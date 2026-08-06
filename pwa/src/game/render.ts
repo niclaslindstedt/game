@@ -218,7 +218,7 @@ export function drawFrame(
   drawScorches(ctx, state, sprites, camera, inView, timeMs);
   drawDecor(ctx, state, sprites, camera, inView, timeMs);
   drawCraters(ctx, state, sprites, camera, inView);
-  drawLandmarks(ctx, state, sprites, camera, inView);
+  drawLandmarks(ctx, state, sprites, camera, inView, timeMs);
   // The car and the garage ship, assembled part by part in place of their
   // landmarks (wheels + sprung body; hull + thrust flame).
   drawVehicles(ctx, state, sprites, camera, inView, timeMs);

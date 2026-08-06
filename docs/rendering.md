@@ -791,6 +791,62 @@ exactly one place:
   flatters every tier equally, which is the one thing a comparison must not do)
   and `loot-toss` runs a whole spill.
 
+## The rift portals
+
+**A HOLE IN REALITY IS THE ONE PROP A FLAT SPRITE CANNOT PLAY.** Four pieces of
+art in the game are tears in space — the seam humming on the garage's bay wall
+(`rift_seam`), the door THE FOUNDER left standing and the far door at the end of
+the void (`rift`, twice on the rift's own road and once in the Mars prelude), the
+warm door onto Boot Hill (`rift_west`), and the blast gate a mummified hand talks
+open (`bunker_gate`) — and every one of them used to stand there as a still
+picture. `pwa/src/game/render/rift-portal.ts` gives them the part the pixel art
+cannot hold, and the read it aims for is **folding into itself**, not spinning
+and not glowing:
+
+- **THE THROAT** is nested shells receding into the mouth, and the trick is that
+  each one TURNS as it goes — a half-turn over the depth of the throat, its width
+  collapsing to a line at the halfway point and opening back out beyond it. A 3-D
+  tunnel's rings only ever get smaller; these pass through edge-on and come back,
+  which is what a solid looks like rotated through an axis the screen does not
+  have. Two shells travel the other way, so the mouth swallows and disgorges at
+  once.
+- **THE FOLD** is the beat the whole thing is built around. Every `FOLD_MS` the
+  throat closes: the mouth narrows and TWISTS, the shells and motes rush to a
+  point, an iris of hot rim light collapses after them, and it snaps back open
+  with an overshoot. Only the INSIDE turns — the pixel lips the art drew stay
+  exactly where they are, which is the difference between a tear folding into
+  itself and a sprite being spun around.
+- **THE MOTES** are violet, gold and green sparks adrift in the black, spiralling
+  in toward the point and winking out when they arrive. They are weighted
+  unequally on purpose: gold drawn additively is nearly white on a black ground
+  and swamps the other two, so three equal sparks make a tear full of yellow.
+- **THE SMOKE** is black, rising, and the one layer here drawn `source-over`
+  rather than additively — it has to take light AWAY. Each puff carries a violet
+  edge under the black, because a black puff over the void's own black ground is
+  invisible without one.
+
+Three rules hold the family together. **The look is a CATALOG keyed by sprite
+name** (the `powerup-fx.ts` idiom): a new tear is a sprite plus a row, and two
+tears that are the same phenomenon differ in palette and size, never in code.
+**A small mouth is not a small version of a big one** — the same shells over a
+third of the area stack their additive light into a white-hot blob, which is the
+opposite of the black nothing the whole thing is about, so every tear below the
+road's own door turns itself down (`glow`). And **exactly one door in the game
+can be seen through**: `rift_west` has a desert on the other side and the script
+says so out loud, so it keeps its daylight and draws its shells as shadow instead
+of light — every other tear is filled with the void.
+
+TWO CALLERS share it, which is the point: the field draws it inside the
+landmark's own billboard (`render/world.ts`) and the cutscene stage draws it over
+the scene prop (`overlays/CutsceneOverlay.tsx`), so the door the hero steps into
+at the end of a prelude is the object he finds standing there when the level
+loads. It is closed-form off the render clock and a seed taken from the tear's
+own position — no state, nothing per-frame allocated, and two tears on one map
+never fold in step. The smoke's gradient is BAKED once and blitted, for the same
+reason the loot aura's light is. Judge it in the EFFECTS GALLERY's WORLD shelf:
+`rift-portal` stands all four side by side on the rift's own ground, which is the
+only floor dark enough to judge black smoke against.
+
 ## What advertises itself as tappable
 
 The field carries a handful of things a press ACTS on rather than walks to, and

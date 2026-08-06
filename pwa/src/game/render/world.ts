@@ -15,8 +15,9 @@ import {
 } from "./caches.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
 import { drawWorldSprite } from "./plane.ts";
-import { drawSpriteCentered, type ViewSize } from "./shared.ts";
-import { cameraAnchorX, cameraAnchorY } from "./tilt.ts";
+import { drawRiftPortal, riftPortalLook } from "./rift-portal.ts";
+import { drawSpriteCentered, seatX, seatY, type ViewSize } from "./shared.ts";
+import { billboard, cameraAnchorX, cameraAnchorY } from "./tilt.ts";
 import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
 import { type Camera } from "./view.ts";
 
@@ -143,6 +144,7 @@ export function drawLandmarks(
   sprites: Sprites,
   camera: Camera,
   inView: InView,
+  timeMs: number,
 ): void {
   for (const landmark of state.landmarks) {
     if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
@@ -154,13 +156,35 @@ export function drawLandmarks(
     // CREATOR is home) is not there yet as far as this character knows.
     if (isLandmarkHidden(landmark.kind)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
+    const base = landmark.anchor === "base";
     drawWorldSprite(
       ctx,
       landmark.sprite,
       sprite,
       landmark.pos,
       camera,
-      landmark.anchor === "base" ? "base" : "center",
+      base ? "base" : "center",
+    );
+    // A TEAR IN SPACE goes on moving after the sprite is down: the throat
+    // turns, the motes drift in, the smoke climbs (./rift-portal.ts). Drawn
+    // inside the landmark's own billboard so it stands with the art rather
+    // than lying down on the tilted floor, and seeded off the tear's own
+    // position so a map with two of them never has them folding in step.
+    const look = riftPortalLook(landmark.sprite);
+    if (!look) continue;
+    // Where the sprite's own centre ends up, given the anchor `drawWorldSprite`
+    // just used: a base-anchored piece stands its feet on the pos, so its
+    // middle is half a sprite up from it.
+    const midY = base ? -Math.round(sprite.height / 2) + 2 : 0;
+    billboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y, () =>
+      drawRiftPortal(
+        ctx,
+        look,
+        seatX(landmark.pos.x, camera.x),
+        seatY(landmark.pos.y, camera.y) + midY,
+        timeMs,
+        landmark.pos.x * 0.017 + landmark.pos.y * 0.031,
+      ),
     );
   }
 }
