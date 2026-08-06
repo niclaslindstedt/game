@@ -88,12 +88,13 @@ because there is no food on the moon). Tried before the part is home it goes
 nowhere at all, and he says why rather than showing a list of places he has
 not earned: still one part short, no sense climbing in until he has been and
 got it. Nothing here ever names a road ahead of the trail: Mars is not
-mentioned until the moon lets go. And a RIFT SEAM opens on the garage
-wall only once it leads somewhere — THE FOUNDER's RIFT CREATOR home from the
-void (see Level 4) and a deep road already walked — and then it reaches back
-into the rift and out to the West. Until then there is nothing on that wall
-at all, because a hole in the world that goes nowhere is not a promise, it is
-a question. The campaign's chapters are unchanged; the garage is the
+mentioned until the moon lets go. THE CAR and THE ROCKET keep the roads they
+have always kept, and the RIFT SEAM takes everything past them: it opens on the
+garage wall only once it leads somewhere — THE FOUNDER's RIFT CREATOR home off
+MARS (see Level 3) and a road already walked through a tear — and then it
+reaches back into the rift, out to the West and down to the vault. Until then
+there is nothing on that wall at all, because a hole in the world that goes
+nowhere is not a promise, it is a question. The campaign's chapters are unchanged; the garage is the
 breath between them, and — when friends join his game — the place they land.
 
 **Side errands at home — RUTH, Ada's mother.** She has a key to the garage and
@@ -306,6 +307,15 @@ bogged to the hubs eight months ago and still politely filing recovery request
 4,110, wants its lane cleared — and then a damaged companion unit, 0034, walked
 home to the dome.
 
+**The rig, and the first choice.** THE FOUNDER does not merely vanish: he rips a
+hole and bolts, and in the scramble his **RIFT CREATOR** falls out of his pocket
+— the rig that tears a seam to anywhere it has already been. Pick it up and the
+tear he left stops being his and starts being a door: on through after him, or
+home to the garage with everything just taken off him. Walk over the rig and the
+tear only says so, because it is still his hole and he took the handle with him.
+It drops HERE, on the first flight, because everything past Mars is a long way
+from home and this is the thing that makes that bearable.
+
 ## Travel — INTO THE RIFT (cutscene)
 
 **The colony's east end after THE FOUNDER fled.** He tore a hole in the universe
@@ -347,12 +357,7 @@ the world's presidents. THE FOUNDER only learned of it by snooping its private l
 and sold the secret to the lizards for a planet, sending their tribute through
 the door. BRO OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
 far door **THE FOUNDER** is cornered a second time and flees again, out the
-other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE —
-and, in the scramble, his **RIFT CREATOR**: the pocket rig that tears a seam to
-anywhere it has already been. "Keep the rift, garage man" turns out to be
-literal. The hero bolts it to the garage wall, and from then on the seam home
-reaches the deep roads both ways — the going-back the rest of the campaign
-walks on. **It reaches exactly what the rig's own description promises and no
+other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE. **It reaches exactly what the rig's own description promises and no
 further: anywhere it has ALREADY BEEN.** A road appears on the seam when the
 hero has walked it the long way through a tear — following THE FOUNDER off Mars
 and again out of the rift, or through the blast door a dead man's hand talks

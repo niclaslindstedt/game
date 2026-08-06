@@ -1321,7 +1321,28 @@ colony, the moon's disaster, the lizard gods — and what Ada was traded for._
 
 _Drops: THE LEGAL DISTINCTION. Leaves: the RIFT._
 
+### Hero's thought — trying THE COWARD'S TEAR without his rig
+
+_Pinned to a DOOR rather than to a mob — the rocket on the garage lawn is the
+only other line in the game that is — and like it, this REPLAYS: it answers a
+tap, not a beat the player is owed once. THE FOUNDER's pocket rig lands on the
+floor in the same scramble that opens the tear he bolts through, and a player
+can walk straight over it; the line sends him back for it rather than letting
+the hole in the universe swallow the tap in silence. It names the thing and not
+the mechanic._
+
+1. IT'S STILL HANGING OPEN. BUT IT'S HIS HOLE, AND HE TOOK THE HANDLE WITH HIM - FIND IT.
+
 ### Found lore (story items)
+
+**RIFT CREATOR** _(falls out of the scramble as THE FOUNDER bolts through his
+own tear — his "KEEP THE RIFT, GARAGE MAN" made literal; a KEEPSAKE: it unseals
+the garage's rift seam for good. It drops on his FIRST flight, not his second,
+because it is what makes the long roads past Mars bearable and would arrive
+after them otherwise.)_
+
+- THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
+- HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
 
 **SCRATCHED MESSAGE** _(Ada's Trail — inside a holding pod)_
 
@@ -1785,13 +1806,6 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
 - A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'
 - 'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S.
-
-**RIFT CREATOR** _(dropped where THE FOUNDER quits the field — his "KEEP THE
-RIFT, GARAGE MAN" made literal; a KEEPSAKE: it unseals the garage's rift seam
-for good)_
-
-- THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
-- HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
 
 ### The wandering merchant — the trader between worlds
 

@@ -206,10 +206,23 @@ describe("following a coward through his own tear", () => {
   const doorOn = (levelId: string, id: string) =>
     (LEVELS[levelId]!.travelDoors ?? []).find((d) => d.id === id)!;
 
-  it("MARS: the tear he bolts through leads into the rift", () => {
+  it("MARS: his tear ASKS — on after him, or home with the haul", () => {
+    // The one tear in the world with a question on it, because the rig that
+    // steers it falls out of the same scramble that opens it.
     const tear = doorOn("mars", "rift");
-    expect(tear.to).toEqual(["the_rift"]);
-    expect(tear.direct).toBe(true);
+    expect(tear.to).toEqual(["the_rift", "garage"]);
+    expect(tear.direct).toBeUndefined();
+    expect(tear.requires).toBe("rift_creator");
+  });
+
+  it("MARS: and says so if the rig was stepped over", () => {
+    // The rig lands on the FLOOR. A tear that silently swallowed the tap
+    // would read as broken rather than as a thing needing a key.
+    const mars = createGame(42, "mars", "medium");
+    const noRig = hero(["medium:goodco_hq", "medium:moon"]);
+    expect(groundedDoorThought(mars, noRig, "medium", "rift")).toBe(
+      "mars_tear_no_rig",
+    );
   });
 
   it("THE RIFT: his second exit leads out to the western", () => {
@@ -218,13 +231,27 @@ describe("following a coward through his own tear", () => {
     expect(tear.direct).toBe(true);
   });
 
-  it("takes the tap straight there rather than opening a one-row picker", () => {
+  it("THE RIFT: his second tear takes the tap straight through, no panel", () => {
+    // No rig question here — it has been in the bag since Mars — and only one
+    // place he can have gone, so a picker would be a one-row dialog.
+    const rift = createGame(42, "the_rift", "medium");
+    const walked = hero([
+      "medium:goodco_hq",
+      "medium:moon",
+      "medium:mars",
+      "medium:the_rift",
+    ]);
+    expect(directRoad(rift, walked, "medium", "rift")).toBe("boot_hill");
+  });
+
+  it("MARS is a picker, not a straight-through", () => {
     const mars = createGame(42, "mars", "medium");
-    // The tear is minted when he bolts, so the door's landmark only stands on
-    // the field mid-run; the reach test is the tap's business
-    // (player-input.ts). This is the road the tap commits to.
-    const walked = hero(["medium:goodco_hq", "medium:moon"]);
-    expect(directRoad(mars, walked, "medium", "rift")).toBe("the_rift");
+    const kept = hero(
+      ["medium:goodco_hq", "medium:moon"],
+      [],
+      ["rift_creator"],
+    );
+    expect(directRoad(mars, kept, "medium", "rift")).toBeNull();
   });
 
   it("leaves the seam at home to do the asking — it is not direct", () => {

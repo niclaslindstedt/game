@@ -362,8 +362,13 @@ describe("the rift creator", () => {
     expect(def.lore.length).toBeGreaterThan(0);
   });
 
-  it("drops where he says KEEP THE RIFT — the rift fight's Founder", () => {
-    expect(enemyDef("the_founder_rift").loot?.storyItems).toContain(
+  it("falls out of his FIRST flight, on Mars — before the long roads start", () => {
+    // The rig is the campaign's town portal, so it has to be in hand for the
+    // road it makes bearable: the rift, the western and the vault are all past
+    // Mars, and every one of them is a long way from the garage. Dropped on his
+    // second flight it would arrive after the stretch it exists to fix.
+    expect(enemyDef("the_founder").loot?.storyItems).toContain("rift_creator");
+    expect(enemyDef("the_founder_rift").loot?.storyItems ?? []).not.toContain(
       "rift_creator",
     );
   });

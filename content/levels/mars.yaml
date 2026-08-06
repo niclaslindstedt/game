@@ -63,14 +63,24 @@ riftExit: true
 # FOLLOWS HIM, which is the whole of the chase in one gesture, and the crossing
 # teaches the seam back home this road.
 #
-# A SET destination: a tear goes where its owner went, and a picker with one row
-# on it is a confirmation dialog nobody asked for. The seam in the garage is the
-# only portal in the game with a question to put.
+# THE CAMPAIGN'S FIRST REAL CHOICE, and the one tear in the world that asks:
+# the RIFT CREATOR falls out of the scramble here, so the moment it is in hand
+# the hero can steer the tear rather than merely fall through it — on after the
+# coward, or home with what he is carrying. Everything past this point is a long
+# way from the garage, which is exactly why the rig drops before it rather than
+# after.
+#
+# `requires` IS THE TEACHING. The rig lands on the floor in the same scramble
+# that opens the tear, and a player can walk over it — so without it the tear
+# answers the tap with a line pointing back at what he stepped over, rather
+# than silently doing nothing. Nobody is stranded either way: the victory
+# splash's own road into the rift is untouched.
 travelDoors:
   - id: rift
     name: THE COWARD'S TEAR
-    to: [the_rift]
-    direct: true
+    to: [the_rift, garage]
+    requires: rift_creator
+    unready: mars_tear_no_rig
 
 objective:
   type: killBoss

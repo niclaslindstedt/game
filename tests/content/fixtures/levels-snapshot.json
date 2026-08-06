@@ -503,8 +503,7 @@
         {
           "id": "rift",
           "name": "THE COWARD'S TEAR",
-          "to": ["the_rift"],
-          "direct": true
+          "to": ["the_rift", "garage"]
         }
       ],
       "objective": {
