@@ -325,8 +325,13 @@ export function giverLead(giver, tuning) {
     `Nothing can hurt them — but nothing is kept off them either. Unlike the merchant they carry no ward, so the horde walks straight through where they stand and comes for you while you talk. Standing on top of somebody with an errand is not cover.`,
   );
   lines.push(
-    `Walk within ${tuning.talkRadius} px and they open the conversation themselves, once. A person with more than one thing to say opens on the whole list rather than handing them out one at a time.`,
+    `Walk within ${tuning.talkRadius} px and you have met them: they are discovered, pinned on the map and marked with a ! over the head. Nothing opens on its own — a deliberate tap inside ${tuning.tapRadius} px is the only way in, and a person with more than one thing to say opens on the whole list rather than handing them out one at a time.`,
   );
+  if (giver.meets) {
+    lines.push(
+      `This one is met before they are asked. The first tap opens a conversation you steer rather than an errand — who they are and why they are standing here — and the list of errands opens from the tap after it. Walking away mid-talk costs nothing: they pick up where they stopped.`,
+    );
+  }
   return lines;
 }
 

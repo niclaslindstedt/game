@@ -81,6 +81,8 @@ export const QUEST_GIVER_FIELDS = {
   at: "not reader-facing: a world coordinate is a number the reader is standing in, not one they can use — where the person is on the map is what the mission page's map render shows",
   greeting: "what they say, behind the reveal",
   farewell: "what they say, behind the reveal",
+  intro:
+    "the meeting sentence in the lead — that this person is spoken to before they are asked anything, and that their errands open from the tap after",
 };
 
 /**
@@ -528,6 +530,11 @@ function giverModel(def, venue, chain) {
     venue,
     // Their whole chain, in the order their own pick list shows it.
     quests: chain,
+    // A person who is MET before they are asked anything. The tree itself is
+    // not printed — it is a talk the reader steers, and transcribing it here
+    // would hand away every branch of it — but that there IS one belongs in
+    // the lead, because it changes what the first walk-up does.
+    meets: def.intro !== undefined,
     story: {
       greeting: def.greeting ?? [],
       farewell: def.farewell ?? [],
@@ -607,6 +614,7 @@ export function questsModel() {
     // index.
     tuning: {
       talkRadius: QUESTS.talkRadius,
+      tapRadius: QUESTS.tapRadius,
       dropChance: QUESTS.dropChance,
       dropPity: QUESTS.dropPity,
       escortHp: QUESTS.escortHp,

@@ -240,6 +240,33 @@ export const GATES = {
   summonDistance: 48,
 } as const;
 
+/**
+ * TIME OF DAY — the clock's hours mapped onto how much daylight a venue
+ * standing under a SKY is given (`LevelDef.sky`, `GameState.daylight`).
+ *
+ * The engine never asks what time it is: a run is handed its light level as a
+ * session parameter, because the wall clock is the app's to read and a run that
+ * sampled it would build a different world on each machine of a party (see
+ * `RunParams.daylight`). All this block owns is the SHAPE of the day — where
+ * the plateaus sit and how long the two ramps take — so the app answers with a
+ * number rather than with a policy.
+ *
+ * The ramps are deliberately long. A garage that snapped from noon to midnight
+ * on the stroke of an hour would read as a bug; three hours of dusk is a lit
+ * lamp coming up under a sky that is still blue, which is the picture the hour
+ * actually looks like.
+ */
+export const DAYLIGHT = {
+  /** Full daylight from this hour (local, 0–24). */
+  dayFrom: 8,
+  /** …until this one, when the light starts going. */
+  dayUntil: 18,
+  /** Fully dark from this hour — the deep night the story's first scene is in. */
+  nightFrom: 21,
+  /** …until this one, when the first light shows. */
+  nightUntil: 5,
+} as const;
+
 /** The level map and its fog of war (see map.ts). */
 export const MAP = {
   /** Fog-of-war grid cell size (world px). Coarse on purpose: the map reads

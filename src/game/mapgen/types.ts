@@ -63,6 +63,11 @@ export type { Enclosure, MapArea, MapSpace } from "./areas.ts";
  *             chamber (the garage's roll-up, and the threshold a driven car
  *             departs through), and a district that names it in `MapArea.doors`
  *             gets one in every doorway of its own rooms.
+ *   light     a LAMP: a pool of light on the ground, pinned to a carved anchor
+ *             and burning only once the venue's `sky` has gone dark
+ *             (`LevelDef.lights`). It draws NO sprite — the fixture hangs
+ *             overhead, off the ground plane the game draws — so what the
+ *             player sees of one is the light itself
  */
 export type MapObjectType =
   | "wall"
@@ -76,13 +81,26 @@ export type MapObjectType =
   | "row"
   | "critter"
   | "lair"
-  | "door";
+  | "door"
+  | "light";
 
-/** Where a `landmark` object is pinned once the chambers are carved:
- * the hero's landing, the goal cell, a step aside from the trader's
- * counter (`stall`), or a step off the landing itself (`home` — the
- * garage's rift seam hums on the bay wall beside the car). */
-export type MapAnchor = "spawn" | "goal" | "stall" | "home";
+/** Where a `landmark` or a `light` object is pinned once the chambers are
+ * carved: the hero's landing, the goal cell, the trader's own counter
+ * (`counter`) or a step aside from it (`stall`), or a step off the landing
+ * itself (`home` — the garage's rift seam hums on the bay wall beside the
+ * car). */
+export type MapAnchor = "spawn" | "goal" | "stall" | "counter" | "home";
+
+/**
+ * A lamp's numbers as a blueprint authors them — the `LevelLight` a carve
+ * compiles it into, minus the position the carve decides.
+ */
+export type MapLightSpec = {
+  radius: number;
+  color?: string;
+  intensity?: number;
+  flicker?: number;
+};
 
 /**
  * One entry of a blueprint's object palette: a sprite plus the purpose that
@@ -212,10 +230,62 @@ export type MapObject = {
    * `door`: WHERE ONE HANGS. Only `spawn` means anything — every doorway of the
    * hero's own chamber, which is the garage's roll-up. A door that hangs by
    * DISTRICT is named by the district instead (`MapArea.doors`), because that
-   * is a fact about the rooms, not about the door. */
+   * is a fact about the rooms, not about the door.
+   *
+   * `light`: which carved feature the lamp is pinned to. */
   at?: MapAnchor;
+  /**
+   * `light`: how far (world px) the lamp stands from the anchor it is pinned
+   * to. A carve has no authored coordinates, so an anchor plus a nudge is how a
+   * lamp reaches the far side of a doorway or the middle of the bay it lights,
+   * and it stays true on every seed the way a fixed coordinate never could.
+   * Omitted = right on the anchor.
+   */
+  offset?: { x: number; y: number };
+  /**
+   * `light`: THE FIXTURE — the sprite of the thing throwing the pool (a lamp
+   * post, a bollard), emitted as a landmark standing at it.
+   *
+   * OMITTING IT IS A CHOICE, NOT A SHORTCUT, and the wrong choice is loud: a
+   * pool of light on open ground with nothing above it reads as a bug — a bulb
+   * burning in mid-air. Leave it off only when the fitting genuinely is not on
+   * the ground plane (a gantry light, a strip over a counter) or when something
+   * already drawn there is obviously the source.
+   */
+  fixture?: string;
   /** `landmark`: `base` pins a standing prop's foot to its position. */
   anchor?: "base" | "center";
+  /**
+   * THE LIGHT A `light` THROWS — the whole of what that purpose is. Compiled
+   * straight into `LevelDef.lights`; see `LevelLight` for what each field
+   * means. Refused by the schema on every other purpose except `door`'s
+   * `lamps` below: a lamp riding a density-scattered prop is a map whose
+   * lighting is rolled rather than designed.
+   */
+  light?: MapLightSpec;
+  /**
+   * `door`: THE PAIR OF LAMPS BOLTED EITHER SIDE OF THE OPENING — a real
+   * fixture drawn on the wall (`sprite`) with its own pool under it, one at
+   * each end of every chain this door hangs.
+   *
+   * It is part of the DOOR rather than two `light` objects because only the
+   * carve knows where the doorway ended up: the lamps are placed at the chain's
+   * own ends and pushed to the OUTSIDE face (away from the chamber the door
+   * shuts), so they flank the opening on whatever border it was punched
+   * through, at any size and on any seed. Authored coordinates could not
+   * survive a re-carve, and a light with no fixture leaves a driveway lit by
+   * nothing anybody can see.
+   */
+  lamps?: {
+    /** The fixture sprite drawn on the wall (a landmark — it never collides). */
+    sprite: string;
+    /** How far outside the door's own line the lamps stand (world px,
+     * default 8) — clear of the chain so the fitting reads as bolted beside
+     * the opening rather than into it. */
+    inset?: number;
+    /** The pool each one throws. */
+    light: MapLightSpec;
+  };
   /**
    * Restrict this prop to the named AREA types (`areas` palette ids). Omitted =
    * it belongs everywhere. This is what makes a district read as a district: the

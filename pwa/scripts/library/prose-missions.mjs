@@ -147,6 +147,14 @@ export function venueNotes(mission) {
       "No fog of war here — the whole floor is lit from the first step, because you know your own home by heart.",
     ]);
   }
+  if (mission.sky) {
+    notes.push([
+      "NIGHTFALL",
+      mission.lamps > 0
+        ? `This place stands under a sky and keeps YOUR hours — come home in the evening and it is evening here, dark by ten and light again by morning. ${mission.lamps} ${mission.lamps === 1 ? "lamp burns" : "lamps burn"} on it after dark, and a driven car brings its own headlights.`
+        : "This place stands under a sky and keeps YOUR hours — come home in the evening and it is evening here, dark by ten and light again by morning.",
+    ]);
+  }
   if (mission.safeZones > 0) {
     notes.push([
       "BREATHING ROOM",

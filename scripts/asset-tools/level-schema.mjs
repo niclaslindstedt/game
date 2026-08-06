@@ -53,6 +53,17 @@ export const CARVED_FIELDS = [
 
 const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit", "hub"]);
 
+/**
+ * The SKIES a venue may stand under (the engine's `SkyKind`, `src/game/
+ * daylight.ts`) — a level naming one has its light follow the clock.
+ *
+ * Spelled out here rather than harvested from the engine like the enemy and
+ * item ids: `daylight.ts` reaches the level registry, which imports the very
+ * file this compile is about to write, and a bootstrap cycle is a worse price
+ * than a two-word list kept in step with the union it mirrors.
+ */
+const SKIES = new Set(["earth"]);
+
 /** What `placeThoughts[].where` may say — the engine's `PlaceThoughtWhere`. */
 const PLACE_THOUGHT_WHERE = new Set(["arrival", "pastDoor"]);
 
@@ -416,6 +427,10 @@ export function validateLevel(def, refs, description = "", options = {}) {
     if (!knownUnique(id)) err(`merchant stockUniques unknown unique "${id}"`);
 
   // ---- objective + geometry --------------------------------------------------
+  // THE SKY — misspell it and the venue simply never gets dark, which is the
+  // kind of silence a schema exists to break.
+  if (def.sky !== undefined && !SKIES.has(def.sky))
+    err(`sky "${def.sky}" not one of ${[...SKIES].join(" | ")}`);
   if (def.objective && !OBJECTIVES.has(def.objective.type))
     err(`objective type "${def.objective.type}" not one of ${[...OBJECTIVES]}`);
   if (carved && def.objective?.type === "reachExit" && !isVec(def.objective.at))

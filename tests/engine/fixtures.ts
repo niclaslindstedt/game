@@ -1677,6 +1677,26 @@ export const FIX_ROAD_LEVEL: LevelDef = {
   ],
 };
 
+// A level standing under a SKY, with two lamps on it — the synthetic twin of
+// the garage's night (`src/game/daylight.ts`). Everything else in the catalog
+// deliberately has no `sky` at all, which is what proves the default: a venue
+// that never opted in is never dimmed, whatever `daylight` a run carries.
+export const FIX_SKY_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_sky_level",
+  sky: "earth",
+  lights: [
+    { pos: { x: 700, y: 500 }, radius: 120 },
+    {
+      pos: { x: 900, y: 400 },
+      radius: 80,
+      color: "150, 216, 255",
+      intensity: 0.7,
+      flicker: 0.3,
+    },
+  ],
+};
+
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
 // its kit (see src/game/arrival.ts). Geometry is the reference level's.
@@ -2194,6 +2214,7 @@ export function installFixtures(force = false): void {
     levels: {
       test_level: FIX_LEVEL,
       test_level_2: FIX_LEVEL_2,
+      test_sky_level: FIX_SKY_LEVEL,
       test_path_level: FIX_PATH_LEVEL,
       test_door_level: FIX_DOOR_LEVEL,
       test_rare_level: FIX_RARE_LEVEL,

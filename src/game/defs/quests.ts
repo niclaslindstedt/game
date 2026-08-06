@@ -253,6 +253,35 @@ export type QuestGiverDef = {
   greeting?: readonly string[];
   /** Spoken when every quest of theirs is done. */
   farewell?: readonly string[];
+  /**
+   * A CONVERSATION THIS PERSON OWES THE HERO BEFORE THEY OWE HIM AN ERRAND
+   * (see defs/conversations.ts). The first tap opens the tree instead of the
+   * slate; every tap after `until` is set opens the slate exactly as it always
+   * did.
+   *
+   * IT EXISTS BECAUSE A SLATE IS NOT A MEETING. A giver's pick list opens on a
+   * one-line `greeting` and a row per errand, which is right for somebody the
+   * hero has walked up to for the third time and wrong for the first time he
+   * meets them at all — an errand handed over by a stranger the player has
+   * never been introduced to reads as a vending machine, and the reason the
+   * person is standing there has nowhere to be said. So the meeting is a
+   * CONVERSATION the player steers, and only once it is had does the slate
+   * open. The errands are then written as things this person says to somebody
+   * they have already spoken to, which is the whole point.
+   *
+   * `until` is the run flag that RETIRES the tree, and some branch of it has
+   * to set it — the build refuses an `until` nothing sets, because a flag
+   * nobody sets is a person who can never hand out the errands they exist to
+   * hand out. A campaign giver's flags travel with the hero (see
+   * quests/campaign.ts), so the meeting is had once per difficulty rather than
+   * once per run.
+   */
+  intro?: {
+    /** CONVERSATION_DEFS id — the tree the first tap opens. */
+    conversation: string;
+    /** The run flag that retires it. Set by a branch of that same tree. */
+    until: string;
+  };
 };
 
 /** ONE ERRAND. */

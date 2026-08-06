@@ -175,16 +175,16 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 
 **A blueprint is a RECIPE, not a layout.** It carries only what the carve needs:
 
-| Field                  | What it says                                                                                               |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                    |
-| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                   |
-| `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of |
-| `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, …)      |
-| `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                           |
-| `elites` / `guardians` | the set pieces the carve places for you                                                                    |
-| `bystanders`           | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in               |
-| `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                      |
+| Field                  | What it says                                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
+| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                       |
+| `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
+| `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
+| `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
+| `elites` / `guardians` | the set pieces the carve places for you                                                                        |
+| `bystanders`           | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                   |
+| `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                          |
 
 Everything else about the mission — its name, its story, its intro, its loot
 pools, its music, its merchant — is **inherited from the level it names**, so a
@@ -216,6 +216,67 @@ and it keeps the landing, the objective, every set piece and every placed item
 outside — so the key is always reachable without the key. `annex.lock` does the
 same to the boss annex's ELEVATOR: the pad is drawn and labelled, and the car
 does not come until the hero is carrying the pass.
+
+**A VENUE MAY STAND UNDER A SKY, AND THEN IT KNOWS WHAT TIME IT IS.** Put
+`sky: earth` on the MISSION and the venue's light follows the player's own
+clock: bright at noon, dark at ten in the evening, with two long ramps between
+(the app reads the hour, the engine never does — `src/game/daylight.ts`). It is
+opt-in for a reason — an airless moon and a sealed corridor look the same at
+midnight — and a level that never names a sky is exactly as bright as it always
+was.
+
+What burns in that dark is the blueprint's business, and there are three ways to
+put light in it.
+
+**A `light` OBJECT is a POOL on the ground**, pinned to a carved anchor
+(`at: spawn | goal | stall | counter | home`) and nudged off it
+(`offset: {x, y}`). Give it a `fixture` — the sprite of the thing throwing it —
+or the pool reads as a bug rather than as a lamp:
+
+```yaml
+- id: yard_lamp
+  type: light
+  at: goal
+  offset: { x: -34, y: 16 }
+  fixture: lamp_post # the thing standing there throwing it
+  light:
+    radius: 52 # world px the pool fades to nothing at
+    color: "255, 206, 138" # omitted = warm tungsten
+    intensity: 0.9 # 0–1, how much of the night it lifts
+    flicker: 0.2 # 0–1, how badly it wavers (0 = a steady lamp)
+```
+
+**A `door` MAY HANG ITS OWN PAIR.** `lamps:` on the map's approach door bolts a
+fixture at each END of every chain it hangs, half a wall's radius onto its
+outside face — so the opening is flanked wherever the carve happened to punch
+it, and the fittings sit ON the wall (the game draws lamps one pass after the
+walls, which is what makes that possible):
+
+```yaml
+- id: garage_door
+  type: door
+  sprite: garage_door
+  radius: 8
+  lamps:
+    sprite: wall_lamp
+    light: { radius: 58, color: "255, 206, 138", intensity: 0.92 }
+```
+
+**AND A ROOFED DISTRICT MAY SIMPLY BE LIT.** `lit: 0.82` on a `hard` area is
+"the lights are on in here": the carve emits that chamber's own rect, so the
+night stops at its walls. It is the only way to light a ROOM — a pool wide
+enough to fill one spills through the wall behind it.
+
+Two rules to author by. Keep the radii SMALL relative to the venue: the lot is
+read on a phone in landscape, and two pools that touch light the whole place
+back to daylight. And keep a source under every outdoor pool — the schema warns
+when a `light` has no `fixture`, and the only exemptions are a fitting that
+genuinely hangs overhead and a pool pinned to something already drawn (`at:
+counter`, the trader's own back-lit machine).
+
+None of it touches a rule: a lamp lights no fog, targets nothing and changes no
+reach — it is somewhere the player can see what he is doing. A driven CAR brings
+its own headlights wherever it goes, and needs no authoring at all.
 
 **`patrol: true` ON AN ELITE** walks it a beat instead of leaving it standing.
 The route is derived from the room the carve grew it in — a sweep down the cell's
@@ -1311,7 +1372,21 @@ questGivers:
       - YOU'RE THE FIRST IN A WHILE. CAN I ASK YOU A FAVOR?
     farewell: # optional, once everything of theirs is done
       - MIND THE TRAYS ON YOUR WAY OUT.
+    intro: # optional: a MEETING owed before any errand is offered
+      conversation: mymod_keeper_meeting # one of your `conversations/`
+      until: mymod_keeper_met # a flag some branch of it sets
 ```
+
+**`intro:` is how somebody gets introduced before they start asking.** The first
+tap opens that conversation tree instead of the errand slate; the slate opens
+from the tap after `until` is set, and the tree is never seen again. It is worth
+reaching for when the reason a person is standing on your map is the reason
+their errands make sense — a slate that opens cold makes a giver read as a
+dispenser. Two things the build refuses, because both are silent at runtime: an
+`until` no branch of any conversation sets (the meeting could never end, so the
+errands could never be offered), and a `conversation` that does not exist.
+Walking away mid-talk is free — author a `reentry:` on the flag your first
+branch sets and they pick up where they stopped.
 
 Each errand is its own file under `quests/`, the stem being its id:
 

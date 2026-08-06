@@ -223,6 +223,41 @@ function axleDrop(
   return (car.suspension[axle] ?? 0) + missing;
 }
 
+// ── THE ASSEMBLY IS ONE BILLBOARD ───────────────────────────────────────────
+// A WHEEL IS NOT A BODY STANDING IN THE WORLD — it is a PART OF THE CAR, and
+// `CAR.wheelOffsets` are the columns of the shared 48-wide part canvas its arch
+// is cut at. Those are SCREEN px along the drawn body, not world px across the
+// floor, and the difference is invisible square-on: with yaw 0 the projection
+// leaves x alone, so a wheel anchored at `car.pos.x + offset` landed in its arch
+// by coincidence.
+//
+// Turn the camera and the coincidence goes. A world step east comes out as a
+// step east AND south under a yaw (render/tilt.ts), while the body panels are
+// one billboard drawn dead straight-on — so the front wheel slid down out of its
+// arch and the rear one climbed up behind the door. At the full isometric 45° the
+// pair sit the better part of a wheel off their arches, at the yaw's own angle:
+// the car reads as a wreck with a spare dropped beside it.
+//
+// So every piece of the car is placed the way the panels always were: ONE anchor
+// through the tilt, and whole-pixel SCREEN offsets inside it. Only things that
+// genuinely stand on their own ground get their own world anchor — a wheel that
+// came OFF (`state.wheelDebris`) is exactly that, and keeps one.
+
+/** Where a wheel's centre column and top row sit inside the car's billboard —
+ * the axle's canvas column off the body's seat, and the wheel standing on the
+ * same base row the 26-high part canvas does. */
+function wheelSeat(
+  car: Extract<Vehicle, { kind: "car" }>,
+  camera: Camera,
+  axle: number,
+  sprite: ImageBitmap,
+): { cx: number; top: number } {
+  return {
+    cx: seatX(car.pos.x, camera.x) + (CAR.wheelOffsets[axle] ?? 0),
+    top: seatY(car.pos.y, camera.y) - (sprite.height - 2),
+  };
+}
+
 // ── THE STEERED FRONT WHEEL ─────────────────────────────────────────────────
 // The rack's angle (`CarVehicle.steer`), drawn — a wheel cranked on its
 // kingpin is no longer edge-on to the camera, and there is no second sprite
@@ -271,11 +306,14 @@ const STEER_LEAN = 0.35;
  * camera. Clamped to a pixel either way, for the same reason. */
 const STEER_GROW = 0.3;
 
+/** Drawn INSIDE the car's own billboard (see THE ASSEMBLY IS ONE BILLBOARD):
+ * `cx` is the axle's centre column and `top` the wheel's top row, both in the
+ * assembly's screen space. */
 function drawSteeredWheel(
   ctx: CanvasRenderingContext2D,
   sprite: ImageBitmap,
-  pos: { x: number; y: number },
-  camera: Camera,
+  cx: number,
+  top: number,
   steer: number,
   faceLeft: boolean,
 ): void {
@@ -285,35 +323,22 @@ function drawSteeredWheel(
   // edge is the other end of the same eleven pixels.
   const swing = Math.sin(steer) * (faceLeft ? -1 : 1);
   const width = Math.max(1, Math.round(w * Math.abs(Math.cos(steer))));
-  billboard(ctx, pos.x, pos.y, camera.x, camera.y, () => {
-    const left = seatX(pos.x, camera.x) - Math.round(width / 2);
-    const top = seatY(pos.y, camera.y) - (h - 2);
-    // Walked over DESTINATION columns, picking a source column for each, so a
-    // squashed wheel comes out solid — mapping the source forward instead
-    // drops columns and leaves gaps through the tyre.
-    for (let i = 0; i < width; i++) {
-      const across = (i + 0.5) / width;
-      const sx = Math.min(w - 1, Math.floor(across * w));
-      // How far this column now stands toward the camera (world px, +y near),
-      // and therefore where it sits and how big it is.
-      const depth = (across - 0.5) * w * swing;
-      const dy = Math.round(depth * STEER_LEAN);
-      const grow = Math.max(-1, Math.min(1, Math.round(depth * STEER_GROW)));
-      // Anchored at the contact patch: the column grows upward off the ground
-      // it is standing on, never through it.
-      ctx.drawImage(
-        sprite,
-        sx,
-        0,
-        1,
-        h,
-        left + i,
-        top + dy - grow,
-        1,
-        h + grow,
-      );
-    }
-  });
+  const left = cx - Math.round(width / 2);
+  // Walked over DESTINATION columns, picking a source column for each, so a
+  // squashed wheel comes out solid — mapping the source forward instead
+  // drops columns and leaves gaps through the tyre.
+  for (let i = 0; i < width; i++) {
+    const across = (i + 0.5) / width;
+    const sx = Math.min(w - 1, Math.floor(across * w));
+    // How far this column now stands toward the camera (world px, +y near),
+    // and therefore where it sits and how big it is.
+    const depth = (across - 0.5) * w * swing;
+    const dy = Math.round(depth * STEER_LEAN);
+    const grow = Math.max(-1, Math.min(1, Math.round(depth * STEER_GROW)));
+    // Anchored at the contact patch: the column grows upward off the ground
+    // it is standing on, never through it.
+    ctx.drawImage(sprite, sx, 0, 1, h, left + i, top + dy - grow, 1, h + grow);
+  }
 }
 
 /** Vertical column bands the tilted shell is blitted in (px of source). */
@@ -379,21 +404,24 @@ function drawCar(
   // Two roll frames half a spoke apart; the angle comes from the
   // simulation, so a parked car never flickers.
   const frame = Math.floor(car.wheelAngle / (Math.PI / 5)) % 2;
-  car.wheelStates.forEach((wheelState, i) => {
-    // A wheel at state 3 is GONE — bouncing away as debris; the axle sits
-    // on the bump stop over the underbody's dark arch.
-    if (wheelState === 3) return;
-    const name = wheelSprite(wheelState, frame);
-    const sprite = spriteByName(sprites, name);
-    if (!sprite) return;
-    const at = { x: car.pos.x + (CAR.wheelOffsets[i] ?? 0), y: car.pos.y };
-    // The FRONT axle (index 1) is the one on the rack, and it is warped only
-    // once the crank is worth a pixel; everything else is a plain blit.
-    if (i === 1 && Math.abs(car.steer) > STEER_MIN) {
-      drawSteeredWheel(ctx, sprite, at, camera, car.steer, car.faceLeft);
-    } else {
-      drawWorldSprite(ctx, name, sprite, at, camera, "base");
-    }
+  // Both axles inside the BODY's billboard — an axle is a column of the part
+  // canvas, not a spot on the floor (see THE ASSEMBLY IS ONE BILLBOARD).
+  billboard(ctx, car.pos.x, car.pos.y, camera.x, camera.y, () => {
+    car.wheelStates.forEach((wheelState, i) => {
+      // A wheel at state 3 is GONE — bouncing away as debris; the axle sits
+      // on the bump stop over the underbody's dark arch.
+      if (wheelState === 3) return;
+      const sprite = spriteByName(sprites, wheelSprite(wheelState, frame));
+      if (!sprite) return;
+      const { cx, top } = wheelSeat(car, camera, i, sprite);
+      // The FRONT axle (index 1) is the one on the rack, and it is warped only
+      // once the crank is worth a pixel; everything else is a plain blit.
+      if (i === 1 && Math.abs(car.steer) > STEER_MIN) {
+        drawSteeredWheel(ctx, sprite, cx, top, car.steer, car.faceLeft);
+      } else {
+        ctx.drawImage(sprite, cx - Math.round(sprite.width / 2), top);
+      }
+    });
   });
   for (const panel of CAR.panels) {
     const rung = Math.max(0, Math.min(3, car.panels[panel] ?? 0));
@@ -490,18 +518,24 @@ function drawShip(
   camera: Camera,
   timeMs: number,
 ): void {
-  // The flame sits UNDER the hull so the bell overlaps its root.
+  // The flame sits UNDER the hull so the bell overlaps its root — and it is
+  // part of the SHIP, so those 7 px are screen px down from the hull's own
+  // seat, inside the hull's billboard. Anchored at `pos.y + 7` in the world
+  // instead they came out down AND east once the camera took a yaw, and the
+  // exhaust drifted out from under the bell (see THE ASSEMBLY IS ONE
+  // BILLBOARD).
   if (ship.thrust > 0) {
-    const flameName = `ship_flame_${Math.floor(timeMs / 90) % 2}`;
-    const flame = spriteByName(sprites, flameName);
+    const flame = spriteByName(
+      sprites,
+      `ship_flame_${Math.floor(timeMs / 90) % 2}`,
+    );
     if (flame) {
-      drawWorldSprite(
-        ctx,
-        flameName,
-        flame,
-        { x: ship.pos.x, y: ship.pos.y + 7 },
-        camera,
-        "base",
+      billboard(ctx, ship.pos.x, ship.pos.y, camera.x, camera.y, () =>
+        ctx.drawImage(
+          flame,
+          seatX(ship.pos.x, camera.x) - Math.round(flame.width / 2),
+          seatY(ship.pos.y, camera.y) + 7 - (flame.height - 2),
+        ),
       );
     }
   }

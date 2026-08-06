@@ -46,6 +46,7 @@ import { pauseMusic, playLevelMusic } from "../music/index.ts";
 import { buildBotViewLoadout } from "../seed-characters.ts";
 import { armedLootMode } from "../session-intent.ts";
 import { getSettings } from "../settings.ts";
+import { runDaylight } from "../time-of-day.ts";
 import type { PlayerAction } from "../render.ts";
 import { openingSeenFor, type RunCheckpoint } from "./run-progress.ts";
 
@@ -329,6 +330,13 @@ export function createRunSession(deps: {
           ? "story"
           : "none",
     muteDialogue: bot !== null,
+    // WHAT TIME IT IS (see ../time-of-day.ts). A run parameter rather than
+    // something the renderer works out per frame, because the whole party has
+    // to be in the same night and the engine may not read a clock. The visit
+    // that plays a venue's opening is the story's own night — home is dark the
+    // evening Ada goes out for chips — and every visit after it keeps the
+    // player's own hours. Only a venue with a `sky` reads it at all.
+    daylight: runDaylight(params, !openingSeen),
     // THE SESSION'S LOOT RULE, read from the armed HOST intent WITHOUT
     // consuming it — the run is built here and the doors are opened later, in
     // the driver. Undefined (every single-player run, and every hosted game

@@ -468,6 +468,23 @@ export type GameState = {
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
   /**
+   * HOW MUCH DAYLIGHT THIS RUN STANDS IN, 0 (the deep of the night) to 1 (broad
+   * daylight) — read only on a venue with a `sky` (see `src/game/daylight.ts`),
+   * and ignored everywhere else.
+   *
+   * It is a SESSION PARAMETER rather than something the engine works out,
+   * because the wall clock is the app's to read and `step()` may not touch one:
+   * the host reads the hour once before the first tick and hands the number to
+   * everybody, so a party spread across two time zones plays in one night
+   * rather than two. Absent — every run created before this existed, every
+   * headless simulation, every engine test — reads as full daylight, which is
+   * exactly how those runs looked already.
+   *
+   * Purely presentational. Nothing in the simulation reads it: sight, aggro,
+   * reach and spawns are what they are at noon.
+   */
+  daylight?: number;
+  /**
    * WHO MAY PICK A DROP UP — the session's loot rule.
    *
    * `"free"` is free-for-all: anything on the floor goes to whoever reaches it,

@@ -49,6 +49,10 @@ export const LEVEL_FIELDS = {
   gravity: "the GRAVITY row",
   heroSuited: "the SUIT note",
   revealed: "the KNOWN GROUND note — no fog of war on home turf",
+  sky: "the NIGHTFALL note — this venue's light follows the player's own clock",
+  lights: "the map render's lamps, and the NIGHTFALL note's count",
+  litZones:
+    "not reader-facing: which rooms keep their own lights on after dark",
   mobLevels: "the difficulty ladder table",
   intendedLevel: "the difficulty ladder table's reference hero",
   loot: "the loot section — the pools, the relics, the powers, the trophy",
@@ -328,6 +332,12 @@ function missionModel(level, order) {
     gravity: level.gravity,
     suited: level.heroSuited !== false,
     revealed: level.revealed === true,
+    // NIGHTFALL: does this venue stand under a sky (`LevelDef.sky`), and what
+    // is still burning on it when that sky goes dark? Reader-facing, because
+    // "come home at midnight and it is midnight" is the kind of thing a player
+    // notices and then wants confirmed.
+    sky: level.sky ?? null,
+    lamps: (level.lights ?? []).length,
     exitTo: level.exitTo ? missionLink(level.exitTo) : null,
     gates: (level.gates ?? []).map((gate) => ({
       to: missionLink(gate.to),

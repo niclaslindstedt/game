@@ -35,6 +35,18 @@ gravity: 800
 # His own garage: no fog of war, the whole floor lit from the first frame.
 revealed: true
 biome: goodco
+# THE ONE VENUE THAT KNOWS WHAT TIME IT IS. Home stands under a sky, so its
+# light follows the player's own clock (`src/game/daylight.ts`): come back at
+# nine in the evening and the lot is dark, the flood over the roll-up door is
+# on, and the bay is a lit box at the end of a black drive. Every other venue
+# in the game is airless, sealed, or underground and stays exactly as bright as
+# it always was.
+#
+# THE FIRST VISIT IS ALWAYS NIGHT, whatever the clock says, because the script
+# says so: movie night, two hours later, and she never came back. The app pins
+# it (the prelude is playing, so this is that night) and hands the run its
+# `daylight` like any other session parameter.
+sky: earth
 tiles:
   # Poured cement, not tiles — the bay's own floor (the map's lawn override
   # hands the outside back to grass).

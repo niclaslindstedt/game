@@ -26,12 +26,14 @@ export {
 
 export type {
   LevelDef,
+  LevelLight,
   MissionDef,
   PackMember,
   PackSpec,
   SpawnerMember,
   SpawnerSpec,
   SpawnSpec,
+  SkyKind,
   WaveBudget,
   WaveSpec,
 } from "./types.ts";
