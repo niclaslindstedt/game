@@ -139,8 +139,16 @@ declare module "*/sprite-data/load-yaml.mjs" {
     SPRITES: Record<string, string[]>;
     SPRITE_PALETTES: Record<string, Record<string, Rgba>>;
     SPRITE_FAMILY: Record<string, string>;
-    /** Only the sprites asking for a plane other than the default `upright`. */
-    SPRITE_PLANES: Record<string, "upright" | "floor">;
+    /** Only the sprites asking for a plane other than the default `upright`,
+     * so `upright` itself never appears as a value. */
+    SPRITE_PLANES: Record<string, "floor" | "wall">;
+    /** How far a `plane: wall` piece rises off its footprint, in world px —
+     * `wallRise`'s answer, resolved at load because this is the last place that
+     * knows the art's own height. Only wall pieces appear. */
+    SPRITE_RISE: Record<string, number>;
+    /** The `plane: floor` pieces whose art states a bearing (a belt's rails run
+     * along it), so a rank laid east has to be turned. Only those appear. */
+    SPRITE_DIRECTIONAL: Record<string, boolean>;
     ANIMATIONS: Record<string, unknown>;
   };
 }
