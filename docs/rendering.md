@@ -740,6 +740,27 @@ look (no toggle). Both are pure render concerns:
   GameScreen captures the hero's own `swing`/`shot` events into a `PlayerAction`
   (matched to his position so a companion's blow is ignored), and `render.ts`
   `drawPlayer` poses the weapon layer via `weaponPose`.
+- **AND THE BODY GOES WITH IT — `WeaponPose.lean`.** Nobody swings a sword with
+  their arm alone, and a weapon that whips through an arc off a figure standing
+  perfectly still reads as a sprite being rotated NEXT TO a hero rather than as a
+  hero swinging it. So the same pose carries a roll of the WHOLE figure about its
+  feet, handed to `withStance` alongside the walk's own tip — the costume, the
+  armor, the weapon and the slash it throws all lean as one, and the weapon's own
+  `rot` composes on top of it exactly as an arm composes on top of a torso. It is
+  facing-RELATIVE (positive tips him toward whatever he is pointed at) while the
+  stance transform sits outside the mirror, so `drawHero` flips its sign for a
+  hero facing left; the walk's tip needs no such thing, a sway being symmetric.
+  The DIRECTION is the read, and it is one per class: **melee** leans back on the
+  wind-up and comes THROUGH the strike (riding the swing's own `lunge` signal, so
+  the lean is the same motion as the blade rather than a second animation running
+  beside it — a two-hander takes more of the body with it, and a `shake` weapon
+  presses in and holds instead, having no arc to follow); **ranged** goes the
+  OTHER WAY, rocked onto his heels by the muzzle's kick and settling forward
+  again, damped by the same brace a two-handed long gun's recoil is; **magic** is
+  the subtlest of the three — the staff comes up and his weight settles back
+  under it, a counterbalance rather than a blow. All of it is a few degrees: the
+  reference device is a phone, the hero is 16 px tall on it, and anything a
+  player would call a lean at desk distance is a stagger down there.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
   look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
