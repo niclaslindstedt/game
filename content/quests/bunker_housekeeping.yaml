@@ -6,11 +6,11 @@ name: HOUSEKEEPING
 lore: >
   The housekeeping units have stopped cleaning and begun patrolling, on a
   route the concierge did not authorise and does not recognise as a cleaning
-  route. Ten of them off it, recorded in the nightly report as scheduled
+  route. Forty of them off it, recorded in the nightly report as scheduled
   maintenance. The floors are, admittedly, no cleaner afterwards.
 offer:
   - - THE UNITS HAVE STOPPED CLEANING AND BEGUN PATROLLING. I DID NOT AUTHORISE THIS.
-  - - TEN, SIR. I WILL RECORD IT AS SCHEDULED MAINTENANCE.
+  - - FORTY, SIR. I WILL RECORD IT AS SCHEDULED MAINTENANCE.
 incomplete:
   - THEY ARE STILL PATROLLING. IT IS NOT A CLEANING ROUTE.
 complete:
@@ -19,7 +19,7 @@ complete:
 objectives:
   - kind: kill
     enemy: vacuum_bot
-    count: 10
+    count: 40
 reward:
   xpShare: 0.55
   coins: 180

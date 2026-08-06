@@ -5,12 +5,12 @@ order: 2
 name: HOUSE RULES
 lore: >
   The brawlers are scripted to fight at nine, and it has not been nine in
-  eleven years. Ten of them is how long it takes a room to go quiet enough
-  to clean, in a saloon whose barkeep has polished the same glasses every
-  night rather than admit the shift is over.
+  eleven years. Forty of them is how long it takes a room to go quiet
+  enough to clean, in a saloon whose barkeep has polished the same glasses
+  every night rather than admit the shift is over.
 offer:
   - - THE BRAWLERS ARE SCRIPTED TO FIGHT AT NINE. IT IS NOT NINE. IT HASN'T BEEN NINE IN ELEVEN YEARS.
-  - - TEN OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN.
+  - - FORTY OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN. IT'S A BIG ROOM.
 incomplete:
   - STILL BRAWLING. STILL NOT NINE.
 complete:
@@ -19,7 +19,7 @@ complete:
 objectives:
   - kind: kill
     enemy: saloon_brawler
-    count: 10
+    count: 40
 reward:
   xpShare: 0.5
   coins: 150

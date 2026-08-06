@@ -5,21 +5,21 @@ order: 2
 name: NOTHING BUT STATIC
 lore: >
   Something is sitting on the operator's band, and it is not weather — the
-  wraiths do it deliberately. Ten of them off the dust buys back a clean
+  wraiths do it deliberately. Forty of them off the dust buys back a clean
   carrier, the first since seventy-one, on a frequency with nobody listening
   at the far end of it.
 offer:
   - - SOMETHING'S SITTING ON MY BAND. NOT WEATHER. THE WRAITHS DO IT ON PURPOSE.
-  - - TEN OF THEM AND I GET MY CARRIER BACK.
+  - - FORTY OF THEM AND I GET MY CARRIER BACK. THEY'RE THICK OUT THERE.
 incomplete:
-  - STILL JAMMED. STILL TEN, MORE OR LESS.
+  - STILL JAMMED. STILL FORTY, MORE OR LESS.
 complete:
   - - CARRIER'S CLEAN. FIRST CLEAN CARRIER SINCE SEVENTY-ONE.
   - - THE SUIT LOCKER'S OPEN. TAKE WHAT FITS.
 objectives:
   - kind: kill
     enemy: wraith
-    count: 10
+    count: 40
 reward:
   xpShare: 0.45
   coins: 90

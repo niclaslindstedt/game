@@ -72,6 +72,18 @@ const MAP_EDGE_MARGIN = 32;
  */
 const CHOICE_WARN_CHARS = 34;
 
+/**
+ * THE FARM CEILING: the most generous `dropChance` a piece may carry before
+ * the author is asked whether its carrier is really a one-off.
+ *
+ * One in eight, and the smallness is what makes a fetch quest a hunt at all —
+ * this game's hero clears a hundred and seventy bodies in three minutes, so a
+ * piece falling off every second or third of them is a counter rather than an
+ * errand. Kept in step with `QUESTS.dropChance` in `src/game/config/quests.ts`,
+ * which is the rate a piece that names none actually rolls at.
+ */
+const FARM_DROP_CEILING = 0.125;
+
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isStr = (v) => typeof v === "string" && v.trim() !== "";
 const isVec = (v) =>
@@ -489,6 +501,24 @@ function checkQuestItem(
       item.dropChance > 1
     ) {
       err(`${what} dropChance must be in (0, 1]`);
+    } else {
+      // A GENEROUS RATE IS ONLY EVER RIGHT OFF A ONE-OFF. Which this is is a
+      // question about the MAP, not about the number: off an elite, a guardian,
+      // a bystander or a rampage-only hellborn the hero meets once, a certainty
+      // is the beat happening at all; off a breed the knots pour out by the
+      // hundred it is an errand that finishes before the player has read what
+      // it asked for. So the ceiling binds exactly the farmable carriers, and
+      // the exception needs no opt-in flag — the blueprint already says which
+      // breeds the horde is made of.
+      const farmed = hordeCarriers(item, questLevel, refs);
+      if (farmed.length > 0 && item.dropChance > FARM_DROP_CEILING) {
+        err(
+          `${what} dropChance ${item.dropChance} is above ${FARM_DROP_CEILING} ` +
+            `(one in ${Math.round(1 / FARM_DROP_CEILING)}) off ` +
+            `${farmed.join(", ")} — the horde is made of those, so the piece ` +
+            `would fall out faster than the errand can be read`,
+        );
+      }
     }
   }
   for (const [i, at] of (item.at ?? []).entries()) {
@@ -512,6 +542,24 @@ function checkQuestItem(
         `over — nothing would ever produce it`,
     );
   }
+}
+
+/**
+ * Which of a piece's carriers are breeds the horde is actually MADE of on the
+ * venue the errand is handed out on — the ones a drop rate is a farm rate for.
+ *
+ * A hub errand is carried across the campaign and its carriers live on whatever
+ * map the trail has reached, so it is checked against every horde at once.
+ * Empty when the pipeline was given no blueprints (a mod that ships none), which
+ * turns the rule off rather than firing it at everything.
+ */
+function hordeCarriers(item, questLevel, refs) {
+  if (!refs.hordeBreeds) return [];
+  const level = refs.hordeBreeds.get(questLevel);
+  const hub = !level || level.size === 0;
+  const horde = hub ? refs.anyHordeBreed : level;
+  if (!horde) return [];
+  return (item.dropFrom ?? []).filter((breed) => horde.has(breed));
 }
 
 function checkEscort(escort, what, refs, err, warn, questLevel) {

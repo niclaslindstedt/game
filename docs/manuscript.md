@@ -650,7 +650,7 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 **The ask:**
 
 1. THE WELDERS ARE THE PROBLEM. THE PEOPLE ARE JUST TIRED — THOSE THINGS LOOK UP.
-2. EIGHT OF THEM AND THE RACKS GO QUIET. I'VE COUNTED.
+2. FORTY OF THEM AND THE RACKS GO QUIET. I'VE COUNTED. TWICE.
 
 **Coming back short:**
 
@@ -701,12 +701,12 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 
 **The ask:**
 
-1. MY LAST ORDER IS FLOOR SAFETY. SIX CURRENT-MODEL UNITS ARE OPERATING OUTSIDE TOLERANCE.
+1. MY LAST ORDER IS FLOOR SAFETY. TWENTY CURRENT-MODEL UNITS ARE OPERATING OUTSIDE TOLERANCE.
 2. I MAY NOT DECOMMISSION THEM. YOU ARE NOT ME.
 
 **Coming back short:**
 
-- TOLERANCE STILL EXCEEDED. SIX WAS THE FIGURE.
+- TOLERANCE STILL EXCEEDED. TWENTY WAS THE FIGURE.
 
 **The handover:**
 
@@ -1001,11 +1001,11 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 **The ask:**
 
 1. SOMETHING'S SITTING ON MY BAND. NOT WEATHER. THE WRAITHS DO IT ON PURPOSE.
-2. TEN OF THEM AND I GET MY CARRIER BACK.
+2. FORTY OF THEM AND I GET MY CARRIER BACK. THEY'RE THICK OUT THERE.
 
 **Coming back short:**
 
-- STILL JAMMED. STILL TEN, MORE OR LESS.
+- STILL JAMMED. STILL FORTY, MORE OR LESS.
 
 **The handover:**
 
@@ -1350,7 +1350,7 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 **The ask:**
 
 1. THE SCOUTS DRIVE THROUGH MY BEDS. NOT MALICE — NOBODY PUT THE BEDS ON THEIR MAP.
-2. EIGHT OF THEM AND THE SURVIVORS WILL ROUTE ROUND.
+2. FORTY OF THEM AND THE SURVIVORS WILL ROUTE ROUND. THEY LEARN SLOWLY.
 
 **Coming back short:**
 
@@ -1393,7 +1393,7 @@ _A survey rover that drove itself into a drift eight months ago and has been pol
 **The ask:**
 
 1. MY RECOVERY REQUEST IS NUMBER FOUR THOUSAND ONE HUNDRED AND TEN.
-2. THE MINING UNITS ROUTE PAST AND DO NOT STOP. SIX OF THEM WOULD FREE THE LANE.
+2. THE MINING UNITS ROUTE PAST AND DO NOT STOP. TWENTY OF THEM WOULD FREE THE LANE.
 
 **Coming back short:**
 
@@ -1785,7 +1785,7 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 **The ask:**
 
 1. THE UNRAVELERS PULL THINGS APART. THAT'S WHAT TOOK THE OTHER TWO — I'VE DECIDED.
-2. TEN OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
+2. FORTY OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
 
 **Coming back short:**
 
@@ -2212,7 +2212,7 @@ _The saloon's barkeep hand, and the only machine in the park that noticed the gu
 **The ask:**
 
 1. THE BRAWLERS ARE SCRIPTED TO FIGHT AT NINE. IT IS NOT NINE. IT HASN'T BEEN NINE IN ELEVEN YEARS.
-2. TEN OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN.
+2. FORTY OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN. IT'S A BIG ROOM.
 
 **Coming back short:**
 
@@ -2259,7 +2259,7 @@ _The park's wardrobe mistress, human, on staff since the first season. She dress
 **The ask:**
 
 1. THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN. THAT'S EIGHT SEASONS OF WORK OUT THERE.
-2. EIGHT OF THEM. ONE PER SEASON. THAT'S FAIR.
+2. TWENTY OF THEM. I'VE COSTED IT BY THE SEASON. THAT'S FAIR.
 
 **Coming back short:**
 
@@ -2267,7 +2267,7 @@ _The park's wardrobe mistress, human, on staff since the first season. She dress
 
 **The handover:**
 
-1. EIGHT. MY LINES ARE MINE.
+1. TWENTY. MY LINES ARE MINE.
 2. I MADE THIS FOR A HAND WHO NEVER GOT A SCENE. IT'LL FIT YOU.
 
 #### A FITTING — offered once THE WARDROBE is handed in
@@ -2580,7 +2580,7 @@ _The residence's concierge unit, which has served no guest anything in four year
 **The ask:**
 
 1. THE UNITS HAVE STOPPED CLEANING AND BEGUN PATROLLING. I DID NOT AUTHORISE THIS.
-2. TEN, SIR. I WILL RECORD IT AS SCHEDULED MAINTENANCE.
+2. FORTY, SIR. I WILL RECORD IT AS SCHEDULED MAINTENANCE.
 
 **Coming back short:**
 

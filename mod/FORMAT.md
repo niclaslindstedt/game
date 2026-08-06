@@ -1345,7 +1345,7 @@ The four objective kinds:
 ```yaml
 - kind: kill # N of a breed; any kill counts, yours or a companion's
   enemy: mymod_crawler
-  count: 8
+  count: 40 # a real cull — this hero clears ~170 bodies in three minutes
 - kind: killNamed # one specific elite or boss
   enemy: mymod_warden
 - kind: collect # N of a token the quest defines below
@@ -1365,7 +1365,11 @@ items:
     name: SPARE FUSE
     icon: icon_manifest
     dropFrom: [mymod_crawler] # breeds that carry it
-    dropChance: 0.34 # optional; a long dry run drops for certain anyway
+    dropChance: 0.08 # optional; defaults to this, and a long dry run
+    #   drops for certain anyway (25 kills). Off a breed the map's `horde` is
+    #   MADE of, the build REFUSES anything above 0.125 — a piece that falls
+    #   out of every second body is a counter, not a hunt. Off a one-off
+    #   (an elite, a guardian, a hellborn) any rate is allowed, including 1.
     at: [{ x: 900, y: 300 }] # optional: pieces lying on the floor
 ```
 

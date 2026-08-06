@@ -174,6 +174,38 @@ the alive cap, thickens the batches and shortens the intervals, all bounded, and
 bounded again across every gate by `globalMaxAlive`. The mobs that come through
 belong to no venue's story, which is why they are their own roster.
 
+## What an errand costs — the farm rate and the top-up
+
+An errand is priced in KILLS, and the two shapes that ask for them are
+deliberately the same size of job. A `kill` objective asks for **40** of a breed
+the map's horde is thick with, or **20** of a scarce or heavy one. A `collect`
+objective's piece falls at `QUESTS.dropChance` — **0.08**, one in twelve and a
+half — with the pity floor at `QUESTS.dropPity` (25) forcing the tail, which
+comes to about eleven kills a piece: four pieces and a forty-kill cull cost the
+same walk.
+
+**The smallness of that rate is the whole rule.** A measured MEDIUM run of
+GOODCO HQ kills 176 monsters in three minutes, so an errand asking for eight of
+them, or for pieces falling off a third of them, was over before its offer box
+had been read twice. The build refuses anything above **0.125** off a breed the
+venue's blueprint `horde` is made of. It says nothing about a piece off a
+ONE-OFF — an elite, a guardian, a bystander, a rampage-only hellborn — where a
+certainty is correct and usually necessary: there is one of that mob, so the
+roll decides whether the beat happens at all rather than how long the hunt is.
+
+**And the horde is topped up to pay for it** (`src/game/quests/restock.ts`). A
+carved map drops `waves` entirely, so every monster the hero will ever fight is
+queued in a spawn point that drains exactly once — which is what lets a level be
+cleared, and what would make an errand accepted on already-swept ground sit at
+0/40 forever with nothing alive to count. Taking one therefore counts what the
+field can still deliver (alive, plus what the ordinary points still owe, times
+`QUESTS.restockHeadroom` because a queued mob in a room the hero never enters is
+not a met mob) and queues the shortfall into those points, bounded by
+`QUESTS.restockMax`. It is a shortfall top-up and not a stocking pass: on a map
+the hero has barely walked into it adds nothing, because a mob mix is a
+difficulty knob and an errand has no business re-tuning the venue it is asked
+on.
+
 ## Companions — the spare-or-kill verdict
 
 Beating a spareable unique to 0 hp pauses the run in the `choice` phase. **KILL**

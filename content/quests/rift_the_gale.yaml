@@ -5,12 +5,12 @@ order: 2
 name: THE GALE
 lore: >
   The unravelers pull things apart, and the keeper has decided that is what
-  took the other two. Ten of them brings nobody back and he knows it before
+  took the other two. Forty of them brings nobody back and he knows it before
   he asks. He would like it done anyway, and he is honest at the handover
   about not feeling any better for it.
 offer:
   - - THE UNRAVELERS PULL THINGS APART. THAT'S WHAT TOOK THE OTHER TWO — I'VE DECIDED.
-  - - TEN OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
+  - - FORTY OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
 incomplete:
   - STILL TOO MANY. THEY COME APART EASY ENOUGH.
 complete:
@@ -19,7 +19,7 @@ complete:
 objectives:
   - kind: kill
     enemy: unraveler
-    count: 10
+    count: 40
 reward:
   xpShare: 0.5
   coins: 130

@@ -30,6 +30,11 @@ items:
     name: A LIZARD GOD'S SCALE
     icon: icon_pried_scale
     dropFrom: [scaled_ancestor]
+    # CERTAIN, because the carrier is a rampage-only hellborn gated to JESUS —
+    # meeting one at all is the errand. A farm rate on a mob the hero may see
+    # once in a campaign is not a hunt, it is a lottery on a beat the story
+    # needs to happen.
+    dropChance: 1
 reward:
   xpShare: 1
   coins: 800

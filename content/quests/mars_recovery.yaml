@@ -7,11 +7,11 @@ lore: >
   A survey rover bogged to the hubs eight months ago has filed the same
   recovery request four thousand one hundred and ten times, on a frequency
   the colony stopped monitoring. The mining units route past its lane and do
-  not stop. Six of them clears the lane, and the request closes by other
+  not stop. Twenty of them clears the lane, and the request closes by other
   means.
 offer:
   - - MY RECOVERY REQUEST IS NUMBER FOUR THOUSAND ONE HUNDRED AND TEN.
-  - - THE MINING UNITS ROUTE PAST AND DO NOT STOP. SIX OF THEM WOULD FREE THE LANE.
+  - - THE MINING UNITS ROUTE PAST AND DO NOT STOP. TWENTY OF THEM WOULD FREE THE LANE.
 incomplete:
   - THE LANE IS STILL IN USE. REQUEST REMAINS OPEN.
 complete:
@@ -20,7 +20,7 @@ complete:
 objectives:
   - kind: kill
     enemy: mining_rover
-    count: 6
+    count: 20
 reward:
   xpShare: 0.4
   coins: 100
