@@ -290,6 +290,7 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "hayBalls",
       "introPage",
       "items",
+      "keepsakes",
       "lairs",
       "landmarks",
       "lastMenaceAttack",

@@ -142,7 +142,7 @@ const EMPTY_FOG = new Uint8Array(0);
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

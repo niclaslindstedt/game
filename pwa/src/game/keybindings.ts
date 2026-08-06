@@ -27,7 +27,8 @@ export type BindableAction =
   | "pause"
   | "medkit"
   | "stamina"
-  | "repair";
+  | "repair"
+  | "riftSeam";
 
 /** The live control scheme: one physical binding code per action. An empty
  * string means the action is unbound (a rebind cleared it off a key that got
@@ -67,6 +68,10 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   medkit: "KeyC",
   stamina: "KeyX",
   repair: "KeyV",
+  // TEAR A SEAM HOME. G for "go home" — a free key next to nothing that fires
+  // in a fight, because the one thing this must never be is a fat-finger away
+  // from a swing.
+  riftSeam: "KeyG",
 };
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
@@ -120,6 +125,11 @@ export const KEYBIND_ROWS: {
     label: "USE REPAIR KIT",
     blurb: "MEND EVERY WEAPON WITH A REPAIR KIT FROM THE DOCK",
   },
+  {
+    action: "riftSeam",
+    label: "TEAR A SEAM HOME",
+    blurb: "OPEN A WAY BACK TO THE GARAGE, WHEREVER YOU ARE STANDING",
+  },
 ];
 
 /** The steering directions, as unit vectors — the held keys whose sum is the
@@ -150,6 +160,7 @@ const DISCRETE_ACTIONS: BindableAction[] = [
   "medkit",
   "stamina",
   "repair",
+  "riftSeam",
 ];
 
 /** The steering vector a held binding code contributes, or null if the code
