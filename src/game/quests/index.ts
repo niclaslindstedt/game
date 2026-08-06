@@ -36,6 +36,7 @@
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 
 import { QUESTS } from "../config/index.ts";
+import { talkToGiverTree } from "../conversation.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import type { EnemyDef } from "../defs/enemies/index.ts";
 import {
@@ -357,6 +358,18 @@ export function talkToQuestGiver(
   const giver = state.questGivers.find((g) => g.id === giverId);
   if (!giver || !giver.discovered) return false;
   if (distance(hero.pos, giver.pos) > QUESTS.tapRadius) return false;
+
+  // A PERSON MAY OWE THE HERO A MEETING BEFORE THEY OWE HIM AN ERRAND
+  // (`QuestGiverDef.intro`). Until the tree's own flag is set, the tap opens
+  // the TREE and never the slate: an errand is a thing somebody asks of you,
+  // and being asked before you have been spoken to is what makes a giver read
+  // as a dispenser. The head mark is unchanged and still says `!`, because
+  // there genuinely is work here — the meeting is the first step of taking it,
+  // not a door in front of it.
+  const intro = questGiverDef(giverId).intro;
+  if (intro && state.questFlags[intro.until] !== true) {
+    return talkToGiverTree(state, hero, giverId, intro.conversation);
+  }
 
   // A TAP OPENS EVERYTHING THIS PERSON HAS — the pick list when that is more
   // than one thing, the single topic when it is one. It is the answer to the

@@ -18,6 +18,7 @@ import {
   advanceQuestDialogue,
   closeQuestDialogue,
   closeQuestLog,
+  closeTalk,
   createGame,
   declineQuest,
   dismissIntro,
@@ -27,6 +28,7 @@ import {
   openQuestLog,
   pauseGame,
   pickQuestTopic,
+  pickTalkChoice,
   QUESTS,
   questXpReward,
   registerDefs,
@@ -37,6 +39,7 @@ import {
   talkToQuestGiver,
   trackedQuests,
   turnInQuest,
+  type ConversationDef,
   type GameState,
   type QuestDef,
   type QuestGiverDef,
@@ -725,6 +728,107 @@ describe("the progress announcement", () => {
 function isProgress(event: GameState["events"][number]): boolean {
   return event.type === "questProgress";
 }
+
+// ------------------------------ the meeting a giver may owe before the slate
+
+const MEET_AT = { x: 400, y: 1320 };
+
+const MEET_GIVERS: Record<string, QuestGiverDef> = {
+  meet_giver: {
+    id: "meet_giver",
+    level: "test_level",
+    name: "MEET GIVER",
+    sprite: "test_giver",
+    at: MEET_AT,
+    lore: "A synthetic civilian who says hello before they ask for anything.",
+    intro: { conversation: "test_meeting", until: "test_met" },
+  },
+};
+
+const MEET_QUESTS: Record<string, QuestDef> = {
+  meet_errand: {
+    id: "meet_errand",
+    level: "test_level",
+    giver: "meet_giver",
+    name: "MEET ERRAND",
+    lore: "A synthetic errand nobody may be offered before saying hello.",
+    offer: [["NOW THAT WE'VE SPOKEN."]],
+    complete: [["THANK YOU."]],
+    objectives: [{ kind: "kill", enemy: "test_minion", count: 1 }],
+    reward: { coins: 5 },
+  },
+};
+
+const MEETING: ConversationDef = {
+  id: "test_meeting",
+  start: "hello",
+  nodes: [
+    {
+      id: "hello",
+      say: ["WE HAVEN'T MET."],
+      choices: [{ text: "WE HAVE NOW.", sets: ["test_met"] }],
+    },
+  ],
+};
+
+describe("a giver who owes the hero a meeting first", () => {
+  beforeEach(() =>
+    registerDefs({
+      quests: MEET_QUESTS,
+      questGivers: MEET_GIVERS,
+      conversations: { [MEETING.id]: MEETING },
+    }),
+  );
+
+  /** A run with the meeting fixtures up and the hero beside that giver. */
+  function meetingRun(): GameState {
+    const state = startGame();
+    state.players[0].pos = { x: MEET_AT.x - 20, y: MEET_AT.y };
+    walkUp(state);
+    return state;
+  }
+
+  it("opens the CONVERSATION on the first tap, not the errand", () => {
+    const state = meetingRun();
+    // The mark is unchanged: there genuinely is work here, and the meeting is
+    // the first step of taking it rather than a door in front of it.
+    expect(giverMark(state, "meet_giver")).toBe("offer");
+    expect(talkToQuestGiver(state, state.players[0], "meet_giver")).toBe(true);
+    expect(state.talk?.defId).toBe("test_meeting");
+    expect(state.talk?.speaker).toMatchObject({
+      kind: "giver",
+      id: "meet_giver",
+      name: "MEET GIVER",
+    });
+    // ...and the errand is nowhere: an offer that opened underneath the
+    // meeting would be the giver asking before saying hello.
+    expect(state.questOffer).toBeNull();
+    expect(state.players[0].screen).toBe("talk");
+  });
+
+  it("opens the errand on the tap after the meeting is had", () => {
+    const state = meetingRun();
+    talkToQuestGiver(state, state.players[0], "meet_giver");
+    // The one row sets the flag and ends the talk.
+    expect(pickTalkChoice(state, state.players[0], 0)).toBe(true);
+    expect(state.talk).toBeNull();
+    expect(state.questFlags["test_met"]).toBe(true);
+
+    expect(talkToQuestGiver(state, state.players[0], "meet_giver")).toBe(true);
+    expect(state.questOffer?.questId).toBe("meet_errand");
+    expect(state.questOffer?.kind).toBe("offer");
+  });
+
+  it("plays the meeting again for a hero who walked away mid-talk", () => {
+    const state = meetingRun();
+    talkToQuestGiver(state, state.players[0], "meet_giver");
+    closeTalk(state, state.players[0]);
+    expect(state.talk).toBeNull();
+    // Nothing was set, so nothing is retired — she is still mid-sentence.
+    expect(talkToQuestGiver(state, state.players[0], "meet_giver")).toBe(true);
+    expect(state.talk?.defId).toBe("test_meeting");
+  });
+});
 
 describe("a run with no errands", () => {
   it("carries an empty quest system without any special case", () => {

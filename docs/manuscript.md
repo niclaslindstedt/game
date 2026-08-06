@@ -269,18 +269,68 @@ campaign-long one (`campaign: true`): three errands, one per leg of the trail,
 each asking for something of her daughter's — and she is never once scared for
 Ada, only proud._
 
-**On being spoken to** (and the header of her errand list):
+#### SHE LET HERSELF IN — the meeting, played before the errands
+
+_The first tap on Ruth is a conversation the player steers
+(`content/conversations/ruth_arrival.yaml`), not an offer page; her errand list
+opens from the tap after it. Nothing in it can be lost — she is the one person
+in the game on the hero's side without being asked — so what the branches buy
+is which of her he meets. All three converge on the ask, and on none of them is
+she scared for Ada._
+
+**She has arrived.**
+
+> I LET MYSELF IN. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
+> THEY RANG AT MIDNIGHT. I CAME STRAIGHT OUT.
+
+— _WHO RANG?_
+
+> A WOMAN WITH A SCRIPT. 'AN INCIDENT INVOLVING A NON-EMPLOYEE.' NOT HER NAME.
+> THEN A CASE NUMBER. HAD I ANY QUESTIONS.
+
+— _WHAT DID YOU ASK?_
+
+> HER NAME. THE WOMAN WASN'T PERMITTED TO CONFIRM IT.
+> SO I PUT THE PHONE DOWN AND DROVE OUT HERE INSTEAD.
+
+— _YOU DIDN'T HAVE TO COME._
+
+> HOME IS A PHONE ON A TABLE. I'VE HAD FOUR HOURS OF THAT.
+> I'D RATHER SIT WITH THE ENGINE PARTS. THEY'RE GOING SOMEWHERE.
+
+— _WERE YOU SCARED?_
+
+> NO. NOT FOR HER. I RAISED HER.
+> I'VE BEEN SORRY FOR WHOEVER HAS HER SINCE MIDNIGHT.
+
+— _I'M GOING AFTER HER._
+
+> I KNOW. THE SHIP'S A PART SHORT AND YOU'RE GOING ANYWAY.
+> I'VE NEVER HAD TO ARGUE WITH YOU ABOUT THAT ONE.
+
+**The ask every branch arrives at.**
+
+> SO. YOU'RE GOING WHERE I CAN'T, AND I WON'T SIT HERE USELESS.
+> WHEN YOU'RE OUT THERE — BRING ME SOMETHING OF HERS.
+
+— _SOMETHING OF HERS?_
+
+> NOT A REPORT. NOT A PHOTOGRAPH. SOMETHING SHE HELD.
+> I'LL KNOW IT WHEN IT'S IN MY HAND.
+
+**On being spoken to afterwards** (and the header of her errand list):
 
 - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-- WHEN YOU'RE OUT THERE — BRING ME SOMETHING OF HERS.
+- I'VE HAD ANOTHER THINK ABOUT WHAT TO ASK YOU FOR.
 
 #### THE RECEIPT
 
 **The ask:**
 
-1. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
-2. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
-3. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
+1. I SAID SOMETHING OF HERS. I'VE BEEN SITTING HERE DECIDING WHAT.
+2. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
+3. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
+4. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
 
 **Coming back short:**
 
@@ -2747,8 +2797,9 @@ is the only honest thing available to him._
 > The game's one CAMPAIGN chain: nine errands across all five venues, carried on
 > the hero rather than on the run. Its final link is offered on JESUS alone,
 > because the level cap it asks for is only reachable there. Data:
-> `content/quests/sev_*.yaml`, `content/quest-givers.yaml`, and the three
-> conversation trees under `content/conversations/`.
+> `content/quests/sev_*.yaml`, `content/quest-givers.yaml`, and three of the
+> conversation trees under `content/conversations/` (the fourth is RUTH's
+> arrival, transcribed with her own errands above).
 
 ### WALTER PRICE — severance processing, GOODCO HQ
 
@@ -3045,6 +3096,7 @@ at the top of this file).
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                       |
 | Quest givers' greetings + farewells                          | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                                        |
 | Every errand's ask, nag and handover                         | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                               |
+| A talk the player STEERS (speaker lines + the hero's rows)   | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)  |
 | The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                     |
 | Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                        |
 | Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                                                                    |
