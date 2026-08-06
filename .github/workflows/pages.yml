@@ -69,6 +69,14 @@ env:
   # `CHARACTER_SIGNING_KEY` repo secret to rotate it. Inherited by every build
   # step (preview / root / branch) since Vite only reads VITE_-prefixed vars.
   VITE_CHARACTER_SIGNING_KEY: ${{ secrets.CHARACTER_SIGNING_KEY }}
+  # Where EXTRAS -> COMMUNITY sends a player: the chat server the players keep.
+  # A repo VARIABLE rather than a secret — the invite is printed on the page for
+  # anyone to click, so there is nothing to hide — and not a hardcoded constant,
+  # because chat invites expire and a leaked one gets spammed, so it has to be
+  # rotatable without a commit. Set it under Settings -> Secrets and variables
+  # -> Actions -> Variables. A build without it simply does not offer the row
+  # (see pwa/vite.config.ts and the EXTRAS builder).
+  COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
 
 jobs:
   build:

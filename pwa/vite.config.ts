@@ -88,6 +88,18 @@ export default defineConfig({
     __SUPPORT_EMAIL__: JSON.stringify(
       process.env.SUPPORT_EMAIL ?? "support-address-not-configured",
     ),
+    // Where the EXTRAS -> COMMUNITY row sends a player: the chat server the
+    // players keep. Supplied by the `COMMUNITY_URL` repo variable through the
+    // Pages workflow rather than hardcoded, so the invite can be rotated (they
+    // expire, and a leaked one gets spammed) without a commit.
+    //
+    // EMPTY IS THE MEANINGFUL DEFAULT, not a placeholder: unlike the support
+    // address — which is printed as prose and is better wrong-and-visible than
+    // missing — this one is a destination, and a row leading to a dead link is
+    // worse than no row. The builder drops it when this is empty (see
+    // `menus-main.ts`), which is also what a fork with no server of its own
+    // gets.
+    __COMMUNITY_URL__: JSON.stringify(process.env.COMMUNITY_URL ?? ""),
   },
   plugins: [
     react(),

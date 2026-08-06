@@ -1,0 +1,30 @@
+name: icon_menu_community
+family: icons
+size: [12, 12]
+description: >
+  Two speech bubbles in conversation: a small shaded one set back at the top
+  right, and a larger lit one in front below it with its tail tapering off to
+  the left — the COMMUNITY row's marker.
+subject:
+  kind: UI icon
+  features: two rounded speech bubbles set diagonally, the far one small and in
+    shadow, the near one larger and brightly lit with a tapering tail
+  accent: pale glass, the nearer bubble brightest
+  flavor: other players, talking
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#dfe6f2" # the near bubble, lit
+  V: "#9095a5" # the far bubble, set back
+grid: |
+  .......OOOOO
+  .......OVVVO
+  .......OVVVO
+  .......OVOOO
+  ........O...
+  OOOOOOOO....
+  OTTTTTTO....
+  OTTTTTTO....
+  OTTTTTTO....
+  OOTOOOOO....
+  .OTO........
+  ..O.........

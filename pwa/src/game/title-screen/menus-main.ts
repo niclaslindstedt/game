@@ -140,6 +140,26 @@ export function buildExtrasMenu(ctx: MenuContext): MenuEntry[] {
         }),
         href: `${import.meta.env.BASE_URL}library/`,
       },
+      // The chat server the players keep. An `href` like LIBRARY above, but
+      // pointed OFF this origin, so the two shells hand it to the player's own
+      // browser rather than steering their game window onto a web page it has
+      // no chrome to leave (electron/src/main.ts's `will-navigate`,
+      // native/App.tsx's `onShouldStartLoadWithRequest`).
+      //
+      // ABSENT when the build was given no address (see `__COMMUNITY_URL__`).
+      // The invite lives in a repo variable because those links expire and get
+      // spammed, so it has to be rotatable without a commit — and a build that
+      // was never told where the players are has nowhere to send them. Absent
+      // beats a row that leads to a dead link.
+      community: __COMMUNITY_URL__
+        ? {
+            ...actionRow("extras", "community", () => {
+              playUiSound(synth, "start");
+            }),
+            href: __COMMUNITY_URL__,
+            external: true,
+          }
+        : null,
     }),
     backRow(ctx, "extras"),
   ];

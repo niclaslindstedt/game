@@ -2073,6 +2073,20 @@ so the bar spans the viewport, and the section nav is the one element on these
 pages allowed to scroll sideways — inside its own box, and only once it has
 already dropped to a line of its own, so the PAGE never carries the overflow.
 
+**A link OFF the site is the opposite case, and never enters the shell at all.**
+The EXTRAS -> COMMUNITY row leads to the chat server the players keep, which
+neither shell serves and neither can offer a way back from — a `BACK TO GAME`
+header is the library's to carry because the library is ours. So both shells
+intercept the navigation and hand the URL to the player's own browser instead:
+`will-navigate` / `setWindowOpenHandler` on the desktop
+(`electron/src/main.ts`), `onShouldStartLoadWithRequest` on the phone
+(`native/App.tsx`, judging with `native/src/navigation.ts`). Same rule on the
+website, where the row is a `target="_blank"` anchor: whatever the surface, a
+run lives in the game's document, and steering that document at a chat invite
+would throw the run away. The address itself is not in the source — it is the
+`COMMUNITY_URL` repo variable (`docs/configuration.md`), because invites expire,
+and a build never given one simply does not offer the row.
+
 ### The library's two picture surfaces
 
 Every bestiary and arsenal page carries two generated images, and they are
