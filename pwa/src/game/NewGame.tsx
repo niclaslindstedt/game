@@ -43,6 +43,12 @@ import { playUiSound } from "./sfx/ui.ts";
  * The input holds the text VERBATIM — the uppercase look is the display's job
  * (`heroNameDisplay`) and the uppercase name is minted on submit. Rewriting the
  * value on every keystroke would break iOS autocomplete: see hero-name.ts.
+ *
+ * Every edit that lands ticks the letter-print blip — the same `ui_blip` the
+ * dialogue crawl prints its characters with — so naming a hero sounds like the
+ * game typing his name out. A rubbed-out character ticks too: the sound marks a
+ * KEYSTROKE THAT CHANGED THE FIELD, not a glyph appearing, which is why
+ * backspace is voiced and a keypress against the full name budget is not.
  */
 function PixelNameInput({
   font,
@@ -90,7 +96,13 @@ function PixelNameInput({
         spellCheck={false}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        onChange={(e) => onChange(clampHeroName(e.target.value))}
+        onChange={(e) => {
+          const next = clampHeroName(e.target.value);
+          // `clampHeroName` hands a fitting edit straight back, so a keypress
+          // against the full budget compares equal here and stays silent.
+          if (next !== value) playUiSound(synth, "blip");
+          onChange(next);
+        }}
         onKeyDown={(e) => {
           // The Enter that names the hero is SPENT HERE. Submitting mints the
           // hero and hands the screen to the title's difficulty ladder, whose
