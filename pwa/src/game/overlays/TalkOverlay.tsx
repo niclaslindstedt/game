@@ -189,21 +189,31 @@ export function TalkOverlay({
     <div className="game-overlay quest-overlay" role="presentation">
       <div className="quest-box">
         <div className="quest-banner">
-          <PixelText text="TALKING" font={font} scale={2} color="#3a2a10" />
+          {/* THE BANNER IS THE QUEST BOX'S GOLD (#ffd75e), not a shade of its
+              own. It was authored at #3a2a10 — a brown a step or two off the
+              parchment wash behind it — which on a phone in daylight was a word
+              you had to hunt for above a box that reads instantly. */}
+          <PixelText text="TALKING" font={font} scale={2} color="#ffd75e" />
         </div>
 
+        {/* THE FACE STANDS BESIDE THE SPEECH, exactly as the errand box's does:
+            the portrait is `.quest-vn`'s own first child, so the name and the
+            lines share one column to its right. Nesting it inside
+            `.quest-speaker` instead stacked the name UNDER the face on the flex
+            column's 0.4rem gap — half the air the box gives anything else, and
+            a layout the sibling gold box did not share. */}
         <div className="quest-vn">
+          <SpritePortrait
+            src={bustSrc(assets.sprites, talk.speaker.sprite)}
+            frameClass="quest-portrait-frame"
+          />
           <div className="quest-content">
             <div className="quest-speaker">
-              <SpritePortrait
-                src={bustSrc(assets.sprites, talk.speaker.sprite)}
-                frameClass="quest-portrait-frame"
-              />
               <PixelText
                 text={talk.speaker.name}
                 font={font}
                 scale={TEXT_SCALE}
-                color="#f4e2b0"
+                color="#c9a95c"
               />
             </div>
             {/* Tapping the LINES pages forward (or skips the crawl); tapping a
@@ -270,7 +280,17 @@ export function TalkOverlay({
                 advance();
               }}
             >
-              {done ? "NEXT" : "SKIP"}
+              {/* THE LABEL IS PIXEL ART, like every other button in the game —
+                  the cutscene's own SKIP, the errand box's ACCEPT / DECLINE.
+                  Left as a bare text node it fell through to the page's UI
+                  font, so the one control on the box was the one thing on it
+                  not written in the game's own letters. */}
+              <PixelText
+                text={done ? "NEXT" : "SKIP"}
+                font={font}
+                scale={2}
+                color="#f6e3b0"
+              />
             </button>
           </div>
         )}

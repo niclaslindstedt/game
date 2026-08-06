@@ -72,6 +72,54 @@ export function drawWorldSprite(
 }
 
 /**
+ * Draw the TOP `keep` fraction of a piece of the level's furniture, its top edge
+ * pinned exactly where the whole piece's is — the roll-up garage door's slat
+ * retracting into the block above it (render/effects.ts).
+ *
+ * It lives HERE rather than in the effect for the reason the module exists: an
+ * effect that redraws an obstacle the engine has already dropped has to answer
+ * the plane question the same way the obstacle pass answered it a frame earlier.
+ * A raw blit stood the door's slats upright for the second they were opening —
+ * the door flipped up off the floor, rolled, and the wall run it was hung in
+ * stayed lying down beside it.
+ *
+ * IN SCREEN SPACE, like `drawFloorDecal` below and unlike `drawWorldSprite`
+ * above: the effects pass is not inside the world transform (it seats its own
+ * draws on `bodyAnchor*` and reaches for `applyWorldProjection` per effect), so
+ * billboarding here would counter-transform art that was never projected and
+ * fling the whole door off across the map — invisibly at yaw 0, where the
+ * projection is the identity and the mistake costs nothing.
+ */
+export function drawWorldSpriteTop(
+  ctx: CanvasRenderingContext2D,
+  name: string,
+  sprite: ImageBitmap,
+  pos: { x: number; y: number },
+  camera: { x: number; y: number },
+  keep: number,
+): void {
+  const art = isFloorPlaneSprite(name) ? flatSprite(sprite, name) : sprite;
+  if (!art) return;
+  const h = Math.max(
+    1,
+    Math.round(art.height * Math.min(1, Math.max(0, keep))),
+  );
+  const ax = bodyAnchorX(pos.x, pos.y, camera.x, camera.y);
+  const ay = bodyAnchorY(pos.x, pos.y, camera.x, camera.y);
+  ctx.drawImage(
+    art,
+    0,
+    0,
+    art.width,
+    h,
+    ax - Math.round(art.width / 2),
+    ay - Math.round(art.height / 2),
+    art.width,
+    h,
+  );
+}
+
+/**
  * A FLOOR DECAL — art the FIGHT left on the ground rather than furniture the
  * level was built with: the blood grid's tiles and the boot prints tracked out
  * of them. Centred on a world point, in SCREEN space.

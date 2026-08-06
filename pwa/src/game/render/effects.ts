@@ -35,6 +35,7 @@ import {
   SWING_STRIKE_END,
   SWING_WINDUP_END,
 } from "./player.ts";
+import { drawWorldSpriteTop } from "./plane.ts";
 import { drawPowerupBurst } from "./powerup-bursts.ts";
 import type { AbilityLook, BossAbilityId } from "@game/core";
 import type { PowerupStyle } from "../powerup-fx.ts";
@@ -818,10 +819,12 @@ function drawEffectPass(
       // edge), eased to start slow like a chain drive taking up and faded over
       // the last pixels so nothing pops.
       //
-      // Each block is drawn on the obstacle pass's own anchor — CENTRED on its
-      // world point (render/plane.ts), not standing its feet on it, which is
-      // what an effect does. Getting that wrong slides the whole door half a
-      // block up the doorway the instant it starts moving.
+      // Each block is drawn through the obstacle pass's own door
+      // (`drawWorldSpriteTop`, render/plane.ts): CENTRED on its world point
+      // rather than standing its feet on it, which is what an effect does —
+      // getting that wrong slides the whole door half a block up the doorway
+      // the instant it starts moving — and on the plane its ART asks for, so
+      // the slats keep lying in the wall run they are hung in.
       const duration = effect.durationMs ?? GARAGE_DOOR_MS;
       const age = duration - (effect.untilMs - timeMs);
       const slab = spriteByName(assets.sprites, effect.sprite ?? "garage_door");
@@ -847,20 +850,14 @@ function drawEffectPass(
           if (t >= 1) continue;
           const eased = t * t * (3 - 2 * t);
           const keep = 1 - eased;
-          const h = Math.max(1, Math.round(slab.height * keep));
-          const ax = bodyAnchorX(wx, wy, camera.x, camera.y);
-          const ay = bodyAnchorY(wx, wy, camera.x, camera.y);
           ctx.globalAlpha = Math.min(1, keep * 3);
-          ctx.drawImage(
+          drawWorldSpriteTop(
+            ctx,
+            effect.sprite ?? "garage_door",
             slab,
-            0,
-            0,
-            slab.width,
-            h,
-            ax - Math.round(slab.width / 2),
-            ay - Math.round(slab.height / 2),
-            slab.width,
-            h,
+            { x: wx, y: wy },
+            camera,
+            keep,
           );
         }
         ctx.restore();
