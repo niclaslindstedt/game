@@ -358,6 +358,7 @@ export {
   lookupTicketIndex,
   stackCapOf,
   hasStackRoom,
+  inventoryRoomFor,
   equipmentMaxDurability,
   equipmentName,
   itemQuote,
@@ -534,6 +535,7 @@ export {
   repairGear,
   sellItem,
   sellValue,
+  stockBuyableCount,
   stockName,
   type BuybackRefusal,
 } from "./game/merchant.ts";
@@ -860,6 +862,7 @@ export type { BalanceTuning } from "./game/tuning.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  abilityBankRoom,
   abilityPowerScale,
   canBankAbility,
   discardHeldAbility,
