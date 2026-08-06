@@ -227,7 +227,7 @@ On top of the web game it adds the things a browser can't give iOS:
   `deviceSettingsProvider()`. Nothing above that file changes.
 
 - **Developer tooling is stripped from the store build only.** The website's
-  hidden DEVELOPER surfaces — the seven-tap sun reveal (`use-sun-charge.ts`),
+  hidden DEVELOPER surfaces — the sixteen-tap sun reveal (`use-sun-charge.ts`),
   the DEVELOPER menu behind it (warp, BOT VIEW, arsenal, effects gallery,
   BALANCE knobs, DEBUG MODE, FORCE STORE) and the commit hash beside the version
   in the title footer — ship in **every** build except the one uploaded to the

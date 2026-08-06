@@ -200,7 +200,7 @@ Two things make the `production` profile different from every other build, and
   exercise the whole purchase flow without spending money.
 - `VITE_DEV_TOOLS=off` (passed by `scripts/bundle-web.mjs` when it bundles the
   site for the `production` profile) strips the **developer tooling** out of the
-  embedded website: the hidden seven-tap sun reveal, the whole DEVELOPER menu
+  embedded website: the hidden sixteen-tap sun reveal, the whole DEVELOPER menu
   tree behind it, and the commit hash beside the version in the title footer.
   `testflight` and every other profile keep them.
 

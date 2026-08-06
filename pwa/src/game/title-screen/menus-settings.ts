@@ -82,8 +82,8 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
       gore: nsfwAllowed() ? navRow(ctx, "settings", "gore") : null,
       audio: navRow(ctx, "settings", "audio"),
       data: navRow(ctx, "settings", "data"),
-      // Hidden until the secret sun gesture unlocks it (seven quick taps on the
-      // title sun to arm it, then the click race — see use-sun-charge.ts); once
+      // Hidden until the secret sun gesture unlocks it (sixteen quick taps on
+      // the title sun to arm it, then the click race — see use-sun-charge.ts); once
       // found it stays put across launches (persisted via `developerUnlocked`).
       // A production store build ships no developer tooling at all, so the row
       // folds away with it at build time (see `__DEV_TOOLS__`).

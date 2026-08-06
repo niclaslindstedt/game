@@ -2548,13 +2548,15 @@ html.app-locked body {
 }
 
 /* ---------------------------------------------------------------------------
-   The hidden developer gesture: SEVEN QUICK TAPS ON THE SUN.
+   The hidden developer gesture: SIXTEEN QUICK TAPS ON THE SUN.
    ---------------------------------------------------------------------------
-   Six taps wind the star up (--sun-charge, 0..1) and the seventh blows it
-   apart. The build-up must be a SECRET: at tap 1 nothing happens at all, at
-   tap 2 you'd only catch it if you knew where to look, and only from tap 3 on
-   does it plainly start to show. Each layer keeps its own threshold in the
-   ramp, so they arrive one at a time rather than all fading up together. */
+   The first TEN taps are answered by nothing whatsoever — the charge layers
+   below are not even mounted for them (use-sun-charge.ts). Taps 11-15 wind the
+   star up (--sun-charge, 0..1) and the sixteenth arms the race that blows it
+   apart. The build-up must be a SECRET: at tap 11 you'd only catch it if you
+   knew where to look, and only from tap 12 on does it plainly start to show.
+   Each layer keeps its own threshold in the ramp, so they arrive one at a time
+   rather than all fading up together. */
 
 /* The disc itself: it brightens, swells, warms toward white-hot, and starts to
    shake — all of it scaled by the charge, so the first taps move it by
@@ -2720,7 +2722,7 @@ html.app-locked body {
 }
 
 /* ---------------------------------------------------------------------------
-   …and the seventh tap arms THE CLICK RACE.
+   …and the sixteenth tap arms THE CLICK RACE.
    ---------------------------------------------------------------------------
    The star is now being fed: a press every 250 ms banks real time and the disc
    SWELLS with the bank; miss the beat and it drains — and shrinks — half again
@@ -2802,7 +2804,7 @@ html.app-locked body {
   }
 }
 
-/* The spokes spin up past anything the seven taps reach, and the second set of
+/* The spokes spin up past anything the taps reach, and the second set of
    hard lens spikes burns out to white with them. */
 .title-sun.racing::before {
   animation-duration: calc(2.6s / (1 + var(--sun-race) * 6));

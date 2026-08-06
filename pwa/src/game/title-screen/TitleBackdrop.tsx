@@ -2,11 +2,13 @@
 // The title sky: the starfield, the drifting asteroids and twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
 // frame by title-sky.ts), and the SUN's detonation — the payoff of the hidden
-// developer gesture (seven quick taps ARM the sun, then a five-second CLICK
-// RACE at tempo swells it until it lets go; the counting, the beat and the
-// frame loop all live in use-sun-charge.ts / sun-race.ts). Every layer is
-// aria-hidden and nothing here is a pointer target: the gesture hit-tests the
-// sun's rect instead, so a press on the menu above it is never swallowed.
+// developer gesture (sixteen quick taps ARM the sun, the first ten of them in
+// total silence, then a five-second CLICK RACE at tempo swells it until it lets
+// go; the counting, the beat and the frame loop all live in use-sun-charge.ts /
+// sun-race.ts, which also drop the whole gesture from a build with no developer
+// tooling). Every layer is aria-hidden and nothing here is a pointer target:
+// the gesture hit-tests the sun's rect instead, so a press on the menu above it
+// is never swallowed.
 
 import {
   useCallback,
@@ -69,7 +71,8 @@ export function TitleBackdrop({
   onDetonated,
 }: {
   /** Watch for the hidden gesture at all: false once the DEVELOPER menu is
-   * unlocked, so the secret is spent rather than replayable. */
+   * unlocked, so the secret is spent rather than replayable. A build without
+   * the developer tooling ignores it and never watches. */
   armed: boolean;
   /** The click race was held to the top — TitleScreen flips `detonate`. */
   onCharged: () => void;
@@ -139,10 +142,11 @@ export function TitleBackdrop({
     });
   }, []);
 
-  // The hidden developer gesture: seven quick taps ARM the sun, then the click
-  // race swells it. The charge drives the build-up below; the race writes its
-  // own two ramps (`--sun-race`, `--sun-tempo`) straight onto the sun and the
-  // glare each frame, which is why neither is a prop here — they move sixty
+  // The hidden developer gesture: sixteen quick taps ARM the sun — the first
+  // ten of them buying nothing at all — then the click race swells it. The
+  // charge drives the build-up below; the race writes its own two ramps
+  // (`--sun-race`, `--sun-tempo`) straight onto the sun and the glare each
+  // frame, which is why neither is a prop here — they move sixty
   // times a second and must not re-render the ten flames and eight embers to do
   // it. Holding the race to the top reports up to TitleScreen, which flips
   // `detonate`.
@@ -239,8 +243,9 @@ export function TitleBackdrop({
       {/* Easter egg sun: it sits still at the centre of the sky while the
           planets wheel around it. Driven by title-sky.ts; the CSS is just the
           look. It is also the hidden developer gesture's target — `--sun-charge`
-          (0..1) winds its glare, its fire and its shaking up tap by tap, and the
-          seventh tap arms the CLICK RACE, whose `--sun-race` swells the disc
+          (0..1) winds its glare, its fire and its shaking up tap by tap from the
+          eleventh on, and the sixteenth tap arms the CLICK RACE, whose
+          `--sun-race` swells the disc
           while the beat is kept (and shrinks it half again as fast when it is
           dropped) until the star lets go. */}
       <div
@@ -249,11 +254,11 @@ export function TitleBackdrop({
         style={chargeStyle}
         aria-hidden="true"
       >
-        {/* The build-up, mounted only while the gesture is being played (and
-            through its ebb). Every layer's opacity ramps off --sun-charge with
-            its own threshold, so the first tap shows NOTHING, the second is a
-            breath of extra glare, and the fire only starts licking from the
-            third. */}
+        {/* The build-up, mounted only once a tap has actually woken the star
+            (and through its ebb) — the silent ten mount nothing at all. Every
+            layer's opacity ramps off --sun-charge with its own threshold, so
+            the eleventh tap is a breath of extra glare and the fire only starts
+            licking from the twelfth. */}
         {lit && (
           <>
             <span className="title-sun-flares" />

@@ -351,9 +351,10 @@ export type GameSettings = {
    * keep their values while muted, so unmuting restores them exactly. */
   muted: MuteMode;
   /** The DEVELOPER menu is hidden until the secret gesture blows the title sun
-   * up — seven quick taps ARM it, then a five-second click race at tempo swells
-   * it until it lets go (see title-screen/use-sun-charge.ts); this latches that
-   * unlock so the menu stays available across launches once discovered. */
+   * up — sixteen quick taps ARM it (the first ten answered by nothing at all),
+   * then a five-second click race at tempo swells it until it lets go (see
+   * title-screen/use-sun-charge.ts); this latches that unlock so the menu stays
+   * available across launches once discovered. */
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
   debug: DebugMode;
