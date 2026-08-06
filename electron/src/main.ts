@@ -30,6 +30,7 @@ import {
   screen,
   shell,
 } from "electron";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -62,6 +63,12 @@ import {
   type ScoresEvent,
   type ScoresRequest,
 } from "./leaderboards";
+import {
+  createShotsBridge,
+  type ShotsBridge,
+  type ShotsEvent,
+  type ShotsRequest,
+} from "./screenshots";
 import {
   APP_ORIGIN,
   APP_SCHEME,
@@ -268,6 +275,7 @@ type BridgeMessage = {
   __gisScores?: boolean;
   __gisMods?: boolean;
   __gisNet?: boolean;
+  __gisShots?: boolean;
   __gisQuit?: boolean;
 };
 
@@ -346,6 +354,7 @@ let achievements: AchievementsBridge | null = null;
 let scores: ScoresBridge | null = null;
 let mods: ModsBridge | null = null;
 let net: NetBridge | null = null;
+let shots: ShotsBridge | null = null;
 
 /**
  * Call one of the page's `window.__gis*Event(...)` callbacks.
@@ -419,6 +428,22 @@ function routeMessage(window: BrowserWindow, raw: string): void {
       emit(window, "__gisNetEvent", event),
     );
     net.handle(data as NetRequest);
+  }
+  if (data.__gisShots) {
+    // SCREENSHOTS — a picture the game took, filed to the player's own
+    // pictures folder (and, on `share`, put on the clipboard with the file
+    // manager opened on it). Ungated: taking a picture of a game is not a
+    // capability anybody sells, and the folder is the player's own.
+    shots ??= createShotsBridge(
+      (event: ShotsEvent) => emit(window, "__gisShotsEvent", event),
+      {
+        folder: join(app.getPath("pictures"), APP_DIR_NAME),
+        // Steam's own screenshot key is filing its own copy whenever the
+        // overlay is in — see screenshots-provider.ts.
+        steamOverlay: STEAM_ENABLED && steamOverlayWanted(),
+      },
+    );
+    shots.handle(data as ShotsRequest);
   }
   if (data.__gisQuit) {
     // The main menu's QUIT row (pwa/src/app/quit-bridge.ts). No reply and no

@@ -56,6 +56,7 @@ const UNION: MenuScreen[] = [
   "arsenal",
   "effects",
   "vault",
+  "screenshots",
   "achievements",
   "store",
   "storeconfirm",
