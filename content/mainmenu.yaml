@@ -218,12 +218,12 @@ screens:
   #   GAMEPLAY   what the game DOES for you (loot, powers, story beats)
   #   CONTROLS   how you tell it what to do
   #   INTERFACE  what the HUD draws over the field
-  #   VIDEO      how the picture itself is presented
+  #   GORE       how much of a mess a kill makes
   #   AUDIO      how loud
   #   DATA       where your heroes live
   #
   # Getting this wrong is invisible and expensive: a player looking for "turn
-  # off the blood" opens VIDEO, and a player looking for "stop wearing every
+  # off the blood" opens GORE, and a player looking for "stop wearing every
   # sword I pick up" opens GAMEPLAY. Nobody hunts, because nobody has to learn
   # THIS game's filing system — which is also why the index carries no help
   # lines. A blurb under each of seven destinations is a second line the reader
@@ -249,10 +249,12 @@ screens:
         label: INTERFACE
         icon: icon_menu_interface
         opens: interface
-      - id: video
-        label: VIDEO
-        icon: icon_menu_display
-        opens: video
+      # Absent where the DEVICE says no mature content (see the GORE screen
+      # below) — a parental control the game still offers to defeat is not one.
+      - id: gore
+        label: GORE
+        icon: icon_skull
+        opens: gore
       - id: audio
         label: AUDIO
         icon: icon_menu_sound
@@ -426,57 +428,7 @@ screens:
           left: THE BIG POWERUP SLOTS SIT BY YOUR LEFT THUMB
 
   # -------------------------------------------------------------------------
-  # SETTINGS -> VIDEO — how the field is PRESENTED. Every row here costs frames,
-  # which is exactly why they are one page: this is where a player goes when the
-  # phone is warm.
-  #
-  # The four knobs come first because they are what the page is FOR; GORE sits
-  # at the bottom because it is the one row here that opens somewhere rather
-  # than moving a number. It is dropped entirely where the DEVICE says no mature
-  # content — a parental control the game still offers to defeat is not one.
-  # -------------------------------------------------------------------------
-  video:
-    title: VIDEO
-    parent: settings
-    tone: player
-    form: settings
-    # Four knobs and the way through to GORE: long enough on a short viewport to
-    # want capping, so the header and the help line stay put while the rows
-    # scroll under them.
-    scroll: true
-    rows:
-      - id: bloom
-        label: BLOOM
-        help:
-          on: BRIGHT THINGS BLEED LIGHT PAST THEIR OWN EDGES
-          off: LIGHTS STAY INSIDE THE PIXELS THAT DREW THEM
-      - id: color-grade
-        label: COLOR GRADE
-        help:
-          on: A LITTLE MORE CONTRAST AND COLOR IN THE WHOLE PICTURE
-          off: THE ART'S OWN PALETTE, UNTOUCHED
-      - id: vignette
-        label: VIGNETTE
-        help:
-          on: THE CORNERS FALL AWAY INTO THE DARK
-          off: THE FIELD IS LIT EVENLY TO ITS EDGES
-      - id: depth-haze
-        label: DEPTH HAZE
-        help:
-          on: THE FLOOR FADES AS IT RAKES OFF TOWARD THE HORIZON
-          off: THE FAR FLOOR READS AS CLEARLY AS THE NEAR
-      # A PAGE rather than the one EXTRA GORE switch it replaced: "is this too
-      # much" is not one question, and the single switch made a player who did
-      # not want to watch a PERSON opened up turn off the machines' sparks and
-      # the ghosts' ectoplasm along with it. Absent where the DEVICE says no
-      # mature content — the row behind it would have nothing left on it.
-      - id: gore
-        label: GORE
-        help: CHOOSE WHICH KINDS OF GORE THE FIGHT SHOWS
-        opens: gore
-
-  # -------------------------------------------------------------------------
-  # SETTINGS -> VIDEO -> GORE — one switch per kind, because "is this too much"
+  # SETTINGS -> GORE — one switch per kind, because "is this too much"
   # is not one question. Three groups, in the order a player thinks about them:
   #
   #   WHOSE GORE         one row per gore FAMILY (game-screen/gore.ts). A player
@@ -495,7 +447,7 @@ screens:
   # -------------------------------------------------------------------------
   gore:
     title: GORE
-    parent: video
+    parent: settings
     tone: player
     form: settings
     # Eight switches and a reset — longer than VIDEO itself, so it caps and
@@ -1006,7 +958,7 @@ screens:
       - id: visuals
         label: VISUALS
         icon: icon_menu_display
-        help: TUNE THE FEEL - KNOCKBACK, BLOOD AND THE CAMERA
+        help: TUNE THE FEEL, THE CAMERA AND THE PICTURE'S OWN WASHES
         opens: visuals
       - id: galleries
         label: GALLERIES
@@ -1128,6 +1080,27 @@ screens:
           on: THE TURNED FLOOR IS SMOOTHED INSTEAD OF STAIRCASED
           idle: NOTHING TO SMOOTH UNTIL CAMERA YAW TURNS THE FLOOR
           off: THE TURNED FLOOR KEEPS ITS HARD PIXEL STAIRCASE
+      # THE THREE WASHES LAID OVER THE FINISHED PICTURE (render/postfx.ts), so
+      # they come last: everything above decides what is drawn, these three
+      # decide what the drawn frame is then seen through. All three are CSS on
+      # the canvas and one overlay, so none of them costs a per-frame draw —
+      # which is why they sit here with the camera rather than on a player page
+      # about frame budget.
+      - id: color-grade
+        label: COLOR GRADE
+        help:
+          on: A LITTLE MORE CONTRAST AND COLOR IN THE WHOLE PICTURE
+          off: THE ART'S OWN PALETTE, UNTOUCHED
+      - id: vignette
+        label: VIGNETTE
+        help:
+          on: THE CORNERS FALL AWAY INTO THE DARK
+          off: THE FIELD IS LIT EVENLY TO ITS EDGES
+      - id: depth-haze
+        label: DEPTH HAZE
+        help:
+          on: THE FLOOR FADES AS IT RAKES OFF TOWARD THE HORIZON
+          off: THE FAR FLOOR READS AS CLEARLY AS THE NEAR
 
   balance:
     title: BALANCE

@@ -37,7 +37,7 @@ and friends — and none of them reads the tree.
 | Reading the tree | `pwa/src/game/title-screen/menu-tree.ts` — `screenDef`, `rowDef`, `rowHelp`, `rowAria`, `parentOf`, `screenHeading`, `SETTINGS_TREE`. The ONE way to ask the tree anything |
 | Row shape + shared factories | `pwa/src/game/title-screen/menu-model.ts` — `MenuEntry`, `MenuScreen` (the hand-written screen union), `MenuContext`, `assembleRows`, `actionRow`, `navRow`, `backRow`, `onOffRow`, `sliderRow`, `volumeRow` |
 | Screen → builder dispatch | `pwa/src/game/title-screen/menus.ts` (`buildMenu`, `headingFor`) |
-| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the six settings pages + GORE), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
+| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the settings index + GAMEPLAY, CONTROLS/KEY BINDINGS, INTERFACE, GORE, AUDIO), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
 | Async state a builder must be HANDED | `use-mods.ts`, `use-sessions.ts`, `use-coin-store.ts`, `use-cloud-save.ts`, `use-character-transfer.ts` |
 | Rendering | `title-screen/MenuList.tsx` (rows, cursor, controls), `MenuHeading.tsx` (title + trail + rule), `TitleScreen.tsx` (orchestration, keyboard, cursor, overflow) |
 | Layout hooks | `title-screen/use-title-layout.ts` — `useHelpWrapRem`, `useMenuOverflow` |
@@ -285,7 +285,7 @@ the index:
 | **PLAYGROUND** | a run: **SELECT LEVEL** (the warp picker — any difficulty and mission regardless of unlock state, skipping the intro), **BOT VIEW** (the autopilot on a real hero, then GAME SPEED + BOT SPEC), the term a run is carved on — **AUTO LEVEL STATS** (`autoLevelStats`) — and **DEBUG MODE**, the meter drawn over it |
 | **CHEATS** | what a run would otherwise earn: **SEED CHARACTERS**, **GRANT 10B COINS**, and **FORCE STORE** (`storeForce`, persisted — the coin store in any build with packs granted FREE, so it is a cheat rather than a build flag; `pwa/src/game/store.ts`) |
 | **BALANCE** | the runtime multiplier sliders (see below) |
-| **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, plus the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live — `docs/rendering.md` |
+| **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live, and the three washes over the finished frame (**COLOR GRADE**, **VIGNETTE**, **DEPTH HAZE**) — `docs/rendering.md` |
 | **GALLERIES** | the two full-screen shelves that only LOOK: **ARSENAL** (`ArsenalScreen.tsx` — every unique/legendary by ilvl, minted via `mintUnique` and drawn through the shared `ItemCard.tsx` the inventory tooltip reuses, so the two never drift) and **EFFECTS** (the EFFECTS GALLERY — see below) |
 
 **EVERY ROW ON THE INDEX IS A DOOR** — no switch or slider is parked among them,

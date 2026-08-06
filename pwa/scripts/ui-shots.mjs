@@ -222,7 +222,6 @@ for (const vp of VIEWPORTS) {
       "gameplay",
       "controls",
       "interface",
-      "video",
       "audio",
       "data",
     ]) {
@@ -230,18 +229,21 @@ for (const vp of VIEWPORTS) {
       await shot(`settings-${page_}`);
       await page.keyboard.press("Escape");
     }
-    // VIDEO's child: the GORE page. Eight switches and a reset make it the
-    // longest settings page in the game, so it is the one most likely to
-    // overflow a short viewport — which is exactly why it is swept.
-    await click("settings-video");
-    await click("video-gore");
+    // The GORE page. Eight switches and a reset make it the longest settings
+    // page in the game, so it is the one most likely to overflow a short
+    // viewport — which is exactly why it is swept.
+    await click("settings-gore");
     await shot("settings-gore");
-    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await click("settings-developer");
     await shot("developer");
     await click("developer-balance");
     await shot("developer-balance");
+    await page.keyboard.press("Escape");
+    // VISUALS: nine sliders and a switch make it the longest developer page,
+    // so it is the other one that has to be watched for overflow.
+    await click("developer-visuals");
+    await shot("developer-visuals");
     await page.keyboard.press("Escape");
     // The three category pages the index files its rows onto.
     await click("developer-cheats");
