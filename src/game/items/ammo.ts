@@ -102,20 +102,24 @@ export function grantAmmo(player: Player, type: AmmoType, count: number): void {
 }
 
 /**
- * THE OPENING HOLSTER — the pouch a fresh run starts with: `AMMO.starting`
- * (100) rounds for the weapon the hero is ACTUALLY HOLDING, and 100 more for
- * the built-in SIDEARM when it eats something else. A hundred shots is over a
- * minute of steady fire, which is the point — the first thing a new player
- * learns about ammunition should be that it exists, not that it is about to
- * run out.
+ * THE OPENING HOLSTER — the pouch a fresh run starts with. `AMMO.starting`
+ * (100) rounds for the kind the hero's own weapon eats, which is the stock the
+ * opening is actually about: a hundred shots is over a minute of steady fire,
+ * and the first thing a new player learns about ammunition should be that it
+ * exists, not that it is about to run out.
  *
- * BOTH, and that is not generosity. `heldWeapon` is the difficulty's own
- * starting weapon, and EASY opens with a SAWED-OFF SHOTGUN: a holster stocked
- * only from the sidearm's def hands that player a shotgun and a hundred rounds
- * of the wrong thing, and he cannot fire a shot all run. The sidearm's own
- * stock is the other half of the same rule — it is the weapon the engine draws
- * when everything else is gone, so a dry one is not a setback, it is the end of
- * the run with nothing the player could have done about it.
+ * THE BUILT-IN SIDEARM gets its kind too, but only `AMMO.sidearmReserve` of it
+ * — and only when it is not already the kind in hand. It is the weapon the
+ * engine draws when everything else has run dry (`swapOffDryWeapon`, which
+ * refuses to draw a sidearm that cannot shoot), so an empty one is not a
+ * setback, it is a run that cannot be finished. A full second stack overshot
+ * that job badly: EASY opens with a SAWED-OFF SHOTGUN, so the pouch read "100
+ * BULLETS, 100 CELLS" and the hundred rounds for a gun the hero does not carry
+ * looked exactly as important as the ones he was firing.
+ *
+ * A MELEE OR MAGIC OPENING is the other case, and there the sidearm IS the
+ * hero's only gun rather than his fallback — so it gets the full opening
+ * stock, which is the hundred cells the game has always given a sword start.
  *
  * Both kinds are read off their defs rather than spelled out, so a game (or a
  * mod) that re-arms either with a bow gets a quiver.
@@ -124,12 +128,16 @@ export function startingAmmo(
   heldWeapon?: string,
 ): Partial<Record<AmmoType, number>> {
   const pouch: Partial<Record<AmmoType, number>> = {};
-  const sidearm = weaponDef(SIDEARM_DEF_ID).ammo;
-  if (sidearm !== undefined) pouch[sidearm] = AMMO.starting;
   const held =
     heldWeapon !== undefined && isWeaponDef(heldWeapon)
       ? weaponDef(heldWeapon).ammo
       : undefined;
+  const sidearm = weaponDef(SIDEARM_DEF_ID).ammo;
+  if (sidearm !== undefined) {
+    pouch[sidearm] = held === undefined ? AMMO.starting : AMMO.sidearmReserve;
+  }
+  // Last, so a hero whose own weapon eats the sidearm's kind gets the full
+  // opening stock rather than the reserve written just above.
   if (held !== undefined) pouch[held] = AMMO.starting;
   return pouch;
 }

@@ -2,31 +2,37 @@ name: ammo_cells
 family: effects
 size: [12, 12]
 description: >
-  The CELLS pickup — a strip of charged power cells in a dark casing, the
-  charge window lit cyan. What the rails, tasers, plasma and the printed
-  sidearm burn.
+  The CELLS pickup — power cells lying loose on the ground, the near one whole
+  and side-on: a dark slab lit along its top edge, a charge window burning cyan
+  through its middle, and a bare metal terminal off the far end. What the rails,
+  tasers, plasma and the printed sidearm burn.
 subject:
   kind: pickup
-  build: a flat dark casing holding a strip of power cells, a bright cyan
-    charge window across the middle and bare metal contacts along the foot
+  build: two stubby power cells lying flat and side-on, the near one whole and
+    the far one half hidden under it, each a dark slab casing lit along its top
+    edge with a bright charge window across its middle and a small metal
+    terminal stub off one end
   accent: electric cyan through a charge window
-  flavor: a strip of cells, still holding a charge
+  flavor: two cells, still holding a charge
 palette:
   O: "#1a1c2c" # dark outline
   m: "#8d9196" # metal terminal
+  M: "#c0c5cf" # lit terminal edge
   C: "#2fd3e0" # charge glow
   c: "#c8fbff" # bright charged core
   K: "#2b3040" # cell casing
+  k: "#4a5468" # lit casing edge
+  b: "#232838" # shaded casing underside
 grid: |
   ............
-  .OOOOOOOOOO.
-  .OmmOmmOmmO.
-  .OOOOOOOOOO.
-  .OCCOCCOCCO.
-  .OccOccOccO.
-  .OCCOCCOCCO.
-  .OCCOCCOCCO.
-  .OKKOKKOKKO.
-  .OOOOOOOOOO.
-  ............
+  OOOOOOOOOO..
+  OkkkkkkkkOO.
+  OKCCCCCcKMmO
+  OKCCCCCcKMmO
+  OKKKKKKKKOO.
+  ObbbbbbbbO..
+  OOOOOOOOOOO.
+  ..OKCCCCcKmO
+  ..ObbbbbbbOO
+  ..OOOOOOOOO.
   ............

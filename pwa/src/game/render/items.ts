@@ -230,9 +230,9 @@ export function drawItems(
               : item.kind === "drink"
                 ? sprites.drink
                 : // A BOX OF AMMUNITION draws its kind's own ground sprite — a
-                  // spilled handful of brass, a bundle of arrows, a strip of
-                  // charged cells — so a shooter reads what is worth the walk
-                  // from across the room.
+                  // couple of cartridges lying in the dirt, a bundle of arrows,
+                  // a pair of charged cells — so a shooter reads what is worth
+                  // the walk from across the room.
                   item.kind === "ammo"
                   ? (spriteByName(sprites, AMMO_KINDS[item.ammo].sprite) ??
                     sprites.medkit)

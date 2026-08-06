@@ -442,10 +442,12 @@ const ENGINE_WEAPONS: Record<string, WeaponDef> = {
     range: 260,
     // IMPOSSIBLE TO BREAK, and now that is the whole of it: the sidearm carries
     // no durability at all, and like every RANGED weapon it eats AMMUNITION
-    // instead. A run opens with `AMMO.starting` (100) charged cells in the
-    // pouch, which is what "the easy starting weapon has a hundred shots"
-    // means. When they are gone he is not disarmed — he is looking for a box,
-    // and the drop ladder is leaning hard toward handing him one.
+    // instead. A melee or magic opening stocks the pouch with `AMMO.starting`
+    // (100) charged cells, because there the sidearm is the hero's only gun; a
+    // RANGED opening stocks its own kind instead and leaves this one only
+    // `AMMO.sidearmReserve` as a seatbelt (see `startingAmmo`). When they are
+    // gone he is not disarmed — he is looking for a box, and the drop ladder is
+    // leaning hard toward handing him one.
     ammo: "cells",
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_blaster",

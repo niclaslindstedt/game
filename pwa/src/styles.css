@@ -6854,14 +6854,25 @@ html.app-locked body {
 }
 
 /* The bag header: the BAG title on the left, the SCRAP-junk button on the
-   right, on one baseline. */
+   right, on one baseline — the header's FOOT, so the title and the buttons
+   both sit against the bag frame below rather than the panel's top edge. */
 .inv-bag-header {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   width: 100%;
   gap: 0.75rem;
+}
+
+/* PixelText draws to a <canvas>, and the blanket `.inventory-panel canvas`
+   rule far below pins every one of them to `flex-start` so flex can't stretch
+   them. The BAG title is the one that must NOT float up: left-aligned with the
+   frame's own left edge and dropped onto the header's foot, it reads as the
+   label of the rectangle immediately under it. Two classes, so it outranks
+   that single-class blanket. */
+.inv-bag-header .inv-bag-title {
+  align-self: flex-end;
 }
 
 /* The header's action buttons (AUTO-EQUIP + DROP-ALL) cluster to the right,
