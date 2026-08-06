@@ -574,30 +574,34 @@ mid-driveway. `LevelLight.sprite` plus a `drawLamps` pass immediately AFTER
 pass runs in daylight too: a lamp is hardware, and a wall that grows a light
 fitting at dusk is a bug — only the pool under it belongs to the night.
 
-**A CAR'S HEADLIGHTS ARE A BEAM, AND THE SHAPE IS THE POINT.** Two round pools
-ahead of the bumper was the first attempt: a pool has no direction, so a car
-crossing the drive looked like it was carrying a lantern. The wedge — narrow at
-the lamps, spreading down the road, running out at the end — says which way the
-car is pointing. It is painted as a CHAIN of overlapping soft pools rather than
-as a clipped triangle: a clip has no edge treatment at all, so the wedge came out
-with two razor lines across the pavement, which is a searchlight in fog rather
-than a headlight on tarmac. Nine cached blits have the same silhouette and
-feather on every side for free.
+**A CAR HAS ONE PAIR OF LAMPS, AND THE ASSEMBLY OWNS THEM.** The lit
+`car_lights` layer and the two cones it throws — a warm tungsten wedge off the
+nose, a short red wash behind the tail — are drawn with the panels and the
+arches in the body's own screen space (`drawLightCones`, `render/vehicles.ts`),
+which is why the DRIVING MINIGAME and the garage light the same car identically:
+they are the same code, and the minigame is the reference.
 
-**AND THE LAMPS ARE BOLTED ON — the beam is a PART OF THE ASSEMBLY, not a thing
-aimed down `CarVehicle.heading`.** These are sealed beams in a shell, not
-steering-linked cornering lamps: they turn when the CAR turns and not one degree
-otherwise, and the car's picture never turns. The body is one side-profile
-assembly cut nose-right that nothing mirrors or rotates (which is the whole
-reason the engine carries a yaw stop), while the heading it is steered on swings
-the better part of 180° inside that stop — so a wedge walked down the heading
-swept a 172° arc across a car that had not visibly moved a pixel, and read as a
-pair of lamps swivelling on their own. The chain is therefore walked in SCREEN px
+The night pass used to draw a SECOND pair on top — a wedge walked out of the
+nose as nine overlapping glow pools and punched through the night sheet, so a
+car laid its own light along the pavement. It was the wrong picture twice over.
+It disagreed with the assembly's cone about what colour the lamps burn (the car
+threw warm tungsten, the night pass threw cold daylight, out of the same two
+bulbs) and about their SIZE — half a screen of reach, 26° each side — so a wagon
+idling in its own bay lit the lot like a searchlight, and the same car on the
+minigame's road looked like a different vehicle. It is gone;
+`render/night.ts` draws no headlight at all.
+
+**AND THE LAMPS ARE BOLTED ON — never aimed down `CarVehicle.heading`.** These
+are sealed beams in a shell, not steering-linked cornering lamps: they turn when
+the CAR turns and not one degree otherwise, and the car's picture never turns.
+The body is one side-profile assembly cut nose-right that nothing mirrors or
+rotates (which is the whole reason the engine carries a yaw stop), while the
+heading it is steered on swings the better part of 180° inside that stop — so
+anything walked down the heading swept a 172° arc across a car that had not
+visibly moved a pixel, and read as a pair of lamps swivelling on their own.
+That is what killed the night pass's wedge. The cones are laid out in SCREEN px
 along the drawn body off the body's own anchor, exactly as the wheel arches are
-(see the billboard rule below); only the POOLS keep the pitch's squash, because
-light lies on the pavement even when the wedge is welded to the picture. The
-daylight cones (`render/vehicles.ts`) always obeyed this and are the reason the
-mismatch was visible at all. `tests/vehicle_assembly_test.ts` holds the line.
+(see the billboard rule below). `tests/vehicle_assembly_test.ts` holds the line.
 
 **KEEP THE POOLS SMALL, and judge it at the phone viewport.** The garage is
 512×280 world units and the landscape view sees ~422×260 of it, so two lamps

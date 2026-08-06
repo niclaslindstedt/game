@@ -30,7 +30,6 @@ import {
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
-import { carBeam } from "../pwa/src/game/render/night.ts";
 import { drawVehicles } from "../pwa/src/game/render/vehicles.ts";
 import {
   DEFAULT_PITCH,
@@ -126,6 +125,19 @@ function drawProbe(names: Map<object, string>) {
           m[4]! + m[0]! * e + m[2]! * f,
           m[5]! + m[1]! * e + m[3]! * f,
         ];
+      },
+      // The light CONES the running car burns are canvas gradients rather than
+      // blits (`drawLightCones`), and this probe has no pixels for them to land
+      // on — but it must survive them being drawn, or a driven car could not be
+      // put through it at all. Swallowed, not recorded: what is asserted about
+      // the lamps is where the `car_lights` BLIT lands.
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      closePath() {},
+      fill() {},
+      createLinearGradient() {
+        return { addColorStop() {} };
       },
       drawImage(sprite: object, ...rest: number[]) {
         const name = names.get(sprite) ?? "?";
@@ -237,56 +249,64 @@ describe("the car assembly", () => {
   // They are sealed beams in a shell, not steering-linked cornering lamps, and
   // the shell's picture never turns: the body is one side-profile assembly cut
   // nose-right and nothing mirrors or rotates it, while `CarVehicle.heading`
-  // swings the better part of 180° inside the yaw stop. Walked down the heading
-  // (which is how the beam started life) the wedge therefore swept a 172° arc
-  // across a car that had not visibly moved a pixel.
-  describe("the headlight beam", () => {
-    /** The car, driven, aimed at `heading` — the field the beam must ignore. */
-    function drivenCar(heading: number) {
+  // swings the better part of 180° inside the yaw stop. Anything hung off the
+  // heading therefore swept a 172° arc across a car that had not visibly moved
+  // a pixel — which is how the night pass's separate beam died.
+  //
+  // A DRIVEN CAR HAS ONE PAIR OF LAMPS AND THE ASSEMBLY OWNS THEM: the lit
+  // `car_lights` layer and the cones it throws (`drawLightCones`), drawn in the
+  // body's own screen space with the panels. The night pass draws no headlight
+  // of its own — see A DRIVEN CAR'S HEADLIGHTS in render/night.ts.
+  describe("the headlights", () => {
+    /** The car, aimed at `heading`, with or without somebody at the wheel. */
+    function carAt(heading: number, driven: boolean): GameState {
       const state = parkedCar({ x: 317, y: 244 });
       const car = state.vehicles[0]!;
       if (car.kind !== "car") throw new Error("no car");
-      car.driver = 0;
+      car.driver = driven ? 0 : null;
       car.heading = heading;
-      return car;
+      return state;
     }
 
     /** Every heading the yaw stop lets the nose reach, and both ends of it. */
     const HEADINGS = [0, 0.4, 1, -1, CAR.maxYaw, -CAR.maxYaw];
 
+    it("burns only with somebody at the wheel", () => {
+      const off = drawAt(carAt(0, false), PROJECTIONS[0]!);
+      expect(off.some((b) => b.name === "car_lights")).toBe(false);
+      const on = drawAt(carAt(0, true), PROJECTIONS[0]!);
+      expect(on.some((b) => b.name === "car_lights")).toBe(true);
+    });
+
     it("does not swing when the car turns", () => {
-      const camera = { x: 0, y: 0 };
-      const straight = carBeam(drivenCar(0), camera, 1);
-      for (const heading of HEADINGS) {
-        const beam = carBeam(drivenCar(heading), camera, 1);
-        expect(beam.x).toBeCloseTo(straight.x, 6);
-        expect(beam.y).toBeCloseTo(straight.y, 6);
-        expect(beam.dir).toBe(straight.dir);
+      for (const projection of PROJECTIONS) {
+        const straight = drawAt(carAt(0, true), projection).find(
+          (b) => b.name === "car_lights",
+        );
+        expect(straight).toBeDefined();
+        for (const heading of HEADINGS) {
+          const lit = drawAt(carAt(heading, true), projection).find(
+            (b) => b.name === "car_lights",
+          );
+          expect(lit).toBeDefined();
+          expect(lit!.centre.x).toBeCloseTo(straight!.centre.x, 6);
+          expect(lit!.centre.y).toBeCloseTo(straight!.centre.y, 6);
+        }
       }
     });
 
-    it("throws out of the drawn nose at every camera angle", () => {
-      const camera = { x: 0, y: 0 };
+    it("rides the body's own anchor at every camera angle", () => {
       for (const projection of PROJECTIONS) {
-        const state = parkedCar({ x: 317, y: 244 });
-        // Drawn PARKED — a running car burns its daylight cones through canvas
-        // gradients, which this transform-only probe has no business minting.
-        const body = drawAt(state, projection).find(
-          (b) => b.name === "car_doors_0",
-        );
-        expect(body).toBeDefined();
-        const car = state.vehicles[0]!;
-        if (car.kind !== "car") throw new Error("no car");
-        car.driver = 0;
         // Hard over, which is where the old bug was loudest.
-        car.heading = CAR.maxYaw;
-        const beam = carBeam(car, camera, 1);
-        // The lamps sit AHEAD of the body's own anchor on the screen's x axis,
-        // and on its row — the wheel arches' rule, applied to the light.
-        expect(beam.x).toBeGreaterThan(body!.centre.x);
-        // Within the pixel the body's own anchor is rounded to.
-        expect(Math.abs(beam.y - body!.centre.y)).toBeLessThanOrEqual(1);
-        expect(beam.dir).toBe(1);
+        const blits = drawAt(carAt(CAR.maxYaw, true), projection);
+        const body = blits.find((b) => b.name === "car_doors_0");
+        const lit = blits.find((b) => b.name === "car_lights");
+        expect(body).toBeDefined();
+        expect(lit).toBeDefined();
+        // The lamps are a layer of the same 48×26 part canvas, so they land on
+        // the body's own anchor — the wheel arches' rule, applied to the light.
+        expect(lit!.centre.x).toBeCloseTo(body!.centre.x, 5);
+        expect(lit!.centre.y).toBeCloseTo(body!.centre.y, 5);
       }
     });
   });
