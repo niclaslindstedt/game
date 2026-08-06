@@ -8,6 +8,19 @@
 // just met. `openShop` opens the SHOPPER's own screen (the rest
 // of the party plays on, and the world only freezes solo, like the bag);
 // the buy/sell mutators are safe to call from the app's UI outside `step()`.
+//
+// THREE POSTINGS, AND THE LEVEL DEF PICKS ONE (`LevelDef.merchant`):
+//
+//   the WANDERER   the default — met out in the level, then rooted for good.
+//   PARKED         `parked:` — stood at the carve's counter from the first
+//                  tick, revealed, and he never takes a step.
+//   A BEAT         `beat:` — revealed like a parked trader and then WALKING,
+//                  end to end along the strip the map carves him
+//                  (`LevelDef.merchantBeat`). He is a counter that moves, so
+//                  he is also the one a car can run down and the one a tap
+//                  has to be able to STOP: `hailMerchant` roots him where he
+//                  stands, the open shop holds him there, and closing it puts
+//                  him back on the pavement.
 
 import {
   createRngFromState,
@@ -49,9 +62,10 @@ import {
   sellValue,
   topMedkitTier,
 } from "./items/index.ts";
-import { addMapMarker } from "./map.ts";
+import { addMapMarker, removeMapMarkers } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import { nearestHeroWhere, partyLevel } from "./party.ts";
+import { zonesBounds, type Zone } from "./zones.ts";
 import type {
   Equipment,
   GameState,
@@ -75,7 +89,7 @@ export function createMerchant(
     id: string;
     width: number;
     height: number;
-    merchant?: { sprite?: string; parked?: boolean };
+    merchant?: { sprite?: string; parked?: boolean; beat?: boolean };
     /** Authored spots the trader may first appear at (LevelDef.merchantSpawns). */
     merchantSpawns?: Vec2[];
   },
@@ -95,12 +109,13 @@ export function createMerchant(
   // whole map — the shop lands somewhere intended. A pre-placed (met-before)
   // trader keeps his door post, so this only steers a fresh placement.
   const spawnPoints = level.merchantSpawns ?? [];
-  // A PARKED trader stands at his counter — the carve's stall spot — even on
-  // a met-before restart: the counter IS his door post, so `preDiscovered`
-  // must not pull him over to the hero's spawn.
-  const parked = level.merchant?.parked === true;
+  // A RESIDENT trader — parked at his counter, or working a beat — starts on
+  // the carve's own spot even on a met-before restart: the pitch IS his door
+  // post, so `preDiscovered` must not pull him over to the hero's spawn.
+  const resident =
+    level.merchant?.parked === true || level.merchant?.beat === true;
   const authored =
-    (parked || !preDiscovered) && spawnPoints.length > 0
+    (resident || !preDiscovered) && spawnPoints.length > 0
       ? ([...spawnPoints]
           .sort(() => rng() - 0.5)
           .find((p) => !blocked(p, MERCHANT.radius)) ?? spawnPoints[0])
@@ -141,6 +156,9 @@ export function createMerchant(
     faceLeft: false,
     moving: false,
     discovered: false,
+    // Nobody has hailed him and nothing has hit him yet.
+    haltMs: 0,
+    dead: false,
     // A pre-placed trader owes a "welcome back" line (delivered on approach);
     // one met live greets through the first-meeting scene, so he owes none.
     greetedReturn: !preDiscovered,
@@ -199,12 +217,33 @@ function draw(merchant: Merchant): number {
  * the first time the hero comes close enough (in line of sight). Discovery
  * roots him for good, pins the level map, rolls his stall, and emits
  * `merchantDiscovered`. All randomness draws his own stream.
+ *
+ * A trader on a BEAT is the exception at both ends: discovery does not root
+ * him (he keeps pacing his strip for the whole run), and a HAIL does — until
+ * the shop closes. A trader who has been RUN DOWN does nothing ever again.
  */
 export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   const merchant = state.merchant;
   merchant.moving = false;
+  if (merchant.dead) return;
+  const beat = beatOf(state);
   if (merchant.discovered) {
     maybeGreetReturn(state, merchant);
+    // Everybody but the beat trader is rooted by the meeting, for good.
+    if (!beat) return;
+    // THE COUNTER STANDS STILL WHILE IT IS OPEN. Solo the world is halted
+    // anyway (`partyBlocked`), but in a party the run plays on around the
+    // shopper — and a trader who strolled off mid-purchase would leave the
+    // shop open at a range that can no longer be walked back into.
+    if (state.players.some((hero) => hero.screen === "shop")) {
+      merchant.haltMs = MERCHANT.hailMs;
+    }
+    if (merchant.haltMs > 0) {
+      merchant.haltMs = Math.max(0, merchant.haltMs - dtMs);
+      merchant.wanderTarget = null;
+      return;
+    }
+    stepBeat(state, merchant, beat, dt, dtMs);
     return;
   }
 
@@ -261,6 +300,11 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   // or not. (A parked merchant is normally revealed at creation; this guard
   // is what keeps a modded or adopted state honest about it.)
   if (runLevelDef(state).merchant?.parked) return;
+  // …and an UNMET beat trader still walks his strip, on the same reasoning.
+  if (beat) {
+    stepBeat(state, merchant, beat, dt, dtMs);
+    return;
+  }
 
   // Wandering: idle a beat, pick a leg, stroll it, idle again. A leg that
   // terrain refuses (walking into a wall) simply times out and re-rolls.
@@ -289,7 +333,84 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     // Time budget: the leg's length at his pace, with slack — then give up.
     merchant.legMs = (reach / MERCHANT.speed) * 1000 * 1.5;
   }
+  walkLeg(state, merchant, dt, dtMs);
+}
+
+/** The strip this level's trader PACES, or undefined if he does not pace one
+ * — the level def has to ASK for a beat and the map has to have carved him
+ * one, because either half alone is a trader standing in the wrong place. */
+function beatOf(state: GameState): readonly Zone[] | undefined {
+  const def = runLevelDef(state);
+  if (def.merchant?.beat !== true) return undefined;
+  const beat = def.merchantBeat;
+  return beat !== undefined && beat.length > 0 ? beat : undefined;
+}
+
+/**
+ * One tick of a trader WORKING HIS PITCH: he crosses his strip end to end,
+ * pauses, and comes back — up and down the street all run.
+ *
+ * The turn is what makes it a beat rather than a fenced wander, and it needs
+ * no heading on the merchant to remember: every leg is aimed at the FAR end
+ * of the strip's long axis, so reaching one end can only produce a leg back
+ * towards the other. His own stream rolls how far along he actually goes and
+ * where across the strip he drifts, which is what keeps the pacing from
+ * reading as a shuttle on a rail.
+ */
+function stepBeat(
+  state: GameState,
+  merchant: Merchant,
+  beat: readonly Zone[],
+  dt: number,
+  dtMs: number,
+): void {
+  if (merchant.idleMs > 0) {
+    merchant.idleMs = Math.max(0, merchant.idleMs - dtMs);
+    return;
+  }
+  if (!merchant.wanderTarget) {
+    const bounds = zonesBounds(beat);
+    if (!bounds) return;
+    const margin = MERCHANT.radius + 4;
+    // The LONG axis is the street; the short one is how wide the pavement is.
+    const alongY = bounds.maxY - bounds.minY >= bounds.maxX - bounds.minX;
+    const lo = (alongY ? bounds.minY : bounds.minX) + margin;
+    const hi = (alongY ? bounds.maxY : bounds.maxX) - margin;
+    const crossLo = (alongY ? bounds.minX : bounds.minY) + margin;
+    const crossHi = (alongY ? bounds.maxX : bounds.maxY) - margin;
+    const at = alongY ? merchant.pos.y : merchant.pos.x;
+    const far = at < (lo + hi) / 2 ? hi : lo;
+    const along = clamp(
+      at + (far - at) * (MERCHANT.beatLegFraction + draw(merchant) * 0.4),
+      Math.min(lo, hi),
+      Math.max(lo, hi),
+    );
+    const cross = crossLo + draw(merchant) * Math.max(0, crossHi - crossLo);
+    merchant.wanderTarget = alongY
+      ? { x: cross, y: along }
+      : { x: along, y: cross };
+    merchant.legMs =
+      (distance(merchant.pos, merchant.wanderTarget) / MERCHANT.speed) *
+      1000 *
+      1.5;
+  }
+  walkLeg(state, merchant, dt, dtMs);
+}
+
+/**
+ * Walk the current leg one tick — shared by the free wander and the beat, so
+ * both answer for terrain, facing and the give-up timer identically. A leg
+ * that arrives (or times out against a wall) is dropped, and he stands there
+ * for a rolled beat before the next one is picked.
+ */
+function walkLeg(
+  state: GameState,
+  merchant: Merchant,
+  dt: number,
+  dtMs: number,
+): void {
   const target = merchant.wanderTarget;
+  if (!target) return;
   const before = merchant.pos;
   merchant.pos = moveToward(merchant.pos, target, MERCHANT.speed * dt);
   const dx = merchant.pos.x - before.x;
@@ -306,6 +427,53 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
 }
 
 /**
+ * HAIL him: root a beat trader where he stands so the hero can walk up to a
+ * counter that has stopped moving. The app sends this on a tap that lands on
+ * him — whether or not the hero is close enough for the shop to open, which
+ * is the whole point of it, since a trader you cannot catch is a trader you
+ * cannot buy from.
+ *
+ * It expires on its own (`MERCHANT.hailMs`) so a hail nobody follows up on
+ * costs the street its dealer for twenty seconds rather than for the run; the
+ * open shop keeps topping it up, and `closeShop` clears it outright — which
+ * is what puts him back on the pavement the moment the modal is dismissed.
+ * A no-op (returning false, so a stray tap is simply ignored) for a trader
+ * who is dead, undiscovered, or not walking anywhere in the first place.
+ */
+export function hailMerchant(state: GameState): boolean {
+  const merchant = state.merchant;
+  if (merchant.dead || !merchant.discovered) return false;
+  if (!beatOf(state)) return false;
+  merchant.haltMs = MERCHANT.hailMs;
+  merchant.wanderTarget = null;
+  merchant.moving = false;
+  return true;
+}
+
+/**
+ * RUN DOWN — a driven car caught the trader (`runDownMerchant`, vehicles.ts).
+ * The stall closes on the spot: every open counter is dropped, the map pin
+ * comes off, and nothing about him is stepped again for the rest of the run.
+ *
+ * Nothing here is persisted, and that is the design rather than an omission:
+ * a merchant is minted per run (`createMerchant`), so the next visit finds
+ * somebody else working the same pitch. Dealers are replaced.
+ */
+export function killMerchant(state: GameState): void {
+  const merchant = state.merchant;
+  if (merchant.dead) return;
+  merchant.dead = true;
+  merchant.moving = false;
+  merchant.wanderTarget = null;
+  merchant.haltMs = 0;
+  for (const hero of state.players) {
+    if (hero.screen === "shop") delete hero.screen;
+  }
+  removeMapMarkers(state, "merchant");
+  state.events.push({ type: "merchantKilled", pos: { ...merchant.pos } });
+}
+
+/**
  * Reveal the merchant WITHOUT the walk-up meeting — used at map start when the
  * hero has already met him here (persisted per level+difficulty, fed in via
  * `createGame`). Roots him and rolls his stall against the arriving hero, just
@@ -318,10 +486,11 @@ export function revealMerchant(state: GameState): void {
   const merchant = state.merchant;
   if (merchant.discovered) return;
   merchant.discovered = true;
-  // A PARKED trader owes no "welcome back" — the hub is re-entered constantly,
-  // and a scene on every approach would make the counter a toll booth. The
-  // met-before wanderer keeps his line for the walk-up.
-  merchant.greetedReturn = runLevelDef(state).merchant?.parked === true;
+  // A RESIDENT trader owes no "welcome back" — the hub is re-entered
+  // constantly, and a scene on every approach would make the counter a toll
+  // booth. The met-before wanderer keeps his line for the walk-up.
+  const def = runLevelDef(state).merchant;
+  merchant.greetedReturn = def?.parked === true || def?.beat === true;
   merchant.wanderTarget = null;
   // SEAT 0 IS CORRECT HERE. A met-before reveal runs inside `createGame`,
   // before the run has been handed to a session and therefore before anybody
@@ -620,6 +789,20 @@ export function merchantName(levelId: string): string {
 }
 
 /**
+ * HIS COUNTER LINE — the one thing this level's trader says when the shop
+ * opens (`LevelDef.merchant.line`), or null where the venue authored none.
+ *
+ * Deliberately NOT a dialogue scene: a greeting the player reads every single
+ * visit has to be something they can trade straight through, so it is drawn
+ * across the counter with his face and his name rather than through the box
+ * that stops the world. The app reads it here so the counter never has to
+ * know what a level def looks like.
+ */
+export function merchantLine(levelId: string): string | null {
+  return levelDef(levelId).merchant?.line ?? null;
+}
+
+/**
  * The merchant's WARD (config `MERCHANT.repelRadius`): push a monster's
  * position out to the rim whenever it strays inside — his stall never
  * drowns in the horde, so the hero can always reach the counter. Called
@@ -661,7 +844,7 @@ export { sellValue };
 export function openShop(state: GameState, hero: Player): boolean {
   if (state.phase !== "playing" || hero.screen !== undefined) return false;
   const merchant = state.merchant;
-  if (!merchant.discovered) return false;
+  if (!merchant.discovered || merchant.dead) return false;
   // The SHOPPER has to be at the counter — this one is emphatically not "any
   // hero", or a player across the map would find the stall open in front of
   // them because somebody else walked up to it. `hero` is the one who tapped,
@@ -670,13 +853,28 @@ export function openShop(state: GameState, hero: Player): boolean {
     return false;
   }
   hero.screen = "shop";
+  // A counter being leaned on stands still (a no-op for everyone who was
+  // standing still already) — see `hailMerchant`.
+  merchant.haltMs = MERCHANT.hailMs;
+  merchant.wanderTarget = null;
   return true;
 }
 
-/** Close the shop. */
-export function closeShop(hero: Player): void {
+/**
+ * Close the shop — and, for a trader who works a beat, PUT HIM BACK ON IT.
+ * The halt is cleared rather than left to expire: dismissing the counter is
+ * the player saying they are done, and a dealer who stood there for another
+ * twenty seconds afterwards would read as a man waiting to be run over.
+ *
+ * `state` is a parameter for exactly that half, so a hero closing his own
+ * screen in a party still hands the street its trader back.
+ */
+export function closeShop(state: GameState, hero: Player): void {
   if (hero.screen !== "shop") return;
   delete hero.screen;
+  if (!state.players.some((other) => other.screen === "shop")) {
+    state.merchant.haltMs = 0;
+  }
 }
 
 /**

@@ -20,3 +20,5 @@ animations:
     { frames: [merchant_mars_0, merchant_mars_1], delayMs: 200 }
   merchant_boot_hill_walk:
     { frames: [merchant_boot_hill_0, merchant_boot_hill_1], delayMs: 200 }
+  merchant_dealer_walk:
+    { frames: [merchant_dealer_0, merchant_dealer_1], delayMs: 200 }

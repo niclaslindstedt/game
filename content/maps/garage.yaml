@@ -76,6 +76,13 @@ areas:
   # in the car ends the level (see `MapArea.driveOut` / `vehicles.ts`). It sits
   # on BOTH lanes and on the line, so the tarmac is departure ground whichever
   # inch of it the bumper touches first.
+  #
+  # `beat` is the road's second job and the reason the lot has a trader at all
+  # any more: THE DEALER paces this strip end to end all run
+  # (`LevelDef.merchant.beat` / merchant.ts). Both lanes and the line carry it,
+  # so his beat is the whole width of the tarmac rather than one kerb — which
+  # is also what puts him in front of the departing car often enough for the
+  # thing to be a real hazard rather than a trick shot.
   - id: road
     enclosure: none
     weight: 1
@@ -83,6 +90,7 @@ areas:
     boss: false
     spawn: false
     driveOut: true
+    beat: true
     label: THE ROAD
     ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 11 }
   - id: road_line
@@ -92,6 +100,7 @@ areas:
     boss: false
     spawn: false
     driveOut: true
+    beat: true
     label: THE ROAD
     ground: { common: road_dash, rare: road_dash, rareEvery: 1 }
   # THE VERGE — grass on the far side of the road, and the reason it is here is
@@ -139,9 +148,11 @@ plan:
       rect: { x: 480, y: 0, width: 32, height: 280 }
   doors:
     - between: [bay, drive]
-  # The rocket stands on the grass; the vending machine parks on the drive.
+  # The rocket stands on the grass. No `stall:` — the trader is not standing
+  # anywhere: a flagged BEAT outranks an authored stall (mapgen/generate.ts),
+  # so his pitch, his safe pocket and the street light hung on him all follow
+  # him onto the road.
   goal: lawn
-  stall: drive
 
 # One look, every visit. A LOT smaller than the rest of the game's venues,
 # because it is a garage, not a level. The lot itself is still 400 wide; the
@@ -272,19 +283,26 @@ objects:
       radius: 52
       color: "255, 222, 170"
       intensity: 0.55
-  # THE VENDING MACHINE at its counter out on the drive — its own back-lit
-  # front, which is the only reason a machine parked in a driveway is worth
-  # walking to at night. Small, cold, and the twitchiest thing on the lot. No
-  # `fixture`: it is pinned to the trader's own spot (`at: counter`), so the
-  # thing throwing it is the machine standing in it.
-  - id: stall_light
+  # THE STREET LIGHT over the road — the county's, not the household's, which
+  # is why it is the coldest light on a lot lit otherwise in sodium. Pinned to
+  # `counter` (the trader's own spot, which on this map is the near lane), so
+  # the beat he paces has one lit end and one dark one and a man in a black
+  # hood is findable at midnight without being on show. Flickering, because
+  # nobody has come out to fix it.
+  - id: street_light
     type: light
     at: counter
+    # …and a step WEST of the trader's spot, which puts the post on the kerb
+    # instead of in the near lane. A lamp standing in live traffic is the kind
+    # of thing nobody can name but everybody reads as wrong — and it is the
+    # lane the departing car uses.
+    offset: { x: -24, y: 0 }
+    fixture: lamp_post
     light:
-      radius: 34
-      color: "150, 216, 255"
-      intensity: 0.72
-      flicker: 0.28
+      radius: 46
+      color: "182, 214, 240"
+      intensity: 0.6
+      flicker: 0.18
 
   # ── THE WORKBENCH WORLD (furniture, never loot) ──────────────────────────
   # Furniture stands AGAINST THE WALLS (`edge`), the way a real garage keeps

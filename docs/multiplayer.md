@@ -1141,7 +1141,8 @@ and its economy, the abandoned hero and the per-player death/corpse/respawn (see
 "the run ends when the party falls" above), production hardening, the garage,
 mods, a joiner's own banked character, prediction, and the party bot. THE GARAGE
 is the home base the mode was owed: a static hub level whose `hub` objective never
-clears, a merchant PARKED at his counter, standing travel doors
+clears, a trader who works the road outside it (THE DEALER — see
+`LevelDef.merchant.beat`), standing travel doors
 (`LevelDef.travelDoors`) as the level select — the car boards and drives out,
 the rocket and the sealed rift seam open the destination picker — and the
 campaign now opens there.

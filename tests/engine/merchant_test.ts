@@ -239,7 +239,7 @@ describe("the shop", () => {
     const before = state.stats.timeMs;
     run(state, idle, 20);
     expect(state.stats.timeMs).toBe(before);
-    closeShop(state.players[0]);
+    closeShop(state, state.players[0]);
     expect(state.players[0].screen).toBeUndefined();
   });
 
@@ -333,7 +333,7 @@ describe("the shop", () => {
 
       // The shelf is the COUNTER's, so it is only reachable across it.
       state.players[0].inventory[0] = null;
-      closeShop(state.players[0]);
+      closeShop(state, state.players[0]);
       expect(buybackItem(state, state.players[0], loot.id)).toBe("gone");
       expect(state.players[0].coins).toBe(paid);
     });

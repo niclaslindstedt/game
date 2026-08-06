@@ -8,8 +8,10 @@ description: |-
   and nothing here is loot - no chests, no crates, just the workbench, the
   car, and the ROLL-UP GARAGE DOOR that opens for anybody who walks or
   drives up to it. Nothing hostile lives here (objective `hub` never clears,
-  every area carries `horde: 0`), the vendor from GOODCO's machines is PARKED
-  at his counter (buys loot, sells kit, repairs gear), and the campaign flows
+  every area carries `horde: 0`), THE DEALER works the road down the far edge
+  of the lot - up and down that stretch all evening in a black hood, buying
+  loot, selling kit and mending gear off the books, and standing exactly
+  where the car comes out - and the campaign flows
   through its three doors: the CAR to GOODCO HQ - board it, drive out through
   the roll-up, across the drive, and onto the ROAD down the lot's far edge,
   which is where the trip commits and where the picture fades out on a car
@@ -70,11 +72,27 @@ placeThoughts:
     where: pastDoor
     after: garage_take_the_car
 merchant:
-  # The GOODCO vending-machine trader, parked at a counter — he follows the
-  # customer, and the customer lives here now. Parked mode is deliberately
-  # scene-free (no greeting, no welcome-back), so he speaks no lines.
-  sprite: merchant_vendor
-  parked: true
+  # THE NEIGHBORHOOD DEALER — the hub's trader, and the only one in the game
+  # who is not a merchant at all. He works the ROAD down the lot's far edge:
+  # up and down that stretch of tarmac all evening, hood up, hands in his
+  # pocket, selling to whoever walks out of the garage. `beat: true` is what
+  # puts him there (the map flags the road districts, see content/maps), and
+  # it is why he is revealed from the first tick like a parked trader and
+  # walks anyway — a counter that moves.
+  #
+  # HE IS ALSO THE ONE THING ON THE LOT A CAR CAN KILL. The drive-out to
+  # GOODCO runs down the same tarmac he paces, at speed, with the wheel out
+  # of the player's hands: catch him and the stall shuts for the visit. It
+  # costs nothing but the visit — a trader is minted per run, so the next
+  # time the hero comes home somebody else is working the pitch, which is
+  # both the honest thing about that trade and the joke.
+  #
+  # No `greeting` and no `returnGreeting`: he is not a scene, he is a man on
+  # a pavement. What he says, he says over the counter (`line`).
+  sprite: merchant_dealer
+  name: THE DEALER
+  beat: true
+  line: NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?
 travelDoors:
   # THE CAR — the earthbound leg. Always open; the campaign's first door.
   - id: car

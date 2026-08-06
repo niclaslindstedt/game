@@ -315,7 +315,9 @@ function kitWornOut(state: GameState, hero: Player): boolean {
  * Pure — `macro.ts` reads it to steer, the harnesses to trade.
  */
 export function wantsMerchantVisit(state: GameState, hero: Player): boolean {
-  if (!state.merchant.discovered) return false;
+  // …and a trader who has been run over is no counter at all: the errand would
+  // steer the hero to a wet patch of road and stand there wanting.
+  if (!state.merchant.discovered || state.merchant.dead) return false;
   const junk = sellableJunkCount(state, hero);
   if (
     weaponStarved(state, hero) &&
@@ -497,7 +499,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     )
     .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
   for (const entry of powerups) buyDown(entry);
-  closeShop(hero);
+  closeShop(state, hero);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state, hero);
   // Crack the bottle at the counter if one was just bought — the walk is over

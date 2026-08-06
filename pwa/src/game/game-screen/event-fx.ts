@@ -1227,6 +1227,52 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   if (event.type === "merchantDiscovered") {
     ctx.pushPickup("MERCHANT DISCOVERED", "#ffd75e", "");
   }
+  // …AND THE TRADER WENT UNDER THE CAR. The hub's dealer works the road the
+  // drive-out runs down, so the departing car can catch him — and a man hit at
+  // speed owes the same spray and the same soaked tarmac a mob does, priced
+  // through the SAME blood arithmetic (a full bar in one blow, which is what
+  // being run over is) so the gore page's amount and the MATURE CONTENT gate
+  // govern it exactly as they govern every other death in the game.
+  //
+  // No toast, no line, no corpse: the picture on the road is the whole
+  // statement, and the next visit quietly mints somebody else.
+  if (event.type === "merchantKilled") {
+    const family = goreFamily("blood");
+    const blow = bloodBlow(1, 1, "minion", true, family.id);
+    const seed = Math.floor(Math.random() * 997);
+    // Thrown AWAY from the hero, who is the man behind the wheel.
+    const heading = Math.atan2(
+      event.pos.y - localHero(state).pos.y,
+      event.pos.x - localHero(state).pos.x,
+    );
+    if (blow) {
+      effects.push({
+        kind: "blood",
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + BLOOD_SPRAY_MS,
+        durationMs: BLOOD_SPRAY_MS,
+        blood: blow,
+        family: family.id,
+        angle: heading,
+        seed,
+      });
+      if (family.stains) {
+        spillBlood(
+          state,
+          bloodSpills(blow, event.pos, seed, heading),
+          family.id,
+        );
+      }
+    } else if (splashOnly(family.id)) {
+      effects.push({
+        kind: "splash",
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + 240,
+        durationMs: 240,
+        sprite: family.splash,
+      });
+    }
+  }
   // Paid the trader to mend the whole kit — toast the spend.
   if (event.type === "gearRepaired") {
     ctx.pushPickup(`REPAIRED - ${event.paid} COIN`, "#ffd75e", "");

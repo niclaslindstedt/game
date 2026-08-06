@@ -63,6 +63,10 @@ stampedes:
   afterProgress: 0.5
 merchant:
   sprite: merchant_vendor
+  # What he says across the counter, every visit (see `merchant.line`) — a
+  # greeting the player can trade straight through, unlike the meeting scene
+  # below it, which is played once ever.
+  line: THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?
   greeting:
     - - EASY, FRIEND. I'M NOT STAFF. I STOCK THE VENDING MACHINES. SOMEBODY HAS TO, EVEN TONIGHT.
     - - LOCKDOWN IS A SELLER'S MARKET. I'LL BUY WHAT WEIGHS YOU DOWN, SELL WHAT KEEPS YOU UPRIGHT.

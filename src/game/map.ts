@@ -130,6 +130,16 @@ export function addMapMarker(
   state.mapMarkers.push({ kind, pos: { ...pos }, defId });
 }
 
+/** Take every marker of one KIND back off the level map — what a pin that
+ * described something that is no longer there owes the map (the trader's
+ * stall after he has been run down). */
+export function removeMapMarkers(
+  state: GameState,
+  kind: MapMarker["kind"],
+): void {
+  state.mapMarkers = state.mapMarkers.filter((m) => m.kind !== kind);
+}
+
 /** Open this hero's level map. Only possible mid-run, like the bag. */
 export function openMap(state: GameState, player: Player): void {
   if (state.phase === "playing" && player.screen === undefined) {

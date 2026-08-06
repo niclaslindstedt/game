@@ -693,6 +693,19 @@ export type LevelDef = {
    */
   driveOut?: Zone[];
   /**
+   * THE TRADER'S BEAT (see `src/game/merchant.ts`): the ground a trader who
+   * WORKS A PITCH paces, carved from the map districts flagged `beat: true`.
+   * Present, it turns the level's merchant from a wanderer met once and rooted
+   * for good into somebody walking a strip end to end all run — the hub's
+   * street dealer, out on the road with the traffic.
+   *
+   * Read as ONE strip: the wander picks its legs along the bounding box's LONG
+   * axis and holds the cross axis inside the box, which is what makes a lane
+   * of tarmac read as a beat rather than as a wander that happens to be
+   * fenced. Author it on a strip, not on a plaza.
+   */
+  merchantBeat?: Zone[];
+  /**
    * QUIET ZONES / DEAD AREAS (see `src/game/zones.ts`): regions where the
    * ambient wave/pack horde does NOT spawn — a lull in the pressure — but
    * authored content still lives: a `chest` to find, a lone rare/unique mob
@@ -1227,6 +1240,28 @@ export type LevelDef = {
      * where the counter is. Omitted = the wandering trader, as everywhere.
      */
     parked?: boolean;
+    /**
+     * WORKS A PITCH — the other resident mode, and the hub's. He is open for
+     * business from the first tick exactly like a `parked` trader (revealed,
+     * stocked, pinned, no meeting scene), and then he WALKS: end to end along
+     * the beat the map carves for him (`LevelDef.merchantBeat`, districts
+     * flagged `beat: true`), all run. A tap roots him where he stands so the
+     * hero can walk up to a counter that isn't moving (`hailMerchant`), and
+     * closing the shop puts him back on the pavement.
+     *
+     * Needs a beat to walk: a level that says `beat: true` on a map with no
+     * flagged district gets a trader standing where he spawned, which the map
+     * schema refuses rather than shipping.
+     */
+    beat?: boolean;
+    /**
+     * THE COUNTER LINE — the one thing he says every time the shop opens,
+     * shown across his counter rather than through the dialogue box (it is a
+     * greeting, not a scene, and a scene on every visit would be a toll
+     * booth). One sentence, in his own voice. Dialogue text — mirror into
+     * `docs/manuscript.md`. Omitted = the counter shows no line.
+     */
+    line?: string;
     /** Pages of the meeting scene (same shape as an elite's `dialogue`). */
     greeting?: string[][];
     /**

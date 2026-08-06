@@ -83,10 +83,15 @@ place in the world: ten years of weekends, the bench, the white hatchback
 parked on the deck, and the ship that is still one part short. His summary on
 the doorstep says everything the room needs to: home — the lawn is dead, the
 bench is a mess, and the ship is one part from perfect. Nothing hunts him
-here. The vendor who stocked GOODCO's machines has parked his cart at a
-counter inside (lockdown is a seller's market, and he follows the customer),
-buying what weighs the hero down, selling what keeps him upright, and mending
-what the road broke. And the first time he is standing in his own bay with the
+here. Trade at home is THE DEALER: not the trader who follows the hero
+across the campaign but a man off the neighborhood, hood up, walking the
+road at the far edge of the lot all evening — buying what weighs the hero
+down, selling what keeps him upright, mending what the road broke, and
+asking for no name and giving none. He is the one figure in the game the
+hero can kill by accident, because the road he works is the road the car
+leaves by; and it costs nothing but the evening, because there is always
+another one on that pavement the next time the hero comes home. Nobody
+remarks on it. And the first time he is standing in his own bay with the
 run live, he says the one thing the place is for out loud to nobody: the part
 is at GOODCO, and the car on the deck is what gets him there. If he wanders out
 under the roll-up on foot anyway, leaving the car where it stands, he catches

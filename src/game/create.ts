@@ -882,10 +882,13 @@ export function createGame(
 
   // A merchant met here before is set up at the door from the outset — revealed
   // now (after the loadout, so his stall prices off the arriving hero's level).
-  // A PARKED trader (the hub's counter) is revealed on every run: standing at
-  // a counter and waiting to be "discovered" would be a fixture pretending to
-  // be an encounter.
-  if (merchantDiscovered || def.merchant?.parked) revealMerchant(state);
+  // A RESIDENT trader is revealed on every run, whichever posting he keeps:
+  // standing at a counter (the hub's old vending machine) or working a beat
+  // (the hub's dealer, out on the road) and waiting to be "discovered" would
+  // be a fixture pretending to be an encounter.
+  if (merchantDiscovered || def.merchant?.parked || def.merchant?.beat) {
+    revealMerchant(state);
+  }
 
   return state;
 }

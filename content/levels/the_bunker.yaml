@@ -44,6 +44,10 @@ tiles:
     every: 8
 heroSuited: false
 foes: SECURITY
+merchant:
+  # No persona and no meeting scene down here: the hooded trader is himself in
+  # the one place that has never had a shop. His counter line is all he says.
+  line: SAME STOCK, LOWER CEILING. THE OWNERS WON'T MISS IT.
 objective:
   type: reachExit
 exitTo: the_rift

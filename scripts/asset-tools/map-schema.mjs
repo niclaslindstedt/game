@@ -571,6 +571,18 @@ export function validateMap(bp, refs, description = "") {
               `puts the strip wherever the seed likes, which is not a road`,
           );
       }
+      if (a.beat !== undefined) {
+        if (typeof a.beat !== "boolean")
+          err(`${where}: beat must be a boolean`);
+        // A beat is a STRIP a trader paces end to end, and a rolled carve puts
+        // its districts wherever the seed likes — which is a trader pacing
+        // whatever shape the dice made. Same reasoning as the road above.
+        else if (a.beat === true && bp.plan === undefined)
+          err(
+            `${where}: beat belongs to an AUTHORED plan — a rolled carve has ` +
+              `no idea which of its cells is a street`,
+          );
+      }
       if (a.lit !== undefined) {
         if (!isNum(a.lit) || a.lit < 0 || a.lit > 1)
           err(`${where}: lit must be a fraction in [0, 1]`);
@@ -646,6 +658,7 @@ export function validateMap(bp, refs, description = "") {
         "doorWidth",
         "doors",
         "driveOut",
+        "beat",
         "label",
         "ground",
         "patch",

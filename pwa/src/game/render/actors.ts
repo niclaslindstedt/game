@@ -33,7 +33,8 @@ import { type Camera } from "./view.ts";
  * resolves his sprite family from the level def), striding his wander legs
  * until met. Once discovered a gold coin bobs over the stall — the "open
  * for business" tell that also makes him findable again from across a
- * screen.
+ * screen, and the one thing that finds the hub's dealer in the dark half of
+ * his beat. A trader who has been run over is not drawn at all.
  */
 export function drawMerchant(
   ctx: CanvasRenderingContext2D,
@@ -43,6 +44,10 @@ export function drawMerchant(
   timeMs: number,
 ): void {
   const merchant = state.merchant;
+  // RUN DOWN: nothing left to draw. The blood the car left is on the floor
+  // (the gore pass owns it) and the body is not — a corpse standing in the
+  // road would be a counter the player keeps walking up to.
+  if (merchant.dead) return;
   const inView = makeInView(camera, worldViewOf(ctx.canvas));
   if (!inView(merchant.pos.x, merchant.pos.y, 48)) return;
   beginBillboard(ctx, merchant.pos.x, merchant.pos.y, camera.x, camera.y);

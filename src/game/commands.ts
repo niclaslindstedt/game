@@ -117,6 +117,7 @@ import {
   buybackItem,
   buyStock,
   closeShop,
+  hailMerchant,
   openShop,
   repairGear,
   sellItem,
@@ -231,6 +232,11 @@ export const RUN_COMMAND_ARGS = {
   closeInventory: [],
   openShop: [],
   closeShop: [],
+  // Not a screen — a tap on the street trader that roots him where he stands
+  // so the hero can walk up to him (`hailMerchant`). It lives beside the shop
+  // because it is the half of the gesture that happens too far away to open
+  // one, and it acts on the WORLD's merchant rather than on the acting hero.
+  hailMerchant: [],
   openCache: [],
   closeCache: [],
   openMap: [],
@@ -542,7 +548,9 @@ export function applyRunCommand(
     case "openShop":
       return openShop(state, hero);
     case "closeShop":
-      return closeShop(hero);
+      return closeShop(state, hero);
+    case "hailMerchant":
+      return hailMerchant(state);
     case "openCache":
       return openCache(state, hero);
     case "closeCache":

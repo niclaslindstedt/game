@@ -1712,6 +1712,22 @@ export const FIX_ROAD_LEVEL: LevelDef = {
   ],
 };
 
+// THE GARAGE WITH A DEALER ON ITS ROAD — the road hub again, but its trader
+// WORKS THE STRIP instead of standing at a counter (`merchant.beat`), and the
+// beat is the very tarmac the departing car drives down. The synthetic twin of
+// the shipped hub: it is the one arrangement in which the trader walks, can be
+// hailed to a stop, and can be run over.
+export const FIX_BEAT_LEVEL: LevelDef = {
+  ...FIX_ROAD_LEVEL,
+  id: "test_beat_level",
+  merchant: { beat: true, line: "TEST LINE" },
+  // He starts on his own strip, like the carve puts him.
+  merchantSpawns: [{ x: 1060, y: 800 }],
+  merchantBeat: [
+    { shape: "rect", rect: { x: 1000, y: 0, width: 120, height: 1600 } },
+  ],
+};
+
 // A level standing under a SKY, with two lamps on it — the synthetic twin of
 // the garage's night (`src/game/daylight.ts`). Everything else in the catalog
 // deliberately has no `sky` at all, which is what proves the default: a venue
@@ -2260,6 +2276,7 @@ export function installFixtures(force = false): void {
       test_hub_level: FIX_HUB_LEVEL,
       test_garage_level: FIX_GARAGE_LEVEL,
       test_road_level: FIX_ROAD_LEVEL,
+      test_beat_level: FIX_BEAT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,

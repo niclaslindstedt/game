@@ -750,8 +750,25 @@ export type Merchant = {
   faceLeft: boolean;
   /** True while he walked this step; drives the walk animation. */
   moving: boolean;
-  /** Latched on the first encounter: rooted, mapped, shop open for business. */
+  /** Latched on the first encounter: rooted, mapped, shop open for business.
+   * A trader who walks a BEAT (`LevelDef.merchant.beat`) is the exception —
+   * he is open for business from the first tick and keeps walking anyway. */
   discovered: boolean;
+  /**
+   * Ms of standing still left — how a BEAT trader is HAILED. A tap on him
+   * roots him where he stands (`hailMerchant`) so the hero can walk up
+   * without chasing a moving counter; the open shop keeps it topped up, and
+   * closing the shop clears it, which is what puts him back on his beat.
+   * Zero on a trader who never walks in the first place.
+   */
+  haltMs: number;
+  /**
+   * RUN DOWN. The one way a trader leaves a run early: a driven car caught
+   * him (`runDownMerchant`, vehicles.ts). The stall closes for the rest of
+   * the visit — and only for the visit, because a merchant is minted per run,
+   * so the next arrival finds somebody else working the same pitch.
+   */
+  dead: boolean;
   /**
    * True once his "welcome back" line has been delivered (or was never owed).
    * A merchant MET live this run greets through the first-meeting scene and is
