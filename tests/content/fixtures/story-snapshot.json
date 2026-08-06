@@ -3304,16 +3304,6 @@
       "portrait": "player",
       "speaker": "ME"
     },
-    "rift_far_door_shut": {
-      "id": "rift_far_door_shut",
-      "pages": [
-        [
-          "THE FAR SIDE, RIGHT THERE. BUT I CAME IN HERE FOR HIM, AND HE'S STILL BREATHING."
-        ]
-      ],
-      "portrait": "player",
-      "speaker": "ME"
-    },
     "rift_graviton": {
       "id": "rift_graviton",
       "pages": [

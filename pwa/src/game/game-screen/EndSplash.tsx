@@ -107,16 +107,11 @@ export function VictorySplash({
             <PixelText font={font} text="RESTART" scale={3} />
           </button>
         )}
-        {/* STAY needs something on the field to walk back TO. Usually that is
-            the boss corpse — the tap that re-opens this menu — and the bossless
-            hub (reachExit) has neither and skips it. The rift is the third
-            case: its boss FLEES, so it leaves no corpse, and what is worth
-            walking back to there is the FAR DOOR at the end of the road, which
-            carries the way onward itself (`stayOnField` takes the same view).
-            It is the one choice here a joiner keeps: the field is the party's,
-            and dropping back onto it is a verb every seat may send. */}
-        {(state?.bossCorpse ||
-          (state && (runLevelDef(state).travelDoors ?? []).length > 0)) && (
+        {/* STAY only makes sense with a boss corpse to walk back to; the
+            bossless hub (reachExit) skips it. It is the one choice here a
+            joiner keeps: the field is the party's, and dropping back onto it
+            is a verb every seat may send. */}
+        {state?.bossCorpse && (
           <button
             type="button"
             className="pixel-button secondary"

@@ -280,16 +280,7 @@ export function resumeGame(player: Player): void {
  * `victory` phase with a corpse to return to. Returns true if it took.
  */
 export function stayOnField(state: GameState): boolean {
-  if (state.phase !== "victory") return false;
-  // SOMETHING TO GO BACK FOR. A corpse is the usual one — it is the tap that
-  // re-opens this menu. A level whose boss FLED leaves none ("a coward leaves
-  // nothing", boss-death.ts), so a cleared rift used to have no STAY at all and
-  // its far door could never be reached: the run ended at the splash, several
-  // screens short of the door the level's own intro tells the hero to find.
-  // A travel door is the other thing worth walking back to, and it carries the
-  // way onward itself, so it stands in for the corpse here.
-  const doors = runLevelDef(state).travelDoors ?? [];
-  if (!state.bossCorpse && doors.length === 0) return false;
+  if (state.phase !== "victory" || !state.bossCorpse) return false;
   state.staying = true;
   state.victoryCountdownMs = null;
   state.phase = "playing";

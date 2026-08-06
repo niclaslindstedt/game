@@ -218,16 +218,6 @@ thoughts:
     pages:
       - - THAT LITTLE THING WEIGHED MORE THAN MY SHIP. SPACE IN HERE BENDS AROUND A GRUDGE.
       - - NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE.
-  # Tapping THE FAR DOOR at the end of the rift while the coward is still on
-  # his feet. Pinned to a DOOR rather than to a mob (the rocket's idiom), so it
-  # REPLAYS — it answers the tap, not a story beat the player is owed once. It
-  # names the stake and not the mechanic: he is not waiting on a lock, he came
-  # in here after THE FOUNDER and will not leave in front of him.
-  rift_far_door_shut:
-    speaker: ME
-    portrait: player
-    pages:
-      - - THE FAR SIDE, RIGHT THERE. BUT I CAME IN HERE FOR HIM, AND HE'S STILL BREATHING.
   # Sighting the first COWBOT in Boot Hill: the drop-in arrival read — the
   # rift's far side is a wild-west theme park, and the town is a machine
   # pretending it's 1880. Wide radius so it lands as the town comes on

@@ -51,16 +51,9 @@ type TravelDoor = NonNullable<
  * ONLY destinations a picker may name.
  *
  * Empty for a door whose keepsake has not come home (the whole door is shut,
- * not merely its rows), for one still waiting on the field to be cleared, and
- * for one whose every destination is still locked.
- *
- * THREE GATES, THREE OWNERS, and keeping them apart is the point: `requires` is
- * the CHARACTER's (a keepsake banked across every run), `afterClear` is the
- * RUN's, and the per-destination filter is CAMPAIGN PROGRESS. Only the run's is
- * read off `state`, which is why this takes one at all.
+ * not merely its rows) and for one whose every destination is still locked.
  */
 export function openRoads(
-  state: GameState,
   character: Character,
   difficulty: Difficulty,
   door: TravelDoor,
@@ -68,11 +61,6 @@ export function openRoads(
   if (door.requires !== undefined && !hasKeepsake(character, door.requires)) {
     return [];
   }
-  // The end of the road is not a way out of a fight still going on. `staying`
-  // is the only state a cleared field is walked in — the win is banked and the
-  // player chose to come back to it (`stayOnField`) — so it is exactly the
-  // question this asks.
-  if (door.afterClear && !state.staying) return [];
   return door.to.filter((dest) => isLevelUnlocked(character, dest, difficulty));
 }
 
@@ -95,7 +83,7 @@ export function groundedDoorThought(
     (d) => d.id === doorId,
   );
   if (!door?.unready) return null;
-  return openRoads(state, character, difficulty, door).length === 0
+  return openRoads(character, difficulty, door).length === 0
     ? door.unready
     : null;
 }
@@ -116,8 +104,7 @@ export function hiddenTravelDoors(
   return (runLevelDef(state).travelDoors ?? [])
     .filter(
       (door) =>
-        !door.unready &&
-        openRoads(state, character, difficulty, door).length === 0,
+        !door.unready && openRoads(character, difficulty, door).length === 0,
     )
     .map((door) => door.id);
 }

@@ -735,15 +735,6 @@
           "sprite": "bunker_gate"
         }
       ],
-      "travelDoors": [
-        {
-          "id": "far_door",
-          "name": "THE FAR DOOR",
-          "to": ["boot_hill", "garage"],
-          "afterClear": true,
-          "unready": "rift_far_door_shut"
-        }
-      ],
       "wells": [
         {
           "pullRadius": 120
