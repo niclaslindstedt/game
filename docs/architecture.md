@@ -1238,7 +1238,15 @@ deploy-shaped:
   CONFIRM gate; shares the stat catalog with the level-up chooser via
   `stat-choices.tsx`),
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
-  tier-colored borders, item card, character sheet), `MapOverlay.tsx` (the
+  tier-colored borders, item card, character sheet),
+  `ItemCard.tsx` (**the shared item card** — the one place a piece of
+  equipment READS, so the bag's tooltip, the arsenal, the vault, the buyback
+  shelf and the merchant's counter can never drift; PRESS AND HOLD one and it
+  is copied to the clipboard as a picture to paste into a chat, which is
+  `card-copy-gesture.ts` → `item-card-image.tsx` → `@ui/lib/dom-raster.ts`,
+  re-rendering the card off screen rather than photographing the one on it —
+  the bag's card is a hover tooltip a mouse dismisses by leaving the cell that
+  raised it, so there the hold rides the CELL), `MapOverlay.tsx` (the
   fog-of-war level map shown in the `map` phase — one chunky pixel of
   terrain per explored fog cell, dark where the hero hasn't been, with a
   legend of event pins: story finds, elite/boss kills, the merchant, and the
@@ -1327,7 +1335,15 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   files), `chiptune.ts` (the 16-bit-style music sequencer: named
   instrument patches + patterns + an order arrangement, scheduled on the
   synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
-  the generated bitmap font), `flag-store.ts` (a persisted string-flag set
+  the generated bitmap font), `pixel-flash.ts` (a word in that font that rises
+  off the point just touched and fades — raised imperatively, because the
+  gestures that raise it have no render of their own), `long-press.ts` (the
+  press-and-hold state machine: it tells a HOLD apart from a drag that moved
+  and from a tap that must not fire twice), `dom-raster.ts` (draws a laid-out
+  DOM subtree of canvases, sprites and framed panels onto one canvas — how an
+  item card becomes a picture; see the note in the file for why this cannot be
+  html2canvas or a `<foreignObject>` when every word on screen is a canvas),
+  `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
 - **`content/sprites/` + `scripts/asset-tools/` +
   `scripts/sprite-data/` + `scripts/generate-assets.mjs`** — the pixel-asset

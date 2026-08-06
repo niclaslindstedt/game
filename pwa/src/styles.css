@@ -7112,20 +7112,14 @@ canvas.tier-artifact {
   filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
 }
 
-/* The item card's class/slot glyph (sword/reticle/spark, helmet/vest/…, at
-   1× = 12 CSS px): sits in the card's lower-right corner beside the item
-   level, replacing the old "MELEE WEAPON" / "HEAD ARMOR" line. */
+/* A class/slot glyph (sword/reticle/spark, helmet/vest/…) at label size, on the
+   unidentified card's IDENTIFY button — the one place a veiled find says what
+   KIND of thing it is. On the card itself the same glyph is a watermark in the
+   bottom-right corner instead (`.card-kind-watermark`, lib/item-card.css). */
 .card-class-glyph {
   flex: 0 0 auto;
   width: 0.75rem;
   height: 0.75rem;
-}
-
-/* The redesign's class/slot glyph shares the foot row with the REQUIRES-LEVEL
-   text, sized to about that text's height so the two read as companions. */
-.card-class-glyph-lg {
-  width: 0.9rem;
-  height: 0.9rem;
 }
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */
@@ -8292,6 +8286,68 @@ canvas.tier-artifact {
   /* Above the modal band: the tooltip is portaled to <body>, so it has to
      out-rank the `.game-overlay` (the inventory/shop) it was opened from. */
   z-index: 110;
+}
+
+/* THE FLASH NOTE (@ui/lib/pixel-flash.ts): a word that rises off the point the
+   player just touched and fades — today, the confirmation that a press-and-hold
+   put an item card's picture on the clipboard.
+
+   It has to clear everything, including the tooltip band above the overlays,
+   because the surface it confirms is by definition the one on top. Pointer-
+   transparent for the same reason the tooltip is: it appears under a finger
+   that is still on the screen and must never eat that finger's next tap. The
+   drop shadow is what keeps it legible over both a bright card and the dark
+   field behind it. */
+.pixel-flash {
+  position: fixed;
+  z-index: 130;
+  pointer-events: none;
+  image-rendering: pixelated;
+  /* Anchored ABOVE the touch point and centered on it, so the word is not
+     under the finger that raised it. */
+  transform: translate(-50%, -160%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.85));
+  animation: pixel-flash-rise 1100ms ease-out forwards;
+}
+
+@keyframes pixel-flash-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -120%);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -170%);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -260%);
+  }
+}
+
+/* Reduced motion keeps the word and drops the travel — the confirmation is the
+   information, the rise is decoration. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-flash {
+    animation: pixel-flash-hold 1100ms linear forwards;
+  }
+
+  @keyframes pixel-flash-hold {
+    0%,
+    70% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
 }
 
 /* THE EXPLAINER NOTE (@ui/lib/InfoTip.tsx + InfoNote.tsx): the card a figure

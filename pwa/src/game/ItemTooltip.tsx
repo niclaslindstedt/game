@@ -18,6 +18,31 @@ import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { ItemCard } from "./ItemCard.tsx";
 
 /**
+ * How a piece the hero is holding reads against what is already on the body:
+ * the piece worn in the same slot for the green/red deltas, and the EQUIPPED
+ * kicker when the inspected piece IS that one (an item never compares to
+ * itself). `wornCounterpart` resolves a RING to the finger the piece would
+ * actually land on — the weaker of the two — so the comparison shown is the
+ * trade the player would really be making.
+ *
+ * Exported because the tooltip is not the only thing that draws this card: the
+ * bag's press-and-hold copies the same card as a picture, and a picture that
+ * compared against a different piece than the tooltip did would be a lie about
+ * the run it came from.
+ */
+export function cardComparison(
+  state: GameState,
+  item: Equipment,
+): { compareTo: Equipment | null; subtitle?: string } {
+  const equipped = wornCounterpart(state, localHero(state), item);
+  const isWorn = equipped?.id === item.id;
+  return {
+    compareTo: equipped && !isWorn ? equipped : null,
+    subtitle: isWorn ? "EQUIPPED" : undefined,
+  };
+}
+
+/**
  * WoW-style item tooltip: name (in tier color) plus the stat/affix lines,
  * floated next to the item that raised it. Portaled to <body> and positioned
  * in viewport coordinates from the anchoring cell's rect. The card NEVER
@@ -80,14 +105,9 @@ export function ItemTooltip({
     worn: { left: number; top: number } | null;
   } | null>(null);
   // The piece worn in this item's slot, for the side-by-side comparison —
-  // unless we're inspecting that very piece (an item never compares to
-  // itself; its own card says EQUIPPED instead).
-  // `wornCounterpart` resolves a RING to the finger the piece would actually
-  // land on (the weaker of the two), so the comparison shown is the trade the
-  // player would really be making.
-  const equipped = wornCounterpart(state, localHero(state), item);
-  const isWorn = equipped?.id === item.id;
-  const compareTo = equipped && !isWorn ? equipped : null;
+  // unless we're inspecting that very piece, which says EQUIPPED instead (see
+  // cardComparison above).
+  const { compareTo, subtitle } = cardComparison(state, item);
 
   useLayoutEffect(() => {
     const el = mainRef.current;
@@ -204,7 +224,7 @@ export function ItemTooltip({
         state={state}
         item={item}
         compareTo={compareTo}
-        subtitle={isWorn ? "EQUIPPED" : undefined}
+        subtitle={subtitle}
       >
         {onUse && (
           <button
