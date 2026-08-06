@@ -8277,19 +8277,15 @@ canvas.tier-artifact {
    the inventory floats it as a tooltip (.item-tooltip), the arsenal docks it or
    pops it up as a modal (.item-card-overlay), and the library's arsenal pages
    wear it as static markup. Only its canvas alignment is app-only: */
+/* THE CARD IS A COLUMN, so `flex-start` here means LEFT — every stat line
+   starts on the card's own left edge instead of being stretched or centered.
+   The card's two ROW children (`.tooltip-name-row`, `.card-foot`) read the very
+   same declaration as TOP, which is the wrong axis for them; they are put back
+   to centered further down, after the blanket `.game-overlay canvas` parking
+   that would otherwise re-pin them. */
 .item-card canvas {
   flex: 0 0 auto;
   align-self: flex-start;
-}
-
-/* The foot row centers its children vertically so the REQUIRES-LEVEL text and
-   the class/slot glyph sit level. The rule above top-aligns every card canvas
-   (so stacked stat lines hug their gap); the foot's own text canvas overrides
-   it back to centered — same specificity, so this must sit AFTER it to win —
-   or the text rides high above the glyph. Keyed off `.card-foot` (not
-   `.item-card`) so ItemCardBody used bare (the shop) centers too. */
-.card-foot canvas {
-  align-self: center;
 }
 
 /* WoW-style item tooltip: the card floated next to the item it describes,
@@ -8936,7 +8932,22 @@ canvas.tier-artifact {
 .shop-price canvas,
 /* The (i) toggle centers its glyph both ways; without this the
    `.game-overlay canvas` rule above pins the "i" to the top of the chip. */
-.info-button canvas {
+.info-button canvas,
+/* THE ITEM CARD'S TWO ROWS. The card itself is a column, so `.item-card canvas`
+   parks its lines at `flex-start` to LEFT-align them (see the note up there) —
+   but inside the card's row-direction children that same declaration reads as
+   TOP, and it beat the rows' own `align-items: center`. The name then rode half
+   its own height above the icon it labels (a one-line name at scale 2 is 0.625rem
+   against a 1.25rem icon: 0.3125rem out, glaring on a piece whose art fills its
+   grid — SMART GLASSES, T-SHIRT), and the REQUIRES-LEVEL text sat high of the
+   class/slot glyph beside it. Both rows live HERE rather than beside their own
+   `.item-card` rule because the parking they must beat is source-order, not
+   specificity: the IDENTIFY reveal mounts its card inside the bag's
+   `.game-overlay`, where the blanket rule above would win against an earlier
+   equal-weight override. Keyed off the ROW classes (not `.item-card`) so
+   ItemCardBody used bare — the shop's deal card — centers too. */
+.tooltip-name-row canvas,
+.card-foot canvas {
   align-self: center;
 }
 
