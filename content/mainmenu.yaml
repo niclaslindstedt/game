@@ -659,7 +659,7 @@ screens:
       - id: join-game
         label: JOIN GAME
         icon: icon_menu_load
-        help: WATCH A GAME SOMEBODY IS HOSTING
+        help: TAKE A SEAT IN A GAME SOMEBODY IS HOSTING
         opens: sessions
       - id: join-address
         label: JOIN BY ADDRESS
@@ -703,7 +703,7 @@ screens:
         label: PASSWORD
         help:
           set: JOINERS MUST TYPE IT - PRESS TO CHANGE IT
-          none: ANYBODY WHO FINDS THE GAME CAN WATCH IT
+          none: ANYBODY WHO FINDS THE GAME CAN JOIN IT
       # The port the socket TRIES. What it GOT is a different number and is
       # printed by the session panel in the run (server/net/udp.ts), which is
       # the rule this row exists to not break.

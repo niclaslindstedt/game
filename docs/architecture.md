@@ -322,10 +322,10 @@ escort.ts` walks the people an escort errand puts on the field, and
     downgrading to
     an ordinary corpse on a refusal — the same fallback shape the incinerate
     gate takes, and for the same reason.
-  - **It is a GLOBAL phase and must stay one.** `docs/multiplayer-plan.md` §3.2
-    turns the per-player UI phases into `Player.screen`s but keeps the group
-    beats global; a boss's death is one of those, so it must not become a
-    per-player screen.
+  - **It is a GLOBAL phase and must stay one.** The per-player UI phases are
+    `Player.screen`s (`docs/multiplayer.md` → THE SCREENS ARE PER-PLAYER), but
+    the group beats stay on `state.phase`; a boss's death is one of those, so
+    it must not become a per-player screen.
   - **SETTINGS → GAMEPLAY → DEATH SCENES** (`deathScenes`, on by default) turns
     the rite AND the hero's own tableau off together, via
     `setDeathScenesEnabled` in the engine's import-free `flags.ts` leaf. Not a
