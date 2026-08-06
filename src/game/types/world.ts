@@ -430,6 +430,16 @@ export type GateState = {
   pos: Vec2;
   /** Latched once the crossing is booked, so it fires exactly once. */
   entered: boolean;
+  /**
+   * A SEAM ONE HERO TORE HOME (`src/game/rift-tool.ts`), rather than a door
+   * the level ships. What it changes is WHO crosses: a level's own gate takes
+   * the party, and this takes the hero who tore it and nobody else.
+   *
+   * Carried on the gate rather than worked out from the destination, because
+   * the app must not have to guess: a party door that happens to lead to the
+   * hub is still a party door.
+   */
+  solo?: boolean;
 };
 
 /**

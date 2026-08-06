@@ -150,6 +150,7 @@ import {
 } from "./story.ts";
 import { spendTalentPoint } from "./talents.ts";
 import { enterCar, exitCar } from "./vehicles.ts";
+import { tearSeamHome } from "./rift-tool.ts";
 import { requestSoloTravel, requestTravel } from "./travel.ts";
 import type {
   CompanionSlot,
@@ -361,6 +362,11 @@ export const RUN_COMMAND_ARGS = {
   // locally-built run would). Refused for any seat but 0: the host chooses
   // the road.
   travelTo: ["str", "str"],
+
+  // TEAR A SEAM HOME — the rift tool's own verb (src/game/rift-tool.ts). No
+  // arguments: a hero may only ever tear his OWN way out, from where he is
+  // standing, and the destination is the campaign's hub by definition.
+  tearSeam: [],
 
   // THE TOWN PORTAL — a SOLO crossing (src/game/travel.ts). The same two
   // arguments the party road takes, and the same words for the skip; what
@@ -590,6 +596,8 @@ export function applyRunCommand(
       return discardFromInventory(state, hero, num(a, 0));
     case "discardEquipped":
       return discardEquipped(state, hero, str(a, 0) as EquipSlot);
+    case "tearSeam":
+      return tearSeamHome(state, hero);
     case "spendGateKey":
       return spendGateKey(state, hero, num(a, 0));
     case "spendReviveItem":

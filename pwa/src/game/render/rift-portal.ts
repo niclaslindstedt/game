@@ -151,7 +151,7 @@ export type RiftPortalLook = {
  * `rift` stands twice on the rift's own road (the door in at the hero's
  * landing, the far door at the end of it) and once more in the scene where THE
  * FOUNDER tears it open on Mars. `rift_seam` is the small one humming on the
- * garage's bay wall once the RIFT CREATOR is bolted up. `rift_west` is the far
+ * garage's bay wall once the RIFT CREATOR is in the hero's pocket. `rift_west` is the far
  * door with Boot Hill's daylight behind it. `bunker_gate` is not a tear at all
  * — it is an armoured blast door — but a mummified hand talks it open onto a
  * vault that is nowhere, so the same nothing churns behind its panel, kept
