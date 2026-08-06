@@ -75,6 +75,7 @@ import {
   drawDecor,
   drawGround,
   drawLandmarks,
+  drawRiftPortals,
   drawObstacles,
   drawWells,
 } from "./render/world.ts";
@@ -218,7 +219,7 @@ export function drawFrame(
   drawScorches(ctx, state, sprites, camera, inView, timeMs);
   drawDecor(ctx, state, sprites, camera, inView, timeMs);
   drawCraters(ctx, state, sprites, camera, inView);
-  drawLandmarks(ctx, state, sprites, camera, inView, timeMs);
+  drawLandmarks(ctx, state, sprites, camera, inView);
   // The car and the garage ship, assembled part by part in place of their
   // landmarks (wheels + sprung body; hull + thrust flame).
   drawVehicles(ctx, state, sprites, camera, inView, timeMs);
@@ -229,6 +230,10 @@ export function drawFrame(
   // any earlier its top half is cut off by the stone in front of it. Drawn in
   // daylight too — only the light it throws belongs to the night.
   drawLamps(ctx, state, sprites, camera, inView);
+  // THE TEARS IN SPACE, on the same footing as the lamps and for the same
+  // reason: a rift is set INTO a wall (the garage's seam hums on the bay wall),
+  // so painted with the other landmarks the stone goes straight over it.
+  drawRiftPortals(ctx, state, sprites, camera, inView, timeMs);
   drawWells(ctx, state, sprites, camera, inView, timeMs);
   // The door on an occupied house, over the structure it is set into.
   drawLairs(ctx, state, sprites, camera, inView);

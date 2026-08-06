@@ -836,7 +836,16 @@ can be seen through**: `rift_west` has a desert on the other side and the script
 says so out loud, so it keeps its daylight and draws its shells as shadow instead
 of light — every other tear is filled with the void.
 
-TWO CALLERS share it, which is the point: the field draws it inside the
+**A TEAR IS IN A WALL, NOT BEHIND ONE**, so the portals are lifted out of the
+landmark pass into `drawRiftPortals` and drawn AFTER the obstacles — the same
+place, and for the same reason, as the lamps. The garage's seam hums on the bay
+wall a step off the hero's landing; painted with the other landmarks the stone
+went straight over it and left a hole in the world you could see about a third
+of. It takes the same trade the barn lights take: anything drawn after the walls
+is drawn over ALL of them, including one genuinely standing in front, and a
+fixture bolted to masonry is better always-visible than sometimes-erased.
+
+TWO CALLERS share the draw, which is the point: the field draws it inside the
 landmark's own billboard (`render/world.ts`) and the cutscene stage draws it over
 the scene prop (`overlays/CutsceneOverlay.tsx`), so the door the hero steps into
 at the end of a prelude is the object he finds standing there when the level

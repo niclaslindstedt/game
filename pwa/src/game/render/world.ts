@@ -144,7 +144,6 @@ export function drawLandmarks(
   sprites: Sprites,
   camera: Camera,
   inView: InView,
-  timeMs: number,
 ): void {
   for (const landmark of state.landmarks) {
     if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
@@ -155,6 +154,51 @@ export function drawLandmarks(
     // A sealed travel door's landmark (the rift seam before the RIFT
     // CREATOR is home) is not there yet as far as this character knows.
     if (isLandmarkHidden(landmark.kind)) continue;
+    // A TEAR IN SPACE is drawn with the WALLS, not with the landmarks — see
+    // `drawRiftPortals` below for why.
+    if (riftPortalLook(landmark.sprite)) continue;
+    const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
+    drawWorldSprite(
+      ctx,
+      landmark.sprite,
+      sprite,
+      landmark.pos,
+      camera,
+      landmark.anchor === "base" ? "base" : "center",
+    );
+  }
+}
+
+/**
+ * THE RIFT PORTALS — the landmark and the churn inside it (./rift-portal.ts).
+ *
+ * A pass of its own, run AFTER the obstacles, for the reason the lamps are:
+ * **a tear is IN a wall, not behind one.** The garage's seam hums on the bay
+ * wall a step off the hero's landing, and drawn with the rest of the landmarks
+ * — before the walls — the stone painted straight over it and left a hole in
+ * the world you could see about a third of. It takes the same trade the barn
+ * lights take: anything drawn after the walls is drawn over ALL of them,
+ * including one genuinely standing in front, and a fixture bolted to masonry is
+ * better always-visible than sometimes-erased.
+ *
+ * The tear's own animation is drawn inside the landmark's billboard so it
+ * stands with the art rather than lying down on the tilted floor, and is seeded
+ * off the tear's own position so a map with two of them never has them folding
+ * in step.
+ */
+export function drawRiftPortals(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  timeMs: number,
+): void {
+  for (const landmark of state.landmarks) {
+    if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
+    if (isLandmarkHidden(landmark.kind)) continue;
+    const look = riftPortalLook(landmark.sprite);
+    if (!look) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     const base = landmark.anchor === "base";
     drawWorldSprite(
@@ -165,13 +209,6 @@ export function drawLandmarks(
       camera,
       base ? "base" : "center",
     );
-    // A TEAR IN SPACE goes on moving after the sprite is down: the throat
-    // turns, the motes drift in, the smoke climbs (./rift-portal.ts). Drawn
-    // inside the landmark's own billboard so it stands with the art rather
-    // than lying down on the tilted floor, and seeded off the tear's own
-    // position so a map with two of them never has them folding in step.
-    const look = riftPortalLook(landmark.sprite);
-    if (!look) continue;
     // Where the sprite's own centre ends up, given the anchor `drawWorldSprite`
     // just used: a base-anchored piece stands its feet on the pos, so its
     // middle is half a sprite up from it.
