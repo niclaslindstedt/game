@@ -395,6 +395,27 @@ export function GameScreen({
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
   // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  // WHO OPENED THE LEVEL-UP CHOOSER: true while the one on screen came from
+  // the player's own press on the HUD's points pip rather than from the ding
+  // raising it (solo — see `openLevelupAfterDing`). Only the reveal lockout
+  // reads it: a modal somebody deliberately opened has no stray steering input
+  // to eat, so it arms at once. Kept app-side because the press is always
+  // local — a joiner's chooser is their own press, whatever the snapshot says
+  // — and cleared the moment the chooser is down, so the next ding's reveal
+  // gets its freeze back.
+  const [levelupByPress, setLevelupByPress] = useState(false);
+  // …and its one-way latch back down, on the EDGE rather than on the absence:
+  // the press is answered a frame before the HUD snapshot reports the chooser
+  // up, so "not showing" cannot mean "done with" — only a chooser that WAS up
+  // and now is not has been closed. Anything else would clear the flag in the
+  // gap between the press and the modal's first paint, and hand the modal the
+  // freeze the press just earned it.
+  const levelupShowingRef = useRef(false);
+  useEffect(() => {
+    const showing = hud?.screen === "levelup";
+    if (levelupShowingRef.current && !showing) setLevelupByPress(false);
+    levelupShowingRef.current = showing;
+  }, [hud?.screen]);
   // Which face of the CHARACTER SCREEN the engine's `inventory` phase is
   // showing — Diablo 2's split, kept app-side because the engine has one
   // freeze, not two: the bag pouch raises the inventory, the hero's portrait
@@ -1440,7 +1461,13 @@ export function GameScreen({
             // banked points.
             if (!fieldLive(state)) return;
             setWeaponMenuOpen(false);
-            runCommand(state, "promptPendingPoints");
+            // The press IS the engagement, so the chooser it raises skips its
+            // reveal lockout (see `levelupByPress`) — latched only if the verb
+            // actually opened one, so a refused press can't leave the flag
+            // standing for a later ding's reveal to spend.
+            if (runCommandOk(state, "promptPendingPoints")) {
+              setLevelupByPress(true);
+            }
             playUiSound(synth, "confirm");
             bumpUi();
           }}
@@ -1603,6 +1630,7 @@ export function GameScreen({
           dialogueRevealRef={dialogueRevealRef}
           demoLevelupFocus={demo ? demoLevelupFocus : null}
           demoTalentFocus={demo ? demoTalentFocus : null}
+          levelupByPress={levelupByPress}
           heroAvatar={heroAvatarFor("bag")}
           charTab={charTab}
           onCharTab={setCharTab}

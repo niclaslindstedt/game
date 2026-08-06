@@ -42,6 +42,7 @@ import {
   stepStampedes,
   stepWells,
 } from "../hazards.ts";
+import { openLevelupAfterDing } from "../items/flow.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../fog.ts";
 import {
@@ -202,12 +203,16 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   // which is every single-player run.
   stepTradeRequests(state);
   // The ding celebration: a fresh level-up burns on the hero for a beat
-  // (golden pillar + fanfare). The points BANK (`Player.pendingStatPoints`)
-  // rather than forcing the chooser open — the chooser is a non-blocking
-  // screen the player opens when they want (`promptPendingPoints`), and the
-  // HUD shows a pip while points wait.
+  // (golden pillar + fanfare) and the points BANK
+  // (`Player.pendingStatPoints`). When the glare fades, SOLO raises the
+  // chooser out of it — one player's world may wait on the pick, and the
+  // reward-then-bookkeeping beat is what a ding is. A PARTY banks it instead
+  // and the HUD's points pip carries the reminder until its player opens the
+  // chooser themselves (`promptPendingPoints`). Both halves are
+  // `openLevelupAfterDing`.
   if (state.levelUpFxMs > 0) {
     state.levelUpFxMs = Math.max(0, state.levelUpFxMs - dtMs);
+    if (state.levelUpFxMs === 0) openLevelupAfterDing(state);
   }
   // Cool down the "bags are full" nudge so a player parked on uncarriable loot
   // gets one cue, not one per frame (see stepItems).

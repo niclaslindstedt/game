@@ -150,8 +150,9 @@ export function createBotDriver(deps: {
       runCommandOk(state, "resolveChoice", true);
       bumpUi();
     }
-    // Level-ups no longer force the chooser open — the points BANK on the
-    // hero, so the drain triggers on the bank rather than on a phase. The
+    // A level-up BANKS its points on the hero, so the drain triggers on the
+    // bank rather than on a phase — which is also what makes it indifferent to
+    // whether the solo ding has raised the chooser over them yet. The
     // demo plays the modal at a watchable pace (see demo-director, which
     // also OPENS the chooser so the viewer sees the points spent); the
     // developer BOT VIEW spends the banked points instantly, no chooser.

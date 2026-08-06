@@ -75,8 +75,9 @@ export function PlayingHud({
    * itself, since the log is read with the play stopped. */
   onOpenQuestLog: () => void;
   /** Open the level-up chooser on the BANKED points (the `+` pip's press) —
-   * a ding no longer forces the chooser, so the pip is the reminder and this
-   * sends `promptPendingPoints`. */
+   * in a party the ding banks rather than forcing the chooser, so the pip is
+   * the reminder and this sends `promptPendingPoints`. It is also how points
+   * left over after a LATER are placed, solo. */
   onOpenPoints: () => void;
   /** The AUTO PILOT control panel, mounted under the minimap while the
    * engine meter runs (GameScreen owns the session it drives). */
@@ -465,10 +466,12 @@ export function PlayingHud({
               )}
               {/* THE POINTS PIP — the same round slot once more, at the row's
                   end, worn only while the hero has stat/talent points BANKED
-                  (a ding no longer forces the chooser open). Gold like the
-                  quest button's alert, because it too means "something is
-                  waiting for you"; pressing it opens the chooser on demand
-                  (`promptPendingPoints`). It yields to the weapon switcher
+                  (in a party a ding never forces the chooser open, and solo it
+                  is what a LATER leaves behind). Gold like the quest button's
+                  alert, because it too means "something is waiting for you";
+                  pressing it opens the chooser on demand
+                  (`promptPendingPoints`) — and, because that press IS the
+                  player engaging it, one with no reveal lockout. It yields to the weapon switcher
                   for the same reason its neighbours do. */}
               {hud.pointsWaiting && (
                 <button
