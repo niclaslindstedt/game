@@ -140,9 +140,10 @@ const EMPTY_FOG = new Uint8Array(0);
 //
 // v27: THE CACHE — the garage chest (src/game/cache.ts). `Player.cache` is a
 // required list the engine indexes unguarded (`stashItem`), and the run grew
-// `cachePos`/`cacheOwned`, which decide whether the chest is standing at all. A
-// v26 blob carries none of the three, so a thaw would hand the stash verbs an
-// `undefined` grid and draw a chest nobody can open.
+// `cachePos`/`cacheSlots`, which decide whether the chest is standing at all
+// and how much of it the hero has earned. A v26 blob carries none of the three,
+// so a thaw would hand the stash verbs an `undefined` grid and draw a chest
+// nobody can open.
 //
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump

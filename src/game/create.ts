@@ -119,12 +119,12 @@ export function createGame(
   // set up at the door from the first tick — a death-and-restart can walk
   // straight to the counter to repair — and greets the hero back on approach.
   merchantDiscovered = false,
-  // True when this CHARACTER has earned the CACHE — the garage chest Ruth pays
-  // for THE SCALE (src/game/cache.ts). A session parameter, seeded from the
-  // character's keepsakes: the run never discovers it, so a joiner and the host
-  // build the same world. The chest still only STANDS where the carve gave it a
-  // spot, which is the hub and nowhere else.
-  cacheOwned = false,
+  // HOW DEEP THE CACHE THIS CHARACTER HAS EARNED IS — 0 for a hero Ruth has
+  // not paid yet (src/game/cache.ts). A session parameter, seeded from the
+  // character's own high-water mark: the run never discovers it, so a joiner
+  // and the host build the same world. The chest still only STANDS where the
+  // carve gave it a spot, which is the hub and nowhere else.
+  cacheSlots = 0,
 ): GameState {
   // This run's map: a chamber grid carved from the mission's blueprint on the
   // run's own seed (see `mapgen/`). Everything below reads a plain `LevelDef`.
@@ -695,7 +695,7 @@ export function createGame(
     cachePos: def.landmarks.find((l) => l.kind === "cache")?.pos
       ? { ...def.landmarks.find((l) => l.kind === "cache")!.pos }
       : null,
-    cacheOwned,
+    cacheSlots,
     // The parked machines minted above (their footprints already stand in
     // `obstacles`) — the car and the ship, where the carve pinned them.
     vehicles,

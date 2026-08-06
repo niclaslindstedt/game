@@ -242,10 +242,10 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "baits",
       "bossCorpse",
       "bossDeath",
-      // v27: THE CACHE — where the garage chest stands on this map, and
-      // whether this hero has earned it (src/game/cache.ts).
-      "cacheOwned",
+      // v27: THE CACHE — where the garage chest stands on this map, and how
+      // deep a one this hero has earned (src/game/cache.ts).
       "cachePos",
+      "cacheSlots",
       "campAnchor",
       "campMs",
       "canopy",

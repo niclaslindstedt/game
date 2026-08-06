@@ -1091,14 +1091,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   its keep needs a clear gain (`SWAP_GAIN_MARGIN`) whenever it GIVES UP REACH,
   because the bot's standoff is derived from the held weapon's range — reaching
   farther is free, reaching less far has to pay for the ground it costs.
-- **`src/game/cache.ts`** — THE CACHE: the antique chest against the garage's
-  north wall, and the one place a piece of gear is KEPT rather than carried.
-  `CACHE.slots` cells on the hero (`Player.cache`, private on the wire like the
-  bag, riding the `Loadout` so it lands on the character); the FIXTURE is a
+- **`src/game/cache.ts`** — THE CACHE: the chest against the garage's north
+  wall, and the one place a piece of gear is KEPT rather than carried.
+  `CACHE.maxSlots` cells on the hero (`Player.cache`, private on the wire like
+  the bag, riding the `Loadout` so it lands on the character); the FIXTURE is a
   `cache` landmark the carve reserves on the hub alone, so `GameState.cachePos`
-  is null everywhere else and every verb refuses. Whether it STANDS there is
-  `cacheOwned` — a session parameter off the character's keepsakes, flipped
-  mid-run exactly once by `grantCache` when Ruth's THE SCALE is handed in, which
+  is null everywhere else and every verb refuses. How many of the cells are
+  USABLE is `cacheSlots` — a LADDER (`DifficultyDef.cache`: 16 → 24 → 32 → 40 →
+  48, a grander piece of furniture with its own name and art each rung, the last
+  of them D2's own 8×6 stash) carried as a session parameter off the character's
+  own HIGH-WATER MARK, so a gentler run never claws a row back. It is raised
+  mid-run by `grantCache` when Ruth's THE SCALE is handed in on a deeper rung
+  than the hero already had, which
   also starts the `cacheArriveMs` the app dramatizes as the thing coming into
   being (`pwa/src/game/render/conjure.ts`, over the `cacheGiven` cue). Opening it
   is the stall's own gesture — a tap on the fixture → `openCache` → the hero's

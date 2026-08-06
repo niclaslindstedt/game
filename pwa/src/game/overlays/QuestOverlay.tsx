@@ -141,13 +141,16 @@ export function QuestOverlay({
   const giver = offer ? questGiverDef(offer.giverId) : null;
   // Memoised because the crawl reads it: a fresh array identity every render
   // would restart the typewriter on every frame, and the speech would never
-  // finish printing.
+  // finish printing. `state` is in the deps for the linter's sake and costs
+  // nothing — the run object's identity is stable for the whole run, and the
+  // only thing the pages read off it is the difficulty (the `{CACHE}` line),
+  // which cannot change inside one.
   const pages = useMemo(
     () =>
       offer && offer.questId
-        ? conversationPages(offer.questId, offer.kind)
+        ? conversationPages(state, offer.questId, offer.kind)
         : [],
-    [offer],
+    [offer, state],
   );
   const lastPage = offer ? offer.page >= pages.length - 1 : false;
   // The rows are derived from the run every render (`giverTopics`), never

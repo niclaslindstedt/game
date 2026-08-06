@@ -7,12 +7,11 @@ order: 3
 requires:
   - ruth_dent
 lore: >
-  In the rift Ada pried a scale off a lizard god with her bare hands - the
-  trail's gut-punch find says so. Her mother asks for a scale like it, off the
-  same scaled breed, not as proof and not for comfort: she wants to hold what
-  her daughter is up against, and find out it is the gods who should worry.
-  What she gives back is the family chest - three generations of keeping -
-  which stands in the bay from that day on.
+  In the rift Ada pried a scale off a lizard god with her bare hands. Her
+  mother asks for one like it, off the same scaled breed, not as proof and not
+  for comfort: she wants to hold what her daughter is up against, and find out
+  it is the gods who should worry. What she gives back is the family's own
+  furniture, a piece deeper into her mother's house each difficulty.
 offer:
   - - WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
   - - MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
@@ -22,7 +21,13 @@ incomplete:
 complete:
   - - IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
   - - I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-  - - THERE'S A CHEST AGAINST THAT WALL NOW - MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
+  # {CACHE} — the RUNG's own line about what she brought and where it came from
+  # (`DifficultyDef.cache.line`, src/game/cache.ts). Ruth hands the chest over
+  # on every difficulty and it is a grander thing each time, so the provenance
+  # ramps with it: a flea-market box, her mother's, a crossing, a dowry, a king.
+  # The errand is one file and the ladder is five; the rung owns the sentence.
+  - - "{CACHE}"
+  - - I'LL KEEP GOING THROUGH HER HOUSE. THERE'S BIGGER BACK THERE.
   - - GO AND MEET HER HALFWAY.
 objectives:
   - kind: collect

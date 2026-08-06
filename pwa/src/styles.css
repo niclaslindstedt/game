@@ -8859,14 +8859,28 @@ canvas.tier-artifact {
 
 /* THE CACHE's two grids (CachePanel.tsx). They wear the bag's rectangle so a
    piece reads identically on both sides of the window and in the bag panel next
-   door, but the CHEST is not the hero's carry and never inherits its column
-   count: `CACHE.slots` is 20, which lays out as 10 x 2 on the landscape phone
-   the game is designed for and 5 x 4 in portrait — a shape the eye can count
-   without scrolling, which is the whole point of a stash you are deciding
-   inside. */
+   door — but the CHEST is EIGHT COLUMNS AT EVERY BREAKPOINT and never inherits
+   the bag's responsive count.
+
+   Eight is D2's own stash width, and pinning it is what makes the LADDER
+   legible: every rung's chest is a multiple of eight (`DifficultyDef.cache` —
+   16 / 24 / 32 / 40 / 48), so each difficulty Ruth is paid on adds exactly one
+   visible ROW and the locked sockets above show how many are left. A column
+   count that changed with the viewport would make the same chest two rows on a
+   phone and three on a tablet, and the one thing the player is here to read is
+   how much room they have.
+
+   The `!important` earns itself: `.inv-bag-grid` sets `--inv-cols` inside two
+   media queries that come LATER in the file, and a single class ties with a
+   single class — so without it the landscape query silently wins and the
+   rectangle goes ragged at exactly the reference viewport. */
 .cache-grid {
-  --inv-cell-max: 2.4rem;
-  max-height: 9rem;
+  --inv-cols: 8 !important;
+  --inv-cell-max: 2.2rem;
+  /* Four rows before it scrolls: the chest is up to six, and the panel carries
+     the bag under it, so the deep rungs scroll rather than pushing CLOSE off
+     the bottom of a landscape phone. */
+  max-height: 9.6rem;
 }
 
 /* A cell here is a BUTTON rather than a drag handle: one tap moves the piece to

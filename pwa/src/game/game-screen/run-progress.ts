@@ -20,8 +20,8 @@ import {
 
 import {
   accrueCampaign,
+  bankCacheSlots,
   bankKeepsake,
-  CACHE_KEEPSAKE,
   bankRiftRoad,
   bankLoadout,
   campaignTally,
@@ -323,15 +323,16 @@ export function createRunProgress(deps: {
     ) {
       characterRef.current = bankKeepsake(characterRef.current, event.defId);
     }
-    // THE CACHE — Ruth's chest, banked the moment she hands it over. It is not
-    // a story item and is never picked up, but it is the same KIND of fact the
-    // keepsakes list holds: a permanent acquisition. Booked here rather than at
-    // the level's end for the reason the campaign chain beside it is — the case
-    // that matters is the player who quits to the menu after the handover, and
-    // a bank that waited for a victory would make them earn their own furniture
-    // twice.
+    // THE CACHE — Ruth's chest, banked at its new DEPTH the moment she hands it
+    // over. It is not a story item and is never picked up, but it is the same
+    // KIND of fact the keepsakes beside it are: a permanent acquisition. Booked
+    // here rather than at the level's end for the reason the campaign chain is
+    // — the case that matters is the player who quits to the menu after the
+    // handover, and a bank that waited for a victory would make them earn their
+    // own furniture twice. `bankCacheSlots` only ever raises, so re-running the
+    // errand on a gentler rung cannot take rows back.
     if (event.type === "cacheGiven") {
-      characterRef.current = bankKeepsake(characterRef.current, CACHE_KEEPSAKE);
+      characterRef.current = bankCacheSlots(characterRef.current, event.slots);
     }
     // A CAMPAIGN ERRAND MOVED — bank the chain on the character now rather
     // than at the level's end. The whole point of a campaign chain is that it

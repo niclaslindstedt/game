@@ -292,7 +292,7 @@ export function rewardProse(quest) {
   }
   if (reward.cache) {
     lines.push(
-      `And it gives something back rather than paying for something. THE CACHE is an antique chest that comes into being against the garage's north wall as the errand is handed in and stands there for good — twenty cells deep, and the only place in the game a piece of gear can be KEPT without being carried. It is yours once and forever: a death, an abandoned run and a fresh difficulty all leave it exactly where it stands, and what is in it never expires.`,
+      `And it gives something back rather than paying for something. THE CACHE is a chest that comes into being against the garage's north wall as the errand is handed in and stands there for good — the only place in the game a piece of gear can be KEPT without being carried. It also GROWS: run this errand on a deeper difficulty and she brings something further back out of her mother's house, worth another row of cells, up to eight columns by six. What you own is the deepest chest you have ever been paid, so a gentler game never takes a row back and nothing in it ever expires.`,
     );
   }
   return lines;

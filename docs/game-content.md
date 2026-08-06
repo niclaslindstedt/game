@@ -90,18 +90,42 @@ Everything a hero owns rides on his body: what is worn, and what fits in the
 bag. That is right for loot, which is meant to be spent or sold — but it made
 the piece a player was SAVING (the off-build unique, the set item three pieces
 short, the weapon for a level they have not reached) cost a bag cell for as long
-as they saved it. **THE CACHE** is D2's answer: an antique chest standing against
-the garage's north wall, `CACHE.slots` (20) cells deep, where a piece can be put
-down without being given up. The bag stays a bag, and keeping stops competing
-with carrying.
+as they saved it. **THE CACHE** is D2's answer: a chest standing against the
+garage's north wall where a piece can be put down without being given up. The
+bag stays a bag, and keeping stops competing with carrying.
 
-Four rules define it, and `src/game/cache.ts` is the one place they live:
+**IT IS A LADDER, AND THAT IS THE FEATURE.** Ruth's errand runs once per
+difficulty, and each rung she has been further back into her mother's house — a
+grander piece of furniture with its own name, its own art, and one more ROW of
+cells (`DifficultyDef.cache`):
 
-- **It is EARNED, once, forever.** Ruth pays it for THE SCALE, the last of her
-  three errands (`reward.cache`) — the only errand in the game that gives
-  something back rather than paying for something. Owning it is a KEEPSAKE on
-  the character, like the rift creator, so a death, an abandoned run or a fresh
-  difficulty never takes it back: furniture is not re-earned.
+| Rung      | What she brings    | Cells |
+| --------- | ------------------ | ----- |
+| EASY      | THE KEEPSAKE BOX   | 16    |
+| MEDIUM    | THE HEIRLOOM CHEST | 24    |
+| HARD      | THE STEAMER TRUNK  | 32    |
+| NIGHTMARE | THE DOWRY CHEST    | 40    |
+| JESUS     | THE INHERITANCE    | 48    |
+
+Eight columns wide at every rung and every breakpoint, which is D2's own stash
+width — so a rung is visibly one row more than the one below, and the top of the
+ladder is 8 × 6, which is D2's stash exactly.
+
+Five rules define it, and `src/game/cache.ts` is the one place they live:
+
+- **It is EARNED, once, forever, and only GROWS.** Ruth pays it for THE SCALE,
+  the last of her three errands (`reward.cache`) — the only errand in the game
+  that gives something back rather than paying for something. What a hero owns
+  is a HIGH-WATER MARK on the character (`Character.cacheSlots`), so a death, an
+  abandoned run and a fresh gentler difficulty all leave it exactly as deep as
+  it was: a stash that shrank when the player started an easier game would have
+  to decide which of their things to throw away. Running the errand again at or
+  below what they already have still pays its XP, coins and loot, and simply
+  leaves the chest alone.
+- **The cells are always the CEILING long** (`CACHE.maxSlots`, 48). How many are
+  usable is `GameState.cacheSlots`; the rest draw LOCKED, the same way the bag
+  draws the room STRENGTH has not bought. That is what makes dropping back to an
+  easier rung a change to a number rather than a decision about what to delete.
 - **It is the HUB'S ALONE.** Only the garage's blueprint stands one (a `cache`
   landmark), and that is the whole balance of it: a stash reachable mid-mission
   is a bag with no cap, and the decision the bag exists to force — what do I
@@ -324,3 +348,16 @@ and prints as `?HERO?`, because the pixel font has no brace glyph — the same
 test refuses one. A caller with no player to ask (a headless sim, the published
 library) gets `HERO_NAME_FALLBACK`, the NEW GAME field's own placeholder, so the
 line still reads as a sentence.
+
+**THE BRACES ARE A CLOSED VOCABULARY, AND THERE ARE TWO.** Beside `{HERO}` sits
+**`{CACHE}`** — the provenance line for whichever chest the difficulty pays
+(`DifficultyDef.cache.line`, see THE CACHE above). Ruth's handover writes it as
+a whole page, and the rung supplies the sentence: a flea-market box on the
+gentlest rung, a thing her family swears came off a king on the hardest. It
+exists because the errand is ONE file and the ladder is five, and writing five
+copies of THE SCALE to say five sentences would put the ladder in the wrong
+place. A page whose token resolves to nothing — a rung that pays no chest, which
+a mod's cut-down ladder may have — is DROPPED rather than shown blank.
+`tests/content/hero_name_test.ts` holds the whole vocabulary in one list, so
+adding a third token is a deliberate edit there rather than a silent new
+template language.

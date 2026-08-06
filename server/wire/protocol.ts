@@ -95,8 +95,9 @@ export type SessionParams = {
   clearedLevels: string[];
   /** The hero has already met this level's merchant on this difficulty. */
   merchantDiscovered: boolean;
-  /** The hosting character has earned the CACHE — the garage chest. */
-  cacheOwned?: boolean;
+  /** How deep the hosting character's CACHE is — the garage chest, one rung
+   * deeper per difficulty beaten. 0 = not earned. */
+  cacheSlots?: number;
   /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
    * the wire moves it, the engine reads it. */
   campaignQuests?: unknown | null;

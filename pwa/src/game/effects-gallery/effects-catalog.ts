@@ -1760,6 +1760,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
           x: localHero(ctx.state).pos.x + 34,
           y: localHero(ctx.state).pos.y - 20,
         },
+        // The top of the ladder, since an exhibit shows a thing at its best.
+        slots: 48,
+        name: "THE INHERITANCE",
       }),
   },
   {

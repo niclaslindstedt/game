@@ -541,12 +541,17 @@ export {
 // every other bag verb; `cacheStanding` is what the renderer and the tap test
 // ask before drawing or opening anything.
 export {
+  CACHE_TOKEN,
+  cacheNameFor,
+  cacheRungFor,
+  cacheSlotsFor,
   cacheStanding,
   closeCache,
   emptyCache,
   grantCache,
   normalizeCache,
   openCache,
+  resolveCacheLine,
   stashItem,
   takeFromCache,
 } from "./game/cache.ts";

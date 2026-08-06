@@ -297,8 +297,9 @@ waiting at home means staring at the phone. Her chain is the game's second
 campaign-long one (`campaign: true`): three errands, one per leg of the trail,
 each asking for something of her daughter's — and she is never once scared for
 Ada, only proud. The last of the three is the only errand in the game that gives
-something back rather than paying for something: the family chest, three
-generations of keeping, which stands in the bay from that day on._
+something back rather than paying for something — and the only reward that
+GROWS: she runs it again on every difficulty, a piece deeper into her mother's
+house each time._
 
 #### SHE LET HERSELF IN — the meeting, played before the errands
 
@@ -372,13 +373,29 @@ anywhere._
 - A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
 
 **The handover** — and the one errand in the game that gives something back.
-_The chest arrives as she speaks: it comes into being against the bay's north
-wall, and stands there for good (THE CACHE, `src/game/cache.ts`)._
+_The thing arrives as she speaks: it comes into being against the bay's north
+wall and stands there for good (THE CACHE, `src/game/cache.ts`). WHAT she
+brings depends on the difficulty — a lidded box on the gentlest rung, the
+gilded INHERITANCE on the hardest — which is why she names none of them here
+and says only "something". The last page below is what makes the ladder a
+promise rather than a surprise._
 
 1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
 2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-3. THERE'S A CHEST AGAINST THAT WALL NOW - MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
-4. GO AND MEET HER HALFWAY.
+3. THERE'S SOMETHING AGAINST THAT WALL NOW. IT WAS MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
+4. I'LL KEEP GOING THROUGH HER HOUSE. THERE'S BIGGER BACK THERE.
+5. GO AND MEET HER HALFWAY.
+
+**What she brings, per rung** — never spoken, only read off the thing standing
+in the bay (`DifficultyDef.cache`):
+
+| Rung      | What it is         | Cells |
+| --------- | ------------------ | ----- |
+| EASY      | THE KEEPSAKE BOX   | 16    |
+| MEDIUM    | THE HEIRLOOM CHEST | 24    |
+| HARD      | THE STEAMER TRUNK  | 32    |
+| NIGHTMARE | THE DOWRY CHEST    | 40    |
+| JESUS     | THE INHERITANCE    | 48    |
 
 **Farewell.**
 

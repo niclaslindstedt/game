@@ -24,7 +24,7 @@
 import { useReducer, useState } from "react";
 
 import {
-  CACHE,
+  cacheRungFor,
   equipmentName,
   isArmorBroken,
   isWeaponBroken,
@@ -75,8 +75,19 @@ export function CachePanel({
    * has to dodge. */
   const [inspect, setInspect] = useState<Equipment | null>(null);
 
-  const used = cache.filter(Boolean).length;
+  // HOW MUCH OF THE GRID THIS HERO HAS EARNED. The list is always the ceiling
+  // long (`CACHE.maxSlots` — D2's own 48); the rows past `cacheSlots` draw
+  // LOCKED, which is the bag's own idiom for room still to be earned and is why
+  // the ladder reads as something to climb rather than as cells that are simply
+  // absent. Ruth pays one more row per difficulty (`DifficultyDef.cache`).
+  const unlocked = state.cacheSlots;
+  const used = cache.filter((item, i) => item && i < unlocked).length;
+  const full = used >= unlocked;
   const bagUsed = bag.filter(Boolean).length;
+  // WHICH CHEST THIS IS — keyed off the EARNED depth rather than off the rung
+  // being played, so a hero opening THE DOWRY CHEST on a fresh EASY run reads
+  // the dowry chest's name over the dowry chest's picture.
+  const rung = cacheRungFor(unlocked);
 
   const move = (side: Side, index: number) => () => {
     // BOTH VERBS RETURN THE CELL THEY LANDED IN, and the first cell is 0 — so
@@ -132,23 +143,26 @@ export function CachePanel({
         <div className="shop-header">
           <span className="shop-portrait-frame">
             <img
-              src={spriteDataUrl(sprites, "antique_chest") ?? undefined}
+              src={
+                spriteDataUrl(sprites, rung?.sprite ?? "antique_chest") ??
+                undefined
+              }
               alt=""
               className="pixel-img"
             />
           </span>
           <PixelText
             font={font}
-            text="THE CACHE"
+            text={rung?.name ?? "THE CACHE"}
             scale={3}
             color="#ffd75e"
             className="shop-name"
           />
           <PixelText
             font={font}
-            text={`${used}/${CACHE.slots}`}
+            text={`${used}/${unlocked}`}
             scale={2}
-            color={used >= CACHE.slots ? "#e06a6a" : "#9aa3ad"}
+            color={full ? "#e06a6a" : "#9aa3ad"}
           />
         </div>
 
@@ -166,7 +180,18 @@ export function CachePanel({
           </div>
           <div className="inv-bag-frame">
             <div className="inv-grid inv-bag-grid cache-grid">
-              {cache.map((item, index) => cell(item, "cache", index))}
+              {cache.map((item, index) =>
+                index < unlocked ? (
+                  cell(item, "cache", index)
+                ) : (
+                  // THE ROOM STILL TO BE EARNED — sealed sockets that hold
+                  // nothing and take no piece, exactly as the bag draws the
+                  // cells STRENGTH has not bought. Drawn rather than omitted so
+                  // the whole 8x6 rectangle is always there and the ladder is
+                  // something the player can SEE the top of.
+                  <div key={index} className="inv-cell locked" aria-hidden />
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -178,9 +203,9 @@ export function CachePanel({
             <PixelText font={font} text="CARRIED" scale={3} color="#9aa3ad" />
             <PixelText
               font={font}
-              text={used >= CACHE.slots ? "THE CHEST IS FULL" : "TAP TO KEEP"}
+              text={full ? "THE CHEST IS FULL" : "TAP TO KEEP"}
               scale={2}
-              color={used >= CACHE.slots ? "#e06a6a" : "#5a6470"}
+              color={full ? "#e06a6a" : "#5a6470"}
             />
           </div>
           <div className="inv-bag-frame">

@@ -3,7 +3,13 @@
 // decor, meteor craters, landmarks, the fallen-boss exit ring, obstacles,
 // and gravity wells — all drawn under the moving actors.
 
-import { ASTEROIDS, CACHE, cacheStanding, type GameState } from "@game/core";
+import {
+  ASTEROIDS,
+  CACHE,
+  cacheRungFor,
+  cacheStanding,
+  type GameState,
+} from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import {
@@ -177,6 +183,12 @@ export function drawLandmarks(
     // so it is asked here rather than through `isLandmarkHidden`.
     if (landmark.kind === "cache") {
       if (!cacheStanding(state)) continue;
+      // WHICH chest stands there is the hero's EARNED rung, not the blueprint's
+      // sprite: Ruth brings a grander piece of furniture each difficulty she is
+      // paid on (`DifficultyDef.cache`), and the map cannot know which one this
+      // character has climbed to. The authored sprite is the fallback.
+      const rung = cacheRungFor(state.cacheSlots);
+      const chest = (rung && spriteByName(sprites, rung.sprite)) || sprite;
       // …and while it is still ARRIVING, it is drawn coming into being instead
       // of standing there (./conjure.ts). The burst of light around it is a
       // transient effect off the `cacheGiven` event; this is the chest itself.
@@ -185,15 +197,24 @@ export function drawLandmarks(
         beginBillboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y);
         drawConjuringSprite(
           ctx,
-          sprite,
+          chest,
           landmark.pos.x - camera.x,
-          landmark.pos.y - camera.y - sprite.height / 2,
+          landmark.pos.y - camera.y - chest.height / 2,
           1 - arriving / CACHE.arriveMs,
           TIER_RGB.unique,
         );
         endBillboard(ctx);
         continue;
       }
+      drawWorldSprite(
+        ctx,
+        rung?.sprite ?? landmark.sprite,
+        chest,
+        landmark.pos,
+        camera,
+        landmark.anchor === "base" ? "base" : "center",
+      );
+      continue;
     }
     drawWorldSprite(
       ctx,

@@ -1,0 +1,40 @@
+name: the_inheritance
+family: earth
+size: [20, 17]
+description: >
+  THE CACHE, rung five and the last — the gilded one, and the biggest thing in
+  the bay. A crowned dome banded in gold, filigree across the front panel, and
+  a red stone set in the lockplate. There is nothing further back in the house.
+  This is the whole inheritance.
+subject:
+  kind: "solid prop"
+  build: "a great gilded chest with a crowned dome, standing on gold feet"
+  features: "gold banding, filigree across the front panel, a red stone set in the lockplate"
+  accent: "dark wood almost lost under gold, with one deep red stone"
+  flavor: "the end of the ladder — there is nothing further back in the house"
+palette:
+  O: "#1a1c2c" # outline, and the keyhole
+  h: "#8f6a3c" # the wood the gold is laid over
+  B: "#6f4d29" # wood
+  E: "#472f16" # wood in shadow
+  G: "#e8b93e" # gold band
+  C: "#f6dc8a" # filigree, the bright gold
+  J: "#e0405c" # the red stone
+grid: |
+  ....................
+  .......OOOOOO.......
+  .....OOCCCCCCOO.....
+  ...OOGhhhhhhhhGOO...
+  ..OGhhhhhhhhhhhhGO..
+  .OGhhhhhhhhhhhhhhGO.
+  .OBBGGBBBJJBBBGGBBO.
+  .OOOOOOOOOOOOOOOOOO.
+  .OBBGGBBBJJBBBGGBBO.
+  .OBBGGBBBJOBBBGGBBO.
+  .OBBGGBBBBBBBBGGBBO.
+  .OBBGGCBCCCCBCGGBBO.
+  .OBBGGBCCBBCCBGGBBO.
+  .OBBGGBBBBBBBBGGBBO.
+  .OEEGGEEEEEEEEGGEEO.
+  .OOOOOOOOOOOOOOOOOO.
+  ..OGG..........GGO..

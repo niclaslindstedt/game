@@ -211,7 +211,7 @@ function wireParams(params: RunParams): SessionParams {
     respec: params.respec ?? false,
     clearedLevels: [...(params.clearedLevels ?? [])],
     merchantDiscovered: params.merchantDiscovered ?? false,
-    cacheOwned: params.cacheOwned ?? false,
+    cacheSlots: params.cacheSlots ?? 0,
     seenThoughts: [...(params.seenThoughts ?? [])],
   };
 }

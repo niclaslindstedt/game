@@ -540,9 +540,16 @@ export type GameEvent =
    * acquisition belongs (a death must never un-give it).
    *
    * `pos` is where the thing lands, which is not where the conversation
-   * happened: the chest goes to its wall, not to the giver's feet.
+   * happened: the chest goes to its wall, not to the giver's feet. `slots` is
+   * how deep the chest now is and `name` what Ruth calls this one — both off
+   * the rung she was paid on (`DifficultyDef.cache`), and both carried on the
+   * event rather than looked up app-side because the app books the depth onto
+   * the CHARACTER, where it has to outlive the run that earned it.
+   *
+   * Fires only when the chest actually GREW, so running the errand again on a
+   * rung at or below what the hero already has says nothing.
    */
-  | { type: "cacheGiven"; pos: Vec2 }
+  | { type: "cacheGiven"; pos: Vec2; slots: number; name: string }
   /**
    * The player walked over loot he couldn't carry — the bag is full, so the
    * piece stays on the ground. `pos` is the hero (the app floats a "bags full"

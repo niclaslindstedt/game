@@ -230,7 +230,7 @@ function paysSection(quest, base) {
     reward?.cache
       ? [
           "THE CACHE",
-          `the antique chest in the garage — twenty cells to KEEP what you cannot carry, standing from the moment you hand this in`,
+          `the chest in the garage — somewhere to KEEP what you cannot carry, standing from the moment you hand this in, and a row deeper on every difficulty you run this errand on`,
         ]
       : null,
   ].filter(Boolean);

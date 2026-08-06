@@ -18,6 +18,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CACHE_TOKEN,
   COMPANION_DEFS,
   CONVERSATION_DEFS,
   CUTSCENE_DEFS,
@@ -27,6 +28,7 @@ import {
   LEVELS,
   QUEST_DEFS,
   QUEST_GIVER_DEFS,
+  resolveCacheLine,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   withHeroName,
@@ -66,8 +68,29 @@ const ALL = Object.entries(CATALOGS).flatMap(([name, catalog]) =>
   strings(catalog, name),
 );
 
-/** Anything brace-shaped — the token itself, or a near miss pretending to be. */
+/**
+ * EVERY TOKEN AUTHORED CONTENT MAY WRITE.
+ *
+ * The braces are a closed vocabulary, not a free-form template language: a line
+ * may say the hero's name, and Ruth's handover may say whichever chest the
+ * difficulty pays (`{CACHE}` — src/game/cache.ts). Anything else brace-shaped
+ * is a typo that ships as `?SOMETHING?` in a font with no brace glyph, which is
+ * what the first assertion below exists to catch.
+ *
+ * ADD A TOKEN HERE WHEN YOU ADD ONE TO THE GAME. Leaving it out fails the
+ * malformed-token check, which is the intended failure: a new token is a new
+ * thing every surface that draws authored text has to resolve, and this list is
+ * where that decision is recorded.
+ */
+const TOKENS = [HERO_NAME_TOKEN, CACHE_TOKEN];
+
+/** Anything brace-shaped — a token, or a near miss pretending to be one. */
 const BRACED = ALL.filter((s) => s.text.includes("{") || s.text.includes("}"));
+
+/** The lines that say the HERO'S NAME, which is what most of this suite is
+ * about — distinct from "has a brace in it" now that there is more than one
+ * token, and the distinction is load-bearing for the scarcity assertion. */
+const NAMED = ALL.filter((s) => s.text.includes(HERO_NAME_TOKEN));
 
 describe("the hero's name in authored content", () => {
   it("finds strings to check at all (the walk still reaches the catalogs)", () => {
@@ -76,16 +99,26 @@ describe("the hero's name in authored content", () => {
     expect(ALL.length).toBeGreaterThan(1000);
   });
 
-  it("writes the token exactly, everywhere a brace appears", () => {
-    const malformed = BRACED.filter(
-      (s) => s.text.split(HERO_NAME_TOKEN).join("").match(/[{}]/) !== null,
-    );
+  it("writes a known token exactly, everywhere a brace appears", () => {
+    const malformed = BRACED.filter((s) => {
+      let text = s.text;
+      for (const token of TOKENS) text = text.split(token).join("");
+      return text.match(/[{}]/) !== null;
+    });
     expect(malformed.map((s) => `${s.path}: ${s.text}`)).toEqual([]);
   });
 
-  it("leaves no brace behind once the name is put in", () => {
+  it("leaves no brace behind once every token is resolved", () => {
     for (const { text } of BRACED) {
-      expect(withHeroName(text, "ZOLTAN")).not.toMatch(/[{}]/);
+      // Both resolvers, because a page may carry either token and the box runs
+      // both over it. `resolveCacheLine` takes a whole page and may DROP one
+      // (a rung that pays no chest), which is a resolution too.
+      const named = withHeroName(text, "ZOLTAN");
+      expect(resolveCacheLine([named], "medium")?.[0] ?? "").not.toMatch(
+        /[{}]/,
+      );
+    }
+    for (const { text } of NAMED) {
       expect(withHeroName(text)).toContain(HERO_NAME_FALLBACK);
     }
   });
@@ -94,7 +127,7 @@ describe("the hero's name in authored content", () => {
     // Every line that says the name OUT LOUD — the hero's own speaker labels
     // (thought `speaker`, a cutscene actor's `name`) are the box's header
     // rather than a line, so they are excluded by asking for pages of text.
-    const spoken = BRACED.filter(
+    const spoken = NAMED.filter(
       (s) => !/\.(speaker|name)$/.test(s.path) && s.text !== HERO_NAME_TOKEN,
     ).map((s) => s.path.replace(/\[\d+\]/g, "[]"));
     expect(spoken.sort()).toEqual(

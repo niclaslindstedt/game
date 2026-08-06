@@ -716,13 +716,17 @@ export type GameState = {
    */
   cachePos: Vec2 | null;
   /**
-   * Does this hero own the chest at all? A SESSION PARAMETER, off the
-   * character's keepsakes (`RunParams.cacheOwned`) — never a fact the run
+   * HOW DEEP THIS HERO'S CHEST IS — the cells they may actually use, out of the
+   * `CACHE.maxSlots` the grid is always laid out at. 0 = no chest at all.
+   *
+   * A HIGH-WATER MARK, and a SESSION PARAMETER (`RunParams.cacheSlots`) off the
+   * deepest chest the character has ever been paid — never a fact the run
    * discovers, because a joiner and the host must build the same world from the
-   * same parameters. Flipped mid-run exactly once: when the errand that pays it
-   * is handed in (`grantCache`).
+   * same parameters. `grantCache` raises it mid-run when Ruth's errand is
+   * handed in on a rung deeper than anything the hero already had; nothing
+   * anywhere lowers it, so a fresh EASY run still opens the chest JESUS paid.
    */
-  cacheOwned: boolean;
+  cacheSlots: number;
   /**
    * The chest COMING INTO BEING, counting down from `CACHE.arriveMs`; 0 or
    * absent once it simply stands there. Set by `grantCache` at the handover and

@@ -208,6 +208,58 @@ export type DifficultyDef = {
   mobLevelMin?: number;
   mobLevelMax?: number;
   /**
+   * THE CHEST THIS RUNG PAYS — the CACHE Ruth hands over for THE SCALE
+   * (src/game/cache.ts). A rung that names none pays no chest, which is what
+   * keeps the test fixtures free of it.
+   *
+   * IT IS A LADDER, AND THE LADDER IS THE POINT. Ruth's last errand is run once
+   * per difficulty, and each time she brings something further back out of her
+   * mother's house: a bigger piece of furniture with its own name, worth one
+   * more ROW of cells. The shipped rungs run 16 → 24 → 32 → 40 → 48, two rows
+   * up to six, and the top of it is exactly Diablo II's stash — the thing this
+   * whole feature is.
+   *
+   * WHAT A HERO OWNS IS A HIGH-WATER MARK, never this number directly: the
+   * chest earned on NIGHTMARE is still forty cells deep on a fresh EASY run,
+   * because a stash that shrank when you started an easier game would have to
+   * decide which of the player's things to throw away. `grantCache` only ever
+   * raises it (see `GameState.cacheSlots`).
+   *
+   * `slots` must be a multiple of `CACHE.cols` or the chest ends in a ragged
+   * half row; the content suite checks it.
+   */
+  cache?: {
+    /** What Ruth calls the thing she brings on this rung. */
+    name: string;
+    /** How many cells it holds — a multiple of `CACHE.cols`. */
+    slots: number;
+    /**
+     * THE THING ITSELF, as a sprite. Each rung is a visibly grander piece of
+     * furniture than the one below — a lidded box, the chest proper, a banded
+     * travel trunk, a carved dowry chest, and finally the gilded one — because
+     * a reward that is only a bigger NUMBER is a reward the player reads in a
+     * tooltip. The chest is the thing standing in their garage; it should look
+     * like the climb.
+     *
+     * The garage blueprint authors a sprite too, and it is only the fallback
+     * (and what satisfies the atlas check): what actually stands there is the
+     * rung the hero has EARNED, which is not knowable when the map is carved.
+     */
+    sprite: string;
+    /**
+     * WHAT RUTH SAYS SHE BROUGHT — the provenance, and the other half of the
+     * ladder. The furniture gets grander; so does the story behind it, from a
+     * flea-market box on the gentlest rung to a thing her family swears came
+     * off a king on the hardest. A reward that only grew a NUMBER would be
+     * something the player reads in a tooltip.
+     *
+     * Written as one whole page (`CACHE_TOKEN` — the errand's `complete:`
+     * block writes `{CACHE}` where it goes), so it obeys the same ~120
+     * character budget every other authored page does.
+     */
+    line: string;
+  };
+  /**
    * MOB ARMOR — this rung's flat bonus to PHYSICAL-damage mitigation, STACKED ON
    * TOP of the steady per-level armor ramp (config `MOB_ARMOR`, applied in
    * `mobArmorReduction`/`mobArmorMult`, loot.ts). The level ramp climbs to 35%
@@ -526,6 +578,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: -3,
     mobLevelMin: 1,
     mobLevelMax: 34,
+    // THE CHEST THIS RUNG PAYS (see `DifficultyDef.cache`).
+    // A lidded box off the top of her mother's wardrobe — the first thing to hand,
+    // and the smallest. Two rows.
+    cache: {
+      name: "THE KEEPSAKE BOX",
+      slots: 16,
+      sprite: "keepsake_box",
+      line: "THERE'S A BOX AGAINST THAT WALL NOW. FLEA MARKET, TWO DOLLARS. PUT IN IT WHAT YOU CAN'T CARRY.",
+    },
     mobArmor: 0,
     aliveMult: 0.9,
     landingAliveMin: 0.75,
@@ -595,6 +656,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: -2,
     mobLevelMin: 2,
     mobLevelMax: 36,
+    // THE CHEST THIS RUNG PAYS (see `DifficultyDef.cache`).
+    // The chest proper, the one the family always meant when it said THE chest.
+    cache: {
+      name: "THE HEIRLOOM CHEST",
+      slots: 24,
+      sprite: "antique_chest",
+      line: "THERE'S A CHEST AGAINST THAT WALL NOW. MY MOTHER'S. SHE KEPT HER LETTERS IN IT AND NOTHING ELSE, EVER.",
+    },
     mobArmor: 0.02,
     aliveMult: 2,
     landingAliveMin: 0.6,
@@ -661,6 +730,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: -1,
     mobLevelMin: 3,
     mobLevelMax: 38,
+    // THE CHEST THIS RUNG PAYS (see `DifficultyDef.cache`).
+    // Off the back of the same house: a travel trunk with somebody's initials
+    // still stencilled on the lid.
+    cache: {
+      name: "THE STEAMER TRUNK",
+      slots: 32,
+      sprite: "steamer_trunk",
+      line: "THAT TRUNK BY THE WALL CAME OVER WITH MY GRANDFATHER. EVERYTHING HE OWNED WENT IN IT, AND IT WASN'T FULL.",
+    },
     mobArmor: 0.05,
     aliveMult: 2.75,
     landingAliveMin: 0.5,
@@ -717,6 +795,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: 0,
     mobLevelMin: 38,
     mobLevelMax: 56,
+    // THE CHEST THIS RUNG PAYS (see `DifficultyDef.cache`).
+    // Older than the house. It was packed for a wedding nobody alive attended and
+    // has been packed for somebody ever since.
+    cache: {
+      name: "THE DOWRY CHEST",
+      slots: 40,
+      sprite: "dowry_chest",
+      line: "THAT ONE CAME WITH A BRIDE, BEFORE THERE WAS A COUNTRY TO BRING IT TO. NOBODY HERE HAS EVER MANAGED TO GET RID OF IT.",
+    },
     mobArmor: 0.1,
     aliveMult: 3.9,
     landingAliveMin: 0.42,
@@ -781,6 +868,16 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: 2,
     mobLevelMin: 58,
     mobLevelMax: 999,
+    // THE CHEST THIS RUNG PAYS (see `DifficultyDef.cache`) — and the top of the
+    // ladder: eight columns by six rows, which is DIABLO II'S STASH exactly.
+    // There is nothing further back in the house; this is the whole
+    // inheritance, and the name says so.
+    cache: {
+      name: "THE INHERITANCE",
+      slots: 48,
+      sprite: "the_inheritance",
+      line: "HIS GRANDFATHER SAID HE HAD THAT ONE OFF A KING. I NEVER BELIEVED A WORD OF IT. THEN I LOOKED AT THE LOCK.",
+    },
     mobArmor: 0.15,
     aliveMult: 7.2,
     landingAliveMin: 0.35,
