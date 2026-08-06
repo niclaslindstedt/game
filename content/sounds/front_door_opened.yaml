@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: front_door_opened
+description: >-
+  A house's front door pulled open: the latch letting go with a small dry
+  click, then a wooden hinge creaking upward as the leaf swings and the night
+  outside comes in behind it. Quiet — a room's own door, not a bulkhead — and
+  the rise is what says OPEN, against the fall of `front_door_closed`.
+voices:
+  # The latch: one short bandpass tick, the sound of a knob turning.
+  - call: noise
+    durationMs: 24
+    volume: 0.032
+    filter:
+      type: bandpass
+      frequency: 2800
+      q: 1.7
+  # The hinge, complaining as it swings — a rising triangle with a slow wobble
+  # on it, which is the whole of what makes a creak read as wood and not as a
+  # tone. Under the click, and longer than it.
+  - call: tone
+    type: triangle
+    from: 196
+    to: 262
+    durationMs: 340
+    volume: 0.028
+    delayMs: 45
+    detuneCents: 7
+    vibrato:
+      rateHz: 7
+      depthCents: 26
+      delayMs: 60
+  # The room opening onto the outside: a breath of low air behind the leaf.
+  - call: noise
+    durationMs: 260
+    volume: 0.016
+    delayMs: 70
+    filter:
+      type: lowpass
+      frequency: 620

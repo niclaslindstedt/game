@@ -311,6 +311,66 @@ describe("cutscene player", () => {
     expect(cs.actors[0]!.holding).toBeNull();
   });
 
+  it("starts a `hidden` prop off the stage, for a beat to bring on", () => {
+    const DOORWAY: CutsceneDef = {
+      id: "test_doorway",
+      stage: {
+        width: 320,
+        height: 180,
+        backdrop: "test",
+        props: [
+          { kind: "door", pos: { x: 10, y: 10 }, id: "shut" },
+          {
+            kind: "door_open",
+            pos: { x: 10, y: 10 },
+            id: "open",
+            hidden: true,
+          },
+        ],
+      },
+      actors: [],
+      beats: [
+        { kind: "wait", ms: 50 },
+        { kind: "prop", prop: "shut", hidden: true },
+        { kind: "prop", prop: "open", hidden: false },
+        { kind: "wait", ms: 50 },
+      ],
+    };
+    const cs = createCutscene(DOORWAY);
+    expect(cs.hiddenProps).toEqual(["open"]);
+    for (let t = 0; t < 60; t += DT) stepCutscene(cs, DOORWAY, DT);
+    expect(cs.hiddenProps).toEqual(["shut"]);
+  });
+
+  it("queues a `sound` beat's id for the host, and drops it on a skip", () => {
+    const NOISY: CutsceneDef = {
+      ...SCENE,
+      id: "test_noisy",
+      beats: [
+        { kind: "sound", sound: "front_door_opened" },
+        { kind: "wait", ms: 50 },
+        { kind: "sound", sound: "front_door_closed" },
+        { kind: "wait", ms: 50 },
+      ],
+    };
+    const cs = createCutscene(NOISY);
+    expect(cs.sounds).toEqual([]);
+    // The opening beat is instant: it settles into the queue on the first step.
+    stepCutscene(cs, NOISY, DT);
+    expect(cs.sounds).toEqual(["front_door_opened"]);
+    // The host drains what it fired; the next beat queues onto the empty list.
+    cs.sounds.length = 0;
+    for (let t = 0; t < 60; t += DT) stepCutscene(cs, NOISY, DT);
+    expect(cs.sounds).toEqual(["front_door_closed"]);
+
+    // A SKIPPED scene makes no noise: settling the rest of the timeline in one
+    // turn must not hand the host every remaining sound as one chord.
+    const skipped = createCutscene(NOISY);
+    finishCutscene(skipped, NOISY);
+    expect(skipped.done).toBe(true);
+    expect(skipped.sounds).toEqual([]);
+  });
+
   it("is deterministic for a fixed dt sequence", () => {
     const a = createCutscene(SCENE);
     const b = createCutscene(SCENE);
@@ -425,6 +485,38 @@ describe("the prelude in a run", () => {
     expect(state.phase).toBe("title");
     expect(state.cutscene).toBeNull();
     expect(state.cutsceneQueue).toEqual([]);
+  });
+
+  it("forwards a scene's `sound` beat as a cutsceneSound event, once", () => {
+    const state = createGame(SEED, "test_prelude_level");
+    const def = cutsceneDef("test_prelude");
+    const heard: string[] = [];
+    for (let i = 0; i < 20_000 && state.phase === "cutscene"; i++) {
+      step(state, idle, DT);
+      for (const e of state.events) {
+        if (e.type === "cutsceneSound") heard.push(e.sfx);
+      }
+      const beat = state.cutscene && def.beats[state.cutscene.beat];
+      if (beat && (beat.kind === "caption" || beat.kind === "say")) {
+        tapCutscene(state);
+      }
+    }
+    // The door the fixture shuts behind Ada — reported exactly once, and the
+    // queue it came out of is empty behind it.
+    expect(heard).toEqual(["test_door"]);
+  });
+
+  it("a skipped scene reports no sound at all", () => {
+    const state = createGame(SEED, "test_prelude_level");
+    skipCutscene(state);
+    const heard: string[] = [];
+    for (let i = 0; i < 120; i++) {
+      step(state, idle, DT);
+      for (const e of state.events) {
+        if (e.type === "cutsceneSound") heard.push(e.sfx);
+      }
+    }
+    expect(heard).toEqual([]);
   });
 
   it("Ada leaves and never comes back", () => {

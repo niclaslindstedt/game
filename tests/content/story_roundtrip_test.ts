@@ -117,7 +117,11 @@ describe("the YAML story catalogs compile to the shipped script", () => {
     for (const rung of ["easy", "medium", "hard", "nightmare", "jesus"]) {
       const def = CUTSCENE_DEFS[cutsceneVariant("prelude", rung)]!;
       const wall = def.stage.props.find((p) => p.kind.startsWith("wall_"))!;
-      const stripped = def.beats.find((b) => b.kind === "prop");
+      // BY ID, not "the first prop beat" — the scene works its front door with
+      // the same beat kind, so the wall's own beat has to be picked out.
+      const stripped = def.beats.find(
+        (b) => b.kind === "prop" && b.prop === wall.id,
+      );
       const held = def.beats.find((b) => b.kind === "hold");
       // The prop beat has to name the wall weapon's own id, or the piece
       // stays hanging there while he walks out carrying a copy of it.

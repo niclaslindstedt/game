@@ -1,0 +1,65 @@
+name: door_open
+family: prelude
+size: [18, 30]
+description: >
+  The apartment's front door standing open — the same frame as `door`, with
+  the leaf swung back against one side and the night lot showing through the
+  gap: the lit front step, the lawn, the road beyond it, stars over the whole
+  thing. The same three surfaces the hero walks out onto in the launch scene
+  and stands on in the garage hub.
+subject:
+  kind: prop
+  build: a tall door frame with the panelled leaf swung back flat against one side, the doorway open
+  features: a pale front step at the threshold, a strip of moonlit lawn, dark tarmac with a pale kerb and one worn centre-line dash beyond it, the neighbours' rooflines in silhouette with one amber-lit window, deep-blue night sky with two stars above
+  accent: brass door knob on the open leaf
+  flavor: what Ada walked out into on movie night, and what the hero follows her into two hours later
+palette:
+  B: "#92643e" # brown door
+  E: "#5d4028" # dark brown panel shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey door frame
+  y: "#ffb02e" # brass door knob
+  J: "#2d3b84" # deep-blue night sky
+  W: "#f4f4f4" # white star
+  K: "#22243a" # rooflines across the road, in silhouette
+  k: "#5c5e68" # pale kerb, catching the street light
+  u: "#2c2e34" # dark gutter grit
+  t: "#3a3c42" # night tarmac
+  Z: "#43454c" # pale aggregate in the tarmac
+  d: "#7c7c75" # traffic white, worn thin
+  g: "#3d6433" # dark night grass
+  G: "#4a7a3e" # mid-green grass
+  l: "#678f5d" # grass lit from the doorway
+  C: "#6e707a" # pale paved step
+  e: "#5c5e68" # step's shaded lip
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOOO.
+  .OVVVVVVVVVVVVVVO.
+  .OVOOOOOOOOOOOOVO.
+  .OVOJJJJJJJOBEOVO.
+  .OVOJJWJJJJOBEOVO.
+  .OVOJJJJJJJOBEOVO.
+  .OVOJJJJJWJOBEOVO.
+  .OVOJJJJJJJOBEOVO.
+  .OVOJJJJJJJOBEOVO.
+  .OVOJJJJJJJOBEOVO.
+  .OVOJKKJJKKOBEOVO.
+  .OVOKKyKKKKOBEOVO.
+  .OVOkkkkkkkOyEOVO.
+  .OVOtZtttttOyEOVO.
+  .OVOttddtttOBEOVO.
+  .OVOtttttZtOBEOVO.
+  .OVOuutuuuuOBEOVO.
+  .OVOgggggggOBEOVO.
+  .OVOggGgggGOBEOVO.
+  .OVOGGgGGGgOBEOVO.
+  .OVOGlGGGlGOBEOVO.
+  .OVOlllGlllOBEOVO.
+  .OVOCCCCCCCOBEOVO.
+  .OVOeeeeeeeOBEOVO.
+  .OVOOOOOOOOOOOOVO.
+  .OVVVVVVVVVVVVVVO.
+  .OOOOOOOOOOOOOOOO.
+  ..................
+  ..................

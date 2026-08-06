@@ -484,12 +484,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -607,9 +639,7 @@
         },
         {
           "kind": "caption",
-          "text": [
-            "THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
-          ]
+          "text": ["THE OLD SWORD. IT'LL DO."]
         },
         {
           "actor": "hero",
@@ -621,8 +651,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -631,6 +675,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -652,8 +714,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -665,7 +727,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -679,17 +751,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -780,12 +852,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -903,9 +1007,7 @@
         },
         {
           "kind": "caption",
-          "text": [
-            "GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
-          ]
+          "text": ["GRANDPA'S SAWED-OFF. THAT'LL DO IT."]
         },
         {
           "actor": "hero",
@@ -917,8 +1019,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -927,6 +1043,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -948,8 +1082,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -961,7 +1095,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -975,17 +1119,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1076,12 +1220,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1199,7 +1375,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH."]
+          "text": ["THE COMBAT KNIFE. IT'LL HAVE TO DO."]
         },
         {
           "actor": "hero",
@@ -1211,8 +1387,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1221,6 +1411,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1242,8 +1450,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1255,7 +1463,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1269,17 +1487,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1370,12 +1588,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1493,7 +1743,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE STICK OFF THE WALL. GOD HELP US BOTH."]
+          "text": ["A STICK. GOD HELP US BOTH."]
         },
         {
           "actor": "hero",
@@ -1505,8 +1755,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1515,6 +1779,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1536,8 +1818,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1549,7 +1831,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1563,17 +1855,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
@@ -1664,12 +1956,44 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
           "ms": 350
         },
         {
           "actor": "ada",
           "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
         },
         {
           "kind": "wait",
@@ -1787,7 +2111,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH."]
+          "text": ["THE KNUCKLES. THEY'LL HAVE TO DO."]
         },
         {
           "actor": "hero",
@@ -1799,8 +2123,22 @@
           }
         },
         {
+          "kind": "sound",
+          "sound": "front_door_opened"
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
           "kind": "wait",
-          "ms": 300
+          "ms": 400
         },
         {
           "actor": "hero",
@@ -1809,6 +2147,24 @@
         {
           "kind": "wait",
           "ms": 400
+        },
+        {
+          "hidden": true,
+          "kind": "prop",
+          "prop": "open_door"
+        },
+        {
+          "hidden": false,
+          "kind": "prop",
+          "prop": "shut_door"
+        },
+        {
+          "kind": "sound",
+          "sound": "front_door_closed"
+        },
+        {
+          "kind": "wait",
+          "ms": 500
         },
         {
           "kind": "fade",
@@ -1830,8 +2186,8 @@
           {
             "kind": "window",
             "pos": {
-              "x": 150,
-              "y": 52
+              "x": 146,
+              "y": 72
             }
           },
           {
@@ -1843,7 +2199,17 @@
             }
           },
           {
+            "id": "shut_door",
             "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "hidden": true,
+            "id": "open_door",
+            "kind": "door_open",
             "pos": {
               "x": 202,
               "y": 80
@@ -1857,17 +2223,17 @@
             }
           },
           {
-            "kind": "table",
-            "pos": {
-              "x": 76,
-              "y": 108
-            }
-          },
-          {
             "kind": "couch",
             "pos": {
               "x": 104,
               "y": 96
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 104,
+              "y": 108
             }
           },
           {
