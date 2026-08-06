@@ -36,7 +36,7 @@ moves a plot beat, `playtest` / `test-scenario` to see it running.
 | Engine | `src/game/quests/` — `index.ts` (orchestrator: givers, marks, the pick list, tallies), `escort.ts`, `rewards.ts`, `campaign.ts` + `campaign-save.ts` (the hero-carried log), `merchant.ts` (the stall hook), `placement.ts` (authored spots on a carved map) |
 | Neutral mobs | `src/game/disposition.ts` (`inert`, `provokeEnemy`), `EnemyDef.disposition` / `conversation` / `ai.idle` |
 | Conversations | `src/game/conversation.ts` (the runtime), `src/game/defs/conversations.ts` (the contract) |
-| Tuning | `src/game/config/quests.ts` (`QUESTS.*` — talk/tap/ward radii, escort numbers, drop pity) |
+| Tuning | `src/game/config/quests.ts` (`QUESTS.*` — talk/tap radii, escort numbers, drop pity; there is deliberately no ward radius) |
 | App surfaces | `overlays/QuestOverlay.tsx` (offer + pick list), `QuestLogOverlay.tsx`, `TalkOverlay.tsx` (conversations), `game-screen/QuestTracker.tsx`, `QuestFlash.tsx`, `render/quests.ts` (givers, head marks, escorts), `quest-text.ts` |
 | Sounds | `content/sounds/quest_*.yaml` + `escort_*.yaml` — event-triggered, so a new quest needs none |
 | Library pages | `pwa/scripts/library/model-quests.mjs` (`QUEST_FIELDS`, `QUEST_GIVER_FIELDS`), `prose-quests.mjs`, `render-quests.mjs` |
@@ -194,7 +194,8 @@ reason:
 2. **Pick the person.** Reuse a giver if one already stands on that map with
    room in their slate; a new one needs an entry in `content/quest-givers.yaml`,
    a `_0`/`_1` sprite pair, a spot inside the map, and a `lore` paragraph. Place
-   them near the intended route — the ward is deliberately small.
+   them near the intended route but out of a wave lane — a giver carries NO
+   ward, so the horde reaches whoever is standing there.
 3. **Write the errand.** `content/quests/<id>.yaml`, stem == id. Objectives
    first (they are the contract), then the words around them.
 4. **New sprites/icons** via the `pixel-assets` skill — a giver/escort needs a

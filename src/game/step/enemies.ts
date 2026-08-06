@@ -54,7 +54,6 @@ import {
 } from "../mechanics/index.ts";
 import { maybePowerScale } from "../menace.ts";
 import { repelFromMerchant } from "../merchant.ts";
-import { repelFromQuestGivers } from "../quests/index.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { quarryFor } from "../aggro.ts";
 import { nearestHeroWhere, seatOf } from "../party.ts";
@@ -146,11 +145,14 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // The merchant's ward shoos the horde off his stall (ghosts included —
     // the ward is not a wall). Bosses are too massive, apparitions too
     // immaterial; everything else keeps its distance.
+    //
+    // A QUEST GIVER HAS NO SUCH WARD, deliberately: one used to stand on every
+    // map with the same bubble around them, and a bubble the horde cannot enter
+    // is a bubble the hero can farm from. Givers are unkillable, so the horde
+    // walking over them costs the errand nothing — it just has to be accepted
+    // in a live fight like everything else on the map.
     if (def.role !== "boss" && !def.apparition) {
       repelFromMerchant(state, enemy.pos);
-      // The same ward, around everybody with an errand to hand out: a quest
-      // giver the horde can pile onto is a quest the hero cannot accept.
-      repelFromQuestGivers(state, enemy.pos);
     }
     // SAFE ZONES keep the trash horde out of the pocket (see zones.ts): only
     // the minion swarm is ejected — set pieces (elites/bosses) hold their

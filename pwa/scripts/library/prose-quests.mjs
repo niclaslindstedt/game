@@ -308,9 +308,10 @@ export function chainProse(quest) {
 
 /**
  * Who this is, and why they are standing in a place everything else is trying
- * to kill you in. The horde's ward is the fact a reader would otherwise
+ * to kill you in. Their invulnerability is the fact a reader would otherwise
  * misread — a civilian in the middle of a level looks like a body waiting to
- * happen, and this one cannot be touched at all.
+ * happen, and this one cannot be touched at all. What it is NOT is cover: the
+ * horde walks right over them and will happily kill the hero standing there.
  */
 export function giverLead(giver, tuning) {
   const lines = [];
@@ -321,7 +322,7 @@ export function giverLead(giver, tuning) {
     )}: ${list(giver.quests.map((quest) => quest.name))}.`,
   );
   lines.push(
-    `Nothing can hurt them, and nothing gets to try — the horde is pushed back out of a ${tuning.repelRadius} px ward around them, exactly as it is around the merchant. An errand you have to clear a pack off to accept is a pack, not an errand.`,
+    `Nothing can hurt them — but nothing is kept off them either. Unlike the merchant they carry no ward, so the horde walks straight through where they stand and comes for you while you talk. Standing on top of somebody with an errand is not cover.`,
   );
   lines.push(
     `Walk within ${tuning.talkRadius} px and they open the conversation themselves, once. A person with more than one thing to say opens on the whole list rather than handing them out one at a time.`,

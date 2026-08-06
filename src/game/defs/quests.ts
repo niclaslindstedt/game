@@ -228,9 +228,10 @@ export type QuestMerchantDeal = {
 };
 
 /**
- * SOMEBODY WHO ASKS FOR HELP. One per spot on one map; the horde is held off
- * them (`QUESTS.repelRadius`) so the hero can always reach the conversation,
- * and nothing can hurt them — they are civilians, like the merchant.
+ * SOMEBODY WHO ASKS FOR HELP. One per spot on one map. Nothing can hurt them —
+ * they are civilians, like the merchant — but unlike the merchant they carry no
+ * ward: the horde walks right over them, so a conversation is had in whatever
+ * fight is going on around it.
  */
 export type QuestGiverDef = {
   id: string;
