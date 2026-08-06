@@ -293,15 +293,21 @@ export function InventoryPanel({
     item: Equipment;
     anchor: DOMRect;
   } | null>(null);
-  // ANY press that misses both the card and a cell puts the card away — the
-  // touch equivalent of moving the mouse off an item, and the one dismiss the
-  // panel has. It is bound on the window rather than on the overlay below
-  // because the card is PORTALED to <body>: an overlay-level handler still
-  // sees the card's own presses (React routes a portal's events through the
-  // tree that rendered it) and read them as a miss, so pressing the card to
-  // read it was what put it away. Cells are exempt because a press on one
-  // raises its own card (and, on touch, the second one equips).
-  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, .inv-cell", () =>
+  // ANY press that misses both the card and a cell that OWNS one puts the card
+  // away — the touch equivalent of moving the mouse off an item, and the one
+  // dismiss the panel has. It is bound on the window rather than on the overlay
+  // below because the card is PORTALED to <body>: an overlay-level handler
+  // still sees the card's own presses (React routes a portal's events through
+  // the tree that rendered it) and read them as a miss, so pressing the card to
+  // read it was what put it away.
+  //
+  // The exemption is `data-card`, stamped on the cells HOLDING a piece, and NOT
+  // `.inv-cell` — which was every cell the panel draws. A bag is mostly empty
+  // and locked cells, and a doll mostly empty frames, none of which raise a
+  // card or do anything else on a press; exempting the whole class meant most
+  // of the panel's own surface silently ate the dismiss, leaving the header
+  // strip above the bag as the only place a press put the card away.
+  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, [data-card]", () =>
     setInspect(null),
   );
   // The just-identified piece whose centered REVEAL is on stage (a ticket was
@@ -701,6 +707,12 @@ export function InventoryPanel({
                           : ""
                       }${item ? tierGlowClass(item.tier) : ""}`}
                       data-drop={`inv:${index}`}
+                      // A cell with a piece in it OWNS that piece's card: its
+                      // press raises the card (and on touch the second one
+                      // equips), so it must never be read as the miss that puts
+                      // the card away. An empty cell owns nothing and dismisses
+                      // like any other patch of the panel.
+                      data-card={item ? "" : undefined}
                       style={
                         item
                           ? { borderColor: TIER_COLORS[item.tier] }

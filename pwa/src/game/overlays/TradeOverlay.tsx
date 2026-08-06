@@ -63,11 +63,14 @@ export function TradeOverlay({
   const me = localHero(state);
   const trade = tradeOf(state, seat);
   const [inspect, setInspect] = useState<Inspect | null>(null);
-  // Any press that misses both the card and a cell puts the card away — the
-  // same rule the bag and the counter dismiss by. Bound above the whole window
-  // rather than on the panel, so a press on the backdrop counts too and a press
-  // on the PORTALED card never reads as a miss (see use-outside-press.ts).
-  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, .inv-cell", () =>
+  // Any press that misses both the card and a cell that OWNS one puts the card
+  // away — the same rule the bag and the counter dismiss by. Bound above the
+  // whole window rather than on the panel, so a press on the backdrop counts
+  // too and a press on the PORTALED card never reads as a miss (see
+  // use-outside-press.ts). The exemption is `data-card` — the cells actually
+  // holding a piece — because an empty bag cell raises no card and pressing
+  // one must dismiss rather than swallow the gesture.
+  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, [data-card]", () =>
     setInspect(null),
   );
   // The screen can outlive the table by a frame (a cancel or a settle lands in
@@ -175,6 +178,7 @@ export function TradeOverlay({
                   item && mine.cell === index ? " selected" : ""
                 }${item ? tierGlowClass(item.tier) : ""}`}
                 aria-label={`trade-bag-${index}`}
+                data-card={item ? "" : undefined}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined
                 }
@@ -280,6 +284,7 @@ function TradeSidePane({
           item ? tierGlowClass(item.tier) : ""
         }`}
         aria-label={`trade-offer-${title === "YOU GIVE" ? "mine" : "theirs"}`}
+        data-card={item ? "" : undefined}
         style={item ? { borderColor: TIER_COLORS[item.tier] } : undefined}
         disabled={!item}
         onClick={item ? (e) => onItemPress(item, e.currentTarget) : undefined}

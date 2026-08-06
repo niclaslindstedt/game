@@ -165,6 +165,11 @@ export function PaperDoll({
               ["--doll-icon" as string]: `calc(var(--slot-u) * ${icon})`,
             }}
             data-drop={`slot:${slot}`}
+            // A WORN frame owns its piece's card — its press raises it — so it
+            // is exempt from the dismiss (see the hook in InventoryPanel). An
+            // empty frame raises nothing, so a press on one puts the card away
+            // like any other miss.
+            data-card={item ? "" : undefined}
             aria-label={label}
             onPointerDown={item ? onSlotDown(item, slot) : undefined}
             onPointerEnter={item ? onSlotEnter(item) : undefined}

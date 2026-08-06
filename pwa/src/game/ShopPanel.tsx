@@ -384,14 +384,20 @@ export function ShopPanel({
     setSelected({ ...pick, anchor });
   };
 
-  // Any press that misses the card, a stall row or a bag cell puts the card
-  // away — the shared rule every floating card in the game dismisses by, bound
-  // above the whole window so a press on the backdrop counts too (see
+  // Any press that misses the card, a live stall row or a filled bag cell puts
+  // the card away — the shared rule every floating card in the game dismisses
+  // by, bound above the whole window so a press on the backdrop counts too (see
   // use-outside-press.ts). The footer's own buttons still fire on the same
   // press: this only clears a selection, it never preventDefaults.
+  //
+  // The exemption is `data-card`, stamped on the rows and cells that actually
+  // RAISE a card, rather than on their classes: a bag is mostly empty cells and
+  // a picked-over stall mostly sold-out rows, and a press on one of those does
+  // nothing at all — so exempting the class made most of the counter's surface
+  // eat the dismiss instead of performing it.
   useDismissOnOutsidePress(
     selected !== null,
-    ".item-tooltip, .shop-stall-item, .shop-bag-cell",
+    ".item-tooltip, [data-card]",
     () => setSelected(null),
   );
 
@@ -586,6 +592,7 @@ export function ShopPanel({
                       : ""
                   }`}
                   aria-label={`stock-${entry.id}`}
+                  data-card={soldOut ? undefined : ""}
                   disabled={soldOut}
                   onClick={(e) =>
                     select({ kind: "stock", id: entry.id }, e.currentTarget)
@@ -724,6 +731,7 @@ export function ShopPanel({
                     : ""
                 }${item ? tierGlowClass(item.tier) : ""}`}
                 aria-label={`bag-${index}`}
+                data-card={item ? "" : undefined}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined
                 }

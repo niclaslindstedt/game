@@ -187,10 +187,12 @@ export function QuestOverlay({
     anchor: DOMRect;
     pinned: boolean;
   } | null>(null);
-  useDismissOnOutsidePress(
-    inspect !== null,
-    ".item-tooltip, .quest-reward-slot",
-    () => setInspect(null),
+  // The exemption is `data-card` — the same marker the bag, the counter and the
+  // trade table stamp on the cells that RAISE a card — so every screen in the
+  // game answers "did this press miss the card?" by one rule. A reward slot
+  // always holds a piece, so here the two spellings pick out the same slots.
+  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, [data-card]", () =>
+    setInspect(null),
   );
   const cursor =
     cursorState.key === listKey
@@ -708,6 +710,7 @@ export function QuestOverlay({
                           picking && i === rewardPick ? " selected" : ""
                         }${tierGlowClass(item.tier)}`}
                         aria-label={`quest-reward-${item.id}`}
+                        data-card=""
                         // HOVER raises a loose card, and only a loose one: a
                         // touch tap synthesises an enter/leave pair around its
                         // own press, so letting those through is what made the

@@ -9,9 +9,16 @@
 // on a touch screen (which has no hover, and which synthesises an enter/leave
 // pair around its own press) the card could be raised and never lowered.
 //
-// These tests pin both halves: the rule itself, and the fact that every screen
-// raising a card goes through the one shared hook with the card's own class
-// exempt.
+// The third failure is the mirror image: exempting too MUCH. The exemption was
+// the cell CLASS, which every cell in a bag wears — the empty ones, the locked
+// ones, the doll's bare frames — so most of the panel's own surface silently
+// swallowed the dismiss and the only place a press put the card away was the
+// strip above the grid. Only a cell HOLDING a piece owns a card, and it says so
+// with `data-card`.
+//
+// These tests pin all three: the rule itself, and the fact that every screen
+// raising a card goes through the one shared hook with the card and exactly the
+// card-owning cells exempt.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -34,7 +41,7 @@ function pressed(...owns: string[]): EventTarget {
   } as unknown as EventTarget;
 }
 
-const SELECTOR = ".item-tooltip, .inv-cell";
+const SELECTOR = ".item-tooltip, [data-card]";
 
 describe("pressIsInside", () => {
   it("a press on the card itself is INSIDE — reading a card never puts it away", () => {
@@ -42,12 +49,36 @@ describe("pressIsInside", () => {
   });
 
   it("a press on the cell that raised it is INSIDE — the cell owns its own card", () => {
-    expect(pressIsInside(pressed(".inv-cell"), SELECTOR)).toBe(true);
+    expect(pressIsInside(pressed("[data-card]"), SELECTOR)).toBe(true);
   });
 
   it("a press on anything else is OUTSIDE", () => {
     expect(pressIsInside(pressed(".inv-footer"), SELECTOR)).toBe(false);
     expect(pressIsInside(pressed(), SELECTOR)).toBe(false);
+  });
+
+  // THE HALF THAT SHIPPED BROKEN. The exemption used to be the CELL CLASS
+  // (`.inv-cell`, `.shop-bag-cell`), which every cell wears — including the
+  // empty ones, the locked ones past what the hero has unlocked, and the doll's
+  // empty frames. Those raise no card and do nothing on a press, so most of the
+  // bag's own surface silently ate the dismiss: the card could only be put away
+  // by pressing the header strip ABOVE the grid. Only a cell that OWNS a card
+  // is exempt, and it says so with `data-card`.
+  it("an EMPTY cell is OUTSIDE — a press on one puts the card away", () => {
+    expect(pressIsInside(pressed(".inv-cell"), SELECTOR)).toBe(false);
+    expect(pressIsInside(pressed(".inv-cell", ".locked"), SELECTOR)).toBe(
+      false,
+    );
+    expect(pressIsInside(pressed(".inv-cell", ".doll-slot"), SELECTOR)).toBe(
+      false,
+    );
+    expect(pressIsInside(pressed(".shop-bag-cell"), SELECTOR)).toBe(false);
+  });
+
+  it("a FILLED cell is INSIDE — it raises the card, so it may not dismiss it", () => {
+    expect(pressIsInside(pressed(".inv-cell", "[data-card]"), SELECTOR)).toBe(
+      true,
+    );
   });
 
   it("a target that cannot answer (the document, a synthetic) is OUTSIDE", () => {
@@ -92,31 +123,54 @@ describe("the card takes its own presses", () => {
   });
 });
 
-/** Every screen that raises an item card, and the cells its own card hangs
- * off. The CARD's class is not listed: it is the one selector all four share,
- * and the test below demands it of each. */
-const SCREENS: { file: string; cells: string[] }[] = [
-  { file: "pwa/src/game/InventoryPanel.tsx", cells: [".inv-cell"] },
-  { file: "pwa/src/game/ShopPanel.tsx", cells: [".shop-stall-item"] },
-  { file: "pwa/src/game/overlays/TradeOverlay.tsx", cells: [".inv-cell"] },
-  {
-    file: "pwa/src/game/overlays/QuestOverlay.tsx",
-    cells: [".quest-reward-slot"],
-  },
+/** Every screen that raises an item card. All four dismiss by the SAME two
+ * selectors — the card itself, and `data-card`, the marker a cell stamps on
+ * itself when it holds a piece — so the list carries no per-screen cell class
+ * any more: a class is worn by empty cells too, and exempting those is what
+ * made the bag impossible to dismiss inside its own grid. */
+const SCREENS: string[] = [
+  "pwa/src/game/InventoryPanel.tsx",
+  "pwa/src/game/PaperDoll.tsx",
+  "pwa/src/game/ShopPanel.tsx",
+  "pwa/src/game/overlays/TradeOverlay.tsx",
+  "pwa/src/game/overlays/QuestOverlay.tsx",
 ];
 
 const source = (file: string) =>
   readFileSync(fileURLToPath(new URL(`../${file}`, import.meta.url)), "utf8");
 
 describe("every screen that raises an item card dismisses it the same way", () => {
-  for (const { file, cells } of SCREENS) {
-    it(`${file} uses the shared hook, with the card exempt`, () => {
+  for (const file of SCREENS) {
+    it(`${file} marks the cells that OWN a card, and only those`, () => {
+      const code = source(file);
+      // A cell earns its exemption by holding a piece, so the marker is
+      // conditional on the item everywhere but the quest slots (which never
+      // draw an empty one).
+      expect(code).toMatch(/data-card=/);
+      if (!file.endsWith("QuestOverlay.tsx")) {
+        expect(code).toMatch(/data-card=\{[^}]*\?[^}]*\}/);
+      }
+    });
+
+    // PaperDoll draws cells for the panel that owns the hook; it raises no card
+    // of its own, so it is exempt from the two rules below.
+    if (file.endsWith("PaperDoll.tsx")) continue;
+
+    it(`${file} uses the shared hook, with the card and its cells exempt`, () => {
       const code = source(file);
       expect(code).toContain("useDismissOnOutsidePress(");
       // The card's own class first: without it the hook dismisses the card on
       // the press meant to read it — the bug the shared rule exists to end.
       expect(code).toContain(".item-tooltip");
-      for (const cell of cells) expect(code).toContain(cell);
+      expect(code).toContain("[data-card]");
+    });
+
+    it(`${file} exempts no CELL CLASS — an empty cell must dismiss`, () => {
+      // The regression this file exists to catch twice over: a class in the
+      // selector is worn by the empty cells too, and a bag is mostly empty.
+      expect(source(file)).not.toMatch(
+        /useDismissOnOutsidePress\([\s\S]{0,200}?\.(inv-cell|shop-bag-cell|shop-stall-item|quest-reward-slot)/,
+      );
     });
 
     it(`${file} keeps no panel-level dismiss of its own`, () => {
@@ -124,7 +178,7 @@ describe("every screen that raises an item card dismisses it the same way", () =
       // a press on the portaled card. One rule, bound above the window, or the
       // two disagree again.
       expect(source(file).replace(/\/\/[^\n]*/g, "")).not.toMatch(
-        /closest\(["'][^"']*(inv-cell|shop-stall-item|quest-reward-slot)/,
+        /closest\(["'][^"']*(inv-cell|shop-stall-item|quest-reward-slot|data-card)/,
       );
     });
   }
