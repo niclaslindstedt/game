@@ -38,7 +38,10 @@ const sprites = new Set(
 describe("what a burned body leaves", () => {
   for (const family of GORE_FAMILIES) {
     it(`${family.id} burns down to art that shipped`, () => {
-      const pool = [...family.remains.humanoid, ...(family.remains.beast ?? [])];
+      const pool = [
+        ...family.remains.humanoid,
+        ...(family.remains.beast ?? []),
+      ];
       expect(pool.length).toBeGreaterThan(0);
       for (const name of pool) {
         expect(
