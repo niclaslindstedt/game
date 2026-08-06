@@ -1173,22 +1173,22 @@ identically.
 Text beats hold the frame until the player taps; timed beats run on the clock and
 a tap cuts them short. Instant beats settle and roll straight into the next one.
 
-| `kind`    | Fields                        | What it does                                                              |
-| --------- | ----------------------------- | ------------------------------------------------------------------------- |
-| `caption` | `text: [line, …]`             | Narrator text, no speaker. Holds for the player.                          |
-| `say`     | `actor`, `text: [line, …]`    | A speech bubble on that actor. Holds for the player.                      |
-| `wait`    | `ms`                          | Hold the frame.                                                           |
-| `move`    | `actor`, `to: {x,y}`, `speed` | Walk an actor there at `speed` px/s; facing follows.                      |
-| `pose`    | `actor`, `sprite`             | Swap an actor's sprite family (sitting → standing, engine cold → firing). |
-| `face`    | `actor`, `faceLeft`           | Mirror an actor without moving.                                           |
-| `enter`   | `actor`                       | Put a `hidden: true` actor on stage.                                      |
-| `exit`    | `actor`                       | Take an actor off.                                                        |
-| `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                         |
-| `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.   |
-| `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                |
-| `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).          |
-| `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.      |
-| `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                 |
+| `kind`    | Fields                        | What it does                                                                        |
+| --------- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| `caption` | `text: [line, …]`             | Narrator text, no speaker. Holds for the player.                                    |
+| `say`     | `actor`, `text: [line, …]`    | A speech bubble on that actor. Holds for the player.                                |
+| `wait`    | `ms`                          | Hold the frame.                                                                     |
+| `move`    | `actor`, `to: {x,y}`, `speed` | Walk an actor there at `speed` px/s; facing follows.                                |
+| `pose`    | `actor`, `sprite`             | Swap an actor's sprite family (sitting → standing, engine cold → firing).           |
+| `face`    | `actor`, `faceLeft`           | Mirror an actor without moving.                                                     |
+| `enter`   | `actor`                       | Put a `hidden: true` actor on stage.                                                |
+| `exit`    | `actor`                       | Take an actor off.                                                                  |
+| `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                                   |
+| `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.             |
+| `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                          |
+| `jump`    | `actor`, `lift`, `ms`         | Ease the actor `lift` px off the ground (`0` puts it back down).                    |
+| `hold`    | `actor`, `sprite?`, `at?`     | Put a sprite in the actor's hands at `at`; no `sprite` empties them.                |
+| `prop`    | `prop`, `hidden`              | Take a labelled stage prop off the stage, or put it back.                           |
 | `sound`   | `sound`                       | Play a sound by id — yours or the game's. An id nothing answers to fails the build. |
 
 **A leap is TWO jumps, and the grab happens between them.** A rise decelerates

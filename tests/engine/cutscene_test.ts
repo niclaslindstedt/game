@@ -320,7 +320,12 @@ describe("cutscene player", () => {
         backdrop: "test",
         props: [
           { kind: "door", pos: { x: 10, y: 10 }, id: "shut" },
-          { kind: "door_open", pos: { x: 10, y: 10 }, id: "open", hidden: true },
+          {
+            kind: "door_open",
+            pos: { x: 10, y: 10 },
+            id: "open",
+            hidden: true,
+          },
         ],
       },
       actors: [],

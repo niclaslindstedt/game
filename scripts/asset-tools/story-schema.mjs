@@ -244,8 +244,15 @@ export function validateCutscene(doc, refs) {
     }
     for (const key of Object.keys(prop)) {
       if (
-        !["label", "sprite", "at", "parallax", "wrap", "ground", "hidden"]
-          .includes(key)
+        ![
+          "label",
+          "sprite",
+          "at",
+          "parallax",
+          "wrap",
+          "ground",
+          "hidden",
+        ].includes(key)
       ) {
         err(`unknown field "${where}.${key}"`);
       }
