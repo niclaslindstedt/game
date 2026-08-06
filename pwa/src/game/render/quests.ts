@@ -41,6 +41,9 @@ const MARK_SPRITE: Record<string, string> = {
   progress: "quest_query_dim",
 };
 
+/** How far the mark rides off its resting height, in whole pixels either way. */
+const MARK_BOB_PX = 1;
+
 /** A stable 0..1 phase off a string id — the mark's own bob offset. */
 function phaseOf(id: string): number {
   let h = 0;
@@ -108,7 +111,8 @@ function drawMark(
   // while the run is frozen behind the offer modal — a paused page whose
   // decorations are still animating reads as not actually paused.
   const bob = Math.round(
-    Math.sin(state.stats.timeMs / 300 + phaseOf(giverId) * Math.PI * 2) * 2,
+    Math.sin(state.stats.timeMs / 300 + phaseOf(giverId) * Math.PI * 2) *
+      MARK_BOB_PX,
   );
   ctx.drawImage(
     glyph,
