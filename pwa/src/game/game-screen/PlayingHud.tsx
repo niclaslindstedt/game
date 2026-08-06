@@ -226,10 +226,15 @@ export function PlayingHud({
                 const equipped = localHero(state).equipment.weapon;
                 const equippedColor =
                   WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
-                const icon = spriteDataUrl(
-                  assets.sprites,
-                  weaponDef(equipped.defId).icon,
-                );
+                // No icon at all means BARE HANDS — the one weapon def that
+                // ships without one, because there is nothing in the hand to
+                // draw. The slot below already renders iconless (the ring, the
+                // class colour and the switch target all still read), so an
+                // unarmed hero gets an empty plate rather than a broken image.
+                const equippedIcon = weaponDef(equipped.defId).icon;
+                const icon = equippedIcon
+                  ? spriteDataUrl(assets.sprites, equippedIcon)
+                  : undefined;
                 // AMMUNITION wins the ring when the weapon eats any: a rifle
                 // has no durability to show, and rounds are the thing about to
                 // stop it. The fraction is against the pouch's per-kind stack
@@ -340,10 +345,10 @@ export function PlayingHud({
                           alternatives.map(({ item, index, dmg }, order) => {
                             const color =
                               WEAPON_CLASS_COLORS[weaponDef(item.defId).class];
-                            const wpnIcon = spriteDataUrl(
-                              assets.sprites,
-                              weaponDef(item.defId).icon,
-                            );
+                            const altIcon = weaponDef(item.defId).icon;
+                            const wpnIcon = altIcon
+                              ? spriteDataUrl(assets.sprites, altIcon)
+                              : undefined;
                             return (
                               <button
                                 key={item.id}

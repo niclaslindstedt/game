@@ -39,9 +39,7 @@ import {
   isUnidentified,
   lookupTicketIndex,
   reviveTarget,
-  SIDEARM_DEF_ID,
   weaponAmmoType,
-  weaponDef,
   wouldUpgradeSlot,
   type AmmoType,
   type EquipSlot,
@@ -126,8 +124,8 @@ const AMMO_SERVES: Record<AmmoType, readonly string[]> = {
   ],
   cells: [
     "WHAT THE ENERGY WEAPONS TAKE —",
-    "THE PRINTED SIDEARM, TASERS,",
-    "RAILS AND PLASMA.",
+    "TASERS, RAILS, LASERS AND",
+    "PLASMA.",
     "ONE CELL PER TRIGGER PULL.",
   ],
 };
@@ -150,12 +148,12 @@ function ammoHelp(player: Player, type: AmmoType): string[] {
     if (piece && weaponAmmoType(piece) === type)
       eaters.push(equipmentName(piece));
   }
-  // The SIDEARM is nowhere in the bag — it is minted into an empty hand — so a
-  // pouch stocked only for it reads as rounds for nothing at all. That is the
-  // one stack a fresh run opens with beside the weapon it hands out, so it is
-  // the case the note has to answer rather than shrug at.
-  const sidearmOnly =
-    eaters.length === 0 && weaponDef(SIDEARM_DEF_ID).ammo === type;
+  // There is no longer a SIDEARM case to answer here. A run used to open with a
+  // stack of cells for the unbreakable fallback gun, so "nothing you carry
+  // fires these" was a lie on a fresh hero; the fallback is now the hero's own
+  // hands, which fire nothing, and the opening pouch stocks only the kind his
+  // actual weapon eats (`startingAmmo`). So a kind nothing carried can fire
+  // means exactly that.
   return [
     ...AMMO_SERVES[type],
     "",
@@ -166,9 +164,7 @@ function ammoHelp(player: Player, type: AmmoType): string[] {
             ? [`AND ${eaters.length - 1} MORE IN THE BAG.`]
             : []),
         ]
-      : sidearmOnly
-        ? ["OF WHAT YOU CARRY, ONLY THE", "SIDEARM YOU FALL BACK ON."]
-        : ["NOTHING YOU CARRY FIRES THESE."]),
+      : ["NOTHING YOU CARRY FIRES THESE."]),
   ];
 }
 

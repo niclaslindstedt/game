@@ -18,7 +18,7 @@ import type { Equipment, GameInput, GameState } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -121,13 +121,13 @@ describe("weapon durability", () => {
     run(state, idle, 400, (s) =>
       s.events.some((e) => e.type === "weaponBroke"),
     );
-    // The hammer is drawn, not a fresh blaster — a good weapon beats defaulting
-    // to the starter.
+    // The hammer is drawn, not an empty hand — a good weapon beats going
+    // bare-handed.
     expect(state.players[0].equipment.weapon.id).toBe(52);
     expect(state.players[0].equipment.weapon.defId).toBe("test_hammer");
   });
 
-  it("with no wieldable weapon in the bag a fresh sidearm is drawn", () => {
+  it("with no wieldable weapon in the bag the hero is left bare-handed", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
@@ -135,7 +135,7 @@ describe("weapon durability", () => {
     run(state, idle, 400, (s) =>
       s.events.some((e) => e.type === "weaponBroke"),
     );
-    expect(state.players[0].equipment.weapon.defId).toBe("blaster");
+    expect(state.players[0].equipment.weapon.defId).toBe("fists");
     expect(state.players[0].equipment.weapon.durability).toBeUndefined();
     // The broken wand still rides in the bag — never destroyed.
     expect(
@@ -225,7 +225,7 @@ describe("same-weapon pickups refresh durability", () => {
   });
 
   it("the unbreakable sidearm is never traded for a breakable copy", () => {
-    const state = equipBlaster(startGame()); // unbreakable blaster in hand
+    const state = equipRangedSidearm(startGame()); // unbreakable blaster in hand
     expect(state.players[0].equipment.weapon.defId).toBe("blaster");
     expect(state.players[0].equipment.weapon.durability).toBeUndefined();
     const looted = weapon(60, "blaster", weaponDef("blaster").durability);
@@ -315,7 +315,7 @@ describe("repair kits — spending", () => {
   });
 
   it("also mend worn armor", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].repairKits = 1;
     state.players[0].equipment.chest = {
@@ -352,20 +352,20 @@ describe("repair kits — spending", () => {
     clearStage(state);
     addPunchingBag(state);
     // The hero mains the hammer (best), with a pistol as backup. When the
-    // hammer breaks the pistol takes over; when the pistol breaks too, only the
-    // starter sidearm remains.
+    // hammer breaks the pistol takes over; when the pistol breaks too, he is
+    // down to his bare hands.
     state.players[0].equipment.weapon = weapon(50, "test_hammer", 1);
     state.players[0].inventory[0] = weapon(51, "test_pistol", 1);
     // First break: hammer → bag (shed #1), pistol drawn.
     run(state, idle, 600, (s) => s.players[0].equipment.weapon.id === 51);
-    // Second break: pistol → bag (shed #2), sidearm drawn.
+    // Second break: pistol → bag (shed #2), nothing left to draw.
     run(
       state,
       idle,
       600,
-      (s) => s.players[0].equipment.weapon.defId === "blaster",
+      (s) => s.players[0].equipment.weapon.defId === "fists",
     );
-    expect(state.players[0].equipment.weapon.defId).toBe("blaster");
+    expect(state.players[0].equipment.weapon.defId).toBe("fists");
     // Clear the field so the re-equipped weapon doesn't wear a point swinging
     // in the same step — this beat is about which weapon returns, not combat.
     state.enemies = [];

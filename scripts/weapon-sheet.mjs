@@ -202,8 +202,10 @@ for (const group of groups) {
     if (behaviors) {
       blit(sheet, upscale(renderText(behaviors, STAT), 2), TEXT_X, y + 30);
     }
-    // Loud markers for the two mistakes a sheet exists to catch.
-    if (!icon) {
+    // Loud markers for the two mistakes a sheet exists to catch. An icon the
+    // def deliberately does not HAVE is not one of them: the engine's BARE
+    // HANDS ships without one because there is nothing in the hand to draw.
+    if (!icon && def.icon !== undefined) {
       blit(
         sheet,
         upscale(renderText("MISSING ICON " + def.icon, WARN), 2),

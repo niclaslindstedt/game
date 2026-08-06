@@ -190,8 +190,8 @@ export const SPAWNERS = {
    * This exists because the density ladder's thicker crowd lands hardest exactly
    * where the hero is weakest: at level 1, with the rung's starting weapon and
    * nothing found yet. Measured, a magic build on HARD spiralled on roughly half
-   * of its seeds — swarmed before it could arm itself, so it never got off the
-   * sidearm. The horde is meant to be a wall LATER, not on the doorstep.
+   * of its seeds — swarmed before it could arm itself, so it never got off its
+   * opening weapon. The horde is meant to be a wall LATER, not on the doorstep.
    */
   landingReach: 0.34,
   /** The respawn-delay multiplier for a point sitting ON the level's boss (0

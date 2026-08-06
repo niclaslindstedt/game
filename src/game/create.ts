@@ -1852,12 +1852,13 @@ export function createHero(
     medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
     staminaPotions: 0,
     repairKits: 0,
-    // THE OPENING HOLSTER: a hundred rounds for the weapon in his hand and a
-    // hundred for the sidearm behind it (`startingAmmo`) — a long, unhurried
+    // THE OPENING HOLSTER: a hundred rounds for the weapon in his hand and
+    // nothing for anything else (`startingAmmo`) — a long, unhurried
     // introduction to the fact that ammunition exists. It has to know the
-    // DIFFICULTY'S starting weapon, because EASY opens with a shotgun and a
-    // holster stocked from the sidearm alone would leave that hero unable to
-    // fire a shot. A carried loadout overwrites the whole pouch below.
+    // DIFFICULTY'S starting weapon, because that is the only gun a fresh hero
+    // has: a MELEE or MAGIC opening carries no rounds at all, since the thing
+    // behind an empty hand is now the hand itself rather than a fallback gun.
+    // A carried loadout overwrites the whole pouch below.
     ammo: startingAmmo(diff.startingWeapon),
     cleanSlates: 0,
     moving: false,

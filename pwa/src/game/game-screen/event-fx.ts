@@ -322,14 +322,28 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // longer than a one-hander's (`meleeSwingMs`). The cone the engine hit with
     // is unchanged: this is entirely how it LOOKS.
     const heavy = isTwoHandedDef(localHero(state).equipment.weapon.defId);
-    const swingMs = meleeSwingMs(heavy);
+    const swingMs = meleeSwingMs(heavy, event.motion);
     // A SHAKEN weapon (`WeaponMotion`) covers no ground on its way anywhere: it
     // is held against a body and juddering. The wedge is the picture of a blade
     // travelling through a sector, so drawing one for a tool that never
     // travelled would be inventing a swing the weapon does not have — the whole
     // read is meant to be the shiver and what comes off the body. Skipped here
     // rather than dimmed at the draw, so nothing is queued at all.
-    if (event.motion !== "shake") {
+    // A PUNCH gets a mark at the end of the reach instead of a wedge across it,
+    // for the same reason the shaken tool gets none: the wedge is the picture of
+    // a blade travelling through a sector, and a fist travels along one line to
+    // one place. Its own effect draws that (`punch` in render/effects.ts), on
+    // the same clock the body's drive runs on.
+    if (event.motion === "punch") {
+      effects.push({
+        kind: "punch",
+        pos: { x: event.pos.x, y: event.pos.y - localHero(state).z },
+        angle: Math.atan2(event.dir.y, event.dir.x),
+        radius: event.range,
+        untilMs: state.stats.timeMs + swingMs,
+        durationMs: swingMs,
+      });
+    } else if (event.motion !== "shake") {
       effects.push({
         kind: "swing",
         // These blows leave the hero's hands, so lift the arc by his

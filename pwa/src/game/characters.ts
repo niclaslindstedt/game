@@ -51,6 +51,7 @@ import {
   type Difficulty,
   type Equipment,
   type Loadout,
+  UNARMED_DEF_ID,
 } from "@game/menu";
 
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
@@ -260,13 +261,13 @@ function newId(): string {
 // every carried piece is ADOPTED onto its frozen def snapshot on load: a base
 // the catalog later rebalanced or retired can neither nerf the hero's gear nor
 // crash the apply. The equipped weapon can never resolve to nothing (it falls
-// back to the engine's unbreakable sidearm); an unresolvable bag/worn piece is
+// back to the hero's own bare hands); an unresolvable bag/worn piece is
 // dropped.
 
 function fallbackWeapon(): Equipment {
   return {
     id: 0,
-    defId: "blaster",
+    defId: UNARMED_DEF_ID,
     slot: "weapon",
     tier: "regular",
     ilvl: 1,

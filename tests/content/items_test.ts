@@ -13,6 +13,7 @@ import {
   equipmentBaseName,
   equipmentName,
   GEAR_DEFS,
+  isBareHands,
   LEVELS,
   LOOT,
   moveInventoryItem,
@@ -28,7 +29,7 @@ import type { Equipment, GameState, Tier } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   revealAll,
@@ -49,7 +50,7 @@ function makeVest(id: number, tier: Tier = "regular"): Equipment {
 }
 
 function killTheBoss(state: GameState): void {
-  equipBlaster(state); // pick the boss off at range, past the loot scatter
+  equipRangedSidearm(state); // pick the boss off at range, past the loot scatter
   stopWaves(state);
   // …on ground the hero has walked: the auto-attack refuses anything still in
   // the fog, and the blaster outranges the reveal disc (`revealAll`).
@@ -191,7 +192,7 @@ describe("boss loot", () => {
 
 describe("ghost drops", () => {
   it("max LUCK guarantees a drop from a regular ghost", () => {
-    const state = equipBlaster(startGame()); // drop-rate test: kill at range
+    const state = equipRangedSidearm(startGame()); // drop-rate test: kill at range
     state.players[0].stats.luck = 100; // dropChance ≥ 1
     state.items = [];
     clearStage(state);
@@ -208,7 +209,7 @@ describe("ghost drops", () => {
     // Three 1-hp minions can miss their rolls at most once: the pity rule
     // must still land at least LOOT.minEquipmentPerLevel equipment drops.
     for (const seed of [1, 2, 3, 4, 5]) {
-      const state = equipBlaster(startGame(seed)); // clear the fodder at range
+      const state = equipRangedSidearm(startGame(seed)); // clear the fodder at range
       clearStage(state); // only the parked boss remains
       state.items = [];
       for (let i = 0; i < 3; i++) {
@@ -241,7 +242,7 @@ describe("the scripted opening drops", () => {
   // one short, then let the blaster finish a stray minion. Returns once the
   // minion is down (the boss clearStage keeps stays parked and alive).
   function killAt(state: GameState, atKills: number): void {
-    equipBlaster(state); // finish the stray minion from range
+    equipRangedSidearm(state); // finish the stray minion from range
     state.items = [];
     state.stats.kills = atKills - 1;
     state.enemies.push(
@@ -511,7 +512,7 @@ describe("inventory", () => {
     expect(state.players[0].equipment.chest).toBeNull();
   });
 
-  it("swaps weapons — the weapon slot is never empty", () => {
+  it("swaps weapons, and comes off into the bag leaving bare hands", () => {
     const state = startGame();
     const cutter: Equipment = {
       id: 60,
@@ -526,9 +527,19 @@ describe("inventory", () => {
     expect(state.players[0].equipment.weapon.defId).toBe("box_cutter");
     expect(state.players[0].inventory[0]?.defId).toBe("medieval_sword"); // swapped back
 
-    // The equipped weapon can never be parked in the bag.
+    // …and the hand comes off like any other slot: the weapon banks and the
+    // hero is left holding nothing but his hands. The slot stays TYPED
+    // never-empty (every read of it leans on that) — "empty" is the bare-hands
+    // piece, which is what `isBareHands` answers for.
+    expect(unequipToInventory(state, state.players[0], "weapon")).toBe(true);
+    expect(isBareHands(state.players[0].equipment.weapon)).toBe(true);
+    expect(
+      state.players[0].inventory.some((i) => i?.defId === "box_cutter"),
+    ).toBe(true);
+
+    // Nothing to take off twice: a hero already bare-handed is refused, so the
+    // bag never fills up with copies of an empty hand.
     expect(unequipToInventory(state, state.players[0], "weapon")).toBe(false);
-    expect(state.players[0].equipment.weapon.defId).toBe("box_cutter");
   });
 
   it("rearranges bag cells by swapping", () => {

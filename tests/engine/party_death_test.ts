@@ -59,8 +59,8 @@ describe("a hero falling in a party", () => {
     expect(corpse.pos).toEqual({ x: 333, y: 222 });
     // The real weapon went to the corpse…
     expect(corpse.gear.some((g) => g.item.id === weaponId)).toBe(true);
-    // …and the never-empty hand holds the minted fallback.
-    expect(b.equipment.weapon.defId).toBe("blaster");
+    // …and the never-empty hand holds nothing but his own hands.
+    expect(b.equipment.weapon.defId).toBe("fists");
   });
 
   it("bills the fallen hero's own toll, and nobody else's", () => {
@@ -116,8 +116,8 @@ describe("a hero falling in a party", () => {
     a.pos = { x: 333, y: 222 };
     step(state, idle, DT);
     expect(state.corpses).toHaveLength(1);
-    // The owner walks back and the kit returns — the real weapon swaps the
-    // minted sidearm out of the hand.
+    // The owner walks back and the kit returns — the real weapon goes back into
+    // the hand that was left empty.
     b.pos = { x: 333 - CORPSE.recoverRadius / 2, y: 222 };
     step(state, idle, DT);
     expect(state.corpses).toHaveLength(0);
@@ -127,20 +127,25 @@ describe("a hero falling in a party", () => {
 
   it("keeps unrecovered pieces on the corpse when the bag is full", () => {
     const { state, b } = party();
+    // Read the REAL weapon's def before the fall: afterwards the hand holds the
+    // empty hand, and filling the bag with THAT would hand recovery a slot it
+    // is allowed to swap out (`isBareHands`) — which is the opposite of what
+    // this test stages.
+    const realWeapon = b.equipment.weapon.defId;
     fell(state, b);
     applyRunCommand(state, "respawn", [], b);
     // No room anywhere: every cell taken and a real weapon already in hand.
     const filler = () => ({
       id: state.nextId++,
-      defId: b.equipment.weapon.defId,
+      defId: realWeapon,
       slot: "weapon" as const,
       tier: "regular" as const,
       ilvl: 1,
       affixes: [],
     });
     b.inventory = b.inventory.map(filler);
-    // A real find in the hand — not the minted fallback, which recovery is
-    // allowed to swap out.
+    // A real find in the hand — not the empty hand, which recovery is allowed
+    // to swap out.
     b.equipment.weapon = { ...filler(), tier: "magic" };
     const corpse = state.corpses[0]!;
     const held = corpse.gear.length;

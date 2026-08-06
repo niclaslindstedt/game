@@ -7159,24 +7159,6 @@
       "sweepDeg": 140,
       "twoHanded": true
     },
-    "blaster": {
-      "ammo": "cells",
-      "class": "ranged",
-      "cooldownMs": 700,
-      "damage": 16,
-      "description": "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
-      "icon": "icon_blaster",
-      "id": "blaster",
-      "levelReq": 1,
-      "name": "BLASTER",
-      "projectile": {
-        "lifetimeMs": 900,
-        "radius": 3,
-        "speed": 420,
-        "sprite": "bolt"
-      },
-      "range": 260
-    },
     "blue_screen": {
       "class": "magic",
       "cooldownMs": 420,
@@ -7524,6 +7506,19 @@
       "name": "FALCATA",
       "range": 40,
       "sweepDeg": 70
+    },
+    "fists": {
+      "class": "melee",
+      "cooldownMs": 600,
+      "damage": 8,
+      "description": "No weapon at all: the hero's own two hands, wrapped around nothing. They cost nothing, they never break and they never run dry — and they make him walk all the way in to use them.",
+      "edge": "blunt",
+      "id": "fists",
+      "levelReq": 1,
+      "motion": "punch",
+      "name": "BARE HANDS",
+      "range": 20,
+      "sweepDeg": 45
     },
     "flamberge": {
       "class": "melee",

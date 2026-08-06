@@ -126,10 +126,16 @@ export type WeaponEdge = "sharp" | "blunt" | "shred";
  * follows from there. `shake` is a weapon that is not swung at all but PRESSED
  * INTO something and held there — it has no arc to draw, so it JUDDERS instead.
  *
+ * `punch` is the third: a fist is not carried through anything, it is THROWN
+ * OUT AND PULLED BACK along one line. It is what the empty hand asks for
+ * (`UNARMED_DEF_ID`) and what any knuckle weapon may ask for — the difference
+ * from `swing` is that there is no arc at all to ride, so the blow reads as
+ * reach and recoil rather than as a sweep, and it throws no crescent.
+ *
  * The engine draws none of it. The word rides out on the `swing` event exactly
- * as `sfx` does, so the app can answer it and a MOD's weapon can ask for either.
+ * as `sfx` does, so the app can answer it and a MOD's weapon can ask for any.
  */
-export type WeaponMotion = "swing" | "shake";
+export type WeaponMotion = "swing" | "shake" | "punch";
 
 export type WeaponDef = {
   id: string;
@@ -400,57 +406,78 @@ export type WeaponDef = {
      */
     chain?: number;
   };
-  /** Inventory icon sprite. */
-  icon: string;
+  /**
+   * Inventory icon sprite — the 12×12 the bag draws, and the sprite the field
+   * hero is drawn HOLDING (`paper-doll.ts`).
+   *
+   * Optional for exactly ONE def, and the item schema still demands it of every
+   * authored weapon (a mod's included): the empty hand (`UNARMED_DEF_ID`) has
+   * no icon because there is nothing in the hand to draw. Everywhere a weapon's
+   * icon is drawn, an absent one means DRAW NOTHING — an empty bag slot, a
+   * hero holding his own hands — rather than a missing-sprite box.
+   */
+  icon?: string;
 };
 
 /**
  * The engine's BUILT-IN weapons — the only defs authored here rather than in
- * the YAML item tree. The BLASTER is engine machinery, not content: it is
- * minted unbreakable whenever the holster would otherwise be empty (see
- * `drawSidearm` in items/durability.ts), never sits in a drop pool, and the
- * engine test fixtures ship their own copy — so it must survive a sequel
- * deleting `content/items/` wholesale.
+ * the YAML item tree. FISTS are engine machinery, not content: they are what
+ * the hero fights with whenever the hand holds nothing else (see `bareHands`
+ * in items/hands.ts), never sit in a drop pool, and the engine test fixtures
+ * ship their own copy — so they must survive a sequel deleting
+ * `content/items/` wholesale.
  */
 const ENGINE_WEAPONS: Record<string, WeaponDef> = {
-  // A deliberate, slow cadence: each shot is an event the player can follow;
-  // DEX (and the first weapon drop) is how the fire rate grows back.
-  blaster: {
-    id: "blaster",
-    name: "BLASTER",
+  // THE EMPTY HAND. There is no last-resort GUN in the hero's holster — take
+  // the weapon out of his hand and what is left is the hand, so the weapon
+  // slot's never-empty contract is honored by the hero's own knuckles rather
+  // than by a freebie the engine mints from nowhere.
+  fists: {
+    id: "fists",
+    name: "BARE HANDS",
     description:
-      "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
-    class: "ranged",
+      "No weapon at all: the hero's own two hands, wrapped around nothing. They cost nothing, they never break and they never run dry — and they make him walk all the way in to use them.",
+    // MELEE, so the blow scales off STRENGTH like every other physical weapon
+    // (`DAMAGE_STAT`) — a bruiser who loses his sword still hits like a
+    // bruiser, and that is the whole reason the empty hand is worth having.
+    class: "melee",
+    // A punch CRUSHES; nothing about a fist opens a body along a line.
+    edge: "blunt",
     levelReq: 1,
     // Off the damage-budget line on purpose (like every difficulty's starting
-    // weapon): the sidearm is the baseline the difficulty ladder is CALIBRATED
-    // on, so it is retuned by hand whenever the horde's health moves — see
-    // MENACE.mobHpBase. It carries no ENHANCED DAMAGE roll, so nothing else
-    // lifts it.
+    // weapon): the empty hand is the baseline the difficulty ladder is
+    // CALIBRATED on, so it is retuned by hand whenever the horde's health moves
+    // — see MENACE.mobHpBase. It carries no ENHANCED DAMAGE roll, so nothing
+    // else lifts it.
     //
-    // RETUNED WITH THE DENSITY LADDER (10 dmg / 900 ms → ~11 dps). The sidearm
-    // is what a hero falls back to with an empty holster, and that is precisely
-    // the state the thicker horde is most likely to catch him in — measured, a
-    // magic build on HARD spiralled on 4 of 7 seeds once the ladder landed:
-    // swarmed before it could arm itself, too slow on the sidearm to earn the
-    // kills that drop a real weapon, so it never got off the BLASTER at all.
-    // Doubling its output is what breaks that loop. It stays FAR under any real
-    // weapon (the pool's opening bases run 3-4× this and climb from there), so
-    // it is still the weapon of last resort — just not a death sentence.
-    damage: 16,
-    cooldownMs: 700,
-    range: 260,
-    // IMPOSSIBLE TO BREAK, and now that is the whole of it: the sidearm carries
-    // no durability at all, and like every RANGED weapon it eats AMMUNITION
-    // instead. A melee or magic opening stocks the pouch with `AMMO.starting`
-    // (100) charged cells, because there the sidearm is the hero's only gun; a
-    // RANGED opening stocks its own kind instead and leaves this one only
-    // `AMMO.sidearmReserve` as a seatbelt (see `startingAmmo`). When they are
-    // gone he is not disarmed — he is looking for a box, and the drop ladder is
-    // leaning hard toward handing him one.
-    ammo: "cells",
-    projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
-    icon: "icon_blaster",
+    // ~30 effective dps, against the 26 the printed sidearm this replaced read
+    // (`scripts/weapon-budget.mjs` prints the figure for exempt weapons too).
+    // The few points are the fare for the RANGE: the sidearm answered from 260
+    // px and the empty hand answers from 20, so an identical dps would have
+    // been a straight nerf to the one state the mercy ladder exists to watch.
+    // It stays FAR under any real weapon — under the BRASS KNUCKLES (45) most
+    // pointedly, because a fist has to beat a weapon strapped over a fist by
+    // losing — so it is still the last resort, just not a death sentence.
+    damage: 14,
+    cooldownMs: 600,
+    // ARM'S LENGTH, and under the brass knuckles' 24 — knuckles are a weapon
+    // strapped over the hand and reach further than the hand does.
+    range: 20,
+    // A jab is thrown straight, so the cone is the narrowest in the game: the
+    // empty hand answers one body at a time and does not sweep a crowd.
+    sweepDeg: 45,
+    // NOT A THROWN PUNCH — the fist does not travel an arc the way a blade
+    // does, it goes out and comes back (`WeaponMotion.punch`).
+    motion: "punch",
+    // NO `durability` AND NO `ammo`: a hand cannot snap and cannot run dry.
+    // It is the one weapon in the game that owes the ranged/melee trade
+    // (see `WeaponDef.ammo`) nothing at all, because it is not a weapon —
+    // it is what is left when there is no weapon.
+    //
+    // AND NO `icon`: an empty hand has nothing in it to draw. The bag's weapon
+    // slot renders EMPTY on it and the field hero holds nothing, which is the
+    // whole point — "unarmed" has to LOOK unarmed, not like a fist item the
+    // player is carrying around.
   },
 };
 
@@ -466,13 +493,14 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
 };
 
 /**
- * The BUILT-IN SIDEARM's def id — the weapon `drawSidearm` mints into an empty
- * holster. Named here (rather than spelled out at each use) because the piece
- * it identifies is the one weapon the ordinary rules do NOT apply to: it is
- * minted UNBREAKABLE, and it never sits in a drop pool. Anything describing
- * "the weapon you start with" has to be able to ask which one it is.
+ * THE EMPTY HAND's def id — what `bareHands` puts in a hand holding nothing.
+ * Named here (rather than spelled out at each use) because the piece it
+ * identifies is the one weapon the ordinary rules do NOT apply to: it never
+ * wears out, never runs dry, and never sits in a drop pool or a bag cell.
+ * Anything asking "is this hero actually holding a weapon" has to be able to
+ * ask which one it is — and the answer to `defId === UNARMED_DEF_ID` is "no".
  */
-export const SIDEARM_DEF_ID = "blaster";
+export const UNARMED_DEF_ID = "fists";
 
 // The generated EXCEPTIONAL/ELITE versions of every pool base — same look,
 // higher numbers and requirements (see defs/grades.ts). Merged into the
@@ -796,9 +824,20 @@ export function equipmentLevelReq(defId: string): number {
     : (gearDef(defId).levelReq ?? 1);
 }
 
-/** The icon sprite of an equipment def. */
+/**
+ * The icon sprite of an equipment def.
+ *
+ * Answers "" for the ONE def that has no icon — the empty hand (see
+ * `WeaponDef.icon`) — and that is safe precisely because the empty hand never
+ * reaches any caller of this: it never drops, never sits in a bag cell, never
+ * rides a pickup card or an achievement badge. The two surfaces that CAN be
+ * looking at an unarmed hero (the paper doll and the bag's weapon slot) ask
+ * `isBareHands` and draw nothing, rather than asking here for a sprite that
+ * does not exist.
+ */
 export function equipmentIcon(defId: string): string {
-  return isWeaponDef(defId) ? weaponDef(defId).icon : gearDef(defId).icon;
+  const icon = isWeaponDef(defId) ? weaponDef(defId).icon : gearDef(defId).icon;
+  return icon ?? "";
 }
 
 /**

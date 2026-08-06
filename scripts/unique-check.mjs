@@ -95,10 +95,10 @@ const GAP_SLACK = 15;
 // legitimately gate low — exempt them from the equip-gap rule.
 const GAP_EXEMPT = new Set(TRINKET_SLOTS);
 // Starter/fallback/street-clothes bases stay out of suggestions — they're the
-// seed stock and the unbreakable sidearm, not unique material (a low-ilvl
+// seed stock and the empty hand, not unique material (a low-ilvl
 // unique may still be hand-authored onto one, e.g. a fang dagger on combat_knife).
 const SEED_BASES = new Set([
-  "blaster",
+  "fists",
   "stick",
   "brass_knuckles",
   "box_cutter",

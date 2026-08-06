@@ -12,7 +12,7 @@ import { JUMP, step } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   startGame,
@@ -55,7 +55,7 @@ describe("airborne melee", () => {
 
   it("ranged still fires from the air (the guard is melee-only)", () => {
     const state = stagedTarget();
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.enemies = [
       makeEnemy({
         id: 1,

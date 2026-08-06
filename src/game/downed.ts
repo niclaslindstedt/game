@@ -31,8 +31,7 @@ import { distanceSq } from "@game/lib/vec.ts";
 
 import { CORPSE } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
-import { drawSidearm, isTwoHandedWeapon } from "./items/hands.ts";
-import { SIDEARM_DEF_ID } from "./defs/equipment.ts";
+import { bareHands, isBareHands, isTwoHandedWeapon } from "./items/hands.ts";
 import { EQUIP_SLOTS } from "./items/slots.ts";
 import { applyHeroDeathToll } from "./loot.ts";
 import { heroInPlay, seatOf } from "./party.ts";
@@ -57,8 +56,8 @@ import type {
  * chased, not counted, not stepped — exactly as a departed seat is treated.
  *
  * The weapon slot honours its never-empty contract: the real weapon goes to
- * the corpse and the hero holds the unbreakable sidearm, which is also what
- * they respawn with.
+ * the corpse and the hero is left with his bare hands, which is also what he
+ * respawns with.
  */
 export function downHero(state: GameState, hero: Player): void {
   const seat = seatOf(state, hero);
@@ -78,10 +77,16 @@ export function downHero(state: GameState, hero: Player): void {
   const equipment = hero.equipment;
   const gear: PlayerCorpse["gear"] = [];
   // The hand first and by name, because its slot is typed never-empty: the
-  // real weapon goes to the corpse and the fallback sidearm takes its place.
-  gear.push({ slot: "weapon", item: equipment.weapon });
-  equipment.weapon = drawSidearm(state);
-  hero.weaponCooldownMs = 0;
+  // real weapon goes to the corpse and the hero is left with his hands. A hero
+  // who was ALREADY bare-handed leaves no weapon behind — the empty hand is not
+  // a possession, so a corpse carrying one would let a recovery hand him back
+  // the nothing he was holding (and, with a full bag, fail the recovery over
+  // it).
+  if (!isBareHands(equipment.weapon)) {
+    gear.push({ slot: "weapon", item: equipment.weapon });
+    equipment.weapon = bareHands(state);
+    hero.weaponCooldownMs = 0;
+  }
   for (const slot of EQUIP_SLOTS) {
     if (slot === "weapon") continue;
     const piece = equipment[slot];
@@ -145,8 +150,8 @@ export function respawnHero(state: GameState, hero: Player): boolean {
  * OWNER ONLY — that is the whole promise, and it is enforceable
  * precisely because recovery is engine code the server runs: another hero
  * standing on the body all day takes nothing. Each piece goes back where it
- * came off when the slot is free (the respawned hero's minted sidearm is
- * discarded for the real weapon, never banked — it is a freebie, not loot),
+ * came off when the slot is free (the respawned hero's empty hands give way to
+ * the real weapon, and are never banked — they are not a possession),
  * and to a free bag cell when it is not; a piece with nowhere to go STAYS on
  * the corpse, so a full bag loses nothing — the body simply keeps holding it.
  * The corpse leaves the field only when it has been emptied.
@@ -178,12 +183,12 @@ export function stepCorpseRecovery(state: GameState): void {
 function takeBack(owner: Player, slot: EquipSlot, item: Equipment): boolean {
   const worn = owner.equipment[slot];
   if (slot === "weapon") {
-    // The hand is never empty, so "free" here means "still holding the minted
-    // fallback" — swap the real weapon back in and let the freebie vanish.
-    // A two-hander waits for the second arm to be clear, like any equip.
+    // The hand is never empty, so "free" here means "holding nothing but his
+    // hands" — swap the real weapon back in over them. A two-hander waits for
+    // the second arm to be clear, like any equip.
     if (
       worn &&
-      isPlainSidearm(worn) &&
+      isBareHands(worn) &&
       !(isTwoHandedWeapon(item) && owner.equipment.offhand)
     ) {
       owner.equipment.weapon = item;
@@ -201,16 +206,6 @@ function takeBack(owner: Player, slot: EquipSlot, item: Equipment): boolean {
   if (free < 0) return false;
   owner.inventory[free] = item;
   return true;
-}
-
-/** The unmodified minted fallback (`drawSidearm`) — the one weapon recovery
- * may silently discard. A sidearm with affixes or a tier is a real find. */
-function isPlainSidearm(piece: Equipment): boolean {
-  return (
-    piece.defId === SIDEARM_DEF_ID &&
-    piece.tier === "regular" &&
-    piece.affixes.length === 0
-  );
 }
 
 /**

@@ -12,8 +12,11 @@
 // hold unchanged — only the ids are synthetic. `installFixtures()` registers
 // them; call it once at module load from the engine test helper.
 //
-// NOTE: the id `blaster` is intentional — `items.ts` falls back to it when a
-// weapon breaks with an empty bag, so the fixture keeps that one shared id.
+// NOTE: the id `fists` is intentional — it is the EMPTY HAND the engine leaves
+// a hero with when a weapon breaks (or is taken off) with an empty bag, so the
+// fixture ladder has to carry that one shared id. `blaster` below is NOT
+// shared any more: it is simply this ladder's synthetic ranged weapon, and its
+// numbers were always its own.
 // `crude_sword` is simply this ladder's default (medium) starting weapon —
 // the engine itself no longer hardcodes any starting-weapon id (the
 // difficulty def carries it).
@@ -601,9 +604,24 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     durability: 20,
     icon: "icon_medieval_sword",
   },
-  // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm
-  // when a breakable weapon shatters with an empty bag (items.ts). On the moon
-  // it is also a scavengeable drop.
+  // SHARED ID: the empty hand the engine leaves in a hero's weapon slot when
+  // there is nothing else to hold (`bareHands` in items/hands.ts). It mirrors
+  // the shipped built-in — melee, no durability, no ammo, no icon — because
+  // suites assert on the state of being unarmed, not on its numbers.
+  fists: {
+    id: "fists",
+    name: "BARE HANDS",
+    class: "melee",
+    edge: "blunt",
+    levelReq: 1,
+    damage: 8,
+    cooldownMs: 600,
+    range: 20,
+    sweepDeg: 45,
+    motion: "punch",
+  },
+  // This ladder's synthetic ranged weapon. It carries no engine meaning at all
+  // (the fallback is `fists` above); on the moon it is a scavengeable drop.
   blaster: {
     id: "blaster",
     name: "BLASTER",

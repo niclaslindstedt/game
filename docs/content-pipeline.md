@@ -291,8 +291,9 @@ never by editing the fixture.
   equipment catalogs — to emit `src/generated/items.ts` (gitignored, regenerated
   on build — never edit or commit it), which `defs/equipment.ts`/`gear.ts`/
   `grades.ts`/`uniques.ts` and the config `QUALITY`/`LOOT` rarity knobs read.
-  The engine's built-in `blaster` sidearm stays authored in `equipment.ts`
-  (engine machinery, not content). The round-trip guard
+  The engine's built-in `fists` — the EMPTY HAND a hero holds when he holds
+  nothing else — stays authored in `equipment.ts` (engine machinery, not
+  content, and the one weapon def that ships with no `icon`). The round-trip guard
   (`tests/content/item_roundtrip_test.ts`) pins the compiled catalogs to
   `tests/content/fixtures/items-snapshot.json`; accept an intentional item
   change with `node scripts/update-item-snapshot.mjs`. See the `weapon-system`

@@ -18,7 +18,7 @@ import {
 } from "../../src/game/crates.ts";
 import {
   clearStage,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   run,
   SEED,
@@ -364,7 +364,7 @@ describe("the hero smashes crates autonomously", () => {
   it("a hero's SHOT smashes a crate it would otherwise sail over", () => {
     const state = startGame(SEED);
     clearStage(state);
-    equipBlaster(state); // a ranged bolt — a jumpable crate is normally flown over
+    equipRangedSidearm(state); // a ranged bolt — a jumpable crate is normally flown over
     const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 70, y: hero.y }, 10);
     const itemsBefore = state.items.length;
@@ -378,7 +378,7 @@ describe("the hero smashes crates autonomously", () => {
 
 describe("the manual AIM & SHOOT trigger never fires on a crate", () => {
   it("a held trigger with no foe in reach leaves a crate in range untouched", () => {
-    const state = equipBlaster(startGame(SEED));
+    const state = equipRangedSidearm(startGame(SEED));
     clearStage(state); // no foe anywhere in reach
     const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);
@@ -395,7 +395,7 @@ describe("the manual AIM & SHOOT trigger never fires on a crate", () => {
   });
 
   it("autonomous fire (no manual gate) still smashes the same crate", () => {
-    const state = equipBlaster(startGame(SEED));
+    const state = equipRangedSidearm(startGame(SEED));
     clearStage(state);
     const hero = state.players[0].pos;
     const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);

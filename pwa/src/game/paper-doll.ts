@@ -136,8 +136,12 @@ export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
   const offhand = offhandDollLayer(equipment.offhand);
   if (offhand) layers.push(offhand);
   const weapon = equipment.weapon;
-  if (weapon) {
-    const icon = weaponDef(weapon.defId).icon;
+  // No icon means nothing in the hand — the EMPTY HAND (`UNARMED_DEF_ID`) is
+  // the one weapon def that ships without one, and the hero drawn holding it
+  // is drawn holding nothing at all. That is the whole look of being unarmed,
+  // so it must not fall back to a placeholder.
+  const icon = weapon ? weaponDef(weapon.defId).icon : undefined;
+  if (icon) {
     layers.push({
       sprite: icon,
       dx: HELD_DX,

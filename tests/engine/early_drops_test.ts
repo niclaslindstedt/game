@@ -11,7 +11,7 @@ import { levelDef } from "@game/core";
 import type { GameState } from "@game/core";
 import {
   clearStage,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -21,7 +21,7 @@ import {
 // Drive the next kill so the schedule reaches `atKills`: park kills one short,
 // then let the blaster finish a stray minion (the parked boss stays alive).
 function killAt(state: GameState, atKills: number): void {
-  equipBlaster(state); // finish the stray minion from range
+  equipRangedSidearm(state); // finish the stray minion from range
   state.items = [];
   // Isolate the early-drop cadence (kill-count driven) from the leveling curve:
   // freeze XP so an opening ding can't flip the phase to "levelup" mid-helper

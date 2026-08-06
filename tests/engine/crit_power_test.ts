@@ -13,11 +13,11 @@ import { rngState } from "@game/lib/rng.ts";
 // Engine-internal kill funnel — asserting the crit-power passthrough at the door.
 import { hitEnemy } from "../../src/game/loot.ts";
 
-import { equipBlaster, makeEnemy, startGame } from "./helpers.ts";
+import { equipRangedSidearm, makeEnemy, startGame } from "./helpers.ts";
 
 describe("crit power", () => {
   it("reports the roll's position in the variance band", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const avg = weaponDamageFor(state, state.players[0], weapon);
     const v = WEAPON.damageVariance; // the fixture blaster takes the default
@@ -32,7 +32,7 @@ describe("crit power", () => {
   });
 
   it("spans the full [0, 1] band over many rolls", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     let lo = 1;
     let hi = 0;
@@ -46,7 +46,7 @@ describe("crit power", () => {
   });
 
   it("never advances the loot stream", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const before = rngState(state.rng);
     for (let i = 0; i < 100; i++)

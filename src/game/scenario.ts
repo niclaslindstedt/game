@@ -17,6 +17,7 @@ import {
   gearDef,
   isGearDef,
   isWeaponDef,
+  UNARMED_DEF_ID,
   weaponDef,
 } from "./defs/equipment.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
@@ -155,8 +156,7 @@ export type ScenarioSpec = {
   coins?: number;
   /**
    * Held weapon: a WEAPON_DEFS id minted plain at catalog durability, or
-   * `null` for the unbreakable fallback sidearm (`blaster`) — the game's
-   * "no weapon" state.
+   * `null` for BARE HANDS (`UNARMED_DEF_ID`) — the game's "no weapon" state.
    */
   weapon?: string | null;
   /** True holsters the weapon entirely: the auto-attack sits out until the
@@ -340,11 +340,11 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   }
 
   if (spec.weapon !== undefined) {
-    // `null` = the unbreakable fallback sidearm — the same piece items/durability.ts
-    // draws when a weapon shatters with an empty bag ("no weapon"). A
+    // `null` = bare hands — the same piece items/durability.ts leaves the hero
+    // with when a weapon shatters with an empty bag ("no weapon"). A
     // UNIQUE_DEFS id mints that named unique (its bonuses AND its signature
     // look), so a scenario can stage a hero holding a specific unique.
-    const defId = spec.weapon ?? "blaster";
+    const defId = spec.weapon ?? UNARMED_DEF_ID;
     const asUnique =
       spec.weapon !== null && knownDef(uniqueDef, defId)
         ? uniqueDef(defId)

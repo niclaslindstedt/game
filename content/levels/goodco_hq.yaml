@@ -236,7 +236,7 @@ loot:
       gear: smart_glasses
     # A guaranteed RANGED sidearm for the BACK HALF — the fix for the "past the
     # night manager but no further" wall: where the probabilistic rain used to
-    # leave the hero stranded on a worn starter (or the feeble blaster) as the
+    # leave the hero stranded on a worn starter (or on his bare hands) as the
     # aisles swell toward PAYLOAD-1, this hands him a real kiting tool so his DPS
     # never craters. Landed around aisle 2-3.
     - atKills: [34, 46]

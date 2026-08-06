@@ -11,7 +11,7 @@ import { advanceDialogue, APPARITION, dialogueContent, step } from "@game/core";
 import type { Enemy, GameState } from "@game/core";
 import {
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -84,7 +84,7 @@ describe("apparitions", () => {
   it("is never targeted by the auto-weapon", () => {
     const state = startGame(42, "test_apparition_level");
     const ghost = stageApparition(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     // Mark it spoken so the scene doesn't pause the run mid-test.
     ghost.spoke = true;
     ghost.vanishMs = 999_999; // hold it on the board

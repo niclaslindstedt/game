@@ -220,7 +220,13 @@ for (const [cls, defs] of Object.entries(byClass)) {
 // ---- Sprite coverage --------------------------------------------------------
 
 for (const def of Object.values(WEAPON_DEFS)) {
-  if (!atlasHas(def.icon)) warn(`${def.id}: icon "${def.icon}" not in atlas`);
+  // NO ICON AT ALL is legal for exactly one def — the engine's BARE HANDS,
+  // which has nothing in the hand to draw (`WeaponDef.icon`). Every authored
+  // weapon still owes one, and the item schema demands it of the YAML tree, so
+  // an undefined icon here can only be the built-in.
+  if (def.icon !== undefined && !atlasHas(def.icon)) {
+    warn(`${def.id}: icon "${def.icon}" not in atlas`);
+  }
   if (def.projectile && !atlasHas(def.projectile.sprite)) {
     warn(
       `${def.id}: projectile sprite "${def.projectile.sprite}" not in atlas`,

@@ -33,12 +33,12 @@ function weapon(
 }
 
 /** A hero carrying three weapons in a deliberately un-ranked bag order: the
- * feeble sidearm first, the heavy hitter last. */
+ * feeblest thing in the game first, the heavy hitter last. */
 function stagedBag() {
   const state = startGame();
   const inv = state.players[0].inventory;
   for (let i = 0; i < inv.length; i++) inv[i] = null;
-  inv[0] = weapon(state, "blaster"); // the last-resort sidearm
+  inv[0] = weapon(state, "stick"); // the weakest weapon the ladder hands out
   inv[1] = weapon(state, "box_cutter");
   inv[2] = weapon(state, "executioners_axe", 8);
   return state;

@@ -71,7 +71,10 @@ export function playerDollLayers(
   const offhand = offhandDollLayer(equipment.offhand);
   if (offhand) layers.push(offhand);
   if (opts.weapon === false) return layers;
+  // An iconless weapon def is the EMPTY HAND, and a hero holding nothing is
+  // drawn holding nothing — see the same guard in `paper-doll.ts`.
   const icon = weaponDef(equipment.weapon.defId).icon;
+  if (!icon) return layers;
   layers.push({
     sprite: icon,
     dx: HELD_DX,

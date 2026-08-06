@@ -26,7 +26,7 @@ import {
 } from "../../src/game/bot/party-play.ts";
 import { macroTarget } from "../../src/game/bot/macro.ts";
 import { bestAimTarget } from "../../src/game/bot/arsenal.ts";
-import { clearStage, equipBlaster, makeEnemy, startGame } from "./helpers.ts";
+import { clearStage, equipRangedSidearm, makeEnemy, startGame } from "./helpers.ts";
 
 /** A run with a second hero seated, both parked where the test puts them. */
 function party(): GameState {
@@ -150,7 +150,7 @@ describe("split the packs", () => {
 
   it("aims past a foe a nearer teammate is handling when an alternative exists", () => {
     const state = party();
-    equipBlaster(state); // seat 0 shoots (range 260, single bolt)
+    equipRangedSidearm(state); // seat 0 shoots (range 260, single bolt)
     const a = state.players[0]!;
     const b = state.players[1]!;
     a.pos = { x: 700, y: 1320 };
@@ -171,7 +171,7 @@ describe("split the packs", () => {
 
   it("still shoots the only enemy there is, handled or not", () => {
     const state = party();
-    equipBlaster(state);
+    equipRangedSidearm(state);
     const a = state.players[0]!;
     const b = state.players[1]!;
     a.pos = { x: 700, y: 1320 };
@@ -190,7 +190,7 @@ describe("split the packs", () => {
   it("keeps the solo pick identical", () => {
     const solo = startGame(9);
     clearStage(solo);
-    equipBlaster(solo);
+    equipRangedSidearm(solo);
     const hero = solo.players[0]!;
     hero.pos = { x: 700, y: 1320 };
     const wounded = makeEnemy({

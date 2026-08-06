@@ -31,7 +31,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   startGame,
@@ -208,7 +208,7 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
   it("fires once the hero has capped the map, and never banks to thoughtsSeen", () => {
     const state = startGame(); // test_level on medium → cap 14
     clearStage(state);
-    equipBlaster(state); // down mobs at range
+    equipRangedSidearm(state); // down mobs at range
     state.players[0].level = xpLevelCap("test_level", "medium");
     state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
@@ -228,7 +228,7 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
   it("stays silent while the hero is still under the cap", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.players[0].level = xpLevelCap("test_level", "medium") - 1; // one short
     state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
@@ -244,7 +244,7 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const state = startGame();
     state.difficulty = "jesus";
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.players[0].level = xpLevelCap("test_level", "jesus");
     state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
@@ -269,7 +269,7 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
   it("still mutters at or below the menace ceiling", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.players[0].level = xpLevelCap("test_level", "medium");
     state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
@@ -285,7 +285,7 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
   it("holds for the cooldown, then rotates to the next variation", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.players[0].level = xpLevelCap("test_level", "medium");
     state.players[0].xpToNext = 1_000_000; // keep an incidental level-up out of the way
     state.capThoughtMs = 0;
@@ -329,7 +329,7 @@ describe("the cap-farm rotation, when the thought catalog is replaced", () => {
   const capped = (): GameState => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     state.players[0].level = xpLevelCap("test_level", "medium");
     state.players[0].xpToNext = 1_000_000;
     state.capThoughtMs = 0;

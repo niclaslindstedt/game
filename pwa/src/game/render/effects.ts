@@ -33,6 +33,9 @@ import { drawEliteBurst } from "./elite-fx.ts";
 import { drawLootShine } from "./loot-aura.ts";
 import {
   MELEE_SWING_MS,
+  PUNCH_CHAMBER_END,
+  PUNCH_MS,
+  PUNCH_STRIKE_END,
   SWING_STRIKE_END,
   SWING_WINDUP_END,
 } from "./player.ts";
@@ -60,6 +63,9 @@ export type Effect = {
     | "burst"
     | "damage"
     | "swing"
+    // The knuckle impact a bare-handed (or knuckle-weapon) blow throws in place
+    // of a swing's wedge — `WeaponMotion.punch`, drawn below.
+    | "punch"
     | "muzzle"
     | "text"
     | "corpse"
@@ -1027,6 +1033,68 @@ function drawEffectPass(
       ctx.strokeStyle = "#c7ddff";
       ctx.lineWidth = 1;
       ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
+    if (effect.kind === "punch") {
+      // A PUNCH LANDS ON A POINT, NOT ACROSS A SECTOR. The swing above draws
+      // the ground a blade sweeps, because that is what a blade does to a
+      // crowd; a fist goes out along one line and arrives, so what it owes the
+      // player is a mark at the END of the hero's reach — the spot the knuckles
+      // reached — timed to the same beat the body drives on (`PUNCH_MS` and its
+      // strike window in render/player.ts).
+      //
+      // Two marks, and both are struck rather than swept:
+      //
+      //  A RING, thrown outward fast and thinning as it goes — the shock of the
+      //    contact, the one shape that reads as "something was hit HERE" at 16
+      //    px without any of the blade vocabulary.
+      //  TWO SPEED LINES along the aim, behind the impact — the picture of the
+      //    hand having come from somewhere at speed.
+      const duration = effect.durationMs ?? PUNCH_MS;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      if (t < 0 || t > 1) continue;
+      // Dark until the hand is actually out: the chamber is a wind-up, and a
+      // mark drawn during it would land before the blow does.
+      const p = clamp01(
+        (t - PUNCH_CHAMBER_END) / (PUNCH_STRIKE_END - PUNCH_CHAMBER_END),
+      );
+      if (p <= 0) continue;
+      const presence =
+        1 - clamp01((t - PUNCH_STRIKE_END) / (1 - PUNCH_STRIKE_END));
+      const aim = effect.angle ?? 0;
+      const reach = Math.max(6, effect.radius ?? 20);
+      ctx.save();
+      ctx.translate(x, groundY);
+      // Through the projection, for the same reason the swing's footprint is:
+      // `aim` and `reach` are world terms, so the mark has to land on the floor
+      // the hero is standing on rather than on the screen.
+      applyWorldProjection(ctx);
+      ctx.translate(Math.cos(aim) * reach, Math.sin(aim) * reach);
+      // THE RING — out fast, then holds while it fades, so the expansion reads
+      // as the impact and not as a bubble drifting off the fist.
+      const burst = 1 - (1 - p) * (1 - p);
+      ctx.globalAlpha = Math.max(0, 0.85 * presence);
+      ctx.strokeStyle = "#fff0d2";
+      ctx.lineWidth = Math.max(0.6, 1.8 * (1 - burst));
+      ctx.beginPath();
+      ctx.arc(0, 0, 1.5 + 6 * burst, 0, Math.PI * 2);
+      ctx.stroke();
+      // THE SPEED LINES — a short pair trailing back along the aim, offset to
+      // either side so they read as the hand's passage rather than as one more
+      // ring. They fade out first; the shock outlives the approach.
+      ctx.globalAlpha = Math.max(0, 0.5 * presence * (1 - burst));
+      ctx.lineWidth = 0.8;
+      for (const side of [-1, 1]) {
+        const ox = -Math.cos(aim) * 5 - Math.sin(aim) * side * 1.6;
+        const oy = -Math.sin(aim) * 5 + Math.cos(aim) * side * 1.6;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy);
+        ctx.lineTo(ox * 0.35, oy * 0.35);
+        ctx.stroke();
+      }
       ctx.restore();
       ctx.globalAlpha = 1;
       continue;

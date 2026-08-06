@@ -167,6 +167,18 @@ type WeaponPose = {
    * which is exactly how an arm composes on top of a torso. Small on purpose:
    * see the three LEAN constants. */
   lean: number;
+  /**
+   * THE STEP INTO IT — how far the WHOLE FIGURE travels along its facing (doll
+   * px, positive forward), on top of the lean. Only the PUNCH uses it, and it
+   * is the reason the punch is the one motion that needed a new channel: every
+   * other attack is read off the WEAPON travelling (a blade riding its cone, a
+   * barrel kicking), so the body only ever had to lean behind it. A bare hand
+   * has no sprite to travel, so if the figure does not move there is no
+   * animation at all — the hero would stand perfectly still and monsters would
+   * die in front of him. Applied inside the facing flip, so forward is forward
+   * whichever way he is pointed. Absent = no step.
+   */
+  lunge?: number;
 };
 
 const REST_POSE: WeaponPose = {
@@ -268,7 +280,13 @@ export function heldMotion(defId: string): WeaponMotion | undefined {
 /** How long the drawn melee swing runs for this weapon (ms) — the one value
  * GameScreen times the `PlayerAction` and its slash-cone effect to, so the two
  * stay locked whichever hands the weapon takes. */
-export function meleeSwingMs(twoHanded?: boolean): number {
+export function meleeSwingMs(
+  twoHanded?: boolean,
+  motion?: WeaponMotion,
+): number {
+  // A PUNCH runs on its own, much shorter clock — and never on the two-handed
+  // stretch, which is about a weapon too heavy to stop.
+  if (motion === "punch") return PUNCH_MS;
   return twoHanded ? MELEE_SWING_MS * TWO_HAND_SWING_SCALE : MELEE_SWING_MS;
 }
 
@@ -326,6 +344,10 @@ function meleeSlashArc(
   // streak is the picture of a blade going somewhere, and this one is standing
   // still and biting. See `WeaponMotion`.
   if (action.motion === "shake") return null;
+  // Nor does a PUNCH: the streak is the picture of an edge sweeping through a
+  // sector, and a fist neither sweeps nor has an edge. Its blow reads off the
+  // body's drive and the knuckle impact (`punch` in render/effects.ts).
+  if (action.motion === "punch") return null;
   const t = (nowMs - action.startMs) / action.durationMs;
   if (t < SWING_WINDUP_END || t > 1) return null; // dark until the strike
   const half = Math.min(MAX_SWING_HALF, (action.arc ?? DEFAULT_SWING_ARC) / 2);
@@ -393,6 +415,66 @@ function shakePose(rest: WeaponPose, nowMs: number, t: number): WeaponPose {
   };
 }
 
+// THE PUNCH — how a blow thrown with the hand reads (`WeaponMotion.punch`).
+//
+// A fist is not carried through anything, so there is no arc and no crescent:
+// the whole picture is REACH AND RECOIL. It is built out of the same three
+// beats a swing has, but they are shorter and they run along one line instead
+// of around a pivot — he loads, he drives the shoulder out over his lead foot,
+// and he pulls the hand straight back to his guard.
+//
+// The numbers are bigger than the swing's LEAN because they are carrying the
+// whole animation on their own: with the empty hand there is no sprite in shot
+// to sell the motion, only the body. They are still a few degrees and a couple
+// of pixels — the hero is 16 px tall on the reference phone, and a step that
+// reads as a step at desk distance is a leap down there.
+const PUNCH_LEAN = (11 * Math.PI) / 180;
+/** Doll px the figure travels at full extension, and how far the held sprite
+ * (a knuckle weapon that asks for this motion) thrusts along the aim.
+ *
+ * These are the largest numbers in the file, and deliberately: measured on the
+ * preview strip at the reference phone, the swing's own values were invisible
+ * here. A swing is READ OFF THE BLADE — the body's lean is a garnish on a
+ * sprite sweeping a visible arc — whereas the empty hand has no sprite at all,
+ * so the body IS the animation and has to carry it alone. */
+const PUNCH_LUNGE_PX = 4.5;
+const PUNCH_THRUST_PX = 5;
+/** How long the drawn punch runs (ms) — well under a swing's, because the
+ * snap back is most of what makes it read as a jab rather than a shove. */
+export const PUNCH_MS = 150;
+// Its timeline, in fractions of the blow: the hand loads to the chamber, drives
+// out across the STRIKE window, then comes back to guard over the recover.
+export const PUNCH_CHAMBER_END = 0.22;
+export const PUNCH_STRIKE_END = 0.46;
+
+/** The punching pose at `t` (0→1 through the blow). */
+function punchPose(rest: WeaponPose, t: number): WeaponPose {
+  // `drive` runs −1 (fully chambered, weight back) → +1 (fully extended, weight
+  // over the front foot) → 0 (home). One signal, read by the body's lean, the
+  // figure's step and the held sprite's thrust alike, so all three are the same
+  // motion rather than three animations that happen to overlap.
+  let drive: number;
+  if (t < PUNCH_CHAMBER_END) {
+    drive = -(t / PUNCH_CHAMBER_END);
+  } else if (t < PUNCH_STRIKE_END) {
+    const p = (t - PUNCH_CHAMBER_END) / (PUNCH_STRIKE_END - PUNCH_CHAMBER_END);
+    // Ease-out: the hand is quickest off the chamber and decelerates into full
+    // extension, which is what a thrown punch does and a shove does not.
+    drive = -1 + 2 * (1 - (1 - p) * (1 - p));
+  } else {
+    const p = (t - PUNCH_STRIKE_END) / (1 - PUNCH_STRIKE_END);
+    drive = 1 - p * p * (3 - 2 * p);
+  }
+  return {
+    rot: rest.rot,
+    offX: rest.offX + PUNCH_THRUST_PX * drive,
+    offY: rest.offY,
+    pivot: rest.pivot,
+    lean: PUNCH_LEAN * drive,
+    lunge: PUNCH_LUNGE_PX * drive,
+  };
+}
+
 /**
  * The held weapon's pose for the active attack at `nowMs`. Each weapon class
  * gets its own motion, shaped to start AND end at rest so it folds cleanly back
@@ -414,6 +496,9 @@ function weaponPose(
   if (t < 0 || t > 1) return rest;
   if (action.weaponClass === "melee" && action.motion === "shake") {
     return shakePose(rest, nowMs, t);
+  }
+  if (action.weaponClass === "melee" && action.motion === "punch") {
+    return punchPose(rest, t);
   }
   if (action.weaponClass === "melee") {
     // The blade RIDES ITS CONE. The cone spans [aim − half, aim + half]; the
@@ -789,6 +874,10 @@ function drawDressedHero(
   } else {
     ctx.translate(x, y);
   }
+  // THE STEP INTO THE BLOW, inside the flip so "forward" follows the facing:
+  // the whole figure — costume, armor, held weapon and all — travels together.
+  // See `WeaponPose.lunge`, which only the punch sets.
+  if (pose.lunge) ctx.translate(pose.lunge, 0);
   // The BODY — costume and worn armor as one stack, with the blood he is
   // wearing soaked into it (render/hero-coat.ts).
   drawCoatedLayers(ctx, sprites, bodyLayers(layers), coat, DOLL_SIZE);

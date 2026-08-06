@@ -18,7 +18,7 @@ import { nearestCrate } from "../../src/game/crates.ts";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   refog,
@@ -46,7 +46,7 @@ function east(state: GameState, dist: number): { x: number; y: number } {
 
 describe("the fog of war hides a mob from the auto-attack", () => {
   it("holds fire on a mob in reach but standing in the fog", () => {
-    const state = foggyStage(equipBlaster(startGame()));
+    const state = foggyStage(equipRangedSidearm(startGame()));
     // 200px out: well inside the blaster's 260 reach, and well past the
     // MAP.revealRadius (160) disc the hero's own walk has uncovered.
     const spot = east(state, 200);
@@ -60,7 +60,7 @@ describe("the fog of war hides a mob from the auto-attack", () => {
   });
 
   it("shoots that same mob the moment the ground under it clears", () => {
-    const state = foggyStage(equipBlaster(startGame()));
+    const state = foggyStage(equipRangedSidearm(startGame()));
     const spot = east(state, 200);
     state.enemies.push(makeEnemy({ pos: spot }));
     step(state, idle, DT);

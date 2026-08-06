@@ -475,7 +475,7 @@ export function gearScore(gear: Equipment): number {
   return score;
 }
 
-/** Remaining attacks left on a weapon; the unbreakable sidearm never wears
+/** Remaining attacks left on a weapon; an unbreakable one never wears
  * out, so it counts as effectively infinite durability. */
 export function remainingDurability(weapon: Equipment): number {
   return weapon.durability ?? Infinity;

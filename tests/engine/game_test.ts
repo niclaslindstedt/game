@@ -30,7 +30,7 @@ import {
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   jumpOnce,
   makeEnemy,
@@ -187,7 +187,7 @@ describe("steering", () => {
   it("turns the hero onto what he is FIGHTING, not onto his legs", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     const hero = state.players[0];
     const { x, y } = hero.pos;
     // One foe BEHIND him, well inside the sidearm's reach.
@@ -205,7 +205,7 @@ describe("steering", () => {
   it("holds the fighting facing between blows, then hands him back to his legs", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     const hero = state.players[0];
     const { x, y } = hero.pos;
     const foe = makeEnemy({ pos: { x: x - 60, y } });
@@ -329,7 +329,7 @@ describe("jumping", () => {
 
 describe("weapon", () => {
   it("auto-fires only when a monster is in range", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     // The blaster outranges the reveal disc, so this is about RANGE only once
     // the floor is uncovered — fog is its own suite's subject (`revealAll`).
     revealAll(state);
@@ -373,7 +373,7 @@ describe("weapon", () => {
   });
 
   it("fires from the player's height mid-jump and the shot sinks back", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].z = 40; // mid-jump
     state.enemies.push(
@@ -391,7 +391,7 @@ describe("weapon", () => {
   });
 
   it("ignores monsters outside the given view — they aren't on screen yet", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const { x, y } = state.players[0].pos;
     state.enemies.push(makeEnemy({ pos: { x: x + 150, y } }));

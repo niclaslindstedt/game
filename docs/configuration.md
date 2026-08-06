@@ -370,7 +370,7 @@ pouch hands most of its share back to the ladder's tail (and, from a crate,
 to gear or the other consumable) instead of littering the field. A repair kit mends the WHOLE arsenal at once — the held weapon and
 every weapon in the bag — and a weapon worn down to zero durability is no longer
 destroyed: it falls into the bag as a broken, unequippable spare (the hero draws
-the best remaining weapon instead of defaulting to the starter sidearm), waiting
+the best remaining weapon, or is left bare-handed with none), waiting
 for a repair kit to wake it. Spending one restores the weapons it booted from
 the hand in the order they were shed, so the hero's main blade comes back to
 hand. Each signal keeps at most ONE rope on the ground: while the

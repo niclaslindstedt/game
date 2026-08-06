@@ -322,7 +322,7 @@ export function macroTarget(
   // THE MERCHANT ERRAND: when a stall visit would actually resolve something —
   // bank the bag's outgrown junk, buy an upgrade the purse covers, mend a
   // spent kit (see `wantsMerchantVisit`) — the counter joins the travel plan:
-  // URGENTLY when the hero is weapon-starved (farming with the sidearm is
+  // URGENTLY when the hero is weapon-starved (farming bare-handed is
   // slower than re-arming), otherwise as the errand between caches. The
   // harness runs the actual trade once he's at the counter (`tradeAtMerchant`),
   // which clears the want, so the errand can't loop.

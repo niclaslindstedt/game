@@ -13,7 +13,7 @@ import { step } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   startGame,
@@ -25,7 +25,7 @@ import {
  * `eliteDist` places the set piece; the minion always stands 60px out.
  */
 function minionAndSetPiece(defId: string, eliteDist: number) {
-  const state = equipBlaster(startGame());
+  const state = equipRangedSidearm(startGame());
   clearStage(state);
   const { x, y } = state.players[0].pos;
   state.enemies.push(makeEnemy({ id: 1, pos: { x: x + 60, y } }));
@@ -76,7 +76,7 @@ describe("target priority", () => {
   });
 
   it("never leaves the hero unable to fire at a lone minion", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const { x, y } = state.players[0].pos;
     state.enemies.push(makeEnemy({ id: 1, pos: { x: x + 100, y } }));

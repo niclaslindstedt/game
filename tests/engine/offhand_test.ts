@@ -20,7 +20,7 @@ import {
   isTwoHandedWeapon,
   LOOT,
   rollEquipment,
-  SIDEARM_DEF_ID,
+  UNARMED_DEF_ID,
   statRequirement,
   type Equipment,
 } from "@game/core";
@@ -161,7 +161,7 @@ describe("the two-handed rule", () => {
     ).toHaveLength(1);
   });
 
-  it("…and falls back to the sidearm when the bag holds nothing one-handed", () => {
+  it("…and falls back to bare hands when the bag holds nothing one-handed", () => {
     const state = startGame();
     state.players[0].stats.strength = 20;
     state.players[0].inventory[0] = greatsword(1);
@@ -177,7 +177,7 @@ describe("the two-handed rule", () => {
     state.players[0].inventory[1] = shield(3);
 
     expect(equipFromInventory(state, state.players[0], 1)).toBe(true);
-    expect(state.players[0].equipment.weapon.defId).toBe(SIDEARM_DEF_ID);
+    expect(state.players[0].equipment.weapon.defId).toBe(UNARMED_DEF_ID);
     expect(state.players[0].equipment.offhand?.defId).toBe("test_shield");
   });
 

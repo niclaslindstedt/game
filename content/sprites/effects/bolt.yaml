@@ -2,8 +2,7 @@ name: bolt
 family: effects
 size: [8, 8]
 description: >
-  The generic firearm bolt fired by the pistols, revolvers, blaster and
-  carbine.
+  The generic firearm bolt fired by the pistols, revolvers and carbines.
 subject:
   kind: projectile
   build: a small round slug with a bright pale-yellow core inside an amber-gold body and a dark outline

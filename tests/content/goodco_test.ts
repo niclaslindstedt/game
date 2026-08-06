@@ -38,7 +38,7 @@ import {
   makeEnemy,
   SEED,
   startGame,
-  equipBlaster,
+  equipRangedSidearm,
 } from "../helpers.ts";
 
 const HQ = LEVELS.goodco_hq!;
@@ -198,7 +198,7 @@ describe("GOODCO HQ level def", () => {
     // where an intern trickles it. Averaged over seeds so one unlucky run
     // can't flip the comparison.
     const dropsFrom = (defId: string, seed: number): number => {
-      const state = equipBlaster(startGame(seed, "goodco_hq")); // pick off at range
+      const state = equipRangedSidearm(startGame(seed, "goodco_hq")); // pick off at range
       clearStage(state); // just the parked boss remains, waves silenced
       state.spawners = []; // silence the spawn points so only the parked stack drops
       // Silence the employee stampede too, or a charging herd would trample the

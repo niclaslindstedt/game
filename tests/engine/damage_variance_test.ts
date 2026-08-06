@@ -16,11 +16,11 @@ import {
 } from "@game/core";
 import { rngState } from "@game/lib/rng.ts";
 
-import { equipBlaster, startGame } from "./helpers.ts";
+import { equipRangedSidearm, startGame } from "./helpers.ts";
 
 describe("damage variance", () => {
   it("keeps every roll inside the weapon's variance band", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const avg = weaponDamageFor(state, state.players[0], weapon);
     const v = WEAPON.damageVariance; // the fixture blaster takes the default
@@ -34,7 +34,7 @@ describe("damage variance", () => {
   });
 
   it("centres on the average and actually varies", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const avg = weaponDamageFor(state, state.players[0], weapon);
     let sum = 0;
@@ -52,7 +52,7 @@ describe("damage variance", () => {
   });
 
   it("reports a min/max range straddling the average", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const avg = weaponDamageFor(state, state.players[0], weapon);
     const { min, max } = weaponDamageRange(state, state.players[0], weapon);
@@ -62,7 +62,7 @@ describe("damage variance", () => {
   });
 
   it("never advances the loot stream", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     const weapon = state.players[0].equipment.weapon;
     const before = rngState(state.rng);
     for (let i = 0; i < 100; i++)
