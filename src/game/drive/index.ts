@@ -47,9 +47,11 @@ import { clamp } from "@game/lib/vec.ts";
 import {
   applyCarPedal,
   CAR,
+  carCrossing,
   createCar,
   integrateCarBody,
   nudgeCar,
+  wheelAuthority,
 } from "../vehicles.ts";
 import type { CarDetachable, CarPanelId } from "../types/index.ts";
 import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
@@ -231,9 +233,19 @@ export function stepDrive(
   // instead of changing its heading — which is also what a lane change looks
   // like from above at 120 mph. Authority scales with ground speed for the same
   // reason the run's own steering does: a stopped car does not change lanes.
-  const authority = Math.min(1, speed / DRIVE.laneRefSpeedPx);
+  //
+  // `carCrossing` is the run's own (src/game/vehicles.ts) and the garage spends
+  // it on the car's own beam — the immediacy is the SHARED half, and the axis
+  // is the only thing the road and the bay disagree about.
+  const authority = wheelAuthority(speed, DRIVE.laneRefSpeedPx);
   const wheel = clamp(input.wheel, -1, 1);
-  car.pos.y += wheel * DRIVE.lateralPx * authority * dt;
+  car.pos.y += carCrossing(
+    speed,
+    wheel,
+    dt,
+    DRIVE.lateralPx,
+    DRIVE.laneRefSpeedPx,
+  );
   const edges = roadEdges();
   car.pos.y = clamp(car.pos.y, edges.top, edges.bottom);
   // …but the RACK still answers it, so the front wheel is visibly cranked the

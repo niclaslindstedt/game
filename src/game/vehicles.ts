@@ -124,6 +124,24 @@ export const CAR = {
    * and a creeping one comes around slowly. */
   turnRate: 3,
   turnRefSpeed: 40,
+  /**
+   * THE WHEEL'S IMMEDIATE HALF — how far the body slides ACROSS its own line
+   * per second at full wheel and full authority (px/s), before the nose has
+   * come round at all. Scaled by `turnRefSpeed` like the swing is, so a parked
+   * car still cannot be crabbed sideways.
+   *
+   * IT IS THE DRIVING MINIGAME'S OWN LATERAL (`DRIVE.lateralPx`,
+   * src/game/drive/config.ts), and it is here for the reason the minigame
+   * feels better to drive than the garage did: on the road the wheel MOVES THE
+   * CAR, this tick, and the rack and the nose are the picture that catches up.
+   * In the bay the wheel only ever wound a rack, which turned a nose, which
+   * eventually pointed the speed somewhere else — two integrators of dead time
+   * between the thumb and the body, which reads as a car that is thinking
+   * about it. A car's length per second: enough that the body visibly commits
+   * the instant the wheel goes over, small enough that it reads as the nose
+   * biting rather than as crabbing.
+   */
+  lateralPx: 48,
   /** THE LOCK — how far the front wheels may ever be cranked off the body's
    * centreline (rad). A road car's rack stops at about a third of a right
    * angle and so does this one, so a target further round than the lock is
@@ -771,45 +789,106 @@ function clampYaw(heading: number, faceLeft: boolean): number {
 }
 
 /**
- * THE RACK AND THE YAW STOP — one tick of the front wheels, and what the nose
- * does about them.
+ * HOW MUCH OF THE WHEEL A CAR THIS FAST ACTUALLY GETS — 0 standing still, 1 at
+ * `refSpeed` and above. A car only turns as far as it rolls, so a parked car's
+ * wheel does nothing and a creeping one comes round slowly.
  *
- * `wantSteer` is what the DRIVER is asking for: the bearing error, cranked no
- * further than the lock. `car.steer` is where the wheels actually are, walked
- * toward it at `CAR.steerRate` rather than snapped, so they visibly wind on
- * and unwind — and walk back to centre the moment the wheel is let go, the
- * way a real rack self-centres. That angle is the one the renderer warps the
- * front wheel sprite by, which is why it is simulated state rather than
- * something the app infers from the turn: a car standing still with its wheels
- * cranked is a picture the driver expects to see.
+ * Shared by the garage and by the driving minigame, which is the point: it is
+ * the one curve both of them read the wheel through (`DRIVE.laneRefSpeedPx` /
+ * `CAR.turnRefSpeed`), so the two answer a thumb the same way at the same
+ * fraction of their own top speed.
+ */
+export function wheelAuthority(speed: number, refSpeed: number): number {
+  return Math.min(1, Math.abs(speed) / refSpeed);
+}
+
+/**
+ * THE WHEEL'S IMMEDIATE HALF — how far the body crosses its own line this tick
+ * (world px, signed the way the wheel is pushed).
  *
- * The NOSE then comes round in proportion to the crank AND the roll — full
- * lock at a crawl turns almost nothing (`turnRefSpeed`, the same authority the
- * heading always had, now read through the rack), and REVERSE turns it the
- * other way for the same crank, because backing up with the wheel cranked left
- * swings the tail left.
+ * The minigame's lane change and the garage's turn-in are the same movement:
+ * the wheel goes over and the body starts across NOW, with no rack and no nose
+ * swing in between. What differs is only the axis it is spent on — the road is
+ * axis-aligned so the drive spends it straight down the screen, while a car in
+ * a bay spends it along its own beam.
+ */
+export function carCrossing(
+  speed: number,
+  wheel: number,
+  dt: number,
+  lateralPx: number,
+  refSpeed: number,
+): number {
+  return clamp(wheel, -1, 1) * lateralPx * wheelAuthority(speed, refSpeed) * dt;
+}
+
+/**
+ * ONE TICK OF THE WHEEL — what the body does about it, what the nose does, and
+ * only then what the front wheels are drawn doing.
+ *
+ * THE ORDER IS THE POINT, AND IT IS THE MINIGAME'S. `wheel` is the player's own
+ * -1…+1 in the SCREEN's frame (-1 is up the screen, whichever way the nose
+ * happens to point — see `CarControl`), and it is spent in the same three
+ * places `stepDrive` spends it:
+ *
+ *   THE BODY  — `CAR.lateralPx` of crossing, immediately. This is the half the
+ *               garage used not to have, and the whole of why the road felt
+ *               like driving and the bay felt like asking.
+ *   THE NOSE  — `CAR.turnRate` of swing, in proportion to the WHEEL rather than
+ *               to the rack. The rack used to sit inside this loop, which put a
+ *               fifth of a second of dead time between the thumb going over and
+ *               the nose moving at all; it is the picture, not the control.
+ *   THE RACK  — `car.steer`, walked toward the crank the driver is asking for
+ *               at `CAR.steerRate` so the front wheels visibly wind on and
+ *               unwind, and self-centre the moment the wheel is let go. It is
+ *               simulated rather than inferred from the turn because the
+ *               renderer warps the front wheel sprite by it: a car standing
+ *               still with its wheels cranked is a picture the driver expects.
+ *               REVERSE cranks it the other way for the same wheel, because
+ *               backing up with the rack over swings the tail.
  *
  * …and it stops at the beam (`CAR.maxYaw`). A driver asking for more than the
  * stop has left STRAIGHTENS UP rather than sitting on a lock he is getting
  * nothing for — a car pinned against its own limit with the wheels hard over
- * reads as a broken steering column.
+ * reads as a broken steering column, and the body stops crossing with it.
  */
-function steerCar(car: CarVehicle, wantSteer: number, dt: number): void {
+function applyWheel(car: CarVehicle, wheel: number, dt: number): void {
+  // The body is one side-profile assembly that never comes about, so which way
+  // it faces is a sign and nothing more — and the sign is what turns a SCREEN
+  // wheel into the heading's own frame. Without it a nose-left car steered
+  // backwards, which is the contract `car_controls_test.ts` pins at the door
+  // ("W turns up the screen whichever way the nose points") and the engine
+  // quietly broke on the far side of it.
+  const nose = car.faceLeft ? -1 : 1;
   const roll = car.speed < 0 ? -1 : 1;
   const off = angleDiff(car.heading, car.faceLeft ? Math.PI : 0);
-  const pushing = wantSteer * roll;
-  if (
-    (off >= CAR.maxYaw && pushing > 0) ||
-    (off <= -CAR.maxYaw && pushing < 0)
-  ) {
-    wantSteer = 0;
+  const pushing = wheel * nose;
+  const command =
+    (off >= CAR.maxYaw && pushing > 0) || (off <= -CAR.maxYaw && pushing < 0)
+      ? 0
+      : clamp(wheel, -1, 1);
+
+  const cross = carCrossing(
+    car.speed,
+    command,
+    dt,
+    CAR.lateralPx,
+    CAR.turnRefSpeed,
+  );
+  if (cross !== 0) {
+    // The beam: square off the nose, on the screen's down side, so a positive
+    // wheel puts the body down the screen exactly as it swings the nose there.
+    car.pos.x += -Math.sin(car.heading) * cross * nose;
+    car.pos.y += Math.cos(car.heading) * cross * nose;
   }
+
+  const authority = wheelAuthority(car.speed, CAR.turnRefSpeed);
+  const swing = CAR.turnRate * dt * authority * command * nose;
+  car.heading = clampYaw(car.heading + swing, car.faceLeft);
+
+  const wantSteer = command * CAR.steerLock * nose * roll;
   const step = CAR.steerRate * dt;
   car.steer += clamp(wantSteer - car.steer, -step, step);
-  const authority = Math.min(1, Math.abs(car.speed) / CAR.turnRefSpeed);
-  const swing =
-    CAR.turnRate * dt * authority * (car.steer / CAR.steerLock) * roll;
-  car.heading = clampYaw(car.heading + swing, car.faceLeft);
 }
 
 /**
@@ -883,6 +962,11 @@ export function carControl(car: CarVehicle, input: GameInput): CarControl {
  * controls identically. The CALLER owns the top speed (`topSpeed`), because
  * that is the one thing the two genuinely disagree about: a wagon pulling out of
  * a bay is capped at a crawl and the same wagon on the open road is not.
+ *
+ * THE PEDAL FIRST, THEN THE WHEEL — the minigame's own order, and it matters:
+ * the wheel is read through the speed the pedal just settled, so a car that has
+ * this instant been braked to a crawl has a crawl's authority rather than last
+ * tick's.
  */
 export function applyCarControl(
   car: CarVehicle,
@@ -892,11 +976,7 @@ export function applyCarControl(
   reverseSpeed: number,
 ): void {
   applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed);
-  // The wheel: the crank the driver is asking for, held at the lock. Reversing
-  // works the rack the other way round, because backing up with the wheel over
-  // swings the tail — `steerCar` owns that half.
-  const roll = car.speed < 0 ? -1 : 1;
-  steerCar(car, clamp(control.wheel, -1, 1) * CAR.steerLock * roll, dt);
+  applyWheel(car, control.wheel, dt);
 }
 
 /**
@@ -1183,7 +1263,11 @@ function departureControl(car: CarVehicle, scene: DepartureState): CarControl {
     scene.target.x - car.pos.x,
   );
   const err = angleDiff(want, car.heading);
-  return { pedal: 1, wheel: clamp(err / DEPARTURE.steerArc, -1, 1) };
+  // The bearing error is in the HEADING's frame and a `CarControl.wheel` is in
+  // the SCREEN's, and for a nose-left car those run opposite ways — so the
+  // synthetic driver flips it exactly as the player's own push is flipped.
+  const nose = car.faceLeft ? -1 : 1;
+  return { pedal: 1, wheel: clamp(err / DEPARTURE.steerArc, -1, 1) * nose };
 }
 
 /**
