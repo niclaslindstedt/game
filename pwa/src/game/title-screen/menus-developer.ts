@@ -254,6 +254,20 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
         nudge: (dir: number) =>
           setNumber(ctx, "cameraYaw", getSettings().cameraYaw + dir * 5),
       }),
+      // …and the switch that decides what the YAW's turned art comes out as:
+      // averaged edges, or the nearest-neighbour staircase (render/tilt.ts).
+      // It rides here rather than in SETTINGS → VIDEO because it is only ever
+      // about the developer camera above it — a square-on floor has no
+      // staircase, so the row says so rather than pretending to do something.
+      "anti-aliasing": onOffRow(
+        ctx,
+        "visuals",
+        "anti-aliasing",
+        "cameraAntialias",
+        {
+          onState: s.cameraYaw > 0 ? "on" : "idle",
+        },
+      ),
     }),
     backRow(ctx, "visuals"),
   ];

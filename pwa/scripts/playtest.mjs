@@ -18,7 +18,7 @@
 //     [--level goodco_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
 //       (any catalog level, SECRET levels included — forced via ?level=)
 //     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45] \
-//     [--mod <dir>]
+//     [--antialias on|off] [--mod <dir>]
 //
 // `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
 // steps per frame, so a bot playtest finishes in a fraction of the wall-clock
@@ -113,6 +113,10 @@ const mapSize = opt("map-size", "");
 // before the app boots. Omit either to play on the shipped camera.
 const pitch = opt("pitch", "");
 const yaw = opt("yaw", "");
+// ANTI-ALIASING (--antialias on|off): whether the art the yaw TURNS is smoothed
+// as it bakes (see render/tilt.ts `projectionSmoothing`). Seeded the same way
+// and only worth passing alongside a --yaw, since it is inert square-on.
+const antialias = opt("antialias", "");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -126,11 +130,11 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
-if (mapSize || pitch || yaw) {
+if (mapSize || pitch || yaw || antialias) {
   // Written before any app code runs, so the engine flags are applied from it on
   // load exactly as they would be for a developer who flipped the switch.
   await page.addInitScript(
-    ([size, camPitch, camYaw]) => {
+    ([size, camPitch, camYaw, camAntialias]) => {
       const KEY = "adas-trail:settings";
       let stored;
       try {
@@ -146,10 +150,11 @@ if (mapSize || pitch || yaw) {
           ...(size ? { generatedMapSize: size } : {}),
           ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
           ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
+          ...(camAntialias ? { cameraAntialias: camAntialias } : {}),
         }),
       );
     },
-    [mapSize, pitch, yaw],
+    [mapSize, pitch, yaw, antialias],
   );
 }
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));

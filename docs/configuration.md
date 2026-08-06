@@ -63,7 +63,7 @@ column of a dozen unrelated tools:
   **GRANT 10B COINS**, and **FORCE STORE** (which belongs here rather than among
   the build flags because the packs it surfaces are granted free).
 - **BALANCE** — the runtime multiplier sliders (below).
-- **VISUALS** — the game-feel sliders and the two camera knobs (below).
+- **VISUALS** — the game-feel sliders and the camera (below).
 - **GALLERIES** — the two full-screen shelves that only look: **ARSENAL** (every
   hand-authored unique/legendary item, ordered by item level and drawn with the
   same icon + item card the in-game inventory uses — steer the scrollable list
@@ -122,6 +122,31 @@ pace at 0.8×). The track is exponential: its four quarters
 cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of the
 travel. Values persist with the settings, and a **RESET ALL** row restores the
 shipped tuning across the board.
+
+The **VISUALS** subpage holds the game-feel sliders — **KNOCKBACK** (how far an
+overkill flings the body), **BLOOD** (how much a wound sprays and how red the
+floor gets; 0× is the clean look for a screenshot) and **GORE LINGER** (how many
+seconds the pieces of a body lie where they landed) — and under them THE CAMERA,
+the world projection dialled live (`docs/rendering.md`):
+
+- **CAMERA PITCH** — how far the camera leans over the floor. 100% looks
+  straight down and the game is the top-down scroller it always was; lower and
+  the ground rakes away while the bodies keep their height. Shipped at 75%.
+- **CAMERA YAW** — how far the camera stands round from square-on, the half
+  people mean by "isometric". 0° (shipped) keeps the floor tiles rectangles;
+  45° turns them into diamonds.
+- **ANTI-ALIASING** — whether the art the yaw TURNS is smoothed as it is baked
+  through the projection. Off (the default) is nearest-neighbour, which keeps
+  every pixel the artist drew and, on a turned floor, breaks each tile seam into
+  a dotted staircase. On bakes the ground supersampled and averages it down, so
+  those seams come out as clean diagonals at the cost of a little of the floor's
+  crispness and a few extra hundred milliseconds of bake at level start. It does
+  nothing at all while CAMERA YAW is 0 — square-on there is no staircase to
+  smooth — so it is a switch about the turned camera above it, not a general
+  video setting.
+
+All three persist (`cameraPitch`, `cameraYaw`, `cameraAntialias`) and, like every
+developer setting, are stripped from a store build.
 
 CHEATS holds a **SEED CHARACTERS** subpage — a shortcut that
 mints ready-to-play heroes straight into the roster so a developer can jump into

@@ -292,7 +292,11 @@ function flipped(
   // Baked through the projection once, so the per-frame draw is a plain blit of
   // pre-squashed art rather than a live resample that re-picks its dropped rows
   // every time the camera moves a fraction of a pixel — see `drawFloorDecal`.
-  const flat = bakeFlat(mirrored) ?? mirrored;
+  //
+  // NEAREST, at every camera and whatever the ANTI-ALIASING switch says: a
+  // stain has no straight edge to keep straight, so averaging its rotation
+  // cleans nothing up and only softens the clots into a smudge (`bakeFlat`).
+  const flat = bakeFlat(mirrored, { antialias: false }) ?? mirrored;
   flipCache.set(key, flat);
   return flat;
 }

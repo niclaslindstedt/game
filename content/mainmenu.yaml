@@ -1113,6 +1113,14 @@ screens:
       - id: camera-yaw
         label: CAMERA YAW
         help: HOW FAR THE CAMERA STANDS ROUND - 45° MAKES THE FLOOR DIAMONDS
+      # Sits under CAMERA YAW because it is only ever about what the yaw did:
+      # a turned floor staircases, and this is the switch that smooths it.
+      - id: anti-aliasing
+        label: ANTI-ALIASING
+        help:
+          on: THE TURNED FLOOR IS SMOOTHED INSTEAD OF STAIRCASED
+          idle: NOTHING TO SMOOTH UNTIL CAMERA YAW TURNS THE FLOOR
+          off: THE TURNED FLOOR KEEPS ITS HARD PIXEL STAIRCASE
 
   balance:
     title: BALANCE

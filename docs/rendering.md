@@ -43,6 +43,21 @@ offset so the pixel art stays crisp. Billboarding a pass is therefore a one-line
 wrap, never a rewrite of its arithmetic — which is how the yaw knob was added
 later without touching a single draw pass.
 
+**AND A TURNED FLOOR STAIRCASES, WHICH IS WHAT `ANTI-ALIASING` IS FOR — a THIRD
+switch on the same page, and one that is deliberately inert unless the yaw is
+up.** Nearest-neighbour is the resample every bake uses, and square-on it is
+simply correct: the pitch is a pure vertical squash, so whole rows are dropped
+and every straight run of pixels stays where the artist put it. Turn the camera
+and those runs cross the destination grid at an angle instead — a tile seam comes
+out as a dotted, ragged staircase, and a floor full of them reads as broken
+rather than drawn. ANTI-ALIASING (persisted as `cameraAntialias`, DEVELOPER →
+VISUALS under the two knobs) bakes the ground layer supersampled and averages it
+down, so those seams land on real intermediate tones instead. The renderer asks
+one question — `projectionSmoothing()`, the knob AND `worldYaw() > 0` — and the
+answer rides in `projectionKey()`, so flipping the switch re-bakes rather than
+blitting the old floor. What it costs, why it is opt-in, and how the bake stays
+inside a phone's memory are under **ANTI-ALIASING IS THE OTHER ONE** below.
+
 **A FLOOR PASS TAKES THE PROJECTION IN ITS ART OR IN ITS TRANSFORM, AND WHICH
 ONE DECIDES WHETHER IT WOBBLES.** A pass drawn live inside
 `applyWorldProjection` is resampled every frame, and a nearest-neighbour squash
@@ -347,15 +362,44 @@ offset. The one place averaging is right is a PROJECTED BAKE, because it happens
 once: `flatSprite` bakes at `BAKE_SUPERSAMPLE`× and box-averages down, so a wall
 panel's turned edges come out antialiased instead of as a staircase of single
 pixels, and at yaw 0 / pitch 1 it is a no-op by construction (a square-on sprite
-downsampled from an integer upscale of itself is bit-identical). The GROUND LAYER
-is deliberately NOT supersampled, for two independent reasons either of which
-stands alone: the intermediate for a big map would be ~7200×3000 (~86 MB, and
-larger maps walk into the browser's canvas cap), and it would look WORSE anyway —
-a wall panel is a small outlined silhouette, but the floor is a texture covering
-the whole screen, and averaging its rotation softens every speckle and seam at
-once, which reads as the one surface in the game being out of focus. The
-staircase on a yawed floor seam is the honest cost of turning pixel art; the fix
-is iso-drawn tile art, not a filter.
+downsampled from an integer upscale of itself is bit-identical).
+
+The GROUND LAYER is the one bake that asks first, because there the averaging is
+a TRADE rather than a free win: a wall panel is a small outlined silhouette, but
+the floor is a texture covering the whole screen, so averaging its rotation
+softens every speckle and grain rivet along with the seams. So it follows the
+**ANTI-ALIASING** switch (`cameraAntialias`, DEVELOPER → VISUALS), off by
+default and inert at yaw 0 where there is no staircase to smooth
+(`projectionSmoothing`). Three things make the smoothed bake affordable:
+
+- **It is CHUNKED.** One intermediate over a whole projected level would be tens
+  of megabytes and would walk into the browser's canvas cap on a big map, so
+  `paintGroundSmoothed` cuts the destination into squares no bigger than one
+  bounded scratch buffer (`BAKE_CHUNK_PX`) and reuses that buffer for every one.
+  Cutting on DESTINATION pixel boundaries is what makes it seamless — a finished
+  pixel's whole sample block belongs to exactly one chunk — and each chunk draws
+  only the tiles that can reach it, found by running the projection BACKWARDS
+  over its corners (`chunkTiles`).
+- **It samples 2×, not 3×.** `GROUND_SUPERSAMPLE` is its own constant for a
+  reason: measured on a large map the crisp bake is the baseline, 2× costs about
+  2.7× of it and 3× about 4.4×, and the two are indistinguishable at the canvas's
+  ~422 px width — the staircase is made of whole destination pixels, so the first
+  subdivision does nearly all the work.
+- **It is keyed.** `projectionKey()` carries the smoothing, so flipping the
+  switch re-bakes instead of blitting the old floor.
+
+The real fix for a turned floor is still iso-drawn tile art; this is the one that
+ships as a switch.
+
+**AND GORE IS NEVER SMOOTHED, BY EITHER PATH.** The stains, the pools and the
+boot prints tracked out of them go through the same `bakeFlat` as the floor
+furniture, but they pass `antialias: false` and take the nearest-neighbour bake
+at every camera, switch or no switch. What averaging is good at is a straight
+outlined edge — architecture — and a spatter has none: smoothing its rotation
+cleans nothing up and softens the clots into a smudge, which takes the bite out
+of the one thing on the floor that is meant to look brutal. (The blood CLOUD is
+the exception that proves it: atomized mist with no shape of its own, drawn from
+a gradient, and smoothed on purpose — see `render/blood.ts`.)
 
 **A CANVAS THAT IS DRAWN ONCE MUST REPAINT WHEN THE PAGE WAKES UP.** The field,
 the minimap and a cutscene's stage are redrawn every frame, so whatever a

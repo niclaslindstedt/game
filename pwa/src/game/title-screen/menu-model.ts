@@ -510,6 +510,7 @@ type OnOffKey =
   | "debug"
   | "autoLevelStats"
   | "storeForce"
+  | "cameraAntialias"
   | "vibration"
   | "muted"
   | "xpFloat"
@@ -534,13 +535,21 @@ type OnOffKey =
  * `offState` is for the one row whose OFF line depends on something else: the
  * trigger AUTO-FIRE names is a click on a mouse and a button on a pad, so the
  * tree carries both and the builder says which one is in the player's hand.
+ * `onState` is the same door on the other side, for a switch that is ON and
+ * nonetheless doing nothing yet — ANTI-ALIASING waits on the CAMERA YAW above
+ * it, and a help line that claimed otherwise would be a lie the player can see
+ * through.
  */
 export function onOffRow(
   ctx: MenuContext,
   screen: MenuScreen,
   id: string,
   key: OnOffKey,
-  opts: { audition?: (on: boolean) => void; offState?: string } = {},
+  opts: {
+    audition?: (on: boolean) => void;
+    offState?: string;
+    onState?: string;
+  } = {},
 ): MenuEntry {
   const on = getSettings()[key] === "on";
   const set = (next: boolean) => {
@@ -551,7 +560,7 @@ export function onOffRow(
   };
   return {
     ...actionRow(screen, id, () => set(!on), {
-      state: on ? "on" : (opts.offState ?? "off"),
+      state: on ? (opts.onState ?? "on") : (opts.offState ?? "off"),
     }),
     toggle: { on, set },
   };

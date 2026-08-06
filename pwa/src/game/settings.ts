@@ -151,6 +151,14 @@ export type GeneratedMapSize = GeneratedMapSizeSetting;
  * via `setStoreForced`, mirroring the other applied flags. */
 export type StoreForce = "on" | "off";
 
+/** ANTI-ALIASING (DEVELOPER → VISUALS): whether the art the camera TURNS is
+ * smoothed as it is baked through the projection, or lands on the pixel grid
+ * nearest-neighbour as it always has. `off` is the default and the shipped look;
+ * `on` trades a little of the floor's crispness for edges that read as diagonals
+ * instead of as staircases. It does nothing at all while CAMERA YAW is 0 — see
+ * `projectionSmoothing` (render/tilt.ts). */
+export type CameraAntialias = "on" | "off";
+
 /** MUTE: a SOUND toggle that silences all audio without touching the mix.
  * `on` forces both output volumes to 0 while the MUSIC and SOUND FX sliders
  * keep their stored levels, so unmuting restores the exact levels the player
@@ -442,6 +450,14 @@ export type GameSettings = {
    * renderer's own `setWorldProjection`. */
   cameraPitch: number;
   cameraYaw: number;
+  /** Developer switch: ANTI-ALIASING for the art the camera TURNS — the floor
+   * baked through the projection (see `groundLayer`).
+   *
+   * Off by default, and inert unless `cameraYaw` is up: a square-on camera makes
+   * no staircase to smooth, and smoothing anyway would soften the shipped floor
+   * for nothing. Pure presentation, so it needs no engine setter — it rides
+   * along to the renderer's `setWorldProjection` with the two camera knobs. */
+  cameraAntialias: CameraAntialias;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
@@ -610,6 +626,10 @@ function defaults(): GameSettings {
     goreLinger: 10,
     cameraPitch: DEFAULT_PITCH,
     cameraYaw: DEFAULT_YAW,
+    // The floor bakes crisp out of the box: the shipped camera is square-on,
+    // where there is no staircase to smooth and smoothing would only cost the
+    // art its edges. A developer who turns the camera turns this on with it.
+    cameraAntialias: "off",
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
     // look: this is how the game is meant to be seen, and the rows exist for a
     // player who wants it plainer or a phone that wants the frames back.
@@ -838,6 +858,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     goreLinger: base.goreLinger,
     cameraPitch: base.cameraPitch,
     cameraYaw: base.cameraYaw,
+    cameraAntialias: base.cameraAntialias,
     balance: base.balance,
   };
 }
@@ -1080,6 +1101,10 @@ function load(): GameSettings {
         Number.isFinite(stored.cameraYaw)
           ? clampYaw(stored.cameraYaw)
           : base.cameraYaw,
+      cameraAntialias:
+        stored.cameraAntialias === "on" || stored.cameraAntialias === "off"
+          ? stored.cameraAntialias
+          : base.cameraAntialias,
       // Each VISUALS knob clamped to its OWN range (`postfx.ts` owns them), so a
       // hand-edited or downgraded store can't hand the renderer a bloom of 40.
       ...visualsFrom(stored, base),
@@ -1110,7 +1135,11 @@ setCutscenesEnabled(settings.cutscenes === "on");
 setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
 setGeneratedMapSize(settings.generatedMapSize);
-setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
+setWorldProjection({
+  pitch: settings.cameraPitch,
+  yaw: settings.cameraYaw,
+  antialias: settings.cameraAntialias === "on",
+});
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -1138,7 +1167,11 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
   setGeneratedMapSize(settings.generatedMapSize);
-  setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
+  setWorldProjection({
+    pitch: settings.cameraPitch,
+    yaw: settings.cameraYaw,
+    antialias: settings.cameraAntialias === "on",
+  });
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
