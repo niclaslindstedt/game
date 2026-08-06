@@ -8,7 +8,7 @@
 //   PLAYGROUND  the next run — the two warps, plus the terms it is carved on
 //   CHEATS      what a run would otherwise have to earn (heroes, coins, a shop)
 //   BALANCE     the runtime multipliers over the shipped tuning
-//   VISUALS     game feel + the camera
+//   VISUALS     game feel, the camera, and the washes over the finished frame
 //   GALLERIES   the arsenal and the effects gallery, which only LOOK
 //
 // The whole tree is `dev: true` in `content/mainmenu.yaml`, and the compiler
@@ -26,6 +26,7 @@ import {
   nudgeBalance,
 } from "../balance-knobs.ts";
 import { grantCoins } from "../characters.ts";
+import { FX_RANGES, type FxName } from "../render/postfx.ts";
 import { PITCH_RANGE, YAW_RANGE } from "../render/tilt.ts";
 import { SEED_TIERS } from "../seed-tiers.ts";
 import {
@@ -145,9 +146,46 @@ export function buildGalleriesMenu(ctx: MenuContext): MenuEntry[] {
   ];
 }
 
+/** Which post-fx wash each VISUALS row drives. The row ids are the tree's
+ * (kebab-case); the settings keys are the renderer's. */
+const FX_ROWS: Record<string, FxName> = {
+  "color-grade": "colorGrade",
+  vignette: "vignette",
+  "depth-haze": "depthHaze",
+};
+
+/** One post-fx row: a 0→max drag track over one presentation wash, showing its
+ * amount as a percentage of the SHIPPED look rather than as a raw multiplier —
+ * "COLOR GRADE 100%" says "as the game is made" where "1.00×" says nothing. */
+function fxRow(ctx: MenuContext, id: string): MenuEntry {
+  const name = FX_ROWS[id]!;
+  const range = FX_RANGES[name];
+  const value = getSettings()[name];
+  const set = (v: number) => {
+    updateSettings({ [name]: v });
+    ctx.bumpSettings();
+  };
+  // Shown against the SHIPPED default, not against the slider's top end: the
+  // default is the number a developer is deciding to move away from.
+  const pct = Math.round((value / range.default) * 100);
+  return sliderRow(
+    "visuals",
+    id,
+    {
+      readout: value <= 0 ? "OFF" : `${pct}%`,
+      pos: (value - range.min) / (range.max - range.min),
+      set: (pos: number) => set(range.min + pos * (range.max - range.min)),
+      nudge: (dir: number) =>
+        set(getSettings()[name] + dir * (range.max - range.min) * 0.05),
+    },
+    { state: value <= 0 ? "off" : "on" },
+  );
+}
+
 /** DEVELOPER → VISUALS: the game-feel sliders — how far a kill throws the body,
  * how much blood a blow spills, how long the pieces lie there — plus the two
- * knobs of the world projection. */
+ * knobs of the world projection and the three washes laid over the finished
+ * frame. */
 export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
   const s = getSettings();
   return [
@@ -217,7 +255,7 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
       }),
       // …and the switch that decides what the YAW's turned art comes out as:
       // averaged edges, or the nearest-neighbour staircase (render/tilt.ts).
-      // It rides here rather than in SETTINGS → VIDEO because it is only ever
+      // It rides beside them rather than on a player page because it is only ever
       // about the developer camera above it — a square-on floor has no
       // staircase, so the row says so rather than pretending to do something.
       "anti-aliasing": onOffRow(
@@ -229,6 +267,16 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
           onState: s.cameraYaw > 0 ? "on" : "idle",
         },
       ),
+      // THE THREE WASHES OVER THE FINISHED PICTURE (render/postfx.ts). They come
+      // last because everything above decides what is DRAWN and these three
+      // decide what the drawn frame is seen THROUGH — and they are developer
+      // knobs rather than player ones because all three are CSS (a `filter` on
+      // the canvas, two gradients on one overlay), so there is no per-frame cost
+      // for a player to win back by turning one off. BLOOM used to sit beside
+      // them and did cost a full-frame pass; it was removed rather than moved.
+      "color-grade": fxRow(ctx, "color-grade"),
+      vignette: fxRow(ctx, "vignette"),
+      "depth-haze": fxRow(ctx, "depth-haze"),
     }),
     backRow(ctx, "visuals"),
   ];

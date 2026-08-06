@@ -117,7 +117,7 @@ Ada went out for chips and soda on movie night and never came back. The
 tracking beacon the hero sewed into her jacket points off-planet. The hero is a
 spaceship builder who once worked at GOODCO until an AI replaced him — so he
 knows the building cold. Like the whole block, he and Ada live on welfare now
-(everyone got replaced); movie night on Webflix is what's left of the good
+(everyone got replaced); movie night on the streaming service is what's left of the good
 life, which is why her chips-and-soda run matters. He raids GOODCO for the one
 engine part the ship in his garage still needs, then follows the beacon to the
 moon, where something under the Sea of Tranquility is not dead enough.
@@ -299,11 +299,13 @@ of the lot: he walks it end to end all evening, hands in his pocket, and sells
 to whoever comes out of the garage. He asks for no name and gives none — which
 is his whole line, and the only thing he ever says._
 
-_He is also the one figure in the game the hero can kill by accident: the road
-he works is the road the car leaves by. Nothing is said about it, by him or by
-the hero, and the next time the hero comes home somebody else is on that
-pavement. Dealers are replaced. That silence is the joke and it is deliberate —
-a line of remorse would make it a beat, and it is not one._
+_He is also the FIRST person the car takes, and it happens on the hero's own
+lot: the road he works is the road the car leaves by, so the drive to GOODCO
+starts the way it goes on. Nothing is said about it, by him or by the hero,
+and the next time the hero comes home somebody else is on that pavement.
+Dealers are replaced. That silence is the joke and it is deliberate — a line
+of remorse would make it a beat, and it is not one, any more than the four
+lanes of neighbours below are._
 
 **Across the counter** (`merchant.line`):
 
@@ -420,6 +422,50 @@ in the bay (`DifficultyDef.cache`):
 **Farewell.**
 
 > SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
+
+## Travel — THE DRIVE (minigame, both ways)
+
+_The earthbound leg, played rather than cut: four lanes out through the block
+that lost its jobs, and the people the welfare did not reach standing in them.
+The joke is the SHAPE of these lines, not any one of them — he has the decent
+thought on an empty road BEFORE he meets anybody, and afterwards he reports on
+the road surface. Nothing in between, ever. He must never acknowledge a single
+body, or the bit stops being funny and starts being a confession._
+
+### Hero's thought — the road ahead, before the first of them
+
+_Fired on a deliberately empty stretch, well short of the crowd, which is the
+only place that promise is cheap to make. Once per campaign, not once per trip:
+a man promising to be careful for the fourth time is a different and much worse
+joke._
+
+1. THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
+2. THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
+
+### Hero's thought — arriving, having hit nobody
+
+_Only reachable by a genuinely exceptional drive. It reads as modest pride in
+his own driving, which is exactly as far as his reflection ever goes._
+
+1. CLEAN RUN. NOT A MARK ON HER.
+
+### Hero's thought — arriving, having hit a few
+
+1. ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN.
+
+### Hero's thought — arriving, having hit a great many
+
+_The line the whole minigame is built to earn. He is talking about the
+suspension._
+
+1. BIT BUMPY TONIGHT. SHE'S FEELING HER AGE.
+
+### Hero's thought — the car giving up on the road
+
+_The wagon has taken more than it can carry and died under him. He blames the
+car, the way he blames the road._
+
+1. COME ON. NOT HERE. NOT TONIGHT.
 
 ## Level 1 — GOODCO HQ
 

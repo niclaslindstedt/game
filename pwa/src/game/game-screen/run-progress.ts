@@ -155,6 +155,12 @@ export function createRunProgress(deps: {
    * may stamp the opening "seen": a level warped into once would otherwise
    * skip its real first-visit story forever. Thoughts still bank. */
   openingPlayed: boolean;
+  /**
+   * Put the DRIVE on screen instead of crossing straight to `to`, and say
+   * whether it took the wheel. False means "not this time" — the MINIGAMES
+   * setting is off, or a party is aboard — and the trip books as it always did.
+   */
+  beginDrive?: (to: string) => boolean;
   /** THE DRIVE-OUT'S FAR SIDE: the wall-clock instant the arrival curtain
    * should be fully lifted by. The departing run washes the screen to black on
    * its own clock (`GameState.departure`); the run it hands over to is a fresh
@@ -536,6 +542,18 @@ export function createRunProgress(deps: {
     // with it: the destination lifts the SAME black rather than snapping into
     // a lit level, so the two halves of the transition are one move.
     if (event.type === "carDeparted") {
+      // THE DRIVE GOES HERE, and nowhere else. The departure beat has played
+      // out exactly as it always did — the car is away down the road and the
+      // screen is black — and what happens next is either the minigame or the
+      // crossing that used to follow immediately. `beginDrive` answers false
+      // whenever the road is not being played (the setting is off, or a party
+      // is aboard), and the trip books on the spot as before.
+      //
+      // Keeping the fork at the EVENT rather than inside `travelTo` matters:
+      // the drive is a thing that happens between two levels, not a way of
+      // getting to one, so every other caller of `travelTo` (a gate, a rift
+      // seam, the victory splash) is untouched by it.
+      if (deps.beginDrive?.(event.to)) return;
       arrivalFadeRef.current = performance.now() + ARRIVAL_FADE_MS;
       travelTo(state, event.to);
     }

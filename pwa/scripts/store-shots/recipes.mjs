@@ -52,7 +52,7 @@ const SAFE_POLICY = { nsfw: false, store: true };
 
 /**
  * Boot a capture context: mute the audio, pre-unlock the developer menu
- * (normally seven taps on the title sun — the recipes reach NIGHTMARE and the
+ * (normally sixteen taps on the title sun — the recipes reach NIGHTMARE and the
  * late maps through the developer warp, both unlock-gated for a fresh hero),
  * and in `safe` mode shut the mature-content gate.
  *

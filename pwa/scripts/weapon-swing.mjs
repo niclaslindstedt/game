@@ -305,9 +305,12 @@ for (const id of weaponIds) {
   // are cursed (Muramasa's -150 maxHp would drop a fresh hero to 0 and end the
   // run just by equipping it), and the level's un-frozen opening strike chips
   // him. Floor his pool and clear the blink. Purely a preview concern.
+  // A run carries a PARTY (`state.players`, seat order); seat 0 is the local
+  // hero offline. `state.player` was the pre-party name and is gone, so reading
+  // it silently threw and killed the preview.
   const bolster = () =>
     page.evaluate(() => {
-      const p = window.__game.player;
+      const p = window.__game.players[0];
       p.maxHp = Math.max(p.maxHp, 600);
       p.hp = p.maxHp;
       p.hurtFlashMs = 0;
@@ -360,7 +363,10 @@ for (const id of weaponIds) {
           spawns: [
             {
               enemy: "guard",
-              at: { x: g.player.pos.x + range * side, y: g.player.pos.y },
+              at: {
+                x: g.players[0].pos.x + range * side,
+                y: g.players[0].pos.y,
+              },
               hpMult: 50,
             },
           ],
@@ -383,7 +389,7 @@ for (const id of weaponIds) {
       // flashing, and at slow-mo that brief blink stretches over the whole
       // capture, dropping him out. Purely a preview concern.
       await page.evaluate(() => {
-        const p = window.__game.player;
+        const p = window.__game.players[0];
         p.hurtFlashMs = 0;
         if (p.hp < p.maxHp) p.hp = p.maxHp;
       });

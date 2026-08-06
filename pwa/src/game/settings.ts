@@ -12,6 +12,7 @@ import {
   setBalanceTuning,
   setCameraYaw,
   setCutscenesEnabled,
+  setMinigamesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
   type BalanceTuning,
@@ -166,7 +167,7 @@ export type MuteMode = "on" | "off";
 export type XpFloat = "on" | "off";
 
 /**
- * GORE (SETTINGS → VIDEO → GORE): one switch per kind of gore, because "is this
+ * GORE (SETTINGS → GORE): one switch per kind of gore, because "is this
  * too much" is not one question.
  *
  * The page splits three ways, and the split is the whole point of it being a
@@ -255,6 +256,28 @@ export type DialogueScenes = "on" | "off";
  * presentation gate only. */
 export type Cutscenes = "on" | "off";
 
+/**
+ * MINIGAMES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's playable
+ * interludes — today the DRIVE between the garage and GOODCO, in both
+ * directions (src/game/drive/).
+ *
+ * `on` (the default) plays them; `off` makes the trip the straight cut it was
+ * before, with the destination built the moment the car reaches the road.
+ * Applied to the engine via `setMinigamesEnabled`.
+ *
+ * IT IS NOT A DIFFICULTY SWITCH AND NOT A GORE SWITCH. A minigame awards no
+ * loot and no XP and cannot be failed in any way that costs the run — a broken
+ * car simply starts the road again — so turning it off skips a scene rather
+ * than skipping a challenge, which is why it sits beside CUTSCENES rather than
+ * anywhere near the difficulty rungs. What the drive does to the people on the
+ * road answers to the GORE page like everything else (`gore-gate.ts`).
+ *
+ * A PARTY SKIPS THEM WHATEVER THIS SAYS. One car, one seat, no loot, no XP:
+ * there is nothing in a minigame for the other six people to do but watch, so
+ * a hosted session takes the straight cut (see `driveParamsFor`).
+ */
+export type Minigames = "on" | "off";
+
 /** DEATH SCENES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's two
  * scripted death cinematics — the BOSS DEATH RITE played over a felled boss
  * (the finisher: it goes to its knees, the horde is held off, the hero closes
@@ -328,9 +351,10 @@ export type GameSettings = {
    * keep their values while muted, so unmuting restores them exactly. */
   muted: MuteMode;
   /** The DEVELOPER menu is hidden until the secret gesture blows the title sun
-   * up — seven quick taps ARM it, then a five-second click race at tempo swells
-   * it until it lets go (see title-screen/use-sun-charge.ts); this latches that
-   * unlock so the menu stays available across launches once discovered. */
+   * up — sixteen quick taps ARM it (the first ten answered by nothing at all),
+   * then a five-second click race at tempo swells it until it lets go (see
+   * title-screen/use-sun-charge.ts); this latches that unlock so the menu stays
+   * available across launches once discovered. */
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
   debug: DebugMode;
@@ -380,6 +404,8 @@ export type GameSettings = {
   dialogue: DialogueScenes;
   /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
   cutscenes: Cutscenes;
+  /** Gameplay preference: the playable interludes (see Minigames). */
+  minigames: Minigames;
   /** Gameplay preference: the scripted death cinematics — the boss finisher and
    * the hero's death tableau (see DeathScenes). */
   deathScenes: DeathScenes;
@@ -415,17 +441,20 @@ export type GameSettings = {
    * so it needs no engine setter. */
   goreLinger: number;
   /**
-   * SETTINGS → VISUALS: the four knobs of how the field is PRESENTED — bloom on
-   * the lights, the colour grade, the vignette, and the depth haze up the raked
-   * floor (see `render/postfx.ts` for what each one is and which mechanism it
-   * uses). Every one is an amount, 0 = off, and every one is read app-side only
-   * (pure presentation), so none needs an engine setter.
+   * DEVELOPER → VISUALS: the three knobs of how the field is PRESENTED — the
+   * colour grade, the vignette, and the depth haze up the raked floor (see
+   * `render/postfx.ts` for what each one is and which mechanism it uses). Every
+   * one is an amount, 0 = off, and every one is read app-side only (pure
+   * presentation), so none needs an engine setter.
    *
-   * These are PLAYER settings, not developer ones — they cost frames on a phone
-   * and a player has to be able to turn them off — so they are deliberately NOT
-   * in `stripDeveloperState`.
+   * DEVELOPER settings rather than player ones, and the reason is that all three
+   * are CSS — a `filter` on the canvas and two gradients on one overlay — so
+   * they are GPU-composited and cost nothing per frame. There is no frame budget
+   * for a player to win back by turning them off, only the shipped look to lose,
+   * so they sit with the camera knobs and ARE scrubbed by `stripDeveloperState`.
+   * (The one knob here that did cost a full-frame pass was BLOOM, and it was
+   * removed outright rather than demoted — see `render/postfx.ts`.)
    */
-  bloom: number;
   colorGrade: number;
   vignette: number;
   depthHaze: number;
@@ -602,6 +631,9 @@ function defaults(): GameSettings {
     // talking turns dialogue and/or cutscenes off.
     dialogue: "on",
     cutscenes: "on",
+    // The drive to GOODCO ships ON: it is the shipped experience, and the whole
+    // of the hero's first trip out of his own garage.
+    minigames: "on",
     // The finisher and the death tableau both play out of the box — they are
     // the shipped experience. A player replaying a map they have cleared five
     // times turns them off to keep the pace up.
@@ -629,7 +661,7 @@ function defaults(): GameSettings {
     cameraAntialias: "off",
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
     // look: this is how the game is meant to be seen, and the rows exist for a
-    // player who wants it plainer or a phone that wants the frames back.
+    // developer judging a change to it on a real field.
     ...defaultFx(),
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
@@ -765,7 +797,7 @@ function clampYaw(v: number): number {
 }
 
 /**
- * The SETTINGS → VISUALS knobs, read out of a stored blob and clamped to their
+ * The DEVELOPER → VISUALS washes, read out of a stored blob and clamped to their
  * own ranges (`render/postfx.ts` owns those). Snapped to a fiftieth so a dragged
  * value reads as a round number, exactly as the camera pair above.
  *
@@ -851,6 +883,9 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     cameraYaw: base.cameraYaw,
     cameraAntialias: base.cameraAntialias,
     balance: base.balance,
+    // The DEVELOPER → VISUALS washes (see the FxSettings block above): a store
+    // build has no page to move them from, so it plays the shipped look.
+    ...defaultFx(),
   };
 }
 
@@ -1057,6 +1092,10 @@ function load(): GameSettings {
         stored.cutscenes === "on" || stored.cutscenes === "off"
           ? stored.cutscenes
           : base.cutscenes,
+      minigames:
+        stored.minigames === "on" || stored.minigames === "off"
+          ? stored.minigames
+          : base.minigames,
       deathScenes:
         stored.deathScenes === "on" || stored.deathScenes === "off"
           ? stored.deathScenes
@@ -1093,8 +1132,8 @@ function load(): GameSettings {
         stored.cameraAntialias === "on" || stored.cameraAntialias === "off"
           ? stored.cameraAntialias
           : base.cameraAntialias,
-      // Each VISUALS knob clamped to its OWN range (`postfx.ts` owns them), so a
-      // hand-edited or downgraded store can't hand the renderer a bloom of 40.
+      // Each VISUALS wash clamped to its OWN range (`postfx.ts` owns them), so
+      // a hand-edited store can't hand the renderer a grade of 40.
       ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
       multiplayer: loadSession(stored.multiplayer, base.multiplayer),
@@ -1120,6 +1159,7 @@ setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
+setMinigamesEnabled(settings.minigames === "on");
 setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
 setWorldProjection({
@@ -1152,6 +1192,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setAutoEquipEnabled(settings.autoEquip === "on");
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");
+  setMinigamesEnabled(settings.minigames === "on");
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
   setWorldProjection({

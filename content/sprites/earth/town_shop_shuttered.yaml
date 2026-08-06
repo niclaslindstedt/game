@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE TOWN — one of the buildings lining the road on the drive to GOODCO.
+# AUTHORED ALREADY CROPPED: the camera is low and the road fills the middle of
+# the frame, so a house is only ever seen from its doorstep to about its first
+# floor. The grid starts partway up the building and the top row is a flat cut —
+# drawing roofs would spend half of every sprite off the top of the screen.
+name: town_shop_shuttered
+family: earth
+space: outside
+size: [40, 30]
+description: >
+  A shuttered corner shop on the road out — a rolled steel shutter over the whole frontage and a dead sign board above it.
+subject:
+  kind: town backdrop building
+  build: a single-storey shop front, cropped above its sign board
+  features: a corrugated steel shutter across the whole frontage, a blank sign board, a kerb
+  accent: the dead sign board over the shutter
+  flavor: the trade the block used to walk to
+palette:
+  O: "#1a1c2c" # outline ink
+  t: "#4a4235" # sill and trim
+  p: "#6a6a63" # pavement
+  L: "#f2d98a" # a window still lit
+  K: "#232838" # a dark window
+  P: "#7a6a52" # boarded up
+  A: "#7e7466" # stucco wall
+  a: "#948a7a" # stucco wall, lit edge
+  n: "#625a4f" # stucco course line
+  S: "#585e6b" # steel shutter
+  N: "#3a3f4d" # shutter corrugation
+grid: |
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAAOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAAO..
+  ..OaAAOKKKKKKKKKKKKKKKKKKKKKKKKKKOAAAO..
+  ..OaAAOKKKKKKKKKKKKKKKKKKKKKKKKKKOAAAO..
+  ..OaAAOKKKKKKKKKKKKKKKKKKKKKKKKKKOAAAO..
+  ..OaAAOKKKKKKKKKKKKKKKKKKKKKKKKKKOAAAO..
+  ..OaAAOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAAO..
+  ..OaAAttttttttttttttttttttttttttttAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OttttttttttttttttttttttttttttttttttO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  ..OaONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOAO..
+  ..OaOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOAO..
+  .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.
+  .pppppppppppppppppppppppppppppppppppppp.

@@ -163,13 +163,31 @@ describe("car physics", () => {
     expect(car.pos.y).toBeLessThan(car.home.y);
   });
 
-  it("coasts to a stop when every control is released", () => {
+  it("keeps rolling when every control is released — letting go is not braking", () => {
+    const state = startGarage();
+    const car = board(state);
+    run(state, steerTo(car.pos.x + 200, car.pos.y), 20);
+    const cruising = car.speed;
+    expect(cruising).toBeGreaterThan(0);
+    // Hands off for a second and a half. The car USED to coast to a dead stop
+    // here, which made the throttle something you held down for an entire
+    // drive and made letting go to think identical to braking. Now it carries
+    // on, with only a whisper of drag on it (`CAR.idleDragPx`) — the same rule
+    // the driving minigame is built on, because it is the same car.
+    run(state, idle, 90);
+    expect(car.speed).toBeGreaterThan(cruising * 0.5);
+  });
+
+  it("stops when the driver asks it to — a push back against the nose", () => {
     const state = startGarage();
     const car = board(state);
     run(state, steerTo(car.pos.x + 200, car.pos.y), 20);
     expect(car.speed).toBeGreaterThan(0);
-    run(state, idle, 90);
-    expect(car.speed).toBe(0);
+    // The brake pedal is the push the other way down the car's own axis.
+    for (let i = 0; i < 120 && car.speed > 0; i++) {
+      run(state, steerTo(car.pos.x - 200, car.pos.y), 1);
+    }
+    expect(car.speed).toBeLessThanOrEqual(0);
   });
 });
 

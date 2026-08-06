@@ -241,8 +241,9 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
  * pitch, length and weight until the star lets go. */
 export function playSunCharge(synth: Synth, charge: number): void {
   const t = Math.max(0, Math.min(1, charge));
-  // Below the third tap nothing is audible — the sky is only just beginning to
-  // look wrong, and a chirp would give the gesture away.
+  // Below the second REACTING tap nothing is audible — the sky is only just
+  // beginning to look wrong, and a chirp would give the gesture away. (The
+  // silent taps before it never reach here at all: the hook doesn't call.)
   if (t < 0.3) return;
   const volume = 0.012 + t * 0.048;
   // A rising sine swell (the star straining) under a band of fire noise that
@@ -266,7 +267,7 @@ export function playSunCharge(synth: Synth, charge: number): void {
   });
 }
 
-/** The seventh tap: the star LOCKS ON and the click race begins (see
+/** The arming tap: the star LOCKS ON and the click race begins (see
  * title-screen/sun-race.ts). One heavy, rising lock — the loudest thing the
  * gesture ever plays, because it is the moment the secret stops being a secret
  * and the player has to be told, unmistakably, that something just started. */

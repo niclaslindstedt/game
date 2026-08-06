@@ -87,15 +87,31 @@ here. Trade at home is THE DEALER: not the trader who follows the hero
 across the campaign but a man off the neighborhood, hood up, walking the
 road at the far edge of the lot all evening — buying what weighs the hero
 down, selling what keeps him upright, mending what the road broke, and
-asking for no name and giving none. He is the one figure in the game the
-hero can kill by accident, because the road he works is the road the car
-leaves by; and it costs nothing but the evening, because there is always
-another one on that pavement the next time the hero comes home. Nobody
-remarks on it. And the first time he is standing in his own bay with the
+asking for no name and giving none. He is also the first person the car
+ever takes, and he is taken on the hero's own lot: the road he works is the
+road the car leaves by, so the drive below starts the way it goes on. It
+costs nothing but the evening — there is always another one on that
+pavement the next time the hero comes home — and, exactly as on the road
+out, nobody remarks on it. And the first time he is standing in his own bay with the
 run live, he says the one thing the place is for out loud to nobody: the part
 is at GOODCO, and the car on the deck is what gets him there. If he wanders out
 under the roll-up on foot anyway, leaving the car where it stands, he catches
 himself at it — Ada is not down the street; get in the car.
+
+**The drive to GOODCO.** The earthbound leg is not a cut — it is played, both
+ways, and it is the blackest joke in the game. The road out of the block runs
+four lanes through what is left of the neighbourhood: shuttered trades, boarded
+windows, and a lit one every third house where somebody's welfare still lands.
+The ones it did not reach are out on the tarmac, because a road is where the
+cars are and a car is where the money is, and they walk straight at him with
+their hands out. There are far too many of them to miss. Before he meets the
+first one he has the decent thought — these are his neighbours, they got
+nothing, mind how you go — and then he drives through them at a hundred and
+twenty and never mentions it again. Arriving, he does not reflect on the people.
+He reflects on the RIDE: whether it was a clean run, or whether the road was a
+bit bumpy tonight. That gap — between the man who worried about them beforehand
+and the man who files them under road surface afterwards — is the whole point,
+and it is left entirely to the player to notice.
 
 **The doors.** Three ways out, earned in order. THE CAR — the white hatchback
 — does the earthbound leg: he drives it to GOODCO HQ the night he takes the

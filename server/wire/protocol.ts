@@ -98,6 +98,8 @@ export type SessionParams = {
   /** How deep the hosting character's CACHE is — the garage chest, one rung
    * deeper per difficulty beaten. 0 = not earned. */
   cacheSlots?: number;
+  /** Arrive at the wheel — the far side of the drive home (`RunParams`). */
+  startInCar?: boolean;
   /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
    * the wire moves it, the engine reads it. */
   campaignQuests?: unknown | null;

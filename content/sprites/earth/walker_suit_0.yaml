@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 0.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_suit_0
+family: earth
+size: [16, 16]
+description: >
+  A man in a navy suit gone shiny at the elbows, a briefcase in his hand. Walk-cycle frame 0.
+subject:
+  kind: pedestrian on the road out
+  build: a middle-aged man standing straight out of habit
+  attire: a navy suit over a white shirt
+  features: thinning hair, a briefcase in the far hand
+  accent: the navy suit
+  flavor: he still leaves the house at eight
+  pose: mid-stride, the legs apart
+palette:
+  O: "#1a1c2c" # outline
+  A: "#39406b" # sleeve
+  B: "#1f1d28" # shoes
+  C: "#39406b" # navy suit
+  G: "#5a4433" # the briefcase
+  H: "#5a5044" # thinning hair
+  K: "#deaa86" # hand
+  P: "#deaa86" # skin
+  S: "#e8e8ee" # white shirt
+  T: "#2b3050" # suit trousers
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAO.
+  .OKOCCSSSSCCOKO.
+  ...OCCCCCCCCOGGO
+  ...OTTTTTTTTOGGO
+  ..OTTO....OTOGGO
+  ..OTTO....OTTO..
+  ..OBBO....OBBO..
+  ................
+  ................

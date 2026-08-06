@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hidden developer gesture, in TWO MOVEMENTS.
 //
-// FIRST, SEVEN QUICK TAPS on the title sky's sun. Each tap winds the star up a
-// notch — the first does nothing at all, the second is a whisper you'd only
-// catch if you knew to look, and from there the glare hardens, fire licks off
-// the limb and the whole disc starts to shake. The seventh no longer detonates
-// it: it ARMS the star, which is the point at which the secret stops being a
-// secret and starts being a test.
+// FIRST, SIXTEEN QUICK TAPS on the title sky's sun — and the first TEN of them
+// buy NOTHING. No glare, no sound, no buzz, no layer mounted: a player idly
+// poking the sky gets exactly the same nothing they would get poking a planet,
+// so the secret cannot be stumbled into. Only the ELEVENTH tap wakes the star,
+// as a whisper you'd only catch if you knew to look; from there the glare
+// hardens, fire licks off the limb and the whole disc starts to shake. The
+// sixteenth does not detonate it: it ARMS the star, which is the point at which
+// the secret stops being a secret and starts being a test.
 //
 // SECOND, THE CLICK RACE (sun-race.ts owns the rule). Hold the sun at tempo —
 // a press every 250 ms — and the bank fills in real time; miss the beat and it
@@ -23,6 +25,13 @@
 // press on a real control is ignored outright and always does its own job.
 // Note the rect is measured LIVE, so the swelling sun is its own growing target
 // — the race gets kinder to the thumb exactly as it gets harder to sustain.
+//
+// AND THE WHOLE THING IS GATED ON `__DEV_TOOLS__` HERE, not only at the call
+// site. A build that ships no developer tooling has no DEVELOPER menu and no
+// way to grow one, so a sun that flares under the thumb there is a door that
+// opens onto nothing — the worst kind of Easter egg. The flag is a build-time
+// literal, so the guard folds the listener, the race loop and the frame paint
+// out of the store bundle rather than merely leaving them unreachable.
 
 import {
   useCallback,
@@ -47,13 +56,20 @@ import {
   type SunRace,
 } from "./sun-race.ts";
 
-/** Taps that ARM the click race. The seventh is the arming tap, so the six
- * before it are the whole build-up. */
-export const SUN_TAPS = 7;
+/** Taps that are banked in TOTAL SILENCE before the star reacts at all. The
+ * gesture's whole first job is to be un-stumble-into-able: ten fast taps is
+ * well past anything an idle thumb does to a decoration, so nothing at all —
+ * not a layer, not a frame of extra glare, not a click, not a buzz — happens
+ * until they are all in, and the ELEVENTH tap is the first the sky answers. */
+export const SUN_SILENT_TAPS = 10;
+
+/** Taps that ARM the click race. The sixteenth is the arming tap, so above the
+ * silent ten there are five rungs of visible build-up before it. */
+export const SUN_TAPS = SUN_SILENT_TAPS + 6;
 
 /** How long a tap counts as part of the same burst. Miss it and the charge
- * lapses back to nothing — the first movement is "seven taps QUICKLY", and idle
- * poking at the sky must never add up to an unlock. */
+ * lapses back to nothing — the first movement is "sixteen taps QUICKLY", and
+ * idle poking at the sky must never add up to an unlock. */
 const TAP_WINDOW_MS = 900;
 
 /** How long the charge layers stay mounted after a burst lapses, so the glare
@@ -72,11 +88,15 @@ const TAP_SLOP_PX = 12;
 const TEMPO_EASE_MS = 130;
 
 /** How wound-up the sun looks at `charge` taps, 0..1 — the ONE ramp the FX and
- * the charge sound both read. The first tap sits at 0 (nothing happens) and the
- * last tap before the race at 1 (full fury). */
+ * the charge sound both read. Every tap through the silent ten sits at 0
+ * (nothing happens), the eleventh opens the build-up at its faintest rung, and
+ * the last tap before the race sits at 1 (full fury). */
 export function sunChargeIntensity(charge: number): number {
-  if (charge <= 1) return 0;
-  return Math.min(1, (charge - 1) / (SUN_TAPS - 2));
+  if (charge <= SUN_SILENT_TAPS) return 0;
+  return Math.min(
+    1,
+    (charge - SUN_SILENT_TAPS) / (SUN_TAPS - 1 - SUN_SILENT_TAPS),
+  );
 }
 
 /** Did this press land on the sun? Measured against its live rect, so it holds
@@ -104,12 +124,14 @@ export function useSunCharge({
    * across the whole backdrop rather than only on the disc. */
   glareRef: RefObject<HTMLElement | null>;
   /** Listen at all? False once the developer menu is unlocked (the secret is
-   * spent) and while the blast is playing. */
+   * spent) and while the blast is playing. A build without the developer
+   * tooling never listens whatever this says (see `__DEV_TOOLS__` below). */
   armed: boolean;
   /** The race was held to the top — blow the sun up. */
   onCharged: () => void;
 }): {
-  /** Taps banked so far (0..SUN_TAPS-1); held at full through the race, 0
+  /** Taps banked so far, as far as the SKY is concerned: 0 through the silent
+   * ten, then SUN_SILENT_TAPS+1..SUN_TAPS-1; held at full through the race, 0
    * between bursts. */
   charge: number;
   /** Keep the charge layers mounted — true through a burst AND its ebb, so the
@@ -118,6 +140,12 @@ export function useSunCharge({
   /** The click race is running: the star is armed and being fed. */
   racing: boolean;
 } {
+  // A build with no developer tooling has nothing for the gesture to unlock, so
+  // it never plays at all. `__DEV_TOOLS__` is a build-time literal: folding the
+  // guard in HERE (rather than trusting every caller to pass `armed: false`)
+  // lets Rollup drop the listener and the race loop out of the store bundle.
+  const live = __DEV_TOOLS__ && armed;
+
   const [charge, setCharge] = useState(0);
   const [lit, setLit] = useState(false);
   const [racing, setRacing] = useState(false);
@@ -171,18 +199,18 @@ export function useSunCharge({
   }, [paintRace]);
 
   useEffect(() => {
-    if (!armed) {
-      // Disarmed (the blast is playing, or the unlock has landed): stop
-      // listening and drop any pending timer. The reported charge is gated on
-      // `armed` below rather than reset here, so nothing sets state from an
-      // effect body.
+    if (!live) {
+      // Disarmed (no developer tooling in this build, the blast is playing, or
+      // the unlock has landed): stop listening and drop any pending timer. The
+      // reported charge is gated on `live` below rather than reset here, so
+      // nothing sets state from an effect body.
       clearTimers();
       chargeRef.current = 0;
       lastTapRef.current = 0;
       raceRef.current = null;
       tempoRef.current = 0;
       paintRace(0, 0);
-      // The reported `racing` is gated on `armed` below, and starving the loop
+      // The reported `racing` is gated on `live` below, and starving the loop
       // of `raceRef` stops it on its next frame — so nothing sets state from an
       // effect body here either. A latched `racing` that outlived a disarm is
       // cleared by the next tap (see the first movement below).
@@ -221,7 +249,7 @@ export function useSunCharge({
         return;
       }
 
-      // ——— FIRST MOVEMENT: counting the seven taps. Reaching here means no
+      // ——— FIRST MOVEMENT: counting the sixteen taps. Reaching here means no
       // race is running, so clear any flag one left behind (a disarm mid-race
       // stops the loop without touching state — see above). React bails out
       // when it is already false, so this costs nothing on the common path.
@@ -249,6 +277,15 @@ export function useSunCharge({
       }
 
       chargeRef.current = next;
+      lapseTimer.current = window.setTimeout(lapse, TAP_WINDOW_MS);
+
+      // THE SILENT TEN. Banked in the ref and NOWHERE else — no state touched,
+      // so not one charge layer mounts, no `.charging` class lands on the disc,
+      // and neither the synth nor the motor is asked for anything. A thumb that
+      // wanders across the sky has to come away with literally no evidence
+      // there is anything under it.
+      if (next <= SUN_SILENT_TAPS) return;
+
       setCharge(next);
       setLit(true);
       const intensity = sunChargeIntensity(next);
@@ -258,17 +295,16 @@ export function useSunCharge({
       if (intensity >= 0.3) {
         haptics.vibrate(Math.round(6 + intensity * 24));
       }
-      lapseTimer.current = window.setTimeout(lapse, TAP_WINDOW_MS);
     };
     window.addEventListener("pointerdown", onPointerDown);
     return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [armed, clearTimers, lapse, onCharged, paintRace, sunRef]);
+  }, [clearTimers, lapse, live, onCharged, paintRace, sunRef]);
 
   // THE RACE'S FRAME LOOP. It bills real time into the bank (sun-race.ts) and
   // paints the result straight onto the sun, so the disc swells while the beat
   // is kept and shrinks the moment it is dropped. Ends exactly two ways: the
   // bank tops out and the star lets go, or it sits empty long enough to give up
-  // and the gesture falls back to the seven taps.
+  // and the gesture falls back to the sixteen taps.
   useEffect(() => {
     if (!racing) return;
     let frame = 0;
@@ -314,8 +350,8 @@ export function useSunCharge({
   // quiet the instant the star lets go, or the fire would still be licking
   // inside the explosion.
   return {
-    charge: armed ? charge : 0,
-    lit: armed && lit,
-    racing: armed && racing,
+    charge: live ? charge : 0,
+    lit: live && lit,
+    racing: live && racing,
   };
 }

@@ -796,6 +796,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   the player can equip a fitting weapon for the fight, and
   `closeInventory` hands the stage back to the speaker on the same page;
   every other scene (last words, thoughts, lore) stays read-only.
+- **`src/game/drive/`** — THE DRIVE: the playable leg between the garage and
+  GOODCO, and the same road home. **Not a level and not a `GamePhase`** — a
+  drive is its own small world (one car, four lanes, a minute of road) with its
+  own seeded rng, its own clock and no `GameState` anywhere near it, because a
+  minigame that borrowed the run's state would inherit the spawner, the menace
+  meter, the objective check and the autopilot and every one of them would have
+  to be taught to sit it out. It BORROWS the car whole, though: the same
+  `CarVehicle` the garage parks, through the same `integrateCarBody`,
+  `nudgeCar` and panel/fix ladders (`vehicles.ts`), so the wagon on the road is
+  the wagon in the bay. `impact.ts` is the heart of it — a real inelastic
+  collision in real units, where the SWEEP of the car's flank decides whether a
+  body was hit and how hard it is thrown, and the contact normal's alignment
+  with the nose decides how much speed and damage the car takes back. Damage
+  goes as the square of the closing speed, which is the whole difficulty curve
+  in one line. The app half is `pwa/src/game/drive-screen/`; whether the road is
+  played at all is `driveParamsFor` (the MINIGAMES setting, and never in a
+  party — one seat, no loot, no XP).
 - **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
   it. The player names their character, and `{HERO}` is where a line means that
   name: over his own pages in every box that speaks, and inside the handful of
@@ -1099,19 +1116,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   is loot, the floor starts `revealed` and the objective never clears, so every
   rung of the macro ladder answered "nothing" and `botAct`'s empty-field branch
   simply stood the hero still — engaging the AUTO PILOT in the garage did
-  nothing at all. This module is the ladder home needs, in the order a player
-  works the room: **the PEOPLE** with a `!` or a `?` over their head
-  (`hubGiverTarget` → `talkToQuestGiver`, then `botScreenCommand` takes the
-  offer / hands the finished errand back / sits through the meeting a person
-  owes before their slate opens), **the COUNTER** (`wantsMerchantVisit` widens at
-  home — the stall is on the way to the road, so ANY junk, ANY affordable mend
-  and any shelf the pouch has room for earns the walk), then **the CAR**
-  (`enterCar`, and `driveOutInput` steers it down the A\* route, through the
-  roll-up and onto the level's `driveOut` road, where `vehicles.ts` books the
-  trip). The verbs travel as intents like every other autopilot action, through
-  `driveBotHub` / `runBotHub` — a THIRD half of the tick, called before the
-  other two because a hero reading a quest box has a SCREEN up and both of those
-  are gated on him not having one.
+  nothing at all. This module is the last two rungs of the ladder home needs:
+  **the COUNTER** (`wantsMerchantVisit` widens at home — the stall is on the way
+  to the road, so ANY junk, ANY affordable mend and any shelf the pouch has room
+  for earns the walk), then **the CAR** (`enterCar`, and `driveOutInput` steers
+  it down the A\* route, through the roll-up and onto the level's `driveOut`
+  road, where `vehicles.ts` books the trip). The first rung — **the PEOPLE** —
+  is `bot/errands.ts`'s and applies on every map. All of it travels as intents
+  like every other autopilot action, through `driveBotErrands` / `runBotErrands`
+  — a THIRD half of the tick, called before the other two because a hero reading
+  a quest box has a SCREEN up and both of those are gated on him not having one.
 
   Two rules hold it together. **The press is the errand the walk is on**, never
   what happens to be in reach — the hero spawns sitting on the parking spot, so
@@ -1120,10 +1134,45 @@ escort.ts` walks the people an escort errand puts on the field, and
   trade can satisfy is written off after `HUB_SHOP_GIVEUP_MS`, so an unattended
   ride cannot burn its meter in its own driveway.
 
-  **The errand boundary moves at home, and only at home.** Out in the field the
-  bot still never walks to a giver and never accepts anything — taking an errand
-  mid-fight is the player's decision (`src/game/bot/errands.ts`). The hub is the
-  one place where working the slate IS the level.
+- **`src/game/bot/errands.ts`** — THE AUTOPILOT'S QUEST PLAY: it takes work,
+  does it, and hands it in. The rule used to be that TAKING an errand was the
+  player's decision, so a giver was never a goal and the bot only ever finished
+  what a human had already signed up for — which left the autopilot walking past
+  the one part of a level with a name on it. Errands are the xp, the coins and
+  the chase-tier loot a level pays over its drops, and half of what they ask for
+  (`kill`, `collect`) is credited by the clearing that was going to happen
+  anyway, so an errand taken ON ARRIVAL costs a walk and one left untaken throws
+  the whole payout away. Three reads, in the order the macro ladder asks them:
+
+  - **the PERSON** (`errandGiver`): the nearest reachable giver with a `!` or a
+    `?`, COMMITTED until their slate clears and WRITTEN OFF if the march makes
+    no headway (`trackErrandAbandon`) — the rung sits high, so a giver a carve
+    walled off must never pin a run. `giverTapCommand` presses
+    `talkToQuestGiver` only where the macro plan is already walking, and
+    `botScreenCommand` (in `hub.ts`, since a screen is nobody's venue) works
+    whatever box opens: take the offer, hand the finished errand back, sit
+    through the meeting a person owes before their slate opens.
+  - **the WORK** (`questObjectiveTarget`): a running errand's outstanding
+    objective — a token to fetch, a breed to hunt, a spot to stand on, somebody
+    to WALK to a door. Above the caches in the ladder, because an errand is
+    directed where a chest is opportunistic.
+  - **the TOKENS** (`questTokenWanted`): the pickup `supplies.ts` reaches for
+    before anything else on the floor.
+
+  **An escort is a walk, not a hands-off.** The escort follows the nearest hero
+  a touch slower than he moves and stops dead past `escortLeashDistance`
+  (`quests/escort.ts`), so doing one is two rules — head for the destination,
+  turn back when they fall behind — latched with hysteresis so each leg is a
+  real leg. Without it, a bot that now ACCEPTS offers would take six escort
+  quests a campaign and fail every one.
+
+  **Reachability counts the doors that open for anybody**
+  (`reachableThroughDoors`, `bot/nav.ts`): every interior door on GOODCO's floor
+  starts shut, so a plain `routeReachable` filter threw away all three of its
+  givers on the first tick and the bot cleared the level with three `!` marks
+  standing. And **a fight is not a stall**: the abandon gauge refreshes while
+  anything is inside the threat ring, or the clock ran out on a march that was
+  simply being fought through.
 
 - **`src/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
   the hand, moment by moment. The hero hauls a kit — a boss ROUND, a crowd
@@ -2141,8 +2190,9 @@ registries alone**, or a release becomes unservable the moment the credential
 goes away.
 
 **One build flavour differs, and only one: the store upload.** The website
-carries the DEVELOPER tooling — the hidden sun reveal (seven taps to arm, then
-the click race — `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
+carries the DEVELOPER tooling — the hidden sun reveal (sixteen taps to arm, the
+first ten of them answered by nothing at all, then the click race —
+`use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
 PLAYGROUND warps, the CHEATS, the BALANCE and VISUALS knobs, the GALLERIES and
 the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the version in the title
 footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local

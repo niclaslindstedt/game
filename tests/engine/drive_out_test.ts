@@ -92,9 +92,10 @@ describe("the road out", () => {
     driveEast(state, 260);
     expect(state.departure).not.toBeNull();
     const was = { ...car.pos };
-    // Hands off. A car under the player's control coasts to a stop from here
-    // (the garage-door suite proves that); a departing one does not. Measured
-    // as DISTANCE rather than as x: by now the nose is coming round onto the
+    // Hands off. A car under the player's control merely holds the speed it
+    // had (the garage-door suite proves that); a departing one has the beat's
+    // own foot flat to the floor and is still gathering pace. Measured as
+    // DISTANCE rather than as x: by now the nose is coming round onto the
     // road's own axis, so the car is leaving on a curve.
     run(state, idle, 20);
     expect(car.speed).toBeGreaterThan(0);

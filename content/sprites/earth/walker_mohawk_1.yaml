@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_mohawk_1
+family: earth
+size: [16, 16]
+description: >
+  A wiry young man with a bleached mohawk and a studded black jacket. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a wiry young man
+  attire: a studded black jacket over ripped jeans
+  features: a bleached mohawk
+  accent: the bleached crest
+  flavor: the only person on this road enjoying himself
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#26242e" # sleeve
+  B: "#1f1d28" # boots
+  C: "#26242e" # studded black jacket
+  H: "#e8d98a" # bleached mohawk
+  K: "#f0cbaa" # hand
+  P: "#f0cbaa" # skin
+  S: "#8a8f9c" # the studs
+  T: "#3f4a63" # ripped jeans
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAAO
+  .OAOCCSSSSCCOKKO
+  .OKOCCSSSSCCO...
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ....OTTOOTTO....
+  ....OTTOOTTO....
+  ....OBBOOBBO....
+  ................
+  ................

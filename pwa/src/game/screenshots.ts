@@ -13,7 +13,7 @@
 //
 // TWO THINGS DELIBERATELY DO NOT SURVIVE IT, both because they are CSS
 // compositing rather than content: the colour grade and the vignette (a
-// `filter` and two gradient layers from SETTINGS → VIDEO), and the panel grain.
+// `filter` and two gradient layers from DEVELOPER → VISUALS), and the panel grain.
 // The picture is the game's pixels at their own resolution, integer-scaled up —
 // which is what a pixel-art screenshot should be anyway, and what makes it
 // legible in a chat window sized for photographs.

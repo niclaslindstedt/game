@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_frame_1
+family: earth
+size: [16, 16]
+description: >
+  A very old man behind a walking frame, taking the crossing a step at a time. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a very old man bent over a walking frame
+  attire: a beige cardigan and brown trousers
+  features: a walking frame held out in front, white hair
+  accent: the frame's grey tubing
+  flavor: he set out before the lights and he is not going to make it
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#b5a488" # sleeve
+  B: "#3a3228" # slippers
+  C: "#b5a488" # beige cardigan
+  G: "#a8adb8" # the walking frame
+  H: "#d4d0c4" # white hair
+  K: "#f0cbaa" # hand
+  P: "#f0cbaa" # skin
+  S: "#cdbea4" # cardigan panel
+  T: "#6b5641" # brown trousers
+grid: |
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOGGO
+  .OAOCCSSSSCCKGGO
+  .OAOCCCCCCCCOGGO
+  ...OTTTTTTTTOGGO
+  ...OTTOOTTO.OGGO
+  ...OTTOOTTO.OOGO
+  ...OTTOOTTO.OOGO
+  ...OBBOOBBO.OOOO
+  ................
+  ................

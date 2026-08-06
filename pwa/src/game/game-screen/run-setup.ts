@@ -169,6 +169,15 @@ export function createRunSession(deps: {
    * onto this hero.
    */
   spectate?: GameState | null;
+  /**
+   * ARRIVE AT THE WHEEL — the far side of the DRIVE home (drive-screen/).
+   *
+   * A ref rather than a prop because the fact belongs to the CROSSING, not to
+   * the mount: the drive sets it as it hands the trip back and this build
+   * consumes it, so an ordinary walk into the garage a minute later is on foot
+   * exactly as it always was.
+   */
+  arriveInCarRef?: MutableRefObject<boolean>;
 }): RunSession {
   if (deps.spectate) return spectatorSession(deps.spectate, deps.runId);
   const {
@@ -310,6 +319,9 @@ export function createRunSession(deps: {
     // gentler rung does not take rows back off a stash the player has filled.
     // The engine still only stands it where the carve gave it a spot.
     cacheSlots: characterCacheSlots(characterRef.current),
+    // AT THE WHEEL, when the trip in was the drive home — he pulls onto his own
+    // drive in the car he left GOODCO in, rather than being stood beside it.
+    startInCar: deps.arriveInCarRef?.current === true,
     // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts), seeded before
     // anything reads the quest log so a chain's gate, a giver's head mark and
     // the tracker are all correct on the first frame.
@@ -362,6 +374,9 @@ export function createRunSession(deps: {
   const state =
     resumed ??
     (checkpoint ? cloneGameState(checkpoint) : createRunFromParams(runParams));
+  // One arrival, one seat: consumed here so the next visit to the hub is on
+  // foot like every other.
+  if (deps.arriveInCarRef) deps.arriveInCarRef.current = false;
 
   // A run started from scratch (not resumed from the menu, not adopted from a
   // checkpoint that already froze it): capture the combat-start checkpoint

@@ -348,61 +348,52 @@ EXPLORED GRID.
 
 ## How the picture is presented
 
-**HOW THE PICTURE IS PRESENTED — SETTINGS → VIDEO, and the split that decides
-where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
-COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
-are PLAYER settings, not developer ones — every one costs frames on a phone — so
-they are deliberately absent from `stripDeveloperState` and ship in the store
-build. **BLOOM ships at 0 and the other three ship on**, which is a judgement
-rather than an oversight: on pixel art at this size every luminance point a halo
-adds is a point of the artist's own shading it paints over, so the halo is
-offered rather than assumed. Do not "restore" it to 1 because the field looks
-unlit.
+**HOW THE PICTURE IS PRESENTED — DEVELOPER → VISUALS, and the split that decides
+where each effect goes.** Three washes (`render/postfx.ts`): COLOR GRADE,
+VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off, and all three ship
+ON at the amounts that module calls the shipped look. They are DEVELOPER settings
+— they sit on the same page as the camera knobs and are scrubbed by
+`stripDeveloperState`, so a store build always plays the shipped look — and the
+reason they can be is that none of them costs a frame: all three are CSS, so
+there is no per-frame budget for a player to win back by turning one off.
 
-**AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
-The bloom decides what counts as light with one luminance knee, and the thing
-that makes that hard here is that the ground is not a minority of a frame, it IS
-the frame — the moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the
-50th AND the 90th percentile of their own picture, while the lights live in the
-top half-percent. A knee below them classes the floor as a light and adds it back
-over itself, which is haze rather than bloom: shipped that way once, it lifted
-the whole picture's brightness 14–24% and the moon came out milky lavender.
-`tests/content/bloom_threshold_test.ts` holds the knee above every ground tile
-the campaign lays down, so a new pale floor says so instead of quietly starting
-to glow. The other half of that pass is the DOWNSCALE, and it is the one place a
-draw call cannot be saved: Canvas2D minification is a 2×2 bilinear tap with no
-mipmap, so it is an honest box filter at exactly ×0.5 and an undersample at
-anything smaller — a ×4 minify of a 4×4 with one white pixel returns 0 where the
-average is 16. Reaching the quarter-size buffer in one step therefore drops
-lights in and out as the camera pans a pixel at a time, and that pulsing IS the
-flicker. Two halvings, always.
+**THERE IS NO CANVAS POST-EFFECT AT ALL, AND BLOOM IS WHY.** A bloom pass lived
+here and was taken out, which is the argument worth keeping rather than the code.
+It was the one knob that HAD to be on the canvas — the light it blooms is the
+game's own baked glow art (`glowSprite`, `beamSprite`, the loot shafts, the muzzle
+flashes) living on that same ~422×195 pixel grid, and a bloom computed at device
+resolution is smoother than the light casting it, which reads as a photo filter
+over pixel art rather than as pixel art glowing. But on pixel art at this size the
+trade loses whatever the threshold and the gain are tuned to: every luminance
+point a halo adds is a point of the artist's own shading it paints over, so the
+loot shafts and the level-up pillar gained a little atmosphere and the floor, the
+rocks and the bodies lost some of their drawing. It shipped at 0 for exactly that
+reason, and a knob whose honest default is off is a knob the game is better off
+without. **Do not bring it back — light the art instead.**
 
 **THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
 MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
 up 2–3× with `image-rendering: pixelated`. So there are two places to put an
 effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
-resolution, in the same pixel grid as the art — where BLOOM belongs, because the
-light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`, the
-loot shafts, the muzzle flashes) living on that same grid; a bloom computed at
-device resolution is smoother than the light casting it, which reads as a photo
-filter over pixel art rather than as pixel art glowing. **IN CSS** is smooth, at
-device resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the
-HAZE belong, because all three are broad low-frequency washes that on the canvas
-would cost a full-frame composite every frame to come out in 2–3 px staircase
-bands. The CSS half is three custom properties from `fxStyleVars` written on the
-GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas,
-which is the overlay's SIBLING and would never inherit them), and the overlay
-sits at `z-index: 0` directly after the canvas so every positioned HUD element
-after it paints on top: the corners of the SCREEN going dark is atmosphere, the
-corners of the HEALTH BAR going dark is a bug.
+resolution, in the same pixel grid as the art — right when the thing an effect
+acts on IS the art, and a full-frame pass every frame on a phone. **IN CSS** is
+smooth, at device resolution, and per-frame FREE — where the GRADE, the VIGNETTE
+and the HAZE belong, because all three are broad low-frequency washes that on the
+canvas would cost a full-frame composite every frame to come out in 2–3 px
+staircase bands. The CSS half is three custom properties from `fxStyleVars`
+written on the GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on
+the canvas, which is the overlay's SIBLING and would never inherit them), and the
+overlay sits at `z-index: 0` directly after the canvas so every positioned HUD
+element after it paints on top: the corners of the SCREEN going dark is
+atmosphere, the corners of the HEALTH BAR going dark is a bug.
 
 **THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
 stage would have to own the whole present path — the world would move to an
 offscreen target and the visible canvas would become the GL one, touching every
 screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
-gallery — and for these four effects it buys nothing: three are strictly better
-in CSS and the fourth wants to be chunky. What a shader WOULD buy is CRT
-curvature, chromatic aberration and a real 3D LUT. That is the day to write it.
+gallery — and for three broad washes it buys nothing: all three are strictly
+better in CSS. What a shader WOULD buy is CRT curvature, chromatic aberration and
+a real 3D LUT. That is the day to write it.
 
 **DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
 the whole field is ONE ground plane and the hero is always at the middle of it —
@@ -786,6 +777,27 @@ look (no toggle). Both are pure render concerns:
   GameScreen captures the hero's own `swing`/`shot` events into a `PlayerAction`
   (matched to his position so a companion's blow is ignored), and `render.ts`
   `drawPlayer` poses the weapon layer via `weaponPose`.
+- **AND THE BODY GOES WITH IT — `WeaponPose.lean`.** Nobody swings a sword with
+  their arm alone, and a weapon that whips through an arc off a figure standing
+  perfectly still reads as a sprite being rotated NEXT TO a hero rather than as a
+  hero swinging it. So the same pose carries a roll of the WHOLE figure about its
+  feet, handed to `withStance` alongside the walk's own tip — the costume, the
+  armor, the weapon and the slash it throws all lean as one, and the weapon's own
+  `rot` composes on top of it exactly as an arm composes on top of a torso. It is
+  facing-RELATIVE (positive tips him toward whatever he is pointed at) while the
+  stance transform sits outside the mirror, so `drawHero` flips its sign for a
+  hero facing left; the walk's tip needs no such thing, a sway being symmetric.
+  The DIRECTION is the read, and it is one per class: **melee** leans back on the
+  wind-up and comes THROUGH the strike (riding the swing's own `lunge` signal, so
+  the lean is the same motion as the blade rather than a second animation running
+  beside it — a two-hander takes more of the body with it, and a `shake` weapon
+  presses in and holds instead, having no arc to follow); **ranged** goes the
+  OTHER WAY, rocked onto his heels by the muzzle's kick and settling forward
+  again, damped by the same brace a two-handed long gun's recoil is; **magic** is
+  the subtlest of the three — the staff comes up and his weight settles back
+  under it, a counterbalance rather than a blow. All of it is a few degrees: the
+  reference device is a phone, the hero is 16 px tall on it, and anything a
+  player would call a lean at desk distance is a stagger down there.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
   look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
