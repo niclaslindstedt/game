@@ -454,6 +454,22 @@ read as a wheel BENT — a state this car really has — rather than turned. Onl
 the front axle gets any of it. Judge it from `node scripts/car-viewer.mjs
 --steer`, which warps the same way.
 
+**AND THE WHOLE MACHINE IS ONE BILLBOARD.** A wheel, an arch, a headlight cone,
+the rocket's exhaust: every one of those is a PART of an assembly cut from one
+shared part canvas (the car's is 48×26), so the numbers that place it —
+`CAR.wheelOffsets` being the wheel arch columns — are SCREEN px along the drawn
+body, and the assembly hangs off a SINGLE anchor through the projection. Giving a
+part its own world anchor (`car.pos.x + offset`) reads those columns as ground
+geometry instead, and that is a no-op at yaw 0 — the projection leaves x alone
+there, so the parts land where they belong by coincidence. Turn the camera and
+the coincidence goes: a step east comes out east AND south while the panels stay
+dead straight-on, so at the full isometric 45° the car's front wheel sat a wheel
+below its arch and the rear one climbed up behind the door, the pair offset at
+exactly the yaw's own angle. The exception is a part that has genuinely become
+its own body — a wheel that came OFF (`state.wheelDebris`), a shed panel lying on
+the floor — which stands on its own ground and keeps its own world anchor.
+`tests/vehicle_assembly_test.ts` holds the line across the whole knob range.
+
 **AND THE CAR MAY NEVER COME ABOUT.** The body is one side-profile assembly and
 nothing mirrors it, so a car free to turn round drove away still facing the way
 it came. The engine's yaw stop (`CAR.maxYaw`) holds the nose just short of
