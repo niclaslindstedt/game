@@ -1,8 +1,8 @@
 # Multiplayer — the shipped architecture
 
-The build plan is [`multiplayer-plan.md`](multiplayer-plan.md); this file
-describes what actually exists. **Every numbered phase through the plan's
-§5.5.3 R1 has landed.** The simulation runs in its own
+This file describes what actually exists, and it is the permanent record: the
+build plan that was used to write the mode is spent and has been deleted, so
+nothing here cites it. **The mode is code-complete.** The simulation runs in its own
 process, the run loop drives it, the wire between it and a renderer is
 complete and tested, the desktop shell forks and supervises a session, a
 session can open a UDP socket and a Steam lobby and admit remote clients
@@ -14,7 +14,7 @@ field and the HUD, trades across a real window, travels through doors with
 everybody else, and leaves with everything they earned banked on their own
 device.
 
-The screens are per-player too (§3.2): one player in their bag no longer stops
+The screens are per-player too: one player in their bag no longer stops
 the world for anybody else — the run halts only when EVERY hero in play has a
 screen up, which solo is exactly the freeze it always was. The client-side
 LATENCY answer is in too: the local hero is PREDICTED by running the engine's
@@ -30,8 +30,8 @@ engine treats the one-element case specially, which is the whole point: a pass
 written against one hero silently means "seat 0" the day a second player
 arrives.
 
-The reads of it split exactly two ways, and the plan's §0 measured the split
-before any of this was written:
+The reads of it split exactly two ways, and the split was MEASURED across the
+engine before any of this was written:
 
 - **PRIVATE reads** — the bag, the purse, the build, the talents, the worn kit —
   are asking about ONE hero, and the answer is always "the one this pass is
@@ -117,7 +117,7 @@ measurement, replay and test in the repo.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
 player going down is a setback the rest fight through — and what that setback
-IS shipped with §4.2 (`src/game/downed.ts`), Diablo 2's shape whole:
+IS lives in `src/game/downed.ts`, Diablo 2's shape whole:
 
 - **The FALL.** A hero at 0 hp while the party still stands goes DOWN
   (`downHero`, the step pipeline's sweep): their own DEATH TOLL is billed at
@@ -143,8 +143,8 @@ IS shipped with §4.2 (`src/game/downed.ts`), Diablo 2's shape whole:
 - **Solo is untouched, structurally.** One hero at 0 hp IS the party wiped, so
   the wipe path (`enterDeathScene` → the death scene → defeat) fires on the
   same tick it always has and none of the above runs: no corpse, no flag, no
-  per-hero toll. Every §4.2 rule is an exact no-op at one hero, the same
-  property every §4.3 rule shipped with.
+  per-hero toll. Every DOWNED rule is an exact no-op at one hero, the same
+  property every co-op economy rule shipped with.
 - **HARDCORE NEVER MIXES WITH SOFTCORE** — enforced at the door, not in the
   engine (which still never learns hardcore exists). `SessionParams.hardcore`
   marks a hardcore character's session, the `join` frame carries the joiner's
@@ -155,7 +155,7 @@ IS shipped with §4.2 (`src/game/downed.ts`), Diablo 2's shape whole:
 
 Its per-player `dying` screen came free, because the screens ARE per-player:
 
-**THE SCREENS ARE PER-PLAYER (§3.2).** `state.phase` keeps only what is
+**THE SCREENS ARE PER-PLAYER.** `state.phase` keeps only what is
 genuinely global — the scenes, the spare-or-kill `choice`, victory and defeat —
 and what one player is LOOKING AT is `Player.screen` ("paused", "levelup",
 "respec", "inventory", "map", "questLog", "shop", "quest", "talk",
@@ -190,9 +190,12 @@ consequences worth knowing:
   the hero whose screen is up, every conversation verb is gated on holding it,
   and a second hero walking up mid-conversation is politely refused. The
   spare-or-kill `choice` stays a GLOBAL beat: shown to everybody, the world
-  frozen for it — the plan's killing-blow-owner gate still waits on the kill
-  chain learning who landed the blow (nothing threads the attacker through
-  `hitEnemy` yet).
+  frozen for it — but the VERDICT is owned, not shared. `ChoiceState.killer`
+  is the SEAT whose blow forced the kneel (the attacker now travels through
+  `hitEnemy`/`killEnemy`, so the chain knows), `resolveChoice` refuses anyone
+  else while that seat is in play, and the refusal FALLS OPEN to the whole
+  party the moment that seat departs — a quitter's kneeling victim can never
+  deadlock the run.
 
 **A seat is appended, never inserted, and never spliced out.** Every command and
 every input frame in flight names a seat by INDEX, so renumbering the party
@@ -444,8 +447,8 @@ Two things, and both are narrow on purpose:
 
 phase 1 shipped the nine scene-advance verbs. **phase 1.5 added the other sixty** —
 the screens, the run's own flow, the bag, the counter, the build, the party, the
-errands, the conversations, the vault and the AUTO PILOT ride — not phase 3, as the
-plan originally said, which was a circular dependency: the run loop cannot move
+errands, the conversations, the vault and the AUTO PILOT ride — not phase 3, where
+they were first scheduled, which was a circular dependency: the run loop cannot move
 into the server until every verb it calls can travel. The two halves are
 separate jobs on the same names. **phase 1.5 makes them TRAVEL**, with today's
 blocking semantics exactly preserved — opening the inventory still freezes the
@@ -472,11 +475,11 @@ reliability**, because that is what the narrower of the two APIs forces.
 sockets, no callbacks, no channels, just `isP2PPacketAvailable()` on a pump
 somebody else runs.
 
-**The seam lives in `server/`, not in `electron/src/`, and that is a deliberate
-departure from the plan's file list.** The plan sketched
-`electron/src/net-transport*.ts`; §5.5 of the same plan says the dedicated
-server "is the same file" as this one, minus Electron. Both cannot be true — a
-transport in the shell is a transport the standalone server does not have. So:
+**The seam lives in `server/`, not in `electron/src/`, and that is deliberate.**
+The obvious placement is a transport in the SHELL (`electron/src/net-transport*.ts`),
+and it cannot survive the dedicated server being "the same file, minus
+Electron" — a transport in the shell is a transport the standalone server does
+not have. So:
 
 - **UDP lives in the session process** (`server/net/udp.ts`). Its packets never
   touch the main process's event loop, and phase 5's dedicated server inherits the
@@ -507,7 +510,7 @@ stale ground late.
 ## Admission — what happens before a stranger's bytes mean anything
 
 `server/net/hub.ts` is the only thing between an open UDP port and the
-simulation, and §5.2's rule is implemented literally: an unadmitted peer may
+simulation, and the two-frame rule is implemented literally: an unadmitted peer may
 send exactly two frames, and every other frame from it is dropped without being
 looked at.
 
@@ -528,7 +531,7 @@ looked at.
    actually fix. The challenge is checked before the password, because answering
    "wrong password" to a spoofed address is a small oracle offered for nothing.
 4. **A seat, and the hero they brought is WEIGHED before the simulation is
-   handed it** (`validateLoadout`, §5.3): the level held inside the ladder, each
+   handed it** (`validateLoadout`): the level held inside the ladder, each
    stat inside the level's own `statCap` and the block inside what that level
    has paid for, and every item checked against the catalogs. That last one is
    the crash rather than the cheat — `gearDef` throws on an id it does not hold
@@ -764,7 +767,7 @@ compiler.
 | `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                        |
 | `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
 | `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's |
-| `tests/engine/party_test.ts`             | Every shared read the plan's §3.1 table answers, each staged with two heroes  |
+| `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes    |
 | `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter    |
 | `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it |
 | `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
@@ -790,8 +793,8 @@ would mean a second, idle simulation standing on the map, and would make the
 host's own renderer a client of a session it did not build.
 
 That is also why **the live status rows are on the PAUSE screen**
-(`game-screen/SessionPanel.tsx`) rather than on the HOST screen the plan's §2.2
-sketched them on: the port the socket ACTUALLY got, the address a friend should
+(`game-screen/SessionPanel.tsx`) rather than on the HOST screen they were first
+sketched on: the port the socket ACTUALLY got, the address a friend should
 type, what the router said and who is in the seats are all facts about a running
 session, and there is no session until the run starts. The HOST screen keeps the
 half that can be answered beforehand — the firewall check, which is a property
@@ -980,7 +983,7 @@ all. So a run more than one person has played is MARKED (`GameState.party`, a
 `PartyStamp`) and reaches no ranking.
 
 The mark is **latched** in `seatHero` rather than seeded from `SessionParams`,
-which is a deliberate departure from the plan's own sketch. A run is marked by
+which is deliberate and was a departure from the obvious design. A run is marked by
 what HAPPENED to it, not by how it was opened (a host who plays alone with the
 door open is playing solo); a parameter is a thing one of three builders can
 forget; and because it is ordinary DYNAMIC state the latch replicates for free,
@@ -1004,18 +1007,18 @@ could before multiplayer existed.
 
 ## What has landed, and what is still owed
 
-phases 1, 2, 1.5, 1.75, 2.5, **phase 3's §3.1 and §3.2**, **phase 4** (the
-abandoned hero, the per-player death/corpse/respawn — see "the run ends when
-the party falls" above — the co-op rules, and now §4.4's mods and §4.5's
-banking + party HUD), **phase 5**, **phase 6** and **phase 5.5's R1** of the
-plan's phases have landed. THE GARAGE (the plan's §6.8) is the
-home base the mode was owed: a static hub level whose `hub` objective never
+**EVERYTHING THE MODE WAS SCOPED TO BUILD HAS LANDED**: the server and the run
+loop, the wire and its transports, the verbs, the per-player screens, the party
+and its economy, the abandoned hero and the per-player death/corpse/respawn (see
+"the run ends when the party falls" above), production hardening, the garage,
+mods, a joiner's own banked character, prediction, and the party bot. THE GARAGE
+is the home base the mode was owed: a static hub level whose `hub` objective never
 clears, a merchant PARKED at his counter, standing travel doors
 (`LevelDef.travelDoors`) as the level select — the car boards and drives out,
 the rocket and the sealed rift seam open the destination picker — and the
 campaign now opens there.
 
-**AND A CROSSING NO LONGER ENDS THE SESSION (§6.4).** With the doors armed or
+**AND A CROSSING NO LONGER ENDS THE SESSION.** With the doors armed or
 a party aboard, travel is a run command (`travelTo`, seat 0 only — the host
 chooses the road) the SESSION consumes between ticks: every seat's loadout is
 extracted through the one banking funnel, the destination is built from the
@@ -1052,7 +1055,7 @@ state.level.id`), and which a client would not even notice as a swap, since
 session a re-roll verb is its own piece of work; until then RESTART is hidden
 from a joiner and ends the host's session exactly as leaving does.
 
-**THE PARTY IS VISIBLE, AND A JOINER IS A FIRST-CLASS PLAYER (§4.5).** The
+**THE PARTY IS VISIBLE, AND A JOINER IS A FIRST-CLASS PLAYER.** The
 field pass draws every hero in play — their own public worn kit through the
 shared paper-doll pass, the downed sprawled where they fell, the local hero
 last and on top — and party frames hang down the HUD's left rail (dressed
@@ -1068,7 +1071,7 @@ could not seat), so a watcher can never bank the host's bag. Achievements
 and the lifetime ledger count for a seated joiner (decision 12); the boards
 stay honest through the PartyStamp.
 
-**MODS RECONCILE AT THE DOOR (§4.4), and the fix under it was bigger than the
+**MODS RECONCILE AT THE DOOR, and the fix under it was bigger than the
 feature**: the session process never had a mod's catalogs at all — the page's
 `registerDefs` never reached it, so every modded HOSTED run (on Steam, every
 modded run) simulated the shipped game while the renderer drew the mod. The
@@ -1078,8 +1081,8 @@ applied in the host's order on the way (and `restoreBaseDefs` puts the
 shipped game back when the run ends); a joiner missing one keeps the refusal,
 whose press opens the game's Steam Workshop hub.
 
-The build plan's phased remainder is CLOSED on the code side. Its three final
-groups landed as follows:
+The mode's final three groups of work — the ones that were still open once the
+party itself worked — landed as follows:
 
 - **THE WHOLE PARTY** — **LANDED**: in-session party travel, banking a
   joiner's character + the party HUD and field visibility, the trade window
@@ -1101,8 +1104,8 @@ groups landed as follows:
   behaviours in. What remains is exactly the set of acceptances no diff can
   close, listed under **What is NOT here yet**.
 
-**§4.3's MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT NEITHER LEVER
-MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
+**THE CO-OP ECONOMY'S MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT
+NEITHER LEVER MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
 byte-identical on two full seeded campaigns) and **`--party N`**, the simulator
 flying one bot per seat with a `PartyReport` whose **PER-CAPITA rate is the read
 to trust** — never the per-kill share, because a party also clears faster and
@@ -1130,9 +1133,9 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT §3.1 DELIBERATELY LEFT IS NOW PAID IN FULL.** §3.2's half (the
-per-player screens above, non-blocking level-up included), §4.5's half (a
-joiner plays their own character and banks it), and §3.3's half — the local
+**WHAT THE PARTY MIGRATION DELIBERATELY LEFT IS NOW PAID IN FULL.** The
+per-player screens above (non-blocking level-up included), a joiner playing
+their own character and banking it, and the latency half — the local
 hero is predicted and everybody else interpolated (see _Prediction and
 interpolation_). One deliberate asymmetry stays: a joiner's run commands
 travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`)
@@ -1208,7 +1211,7 @@ paper over it — it stops fighting, walks into a wall, or fails to swap a weapo
 and it does so in CI (`tests/engine/net_bot_client_test.ts`).
 
 **THE SOAK IS `scripts/bot-client.mjs`** — a fleet pointed at an address, with
-§5.6's adversity available at the transport seam:
+latency, jitter and loss available at the transport seam:
 
 ```sh
 node electron/server-dist/server/main.js soak.json     # allowUnlicensedTransport
@@ -1269,12 +1272,13 @@ Every one of these is a real defect, and not one of them fails a unit test.
 - **A global screen nobody left in play can close.** The level-up chooser
   lifted only when the points were placed, and its owner could stop being able
   to place them by quitting or by going down. `releaseStuckLevelup` dropped
-  the world's obligation to wait, every tick, as a bolt-on; §3.2's per-player
+  the world's obligation to wait, every tick, as a bolt-on; the per-player
   screens are the structural fix and RETIRED it — an abandoned screen holds
   nothing shut, because `partyBlocked` only counts heroes in play (the points
   are still KEPT for a reclaim).
 
-The soak runs themselves are in the plan's §5.9.
+Each of the six was fixed at the layer that owned it, and each has a suite
+above holding it fixed.
 
 ## Prediction and interpolation
 
@@ -1331,9 +1335,10 @@ state, and the interpolation bounds.
 
 ## What is NOT here yet
 
-Everything below needs a human, hardware, or hours of wall clock — none of it
-is closable by a diff, which is why it is recorded here instead of being
-ticked from one.
+Most of what follows needs a human, hardware, or hours of wall clock — none of
+THAT is closable by a diff, which is why it is recorded here instead of being
+ticked from one. The three MOD tails at the foot are the exception: they are
+ordinary work, small, and deliberately left rather than forgotten.
 
 - **The Steam path is written but unproven under load.** The binding's legacy
   P2P API is polled, deprecated and thinner on guarantees than SDR; it must be
@@ -1358,3 +1363,25 @@ ticked from one.
 - **The store surfaces**: the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
   skill) are owed when the mode ships to the store.
+
+**AND THREE MOD TAILS, which ARE closable by a diff.** Mod reconciliation
+shipped whole on the path that has lobby metadata to reconcile against; these
+are the edges it does not cover, each verified against the code rather than
+assumed:
+
+- **The Workshop door opens the HUB, not the mod.** A row refused for a
+  missing mod opens the game's Workshop hub (`net.openWorkshop()`), because
+  the wire carries COMPILED mod ids and the Workshop addresses content by
+  PUBLISHED FILE id, and nothing maps one to the other. The player still has
+  to find the mod by name once they are there.
+- **JOIN BY ADDRESS and `+connect_lobby` get no PRE-FLIGHT reconcile.** Both
+  arrive without lobby metadata, so neither can offer the Workshop door before
+  connecting; a mismatch is caught at the handshake instead and comes back as
+  the `mod-mismatch` refusal. Correct, but a worse answer than the browser
+  row's — the player learns what is wrong only after trying.
+- **The CHARACTER carries no `ModStamp`.** A hero records that a PARTY carried
+  it (`CampaignTally.party`, latched, and the boards read it) but not which
+  mods it was played under. The stamp exists and is tracked for the RUN
+  (`pwa/src/game/mod-state.ts`); it is the persisted roster entry that is
+  missing it, so a roster still misreports after an unsubscribe. This was long
+  assumed to be "the rule that already exists" — measured, it never did.
