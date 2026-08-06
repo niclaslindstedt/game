@@ -50,10 +50,10 @@ export function startGame(seed = 42, levelId = "test_level"): GameState {
 }
 
 /**
- * Idle through the ding celebration, then open seat 0's stat chooser. A ding
- * no longer forces the chooser: the points bank while
- * `levelUpFxMs` burns, and `promptPendingPoints` opens the `levelup` screen
- * on demand.
+ * Idle through the ding celebration, then make sure seat 0's stat chooser is
+ * up. The points bank while `levelUpFxMs` burns; solo the chooser then raises
+ * itself (`openLevelupAfterDing`) and the `promptPendingPoints` below is the
+ * no-op that also serves a fixture already holding a screen open.
  */
 export function runUntilChooser(state: GameState): void {
   run(

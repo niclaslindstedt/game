@@ -5,8 +5,9 @@
 // the world exactly as the old phase did; a party member's screen freezes
 // nobody; a hero with a screen up steers nothing but still stands on the
 // field; a departed or downed hero's abandoned screen holds nothing shut (the
-// structural fix `releaseStuckLevelup` used to bolt on); and a level-up BANKS
-// its points instead of pausing the run.
+// structural fix `releaseStuckLevelup` used to bolt on); and a level-up raises
+// the chooser SOLO once the ding's celebration burns out, while a PARTY banks
+// its points for the HUD's pip instead of dropping a modal on a live fight.
 
 import { describe, expect, it } from "vitest";
 
@@ -181,22 +182,59 @@ describe("an abandoned screen holds nothing shut", () => {
   });
 });
 
-describe("a level-up banks instead of pausing", () => {
-  it("the ding neither halts the run nor opens the chooser", () => {
+describe("a level-up raises the chooser solo and banks it in a party", () => {
+  it("solo, the chooser rises as the ding's celebration burns out", () => {
     const state = startGame();
     stopWaves(state);
     const hero = state.players[0];
+    // The ding itself neither halts the run nor opens anything: the
+    // celebration window burns first (the reward before the bookkeeping).
+    grantXp(state, hero, hero.xpToNext);
+    expect(hero.pendingStatPoints).toBeGreaterThan(0);
+    expect(hero.screen).toBeUndefined();
+    expect(worldAdvances(state)).toBe(true);
+    // …and the tick that empties it raises the chooser, which solo is the
+    // freeze it always was.
+    for (let i = 0; i < 200 && state.levelUpFxMs > 0; i++)
+      step(state, idle, DT);
+    expect(state.phase).toBe("playing");
+    expect(hero.screen).toBe("levelup");
+    expect(worldAdvances(state)).toBe(false);
+  });
+
+  it("a party banks it instead — the pip carries it, no modal drops mid-fight", () => {
+    const state = startGame();
+    stopWaves(state);
+    const hero = state.players[0];
+    seatHero(state, null); // the run is two people's from here on
     bankALevel(state, hero);
     expect(hero.pendingStatPoints).toBeGreaterThan(0);
     expect(hero.screen).toBeUndefined();
     expect(state.phase).toBe("playing");
     expect(worldAdvances(state)).toBe(true);
+    // Nor for the second seat, dinging on its own.
+    const joiner = state.players[1]!;
+    bankALevel(state, joiner);
+    expect(joiner.pendingStatPoints).toBeGreaterThan(0);
+    expect(joiner.screen).toBeUndefined();
+  });
+
+  it("a run whose second player quit is still a party run — it keeps banking", () => {
+    const state = startGame();
+    stopWaves(state);
+    const hero = state.players[0];
+    seatHero(state, null);
+    expect(departHero(state, 1)).toBe(true);
+    bankALevel(state, hero);
+    expect(hero.pendingStatPoints).toBeGreaterThan(0);
+    expect(hero.screen).toBeUndefined();
   });
 
   it("the chooser opens on demand, closes with points banked, and closes itself when everything is spent", () => {
     const state = startGame();
     stopWaves(state);
     const hero = state.players[0];
+    seatHero(state, null); // a party, so the ding banks and nothing forces
     bankALevel(state, hero);
     expect(promptPendingPoints(state, hero)).toBe(true);
     expect(hero.screen).toBe("levelup");

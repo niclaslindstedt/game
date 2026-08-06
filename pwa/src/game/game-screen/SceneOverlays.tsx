@@ -60,6 +60,7 @@ export function SceneOverlays({
   dialogueRevealRef,
   demoLevelupFocus,
   demoTalentFocus,
+  levelupByPress,
   heroAvatar,
   charTab,
   onCharTab,
@@ -84,6 +85,9 @@ export function SceneOverlays({
    * demo) — lights the talent picker's row, the way demoLevelupFocus lights
    * the stat chooser's button. */
   demoTalentFocus: string | null;
+  /** The level-up chooser now up is one the PLAYER opened (the HUD's points
+   * pip), not one the ding raised — so it skips its reveal lockout. */
+  levelupByPress: boolean;
   /** The hero-avatar button, re-parked over an arrival scene — the BAG copy
    * (see GameScreen): there is no pouch on screen during a stare-down, and
    * equipping a fitting weapon is the whole reason it is offered there. */
@@ -241,6 +245,7 @@ export function SceneOverlays({
           font={font}
           sprites={assets.sprites}
           onChange={bumpUi}
+          skipArm={levelupByPress}
           demoFocusStat={demoLevelupFocus}
         />
       )}

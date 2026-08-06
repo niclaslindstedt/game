@@ -76,6 +76,7 @@ import {
   armorReduction,
   autoEquipBest,
   canEquip,
+  closeLevelup,
   dismissIntro,
   effectiveStat,
   equipmentName,
@@ -1627,10 +1628,10 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
-    // THE BANKED LEVEL-UPS, per seat: a ding no longer pauses the
-    // run — the points bank on the hero and the chooser opens on demand — so
-    // the sim spends them the moment they appear, exactly as the app's
-    // autoplay does. If the bot's pick is at the level-scaled cap it won't
+    // THE BANKED LEVEL-UPS, per seat: a ding banks its points on the hero
+    // rather than pausing on the spot, so the sim spends them the moment they
+    // appear, exactly as the app's autoplay does — before the tick, so a
+    // chooser the solo ding raised over them is already down when step() runs. If the bot's pick is at the level-scaled cap it won't
     // take; dump the point into any stat with room so a ding always resolves.
     // Spending the last point closes a chooser `dismissIntro` greeted an
     // adopted veteran with (`resumeAfterLevelup`), so no screen is left
@@ -1664,6 +1665,12 @@ function playRun(args: {
         const talentId = botPickTalent(seatBot, state, hero);
         if (!talentId || !spendTalentPoint(state, hero, talentId)) break;
       }
+      // A PILE THAT COULD NOT BE PLACED (every stat at its cap, or a talent the
+      // picker refused) leaves the chooser standing, and solo the ding's own
+      // reveal is what raised it (`openLevelupAfterDing`) — a screen nobody
+      // lowers would hold the world still for the rest of the measurement. Take
+      // the LATER a player would take: the points keep, the instrument runs on.
+      if (hero.screen === "levelup") closeLevelup(hero);
     }
     // THE PRE-STEP HOUSEKEEPING, as INTENTS (bot/intent.ts): the POCKET
     // ARSENAL's draw — keep the hand on whatever maximizes damage this moment,

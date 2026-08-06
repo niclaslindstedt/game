@@ -579,8 +579,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   manages the inventory. Level-ups restore full health, land automatic
   base-attribute gains (see `leveling.ts` below), and celebrate first: the
   ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
-  app draws the golden burn off it — and the `levelup` stat-chooser phase
-  only opens once the window has burned down. XP SCROLLS pay no XP at all — one
+  app draws the golden burn off it — and the points BANK on the hero
+  (`pendingStatPoints`). Who opens the `levelup` chooser on them depends on the
+  run: SOLO it rises out of the fading glare, on the tick the window empties
+  (`openLevelupAfterDing`); in a PARTY it stays banked behind the HUD's points
+  pip and its player opens it when they choose (`promptPendingPoints`) — see
+  [`multiplayer.md`](multiplayer.md). XP SCROLLS pay no XP at all — one
   is READ by walking over it (there is nothing to dock and nothing to spend), and
   for `scrollDurationMs` afterwards every XP that hero earns is multiplied by
   `scrollXpMult` (both authored in `content/leveling.yaml`; the window is
@@ -1209,8 +1213,11 @@ deploy-shaped:
   a box over the stage bottom and waits for TAP, SKIP ends the scene) and
   `CutscenePreview.tsx` (the
   `?cutscene=<id>` workbench that loops one scene outside any run),
-  `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
-  `levelup`; folds into a 3×2 grid on landscape phones),
+  `LevelUpOverlay.tsx` (the stat chooser shown while the hero's `levelup`
+  screen is up; folds into a 3×2 grid on landscape phones. Its reveal lockout
+  is skipped when the PLAYER opened it from the HUD's points pip — a modal
+  somebody deliberately raised has no stray steering input to protect them
+  from; only the ding's own reveal is frozen),
   `RespecOverlay.tsx` (the respec — a Diablo-style attribute
   screen shown in the `respec` phase, with a −/+ stepper per stat and a
   CONFIRM gate; shares the stat catalog with the level-up chooser via

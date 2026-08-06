@@ -383,9 +383,11 @@ export function createDemoDirector(deps: {
     screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
   const stepLevelup = (dtMs: number) => {
     if (!bot || localHero(state).pendingStatPoints <= 0) return;
-    // A ding no longer raises the chooser on its own — the points bank on the
-    // hero. The demo opens it the way a player would (`promptPendingPoints`),
-    // so the viewer still watches the modal instead of an invisible drain.
+    // The points bank on the hero, and the solo ding raises the chooser over
+    // them a beat later — but the demo does not wait on that beat (nor on a
+    // pile carried in from before it): if the modal is not up it opens it the
+    // way a player would (`promptPendingPoints`), so the viewer always watches
+    // the modal instead of an invisible drain.
     if (localScreen(state) !== "levelup") {
       runCommandOk(state, "promptPendingPoints");
       bumpUi();

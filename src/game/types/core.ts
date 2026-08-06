@@ -58,9 +58,11 @@ export type GamePhase =
  *
  * `paused` is the pause MENU, per player like the rest: in a solo game it
  * still freezes the world (every hero in play has a screen up), in a party it
- * parks one hero. `levelup` is the stat/talent chooser — no longer forced
- * open by a ding: the points bank on `Player.pendingStatPoints` and the
- * chooser is opened on demand (`promptPendingPoints`). `respec` is the one
+ * parks one hero. `levelup` is the stat/talent chooser: a ding always banks
+ * its points on `Player.pendingStatPoints`, and SOLO the chooser rises on them
+ * as the celebration burns out (`openLevelupAfterDing`) while a PARTY leaves
+ * them for the HUD's pip and the on-demand opener (`promptPendingPoints`) —
+ * a run cannot halt seven people for one player's stat pick. `respec` is the one
  * modal among them: it cannot be closed until the refunded points are
  * re-spent (`confirmRespec`), exactly as before.
  */

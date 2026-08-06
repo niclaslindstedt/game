@@ -2040,9 +2040,11 @@ export function grantXp(
     // the blinding light explosion engulfs the hero, the fanfare
     // rings, and the same flash HURLS the surrounding horde back — a knockback
     // on the light, no wound (the app draws the burst off the `levelUp` event;
-    // this is the physics of the shove). The chooser no longer forces itself
-    // open — the HUD pips while points wait, and `promptPendingPoints` opens
-    // it when the player wants it.
+    // this is the physics of the shove). The CHOOSER is not this function's
+    // business: the celebration is armed here and whoever raises a modal on
+    // the banked points does it when the window empties — solo the ding's own
+    // reveal (`openLevelupAfterDing`, from step()), in a party the HUD's pip
+    // and `promptPendingPoints`.
     state.levelUpFxMs = LEVELING.dingCelebrationMs;
     levelUpShockwave(state, player);
   }

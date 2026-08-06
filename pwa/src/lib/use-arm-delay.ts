@@ -10,12 +10,22 @@ import { useEffect, useState } from "react";
  * that keeps a freshly revealed modal inert so a stray tap or held key from
  * the gameplay underneath can't act on it the instant it appears. Arms once
  * per mount; key the component to re-arm for a fresh reveal.
+ *
+ * `ms <= 0` is ARMED FROM THE FIRST RENDER, not armed a frame later: the
+ * lockout exists for a modal that appears UNDER live input, so a modal the
+ * player opened themselves passes 0 and must be live the moment they see it. A
+ * zero-delay timeout would still hand the first paint an inert box (and, on the
+ * pointerdown that opened it, swallow the pointerup as a dead tap).
  */
 export function useArmDelay(ms: number): boolean {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
+    if (ms <= 0) return undefined;
     const timer = window.setTimeout(() => setArmed(true), ms);
     return () => window.clearTimeout(timer);
   }, [ms]);
-  return armed;
+  // The `ms <= 0` half is read straight rather than latched through state: a
+  // no-wait modal is armed in the SAME render that mounts it, and a state flip
+  // (even one an effect makes immediately) would always be one render late.
+  return armed || ms <= 0;
 }

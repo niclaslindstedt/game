@@ -14,6 +14,13 @@
 // stray input as a permanent stat pick. An "arming" bar fills across the wait
 // so the pause reads as intentional, then the buttons light up and accept input.
 //
+// THE FREEZE IS FOR A MODAL THAT ARRIVES UNANNOUNCED, AND ONLY THAT. A chooser
+// the player OPENED — the HUD's points pip, the one door a party ever reaches
+// it through — is one they are already looking at with a finger aimed at it,
+// so there is no stray steering input to eat and nothing to protect them from;
+// it arms instantly (`skipArm`, from the press that sent
+// `promptPendingPoints`). Only the ding's own reveal keeps the lockout.
+//
 // Keyboard: a cursor highlights one stat; the arrow keys (and WASD) move it and
 // Enter/Space spends a point on it. GameScreen cedes the keyboard to this
 // overlay while the `levelup` screen is up, so these keys never leak to
@@ -52,12 +59,16 @@ export function LevelUpOverlay({
   font,
   sprites,
   onChange,
+  skipArm = false,
   demoFocusStat = null,
 }: {
   state: GameState;
   font: PixelFont;
   sprites: Sprites;
   onChange: () => void;
+  /** The player opened this chooser themselves (the HUD's points pip), so it
+   * skips the reveal lockout and takes input at once — see the header. */
+  skipArm?: boolean;
   /** HOW TO PLAY demo only: the stat the autopilot is about to tap. When set,
    * that button carries the selection ring (the same highlight a human cursor
    * gives) so a viewer can SEE which stat the bot picks. Null in normal play,
@@ -75,7 +86,9 @@ export function LevelUpOverlay({
   // seconds after the chooser mounts. It arms once and stays armed for the
   // life of the overlay, so spending a second banked point is instant (the
   // wait already happened) — only a brand-new level-up (a fresh mount) re-arms.
-  const armed = useArmDelay(LEVELUP_ARM_MS);
+  // A chooser the player asked for skips the wait entirely (`skipArm`).
+  const armMs = skipArm ? 0 : LEVELUP_ARM_MS;
+  const armed = useArmDelay(armMs);
   const points = localHero(state).pendingStatPoints;
 
   // LATER/Escape: bank the unspent points and close the chooser — the HUD's
@@ -191,14 +204,17 @@ export function LevelUpOverlay({
             scale={2}
             color="#9aa3ad"
           />
-          {!showInfo && (
+          {!showInfo && !skipArm && (
             // The "arming" bar fills across LEVELUP_ARM_MS so the inert buttons
             // read as a deliberate pause, not a frozen UI. It sits to the right
             // of the CHOOSE A STAT text. Its fill duration is driven from the
             // same constant that flips `armed`, so the bar and the lockout
             // always end together. Once armed it's hidden with `visibility`
             // rather than unmounted, so its slot stays reserved and the row
-            // (and the box) doesn't shift.
+            // (and the box) doesn't shift. A chooser the player opened
+            // (`skipArm`) never has a wait to draw, so it never mounts one at
+            // all — there is no shift to guard against when the bar was never
+            // there.
             <PixelBar
               fillMs={LEVELUP_ARM_MS}
               className={`levelup-arming-bar${armed ? " armed" : ""}`}

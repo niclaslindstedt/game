@@ -166,14 +166,21 @@ halts only when EVERY hero in play has a screen up (`partyBlocked`), which is
 what keeps a solo game's bag exactly the freeze it always was. Three
 consequences worth knowing:
 
-- **A LEVEL-UP BANKS instead of pausing** (decision 4 — a real single-player
-  behaviour change): the ding celebrates on the field, the points bank on
-  `Player.pendingStatPoints` (and the talent queue on
-  `Player.pendingTalentPoints`, moved off the run), and the chooser is a
-  non-blocking screen opened on demand (`promptPendingPoints`, the HUD's
-  points pip) and closeable with points still banked (`closeLevelup`). The
-  RESPEC stays the one modal: it holds its owner until the refunded pool is
-  re-placed.
+- **A LEVEL-UP BANKS instead of pausing — IN A PARTY** (decision 4). The ding
+  celebrates on the field and the points bank on `Player.pendingStatPoints`
+  (with the talent queue on `Player.pendingTalentPoints`, moved off the run)
+  either way; what differs is who raises the chooser. SOLO it raises itself as
+  the celebration burns out (`openLevelupAfterDing`, called from step() on the
+  tick that empties `levelUpFxMs`) — one player's world may wait on the pick,
+  and that beat IS what a level-up is. In a PARTY nothing forces it: freezing
+  seven people while one reads stat blurbs is not on offer, and the modal that
+  did NOT freeze them would be a box dropped over a hero standing in a live
+  fight. So the HUD's points pip carries it and the chooser is opened on demand
+  (`promptPendingPoints`), closeable with points still banked (`closeLevelup`).
+  `isPartyRun` is the gate — a run whose second player quit an hour ago is
+  still a run two people are playing, so it keeps banking rather than starting
+  to force modals the moment somebody leaves. The RESPEC stays the one modal
+  that holds its owner until the refunded pool is re-placed.
 - **A quitter's or a downed hero's abandoned screen holds nothing shut** —
   `partyBlocked` only counts heroes in play. That is the structural version of
   the fix `releaseStuckLevelup` used to bolt on, and the reason that function

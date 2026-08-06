@@ -296,9 +296,14 @@ halts only when EVERY hero in play has one up (`partyBlocked`), which solo is
 exactly the old freeze. So `state.phase === "playing"` no longer means "the
 world is live" — the question "may this hero act / is this hero watching the
 field" is `phase === "playing" && hero.screen === undefined` (app-side:
-`fieldLive(state)` in `pwa/src/game/local-seat.ts`). A ding BANKS its points
-(`pendingStatPoints`/`pendingTalentPoints` on the hero); nothing may force the
-chooser open mid-run except `promptPendingPoints`.
+`fieldLive(state)` in `pwa/src/game/local-seat.ts`). A ding always BANKS its
+points (`pendingStatPoints`/`pendingTalentPoints` on the hero) and WHO OPENS THE
+CHOOSER IS A QUESTION ABOUT THE RUN, not the ding: SOLO, `openLevelupAfterDing`
+raises it as the celebration burns out (step.ts — the freeze a level-up always
+was); in a PARTY it stays banked for the HUD's points pip, because the run
+cannot wait on one player reading stat blurbs. `isPartyRun` is the gate, and
+nothing else may force the chooser open mid-run — every other door is
+`promptPendingPoints`.
 
 **EVERY PAYOUT GOES THROUGH ITS ONE FUNNEL.** A KILL's XP is the party's:
 `shareXp(state, amount, pos)`. Every other award has an owner:

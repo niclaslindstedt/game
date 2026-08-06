@@ -8,6 +8,7 @@ import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import { heroInPlay } from "../party.ts";
+import { isPartyRun } from "../seating.ts";
 import { advanceCutsceneChain } from "../story.ts";
 import type { GameState, Player } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
@@ -28,10 +29,11 @@ export function hasPendingPoints(player: Player): boolean {
 /**
  * Open the level-up chooser for a hero with unspent points — the on-demand
  * opener behind the HUD's "points waiting" pip, and the door the AUTO PILOT
- * refund walks a stopped ride through. A ding no longer forces the chooser
- * open: the points bank, and this is how they get
- * placed. From active play only, with no other screen up — a pause menu or an
- * end-of-run splash is never fought over. Returns whether it opened.
+ * refund walks a stopped ride through — and, in a PARTY, the only door a
+ * level-up's points are ever placed through (solo the ding raises the chooser
+ * itself; see `openLevelupAfterDing`). From active play only, with no other
+ * screen up — a pause menu or an end-of-run splash is never fought over.
+ * Returns whether it opened.
  */
 export function promptPendingPoints(state: GameState, player: Player): boolean {
   if (
@@ -43,6 +45,37 @@ export function promptPendingPoints(state: GameState, player: Player): boolean {
   }
   player.screen = "levelup";
   return true;
+}
+
+/**
+ * THE DING'S OWN OPENING — the chooser rises out of the fading glare once the
+ * celebration window (`GameState.levelUpFxMs`) has burned down, called from
+ * step() on the tick that empties it.
+ *
+ * **SOLO ONLY, and that is the whole rule.** With one hero the chooser is what
+ * a level-up IS — the reward lands, the light fades, the modal rises, and the
+ * world waits for the pick because the world is one player's. In a PARTY the
+ * same modal is a thing the run cannot wait for: it would either freeze seven
+ * other people while one reads stat blurbs, or (since it does not — see
+ * `partyBlocked`) drop a modal over a hero standing in a live fight nobody
+ * paused. So a party BANKS the ding and the HUD's points pip carries it, to be
+ * placed when its player chooses (`promptPendingPoints`).
+ *
+ * `isPartyRun` rather than a count of seats: a run whose second player quit an
+ * hour ago is still a run two people are playing (the stamp never clears), and
+ * a chooser that started forcing itself open the moment a friend left would be
+ * a mid-fight modal by another door.
+ *
+ * Every gate the on-demand opener has applies unchanged — active play, no
+ * other screen up, something actually owed — so a hero reading their bag or a
+ * scene holding the stage is never interrupted; the pip keeps the reminder and
+ * the press reopens it.
+ */
+export function openLevelupAfterDing(state: GameState): void {
+  if (isPartyRun(state)) return;
+  for (const hero of state.players) {
+    if (heroInPlay(hero)) promptPendingPoints(state, hero);
+  }
 }
 
 /**

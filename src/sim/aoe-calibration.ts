@@ -39,6 +39,7 @@ import { GEAR_DEFS } from "../game/defs/gear.ts";
 import {
   advanceOutro,
   allocateStat,
+  closeLevelup,
   dismissIntro,
   setAutoEquipEnabled,
   skipCutscene,
@@ -503,10 +504,11 @@ function advanceUntilStep(
         reviveHero(state);
         break;
       default: {
-        // Banked level-ups (a ding no longer pauses the run):
-        // spend on sight so the probe's stats track its level, and so a
-        // chooser `dismissIntro` greeted the hero with never holds the solo
-        // freeze. Spending the last point closes it (`resumeAfterLevelup`).
+        // Banked level-ups (a ding banks rather than pausing on the spot):
+        // spend on sight so the probe's stats track its level, and so no
+        // chooser — the solo ding's own, or the one `dismissIntro` greets an
+        // arriving pile with — holds the solo freeze. Spending the last point
+        // closes it (`resumeAfterLevelup`).
         const hero = state.players[0];
         while (hero.pendingStatPoints > 0) {
           if (allocateStat(state, hero, botAllocate(bot, state, hero))) {
@@ -525,6 +527,10 @@ function advanceUntilStep(
           const talentId = botPickTalent(bot, state, hero);
           if (!talentId || !spendTalentPoint(state, hero, talentId)) break;
         }
+        // Whatever could not be placed keeps, but the chooser does not stay up
+        // holding the solo freeze — the probe takes a player's LATER (see the
+        // same guard in simulate.ts).
+        if (hero.screen === "levelup") closeLevelup(hero);
         return true; // a live, unpaused phase → run a real tick
       }
     }
