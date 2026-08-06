@@ -1501,6 +1501,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
   hand-edited).
+
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias:
   `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
