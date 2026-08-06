@@ -2,7 +2,7 @@
 // WHETHER THE ROAD IS PLAYED AT ALL — the one place that decides it, and the
 // parameters a drive is built from when it is.
 //
-// THREE THINGS HAVE TO AGREE, and each says no for a different reason:
+// FOUR THINGS HAVE TO AGREE, and each says no for a different reason:
 //
 //   THE SETTING.   SETTINGS → GAMEPLAY → MINIGAMES, off. The player has said
 //                  they would rather have the cut, and that is the whole of it.
@@ -12,6 +12,14 @@
 //                  and the run they are all standing in would have to be held
 //                  open for the length of it. A party takes the cut, always,
 //                  whatever the setting says. (docs/multiplayer.md.)
+//   THE DRIVER.    Nobody's hands are on this run — BOT VIEW / `?bot=`, the
+//                  demo, or the paid AUTO PILOT is playing it. A minigame is a
+//                  thing to PLAY, and the autopilot has no strategy for the
+//                  road: handed the wheel it holds no pedal, so the wagon
+//                  coasts to a stop on the tarmac and the drive never reaches
+//                  its end — an unattended run stranded on a road forever,
+//                  which is the exact failure the departure beat exists to
+//                  avoid. So a run being driven for you takes the cut.
 //   THE ROAD.      There is only one drive in the game, and it is the earthbound
 //                  leg between the garage and GOODCO. A car door pointing
 //                  anywhere else has no road authored for it and gets the cut.
@@ -40,6 +48,9 @@ const GOODCO = "goodco_hq";
  * `solo` is false whenever anybody else is in the session — the caller knows,
  * because it is the same question `sessionTravels` asks about a crossing.
  *
+ * `autoplayed` is true whenever a BOT holds this run's input rather than a
+ * person — see THE DRIVER above.
+ *
  * `difficulty` is the RUN'S OWN rung, carried in because a drive is settled
  * whole before its first tick and has no run under it to ask afterwards. It is
  * what the road weighs on the way to work.
@@ -48,11 +59,13 @@ export function driveParamsFor(
   to: string,
   from: string,
   solo: boolean,
+  autoplayed: boolean,
   seed: number,
   difficulty: Difficulty,
 ): DriveParams | null {
   if (!areMinigamesEnabled()) return null;
   if (!solo) return null;
+  if (autoplayed) return null;
   const direction = legDirection(from, to);
   if (direction === null) return null;
   return {

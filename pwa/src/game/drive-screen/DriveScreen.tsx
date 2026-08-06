@@ -254,7 +254,10 @@ export function DriveScreen({
   const failing = damage > 70;
 
   return (
-    <div style={SHELL}>
+    // The class carries ONE thing — the stacking band (styles.css). It has to
+    // out-rank the departure curtain, which is still painted full black behind
+    // a drive and would otherwise hide the entire road.
+    <div className="drive-screen" style={SHELL}>
       <canvas ref={canvasRef} style={CANVAS} />
       <div style={HUD_BAR}>
         <span>

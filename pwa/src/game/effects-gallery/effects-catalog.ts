@@ -462,7 +462,15 @@ const FIELD_EXHIBITS: Exhibit[] = [
     label: "A MACHINE BURNS UP",
     blurb: "IT DOES NOT CHAR - IT SLAGS, AND LEAVES A SHAPE THAT WAS A MACHINE",
     group: "IMPACT",
-    keywords: ["fire", "burn", "machine", "robot", "slag", "sparks", "nuke kill"],
+    keywords: [
+      "fire",
+      "burn",
+      "machine",
+      "robot",
+      "slag",
+      "sparks",
+      "nuke kill",
+    ],
     stage: { spawns: horde(6, 34, 90, "servo_bot") },
     showMs: 2600,
     fire: (ctx) => {

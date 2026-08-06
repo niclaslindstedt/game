@@ -5938,6 +5938,26 @@ html.app-locked body {
   pointer-events: none;
 }
 
+/* ---- The drive (the road the curtain hands over to) ----------------------- */
+
+/* THE ONE SURFACE THAT HAS TO BEAT THE CURTAIN. The drive-out fades the picture
+   to black and then hands the trip to the road (`carDeparted` → beginDrive), and
+   the curtain does NOT lift for it: the departing run is still mounted with
+   `state.departure` set, so render-frame keeps writing opacity 1 for as long as
+   the drive lasts. Mounted before the curtain in DOM order and left at
+   `z-index: auto`, the whole minigame therefore played UNDERNEATH a black sheet
+   — the road, the traffic, the HUD and the hero's four lines, all invisible,
+   with the only sign of life the departing car's engine still audible behind it.
+   So the drive sits at the very top of the shell's band, above the curtain it is
+   the far side of, and above every modal: while a road is up it owns the whole
+   picture and the whole of the input. The layering is pinned by
+   tests/overlay_layers_test.ts. Everything else about the screen is inline
+   (drive-screen/DriveScreen.tsx) — only the band belongs here, next to the stack
+   it has to win. */
+.drive-screen {
+  z-index: 300;
+}
+
 /* ---- The level-name card (name alone on black before the drop) ------------ */
 
 /* Opaque from the first frame — the world keeps rendering underneath, so a

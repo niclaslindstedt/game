@@ -354,6 +354,18 @@ export function GameScreen({
    * the drive home is offered from there.
    */
   const soloRef = useRef(true);
+  /**
+   * Whether a BOT holds this run's input rather than a person — BOT VIEW /
+   * `?bot=`, the demo's showcase, or the paid AUTO PILOT. Parked here for the
+   * same reason `soloRef` is: the victory splash offers the drive home from
+   * outside the effect that knows.
+   *
+   * A PREDICATE rather than a flag, because two of the three can change while
+   * the run is up (the ride is engaged and disengaged mid-run), and it is the
+   * answer AT THE ROAD that decides whether there is anybody to play it. Left
+   * saying "a person" until a run installs the real reading.
+   */
+  const autoplayedRef = useRef<() => boolean>(() => false);
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
@@ -723,6 +735,11 @@ export function GameScreen({
       spectate: joined?.state ?? travelled?.state ?? null,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
+    // WHO IS PLAYING IT, for the one question that has to be asked from outside
+    // this effect (see `autoplayedRef`): the developer/playtest bot and the demo
+    // are settled with the run, the paid AUTO PILOT is engaged and disengaged
+    // while it is up, so the ride is read at the moment of asking.
+    autoplayedRef.current = () => bot !== null || demo || state.autopilot.active;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
     // screen always did; a net driver hands the input to a session server and
     // applies what comes back. Which one is decided once, at the top of the
@@ -976,6 +993,7 @@ export function GameScreen({
           to,
           runLevelId,
           solo,
+          autoplayedRef.current(),
           Date.now() >>> 0,
           difficulty,
         );
@@ -1086,6 +1104,12 @@ export function GameScreen({
     // is gated on.
     let firstFrameOk = false;
     const render = (timeMs: number) => {
+      // THE DRIVE OWNS THE PICTURE (see the mount below): it covers the shell
+      // whole and opaque, so a frame drawn under it is a frame nobody sees.
+      // Never before the first one, though — `firstFrameOk` is the line between
+      // a survivable bad frame and a run that cannot start, and a drive can only
+      // begin many frames into a run anyway.
+      if (firstFrameOk && driveRef.current) return;
       renderFrame(timeMs);
       firstFrameOk = true;
     };
@@ -1098,6 +1122,16 @@ export function GameScreen({
       speed: () =>
         state.autopilot.active ? state.autopilot.speed : tuning.simSpeed,
       simulate(dtMs) {
+        // THE DRIVE HOLDS THE RUN THAT LAUNCHED IT. A road is an interlude
+        // BETWEEN two levels: the departing run is kept mounted (tearing it down
+        // and rebuilding it around an interlude is the thing the drive's mount
+        // deliberately avoids) but it is over, and a run nobody is watching must
+        // not keep playing. Left ticking it did exactly that — the departed car
+        // carried on at full throttle off the end of the map, and its engine cue
+        // (`carEngine`, one grain per `CAR.engineCueMs`) kept revving under the
+        // road, which is the one thing a player could still tell was happening.
+        // The frozen state is what `onArrived` hands to `travelTo`, unchanged.
+        if (driveRef.current) return;
         // HOW TO PLAY: the sim stays frozen while a teaching tooltip is being
         // read; render keeps drawing the frozen frame + tip.
         if (demoDirector.holdSim(dtMs)) return;
@@ -1544,6 +1578,7 @@ export function GameScreen({
       to,
       from,
       soloRef.current,
+      autoplayedRef.current(),
       Date.now() >>> 0,
       difficulty,
     );
