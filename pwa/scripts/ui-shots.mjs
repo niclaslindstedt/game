@@ -605,15 +605,37 @@ for (const vp of VIEWPORTS) {
       const g = window.__game;
       // A purse fat enough that nothing on the counter greys out as unaffordable.
       g.players[0].coins = 50_000;
-      g.phase = "shop";
+      // THE COUNTER IS THE SHOPPER'S OWN SCREEN, not a phase of the run (see
+      // AGENTS.md — `Player.screen`). This used to force `phase = "shop"`, a
+      // phase the engine no longer has: nothing rendered off it, Escape's
+      // close (which reads the screen) could not clear it, and every step
+      // after this one failed with "stuck in phase shop".
+      g.players[0].screen = "shop";
     });
-    await game.waitForFunction(() => window.__game?.phase === "shop");
+    await game.waitForFunction(
+      () => window.__game?.players?.[0]?.screen === "shop",
+    );
     await gshot("shop");
     // The floating DEAL CARD (ShopDealCard) — the shop's other half, and the one
     // surface that has to fit beside a cell at every viewport. Shot from a stall
     // row (a powerup or consumable card) and from a bag cell (an item card).
     await game.locator(".shop-stall-item").first().click();
     await gshot("shop-deal-stock");
+    // A STACKED row's card is the widest the card's foot ever gets: BUY and
+    // BUY ALL side by side, the second carrying a count AND a price. The cell
+    // wearing a depth chip is the one to tap.
+    const stacked = game
+      .locator(".shop-stall-item:has(.shop-stall-count)")
+      .first();
+    if ((await stacked.count()) > 0) {
+      // The card already up is a portal floating BESIDE the cell — often over
+      // the next one along — so put it away before reaching for another row,
+      // exactly as a player's own tap-outside does.
+      await game.keyboard.press("Escape");
+      await stacked.click();
+      await gshot("shop-deal-stack");
+      await game.keyboard.press("Escape");
+    }
     const bagItem = game.locator(".shop-bag-cell:not([disabled])").first();
     if ((await bagItem.count()) > 0) {
       await bagItem.click();

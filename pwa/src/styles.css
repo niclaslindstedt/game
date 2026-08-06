@@ -7359,6 +7359,19 @@ canvas.tier-artifact {
   margin-top: 0.35rem;
 }
 
+/* A stacked row's card carries TWO buttons (BUY and BUY ALL): one row at the
+   card's foot, kept to the right edge the single button already sits at, and
+   allowed to wrap when BUY ALL's count and price make the pair wider than the
+   card. The buttons keep their own `margin-top`, so the row needs none. */
+.shop-deal-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
 /* The portal wrapper is a BOX-LESS pass-through: `display: contents` keeps it in
    the DOM (so the card's presses still bubble to the handlers that swallow them,
    which is the wrapper's only job) while laying down no rect of its own — and,
@@ -7418,8 +7431,8 @@ canvas.tier-artifact {
   gap: 0.5rem;
 }
 
-/* SELL JUNK + SELL ALL sit together on the left, wrapping between themselves
-   before crowding CLOSE. */
+/* SELL JUNK, BUY BACK, IDENTIFY and REPAIR sit together on the left, wrapping
+   between themselves before crowding CLOSE. */
 .shop-footer-sell {
   display: flex;
   flex-direction: row;
