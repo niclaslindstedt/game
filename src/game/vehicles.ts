@@ -842,8 +842,16 @@ function steerCar(car: CarVehicle, wantSteer: number, dt: number): void {
  *
  * The push arrives as `GameInput.target`, which is read as a DIRECTION off the
  * car rather than as a destination to chase — the app simply points it where the
- * player is pushing (player-input.ts), and one composer now serves the pad, the
- * stick, the keyboard and the pointer alike.
+ * player is pushing (player-input.ts), and one composer serves the pad, the
+ * stick and the pointer alike.
+ *
+ * …and the KEYBOARD is the one control that is NOT a push, which the app settles
+ * before this ever sees it (`carKeyControl` / `carKeyTarget`,
+ * pwa/src/game/car-keys.ts). D is the accelerator, A the brake, W and S the
+ * wheel, whichever way the nose happens to be pointing: a key is a control on
+ * the car, and a pedal that became the brake because the car came about is a
+ * pedal nobody can drive with. The app hands the result back as a target laid
+ * out along the nose, so what arrives here is the same push it always was.
  */
 export type CarControl = {
   /** -1 (full brake / reverse) … +1 (full throttle), 0 = hold this speed. */

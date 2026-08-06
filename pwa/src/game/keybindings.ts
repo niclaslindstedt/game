@@ -81,10 +81,26 @@ export const KEYBIND_ROWS: {
   label: string;
   blurb: string;
 }[] = [
-  { action: "moveUp", label: "FORWARD", blurb: "STEER THE HERO UP THE FIELD" },
-  { action: "moveDown", label: "BACK", blurb: "STEER THE HERO DOWN THE FIELD" },
-  { action: "moveLeft", label: "LEFT", blurb: "STEER THE HERO LEFT" },
-  { action: "moveRight", label: "RIGHT", blurb: "STEER THE HERO RIGHT" },
+  {
+    action: "moveUp",
+    label: "FORWARD",
+    blurb: "STEER THE HERO UP THE FIELD - AT THE WHEEL, TURN LEFT",
+  },
+  {
+    action: "moveDown",
+    label: "BACK",
+    blurb: "STEER THE HERO DOWN THE FIELD - AT THE WHEEL, TURN RIGHT",
+  },
+  {
+    action: "moveLeft",
+    label: "LEFT",
+    blurb: "STEER THE HERO LEFT - AT THE WHEEL, SLOW DOWN AND REVERSE",
+  },
+  {
+    action: "moveRight",
+    label: "RIGHT",
+    blurb: "STEER THE HERO RIGHT - AT THE WHEEL, ACCELERATE",
+  },
   { action: "walk", label: "WALK", blurb: "HOLD TO WALK INSTEAD OF RUN" },
   { action: "jump", label: "JUMP", blurb: "HOP OVER A GAP OR A SHOT" },
   {
