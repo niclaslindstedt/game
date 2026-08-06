@@ -963,6 +963,7 @@ export {
   createDrive,
   driveMph,
   driveRideQuality,
+  impactMasses,
   laneCenter,
   restartDrive,
   roadEdges,
@@ -986,6 +987,7 @@ export type {
   DriveStrike,
   DriveTraffic,
   Impact,
+  ImpactMasses,
   PedestrianMode,
 } from "./game/drive/index.ts";
 

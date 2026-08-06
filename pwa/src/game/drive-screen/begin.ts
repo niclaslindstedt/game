@@ -22,6 +22,7 @@
 
 import {
   areMinigamesEnabled,
+  type Difficulty,
   type DriveDirection,
   type DriveParams,
 } from "@game/core";
@@ -38,12 +39,17 @@ const GOODCO = "goodco_hq";
  *
  * `solo` is false whenever anybody else is in the session — the caller knows,
  * because it is the same question `sessionTravels` asks about a crossing.
+ *
+ * `difficulty` is the RUN'S OWN rung, carried in because a drive is settled
+ * whole before its first tick and has no run under it to ask afterwards. It is
+ * what the road weighs on the way to work.
  */
 export function driveParamsFor(
   to: string,
   from: string,
   solo: boolean,
   seed: number,
+  difficulty: Difficulty,
 ): DriveParams | null {
   if (!areMinigamesEnabled()) return null;
   if (!solo) return null;
@@ -53,6 +59,7 @@ export function driveParamsFor(
     seed,
     direction,
     to,
+    difficulty,
     // THE GORE GATE, ASKED ONCE AND CARRIED. Both halves have to say yes: the
     // family switch (people bleed) and the switch for a body BURST rather than
     // cut. Fixed for the whole road on purpose — a switch flipped mid-drive

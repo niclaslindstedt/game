@@ -39,7 +39,8 @@
 import { type Vec2 } from "@game/lib/vec.ts";
 
 import { CAR } from "../vehicles.ts";
-import type { CarPanelId } from "../types/index.ts";
+import { difficultyDef } from "../defs/difficulties.ts";
+import type { CarPanelId, Difficulty } from "../types/index.ts";
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 
 /** Half the car's body length in world px — the 48-px assembly's own reach off
@@ -178,8 +179,29 @@ export function panelAt(along: number): CarPanelId {
   return "backside";
 }
 
-/** The mass to solve a given kind of thing against — the two the road holds. */
-export const IMPACT_MASS = {
-  pedestrian: DRIVE_UNITS.pedestrianMassKg,
-  traffic: DRIVE_UNITS.trafficMassKg,
-} as const;
+/** The mass to solve each kind of thing on the road against. */
+export type ImpactMasses = {
+  pedestrian: number;
+  traffic: number;
+};
+
+/**
+ * WHAT THE ROAD WEIGHS ON THIS RUNG — the drive's one difficulty knob.
+ *
+ * The collision above is a momentum sum with exactly three inputs, and only one
+ * of them is honestly a property of the ROAD rather than of the car or of the
+ * world's units: how much mass the wagon has to shove out of the way. So that
+ * is what the ladder turns (`DifficultyDef.drive`), and turning it moves both
+ * halves of the answer at once because they are the same sum — a body costs
+ * more speed AND does more damage on a harder rung, in the same proportion,
+ * with every ratio the model is built on left alone. See the field's own note
+ * in `defs/difficulties.ts` for why it saturates faster on traffic than on the
+ * crowd.
+ */
+export function impactMasses(difficulty: Difficulty): ImpactMasses {
+  const { drive } = difficultyDef(difficulty);
+  return {
+    pedestrian: DRIVE_UNITS.pedestrianMassKg * drive.pedestrianMassMult,
+    traffic: DRIVE_UNITS.trafficMassKg * drive.trafficMassMult,
+  };
+}

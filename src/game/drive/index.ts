@@ -19,6 +19,13 @@
 // exactly why a party skips it (`docs/multiplayer.md`: a beat that pays nothing
 // and seats one person is not something to make seven people watch).
 //
+// AND IT IS PLAYED ON THE RUN'S OWN RUNG. The difficulty travels in on
+// `DriveParams.difficulty` and turns exactly one thing: what the road WEIGHS
+// (`impactMasses`). A body costs a MEDIUM driver about a fifth of his speed and
+// a JESUS driver nearly half of it, and does proportionally more to the car on
+// the way past, because both come out of the same momentum sum. Everything else
+// — the course, the crowd, the traffic, the wagon — is the same on every rung.
+//
 // ── HOW IT SITS IN THE GAME ─────────────────────────────────────────────────
 // It is NOT a `GamePhase` and NOT a level. The car reaching the garage's road
 // out fires `carDeparted` exactly as it always did; the app catches it and, if
@@ -53,7 +60,7 @@ import {
   spawnCrowd,
   stepCrowd,
 } from "./crowd.ts";
-import { IMPACT_MASS, panelAt, solveImpact } from "./impact.ts";
+import { impactMasses, panelAt, solveImpact } from "./impact.ts";
 import {
   laneRunsWithHero,
   shunt,
@@ -66,8 +73,8 @@ export { DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
 export type { DriveOutcome } from "./config.ts";
 export { CROWD_VARIANTS, laneCenter, roadEdges } from "./crowd.ts";
 export { TRAFFIC_VARIANTS, laneRunsWithHero } from "./traffic.ts";
-export { panelAt, solveImpact } from "./impact.ts";
-export type { Impact } from "./impact.ts";
+export { impactMasses, panelAt, solveImpact } from "./impact.ts";
+export type { Impact, ImpactMasses } from "./impact.ts";
 export type {
   DriveDirection,
   DriveEvent,
@@ -295,6 +302,9 @@ function stepWheel(wheel: DriveState["wheelDebris"][number], dt: number): void {
 function collide(drive: DriveState): void {
   const { car } = drive;
   const dir = drive.params.direction;
+  // WHAT THE ROAD WEIGHS ON THIS RUNG, read once for the tick rather than once
+  // per body — the difficulty ladder's whole footprint inside the minigame.
+  const mass = impactMasses(drive.params.difficulty);
 
   for (const ped of drive.pedestrians) {
     if (ped.mode === "tumbling") continue;
@@ -305,7 +315,7 @@ function collide(drive: DriveState): void {
       ped.pos,
       ped.vel,
       DRIVE.pedestrianRadiusPx,
-      IMPACT_MASS.pedestrian,
+      mass.pedestrian,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
@@ -354,7 +364,7 @@ function collide(drive: DriveState): void {
       other.pos,
       { x: other.speed, y: other.slew },
       CAR.footprint.radius,
-      IMPACT_MASS.traffic,
+      mass.traffic,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
