@@ -100,6 +100,16 @@ export type MenuEntry = {
    * `action` still runs on click (the row's sound); the browser does the
    * navigating, so an `href` row's action must not also assign `location`. */
   href?: string;
+  /** Does that `href` leave THIS SITE (the COMMUNITY row → the chat server)?
+   *
+   * Opens in a new tab and carries `rel="noopener noreferrer"`, which is the
+   * difference that matters: the LIBRARY is the same origin and navigating to
+   * it costs a player nothing, but a run in progress lives in this document —
+   * steering the tab off-site to look at a chat invite would throw it away.
+   * Both store shells then intercept it and hand the URL to the player's own
+   * browser (electron/src/main.ts, native/App.tsx), because a game window has
+   * no address bar or back button to leave a web page with. */
+  external?: boolean;
   /** A shown-but-not-yet-playable entry (a locked level): the cursor still
    * lands on it, but choosing it just buzzes instead of starting. */
   locked?: boolean;

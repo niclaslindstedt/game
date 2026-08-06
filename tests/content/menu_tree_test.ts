@@ -464,4 +464,26 @@ describe("the title menu tree", () => {
       full.indexOf("extras-library") - 1,
     );
   });
+
+  it("sends COMMUNITY off-site as a real anchor in a new tab", () => {
+    // Not a click handler assigning `location`: an anchor is what both store
+    // shells intercept to hand the URL to the player's own browser, and
+    // `external` is what keeps a run in this document alive through the trip.
+    // The address is the build's (`__COMMUNITY_URL__` — a repo variable in
+    // production, a stand-in here; see vitest.config.ts), which is why this
+    // asserts the row's SHAPE rather than a hardcoded server.
+    const row = buildMenu("extras", ctxFor()).find(
+      (entry) => entry.aria === "extras-community",
+    );
+    expect(row?.href).toBe(__COMMUNITY_URL__);
+    expect(row?.href).toMatch(/^https:\/\//);
+    expect(row?.external).toBe(true);
+    // The LIBRARY is the same origin — it must NOT be flagged external, or a
+    // shell would push the field guide out into a browser.
+    const library = buildMenu("extras", ctxFor()).find(
+      (entry) => entry.aria === "extras-library",
+    );
+    expect(library?.href).toBeTruthy();
+    expect(library?.external).toBeUndefined();
+  });
 });

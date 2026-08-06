@@ -13,6 +13,13 @@ export default defineConfig({
   // pwa/src/build-globals.d.ts).
   define: {
     __DEV_TOOLS__: JSON.stringify(true),
+    // The EXTRAS -> COMMUNITY destination. A stand-in address rather than the
+    // deployed one: the suite only cares that a build WITH a community server
+    // offers the row and points an anchor at it, and hardcoding the real
+    // invite here would defeat the point of keeping it in a repo variable.
+    // The unset case (no row at all) is the `?` guard in menus-main.ts —
+    // a build constant cannot be flipped from inside a test.
+    __COMMUNITY_URL__: JSON.stringify("https://example.invalid/community"),
   },
   resolve: {
     // Keep in lockstep with tsconfig.json `paths` (and the website's vite

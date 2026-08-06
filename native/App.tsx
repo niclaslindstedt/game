@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   AppState,
   BackHandler,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -55,6 +56,7 @@ import {
   VIEWPORT_HARDENING,
 } from "./src/injected";
 import { startLocalServer, type LocalServer } from "./src/local-server";
+import { isDocumentUrl, isExternalUrl } from "./src/navigation";
 import { playPattern, type VibrationPattern } from "./src/native-haptics";
 import {
   createStoreBridge,
@@ -90,27 +92,6 @@ type BridgeMessage = {
   // The screenshot share sheet (pwa/src/app/screenshot-bridge.ts).
   __gisShots?: boolean;
 };
-
-/**
- * Is this URL one of the site's DOCUMENTS rather than the game itself?
- *
- * The library (`/library/…`) and the two store-mandated pages are plain long
- * HTML served off the very same local origin as the game, so the WebView can
- * only tell them apart by path. Keep this in step with `DOC_PAGES`
- * (pwa/pwa-plugin.ts) and the library's mount point.
- *
- * Matched on the PATH, not with `includes`, so a query or fragment can't smuggle
- * the word past it and a level called `library` in some future URL can't either.
- */
-export function isDocumentUrl(url: string): boolean {
-  let path: string;
-  try {
-    path = new URL(url).pathname;
-  } catch {
-    return false;
-  }
-  return /(^|\/)(library|privacy|contact)(\/|$)/.test(path);
-}
 
 export default function App() {
   const webRef = useRef<WebView>(null);
@@ -323,6 +304,18 @@ export default function App() {
     setOnDocument(isDocumentUrl(nav.url));
   }, []);
 
+  // Keep the WebView on the site and hand anything else to the player's own
+  // browser — see `isExternalUrl`. Returning false cancels the navigation, so
+  // the game stays exactly where it was while the link opens elsewhere.
+  const onShouldStartLoad = useCallback(
+    (req: WebViewNavigation) => {
+      if (!isExternalUrl(req.url, uri)) return true;
+      void Linking.openURL(req.url).catch(() => {});
+      return false;
+    },
+    [uri],
+  );
+
   const reveal = useCallback(() => {
     setLoaded(true);
     void SplashScreen.hideAsync().catch(() => {});
@@ -390,6 +383,7 @@ export default function App() {
           injectedJavaScript={VIEWPORT_HARDENING}
           onMessage={onMessage}
           onNavigationStateChange={onNavStateChange}
+          onShouldStartLoadWithRequest={onShouldStartLoad}
           onLoadEnd={reveal}
           onError={() => setFailed(true)}
           onHttpError={() => setFailed(true)}

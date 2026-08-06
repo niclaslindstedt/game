@@ -42,6 +42,7 @@ export default [
         __BUILD_COMMIT__: "readonly",
         __DEV_TOOLS__: "readonly",
         __SUPPORT_EMAIL__: "readonly",
+        __COMMUNITY_URL__: "readonly",
       },
     },
     plugins: {

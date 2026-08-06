@@ -28,3 +28,9 @@ declare const __DEV_TOOLS__: boolean;
 
 /** The support address printed by the contact page and the privacy policy. */
 declare const __SUPPORT_EMAIL__: string;
+
+/** Where EXTRAS -> COMMUNITY sends a player — the chat server the players keep.
+ * EMPTY when the build was given no address, which is not an error: the row is
+ * simply not offered (see `menus-main.ts`). Set by the `COMMUNITY_URL` repo
+ * variable (see pwa/vite.config.ts and docs/configuration.md). */
+declare const __COMMUNITY_URL__: string;

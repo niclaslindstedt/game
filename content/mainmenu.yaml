@@ -210,6 +210,14 @@ screens:
         label: LIBRARY
         icon: icon_menu_library
         help: THE FIELD GUIDE - MONSTERS, RELICS, MISSIONS
+      # Leaves the app entirely, for the chat server the players keep. Last on
+      # the shelf because it is the only row that goes somewhere this project
+      # does not serve, and absent from any build that was not given an address
+      # to send them to (COMMUNITY_URL — see the builder).
+      - id: community
+        label: COMMUNITY
+        icon: icon_menu_community
+        help: TALK TO OTHER PLAYERS - CHAT, TIPS AND RUNS
 
   # =========================================================================
   # SETTINGS — six pages, and the split between them is the one players already

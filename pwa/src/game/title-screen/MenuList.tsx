@@ -189,7 +189,16 @@ export function MenuList({
         return (
           <Row
             key={entry.aria}
-            {...(entry.href ? { href: entry.href } : { type: "button" })}
+            {...(entry.href
+              ? {
+                  href: entry.href,
+                  // Off-site rows open in a new tab so a run in this document
+                  // survives the trip — see `MenuEntry.external`.
+                  ...(entry.external
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {}),
+                }
+              : { type: "button" })}
             ref={
               // Keyed on the CURSOR, not the highlight: this is what keyboard
               // steering scrolls back into view, and it must follow the cursor
