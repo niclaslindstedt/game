@@ -1,0 +1,36 @@
+name: icon_menu_screenshots
+family: icons
+size: [12, 12]
+description: >
+  A boxy camera seen head-on: a prism hump on top, a big round lens with a
+  bright catchlight in it, and a small white flash window on the shoulder — the
+  SCREENSHOTS row's marker, the shelf of pictures the player took.
+subject:
+  kind: UI icon
+  features: a wide slab body with a small trapezoid viewfinder hump centred on
+    its top edge, a large round lens centred in it with a two-pixel catchlight
+    in the lens's upper left, and a white flash window on the upper right
+    shoulder
+  accent: cold blue glass in the lens against a slate-grey chassis
+  flavor: the pictures you took
+palette:
+  O: "#1a1c2c" # dark outline
+  H: "#9aa4b6" # lit chassis, top edge
+  B: "#656f81" # chassis body
+  b: "#454d5c" # chassis shadow, lower edge
+  l: "#3d8cb8" # lens glass
+  L: "#a8e6ff" # lens catchlight
+  W: "#f4f4f4" # flash window
+grid: |
+  ....OOO.....
+  ...OHHHO....
+  OOOOHHHOOOOO
+  OHHHHHHHWWHO
+  OBBOOOOOOBBO
+  OBOllllllOBO
+  OBOlLLlllOBO
+  OBOllllllOBO
+  ObOllllllObO
+  ObbOOOOOObbO
+  ObbbbbbbbbbO
+  OOOOOOOOOOOO

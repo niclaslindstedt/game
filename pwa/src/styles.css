@@ -12182,6 +12182,277 @@ canvas.tier-artifact {
 }
 
 /* ==========================================================================
+   SCREENSHOTS — the flash the SCREENSHOT key raises over a run, and the
+   gallery that flash opens.
+   ==========================================================================
+
+   Two surfaces, and they follow two skins that already exist here: the flash is
+   the ACHIEVEMENT TOAST's arrangement (an inert banner over the field, whose
+   press the canvas routes — see controls.ts), and the gallery is the ARSENAL's
+   shelf (`.arsenal-overlay` / `.arsenal-panel`), so every full-screen browser
+   in the game keeps reading as one family. */
+
+/* The camera's own flash: one white frame over the whole field. Above the
+   screen-space FX bands and below the modal one, because it is a lighting
+   event rather than a thing to press. */
+.shot-flash-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 98;
+  background: #ffffff;
+  pointer-events: none;
+  opacity: 0;
+  animation: shot-flash-burst 220ms ease-out forwards;
+}
+
+@keyframes shot-flash-burst {
+  0% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The receipt: a framed miniature against the RIGHT edge, vertically centred.
+   Deliberately NOT the bottom strip the pickup card and the achievement toast
+   share — three banners stacking in one place is a pile — and deliberately
+   clear of all four corners, which the vitals, the minimap and the two docks
+   already own. Never eats pointer events (see below). */
+.shot-flash {
+  position: absolute;
+  right: max(0.6rem, env(safe-area-inset-right));
+  top: 50%;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-sizing: border-box;
+  padding: 0.35rem 0.5rem;
+  background: rgba(11, 13, 16, 0.78);
+  border: 2px solid #7fd4ff;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0.35rem rgba(127, 212, 255, 0.32),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  pointer-events: none;
+  overflow: visible;
+  isolation: isolate;
+  animation: shot-flash 3200ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* Inert to the last descendant, for the achievement toast's reason: a
+   composited replaced-element child (the <img>, a PixelText <canvas>) gets its
+   own hit-test layer on iOS and would eat a steering touch even under an inert
+   root. The canvas hit-tests the banner and routes the press instead. */
+.shot-flash * {
+  pointer-events: none;
+}
+
+/* Slide in off the right edge, hold, slide back out — sized to
+   SHOT_FLASH_TTL_MS in ScreenshotFlash.tsx. */
+@keyframes shot-flash {
+  0% {
+    transform: translate(120%, -50%);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(-4%, -50%);
+    opacity: 1;
+  }
+  13% {
+    transform: translate(0, -50%);
+  }
+  86% {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(60%, -50%);
+    opacity: 0;
+  }
+}
+
+.shot-flash-frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.6rem;
+  border: 1px solid rgba(127, 212, 255, 0.55);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.shot-flash-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* The miniature is a hard downscale of a pixel-art frame, so it is the one
+     place `pixelated` is WRONG: nearest-neighbour at a quarter size drops three
+     pixels in four and the HUD comes back as confetti. Let the browser filter
+     it — this is a thumbnail, not the picture. */
+  image-rendering: auto;
+}
+
+/* One sheen sweep across the miniature, so the frame reads as a photograph
+   being taken rather than as a static thumbnail that appeared. */
+.shot-flash-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 65%
+  );
+  transform: translateX(-100%);
+  animation: shot-flash-sheen 900ms ease-out 120ms 1 both;
+}
+
+@keyframes shot-flash-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.shot-flash-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ---- The GALLERY -------------------------------------------------------- */
+
+/* Raised over a RUN it has the game shell's layer bands to answer to, exactly
+   as the achievements shelf does: it must cover the screen-space FX layers
+   (90..98, the flash burst included) and any pause menu it was opened over. */
+.game-screen .shots-overlay {
+  z-index: 100;
+}
+
+.shots-panel {
+  /* Wider than the item browsers: the content is a landscape picture, and the
+     panel should not letterbox it into a stripe. */
+  width: min(96vw, 60rem);
+}
+
+/* The viewer proper: the two step arrows either side of the picture. */
+.shots-stage {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.shots-step {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.6rem;
+}
+
+/* The picture's own window. A fixed aspect box rather than a shrink-to-fit
+   image, so flipping between shots of different sizes never reflows the panel
+   under the player's cursor. */
+.shots-frame {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: min(52vh, 26rem);
+  background: rgba(4, 5, 8, 0.85);
+  border: 2px solid var(--panel-rail);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.shots-img {
+  max-width: 100%;
+  max-height: 100%;
+  /* The full-size view IS the pixels — shown at or below their own scale, so
+     nearest-neighbour is what keeps them square. */
+  image-rendering: pixelated;
+}
+
+.shots-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+}
+
+.shots-caption.is-wide {
+  flex-direction: row;
+  gap: 0.6rem;
+  align-items: baseline;
+}
+
+/* The filmstrip: the whole roll, newest first, scrolled on its own so a full
+   roll never grows the panel past the viewport. */
+.shots-strip {
+  display: flex;
+  gap: 0.3rem;
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-bottom: 0.2rem;
+}
+
+.shots-thumb {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 4rem;
+  padding: 0;
+  background: rgba(4, 5, 8, 0.85);
+  border: 2px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.shots-thumb.selected {
+  border-color: #7fd4ff;
+}
+
+.shots-thumb-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: auto;
+}
+
+.shots-actions {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.shots-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+}
+
+/* One line under the buttons: the last action's result, or what the shell is
+   doing with the pictures. Fixed height so it appearing never nudges the
+   panel. */
+.shots-notice {
+  min-height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ==========================================================================
    QUESTS — the offer box, the log, and the on-screen tracker.
    ==========================================================================
 
