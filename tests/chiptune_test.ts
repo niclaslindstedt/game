@@ -49,6 +49,7 @@ function makeFakeSynth(): {
   return {
     synth: {
       unlock() {},
+      autostart() {},
       resume() {
         resumes.count++;
       },

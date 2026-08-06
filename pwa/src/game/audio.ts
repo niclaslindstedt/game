@@ -23,6 +23,7 @@ export function setAudioVolumes(v: { music: number; sfx: number }): void {
 function scaledView(volume: () => number): Synth {
   return {
     unlock: () => raw.unlock(),
+    autostart: () => raw.autostart(),
     resume: () => raw.resume(),
     now: () => raw.now(),
     tone(options) {

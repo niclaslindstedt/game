@@ -28,11 +28,11 @@ import { musicSynth } from "../audio.ts";
  * to import.
  *
  * A score is a wall of note data (tens of KB apiece) and NONE of it is startup.
- * A level's theme is wanted the moment a run begins, not while the menu is up —
- * and the title theme can't sound before the player's first gesture unlocks
- * audio anyway, so even it has no business in the entry chunk. The generated
- * index gives each track its own `import()`, so the browser fetches the one
- * being asked for.
+ * A level's theme is wanted the moment a run begins, not while the menu is up,
+ * and even the title theme is wanted one paint AFTER the menu is on screen
+ * (`armTitleMusic`) rather than inside the entry chunk. The generated index
+ * gives each track its own `import()`, so the browser fetches the one being
+ * asked for.
  */
 const trackCache = new Map<string, ChiptuneTrack>();
 
@@ -96,6 +96,52 @@ function playTrack(id: string): void {
  * off every menu gesture as the audio unlock). */
 export function playTitleMusic(): void {
   playTrack(TITLE_TRACK);
+}
+
+/** The gestures that count as "the player has arrived" — any pointer, any
+ * touch, any key. Captured (so an overlay that stops propagation cannot
+ * swallow the first one) and passive (nothing here preventDefaults). */
+const ARRIVAL_EVENTS = ["pointerdown", "touchend", "keydown"] as const;
+const ARRIVAL_OPTS = { capture: true, passive: true } as const;
+
+/**
+ * THE THEME BELONGS TO THE MENU OPENING, NOT TO THE FIRST BUTTON PRESSED.
+ *
+ * Call it as the title screen mounts; the returned function disarms it (the
+ * unmount). Three things happen, in the order they can happen at all:
+ *
+ * 1. The arrangement is claimed straight away, locked or not. The sequencer
+ *    tolerates a silent clock — it ticks, finds none, nudges and waits — so
+ *    the score is fetched and standing by, and the moment sound is permitted
+ *    the theme is already playing rather than starting a beat later.
+ * 2. `autostart()` starts it with no gesture at all where the platform allows
+ *    that (the Steam shell, a browser that already trusts this origin). This
+ *    is the case the player means by "it should just start on open".
+ * 3. Where it doesn't, the player's FIRST touch or key ANYWHERE unlocks —
+ *    rather than the first menu row they happen to press. The listener stays
+ *    armed until the clock actually moves, so a gesture the browser refused to
+ *    honour isn't the last one we listen to.
+ */
+export function armTitleMusic(): () => void {
+  playTitleMusic();
+  musicSynth.autostart();
+  if (typeof document === "undefined" || musicSynth.now() !== null)
+    return () => {};
+
+  let armed = true;
+  const disarm = (): void => {
+    if (!armed) return;
+    armed = false;
+    for (const type of ARRIVAL_EVENTS)
+      document.removeEventListener(type, onArrival, ARRIVAL_OPTS);
+  };
+  const onArrival = (): void => {
+    musicSynth.unlock();
+    if (musicSynth.now() !== null) disarm();
+  };
+  for (const type of ARRIVAL_EVENTS)
+    document.addEventListener(type, onArrival, ARRIVAL_OPTS);
+  return disarm;
 }
 
 /**

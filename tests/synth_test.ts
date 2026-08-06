@@ -2,10 +2,12 @@
 // The WebAudio synth (@ui/lib/synth.ts). It reaches for `AudioContext`, so
 // these tests stub fakes on the global and assert two behaviors:
 //
-// 1. The context is created ONLY from a user gesture (unlock), never as a
-//    side effect of reading the clock (now). A context built outside a
-//    gesture lands in a state iOS Safari won't resume, which is exactly how
-//    the title tune goes silent at app start.
+// 1. The context is created ONLY from a user gesture (unlock) — or from an
+//    autostart the browser has explicitly permitted (see autoplayAllowed) —
+//    and never as a side effect of reading the clock (now). A context built
+//    outside a gesture on an engine that grants no such permission lands in a
+//    state iOS Safari won't resume, which is exactly how the title tune goes
+//    silent at app start.
 // 2. Every voice reaches the destination through the one master limiter.
 //    Combat overlaps many voices at once; anything wired straight to the
 //    destination sums past full scale and hard-clips.
@@ -204,6 +206,29 @@ beforeEach(() => {
   if (!hadWindow) g.window = { addEventListener: recordOn(winListeners) };
 });
 
+/** Run `body` with `navigator.getAutoplayPolicy` answering `policy` — or, for
+ * `null`, with an engine that doesn't implement the question at all. */
+const withAutoplayPolicy = (policy: string | null, body: () => void): void => {
+  const had = "navigator" in g;
+  const previous = g.navigator;
+  Object.defineProperty(g, "navigator", {
+    value: policy === null ? {} : { getAutoplayPolicy: (): string => policy },
+    configurable: true,
+    writable: true,
+  });
+  try {
+    body();
+  } finally {
+    if (had)
+      Object.defineProperty(g, "navigator", {
+        value: previous,
+        configurable: true,
+        writable: true,
+      });
+    else delete g.navigator;
+  }
+};
+
 /** Background/foreground the page the way an app switch does. */
 const setVisibility = (state: "visible" | "hidden"): void => {
   (g.document as { visibilityState: string }).visibilityState = state;
@@ -230,6 +255,39 @@ describe("audio context lifecycle", () => {
     // Resumed to running, so the clock now reports a time the sequencer can
     // schedule against.
     expect(synth.now()).toBeCloseTo(1.5, 6);
+  });
+
+  it("autostarts only where the browser says a gesture isn't needed", () => {
+    // The desktop shell launches Chromium with `no-user-gesture-required`, and
+    // a browser grants the policy to an origin the player already engages
+    // with; there the title theme may sound the moment the menu opens.
+    withAutoplayPolicy("allowed", () => {
+      const synth = createSynth();
+      synth.autostart();
+      expect(FakeAudioContext.created).toBe(1);
+      expect(synth.now()).not.toBeNull();
+    });
+  });
+
+  it("never builds a context off-gesture when the policy withholds it", () => {
+    withAutoplayPolicy("disallowed", () => {
+      const synth = createSynth();
+      synth.autostart();
+      expect(FakeAudioContext.created).toBe(0);
+    });
+  });
+
+  it("treats an engine with no autoplay policy at all as a refusal", () => {
+    // Safari/iOS answers nothing, and a context built outside a gesture there
+    // is one no later gesture can revive (see now()) — so autostart guesses
+    // nothing and the caller keeps waiting for a real gesture.
+    withAutoplayPolicy(null, () => {
+      const synth = createSynth();
+      synth.autostart();
+      expect(FakeAudioContext.created).toBe(0);
+      synth.unlock();
+      expect(FakeAudioContext.created).toBe(1);
+    });
   });
 
   it("reuses the one context across unlock and now", () => {
