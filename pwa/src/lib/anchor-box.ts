@@ -85,3 +85,95 @@ export function boxesOverlap(
     a.top + a.height > b.top
   );
 }
+
+/**
+ * Place TWO boxes that belong together — a card and the card it is being
+ * compared against — as ONE object beside the anchor.
+ *
+ * It exists because placing them one at a time fails: put the first box down,
+ * and the second has to find a free spot around it that is also on screen and
+ * also off the anchor. On a small phone or a 2×-scaled tablet there often is
+ * no such spot, and the caller's only remaining move is to drop the second box
+ * — which is the comparison itself going missing exactly where it is hardest
+ * to do in your head. Sized and placed as one block, the pair fits wherever a
+ * block that size fits, so the second card stops being optional.
+ *
+ * `primary` is the box the anchor is ABOUT (the inspected item's card); it is
+ * kept on the side nearest the anchor, so the eye travels icon → its card →
+ * the thing it is being weighed against. The pair lays out in a ROW when a row
+ * fits and a COLUMN otherwise, since which axis has room is a property of the
+ * screen rather than of the cards.
+ */
+export function placePair(
+  anchor: DOMRect,
+  primary: BoxRect,
+  secondary: BoxRect,
+  opts: PlaceOpts = {},
+): { primary: BoxPos; secondary: BoxPos } {
+  const gap = opts.gap ?? GAP;
+  const margin = opts.margin ?? MARGIN;
+  const vw = opts.viewport?.width ?? window.innerWidth;
+  const vh = opts.viewport?.height ?? window.innerHeight;
+  const row = {
+    width: primary.width + gap + secondary.width,
+    height: Math.max(primary.height, secondary.height),
+  };
+  const col = {
+    width: Math.max(primary.width, secondary.width),
+    height: primary.height + gap + secondary.height,
+  };
+  // Both shapes are actually PLACED and then scored, rather than picked on
+  // size alone: a row can be narrow enough for the viewport and still have
+  // nowhere to sit beside the anchor, which lands it back over the cell it is
+  // describing. Spilling off the screen is the worse of the two faults, so it
+  // dominates the score; covering the anchor breaks the tie. A row wins an
+  // outright tie — reading two cards side by side beats reading them stacked.
+  const opts2 = { gap, margin, viewport: { width: vw, height: vh } };
+  const cost = (box: BoxRect, at: BoxPos) => {
+    const off =
+      Math.max(0, margin - at.left) +
+      Math.max(0, at.left + box.width - (vw - margin)) +
+      Math.max(0, margin - at.top) +
+      Math.max(0, at.top + box.height - (vh - margin));
+    const over = boxesOverlap(
+      { ...at, ...box },
+      {
+        left: anchor.left,
+        top: anchor.top,
+        width: anchor.width,
+        height: anchor.height,
+      },
+    )
+      ? 1
+      : 0;
+    return off * 4 + over;
+  };
+  const rowAt = placeBeside(anchor, row, opts2);
+  const colAt = placeBeside(anchor, col, opts2);
+  const asRow = cost(row, rowAt) <= cost(col, colAt);
+  const box = asRow ? row : col;
+  const at = asRow ? rowAt : colAt;
+  // Which end of the block the anchor is at, judged against the block's MIDDLE
+  // rather than its far edge: when the pair had to be clamped it can end a few
+  // pixels short of clearing the anchor, and a rule that demands full
+  // separation flips the wrong way on exactly those layouts. Past the middle
+  // means the anchor is on the far side, so the primary card takes that end
+  // and still lands nearest the cell it describes.
+  const flip = asRow
+    ? anchor.left >= at.left + box.width / 2
+    : anchor.top >= at.top + box.height / 2;
+  if (asRow) {
+    const primaryLeft = flip ? at.left + box.width - primary.width : at.left;
+    const secondaryLeft = flip ? at.left : at.left + primary.width + gap;
+    return {
+      primary: { left: primaryLeft, top: at.top },
+      secondary: { left: secondaryLeft, top: at.top },
+    };
+  }
+  const primaryTop = flip ? at.top + box.height - primary.height : at.top;
+  const secondaryTop = flip ? at.top : at.top + primary.height + gap;
+  return {
+    primary: { left: at.left, top: primaryTop },
+    secondary: { left: at.left, top: secondaryTop },
+  };
+}

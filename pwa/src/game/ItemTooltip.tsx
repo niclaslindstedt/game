@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import { wornCounterpart, type Equipment, type GameState } from "@game/core";
 
 import { clamp as clampNum } from "@game/lib/vec.ts";
-import { boxesOverlap, placeBeside } from "@ui/lib/anchor-box.ts";
+import { boxesOverlap, placeBeside, placePair } from "@ui/lib/anchor-box.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -98,8 +98,9 @@ export function ItemTooltip({
 
     // The worn piece's card: over its own equip slot when that doesn't
     // collide with the main card, else hugging the main card's free side.
-    // No collision-free spot (tiny viewports) hides it — the main card's
-    // (+N) deltas still carry the comparison.
+    // When NOTHING is free the two are re-placed as one block instead (see
+    // below) — the comparison is the reason the card is up, so it is never the
+    // thing that gets dropped to make the layout work.
     let worn: { left: number; top: number } | null = null;
     const wornEl = wornRef.current;
     if (wornEl) {
@@ -159,6 +160,24 @@ export function ItemTooltip({
             p.top + h2 <= vh - margin &&
             !collides(p),
         ) ?? null;
+      // NOTHING FREE — so move BOTH cards, rather than dropping one of them.
+      // Placing the worn card last means it has to fit in whatever the main
+      // card left over, and on a small phone or a 2×-scaled tablet a tall
+      // weapon card leaves nothing: the quest box's CHOOSE ONE handed the
+      // player three weapons to weigh against the one in their hands and then
+      // declined to show it. Sized as one block the pair fits wherever a block
+      // that size fits, laying out in a row or a column depending on which way
+      // the screen has room (@ui/lib/anchor-box.ts).
+      if (!worn) {
+        const pair = placePair(
+          anchor,
+          { width: w, height: h },
+          { width: w2, height: h2 },
+          { gap, margin },
+        );
+        setPos({ main: pair.primary, worn: pair.secondary });
+        return;
+      }
     }
     setPos({ main, worn });
   }, [anchor, item, compareTo]);
