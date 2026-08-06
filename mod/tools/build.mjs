@@ -24,9 +24,16 @@
 //     shipped enemy, its own new enemy, or both, and an unknown id is an error
 //     at COMPILE time with a file and a line — never a blank sprite or a
 //     missing monster at play time.
-//  3. **Nothing executes.** A bundle is data: defs, and sprites as raw pixels.
-//     There is no scripting hook, and adding one would turn "subscribe to a
-//     mod" into "run a stranger's code".
+//  3. **A mod may change the RULES, and only inside a sandbox.** A bundle is
+//     data (defs, sprites as raw pixels) plus `scripts:` — the Lua a mod may
+//     ship to replace a shipped formula (`content/scripts/*.lua`). That is a
+//     stranger's code, so it never leaves the box the engine puts it in: the
+//     VM has no io, no os, no require, no load, no clock and no randomness, it
+//     sees only the read-only views the host installs, and every call is
+//     metered so a runaway loop dies instead of hanging the game. The compiler
+//     PARSES every script here, with the game's own interpreter, so a broken
+//     one fails on the author's machine rather than in a player's run.
+//     → docs/scripting.md
 //
 // See mod/README.md for the authoring guide and mod/FORMAT.md for the
 // reference.
@@ -46,6 +53,7 @@ import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSet } from "../../scripts/asset-tools/set-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
+import { validateScript } from "../../scripts/asset-tools/script-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import {
   validateTalent,
@@ -79,6 +87,7 @@ import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
 import { loadMaps } from "../../scripts/map-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
+import { loadScripts } from "../../scripts/script-data/load-lua.mjs";
 import { loadSets } from "../../scripts/set-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 import { loadTalents } from "../../scripts/talent-data/load-yaml.mjs";
@@ -245,6 +254,13 @@ export function buildMod(modDir, catalog) {
   // THE KITS. A mod could already ship `rarity: set` items; without this the
   // pieces belonged to nothing, granted nothing, and read as a bug in the mod.
   const sets = loadTree(() => loadSets(modDir), "sets", fail);
+
+  // THE RULES. A mod's `scripts/<id>.lua` replaces the shipped formula of the
+  // same name for the length of a modded run — the one catalog that is
+  // behaviour rather than data, and therefore the one a total conversion needs
+  // to be a different GAME rather than a re-skin of this one. Optional, and
+  // absent from almost every mod: an addon that adds monsters changes no rules.
+  const scripts = loadTree(() => loadScripts(modDir), "scripts", fail);
   // THE LADDER'S VOICE — what the difficulty rungs are CALLED. A conversion set
   // somewhere else entirely still offered "JESUS CHRIST!"; the numbers behind
   // each rung stay the game's (see the schema's header).
@@ -295,6 +311,7 @@ export function buildMod(modDir, catalog) {
   const modTalents = talents?.talents ?? {};
   const modCompanions = companions?.companions ?? {};
   const modSets = sets?.sets ?? {};
+  const modScripts = scripts?.scripts ?? {};
   const modDifficulties = difficulties?.voices ?? {};
   const modCutscenes = cutscenes?.cutscenes ?? {};
   const modThoughts = thoughts?.thoughts ?? {};
@@ -317,12 +334,17 @@ export function buildMod(modDir, catalog) {
     Object.keys(modCutscenes).length +
     Object.keys(modThoughts).length +
     Object.keys(modStoryItems).length +
-    Object.keys(modQuests).length;
+    Object.keys(modQuests).length +
+    // A RULES-ONLY mod is a real mod, and a valuable one — "the XP curve is
+    // twice as steep and the horde is a quarter tougher" adds nothing to the
+    // game's contents and changes the whole of how it plays.
+    Object.keys(modScripts).length;
   if (adds === 0) {
     fail(
       "a mod must add at least one level, map blueprint, enemy, item, sound, " +
-        "track, powerup, talent, companion, cutscene, thought, story item or " +
-        "quest — a bundle of nothing would install and do nothing at all",
+        "track, powerup, talent, companion, cutscene, thought, story item, " +
+        "quest or rule script — a bundle of nothing would install and do " +
+        "nothing at all",
     );
   }
 
@@ -547,6 +569,23 @@ export function buildMod(modDir, catalog) {
     errors.push(...prefix(res.errors, "sets.yaml"));
     warnings.push(...prefix(res.warnings, "sets.yaml"));
   }
+  // THE RULES a mod ships, through the game's own Lua compiler (see
+  // `asset-tools/script-schema.mjs`). This is the only content kind whose
+  // validator RUNS what it is checking — it parses the chunk and loads its top
+  // level in an empty sandbox — because a scripting hook's failures are
+  // otherwise all silent: a typo'd hook name is a file that quietly does
+  // nothing for the rest of a campaign, and the shipped rule standing in for it
+  // looks exactly like a mod that "didn't work".
+  //
+  // An unknown export is a WARNING here rather than an error (unlike the
+  // shipped catalog), because a mod may legitimately carry a helper the engine
+  // does not call — but it is named, because nine times in ten it is a typo.
+  for (const { id, source } of scripts?.entries ?? []) {
+    const res = validateScript(id, source, { shipped: false });
+    errors.push(...res.errors);
+    warnings.push(...res.warnings);
+  }
+
   // And the other direction: a `rarity: set` piece with no kit grants nothing
   // and reads as a bug in the mod rather than as a missing file.
   {
@@ -819,6 +858,11 @@ export function buildMod(modDir, catalog) {
       // The KITS a mod's green pieces belong to. `{ id → SetDef }`, exactly the
       // shape `registerDefs({ sets })` takes.
       sets: modSets,
+      // The RULES — `{ id → { id, source } }`, exactly the shape
+      // `registerDefs({ scripts })` takes. The SOURCE travels, not a compiled
+      // form: the VM parses at load, once per run, and shipping an AST would
+      // freeze the interpreter's internal shape into a published bundle.
+      scripts: modScripts,
       // What the ladder's rungs are CALLED under this mod — a partial
       // `{ rung → { name?, tagline? } }` the page folds onto the shipped defs,
       // never a replacement for them.

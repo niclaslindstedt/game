@@ -3392,5 +3392,27 @@
     "weaponDry",
     "wellDeath",
     "wellSwallowed"
-  ]
+  ],
+  "scriptHooks": {
+    "combat": [
+      "mob_armor_reduction",
+      "weapon_damage"
+    ],
+    "loot": [
+      "drop_chance",
+      "magic_find_factor",
+      "tier_chance"
+    ],
+    "menace": [
+      "mob_hp_level_factor",
+      "mob_level",
+      "overkill_efficiency"
+    ],
+    "progression": [
+      "mob_xp",
+      "stat_diminish",
+      "xp_cap_multiplier",
+      "xp_to_level_up"
+    ]
+  }
 }

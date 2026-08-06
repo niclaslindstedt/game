@@ -248,9 +248,29 @@ escort.ts` walks the people an escort errand puts on the field, and
   STEERS: a tree of what a speaker says and what the hero may say back, opened
   by tapping a neutral mob and frozen in its own `talk` phase. A branch may set
   a run FLAG, provoke the speaker, hand over a quest piece, or move to another
-  node — and nothing else, because a mod ships these files and there is
-  deliberately no scripting hook. The FLAGS (`GameState.questFlags`) are the one
-  thing a branch leaves behind for the rest of the game to read.
+  node — and nothing else. A conversation is DATA even though a mod may now ship
+  Lua (`docs/scripting.md`): the scripting seam answers a formula's question, it
+  is not a place to hang a behaviour off, and a branch that could run code would
+  be a second, unbounded way for a talk to change the world. The FLAGS
+  (`GameState.questFlags`) are the one thing a branch leaves behind for the rest
+  of the game to read.
+- **`src/game/script/` + `src/lib/lua/`** — THE RULES THE ENGINE HANDS OUT.
+  Twelve formulas (the XP curve, what a kill pays, the horde's hp and level, the
+  drop chance, the rarity roll, weapon damage, mob armor) are authored in
+  `content/scripts/*.lua` and called through a sandboxed Lua VM, so a total
+  conversion changes how the game WORKS rather than only what is in it. The
+  split is four modules: `src/lib/lua/` is the VM (generic — lexer, parser, tree
+  walker, a stdlib whose absent half IS the security model); `script/catalog.ts`
+  is an IMPORT-FREE LEAF holding what a mod registered, for the same reason
+  `flags.ts` and `mapgen/blueprints.ts` are leaves — `registerDefs` is reachable
+  from the startup path and the 200 KB budget has no room for an interpreter, so
+  what a mod registers is SOURCE TEXT and the compile happens on the first hook
+  call, inside a run; `script/env.ts` builds the frozen `game.config` /
+  `game.balance` / `game.run` views; `script/host.ts` resolves a hook, contains
+  its failures (a broken override falls back to the file it overrode and reports
+  itself once) and memoizes the calls that read nothing but their arguments.
+  `script/bindings.ts` is the ONLY place the rest of the engine touches any of
+  it. → `docs/scripting.md`
 - **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its

@@ -11,6 +11,12 @@ import { XP_TO_NEXT, XP_TUNING } from "../generated/leveling.ts";
 import { LEVELING, STATS, XP_CAP } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
+import {
+  hookMobXp,
+  hookStatDiminish,
+  hookXpCapMultiplier,
+  hookXpToLevelUp,
+} from "./script/bindings.ts";
 import { chosenStatPointsThrough, statPointsAt } from "./stat-points.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Difficulty, StatName } from "./types/index.ts";
@@ -115,9 +121,11 @@ export function statCap(level: number): number {
  */
 export function diminishStat(points: number, level: number): number {
   const cap = statCap(level);
-  if (points <= cap) return points;
-  const over = points - cap;
-  return cap + over / (1 + STATS.statTaper * over);
+  return hookStatDiminish(points, cap, () => {
+    if (points <= cap) return points;
+    const over = points - cap;
+    return cap + over / (1 + STATS.statTaper * over);
+  });
 }
 
 /**
@@ -174,19 +182,21 @@ export { chosenStatPointsThrough, statPointsAt };
  * proportionally more.
  */
 export function mobLevelXp(mlvl: number, playerLevel: number): number {
-  // The compounding base is CLAMPED a few levels above the hero (WoW-style):
-  // a far-above mob pays as a (hero + clamp)-level mob times the capped
-  // above-level bonus, so cross-level kills can't power-level the hero.
-  const baseLevel = Math.min(
-    Math.max(1, mlvl),
-    Math.max(1, playerLevel) + LEVELING.xpAboveClampLevels,
-  );
-  return (
-    LEVELING.refMobHp *
-    Math.pow(1 + LEVELING.mobXpGrowthPerLevel, baseLevel - 1) *
-    LEVELING.xpPerHp *
-    levelDiffXpMult(mlvl, playerLevel)
-  );
+  return hookMobXp(mlvl, playerLevel, () => {
+    // The compounding base is CLAMPED a few levels above the hero (WoW-style):
+    // a far-above mob pays as a (hero + clamp)-level mob times the capped
+    // above-level bonus, so cross-level kills can't power-level the hero.
+    const baseLevel = Math.min(
+      Math.max(1, mlvl),
+      Math.max(1, playerLevel) + LEVELING.xpAboveClampLevels,
+    );
+    return (
+      LEVELING.refMobHp *
+      Math.pow(1 + LEVELING.mobXpGrowthPerLevel, baseLevel - 1) *
+      LEVELING.xpPerHp *
+      levelDiffXpMult(mlvl, playerLevel)
+    );
+  });
 }
 
 /**
@@ -284,7 +294,21 @@ export function xpBoostMultiplier(player: { xpBoostMs?: number }): number {
 export function xpToLevelUp(level: number, difficulty?: Difficulty): number {
   const l = Math.max(1, level);
   const xp = XP_TO_NEXT[Math.min(l, XP_TO_NEXT.length) - 1] ?? 1;
-  return Math.round(xp * endgameSteepenMult(l) * tierLevelCostMult(difficulty));
+  return hookXpToLevelUp(l, xp, costTier(difficulty), () =>
+    Math.round(xp * endgameSteepenMult(l) * tierLevelCostMult(difficulty)),
+  );
+}
+
+/**
+ * A difficulty's LEVELING COST TIER: its rung above the three bottom lanes
+ * (`difficultyDef.index − 3`, floored at 0 — easy/medium/hard share tier 0,
+ * nightmare 1, jesus 2). Resolved here rather than inside the script because it
+ * is a lookup into the difficulty catalog, and a script is handed values, never
+ * catalogs. No difficulty (the bare curve — the companion and derivation reads)
+ * is tier 0.
+ */
+function costTier(difficulty?: Difficulty): number {
+  return difficulty ? Math.max(0, difficultyDef(difficulty).index - 3) : 0;
 }
 
 /**
@@ -352,7 +376,9 @@ export function xpLevelCap(levelId: string, difficulty: Difficulty): number {
  * global `LEVELING.maxLevel` is the only true level ceiling.
  */
 export function xpCapMultiplier(level: number, cap: number): number {
-  const over = level - (cap - XP_CAP.fadeLevels);
-  if (over <= 0) return 1;
-  return Math.max(XP_CAP.floor, Math.pow(XP_CAP.softCapDecay, over));
+  return hookXpCapMultiplier(level, cap, () => {
+    const over = level - (cap - XP_CAP.fadeLevels);
+    if (over <= 0) return 1;
+    return Math.max(XP_CAP.floor, Math.pow(XP_CAP.softCapDecay, over));
+  });
 }

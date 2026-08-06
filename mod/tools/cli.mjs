@@ -351,6 +351,7 @@ function compile() {
       [Object.keys(b.cutscenes ?? {}).length, "scene"],
       [Object.keys(b.thoughts ?? {}).length, "thought"],
       [Object.keys(b.storyItems ?? {}).length, "story item"],
+      [Object.keys(b.scripts ?? {}).length, "rule script"],
     ]
       .filter(([n]) => n > 0)
       .map(([n, one]) => fmt(n, one));

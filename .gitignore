@@ -96,3 +96,10 @@ native/*.p8
 # `.agent/`; these plural/runtime directories are materialized by coding tools.
 .agents/
 .codex/
+
+# The Lua VM compiled for the SHIPPED mod compiler (scripts/build-lua.mjs) — the
+# desktop shell's main process has no TypeScript, so the validator reads this
+# instead of src/lib/lua/. Build output like src/generated/; regenerated, never
+# committed.
+mod/tools/lua-vm/
+mod/tools/tsconfig.lua-vm.json

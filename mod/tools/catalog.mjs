@@ -41,6 +41,7 @@ const OUT = path.join(repoRoot, "mod", "catalog.json");
 // Import the def catalogs DIRECTLY rather than through @game/core, which pulls
 // the level registry and with it every map in the game — the same bootstrap
 // rule scripts/generate-levels.mjs follows.
+const { HOOKS } = await import(engine("src/game/script/hooks.ts"));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
@@ -298,6 +299,21 @@ const catalog = {
   sounds: shippedSoundIds(),
   music: shippedMusicIds(),
   events: emittedEvents(),
+  // THE RULES a mod may take over: script file → the hooks that file owns.
+  // Not an id set either — it is the shape of the scripting seam, and it is in
+  // here for the same reason `talentProcs` is: the mod compiler runs in the
+  // shipped app's main process with no TypeScript to import `hooks.ts` from,
+  // and a second list of hook names would drift inside a release. Carries no
+  // numbers and no bodies — a mod may NAME a rule; the shipped formula for it
+  // is in `content/scripts/`, which travels in the SDK.
+  scriptHooks: Object.fromEntries(
+    [...new Set(HOOKS.map((h) => h.script))]
+      .sort()
+      .map((script) => [
+        script,
+        sorted(HOOKS.filter((h) => h.script === script).map((h) => h.hook)),
+      ]),
+  ),
 };
 
 const body = `${JSON.stringify(catalog, null, 2)}\n`;

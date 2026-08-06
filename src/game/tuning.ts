@@ -178,6 +178,20 @@ const tuning: BalanceTuning = { ...BALANCE_TUNING_DEFAULTS };
 export const BALANCE: Readonly<BalanceTuning> = tuning;
 
 /**
+ * Bumped on every write to the knobs above.
+ *
+ * It exists for the SCRIPT host, which memoizes a hook's answer when the call
+ * did not read the run (see `script/host.ts`) — and a hook's answer routinely
+ * depends on a knob (`gearQuality` scales the whole rarity roll). Without an
+ * epoch to key the memo on, moving a slider on the DEVELOPER page would leave
+ * the old answer cached and the page would appear to do nothing.
+ */
+let epoch = 0;
+export function balanceEpoch(): number {
+  return epoch;
+}
+
+/**
  * Apply developer balance multipliers (partial — omitted knobs keep their
  * current value). Non-finite values are ignored and the rest clamped to
  * [0, 100], so a corrupt store can never wedge the simulation. Takes effect
@@ -191,6 +205,7 @@ export function setBalanceTuning(patch: Partial<BalanceTuning>): void {
     if (typeof value !== "number" || !Number.isFinite(value)) continue;
     tuning[key] = clamp(value, TUNING_MIN, TUNING_MAX);
   }
+  epoch++;
 }
 
 /** The current multipliers, as a defensive copy (UI/readout use). */
@@ -203,4 +218,5 @@ export function getBalanceTuning(): BalanceTuning {
  * teardown. */
 export function resetBalanceTuning(): void {
   Object.assign(tuning, BALANCE_TUNING_DEFAULTS);
+  epoch++;
 }
