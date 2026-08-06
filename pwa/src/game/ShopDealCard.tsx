@@ -205,8 +205,11 @@ export function ShopDealCard({
     top: pos?.top ?? anchor.top,
     visibility: pos ? ("visible" as const) : ("hidden" as const),
   };
-  // The whole card swallows its own presses: the panel underneath clears the
-  // selection on any press that misses a cell, and this card is a miss.
+  // The whole card swallows its own presses so nothing under it reads them as
+  // a press on the counter. (The DISMISS rule already spares the card — it
+  // keys on the `item-tooltip` class both branches below wear, not on
+  // propagation — but a portal's events still travel the React tree that
+  // rendered it, and the panel below has other handlers.)
   const swallow = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
 

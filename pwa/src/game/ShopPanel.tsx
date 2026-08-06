@@ -15,7 +15,7 @@
 // re-renders.
 
 import { localHero } from "./local-seat.ts";
-import { useCallback, useEffect, useState, type PointerEvent } from "react";
+import { useEffect, useState } from "react";
 
 import {
   abilityDef,
@@ -40,6 +40,7 @@ import {
 import { formatCoins } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
@@ -377,16 +378,16 @@ export function ShopPanel({
     setSelected({ ...pick, anchor });
   };
 
-  // Any press that misses a stall or bag cell puts the card away — the card
-  // itself swallows its own presses (see ShopDealCard), and the footer's own
-  // buttons still fire because this only clears a selection, never preventDefault.
-  const dismissOnMiss = useCallback((event: PointerEvent) => {
-    if (
-      !(event.target as HTMLElement).closest(".shop-stall-item, .shop-bag-cell")
-    ) {
-      setSelected(null);
-    }
-  }, []);
+  // Any press that misses the card, a stall row or a bag cell puts the card
+  // away — the shared rule every floating card in the game dismisses by, bound
+  // above the whole window so a press on the backdrop counts too (see
+  // use-outside-press.ts). The footer's own buttons still fire on the same
+  // press: this only clears a selection, it never preventDefaults.
+  useDismissOnOutsidePress(
+    selected !== null,
+    ".item-tooltip, .shop-stall-item, .shop-bag-cell",
+    () => setSelected(null),
+  );
 
   // ESCAPE (and the pad's B, which arrives as one) unwinds one layer at a time
   // — the CARD first, then an armed IDENTIFY mode, and the shop only once
@@ -499,7 +500,7 @@ export function ShopPanel({
 
   return (
     <div className="game-overlay" role="presentation">
-      <div className="inventory-panel shop-panel" onPointerDown={dismissOnMiss}>
+      <div className="inventory-panel shop-panel">
         {/* Header: who you're trading with — his FACE and his name — and the
             purse. The portrait is the level's own merchant sprite (he dresses
             for the venue), shown the way a quest giver's is, so the counter

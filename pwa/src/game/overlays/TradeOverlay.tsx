@@ -23,6 +23,7 @@ import {
 import { formatCoins } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 
 import type { GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -62,6 +63,13 @@ export function TradeOverlay({
   const me = localHero(state);
   const trade = tradeOf(state, seat);
   const [inspect, setInspect] = useState<Inspect | null>(null);
+  // Any press that misses both the card and a cell puts the card away — the
+  // same rule the bag and the counter dismiss by. Bound above the whole window
+  // rather than on the panel, so a press on the backdrop counts too and a press
+  // on the PORTALED card never reads as a miss (see use-outside-press.ts).
+  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, .inv-cell", () =>
+    setInspect(null),
+  );
   // The screen can outlive the table by a frame (a cancel or a settle lands in
   // a snapshot before the lowered screen does the render after). Draw nothing
   // rather than a window over a table that is gone.
@@ -86,15 +94,7 @@ export function TradeOverlay({
 
   return (
     <div className="game-overlay" role="presentation">
-      <div
-        className="inventory-panel trade-panel"
-        onPointerDown={(e) => {
-          // A tap past the cells puts the floating card away, shop-style.
-          if (!(e.target as HTMLElement).closest(".inv-cell")) {
-            setInspect(null);
-          }
-        }}
-      >
+      <div className="inventory-panel trade-panel">
         <div className="trade-header">
           <PixelText font={font} text="TRADE" scale={3} color="#ffd75e" />
           <PixelText

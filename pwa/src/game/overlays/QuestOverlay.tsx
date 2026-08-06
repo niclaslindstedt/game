@@ -44,6 +44,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { wrapPage } from "@ui/lib/text-pager.ts";
 import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
+import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { ItemIcon } from "../ItemCard.tsx";
@@ -163,10 +164,26 @@ export function QuestOverlay({
   // The reward piece whose card is open, and the slot it is anchored to. The
   // bag's own tooltip draws it, so a quest reward is read on exactly the screen
   // the player reads every other piece of gear on.
+  //
+  // A card is raised one of TWO ways and they dismiss differently. A HOVER
+  // raises a loose one that follows the mouse off the slot; a PRESS PINS it,
+  // and a pinned card stays up until something puts it away — the same press
+  // again (a toggle), or a press anywhere that is not the card. That split is
+  // what a touch screen needs: it has no hover to end, so before this the card
+  // a tap raised had nothing at all that lowered it — the enter/leave pair a
+  // tap synthesises around its own press fired in the wrong order (leave, then
+  // the click that re-raised it), which is why dismissing it looked possible
+  // but never reproduced.
   const [inspect, setInspect] = useState<{
     item: Equipment;
     anchor: DOMRect;
+    pinned: boolean;
   } | null>(null);
+  useDismissOnOutsidePress(
+    inspect !== null,
+    ".item-tooltip, .quest-reward-slot",
+    () => setInspect(null),
+  );
   const cursor =
     cursorState.key === listKey
       ? Math.min(cursorState.index, Math.max(0, rowCount - 1))
@@ -680,21 +697,38 @@ export function QuestOverlay({
                           picking && i === rewardPick ? " selected" : ""
                         }${tierGlowClass(item.tier)}`}
                         aria-label={`quest-reward-${item.id}`}
-                        onPointerEnter={(e) =>
-                          setInspect({
-                            item,
-                            anchor: e.currentTarget.getBoundingClientRect(),
-                          })
-                        }
-                        onPointerLeave={() => setInspect(null)}
-                        onClick={(e) => {
-                          // A press always SHOWS the piece (the only way in on
-                          // a touch screen, which has no hover) and, at the
-                          // handover, takes it.
-                          setInspect({
-                            item,
-                            anchor: e.currentTarget.getBoundingClientRect(),
-                          });
+                        // HOVER raises a loose card, and only a loose one: a
+                        // touch tap synthesises an enter/leave pair around its
+                        // own press, so letting those through is what made the
+                        // card blink. A pinned card ignores both.
+                        onPointerEnter={(e) => {
+                          if (e.pointerType === "touch") return;
+                          const anchor =
+                            e.currentTarget.getBoundingClientRect();
+                          setInspect((prev) =>
+                            prev?.pinned
+                              ? prev
+                              : { item, anchor, pinned: false },
+                          );
+                        }}
+                        onPointerLeave={(e) => {
+                          if (e.pointerType === "touch") return;
+                          setInspect((prev) => (prev?.pinned ? prev : null));
+                        }}
+                        // A PRESS TOGGLES: it pins the piece's card (the only
+                        // way in on a touch screen, which has no hover), and a
+                        // second press on the same piece puts it away again.
+                        onPointerDown={(e) => {
+                          const anchor =
+                            e.currentTarget.getBoundingClientRect();
+                          setInspect((prev) =>
+                            prev?.item.id === item.id
+                              ? null
+                              : { item, anchor, pinned: true },
+                          );
+                        }}
+                        // At the handover the press also TAKES the piece.
+                        onClick={() => {
                           if (picking) onChooseReward(i);
                         }}
                       >
