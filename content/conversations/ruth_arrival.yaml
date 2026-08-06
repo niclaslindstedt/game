@@ -1,96 +1,21 @@
-# RUTH ARRIVES — the meeting the errand list used to skip.
+# RUTH ARRIVES — the meeting, and nothing else.
 #
 # She is Ada's mother and she has just driven out here on a midnight phone call
-# that would not say her daughter's name. Everything she asks the hero for
-# afterwards comes out of this one talk, so it is played BEFORE her slate opens
-# (`QuestGiverDef.intro`, retired by `ruth_met`) rather than folded into an
-# offer page: a person handing a stranger three errands is a dispenser, and a
-# person who tells you why she is standing in your garage is somebody you then
-# want to do them for.
+# that would not say her daughter's name. This is played BEFORE her slate opens
+# (`QuestGiverDef.intro`, retired by `ruth_met`) so that the first thing she is
+# to the player is a person rather than a dispenser.
 #
-# NOTHING HERE CAN BE LOST, AND THAT IS DELIBERATE. Every other tree in the
-# game has a branch that shuts a door, because every other tree is somebody
-# with a reason not to help. Ruth has no such reason — she is the one person in
-# the game on the hero's side without being asked — so what the branches buy is
-# WHICH of her the player meets: the one who wants the company's phone script
-# repeated back, the one who will not be sent home, or the one who is already
-# past all of it and wants the job started. The three converge on the same ask,
-# and she is never once scared for Ada on any of them.
+# SHE ASKS FOR NOTHING HERE, AND THAT IS THE POINT. An earlier draft spent nine
+# nodes setting up the errands she would hand over later, and the meeting read
+# as a menu with a preamble. Two beats — she is in, and he should go — is the
+# whole of what she drove out to say; every errand introduces itself in its own
+# offer, where the player is actually standing when it matters.
 start: greet
-reentry:
-  # Walked away mid-talk: she does not arrive twice. Come back and she is
-  # standing where the conversation stopped, on the part she drove out to say.
-  - requires: [ruth_heard]
-    node: ask
 nodes:
   greet:
     say:
       - I LET MYSELF IN. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
-      - THEY RANG AT MIDNIGHT. I CAME STRAIGHT OUT.
+      - GO AND FIND HER. I'LL BE HERE.
     choices:
-      - text: WHO RANG?
-        sets: [ruth_heard]
-        goto: who
-      - text: YOU DIDN'T HAVE TO COME.
-        sets: [ruth_heard]
-        goto: stay
       - text: I'M GOING AFTER HER.
-        sets: [ruth_heard]
-        goto: going
-  who:
-    say:
-      - A WOMAN WITH A SCRIPT. 'AN INCIDENT INVOLVING A NON-EMPLOYEE.' NOT HER NAME.
-      - THEN A CASE NUMBER. HAD I ANY QUESTIONS.
-    choices:
-      - text: WHAT DID YOU ASK?
-        goto: asked
-      - text: SO YOU DROVE HERE.
-        goto: ask
-  asked:
-    say:
-      - HER NAME. THE WOMAN WASN'T PERMITTED TO CONFIRM IT.
-      - SO I PUT THE PHONE DOWN AND DROVE OUT HERE INSTEAD.
-    choices:
-      - text: I'LL GET HER NAME OFF THEM.
-        goto: ask
-  stay:
-    say:
-      - HOME IS A PHONE ON A TABLE. I'VE HAD FOUR HOURS OF THAT.
-      - I'D RATHER SIT WITH THE ENGINE PARTS. THEY'RE GOING SOMEWHERE.
-    choices:
-      - text: WERE YOU SCARED?
-        goto: scared
-      - text: STAY AS LONG AS YOU LIKE.
-        goto: ask
-  scared:
-    say:
-      - NO. NOT FOR HER. I RAISED HER.
-      - I'VE BEEN SORRY FOR WHOEVER HAS HER SINCE MIDNIGHT.
-    choices:
-      - text: I'LL FIND OUT WHO THAT IS.
-        goto: ask
-  going:
-    say:
-      - I KNOW. THE SHIP'S A PART SHORT AND YOU'RE GOING ANYWAY.
-      - I'VE NEVER HAD TO ARGUE WITH YOU ABOUT THAT ONE.
-    choices:
-      - text: YOU COULD WAIT AT HOME.
-        goto: stay
-      - text: I'LL BRING HER HOME.
-        goto: ask
-  ask:
-    say:
-      - SO. YOU'RE GOING WHERE I CAN'T, AND I WON'T SIT HERE USELESS.
-      - WHEN YOU'RE OUT THERE - BRING ME SOMETHING OF HERS.
-    choices:
-      - text: SOMETHING OF HERS?
-        goto: something
-      - text: I'LL BRING YOU SOMETHING.
-        sets: [ruth_met]
-  something:
-    say:
-      - NOT A REPORT. NOT A PHOTOGRAPH. SOMETHING SHE HELD.
-      - I'LL KNOW IT WHEN IT'S IN MY HAND.
-    choices:
-      - text: THEN I'LL GO AND LOOK.
         sets: [ruth_met]
