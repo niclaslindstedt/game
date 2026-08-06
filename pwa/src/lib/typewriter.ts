@@ -48,6 +48,21 @@ export function pauseAfter(text: string, i: number): number {
   }
 }
 
+/**
+ * How many PRINTED characters the first `count` of `text` holds — the index
+ * `onType` counts in (spaces and line breaks are silent). Recomputed when a
+ * held crawl re-arms, so the blip's every-other-character rhythm carries across
+ * the hold instead of restarting on the beat.
+ */
+export function countVisible(text: string, count: number): number {
+  let visible = 0;
+  for (let i = 0; i < count; i += 1) {
+    const ch = text[i];
+    if (ch !== " " && ch !== "\n") visible += 1;
+  }
+  return visible;
+}
+
 /** Does the viewer ask us to cut motion? Then print the whole page at once. */
 function prefersReducedMotion(): boolean {
   return (
@@ -72,11 +87,20 @@ export type TypewriterReveal = {
  * crawl begins again. `onType(visibleIndex, char)` fires once per printed
  * non-blank character, so the caller can voice the letter-print blip; spaces
  * and line breaks are silent.
+ *
+ * `opts.paused` HOLDS the crawl where it stands — for the screen a player
+ * raised over the scene (the pause menu, the bag on an arrival stare-down).
+ * Text kept printing behind those, blips and all, which is a scene played to
+ * nobody: the lines it revealed are read as the box comes back. Resuming picks
+ * up at the very character it stopped on, so nothing is re-typed and nothing
+ * is skipped.
  */
 export function useTypewriter(
   page: readonly string[],
   onType?: (visibleIndex: number, char: string) => void,
+  opts: { paused?: boolean } = {},
 ): TypewriterReveal {
+  const paused = opts.paused ?? false;
   const full = page.join("\n");
   // The viewer's motion preference, read once — a reduced-motion reader gets
   // the whole page immediately, no crawl, no blips.
@@ -93,10 +117,16 @@ export function useTypewriter(
   }
 
   // Keep the latest onType reachable from the timer without re-arming it when
-  // the caller passes a fresh closure each render.
+  // the caller passes a fresh closure each render. The revealed count rides
+  // along for the same reason the crawl needs it: a pause tears the timer
+  // effect down and a resume builds a new one, which has to start from where
+  // the last one stopped rather than from zero. Declared BEFORE the crawl
+  // effect so this sync always runs first in the same commit.
   const onTypeRef = useRef(onType);
+  const countRef = useRef(count);
   useEffect(() => {
     onTypeRef.current = onType;
+    countRef.current = count;
   });
 
   // skip() reaches the running reveal through a ref so its identity stays
@@ -106,8 +136,12 @@ export function useTypewriter(
 
   useEffect(() => {
     if (reduced || full.length === 0) return;
-    let i = 0;
-    let visible = 0;
+    // Where the last run of this effect left off (0 on a fresh page — the
+    // render-time reset above puts the count back and the sync effect above
+    // carries it here). `skip` must stay wired while held, so the arming below
+    // is the only thing a pause skips.
+    let i = Math.min(countRef.current, full.length);
+    let visible = countVisible(full, i);
     let timer = 0;
     let cancelled = false;
 
@@ -131,13 +165,18 @@ export function useTypewriter(
         timer = window.setTimeout(tick, pauseAfter(full, i - 1));
       }
     };
-    timer = window.setTimeout(tick, BASE_CHAR_MS);
+    if (!paused && i < full.length) {
+      timer = window.setTimeout(
+        tick,
+        i === 0 ? BASE_CHAR_MS : pauseAfter(full, i - 1),
+      );
+    }
 
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [full, reduced]);
+  }, [full, reduced, paused]);
 
   // Slice the revealed prefix back into per-row strings. The join/split on
   // "\n" round-trips the original rows: a prefix that stops mid-page yields

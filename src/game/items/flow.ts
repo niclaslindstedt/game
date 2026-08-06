@@ -253,15 +253,27 @@ export function closeInventory(player: Player): void {
 }
 
 /**
- * Open this hero's pause menu. Only possible mid-run with nothing else up —
- * end-of-run splashes and scenes hold the whole stage already. Solo it
- * freezes the world exactly as it always did (`partyBlocked`); in a party it
- * parks one hero, and the other seven play on.
+ * Can this hero raise the pause menu right now? Mid-run with nothing else up —
+ * and over an in-world DIALOGUE, the way the bag is lent the stage above. A
+ * scene can run for several pages, and the one control a player reaches for
+ * when something interrupts them is ESCAPE: with the menu withheld there, the
+ * only way out of a talking boss was to tap through the whole speech first (or
+ * background the tab, which auto-pauses through this same door). The rest of
+ * the phases keep the menu shut: an end-of-run splash, a cutscene and the
+ * briefing hold the whole stage already, and each has its own way out.
+ */
+export function canPauseGame(state: GameState, player: Player): boolean {
+  if (player.screen !== undefined) return false;
+  return state.phase === "playing" || state.phase === "dialogue";
+}
+
+/**
+ * Open this hero's pause menu (see `canPauseGame` for when that is allowed).
+ * Solo it freezes the world exactly as it always did (`partyBlocked`); in a
+ * party it parks one hero, and the other seven play on.
  */
 export function pauseGame(state: GameState, player: Player): void {
-  if (state.phase === "playing" && player.screen === undefined) {
-    player.screen = "paused";
-  }
+  if (canPauseGame(state, player)) player.screen = "paused";
 }
 
 /** Leave the pause menu and take the field back. */

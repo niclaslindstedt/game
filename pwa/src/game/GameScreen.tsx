@@ -25,6 +25,7 @@ import type { CSSProperties } from "react";
 import {
   runLevelDef,
   canOpenInventory,
+  canPauseGame,
   debugDetonateNuke,
   debugLevelUpFx,
   error,
@@ -739,7 +740,8 @@ export function GameScreen({
     // this effect (see `autoplayedRef`): the developer/playtest bot and the demo
     // are settled with the run, the paid AUTO PILOT is engaged and disengaged
     // while it is up, so the ride is read at the moment of asking.
-    autoplayedRef.current = () => bot !== null || demo || state.autopilot.active;
+    autoplayedRef.current = () =>
+      bot !== null || demo || state.autopilot.active;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
     // screen always did; a net driver hands the input to a session server and
     // applies what comes back. Which one is decided once, at the top of the
@@ -876,10 +878,11 @@ export function GameScreen({
     // Pause raises the local hero's `paused` screen (which halts the world
     // solo) and the music together; resume lifts both. Music truly resumes in
     // place — the chiptune player keeps its position across the pause. Guarded
-    // so it only toggles mid-run, never over an intro/end splash or another
-    // open screen.
+    // by the engine's own rule (`canPauseGame`) so it only opens where the menu
+    // is allowed — mid-run or over an in-world dialogue, never over an
+    // intro/end splash or another open screen.
     const pause = (userInitiated = false) => {
-      if (!fieldLive(state)) return;
+      if (!canPauseGame(state, localHero(state))) return;
       // A hand-opened pause latches so the bot's input loop won't clear it (an
       // auto-pause from tab blur passes userInitiated=false and stays clearable).
       if (userInitiated) userPausedRef.current = true;
