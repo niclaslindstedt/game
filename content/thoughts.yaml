@@ -10,7 +10,10 @@
 # `src/game/defs/thoughts.ts`, which owns the TYPES. Adding a beat is an entry
 # here plus a reference to its id from a level — no engine changes.
 #
-#   speaker      name shown in the dialogue header — the hero's own voice ("ME")
+#   speaker      name shown in the dialogue header — always "{HERO}", the name
+#                the player gave this character (see src/game/hero-name.ts);
+#                the same token may go INSIDE a line somebody says to him, and
+#                docs/game-content.md says who is allowed to
 #   portrait     portrait sprite family; the overlay draws frame `<portrait>_0`
 #   pages        what he thinks: one entry per page, and a page is ONE string —
 #                the box flows it into whatever column it has (a second string
@@ -35,7 +38,7 @@ thoughts:
   # and the seam are two chapters away and must not be mentioned. Portrait is
   # "hero" (unsuited — he is at home). Read once, ever.
   garage_take_the_car:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT.
@@ -48,7 +51,7 @@ thoughts:
   # once, ever, and never while he is at the wheel (the car crosses this same
   # threshold on its way out).
   garage_on_foot:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
@@ -62,7 +65,7 @@ thoughts:
   # home), and unlike every other pinned beat it REPLAYS: it answers a tap, so
   # a player who tries the ship again next chapter gets the same answer.
   garage_ship_unfinished:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
@@ -73,7 +76,7 @@ thoughts:
   # rooms later. Portrait is "hero" (plain clothes) — the EVA suit is loot
   # he hasn't found yet; the overlay resolves it live regardless.
   goodco_staff:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT.
@@ -99,7 +102,7 @@ thoughts:
   # machine walked HIM out of the same door — which is why the swing at the
   # end costs something.
   goodco_first_blow:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     voice:
       speaker: LAB SCIENTIST
@@ -112,9 +115,13 @@ thoughts:
   # Blow two. The refusal gets louder — and the line that has to land is that
   # he has never hit anyone, because everything he does for the rest of the
   # campaign is measured against it. The scientist's answer is worse than
-  # not recognising him: he does, and it changes nothing.
+  # not recognising him: he does, and it changes nothing. HE SAYS THE NAME
+  # (`{HERO}` — the one the player entered on the NEW GAME screen), which is
+  # the whole reason this beat is the campaign's first use of it: a stranger
+  # would have swung at anybody, and a man who says your name and swings
+  # anyway is what makes this floor a horde of people rather than of monsters.
   goodco_second_blow:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     voice:
       speaker: LAB SCIENTIST
@@ -122,7 +129,7 @@ thoughts:
     pages:
       - - HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
       - them:
-          - I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
+          - I KNOW WHO YOU ARE, {HERO}. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
       - - STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START.
   # Blow three: he hits back, and THIS is the beat that ARMS his weapon and
   # starts the game. It is an apology, not a boast — the old "good thing I
@@ -130,7 +137,7 @@ thoughts:
   # joke the difficulty ladder writes for us: on EASY the thing he answers
   # with is grandpa's sawed-off, and the night shift finds that out at once.
   goodco_armed:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     voice:
       speaker: LAB SCIENTIST
@@ -147,7 +154,7 @@ thoughts:
   # the door — his own story in miniature. Now one is between him and Ada,
   # and the tables turn.
   goodco_successor:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE.
@@ -156,7 +163,7 @@ thoughts:
   # Sighting the first wisp on the moon: the dead walking the dust is the
   # hero's first proof the broadcast history is a lie — somebody knew.
   moon_wisp_sight:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - IT CAME OUT OF THE DUST. NO SUIT. NO SHIP. NO FOOTPRINTS.
@@ -165,7 +172,7 @@ thoughts:
   # `after` gate keeps this from ever playing first) — the dead can fall,
   # and that will have to be enough.
   moon_wisp_kill:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - OKAY. THEY GO DOWN LIKE ANYTHING ELSE. THAT'LL HAVE TO DO.
@@ -173,7 +180,7 @@ thoughts:
   # HQ have followed the trail all the way up here — the conspiracy isn't just
   # shipping Ada moonward, it built a garrison to receive her.
   moon_successor:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - A GOODCO UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST.
@@ -182,14 +189,14 @@ thoughts:
   # Killing the first scout rover on Mars: the tire tracks say the colony
   # has been running for years while everyone watched the moon.
   mars_rover:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM.
       - - THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF GOODCO. FIGURES.
   # Killing the first FEMBOT: the hero's read on the colony's... amenities.
   mars_fembot:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - ...IT BLEW ME A KISS. THE ROBOT. IN THE NIGHTGOWN. IT BLEW ME A KISS AND FIRED.
@@ -198,7 +205,7 @@ thoughts:
   # Sighting the first voidling in the rift: the hero's arrival read — he
   # is standing on nothing, and the nothing holds.
   rift_arrival:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - I'M WALKING ON NOTHING. NO GROUND. NO SKY. AND MY BOOTS DON'T SEEM TO CARE.
@@ -206,14 +213,14 @@ thoughts:
   # The first asteroid to land on the hero in the rift: the rock rain has
   # teeth, and he only learns it the hard way. Fires once, on the strike.
   rift_asteroid:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - SOMETHING CAME OUT OF THE DARK AND HIT LIKE A TRUCK. A ROCK. A FLYING ROCK.
       - - BETTER WATCH OUT FOR THESE ASTEROIDS. THEY HURT.
   # Downing the first graviton: the physics of this place, in one grudge.
   rift_graviton:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - THAT LITTLE THING WEIGHED MORE THAN MY SHIP. SPACE IN HERE BENDS AROUND A GRUDGE.
@@ -224,7 +231,7 @@ thoughts:
   # screen. Portrait is "hero" — the park is habitable, the EVA suit is
   # stowed (the level runs `heroSuited: false`).
   boot_hill_arrival:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - A COWBOY JUST TIPPED ITS HAT AT ME. SERVOS IN THE WRIST. TICKING IN THE JAW.
@@ -233,7 +240,7 @@ thoughts:
   # his job back home, wearing spurs. The two-part beat orders itself with
   # `after` (see the town, then down a hand).
   boot_hill_hosts:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'
@@ -242,7 +249,7 @@ thoughts:
   # security state didn't collapse with the economy, it just changed
   # employers and postcodes. Wide drop-in radius, like the other surveys.
   bunker_arrival:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - BLACK SUITS. EARPIECES. THE ALPHABET, ALL DOWN HERE, DRAWING A PRIVATE SALARY.
@@ -250,7 +257,7 @@ thoughts:
   # Sighting the first VACUUM BOT, once the arrival read has landed: the
   # housekeeping gag — even the cleaning staff got automated, and armed.
   bunker_vacuum:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - A VACUUM ROBOT. WITH A TASER. THE FLOORS ARE SPOTLESS AND HOSTILE.
@@ -259,7 +266,7 @@ thoughts:
   # landed: the place has no address, but it has a border patrol — and for
   # once, the hero really is the illegal immigrant.
   bunker_ice:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - ICE. IN A BUNKER OUTSIDE THE UNIVERSE. STILL CHECKING PAPERS.
@@ -273,31 +280,31 @@ thoughts:
   # so it never reads like a broken record. Every one lands the same two beats
   # — these fights give me nothing now / go find Ada — in a different mood.
   cap_pathetic_1:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE.
-      - - QUIT FARMING SCRAP, BUILDER. ADA'S STILL OUT THERE.
+      - - QUIT FARMING SCRAP, {HERO}. ADA'S STILL OUT THERE.
   cap_pathetic_2:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - PATHETIC. THEY LINE UP AND FALL OVER. I COULD DO THIS IN MY SLEEP.
       - - EVERY MINUTE HERE IS A MINUTE ADA DOESN'T HAVE. MOVE.
   cap_pathetic_3:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - I'VE WRUNG THIS PLACE DRY. NOTHING LEFT TO PROVE HERE.
       - - STOP CIRCLING. THE ONLY THING THAT MATTERS IS FINDING HER. GO.
   cap_pathetic_4:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHEN DID THIS GET EASY? THEY DON'T EVEN REGISTER. JUST NOISE ON THE WAY.
       - - ENOUGH WARMUP. ADA FIRST. ALWAYS ADA.
   cap_pathetic_5:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - I'M SWATTING FLIES AND CALLING IT PROGRESS. THIS ISN'T GETTING ME CLOSER.
@@ -313,84 +320,84 @@ thoughts:
   # meets both. Portraits follow the map (plain clothes at HQ, the EVA suit
   # from the moon on) like every other beat.
   hellborn_tunguska:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - WHAT THE HELL IS THIS. THAT CAME OUT OF THE AIR. OUT OF NOTHING.
       - - IT'S BURNT ALL THE WAY THROUGH AND IT'S STILL WALKING.
       - - SOMETHING LANDED IN SIBERIA IN NINETEEN-OH-EIGHT AND THEY NEVER FOUND A CRATER. NOW I KNOW WHY.
   hellborn_investor:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: hero
     pages:
       - - IT HAS NO FACE. IT HAS A SEAL WHERE A FACE GOES, AND IT'S HOLDING A LEDGER.
       - - IT'S BEEN PAID EVERY TIME A MACHINE LEARNED A JOB AND A MAN WENT HOME.
       - - FOUR PLANETS, MAYBE MORE. IT'S HERE TO COLLECT ON THIS ONE.
   hellborn_pharaoh:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHAT THE HELL IS THIS. THAT'S A KING. THERE ARE NO KINGS ON THE MOON.
       - - THE DUST CAME OFF A GOLD MASK OLDER THAN CONTINENTS.
       - - THE WRECK UNDER TRANQUILITY ISN'T A WRECK. IT'S A LID. AND WE PLANTED A FLAG ON IT.
   hellborn_drowned:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - IT'S DRIPPING. UP HERE. THERE'S NO WATER ON THE MOON - THERE NEVER WAS.
       - - EXCEPT THERE WAS. NINE HUNDRED YEARS OF IT, AND HARBOURS, AND CREWS.
       - - THEY WENT DOWN WITH IT. THEY'RE STILL HOLDING THEIR BREATH.
   hellborn_olympus:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHAT THE HELL IS THIS. THAT'S NOT GOODCO. THAT'S NOT ANYBODY'S.
       - - IT'S BEEN DIGGING THIS PLANET SINCE BEFORE THE PLANET HAD A NAME.
       - - OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM.
   hellborn_shepherd:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - IT'S COUNTING. I CAN FEEL IT COUNTING ME. THE MARKS ON ITS HEAD KEEP MOVING.
       - - TWO MOONS AROUND A DEAD ROCK. THOSE AREN'T MOONS. THAT'S A FENCE.
       - - I'M INSIDE IT. I'VE BEEN INSIDE IT SINCE I LANDED.
   hellborn_vanishing:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHAT THE HELL IS THIS. THERE'S NOTHING INSIDE IT. IT'S THE SHAPE OF A HOLE.
       - - EVERYONE IN HERE FELL IN AFTER SOMETHING ELSE WENT FIRST. THIS WENT FIRST.
       - - IT MADE THE DOOR ADA WAS CARRIED THROUGH. IT'S BEEN WAITING FOR NOISE.
   hellborn_ancestor:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - THE LIZARDS BOUGHT MY GIRL. THIS THING IS WHAT THEY PRAY TO.
       - - THEY LEASE WORLDS AND TAKE A CUT. IT ATE ITS OUTRIGHT. SEVEN OF THEM.
       - - THE TRIBUTE ROAD EXISTS TO KEEP IT FED. ADA WAS ON THAT ROAD. GOD HELP THEM.
   hellborn_noon:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHAT THE HELL IS THIS. IT'S GOT THE SUN WHERE ITS FACE SHOULD BE.
       - - IT WANTS THE OTHER END OF THE STREET. IT'S WANTED IT SINCE BEFORE THIS STREET.
       - - A WORLD WITH NO SUNSET, AND NOBODY EVER SHOWED. SOMEBODY SHOULD.
   hellborn_ruin:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - STAKES AND WIRE AND A FLAG ON TOP. IT'S NOT ATTACKING. IT'S CLAIMING.
       - - EVERY FRONTIER THAT EVER RAN OUT OF WEST HAD THIS STANDING AT THE END OF IT.
       - - THEY BUILT THIS WHOLE COUNTY AVAILABLE. THEY RANG THE DINNER BELL.
   hellborn_saint:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - WHAT THE HELL IS THIS. THERE'S SOMEBODY IN THE ICE AND THE ICE IS WALKING.
       - - THE PERMAFROST HELD IT SINCE BEFORE THERE WAS PERMAFROST TO HOLD IT.
       - - THEY DIDN'T BUILD A BUNKER TO KEEP THINGS OUT. THEY POURED ONE OVER THIS.
   hellborn_deadhand:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - IT'S A HAND. JUST A HAND, WALKING, AND IT'S HOLDING A KEY DOWN.

@@ -796,6 +796,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   the player can equip a fitting weapon for the fight, and
   `closeInventory` hands the stage back to the speaker on the same page;
   every other scene (last words, thoughts, lore) stays read-only.
+- **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
+  it. The player names their character, and `{HERO}` is where a line means that
+  name: over his own pages in every box that speaks, and inside the handful of
+  lines whose speaker actually knows him. An import-free leaf, because the
+  engine's dialogue path, the app's four text overlays and the library's page
+  writer all resolve it. It is deliberately NOT engine state — a name changes
+  no tick, so it is neither a `RunParams` field nor anything on the wire, and
+  each viewer resolves it against the hero THEY are playing (which is the only
+  answer that works in a party). `docs/game-content.md` has the authoring rule.
 - **`src/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
   verdict (config `COMPANIONS`): a spareable unique (`EnemyDef.spareable`)
   beaten to 0 hp kneels and pauses the run in the `choice` phase (the

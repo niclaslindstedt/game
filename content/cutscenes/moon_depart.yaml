@@ -25,7 +25,7 @@ actors:
       sprite: the_flagbearer,
       at: { x: 56, y: 96 },
     }
-  - { id: hero, name: ME, sprite: hero_suit, at: { x: 96, y: 96 } }
+  - { id: hero, name: "{HERO}", sprite: hero_suit, at: { x: 96, y: 96 } }
   - { id: ship, sprite: ship, at: { x: 178, y: 100 } }
 beats:
   - { kind: fade, to: 1, ms: 0 }

@@ -31,7 +31,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { talkChoices, talkNode, type GameState } from "@game/core";
+import {
+  talkChoices,
+  talkNode,
+  withHeroName,
+  withHeroNameLines,
+  type GameState,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -75,10 +81,15 @@ export function TalkOverlay({
   onPick,
   onBlip,
   onClose,
+  heroName,
 }: {
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
+  /** The name the player gave this hero — what an authored `{HERO}` in a
+   * conversation resolves to (the people who ask him for things know him by
+   * it). */
+  heroName?: string;
   /** Page forward through the speaker's lines. */
   onAdvance: () => void;
   /** Take a branch — the index into the ENGINE's filtered choice list. */
@@ -123,10 +134,10 @@ export function TalkOverlay({
   const speech = useMemo(
     () =>
       wrapPage(
-        [...(node?.say ?? [])],
+        withHeroNameLines([...(node?.say ?? [])], heroName),
         colFontPx == null ? null : (line) => font.wrap(line, colFontPx),
       ),
-    [node, colFontPx, font],
+    [node, colFontPx, font, heroName],
   );
   const { rows, done, skip } = useTypewriter(speech, (visibleIndex) => {
     // Every other character — the same cadence the dialogue and quest boxes use.
@@ -261,7 +272,7 @@ export function TalkOverlay({
                   />
                 </span>
                 <PixelText
-                  text={choice.text}
+                  text={withHeroName(choice.text, heroName)}
                   font={font}
                   scale={TEXT_SCALE}
                   color={i === cursor ? "#ffd98a" : "#c8bda0"}

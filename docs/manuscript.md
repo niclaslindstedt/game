@@ -40,6 +40,28 @@ and the story comes out as an exchange rather than a speech. His reply pages
 are authored as `{ hero: [...] }` entries in the data (`EnemyDef.dialogue`)
 and transcribed here as **ME:** paragraphs.
 
+## The hero's name — `{HERO}`
+
+**The hero is called whatever the player named him**, and the game says it: the
+name is what the box prints over his own words, wherever he speaks — a pinned
+thought, a reply mid-stare-down, his half of a cutscene. He is transcribed here
+as **ME:** because that is who he is to himself and because this document has
+no player to ask; on the screen it is the name.
+
+He is also _spoken to_ by it, four times in the whole campaign. That scarcity is
+the effect: a name lands because almost nobody uses it. The four are the people
+who genuinely know the man — the LAB SCIENTIST who ate lunch beside him for six
+years, RUTH who has had a key to his garage as long as her daughter has, THE
+ARCHITECT who shared his bench, and THE BRO SUPERCORE, which has held his
+personnel file since it took his job. Nobody else gets it: not the horde, not
+the merchant, not a monster from another universe who has never met him.
+
+A line that names him writes the token **`{HERO}`** where the name goes, and
+every surface that draws authored text resolves it (`src/game/hero-name.ts`).
+It is transcribed verbatim below, braces and all, so the four lines are
+findable — and it is the same token a mod may write, since a mod's content
+compiles through the same schemas.
+
 ## How a page is written
 
 **A page is a PARAGRAPH, and the box breaks it — the author does not.** Every
@@ -148,7 +170,7 @@ through them. Every variation lands the same two beats — these fights give me
 nothing now / go find Ada. (`THOUGHT_DEFS` ids `cap_pathetic_1..5`; fired by
 `maybeCapThought`.)_
 
-1. THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE. // QUIT FARMING SCRAP, BUILDER. ADA'S STILL OUT THERE.
+1. THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE. // QUIT FARMING SCRAP, {HERO}. ADA'S STILL OUT THERE.
 2. PATHETIC. THEY LINE UP AND FALL OVER. I COULD DO THIS IN MY SLEEP. // EVERY MINUTE HERE IS A MINUTE ADA DOESN'T HAVE. MOVE.
 3. I'VE WRUNG THIS PLACE DRY. NOTHING LEFT TO PROVE HERE. // STOP CIRCLING. THE ONLY THING THAT MATTERS IS FINDING HER. GO.
 4. WHEN DID THIS GET EASY? THEY DON'T EVEN REGISTER. JUST NOISE ON THE WAY. // ENOUGH WARMUP. ADA FIRST. ALWAYS ADA.
@@ -280,7 +302,7 @@ she scared for Ada._
 
 **She has arrived.**
 
-> I LET MYSELF IN. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
+> I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
 > THEY RANG AT MIDNIGHT. I CAME STRAIGHT OUT.
 
 — _WHO RANG?_
@@ -418,8 +440,10 @@ _The level opens with the hero's weapon holstered: he walks in like it's still
 his old job. A lone LAB SCIENTIST breaks from the pack and hits him — and he
 does not hit back. These are his old colleagues. He names the man, tells the
 floor to stand down, says he has never raised a hand to anyone; the scientist
-answers him, and every reason he gives is one the hero would have given himself
-in the years before the same machine walked him out of the same door. He is hit
+answers him — by name, on the second blow, which is the campaign's first proof
+that the horde on this floor is made of people who know exactly who he is — and
+every reason he gives is one the hero would have given himself in the years
+before the same machine walked him out of the same door. He is hit
 a second time, and a third. Only then does he answer one, apologising while he
 does it — and the auto-attack is live from there on._
 
@@ -441,7 +465,7 @@ with is grandpa's sawed-off._
 
 **ME:** HE SWUNG AGAIN. HARDER. AND THE WHOLE FLOOR IS TURNING ROUND TO WATCH.
 
-**LAB SCIENTIST:** I KNOW WHO YOU ARE. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
+**LAB SCIENTIST:** I KNOW WHO YOU ARE, {HERO}. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB.
 
 **ME:** STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START.
 
@@ -501,7 +525,7 @@ and has cut a PASSAGE CHIP into his own skull to pass as a machine. He also
 carries the CORE KEYCARD — the badge to the AI CORE, the one room on the floor
 no plain hand can open._
 
-**THE ARCHITECT:** MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW. A REAL ONE.
+**THE ARCHITECT:** {HERO}. MY OLD BENCH PARTNER. STILL SOLDERING TOYS IN A GARAGE? I BUILD MINDS NOW. A REAL ONE.
 
 **ME:** THEY DUMPED US BOTH FOR AN AI. YOU BUILD THEM A BIGGER ONE? QUIT. COME HOME. IT'S ROTTEN.
 
@@ -2160,7 +2184,7 @@ the rift's far side wholesale, and took everyone's jobs to keep one man
 uncatchably rich. It holds Ada in its control room as leverage. It does not walk;
 three minds aim its guns._
 
-**THE BRO SUPERCORE:** HELLO AGAIN, BUILDER. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT.
+**THE BRO SUPERCORE:** HELLO AGAIN, {HERO}. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT.
 
 **ME:** THE TALKING DOG FROM THE FACTORY FLOOR. THE AI THAT TOOK MY JOB. ALL ONE THING?
 

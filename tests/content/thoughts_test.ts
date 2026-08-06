@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   advanceDialogue,
   dialogueContent,
+  HERO_NAME_TOKEN,
   step,
   thoughtDef,
   type GameEvent,
@@ -82,9 +83,12 @@ describe("first-kill thoughts", () => {
       defId: "moon_successor",
     });
     // Spoken in the hero's own voice, with his portrait — not a mob talking.
-    const content = dialogueContent(state.dialogue!);
+    // The def's speaker is the `{HERO}` token, so the box is headed by the
+    // name this viewer's hero was given (hero_name_test.ts owns that rule).
+    const content = dialogueContent(state.dialogue!, "ZOLTAN");
     const def = thoughtDef("moon_successor");
-    expect(content.speaker).toBe(def.speaker);
+    expect(def.speaker).toBe(HERO_NAME_TOKEN);
+    expect(content.speaker).toBe("ZOLTAN");
     expect(content.portrait).toBe(def.portrait);
     expect(content.pages).toEqual(def.pages);
   });
@@ -137,9 +141,10 @@ describe("first-kill thoughts", () => {
       defId: "goodco_staff",
     });
     expect(state.stats.kills).toBe(0); // sighted, not killed
-    const content = dialogueContent(state.dialogue!);
+    const content = dialogueContent(state.dialogue!, "ZOLTAN");
     const def = thoughtDef("goodco_staff");
-    expect(content.speaker).toBe(def.speaker);
+    expect(def.speaker).toBe(HERO_NAME_TOKEN);
+    expect(content.speaker).toBe("ZOLTAN");
     expect(content.pages).toEqual(def.pages);
   });
 

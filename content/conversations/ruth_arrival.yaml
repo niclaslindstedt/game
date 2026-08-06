@@ -25,7 +25,7 @@ reentry:
 nodes:
   greet:
     say:
-      - I LET MYSELF IN. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
+      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
       - THEY RANG AT MIDNIGHT. I CAME STRAIGHT OUT.
     choices:
       - text: WHO RANG?

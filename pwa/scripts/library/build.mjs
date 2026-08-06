@@ -36,7 +36,7 @@ import { copySprites, spriteCell, writeGroundTile } from "./art.mjs";
 import sharp from "sharp";
 
 import { renderMapCrop, writeMissionMap } from "./map-render.mjs";
-import { LEVELS, itemIcon } from "./catalogs.mjs";
+import { LEVELS, itemIcon, withHeroName } from "./catalogs.mjs";
 import { TITLE } from "./html.mjs";
 import { libraryModel } from "./model.mjs";
 import { openCardShooter } from "./card-shot.mjs";
@@ -233,11 +233,21 @@ function copyImages(cacheDir, dir) {
   return count;
 }
 
-/** Write an HTML page at `<library>/<path>/index.html` (or the library root). */
+/**
+ * Write an HTML page at `<library>/<path>/index.html` (or the library root).
+ *
+ * The hero's name is resolved HERE, on the finished document, rather than in
+ * each of the four renderers that can meet it (a chapter's pinned beat, an
+ * arrival scene, an errand's ask, a mission page's quote). A `{HERO}` cannot
+ * occur in these pages for any other reason, and one pass over the built HTML
+ * is the only version of this that cannot be forgotten by the next renderer
+ * somebody adds. See `withHeroName` in `catalogs.mjs` for what it resolves to
+ * and why the library has no player to ask.
+ */
 function writePage(path, html) {
   const dir = path ? join(libraryDir, path) : libraryDir;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "index.html"), html);
+  writeFileSync(join(dir, "index.html"), withHeroName(html));
 }
 
 /**
