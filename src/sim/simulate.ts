@@ -51,11 +51,7 @@ import {
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
 } from "../game/bot/economy.ts";
-import {
-  runBotActions,
-  runBotHub,
-  runBotUpkeep,
-} from "../game/bot/intent.ts";
+import { runBotActions, runBotHub, runBotUpkeep } from "../game/bot/intent.ts";
 import { applyRunCommand } from "../game/commands.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";

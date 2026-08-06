@@ -138,9 +138,9 @@ describe("the hub is a level the autopilot can play", () => {
     const state = stage();
     const hero = state.players[0]!;
     stand(hero, CAR_AT);
-    expect(hubTapCommand(createBot("balanced"), state, hero, false)?.name).not.toBe(
-      "enterCar",
-    );
+    expect(
+      hubTapCommand(createBot("balanced"), state, hero, false)?.name,
+    ).not.toBe("enterCar");
   });
 
   it("takes the errand off the offer, and hands the finished one back", () => {
@@ -151,9 +151,9 @@ describe("the hub is a level the autopilot can play", () => {
     // tap reach sits inside — so by the time the bot presses, this has already
     // happened on the way in. Set outright here so the press is what is tested.
     state.questGivers.find((g) => g.id === "hub_giver")!.discovered = true;
-    expect(applyRunCommand(state, "talkToQuestGiver", ["hub_giver"], hero)).toBe(
-      true,
-    );
+    expect(
+      applyRunCommand(state, "talkToQuestGiver", ["hub_giver"], hero),
+    ).toBe(true);
     expect(hero.screen).toBe("quest");
     // A single topic opens the conversation itself; the bot accepts it.
     const take = botScreenCommand(state, hero);
