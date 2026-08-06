@@ -30,8 +30,10 @@ import {
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "../render/plane.ts";
+import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
+import { applyWorldProjection, billboard } from "../render/tilt.ts";
 import { drawCarAssembly } from "../render/vehicles.ts";
-import { applyWorldProjection } from "../render/tilt.ts";
+
 import type { Camera } from "../render/view.ts";
 import {
   CROWD_FRAME_MS,
@@ -185,13 +187,33 @@ export function drawDrive(
   type Drawn = { y: number; draw: () => void };
   const drawn: Drawn[] = [];
 
-  const put = (name: string, x: number, y: number, lift = 0) => {
+  const put = (name: string, x: number, y: number, lift = 0, faceLeft = false) => {
     const sprite = spriteByName(sprites, name);
     if (!sprite) return;
     drawn.push({
       y,
-      draw: () =>
-        drawWorldSprite(ctx, name, sprite, { x, y: y - lift }, camera, "base"),
+      draw: () => {
+        if (!faceLeft) {
+          drawWorldSprite(ctx, name, sprite, { x, y: y - lift }, camera, "base");
+          return;
+        }
+        // NOSE-FIRST DOWN ITS OWN LANE. Every car sprite is drawn facing right,
+        // so oncoming traffic has to be mirrored — without this the far lanes
+        // were full of cars driving backwards at 60, which reads as a bug long
+        // before it reads as traffic. Mirrored around the sprite's own centre
+        // INSIDE the billboard, exactly as every actor renderer does it
+        // (`drawSpriteFacing`), so the flip cannot move where the car is
+        // standing.
+        billboard(ctx, x, y - lift, camera.x, camera.y, () =>
+          drawSpriteFacing(
+            ctx,
+            sprite,
+            seatX(x, camera.x) - Math.round(sprite.width / 2),
+            seatY(y - lift, camera.y) - Math.round(sprite.height - 2),
+            true,
+          ),
+        );
+      },
     });
   };
 
@@ -200,7 +222,7 @@ export function drawDrive(
   }
   for (const other of drive.traffic) {
     const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];
-    if (name) put(name, other.pos.x, other.pos.y);
+    if (name) put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
   }
   for (const ped of drive.pedestrians) {
     const frames = CROWD_SPRITES[ped.variant % CROWD_SPRITES.length];
