@@ -23,7 +23,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import { DRIVE } from "@game/core";
+import { DRIVE, impactMasses, solveImpact } from "@game/core";
+
+import { CAR } from "../../src/game/vehicles.ts";
 
 import { GENERATED_SOUNDS } from "../../pwa/src/generated/sounds.ts";
 import {
@@ -70,12 +72,49 @@ describe("the road's sound banks", () => {
   });
 
   it("reaches for the heavy shelf only when the physics says it was heavy", () => {
-    const light = DRIVE.impact.wearJoules * 0.01;
-    const heavy = DRIVE.impact.wearJoules * 0.2;
-    expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, light));
-    expect(HARD_BODY_SOUNDS).toContain(bodyHitSound(10, 4, heavy));
-    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, light));
-    expect(CRUNCH_SOUNDS).toContain(trafficHitSound(10, 4, heavy));
+    // THE ENERGIES ARE SOLVED, NOT PICKED, and that is the whole point of this
+    // test. Two joule figures typed in by hand only ever prove that a number is
+    // bigger than a threshold; they cannot say whether anything the road can
+    // actually DO reaches it — and for a long time nothing did. Absorbed energy
+    // goes as the SQUARE of closing speed, so a threshold chosen by eye is wrong
+    // by the square of however far off the speed was, and the heavy body bank
+    // sat five times out of reach: on the baseline rung a body met dead square
+    // at the full 120 was not loud enough to play it, and two rungs of players
+    // never heard it. So every sample below is a REAL collision through the
+    // engine's own `solveImpact`, on MEDIUM, and the claim is the one the source
+    // makes out loud — the same collision at half the speed and at the top end
+    // comes off different shelves.
+    const mass = impactMasses("medium");
+    const bodyAt = (frac: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx * frac,
+        // Dead square on the nose: the contact normal runs straight down the
+        // car's own axis, so the car eats the lot.
+        { x: 30, y: 0 },
+        { x: 0, y: 0 },
+        DRIVE.pedestrianRadiusPx,
+        mass.pedestrian,
+      )?.joules ?? 0;
+    const vanAt = (frac: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx * frac,
+        { x: 30, y: 0 },
+        // A van dawdling along in the same lane — the rear-ender.
+        { x: DRIVE.trafficSpeedPx.min, y: 0 },
+        CAR.footprint.radius,
+        mass.traffic,
+      )?.joules ?? 0;
+
+    // A CAREFUL DRIVER, at forty percent of the top end.
+    expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(0.4)));
+    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.4)));
+    // …and one holding the throttle down.
+    expect(HARD_BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(1)));
+    expect(CRUNCH_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(1)));
   });
 
   it("picks the same take for the same spot, and different ones across the road", () => {
