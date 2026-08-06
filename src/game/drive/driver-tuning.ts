@@ -44,6 +44,23 @@ export type DriveBotTuning = {
   /** What a person standing on the chosen line is WORTH avoiding. The unit for
    * everything below. */
   bodyCost: number;
+  /**
+   * …and a LAMP POST, which is the one obstacle on this road that does not
+   * move, does not flinch, and cannot be read as "he might step back".
+   *
+   * It sits between a body and a car, and nearer the car: a post costs about
+   * three people's worth of wagon in one hit (`DRIVE_UNITS.lampPostMassKg`),
+   * and unlike a person it is exactly where it looked. A driver blind to them
+   * settles in the gutter — which is the emptiest-looking line on a road this
+   * peopled, and the one that grinds a lamp standard every hundred pixels
+   * until the car dies. That is not hypothetical: the first bench after the
+   * kerb became solid arrived 0 legs out of 60 on every rung.
+   *
+   * A PARKED CAR uses `trafficCost` instead, because it is a car — and it is
+   * the worse of the two, since it is met at the hero's whole speed rather than
+   * the difference.
+   */
+  propCost: number;
   /** …and another car, which is far worse: a shunt does 2.6× the damage of a
    * body (`DRIVE.impact.trafficWearScale`) and can end the leg in three. */
   trafficCost: number;
@@ -100,6 +117,7 @@ export const DRIVE_BOT_DEFAULTS: DriveBotTuning = {
   probePitchPx: 4,
   clearancePx: 6,
   bodyCost: 1,
+  propCost: 3,
   trafficCost: 5,
   oncomingCost: 3,
   holdCost: 0.5,

@@ -178,6 +178,10 @@ export function createRunSession(deps: {
    * exactly as it always was.
    */
   arriveInCarRef?: MutableRefObject<boolean>;
+  /** A thought the hero arrived still having — the DRIVE's verdict on the trip
+   * in, spoken as the first page of this level's opening monologue. Consumed
+   * on the same arrival that set it. */
+  arrivalThoughtRef?: MutableRefObject<string | undefined>;
 }): RunSession {
   if (deps.spectate) return spectatorSession(deps.spectate, deps.runId);
   const {
@@ -322,6 +326,9 @@ export function createRunSession(deps: {
     // AT THE WHEEL, when the trip in was the drive home — he pulls onto his own
     // drive in the car he left GOODCO in, rather than being stood beside it.
     startInCar: deps.arriveInCarRef?.current === true,
+    // WHAT HE MADE OF THE TRIP IN — the drive's own reading of it
+    // (`driveVerdict`), spoken before the level's own briefing.
+    arrivalThought: deps.arrivalThoughtRef?.current,
     // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts), seeded before
     // anything reads the quest log so a chain's gate, a giver's head mark and
     // the tracker are all correct on the first frame.
@@ -377,6 +384,7 @@ export function createRunSession(deps: {
   // One arrival, one seat: consumed here so the next visit to the hub is on
   // foot like every other.
   if (deps.arriveInCarRef) deps.arriveInCarRef.current = false;
+  if (deps.arrivalThoughtRef) deps.arrivalThoughtRef.current = undefined;
 
   // A run started from scratch (not resumed from the menu, not adopted from a
   // checkpoint that already froze it): capture the combat-start checkpoint

@@ -64,6 +64,13 @@ import {
 } from "./crowd.ts";
 import { impactMasses, panelAt, solveImpact } from "./impact.ts";
 import {
+  fellLamp,
+  firstPropSlot,
+  propRadius,
+  spawnProps,
+  stepProps,
+} from "./street.ts";
+import {
   laneRunsWithHero,
   shunt,
   spawnTraffic,
@@ -79,6 +86,7 @@ export {
   CROWD_VARIANTS,
   laneAt,
   laneCenter,
+  roadBandEdges,
   roadEdges,
 } from "./crowd.ts";
 export { TRAFFIC_VARIANTS, laneRunsWithHero } from "./traffic.ts";
@@ -88,12 +96,16 @@ export type { DriveDriver } from "./driver.ts";
 export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
+export { inevitableHit } from "./predict.ts";
+export type { InevitableHit } from "./predict.ts";
 export type {
   DriveDirection,
   DriveEvent,
   DriveInput,
   DriveParams,
   DrivePedestrian,
+  DriveProp,
+  DrivePropKind,
   DriveState,
   DriveStrike,
   DriveTraffic,
@@ -134,11 +146,13 @@ export function createDrive(params: DriveParams): DriveState {
     ms: 0,
     pedestrians: [],
     traffic: [],
+    props: [],
     wheelDebris: [],
     strikes: [],
     events: [],
     bodies: 0,
     shunts: 0,
+    posts: 0,
     topSpeed: car.speed,
     outcome: DRIVE_OUTCOME.driving,
     outcomeMs: 0,
@@ -153,6 +167,7 @@ export function createDrive(params: DriveParams): DriveState {
     },
     nextPedestrianAt: resetCrowdMarks(rng),
     nextTrafficAt: DRIVE.crowdStartPx * 0.5,
+    nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
     nextId: 1,
   };
@@ -210,6 +225,7 @@ export function stepDrive(
     advanceCar(drive, dt);
     stepCrowd(drive, dt);
     stepTraffic(drive, dt);
+    stepProps(drive, dt);
     integrateCarBody(car, dt);
     stepDebris(drive, dt);
     return;
@@ -262,8 +278,10 @@ export function stepDrive(
 
   spawnCrowd(drive);
   spawnTraffic(drive);
+  spawnProps(drive);
   stepCrowd(drive, dt);
   stepTraffic(drive, dt);
+  stepProps(drive, dt);
   collide(drive);
   integrateCarBody(car, dt);
   stepDebris(drive, dt);
@@ -403,6 +421,51 @@ function collide(drive: DriveState): void {
     });
     damage(drive, hit.joules, hit.along, DRIVE.impact.trafficWearScale);
   }
+
+  // ── THE KERB ──────────────────────────────────────────────────────────────
+  // The furniture, which is the same collision again against two things that
+  // answer for it very differently. Note what is NOT special-cased: a parked
+  // car costs more than the van you were tailgating because it is STILL, so the
+  // sweep is the hero's whole speed rather than the difference — the sum
+  // already knows, and there is no "parked cars hurt more" rule anywhere.
+  for (const prop of drive.props) {
+    if (prop.hitCooldownMs > 0) continue;
+    if (prop.felled) continue;
+    const parked = prop.kind === "parked_car";
+    const hit = solveImpact(
+      car.pos,
+      dir,
+      car.speed,
+      prop.pos,
+      { x: 0, y: 0 },
+      propRadius(prop.kind),
+      parked ? mass.parked : mass.lamp,
+    );
+    if (!hit) continue;
+    car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
+    if (parked) {
+      drive.shunts++;
+      // It is a car, so it takes it like one: shoved out of its space, scrubbed
+      // and settling. The handbrake is already priced into its mass.
+      prop.hitCooldownMs = DRIVE.shuntImmuneMs;
+      prop.pos.y += Math.sign(prop.pos.y - car.pos.y || 1) * DRIVE.separationPx;
+      drive.events.push({
+        type: "trafficHit",
+        pos: { x: hit.contact.x, y: hit.contact.y },
+        joules: hit.joules,
+      });
+      damage(drive, hit.joules, hit.along, DRIVE.impact.trafficWearScale);
+      continue;
+    }
+    drive.posts++;
+    fellLamp(prop, hit.launch, hit.liftZ);
+    drive.events.push({
+      type: "lampFelled",
+      pos: { x: hit.contact.x, y: hit.contact.y },
+      joules: hit.joules,
+    });
+    damage(drive, hit.joules, hit.along, DRIVE.impact.lampWearScale);
+  }
 }
 
 /**
@@ -512,14 +575,44 @@ function detachDriveWheel(drive: DriveState, axle: 0 | 1): void {
   });
 }
 
-/** How the hero read the trip — which of his arrival lines the body count
- * earns. Kept here rather than app-side so the sim, the tests and the story all
- * agree on where the line between "fine" and "bumpy" sits. */
-export function driveRideQuality(
-  drive: DriveState,
-): "clean" | "some" | "bumpy" {
-  if (drive.bodies === 0) return "clean";
-  return drive.bodies >= DRIVE.bumpyRideBodies ? "bumpy" : "some";
+/**
+ * HOW HE READ THE TRIP — which of his arrival lines this drive earned, as the
+ * id of the thought to play.
+ *
+ * IT READS THE WHOLE DRIVE, not the body count. What the road hands back is
+ * five numbers — the clock, the car's own wear, the cars he shoved, the street
+ * lights he took out, and the people — and the line he says is about whichever
+ * of them is most REMARKABLE, in the order below. That order is the joke's
+ * machinery: the car, the clock, the other drivers and the council's lighting
+ * all outrank the crowd, because those are the four things a man notices on a
+ * commute. A body only ever reaches him as road surface.
+ *
+ * Kept in the engine rather than app-side so the sim, the tests and the
+ * manuscript all agree about where each line sits — and because a headless
+ * drive (a balance pass, a soak) can ask what the trip was worth without a
+ * renderer.
+ */
+export function driveVerdict(drive: DriveState): string {
+  const { verdict } = DRIVE;
+  const { bodies, shunts, posts } = drive;
+  // A GENUINELY CLEAN RUN, first because it is the rarest thing on this road by
+  // a long way: not a person, not a car, not a post, and the wagon unmarked.
+  if (bodies === 0 && shunts === 0 && posts === 0 && drive.car.wear < 0.02) {
+    return "drive_arrive_clean";
+  }
+  // The car, if it barely made it. Nothing else gets a word in.
+  if (drive.car.wear >= verdict.wreckWear) return "drive_arrive_wreck";
+  // Then the two things that are somebody ELSE's property, which is the only
+  // category of damage he has ever been able to see.
+  if (posts >= verdict.posts && posts >= shunts) return "drive_arrive_posts";
+  if (shunts >= verdict.cars) return "drive_arrive_cars";
+  // Then the clock, at either end of it.
+  if (drive.ms <= verdict.quickMs) return "drive_arrive_quick";
+  if (drive.ms >= verdict.slowMs) return "drive_arrive_slow";
+  // And finally the road surface, which is where the people went.
+  return bodies >= verdict.bumpyBodies
+    ? "drive_arrive_bumpy"
+    : "drive_arrive_some";
 }
 
 /** The speed the HUD says out loud, in the unit the top end is authored in. */

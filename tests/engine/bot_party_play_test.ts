@@ -26,7 +26,12 @@ import {
 } from "../../src/game/bot/party-play.ts";
 import { macroTarget } from "../../src/game/bot/macro.ts";
 import { bestAimTarget } from "../../src/game/bot/arsenal.ts";
-import { clearStage, equipRangedSidearm, makeEnemy, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  equipRangedSidearm,
+  makeEnemy,
+  startGame,
+} from "./helpers.ts";
 
 /** A run with a second hero seated, both parked where the test puts them. */
 function party(): GameState {

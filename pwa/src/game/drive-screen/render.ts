@@ -38,6 +38,7 @@ import type { Camera } from "../render/view.ts";
 import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
+  LAMP_SPRITE,
   roadBands,
   sceneryBetween,
   TRAFFIC_SPRITES,
@@ -232,6 +233,45 @@ export function drawDrive(
 
   for (const prop of sceneryBetween(left, right)) {
     put(prop.sprite, prop.x, prop.y);
+  }
+  // THE KERB, drawn from the SIM rather than derived here — the furniture is
+  // world now, so what is painted is exactly what the bumper can reach
+  // (src/game/drive/street.ts). A standing piece is a plain blit; a FELLED post
+  // is the one thing on this road drawn turned over, because a street light
+  // that has left its base is the only object here whose orientation carries
+  // information.
+  for (const prop of drive.props) {
+    if (prop.kind === "parked_car") {
+      const name = TRAFFIC_SPRITES[prop.variant % TRAFFIC_SPRITES.length];
+      if (name) put(name, prop.pos.x, prop.pos.y);
+      continue;
+    }
+    if (!prop.felled) {
+      put(LAMP_SPRITE, prop.pos.x, prop.pos.y);
+      continue;
+    }
+    const sprite = spriteByName(sprites, LAMP_SPRITE);
+    if (!sprite) continue;
+    drawn.push({
+      y: prop.pos.y,
+      draw: () =>
+        billboard(ctx, prop.pos.x, prop.pos.y, camera.x, camera.y, () => {
+          // Turned about its FOOT, which is where it broke: a post pivoting
+          // around its own middle reads as a spinning stick rather than as
+          // something that was bolted to the pavement a moment ago.
+          const cx = seatX(prop.pos.x, camera.x);
+          const cy = seatY(prop.pos.y - prop.z, camera.y);
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(prop.angle);
+          ctx.drawImage(
+            sprite,
+            -Math.round(sprite.width / 2),
+            -Math.round(sprite.height - 2),
+          );
+          ctx.restore();
+        }),
+    });
   }
   for (const other of drive.traffic) {
     const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];

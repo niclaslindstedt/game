@@ -837,19 +837,37 @@ escort.ts` walks the people an escort errand puts on the field, and
   with the nose decides how much speed and damage the car takes back. The
   street around it is a street: pavements the crowd genuinely stands on
   (`crowdEdges`, wider than the car's own `roadEdges`), painted crossings on a
-  fixed pitch that half the crowd is gathered onto (`crossingsBetween`), and a
-  town on one building line — and everybody on it, shunted traffic included, is
-  held to those edges. Its presentation lives beside it —
-  `drive-screen/drive-fx.ts` (sparks, grit, shards, the wreck's smoke, the
-  speed-scaled shake; every effect is anchored to the ROAD and left behind
-  except the dead engine's smoke, which rides the car it came out of) and
+  fixed pitch that half the crowd is gathered onto (`crossingsBetween`), a town
+  on one building line, and a KERB the wagon can actually hit — the lamp posts
+  and parked cars of `street.ts`, derived from a hash of their own slot (no rng
+  draw, the same street both ways) and materialized into `DriveState.props` as
+  the road unrolls. Everybody on it, shunted traffic included, is held to those
+  edges. A parked car does not break and costs far more than the van you were
+  tailgating, because the collision is solved on the SWEEP and a stopped car is
+  met at the hero's whole speed; a lamp post shears off its base, cartwheels
+  down the road and takes a slice of the car with it — and the auto-driver
+  reads the furniture like everything else, or it settles in the gutter and
+  grinds itself to a halt on the emptiest-looking line on the road. Its
+  presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
+  shards, the wreck's smoke, and a camera that moves only when something is
+  actually struck; every effect is anchored to the ROAD and left behind except
+  the dead engine's smoke, which rides the car it came out of) and
   `sfx/drive.ts` (the geared engine note, made of grains on a quickening
   cadence) — with what a tick OWES those two lifted into
   `drive-screen/loop.ts` (`drainDrive`, `drawBursts`, `runEngineNote`), because
   the effects gallery's DRIVE shelf is a second host that has to drain a road
   exactly as the screen does. The whole frame is drawn INSIDE
   `applyWorldProjection`, because that is the space `drawWorldSprite`
-  billboards into. Damage
+  billboards into. THE MOMENT a hit stops being avoidable, the world drops to a
+  quarter speed and the camera leans in on the wagon: `predict.ts` answers
+  WHETHER (the wheel's own authority against the crowd's own velocity) and
+  `drive-screen/drive-time.ts` decides what that is worth, by dilating how much
+  real time buys a fixed step — the simulation is untouched, so a drive that
+  spent half its length in slow motion arrives with the same bodies and the same
+  road. What he MAKES of the trip is not said on the road at all: `driveVerdict`
+  reads the whole journey and hands the arriving run one line
+  (`RunParams.arrivalThought`), spoken as the last page of the destination's
+  opening monologue. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off

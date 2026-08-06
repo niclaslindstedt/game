@@ -400,8 +400,15 @@ export function drawCarAssembly(
   // its wheel no longer holds up, and the whole body pitches between the
   // two (a missing front wheel reads nose-down). A RUNNING engine shivers
   // the shell a pixel on the render clock — presentation only.
+  //
+  // SLOWLY. The shiver opened at 45 ms a toggle, which is eleven times a
+  // second, and at that rate a one-pixel bob has no lope to it at all — it is
+  // just noise, and on the road (where the car is the thing the eye is locked
+  // to for a whole minute) it read as the picture being broken rather than as
+  // an engine turning over. A quarter of the rate is a lump, which is what an
+  // old estate idling actually looks like from ten feet away.
   const running = car.driver !== null;
-  const shiver = running ? (Math.floor(timeMs / 45) % 2 === 0 ? 0 : -1) : 0;
+  const shiver = running ? (Math.floor(timeMs / 180) % 2 === 0 ? 0 : -1) : 0;
   const rearDrop = axleDrop(car, 0) + shiver;
   const frontDrop = axleDrop(car, 1) + shiver;
   // Underbody first — the arches open onto dark steel and springs, never

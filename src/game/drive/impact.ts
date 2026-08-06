@@ -183,6 +183,12 @@ export function panelAt(along: number): CarPanelId {
 export type ImpactMasses = {
   pedestrian: number;
   traffic: number;
+  /** A car left at the kerb — laddered on the traffic's own multiplier,
+   * because it is a car. */
+  parked: number;
+  /** A street light. NOT laddered: the difficulty is about what the ROAD
+   * weighs, and the council's lighting is the same steel on every rung. */
+  lamp: number;
 };
 
 /**
@@ -203,5 +209,7 @@ export function impactMasses(difficulty: Difficulty): ImpactMasses {
   return {
     pedestrian: DRIVE_UNITS.pedestrianMassKg * drive.pedestrianMassMult,
     traffic: DRIVE_UNITS.trafficMassKg * drive.trafficMassMult,
+    parked: DRIVE_UNITS.parkedCarMassKg * drive.trafficMassMult,
+    lamp: DRIVE_UNITS.lampPostMassKg,
   };
 }

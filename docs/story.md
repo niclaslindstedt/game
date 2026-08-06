@@ -106,12 +106,21 @@ The ones it did not reach are out on the tarmac, because a road is where the
 cars are and a car is where the money is, and they walk straight at him with
 their hands out. There are far too many of them to miss. Before he meets the
 first one he has the decent thought — these are his neighbours, they got
-nothing, mind how you go — and then he drives through them at a hundred and
-twenty and never mentions it again. Arriving, he does not reflect on the people.
-He reflects on the RIDE: whether it was a clean run, or whether the road was a
-bit bumpy tonight. That gap — between the man who worried about them beforehand
-and the man who files them under road surface afterwards — is the whole point,
-and it is left entirely to the player to notice.
+nothing, mind how you go — and he says it to himself at the wheel, without
+slowing down, which is the only place a promise like that costs nothing. Then he
+drives through them at a hundred and twenty and never mentions it again.
+
+He does his reflecting on the far side, standing beside the car with the engine
+ticking, and it is the last thing he says before he starts on the job he came
+for. It is never about the people. It is about the SUSPENSION, the CLOCK, the
+OTHER DRIVERS and the COUNCIL'S LIGHTING — the four things a man notices on a
+commute. He made good time, or he took his time; the roads out this way are
+rough and always have been; nobody in this neighbourhood can drive; those lamp
+standards are far too close to the kerb; and she is thirty years old and has
+never given him a day's trouble, said over a car he has just destroyed. That gap
+— between the man who worried about them beforehand and the man who files them
+under road surface afterwards — is the whole point, and it is left entirely to
+the player to notice.
 
 **The doors.** Three ways out, earned in order. THE CAR — the white hatchback
 — does the earthbound leg: he drives it to GOODCO HQ the night he takes the

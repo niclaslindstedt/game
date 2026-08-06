@@ -56,15 +56,23 @@ thoughts:
     pages:
       - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
   # ── THE DRIVE TO GOODCO (src/game/drive/) ─────────────────────────────────
-  # The earthbound leg, played rather than cut. These five are NOT pinned by a
-  # level: the drive is not a level, so the app plays them off the road's own
-  # beats (`DriveEvent`) rather than through `placeThoughts`.
+  # The earthbound leg, played rather than cut. These are NOT pinned by a level:
+  # the drive is not a level, so the app plays them off the road's own beats
+  # (`DriveEvent`) rather than through `placeThoughts`.
   #
   # THE SHAPE OF THE SET IS THE JOKE, and it only works if nothing is added
   # between the ends of it. He worries about the people BEFORE he meets any,
-  # and afterwards he reports on the ROAD SURFACE. A line acknowledging a body
-  # would turn the bit from a joke into a confession — so there isn't one, and
-  # there must never be one.
+  # and afterwards he reports on the ROAD SURFACE, the CAR, the CLOCK, the
+  # OTHER DRIVERS and the COUNCIL'S LIGHTING — the four things a man notices on
+  # a commute, and not one of them a person. A line acknowledging a body would
+  # turn the bit from a joke into a confession, so there isn't one, and there
+  # must never be one.
+  #
+  # TWO PLACES, AND THE SPLIT MATTERS. The first two are BARKED over a car that
+  # keeps moving — nothing on that screen stops for him to talk. The
+  # `drive_arrive_*` set is not said on the road at all: the drive picks one
+  # (`driveVerdict`) and hands it to the arriving run, which speaks it as the
+  # LAST page of that venue's opening monologue, standing beside the car.
   #
   # THE ROAD AHEAD, said on an empty stretch well short of the crowd — the only
   # place that promise costs him nothing. Read once ever, not once per trip: a
@@ -75,15 +83,63 @@ thoughts:
     pages:
       - - THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
       - - THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
-  # ARRIVING, HAVING HIT NOBODY. Only reachable by a genuinely exceptional
-  # drive — the road is laid down to make it nearly impossible. Modest pride in
-  # his own driving, which is as far as his reflection ever goes.
+  # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
+  # road — never the thing that actually broke it.
+  drive_broke_down:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - COME ON. NOT HERE. NOT TONIGHT.
+  # ── THE ARRIVAL VERDICT ───────────────────────────────────────────────────
+  # Seven readings of one trip, in `driveVerdict`'s own priority order: the car
+  # first, then the two kinds of somebody else's property, then the clock, and
+  # only then — as road surface — the people.
+  #
+  # ARRIVING, HAVING TOUCHED NOTHING AT ALL: not a person, not a car, not a
+  # post, and the wagon unmarked. Very nearly unreachable, because the road is
+  # laid down to make sure of it. Modest pride in his own driving, which is as
+  # far as his reflection ever goes.
   drive_arrive_clean:
     speaker: "{HERO}"
     portrait: hero
     pages:
       - - CLEAN RUN. NOT A MARK ON HER.
-  # ARRIVING, HAVING HIT A FEW.
+  # THE CAR BARELY MADE IT — said over a wagon with the bumper gone and one
+  # wheel dragging. He is not lying; he genuinely does not connect the two
+  # halves of the sentence.
+  drive_arrive_wreck:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE.
+  # THE COUNCIL'S LIGHTING, flattened. Somebody else's property, which is the
+  # one category of damage he has always been able to see.
+  drive_arrive_posts:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THEY'VE PUT THOSE LAMP STANDARDS FAR TOO CLOSE TO THE KERB. SOMEBODY'S GOING TO HAVE AN ACCIDENT.
+  # PAINT TRADED WITH HALF THE TRAFFIC.
+  drive_arrive_cars:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - NOBODY OUT HERE CAN DRIVE. NOT ONE OF THEM LOOKED.
+  # UNUSUALLY GOOD TIME — the blackest of the seven, and the only one that comes
+  # near the thing itself. Still deniably: he is talking about the traffic.
+  drive_arrive_quick:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME.
+  # HAVING DAWDLED.
+  drive_arrive_slow:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - TOOK MY TIME. NO SENSE ARRIVING SOMEWHERE LIKE THIS IN A HURRY.
+  # ARRIVING, HAVING HIT A FEW — the default when nothing else about the trip
+  # was worth remarking on.
   drive_arrive_some:
     speaker: "{HERO}"
     portrait: hero
@@ -96,13 +152,6 @@ thoughts:
     portrait: hero
     pages:
       - - BIT BUMPY TONIGHT. SHE'S FEELING HER AGE.
-  # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
-  # road — never the thing that actually broke it.
-  drive_broke_down:
-    speaker: "{HERO}"
-    portrait: hero
-    pages:
-      - - COME ON. NOT HERE. NOT TONIGHT.
   # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
   # before GOODCO HQ has fallen plays this instead of the travel picker (the
   # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do

@@ -39,11 +39,25 @@ const TUMBLE_REST = 8;
 const TUMBLE_GRAVITY = 620;
 const TUMBLE_BOUNCE = 0.28;
 
+/**
+ * THE TARMAC ITSELF — the outer lane markings, with no gutter on either side.
+ *
+ * The narrowest of the three bands this file knows about, and the one the KERB
+ * is measured off: the pavement starts here, the street furniture stands just
+ * beyond it (`street.ts`), and the renderer paints its road exactly this wide.
+ * Kept here beside the other two so nothing has to re-derive `laneCount ×
+ * laneWidth / 2` and quietly disagree by a pixel.
+ */
+export function roadBandEdges(): { top: number; bottom: number } {
+  const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
+  return { top: -half, bottom: half };
+}
+
 /** The road's outer edges in world y — the tarmac plus its gutters. Everything
  * on the road is born, walks and dies between these. */
 export function roadEdges(): { top: number; bottom: number } {
-  const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
-  return { top: -half - DRIVE.vergePx, bottom: half + DRIVE.vergePx };
+  const band = roadBandEdges();
+  return { top: band.top - DRIVE.vergePx, bottom: band.bottom + DRIVE.vergePx };
 }
 
 /**

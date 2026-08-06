@@ -14,13 +14,15 @@ import {
   createDrive,
   crossingsBetween,
   crowdEdges,
-  driveRideQuality,
+  driveVerdict,
   DRIVE,
   DRIVE_OUTCOME,
   DRIVE_UNITS,
   impactMasses,
+  inevitableHit,
   laneCenter,
   restartDrive,
+  roadBandEdges,
   roadEdges,
   solveImpact,
   stepDrive,
@@ -460,15 +462,200 @@ describe("the traffic", () => {
   });
 });
 
-describe("how the hero read the trip", () => {
-  it("reads a clean run, a few, and a bloodbath differently", () => {
+describe("the kerb", () => {
+  /** Drive down the gutter, where the furniture is. */
+  function hugTheKerb(wheel: 1 | -1): DriveState {
     const drive = createDrive(PARAMS);
-    drive.bodies = 0;
-    expect(driveRideQuality(drive)).toBe("clean");
-    drive.bodies = 1;
-    expect(driveRideQuality(drive)).toBe("some");
-    drive.bodies = DRIVE.bumpyRideBodies;
-    expect(driveRideQuality(drive)).toBe("bumpy");
+    for (
+      let t = 0;
+      t < 20000 && drive.outcome === DRIVE_OUTCOME.driving;
+      t += 16
+    ) {
+      stepDrive(drive, 16, { pedal: 0.75, wheel });
+    }
+    return drive;
+  }
+
+  it("stands its furniture on both pavements as the road unrolls", () => {
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 4000);
+    expect(drive.props.length).toBeGreaterThan(0);
+    const band = roadBandEdges();
+    // Everything stands clear of the tarmac — a lamp post in a lane would be a
+    // wall across the road rather than a thing at the side of it.
+    for (const prop of drive.props) {
+      if (prop.felled) continue;
+      expect(
+        prop.pos.y <= band.top || prop.pos.y >= band.bottom,
+        `prop at y=${prop.pos.y}`,
+      ).toBe(true);
+    }
+    expect(drive.props.some((p) => p.kind === "lamp_post")).toBe(true);
+  });
+
+  it("lays the same street down for the same seed, and both ways along it", () => {
+    // Hashed off the slot rather than rolled, so the street never moves — a
+    // restart puts every post back, and the way home passes the same ones.
+    const a = createDrive(PARAMS);
+    const b = createDrive(PARAMS);
+    floorIt(a, 6000);
+    floorIt(b, 6000);
+    expect(a.props.map((p) => `${p.kind}@${p.pos.x}`)).toEqual(
+      b.props.map((p) => `${p.kind}@${p.pos.x}`),
+    );
+  });
+
+  it("breaks a lamp post off its base and throws it down the road", () => {
+    const drive = hugTheKerb(-1);
+    expect(drive.posts).toBeGreaterThan(0);
+    const felled = drive.props.filter((p) => p.felled);
+    expect(felled.length).toBeGreaterThan(0);
+    // It LEFT: turned over, and no longer standing where it was bolted.
+    expect(felled.some((p) => Math.abs(p.angle) > 0.2)).toBe(true);
+    // …and a post that has gone is never hit again.
+    for (const post of felled) expect(post.kind).toBe("lamp_post");
+  });
+
+  it("makes a parked car cost far more than the same car driving along", () => {
+    // THE WHOLE POINT OF PARKED CARS BEING SOLID, and it is not a rule anybody
+    // wrote: the collision is solved on the SWEEP, so a car standing still is
+    // met at the hero's whole speed and one dawdling in the same direction at
+    // the difference — and the damage goes as the SQUARE of that.
+    const speed = DRIVE.topSpeedPx;
+    const mass = impactMasses("medium");
+    const square = (bodyVel: { x: number; y: number }, m: number) =>
+      solveImpact({ x: 0, y: 0 }, 1, speed, { x: 30, y: 0 }, bodyVel, 9, m);
+    const parked = square({ x: 0, y: 0 }, mass.parked);
+    const rolling = square({ x: DRIVE.trafficSpeedPx.min, y: 0 }, mass.traffic);
+    expect(parked!.joules).toBeGreaterThan(rolling!.joules * 1.5);
+    expect(parked!.speedLoss).toBeGreaterThan(rolling!.speedLoss);
+  });
+
+  it("charges a post far less than a car, and more than a person", () => {
+    const mass = impactMasses("medium");
+    const at = (m: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx,
+        { x: 30, y: 0 },
+        { x: 0, y: 0 },
+        4,
+        m,
+      )!.joules;
+    expect(at(mass.lamp)).toBeGreaterThan(at(mass.pedestrian));
+    expect(at(mass.lamp)).toBeLessThan(at(mass.parked));
+  });
+
+  it("keeps the difficulty ladder off the council's lighting", () => {
+    // The rung says what the ROAD weighs — the crowd and the traffic. A street
+    // light is the same steel on every one of them.
+    for (const difficulty of DIFFICULTY_ORDER) {
+      expect(impactMasses(difficulty).lamp).toBe(impactMasses("medium").lamp);
+    }
+  });
+});
+
+describe("the moment before a hit", () => {
+  it("says nothing while the wheel can still save it", () => {
+    const drive = createDrive(PARAMS);
+    // An empty opening stretch at speed: there is nobody to be inevitable.
+    floorIt(drive, 2000);
+    expect(inevitableHit(drive)).toBeNull();
+  });
+
+  it("calls a body dead ahead and close inevitable, and one across the road not", () => {
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 3000);
+    drive.pedestrians.length = 0;
+    const plant = (dy: number, dx: number) => {
+      drive.pedestrians.length = 0;
+      drive.pedestrians.push({
+        id: 1,
+        pos: { x: drive.car.pos.x + dx, y: drive.car.pos.y + dy },
+        vel: { x: 0, y: 0 },
+        mode: "afoot",
+        variant: 0,
+        phase: 0,
+        z: 0,
+        vz: 0,
+        counted: false,
+      });
+      return inevitableHit(drive);
+    };
+    // Right in front of the bumper, a couple of frames out: no wheel saves it.
+    expect(plant(0, 40)).not.toBeNull();
+    // The same distance ahead but a lane and a half over: plenty of room.
+    expect(plant(DRIVE.laneWidth * 1.5, 40)).toBeNull();
+    // …and dead ahead but a long way off: still avoidable, so still silent.
+    expect(plant(0, 500)).toBeNull();
+  });
+
+  it("stays quiet at a crawl, where there is no drama to be had", () => {
+    const drive = createDrive(PARAMS);
+    for (let t = 0; t < 4000; t += 16)
+      stepDrive(drive, 16, { pedal: -1, wheel: 0 });
+    drive.pedestrians.push({
+      id: 1,
+      pos: { x: drive.car.pos.x + 30, y: drive.car.pos.y },
+      vel: { x: 0, y: 0 },
+      mode: "afoot",
+      variant: 0,
+      phase: 0,
+      z: 0,
+      vz: 0,
+      counted: false,
+    });
+    expect(inevitableHit(drive)).toBeNull();
+  });
+});
+
+describe("how the hero read the trip", () => {
+  /** A drive that has arrived, with nothing on its record but what is set. */
+  function arrived(over: Partial<DriveState> = {}): DriveState {
+    const drive = createDrive(PARAMS);
+    Object.assign(drive, over);
+    // Between the two clock verdicts unless a case says otherwise, so a test
+    // about the CAR is never quietly answered by the stopwatch.
+    if (over.ms === undefined) {
+      drive.ms = (DRIVE.verdict.quickMs + DRIVE.verdict.slowMs) / 2;
+    }
+    return drive;
+  }
+
+  it("only calls a run clean when NOTHING was touched", () => {
+    expect(driveVerdict(arrived())).toBe("drive_arrive_clean");
+    expect(driveVerdict(arrived({ bodies: 1 }))).not.toBe("drive_arrive_clean");
+    expect(driveVerdict(arrived({ shunts: 1 }))).not.toBe("drive_arrive_clean");
+    expect(driveVerdict(arrived({ posts: 1 }))).not.toBe("drive_arrive_clean");
+  });
+
+  it("reads the road surface when the crowd is all there is to report", () => {
+    expect(driveVerdict(arrived({ bodies: 1 }))).toBe("drive_arrive_some");
+    expect(driveVerdict(arrived({ bodies: DRIVE.verdict.bumpyBodies }))).toBe(
+      "drive_arrive_bumpy",
+    );
+  });
+
+  it("lets the CAR, the KERB and the CLOCK all outrank the body count", () => {
+    // The joke's whole machinery: everything a man notices on a commute comes
+    // before the people, and the people only ever reach him as road surface.
+    const many = { bodies: 200 };
+    const wrecked = arrived(many);
+    wrecked.car.wear = DRIVE.verdict.wreckWear;
+    expect(driveVerdict(wrecked)).toBe("drive_arrive_wreck");
+    expect(driveVerdict(arrived({ ...many, posts: DRIVE.verdict.posts }))).toBe(
+      "drive_arrive_posts",
+    );
+    expect(driveVerdict(arrived({ ...many, shunts: DRIVE.verdict.cars }))).toBe(
+      "drive_arrive_cars",
+    );
+    expect(driveVerdict(arrived({ ...many, ms: 1000 }))).toBe(
+      "drive_arrive_quick",
+    );
+    expect(driveVerdict(arrived({ ...many, ms: 600000 }))).toBe(
+      "drive_arrive_slow",
+    );
   });
 });
 
