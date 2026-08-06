@@ -1429,7 +1429,16 @@ export function buildPropLines(
           jumpable: line.jumpable ?? false,
         });
       } else {
-        decor.push({ kind: line.sprite, sprite: line.sprite, pos });
+        // The line's own bearing rides along on the piece — see `Decor.facing`.
+        // A ONE-PROP line (a prefab's mop bucket, `from` === `to`) has no
+        // direction to state, and says so by leaving it off rather than by
+        // claiming east.
+        decor.push({
+          kind: line.sprite,
+          sprite: line.sprite,
+          pos,
+          ...(n.len > 0 ? { facing: Math.atan2(n.y, n.x) } : {}),
+        });
       }
       if (n.len === 0) break;
     }

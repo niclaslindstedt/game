@@ -435,6 +435,29 @@ export function hasStackRoom(player: Player, item: Equipment): boolean {
 }
 
 /**
+ * HOW MANY more copies of `item` the bag could take, counting the same two
+ * routes `addToInventory` takes: the room left in every existing stack of its
+ * base, plus what the empty cells would hold. The counting half of
+ * `hasStackRoom`, read by the counter's bulk purchase (`stockBuyableCount`) so
+ * a BUY ALL never promises units the bag would then refuse. Ordinary gear
+ * answers "one per empty cell", which is the free-cell count.
+ */
+export function inventoryRoomFor(player: Player, item: Equipment): number {
+  const cap = stackCapOf(item);
+  const free = player.inventory.filter((cell) => cell === null).length;
+  if (cap <= 1) return free;
+  // A merge is WHOLE or not at all, so a unit of `incoming` fits only where
+  // that many places are left — hence the floor rather than the raw remainder.
+  const incoming = item.qty ?? 1;
+  let room = free * Math.floor(cap / incoming);
+  for (const cell of player.inventory) {
+    if (cell === null || cell.defId !== item.defId) continue;
+    room += Math.floor((cap - (cell.qty ?? 1)) / incoming);
+  }
+  return room;
+}
+
+/**
  * Add loot to the bag; false (and no mutation) when there is nowhere for it.
  * A STACKABLE piece (`stackCapOf` > 1) first tries to merge WHOLE into an
  * existing stack of its base — whole or not at all, so a refusal never leaves

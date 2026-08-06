@@ -113,6 +113,24 @@ export function tickAbilityClock(
 }
 
 /**
+ * HOW MANY copies of `defId` the dock could take right now: the room left under
+ * the carry cap, and at most ONE for a `uniqueHeld` power (the NUKE) — none at
+ * all while a copy is already docked. The counting half of `canBankAbility`,
+ * split out so a bulk purchase across the counter (`stockBuyableCount`) asks
+ * the dock's own rule rather than a second copy of it.
+ */
+export function abilityBankRoom(
+  state: GameState,
+  player: Player,
+  defId: string,
+): number {
+  const held = player.heldAbilities;
+  const room = Math.max(0, HELD_ITEMS.cap - held.length);
+  if (!abilityDef(defId).uniqueHeld) return room;
+  return held.includes(defId) ? 0 : Math.min(1, room);
+}
+
+/**
  * Whether a pickup of `defId` can bank into the powerup dock right now: there
  * must be room under the carry cap, and a `uniqueHeld` power (the NUKE) is
  * refused while a copy is already docked. The one gate every route into the
@@ -125,9 +143,7 @@ export function canBankAbility(
   player: Player,
   defId: string,
 ): boolean {
-  const held = player.heldAbilities;
-  if (held.length >= HELD_ITEMS.cap) return false;
-  return !(abilityDef(defId).uniqueHeld && held.includes(defId));
+  return abilityBankRoom(state, player, defId) > 0;
 }
 
 /**

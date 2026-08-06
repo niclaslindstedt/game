@@ -29,7 +29,7 @@ import {
   type Rng,
 } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
-import { canBankAbility } from "./abilities.ts";
+import { abilityBankRoom, canBankAbility } from "./abilities.ts";
 import {
   CONSUMABLES,
   ECONOMY,
@@ -53,6 +53,7 @@ import {
   consumableName,
   equipmentName,
   hasStackRoom,
+  inventoryRoomFor,
   markIdentified,
   medkitTierIndex,
   mintUnique,
@@ -911,9 +912,9 @@ export function sellItem(
 /**
  * Put a just-sold piece on the trader's BUY-BACK shelf at the front (most
  * recent first — the mistake a player wants back is almost always the LAST
- * thing that left the bag, and a SELL ALL of a full bag would otherwise bury
- * it under eleven mops). At `MERCHANT.buybackSlots` the OLDEST entry falls off
- * the end for good.
+ * thing that left the bag, and a SELL JUNK sweep of a full bag would otherwise
+ * bury it under eleven mops). At `MERCHANT.buybackSlots` the OLDEST entry
+ * falls off the end for good.
  */
 function shelveForBuyback(
   merchant: Merchant,
@@ -1022,6 +1023,31 @@ function canCarryStock(
 }
 
 /**
+ * HOW MANY units of this row the hero could TAKE right now, purse aside — the
+ * counting form of `canCarryStock`, and it must agree with it exactly for the
+ * same reason: the two answer the same question at two arities.
+ */
+function stockCarryRoom(
+  state: GameState,
+  hero: Player,
+  entry: MerchantStock,
+): number {
+  switch (entry.kind) {
+    case "ability":
+      return abilityBankRoom(state, hero, entry.defId);
+    case "weapon":
+      return inventoryRoomFor(hero, entry.equipment);
+    case "consumable": {
+      const held =
+        entry.item === "medkit"
+          ? (hero.medkits[medkitTierIndex(entry.tier)] ?? 0)
+          : hero[entry.item === "repair" ? "repairKits" : "staminaPotions"];
+      return Math.max(0, CONSUMABLES.stackCap - held);
+    }
+  }
+}
+
+/**
  * Buy one unit of the stall entry with `stockId`, spending the entry's `qty`.
  * A POWERUP goes to the powerup dock, a WEAPON into the bag, a CONSUMABLE into
  * its dock stack — each refused (with no coins spent and no unit spent) when
@@ -1095,4 +1121,30 @@ export function canBuyStock(
   if (entry.qty <= 0) return false;
   if (hero.coins < entry.price) return false;
   return canCarryStock(state, hero, entry);
+}
+
+/**
+ * How many units of this row a BUY ALL would actually take: the pile's own
+ * depth, what the purse covers, and what the hero can carry — the smallest of
+ * the three. The counter reads it for the stacked row's second button, both to
+ * price the tap before it happens and to decide whether that button is worth
+ * offering at all; a promise of seven when the dock holds three is a button
+ * that lies about what it does.
+ *
+ * The purchase itself is still `buyStock` per unit, which re-checks all three
+ * — this only says how far that loop will get.
+ */
+export function stockBuyableCount(
+  state: GameState,
+  hero: Player,
+  entry: Merchant["stock"][number],
+): number {
+  if (entry.qty <= 0) return 0;
+  // A free row (a mod's, or a giveaway) is bounded by the pile, not the purse.
+  const affordable =
+    entry.price > 0 ? Math.floor(hero.coins / entry.price) : entry.qty;
+  return Math.max(
+    0,
+    Math.min(entry.qty, affordable, stockCarryRoom(state, hero, entry)),
+  );
 }

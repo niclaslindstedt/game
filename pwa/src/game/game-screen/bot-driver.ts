@@ -9,15 +9,16 @@ import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import type { MutableRefObject } from "react";
 
 import {
-  giverTopics,
   botAct,
   botAllocate,
   botCareCommand,
   botPickTalent,
   createBot,
   driveBotActions,
+  driveBotHub,
   driveBotUpkeep,
   gateKeyTarget,
+  heroCar,
   tradeAtMerchant,
   wantsMerchantVisit,
   type Bot,
@@ -61,7 +62,8 @@ export function createBotDriver(deps: {
   userPausedRef: MutableRefObject<boolean>;
   /** Sim ms of the bot's last merchant counter visit — the cooldown gate so
    * it doesn't re-open a stall every tick. A component-lifetime ref so it
-   * carries across the ride's own run remounts. */
+   * carries across the ride's own run remounts, which is also why the gate
+   * below has to notice that a FRESH RUN restarts the clock at zero. */
   botShopMsRef: MutableRefObject<number>;
   /** Dismiss the level intro and roll the level theme (the run's opener). */
   beginRun: () => void;
@@ -123,27 +125,20 @@ export function createBotDriver(deps: {
       runCommand(state, "advanceDialogue");
       bumpUi();
     }
-    // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot takes it. An unattended
-    // AUTO PILOT run parked in a quest modal forever is the failure this
-    // exists to prevent — but the right answer is not "dismiss it": xp, coins
-    // and loot are exactly what the ride is paying for, and accepting also
-    // means an autoplay run actually exercises the quest system. It skips the
-    // speech (a bot has nothing to read) and hands in whatever is finished
-    // whenever it happens to wander back past the giver.
-    if (localScreen(state) === "quest") {
-      const offer = state.questOffer;
-      if (offer?.kind === "list") {
-        // A giver with several errands opens on the pick list; the bot takes
-        // them top-down (finished work first, then fresh work — `giverTopics`
-        // already orders it that way), one per frame.
-        const first = giverTopics(state, offer.giverId)[0];
-        if (first) runCommandOk(state, "pickQuestTopic", first.questId);
-        else runCommand(state, "closeQuestDialogue");
-      } else if (offer?.kind === "offer") runCommandOk(state, "acceptQuest");
-      else if (offer?.kind === "complete") runCommand(state, "turnInQuest");
-      else runCommand(state, "closeQuestDialogue");
-      bumpUi();
-    }
+    // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot takes it — and at HOME it
+    // goes and asks for one. Both halves are the engine's decision now
+    // (`driveBotHub` → bot/hub.ts): work whatever conversation is open (take
+    // the offer, hand in the finished errand, sit through the meeting a person
+    // owes), and on a hub tap the giver with a mark over their head or climb
+    // into the car. An unattended AUTO PILOT run parked in a quest modal
+    // forever is the failure the first half exists to prevent — and the right
+    // answer was never "dismiss it": xp, coins and loot are exactly what the
+    // ride is paying for.
+    //
+    // OUTSIDE the `fieldLive` gate below, deliberately: a hero reading a quest
+    // box HAS a screen up, so a tick gated on him not having one is a tick
+    // that can never close it.
+    if (driveBotHub(drivingBot, state, localHero(state), send)) bumpUi();
     // The bot always SPARES a kneeling unique — autoplay runs exercise
     // the companion systems, and a party beats a lone bot anyway.
     if (state.phase === "choice") {
@@ -255,6 +250,19 @@ export function createBotDriver(deps: {
         acted = driveBotActions(state, localHero(state), send);
       }
       if (acted) bumpUi();
+      // A FRESH RUN RESTARTS THE CLOCK, and the ref does not: it is a
+      // component-lifetime ref carrying SIM ms across the run remounts a ride
+      // causes, so a level entered after a trade came in with the mark in its
+      // FUTURE and the cooldown ran from `timeMs 0` — a full 15 s of the new
+      // level with the counter shut. On the hub, which is nothing but arrive,
+      // trade and leave, that is the whole visit spent standing at a stall
+      // doing nothing. A clock that went backwards means a new run, so the mark
+      // is stale.
+      // (`-Infinity` is the ref's own "never traded" value — the same one it
+      // starts a fresh mount on, so this is a rewind rather than a new rule.)
+      if (state.stats.timeMs < botShopMsRef.current) {
+        botShopMsRef.current = -Infinity;
+      }
       if (
         wantsMerchantVisit(state, localHero(state)) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&
@@ -308,8 +316,10 @@ export function createBotDriver(deps: {
     input.fire = undefined;
     // An OPEN travel gate overrides the steer: the AUTO PILOT walks
     // straight into the door it just tore open (stepGates books the
-    // crossing on arrival — the gateEntered handler travels).
-    if (!bot && state.autopilot.active) {
+    // crossing on arrival — the gateEntered handler travels). NOT while he is
+    // at a wheel, though: a driver is not walking anywhere, and pointing the
+    // CAR at a gate would drive the hub's drive-out into a doorway.
+    if (!bot && state.autopilot.active && !heroCar(state, localHero(state))) {
       const gate = state.gates.find((g) => !g.entered);
       if (gate) {
         input.steering = true;

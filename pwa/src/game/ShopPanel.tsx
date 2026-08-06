@@ -6,13 +6,14 @@
 // the hero's BAG below, where every piece is worth what he'll pay for it.
 //
 // Tapping anything raises a FLOATING CARD beside the cell (ShopDealCard) with
-// the trade's own BUY/SELL button in it; tapping past the cells puts it away.
-// That card replaced a fixed detail bar at the foot of the panel, which had to
-// reserve room for the tallest item it might ever show and so spent a third of a
-// phone screen on a TAP AN ITEM TO TRADE hint. SELL JUNK clears every outgrown
-// piece in one tap, using the same scrap rule as the inventory's sweep. All
-// mutations go through the engine's shop API (sellItem/buyStock) and `onChange`
-// re-renders.
+// the trade's own BUY/SELL button in it — and, on a STACKED stall row, a second
+// BUY ALL that clears the pile in one tap for what it will really cost; tapping
+// past the cells puts it away. That card replaced a fixed detail bar at the foot
+// of the panel, which had to reserve room for the tallest item it might ever
+// show and so spent a third of a phone screen on a TAP AN ITEM TO TRADE hint.
+// SELL JUNK clears every outgrown piece in one tap, using the same scrap rule as
+// the inventory's sweep. All mutations go through the engine's shop API
+// (sellItem/buyStock) and `onChange` re-renders.
 
 import { localHero } from "./local-seat.ts";
 import { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ import {
   merchantName,
   repairAllCost,
   sellValue,
+  stockBuyableCount,
   wornCounterpart,
   type Equipment,
   type GameState,
@@ -146,44 +148,42 @@ function DealLabel({
 }
 
 /**
- * A one-tap bulk-sell tool in the bag header: a coin glyph (one for JUNK, a
- * stack of three for ALL), the label, and — when there's anything to sell —
- * the coins it would fetch. Disabled (and total hidden) when nothing qualifies
- * so it can never fire on an empty bag.
+ * The counter's one bulk-sell tool: every OUTGROWN piece across the counter in
+ * a single gesture (the inventory's own scrap rule), wearing a coin, the label,
+ * and — when there's anything to sell — the coins it would fetch. Disabled (and
+ * total hidden) when nothing qualifies, so it can never fire on an empty bag.
+ *
+ * It is the counter's ONLY bulk sale: a SELL ALL sat beside it and sold the
+ * keepers too, and it is gone. A whole bag still crosses the counter one deal
+ * card at a time.
  */
-function BulkSellButton({
+function SellJunkButton({
   font,
   sprites,
-  coinIcon,
-  label,
-  ariaLabel,
   total,
   count,
   onSell,
 }: {
   font: PixelFont;
   sprites: Sprites;
-  coinIcon: string;
-  label: string;
-  ariaLabel: string;
   total: number;
   count: number;
   onSell: () => void;
 }) {
   const enabled = count > 0;
-  const coin = spriteDataUrl(sprites, coinIcon);
+  const coin = spriteDataUrl(sprites, "icon_coin");
   return (
     <button
       type="button"
       className="pixel-button secondary shop-bulk-btn"
-      aria-label={ariaLabel}
+      aria-label="sell-junk"
       disabled={!enabled}
       onClick={enabled ? onSell : undefined}
     >
       {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
       <PixelText
         font={font}
-        text={label}
+        text="SELL JUNK"
         scale={2}
         color={enabled ? "#e6e8eb" : "#5a6470"}
       />
@@ -281,7 +281,7 @@ function IdentifyButton({
  * Open the BUY-BACK shelf — the undo beside the sell tools it undoes. It wears
  * the satchel the LOST & FOUND's rows wear (the two screens are the same idea
  * at two prices) and carries the count of what is on the shelf, so a player who
- * has just fired SELL ALL can see at a glance that the seven pieces are still
+ * has just swept SELL JUNK can see at a glance that the seven pieces are still
  * recoverable. Dead until something has actually been sold here.
  */
 function BuybackButton({
@@ -444,13 +444,17 @@ export function ShopPanel({
     );
   const junkTotal = junk.reduce((sum, e) => sum + sellValue(e.item), 0);
 
-  // SELL ALL: the whole bag across the counter in one gesture — every loose
-  // piece, keepers included (the equipped loadout is untouched). The count
-  // gates the button; the total is what the purse gains.
-  const bag = player.inventory
-    .map((item, index) => ({ item, index }))
-    .filter((e): e is { item: Equipment; index: number } => e.item !== null);
-  const bagTotal = bag.reduce((sum, e) => sum + sellValue(e.item), 0);
+  // BUY ALL: how many units of the selected STACKED row a single tap would
+  // actually take — the pile's depth, the purse and the carry room at once
+  // (stockBuyableCount), so the button's price tag is what the loop below will
+  // really spend rather than an optimistic multiplication.
+  const bulkBuy = selectedStock
+    ? stockBuyableCount(state, player, selectedStock)
+    : 0;
+  // What that button SHOWS: the units it would take, or — when it can't take
+  // two and is therefore dead — the whole pile it is dimmed against, which is
+  // the number that explains the dimming.
+  const bulkShown = bulkBuy > 1 ? bulkBuy : (selectedStock?.qty ?? 0);
 
   // REPAIR ALL: the coins to mend the worn weapon, worn armor, and every
   // breakable bag piece back to full (0 when the whole kit is already whole).
@@ -502,6 +506,22 @@ export function ShopPanel({
     } else {
       playUiSound(synth, "back");
     }
+  };
+
+  // BUY ALL: clear the stacked row in one tap. Still ONE `buyStock` per unit —
+  // the verb every other route buys through, re-checking the purse and the
+  // room each time — so this can never take a unit the single BUY would have
+  // refused, and a session's command channel sees the same verb it always did.
+  // `bulkBuy` bounds the loop, and the refusal breaks it anyway.
+  const doBuyAll = (entry: MerchantStock, count: number) => {
+    let bought = 0;
+    while (bought < count && runCommandOk(state, "buyStock", entry.id)) {
+      bought += 1;
+    }
+    playUiSound(synth, bought > 0 ? "equip" : "back");
+    if (bought === 0) return;
+    if (entry.qty <= 0) setSelected(null);
+    onChange();
   };
 
   return (
@@ -765,33 +785,13 @@ export function ShopPanel({
         <div className="shop-footer">
           <div className="shop-footer-sell">
             {/* SELL JUNK: only the outgrown pieces, one coin. */}
-            <BulkSellButton
+            <SellJunkButton
               font={font}
               sprites={sprites}
-              coinIcon="icon_coin"
-              label="SELL JUNK"
-              ariaLabel="sell-junk"
               total={junkTotal}
               count={junk.length}
               onSell={() => {
                 for (const { index } of junk)
-                  runCommand(state, "sellItem", index);
-                playUiSound(synth, "confirm");
-                setSelected(null);
-                onChange();
-              }}
-            />
-            {/* SELL ALL: the whole bag, a stack of three coins. */}
-            <BulkSellButton
-              font={font}
-              sprites={sprites}
-              coinIcon="icon_coins"
-              label="SELL ALL"
-              ariaLabel="sell-all"
-              total={bagTotal}
-              count={bag.length}
-              onSell={() => {
-                for (const { index } of bag)
                   runCommand(state, "sellItem", index);
                 playUiSound(synth, "confirm");
                 setSelected(null);
@@ -864,20 +864,44 @@ export function ShopPanel({
               : null
           }
           action={
-            <button
-              type="button"
-              className="pixel-button shop-deal-btn"
-              aria-label="buy-selected"
-              disabled={!canBuyStock(state, localHero(state), selectedStock)}
-              onClick={() => doBuy(selectedStock)}
-            >
-              <DealLabel
-                font={font}
-                sprites={sprites}
-                verb="BUY"
-                amount={selectedStock.price}
-              />
-            </button>
+            <div className="shop-deal-actions">
+              <button
+                type="button"
+                className="pixel-button shop-deal-btn"
+                aria-label="buy-selected"
+                disabled={!canBuyStock(state, localHero(state), selectedStock)}
+                onClick={() => doBuy(selectedStock)}
+              >
+                <DealLabel
+                  font={font}
+                  sprites={sprites}
+                  verb="BUY"
+                  amount={selectedStock.price}
+                />
+              </button>
+              {/* BUY ALL — offered only on a STACKED row (a pile of medkits,
+                  salts, lookup tickets), because on a one-off weapon it would
+                  be the BUY button twice. It prices what it will actually take:
+                  when the purse or the carry room stops short of the pile, the
+                  button dims and shows the pile's own cost, so a dead button
+                  still says WHY it is dead. */}
+              {selectedStock.qty > 1 && (
+                <button
+                  type="button"
+                  className="pixel-button shop-deal-btn"
+                  aria-label="buy-all-selected"
+                  disabled={bulkBuy < 2}
+                  onClick={() => doBuyAll(selectedStock, bulkBuy)}
+                >
+                  <DealLabel
+                    font={font}
+                    sprites={sprites}
+                    verb={`BUY ALL ${bulkShown}`}
+                    amount={bulkShown * selectedStock.price}
+                  />
+                </button>
+              )}
+            </div>
           }
         />
       )}

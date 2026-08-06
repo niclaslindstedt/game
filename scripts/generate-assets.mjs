@@ -46,7 +46,9 @@ import {
   FAMILIES,
   SPRITE_FAMILY,
   SPRITE_PALETTES,
+  SPRITE_DIRECTIONAL,
   SPRITE_PLANES,
+  SPRITE_RISE,
   SPRITES,
   WOUND_PLANS,
 } from "./sprite-data/index.mjs";
@@ -156,13 +158,33 @@ writeFileSync(`${assetsDir}/atlas.json`, `{\n${rectLines.join(",\n")}\n}\n`);
 // the atlas rects: `SpriteName` is `keyof typeof atlas.json`, and widening
 // every entry to carry a plane would make the atlas a record of records for the
 // sake of a property a few dozen sprites set. Sorted, so the file diffs.
-const floorSprites = Object.entries(SPRITE_PLANES)
-  .filter(([, plane]) => plane === "floor")
-  .map(([name]) => name)
-  .sort();
+//
+// Three lists, because a plan-view sprite answers up to three questions: which
+// plane (`floor` lies flat, `wall` is extruded off its footprint), how far a
+// wall RISES, and whether flat art RUNS one way and has to be turned to its
+// placement's bearing (`render/plane.ts`).
+const byPlane = (want) =>
+  Object.entries(SPRITE_PLANES)
+    .filter(([, plane]) => plane === want)
+    .map(([name]) => name)
+    .sort();
+const wallSprites = Object.fromEntries(
+  byPlane("wall").map((name) => [name, SPRITE_RISE[name]]),
+);
+const directionalSprites = byPlane("floor").filter(
+  (name) => SPRITE_DIRECTIONAL[name],
+);
 writeFileSync(
   `${assetsDir}/sprite-planes.json`,
-  `${JSON.stringify({ floor: floorSprites }, null, 2)}\n`,
+  `${JSON.stringify(
+    {
+      floor: byPlane("floor"),
+      wall: wallSprites,
+      directional: directionalSprites,
+    },
+    null,
+    2,
+  )}\n`,
 );
 
 // Contact sheets: one per family over ITS ground tile (the reviewable

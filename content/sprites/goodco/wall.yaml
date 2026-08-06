@@ -1,6 +1,10 @@
 name: wall
 family: goodco
-plane: floor
+# THE WALL STANDS. Its art is a plan view of a partition, not paint on the
+# ground: drawn flat it read as a slightly darker paving slab, and with the
+# camera turned a lab's rooms stopped being rooms. `plane: wall` keeps the same
+# footprint and extrudes it (render/plane.ts).
+plane: wall
 size: [16, 16]
 description: >
   A section of solid dark-grey lab wall panel with a beveled metal edge; blocks

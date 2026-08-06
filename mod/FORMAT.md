@@ -590,30 +590,48 @@ grid: |
   `size[1]` rows. The compiler checks both.
 - Every character in the grid must be in the palette.
 - `plane:` says which plane the art is drawn on — `upright` (the default) for
-  anything with a side to it, `floor` for art drawn in PLAN. See below.
+  anything with a side to it, `floor` for flat art drawn in PLAN, `wall` for
+  plan art that has a HEIGHT. See below.
 
-### `plane:` — does it stand up, or does it lie down?
+### `plane:` — does it stand up, lie down, or stand on its own footprint?
 
 The camera looks at the ground at an angle, so the floor foreshortens (and, with
-the yaw knob up, turns). Which half of that a sprite belongs to is a property of
+the yaw knob up, turns). Which of the three a sprite belongs to is a property of
 the ART, so the art says so:
 
 ```yaml
-plane: floor # a wall panel, a painted marking, a hatch, a crate seen from above
+plane: floor # a painted marking, a hatch, a crate seen from above
+plane: wall # a wall panel, a parapet, a barrier — plan art you cannot see past
+rise: 12 # wall only: how far it stands off its footprint (default: its own height)
 ```
 
 `upright` — the default, so a sprite that says nothing keeps the obvious
 behaviour — is a thing with a SIDE to it: a body, a rock, a building front. It is
 anchored at its spot on the floor and then drawn standing at full size.
 
-`floor` is art drawn looking straight DOWN at it. It belongs to the ground and
-takes the projection whole, exactly as the ground tiles under it do. Get this
-wrong on a wall panel and it comes out taller than the floor grid it is set into
-— and once the camera is turned, a straight run of them staircases diagonally
-across a floor whose own seams run the other way.
+`floor` is art drawn looking straight DOWN at it, on something genuinely FLAT.
+It belongs to the ground and takes the projection whole, exactly as the ground
+tiles under it do. Get this wrong on a body and it comes out squashed into a
+distorted picture of the same top-down game.
 
-It applies to the level's furniture — obstacles, decor, landmarks, lair doors,
-elevator pads. Characters always stand up.
+`wall` is plan art whose subject is not flat — a partition, a low barrier. The
+footprint stays on the floor and the piece is EXTRUDED off it: the same art,
+stacked `rise` px upward with the cap on top. Drawn as plain `floor` art a wall
+reads as a paving slab, and with the camera turned a room's walls become a
+slightly darker path across the floor you would walk straight over. `rise`
+defaults to the art's own height, so a 16×16 plan panel becomes a 16-px wall.
+
+A door hung in a wall run belongs on the wall's plane too — a door on a different
+plane from its run is a hole in the world.
+
+`directional: true` (on `floor` art only) says the picture RUNS one way — a
+conveyor belt, whose rails go along it and whose rollers cross it. Directional
+art is authored running SOUTH, down the sprite's own rows; a placement that knows
+its bearing (a `propLine`) turns the piece to match, so the same belt reads right
+in an east-west bay and a north-south one.
+
+All of this applies to the level's furniture — obstacles, decor, landmarks, lair
+doors, elevator pads. Characters always stand up.
 
 A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble

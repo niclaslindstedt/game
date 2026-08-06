@@ -60,6 +60,7 @@ import {
 } from "../companions.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import { gearDef, isGearDef, SIDEARM_DEF_ID } from "../defs/equipment.ts";
+import { atHub } from "./hub.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type {
   Equipment,
@@ -313,11 +314,18 @@ function kitWornOut(state: GameState, hero: Player): boolean {
  * worn out with no repair kit stocked and the purse covers the mend. Every
  * clause clears itself after a `tradeAtMerchant`, so the errand can't loop.
  * Pure — `macro.ts` reads it to steer, the harnesses to trade.
+ *
+ * AT HOME IT IS A WIDER QUESTION ({@link hubTradePays}), because the walk is
+ * not a detour there: the stall stands between the workbench and the road, and
+ * the hero is about to leave for a level.
  */
 export function wantsMerchantVisit(state: GameState, hero: Player): boolean {
-  // …and a trader who has been run over is no counter at all: the errand would
-  // steer the hero to a wet patch of road and stand there wanting.
+  // …and a trader who has been RUN OVER is no counter at all — checked before
+  // the hub's own wider question below, because at home he is exactly the one
+  // who can be: the errand would otherwise steer the hero out to a wet patch
+  // of road and stand there wanting.
   if (!state.merchant.discovered || state.merchant.dead) return false;
+  if (atHub(state) && hubTradePays(state, hero)) return true;
   const junk = sellableJunkCount(state, hero);
   if (
     weaponStarved(state, hero) &&
@@ -336,6 +344,43 @@ export function wantsMerchantVisit(state: GameState, hero: Player): boolean {
   // the rest of the campaign a companion short, and every reason it HAD to
   // visit (junk, a worn kit) clears itself long before it would think to.
   if (needsRevive(state, hero) && affordableRevive(state, hero)) return true;
+  return false;
+}
+
+/**
+ * WOULD A COUNTER VISIT AT HOME RESOLVE ANYTHING? The hub's own, wider read —
+ * the one `wantsMerchantVisit` defers to on a hub level.
+ *
+ * Out in the field a stall visit is a DETOUR, so it has to earn the walk: three
+ * pieces of junk, a blade about to snap, a friend face-down. At home it earns
+ * nothing, because the counter is on the way to the road and the hero is about
+ * to set out — a player kits up before leaving, whatever is or is not urgent.
+ * So the bar drops to "is there anything to do here at all":
+ *
+ *   • ANY outgrown piece to bank for coins (not a sell run's worth);
+ *   • ANY wear on the kit the purse can mend — a repair kit in the pouch is no
+ *     longer an excuse, since spending one at home is spending it for nothing;
+ *   • a stall weapon that beats what is in his hand;
+ *   • a shelf the pouch has room for and the purse covers.
+ *
+ * **EVERY CLAUSE HAS TO BE ONE `tradeAtMerchant` ACTUALLY CLEARS**, or the
+ * errand outranks the car forever and the ride never leaves the driveway. The
+ * consumable clause therefore mirrors the counter routine's own RESERVE rule
+ * (keep back the price of the next mend) rather than plain affordability —
+ * conservative, so at worst the bot walks past a top-up it could have made.
+ * Pure.
+ */
+function hubTradePays(state: GameState, hero: Player): boolean {
+  if (sellableJunkCount(state, hero) > 0) return true;
+  const mend = repairAllCost(state, hero);
+  if (mend > 0 && hero.coins >= mend) return true;
+  if (affordableStallUpgrade(state, hero)) return true;
+  if (needsRevive(state, hero) && affordableRevive(state, hero)) return true;
+  for (const entry of state.merchant.stock) {
+    if (entry.kind !== "consumable") continue;
+    if (!canBuyStock(state, hero, entry)) continue;
+    if (hero.coins - entry.price >= mend) return true;
+  }
   return false;
 }
 

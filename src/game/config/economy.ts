@@ -120,10 +120,10 @@ export const MERCHANT = {
    * for exactly the coins he paid for it.
    *
    * Twelve, World of Warcraft's number, and for its reason: the shelf exists
-   * to undo a MISTAKE (a mis-tap on the deal card, a SELL ALL that went out
-   * with a keeper still in the bag), not to be a second bag the hero parks his
-   * overflow in. A dozen is more than any one visit's regret and far fewer than
-   * a stash. It costs nothing either way — a bought-back piece is bought at the
+   * to undo a MISTAKE (a mis-tap on the deal card, a SELL JUNK sweep that went
+   * out with a keeper still in the bag), not to be a second bag the hero parks
+   * his overflow in. A dozen is more than any one visit's regret and far fewer
+   * than a stash. It costs nothing either way — a bought-back piece is bought at the
    * price it sold for, so the shelf moves no coins, only mistakes.
    *
    * It is the TRADER's memory, so it dies with him: a new level is a new

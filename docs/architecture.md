@@ -1056,7 +1056,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   choosing a direction starts a clock, and until it runs out the hero may
   correct, turn, or stop freely but may not turn AROUND — he stands still for the
   wait instead of strobing back and forth between two disagreeing reads (the
-  reflex dodges preempt it). Its
+  reflex dodges preempt it). A goal no A\* route reaches gets one question asked
+  before the sweep gives up on it: **is there a SHUT DOOR in the way that would
+  open if he walked up to it** (`doorwayVia` in `src/game/bot/nav.ts`)? The nav
+  grid is built from the obstacle field, so a closed `approach` door — the
+  garage's roll-up, every office door on GOODCO's floor — reads as a solid wall
+  and the plan came back empty; the bot now walks to the leaf instead, which is
+  what a player does, and the door's own obstacle chain vanishes on arrival.
+  Its
   positioning is data-tuned: `src/game/bot/tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
   hand-authored `content/bot.yaml` (a global `default` layer + per-level
@@ -1085,6 +1092,38 @@ escort.ts` walks the people an escort errand puts on the field, and
   simulating in a session server sends its housekeeping instead of writing to a
   replica the next snapshot erases. See docs/multiplayer.md → "The autopilot is
   an intent".
+
+- **`src/game/bot/hub.ts`** — THE AUTOPILOT AT HOME. A HUB level
+  (`objective.type === "hub"` — the garage, or a mod's own town) is the one
+  venue whose whole content is PEOPLE AND DOORS: no knot is ever placed, nothing
+  is loot, the floor starts `revealed` and the objective never clears, so every
+  rung of the macro ladder answered "nothing" and `botAct`'s empty-field branch
+  simply stood the hero still — engaging the AUTO PILOT in the garage did
+  nothing at all. This module is the ladder home needs, in the order a player
+  works the room: **the PEOPLE** with a `!` or a `?` over their head
+  (`hubGiverTarget` → `talkToQuestGiver`, then `botScreenCommand` takes the
+  offer / hands the finished errand back / sits through the meeting a person
+  owes before their slate opens), **the COUNTER** (`wantsMerchantVisit` widens at
+  home — the stall is on the way to the road, so ANY junk, ANY affordable mend
+  and any shelf the pouch has room for earns the walk), then **the CAR**
+  (`enterCar`, and `driveOutInput` steers it down the A\* route, through the
+  roll-up and onto the level's `driveOut` road, where `vehicles.ts` books the
+  trip). The verbs travel as intents like every other autopilot action, through
+  `driveBotHub` / `runBotHub` — a THIRD half of the tick, called before the
+  other two because a hero reading a quest box has a SCREEN up and both of those
+  are gated on him not having one.
+
+  Two rules hold it together. **The press is the errand the walk is on**, never
+  what happens to be in reach — the hero spawns sitting on the parking spot, so
+  a reach-first ladder drove out on the first tick of every visit. And **the
+  counter can never strand the ride**: standing at the stall with a want no
+  trade can satisfy is written off after `HUB_SHOP_GIVEUP_MS`, so an unattended
+  ride cannot burn its meter in its own driveway.
+
+  **The errand boundary moves at home, and only at home.** Out in the field the
+  bot still never walks to a giver and never accepts anything — taking an errand
+  mid-fight is the player's decision (`src/game/bot/errands.ts`). The hub is the
+  one place where working the slate IS the level.
 
 - **`src/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
   the hand, moment by moment. The hero hauls a kit — a boss ROUND, a crowd
