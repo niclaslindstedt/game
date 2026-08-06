@@ -187,10 +187,16 @@ storyItems:
     lore:
       - - "A BURNT PROBE, STAMPED TRUST ME BRO AI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
       - - "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
-  # THE FOUNDER's parting gift, dropped where he says "KEEP THE RIFT, GARAGE
-  # MAN" — the device that unseals the garage's RIFT SEAM (a KEEPSAKE: banked
-  # on the character, so the seam stays open on every later run). Its second
-  # page states the D2 going-back rule in the fiction's own words: the seam
+  # OUT OF THE FOUNDER's COAT, not a gift: it falls out of his pocket as he
+  # bolts through the tear he just tore, and he is in far too much of a hurry
+  # to feel it go. That it costs him so little is IMPLICIT and must stay that
+  # way — he owns the machines that made it — so the second page notices and
+  # does not explain.
+  #
+  # THE CAMPAIGN'S TOWN PORTAL, and a KEEPSAKE (banked on the character, so it
+  # can never be sold, dropped or lost to a death): it unseals the garage's
+  # RIFT SEAM and lets the hero tear a way home from wherever he is standing.
+  # Its first page states the seam's own rule in the fiction's words — a seam
   # only reaches roads already walked.
   rift_creator:
     name: RIFT CREATOR
@@ -198,7 +204,7 @@ storyItems:
     keepsake: true
     lore:
       - - THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
-      - - HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
+      - - OUT OF HIS COAT WHILE HE RAN. HE WON'T MISS IT - AND NOW I CAN GET HOME FROM ANYWHERE.
   # ---- Boot Hill ------------------------------------------------------------
   # ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
   # the reunion's "nice hat" (see the epilogue in docs/manuscript.md).

@@ -91,7 +91,7 @@ travelDoors:
     unready: garage_ship_unfinished
   # THE RIFT SEAM — the ONE rift portal in the game that asks where to, which
   # is the whole point of the tool it runs on. Sealed until the RIFT CREATOR is
-  # bolted to the wall (`requires`: a keepsake banked on the character), and
+  # in the hero's pocket (`requires`: a keepsake banked on the character), and
   # then it reaches exactly the roads the hero has ALREADY WALKED through a
   # portal out in the world (`reached` — see Character.riftRoads), which is what
   # the keepsake's own lore says it does: it tears a seam to anywhere it has

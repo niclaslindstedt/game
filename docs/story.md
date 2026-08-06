@@ -320,14 +320,23 @@ bogged to the hubs eight months ago and still politely filing recovery request
 4,110, wants its lane cleared — and then a damaged companion unit, 0034, walked
 home to the dome.
 
-**The rig, and the first choice.** THE FOUNDER does not merely vanish: he rips a
-hole and bolts, and in the scramble his **RIFT CREATOR** falls out of his pocket
-— the rig that tears a seam to anywhere it has already been. Pick it up and the
-tear he left stops being his and starts being a door: on through after him, or
-home to the garage with everything just taken off him. Walk over the rig and the
-tear only says so, because it is still his hole and he took the handle with him.
-It drops HERE, on the first flight, because everything past Mars is a long way
-from home and this is the thing that makes that bearable.
+**The rig, and the first choice.** THE FOUNDER does not merely vanish: he tears a
+hole in the air and bolts through it, and running is not a thing he has had much
+practice at. The **RIFT CREATOR** comes out of his coat on the way — he is in far
+too much of a hurry to feel it go, and it never slows him down afterwards either.
+_(Why it costs him nothing is deliberately never said out loud: he owns the
+machines that made it. The game shows a coward dropping something expensive and
+leaves the arithmetic to the player.)_
+
+So the hero picks up a working rift tool, his to keep — and from that moment he
+is no longer somebody the map can strand. He can tear a way home from wherever he
+is standing, in the middle of a fight if he likes, and step back onto exactly the
+ground he left. The tear THE FOUNDER left behind becomes a door rather than a
+taunt: on through after him, or home with everything just taken off him. Walk
+over the rig instead and the tear only says so, because that one is still his and
+he took the handle with him. It drops HERE, on the first flight, because
+everything past Mars is a long way from home — and the campaign's whole back half
+is built on the hero being able to get back.
 
 ## Travel — INTO THE RIFT (cutscene)
 
