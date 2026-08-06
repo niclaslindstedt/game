@@ -210,6 +210,23 @@ export type ScenarioSpec = {
    * spot (see step/ `objectiveCleared`).
    */
   clearEnemies?: boolean;
+  /**
+   * WOUND THE LEVEL'S BOSS (and any escorting boss beside it — the rift ends on
+   * a pair) to this fraction of its bar, clamped to (0, 1]. `spawns.hpFrac`
+   * does the same to monsters the scenario itself places; this reaches the one
+   * body a scenario CANNOT place, because the boss is the level's own.
+   *
+   * Two things read the fraction and both are the point. The renderer swaps
+   * WOUND SPRITES off it (config WOUNDS — a boss's dying last stand at ≤0.1),
+   * so a battle-worn boss can be looked at without landing a blow; and
+   * `EnemyDef.phases` cross at it, so `bossHpFrac: 0.3` stages a two-phase
+   * fight ALREADY IN ITS SECOND PHASE, casting the kit that phase authors.
+   *
+   * Never kills: a sliver is left standing, so what happens next is a real kill
+   * down the ordinary path — the death FX, the corpse, the drops and the
+   * `bossCorpse` marker all arrive because the boss was actually felled.
+   */
+  bossHpFrac?: number;
   /** Exhaust the wave budget so the horde spawner stays silent and the
    * field holds exactly what the scenario placed. */
   stopWaves?: boolean;
@@ -416,6 +433,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
     state.stats.totalEnemies -= state.enemies.length - keep.length;
     state.enemies = keep;
   }
+  if (spec.bossHpFrac !== undefined) woundBoss(state, spec.bossHpFrac);
   if (spec.clearDrops) state.items = [];
   if (spec.stopWaves) {
     const waves = runLevelDef(state).waves;
@@ -441,6 +459,23 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   // the whole map, so nothing staged after it could re-darken anything anyway,
   // and reading it here keeps it visibly the final word on visibility.
   if (spec.reveal) state.explored.fill(1);
+}
+
+/**
+ * Take every boss on the field down to `frac` of its bar — one hit point at the
+ * very least, because a scenario poses a boss rather than killing one (the same
+ * rule `spawns.hpFrac` follows).
+ */
+function woundBoss(state: GameState, frac: number): void {
+  const bosses = state.enemies.filter((e) => enemyDef(e.defId).role === "boss");
+  if (bosses.length === 0) {
+    warn("scenario: bossHpFrac, but the level has no boss — nothing wounded");
+    return;
+  }
+  const wanted = clamp(frac, 0, 1);
+  for (const boss of bosses) {
+    boss.hp = clamp(Math.round(boss.maxHp * wanted), 1, boss.maxHp);
+  }
 }
 
 /** Mint a plain weapon at catalog durability (the fallback sidearm is

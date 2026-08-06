@@ -3,10 +3,10 @@
 // The store screenshot TIME MATRIX — the tool that finds the magnificent frame
 // instead of guessing at it.
 //
-// A screenshot of a 200 ms explosion is luck. This stages a recipe ONCE, then
-// samples the same live run at a schedule of delays, and composites every
-// sample into one numbered contact sheet. You LOOK at the sheet, pick the frame
-// that reads best, and re-run narrowly around it:
+// A screenshot of a 200 ms explosion is luck. This reproduces a recipe at a
+// schedule of delays and composites every sample into one numbered contact
+// sheet. You LOOK at the sheet, pick the frame that reads best, and re-run
+// narrowly around it:
 //
 //   # 1. coarse: where in the first couple of seconds does this look good?
 //   node pwa/scripts/store-shot-sweep.mjs --shot nuke
@@ -20,8 +20,13 @@
 // Sheets land in pwa/assets-preview/store-sweep/<shot>/ — `sheet.png` is the
 // one to open; the individual frames sit beside it.
 //
-// Sampling happens on ONE staged run, so the frames are a real timeline of a
-// single detonation/fight rather than a dozen re-rolls of the scenario.
+// EACH SAMPLE IS ITS OWN STAGED RUN — stage, trigger, wait, shoot, exactly as
+// store-shots.mjs does — so the frame you pick off the sheet is the frame the
+// capture reproduces. Sampling a single run instead would be faster and would
+// lie: a full-raster screenshot costs the better part of a second, so the
+// shutter drifts seconds past the schedule (see the comment on the loop). The
+// stagings are seeded and identical, so the sheet really is one fight sampled
+// at different depths. A full schedule takes a couple of minutes.
 //
 // Options:
 //   --shot <id[,id]>   which recipes to sweep (default: all)
@@ -31,11 +36,14 @@
 //   --device <name>    device to sweep on (default iphone-6.9 — sweeping the
 //                      iPad too doubles the time and the framing barely differs)
 //   --raw              skip the caption band (judge the gameplay alone)
+//   --safe             sweep with the mature-content gate shut, exactly as
+//                      `store-shots.mjs --safe` captures (see SAFE_POLICY in
+//                      store-shots/recipes.mjs). A delay picked off bloodied
+//                      frames is not necessarily the delay a safe set wants —
+//                      what a burst of gibs was covering can be an empty patch
+//                      of floor once the gate is shut — so tune each mode on a
+//                      sheet shot in that mode.
 //   --url <url>        dev server (default http://localhost:5199)
-
-// `window` below only appears inside page.evaluate / addInitScript callbacks,
-// which execute in the browser page, not in Node.
-/* global window */
 
 import { mkdirSync } from "node:fs";
 import process from "node:process";
@@ -48,9 +56,9 @@ import { BRAND_BG, captionBand, compose } from "./store-shots/compose.mjs";
 import {
   COARSE_MS,
   DEVICES,
-  SETTINGS_KEY,
   SHOTS,
   assertRasters,
+  prepareContext,
   stageRun,
 } from "./store-shots/recipes.mjs";
 
@@ -68,6 +76,7 @@ const span = Number(opt("span", 240));
 const frameCount = Number(opt("frames", 9));
 const deviceName = opt("device", "iphone-6.9");
 const raw = has("raw");
+const safe = has("safe");
 
 const device = DEVICES.find((d) => d.name === deviceName);
 if (!device) {
@@ -158,19 +167,7 @@ const context = await browser.newContext({
   hasTouch: device.touch ?? true,
   reducedMotion: "no-preference",
 });
-await context.addInitScript(
-  ([key]) => {
-    window.localStorage.setItem(
-      key,
-      JSON.stringify({
-        developerUnlocked: true,
-        musicVolume: 0,
-        sfxVolume: 0,
-      }),
-    );
-  },
-  [SETTINGS_KEY],
-);
+await prepareContext(context, { safe });
 
 for (const shot of shots) {
   const times = schedule(shot);
@@ -178,25 +175,43 @@ for (const shot of shots) {
   mkdirSync(dir, { recursive: true });
   console.log(
     `\n${shot.id} — ${times.length} samples ` +
-      `[${times[0]}..${times[times.length - 1]}ms] on ${device.name}`,
+      `[${times[0]}..${times[times.length - 1]}ms] on ${device.name}` +
+      (safe ? "  [safe: mature content off]" : ""),
   );
 
-  const page = await context.newPage();
-  page.on("pageerror", (e) => console.error(`  PAGE ERROR: ${e.message}`));
+  // ONE STAGED RUN PER SAMPLE, which is slower than it looks like it needs to
+  // be and is the only version that tells the truth.
+  //
+  // This used to stage once and take the whole schedule off that single run,
+  // on the reasoning that the sheet was then a real timeline of one detonation
+  // rather than a dozen re-rolls. The reasoning was sound and the arithmetic
+  // was not: a 2868x1320 screenshot, composited and written, costs the better
+  // part of a second, and every sample pays for the ones before it. Asked for
+  // 0/30/60/90...900 ms, that loop really fired the shutter at 0/2377/3218...
+  // 8025 ms — and labelled those frames with the numbers that had been asked
+  // for. So a sheet said "130 ms" over a picture of eight seconds in, and the
+  // delay copied off it into `captureAtMs` reproduced a frame nobody had ever
+  // looked at. Every sub-second window in the set was tuned through that lie.
+  //
+  // Re-staging per sample costs a fresh page and a walk through the menus each
+  // time (a couple of minutes for a full schedule), and buys the one property
+  // that matters: this is now EXACTLY what `store-shots.mjs` does — stage,
+  // trigger, wait, shoot — so the frame you pick off the sheet is the frame the
+  // capture reproduces. The stagings are seeded and identical, so they really
+  // are the same detonation, sampled at different depths into it.
+  const frames = [];
+  for (const atMs of times) {
+    const page = await context.newPage();
+    page.on("pageerror", (e) => console.error(`  PAGE ERROR: ${e.message}`));
+    try {
+      await stageRun(page, shot, url);
+      // The clock starts when the trigger RETURNS (or right after prepare, if
+      // there is none). A trigger that WAITS for something (the boss's windup,
+      // the boss falling) therefore costs the schedule nothing: 0 ms is the
+      // instant the thing happened, whenever that turned out to be.
+      if (shot.trigger) await shot.trigger(page);
+      if (atMs > 0) await page.waitForTimeout(atMs);
 
-  try {
-    await stageRun(page, shot, url);
-
-    // The clock starts at the trigger (or right after prepare, if there is
-    // none), and every sample is timed off that one instant — so the sheet is a
-    // real timeline of one event, not a dozen re-staged approximations.
-    const t0 = Date.now();
-    if (shot.trigger) await shot.trigger(page);
-
-    const frames = [];
-    for (const atMs of times) {
-      const wait = atMs - (Date.now() - t0);
-      if (wait > 0) await page.waitForTimeout(wait);
       const shotBuf = await page.screenshot();
       const buffer = raw
         ? shotBuf
@@ -206,18 +221,20 @@ for (const shot of shots) {
         `${dir}/${String(atMs).padStart(5, "0")}ms.png`,
       );
       process.stdout.write(`  ${atMs}ms`);
+    } catch (e) {
+      console.error(`\n  ✗ ${shot.id} @${atMs}ms: ${e.message}`);
+      process.exitCode = 1;
+    } finally {
+      await page.close();
     }
-    process.stdout.write("\n");
+  }
+  process.stdout.write("\n");
 
+  if (frames.length > 0) {
     await contactSheet(frames, shot, dir);
     console.log(
       `  sheet -> pwa/assets-preview/store-sweep/${shot.id}/sheet.png`,
     );
-  } catch (e) {
-    console.error(`  ✗ ${shot.id}: ${e.message}`);
-    process.exitCode = 1;
-  } finally {
-    await page.close();
   }
 }
 

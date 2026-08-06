@@ -259,6 +259,33 @@ describe("scenario / the field", () => {
     expect(fodder!.hp).toBe(1);
   });
 
+  it("wounds the level's own boss to the staged fraction", () => {
+    const state = startGame();
+    applyScenario(state, {
+      clearEnemies: true,
+      spawns: [{ enemy: "test_fodder", at: { x: 520, y: 500 } }],
+    });
+    const b = boss(state)!;
+    const fodder = state.enemies.find((e) => e.defId === "test_fodder")!;
+
+    applyScenario(state, { bossHpFrac: 0.25 });
+    expect(b.hp).toBe(Math.round(b.maxHp * 0.25));
+    // The horde is not a boss and is left exactly as it stood.
+    expect(fodder.hp).toBe(fodder.maxHp);
+
+    // A sliver is left standing whatever is asked for — a scenario poses a
+    // boss for the kill that follows, it never lands it.
+    applyScenario(state, { bossHpFrac: 0 });
+    expect(b.hp).toBe(1);
+  });
+
+  it("bossHpFrac on a field with no boss left is a no-op", () => {
+    const state = startGame();
+    state.enemies = [];
+    expect(() => applyScenario(state, { bossHpFrac: 0.1 })).not.toThrow();
+    expect(state.enemies).toEqual([]);
+  });
+
   it("is deterministic: same seed + same spec, same ring", () => {
     const build = () => {
       const state = startGame(123);
