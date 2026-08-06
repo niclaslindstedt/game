@@ -179,6 +179,46 @@
               "x": 46,
               "y": 98
             }
+          },
+          {
+            "ground": true,
+            "kind": "garage_drive",
+            "pos": {
+              "x": 57,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 28,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 84,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 140,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 196,
+              "y": 126
+            }
           }
         ],
         "width": 224
