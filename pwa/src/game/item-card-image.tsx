@@ -25,7 +25,11 @@ import { flushSync } from "react-dom";
 
 import { equipmentName, type Equipment, type GameState } from "@game/core";
 
-import { canvasToPng, rasterizeElement } from "@ui/lib/dom-raster.ts";
+import {
+  canvasToPng,
+  rasterizeElement,
+  trimTransparent,
+} from "@ui/lib/dom-raster.ts";
 import { flashPixelNote } from "@ui/lib/pixel-flash.ts";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -43,9 +47,21 @@ import { playUiSound } from "./sfx/ui.ts";
  */
 const CARD_IMAGE_MAGNIFICATION = 3;
 
-/** Transparent margin, in OUTPUT pixels, so a legendary's outer halo isn't
- * sheared off at the edge. */
-const CARD_IMAGE_PAD_PX = 36;
+/**
+ * Scratch margin, in OUTPUT pixels, for the one thing a card draws OUTSIDE its
+ * own border box: a unique/legendary/artifact's halo (`0 0 14px 2px` — 16 CSS
+ * px of reach). It is not margin the picture keeps — `trimTransparent` crops
+ * straight back to the ink — so this only has to be generous enough that no
+ * glow is sheared off at the edge.
+ *
+ * THE PICTURE ITSELF HUGS THE CARD. A pasted find is a cutout of the card and
+ * nothing else: transparent outside its rounded corners, with no field of empty
+ * pixels around it to read as a background on whatever it lands on. The
+ * grounding drop shadow is switched off for the same reason (see
+ * `.item-card-portrait` in lib/item-card.css) — it would put a grey haze where
+ * that emptiness used to be.
+ */
+const CARD_IMAGE_BLEED_PX = 60;
 
 /**
  * How many CSS px the browser is currently showing per art pixel. On a large
@@ -122,6 +138,7 @@ async function withOffscreenCard<T>(
           item={props.item}
           compareTo={props.compareTo ?? null}
           subtitle={props.subtitle}
+          className="item-card-portrait"
           style={{ width: "max-content" }}
         />,
       );
@@ -149,7 +166,9 @@ export function itemCardPng(props: ItemCardImageProps): Promise<Blob> {
   return withOffscreenCard(props, (card) => {
     const scale = CARD_IMAGE_MAGNIFICATION / cssPxPerArtPx(card);
     return canvasToPng(
-      rasterizeElement(card, { scale, padPx: CARD_IMAGE_PAD_PX / scale }),
+      trimTransparent(
+        rasterizeElement(card, { scale, padPx: CARD_IMAGE_BLEED_PX / scale }),
+      ),
     );
   });
 }

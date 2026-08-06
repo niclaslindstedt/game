@@ -65,9 +65,14 @@
   background: var(--panel-fill);
   border: 2px solid #1d2530;
   border-radius: 6px;
+  /* THE GROUNDING SHADOW — the card sitting ON the surface behind it — in a
+     variable of its own, because it is the one part of the skin that only
+     makes sense while the card is IN the game. A standalone portrait of the
+     card switches it off through `.item-card-portrait` below. */
+  --card-ground: 0 6px 18px rgba(0, 0, 0, 0.65);
   box-shadow:
     inset 0 0 0 1px var(--panel-groove),
-    0 6px 18px rgba(0, 0, 0, 0.65);
+    var(--card-ground);
 }
 
 .item-card.tier-set,
@@ -76,8 +81,23 @@
 .item-card.tier-artifact {
   box-shadow:
     inset 0 0 0 1px var(--panel-groove),
-    0 6px 18px rgba(0, 0, 0, 0.65),
+    var(--card-ground),
     0 0 14px 2px rgba(var(--tier-glow), 0.45);
+}
+
+/* THE CARD AS A STANDALONE PICTURE — the off-screen copy `item-card-image.tsx`
+   rasterizes when a press-and-hold copies a find (and nothing on screen ever
+   wears this).
+
+   It drops the grounding shadow and keeps everything else. A drop shadow is the
+   card's relationship to the surface UNDER it, and a pasted PNG has no surface:
+   all it can do is smear a grey haze over whatever the image lands on, and push
+   the picture's edge a dozen transparent pixels out from the card it is
+   supposed to be a picture OF. The tier halo stays — that one is the item's own
+   light rather than a shadow it casts, and a legendary that arrives in a chat
+   window without its glow has lost the thing that made it worth showing. */
+.item-card-portrait {
+  --card-ground: 0 0 0 0 transparent;
 }
 
 /* The SET block on a green piece's card (SetBlock in ItemCard.tsx): the set
