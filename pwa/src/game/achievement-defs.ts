@@ -352,16 +352,22 @@ const SLOT_BADGES: Record<
 };
 
 /**
- * THE HERO CLIMB: a rung every ten levels to the cap, plus the two QUARTER
- * marks (25 and 75) that shipped before the decades did.
+ * THE HERO CLIMB: a rung every ten levels, and the cap.
  *
- * The decades are the point — 99 levels with four badges on them meant most of
- * the climb happened in silence, and the stretch from 50 to 99 (which is most
- * of a hero's life) paid exactly one. The quarters stay because a badge id is
- * FOREVER once a store carries it: a Steam achievement id survives in every
- * owner's profile whether or not the game still lists it, so a shipped rung is
- * added around, never replaced. `platform-achievements.ts` keeps the store
- * lists on those five and holds the decades in-game.
+ * 99 levels used to carry four badges — 10, 25, 50, 75, 99 — so most of the
+ * climb happened in silence, and the stretch from 50 to the cap, which is most
+ * of a hero's life, paid exactly one. A decade is the unit because it is the
+ * one a player already counts in.
+ *
+ * THE TWO QUARTER MARKS ARE GONE, AND THAT WAS A DELIBERATE EXCEPTION rather
+ * than a tidy-up. A badge id is normally FOREVER once a store carries it: a
+ * Steam achievement id survives in every owner's profile whether or not the
+ * game still lists it, so a shipped rung is added around, never replaced.
+ * `level_25` and `level_75` were retired because nobody had earned them yet —
+ * the portal rows exist but no profile carries one, so there was nothing to
+ * strand. That is the ONLY circumstance in which a rung may leave this table,
+ * and it stops being true the day a player unlocks one. The two names were too
+ * good to retire with them, so they were re-homed onto the nearest decades.
  *
  * The last rung is the only LEGEND in the category, and it is the badge the
  * whole ladder exists to arrive at — the game's own top-tier reveal plays for
@@ -370,14 +376,12 @@ const SLOT_BADGES: Record<
 const LEVEL_LADDER: [number, string, AchievementTier, string?][] = [
   [10, "DOUBLE DIGITS", "beginner"],
   [20, "HITTING STRIDE", "beginner"],
-  [25, "SEASONED", "intermediate"],
-  [30, "HARDENED", "intermediate"],
+  [30, "SEASONED", "intermediate"],
   [40, "GRIZZLED", "intermediate"],
   [50, "VETERAN", "pro"],
   [60, "UNBROKEN", "pro"],
   [70, "IRONCLAD", "pro"],
-  [75, "WAR MACHINE", "expert"],
-  [80, "MONUMENT", "expert", "icon_trophy"],
+  [80, "WAR MACHINE", "expert", "icon_trophy"],
   [90, "THE LAST CLIMB", "expert", "icon_trophy"],
   [99, "LIVING LEGEND", "legend", "icon_crown"],
 ];

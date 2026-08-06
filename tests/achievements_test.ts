@@ -565,6 +565,16 @@ describe("achievement catalog", () => {
       expect(def!.category).toBe("hero");
       expect(def!.desc).toBe(`REACH LEVEL ${level}`);
     }
+    // …and NOTHING else. The decade is the unit a player counts in, so a rung
+    // off the grid (the old quarter marks at 25 and 75, or a one-off somebody
+    // adds for a nice number) makes the ladder read as arbitrary rather than
+    // as a rhythm.
+    expect(
+      ACHIEVEMENTS.filter((a) => a.id.startsWith("level_")).map((a) => a.id),
+    ).toEqual([
+      ...Array.from({ length: 9 }, (_, i) => `level_${(i + 1) * 10}`),
+      "level_99",
+    ]);
     // …and the cap itself is the ladder's last word, and the whole category's
     // only reveal.
     expect(ACHIEVEMENTS_BY_ID.get("level_99")?.tier).toBe("legend");
@@ -624,9 +634,10 @@ describe("platform achievements", () => {
     const carried = new Set(PLATFORM_ACHIEVEMENTS.map((a) => a.id));
     const rungs = new Set([
       "level_10",
-      "level_25",
+      "level_30",
       "level_50",
-      "level_75",
+      "level_70",
+      "level_90",
       "level_99",
     ]);
     for (const def of ACHIEVEMENTS) {
@@ -641,13 +652,17 @@ describe("platform achievements", () => {
     expect(carried.has("outfit_full")).toBe(true);
   });
 
-  it("keeps every hero rung the stores were filled in with", () => {
-    // A store achievement id is PERMANENT — a Steam one survives in an owner's
-    // profile whether or not the game still lists it. So the five quarter-mark
-    // rungs the portals already carry may never drop off the list, however the
-    // in-game ladder is reshaped around them.
+  it("carries a hero rung every twenty levels, and the cap", () => {
+    // The stores get every OTHER decade — enough that a profile shows a climb,
+    // few enough that one counter isn't a tenth of a hundred-entry allowance.
+    //
+    // A store achievement id is otherwise PERMANENT: a Steam one survives in an
+    // owner's profile whether or not the game still lists it. The quarter marks
+    // this list used to hold (25 and 75) were dropped as a one-time exception —
+    // the portal rows existed but nobody had earned one, so there was nothing
+    // to strand. Once a player unlocks a rung, it may never leave this list.
     const carried = new Set(PLATFORM_ACHIEVEMENTS.map((a) => a.id));
-    for (const level of [10, 25, 50, 75, 99]) {
+    for (const level of [10, 30, 50, 70, 90, 99]) {
       expect(carried.has(`level_${level}`), `level_${level}`).toBe(true);
     }
   });

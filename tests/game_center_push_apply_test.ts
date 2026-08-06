@@ -16,7 +16,7 @@
 
 import { spawn } from "node:child_process";
 import { generateKeyPairSync } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -25,6 +25,19 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+
+/** How many rows the committed manifest holds, read rather than typed: the
+ * curated list moves whenever the badge catalog does (a hero rung added, a
+ * family sent home), and a number typed into these assertions turns every such
+ * change into a sweep through this file. */
+const ROWS = (
+  JSON.parse(
+    readFileSync(
+      new URL("../native/store/game-center-achievements.json", import.meta.url),
+      "utf8",
+    ),
+  ) as { achievements: unknown[] }
+).achievements.length;
 const SCRIPT = path.join(root, "scripts", "game-center-push.mjs");
 const APP_ID = "6740000000";
 const DETAIL_ID = "detail-1";
@@ -489,9 +502,9 @@ describe("the achievements", { timeout: SPAWN_MS }, () => {
     ]);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("86 achievements, 1000/1000 points");
-    expect(result.stdout).toMatch(/86 without artwork/);
-    expect(portal.collections.gameCenterAchievements!).toHaveLength(86);
+    expect(result.stdout).toContain(`${ROWS} achievements, 1000/1000 points`);
+    expect(result.stdout).toContain(`${ROWS} without artwork`);
+    expect(portal.collections.gameCenterAchievements!).toHaveLength(ROWS);
 
     const attributes = portal.collections.gameCenterAchievements!.map(
       (id) => portal.rows.get(id)!.attributes,
@@ -502,7 +515,7 @@ describe("the achievements", { timeout: SPAWN_MS }, () => {
 
     // Every badge carries the id the game reports, which is the whole point.
     const vendors = new Set(attributes.map((a) => a.vendorIdentifier));
-    expect(vendors.size).toBe(86);
+    expect(vendors.size).toBe(ROWS);
     expect(vendors.has("clear_goodco_hq")).toBe(true);
   });
 
@@ -526,7 +539,8 @@ describe("the achievements", { timeout: SPAWN_MS }, () => {
       "--apply",
     ]);
     expect(first.stderr).toBe("");
-    expect(first.stdout).toMatch(/84 without artwork/);
+    // Two of the rows have art in the temp directory; the rest do not.
+    expect(first.stdout).toContain(`${ROWS - 2} without artwork`);
     expect(first.stdout).toContain("2 image(s) to upload");
     expect(portal.uploads.map((u) => u.bytes)).toEqual([
       png.length,

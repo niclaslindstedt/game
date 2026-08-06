@@ -1688,12 +1688,12 @@ seams a browser can't provide on iOS:
   grant a badge the game didn't award; because both platforms keep the highest
   percentage they have seen for an id, a report is idempotent and a failed one
   is simply retried. Game Center caps a game at 100 achievements and 1,000
-  points total against the game's 251 badges, so
-  `pwa/src/game/platform-achievements.ts` carries 86 of them — dropping the
+  points total against the game's 249 badges, so
+  `pwa/src/game/platform-achievements.ts` carries 87 of them — dropping the
   per-unique `unique_*` wall and the `equip_*` onboarding nudges, both already
-  rolled up by ladders that do travel, plus the hero ladder's decade rungs,
-  where the stores keep the quarter marks (10/25/50/75/99) they were filled in
-  with — and apportions the point budget from the badges' own tiers. The resulting list is generated and committed
+  rolled up by ladders that do travel, plus every other rung of the hero
+  ladder, where the stores take one every twenty levels (10/30/50/70/90) plus
+  the cap — and apportions the point budget from the badges' own tiers. The resulting list is generated and committed
   (`native/store/game-center-achievements.json`, via
   `scripts/game-center-achievements.mjs`) because an achievement only exists
   once it has been created in App Store Connect. Reports are throttled to
