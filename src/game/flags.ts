@@ -140,4 +140,3 @@ export function setAutoStatGainsEnabled(enabled: boolean): void {
 export function autoStatGainsOn(): boolean {
   return autoStatGainsEnabled;
 }
-

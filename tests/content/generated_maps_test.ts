@@ -142,8 +142,7 @@ describe("generated levels", () => {
         }) as {
           errors: string[];
         };
-        for (const e of res.errors)
-          errors.push(`${id}/${seed}: ${e}`);
+        for (const e of res.errors) errors.push(`${id}/${seed}: ${e}`);
       }
     expect(errors.slice(0, 8)).toEqual([]);
   });
@@ -192,9 +191,7 @@ describe("generated levels", () => {
         for (let grew = true; grew;) {
           grew = false;
           for (let i = lifts.length - 1; i >= 0; i--) {
-            const lift = lifts[i] as NonNullable<
-              LevelDef["elevators"]
-            >[number];
+            const lift = lifts[i] as NonNullable<LevelDef["elevators"]>[number];
             if (!origins.some((from) => findPath(grid, from, lift.pos)))
               continue;
             origins.push(lift.to);
@@ -264,14 +261,10 @@ describe("generated levels", () => {
           if (origins.some((from) => findPath(unlocked, from, lift.pos)))
             origins.push(lift.to);
         for (const [what, at] of shut) {
-          const withKey = origins.some((from) =>
-            findPath(unlocked, from, at),
-          );
+          const withKey = origins.some((from) => findPath(unlocked, from, at));
           const withoutKey = origins.some((from) => findPath(grid, from, at));
           if (withKey && !withoutKey)
-            trapped.push(
-              `${id}/${seed}: ${what} is behind a locked door`,
-            );
+            trapped.push(`${id}/${seed}: ${what} is behind a locked door`);
         }
       }
     expect(trapped.slice(0, 8)).toEqual([]);
@@ -296,10 +289,7 @@ describe("generated levels", () => {
         }
         for (const lift of def.elevators ?? [])
           if (lift.opensWith)
-            expect(
-              keys.has(lift.opensWith),
-              `${id}/${seed} lift`,
-            ).toBe(true);
+            expect(keys.has(lift.opensWith), `${id}/${seed} lift`).toBe(true);
       }
   });
 
@@ -602,9 +592,7 @@ describe("the story on a generated map", () => {
       for (const seed of WALK_SEEDS) {
         const cast = castOf(resolveLevelDef(id, seed));
         const missing = authored.filter((who) => !cast.has(who));
-        expect(missing, `${id}/${seed} lost a speaking part`).toEqual(
-          [],
-        );
+        expect(missing, `${id}/${seed} lost a speaking part`).toEqual([]);
       }
     }
   });
@@ -725,8 +713,7 @@ describe("the generated horde", () => {
       for (const seed of WALK_SEEDS) {
         const def = resolveLevelDef(id, seed);
         const knots = (def.spawners ?? []).filter((s) => !s.hellgate);
-        const perMillion =
-          knots.length / ((def.width * def.height) / MILLION);
+        const perMillion = knots.length / ((def.width * def.height) / MILLION);
         expect(
           perMillion,
           `${id}/${seed} carves an empty map (${perMillion.toFixed(2)} knots/Mpx²)`,

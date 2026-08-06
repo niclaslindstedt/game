@@ -1144,7 +1144,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setCutscenesEnabled(settings.cutscenes === "on");
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
-    setWorldProjection({
+  setWorldProjection({
     pitch: settings.cameraPitch,
     yaw: settings.cameraYaw,
     antialias: settings.cameraAntialias === "on",

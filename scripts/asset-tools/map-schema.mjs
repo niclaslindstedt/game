@@ -36,7 +36,6 @@ const SPACES = new Set(["inside", "outside"]);
 /** What an area that names no `space` is (see `MapArea.space`). */
 const DEFAULT_SPACE = "outside";
 
-
 const OBJECT_TYPES = new Set([
   "wall",
   "obstacle",
