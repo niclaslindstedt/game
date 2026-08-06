@@ -73,6 +73,14 @@ export const YAW_RANGE = { min: 0, max: 45 } as const;
  * (render/caches.ts) for what it costs and buys. */
 let antialias = false;
 
+/**
+ * STANDING WALLS — whether `plane: wall` art is EXTRUDED off its footprint, or
+ * lies down with the floor the way every wall in this game did before the
+ * extrusion existed. On by default and the shipped look; see
+ * `standingWalls` below for why it is a knob at all.
+ */
+let walls = true;
+
 // The live projection, as the matrix `[a c; b d]` mapping a camera-relative
 // world offset to a screen offset, plus its inverse. Kept as plain numbers
 // because every draw in the frame reads them.
@@ -120,6 +128,7 @@ export function setWorldProjection(next: {
   pitch?: number;
   yaw?: number;
   antialias?: boolean;
+  standingWalls?: boolean;
 }): void {
   if (next.pitch !== undefined) {
     pitch = Math.min(PITCH_RANGE.max, Math.max(PITCH_RANGE.min, next.pitch));
@@ -128,6 +137,7 @@ export function setWorldProjection(next: {
     yawDeg = Math.min(YAW_RANGE.max, Math.max(YAW_RANGE.min, next.yaw));
   }
   if (next.antialias !== undefined) antialias = next.antialias;
+  if (next.standingWalls !== undefined) walls = next.standingWalls;
   recompute();
 }
 
@@ -165,6 +175,28 @@ export function worldAntialias(): boolean {
  */
 export function projectionSmoothing(): boolean {
   return antialias && yawDeg > 0;
+}
+
+/**
+ * WHETHER A `plane: wall` PIECE STANDS UP — the third thing about the camera a
+ * developer may want to disagree with, and it belongs beside the other two.
+ *
+ * The extrusion earns itself under a YAW, where a wall drawn flat stops being a
+ * wall: the floor turns to diamonds, a lab's partitions become a slightly darker
+ * PATH across it, and a room stops reading as a room. SQUARE-ON, though, the
+ * floor grid is still rectangles and the flat panel already read as a wall — so
+ * a face hanging a hero's height off every panel is a look to have an opinion
+ * about rather than a fix. Off, `render/plane.ts` draws the piece exactly as it
+ * drew it before the extrusion existed: the same footprint, lying down with the
+ * floor, taking the projection whole.
+ *
+ * Unlike `projectionSmoothing` this is NOT folded together with the yaw. The
+ * knob means "I do not want the faces", and a camera the developer is sweeping
+ * from 0° to 45° to compare the two looks must not switch the answer out from
+ * under them halfway.
+ */
+export function standingWalls(): boolean {
+  return walls;
 }
 
 /** A cheap identity for the current projection, for cache keys — the smoothing

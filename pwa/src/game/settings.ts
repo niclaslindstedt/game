@@ -153,6 +153,15 @@ export type StoreForce = "on" | "off";
  * `projectionSmoothing` (render/tilt.ts). */
 export type CameraAntialias = "on" | "off";
 
+/** STANDING WALLS (DEVELOPER → VISUALS): whether `plane: wall` art is EXTRUDED
+ * off its footprint — the one projected slice stacked a hero's height up the
+ * screen — or lies down with the floor the way every wall did before the
+ * extrusion existed. `on` is the default and the shipped look; `off` is for a
+ * square-on camera, where the floor grid is still rectangles and the flat panel
+ * already read as a wall, so the faces are a look to have an opinion about
+ * rather than a fix. See `standingWalls` (render/tilt.ts). */
+export type StandingWalls = "on" | "off";
+
 /** MUTE: a SOUND toggle that silences all audio without touching the mix.
  * `on` forces both output volumes to 0 while the MUSIC and SOUND FX sliders
  * keep their stored levels, so unmuting restores the exact levels the player
@@ -485,6 +494,15 @@ export type GameSettings = {
    * for nothing. Pure presentation, so it needs no engine setter — it rides
    * along to the renderer's `setWorldProjection` with the two camera knobs. */
   cameraAntialias: CameraAntialias;
+  /** Developer switch: STANDING WALLS — whether `plane: wall` art is extruded
+   * off its footprint or drawn flat with the floor.
+   *
+   * On by default (the shipped look). Pure presentation, so it needs no engine
+   * setter — it rides along to the renderer's `setWorldProjection` with the two
+   * camera knobs and the anti-aliasing switch. Unlike that switch it is NOT
+   * folded together with the yaw: it means "I do not want the faces", so
+   * sweeping the camera round must not switch the answer out from under it. */
+  standingWalls: StandingWalls;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
@@ -659,6 +677,10 @@ function defaults(): GameSettings {
     // where there is no staircase to smooth and smoothing would only cost the
     // art its edges. A developer who turns the camera turns this on with it.
     cameraAntialias: "off",
+    // The walls stand out of the box: an extruded panel is what makes a room a
+    // room once the camera is turned, and it is what the venues are dressed
+    // against. A developer who wants the old paving-slab look turns this off.
+    standingWalls: "on",
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
     // look: this is how the game is meant to be seen, and the rows exist for a
     // developer judging a change to it on a real field.
@@ -882,6 +904,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     cameraPitch: base.cameraPitch,
     cameraYaw: base.cameraYaw,
     cameraAntialias: base.cameraAntialias,
+    standingWalls: base.standingWalls,
     balance: base.balance,
     // The DEVELOPER → VISUALS washes (see the FxSettings block above): a store
     // build has no page to move them from, so it plays the shipped look.
@@ -1132,6 +1155,10 @@ function load(): GameSettings {
         stored.cameraAntialias === "on" || stored.cameraAntialias === "off"
           ? stored.cameraAntialias
           : base.cameraAntialias,
+      standingWalls:
+        stored.standingWalls === "on" || stored.standingWalls === "off"
+          ? stored.standingWalls
+          : base.standingWalls,
       // Each VISUALS wash clamped to its OWN range (`postfx.ts` owns them), so
       // a hand-edited store can't hand the renderer a grade of 40.
       ...visualsFrom(stored, base),
@@ -1166,6 +1193,7 @@ setWorldProjection({
   pitch: settings.cameraPitch,
   yaw: settings.cameraYaw,
   antialias: settings.cameraAntialias === "on",
+  standingWalls: settings.standingWalls === "on",
 });
 setCameraYaw(settings.cameraYaw);
 setBalanceTuning(settings.balance);
@@ -1199,6 +1227,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
     pitch: settings.cameraPitch,
     yaw: settings.cameraYaw,
     antialias: settings.cameraAntialias === "on",
+    standingWalls: settings.standingWalls === "on",
   });
   setCameraYaw(settings.cameraYaw);
   setBalanceTuning(settings.balance);
