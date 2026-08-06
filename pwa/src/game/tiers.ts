@@ -126,9 +126,16 @@ export function tierGlowClass(tier: Tier): string {
  * bonus reads at a glance by what it does: orange for raw damage, gold for
  * crit, green for vitality, blue for a stat point. Shared by the rolled
  * affixes and a gear piece's baked-in bonuses, which mean the same things.
+ *
+ * NOTHING GOOD ON A CARD MAY READ RED. Red is the card's one negative signal —
+ * a requirement the hero fails (REQUIRES LEVEL above him, REQUIRES nn STR), a
+ * broken or near-broken piece, a downgrade delta — so a bonus wearing a
+ * red-orange said "you can't use this" at a glance. Damage keeps the warm end
+ * of the wheel, but as a bright ORANGE that cannot be mistaken for the warning
+ * hue (#e06a6a) sitting two lines below it.
  */
 export const AFFIX_COLORS: Record<Affix["kind"], string> = {
-  damagePct: "#e0603a",
+  damagePct: "#ff9a3c",
   crit: "#e8b93e",
   maxHp: "#5fd97a",
   armor: "#9ab3c9",
