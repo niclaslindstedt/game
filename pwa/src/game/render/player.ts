@@ -156,6 +156,17 @@ type WeaponPose = {
    * weapon travels AROUND the body instead of off the end of one arm — which is
    * the difference a player actually sees between the two. */
   pivot: { x: number; y: number };
+  /** THE BODY BEHIND THE BLOW — a roll of the whole figure about its FEET
+   * (radians), FACING-RELATIVE: positive tips him forward, toward whatever he is
+   * pointed at, negative rocks him back onto his heels. Nobody swings a sword
+   * with their arm alone, and a weapon that whips through an arc off a body
+   * standing perfectly still reads as a sprite being rotated next to a hero
+   * rather than as a hero swinging it. Applied by `drawHero` on top of the
+   * walk's own tip (`withStance`), so the costume, the armor, the weapon and the
+   * slash it throws all lean as one — the weapon's own `rot` composes on top,
+   * which is exactly how an arm composes on top of a torso. Small on purpose:
+   * see the three LEAN constants. */
+  lean: number;
 };
 
 const REST_POSE: WeaponPose = {
@@ -163,6 +174,7 @@ const REST_POSE: WeaponPose = {
   offX: 0,
   offY: 0,
   pivot: WEAPON_SHOULDER,
+  lean: 0,
 };
 
 /**
@@ -177,6 +189,7 @@ const TWO_HAND_REST: WeaponPose = {
   offX: -3,
   offY: 1,
   pivot: WEAPON_SHOULDER,
+  lean: 0,
 };
 
 /** Where BOTH hands sit on a two-hander, doll-local — low and toward the body's
@@ -201,6 +214,37 @@ const TWO_HAND_SWING_SCALE = 1.35;
  * wind-up, forward on the strike. Small on purpose: it is a shift of weight, not
  * a step, and the hero's own position is the engine's business. */
 const TWO_HAND_LUNGE_PX = 2;
+
+// THE BODY'S SHARE OF THE BLOW (radians of roll about the feet, facing-relative
+// — positive tips him toward what he is pointed at). Three classes, three
+// motions, and the DIRECTION is the whole read:
+//
+//  MELEE leans BACK on the wind-up and comes THROUGH the strike — the torso
+//    leads the arm, which is what a body does when it puts weight behind an
+//    edge. It rides the swing's own `lunge` signal (−1 wound back → +1 followed
+//    through), so the lean is the same motion as the blade, never a second
+//    animation running beside it. A two-hander takes more of the body with it.
+//  RANGED goes the OTHER WAY: a shot pushes back, so he rocks onto his heels
+//    with the muzzle's kick and settles forward again. Same impulse the recoil
+//    rides, so the two are one event.
+//  MAGIC is the subtlest of the three — barely a shift. The staff comes up and
+//    the caster's weight settles back under it, a counterbalance rather than a
+//    blow; a planted two-handed staff takes a touch more of him than a wand's
+//    flick of the wrist.
+//
+// All three are a few degrees: the reference device is a phone, the hero is 16
+// px tall on it, and anything a player would call a "lean" at desk distance is a
+// stagger down there. Calibrated on the weapon-swing preview strips
+// (`pwa/scripts/weapon-swing.mjs poses`), which draw the whole figure.
+const MELEE_LEAN = (4.3 * Math.PI) / 180;
+const MELEE_LEAN_HEAVY = (6.6 * Math.PI) / 180;
+/** A SHAKEN weapon travels no arc (`WeaponMotion.shake`), so there is no swing
+ * for the body to follow — he PRESSES: one steady lean into the tool for as long
+ * as it is biting, under the weapon's own judder. */
+const SHAKE_LEAN = (2.9 * Math.PI) / 180;
+const RANGED_LEAN = (3.2 * Math.PI) / 180;
+const MAGIC_LEAN = (1.4 * Math.PI) / 180;
+const MAGIC_LEAN_STAFF = (2 * Math.PI) / 180;
 
 /** Is the weapon in the hero's hands a two-hander? Read off the live catalog by
  * def id (the frozen def a re-homed save carries answers first), so the pose
@@ -343,6 +387,9 @@ function shakePose(rest: WeaponPose, nowMs: number, t: number): WeaponPose {
       SHAKE_LEAN_PX * bite,
     offY: rest.offY + Math.sin(nowMs * SHAKE_HZ.y) * SHAKE_PX * bite,
     pivot: rest.pivot,
+    // He leans on it. The same hump the weapon's own lean-in rides, so the body
+    // and the tool press into the target together and come off it together.
+    lean: SHAKE_LEAN * bite,
   };
 }
 
@@ -413,15 +460,21 @@ function weaponPose(
       rot = rest.rot + (rotFor(half + over) - rest.rot) * settle;
       lunge = settle;
     }
-    if (!heavy) return { rot, offX: 0, offY: 0, pivot };
-    // …and the body goes with it: a two-hander is swung with the hips, so the
-    // grip travels a couple of px through the blow instead of the blade merely
-    // rotating on a fixed point.
+    // THE FIGURE GOES WITH THE BLADE. `lunge` is already the blow's weight
+    // shift — −1 wound back through the wind-up, +1 followed through at the end
+    // of the strike, easing home over the recover — so the torso reads it
+    // directly rather than re-deriving a second curve off the same timeline.
+    const lean = (heavy ? MELEE_LEAN_HEAVY : MELEE_LEAN) * lunge;
+    if (!heavy) return { rot, offX: 0, offY: 0, pivot, lean };
+    // …and a two-hander is swung with the hips, so the grip travels a couple of
+    // px through the blow on top of that, instead of the blade merely rotating
+    // on a fixed point.
     return {
       rot,
       offX: rest.offX + TWO_HAND_LUNGE_PX * lunge,
       offY: rest.offY,
       pivot,
+      lean,
     };
   }
   if (action.weaponClass === "ranged") {
@@ -436,6 +489,10 @@ function weaponPose(
       offX: -3 * kick * brace,
       offY: -1 * kick * brace,
       pivot: WEAPON_SHOULDER,
+      // The other way from a swing: the shot shoves him back onto his heels and
+      // he settles forward again. A braced long gun eats that too — the same
+      // damping the barrel gets, because it is the same shoulder taking it.
+      lean: -RANGED_LEAN * kick * brace,
     };
   }
   // Magic: a smooth bloom (sin) that thrusts the wand up and forward on the
@@ -449,6 +506,9 @@ function weaponPose(
     offX: bloom,
     offY: (staff ? -5 : -3) * bloom,
     pivot: WEAPON_SHOULDER,
+    // Barely there: the wand rises and his weight settles back under it, then
+    // returns. A degree or two — a cast is a gesture, not an impact.
+    lean: -(staff ? MAGIC_LEAN_STAFF : MAGIC_LEAN) * bloom,
   };
 }
 
@@ -638,15 +698,22 @@ function drawHero(
     heldTwoHanded(player.equipment.weapon.defId),
   );
   // The whole figure — costume, armor, weapon and the slash it throws — is posed
-  // as one about his FEET, outside the facing flip, so both beats read the same
+  // as one about his FEET, outside the facing flip, so every beat reads the same
   // way whichever way he is pointed: the walk's soft tip (airborne he is on an
-  // arc, not a stride), and the JUMP's stretch off the floor / squash into the
-  // landing, which is what gives the hop its weight.
+  // arc, not a stride), the ATTACK's lean (`WeaponPose.lean` — the body behind
+  // the blow), and the JUMP's stretch off the floor / squash into the landing,
+  // which is what gives the hop its weight.
+  //
+  // The lean is facing-RELATIVE and this transform is not (it sits outside the
+  // mirror, so a positive roll always tips him clockwise on screen) — hence the
+  // flip here: forward is to the right when he faces right and to the left when
+  // he doesn't. The walk's tip needs no such thing; a sway is symmetric.
+  const lean = player.faceLeft ? -pose.lean : pose.lean;
   withStance(
     ctx,
     { x: x + TILE / 2, y: y + TILE },
     {
-      tilt: airborne ? 0 : gait.tilt,
+      tilt: (airborne ? 0 : gait.tilt) + lean,
       scaleY: impactScaleY(impact, state.stats.timeMs),
     },
     () =>
