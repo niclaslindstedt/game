@@ -495,12 +495,26 @@ fitting at dusk is a bug — only the pool under it belongs to the night.
 ahead of the bumper was the first attempt: a pool has no direction, so a car
 crossing the drive looked like it was carrying a lantern. The wedge — narrow at
 the lamps, spreading down the road, running out at the end — says which way the
-car is pointing before the sprite does. It is painted as a CHAIN of overlapping
-soft pools walked down `CarVehicle.heading` rather than as a clipped triangle:
-a clip has no edge treatment at all, so the wedge came out with two razor lines
-across the pavement, which is a searchlight in fog rather than a headlight on
-tarmac. Nine cached blits have the same silhouette and feather on every side for
-free.
+car is pointing. It is painted as a CHAIN of overlapping soft pools rather than
+as a clipped triangle: a clip has no edge treatment at all, so the wedge came out
+with two razor lines across the pavement, which is a searchlight in fog rather
+than a headlight on tarmac. Nine cached blits have the same silhouette and
+feather on every side for free.
+
+**AND THE LAMPS ARE BOLTED ON — the beam is a PART OF THE ASSEMBLY, not a thing
+aimed down `CarVehicle.heading`.** These are sealed beams in a shell, not
+steering-linked cornering lamps: they turn when the CAR turns and not one degree
+otherwise, and the car's picture never turns. The body is one side-profile
+assembly cut nose-right that nothing mirrors or rotates (which is the whole
+reason the engine carries a yaw stop), while the heading it is steered on swings
+the better part of 180° inside that stop — so a wedge walked down the heading
+swept a 172° arc across a car that had not visibly moved a pixel, and read as a
+pair of lamps swivelling on their own. The chain is therefore walked in SCREEN px
+along the drawn body off the body's own anchor, exactly as the wheel arches are
+(see the billboard rule below); only the POOLS keep the pitch's squash, because
+light lies on the pavement even when the wedge is welded to the picture. The
+daylight cones (`render/vehicles.ts`) always obeyed this and are the reason the
+mismatch was visible at all. `tests/vehicle_assembly_test.ts` holds the line.
 
 **KEEP THE POOLS SMALL, and judge it at the phone viewport.** The garage is
 512×280 world units and the landscape view sees ~422×260 of it, so two lamps

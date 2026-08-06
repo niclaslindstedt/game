@@ -5,8 +5,9 @@
 // portrait built from the stored build, the name, level, standing, a row of
 // difficulty-progress pips, and a HARDCORE / FALLEN badge, with a delete tab
 // down the right edge. Picking a living hero hands it up via `onPlay`; BACK
-// returns to the title (`onBack`). Minting a fresh hero lives on the title
-// menu's NEW GAME entry, not here.
+// returns to the title (`onBack`), as does deleting the last hero on the
+// roster — an empty roster has nothing left to do here. Minting a fresh hero
+// lives on the title menu's NEW GAME entry, not here.
 
 import {
   useCallback,
@@ -82,11 +83,21 @@ export function LoadGame({
     };
   }, [assets]);
 
-  const remove = useCallback((id: string) => {
-    playUiSound(synth, "back");
-    deleteCharacter(id);
-    setRoster(loadCharacters());
-  }, []);
+  // Deleting the LAST hero leaves the screen with nothing to select and no way
+  // to mint a replacement — minting lives on the title menu's NEW GAME — so an
+  // empty roster shows itself out rather than parking the player on a blank
+  // column above a lone BACK row. The title menu drops its own LOAD GAME row
+  // the moment the roster empties, so the exit lands somewhere consistent.
+  const remove = useCallback(
+    (id: string) => {
+      playUiSound(synth, "back");
+      deleteCharacter(id);
+      const remaining = loadCharacters();
+      setRoster(remaining);
+      if (remaining.length === 0) onBack();
+    },
+    [onBack],
+  );
 
   // The BACK row is drawn by the title menu's own MenuList, so the roster
   // leaves the screen through exactly the row every other menu uses — same

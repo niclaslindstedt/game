@@ -113,24 +113,20 @@ breath between them, and — when friends join his game — the place they land.
 **Side errands at home — RUTH, Ada's mother.** She has a key to the garage and
 always has, and once the voyages start she is simply there between them,
 standing by the engine parts, because waiting at home means staring at the
-phone. She is the only person in the game who uses his name kindly, and she
-uses it in her first breath — she has known him as long as her daughter has. She knows about the jacket — Ada told her about the zipper he fixed and
-laughed about it for a week — and she asks him for the one thing a search party
-cannot bring back: something of her daughter's. **The first time he speaks to
-her she says how she got here**, and everything she asks for afterwards comes
-out of that one conversation: the company rang at midnight with a woman reading
-a script about an incident involving a NON-EMPLOYEE — the only category it has
-for a grown woman who was standing at its vending machines — never once said
-Ada's name, gave her a case number and asked whether she had any questions, so
-she put the phone down and drove straight out. She is not going home to sit by
-it. He
-can ask who rang, tell her she needn't have come, or tell her he is going after
-Ada; the three answers meet at the same ask, and on none of them is she scared
-for her daughter. Then, and only then, the errands: three, one per leg of
-the trail, each elaborating a trace the campaign already lays down. THE
-RECEIPT: the chips-and-soda purchase the cameras caught being interrupted was
-still logged and printed, and GOODCO's night staff carry the floor's paperwork
-on them — bring her the slip from the last ordinary thing Ada did. THE DENT:
+phone. She knows about the jacket — Ada told her about the zipper he fixed and
+laughed about it for a week. **The first time he speaks to her she says only
+two things**: that she let herself in, because she has always had a key and he
+never asked for it back, and that he should go and find Ada. She opens on his
+name — she has known him as long as her daughter has, and she is the one person
+in the game who uses it kindly. She asks for
+nothing that night and is not scared for her daughter — the meeting is a person
+arriving, not a slate opening. Her errands come afterwards, each asked for on
+its own when the trail has laid the trace it elaborates: three, one per leg. THE
+RECEIPT: she wants something of Ada's that is not a report and not a
+photograph — something she held — and the chips-and-soda purchase the cameras
+caught being interrupted was still logged and printed, and GOODCO's night staff
+carry the floor's paperwork on them, so bring her the slip from the last
+ordinary thing Ada did. THE DENT:
 the ENGAGEMENT REPORT says Ada bit companion unit 34, so somewhere on Mars a
 service robot carries a dented shell plate — Ruth wants to see the dent her
 daughter's teeth left in the machine that was told to keep her company. THE

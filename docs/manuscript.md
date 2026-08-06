@@ -293,63 +293,31 @@ Ada, only proud._
 
 #### SHE LET HERSELF IN — the meeting, played before the errands
 
-_The first tap on Ruth is a conversation the player steers
-(`content/conversations/ruth_arrival.yaml`), not an offer page; her errand list
-opens from the tap after it. Nothing in it can be lost — she is the one person
-in the game on the hero's side without being asked — so what the branches buy
-is which of her he meets. All three converge on the ask, and on none of them is
-she scared for Ada._
+_The first tap on Ruth is a conversation (`content/conversations/ruth_arrival.yaml`),
+not an offer page; her errand list opens from the tap after it. It is two beats
+long and asks for nothing: she says how she got in and what she wants him to
+do, and every errand she later hands him is set up in its own offer instead.
+She opens on his name, which is most of what those two beats are for — she has
+known him as long as her daughter has. She is not scared for Ada here or
+anywhere._
 
 **She has arrived.**
 
 > I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
-> THEY RANG AT MIDNIGHT. I CAME STRAIGHT OUT.
-
-— _WHO RANG?_
-
-> A WOMAN WITH A SCRIPT. 'AN INCIDENT INVOLVING A NON-EMPLOYEE.' NOT HER NAME.
-> THEN A CASE NUMBER. HAD I ANY QUESTIONS.
-
-— _WHAT DID YOU ASK?_
-
-> HER NAME. THE WOMAN WASN'T PERMITTED TO CONFIRM IT.
-> SO I PUT THE PHONE DOWN AND DROVE OUT HERE INSTEAD.
-
-— _YOU DIDN'T HAVE TO COME._
-
-> HOME IS A PHONE ON A TABLE. I'VE HAD FOUR HOURS OF THAT.
-> I'D RATHER SIT WITH THE ENGINE PARTS. THEY'RE GOING SOMEWHERE.
-
-— _WERE YOU SCARED?_
-
-> NO. NOT FOR HER. I RAISED HER.
-> I'VE BEEN SORRY FOR WHOEVER HAS HER SINCE MIDNIGHT.
+> GO AND FIND HER. I'LL BE HERE.
 
 — _I'M GOING AFTER HER._
-
-> I KNOW. THE SHIP'S A PART SHORT AND YOU'RE GOING ANYWAY.
-> I'VE NEVER HAD TO ARGUE WITH YOU ABOUT THAT ONE.
-
-**The ask every branch arrives at.**
-
-> SO. YOU'RE GOING WHERE I CAN'T, AND I WON'T SIT HERE USELESS.
-> WHEN YOU'RE OUT THERE — BRING ME SOMETHING OF HERS.
-
-— _SOMETHING OF HERS?_
-
-> NOT A REPORT. NOT A PHOTOGRAPH. SOMETHING SHE HELD.
-> I'LL KNOW IT WHEN IT'S IN MY HAND.
 
 **On being spoken to afterwards** (and the header of her errand list):
 
 - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-- I'VE HAD ANOTHER THINK ABOUT WHAT TO ASK YOU FOR.
+- WHILE YOU'RE STANDING THERE - THERE'S SOMETHING I'D ASK OF YOU.
 
 #### THE RECEIPT
 
 **The ask:**
 
-1. I SAID SOMETHING OF HERS. I'VE BEEN SITTING HERE DECIDING WHAT.
+1. WHEN YOU'RE OUT THERE - BRING ME SOMETHING OF HERS. NOT A REPORT. SOMETHING SHE HELD.
 2. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
 3. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
 4. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
