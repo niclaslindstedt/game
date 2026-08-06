@@ -139,6 +139,18 @@ export type RunParams = {
    * `dialogue` phase and flash a page per tick. */
   muteDialogue?: boolean;
   /**
+   * HOW MUCH DAYLIGHT THE RUN STANDS IN, 0 (deep night) to 1 (broad daylight)
+   * — read only by a venue with a `sky` (`src/game/daylight.ts`).
+   *
+   * A parameter rather than something the run works out for itself for the
+   * reason every field here is one: the app reads the wall clock, the engine
+   * may not, and a session whose host built its night from a clock the joiner
+   * could not see would hand the two of them different pictures of the same
+   * garage. Out-of-range values are clamped on read (a parameter that arrives
+   * from a wire is a claim rather than a fact); absent is full daylight.
+   */
+  daylight?: number;
+  /**
    * The build an AUTO PILOT flight already in progress engaged on.
    *
    * A FLIGHT outlives a run — the ride crosses levels — so the refund it owes
@@ -179,6 +191,12 @@ export function createRunFromParams(params: RunParams): GameState {
   if (typeof params.coins === "number") state.players[0].coins = params.coins;
   if (params.seenThoughts?.length) {
     markThoughtsSeen(state, params.seenThoughts);
+  }
+  // THE HOUR THE RUN IS PLAYED IN. Clamped here rather than trusted, so a
+  // hostile or simply wrong wire value can only ever pick a point on the day
+  // the renderer already knows how to draw.
+  if (typeof params.daylight === "number" && Number.isFinite(params.daylight)) {
+    state.daylight = Math.min(1, Math.max(0, params.daylight));
   }
   state.autopilot.build = (params.autopilotBuild as BuildSnapshot) ?? null;
   if (params.lootMode === "allocated") state.lootMode = "allocated";

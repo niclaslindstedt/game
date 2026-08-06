@@ -38,6 +38,14 @@ areas:
     boss: false
     label: THE GARAGE
     ground: { common: cement_0, rare: cement_1, rareEvery: 5 }
+    # THE LIGHTS ARE ON IN HERE. It is a garage: a roof, a strip light over the
+    # bench, and a man who has been working in it all evening. So the bay keeps
+    # its own light when the lot outside goes dark (`sky: earth` on the
+    # mission) — and it keeps it as a ROOM, right up to the walls, which is
+    # what a district can express and a pool of light cannot. Short of 1 on
+    # purpose: a working garage at midnight is lit, not sunlit, and the doorway
+    # still has to read as the edge of somewhere.
+    lit: 0.82
   - id: drive
     enclosure: none
     weight: 1
@@ -172,6 +180,26 @@ objects:
     type: door
     sprite: garage_door
     radius: 8
+    # THE TWO BARN LIGHTS BOLTED EITHER SIDE OF THE OPENING — the lamps the
+    # whole night out here hangs off (the mission carries `sky: earth`, so the
+    # lot follows the clock). The carve stands one at each end of the chain, a
+    # step onto the DRIVE side, so they flank the roll-up and their pools fall
+    # on the pavement in front of it — which is what the driveway is lit by
+    # once the sun is down, and what a man walking out to his car at midnight
+    # actually sees. Sodium-warm and steady: outdoor fittings that have been on
+    # that wall for ten years and still work, which is more than can be said
+    # for the lawn.
+    #
+    # KEEP THE RADIUS SMALL. The whole lot is 512×280 and the phone sees most
+    # of it at once, so two pools whose tails touch light the place back to
+    # daylight — which is exactly how the first pass of this came out, and it
+    # read as the brightness turned down rather than as night.
+    lamps:
+      sprite: wall_lamp
+      light:
+        radius: 58
+        color: "255, 206, 138"
+        intensity: 0.92
 
   # ── THE DOORS (see the mission's travelDoors) ────────────────────────────
   # The car sits in the bay at the hero's landing; the rocket holds the goal
@@ -194,6 +222,48 @@ objects:
   - id: rift_seam
     type: landmark
     at: home
+
+  # ── THE LAMPS ────────────────────────────────────────────────────────────
+  # What is still burning out here after dark, and nothing more: two pools on
+  # the open lot, with black grass between them and the barn lights flanking
+  # the door (above). The bay itself is not on this list — a garage is LIT (see
+  # the district's own `lit:`), and a room's lights are a room, not a circle.
+  #
+  # Both are pinned to the carve's own anchors and nudged off them (`at` +
+  # `offset`), never to a coordinate: the pin makes this lot lay out identically
+  # every visit, but a lamp authored at an absolute x/y would still be a lie the
+  # day the floor plan moves.
+  #
+  # AND BOTH HAVE SOMETHING THROWING THEM. A pool on open ground with nothing
+  # above it does not read as a lamp, it reads as a bug — a bulb burning in
+  # mid-air. So the lawn's light gets a POST (`fixture`), and the machine's is
+  # pinned to the machine itself, which the game already draws.
+  #
+  # THE YARD LIGHT on the back lawn — the post that was put up to light the
+  # driveway years before there was a rocket standing on the grass. Dim on
+  # purpose: enough to find the ladder by and not a lumen more.
+  - id: lawn_light
+    type: light
+    at: goal
+    offset: { x: -34, y: 16 }
+    fixture: lamp_post
+    light:
+      radius: 52
+      color: "255, 222, 170"
+      intensity: 0.55
+  # THE VENDING MACHINE at its counter out on the drive — its own back-lit
+  # front, which is the only reason a machine parked in a driveway is worth
+  # walking to at night. Small, cold, and the twitchiest thing on the lot. No
+  # `fixture`: it is pinned to the trader's own spot (`at: counter`), so the
+  # thing throwing it is the machine standing in it.
+  - id: stall_light
+    type: light
+    at: counter
+    light:
+      radius: 34
+      color: "150, 216, 255"
+      intensity: 0.72
+      flicker: 0.28
 
   # ── THE WORKBENCH WORLD (furniture, never loot) ──────────────────────────
   # Furniture stands AGAINST THE WALLS (`edge`), the way a real garage keeps

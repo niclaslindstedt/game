@@ -124,6 +124,25 @@ export type MapArea = {
    */
   driveOut?: boolean;
   /**
+   * THIS DISTRICT IS LIT — how much of the venue's NIGHT its own lights hold
+   * off, 0 (none: outdoor ground, dark after dusk) to 1 (as bright as noon).
+   * Read only on a venue whose mission names a `sky`; everywhere else it is
+   * inert, because everywhere else is never dark to begin with.
+   *
+   * It is a DISTRICT rather than a lamp because a roofed room is lit as a room:
+   * the garage bay has strip lights on, and the honest picture of that is the
+   * whole floor up to the walls, not a circle in the middle of it with the
+   * corners in shadow. The carve emits each such chamber as a rect
+   * (`LevelDef.litZones`), so the light stops exactly where the wall does — a
+   * radial pool cannot do that, and pools big enough to fill a room leak
+   * straight through it onto the lawn.
+   *
+   * Author it on ROOFED districts only (`enclosure: hard`). On open ground it
+   * is a rectangle of daylight sitting in the middle of a night, and the shape
+   * of it is unmissable.
+   */
+  lit?: number;
+  /**
    * The area's OWN GROUND, as a `TileSpec` ground pair (and optional patch pair)
    * of sprite names. This is what makes a district legible: without it every cell
    * is the same floor and the wall around a compound reads as a stub of rock in

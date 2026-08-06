@@ -33,6 +33,7 @@ import { DIALOGUE } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type {
   LevelDef,
+  LevelLight,
   MissionDef,
   SpawnerSpec,
   SpawnSpec,
@@ -67,7 +68,12 @@ import {
   type Chamber,
   type ChamberGrid,
 } from "./rooms.ts";
-import type { MapBlueprint, MapSetPiece, MapSizeName } from "./types.ts";
+import type {
+  MapAnchor,
+  MapBlueprint,
+  MapSetPiece,
+  MapSizeName,
+} from "./types.ts";
 
 /**
  * Mixed into the run seed before the layout stream is drawn, so a map's GEOMETRY
@@ -87,8 +93,9 @@ const SIZE_SALT = 0x85ebca6b;
  * `path` is the load-bearing one: an intended route is what drives the app's
  * guidance arrow, and an arrow pointing at the boss is the opposite of a search.
  * `waves`/`tempo` go because the cell knots are this map's horde and a level uses
- * one model or the other; `doors`, `propLines` and `packs` go because their
- * coordinates were drawn for a map that is not this one.
+ * one model or the other; `doors`, `propLines`, `packs` and `lights` go because
+ * their coordinates were drawn for a map that is not this one — the carve hangs
+ * its own doors and hangs its own lamps.
  */
 const DROPPED_ON_CARVE = [
   "path",
@@ -97,6 +104,7 @@ const DROPPED_ON_CARVE = [
   "doors",
   "propLines",
   "packs",
+  "lights",
 ] as const satisfies readonly (keyof MissionDef)[];
 
 /** The area an id names, for a cell. */
@@ -1069,6 +1077,17 @@ export function generateLevel(
   // THE ROAD OUT: the districts a driven car leaves by, as plain rects — the
   // cell rather than a circle inside it, because the whole point of the strip is
   // that touching its tarmac at all is the departure (see `MapArea.driveOut`).
+  // THE ROOMS WITH THEIR LIGHTS ON — each such chamber's own rect, so a venue's
+  // night stops exactly at the wall rather than at the edge of a pool (see
+  // `MapArea.lit`). The whole cell, like the road below: a room is lit up to
+  // its walls, and the walls are where the cell ends.
+  const litZones: NonNullable<LevelDef["litZones"]> = grid.chambers
+    .filter((c) => (areaOf(bp.areas, c).lit ?? 0) > 0)
+    .map((c) => ({
+      rect: { x: c.x, y: c.y, width: c.w, height: c.h },
+      amount: Math.min(1, Math.max(0, areaOf(bp.areas, c).lit ?? 0)),
+    }));
+
   const driveOut: Zone[] = grid.chambers
     .filter((c) => areaOf(bp.areas, c).driveOut === true)
     .map((c) => ({
@@ -1100,31 +1119,66 @@ export function generateLevel(
   }
 
   // --- Props ----------------------------------------------------------------
+  // WHERE AN ANCHORED OBJECT LANDS. `stall` stands a fixed step off the
+  // trader's counter — deterministic on purpose (no rng draw, so adding an
+  // anchored object to a map cannot shift the rolls of anything placed after
+  // it). Shared by the landmarks and the lamps, which are pinned the same way.
+  const anchorPos = (at: MapAnchor | undefined): Vec2 =>
+    at === "goal"
+      ? vec(Math.round(goalCenter.x), Math.round(goalCenter.y))
+      : at === "counter"
+        ? vec(Math.round(merchantAt.x), Math.round(merchantAt.y))
+        : at === "stall"
+          ? vec(Math.round(merchantAt.x + 70), Math.round(merchantAt.y - 40))
+          : at === "home"
+            ? // A fixed step off the hero's own landing — `stall`'s offset
+              // mirrored, so the two never collide when both stand near it —
+              // clamped on-map for a landing near the western/northern edge.
+              vec(
+                Math.max(24, Math.round(playerSpawn.x - 70)),
+                Math.max(24, Math.round(playerSpawn.y - 40)),
+              )
+            : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
   const landmarks: LevelDef["landmarks"] = bp.objects
     .filter((o) => o.type === "landmark")
     .map((o) => {
-      // `stall` stands a fixed step off the trader's counter — deterministic
-      // on purpose (no rng draw, so adding one to a map cannot shift the
-      // rolls of anything placed after it).
-      const pos =
-        o.at === "goal"
-          ? vec(Math.round(goalCenter.x), Math.round(goalCenter.y))
-          : o.at === "stall"
-            ? vec(Math.round(merchantAt.x + 70), Math.round(merchantAt.y - 40))
-            : o.at === "home"
-              ? // A fixed step off the hero's own landing — `stall`'s offset
-                // mirrored, so the two never collide when both stand near it —
-                // clamped on-map for a landing near the western/northern edge.
-                vec(
-                  Math.max(24, Math.round(playerSpawn.x - 70)),
-                  Math.max(24, Math.round(playerSpawn.y - 40)),
-                )
-              : vec(Math.round(playerSpawn.x), Math.round(playerSpawn.y));
+      const pos = anchorPos(o.at);
       const mark: LevelDef["landmarks"][number] = { kind: o.kind ?? o.id, pos };
       if (o.sprite) mark.sprite = o.sprite;
       if (o.anchor) mark.anchor = o.anchor;
       return mark;
     });
+
+  // THE LAMPS (`LevelDef.lights`) — the pools of light the venue's night is
+  // read by. A `light` object is pinned like a landmark, a nudge off its
+  // anchor; the door's own lamp goes up with the door itself, further down.
+  // Nothing here draws a sprite and nothing collides: a lamp is a place the
+  // player can see, and the fixture throwing it hangs above the ground plane
+  // the game draws.
+  const lights: LevelLight[] = [];
+  for (const o of bp.objects) {
+    if (o.type !== "light" || !o.light) continue;
+    const at = anchorPos(o.at);
+    // Clamped onto the map: an offset is authored against the shape of the
+    // place rather than against a carve, and a lamp shoved off the edge by a
+    // landing near the boundary would light the letterbox.
+    const pos = vec(
+      Math.min(width, Math.max(0, at.x + (o.offset?.x ?? 0))),
+      Math.min(height, Math.max(0, at.y + (o.offset?.y ?? 0))),
+    );
+    lights.push({ pos, ...o.light });
+    // …and the thing throwing it, when the fitting is on the ground plane at
+    // all. A landmark rather than an obstacle: a lamp post is scenery the decor
+    // pass keeps clear of, not a wall to walk into.
+    if (o.fixture) {
+      landmarks.push({
+        kind: o.id,
+        pos,
+        sprite: o.fixture,
+        anchor: "base",
+      });
+    }
+  }
 
   // --- Assemble -------------------------------------------------------------
   // Inherit every non-geometry field, then override exactly what the carve owns.
@@ -1200,6 +1254,41 @@ export function generateLevel(
         sprite: obj.sprite ?? obj.id,
         opens: "approach",
       });
+      // THE LAMPS EITHER SIDE OF THE OPENING — a real fixture bolted at each
+      // END of the chain, pushed to the OUTSIDE face of the chamber the door
+      // shuts, each with its own pool under it. Only the carve knows where the
+      // doorway landed, which is why they are hung here with the door rather
+      // than authored as two more objects: the pair flanks whatever border the
+      // opening was punched through, on any size and any seed.
+      const lamps = obj.lamps;
+      if (lamps) {
+        const inset = lamps.inset ?? 8;
+        const mid = chamberCenter(spawn);
+        // Outward is simply "away from the room the door belongs to", along
+        // the axis the chain does NOT run down.
+        const out =
+          gap.axis === "v"
+            ? { x: gap.coord >= mid.x ? inset : -inset, y: 0 }
+            : { x: 0, y: gap.coord >= mid.y ? inset : -inset };
+        // …and the two ENDS, stepped a little further apart than the chain
+        // itself so a fitting stands beside the opening rather than in it.
+        // `gap.from` is always the lower coordinate, so the first end steps
+        // back down the chain and the second steps on up it.
+        [from, to].forEach((end, i) => {
+          const step = i === 0 ? -inset : inset;
+          const pos = vec(
+            Math.round(end.x + out.x + (gap.axis === "v" ? 0 : step)),
+            Math.round(end.y + out.y + (gap.axis === "v" ? step : 0)),
+          );
+          landmarks.push({
+            kind: `${obj.id}_lamp`,
+            pos,
+            sprite: lamps.sprite,
+            anchor: "base",
+          });
+          lights.push({ pos, ...lamps.light });
+        });
+      }
     }
   }
 
@@ -1280,6 +1369,8 @@ export function generateLevel(
     ];
   }
   if (doors.length > 0) def.doors = doors;
+  if (lights.length > 0) def.lights = lights;
+  if (litZones.length > 0) def.litZones = litZones;
   const fauna = buildFauna(bp, grid, rng);
   if (fauna) def.fauna = fauna;
   if (lairs.length > 0) def.lairs = lairs;

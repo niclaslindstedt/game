@@ -489,6 +489,12 @@ export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 export { clearOfFog } from "./game/fog.ts";
 export { heroView, insideView, visibleTo } from "./game/sight.ts";
 
+// TIME OF DAY — how dark the venue this run stands in has gone, and the curve
+// the app maps its wall clock onto before it hands a run its `daylight` (see
+// daylight.ts: the sky is the mission's, the hour is the app's, and the look of
+// the dark is the renderer's).
+export { daylightAtHour, nightAmount, SKY_KINDS } from "./game/daylight.ts";
+
 // Obstacle sight queries: the swept "does this line clear the level's solid
 // features?" test — walls, buildings, ranks of machinery, big rocks. Jumpable
 // low ones never occlude, and NEITHER DOES A LONE narrow piece: it takes two
@@ -1007,12 +1013,14 @@ export {
   levelsBefore,
   runLevelDef,
   type LevelDef,
+  type LevelLight,
   type MissionDef,
   type PackMember,
   type PackSpec,
   type SpawnerMember,
   type SpawnerSpec,
   type SpawnSpec,
+  type SkyKind,
   type WaveBudget,
   type WaveSpec,
 } from "./game/defs/levels/index.ts";
@@ -1124,6 +1132,7 @@ export {
   CRATES,
   DIALOGUE,
   DODGE,
+  DAYLIGHT,
   DOORS,
   ECONOMY,
   GOLD,

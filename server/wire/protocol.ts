@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 23;
+export const PROTOCOL_VERSION = 24;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -109,6 +109,16 @@ export type SessionParams = {
   openingSkip?: string;
   /** Mute the in-world dialogue — a bot run has nobody to tap through it. */
   muteDialogue?: boolean;
+  /**
+   * HOW MUCH DAYLIGHT THE SESSION'S RUN STANDS IN, 0 (deep night) to 1 (broad
+   * daylight); see `GameState.daylight`.
+   *
+   * A session parameter because the HOST's clock is the session's clock: a
+   * joiner three time zones away is in the host's garage, on the host's
+   * evening, and a client that read its own watch would light the same lamps at
+   * a different hour. The engine clamps it on read — a wire value is a claim.
+   */
+  daylight?: number;
   /**
    * The session's LOOT RULE — `free` (the default) or `allocated`; see
    * `GameState.lootMode`. Structural, so this leaf needs no engine import to
