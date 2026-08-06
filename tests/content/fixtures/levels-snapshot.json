@@ -503,7 +503,9 @@
         {
           "id": "rift",
           "name": "THE COWARD'S TEAR",
-          "to": ["the_rift", "garage"]
+          "to": ["the_rift", "garage"],
+          "requires": "rift_creator",
+          "unready": "mars_tear_no_rig"
         }
       ],
       "objective": {
