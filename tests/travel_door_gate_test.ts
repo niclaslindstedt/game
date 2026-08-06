@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Character } from "../pwa/src/game/characters.ts";
 import {
+  directRoad,
   groundedDoorThought,
   hiddenTravelDoors,
   openRoads,
@@ -64,7 +65,7 @@ describe("the picker names only the roads that are open", () => {
       "medium:mars",
       "medium:the_rift",
     ];
-    const walked = ["the_rift", "boot_hill"];
+    const walked = ["medium:the_rift", "medium:boot_hill"];
     expect(openRoads(hero(toTheRift, [], [], walked), "medium", seam)).toEqual(
       [],
     );
@@ -86,10 +87,10 @@ describe("the picker names only the roads that are open", () => {
     expect(
       openRoads(hero(toTheRift, [], ["rift_creator"]), "medium", seam),
     ).toEqual([]);
-    // …and the other way round: a road walked through a portal is offered even
-    // on a rung whose ladder has not reached it. The tool remembers the trip,
-    // not the campaign.
-    const fresh = hero([], [], ["rift_creator"], ["the_bunker"]);
+    // …and the other way round: a road walked through a portal on THIS rung is
+    // offered even though its ladder has not reached it. The tool remembers
+    // the trip, not the campaign.
+    const fresh = hero([], [], ["rift_creator"], ["nightmare:the_bunker"]);
     expect(openRoads(fresh, "nightmare", seam)).toEqual(["the_bunker"]);
   });
 
@@ -159,7 +160,7 @@ describe("the rift seam — it simply isn't there", () => {
       ["medium:goodco_hq", "medium:moon", "medium:mars", "medium:the_rift"],
       [],
       ["rift_creator"],
-      ["the_rift"],
+      ["medium:the_rift"],
     );
     expect(hiddenTravelDoors(home(), kept, "medium")).not.toContain(
       "rift_seam",
@@ -167,8 +168,84 @@ describe("the rift seam — it simply isn't there", () => {
   });
 });
 
-describe("the rift portals out in the maps", () => {
-  it("MARS and THE RIFT declare their way onward as a tear", () => {
+describe("the seam's roads are per RUNG", () => {
+  const seam = () => doorNamed("rift_seam");
+
+  it("arrives on a harder rung with nothing on it", () => {
+    // The KEEPSAKE is banked for good, so the seam is on the wall from the
+    // first minute of nightmare — and every road is walked again, in order,
+    // the long way. A seam that carried medium's roads up would hand the
+    // player the back half of the map before they had taken a step of it.
+    const veteran = hero(
+      ["medium:the_rift", "medium:boot_hill"],
+      [],
+      ["rift_creator"],
+      ["medium:the_rift", "medium:boot_hill"],
+    );
+    expect(openRoads(veteran, "medium", seam())).toEqual([
+      "the_rift",
+      "boot_hill",
+    ]);
+    expect(openRoads(veteran, "nightmare", seam())).toEqual([]);
+  });
+
+  it("and the door goes back off the wall with them", () => {
+    const veteran = hero(
+      ["medium:the_rift"],
+      [],
+      ["rift_creator"],
+      ["medium:the_rift"],
+    );
+    expect(hiddenTravelDoors(home(), veteran, "nightmare")).toContain(
+      "rift_seam",
+    );
+  });
+});
+
+describe("following a coward through his own tear", () => {
+  const doorOn = (levelId: string, id: string) =>
+    (LEVELS[levelId]!.travelDoors ?? []).find((d) => d.id === id)!;
+
+  it("MARS: the tear he bolts through leads into the rift", () => {
+    const tear = doorOn("mars", "rift");
+    expect(tear.to).toEqual(["the_rift"]);
+    expect(tear.direct).toBe(true);
+  });
+
+  it("THE RIFT: his second exit leads out to the western", () => {
+    const tear = doorOn("the_rift", "rift");
+    expect(tear.to).toEqual(["boot_hill"]);
+    expect(tear.direct).toBe(true);
+  });
+
+  it("takes the tap straight there rather than opening a one-row picker", () => {
+    const mars = createGame(42, "mars", "medium");
+    // The tear is minted when he bolts, so the door's landmark only stands on
+    // the field mid-run; the reach test is the tap's business
+    // (player-input.ts). This is the road the tap commits to.
+    const walked = hero(["medium:goodco_hq", "medium:moon"]);
+    expect(directRoad(mars, walked, "medium", "rift")).toBe("the_rift");
+  });
+
+  it("leaves the seam at home to do the asking — it is not direct", () => {
+    expect(
+      directRoad(home(), hero([], [], ["rift_creator"]), "medium", "rift_seam"),
+    ).toBeNull();
+  });
+
+  it("does not collide with the tear he ARRIVED through", () => {
+    // The rift's own map stands a tear where the hero lands, and it is not a
+    // door — it carries its own landmark id so the KIND `rift` unambiguously
+    // means "the one the coward tore".
+    const rift = createGame(42, "the_rift", "medium");
+    const arrival = rift.landmarks.filter((l) => l.kind === "arrival_tear");
+    expect(arrival).toHaveLength(1);
+    expect(rift.landmarks.filter((l) => l.kind === "rift")).toHaveLength(0);
+  });
+});
+
+describe("the venues whose way onward is a tear", () => {
+  it("MARS and THE RIFT declare it", () => {
     // Both of these bosses FLEE, which ends the level the instant the tear
     // opens — so there is never a live field to walk over and tap it on, and
     // the crossing itself is the trip. `riftExit` is what says so, and it is

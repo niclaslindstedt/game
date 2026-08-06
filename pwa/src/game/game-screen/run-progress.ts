@@ -233,7 +233,7 @@ export function createRunProgress(deps: {
     // hosted party's crossing teaches the host's own seam the same road a local
     // run's would — the trip happened either way.
     if (opts.viaRift) {
-      characterRef.current = bankRiftRoad(characterRef.current, to);
+      characterRef.current = bankRiftRoad(characterRef.current, to, difficulty);
     }
     // WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
     // the session to swap the level under everybody at once; the swap comes

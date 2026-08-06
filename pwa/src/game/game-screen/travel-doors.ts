@@ -62,12 +62,18 @@ export function openRoads(
     return [];
   }
   // THE SEAM REACHES WHERE THE TOOL HAS BEEN, not where the campaign says the
-  // hero may go. The two nearly agree and then sharply do not: a road walked
-  // the long way through a portal is offered even on a rung whose ladder has
-  // not reached it, and a level merely unlocked by clearing the one before it
-  // is NOT — nothing has torn that seam yet.
+  // hero may go. A level merely unlocked by clearing the one before it is NOT
+  // offered — nothing has torn that seam yet. And the memory is PER RUNG, so
+  // stepping up to nightmare puts the seam back on the wall with nothing on
+  // it: the roads are walked again, in order, the long way.
+  // A TEAR IS NOT CAMPAIGN-GATED. Following a boss through the hole he just
+  // tore is not a road the ladder grants — the gate is that the tear EXISTS,
+  // which is physical: no bolt, no landmark, and the tap finds nothing to
+  // reach for (player-input.ts). Filtering it by `isLevelUnlocked` on top of
+  // that only asks the campaign to re-authorise a chase it can already see.
+  if (door.direct) return [...door.to];
   if (door.reached)
-    return door.to.filter((dest) => hasRiftRoad(character, dest));
+    return door.to.filter((dest) => hasRiftRoad(character, dest, difficulty));
   return door.to.filter((dest) => isLevelUnlocked(character, dest, difficulty));
 }
 
@@ -93,6 +99,29 @@ export function groundedDoorThought(
   return openRoads(character, difficulty, door).length === 0
     ? door.unready
     : null;
+}
+
+/**
+ * THE ONE ROAD A SET-DESTINATION PORTAL TAKES, or null when this door is not
+ * one (or has nowhere to go, which its `unready` line has already answered by
+ * the time this is asked).
+ *
+ * `direct` doors are the tears a fleeing boss rips open: it goes where he
+ * went, and a picker with a single row on it is a confirmation dialog nobody
+ * asked for. The seam at home is deliberately NOT one — it is the portal with
+ * a question worth putting, which is the whole point of the tool it runs on.
+ */
+export function directRoad(
+  state: GameState,
+  character: Character,
+  difficulty: Difficulty,
+  doorId: string,
+): string | null {
+  const door = (runLevelDef(state).travelDoors ?? []).find(
+    (d) => d.id === doorId,
+  );
+  if (!door?.direct) return null;
+  return openRoads(character, difficulty, door)[0] ?? null;
 }
 
 /**

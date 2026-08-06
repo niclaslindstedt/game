@@ -107,11 +107,16 @@ export function VictorySplash({
             <PixelText font={font} text="RESTART" scale={3} />
           </button>
         )}
-        {/* STAY only makes sense with a boss corpse to walk back to; the
-            bossless hub (reachExit) skips it. It is the one choice here a
+        {/* STAY needs something on the field to walk back TO. Usually the boss
+            corpse — the tap that re-opens this menu — and the bossless hub
+            (reachExit) has neither and skips it. A boss who FLED leaves no
+            corpse but leaves his TEAR, which is a door the player can follow
+            him through, so a level with standing doors offers STAY too
+            (`stayOnField` takes the same view). It is the one choice here a
             joiner keeps: the field is the party's, and dropping back onto it
             is a verb every seat may send. */}
-        {state?.bossCorpse && (
+        {(state?.bossCorpse ||
+          (state && (runLevelDef(state).travelDoors ?? []).length > 0)) && (
           <button
             type="button"
             className="pixel-button secondary"

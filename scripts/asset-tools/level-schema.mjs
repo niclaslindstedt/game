@@ -405,6 +405,19 @@ export function validateLevel(def, refs, description = "", options = {}) {
         err(`travel door "${d.id}" names unknown thought "${d.unready}"`);
       if (d.reached !== undefined && typeof d.reached !== "boolean")
         err(`travel door "${d.id}" reached must be a boolean`);
+      if (d.direct !== undefined && typeof d.direct !== "boolean")
+        err(`travel door "${d.id}" direct must be a boolean`);
+      // "SET DESTINATION" HAS TO MEAN ONE. A `direct` door skips the picker and
+      // takes its single road, so a second entry in `to` would be a place the
+      // player could never reach and would never be told about.
+      if (d.direct && to.length !== 1)
+        err(
+          `travel door "${d.id}" is direct and must name exactly one destination (has ${to.length})`,
+        );
+      // The two are opposites: `reached` exists to put a question, `direct`
+      // exists to skip one.
+      if (d.direct && d.reached)
+        err(`travel door "${d.id}" cannot be both direct and reached`);
     }
   }
   if (def.riftExit !== undefined && typeof def.riftExit !== "boolean")

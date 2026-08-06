@@ -552,6 +552,19 @@ export type LevelDef = {
      */
     requires?: string;
     /**
+     * A PORTAL WITH A SET DESTINATION — no picker: the tap simply takes it.
+     *
+     * The tears a fleeing boss rips open are these, and it is what separates
+     * them from the garage's seam. THE FOUNDER's exit goes exactly one place —
+     * wherever he went — and asking the player to confirm that in a panel is a
+     * dialogue with one row in it. The SEAM is the one portal with a question
+     * worth putting, because the RIFT CREATOR is the thing that can choose.
+     *
+     * A `direct` door with more than one destination is a content error the
+     * schema refuses: "set destination" has to mean one.
+     */
+    direct?: boolean;
+    /**
      * A DOOR THAT ONLY REACHES WHERE THE HERO HAS ALREADY BEEN — the garage's
      * rift seam, and the reason the RIFT CREATOR reads the way its own lore
      * says it does ("tears a seam to anywhere it has already been").

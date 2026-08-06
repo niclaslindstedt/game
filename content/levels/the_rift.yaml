@@ -46,6 +46,21 @@ merchant:
 # the western. `rift_exit` (Boot Hill's prelude) is the scene of him stepping
 # through it, and the crossing teaches the seam at home that road.
 riftExit: true
+# THE COWARD'S OWN EXIT — the tear THE FOUNDER rips open and bolts through, left
+# standing where he vanished (`flees.landmark: rift` on his def; the landmark
+# outlives the scene on purpose, so the map remembers where he went). Tapping it
+# FOLLOWS HIM, which is the whole of the chase in one gesture, and the crossing
+# teaches the seam back home this road.
+#
+# A SET destination: a tear goes where its owner went, and a picker with one row
+# on it is a confirmation dialog nobody asked for. The seam in the garage is the
+# only portal in the game with a question to put.
+travelDoors:
+  - id: rift
+    name: THE COWARD'S TEAR
+    to: [boot_hill]
+    direct: true
+
 objective:
   type: killBoss
 gates:

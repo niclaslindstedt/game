@@ -138,6 +138,7 @@ import { createAutosave } from "./game-screen/autosave.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
 import { RunVaultScreen } from "./VaultScreen.tsx";
 import {
+  directRoad,
   groundedDoorThought,
   hiddenTravelDoors,
 } from "./game-screen/travel-doors.ts";
@@ -1050,6 +1051,15 @@ export function GameScreen({
             // because the run may be simulating elsewhere.
             if (groundedDoorThought(state, character, difficulty, doorId)) {
               runCommand(state, "tapTravelDoor", doorId);
+              return;
+            }
+            // FOLLOWING HIM THROUGH SKIPS THE PANEL. A tear goes where its
+            // owner went, so there is nothing to ask: the tap IS the chase.
+            // The seam back home learns the road from it (`viaRift`).
+            const road = directRoad(state, character, difficulty, doorId);
+            if (road) {
+              playUiSound(synth, "confirm");
+              progressRef.current?.travelTo(state, road, { viaRift: true });
               return;
             }
             playUiSound(synth, "confirm");

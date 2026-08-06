@@ -499,6 +499,14 @@
         "returnGreeting": ["THE LIVE ONE RETURNS. SCALES ARE STILL HONEST."]
       },
       "riftExit": true,
+      "travelDoors": [
+        {
+          "id": "rift",
+          "name": "THE COWARD'S TEAR",
+          "to": ["the_rift"],
+          "direct": true
+        }
+      ],
       "objective": {
         "type": "killBoss"
       },
@@ -726,6 +734,14 @@
         "returnGreeting": ["YOU AGAIN. OF COURSE. ALL ROADS STILL LEAD HERE."]
       },
       "riftExit": true,
+      "travelDoors": [
+        {
+          "id": "rift",
+          "name": "THE COWARD'S TEAR",
+          "to": ["boot_hill"],
+          "direct": true
+        }
+      ],
       "objective": {
         "type": "killBoss"
       },

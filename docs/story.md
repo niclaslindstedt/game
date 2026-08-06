@@ -354,10 +354,16 @@ literal. The hero bolts it to the garage wall, and from then on the seam home
 reaches the deep roads both ways — the going-back the rest of the campaign
 walks on. **It reaches exactly what the rig's own description promises and no
 further: anywhere it has ALREADY BEEN.** A road appears on the seam when the
-hero has walked it the long way through a tear — following THE FOUNDER off Mars,
-stepping out the rift's far door into the western, or through the blast door a
-dead man's hand talks open — so the way home grows a branch each time a portal
-out in the world is used, and never offers a place he has only heard of.
+hero has walked it the long way through a tear — following THE FOUNDER off Mars
+and again out of the rift, or through the blast door a dead man's hand talks
+open — so the way home grows a branch each time a portal out in the world is
+used, and never offers a place he has only heard of. It keeps that memory per
+campaign: a fresh rung starts with the seam bare and every road walked again.
+
+**The chase is a thing the player does.** THE FOUNDER does not merely vanish —
+he rips a hole and bolts through it, and the hole STAYS, standing where he went.
+The hero can follow him through it, which is how the road onto the next place is
+actually taken; it is also what teaches the seam at home that this road exists.
 **Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
 wrapped around a scale she pried off a lizard god. She is fighting back, and the
