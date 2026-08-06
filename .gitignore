@@ -99,7 +99,8 @@ native/*.p8
 
 # The Lua VM compiled for the SHIPPED mod compiler (scripts/build-lua.mjs) — the
 # desktop shell's main process has no TypeScript, so the validator reads this
-# instead of src/lib/lua/. Build output like src/generated/; regenerated, never
-# committed.
-mod/tools/lua-vm/
-mod/tools/tsconfig.lua-vm.json
+# instead of src/lib/lua/. It sits beside server-dist/ rather than under mod/,
+# which is licence-split territory. Build output like src/generated/;
+# regenerated, never committed.
+electron/modtools-lua/
+electron/tsconfig.modtools-lua.json

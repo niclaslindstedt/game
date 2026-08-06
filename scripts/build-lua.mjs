@@ -20,11 +20,15 @@
 // runtime somebody else upgrades is one that breaks in a released build, on a
 // player's machine, for a reason nobody changed.
 //
-// The output lands INSIDE `mod/tools/`, which `electron-builder.config.cjs`
-// already copies wholesale into the packaged toolchain — so shipping the VM
-// needs no packaging entry, and `tests/content/mod_toolchain_deps_test.ts`
-// counts it as carried without a special case. It is gitignored and rebuilt,
-// like every other generated tree here.
+// The output lands in `electron/modtools-lua/`, beside `electron/server-dist/`
+// — the shell's other compiled-engine tree — and NOT under `mod/`. That is not
+// tidiness: `mod/` is licensed in two halves (the samples are CC0, the
+// toolchain is the SDK licence) and `tests/content/mod_licence_test.ts` holds
+// every file to its side of the split. This tree is compiled from
+// PolyForm-licensed engine source and carries that header by construction, so
+// parking it in the SDK folder would either fail that test or, worse, pass it
+// by relabelling somebody's licence. It is gitignored and rebuilt, like every
+// other generated tree here.
 //
 // Unlike the server's target this one needs NO staging step: `src/lib/lua/`
 // imports nothing but its own siblings by relative path, so there is no alias
@@ -39,12 +43,12 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const outDir = path.join(root, "mod", "tools", "lua-vm");
+const outDir = path.join(root, "electron", "modtools-lua");
 /** What ships: the VM, and the import-free hook catalog the validator checks a
  * script's exports against. Both are leaves — the hook list deliberately
  * imports nothing — so the pair compiles standalone. The output MIRRORS `src/`
- * (`lua-vm/lib/lua/index.js`, `lua-vm/game/script/hooks.js`) so a reader can
- * map a shipped file back to its source without a table. */
+ * (`lib/lua/index.js`, `game/script/hooks.js` inside the out dir) so a reader
+ * can map a shipped file back to its source without a table. */
 const SOURCES = ["src/lib/lua", "src/game/script/hooks.ts"];
 
 /** The compiler options, written out rather than inherited from the root
@@ -68,10 +72,10 @@ const CONFIG = {
     declaration: false,
     sourceMap: false,
     types: [],
-    outDir: "lua-vm",
-    rootDir: "../../src",
+    outDir: "modtools-lua",
+    rootDir: "../src",
   },
-  include: ["../../src/lib/lua/**/*.ts", "../../src/game/script/hooks.ts"],
+  include: ["../src/lib/lua/**/*.ts", "../src/game/script/hooks.ts"],
 };
 
 for (const rel of SOURCES) {
@@ -81,11 +85,11 @@ for (const rel of SOURCES) {
 }
 
 rmSync(outDir, { recursive: true, force: true });
-mkdirSync(path.join(root, "mod", "tools"), { recursive: true });
+mkdirSync(path.join(root, "electron"), { recursive: true });
 
 // The config lives beside the output tree so its relative paths are short and
 // legible in a `tsc` diagnostic. Written before `tsc` looks, never with it.
-const configPath = path.join(root, "mod", "tools", "tsconfig.lua-vm.json");
+const configPath = path.join(root, "electron", "tsconfig.modtools-lua.json");
 writeFileSync(configPath, `${JSON.stringify(CONFIG, null, 2)}\n`);
 
 const tsc = path.join(
@@ -115,8 +119,8 @@ try {
   process.exit(1);
 }
 
-// `type: module` so Node reads the emitted ESM as ESM even though the nearest
-// package.json above it (mod/package.json) may say otherwise.
+// `type: module` so Node reads the emitted ESM as ESM regardless of what the
+// nearest package.json above it says — `electron/package.json` does not.
 writeFileSync(
   path.join(outDir, "package.json"),
   `${JSON.stringify({ type: "module" }, null, 2)}\n`,

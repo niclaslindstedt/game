@@ -42,6 +42,11 @@ const engine = (p) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
  * the session server: the runtime is Electron's and its version is not ours to
  * pin.
  *
+ * The shipped paths are relative to the TOOLCHAIN ROOT — in the packaged app
+ * this file sits at `modtools/scripts/asset-tools/`, so `lua-vm/…` resolves to
+ * `modtools/lua-vm/…`, which is where `extraResources` puts it. In the repo
+ * that path does not exist and the TypeScript branch is the one taken.
+ *
  * A missing ship target is named rather than silently skipped: a validator that
  * quietly stops validating in the packaged app is exactly the drift the
  * one-compiler rule exists to prevent.
@@ -61,12 +66,12 @@ async function loadEngineModule(tsPath, shippedPath, what) {
 
 const { compile, load, LuaTable } = await loadEngineModule(
   "src/lib/lua/index.ts",
-  "mod/tools/lua-vm/lib/lua/index.js",
+  "lua-vm/lib/lua/index.js",
   "the Lua VM",
 );
 const { HOOKS } = await loadEngineModule(
   "src/game/script/hooks.ts",
-  "mod/tools/lua-vm/game/script/hooks.js",
+  "lua-vm/game/script/hooks.js",
   "the hook catalog",
 );
 
