@@ -60,6 +60,9 @@ let activeLevels: Record<string, MissionDef> = LEVELS;
 /** Test/authoring hook: replace the active level catalog. */
 export function setLevelDefs(defs: Record<string, MissionDef>): void {
   activeLevels = defs;
+  // A swapped catalog may have a different hub — or none — so the cached
+  // answer goes with it (see `hubLevelId`).
+  hubId = undefined;
   // Keep the menu-facing summaries in step, so a fixture catalog answers for
   // itself on both sides of the split (see summary.ts).
   setLevelSummaries(
@@ -113,6 +116,27 @@ export function handAuthoredLevel(def: MissionDef): LevelDef {
  */
 export function runLevelDef(state: GameState): LevelDef {
   return state.carvedLevel ?? handAuthoredLevel(levelDef(state.level.id));
+}
+
+/**
+ * THE CAMPAIGN'S HOME — the one venue whose objective is `hub`, which is where
+ * a torn seam always leads (`src/game/rift-tool.ts`).
+ *
+ * Asked of the catalog rather than hard-coded to "garage", so a MOD that ships
+ * its own hub gets a working town portal for free. Cached because it is asked
+ * on every frame the HUD draws its button, and the catalog only moves when
+ * `registerDefs` swaps it — which clears this along with everything else.
+ */
+let hubId: string | null | undefined;
+export function hubLevelId(): string {
+  if (hubId === undefined) {
+    const catalog = activeLevels;
+    hubId =
+      Object.keys(catalog).find(
+        (id) => catalog[id]?.objective.type === "hub",
+      ) ?? null;
+  }
+  return hubId ?? "garage";
 }
 
 /**

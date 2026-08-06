@@ -1356,14 +1356,20 @@ the mechanic._
 
 ### Found lore (story items)
 
-**RIFT CREATOR** _(falls out of the scramble as THE FOUNDER bolts through his
-own tear — his "KEEP THE RIFT, GARAGE MAN" made literal; a KEEPSAKE: it unseals
-the garage's rift seam for good. It drops on his FIRST flight, not his second,
-because it is what makes the long roads past Mars bearable and would arrive
-after them otherwise.)_
+**RIFT CREATOR** _(out of THE FOUNDER's coat as he bolts through the tear he
+just tore — he is in far too much of a hurry to feel it go. A KEEPSAKE, and the
+campaign's town portal: it unseals the garage's rift seam AND lets the hero tear
+a way home from wherever he is standing. It drops on his FIRST flight, not his
+second, because everything past Mars is a long way from home and the back half
+of the campaign is built on the hero being able to get back._
+
+_The second page is the hero shrugging at how little it seems to cost the man he
+took it from. WHY it costs him so little is never said out loud anywhere in the
+game — he owns the machines that made it — and it must stay that way: the line
+notices, it does not explain.)_
 
 - THE FOUNDER'S POCKET RIFT RIG. IT TEARS A SEAM TO ANYWHERE IT'S ALREADY BEEN.
-- HE SAID KEEP THE RIFT. I'M BOLTING THIS TO THE GARAGE WALL.
+- OUT OF HIS COAT WHILE HE RAN. HE WON'T MISS IT - AND NOW I CAN GET HOME FROM ANYWHERE.
 
 **SCRATCHED MESSAGE** _(Ada's Trail — inside a holding pod)_
 

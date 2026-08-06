@@ -121,6 +121,18 @@ export type RunParams = {
   /** The inner monologues this hero has already read on this difficulty. We die
    * and replay a lot; an already-read thought is not read again. */
   seenThoughts?: readonly string[];
+  /**
+   * THE KEEPSAKES THIS HERO CARRIES — story-item ids banked on the CHARACTER
+   * for good (`StoryItemDef.keepsake`), chiefly the RIFT CREATOR.
+   *
+   * A run starts with `state.storyItems` empty because that list is what THIS
+   * run has found; a keepsake is what every run before it left the hero
+   * holding, and the roster that knows is app-side. So it arrives the way
+   * every other pre-tick fact does — as a parameter — which is also what
+   * carries it to a joining client, whose own copy of the run has to agree
+   * about who may tear a seam home.
+   */
+  keepsakes?: string[];
   /** How much of the opening to skip (an `OpeningSkip` name; anything else is
    * read as `none`, because a parameter that arrives from a wire is a claim
    * rather than a fact). */
@@ -200,6 +212,7 @@ export function createRunFromParams(params: RunParams): GameState {
   if (params.seenThoughts?.length) {
     markThoughtsSeen(state, params.seenThoughts);
   }
+  if (params.keepsakes?.length) state.keepsakes = [...params.keepsakes];
   // THE HOUR THE RUN IS PLAYED IN. Clamped here rather than trusted, so a
   // hostile or simply wrong wire value can only ever pick a point on the day
   // the renderer already knows how to draw.

@@ -653,6 +653,10 @@ export function createGame(
     choice: null,
     companions: [],
     storyItems: [],
+    // What the hero arrived CARRYING is a session parameter, applied by
+    // `createRunFromParams` — a bare `createGame` is a hero with nothing
+    // banked, which is exactly right for a fresh campaign and for a test.
+    keepsakes: [],
     clearedLevels,
     thoughtsSeen: [],
     capThoughtMs: 0,

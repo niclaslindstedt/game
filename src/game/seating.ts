@@ -60,6 +60,23 @@ export type SeatOptions = {
    * own bot creation passes this; the hub never forwards it from a joiner.
    */
   bot?: boolean;
+  /**
+   * PUT THEM IN **THIS** SEAT rather than in the lowest free one.
+   *
+   * For a MULTI-WORLD session (`server/worlds.ts`), where the same party is
+   * spread across two carves at once and a seat number has to mean the same
+   * hero in every one of them: seat 2 crossing a portal into the garage must
+   * land on index 2 there, or the input frames and commands still naming index
+   * 2 would steer whoever the destination happened to seat first. Indices below
+   * it that do not exist yet are filled with DEPARTED placeholders — a body the
+   * world does not answer for, which is exactly what a seat standing on another
+   * level is from this world's point of view.
+   *
+   * Ordinary seating (a joiner arriving, a bot filling a chair) passes nothing
+   * and keeps the lowest-free-seat rule, which is the one that stops a session
+   * people have cycled through filling up with abandoned bodies.
+   */
+  seat?: number;
 };
 
 /**
@@ -74,7 +91,11 @@ export function seatHero(
   loadout: Loadout | null,
   opts: SeatOptions = {},
 ): Player {
-  const seat = nextFreeSeat(state);
+  const seat = opts.seat ?? nextFreeSeat(state);
+  // An EXPLICIT seat may sit past the end of the party (see `SeatOptions.seat`);
+  // the gap below it is filled with departed placeholders so every index in
+  // between exists and answers for nobody.
+  if (seat > state.players.length) ensureSeats(state, seat);
   const def = runLevelDef(state);
   const diff = difficultyDef(state.difficulty);
   const hero = createHero(
@@ -94,6 +115,38 @@ export function seatHero(
   if (loadout) applyLoadout(state, hero, loadout);
   stampParty(state);
   return hero;
+}
+
+/**
+ * Grow the party to `seats` chairs, filling the new ones with DEPARTED
+ * placeholders — bodies the world does not answer for.
+ *
+ * A MULTI-WORLD session's alignment tool (`server/worlds.ts`). The party is
+ * spread across two carves at once and a seat number has to name the same
+ * player in both, so a world holding only seat 2 still needs indices 0 and 1 to
+ * exist. What stands in them is precisely what a hero on another level is from
+ * here: present in the list, answered for by nobody — the same `departed` flag
+ * a quitter's seat wears, and every party read (`heroInPlay`, `partyLevel`,
+ * `partyCentroid`, `partyWiped`) already reads it correctly.
+ *
+ * Idempotent, and it never SHRINKS: a seat is never spliced out of a party (see
+ * rule 1 above), so this only ever appends.
+ */
+export function ensureSeats(state: GameState, seats: number): void {
+  const def = runLevelDef(state);
+  const diff = difficultyDef(state.difficulty);
+  while (state.players.length < seats) {
+    const seat = state.players.length;
+    const hero = createHero(
+      arrivalSpot(state, seat),
+      def,
+      state.difficulty,
+      diff,
+      () => state.nextId++,
+    );
+    hero.departed = true;
+    state.players.push(hero);
+  }
 }
 
 /**

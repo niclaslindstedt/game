@@ -828,6 +828,120 @@ the process that received them is about to exit. They are delivered on the
 page's `did-finish-load` as the bridge's one unsolicited event, and consumed:
 an invite left parked would re-join the same session on every reload.
 
+## Two levels in one session
+
+A session used to hold exactly one `GameState`, and every crossing moved the
+whole party. That is the right call for the campaign — friends walk into the
+next level together — and it was a hard ceiling on one feature: **a real town
+portal**, where one player nips home to sell while their friends keep fighting.
+Issue #952 scoped what it would take; this is what landed.
+
+`server/worlds.ts` (the pure half — raising a carve, populating it, lifting a
+seat's carry-over out), `server/crossing.ts` (the crossing itself, both roads
+through one function) and `server/session.ts` (the loop over them).
+
+**A SEAT NUMBER MEANS THE SAME PLAYER IN EVERY WORLD, and that is the whole
+trick.** The obvious design — a seat becomes a `(world, index)` pair — would
+have touched every input frame, every command, the roster, the reconnect ticket,
+the party HUD and the private tier's withholding, all of which name a seat by a
+single number. So instead **every world carries the same party shape**: seat 3
+is `players[3]` in the field's carve AND in the garage's, and the world a hero
+is not currently standing in holds a DEPARTED body in that chair. That flag
+already means exactly the right thing — present in the list, answered for by
+nobody — so `heroInPlay`, `partyLevel`, `partyCentroid`, `partyWiped`, the aggro
+pass and the XP share all read a hero on another level correctly with no change
+at all. `Recipient.seat` keeps working, and so does every frame in flight.
+
+**A WORLD IS ONE PER LEVEL ID.** A session never holds two carves of the same
+venue, which is what makes "travel to X" a single verb with two meanings that
+need no flag to tell apart: if no world is on X, one is carved; if one is, the
+seat WALKS ONTO IT. The road home and the road back are the same request, and
+the second one lands on the field as it was left — the same dead, the same loot
+on the floor — rather than on a fresh roll of it. It is also what keeps the
+client's crossing detection sound: `NetClient.applyWhole` reads a world change
+off a CHANGED LEVEL ID, which is only ever true when the id is the world's
+identity.
+
+**THE VERB IS `travelSolo`**, beside `travelTo`. Same two arguments, same words
+for the opening skip; what differs is who moves. There is no seat-0 rule on it —
+a player is entitled to move their own body — and unlike `travelTo` it is NOT
+refused for a destination somebody is already on, because that is the case that
+matters. It parks one request per seat on `GameState.pendingSolo` (a list, not a
+single field: two people can step home in the same tick), which only a session
+ever drains — a local single-player run has one world and simply never reads it,
+exactly as it never reads `pendingTravel`.
+
+**A WORLD TICKS WHILE A SEAT IS ASSIGNED TO IT**, and "assigned" is deliberately
+not "in play": a hero who is dead, downed or whose player dropped is still ON
+that level, and a freeze rule reading `heroInPlay` would stop the world on the
+very tick a death needs it to keep turning. Only WALKING OUT un-assigns a seat.
+So your friends' fight carries on while you shop (they are standing in it), the
+garage nobody is in costs nothing, and in a session where nobody has ever
+crossed alone this is byte-for-byte the old behaviour. The host-CPU price is
+therefore two worlds stepping only while two worlds are genuinely being played —
+never a background level ticking for an empty room. A world the last seat leaves
+is disposed outright.
+
+**THE WIRE GOT CHEAPER, NOT DEARER.** There is no spatial or interest culling in
+this replication: a snapshot is the whole run minus the seat's private
+withholdings, so every client receives every enemy, projectile and event in the
+world it is in. Splitting the party across two carves changes only WHICH world
+that is — so per-client bandwidth does not double, it stays one world's worth,
+and in the split case each world holds fewer entities than the single world
+would have. The hero in the garage stops paying for the rift's horde: no
+positions, no projectiles, and none of the gore, sound and haptic events for a
+fight two universes away. The machinery was already the right shape, because the
+snapshot is cut per RECIPIENT for the private tier; "cut it for this seat's
+world" is the same seam widened. `state.events` is accumulated per world for the
+same reason — an event is a thing that happened SOMEWHERE.
+
+**A CROSSING HANDS THE ARRIVING CLIENT THE WHOLE WORLD**, and on the second
+world that stopped being a formality. A player stepping back onto a field their
+party has been fighting on for five minutes holds a baseline for that carve that
+is stale or absent, so a delta against it would name entity ids they do not
+hold. They are sent the world entire instead — every mob where it now stands,
+every item that dropped while they were away, every teammate's position, the fog
+as the party opened it — and it stays whole until they acknowledge one
+(`fullUntilAck`), because on an unreliable transport there is no ordering to
+lean on. It is the existing re-baselining path with a new trigger, which is what
+question 3 of the issue suspected. Two supporting fixes went in with it: a full
+snapshot now revives the byte-array fields (`explored`) into real typed arrays
+rather than leaving the index-keyed object a `JSON.stringify` produces, and
+everybody ALREADY standing in the destination is owed a full snapshot too — the
+same rule a mid-run join has always followed.
+
+**WHAT A CROSSING CARRIES, and the two places a solo one differs.** Both roads
+lift the seat's carry-over through `extractLoadout`, the one banking funnel, so
+nothing a victory would have kept is lost. A SOLO crossing additionally carries
+the **wound** (a level transition rests the hero; a town portal that healed you
+would be a free full heal on a walk's cooldown) and leaves the **companions**
+standing with the party (they are a fact about the run rather than about one
+hero). That second rule is also the fix for a bug the single-world party
+crossing had carried since joiners could bring their own: `applyLoadout` rebuilds
+`state.companions` from the arriving hero's carry alone, so the last seat seated
+erased everybody else's — they accumulate now.
+
+**A CHAIR SOMEBODY WALKED OUT OF IS HELD.** `Player.held` is the reconnect
+grace's flag and it means precisely the right thing here too: this seat is being
+kept for somebody who is coming back, so `nextFreeSeat` skips it. Without it the
+lowest-free-seat rule reads the vacated body as an abandoned one and seats the
+next arrival on top of a hero standing in the garage with a bag full of loot.
+
+**AND THE ANSWERS TO THE REST OF THE ISSUE'S QUESTIONS.** A JOINER joins the
+PRIMARY world — their friends, never whichever level somebody happens to be
+shopping on; every other world is padded out to the new width so the chair
+exists there too. A RECONNECT comes back to the world it dropped out of, so
+somebody whose connection went while shopping returns to the counter rather than
+to a fight they were not in; a hold that lapses in a second world gives the seat
+back to the party's and lets that carve go. The PARTY STAMP is copied onto every
+world a session raises. THE PROTOCOL grew exactly one field — `RosterEntry.level`
+— because a client only ever receives its own world's snapshot, and without it a
+party frame could not tell a teammate in the garage from one who has quit; the
+version is bumped for it. THE PORTAL OBJECT itself (a pair of anchors, an owner,
+a lifetime, and a rule about who may use it and when it closes) is content
+riding on top of this and is not built yet: what exists today is the session
+verb, not a tear on the ground that your friends can walk into.
+
 ## Reconnect — a dropped player comes back to their own hero
 
 A dropped connection and a player quitting are the same event as far as a socket
@@ -1032,18 +1146,15 @@ clears, a merchant PARKED at his counter, standing travel doors
 the rocket and the sealed rift seam open the destination picker — and the
 campaign now opens there.
 
-**ONE SESSION IS ONE LEVEL, AND THAT IS WHAT THE TOWN PORTAL RUNS INTO.** The
+**A SESSION MAY HOLD MORE THAN ONE LEVEL AT ONCE** — see _Two levels in one
+session_ below. The SOLO town portal still works the way it always did: the
 RIFT CREATOR parks the field a hero steps out of, so the garage's seam can put
 them back on the same carve with the same dead and the same loot on the floor
-(`saveRiftRun`, pwa/src/game/saved-run.ts). **It is solo only, by construction
-rather than by choice**: a parked field is one frozen `GameState`, and in
-company the field is not one hero's to freeze — everybody else is standing on
-it. So a rift crossing in a session parks nothing and the seam grows no RETURN
-row; the party goes through together, as it does through every other door. What
-it would take to lift that — one session running two carves with seats routed
-between them — is scoped in issue #952, and a real co-op town portal (a portal
-your friends can also use, which closes when its opener steps back through)
-waits on it.
+(`saveRiftRun`, pwa/src/game/saved-run.ts), and a parked field there is one
+frozen `GameState` in the app's own storage. In COMPANY that frozen state was
+never buildable — the field is not one hero's to freeze, everybody else is
+standing on it — so the session grew the other half instead: a second live
+carve, with seats routed between the two.
 
 **AND A CROSSING NO LONGER ENDS THE SESSION.** With the doors armed or
 a party aboard, travel is a run command (`travelTo`, seat 0 only — the host

@@ -797,7 +797,13 @@ export type GameEvent =
    * crossing (once per gate) — the APP owns the travel: bank the build,
    * start a run of level `to` carrying it.
    */
-  | { type: "gateEntered"; pos: Vec2; to: string }
+  | {
+      type: "gateEntered";
+      pos: Vec2;
+      to: string;
+      solo?: boolean;
+      seat?: number;
+    }
   /**
    * A hero climbed into the car and the engine turned over (`enterCar`).
    * The app plays the starter cough and begins the idle rumble; the lights

@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 26;
+export const PROTOCOL_VERSION = 28;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -106,6 +106,11 @@ export type SessionParams = {
   coins?: number | null;
   /** The inner monologues this hero has already read on this difficulty. */
   seenThoughts?: string[];
+  /** KEEPSAKES the hero arrived carrying — story items banked on the character
+   * for good (chiefly the RIFT CREATOR). Holding the rig is what lets a hero
+   * tear a seam home mid-run, so a joining client's own copy of the run has to
+   * agree about it (see `src/game/rift-tool.ts`). */
+  keepsakes?: string[];
   /** How much of the opening to skip: `none`, `story` (already watched on this
    * difficulty), or `all` (a developer warp-in). Structural, so this leaf needs
    * no engine import to name it. */
@@ -410,6 +415,19 @@ export type RosterEntry = {
    * measured second. The net graph's per-seat figure; 0 until a window has
    * completed. */
   rate: number;
+  /**
+   * THE LEVEL THIS SEAT IS STANDING ON.
+   *
+   * One session may hold two carves at once — somebody through a town portal
+   * while the rest of the party keeps fighting (`server/worlds.ts`) — and this
+   * is the only thing on the wire that says which. A client only ever receives
+   * its OWN world's snapshot, so without it a party frame could not tell a
+   * teammate who is in the garage from one who has quit: both are a departed
+   * body in the state it holds.
+   *
+   * Absent for a spectator, who is watching the primary world by definition.
+   */
+  level?: string;
 };
 
 /** A `roster` frame. */

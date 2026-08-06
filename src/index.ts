@@ -88,6 +88,7 @@ export { quarryFor, quarryOf } from "./game/aggro.ts";
 export { partyXpBonus, splitXp, type XpCut } from "./game/xp-share.ts";
 export {
   departHero,
+  ensureSeats,
   isPartyRun,
   nextFreeSeat,
   releaseSeat,
@@ -129,7 +130,7 @@ export {
   type TradeRefusal,
   type TradeRequest,
 } from "./game/trade.ts";
-export { requestTravel } from "./game/travel.ts";
+export { requestSoloTravel, requestTravel } from "./game/travel.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
 export { areDeathScenesEnabled, setDeathScenesEnabled } from "./game/flags.ts";

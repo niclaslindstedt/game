@@ -6,7 +6,7 @@
 // Pure feedback (effects, toasts) lives in event-fx.ts; the AUTO PILOT's
 // route decisions live in autopilot-director.ts.
 
-import { fieldLive, localHero } from "../local-seat.ts";
+import { fieldLive, localHero, localSeat } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import { bankCampaignQuests, isPartyRun, storyItemDef } from "@game/core";
@@ -507,6 +507,26 @@ export function createRunProgress(deps: {
     // a RIFT PORTAL — a door onto a vault that is nowhere, talked open by a
     // dead man's hand — so the seam at home learns the road from it.
     if (event.type === "gateEntered") {
+      // A SEAM THIS HERO TORE IS THIS HERO'S TRIP, and the two crossings are
+      // genuinely different animals (src/game/rift-tool.ts):
+      //
+      //   PARTY  the session holds both levels and moves this SEAT alone
+      //          (`travelSolo`), so the field keeps running with everybody
+      //          else on it and there is nothing of this hero's to freeze.
+      //   SOLO   there is no session, so the field is PARKED and thawed on the
+      //          way back — the whole reason the trip is worth taking.
+      //
+      // A gate that is not a seam is a level's own door and takes the party,
+      // exactly as it always did.
+      if (event.solo && event.seat === localSeat()) {
+        if (deps.sessionTravels?.()) {
+          runCommand(state, "travelSolo", event.to, "story");
+          return;
+        }
+        travelTo(state, event.to, { viaRift: true });
+        return;
+      }
+      if (event.solo) return; // somebody else's way home
       travelTo(state, event.to, { viaRift: true });
     }
     // DRIVING OUT of the garage: the drive-out beat has played out — the car

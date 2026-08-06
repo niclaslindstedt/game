@@ -238,6 +238,11 @@ export const COMMANDS = [
   "exitCar",
   "tapTravelDoor",
   "travelTo",
+  // THE RIFT TOOL's own verb — tear a seam home from where you stand. Any seat
+  // may send it for their OWN body (src/game/rift-tool.ts); the crossing it
+  // leads to is `travelSolo` below, which the session performs per seat.
+  "tearSeam",
+  "travelSolo",
   "startAutopilot",
   "stopAutopilot",
   "setAutopilotSpeed",

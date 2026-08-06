@@ -42,3 +42,44 @@ export function requestTravel(
   state.pendingTravel = { to: dest, skip };
   return true;
 }
+
+/**
+ * Ask to cross ALONE — the town portal's verb.
+ *
+ * The party crossing above is one decision the host makes for everybody, and
+ * that is right for a campaign: friends walk into the next level together. A
+ * SOLO crossing is the other shape, and it is each player's own: one hero steps
+ * home to sell, repair and stash while the rest keep fighting the field they
+ * are standing on. So there is no seat-0 rule here — a player is entitled to
+ * move their OWN body — and the destination is not refused for being somewhere
+ * a world already exists on, because that is exactly the case that matters: the
+ * road HOME and the road BACK are the same verb, and the second one is a return
+ * onto the field still standing rather than a fresh carve of it.
+ *
+ * What the request cannot do is move somebody else: the acting hero is the seat
+ * the session admitted this client into (`server/session.ts`), never a field on
+ * the frame.
+ *
+ * ONE PENDING REQUEST PER SEAT — a second replaces the first, which is what
+ * keeps the list bounded by the seat cap on a channel a stranger may spam.
+ *
+ * **IT NEEDS A SESSION TO MEAN ANYTHING.** Only a multi-world session consumes
+ * these (`server/worlds.ts`); a local single-player run has one world and
+ * simply never drains the list, exactly as it never drains `pendingTravel`.
+ */
+export function requestSoloTravel(
+  state: GameState,
+  actor: Player,
+  dest: string,
+  skip: string,
+): boolean {
+  const seat = seatOf(state, actor);
+  if (seat < 0 || actor.departed) return false;
+  if (!hasLevel(dest) || dest === state.level.id) return false;
+  const queue = (state.pendingSolo ??= []);
+  const already = queue.findIndex((request) => request.seat === seat);
+  const request = { seat, to: dest, skip };
+  if (already >= 0) queue[already] = request;
+  else queue.push(request);
+  return true;
+}

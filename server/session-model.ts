@@ -224,10 +224,36 @@ export type SessionOptions = {
   adopt?: FrozenRun | null;
 };
 
-export type Session = {
-  /** The authoritative state. Read by the host's own diagnostics and by the
-   * tests; NOTHING outside this module may write it. */
+/** One live carve, as anything outside the session may see it. */
+export type WorldView = {
+  levelId: string;
+  /** The authoritative run on this carve. Read by the host's own diagnostics
+   * and by the tests, exactly as `Session.state` is; NOTHING outside the
+   * session may write it. */
   readonly state: GameState;
+  /** The seats standing in it, in seat order. */
+  seats: number[];
+  /** This is the world the session is ABOUT — where a joiner is seated, and
+   * what `Session.state` reports. Exactly one world is. */
+  primary: boolean;
+  /** It owes a tick. A second world with nobody in it does not (see
+   * `server/worlds.ts`). */
+  live: boolean;
+};
+
+export type Session = {
+  /**
+   * The authoritative state of the PRIMARY world — where the party is, where a
+   * joiner is seated, and the run the session is about. Read by the host's own
+   * diagnostics and by the tests; NOTHING outside this module may write it.
+   *
+   * A session may hold a SECOND world while somebody has stepped through a
+   * town portal (`server/worlds.ts`); `worlds` is what says so.
+   */
+  readonly state: GameState;
+  /** Every live carve and who is standing in it — one entry in every ordinary
+   * session, two while a player is away through a portal. */
+  readonly worlds: WorldView[];
   /** Ticks elapsed since the session started. */
   readonly tick: number;
   /** Owe the simulation `ms` of wall clock and run the whole `TICK_MS` slices
