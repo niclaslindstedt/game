@@ -92,16 +92,17 @@ export function groundLayerPoint(
 }
 
 /**
- * A FLOOR-PLANE SPRITE, baked through the projection — the wall panels, painted
- * markings, hatches and top-down crates that belong to the ground rather than
- * standing on it (`plane: floor`, see `assets.ts`).
+ * A FLOOR-PLANE SPRITE, baked through the projection — the painted markings,
+ * hatches and top-down crates that belong to the ground rather than standing on
+ * it (`plane: floor`, see `assets.ts`), and the slice a `plane: wall` piece is
+ * extruded from (`wallBlock` below).
  *
  * Baked once per (sprite, projection) for exactly the reason the ground layer is
  * (`groundLayer` above): a projection is a squash and a turn, nearest-neighbour
  * is the only resample that keeps pixel art crisp, and a nearest-neighbour
  * resample picks WHICH rows and columns to drop from the destination offset — so
  * transforming per frame re-picks them every time the camera moves a pixel and
- * the wall visibly boils. Baked, the dropped rows are baked in too and the
+ * the art visibly boils. Baked, the dropped rows are baked in too and the
  * per-frame draw is a plain 1:1 blit.
  *
  * The bake is centred on the sprite's own centre, so the caller anchors it
@@ -176,23 +177,115 @@ function bakeSupersampled(
 const flatCache = new Map<string, HTMLCanvasElement | null>();
 let flatCacheProjection = projectionKey();
 
+/** Drop every projected bake when the camera knobs move. Kept as one call so
+ * the flat art and the wall blocks below can never fall out of step with each
+ * other — or with the ground layer they sit on. */
+function freshBakes(): void {
+  const projection = projectionKey();
+  if (projection === flatCacheProjection) return;
+  flatCache.clear();
+  wallCache.clear();
+  flatCacheProjection = projection;
+}
+
+/**
+ * `spin` is the piece's own bearing, in radians, applied to the ART BEFORE the
+ * projection — see `isDirectionalSprite`. Zero for everything that has no
+ * bearing to state, which is nearly all of it, and it stays out of the cache key
+ * in that case so the common bake is looked up by its plain name.
+ */
 export function flatSprite(
   sprite: ImageBitmap,
   name: string,
+  spin = 0,
 ): HTMLCanvasElement | null {
   // The whole cache is dropped when the camera knobs move rather than keyed per
   // projection: DEVELOPER → VISUALS is a pair of SLIDERS, so keying would mint a
   // canvas per sprite per pixel of drag and never let go of any of them.
-  const projection = projectionKey();
-  if (projection !== flatCacheProjection) {
-    flatCache.clear();
-    flatCacheProjection = projection;
-  }
-  const cached = flatCache.get(name);
+  freshBakes();
+  const key = spin === 0 ? name : `${name}@${spin.toFixed(4)}`;
+  const cached = flatCache.get(key);
   if (cached !== undefined) return cached;
-  const canvas = bakeFlat(sprite);
-  flatCache.set(name, canvas);
+  const canvas = bakeFlat(sprite, { spin });
+  flatCache.set(key, canvas);
   return canvas;
+}
+
+/**
+ * A `plane: wall` PIECE AS THE BLOCK IT IS — the same plan art, projected once
+ * and then STACKED `rise` screen px upward, cap on top.
+ *
+ * This is sprite stacking, and it is the answer here for the reason it is the
+ * answer anywhere: it needs no second piece of art and it comes out right at
+ * every pitch and yaw, because the only thing that ever changes is the ONE
+ * projected slice it repeats. A wall drawn flat is a paving slab — turn the
+ * camera and a lab's partitions become a slightly darker path across the floor —
+ * and hand-drawing an elevation for each of them would be an art project that
+ * still had to be redrawn for the next yaw somebody dialled in.
+ *
+ * The stack is a BAKE, once per sprite per projection, not a per-frame loop:
+ * a 16-px wall is seventeen blits, and a bay wall in view is sixty panels.
+ *
+ * The shading is what turns a stack of identical slices into a face: a
+ * `source-atop` ramp darkens the block toward the floor (the wall's own shadow
+ * on itself, and the contact shadow where it meets the ground), then the cap is
+ * laid down again UNSHADED so the top keeps the colours the artist chose. Only
+ * the cap does — a face made of the cap's own edge pixels smeared upward is
+ * exactly what a low-detail wall face should look like.
+ */
+const wallCache = new Map<string, HTMLCanvasElement | null>();
+
+export function wallBlock(
+  sprite: ImageBitmap,
+  name: string,
+  rise: number,
+): HTMLCanvasElement | null {
+  freshBakes();
+  const key = `${name}/${rise}`;
+  const cached = wallCache.get(key);
+  if (cached !== undefined) return cached;
+  const block = bakeWall(sprite, rise);
+  wallCache.set(key, block);
+  return block;
+}
+
+/**
+ * How dark the foot of a wall is against its cap — the bottom of the ramp, and
+ * the contact shadow where the panel meets the floor.
+ *
+ * Kept modest on purpose. The face is smeared from the plan art's own EDGE
+ * pixels, and a wall panel is outlined, so the face starts near the outline's
+ * colour before any of this is applied: a heavy ramp on top of that crushes the
+ * whole side to black and the run stops reading as masonry.
+ */
+const WALL_FOOT_SHADE = 0.42;
+/** …and the top of it, just under the cap, so the face is never flat. */
+const WALL_HEAD_SHADE = 0;
+
+function bakeWall(sprite: ImageBitmap, rise: number): HTMLCanvasElement | null {
+  const cap = bakeFlat(sprite);
+  if (!cap) return null;
+  const h = Math.max(1, Math.round(rise));
+  const out = document.createElement("canvas");
+  out.width = cap.width;
+  out.height = cap.height + h;
+  const ctx = out.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = false;
+  // Bottom-up, so a slice nearer the eye is drawn over the one behind it.
+  for (let y = h; y >= 0; y--) ctx.drawImage(cap, 0, y);
+  // The ramp — over the pixels the stack actually painted, never the gaps
+  // between them, which is what `source-atop` buys over a plain fill.
+  const ramp = ctx.createLinearGradient(0, 0, 0, out.height);
+  ramp.addColorStop(0, `rgba(0, 0, 0, ${WALL_HEAD_SHADE})`);
+  ramp.addColorStop(1, `rgba(0, 0, 0, ${WALL_FOOT_SHADE})`);
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.fillStyle = ramp;
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.globalCompositeOperation = "source-over";
+  // …and the cap back on top of it, at its authored brightness.
+  ctx.drawImage(cap, 0, 0);
+  return out;
 }
 
 /**
@@ -219,17 +312,26 @@ export function flatSprite(
  */
 export function bakeFlat(
   sprite: ImageBitmap | HTMLCanvasElement,
-  opts: { antialias?: boolean } = {},
+  opts: { antialias?: boolean; spin?: number } = {},
 ): HTMLCanvasElement | null {
   const w = sprite.width;
   const h = sprite.height;
-  // The projected footprint of the sprite's own rect, about its centre.
-  const corners = [
-    [-w / 2, -h / 2],
-    [w / 2, -h / 2],
-    [-w / 2, h / 2],
-    [w / 2, h / 2],
-  ] as const;
+  // THE PIECE'S OWN BEARING, turned in before the projection — the belt laid
+  // east is the same art as the belt laid south, rotated on the FLOOR. Turning
+  // it here rather than at the draw is the whole point: the result is a bake
+  // like any other, blitted 1:1 per frame, and the rotation is resampled once.
+  const spin = opts.spin ?? 0;
+  const cos = spin === 0 ? 1 : Math.cos(spin);
+  const sin = spin === 0 ? 0 : Math.sin(spin);
+  // The projected footprint of the sprite's own (turned) rect, about its centre.
+  const corners = (
+    [
+      [-w / 2, -h / 2],
+      [w / 2, -h / 2],
+      [-w / 2, h / 2],
+      [w / 2, h / 2],
+    ] as const
+  ).map(([x, y]) => [cos * x - sin * y, sin * x + cos * y] as const);
   const xs = corners.map(([x, y]) => projectX(x, y));
   const ys = corners.map(([x, y]) => projectY(x, y));
   const width = Math.max(1, Math.ceil(Math.max(...xs) - Math.min(...xs)));
@@ -243,6 +345,7 @@ export function bakeFlat(
       width / 2,
       height / 2,
     );
+    if (spin !== 0) ctx.transform(cos, sin, -sin, cos, 0, 0);
     ctx.drawImage(sprite, -w / 2, -h / 2);
   };
   if (opts.antialias === false) {

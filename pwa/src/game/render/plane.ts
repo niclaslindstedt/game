@@ -6,21 +6,51 @@
 // size. For the passes that draw the level's own furniture — the obstacles, the
 // decor, the landmarks — that split is not a property of the PASS, it is a
 // property of the ART, and it always was: a boulder and a house front are drawn
-// in elevation and have to stand, while a wall panel, a painted lane marking and
-// a crate seen from above are drawn in PLAN and have to lie.
+// in elevation and have to stand, while a painted lane marking and a crate seen
+// from above are drawn in PLAN and have to lie.
 //
-// Standing plan-view art up is what the tilt got wrong, and it is loud: a wall
-// panel comes out taller than the floor grid it is set into, and once the camera
-// is turned a straight run of them staircases diagonally across a floor whose
-// own seams run the other way.
+// Standing plan-view art up is what the tilt got wrong, and it is loud: the
+// piece comes out taller than the floor grid it is set into, and once the camera
+// is turned a straight run of it staircases diagonally across a floor whose own
+// seams run the other way.
 //
-// So the art says which it is (`plane: floor` in the sprite's YAML, reaching the
-// app as `isFloorPlaneSprite`) and this is the one place that acts on it.
+// THE PLAN VIEW HAS A THIRD CASE, THOUGH, AND IT IS THE ONE THE WALLS ARE IN.
+// "Drawn in plan" and "flat" are not the same claim: a lane marking really is
+// paint on the ground, but a wall panel is a plan view of a thing you cannot see
+// past. Lying down it reads as a paving slab — turn the camera and a lab's
+// partitions become a slightly darker path across the floor, and the room stops
+// being a room. So `plane: wall` art keeps the same footprint on the same floor
+// and is EXTRUDED off it: the one projected slice, stacked `rise` px upward with
+// a cap on top (`wallBlock`). No second piece of art, and right at every pitch
+// and yaw, because the projection is applied to the slice rather than to a
+// hand-drawn elevation that would only ever suit one camera.
+//
+// So the art says which it is (`plane:` in the sprite's YAML, reaching the app as
+// `isFloorPlaneSprite` / `wallPlaneRise`) and this is the one place that acts on
+// it.
 
-import { isFloorPlaneSprite } from "../assets.ts";
-import { flatSprite } from "./caches.ts";
+import {
+  isDirectionalSprite,
+  isFloorPlaneSprite,
+  wallPlaneRise,
+} from "../assets.ts";
+import { flatSprite, wallBlock } from "./caches.ts";
 import { seatX, seatY } from "./shared.ts";
 import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
+
+/**
+ * Directional art is authored running SOUTH — down the sprite's own rows — so a
+ * piece placed along a bearing is turned by the difference. See
+ * `isDirectionalSprite`.
+ */
+const AUTHORED_BEARING = Math.PI / 2;
+
+/** The turn a piece of art takes to run along `facing` — zero for art with no
+ * bearing to state, and for a placement that never supplied one. */
+function spinFor(name: string, facing: number | undefined): number {
+  if (facing === undefined || !isDirectionalSprite(name)) return 0;
+  return facing - AUTHORED_BEARING;
+}
 
 /**
  * Draw a piece of the level's furniture at world `pos`, on whichever plane its
@@ -30,6 +60,10 @@ import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
  * default) hangs the sprite around it, `base` stands the sprite's feet on it —
  * the choice a tall landmark makes so it looms rather than sinking into the
  * floor. Flat art has no feet to stand on, so it always centres.
+ *
+ * `facing` is for DIRECTIONAL flat art only (a conveyor belt), and is the
+ * bearing the piece's PLACEMENT runs along — ignored by everything else, which
+ * is why a pass may hand it over unconditionally.
  */
 export function drawWorldSprite(
   ctx: CanvasRenderingContext2D,
@@ -38,18 +72,37 @@ export function drawWorldSprite(
   pos: { x: number; y: number },
   camera: { x: number; y: number },
   anchor: "center" | "base" = "center",
+  facing?: number,
 ): void {
+  const rise = wallPlaneRise(name);
+  if (rise > 0) {
+    // THE WALL: the same footprint the flat branch below would have drawn, with
+    // the block standing on it. The bake's BOTTOM slice is that footprint
+    // (`bakeWall` stacks upward from it), so the seat is the flat seat and the
+    // whole block is hung `rise` px above it.
+    const block = wallBlock(sprite, name, rise);
+    if (!block) return;
+    const foot = block.height - rise;
+    billboard(ctx, pos.x, pos.y, camera.x, camera.y, () =>
+      ctx.drawImage(
+        block,
+        seatX(pos.x, camera.x) - Math.round(block.width / 2),
+        seatY(pos.y, camera.y) - Math.round(foot / 2) - rise,
+      ),
+    );
+    return;
+  }
   if (isFloorPlaneSprite(name)) {
     // Pre-projected once (`flatSprite`) and blitted 1:1 here, rather than drawn
     // through the live transform — a per-frame resample of pixel art boils as
     // the camera pans. The blit happens INSIDE the billboard because the baked
     // art already carries the projection; drawing it in the tilted space would
     // apply it a second time.
-    const flat = flatSprite(sprite, name);
+    const flat = flatSprite(sprite, name, spinFor(name, facing));
     if (!flat) return;
-    // Seat first, then step back by a WHOLE half-sprite — see `seatX`. A wall
-    // panel or a cable run baked to an odd height is exactly the art that
-    // shivered when the two were rounded together.
+    // Seat first, then step back by a WHOLE half-sprite — see `seatX`. A cable
+    // run baked to an odd height is exactly the art that shivered when the two
+    // were rounded together.
     billboard(ctx, pos.x, pos.y, camera.x, camera.y, () =>
       ctx.drawImage(
         flat,
@@ -89,6 +142,9 @@ export function drawWorldSprite(
  * billboarding here would counter-transform art that was never projected and
  * fling the whole door off across the map — invisibly at yaw 0, where the
  * projection is the identity and the mistake costs nothing.
+ *
+ * A `plane: wall` door retracts as the BLOCK it is drawn as, top edge first —
+ * the same question answered the same way, one plane later.
  */
 export function drawWorldSpriteTop(
   ctx: CanvasRenderingContext2D,
@@ -98,7 +154,12 @@ export function drawWorldSpriteTop(
   camera: { x: number; y: number },
   keep: number,
 ): void {
-  const art = isFloorPlaneSprite(name) ? flatSprite(sprite, name) : sprite;
+  const rise = wallPlaneRise(name);
+  const art = rise
+    ? wallBlock(sprite, name, rise)
+    : isFloorPlaneSprite(name)
+      ? flatSprite(sprite, name)
+      : sprite;
   if (!art) return;
   const h = Math.max(
     1,
@@ -106,6 +167,14 @@ export function drawWorldSpriteTop(
   );
   const ax = bodyAnchorX(pos.x, pos.y, camera.x, camera.y);
   const ay = bodyAnchorY(pos.x, pos.y, camera.x, camera.y);
+  // The SAME seat `drawWorldSprite` uses for this plane, spelt out rather than
+  // shared because that one is inside a billboard and this is not (see above).
+  // An extruded block is seated on its FOOTPRINT with the rise hung above it —
+  // centring the whole block instead drops the retracting door half a rise
+  // below the wall run it is hung in, for exactly the second it is moving.
+  const top = rise
+    ? ay - Math.round((art.height - rise) / 2) - rise
+    : ay - Math.round(art.height / 2);
   ctx.drawImage(
     art,
     0,
@@ -113,7 +182,7 @@ export function drawWorldSpriteTop(
     art.width,
     h,
     ax - Math.round(art.width / 2),
-    ay - Math.round(art.height / 2),
+    top,
     art.width,
     h,
   );

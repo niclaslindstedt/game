@@ -9,9 +9,10 @@ import {
   cacheRungFor,
   cacheStanding,
   type GameState,
+  type Obstacle,
 } from "@game/core";
 
-import { spriteByName, type Sprites } from "../assets.ts";
+import { spriteByName, wallPlaneRise, type Sprites } from "../assets.ts";
 import {
   DECOR_FRAME_MS,
   decorFrames,
@@ -35,6 +36,7 @@ import {
   cameraAnchorX,
   cameraAnchorY,
   endBillboard,
+  projectY,
 } from "./tilt.ts";
 import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
 import { type Camera } from "./view.ts";
@@ -111,7 +113,19 @@ export function drawDecor(
     const sprite = frames
       ? frames[frame]!
       : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
-    drawWorldSprite(ctx, name, sprite, decor.pos, camera);
+    // `facing` is the bearing the piece's PROP LINE runs along, and only
+    // DIRECTIONAL art acts on it (./plane.ts): a belt laid down a bay that runs
+    // east is the same machine as one laid south, turned on the floor. Scatter
+    // decor has no line and so no bearing, and is drawn exactly as before.
+    drawWorldSprite(
+      ctx,
+      name,
+      sprite,
+      decor.pos,
+      camera,
+      "center",
+      decor.facing,
+    );
   }
 }
 
@@ -323,10 +337,24 @@ export function drawBossCorpseRing(
   ctx.restore();
 }
 
-/** Obstacles sit on the ground plane, under everything that moves. Each
- * carries its sprite name from the def, and the ART decides which plane it is
- * drawn on (./plane.ts): a boulder or a house front stands up, a wall panel or
- * a top-down crate lies down with the floor it is set into. */
+/**
+ * Obstacles sit on the ground plane, under everything that moves. Each carries
+ * its sprite name from the def, and the ART decides which plane it is drawn on
+ * (./plane.ts): a boulder or a house front stands up, a top-down crate lies down
+ * with the floor it is set into, a WALL panel is extruded off it.
+ *
+ * The walls go LAST, and back-to-front. Everything else on this layer is drawn
+ * in the order the level built it, which is fine for pieces that do not overlap
+ * — but an extruded wall is TALL, so a panel nearer the eye has to be painted
+ * over the one behind it or a run of them comes out with each block's cap
+ * sliced off by its own neighbour. Depth is the PROJECTED y (the axis that
+ * actually runs into the screen once the camera is turned), never the world's.
+ *
+ * Sorted through a module-scope buffer rather than a fresh array per frame: this
+ * runs at 60 Hz with the whole visible field in it.
+ */
+const wallQueue: { obstacle: Obstacle; depth: number }[] = [];
+
 export function drawObstacles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -334,11 +362,24 @@ export function drawObstacles(
   camera: Camera,
   inView: InView,
 ): void {
+  wallQueue.length = 0;
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
     // A vehicle's footprint blockers are collision only — the machine over
     // them is ./vehicles.ts's to draw.
     if (obstacle.kind === "vehicle") continue;
+    if (wallPlaneRise(obstacle.sprite) > 0) {
+      wallQueue.push({
+        obstacle,
+        depth: projectY(obstacle.pos.x, obstacle.pos.y),
+      });
+      continue;
+    }
+    const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
+    drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
+  }
+  wallQueue.sort((a, b) => a.depth - b.depth);
+  for (const { obstacle } of wallQueue) {
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
     drawWorldSprite(ctx, obstacle.sprite, sprite, obstacle.pos, camera);
   }

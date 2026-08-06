@@ -1,6 +1,8 @@
 name: control_wall
 family: boot_hill
-plane: floor
+# A wall segment, and drawn as one — the footprint stays on the floor and the
+# panel stands on it (render/plane.ts).
+plane: wall
 size: [16, 16]
 description: >
   A control-room wall panel - a riveted steel section with a lit top edge,

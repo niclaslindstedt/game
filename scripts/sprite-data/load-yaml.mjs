@@ -29,6 +29,7 @@ import {
   gridRows,
   validatePalette,
   validateSprite,
+  wallRise,
 } from "../asset-tools/sprite-schema.mjs";
 import { paletteFromHex } from "../asset-tools/sprite-yaml.mjs";
 
@@ -86,8 +87,12 @@ export function loadSprites() {
   const SPRITE_FAMILY = {};
   // Only the sprites that ask for something OTHER than the default plane, so
   // the emitted manifest names the handful of floor-plane pieces rather than
-  // repeating "upright" fourteen hundred times.
+  // repeating "upright" fourteen hundred times. `SPRITE_RISE` and
+  // `SPRITE_DIRECTIONAL` are the two per-plane knobs, kept beside it and just
+  // as sparse — only the pieces that set them appear.
   const SPRITE_PLANES = {};
+  const SPRITE_RISE = {};
+  const SPRITE_DIRECTIONAL = {};
   const ANIMATIONS = {};
   const FAMILIES = [];
 
@@ -173,6 +178,13 @@ export function loadSprites() {
       SPRITE_FAMILY[sprite.name] = name;
       if (sprite.plane && sprite.plane !== DEFAULT_SPRITE_PLANE) {
         SPRITE_PLANES[sprite.name] = sprite.plane;
+        // Resolved HERE rather than in the renderer: the default is the art's
+        // own height, and this is the last place that knows it.
+        if (sprite.plane === "wall")
+          SPRITE_RISE[sprite.name] = wallRise(sprite);
+        if (sprite.plane === "floor" && sprite.directional) {
+          SPRITE_DIRECTIONAL[sprite.name] = true;
+        }
       }
       family.sprites[sprite.name] = grid;
     }
@@ -194,6 +206,8 @@ export function loadSprites() {
     SPRITE_PALETTES,
     SPRITE_FAMILY,
     SPRITE_PLANES,
+    SPRITE_RISE,
+    SPRITE_DIRECTIONAL,
     ANIMATIONS,
   };
 }

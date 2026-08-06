@@ -2,6 +2,13 @@ name: conveyor
 family: goodco
 space: inside
 plane: floor
+# A BELT RUNS ONE WAY. The art draws a machine running SOUTH — side rails down
+# the east and west edges, roller ribs crossing it, the pattern marching down
+# the frames — and a rank of them is laid along whichever axis its bay is
+# longest. Without this the belt in an east-west bay carried its cargo sideways
+# across its own rails; with it, the placement's bearing turns the art to match
+# (`Decor.facing`, render/plane.ts).
+directional: true
 size: [20, 16]
 description: >
   A straight section of the assembly-line conveyor seen from above: chrome side
