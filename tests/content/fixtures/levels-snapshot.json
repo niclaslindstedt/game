@@ -498,6 +498,7 @@
         ],
         "returnGreeting": ["THE LIVE ONE RETURNS. SCALES ARE STILL HONEST."]
       },
+      "riftExit": true,
       "objective": {
         "type": "killBoss"
       },
@@ -724,6 +725,7 @@
         ],
         "returnGreeting": ["YOU AGAIN. OF COURSE. ALL ROADS STILL LEAD HERE."]
       },
+      "riftExit": true,
       "objective": {
         "type": "killBoss"
       },
@@ -1516,8 +1518,9 @@
         {
           "id": "rift_seam",
           "name": "THE RIFT SEAM",
-          "to": ["the_rift", "boot_hill"],
-          "requires": "rift_creator"
+          "to": ["the_rift", "boot_hill", "the_bunker"],
+          "requires": "rift_creator",
+          "reached": true
         }
       ],
       "loot": {

@@ -21,6 +21,7 @@ import {
 import {
   accrueCampaign,
   bankKeepsake,
+  bankRiftRoad,
   bankLoadout,
   campaignTally,
   hasClearedLevel,
@@ -103,6 +104,16 @@ export type TravelOptions = {
    * worth more than what the win put on the character.)
    */
   banked?: boolean;
+  /**
+   * THE TRIP WAS THROUGH A RIFT PORTAL, so the destination is banked on the
+   * character (`riftRoads`) and the garage's seam can reach it from here on.
+   *
+   * Set by the three crossings that ARE a rift portal — a `direct` portal's
+   * tap, the seam's own picker, and the blast gate the severed hand opens —
+   * and by nothing else. The victory splash's NEXT LEVEL is a road walked, not
+   * a seam torn, and must not teach the tool a shortcut the hero never took.
+   */
+  viaRift?: boolean;
 };
 
 export function createRunProgress(deps: {
@@ -218,6 +229,12 @@ export function createRunProgress(deps: {
   };
 
   const travelTo = (state: GameState, to: string, opts: TravelOptions = {}) => {
+    // WHERE THE TOOL HAS NOW BEEN. Booked before the session branch below, so a
+    // hosted party's crossing teaches the host's own seam the same road a local
+    // run's would — the trip happened either way.
+    if (opts.viaRift) {
+      characterRef.current = bankRiftRoad(characterRef.current, to);
+    }
     // WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
     // the session to swap the level under everybody at once; the swap comes
     // back as a full snapshot, the driver's travel hook banks this hero off
@@ -438,9 +455,11 @@ export function createRunProgress(deps: {
       }
     }
     // Stepping into a travel gate (the cow-level door the SEVERED HAND
-    // tears open): the same crossing a hub's travel door makes on a tap.
+    // tears open): the same crossing a hub's travel door makes on a tap. It is
+    // a RIFT PORTAL — a door onto a vault that is nowhere, talked open by a
+    // dead man's hand — so the seam at home learns the road from it.
     if (event.type === "gateEntered") {
-      travelTo(state, event.to);
+      travelTo(state, event.to, { viaRift: true });
     }
     // DRIVING OUT of the garage: the drive-out beat has played out — the car
     // is away down the road and the screen is already black — and the trip it

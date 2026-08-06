@@ -39,7 +39,7 @@
 import { runLevelDef, type Difficulty, type GameState } from "@game/core";
 
 import { isLevelUnlocked } from "../character-progress.ts";
-import { hasKeepsake, type Character } from "../characters.ts";
+import { hasKeepsake, hasRiftRoad, type Character } from "../characters.ts";
 
 /** One of a level's standing doors, as this module needs to read it. */
 type TravelDoor = NonNullable<
@@ -61,6 +61,13 @@ export function openRoads(
   if (door.requires !== undefined && !hasKeepsake(character, door.requires)) {
     return [];
   }
+  // THE SEAM REACHES WHERE THE TOOL HAS BEEN, not where the campaign says the
+  // hero may go. The two nearly agree and then sharply do not: a road walked
+  // the long way through a portal is offered even on a rung whose ladder has
+  // not reached it, and a level merely unlocked by clearing the one before it
+  // is NOT — nothing has torn that seam yet.
+  if (door.reached)
+    return door.to.filter((dest) => hasRiftRoad(character, dest));
   return door.to.filter((dest) => isLevelUnlocked(character, dest, difficulty));
 }
 

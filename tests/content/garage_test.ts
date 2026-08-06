@@ -208,17 +208,27 @@ describe("the doors", () => {
         `door "${door.id}" has no landmark to stand on`,
       ).toBeDefined();
       for (const dest of door.to) {
-        expect(LEVEL_ORDER, `door "${door.id}" → "${dest}"`).toContain(dest);
+        // The seam reaches the BUNKER too, which is a secret level and so is
+        // deliberately absent from the campaign order — every road still has
+        // to name a real venue.
+        expect(LEVELS, `door "${door.id}" → "${dest}"`).toHaveProperty(dest);
       }
     }
   });
 
-  it("routes the campaign: car to GOODCO, rocket to the voyages, seam to the deep roads", () => {
+  it("routes the campaign: car to GOODCO, rocket to the voyages, seam to every rift road", () => {
     const doorMap = new Map((garage.travelDoors ?? []).map((d) => [d.id, d]));
     expect(doorMap.get("car")?.to).toEqual(["goodco_hq"]);
     expect(doorMap.get("rocket")?.to).toEqual(["moon", "mars"]);
-    expect(doorMap.get("rift_seam")?.to).toEqual(["the_rift", "boot_hill"]);
-    expect(doorMap.get("rift_seam")?.requires).toBe("rift_creator");
+    // THE SEAM IS THE ONE PORTAL THAT ASKS, and what it may offer is every
+    // venue a rift portal leads to — the two deep roads and the vault. Its
+    // rows are then whittled to the ones this hero has actually walked
+    // (`reached` → Character.riftRoads), which is the tool's own lore: it
+    // tears a seam to anywhere it has already been.
+    const seam = doorMap.get("rift_seam");
+    expect(seam?.to).toEqual(["the_rift", "boot_hill", "the_bunker"]);
+    expect(seam?.requires).toBe("rift_creator");
+    expect(seam?.reached).toBe(true);
   });
 
   it("grounds the rocket until the part is home, and names no road while it is", () => {

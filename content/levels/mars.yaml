@@ -52,6 +52,11 @@ merchant:
     - - IT KEPT THE DOME. I KEPT THE SCALES. SELL ME WHAT THE MACHINES DROP - BUY WHAT HELPS.
   returnGreeting:
     - THE LIVE ONE RETURNS. SCALES ARE STILL HONEST.
+# THE WAY ON IS A TEAR. THE FOUNDER rips one open and bolts through it at a
+# quarter health, and the hero follows — which is what `rift_entry` (the rift's
+# own prelude) is a scene of. Crossing it teaches the garage's seam the road,
+# so the way home starts reaching the rift once it has been walked the long way.
+riftExit: true
 objective:
   type: killBoss
 placedItems:

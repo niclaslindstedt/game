@@ -1668,7 +1668,7 @@ export function GameScreen({
           onTravel={(dest) => {
             setTravelDoor(null);
             playUiSound(synth, "confirm");
-            progressRef.current?.travelTo(state, dest);
+            progressRef.current?.travelTo(state, dest, { viaRift: true });
           }}
           onClose={() => {
             setTravelDoor(null);
@@ -1878,6 +1878,12 @@ export function GameScreen({
                 // he is carrying now is a farmed field's worth more than what
                 // was banked then, and leaving would lose it.
                 banked: !state.staying,
+                // ON THE TWO VENUES WHOSE WAY ONWARD IS A TEAR (`riftExit` —
+                // Mars and the rift), this button IS the portal being used:
+                // both their bosses flee, which ends the level at the instant
+                // the tear opens, so the crossing is the only form the trip
+                // can take. The seam at home learns the road from it.
+                viaRift: runLevelDef(state).riftExit === true,
               });
           }}
           onRestart={() => {

@@ -352,7 +352,12 @@ and, in the scramble, his **RIFT CREATOR**: the pocket rig that tears a seam to
 anywhere it has already been. "Keep the rift, garage man" turns out to be
 literal. The hero bolts it to the garage wall, and from then on the seam home
 reaches the deep roads both ways — the going-back the rest of the campaign
-walks on.
+walks on. **It reaches exactly what the rig's own description promises and no
+further: anywhere it has ALREADY BEEN.** A road appears on the seam when the
+hero has walked it the long way through a tear — following THE FOUNDER off Mars,
+stepping out the rift's far door into the western, or through the blast door a
+dead man's hand talks open — so the way home grows a branch each time a portal
+out in the world is used, and never offers a place he has only heard of.
 **Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
 wrapped around a scale she pried off a lizard god. She is fighting back, and the

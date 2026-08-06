@@ -127,6 +127,23 @@ export type Character = {
    */
   keepsakes?: string[];
   /**
+   * WHERE THE RIFT CREATOR HAS ALREADY BEEN — the level ids this hero has
+   * arrived at by stepping through a rift portal, across every run and every
+   * difficulty.
+   *
+   * It is the tool's own memory rather than the campaign's: the keepsake
+   * "tears a seam to anywhere it has ALREADY BEEN" (its own lore), so the
+   * garage's seam can offer a road only once the hero has walked it the long
+   * way — through THE FOUNDER's tear on Mars, out the rift's far door, or
+   * through the blast gate a dead man's hand talks open. Recorded by the one
+   * crossing funnel (`travelTo`, `viaRift`); read by `travelDoors[].reached`.
+   *
+   * Deliberately NOT derived from `clears`: a hero who used a portal and then
+   * died on the other side has still been there, and the seam remembers it.
+   * Optional — a roster stored before the field existed reads as none.
+   */
+  riftRoads?: string[];
+  /**
    * THE CAMPAIGN CHAIN'S LOG, per difficulty — the errands marked
    * `campaign: true` (see src/game/quests/campaign.ts) plus the run flags their
    * conversations set. Keyed by rung for the same reason clears and story beats
@@ -307,6 +324,7 @@ export function loadCharacters(): Character[] {
       storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
       merchantsMet: Array.isArray(c.merchantsMet) ? c.merchantsMet : [],
       ...(Array.isArray(c.keepsakes) ? { keepsakes: c.keepsakes } : {}),
+      ...(Array.isArray(c.riftRoads) ? { riftRoads: c.riftRoads } : {}),
       ...(c.campaignQuests && typeof c.campaignQuests === "object"
         ? { campaignQuests: c.campaignQuests as Character["campaignQuests"] }
         : {}),
@@ -811,6 +829,25 @@ export function bankKeepsake(character: Character, defId: string): Character {
 /** Does this character keep `defId` — the travel doors' `requires` read. */
 export function hasKeepsake(character: Character, defId: string): boolean {
   return character.keepsakes?.includes(defId) === true;
+}
+
+/** BANK A RIFT ROAD — this hero has now arrived at `levelId` through a rift
+ * portal, so the garage's seam can reach it from here on. Recorded by
+ * `travelTo`'s `viaRift` crossings; idempotent like `bankKeepsake` above. */
+export function bankRiftRoad(character: Character, levelId: string): Character {
+  if (character.riftRoads?.includes(levelId)) return character;
+  const updated: Character = {
+    ...character,
+    riftRoads: [...(character.riftRoads ?? []), levelId],
+  };
+  persist(updated);
+  return updated;
+}
+
+/** Has this hero stepped through a rift portal onto `levelId` — the seam's
+ * `reached` read. */
+export function hasRiftRoad(character: Character, levelId: string): boolean {
+  return character.riftRoads?.includes(levelId) === true;
 }
 
 export function markMerchantMet(

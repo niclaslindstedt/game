@@ -403,8 +403,12 @@ export function validateLevel(def, refs, description = "", options = {}) {
       // withheld precisely BECAUSE there is a line to play instead.
       if (d.unready !== undefined && !refs.thoughts.has(d.unready))
         err(`travel door "${d.id}" names unknown thought "${d.unready}"`);
+      if (d.reached !== undefined && typeof d.reached !== "boolean")
+        err(`travel door "${d.id}" reached must be a boolean`);
     }
   }
+  if (def.riftExit !== undefined && typeof def.riftExit !== "boolean")
+    err("riftExit must be a boolean");
   if (
     def.merchant?.parked !== undefined &&
     typeof def.merchant.parked !== "boolean"

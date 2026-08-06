@@ -42,6 +42,10 @@ merchant:
     - - BRING ME RELICS, TRAVELER. TAKE WHAT YOU NEED. WE'RE BOTH FAR FROM HOME.
   returnGreeting:
     - YOU AGAIN. OF COURSE. ALL ROADS STILL LEAD HERE.
+# THE WAY ON IS THE FAR DOOR — the tear the intro sends him to find, opening on
+# the western. `rift_exit` (Boot Hill's prelude) is the scene of him stepping
+# through it, and the crossing teaches the seam at home that road.
+riftExit: true
 objective:
   type: killBoss
 gates:
