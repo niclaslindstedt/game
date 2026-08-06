@@ -15,6 +15,7 @@
 import { localHero } from "./local-seat.ts";
 import {
   useEffect,
+  useRef,
   type CSSProperties,
   type MouseEventHandler,
   type Ref,
@@ -66,8 +67,11 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import type { LongPressWatch } from "@ui/lib/long-press.ts";
+
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { armCardCopy } from "./card-copy-gesture.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import {
   AFFIX_COLORS,
@@ -981,6 +985,13 @@ export type ItemCardProps = {
  * docks it beside its list — one card, so the two never drift. `children` seats
  * an optional trailing control (the tooltip's USE button); `cardRef` exposes the
  * box for measuring; `onClick` lets a wrapper (the modal) stop backdrop taps.
+ *
+ * PRESS AND HOLD COPIES THE CARD as a picture (card-copy-gesture.ts), which is
+ * why the box carries a pointer stream it otherwise has no use for. It is live
+ * wherever the card itself is touchable — the arsenal, the vault, the buyback
+ * shelf, the merchant's counter. The INVENTORY's card is a floating tooltip and
+ * so `pointer-events: none`; nothing here ever fires for it, and the bag cell
+ * underneath arms the same hold instead (see InventoryPanel).
  */
 export function ItemCard({
   font,
@@ -1002,6 +1013,14 @@ export function ItemCard({
   children?: ReactNode;
   onClick?: MouseEventHandler<HTMLDivElement>;
 }) {
+  const hold = useRef<LongPressWatch | null>(null);
+  const endHold = () => {
+    hold.current?.cancel();
+    hold.current = null;
+  };
+  // A card can be swapped out from under a live hold (the arsenal's list moves
+  // on, the shop's counter closes), so the timer goes with the component.
+  useEffect(() => endHold, []);
   return (
     <div
       ref={cardRef}
@@ -1010,6 +1029,27 @@ export function ItemCard({
       }`}
       style={{ borderColor: TIER_COLORS[item.tier], ...style }}
       onClick={onClick}
+      onPointerDown={(event) => {
+        endHold();
+        hold.current = armCardCopy(
+          { x: event.clientX, y: event.clientY },
+          () => ({
+            font,
+            relicFonts,
+            sprites,
+            state,
+            item,
+            compareTo,
+            subtitle,
+          }),
+        );
+      }}
+      onPointerMove={(event) =>
+        hold.current?.moved(event.clientX, event.clientY)
+      }
+      onPointerUp={endHold}
+      onPointerCancel={endHold}
+      onPointerLeave={endHold}
     >
       <ItemCardBody
         font={font}

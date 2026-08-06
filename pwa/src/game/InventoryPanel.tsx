@@ -52,6 +52,7 @@ import {
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { InfoTip } from "@ui/lib/InfoTip.tsx";
+import type { LongPressWatch } from "@ui/lib/long-press.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
@@ -63,11 +64,12 @@ import {
   type Sprites,
 } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { armCardCopy } from "./card-copy-gesture.ts";
 import { playEquipHaptic } from "./haptics.ts";
 import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { ItemIcon, itemKindGlyph } from "./ItemCard.tsx";
 import { InfoNote } from "./InfoNote.tsx";
-import { ItemTooltip } from "./ItemTooltip.tsx";
+import { cardComparison, ItemTooltip } from "./ItemTooltip.tsx";
 import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
@@ -310,6 +312,22 @@ export function InventoryPanel({
   // the up-handler needs the freshest drag without re-subscribing per move.
   const dragRef = useRef<Drag | null>(null);
   const dragActive = drag !== null;
+  // PRESS AND HOLD A BAG CELL OR A WORN SLOT COPIES THE PIECE'S CARD as a
+  // picture (card-copy-gesture.ts). It rides the CELL rather than the card
+  // because the card here is the floating tooltip, which is `pointer-events:
+  // none` on purpose — the finger that means "this card" never actually
+  // touches it. The same press is also the start of a drag, and the two
+  // separate cleanly: a drag is a press that MOVED (the watch cancels itself
+  // past its slop), a hold is a press that did not. What the hold owes the
+  // release is that it be swallowed — see `up` below, where a fired hold means
+  // the tap must not also equip the piece it just photographed.
+  const holdRef = useRef<LongPressWatch | null>(null);
+  const endHold = () => {
+    holdRef.current?.cancel();
+    holdRef.current = null;
+  };
+  // A panel closed mid-hold takes its timer with it.
+  useEffect(() => endHold, []);
 
   // While dragging, follow the pointer globally and resolve the drop target
   // under the release point (works for touch and mouse alike).
@@ -361,6 +379,7 @@ export function InventoryPanel({
     const move = (e: PointerEvent) => {
       const d = dragRef.current;
       if (!d) return;
+      holdRef.current?.moved(e.clientX, e.clientY);
       dragRef.current = {
         ...d,
         x: e.clientX,
@@ -372,6 +391,16 @@ export function InventoryPanel({
     const up = (e: PointerEvent) => {
       const d = dragRef.current;
       if (!d) return;
+      // A press the hold already claimed is spent: it copied the card, and it
+      // must not ALSO equip the piece on the way back up. The tooltip stays
+      // raised so the player sees what was photographed.
+      const copied = holdRef.current?.fired ?? false;
+      endHold();
+      if (copied) {
+        dragRef.current = null;
+        setDrag(null);
+        return;
+      }
       if (!d.moved) {
         // A plain click/tap: quick-equip from the bag, quick-unequip from a
         // slot. Desktop equips on a single click (the item is already shown on
@@ -401,11 +430,17 @@ export function InventoryPanel({
       setDrag(null);
       onChange();
     };
+    // A gesture the browser takes over (a scroll claiming the touch) never
+    // reaches `up`, so the hold has to be dropped on its own signal — or the
+    // card is copied by a press the player already let go of.
+    const cancelled = () => endHold();
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancelled);
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancelled);
     };
   }, [dragActive, state, onChange]);
 
@@ -495,6 +530,17 @@ export function InventoryPanel({
       // desktop it's moot since a click equips regardless.
       const wasInspected = inspect?.item.id === item.id;
       setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
+      // Arm the copy hold on the same press that starts the drag; whichever
+      // the player turns out to have meant, the other cancels itself.
+      endHold();
+      holdRef.current = armCardCopy({ x: e.clientX, y: e.clientY }, () => ({
+        font,
+        relicFonts,
+        sprites,
+        state,
+        item,
+        ...cardComparison(state, item),
+      }));
       dragRef.current = {
         item,
         from,

@@ -8294,6 +8294,68 @@ canvas.tier-artifact {
   z-index: 110;
 }
 
+/* THE FLASH NOTE (@ui/lib/pixel-flash.ts): a word that rises off the point the
+   player just touched and fades — today, the confirmation that a press-and-hold
+   put an item card's picture on the clipboard.
+
+   It has to clear everything, including the tooltip band above the overlays,
+   because the surface it confirms is by definition the one on top. Pointer-
+   transparent for the same reason the tooltip is: it appears under a finger
+   that is still on the screen and must never eat that finger's next tap. The
+   drop shadow is what keeps it legible over both a bright card and the dark
+   field behind it. */
+.pixel-flash {
+  position: fixed;
+  z-index: 130;
+  pointer-events: none;
+  image-rendering: pixelated;
+  /* Anchored ABOVE the touch point and centered on it, so the word is not
+     under the finger that raised it. */
+  transform: translate(-50%, -160%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.85));
+  animation: pixel-flash-rise 1100ms ease-out forwards;
+}
+
+@keyframes pixel-flash-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -120%);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -170%);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -260%);
+  }
+}
+
+/* Reduced motion keeps the word and drops the travel — the confirmation is the
+   information, the rise is decoration. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-flash {
+    animation: pixel-flash-hold 1100ms linear forwards;
+  }
+
+  @keyframes pixel-flash-hold {
+    0%,
+    70% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
 /* THE EXPLAINER NOTE (@ui/lib/InfoTip.tsx + InfoNote.tsx): the card a figure
    raises when the player asks what it is — the character sheet's rows, the
    bag's purse and ammunition sockets.
