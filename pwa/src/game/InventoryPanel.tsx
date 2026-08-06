@@ -314,9 +314,10 @@ export function InventoryPanel({
   const dragActive = drag !== null;
   // PRESS AND HOLD A BAG CELL OR A WORN SLOT COPIES THE PIECE'S CARD as a
   // picture (card-copy-gesture.ts). It rides the CELL rather than the card
-  // because the card here is the floating tooltip, which is `pointer-events:
-  // none` on purpose — the finger that means "this card" never actually
-  // touches it. The same press is also the start of a drag, and the two
+  // because the card here is a TOOLTIP: a mouse raises it by hovering the cell
+  // and `leaveItem` puts it away the moment the pointer leaves, so moving onto
+  // the card to press it is the one gesture that cannot work. The cell is what
+  // the player reached for. The same press is also the start of a drag, and the two
   // separate cleanly: a drag is a press that MOVED (the watch cancels itself
   // past its slop), a hold is a press that did not. What the hold owes the
   // release is that it be swallowed — see `up` below, where a fired hold means

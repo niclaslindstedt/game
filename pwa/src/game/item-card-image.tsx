@@ -6,10 +6,10 @@
 // stands, and that is the whole design:
 //
 //   • The one on screen is not always reachable. The inventory's card is a
-//     tooltip, and a tooltip is `pointer-events: none` — it exists to be read,
-//     not touched, and the finger that "long-presses the card" is physically on
-//     the BAG CELL underneath it. Every surface would otherwise need its own
-//     handle on its own card element.
+//     TOOLTIP: on a mouse it is raised by hovering a bag cell and dismissed the
+//     instant the pointer leaves that cell, so it cannot be pressed at all —
+//     the finger that means "this card" is on the CELL. Every surface would
+//     otherwise need its own handle on its own card element.
 //   • The one on screen carries furniture the picture should not. The tooltip
 //     wears a USE button, the shop's wears a BUY row, the arsenal's is docked
 //     into a column. A fresh render is the card and nothing else.

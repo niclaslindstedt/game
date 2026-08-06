@@ -3,9 +3,12 @@
 // gesture (@ui/lib/long-press.ts) and the picture (./item-card-image.tsx),
 // shared by every surface that shows an item so the hold means the same thing
 // everywhere: the bordered card the arsenal, the vault, the merchant's counter
-// and the buyback shelf all render, and the bag CELL underneath the inventory's
-// tooltip — which is pointer-transparent by design, so the finger that means
-// "this card" is really on the cell.
+// and the buyback shelf all render, and — separately — the bag CELL, because
+// the inventory's card is a TOOLTIP and a tooltip is not the thing under the
+// finger. On a mouse it is raised by hovering a cell and dismissed the instant
+// the pointer leaves it, so it can never be pressed; on touch it can be, but
+// the cell is still what the player reached for. Both arms exist, they cannot
+// double-fire (a press lands on one element), and either one copies the card.
 //
 // THE COPY MODULE IS PULLED IN DYNAMICALLY, for two reasons that happen to
 // agree. It renders an `ItemCard` of its own, so a static import would close a

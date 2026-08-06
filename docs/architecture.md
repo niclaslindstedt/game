@@ -1245,8 +1245,8 @@ deploy-shaped:
   is copied to the clipboard as a picture to paste into a chat, which is
   `card-copy-gesture.ts` → `item-card-image.tsx` → `@ui/lib/dom-raster.ts`,
   re-rendering the card off screen rather than photographing the one on it —
-  the bag's card is a `pointer-events: none` tooltip, so the finger that means
-  "this card" is really on the cell underneath), `MapOverlay.tsx` (the
+  the bag's card is a hover tooltip a mouse dismisses by leaving the cell that
+  raised it, so there the hold rides the CELL), `MapOverlay.tsx` (the
   fog-of-war level map shown in the `map` phase — one chunky pixel of
   terrain per explored fog cell, dark where the hero hasn't been, with a
   legend of event pins: story finds, elite/boss kills, the merchant, and the

@@ -935,30 +935,37 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       )}
-      {/* The card's foot: the REQUIRES LEVEL gate on the LEFT (WoW's bottom-left
-          "Requires Level NN"), the class/slot glyph pushed to the RIGHT — sized
-          to the text. Rarity is read from the NAME color, so no spelled-out
-          tier label rides here. */}
-      <div className="card-foot">
-        {levelReqLine && (
+      {/* The card's foot: the REQUIRES LEVEL gate (WoW's bottom-left "Requires
+          Level NN"). Rarity is read from the NAME color, so no spelled-out tier
+          label rides here, and a piece usable from level 1 has no foot at all.
+          The kind glyph used to share this row and is no longer in it — see
+          below. */}
+      {levelReqLine && (
+        <div className="card-foot">
           <PixelText
             font={font}
             text={levelReqLine.text}
             scale={lineScale}
             color={levelReqLine.color}
           />
-        )}
-        <div className="card-foot-right">
-          {glyph && (
-            <img
-              src={glyph}
-              alt={weaponClass ? `${weaponClass} weapon` : item.slot}
-              className="pixel-img card-class-glyph card-class-glyph-lg"
-              draggable={false}
-            />
-          )}
         </div>
-      </div>
+      )}
+      {/* WHAT KIND OF THING THIS IS, as a WATERMARK sunk into the card's
+          bottom-right corner: big, very dim, and BEHIND every line, the way a
+          maker's mark sits under the writing rather than beside it. It carries
+          no layout at all (absolutely positioned — see .card-kind-watermark),
+          which is the point: as an ordinary item in the foot row it made the
+          REQUIRES LEVEL line visibly deeper than the REQUIRES STRENGTH line
+          right above it, and the card's last two lines read as though one of
+          them mattered more. */}
+      {glyph && (
+        <img
+          src={glyph}
+          alt={weaponClass ? `${weaponClass} weapon` : item.slot}
+          className="pixel-img card-kind-watermark"
+          draggable={false}
+        />
+      )}
     </>
   );
 }
@@ -988,10 +995,11 @@ export type ItemCardProps = {
  *
  * PRESS AND HOLD COPIES THE CARD as a picture (card-copy-gesture.ts), which is
  * why the box carries a pointer stream it otherwise has no use for. It is live
- * wherever the card itself is touchable — the arsenal, the vault, the buyback
- * shelf, the merchant's counter. The INVENTORY's card is a floating tooltip and
- * so `pointer-events: none`; nothing here ever fires for it, and the bag cell
- * underneath arms the same hold instead (see InventoryPanel).
+ * wherever the card STAYS PUT under a pointer — the arsenal, the vault, the
+ * buyback shelf, the merchant's counter. The INVENTORY's card is a hover
+ * tooltip that a mouse dismisses by leaving the cell that raised it, so it can
+ * never be pressed there; the bag cell arms the same hold instead (see
+ * InventoryPanel).
  */
 export function ItemCard({
   font,

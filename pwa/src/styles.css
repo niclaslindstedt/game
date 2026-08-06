@@ -7112,20 +7112,14 @@ canvas.tier-artifact {
   filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
 }
 
-/* The item card's class/slot glyph (sword/reticle/spark, helmet/vest/…, at
-   1× = 12 CSS px): sits in the card's lower-right corner beside the item
-   level, replacing the old "MELEE WEAPON" / "HEAD ARMOR" line. */
+/* A class/slot glyph (sword/reticle/spark, helmet/vest/…) at label size, on the
+   unidentified card's IDENTIFY button — the one place a veiled find says what
+   KIND of thing it is. On the card itself the same glyph is a watermark in the
+   bottom-right corner instead (`.card-kind-watermark`, lib/item-card.css). */
 .card-class-glyph {
   flex: 0 0 auto;
   width: 0.75rem;
   height: 0.75rem;
-}
-
-/* The redesign's class/slot glyph shares the foot row with the REQUIRES-LEVEL
-   text, sized to about that text's height so the two read as companions. */
-.card-class-glyph-lg {
-  width: 0.9rem;
-  height: 0.9rem;
 }
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */

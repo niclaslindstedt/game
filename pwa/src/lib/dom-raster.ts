@@ -494,12 +494,28 @@ export function rasterizeElement(
       w: rect.width,
       h: rect.height,
     };
+    // A NEGATIVE z-index PAINTS EARLY — after this element's own background,
+    // before its content. It is the one bit of CSS's stacking order a tree walk
+    // cannot infer from document order, and the one the item card leans on: its
+    // kind glyph is a watermark BEHIND every line, written last in the markup.
+    // Drawn in tree order it would land on top of the text, and the copied
+    // picture would disagree with the card on screen.
+    const behind: Element[] = [];
+    const above: Element[] = [];
+    for (const child of el.children) {
+      const z = Number(getComputedStyle(child).zIndex);
+      (Number.isFinite(z) && z < 0 ? behind : above).push(child);
+    }
     ctx.globalAlpha = opacity;
     if (box.w > 0 && box.h > 0) {
       const radii = cornerRadii(style, box);
       paintShadows(ctx, style, box, radii);
       paintBackground(ctx, style, box, radii);
       paintBorders(ctx, style, box, radii);
+    }
+    for (const child of behind) paint(child, opacity);
+    ctx.globalAlpha = opacity;
+    if (box.w > 0 && box.h > 0) {
       // A pixel sprite is blown up by repetition, never by interpolation —
       // the same promise `image-rendering: pixelated` makes on screen.
       const pixelated = style.imageRendering === "pixelated";
@@ -525,7 +541,7 @@ export function rasterizeElement(
         ctx.drawImage(el, at.x, at.y, at.w, at.h);
       }
     }
-    for (const child of el.children) paint(child, opacity);
+    for (const child of above) paint(child, opacity);
     ctx.globalAlpha = alpha;
   };
 
