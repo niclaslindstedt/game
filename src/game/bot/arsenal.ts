@@ -22,7 +22,7 @@ import type { AbilityDef } from "../defs/abilities.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import {
   maxMeleeTargets,
-  weaponRangeFor,
+  weaponFiringRange,
   weaponSweepHalfAngle,
 } from "../items/index.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
@@ -302,7 +302,15 @@ export function bestAimTarget(
 ): Vec2 | undefined {
   const player = hero;
   const equipped = player.equipment.weapon;
-  const range = weaponRangeFor(state, player, equipped);
+  const def = weaponDef(equipped.defId);
+  const spec = def.projectile;
+  // POINT ONLY WHERE THE WEAPON CAN ACTUALLY BITE, which is exactly what
+  // stepWeapon will fire on: the reach its round survives to fly
+  // (`weaponFiringRange`), and — for a gun — the PHYSICAL line its projectile
+  // travels rather than the eye's, which looks past the lone pieces that eat
+  // rounds. Pointing at a foe the auto-attack then refuses just drags the pick's
+  // aim bias off the foes it would have taken.
+  const range = weaponFiringRange(state, player, equipped);
   // Candidates: live, targetable, in range, in sight — the foes a swing or a
   // shot could actually reach this tick.
   const rangeSq = range * range;
@@ -313,7 +321,13 @@ export function bestAimTarget(
     const dy = enemy.pos.y - player.pos.y;
     const dSq = dx * dx + dy * dy;
     if (dSq > rangeSq) continue;
-    if (!lineOfSight(state, player.pos, enemy.pos)) continue;
+    if (
+      spec
+        ? blockedByObstacle(state, player.pos, enemy.pos, spec.radius)
+        : !lineOfSight(state, player.pos, enemy.pos)
+    ) {
+      continue;
+    }
     // The unit bearing rides along so the cluster scoring below never
     // re-derives it (the old per-pair hypot was this pick's hotspot).
     const d = Math.sqrt(dSq);
@@ -337,8 +351,6 @@ export function bestAimTarget(
     if (open.length > 0) pool = open;
   }
   const nearest = pool[0]!;
-  const def = weaponDef(equipped.defId);
-  const spec = def.projectile;
   // The weapon's damage FOOTPRINT around its aim: a melee sweep's cone, a
   // spread volley's fan, or a piercing round's narrow corridor. 0 = a plain
   // single-target shot.

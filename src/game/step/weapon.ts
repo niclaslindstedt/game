@@ -21,13 +21,13 @@ import {
   rollWeaponHit,
   weaponCooldownFor,
   weaponCritMult,
-  weaponRangeFor,
+  weaponFiringRange,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { visibleTo } from "../sight.ts";
-import { lineOfSight } from "../obstacles.ts";
+import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
 import { createProjectile } from "../projectile.ts";
 import {
   talentCleavingEcho,
@@ -40,6 +40,7 @@ import type {
   Equipment,
   GameInput,
   GameState,
+  Obstacle,
   Player,
   WeaponClass,
 } from "../types/index.ts";
@@ -85,16 +86,38 @@ export function stepWeapon(
   const equipped = player.equipment.weapon;
   if (!hasAmmoFor(player, equipped)) return;
   const weapon = weaponDef(equipped.defId);
+  // What this weapon THROWS, or nothing at all for a blade — the split every
+  // question below turns on.
+  const spec = weapon.projectile;
   // Airborne over the fight: a melee weapon can't reach the grounded horde
   // while the hero floats above it — the same z rule (JUMP.dodgeHeight) that
   // lets enemies pass beneath him stays his blade. The cooldown keeps ticking
   // down mid-air (decremented above), so the swing is ready the instant he
   // lands. Ranged and magic still fire from height (shots leave at his z).
-  if (!weapon.projectile && player.z > JUMP.dodgeHeight) return;
-  // No target through a wall: the character never wastes a swing or a shot
-  // on a monster it can't actually reach. INTELLIGENCE widens every weapon's
-  // reach, so a high-INT build strikes from a touch further out.
-  const range = weaponRangeFor(state, player, equipped);
+  if (!spec && player.z > JUMP.dodgeHeight) return;
+  // A TRIGGER PULL THAT CANNOT CONNECT IS NEVER TAKEN — it spends a round (and
+  // an edge's tooth) on nothing, and the player watches his character shoot at
+  // thin air. Two things decide whether a blow arrives, and a ranged weapon
+  // answers both differently from a blade:
+  //
+  // HOW FAR IT GETS. `weaponFiringRange` is the paper reach (INTELLIGENCE widens
+  // every ranged and magic weapon's, so a high-INT build strikes from further
+  // out) cut down to the distance the round actually FLIES before its timer runs
+  // out. A shotgun's pellets expire at ~163 px whatever the hero's INT reads, so
+  // measuring the pick against the paper figure had him emptying shells at
+  // monsters half a screen past where a pellet has ever landed.
+  const range = weaponFiringRange(state, player, equipped);
+  // WHAT IS IN THE WAY. A swing asks the EYE (`lineOfSight`) — a blade sweeps an
+  // arc, and a lone piece narrow enough to leave the mob in plain view is not
+  // what stops it. A SHOT is a body in flight, so it asks the PHYSICAL question
+  // its own projectile will ask a tick later (`blockedByObstacle`,
+  // step/projectiles.ts): EVERY tall obstacle eats a round, lone ones included —
+  // the exact pieces the sight rule is written to look past. Asking the eye on
+  // the gun's behalf is how the hero came to spend a magazine on a boulder.
+  //
+  // Where each probe STOPS is `shotProbes`, and it is not the same point for a
+  // monster as for a box.
+  const probe = spec ? shotProbes(state, player.pos, spec.radius) : undefined;
   // A desktop mouse tilts the pick toward whatever the cursor points at (a unit
   // bearing from the hero); a pointer resting on the hero has no bearing, so the
   // zero vector below falls straight back to the nearest foe.
@@ -104,7 +127,10 @@ export function stepWeapon(
     player.pos,
     range,
     player,
-    (enemy) => lineOfSight(state, player.pos, enemy.pos),
+    (enemy) =>
+      probe
+        ? probe.body(enemy.pos, enemyDef(enemy.defId).radius)
+        : lineOfSight(state, player.pos, enemy.pos),
     aim,
   );
   // With no foe in reach, the auto-attack turns on the nearest breakable CRATE
@@ -117,11 +143,17 @@ export function stepWeapon(
   // mob I'm aiming at": a held button must never fire on a crate when no foe is
   // in reach, so a player holding down the trigger between fights doesn't burn
   // the weapon on boxes. There the pull stays inert until a mob is reachable.
+  //
+  // THE LINE TO A BOX MATTERS MORE THAN THE LINE TO A MOB, because a box never
+  // moves: a pick the round cannot get to is not one wasted shot but every shot
+  // the hero has, poured past the same boulder for as long as he stands there.
+  // Every breakable IS worth shooting once the round arrives, solid ones
+  // included — stepProjectiles credits the round to the breakable it died on.
   const targetPos =
     target?.pos ??
     (input.fire === true
       ? undefined
-      : nearestCrate(state, player.pos, range, player)?.pos);
+      : nearestCrate(state, player.pos, range, player, probe?.box)?.pos);
   if (!targetPos) return;
 
   // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)
@@ -136,7 +168,7 @@ export function stepWeapon(
   // while the cooldown set above is recovering, so this holds between blows
   // instead of flicking back to his legs the moment the swing lands.
   faceAlong(player, dir);
-  if (!weapon.projectile) {
+  if (!spec) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
     // blow — but only the nearest `maxMeleeTargets` of them (INT raises that
@@ -219,7 +251,6 @@ export function stepWeapon(
   // rolled INDEPENDENTLY inside the weapon's variance band — so a volley's
   // pellets bite for a spread of numbers, not one repeated figure. The fan
   // itself is the falloff (fewer pellets connect at range).
-  const spec = weapon.projectile;
   let count = Math.max(1, spec.count ?? 1);
   let spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
   // VOLLEY (ranged tree): a chance for one trigger pull to loose EXTRA
@@ -286,6 +317,71 @@ export function stepWeapon(
     ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
   });
   wearEquippedWeapon(state, player);
+}
+
+/**
+ * THE TWO CLEARANCE PROBES A GUN'S PICK RUNS — "can the round get to that
+ * monster", "can it get to that box" — built once per trigger pull around the
+ * shooter and the round's own radius. A blade has neither: it asks the eye
+ * (`lineOfSight`), which is a different question (obstacles.ts).
+ *
+ * They differ in where the probe STOPS, and only in that. A monster is not an
+ * obstacle, so the probe runs to its surface — the point the round is spent at,
+ * and no further, because a monster backed against a building would otherwise
+ * find the building in its own way. A BOX is an obstacle and answers the query
+ * with itself, so the probe stops short of its whole footprint (a rack is wider
+ * than its `radius` suggests) plus twice the round's radius: the sweep inflates
+ * every obstacle by the probe's own width, so one width clears the surface and
+ * the second clears the inflation. The cost is a couple of world px of
+ * indifference about what stands immediately in front of a box.
+ */
+function shotProbes(
+  state: GameState,
+  from: Vec2,
+  shotRadius: number,
+): {
+  body: (to: Vec2, radius: number) => boolean;
+  box: (box: Obstacle) => boolean;
+} {
+  const clear = (to: Vec2, backoff: number) =>
+    !blockedByObstacle(state, from, shotStop(from, to, backoff), shotRadius);
+  return {
+    body: (to, radius) => clear(to, radius),
+    box: (box) =>
+      clear(
+        box.pos,
+        (box.half ? Math.max(box.half.x, box.half.y) : box.radius) +
+          shotRadius * 2,
+      ),
+  };
+}
+
+/** Reused across calls: where the last {@link shotStop} landed. The probe runs
+ * per candidate at horde scale and its result is handed straight to the sweep
+ * and never kept, so it is written in place rather than minted — the same reason
+ * the sweep itself inflates its boxes as scalars (obstacles.ts). */
+const shotStopAt: Vec2 = { x: 0, y: 0 };
+
+/**
+ * Where a shot at a body of radius `radius` is SPENT — the point on the bearing
+ * where the round meets that body's surface, which is as far as the clearance
+ * probe has any business looking.
+ *
+ * Probing to the CENTRE instead asks whether the round could reach a point
+ * inside the thing it is aimed at, and a monster standing against cover answers
+ * that with the cover it is standing against: a pack pressed along a building's
+ * face would read as unshootable, every one of them, while the player watches
+ * his character decline to fire at monsters in plain view.
+ */
+function shotStop(from: Vec2, to: Vec2, radius: number): Vec2 {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  // Already touching: there is no flight left to be blocked.
+  const t = dist <= radius ? 0 : (dist - radius) / dist;
+  shotStopAt.x = from.x + dx * t;
+  shotStopAt.y = from.y + dy * t;
+  return shotStopAt;
 }
 
 /**
