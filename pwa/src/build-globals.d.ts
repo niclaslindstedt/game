@@ -13,7 +13,7 @@ declare const __APP_VERSION__: string;
  * the hash is not embedded there at all (see `__DEV_TOOLS__`). */
 declare const __BUILD_COMMIT__: string;
 
-/** Does this build carry the DEVELOPER tooling — the hidden seven-tap sun
+/** Does this build carry the DEVELOPER tooling — the hidden sixteen-tap sun
  * reveal, the DEVELOPER menu tree behind it, and the commit hash above? True in
  * every build a human might develop or test with (the website, the installed
  * PWA, the `/preview/` and `/branch/` slots, local dev, and the native

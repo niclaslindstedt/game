@@ -252,8 +252,8 @@ npm run release:linux    # → release/linux-unpacked/
 
 **Use `release:*`, not `dist:*`.** They differ in exactly one way and it is
 invisible: `release:*` bundles the website with `VITE_DEV_TOOLS=off`, which
-strips the hidden seven-tap sun reveal, the whole DEVELOPER menu behind it, the
-arsenal and effects galleries, and the commit hash in the title footer.
+strips the hidden sixteen-tap sun reveal, the whole DEVELOPER menu behind it,
+the arsenal and effects galleries, and the commit hash in the title footer.
 `dist:*` keeps them — right for a local build, wrong for the store. The upload
 script checks for the developer chunks and refuses, so this is caught rather
 than shipped, but building the right thing first saves a round trip.

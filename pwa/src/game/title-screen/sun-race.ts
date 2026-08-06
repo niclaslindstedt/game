@@ -2,7 +2,7 @@
 // THE CLICK RACE — the second half of the hidden developer gesture, and the
 // half that actually costs something.
 //
-// Seven quick taps on the title sun no longer unlock anything; they ARM this.
+// Sixteen quick taps on the title sun no longer unlock anything; they ARM this.
 // From there the star has to be held at TEMPO: a press at least every
 // `RACE_BEAT_MS`, sustained for `RACE_HOLD_MS` of banked on-beat time. Fall
 // behind and the bank DRAINS, at `RACE_DECAY`× the rate it filled — so a slip
@@ -31,7 +31,7 @@ export const RACE_HOLD_MS = 5000;
 export const RACE_DECAY = 1.5;
 
 /** How long the race may sit at empty before it gives up and the gesture falls
- * back to the seven taps. Not zero: a player who fumbles one beat at the very
+ * back to the tap count. Not zero: a player who fumbles one beat at the very
  * start would otherwise be thrown out before their next press lands. */
 export const RACE_LAPSE_MS = 1200;
 
@@ -94,7 +94,7 @@ export function raceWon(race: SunRace): boolean {
   return race.heldMs >= RACE_HOLD_MS;
 }
 
-/** Spent and abandoned: the star cools and the gesture rearms at seven taps. */
+/** Spent and abandoned: the star cools and the gesture rearms at the taps. */
 export function raceLapsed(race: SunRace): boolean {
   return race.emptyMs >= RACE_LAPSE_MS;
 }

@@ -2089,8 +2089,9 @@ registries alone**, or a release becomes unservable the moment the credential
 goes away.
 
 **One build flavour differs, and only one: the store upload.** The website
-carries the DEVELOPER tooling — the hidden sun reveal (seven taps to arm, then
-the click race — `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
+carries the DEVELOPER tooling — the hidden sun reveal (sixteen taps to arm, the
+first ten of them answered by nothing at all, then the click race —
+`use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
 PLAYGROUND warps, the CHEATS, the BALANCE and VISUALS knobs, the GALLERIES and
 the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the version in the title
 footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
