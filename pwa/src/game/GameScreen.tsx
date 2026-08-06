@@ -739,7 +739,8 @@ export function GameScreen({
     // this effect (see `autoplayedRef`): the developer/playtest bot and the demo
     // are settled with the run, the paid AUTO PILOT is engaged and disengaged
     // while it is up, so the ride is read at the moment of asking.
-    autoplayedRef.current = () => bot !== null || demo || state.autopilot.active;
+    autoplayedRef.current = () =>
+      bot !== null || demo || state.autopilot.active;
     // WHO ADVANCES THIS RUN. A local driver steps it here, exactly as this
     // screen always did; a net driver hands the input to a session server and
     // applies what comes back. Which one is decided once, at the top of the

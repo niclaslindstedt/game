@@ -188,6 +188,83 @@ describe("the steering", () => {
     expect(Math.abs(car.steer)).toBeLessThan(CAR.steerLock);
   });
 
+  // THE WHEEL MOVES THE CAR, THIS TICK — the driving minigame's own lateral
+  // (`CAR.lateralPx` / `carCrossing`), brought into the bay because the road
+  // felt like driving and the bay felt like asking. The wheel used to wind a
+  // rack, which turned a nose, which eventually pointed the speed somewhere
+  // else: two integrators of dead time between the thumb and the body.
+  it("puts the body across the moment the wheel goes over", () => {
+    const state = startHub();
+    const car = board(state);
+    const ahead = () =>
+      steerTo(
+        car.pos.x + Math.cos(car.heading) * 300,
+        car.pos.y + Math.sin(car.heading) * 300,
+      );
+    run(state, ahead(), 90);
+    expect(car.speed).toBeGreaterThan(0);
+
+    const y0 = car.pos.y;
+    // A tenth of a second of wheel — six frames, the shortest input a thumb
+    // makes. The nose has barely started to come round at this point, so
+    // essentially all of this is the crossing.
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 6);
+    expect(car.pos.y - y0).toBeGreaterThan(4);
+  });
+
+  it("swings the nose off the WHEEL, not off the rack", () => {
+    // The rack is the picture — it winds on at `steerRate` and the renderer
+    // warps the front wheel sprite by it. Reading the swing off it cost a fifth
+    // of a second before the nose moved at all; the swing now answers the
+    // player's own wheel, so the nose is committed while the rack is still
+    // winding on.
+    const state = startHub();
+    const car = board(state);
+    const ahead = () =>
+      steerTo(
+        car.pos.x + Math.cos(car.heading) * 300,
+        car.pos.y + Math.sin(car.heading) * 300,
+      );
+    run(state, ahead(), 90);
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 6);
+    // A tenth of a second in: the nose is already meaningfully over…
+    expect(yaw(car)).toBeGreaterThan(0.15);
+    // …while the rack is still short of full lock.
+    expect(car.steer).toBeLessThan(CAR.steerLock);
+  });
+
+  it("does not crab a parked car sideways", () => {
+    // The crossing is gated on ground speed exactly as the swing is
+    // (`wheelAuthority`), so the standing car that cranks its wheels
+    // (above) still does not move an inch.
+    const state = startHub();
+    const car = board(state);
+    const at = { x: car.pos.x, y: car.pos.y };
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 30);
+    expect(car.speed).toBe(0);
+    expect(car.pos).toEqual(at);
+  });
+
+  it("steers the same way up the screen with the nose pointing left", () => {
+    // WHICHEVER WAY THE NOSE POINTS: a `CarControl.wheel` is in the SCREEN's
+    // frame ("W turns up the screen whichever way the nose points", pinned at
+    // the door by car_controls_test.ts) and the heading's frame runs the other
+    // way for a nose-left car. The engine used to read it in the heading's
+    // frame, so a car that had been parked facing left steered backwards.
+    const state = startHub();
+    const car = board(state);
+    car.faceLeft = true;
+    car.heading = Math.PI;
+    // Nose-left, so the accelerator is a push LEFT.
+    run(state, steerTo(car.pos.x - 300, car.pos.y), 90);
+    expect(car.speed).toBeGreaterThan(0);
+    const y0 = car.pos.y;
+    // Push UP the screen: the nose must come up and the body must follow it up.
+    run(state, steerTo(car.pos.x, car.pos.y - 400), 30);
+    expect(Math.sin(car.heading)).toBeLessThan(0);
+    expect(car.pos.y).toBeLessThan(y0);
+  });
+
   it("carries on when the wheel is let go, instead of coasting to a stop", () => {
     // THE CONTROL MODEL IN ONE TEST. Letting go means "carry on as you are",
     // the way it does in a car — braking is something the driver ASKS for, with
