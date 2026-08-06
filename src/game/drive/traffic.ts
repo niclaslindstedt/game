@@ -25,7 +25,7 @@
 import { randomRange } from "@game/lib/rng.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
-import { DRIVE } from "./config.ts";
+import { courseLength, DRIVE } from "./config.ts";
 import { laneCenter } from "./crowd.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
@@ -67,7 +67,7 @@ export function spawnTraffic(state: DriveState): void {
     const at = state.nextTrafficAt;
     state.nextTrafficAt += 1000 / trafficPerKPx(state);
     if (at < DRIVE.crowdStartPx * 0.5) continue;
-    if (at > DRIVE.coursePx) break;
+    if (at > courseLength(state.params)) break;
     const lane = Math.floor(rng() * DRIVE.laneCount) % DRIVE.laneCount;
     const withHero = laneRunsWithHero(lane, dir);
     const pace = randomRange(

@@ -91,6 +91,29 @@ levels:                  # bend one map only (partial — the rest fall through)
 - The generator FAILS the build on an unknown knob key or an unknown level id, so
   a typo can't silently no-op.
 
+## The OTHER autopilot: the drive's auto-driver
+
+`src/game/drive/driver.ts` is the second thing in this repo that plays the game
+without a human, and it is held to the same bar this skill sets — the decisions a
+decent human makes, no artificial handicaps, no draw from the world's rng. It is
+a **different problem** (one car, four lanes, a crowd that walks at you), so it
+is a separate module with a separate knob block; nothing here about weapon reach
+or postures applies to it.
+
+- **What it drives**: the title-screen demo, a `?bot=` playtest that takes the
+  car out, `?drive&bot=1` in the workbench, and `make drive-bench`.
+- **Its knobs**: the `drive:` block of the SAME `content/bot.yaml`, layered over
+  `DRIVE_BOT_DEFAULTS` (`src/game/drive/driver-tuning.ts`). Adding one is the
+  same three edits — the type, the defaults, the read — then `npm run levels`.
+- **Measure it with `make drive-bench`**, never by eye: a road that reads fine
+  over thirty seconds breaks the car four legs in ten over a whole minute.
+  `ARGS="--seeds 100"` for a real reading, `ARGS="--knob cruiseFrac=0.8"` to
+  probe a candidate without a rebuild, `ARGS="--straight 1"` for the same road
+  with nobody steering (the floor every change is judged against).
+- **The body count is not the score.** The crowd is deliberately unthreadable
+  (`DRIVE.pedestriansPerKPx`) — a tune that drops bodies to nothing has broken
+  the crowd, not improved the driver. Watch ARRIVED and TRIP.
+
 ## The current combat model (so you don't re-derive it)
 
 `survive()` (the `balanced`/`aggro`/`flee` postures) reads two distances, so a
@@ -196,6 +219,9 @@ deficiency (§7.4), not an XP-split one. Do not reach for
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `pwa/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
+| `src/game/drive/driver.ts` + `driver-tuning.ts` | The DRIVE's auto-driver and its knobs (the `drive:` block of `bot.yaml`) |
+| `make drive-bench` | Measures the drive: N seeds a rung, arrival rate / trip / bodies / ending wear |
+| `?drive&bot=1` | The road on its own with the auto-driver at the wheel — look at it without playing it |
 | BOT VIEW (DEVELOPER → PLAYGROUND) | Draws `bot.lastThought` over the hero — the live decision trace |
 
 ### Running a playtest

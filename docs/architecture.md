@@ -847,7 +847,19 @@ escort.ts` walks the people an escort errand puts on the field, and
   traffic and the wagon are identical on every rung. The app half is
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
-  loot, no XP).
+  loot, no XP). `drive/driver.ts` is the AUTO-DRIVER — the hands on the wheel
+  when nobody's are: the title-screen demo, a `?bot=` playtest, `?drive&bot=1`
+  in the workbench, and `make drive-bench`, which plays N seeds a rung and
+  reports arrival rate, trip time, bodies and ending wear. It lives in the
+  engine rather than the screen for the same two reasons everything else here
+  does — the probes that want it are headless, and a road that steered
+  differently on the second run would take determinism down with it — so it
+  spends no `drive.rng()` draw, reads the road ACROSS rather than by lane (to
+  find the gap two bodies leave between them) and nurses a bent wagon home
+  instead of trying to win a leg it has already lost. Its knobs are the `drive:`
+  block of `content/bot.yaml`, beside the run autopilot's. The demo drives the
+  same road with the finish brought forward (`DriveParams.coursePx`), because a
+  minute is a long time in an attract loop.
 - **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
   it. The player names their character, and `{HERO}` is where a line means that
   name: over his own pages in every box that speaks, and inside the handful of

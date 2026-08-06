@@ -978,6 +978,7 @@ export function GameScreen({
           solo,
           Date.now() >>> 0,
           difficulty,
+          demo,
         );
         if (!params) return false;
         pendingTravelRef.current = { to, opts: {} };
@@ -1546,6 +1547,7 @@ export function GameScreen({
       soloRef.current,
       Date.now() >>> 0,
       difficulty,
+      demo,
     );
     if (!params) return false;
     pendingTravelRef.current = { to, opts };
@@ -1572,6 +1574,14 @@ export function GameScreen({
         <DriveScreen
           params={drive}
           assets={assets}
+          // NOBODY'S THUMB IS ON THIS ONE. A demo or a BOT VIEW run is the
+          // autopilot playing the game, and the road is part of the game: with
+          // no driver it coasts down from its opening 28% throttle, stops, and
+          // the crossing on the far side of it never happens — so the attract
+          // loop parks on a stationary car for the rest of its life. The same
+          // switch is what lets `playtest.mjs` and the shot recipes see the
+          // road at all.
+          auto={demo || botView}
           onArrived={(to) => {
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the

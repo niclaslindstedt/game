@@ -22,6 +22,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   createDrive,
+  createDriveDriver,
+  driveDriverInput,
   driveMph,
   driveRideQuality,
   restartDrive,
@@ -30,6 +32,7 @@ import {
   withHeroNameLines,
   DRIVE,
   DRIVE_OUTCOME,
+  type DriveDriver,
   type DriveInput,
   type DriveParams,
   type DriveState,
@@ -92,11 +95,21 @@ type Burst = {
 /** How long a burst's pieces are drawn for (ms) — the run's own figure. */
 const BURST_LIFE_MS = 2600;
 
+/**
+ * How long one of the hero's lines is left up when NOBODY IS WATCHING FOR A TAP
+ * (ms). A line parks the car — that is the point of it, and a player dismisses
+ * it — but an attract loop has no thumb, so without this the demo stops dead on
+ * the monologue and never reaches the road it was raised to talk about.
+ * Comfortably longer than reading four short lines out loud.
+ */
+const AUTO_SPEECH_MS = 3400;
+
 export function DriveScreen({
   params,
   assets,
   onArrived,
   stage,
+  auto = false,
 }: {
   params: DriveParams;
   assets: GameAssets;
@@ -109,6 +122,22 @@ export function DriveScreen({
    * `createDrive` built and this parameter does not exist for them.
    */
   stage?: (drive: DriveState) => void;
+  /**
+   * SOMEBODY ELSE AT THE WHEEL — the engine's own auto-driver
+   * (`createDriveDriver`) supplies the input and the pad and the keys sit out.
+   *
+   * On for every run nobody is playing: the title-screen demo, a `?bot=`
+   * playtest, `?drive&bot=1` in the workbench. Without it those land on a road
+   * with nothing holding the throttle, the car coasts down from its opening 28%
+   * and stops, and the drive never arrives — which is not a stalled MINIGAME,
+   * it is a stalled attract loop, because the crossing on the far side of the
+   * road is what the run was waiting for.
+   *
+   * The DIALOGUE follows the wheel: with nobody to tap, the hero's four lines
+   * dismiss themselves after {@link AUTO_SPEECH_MS} instead of parking the car
+   * forever on the first one.
+   */
+  auto?: boolean;
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const driveRef = useRef<DriveState>(
@@ -127,6 +156,14 @@ export function DriveScreen({
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
+  /** The hands on the wheel when nobody's are — minted once, because the driver
+   * carries the line it has committed to and rebuilding it every frame would be
+   * a driver that never commits to anything. */
+  const driverRef = useRef<DriveDriver | null>(
+    auto ? createDriveDriver() : null,
+  );
+  /** Drive-clock ms at which an unattended line puts itself away. */
+  const autoSpeechRef = useRef(0);
   const [speech, setSpeech] = useState<string[] | null>(null);
   const [hud, setHud] = useState({ mph: 0, gear: 0, bodies: 0, wear: 0 });
   const speechRef = useRef<string[] | null>(null);
@@ -149,6 +186,7 @@ export function DriveScreen({
 
   const dismiss = useCallback(() => {
     speechRef.current = null;
+    autoSpeechRef.current = 0;
     setSpeech(null);
   }, []);
 
@@ -213,13 +251,28 @@ export function DriveScreen({
       // legs of the road, even the one the wagon drives nose-LEFT
       // (`carKeyControl`, ../car-keys.ts).
       const pad = padRef.current;
-      inputRef.current = pad
-        ? { pedal: pad.x * nose, wheel: pad.y }
-        : carKeyControl(keysRef.current, getSettings().keybindings);
-
       const drive = driveRef.current;
+      const driver = driverRef.current;
+      inputRef.current = driver
+        ? // NOBODY IS PLAYING THIS. The engine's own driver reads the road and
+          // the thumb and the keyboard are ignored outright — not merely
+          // unread: a stray keypress in a demo must not be able to steer the
+          // car, and a screenshot recipe that holds a key down must not get a
+          // different road than the one it asked for.
+          driveDriverInput(driver, drive)
+        : pad
+          ? { pedal: pad.x * nose, wheel: pad.y }
+          : carKeyControl(keysRef.current, getSettings().keybindings);
+
       // A line on screen parks the car — the same freeze the run's own dialogue
-      // is, and for the same reason: nobody reads a monologue at 120 mph.
+      // is, and for the same reason: nobody reads a monologue at 120 mph. With
+      // nobody there to tap it away, it puts ITSELF away (see `auto`); the
+      // clock is the wall's, because the drive's own stops with the road.
+      if (driver && speechRef.current !== null) {
+        if (autoSpeechRef.current === 0)
+          autoSpeechRef.current = now + AUTO_SPEECH_MS;
+        else if (now >= autoSpeechRef.current) dismiss();
+      }
       const paused = speechRef.current !== null;
       acc += Math.min(MAX_CATCHUP_MS, now - last);
       last = now;
@@ -301,7 +354,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [assets, nose, onArrived, say]);
+  }, [assets, dismiss, nose, onArrived, say]);
 
   const damage = hud.wear;
   const failing = damage > 70;

@@ -52,7 +52,7 @@ import {
   nudgeCar,
 } from "../vehicles.ts";
 import type { CarDetachable, CarPanelId } from "../types/index.ts";
-import { DRIVE, DRIVE_OUTCOME } from "./config.ts";
+import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
 import {
   laneCenter,
   roadEdges,
@@ -69,16 +69,21 @@ import {
 } from "./traffic.ts";
 import type { DriveInput, DriveParams, DriveState } from "./types.ts";
 
-export { DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
+export { courseLength, DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
 export type { DriveOutcome } from "./config.ts";
 export {
   crossingsBetween,
   crowdEdges,
   CROWD_VARIANTS,
+  laneAt,
   laneCenter,
   roadEdges,
 } from "./crowd.ts";
 export { TRAFFIC_VARIANTS, laneRunsWithHero } from "./traffic.ts";
+export { createDriveDriver, driveDriverInput } from "./driver.ts";
+export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
+export type { DriveDriver } from "./driver.ts";
+export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
 export type {
@@ -256,7 +261,7 @@ export function stepDrive(
     drive.monologueDone = true;
     drive.events.push({ type: "monologue" });
   }
-  if (drive.distance >= DRIVE.coursePx) {
+  if (drive.distance >= courseLength(drive.params)) {
     drive.outcome = DRIVE_OUTCOME.arrived;
     drive.outcomeMs = 0;
     drive.events.push({ type: "arrived" });

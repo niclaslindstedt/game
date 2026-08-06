@@ -386,7 +386,14 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   `src/game/bot/index.ts` resolves per level via `botTuningFor(state.level.id)`
   (`src/game/bot/tuning.ts` holds the `BotTuning` schema + neutral defaults). See
   the `bot-improvement` skill. The generated file is gitignored/regenerated; the
-  YAML is committed.
+  YAML is committed. The same file carries a third block, `drive:` — the DRIVE
+  minigame's AUTO-DRIVER (`src/game/drive/driver.ts`), which is a different
+  autopilot on a different problem (one car, four lanes, a crowd) and so is a
+  flat layer over `DRIVE_BOT_DEFAULTS` (`src/game/drive/driver-tuning.ts`, its
+  own import-free leaf for the same bootstrap reason `bot/tuning.ts` is one)
+  rather than anything keyed by level. It emits `DRIVE_BOT_OVERRIDES` beside
+  `BOT_TUNING_OVERRIDES` in the same generated file, and an unknown knob under
+  either fails the build. Measure a change to it with `make drive-bench`.
 - The **pixel font glyph set** is hand-defined in
   `scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
   transparent, 3×5 variable-width cells); `make assets` packs it into the font
