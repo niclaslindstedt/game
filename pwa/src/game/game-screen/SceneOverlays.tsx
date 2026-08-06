@@ -96,8 +96,9 @@ export function SceneOverlays({
    * its `inventory` phase — the bag, or the stat sheet. */
   charTab: CharTab;
   onCharTab: (tab: CharTab) => void;
-  /** The roster hero playing this run — the sheet's name plate (the engine
-   * state carries a build, never a name). */
+  /** The roster hero playing this run — the sheet's name plate, the name over
+   * every page he speaks, and what the `{HERO}` token in an authored line
+   * resolves to (the engine state carries a build, never a name). */
   heroName: string;
   hardcore: boolean;
   /** Leave the level-name card and drop into the run — the level music
@@ -112,6 +113,7 @@ export function SceneOverlays({
           cutscene={state.cutscene}
           assets={assets}
           font={font}
+          heroName={heroName}
           revealRef={cutsceneRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");
@@ -133,6 +135,7 @@ export function SceneOverlays({
           state={state}
           assets={assets}
           font={font}
+          heroName={heroName}
           revealRef={introRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");
@@ -157,6 +160,7 @@ export function SceneOverlays({
           state={state}
           assets={assets}
           font={font}
+          heroName={heroName}
           revealRef={introRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");
@@ -184,6 +188,7 @@ export function SceneOverlays({
           state={state}
           assets={assets}
           font={font}
+          heroName={heroName}
           revealRef={dialogueRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");

@@ -1705,6 +1705,7 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
+          heroName={character.name}
           onAdvance={() => {
             runCommand(state, "advanceTalk");
             playUiSound(synth, "move");
@@ -1736,6 +1737,7 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
+          heroName={character.name}
           onAdvance={() => {
             runCommand(state, "advanceQuestDialogue");
             playUiSound(synth, "move");

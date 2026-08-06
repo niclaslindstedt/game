@@ -1272,13 +1272,34 @@ he just saw.
 ```yaml
 thoughts:
   mymod_creeper_sight:
-    speaker: ME # the name over the words
+    speaker: "{HERO}" # the name over the words — see below
     portrait: hero_suit # a sprite family; frame `<portrait>_0` is drawn
     pages:
       - - IT'S A PLANT. IT HAS A GAIT.
         - THOSE TWO FACTS DO NOT
         - BELONG IN ONE SENTENCE.
 ```
+
+### `{HERO}` — the player's own name
+
+The player names their character on the NEW GAME screen, and **`{HERO}` is that
+name**. Write it anywhere authored text should say it and every box that draws
+the line resolves it: a thought's `speaker` (so the header over his own words is
+the character the player made, which is what the shipped campaign does on every
+one of its beats), a cutscene actor's `name`, a spoken line, a conversation node,
+an errand's ask.
+
+```yaml
+# Somebody who knows him — a line, not a label.
+dialogue:
+  - - "{HERO}. I HEARD YOU WERE DEAD."
+```
+
+Two rules worth knowing. Spell it **exactly** — `{hero}`, `{ HERO }` and
+`{NAME}` resolve to nothing and print as `?HERO?`, because the pixel font has no
+brace glyph. And spend it sparingly: a name lands because almost nobody uses it,
+so give it to the handful of characters who genuinely know the man and to nobody
+else.
 
 A thought is fired by a LEVEL pinning it to a monster — `firstSightThoughts` the
 first time one comes into view, `firstKillThoughts` the first time he puts one

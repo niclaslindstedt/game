@@ -861,6 +861,18 @@ export {
   stormSpellBlock,
 } from "./game/spells.ts";
 
+// THE HERO'S OWN NAME, as authored content asks for it. Every surface that
+// draws a line the player wrote a character name for resolves `{HERO}` through
+// these — the dialogue box does it for the app (`dialogueContent`), the
+// cutscene, intro and conversation overlays do it themselves.
+export {
+  HERO_NAME_FALLBACK,
+  HERO_NAME_TOKEN,
+  heroNameOr,
+  withHeroName,
+  withHeroNameLines,
+} from "./game/hero-name.ts";
+
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
 // `advanceDialogue` is the player's tap; `dialogueContent` is what the app
 // draws while `phase === "dialogue"`.

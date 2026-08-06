@@ -21,6 +21,11 @@ import type {
 } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { capThoughtIds, thoughtDef } from "./defs/thoughts.ts";
+import {
+  HERO_NAME_TOKEN,
+  withHeroName,
+  withHeroNameLines,
+} from "./hero-name.ts";
 import { knockEnemyBack } from "./knockback.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
@@ -60,8 +65,15 @@ export function advanceCutsceneChain(state: GameState): void {
   }
 }
 
-/** The name over the hero's own words, wherever in a scene he speaks. */
-const HERO_SPEAKER = "ME";
+/**
+ * The name over the hero's own words, wherever in a scene he speaks — the
+ * player's own, so the box that carries his inner monologue is headed by the
+ * character they named rather than by a pronoun. It is the same token every
+ * other authored line writes (`src/game/hero-name.ts`), resolved on the way
+ * out of {@link dialogueContent}, which is why a `{ hero: … }` reply page
+ * needs no special case here.
+ */
+const HERO_SPEAKER = HERO_NAME_TOKEN;
 
 /**
  * WHO IS DELIVERING ONE PAGE. Every scene in the game resolves to a list of
@@ -91,6 +103,15 @@ function soloPages(
   return { pages, voices: pages.map(() => voice) };
 }
 
+/** What a scene resolves to, before the hero's name is put into it. */
+type SceneContent = {
+  speaker: string;
+  /** Sprite/icon key for the speaker's portrait. */
+  portrait: string;
+  pages: string[][];
+  voices: DialogueVoice[];
+};
+
 /**
  * The text behind a running dialogue: who is on stage and every page of
  * what they say. The app renders `pages[dialogue.page]`; tests assert on
@@ -99,14 +120,46 @@ function soloPages(
  * in an arrival scene; a mob answering back in one of his own monologues).
  * `speaker`/`portrait` remain the SCENE's owner, for anything that wants to
  * name the scene rather than the page.
+ *
+ * `heroName` is the name of the hero the VIEWER is playing (`localHero`'s
+ * character, app-side): it heads his own pages and lands in the handful of
+ * authored lines that write `{HERO}` because the speaker knows him. It is a
+ * parameter rather than something read off the run for the reason in
+ * `hero-name.ts` — the name changes no tick, and in a party each screen's box
+ * belongs to a different person. A caller with no name in hand gets the
+ * first-person fallback, which is what the box printed before anyone had one.
  */
-export function dialogueContent(dialogue: DialogueState): {
-  speaker: string;
-  /** Sprite/icon key for the speaker's portrait. */
-  portrait: string;
-  pages: string[][];
-  voices: DialogueVoice[];
-} {
+export function dialogueContent(
+  dialogue: DialogueState,
+  heroName?: string | null,
+): SceneContent {
+  return withHeroNameIn(authoredContent(dialogue), heroName);
+}
+
+/**
+ * Put the hero's name through a resolved scene: over his own pages, and into
+ * whichever authored lines wrote the token. A PAGE that gained nothing keeps
+ * its identity — and the page is what the box wraps and paginates — so a
+ * scene that never names him (nearly all of them) costs no re-flow on every
+ * typed character.
+ */
+function withHeroNameIn(
+  content: SceneContent,
+  heroName?: string | null,
+): SceneContent {
+  return {
+    ...content,
+    speaker: withHeroName(content.speaker, heroName),
+    pages: content.pages.map((page) => withHeroNameLines(page, heroName)),
+    voices: content.voices.map((voice) => {
+      const speaker = withHeroName(voice.speaker, heroName);
+      return speaker === voice.speaker ? voice : { ...voice, speaker };
+    }),
+  };
+}
+
+/** The scene exactly as it was authored, tokens and all. */
+function authoredContent(dialogue: DialogueState): SceneContent {
   if (
     dialogue.source.kind === "enemy" ||
     dialogue.source.kind === "enemyDeath"

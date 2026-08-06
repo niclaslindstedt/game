@@ -14,7 +14,7 @@ start: greet
 nodes:
   greet:
     say:
-      - I LET MYSELF IN. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
+      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
       - GO AND FIND HER. I'LL BE HERE.
     choices:
       - text: I'M GOING AFTER HER.

@@ -64,6 +64,7 @@ const [
   companionStats,
   party,
   mapgen,
+  heroName,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
   engine("game/defs/levels/index.ts"),
@@ -99,6 +100,7 @@ const [
   engine("game/companion-stats.ts"),
   engine("game/companions.ts"),
   engine("game/mapgen/index.ts"),
+  engine("game/hero-name.ts"),
 ]);
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
@@ -108,6 +110,17 @@ const [
 const affixText = await import(
   pathToFileURL(join(REPO, "pwa/src/lib/affix-line.ts")).href
 );
+
+/**
+ * THE LIBRARY HAS NO PLAYER TO ASK. A handful of authored lines name the hero
+ * — the people who actually know him say it out loud — and write `{HERO}`
+ * where the name goes (`src/game/hero-name.ts`). These pages are read by
+ * somebody who may not own the game yet, let alone have a character, so they
+ * resolve the token to the engine's own stand-in and print a sentence rather
+ * than a template. Applied once, on the finished page (`writePage`), so no
+ * renderer has to remember.
+ */
+export const withHeroName = heroName.withHeroName;
 
 export const ENEMY_DEFS = enemies.ENEMY_DEFS;
 /** The scripted send-off a boss gets, resolved the way the engine resolves it
