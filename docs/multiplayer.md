@@ -1018,6 +1018,19 @@ clears, a merchant PARKED at his counter, standing travel doors
 the rocket and the sealed rift seam open the destination picker — and the
 campaign now opens there.
 
+**ONE SESSION IS ONE LEVEL, AND THAT IS WHAT THE TOWN PORTAL RUNS INTO.** The
+RIFT CREATOR parks the field a hero steps out of, so the garage's seam can put
+them back on the same carve with the same dead and the same loot on the floor
+(`saveRiftRun`, pwa/src/game/saved-run.ts). **It is solo only, by construction
+rather than by choice**: a parked field is one frozen `GameState`, and in
+company the field is not one hero's to freeze — everybody else is standing on
+it. So a rift crossing in a session parks nothing and the seam grows no RETURN
+row; the party goes through together, as it does through every other door. What
+it would take to lift that — one session running two carves with seats routed
+between them — is scoped in issue #952, and a real co-op town portal (a portal
+your friends can also use, which closes when its opener steps back through)
+waits on it.
+
 **AND A CROSSING NO LONGER ENDS THE SESSION.** With the doors armed or
 a party aboard, travel is a run command (`travelTo`, seat 0 only — the host
 chooses the road) the SESSION consumes between ticks: every seat's loadout is

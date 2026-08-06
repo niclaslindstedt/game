@@ -39,6 +39,7 @@ import { cloneGameState } from "../checkpoint.ts";
 import { runCommand } from "../run-commands.ts";
 import { playDeathHaptic } from "../haptics.ts";
 import { recordCampaign } from "../highscores.ts";
+import { saveRiftRun } from "../saved-run.ts";
 import { publishLeaderboards } from "../leaderboards.ts";
 import { stopMusic } from "../music/index.ts";
 import type { Hud } from "./hud-model.ts";
@@ -115,6 +116,13 @@ export type TravelOptions = {
    */
   viaRift?: boolean;
 };
+
+/** Is this level the campaign's HOME — the one venue a run goes to in order to
+ * be interrupted? Asked of the level catalog rather than of an id, so a MOD's
+ * own hub answers it the way the garage does. */
+function isHubLevel(levelId: string): boolean {
+  return levelDef(levelId).objective.type === "hub";
+}
 
 export function createRunProgress(deps: {
   /** The live character — victories/deaths bank back into this ref so a
@@ -234,6 +242,34 @@ export function createRunProgress(deps: {
     // run's would — the trip happened either way.
     if (opts.viaRift) {
       characterRef.current = bankRiftRoad(characterRef.current, to, difficulty);
+    }
+    // THE TOWN PORTAL'S FAR SIDE. Stepping HOME through a tear does not end the
+    // field it was opened on — it PARKS it, so the seam in the garage can put
+    // the hero back exactly where he stood, on the same carve, with the same
+    // dead and the same loot still on the floor. Without this a trip home to
+    // sell was a trap rather than a convenience: every level is carved fresh
+    // from a seed, so "back to Mars" would build a different Mars and throw the
+    // old one away.
+    //
+    // Three conditions, and each rules out a trip that is not a town portal:
+    // the crossing has to be through a TEAR, it has to be INTO the hub, and it
+    // has to be FROM somewhere else — the hub is where a run goes to be
+    // interrupted, and parking it would mean returning to a garage from a
+    // garage. SOLO only: a session holds one level and a crossing moves the
+    // whole party, so in company there is no field of this hero's to freeze
+    // (see issue #952).
+    if (
+      opts.viaRift &&
+      !deps.sessionTravels?.() &&
+      isHubLevel(to) &&
+      !isHubLevel(state.level.id)
+    ) {
+      saveRiftRun({
+        characterId: characterRef.current.id,
+        difficulty,
+        levelId: state.level.id,
+        state,
+      });
     }
     // WITH A PARTY ABOARD, THE CROSSING IS THE SESSION'S. The verb asks
     // the session to swap the level under everybody at once; the swap comes

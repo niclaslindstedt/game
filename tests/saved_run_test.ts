@@ -17,9 +17,12 @@ import type { Difficulty } from "@game/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  clearRiftRun,
   clearSavedRun,
+  loadRiftRun,
   loadSavedRun,
   SAVE_VERSION,
+  saveRiftRun,
   saveRun,
 } from "../pwa/src/game/saved-run.ts";
 
@@ -414,5 +417,67 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "xpGained",
       "xpLost",
     ]);
+  });
+});
+
+describe("the town portal's parked field — a second slot, not the same one", () => {
+  const field = (levelId: string) => ({
+    characterId: "hero-1",
+    difficulty: "medium" as Difficulty,
+    levelId,
+    state: createGame(7, levelId, "medium"),
+  });
+
+  it("does not collide with the run parked by the menu", () => {
+    // The two exist AT ONCE and that is the whole point: stepping home through
+    // a tear leaves a field standing, and the hub run that follows immediately
+    // claims `current-run` for itself. One key each, or the trip home eats the
+    // very thing it was supposed to preserve.
+    saveRiftRun(field("mars"));
+    saveRun(field("garage"));
+
+    expect(loadRiftRun()?.levelId).toBe("mars");
+    expect(loadSavedRun()?.levelId).toBe("garage");
+  });
+
+  it("keeps the field when the hub run is dropped", () => {
+    // Quitting the garage to the menu must not throw away the planet waiting
+    // on the other side of the seam.
+    saveRiftRun(field("mars"));
+    saveRun(field("garage"));
+    clearSavedRun();
+
+    expect(loadSavedRun()).toBeNull();
+    expect(loadRiftRun()?.levelId).toBe("mars");
+  });
+
+  it("is spent by the return", () => {
+    saveRiftRun(field("the_rift"));
+    expect(loadRiftRun()).not.toBeNull();
+    clearRiftRun();
+    expect(loadRiftRun()).toBeNull();
+  });
+
+  it("thaws the field it froze, fog and all", () => {
+    // The same freezer, so the same guarantee the menu's resume relies on:
+    // `explored` comes back a real typed array rather than the plain object
+    // `JSON.stringify` makes of it.
+    const parked = field("the_rift");
+    parked.state.explored[3] = 1;
+    saveRiftRun(parked);
+
+    const thawed = loadRiftRun();
+    expect(thawed?.levelId).toBe("the_rift");
+    expect(thawed?.state.explored).toBeInstanceOf(Uint8Array);
+    expect(thawed?.state.explored[3]).toBe(1);
+  });
+
+  it("names the hero and the rung it belongs to, so another campaign can refuse it", () => {
+    // GameScreen checks both before offering the row: a field parked by one
+    // hero on medium is not a road the next hero may step onto.
+    saveRiftRun(field("mars"));
+    const thawed = loadRiftRun();
+    expect(thawed?.characterId).toBe("hero-1");
+    expect(thawed?.difficulty).toBe("medium");
   });
 });

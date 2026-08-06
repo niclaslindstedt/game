@@ -137,6 +137,7 @@ import {
 } from "./game-screen/run-progress.ts";
 import { createAutosave } from "./game-screen/autosave.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
+import { clearRiftRun, loadRiftRun, type ParkedRun } from "./saved-run.ts";
 import { RunVaultScreen } from "./VaultScreen.tsx";
 import {
   directRoad,
@@ -328,6 +329,35 @@ export function GameScreen({
   // The live engine state object for this run. Mutable (the loop advances it
   // in place); stored in React state so overlays can read it during render.
   const [state, setState] = useState<GameState | null>(null);
+  /**
+   * THE FIELD PARKED ON THE OTHER SIDE OF A TEAR, as this door may offer it —
+   * or null when there is none, when it belongs to another hero or another
+   * rung, or when this is not the door that remembers.
+   *
+   * The `reached` door is the RIFT CREATOR's own (`travelDoors[].reached`, the
+   * garage seam): the tool is what keeps the memory, so the car and the rocket
+   * never offer a way back to a field. A session is refused outright — one
+   * level per session, so a party never parked anything (issue #952).
+   */
+  const parkedField = (doorId: string): ParkedRun | null => {
+    if (!state || join) return null;
+    const door = (runLevelDef(state).travelDoors ?? []).find(
+      (d) => d.id === doorId,
+    );
+    if (!door?.reached) return null;
+    const parked = loadRiftRun();
+    if (!parked) return null;
+    // A parked field belongs to ONE hero on ONE rung. Anything else is another
+    // campaign's business, and resuming it here would drop this hero onto it.
+    if (
+      parked.characterId !== character.id ||
+      parked.difficulty !== difficulty
+    ) {
+      return null;
+    }
+    return parked;
+  };
+
   // Which standing travel door's picker is open (a `travelDoors` id from the
   // hub), or null. Opened by a field tap on the door's landmark
   // (player-input.ts), closed by picking a road or NOT YET. The CHARACTER is
@@ -1715,6 +1745,28 @@ export function GameScreen({
           character={travelDoor.character}
           difficulty={difficulty}
           canTravel={!join}
+          // THE FIELD LEFT STANDING on the other side of a tear, offered on the
+          // tool's own door only — it is the RIFT CREATOR that remembers where
+          // it has been, and the car and the rocket have no such memory. Read
+          // at RENDER rather than latched at the tap, so a return that empties
+          // the slot cannot leave a stale row behind it.
+          parkedLevelId={parkedField(travelDoor.doorId)?.levelId ?? null}
+          onReturn={() => {
+            const parked = parkedField(travelDoor.doorId);
+            if (!parked) return;
+            setTravelDoor(null);
+            playUiSound(synth, "confirm");
+            // THE SLOT IS SPENT BY THE RETURN. Cleared first, so a crash
+            // between here and the remount cannot leave a field that is also
+            // being played — one copy of a run is the whole invariant.
+            clearRiftRun();
+            // Bank this hub visit, then adopt the thawed field: the run effect
+            // consumes `resumeRef` when the level id flips (run-setup.ts), the
+            // same door a menu CONTINUE comes through.
+            progressRef.current?.bankHero(state);
+            resumeRef.current = parked.state;
+            setLevelId(parked.levelId);
+          }}
           onTravel={(dest) => {
             setTravelDoor(null);
             playUiSound(synth, "confirm");
