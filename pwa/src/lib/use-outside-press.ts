@@ -18,6 +18,13 @@ import { useEffect, useRef } from "react";
  *
  * A press with no `closest` (the document itself, a window-level synthetic) is
  * OUTSIDE: nothing that owns a card is unable to answer.
+ *
+ * THE SELECTOR MUST NAME OWNERS, NOT NEIGHBOURS. A grid's cell class is the
+ * tempting spelling and the wrong one: a bag is mostly EMPTY cells, which raise
+ * nothing and do nothing, so exempting the class hands most of the panel's
+ * surface a press that neither opens anything nor closes anything. The game's
+ * callers therefore stamp `data-card` on the cells actually holding a piece and
+ * exempt that.
  */
 export function pressIsInside(
   target: EventTarget | null,
