@@ -35,6 +35,8 @@ export function TravelPanel({
   character,
   difficulty,
   canTravel,
+  parkedLevelId,
+  onReturn,
   onTravel,
   onClose,
 }: {
@@ -47,6 +49,19 @@ export function TravelPanel({
   /** False on a mount that may not swap the level — a joined session's
    * client (the HOST chooses the road) — so every row reads but none acts. */
   canTravel: boolean;
+  /**
+   * THE FIELD STILL STANDING ON THE OTHER SIDE — the level id of the run this
+   * hero stepped out of through a tear, or null when there is none.
+   *
+   * A row of its own above the roads, because it is a different KIND of trip:
+   * every other row starts a fresh carve, and this one puts the player back on
+   * the exact ground they left, with the same dead and the same loot on the
+   * floor. Only the tool's own door is ever handed one, and never in a session
+   * — a party has no field of one hero's to park (issue #952).
+   */
+  parkedLevelId?: string | null;
+  /** Step back through onto the parked field (see `parkedLevelId`). */
+  onReturn?: () => void;
   onTravel: (levelId: string) => void;
   onClose: () => void;
 }) {
@@ -67,6 +82,24 @@ export function TravelPanel({
         />
       )}
       <div className="splash-buttons">
+        {/* THE WAY BACK, first and named as a return: that run is still
+            standing where it was left, so this is the one row on the panel
+            that does not START anything. */}
+        {parkedLevelId && onReturn && (
+          <button
+            type="button"
+            className={canTravel ? "pixel-button" : "pixel-button secondary"}
+            disabled={!canTravel}
+            onClick={() => canTravel && onReturn()}
+          >
+            <PixelText
+              font={font}
+              text={`BACK TO ${levelDef(parkedLevelId).name}`}
+              scale={3}
+              color={canTravel ? "#0b0d10" : "#6b7480"}
+            />
+          </button>
+        )}
         {roads.map((dest) => (
           <button
             key={dest}

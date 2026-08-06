@@ -32,6 +32,23 @@ import { storageKey } from "../identity.ts";
 
 const KEY = storageKey("current-run");
 
+/**
+ * THE SECOND SLOT — the field a rift portal was stepped out of.
+ *
+ * `current-run` is "the run you are in the middle of", parked when the app is
+ * backgrounded or exited to the menu, and there can only ever be one of those.
+ * The TOWN PORTAL needs another: stepping home through a tear leaves a field
+ * standing on the other side, and the hub run that follows immediately claims
+ * `current-run` for itself. Parked in the same freezer on its own key, so going
+ * home to sell and coming back survives an app update exactly as CONTINUE does
+ * — and so a crash between the two costs the field rather than the hero.
+ *
+ * SOLO ONLY, and the reason is the session's: a session holds one level and
+ * every crossing moves the whole party, so in company there is no field of
+ * yours to freeze — your friends are standing on it. See issue #952.
+ */
+const RIFT_KEY = storageKey("rift-parked-run");
+
 /** The stand-in `explored` a thawed state carries for the one statement
  * between spreading the blob and `reviveExplored` replacing it. */
 const EMPTY_FOG = new Uint8Array(0);
@@ -201,6 +218,29 @@ function unpackExplored(packed: string, size: number): Uint8Array {
 
 /** Freeze the parked run to storage. Best-effort — a storage failure is logged, not thrown. */
 export function saveRun(run: ParkedRun): void {
+  writeRun(KEY, run);
+}
+
+/** THE TOWN PORTAL'S FAR SIDE: park the field this hero just stepped out of,
+ * so the seam at home can put them back on it exactly as they left it. */
+export function saveRiftRun(run: ParkedRun): void {
+  writeRun(RIFT_KEY, run);
+}
+
+/** Thaw the field parked on the other side of a rift portal, or null when
+ * there is none / it is unreadable / an older build wrote it. Same freezer and
+ * the same refusals as `loadSavedRun`; WHOSE it is is the caller's check. */
+export function loadRiftRun(): ParkedRun | null {
+  return readRun(RIFT_KEY);
+}
+
+/** Drop the parked field — on return, on abandonment, or when a second trip
+ * home replaces it. */
+export function clearRiftRun(): void {
+  removeRun(RIFT_KEY);
+}
+
+function writeRun(key: string, run: ParkedRun): void {
   try {
     const { rng, fxRng, goldRng, explored, ...rest } = run.state;
     const payload: Serialized = {
@@ -216,7 +256,7 @@ export function saveRun(run: ParkedRun): void {
       // replay stale sfx (it's overwritten again on the first step anyway).
       state: { ...rest, events: [] },
     };
-    localStorage.setItem(KEY, JSON.stringify(payload));
+    localStorage.setItem(key, JSON.stringify(payload));
   } catch (err) {
     warn(`could not save the current run: ${String(err)}`);
   }
@@ -341,8 +381,12 @@ function reviveExplored(state: GameState, packed?: string): void {
 
 /** Drop any parked run — called when one is resumed, abandoned, or replaced. */
 export function clearSavedRun(): void {
+  removeRun(KEY);
+}
+
+function removeRun(key: string): void {
   try {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(key);
   } catch {
     // A storage that won't delete is a storage that won't persist either;
     // nothing to recover, so stay silent.
@@ -355,9 +399,13 @@ export function clearSavedRun(): void {
  * can't wedge future loads.
  */
 export function loadSavedRun(): ParkedRun | null {
+  return readRun(KEY);
+}
+
+function readRun(key: string): ParkedRun | null {
   let raw: string | null;
   try {
-    raw = localStorage.getItem(KEY);
+    raw = localStorage.getItem(key);
   } catch {
     return null;
   }
@@ -372,7 +420,7 @@ export function loadSavedRun(): ParkedRun | null {
       typeof payload.levelId !== "string" ||
       !hasLevel(payload.levelId)
     ) {
-      clearSavedRun();
+      removeRun(key);
       return null;
     }
     const state: GameState = {
@@ -434,7 +482,7 @@ export function loadSavedRun(): ParkedRun | null {
     };
   } catch (err) {
     warn(`ignoring an unreadable saved run: ${String(err)}`);
-    clearSavedRun();
+    removeRun(key);
     return null;
   }
 }
