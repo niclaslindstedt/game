@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_old_woman_1
+family: earth
+size: [16, 16]
+description: >
+  An old woman in a plum long coat and a headscarf, a shopping bag on her arm. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a small old woman in a coat down to her shins
+  attire: a plum long coat
+  features: a patterned headscarf, a shopping bag on the far arm
+  accent: the plum coat
+  flavor: the bag has been empty a while now
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#6d4257" # sleeve
+  B: "#241f2c" # shoes
+  C: "#6d4257" # plum long coat
+  G: "#a8925f" # the shopping bag
+  H: "#8a5f7a" # headscarf
+  K: "#deaa86" # hand
+  P: "#deaa86" # skin
+  S: "#87566d" # coat lining
+  T: "#5c3849" # coat skirt
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OKOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAO.
+  .OAOCCSSSSCCOKO.
+  ...OCCCCCCCCOGGO
+  ...OTTTTTTTTOGGO
+  ..OTTTTTTTTTOGGO
+  ..OTTTTTTTTTTO..
+  ....OBBOOBBO....
+  ................
+  ................

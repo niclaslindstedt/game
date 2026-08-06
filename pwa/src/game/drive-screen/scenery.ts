@@ -20,22 +20,47 @@
 import { DRIVE, roadEdges } from "@game/core";
 
 /**
- * THE CROWD's bodies — the people the welfare did not reach.
+ * THE CROWD's bodies — the twenty people the welfare did not reach.
  *
- * Reused from the goodco roster rather than drawn fresh, which is a deliberate
- * and reversible call: at the size a pedestrian is actually seen (a 16-px body
- * a screen away, for the half-second before it goes under the bumper) what
- * reads is the silhouette and the walk, and these four already have both. The
- * table is a named module for exactly this reason — dedicated art for the road
- * is one edit here and nothing else.
+ * WHY TWENTY AND WHY THESE. A road the player is meant to feel bad about
+ * driving down cannot be four office workers on repeat: at the density this
+ * minigame runs, a short roster reads as one man cloned across a mile of
+ * tarmac, and a clone is a texture rather than a person. So the roster is
+ * twenty, and it varies along the axis that actually reads at 16 px — the
+ * SILHOUETTE. A bicycle, a wheelchair, a walking frame, a pram, a shopping
+ * trolley, a long coat and a child are told apart across four lanes at speed;
+ * two jackets in different blues are not.
+ *
+ * It is also the only place in the feature that argues with the joke, on
+ * purpose. The hero never acknowledges a single one of them — so the crowd has
+ * to do all of the acknowledging itself, and an old man behind a walking frame
+ * or a woman pushing a pram is the moment the bit stops being comfortable.
+ *
+ * The order is `DrivePedestrian.variant`'s, and its length must match the
+ * engine's `CROWD_VARIANTS` (src/game/drive/crowd.ts).
  */
 export const CROWD_SPRITES: readonly (readonly [string, string])[] = [
-  ["stampede_a_0", "stampede_a_1"],
-  ["stampede_b_0", "stampede_b_1"],
-  ["stampede_c_0", "stampede_c_1"],
-  ["wandering_tourist_0", "wandering_tourist_1"],
+  ["walker_old_man_0", "walker_old_man_1"],
+  ["walker_old_woman_0", "walker_old_woman_1"],
+  ["walker_hoodie_0", "walker_hoodie_1"],
+  ["walker_young_woman_0", "walker_young_woman_1"],
+  ["walker_boy_0", "walker_boy_1"],
+  ["walker_girl_0", "walker_girl_1"],
+  ["walker_suit_0", "walker_suit_1"],
+  ["walker_hi_vis_0", "walker_hi_vis_1"],
+  ["walker_trolley_0", "walker_trolley_1"],
+  ["walker_pram_0", "walker_pram_1"],
+  ["walker_dog_0", "walker_dog_1"],
+  ["walker_crutches_0", "walker_crutches_1"],
+  ["walker_frame_0", "walker_frame_1"],
+  ["walker_skater_0", "walker_skater_1"],
+  ["walker_long_coat_0", "walker_long_coat_1"],
+  ["walker_mohawk_0", "walker_mohawk_1"],
+  ["walker_bagman_0", "walker_bagman_1"],
+  ["walker_headphones_0", "walker_headphones_1"],
+  ["walker_cyclist_0", "walker_cyclist_1"],
+  ["walker_wheelchair_0", "walker_wheelchair_1"],
 ];
-
 /** How fast a walking body cycles its two frames (ms). */
 export const CROWD_FRAME_MS = 220;
 

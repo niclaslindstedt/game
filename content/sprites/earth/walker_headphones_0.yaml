@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 0.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_headphones_0
+family: earth
+size: [16, 16]
+description: >
+  A young woman with purple hair and headphones on, hearing none of it. Walk-cycle frame 0.
+subject:
+  kind: pedestrian on the road out
+  build: a young woman walking in her own world
+  attire: a purple bomber jacket over black leggings
+  features: dyed purple hair under a headphone band
+  accent: the purple bomber
+  flavor: she never hears the horn
+  pose: mid-stride, the legs apart
+palette:
+  O: "#1a1c2c" # outline
+  A: "#6b4a9c" # sleeve
+  B: "#e8e8ee" # trainers
+  C: "#6b4a9c" # purple bomber
+  H: "#8a4f9c" # dyed purple hair
+  K: "#deaa86" # hand
+  P: "#deaa86" # skin
+  S: "#8a6ac0" # jacket panel
+  T: "#2d2b36" # black leggings
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAO.
+  .OKOCCSSSSCCOKO.
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ..OTTO....OTTO..
+  ..OTTO....OTTO..
+  ..OBBO....OBBO..
+  ................
+  ................

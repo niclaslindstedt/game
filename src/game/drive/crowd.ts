@@ -29,7 +29,7 @@ import type { DrivePedestrian, DriveState } from "./types.ts";
 /** How many distinct bodies the crowd is drawn from. The app's sprite table is
  * this long (`CROWD_SPRITES`, pwa/src/game/drive-screen/scenery.ts) — keep the
  * two in step, or the road quietly stops using its last body. */
-export const CROWD_VARIANTS = 4;
+export const CROWD_VARIANTS = 20;
 
 /** How fast a tumbling body sheds its speed on the tarmac (1/s), and the speed
  * under which it has stopped for good. */

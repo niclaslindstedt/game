@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 0.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_hi_vis_0
+family: earth
+size: [16, 16]
+description: >
+  A man still in the orange hi-vis of a job that no longer calls. Walk-cycle frame 0.
+subject:
+  kind: pedestrian on the road out
+  build: a broad man in work clothes
+  attire: an orange hi-vis vest over work trousers
+  features: a dark beanie, heavy boots, one hand out
+  accent: the orange vest
+  flavor: the vest is the only part of the job he kept
+  pose: mid-stride, the legs apart
+palette:
+  O: "#1a1c2c" # outline
+  A: "#e07a2a" # sleeve
+  B: "#2a2318" # boots
+  C: "#e07a2a" # hi-vis vest
+  H: "#3a4a6b" # dark beanie
+  K: "#b07a55" # hand
+  P: "#b07a55" # skin
+  S: "#f6d24a" # reflective band
+  T: "#4a4235" # work trousers
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAAO
+  .OKOCCSSSSCCOKKO
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ..OTTO....OTTO..
+  ..OTTO....OTTO..
+  ..OBBO....OBBO..
+  ................
+  ................
