@@ -1,0 +1,31 @@
+name: keepsake_box
+family: earth
+size: [12, 10]
+description: >
+  THE CACHE, rung one — a small lidded keepsake box off the top of a wardrobe.
+  Plain pine, a flat lid, one brass clasp, and no pretensions at all. It is the
+  first thing to hand in a dead woman's house and the smallest thing on the
+  ladder.
+subject:
+  kind: "solid prop"
+  build: "a small flat-lidded wooden keepsake box on stub feet"
+  features: "a plain lid seam and a single small brass clasp"
+  accent: "pale pine with one brass fitting"
+  flavor: "the first thing to hand off the top of her mother's wardrobe"
+palette:
+  O: "#1a1c2c" # outline
+  h: "#b08a5c" # lid, pale pine
+  B: "#96703f" # box
+  E: "#6b4f2a" # box in shadow
+  G: "#e8b93e" # brass clasp
+grid: |
+  ............
+  ..OOOOOOOO..
+  ..OhhhhhhO..
+  ..OOOOOOOO..
+  ..OBBGGBBO..
+  ..OBBGGBBO..
+  ..OBBBBBBO..
+  ..OEEEEEEO..
+  ..OOOOOOOO..
+  ...O....O...

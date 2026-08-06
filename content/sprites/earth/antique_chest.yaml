@@ -1,0 +1,35 @@
+name: antique_chest
+family: earth
+size: [14, 13]
+description: >
+  THE CACHE — a domed walnut chest banded in iron, standing against the garage
+  wall on stubby feet. Three generations of a family's keeping, and the only
+  thing in the bay that was never a tool. Brass lockplate over the seam, the
+  lid rubbed pale where hands have opened it.
+subject:
+  kind: "solid prop"
+  build: "a domed-lid antique wooden chest on short feet"
+  features: "iron straps down the front, a brass lockplate with a keyhole, a lid worn pale with handling"
+  accent: "aged walnut with black iron and warm brass"
+  flavor: "a family heirloom in a working garage — the one thing here that isn't a tool"
+palette:
+  O: "#1a1c2c" # outline, and the keyhole
+  H: "#b98a52" # lid, rubbed pale by hands
+  B: "#8a5a30" # walnut
+  E: "#5d3a1c" # walnut in shadow
+  I: "#4f5464" # iron strap
+  G: "#e8b93e" # brass
+grid: |
+  ....OOOOOO....
+  ..OOHHHHHHOO..
+  .OHHHHHHHHHBO.
+  .OHHHHHHHHHBO.
+  .OBIBBGGBBIEO.
+  .OOOOOOOOOOOO.
+  .OBIBBGGBBIEO.
+  .OBIBBGOBBIEO.
+  .OBIBBBBBBIEO.
+  .OBIBBBBBBIEO.
+  .OEIEEEEEEIEO.
+  .OOOOOOOOOOOO.
+  ..OO......OO..

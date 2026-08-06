@@ -349,7 +349,7 @@ export function validateQuest(id, def, refs) {
   for (const [i, escort] of (def.escorts ?? []).entries()) {
     checkEscort(escort, `escorts[${i}]`, refs, err, warn, def.level);
   }
-  checkReward(def.reward, refs, err, warn);
+  checkReward(def.reward, refs, err, warn, def.level);
 
   for (const req of def.requires ?? []) {
     if (!isStr(req)) err("requires entries must be quest ids");
@@ -666,7 +666,7 @@ function checkMerchantDeal(deal, itemIds, err) {
   }
 }
 
-function checkReward(reward, refs, err, warn) {
+function checkReward(reward, refs, err, warn, levelId) {
   if (reward === undefined) return;
   if (!reward || typeof reward !== "object" || Array.isArray(reward)) {
     err("reward must be a mapping");
@@ -707,6 +707,22 @@ function checkReward(reward, refs, err, warn) {
   for (const id of reward.abilities ?? []) {
     if (refs.abilities && !refs.abilities.has(id)) {
       err(`reward names powerup "${id}", which does not exist`);
+    }
+  }
+  // THE CACHE — the garage chest (src/game/cache.ts). It is a FIXTURE on a map
+  // rather than an item, so an errand can only pay it where a map has somewhere
+  // to put one: paid anywhere else the handover is a silent no-op that still
+  // tells the player they were given something.
+  if (reward.cache !== undefined) {
+    if (typeof reward.cache !== "boolean") {
+      err("reward.cache must be true or false — there is only one chest");
+    } else if (reward.cache && refs.cacheLevels && levelId) {
+      if (!refs.cacheLevels.has(levelId)) {
+        err(
+          `reward pays the CACHE, but "${levelId}" stands none — the map ` +
+            `needs a \`cache\` landmark for the chest to arrive at`,
+        );
+      }
     }
   }
   if (reward.loot !== undefined) {

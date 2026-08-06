@@ -214,6 +214,27 @@ objects:
     type: landmark
     sprite: starship
     at: goal
+  # ── THE CACHE ────────────────────────────────────────────────────────────
+  # THE ANTIQUE CHEST against the bay's NORTH WALL — the game's one stash
+  # (src/game/cache.ts), and the only landmark here that is not a door.
+  #
+  # It is authored whether or not the hero has earned it: the map's job is to
+  # know WHERE the furniture goes, and whether it is standing there is the
+  # RUN's business (`cacheOwned`, a session parameter off the character's
+  # keepsakes). That split is what lets the chest be handed over mid-run and
+  # simply be there on every visit afterwards, with nothing re-carved.
+  #
+  # `spawn` + a nudge NORTH, rather than a coordinate: the bay's north wall
+  # runs along the top of the hero's own chamber, so a lift off his landing is
+  # a description of the place that survives the floor plan moving. Being a
+  # landmark also keeps the workbench world off it — the obstacle scatter
+  # clears every landmark by `decorClearance`, which is exactly what a chest
+  # somebody has to be able to walk up to needs.
+  - id: cache
+    type: landmark
+    sprite: antique_chest
+    at: spawn
+    offset: { x: 0, y: -40 }
   # The seam hums on the bay floor beside the car — a step off the hero's own
   # landing and level with it, INSIDE the garage rather than up against the
   # wall behind it (`home`, mapgen/generate.ts, which is where that step is

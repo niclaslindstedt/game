@@ -112,6 +112,7 @@ import {
   requestTrade,
 } from "./trade.ts";
 import { closeMap, openMap } from "./map.ts";
+import { closeCache, openCache, stashItem, takeFromCache } from "./cache.ts";
 import {
   buybackItem,
   buyStock,
@@ -230,6 +231,8 @@ export const RUN_COMMAND_ARGS = {
   closeInventory: [],
   openShop: [],
   closeShop: [],
+  openCache: [],
+  closeCache: [],
   openMap: [],
   closeMap: [],
   openQuestLog: [],
@@ -282,6 +285,14 @@ export const RUN_COMMAND_ARGS = {
   identifyItem: ["int"],
   buyQuestPiece: ["str", "str"],
   sellQuestPiece: ["str", "str"],
+
+  // THE CACHE — the garage chest (src/game/cache.ts). Both verbs name a CELL,
+  // and each names the cell in the grid the piece is LEAVING: `stashItem` a bag
+  // cell, `takeFromCache` a chest cell. Where it lands is the engine's to pick
+  // (the first free slot), which is also what keeps the pair from needing a
+  // destination argument that a client could get wrong.
+  stashItem: ["int"],
+  takeFromCache: ["int"],
 
   // THE BUILD — the level-up chooser, the talent picker, and the one respec.
   allocateStat: ["stat"],
@@ -532,6 +543,10 @@ export function applyRunCommand(
       return openShop(state, hero);
     case "closeShop":
       return closeShop(hero);
+    case "openCache":
+      return openCache(state, hero);
+    case "closeCache":
+      return closeCache(hero);
     case "openMap":
       return openMap(state, hero);
     case "closeMap":
@@ -637,6 +652,12 @@ export function applyRunCommand(
       return repairGear(state, hero);
     case "identifyItem":
       return identifyItem(state, hero, num(a, 0));
+
+    // THE CACHE — the acting hero's own chest, exactly like their own bag.
+    case "stashItem":
+      return stashItem(state, hero, num(a, 0));
+    case "takeFromCache":
+      return takeFromCache(state, hero, num(a, 0));
     case "buyQuestPiece":
       return buyQuestPiece(state, hero, str(a, 0), str(a, 1));
     case "sellQuestPiece":

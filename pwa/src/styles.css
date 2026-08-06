@@ -8857,6 +8857,52 @@ canvas.tier-artifact {
   max-height: 14.6rem;
 }
 
+/* THE CACHE's two grids (CachePanel.tsx). They wear the bag's rectangle so a
+   piece reads identically on both sides of the window and in the bag panel next
+   door — but the CHEST is EIGHT COLUMNS AT EVERY BREAKPOINT and never inherits
+   the bag's responsive count.
+
+   Eight is D2's own stash width, and pinning it is what makes the LADDER
+   legible: every rung's chest is a multiple of eight (`DifficultyDef.cache` —
+   16 / 24 / 32 / 40 / 48), so each difficulty Ruth is paid on adds exactly one
+   visible ROW and the locked sockets above show how many are left. A column
+   count that changed with the viewport would make the same chest two rows on a
+   phone and three on a tablet, and the one thing the player is here to read is
+   how much room they have.
+
+   The `!important` earns itself: `.inv-bag-grid` sets `--inv-cols` inside two
+   media queries that come LATER in the file, and a single class ties with a
+   single class — so without it the landscape query silently wins and the
+   rectangle goes ragged at exactly the reference viewport. */
+.cache-grid {
+  --inv-cols: 8 !important;
+  --inv-cell-max: 2.2rem;
+  /* Four rows before it scrolls: the chest is up to six, and the panel carries
+     the bag under it, so the deep rungs scroll rather than pushing CLOSE off
+     the bottom of a landscape phone. */
+  max-height: 9.6rem;
+}
+
+/* A cell here is a BUTTON rather than a drag handle: one tap moves the piece to
+   the other grid, so it takes the pointer instead of the drag cursor, and an
+   empty cell is inert rather than dimmed-and-pressable. */
+.cache-cell {
+  cursor: pointer;
+  padding: 0;
+}
+
+.cache-cell:disabled {
+  cursor: default;
+}
+
+/* The chest's own picture in the header sits in the trader's portrait frame —
+   the two windows are the same idiom (a place you stand and move things at),
+   so the header is the same header. */
+.cache-panel .shop-portrait-frame img {
+  width: 2.4rem;
+  height: auto;
+}
+
 /* Landscape: the bag lies beside the doll with room for ten columns, which is
    D2's own width — and four rows, which is D2's own height. */
 @media (min-aspect-ratio: 4/3) {

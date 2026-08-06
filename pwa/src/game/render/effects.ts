@@ -27,6 +27,7 @@ import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
 import { drawFlameGout } from "./flame.ts";
 import { drawGore } from "./gibs.ts";
+import { drawConjureBurst } from "./conjure.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import { drawEliteBurst } from "./elite-fx.ts";
 import { drawLootShine } from "./loot-aura.ts";
@@ -66,6 +67,10 @@ export type Effect = {
     | "singularity"
     | "hellgate"
     | "crateBreak"
+    // A named relic an errand pays COMING INTO BEING at the giver's feet — the
+    // light half of it, drawn by ./conjure.ts. The icon's own half rides the
+    // item's `conjureMs` in ./items.ts.
+    | "conjure"
     // The arrival bloom of a magic-or-better find — drawn by ./loot-aura.ts.
     | "lootShine"
     // The blood a landed blow throws — drawn by ./blood.ts.
@@ -112,7 +117,9 @@ export type Effect = {
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
-  /** Text float: the glyph color. */
+  /** Text float: the glyph color, as a CSS colour.
+   * Loot shine / conjure: the tier's colour as a bare `"r, g, b"` triplet, so
+   * the draw can vary the alpha per layer (`TIER_RGB`, `lootAuraFor`). */
   color?: string;
   /** Text float: how far the word climbs over its life, in world px
    * (default 16). XP popups rise further so they read as "flowing up". */
@@ -1317,6 +1324,23 @@ function drawEffectPass(
       ctx.beginPath();
       ctx.arc(x, groundY, core, 0, Math.PI * 2);
       ctx.fill();
+      continue;
+    }
+    if (effect.kind === "conjure") {
+      // A CONJURED ARRIVAL (`questGift`): the ground light, the motes rushing
+      // in, and the snap when the thing becomes real. `color` is the relic's
+      // rarity rgb, resolved where the event was read so the burst wears the
+      // same grade colour the piece will wear on the floor a beat later.
+      const duration = effect.durationMs ?? 1400;
+      const t = clamp01(1 - (effect.untilMs - timeMs) / duration);
+      drawConjureBurst(
+        ctx,
+        x,
+        groundY,
+        t,
+        effect.color ?? "255, 236, 170",
+        effect.seed ?? 0,
+      );
       continue;
     }
     if (effect.kind === "hellgate") {

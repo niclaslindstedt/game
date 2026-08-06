@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: cache_given
+description: >-
+  THE CACHE arriving: a long shimmering swell that rises rather than strikes
+  — a low drone opening under two voices climbing a fifth apart, a wash of
+  high-passed noise gathering over the top, and a bright bell landing on the
+  snap at the end, when the chest is finally a thing in the room. Wet with
+  echo, and pitched clear of the handover's coin figure so the two layer
+  instead of clashing.
+on:
+  type: cacheGiven
+voices:
+  # The drone the whole thing stands on — the pool of light on the floor.
+  - call: tone
+    type: sine
+    from: 196
+    to: 262
+    durationMs: 1200
+    volume: 0.03
+    echo: 0.4
+  # The gather: two voices climbing, the second a beat behind, so the swell
+  # reads as something being drawn in from two directions at once.
+  - call: tone
+    type: triangle
+    from: 523
+    to: 1047
+    durationMs: 900
+    volume: 0.022
+    delayMs: 120
+    detuneCents: 6
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 784
+    to: 1568
+    durationMs: 800
+    volume: 0.018
+    delayMs: 320
+    detuneCents: -6
+    echo: 0.45
+  # The air itself rushing in — noise swept high, so it hisses toward the
+  # centre instead of sitting under the tones as a rumble.
+  - call: noise
+    durationMs: 900
+    volume: 0.012
+    delayMs: 200
+    filter:
+      type: highpass
+      frequency: 3200
+    echo: 0.35
+  # THE SNAP: it is real. One bell, on the frame the light peaks.
+  - call: tone
+    type: sine
+    from: 2093
+    durationMs: 320
+    volume: 0.034
+    delayMs: 1180
+    echo: 0.55
+  - call: tone
+    type: sine
+    from: 3136
+    durationMs: 260
+    volume: 0.016
+    delayMs: 1220
+    echo: 0.6

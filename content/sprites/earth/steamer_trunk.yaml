@@ -1,0 +1,37 @@
+name: steamer_trunk
+family: earth
+size: [16, 14]
+description: >
+  THE CACHE, rung three — a flat-topped steamer trunk off the back of the same
+  house, brass-capped at every corner and belted with two leather straps.
+  Somebody's initials are still stencilled on the lid. It has crossed an ocean
+  and it shows.
+subject:
+  kind: "solid prop"
+  build: "a flat-topped steamer travel trunk with brass corner caps"
+  features: "two buckled leather straps down the front, capped corners, a stencilled lid"
+  accent: "dark canvas-and-wood with brass fittings and oxblood leather"
+  flavor: "packed for an ocean crossing nobody in the family talks about"
+palette:
+  O: "#1a1c2c" # outline
+  h: "#9a7a52" # lid
+  B: "#7d5c36" # body
+  E: "#54391e" # body in shadow
+  L: "#8c3d33" # oxblood strap
+  C: "#e8b93e" # brass corner cap
+  G: "#f0d27a" # brass buckle plate
+grid: |
+  ................
+  ..OOOOOOOOOOOO..
+  .OCChhhhhhhhCCO.
+  .OChhhhhhhhhhCO.
+  .OChhhhhhhhhhCO.
+  .OOOOOOOOOOOOOO.
+  .OBLLBBGGBBLLBO.
+  .OBLLBBGGBBLLBO.
+  .OBLLBBBBBBLLBO.
+  .OBLLBBBBBBLLBO.
+  .OELLEEEEEELLEO.
+  .OCEEEEEEEEEECO.
+  .OOOOOOOOOOOOOO.
+  ..OO........OO..

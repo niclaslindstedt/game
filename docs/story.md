@@ -135,7 +135,19 @@ SCALE: in the rift Ada pried a scale off a lizard god, so Ruth asks for a scale
 like it, off the same scaled breed, to hold what her daughter's hands were
 strong enough to do. She is never scared for Ada and says so; each trophy
 confirms what she already believed, and her last word on the subject is that
-the girl is fighting her way back and the hero should go on.
+the girl is fighting her way back and the hero should go on. **For the last of
+the three she gives something back**: the family's own furniture — her mother's,
+and hers before that — standing against the bay's north wall by the time she has
+finished the sentence, and from then on where the hero keeps whatever he cannot
+carry. It is the only thing anybody in the game hands him that is not a weapon.
+**And it is the one reward that GROWS.** She runs the errand again on every
+difficulty, and each time she has been further back into her mother's house: a
+lidded KEEPSAKE BOX, then the HEIRLOOM CHEST, then a STEAMER TRUNK that crossed
+an ocean, then a DOWRY CHEST older than the house, and at the last a gilded one
+with a red stone in the lock that she only ever calls THE INHERITANCE. Each is
+bigger than the last and each replaces the one before it in the bay. Nothing he
+has put in it is ever lost on the way up, and a gentler game never takes any of
+it back — a thing given is given.
 
 ## Level 1 — GOODCO HQ
 

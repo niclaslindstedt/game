@@ -263,6 +263,7 @@ export function rewardProse(quest) {
     reward.abilities.length > 0
       ? list(reward.abilities.map((a) => a.name))
       : "",
+    reward.cache ? "the CACHE" : "",
   ].filter(Boolean);
   lines.push(`Handing it in pays ${list(parts)}.`);
 
@@ -287,6 +288,11 @@ export function rewardProse(quest) {
       `${list(reward.uniques.map((u) => u.name))} ${
         reward.uniques.length === 1 ? "is" : "are"
       } handed over WHOLE rather than rolled for — a named relic an author picked, which is the one payout in the game that is not a roll.`,
+    );
+  }
+  if (reward.cache) {
+    lines.push(
+      `And it gives something back rather than paying for something. THE CACHE is a chest that comes into being against the garage's north wall as the errand is handed in and stands there for good — the only place in the game a piece of gear can be KEPT without being carried. It also GROWS: run this errand on a deeper difficulty and she brings something further back out of her mother's house, worth another row of cells, up to eight columns by six. What you own is the deepest chest you have ever been paid, so a gentler game never takes a row back and nothing in it ever expires.`,
     );
   }
   return lines;

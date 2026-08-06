@@ -11,6 +11,7 @@ import type { MutableRefObject } from "react";
 
 import {
   CAR,
+  cacheStanding,
   MERCHANT,
   QUESTS,
   enemyDef,
@@ -702,6 +703,26 @@ export function handleFieldTaps(
         bumpUi();
         break;
       }
+    }
+  }
+  // A tap on THE CACHE opens the chest (src/game/cache.ts) — the stall gesture
+  // again, on the one landmark in the game that is furniture rather than a
+  // door. It runs after the travel doors because the doors are the older
+  // gesture and the hub is crowded; `openCache` re-checks its own reach, the
+  // ownership and the arrival, so a tap that lands on a chest that is not there
+  // (or is still becoming one) is simply ignored.
+  if (shopTap && !bot && fieldLive(state) && cacheStanding(state)) {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    const at = state.cachePos!;
+    if (
+      Math.hypot(wx - at.x, wy - at.y) <= MERCHANT.radius * 3 &&
+      runCommandOk(state, "openCache")
+    ) {
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      bumpUi();
+      return;
     }
   }
   // A tap on the hub's WORKBENCH opens the LOST & FOUND (the vault's stash):

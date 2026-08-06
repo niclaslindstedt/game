@@ -445,6 +445,10 @@ export function createControls(deps: {
         runCommand(state, "closeShop");
         playUiSound(synth, "back");
         bumpUi();
+      } else if (screen === "cache") {
+        runCommand(state, "closeCache");
+        playUiSound(synth, "back");
+        bumpUi();
       } else if (screen === "map") {
         runCommand(state, "closeMap");
         playUiSound(synth, "back");

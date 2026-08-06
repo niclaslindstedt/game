@@ -127,6 +127,21 @@ export type Character = {
    */
   keepsakes?: string[];
   /**
+   * HOW DEEP THIS HERO'S CACHE IS — the garage chest Ruth pays for THE SCALE
+   * (src/game/cache.ts), which grows one row per difficulty she is paid on.
+   *
+   * A HIGH-WATER MARK, and that is the whole reason it is a number on the
+   * character rather than a keepsake string: the chest earned on NIGHTMARE is
+   * still forty cells deep on a fresh EASY run, because a stash that shrank
+   * when the player started a gentler game would have to decide which of their
+   * things to throw away. Recorded on the `cacheGiven` engine event and only
+   * ever raised.
+   *
+   * Absent (or 0) = Ruth has not paid this hero yet. Optional so a roster
+   * stored before the chest shipped reads as no chest.
+   */
+  cacheSlots?: number;
+  /**
    * WHERE THE RIFT CREATOR HAS ALREADY BEEN, as `${difficulty}:${levelId}` —
    * the venues this hero has arrived at by stepping through a rift portal.
    *
@@ -830,6 +845,28 @@ export function bankKeepsake(character: Character, defId: string): Character {
   };
   persist(updated);
   return updated;
+}
+
+/**
+ * BANK THE CACHE'S DEPTH — how many cells the chest Ruth just handed over
+ * holds (`Character.cacheSlots`, recorded on the `cacheGiven` event).
+ *
+ * ONLY EVER RAISES. Ruth's errand runs once per difficulty and pays a deeper
+ * chest each time, so the character keeps the DEEPEST they have been paid and a
+ * later run on a gentler rung reports a smaller one — which must not shrink a
+ * stash the player has been filling for hours. Idempotent like `bankKeepsake`
+ * beside it: a no-op returns the character untouched.
+ */
+export function bankCacheSlots(character: Character, slots: number): Character {
+  if (slots <= (character.cacheSlots ?? 0)) return character;
+  const updated: Character = { ...character, cacheSlots: slots };
+  persist(updated);
+  return updated;
+}
+
+/** How deep this hero's chest is — the `RunParams.cacheSlots` read. */
+export function characterCacheSlots(character: Character): number {
+  return character.cacheSlots ?? 0;
 }
 
 /** Does this character keep `defId` — the travel doors' `requires` read. */

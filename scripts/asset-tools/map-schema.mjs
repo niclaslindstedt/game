@@ -73,7 +73,7 @@ const ALLOWED_FIELDS = {
   crate: ["radius", "density", "jumpable", "loot", "areas", "space", "edge"],
   chest: [],
   decor: ["density", "areas", "space"],
-  landmark: ["at", "anchor"],
+  landmark: ["at", "anchor", "offset"],
   building: ["density", "w", "h", "jumpable", "areas", "space"],
   row: [
     "areas",
@@ -911,6 +911,14 @@ export function validateMap(bp, refs, description = "") {
           o.anchor !== "center"
         )
           err(`${where}: anchor must be "base" or "center"`);
+        // A NUDGE OFF THE ANCHOR, exactly as a lamp takes one — how a fixture
+        // is stood against a wall rather than in the middle of the room the
+        // anchor names.
+        if (
+          o.offset !== undefined &&
+          (!isNum(o.offset.x) || !isNum(o.offset.y))
+        )
+          err(`${where}: offset needs numeric x/y`);
       }
       // THE LAMP'S OWN NUMBERS — on a `light` (where a light block is
       // mandatory: a lamp with no light compiles to nothing at all) and inside

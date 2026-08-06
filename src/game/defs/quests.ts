@@ -182,6 +182,16 @@ export type QuestReward = {
    * that hands them out has no build decisions in it, only postponed ones.
    */
   cleanSlates?: number;
+  /**
+   * THE CACHE — this errand hands over the garage chest (src/game/cache.ts).
+   *
+   * A boolean rather than an id because there is exactly ONE chest: it is a
+   * fixture on a map, not an item, so an errand either gives the hero their
+   * stash or it does not. It only lands where the carve reserved a spot for
+   * one, which today is the hub — an errand elsewhere that pays it is a bug
+   * the build refuses (see the quest schema).
+   */
+  cache?: boolean;
 };
 
 /**

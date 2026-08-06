@@ -1205,6 +1205,16 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 0.9,
     mobHpMult: 1,
     mobLevelOffset: -3,
+    // THE CACHE this rung pays (`DifficultyDef.cache`). A three-rung ladder in
+    // the same shape as the shipped five, so the engine suite can exercise the
+    // GROWTH — a deeper rung replaces the chest, a gentler one is a no-op —
+    // without naming a shipped difficulty's numbers.
+    cache: {
+      name: "TEST BOX",
+      slots: 8,
+      sprite: "keepsake_box",
+      line: "A TEST BOX APPEARED.",
+    },
     aliveMult: 0.9,
     activeSpawnerCap: 2,
     spawnerRespawnMult: 1.6,
@@ -1249,6 +1259,16 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1,
     mobHpMult: 1,
     mobLevelOffset: -2,
+    // THE CACHE this rung pays (`DifficultyDef.cache`). A three-rung ladder in
+    // the same shape as the shipped five, so the engine suite can exercise the
+    // GROWTH — a deeper rung replaces the chest, a gentler one is a no-op —
+    // without naming a shipped difficulty's numbers.
+    cache: {
+      name: "TEST CHEST",
+      slots: 16,
+      sprite: "antique_chest",
+      line: "A TEST CHEST APPEARED.",
+    },
     aliveMult: 1,
     activeSpawnerCap: 3,
     spawnerRespawnMult: 1.0,
@@ -1293,6 +1313,16 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1.1,
     mobHpMult: 1,
     mobLevelOffset: -1,
+    // THE CACHE this rung pays (`DifficultyDef.cache`). A three-rung ladder in
+    // the same shape as the shipped five, so the engine suite can exercise the
+    // GROWTH — a deeper rung replaces the chest, a gentler one is a no-op —
+    // without naming a shipped difficulty's numbers.
+    cache: {
+      name: "TEST TRUNK",
+      slots: 24,
+      sprite: "steamer_trunk",
+      line: "A TEST TRUNK APPEARED.",
+    },
     aliveMult: 1.1,
     activeSpawnerCap: 4,
     spawnerRespawnMult: 0.8,
@@ -1631,6 +1661,11 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
       // createGame mints a Vehicle for each (src/game/vehicles.ts).
       { kind: "car", anchor: "base", pos: { x: 700, y: 500 } },
       { kind: "rocket", anchor: "base", pos: { x: 1100, y: 300 } },
+      // THE CACHE's spot (src/game/cache.ts) — `cache` is an ENGINE landmark
+      // kind like the two above: the carve reserves the ground and the RUN
+      // decides whether the chest stands in it. A hub is the only venue that
+      // has one, exactly as the shipped garage is.
+      { kind: "cache", anchor: "base", pos: { x: 500, y: 300 } },
     ],
   };
   delete base.waves;

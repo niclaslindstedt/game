@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 27;
+export const PROTOCOL_VERSION = 28;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -95,6 +95,9 @@ export type SessionParams = {
   clearedLevels: string[];
   /** The hero has already met this level's merchant on this difficulty. */
   merchantDiscovered: boolean;
+  /** How deep the hosting character's CACHE is — the garage chest, one rung
+   * deeper per difficulty beaten. 0 = not earned. */
+  cacheSlots?: number;
   /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
    * the wire moves it, the engine reads it. */
   campaignQuests?: unknown | null;

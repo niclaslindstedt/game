@@ -99,12 +99,22 @@ for (const id of levels) {
 // reason `levelSizes` is read from `content/levels/`: the YAML is already on
 // disk here, and this pipeline learns nothing else about a map.
 const hordeBreeds = new Map();
+// WHICH VENUES STAND A CACHE — the blueprint's `cache` landmark, read out of
+// the same pass. An errand that pays the chest (`reward.cache`) on a map with
+// nowhere to put one is a payout that silently does nothing, which is the
+// worst way for a reward to fail: the player is told they got something.
+const cacheLevels = new Set();
 for (const id of levels) {
   const breeds = new Set();
   try {
     const bp = parse(readFileSync(engine(`content/maps/${id}.yaml`), "utf8"));
     for (const member of bp?.horde?.members ?? []) {
       if (typeof member?.enemy === "string") breeds.add(member.enemy);
+    }
+    for (const o of bp?.objects ?? []) {
+      if (o?.type === "landmark" && (o.kind ?? o.id) === "cache") {
+        cacheLevels.add(id);
+      }
     }
   } catch {
     // A venue need not be carved from a blueprint (the hub is not).
@@ -161,6 +171,7 @@ const refs = {
   levelSizes,
   hordeBreeds,
   anyHordeBreed,
+  cacheLevels,
   // questId → the pieces some conversation branch hands over, so a piece that
   // is given rather than found is not reported as one nothing produces.
   givenPieces: collectGivenPieces(conversations),

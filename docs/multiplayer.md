@@ -708,6 +708,20 @@ An allocated drop is visible to everybody and deliberately NOT in
 `PRIVATE_PLAYER_FIELDS` — hiding it would make a party walk over piles they
 cannot see on the way to their own.
 
+**THE CACHE splits the same way, in the other direction** (`src/game/cache.ts`).
+The CHEST is public — one piece of furniture standing in the hub, which anybody
+may walk up to and which everybody sees arrive — while what a hero keeps in it
+is `Player.cache`, withheld from every other seat exactly as their bag is. One
+chest, one stash each. `openCache` is checked against the TAPPING hero's own
+feet rather than "any hero at the chest", or a player across the lot would find
+a window open in front of them because somebody else walked over; `stashItem`
+and `takeFromCache` both act on the acting seat's own two grids, like every
+other bag verb. Owning the chest at all is a session parameter
+(`RunParams.cacheOwned`, off the character's keepsakes), never something the run
+discovers — the host and a joiner have to build the same world from the same
+parameters, and the one moment it changes mid-run is an engine event both ends
+see (`cacheGiven`).
+
 **The menace meter reads the party's output PER CAPITA** (`tickMenace`). The
 damage and kills it is handed are the RUN's totals, summed over everybody, and
 the question the meter asks — "is this too easy" — with eight people in the room

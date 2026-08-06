@@ -1,0 +1,40 @@
+name: dowry_chest
+family: earth
+size: [18, 16]
+description: >
+  THE CACHE, rung four — a dowry chest older than the house it came out of. A
+  high domed lid, two iron bands set well in off the corners, a diamond carved
+  into the front panel and worn smooth by two centuries of hands, and a
+  lockplate the size of a fist. It was packed for a wedding nobody alive
+  attended and has been packed for somebody ever since.
+subject:
+  kind: "solid prop"
+  build: "a large domed dowry chest standing on iron feet"
+  features: "two heavy inset iron bands, brass caps at every corner, a diamond carved into the front panel, a fist-sized brass lockplate with a keyhole"
+  accent: "warm old oak with pale grey ironwork and old brass"
+  flavor: "packed for a wedding nobody alive attended, and packed for somebody ever since"
+palette:
+  O: "#1a1c2c" # outline, and the keyhole
+  h: "#a17a45" # the domed lid, catching the light
+  B: "#7a5429" # oak
+  E: "#503418" # oak in shadow
+  I: "#7b8298" # ironwork, pale enough to read off the outline
+  C: "#c0a074" # the carving, worn pale by two centuries of hands
+  G: "#e8b93e" # brass lockplate
+grid: |
+  ..................
+  ......OOOOOO......
+  ....OOhhhhhhOO....
+  ..OOhhhhhhhhhhOO..
+  .OhhhhhhhhhhhhhhO.
+  .OhhhhhhhhhhhhhhO.
+  .OGBIIBBGGBBIIBGO.
+  .OOOOOOOOOOOOOOOO.
+  .OGBIIBBGGBBIIBGO.
+  .OBBIIBBGOBBIIBBO.
+  .OBBIICBBBBCIIBBO.
+  .OBBIIBCCCCBIIBBO.
+  .OBBIICBBBBCIIBBO.
+  .OGEIIEEEEEEIIEGO.
+  .OOOOOOOOOOOOOOOO.
+  ..OII........IIO..

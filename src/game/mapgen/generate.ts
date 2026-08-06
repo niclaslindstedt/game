@@ -1259,7 +1259,16 @@ export function generateLevel(
   const landmarks: LevelDef["landmarks"] = bp.objects
     .filter((o) => o.type === "landmark")
     .map((o) => {
-      const pos = anchorPos(o.at);
+      // The anchor, plus the authored nudge off it (a lamp's own rule) —
+      // clamped on-map, since an offset is written against the SHAPE of the
+      // place and a landing near the boundary must not shove furniture into
+      // the letterbox. This is how a fixture stands against a wall instead of
+      // in the middle of the room its anchor names.
+      const at = anchorPos(o.at);
+      const pos = vec(
+        Math.min(width, Math.max(0, at.x + (o.offset?.x ?? 0))),
+        Math.min(height, Math.max(0, at.y + (o.offset?.y ?? 0))),
+      );
       const mark: LevelDef["landmarks"][number] = { kind: o.kind ?? o.id, pos };
       if (o.sprite) mark.sprite = o.sprite;
       if (o.anchor) mark.anchor = o.anchor;

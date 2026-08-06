@@ -388,6 +388,21 @@ export type Player = {
    * it survives the level hops a multi-lap flight makes.
    */
   vault: Equipment[];
+  /**
+   * THE CACHE (src/game/cache.ts): the antique chest against the garage's north
+   * wall, and what is IN it — `CACHE.slots` cells, `null` where empty, laid out
+   * like the bag so the two grids can be moved between cell for cell.
+   *
+   * PRIVATE, exactly like the bag and the purse: the chest is a fixture anybody
+   * in the party can walk up to, but what each hero keeps in it is their own
+   * (see `PRIVATE_PLAYER_FIELDS`). It rides the LOADOUT, so it survives the
+   * level hops of a campaign and lands on the character with everything else.
+   *
+   * Empty and unreachable until the chest is EARNED — owning it is
+   * `GameState.cacheOwned`, which is a session parameter off the character's
+   * keepsakes, not a fact about these cells.
+   */
+  cache: (Equipment | null)[];
 };
 
 /**

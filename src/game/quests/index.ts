@@ -34,6 +34,7 @@
 //    to carry across a content update.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
+import { resolveCacheLine } from "../cache.ts";
 
 import { QUESTS } from "../config/index.ts";
 import { talkToGiverTree } from "../conversation.ts";
@@ -415,7 +416,7 @@ export function advanceQuestDialogue(state: GameState, hero: Player): void {
   if (hero.screen !== "quest") return;
   const offer = state.questOffer;
   if (!offer || offer.kind === "list" || !offer.questId) return;
-  const pages = conversationPages(offer.questId, offer.kind);
+  const pages = conversationPages(state, offer.questId, offer.kind);
   if (offer.page < pages.length - 1) {
     offer.page++;
     return;
@@ -430,16 +431,33 @@ export function advanceQuestDialogue(state: GameState, hero: Player): void {
   leaveTopic(state, hero);
 }
 
-/** The pages a conversation reads out, by its kind. */
+/**
+ * The pages a conversation reads out, by its kind.
+ *
+ * Takes the RUN because an authored page may carry `{CACHE}` — the rung's own
+ * line about the chest Ruth just brought (src/game/cache.ts). A page whose
+ * token resolves to nothing (a rung that pays no chest) is DROPPED rather than
+ * shown blank, so the same errand reads correctly on a difficulty ladder that a
+ * mod cut down.
+ */
 export function conversationPages(
+  state: GameState,
   questId: string,
   kind: "list" | "offer" | "incomplete" | "complete",
 ): readonly (readonly string[])[] {
   if (kind === "list") return [];
   const def = questDef(questId);
-  if (kind === "offer") return def.offer;
-  if (kind === "complete") return def.complete;
-  return def.incomplete ? [def.incomplete] : [["..."]];
+  const pages =
+    kind === "offer"
+      ? def.offer
+      : kind === "complete"
+        ? def.complete
+        : def.incomplete
+          ? [def.incomplete]
+          : [["..."]];
+  return pages
+    .map((page) => resolveCacheLine(page, state.difficulty))
+    .filter((page): page is readonly string[] => page !== null);
 }
 
 /** Close the conversation without taking or handing in anything. */

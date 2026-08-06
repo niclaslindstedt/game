@@ -1738,6 +1738,34 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "cache-given",
+    icon: "antique_chest",
+    label: "THE CACHE ARRIVES",
+    blurb: "LIGHT GATHERS AND KNITS THE CHEST OUT OF NOTHING",
+    group: "WORLD",
+    keywords: ["cache", "chest", "stash", "quest", "conjure", "garage"],
+    // Home ground: the chest only ever arrives in the garage, so the exhibit
+    // stands on the floor it will stand on.
+    levelId: "garage",
+    stage: {},
+    // The whole arrival, plus a beat to see it standing there afterwards.
+    showMs: 2200,
+    // Only the LIGHT half stages here: the chest's own body knits off the
+    // run's `cacheArriveMs`, and the gallery has no errand to pay one out of.
+    // What is on show is exactly what the burst contributes.
+    fire: (ctx) =>
+      ctx.emit({
+        type: "cacheGiven",
+        pos: {
+          x: localHero(ctx.state).pos.x + 34,
+          y: localHero(ctx.state).pos.y - 20,
+        },
+        // The top of the ladder, since an exhibit shows a thing at its best.
+        slots: 48,
+        name: "THE INHERITANCE",
+      }),
+  },
+  {
     id: "car-grind",
     icon: "car_wheel_0",
     label: "THE LAST STAND",

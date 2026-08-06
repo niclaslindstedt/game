@@ -537,6 +537,25 @@ export {
   stockName,
   type BuybackRefusal,
 } from "./game/merchant.ts";
+// THE CACHE — the antique chest in the garage, and the game's one stash (see
+// cache.ts). The verbs are the app's to call through `applyRunCommand` like
+// every other bag verb; `cacheStanding` is what the renderer and the tap test
+// ask before drawing or opening anything.
+export {
+  CACHE_TOKEN,
+  cacheNameFor,
+  cacheRungFor,
+  cacheSlotsFor,
+  cacheStanding,
+  closeCache,
+  emptyCache,
+  grantCache,
+  normalizeCache,
+  openCache,
+  resolveCacheLine,
+  stashItem,
+  takeFromCache,
+} from "./game/cache.ts";
 export {
   CAR,
   DEPARTURE,
@@ -1165,6 +1184,7 @@ export {
   MELEE,
   MENACE,
   MERCHANT,
+  CACHE,
   QUESTS,
   MERCY,
   MOB_ARMOR,

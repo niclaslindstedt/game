@@ -138,11 +138,27 @@ const EMPTY_FOG = new Uint8Array(0);
 // screen, so essentially every one carries `phase: "paused"` — a value the
 // union no longer holds — and its talent queue sits where nothing reads it.
 //
+// v27: THE TOWN PORTAL — the run grew `keepsakes`, the rift tool's own record
+// of where a seam has been torn home from.
+// v28: THE CACHE — the garage chest (src/game/cache.ts). `Player.cache` is a
+// required list the engine indexes unguarded (`stashItem`), and the run grew
+// `cachePos`/`cacheSlots`, which decide whether the chest is standing at all
+// and how much of it the hero has earned. A v27 blob carries none of the three,
+// so a thaw would hand the stash verbs an `undefined` grid and draw a chest
+// nobody can open.
+//
+// (27 AND 28 WERE THE SAME NUMBER FOR A MOMENT: the town portal and the chest
+// were in flight together and each bumped 26 → 27 on its own branch. The merge
+// took the union of the two SHAPES and would have kept one number for three
+// different states, which is precisely the skew the guard exists to refuse —
+// hence the split. When two branches both bump, the second one to land re-bumps
+// rather than agreeing.)
+//
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 27;
+export const SAVE_VERSION = 28;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

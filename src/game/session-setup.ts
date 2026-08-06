@@ -93,6 +93,16 @@ export type RunParams = {
    * trader is set up at the door from the start. */
   merchantDiscovered?: boolean;
   /**
+   * HOW DEEP THE CACHE THIS CHARACTER HAS EARNED IS — the garage chest Ruth
+   * pays for THE SCALE, one rung deeper each difficulty (src/game/cache.ts).
+   * Seeded from the character's own high-water mark, so the chest stands in the
+   * hub at its full earned depth from the first frame of every visit after the
+   * one it was given in — including a fresh run on a gentler rung. 0 = not
+   * earned. It still only appears where the carve gave it a spot, which is the
+   * garage and nowhere else.
+   */
+  cacheSlots?: number;
+  /**
    * The CAMPAIGN chain the hero carries (`quests/campaign.ts`), or null.
    *
    * Seeded before anything reads the quest log, so a chain's gate, a giver's
@@ -187,6 +197,7 @@ export function createRunFromParams(params: RunParams): GameState {
     params.respec ?? false,
     params.clearedLevels ? [...params.clearedLevels] : [],
     params.merchantDiscovered ?? false,
+    params.cacheSlots ?? 0,
   );
   seedCampaignQuests(
     state,

@@ -12,6 +12,7 @@
 // saved state.
 
 import { clamp } from "@game/lib/vec.ts";
+import { normalizeCache } from "./cache.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import { foldCorpseGear } from "./downed.ts";
 import {
@@ -131,6 +132,11 @@ export function extractLoadout(state: GameState, player: Player): Loadout {
         (piece) => copyPiece(piece) as Equipment,
       ),
     ],
+    // THE CACHE rides along too (src/game/cache.ts). It is only REACHABLE in
+    // the garage, but it has to travel: the loadout is the one road anything a
+    // hero owns takes to the character, and a chest left behind at the level
+    // boundary would be emptied by the walk to the next venue.
+    cache: player.cache.map(copyPiece),
     heldAbilities: [...player.heldAbilities],
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
@@ -271,6 +277,15 @@ export function applyLoadout(
     .map((piece) => stillWearable(mint(piece)))
     .filter((piece): piece is Equipment => piece !== null)
     .slice(0, VAULT.capacity);
+  // THE CACHE carries across the same way, re-minted and re-fit to this build's
+  // `CACHE.slots` (`normalizeCache`) so a save from a different slot count
+  // loads without a hole in the grid. `stillWearable` is deliberately NOT
+  // applied: a chest is where a piece goes precisely BECAUSE the hero cannot
+  // use it yet, so culling what the body can no longer wear would delete the
+  // stash's whole reason for existing.
+  player.cache = normalizeCache(
+    (loadout.cache ?? []).map((piece) => mint(piece)),
+  );
   // A `uniqueHeld` power (the NUKE) docks at most once — loadouts banked
   // before the rule existed may carry doubles, so the extras stay behind.
   player.heldAbilities = loadout.heldAbilities
