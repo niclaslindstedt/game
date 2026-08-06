@@ -17,4 +17,8 @@ animations:
   hero_suit_walk: { frames: [hero_suit_0, hero_suit_1], delayMs: 220 }
   ship_fire_burn: { frames: [ship_fire_0, ship_fire_1], delayMs: 120 }
   ship_fly_cruise: { frames: [ship_fly_0, ship_fly_1], delayMs: 160 }
-contrastExempt: [stars_a, stars_b, sky_moon]
+# Scenery, not bodies: none of these is ever drawn over the family's grass
+# tile. The sky pieces hang in a scene's own night wash, and the launch's
+# driveway is laid on that scene's dark lawn colour — where a paving grey that
+# would read as pale against DAYLIGHT grass separates from it plainly.
+contrastExempt: [stars_a, stars_b, sky_moon, garage_drive, road_lane]

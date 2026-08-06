@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: garage_drive
+family: scenes
+size: [16, 16]
+description: >
+  The paved drive outside the garage's roll-up door in the launch scene — a
+  slab of pale swept concrete a shade wider than the door itself, running
+  straight from the threshold down to the road's kerb, two faint wheel tracks
+  worn along it and a darker lip down either side against the lawn. Clean:
+  this is the one part of the lot that gets hosed down.
+subject:
+  kind: "cutscene ground art (driveway)"
+  build: "a straight slab of poured paving running from the garage threshold down to the road, two wheel tracks worn along it"
+  features: "two faint wheel tracks worn down its length, faint aggregate speckle, a darker lip down either side against the grass, no stains"
+  accent: "pale cool greys against the dark lawn"
+  flavor: "swept, unstained — the drive the car crosses on its way out to the tarmac"
+palette:
+  P: "#6e707a" # pale paving, night
+  p: "#666872" # worn paving
+  V: "#777985" # light fleck
+  s: "#5c5e68" # edge lip
+grid: |
+  sPPPpsPPPPppPPPs
+  sPPPppVPPPppPPPs
+  sPPPppPPPPppPPPs
+  sPPPspPVPPppPPPs
+  sPPPppPPPPppPPPs
+  sPspppPPPPppPPPs
+  sPPPppPPPPpVVPPs
+  sPPPppPPPPppPPPs
+  sPPPppPPPPppPPPs
+  sPPPppPPPPppPPPs
+  sPPPpVPPVPppPPps
+  sPsPppPPPPppPPPs
+  ssPPppPPPPppPPPs
+  sPPPppPPsPppPPPs
+  sPPPppPPPPppPPPs
+  sPPPpVPPPPpVPPPs

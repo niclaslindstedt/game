@@ -16,7 +16,12 @@ import {
   type MutableRefObject,
 } from "react";
 
-import { currentLine, cutsceneDef, type CutsceneState } from "@game/core";
+import {
+  currentLine,
+  cutsceneDef,
+  type CutsceneProp,
+  type CutsceneState,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -88,40 +93,28 @@ function drawStage(
     }
   }
 
-  // Props and visible actors share one painter's queue, bottom-anchored at
-  // their pos (pos.y = where they meet the floor), sorted back to front.
-  type Placed = {
-    sprite: string;
-    x: number;
-    y: number;
-    flip: boolean;
-    wrap: boolean;
-    jitter: number;
-    /** World px the drawing is raised by — HEIGHT, which never re-sorts the
-     * queue (an airborne hero stays in front of the couch he leapt from). */
-    lift: number;
-    /** Carried sprite, offset from this drawing's own top-left. */
-    hold?: { sprite: string; dx: number; dy: number };
-    /** Last-resort art: the actor's frame 0, for a family that authors no
-     * frame for the pose being asked for (only the hero has a jump). */
-    alt?: string;
+  const place = (prop: CutsceneProp): Placed => {
+    const depth = prop.parallax ?? 1;
+    return {
+      sprite: prop.kind,
+      x: prop.pos.x + shift.x * depth,
+      y: prop.pos.y + shift.y * depth,
+      flip: false,
+      wrap: prop.wrap ?? false,
+      jitter: 0,
+      lift: 0,
+    };
   };
-  const queue: Placed[] = def.stage.props
+  const props = def.stage.props
     // A `prop` beat can take a piece off the stage mid-scene — the wall
     // weapon the moment the hero has it in his hand.
-    .filter((prop) => !(prop.id && cutscene.hiddenProps.includes(prop.id)))
-    .map((prop) => {
-      const depth = prop.parallax ?? 1;
-      return {
-        sprite: prop.kind,
-        x: prop.pos.x + shift.x * depth,
-        y: prop.pos.y + shift.y * depth,
-        flip: false,
-        wrap: prop.wrap ?? false,
-        jitter: 0,
-        lift: 0,
-      };
-    });
+    .filter((prop) => !(prop.id && cutscene.hiddenProps.includes(prop.id)));
+  // Art that LIES ON THE GROUND — the launch scene's driveway and the road
+  // across the front of the lot — is painted with the floor, in its own queue
+  // under everything standing. A slab is anchored at its NEAR edge, so left in
+  // the standing queue it would sort in front of every actor walking on it.
+  const floorQueue: Placed[] = props.filter((p) => p.ground).map(place);
+  const queue: Placed[] = props.filter((p) => !p.ground).map(place);
   for (const actor of cutscene.actors) {
     if (actor.hidden) continue;
     // Off the ground the actor holds its airborne frame; walking alternates
@@ -148,58 +141,89 @@ function drawStage(
         : {}),
     });
   }
+  floorQueue.sort((a, b) => a.y - b.y);
   queue.sort((a, b) => a.y - b.y);
 
-  for (const item of queue) {
-    const sprite =
-      spriteByName(assets.sprites, item.sprite) ??
-      spriteByName(assets.sprites, `${item.sprite}_0`) ??
-      (item.alt ? spriteByName(assets.sprites, item.alt) : undefined);
-    if (!sprite) continue;
-    let cx = item.x;
-    if (item.wrap) {
-      // Wrapping props re-enter from the far edge under a long drift (the
-      // transit star fields) instead of scrolling away forever.
-      const span = width + sprite.width;
-      const centered = cx + sprite.width / 2;
-      cx = (((centered % span) + span) % span) - sprite.width / 2;
-    }
-    // A shaking actor trembles on the scene clock — deterministic, so the
-    // preview harness replays it identically.
-    const jx = item.jitter
-      ? Math.round(Math.sin(cutscene.timeMs / 30) * item.jitter)
-      : 0;
-    const jy = item.jitter
-      ? Math.round(Math.cos(cutscene.timeMs / 23) * item.jitter * 0.6)
-      : 0;
-    const x = Math.round(cx - sprite.width / 2) + jx;
-    const y = Math.round(item.y - sprite.height - item.lift) + jy;
-    // What this drawing carries, offset from its own top-left (the paper
-    // doll's own anchoring, so the cutscene hero grips his weapon where the
-    // field hero does). A held sprite is drawn INSIDE the body's box, which
-    // is what mirrors it onto the other hand when the actor turns around.
-    const held = item.hold
-      ? spriteByName(assets.sprites, item.hold.sprite)
-      : undefined;
-    const draw = () => {
-      ctx.drawImage(sprite, 0, 0);
-      if (held && item.hold) ctx.drawImage(held, item.hold.dx, item.hold.dy);
-    };
-    ctx.save();
-    if (item.flip) {
-      ctx.translate(x + sprite.width, y);
-      ctx.scale(-1, 1);
-    } else {
-      ctx.translate(x, y);
-    }
-    draw();
-    ctx.restore();
+  for (const item of [...floorQueue, ...queue]) {
+    paintOne(ctx, item, assets, cutscene, width);
   }
 
   if (cutscene.fade > 0) {
     ctx.fillStyle = `rgba(6, 7, 12, ${cutscene.fade})`;
     ctx.fillRect(0, 0, width, height);
   }
+}
+
+/** Props and visible actors are bottom-anchored at their pos (pos.y = where
+ * they meet the floor) and painted back to front by y. */
+type Placed = {
+  sprite: string;
+  x: number;
+  y: number;
+  flip: boolean;
+  wrap: boolean;
+  jitter: number;
+  /** World px the drawing is raised by — HEIGHT, which never re-sorts the
+   * queue (an airborne hero stays in front of the couch he leapt from). */
+  lift: number;
+  /** Carried sprite, offset from this drawing's own top-left. */
+  hold?: { sprite: string; dx: number; dy: number };
+  /** Last-resort art: the actor's frame 0, for a family that authors no
+   * frame for the pose being asked for (only the hero has a jump). */
+  alt?: string;
+};
+
+/** One drawing off a stage queue: its art, whatever it carries, its wrap. */
+function paintOne(
+  ctx: CanvasRenderingContext2D,
+  item: Placed,
+  assets: GameAssets,
+  cutscene: CutsceneState,
+  width: number,
+): void {
+  const sprite =
+    spriteByName(assets.sprites, item.sprite) ??
+    spriteByName(assets.sprites, `${item.sprite}_0`) ??
+    (item.alt ? spriteByName(assets.sprites, item.alt) : undefined);
+  if (!sprite) return;
+  let cx = item.x;
+  if (item.wrap) {
+    // Wrapping props re-enter from the far edge under a long drift (the
+    // transit star fields) instead of scrolling away forever.
+    const span = width + sprite.width;
+    const centered = cx + sprite.width / 2;
+    cx = (((centered % span) + span) % span) - sprite.width / 2;
+  }
+  // A shaking actor trembles on the scene clock — deterministic, so the
+  // preview harness replays it identically.
+  const jx = item.jitter
+    ? Math.round(Math.sin(cutscene.timeMs / 30) * item.jitter)
+    : 0;
+  const jy = item.jitter
+    ? Math.round(Math.cos(cutscene.timeMs / 23) * item.jitter * 0.6)
+    : 0;
+  const x = Math.round(cx - sprite.width / 2) + jx;
+  const y = Math.round(item.y - sprite.height - item.lift) + jy;
+  // What this drawing carries, offset from its own top-left (the paper
+  // doll's own anchoring, so the cutscene hero grips his weapon where the
+  // field hero does). A held sprite is drawn INSIDE the body's box, which
+  // is what mirrors it onto the other hand when the actor turns around.
+  const held = item.hold
+    ? spriteByName(assets.sprites, item.hold.sprite)
+    : undefined;
+  const draw = () => {
+    ctx.drawImage(sprite, 0, 0);
+    if (held && item.hold) ctx.drawImage(held, item.hold.dx, item.hold.dy);
+  };
+  ctx.save();
+  if (item.flip) {
+    ctx.translate(x + sprite.width, y);
+    ctx.scale(-1, 1);
+  } else {
+    ctx.translate(x, y);
+  }
+  draw();
+  ctx.restore();
 }
 
 export function CutsceneOverlay({

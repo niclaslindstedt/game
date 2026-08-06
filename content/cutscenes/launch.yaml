@@ -22,6 +22,24 @@ stage:
     - { sprite: stars_a, at: { x: 82, y: 46 }, parallax: 0.15 }
     # Home, garage door up — the ship rolled out onto the back lawn.
     - { sprite: garage_house, at: { x: 46, y: 98 } }
+    # ── THE LOT'S OWN GROUND (`content/maps/garage.yaml`) ──────────────────
+    # The hub is walkable and the player has already stood on all of this, so
+    # the establishing shot owes it the same three surfaces: the swept PAVED
+    # DRIVE outside the roll-up door, and past it THE ROAD, two lanes of dark
+    # tarmac with a painted centre line, running off both edges of the frame.
+    # `ground: true` paints them WITH the floor rather than into the standing
+    # queue — a slab is anchored at its NEAR edge, so sorted normally it would
+    # come out in front of the hero walking over it.
+    #
+    # The drive runs from the door's threshold (the house's base, y 98) down
+    # to the road's kerb at y 114, flaring as it goes, and the road's four
+    # tiles lay the bottom 12 rows of the stage end to end (56 px each,
+    # centred at 28/84/140/196 = the full 224).
+    - { sprite: garage_drive, at: { x: 57, y: 114 }, ground: true }
+    - { sprite: road_lane, at: { x: 28, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
 actors:
   - { id: hero, name: ME, sprite: hero_tee, at: { x: 74, y: 102 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.

@@ -98,3 +98,40 @@ describe("cutscene sprites", () => {
     });
   }
 });
+
+// THE ESTABLISHING SHOT OWES THE HUB ITS OWN GROUND. The garage lot is
+// walkable (content/maps/garage.yaml), so the player has already stood on the
+// swept paved DRIVE outside the roll-up door and on the two-lane ROAD the
+// drive leads out to. The launch scene is that same lot at night; a pass that
+// drops either surface leaves the shot disagreeing with the map behind it.
+describe("the launch scene stands on the garage lot", () => {
+  const props = () => CUTSCENE_DEFS.launch!.stage.props;
+
+  it("lays the drive and the road the hub map has", () => {
+    const kinds = props().map((p) => p.kind);
+    expect(kinds).toContain("garage_drive");
+    expect(kinds.filter((k) => k === "road_lane").length).toBeGreaterThan(0);
+  });
+
+  it("lays them on the FLOOR, under everything standing on them", () => {
+    // A slab is anchored at its NEAR edge, so left in the standing queue it
+    // sorts in front of the hero walking over it and paints over his feet.
+    for (const prop of props()) {
+      if (prop.kind !== "garage_drive" && prop.kind !== "road_lane") continue;
+      expect(prop.ground, `"${prop.kind}" is not a ground prop`).toBe(true);
+    }
+  });
+
+  it("runs the road off both edges of the frame", () => {
+    const stage = CUTSCENE_DEFS.launch!.stage;
+    const lanes = props().filter((p) => p.kind === "road_lane");
+    const xs = lanes.map((p) => p.pos.x).sort((a, b) => a - b);
+    // 56 px of tarmac per tile, laid end to end across the whole 224.
+    const span = 56;
+    expect(xs[0]! - span / 2).toBeLessThanOrEqual(0);
+    expect(xs.at(-1)! + span / 2).toBeGreaterThanOrEqual(stage.width);
+    for (let i = 1; i < xs.length; i++) {
+      expect(xs[i]! - xs[i - 1]!, "a gap in the tarmac").toBe(span);
+    }
+  });
+});

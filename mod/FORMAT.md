@@ -1095,6 +1095,12 @@ default) moves with the ground, `0` is pinned to the sky. `wrap: true` makes a
 prop re-enter from the far edge instead of scrolling away for ever — star fields
 under a long `drift`.
 
+**`ground: true` is art that LIES on the floor** — paving, a road, a painted
+marking — rather than standing on it. Ground props are painted with the floor,
+under everything in the standing queue, because a slab is anchored at its NEAR
+edge: sorted normally it would come out in front of every actor walking over it
+and paint over their feet.
+
 **A prop's art is `sprite:`.** The renderer draws it by name, falling back to
 `<name>_0`. An actor's `sprite` names a two-frame FAMILY: `<name>_0` standing,
 alternating `_1` while a `move` beat walks it. Yours and the game's work

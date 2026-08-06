@@ -257,7 +257,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   a jump's `lift` is HEIGHT, so an airborne actor is never re-sorted through
   the furniture it leapt from) — and a stage may carry a constant
   `drift` that streams its props by per-prop `parallax` depth (the space
-  transits' star field) even while a held line idles the timeline. Text
+  transits' star field) even while a held line idles the timeline. A prop
+  marked `ground` is art that LIES on the floor rather than standing on it
+  (the launch's driveway and the road across the front of the lot) and is
+  painted with the floor, under the whole standing queue — a slab is
+  anchored at its NEAR edge, so sorted normally it would come out in front
+  of every actor walking over it. Text
   beats crawl in letter by letter and hold until
   `tapCutscene` (JRPG-style), and `skipCutscene` bails the whole opening —
   every queued scene _and_ the hero's level-intro monologue that follows —
