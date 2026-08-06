@@ -35,6 +35,8 @@ import {
 } from "@game/core";
 
 import { type GameAssets } from "../assets.ts";
+import { carKeyControl } from "../car-keys.ts";
+import { getSettings } from "../settings.ts";
 import { dismemberAllowed, goreAmount } from "../game-screen/gore-gate.ts";
 import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
 import { drawGore } from "../render/gibs.ts";
@@ -121,11 +123,16 @@ export function DriveScreen({
   }, []);
 
   // ── THE CONTROLS ──────────────────────────────────────────────────────────
-  // THE SAME PUSH THE GARAGE READS, and the engine resolves it the same way:
-  // along the nose is the accelerator, against it the brake, across it the
-  // wheel, nothing held holds the speed. So the leg out (nose right) accelerates
-  // on RIGHT and the leg home (nose left) accelerates on LEFT — "push the way
-  // the car is pointing", which is the one rule either leg needs.
+  // THE SAME CONTROLS THE GARAGE READS, and the engine resolves them the same
+  // way: a pedal, a wheel, and nothing held holds the speed.
+  //
+  // A DRAG says a direction — along the nose is the accelerator, against it the
+  // brake, across it the wheel — so the leg out (nose right) accelerates on
+  // RIGHT and the leg home (nose left) accelerates on LEFT: "drag the way the
+  // car is pointing", which is the one rule a thumb needs.
+  //
+  // THE KEYS ARE FIXED: D accelerates, A slows and backs up, W and S are the
+  // wheel, on both legs and whichever way the wagon is facing.
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       keysRef.current.add(e.code);
@@ -167,27 +174,19 @@ export function DriveScreen({
         canvas.height = h;
       }
 
-      // Gather the push. A thumb on the pad wins; otherwise the keys.
+      // Gather the controls. A thumb on the pad wins; otherwise the keys.
+      //
+      // THE TWO ARE READ DIFFERENTLY ON PURPOSE. A drag is a DIRECTION, so the
+      // push read against the nose is the pedal and the push across it is the
+      // wheel — exactly `carControl`'s reading, one frame earlier, and the
+      // same "drag the way the car is pointing" the garage answers to. A KEY is
+      // not a direction but a control on the car: D is the accelerator on both
+      // legs of the road, even the one the wagon drives nose-LEFT
+      // (`carKeyControl`, ../car-keys.ts).
       const pad = padRef.current;
-      let px = 0;
-      let py = 0;
-      if (pad) {
-        px = pad.x;
-        py = pad.y;
-      } else {
-        const k = keysRef.current;
-        const held = (...codes: string[]) => codes.some((c) => k.has(c));
-        if (held("ArrowRight", "KeyD")) px += 1;
-        if (held("ArrowLeft", "KeyA")) px -= 1;
-        if (held("ArrowDown", "KeyS")) py += 1;
-        if (held("ArrowUp", "KeyW")) py -= 1;
-      }
-      inputRef.current = {
-        // The horizontal push read against the nose is the pedal; the vertical
-        // is the wheel. Exactly `carControl`'s reading, one frame earlier.
-        pedal: px * nose,
-        wheel: py,
-      };
+      inputRef.current = pad
+        ? { pedal: pad.x * nose, wheel: pad.y }
+        : carKeyControl(keysRef.current, getSettings().keybindings);
 
       const drive = driveRef.current;
       // A line on screen parks the car — the same freeze the run's own dialogue

@@ -203,7 +203,16 @@ whatever action held it; **Escape** cancels and is never bindable). Bindings are
 stored by physical key code, so WASD stays put under any keyboard layout, and
 persist with the settings; **Reset to Defaults** restores the shipped scheme.
 **Escape** pauses/resumes the run and closes overlays no matter what else is
-bound. On touch, tapping the on-screen clock / foe counter in the HUD pauses
+bound.
+
+**At the wheel the same four keys are the car's**, and they are pedals rather
+than a direction on screen: **D** accelerates, **A** slows down and then backs
+up, **W** turns left (up the screen) and **S** turns right (down) — on the way
+out of the garage, on the way home, and whichever way the wagon is facing. (The
+arrow keys drive too, while they are bound to nothing else.) A **thumb or a
+mouse still pushes**: dragging the way the car is pointing is the accelerator,
+against it the brake, across it the wheel. Letting go of everything holds the
+speed rather than stopping — braking is something you ask for. On touch, tapping the on-screen clock / foe counter in the HUD pauses
 too. The run also auto-pauses when the tab or app loses focus; clicking the
 screen or pressing the pause key / **Escape** again resumes. During a cutscene,
 intro, or dialogue, **Space** or **Enter** turns the page (the first press

@@ -39,6 +39,7 @@ import { stopMusic } from "../music/index.ts";
 import { screenDirToWorld } from "../render/tilt.ts";
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
+import { carKeyControl, carKeyTarget, CAR_KEYS_IDLE } from "../car-keys.ts";
 import { moveVectorForCode } from "../keybindings.ts";
 
 import { runCommandOk } from "../run-commands.ts";
@@ -95,11 +96,12 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
   return clamp01(dist / fullSpeedPx);
 }
 
-/** The car the LOCAL hero is at the wheel of, or null on foot. It changes ONE
- * thing about the input now — where the push is measured FROM (the car, not the
- * body riding in it) — because the engine turns that push into a pedal and a
- * wheel itself (`carControl`, src/game/vehicles.ts). Every scheme composes the
- * same push through `composePush`. */
+/** The car the LOCAL hero is at the wheel of, or null on foot. It changes two
+ * things about the input: where a PUSH is measured from (the car, not the body
+ * riding in it) — the engine turns that push into a pedal and a wheel itself
+ * (`carControl`, src/game/vehicles.ts) — and that the KEYS stop being a push at
+ * all, becoming the car's own pedals (`carKeyControl`, ../car-keys.ts). Every
+ * pushing scheme still composes through `composePush`. */
 function drivenCar(state: GameState): CarVehicle | null {
   const seat = state.players.indexOf(localHero(state));
   return (
@@ -347,14 +349,14 @@ export function readHumanInput(
     // AIM & SHOOT always walks by keyboard regardless of the KEYS
     // setting — the mouse only aims there, so WASD is the one way
     // to move and must never be switched off underneath the mode.
-    if (
+    const keysLive =
       settings.keyboardMove === "on" ||
       settings.steering === "aim" ||
       // GAMEPAD keeps WASD live alongside the stick: a desktop player may well
       // hold a pad in one hand, and the locked KEYS row promises it.
-      settings.steering === "gamepad"
-    ) {
-      const binds = settings.keybindings;
+      settings.steering === "gamepad";
+    const binds = settings.keybindings;
+    if (keysLive) {
       for (const code of queues.heldMoveKeysRef.current) {
         const v = moveVectorForCode(code, binds);
         if (v) {
@@ -363,19 +365,29 @@ export function readHumanInput(
         }
       }
     }
+    // AT THE WHEEL THE SAME FOUR KEYS ARE PEDALS, NOT A DIRECTION: D
+    // accelerates, A slows and then backs up, W and S are the wheel — and they
+    // mean that whichever way the nose is pointing and whatever the camera is
+    // doing, because a key is a control on the CAR rather than a place on the
+    // screen (`carKeyControl`, ../car-keys.ts). A thumb on the pad still says a
+    // DIRECTION and is still read along the nose, which is the right model for
+    // a drag; a pedal that turns into the brake because the car came about is
+    // not a pedal anybody can drive with.
+    const driving =
+      car && keysLive
+        ? carKeyControl(queues.heldMoveKeysRef.current, binds)
+        : CAR_KEYS_IDLE;
     const key = normalize(dx, dy);
-    if (key.len > 0) {
+    if (car && (driving.pedal !== 0 || driving.wheel !== 0)) {
+      const at = carKeyTarget(car, driving, DPAD_STEER_DISTANCE);
+      input.steering = true;
+      input.target.x = at.x;
+      input.target.y = at.y;
+      input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+    } else if (key.len > 0) {
       // The bind names a direction on the SCREEN ("forward" is up the screen),
       // so it crosses into the world through the projection like every other
       // push — see `screenDirToWorld`.
-      //
-      // AT THE WHEEL THE SAME FOUR KEYS ARE THE CAR'S: the engine reads the
-      // push along the nose as the ACCELERATOR and across it as the WHEEL
-      // (`carControl`). With the car drawn nose-right that is the arcade
-      // layout — right speeds up, left brakes, up and down steer — and it
-      // stays the accelerator on the way home, where the same car is drawn
-      // nose-LEFT and the accelerator is therefore LEFT. "Push the way the car
-      // is pointing" is the rule, and it is the only one a player has to know.
       composePush(
         input,
         car ? car.pos : localHero(state).pos,
