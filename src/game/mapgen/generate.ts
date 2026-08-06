@@ -1262,7 +1262,13 @@ export function generateLevel(
       // opening was punched through, on any size and any seed.
       const lamps = obj.lamps;
       if (lamps) {
-        const inset = lamps.inset ?? 8;
+        // CLEAR OF THE WALL, and the default is sized to make sure of it. The
+        // fixture is a LANDMARK, and landmarks are painted before the obstacles
+        // are (render.ts's draw order), so a lamp standing inside the wall
+        // chain's own footprint comes out with its top half cut off by the
+        // stone in front of it. The chain's radius plus a body's width of
+        // daylight puts the whole fitting on the open side of the wall.
+        const inset = lamps.inset ?? radius + 8;
         const mid = chamberCenter(spawn);
         // Outward is simply "away from the room the door belongs to", along
         // the axis the chain does NOT run down.
