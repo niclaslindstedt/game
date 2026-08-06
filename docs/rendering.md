@@ -31,7 +31,9 @@ stripped from a store build like every developer setting), because the answer to
 rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
 longer cover their axis-aligned collision boxes still read wrong under a turned
 camera, and a proper isometric look needs that structural art redrawn as iso
-pieces — which is an art project, not a render setting.
+pieces — which is an art project, not a render setting. The WALLS are out of that
+backlog (`plane: wall` extrudes them off their own footprint, below) and so are
+the belts (`directional:`); what is left is the front-facing BUILDINGS.
 
 **THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT**, and
 the exception proves the rule: a body drawn standing up covers a strip of FLOOR
@@ -89,19 +91,63 @@ footprint); it is wrong for authored pixel art that merely lies there.
 
 **WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
 THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
-elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
-crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
-up is loud: the panel comes out taller than the floor grid it is set into, and
-under a yaw a straight run of them staircases diagonally across a floor whose
-own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
-`plane: upright | floor` (**upright is the default**, so a sprite that says
+elevation and have to stand; a painted lane marking, a hatch and a crate seen
+from above are drawn in PLAN and have to lie. Standing plan-view art up is loud:
+the piece comes out taller than the floor grid it is set into, and under a yaw a
+straight run of them staircases diagonally across a floor whose own seams run the
+other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor | wall` (**upright is the default**, so a sprite that says
 nothing keeps the look it has), the build emits the floor-plane names to
 `assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
 it — read by the obstacles, the decor, the landmarks, the lair doors and the
 elevator pads, never by an actor. A floor-plane sprite is **baked through the
 projection once** (`flatSprite`) for exactly the reason the ground layer is:
 transforming pixel art per frame re-picks which rows the nearest-neighbour
-resample drops, and the wall boils as the camera pans.
+resample drops, and the art boils as the camera pans.
+
+**AND "DRAWN IN PLAN" IS NOT "FLAT" — `plane: wall`, THE THIRD CASE, AND THE ONE
+THE WALLS ARE IN.** A lane marking really is paint on the ground. A wall panel is
+a plan view of a thing you cannot see past, and laid down it reads as a paving
+slab: turn the camera and a lab's partitions become a slightly darker path
+across the floor, a garage becomes a yard, and a room stops being a room. So a
+wall-plane sprite keeps the same footprint on the same floor and is **EXTRUDED
+off it** — the one projected slice, stacked `rise` px of screen height with the
+cap laid back on top at its authored brightness, then a `source-atop` ramp for
+the contact shadow (`wallBlock`, render/caches.ts). It is sprite stacking, and it
+is the answer here for the reason it is the answer anywhere: **no second piece of
+art, and right at every pitch and yaw**, because the projection is applied to the
+slice rather than to a hand-drawn elevation that would only ever suit the one
+camera it was drawn for. The stack is a BAKE — once per sprite per projection,
+dropped alongside the flat bakes when a knob moves — so the per-frame cost is one
+blit per panel, same as before.
+
+`rise` defaults to the art's OWN height, so a 16×16 plan panel extrudes into a
+cube: a wall a hero tall, which is what it takes to read as one. A piece that is
+deliberately lower than it is deep (a parapet, a kerb) says so with `rise:`.
+
+Two consequences worth carrying. **The walls are drawn LAST in the obstacle pass
+and back-to-front**, by PROJECTED y — the axis that actually runs into the screen
+once the camera is turned — because an extruded panel is tall enough to slice the
+cap off its own neighbour otherwise. And a door hung in a wall run **must be on
+the wall's plane too**: a door on a different plane from the run it interrupts is
+a hole in the world, which is why the garage door's roll-up
+(`drawWorldSpriteTop`) answers the plane question the same way one frame later,
+seat included.
+
+**FLAT ART CAN ALSO RUN ONE WAY — `directional: true`, and the bearing comes from
+the PLACEMENT.** A stain lies whichever way round it likes; a conveyor belt does
+not. Its side rails run along the belt, its rollers cross it, and its frames
+march the pattern one way — and a rank of belts is laid along whichever axis the
+chamber it landed in is longest (`buildRows`, mapgen/place.ts), so the same art is
+east-west in one bay and north-south in the next. Drawn unturned, half the belts
+in the game carry their cargo sideways across their own rails: invisible
+square-on, where rails and rollers still line up with the screen's own axes, and
+glaring the moment the camera turns, when the belt is the only thing on the floor
+moving at 45° to itself. So the ART declares that it HAS a bearing (authored
+running SOUTH, down the sprite's own rows), the PLACEMENT supplies which
+(`Decor.facing`, stamped from the prop line's direction — presentation-only state,
+because nothing in the simulation cares), and `bakeFlat` turns the art in before
+it projects it, so the result is a bake like any other.
 
 **A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
 `projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws

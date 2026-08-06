@@ -39,6 +39,8 @@ const {
   SPRITE_PALETTES,
   SPRITE_FAMILY,
   SPRITE_PLANES,
+  SPRITE_RISE,
+  SPRITE_DIRECTIONAL,
   ANIMATIONS,
 } = loadSprites();
 
@@ -54,6 +56,11 @@ export { SPRITE_PALETTES };
 export { SPRITE_FAMILY };
 /** Sprites drawn on a plane other than the default `upright`, name → plane. */
 export { SPRITE_PLANES };
+/** How far a `plane: wall` piece rises off its footprint, name → world px. */
+export { SPRITE_RISE };
+/** `plane: floor` art that RUNS one way and is turned to its placement's
+ * bearing, name → true (see `DIRECTIONAL_AUTHORED_BEARING`). */
+export { SPRITE_DIRECTIONAL };
 /** Frame sequences the generator turns into film strips + motion previews. */
 export { ANIMATIONS };
 

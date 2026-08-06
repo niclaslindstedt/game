@@ -159,6 +159,22 @@ export type Decor = {
   /** Sprite name the renderer blits — resolved from the level def. */
   sprite: string;
   pos: Vec2;
+  /**
+   * WHICH WAY THIS PIECE RUNS, in radians — the bearing of the `propLine` that
+   * laid it down, absent on scattered decor, which has no line and no bearing.
+   *
+   * Presentation only, and deliberately so: nothing in the simulation cares
+   * which way a belt faces, but the RENDERER cannot work it out on its own. A
+   * rank runs along whichever axis the chamber it was laid in is longest
+   * (`buildRows`, mapgen/place.ts), so the same conveyor is east-west in one bay
+   * and north-south in the next, and art with a direction in it — rails along
+   * the belt, rollers across it, an animation marching one way — comes out
+   * carrying its cargo sideways in half the rooms in the game. Square-on the eye
+   * forgives it; turn the camera and it is the only thing on the floor moving at
+   * 45° to itself. The art says whether it HAS a bearing (`directional:` on the
+   * sprite), this says what that bearing IS.
+   */
+  facing?: number;
 };
 
 /**

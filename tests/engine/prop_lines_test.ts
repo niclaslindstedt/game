@@ -93,6 +93,57 @@ describe("buildPropLines", () => {
     expect(obstacles[0]!.half).toBeUndefined();
   });
 
+  it("stamps the line's own bearing on every flat prop it lays", () => {
+    // A rank runs along whichever axis its chamber is longest, so the SAME art
+    // is laid east in one bay and south in the next — and art with a direction
+    // in it (a belt: rails along, rollers across) needs to be told which. See
+    // `Decor.facing`.
+    const east = buildPropLines(
+      defWith([
+        {
+          sprite: "conveyor",
+          from: { x: 0, y: 0 },
+          to: { x: 300, y: 0 },
+          spacing: 100,
+        },
+      ]),
+      ids(),
+    ).decor;
+    expect(east).toHaveLength(4);
+    for (const d of east) expect(d.facing).toBeCloseTo(0, 6);
+
+    const south = buildPropLines(
+      defWith([
+        {
+          sprite: "conveyor",
+          from: { x: 0, y: 0 },
+          to: { x: 0, y: 300 },
+          spacing: 100,
+        },
+      ]),
+      ids(),
+    ).decor;
+    for (const d of south) expect(d.facing).toBeCloseTo(Math.PI / 2, 6);
+  });
+
+  it("leaves a one-prop line's bearing off rather than claiming east", () => {
+    // A prefab's mop bucket is a from === to line: there is no direction to
+    // state, and stating one anyway would turn directional art on a whim.
+    const { decor } = buildPropLines(
+      defWith([
+        {
+          sprite: "mop_bucket",
+          from: { x: 40, y: 40 },
+          to: { x: 40, y: 40 },
+          spacing: 16,
+        },
+      ]),
+      ids(),
+    );
+    expect(decor).toHaveLength(1);
+    expect(decor[0]!.facing).toBeUndefined();
+  });
+
   it("returns nothing when there are no prop lines", () => {
     const { obstacles, decor } = buildPropLines(defWith([]), ids());
     expect(obstacles).toHaveLength(0);

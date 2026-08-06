@@ -21,16 +21,41 @@ const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
  * anchored at its projected spot and then drawn standing at full size, because
  * squashing it would just be a distorted picture of the same top-down game.
  *
- * `floor` is art drawn in PLAN — a wall panel, a painted lane marking, a crate
- * seen from above, a hole in the ground. It belongs to the floor and has to take
- * the projection whole, exactly as the ground tiles under it do; standing it up
- * leaves a wall taller than the grid it sits on, and under a yaw a straight run
- * of them reads as a flight of stairs instead of a wall.
+ * `floor` is art drawn in PLAN — a painted lane marking, a hatch, a hole in the
+ * ground, a crate seen from above. It belongs to the floor and has to take the
+ * projection whole, exactly as the ground tiles under it do; standing it up
+ * leaves it taller than the grid it sits on, and under a yaw a straight run of
+ * them reads as a flight of stairs instead of a run of anything.
+ *
+ * `wall` is art drawn in PLAN that is not FLAT — a wall panel, a parapet, a low
+ * barrier. Its footprint belongs to the floor exactly as `floor`'s does, but the
+ * thing standing on that footprint has a HEIGHT, and drawn flat it reads as a
+ * paving slab: turn the camera and a room's walls become a slightly darker path
+ * across the floor you would walk over rather than something you cannot see past.
+ * So the renderer EXTRUDES it — the same plan art, projected once and stacked
+ * `rise` px of screen height, cap on top — which needs no second piece of art and
+ * comes out right at every pitch and yaw. See `render/plane.ts`.
  */
-export const SPRITE_PLANES = new Set(["upright", "floor"]);
+export const SPRITE_PLANES = new Set(["upright", "floor", "wall"]);
 
 /** The plane a sprite that names none is drawn on. */
 export const DEFAULT_SPRITE_PLANE = "upright";
+
+/**
+ * HOW FAR A `plane: wall` PIECE RISES OFF ITS FOOTPRINT, in world px — which is
+ * screen px, a standing thing being drawn at full size.
+ *
+ * The default is the art's OWN height, so a square plan panel extrudes into a
+ * cube: a 16×16 wall tile becomes a 16-px wall, which is a hero tall and reads
+ * as one. `rise:` overrides it for a piece that is deliberately lower than it is
+ * deep (a parapet, a kerb, a crash barrier).
+ */
+export function wallRise(sprite) {
+  const authored = sprite?.rise;
+  if (Number.isInteger(authored) && authored > 0) return authored;
+  const h = Array.isArray(sprite?.size) ? sprite.size[1] : 0;
+  return Number.isInteger(h) && h > 0 ? h : 1;
+}
 
 /**
  * WHERE THE ART BELONGS — inside a building, or out in the world.
@@ -49,6 +74,30 @@ export const DEFAULT_SPRITE_PLANE = "upright";
  * needs to say so.
  */
 export const SPRITE_SPACES = new Set(["inside", "outside"]);
+
+/**
+ * ART THAT RUNS ONE WAY — `directional: true` on a `plane: floor` sprite.
+ *
+ * Most plan art has no bearing: a stain, a hatch, a pool of oil looks the same
+ * whichever way round it lies. A conveyor belt does not. Its side rails run
+ * along the belt, its rollers cross it, and its animation frames march the
+ * pattern one way — so a run of belts laid EAST that is drawn with the art's own
+ * NORTH-SOUTH picture is a machine visibly carrying its cargo sideways.
+ *
+ * The bearing is not the art's to know: a `propLine` runs whichever way the
+ * chamber it was laid in is longest (`buildRows`, src/game/mapgen/place.ts), so
+ * the same belt is east-west in one bay and north-south in the next. So the art
+ * declares that it HAS a direction, the placement supplies WHICH (`Decor.facing`
+ * — the line's own bearing), and the renderer turns the piece to match before it
+ * projects it. The convention is that directional art is authored running
+ * SOUTH — down the grid, the way a sprite's rows already read.
+ *
+ * Invisible at yaw 0 for the same reason everything else on this page is: with
+ * the camera square-on a belt drawn across its run still shows rails and rollers
+ * along the screen's own axes, and the eye forgives it. Turn the camera and it
+ * is the only thing on the floor moving at 45° to itself.
+ */
+export const DIRECTIONAL_AUTHORED_BEARING = "south";
 
 /**
  * The closed vocabulary of `subject:` slots (kept in step with `SUBJECT_KEYS`
@@ -153,6 +202,34 @@ export function validateSprite(sprite) {
     errors.push(
       `${name}: plane must be one of ${[...SPRITE_PLANES].join(", ")} (got ${JSON.stringify(plane)})`,
     );
+  }
+
+  // `rise` is the wall plane's own knob and means nothing anywhere else — a
+  // `rise` on an upright rock is an authoring mistake that would otherwise sit
+  // in the file looking load-bearing.
+  const rise = sprite?.rise;
+  if (rise !== undefined) {
+    if (plane !== "wall") {
+      errors.push(`${name}: rise is only meaningful with plane: wall`);
+    } else if (!Number.isInteger(rise) || rise <= 0 || rise > 64) {
+      errors.push(
+        `${name}: rise must be a positive integer up to 64 (got ${JSON.stringify(rise)})`,
+      );
+    }
+  }
+
+  // …and `directional` is the FLOOR plane's, for art whose picture runs one way
+  // down the ground (see the constant's own note). A standing body faces the
+  // camera by construction, so it has no bearing to be told about.
+  const directional = sprite?.directional;
+  if (directional !== undefined) {
+    if (typeof directional !== "boolean") {
+      errors.push(
+        `${name}: directional must be true or false (got ${JSON.stringify(directional)})`,
+      );
+    } else if (directional && plane !== "floor") {
+      errors.push(`${name}: directional is only meaningful with plane: floor`);
+    }
   }
 
   const space = sprite?.space;

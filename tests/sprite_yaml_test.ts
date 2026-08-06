@@ -148,19 +148,40 @@ describe("the shipped sprite tree", () => {
     expect(Object.keys(loaded.SPRITES).length).toBeGreaterThan(500);
   });
 
-  it("collects only the sprites that ask to lie down", () => {
+  it("collects only the sprites that ask for something other than upright", () => {
     // The map carries the EXCEPTIONS, not an entry per sprite — `upright` is the
     // default and saying so 1,357 times is a manifest nobody can read.
     const planes = loaded.SPRITE_PLANES;
-    expect(Object.values(planes).every((p) => p === "floor")).toBe(true);
-    // The wall panel is the case the field exists for: 16×16 art drawn looking
-    // straight down at a bevelled panel, which under a yaw used to staircase.
-    expect(planes.wall).toBe("floor");
+    expect(
+      Object.values(planes).every((p) => p === "floor" || p === "wall"),
+    ).toBe(true);
+    // The wall panel is the case the WALL plane exists for: plan art of a thing
+    // you cannot see past, which lying flat read as a paving slab.
+    expect(planes.wall).toBe("wall");
     // …and a body is never in it, whatever else changes about the catalog.
     expect(planes.player_0).toBeUndefined();
     expect(Object.keys(planes).length).toBeLessThan(
       Object.keys(loaded.SPRITES).length,
     );
+  });
+
+  it("resolves a wall's rise, and only a wall's", () => {
+    // The default is the art's own height, so a 16×16 plan panel extrudes into
+    // a cube — a wall a hero tall, which is what it takes to read as one.
+    expect(loaded.SPRITE_RISE.wall).toBe(16);
+    for (const name of Object.keys(loaded.SPRITE_RISE)) {
+      expect(loaded.SPRITE_PLANES[name]).toBe("wall");
+    }
+  });
+
+  it("collects directional flat art, and only flat art", () => {
+    // A belt's rails run along it and its rollers cross it, so a rank laid east
+    // has to be turned; a stain has no bearing to state and is absent.
+    expect(loaded.SPRITE_DIRECTIONAL.conveyor_0).toBe(true);
+    expect(loaded.SPRITE_DIRECTIONAL.stain).toBeUndefined();
+    for (const name of Object.keys(loaded.SPRITE_DIRECTIONAL)) {
+      expect(loaded.SPRITE_PLANES[name]).toBe("floor");
+    }
   });
 
   it("exposes the hero as a 16×16 sprite", () => {
