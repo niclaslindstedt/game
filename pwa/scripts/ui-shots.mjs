@@ -87,7 +87,7 @@ for (const vp of VIEWPORTS) {
     viewport: { width: vp.width, height: vp.height },
     hasTouch: true,
   });
-  // Pre-unlock the developer menu (normally seven quick taps on the title
+  // Pre-unlock the developer menu (normally sixteen quick taps on the title
   // sun) so the DEVELOPER row, warp picker, and arsenal are reachable; mute
   // audio.
   await context.addInitScript(
@@ -222,7 +222,6 @@ for (const vp of VIEWPORTS) {
       "gameplay",
       "controls",
       "interface",
-      "video",
       "audio",
       "data",
     ]) {
@@ -230,18 +229,21 @@ for (const vp of VIEWPORTS) {
       await shot(`settings-${page_}`);
       await page.keyboard.press("Escape");
     }
-    // VIDEO's child: the GORE page. Eight switches and a reset make it the
-    // longest settings page in the game, so it is the one most likely to
-    // overflow a short viewport — which is exactly why it is swept.
-    await click("settings-video");
-    await click("video-gore");
+    // The GORE page. Eight switches and a reset make it the longest settings
+    // page in the game, so it is the one most likely to overflow a short
+    // viewport — which is exactly why it is swept.
+    await click("settings-gore");
     await shot("settings-gore");
-    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await click("settings-developer");
     await shot("developer");
     await click("developer-balance");
     await shot("developer-balance");
+    await page.keyboard.press("Escape");
+    // VISUALS: nine sliders and a switch make it the longest developer page,
+    // so it is the other one that has to be watched for overflow.
+    await click("developer-visuals");
+    await shot("developer-visuals");
     await page.keyboard.press("Escape");
     // The three category pages the index files its rows onto.
     await click("developer-cheats");
@@ -605,15 +607,37 @@ for (const vp of VIEWPORTS) {
       const g = window.__game;
       // A purse fat enough that nothing on the counter greys out as unaffordable.
       g.players[0].coins = 50_000;
-      g.phase = "shop";
+      // THE COUNTER IS THE SHOPPER'S OWN SCREEN, not a phase of the run (see
+      // AGENTS.md — `Player.screen`). This used to force `phase = "shop"`, a
+      // phase the engine no longer has: nothing rendered off it, Escape's
+      // close (which reads the screen) could not clear it, and every step
+      // after this one failed with "stuck in phase shop".
+      g.players[0].screen = "shop";
     });
-    await game.waitForFunction(() => window.__game?.phase === "shop");
+    await game.waitForFunction(
+      () => window.__game?.players?.[0]?.screen === "shop",
+    );
     await gshot("shop");
     // The floating DEAL CARD (ShopDealCard) — the shop's other half, and the one
     // surface that has to fit beside a cell at every viewport. Shot from a stall
     // row (a powerup or consumable card) and from a bag cell (an item card).
     await game.locator(".shop-stall-item").first().click();
     await gshot("shop-deal-stock");
+    // A STACKED row's card is the widest the card's foot ever gets: BUY and
+    // BUY ALL side by side, the second carrying a count AND a price. The cell
+    // wearing a depth chip is the one to tap.
+    const stacked = game
+      .locator(".shop-stall-item:has(.shop-stall-count)")
+      .first();
+    if ((await stacked.count()) > 0) {
+      // The card already up is a portal floating BESIDE the cell — often over
+      // the next one along — so put it away before reaching for another row,
+      // exactly as a player's own tap-outside does.
+      await game.keyboard.press("Escape");
+      await stacked.click();
+      await gshot("shop-deal-stack");
+      await game.keyboard.press("Escape");
+    }
     const bagItem = game.locator(".shop-bag-cell:not([disabled])").first();
     if ((await bagItem.count()) > 0) {
       await bagItem.click();

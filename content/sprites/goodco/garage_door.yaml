@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: garage_door
 family: goodco
-# THE DOOR LIES DOWN. Its chain is hung across a doorway in a wall run, and the
-# wall it interrupts is `plane: floor` — so drawn upright the slats stood taller
-# than the panels either side of them and, once the camera was turned, the run
-# staircased diagonally across a floor whose own seams went the other way.
-plane: floor
+# THE DOOR MATCHES THE WALL IT INTERRUPTS, whatever that wall is doing — a door
+# on a different plane from the run it is hung in is a hole in the world. The
+# run stands (`plane: wall`), so the slats stand with it, on the same footprint
+# and to the same rise.
+plane: wall
 size: [16, 16]
 description: >
   One segment of the garage's roll-up door — horizontal slats in weathered

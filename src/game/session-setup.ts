@@ -33,6 +33,7 @@
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
 import { createGame } from "./create.ts";
+import { enterCar } from "./vehicles.ts";
 import { dismissIntro, skipCutscene, skipStoryOpening } from "./items/flow.ts";
 import { seedCampaignQuests } from "./quests/campaign.ts";
 import { markThoughtsSeen, muteDialogue } from "./story.ts";
@@ -86,6 +87,20 @@ export type RunParams = {
   loadout?: unknown | null;
   /** A LEVEL TOKEN respec is owed at the run's start. */
   respec?: boolean;
+  /**
+   * ARRIVE AT THE WHEEL rather than on foot — the far side of the DRIVE home.
+   *
+   * The trip back from GOODCO is played (src/game/drive/), so the hero pulls
+   * onto his own drive in the car he left in; standing him beside it on arrival
+   * would throw away the one thing the whole minute was about. It is a SESSION
+   * PARAMETER rather than a poke at the state after `createGame`, because
+   * everything the app settles about a run before its first tick has to be:
+   * the app, the session and an arriving client all build the same run from the
+   * same parameters, and a field only one of them applied is a desync.
+   *
+   * A no-op on any level whose carve pins no car.
+   */
+  startInCar?: boolean;
   /** Level ids the hero has already cleared on this difficulty — the engine
    * gates drops on them (the bunker key stays latent until Boot Hill falls). */
   clearedLevels?: readonly string[];
@@ -213,6 +228,19 @@ export function createRunFromParams(params: RunParams): GameState {
     markThoughtsSeen(state, params.seenThoughts);
   }
   if (params.keepsakes?.length) state.keepsakes = [...params.keepsakes];
+  // AT THE WHEEL, if the trip in was a drive. `enterCar` is the same verb the
+  // tap uses, so the seat, the lifted blockers, the running engine and the
+  // `carStarted` cue are all exactly what boarding normally does — the hero has
+  // simply not let go of it since GOODCO.
+  if (params.startInCar) {
+    const hero = state.players[0];
+    const car = state.vehicles.find((v) => v.kind === "car");
+    if (hero && car) {
+      hero.pos.x = car.pos.x;
+      hero.pos.y = car.pos.y;
+      enterCar(state, hero);
+    }
+  }
   // THE HOUR THE RUN IS PLAYED IN. Clamped here rather than trusted, so a
   // hostile or simply wrong wire value can only ever pick a point on the day
   // the renderer already knows how to draw.

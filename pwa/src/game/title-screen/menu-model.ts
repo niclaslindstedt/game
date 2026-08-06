@@ -45,7 +45,6 @@ export type MenuScreen =
   | "controls"
   | "keybindings"
   | "interface"
-  | "video"
   | "gore"
   | "audio"
   | "data"
@@ -536,6 +535,7 @@ type OnOffKey =
   | "healthBars"
   | "dialogue"
   | "cutscenes"
+  | "minigames"
   | "deathScenes";
 
 /**

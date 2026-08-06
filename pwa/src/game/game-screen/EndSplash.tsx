@@ -88,9 +88,7 @@ export function VictorySplash({
               >
                 <PixelText
                   font={font}
-                  text={
-                    exitTo ? `BACK TO ${levelDef(exitTo).name}` : "NEXT LEVEL"
-                  }
+                  text={exitLabel(exitTo)}
                   scale={3}
                   color="#0b0d10"
                 />
@@ -410,4 +408,22 @@ function SoftcoreDefeat({
       </button>
     </div>
   );
+}
+
+/**
+ * What the advance button says.
+ *
+ * THREE ANSWERS, and the middle one is the point. A level that leads back to
+ * the HUB says GO HOME — not "BACK TO THE GARAGE", which named the building
+ * when what the player is doing is going home, and not "NEXT LEVEL", which is
+ * simply false: GOODCO is the end of the errand, and what follows it is the
+ * drive back to his own bay with the part in his pocket. It is keyed off the
+ * destination being a hub rather than off GOODCO by name, so any venue that
+ * ever leads home gets the right word for free.
+ */
+function exitLabel(exitTo: string | null): string {
+  if (!exitTo) return "NEXT LEVEL";
+  return levelDef(exitTo).objective.type === "hub"
+    ? "GO HOME"
+    : `BACK TO ${levelDef(exitTo).name}`;
 }

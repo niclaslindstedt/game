@@ -41,7 +41,6 @@ const UNION: MenuScreen[] = [
   "controls",
   "keybindings",
   "interface",
-  "video",
   "gore",
   "audio",
   "data",
@@ -381,12 +380,12 @@ describe("the title menu tree", () => {
     // visibly do nothing — the same call the row made when it was one switch.
     try {
       setDevicePolicyForTest({ nsfw: false, store: true });
-      expect(buildMenu("video", ctxFor()).map((row) => row.aria)).not.toContain(
-        "video-gore",
-      );
+      expect(
+        buildMenu("settings", ctxFor()).map((row) => row.aria),
+      ).not.toContain("settings-gore");
       setDevicePolicyForTest(null);
-      expect(buildMenu("video", ctxFor()).map((row) => row.aria)).toContain(
-        "video-gore",
+      expect(buildMenu("settings", ctxFor()).map((row) => row.aria)).toContain(
+        "settings-gore",
       );
     } finally {
       setDevicePolicyForTest(null);

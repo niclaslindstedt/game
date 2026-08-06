@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// SETTINGS → VISUALS (pwa/src/game/render/postfx.ts): the four knobs of how the
-// field is presented, and the two rules that would break silently rather than
-// loudly.
+// DEVELOPER → VISUALS (pwa/src/game/render/postfx.ts): the three washes the
+// field is presented through, and the two rules that would break silently
+// rather than loudly.
 //
-// OFF HAS TO COST NOTHING. Every one of these is a per-frame cost on a phone, so
-// a knob at 0 must not merely draw nothing — it must not put the canvas on a
+// OFF HAS TO COST NOTHING. All three are composited by the GPU on a phone, so a
+// knob at 0 must not merely draw nothing — it must not put the canvas on a
 // compositing layer or leave an overlay for the compositor to blend. A no-op
 // filter chain looks identical and costs real memory, which is exactly the kind
 // of regression no screenshot would catch.
@@ -17,11 +17,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  BLOOM,
   clampFx,
   defaultFx,
   FX_RANGES,
   fxStyleVars,
+  GRADE,
   HAZE,
   VIGNETTE,
   type FxName,
@@ -41,8 +41,8 @@ describe("the visuals knobs", () => {
   });
 
   it("lets every knob reach a true OFF", () => {
-    // A knob whose floor is above zero is a feature a player cannot decline —
-    // and on a phone that is a frame budget they cannot get back.
+    // A knob whose floor is above zero is a wash that cannot be judged against
+    // its own absence, which is the whole reason the rows exist.
     for (const name of NAMES) {
       expect(FX_RANGES[name].min).toBe(0);
       expect(clampFx(name, -5)).toBe(0);
@@ -50,11 +50,11 @@ describe("the visuals knobs", () => {
   });
 
   it("clamps out of range rather than refusing, and repairs a NaN", () => {
-    expect(clampFx("bloom", 99)).toBe(BLOOM.max);
+    expect(clampFx("depthHaze", 99)).toBe(HAZE.max);
     expect(clampFx("vignette", -1)).toBe(VIGNETTE.min);
     // A corrupted stored value must not travel into a `filter` string, where it
     // would silently void the whole declaration.
-    expect(clampFx("bloom", Number.NaN)).toBe(BLOOM.default);
+    expect(clampFx("colorGrade", Number.NaN)).toBe(GRADE.default);
   });
 });
 

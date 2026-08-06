@@ -358,6 +358,7 @@ export {
   lookupTicketIndex,
   stackCapOf,
   hasStackRoom,
+  inventoryRoomFor,
   equipmentMaxDurability,
   equipmentName,
   itemQuote,
@@ -534,6 +535,7 @@ export {
   repairGear,
   sellItem,
   sellValue,
+  stockBuyableCount,
   stockName,
   type BuybackRefusal,
 } from "./game/merchant.ts";
@@ -705,12 +707,15 @@ export {
   botCareCommand,
   botCullCommands,
   botDrawCommand,
+  botHubCommand,
   botIntent,
   botSortCommand,
   botSweepCommand,
   driveBotActions,
+  driveBotHub,
   driveBotUpkeep,
   runBotActions,
+  runBotHub,
   runBotUpkeep,
 } from "./game/bot/intent.ts";
 export type {
@@ -718,6 +723,21 @@ export type {
   BotCommandSink,
   BotIntent,
 } from "./game/bot/intent.ts";
+
+// THE AUTOPILOT AT HOME (bot/hub.ts): the hub's own travel plan — the people
+// with a mark over their head, the counter, then the car out — plus the reads
+// a host needs to drive it (is this the hub, is the hero at a wheel).
+export {
+  atHub,
+  botScreenCommand,
+  driveOutInput,
+  heroCar,
+  hubCar,
+  hubGiverTarget,
+  hubGoal,
+  hubTapCommand,
+} from "./game/bot/hub.ts";
+export type { HubCommand, HubGoal } from "./game/bot/hub.ts";
 
 // The POCKET ARSENAL: which weapon is in the hand, moment by moment — the
 // blade in reach, the boss round at a big body, the spread across a mass —
@@ -860,6 +880,7 @@ export type { BalanceTuning } from "./game/tuning.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  abilityBankRoom,
   abilityPowerScale,
   canBankAbility,
   discardHeldAbility,
@@ -916,6 +937,50 @@ export {
   setDialogueEnabled,
   unmuteDialogue,
 } from "./game/story.ts";
+
+// THE DRIVE — the playable interlude between the garage and GOODCO, and the
+// same road home (src/game/drive/). RUN-FACING ONLY: it must never reach
+// `src/menu.ts`, because the road drags the crowd, the traffic, the impact
+// model and the car behind it, and the startup path's budget has no room for
+// any of that. The app imports it from the GAME screen, never from the title.
+export {
+  createDrive,
+  driveMph,
+  driveRideQuality,
+  laneCenter,
+  restartDrive,
+  roadEdges,
+  solveImpact,
+  stepDrive,
+  CROWD_VARIANTS,
+  DRIVE,
+  DRIVE_OUTCOME,
+  DRIVE_UNITS,
+  IDLE_DRIVE_INPUT,
+  TRAFFIC_VARIANTS,
+} from "./game/drive/index.ts";
+export type {
+  DriveDirection,
+  DriveEvent,
+  DriveInput,
+  DriveOutcome,
+  DriveParams,
+  DrivePedestrian,
+  DriveState,
+  DriveStrike,
+  DriveTraffic,
+  Impact,
+  PedestrianMode,
+} from "./game/drive/index.ts";
+
+// THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf
+// rather than through the system it gates (the way the dialogue and cutscene
+// flags come through story.ts), because that system is the DRIVE — and having
+// `@game/core` re-export a boolean through src/game/drive/ would put the road,
+// the crowd, the traffic and the impact model behind an import of the engine's
+// front door. The flag leaf has no imports at all, which is the whole point of
+// it.
+export { areMinigamesEnabled, setMinigamesEnabled } from "./game/flags.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
 // renders scenes from CutsceneState + def; `currentLine` is the text on

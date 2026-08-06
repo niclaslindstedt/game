@@ -34,6 +34,8 @@ import {
   seatHero,
   sellValue,
   skipCutscene,
+  stackCapOf,
+  stockBuyableCount,
   type Equipment,
   type GameState,
   type MerchantStock,
@@ -452,6 +454,105 @@ describe("the shop", () => {
     // Refused with nothing spent: neither the purse nor the shelf moved.
     expect(state.players[0].coins).toBe(100_000);
     expect(entry.qty).toBeGreaterThan(0);
+  });
+
+  // BUY ALL's arithmetic (the counter's second button on a stacked row): the
+  // pile, the purse and the carry room, whichever runs out first. It is only
+  // worth anything if the loop it sizes actually gets that far, so every case
+  // here spends it against `buyStock` rather than asserting a number alone.
+  describe("how many a bulk purchase would take", () => {
+    /** A stall with the hero at the counter and a named consumable row. */
+    const counter = (item: "medkit" | "repair" | "drink") => {
+      const state = startGame();
+      meet(state);
+      state.players[0].pos = { ...state.merchant.pos };
+      openShop(state, state.players[0]);
+      const entry = state.merchant.stock.find(
+        (s) => s.kind === "consumable" && s.item === item,
+      )!;
+      return { state, hero: state.players[0], entry };
+    };
+
+    it("takes the whole pile when the purse and the dock are deep", () => {
+      const { state, hero, entry } = counter("repair");
+      hero.coins = 100_000;
+      hero.repairKits = 0;
+      const count = stockBuyableCount(state, hero, entry);
+      expect(count).toBe(entry.qty);
+      for (let i = 0; i < count; i++) {
+        expect(buyStock(state, hero, entry.id)).toBe(true);
+      }
+      // Sized exactly: the pile is gone and the next tap has nothing to take.
+      expect(entry.qty).toBe(0);
+      expect(stockBuyableCount(state, hero, entry)).toBe(0);
+      expect(buyStock(state, hero, entry.id)).toBe(false);
+    });
+
+    it("is capped by the purse", () => {
+      const { state, hero, entry } = counter("repair");
+      hero.repairKits = 0;
+      // Two units' worth and change — the change buys nothing.
+      hero.coins = entry.price * 2 + Math.floor(entry.price / 2);
+      expect(entry.qty).toBeGreaterThan(2);
+      expect(stockBuyableCount(state, hero, entry)).toBe(2);
+      for (let i = 0; i < 2; i++) {
+        expect(buyStock(state, hero, entry.id)).toBe(true);
+      }
+      expect(buyStock(state, hero, entry.id)).toBe(false); // purse short
+    });
+
+    it("is capped by the room left in the dock", () => {
+      const { state, hero, entry } = counter("drink");
+      hero.coins = 100_000;
+      hero.staminaPotions = CONSUMABLES.stackCap - 2;
+      expect(entry.qty).toBeGreaterThan(2);
+      expect(stockBuyableCount(state, hero, entry)).toBe(2);
+      for (let i = 0; i < 2; i++) {
+        expect(buyStock(state, hero, entry.id)).toBe(true);
+      }
+      // Full: the row still has units, and the dock refuses every one of them.
+      expect(entry.qty).toBeGreaterThan(0);
+      expect(stockBuyableCount(state, hero, entry)).toBe(0);
+      expect(buyStock(state, hero, entry.id)).toBe(false);
+    });
+
+    it("counts a stackable row's bag room as stacks, not cells", () => {
+      const state = startGame();
+      meet(state);
+      state.players[0].pos = { ...state.merchant.pos };
+      openShop(state, state.players[0]);
+      const hero = state.players[0];
+      const entry = state.merchant.stock.find(
+        (s) => s.kind === "weapon" && stackCapOf(s.equipment) > 1,
+      ) as Extract<MerchantStock, { kind: "weapon" }>;
+      expect(entry).toBeDefined();
+      hero.coins = 100_000;
+      // ONE free cell, and a ticket stack merges into it — so the row's whole
+      // pile fits a bag that has a single cell left, exactly as `buyStock`'s
+      // add does. A count that read cells instead of stacks would say 1.
+      hero.inventory.fill(piece("test_sword"));
+      hero.inventory[0] = null;
+      const cap = stackCapOf(entry.equipment);
+      expect(stockBuyableCount(state, hero, entry)).toBe(
+        Math.min(entry.qty, cap),
+      );
+      const count = stockBuyableCount(state, hero, entry);
+      for (let i = 0; i < count; i++) {
+        expect(buyStock(state, hero, entry.id)).toBe(true);
+      }
+      // One cell, `count` deep — every unit merged into the stack it started.
+      const stack = hero.inventory.find(
+        (cell) => cell?.defId === entry.equipment.defId,
+      );
+      expect(stack?.qty).toBe(count);
+    });
+
+    it("is zero for a sold-out row, whatever the purse holds", () => {
+      const { state, hero, entry } = counter("medkit");
+      hero.coins = 100_000;
+      entry.qty = 0;
+      expect(stockBuyableCount(state, hero, entry)).toBe(0);
+    });
   });
 
   it("won't sell a uniqueHeld powerup while one is already docked", () => {

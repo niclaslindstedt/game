@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The SETTINGS tree's player-facing screens: the index, and the five pages
 // under it — GAMEPLAY, CONTROLS (+ the desktop-only KEY BINDINGS rebind list),
-// INTERFACE, VIDEO and AUDIO. DATA lives in menus-data.ts.
+// INTERFACE, GORE and AUDIO. DATA lives in menus-data.ts.
 //
 // THE SPLIT IS THE ESTABLISHED ONE, and it is worth stating because it is the
 // only thing keeping a settings tree findable: what the game DOES for you, how
-// you TELL it what to do, what the HUD DRAWS, how the picture is PRESENTED, how
-// LOUD it is, and where your HEROES live. A player who wants the blood turned
-// down opens VIDEO; a player who is tired of wearing every sword they pick up
-// opens GAMEPLAY. Nobody hunts, because nobody has to learn this game's own
-// filing system.
+// you TELL it what to do, what the HUD DRAWS, how much of a MESS a kill makes,
+// how LOUD it is, and where your HEROES live. A player who wants the blood
+// turned down opens GORE; a player who is tired of wearing every sword they
+// pick up opens GAMEPLAY. Nobody hunts, because nobody has to learn this game's
+// own filing system.
 //
 // The order and the wording are `content/mainmenu.yaml`'s; this file is what
 // each row does.
@@ -26,7 +26,6 @@ import {
   type SteeringMode,
 } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
-import { FX_RANGES, type FxName } from "../render/postfx.ts";
 import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
 import {
   actionRow,
@@ -34,7 +33,6 @@ import {
   backRow,
   navRow,
   onOffRow,
-  sliderRow,
   volumeRow,
   type MenuContext,
   type MenuEntry,
@@ -76,11 +74,16 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
         ? navRow(ctx, "settings", "controls")
         : null,
       interface: navRow(ctx, "settings", "interface"),
-      video: navRow(ctx, "settings", "video"),
+      // Dropped entirely when the DEVICE says no mature content (iOS Settings →
+      // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
+      // every switch behind this row, so leaving it would open a page of
+      // controls that visibly do nothing, and a parental control the game still
+      // offers to turn the gore back on reads as one the player can defeat.
+      gore: nsfwAllowed() ? navRow(ctx, "settings", "gore") : null,
       audio: navRow(ctx, "settings", "audio"),
       data: navRow(ctx, "settings", "data"),
-      // Hidden until the secret sun gesture unlocks it (seven quick taps on the
-      // title sun to arm it, then the click race — see use-sun-charge.ts); once
+      // Hidden until the secret sun gesture unlocks it (sixteen quick taps on
+      // the title sun to arm it, then the click race — see use-sun-charge.ts); once
       // found it stays put across launches (persisted via `developerUnlocked`).
       // A production store build ships no developer tooling at all, so the row
       // folds away with it at build time (see `__DEV_TOOLS__`).
@@ -140,6 +143,9 @@ export function buildGameplayMenu(ctx: MenuContext): MenuEntry[] {
       ),
       dialogue: onOffRow(ctx, "gameplay", "dialogue", "dialogue"),
       cutscenes: onOffRow(ctx, "gameplay", "cutscenes", "cutscenes"),
+      // Beside CUTSCENES because it is the same kind of answer — whether the
+      // game hands you something to sit through between one place and the next.
+      minigames: onOffRow(ctx, "gameplay", "minigames", "minigames"),
       "death-scenes": onOffRow(ctx, "gameplay", "death-scenes", "deathScenes"),
     }),
     backRow(ctx, "gameplay"),
@@ -330,71 +336,6 @@ export function buildInterfaceMenu(ctx: MenuContext): MenuEntry[] {
   ];
 }
 
-/** Which post-fx knob each VIDEO row drives. The row ids are the tree's
- * (kebab-case); the settings keys are the renderer's. */
-const FX_ROWS: Record<string, FxName> = {
-  bloom: "bloom",
-  "color-grade": "colorGrade",
-  vignette: "vignette",
-  "depth-haze": "depthHaze",
-};
-
-/** One VIDEO row: a 0→max drag track over one presentation knob, showing its
- * amount as a percentage of the shipped look rather than a raw multiplier —
- * "BLOOM 100%" says "as the game is made" where "1.00×" says nothing. */
-function fxRow(ctx: MenuContext, id: string): MenuEntry {
-  const name = FX_ROWS[id]!;
-  const range = FX_RANGES[name];
-  const value = getSettings()[name];
-  const set = (v: number) => {
-    updateSettings({ [name]: v });
-    ctx.bumpSettings();
-  };
-  // Shown against the SHIPPED default, not against the slider's top end: the
-  // default is the number a player is deciding to move away from.
-  const pct = Math.round((value / range.default) * 100);
-  return sliderRow(
-    "video",
-    id,
-    {
-      readout: value <= 0 ? "OFF" : `${pct}%`,
-      pos: (value - range.min) / (range.max - range.min),
-      set: (pos: number) => set(range.min + pos * (range.max - range.min)),
-      nudge: (dir: number) =>
-        set(getSettings()[name] + dir * (range.max - range.min) * 0.05),
-    },
-    { state: value <= 0 ? "off" : "on" },
-  );
-}
-
-/**
- * SETTINGS → VIDEO: how the field is PRESENTED — the four knobs of
- * `render/postfx.ts`, each a drag track from OFF through the shipped look and
- * on past it for a player who wants it laid on thick, then the way through to
- * the gore switches at the bottom.
- *
- * Every row is honest about costing something, which is why they are all here
- * rather than folded into INTERFACE: this is the page you come to when the
- * phone is warm.
- */
-export function buildVideoMenu(ctx: MenuContext): MenuEntry[] {
-  return [
-    ...assembleRows("video", {
-      bloom: fxRow(ctx, "bloom"),
-      "color-grade": fxRow(ctx, "color-grade"),
-      vignette: fxRow(ctx, "vignette"),
-      "depth-haze": fxRow(ctx, "depth-haze"),
-      // Dropped entirely when the DEVICE says no mature content (iOS Settings →
-      // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
-      // every switch behind this row, so leaving it would open a page of
-      // controls that visibly do nothing, and a parental control the game still
-      // offers to turn the gore back on reads as one the player can defeat.
-      gore: nsfwAllowed() ? navRow(ctx, "video", "gore") : null,
-    }),
-    backRow(ctx, "video"),
-  ];
-}
-
 /** Which switch each GORE row drives. The row ids are the tree's, the keys are
  * the settings'; `gore-gate.ts` is what reads them, and it is the only thing
  * that does. */
@@ -414,7 +355,7 @@ const GORE_ROWS = {
 const BLOOD_ONLY = ["hero-soak", "bootprints"] as const;
 
 /**
- * SETTINGS → VIDEO → GORE: one switch per kind of gore.
+ * SETTINGS → GORE: one switch per kind of gore.
  *
  * The page exists because "is this too much" is not one question — see the
  * `GoreSwitch` doc in settings.ts for the three groups and why the families are

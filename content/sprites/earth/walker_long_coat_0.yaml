@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 0.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_long_coat_0
+family: earth
+size: [16, 16]
+description: >
+  A tall woman in a long charcoal coat, walking fast. Walk-cycle frame 0.
+subject:
+  kind: pedestrian on the road out
+  build: a tall woman walking with purpose
+  attire: a long charcoal coat down past the knee
+  features: a full afro
+  accent: the coat's deep charcoal
+  flavor: the only one out here actually going somewhere
+  pose: mid-stride, the legs apart
+palette:
+  O: "#1a1c2c" # outline
+  A: "#3a3e48" # sleeve
+  B: "#1f1d28" # boots
+  C: "#3a3e48" # charcoal coat
+  H: "#241f1c" # black afro
+  K: "#7a4f36" # hand
+  P: "#7a4f36" # skin
+  S: "#4e535f" # coat panel
+  T: "#32363f" # coat skirt
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAO.
+  .OKOCCSSSSCCOKO.
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ..OTTTTTTTTTTO..
+  ..OTTTTTTTTTTO..
+  ..OBBO....OBBO..
+  ................
+  ................

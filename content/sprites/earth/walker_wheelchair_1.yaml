@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_wheelchair_1
+family: earth
+size: [16, 16]
+description: >
+  A man in a wheelchair working his own rims across the lanes. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a seated man pushing his own push-rims
+  attire: a green jacket over a lap blanket
+  features: a large spoked wheel each side, hands on the rims
+  accent: the chair's grey steel
+  flavor: four lanes, and the lights were never long enough
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#3c6b46" # sleeve
+  B: "#2a2733" # shoes
+  C: "#3c6b46" # green jacket
+  F: "#8a8f9c" # the wheelchair
+  H: "#7d7566" # grey hair
+  K: "#f0cbaa" # hand
+  P: "#f0cbaa" # skin
+  S: "#589a66" # jacket panel
+  T: "#4a4a58" # lap blanket
+grid: |
+  ................
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO...F
+  ...OCCCCCCCCO..F
+  .OAOCCCSSCCCO.FF
+  .OKOCCCCCCCCOFFF
+  ...OTTTTTTTTOFFF
+  ..OTTTTTTTTTOFFF
+  .OOO..OBBO..OOO.
+  OF.FO......OF.FO
+  O.FFO......O.FFO
+  .OOO........OOO.
+  ................

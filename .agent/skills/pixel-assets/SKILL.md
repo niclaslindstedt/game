@@ -29,17 +29,28 @@ slots](#structured-subject-slots) below). When a `subject` is present the free
 acceptance target.
 
 **Decide which PLANE a piece of world furniture is drawn on before you draw
-it** — `plane: upright` (the default) or `plane: floor` in the sprite's YAML.
-The camera looks at the ground at an angle, so the floor foreshortens (and,
-under the yaw knob, turns); `upright` is anything with a SIDE to it (a body, a
-rock, a building front), drawn standing at full size, while `floor` is art drawn
-looking straight DOWN — a wall panel, a painted marking, a hatch, a crate seen
-from above — which takes the projection whole like the ground tiles under it.
-Getting it wrong on a wall panel is loud: it comes out taller than the floor grid
-it is set into, and under a yaw a straight run of them staircases across the
-floor. It applies to the level's furniture (obstacles, decor, landmarks, lair
-doors, elevator pads); characters always stand up. See **THE WORLD PROJECTION**
-in `AGENTS.md`.
+it** — `plane: upright` (the default), `plane: floor`, or `plane: wall` in the
+sprite's YAML. The camera looks at the ground at an angle, so the floor
+foreshortens (and, under the yaw knob, turns); `upright` is anything with a SIDE
+to it (a body, a rock, a building front), drawn standing at full size, while
+`floor` is art drawn looking straight DOWN at something genuinely flat — a
+painted marking, a hatch, a crate seen from above — which takes the projection
+whole like the ground tiles under it.
+
+`wall` is the third case and the easy one to miss: plan art whose SUBJECT is not
+flat — a partition, a parapet, a barrier. Its footprint stays on the floor and
+the piece is extruded off it (`rise:`, defaulting to the art's own height), so it
+reads as something you cannot see past. Author it as a plan view exactly as you
+would `floor` art; the extrusion is the renderer's. Get this one wrong and a
+lab's walls become a slightly darker path across the floor. A door hung in a wall
+run takes the wall's plane too.
+
+`directional: true` (on `floor` art) says the picture RUNS one way — a conveyor
+belt. Author it running SOUTH, down the grid's own rows; the placement turns it.
+
+It applies to the level's furniture (obstacles, decor, landmarks, lair doors,
+elevator pads); characters always stand up. See **THE WORLD PROJECTION** in
+`AGENTS.md`.
 
 **Before drawing, read the [art style guide](../../../docs/art-style.md)** — the
 house style for the game's pixel art: the feel, the shared look every sprite

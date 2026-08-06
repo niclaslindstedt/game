@@ -32,6 +32,7 @@ import {
   type Difficulty,
   type GameInput,
   type GameState,
+  type DriveParams,
 } from "@game/core";
 
 import { describeError } from "@ui/lib/describe-error.ts";
@@ -39,6 +40,8 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
+import { DriveScreen } from "./drive-screen/DriveScreen.tsx";
+import { driveParamsFor } from "./drive-screen/begin.ts";
 import { recordRunStarted } from "./achievements.ts";
 import { AchievementsScreen } from "./achievements-shelf.ts";
 import { AchievementToast } from "./AchievementToast.tsx";
@@ -131,6 +134,7 @@ import {
   type AreaCaptionState,
 } from "./game-screen/render-frame.ts";
 import {
+  ARRIVAL_FADE_MS,
   createRunProgress,
   type RunCheckpoint,
   type RunProgress,
@@ -322,6 +326,37 @@ export function GameScreen({
   // Whether the just-ended run set a new best survival time on this
   // difficulty — flagged on the end-of-run splash's high-score line.
   const [newRecord, setNewRecord] = useState(false);
+  /**
+   * THE DRIVE, WHEN ONE IS UP — the playable leg between the garage and GOODCO
+   * (src/game/drive/, pwa/src/game/drive-screen/). Null every other moment.
+   *
+   * It is component state rather than anything inside the run because a drive
+   * is BETWEEN runs: the departing one has already washed to black and the
+   * arriving one has not been built. While this is set the drive owns the
+   * picture and the input, and clearing it makes the crossing that was waiting.
+   */
+  const [drive, setDrive] = useState<DriveParams | null>(null);
+  const driveRef = useRef<DriveParams | null>(null);
+  /**
+   * The crossing the drive is holding up, with the options it must be made
+   * with. A drive is a scene BETWEEN two levels, not a way of getting to one,
+   * so the trip it interrupts has to be made afterwards exactly as it would
+   * have been made without it — banked flag, rift flag and all.
+   */
+  const pendingTravelRef = useRef<{
+    to: string;
+    opts: Parameters<NonNullable<typeof progressRef.current>["travelTo"]>[2];
+  } | null>(null);
+  /**
+   * Whether this run is the only person's — the same question `sessionTravels`
+   * asks about a crossing, parked on a ref so the VICTORY SPLASH can ask it
+   * too. The splash renders outside the effect the session driver lives in, and
+   * the drive home is offered from there.
+   */
+  const soloRef = useRef(true);
+  /** Set as the drive HOME hands the trip back, consumed by the next run's
+   * build (run-setup.ts): he pulls onto his own drive at the wheel. */
+  const arriveInCarRef = useRef(false);
   // What landed the fatal blow, ready to print — the line the SOFTCORE YOU DIED
   // splash leads with (death-cause.ts). Captured off the tick the hero fell on,
   // because that tick carries both the blow and the death.
@@ -678,6 +713,7 @@ export function GameScreen({
       levelId,
       difficulty,
       characterRef,
+      arriveInCarRef,
       resumeRef,
       checkpointRef,
       botView,
@@ -917,10 +953,32 @@ export function GameScreen({
       captureEnabled: session.captureCheckpoint,
       // With the doors open or a party aboard, a crossing is the
       // SESSION's to perform — see run-progress's own note.
-      sessionTravels: () =>
-        Boolean(driver.session) &&
-        (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1),
+      sessionTravels: () => {
+        const shared =
+          Boolean(driver.session) &&
+          (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1);
+        // The same fact the victory splash's drive home needs, kept current
+        // here because this is the one predicate that already knows it.
+        soloRef.current = !shared;
+        return shared;
+      },
       openingPlayed: session.openingPlayed,
+      beginDrive: (to) => {
+        // Solo is the same question a crossing asks about the session, read the
+        // other way round: if the SESSION would perform the trip, there are
+        // other people in it and the road is not played.
+        const solo = !(
+          Boolean(driver.session) &&
+          (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1)
+        );
+        soloRef.current = solo;
+        const params = driveParamsFor(to, runLevelId, solo, Date.now() >>> 0);
+        if (!params) return false;
+        pendingTravelRef.current = { to, opts: {} };
+        driveRef.current = params;
+        setDrive(params);
+        return true;
+      },
       arrivalFadeRef,
       setHud,
       setLevelId,
@@ -1466,6 +1524,24 @@ export function GameScreen({
     );
   const heroAvatar = heroAvatarFor("stats");
 
+  /**
+   * Put the DRIVE HOME on screen instead of crossing, and say whether it took
+   * the wheel — the mirror of `beginDrive` on the departure event, for the leg
+   * that has no `carDeparted` to hang off.
+   */
+  const beginDriveHome = (
+    from: string,
+    to: string,
+    opts: NonNullable<typeof pendingTravelRef.current>["opts"],
+  ) => {
+    const params = driveParamsFor(to, from, soloRef.current, Date.now() >>> 0);
+    if (!params) return false;
+    pendingTravelRef.current = { to, opts };
+    driveRef.current = params;
+    setDrive(params);
+    return true;
+  };
+
   return (
     // The VISUALS custom properties go on the SCREEN ROOT, not on the overlay
     // below: the colour grade is a `filter` on the CANVAS, which is the overlay's
@@ -1473,6 +1549,35 @@ export function GameScreen({
     // they inherit to both.
     <div ref={screenRef} className="game-screen" style={fxVars}>
       <canvas ref={canvasRef} className="game-canvas" />
+
+      {/* THE DRIVE. While a road is up it owns the whole picture and the whole
+          of the input: the departing run has already washed to black and the
+          arriving one has not been built, so there is nothing underneath worth
+          showing and nothing underneath that wants a thumb. Mounted over the
+          canvas rather than in place of it so the run's own mount is never torn
+          down and rebuilt around an interlude. */}
+      {drive && assets && (
+        <DriveScreen
+          params={drive}
+          assets={assets}
+          onArrived={(to) => {
+            // The crossing that was waiting on the road, made exactly as it
+            // would have been a minute ago — the drive changed how long the
+            // trip took, not what it was.
+            // Homeward, he arrives sitting in it — the whole point of having
+            // driven. Outbound he gets out at GOODCO like anybody parking.
+            arriveInCarRef.current = drive.direction === -1;
+            driveRef.current = null;
+            setDrive(null);
+            const pending = pendingTravelRef.current;
+            pendingTravelRef.current = null;
+            if (state) {
+              arrivalFadeRef.current = performance.now() + ARRIVAL_FADE_MS;
+              progressRef.current?.travelTo(state, to, pending?.opts ?? {});
+            }
+          }}
+        />
+      )}
 
       {/* THE VIGNETTE AND THE DEPTH HAZE (SETTINGS → VISUALS) — two CSS
           gradients over the finished picture, at device resolution and free per
@@ -2009,7 +2114,26 @@ export function GameScreen({
           // nobody has to rejoin); a local run takes the app-side road this
           // splash has always taken.
           onAdvance={(next) => {
-            if (state)
+            if (!state) return;
+            // GO HOME IS A DRIVE TOO. The trip out books on the car reaching
+            // the road (`carDeparted`); the trip BACK books on this button,
+            // because leaving GOODCO is not something the hero does at a
+            // wheel — he walks out of the building and gets in. So the road is
+            // offered here as well, and `driveParamsFor` gives the same three
+            // answers it gives the other leg (the setting, the party, and
+            // whether this pair of levels has a road between them at all).
+            //
+            // Nothing is banked before it: the drive is a scene between two
+            // levels, so the crossing it hands back does the banking exactly
+            // as this button always did.
+            if (
+              beginDriveHome(state.level.id, next, {
+                banked: !state.staying,
+                viaRift: runLevelDef(state).riftExit === true,
+              })
+            )
+              return;
+            {
               progressRef.current?.travelTo(state, next, {
                 // The hero went onto the character when the level was WON.
                 // …unless the player took STAY afterwards, in which case what
@@ -2023,6 +2147,7 @@ export function GameScreen({
                 // can take. The seam at home learns the road from it.
                 viaRift: runLevelDef(state).riftExit === true,
               });
+            }
           }}
           onRestart={() => {
             setHud(null);

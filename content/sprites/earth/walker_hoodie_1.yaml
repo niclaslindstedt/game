@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_hoodie_1
+family: earth
+size: [16, 16]
+description: >
+  A young man in a grey hoodie with the hood up and a hand out to the road. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a young man, shoulders hunched
+  attire: a grey hoodie over blue jeans
+  features: the hood up over his head, one hand held out
+  accent: the raised hood
+  flavor: he was on the GOODCO line until the machine learned it
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#5a5f6b" # sleeve
+  B: "#2a2733" # trainers
+  C: "#5a5f6b" # grey hoodie
+  H: "#5a5f6b" # raised hood
+  K: "#b07a55" # hand
+  P: "#b07a55" # skin
+  S: "#767c8a" # hoodie panel
+  T: "#3f4a63" # blue jeans
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAAO
+  .OAOCCSSSSCCOKKO
+  .OKOCCSSSSCCO...
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ....OTTOOTTO....
+  ....OTTOOTTO....
+  ....OBBOOBBO....
+  ................
+  ................

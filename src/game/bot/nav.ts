@@ -20,7 +20,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import { botTuningFor } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
-import { PLAYER } from "../config/index.ts";
+import { DOORS, PLAYER } from "../config/index.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import { exploredRay, isExplored } from "../map.ts";
 import { onPathLevel } from "../path.ts";
@@ -28,6 +28,7 @@ import {
   buildNavGrid,
   closeNavCells,
   findPortalPath,
+  routeReachable,
   type NavGrid,
   type NavPortal,
 } from "../pathfind.ts";
@@ -692,12 +693,88 @@ export function routeTarget(
   return target;
 }
 
+/**
+ * How far SHORT of a shut door's centre the bot aims when it walks up to open
+ * one — inside {@link DOORS.openRadius} (so arriving IS opening it) and well
+ * clear of the leaf's own obstacle chain (so the sweep to the spot reads as
+ * open ground rather than as a wall to be traced around).
+ */
+const DOOR_APPROACH_GAP = DOORS.openRadius * 0.75;
+
+/**
+ * A SHUT DOOR THAT OPENS FOR ANYBODY IS A WAY THROUGH, NOT A WALL — the spot to
+ * walk to in order to open one, or null when the goal is already reachable (or
+ * no such door is).
+ *
+ * The nav grid is built from the obstacle field, and a closed `approach` door's
+ * leaves are in it — so to A* the garage's roll-up, and every office door on
+ * GOODCO's floor, is a solid wall. That is a lie about a door that opens for
+ * anybody who walks up to it, and it cost exactly what a lie costs: the plan
+ * came back EMPTY, `routeTarget` fell through to the raw goal, and the local
+ * wall sense traced the hero off along the nearest wall. In the garage — one
+ * room, one roll-up, and everything worth doing on the far side of it — that
+ * is a bot who can never leave the bay.
+ *
+ * It is deliberately not a grid edit (the counterpart to `blockWellCells`
+ * closing cells): re-opening one would have to re-derive its links, and the
+ * door would still be a wall to `blockedByObstacle`, which the string-pull and
+ * the wall-end sense both read — so the hero would have a route through a
+ * doorway he still refused to walk at. Walking UP to the door is what a player
+ * does anyway, and it needs no lie at all: the leaves come off the obstacle
+ * field the moment it opens, `obstaclesVersion` bumps, the grid rebuilds, and
+ * the ordinary route takes over on the next tick.
+ *
+ * Only ever consulted for an UNREACHABLE goal, so a level whose doors are all
+ * open (or irrelevant) never pays for it. Pure w.r.t. the state.
+ */
+export function doorwayVia(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  goal: Vec2,
+): Vec2 | null {
+  if (state.doors.length === 0) return null;
+  let shut = false;
+  for (const door of state.doors) {
+    if (!door.open && door.approach) shut = true;
+  }
+  if (!shut) return null;
+  const rc = ensureRoute(bot, state);
+  const portals = knownPortals(state);
+  if (routeReachable(rc.grid, portals, hero.pos, goal)) return null;
+  let best: Vec2 | null = null;
+  let bestD = Infinity;
+  for (const door of state.doors) {
+    if (door.open || !door.approach) continue;
+    // The standing spot is on the HERO's side of the leaf — pulled back along
+    // the bearing he is coming from, which is the side he can actually reach.
+    const n = normalize(hero.pos.x - door.center.x, hero.pos.y - door.center.y);
+    const stand =
+      n.len < 1e-6
+        ? { x: door.center.x, y: door.center.y }
+        : {
+            x: door.center.x + n.x * DOOR_APPROACH_GAP,
+            y: door.center.y + n.y * DOOR_APPROACH_GAP,
+          };
+    if (!routeReachable(rc.grid, portals, hero.pos, stand)) continue;
+    const d = distance(hero.pos, stand);
+    if (d < bestD) {
+      bestD = d;
+      best = stand;
+    }
+  }
+  return best;
+}
+
 /** Steer toward a far TRAVEL goal along a global A* route (see {@link routeTarget})
  * — the macro-travel movement primitive that rounds every wall on the way, not
  * just the one 140px ahead. The route's sub-target still runs through the
  * local {@link navTarget} (a no-op on a clear sweep): when the plan falls back
  * to a raw goal (A* found no path) or the string-pull goes stale, the
- * wall-end sense traces the blocker instead of grinding into it. */
+ * wall-end sense traces the blocker instead of grinding into it.
+ *
+ * A goal no route reaches gets one question asked first — is there a SHUT DOOR
+ * in the way that would open if he walked up to it ({@link doorwayVia})? */
 export function routeSteer(
   bot: Bot,
   state: GameState,
@@ -705,10 +782,11 @@ export function routeSteer(
   goal: Vec2,
   jump = false,
 ): GameInput {
+  const via = doorwayVia(bot, state, hero, goal) ?? goal;
   return steer(
     state,
     hero,
-    navTarget(bot, state, hero, routeTarget(bot, state, hero, goal)),
+    navTarget(bot, state, hero, routeTarget(bot, state, hero, via)),
     jump,
   );
 }

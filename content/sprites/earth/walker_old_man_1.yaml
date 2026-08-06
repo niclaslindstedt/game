@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_old_man_1
+family: earth
+size: [16, 16]
+description: >
+  An old man in a flat cap and a heavy brown overcoat, bent over a walking cane. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: an old man, stooped, a head shorter than he stood
+  attire: a heavy brown overcoat over dark trousers
+  features: a flat cap, white hair, a walking cane in the far hand
+  accent: the pale cane
+  flavor: he has been crossing this road since before it had four lanes
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#6b5641" # sleeve
+  B: "#241f2c" # shoes
+  C: "#6b5641" # brown overcoat
+  G: "#b9a887" # the walking cane
+  H: "#4a4235" # flat cap
+  K: "#f0cbaa" # hand
+  P: "#f0cbaa" # skin
+  S: "#8a7358" # coat lining
+  T: "#3a3444" # dark trousers
+grid: |
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOGO.
+  .OKOCCCCCCCCOGO.
+  ...OTTTTTTTTOGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OBBOOBBO.OOO.
+  ................
+  ................

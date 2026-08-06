@@ -8,6 +8,43 @@ palette:
   Q: "#723c8f"
 animations:
   slime_bounce: { frames: [slime_0, slime_1], delayMs: 280 }
+  # THE CROWD on the road to GOODCO. The ones who cannot hurry walk slower —
+  # an old man and a loaded trolley on the same cadence as a skateboarder is
+  # the tell that a crowd was generated rather than authored.
+  walker_old_man_walk:
+    { frames: [walker_old_man_0, walker_old_man_1], delayMs: 420 }
+  walker_old_woman_walk:
+    { frames: [walker_old_woman_0, walker_old_woman_1], delayMs: 420 }
+  walker_hoodie_walk:
+    { frames: [walker_hoodie_0, walker_hoodie_1], delayMs: 260 }
+  walker_young_woman_walk:
+    { frames: [walker_young_woman_0, walker_young_woman_1], delayMs: 260 }
+  walker_boy_walk: { frames: [walker_boy_0, walker_boy_1], delayMs: 260 }
+  walker_girl_walk: { frames: [walker_girl_0, walker_girl_1], delayMs: 260 }
+  walker_suit_walk: { frames: [walker_suit_0, walker_suit_1], delayMs: 260 }
+  walker_hi_vis_walk:
+    { frames: [walker_hi_vis_0, walker_hi_vis_1], delayMs: 260 }
+  walker_trolley_walk:
+    { frames: [walker_trolley_0, walker_trolley_1], delayMs: 420 }
+  walker_pram_walk: { frames: [walker_pram_0, walker_pram_1], delayMs: 260 }
+  walker_dog_walk: { frames: [walker_dog_0, walker_dog_1], delayMs: 260 }
+  walker_crutches_walk:
+    { frames: [walker_crutches_0, walker_crutches_1], delayMs: 420 }
+  walker_frame_walk: { frames: [walker_frame_0, walker_frame_1], delayMs: 420 }
+  walker_skater_walk:
+    { frames: [walker_skater_0, walker_skater_1], delayMs: 260 }
+  walker_long_coat_walk:
+    { frames: [walker_long_coat_0, walker_long_coat_1], delayMs: 260 }
+  walker_mohawk_walk:
+    { frames: [walker_mohawk_0, walker_mohawk_1], delayMs: 260 }
+  walker_bagman_walk:
+    { frames: [walker_bagman_0, walker_bagman_1], delayMs: 420 }
+  walker_headphones_walk:
+    { frames: [walker_headphones_0, walker_headphones_1], delayMs: 260 }
+  walker_cyclist_walk:
+    { frames: [walker_cyclist_0, walker_cyclist_1], delayMs: 260 }
+  walker_wheelchair_walk:
+    { frames: [walker_wheelchair_0, walker_wheelchair_1], delayMs: 260 }
 contrastExempt: [grass_0, grass_1]
 # Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
 # check skips them (see scripts/generate-assets.mjs).

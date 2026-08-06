@@ -37,7 +37,7 @@ and friends — and none of them reads the tree.
 | Reading the tree | `pwa/src/game/title-screen/menu-tree.ts` — `screenDef`, `rowDef`, `rowHelp`, `rowAria`, `parentOf`, `screenHeading`, `SETTINGS_TREE`. The ONE way to ask the tree anything |
 | Row shape + shared factories | `pwa/src/game/title-screen/menu-model.ts` — `MenuEntry`, `MenuScreen` (the hand-written screen union), `MenuContext`, `assembleRows`, `actionRow`, `navRow`, `backRow`, `onOffRow`, `sliderRow`, `volumeRow` |
 | Screen → builder dispatch | `pwa/src/game/title-screen/menus.ts` (`buildMenu`, `headingFor`) |
-| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the six settings pages + GORE), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
+| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the settings index + GAMEPLAY, CONTROLS/KEY BINDINGS, INTERFACE, GORE, AUDIO), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
 | Async state a builder must be HANDED | `use-mods.ts`, `use-sessions.ts`, `use-coin-store.ts`, `use-cloud-save.ts`, `use-character-transfer.ts` |
 | Rendering | `title-screen/MenuList.tsx` (rows, cursor, controls), `MenuHeading.tsx` (title + trail + rule), `TitleScreen.tsx` (orchestration, keyboard, cursor, overflow) |
 | Layout hooks | `title-screen/use-title-layout.ts` — `useHelpWrapRem`, `useMenuOverflow` |
@@ -206,18 +206,28 @@ new menu surface is navigable by pad automatically as long as it listens on
 
 The title screen hides a **DEVELOPER menu** behind a gesture in TWO MOVEMENTS,
 and the split is deliberate: the first is a SECRET, the second is a TEST.
-**Seven quick taps on the sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between
+**Sixteen quick taps on the sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between
 taps — in `pwa/src/game/title-screen/use-sun-charge.ts`) no longer unlock
 anything; they ARM the star. Holding it then costs something — see **THE CLICK
 RACE** below — and only the race's top detonates the sun and latches
 `developerUnlocked` in the persisted settings (`pwa/src/game/settings.ts`),
-after which the gesture disarms. The BUILD-UP is
-half the secret: `sunChargeIntensity` maps the taps banked so far onto one 0..1
-`--sun-charge` (registered with `@property` so it TWEENS, which is what makes the
-charge swell in and ebb back out), and each layer in `styles.css` ramps off it
-with its OWN threshold — tap 1 shows nothing at all, tap 2 is a breath of extra
-glare, and only from tap 3 does the star plainly throw fire, shake and burn
-hotter. Stop tapping and the burst lapses. The gesture is a plain **window
+after which the gesture disarms.
+
+**THE FIRST `SUN_SILENT_TAPS` (10) BUY NOTHING, AND "NOTHING" IS LITERAL.** They
+are banked in a ref and touch no state at all: no charge layer is mounted, no
+`.charging` class lands on the disc, `playSunCharge` is not called and the motor
+is not asked for a buzz. A thumb wandering across the sky has to come away with
+no evidence there is anything under it — a gesture that flickers on the second
+tap is one that gets stumbled into and then hunted down. The ELEVENTH tap is the
+first the sky answers.
+
+From there the BUILD-UP is half the secret: `sunChargeIntensity` maps the taps
+banked so far onto one 0..1 `--sun-charge` (registered with `@property` so it
+TWEENS, which is what makes the charge swell in and ebb back out), and each
+layer in `styles.css` ramps off it with its OWN threshold — tap 11 is a breath
+of extra glare, and only from tap 12 does the star plainly throw fire, shake and
+burn hotter; tap 15 is full fury and tap 16 arms the race. Stop tapping and the
+burst lapses (silent taps included). The gesture is a plain **window
 listener that hit-tests the press against the sun's rect** — not a button on the
 sun: the sun is decoration the sky driver sizes and places each frame, and a
 transparent target parked over it would swallow presses meant for whatever menu
@@ -235,15 +245,15 @@ where a **DEVELOPER** row now appears (it stays available across launches once
 unlocked).
 
 **THE CLICK RACE — the second movement, and the reason the sun is the meter.**
-Seven taps is a secret you can be TOLD; once told, it costs nothing, which is
+A tap count is a secret you can be TOLD; once told, it costs nothing, which is
 exactly the wrong price for a switch that turns on level warping and the
 balance knobs. So the arming tap starts a race
 (`pwa/src/game/title-screen/sun-race.ts`, a pure leaf over a clock): a press at
 least every `RACE_BEAT_MS` (250 ms) is ON TEMPO and banks REAL TIME into
 `heldMs`; drop the beat and the bank drains at `RACE_DECAY` (1.5×) the rate it
 filled. `RACE_HOLD_MS` (5 s) banked and the star lets go — the same detonation
-the seventh tap used to fire. Sit at empty for `RACE_LAPSE_MS` and the race
-gives up, the star cools, and the gesture rearms at seven taps. Four rules:
+the arming tap used to fire. Sit at empty for `RACE_LAPSE_MS` and the race
+gives up, the star cools, and the gesture rearms at the tap count. Four rules:
 
 1. **THE BANK IS FILLED BY TIME, NOT BY PRESSES.** A press is a promise about
    the next 250 ms, not a deposit — so mashing at 20 Hz buys nothing beyond
@@ -285,7 +295,7 @@ the index:
 | **PLAYGROUND** | a run: **SELECT LEVEL** (the warp picker — any difficulty and mission regardless of unlock state, skipping the intro), **BOT VIEW** (the autopilot on a real hero, then GAME SPEED + BOT SPEC), the term a run is carved on — **AUTO LEVEL STATS** (`autoLevelStats`) — and **DEBUG MODE**, the meter drawn over it |
 | **CHEATS** | what a run would otherwise earn: **SEED CHARACTERS**, **GRANT 10B COINS**, and **FORCE STORE** (`storeForce`, persisted — the coin store in any build with packs granted FREE, so it is a cheat rather than a build flag; `pwa/src/game/store.ts`) |
 | **BALANCE** | the runtime multiplier sliders (see below) |
-| **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, plus the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live — `docs/rendering.md` |
+| **VISUALS** | KNOCKBACK, BLOOD and GORE LINGER, the **CAMERA PITCH** / **CAMERA YAW** sliders that dial the whole world projection live, and the three washes over the finished frame (**COLOR GRADE**, **VIGNETTE**, **DEPTH HAZE**) — `docs/rendering.md` |
 | **GALLERIES** | the two full-screen shelves that only LOOK: **ARSENAL** (`ArsenalScreen.tsx` — every unique/legendary by ilvl, minted via `mintUnique` and drawn through the shared `ItemCard.tsx` the inventory tooltip reuses, so the two never drift) and **EFFECTS** (the EFFECTS GALLERY — see below) |
 
 **EVERY ROW ON THE INDEX IS A DOOR** — no switch or slider is parked among them,
@@ -310,7 +320,10 @@ the mode, read BEFORE the mode is cleared.
 **NONE OF IT SHIPS IN THE STORE BUILD — and "does not ship" means the code is
 gone, not hidden.** The reveal, the whole DEVELOPER tree, and the commit hash
 beside the version in the title footer are gated on `__DEV_TOOLS__`, a
-build-time literal `pwa/vite.config.ts` sets from `VITE_DEV_TOOLS`. It is TRUE
+build-time literal `pwa/vite.config.ts` sets from `VITE_DEV_TOOLS` — and
+`useSunCharge` tests that flag ITSELF rather than trusting its `armed` prop,
+because a sun that flares under the thumb on a build with no DEVELOPER menu is a
+door onto nothing. It is TRUE
 everywhere a human might want the tooling — the website, the installed PWA, the
 `/preview/` and `/branch/` slots, local dev, and the native `preview` and
 `testflight` apps — and FALSE for exactly one build: the `production` EAS

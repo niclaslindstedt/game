@@ -85,6 +85,46 @@ export function isFloorPlaneSprite(name: string): boolean {
   return FLOOR_PLANE_SPRITES.has(name);
 }
 
+/**
+ * THE ART THAT STANDS ON ITS OWN FOOTPRINT — `plane: wall`.
+ *
+ * Drawn in plan like the floor art above, but the thing the plan describes has
+ * a HEIGHT: a wall panel, a parapet, a barrier. Laid flat it reads as a paving
+ * slab — turn the camera and a room's walls become a slightly darker path across
+ * a floor the eye walks straight over — so the renderer extrudes the same art by
+ * this many world px of rise instead (`render/plane.ts` `wallBlock`).
+ *
+ * A map rather than a Set because the rise rides along with the membership, and
+ * both are asked per obstacle per frame.
+ */
+const WALL_PLANE_RISE = new Map<string, number>(
+  Object.entries(spritePlanes.wall as Record<string, number>),
+);
+
+/** How far this sprite rises off its footprint, or 0 if it is not wall art. */
+export function wallPlaneRise(name: string): number {
+  return WALL_PLANE_RISE.get(name) ?? 0;
+}
+
+/**
+ * FLAT ART THAT RUNS ONE WAY — `directional: true`.
+ *
+ * A stain lies whichever way round it likes; a conveyor belt does not. Its rails
+ * run along the belt and its rollers cross it, so a run of belts laid east while
+ * the art draws a north-south machine is a belt visibly carrying its cargo
+ * sideways — invisible square-on and glaring the moment the camera turns.
+ *
+ * The art declares only that it HAS a bearing (authored running SOUTH, down the
+ * grid); the placement supplies which way this piece actually runs
+ * (`Decor.facing`, stamped from the prop line's own direction).
+ */
+const DIRECTIONAL_SPRITES = new Set<string>(spritePlanes.directional);
+
+/** Does this sprite's picture run one way, so a placement may turn it? */
+export function isDirectionalSprite(name: string): boolean {
+  return DIRECTIONAL_SPRITES.has(name);
+}
+
 const dataUrls = new Map<string, string>();
 
 /**

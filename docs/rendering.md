@@ -31,7 +31,9 @@ stripped from a store build like every developer setting), because the answer to
 rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
 longer cover their axis-aligned collision boxes still read wrong under a turned
 camera, and a proper isometric look needs that structural art redrawn as iso
-pieces — which is an art project, not a render setting.
+pieces — which is an art project, not a render setting. The WALLS are out of that
+backlog (`plane: wall` extrudes them off their own footprint, below) and so are
+the belts (`directional:`); what is left is the front-facing BUILDINGS.
 
 **THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT**, and
 the exception proves the rule: a body drawn standing up covers a strip of FLOOR
@@ -89,19 +91,63 @@ footprint); it is wrong for authored pixel art that merely lies there.
 
 **WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
 THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
-elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
-crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
-up is loud: the panel comes out taller than the floor grid it is set into, and
-under a yaw a straight run of them staircases diagonally across a floor whose
-own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
-`plane: upright | floor` (**upright is the default**, so a sprite that says
+elevation and have to stand; a painted lane marking, a hatch and a crate seen
+from above are drawn in PLAN and have to lie. Standing plan-view art up is loud:
+the piece comes out taller than the floor grid it is set into, and under a yaw a
+straight run of them staircases diagonally across a floor whose own seams run the
+other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor | wall` (**upright is the default**, so a sprite that says
 nothing keeps the look it has), the build emits the floor-plane names to
 `assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
 it — read by the obstacles, the decor, the landmarks, the lair doors and the
 elevator pads, never by an actor. A floor-plane sprite is **baked through the
 projection once** (`flatSprite`) for exactly the reason the ground layer is:
 transforming pixel art per frame re-picks which rows the nearest-neighbour
-resample drops, and the wall boils as the camera pans.
+resample drops, and the art boils as the camera pans.
+
+**AND "DRAWN IN PLAN" IS NOT "FLAT" — `plane: wall`, THE THIRD CASE, AND THE ONE
+THE WALLS ARE IN.** A lane marking really is paint on the ground. A wall panel is
+a plan view of a thing you cannot see past, and laid down it reads as a paving
+slab: turn the camera and a lab's partitions become a slightly darker path
+across the floor, a garage becomes a yard, and a room stops being a room. So a
+wall-plane sprite keeps the same footprint on the same floor and is **EXTRUDED
+off it** — the one projected slice, stacked `rise` px of screen height with the
+cap laid back on top at its authored brightness, then a `source-atop` ramp for
+the contact shadow (`wallBlock`, render/caches.ts). It is sprite stacking, and it
+is the answer here for the reason it is the answer anywhere: **no second piece of
+art, and right at every pitch and yaw**, because the projection is applied to the
+slice rather than to a hand-drawn elevation that would only ever suit the one
+camera it was drawn for. The stack is a BAKE — once per sprite per projection,
+dropped alongside the flat bakes when a knob moves — so the per-frame cost is one
+blit per panel, same as before.
+
+`rise` defaults to the art's OWN height, so a 16×16 plan panel extrudes into a
+cube: a wall a hero tall, which is what it takes to read as one. A piece that is
+deliberately lower than it is deep (a parapet, a kerb) says so with `rise:`.
+
+Two consequences worth carrying. **The walls are drawn LAST in the obstacle pass
+and back-to-front**, by PROJECTED y — the axis that actually runs into the screen
+once the camera is turned — because an extruded panel is tall enough to slice the
+cap off its own neighbour otherwise. And a door hung in a wall run **must be on
+the wall's plane too**: a door on a different plane from the run it interrupts is
+a hole in the world, which is why the garage door's roll-up
+(`drawWorldSpriteTop`) answers the plane question the same way one frame later,
+seat included.
+
+**FLAT ART CAN ALSO RUN ONE WAY — `directional: true`, and the bearing comes from
+the PLACEMENT.** A stain lies whichever way round it likes; a conveyor belt does
+not. Its side rails run along the belt, its rollers cross it, and its frames
+march the pattern one way — and a rank of belts is laid along whichever axis the
+chamber it landed in is longest (`buildRows`, mapgen/place.ts), so the same art is
+east-west in one bay and north-south in the next. Drawn unturned, half the belts
+in the game carry their cargo sideways across their own rails: invisible
+square-on, where rails and rollers still line up with the screen's own axes, and
+glaring the moment the camera turns, when the belt is the only thing on the floor
+moving at 45° to itself. So the ART declares that it HAS a bearing (authored
+running SOUTH, down the sprite's own rows), the PLACEMENT supplies which
+(`Decor.facing`, stamped from the prop line's direction — presentation-only state,
+because nothing in the simulation cares), and `bakeFlat` turns the art in before
+it projects it, so the result is a bake like any other.
 
 **A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
 `projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws
@@ -302,61 +348,52 @@ EXPLORED GRID.
 
 ## How the picture is presented
 
-**HOW THE PICTURE IS PRESENTED — SETTINGS → VIDEO, and the split that decides
-where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
-COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
-are PLAYER settings, not developer ones — every one costs frames on a phone — so
-they are deliberately absent from `stripDeveloperState` and ship in the store
-build. **BLOOM ships at 0 and the other three ship on**, which is a judgement
-rather than an oversight: on pixel art at this size every luminance point a halo
-adds is a point of the artist's own shading it paints over, so the halo is
-offered rather than assumed. Do not "restore" it to 1 because the field looks
-unlit.
+**HOW THE PICTURE IS PRESENTED — DEVELOPER → VISUALS, and the split that decides
+where each effect goes.** Three washes (`render/postfx.ts`): COLOR GRADE,
+VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off, and all three ship
+ON at the amounts that module calls the shipped look. They are DEVELOPER settings
+— they sit on the same page as the camera knobs and are scrubbed by
+`stripDeveloperState`, so a store build always plays the shipped look — and the
+reason they can be is that none of them costs a frame: all three are CSS, so
+there is no per-frame budget for a player to win back by turning one off.
 
-**AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
-The bloom decides what counts as light with one luminance knee, and the thing
-that makes that hard here is that the ground is not a minority of a frame, it IS
-the frame — the moon's regolith (0.554) and GOODCO HQ's deck (0.701) are each the
-50th AND the 90th percentile of their own picture, while the lights live in the
-top half-percent. A knee below them classes the floor as a light and adds it back
-over itself, which is haze rather than bloom: shipped that way once, it lifted
-the whole picture's brightness 14–24% and the moon came out milky lavender.
-`tests/content/bloom_threshold_test.ts` holds the knee above every ground tile
-the campaign lays down, so a new pale floor says so instead of quietly starting
-to glow. The other half of that pass is the DOWNSCALE, and it is the one place a
-draw call cannot be saved: Canvas2D minification is a 2×2 bilinear tap with no
-mipmap, so it is an honest box filter at exactly ×0.5 and an undersample at
-anything smaller — a ×4 minify of a 4×4 with one white pixel returns 0 where the
-average is 16. Reaching the quarter-size buffer in one step therefore drops
-lights in and out as the camera pans a pixel at a time, and that pulsing IS the
-flicker. Two halvings, always.
+**THERE IS NO CANVAS POST-EFFECT AT ALL, AND BLOOM IS WHY.** A bloom pass lived
+here and was taken out, which is the argument worth keeping rather than the code.
+It was the one knob that HAD to be on the canvas — the light it blooms is the
+game's own baked glow art (`glowSprite`, `beamSprite`, the loot shafts, the muzzle
+flashes) living on that same ~422×195 pixel grid, and a bloom computed at device
+resolution is smoother than the light casting it, which reads as a photo filter
+over pixel art rather than as pixel art glowing. But on pixel art at this size the
+trade loses whatever the threshold and the gain are tuned to: every luminance
+point a halo adds is a point of the artist's own shading it paints over, so the
+loot shafts and the level-up pillar gained a little atmosphere and the floor, the
+rocks and the bodies lost some of their drawing. It shipped at 0 for exactly that
+reason, and a knob whose honest default is off is a knob the game is better off
+without. **Do not bring it back — light the art instead.**
 
 **THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
 MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
 up 2–3× with `image-rendering: pixelated`. So there are two places to put an
 effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
-resolution, in the same pixel grid as the art — where BLOOM belongs, because the
-light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`, the
-loot shafts, the muzzle flashes) living on that same grid; a bloom computed at
-device resolution is smoother than the light casting it, which reads as a photo
-filter over pixel art rather than as pixel art glowing. **IN CSS** is smooth, at
-device resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the
-HAZE belong, because all three are broad low-frequency washes that on the canvas
-would cost a full-frame composite every frame to come out in 2–3 px staircase
-bands. The CSS half is three custom properties from `fxStyleVars` written on the
-GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas,
-which is the overlay's SIBLING and would never inherit them), and the overlay
-sits at `z-index: 0` directly after the canvas so every positioned HUD element
-after it paints on top: the corners of the SCREEN going dark is atmosphere, the
-corners of the HEALTH BAR going dark is a bug.
+resolution, in the same pixel grid as the art — right when the thing an effect
+acts on IS the art, and a full-frame pass every frame on a phone. **IN CSS** is
+smooth, at device resolution, and per-frame FREE — where the GRADE, the VIGNETTE
+and the HAZE belong, because all three are broad low-frequency washes that on the
+canvas would cost a full-frame composite every frame to come out in 2–3 px
+staircase bands. The CSS half is three custom properties from `fxStyleVars`
+written on the GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on
+the canvas, which is the overlay's SIBLING and would never inherit them), and the
+overlay sits at `z-index: 0` directly after the canvas so every positioned HUD
+element after it paints on top: the corners of the SCREEN going dark is
+atmosphere, the corners of the HEALTH BAR going dark is a bug.
 
 **THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
 stage would have to own the whole present path — the world would move to an
 offscreen target and the visible canvas would become the GL one, touching every
 screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
-gallery — and for these four effects it buys nothing: three are strictly better
-in CSS and the fourth wants to be chunky. What a shader WOULD buy is CRT
-curvature, chromatic aberration and a real 3D LUT. That is the day to write it.
+gallery — and for three broad washes it buys nothing: all three are strictly
+better in CSS. What a shader WOULD buy is CRT curvature, chromatic aberration and
+a real 3D LUT. That is the day to write it.
 
 **DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
 the whole field is ONE ground plane and the hero is always at the middle of it —

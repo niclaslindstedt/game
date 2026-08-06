@@ -9,7 +9,7 @@
 //      control the game can offer to turn back on is not a control — and it
 //      FAILS OPEN: an unmanaged device (a browser, an Android build, a
 //      malformed payload) plays the whole game.
-//   2. THE PLAYER.  SETTINGS → VIDEO → GORE: one switch per kind, because "is
+//   2. THE PLAYER.  SETTINGS → GORE: one switch per kind, because "is
 //      this too much" is not one question. Somebody who does not want to watch a
 //      PERSON come apart is not asking for a rover to stop throwing sparks, and
 //      before this page there was no way to say so.

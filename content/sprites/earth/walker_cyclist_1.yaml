@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_cyclist_1
+family: earth
+size: [16, 16]
+description: >
+  A cyclist in a red top riding straight up the middle of the road. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a rider leaning forward over the bars of a bicycle
+  attire: a red cycling top and dark shorts
+  features: two spoked wheels under a low frame, hands on the bars
+  accent: the bicycle's pale steel
+  flavor: no lights, no helmet, no fear
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  B: "#1f1d28" # shoes
+  C: "#c8342e" # red cycling top
+  F: "#9aa0aa" # the bicycle
+  H: "#2e2a24" # dark hair
+  K: "#b07a55" # hand
+  P: "#b07a55" # skin
+  S: "#e0605a" # top panel
+  T: "#2d2b36" # dark shorts
+grid: |
+  ................
+  ....OHHHHO......
+  ...OHHHHHHO.....
+  ...OPPPPPPO.....
+  ...OPOPPOPO.....
+  ..OCCCCCCCCO....
+  ..OCCCSSCCCOKO..
+  ..OCCSSSSCCOFO..
+  ..OTTTTTTTOFFO..
+  ...OTTTTTOFFO...
+  ....O.OTTOFO....
+  .OOO..OTTO.OOO..
+  OF.FO.OBBO.OF.FO
+  O.FFO......O.FFO
+  .OOO........OOO.
+  ................

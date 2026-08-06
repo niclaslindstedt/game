@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_dog_1
+family: earth
+size: [16, 16]
+description: >
+  A man in a blue windbreaker walking a small dog far too close to the traffic. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: an ordinary man in a windbreaker
+  attire: a blue windbreaker and grey trousers
+  features: a small tan dog trotting at his knee
+  accent: the tan dog
+  flavor: the dog has no idea
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#3f5f9e" # sleeve
+  B: "#2a2733" # shoes
+  C: "#3f5f9e" # blue windbreaker
+  D: "#c08a4a" # the dog
+  H: "#2e2a24" # dark hair
+  K: "#deaa86" # hand
+  P: "#deaa86" # skin
+  S: "#5d80c4" # windbreaker panel
+  T: "#5a5f6b" # grey trousers
+grid: |
+  ................
+  .....OHHHHO.....
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OKOCCCSSCCCOAO.
+  .OAOCCSSSSCCOAO.
+  .OAOCCSSSSCCOKO.
+  ...OCCCCCCCCO...
+  ...OTTTTTTTTO...
+  ODDOOTTOOTTO....
+  DDDDOTTOOTTO....
+  OO..OBBOOBBO....
+  ................
+  ................
