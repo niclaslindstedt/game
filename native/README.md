@@ -240,6 +240,14 @@ On top of the web game it adds the things a browser can't give iOS:
   BALANCE multipliers — so a TestFlight tester's settings can't govern the
   shipped game after an update.
 
+**Multiplayer is not here**, and the shell is why: `netBridgeAvailable()` is
+gated on the Steam shell, which is the only one with a session process to fork.
+Whether this shell could JOIN one (it could — see the WebSocket path), why it
+should not HOST one, how a QR could carry the invite, and what gating it behind
+a non-consumable IAP would cost the store bridge are evaluated in
+[`docs/multiplayer-native.md`](../docs/multiplayer-native.md). Nothing in that
+file is built.
+
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it
 manages its own dependencies.

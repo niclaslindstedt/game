@@ -672,6 +672,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                                          |
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
+| Whether the App Store / Play build could join or host a session, and what an IAP gate would cost                      | `docs/multiplayer-native.md` — an evaluation; nothing in it is built                |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |
 | What a mob, item, venue or power actually IS                                                                          | its `content/` YAML — the catalogs are the lookup                                   |

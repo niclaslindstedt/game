@@ -1499,6 +1499,13 @@ ordinary work, small, and deliberately left rather than forgotten.
   the HOST/JOIN screens (they exist only in desktop builds, which the
   browser-driving harness cannot reach). Record results — including failures —
   when they are run.
+- **The MOBILE build takes no part in any of this**, and whether it could is
+  evaluated rather than guessed: **`docs/multiplayer-native.md`** works out what
+  an App Store / Play build could join (a WebSocket transport away, with no
+  native module at all), why it must not host (a suspended app is a dead
+  session, before carrier NAT is even reached), what a QR-carried invite would
+  look like, and what gating the whole thing behind an in-app purchase would
+  cost. Nothing in that file is built.
 - **The store surfaces**: the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
   skill) are owed when the mode ships to the store.

@@ -278,7 +278,7 @@ How a mod is compiled, loaded and resolved — the design behind all of the abov
 - [Game content](docs/game-content.md) — the rules the catalogs sit inside (what a catalog holds is the YAML, and the generated `/library/`)
 - [Story](docs/story.md) · [Manuscript](docs/manuscript.md) — the plot, and every spoken line
 - [Art style](docs/art-style.md) · [Naming](docs/naming.md)
-- [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
+- [Multiplayer](docs/multiplayer.md) · [Multiplayer on the phone](docs/multiplayer-native.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
 - [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under
 - [`OSS_SPEC.md`](OSS_SPEC.md) — the layout and governance spec it conforms to
 
