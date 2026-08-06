@@ -38,13 +38,14 @@
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 
-import { PLAYER } from "./config/index.ts";
+import { MERCHANT, PLAYER } from "./config/index.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { billboardBearing } from "./flags.ts";
+import { killMerchant } from "./merchant.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
-import { anyZoneContains, type Zone } from "./zones.ts";
+import { anyZoneContains, zonesBounds, type Zone } from "./zones.ts";
 import {
   CAR_FIX,
   type CarDetachable,
@@ -179,6 +180,14 @@ export const CAR = {
    * and the speed below which dragging steel stops sparking. */
   grindCueMs: 90,
   grindMinSpeed: 8,
+  /**
+   * The speed above which the bumper KILLS the man it hits
+   * (`runDownMerchant`). A car creeping out of its own bay is a car being
+   * parked — somebody standing in front of it gets leaned on, not run over —
+   * so the threshold sits well above the crawl and well under the pace of a
+   * car that has committed to the road.
+   */
+  roadkillSpeed: 45,
 } as const;
 
 /**
@@ -730,6 +739,12 @@ export function stepVehicles(
     } else {
       vehicle.grindCueMs = 0;
     }
+    // …and what the bumper found on the way. Read here rather than inside
+    // `driveCar` so it covers the DRIVE-OUT too, which is the whole reason it
+    // exists: the departure beat aims the car straight down the road the hub's
+    // dealer paces, and a man standing on that tarmac is standing in front of
+    // a car nobody is steering any more.
+    runDownMerchant(state, vehicle);
     integrateCarBody(vehicle, dt);
   }
   for (const wheel of state.wheelDebris) {
@@ -1066,6 +1081,36 @@ function collideCarBody(state: GameState, car: CarVehicle): void {
 }
 
 /**
+ * THE ONE THING ON THE LOT A CAR CAN HIT.
+ *
+ * The trader is not an obstacle — the horde is pushed off his pitch and the
+ * body of a car is resolved against walls and furniture, so a merchant has
+ * never had to answer for anything moving. A hub whose dealer works the ROAD
+ * changes that: the drive-out runs straight down his beat, and a car that
+ * passed through him would be the loudest missing rule on the map.
+ *
+ * Read against the SAME circles the body blocks the floor with
+ * (`vehicleFootprint`), so what hits him is the drawn car rather than a dot at
+ * its centre, and only above `CAR.roadkillSpeed` — a car being parked leans on
+ * people, it does not kill them. `killMerchant` owns everything that follows.
+ */
+function runDownMerchant(state: GameState, car: CarVehicle): void {
+  const merchant = state.merchant;
+  if (merchant.dead) return;
+  if (Math.abs(car.speed) < CAR.roadkillSpeed) return;
+  const reach = CAR.footprint.radius + MERCHANT.radius;
+  for (const along of CAR.footprint.offsets) {
+    const point = alongBody(car.pos, along);
+    if (
+      Math.hypot(point.x - merchant.pos.x, point.y - merchant.pos.y) <= reach
+    ) {
+      killMerchant(state);
+      return;
+    }
+  }
+}
+
+/**
  * Where a departing car is aimed: down the middle of the road, past whichever
  * of its two ends is FARTHER off — the longer runway, so the last thing on
  * screen is a car still going rather than one that ran out of tarmac.
@@ -1074,25 +1119,9 @@ function collideCarBody(state: GameState, car: CarVehicle): void {
  * draw and lands the same way on every client that simulates the same tick.
  */
 function roadTarget(road: readonly Zone[], from: Vec2): Vec2 {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const zone of road) {
-    const [x, y, w, h] =
-      zone.shape === "rect"
-        ? [zone.rect.x, zone.rect.y, zone.rect.width, zone.rect.height]
-        : [
-            zone.pos.x - zone.radius,
-            zone.pos.y - zone.radius,
-            zone.radius * 2,
-            zone.radius * 2,
-          ];
-    minX = Math.min(minX, x);
-    maxX = Math.max(maxX, x + w);
-    minY = Math.min(minY, y);
-    maxY = Math.max(maxY, y + h);
-  }
+  const bounds = zonesBounds(road);
+  if (!bounds) return { ...from };
+  const { minX, minY, maxX, maxY } = bounds;
   // A road runs along its LONG axis; the target is the far end of that axis,
   // held on the strip's centre line so the car straightens up as it goes.
   const alongY = maxY - minY >= maxX - minX;

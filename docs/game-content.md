@@ -209,6 +209,23 @@ first walks up; the **meeting** roots him for the rest of the run, pins him on
 the map, and **rolls his stall once** — every entry has a finite quantity and
 nothing restocks, so a counter can be cleared out.
 
+A venue may post him three ways, and the level def picks one. The default is
+that **wanderer**. `parked:` stands him at the carve's counter, open from the
+first tick with no meeting scene — a fixture rather than an encounter. `beat:`
+does the same and then sets him WALKING: he paces the strip the map carved him
+(districts flagged `beat: true` → `LevelDef.merchantBeat`) end to end for the
+whole run. A walking counter needs two rules nothing else does — a tap HAILS
+him to a stop so the hero can reach him (`hailMerchant`, cleared when the shop
+closes), and a driven car can **run him down** (`CAR.roadkillSpeed`), which
+shuts the stall for that visit only. Nothing about a merchant persists, so the
+next arrival mints another one on the same pitch. The hub's dealer is the
+shipped example, and he works the road the car leaves by on purpose.
+
+`line:` is what a trader says **across the counter** — one sentence, drawn on
+the shop panel on every visit. It is not a scene, and that is the whole point:
+a greeting the player has to dismiss before buying a medkit is a toll booth,
+so the once-only `greeting:` stays the meeting's and this is the trading one.
+
 Coins enter a run by **selling loot** and by **gold off the floor**, and leave
 it at the stall and on the AUTO PILOT meter (`GOLD` and
 `AUTOPILOT.coinsPerSecond` are two ends of one lever). Sell value is item level

@@ -54,6 +54,7 @@ heroSuited: false
 merchant:
   sprite: merchant_boot_hill
   name: THE BARKEEP
+  line: BAR'S DRY. THE STOCK ISN'T. NAME IT, PARTNER.
   greeting:
     - - WELL HOWDY. MIND THE GLASSES - THE ROBOTS DON'T DRINK, BUT THEY TIP IN PARTS.
     - - YES, IT'S ME. A MARKET FELL THROUGH A RIFT AND I FELL WITH IT. THE HAT IS NEW.

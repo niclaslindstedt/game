@@ -244,11 +244,12 @@ the far side shows him still holding it.)_
 _The hero's home base (`content/levels/garage.yaml`), and where a new game now
 OPENS: the living-room prelude plays on the garage's first entry, and every
 earthside chapter returns here (GOODCO by car, the moon for food, the West
-once the rift seam is unsealed). The parked vendor at the counter is
-deliberately scene-free — the hub is re-entered constantly, and a greeting on
-every approach would make the counter a toll booth. Its one line is the
-arrival monologue, played once per difficulty, spoken BEFORE the GOODCO raid:
-the ship still wants its part._
+once the rift seam is unsealed). THE DEALER out on the road is deliberately
+scene-free — the hub is re-entered constantly, and a greeting on every
+approach would make the counter a toll booth — so he speaks only across the
+counter (below). The hub's one spoken beat is the arrival monologue, played
+once per difficulty, spoken BEFORE the GOODCO raid: the ship still wants its
+part._
 
 ### Opening monologue (hero, black screen)
 
@@ -288,6 +289,27 @@ He has not earned those roads and does not yet know they are where the trail
 goes._
 
 1. STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+
+### THE DEALER — the neighborhood, at home
+
+_The hub's trader, and the only one in the game who is NOT the impossible
+merchant wearing another job (`content/levels/garage.yaml`, `merchant.beat`).
+A man off the neighborhood in a black hood, working the road at the far edge
+of the lot: he walks it end to end all evening, hands in his pocket, and sells
+to whoever comes out of the garage. He asks for no name and gives none — which
+is his whole line, and the only thing he ever says._
+
+_He is also the FIRST person the car takes, and it happens on the hero's own
+lot: the road he works is the road the car leaves by, so the drive to GOODCO
+starts the way it goes on. Nothing is said about it, by him or by the hero,
+and the next time the hero comes home somebody else is on that pavement.
+Dealers are replaced. That silence is the joke and it is deliberate — a line
+of remorse would make it a beat, and it is not one, any more than the four
+lanes of neighbours below are._
+
+**Across the counter** (`merchant.line`):
+
+- NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?
 
 ### Side errands — RUTH
 
@@ -732,6 +754,10 @@ is his floor. Spoken once, on the first meeting._
 - EASY, FRIEND. I'M NOT STAFF. I STOCK THE VENDING MACHINES. SOMEBODY HAS TO, EVEN TONIGHT.
 - LOCKDOWN IS A SELLER'S MARKET. I'LL BUY WHAT WEIGHS YOU DOWN, SELL WHAT KEEPS YOU UPRIGHT.
 
+**Across the counter** (`merchant.line`, said every time the shop opens):
+
+- THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?
+
 ---
 
 ### Side errands — PRIYA NAIR
@@ -1084,6 +1110,10 @@ his return ticket. Spoken once, on the first meeting._
 
 - YOU'RE SOLID. THAT'S NEW. I CAME UP WITH THE '76 SALVAGE RUN. MISSED THE RIDE HOME.
 - THE GHOSTS DON'T CARRY COIN, SO YOU'RE MY WHOLE MARKET NOW. SELL ME SCRAP. BUY WHAT WORKS.
+
+**Across the counter** (`merchant.line`):
+
+- EVERY ITEM HERE CAME UP ON A ROCKET. THAT'S THE PRICE, NOT THE MARKUP.
 
 ---
 
@@ -1460,6 +1490,10 @@ once, on the first meeting._
 
 - A BREATHING CUSTOMER. AT LAST. I RAN THE COLONY COMMISSARY TILL THE AI RAN THE NUMBERS.
 - IT KEPT THE DOME. I KEPT THE SCALES. SELL ME WHAT THE MACHINES DROP - BUY WHAT HELPS.
+
+**Across the counter** (`merchant.line`):
+
+- THE SCALES ARE HONEST. THE PRICES ARE MINE. LOOK ALL YOU LIKE.
 
 ---
 
@@ -1887,6 +1921,10 @@ on the first meeting._
 - AH. YOU AGAIN. DON'T LOOK SO SURPRISED - EVERY MARKET I RAN FELL THROUGH HERE.
 - THE VENDING MACHINES. THE MOON. THE DOME. ALL ROADS LEAD HERE. COIN SPENDS ON ALL.
 - BRING ME RELICS, TRAVELER. TAKE WHAT YOU NEED. WE'RE BOTH FAR FROM HOME.
+
+**Across the counter** (`merchant.line`):
+
+- COIN SPENDS IN EVERY WORLD I'VE LOST. HAVE A LOOK, TRAVELER.
 
 ---
 
@@ -2317,6 +2355,10 @@ meeting._
 - YES, IT'S ME. A MARKET FELL THROUGH A RIFT AND I FELL WITH IT. THE HAT IS NEW.
 - I'VE COME INTO SOME... ESTATE PIECES. THE OWNER'S WARDROBE. PRICES FIRM. BRING WATCHES.
 
+**Across the counter** (`merchant.line`):
+
+- BAR'S DRY. THE STOCK ISN'T. NAME IT, PARTNER.
+
 ### Side errands — CLEM
 
 _The saloon's barkeep hand, and the only machine in the park that noticed the guests had stopped coming. It has polished the same glasses every night for eleven years rather than admit the shift is over. It knows every hand in town by serial, and which of them have lately started behaving like something else is driving._
@@ -2643,6 +2685,19 @@ lectured. It drops the one key that opens the exit._
 
 - THE WARDEN'S OWN KEY. THE EXIT WAS NEVER CUT FOR THE RESIDENTS - ONLY FOR THIS.
 - A DOOR THAT OPENS FOR THE MACHINE AND NO ONE ELSE. THEY WERE NEVER GETTING OUT.
+
+### The wandering merchant — no costume at all
+
+_The one venue where the trader wears nothing over himself: there was never a
+shop in the vault, so there is no job here for him to have been doing. He says
+one thing across the counter and nothing else — no meeting scene, no welcome
+back._
+
+**Across the counter** (`merchant.line`):
+
+- SAME STOCK, LOWER CEILING. THE OWNERS WON'T MISS IT.
+
+---
 
 ### Exit monologue (hero, black screen — reaching the bunker's exit door)
 
@@ -3179,6 +3234,7 @@ at the top of this file).
 | Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                          |
 | Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                  |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                       |
+| A trader's counter line (said every visit, shop panel)       | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                    |
 | Quest givers' greetings + farewells                          | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                                        |
 | Every errand's ask, nag and handover                         | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                               |
 | A talk the player STEERS (speaker lines + the hero's rows)   | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)  |

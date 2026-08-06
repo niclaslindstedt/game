@@ -206,6 +206,17 @@ export type MapArea = {
    */
   driveOut?: boolean;
   /**
+   * THE TRADER'S BEAT: a merchant who WORKS A PITCH (`LevelDef.merchant.beat`)
+   * paces this district end to end instead of standing at a counter. Flag the
+   * strip he belongs on — the hub's road, a market row — and the carve
+   * compiles every cell of it into `LevelDef.merchantBeat`; see `merchant.ts`.
+   *
+   * The beat is read as ONE strip along its long axis, so a district flagged
+   * here should BE one: a lane, a row, a stretch of pavement. Flagging a
+   * plaza gives a trader who crosses it diagonally forever.
+   */
+  beat?: boolean;
+  /**
    * ROOMS INSIDE THE DISTRICT: cut every cell of this area into rooms of at
    * least this edge (world px), each pair of them walled and doored by the same
    * derivation every other border goes through.

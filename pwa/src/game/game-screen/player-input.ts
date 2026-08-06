@@ -508,17 +508,29 @@ export function handleFieldTaps(
   // before the black arrives.
   const shopTap = state.departure ? null : queues.shopTapRef.current;
   queues.shopTapRef.current = null;
-  if (shopTap && !bot && fieldLive(state) && state.merchant.discovered) {
+  if (
+    shopTap &&
+    !bot &&
+    fieldLive(state) &&
+    state.merchant.discovered &&
+    !state.merchant.dead
+  ) {
     const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     const m = state.merchant.pos;
-    if (
-      Math.hypot(wx - m.x, wy - m.y) <= MERCHANT.radius * 2.5 &&
-      runCommandOk(state, "openShop")
-    ) {
-      input.jump = false;
-      input.useItem = false;
-      playUiSound(synth, "confirm");
-      bumpUi();
+    if (Math.hypot(wx - m.x, wy - m.y) <= MERCHANT.radius * 2.5) {
+      // A TAP ON A TRADER WHO WALKS IS FIRST OF ALL "WAIT THERE". The hub's
+      // dealer paces the road, so the counter is a moving target and the tap
+      // that lands on him is very often out of trading reach — hail him and
+      // he stops where he stands until the shop has been opened and closed
+      // (`hailMerchant`), which is what makes walking up to him possible at
+      // all. Refused (and ignored) by every trader who wasn't going anywhere.
+      const hailed = runCommandOk(state, "hailMerchant");
+      if (runCommandOk(state, "openShop") || hailed) {
+        input.jump = false;
+        input.useItem = false;
+        playUiSound(synth, "confirm");
+        bumpUi();
+      }
     }
   }
   // A tap on somebody with an ERRAND re-opens their conversation. It shares

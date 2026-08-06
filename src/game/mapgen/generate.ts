@@ -945,7 +945,12 @@ export function generateLevel(
   // The trader keeps a mid-depth cell — the halfway shop every mission wants,
   // wherever halfway turned out to be. An authored plan may park him outright
   // (`plan.stall` — the vending machine on the paved drive).
+  // A trader who WORKS A PITCH starts on his pitch, so a flagged beat outranks
+  // even an authored stall: the strip is where he spends the whole run, and a
+  // counter anchored somewhere else would put his safe pocket, his map pin and
+  // whatever light the map hangs on him a district away from the man.
   const shopRoom =
+    grid.chambers.find((c) => areaOf(bp.areas, c).beat === true) ??
     (bp.plan?.stall
       ? grid.chambers.find((c) => c.area === bp.plan?.stall)
       : undefined) ??
@@ -1140,11 +1145,24 @@ export function generateLevel(
     );
 
   // --- The breathers --------------------------------------------------------
-  const merchantAt = pointIn(
-    shopRoom,
-    rng,
-    Math.min(WALL_INSET, shopRoom.w / 3, shopRoom.h / 3),
-  );
+  // A BEAT trader starts in the MIDDLE of his strip, not at a rolled point in
+  // it: the spot is his pitch's anchor — his map pin, his safe pocket, and
+  // whatever the map hangs on `counter` (the hub's street light) — and a roll
+  // along a strip 280 long put all three within fourteen pixels of the top
+  // edge of the map, which is a street lamp lighting the county line and a
+  // dealer starting his shift off screen. The middle is also simply where a
+  // man working a stretch of pavement stands.
+  const merchantAt =
+    areaOf(bp.areas, shopRoom).beat === true
+      ? vec(
+          Math.round(shopRoom.x + shopRoom.w / 2),
+          Math.round(shopRoom.y + shopRoom.h / 2),
+        )
+      : pointIn(
+          shopRoom,
+          rng,
+          Math.min(WALL_INSET, shopRoom.w / 3, shopRoom.h / 3),
+        );
   // The trader's pitch is the one true SAFE pocket — the horde is pushed out of
   // it, the way every hand-authored map treats its stall (PIT STOP, AIRLOCK,
   // SALOON).
@@ -1199,6 +1217,17 @@ export function generateLevel(
 
   const driveOut: Zone[] = grid.chambers
     .filter((c) => areaOf(bp.areas, c).driveOut === true)
+    .map((c) => ({
+      shape: "rect",
+      rect: { x: c.x, y: c.y, width: c.w, height: c.h },
+    }));
+
+  // THE TRADER'S BEAT — the districts a merchant who works a pitch paces
+  // (`MapArea.beat`), as the whole cell like the road above: the strip IS the
+  // ground he is allowed on, so a circle inside it would leave him wandering
+  // off the tarmac he belongs to. See `LevelDef.merchantBeat` / merchant.ts.
+  const merchantBeat: Zone[] = grid.chambers
+    .filter((c) => areaOf(bp.areas, c).beat === true)
     .map((c) => ({
       shape: "rect",
       rect: { x: c.x, y: c.y, width: c.w, height: c.h },
@@ -1491,6 +1520,7 @@ export function generateLevel(
     quietZones,
     merchantSpawns: [merchantAt],
     ...(driveOut.length > 0 ? { driveOut } : {}),
+    ...(merchantBeat.length > 0 ? { merchantBeat } : {}),
     obstacles: buildObstacles(bp, grid, rng),
     decor: buildDecor(bp, grid, rng),
     walls,

@@ -7200,6 +7200,17 @@ canvas.tier-artifact {
   justify-self: end;
 }
 
+/* WHAT HE SAYS ACROSS THE COUNTER (`LevelDef.merchant.line`) — one line under
+   the header, in the muted grey every secondary caption in the overlays wears,
+   so it reads as somebody talking rather than as a heading. Centred under his
+   name and allowed to wrap on the phone, where a sentence is wider than the
+   panel. */
+.shop-panel > .shop-line {
+  align-self: center;
+  max-width: 100%;
+  margin: -0.15rem 0 0.15rem;
+}
+
 .shop-section {
   display: flex;
   flex-direction: column;

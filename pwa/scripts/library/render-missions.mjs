@@ -237,10 +237,31 @@ function merchantSection(mission, base) {
           ),
         )} on top of the ordinary rolled stock — rolled at the same odds a boss drops one, landing on a counter instead of a corpse.</p>`
       : "";
+  // HOW he keeps this venue: roaming until you find him (the usual), stood at
+  // a counter from the first minute, or walking a strip of the map all run —
+  // which is the one that changes how you shop, since the counter moves and a
+  // tap is what makes it wait for you.
+  const posting = merchant.beat
+    ? `      <p>He does not keep a pitch here: he walks a stretch of this map
+      end to end, all run. Tap him and he waits where he is until you are done
+      at the counter.</p>`
+    : merchant.parked
+      ? `      <p>He is here from the first minute, stood at his counter — no
+      finding him first.</p>`
+      : "";
+  // …and the one thing he says every single time you open the counter. Not
+  // behind the reveal the meeting scene sits behind: it is a greeting, not a
+  // story beat, and you will hear it on your first visit anyway.
+  const line = merchant.line
+    ? `      <blockquote class="speech">
+        <span class="who">${escapeHtml(merchant.name)}</span>
+        <p>${escapeHtml(merchant.line)}</p>
+      </blockquote>`
+    : "";
   return `      <h2 id="merchant">The trader</h2>
       <p>A wandering merchant works this venue too: sell him what you will
       never wear, buy what you will. He dresses for the place.</p>
-${stock}${
+${posting}${line}${stock}${
     merchant.greeting.length > 0
       ? `
 ${reveal({

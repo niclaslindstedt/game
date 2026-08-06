@@ -43,6 +43,7 @@
       },
       "merchant": {
         "sprite": "merchant_vendor",
+        "line": "THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?",
         "greeting": [
           [
             "EASY, FRIEND. I'M NOT STAFF. I STOCK THE VENDING MACHINES. SOMEBODY HAS TO, EVEN TONIGHT."
@@ -270,6 +271,7 @@
       "foes": "GHOSTS",
       "merchant": {
         "sprite": "merchant_moon",
+        "line": "EVERY ITEM HERE CAME UP ON A ROCKET. THAT'S THE PRICE, NOT THE MARKUP.",
         "greeting": [
           [
             "YOU'RE SOLID. THAT'S NEW. I CAME UP WITH THE '76 SALVAGE RUN. MISSED THE RIDE HOME."
@@ -488,6 +490,7 @@
       },
       "merchant": {
         "sprite": "merchant_mars",
+        "line": "THE SCALES ARE HONEST. THE PRICES ARE MINE. LOOK ALL YOU LIKE.",
         "greeting": [
           [
             "A BREATHING CUSTOMER. AT LAST. I RAN THE COLONY COMMISSARY TILL THE AI RAN THE NUMBERS."
@@ -721,6 +724,7 @@
       "foes": "ENTITIES",
       "merchant": {
         "sprite": "merchant",
+        "line": "COIN SPENDS IN EVERY WORLD I'VE LOST. HAVE A LOOK, TRAVELER.",
         "greeting": [
           [
             "AH. YOU AGAIN. DON'T LOOK SO SURPRISED - EVERY MARKET I RAN FELL THROUGH HERE."
@@ -1220,6 +1224,7 @@
       "merchant": {
         "sprite": "merchant_boot_hill",
         "name": "THE BARKEEP",
+        "line": "BAR'S DRY. THE STOCK ISN'T. NAME IT, PARTNER.",
         "greeting": [
           [
             "WELL HOWDY. MIND THE GLASSES - THE ROBOTS DON'T DRINK, BUT THEY TIP IN PARTS."
@@ -1517,8 +1522,10 @@
         }
       ],
       "merchant": {
-        "sprite": "merchant_vendor",
-        "parked": true
+        "sprite": "merchant_dealer",
+        "name": "THE DEALER",
+        "beat": true,
+        "line": "NO NAMES, NO RECEIPTS, NO REFUNDS. WHAT DO YOU NEED?"
       },
       "travelDoors": [
         {
@@ -1700,6 +1707,9 @@
       },
       "heroSuited": false,
       "foes": "SECURITY",
+      "merchant": {
+        "line": "SAME STOCK, LOWER CEILING. THE OWNERS WON'T MISS IT."
+      },
       "objective": {
         "type": "reachExit"
       },

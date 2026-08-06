@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: merchant_run_down
+description: >-
+  A body goes under the car. The heaviest, wettest impact in the game and the
+  only one with no weapon in it: a bandpass thump of the bumper arriving, a
+  lowpass boom of the mass going down under the wheels, and a short scrape of
+  tyre over tarmac coming out the far side of it. Rare enough to be big — it
+  happens at most once a visit — but no shot at the top of the mix: the
+  drive-out's engine is running under it and this has to land INSIDE that
+  rather than over it.
+on:
+  type: merchantKilled
+voices:
+  # The bumper arriving: a low square knock, gone almost before it starts.
+  - call: tone
+    type: square
+    from: 190
+    to: 62
+    durationMs: 90
+    volume: 0.055
+    detuneCents: 9
+  # The mass going down — the wet, lowpassed boom every kill in this game
+  # leans on, longer here because a whole man is a lot of it.
+  - call: noise
+    durationMs: 260
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 420
+  # A sawtooth dive under the boom: the weight of a car not slowing down.
+  - call: tone
+    type: sawtooth
+    from: 120
+    to: 34
+    durationMs: 300
+    volume: 0.04
+    detuneCents: 12
+    echo: 0.18
+  # …and the tyre coming out the far side, dragging over wet tarmac.
+  - call: noise
+    durationMs: 170
+    volume: 0.03
+    delayMs: 120
+    filter:
+      type: bandpass
+      frequency: 1800

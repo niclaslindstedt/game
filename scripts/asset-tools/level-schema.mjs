@@ -427,6 +427,18 @@ export function validateLevel(def, refs, description = "", options = {}) {
     typeof def.merchant.parked !== "boolean"
   )
     err("merchant.parked must be a boolean");
+  if (
+    def.merchant?.beat !== undefined &&
+    typeof def.merchant.beat !== "boolean"
+  )
+    err("merchant.beat must be a boolean");
+  // The two RESIDENT postings are alternatives, not layers: one stands at a
+  // counter and never moves, the other never stops moving. Asking for both
+  // silently picks whichever guard the step pass reads first.
+  if (def.merchant?.parked === true && def.merchant?.beat === true)
+    err("merchant cannot be both parked and on a beat — pick one");
+  if (def.merchant?.line !== undefined && typeof def.merchant.line !== "string")
+    err("merchant.line must be a string");
   for (const d of def.doors ?? []) {
     // An APPROACH door (the garage door) opens on proximity — no key exists
     // for it, by design. Every KEY door still owes a story item.

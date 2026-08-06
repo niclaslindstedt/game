@@ -62,6 +62,34 @@ export function anyZoneContains(
   return false;
 }
 
+/** The bounding box of a list of zones, or null for an empty list. The one
+ * reading of "where is this region, roughly" — what a strip's LONG AXIS is
+ * measured on (the trader's beat, the departing car's road). */
+export function zonesBounds(
+  zones: readonly Zone[],
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const zone of zones) {
+    const [x, y, w, h] =
+      zone.shape === "rect"
+        ? [zone.rect.x, zone.rect.y, zone.rect.width, zone.rect.height]
+        : [
+            zone.pos.x - zone.radius,
+            zone.pos.y - zone.radius,
+            zone.radius * 2,
+            zone.radius * 2,
+          ];
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w);
+    maxY = Math.max(maxY, y + h);
+  }
+  return zones.length > 0 ? { minX, minY, maxX, maxY } : null;
+}
+
 /**
  * Push `pos` (mutated in place) just OUTSIDE the first zone it is inside, by
  * `margin` world px — the safe-zone counterpart to obstacle resolution. A rect

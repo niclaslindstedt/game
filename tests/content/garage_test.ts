@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE GARAGE — the hub's wiring. The contract: home is STATIC (one pinned
 // carve, whatever the seed or the size setting), nothing hostile ever stands
-// in it and the run never ends on its own, the trader is parked at his
-// counter from the first tick, the three doors stand where their travelDoors
+// in it and the run never ends on its own, THE DEALER works the road from the
+// first tick (and can be run down by the car leaving it), the three doors
+// stand where their travelDoors
 // point, and the RIFT SEAM's key — THE FOUNDER's RIFT CREATOR — really drops
 // where he says "keep the rift".
 
@@ -10,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   advanceDialogue,
+  anyZoneContains,
   applyRunCommand,
   createGame,
   dismissIntro,
@@ -91,17 +93,51 @@ describe("the venue", () => {
 });
 
 describe("the counter", () => {
-  it("parks the trader, revealed and stocked from the first tick", () => {
-    expect(garage.merchant?.parked).toBe(true);
+  it("stands THE DEALER on the road, open from the first tick", () => {
+    expect(garage.merchant?.beat).toBe(true);
+    expect(garage.merchant?.parked).toBeUndefined();
+    expect(garage.merchant?.sprite).toBe("merchant_dealer");
     const state = startHome();
     expect(state.merchant.discovered).toBe(true);
     expect(state.merchant.stock.length).toBeGreaterThan(0);
     expect(state.merchant.pos).toEqual(carved.merchantSpawns?.[0]);
-    // Parked is scene-free: standing beside him raises no dialogue.
+    // Scene-free like the parked trader he replaced: home is re-entered
+    // constantly, so standing beside him raises no dialogue.
     state.players[0].pos = { ...state.merchant.pos };
     run(state, 120);
     expect(state.phase).toBe("playing");
-    expect(state.merchant.moving).toBe(false);
+  });
+
+  it("carves his beat out of the road, and starts him on it", () => {
+    const beat = carved.merchantBeat ?? [];
+    expect(beat.length).toBeGreaterThan(0);
+    const spawn = carved.merchantSpawns?.[0];
+    expect(spawn).toBeDefined();
+    // He starts ON the tarmac he paces — and the tarmac is the road the car
+    // leaves by, which is what makes running him over possible at all.
+    expect(anyZoneContains(beat, spawn!)).toBe(true);
+    expect(anyZoneContains(carved.driveOut ?? [], spawn!)).toBe(true);
+  });
+
+  it("walks it: the counter moves, and a hail stops it", () => {
+    const state = startHome();
+    const from = { ...state.merchant.pos };
+    run(state, 300);
+    expect(state.merchant.pos).not.toEqual(from);
+    expect(applyRunCommand(state, "hailMerchant")).toBe(true);
+    const waiting = { ...state.merchant.pos };
+    run(state, 300);
+    expect(state.merchant.pos).toEqual(waiting);
+  });
+
+  it("says one line across the counter, on every visit", () => {
+    // Every venue's trader has one (see docs/manuscript.md), and the hub's is
+    // the dealer's whole script.
+    for (const id of [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]) {
+      const line = LEVELS[id]?.merchant?.line;
+      expect(line, `level "${id}" has no merchant line`).toBeTruthy();
+    }
+    expect(garage.merchant?.line).toContain("NO NAMES");
   });
 });
 
@@ -157,15 +193,17 @@ describe("the night", () => {
       expect(clearsOpening, "a lamp stands in the doorway itself").toBe(true);
     }
     // EVERY pool has something drawn throwing it. A light with no fixture over
-    // it reads as a bug rather than as a lamp — the one exception is the
-    // trader's own machine, which is drawn where it stands, so its pool is the
-    // only one on this map allowed to carry no sprite.
-    const sourceless = lights.filter((l) => !l.sprite);
-    expect(sourceless.length).toBe(1);
-    expect(
-      sourceless[0]!.pos,
-      "the only lamp with no fixture must be the trader's own machine",
-    ).toEqual(carved.merchantSpawns?.[0]);
+    // it reads as a bug rather than as a lamp — and since the vending machine
+    // that used to throw its own gave way to a man walking the road, there is
+    // now nothing on this map allowed to light itself.
+    expect(lights.filter((l) => !l.sprite)).toHaveLength(0);
+    // The STREET LIGHT stands over the trader's beat, and on the kerb rather
+    // than in the lane the departing car uses.
+    const street = lights.filter((l) => l.sprite === "lamp_post");
+    expect(street.length).toBe(2); // the yard post, and the county's
+    const kerb = street.find((l) => l.pos.x > carved.width / 2);
+    expect(kerb, "no street light over the road").toBeDefined();
+    expect(anyZoneContains(carved.driveOut ?? [], kerb!.pos)).toBe(false);
     // …and a fixture is never a LANDMARK: landmarks are painted before the
     // walls are, so a lamp bolted to one would have its top cut off (it rides
     // the light instead — see `LevelLight.sprite`).

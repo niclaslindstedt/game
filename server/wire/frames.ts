@@ -162,6 +162,7 @@ export const COMMANDS = [
   "closeInventory",
   "openShop",
   "closeShop",
+  "hailMerchant",
   "openCache",
   "closeCache",
   "openMap",

@@ -29,6 +29,7 @@ import {
   isScrappableLoot,
   isUnidentified,
   medkitTierIndex,
+  merchantLine,
   merchantName,
   repairAllCost,
   sellValue,
@@ -56,6 +57,7 @@ import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
 import { bustSrc, SpritePortrait } from "./SpritePortrait.tsx";
+import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 import { runCommand, runCommandOk } from "./run-commands.ts";
@@ -345,6 +347,10 @@ export function ShopPanel({
   const [identifyMode, setIdentifyMode] = useState(false);
   const merchant = state.merchant;
   const player = localHero(state);
+  const line = merchantLine(state.level.id);
+  // His line is a SENTENCE, so it wraps to the same width every other piece of
+  // running copy in the overlays does rather than running off the phone.
+  const wrapRem = useHelpWrapRem();
 
   // Derived per render, never stored: a row goes stale the instant a flag
   // three rooms away unlocks or spends it (see quests/merchant.ts).
@@ -539,6 +545,23 @@ export function ShopPanel({
           />
           <CoinPrice font={font} sprites={sprites} amount={player.coins} />
         </div>
+
+        {/* HIS LINE — what he says while you shop (`LevelDef.merchant.line`).
+            Across the counter rather than through the dialogue box on purpose:
+            it is said on EVERY visit, and a scene that has to be dismissed
+            before the hero can buy a medkit is a toll booth. Absent on a venue
+            that authored none, which is most of them. */}
+        {line !== null && (
+          <PixelText
+            font={font}
+            text={line}
+            scale={2}
+            color="#9aa3ad"
+            className="shop-line"
+            maxWidth={wrapRem}
+            align="center"
+          />
+        )}
 
         {/* The stall: his goods, priced. Sold-out weapons stay visible but
             dark — the run remembers what it passed up. */}

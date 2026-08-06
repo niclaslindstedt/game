@@ -320,7 +320,11 @@ function kitWornOut(state: GameState, hero: Player): boolean {
  * the hero is about to leave for a level.
  */
 export function wantsMerchantVisit(state: GameState, hero: Player): boolean {
-  if (!state.merchant.discovered) return false;
+  // …and a trader who has been RUN OVER is no counter at all — checked before
+  // the hub's own wider question below, because at home he is exactly the one
+  // who can be: the errand would otherwise steer the hero out to a wet patch
+  // of road and stand there wanting.
+  if (!state.merchant.discovered || state.merchant.dead) return false;
   if (atHub(state) && hubTradePays(state, hero)) return true;
   const junk = sellableJunkCount(state, hero);
   if (
@@ -540,7 +544,7 @@ export function tradeAtMerchant(state: GameState, hero: Player): boolean {
     )
     .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
   for (const entry of powerups) buyDown(entry);
-  closeShop(hero);
+  closeShop(state, hero);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state, hero);
   // Crack the bottle at the counter if one was just bought — the walk is over

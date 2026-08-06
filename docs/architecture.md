@@ -953,7 +953,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   the step) roots him for good, pins the map (`merchant` marker), rolls his
   stall against the hero's level, emits `merchantDiscovered`, and plays the
   level's greeting scene (`LevelDef.merchant` — sprite, name, and pages;
-  the words live in `docs/manuscript.md`). A level may also list stall
+  the words live in `docs/manuscript.md`). A venue may post him otherwise:
+  `parked:` stands him at the carve's counter from the first tick, and
+  `beat:` does that and then WALKS him end to end along the strip the map
+  carved (districts flagged `beat: true` → `LevelDef.merchantBeat`) — the
+  hub's street dealer. A walking counter owes two rules nothing else does:
+  `hailMerchant` roots him where a tap landed (cleared by `closeShop`, so
+  dismissing the modal puts him back on his beat), and a driven car above
+  `CAR.roadkillSpeed` runs him down (`runDownMerchant` in vehicles.ts →
+  `killMerchant`, which shuts the stall, drops every open counter, unpins
+  the map and emits `merchantKilled`). Nothing about a merchant persists,
+  so the next visit mints another one on the same pitch. `merchant.line` is
+  what he says ACROSS the counter on every visit — drawn on the shop panel
+  rather than through the dialogue box, which is what keeps a greeting the
+  player reads constantly from being a toll booth. A level may also list stall
   UNIQUES (`merchant.stockUniques`): named uniques the stall MAY carry,
   each rolled at the standing boss-unique odds when it stocks — the same
   rarity as a unique drop, sold across the counter instead. His ward (`repelFromMerchant`,

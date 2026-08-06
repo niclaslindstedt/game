@@ -35,6 +35,22 @@ export const MERCHANT = {
   speed: 26,
   /** Each wander leg heads this far from where he stands, rolled per leg. */
   wanderRange: [50, 150] as [number, number],
+  /**
+   * A BEAT leg's length as a fraction of the way to the far end of the strip
+   * (plus up to 0.4 more, rolled): 0.6 means he covers at least three fifths
+   * of what is left before he stops for a breath. High on purpose — a beat
+   * made of short hops is a wander with extra steps, and the thing that reads
+   * from across the lot is a man crossing the whole street and coming back.
+   */
+  beatLegFraction: 0.6,
+  /**
+   * How long a HAILED trader stands where he was hailed (`hailMerchant`).
+   * Long enough to walk the width of the hub to him, short enough that a tap
+   * nobody follows up on is a pause rather than a parking. The open shop
+   * keeps topping it up and closing the shop clears it, so this figure only
+   * ever governs a hail that went nowhere.
+   */
+  hailMs: 20_000,
   /** Pause between wander legs, rolled per pause. */
   idleMs: [900, 2800] as [number, number],
   /** Spawns at least this far from the player spawn — he is met, not given. */

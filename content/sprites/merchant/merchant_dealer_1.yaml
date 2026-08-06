@@ -1,0 +1,41 @@
+name: merchant_dealer_1
+family: merchant
+size: [16, 16]
+description: >
+  The neighborhood dealer mid-stride — the same black hood pulled low, hands
+  in the front pocket, gold chain at the collar, feet planted a touch wider as
+  he walks his stretch of pavement.
+subject:
+  kind: merchant reskin — the neighborhood dealer who works the street
+  name: THE DEALER
+  build: lean and unhurried, shoulders up around the ears
+  attire: a black hooded top with the hood pulled low, white drawstrings, white sneakers
+  features: the hood's cavity is shadow with a pale jaw at the bottom of it
+  accent: the thin gold chain at the collar
+  pose: a mid-bob walking frame, the feet planted a touch wider, hands still pocketed
+  flavor: the man who is always on that stretch of pavement, and never the same man twice
+palette:
+  O: "#1a1c2c" # navy outline, and the shadow inside the hood
+  W: "#f4f4f4" # white hood drawstrings
+  Z: "#262b3d" # black hooded top
+  b: "#3f4553" # the lit top-left planes of the hood and shoulders
+  o: "#d6a842" # thin gold chain at the collar
+  p: "#deaa86" # jaw, and the hands sunk in the front pocket
+  w: "#c6c6c6" # white sneakers
+grid: |
+  ................
+  .....OOOOOO.....
+  ....ObbbZZZO....
+  ...ObbZZZZZZO...
+  ...ObZOOOOZZO...
+  ...ObZOOOOZZO...
+  ....OZOppOZO....
+  ...OObZooZbOO...
+  ..ObbZZZZZZZbO..
+  ..ObZZWZZWZZbO..
+  ..ObZpZZZZpZbO..
+  ...OZZZZZZZZO...
+  ..OZZO....OZZO..
+  ..OwwO....OwwO..
+  ..OOOO....OOOO..
+  ................

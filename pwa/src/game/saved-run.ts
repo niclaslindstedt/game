@@ -462,9 +462,16 @@ function readRun(key: string): ParkedRun | null {
       // shipped simply has nothing on it — so it is defaulted here rather than
       // paid for with a SAVE_VERSION bump that would bin every parked run for a
       // list that starts empty anyway.
+      // …and the trader's HALT timer and his pulse are additive on exactly the
+      // same terms: a run parked before the street dealer shipped has a trader
+      // who never walked anywhere, so zero and alive are what he always was.
+      // `haltMs` in particular must not thaw undefined — it is arithmetic every
+      // tick, and NaN there is a trader who can never be hailed again.
       merchant: {
         ...payload.state.merchant,
         buyback: payload.state.merchant?.buyback ?? [],
+        haltMs: payload.state.merchant?.haltMs ?? 0,
+        dead: payload.state.merchant?.dead ?? false,
       },
       // PLAYER CORPSES are purely additive on the same reasoning as the
       // buy-back shelf above: a run parked before they shipped simply has none

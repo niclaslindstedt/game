@@ -846,6 +846,15 @@ export type GameEvent =
    */
   | { type: "merchantDiscovered"; pos: Vec2 }
   /**
+   * THE TRADER WENT UNDER A CAR. A driven vehicle caught the merchant at
+   * `pos` (see `runDownMerchant`, vehicles.ts): the stall is shut for the
+   * rest of the visit, every open counter has been dropped, and his pin is
+   * off the map. The app spills the blood and thumps the impact — and says
+   * nothing else, because the next visit mints another trader on the same
+   * pitch and the game does not pretend otherwise.
+   */
+  | { type: "merchantKilled"; pos: Vec2 }
+  /**
    * The hero walked up to somebody with an errand for the first time: they are
    * pinned on the level map and their mark is now readable. `giverId` keys
    * QUEST_GIVER_DEFS.
