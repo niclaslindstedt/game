@@ -707,15 +707,15 @@ export {
   botCareCommand,
   botCullCommands,
   botDrawCommand,
-  botHubCommand,
+  botErrandCommand,
   botIntent,
   botSortCommand,
   botSweepCommand,
   driveBotActions,
-  driveBotHub,
+  driveBotErrands,
   driveBotUpkeep,
   runBotActions,
-  runBotHub,
+  runBotErrands,
   runBotUpkeep,
 } from "./game/bot/intent.ts";
 export type {
@@ -733,11 +733,24 @@ export {
   driveOutInput,
   heroCar,
   hubCar,
-  hubGiverTarget,
   hubGoal,
   hubTapCommand,
 } from "./game/bot/hub.ts";
 export type { HubCommand, HubGoal } from "./game/bot/hub.ts";
+
+// THE AUTOPILOT'S QUEST PLAY (bot/errands.ts): the person with a mark over
+// their head as a travel goal and a tap, the running errands' own objectives
+// (tokens, breeds, spots, and somebody to walk to a door), and the token read
+// the pickup detour puts ahead of the floor.
+export {
+  errandGiver,
+  GIVER_REACH,
+  giverTapCommand,
+  questObjectiveTarget,
+  questTokenWanted,
+  trackErrandAbandon,
+} from "./game/bot/errands.ts";
+export type { QuestGoal } from "./game/bot/errands.ts";
 
 // The POCKET ARSENAL: which weapon is in the hand, moment by moment — the
 // blade in reach, the boss round at a big body, the spread across a mass —

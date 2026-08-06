@@ -40,7 +40,7 @@ import {
   threatCountWithin,
 } from "./perception.ts";
 import { allyCoverTarget, partyLeash } from "./party-play.ts";
-import { questObjectiveTarget } from "./errands.ts";
+import { errandGiver, questObjectiveTarget } from "./errands.ts";
 import { hubGoal } from "./hub.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
@@ -210,8 +210,15 @@ function macroPreemptible(
   // exists to finish.
   const cover = allyCoverTarget(state, hero, tune);
   if (cover && cover.x === goal.x && cover.y === goal.y) return false;
-  const quest = questObjectiveTarget(state, hero);
+  const quest = questObjectiveTarget(bot, state, hero);
   if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y) return false;
+  // WALKING TO A PERSON is the most committed destination of the lot: the
+  // whole value of taking an errand is taking it EARLY, and a lull's hunt
+  // re-pointing the route two rooms short of the giver spends the walk and
+  // collects nothing.
+  const person = errandGiver(bot, state, hero);
+  if (person && person.pos.x === goal.x && person.pos.y === goal.y)
+    return false;
   // A HOME ERRAND is a committed destination too — and on a hub with a horde
   // in it (a mod's town under siege), a lull's hunt re-pointing the route off
   // the car is a ride that never leaves.
@@ -357,14 +364,25 @@ function ownMacroTarget(
   // this ladder at all. NULL solo and with everybody healthy.
   const cover = allyCoverTarget(state, hero, tune);
   if (cover) return cover;
+  // TAKE THE WORK FIRST (`errands.ts` `errandGiver`). A person with a `!` or a
+  // `?` over their head is the highest-value thing on most maps and the
+  // cheapest: half of what an errand asks for (`kill`, `collect`) is credited
+  // by the clearing that was going to happen anyway, so an errand taken ON
+  // ARRIVAL costs a walk and pays a level's worth of xp, coins and chase-tier
+  // loot — while the same errand taken at the END of the sweep counts nothing,
+  // because everything that would have credited it is already dead. That is
+  // the whole reason this rung sits above the hunt, the farm and the caches
+  // rather than beside the objectives it opens. A person is also a fixed,
+  // silent, invulnerable point, so the walk is as cheap as a destination gets.
+  const person = errandGiver(bot, state, hero);
+  if (person) return person.pos;
   // AT HOME, THE ROOM IS THE LEVEL (`hub.ts`). A hub has no horde, no cache, no
   // fog and no boss, so every rung below this one answers "nothing" and the
   // ladder used to run off its own end — the whole reason turning the AUTO
-  // PILOT on in the garage did nothing at all. The people with a mark over
-  // their head, the counter, and the car ARE the content here, in that order,
-  // and they sit this high because there is nothing above them to lose to:
-  // only a pinned nudge and a teammate on the floor outrank going home's
-  // errands. Null on every other level, which leaves the ladder untouched.
+  // PILOT on in the garage did nothing at all. The counter and the car ARE the
+  // content here (the PEOPLE are the rung above, on every map), and they sit
+  // this high because there is nothing below them to lose to. Null on every
+  // other level, which leaves the ladder untouched.
   const home = hubGoal(bot, state, hero, errand);
   if (home) return home.pos;
   // The ANTI-LOITER hunt: gone too long without a fight, the bot marches on
@@ -382,17 +400,20 @@ function ownMacroTarget(
     const spawner = activeSpawnerNear(state, hero);
     if (spawner) return spawner;
   }
+  // THE WORK ITSELF: a running errand's outstanding objective on this level —
+  // a token to fetch, a breed to hunt, a spot to stand on, somebody to walk to
+  // a door (`errands.ts`). ABOVE the caches, because an errand is DIRECTED
+  // where a chest is opportunistic: its payout is a level's worth of xp and a
+  // tier-bonus roll rather than one locker's spill, and its `kill` breeds are
+  // exactly the bodies the sweep wants to be killing anyway. Every candidate is
+  // A*-reachable (a token scattered behind a wall would otherwise pin a rung
+  // this high), and both nearest-first, so a cache on the way is still cracked
+  // by the fight that passes it.
+  const quest = questObjectiveTarget(bot, state, hero);
+  if (quest) return quest.pos;
   const content = nearestContent(bot, state, hero, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
-  // THE RUNNING ERRANDS: an ACTIVE quest's outstanding objective on this level
-  // — a token to fetch, a breed to hunt, a spot to stand on — is a destination
-  // the player literally signed up for, so it beats the guidance arrow and the
-  // fog sweep below (generic travel) while every committed fight and cache
-  // above keeps its rank. Only errands already TAKEN: a giver is never a goal,
-  // and accepting is the player's decision (see `errands.ts`).
-  const quest = questObjectiveTarget(state, hero);
-  if (quest) return quest.pos;
   // THE GUIDANCE ARROW IS AN INSTRUCTION. On a path level the blinking amber
   // "go this way" arrow the player sees points at the next unwalked waypoint
   // of the authored intended path (path.ts; drawn by the app's
@@ -498,8 +519,12 @@ function macroThought(
   // crossing the map toward a spot with no loot on it.
   const cover = allyCoverTarget(state, hero, tune);
   if (cover && cover.x === goal.x && cover.y === goal.y) return "COVER ALLY";
-  // The home errands (hub.ts) carry their own labels — SEE FOLK / TO SHOP /
-  // TO CAR — so the bubble in the garage says which of the three he is on.
+  // On his way to somebody with a mark over their head (errands.ts).
+  const person = errandGiver(bot, state, hero);
+  if (person && person.pos.x === goal.x && person.pos.y === goal.y)
+    return "SEE FOLK";
+  // The home errands (hub.ts) carry their own labels — TO SHOP / TO CAR — so
+  // the bubble in the garage says which of the two he is on.
   const home = hubGoal(bot, state, hero, wantsMerchantVisit(state, hero));
   if (home && home.pos.x === goal.x && home.pos.y === goal.y)
     return home.thought;
@@ -511,14 +536,17 @@ function macroThought(
     activeSpawnerNear(state, hero)
   )
     return "CLEAR SPAWNER";
+  // A running errand's own goal: fetching its token, hunting its breed,
+  // walking to its spot, walking somebody to a door (errands.ts) — the label
+  // rides on the goal itself. Read BEFORE the caches, in the ladder's own
+  // order: a chest that happens to sit on an errand's token would otherwise be
+  // labelled SEEK CHEST while the hero is plainly on an errand.
+  const quest = questObjectiveTarget(bot, state, hero);
+  if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y)
+    return quest.thought;
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)
     return bot.content?.kind === "elite" ? "HUNT ELITE" : "SEEK CHEST";
-  // A running errand's own goal: fetching its token, hunting its breed,
-  // walking to its spot (errands.ts) — the label rides on the goal itself.
-  const quest = questObjectiveTarget(state, hero);
-  if (quest && quest.pos.x === goal.x && quest.pos.y === goal.y)
-    return quest.thought;
   const arrowWp = nextPathWaypoint(state);
   if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y)
     return "FOLLOW ARROW";

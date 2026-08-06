@@ -766,6 +766,35 @@ export function doorwayVia(
   return best;
 }
 
+/**
+ * CAN HE GET THERE — counting the doors that would open if he walked up to
+ * them? The reachability test every ERRAND rung filters its candidates with.
+ *
+ * `routeReachable` alone is the wrong question on a map with interior doors,
+ * and GOODCO's floor is the proof: every office door starts shut, so at the
+ * moment the run begins the grid says the whole building is walled off and a
+ * plain reachability filter threw away all three of its quest givers — the bot
+ * cleared the level with three `!` marks standing untouched. The steering has
+ * known better since {@link doorwayVia}; this is the same knowledge said as a
+ * predicate, so the filter and the march can never disagree.
+ *
+ * It is deliberately optimistic — a shut door somewhere does not prove THIS
+ * goal is behind it — because the rungs that read it all carry an abandon
+ * gauge (`errands.ts` `trackErrandAbandon`) that writes off a destination the
+ * march makes no headway toward. Better to walk at a person and give up than to
+ * never look.
+ */
+export function reachableThroughDoors(
+  bot: Bot,
+  state: GameState,
+  hero: Player,
+  goal: Vec2,
+): boolean {
+  const rc = ensureRoute(bot, state);
+  if (routeReachable(rc.grid, knownPortals(state), hero.pos, goal)) return true;
+  return doorwayVia(bot, state, hero, goal) !== null;
+}
+
 /** Steer toward a far TRAVEL goal along a global A* route (see {@link routeTarget})
  * — the macro-travel movement primitive that rounds every wall on the way, not
  * just the one 140px ahead. The route's sub-target still runs through the

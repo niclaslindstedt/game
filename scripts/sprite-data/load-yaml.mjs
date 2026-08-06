@@ -67,7 +67,8 @@ export function loadSpriteSpaces(dir = spritesDir) {
  * Load the whole sprite tree.
  *
  * @returns `{ CORE_PALETTE, FAMILIES, SPRITES, SPRITE_PALETTES, SPRITE_FAMILY,
- *            SPRITE_PLANES, ANIMATIONS }` — the base (hand-authored) sprites
+ *            SPRITE_PLANES, SPRITE_RISE, SPRITE_DIRECTIONAL, ANIMATIONS }` —
+ *            the base (hand-authored) sprites
  *            only; wounded and worn variants are derived on top of these by
  *            index.mjs.
  */

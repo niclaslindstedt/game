@@ -15,7 +15,7 @@ import {
   botPickTalent,
   createBot,
   driveBotActions,
-  driveBotHub,
+  driveBotErrands,
   driveBotUpkeep,
   gateKeyTarget,
   heroCar,
@@ -125,20 +125,20 @@ export function createBotDriver(deps: {
       runCommand(state, "advanceDialogue");
       bumpUi();
     }
-    // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot takes it — and at HOME it
-    // goes and asks for one. Both halves are the engine's decision now
-    // (`driveBotHub` → bot/hub.ts): work whatever conversation is open (take
-    // the offer, hand in the finished errand, sit through the meeting a person
-    // owes), and on a hub tap the giver with a mark over their head or climb
-    // into the car. An unattended AUTO PILOT run parked in a quest modal
-    // forever is the failure the first half exists to prevent — and the right
-    // answer was never "dismiss it": xp, coins and loot are exactly what the
-    // ride is paying for.
+    // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot goes and asks for one. All
+    // of it is the engine's decision (`driveBotErrands` → bot/errands.ts +
+    // bot/hub.ts): work whatever conversation is open (take the offer, hand in
+    // the finished errand, sit through the meeting a person owes), tap the
+    // person the macro plan is already walking to, and at home climb into the
+    // car. An unattended AUTO PILOT run parked in a quest modal forever is the
+    // failure the first half exists to prevent — and the right answer was never
+    // "dismiss it": xp, coins and loot are exactly what the ride is paying
+    // for.
     //
     // OUTSIDE the `fieldLive` gate below, deliberately: a hero reading a quest
     // box HAS a screen up, so a tick gated on him not having one is a tick
     // that can never close it.
-    if (driveBotHub(drivingBot, state, localHero(state), send)) bumpUi();
+    if (driveBotErrands(drivingBot, state, localHero(state), send)) bumpUi();
     // The bot always SPARES a kneeling unique — autoplay runs exercise
     // the companion systems, and a party beats a lone bot anyway.
     if (state.phase === "choice") {
