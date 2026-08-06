@@ -121,18 +121,40 @@ camera it was drawn for. The stack is a BAKE — once per sprite per projection,
 dropped alongside the flat bakes when a knob moves — so the per-frame cost is one
 blit per panel, same as before.
 
+**THE STACK CUTS THE SHAPE; IT MUST NOT ALSO CHOOSE THE COLOUR.** Every slice
+covers the one behind it, so a plain stack leaves each face pixel showing the
+cap's BOTTOM EDGE — and every wall in this game is outlined pixel art, whose
+bottom edge is the outline. The face came out one flat near-black smear: a bar of
+shadow under every panel rather than a wall standing on the floor, loudest
+square-on, where the face is taller than the cap it hangs off. So the silhouette
+the stack cuts is kept and REPAINTED, `source-atop`, with the same plan art
+stretched over the whole block. A plan view of a wall panel already reads
+top-to-bottom as an elevation would — lit bevel, panel field, base shadow — so
+stretching it down the block gives the face the artist's own material and their
+own light, and the outline stays a contour round the silhouette instead of a fill
+inside it. Nothing is authored twice, and the shape is still the projected
+slice's, so it is still right at every pitch and yaw.
+
 `rise` defaults to the art's OWN height, so a 16×16 plan panel extrudes into a
 cube: a wall a hero tall, which is what it takes to read as one. A piece that is
 deliberately lower than it is deep (a parapet, a kerb) says so with `rise:`.
 
-Two consequences worth carrying. **The walls are drawn LAST in the obstacle pass
+Three consequences worth carrying. **The walls are drawn LAST in the obstacle pass
 and back-to-front**, by PROJECTED y — the axis that actually runs into the screen
 once the camera is turned — because an extruded panel is tall enough to slice the
-cap off its own neighbour otherwise. And a door hung in a wall run **must be on
-the wall's plane too**: a door on a different plane from the run it interrupts is
-a hole in the world, which is why the garage door's roll-up
-(`drawWorldSpriteTop`) answers the plane question the same way one frame later,
-seat included.
+cap off its own neighbour otherwise. A door hung in a wall run **must be on the
+wall's plane too**: a door on a different plane from the run it interrupts is a
+hole in the world, which is why the garage door's roll-up (`drawWorldSpriteTop`)
+answers the plane question the same way one frame later, seat included.
+
+And **everything with a BODY is drawn after `drawObstacles`** (render.ts), which
+the obstacle pass earns by no longer being a floor pass: a face that sweeps
+`rise` px up the screen covers whatever was painted there, which is right for the
+ground the wall stands in front of and wrong for anything standing on it. The
+hero, the horde and the loot were always down there; the lamps and the rift
+portals were moved for it (a fitting is BOLTED to the stone), and so are the
+VEHICLES — a machine is a body, and a car parked at the garage's north wall was
+swallowed whole by that wall's face, wheels down.
 
 **FLAT ART CAN ALSO RUN ONE WAY — `directional: true`, and the bearing comes from
 the PLACEMENT.** A stain lies whichever way round it likes; a conveyor belt does

@@ -226,12 +226,25 @@ export function flatSprite(
  * The stack is a BAKE, once per sprite per projection, not a per-frame loop:
  * a 16-px wall is seventeen blits, and a bay wall in view is sixty panels.
  *
- * The shading is what turns a stack of identical slices into a face: a
- * `source-atop` ramp darkens the block toward the floor (the wall's own shadow
- * on itself, and the contact shadow where it meets the ground), then the cap is
- * laid down again UNSHADED so the top keeps the colours the artist chose. Only
- * the cap does — a face made of the cap's own edge pixels smeared upward is
- * exactly what a low-detail wall face should look like.
+ * THE STACK CUTS THE SHAPE; IT MUST NOT ALSO CHOOSE THE COLOUR. Every slice
+ * covers the one behind it, so a plain stack leaves each face pixel showing the
+ * cap's BOTTOM EDGE — and every wall in this game is outlined pixel art, whose
+ * bottom edge is the outline. The face came out one flat near-black smear: a bar
+ * of shadow under every panel rather than a wall standing on the floor, loudest
+ * square-on where the face is taller than the cap it hangs off.
+ *
+ * So the silhouette the stack cuts is kept and REPAINTED, `source-atop`, with
+ * the same plan art stretched over the whole block. A plan view of a wall panel
+ * already reads top-to-bottom as an elevation would — lit bevel, panel field,
+ * base shadow — so stretching it down the block gives the face the artist's own
+ * material and their own light, and the outline stays where it belongs: a
+ * contour round the silhouette rather than a fill inside it. Nothing is authored
+ * twice, and it still comes out right at every pitch and yaw, because the shape
+ * is still the projected slice's.
+ *
+ * Then a `source-atop` ramp darkens the block toward the floor (the wall's own
+ * shadow on itself, and the contact shadow where it meets the ground), and the
+ * cap is laid down again UNSHADED so the top keeps the colours the artist chose.
  */
 const wallCache = new Map<string, HTMLCanvasElement | null>();
 
@@ -253,12 +266,12 @@ export function wallBlock(
  * How dark the foot of a wall is against its cap — the bottom of the ramp, and
  * the contact shadow where the panel meets the floor.
  *
- * Kept modest on purpose. The face is smeared from the plan art's own EDGE
- * pixels, and a wall panel is outlined, so the face starts near the outline's
- * colour before any of this is applied: a heavy ramp on top of that crushes the
- * whole side to black and the run stops reading as masonry.
+ * Kept modest on purpose. The face already carries the artist's own base shadow
+ * (it is their plan art stretched down the block), so this is the contact with
+ * the ground on top of that, and a heavy ramp crushes the whole side to black
+ * and the run stops reading as masonry.
  */
-const WALL_FOOT_SHADE = 0.42;
+const WALL_FOOT_SHADE = 0.3;
 /** …and the top of it, just under the cap, so the face is never flat. */
 const WALL_HEAD_SHADE = 0;
 
@@ -272,14 +285,21 @@ function bakeWall(sprite: ImageBitmap, rise: number): HTMLCanvasElement | null {
   const ctx = out.getContext("2d");
   if (!ctx) return null;
   ctx.imageSmoothingEnabled = false;
-  // Bottom-up, so a slice nearer the eye is drawn over the one behind it.
+  // THE SILHOUETTE. Bottom-up, so a slice nearer the eye is drawn over the one
+  // behind it — what is wanted from this pass is the SHAPE it cuts, which is the
+  // projected footprint swept `rise` px up the screen.
   for (let y = h; y >= 0; y--) ctx.drawImage(cap, 0, y);
-  // The ramp — over the pixels the stack actually painted, never the gaps
-  // between them, which is what `source-atop` buys over a plain fill.
+  // THE MATERIAL. The plan art stretched over the whole block, kept inside the
+  // shape above — `source-atop` paints over the pixels the stack laid down and
+  // never the gaps between them, so the silhouette is untouched and only what
+  // fills it changes. Nearest-neighbour: this is pixel art being stretched, and
+  // a smoothed face would be the one soft thing in the frame.
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.drawImage(cap, 0, 0, cap.width, cap.height, 0, 0, out.width, out.height);
+  // The ramp, on the same terms.
   const ramp = ctx.createLinearGradient(0, 0, 0, out.height);
   ramp.addColorStop(0, `rgba(0, 0, 0, ${WALL_HEAD_SHADE})`);
   ramp.addColorStop(1, `rgba(0, 0, 0, ${WALL_FOOT_SHADE})`);
-  ctx.globalCompositeOperation = "source-atop";
   ctx.fillStyle = ramp;
   ctx.fillRect(0, 0, out.width, out.height);
   ctx.globalCompositeOperation = "source-over";
