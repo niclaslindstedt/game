@@ -84,6 +84,9 @@ const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
 const { loadCompanions } = await import(
   engine("scripts/companion-data/load-yaml.mjs")
 );
+const { loadSpriteSpaces } = await import(
+  engine("scripts/sprite-data/load-yaml.mjs")
+);
 // The compass-region grammar a MAP BLUEPRINT points its boss with. A parser
 // cannot travel in a JSON file, and the shipped app has no TypeScript to run
 // the engine's — so the names the engine's OWN parser accepts are enumerated
@@ -279,6 +282,13 @@ const catalog = {
   deathRites: sorted(DEATH_RITES.filter((r) => !r.flight).map((r) => r.id)),
   flightRites: sorted(DEATH_RITES.filter((r) => r.flight).map((r) => r.id)),
   sprites: shippedSpriteNames(),
+  // Which side of a building's wall a shipped sprite belongs on, for the sprites
+  // that say (`space:` — see `SPRITE_SPACES`). A mod's blueprint is checked
+  // against it exactly as the campaign's is, so a mod that scatters the office
+  // furniture over its car park is told at compile time rather than on a seed.
+  spriteSpaces: Object.fromEntries(
+    [...loadSpriteSpaces()].sort(([a], [b]) => a.localeCompare(b)),
+  ),
   // The elements a weapon's signature look may name (see `WeaponFx`).
   elements: sorted(
     new Set([...Object.keys(SLASH_ELEMENTS), ...Object.keys(SHOT_ELEMENTS)]),

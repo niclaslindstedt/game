@@ -1,5 +1,6 @@
 name: weld_scorch
 family: goodco
+space: inside
 plane: floor
 size: [14, 10]
 description: >

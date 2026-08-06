@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: workbench
 family: goodco
+space: inside
 size: [16, 14]
 description: >
   The hero's workbench — a heavy steel-topped bench with a vise bolted to

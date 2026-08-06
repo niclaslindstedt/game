@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: power_cabinet
 family: goodco
+space: inside
 size: [10, 10]
 description: >
   A power cabinet with a live warning panel — GOODCO factory floor

@@ -717,6 +717,13 @@ export function buildMod(modDir, catalog) {
       modLevels.map((def) => def.id),
     ),
     sprites: spriteNames,
+    // Which side of a wall each piece of art belongs on: the shipped
+    // declarations from the catalog, plus this mod's own sprites, which state it
+    // in exactly the same field of exactly the same file.
+    spriteSpace: new Map([
+      ...Object.entries(catalog.spriteSpaces ?? {}),
+      ...sprites.filter((s) => s.space).map((s) => [s.name, s.space]),
+    ]),
     ramps: new Set(Object.keys(loadLadder().ramps)),
     parseRegion: regionChecker(catalog.regions),
   };
@@ -930,6 +937,11 @@ function rasterize(sprite) {
     width,
     height,
     rgba: bytes.toString("base64"),
+    // Carried through unrasterized: it is not pixels, it is the fact the MAP
+    // gate reads to keep this art on its own side of a wall (see `space:` in
+    // sprite-schema.mjs). Harmless in the bundle, and the alternative is a
+    // second pass over the same files.
+    ...(sprite.space ? { space: sprite.space } : {}),
   };
 }
 

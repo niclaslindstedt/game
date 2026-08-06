@@ -128,10 +128,15 @@ describe("GOODCO HQ level def", () => {
 
   it("keeps scattered furniture clear of the architecture", () => {
     const state = startGame(SEED, "goodco_hq");
-    const architecture = ["wall", "door_locked"];
     const walls = state.obstacles.filter((o) => o.kind === "wall");
+    // ARCHITECTURE is not furniture, and a door is architecture however it is
+    // drawn: an interior door wears its own sprite as its kind (`door_office`),
+    // so the set is taken from `state.doors` rather than from a list of names —
+    // a door stands IN the wall by definition, and holding one to the scatter's
+    // clearance would be asking it not to touch the doorway it fills.
+    const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
     const scattered = state.obstacles.filter(
-      (o) => !architecture.includes(o.kind),
+      (o) => o.kind !== "wall" && !doorParts.has(o.id),
     );
     expect(scattered.length).toBeGreaterThan(0);
     // BUCKETED, not every-against-every: a carved floor carries a couple of
@@ -355,11 +360,20 @@ describe("GOODCO HQ level def", () => {
     // bay keeps a cross-corridor rather than becoming a wall of hardware.
     for (const rank of ranks) expect(rank.aisle ?? 0).toBeGreaterThan(0);
 
+    // `propLines` carries two different things now, and only one of them is a
+    // rank: a RANK is a run the carve walked down a cell, and a PREFAB's fixed
+    // prop is a single point (`from === to`) standing exactly where the static
+    // room authored it. Split them by that, and hold each to its own claim.
     const lines = carved.propLines ?? [];
-    expect(lines.length).toBeGreaterThan(0);
-    // A line is a real run rather than one lonely prop.
-    for (const line of lines)
+    const runs = lines.filter((l) => dist(l.from, l.to) > 0);
+    const pinned = lines.filter((l) => dist(l.from, l.to) === 0);
+    expect(runs.length).toBeGreaterThan(0);
+    // A rank is a real run rather than one lonely prop.
+    for (const line of runs)
       expect(dist(line.from, line.to)).toBeGreaterThan(line.spacing);
+    // …and the janitor's cupboard is standing somewhere on this floor, with the
+    // mop bucket it is recognisable by.
+    expect(pinned.some((l) => l.sprite === "mop_bucket")).toBe(true);
   });
 
   it("wires every knotted elite to the knot it stands in", () => {

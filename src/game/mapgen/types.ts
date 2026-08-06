@@ -25,7 +25,7 @@
 // difficulty figure and the engine never reads it.
 
 import type { Difficulty } from "../types/index.ts";
-import type { MapArea } from "./areas.ts";
+import type { MapArea, MapSpace } from "./areas.ts";
 import type {
   DifficultyHp,
   DifficultyMobLevels,
@@ -33,7 +33,7 @@ import type {
 import type { MapSizeName } from "../flags.ts";
 
 export type { MapSizeName };
-export type { Enclosure, MapArea } from "./areas.ts";
+export type { Enclosure, MapArea, MapSpace } from "./areas.ts";
 
 /**
  * What a blueprint object is FOR. The type is what lets the generator place a
@@ -56,10 +56,13 @@ export type { Enclosure, MapArea } from "./areas.ts";
  *             off the render clock, collides with nothing, cannot be hurt.
  *   lair      an OCCUPIED house: a structure with a door that opens and an elite
  *             that comes out of it (see `LevelDef.lairs`)
- *   door      an APPROACH door hung across every doorway of the SPAWN chamber
- *             (the garage door): a solid chain that slides open for anybody
- *             who walks or drives up to it (`LevelDef.doors`, opens:
- *             "approach"), and the threshold a driven car departs through
+ *   door      a real DOOR: a solid chain hung across a doorway that slides open
+ *             for anybody who walks or drives up to it (`LevelDef.doors`,
+ *             opens: "approach"). Where it hangs is said by whoever wants one —
+ *             `at: spawn` puts it across every doorway of the hero's own
+ *             chamber (the garage's roll-up, and the threshold a driven car
+ *             departs through), and a district that names it in `MapArea.doors`
+ *             gets one in every doorway of its own rooms.
  *   light     a LAMP: a pool of light on the ground, pinned to a carved anchor
  *             and burning only once the venue's `sky` has gone dark
  *             (`LevelDef.lights`). It draws NO sprite — the fixture hangs
@@ -206,7 +209,30 @@ export type MapObject = {
   doorOpen?: string;
   /** `lair`: how close the hero must come to be greeted (world px). */
   trigger?: number;
-  /** `landmark` / `light`: which carved feature it is pinned to. */
+  /**
+   * `door`: the same door STANDING OPEN — drawn in the jambs once it has slid
+   * aside, so the doorway keeps a door in it instead of turning back into a
+   * hole in the wall the moment the hero uses it.
+   *
+   * It is what makes the door read as architecture rather than as a barrier
+   * that was removed. Optional, because the garage's roll-up rolls UP: there is
+   * nothing left standing in the opening to draw.
+   */
+  openSprite?: string;
+  /**
+   * `door`: this one ROLLS UP rather than sliding aside — the garage door. It
+   * picks the app's roll-up animation and its chain-drive sound instead of the
+   * plain door slide (`LevelDef.doors[].rollUp`).
+   */
+  rollUp?: boolean;
+  /** `landmark`: which carved feature it is pinned to.
+   *
+   * `door`: WHERE ONE HANGS. Only `spawn` means anything — every doorway of the
+   * hero's own chamber, which is the garage's roll-up. A door that hangs by
+   * DISTRICT is named by the district instead (`MapArea.doors`), because that
+   * is a fact about the rooms, not about the door.
+   *
+   * `light`: which carved feature the lamp is pinned to. */
   at?: MapAnchor;
   /**
    * `light`: how far (world px) the lamp stands from the anchor it is pinned
@@ -268,6 +294,77 @@ export type MapObject = {
    * like walking somewhere. Scatter and building purposes only.
    */
   areas?: string[];
+  /**
+   * Restrict this prop to the INSIDE or the OUTSIDE districts (see
+   * {@link MapSpace}) — the same restriction `areas` expresses, said once
+   * instead of once per district.
+   *
+   * It is not merely shorthand, because the two rot differently: a map that
+   * grows a new interior district has to remember to add it to the `areas` of
+   * every indoor prop, and the failure when somebody forgets is silent — a wing
+   * with no furniture in it. `space` is a statement about the PROP, so it stays
+   * true as the palette changes.
+   *
+   * The build cross-checks it against the SPRITE's own declared space
+   * (`content/sprites/**`, `space:`), which is where the fact really lives: a
+   * server rack is an indoor object on every map in the game, and a palette
+   * entry that could scatter one onto a car park fails the build rather than
+   * shipping. Both may be given, and the prop then has to satisfy both.
+   */
+  space?: MapSpace;
+};
+
+/**
+ * A PREFAB — a room that is the SAME room every run, cut into a carve that is
+ * different every run.
+ *
+ * The generated maps buy their replay value by making every room new, and pay
+ * for it in recognition: nothing on a carved floor is a landmark, because
+ * nothing on it has been there before. A player who has run GOODCO ten times
+ * cannot say one true sentence about the building. That is the price of the
+ * search, and it does not have to be paid in full — a handful of rooms that ARE
+ * always the same (the car park he arrives in, the cleaning cupboard, the
+ * transformer room) give the floor plan something to be measured from, and
+ * everything between them stays rolled.
+ *
+ * A prefab is cut out of a district as a GUILLOTINE (see `stampPrefab`), so it
+ * is a real cell like any other: it takes its walls from its own AREA the way
+ * every cell does, its doorway is punched by the same spanning tree, and the
+ * horde, the fog and the minimap treat it as the room it is. What is authored is
+ * only its SIZE and its CONTENTS.
+ *
+ * NOTHING THE RUN NEEDS MAY LIVE IN ONE. A carve too small to give a prefab its
+ * corner simply does not have that room this run, and a mission whose keycard
+ * was in it would be unfinishable on those seeds — the same rule the keyed rooms
+ * follow, for the same reason.
+ */
+export type MapPrefab = {
+  /** Blueprint-unique id (and what the map tooling labels it). */
+  id: string;
+  /**
+   * The AREA this room wears — its floor, its walls, its doorway width, its
+   * label. Usually an area of its own (weight 0, so the carve never grows a
+   * second one); it may also be the host district's own area, for a prefab that
+   * is an ARRANGEMENT rather than a room — a bank of parking bays is not walled
+   * off from the car park it is in.
+   */
+  area: string;
+  /** Room footprint in world px — identical on every seed and every size, which
+   * is the entire point. */
+  width: number;
+  height: number;
+  /** The district areas it may be cut out of. */
+  in: string[];
+  /**
+   * The room's FIXED CONTENTS: a palette object stamped at an offset from the
+   * room's top-left corner, in world px.
+   *
+   * Exact positions rather than a scatter, because "the same room every time" is
+   * a claim about the furniture as much as about the walls — a cleaning cupboard
+   * whose mop bucket moves is just a small room. Compiled to `LevelDef.propLines`
+   * of one prop each, which is the engine's one deterministic placement.
+   */
+  props?: { object: string; at: [number, number] }[];
 };
 
 /** One of the three sizes a blueprint may be carved at. */
@@ -497,6 +594,12 @@ export type MapBlueprint = {
    * `sizes` extents; `sizes.rooms` is ignored when a plan is present.
    */
   plan?: MapPlan;
+  /**
+   * THE ROOMS THAT ARE ALWAYS THE SAME ROOM — static rooms cut into the rolled
+   * carve (see {@link MapPrefab}). A partial `plan`: the venue is generated, and
+   * these few pieces of it are drawn.
+   */
+  prefabs?: MapPrefab[];
   sizes: Record<MapSizeName, MapSizeSpec>;
   /**
    * The AREA PALETTE — what kinds of place this map is made of (see areas.ts).

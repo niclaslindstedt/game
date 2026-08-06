@@ -31,8 +31,12 @@ level: garage
 carveSeed: 35
 
 areas:
+  # The one INSIDE district on the lot: the bay has a roof on it, which is what
+  # lets the workbench world stand here and nowhere else on the map. Every other
+  # area below is open sky and says nothing, which is the default.
   - id: bay
     enclosure: hard
+    space: inside
     weight: 1
     horde: 0
     boss: false
@@ -173,12 +177,17 @@ objects:
     radius: 8
 
   # ── THE GARAGE DOOR ──────────────────────────────────────────────────────
-  # Hung across the bay's doorway(s): a chain of roll-up slat segments that
-  # slides open for anybody who walks or drives up (LevelDef.doors, opens:
-  # approach) — and the threshold the driven car departs through.
+  # `at: spawn` — hung across the bay's doorway(s), the HERO'S OWN chamber: a
+  # chain of roll-up slat segments that opens for anybody who walks or drives
+  # up (LevelDef.doors, opens: approach), and the threshold the driven car
+  # departs through. `rollUp` is what makes it go UP rather than aside: it
+  # picks the chain-drive sound and the roll-up animation, and it is why it
+  # needs no open frame — there is nothing left standing in the opening.
   - id: garage_door
     type: door
     sprite: garage_door
+    at: spawn
+    rollUp: true
     radius: 8
     # THE TWO BARN LIGHTS BOLTED EITHER SIDE OF THE OPENING — the lamps the
     # whole night out here hangs off (the mission carries `sky: earth`, so the

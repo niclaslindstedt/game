@@ -22,7 +22,7 @@ import type { TileSpec } from "../types/index.ts";
 import type { LevelDef, MissionDef } from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import type { Chamber, ChamberGrid, WallRun } from "./rooms.ts";
-import { areaById } from "./areas.ts";
+import { areaById, spaceOf } from "./areas.ts";
 import type { MapBlueprint, MapObject } from "./types.ts";
 
 /** A world rect in the ground plane. */
@@ -215,14 +215,31 @@ export function densityCount(
 function districtOf(
   bp: MapBlueprint,
   grid: ChamberGrid,
-  areas: string[] | undefined,
+  o: Pick<MapObject, "areas" | "space">,
 ): { within?: Zone[]; area: number } {
   const total = grid.chambers.reduce((sum, c) => sum + c.w * c.h, 0);
+  // A prop restricted only by SPACE (see `MapObject.space`) names no districts,
+  // so the list it is priced over is built here rather than authored: every
+  // district on the map that is on the right side of the wall. Saying it this
+  // way round matters — `space` has to keep meaning what it means when the
+  // palette grows another interior district, which an `areas` list cannot.
+  const areas =
+    o.areas ??
+    (o.space
+      ? [
+          ...new Set(
+            bp.areas.filter((a) => spaceOf(a) === o.space).map((a) => a.id),
+          ),
+        ]
+      : undefined);
   if (!areas || areas.length === 0) return { area: total };
   const zones: Zone[] = [];
   let area = 0;
   for (const id of areas) {
     const spec = areaById(bp.areas, id);
+    // Both restrictions hold at once: a prop that names its districts AND its
+    // side of the wall gets the intersection, never the union.
+    if (o.space && spaceOf(spec) !== o.space) continue;
     if (spec.shellOf) {
       // A shell owns no cells — its region is the band, and props that name it
       // scatter into that band.
@@ -332,9 +349,10 @@ export function buildTiles(
     if (!area.ground) continue;
     // An ENCLOSED district keeps its rectangle: there is a wall along it, the
     // rectangle IS the room, and a ragged floor under a straight wall would look
-    // like a mistake. An OPEN one gets the ragged patch (see `raggedRects`).
+    // like a mistake. An OPEN one gets the ragged patch (see `raggedRects`) —
+    // unless it is a PAVED one, which is unwalled and still laid to the inch.
     const rects =
-      area.enclosure === "none"
+      (area.ragged ?? area.enclosure === "none")
         ? raggedRects(c, rng)
         : [{ x: c.x, y: c.y, width: c.w, height: c.h }];
     for (const rect of rects) {
@@ -487,7 +505,7 @@ export function buildObstacles(
   for (const o of bp.objects) {
     if (o.type !== "obstacle" && o.type !== "cover" && o.type !== "crate")
       continue;
-    const district = districtOf(bp, grid, o.areas);
+    const district = districtOf(bp, grid, o);
     const count = densityCount(o.density, district.area, rng);
     if (count <= 0) continue;
     const kind = o.kind ?? o.id;
@@ -527,7 +545,7 @@ export function buildDecor(
   const out: LevelDef["decor"] = [];
   for (const o of bp.objects) {
     if (o.type !== "decor") continue;
-    const district = districtOf(bp, grid, o.areas);
+    const district = districtOf(bp, grid, o);
     const count = densityCount(o.density, district.area, rng);
     if (count <= 0) continue;
     const kind = o.kind ?? o.id;
@@ -674,7 +692,7 @@ export function buildFauna(
   const out: NonNullable<LevelDef["fauna"]> = [];
   for (const o of bp.objects) {
     if (o.type !== "critter") continue;
-    const district = districtOf(bp, grid, o.areas);
+    const district = districtOf(bp, grid, o);
     const count = densityCount(o.density, district.area, rng);
     if (count <= 0) continue;
     const line: NonNullable<LevelDef["fauna"]>[number] = {
@@ -776,6 +794,65 @@ export function buildRows(
         // A wide aisle after every `bank` ranks; the tight `gap` within one.
         across += inBank % bank === 0 ? aisle : gap;
       }
+    }
+  }
+  return out;
+}
+
+/**
+ * THE PREFABS' FIXED CONTENTS — every static room's authored props, stamped at
+ * the offsets it authored them at (see `MapPrefab.props`).
+ *
+ * Emitted as one-prop `propLines` rather than as scatter, because a `propLine`
+ * is the engine's only DETERMINISTIC placement: a line from a point to itself
+ * puts exactly one prop exactly there, colliding or flat according to the
+ * palette entry, and nothing about it is rolled. Which is the whole claim a
+ * prefab makes — the mop bucket is by the door, and it is by the door on every
+ * seed, or the room is not a room the player can recognise.
+ *
+ * A prop that would land outside its own room is dropped rather than clamped: an
+ * offset past the wall is an authoring mistake, and a piece silently slid back
+ * inside would hide it while leaving the room wrong.
+ */
+export function buildPrefabProps(
+  bp: MapBlueprint,
+  grid: ChamberGrid,
+): NonNullable<LevelDef["propLines"]> {
+  const out: NonNullable<LevelDef["propLines"]> = [];
+  for (const placement of grid.prefabs) {
+    const prefab = bp.prefabs?.find((p) => p.id === placement.id);
+    if (!prefab) continue;
+    for (const prop of prefab.props ?? []) {
+      const o = bp.objects.find((entry) => entry.id === prop.object);
+      if (!o) continue;
+      const at = vec(
+        Math.round(placement.x + prop.at[0]),
+        Math.round(placement.y + prop.at[1]),
+      );
+      if (
+        at.x < placement.x ||
+        at.x > placement.x + placement.w ||
+        at.y < placement.y ||
+        at.y > placement.y + placement.h
+      )
+        continue;
+      const line: NonNullable<LevelDef["propLines"]>[number] = {
+        sprite: o.sprite ?? o.kind ?? o.id,
+        from: at,
+        // A COPY, never the same vector twice: two fields of one def sharing a
+        // mutable point is a trap waiting for the first thing that writes to it.
+        to: vec(at.x, at.y),
+        spacing: 1,
+      };
+      // Anything that is not flat decor stands in the way, which is what makes a
+      // prefab a room rather than a picture of one.
+      if (o.type !== "decor") {
+        line.collide = true;
+        if (o.half) line.half = vec(o.half.x, o.half.y);
+        else line.radius = o.radius ?? 8;
+        if (o.jumpable) line.jumpable = true;
+      }
+      out.push(line);
     }
   }
   return out;

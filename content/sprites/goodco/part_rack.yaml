@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: part_rack
 family: goodco
+space: inside
 size: [12, 10]
 description: >
   An open parts rack stacked with components — GOODCO factory floor

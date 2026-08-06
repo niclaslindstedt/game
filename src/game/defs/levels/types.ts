@@ -940,12 +940,32 @@ export type LevelDef = {
      * roll-up slats wear `garage_door`. */
     sprite?: string;
     /**
+     * The same door STANDING OPEN — drawn in the jambs once the leaves have slid
+     * aside, so a doorway that has been used keeps a door in it instead of
+     * reverting to a hole in the wall.
+     *
+     * It is drawn as flat scenery (`state.decor`), never as an obstacle: the
+     * whole meaning of an open door is that the hero can walk through it. Omit
+     * it for a door with nothing left to draw — the garage's roll-up rolls UP.
+     */
+    openSprite?: string;
+    /**
      * How it opens: `key` (the default — a story item whose `unlocks` names
      * this door, carried up to it) or `approach` — it slides open for anybody
-     * who simply walks or drives up (the garage door; no key exists, and its
-     * opening fires `garageDoorOpened` for the roll-up animation).
+     * who simply walks or drives up (the interior doors of a building, and the
+     * garage door; no key exists for either).
      */
     opens?: "key" | "approach";
+    /**
+     * THE ROLL-UP: this one goes up rather than aside, so its opening fires
+     * `garageDoorOpened` (the app's roll-up animation and its chain-drive
+     * sound) instead of the plain `doorOpened` slide.
+     *
+     * It is a fact about the DOOR, not about its lock, and keeping the two
+     * apart is what lets a building's interior doors open for anybody who walks
+     * up to them without every one of them sounding like a loading bay.
+     */
+    rollUp?: boolean;
   }[];
   /**
    * LAIRS: a named monster lives in this house, and comes OUT of it.

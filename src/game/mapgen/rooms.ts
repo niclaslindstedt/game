@@ -35,10 +35,11 @@ import {
   assignAreas,
   borderEnclosure,
   borderOwner,
+  confineAreas,
   type Enclosure,
   type MapArea,
 } from "./areas.ts";
-import type { MapPlan } from "./types.ts";
+import type { MapPlan, MapPrefab } from "./types.ts";
 
 /** One carved cell: an axis-aligned rectangle in world px, plus what it IS. */
 export type Chamber = {
@@ -50,6 +51,21 @@ export type Chamber = {
   h: number;
   /** The assigned area palette id (see areas.ts). */
   area: string;
+  /**
+   * The DISTRICT this cell was cut out of — the coarse cell the area walk
+   * assigned, before an interior area was subdivided into rooms
+   * (`MapArea.roomSize`).
+   *
+   * It exists because half the placement pass is priced per DISTRICT and half
+   * per ROOM, and once a building's floor is thirty rooms instead of four halls
+   * the two stop meaning the same thing: a cache in every dead end is right when
+   * a dead end is a district and absurd when it is a broom cupboard. Everything
+   * about CONTENT (the scatter, the horde, the ranks) stays per cell; everything
+   * about HOW MANY of a thing the map pays for counts districts.
+   *
+   * Equal to `id` on a map that subdivides nothing, so nothing changes for one.
+   */
+  district: number;
 };
 
 /**
@@ -73,6 +89,13 @@ export type Border = {
   /** The `wall` object id this border's barrier is cut from — the material of
    * whichever area owns it (see `borderOwner`). */
   material: string;
+  /** The area id that owns it — the one whose enclosure decided there is a wall
+   * here at all. It decides the material, the opening width, and whether a real
+   * DOOR is hung in that opening (`MapArea.doors`). */
+  owner: string;
+  /** The opening (world px) punched through it — the owning area's own
+   * `doorWidth`, or the blueprint's. */
+  door: number;
 };
 
 export type ChamberGrid = {
@@ -80,10 +103,27 @@ export type ChamberGrid = {
   borders: Border[];
   /** Cell id → the cells it can be WALKED to (open, arch or doored borders). */
   neighbors: number[][];
+  /** The STATIC rooms stamped into the carve (see `MapBlueprint.prefabs`) —
+   * where each one landed, so the dressing pass can stand its fixed contents in
+   * it. Empty on a blueprint that authors none. */
+  prefabs: PrefabPlacement[];
 };
 
-/** A shared border before its treatment and material are decided. */
-type RawBorder = Omit<Border, "link" | "material">;
+/** Where one prefab room ended up on this carve. */
+export type PrefabPlacement = {
+  /** The `prefabs` entry's id. */
+  id: string;
+  /** The cell it became — its rect is that cell's rect. */
+  cell: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+/** A shared border before its treatment, its material and its owner are
+ * decided — pure geometry, which is all `findBorders` can know. */
+type RawBorder = Omit<Border, "link" | "material" | "owner" | "door">;
 
 /** A wall run to be expanded into a chain of solid circles. */
 export type WallRun = {
@@ -112,18 +152,20 @@ export type DoorGap = {
   /** The cells either side, so a caller can ask whether one of them is sealed. */
   a: number;
   b: number;
+  /** The area that owns the wall this hole is in — whose `doors` entry, if it
+   * has one, is the door hung across it. */
+  owner: string;
+  /** The wall's own radius scale: the opening width it was cut to. */
+  width: number;
 };
 
 /** Where a `door` border's opening sits: the MIDDLE of the border, which is the
  * one placement that leaves matching walls either side instead of a corner
  * sliver. Shared by the wall runs and the door gaps so the two can never
  * disagree about where the hole is. */
-function doorwaySpan(
-  border: Border,
-  doorWidth: number,
-): { from: number; to: number } {
+function doorwaySpan(border: Border): { from: number; to: number } {
   const mid = (border.from + border.to) / 2;
-  return { from: mid - doorWidth / 2, to: mid + doorWidth / 2 };
+  return { from: mid - border.door / 2, to: mid + border.door / 2 };
 }
 
 /**
@@ -133,11 +175,11 @@ function doorwaySpan(
  * `arch` is a gateway too wide to hang a door in — which is also why an area is
  * only lockable when it is sealed `hard` (see `MapArea.lock`).
  */
-export function doorGaps(grid: ChamberGrid, doorWidth: number): DoorGap[] {
+export function doorGaps(grid: ChamberGrid): DoorGap[] {
   const out: DoorGap[] = [];
   for (const border of grid.borders) {
     if (border.link !== "door") continue;
-    const span = doorwaySpan(border, doorWidth);
+    const span = doorwaySpan(border);
     out.push({
       axis: border.axis,
       coord: border.coord,
@@ -145,6 +187,8 @@ export function doorGaps(grid: ChamberGrid, doorWidth: number): DoorGap[] {
       to: span.to,
       a: border.a,
       b: border.b,
+      owner: border.owner,
+      width: border.door,
     });
   }
   return out;
@@ -169,6 +213,17 @@ export function chamberCenter(c: Chamber): { x: number; y: number } {
  */
 const ARCH_GATE_DOORS = 1.7;
 const ARCH_GATE_MAX_SHARE = 0.45;
+
+/**
+ * The narrowest stretch of OPEN border that is a way through rather than a
+ * crack between two walls (world px).
+ *
+ * Measured off a body and the grid that routes it, not off a doorway: the hero
+ * is 20 across (`PLAYER.radius`), and the autopilot's nav grid resolves at
+ * `NAV_CELL` = 40, so a gap that cannot spare a couple of cells is somewhere
+ * nothing can be routed through even when the geometry technically allows it.
+ */
+const MIN_WALKABLE = 80;
 
 /**
  * Split the map rectangle into `target` cells, largest-first.
@@ -348,6 +403,9 @@ export function planChambers(
     w: room.rect.width,
     h: room.rect.height,
     area: room.area,
+    // A drawn room IS its own district: nothing subdivides a plan, because the
+    // author already drew every room they wanted.
+    district: id,
   }));
   const raw = findBorders(chambers);
   const areaOf = (id: number): MapArea =>
@@ -373,12 +431,13 @@ export function planChambers(
             ? "arch"
             : "door"
           : "closed";
+    const owner = borderOwner(areaOf(border.a), areaOf(border.b), areas);
     return {
       ...border,
       link,
-      material:
-        borderOwner(areaOf(border.a), areaOf(border.b), areas).wall ??
-        defaultWall,
+      material: owner.wall ?? defaultWall,
+      owner: owner.id,
+      door: owner.doorWidth ?? doorWidth,
     };
   });
   const neighbors: number[][] = chambers.map(() => []);
@@ -387,7 +446,140 @@ export function planChambers(
     (neighbors[b.a] as number[]).push(b.b);
     (neighbors[b.b] as number[]).push(b.a);
   }
-  return { chambers, borders, neighbors };
+  return { chambers, borders, neighbors, prefabs: [] };
+}
+
+/** A cell mid-carve: a rect that knows its district and whether anything is
+ * still allowed to cut it up. */
+type Cut = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  area: string;
+  district: number;
+  /** A PREFAB room — drawn, not grown, so the room carve leaves it alone. */
+  prefab?: string;
+};
+
+/**
+ * The smallest leftover a prefab may cut an OPEN district down to.
+ *
+ * An enclosed district's leftovers are ROOMS, and a room has to be able to hold
+ * a doorway or it seals itself — so there the floor is the same `doorWidth * 2`
+ * the carve already uses to decide whether a border can be opened at all. Open
+ * ground has no walls and no doorways, so its cells are an accounting fiction: a
+ * thin strip of car park beside a prefab is not a thin room, it is car park, and
+ * holding it to a room's floor is what would stop a small map having its parking
+ * bays at all.
+ */
+const OPEN_LEFTOVER = 120;
+
+/**
+ * Cut one PREFAB room out of a district it belongs in (see `MapBlueprint.prefabs`).
+ *
+ * The cut is a GUILLOTINE from a rolled corner: the room itself, the full-depth
+ * strip beside it, and what is left above or below it. Three rects that tile the
+ * host exactly — which is the whole reason it is done here rather than by
+ * dropping a rect on top of the grid later. A generated map has no "outside the
+ * rooms"; a prefab stamped over one would leave a rectangle of floor that no
+ * cell owns, with no wall around it and no border to derive one from, and every
+ * pass downstream would dress straight through it.
+ *
+ * @returns whether it was placed — a carve too small to give one a corner
+ *   simply does not have that room this run, which is the honest outcome and
+ *   the reason nothing the mission NEEDS may live in a prefab.
+ */
+function stampPrefab(
+  cells: Cut[],
+  prefab: MapPrefab,
+  areas: MapArea[],
+  doorWidth: number,
+  rng: Rng,
+): boolean {
+  // A leftover is either NOTHING (the prefab took the whole span, and the room
+  // simply replaces the cell) or big enough to be a place in its own right.
+  // Anything between the two is a sliver, which indoors is a corridor with no
+  // door and outdoors is a seam.
+  const leftoverOk = (slack: number, keep: number): boolean =>
+    slack === 0 || slack >= keep;
+  const candidates: number[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    const host = cells[i] as Cut;
+    if (host.prefab !== undefined) continue;
+    if (!prefab.in.includes(host.area)) continue;
+    const area = areaById(areas, host.area);
+    const keep =
+      area.enclosure === "none"
+        ? OPEN_LEFTOVER
+        : (area.doorWidth ?? doorWidth) * 2;
+    const slackX = host.w - prefab.width;
+    const slackY = host.h - prefab.height;
+    if (slackX < 0 || slackY < 0) continue;
+    if (!leftoverOk(slackX, keep) || !leftoverOk(slackY, keep)) continue;
+    candidates.push(i);
+  }
+  if (candidates.length === 0) return false;
+  const at = candidates[Math.floor(rng() * candidates.length)] as number;
+  const host = cells[at] as Cut;
+  // A rolled corner, so the same room is not always in the same part of the
+  // same kind of district — the ROOM is what the player learns, not the walk.
+  const east = rng() < 0.5;
+  const south = rng() < 0.5;
+  const px = east ? host.x + host.w - prefab.width : host.x;
+  const py = south ? host.y + host.h - prefab.height : host.y;
+  const room: Cut = {
+    x: px,
+    y: py,
+    w: prefab.width,
+    h: prefab.height,
+    area: prefab.area,
+    district: host.district,
+    prefab: prefab.id,
+  };
+  const beside: Cut = {
+    ...host,
+    x: east ? host.x : px + prefab.width,
+    w: host.w - prefab.width,
+  };
+  const over: Cut = {
+    ...host,
+    x: px,
+    y: south ? host.y : py + prefab.height,
+    w: prefab.width,
+    h: host.h - prefab.height,
+  };
+  // A leftover of zero is not a cell — the prefab took that whole span.
+  cells.splice(
+    at,
+    1,
+    room,
+    ...[beside, over].filter((c) => c.w > 0 && c.h > 0),
+  );
+  return true;
+}
+
+/**
+ * Cut one interior district into ROOMS of at least `size` across (see
+ * `MapArea.roomSize`) — the same largest-first split the map itself is carved
+ * with, so the rooms come out even rather than as one hall and a row of closets.
+ *
+ * The floor is priced at two minimum rooms apiece: `size` is the SMALLEST a room
+ * may be, and a target that assumed every room would be exactly that leaves the
+ * split no slack and comes out as a grid. At 2× the rooms vary, and the smallest
+ * of them is still a room.
+ */
+function subdivide(cell: Cut, size: number, rng: Rng): Cut[] {
+  const target = Math.max(2, Math.round((cell.w * cell.h) / (size * size * 2)));
+  const parts = carve(cell.w, cell.h, target, size, rng);
+  if (parts.length <= 1) return [cell];
+  return parts.map((r) => ({
+    ...cell,
+    x: cell.x + r.x,
+    y: cell.y + r.y,
+    w: r.w,
+    h: r.h,
+  }));
 }
 
 export function carveChambers(
@@ -402,42 +594,92 @@ export function carveChambers(
   defaultWall: string,
   rng: Rng,
   promised: string[] = [],
+  prefabs: MapPrefab[] = [],
 ): ChamberGrid {
-  const cells = carve(width, height, target, minRoom, rng);
-  const raw = findBorders(cells);
+  // --- 1. THE DISTRICTS -----------------------------------------------------
+  // The coarse carve: what KIND of place goes where. Nothing here knows about
+  // rooms yet, because a district's type has to be settled before anything can
+  // ask whether it is the sort of place that HAS rooms.
+  const districts = carve(width, height, target, minRoom, rng);
+  const districtBorders = findBorders(districts);
 
   // Raw adjacency (every shared border, walled or not) — what the area walk
   // clusters over, so a district is a district regardless of how it is fenced.
-  const adjacent: number[][] = cells.map(() => []);
-  for (const border of raw) {
+  const adjacent: number[][] = districts.map(() => []);
+  for (const border of districtBorders) {
     (adjacent[border.a] as number[]).push(border.b);
     (adjacent[border.b] as number[]).push(border.a);
   }
+  const confine = confineAreas(areas, width, height, rng);
   const cellAreas = assignAreas(
-    cells.map((c, id) => ({ id, ...c, area: "" })),
+    districts.map((c, id) => ({ id, ...c, area: "", district: id })),
     adjacent,
     areas,
     cluster,
     rng,
     promised,
+    confine,
   );
-  const chambers: Chamber[] = cells.map((c, id) => ({
-    id,
+
+  // --- 2. THE STATIC ROOMS --------------------------------------------------
+  // A prefab is cut out of a DISTRICT, before the room carve, so it takes its
+  // corner out of a whole hall rather than out of whichever closet the split
+  // happened to leave. Everything it does not take is carved as usual.
+  let cut: Cut[] = districts.map((c, id) => ({
     ...c,
     area: cellAreas[id] as string,
+    district: id,
   }));
+  for (const prefab of prefabs) stampPrefab(cut, prefab, areas, doorWidth, rng);
 
-  // A doorway needs the opening itself plus half of one clear at each end, so it
-  // never opens flush into a corner.
-  const doorSpan = doorWidth * 2;
+  // --- 3. THE ROOMS ---------------------------------------------------------
+  // …and an interior district is carved a second time, into rooms (see
+  // `MapArea.roomSize`). They all wear the district's own area, so every
+  // dressing pass downstream is unchanged; what changes is that there are now
+  // walls and doorways between them.
+  cut = cut.flatMap((c) => {
+    if (c.prefab !== undefined) return [c];
+    const size = areaById(areas, c.area).roomSize;
+    return size !== undefined ? subdivide(c, size, rng) : [c];
+  });
+
+  const chambers: Chamber[] = cut.map((c, id) => ({
+    id,
+    x: c.x,
+    y: c.y,
+    w: c.w,
+    h: c.h,
+    area: c.area,
+    district: c.district,
+  }));
+  const placed: PrefabPlacement[] = [];
+  cut.forEach((c, id) => {
+    if (c.prefab === undefined) return;
+    placed.push({ id: c.prefab, cell: id, x: c.x, y: c.y, w: c.w, h: c.h });
+  });
+  const raw = findBorders(chambers);
+
   const areaOf = (id: number): MapArea =>
     areaById(areas, chambers[id]?.area ?? "");
   const enclosureOf = (id: number): Enclosure => areaOf(id).enclosure;
   // The material is the OWNING area's, decided the same way the treatment is: the
   // stronger enclosure wins, so a dome's seam is dome panel even where it abuts
-  // open ground built of rubble.
-  const materialOf = (a: number, b: number): string =>
-    borderOwner(areaOf(a), areaOf(b), areas).wall ?? defaultWall;
+  // open ground built of rubble — and so is the WIDTH of the hole cut in it,
+  // because a bay's roll-up and a cupboard's door are not the same opening.
+  const ownerOf = (a: number, b: number): MapArea =>
+    borderOwner(areaOf(a), areaOf(b), areas);
+  // THE OPENING IS THE SMALLER ROOM'S, which is the one rule here that is not
+  // the owner's. A wall's MATERIAL belongs to whichever district raised it — a
+  // dome's seam is dome panel wherever it runs — but the size of the hole in it
+  // is decided by what has to get through, and that is the humbler of the two
+  // sides: the door between an assembly hangar and a broom cupboard is a
+  // cupboard door, in this building and in every real one. Taking the owner's
+  // instead put roller shutters on the cleaning store.
+  const openingOf = (a: number, b: number): number =>
+    Math.min(
+      areaOf(a).doorWidth ?? doorWidth,
+      areaOf(b).doorWidth ?? doorWidth,
+    );
 
   // Every border's treatment, before connectivity: the stronger of the two
   // areas' enclosures, downgraded to a solid wall when the border is too short
@@ -449,10 +691,59 @@ export function carveChambers(
       enclosureOf(border.a),
       enclosureOf(border.b),
     );
-    if (strength === "none") link.set(border, "open");
+    // A doorway needs the opening itself plus half of one clear at each end, so
+    // it never opens flush into a corner.
+    const opening = openingOf(border.a, border.b);
+    const doorSpan = opening * 2;
+    // …AND OPEN GROUND HAS A MINIMUM TOO, which is not obvious and was wrong for
+    // a long time. Two cells of one open district have no wall between them, so
+    // ANY overlap read as a way through — including the thirty-pixel slivers the
+    // carve leaves where two independent splits landed near each other
+    // (`coalesce` already knew about those). A sliver is a gap between two walls,
+    // not a route: nothing can walk it, and counting it as an edge told the
+    // vault picker that a car park with a keyed room on one side and a hall on
+    // the other was still connected round the back, which sealed the mission
+    // behind a keycard on one goodco seed in eight.
+    //
+    // The floor is a BODY's rather than a doorway's: open ground has no
+    // doorways, and its `doorWidth` may be anything or nothing at all.
+    if (strength === "none")
+      link.set(border, span >= MIN_WALKABLE ? "open" : "closed");
     else if (strength === "soft")
       link.set(border, span >= doorSpan ? "arch" : "closed");
     else link.set(border, span >= doorSpan ? "door" : "closed");
+  }
+
+  // A ROOM WITH NO WAY IN IS NOT A ROOM. Every border above is downgraded to a
+  // solid wall when it is too short to hold the opening its treatment implies,
+  // and a cell every one of whose borders is too short is sealed for good — the
+  // spanning tree below can only open a border that is already a `door`, so it
+  // cannot rescue one. On district-sized cells that was a theoretical worry; on
+  // ROOMS (`MapArea.roomSize`) it is a real one, because a room is only a couple
+  // of doorways wide and two of them can overlap by very little.
+  //
+  // So a cell with nothing openable takes its LONGEST border regardless. The
+  // opening is then wider than the border can hold, which `wallSegments` renders
+  // as the honest thing: no wall along it at all — an opening rather than a
+  // doorway, which is what a gap that narrow is anyway.
+  const openable = chambers.map(() => false);
+  for (const border of raw) {
+    if (link.get(border) === "closed") continue;
+    openable[border.a] = true;
+    openable[border.b] = true;
+  }
+  for (const c of chambers) {
+    if (openable[c.id]) continue;
+    let widest: RawBorder | null = null;
+    for (const border of raw) {
+      if (border.a !== c.id && border.b !== c.id) continue;
+      if (!widest || border.to - border.from > widest.to - widest.from)
+        widest = border;
+    }
+    if (!widest) continue;
+    link.set(widest, "door");
+    openable[widest.a] = true;
+    openable[widest.b] = true;
   }
 
   // Connectivity. The freely-passable borders are unioned FIRST: open ground and
@@ -479,18 +770,23 @@ export function carveChambers(
   for (const border of spare)
     if (!opened.has(border)) link.set(border, "closed");
 
-  const borders: Border[] = raw.map((b) => ({
-    ...b,
-    link: link.get(b) as BorderLink,
-    material: materialOf(b.a, b.b),
-  }));
+  const borders: Border[] = raw.map((b) => {
+    const owner = ownerOf(b.a, b.b);
+    return {
+      ...b,
+      link: link.get(b) as BorderLink,
+      material: owner.wall ?? defaultWall,
+      owner: owner.id,
+      door: owner.doorWidth ?? doorWidth,
+    };
+  });
   const neighbors: number[][] = chambers.map(() => []);
   for (const border of borders) {
     if (border.link === "closed") continue;
     (neighbors[border.a] as number[]).push(border.b);
     (neighbors[border.b] as number[]).push(border.a);
   }
-  return { chambers, borders, neighbors };
+  return { chambers, borders, neighbors, prefabs: placed };
 }
 
 /**
@@ -503,7 +799,7 @@ export function carveChambers(
  * because the ground either side of it stopped being two different kinds of
  * place. There are no orphan stubs to explain.
  */
-export function wallSegments(grid: ChamberGrid, doorWidth: number): WallRun[] {
+export function wallSegments(grid: ChamberGrid): WallRun[] {
   const out: WallRun[] = [];
   const run = (b: Border, from: number, to: number) => {
     if (to - from < 1) return;
@@ -523,7 +819,7 @@ export function wallSegments(grid: ChamberGrid, doorWidth: number): WallRun[] {
         // A fence with a broad gate in the middle — wider than a doorway, but
         // never more than a share of the border, so the wall stays the bigger part.
         const gate = Math.min(
-          doorWidth * ARCH_GATE_DOORS,
+          border.door * ARCH_GATE_DOORS,
           (border.to - border.from) * ARCH_GATE_MAX_SHARE,
         );
         const mid = (border.from + border.to) / 2;
@@ -532,7 +828,7 @@ export function wallSegments(grid: ChamberGrid, doorWidth: number): WallRun[] {
         break;
       }
       case "door": {
-        const gap = doorwaySpan(border, doorWidth);
+        const gap = doorwaySpan(border);
         run(border, border.from, gap.from);
         run(border, gap.to, border.to);
         break;

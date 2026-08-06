@@ -127,6 +127,18 @@ Each of these was a bug first. Re-deriving them costs a session.
 - **Nothing outside a run may import `mapgen/`.** The menus reach levels through
   `defs/levels/summary.ts`. Pulling the generator onto the startup path drags the
   whole level catalog into the 170 KB critical-path budget.
+- **An OPEN border narrower than a body is a wall, not a way through.** Two cells
+  of one open district have no wall between them, so any overlap used to read as
+  connectivity — including the thirty-pixel slivers the carve leaves where two
+  independent splits landed near each other. Nothing can walk one, and counting
+  it as a graph edge lies to everything that asks whether the map hangs together:
+  it told `survivesWithout` a car park was connected round the back and sealed
+  the whole mission behind a keycard. `MIN_WALKABLE` (80, off the hero's 20 and
+  `NAV_CELL`'s 40) is the floor, and a sliver below it is walled.
+- **A cell whose every border is too short to open would be sealed for good** —
+  the spanning tree can only open a border that is already a `door`. Rare on
+  district-sized cells, real on ROOMS, so `carveChambers` promotes such a cell's
+  longest border regardless.
 
 ## What actually makes a carve look designed
 
@@ -162,6 +174,50 @@ Hard-won, in rough order of impact:
   map before deciding it "looks about right".
 
 ## Capabilities a blueprint can ask for
+
+**A DISTRICT KNOWS WHICH SIDE OF THE WALL IT IS ON — `space: inside | outside`,
+and three things hang off it.** An enclosure says how a cell meets its
+NEIGHBOURS; a fenced yard and a server room are both `hard` and only one has a
+ceiling. Saying which is which buys:
+
+- **ROOMS.** `roomSize:` carves an interior district a SECOND time, into rooms of
+  at least that edge, all wearing the district's own area — so a corporate floor
+  is thirty rooms off a corridor rather than four halls with desks in them.
+  `Chamber.district` remembers the coarse cell, because anything priced per
+  district (the caches) must not suddenly be priced per cupboard.
+- **DOORS.** `doors:` names a `door` object hung in every doorway the district
+  owns — shut until somebody walks up, then open for good, with its leaves left
+  standing (`openSprite`). `doorWidth:` sizes the hole, and the opening taken is
+  the SMALLER of the two areas' (a hangar-to-cupboard door is a cupboard door).
+  Calibrate against a body: the hero is 20 across, so 56–64 is a person door and
+  220 is the door a rocket leaves through.
+- **PROPS.** A sprite is authored `space:` in its own YAML — a fact about the ART,
+  true on every map — and the map schema refuses a palette entry that could
+  scatter it into the wrong half. `MapObject.space` is the restriction that keeps
+  being true when the palette grows another district, where an `areas` list rots.
+
+**AND THE STAFF WALK THROUGH THE DOORS TOO.** `stepDoors` opens an approach door
+for any mob that comes up to it, and a KEYED door for one carrying that key —
+derived from `loot.storyItems`, so the mob a door opens for is exactly the mob
+you can take the card from. A floor cut into rooms whose doors only the hero can
+open is a floor with the night shift shut in the rooms.
+
+**SOME ROOMS ARE ALWAYS THE SAME ROOM — `prefabs:`.** The carve buys replay value
+by making every room new and pays for it in recognition: ten runs in, a player
+cannot say one true sentence about the building. A prefab is a fixed-size room
+with fixed contents (`props`, exact offsets, compiled to one-prop `propLines`)
+GUILLOTINED out of a district — a real cell, with derived walls, a punched
+doorway and its own fog. Its area may be its host's (a bank of parking bays is
+not walled off from the car park). Nothing the run needs may live in one: a carve
+too small to give it a corner simply does not have that room this shift.
+
+**THE ARRIVAL CAN BE A PLACE, NOT A PREFERENCE — `landing:` and `regions:`.**
+`spawn:` is a permission with a fallback that reopens the whole map, which is
+right when a carve grew too little of the preferred district and wrong when the
+arrival is a SCENE (GOODCO's hero parks in the lot and walks in). `landing: true`
+confines the pick and promises the district a seed; `regions:` rolls ONE compass
+region per run and confines the district to it, seed and spread both — which is
+how a car park ends up at an edge, a different edge each shift.
 
 **A KEYCARD OPENS A ROOM THE CARVE PICKED — `lock:` on an area, `locks:` on the
 blueprint.** The campaign's keycards were lore for as long as a carve had no way

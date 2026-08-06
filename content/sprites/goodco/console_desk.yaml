@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: console_desk
 family: goodco
+space: inside
 size: [12, 10]
 description: >
   An operator console with a lit screen — GOODCO factory floor

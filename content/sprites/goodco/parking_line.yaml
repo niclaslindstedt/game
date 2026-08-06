@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: parking_line
+family: goodco
+space: outside
+plane: floor
+size: [4, 34]
+description: >
+  A painted bay divider on the GOODCO staff car park — a worn white stripe on
+  asphalt, as deep as the bay it marks and faded where the tyres cross it.
+subject:
+  kind: painted marking prop
+  build: a single straight parking-bay divider painted on tarmac
+  features: worn patches where wheels have crossed it
+  accent: dirty white paint on dark asphalt
+  flavor: the lot the night shift parks in
+palette:
+  W: "#e8e9ec" # fresh white paint
+  w: "#b6b8bf" # worn paint
+  g: "#8f9199" # scuffed paint, nearly gone
+grid: |
+  WWWW
+  WWWW
+  wWWW
+  WWWW
+  WWWW
+  WWWw
+  WWWW
+  wWWw
+  gwwW
+  wWWW
+  WWWW
+  WWWW
+  WWWw
+  WWWW
+  wWWW
+  WWWW
+  wgwW
+  wwWW
+  WWWW
+  WWWw
+  WWWW
+  wWWW
+  WWWW
+  wWWw
+  WWWW
+  WWWW
+  wWWW
+  WWgW
+  WWWW
+  wwWW
+  WWWW
+  WWWw
+  WWWW
+  WWWW

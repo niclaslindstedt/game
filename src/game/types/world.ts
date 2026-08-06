@@ -354,11 +354,19 @@ export type DoorState = {
   from?: Vec2;
   to?: Vec2;
   /**
-   * An APPROACH door (the garage door) opens for anybody who walks or drives
-   * up to it — no key, and its opening fires `garageDoorOpened` (the app's
-   * roll-up animation) rather than `doorOpened`. Absent = a key door.
+   * An APPROACH door (a building's interior doors, the garage door) opens for
+   * anybody who walks or drives up to it — no key. Absent = a key door.
    */
   approach?: boolean;
+  /**
+   * The same door STANDING OPEN: laid down as flat scenery in the jambs the
+   * moment it opens, so the doorway keeps a door in it (see
+   * `LevelDef.doors[].openSprite`). Absent = nothing is left to draw.
+   */
+  openSprite?: string;
+  /** It ROLLS UP rather than sliding aside — the garage door, which is the one
+   * that fires `garageDoorOpened` and its chain-drive sound. */
+  rollUp?: boolean;
 };
 
 /**

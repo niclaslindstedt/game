@@ -31,6 +31,11 @@ export const REQUIRED_FIELDS = [
 
 const ENCLOSURES = new Set(["none", "soft", "hard"]);
 
+const SPACES = new Set(["inside", "outside"]);
+
+/** What an area that names no `space` is (see `MapArea.space`). */
+const DEFAULT_SPACE = "outside";
+
 const SIZE_NAMES = ["small", "medium", "large"];
 
 const OBJECT_TYPES = new Set([
@@ -63,16 +68,18 @@ const ALLOWED_FIELDS = {
     "cell",
     "loot",
     "areas",
+    "space",
     "edge",
   ],
-  cover: ["radius", "density", "jumpable", "areas", "edge"],
-  crate: ["radius", "density", "jumpable", "loot", "areas", "edge"],
+  cover: ["radius", "density", "jumpable", "areas", "space", "edge"],
+  crate: ["radius", "density", "jumpable", "loot", "areas", "space", "edge"],
   chest: [],
-  decor: ["density", "areas"],
+  decor: ["density", "areas", "space"],
   landmark: ["at", "anchor"],
-  building: ["density", "w", "h", "jumpable", "areas"],
+  building: ["density", "w", "h", "jumpable", "areas", "space"],
   row: [
     "areas",
+    "space",
     "chance",
     "spacing",
     "gap",
@@ -84,13 +91,15 @@ const ALLOWED_FIELDS = {
     "radius",
     "jumpable",
   ],
-  critter: ["density", "areas", "animated", "range", "speed", "scale"],
-  lair: ["w", "h", "door", "doorOpen", "trigger", "areas"],
-  // An APPROACH door hung across the spawn chamber's doorways (the garage
-  // door): a chain of `radius` circles wearing `sprite`, placed by rule — and
-  // optionally the PAIR OF LAMPS bolted either side of the opening, hung with
-  // it because only the carve knows where the opening ended up.
-  door: ["radius", "lamps"],
+  critter: ["density", "areas", "space", "animated", "range", "speed", "scale"],
+  lair: ["w", "h", "door", "doorOpen", "trigger", "areas", "space"],
+  // A real DOOR: a chain of `radius` circles wearing `sprite`, hung across a
+  // doorway by rule — `at: spawn` across the hero's own chamber (the garage's
+  // roll-up), or across a district's own doorways when one names it in
+  // `MapArea.doors` — and optionally the PAIR OF LAMPS bolted either side of
+  // the opening, hung with it because only the carve knows where the opening
+  // ended up.
+  door: ["radius", "at", "openSprite", "rollUp", "lamps"],
   // A LAMP: a pool of light pinned to a carved anchor, a nudge off it, burning
   // only once the venue's sky has gone dark — plus, unless the fitting is
   // genuinely overhead, the FIXTURE throwing it.
@@ -124,6 +133,11 @@ const NEEDS_DENSITY = new Set([
 
 const ANCHORS = new Set(["spawn", "goal", "stall", "counter", "home"]);
 
+/** How far a PREFAB's solid props are held off the room's own edges (world px),
+ * before the piece's own radius is added — roughly the scatter's own wall
+ * clearance (`OBSTACLES.spacing` plus a wall stone's radius). */
+const PREFAB_EDGE_CLEAR = 48;
+
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPosNum = (v) => isNum(v) && v > 0;
 
@@ -142,6 +156,14 @@ export function validateMap(bp, refs, description = "") {
   const warnings = [];
   const tag = bp?.id ? `map "${bp.id}"` : "map";
   const err = (m) => errors.push(`${tag}: ${m}`);
+  // Which side of a building's wall each district is on — read straight off the
+  // palette up here, because half the checks below (a prop's sprite, a prefab's
+  // host) are questions about it rather than about the areas themselves.
+  const areaSpace = new Map(
+    (Array.isArray(bp.areas) ? bp.areas : [])
+      .filter((a) => typeof a?.id === "string")
+      .map((a) => [a.id, a.space ?? DEFAULT_SPACE]),
+  );
 
   for (const field of REQUIRED_FIELDS) {
     if (bp[field] === undefined) err(`missing required field "${field}"`);
@@ -203,6 +225,124 @@ export function validateMap(bp, refs, description = "") {
       for (const key of Object.keys(bp.plan))
         if (!["rooms", "doors", "goal", "stall"].includes(key))
           err(`plan: unknown field "${key}"`);
+    }
+  }
+
+  // Every palette object a prefab stands somewhere — the entries that are
+  // placed by an authored offset rather than by a density.
+  const prefabProps = new Set(
+    (Array.isArray(bp.prefabs) ? bp.prefabs : []).flatMap((p) =>
+      (p?.props ?? []).map((prop) => prop?.object),
+    ),
+  );
+
+  // ---- prefabs (the static rooms — see MapBlueprint.prefabs) ----------------
+  // Every check here is a build error rather than a warning for one reason: a
+  // prefab that cannot be placed is SILENT. The carve tries, fails to find a
+  // district with room for it, and carries on — which is the correct runtime
+  // behaviour (nothing the run needs may live in one) and exactly why an
+  // authoring mistake has to be caught here instead.
+  if (bp.prefabs !== undefined) {
+    const areaIdSet = new Set((bp.areas ?? []).map((a) => a?.id));
+    const objectIds = new Set((bp.objects ?? []).map((o) => o?.id));
+    if (!Array.isArray(bp.prefabs)) err("prefabs must be a list");
+    else {
+      const seen = new Set();
+      bp.prefabs.forEach((p, i) => {
+        const where = `prefabs[${i}]`;
+        if (typeof p?.id !== "string" || p.id.length === 0) {
+          err(`${where}: needs a string id`);
+          return;
+        }
+        if (seen.has(p.id)) err(`duplicate prefab id "${p.id}"`);
+        seen.add(p.id);
+        if (!areaIdSet.has(p.area)) err(`${where}: unknown area "${p.area}"`);
+        if (!isPosNum(p.width) || !isPosNum(p.height))
+          err(`${where}: needs a positive width/height`);
+        if (!Array.isArray(p.in) || p.in.length === 0)
+          err(`${where}: "in" must name the districts it may be cut out of`);
+        else
+          for (const id of p.in)
+            if (!areaIdSet.has(id)) err(`${where}: unknown host area "${id}"`);
+        // A room cut out of a district it IS: legal (a bank of parking bays is
+        // not walled off from the car park), but a room cut out of a district on
+        // the other side of a wall is not — an office cut into a car park is a
+        // shed with a carpet in it.
+        for (const id of Array.isArray(p.in) ? p.in : []) {
+          if (!areaIdSet.has(id) || !areaIdSet.has(p.area)) continue;
+          if (areaSpace.get(id) !== areaSpace.get(p.area))
+            err(
+              `${where}: a ${areaSpace.get(p.area)} room cannot be cut out of ` +
+                `"${id}", which is ${areaSpace.get(id)}`,
+            );
+        }
+        // It has to FIT: the host has to give it its corner and still leave a
+        // room beside it at every size the map is carved at. Checked against the
+        // SMALLEST, which is where it silently goes missing.
+        const small = bp.sizes?.small;
+        if (small && isPosNum(p.width) && isPosNum(p.height)) {
+          if (p.width >= small.width || p.height >= small.height)
+            err(
+              `${where}: ${p.width}×${p.height} does not fit sizes.small ` +
+                `(${small.width}×${small.height})`,
+            );
+        }
+        for (const [j, prop] of (p.props ?? []).entries()) {
+          const at = `${where}.props[${j}]`;
+          if (!objectIds.has(prop?.object))
+            err(`${at}: unknown object "${prop?.object}"`);
+          if (
+            !Array.isArray(prop?.at) ||
+            prop.at.length !== 2 ||
+            !prop.at.every((n) => isNum(n) && n >= 0)
+          ) {
+            err(`${at}: "at" must be an [x, y] offset inside the room`);
+            continue;
+          }
+          // An offset past the wall is dropped at carve time, which would leave
+          // the room quietly missing a piece of the furniture that IS the room.
+          if (
+            isPosNum(p.width) &&
+            isPosNum(p.height) &&
+            (prop.at[0] > p.width || prop.at[1] > p.height)
+          ) {
+            err(
+              `${at}: [${prop.at[0]}, ${prop.at[1]}] is outside the ` +
+                `${p.width}×${p.height} room`,
+            );
+            continue;
+          }
+          // …AND OFF THE WALLS. A prefab is cut to a district's CORNER, so at
+          // least two of its edges are somebody's wall — and a solid piece
+          // planted against one is a piece standing inside it. Cheap to get
+          // wrong and invisible until a render, because the offsets look
+          // perfectly reasonable next to the room's own dimensions.
+          const solid = (bp.objects ?? []).find(
+            (o) => o?.id === prop.object && o.type !== "decor",
+          );
+          const clear = Math.max(
+            PREFAB_EDGE_CLEAR,
+            (solid?.radius ?? 0) + PREFAB_EDGE_CLEAR / 2,
+          );
+          if (
+            solid &&
+            isPosNum(p.width) &&
+            isPosNum(p.height) &&
+            (prop.at[0] < clear ||
+              prop.at[1] < clear ||
+              p.width - prop.at[0] < clear ||
+              p.height - prop.at[1] < clear)
+          )
+            warnings.push(
+              `${tag}: ${at} stands "${prop.object}" within ${Math.round(clear)}px of the ` +
+                `room's edge — a prefab's edges are walls, and the scatter's ` +
+                `clearance rules do not apply to an authored offset`,
+            );
+        }
+        for (const key of Object.keys(p))
+          if (!["id", "area", "width", "height", "in", "props"].includes(key))
+            err(`${where}: unknown field "${key}"`);
+      });
     }
   }
 
@@ -339,6 +479,7 @@ export function validateMap(bp, refs, description = "") {
   const areaIds = new Set();
   const areaWalls = [];
   const areaNests = [];
+  const areaDoors = [];
   if (Array.isArray(bp.areas)) {
     if (bp.areas.length === 0)
       err("areas must name at least one kind of place");
@@ -361,18 +502,81 @@ export function validateMap(bp, refs, description = "") {
       else if (
         a.weight === 0 &&
         a.shellOf === undefined &&
-        bp.annex?.area !== a.id
+        bp.annex?.area !== a.id &&
+        !(bp.prefabs ?? []).some((p) => p?.area === a.id)
       )
         err(
           `${where}: weight 0 means never seeded, which only makes sense for a ` +
-            `shell or the annex`,
+            `shell, a prefab's room or the annex`,
         );
       if (a.horde !== undefined && (!isNum(a.horde) || a.horde < 0))
         err(`${where}: horde must be a non-negative multiplier`);
+      if (a.space !== undefined && !SPACES.has(a.space))
+        err(`${where}: space must be one of ${[...SPACES].join(", ")}`);
       if (a.boss !== undefined && typeof a.boss !== "boolean")
         err(`${where}: boss must be a boolean`);
       if (a.spawn !== undefined && typeof a.spawn !== "boolean")
         err(`${where}: spawn must be a boolean`);
+      if (a.landing !== undefined) {
+        if (typeof a.landing !== "boolean")
+          err(`${where}: landing must be a boolean`);
+        // The two say opposite things about the same cell, and the carve reads
+        // `landing` first — so a palette that sets both is one where the author
+        // has changed their mind in only one place.
+        else if (a.landing === true && a.spawn === false)
+          err(`${where}: landing and "spawn: false" contradict each other`);
+      }
+      for (const [i, r] of (a.regions ?? []).entries())
+        region(r, `${where} regions[${i}]`);
+      if (a.regions !== undefined && !Array.isArray(a.regions))
+        err(`${where}: regions must be a list of compass region names`);
+      if (
+        a.maxCells !== undefined &&
+        (!Number.isInteger(a.maxCells) || a.maxCells < 1)
+      )
+        err(`${where}: maxCells must be an integer >= 1`);
+      // The ROOM CARVE. A district with no walls between its cells cannot be cut
+      // into rooms — that is one room with lines drawn on the floor — and a room
+      // too narrow to take its own doorway plus the margins either side seals
+      // itself (see `carveChambers`).
+      if (a.roomSize !== undefined) {
+        if (!isPosNum(a.roomSize)) err(`${where}: roomSize must be positive`);
+        else if (a.enclosure === "none")
+          err(
+            `${where}: enclosure "none" builds no walls, so it has no rooms to ` +
+              `cut — roomSize would do nothing`,
+          );
+        const opening = a.doorWidth ?? layout?.doorWidth;
+        if (
+          isPosNum(a.roomSize) &&
+          isPosNum(opening) &&
+          opening * 2 > a.roomSize
+        )
+          err(
+            `${where}: roomSize ${a.roomSize} cannot take a ${opening}px doorway ` +
+              `plus its end margins — the rooms would seal themselves`,
+          );
+      }
+      if (a.doorWidth !== undefined) {
+        if (!isPosNum(a.doorWidth)) err(`${where}: doorWidth must be positive`);
+        else if (a.enclosure === "none")
+          err(
+            `${where}: enclosure "none" builds no walls, so a doorWidth does nothing`,
+          );
+      }
+      // A DOOR hung in every doorway of this district (`MapArea.doors`).
+      if (a.doors !== undefined) {
+        if (typeof a.doors !== "string")
+          err(`${where}: doors must name a door object`);
+        else if (a.enclosure !== "hard")
+          // `none` is not a wall at all and `soft` is an archway too wide to
+          // hang a door in — the same rule a keyed room follows.
+          err(
+            `${where}: only a "hard" district has doorways to hang doors in — ` +
+              `"${a.enclosure}" leaves the way open`,
+          );
+        else areaDoors.push([a.doors, where]);
+      }
       if (a.once !== undefined && typeof a.once !== "boolean")
         err(`${where}: once must be a boolean`);
       if (a.driveOut !== undefined) {
@@ -421,6 +625,17 @@ export function validateMap(bp, refs, description = "") {
               `"spawn: false" — nothing the run needs may be behind its own key`,
           );
       }
+      if (a.ragged !== undefined) {
+        if (typeof a.ragged !== "boolean")
+          err(`${where}: ragged must be a boolean`);
+        // The default already says so, and a `true` on a walled district would
+        // put a torn floor under a straight wall.
+        else if (a.ragged === true && a.enclosure !== "none")
+          err(
+            `${where}: only open ground is laid ragged — a wall over a torn ` +
+              `floor edge reads as a mistake`,
+          );
+      }
       if (a.blocks !== undefined && !isPosNum(a.blocks))
         err(`${where}: blocks must be a positive street width`);
       if (a.wall !== undefined) {
@@ -440,14 +655,22 @@ export function validateMap(bp, refs, description = "") {
       const allowed = new Set([
         "id",
         "enclosure",
+        "space",
         "weight",
         "horde",
         "boss",
         "spawn",
+        "landing",
+        "regions",
+        "maxCells",
+        "roomSize",
+        "doorWidth",
+        "doors",
         "driveOut",
         "label",
         "ground",
         "patch",
+        "ragged",
         "wall",
         "shellOf",
         "shellWidth",
@@ -588,8 +811,19 @@ export function validateMap(bp, refs, description = "") {
       // only on the two scattered purposes that can carry break hp.
       if (o.loot !== undefined && o.type !== "obstacle" && o.type !== "crate")
         err(`${where}: only an obstacle or a crate can carry a loot spill`);
-      if (NEEDS_DENSITY.has(o.type) && !isPosNum(o.density))
-        err(`${where}: a "${o.type}" needs a positive density`);
+      // A scattered purpose is priced by density — except when it is not
+      // scattered at all: a prop that exists only to stand at an authored offset
+      // inside a PREFAB has no count to give, and demanding one would sprinkle
+      // mop buckets across the whole floor to satisfy the schema.
+      if (
+        NEEDS_DENSITY.has(o.type) &&
+        !isPosNum(o.density) &&
+        !prefabProps.has(o.id)
+      )
+        err(
+          `${where}: a "${o.type}" needs a positive density (or a prefab that ` +
+            `stands it somewhere)`,
+        );
       if (isPosNum(o.density) && o.density > 200)
         warnings.push(
           `${tag}: ${where} density ${o.density} is very thick (>200 per 1M px²)`,
@@ -651,6 +885,41 @@ export function validateMap(bp, refs, description = "") {
         else sprite(o.doorOpen, `${where} doorOpen`);
         if (o.trigger !== undefined && !isPosNum(o.trigger))
           err(`${where}: trigger must be positive`);
+      }
+      if (o.type === "door") {
+        // A door has to be told WHERE to hang, and there are exactly two ways to
+        // say it. An entry that says neither compiles to a palette entry nothing
+        // ever reads — a door nobody hung, which looks from the YAML like a door
+        // that is simply never reached.
+        const byArea = (bp.areas ?? []).some((a) => a?.doors === o.id);
+        if (o.at !== undefined && o.at !== "spawn")
+          err(
+            `${where}: a door only understands "at: spawn" (the hero's own ` +
+              `chamber); a district's doors are named by the district`,
+          );
+        if (o.at === undefined && !byArea)
+          err(
+            `${where}: nothing hangs this door — give it "at: spawn", or name ` +
+              `it in an area's \`doors\``,
+          );
+        if (o.openSprite !== undefined) {
+          if (typeof o.openSprite !== "string")
+            err(`${where}: openSprite must name a sprite`);
+          else sprite(o.openSprite, `${where} openSprite`);
+        }
+        if (o.rollUp !== undefined && typeof o.rollUp !== "boolean")
+          err(`${where}: rollUp must be a boolean`);
+        // A roll-up goes UP: there is nothing left standing in the opening, so
+        // an open frame on one is art that is never drawn.
+        if (o.rollUp === true && o.openSprite !== undefined)
+          err(`${where}: a rollUp door rolls away — it has no open frame`);
+        // …and a door that slides ASIDE leaves its leaves in the jambs. Without
+        // a frame for them the doorway reverts to a hole in the wall the moment
+        // it is used, which is what an interior looked like before doors existed.
+        if (!o.rollUp && o.openSprite === undefined)
+          warnings.push(
+            `${tag}: ${where} has no openSprite — the doorway will be empty once opened`,
+          );
       }
       if (o.type === "landmark") {
         if (!ANCHORS.has(o.at))
@@ -717,6 +986,32 @@ export function validateMap(bp, refs, description = "") {
           for (const id of o.areas)
             if (!areaIds.has(id)) err(`${where}: unknown area "${id}"`);
       }
+      if (o.space !== undefined && !SPACES.has(o.space))
+        err(`${where}: space must be one of ${[...SPACES].join(", ")}`);
+      // THE PROP IS ON THE WRONG SIDE OF THE WALL. The sprite says where the
+      // art belongs (`content/sprites/**`, `space:`), which is a fact about the
+      // object rather than about this map; the palette entry says which
+      // districts it may be scattered over. If the second could reach a district
+      // the first refuses, this map is one seed away from a cactus in a
+      // cleanroom — and nothing downstream would ever say so.
+      if (DISTRICTABLE.has(o.type)) {
+        const wants = refs.spriteSpace?.get(o.sprite ?? o.kind ?? o.id);
+        // The districts this entry can actually reach: the ones it names, cut
+        // by its own `space` if it has one, or every district when it names
+        // neither.
+        const reach = (o.areas ?? [...areaIds]).filter(
+          (id) => !o.space || areaSpace.get(id) === o.space,
+        );
+        const wrong = wants
+          ? reach.filter((id) => areaSpace.get(id) !== wants)
+          : [];
+        if (wrong.length > 0)
+          err(
+            `${where}: sprite "${o.sprite ?? o.kind ?? o.id}" is ${wants} art, but ` +
+              `this entry can be placed in ${wrong.map((id) => `"${id}"`).join(", ")} ` +
+              `— restrict it with \`space: ${wants}\` or an areas list`,
+          );
+      }
       if (o.rockSizes !== undefined) {
         if (
           !Array.isArray(o.rockSizes) ||
@@ -745,6 +1040,12 @@ export function validateMap(bp, refs, description = "") {
       err(`${where}: wall "${id}" is not in the object palette`);
   for (const [id, where] of areaNests)
     if (!areaIds.has(id)) err(`${where}: shellOf names unknown area "${id}"`);
+  for (const [id, where] of areaDoors) {
+    const door = bp.objects?.find((o) => o?.id === id);
+    if (!door) err(`${where}: doors "${id}" is not in the object palette`);
+    else if (door.type !== "door")
+      err(`${where}: doors "${id}" is a "${door.type}", not a door`);
+  }
   // A PINNED blueprint (`carveSeed` — the static hub) pays nothing on purpose:
   // a hub with loot in its dead ends would be a farm in the one place the
   // player is meant to idle, so the missing chest is the design, not a gap.

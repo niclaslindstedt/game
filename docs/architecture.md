@@ -62,7 +62,15 @@ run against synthetic fixtures with no shipped content (see
   has to be found; everything non-geometric (story, loot pools, merchant,
   hazards) is inherited from the MISSION the blueprint names — which carries no
   geometry at all (`MissionDef`, `content/levels/<id>.yaml`). Walls are DERIVED from which two kinds of
-  place meet at each border, never authored. A MOD may ship a blueprint too
+  place meet at each border, never authored. An area also says which side of a
+  building's wall it is on (`space: inside | outside`), which is what lets an
+  interior district be cut a second time into ROOMS (`roomSize`) with a real
+  DOOR hung in every doorway (`doors`), and what lets the build refuse a prop
+  whose SPRITE is authored for the other half — a car park's cars cannot scatter
+  into a cleanroom. A blueprint may also pin a few rooms outright
+  (`prefabs`): a fixed-size room with fixed contents, guillotined into the
+  rolled carve, so a venue the player has run ten times has something in it he
+  can recognise. A MOD may ship a blueprint too
   (`maps/<id>.yaml` in its folder, through the same loader and schema), which is
   why the registry is the import-free leaf `mapgen/blueprints.ts` —
   `registerDefs({ blueprints })` swaps a mod's recipes in without the def

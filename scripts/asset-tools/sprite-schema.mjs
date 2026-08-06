@@ -33,6 +33,24 @@ export const SPRITE_PLANES = new Set(["upright", "floor"]);
 export const DEFAULT_SPRITE_PLANE = "upright";
 
 /**
+ * WHERE THE ART BELONGS — inside a building, or out in the world.
+ *
+ * It is a fact about the OBJECT rather than about any one map: a cactus is an
+ * outdoor thing on every map in the game and a server rack is an indoor one, and
+ * saying so once here is what lets the map compiler refuse a palette entry that
+ * could scatter either into the wrong half of a venue
+ * (`MapObject.space` / `MapArea.space`). Before this, "don't put the office
+ * furniture on the lawn" was an authoring discipline enforced by nobody, and the
+ * failure was silent on every seed but the one somebody happened to render.
+ *
+ * Most sprites declare NOTHING, and that is the honest answer for most of them —
+ * a crate, a puddle of blood, a corpse and a bullet hole belong wherever they
+ * turn up. Only art that would read as a mistake on the other side of a wall
+ * needs to say so.
+ */
+export const SPRITE_SPACES = new Set(["inside", "outside"]);
+
+/**
  * The closed vocabulary of `subject:` slots (kept in step with `SUBJECT_KEYS`
  * in `prompt.mjs`). A structured subject is optional, but if present it must use
  * only these keys — a typo'd slot silently drops signal from the prompt, so it
@@ -134,6 +152,13 @@ export function validateSprite(sprite) {
   if (plane !== undefined && !SPRITE_PLANES.has(plane)) {
     errors.push(
       `${name}: plane must be one of ${[...SPRITE_PLANES].join(", ")} (got ${JSON.stringify(plane)})`,
+    );
+  }
+
+  const space = sprite?.space;
+  if (space !== undefined && !SPRITE_SPACES.has(space)) {
+    errors.push(
+      `${name}: space must be one of ${[...SPRITE_SPACES].join(", ")} (got ${JSON.stringify(space)})`,
     );
   }
 

@@ -1,5 +1,6 @@
 name: conduit
 family: goodco
+space: inside
 plane: floor
 size: [16, 6]
 description: >

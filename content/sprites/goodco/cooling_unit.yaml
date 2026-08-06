@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: cooling_unit
 family: goodco
+space: inside
 size: [10, 10]
 description: >
   A floor-standing cooling unit, grille out — GOODCO factory floor

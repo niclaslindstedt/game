@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: lamp_post
 family: goodco
+space: outside
 size: [8, 15]
 description: >
   The yard light out on the back lawn — a plain steel post with a small hooded

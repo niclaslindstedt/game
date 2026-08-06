@@ -1,5 +1,6 @@
 name: desk
 family: goodco
+space: inside
 plane: floor
 size: [20, 12]
 description: >

@@ -1,5 +1,6 @@
 name: parts_bin
 family: goodco
+space: inside
 size: [14, 12]
 description: >
   An open parts bin on the assembly floor — a slate tote heaped with colourful

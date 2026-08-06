@@ -1540,6 +1540,20 @@ export const FIX_DOOR_LEVEL: LevelDef = {
       to: { x: 1700, y: 700 },
       radius: 13,
     },
+    // AN INTERIOR DOOR: no key, no roll-up — it slides aside for anybody who
+    // walks up to it, hero or staff, and leaves its leaves standing in the
+    // jambs. The generated interiors hang one of these in every doorway
+    // (`MapArea.doors`), which is what makes the rest of this suite matter: a
+    // door only the hero could open would leave the whole night shift stuck.
+    {
+      id: "test_office_door",
+      from: { x: 900, y: 500 },
+      to: { x: 1100, y: 500 },
+      radius: 13,
+      sprite: "test_office_door",
+      openSprite: "test_office_door_open",
+      opens: "approach",
+    },
   ],
 };
 
@@ -1639,6 +1653,11 @@ export const FIX_GARAGE_LEVEL: LevelDef = {
       radius: 8,
       sprite: "test_garage_door",
       opens: "approach",
+      // A roll-up, which is now said outright rather than inferred from the
+      // lock: `approach` is about WHO opens it and `rollUp` about HOW, so a
+      // building's interior doors can open for anybody who walks up without
+      // every one of them sounding like a loading bay.
+      rollUp: true,
     },
   ],
 };

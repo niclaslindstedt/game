@@ -39,6 +39,30 @@ const spritesDir = fileURLToPath(
 const readYaml = (path) => parse(readFileSync(path, "utf8"));
 
 /**
+ * The `space:` declaration of every sprite that makes one — sprite name → the
+ * side of a building's wall the art belongs on (see `SPRITE_SPACES`).
+ *
+ * Its own tiny loader rather than a field on {@link loadSprites}'s result,
+ * because its one consumer is the MAP compiler, which needs no palettes, no
+ * grids and no wound derivation and would otherwise pay for all three (and
+ * roughly half a second) to read one string per file. It still parses the real
+ * YAML — the same files, the same key — so the fact cannot drift from the sprite
+ * that states it.
+ */
+export function loadSpriteSpaces(dir = spritesDir) {
+  const out = new Map();
+  for (const family of readdirSync(dir, { withFileTypes: true })) {
+    if (!family.isDirectory()) continue;
+    for (const file of readdirSync(`${dir}/${family.name}`)) {
+      if (!file.endsWith(".yaml") || file.startsWith("_")) continue;
+      const sprite = readYaml(`${dir}/${family.name}/${file}`);
+      if (sprite?.space) out.set(file.slice(0, -".yaml".length), sprite.space);
+    }
+  }
+  return out;
+}
+
+/**
  * Load the whole sprite tree.
  *
  * @returns `{ CORE_PALETTE, FAMILIES, SPRITES, SPRITE_PALETTES, SPRITE_FAMILY,

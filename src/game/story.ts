@@ -777,26 +777,74 @@ export function stepGates(state: GameState): void {
 }
 
 /**
+ * Does THIS MOB have the card for this door on it?
+ *
+ * Derived from what it is CARRYING (`loot.storyItems` → the item's `unlocks`)
+ * rather than from a pass list of its own, because those are the same fact said
+ * twice and the second copy is the one that goes stale. It also makes the rule
+ * the player can see: the door answers to the card, the card is on the body, so
+ * the mob the door opens for is exactly the mob you can take it from.
+ */
+function enemyHoldsKeyFor(enemy: Enemy, doorId: string): boolean {
+  const carried = enemyDef(enemy.defId).loot?.storyItems;
+  if (!carried) return false;
+  return carried.some((id) => storyItemDef(id).unlocks === doorId);
+}
+
+/**
  * Doors: a KEY door opens for the party carrying the matching key up to it;
- * an APPROACH door (the garage door) opens for anybody who simply comes
- * near — on foot here, or driven at by the car (vehicles.ts calls
+ * an APPROACH door (an office door, the garage door) opens for anybody who
+ * simply comes near — on foot here, or driven at by the car (vehicles.ts calls
  * `openDoor` with the car's own position).
+ *
+ * AND THE STAFF WALK THROUGH THEIR OWN BUILDING. Once a floor is cut into rooms
+ * with real doors in the doorways (`MapArea.doors`), a door that only ever
+ * opened for the hero is a door every guard on the night shift is stuck behind:
+ * the sentry pacing his round walks into it, the pack chasing the hero stops at
+ * it, and the building reads as a set rather than as a place with people in it.
+ * So an approach door opens for a mob exactly as it does for the hero — it is an
+ * automatic door and they have badges — and a KEY door opens for a mob that is
+ * carrying that key.
+ *
+ * The keyed half sounds like it should give the vault away, and does not, for a
+ * geometric reason worth stating: `DOORS.openRadius` is 40 px and a set piece is
+ * placed and paces well inside its room's walls, so nothing wanders a card up to
+ * a door. What it takes is a mob that has a REASON to cross that threshold —
+ * which, since the only thing mobs walk toward is the hero, means the hero is
+ * already standing there.
  */
 export function stepDoors(state: GameState): void {
   for (const door of state.doors) {
     if (door.open) continue;
-    if (!door.approach && !holdsKeyFor(state, door.id)) continue;
-    if (!anyHeroWithin(state, door.center, DOORS.openRadius)) continue;
-    openDoor(state, door);
+    const keyed = !door.approach;
+    if (
+      (!keyed || holdsKeyFor(state, door.id)) &&
+      anyHeroWithin(state, door.center, DOORS.openRadius)
+    ) {
+      openDoor(state, door);
+      continue;
+    }
+    for (const enemy of state.enemies) {
+      if (enemy.hp <= 0) continue;
+      if (keyed && !enemyHoldsKeyFor(enemy, door.id)) continue;
+      // The mob's own bulk counts: a wide body standing IN a doorway has its
+      // centre further out than a hero's would be, and a door that refused to
+      // open for something already filling it is the one bug this cannot afford.
+      const reach = DOORS.openRadius + enemyDef(enemy.defId).radius;
+      if (distance(enemy.pos, door.center) > reach) continue;
+      openDoor(state, door);
+      break;
+    }
   }
 }
 
 /**
- * Slide a door open: its obstacle chain vanishes for good, the autopilot's
- * nav grid is told (`obstaclesVersion` — a wall that disappears without the
- * bump is a wall the bot still routes around), and the app hears which KIND
- * of door moved: `garageDoorOpened` drives the roll-up animation, `doorOpened`
- * the vault slide.
+ * Slide a door open: its obstacle chain vanishes for good, the leaves are left
+ * standing in the jambs if the door has art for that, the autopilot's nav grid
+ * is told (`obstaclesVersion` — a wall that disappears without the bump is a
+ * wall the bot still routes around), and the app hears which KIND of door
+ * moved: `garageDoorOpened` drives the roll-up animation, `doorOpened` the
+ * plain slide.
  */
 export function openDoor(
   state: GameState,
@@ -807,8 +855,21 @@ export function openDoor(
   const gone = new Set(door.obstacleIds);
   state.obstacles = state.obstacles.filter((o) => !gone.has(o.id));
   state.obstaclesVersion++;
+  // THE LEAVES STAY. A doorway whose door simply disappears is a hole in a
+  // wall, and a building of them reads as a floor plan with the doors deleted —
+  // which is exactly what an interior looked like before this. The open frames
+  // are flat scenery at the two ENDS of the chain (where the leaves went), so
+  // they are drawn but never stood in the way of again.
+  if (door.openSprite && door.from && door.to) {
+    for (const pos of [door.from, door.to])
+      state.decor.push({
+        kind: door.openSprite,
+        sprite: door.openSprite,
+        pos: { x: pos.x, y: pos.y },
+      });
+  }
   state.events.push({
-    type: door.approach ? "garageDoorOpened" : "doorOpened",
+    type: door.rollUp ? "garageDoorOpened" : "doorOpened",
     pos: { ...door.center },
   });
 }
