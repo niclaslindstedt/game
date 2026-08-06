@@ -46,7 +46,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMapSize: "random",
 };
 
 type Decoded = NonNullable<ReturnType<typeof decodeFrame>>;

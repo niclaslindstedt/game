@@ -329,7 +329,6 @@ describe("the title menu tree", () => {
     for (const id of [
       "select-level",
       "bot-view",
-      "map-size",
       "auto-level-stats",
       "seed",
       "grant-coins",

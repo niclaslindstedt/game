@@ -34,7 +34,6 @@ import {
   GORE_LINGER_MAX,
   KNOCKBACK_MAX,
   updateSettings,
-  type GeneratedMapSize,
 } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import {
@@ -48,22 +47,6 @@ import {
   type MenuEntry,
 } from "./menu-model.ts";
 import { rowAria } from "./menu-tree.ts";
-
-/** The size choices in cycle order. `random` last: it is the "surprise me" end
- * of the list, not a size. */
-const MAP_SIZE_ORDER: GeneratedMapSize[] = [
-  "small",
-  "medium",
-  "large",
-  "random",
-];
-
-const MAP_SIZE_LABEL: Record<GeneratedMapSize, string> = {
-  small: "SMALL",
-  medium: "MEDIUM",
-  large: "LARGE",
-  random: "RANDOM",
-};
 
 /** The DEVELOPER index: five doors, and nothing else. Every row goes somewhere
  * — which is what keeps the page short enough to read at a glance. */
@@ -83,10 +66,9 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
 }
 
 /** DEVELOPER → PLAYGROUND: the two doors into a run of your own choosing, the
- * terms the run is carved on (read when a level is BUILT, so they land on the
+ * term the run is carved on (read when a level is BUILT, so it lands on the
  * run these doors are about to start) and the meter drawn over it. */
 export function buildPlaygroundMenu(ctx: MenuContext): MenuEntry[] {
-  const s = getSettings();
   return [
     ...assembleRows("playground", {
       "select-level": actionRow("playground", "select-level", () => {
@@ -102,27 +84,6 @@ export function buildPlaygroundMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setScreen("difficulty");
         ctx.setCursor(0);
       }),
-      // Every map is carved, so the size is the one knob left over the
-      // generator. A label-cycling row, not a switch: four choices are not an
-      // on/off.
-      "map-size": actionRow(
-        "playground",
-        "map-size",
-        () => {
-          playUiSound(synth, "confirm");
-          const at = MAP_SIZE_ORDER.indexOf(getSettings().generatedMapSize);
-          updateSettings({
-            generatedMapSize: MAP_SIZE_ORDER[
-              (at + 1) % MAP_SIZE_ORDER.length
-            ] as GeneratedMapSize,
-          });
-          ctx.bumpSettings();
-        },
-        {
-          value: MAP_SIZE_LABEL[s.generatedMapSize],
-          state: s.generatedMapSize,
-        },
-      ),
       "auto-level-stats": onOffRow(
         ctx,
         "playground",

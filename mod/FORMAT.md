@@ -178,7 +178,7 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 | Field                  | What it says                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
-| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                       |
+| `size`                 | the world rectangle the map is carved into — a width, a height and a chamber count                             |
 | `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
 | `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
 | `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
@@ -197,8 +197,9 @@ intent, and every difficulty number comes from one file.
 
 Three rules to author by:
 
-- **A count is a DENSITY.** Densities are per 1,000,000 world px², because the
-  same blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+- **A count is a DENSITY.** Densities are per 1,000,000 world px², so the
+  dressing follows the floor a district's cells actually rolled rather than
+  piling up in a small one and leaving a big one bare.
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.

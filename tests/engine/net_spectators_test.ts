@@ -41,7 +41,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMapSize: "random",
 };
 
 /** One connected client's inbox, decoded. */

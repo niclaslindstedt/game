@@ -1018,15 +1018,6 @@ screens:
       - id: bot-view
         label: BOT VIEW
         help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
-      # Every mission is carved from its blueprint, so the size is the only
-      # knob left over the generator.
-      - id: map-size
-        label: MAP SIZE
-        help:
-          small: A TIGHT MAP - THE BOSS IS A FEW ROOMS AWAY
-          medium: A FULL MAP - A REAL SEARCH FOR THE BOSS
-          large: A SPRAWLING MAP - THE BOSS IS A LONG WAY OFF
-          random: THE MAP ROLLS ITS OWN SIZE EACH RUN
       - id: auto-level-stats
         label: AUTO LEVEL STATS
         help:

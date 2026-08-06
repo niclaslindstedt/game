@@ -102,15 +102,11 @@ const seed = opt("seed", "");
 // Fast-forward multiplier, forwarded to the app as `?speed=`: run the bot
 // through the level faster (more sim steps per frame). Empty / 1 = real time.
 const speed = opt("speed", "");
-// MAP SIZE (--map-size): every mission's map is carved from its blueprint per
-// run (see AGENTS.md § GENERATED MAPS), so what this picks is the SCALE. It is a
-// persisted DEVELOPER setting, not a URL param, so it has to be seeded into
-// storage before the app boots — which is what `addInitScript` below does.
-const mapSize = opt("map-size", "");
 // THE CAMERA KNOBS (--pitch, --yaw): the world projection, dialled for this run
-// (see AGENTS.md § THE WORLD PROJECTION). Like GENERATED MAPS they are persisted
-// DEVELOPER settings rather than URL params, so they are seeded into storage
-// before the app boots. Omit either to play on the shipped camera.
+// (see AGENTS.md § THE WORLD PROJECTION). They are persisted DEVELOPER settings
+// rather than URL params, so they are seeded into storage before the app boots
+// — which is what `addInitScript` below does. Omit either to play on the
+// shipped camera.
 const pitch = opt("pitch", "");
 const yaw = opt("yaw", "");
 // ANTI-ALIASING (--antialias on|off): whether the art the yaw TURNS is smoothed
@@ -130,11 +126,11 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
-if (mapSize || pitch || yaw || antialias) {
+if (pitch || yaw || antialias) {
   // Written before any app code runs, so the engine flags are applied from it on
   // load exactly as they would be for a developer who flipped the switch.
   await page.addInitScript(
-    ([size, camPitch, camYaw, camAntialias]) => {
+    ([camPitch, camYaw, camAntialias]) => {
       const KEY = "adas-trail:settings";
       let stored;
       try {
@@ -147,14 +143,13 @@ if (mapSize || pitch || yaw || antialias) {
         JSON.stringify({
           ...stored,
           developerUnlocked: true,
-          ...(size ? { generatedMapSize: size } : {}),
           ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
           ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
           ...(camAntialias ? { cameraAntialias: camAntialias } : {}),
         }),
       );
     },
-    [mapSize, pitch, yaw, antialias],
+    [pitch, yaw, antialias],
   );
 }
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));

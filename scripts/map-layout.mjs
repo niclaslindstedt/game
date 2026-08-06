@@ -22,7 +22,6 @@
 //   node scripts/map-layout.mjs <id> --difficulty hard   con vs that rung
 //   node scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
 //   node scripts/map-layout.mjs <id> --seed 3     another carve of the same map
-//   node scripts/map-layout.mjs <id> --size large
 //   node scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
 //   node scripts/map-layout.mjs <id> --mod ../my-mod   a MOD's own venue
 //   node scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
@@ -30,8 +29,8 @@
 //   node scripts/map-layout.mjs <id> --highlight-file report.json
 //
 // Every map is CARVED from its blueprint per run (see src/game/mapgen), so a
-// render is of ONE run's map: --seed picks which, --size small|medium|large picks
-// the scale. It is the LOOK half of the blueprint authoring loop — the picture
+// render is of ONE run's map: --seed picks which. It is the LOOK half of the
+// blueprint authoring loop — the picture
 // that shows whether a chamber grid reads as a place worth searching.
 //
 // HIGHLIGHTS mark arbitrary world coordinates on the render — built for the
@@ -103,7 +102,7 @@ async function renderLevel(entry, opts) {
   c.labels = [];
   label(
     c.surf,
-    `MAP LAYOUT - ${def.name} - ${def.id} - ${opts.size.toUpperCase()} SEED ${opts.seed ?? 1} - GRID ${gridStep(def)}U - CON vs ${diff.toUpperCase()}`,
+    `MAP LAYOUT - ${def.name} - ${def.id} - SEED ${opts.seed ?? 1} - GRID ${gridStep(def)}U - CON vs ${diff.toUpperCase()}`,
     PAD,
     PAD - 1,
     C.ink,
@@ -132,14 +131,12 @@ function parseArgs(argv) {
     difficulty: "easy",
     all: false,
     seed: null,
-    size: "medium",
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--all") opts.all = true;
     else if (a === "--seed") opts.seed = Number(argv[++i]);
-    else if (a === "--size") opts.size = argv[++i];
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--width") opts.width = Number(argv[++i]);
     else if (a === "--highlight") opts.highlight = argv[++i];
@@ -160,7 +157,7 @@ const entries = [...loadLevels().entries, ...(loaded?.levels ?? [])];
 const opts = parseArgs(argv);
 
 // EVERY MAP IS CARVED — a mission authors no geometry — so each entry's def is
-// resolved the way a run resolves it, on the seed and size given. Everything
+// resolved the way a run resolves it, on the seed given. Everything
 // downstream is untouched: the drawers take a plain LevelDef, which is exactly
 // what the generator produces.
 {
@@ -174,7 +171,7 @@ const opts = parseArgs(argv);
       missing.push(entry.id);
       continue;
     }
-    entry.def = resolveLevelDef(entry.id, seed, opts.size);
+    entry.def = resolveLevelDef(entry.id, seed);
   }
   if (missing.length > 0)
     console.warn(`! no map blueprint for: ${missing.join(", ")}`);

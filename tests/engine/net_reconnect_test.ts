@@ -40,7 +40,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMapSize: "random",
 };
 
 /** A session on a clock the test owns, with the host already seated. */

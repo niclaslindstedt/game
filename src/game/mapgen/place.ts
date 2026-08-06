@@ -10,8 +10,9 @@
 // restriction built from exactly those cells' rectangles — so the cactus stays
 // out on the hardpan, the crates stay inside the compound, and walking from one
 // district to the next looks like walking somewhere. Counts come from a DENSITY
-// against the restricted floor rather than a fixed number, because a blueprint
-// is carved at three sizes and a fixed count would leave LARGE bare.
+// against the restricted floor rather than a fixed number, because a district's
+// floor is whatever the split rolled it — a fixed count would pile up in a
+// closet and leave a plaza bare.
 //
 // `generate.ts` owns the decisions (where the boss is, where the hero lands, how
 // deep each cell sits); this file owns the consequences.

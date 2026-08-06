@@ -51,7 +51,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMapSize: "random",
 };
 
 /** The host's own renderer, as `server/main.ts` numbers it. */

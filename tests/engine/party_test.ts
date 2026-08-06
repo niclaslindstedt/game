@@ -284,7 +284,6 @@ describe("a seat outlives the player in it", () => {
         respec: false,
         clearedLevels: [],
         merchantDiscovered: false,
-        generatedMapSize: "medium",
       },
       build: engineVersion,
     });

@@ -28,10 +28,8 @@ npm install --no-save playwright
 cd pwa && npx vite --port 5199 &     # dev server
 node pwa/scripts/playtest.mjs --strategy kite   # from the repo root
 
-# every mission's map is carved per run (AGENTS.md § GENERATED MAPS); --map-size
-# picks the SCALE — a persisted developer setting, so the runner seeds it into
-# storage before the app boots
-node pwa/scripts/playtest.mjs --strategy survivor --level goodco_hq --map-size large
+# every mission's map is carved per run, at the one size its blueprint prices
+node pwa/scripts/playtest.mjs --strategy survivor --level goodco_hq
 ```
 
 Strategies:
