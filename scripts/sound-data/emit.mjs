@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   captureAchievementJingle,
+  captureLegendJingle,
   captureEventSounds,
   captureUiSounds,
 } from "./capture.mjs";
@@ -85,6 +86,7 @@ const sounds = [
     description: prose.get(s.ui) ?? "",
   })),
   await captureAchievementJingle(),
+  await captureLegendJingle(),
 ];
 
 mkdirSync(OUT, { recursive: true });

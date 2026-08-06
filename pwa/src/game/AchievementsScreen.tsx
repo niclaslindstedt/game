@@ -8,7 +8,7 @@
 // it acknowledges the unseen queue. Follows the arsenal viewer's shape: a
 // scrollable list, ESC/BACK out, pointer or arrow keys to walk rows.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -23,6 +23,7 @@ import {
   CATEGORY_LABELS,
   type AchievementDef,
 } from "./achievement-defs.ts";
+import { TIER_LOOK, tierStyle } from "./achievement-tiers.ts";
 import {
   openPlatformAchievements,
   platformAchievementsState,
@@ -316,9 +317,13 @@ export function AchievementsScreen({
                       ? (el) => el?.scrollIntoView({ block: "nearest" })
                       : undefined
                   }
-                  className={`achievement-row ${unlocked ? "unlocked" : "locked"}${
-                    selected ? " selected" : ""
-                  }`}
+                  className={`achievement-row badge-tier-${def.tier} ${
+                    unlocked ? "unlocked" : "locked"
+                  }${selected ? " selected" : ""}`}
+                  // The row is lit by its own rung: the frame color and the
+                  // halo strength both come off the tier, so the shelf reads as
+                  // a ladder instead of one column of identical gold.
+                  style={tierStyle(def.tier) as CSSProperties}
                   role="button"
                   tabIndex={-1}
                   aria-label={`achievement-${def.id}`}
@@ -345,7 +350,7 @@ export function AchievementsScreen({
                       font={font}
                       text={def.name}
                       scale={2}
-                      color={unlocked ? GOLD : DIM}
+                      color={unlocked ? TIER_LOOK[def.tier].color : DIM}
                     />
                     <PixelText
                       font={font}
@@ -400,11 +405,12 @@ export function AchievementsScreen({
 
           {wide && badges[cursor] && (
             <div
-              className={`achievements-detail ${
+              className={`achievements-detail badge-tier-${badges[cursor].tier} ${
                 save.unlocked[badges[cursor].id] !== undefined
                   ? "unlocked"
                   : "locked"
               }`}
+              style={tierStyle(badges[cursor].tier) as CSSProperties}
             >
               <AchievementCardBody
                 font={font}

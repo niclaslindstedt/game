@@ -6,10 +6,10 @@
 // companion) derive from the live content registries so a sequel that rewrites
 // the catalogs gets its roster of badges for free.
 //
-// Tiers use the game's achievement ladder (beginner → expert) so the shared
-// point weights apply; the pixel UI (AchievementsScreen, the
-// unlock toast) renders these defs directly — sprite-name icons, plain-string
-// caps text matching the rest of the game's UI.
+// Every badge sits on the effort ladder (BEGINNER → LEGEND, achievement-tiers.ts),
+// which is what it is worth AND how loudly it is celebrated; the pixel UI
+// (AchievementsScreen, the unlock toast) renders these defs directly —
+// sprite-name icons, plain-string caps text matching the rest of the game's UI.
 
 import {
   COMPANION_DEFS,
@@ -28,14 +28,17 @@ import {
   type LifetimeTotals,
 } from "./achievement-totals.ts";
 
-export type AchievementTier = "beginner" | "intermediate" | "pro" | "expert";
+// THE EFFORT LADDER lives in the import-free leaf next door
+// (achievement-tiers.ts — its header says why), and is re-exported here so
+// this module stays the one door for everything about a badge.
+import type { AchievementTier } from "./achievement-tiers.ts";
 
-export const ACHIEVEMENT_POINTS: Record<AchievementTier, number> = {
-  beginner: 10,
-  intermediate: 25,
-  pro: 50,
-  expert: 100,
-};
+export {
+  ACHIEVEMENT_POINTS,
+  ACHIEVEMENT_TIERS,
+  tierRank,
+  type AchievementTier,
+} from "./achievement-tiers.ts";
 
 /** Browser sections, in display order. */
 export const ACHIEVEMENT_CATEGORIES = [
@@ -114,8 +117,17 @@ function counter(
   };
 }
 
-/** One badge per campaign mission — clear it on any difficulty. */
+/**
+ * One badge per campaign mission — clear it on any difficulty.
+ *
+ * The tier tracks the mission's PLACE in the campaign, because that is what
+ * clearing it actually costs: the opening two are the tutorial stretch, the
+ * middle is the game, and the LAST one is gated behind every mission before
+ * it — clearing the finale is beating the campaign. A flat tier across the
+ * ladder paid that what it paid the first ten minutes.
+ */
 function missionBadges(): AchievementDef[] {
+  const finale = LEVEL_ORDER.length - 1;
   return LEVEL_ORDER.map((levelId, i) => {
     const level = levelDef(levelId);
     return {
@@ -124,22 +136,33 @@ function missionBadges(): AchievementDef[] {
       name: level.name,
       desc: `CLEAR ${level.name} ON ANY DIFFICULTY`,
       icon: "map_story",
-      tier: (i < 2 ? "beginner" : "intermediate") as AchievementTier,
+      tier: (i < 2
+        ? "beginner"
+        : i < finale
+          ? "intermediate"
+          : "pro") as AchievementTier,
       subject: { kind: "level" as const, id: levelId },
       done: (t: LifetimeTotals) => t.levelClears.includes(levelId),
     };
   });
 }
 
-/** One badge per difficulty — beat the whole campaign on it. */
+/**
+ * One badge per difficulty — beat the whole campaign on it.
+ *
+ * The CRUELEST setting is always the LEGEND rung, read off the end of the
+ * ladder rather than typed into the table: a sequel that adds a sixth
+ * difficulty should crown the new top of the ladder, not leave the crown two
+ * rungs down where a fixed index left it.
+ */
 function difficultyBadges(): AchievementDef[] {
   const tiers: AchievementTier[] = [
     "intermediate",
     "intermediate",
     "pro",
     "expert",
-    "expert",
   ];
+  const hardest = DIFFICULTY_ORDER.length - 1;
   return DIFFICULTY_ORDER.map((difficulty, i) => {
     const def = difficultyDef(difficulty);
     return {
@@ -148,19 +171,38 @@ function difficultyBadges(): AchievementDef[] {
       name: `${def.name} STREET CRED`,
       desc: `BEAT THE CAMPAIGN ON ${def.name}`,
       icon: "icon_trophy",
-      tier: tiers[Math.min(i, tiers.length - 1)] ?? "expert",
+      tier:
+        i === hardest
+          ? "legend"
+          : (tiers[Math.min(i, tiers.length - 1)] ?? "expert"),
       subject: { kind: "difficulty" as const, id: difficulty },
       done: (t: LifetimeTotals) => t.difficultiesBeaten.includes(difficulty),
     };
   });
 }
 
-/** One badge per hand-authored unique — the trophy wall. */
+/**
+ * One badge per hand-authored unique — the trophy wall.
+ *
+ * The tier reads the relic's `ilvl`, which is exactly the right question to
+ * ask: a named drop is only in the pool once the run's loot level is inside
+ * `LOOT.namedIlvlWindow` of it (items/rolling.ts), so the ilvl says HOW DEEP
+ * the hero has to be before the relic can fall at all — the one thing that
+ * makes finding one relic harder than finding another.
+ *
+ * THE BANDS ARE THE ROADMAP: through the campaign proper (≤ 30), across the
+ * long climb (≤ 70), and out past it into the endgame, where the artifacts
+ * sit at an ilvl only the level cap can wear. What they are NOT is a slope
+ * that dumps everything at the top, which is what the old 15/28 cut did to a
+ * catalog whose relics run past ilvl 200 — three quarters of the wall came out
+ * EXPERT, and since the wall is more than half the shelf, so did most of the
+ * game. A tier the majority of badges share has stopped saying anything.
+ */
 function uniqueBadges(): AchievementDef[] {
   return UNIQUE_IDS.map((id) => {
     const u = uniqueDef(id);
     const tier: AchievementTier =
-      u.ilvl <= 15 ? "intermediate" : u.ilvl <= 28 ? "pro" : "expert";
+      u.ilvl <= 30 ? "intermediate" : u.ilvl <= 70 ? "pro" : "expert";
     return {
       id: `unique_${id}`,
       category: "arsenal" as const,
@@ -191,30 +233,39 @@ function companionBadges(): AchievementDef[] {
 // Sized against the leveling model (scripts/leveling-curve.mjs): the climb
 // to the level-99 cap runs ~25K kills, so the ladder keeps paying through
 // the whole journey and two rungs beyond it for the post-cap farmers.
+// The rungs are priced against that 25K figure rather than against how big
+// the number looks: 1,000 is a couple of missions, 5,000 and 10,000 are
+// waypoints on the climb, 25,000 IS the climb — and the two beyond it are
+// double and quadruple a finished game, which is what earns 100,000 the
+// LEGEND rung.
 const KILL_LADDER: [string, string, number, AchievementTier][] = [
   ["kills_1", "FIRST BLOOD", 1, "beginner"],
   ["kills_100", "BODY COUNT", 100, "beginner"],
   ["kills_1000", "EXTERMINATOR", 1_000, "intermediate"],
   ["kills_5000", "ONE-PERSON ARMY", 5_000, "pro"],
-  ["kills_10000", "APEX PREDATOR", 10_000, "expert"],
+  ["kills_10000", "APEX PREDATOR", 10_000, "pro"],
   ["kills_25000", "WALKING APOCALYPSE", 25_000, "expert"],
   ["kills_50000", "EXTINCTION EVENT", 50_000, "expert"],
-  ["kills_100000", "DEATH INCARNATE", 100_000, "expert"],
+  ["kills_100000", "DEATH INCARNATE", 100_000, "legend"],
 ];
 
+// MAGIC is the commonest tier above a plain find — a campaign hands them out
+// by the fistful — so this ladder is priced as PACING rather than as a chase.
+// It sits a full bucket under the rare ladder at every matching rung, which is
+// the honest reading: 250 magic finds is a busy week, 250 rares is a project.
 const MAGIC_LADDER: [string, string, number, AchievementTier][] = [
   ["magic_10", "MAGIC TOUCH", 10, "beginner"],
   ["magic_25", "BLUE BLOOD", 25, "beginner"],
   ["magic_50", "ENCHANTED", 50, "intermediate"],
-  ["magic_100", "MAGIC KINGDOM", 100, "pro"],
-  ["magic_250", "DEEP BLUE", 250, "expert"],
+  ["magic_100", "MAGIC KINGDOM", 100, "intermediate"],
+  ["magic_250", "DEEP BLUE", 250, "pro"],
 ];
 
 const RARE_LADDER: [string, string, number, AchievementTier][] = [
   ["rare_10", "RARE TASTE", 10, "beginner"],
   ["rare_25", "RARE BREED", 25, "intermediate"],
-  ["rare_50", "RARE FORM", 50, "pro"],
-  ["rare_100", "RARITY EXPERT", 100, "expert"],
+  ["rare_50", "RARE FORM", 50, "intermediate"],
+  ["rare_100", "RARITY EXPERT", 100, "pro"],
   ["rare_250", "GOLD STANDARD", 250, "expert"],
 ];
 
@@ -242,7 +293,9 @@ const TOTAL_DAMAGE_LADDER: [string, string, number, AchievementTier][] = [
   ["damage_100k", "HURT LOCKER", 100_000, "intermediate"],
   ["damage_1m", "FORCE OF NATURE", 1_000_000, "pro"],
   ["damage_10m", "NATURAL DISASTER", 10_000_000, "expert"],
-  ["damage_50m", "PLANET CRACKER", 50_000_000, "expert"],
+  // Five times a finished climb — the damage ladder's answer to DEATH
+  // INCARNATE, and priced with it.
+  ["damage_50m", "PLANET CRACKER", 50_000_000, "legend"],
 ];
 
 const BURST_LADDER: [string, string, number, AchievementTier][] = [
@@ -298,6 +351,41 @@ const SLOT_BADGES: Record<
   },
 };
 
+/**
+ * THE HERO CLIMB: a rung every ten levels, and the cap.
+ *
+ * 99 levels used to carry four badges — 10, 25, 50, 75, 99 — so most of the
+ * climb happened in silence, and the stretch from 50 to the cap, which is most
+ * of a hero's life, paid exactly one. A decade is the unit because it is the
+ * one a player already counts in.
+ *
+ * THE TWO QUARTER MARKS ARE GONE, AND THAT WAS A DELIBERATE EXCEPTION rather
+ * than a tidy-up. A badge id is normally FOREVER once a store carries it: a
+ * Steam achievement id survives in every owner's profile whether or not the
+ * game still lists it, so a shipped rung is added around, never replaced.
+ * `level_25` and `level_75` were retired because nobody had earned them yet —
+ * the portal rows exist but no profile carries one, so there was nothing to
+ * strand. That is the ONLY circumstance in which a rung may leave this table,
+ * and it stops being true the day a player unlocks one. The two names were too
+ * good to retire with them, so they were re-homed onto the nearest decades.
+ *
+ * The last rung is the only LEGEND in the category, and it is the badge the
+ * whole ladder exists to arrive at — the game's own top-tier reveal plays for
+ * it (see achievement-tiers.ts).
+ */
+const LEVEL_LADDER: [number, string, AchievementTier, string?][] = [
+  [10, "DOUBLE DIGITS", "beginner"],
+  [20, "HITTING STRIDE", "beginner"],
+  [30, "SEASONED", "intermediate"],
+  [40, "GRIZZLED", "intermediate"],
+  [50, "VETERAN", "pro"],
+  [60, "UNBROKEN", "pro"],
+  [70, "IRONCLAD", "pro"],
+  [80, "WAR MACHINE", "expert", "icon_trophy"],
+  [90, "THE LAST CLIMB", "expert", "icon_trophy"],
+  [99, "LIVING LEGEND", "legend", "icon_crown"],
+];
+
 const UNIQUE_LADDER: [string, string, number, AchievementTier][] = [
   ["uniques_1", "ONE OF A KIND", 1, "beginner"],
   ["uniques_5", "COLLECTOR", 5, "intermediate"],
@@ -327,7 +415,9 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: "ARCHIVIST",
     desc: "COLLECT 10 STORY ITEMS",
     icon: "icon_dossier",
-    tier: "pro",
+    // A third of the shipped lore, and every piece of it lies where the player
+    // was already walking — attention rather than difficulty.
+    tier: "intermediate",
     goal: 10,
     read: (t) => t.storyItems.length,
   }),
@@ -420,7 +510,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: "KINGSLAYER",
     desc: "DEFEAT 50 BOSSES",
     icon: "icon_crown",
-    tier: "expert",
+    // One boss per mission clear, so 50 is roughly seven campaigns — a lot of
+    // play, but a fifth of what REGICIDE ROUTINE asks, and the two sat on the
+    // same tier paying the same points.
+    tier: "pro",
     goal: 50,
     read: (t) => t.bossKills,
   }),
@@ -588,7 +681,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: "COMPLETIONIST",
     desc: "FIND EVERY UNIQUE ITEM",
     icon: "icon_bag",
-    tier: "expert",
+    tier: "legend",
     goal: UNIQUE_IDS.length,
     read: (t) => t.uniquesFound.length,
   }),
@@ -642,7 +735,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: "MYTHIC WARDROBE",
     desc: "WEAR A FULL OUTFIT, ALL UNIQUE OR LEGENDARY",
     icon: "icon_dragonscale_cloak",
-    tier: "expert",
+    // Nine named pieces worn AT ONCE — not nine found, nine that fit one hero
+    // at one moment. The wardrobe ladder's summit, and the only outfit rung
+    // most players will never see.
+    tier: "legend",
     done: (t) => t.outfitRank >= 3,
   },
 
@@ -666,62 +762,26 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     name: "THE FULL PARTY",
     desc: "RECRUIT EVERY COMPANION",
     icon: "flag",
-    tier: "expert",
+    // Every spareable legend won over — one shot each, in one run each, and a
+    // killed elite is gone for that run.
+    tier: "legend",
     goal: Object.keys(COMPANION_DEFS).length,
     read: (t) => t.companions.length,
   }),
 
   // ---- HERO: the level climb (cap 99 — see LEVELING.maxLevel).
-  counter({
-    id: "level_10",
-    category: "hero",
-    name: "DOUBLE DIGITS",
-    desc: "REACH LEVEL 10",
-    icon: "icon_medal",
-    tier: "beginner",
-    goal: 10,
-    read: (t) => t.heroLevel,
-  }),
-  counter({
-    id: "level_25",
-    category: "hero",
-    name: "SEASONED",
-    desc: "REACH LEVEL 25",
-    icon: "icon_medal",
-    tier: "intermediate",
-    goal: 25,
-    read: (t) => t.heroLevel,
-  }),
-  counter({
-    id: "level_50",
-    category: "hero",
-    name: "VETERAN",
-    desc: "REACH LEVEL 50",
-    icon: "icon_medal",
-    tier: "pro",
-    goal: 50,
-    read: (t) => t.heroLevel,
-  }),
-  counter({
-    id: "level_75",
-    category: "hero",
-    name: "WAR MACHINE",
-    desc: "REACH LEVEL 75",
-    icon: "icon_medal",
-    tier: "expert",
-    goal: 75,
-    read: (t) => t.heroLevel,
-  }),
-  counter({
-    id: "level_99",
-    category: "hero",
-    name: "LIVING LEGEND",
-    desc: "REACH LEVEL 99",
-    icon: "icon_medal",
-    tier: "expert",
-    goal: 99,
-    read: (t) => t.heroLevel,
-  }),
+  ...LEVEL_LADDER.map(([goal, name, tier, icon]) =>
+    counter({
+      id: `level_${goal}`,
+      category: "hero",
+      name,
+      desc: `REACH LEVEL ${goal}`,
+      icon: icon ?? "icon_medal",
+      tier,
+      goal,
+      read: (t) => t.heroLevel,
+    }),
+  ),
 
   // ---- MASTERY: showing up, again and again.
   counter({

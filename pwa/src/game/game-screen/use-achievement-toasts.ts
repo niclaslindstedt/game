@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ACHIEVEMENTS_BY_ID } from "../achievement-defs.ts";
 import {
-  ACHIEVEMENT_TOAST_TTL_MS,
+  achievementToastTtlMs,
   type AchievementToastData,
 } from "../AchievementToast.tsx";
 import { synth } from "../audio.ts";
@@ -40,11 +40,13 @@ export function useAchievementToasts(): {
   // itself after its TTL; an idle stage pulls the next queued badge.
   useEffect(() => {
     if (!achievementToast) return;
-    playAchievementJingle(synth);
-    playAchievementHaptic();
+    // Chime, buzz and dwell are all the TIER's — a legend rings a fanfare and
+    // holds the screen where a beginner ticks and slips away.
+    playAchievementJingle(synth, achievementToast.tier);
+    playAchievementHaptic(achievementToast.tier);
     const timer = setTimeout(
       () => setAchievementToast(null),
-      ACHIEVEMENT_TOAST_TTL_MS,
+      achievementToastTtlMs(achievementToast.tier),
     );
     return () => clearTimeout(timer);
   }, [achievementToast]);
@@ -65,6 +67,7 @@ export function useAchievementToasts(): {
         id: ++seqRef.current,
         name: def.name,
         icon: def.icon,
+        tier: def.tier,
       });
     }
     // Wake the stage (the idle-stage effect pulls the queue).

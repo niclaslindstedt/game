@@ -71,7 +71,10 @@ export function achievementsDescription(model) {
 }
 
 /**
- * THE POINT LADDER: four tiers, four weights, and what the whole shelf is worth.
+ * THE POINT LADDER: the effort tiers, their weights, and what the whole shelf
+ * is worth. Counted off the model rather than stated here — the ladder grew a
+ * rung once already (LEGEND, for the handful of feats that stop the screen),
+ * and a number typed into this sentence would have gone stale that day.
  *
  * The weights come from the game's achievement catalog, and the
  * spread across them is the one fact about the catalog nobody can see from

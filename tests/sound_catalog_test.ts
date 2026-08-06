@@ -33,6 +33,7 @@ import {
 } from "../scripts/sound-data/record.mjs";
 import {
   captureAchievementJingle,
+  captureLegendJingle,
   captureEventSounds,
   captureUiSounds,
 } from "../scripts/sound-data/capture.mjs";
@@ -80,9 +81,14 @@ describe("every shipped sound survived the lift to content", () => {
     }
   });
 
-  it("the achievement fanfare plays byte-identically", async () => {
-    const jingle = await captureAchievementJingle();
-    expect(fromCatalog(jingle.id)).toEqual(jingle.calls);
+  it("the achievement fanfares play byte-identically", async () => {
+    // Two of them: the badge chime at its reference weight, and the separate
+    // piece the top-tier card reveal plays. A catalog carrying only the first
+    // would describe the quiet half of the feature.
+    for (const capture of [captureAchievementJingle, captureLegendJingle]) {
+      const jingle = await capture();
+      expect(fromCatalog(jingle.id), jingle.id).toEqual(jingle.calls);
+    }
   });
 });
 

@@ -52,7 +52,12 @@ const FX_LAYERS = [
 const MODALS = [".game-overlay", ".game-splash"];
 
 /** The few surfaces that must float OVER a modal. */
-const ABOVE_MODALS = [".item-tooltip", ".achievement-toast", ".demo-tip"];
+const ABOVE_MODALS = [
+  ".item-tooltip",
+  ".achievement-toast",
+  ".achievement-reveal",
+  ".demo-tip",
+];
 
 /** Chrome anchored to the running game — a modal covers it. */
 const RUN_CHROME = [".area-caption", ".pickup-card", ".pickup-feed"];
@@ -94,6 +99,22 @@ describe("game shell layer bands", () => {
       expect(bandOf(above), `${above} must sit over a modal`).toBeGreaterThan(
         modalTop,
       );
+    }
+  });
+
+  it("leaves the legend reveal inert while it covers the whole screen", () => {
+    // The top-tier unlock takes the ENTIRE viewport for six seconds while a
+    // hero is still being steered under it. `pointer-events` only inherits to
+    // descendants, and on iOS a composited replaced child (the badge <img>, a
+    // PixelText <canvas>) gets its own hit-test layer — so the root being inert
+    // is not enough, exactly as the banner's own comment records. Both rules or
+    // the reveal eats every steering press it is on screen for.
+    for (const selector of [".achievement-reveal", ".achievement-reveal *"]) {
+      const rule = new RegExp(
+        `(^|\\n)${selector.replace(/[.*]/g, (c) => `\\${c}`)}\\s*\\{([^}]*)\\}`,
+      ).exec(CSS);
+      expect(rule, `no rule for ${selector}`).not.toBeNull();
+      expect(rule?.[2], selector).toMatch(/pointer-events:\s*none/);
     }
   });
 

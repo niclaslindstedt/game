@@ -1,21 +1,30 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHICH badges the platform (Game Center today, Play Games later) carries, and
-// how far along each one is. The game's own shelf shows all 226; a platform
+// how far along each one is. The game's own shelf shows all 249; a platform
 // list is capped — Game Center allows a game 100 achievements and 1,000 points
 // TOTAL across them — so this module curates, and the curation is content, not
 // machinery.
 //
 // The rule: a platform entry is something a player would tell someone about.
-// Two families are therefore game-only, and each is already ROLLED UP by a
+// Three families are therefore game-only, and each is already ROLLED UP by a
 // ladder that does travel:
 //
-//   unique_*   131 badges, one per hand-authored relic. That is a collection
+//   unique_*   one badge per hand-authored relic, and the catalog runs to 149
+//              of them at the time of writing. That is a collection
 //              WALL — it reads as a set, browsed in the shelf, and alone it
 //              would take three quarters of the platform's entire allowance.
 //              The `uniques_1/5/10/25/50/all` ladder carries the same climb in
 //              six entries.
 //   equip_*    nine "wear a helmet" onboarding nudges. `outfit_full` (fill
 //              every slot at once) is the version worth showing.
+//   level_N    every OTHER rung of the hero ladder. The climb to 99 wants a
+//              badge every ten levels so the middle of it stops being silent —
+//              but a store list is a hundred entries TOTAL, and ten of them
+//              spent on one counter is a tenth of the allowance for one number
+//              going up. So the stores take every twenty (10, 30, 50, 70, 90)
+//              plus the cap, which still reads as a climb on a profile, and
+//              the rungs between them stay in the game where they cost
+//              nothing.
 //
 // Everything else maps ONE TO ONE, and the badge id IS the platform id on Game
 // Center — the same name in the ledger, on the shelf, in the manifest the
@@ -50,9 +59,19 @@ export const PLATFORM_POINT_BUDGET = 1_000;
 /** Game Center's per-achievement point range (both ends inclusive). */
 export const PLATFORM_POINT_MAX = 100;
 
+/** The hero rungs the stores DO carry: every twenty levels, plus the cap.
+ * Stated as what stays rather than what goes, because that is the rule — and
+ * because this is the list already created in App Store Connect and
+ * Steamworks, which may never shrink once a player has earned from it. */
+const PLATFORM_LEVEL_RUNGS = [10, 30, 50, 70, 90, 99];
+
 /** Badge families the platform doesn't carry — see the header for why each one
- * is better served by the ladder that rolls it up. */
-const LOCAL_ONLY = [/^unique_/, /^equip_/];
+ * is better served by the ladder that rolls it up, or by staying home. */
+const LOCAL_ONLY = [
+  /^unique_/,
+  /^equip_/,
+  new RegExp(`^level_(?!(?:${PLATFORM_LEVEL_RUNGS.join("|")})$)`),
+];
 
 /** Does this badge get an entry in the platform's list? */
 export function isPlatformAchievement(id: string): boolean {
@@ -105,7 +124,7 @@ export function platformProgress(
 /**
  * The point value to give each entry in the portal, spending the platform's
  * whole 1,000-point budget in proportion to the game's own tier weights
- * (10/25/50/100 — see `ACHIEVEMENT_POINTS`).
+ * (10/25/50/100/250 — see `ACHIEVEMENT_POINTS`).
  *
  * Not a hand-typed column: the budget is fixed while the catalog grows, so
  * every added badge re-slices the same pie, and typing the numbers would mean
@@ -188,7 +207,7 @@ export type PlatformAchievementRow = {
  * list.
  *
  * Steam's 100-achievement cap lifts once the app clears Valve's Profile
- * Features threshold, at which point all 226 badges — the `unique_*` wall
+ * Features threshold, at which point all 249 badges — the `unique_*` wall
  * included — can ship. Flip this then, regenerate the manifest, and create the
  * new rows in the partner site.
  *

@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: achievement_unlocked
 description: >-
-  A three-note rising fanfare — G, C, E climbing 70 ms apart, each triangle
-  note shadowed an octave up by a quiet sine, with a bright airy hiss over the
-  top and a last shimmer rising out of the tail.
+  The badge chime, at the middle of the effort ladder — G, C, E climbing 70 ms
+  apart, each triangle note shadowed an octave up by a quiet sine, with a
+  bright airy hiss over the top and a last shimmer rising out of the tail, over
+  a warm root swell and the fifth it settles on. A lesser badge plays the same
+  chime quieter and without those last two; the top rung plays a different
+  piece entirely (achievement_legend).
 voices:
   - call: tone
     type: triangle
@@ -63,3 +66,17 @@ voices:
     volume: 0.014
     delayMs: 260
     echo: 0.5
+  - call: tone
+    type: triangle
+    from: 262
+    durationMs: 620
+    volume: 0.026
+    attackMs: 12
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 320
+    volume: 0.022
+    delayMs: 210
+    echo: 0.45
