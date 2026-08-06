@@ -57,6 +57,11 @@ import {
 // the same lines without importing a React component — see the note there.
 import { affixLine, STAT_LABELS } from "@ui/lib/affix-line.ts";
 export { affixLine, STAT_LABELS };
+// WHICH glyph names a piece's kind lives in a React-free leaf, so the sprite
+// the card asks for can be checked against the shipped atlas without loading
+// the app — see item-glyph.ts.
+import { itemKindGlyph } from "./item-glyph.ts";
+export { itemKindGlyph };
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -574,22 +579,6 @@ export function durabilityLine(item: Equipment): CardLine | null {
         ? "#e06a6a"
         : undefined,
   };
-}
-
-/**
- * The sprite naming WHAT KIND of thing a piece is — a weapon's class glyph
- * (sword/reticle/spark) or a gear piece's slot glyph. A SHIELD borrows the
- * OFF HAND frame's own glyph (`icon_slot_offhand`, which IS a shield
- * silhouette) rather than shipping an identical second copy; a BAG keeps its
- * satchel, and the glyph is how the card says which of the two arm-fillers
- * this is. The card's foot row reads it, and so does the unidentified
- * tooltip's IDENTIFY button (the one place a veiled find says its shape).
- */
-export function itemKindGlyph(item: Equipment): string {
-  if (isWeaponDef(item.defId)) {
-    return `icon_class_${weaponDef(item.defId).class}`;
-  }
-  return `icon_slot_${item.slot === "shield" ? "offhand" : item.slot}`;
 }
 
 /** The item's pixel icon (equipmentIcon → sprite), the same glyph the field
