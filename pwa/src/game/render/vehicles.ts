@@ -461,6 +461,14 @@ function drawCar(
  * ahead of the nose and a short red wash behind the taillights, both faded
  * out along their length with a slow flicker so they read as burning lamps
  * rather than painted decals. Pure canvas gradients — light has no pixels.
+ *
+ * THE LAMPS ARE BOLTED TO THE BODY, so the cones are laid out in the car's own
+ * screen space off `sx` — whole pixels along the drawn body, like the wheel
+ * arches — and `CarVehicle.heading` is deliberately nowhere in here. The picture
+ * never turns (one side-profile assembly, nothing mirrors it), so a cone that
+ * followed the steered heading would swing across a car that had not moved,
+ * which is a swivelling cornering lamp rather than a headlight. The night pass's
+ * beam obeys the same rule and for the same reason — render/night.ts, HEADLIGHT.
  */
 function drawLightCones(
   ctx: CanvasRenderingContext2D,
