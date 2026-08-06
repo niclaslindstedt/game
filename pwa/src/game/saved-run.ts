@@ -23,6 +23,7 @@ import {
   mapCols,
   mapRows,
   warn,
+  UNARMED_DEF_ID,
 } from "@game/menu";
 import type { Difficulty, Equipment, GameState } from "@game/menu";
 
@@ -278,13 +279,15 @@ function writeRun(key: string, run: ParkedRun): void {
   }
 }
 
-/** The engine's unbreakable sidearm — the floor a thawed loadout falls back to
- * when its equipped weapon is a legacy piece whose base the catalog has since
- * dropped (a run can never resume weaponless). */
+/** THE EMPTY HAND — what a thawed loadout falls back to when its equipped
+ * weapon is a legacy piece whose base the catalog has since dropped. The hand
+ * is typed never-empty, so the resume needs SOMETHING there; handing the player
+ * his own hands is the honest answer, and he can equip whatever the bag still
+ * carries. */
 function fallbackWeapon(): Equipment {
   return {
     id: 0,
-    defId: "blaster",
+    defId: UNARMED_DEF_ID,
     slot: "weapon",
     tier: "regular",
     ilvl: 1,

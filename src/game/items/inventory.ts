@@ -20,7 +20,7 @@ import {
   recomputeMaxStamina,
 } from "./derived.ts";
 import { isOfferedInTrade } from "../trade.ts";
-import { freeHandsFor } from "./hands.ts";
+import { bareHands, freeHandsFor, isBareHands } from "./hands.ts";
 import { equipSlotForItem, fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
 import { heroLoadoutMemo } from "./derived.ts";
@@ -167,8 +167,7 @@ export function equipFromInventory(
   // bag needs the hand a greatsword is holding. Refused whole when the bag has
   // no room for what would come off (items/hands.ts).
   if (!freeHandsFor(state, player, item, index)) return false;
-  const previous = player.equipment[slot];
-  player.inventory[index] = previous ?? null;
+  player.inventory[index] = displacedByEquip(player, slot);
   if (slot === "weapon") {
     player.equipment.weapon = item;
     player.weaponCooldownMs = 0;
@@ -181,6 +180,23 @@ export function equipFromInventory(
   // to land (grow-only — see syncInventoryCapacity).
   syncInventoryCapacity(state, player);
   return true;
+}
+
+/**
+ * What goes back into the cell an equip just emptied: whatever was worn in
+ * `slot`, or nothing.
+ *
+ * "Or nothing" is the BARE HANDS case, and it is the whole reason this is a
+ * function rather than a `?? null`. The hand is typed never-empty, so an
+ * unarmed hero is holding a real `Equipment` — but it is not a possession, it
+ * is the absence of one, and banking it would hand the player a FISTS item to
+ * carry around, drag, sell and drop. It vanishes instead: the empty hand is
+ * minted on demand every time it is needed (`bareHands`).
+ */
+function displacedByEquip(player: Player, slot: EquipSlot): Equipment | null {
+  const previous = player.equipment[slot];
+  if (!previous) return null;
+  return slot === "weapon" && isBareHands(previous) ? null : previous;
 }
 
 /**
@@ -349,8 +365,7 @@ export function equipFromInventoryInto(
   if (!fitsEquipSlot(item.slot, slot)) return false;
   if (!canEquip(state, player, item)) return false;
   if (!freeHandsFor(state, player, item, index)) return false;
-  const previous = player.equipment[slot];
-  player.inventory[index] = previous ?? null;
+  player.inventory[index] = displacedByEquip(player, slot);
   if (slot === "weapon") {
     player.equipment.weapon = item;
     player.weaponCooldownMs = 0;
@@ -364,24 +379,46 @@ export function equipFromInventoryInto(
 }
 
 /**
- * Move an equipped piece back into the first free inventory cell. The weapon
- * slot can never be emptied — the character always fights with something —
- * so weapons only leave via an `equipFromInventory` swap.
+ * Move an equipped piece back into the first free inventory cell.
+ *
+ * THE WEAPON COMES OFF LIKE ANYTHING ELSE, and what is left is the hero's own
+ * hands (`bareHands`). The slot is still typed never-empty — every read of
+ * `equipment.weapon` in the engine leans on that — but "never empty" is a
+ * statement about the TYPE, not about the player: he is allowed to carry no
+ * weapon, and the bare-handed piece is how the engine says so. It is minted
+ * here rather than left as a `null`, so the hundred-odd reads of the hand
+ * (damage, reach, the bot's stand-off, the doll) keep answering without a
+ * branch, and every surface that needs to say "he is unarmed" asks
+ * `isBareHands` instead.
+ *
+ * Taking the hand off is refused only when there is nothing to take off — a
+ * hero already bare-handed — or when the bag has nowhere to put what comes off,
+ * which is the same refusal every other slot makes.
  */
 export function unequipToInventory(
   state: GameState,
   player: Player,
   slot: EquipSlot,
 ): boolean {
-  if (slot === "weapon") return false;
   const item = player.equipment[slot];
   if (!item) return false;
+  if (slot === "weapon" && isBareHands(item)) return false;
   const free = player.inventory.indexOf(null);
   if (free === -1) return false;
   player.inventory[free] = item;
-  player.equipment[slot] = null;
+  if (slot === "weapon") {
+    player.equipment.weapon = bareHands(state);
+    // The hand changed, so the swing timer restarts — exactly as it does on
+    // every other route a weapon leaves it (equip, break, dry swap).
+    player.weaponCooldownMs = 0;
+  } else {
+    player.equipment[slot] = null;
+  }
   recomputeMaxHp(state, player);
   recomputeMaxStamina(state, player);
+  // A +STRENGTH weapon coming off can NARROW the bag; sync so the capacity
+  // matches the kit again (grow-only — see syncInventoryCapacity).
+  syncInventoryCapacity(state, player);
   return true;
 }
 

@@ -27,7 +27,7 @@ import { firingReach } from "../../src/game/bot/perception.ts";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   revealAll,
@@ -62,7 +62,7 @@ function north(state: GameState, dist: number): { x: number; y: number } {
 
 describe("the edge of the screen hides a mob from the auto-attack", () => {
   it("holds fire on a mob in reach, in the light, and off the top of the frame", () => {
-    const state = litStage(equipBlaster(startGame()));
+    const state = litStage(equipRangedSidearm(startGame()));
     // 150px north: inside the blaster's 260 reach, on ground the hero has
     // walked — and 53px past the top edge of a landscape phone.
     const spot = north(state, 150);
@@ -75,7 +75,7 @@ describe("the edge of the screen hides a mob from the auto-attack", () => {
   });
 
   it("shoots that same mob once it is on screen", () => {
-    const state = litStage(equipBlaster(startGame()));
+    const state = litStage(equipRangedSidearm(startGame()));
     const enemy = makeEnemy({ pos: north(state, 150) });
     state.enemies.push(enemy);
     step(state, watching(state), DT);
@@ -104,7 +104,7 @@ describe("the edge of the screen hides a mob from the auto-attack", () => {
     // A run with no camera reported — the engine suites, `simulate --view none`
     // — must not have the screen half refuse everything, or the hero could
     // never attack at all.
-    const state = litStage(equipBlaster(startGame()));
+    const state = litStage(equipRangedSidearm(startGame()));
     state.enemies.push(makeEnemy({ pos: north(state, 150) }));
 
     step(state, idle, DT);
@@ -130,7 +130,7 @@ describe("the hero carries the screen the game aims through", () => {
     // field is still being drawn behind it — and the weapon still auto-fires.
     // Reading the view off that idle input would drop the gate exactly when the
     // player is least able to see what the hero shoots at.
-    const state = litStage(equipBlaster(startGame()));
+    const state = litStage(equipRangedSidearm(startGame()));
     const view = viewAround(state.players[0].pos);
     step(state, { ...idle, view }, DT);
 
@@ -215,7 +215,7 @@ describe("the companions engage only what the hero can see", () => {
 
 describe("the autopilot's stand-off knows where the frame ends", () => {
   it("cuts the firing reach at the screen edge, not at the weapon's reach", () => {
-    const state = litStage(equipBlaster(startGame()));
+    const state = litStage(equipRangedSidearm(startGame()));
     const hero = state.players[0];
     const target = north(state, 400);
 

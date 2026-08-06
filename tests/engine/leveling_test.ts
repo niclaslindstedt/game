@@ -52,7 +52,7 @@ import {
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   heroSpeedMult,
   idle,
   makeEnemy,
@@ -67,7 +67,7 @@ import {
 function killGhostWorth(maxHp: number, mlvl: number) {
   // Ranged blaster: pick the ghost off from a fixed distance (its per-shot
   // damage stays under the ghost's hp, so no overkill toll clips the xp).
-  const state = equipBlaster(startGame());
+  const state = equipRangedSidearm(startGame());
   state.players[0].stats.luck = 0;
   clearStage(state); // keep the parked boss so the objective stays open
   state.enemies.push(
@@ -572,7 +572,7 @@ describe("stats", () => {
     // End-to-end: the quicker cadence shows up as extra bolts downrange, not
     // just a smaller number. Park an unkillable target in range and count.
     const shotsIn = (dex: number) => {
-      const state = equipBlaster(startGame()); // ranged: bolts are countable
+      const state = equipRangedSidearm(startGame()); // ranged: bolts are countable
       state.players[0].stats.dexterity = dex;
       clearStage(state);
       state.enemies.push(
@@ -650,7 +650,7 @@ describe("stats", () => {
   });
 
   it("a guaranteed crit doubles the damage dealt", () => {
-    const state = equipBlaster(startGame()); // unbreakable blaster: full damage
+    const state = equipRangedSidearm(startGame()); // unbreakable blaster: full damage
     // Blaster is ranged → DEXTERITY drives its crit. Stack it far past 1 so
     // every shot crits (DEX also quickens cadence, which only lands the crit
     // sooner — the first hit's damage is what we measure).

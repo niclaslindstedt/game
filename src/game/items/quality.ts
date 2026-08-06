@@ -62,7 +62,7 @@ export function equipmentName(equipment: Equipment): string {
 // ---- Make quality --------------------------------------------------------------
 
 /** An instance's make quality; pieces from before quality shipped (and
- * hand-minted ones — starting gear, the fallback sidearm) read as normal. */
+ * hand-minted ones — starting gear, the bare hands) read as normal. */
 export function qualityOf(equipment: Equipment): Quality {
   return equipment.quality ?? "normal";
 }

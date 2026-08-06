@@ -19,13 +19,14 @@
 // the equip is refused whole.
 //
 // The awkward half is that the WEAPON SLOT IS NEVER EMPTY — the character
-// always fights with something. So taking a two-hander off is not "remove it",
-// it is "replace it", which needs the same best-remaining-weapon pick the
-// on-break swap makes. That pick (`takeBestBagWeapon`) and the last-resort
-// sidearm (`drawSidearm`) therefore live here rather than in durability.ts,
-// which is downstream of the bag and cannot be reached from it.
+// always fights with something, and with no weapon at all that something is his
+// own two hands. So taking a two-hander off is not "remove it", it is "replace
+// it", which needs the same best-remaining-weapon pick the on-break swap makes.
+// That pick (`takeBestBagWeapon`) and the empty hand behind it (`bareHands`)
+// therefore live here rather than in durability.ts, which is downstream of the
+// bag and cannot be reached from it.
 
-import { isWeaponDef, SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
+import { isWeaponDef, UNARMED_DEF_ID, weaponDef } from "../defs/equipment.ts";
 import type { Equipment, GameState, Player } from "../types/index.ts";
 import { hasAmmoFor } from "./ammo.ts";
 import { canEquip } from "./requirements.ts";
@@ -91,17 +92,33 @@ export function takeBestBagWeapon(
   return weapon;
 }
 
-/** A fresh, unbreakable sidearm — the last-resort weapon drawn when the bag
- * holds nothing wieldable, so the weapon slot honors its never-empty contract. */
-export function drawSidearm(state: GameState): Equipment {
+/**
+ * THE EMPTY HAND — what fills the weapon slot when the hero is holding nothing:
+ * the weapon he took off, the one that snapped, the one that ran dry, the one
+ * on his corpse. It is a real `Equipment` because the weapon slot's never-empty
+ * contract is what every read of `equipment.weapon` leans on, but it is not a
+ * weapon the player owns: it is minted on demand, never enters the bag, and is
+ * discarded the moment anything real reaches the hand (`isBareHands`).
+ */
+export function bareHands(state: GameState): Equipment {
   return {
     id: state.nextId++,
-    defId: SIDEARM_DEF_ID,
+    defId: UNARMED_DEF_ID,
     slot: "weapon",
     tier: "regular",
     ilvl: 1,
     affixes: [],
   };
+}
+
+/**
+ * Is this hero fighting with nothing but his hands? The question every surface
+ * asking "is he actually armed" wants — the inventory's weapon slot draws EMPTY
+ * on a yes, the bag refuses to stow it, and the bot reads it as the starved
+ * state it used to read off the fallback sidearm.
+ */
+export function isBareHands(piece: Equipment | null | undefined): boolean {
+  return piece?.defId === UNARMED_DEF_ID;
 }
 
 /** The first free bag cell, ignoring `except` (the cell the incoming piece is
@@ -161,7 +178,7 @@ export function freeHandsFor(
     // would take the arm straight back off him.
     const replacement =
       takeBestBagWeapon(state, player, { skipTwoHanded: true }) ??
-      drawSidearm(state);
+      bareHands(state);
     player.inventory[free] = shed;
     equipment.weapon = replacement;
     player.weaponCooldownMs = 0;

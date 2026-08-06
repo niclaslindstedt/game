@@ -32,7 +32,7 @@ import {
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   makeEnemy,
   refog,
   startGame,
@@ -83,7 +83,7 @@ describe("bot strategies", () => {
   it("kite settles inside weapon range but outside the pack's grasp", () => {
     // Kiting is a ranged tactic — hold the crowd at bolt reach — so give the
     // bot the blaster rather than the default melee sword.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.enemies.push(
       makeEnemy({
@@ -106,7 +106,7 @@ describe("bot strategies", () => {
   it("boss strategy crosses the map and engages THE FLAGBEARER", () => {
     // Kiting the boss across the map is a ranged tactic; the melee default
     // would have to shove through the ridge terrain to touch him.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state); // just the parked boss at the flag
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     const steps = drive(
@@ -178,7 +178,7 @@ describe("bot strategies", () => {
   });
 
   it("survivor punches out the gap when surrounded", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const c = { ...state.players[0].pos };
     // Ring the hero with fast chasers, leaving a clear GAP on the +x side.
@@ -221,7 +221,7 @@ describe("bot strategies", () => {
     // Against a stationary cluster, aggro closes to fighting range while flee
     // widens the gap — so flee ends farther from the pack's centre.
     const distToCluster = (posture: "aggro" | "flee") => {
-      const state = equipBlaster(startGame());
+      const state = equipRangedSidearm(startGame());
       clearStage(state);
       const c = { ...state.players[0].pos };
       const foes = [];
@@ -278,7 +278,7 @@ describe("bot strategies", () => {
       );
       return { nearest, dmg: state.stats.damageTaken };
     };
-    const ranged = standoff(equipBlaster);
+    const ranged = standoff(equipRangedSidearm);
     const melee = standoff((s) => s);
     expect(ranged.nearest).toBeGreaterThan(melee.nearest);
     // The gun holds well outside a foe's ~34px grasp and never takes a hit.
@@ -432,7 +432,7 @@ describe("bot strategic aim", () => {
   // single shot finishes the most wounded body — unless something is about to
   // bite, which is always shot first.
   it("finishes the most wounded foe in range with a single-target gun", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const p = state.players[0].pos;
     state.enemies.push(
@@ -456,7 +456,7 @@ describe("bot strategic aim", () => {
   });
 
   it("shoots the body about to bite over a far wounded one", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const p = state.players[0].pos;
     state.enemies.push(
@@ -509,7 +509,7 @@ describe("bot safe-direction kiting", () => {
   // ground — because the fresh spawns live ahead. A banked NUKE makes the bot
   // daring: it keeps the classic forward drift even while hurt.
   const retreatAxisDot = (nuke: boolean): number => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     // Boss-ready and fully discovered, so the macro goal is unambiguously the
     // BOSS (forward) — the daring drift has one direction to show.
@@ -582,7 +582,7 @@ describe("bot jump discipline", () => {
   }
 
   it("breaks a surround on FOOT while the ring is still off him", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 110); // encircled, but nothing is inside biting range yet
     const bot = createBot("survivor");
@@ -592,7 +592,7 @@ describe("bot jump discipline", () => {
   });
 
   it("spends the jump only once a body closes to biting range", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 40); // a body inside contact range — hop over the ring
     const bot = createBot("survivor");
@@ -602,7 +602,7 @@ describe("bot jump discipline", () => {
   });
 
   it("will not hop itself out of stamina to break a surround", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 40); // a body biting — would hop with a full pool
     state.players[0].stamina = state.players[0].maxStamina * 0.2; // …but the pool is low
@@ -615,7 +615,7 @@ describe("bot jump discipline", () => {
   it("dodges a telegraphed move on foot, not with a jump", () => {
     // A slam/charge is dodged by stepping off the line — the windup gives time to
     // walk clear, so the hop that used to fire here was a needless stamina drain.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     // A charging elite locked onto the hero, mid-dash straight at him.
     const foe = makeEnemy({
@@ -634,7 +634,7 @@ describe("bot jump discipline", () => {
   it("jumps to escape a bite when bleeding below half, no surround needed", () => {
     // Bleeding + a LANDED hit + a body about to bite warrants the untouchable
     // airborne frames — the hero doesn't have to be fully ringed to hop out.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].hp = state.players[0].maxHp * 0.45; // below the ~half hop threshold
     state.players[0].hurtFlashMs = 250; // the bite just landed
@@ -655,7 +655,7 @@ describe("bot jump discipline", () => {
     // Low HP + a body at contact range but NO recent bite: proximity alone is
     // not a cue to spend the pool — without the landed-hit gate the bleeding
     // hero re-hopped on every cooldown for as long as a body shadowed him.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].hp = state.players[0].maxHp * 0.45;
     state.enemies.push(
@@ -675,7 +675,7 @@ describe("bot jump discipline", () => {
     // One escape hop, then feet until the next is earned: the same genuine
     // surround that warrants the first hop is refused a second one until
     // `hopCooldownMs` has passed.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 40); // a body biting inside a genuine ring
     const bot = createBot("survivor");
@@ -689,7 +689,7 @@ describe("bot jump discipline", () => {
   it("stays on foot for a lone biter while healthy", () => {
     // Same single biter, but at full HP and no surround — nothing warrants a hop,
     // so he gives ground on foot and banks the pool.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.enemies.push(
       makeEnemy({
@@ -772,7 +772,7 @@ describe("bot hop commitment", () => {
   }
 
   it("latches a flee plan at takeoff and steers the whole flight at it", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 40); // a body biting inside a genuine ring — hop out
     const bot = createBot("survivor");
@@ -799,7 +799,7 @@ describe("bot hop commitment", () => {
     // Boxed in by TALL walls on every side, a jump cannot translate anywhere —
     // it would just rise in place and burn the pool. The break-out stays on
     // FOOT (nav rounds what it can); the takeoff is refused.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     ringHero(state, 40); // the same ring that earns a hop on open ground
     const p = state.players[0].pos;
@@ -1022,7 +1022,7 @@ describe("bot chest cracking", () => {
     // A locker on a quiet field is never walked past: the bot closes to
     // weapon range and plants, and the auto-attack (stepWeapon's crate
     // fallback) breaks it open.
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     placeChest(state, 200);
     const bot = createBot("survivor");
@@ -1041,7 +1041,7 @@ describe("bot chest cracking", () => {
     // The payoff of the errand IS the loot on the ground — a human sweeps up
     // the stamina pot / gear the locker just spilled before moving on, and
     // never celebrates the crack with a jump (there is nothing to escape).
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     placeChest(state, 200);
     const bot = createBot("survivor");
@@ -1073,7 +1073,7 @@ describe("bot turn rate limit", () => {
    * flicker: outside his hold he closes on it, inside it he back-pedals straight
    * away, so one body's position decides a true about-face. */
   function press(): { state: GameState; bot: Bot; foe: Enemy } {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].disarmed = false;
     const foe = makeEnemy({
@@ -1394,7 +1394,7 @@ describe("bot bravery", () => {
   // discipline itself: below the ~70% run threshold every non-urgent
   // reposition is walked, however kitted the hero.
   function march(frac: number): GameState {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].disarmed = false;
     // A distant tank keeps the field non-empty (the bot marches, not idles) —
@@ -1440,7 +1440,7 @@ describe("bot bravery", () => {
     // demands a full pool and stops to top up first (walking can't refill the
     // trickle-regen pool before contact, so he plants a BREATHER).
     const spotPack = (): GameState => {
-      const state = equipBlaster(startGame());
+      const state = equipRangedSidearm(startGame());
       clearStage(state);
       state.players[0].disarmed = false;
       state.enemies.push(
@@ -1476,7 +1476,7 @@ describe("bot pre-fight top-up", () => {
   // approach when the walk regen refills before contact, else plant and let
   // them cover the ground while the faster standstill regen races them.
   function spot(foeDist: number, foeSpeed: number, frac: number): GameState {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].disarmed = false;
     state.enemies.push(
@@ -1534,7 +1534,7 @@ describe("bot travel discipline", () => {
   // only refills standing still — so the macro march never hops, and the
   // stamina potions stay corked for actual fights.
   function quietMarch(): GameState {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state); // just the parked boss, far away — a quiet field
     state.players[0].disarmed = false;
     return state;
@@ -1578,7 +1578,7 @@ describe("bot powerup strategy", () => {
   // cheap utilities are spent eagerly — including as shelf-space burns that
   // keep a dock slot cycling free for the next strong pickup.
   function stage(): GameState {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     state.players[0].disarmed = false;
     return state;

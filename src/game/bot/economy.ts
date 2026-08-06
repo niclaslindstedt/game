@@ -59,7 +59,7 @@ import {
   spendReviveItem,
 } from "../companions.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
-import { gearDef, isGearDef, SIDEARM_DEF_ID } from "../defs/equipment.ts";
+import { gearDef, isGearDef, UNARMED_DEF_ID } from "../defs/equipment.ts";
 import { atHub } from "./hub.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type {
@@ -78,7 +78,7 @@ export const BOT_BAG_KEEP_FREE = 1;
 const SELL_RUN_MIN_JUNK = 3;
 
 /** Held-weapon durability fraction at/below which the hero is one fight from
- * being dumped onto the sidearm — the starvation line the merchant errand
+ * being dumped onto his bare hands — the starvation line the merchant errand
  * (and the campaign sim's autoShop) trip on. */
 const STARVED_DURABILITY_FRAC = 0.15;
 
@@ -89,12 +89,12 @@ const REPAIR_VISIT_FRAC = 0.35;
 
 /**
  * Can the hero no longer fight his way forward with what's in his hand — he's
- * on the unbreakable fallback sidearm, or his held weapon is about to snap?
+ * down to his bare hands, or his held weapon is about to snap?
  * The cue that a merchant visit is URGENT rather than a convenience. Pure.
  */
 export function weaponStarved(state: GameState, hero: Player): boolean {
   const w = hero.equipment.weapon;
-  if (w.defId === SIDEARM_DEF_ID) return true; // dumped onto the fallback sidearm
+  if (w.defId === UNARMED_DEF_ID) return true; // nothing in his hands at all
   if (w.durability === undefined) return false; // a keeper unique/legendary
   const max = equipmentMaxDurability(w);
   return (

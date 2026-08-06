@@ -153,7 +153,7 @@ export type ArmorType = "cloth" | "leather" | "mail" | "plate";
  *
  *   bullets  every firearm: pistols, revolvers, rifles, shotguns, nailguns
  *   arrows   anything drawn and loosed — bows, and the crossbow idiom
- *   cells    charged shot: rails, tasers, plasma, the printed sidearm
+ *   cells    charged shot: rails, tasers, lasers, plasma
  *
  * MELEE and MAGIC weapons carry none. Magic is powered by the hero, which is
  * the whole distinction between a wand and a gun; melee needs no argument.
@@ -423,7 +423,7 @@ export type Equipment = {
    * Weapons spend one point per attack and are TRASHED at zero; armor spends
    * one per hit taken and merely goes INACTIVE at zero — it stays worn,
    * contributing nothing, until a repair kit restores it. Undefined =
-   * unbreakable (the built-in sidearm, unique/legendary finds).
+   * unbreakable (the built-in bare hands, unique/legendary finds).
    */
   durability?: number;
   /**

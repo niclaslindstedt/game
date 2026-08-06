@@ -17,7 +17,7 @@ import type { GameEvent, GameState } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -44,7 +44,7 @@ function stageCoward(state: GameState): void {
       "test_coward",
     ),
   );
-  equipBlaster(state);
+  equipRangedSidearm(state);
 }
 
 /**
@@ -144,7 +144,7 @@ describe("fleeing uniques", () => {
         "test_coward_early",
       ),
     );
-    equipBlaster(state);
+    equipRangedSidearm(state);
     const events = runUntilFled(state);
 
     // It fled (off the board, bossFled booked, no kill) — same escape path.

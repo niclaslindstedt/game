@@ -60,9 +60,12 @@ describe("worn-gear overlays", () => {
 
 describe("held-weapon icons", () => {
   for (const def of Object.values(WEAPON_DEFS)) {
+    // The EMPTY HAND ships no icon on purpose — there is nothing in the hand to
+    // draw — so it is the one def with nothing for the atlas to carry.
+    if (def.icon === undefined) continue;
     it(`${def.id} ships its icon`, () => {
       expect(
-        sprites.has(def.icon),
+        sprites.has(def.icon as string),
         `${def.icon} missing from the atlas — run \`make assets\``,
       ).toBe(true);
     });

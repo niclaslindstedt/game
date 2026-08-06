@@ -32,7 +32,7 @@ export {
   refog,
   run,
   settleBossRite,
-  equipBlaster,
+  equipRangedSidearm,
   heroSpeedMult,
   mobSpeedMult,
 } from "../helpers.ts";

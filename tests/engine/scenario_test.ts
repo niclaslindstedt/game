@@ -114,10 +114,10 @@ describe("scenario / equipment", () => {
     expect(weapon.durability).toBe(weaponDef("test_hammer").durability);
   });
 
-  it("weapon null hands over the unbreakable fallback sidearm", () => {
+  it("weapon null leaves the hero bare-handed", () => {
     const state = startGame();
     applyScenario(state, { weapon: null });
-    expect(state.players[0].equipment.weapon.defId).toBe("blaster");
+    expect(state.players[0].equipment.weapon.defId).toBe("fists");
     expect(state.players[0].equipment.weapon.durability).toBeUndefined();
   });
 

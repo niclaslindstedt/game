@@ -7,7 +7,7 @@ subject:
   kind: UI icon
   features: a question mark two pixels thick, with a separate dot beneath it
   accent: gold, lit pale across the top bar and shaded at each stroke's foot
-  flavor: the manual, for a hero who has never held a blaster
+  flavor: the manual, for a hero who has never held a weapon
 palette:
   Y: "#ffe3b6" # pale gold highlight
   q: "#96762e" # dark gold shade

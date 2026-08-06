@@ -13,7 +13,7 @@ import { step } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -24,7 +24,7 @@ import {
  * right of the hero and a farther one to the left. Both are well inside the
  * blaster's reach, so the pick is about direction, not range. */
 function twoFoes() {
-  const state = equipBlaster(startGame());
+  const state = equipRangedSidearm(startGame());
   clearStage(state);
   const { x, y } = state.players[0].pos;
   state.enemies.push(makeEnemy({ id: 1, pos: { x: x + 40, y } })); // right, near
@@ -58,7 +58,7 @@ describe("mouse aim", () => {
   });
 
   it("fires at the only foe even when the pointer aims at empty space", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const { x, y } = state.players[0].pos;
     // A single foe to the LEFT; the cursor points at nothing on the RIGHT.
@@ -95,7 +95,7 @@ describe("mouse aim", () => {
   });
 
   it("keeps a point-blank foe as the target regardless of pointer direction", () => {
-    const state = equipBlaster(startGame());
+    const state = equipRangedSidearm(startGame());
     clearStage(state);
     const { x, y } = state.players[0].pos;
     // A foe right on the hero (no bearing — the dist-0 alignment guard) plus a

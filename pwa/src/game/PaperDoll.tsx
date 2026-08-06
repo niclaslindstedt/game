@@ -28,6 +28,7 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import {
   fitsEquipSlot,
   isArmorBroken,
+  isBareHands,
   type EquipSlot,
   type Equipment,
   type GameState,
@@ -147,7 +148,14 @@ export function PaperDoll({
   return (
     <div className="paper-doll">
       {DOLL_SLOTS.map(({ slot, area, label, glyph, icon }) => {
-        const item = equipment[slot];
+        // AN EMPTY HAND IS AN EMPTY FRAME. The weapon slot is typed
+        // never-empty, so a hero carrying no weapon is "wearing" the bare-hands
+        // piece — but he is not holding anything, and the bay has to say so. A
+        // null here is the whole of it: the frame draws its ghost glyph, raises
+        // no item card, starts no drag and paints no tier border, exactly like
+        // every other empty slot.
+        const worn = equipment[slot];
+        const item = isBareHands(worn) ? null : worn;
         const ghost = spriteDataUrl(sprites, glyph);
         return (
           <div

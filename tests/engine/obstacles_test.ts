@@ -17,7 +17,7 @@ import type { GameState, Obstacle } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -306,7 +306,7 @@ describe("walls block shots", () => {
   });
 
   it("auto-aim never targets a monster behind a wall", () => {
-    const state = equipBlaster(startGame()); // ranged, so a clear shot would fire
+    const state = equipRangedSidearm(startGame()); // ranged, so a clear shot would fire
     clearStage(state);
     const obstacle = placeWall(state, 60);
     // In range of the blaster, but walled off.
@@ -322,7 +322,7 @@ describe("walls block shots", () => {
   });
 
   it("auto-aim still fires over a jumpable obstacle", () => {
-    const state = equipBlaster(startGame()); // ranged: the shot clears the rock
+    const state = equipRangedSidearm(startGame()); // ranged: the shot clears the rock
     clearStage(state);
     const obstacle = placeObstacle(state, 60, true);
     const target = makeEnemy({

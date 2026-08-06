@@ -124,11 +124,11 @@ for (const levelId of LEVEL_ORDER) {
 // so an exceptional/elite version of a pooled base is pooled, not special.
 const pooledOrBase = (def) => pooled.has(def.gradeBase ?? def.id);
 // Exempt: the difficulty ladder's wall weapons (its calibration), the
-// engine's unbreakable fallback sidearm (deliberately under budget), and the
-// TRASH class — THE FOUNDER's zero-damage joke drops, which owe the budget
+// engine's BARE HANDS (deliberately under budget — it is what the hero has
+// when he has no weapon, not a weapon), and the TRASH class — THE FOUNDER's zero-damage joke drops, which owe the budget
 // nothing on purpose (they only mint via his scripted Boot Hill estate).
 const exempt = new Set([
-  "blaster",
+  "fists",
   "soggy_cardboard_sword",
   "legal_distinction_empty",
   "demo_wiper",

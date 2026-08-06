@@ -49,6 +49,7 @@ export {
 export {
   equipmentLevelReq,
   gearDef,
+  UNARMED_DEF_ID,
   weaponDef,
 } from "./game/defs/equipment.ts";
 

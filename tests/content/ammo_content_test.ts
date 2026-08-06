@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import {
   AMMO,
   AMMO_KINDS,
+  UNARMED_DEF_ID,
   AMMO_TYPES,
   DIFFICULTY_DEFS,
   startingAmmo,
@@ -56,7 +57,14 @@ describe("every ranged weapon in the catalog", () => {
 });
 
 describe("every melee and magic weapon", () => {
-  const swung = WEAPONS.filter((def) => def.class !== "ranged");
+  // THE EMPTY HAND IS NOT A WEAPON and is deliberately outside this trade: it
+  // eats nothing AND wears out never, because it is what is left when the hero
+  // has no weapon (see the EMPTY HAND suite below). Every AUTHORED melee and
+  // magic piece still owes both halves — and the item schema holds the YAML
+  // tree to it, which is why the built-in is the only exception there can be.
+  const swung = WEAPONS.filter(
+    (def) => def.class !== "ranged" && def.id !== UNARMED_DEF_ID,
+  );
 
   it("eats nothing — the other half of the same trade", () => {
     const eaters = swung
@@ -73,53 +81,42 @@ describe("every melee and magic weapon", () => {
   });
 });
 
-describe("the built-in sidearm", () => {
-  it("eats a kind, so the opening holster has something to stock", () => {
-    // `startingAmmo` reads the sidearm's own def to fill the run's opening
-    // pouch. A sidearm that ate nothing would silently leave that half empty.
-    expect(WEAPON_DEFS.blaster!.ammo).toBeDefined();
-    expect(WEAPON_DEFS.blaster!.durability).toBeUndefined();
+describe("the built-in EMPTY HAND", () => {
+  it("eats nothing and never wears out", () => {
+    // The engine's built-in weapon is no longer a gun — it is the hero's own
+    // hands (`UNARMED_DEF_ID`), and a hand is the one thing in the game that
+    // owes the ranged/melee trade NOTHING: it cannot run dry and it cannot
+    // snap. This is what lets the dry swap and the on-break swap close
+    // unconditionally, so no hero is ever left holding a weapon he cannot use.
+    const hand = WEAPON_DEFS[UNARMED_DEF_ID]!;
+    expect(hand.ammo).toBeUndefined();
+    expect(hand.durability).toBeUndefined();
+    expect(hand.class).toBe("melee");
   });
 });
 
 describe("the opening holster, against the shipped difficulty ladder", () => {
-  const sidearm = WEAPON_DEFS.blaster!.ammo!;
-
   it.each(Object.values(DIFFICULTY_DEFS).map((d) => [d.id, d.startingWeapon]))(
-    "%s opens loaded for the weapon it actually hands out",
+    "%s opens loaded for the weapon it actually hands out, and nothing else",
     (_id, startingWeapon) => {
       const pouch = startingAmmo(startingWeapon);
       const held = WEAPON_DEFS[startingWeapon]?.ammo;
-      if (held !== undefined) {
+      // THE POUCH CARRIES EXACTLY WHAT THE HERO CAN FIRE — one kind for a
+      // ranged opening, and NOTHING AT ALL for a melee or magic one.
+      //
+      // There used to be a second stack: the engine kept an unbreakable sidearm
+      // behind every hero, so a sword start opened with a hundred charged cells
+      // for a gun it might never draw. The sidearm is gone (an empty hand is
+      // now an empty hand), and the rule this pins is the one that replaced it
+      // — a hero never opens holding rounds for a weapon he does not carry.
+      if (held === undefined) {
+        expect(Object.keys(pouch)).toEqual([]);
+      } else {
         expect(pouch[held]).toBe(AMMO.starting);
+        expect(Object.keys(pouch)).toEqual([held]);
       }
-      // A MELEE or MAGIC opening leaves the sidearm as the hero's only gun, so
-      // it gets the full stock; a RANGED opening leaves it a fallback, and a
-      // fallback gets the reserve. The bug this pins is EASY's sawed-off
-      // shotgun opening beside a full hundred rounds of CELLS — a kind nothing
-      // the hero carries can fire, reading in the bag's foot rail as though it
-      // mattered as much as his bullets.
-      expect(pouch[sidearm]).toBe(
-        held === undefined || held === sidearm
-          ? AMMO.starting
-          : AMMO.sidearmReserve,
-      );
     },
   );
-
-  it("never opens a kind nothing in the run can fire", () => {
-    // Every kind the opening pouch carries must be one SOME weapon eats — the
-    // sidearm's or the starting weapon's, never a third.
-    for (const diff of Object.values(DIFFICULTY_DEFS)) {
-      const pouch = startingAmmo(diff.startingWeapon);
-      const wanted = new Set(
-        [WEAPON_DEFS[diff.startingWeapon]?.ammo, sidearm].filter(
-          (kind) => kind !== undefined,
-        ),
-      );
-      expect(Object.keys(pouch).sort()).toEqual([...wanted].sort());
-    }
-  });
 });
 
 describe("each kind's art is in the shipped atlas", () => {

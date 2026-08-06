@@ -3,13 +3,16 @@
 // vitest only collects `*_test.ts` / `*_tests.ts`.
 
 import {
+  AMMO,
   createGame,
   dismissIntro,
   enemyDef,
   getBalanceTuning,
+  isWeaponDef,
   runLevelDef,
   skipCutscene,
   step,
+  weaponDef,
 } from "@game/core";
 import type { Enemy, GameEvent, GameInput, GameState, Vec2 } from "@game/core";
 // Engine-internal: the seed reveal a fresh run stamps around the spawn.
@@ -56,24 +59,38 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
 }
 
 /**
- * Swap the default melee starting weapon (the difficulty's wall piece) for the unbreakable
- * ranged blaster sidearm. Suites that calibrate on ranged-at-distance
- * behaviour (fire an aimed bolt, kite at reach, pick mobs off across a gap)
- * use this so they test that behaviour explicitly rather than depending on
- * whatever the game's default starting weapon happens to be. Minted without
- * durability, exactly as `drawSidearm` mints it in a real run.
+ * Swap the default melee starting weapon (the difficulty's wall piece) for a
+ * LONG-REACH GUN. Suites that calibrate on ranged-at-distance behaviour (fire
+ * an aimed bolt, kite at reach, pick mobs off across a gap) use this so they
+ * test that behaviour explicitly rather than depending on whatever the game's
+ * default starting weapon happens to be.
+ *
+ * THE TWO CATALOGS NAME DIFFERENT GUNS, which is why the id is resolved here
+ * rather than spelled out at 30 call sites: `tests/engine/` runs on the
+ * synthetic fixture ladder (whose ranged piece is `blaster`) and
+ * `tests/content/` on the shipped one (`nine_mm`). The engine's own built-in
+ * is no longer a gun at all — it is the EMPTY HAND — so there is no id that
+ * means "a gun" in both.
+ *
+ * The pouch is stocked to match, because every SHIPPED gun eats ammunition and
+ * a melee opening now starts empty-handed of rounds (see `startingAmmo`): an
+ * unstocked gun would simply click, and the suite would be measuring the dry
+ * swap instead of the shot it meant to.
  */
-export function equipBlaster(state: GameState): GameState {
+export function equipRangedSidearm(state: GameState): GameState {
+  const defId = isWeaponDef("blaster") ? "blaster" : "nine_mm";
   state.players[0].equipment.weapon = {
     id: state.nextId++,
-    defId: "blaster",
+    defId,
     slot: "weapon",
     tier: "regular",
-    // Pinned at the def's levelReq (1) — item level prices affixes, not
-    // damage, so this is just the honest level for a fresh sidearm.
+    // Pinned at ilvl 1 — item level prices affixes, not damage, so this is
+    // just the honest level for a plain sidearm.
     ilvl: 1,
     affixes: [],
   };
+  const kind = weaponDef(defId).ammo;
+  if (kind !== undefined) state.players[0].ammo[kind] = AMMO.starting;
   state.players[0].weaponCooldownMs = 0;
   return state;
 }

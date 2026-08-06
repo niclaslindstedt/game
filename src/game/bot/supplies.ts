@@ -175,11 +175,11 @@ function hasBrokenBagWeapon(state: GameState, hero: Player): boolean {
 }
 
 /** The held weapon's remaining wear as a fraction of its full budget (1 = fresh,
- * 0 = about to break), or 1 for the unbreakable sidearm — the "how spent is my
+ * 0 = about to break), or 1 for anything unbreakable — the "how spent is my
  * blade" gauge the repair heuristics read. */
 function weaponWearFrac(state: GameState, hero: Player): number {
   const weapon = hero.equipment.weapon;
-  if (weapon.durability === undefined) return 1; // unbreakable sidearm
+  if (weapon.durability === undefined) return 1; // unbreakable (or bare hands)
   const max = equipmentMaxDurability(weapon);
   return max > 0 ? weapon.durability / max : 1;
 }

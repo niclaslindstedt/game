@@ -34,7 +34,7 @@ import {
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   mobSpeedMult,
@@ -195,7 +195,7 @@ describe("elite ambushes", () => {
   });
 
   it("forfeits the arrival scene — never the drops or last words — mid-rush", () => {
-    const state = equipBlaster(startGame()); // ranged: kill the rush at reach
+    const state = equipRangedSidearm(startGame()); // ranged: kill the rush at reach
     clearStage(state);
     state.rng = () => 0.99; // every bolt lands: no miss, dodge, or crit
     // Inside blaster range but outside the speak radius: the bolt reaches

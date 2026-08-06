@@ -54,7 +54,7 @@ import {
 } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 import {
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   jumpOnce,
   makeEnemy,
@@ -750,7 +750,7 @@ describe("the ranged tree's proc talents", () => {
   it("PIERCING SHOT punches through a foe to strike the one behind it", () => {
     const state = heroWithStats({ dex: 50 });
     trained(state, "piercing_shot", 5);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     stopWaves(state);
     state.rng = () => 0.9; // clean hits, no crit
     const hp = 1e6;
@@ -787,7 +787,7 @@ describe("the ranged tree's proc talents", () => {
   it("CONCUSSIVE ROUNDS shoves a struck foe back", () => {
     const state = heroWithStats({ dex: 50 });
     trained(state, "concussive_rounds", 5);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     stopWaves(state);
     state.rng = () => 0.3; // clears miss/dodge, fires the shove (chance 0.65)
     const hp = 1e6;
@@ -810,7 +810,7 @@ describe("the ranged tree's proc talents", () => {
     trained(state, "crippling_shot", 5);
     const c = talentCrippling(state, state.players[0])!;
     expect(c.chance).toBeLessThanOrEqual(0.75);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     stopWaves(state);
     state.rng = () => 0.3; // fires the slow (chance 0.75)
     const hp = 1e6;
@@ -840,7 +840,7 @@ describe("the ranged tree's proc talents", () => {
   it("VOLLEY looses extra projectiles on a single trigger pull", () => {
     const state = heroWithStats({ dex: 50 });
     trained(state, "volley", 5);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     stopWaves(state);
     state.rng = () => 0.3; // fires the extra spread (chance 0.5)
     state.players[0].weaponCooldownMs = 0;

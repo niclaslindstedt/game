@@ -8,6 +8,7 @@ import { canBankAbility } from "../abilities.ts";
 import { JUMP, LOOT, MEDKIT, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { tierRank } from "../defs/equipment.ts";
+import { isBareHands } from "../items/hands.ts";
 import {
   addToInventory,
   ammoName,
@@ -272,7 +273,12 @@ export function stepItems(state: GameState, dtMs: number): void {
         // Never null here: `isBetterEquipment` already refused the trinket (it
         // pays out from the bag, so it is never worn).
         const slot = wearSlotFor(state, player, item.equipment) as EquipSlot;
-        const previous = player.equipment[slot];
+        // The empty hand is not a possession, so an unarmed hero picking up a
+        // weapon banks nothing — see `displacedByEquip`, which the bag's own
+        // equip routes through for the same reason.
+        const worn = player.equipment[slot];
+        const previous =
+          slot === "weapon" && isBareHands(worn) ? null : (worn ?? null);
         if (slot === "weapon") {
           player.equipment.weapon = item.equipment;
           player.weaponCooldownMs = 0;

@@ -143,6 +143,41 @@ cell to take it back, and the engine picks the free slot either way. A full
 destination refuses the move and leaves the piece where the player last saw it;
 nothing ever lands on the floor.
 
+## The empty hand — what a hero holds when he holds nothing
+
+**A hero may carry no weapon.** The weapon slot comes off like every other
+slot: unequip it and the piece banks to the bag, exactly as a helmet does.
+
+What is left is his own two hands — the engine's built-in `fists`
+(`UNARMED_DEF_ID`), which is not a weapon the player owns but the absence of
+one:
+
+- **It is minted on demand and never banked.** It has no icon, so the bag's
+  weapon bay draws EMPTY and the field hero is drawn holding nothing. Equipping
+  anything over it makes it vanish rather than displacing it into a cell, and a
+  hero who falls with empty hands leaves no weapon on his corpse. Ask
+  `isBareHands`, never a tier or an affix.
+- **It is MELEE, so a punch scales off STRENGTH** like any other physical blow
+  — a bruiser who loses his sword still hits like a bruiser. It reaches 20 px
+  (under the brass knuckles' 24: knuckles are a weapon strapped over the hand
+  and reach further than the hand does) through the narrowest cone in the game,
+  and it throws no slash crescent — it reads as reach and recoil
+  (`WeaponMotion.punch`).
+- **It eats nothing and breaks never**, which is the one property the rest of
+  the system leans on. The on-break swap and the dry-weapon swap both prefer
+  the best wieldable weapon in the bag and fall back to the hand, so neither
+  can fail: a hero whose blade snaps or whose rifle clicks is never left unable
+  to land a blow, and therefore never unable to earn the kill that drops him
+  the replacement.
+- **~30 effective dps**, deliberately off the damage-budget line and under
+  every real weapon in the game (the opening pool bases run 3-4× it). It is the
+  last resort — just not a death sentence.
+
+The slot is still TYPED never-empty, and that is a statement about the type
+rather than about the player: the hundred-odd reads of `equipment.weapon`
+(damage, reach, the bot's stand-off, the paper doll) keep answering without a
+branch.
+
 ## Ammunition — what a ranged weapon spends instead of wearing out
 
 A gun does not get blunt. **Ranged** weapons carry no `durability` at all and
@@ -160,12 +195,12 @@ refuses either half being wrong. Rules in `src/game/items/ammo.ts`, knobs in
   kind to its own independent cap, and carry between levels. Ammunition a hero
   cannot pick up because he is carrying a spare helmet is a frustration with
   nothing to say.
-- **A run opens stocked for the weapon in HAND**, since a run whose starter is a
-  shotgun would otherwise open with a hundred rounds of the wrong thing. The
-  built-in sidearm's kind gets a small reserve behind it (`AMMO.sidearmReserve`)
-  — enough that the dry-weapon swap always has something to draw, not so much
-  that the pouch shows two full stacks for one gun. When the starter is melee or
-  magic the sidearm is the hero's only gun, so it opens with the full stock.
+- **A run opens stocked for the weapon in HAND, and for nothing else**, since a
+  run whose starter is a shotgun would otherwise open with a hundred rounds of
+  the wrong thing. A MELEE or MAGIC opening therefore carries no rounds at all:
+  there is no fallback gun behind the hero to stock for — what is behind an
+  empty hand is the hand itself (`UNARMED_DEF_ID`), which fires nothing and
+  cannot run dry.
 - Every read of `player.ammo[...]` outside `ammo.ts` is a cap, an overflow
   remainder or a dry-swap about to disagree with the others.
 

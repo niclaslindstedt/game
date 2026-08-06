@@ -24,7 +24,7 @@ import {
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   openSpotNear,
@@ -33,7 +33,7 @@ import {
 
 /** Park a one-hit-from-death mob of `defId` at arm's length: inside the
  * blaster's reach but outside contact range, so the kill lands without the
- * hero trading hp for it (pair with `equipBlaster`). Point-blank parking made
+ * hero trading hp for it (pair with `equipRangedSidearm`). Point-blank parking made
  * these scenarios hostage to the rng stream — a couple of unlucky whiffs and
  * the mob's contact damage decided the test, not the story pin. */
 function placeDying(state: GameState, defId: string) {
@@ -73,7 +73,7 @@ describe("first-kill thoughts", () => {
   it("opens the hero's monologue on the first moon SUCCESSOR kill", () => {
     const state = startGame(); // the moon
     clearStage(state);
-    equipBlaster(state); // kill at range — no hp traded for the story beat
+    equipRangedSidearm(state); // kill at range — no hp traded for the story beat
     const bot = placeDying(state, "successor");
 
     killAndCollect(state, bot.id);
@@ -96,7 +96,7 @@ describe("first-kill thoughts", () => {
   it("plays once — a later SUCCESSOR kill is silent", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state); // kill at range — no hp traded for the story beat
+    equipRangedSidearm(state); // kill at range — no hp traded for the story beat
     // Kills now pay real (level-based) xp; hold the bar open so a story-beat
     // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
     state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;
@@ -201,7 +201,7 @@ describe("first-kill thoughts", () => {
   it("holds the kill beat until the sighting has played — a snipe from beyond view defers it", () => {
     const state = startGame();
     clearStage(state);
-    equipBlaster(state);
+    equipRangedSidearm(state);
     // Kills now pay real (level-based) xp; hold the bar open so a story-beat
     // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
     state.players[0].xpToNext = Number.MAX_SAFE_INTEGER;

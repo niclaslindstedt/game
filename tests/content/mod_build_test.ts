@@ -1164,7 +1164,7 @@ describe("what the compiler refuses", () => {
     "    hp: 120",
     "    speed: 80",
     "    radius: 12",
-    "    weapon: blaster",
+    "    weapon: nine_mm",
     "    killQuotes: [DONE.]",
   ];
 

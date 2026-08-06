@@ -1092,12 +1092,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   and the durability cycle
   (`wearEquippedWeapon` — a weapon worn to zero is NOT trashed: it falls into
   the bag as a broken, unequippable spare (`isWeaponBroken`) and the best
-  wieldable bag weapon takes over, never defaulting to the sidearm while a good
-  weapon remains; its twin `swapOffDryWeapon` does the same for a RANGED weapon
-  that ran out of AMMUNITION, narrowed to bag weapons the hero can actually
-  fire and falling back to the SIDEARM — which is minted rather than carried, so
-  a bag with nothing loaded in it is not the end of the line — whenever the
-  sidearm's own pouch has something in it; `wearWornArmor` — armor spends a point per landed hit
+  wieldable bag weapon takes over, and only with nothing wieldable is the hero
+  left with his BARE HANDS (`bareHands` — minted rather than carried, and never
+  banked); its twin `swapOffDryWeapon` does the same for a RANGED weapon that
+  ran out of AMMUNITION, narrowed to bag weapons the hero can actually fire and
+  falling back to the same empty hand — which, eating nothing and breaking
+  never, closes that fallback unconditionally, so a bag with nothing loaded in
+  it is not the end of the line; `wearWornArmor` — armor spends a point per landed hit
   and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and the
   stacked repair kit (`consumeRepairKit` → `repairAll`), banked into the
   consumable dock like a medkit and spent on the player's call to mend the whole

@@ -171,7 +171,7 @@ export const LOOT = {
   medkitShare: 0.14,
   /**
    * …the share that is a weapon repair kit. A generous slice, like the medkit
-   * one: a worn weapon that snaps strands the hero on the sidearm (or sends him
+   * one: a worn weapon that snaps leaves the hero punching (or sends him
    * running to the merchant), so mending kits are meant to turn up often enough
    * to keep a good weapon alive through a run. Uniform across rungs (no
    * `repairDropMult`) — since medkits thin up the ladder but this doesn't, the
@@ -371,7 +371,7 @@ export const LOOT = {
    * will part with it, in item levels. It exists because a weapon is not loot
    * like any other loot: a bag with no armor in it costs the hero some armor,
    * and a bag with no WEAPON in it can cost him the run — his blade snaps, his
-   * rifle runs dry, and the only thing left in the holster is the sidearm.
+   * rifle runs dry, and the only thing left to fight with is his hands.
    *
    * So the sweep is not allowed to price a spare weapon the way it prices a
    * spare helmet. "Worse than what I am holding" describes every backup ever
@@ -513,7 +513,7 @@ export const MERCY = {
   lowHealthFull: 0.15,
   /** Equipped-weapon durability fraction below which repair kits start dropping
    * more often, and where that boost maxes — scaled by the rung's
-   * `mercy.repairBonus`. The unbreakable sidearm never triggers it. */
+   * `mercy.repairBonus`. Bare hands never trigger it — nothing to mend. */
   lowDurabilityStart: 0.5,
   lowDurabilityFull: 0.1,
   /**

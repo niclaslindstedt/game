@@ -11,7 +11,7 @@
 
 import { clamp01 } from "@game/lib/vec.ts";
 import { AMMO, AMMO_KINDS, AMMO_TYPES } from "../config/index.ts";
-import { isWeaponDef, SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
+import { isWeaponDef, UNARMED_DEF_ID, weaponDef } from "../defs/equipment.ts";
 import type { AmmoType, Equipment, GameState, Player } from "../types/index.ts";
 import { desperationRamp } from "./mercy.ts";
 
@@ -108,21 +108,18 @@ export function grantAmmo(player: Player, type: AmmoType, count: number): void {
  * and the first thing a new player learns about ammunition should be that it
  * exists, not that it is about to run out.
  *
- * THE BUILT-IN SIDEARM gets its kind too, but only `AMMO.sidearmReserve` of it
- * — and only when it is not already the kind in hand. It is the weapon the
- * engine draws when everything else has run dry (`swapOffDryWeapon`, which
- * refuses to draw a sidearm that cannot shoot), so an empty one is not a
- * setback, it is a run that cannot be finished. A full second stack overshot
- * that job badly: EASY opens with a SAWED-OFF SHOTGUN, so the pouch read "100
- * BULLETS, 100 CELLS" and the hundred rounds for a gun the hero does not carry
- * looked exactly as important as the ones he was firing.
+ * AND THAT IS THE WHOLE OF IT — A MELEE OR MAGIC OPENING STARTS WITH AN EMPTY
+ * POUCH. There used to be a second stack here: the engine kept an unbreakable
+ * SIDEARM behind every hero, so a sword start was handed a hundred charged
+ * cells for the gun it would eventually be forced onto. That gun is gone (the
+ * hand behind an empty hand is now the hero's own — see `UNARMED_DEF_ID`), and
+ * with it the reason to stock rounds for a weapon nobody is carrying. A hero
+ * who never picks up a gun now never picks up a round he cannot fire, and one
+ * who finds a rifle finds boxes for it the moment he does (`ammoAppetite`
+ * leans on an empty stack, and `ammoKindFor` already reads the bag).
  *
- * A MELEE OR MAGIC OPENING is the other case, and there the sidearm IS the
- * hero's only gun rather than his fallback — so it gets the full opening
- * stock, which is the hundred cells the game has always given a sword start.
- *
- * Both kinds are read off their defs rather than spelled out, so a game (or a
- * mod) that re-arms either with a bow gets a quiver.
+ * The kind is read off the def rather than spelled out, so a game (or a mod)
+ * that opens the ladder with a bow gets a quiver.
  */
 export function startingAmmo(
   heldWeapon?: string,
@@ -132,12 +129,6 @@ export function startingAmmo(
     heldWeapon !== undefined && isWeaponDef(heldWeapon)
       ? weaponDef(heldWeapon).ammo
       : undefined;
-  const sidearm = weaponDef(SIDEARM_DEF_ID).ammo;
-  if (sidearm !== undefined) {
-    pouch[sidearm] = held === undefined ? AMMO.starting : AMMO.sidearmReserve;
-  }
-  // Last, so a hero whose own weapon eats the sidearm's kind gets the full
-  // opening stock rather than the reserve written just above.
   if (held !== undefined) pouch[held] = AMMO.starting;
   return pouch;
 }
@@ -223,11 +214,24 @@ export function ammoAppetite(state: GameState, player: Player): number {
  * That last clause is what keeps the rope honest. A hero with a dry rifle and
  * a sword in the bag is not in trouble, he has a decision to make; the engine
  * makes it for him anyway (`stepWeapon` draws the sword). Only a hero whose
- * every option is the same empty stack is in the one unrecoverable state
- * ammunition can create, and that is the state this answers.
+ * every option is the same empty stack is in the state ammunition can create,
+ * and that is the state this answers.
+ *
+ * AN EMPTY HAND IS THAT STATE TOO — and it is now the shape it arrives in. The
+ * dry swap no longer leaves the hero holding the gun that will not fire; it
+ * puts him on his knuckles (there is no fallback sidearm any more), so reading
+ * only the held weapon's ammo kind would have quietly retired this rope on the
+ * exact case it was written for. When his hands are empty the kind to measure
+ * is what the ranged weapon he BANKED eats — and a hero who is bare-handed
+ * because he chose to be, with no gun in the bag at all, is not out of
+ * ammunition and gets nothing.
  */
 export function outOfAmmoDesperation(state: GameState, player: Player): number {
-  const type = weaponAmmoType(player.equipment.weapon);
+  const held = player.equipment.weapon;
+  const type =
+    held.defId === UNARMED_DEF_ID
+      ? bankedAmmoKind(player)
+      : weaponAmmoType(held);
   if (type === undefined) return 0;
   for (const piece of player.inventory) {
     if (!piece) continue;
@@ -249,4 +253,18 @@ export function outOfAmmoDesperation(state: GameState, player: Player): number {
  * should not silence the rope. */
 function isWieldableWeapon(piece: Equipment): boolean {
   return piece.slot === "weapon";
+}
+
+/** What the first ammunition-eating weapon in the bag eats, or undefined when
+ * the hero is carrying no gun at all — the kind a BARE-HANDED hero's
+ * desperation is measured in (see `outOfAmmoDesperation`). Deliberately the
+ * same walk `ammoKindFor` makes, minus its leanest-stack fallback: that
+ * fallback always answers, and here "no gun anywhere" has to mean no. */
+function bankedAmmoKind(player: Player): AmmoType | undefined {
+  for (const piece of player.inventory) {
+    if (!piece) continue;
+    const type = weaponAmmoType(piece);
+    if (type !== undefined) return type;
+  }
+  return undefined;
 }

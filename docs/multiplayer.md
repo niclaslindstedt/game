@@ -124,7 +124,8 @@ IS lives in `src/game/downed.ts`, Diablo 2's shape whole:
   that moment (the wipe toll later skips a hero already `downed`, so no fall
   is ever priced twice), their worn kit is stripped onto a **corpse** where
   they fell (`state.corpses`, public in the replication split — worn gear was
-  always visible), and the never-empty hand holds the minted sidearm. The body
+  always visible), and the never-empty hand is left holding nothing but his
+  own hands. The body
   lies on the field; `heroInPlay` already answered for everything else.
 - **The WAY BACK is a verb.** `respawn` (a run command like any other — the
   acting hero is the admitted seat) stands a downed hero up at the level's
@@ -132,7 +133,7 @@ IS lives in `src/game/downed.ts`, Diablo 2's shape whole:
   the walk. When to take it is the player's own call — there is no timer.
 - **The CORPSE is the owner's alone.** Walking back within
   `CORPSE.recoverRadius` takes the gear back piece by piece — worn again where
-  the slot is free (the minted sidearm is discarded for the real weapon, never
+  the slot is free (the empty hand gives way to the real weapon, and is never
   banked), to the bag where it is not, and a piece with nowhere to go STAYS on
   the body, which leaves the field only when emptied. Another hero standing on
   it all day takes nothing, and the server is what enforces that.

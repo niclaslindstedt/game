@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   AMMO,
+  AMMO_TYPES,
   ammoCount,
   bankAmmo,
   hasAmmoFor,
@@ -108,31 +109,22 @@ describe("the opening holster", () => {
     if (held !== undefined) {
       expect(ammoCount(state.players[0], held)).toBe(AMMO.starting);
     }
-    // …and the fallback sidearm is stocked too, because a dry last resort is
-    // not a setback, it is a run that cannot be finished — but only with the
-    // RESERVE, so the foot rail does not open a shotgun run reading "100
-    // BULLETS, 100 CELLS".
-    const sidearm = weaponDef("blaster").ammo;
-    if (sidearm !== undefined && sidearm !== held) {
-      expect(ammoCount(state.players[0], sidearm)).toBe(AMMO.sidearmReserve);
+    // …and NOTHING ELSE. There is no fallback gun behind the hero any more —
+    // an empty hand is an empty hand — so the pouch carries exactly the one
+    // kind he can fire, and the foot rail never opens a shotgun run reading
+    // "100 BULLETS, 100 CELLS".
+    for (const kind of AMMO_TYPES) {
+      if (kind === held) continue;
+      expect(ammoCount(state.players[0], kind)).toBe(0);
     }
   });
 
-  it("stocks the held kind whether or not the sidearm eats one", () => {
-    // The fixture sidearm deliberately does NOT play by the shipped ranged
-    // rule (it wears out rather than eating a kind), which is the arrangement
-    // that used to leave the pouch empty: the opening holster reads the HELD
-    // weapon first, so a run still opens loaded. The sidearm's own half is the
-    // shipped catalog's business — `tests/content/ammo_content_test.ts`.
+  it("stocks the held kind, and opens empty for a weapon that eats none", () => {
     expect(startingAmmo("test_carbine").bullets).toBe(AMMO.starting);
-  });
-
-  it("is a seatbelt, not a second stack", () => {
-    // The reserve has one job — keep `swapOffDryWeapon` able to draw a sidearm
-    // that shoots — and a reserve as deep as the opening stock would make the
-    // wrong kind look exactly as important as the right one.
-    expect(AMMO.sidearmReserve).toBeGreaterThan(0);
-    expect(AMMO.sidearmReserve).toBeLessThan(AMMO.starting / 2);
+    // A MELEE opening carries no rounds at all: nothing the hero holds — now
+    // or when his weapon breaks — can fire one. The shipped ladder's own half
+    // of this is `tests/content/ammo_content_test.ts`.
+    expect(Object.keys(startingAmmo("test_hammer"))).toEqual([]);
   });
 });
 
@@ -258,7 +250,7 @@ describe("a dry weapon", () => {
     expect(state.events.some((e) => e.type === "weaponDry")).toBe(true);
   });
 
-  it("falls back to the built-in SIDEARM when the bag holds nothing loaded", () => {
+  it("falls back to BARE HANDS when the bag holds nothing loaded", () => {
     const state = startGame();
     clearStage(state);
     const dry = arm(state, "test_carbine");
@@ -272,7 +264,7 @@ describe("a dry weapon", () => {
     // that would have handed him a box: a softlock, not a setback.
     player.inventory[0] = weapon(state.nextId++, "test_carbine");
     step(state, idle, DT);
-    expect(player.equipment.weapon.defId).toBe("blaster");
+    expect(player.equipment.weapon.defId).toBe("fists");
     expect(state.events.some((e) => e.type === "weaponDry")).toBe(true);
     // …and the empty weapon is kept, not destroyed: he is going to reload it.
     expect(player.inventory.some((cell) => cell?.id === dry.id)).toBe(true);

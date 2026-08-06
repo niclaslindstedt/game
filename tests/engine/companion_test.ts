@@ -34,7 +34,7 @@ import type { Equipment, GameEvent, GameInput, GameState } from "@game/core";
 import {
   clearStage,
   DT,
-  equipBlaster,
+  equipRangedSidearm,
   idle,
   makeEnemy,
   run,
@@ -66,7 +66,7 @@ function stageSpareable(state: GameState, hp = 10): void {
       "test_spareable",
     ),
   );
-  equipBlaster(state);
+  equipRangedSidearm(state);
   // Pin the stream to the always-lands value so the staged blaster bolts
   // neither miss nor crit and no probabilistic drop muddies the assertions.
   state.rng = () => 0.99;

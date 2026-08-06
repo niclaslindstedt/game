@@ -103,12 +103,12 @@ const DAMAGE_STAT = {
 };
 
 // Bases the damage-budget model exempts (weapon-budget.mjs): the difficulty
-// ladder's starter weapons and the fallback sidearm sit intentionally off the
+// ladder's starter weapons and the bare hands sit intentionally off the
 // budget line, so a unique built on one (EXCALIBUR → medieval_sword) reads hot
 // only because its BASE is off-budget, not its bonuses. Mark those so the report
 // can caveat them.
 const EXEMPT_BASES = new Set([
-  "blaster",
+  "fists",
   "soggy_cardboard_sword",
   "legal_distinction_empty",
   "demo_wiper",
