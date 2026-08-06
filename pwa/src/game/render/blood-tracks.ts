@@ -278,7 +278,11 @@ function flipped(
   if (cached) return cached;
   const art = spriteByName(sprites, name);
   if (!art) return null;
-  const flat = bakeFlat(flip === 0 ? art : mirror(art, flip));
+  // Nearest, like the pools these boots stepped in — gore is never smoothed,
+  // however the camera is turned (`bakeFlat`).
+  const flat = bakeFlat(flip === 0 ? art : mirror(art, flip), {
+    antialias: false,
+  });
   if (!flat) return null;
   flipCache.set(key, flat);
   return flat;

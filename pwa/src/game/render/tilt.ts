@@ -18,6 +18,17 @@
 //           at when they call a game isometric. Pitch 0.5 with yaw 45° is the
 //           classic 2:1 isometric floor.
 //
+// A third switch rides along without being part of the transform:
+//
+//   ANTI-ALIASING — whether the art the yaw TURNS is smoothed as it is baked
+//           through the projection. Nearest-neighbour turns a straight run of
+//           pixels into a dotted, ragged staircase, which is the honest cost of
+//           rotating pixel art and the thing that makes a yawed floor look
+//           broken rather than drawn. It is a SETTING because the alternative
+//           costs the floor a little of its crispness, and it is inert at yaw 0
+//           because a square-on camera makes no staircase to smooth
+//           (`projectionSmoothing`).
+//
 // Two halves make the result read as depth rather than as a distorted picture:
 //
 //   THE FLOOR LIES DOWN. Everything painted ON the ground — the baked ground
@@ -55,6 +66,12 @@ export const DEFAULT_YAW = 0;
 export const PITCH_RANGE = { min: 0.25, max: 1 } as const;
 /** …and the yaw, from square-on to the full isometric quarter turn. */
 export const YAW_RANGE = { min: 0, max: 45 } as const;
+
+/** Whether the art the projection TURNS is smoothed on its way through — the
+ * anti-aliasing knob, off by default. See `projectionSmoothing` below for the
+ * half of it that matters to the renderer, and `groundLayer`
+ * (render/caches.ts) for what it costs and buys. */
+let antialias = false;
 
 // The live projection, as the matrix `[a c; b d]` mapping a camera-relative
 // world offset to a screen offset, plus its inverse. Kept as plain numbers
@@ -102,6 +119,7 @@ recompute();
 export function setWorldProjection(next: {
   pitch?: number;
   yaw?: number;
+  antialias?: boolean;
 }): void {
   if (next.pitch !== undefined) {
     pitch = Math.min(PITCH_RANGE.max, Math.max(PITCH_RANGE.min, next.pitch));
@@ -109,6 +127,7 @@ export function setWorldProjection(next: {
   if (next.yaw !== undefined) {
     yawDeg = Math.min(YAW_RANGE.max, Math.max(YAW_RANGE.min, next.yaw));
   }
+  if (next.antialias !== undefined) antialias = next.antialias;
   recompute();
 }
 
@@ -121,9 +140,38 @@ export function worldYaw(): number {
   return yawDeg;
 }
 
-/** A cheap identity for the current projection, for cache keys. */
+/** The anti-aliasing KNOB as the player set it — what the settings row shows.
+ * The renderer wants `projectionSmoothing` instead. */
+export function worldAntialias(): boolean {
+  return antialias;
+}
+
+/**
+ * WHETHER THE PROJECTION IS SMOOTHING ANYTHING RIGHT NOW — the knob AND a
+ * turned camera, which is the whole rule.
+ *
+ * The staircase this smooths is made by the YAW and by nothing else. A
+ * square-on camera at any pitch is a pure vertical squash: every source column
+ * stays a column, so nearest-neighbour drops whole ROWS and leaves the art's
+ * horizontal detail exactly where it was — there is no diagonal to break up and
+ * nothing to average, and averaging anyway would only soften a floor that was
+ * already right. Turn the camera and every straight run of pixels crosses the
+ * destination grid at an angle instead, which is where the dotted, ragged
+ * staircase comes from.
+ *
+ * So the knob is deliberately inert at yaw 0 rather than merely pointless
+ * there: a developer who leaves it on and dials the camera back to square-on
+ * gets the crisp shipped floor, not a blurred one.
+ */
+export function projectionSmoothing(): boolean {
+  return antialias && yawDeg > 0;
+}
+
+/** A cheap identity for the current projection, for cache keys — the smoothing
+ * included, because it changes what a bake COMES OUT as, not just how it looks
+ * on the way to the screen. */
 export function projectionKey(): string {
-  return `${pitch}/${yawDeg}`;
+  return `${pitch}/${yawDeg}/${projectionSmoothing() ? "aa" : "raw"}`;
 }
 
 /** Project a camera-relative world offset onto the screen. */

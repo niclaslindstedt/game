@@ -12,7 +12,14 @@ import { groundTileName } from "./ground-tiles.ts";
 import { clearRecolorCache } from "./recolor.ts";
 import { clearSpriteSplitCache } from "./sprite-split.ts";
 import { TILE } from "./shared.ts";
-import { projectionKey, projectX, projectY } from "./tilt.ts";
+import {
+  projectionKey,
+  projectionSmoothing,
+  projectX,
+  projectY,
+  unprojectX,
+  unprojectY,
+} from "./tilt.ts";
 
 let cachesFor: Sprites | null = null;
 
@@ -199,9 +206,20 @@ export function flatSprite(
  * hot loop stays a single lookup and a single blit per tile — a second cache in
  * front of this one would build a key string per blot per frame for no gain.
  * They drop their map on a projection change exactly as this module does.
+ *
+ * **`antialias: false` IS FOR GORE, AND GORE IS THE ONLY THING THAT ASKS FOR
+ * IT.** A wall panel is architecture — a straight outlined edge, which is
+ * exactly what averaging is good at, and exactly what a staircase ruins. Blood
+ * is not: a spatter is chunky pixel art with no line in it to keep straight, so
+ * smoothing its rotation does not clean anything up, it just softens the clots
+ * into a smudge and takes the bite out of the one thing on the floor that is
+ * supposed to look brutal. So the stains, the pools and the boot prints bake
+ * NEAREST at every camera, switch or no switch, while the floor and its
+ * furniture answer to `projectionSmoothing`.
  */
 export function bakeFlat(
   sprite: ImageBitmap | HTMLCanvasElement,
+  opts: { antialias?: boolean } = {},
 ): HTMLCanvasElement | null {
   const w = sprite.width;
   const h = sprite.height;
@@ -216,10 +234,7 @@ export function bakeFlat(
   const ys = corners.map(([x, y]) => projectY(x, y));
   const width = Math.max(1, Math.ceil(Math.max(...xs) - Math.min(...xs)));
   const height = Math.max(1, Math.ceil(Math.max(...ys) - Math.min(...ys)));
-  // Supersampled, so the turned edges of a wall panel come out antialiased
-  // instead of as a staircase of single pixels — see `bakeSupersampled`. Free of
-  // any effect at yaw 0 and pitch 1, where the transform is the identity.
-  return bakeSupersampled(width, height, (ctx) => {
+  const paint = (ctx: CanvasRenderingContext2D) => {
     ctx.transform(
       projectX(1, 0),
       projectY(1, 0),
@@ -229,7 +244,21 @@ export function bakeFlat(
       height / 2,
     );
     ctx.drawImage(sprite, -w / 2, -h / 2);
-  });
+  };
+  if (opts.antialias === false) {
+    const out = document.createElement("canvas");
+    out.width = width;
+    out.height = height;
+    const ctx = out.getContext("2d");
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = false;
+    paint(ctx);
+    return out;
+  }
+  // Supersampled, so the turned edges of a wall panel come out antialiased
+  // instead of as a staircase of single pixels — see `bakeSupersampled`. Free of
+  // any effect at yaw 0 and pitch 1, where the transform is the identity.
+  return bakeSupersampled(width, height, paint);
 }
 
 /** Pre-rendered radial glows, keyed by `rgb/radius`. Loot glows pulse every
@@ -509,43 +538,79 @@ export function groundLayer(
   );
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  // NEAREST-NEIGHBOUR, AND DELIBERATELY NOT SUPERSAMPLED — unlike `flatSprite`
-  // above, for two independent reasons, either of which is enough.
+  // SMOOTHED OR STAIRCASED — the anti-aliasing knob's one consequence, and the
+  // reason it is a knob rather than a constant (render/tilt.ts).
   //
-  // MEMORY: this canvas is the whole level projected. A big map bakes to roughly
-  // 2400x1000; at the 3x the sprites use, the intermediate would be 7200x3000 —
-  // 21 million pixels, ~86 MB — for one throwaway buffer on a phone, and larger
-  // maps would walk into the browser's own canvas dimension cap.
+  // NEAREST-NEIGHBOUR is the crisp answer and the default: every source pixel
+  // lands on exactly one destination pixel, so the floor's speckles, seams and
+  // grain rivets come through as the artist drew them. Square-on that is simply
+  // correct — the squash drops whole rows and touches nothing else. TURNED, the
+  // same resample takes every straight run of pixels across the destination grid
+  // at an angle and breaks it up: a tile seam comes out as a dotted, ragged
+  // staircase, and a floor full of them reads as broken rather than as drawn.
   //
-  // AND IT WOULD LOOK WORSE ANYWAY, which is the reason that would still stand
-  // if the memory were free. A wall panel is a small silhouette with a dark
-  // outline, so averaging its turned edges reads as a clean diagonal. The floor
-  // is a TEXTURE covering the entire screen: averaging its rotation softens every
-  // speckle, seam and grain rivet in it at once, and a floor whose pixels have
-  // gone slightly fuzzy does not read as "nicely antialiased", it reads as the
-  // one surface in the game that is out of focus. The staircase on a yawed floor
-  // seam is the honest cost of turning pixel art, and the fix for it is iso-drawn
-  // tile art, not a filter.
-  ctx.imageSmoothingEnabled = false;
-  // Bake THROUGH the projection: each tile is laid down already turned and
-  // flattened, so the per-frame blit is a straight copy for ever after.
-  ctx.setTransform(
-    projectX(1, 0),
-    projectY(1, 0),
-    projectX(0, 1),
-    projectY(0, 1),
-    origin.x,
-    origin.y,
-  );
-  const tilesX = Math.ceil(width / TILE);
-  const tilesY = Math.ceil(height / TILE);
+  // SMOOTHED bakes the tiles at `GROUND_SUPERSAMPLE`× and averages down, exactly
+  // as `flatSprite` does — real antialiasing on the edges the rotation created.
+  // It costs the floor a little of its crispness (a texture covering the whole
+  // screen has its every speckle averaged too, which is why this is opt-in and
+  // not the shipped look) and it costs the bake a few times the fill, once per
+  // level. What it does NOT cost is memory: a whole level projected runs to 8
+  // megapixels on a large map, and one intermediate over all of it would be four
+  // times that — tens of megabytes on a phone, and past the canvas dimension cap
+  // besides — so the supersampled bake goes CHUNK BY CHUNK through one bounded
+  // scratch buffer (`paintGroundSmoothed`).
+  //
+  // The real fix for a turned floor is still iso-drawn tile art; this is the one
+  // that can ship as a switch.
+  const tiles = { x: Math.ceil(width / TILE), y: Math.ceil(height / TILE) };
+  if (
+    !projectionSmoothing() ||
+    !paintGroundSmoothed(canvas, ctx, state, sprites, origin, tiles)
+  ) {
+    ctx.imageSmoothingEnabled = false;
+    // Bake THROUGH the projection: each tile is laid down already turned and
+    // flattened, so the per-frame blit is a straight copy for ever after.
+    ctx.setTransform(
+      projectX(1, 0),
+      projectY(1, 0),
+      projectX(0, 1),
+      projectY(0, 1),
+      origin.x,
+      origin.y,
+    );
+    paintGroundTiles(ctx, state, sprites, {
+      tx0: 0,
+      tx1: tiles.x - 1,
+      ty0: 0,
+      ty1: tiles.y - 1,
+    });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  groundCache = { levelId: state.level.id, projection, origin, canvas };
+  return canvas;
+}
+
+/** The tile block a bake is painting: inclusive indices into the level's grid. */
+type TileRange = { tx0: number; tx1: number; ty0: number; ty1: number };
+
+/**
+ * Lay the level's ground tiles down through whatever transform `ctx` already
+ * carries — the shared inner loop of both bakes above, so the smoothed one
+ * cannot drift from the crisp one.
+ */
+function paintGroundTiles(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  range: TileRange,
+): void {
   // A HAIR of overlap on each tile. The projection puts tile edges on
   // fractional device pixels, and two neighbours that each round inward leave a
   // one-pixel seam of bare canvas between them — a grid of hairlines across the
   // whole floor, which is exactly the artefact the bake exists to avoid.
   const bleed = 1;
-  for (let ty = 0; ty < tilesY; ty++) {
-    for (let tx = 0; tx < tilesX; tx++) {
+  for (let ty = range.ty0; ty <= range.ty1; ty++) {
+    for (let tx = range.tx0; tx <= range.tx1; tx++) {
       ctx.drawImage(
         groundTile(sprites, state.level.tiles, tx, ty),
         0,
@@ -559,9 +624,151 @@ export function groundLayer(
       );
     }
   }
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  groundCache = { levelId: state.level.id, projection, origin, canvas };
-  return canvas;
+}
+
+/**
+ * …AND THE FACTOR THE GROUND LAYER USES, which is deliberately not the same
+ * number.
+ *
+ * A flat SPRITE is a few thousand pixels and is baked once per atlas entry, so
+ * 3× is free and buys the cleanest diagonal available. The ground layer is the
+ * whole level projected — 8 megapixels on a large map — and every extra sample
+ * is paid over all of it, at the one moment the player is waiting to start:
+ * measured on a large map, 2× costs roughly 2.7× the crisp bake and 3× costs
+ * 4.4×. What that extra pass buys is a difference nobody can point to. The
+ * staircase this removes is made of WHOLE destination pixels, so the first
+ * subdivision does nearly all the work — 2× already lands four tones on every
+ * turned seam, and at the canvas's ~422 px width the fifth through tenth are
+ * invisible.
+ *
+ * Still an INTEGER, for the same reason: the intermediate has to be an exact
+ * multiple of the destination or the box filter is not a box filter.
+ */
+const GROUND_SUPERSAMPLE = 2;
+
+/**
+ * The widest a supersampled scratch buffer may get on either axis.
+ *
+ * 2048 is comfortably inside every browser's canvas limits — Safari caps a
+ * canvas at 16384 px per side and at an AREA a couple of full-screen buffers
+ * past that, and a phone under memory pressure discards backing stores well
+ * before either. One buffer of this size is ~16 MB, it is reused for every
+ * chunk, and it is the only allocation the smoothed bake makes beyond the layer
+ * itself.
+ */
+const BAKE_CHUNK_PX = 2048;
+
+/**
+ * BAKE THE GROUND LAYER SUPERSAMPLED, one bounded chunk at a time — the
+ * anti-aliased half of `groundLayer`.
+ *
+ * The destination is cut into squares no bigger than one scratch buffer holds at
+ * `GROUND_SUPERSAMPLE`×; each is painted big, averaged down, and blitted into
+ * place. Cutting on DESTINATION pixel boundaries is what makes it seamless: a
+ * finished pixel's whole N×N sample block belongs to exactly one chunk, so the
+ * result is identical to averaging one enormous intermediate that no phone could
+ * allocate.
+ *
+ * Each chunk draws only the tiles that can reach it, found by running the
+ * projection BACKWARDS over the chunk's corners — without that every chunk would
+ * redraw the entire level and the bake would cost chunks × tiles.
+ *
+ * Returns false if the scratch buffer can't be had, so the caller falls back to
+ * the crisp bake rather than shipping a blank floor.
+ */
+function paintGroundSmoothed(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  origin: { x: number; y: number },
+  tiles: { x: number; y: number },
+): boolean {
+  const ss = GROUND_SUPERSAMPLE;
+  const step = Math.max(1, Math.floor(BAKE_CHUNK_PX / ss));
+  const big = document.createElement("canvas");
+  big.width = Math.min(canvas.width, step) * ss;
+  big.height = Math.min(canvas.height, step) * ss;
+  const bigCtx = big.getContext("2d");
+  if (!bigCtx) return false;
+  // Smoothing ON for the downscale, which IS the box filter — and OFF inside the
+  // chunk, where the art must stay pixels until the one average that follows.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  bigCtx.imageSmoothingEnabled = false;
+  for (let y0 = 0; y0 < canvas.height; y0 += step) {
+    for (let x0 = 0; x0 < canvas.width; x0 += step) {
+      const w = Math.min(step, canvas.width - x0);
+      const h = Math.min(step, canvas.height - y0);
+      bigCtx.setTransform(1, 0, 0, 1, 0, 0);
+      bigCtx.clearRect(0, 0, w * ss, h * ss);
+      // The projection, scaled up by the supersample and shifted so the chunk's
+      // own top-left is the buffer's origin — so `paintGroundTiles` goes on
+      // writing plain world coordinates and knows about neither.
+      bigCtx.setTransform(
+        projectX(1, 0) * ss,
+        projectY(1, 0) * ss,
+        projectX(0, 1) * ss,
+        projectY(0, 1) * ss,
+        (origin.x - x0) * ss,
+        (origin.y - y0) * ss,
+      );
+      paintGroundTiles(
+        bigCtx,
+        state,
+        sprites,
+        chunkTiles(origin, tiles, x0, y0, w, h),
+      );
+      ctx.drawImage(big, 0, 0, w * ss, h * ss, x0, y0, w, h);
+    }
+  }
+  return true;
+}
+
+/**
+ * WHICH TILES CAN REACH A CHUNK of the baked layer — the projection run
+ * backwards over the chunk's four corners, as a tile-index box.
+ *
+ * The unprojected chunk is a parallelogram, so its axis-aligned world box is
+ * deliberately generous: a few tiles land in it that draw entirely outside the
+ * chunk and are clipped away for nothing. That is the right way round — a box
+ * one tile too tight leaves a hole in the floor, and one tile too wide costs a
+ * few draw calls in a bake that happens once per level.
+ */
+function chunkTiles(
+  origin: { x: number; y: number },
+  tiles: { x: number; y: number },
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+): TileRange {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const [cx, cy] of [
+    [x0, y0],
+    [x0 + w, y0],
+    [x0, y0 + h],
+    [x0 + w, y0 + h],
+  ] as const) {
+    const wx = unprojectX(cx - origin.x, cy - origin.y);
+    const wy = unprojectY(cx - origin.x, cy - origin.y);
+    if (wx < minX) minX = wx;
+    if (wx > maxX) maxX = wx;
+    if (wy < minY) minY = wy;
+    if (wy > maxY) maxY = wy;
+  }
+  // One tile of margin on every side: a tile is drawn from its top-left corner,
+  // so one whose corner sits outside the box can still cover ground inside it —
+  // and the bleed pushes each one a pixel further than that.
+  return {
+    tx0: Math.max(0, Math.floor(minX / TILE) - 1),
+    tx1: Math.min(tiles.x - 1, Math.ceil(maxX / TILE) + 1),
+    ty0: Math.max(0, Math.floor(minY / TILE) - 1),
+    ty1: Math.min(tiles.y - 1, Math.ceil(maxY / TILE) + 1),
+  };
 }
 
 /**

@@ -27,12 +27,15 @@ import {
   DEFAULT_PITCH,
   DEFAULT_YAW,
   PITCH_RANGE,
+  projectionKey,
+  projectionSmoothing,
   projectX,
   projectY,
   screenDirToWorld,
   setWorldProjection,
   unprojectX,
   unprojectY,
+  worldAntialias,
   worldPitch,
   worldToCanvas,
   worldViewRect,
@@ -44,7 +47,11 @@ import { startGame } from "./engine/helpers.ts";
 
 /** The projection is module state, so every test puts it back. */
 afterEach(() => {
-  setWorldProjection({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
+  setWorldProjection({
+    pitch: DEFAULT_PITCH,
+    yaw: DEFAULT_YAW,
+    antialias: false,
+  });
 });
 
 /**
@@ -211,6 +218,58 @@ describe("the world projection", () => {
     for (const yaw of [10, 22, 45]) {
       expect(area(0.6, yaw)).toBeCloseTo(square, 6);
     }
+  });
+});
+
+describe("the anti-aliasing knob", () => {
+  // The switch that decides whether the art the yaw TURNS is smoothed as it
+  // bakes or lands on the pixel grid nearest-neighbour (render/caches.ts
+  // `groundLayer`). Two things about it are load-bearing and silent when
+  // broken: it must do NOTHING square-on, where there is no staircase to
+  // smooth and averaging would only cost the shipped floor its crispness — and
+  // it must reach the CACHE KEY, since it changes what a bake comes out as
+  // rather than how the bake is drawn.
+
+  it("does nothing at all while the camera is square-on", () => {
+    setWorldProjection({ pitch: 0.5, yaw: 0, antialias: true });
+    expect(worldAntialias()).toBe(true);
+    expect(projectionSmoothing()).toBe(false);
+  });
+
+  it("smooths as soon as the camera is turned, and stops when it is not", () => {
+    setWorldProjection({ pitch: 0.5, yaw: 45, antialias: true });
+    expect(projectionSmoothing()).toBe(true);
+    setWorldProjection({ yaw: 0 });
+    expect(projectionSmoothing()).toBe(false);
+    setWorldProjection({ yaw: YAW_RANGE.max / 2 });
+    expect(projectionSmoothing()).toBe(true);
+    setWorldProjection({ antialias: false });
+    expect(projectionSmoothing()).toBe(false);
+  });
+
+  it("keeps the knob when a camera knob moves without it", () => {
+    // The settings screen writes the pair and the switch together, but the
+    // playtest harness and the effects gallery dial pitch alone — an omitted
+    // field must not silently reset the other.
+    setWorldProjection({ pitch: 0.5, yaw: 45, antialias: true });
+    setWorldProjection({ pitch: 0.75 });
+    expect(worldAntialias()).toBe(true);
+    expect(projectionSmoothing()).toBe(true);
+  });
+
+  it("re-keys a bake when it changes, but only when it changes anything", () => {
+    setWorldProjection({ pitch: 0.5, yaw: 45, antialias: false });
+    const hard = projectionKey();
+    setWorldProjection({ antialias: true });
+    // Turned: the two bakes differ, so the key must too or the floor baked
+    // before the switch would be blitted after it.
+    expect(projectionKey()).not.toBe(hard);
+    setWorldProjection({ yaw: 0, antialias: false });
+    const square = projectionKey();
+    setWorldProjection({ antialias: true });
+    // Square-on: the bake is identical either way, so flipping the switch must
+    // NOT throw away every cached bake in the renderer.
+    expect(projectionKey()).toBe(square);
   });
 });
 
