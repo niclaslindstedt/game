@@ -229,8 +229,38 @@ export function validateQuestGiver(id, def, refs) {
     checkLines(def.greeting, "greeting", err, warn);
   if (def.farewell !== undefined)
     checkLines(def.farewell, "farewell", err, warn);
+  if (def.intro !== undefined) checkGiverIntro(def.intro, refs, err);
 
   return { errors, warnings };
+}
+
+/**
+ * THE MEETING THIS PERSON OWES THE HERO BEFORE THEIR SLATE OPENS
+ * (`QuestGiverDef.intro`). Both halves are hard errors, and both fail the same
+ * silent way at runtime: a tap that opens a tree that is not there, or one that
+ * opens a tree nothing can ever retire — a person standing over their own
+ * errands forever, with nothing on screen to say why the list never comes up.
+ *
+ * @param {unknown} intro  the authored `intro:` block.
+ * @param {object} refs    `{ conversations, flags }` — Sets of live ids.
+ * @param {(m: string) => void} err
+ */
+function checkGiverIntro(intro, refs, err) {
+  if (!intro || typeof intro !== "object" || Array.isArray(intro)) {
+    err("intro must be `{ conversation, until }`");
+    return;
+  }
+  if (!isStr(intro.conversation)) err("intro.conversation is required");
+  else if (refs.conversations && !refs.conversations.has(intro.conversation)) {
+    err(`intro conversation "${intro.conversation}" does not exist`);
+  }
+  if (!isStr(intro.until)) err("intro.until is required (a run flag)");
+  else if (refs.flags && !refs.flags.has(intro.until)) {
+    err(
+      `intro flag "${intro.until}" is set by no conversation branch — the ` +
+        `meeting would never end, and this person could never hand out an errand`,
+    );
+  }
 }
 
 /**

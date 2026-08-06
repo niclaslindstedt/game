@@ -89,7 +89,17 @@ export function TalkOverlay({
 }) {
   const talk = state.talk;
   const node = talkNode(state);
-  const choices = useMemo(() => talkChoices(state), [state]);
+  // DERIVED EVERY RENDER, AND NEVER MEMOIZED ON `state`. The run's state is
+  // MUTATED IN PLACE — its object identity is fixed for the whole run — so a
+  // `useMemo(…, [state])` here computed the first node's rows once and then
+  // never again: every later node drew its own speech under the OPENING
+  // node's buttons, while the index the player pressed was resolved against
+  // the real node by the engine. (Caught eyeballing Ruth's meeting: page three
+  // of the tree still offered page one's answers.) The filter is a pass over a
+  // handful of authored rows, so calling it per render is cheaper than any
+  // dependency list that would have to name the node AND every flag a
+  // `requires:` row reads.
+  const choices = talkChoices(state);
   const [cursor, setCursor] = useState(0);
 
   // A fresh node re-homes the cursor. Adjusted DURING RENDER (React's supported

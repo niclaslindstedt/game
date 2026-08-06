@@ -1311,7 +1311,21 @@ questGivers:
       - YOU'RE THE FIRST IN A WHILE. CAN I ASK YOU A FAVOR?
     farewell: # optional, once everything of theirs is done
       - MIND THE TRAYS ON YOUR WAY OUT.
+    intro: # optional: a MEETING owed before any errand is offered
+      conversation: mymod_keeper_meeting # one of your `conversations/`
+      until: mymod_keeper_met # a flag some branch of it sets
 ```
+
+**`intro:` is how somebody gets introduced before they start asking.** The first
+tap opens that conversation tree instead of the errand slate; the slate opens
+from the tap after `until` is set, and the tree is never seen again. It is worth
+reaching for when the reason a person is standing on your map is the reason
+their errands make sense — a slate that opens cold makes a giver read as a
+dispenser. Two things the build refuses, because both are silent at runtime: an
+`until` no branch of any conversation sets (the meeting could never end, so the
+errands could never be offered), and a `conversation` that does not exist.
+Walking away mid-talk is free — author a `reentry:` on the flag your first
+branch sets and they pick up where they stopped.
 
 Each errand is its own file under `quests/`, the stem being its id:
 

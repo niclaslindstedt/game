@@ -31,15 +31,22 @@ questGivers:
     sprite: qg_ruth
     at: { x: 176, y: 176 }
     lore: >
-      Ada's mother, who has a key to the garage and always has. Once the
-      voyages start she is simply there between them, standing by the engine
-      parts, because waiting at home means staring at the phone. She was
-      never once scared for her daughter — she raised her — and what she
-      asks for is the one thing a search party cannot bring back: something
-      of Ada's.
+      Ada's mother, who has a key to the garage and always has. She drove out
+      on the midnight call that would not say her daughter's name, and between
+      the voyages she is simply there by the engine parts, because waiting at
+      home means staring at the phone. She was never once scared for her
+      daughter — she raised her — and what she asks for is the one thing a
+      search party cannot bring back: something of Ada's.
+    # THE MEETING COMES FIRST. Her three errands all come out of one talk on
+    # the night she arrived, so the first tap plays that talk and the slate
+    # opens from the tap after it (the greeting below is the header she then
+    # wears every time he comes back).
+    intro:
+      conversation: ruth_arrival
+      until: ruth_met
     greeting:
       - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-      - WHEN YOU'RE OUT THERE - BRING ME SOMETHING OF HERS.
+      - I'VE HAD ANOTHER THINK ABOUT WHAT TO ASK YOU FOR.
     farewell:
       - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
