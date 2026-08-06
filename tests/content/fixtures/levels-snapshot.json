@@ -1473,6 +1473,7 @@
       "gravity": 800,
       "revealed": true,
       "biome": "goodco",
+      "sky": "earth",
       "tiles": {
         "ground": {
           "common": "cement_0",

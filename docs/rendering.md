@@ -375,6 +375,99 @@ canvas's own `contextrestored` — the paint must therefore draw the canvas from
 scratch, sizing included, since a restored context comes back blank. Nothing
 else in the app may assume a canvas it drew is still on screen.
 
+## The night, and what burns in it
+
+**A VENUE MAY KNOW WHAT TIME IT IS, AND EXACTLY ONE OF THEM DOES.** A mission
+that names a `sky` (only the GARAGE, the hub the player keeps coming back to)
+has its light follow the player's own clock: `render/night.ts` washes the
+finished world picture down toward a cold blue-black and the map's own lamps
+burn holes back in it. **Three owners, and they do not overlap** — the MISSION
+says whether the venue has a sky at all, the APP reads the hour and hands the
+run a `daylight` level as a session parameter (`RunParams.daylight`, because
+`step()` may not touch a clock and a party in two time zones must play in one
+night), and this file decides what the dark looks like. `nightAmount(state)`
+(`src/game/daylight.ts`) is the one accessor that folds the first two together.
+
+**IT CHANGES NOTHING ABOUT THE SIMULATION, on purpose.** Sight, aggro, weapon
+reach and spawns are what they are at noon; a hero is not blinded by a sunset
+and a mob does not creep up on him because the screen went dark. The night is
+the same class of thing as the vignette — and it is deliberately NOT the fog,
+which is a different darkness with a different meaning (ground nobody has
+walked). The night goes down first, the fog on top of it.
+
+**IT IS A HOLE-PUNCH, NOT A PILE OF GLOWS, and that is the whole of why it does
+not look cheap.** The wash is one flat sheet over the finished picture, and each
+lamp is ERASED out of that sheet (`destination-out`) rather than painted on top
+of it — so the artwork comes back through at full strength inside a pool, which
+is what light does to a picture, instead of the dark floor plus a coloured haze
+that additive glows give you. The lamp's own colour is then added back at a
+fraction (`LAMP_TINT`), which is what makes one pool sodium-warm and the next
+one fluorescent-cold. Two other things it must do, both learned from the
+screenshot: each pool is cut with TWO LOBES (a narrow strong one over a wide
+faint one), because a linear gradient cut from a flat sheet has a visible rim
+and reads as a disc laid on the ground; and each is SQUASHED BY THE PITCH,
+because a pool lies on the ground plane and a round one on a raked floor reads
+as a glow hanging in the air.
+
+**IT LIVES ON THE CANVAS RATHER THAN IN CSS** with the grade and the vignette
+above, and the reason is the lamps: those three are broad screen-space washes
+with nothing in them to line up with the world, while every lamp here is pinned
+to a spot on the FLOOR — it pans with the camera and foreshortens with the
+pitch. One thing to know if a wash ever comes out invisible: `ctx.save()`
+preserves the composite mode and the alpha rather than resetting them, so the
+sheet's blit states `source-over` outright. Blitted under a `lighter` some
+earlier pass left behind, a near-black sheet ADDS nothing at all and looks
+exactly like a pass that never ran.
+
+**A ROOM IS LIT AS A ROOM, NOT AS A POOL.** The second instrument is
+`LevelDef.litZones` — a carved district whose blueprint area carries a `lit`,
+cut out of the sheet as its own RECT rather than as a circle. The garage bay is
+one: it is a garage, the strip lights are on, and the honest picture of that is
+the whole floor up to the walls. A pool big enough to fill a room spills half of
+itself through the wall onto whatever is behind it, which is the one thing a
+radial light cannot be talked out of. The rect is cut from its four PROJECTED
+corners, so it turns with the floor under a yaw instead of peeling away from the
+building it belongs to.
+
+**EVERY POOL OUTDOORS NEEDS SOMETHING DRAWN THROWING IT.** A light with no
+fixture over it does not read as a lamp, it reads as a bug — "a light bulb in
+nowhere" was the exact verdict the first pass earned. So a blueprint's `light`
+object carries a `fixture` sprite (the barn lights flanking the garage door, the
+yard post on the lawn) and the map schema WARNS when one has neither that nor a
+reason to be exempt. The two exemptions are real and narrow: a fitting that
+genuinely hangs off the ground plane, and a pool pinned to something the game
+already draws (the trader's back-lit machine, which is why `at: counter` exists).
+
+**AND THE FIXTURE RIDES THE LIGHT, NOT THE LANDMARK LIST — because of the draw
+order.** Landmarks are painted before the level's obstacles, so a barn light
+bolted to a wall came out with its top half cut off by the stone in front of it,
+and standing it clear of the wall to dodge that left the lamp hanging in
+mid-driveway. `LevelLight.sprite` plus a `drawLamps` pass immediately AFTER
+`drawObstacles` is what lets a fitting sit on the wall it is bolted to. That
+pass runs in daylight too: a lamp is hardware, and a wall that grows a light
+fitting at dusk is a bug — only the pool under it belongs to the night.
+
+**A CAR'S HEADLIGHTS ARE A BEAM, AND THE SHAPE IS THE POINT.** Two round pools
+ahead of the bumper was the first attempt: a pool has no direction, so a car
+crossing the drive looked like it was carrying a lantern. The wedge — narrow at
+the lamps, spreading down the road, running out at the end — says which way the
+car is pointing before the sprite does. It is painted as a CHAIN of overlapping
+soft pools walked down `CarVehicle.heading` rather than as a clipped triangle:
+a clip has no edge treatment at all, so the wedge came out with two razor lines
+across the pavement, which is a searchlight in fog rather than a headlight on
+tarmac. Nine cached blits have the same silhouette and feather on every side for
+free.
+
+**KEEP THE POOLS SMALL, and judge it at the phone viewport.** The garage is
+512×280 world units and the landscape view sees ~422×260 of it, so two lamps
+whose tails touch light the whole lot back to daylight — which is precisely how
+the first pass of this came out, and it read as "someone turned the brightness
+down" rather than as night. The shipped composition is four small pools (the
+flood over the roll-up door, the bay's tube over the car, the vending machine at
+its counter, the ship's work lamp) with real dark between them, plus a small one
+every hero in play carries — the concession that makes a dark venue playable
+without either brightening the night or inventing a flashlight item.
+
 ## Mobile-first, landscape — and the scale tiers
 
 **Mobile-first, landscape.** The reference device is a phone held

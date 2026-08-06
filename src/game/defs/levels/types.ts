@@ -299,6 +299,85 @@ export type WaveSpec = {
   budget: WaveBudget[];
 };
 
+/**
+ * The SKY a venue stands under — the levels whose light follows the clock (see
+ * `src/game/daylight.ts`, which owns the curve and the reasoning).
+ *
+ * One kind today, and a named kind rather than a boolean because the question a
+ * second one would ask is a real one: a venue lit by something other than
+ * Earth's sun wants its own curve and its own colour, and `sky: earth` is
+ * already the honest answer for the garage rather than `outdoors: true`.
+ */
+export type SkyKind = "earth";
+
+/**
+ * ONE LAMP on a carved map — a pool of light lying on the ground plane, drawn
+ * only into the dark (see {@link LevelDef.lights}).
+ *
+ * It is described in world units and plain colours because the renderer is the
+ * only thing that ever reads one: the engine carries lamps the way it carries
+ * `biome` and `sprite` names, without knowing what light is.
+ */
+/**
+ * A DISTRICT THAT IS LIT FROM WITHIN — a roofed room whose own lights are on,
+ * so the venue's night stops at its walls (see {@link LevelDef.litZones}).
+ *
+ * A rect rather than a pool, because that is the difference it exists to make:
+ * a room is lit up to its walls and not one pixel past them, which no radial
+ * lamp can express. Carved from a blueprint area's `lit`.
+ */
+export type LevelLitZone = {
+  /** The floor it covers (world px) — a carved chamber's own rect. */
+  rect: { x: number; y: number; width: number; height: number };
+  /** How much of the night it holds off, 0–1 (1 = as bright as noon). */
+  amount: number;
+};
+
+export type LevelLight = {
+  /** Where it falls on the floor (world px). */
+  pos: Vec2;
+  /**
+   * THE FIXTURE — the sprite of the thing throwing it (a barn light on a wall,
+   * a post on a lawn), drawn at `pos` with its foot on the ground.
+   *
+   * It rides the LIGHT rather than being a landmark, and that is not a
+   * bookkeeping choice: a landmark is painted before the level's obstacles are,
+   * so a lamp bolted to a wall came out with its top half cut off by the stone
+   * in front of it. The renderer draws these in their own pass AFTER the walls
+   * (`drawLamps`), which is what lets a fitting sit ON the wall it is bolted to
+   * instead of standing shyly clear of it in the driveway. It also keeps
+   * `landmarks` meaning what it means — a story prop the scatter avoids and the
+   * app hit-tests.
+   *
+   * Omitted where the fitting genuinely is not on the ground plane (a gantry
+   * light) or where something already drawn is obviously the source (the
+   * trader's back-lit machine).
+   */
+  sprite?: string;
+  /** How far the pool reaches (world px) — the radius its light fades to
+   * nothing at. */
+  radius: number;
+  /**
+   * The colour it burns, as a CSS colour the renderer tints its glow with.
+   * Omitted = the warm tungsten a porch light throws.
+   */
+  color?: string;
+  /**
+   * How hard it burns, 0–1 (default 1): how much of the night it lifts at its
+   * centre. Below 1 the pool never quite reaches full daylight, which is what a
+   * lamp in a big dark yard actually looks like.
+   */
+  intensity?: number;
+  /**
+   * How much it FLICKERS, 0–1 (default 0 — a steady lamp). A tired fluorescent
+   * tube over a workbench wavers; a sodium flood outside does not. The waver is
+   * drawn off the render clock and the lamp's own position, never off a run's
+   * rng: a cosmetic draw taken from `state.rng()` would shift every loot roll
+   * after it (see AGENTS.md).
+   */
+  flicker?: number;
+};
+
 export type LevelDef = {
   /** Registry key. */
   id: string;
@@ -328,6 +407,42 @@ export type LevelDef = {
   gravity: number;
   /** Tileset/mood key for the renderer. */
   biome: string;
+  /**
+   * THE SKY THIS VENUE STANDS UNDER — present, its light follows the clock
+   * (`src/game/daylight.ts`): the run is handed a `daylight` level as a session
+   * parameter and the renderer washes the field down toward night, with the
+   * map's own {@link LevelDef.lights} burning in it.
+   *
+   * Omitted is the answer for almost everything the game ships: an airless
+   * regolith, a rift, a sealed corridor and a lit warehouse floor look the same
+   * at midnight as at noon, and a venue that never opted in is never dimmed.
+   * The GARAGE opted in because the story starts there at night and because
+   * home is the one place the player comes back to often enough to notice that
+   * it is evening.
+   */
+  sky?: SkyKind;
+  /**
+   * THE LAMPS BURNING ON THIS MAP — pools of light on the ground plane, drawn
+   * only once the venue's `sky` has gone dark (a lamp at noon is a lamp nobody
+   * can see). Carved from the blueprint's `light` objects and the `light:` block
+   * on its approach door, so a mission never authors one itself.
+   *
+   * Purely presentational, like the night they burn in: a lamp reveals no fog,
+   * lights no target and changes no reach. It is a place the player can see
+   * what he is doing.
+   */
+  lights?: LevelLight[];
+  /**
+   * THE ROOMS WHOSE OWN LIGHTS ARE ON — carved from the blueprint areas that
+   * carry a `lit`, and read only once the venue's `sky` has gone dark. The
+   * garage BAY is one: it is a garage, the strip lights are on, and the night
+   * outside stops at its wall.
+   *
+   * Presentational like {@link LevelDef.lights}, and the two are different
+   * instruments on purpose: a lamp is a POOL with a soft edge that spills where
+   * it likes, a lit zone is a ROOM with hard edges that are its walls.
+   */
+  litZones?: LevelLitZone[];
   /**
    * Music track id for this level (a key into the app's music registry, like
    * `biome` and `sprite` — the engine stays audio-free and never plays it).

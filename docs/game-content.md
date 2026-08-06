@@ -37,6 +37,31 @@ authored on the hub as `travelDoors`, and **a road the player has not earned is
 never named** — a door with no open destination either says so in the hero's own
 voice (`unready`) or is not drawn at all.
 
+## Home knows what time it is
+
+A venue may stand under a **sky** (`sky: earth` on the mission), and then its
+light follows the player's own clock — bright at noon, dark by ten in the
+evening, with a long ramp either side. **Exactly one venue opted in: the
+GARAGE.** Everything else the campaign visits is airless, sealed or
+underground, and a level that names no sky is never dimmed by anybody's watch.
+
+Two rules hold it up, and both are about who owns which fact. The engine never
+reads a clock — `step()` is deterministic, so the APP reads the hour once and
+hands the run a `daylight` level as a session parameter, which is also what puts
+a whole hosted party in ONE night rather than one per time zone. And **the story
+outranks the clock**: the visit that plays a venue's opening is the night the
+script says it is, so the campaign still starts on the evening Ada walks out for
+chips, whatever time the player picked up the game. From the second visit home
+keeps the player's own hours.
+
+What burns in that dark is the blueprint's: the two barn lights bolted either
+side of the roll-up door, the yard post out on the lawn, the trader's own
+back-lit machine — and the BAY itself, which is lit as a room, up to its walls,
+because it is a garage with the lights on. A driven car brings its headlights
+with it. What the dark LOOKS like is the renderer's (`docs/rendering.md`), and
+none of it touches a rule: sight, reach, aggro and spawns are exactly what they
+are at noon.
+
 ## What carries between levels
 
 Clearing a level banks a **loadout snapshot** — level, stats, worn equipment,

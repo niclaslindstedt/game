@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: wall_lamp
+family: goodco
+size: [10, 11]
+description: >
+  The barn light bolted beside the garage's roll-up door — a plate on the
+  wall, a short gooseneck arm, and a wide steel hood with a warm lens burning
+  under it. A pair of these is what lights the driveway after dark.
+subject:
+  kind: "wall-mounted outdoor lamp prop"
+  build: "a wall plate and a short arm carrying a wide conical hood, hood wider than the plate"
+  features: "ribbed steel hood, a glowing lens filling its underside"
+  accent: "cold galvanized grey against a hot amber lens"
+  flavor: "the light that has been left on over that door for as long as anyone remembers"
+palette:
+  O: "#1a1c2c" # outline
+  t: "#aab0be" # bracket highlight
+  s: "#818690" # bracket metal
+  b: "#3f4553" # shadowed metal
+  T: "#dde1ea" # hood top highlight
+  V: "#c0c5cf" # hood face
+  v: "#9095a5" # hood underside shade
+  y: "#ffcf6e" # warm lens
+  w: "#fff4cf" # hot lens core
+grid: |
+  ...OOO....
+  ..OtssO...
+  ..OssbO...
+  ...OsO....
+  .OOOOOOOO.
+  OTTTTTTTTO
+  OVVVVVVVVO
+  OvvvvvvvvO
+  .OyyyyyyO.
+  ..OwwwwO..
+  ...wyyw...

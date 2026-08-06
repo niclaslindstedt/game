@@ -46,6 +46,7 @@ const OBJECT_TYPES = new Set([
   "critter",
   "lair",
   "door",
+  "light",
 ]);
 
 // Which extra fields each purpose is allowed to carry. `id`/`type`/`kind`/
@@ -86,8 +87,14 @@ const ALLOWED_FIELDS = {
   critter: ["density", "areas", "animated", "range", "speed", "scale"],
   lair: ["w", "h", "door", "doorOpen", "trigger", "areas"],
   // An APPROACH door hung across the spawn chamber's doorways (the garage
-  // door): a chain of `radius` circles wearing `sprite`, placed by rule.
-  door: ["radius"],
+  // door): a chain of `radius` circles wearing `sprite`, placed by rule — and
+  // optionally the PAIR OF LAMPS bolted either side of the opening, hung with
+  // it because only the carve knows where the opening ended up.
+  door: ["radius", "lamps"],
+  // A LAMP: a pool of light pinned to a carved anchor, a nudge off it, burning
+  // only once the venue's sky has gone dark — plus, unless the fitting is
+  // genuinely overhead, the FIXTURE throwing it.
+  light: ["at", "offset", "light", "fixture"],
 };
 
 // Purposes that may be restricted to a district. A `wall`, `chest` or `landmark`
@@ -115,7 +122,7 @@ const NEEDS_DENSITY = new Set([
   "critter",
 ]);
 
-const ANCHORS = new Set(["spawn", "goal", "stall", "home"]);
+const ANCHORS = new Set(["spawn", "goal", "stall", "counter", "home"]);
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
 const isPosNum = (v) => isNum(v) && v > 0;
@@ -223,6 +230,29 @@ export function validateMap(bp, refs, description = "") {
     } catch (e) {
       err(`${where}: ${e.message}`);
     }
+  };
+  /** A lamp's numbers — the `light:` block on a `light` object, and the one
+   * inside a door's `lamps` (see `MapLightSpec`). */
+  const checkLight = (light, where) => {
+    if (!isPosNum(light.radius)) err(`${where}: light.radius must be positive`);
+    // A pool wider than the phone's whole landscape view lights the LEVEL
+    // rather than a place in it, which is the one thing a lamp must not do —
+    // and on a small lot two of those wash the night away entirely.
+    else if (light.radius > 200)
+      warnings.push(
+        `${tag}: ${where} light.radius ${light.radius} is wide — a pool much ` +
+          `past this reads as daylight rather than as a lamp`,
+      );
+    for (const key of ["intensity", "flicker"]) {
+      const v = light[key];
+      if (v !== undefined && (!isNum(v) || v < 0 || v > 1))
+        err(`${where}: light.${key} must be a fraction in [0, 1]`);
+    }
+    if (light.color !== undefined && typeof light.color !== "string")
+      err(`${where}: light.color must be a colour string`);
+    for (const key of Object.keys(light))
+      if (!["radius", "color", "intensity", "flicker"].includes(key))
+        err(`${where}: light has no field "${key}"`);
   };
 
   // ---- sizes ---------------------------------------------------------------
@@ -358,6 +388,19 @@ export function validateMap(bp, refs, description = "") {
               `puts the strip wherever the seed likes, which is not a road`,
           );
       }
+      if (a.lit !== undefined) {
+        if (!isNum(a.lit) || a.lit < 0 || a.lit > 1)
+          err(`${where}: lit must be a fraction in [0, 1]`);
+        // A lit district is a ROOM with its lights on, and the shape of it is
+        // its walls. On open ground the carve emits a rectangle of daylight
+        // sitting in the middle of a night, and nothing about it reads as
+        // anything but a bug.
+        else if (a.lit > 0 && a.enclosure !== "hard")
+          err(
+            `${where}: only a "hard" district may be lit — an open district's ` +
+              `rect has no walls to stop the light at`,
+          );
+      }
       if (a.lock !== undefined) {
         if (typeof a.lock !== "boolean")
           err(`${where}: lock must be a boolean`);
@@ -412,6 +455,7 @@ export function validateMap(bp, refs, description = "") {
         "once",
         "blocks",
         "lock",
+        "lit",
       ]);
       for (const key of Object.keys(a))
         if (!allowed.has(key)) err(`${where}: unknown field "${key}"`);
@@ -515,8 +559,10 @@ export function validateMap(bp, refs, description = "") {
       // else), so the palette entry is purely the declaration that this map pays
       // its dead ends out.
       const base = o.sprite ?? o.kind ?? o.id;
-      if (o.type === "chest") {
-        // nothing to check
+      if (o.type === "chest" || o.type === "light") {
+        // Neither names a `sprite`: a chest is drawn from the engine's own art,
+        // and a lamp's art — if it has any on the ground plane at all — is its
+        // `fixture`, checked with the rest of its own fields below.
       } else if (o.type === "critter" && o.animated) {
         // the two walk frames are checked below, not the base name
       } else if (Array.isArray(o.rockSizes)) {
@@ -618,6 +664,48 @@ export function validateMap(bp, refs, description = "") {
         )
           err(`${where}: anchor must be "base" or "center"`);
       }
+      // THE LAMP'S OWN NUMBERS — on a `light` (where a light block is
+      // mandatory: a lamp with no light compiles to nothing at all) and inside
+      // a door's `lamps`.
+      if (o.type === "door" && o.lamps !== undefined) {
+        const where2 = `${where} lamps`;
+        if (typeof o.lamps.sprite !== "string")
+          err(`${where2}: needs a fixture sprite`);
+        else sprite(o.lamps.sprite, where2);
+        if (o.lamps.inset !== undefined && !isPosNum(o.lamps.inset))
+          err(`${where2}: inset must be positive`);
+        if (o.lamps.light === undefined) err(`${where2}: needs a light block`);
+        else checkLight(o.lamps.light, where2);
+        for (const key of Object.keys(o.lamps))
+          if (!["sprite", "inset", "light"].includes(key))
+            err(`${where2}: has no field "${key}"`);
+      }
+      if (o.type === "light") {
+        if (!ANCHORS.has(o.at))
+          err(`${where}: light "at" must be one of ${[...ANCHORS].join(", ")}`);
+        if (
+          o.offset !== undefined &&
+          (!isNum(o.offset.x) || !isNum(o.offset.y))
+        )
+          err(`${where}: offset needs numeric x/y`);
+        if (o.light === undefined) err(`${where}: a light needs a light block`);
+        if (o.fixture !== undefined) {
+          if (typeof o.fixture !== "string")
+            err(`${where}: fixture must be a sprite name`);
+          else sprite(o.fixture, `${where} fixture`);
+        } else if (o.at !== "counter") {
+          // Not an error — a gantry light hangs off the ground plane and has
+          // nothing to draw — but it is the mistake worth naming, because a
+          // pool on open ground with nothing above it reads as a bug rather
+          // than as a lamp. `counter` is exempt: the trader's own machine is
+          // standing in that spot, drawn, and is obviously the source.
+          warnings.push(
+            `${tag}: ${where} has no fixture — nothing on the ground will be ` +
+              `throwing this light`,
+          );
+        }
+      }
+      if (o.light !== undefined) checkLight(o.light, where);
       if (o.areas !== undefined) {
         if (!DISTRICTABLE.has(o.type))
           err(

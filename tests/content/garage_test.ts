@@ -18,6 +18,7 @@ import {
   LEVELS,
   MAP_BLUEPRINTS,
   markThoughtsSeen,
+  nightAmount,
   resolveLevelDef,
   SECRET_LEVEL_ORDER,
   skipCutscene,
@@ -101,6 +102,94 @@ describe("the counter", () => {
     run(state, 120);
     expect(state.phase).toBe("playing");
     expect(state.merchant.moving).toBe(false);
+  });
+});
+
+describe("the night", () => {
+  it("is the one venue in the game that stands under a sky", () => {
+    expect(garage.sky).toBe("earth");
+    // The claim the whole feature rests on: nothing else opted in, so no other
+    // map in the campaign can be dimmed by an hour on anybody's clock.
+    for (const id of [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]) {
+      if (id === "garage") continue;
+      expect(LEVELS[id]?.sky, `level "${id}"`).toBeUndefined();
+    }
+  });
+
+  it("lights the bay as a ROOM — up to its walls, not a pool in the middle", () => {
+    const lit = carved.litZones ?? [];
+    expect(lit.length).toBe(1);
+    // The bay's own cell, and only it: the drive, the lawn and the road are
+    // open ground and go dark with the sky.
+    const bay = lit[0]!;
+    expect(bay.amount).toBeGreaterThan(0.5);
+    expect(bay.amount).toBeLessThan(1);
+    expect(bay.rect.width).toBeGreaterThan(100);
+    // The hero lands in his own garage, so his landing is inside the lit room.
+    expect(carved.playerSpawn.x).toBeGreaterThanOrEqual(bay.rect.x);
+    expect(carved.playerSpawn.x).toBeLessThanOrEqual(
+      bay.rect.x + bay.rect.width,
+    );
+    expect(carved.playerSpawn.y).toBeGreaterThanOrEqual(bay.rect.y);
+    expect(carved.playerSpawn.y).toBeLessThanOrEqual(
+      bay.rect.y + bay.rect.height,
+    );
+  });
+
+  it("flanks the roll-up door with two lamps that are really there", () => {
+    const lights = carved.lights ?? [];
+    // The yard post on the lawn, the machine at the counter, and one barn
+    // light at each end of the door's chain.
+    expect(lights.length).toBe(4);
+    const door = carved.doors?.find((d) => d.id === "garage_door");
+    expect(door).toBeDefined();
+    const flanking = lights.filter((l) => l.sprite === "wall_lamp");
+    expect(
+      flanking.length,
+      "the roll-up door has no lamps beside it — the drive is dark at night",
+    ).toBe(2);
+    // One at each END of the chain, and both OUTSIDE the bay — which is the
+    // whole point: they are what lights the driveway.
+    for (const lamp of flanking) {
+      expect(lamp.pos.x).toBeGreaterThan(door!.from.x);
+      const clearsOpening =
+        lamp.pos.y < door!.from.y || lamp.pos.y > door!.to.y;
+      expect(clearsOpening, "a lamp stands in the doorway itself").toBe(true);
+    }
+    // EVERY pool has something drawn throwing it. A light with no fixture over
+    // it reads as a bug rather than as a lamp — the one exception is the
+    // trader's own machine, which is drawn where it stands, so its pool is the
+    // only one on this map allowed to carry no sprite.
+    const sourceless = lights.filter((l) => !l.sprite);
+    expect(sourceless.length).toBe(1);
+    expect(
+      sourceless[0]!.pos,
+      "the only lamp with no fixture must be the trader's own machine",
+    ).toEqual(carved.merchantSpawns?.[0]);
+    // …and a fixture is never a LANDMARK: landmarks are painted before the
+    // walls are, so a lamp bolted to one would have its top cut off (it rides
+    // the light instead — see `LevelLight.sprite`).
+    for (const mark of carved.landmarks) {
+      expect(["wall_lamp", "lamp_post"]).not.toContain(mark.sprite);
+    }
+    // Every lamp lands on the lot rather than off the edge of it, and none is
+    // so wide it lights the whole venue back to daylight.
+    for (const light of lights) {
+      expect(light.pos.x).toBeGreaterThanOrEqual(0);
+      expect(light.pos.x).toBeLessThanOrEqual(carved.width);
+      expect(light.pos.y).toBeGreaterThanOrEqual(0);
+      expect(light.pos.y).toBeLessThanOrEqual(carved.height);
+      expect(light.radius).toBeLessThan(carved.width / 4);
+    }
+  });
+
+  it("is dark on the night the story opens, and daylight is only a parameter", () => {
+    // The engine never reads a clock: a run is handed its hour, and a run
+    // handed none is in full daylight (see src/game/daylight.ts).
+    expect(nightAmount(startHome())).toBe(0);
+    const night = startHome();
+    night.daylight = 0;
+    expect(nightAmount(night)).toBe(1);
   });
 });
 

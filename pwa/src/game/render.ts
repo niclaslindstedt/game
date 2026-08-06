@@ -39,6 +39,7 @@ import { drawEliteAuras } from "./render/elite-fx.ts";
 import { drawBossRite } from "./render/boss-rite.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
+import { drawLamps, drawNight } from "./render/night.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
 import {
   drawAsteroids,
@@ -223,6 +224,11 @@ export function drawFrame(
   drawVehicles(ctx, state, sprites, camera, inView, timeMs);
   drawBossCorpseRing(ctx, state, camera, inView, timeMs);
   drawObstacles(ctx, state, sprites, camera, inView);
+  // THE LAMPS — the fittings themselves (render/night.ts), immediately after
+  // the walls and for that reason: a barn light is BOLTED to one, and painted
+  // any earlier its top half is cut off by the stone in front of it. Drawn in
+  // daylight too — only the light it throws belongs to the night.
+  drawLamps(ctx, state, sprites, camera, inView);
   drawWells(ctx, state, sprites, camera, inView, timeMs);
   // The door on an occupied house, over the structure it is set into.
   drawLairs(ctx, state, sprites, camera, inView);
@@ -334,6 +340,15 @@ export function drawFrame(
 
   // The tilted world ends here: what follows covers the SCREEN.
   ctx.restore();
+
+  // NIGHTFALL — on a venue that stands under a sky (the garage, and nothing
+  // else the game ships), the whole picture washes down toward the dark and the
+  // map's own lamps burn holes back in it (render/night.ts). Before the fog and
+  // after everything that walks, because it is the LIGHT on the field: a body
+  // standing in an unlit corner is dim, and the fog on top of it is the
+  // separate darkness of ground nobody has walked yet. Costs nothing in
+  // daylight, and nothing at all on a venue with no sky.
+  drawNight(ctx, state, camera, view, timeMs);
 
   // Fog of war — over the world, under the HUD/flash (StarCraft/Warcraft): the
   // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's

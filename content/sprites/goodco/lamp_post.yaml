@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: lamp_post
+family: goodco
+size: [8, 15]
+description: >
+  The yard light out on the back lawn — a plain steel post with a small hooded
+  head and a lens burning under it. It is what keeps the grass around the
+  rocket findable after dark.
+subject:
+  kind: "standing outdoor lamp post prop"
+  build: "a slim post carrying a small hooded lamp head, head wider than the post"
+  features: "a ribbed post, a hood with a lit lens beneath it, a flared foot"
+  accent: "cold galvanized grey against a hot amber lens"
+  flavor: "put up to light the driveway years before there was a rocket on the grass"
+palette:
+  O: "#1a1c2c" # outline
+  T: "#dde1ea" # hood highlight
+  V: "#c0c5cf" # hood face
+  v: "#9095a5" # hood shade
+  s: "#818690" # post metal
+  b: "#5a616f" # post shadow side
+  y: "#ffcf6e" # warm lens
+  w: "#fff4cf" # hot lens core
+grid: |
+  ..OOOO..
+  .OTTVvO.
+  .OyyyyO.
+  ..OwwO..
+  ...ww...
+  ...sb...
+  ...sb...
+  ...sb...
+  ...sb...
+  ...sb...
+  ...sb...
+  ...sb...
+  ...sb...
+  ..OssO..
+  ..OOOO..
