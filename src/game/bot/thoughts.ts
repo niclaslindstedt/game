@@ -143,6 +143,10 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   // token and hunting its breed read as one sustained intent.
   "ON ERRAND": { family: "errand", rank: 20, tier: "state" },
   "FETCH TOKEN": { family: "errand", rank: 20, tier: "state" },
+  // Walking somebody to a door (errands.ts `escortGoal`) — the same family, so
+  // the leg and the turn-back it alternates with read as one sustained walk
+  // rather than two thoughts trading the bubble.
+  "WALK THEM": { family: "errand", rank: 20, tier: "state" },
   "FOLLOW ARROW": { family: "arrow", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },
   // ── Standing easy.

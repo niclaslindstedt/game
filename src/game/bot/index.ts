@@ -55,6 +55,7 @@ import {
 } from "./dodges.ts";
 import { pushBoss, survive } from "./fight.ts";
 import { wantsMerchantVisit } from "./economy.ts";
+import { errandGiver, trackErrandAbandon } from "./errands.ts";
 import { atHub, driveOutInput, hubGoal, trackHubShop } from "./hub.ts";
 import { macroSteer, trackEngagement, unstuckInput } from "./macro.ts";
 import { applyPartySpacing } from "./party-play.ts";
@@ -179,10 +180,17 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
     think(bot, "DRIVE OUT");
     return drive;
   }
+  // THE ERRAND BOOKKEEPING (errands.ts): gauge headway toward the person the
+  // bot committed to walking over to, and write them off if the march makes
+  // none — the errand rung sits high enough that a giver a carve walled off
+  // would pin the run rather than cost a detour. Above the empty-field branch
+  // (which returns) because a cleared floor is exactly when a slate gets
+  // worked.
+  trackErrandAbandon(bot, state, hero);
   // The hub's own bookkeeping (hub.ts): gauge how long the hero has stood at
   // the counter with the shop errand still unfinished, so a want no trade can
-  // satisfy can't park the ride in its own driveway. Above the empty-field
-  // branch because a hub is EXPECTED to be empty — that branch returns.
+  // satisfy can't park the ride in its own driveway. Same reason for the
+  // placement.
   const homeShop = atHub(state) && wantsMerchantVisit(state, hero);
   if (atHub(state)) trackHubShop(bot, state, hero, homeShop);
   // A clear field: nothing to fight, so the loop below would just idle — but a
@@ -216,13 +224,14 @@ function decideAct(bot: Bot, state: GameState, hero: Player): GameInput {
       think(bot, "STORM");
       return sprint(stormDodge);
     }
-    // …EXCEPT AT HOME, WHERE AN EMPTY FIELD IS THE NORMAL STATE OF THE LEVEL.
-    // A hub never places a knot (`horde: 0` on every area), so "nothing to
-    // fight" is not a lull the bot should stand easy through — it is the
-    // garage, and there is a slate to work, a counter to clear and a car to
-    // take (`hub.ts`). This is the whole of the fix for an AUTO PILOT engaged
-    // at home doing nothing at all.
-    if (hubGoal(bot, state, hero, homeShop)) {
+    // …EXCEPT WHERE AN EMPTY FIELD STILL LEAVES SOMETHING TO DO. A hub never
+    // places a knot (`horde: 0` on every area), so "nothing to fight" is not a
+    // lull the bot should stand easy through — it is the garage, and there is a
+    // counter to clear and a car to take (`hub.ts`). And a PERSON with a mark
+    // over their head is worth walking to on any map, cleared or not: an
+    // errand handed in on swept ground is the level's last payout
+    // (`errands.ts`). Standing easy is what is left when neither answers.
+    if (errandGiver(bot, state, hero) || hubGoal(bot, state, hero, homeShop)) {
       return macroSteer(bot, state, hero, tune);
     }
     think(bot, "IDLE");

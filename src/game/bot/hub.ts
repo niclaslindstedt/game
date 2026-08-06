@@ -11,12 +11,12 @@
 // itself and `botAct`'s empty-field branch stood the hero still. Turning the
 // AUTO PILOT on in the garage did NOTHING, which is the bug this module is.
 //
-// What a player does at home is a short, ordered list, and it is the whole of
-// this module:
+// What a player does at home is a short, ordered list, and this module owns the
+// last two rungs of it:
 //
-//   1. THE PEOPLE — walk up to whoever has a `!` or a `?` over their head and
-//      TAP them: take the errand, hand in the finished one, sit through the
-//      meeting a person owes before their slate opens.
+//   1. THE PEOPLE — whoever has a `!` or a `?` over their head. NOT this
+//      module's any more: the bot works a slate on every map now, so the
+//      giver rung lives in `errands.ts` and outranks everything here.
 //   2. THE COUNTER — sell the haul, mend the kit, top the pouch back up. The
 //      trade itself is `economy.ts`'s (`tradeAtMerchant`); the hub only widens
 //      WHEN a visit pays, because at home the stall is on the way out.
@@ -31,21 +31,13 @@
 // **WHETHER THE COUNTER PAYS ARRIVES AS AN ARGUMENT**, rather than being read
 // here: `economy.ts` owns that question and reads {@link atHub} to answer it,
 // so asking it back would be a cycle. The callers already have it in hand.
-//
-// **THE ERRAND BOUNDARY MOVES AT HOME, AND ONLY AT HOME.** Out in the field the
-// bot never walks to a giver and never accepts anything: taking an errand
-// mid-fight is the player's decision (see `errands.ts`). The hub is the one
-// place where working the slate IS the level — it is why the room exists — so
-// the giver becomes a destination here and nowhere else.
 
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import { CAR } from "../vehicles.ts";
-import { QUESTS } from "../config/index.ts";
-
 import { runLevelDef } from "../defs/levels/index.ts";
-import { giverMark, giverTopics } from "../quests/index.ts";
+import { giverTopics } from "../quests/index.ts";
 import { talkChoices } from "../conversation.ts";
 import { anyZoneContains, type Zone } from "../zones.ts";
 import { MERCHANT } from "../config/index.ts";
@@ -66,41 +58,13 @@ export function atHub(state: GameState): boolean {
   return runLevelDef(state).objective.type === "hub";
 }
 
-/** A hub destination: where to walk, and the BOT VIEW label that names why. */
+/** A hub destination: where to walk, and the BOT VIEW label that names why.
+ * The PEOPLE are no longer one of them — a slate is worked on every map now
+ * (`errands.ts`), from a rung that outranks this one. */
 export type HubGoal = {
   pos: Vec2;
-  thought: "SEE FOLK" | "TO SHOP" | "TO CAR";
+  thought: "TO SHOP" | "TO CAR";
 };
-
-/** How close the bot walks before it TAPS a giver — comfortably inside
- * {@link QUESTS.tapRadius}, so the press lands on the first tick it arrives
- * rather than on the exact pixel the reach test happens to allow. */
-export const GIVER_REACH = QUESTS.tapRadius * 0.6;
-
-/**
- * THE PERSON WORTH WALKING TO: the nearest giver on this map with work to hand
- * out (`!`) or work to hand in (`?`), or null when everybody is done with the
- * hero for now.
- *
- * A `progress` mark — an errand of theirs already running — is deliberately NOT
- * a reason to walk over: the "not yet" nag is a conversation with nothing in
- * it, and a bot that kept opening it would stand there reading the same line
- * until the purse ran out. Pure.
- */
-export function hubGiverTarget(state: GameState, hero: Player): string | null {
-  let best: string | null = null;
-  let bestD = Infinity;
-  for (const giver of state.questGivers) {
-    const mark = giverMark(state, giver.id);
-    if (mark !== "offer" && mark !== "turnIn") continue;
-    const d = distance(hero.pos, giver.pos);
-    if (d < bestD) {
-      bestD = d;
-      best = giver.id;
-    }
-  }
-  return best;
-}
 
 /**
  * THE HUB'S CAR — the campaign's earthbound door, and the one door whose trip
@@ -180,11 +144,15 @@ export function trackHubShop(
 }
 
 /**
- * THE HUB'S TRAVEL PLAN — where the bot goes at home, in the order a player
- * works the room: the person with a mark over their head, then the counter,
- * then the car. Null when this is not a hub (every other level keeps the
- * ordinary macro ladder untouched) or when there is genuinely nothing left to
- * do here.
+ * THE HUB'S TRAVEL PLAN — where the bot goes at home once the SLATE is worked:
+ * the counter, then the car. Null when this is not a hub (every other level
+ * keeps the ordinary macro ladder untouched) or when there is genuinely
+ * nothing left to do here.
+ *
+ * The PEOPLE used to be this function's first rung and are not any more: a
+ * giver is a destination on every map now (`errands.ts` `errandGiver`), from a
+ * rung of the ladder that sits ABOVE this one — so the ordering a player works
+ * the room in survives, with the "who has a mark" half no longer written twice.
  *
  * `shopWanted` is `economy.ts`'s `wantsMerchantVisit` — see the module header
  * on why it arrives rather than being read.
@@ -200,11 +168,6 @@ export function hubGoal(
   shopWanted: boolean,
 ): HubGoal | null {
   if (!atHub(state)) return null;
-  const giverId = hubGiverTarget(state, hero);
-  if (giverId) {
-    const giver = state.questGivers.find((g) => g.id === giverId);
-    if (giver) return { pos: giver.pos, thought: "SEE FOLK" };
-  }
   if (shopWanted && !hubShopWrittenOff(bot, state)) {
     return { pos: state.merchant.pos, thought: "TO SHOP" };
   }
@@ -236,17 +199,13 @@ export type HubCommand = {
 
 /**
  * WHAT THE BOT PRESSES at home, as a verb the hosts send — the action half of
- * {@link hubGoal}, decided from the same state and never applied here.
+ * {@link hubGoal}, decided from the same state and never applied here: standing
+ * at the car with the room worked and the shopping done, `enterCar`, which
+ * starts the engine on the spot.
  *
- * At most one press per tick, in the order the run will accept them:
- *
- *   • standing at a giver with a mark → `talkToQuestGiver` (the ONLY door into
- *     a conversation — nothing opens itself, see `quests/index.ts` rule 2);
- *   • standing at the car with the shopping done → `enterCar`, which starts
- *     the engine on the spot.
- *
- * Working a conversation once it is OPEN is {@link botScreenCommand}'s job,
- * because an open screen is not a hub thing: a giver stands on most maps.
+ * The giver's own press is `errands.ts` `giverTapCommand` (it happens on every
+ * map), and working a conversation once it is OPEN is {@link botScreenCommand}'s
+ * job — neither is a hub thing any more.
  *
  * Null whenever there is nothing in reach, which is most ticks. Pure.
  */
@@ -266,15 +225,11 @@ export function hubTapCommand(
   // in the same place), so a ladder that boarded whatever was in reach drove
   // out on the first tick of every visit, past a mother with a `!` over her
   // head and a counter full of unsold loot. Asking `hubGoal` what he is doing
-  // keeps the two in step by construction.
+  // keeps the two in step by construction — and the giver rung above it in the
+  // macro ladder is what keeps `hubGoal` silent while somebody is still owed a
+  // conversation.
   const goal = hubGoal(bot, state, hero, shopWanted);
   if (!goal) return null;
-  if (goal.thought === "SEE FOLK") {
-    const giverId = hubGiverTarget(state, hero);
-    return giverId && distance(hero.pos, goal.pos) <= GIVER_REACH
-      ? { name: "talkToQuestGiver", args: [giverId] }
-      : null;
-  }
   if (goal.thought === "TO CAR") {
     const car = hubCar(state);
     return car && distance(hero.pos, car.pos) <= CAR.boardRadius

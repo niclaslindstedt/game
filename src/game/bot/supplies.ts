@@ -328,6 +328,35 @@ export function nearestWantedItem(
   return best;
 }
 
+/**
+ * The nearest BANKABLE quest token on the floor, or undefined — the "prioritize
+ * the errand's loot" read {@link wantedItemNearby} takes before anything else
+ * on the ground.
+ *
+ * Same two refusals every wanted pickup gets, and for the same reasons: a drop
+ * inside a gravity well's PULL is chased into the hole, and one the hero's body
+ * cannot sweep STRAIGHT to grinds the march into a grab → wedge → unstick loop.
+ * A token behind a wall is not abandoned by skipping it here — it is a macro
+ * GOAL as well (`errands.ts` `questObjectiveTarget`), which routes around walls
+ * properly instead of steering at them.
+ */
+function nearestQuestToken(state: GameState, hero: Player): Item | undefined {
+  let best: Item | undefined;
+  let bestD = Infinity;
+  for (const item of state.items) {
+    if (item.kind !== "quest") continue;
+    if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+    if (!questTokenWanted(state, item)) continue;
+    if (insideWellPull(state, item.pos)) continue;
+    const d = distance(item.pos, hero.pos);
+    if (d >= bestD) continue;
+    if (blockedByObstacle(state, hero.pos, item.pos, PLAYER.radius)) continue;
+    best = item;
+    bestD = d;
+  }
+  return best;
+}
+
 /** Is this map's XP still WORTH DOUBLING — the hero under the rung's intended
  * exit level (`intendedLevelByDifficulty`)? A scroll multiplies what the hero
  * earns, and on ground he has outgrown the per-map cap has already throttled
@@ -456,6 +485,19 @@ export function wantedItemNearby(
 ): Item | undefined {
   const scroll = wantedScrollNearby(state, hero);
   if (scroll) return scroll;
+  // A QUEST TOKEN OUTRANKS THE FLOOR. `nearestWantedItem` picks by distance
+  // alone, so on a field the fight has littered with medkits and coins the one
+  // pickup that is PROGRESS — a piece of an errand somebody is waiting on,
+  // gated by `questTokenWanted` to the tally that still has room — was
+  // routinely shadowed by a drink a few px nearer, and the hero walked off with
+  // the token still lying there. Errands are the level's real payout, so the
+  // token is looked for FIRST and taken at the same reach a piece of gear is.
+  //
+  // Deliberately here rather than inside `nearestWantedItem`: that read is the
+  // BLEEDING hero's too (`fight.ts` asks it for a medkit mid-bail), and a token
+  // winning THAT pick would have him walk past the heal that keeps him alive.
+  const token = nearestQuestToken(state, hero);
+  if (token && distance(token.pos, hero.pos) <= ITEM_REACH) return token;
   const item = nearestWantedItem(state, hero);
   if (!item) return undefined;
   const d = distance(item.pos, hero.pos);
