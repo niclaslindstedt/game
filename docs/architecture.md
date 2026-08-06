@@ -832,10 +832,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   street around it is a street: pavements the crowd genuinely stands on
   (`crowdEdges`, wider than the car's own `roadEdges`), painted crossings on a
   fixed pitch that half the crowd is gathered onto (`crossingsBetween`), and a
-  town on one building line. Its presentation lives beside it —
+  town on one building line — and everybody on it, shunted traffic included, is
+  held to those edges. Its presentation lives beside it —
   `drive-screen/drive-fx.ts` (sparks, grit, shards, the wreck's smoke, the
-  speed-scaled shake) and `sfx/drive.ts` (the geared engine note, made of
-  grains on a quickening cadence) — and the whole frame is drawn INSIDE
+  speed-scaled shake; every effect is anchored to the ROAD and left behind
+  except the dead engine's smoke, which rides the car it came out of) and
+  `sfx/drive.ts` (the geared engine note, made of grains on a quickening
+  cadence) — with what a tick OWES those two lifted into
+  `drive-screen/loop.ts` (`drainDrive`, `drawBursts`, `runEngineNote`), because
+  the effects gallery's DRIVE shelf is a second host that has to drain a road
+  exactly as the screen does. The whole frame is drawn INSIDE
   `applyWorldProjection`, because that is the space `drawWorldSprite`
   billboards into. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
@@ -1465,6 +1471,19 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   exhibits can never drift from what ships; the melee/shot/talent shelves are
   generated from `weapon-fx.ts` and the talent catalog, and
   `tests/content/effects_gallery_test.ts` fails the build when one falls behind.
+  ONE CATALOG, TWO HOSTS: an `Exhibit` is a `RunExhibit` or a `DriveExhibit`
+  (`exhibit-kit.ts`), and the gallery picks its host off that discriminator —
+  `run-exhibit.ts` stands a `GameState` up, and the DRIVE shelf's
+  `drive-exhibit.ts` stands a `DriveState` up instead, because a collision cannot
+  be posed and has to be driven into. Both answer the same `ExhibitRun`, so the
+  chrome, the keys, the slow-motion chip and the contact-sheet script never learn
+  there are two. The road's exhibits plant a body or a van in front of the bumper
+  (`drive-exhibits.ts`, pure engine — no browser, so
+  `tests/content/drive_exhibits_test.ts` drives every one of them headlessly and
+  fails the build when a staging stops producing the event and sound bank it
+  advertises), and the take FOLLOWS the car to its collision and HOLDS there,
+  because everything a hit leaves behind is anchored to the road and would
+  otherwise be off the left edge 200 ms later.
   Reached from SETTINGS → DEVELOPER → GALLERIES → EFFECTS or at `?effects`),
   `tiers.ts` (tier name colors), `sfx/` (engine events →
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,

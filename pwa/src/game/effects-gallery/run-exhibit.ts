@@ -56,12 +56,17 @@ import {
   type Camera,
 } from "../render.ts";
 import { playEventSounds } from "../sfx/index.ts";
-import { sortedMobs, stageSpec, type Exhibit } from "./exhibit-kit.ts";
+import {
+  sortedMobs,
+  stageSpec,
+  type ExhibitRun,
+  type RunExhibit,
+} from "./exhibit-kit.ts";
 
 /** A short beat between staging and the arrival firing, so the eye lands on the
  * diorama before the effect goes off. */
 const OPENING_DELAY_MS = 400;
-/** Default show length for an exhibit that names none (see `Exhibit.showMs`). */
+/** Default show length for an exhibit that names none (see `ExhibitCard.showMs`). */
 const DEFAULT_SHOW_MS = 1400;
 /** The quiet beat between a show ENDING and the loop running it again — long
  * enough that the replay reads as a fresh take rather than a stutter, short
@@ -96,42 +101,8 @@ const REBUILD_PHASES = new Set([
   "choice",
 ]);
 
-/**
- * The speeds the gallery can run an exhibit at — the FX iteration loop's
- * slow-motion. A burst that is over in 200 ms is impossible to JUDGE at full
- * speed (the eye gets a smear and an afterimage); at an eighth it plays as a
- * readable sequence of beats, which is what tells "the flash is too long" from
- * "the flash is the wrong colour". The slowdown scales SIM time, so every part
- * of an effect stretches together and the loop's own rhythm (show, beat, replay)
- * stretches with it. The screen-space CSS bursts (the nuke's flash, the ding's
- * god-rays) run on wall-clock animations and keep their real length — they are
- * the one thing slow motion cannot stretch.
- */
-export const EXHIBIT_SPEEDS = [1, 0.5, 0.25, 0.125] as const;
-
-export type ExhibitSpeed = (typeof EXHIBIT_SPEEDS)[number];
-
-/** The label a speed wears in the gallery bar and in a screenshot's filename. */
-export function speedLabel(speed: number): string {
-  return speed === 1 ? "1X" : `1/${Math.round(1 / speed)}X`;
-}
-
-export type ExhibitRun = {
-  /** Re-stage the diorama and run the show again right now, restarting the loop
-   * from here (a tap on the field, or Enter). For an always-on exhibit (a
-   * talent's conjurations, a running powerup) the re-stage IS the show: the aura
-   * is back at full strength. */
-  replay: () => void;
-  /** Run the diorama at a fraction of real time (see `EXHIBIT_SPEEDS`). Takes
-   * effect on the next tick; the show in progress simply keeps playing, slower.
-   */
-  setSpeed: (speed: number) => void;
-  /** Tear the run down (loop, observer, FX timers). */
-  stop: () => void;
-};
-
 export function runExhibit(deps: {
-  exhibit: Exhibit;
+  exhibit: RunExhibit;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   assets: GameAssets;
@@ -208,7 +179,7 @@ export function runExhibit(deps: {
     (
       window as {
         __gallery?: {
-          exhibit: Exhibit;
+          exhibit: RunExhibit;
           state: () => GameState;
           /** The live transient EFFECT layer — what the diorama is actually
            * drawing this frame. The one thing `state` cannot answer: an effect

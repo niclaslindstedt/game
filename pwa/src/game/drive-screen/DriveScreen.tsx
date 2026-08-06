@@ -25,7 +25,6 @@ import {
   createDriveDriver,
   driveDriverInput,
   driveMph,
-  driveRideQuality,
   restartDrive,
   stepDrive,
   thoughtDef,
@@ -41,40 +40,26 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
-import { synth } from "../audio.ts";
 import { carKeyControl } from "../car-keys.ts";
 import { getSettings } from "../settings.ts";
-import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
-import { drawGore } from "../render/gibs.ts";
 import { viewScaleFor } from "../render/view.ts";
-import { playDriveSound } from "../sfx/index.ts";
-import {
-  engineGrainMs,
-  engineNote,
-  playDriveEngine,
-  playDriveShift,
-} from "../sfx/drive.ts";
+import { engineNote } from "../sfx/drive.ts";
 import {
   clearDriveFx,
   createDriveFx,
   drawDriveFx,
-  driveBodyHit,
-  driveBreakdown,
-  drivePartHit,
-  driveTrafficHit,
   shakeCamera,
   stepDriveFx,
   type DriveFxState,
 } from "./drive-fx.ts";
 import {
-  bodyHitSound,
-  BREAKDOWN_SOUND,
-  panelSound,
-  SHED_SOUND,
-  trafficHitSound,
-} from "./drive-sounds.ts";
+  createEngineNote,
+  drainDrive,
+  drawBursts,
+  runEngineNote,
+  type Burst,
+} from "./loop.ts";
 import { drawDrive, driveCamera } from "./render.ts";
-import { CROWD_SPRITES } from "./scenery.ts";
 
 /** The simulation's fixed step (ms) — the engine's own, so a drive ticks at the
  * same rate a run does and the physics is frame-rate independent. */
@@ -82,18 +67,6 @@ const STEP_MS = 16;
 /** The most catch-up a single frame may do, so a backgrounded tab does not
  * resolve four seconds of collisions in one go. */
 const MAX_CATCHUP_MS = 100;
-
-/** One body coming apart, held for as long as its pieces are in the air. */
-type Burst = {
-  burst: GoreBurst;
-  x: number;
-  y: number;
-  bornMs: number;
-  sprite: string;
-};
-
-/** How long a burst's pieces are drawn for (ms) — the run's own figure. */
-const BURST_LIFE_MS = 2600;
 
 /**
  * How long one of the hero's lines is left up when NOBODY IS WATCHING FOR A TAP
@@ -149,10 +122,7 @@ export function DriveScreen({
   );
   const burstsRef = useRef<Burst[]>([]);
   const fxRef = useRef<DriveFxState>(createDriveFx());
-  /** The engine's own little scheduler: when the next grain is due (drive-clock
-   * ms) and which gear the last one was in, so an upshift can be HEARD rather
-   * than merely computed. */
-  const engineRef = useRef({ dueMs: 0, gear: 0 });
+  const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
@@ -280,16 +250,14 @@ export function DriveScreen({
         acc -= STEP_MS;
         if (!paused) {
           stepDrive(drive, STEP_MS, inputRef.current);
-          drainDrive(drive, burstsRef.current, fxRef.current, now, {
-            say,
-            onArrived,
-          });
+          drainDrive(drive, burstsRef.current, fxRef.current, say);
           // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
           // fixed step — so a slow frame never skips a grain or fast-forwards a
           // spark, and the speech box's freeze stops both dead exactly as it
           // stops the road.
           stepDriveFx(fxRef.current, STEP_MS, drive.ms);
           runEngineNote(drive, engineRef.current);
+          endDrive(drive, burstsRef.current, fxRef.current, onArrived);
         }
       }
 
@@ -310,32 +278,25 @@ export function DriveScreen({
       );
       drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, now);
 
-      // The bodies coming apart, over the finished picture — the same pass the
-      // run uses, handed a synthetic effect because a drive has no effect layer.
-      burstsRef.current = burstsRef.current.filter(
-        (b) => now - b.bornMs < BURST_LIFE_MS,
+      burstsRef.current = drawBursts(
+        ctx,
+        burstsRef.current,
+        camera,
+        drive.ms,
+        assets.sprites,
       );
-      for (const b of burstsRef.current) {
-        drawGore(
-          ctx,
-          {
-            kind: "gib",
-            gib: b.burst,
-            sprite: b.sprite,
-            untilMs: b.bornMs + BURST_LIFE_MS,
-            durationMs: BURST_LIFE_MS,
-            pos: { x: b.x, y: b.y },
-          } as Parameters<typeof drawGore>[1],
-          Math.round(b.x - camera.x),
-          Math.round(b.y - camera.y),
-          now,
-          assets.sprites,
-        );
-      }
 
       // The sparks, the grit, the smoke and the bloom — over the finished
       // picture, on the same camera it was drawn with.
-      drawDriveFx(ctx, fxRef.current, camera, drive.ms, viewW, viewH);
+      drawDriveFx(
+        ctx,
+        fxRef.current,
+        camera,
+        drive.ms,
+        viewW,
+        viewH,
+        drive.car.pos,
+      );
 
       setHud((prev) => {
         const next = {
@@ -458,121 +419,18 @@ export function DriveScreen({
 let padOrigin: { x: number; y: number } | null = null;
 
 /**
- * Turn one tick's drive events and strikes into what the app owes them.
- *
- * The BEATS are the four lines; the STRIKES are the bodies. Kept out of the
- * component body so the loop reads as a loop.
+ * THE TWO TERMINAL BEATS, once their hold has run out — the SCREEN's own
+ * policy, which is why they are here rather than in the shared drain
+ * (`loop.ts`). A BREAKDOWN puts the player back at the top of the SAME road
+ * (the seed is kept, so the stretch that killed him is the stretch he gets to
+ * learn); an ARRIVAL hands the crossing back to the game screen.
  */
-/**
- * ONE GRAIN OF THE ENGINE, if one is due — the running note, made out of
- * one-shots on a cadence that quickens with the revs (see `sfx/drive.ts`).
- *
- * Scheduled on the DRIVE's clock rather than the wall's, so it keeps step with
- * the physics through a stutter and stops with the world when a line is up. A
- * dead engine says nothing at all: the wreck rolls in silence, which is most of
- * why the breakdown lands.
- */
-function runEngineNote(
-  drive: DriveState,
-  engine: { dueMs: number; gear: number },
-): void {
-  if (drive.outcome === DRIVE_OUTCOME.broken) return;
-  if (drive.ms < engine.dueMs) return;
-  const frac = Math.abs(drive.car.speed) / DRIVE.topSpeedPx;
-  const { gear, rev } = engineNote(frac);
-  // THE SHIFT IS HEARD BEFORE THE NEXT GRAIN: the note the player follows is
-  // the climb inside a gear, so the moment it resets has to be marked or the
-  // pitch simply appears to jump backwards for no reason.
-  if (gear > engine.gear) playDriveShift(synth, frac);
-  engine.gear = gear;
-  playDriveEngine(synth, frac, drive.car.wear);
-  engine.dueMs = drive.ms + engineGrainMs(rev);
-}
-
-function drainDrive(
+function endDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
-  now: number,
-  {
-    say,
-    onArrived,
-  }: {
-    say: (id: string) => void;
-    onArrived: (to: string, bodies: number) => void;
-  },
+  onArrived: (to: string, bodies: number) => void,
 ): void {
-  for (const strike of drive.strikes) {
-    const frames = CROWD_SPRITES[strike.variant % CROWD_SPRITES.length];
-    bursts.push({
-      // The burst's force is priced off the collision's own energy, so a body
-      // taken at 120 comes apart harder than one clipped at 40 — the physics
-      // reaches the picture rather than being re-decided here.
-      burst: goreBurst(
-        "gib",
-        Math.atan2(strike.vel.y, strike.vel.x),
-        Math.min(6, 1 + strike.joules / 30000),
-        1,
-        "humanoid",
-        strike.id,
-        "blood",
-      ),
-      x: strike.pos.x,
-      y: strike.pos.y,
-      bornMs: now,
-      sprite: frames?.[0] ?? "stampede_a_0",
-    });
-  }
-  for (const event of drive.events) {
-    // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
-    // Every collision the engine books gets both. The WEIGHT of it comes from
-    // the collision's own joules — the same number the gore burst is priced
-    // off — so a body clipped at 40 gives a thud and a puff of grit, and a van
-    // met square at 120 gives a crunch, a shower of sparks and a shove of the
-    // whole frame. Nothing here decides how hard anything was; it only asks.
-    if (event.type === "pedestrianHit") {
-      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(
-        synth,
-        bodyHitSound(event.pos.x, event.pos.y, event.joules),
-      );
-    }
-    if (event.type === "trafficHit") {
-      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(
-        synth,
-        trafficHitSound(event.pos.x, event.pos.y, event.joules),
-      );
-    }
-    if (event.type === "panelBent") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
-      playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
-    }
-    if (event.type === "partShed") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      playDriveSound(synth, SHED_SOUND);
-    }
-    if (event.type === "breakdown") {
-      driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
-      playDriveSound(synth, BREAKDOWN_SOUND);
-    }
-    if (event.type === "monologue") say("drive_out_welfare");
-    if (event.type === "breakdown") say("drive_broke_down");
-    if (event.type === "arrived") {
-      const quality = driveRideQuality(drive);
-      say(
-        quality === "clean"
-          ? "drive_arrive_clean"
-          : quality === "some"
-            ? "drive_arrive_some"
-            : "drive_arrive_bumpy",
-      );
-    }
-  }
-  // The two terminal beats, once their hold has run out. A BREAKDOWN puts the
-  // player back at the top of the SAME road (the seed is kept, so the stretch
-  // that killed him is the stretch he gets to learn); an ARRIVAL hands the
-  // crossing back to the game screen.
   if (
     drive.outcome === DRIVE_OUTCOME.broken &&
     drive.outcomeMs > DRIVE.breakdownHoldMs

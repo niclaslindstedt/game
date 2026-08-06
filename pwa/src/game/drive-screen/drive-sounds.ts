@@ -41,11 +41,30 @@ export const PANEL_SOUNDS = ["drive_panel_a", "drive_panel_b"] as const;
 export const SHED_SOUND = "drive_part_shed";
 export const BREAKDOWN_SOUND = "drive_breakdown";
 
-/** Where the body's thud becomes a body's crunch, as a fraction of the energy
- * that totals the car. Sits at about a square hit at half the top end, so the
- * heavy takes are what a driver holding the throttle down hears and the light
- * ones are what a careful one does. */
-const HARD_BODY_JOULES = 0.045;
+/**
+ * Where the body's thud becomes a body's crunch, as a fraction of the energy
+ * that totals the car. Sits at a square hit at HALF the top end, so the heavy
+ * takes are what a driver holding the throttle down hears and the light ones are
+ * what a careful one does.
+ *
+ * MEASURED, not guessed, and it had to be: absorbed energy goes as the SQUARE of
+ * the closing speed (`solveImpact`), so a threshold picked by eye is wrong by
+ * the square of however far off the speed was. It was, by a factor of five — at
+ * 0.045 the heavy bank could not play on EASY or MEDIUM AT ALL, because a body
+ * met dead square at the full 120 on the baseline rung is worth 0.036 of
+ * `wearJoules` and nothing on that road is worth more. Two rungs of players
+ * heard one bank. The shares below are `solveImpact`'s own, on MEDIUM:
+ *
+ *   square @ 120 mph   0.0363      square @ 84 mph   0.0178
+ *   square @  60 mph   0.0091      square @ 48 mph   0.0058
+ *   clipped @ 120 mph  0.0005 … 0.013, by how far off the nose it caught
+ *
+ * So the line lands where the sentence above says it does, and it is the same
+ * line on every rung — the ladder moves the ENERGY (it weights the road, see
+ * `impactMasses`), which is exactly why a JESUS driver hears the heavy bank off
+ * blows a MEDIUM one gets a thud for.
+ */
+const HARD_BODY_JOULES = 0.009;
 /** …and the same line for traffic, higher because trading paint at all is
  * already the expensive mistake. */
 const CRUNCH_JOULES = 0.09;

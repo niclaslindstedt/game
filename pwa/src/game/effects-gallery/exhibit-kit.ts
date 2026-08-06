@@ -18,6 +18,11 @@ import {
   type AbilityLook,
   type BossAbility,
   type BossAbilityId,
+  type Difficulty,
+  type DriveDirection,
+  type DriveEvent,
+  type DriveInput,
+  type DriveState,
   type Enemy,
   type GameEvent,
   type GameState,
@@ -41,7 +46,51 @@ export type ExhibitGroup =
   // set pieces would flatter every one of them.
   | "ELITES"
   | "WORLD"
+  // THE ROAD — the drive minigame's own collisions, and the ONE shelf whose
+  // exhibits are not hosted by a run (see `DriveExhibit`).
+  | "DRIVE"
   | "UI";
+
+/**
+ * The speeds the gallery can run an exhibit at — the FX iteration loop's
+ * slow-motion. A burst that is over in 200 ms is impossible to JUDGE at full
+ * speed (the eye gets a smear and an afterimage); at an eighth it plays as a
+ * readable sequence of beats, which is what tells "the flash is too long" from
+ * "the flash is the wrong colour". The slowdown scales SIM time, so every part
+ * of an effect stretches together and the loop's own rhythm (show, beat, replay)
+ * stretches with it. The screen-space CSS bursts (the nuke's flash, the ding's
+ * god-rays) run on wall-clock animations and keep their real length — they are
+ * the one thing slow motion cannot stretch.
+ */
+export const EXHIBIT_SPEEDS = [1, 0.5, 0.25, 0.125] as const;
+
+export type ExhibitSpeed = (typeof EXHIBIT_SPEEDS)[number];
+
+/** The label a speed wears in the gallery bar and in a screenshot's filename. */
+export function speedLabel(speed: number): string {
+  return speed === 1 ? "1X" : `1/${Math.round(1 / speed)}X`;
+}
+
+/**
+ * A LIVE EXHIBIT — the handle the gallery steers whichever host is standing the
+ * show up. Both hosts answer it identically (`run-exhibit.ts` for the
+ * run-hosted shelves, `drive-exhibit.ts` for the road), which is what lets the
+ * gallery's chrome, its keys and the contact-sheet script stay ignorant of
+ * which kind of exhibit is on screen.
+ */
+export type ExhibitRun = {
+  /** Re-stage the diorama and run the show again right now, restarting the loop
+   * from here (a tap on the field, or Enter). For an always-on exhibit (a
+   * talent's conjurations, a running powerup) the re-stage IS the show: the aura
+   * is back at full strength. */
+  replay: () => void;
+  /** Run the diorama at a fraction of real time (see `EXHIBIT_SPEEDS`). Takes
+   * effect on the next tick; the show in progress simply keeps playing, slower.
+   */
+  setSpeed: (speed: number) => void;
+  /** Tear the run down (loop, observer, FX timers). */
+  stop: () => void;
+};
 
 /** What an exhibit's `fire` is handed to put its effect on the screen. */
 export type ExhibitCtx = {
@@ -86,7 +135,9 @@ export type ExhibitCtx = {
   after: (delayMs: number, beat: () => void) => void;
 };
 
-export type Exhibit = {
+/** What every exhibit carries, whichever host stands it up: how it is named,
+ * found, iconed and how long its show lasts. */
+export type ExhibitCard = {
   /** Stable id — the search handle, the `?effects=<id>` deep link, the key. */
   id: string;
   /** Shown as the exhibit's title (pixel font, so uppercase). */
@@ -103,6 +154,24 @@ export type Exhibit = {
   icon: string;
   /** Extra search terms beyond the label/blurb/group words. */
   keywords?: string[];
+  /**
+   * How long this effect's show LASTS, in ms — the beat before the loop runs it
+   * again (and before the PLAY button steps back into the middle of the screen).
+   * Sized to the effect itself: a nova ring is over in a third of a second, a
+   * nuke rolls smoke for the better part of two. Default 1400.
+   */
+  showMs?: number;
+};
+
+/**
+ * AN EXHIBIT HOSTED BY A RUN — the whole gallery bar the road. It is a
+ * `GameState` built by `createGame`, posed by a `ScenarioSpec` and stepped by
+ * `step()`, with the show fired into its live event stream (`run-exhibit.ts`).
+ */
+export type RunExhibit = ExhibitCard & {
+  /** Which host stands this one up. Absent means the run — the default, so the
+   * hundred-odd entries authored before the road existed need no field. */
+  kind?: "run";
   /** The level whose ground the effect is staged over. Default `goodco_hq`. */
   levelId?: string;
   /**
@@ -125,13 +194,6 @@ export type Exhibit = {
    */
   cut?: Partial<CleaveCut>;
   /**
-   * How long this effect's show LASTS, in ms — the beat before the loop runs it
-   * again (and before the PLAY button steps back into the middle of the screen).
-   * Sized to the effect itself: a nova ring is over in a third of a second, a
-   * nuke rolls smoke for the better part of two. Default 1400.
-   */
-  showMs?: number;
-  /**
    * WALK the hero in a slow circle for the length of the show, instead of
    * leaving him planted in the middle of the diorama. Only for effects that
    * are ABOUT movement and would otherwise show nothing — the ION WAKE lays
@@ -144,6 +206,82 @@ export type Exhibit = {
    * show — a talent's conjurations, a running powerup, a level's own hazard. */
   fire?: (ctx: ExhibitCtx) => void;
 };
+
+/**
+ * AN EXHIBIT HOSTED BY THE ROAD — the DRIVE shelf, and the one kind of exhibit
+ * that has no `GameState` under it at all.
+ *
+ * A drive is not a run and deliberately shares nothing with one: no level, no
+ * horde, no `step()`, its own clock (`DriveState.ms`) and its own event type
+ * (`DriveEvent`). So it gets its own host (`drive-exhibit.ts`), which builds a
+ * real road with `createDrive`, plants what the exhibit is ABOUT in front of the
+ * bumper, ticks it with `stepDrive` and drains it through the SAME
+ * `drainDrive` the minigame's own screen uses — which is what stops the shelf
+ * becoming a diorama of what the road used to do.
+ *
+ * There is no `fire` here on purpose. A collision is not an event an exhibit
+ * pushes; it is something the physics has to be driven INTO, so the whole of a
+ * drive exhibit's show is what `road` plants and how fast the car meets it.
+ */
+export type DriveExhibit = ExhibitCard & {
+  kind: "drive";
+  /** The rung the road is driven on — what the collision WEIGHS
+   * (`impactMasses`). Default `medium`, the run around the drive's own default. */
+  difficulty?: Difficulty;
+  /** Which leg. Default the trip out (nose right along +x). */
+  direction?: DriveDirection;
+  /** Whether bodies come apart. Default on: "what a body coming apart at 120
+   * looks like" is half of what this shelf is for, and the exhibit stands
+   * outside the player's gore gate the same way every other gore exhibit in the
+   * gallery does. */
+  gib?: boolean;
+  /**
+   * PLANT WHAT THE EXHIBIT IS OF in front of the bumper, and set the speed it
+   * should be met at — run once on a fresh road before its first tick.
+   *
+   * It is the very hook `?drive&stage=body|traffic|both` uses, and for the same
+   * reason: waiting for the road to deal you the collision you wanted to look at
+   * is a fishing trip, not a review. Everything staged is planted by hand rather
+   * than rolled, so the drive's own seeded stream is untouched.
+   */
+  road?: (drive: DriveState) => void;
+  /** What is held on the wheel for the length of the show. Default: flat out,
+   * straight ahead — the speed the road is worth judging at. */
+  input?: DriveInput;
+  /**
+   * THE EVENT THIS EXHIBIT EXISTS TO SHOW, and the SOUND BANK the road must pick
+   * that event's take from (`drive-sounds.ts` — the light body bank against the
+   * heavy one, the scrape against the crunch). Never a single id: which TAKE
+   * plays is hashed off where the hit happened, and pinning that would be
+   * pinning an arbitrary hash rather than the thing the exhibit is about.
+   *
+   * They are a CONTRACT rather than documentation:
+   * `tests/content/drive_exhibits_test.ts` drives every staging headlessly and
+   * fails the build when one stops producing what it advertises. A drive
+   * exhibit's whole show is a plant distance and a lateral offset measured
+   * against a momentum sum, so a re-tune of the road's masses, its top speed or
+   * its sound thresholds can silently turn "taken square" into a glancing thud —
+   * and a shelf that showed the wrong shelf would be worse than no shelf at all.
+   *
+   * Absent for the one exhibit with no collision in it (the ride).
+   */
+  shows?: DriveEvent["type"];
+  bank?: readonly string[];
+  /**
+   * Run the ENGINE NOTE under this exhibit. Off by default and on for exactly
+   * one entry (the ride itself), because the note is a continuous drone and a
+   * drone under a 200 ms crunch is the one thing that would stop the crunch
+   * being judgeable — which is what this shelf is for.
+   */
+  engine?: boolean;
+};
+
+export type Exhibit = RunExhibit | DriveExhibit;
+
+/** Which host stands this exhibit up. */
+export function isDriveExhibit(exhibit: Exhibit): exhibit is DriveExhibit {
+  return exhibit.kind === "drive";
+}
 
 /**
  * The stage every exhibit starts from — the display-case half of the engine's
@@ -193,7 +331,7 @@ export const STAGE_BASE: ScenarioSpec = {
 };
 
 /** The exhibit's full spec: its own fields over the shared base. */
-export function stageSpec(exhibit: Exhibit): ScenarioSpec {
+export function stageSpec(exhibit: RunExhibit): ScenarioSpec {
   return { ...STAGE_BASE, ...exhibit.stage };
 }
 
