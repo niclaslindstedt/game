@@ -32,13 +32,47 @@ the run
 
 Five decisions carry it.
 
-### 1. A mod is compiled, never interpreted
+### 1. A mod is compiled, never interpreted — and its CODE runs in a box
 
 The game never parses a mod's YAML. The desktop shell's main process compiles
 each mod once, at load, into a `ModBundle` of plain JSON — and only that reaches
-the page. The renderer keeps no filesystem, no YAML parser, and no way to run
-anything a mod shipped. There is no scripting hook in the format, and adding one
-would turn "subscribe to a mod" into "run a stranger's code".
+the page. The renderer keeps no filesystem and no YAML parser.
+
+A mod may ship one thing that is not data: **`scripts/<id>.lua`**, the rules the
+engine hands out rather than keeping (→ [`docs/scripting.md`](scripting.md)).
+That is what makes a total conversion able to be a different GAME rather than a
+re-skin of this one — until it existed, a conversion could replace every
+monster, venue, relic, scene and recruit and still hand the player _this_ game's
+XP curve, loot rain and damage formula.
+
+It is also, unavoidably, a stranger's code, so it never leaves the box:
+
+- **The VM is ours** (`src/lib/lua/`), and its standard library is a SUBSET
+  chosen as the security model. No `io`, no `os`, no `require`, no `load`, no
+  `debug`, no `_G`, no `coroutine` — there is nothing to reach the filesystem
+  with, and no way to bring in a chunk the compiler did not see.
+- **A script sees only what the host hands it**: `game.config`, `game.balance`
+  and `game.run`, all deeply FROZEN. A write is an error naming the field, and
+  the freeze is on the tables themselves rather than behind a metatable, so
+  `setmetatable` does not lift it.
+- **Every call is METERED.** A hook that loops forever dies on its instruction
+  budget, and its own `pcall` cannot swallow the kill signal.
+- **It is deterministic.** No clock, no `math.random`, insertion-ordered
+  iteration, a stable sort — a seeded run and a multiplayer session both depend
+  on two machines getting the same numbers.
+- **It cannot break the run.** A script that will not compile, a hook that
+  throws, one that runs away, one that returns `nil` — each falls back to the
+  file it was overriding, reports itself once with a file and a line, and the
+  run keeps playing.
+- **The compiler RUNS it**, with the same interpreter the game uses, so a syntax
+  error or a typo'd hook name fails on the author's machine. That last one
+  matters more than it sounds: a mis-spelled hook is otherwise silent forever,
+  since the shipped rule quietly stands in and the author's file appears to do
+  nothing.
+
+The engine still owns everything a script must not be able to move — chiefly the
+RNG. A loot hook decides what a draw is measured against; the draws themselves,
+and their order, stay on the engine's side of the seam.
 
 ### 2. One compiler, one schema
 
@@ -589,10 +623,11 @@ dynamic import.
 ## What is not here yet
 
 - **A NEW KIND of talent proc.** A mod may author, retune or replace any of the
-  eleven proc blocks the engine fires (see “The build system is content too” above), but a proc the engine has no hook
-  for — "your blows sometimes stun" — is engine code, not content. The format has
-  no scripting hook and adding one would turn "subscribe to a mod" into "run a
-  stranger's code".
+  eleven proc blocks the engine fires (see “The build system is content too”
+  above), but a proc the engine has no hook for — "your blows sometimes stun" —
+  is engine code, not content. The scripting seam does not reach it either: a
+  hook is a FORMULA the engine asks for an answer from, not a place to hang a
+  new behaviour off. → [`docs/scripting.md`](scripting.md)
 - **`grades:`** ladders and the loot economy (`content/item_quality.yaml`,
   `content/item_rarity.yaml`) are deliberately the game's rather than a mod's — a
   mod that moved the tier ladder would be rebalancing the campaign instead of

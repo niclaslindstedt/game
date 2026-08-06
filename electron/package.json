@@ -7,7 +7,8 @@
   "private": true,
   "scripts": {
     "server": "node ../scripts/build-server.mjs",
-    "build": "npm run server && tsc -p tsconfig.json",
+    "modtools": "node ../scripts/build-lua.mjs",
+    "build": "npm run server && npm run modtools && tsc -p tsconfig.json",
     "bundle": "node scripts/bundle-web.mjs",
     "bundle:copy": "node scripts/bundle-web.mjs --skip-build",
     "start": "npm run build && electron .",

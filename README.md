@@ -42,6 +42,11 @@ _in_ the game is [`docs/game-content.md`](docs/game-content.md); the plot is
 - **Content is data.** Levels, maps, monsters, items, talents, sprites, sounds,
   music and story are authored as YAML under `content/` and compiled into the
   engine at build time — adding a venue or a monster needs no engine change.
+- **And the RULES are content too.** The XP curve, the loot rain, the rarity
+  roll, weapon damage and the horde's scaling are authored in
+  `content/scripts/*.lua` and run through a sandboxed, deterministic, metered
+  Lua VM — so a total conversion changes how the game _works_, not just what is
+  in it. → [`docs/scripting.md`](docs/scripting.md)
 - **A mod is the same format, checked by the same validator.** Anything under
   `content/` is a worked example of its kind, and `mod/tools/cli.mjs check` runs
   the exact compiler the shipped game runs when it loads a mod.
@@ -114,7 +119,7 @@ here are drift-tested against a fresh build.
 
 | Path             | What it is                                                                                          |
 | ---------------- | --------------------------------------------------------------------------------------------------- |
-| `content/`       | **Every authored catalog, as YAML** — the format a mod is written in                                |
+| `content/`       | **Every authored catalog** — YAML, plus the Lua rules in `content/scripts/`                         |
 | `mod/`           | The mod SDK: the CLI, the compiler, `FORMAT.md`, the worked example, `catalog.json`                 |
 | `src/`           | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
 | `pwa/`           | The deployable app — a Vite + React PWA shell that mounts the engine                                |

@@ -43,6 +43,7 @@ make fmt           # format in place
 make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews (runs make levels)
 make levels        # recompile every content catalog from content/*.yaml
+make lua-vm        # compile src/lib/lua/ for the SHIPPED mod compiler
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
@@ -420,6 +421,22 @@ state filling up invisibly. Everything "not safe for kids" hangs off the same
 umbrella `nsfwAllowed()` — a new mature feature adds a check, **never a new
 setting** — and it FAILS OPEN. → `gore-system`
 
+**A RULE THE ENGINE HANDS OUT IS CONTENT, AND IT LIVES IN LUA.** Twelve
+formulas — the XP curve, what a kill pays, the horde's hp and level, the drop
+chance, the rarity roll, weapon damage, mob armor — are authored in
+`content/scripts/*.lua` and called through a sandboxed VM (`src/lib/lua/`), so a
+total conversion can change how the game WORKS rather than only what is in it.
+Three rules govern the seam and each is load-bearing:
+**A HOOK IS A FORMULA, NEVER A FRAME** — every one is called per kill, per drop,
+per spawn, per swing or per ding, and anything per-entity-per-frame stays in
+TypeScript; **THE ENGINE KEEPS THE DICE** — a hook decides what a draw is
+measured against, never how many draws there are, or a mod could break a seeded
+run; and **THE BINDING'S FALLBACK IS NOT A SECOND IMPLEMENTATION** — it is what
+the engine does with no content tree at all (fixture-only suites, a fresh
+clone), and `tests/content/script_parity_test.ts` pins it to the Lua bit-for-bit.
+Adding a hook is four edits (`script/hooks.ts`, the `.lua`, `script/bindings.ts`,
+`make mod-catalog`). → `docs/scripting.md`
+
 **A MOD'S CATALOGS ARRIVE THROUGH `registerDefs`**, the same seam the engine's
 test fixtures use, and a mod applies to a RUN rather than an install
 (`restoreBaseDefs()`). A content change that adds or retires an id runs
@@ -440,6 +457,7 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 | Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `src/` or `pwa/`                                                                                                        |
 | Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                |
 | The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                     |
+| A RULE the engine hands to a script                                 | `content/scripts/<id>.lua` + a hook in `src/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows               |
 | Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                               |
 | Tests                                                               | `tests/…`, named `*_test.ts`                                                                                                                                |
 | Docs / examples / LLM prompts                                       | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                       |
@@ -502,6 +520,7 @@ order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.m
 
 | Catalog       | Source                                                    | Generator                 | Output                                              | Snapshot guard                |
 | ------------- | --------------------------------------------------------- | ------------------------- | --------------------------------------------------- | ----------------------------- |
+| Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`    | `src/generated/scripts.ts`                          | `script_parity_test.ts`       |
 | Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`      | `src/generated/items.ts`                            | `item_roundtrip_test.ts`      |
 | Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`      | `src/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
 | Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`    | `src/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
@@ -527,7 +546,10 @@ screen.
 `scripts/asset-tools/<catalog>-schema.mjs`, one per catalog, and the field-level
 reference when authoring either this repo's content or a mod: `mod/tools/build.mjs`
 runs the SAME modules, so what a schema accepts is exactly what a mod may say
-(`mainmenu.yaml`'s is the one exception — a mod may not bring one). A new field
+(`mainmenu.yaml`'s is the one exception — a mod may not bring one). The SCRIPT
+schema is the odd one out in kind rather than in authority: it has no field list,
+because it validates by COMPILING the file with the engine's own Lua VM and
+looking at what the module exported. A new field
 is added THERE, with its rule and its error message, before any generator reads
 it; `CONTRIBUTING.md` indexes the set against the file each validates.
 
@@ -587,6 +609,7 @@ are regenerated in the same commit as the content change that moves them:
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
 | the co-op architecture                                                 | `docs/multiplayer.md`                                                     |
 | the mod format or SDK                                                  | `docs/modding.md`, `mod/FORMAT.md`, and `make mod-catalog` if ids moved   |
+| a scripting hook, or what a script may read                            | `docs/scripting.md`, `mod/FORMAT.md`, then `make mod-catalog`             |
 | Make targets / npm scripts                                             | `README.md` Usage, `CONTRIBUTING.md`, this file                           |
 | deploy slots / pages workflow                                          | `docs/architecture.md`, `README.md`, `pwa/pwa-plugin.ts` `DEPLOY_SLOTS`   |
 | config knobs (env vars, URL params, a developer setting)               | `docs/configuration.md`, `README.md` Configuration                        |
@@ -673,6 +696,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
+| Scripting: the hooks, the sandbox, what a script may read, adding one                                                 | `docs/scripting.md`                                                                 |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |
 | What a mob, item, venue or power actually IS                                                                          | its `content/` YAML — the catalogs are the lookup                                   |
 | The rules those catalogs sit inside; this game's plot                                                                 | `docs/game-content.md`, `docs/story.md`                                             |

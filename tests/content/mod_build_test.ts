@@ -1596,3 +1596,114 @@ describe("what the compiler refuses", () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// THE RULES a mod ships
+// ---------------------------------------------------------------------------
+
+describe("scripts/", () => {
+  /** The manifest for a mod whose whole content is one rule file. */
+  const RULES_MOD = {
+    "mod.yaml": [
+      "id: rules-only",
+      "name: RULES ONLY",
+      "version: 1.0.0",
+      "author: tester",
+      "description: A mod that changes formulas rather than contents.",
+      "kind: addon",
+      "contents:",
+      "  - path: scripts/menace.lua",
+      "    summary: Overkill pays full value.",
+      "    change: replaces",
+    ].join("\n"),
+    "README.md": "# RULES ONLY\n\nA rules-only mod.\n",
+  };
+
+  it("compiles a mod whose only content is a rule", () => {
+    // A rules-only mod is a REAL mod, and the most direct answer to "I want the
+    // game to play differently" — it must not be refused as a bundle of
+    // nothing just because it adds no monsters.
+    const dir = scratchMod({
+      ...RULES_MOD,
+      "scripts/menace.lua":
+        "local M = {}\nfunction M.overkill_efficiency() return 1 end\nreturn M\n",
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle?.scripts.menace?.source).toContain("overkill_efficiency");
+  });
+
+  it("carries the SOURCE, not a compiled form", () => {
+    // The VM parses at load, once per run. Shipping an AST would freeze the
+    // interpreter's internal shape into a published bundle.
+    const source =
+      "local M = {}\n-- a comment the author wrote\nfunction M.overkill_efficiency() return 1 end\nreturn M\n";
+    const dir = scratchMod({ ...RULES_MOD, "scripts/menace.lua": source });
+    const { bundle } = buildMod(dir, catalog);
+    expect(bundle?.scripts.menace?.source).toBe(source);
+  });
+
+  it("refuses a script that does not parse, naming the line", () => {
+    const dir = scratchMod({
+      ...RULES_MOD,
+      "scripts/menace.lua": "local M = {\nreturn M\n",
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(bundle).toBeNull();
+    expect(errors.join("\n")).toMatch(/menace\.lua:2/);
+  });
+
+  it("refuses a script id the engine never reads", () => {
+    const dir = scratchMod({
+      "mod.yaml": RULES_MOD["mod.yaml"].replace(
+        "scripts/menace.lua",
+        "scripts/wizardry.lua",
+      ),
+      "README.md": RULES_MOD["README.md"],
+      "scripts/wizardry.lua": "return {}\n",
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(bundle).toBeNull();
+    expect(errors.join("\n")).toMatch(/no such script/);
+  });
+
+  it("warns about a hook name that is not one — the silent typo", () => {
+    // Without this the mod compiles, installs, and does nothing at all: the
+    // shipped rule quietly stands in for the misspelt one, forever.
+    const dir = scratchMod({
+      ...RULES_MOD,
+      "scripts/menace.lua":
+        "local M = {}\nfunction M.overkil_efficiency() return 1 end\nreturn M\n",
+    });
+    const { errors, warnings } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(warnings.join("\n")).toMatch(/overkil_efficiency/);
+    expect(warnings.join("\n")).toMatch(/overkill_efficiency/);
+  });
+
+  it("refuses a hook that is not a function", () => {
+    const dir = scratchMod({
+      ...RULES_MOD,
+      "scripts/menace.lua": "return { overkill_efficiency = 3 }\n",
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(bundle).toBeNull();
+    expect(errors.join("\n")).toMatch(/not a function/);
+  });
+
+  it("names every hook a mod may implement in the catalog", () => {
+    // The compiler runs in the shipped app's main process, which has no
+    // TypeScript to import `hooks.ts` from — so the hook names travel in
+    // catalog.json, and a mod naming one that moved is refused rather than
+    // silently ignored.
+    const hooks = (catalog as { scriptHooks?: Record<string, string[]> })
+      .scriptHooks;
+    expect(hooks).toBeDefined();
+    expect(Object.keys(hooks ?? {}).sort()).toEqual([
+      "combat",
+      "loot",
+      "menace",
+      "progression",
+    ]);
+  });
+});

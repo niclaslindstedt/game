@@ -26,6 +26,12 @@ import { setConversationDefs, type ConversationDef } from "./conversations.ts";
 // needs to have loaded.
 import { setMapBlueprints } from "../mapgen/blueprints.ts";
 import type { MapBlueprint } from "../mapgen/types.ts";
+// The import-free SCRIPT leaf, never `script/host.ts` — that one reaches the
+// Lua VM (lexer, parser, interpreter, stdlib), and this module is reachable
+// from the startup path where the 200 KB budget lives. What a mod registers is
+// SOURCE TEXT; the compile happens on the first hook call, inside a run.
+import { setScriptSources } from "../script/catalog.ts";
+import type { ScriptSource } from "../script/catalog.ts";
 import { setSetDefs, type SetDef } from "./sets.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
 import { setTalentDefs, type TalentDef } from "./talents/index.ts";
@@ -68,6 +74,14 @@ export type DefOverrides = {
   /** The talks the hero STEERS (`defs/conversations.ts`) — named by a neutral
    * mob or by an errand whose offer is a tree rather than a page. */
   conversations?: Record<string, ConversationDef>;
+  /**
+   * The RULES (`content/scripts/*.lua`) — the one catalog that is behaviour
+   * rather than data. A mod ships `scripts/<id>.lua` and its formulas replace
+   * the shipped ones for the length of the run; a file it does not ship keeps
+   * the shipped rule, and so does a HOOK it does not implement inside a file it
+   * does ship. Keyed by script id, which is the file stem.
+   */
+  scripts?: Record<string, ScriptSource>;
 };
 
 /**
@@ -94,4 +108,8 @@ export function registerDefs(defs: DefOverrides): void {
   if (defs.quests) setQuestDefs(defs.quests);
   if (defs.questGivers) setQuestGiverDefs(defs.questGivers);
   if (defs.conversations) setConversationDefs(defs.conversations);
+  // Always assigned when the key is present, INCLUDING an empty record: that is
+  // how `restoreBaseDefs()` clears a mod's rules, and how the swap bumps the
+  // generation counter the script host throws its compiled chunks away on.
+  if (defs.scripts) setScriptSources(defs.scripts);
 }

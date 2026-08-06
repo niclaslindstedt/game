@@ -5,7 +5,7 @@
 # A scene is a STAGE (a backdrop colour wash and a set of props), a CAST (actors
 # the beats move, pose and give lines to), and a TIMELINE of beats played
 # strictly in order. Text beats hold the frame until the player taps; timed ones
-# run on the clock. Everything here is data — there is no scripting hook in the
+# run on the clock. Everything here is data — a scene is never scripted in the
 # mod format, and a scene cannot do anything but play itself.
 #
 # Every sprite named below is the BASE GAME's, which is the point: a mod can

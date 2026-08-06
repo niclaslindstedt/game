@@ -33,7 +33,18 @@ export const TREES = {
   music: { depth: 1, what: "a score" },
   cutscenes: { depth: 1, what: "a scene" },
   quests: { depth: 1, what: "an errand" },
+  // The one tree that is not YAML: a RULE is code, and authoring code as a
+  // quoted string inside a data file would cost an author their editor's
+  // highlighting, their line numbers and their diff.
+  scripts: {
+    depth: 1,
+    ext: "lua",
+    what: "a rule the engine hands to a script",
+  },
 };
+
+/** A tree's file extension — YAML unless the tree says otherwise. */
+const treeExt = (tree) => tree.ext ?? "yaml";
 
 /** The rarity directories `items/` may group by — the loader takes the
  * directory name AS the rarity, so a typo is a rarity that does not exist
@@ -180,19 +191,21 @@ export function classify(rel) {
     };
   }
   if (parts.length !== tree.depth + 1) {
+    const ext = treeExt(tree);
     const shape =
       tree.depth === 1
-        ? `${parts[0]}/<id>.yaml`
-        : `${parts[0]}/<${tree.group}>/<id>.yaml`;
+        ? `${parts[0]}/<id>.${ext}`
+        : `${parts[0]}/<${tree.group}>/<id>.${ext}`;
     return {
       role: "stray",
       why: `${tree.what} is loaded from ${shape} — this one sits at a depth nothing reads`,
     };
   }
-  if (!name.endsWith(".yaml")) {
+  const ext = treeExt(tree);
+  if (!name.endsWith(`.${ext}`)) {
     return {
       role: "stray",
-      why: `${parts[0]}/ holds YAML only — the compiler skips everything else`,
+      why: `${parts[0]}/ holds .${ext} files only — the compiler skips everything else`,
     };
   }
   // `sprites/` and `quests/` are the two loaders that SKIP an underscored file

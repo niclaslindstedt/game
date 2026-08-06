@@ -105,6 +105,11 @@ export type ModBundle = {
   /** The mod's own SETS, by id — the kits its `rarity: set` pieces belong to
    * and draw their tiered bonuses from. */
   sets: Record<string, unknown>;
+  /** The mod's own RULES, by script id — `{ id → { id, source } }`, the Lua a
+   * mod ships to replace a shipped formula. The one catalog that is BEHAVIOUR
+   * rather than data (see docs/scripting.md); absent from almost every mod,
+   * since an addon that adds monsters changes no rules. */
+  scripts?: Record<string, { id: string; source: string }>;
   /** What the difficulty ladder's rungs are CALLED under this mod: a PARTIAL
    * `{ rung → { name?, tagline? } }` folded onto the shipped defs. The numbers
    * behind a rung stay the game's — see the schema's header for why. */
@@ -160,7 +165,8 @@ export type ModClash = {
     | "cutscene"
     | "thought"
     | "story item"
-    | "quest";
+    | "quest"
+    | "rule script";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

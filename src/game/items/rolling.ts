@@ -41,6 +41,11 @@ import {
 } from "../defs/uniques.ts";
 import { bonusBudget } from "../item-budget.ts";
 import { currentMobLevel } from "../menace.ts";
+import {
+  hookDropChance,
+  hookMagicFindFactor,
+  hookTierChance,
+} from "../script/bindings.ts";
 import { BALANCE } from "../tuning.ts";
 import type {
   Affix,
@@ -201,10 +206,12 @@ function magicFindFactor(
   tier: Exclude<Tier, "regular" | "trash">,
   mf: number,
 ): number {
-  if (mf <= 0) return 1;
-  const cap = (LOOT.mfSaturation as Partial<Record<Tier, number>>)[tier];
-  if (cap === undefined) return 1 + mf; // magic: linear
-  return 1 + (cap * mf) / (cap + mf); // rare/unique/legendary: saturating
+  return hookMagicFindFactor(tier, mf, () => {
+    if (mf <= 0) return 1;
+    const cap = (LOOT.mfSaturation as Partial<Record<Tier, number>>)[tier];
+    if (cap === undefined) return 1 + mf; // magic: linear
+    return 1 + (cap * mf) / (cap + mf); // rare/unique/legendary: saturating
+  });
 }
 
 /**
@@ -287,22 +294,44 @@ function rollTier(
       tier === "unique" || tier === "legendary" || tier === "artifact";
     const topChase = tier === "legendary" || tier === "artifact";
     if (topChase && !hardPlus) continue; // legendary/artifact: HARD and up
-    const base =
-      (LOOT.rarityBase[tier] +
-        LOOT.raritySlope[tier] * (lootLevel - qlvl) +
-        (difficultyChances[tier] ?? 0) +
-        (roleBonus?.[tier] ?? 0)) *
-        (named ? namedMult : 1) *
-        (named && plainMinion ? LOOT.minionNamedMult : 1) +
-      (named ? 0 : tierBonus);
-    if (base <= 0) continue;
-    const chance = Math.min(
-      LOOT.rarityChanceMax,
-      base *
-        magicFindFactor(tier, mf) *
-        (named ? overCapMult : 1) *
-        BALANCE.gearQuality,
+    // THE CHANCE ITSELF IS CONTENT (`content/scripts/loot.lua`). The walk, the
+    // gates above and the DRAW below stay here: a seeded run's rng sequence is
+    // the engine's promise, not a script's — which is also why a zero chance
+    // spends no draw, exactly as an unreachable tier never did.
+    const chance = hookTierChance(
+      tier,
+      {
+        depth: lootLevel - qlvl,
+        difficultyBonus: difficultyChances[tier] ?? 0,
+        roleBonus: roleBonus?.[tier] ?? 0,
+        tierBonus,
+        namedMult,
+        plainMinion,
+        mf,
+        overCapMult,
+      },
+      () => {
+        const base =
+          (LOOT.rarityBase[tier] +
+            LOOT.raritySlope[tier] * (lootLevel - qlvl) +
+            (difficultyChances[tier] ?? 0) +
+            (roleBonus?.[tier] ?? 0)) *
+            (named ? namedMult : 1) *
+            (named && plainMinion ? LOOT.minionNamedMult : 1) +
+          (named ? 0 : tierBonus);
+        if (base <= 0) return 0;
+        return Math.min(
+          LOOT.rarityChanceMax,
+          base *
+            magicFindFactor(tier, mf) *
+            (named ? overCapMult : 1) *
+            BALANCE.gearQuality,
+        );
+      },
+      state,
+      player,
     );
+    if (chance <= 0) continue;
     if (state.rng() < chance) return tier;
   }
   return "regular";
@@ -860,12 +889,17 @@ export { adoptEquipment } from "./adopt.ts";
 
 /** Chance a regular monster drops loot, after LUCK and difficulty. */
 export function dropChance(state: GameState, player: Player): number {
+  const difficultyBonus = difficultyDef(state.difficulty).dropChanceBonus;
+  const luck = effectiveStat(state, player, "luck");
   // The developer drop-rate knob scales the whole per-kill chance — base,
   // difficulty bonus, and LUCK alike — so the rain thickens uniformly.
-  return (
-    (LOOT.dropChance +
-      difficultyDef(state.difficulty).dropChanceBonus +
-      effectiveStat(state, player, "luck") * STATS.dropChancePerLuck) *
-    BALANCE.dropRate
+  return hookDropChance(
+    difficultyBonus,
+    luck,
+    () =>
+      (LOOT.dropChance + difficultyBonus + luck * STATS.dropChancePerLuck) *
+      BALANCE.dropRate,
+    state,
+    player,
   );
 }

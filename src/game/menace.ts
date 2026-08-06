@@ -38,6 +38,11 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import { weaponDps } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { livingHeroes, partyCentroid, partyLevel } from "./party.ts";
+import {
+  hookMobHpLevelFactor,
+  hookMobLevel,
+  hookOverkillEfficiency,
+} from "./script/bindings.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Player } from "./types/index.ts";
 
@@ -169,6 +174,10 @@ export function evolutionLevelBonus(stage: number): number {
  * never touches leveling pace. Never below 1 (a level-1 mob is its catalog bar).
  */
 export function mobHpLevelFactor(mobLevel: number): number {
+  return hookMobHpLevelFactor(mobLevel, () => nativeMobHpLevelFactor(mobLevel));
+}
+
+function nativeMobHpLevelFactor(mobLevel: number): number {
   const knee = MENACE.mobHpGrowthKnee;
   const g = MENACE.mobHpGrowthPerLevel;
   // The flat scale rides every level alike (see `MENACE.mobHpBase`): it is the
@@ -339,12 +348,22 @@ export function mobLevelFor(playerLevel: number, difficulty: string): number {
   // farm meets stuck mobs) nor drop below its floor (a freshly-arrived hero on
   // nightmare/jesus meets mobs a touch above him). Elites/bosses add their
   // `levelBonus` on top in `maybePowerScale` and may run past the ceiling.
-  return Math.max(
-    1,
-    Math.min(
-      d.mobLevelMax ?? Infinity,
-      Math.max(d.mobLevelMin ?? 1, Math.round(playerLevel + d.mobLevelOffset)),
-    ),
+  return hookMobLevel(
+    playerLevel,
+    d.mobLevelOffset,
+    d.mobLevelMin,
+    d.mobLevelMax,
+    () =>
+      Math.max(
+        1,
+        Math.min(
+          d.mobLevelMax ?? Infinity,
+          Math.max(
+            d.mobLevelMin ?? 1,
+            Math.round(playerLevel + d.mobLevelOffset),
+          ),
+        ),
+      ),
   );
 }
 
@@ -508,8 +527,10 @@ export function lureMult(state: GameState): number {
  * to "too easy" is to move up, not to keep mowing.
  */
 export function overkillEfficiency(damage: number, maxHp: number): number {
-  if (maxHp <= 0 || damage <= maxHp) return 1;
-  return maxHp / damage;
+  return hookOverkillEfficiency(damage, maxHp, () => {
+    if (maxHp <= 0 || damage <= maxHp) return 1;
+    return maxHp / damage;
+  });
 }
 
 /** Extra context a killing blow hands `bankOverkill`: which hero ATTACK it
