@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE PICTURE THE FIELD IS PRESENTED THROUGH — the four knobs on SETTINGS →
+// THE PICTURE THE FIELD IS PRESENTED THROUGH — the three knobs on DEVELOPER →
 // VISUALS, and the one thing that decides which mechanism each one uses.
 //
-// THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT DECIDES EVERYTHING HERE.
+// ALL THREE ARE CSS, AND THAT IS NOT AN ACCIDENT OF THE THREE THAT ARE LEFT.
 // The game canvas is sized in WORLD units, not device pixels (`viewScaleFor`),
 // and CSS blows it up 2–3× with `image-rendering: pixelated`. So there are two
 // completely different places to put an effect, and the choice is not a matter
 // of taste:
 //
 //   ON THE CANVAS — chunky, at world resolution, in the same pixel grid as the
-//   art. This is where BLOOM belongs, because the light it blooms is the game's
-//   own baked glows (`glowSprite`, `beamSprite`, the loot shafts, the muzzle
-//   flashes), which live on that same grid. A bloom computed at device
-//   resolution would be smoother than the light making it, which reads as a
-//   photographic filter laid over pixel art rather than as the pixel art
-//   glowing.
+//   art. That is where an effect belongs when the thing it acts on is the art
+//   itself, and it costs a full-frame pass every frame on a phone.
 //
 //   IN CSS — smooth, at device resolution, and free. This is where the GRADE,
 //   the VIGNETTE and the HAZE belong. All three are broad, low-frequency washes;
@@ -23,13 +19,24 @@
 //   look WORSE. As CSS on the canvas element and one overlay they are
 //   GPU-composited, per-frame-free, and smooth.
 //
-// That split is why there is no WebGL pass here. A shader stage would have to
-// own the whole present path (the world would move to an offscreen target and
-// the visible canvas would become the GL one, which touches every screen↔world
-// crossing in the app), and for these four effects it would buy nothing: three
-// of them are strictly better in CSS and the fourth wants to be chunky. What a
-// shader WOULD buy is the effects nobody has asked for yet — CRT curvature,
-// chromatic aberration, a real 3D LUT — and that is the day to write it.
+// A BLOOM PASS LIVED HERE AND WAS TAKEN OUT, which is the argument worth keeping
+// rather than the code. It was the one knob that had to be on the canvas — the
+// light it blooms is the game's own baked glow art (`glowSprite`, `beamSprite`,
+// the loot shafts, the muzzle flashes) on that same pixel grid — and on pixel
+// art at this size that is a losing trade whatever the threshold and the gain
+// are tuned to: every luminance point a halo adds is a point of the artist's own
+// shading it paints over, so the shafts gained a little atmosphere and the floor,
+// the rocks and the bodies lost some of their drawing. It shipped at 0 for that
+// reason, and a knob whose honest default is off is a knob the game is better
+// off without. Don't bring it back; light the art instead.
+//
+// That is also why there is no WebGL pass here. A shader stage would have to own
+// the whole present path (the world would move to an offscreen target and the
+// visible canvas would become the GL one, which touches every screen↔world
+// crossing in the app), and for three broad washes it would buy nothing — all
+// three are strictly better in CSS. What a shader WOULD buy is the effects
+// nobody has asked for yet — CRT curvature, chromatic aberration, a real 3D LUT
+// — and that is the day to write it.
 //
 // This module is the shared model: the ranges, the defaults, and the CSS
 // variables. It imports nothing, so the settings screen may read it without
@@ -38,25 +45,6 @@
 /** One knob's range. `off` is the value at which the effect does nothing at all
  * and must cost nothing — every consumer checks for it before doing any work. */
 export type FxRange = { min: number; max: number; default: number };
-
-/**
- * BLOOM — how much light bleeds out of the bright things.
- *
- * **THE ONE KNOB HERE THAT SHIPS OFF**, and off is the considered answer rather
- * than a placeholder. At 1 a legendary's light shaft, a muzzle flash and the
- * level-up pillar do read as light — but the game they are lit against is pixel
- * art at ~422×195, where every luminance point a halo adds is a luminance point
- * of the artist's own shading it paints over. Judged side by side on the real
- * field, the shafts gain a little atmosphere and the floor, the rocks and the
- * bodies lose a little of their drawing, and that is not a trade the default
- * should make on a player's behalf.
- *
- * So it is offered rather than assumed: 1 is a tuned, restrained look for
- * anyone who wants it (see GAIN in render/bloom.ts) and 2 is a deliberate
- * overdose, which is what a knob is for. Off skips the pass entirely and costs
- * nothing at all, which is also the right default on a phone.
- */
-export const BLOOM: FxRange = { min: 0, max: 2, default: 0 };
 
 /**
  * COLOUR GRADE — how far the picture is pushed toward its venue's own mood
@@ -96,7 +84,6 @@ export const HAZE: FxRange = { min: 0, max: 1, default: 0.5 };
 
 /** Every knob, for the settings page and the reset row. */
 export const FX_RANGES = {
-  bloom: BLOOM,
   colorGrade: GRADE,
   vignette: VIGNETTE,
   depthHaze: HAZE,
@@ -117,7 +104,6 @@ export function clampFx(name: FxName, value: number): number {
 /** The shipped look. */
 export function defaultFx(): FxSettings {
   return {
-    bloom: BLOOM.default,
     colorGrade: GRADE.default,
     vignette: VIGNETTE.default,
     depthHaze: HAZE.default,

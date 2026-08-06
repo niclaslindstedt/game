@@ -62,7 +62,8 @@ column of a dozen unrelated tools:
   **GRANT 10B COINS**, and **FORCE STORE** (which belongs here rather than among
   the build flags because the packs it surfaces are granted free).
 - **BALANCE** — the runtime multiplier sliders (below).
-- **VISUALS** — the game-feel sliders and the camera (below).
+- **VISUALS** — the game-feel sliders, the camera, and the three washes the
+  finished frame is presented through (below).
 - **GALLERIES** — the two full-screen shelves that only look: **ARSENAL** (every
   hand-authored unique/legendary item, ordered by item level and drawn with the
   same icon + item card the in-game inventory uses — steer the scrollable list
@@ -143,8 +144,30 @@ the world projection dialled live (`docs/rendering.md`):
   smooth — so it is a switch about the turned camera above it, not a general
   video setting.
 
-All three persist (`cameraPitch`, `cameraYaw`, `cameraAntialias`) and, like every
-developer setting, are stripped from a store build.
+Under the camera sit the three washes laid over the FINISHED frame
+(`pwa/src/game/render/postfx.ts`, and `docs/rendering.md` for the mechanism).
+Each is a drag track reading as a percentage of the shipped look, where 0 is a
+true off:
+
+- **COLOR GRADE** — a little more contrast, colour and the faintest cool cast
+  over the whole picture. Shipped at 60% of its own range's top.
+- **VIGNETTE** — how far the corners fall off into the dark. It is also a
+  readability tool (the hero is always centre-screen), which is why it is kept
+  modest: a heavy vignette in a game about being surrounded hides the things
+  surrounding you. Shipped at 45%.
+- **DEPTH HAZE** — aerial perspective, the floor losing contrast as it rakes off
+  toward the top of the screen. Scaled by the live CAMERA PITCH, since a camera
+  looking straight down has no horizon to fade toward. Shipped at 50%.
+
+They are developer knobs rather than player ones because all three are CSS — a
+`filter` on the canvas and two gradients on one overlay — so none of them costs a
+frame, and there is no phone budget for a player to win back by turning one off.
+A BLOOM knob used to sit beside them and did cost a full-frame canvas pass; it
+was removed outright rather than demoted (`docs/rendering.md` carries why).
+
+All of them persist (`cameraPitch`, `cameraYaw`, `cameraAntialias`, `colorGrade`,
+`vignette`, `depthHaze`) and, like every developer setting, are stripped from a
+store build — so a store build always plays the shipped look.
 
 CHEATS holds a **SEED CHARACTERS** subpage — a shortcut that
 mints ready-to-play heroes straight into the roster so a developer can jump into

@@ -166,7 +166,7 @@ export type MuteMode = "on" | "off";
 export type XpFloat = "on" | "off";
 
 /**
- * GORE (SETTINGS → VIDEO → GORE): one switch per kind of gore, because "is this
+ * GORE (SETTINGS → GORE): one switch per kind of gore, because "is this
  * too much" is not one question.
  *
  * The page splits three ways, and the split is the whole point of it being a
@@ -415,17 +415,20 @@ export type GameSettings = {
    * so it needs no engine setter. */
   goreLinger: number;
   /**
-   * SETTINGS → VISUALS: the four knobs of how the field is PRESENTED — bloom on
-   * the lights, the colour grade, the vignette, and the depth haze up the raked
-   * floor (see `render/postfx.ts` for what each one is and which mechanism it
-   * uses). Every one is an amount, 0 = off, and every one is read app-side only
-   * (pure presentation), so none needs an engine setter.
+   * DEVELOPER → VISUALS: the three knobs of how the field is PRESENTED — the
+   * colour grade, the vignette, and the depth haze up the raked floor (see
+   * `render/postfx.ts` for what each one is and which mechanism it uses). Every
+   * one is an amount, 0 = off, and every one is read app-side only (pure
+   * presentation), so none needs an engine setter.
    *
-   * These are PLAYER settings, not developer ones — they cost frames on a phone
-   * and a player has to be able to turn them off — so they are deliberately NOT
-   * in `stripDeveloperState`.
+   * DEVELOPER settings rather than player ones, and the reason is that all three
+   * are CSS — a `filter` on the canvas and two gradients on one overlay — so
+   * they are GPU-composited and cost nothing per frame. There is no frame budget
+   * for a player to win back by turning them off, only the shipped look to lose,
+   * so they sit with the camera knobs and ARE scrubbed by `stripDeveloperState`.
+   * (The one knob here that did cost a full-frame pass was BLOOM, and it was
+   * removed outright rather than demoted — see `render/postfx.ts`.)
    */
-  bloom: number;
   colorGrade: number;
   vignette: number;
   depthHaze: number;
@@ -629,7 +632,7 @@ function defaults(): GameSettings {
     cameraAntialias: "off",
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
     // look: this is how the game is meant to be seen, and the rows exist for a
-    // player who wants it plainer or a phone that wants the frames back.
+    // developer judging a change to it on a real field.
     ...defaultFx(),
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
@@ -765,7 +768,7 @@ function clampYaw(v: number): number {
 }
 
 /**
- * The SETTINGS → VISUALS knobs, read out of a stored blob and clamped to their
+ * The DEVELOPER → VISUALS washes, read out of a stored blob and clamped to their
  * own ranges (`render/postfx.ts` owns those). Snapped to a fiftieth so a dragged
  * value reads as a round number, exactly as the camera pair above.
  *
@@ -851,6 +854,9 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     cameraYaw: base.cameraYaw,
     cameraAntialias: base.cameraAntialias,
     balance: base.balance,
+    // The DEVELOPER → VISUALS washes (see the FxSettings block above): a store
+    // build has no page to move them from, so it plays the shipped look.
+    ...defaultFx(),
   };
 }
 
@@ -1093,8 +1099,8 @@ function load(): GameSettings {
         stored.cameraAntialias === "on" || stored.cameraAntialias === "off"
           ? stored.cameraAntialias
           : base.cameraAntialias,
-      // Each VISUALS knob clamped to its OWN range (`postfx.ts` owns them), so a
-      // hand-edited or downgraded store can't hand the renderer a bloom of 40.
+      // Each VISUALS wash clamped to its OWN range (`postfx.ts` owns them), so
+      // a hand-edited store can't hand the renderer a grade of 40.
       ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
       multiplayer: loadSession(stored.multiplayer, base.multiplayer),

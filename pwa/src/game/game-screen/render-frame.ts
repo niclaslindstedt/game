@@ -26,7 +26,6 @@ import { clamp, normalize } from "@game/lib/vec.ts";
 import type { PointerTracker } from "@ui/lib/pointer.ts";
 
 import { type GameAssets } from "../assets.ts";
-import { applyBloom } from "../render/bloom.ts";
 import { synth } from "../audio.ts";
 import { currentAreaLabel } from "../AreaCaption.tsx";
 import { drawMinimap } from "../Minimap.tsx";
@@ -45,7 +44,6 @@ import {
   MELEE_SWING_MS,
   worldToCanvas,
 } from "../render.ts";
-import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { shotStyleFor } from "../weapon-fx.ts";
 import type { DemoDirector } from "./demo-director.ts";
@@ -142,11 +140,6 @@ export function createRenderFrame(deps: {
   } = deps;
 
   let lastHud = "";
-  // The VISUALS knobs, read ONCE at loop construction rather than per frame:
-  // they are title-menu settings, so they cannot move mid-run, and `getSettings`
-  // per frame would be a lookup 60 times a second for a value that never
-  // changes. A run started after a change picks up the new one.
-  const fx = getSettings();
   // FPS meter (DEBUG MODE / ?debug): an EMA over the real rAF deltas,
   // flushed to its DOM node a few times a second.
   let fpsLastMs: number | undefined;
@@ -322,13 +315,10 @@ export function createRenderFrame(deps: {
       combatNoiseFade(state),
     );
 
-    // BLOOM the finished world picture (SETTINGS → VISUALS) — the lights bleed
-    // out past the pixels that drew them. Here, and not a line later: everything
-    // world-anchored is down, and everything below is UI (the bot's thought read,
-    // the HUD's own canvases), which must stay crisp — interface that blooms
-    // reads as a fault rather than as atmosphere. Off costs nothing at all
-    // (render/bloom.ts returns immediately).
-    applyBloom(ctx, fx.bloom);
+    // Everything world-anchored is down; everything below this line is UI (the
+    // bot's thought read, the HUD's own canvases). There is no full-frame pass
+    // between the two — the presentation washes are CSS over the finished canvas
+    // (render/postfx.ts), which is also why they cannot smear the interface.
 
     // BOT VIEW / debug: pin the autopilot's current decision (`bot.lastThought`,
     // set by `botAct`) over the hero's head so what the bot is "thinking" each

@@ -50,7 +50,6 @@ import {
   buildInterfaceMenu,
   buildKeybindingsMenu,
   buildSettingsMenu,
-  buildVideoMenu,
 } from "./menus-settings.ts";
 import {
   buildStoreConfirmMenu,
@@ -106,7 +105,6 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "controls") return buildControlsMenu(ctx);
   if (screen === "keybindings") return buildKeybindingsMenu(ctx);
   if (screen === "interface") return buildInterfaceMenu(ctx);
-  if (screen === "video") return buildVideoMenu(ctx);
   if (screen === "gore") return buildGoreMenu(ctx);
   if (screen === "audio") return buildAudioMenu(ctx);
   return [backRow(ctx, screen)];

@@ -66,10 +66,10 @@ phone, not like a desktop — and remember media queries see the *physical*
 CSS viewport (1180×820), so width/height-gated rules written for phones
 silently miss the iPad even when its effective space matches a phone's.
 
-The settings step walks the whole SETTINGS tree — CONTROLS, DISPLAY, SOUND,
-DATA, and the developer surfaces (the DEVELOPER page itself, its BALANCE
-multiplier subpage, the arsenal browser, and the warp picker's difficulty +
-level lists). The BALANCE page is the tallest menu in the game (12 rows), so
+The settings step walks the whole SETTINGS tree — GAMEPLAY, CONTROLS, INTERFACE,
+GORE, AUDIO, DATA, and the developer surfaces (the DEVELOPER page itself, its
+BALANCE multiplier and VISUALS subpages, the arsenal browser, and the warp
+picker's difficulty + level lists). The BALANCE page is the tallest menu in the game (12 rows), so
 it is the first place a menu-height regression shows: check the
 measure-then-cap scroll treatment it shares with the level ladder
 (`tallMenu`/`.title-menu.scrollable` in `TitleScreen.tsx`) still engages at

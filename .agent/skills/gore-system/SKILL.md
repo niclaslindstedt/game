@@ -130,7 +130,7 @@ escalating for ever. Three pieces:
   — that knob exists to clear a field for a screenshot, not to make the game
   gentler.
 
-- **AND "IS THIS TOO MUCH" IS NOT ONE QUESTION — SETTINGS → VIDEO → GORE.** What
+- **AND "IS THIS TOO MUCH" IS NOT ONE QUESTION — SETTINGS → GORE.** What
   was a single EXTRA GORE switch is a PAGE of eight, all shipping ON, because the
   one switch made a player who did not want to watch a PERSON opened up turn off
   the machines' sparks and the ghosts' ectoplasm with it. Three groups: one row
