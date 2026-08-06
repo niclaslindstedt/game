@@ -234,6 +234,7 @@ export const COMMANDS = [
   "exitCar",
   "tapTravelDoor",
   "travelTo",
+  "travelSolo",
   "startAutopilot",
   "stopAutopilot",
   "setAutopilotSpeed",

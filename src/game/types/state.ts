@@ -541,6 +541,25 @@ export type GameState = {
    */
   pendingTravel?: { to: string; skip: string };
   /**
+   * REQUESTED SOLO CROSSINGS — one hero stepping off this level while the rest
+   * of the party keeps playing on it (`src/game/travel.ts`,
+   * `requestSoloTravel`).
+   *
+   * The town portal's verb, and the reason it is a LIST rather than the single
+   * request `pendingTravel` is: a party crossing is one decision the host makes
+   * for everybody, while a solo crossing is each player's own — two people can
+   * step home in the same tick, and one overwriting the other would strand
+   * somebody on a field they had already left. At most one entry per seat
+   * (a second request from the same seat replaces the first), so it is bounded
+   * by the seat cap.
+   *
+   * Consumed by the SESSION between ticks, which routes that seat into the
+   * destination's world and leaves this one standing (`server/worlds.ts`).
+   * Nothing in `step()` reads it, so a run that never consumes one — every
+   * local single-player run — is byte-identical with or without it.
+   */
+  pendingSolo?: { seat: number; to: string; skip: string }[];
+  /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered
    * kills; idling bleeds it off — but never below `menaceFloor`. Read as an

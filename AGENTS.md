@@ -334,6 +334,19 @@ the seat the session admitted the client into — never from a field on the fram
 **A READ OF "THE HERO" IN THE APP IS `localHero(state)`**
 (`pwa/src/game/local-seat.ts`) — 0 offline and for the host.
 
+**A SESSION MAY HOLD TWO LEVELS AT ONCE, AND A SEAT NUMBER MEANS THE SAME
+PLAYER IN BOTH.** One player can step home through a town portal while the rest
+keep fighting (`travelSolo`; `server/worlds.ts`), so a session is a MAP of
+worlds rather than one `GameState` — but the seat was deliberately not made a
+`(world, index)` pair. Every world carries the same party shape instead, and the
+world a hero is not standing in holds a DEPARTED body in that chair, which is
+what keeps `state.players[seat]`, `Recipient.seat`, the reconnect ticket and
+every in-flight frame meaning what they always did. Two rules follow: **one
+world per LEVEL ID** (so "travel to X" carves X or WALKS ONTO the X already
+standing, and the client can read a world change off a changed level id), and a
+world **ticks while a seat is assigned to it** — never `heroInPlay`, which would
+freeze the world on the tick a death needs. → `docs/multiplayer.md`
+
 **ANYTHING THAT ADDS OR REMOVES AN OBSTACLE MID-RUN MUST BUMP
 `state.obstaclesVersion`.** The autopilot builds its nav grid once per level and
 caches it; a wall that appears without the bump is a wall it routes straight
@@ -475,6 +488,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`; the page's half is `pwa/src/app/net-bridge.ts`                                                                                         |
 | A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`) |
 | A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
+| A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                 |
 
 Everything multiplayer: **`docs/multiplayer.md`** — the shipped architecture,
 and the record of what still needs a human with hardware to accept.
