@@ -36,4 +36,8 @@ declare module "*/sound-data/capture.mjs" {
     id: string;
     calls: Record<string, unknown>[];
   }>;
+  export function captureLegendJingle(): Promise<{
+    id: string;
+    calls: Record<string, unknown>[];
+  }>;
 }

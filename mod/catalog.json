@@ -3137,6 +3137,7 @@
   "sounds": [
     "ability_ended",
     "ability_started",
+    "achievement_legend",
     "achievement_unlocked",
     "apparition_vanished",
     "armor_broke",

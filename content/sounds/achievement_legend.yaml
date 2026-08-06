@@ -1,0 +1,167 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: achievement_legend
+description: >-
+  The fanfare for a LEGEND badge — the sound of the card reveal, in the four
+  beats the light is drawn in: a filtered rip sweeping up over a sub as the
+  rays tear open, a slow choir triad swelling behind them, the badge chime's
+  arpeggio carried two octaves higher and racing the card in, and the full
+  chord landing under the bloom with an impact beneath it. The only achievement
+  cue allowed to stand beside the level-up ding rather than under it.
+voices:
+  - call: noise
+    durationMs: 620
+    volume: 0.03
+    filter:
+      type: highpass
+      frequency: 2200
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 60
+    to: 180
+    durationMs: 560
+    volume: 0.07
+    attackMs: 40
+    echo: 0.2
+  - call: tone
+    type: triangle
+    from: 131
+    durationMs: 1500
+    volume: 0.03
+    attackMs: 180
+    delayMs: 0
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 196
+    durationMs: 1500
+    volume: 0.03
+    attackMs: 180
+    delayMs: 40
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 330
+    durationMs: 1500
+    volume: 0.03
+    attackMs: 180
+    delayMs: 80
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 140
+    volume: 0.032
+    delayMs: 120
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 1046
+    durationMs: 120
+    volume: 0.016
+    delayMs: 120
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 659
+    durationMs: 140
+    volume: 0.032
+    delayMs: 210
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 1318
+    durationMs: 120
+    volume: 0.016
+    delayMs: 210
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 140
+    volume: 0.032
+    delayMs: 300
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 120
+    volume: 0.016
+    delayMs: 300
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 1047
+    durationMs: 140
+    volume: 0.032
+    delayMs: 390
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 2094
+    durationMs: 120
+    volume: 0.016
+    delayMs: 390
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 1319
+    durationMs: 140
+    volume: 0.032
+    delayMs: 480
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 2638
+    durationMs: 120
+    volume: 0.016
+    delayMs: 480
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 1100
+    volume: 0.038
+    attackMs: 6
+    delayMs: 640
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 1100
+    volume: 0.038
+    attackMs: 6
+    delayMs: 640
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 1100
+    volume: 0.038
+    attackMs: 6
+    delayMs: 640
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 1100
+    volume: 0.038
+    attackMs: 6
+    delayMs: 640
+    echo: 0.5
+  - call: noise
+    durationMs: 320
+    volume: 0.05
+    delayMs: 640
+    filter:
+      type: lowpass
+      frequency: 420
+    echo: 0.15
+  - call: tone
+    type: sine
+    from: 2093
+    to: 3136
+    durationMs: 520
+    volume: 0.018
+    delayMs: 900
+    echo: 0.6
