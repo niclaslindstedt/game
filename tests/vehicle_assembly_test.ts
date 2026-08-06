@@ -25,6 +25,7 @@ import { CAR, createVehicles } from "@game/core";
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
+import { carBeam } from "../pwa/src/game/render/night.ts";
 import { drawVehicles } from "../pwa/src/game/render/vehicles.ts";
 import {
   DEFAULT_PITCH,
@@ -214,6 +215,64 @@ describe("the car assembly", () => {
       expect(part.centre.x).toBeCloseTo(shell[0]!.centre.x, 5);
       expect(part.centre.y).toBeCloseTo(shell[0]!.centre.y, 5);
     }
+  });
+
+  // ── THE HEADLIGHTS ARE BOLTED ON ──────────────────────────────────────────
+  // They are sealed beams in a shell, not steering-linked cornering lamps, and
+  // the shell's picture never turns: the body is one side-profile assembly cut
+  // nose-right and nothing mirrors or rotates it, while `CarVehicle.heading`
+  // swings the better part of 180° inside the yaw stop. Walked down the heading
+  // (which is how the beam started life) the wedge therefore swept a 172° arc
+  // across a car that had not visibly moved a pixel.
+  describe("the headlight beam", () => {
+    /** The car, driven, aimed at `heading` — the field the beam must ignore. */
+    function drivenCar(heading: number) {
+      const state = parkedCar({ x: 317, y: 244 });
+      const car = state.vehicles[0]!;
+      if (car.kind !== "car") throw new Error("no car");
+      car.driver = 0;
+      car.heading = heading;
+      return car;
+    }
+
+    /** Every heading the yaw stop lets the nose reach, and both ends of it. */
+    const HEADINGS = [0, 0.4, 1, -1, CAR.maxYaw, -CAR.maxYaw];
+
+    it("does not swing when the car turns", () => {
+      const camera = { x: 0, y: 0 };
+      const straight = carBeam(drivenCar(0), camera, 1);
+      for (const heading of HEADINGS) {
+        const beam = carBeam(drivenCar(heading), camera, 1);
+        expect(beam.x).toBeCloseTo(straight.x, 6);
+        expect(beam.y).toBeCloseTo(straight.y, 6);
+        expect(beam.dir).toBe(straight.dir);
+      }
+    });
+
+    it("throws out of the drawn nose at every camera angle", () => {
+      const camera = { x: 0, y: 0 };
+      for (const projection of PROJECTIONS) {
+        const state = parkedCar({ x: 317, y: 244 });
+        // Drawn PARKED — a running car burns its daylight cones through canvas
+        // gradients, which this transform-only probe has no business minting.
+        const body = drawAt(state, projection).find(
+          (b) => b.name === "car_doors_0",
+        );
+        expect(body).toBeDefined();
+        const car = state.vehicles[0]!;
+        if (car.kind !== "car") throw new Error("no car");
+        car.driver = 0;
+        // Hard over, which is where the old bug was loudest.
+        car.heading = CAR.maxYaw;
+        const beam = carBeam(car, camera, 1);
+        // The lamps sit AHEAD of the body's own anchor on the screen's x axis,
+        // and on its row — the wheel arches' rule, applied to the light.
+        expect(beam.x).toBeGreaterThan(body!.centre.x);
+        // Within the pixel the body's own anchor is rounded to.
+        expect(Math.abs(beam.y - body!.centre.y)).toBeLessThanOrEqual(1);
+        expect(beam.dir).toBe(1);
+      }
+    });
   });
 
   it("keeps the wheels put as the camera turns", () => {
