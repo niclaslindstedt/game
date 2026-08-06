@@ -173,3 +173,53 @@ export function setGeneratedMapSize(size: GeneratedMapSizeSetting): void {
 export function generatedMapSizeSetting(): GeneratedMapSizeSetting {
   return generatedMapSize;
 }
+
+// -- THE CAMERA'S YAW (pwa developer slider `cameraYaw`) ----------------------
+//
+// How far round from square-on the camera stands, in radians — the ONE number
+// the simulation ever takes from the projection, and it is here for exactly one
+// reason:
+//
+//   A BODY DRAWN STANDING UP COVERS A STRIP OF GROUND THE CAMERA CHOOSES THE
+//   BEARING OF. Everything with a body is anchored at its projected spot and
+//   then drawn dead straight-on (pwa/src/game/render/tilt.ts), so a picture 48
+//   px wide covers 48 px of FLOOR running along whichever world bearing comes
+//   out horizontal on the screen. For a round body — a mob, a rock, a barrel —
+//   nobody can tell: its footprint is the same circle whichever way that
+//   bearing points, and the engine is right to know nothing about it.
+//
+// The CAR is not round. It is a long, low side-profile assembly that nothing
+// mirrors and nothing rotates, so the ground it visibly covers turns with the
+// CAMERA and with nothing else — and its blockers have to lie under it
+// (`vehicleFootprint`, vehicles.ts). The engine already carries the other half
+// of that same fact: `CAR.maxYaw` stops the nose short of the beam because the
+// art has one profile.
+//
+// It ships at 0 — square-on, where the bearing below is +x and every sum that
+// reads it is the identity it always was.
+let cameraYawRad = 0;
+
+/**
+ * Set the camera's yaw, in DEGREES — the units the setting and the renderer's
+ * own `setWorldProjection({ yaw })` both speak. Apply the two TOGETHER (pwa
+ * settings.ts does, in one block): they are one camera, and the only way they
+ * can disagree is a call site that moved one of them alone.
+ */
+export function setCameraYaw(degrees: number): void {
+  cameraYawRad = Number.isFinite(degrees) ? (degrees * Math.PI) / 180 : 0;
+}
+
+/**
+ * THE WORLD BEARING THAT COMES OUT HORIZONTAL ON SCREEN (radians) — the
+ * direction a drawn body's own WIDTH lies along on the floor.
+ *
+ * The projection turns (yaw) and then squashes (pitch), so the bearing the
+ * squash leaves flat is the yaw's own, backwards. It is exactly unit-preserving
+ * besides — a world step of n px along it projects to n px of screen x, at every
+ * yaw and every pitch — so a COLUMN of a drawn body and a world offset along
+ * this bearing are the same number, which is what lets the car's blockers reuse
+ * its wheel-arch columns verbatim.
+ */
+export function billboardBearing(): number {
+  return -cameraYawRad;
+}

@@ -21,7 +21,12 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { CAR, createVehicles } from "@game/core";
+import {
+  CAR,
+  createVehicles,
+  setCameraYaw,
+  vehicleFootprint,
+} from "@game/core";
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
@@ -36,9 +41,20 @@ import {
 } from "../pwa/src/game/render/tilt.ts";
 import { startGame } from "./engine/helpers.ts";
 
-/** The projection is module state, so every test puts it back. */
+/**
+ * Point BOTH cameras at the same place — the renderer's projection and the one
+ * number the engine takes from it (`setCameraYaw`, which is how a machine's
+ * blockers find the ground its picture stands on). The app applies them in one
+ * block for the same reason; splitting them is the only way they can drift.
+ */
+function useCamera(projection: { pitch: number; yaw: number }): void {
+  setWorldProjection(projection);
+  setCameraYaw(projection.yaw);
+}
+
+/** Both are module state, so every test puts them back. */
 afterEach(() => {
-  setWorldProjection({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
+  useCamera({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
 });
 
 /** The part canvas every panel (and the underbody) shares, and the wheel. */
@@ -163,7 +179,7 @@ function drawAt(
   state: GameState,
   projection: { pitch: number; yaw: number },
 ): Blit[] {
-  setWorldProjection(projection);
+  useCamera(projection);
   const { sprites, names } = carSprites();
   const probe = drawProbe(names);
   drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
@@ -273,6 +289,46 @@ describe("the car assembly", () => {
         expect(beam.dir).toBe(1);
       }
     });
+  });
+
+  // ── AND THE GROUND IT BLOCKS IS THE GROUND IT STANDS ON ───────────────────
+  // The other half of the same fact, and the half the player walks into: the
+  // car's collision chain (`vehicleFootprint`) is three columns of the SAME part
+  // canvas, so projected it has to land on the drawn body's own columns. Laid
+  // along the heading instead it swung off the picture at the camera's angle,
+  // and the hero walked through the bonnet and was stopped by bare floor.
+  describe("the blockers under it", () => {
+    for (const projection of PROJECTIONS) {
+      it(`land on the drawn body's own columns — ${projection.name}`, () => {
+        const at = { x: 317, y: 244 };
+        const state = parkedCar(at);
+        const blits = drawAt(state, projection);
+        const car = state.vehicles[0]!;
+        const prints = vehicleFootprint(car);
+        expect(prints).toHaveLength(CAR.footprint.offsets.length);
+        prints.forEach((print, i) => {
+          const dx = print.pos.x - at.x;
+          const dy = print.pos.y - at.y;
+          // Projected, the blocker sits at its own column of the assembly, on
+          // the body's own row — at every camera the two knobs can reach.
+          expect(projectX(dx, dy)).toBeCloseTo(CAR.footprint.offsets[i]!, 6);
+          expect(projectY(dx, dy)).toBeCloseTo(0, 6);
+        });
+        // …and the outer two ARE the wheel arches, so they can be read against
+        // the wheels this pass actually blitted. Whole-pixel slack: the drawn
+        // parts are rounded to the device grid and the blockers are not.
+        const shell = blits.find((b) => b.name === "car_doors_0")!;
+        const wheels = blits.filter((b) => b.name.startsWith("car_wheel_"));
+        [0, 2].forEach((i, axle) => {
+          const print = prints[i]!;
+          const column = projectX(print.pos.x - at.x, print.pos.y - at.y);
+          expect(column).toBeCloseTo(
+            wheels[axle]!.centre.x - shell.centre.x,
+            1,
+          );
+        });
+      });
+    }
   });
 
   it("keeps the wheels put as the camera turns", () => {

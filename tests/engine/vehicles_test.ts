@@ -6,7 +6,7 @@
 // and flying minigames will write. Deterministic clockwork: nothing here
 // may touch the run's rng.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { rngState } from "@game/lib/rng.ts";
 import {
@@ -15,6 +15,7 @@ import {
   CAR_FIX,
   detachWheel,
   nudgeCar,
+  setCameraYaw,
   shedPart,
   type CarVehicle,
 } from "@game/core";
@@ -278,6 +279,59 @@ describe("a wheel coming off", () => {
     // Detaching again is refused — there is no second wheel on that axle.
     detachWheel(state, car, 1, { x: 60, y: 0 });
     expect(state.wheelDebris).toHaveLength(1);
+  });
+});
+
+// ── THE FOOTPRINT LIES UNDER THE PICTURE ────────────────────────────────────
+// A car is one side-profile assembly drawn dead straight-on at a single anchor
+// (pwa/src/game/render/vehicles.ts), so the ground it visibly covers runs along
+// whichever world bearing the CAMERA draws horizontal — never along its nose,
+// which the picture does not show at all. Walked down the heading, the blockers
+// stood off the drawn body by up to a body-length, and the hero walked through
+// the bonnet and was stopped by open floor.
+describe("the footprint", () => {
+  /** The engine's camera is module state, so every test puts it back. */
+  afterEach(() => setCameraYaw(0));
+
+  const carPrints = (state: ReturnType<typeof startHub>) =>
+    state.obstacles.filter((o) => o.kind === "vehicle" && o.jumpable);
+
+  it("ignores the nose — the picture never turns, so neither does the chain", () => {
+    const state = startHub();
+    const car = carOf(state);
+    state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
+    expect(applyRunCommand(state, "enterCar")).toBe(true);
+    // Hard over, which is as far off its own axis as the yaw stop lets a nose
+    // come — and the drawn body is exactly where it was.
+    car.heading = CAR.maxYaw;
+    expect(applyRunCommand(state, "exitCar")).toBe(true);
+    const prints = carPrints(state);
+    expect(prints).toHaveLength(3);
+    for (const print of prints) expect(print.pos.y).toBeCloseTo(car.pos.y, 6);
+    expect(
+      prints.map((p) => p.pos.x - car.pos.x).sort((a, b) => a - b),
+    ).toEqual([...CAR.footprint.offsets].sort((a, b) => a - b));
+  });
+
+  it("turns with the CAMERA, which is the thing that turns the picture", () => {
+    setCameraYaw(45);
+    const state = startHub();
+    const car = carOf(state);
+    const prints = carPrints(state);
+    expect(prints).toHaveLength(3);
+    const offsets = [...CAR.footprint.offsets].sort((a, b) => a - b);
+    const along = prints
+      .map((p) => ({ dx: p.pos.x - car.pos.x, dy: p.pos.y - car.pos.y }))
+      // A screen-horizontal chain runs NORTH-east across the floor under a
+      // camera stood 45° round: the bearing is the yaw's own, backwards.
+      .map(({ dx, dy }) => {
+        expect(dy).toBeCloseTo(-dx, 6);
+        return Math.sign(dx) * Math.hypot(dx, dy);
+      })
+      .sort((a, b) => a - b);
+    // Same LENGTHS along the body — the bearing is unit-preserving, which is
+    // what lets a blocker reuse a drawn column's number verbatim.
+    along.forEach((d, i) => expect(d).toBeCloseTo(offsets[i]!, 6));
   });
 });
 

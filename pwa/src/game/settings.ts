@@ -10,6 +10,7 @@ import {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setBalanceTuning,
+  setCameraYaw,
   setCutscenesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
@@ -445,9 +446,17 @@ export type GameSettings = {
    * `cameraPitch` is how far the camera looks DOWN (1 = straight down, 0.5 = a
    * 2:1 foreshortened floor) and `cameraYaw` how far it stands round from
    * square-on, in DEGREES (0 = axis-aligned floor tiles, 45 = the diamond grid
-   * of a true isometric view). Both are pure presentation — the simulation is
-   * square whatever they say — so they need no engine setter, only the
-   * renderer's own `setWorldProjection`. */
+   * of a true isometric view). The simulation stays square whatever they say,
+   * so the PITCH needs no engine setter — only the renderer's own
+   * `setWorldProjection`.
+   *
+   * The YAW needs one anyway, and precisely one thing wants it: a body drawn
+   * standing up covers a strip of FLOOR running along whichever world bearing
+   * comes out horizontal, and the car's blockers are laid along that strip so
+   * they sit under the car the player can see (`setCameraYaw` → the engine's
+   * `billboardBearing`, and `vehicleFootprint` for the whole rule). It is
+   * applied in the same block as `setWorldProjection` below and never without
+   * it — they are one camera. */
   cameraPitch: number;
   cameraYaw: number;
   /** Developer switch: ANTI-ALIASING for the art the camera TURNS — the floor
@@ -1140,6 +1149,7 @@ setWorldProjection({
   yaw: settings.cameraYaw,
   antialias: settings.cameraAntialias === "on",
 });
+setCameraYaw(settings.cameraYaw);
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -1172,6 +1182,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
     yaw: settings.cameraYaw,
     antialias: settings.cameraAntialias === "on",
   });
+  setCameraYaw(settings.cameraYaw);
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

@@ -134,7 +134,10 @@ the world projection dialled live (`docs/rendering.md`):
   the ground rakes away while the bodies keep their height. Shipped at 75%.
 - **CAMERA YAW** — how far the camera stands round from square-on, the half
   people mean by "isometric". 0° (shipped) keeps the floor tiles rectangles;
-  45° turns them into diamonds.
+  45° turns them into diamonds. It is the only camera knob the simulation is
+  told about: a body drawn standing up covers a strip of floor running along
+  whichever bearing comes out horizontal, so the car's collision chain turns
+  with it and stays under the car you can see (`docs/rendering.md`).
 - **ANTI-ALIASING** — whether the art the yaw TURNS is smoothed as it is baked
   through the projection. Off (the default) is nearest-neighbour, which keeps
   every pixel the artist drew and, on a turned floor, breaks each tile seam into

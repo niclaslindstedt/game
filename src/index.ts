@@ -28,8 +28,14 @@ export { createGame } from "./game/create.ts";
 // The engine's runtime toggles. Most reach the app through `@game/menu`; the
 // map-size pair is re-exported here too so a simulation-side caller (the map
 // tooling, the content guard) need not import the menu entry point to set a
-// flag that gates the simulation.
+// flag that gates the simulation. So is the CAMERA'S YAW, for the same reason
+// read the other way round: it is the one number the simulation takes from the
+// projection (a machine's blockers lie under its picture — see
+// `vehicleFootprint`), so a render test or a headless probe that turns the
+// camera has to be able to tell the engine about it.
 export {
+  billboardBearing,
+  setCameraYaw,
   setGeneratedMapSize,
   generatedMapSizeSetting,
   type GeneratedMapSizeSetting,
