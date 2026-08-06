@@ -25,6 +25,14 @@ export { createGame } from "./game/create.ts";
 // seam `createGame` resolves a level through. Read by the map tooling and the
 // content tests; never by the app's startup path, which reaches levels through
 // `defs/levels/summary.ts` and must not pull the generator's bytes.
+// The engine's runtime toggles reach the app through `@game/menu`. The CAMERA'S
+// YAW is re-exported here too, because it is the one number the simulation takes
+// from the projection (a machine's blockers lie under its picture — see
+// `vehicleFootprint`): a render test or a headless probe that turns the camera
+// has to be able to tell the engine about it without importing the menu entry
+// point.
+export { billboardBearing, setCameraYaw } from "./game/flags.ts";
+
 // The autopilot's global pathfinder. Exported so the map tooling and the
 // generated-map guard can ask the engine's OWN router whether a carved map is
 // walkable, instead of re-deriving reachability and drifting from it.

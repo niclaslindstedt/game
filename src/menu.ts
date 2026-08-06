@@ -70,6 +70,7 @@ export { mapCols, mapRows } from "./game/map.ts";
 export {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
+  setCameraYaw,
   setCutscenesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,

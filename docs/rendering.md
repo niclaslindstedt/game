@@ -3,7 +3,9 @@
 The engine simulates a flat, square, top-down world and knows nothing about how
 it is drawn. Everything in this document lives in `pwa/src/game/render/` and is
 **presentation only**: change any of it and the simulation produces the same
-bytes. It is the reference half of the renderer — the projection, the post
+bytes. (One knob is not, and it is named where it is described: the camera's YAW
+turns the ground a BILLBOARD stands on, which the car's blockers have to lie
+under.) It is the reference half of the renderer — the projection, the post
 effects, the canvas and its scale tiers, how bodies carry themselves, and how
 loot announces itself.
 
@@ -30,6 +32,15 @@ rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
 longer cover their axis-aligned collision boxes still read wrong under a turned
 camera, and a proper isometric look needs that structural art redrawn as iso
 pieces — which is an art project, not a render setting.
+
+**THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT**, and
+the exception proves the rule: a body drawn standing up covers a strip of FLOOR
+running along whichever world bearing comes out horizontal, and every body in the
+game is round enough not to care — except the CAR, whose blockers have to lie
+under a 48-px side profile that nothing rotates. So the app pushes the yaw into
+the engine's own import-free leaf (`setCameraYaw` → `billboardBearing`,
+src/game/flags.ts) beside `setWorldProjection`, and nothing else crosses. See
+**SO THE GROUND IT BLOCKS…** under the vehicles below.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -620,6 +631,23 @@ exactly the yaw's own angle. The exception is a part that has genuinely become
 its own body — a wheel that came OFF (`state.wheelDebris`), a shed panel lying on
 the floor — which stands on its own ground and keeps its own world anchor.
 `tests/vehicle_assembly_test.ts` holds the line across the whole knob range.
+
+**SO THE GROUND IT BLOCKS IS THE GROUND ITS PICTURE STANDS ON — AND THAT IS THE
+ONE NUMBER THE SIMULATION TAKES FROM THE PROJECTION.** A car's collision chain
+(`vehicleFootprint`, src/game/vehicles.ts) is three circles at three columns of
+that same 48-px canvas, so it has to lie along whichever world bearing comes out
+HORIZONTAL on screen — `billboardBearing()` in the import-free leaf
+`src/game/flags.ts`, which is `-yaw` and is exactly unit-preserving, so a drawn
+column and a world offset along it are the same number. The app pushes the yaw in
+beside `setWorldProjection` (pwa settings.ts) and never without it. Every other
+body in the game is round enough not to care — a mob, a rock, a barrel blocks the
+same circle whichever way that bearing points — which is why this is the only
+place the engine hears about the camera at all. Walked down `CarVehicle.heading`
+instead, the chain turned under a car whose picture never turns: a nose swung up
+the screen laid the blockers square across the drawn body, and a yaw stood even a
+PARKED car's chain off its own picture at the yaw's own angle. Both read the same
+way from inside the game — the hero walks through the drawn bonnet and is stopped
+by open floor half a car away, and hops onto a roof that is not there.
 
 **AND THE CAR MAY NEVER COME ABOUT.** The body is one side-profile assembly and
 nothing mirrors it, so a car free to turn round drove away still facing the way
