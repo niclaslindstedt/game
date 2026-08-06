@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: cable_run
 family: goodco
+space: inside
 plane: floor
 size: [16, 5]
 description: >

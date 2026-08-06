@@ -46,6 +46,7 @@ import {
   buildFauna,
   buildObstacles,
   buildPlacedItems,
+  buildPrefabProps,
   buildRows,
   buildTiles,
   buildWalls,
@@ -67,7 +68,12 @@ import {
   type Chamber,
   type ChamberGrid,
 } from "./rooms.ts";
-import type { MapBlueprint, MapSetPiece, MapSizeName } from "./types.ts";
+import type {
+  MapBlueprint,
+  MapObject,
+  MapSetPiece,
+  MapSizeName,
+} from "./types.ts";
 
 /**
  * Mixed into the run seed before the layout stream is drawn, so a map's GEOMETRY
@@ -121,6 +127,9 @@ function pickGoalChamber(
   width: number,
   height: number,
   rng: Rng,
+  /** The cell the hero is PINNED to land in (`MapArea.landing`), when a
+   * blueprint names one — see the note below. */
+  landing?: Chamber,
 ): Chamber {
   const eligible = grid.chambers.filter((c) => areaOf(areas, c).boss !== false);
   const pool = eligible.length > 0 ? eligible : grid.chambers;
@@ -133,7 +142,31 @@ function pickGoalChamber(
     const mid = chamberCenter(c);
     return regionContains(rect, mid.x, mid.y);
   });
-  const candidates = inside.length > 0 ? inside : pool;
+  let candidates = inside.length > 0 ? inside : pool;
+  // A PINNED ARRIVAL INVERTS THE ORDER OF THESE TWO PICKS. Normally the boss is
+  // rolled first and the hero is stood as far from it as the grid allows, which
+  // is what makes the search long. When the landing is a fact about the mission
+  // instead (`MapArea.landing` — GOODCO's car park, one cell, in a corner rolled
+  // per run), the hero cannot be moved: two rolled corners can be the same
+  // corner, and then the run opens with the objective 600 px away. So the boss
+  // gives ground rather than the arrival — its own region first, the rest of the
+  // map if that region has nothing far enough, and only then the best available.
+  if (landing) {
+    const far = Math.hypot(width, height) / 3;
+    const away = (c: Chamber): number => {
+      const mid = chamberCenter(c);
+      const from = chamberCenter(landing);
+      return Math.hypot(mid.x - from.x, mid.y - from.y);
+    };
+    const clear = candidates.filter((c) => away(c) >= far);
+    const elsewhere = pool.filter((c) => away(c) >= far);
+    candidates =
+      clear.length > 0
+        ? clear
+        : elsewhere.length > 0
+          ? elsewhere
+          : [pool.reduce((best, c) => (away(c) > away(best) ? c : best))];
+  }
   // Deepest into the named corner first, floor area breaking ties: a boss pushed
   // out to the edge of its third is a boss the hero has to cross the map for,
   // where one hugging the middle gets found on the way to somewhere else.
@@ -167,6 +200,16 @@ function pickSpawnChamber(
    * rather than a preference — see the LONG WALK note at the bottom. */
   planned = false,
 ): Chamber {
+  // THE ARRIVAL, when a district claims it (`MapArea.landing`): the pool is that
+  // district and the fallback below is off. `spawn` is a permission and the
+  // fallback exists to rescue a carve that grew too little of the preferred
+  // district; `landing` is a statement about the MISSION — the hero parks in the
+  // lot and walks in — and there is nothing for a fallback to rescue, only a
+  // scene for it to skip.
+  const landings = new Set(
+    areas.filter((a) => a.landing === true).map((a) => a.id),
+  );
+  const pinned = landings.size > 0;
   const fromGoal = doorDistances(grid, goal.id);
   const goalMid = chamberCenter(goal);
   const reach = (c: Chamber): number => fromGoal[c.id] as number;
@@ -208,7 +251,9 @@ function pickSpawnChamber(
     return best as Chamber;
   };
   const anywhere = grid.chambers.filter((c) => c.id !== goal.id);
-  const eligible = anywhere.filter((c) => areaOf(areas, c).spawn !== false);
+  const eligible = anywhere.filter((c) =>
+    pinned ? landings.has(c.area) : areaOf(areas, c).spawn !== false,
+  );
   const pool = eligible.length > 0 ? eligible : anywhere;
   if (regions && regions.length > 0) {
     const rect = regionRect(
@@ -240,7 +285,7 @@ function pickSpawnChamber(
   // diagonal past this floor and the hero opened the hub standing in the middle
   // of the public highway, with the roll-up door hung on the wrong room behind
   // him.
-  return gap(pick) >= floor || pool === anywhere || planned
+  return gap(pick) >= floor || pool === anywhere || planned || pinned
     ? pick
     : pickFarthest(anywhere);
 }
@@ -275,6 +320,31 @@ const KNOTS_PER_CELL_MAX = 6;
 /** How many of the opening beat's crowd stand around the hero's landing — enough
  * to read as the room he walked into, few enough to still be a breather. */
 const OPENING_CROWD = 3;
+
+/**
+ * The smallest room (shortest edge, world px) a PATROLLING set piece may be
+ * placed in.
+ *
+ * `patrolBeat` insets its waypoint off the walls, so the round a room can offer
+ * is its edge minus two insets — and below about this the remainder is a pace or
+ * two, which reads as a man fidgeting rather than as a sentry walking his patch.
+ * Better a sentry in the wrong room than a sentry standing still: the pacing IS
+ * the set piece.
+ */
+const PATROL_ROOM = 460;
+
+/**
+ * How far off the hero the OPENING STRIKE's rusher is stood — a floor and a
+ * ceiling on the step it has to cross.
+ *
+ * The beat is two-part and ordered: the hero reads the crowd, and only then does
+ * the one that breaks from it draw his blade. That only reads as a rush if the
+ * rusher is somewhere to rush FROM, so the floor matters more than the ceiling —
+ * placed a quarter of the way across a small landing it is already there when
+ * the read fires, and the scene plays as a man being shoved rather than charged.
+ */
+const OPENING_REACH = 170;
+const OPENING_REACH_MAX = 200;
 
 /**
  * The ambient horde as finite knots spread across the cells (see `SpawnerSpec`):
@@ -457,7 +527,12 @@ function buildHellgates(
  * wedges on a crate is a patroller standing still.
  */
 function patrolBeat(room: Chamber, at: Vec2): Vec2 {
-  const inset = Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3);
+  // A QUARTER of the room, not a third — and never more than the standard wall
+  // clearance. The beat is what is left after the inset is taken off BOTH ends,
+  // so a generous inset eats a small room's round entirely: a third of a 340 px
+  // office left the night manager a 114 px shuffle. A quarter leaves him a walk
+  // in the same room, and in a hall the cap does the same job it always did.
+  const inset = Math.min(WALL_INSET, room.w / 4, room.h / 4);
   return room.w >= room.h
     ? vec(
         Math.round(
@@ -608,6 +683,9 @@ function appendAnnex(
     w,
     h: annex.height,
     area: annex.area,
+    // Its own district: it is not part of anything the carve grew, which is the
+    // whole point of it.
+    district: grid.chambers.length,
   };
   grid.chambers.push(room);
   grid.neighbors.push([]);
@@ -656,9 +734,19 @@ export function generateLevel(
   // fought an elite for and which opens nothing on this seed is worse than no
   // keycard at all — and the odds alone left a third of the runs without one.
   const lockable = bp.areas.filter((a) => a.lock === true).map((a) => a.id);
-  const promised = (bp.locks ?? []).map(
-    (_, i) => lockable[i % Math.max(1, lockable.length)] as string,
-  );
+  const keyRooms =
+    lockable.length > 0
+      ? (bp.locks ?? []).map((_, i) => lockable[i % lockable.length] as string)
+      : [];
+  // …AND SO IS THE ARRIVAL, first of all. A district the hero is DECLARED to
+  // land in (`MapArea.landing`) is one the map cannot be without: left to its
+  // weight, a seed that never rolls it strands the landing pick with nothing
+  // eligible and the mission opens wherever the fallback lands — which on
+  // GOODCO is halfway down a corridor rather than out in the car park.
+  const promised = [
+    ...bp.areas.filter((a) => a.landing === true).map((a) => a.id),
+    ...keyRooms,
+  ];
   // An AUTHORED PLAN draws the rooms outright (the static hub's composed
   // shot); everything else is grown by the BSP as always. A plan consumes no
   // rng, so the dressing draws land on the same stream either way.
@@ -675,7 +763,8 @@ export function generateLevel(
         bp.layout.cluster,
         bp.layout.wall,
         rng,
-        lockable.length > 0 ? promised : [],
+        promised,
+        bp.prefabs ?? [],
       );
 
   // --- Where the search ends, and where it starts ----------------------------
@@ -683,6 +772,20 @@ export function generateLevel(
   // hero, whose whole job is to be far away. An authored plan may NAME the goal
   // room outright (`plan.goal` — the rocket stands on the lawn, not wherever
   // the roll lands); the rng is still drawn so a plan changes no later rolls.
+  // …and where the hero is PINNED to land, when the blueprint says so, because
+  // the boss then has to be picked away from it rather than the other way round.
+  // The largest of the district's cells, so the tie is settled the same way
+  // everywhere and a one-cell district (the usual case — see `maxCells`) simply
+  // is the answer.
+  const landingAreas = new Set(
+    bp.areas.filter((a) => a.landing === true).map((a) => a.id),
+  );
+  const landingCell =
+    landingAreas.size > 0
+      ? grid.chambers
+          .filter((c) => landingAreas.has(c.area))
+          .sort((a, b) => b.w * b.h - a.w * a.h)[0]
+      : undefined;
   const rolledGoal = pickGoalChamber(
     grid,
     bp.areas,
@@ -690,6 +793,7 @@ export function generateLevel(
     spec.width,
     spec.height,
     rng,
+    landingCell,
   );
   const goal =
     (bp.plan?.goal
@@ -751,10 +855,16 @@ export function generateLevel(
   // hero does not loot his own home) — the schema already warns that its
   // dead ends pay nothing, so the silence is a choice, never an accident.
   const wantsChests = bp.objects.some((o) => o.type === "chest");
+  // …and HOW MANY is priced per DISTRICT, not per cell. A cache in every fifth
+  // dead end is right when a dead end is a district and absurd once an interior
+  // district has been cut into rooms: the same fraction of thirty offices is six
+  // caches on a floor that used to pay two, which is a loot piñata rather than a
+  // reward for searching (see `Chamber.district`).
+  const districts = new Set(grid.chambers.map((c) => c.district)).size;
   const chestRooms = wantsChests
     ? detourRank(grid, new Set([...offLimits, ...lockableIds]), depth).slice(
         0,
-        Math.max(2, Math.round(grid.chambers.length / 5)),
+        Math.max(2, Math.round(districts / 5)),
       )
     : [];
   const chestIds = new Set(chestRooms.map((c) => c.id));
@@ -915,8 +1025,31 @@ export function generateLevel(
         ? openCells
         : grid.chambers;
   const eliteRooms = spread(elitePool, bp.elites.length);
+  // A SENTRY NEEDS SOMEWHERE TO PACE. The beat is derived from the room the
+  // piece was placed in (`patrolBeat`), so a walker dropped in a broom cupboard
+  // walks nothing: measured on a goodco office wing, the janitor's whole round
+  // came to 111 px, which on screen is a man shuffling on the spot. Rooms only
+  // got small enough for that to happen when interior districts started being
+  // cut into them (`MapArea.roomSize`), so the fix belongs here rather than in
+  // the beat: a patroller is re-homed to the roomiest cell still going.
+  const paced = new Set<number>();
+  const roomToPace = (room: Chamber): Chamber => {
+    if (Math.min(room.w, room.h) >= PATROL_ROOM) return room;
+    // …and when the carve grew nothing that roomy, the ROOMIEST still beats the
+    // one the spread happened to pick: a floor of small offices should put its
+    // sentry in the biggest of them, not in the first.
+    const roomier = elitePool
+      .filter((c) => !paced.has(c.id))
+      .sort((a, b) => Math.min(b.w, b.h) - Math.min(a.w, a.h))[0];
+    return roomier && Math.min(roomier.w, roomier.h) > Math.min(room.w, room.h)
+      ? roomier
+      : room;
+  };
   bp.elites.forEach((piece, i) => {
-    const room = eliteRooms[i] as Chamber;
+    const room = piece.patrol
+      ? roomToPace(eliteRooms[i] as Chamber)
+      : (eliteRooms[i] as Chamber);
+    if (piece.patrol) paced.add(room.id);
     const at = pointIn(
       room,
       rng,
@@ -1147,8 +1280,9 @@ export function generateLevel(
   const offMap = new Set([spawn.id, goal.id, bossHome.id, ...vaultIds]);
   const walls: NonNullable<LevelDef["walls"]> = buildWalls(
     bp,
-    wallSegments(grid, bp.layout.doorWidth),
+    wallSegments(grid),
   );
+  const gaps = doorGaps(grid);
   // THE LOCKED DOORS: every doorway into a sealed cell, filled back in with the
   // chain the matching keycard dissolves. A vault with three ways in gets three
   // doors on ONE id — a key opens the ROOM, not one of its doorways, and a
@@ -1162,7 +1296,7 @@ export function generateLevel(
     const radius =
       bp.objects.find((o) => o.id === (material.wall ?? bp.layout.wall))
         ?.radius ?? 8;
-    for (const gap of doorGaps(grid, bp.layout.doorWidth)) {
+    for (const gap of gaps) {
       const key = vaultKeys.get(gap.a) ?? vaultKeys.get(gap.b);
       if (!key) continue;
       // A doorway INSIDE one vault stays open: the key opens the room, and a
@@ -1176,30 +1310,55 @@ export function generateLevel(
     }
   }
 
-  // APPROACH doors (`type: door` — the garage door): hung across every
-  // doorway of the SPAWN chamber, so the hero's own bay is shut until
-  // somebody walks or drives up to a leaf. Deterministic — no rng draw, so
-  // hanging one cannot shift the rolls of anything placed after it.
+  // APPROACH doors (`type: door`): a real door hung in a doorway, shut until
+  // somebody walks or drives up to it. Two things want one and they say so
+  // differently, because they are two different facts:
+  //
+  //   `at: spawn`      every doorway of the HERO'S OWN chamber — the garage's
+  //                    roll-up, and the threshold a driven car departs through.
+  //   `MapArea.doors`  every doorway a DISTRICT owns — an interior floor's own
+  //                    doors, which is most of what makes a building read as
+  //                    rooms rather than as a floor plan.
+  //
+  // A doorway is claimed once: the vault doors above are already hung, and a
+  // second door across the same hole would be a lock with a door in front of
+  // it. Deterministic throughout — no rng draw, so hanging one cannot shift the
+  // rolls of anything placed after it.
+  const hung = new Set(doors.map((d) => `${d.from.x},${d.from.y}`));
+  const hangDoor = (obj: MapObject, gap: (typeof gaps)[number]): void => {
+    const from =
+      gap.axis === "v" ? vec(gap.coord, gap.from) : vec(gap.from, gap.coord);
+    const to =
+      gap.axis === "v" ? vec(gap.coord, gap.to) : vec(gap.to, gap.coord);
+    const at = `${from.x},${from.y}`;
+    if (hung.has(at)) return;
+    hung.add(at);
+    doors.push({
+      id: obj.id,
+      from,
+      to,
+      radius:
+        obj.radius ??
+        bp.objects.find((o) => o.id === bp.layout.wall)?.radius ??
+        8,
+      sprite: obj.sprite ?? obj.id,
+      ...(obj.openSprite ? { openSprite: obj.openSprite } : {}),
+      ...(obj.rollUp ? { rollUp: true } : {}),
+      opens: "approach",
+    });
+  };
+  for (const gap of gaps) {
+    const byArea = areaById(bp.areas, gap.owner).doors;
+    const obj = byArea
+      ? bp.objects.find((o) => o.id === byArea && o.type === "door")
+      : undefined;
+    if (obj) hangDoor(obj, gap);
+  }
   for (const obj of bp.objects) {
-    if (obj.type !== "door") continue;
-    const radius =
-      obj.radius ??
-      bp.objects.find((o) => o.id === bp.layout.wall)?.radius ??
-      8;
-    for (const gap of doorGaps(grid, bp.layout.doorWidth)) {
+    if (obj.type !== "door" || obj.at !== "spawn") continue;
+    for (const gap of gaps) {
       if (gap.a !== spawn.id && gap.b !== spawn.id) continue;
-      const from =
-        gap.axis === "v" ? vec(gap.coord, gap.from) : vec(gap.from, gap.coord);
-      const to =
-        gap.axis === "v" ? vec(gap.coord, gap.to) : vec(gap.to, gap.coord);
-      doors.push({
-        id: obj.id,
-        from,
-        to,
-        radius,
-        sprite: obj.sprite ?? obj.id,
-        opens: "approach",
-      });
+      hangDoor(obj, gap);
     }
   }
 
@@ -1293,7 +1452,12 @@ export function generateLevel(
   if (buildings.length > 0) def.buildings = buildings;
   // The ranks go in every cell but the two endpoints: the hero must land on clear
   // floor, and the boss needs room to be fought in.
-  const rows = buildRows(bp, grid, endpoints, rng);
+  // …and the PREFABS' own furniture, which is not a rank at all — it is one
+  // prop per authored offset, riding the same deterministic placement.
+  const rows = [
+    ...buildRows(bp, grid, endpoints, rng),
+    ...buildPrefabProps(bp, grid),
+  ];
   if (rows.length > 0) def.propLines = rows;
   const placedItems = buildPlacedItems(base, grid, depth, offMap, rng);
   if (placedItems) def.placedItems = placedItems;
@@ -1302,10 +1466,25 @@ export function generateLevel(
   // The scripted first-blow beat re-anchors beside the hero: it exists to put a
   // harmless swing on him in the opening seconds, which only works within sight.
   if (base.openingStrike) {
+    // THE RUSHER HAS TO ARRIVE, which means he must not START arrived. A quarter
+    // of the cell was fine while every cell was a district; it stops being fine
+    // the moment the landing can be a smaller room, because a quarter of a small
+    // room is a step. So the offset has a FLOOR — and it is taken toward
+    // whichever side of the landing has the floor to give, clamped off that
+    // side's wall, so the beat plays the same whichever corner the hero landed
+    // in.
+    const east = spawn.x + spawn.w - playerSpawn.x;
+    const west = playerSpawn.x - spawn.x;
+    const side = east >= west ? 1 : -1;
+    const room = Math.max(east, west) - WALL_INSET / 2;
+    const reach = Math.max(
+      OPENING_REACH,
+      Math.min(spawn.w / 4, OPENING_REACH_MAX),
+    );
     def.openingStrike = {
       ...base.openingStrike,
       at: vec(
-        Math.round(playerSpawn.x + Math.min(spawn.w / 4, 200)),
+        Math.round(playerSpawn.x + side * Math.max(40, Math.min(reach, room))),
         Math.round(playerSpawn.y),
       ),
     };

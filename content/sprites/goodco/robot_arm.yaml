@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: robot_arm
 family: goodco
+space: inside
 size: [12, 11]
 description: >
   An assembly robot arm on its pedestal — GOODCO factory floor

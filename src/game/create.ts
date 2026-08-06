@@ -1503,6 +1503,8 @@ function buildDoors(
       to: vec(last.pos.x, last.pos.y),
     };
     if (door.opens === "approach") state.approach = true;
+    if (door.openSprite) state.openSprite = door.openSprite;
+    if (door.rollUp) state.rollUp = true;
     doors.push(state);
   }
   return doors;

@@ -1,5 +1,6 @@
 name: conveyor_2
 family: goodco
+space: inside
 plane: floor
 size: [20, 16]
 description: >

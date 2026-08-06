@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: engine_bell
 family: goodco
+space: inside
 size: [14, 12]
 description: >
   A rocket engine bell, mouth up — GOODCO factory floor

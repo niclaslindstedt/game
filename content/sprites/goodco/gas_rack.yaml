@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: gas_rack
 family: goodco
+space: inside
 size: [12, 8]
 description: >
   A rack of gas cylinders, chained upright — GOODCO factory floor

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: nose_cone
 family: goodco
+space: inside
 size: [18, 13]
 description: >
   A rocket nose cone on a stand — GOODCO factory floor

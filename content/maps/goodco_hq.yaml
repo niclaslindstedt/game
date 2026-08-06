@@ -1,41 +1,123 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 description: |-
   GENERATED GOODCO HQ — the campus as a floorplan that is different every shift.
-  THE READ: an interior map, so unlike the outdoor missions it is walls all the
-  way: open PRODUCTION FLOOR partitioned by half-height dividers, sealed ASSEMBLY
-  BAYS, and sterile LABS, and PAYLOAD-1 is idling in one of them. WHICH one is rolled
-  per run out of the six outer thirds, so the prototype rocket is never in the same
-  wing twice and the only way to it is to walk the building room by room, reading
-  the fog-of-war minimap as it fills in. The hero badges in at whichever floor is
-  farthest from the boss by door count.
-  FEEL: the onboarding mission, so it stays legible — straight walls, wide
-  doorways, and the same escalating staff (interns, scientists, engineers, guards,
-  assemblers, hazmat, then SUCCESSOR units deep in the bays). Being indoors is what
-  makes this the one blueprint where the DISTRICTS OWN THEIR FLOOR: a lab really
-  does have a different floor from a bay, the override rectangle really is the
-  room, and the ground changing underfoot is the map telling you where you are. The
-  scripted first swing still lands beside the hero wherever he badges in.
+  THE READ: THE HERO ARRIVES OUTSIDE. He parks in the STAFF LOT — tarmac, bay
+  lines, the night shift's cars still in them, one lamp burning — and the
+  building is the wall in front of him with a door in it. Everything past that
+  door is INSIDE (`space: inside`), and inside is not four halls, it is rooms:
+  the OFFICE WING is cut into cubicle-sized rooms, the CLEANROOMS into labs, the
+  PRODUCTION FLOOR into halls, and every doorway between them carries a real
+  door that slides open as he walks up to it. Only the ASSEMBLY BAYS stay whole,
+  because a bay is a hall by trade. PAYLOAD-1 is idling in one of them, and WHICH
+  is rolled per run out of the six outer thirds, so the only way to it is to walk
+  the building room by room, reading the fog-of-war minimap as it fills in.
+  TWO ROOMS ARE ALWAYS THE SAME ROOM (`prefabs`): the bank of PARKING BAYS he
+  lands beside, and the JANITOR'S CUPBOARD somewhere in the offices — lockers, a
+  mop bucket, and the same mop bucket every single run. They are the only things
+  on the floor a returning player can measure the rest of it against.
+  DOORS GET BIGGER AS THE BUILDING GETS SERIOUS: 56px on the cleaning cupboard,
+  64 on an office, 88 into a cleanroom, 130 onto the production floor and the
+  full 220 between two assembly bays — a hangar door, because that is what a
+  rocket leaves through. An opening is the SMALLER room's, so the door from the
+  hangar into the cupboard is still a cupboard door.
+  FEEL: the onboarding mission, so it stays legible — straight walls, and the
+  same escalating staff (interns and smokers out in the lot,
+  then scientists, engineers, guards, assemblers, hazmat, and SUCCESSOR units
+  deep in the bays). Being indoors is what makes this the one blueprint where the
+  DISTRICTS OWN THEIR FLOOR: a lab really does have a different floor from a bay,
+  the override rectangle really is the room, and the ground changing underfoot is
+  the map telling you where you are. The scripted first swing still lands beside
+  the hero, out on the tarmac.
 id: goodco_hq
 level: goodco_hq
 
-# WHAT THE CAMPUS IS MADE OF. Every district is enclosed — it is a building — so
-# the walls come from the pairing as always, but nothing here is `none`: a FLOOR
-# meets its neighbour behind a half-height divider with a broad opening, and a BAY
-# or a LAB is sealed with a single doorway. PAYLOAD-1 idles in a bay or a lab, never
-# out on the open floor, and the hero always badges in on the floor.
+# WHAT THE CAMPUS IS MADE OF — and, first of all, which side of the wall each
+# piece of it is on (`space`). That one word is what keeps the office furniture
+# off the car park and the parked cars out of the cleanroom: a prop is authored
+# `inside` or `outside` on its own SPRITE, and the build refuses a palette entry
+# that could scatter it into the wrong half.
 areas:
+  # ── OUTSIDE ───────────────────────────────────────────────────────────────
+  # THE STAFF LOT — where the hero arrives, and the only outdoor district on the
+  # map. `landing: true` is stronger than `spawn: true`: he does not merely MAY
+  # start here, he DOES, because walking in through the front of the building is
+  # the mission's opening beat and a seed that badges him in halfway down a
+  # corridor has skipped it rather than moved it. `regions` rolls WHICH edge the
+  # lot is on, so the building is a different shape around him every shift, and
+  # `once` keeps it one car park rather than three — and `maxCells: 1` keeps it
+  # a CORNER rather than a wing: a region is tested per cell CENTRE, and a
+  # carve's cells are big enough that three of them in the southern third came
+  # out as the entire southern half of a small map. One cell is a car park; the
+  # rest of the level is the building, which is what the mission is about. Paved, so `ragged: false` — a lot
+  # is unwalled and its edge is still a kerb, laid to the inch.
+  - id: lot
+    enclosure: none
+    space: outside
+    weight: 2
+    once: true
+    landing: true
+    boss: false
+    horde: 0.5
+    ragged: false
+    regions: [northwest, northeast, southwest, southeast]
+    maxCells: 1
+    label: STAFF PARKING
+    ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 9 }
+
+  # ── INSIDE ────────────────────────────────────────────────────────────────
+  # THE JANITOR'S CUPBOARD, declared FIRST of the enclosed districts on purpose:
+  # a tie between two `hard` areas is settled by authoring order (see
+  # `borderOwner`), so being first is what lets this room own its own borders and
+  # hang its own narrow door rather than wearing the office's wide one. Weight 0
+  # — it is never seeded, it is only ever cut in as a PREFAB.
+  - id: utility
+    enclosure: hard
+    space: inside
+    weight: 0
+    horde: 0
+    boss: false
+    spawn: false
+    doorWidth: 56
+    doors: door_office
+    label: JANITORIAL
+    ground: { common: lab_0, rare: lab_1, rareEvery: 4 }
+  # THE OFFICE WING — the smallest rooms in the building and the reason `roomSize`
+  # exists: a corporate floor is thirty rooms off a corridor, not four halls with
+  # desks in them. 340px rooms behind a 64px door, which is a PERSON DOOR: the
+  # hero is 20 across, so it is three of him wide and reads as one.
+  - id: office
+    enclosure: hard
+    space: inside
+    weight: 2.5
+    horde: 1
+    boss: false
+    spawn: false
+    roomSize: 340
+    doorWidth: 64
+    doors: door_office
+    label: OFFICE WING
+    ground: { common: lab_0, rare: lab_1, rareEvery: 13 }
   - id: floor
-    enclosure: soft
+    enclosure: hard
+    space: inside
     weight: 3
     horde: 1
     boss: false
+    spawn: false
+    roomSize: 620
+    doorWidth: 130
+    doors: door_office
     label: PRODUCTION FLOOR
     ground: { common: lab_0, rare: lab_1, rareEvery: 13 }
+  # A BAY IS A HALL BY TRADE — no `roomSize`, because you do not partition the
+  # room the rocket is assembled in. It still hangs doors on the doorways it has.
   - id: bay
     enclosure: hard
+    space: inside
     weight: 3
     horde: 1.25
     spawn: false
+    doors: door_office
     label: ASSEMBLY BAY
     ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
   # A cleanroom is a LAB floor kept spotless, with the extraction vents clustered
@@ -45,9 +127,13 @@ areas:
   # are one zone among several, not the surface.
   - id: lab
     enclosure: hard
+    space: inside
     weight: 2
     horde: 1.1
     spawn: false
+    roomSize: 460
+    doorWidth: 88
+    doors: door_office
     label: CLEANROOM
     ground: { common: lab_0, rare: lab_1, rareEvery: 5 }
     patch: { a: vent_0, b: vent_1, every: 6 }
@@ -61,9 +147,12 @@ areas:
   # both refused here. The WEIGHT is deliberately low: the three rooms are
   # PROMISED (one seed per key — see `locks:`), so the weight only decides how
   # often a FOURTH sealed store turns up, and a floor of vaults is a floor with
-  # nothing on it.
+  # nothing on it. It hangs no `doors` of its own: its doorways already carry the
+  # keycard door, and a second door across the same hole is a lock with a door
+  # standing in front of it.
   - id: vault
     enclosure: hard
+    space: inside
     weight: 0.6
     horde: 0.9
     boss: false
@@ -86,10 +175,15 @@ sizes:
     height: 2800
     rooms: 24
 
-# THE CARVE. Smaller rooms than the outdoor maps (520px) — an office floor is not
-# a plain — and no `wander` on the wall material: a building's partitions are
-# straight, and a meandering interior wall would read as damage rather than as
-# architecture.
+# THE CARVE. Smaller DISTRICTS than the outdoor maps (520px) — an office floor is
+# not a plain — and then the interior districts are cut into ROOMS again on top
+# of that (`roomSize`). No `wander` on the wall material: a building's partitions
+# are straight, and a meandering interior wall would read as damage rather than
+# as architecture.
+#
+# The blueprint-wide `doorWidth` is the HANGAR DOOR — it is what an area that
+# names none of its own falls back to, which here is the ASSEMBLY BAY and the
+# keycard stores. Every other district asks for something a person walks through.
 layout:
   minRoom: 520
   doorWidth: 220
@@ -97,11 +191,115 @@ layout:
   cluster: 0.5
   wall: partition
 
+# THE TWO ROOMS THAT ARE ALWAYS THE SAME ROOM. Everything else on this floor is
+# rolled, which is what makes the search work and what makes the building
+# unmemorable: ten runs in, a player cannot say one true sentence about it. A
+# prefab is cut into the carve as a real cell — same walls, same derived doorway,
+# same fog — with its furniture at authored offsets, so these two ARE learnable.
+# Nothing the run needs is in either: a carve too small to give one its corner
+# simply does not have that room this shift.
+prefabs:
+  # THE PARKING BAYS the hero lands beside — two ranks of dividers, the night
+  # shift's cars still in three of them, one lamp and the skip nobody empties.
+  # Its area is the LOT itself: bays are an arrangement, not a room, and walling
+  # them off from the car park they are in would be absurd.
+  # A CAR PARK, not a forecourt: two short ranks of five bays, the night shift's
+  # cars nose-first in some of them and the rest empty. Bays are 60 apart because
+  # a car is 48 across, drawn SIDE ON like the one in the garage — same canvas,
+  # same scale, so the thing in the lot and the thing the hero drives read as the
+  # same kind of object. Every solid piece is held a good 50px off the room's own
+  # edges: a prefab is cut to a district's corner, so two of those edges are
+  # somebody's wall, and a lamp standard planted against one is inside it.
+  - id: parking_bays
+    area: lot
+    width: 380
+    height: 230
+    in: [lot]
+    props:
+      - { object: parking_line, at: [40, 62] }
+      - { object: parking_line, at: [100, 62] }
+      - { object: parking_line, at: [160, 62] }
+      - { object: parking_line, at: [220, 62] }
+      - { object: parking_line, at: [280, 62] }
+      - { object: parking_line, at: [340, 62] }
+      - { object: parked_car, at: [70, 62] }
+      - { object: parked_car, at: [190, 62] }
+      - { object: parked_car, at: [310, 62] }
+      - { object: parking_line, at: [40, 168] }
+      - { object: parking_line, at: [100, 168] }
+      - { object: parking_line, at: [160, 168] }
+      - { object: parking_line, at: [220, 168] }
+      - { object: parking_line, at: [280, 168] }
+      - { object: parking_line, at: [340, 168] }
+      - { object: parked_car, at: [130, 168] }
+      - { object: parked_car, at: [250, 168] }
+  # THE JANITOR'S CUPBOARD — lockers along one wall, the mop bucket by the door,
+  # a crate of consumables and the rack he never puts anything back on. Small on
+  # purpose: it has to be able to take a corner out of an office cell and still
+  # leave a room beside it.
+  - id: janitorial
+    area: utility
+    width: 360
+    height: 300
+    in: [office, lab, floor]
+    props:
+      - { object: locker, at: [60, 50] }
+      - { object: locker, at: [110, 50] }
+      - { object: locker, at: [160, 50] }
+      - { object: mop_bucket, at: [70, 230] }
+      - { object: crate, at: [290, 80] }
+      - { object: part_rack, at: [290, 220] }
+
 objects:
   - id: partition
     type: wall
     kind: wall
     radius: 8
+
+  # ── THE DOORS ────────────────────────────────────────────────────────────
+  # Every interior district names this in its `doors`, so every doorway in the
+  # building carries one: a solid slab that stands shut until somebody walks up
+  # to it, then slides aside with a clack and stays open, its leaves left
+  # standing in the jambs (`openSprite`). It is what turns a floor plan into a
+  # building — a doorway is a gap, a DOOR is a thing that was shut.
+  - id: door_office
+    type: door
+    sprite: door_office
+    openSprite: door_office_open
+    radius: 8
+
+  # ── THE STAFF LOT ────────────────────────────────────────────────────────
+  # Outdoor props, and the build knows it: each of these sprites is authored
+  # `space: outside`, so naming any of them on an indoor district fails the
+  # compile rather than putting a parked car in a cleanroom. The prefab above
+  # lays the recognisable rank; these thin the rest of the tarmac out.
+  # The SCATTER is deliberately thin — a couple of cars left anyhow off the marked
+  # bays, the lamp standard and the skip nobody empties. Priced high it reads as a
+  # showroom and buries the ORDERED rank the prefab lays, which is the thing the
+  # player is meant to recognise.
+  - id: parked_car
+    type: obstacle
+    radius: 18
+    density: 3
+    space: outside
+  - id: lamp_post
+    type: obstacle
+    radius: 5
+    density: 5
+    space: outside
+  - id: dumpster
+    type: obstacle
+    radius: 10
+    density: 3
+    space: outside
+    loot:
+      chance: 0.3
+      drop:
+        health: 1
+        stamina: 1
+  - id: parking_line
+    type: decor
+    space: outside
 
   # ── THE ASSEMBLY LINE ────────────────────────────────────────────────────
   # RANKS, not scatter (see the `row` object type). A rocket does not get built
@@ -252,13 +450,35 @@ objects:
     type: crate
     radius: 8
     density: 8
-    areas: [floor]
+    areas: [floor, office]
     loot:
       chance: 0.35
       drop:
         health: 2
         stamina: 1
         gear: 1
+
+  # ── THE OFFICE WING ──────────────────────────────────────────────────────
+  # Small rooms want FEWER, BIGGER pieces, not more of the same scatter — a
+  # cubicle with eight props in it is a skip. Lockers along a wall, a plant
+  # somebody has kept alive, and the desks above are the whole vocabulary.
+  - id: locker
+    type: obstacle
+    radius: 7
+    density: 10
+    areas: [office]
+    space: inside
+  - id: plant
+    type: decor
+    density: 9
+    areas: [office]
+  # THE CUPBOARD'S OWN BUCKET — no density at all: it is never scattered, it
+  # stands exactly where the `janitorial` prefab puts it, which is the only
+  # reason the room is a room the player can recognise.
+  - id: mop_bucket
+    type: obstacle
+    radius: 6
+    space: inside
   # THE ARMORY NOBODY ASKED ABOUT — the same cabinets the PUMP SHOTGUN's lore
   # names, standing on the floor and in the bays.
   - id: weapon_locker
@@ -303,9 +523,13 @@ objects:
     type: decor
     density: 16
     areas: [lab]
+  # Wherever the building is — the one marking with no district of its own, so
+  # `space` rather than an `areas` list: it belongs on every floor INSIDE, and
+  # painting it on the car park would be somebody marking up the tarmac.
   - id: floor_marks
     type: decor
     density: 14
+    space: inside
   - id: conduit
     type: decor
     density: 12

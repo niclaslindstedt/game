@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: door_office
+family: goodco
+space: inside
+size: [16, 16]
+description: >
+  One segment of a GOODCO interior door — a brand-white slab with a chrome push
+  bar and a strip of blue-tinted safety glass at head height; the chain tiles it
+  across a doorway and it slides aside for anybody who walks up.
+subject:
+  kind: solid door obstacle prop
+  build: a flush interior office door seen head on, chrome frame all round
+  features: a band of tinted vision glass across the top, a chrome push bar, a scuffed kick plate
+  accent: brand white and chrome over cold blue glazing
+  flavor: the door between one identical GOODCO corridor and the next
+palette:
+  O: "#1a1c2c" # outline and frame
+  T: "#c0c5cf" # chrome rail highlight
+  V: "#e4e7ee" # brand-white door face
+  b: "#3f4553" # push-bar shadow
+  c: "#6f9cb8" # tinted vision glass
+  f: "#aab0be" # chrome push bar
+  s: "#9095a5" # lower door shade
+  v: "#60687e" # scuffed kick plate
+  x: "#a8d8e6" # glass highlight
+grid: |
+  OOOOOOOOOOOOOOOO
+  OTTTTTTTTTTTTTTO
+  OTccccccccccccTO
+  OTcxxxxxxxxxxcTO
+  OTcxxxxxxxxxxcTO
+  OTccccccccccccTO
+  OTTTTTTTTTTTTTTO
+  OVVVVVVVVVVVVVVO
+  OVVVVVVVVVVVVVVO
+  OffffffffffffffO
+  ObbbbbbbbbbbbbbO
+  OVVVVVVVVVVVVVVO
+  OVVVVVVVVVVVVVVO
+  OssssssssssssssO
+  OvvvvvvvvvvvvvvO
+  OOOOOOOOOOOOOOOO

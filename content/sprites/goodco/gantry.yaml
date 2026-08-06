@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: gantry
 family: goodco
+space: inside
 size: [16, 11]
 description: >
   A service gantry frame beside the line — GOODCO factory floor

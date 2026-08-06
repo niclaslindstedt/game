@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: server_rack
 family: goodco
+space: inside
 size: [12, 13]
 description: >
   A tall AI server rack, status lights down its face — GOODCO factory floor

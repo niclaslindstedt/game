@@ -1,5 +1,6 @@
 name: fuselage
 family: goodco
+space: inside
 size: [20, 26]
 description: >
   A half-built spaceship standing in its assembly jig — a white GOODCO hull with

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: dumpster
+family: goodco
+space: outside
+size: [20, 14]
+description: >
+  A wheeled skip behind the GOODCO building — a dull green steel bin with its
+  lid down, amber hazard flashes on the front and two small castors under it.
+subject:
+  kind: solid obstacle prop
+  build: a wheeled steel waste skip seen head on, lid closed
+  features: a lipped lid, amber hazard flashes, two castors
+  accent: dull municipal green with amber hazard marks
+  flavor: what the GOODCO campus puts out back and never mentions
+palette:
+  O: "#1a1c2c" # outline
+  G: "#4f7a4a" # green steel body
+  g: "#37583a" # body shadow
+  L: "#6f9a63" # lid highlight
+  l: "#456b45" # lid front lip
+  y: "#d8b74a" # hazard amber
+grid: |
+  OOOOOOOOOOOOOOOOOOOO
+  OLLLLLLLLLLLLLLLLLLO
+  OLLLLLLLLLLLLLLLLLLO
+  OllllllllllllllllllO
+  OOOOOOOOOOOOOOOOOOOO
+  OGGGGGGGGGGGGGGGGGGO
+  OGGGGGGGGGGGGGGGGGGO
+  OGGyyGGGGGGGGGGyyGGO
+  OGGGGGGGGGGGGGGGGGGO
+  OggggggggggggggggggO
+  OggggggggggggggggggO
+  OOOOOOOOOOOOOOOOOOOO
+  .OO..............OO.
+  .OO..............OO.

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: mop_bucket
+family: goodco
+space: inside
+size: [11, 13]
+description: >
+  A janitor's yellow wringer bucket with the mop still standing in it — grey
+  water to the brim, the head slumped over the rim.
+subject:
+  kind: solid obstacle prop
+  build: a yellow mop bucket seen head on with a mop standing in it
+  features: a slumped grey mop head, grey water at the brim, a wringer lip
+  accent: caution yellow against grey water
+  flavor: THE JANITOR's, and he has not finished
+palette:
+  O: "#1a1c2c" # outline
+  Y: "#e0b83c" # bucket yellow
+  y: "#a8871f" # bucket shadow
+  w: "#8b9099" # grey mop water
+  m: "#b9bcc2" # mop head
+  p: "#8a6a3c" # mop handle
+grid: |
+  .....OO....
+  .....Op....
+  .....Op....
+  .....Op....
+  ....OOpOO..
+  ...OmmmmmO.
+  ...OmmmmmO.
+  OOOOOOOOOOO
+  OYYYYYYYYYO
+  OYYYYYYYYYO
+  OYwwwwwwwYO
+  OyyyyyyyyyO
+  OOOOOOOOOOO

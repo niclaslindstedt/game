@@ -28,6 +28,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 import { validateMap } from "./asset-tools/map-schema.mjs";
 import { loadLadder } from "./level-data/ladder.mjs";
 import { loadMaps } from "./map-data/load-yaml.mjs";
+import { loadSpriteSpaces } from "./sprite-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
@@ -75,6 +76,10 @@ const refs = {
   ),
   levels: new Set(GENERATED_LEVELS.map((l) => l.id)),
   sprites,
+  // Which side of a building's wall each piece of art belongs on, straight off
+  // the sprite files — so a palette entry that could scatter a server rack onto
+  // a car park fails HERE rather than on somebody's seed (see `MapObject.space`).
+  spriteSpace: loadSpriteSpaces(),
   ramps: new Set(Object.keys(ramps)),
   // Every door a story item is the key to — what a blueprint's `locks` list may
   // name, so a sealed room always has a key somebody carries.

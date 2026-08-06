@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: floor_grate
 family: goodco
+space: inside
 plane: floor
 size: [12, 5]
 description: >
