@@ -41,7 +41,7 @@
       "name": "BOOT HILL",
       "description": "CLEAR BOOT HILL ON ANY DIFFICULTY",
       "category": "story",
-      "tier": "intermediate",
+      "tier": "pro",
       "hidden": false
     },
     {
@@ -81,7 +81,7 @@
       "name": "JESUS CHRIST! STREET CRED",
       "description": "BEAT THE CAMPAIGN ON JESUS CHRIST!",
       "category": "story",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -97,7 +97,7 @@
       "name": "ARCHIVIST",
       "description": "COLLECT 10 STORY ITEMS",
       "category": "story",
-      "tier": "pro",
+      "tier": "intermediate",
       "hidden": false
     },
     {
@@ -145,7 +145,7 @@
       "name": "APEX PREDATOR",
       "description": "KILL 10,000 MOBS",
       "category": "combat",
-      "tier": "expert",
+      "tier": "pro",
       "hidden": false
     },
     {
@@ -169,7 +169,7 @@
       "name": "DEATH INCARNATE",
       "description": "KILL 100,000 MOBS",
       "category": "combat",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -225,7 +225,7 @@
       "name": "KINGSLAYER",
       "description": "DEFEAT 50 BOSSES",
       "category": "combat",
-      "tier": "expert",
+      "tier": "pro",
       "hidden": false
     },
     {
@@ -353,7 +353,7 @@
       "name": "PLANET CRACKER",
       "description": "DEAL 50,000,000 TOTAL DAMAGE",
       "category": "combat",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -417,7 +417,7 @@
       "name": "MAGIC KINGDOM",
       "description": "FIND 100 MAGIC ITEMS",
       "category": "loot",
-      "tier": "pro",
+      "tier": "intermediate",
       "hidden": false
     },
     {
@@ -425,7 +425,7 @@
       "name": "DEEP BLUE",
       "description": "FIND 250 MAGIC ITEMS",
       "category": "loot",
-      "tier": "expert",
+      "tier": "pro",
       "hidden": false
     },
     {
@@ -449,7 +449,7 @@
       "name": "RARE FORM",
       "description": "FIND 50 RARE ITEMS",
       "category": "loot",
-      "tier": "pro",
+      "tier": "intermediate",
       "hidden": false
     },
     {
@@ -457,7 +457,7 @@
       "name": "RARITY EXPERT",
       "description": "FIND 100 RARE ITEMS",
       "category": "loot",
-      "tier": "expert",
+      "tier": "pro",
       "hidden": false
     },
     {
@@ -529,7 +529,7 @@
       "name": "COMPLETIONIST",
       "description": "FIND EVERY UNIQUE ITEM",
       "category": "loot",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -561,7 +561,7 @@
       "name": "MYTHIC WARDROBE",
       "description": "WEAR A FULL OUTFIT, ALL UNIQUE OR LEGENDARY",
       "category": "gear",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -609,7 +609,7 @@
       "name": "THE FULL PARTY",
       "description": "RECRUIT EVERY COMPANION",
       "category": "party",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {
@@ -649,7 +649,7 @@
       "name": "LIVING LEGEND",
       "description": "REACH LEVEL 99",
       "category": "hero",
-      "tier": "expert",
+      "tier": "legend",
       "hidden": false
     },
     {

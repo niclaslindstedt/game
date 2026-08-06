@@ -2051,10 +2051,12 @@ export function GameScreen({
         <DownedOverlay state={state} font={font} bumpUi={bumpUi} />
       )}
 
-      {/* The achievement unlock banner — any phase: a badge earned on the
-          winning blow still gets its moment over the victory splash. A tap on
-          it opens the shelf below (routed through the canvas, see
-          controls.ts — the banner never takes the press itself). */}
+      {/* The achievement unlock celebration — any phase: a badge earned on the
+          winning blow still gets its moment over the victory splash. The badge's
+          TIER decides whether that is the corner banner or the full-screen
+          reveal (AchievementToast). A tap on it opens the shelf below (routed
+          through the canvas, see controls.ts — it never takes the press
+          itself). */}
       {achievementToast && (
         <AchievementToast
           key={`toast-${achievementToast.id}`}

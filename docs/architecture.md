@@ -1481,10 +1481,22 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
   unlock banner, which raises the same shelf over the run and PAUSES it
   (`game-screen/use-achievements-shelf.ts`) — and
-  `AchievementToast.tsx` the gold unlock banner that still fires in-run as
-  badges are earned; `platform-achievements.ts` / `achievement-sync.ts`
+  `AchievementToast.tsx` the in-run unlock celebration;
+  `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —
-  see the native section below),
+  see the native section below).
+
+  **A badge's TIER is the whole design.** `AchievementDef.tier` is one of five
+  effort rungs (BEGINNER → INTERMEDIATE → PRO → EXPERT → LEGEND), it is what
+  the badge is worth (`ACHIEVEMENT_POINTS`, 10/25/50/100/250), and
+  `achievement-tiers.ts` turns that one field into everything the celebration
+  does: the banner's frame weight, halo and fleck count, how long it holds the
+  screen, the chime (`sfx/jingles.ts`) and the buzz (`haptics.ts`) — and, for
+  LEGEND alone, a full-screen card REVEAL instead of the corner banner, which
+  is what the level cap, the campaign on its cruelest setting, every relic and
+  every ally land as. Keeping the ladder in one table is what keeps it
+  monotone; `tests/achievements_test.ts` pins that no counter ladder ever pays
+  less for asking more, and that exactly one tier gets the reveal,
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
@@ -1675,11 +1687,12 @@ seams a browser can't provide on iOS:
   grant a badge the game didn't award; because both platforms keep the highest
   percentage they have seen for an id, a report is idempotent and a failed one
   is simply retried. Game Center caps a game at 100 achievements and 1,000
-  points total against the game's 226 badges, so
+  points total against the game's 251 badges, so
   `pwa/src/game/platform-achievements.ts` carries 86 of them — dropping the
   per-unique `unique_*` wall and the `equip_*` onboarding nudges, both already
-  rolled up by ladders that do travel — and apportions the point budget from the
-  badges' own tiers. The resulting list is generated and committed
+  rolled up by ladders that do travel, plus the hero ladder's decade rungs,
+  where the stores keep the quarter marks (10/25/50/75/99) they were filled in
+  with — and apportions the point budget from the badges' own tiers. The resulting list is generated and committed
   (`native/store/game-center-achievements.json`, via
   `scripts/game-center-achievements.mjs`) because an achievement only exists
   once it has been created in App Store Connect. Reports are throttled to

@@ -10070,7 +10070,14 @@ canvas.tier-artifact {
 
 /* The unlock banner: bottom-center, tucked under the pickup card's zone and
    clear of the corner feed, the powerup dock, and the top HUD — the badge
-   celebrates from the screen's quiet edge. Never eats pointer events. */
+   celebrates from the screen's quiet edge. Never eats pointer events.
+
+   IT CLIMBS WITH THE TIER. `--badge-tier` / `--badge-tier-rgb` come off the
+   component (achievement-tiers.ts owns the palette), and the per-tier classes
+   below add what a color alone can't say: a bigger frame, a heavier halo, a
+   longer dwell. So a hundred-point badge OUTRANKS a ten-point one at a glance,
+   without the player reading a number. The top tier never reaches this rule at
+   all — it renders as the full-screen reveal further down. */
 .achievement-toast {
   position: absolute;
   bottom: max(0.6rem, env(safe-area-inset-bottom));
@@ -10088,16 +10095,54 @@ canvas.tier-artifact {
   box-sizing: border-box;
   padding: 0.4rem 0.7rem;
   background: rgba(11, 13, 16, 0.78);
-  border: 2px solid #ffd75e;
+  border: var(--badge-frame, 2px) solid var(--badge-tier, #ffd75e);
   border-radius: 6px;
   box-shadow:
-    0 0 0.35rem rgba(255, 215, 94, 0.35),
+    0 0 var(--badge-halo, 0.35rem)
+      rgba(var(--badge-tier-rgb, 255, 215, 94), var(--badge-halo-alpha, 0.35)),
     0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
   pointer-events: none;
   overflow: visible;
   isolation: isolate;
-  animation: achievement-toast 4000ms ease-out forwards;
+  /* Sized to the tier's own dwell (TIER_LOOK.ttlMs) — the keyframes below are
+     stated in percentages, so they retime themselves against it. */
+  animation: achievement-toast var(--badge-ttl, 4000ms) ease-out forwards;
   will-change: transform, opacity;
+}
+/* HOW LOUD EACH RUNG IS, in two levers, set once and read by every achievement
+   surface — the unlock banner, the shelf row's icon cell, the detail card. A
+   ten-point badge is a thin bronze slip; a hundred-point one is framed and
+   haloed. Named `badge-tier-*` rather than `tier-*` so it can never be confused
+   with the ITEM rarity glow classes (tiers.ts), which share this stylesheet and
+   very nearly share these names.
+
+   The DWELL is not one of the levers — it rides in on `--badge-ttl` from the
+   look table, so the stylesheet never keeps a second copy of a timing the
+   celebration's own timer is also reading. */
+.badge-tier-beginner {
+  --badge-frame: 1px;
+  --badge-halo: 0.2rem;
+  --badge-halo-alpha: 0.22;
+}
+.badge-tier-intermediate {
+  --badge-frame: 2px;
+  --badge-halo: 0.3rem;
+  --badge-halo-alpha: 0.3;
+}
+.badge-tier-pro {
+  --badge-frame: 2px;
+  --badge-halo: 0.45rem;
+  --badge-halo-alpha: 0.4;
+}
+.badge-tier-expert {
+  --badge-frame: 3px;
+  --badge-halo: 0.75rem;
+  --badge-halo-alpha: 0.55;
+}
+.badge-tier-legend {
+  --badge-frame: 3px;
+  --badge-halo: 1rem;
+  --badge-halo-alpha: 0.75;
 }
 /* The banner sits over the very zone a thumb anchors the virtual dpad in
    (bottom-centre) and must NEVER swallow that touch — the dpad has priority
@@ -10110,8 +10155,8 @@ canvas.tier-artifact {
   pointer-events: none;
 }
 
-/* Rise in from the bottom edge, settle, hold, sink out — sized to
-   ACHIEVEMENT_TOAST_TTL_MS. */
+/* Rise in from the bottom edge, settle, hold, sink out — stated in percentages
+   so it retimes itself to whatever dwell the tier brought (`--badge-ttl`). */
 @keyframes achievement-toast {
   0% {
     transform: translate(-50%, 140%) scale(0.9);
@@ -10195,8 +10240,8 @@ canvas.tier-artifact {
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #ffe9a8;
-  box-shadow: 0 0 6px 1px rgba(255, 215, 94, 0.8);
+  background: #fff;
+  box-shadow: 0 0 6px 1px rgba(var(--badge-tier-rgb, 255, 215, 94), 0.85);
   transform: rotate(45deg) scale(0);
   animation: achievement-toast-sparkle 1300ms ease-in-out
     var(--spark-delay, 0ms) infinite;
@@ -10214,6 +10259,358 @@ canvas.tier-artifact {
   70% {
     transform: rotate(45deg) scale(0.4);
     opacity: 0.6;
+  }
+}
+
+/* ---- The LEGEND reveal ------------------------------------------------------
+   The top-tier unlock, and the only one that takes the whole screen: the room
+   goes dark, rays tear open behind the middle of it, and the badge's card flips
+   in out of depth and LANDS — bloom, shockwave and a white blink on the frame
+   the card stops on. The same four beats the legend fanfare is written in
+   (sfx/jingles.ts), timed to the same marks, because sound and light arriving
+   apart reads as a video with a soundtrack rather than one event.
+
+   Every layer is one-shot and absolutely placed behind the card; the container
+   owns the fade in and out over the tier's dwell (TIER_LOOK.ttlMs), which is
+   why the sub-animations may state plain ms and stay readable.
+
+   INERT, LIKE THE BANNER, AND FOR A SHARPER REASON: this covers the entire
+   viewport for six seconds while a hero is still being steered under it, so
+   nothing here may take a pointer. The tap-to-open-the-shelf rect is the CARD
+   alone (the component puts `toastRef` there, not on the backdrop) and the
+   canvas hit-tests it — see controls.ts. */
+.achievement-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 115;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Depth for the card's flip — without it the rotateY is a flat squash. */
+  perspective: 40rem;
+  pointer-events: none;
+  overflow: hidden;
+  animation: achievement-reveal var(--badge-ttl, 6400ms) linear forwards;
+  will-change: opacity;
+}
+.achievement-reveal * {
+  pointer-events: none;
+}
+/* The room going dark — a vignette rather than a flat wash, so the field is
+   still legible at the edges while the middle belongs to the card. */
+.achievement-reveal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(8, 10, 14, 0.55) 0%,
+    rgba(8, 10, 14, 0.86) 70%
+  );
+  animation: achievement-reveal-dark 700ms ease-out both;
+}
+
+@keyframes achievement-reveal {
+  0% {
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes achievement-reveal-dark {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Beat 1 — the rays tear open, then keep turning slowly under the card for the
+   whole hold, so the tableau never goes static while it is being read. */
+.achievement-reveal-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160vmax;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(var(--badge-tier-rgb, 255, 94, 108), 0.5) 0deg 3deg,
+    transparent 3deg 16deg
+  );
+  /* A RING, not a disc: the middle of the fan is behind the card and wasted, so
+     the mask holds the rays back until just outside its edge and burns them out
+     before the frame's. */
+  -webkit-mask: radial-gradient(
+    circle,
+    transparent 6%,
+    #000 16%,
+    transparent 52%
+  );
+  mask: radial-gradient(circle, transparent 6%, #000 16%, transparent 52%);
+  opacity: 0;
+  animation: achievement-reveal-rays 5600ms cubic-bezier(0.1, 0.7, 0.3, 1) both;
+}
+@keyframes achievement-reveal-rays {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(-30deg);
+  }
+  12% {
+    opacity: 0.9;
+  }
+  40% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.28;
+    transform: translate(-50%, -50%) scale(1) rotate(40deg);
+  }
+}
+
+/* Beat 4 — the bloom off the card's heart, the shockwave past its edges, and a
+   single white blink on the frame it lands on. All three fire at 640ms, which
+   is where the card stops and where the fanfare's chord hits. */
+.achievement-reveal-bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70vmin;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.2);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(var(--badge-tier-rgb, 255, 94, 108), 0.7) 30%,
+    transparent 68%
+  );
+  opacity: 0;
+  animation: achievement-reveal-bloom 900ms ease-out 560ms forwards;
+}
+@keyframes achievement-reveal-bloom {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+}
+.achievement-reveal-blast {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30vmin;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.15);
+  border-radius: 50%;
+  border: 0.28rem solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 1.6rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.8),
+    inset 0 0 1rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.7);
+  opacity: 0;
+  animation: achievement-reveal-blast 820ms ease-out 620ms forwards;
+}
+@keyframes achievement-reveal-blast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(5);
+    border-width: 0;
+  }
+}
+.achievement-reveal-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  animation: achievement-reveal-flash 420ms ease-out 620ms forwards;
+}
+@keyframes achievement-reveal-flash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Beats 2–3 — the card itself, flipping in out of depth and overshooting a
+   touch before it settles, which is what makes it read as LANDING rather than
+   as fading up. It carries the tier's color on every edge. */
+.achievement-reveal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  box-sizing: border-box;
+  /* Wide enough for the wrapped name at 4× (REVEAL_NAME_REM), and never wider
+     than a landscape phone's short side. */
+  max-width: min(20rem, 86vw);
+  padding: 0.9rem 1.2rem;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 21, 27, 0.96),
+    rgba(9, 11, 15, 0.96)
+  );
+  border: 3px solid var(--badge-tier, #ff5e6c);
+  border-radius: 10px;
+  box-shadow:
+    0 0 1.4rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.65),
+    inset 0 0 1.2rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.22),
+    0 0.6rem 1.4rem rgba(8, 10, 14, 0.7);
+  isolation: isolate;
+  animation: achievement-reveal-card 760ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+@keyframes achievement-reveal-card {
+  0% {
+    opacity: 0;
+    transform: translateY(14%) scale(0.12) rotateY(-120deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  84% {
+    transform: translateY(0) scale(1.08) rotateY(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateY(0deg);
+  }
+}
+
+.achievement-reveal-icon {
+  width: 4.2rem;
+  height: 4.2rem;
+  image-rendering: pixelated;
+  filter: drop-shadow(
+    0 0 0.5rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.8)
+  );
+}
+
+/* The sheen sweeping the card face as it settles — the banner's trick, timed
+   to start where the card stops. */
+.achievement-reveal-sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.achievement-reveal-sheen::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  /* Wide and faint. The banner's recipe is a narrow bright slip, which works
+     at banner size and does NOT here: over a card five times the area the same
+     band reads as a grey slab parked across the face rather than as light
+     moving over it. */
+  width: 55%;
+  left: -60%;
+  background: linear-gradient(
+    105deg,
+    transparent,
+    rgba(255, 245, 220, 0.16),
+    transparent
+  );
+  animation: achievement-reveal-sheen 1500ms ease-out 700ms 1 both;
+}
+@keyframes achievement-reveal-sheen {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(500%);
+  }
+}
+
+/* Motes around the card for the whole hold — bigger and slower than the
+   banner's flecks, since they have the middle of the screen to drift in. */
+.achievement-reveal-sparkles {
+  position: absolute;
+  inset: -1.2rem;
+  pointer-events: none;
+}
+.achievement-reveal-sparkle {
+  position: absolute;
+  width: 0.4rem;
+  height: 0.4rem;
+  margin: -0.2rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0.7rem 0.12rem rgba(var(--badge-tier-rgb, 255, 94, 108), 0.9);
+  opacity: 0;
+  animation: achievement-reveal-sparkle 2100ms ease-out var(--spark-delay, 0ms)
+    infinite;
+}
+@keyframes achievement-reveal-sparkle {
+  0% {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-1.1rem) scale(0.3);
+  }
+}
+
+/* The whole spectacle is motion, so a player who asked for less gets the card
+   and the color and nothing that moves: it fades up, holds, fades out. The
+   badge still reads — which is the part that matters. */
+@media (prefers-reduced-motion: reduce) {
+  .achievement-reveal-rays,
+  .achievement-reveal-bloom,
+  .achievement-reveal-blast,
+  .achievement-reveal-flash,
+  .achievement-reveal-sheen::before,
+  .achievement-reveal-sparkle {
+    animation: none;
+    opacity: 0;
+  }
+  .achievement-reveal-card {
+    animation: achievement-reveal-card-still 400ms ease-out both;
+  }
+  @keyframes achievement-reveal-card-still {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .achievement-toast-sparkle {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -10377,7 +10774,7 @@ canvas.tier-artifact {
     0 6px 18px rgba(0, 0, 0, 0.65);
 }
 .achievements-detail.unlocked {
-  border-color: rgba(255, 215, 94, 0.45);
+  border-color: rgba(var(--badge-tier-rgb, 255, 215, 94), 0.45);
 }
 
 .achievements-header {
@@ -10420,9 +10817,15 @@ canvas.tier-artifact {
   border: 2px solid #3a4150;
   border-radius: 4px;
 }
+/* An earned row is framed in its own TIER's color and haloed to its own tier's
+   strength (`--badge-tier` / `--badge-halo`, off the row's `badge-tier-*`
+   class) — so scrolling the shelf reads as a ladder rather than as one long
+   column of identical gold. A row with no tier vars falls back to the gold
+   every badge used to wear. */
 .achievement-row.unlocked .achievement-cell {
-  border-color: #ffd75e;
-  box-shadow: 0 0 0.3rem rgba(255, 215, 94, 0.3);
+  border-color: var(--badge-tier, #ffd75e);
+  box-shadow: 0 0 var(--badge-halo, 0.3rem)
+    rgba(var(--badge-tier-rgb, 255, 215, 94), var(--badge-halo-alpha, 0.3));
 }
 .achievement-cell .pixel-img {
   width: 1.5rem;
@@ -10517,8 +10920,9 @@ canvas.tier-artifact {
 }
 .achievement-card.unlocked .achievement-card-cell,
 .achievements-detail.unlocked .achievement-card-cell {
-  border-color: #ffd75e;
-  box-shadow: 0 0 0.5rem rgba(255, 215, 94, 0.35);
+  border-color: var(--badge-tier, #ffd75e);
+  box-shadow: 0 0 calc(var(--badge-halo, 0.35rem) + 0.15rem)
+    rgba(var(--badge-tier-rgb, 255, 215, 94), var(--badge-halo-alpha, 0.35));
 }
 .achievement-card-cell .pixel-img {
   width: 5.2rem;

@@ -12,6 +12,7 @@ import { readFileSync } from "node:fs";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  DIFFICULTY_ORDER,
   ENEMY_DEFS,
   LEVEL_ORDER,
   UNIQUE_IDS,
@@ -22,7 +23,11 @@ import {
 import {
   ACHIEVEMENTS,
   ACHIEVEMENTS_BY_ID,
+  ACHIEVEMENT_POINTS,
+  ACHIEVEMENT_TIERS,
+  tierRank,
 } from "../pwa/src/game/achievement-defs.ts";
+import { TIER_LOOK } from "../pwa/src/game/achievement-tiers.ts";
 import {
   applyEventsToTotals,
   applyKillRate,
@@ -474,6 +479,118 @@ describe("achievement catalog", () => {
     }
   });
 
+  it("pays more for every step up the effort ladder", () => {
+    // The tier IS the price, so the ladder has to be strictly ascending — two
+    // tiers worth the same would make one of them a label with no consequence.
+    for (let i = 1; i < ACHIEVEMENT_TIERS.length; i++) {
+      const under = ACHIEVEMENT_TIERS[i - 1]!;
+      const over = ACHIEVEMENT_TIERS[i]!;
+      expect(ACHIEVEMENT_POINTS[over], `${over} vs ${under}`).toBeGreaterThan(
+        ACHIEVEMENT_POINTS[under],
+      );
+      expect(tierRank(over)).toBe(tierRank(under) + 1);
+    }
+  });
+
+  it("never lets a counter ladder pay less for asking more", () => {
+    // THE POINTS-MATCH-DIFFICULTY CONTRACT, in the one place it can actually be
+    // checked. Whether 50 rares deserves PRO is a judgement call no test can
+    // make — but "KILL 25,000 MOBS pays less than KILL 5,000 MOBS" is a plain
+    // mistake, and a retier that fixes one rung and forgets its neighbour is
+    // exactly how it gets made. Ladders are grouped by the id stem the rungs
+    // share (`kills_1000` → `kills`), and ordered by the goal they actually
+    // climb to rather than by their place in the file.
+    const ladders = new Map<
+      string,
+      { id: string; goal: number; rank: number }[]
+    >();
+    // A ceiling every meter is already clamped at, so `progress` reports the
+    // goal itself rather than a live figure.
+    const maxed = emptyTotals();
+    maxed.kills = 10 ** 9;
+    maxed.heroLevel = 999;
+    maxed.totalRuns = 10 ** 6;
+    maxed.totalDamage = 10 ** 12;
+    maxed.maxSingleHit = 10 ** 9;
+    maxed.maxBurstDamage = 10 ** 9;
+    for (const def of ACHIEVEMENTS) {
+      const goal = def.progress?.(maxed).goal;
+      if (goal === undefined) continue;
+      const stem = def.id.replace(/_[^_]+$/, "");
+      const rungs = ladders.get(stem) ?? [];
+      rungs.push({ id: def.id, goal, rank: tierRank(def.tier) });
+      ladders.set(stem, rungs);
+    }
+    // The grouping is only meaningful if it actually found the ladders — a
+    // renamed id family would otherwise leave this passing over nothing.
+    for (const stem of [
+      "kills",
+      "magic",
+      "rare",
+      "uniques",
+      "level",
+      "bosses",
+    ]) {
+      expect(ladders.get(stem)?.length, stem).toBeGreaterThan(2);
+    }
+    for (const [stem, rungs] of ladders) {
+      const climb = [...rungs].sort((a, b) => a.goal - b.goal);
+      for (let i = 1; i < climb.length; i++) {
+        expect(
+          climb[i]!.rank,
+          `${stem}: ${climb[i]!.id} must not pay less than ${climb[i - 1]!.id}`,
+        ).toBeGreaterThanOrEqual(climb[i - 1]!.rank);
+      }
+    }
+  });
+
+  it("keeps LEGEND scarce, and spends it on the monuments", () => {
+    // The top rung is the one that stops the screen (achievement-tiers.ts), so
+    // it is worth nothing if it is handed out. A new legend badge should have
+    // to move this number deliberately rather than drift past it.
+    const legends = ACHIEVEMENTS.filter((a) => a.tier === "legend");
+    expect(legends.length).toBeLessThanOrEqual(10);
+    for (const id of ["level_99", "uniques_all", "ally_all"]) {
+      expect(ACHIEVEMENTS_BY_ID.get(id)?.tier, id).toBe("legend");
+    }
+    // …and the cruelest difficulty's badge, whichever the catalog ends on.
+    const hardest = DIFFICULTY_ORDER[DIFFICULTY_ORDER.length - 1]!;
+    expect(ACHIEVEMENTS_BY_ID.get(`campaign_${hardest}`)?.tier).toBe("legend");
+  });
+
+  it("puts a hero badge on every decade of the climb to the cap", () => {
+    for (let level = 10; level <= 90; level += 10) {
+      const def = ACHIEVEMENTS_BY_ID.get(`level_${level}`);
+      expect(def, `level_${level}`).toBeDefined();
+      expect(def!.category).toBe("hero");
+      expect(def!.desc).toBe(`REACH LEVEL ${level}`);
+    }
+    // …and the cap itself is the ladder's last word, and the whole category's
+    // only reveal.
+    expect(ACHIEVEMENTS_BY_ID.get("level_99")?.tier).toBe("legend");
+    const hero = ACHIEVEMENTS.filter((a) => a.category === "hero");
+    expect(
+      hero.filter((a) => TIER_LOOK[a.tier].reveal).map((a) => a.id),
+    ).toEqual(["level_99"]);
+  });
+
+  it("gives exactly one tier the full-screen reveal", () => {
+    // A second reveal tier would make the spectacle ordinary, which is the one
+    // thing it cannot be.
+    const revealing = ACHIEVEMENT_TIERS.filter((t) => TIER_LOOK[t].reveal);
+    expect(revealing).toEqual(["legend"]);
+    // And the celebration grows with the rung, all the way up — the dwell is
+    // the lever the toast queue reads, so it is the one that must not sag.
+    for (let i = 1; i < ACHIEVEMENT_TIERS.length; i++) {
+      expect(TIER_LOOK[ACHIEVEMENT_TIERS[i]!].ttlMs).toBeGreaterThan(
+        TIER_LOOK[ACHIEVEMENT_TIERS[i - 1]!].ttlMs,
+      );
+      expect(TIER_LOOK[ACHIEVEMENT_TIERS[i]!].sparkles).toBeGreaterThanOrEqual(
+        TIER_LOOK[ACHIEVEMENT_TIERS[i - 1]!].sparkles,
+      );
+    }
+  });
+
   it("points every badge icon at a sprite in the shipped atlas", () => {
     const atlas = JSON.parse(
       readFileSync(
@@ -503,15 +620,36 @@ describe("platform achievements", () => {
     );
   });
 
-  it("carries every badge except the two rolled-up families", () => {
+  it("carries every badge except the families that stay home", () => {
     const carried = new Set(PLATFORM_ACHIEVEMENTS.map((a) => a.id));
+    const rungs = new Set([
+      "level_10",
+      "level_25",
+      "level_50",
+      "level_75",
+      "level_99",
+    ]);
     for (const def of ACHIEVEMENTS) {
-      const local = def.id.startsWith("unique_") || def.id.startsWith("equip_");
+      const local =
+        def.id.startsWith("unique_") ||
+        def.id.startsWith("equip_") ||
+        (def.id.startsWith("level_") && !rungs.has(def.id));
       expect(carried.has(def.id), def.id).toBe(!local);
     }
     // …and each family's roll-up DOES travel, so the climb is still visible.
     expect(carried.has("uniques_all")).toBe(true);
     expect(carried.has("outfit_full")).toBe(true);
+  });
+
+  it("keeps every hero rung the stores were filled in with", () => {
+    // A store achievement id is PERMANENT — a Steam one survives in an owner's
+    // profile whether or not the game still lists it. So the five quarter-mark
+    // rungs the portals already carry may never drop off the list, however the
+    // in-game ladder is reshaped around them.
+    const carried = new Set(PLATFORM_ACHIEVEMENTS.map((a) => a.id));
+    for (const level of [10, 25, 50, 75, 99]) {
+      expect(carried.has(`level_${level}`), `level_${level}`).toBe(true);
+    }
   });
 
   it("uses ids the portals accept", () => {
@@ -535,10 +673,9 @@ describe("platform achievements", () => {
 
   it("weights a harder badge no lower than an easier one", () => {
     const points = platformPoints();
-    const rank = { beginner: 0, intermediate: 1, pro: 2, expert: 3 };
     for (const a of PLATFORM_ACHIEVEMENTS) {
       for (const b of PLATFORM_ACHIEVEMENTS) {
-        if (rank[a.tier] > rank[b.tier]) {
+        if (tierRank(a.tier) > tierRank(b.tier)) {
           expect(
             points[a.id] ?? 0,
             `${a.id} vs ${b.id}`,
