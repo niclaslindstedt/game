@@ -229,6 +229,22 @@ export type Bot = {
     pickFar?: boolean;
   };
   /**
+   * ERRAND memory (see `errands.ts`): the giver the bot has COMMITTED to
+   * walking over to, the headway gauge that WRITES ONE OFF when the march
+   * makes none (a carve can wall a person off, and the errand rung sits high
+   * enough that pinning it would pin the run), the per-level skip set that
+   * keeps, and the escort's walk/wait latch. Per-level, pure — same
+   * determinism guarantee as `content`.
+   */
+  errand?: {
+    levelId: string;
+    giverId: string | null;
+    bestRoute: number;
+    bestMs: number;
+    skip: string[];
+    escortHeld: boolean;
+  };
+  /**
    * HUB memory (see `hub.ts`): how long the hero has stood at the counter with
    * the shop errand still wanting, and whether that errand has been WRITTEN OFF
    * for this visit. At home the counter outranks the car, so a want no trade

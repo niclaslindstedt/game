@@ -33,11 +33,11 @@ import {
   driveOutInput,
   heroCar,
   hubCar,
-  hubGiverTarget,
   hubGoal,
   hubTapCommand,
   trackHubShop,
 } from "../../src/game/bot/hub.ts";
+import { errandGiver, giverTapCommand } from "../../src/game/bot/errands.ts";
 import { doorwayVia, routeSteer } from "../../src/game/bot/nav.ts";
 import { macroTarget } from "../../src/game/bot/macro.ts";
 import { botAct } from "../../src/game/bot/index.ts";
@@ -108,14 +108,15 @@ describe("the hub is a level the autopilot can play", () => {
   it("goes to the person with work before anything else", () => {
     const state = stage();
     const hero = state.players[0]!;
+    const bot = createBot("balanced");
     stand(hero, CAR_AT);
-    expect(hubGiverTarget(state, hero)).toBe("hub_giver");
-    const goal = hubGoal(createBot("balanced"), state, hero, false);
-    expect(goal?.thought).toBe("SEE FOLK");
-    expect(goal?.pos).toEqual(GIVER_AT);
+    // The PERSON is `errands.ts`'s rung (it applies on every map), and it sits
+    // ABOVE the hub's own — so the hub answers "the car" while the ladder as a
+    // whole still walks him to Ruth first.
+    expect(errandGiver(bot, state, hero)?.giverId).toBe("hub_giver");
+    expect(hubGoal(bot, state, hero, false)?.thought).toBe("TO CAR");
     // …and the macro ladder actually routes there, which is the half that was
     // missing: a hub answers every other rung with nothing.
-    const bot = createBot("balanced");
     expect(macroTarget(bot, state, hero, TUNE)).toEqual(GIVER_AT);
   });
 
@@ -123,10 +124,12 @@ describe("the hub is a level the autopilot can play", () => {
     const state = stage();
     const hero = state.players[0]!;
     const bot = createBot("balanced");
+    const tap = () =>
+      giverTapCommand(bot, state, hero, macroTarget(bot, state, hero, TUNE));
     stand(hero, CAR_AT); // parked on the car, a long step from the giver
-    expect(hubTapCommand(bot, state, hero, false)).toBeNull();
+    expect(tap()).toBeNull();
     stand(hero, { x: GIVER_AT.x, y: GIVER_AT.y + 40 });
-    expect(hubTapCommand(bot, state, hero, false)).toEqual({
+    expect(tap()).toEqual({
       name: "talkToQuestGiver",
       args: ["hub_giver"],
     });
@@ -134,13 +137,14 @@ describe("the hub is a level the autopilot can play", () => {
 
   it("never boards the car with a person still waiting", () => {
     // The hero SPAWNS on the parking spot, so a ladder that pressed whatever
-    // was in reach drove out on the first tick of every visit.
+    // was in reach drove out on the first tick of every visit. The giver rung
+    // above the hub's is what holds the car shut until the slate is worked.
     const state = stage();
     const hero = state.players[0]!;
+    const bot = createBot("balanced");
     stand(hero, CAR_AT);
-    expect(
-      hubTapCommand(createBot("balanced"), state, hero, false)?.name,
-    ).not.toBe("enterCar");
+    expect(errandGiver(bot, state, hero)).toBeTruthy();
+    expect(macroTarget(bot, state, hero, TUNE)).toEqual(GIVER_AT);
   });
 
   it("takes the errand off the offer, and hands the finished one back", () => {
@@ -162,10 +166,11 @@ describe("the hub is a level the autopilot can play", () => {
     expect(state.quests["hub_errand"]?.status).toBe("active");
     // Nothing left to walk over for while it is merely RUNNING — the "not yet"
     // nag is a conversation with nothing in it.
-    expect(hubGiverTarget(state, hero)).toBeNull();
+    const bot = createBot("balanced");
+    expect(errandGiver(bot, state, hero)).toBeNull();
     // Finish it, and the `?` brings him back.
     state.quests["hub_errand"]!.status = "complete";
-    expect(hubGiverTarget(state, hero)).toBe("hub_giver");
+    expect(errandGiver(bot, state, hero)?.giverId).toBe("hub_giver");
     applyRunCommand(state, "talkToQuestGiver", ["hub_giver"], hero);
     const hand = botScreenCommand(state, hero);
     expect(hand).toEqual({ name: "turnInQuest", args: [] });
@@ -193,7 +198,9 @@ describe("the hub is a level the autopilot can play", () => {
 });
 
 describe("the car out", () => {
-  /** The hub with its errands already settled, so the car is the plan. */
+  /** The hub with its errands already settled — turned in, so nobody carries a
+   * mark and the errand rung above the hub's stays silent — so the car is the
+   * plan. */
   function settled(): { state: GameState; hero: Player } {
     const state = stage();
     const hero = state.players[0]!;

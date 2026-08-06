@@ -173,7 +173,9 @@ const stage = (tree, enemy) =>
         ...(weapon ? { weapon } : {}),
         spawns: [{ enemy, count: 14, minDistance: 30, maxDistance: 92 }],
       });
-      const p = window.__game.player;
+      // Seat 0 is the local hero offline; `state.player` was the pre-party name
+      // and is gone, so reading it silently threw and killed the preview.
+      const p = window.__game.players[0];
       p.stats[stat] = Math.max(p.stats[stat] ?? 0, 180);
       p.maxHp = Math.max(p.maxHp, 4000);
       p.hp = p.maxHp;
