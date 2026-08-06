@@ -145,7 +145,7 @@ export function drawVehicles(
     if (vehicle.kind === "car") {
       const glow = boardableGlow(state, vehicle, timeMs);
       if (glow > 0) drawBoardableGlow(ctx, vehicle, camera, glow);
-      drawCar(ctx, vehicle, sprites, camera, timeMs);
+      drawCarAssembly(ctx, vehicle, sprites, camera, timeMs);
     } else {
       drawShip(ctx, vehicle, sprites, camera, timeMs);
     }
@@ -379,7 +379,17 @@ function drawShellLayer(
   });
 }
 
-function drawCar(
+/**
+ * THE CAR ITSELF — the whole assembly, given nothing but a car.
+ *
+ * Exported (and named for what it is) because the DRIVING MINIGAME draws the
+ * same wagon on a road that has no `GameState` under it at all
+ * (pwa/src/game/drive-screen/render.ts). Everything above this — the boardable
+ * glow, the wheel debris, the ship — needs a run around it; this does not, and
+ * keeping the split here is what stops the minigame growing a second copy of
+ * the panel stack, the wheel ladder and the dangle poses.
+ */
+export function drawCarAssembly(
   ctx: CanvasRenderingContext2D,
   car: Extract<Vehicle, { kind: "car" }>,
   sprites: Sprites,

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_crutches_1
+family: earth
+size: [16, 16]
+description: >
+  A woman in a mustard coat swinging along on a crutch. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a woman putting her weight through a crutch
+  attire: a mustard coat over dark trousers
+  features: a crutch under the far arm, one leg held short
+  accent: the pale crutch
+  flavor: halfway across when the lights changed
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#c9963f" # sleeve
+  B: "#241f2c" # shoes
+  C: "#c9963f" # mustard coat
+  G: "#c5c9d0" # the crutch
+  H: "#6b4a2e" # brown hair
+  K: "#b07a55" # hand
+  P: "#b07a55" # skin
+  S: "#e0b566" # coat panel
+  T: "#3f3a44" # dark trousers
+grid: |
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOGO.
+  .OKOCCCCCCCCOGO.
+  ...OTTTTTTTTOGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OBBOOBBO.OOO.
+  ................
+  ................

@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 1.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_bagman_1
+family: earth
+size: [16, 16]
+description: >
+  A heavy man in an army-surplus coat, weighed down by a bulging bag. Walk-cycle frame 1.
+subject:
+  kind: pedestrian on the road out
+  build: a heavy man leaning against the weight he carries
+  attire: an olive army-surplus coat over layered clothes
+  features: a full grey beard, a bulging bag in the far hand
+  accent: the olive surplus coat
+  flavor: he has not put it down in a year
+  pose: mid-stride, the legs passing
+palette:
+  O: "#1a1c2c" # outline
+  A: "#5a6348" # sleeve
+  B: "#2a2318" # boots
+  C: "#5a6348" # olive surplus coat
+  G: "#8a7a5c" # the bag
+  H: "#7d7566" # grey hair
+  K: "#deaa86" # hand
+  P: "#deaa86" # skin
+  S: "#727c5c" # coat lining
+  T: "#3f3a33" # trousers
+grid: |
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOAO.
+  .OAOCCSSSSCCOGO.
+  .OKOCCCCCCCCOGO.
+  ...OTTTTTTTTOGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OTTOOTTO.OGO.
+  ...OBBOOBBO.OOO.
+  ................
+  ................

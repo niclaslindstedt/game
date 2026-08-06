@@ -72,6 +72,7 @@ export {
   setAutoStatGainsEnabled,
   setCameraYaw,
   setCutscenesEnabled,
+  setMinigamesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
 } from "./game/flags.ts";

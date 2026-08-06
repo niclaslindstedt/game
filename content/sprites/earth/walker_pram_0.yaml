@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE CROWD — one of the people out on the road to GOODCO, the ones the welfare
+# did not reach. Walk-cycle frame 0.
+#
+# Built from one of six shared SILHOUETTE templates (adult, reaching, stooped,
+# child, skirt, pusher, plus the two seated ones), so every body in the roster
+# stands on the same ground line and reads at the same scale — a crowd whose
+# members do not share a ground line reads as a bug rather than as a crowd.
+name: walker_pram_0
+family: earth
+size: [16, 16]
+description: >
+  A woman pushing a pram across four lanes of traffic. Walk-cycle frame 0.
+subject:
+  kind: pedestrian on the road out
+  build: a woman leaning into a pram's handle
+  attire: a teal coat
+  features: both hands on the pram, loose brown hair
+  accent: the pram's red hood
+  flavor: the worst thing on this road, and she has no choice about it
+  pose: mid-stride, the legs apart
+palette:
+  O: "#1a1c2c" # outline
+  A: "#3f7a82" # sleeve
+  B: "#241f2c" # shoes
+  C: "#3f7a82" # teal coat
+  G: "#b8473c" # the pram
+  H: "#5a3a28" # loose brown hair
+  K: "#f0cbaa" # hand
+  P: "#f0cbaa" # skin
+  S: "#5b9aa3" # coat panel
+  T: "#2f3a44" # trousers
+grid: |
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OCCCCCCCCO...
+  .OAOCCCSSCCCOGGO
+  .OAOCCSSSSCCKGGO
+  .OAOCCCCCCCCOGGO
+  ...OTTTTTTTTOGGO
+  ..OTTO....OTTGGO
+  ..OTTO....OTTOGO
+  ..OTTO....OTTOGO
+  ..OBBO....OBBOOO
+  ................
+  ................

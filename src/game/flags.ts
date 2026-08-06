@@ -51,6 +51,35 @@ export function areCutscenesEnabled(): boolean {
   return cutscenesEnabled;
 }
 
+// -- MINIGAMES (pwa setting `minigames`) --------------------------------------
+//
+// Whether the game's playable interludes run — today the DRIVE between the
+// garage and GOODCO and the same road home (src/game/drive/). ON by default:
+// the drive is the shipped experience and is most of the hero's first trip out
+// of his own garage. OFF makes the trip the straight cut it used to be, with
+// the destination built the moment the car reaches the road.
+//
+// It lives HERE rather than in the drive module for the reason every other flag
+// does: the thing that reads it is the app's departure handler, which sits on
+// the startup side of the budget, and importing the drive to ask a boolean
+// would pull the whole road — the crowd, the traffic, the impact model and the
+// car — onto a path that must not have it.
+//
+// A PARTY SKIPS THEM WHATEVER THIS SAYS, and that is not this flag's business:
+// a minigame seats one player and pays no loot or XP, so a hosted session takes
+// the cut regardless (see the app's `driveParamsFor`).
+let minigamesEnabled = true;
+
+/** Toggle the playable interludes (a gameplay preference). */
+export function setMinigamesEnabled(enabled: boolean): void {
+  minigamesEnabled = enabled;
+}
+
+/** Whether the playable interludes are enabled. */
+export function areMinigamesEnabled(): boolean {
+  return minigamesEnabled;
+}
+
 // -- DEATH SCENES (pwa setting `deathScenes`) ---------------------------------
 //
 // Whether the game's two scripted DEATH CINEMATICS play: the BOSS DEATH RITE

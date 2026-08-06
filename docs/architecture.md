@@ -796,6 +796,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   the player can equip a fitting weapon for the fight, and
   `closeInventory` hands the stage back to the speaker on the same page;
   every other scene (last words, thoughts, lore) stays read-only.
+- **`src/game/drive/`** — THE DRIVE: the playable leg between the garage and
+  GOODCO, and the same road home. **Not a level and not a `GamePhase`** — a
+  drive is its own small world (one car, four lanes, a minute of road) with its
+  own seeded rng, its own clock and no `GameState` anywhere near it, because a
+  minigame that borrowed the run's state would inherit the spawner, the menace
+  meter, the objective check and the autopilot and every one of them would have
+  to be taught to sit it out. It BORROWS the car whole, though: the same
+  `CarVehicle` the garage parks, through the same `integrateCarBody`,
+  `nudgeCar` and panel/fix ladders (`vehicles.ts`), so the wagon on the road is
+  the wagon in the bay. `impact.ts` is the heart of it — a real inelastic
+  collision in real units, where the SWEEP of the car's flank decides whether a
+  body was hit and how hard it is thrown, and the contact normal's alignment
+  with the nose decides how much speed and damage the car takes back. Damage
+  goes as the square of the closing speed, which is the whole difficulty curve
+  in one line. The app half is `pwa/src/game/drive-screen/`; whether the road is
+  played at all is `driveParamsFor` (the MINIGAMES setting, and never in a
+  party — one seat, no loot, no XP).
 - **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
   it. The player names their character, and `{HERO}` is where a line means that
   name: over his own pages in every box that speaks, and inside the handful of

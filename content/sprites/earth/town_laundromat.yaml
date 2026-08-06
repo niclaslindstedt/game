@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE TOWN — one of the buildings lining the road on the drive to GOODCO.
+# AUTHORED ALREADY CROPPED: the camera is low and the road fills the middle of
+# the frame, so a house is only ever seen from its doorstep to about its first
+# floor. The grid starts partway up the building and the top row is a flat cut —
+# drawing roofs would spend half of every sprite off the top of the screen.
+name: town_laundromat
+family: earth
+space: outside
+size: [40, 30]
+description: >
+  A laundromat still open on the road out — a lit window front full of machines, a glass door, and a hand-painted sign.
+subject:
+  kind: town backdrop building
+  build: a single-storey shop front with a wide lit window, cropped above the sign
+  features: a wide window with machine drums behind it, a glass door, a painted fascia
+  accent: the flat warm light spilling onto the pavement
+  flavor: open all night because nobody has anywhere to be in the morning
+palette:
+  O: "#1a1c2c" # outline ink
+  t: "#4a4235" # sill and trim
+  p: "#6a6a63" # pavement
+  L: "#f2d98a" # a window still lit
+  K: "#232838" # a dark window
+  P: "#7a6a52" # boarded up
+  A: "#5f7d86" # painted block wall
+  a: "#7899a3" # painted block wall, lit edge
+  n: "#4a6168" # painted block course line
+  M: "#cfd6dc" # machine fronts
+grid: |
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAO..
+  ..OaAOKKKKKKKKKKKKKKKKKKKKKKKKKKKKOAAO..
+  ..OaAOKKKKKKKKKKKKKKKKKKKKKKKKKKKKOAAO..
+  ..OaAOKKKKKKKKKKKKKKKKKKKKKKKKKKKKOAAO..
+  ..OaAOKKKKKKKKKKKKKKKKKKKKKKKKKKKKOAAO..
+  ..OaAOKKKKKKKKKKKKKKKKKKKKKKKKKKKKOAAO..
+  ..OaAOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAO..
+  ..OaAttttttttttttttttttttttttttttttAAO..
+  ..OttttttttttttttttttttttttttttttttttO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOOOOOOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLMMLLLLMMLLLLMMLLLOAOLLLLOAAAAO..
+  ..OaAOLLMMLLLLMMLLLLMMLLLOAOLLLLOAAAAO..
+  ..OaAOLLMMLLLLMMLLLLMMLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLtOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAOLLLLLLLLLLLLLLLLLLLOAOLLLLOAAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAOLLLLOAAAAO..
+  ..OaAAAAAAAAAAAAAAAAAAAAAAAOLLLLOAAAAO..
+  .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.
+  .pppppppppppppppppppppppppppppppppppppp.
