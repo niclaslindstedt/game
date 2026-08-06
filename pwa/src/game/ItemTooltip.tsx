@@ -33,6 +33,12 @@ import { ItemCard } from "./ItemCard.tsx";
  * the first paint until measured, to avoid a positioned flash. The card
  * CONTENT (name, stat lines, affixes) renders through the shared
  * `ItemCardBody`, so the tooltip and the arsenal viewer never drift.
+ *
+ * BOTH cards wear the `item-tooltip` class, and that class is load-bearing
+ * beyond its looks: every screen that raises one dismisses it with
+ * `useDismissOnOutsidePress(…, ".item-tooltip, …")`, so the class is what
+ * tells a press ON the card apart from a press that misses it. Rename it
+ * without following the selectors and reading a card puts it away.
  */
 export function ItemTooltip({
   font,
@@ -204,8 +210,10 @@ export function ItemTooltip({
           <button
             type="button"
             className="pixel-button tooltip-use"
-            // Swallow the press so the overlay's tap-to-dismiss and the drag
-            // machinery never see it — this click is the whole gesture.
+            // Swallow the press so the panel underneath and the drag machinery
+            // never see it — this click is the whole gesture. (The card's own
+            // presses are already exempt from the outside-press dismiss by its
+            // `item-tooltip` class; this guards everything else.)
             onPointerDown={(e) => e.stopPropagation()}
             onClick={onUse}
           >

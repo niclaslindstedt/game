@@ -54,6 +54,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { InfoTip } from "@ui/lib/InfoTip.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 
 import {
   spriteDataUrl,
@@ -290,6 +291,17 @@ export function InventoryPanel({
     item: Equipment;
     anchor: DOMRect;
   } | null>(null);
+  // ANY press that misses both the card and a cell puts the card away — the
+  // touch equivalent of moving the mouse off an item, and the one dismiss the
+  // panel has. It is bound on the window rather than on the overlay below
+  // because the card is PORTALED to <body>: an overlay-level handler still
+  // sees the card's own presses (React routes a portal's events through the
+  // tree that rendered it) and read them as a miss, so pressing the card to
+  // read it was what put it away. Cells are exempt because a press on one
+  // raises its own card (and, on touch, the second one equips).
+  useDismissOnOutsidePress(inspect !== null, ".item-tooltip, .inv-cell", () =>
+    setInspect(null),
+  );
   // The just-identified piece whose centered REVEAL is on stage (a ticket was
   // spent on it from this panel). The same live instance — the identify
   // already cleared its veil, so the card renders the full stats.
@@ -522,15 +534,7 @@ export function InventoryPanel({
   // cells is a harmless no-op, never a discard; only a release out beyond the
   // panel trashes the piece.
   return (
-    <div
-      className="game-overlay inventory-overlay"
-      data-drop="ground"
-      // Tapping empty space (outside any item cell) dismisses the tooltip —
-      // the touch equivalent of moving the mouse off an item.
-      onPointerDown={(e) => {
-        if (!(e.target as HTMLElement).closest(".inv-cell")) setInspect(null);
-      }}
-    >
+    <div className="game-overlay inventory-overlay" data-drop="ground">
       <div className="inventory-panel" data-drop="none">
         <div className="inv-body">
           {/* The body itself. In portrait the two children stack — doll,

@@ -7336,20 +7336,6 @@ canvas.tier-artifact {
   overscroll-behavior: contain;
 }
 
-/* `.item-tooltip` ignores the pointer (it is a HOVER card there, and a card
-   that ate clicks would block the cell under it). Here the card is the trade's
-   own control surface — its button has to be pressable, and its presses have
-   to reach the wrapper that swallows them — so it opts back in.
-
-   BOTH classes on purpose: `.item-tooltip { pointer-events: none }` lives
-   LATER in this file at the same one-class specificity, so a bare
-   `.shop-deal-card` opt-in silently loses the cascade — which left the whole
-   card (BUY and SELL buttons included) pointer-transparent: every press fell
-   through to the panel underneath and read as a miss that dismissed the card. */
-.item-tooltip.shop-deal-card {
-  pointer-events: auto;
-}
-
 /* The card's own BUY/SELL button spans its foot — a full-width tap target under
    the facts it is acting on, like the inventory tooltip's USE row. */
 /* The card's own BUY/SELL action, sized like the quest box's ACCEPT — a
@@ -8294,26 +8280,38 @@ canvas.tier-artifact {
 
 /* WoW-style item tooltip: the card floated next to the item it describes,
    portaled to <body> and positioned in viewport coords by ItemTooltip so it
-   never clips against the panel's scroll box. Purely informational —
-   pointer-transparent so taps fall through to dismiss it. */
+   never clips against the panel's scroll box.
+
+   IT TAKES ITS OWN PRESSES, and that is what makes it dismissable. The card
+   used to be pointer-transparent "so taps fall through to dismiss it", but a
+   press that falls through lands on whatever the card happens to be covering,
+   and the card is placed wherever it fits: over a bag cell it swapped itself
+   for THAT item's card, over panel filler it went away, over a quest box it
+   did nothing. Same gesture, three outcomes decided by layout — which is
+   exactly the "dismissing it is possible but never reproduces" the fix came
+   from. Owning its presses is what lets one rule
+   (`useDismissOnOutsidePress`) tell reading the card apart from missing it. */
 .item-tooltip {
   position: fixed;
   /* Above the modal band: the tooltip is portaled to <body>, so it has to
      out-rank the `.game-overlay` (the inventory/shop) it was opened from. */
   z-index: 110;
-  pointer-events: none;
 }
 
 /* THE EXPLAINER NOTE (@ui/lib/InfoTip.tsx + InfoNote.tsx): the card a figure
    raises when the player asks what it is — the character sheet's rows, the
    bag's purse and ammunition sockets.
 
-   It shares the item tooltip's contract exactly, and for the same reasons: it
-   is portaled to <body>, so it needs a z-index that clears the `.game-overlay`
-   it was raised from, and it is pointer-transparent, so the tap that dismisses
-   it lands on whatever is underneath instead of on the note. It sits one step
-   ABOVE the item tooltip only so the two can never argue on a screen that has
-   both up; in practice they never do. */
+   It is portaled to <body> for the same reason as the item card, so it needs
+   the same kind of z-index — one that clears the `.game-overlay` it was raised
+   from, one step above the item card only so the two can never argue on a
+   screen that has both up (in practice they never do).
+
+   It parts company with the item card on the POINTER: a note is one paragraph
+   with nothing in it to press, raised by a `?` the player is already pointing
+   at, so it stays transparent and the tap that dismisses it lands on whatever
+   is underneath. The item card owns its presses instead — it has a USE row in
+   it, and things worth reading rather than glancing at. */
 .info-tip-box {
   position: fixed;
   z-index: 111;
@@ -8370,13 +8368,11 @@ canvas.tier-artifact {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* The USE row a usable trinket grows (a travel-gate key on its home level):
-   the tooltip itself ignores the pointer, so the button opts back in. The
-   label — and the class/slot glyph the IDENTIFY row seats beside it — rides
-   centered: the row spans the card, and a label parked at its left edge read
-   as a misrender rather than a button. */
+/* The USE row a usable trinket grows (a travel-gate key on its home level).
+   The label — and the class/slot glyph the IDENTIFY row seats beside it —
+   rides centered: the row spans the card, and a label parked at its left edge
+   read as a misrender rather than a button. */
 .item-tooltip .tooltip-use {
-  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
