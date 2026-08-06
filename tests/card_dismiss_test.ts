@@ -76,7 +76,7 @@ describe("the card takes its own presses", () => {
     const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rule = new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`).exec(CSS);
     expect(rule, `no rule for ${selector}`).not.toBeNull();
-    return rule![2];
+    return rule?.[2] ?? "";
   };
 
   it("the floating item card is not pointer-transparent", () => {
