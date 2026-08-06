@@ -127,7 +127,6 @@ function stubSession() {
           respec: false,
           clearedLevels: [],
           merchantDiscovered: false,
-          generatedMapSize: "medium",
         },
         slot: 1,
         seat: null,

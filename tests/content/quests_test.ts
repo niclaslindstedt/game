@@ -53,7 +53,7 @@ describe("the campaign's quest givers", () => {
     for (const giver of GIVERS) {
       const level = LEVELS[giver.level];
       expect(level, `${giver.id} names an unknown level`).toBeDefined();
-      const small = MAP_BLUEPRINTS[giver.level]?.sizes.small;
+      const small = MAP_BLUEPRINTS[giver.level]?.size;
       expect(small, `${giver.level} ships no blueprint`).toBeDefined();
       expect(giver.at.x, `${giver.id} x`).toBeGreaterThan(0);
       expect(giver.at.y, `${giver.id} y`).toBeGreaterThan(0);
@@ -179,7 +179,7 @@ describe("the campaign's errands", () => {
   it("place every fetch piece and escort destination inside the map", () => {
     for (const quest of QUESTS) {
       // The smallest carve, for the reason the givers' own check uses it.
-      const small = MAP_BLUEPRINTS[quest.level]!.sizes.small;
+      const small = MAP_BLUEPRINTS[quest.level]!.size;
       const inside = (p: { x: number; y: number }, what: string) => {
         expect(p.x, `${quest.id} ${what} x`).toBeGreaterThan(0);
         expect(p.y, `${quest.id} ${what} y`).toBeGreaterThan(0);

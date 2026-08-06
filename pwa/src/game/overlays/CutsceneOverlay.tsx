@@ -19,6 +19,8 @@ import {
 import {
   currentLine,
   cutsceneDef,
+  withHeroName,
+  withHeroNameLines,
   type CutsceneProp,
   type CutsceneState,
 } from "@game/core";
@@ -234,10 +236,15 @@ export function CutsceneOverlay({
   onSkip,
   onBlip,
   revealRef,
+  heroName,
 }: {
   cutscene: CutsceneState;
   assets: GameAssets;
   font: PixelFont;
+  /** The name the player gave this hero — the caption header over his own
+   * beats (the scenes cast him as `{HERO}`) and what an authored `{HERO}` in
+   * a spoken line resolves to. */
+  heroName?: string;
   /** Player tap: advance the running beat (turn the page). */
   onTap: () => void;
   /** The SKIP button: end the scene outright. */
@@ -273,7 +280,7 @@ export function CutsceneOverlay({
   // the thing being watched — so the folded rows are simply all shown.
   const { ref: textRef, fontPx: colFontPx } = useTextColumn(TEXT_SCALE);
   const visualLines = wrapPage(
-    line?.text ?? EMPTY_LINE,
+    withHeroNameLines(line?.text ?? EMPTY_LINE, heroName),
     colFontPx == null ? null : (row) => font.wrap(row, colFontPx),
   );
 
@@ -337,10 +344,11 @@ export function CutsceneOverlay({
           {line.kind === "say" && line.actor && (
             <PixelText
               font={font}
-              text={
+              text={withHeroName(
                 def.actors.find((a) => a.id === line.actor)?.name ??
-                line.actor.toUpperCase()
-              }
+                  line.actor.toUpperCase(),
+                heroName,
+              )}
               scale={2}
               color="#7ef0c8"
               maxWidth={CUTSCENE_TEXT_REM}

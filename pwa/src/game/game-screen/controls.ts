@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The run's control surface: the canvas pointer tracker (touch dpad taps,
-// mouse press-to-use, and the tap routing for the two inert banners that park
-// in the thumb's zone — the pickup card and the achievement toast), the
+// mouse press-to-use, and the tap routing for the three inert banners that park
+// over the field — the pickup card, the achievement toast and the screenshot
+// flash), the
 // rebindable keyboard/mouse/wheel actions, the fixed Escape hatch,
 // scene-advance keys, the weapon/powerup number rows, and the blur/visibility
 // auto-pause. GameScreen builds one per run effect; detach() unwires
@@ -59,14 +60,23 @@ export function createControls(deps: {
    * the thumb's dpad zone — so the canvas routes a tap over it here instead:
    * `openAchievements` raises the trophy shelf. */
   achievementToastElRef: MutableRefObject<HTMLDivElement | null>;
-  /** Raise the ACHIEVEMENTS shelf (pausing the run) — see
-   * use-achievements-shelf.ts. */
+  /** Raise the ACHIEVEMENTS shelf (pausing the run) — see use-run-shelf.ts. */
   openAchievements: () => void;
   /** Toggle that same shelf: the ACHIEVEMENTS bind's own verb. */
   toggleAchievements: () => void;
   /** Live mirror of whether the shelf is up: while it is, it owns the
    * keyboard (its own listener walks the rows and closes). */
   achievementsOpenRef: MutableRefObject<boolean>;
+  /** The live screenshot-flash element (null while none is up). Inert for the
+   * same reason the two above are, so the canvas routes a tap over the
+   * miniature here: `openShots` raises the gallery on that picture. */
+  shotFlashElRef: MutableRefObject<HTMLDivElement | null>;
+  /** Raise the SCREENSHOT gallery (pausing the run) — see use-run-shelf.ts. */
+  openShots: () => void;
+  /** Live mirror of whether that gallery is up — it owns the keyboard too. */
+  shotsOpenRef: MutableRefObject<boolean>;
+  /** The SCREENSHOT bind's own verb: take one, captioned by the caller. */
+  takeScreenshot: () => void;
   /** A pause the viewer opened by hand — latched so the bot's input loop
    * leaves it alone. */
   userPausedRef: MutableRefObject<boolean>;
@@ -98,6 +108,10 @@ export function createControls(deps: {
     openAchievements,
     toggleAchievements,
     achievementsOpenRef,
+    shotFlashElRef,
+    openShots,
+    shotsOpenRef,
+    takeScreenshot,
     userPausedRef,
     dialogueRevealRef,
     introRevealRef,
@@ -185,6 +199,13 @@ export function createControls(deps: {
           openAchievements();
           return;
         }
+        // …and the SCREENSHOT FLASH, which is the same arrangement one more
+        // time: pressing the miniature is a request to LOOK at the picture, so
+        // it freezes the run and opens the gallery on it.
+        if (tapHits(shotFlashElRef.current)) {
+          openShots();
+          return;
+        }
       }
       // Only touch/pen taps jump: a mouse click uses an item (cursor-follow)
       // or pulls the trigger (AIM & SHOOT) — desktop jumps live on Space.
@@ -261,6 +282,13 @@ export function createControls(deps: {
         // keyboard, and its own listener closes it.
         toggleAchievements();
         return;
+      case "screenshot":
+        // Never freezes the run and never refuses: a picture of the death
+        // splash, the victory screen, a cutscene or the pause menu is as
+        // wanted as one of the fight. The capture is asynchronous and the
+        // flash it raises is a receipt, not a screen.
+        takeScreenshot();
+        return;
       case "pause":
         if (fieldLive(state)) {
           pause(true);
@@ -294,7 +322,15 @@ export function createControls(deps: {
     // threw the YOU DIED modal up the instant he hit the ground and ate the
     // whole beat. Swallowing the key here also keeps a bound action (a powerup,
     // the medkit) from queueing itself against a corpse.
-    if (state.phase === "dying") return;
+    // …with ONE exception, and it is the whole point of the key: the death
+    // tableau is a moment a player wants a picture of. The screenshot bind
+    // neither freezes the run nor raises a screen, so letting it through
+    // cannot eat the beat the guard exists to protect.
+    if (state.phase === "dying") {
+      if (actionForCode(event.code, getSettings().keybindings) === "screenshot")
+        takeScreenshot();
+      return;
+    }
     // The level-up chooser (and the respec screen it shares parts with) owns
     // the keyboard while it's up: LevelUpOverlay runs its own listener
     // (arrows/WASD move the cursor, Enter/Space spend a point, Escape banks
@@ -303,8 +339,10 @@ export function createControls(deps: {
     if (screen === "levelup" || screen === "respec") return;
     // The ACHIEVEMENTS shelf owns the keyboard the same way while it is up:
     // it walks its own rows and closes itself on ESC or the achievements bind.
-    // Ceding here keeps that press from also resuming the run under it.
-    if (achievementsOpenRef.current) return;
+    // Ceding here keeps that press from also resuming the run under it. The
+    // SCREENSHOT gallery is the same shelf discipline (use-run-shelf.ts) and
+    // cedes on the same line.
+    if (achievementsOpenRef.current || shotsOpenRef.current) return;
     const binds = getSettings().keybindings;
     // Track held movement keys + the walk modifier every keydown (repeats
     // included — Set.add is idempotent) so the sim loop reads live state.
@@ -453,7 +491,7 @@ export function createControls(deps: {
   // the shipped scheme is all-keyboard, so there's no default pointer capture
   // to fight the canvas steering.
   const onMouseDown = (event: MouseEvent) => {
-    if (achievementsOpenRef.current) return;
+    if (achievementsOpenRef.current || shotsOpenRef.current) return;
     const action = actionForCode(
       mouseButtonCode(event.button),
       getSettings().keybindings,
@@ -464,7 +502,7 @@ export function createControls(deps: {
     }
   };
   const onWheel = (event: WheelEvent) => {
-    if (achievementsOpenRef.current) return;
+    if (achievementsOpenRef.current || shotsOpenRef.current) return;
     const action = actionForCode(
       wheelCode(event.deltaY),
       getSettings().keybindings,

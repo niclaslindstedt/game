@@ -64,7 +64,7 @@ stage:
 actors:
   - {
       id: hero,
-      name: ME,
+      name: "{HERO}",
       sprite: hero_couch,
       at: { x: 96, y: 97 },
       faceLeft: true,

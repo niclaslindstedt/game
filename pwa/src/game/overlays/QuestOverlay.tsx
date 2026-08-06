@@ -33,6 +33,7 @@ import {
   questGiverDef,
   questRewardChoices,
   questXpReward,
+  withHeroNameLines,
   type Equipment,
   type GameState,
   type QuestTopic,
@@ -111,10 +112,14 @@ export function QuestOverlay({
   onChooseReward,
   onBlip,
   onClose,
+  heroName,
 }: {
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
+  /** The name the player gave this hero — what an authored `{HERO}` in an
+   * errand's ask, hello or handover resolves to. */
+  heroName?: string;
   /** Turn to the next page of the speech. */
   onAdvance: () => void;
   onAccept: () => void;
@@ -218,8 +223,9 @@ export function QuestOverlay({
   // ever. Every read of a mutated engine field has to be in the deps by value.
   const page = offer?.page ?? 0;
   const speech = useMemo(
-    () => (offer && !listing ? (pages[page] ?? []) : []),
-    [offer, listing, pages, page],
+    () =>
+      offer && !listing ? withHeroNameLines(pages[page] ?? [], heroName) : [],
+    [offer, listing, pages, page, heroName],
   );
   // An authored line is a PARAGRAPH: flow it into the speech column's own
   // measured width (the box is narrower than the dialogue box's — a portrait
@@ -261,12 +267,14 @@ export function QuestOverlay({
   const greetLines = useMemo(
     () =>
       wrapPage(
-        listing && giver ? (giver.greeting ?? DEFAULT_GREETING) : [],
+        listing && giver
+          ? withHeroNameLines(giver.greeting ?? DEFAULT_GREETING, heroName)
+          : [],
         greetColFontPx == null
           ? null
           : (line) => font.wrap(line, greetColFontPx),
       ),
-    [listing, giver, greetColFontPx, font],
+    [listing, giver, greetColFontPx, font, heroName],
   );
   // A PERSON GREETS YOU ONCE PER WALK-UP. Taking an errand steps back to the
   // slate (`leaveTopic`), and a hello that retyped every time the player backed

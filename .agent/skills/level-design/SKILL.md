@@ -14,7 +14,7 @@ A venue is **two files, and they answer different questions**:
   replaces it.
 - `content/maps/<id>.yaml` — the **BLUEPRINT** its map is carved from, fresh on
   every run's own seed. Areas, an object palette, the horde's density and
-  breeds, the cast, three sizes, the compass regions the boss may hide in.
+  breeds, the cast, its extents, the compass regions the boss may hide in.
 
 So the geometry half of designing a level is a blueprint, and its own skill is
 **`mapgen-improvement`** (the carve, the area rules, the render → crop → judge
@@ -282,8 +282,8 @@ else to render — change the seed to see another run's map.
    asserts they resolve.
 2. **Roster** — the `enemy-design` skill.
 3. **Write the BLUEPRINT** (`content/maps/<id>.yaml`): the areas the venue is
-   made of, the object palette, the horde's density and breeds, the cast, the
-   three sizes. Keep the mobile viewport in mind (≈422×195 world units visible).
+   made of, the object palette, the horde's density and breeds, the cast, its
+   `size`. Keep the mobile viewport in mind (≈422×195 world units visible).
    **Render a carve and LOOK at it** — see `mapgen-improvement`.
 4. **Loot pools** — cumulative, plus the map's own new bases; `earlyDrops`.
 5. **Pacing wiring** — the caps/checker tables above.

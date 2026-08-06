@@ -87,7 +87,6 @@ const RUN: SessionParams = {
   seenThoughts: ["moon_arrival"],
   openingSkip: "story",
   muteDialogue: true,
-  generatedMapSize: "random",
 };
 
 /** Everything a run holds that both sides must agree on, hashed as one string.

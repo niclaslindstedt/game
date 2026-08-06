@@ -8,7 +8,12 @@
 
 import { describe, expect, it } from "vitest";
 
-import { advanceDialogue, collectStoryItem, dialogueContent } from "@game/core";
+import {
+  advanceDialogue,
+  collectStoryItem,
+  dialogueContent,
+  HERO_NAME_FALLBACK,
+} from "@game/core";
 import type { GameState } from "@game/core";
 import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
@@ -40,13 +45,35 @@ describe("hero replies in arrival scenes", () => {
       ["TEST TALKER LINE TWO."],
     ]);
     // …and the voices mark exactly the page the hero speaks, with his own name
-    // over it rather than the mob's.
+    // over it rather than the mob's. A caller with no player to ask (this one)
+    // gets the engine's stand-in.
     expect(content.voices.map((v) => v.hero)).toEqual([false, true, false]);
     expect(content.voices.map((v) => v.speaker)).toEqual([
       "TEST TALKER",
-      "ME",
+      HERO_NAME_FALLBACK,
       "TEST TALKER",
     ]);
+  });
+
+  it("prints the player's own name over the hero's reply", () => {
+    const state = meetTalker();
+    const content = dialogueContent(state.dialogue!, "ZOLTAN");
+    // The name goes over HIS page only — the mob keeps its own on both of its.
+    expect(content.voices.map((v) => v.speaker)).toEqual([
+      "TEST TALKER",
+      "ZOLTAN",
+      "TEST TALKER",
+    ]);
+    // …and the scene still belongs to the mob that opened it.
+    expect(content.speaker).toBe("TEST TALKER");
+  });
+
+  it("falls back for a blank name rather than printing a hole", () => {
+    const state = meetTalker();
+    for (const blank of [undefined, null, "", "   "]) {
+      const content = dialogueContent(state.dialogue!, blank);
+      expect(content.voices[1]!.speaker).toBe(HERO_NAME_FALLBACK);
+    }
   });
 
   it("turns a hero page like any other page", () => {

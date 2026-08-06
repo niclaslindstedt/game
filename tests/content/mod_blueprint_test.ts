@@ -33,7 +33,6 @@ import {
   LEVELS,
   MAP_BLUEPRINTS,
   registerDefs,
-  setGeneratedMapSize,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
@@ -114,7 +113,6 @@ function bossAt(def: LevelDef): { x: number; y: number } {
 
 afterAll(() => {
   registerDefs(SHIPPED);
-  setGeneratedMapSize("random");
 });
 
 describe("a mod's map blueprint", () => {
@@ -130,7 +128,6 @@ describe("a mod's map blueprint", () => {
 
   it("carves the mod's own mission, and inherits everything it is not", () => {
     applyExample();
-    setGeneratedMapSize("medium");
     const def = carve(7);
     // INHERITED from the mod's level: a generated greenhouse is still the
     // greenhouse, because the blueprint is a recipe for geometry and nothing
@@ -152,7 +149,6 @@ describe("a mod's map blueprint", () => {
 
   it("hides its boss somewhere new every seed", () => {
     applyExample();
-    setGeneratedMapSize("medium");
     const homes = new Set<string>();
     for (const seed of [1, 7, 42, 99, 1234]) {
       const at = bossAt(carve(seed));
@@ -164,24 +160,14 @@ describe("a mod's map blueprint", () => {
 
   it("carves a map the boss can actually be walked to", () => {
     applyExample();
-    for (const size of ["small", "medium", "large"] as const) {
-      setGeneratedMapSize(size);
-      for (const seed of [3, 11, 77]) {
-        // The grid comes from the SAME run as the def — building it from a
-        // default run and pathing another carve's coordinates through it is a
-        // check that passes and means nothing.
-        const state = createGame(seed, "greenhouse", "medium");
-        const def = state.carvedLevel as LevelDef;
-        const route = findPath(
-          buildNavGrid(state),
-          def.playerSpawn,
-          bossAt(def),
-        );
-        expect(
-          route,
-          `${size}/${seed}: the gardener is walled off`,
-        ).toBeTruthy();
-      }
+    for (const seed of [3, 11, 77]) {
+      // The grid comes from the SAME run as the def — building it from a
+      // default run and pathing another carve's coordinates through it is a
+      // check that passes and means nothing.
+      const state = createGame(seed, "greenhouse", "medium");
+      const def = state.carvedLevel as LevelDef;
+      const route = findPath(buildNavGrid(state), def.playerSpawn, bossAt(def));
+      expect(route, `${seed}: the gardener is walled off`).toBeTruthy();
     }
   });
 });

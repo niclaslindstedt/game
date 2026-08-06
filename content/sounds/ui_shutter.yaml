@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_shutter
+description: >-
+  A camera shutter: the leaf snapping open and, a breath later, closed — two
+  bright, dry noise clicks with a tiny mechanical tick between them. Short and
+  quiet enough to fire mid-fight without stepping on the weapon it interrupts.
+voices:
+  # The leaf opening: a hard, bright tick with no tail on it.
+  - call: noise
+    durationMs: 22
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 3600
+      q: 1.6
+  # The spring under it — a single dry knock, felt more than heard.
+  - call: tone
+    type: square
+    from: 1480
+    to: 900
+    durationMs: 18
+    volume: 0.018
+    delayMs: 4
+  # …and closed again, a shade darker and softer than the opening.
+  - call: noise
+    durationMs: 30
+    volume: 0.038
+    delayMs: 70
+    filter:
+      type: bandpass
+      frequency: 2400
+      q: 1.2

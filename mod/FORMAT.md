@@ -178,7 +178,7 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 | Field                  | What it says                                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
-| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                       |
+| `size`                 | the world rectangle the map is carved into — a width, a height and a chamber count                             |
 | `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
 | `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
 | `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
@@ -197,8 +197,9 @@ intent, and every difficulty number comes from one file.
 
 Three rules to author by:
 
-- **A count is a DENSITY.** Densities are per 1,000,000 world px², because the
-  same blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+- **A count is a DENSITY.** Densities are per 1,000,000 world px², so the
+  dressing follows the floor a district's cells actually rolled rather than
+  piling up in a small one and leaving a big one bare.
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.
@@ -1292,13 +1293,34 @@ he just saw.
 ```yaml
 thoughts:
   mymod_creeper_sight:
-    speaker: ME # the name over the words
+    speaker: "{HERO}" # the name over the words — see below
     portrait: hero_suit # a sprite family; frame `<portrait>_0` is drawn
     pages:
       - - IT'S A PLANT. IT HAS A GAIT.
         - THOSE TWO FACTS DO NOT
         - BELONG IN ONE SENTENCE.
 ```
+
+### `{HERO}` — the player's own name
+
+The player names their character on the NEW GAME screen, and **`{HERO}` is that
+name**. Write it anywhere authored text should say it and every box that draws
+the line resolves it: a thought's `speaker` (so the header over his own words is
+the character the player made, which is what the shipped campaign does on every
+one of its beats), a cutscene actor's `name`, a spoken line, a conversation node,
+an errand's ask.
+
+```yaml
+# Somebody who knows him — a line, not a label.
+dialogue:
+  - - "{HERO}. I HEARD YOU WERE DEAD."
+```
+
+Two rules worth knowing. Spell it **exactly** — `{hero}`, `{ HERO }` and
+`{NAME}` resolve to nothing and print as `?HERO?`, because the pixel font has no
+brace glyph. And spend it sparingly: a name lands because almost nobody uses it,
+so give it to the handful of characters who genuinely know the man and to nobody
+else.
 
 A thought is fired by a LEVEL pinning it to a monster — `firstSightThoughts` the
 first time one comes into view, `firstKillThoughts` the first time he puts one

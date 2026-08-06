@@ -204,6 +204,12 @@ beforeEach(() => {
   if (!hadWindow) g.window = { addEventListener: recordOn(winListeners) };
 });
 
+/** Background/foreground the page the way an app switch does. */
+const setVisibility = (state: "visible" | "hidden"): void => {
+  (g.document as { visibilityState: string }).visibilityState = state;
+  fire(docListeners, "visibilitychange");
+};
+
 afterEach(() => {
   delete g.AudioContext;
   if (!hadDocument) delete g.document;
@@ -258,6 +264,80 @@ describe("audio context lifecycle", () => {
 
     // No extra context was constructed — recovery only ever resumes the one.
     expect(FakeAudioContext.created).toBe(1);
+  });
+});
+
+describe("backgrounding silences the app", () => {
+  // The iOS PWA bug this exists to stop: switching to another home-screen PWA
+  // interrupts nothing (that app claims no audio session the way Safari or
+  // YouTube do), so the context stays "running" and the game keeps playing out
+  // of the background — at about a quarter speed, because a hidden page's
+  // timers are throttled to ~1 Hz and the music scheduler books only its
+  // lookahead per tick. Only an explicit suspend stops it.
+
+  it("suspends the context when the page goes to the background", () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = FakeAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+    expect(ctx.state).toBe("running");
+
+    setVisibility("hidden");
+    expect(ctx.state).toBe("suspended");
+    expect(synth.now()).toBeNull(); // and the sequencer stops booking notes
+  });
+
+  it("refuses to revive a backgrounded context — the scheduler's self-heal cannot undo the suspend", () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = FakeAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+    setVisibility("hidden");
+
+    // The chiptune tick sees a null clock every throttled beat and nudges the
+    // context back. That nudge is exactly what would resurrect the quarter-
+    // speed theme, so it must not land while the page is hidden.
+    synth.resume();
+    expect(ctx.state).toBe("suspended");
+
+    // Nor may a queued sound (or a stray focus event) reopen the route.
+    synth.tone({ from: 440, durationMs: 50 });
+    synth.noise({ durationMs: 30 });
+    fire(winListeners, "focus");
+    expect(ctx.state).toBe("suspended");
+  });
+
+  it("picks the sound back up when the player returns", () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = FakeAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+
+    setVisibility("hidden");
+    expect(ctx.state).toBe("suspended");
+    setVisibility("visible");
+    expect(ctx.state).toBe("running");
+    expect(synth.now()).not.toBeNull();
+    expect(FakeAudioContext.created).toBe(1); // resumed, never rebuilt
+  });
+
+  it("suspends on pagehide too, for a freeze that skips visibilitychange", () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = FakeAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+
+    fire(winListeners, "pagehide");
+    expect(ctx.state).toBe("suspended");
+  });
+
+  it("never builds its one context for a backgrounded page", () => {
+    const synth = createSynth();
+    (g.document as { visibilityState: string }).visibilityState = "hidden";
+    // A sound fired while hidden must not be what creates the context: born
+    // outside a gesture it lands in a state iOS won't resume.
+    synth.tone({ from: 440, durationMs: 50 });
+    expect(FakeAudioContext.created).toBe(0);
   });
 });
 

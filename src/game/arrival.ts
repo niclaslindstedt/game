@@ -373,21 +373,21 @@ export function applyLoadout(
 }
 
 /**
- * The seed and size the derivation carves a cleared mission at.
+ * The seed the derivation carves a cleared mission at.
  *
  * A mission has no roster of its own any more — the horde is knots on a carved
  * grid — so the estimate has to look at a map, and the ONE requirement is that
  * it always looks at the same one: `deriveArrivalLoadout` is documented as
  * deterministic per (levelId, difficulty), and rolling the run's own seed in
  * here would make a dev warp's starting build depend on which map the player
- * happened to get. A fixed seed at the shipped size is a representative carve
- * of that mission, and it is the same one every time.
+ * happened to get. A fixed seed is a representative carve of that mission, and
+ * it is the same one every time.
  */
 const ROSTER_SEED = 1;
 
 /** A cleared mission's map, carved for the roster estimate above. */
 function rosterCarve(def: MissionDef): LevelDef {
-  return resolveLevelDef(def.id, ROSTER_SEED, "medium");
+  return resolveLevelDef(def.id, ROSTER_SEED);
 }
 
 /** The XP a full clear of `def`'s roster pays at this difficulty: every

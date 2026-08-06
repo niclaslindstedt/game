@@ -41,7 +41,7 @@ stage:
     - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
     - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
 actors:
-  - { id: hero, name: ME, sprite: hero_tee, at: { x: 74, y: 102 } }
+  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 74, y: 102 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.
   # Poses to `ship_fire` when the engine lights.
   - { id: ship, sprite: ship, at: { x: 172, y: 100 } }

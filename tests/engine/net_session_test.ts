@@ -44,7 +44,6 @@ const PARAMS: SessionParams = {
   respec: false,
   clearedLevels: [],
   merchantDiscovered: false,
-  generatedMapSize: "random",
 };
 
 /** The client id the rig connects with. */

@@ -25,16 +25,6 @@ export { createGame } from "./game/create.ts";
 // seam `createGame` resolves a level through. Read by the map tooling and the
 // content tests; never by the app's startup path, which reaches levels through
 // `defs/levels/summary.ts` and must not pull the generator's bytes.
-// The engine's runtime toggles. Most reach the app through `@game/menu`; the
-// map-size pair is re-exported here too so a simulation-side caller (the map
-// tooling, the content guard) need not import the menu entry point to set a
-// flag that gates the simulation.
-export {
-  setGeneratedMapSize,
-  generatedMapSizeSetting,
-  type GeneratedMapSizeSetting,
-} from "./game/flags.ts";
-
 // The autopilot's global pathfinder. Exported so the map tooling and the
 // generated-map guard can ask the engine's OWN router whether a carved map is
 // walkable, instead of re-deriving reachability and drifting from it.
@@ -54,11 +44,9 @@ export {
   regionRect,
   resolveLevelDef,
   setMapBlueprints,
-  resolveMapSize,
   type MapBlueprint,
   type MapObject,
   type MapObjectType,
-  type MapSizeName,
 } from "./game/mapgen/index.ts";
 export { IDLE_INPUT, step, type PartyInput } from "./game/step/index.ts";
 // CLIENT-SIDE MOVEMENT PREDICTION — the engine's own movement pass with combat
@@ -431,6 +419,7 @@ export {
   weaponDamageRange,
   weaponDps,
   maxMeleeTargets,
+  weaponFiringRange,
   weaponRangeFor,
   rollWeaponDamage,
   rollWeaponHit,
@@ -871,6 +860,18 @@ export {
   stasisSpellParams,
   stormSpellBlock,
 } from "./game/spells.ts";
+
+// THE HERO'S OWN NAME, as authored content asks for it. Every surface that
+// draws a line the player wrote a character name for resolves `{HERO}` through
+// these — the dialogue box does it for the app (`dialogueContent`), the
+// cutscene, intro and conversation overlays do it themselves.
+export {
+  HERO_NAME_FALLBACK,
+  HERO_NAME_TOKEN,
+  heroNameOr,
+  withHeroName,
+  withHeroNameLines,
+} from "./game/hero-name.ts";
 
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
 // `advanceDialogue` is the player's tap; `dialogueContent` is what the app
