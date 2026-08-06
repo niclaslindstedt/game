@@ -562,6 +562,63 @@ export function rasterizeElement(
   return canvas;
 }
 
+/** The tightest box holding a non-transparent pixel, or null when every pixel
+ * is transparent. `[left, top, right, bottom]`, all inclusive. */
+export function opaqueBounds(
+  data: Uint8ClampedArray | number[],
+  width: number,
+  height: number,
+): [number, number, number, number] | null {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    const row = y * width;
+    for (let x = 0; x < width; x++) {
+      if ((data[(row + x) * 4 + 3] ?? 0) === 0) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      maxY = y;
+    }
+  }
+  return maxX < 0 ? null : [minX, minY, maxX, maxY];
+}
+
+/**
+ * Crop away the fully transparent border — so the picture is the size of what
+ * was actually DRAWN rather than the size of the box it was drawn in.
+ *
+ * This is what lets a caller pad generously without paying for the padding.
+ * A card's ink does not stop at its own border box: a legendary's halo bleeds
+ * out past it, and rasterizing with no room at all shears the halo off at the
+ * edge. Padding for the widest possible glow and then trimming back to the ink
+ * gives both — the halo survives, and a card that has none comes out hugging
+ * its own corners instead of floating in a field of nothing.
+ */
+export function trimTransparent(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const ctx = canvas.getContext("2d");
+  if (!ctx || canvas.width <= 0 || canvas.height <= 0) return canvas;
+  const bounds = opaqueBounds(
+    ctx.getImageData(0, 0, canvas.width, canvas.height).data,
+    canvas.width,
+    canvas.height,
+  );
+  // Nothing drawn at all: hand back the canvas rather than a 0×0 one nothing
+  // downstream can encode.
+  if (!bounds) return canvas;
+  const [left, top, right, bottom] = bounds;
+  const w = right - left + 1;
+  const h = bottom - top + 1;
+  if (w === canvas.width && h === canvas.height) return canvas;
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  out.getContext("2d")?.drawImage(canvas, -left, -top);
+  return out;
+}
+
 /** The canvas as a PNG blob. Rejects when the browser declines to encode. */
 export function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {

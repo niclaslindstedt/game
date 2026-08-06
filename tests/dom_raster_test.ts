@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  opaqueBounds,
   parseBoxShadows,
   parseLinearGradient,
   splitCssLayers,
@@ -83,6 +84,61 @@ describe("linear gradient parsing", () => {
     ).toBeNull();
     // One colour is not a gradient.
     expect(parseLinearGradient("linear-gradient(red)")).toBeNull();
+  });
+});
+
+describe("trimming to the ink", () => {
+  /** An RGBA buffer of `w`×`h` whose pixels are opaque exactly where `at` says. */
+  const pixels = (
+    w: number,
+    h: number,
+    at: (x: number, y: number) => boolean,
+  ) => {
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++)
+        data[(y * w + x) * 4 + 3] = at(x, y) ? 255 : 0;
+    }
+    return data;
+  };
+
+  it("finds the box the drawing actually fills", () => {
+    // A 2×2 blot at (3,1) in a 8×5 field — the bounds are INCLUSIVE, so a
+    // one-pixel mark reads as a 1×1 box rather than an empty one.
+    const bounds = opaqueBounds(
+      pixels(8, 5, (x, y) => x >= 3 && x <= 4 && y >= 1 && y <= 2),
+      8,
+      5,
+    );
+    expect(bounds).toEqual([3, 1, 4, 2]);
+  });
+
+  it("keeps a pixel the eye can barely see", () => {
+    // A tier halo fades to alpha 1 at its outermost ring. Trimming on anything
+    // but "not fully transparent" would shear the last of the glow off.
+    const data = pixels(4, 4, () => false);
+    data[(1 * 4 + 2) * 4 + 3] = 1;
+    expect(opaqueBounds(data, 4, 4)).toEqual([2, 1, 2, 1]);
+  });
+
+  it("says nothing was drawn when nothing was", () => {
+    expect(
+      opaqueBounds(
+        pixels(4, 4, () => false),
+        4,
+        4,
+      ),
+    ).toBeNull();
+  });
+
+  it("spans the whole field when the drawing fills it", () => {
+    expect(
+      opaqueBounds(
+        pixels(3, 2, () => true),
+        3,
+        2,
+      ),
+    ).toEqual([0, 0, 2, 1]);
   });
 });
 
