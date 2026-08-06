@@ -140,7 +140,14 @@ declare module "*/sprite-data/load-yaml.mjs" {
     SPRITE_PALETTES: Record<string, Record<string, Rgba>>;
     SPRITE_FAMILY: Record<string, string>;
     /** Only the sprites asking for a plane other than the default `upright`. */
-    SPRITE_PLANES: Record<string, "upright" | "floor">;
+    SPRITE_PLANES: Record<string, "upright" | "floor" | "wall">;
+    /** How far a WALL piece extrudes, for the pieces that say (`SPRITE_PLANES`
+     * carries the plane; these two are its per-plane knobs and are just as
+     * sparse — only the art that sets one appears). */
+    SPRITE_RISE: Record<string, number>;
+    /** Flat art with a BEARING — a belt whose rails run along it, so a rank
+     * laid east has to be turned. Floor-plane only. */
+    SPRITE_DIRECTIONAL: Record<string, boolean>;
     ANIMATIONS: Record<string, unknown>;
   };
 }
