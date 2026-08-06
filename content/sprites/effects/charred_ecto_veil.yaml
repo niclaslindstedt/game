@@ -1,0 +1,33 @@
+name: charred_ecto_veil
+family: effects
+size: [16, 16]
+description: >
+  What is left of a burned haunting — the veil the goo was holding, dropped in
+  a crumpled heap of folds with the cold light in it gone out and one corner
+  still standing where it fell.
+subject:
+  kind: aftermath effect
+  build: a low crumpled heap of drained green shroud lying flat on the ground, dark creases folded through it, one corner still propped upright at the top of the pile
+  accent: two cold green sparks guttering down in the folds
+  flavor: fire has nothing to burn in a ghost but the goo, and the goo is the only part that was ever there
+palette:
+  O: "#111d1a" # scorched char outline and the dark of the folds
+  g: "#3f6b55" # drained ecto, gone dull
+  E: "#a8f0bc" # a cold spark still guttering
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ................
+  ................
+  .......OO.......
+  ....OO.OgO......
+  ...OggOOgOO.....
+  ..OggggggggOO...
+  .OggOgggggggggO.
+  OggggOgggOggggO.
+  OggggggggggggggO
+  OggEgggOgggggEgO
+  .OggggggggggggO.
+  ..OOOOOOOOOOOO..

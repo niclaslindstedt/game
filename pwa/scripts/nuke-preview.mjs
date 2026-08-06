@@ -33,8 +33,8 @@ const opt = (name, fallback) => {
 const url = opt("url", "http://localhost:5199");
 const level = opt("level", "goodco_hq");
 const seed = opt("seed", "7");
-// A ring of mobs staged around the hero so the blast has bodies to burn into
-// charred skeletons (see the incineration FX). Forwarded as `?scenario=`.
+// A ring of mobs staged around the hero so the blast has bodies to burn down
+// into their own remains (see the incineration FX). Forwarded as `?scenario=`.
 const mobs = opt("mobs", "intern");
 const mobCount = opt("count", "14");
 const outDir = opt(

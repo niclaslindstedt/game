@@ -480,7 +480,7 @@ export const SHOTS = [
     // is loud and unreadable — every frame in it looks like every other. What
     // says "clear the room" is the aftermath, and at 0.25x sim it arrives around
     // 3.5-5 s of wall clock: the fire has burned down and what is left is a
-    // whole screenful of charred skeletons over a kill counter in the sixties.
+    // whole screenful of smoking remains over a kill counter in the sixties.
     // The field thins from there and is bare past 7 s.
     captureAtMs: 3600,
     sweepMs: [0, 600, 1500, 2600, 3600, 4200, 4800, 5400, 6000, 7000, 8000],

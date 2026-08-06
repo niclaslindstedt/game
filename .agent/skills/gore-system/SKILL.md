@@ -34,9 +34,10 @@ fragments about the blood floor and about measuring soak rates).
 | Cutting the victim's own art | `pwa/src/game/render/sprite-split.ts` (`splitSprite`, `shredSprite`, `slicedPiece`) |
 | The pieces in flight | `pwa/src/game/render/gibs.ts` (rides `items/toss.ts`'s arc) |
 | The four families | `pwa/src/game/game-screen/gore.ts` + `pwa/src/game/render/recolor.ts` |
+| What a BURNED body leaves | `charredRemains` + `GoreFamily.remains` in the same `gore.ts`, drawn by the `incinerate` pass in `pwa/src/game/render/effects.ts` |
 | The one gate | `pwa/src/game/game-screen/gore-gate.ts` (`goreAmount`, `nsfwAllowed`) |
 | Sharpness on the weapon | `src/game/items/edge.ts` (`WeaponDef.edge`), rides out on `enemyKilled.edged` |
-| The art | `content/sprites/effects/blood_*`, `gib_*`, `cleave_wound`, `gore_inside` |
+| The art | `content/sprites/effects/blood_*`, `gib_*`, `charred_*`, `cleave_wound`, `gore_inside` |
 | Measuring | `scripts/gore-rate.mjs`; the EFFECTS GALLERY exhibits (below) |
 
 ## The blow, and the two numbers it splits into
@@ -404,10 +405,10 @@ reads as a light source rather than as an inside.
 used to keep a plain two-frame splash and a plain corpse whatever killed them,
 which made three quarters of the roster the one part of the game a hit did not
 land on. There are four families now — `blood`, `ecto`, `sparks`, `cosmic` — and
-each sprays, cuts, bursts, spills and hangs its own ambient. Adding a fifth is a
-ROW IN THAT FILE plus its art, never an edit to the spray, the burst, the cleave,
-the floor and the effect pass. Four things vary, and each is a different reason a
-burst reads as one kind of thing:
+each sprays, cuts, bursts, spills, hangs its own ambient and burns down to its
+own remains. Adding a fifth is a ROW IN THAT FILE plus its art, never an edit to
+the spray, the burst, the cleave, the floor and the effect pass. Six things vary,
+and each is a different reason a burst reads as one kind of thing:
 
 - **THE PIECES**, which is the half that does the work. A rover has no liver and
   a collapsed star has no ribcage, so each family carries its own `bands` (what
@@ -443,6 +444,17 @@ burst reads as one kind of thing:
   the gore gate itself is. `bloodAt` — what the hero's boots wade through — is
   deliberately blood ALONE, because the soak and the trail are blood art in
   blood's colours and a tile of oil must not print red bootprints out of it.
+- **THE REMAINS** (`GoreFamily.remains`, read by `charredRemains`) — what is
+  left when a body is BURNED rather than opened, which is the nuke's and the
+  flamethrower's whole picture. A machine has no ribcage to char and a
+  rift-thing has no bones at all, so each family burns down to its own art:
+  scorched bone (three rungs of it, by how much the fire got, plus a
+  long-skulled carcass for a `beast` — the same anatomy split `humanOnly` is),
+  a slagged chassis, a dropped veil, a cold husk. THE POOL IS THE POINT AS MUCH
+  AS THE FAMILY IS: a nuke kills a screenful at once, so one mark per family
+  would still be a decal stamped forty times. The pick comes off the KILL'S OWN
+  SEED — never a `state.rng()` draw, and never `Math.random()` at the draw,
+  which would flicker across the 1600ms the body burns for.
 
 The same gate covers all four — `goreAmount(family)`, one switch per family — so
 a blow refused by the device or by the player's own row still falls back to the
@@ -488,7 +500,8 @@ take would misreport a system whose whole point is that it does not.
 | --- | --- |
 | A gore PIECE a burst throws | `content/sprites/effects/gib_<part>.yaml` (it must be something that was INSIDE) + its entry in `SIGNATURE` / `FILLER` in `gore-burst.ts`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one |
 | An ORGAN a cut can spill | the sprite + the `ANATOMY_BANDS` band it lives in. Every cut through that band spills it from then on — nobody writes the combinations down |
-| A gore FAMILY | one row in `gore.ts` (bands, signature ladder, filler, ramp, cloud colour, what bounces, whether it `stains`) + its art. Never an edit to the spray, the burst, the cleave, the floor and the effect pass |
+| A gore FAMILY | one row in `gore.ts` (bands, signature ladder, filler, ramp, cloud colour, what bounces, whether it `stains`, what it BURNS DOWN TO) + its art. Never an edit to the spray, the burst, the cleave, the floor and the effect pass |
+| A burned body's REMAINS | `content/sprites/effects/charred_<what>.yaml` + its name in that family's `remains` pool in `gore.ts`. The pool is picked from on the KILL'S OWN SEED, so a second entry is what stops a nuked screenful leaving one decal forty times |
 | A KIND of dismemberment | a switch in `KIND_SWITCH` + the settings row; the fallback for a refusal is always the ORDINARY corpse, never the other kind |
 | A mature feature of any sort | a `nsfwAllowed()` check — **never a new setting**. See the gate's rules above |
 
