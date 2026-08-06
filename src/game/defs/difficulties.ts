@@ -545,6 +545,37 @@ export type DifficultyDef = {
    * blow itself (here it's the reaction window, not the bite).
    */
   stampedeTelegraphMult: number;
+  /**
+   * THE DRIVE'S OWN RUNG — how heavy the road is in the minigame between the
+   * garage and GOODCO (`src/game/drive/`), as multipliers on the mass of the
+   * two things out on it.
+   *
+   * THE LADDER TURNS THE MASS AND NOTHING ELSE, on purpose. A drive's collision
+   * is a real momentum sum rather than a table of penalties (`impact.ts`), so
+   * the honest place to put a difficulty knob is the one number that is
+   * genuinely a property of the ROAD — what the car has to shove out of the
+   * way. Turn it and BOTH halves of the answer move together, because they are
+   * the same sum: the car hands over more momentum (a body costs more speed)
+   * and the crumple absorbs more energy (the car breaks sooner). Every RATIO
+   * the model is built on survives untouched — square on the nose still costs
+   * far more than clipped on the wing, damage still goes as the SQUARE of the
+   * closing speed, and a struck body still LEAVES at very nearly the same
+   * speed (its launch is `M/(M+m)` of the sweep, which barely moves), so the
+   * gore reads identically on every rung.
+   *
+   * MEDIUM is the 1.0 baseline the road was tuned at (`DRIVE.coursePx`'s
+   * measured table). The crowd's column climbs further than the traffic's
+   * because a mass multiplier SATURATES against the car's own 1600 kg: an
+   * infinitely heavy van would still only cost the wagon its own share of the
+   * closing speed, so 4.5× the mass of a hatchback is about 1.75× the speed
+   * loss, while 2.5× the mass of a person is about 2.3×.
+   */
+  drive: {
+    /** Multiplies `DRIVE_UNITS.pedestrianMassKg` for this rung. */
+    pedestrianMassMult: number;
+    /** Multiplies `DRIVE_UNITS.trafficMassKg` for this rung. */
+    trafficMassMult: number;
+  };
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -640,6 +671,11 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.1,
     stampedeDamageFrac: 0.1,
     stampedeTelegraphMult: 1.5,
+    // The road forgives too: a body meeting the bumper costs about six in ten
+    // of what MEDIUM's costs, and the other cars are a light shunt. The gentle
+    // rung is where a player learns the wheel, so the wagon still reaches
+    // GOODCO with the throttle held down.
+    drive: { pedestrianMassMult: 0.6, trafficMassMult: 0.7 },
   },
   medium: {
     id: "medium",
@@ -714,6 +750,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.15,
     stampedeDamageFrac: 0.15,
     stampedeTelegraphMult: 1.3,
+    // THE ROAD AS IT WAS MEASURED — the 1.0 baseline `DRIVE.coursePx`'s table
+    // was driven against. Every other rung is a multiple of this one.
+    drive: { pedestrianMassMult: 1, trafficMassMult: 1 },
   },
   hard: {
     id: "hard",
@@ -779,6 +818,10 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.2,
     stampedeDamageFrac: 0.2,
     stampedeTelegraphMult: 1.0,
+    // A body now costs about 1.4× the speed and 1.4× the car it costs on
+    // MEDIUM, and trading paint about 1.3× — the first rung on which flat out
+    // through the crowd stops being a way of getting there sooner.
+    drive: { pedestrianMassMult: 1.4, trafficMassMult: 1.7 },
   },
   nightmare: {
     id: "nightmare",
@@ -849,6 +892,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.28,
     stampedeDamageFrac: 0.3,
     stampedeTelegraphMult: 0.7,
+    // Nearly double, and the crowd is where the trip is lost: a driver who
+    // does not thread arrives on a wreck, and a driver who does arrives late.
+    drive: { pedestrianMassMult: 1.9, trafficMassMult: 2.8 },
   },
   jesus: {
     id: "jesus",
@@ -919,6 +965,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.4,
     stampedeDamageFrac: 0.4,
     stampedeTelegraphMult: 0.4,
+    // The road hits back like a wall. Holding the throttle down through the
+    // crowd ends the leg, every time; the way to GOODCO is the gaps.
+    drive: { pedestrianMassMult: 2.5, trafficMassMult: 4.5 },
   },
 };
 

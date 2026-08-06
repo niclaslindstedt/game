@@ -16,6 +16,7 @@ import {
   DRIVE,
   DRIVE_OUTCOME,
   DRIVE_UNITS,
+  impactMasses,
   laneCenter,
   restartDrive,
   solveImpact,
@@ -23,12 +24,16 @@ import {
   type DriveParams,
   type DriveState,
 } from "../../src/game/drive/index.ts";
+import { DIFFICULTY_ORDER } from "../../src/game/defs/difficulties.ts";
+import type { Difficulty } from "../../src/game/types/index.ts";
 
 const PARAMS: DriveParams = {
   seed: 1234,
   direction: 1,
   to: "goodco_hq",
   gib: true,
+  // The baseline rung — every measured number about the road is MEDIUM's.
+  difficulty: "medium",
 };
 
 /** Drive flat out for `ms`, in the engine's own fixed step. */
@@ -108,6 +113,80 @@ describe("the impact model", () => {
       DRIVE_UNITS.pedestrianMassKg,
     );
     expect(miss).toBeNull();
+  });
+});
+
+describe("the difficulty ladder on the road", () => {
+  /** One square hit on the bumper, solved against a given mass. */
+  const squareHit = (mass: number) =>
+    solveImpact(
+      { x: 0, y: 0 },
+      1,
+      DRIVE.topSpeedPx,
+      { x: 30, y: 0 },
+      { x: 0, y: 0 },
+      DRIVE.pedestrianRadiusPx,
+      mass,
+    )!;
+
+  it("makes the road heavier every rung, with MEDIUM the baseline", () => {
+    const medium = impactMasses("medium");
+    expect(medium.pedestrian).toBeCloseTo(DRIVE_UNITS.pedestrianMassKg, 6);
+    expect(medium.traffic).toBeCloseTo(DRIVE_UNITS.trafficMassKg, 6);
+    for (let i = 1; i < DIFFICULTY_ORDER.length; i++) {
+      const prev = impactMasses(DIFFICULTY_ORDER[i - 1] as Difficulty);
+      const next = impactMasses(DIFFICULTY_ORDER[i] as Difficulty);
+      expect(next.pedestrian).toBeGreaterThan(prev.pedestrian);
+      expect(next.traffic).toBeGreaterThan(prev.traffic);
+    }
+  });
+
+  it("costs more speed and more car for the very same hit up the ladder", () => {
+    for (let i = 1; i < DIFFICULTY_ORDER.length; i++) {
+      const prev = squareHit(
+        impactMasses(DIFFICULTY_ORDER[i - 1] as Difficulty).pedestrian,
+      );
+      const next = squareHit(
+        impactMasses(DIFFICULTY_ORDER[i] as Difficulty).pedestrian,
+      );
+      // The two halves of the same momentum sum move together: a body on a
+      // harder rung takes more off the speedometer AND more out of the car.
+      expect(next.speedLoss).toBeGreaterThan(prev.speedLoss);
+      expect(next.joules).toBeGreaterThan(prev.joules);
+    }
+  });
+
+  it("throws a struck body at very nearly the same speed on every rung", () => {
+    // The launch is `M/(M+m)` of the sweep, which barely moves however heavy
+    // the road gets — so the gore reads the same on JESUS as on EASY, and the
+    // ladder is felt through the wheel rather than through the windscreen.
+    const gentle = squareHit(impactMasses("easy").pedestrian).launch.x;
+    const brutal = squareHit(
+      impactMasses(DIFFICULTY_ORDER.at(-1) as Difficulty).pedestrian,
+    ).launch.x;
+    expect(brutal).toBeGreaterThan(gentle * 0.75);
+    expect(brutal).toBeLessThan(gentle);
+  });
+
+  it("arrives slower and more broken over the same road on a harder rung", () => {
+    // The SAME seed, so the same crowd stands in the same places; the only
+    // difference is what they weigh.
+    const gentle = createDrive({ ...PARAMS, difficulty: "easy" });
+    const brutal = createDrive({
+      ...PARAMS,
+      difficulty: DIFFICULTY_ORDER.at(-1) as Difficulty,
+    });
+    const target = 12000;
+    for (const drive of [gentle, brutal]) {
+      while (
+        drive.distance < target &&
+        drive.outcome === DRIVE_OUTCOME.driving
+      ) {
+        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+      }
+    }
+    expect(brutal.car.wear).toBeGreaterThan(gentle.car.wear);
+    expect(brutal.ms).toBeGreaterThan(gentle.ms);
   });
 });
 

@@ -972,7 +972,13 @@ export function GameScreen({
           (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1)
         );
         soloRef.current = solo;
-        const params = driveParamsFor(to, runLevelId, solo, Date.now() >>> 0);
+        const params = driveParamsFor(
+          to,
+          runLevelId,
+          solo,
+          Date.now() >>> 0,
+          difficulty,
+        );
         if (!params) return false;
         pendingTravelRef.current = { to, opts: {} };
         driveRef.current = params;
@@ -1534,7 +1540,13 @@ export function GameScreen({
     to: string,
     opts: NonNullable<typeof pendingTravelRef.current>["opts"],
   ) => {
-    const params = driveParamsFor(to, from, soloRef.current, Date.now() >>> 0);
+    const params = driveParamsFor(
+      to,
+      from,
+      soloRef.current,
+      Date.now() >>> 0,
+      difficulty,
+    );
     if (!params) return false;
     pendingTravelRef.current = { to, opts };
     driveRef.current = params;

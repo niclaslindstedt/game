@@ -19,7 +19,12 @@ import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { CarControl } from "../vehicles.ts";
-import type { CarPanelId, CarVehicle, WheelDebris } from "../types/index.ts";
+import type {
+  CarPanelId,
+  CarVehicle,
+  Difficulty,
+  WheelDebris,
+} from "../types/index.ts";
 import type { DriveOutcome } from "./config.ts";
 
 /**
@@ -150,6 +155,20 @@ export type DriveParams = {
   seed: number;
   /** Which leg this is. */
   direction: DriveDirection;
+  /**
+   * THE RUNG THE ROAD IS DRIVEN ON — the same difficulty the run around it is
+   * played at, and the only thing that changes about the minigame between one
+   * and the next.
+   *
+   * It is a PARAMETER rather than a lookup for the same reason the seed and the
+   * gore gate are: a drive is settled whole before its first tick and then runs
+   * on its own, so nothing mid-road has to ask the app which run it came from —
+   * and a restart after a breakdown rebuilds the same road on the same rung.
+   * What the rung actually turns is the mass of everything on the tarmac
+   * (`impactMasses`), so a body costs a MEDIUM driver a fifth of his speed and
+   * a JESUS driver nearly half of it.
+   */
+  difficulty: Difficulty;
   /** Where the car ends up: the level the drive hands on to when it arrives. */
   to: string;
   /**

@@ -18,9 +18,17 @@
 // seeded stream (see `DriveState.rng`), so a drive can be replayed, tested
 // headlessly and A/B'd without ever shifting a loot roll.
 
-/** How the drive's world units meet the real ones, and what the wagon and the
- * people on the road weigh. Every collision number below is derived from
- * these three and nothing else. */
+/**
+ * How the drive's world units meet the real ones, and what the wagon and the
+ * people on the road weigh. Every collision number below is derived from these
+ * three and nothing else.
+ *
+ * THE TWO ROAD MASSES ARE THE DIFFICULTY LADDER'S ONE HANDLE on the minigame:
+ * a drive multiplies them by its rung's `DifficultyDef.drive` before it solves
+ * anything (`impactMasses`), which is why the numbers here are the MEDIUM road
+ * rather than the only road. Nothing else about a drive changes with the rung —
+ * same course, same crowd, same traffic, same car.
+ */
 export const DRIVE_UNITS = {
   /**
    * METRES PER WORLD PIXEL — the conversion the whole impact model rests on.
@@ -33,12 +41,12 @@ export const DRIVE_UNITS = {
    */
   mPerPx: 53.6 / 624,
   /** The wagon, kerb weight (kg). A thirty-year-old estate with a boot full of
-   * somebody's tools. */
+   * somebody's tools. The one mass no rung touches: it is the hero's own car. */
   carMassKg: 1600,
-  /** A person (kg). */
+  /** A person (kg), on MEDIUM — laddered per rung, see above. */
   pedestrianMassKg: 78,
-  /** Another car on the road (kg) — a bit lighter than the hero's barge, which
-   * is why they get shoved and he does not. */
+  /** Another car on the road (kg), on MEDIUM — a bit lighter than the hero's
+   * barge, which is why they get shoved and he does not. Laddered per rung. */
   trafficMassKg: 1300,
 } as const;
 

@@ -810,9 +810,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   body was hit and how hard it is thrown, and the contact normal's alignment
   with the nose decides how much speed and damage the car takes back. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
-  in one line. The app half is `pwa/src/game/drive-screen/`; whether the road is
-  played at all is `driveParamsFor` (the MINIGAMES setting, and never in a
-  party — one seat, no loot, no XP).
+  in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
+  exactly one number — what the road WEIGHS (`impactMasses`, off
+  `DifficultyDef.drive`) — so a body costs a MEDIUM driver about a fifth of his
+  speed and a JESUS driver nearly half of it, and does proportionally more to
+  the car, both out of the same momentum sum; the course, the crowd, the
+  traffic and the wagon are identical on every rung. The app half is
+  `pwa/src/game/drive-screen/`; whether the road is played at all is
+  `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
+  loot, no XP).
 - **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
   it. The player names their character, and `{HERO}` is where a line means that
   name: over his own pages in every box that speaks, and inside the handful of
