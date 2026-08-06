@@ -47,14 +47,14 @@ import { startGame } from "./engine/helpers.ts";
  * blockers find the ground its picture stands on). The app applies them in one
  * block for the same reason; splitting them is the only way they can drift.
  */
-function useCamera(projection: { pitch: number; yaw: number }): void {
+function applyCamera(projection: { pitch: number; yaw: number }): void {
   setWorldProjection(projection);
   setCameraYaw(projection.yaw);
 }
 
 /** Both are module state, so every test puts them back. */
 afterEach(() => {
-  useCamera({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
+  applyCamera({ pitch: DEFAULT_PITCH, yaw: DEFAULT_YAW });
 });
 
 /** The part canvas every panel (and the underbody) shares, and the wheel. */
@@ -179,7 +179,7 @@ function drawAt(
   state: GameState,
   projection: { pitch: number; yaw: number },
 ): Blit[] {
-  useCamera(projection);
+  applyCamera(projection);
   const { sprites, names } = carSprites();
   const probe = drawProbe(names);
   drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
