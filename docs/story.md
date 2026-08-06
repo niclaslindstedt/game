@@ -92,6 +92,21 @@ is at GOODCO, and the car on the deck is what gets him there. If he wanders out
 under the roll-up on foot anyway, leaving the car where it stands, he catches
 himself at it — Ada is not down the street; get in the car.
 
+**The drive to GOODCO.** The earthbound leg is not a cut — it is played, both
+ways, and it is the blackest joke in the game. The road out of the block runs
+four lanes through what is left of the neighbourhood: shuttered trades, boarded
+windows, and a lit one every third house where somebody's welfare still lands.
+The ones it did not reach are out on the tarmac, because a road is where the
+cars are and a car is where the money is, and they walk straight at him with
+their hands out. There are far too many of them to miss. Before he meets the
+first one he has the decent thought — these are his neighbours, they got
+nothing, mind how you go — and then he drives through them at a hundred and
+twenty and never mentions it again. Arriving, he does not reflect on the people.
+He reflects on the RIDE: whether it was a clean run, or whether the road was a
+bit bumpy tonight. That gap — between the man who worried about them beforehand
+and the man who files them under road surface afterwards — is the whole point,
+and it is left entirely to the player to notice.
+
 **The doors.** Three ways out, earned in order. THE CAR — the white hatchback
 — does the earthbound leg: he drives it to GOODCO HQ the night he takes the
 part, and it comes home the worse for every trip. THE ROCKET stands on the

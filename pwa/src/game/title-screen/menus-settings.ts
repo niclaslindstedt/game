@@ -140,6 +140,9 @@ export function buildGameplayMenu(ctx: MenuContext): MenuEntry[] {
       ),
       dialogue: onOffRow(ctx, "gameplay", "dialogue", "dialogue"),
       cutscenes: onOffRow(ctx, "gameplay", "cutscenes", "cutscenes"),
+      // Beside CUTSCENES because it is the same kind of answer — whether the
+      // game hands you something to sit through between one place and the next.
+      minigames: onOffRow(ctx, "gameplay", "minigames", "minigames"),
       "death-scenes": onOffRow(ctx, "gameplay", "death-scenes", "deathScenes"),
     }),
     backRow(ctx, "gameplay"),

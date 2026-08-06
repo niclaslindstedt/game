@@ -156,20 +156,26 @@ describe("the steering", () => {
   it("holds the nose short of the beam — the car can never come about", () => {
     const state = startHub();
     const car = board(state);
-    // THROTTLE AND FULL LEFT LOCK, held: a target off the bow inside the
-    // forward arc, recomposed off the nose every tick — which is what W+A is
-    // (game-screen/player-input.ts). The car turns as hard as it turns for as
-    // long as the key is down, which used to walk it right round the compass.
-    for (let i = 0; i < 600; i++) {
-      const ang = car.heading - Math.PI / 4;
+    // GET IT ROLLING FIRST: a push straight down the nose is all accelerator
+    // and no wheel (`carControl` reads the push ALONG the nose as the pedal).
+    for (let i = 0; i < 60; i++) {
       run(
         state,
         steerTo(
-          car.pos.x + Math.cos(ang) * 300,
-          car.pos.y + Math.sin(ang) * 300,
+          car.pos.x + Math.cos(car.heading) * 300,
+          car.pos.y + Math.sin(car.heading) * 300,
         ),
         1,
       );
+    }
+    expect(car.speed).toBeGreaterThan(0);
+    // …THEN HOLD THE WHEEL HARD OVER: a push straight ACROSS the nose is all
+    // wheel and no pedal, and a car with nothing on the pedal HOLDS its speed
+    // rather than coasting down — so it keeps turning for as long as the key is
+    // held, which is exactly the input that used to walk it right round the
+    // compass.
+    for (let i = 0; i < 600; i++) {
+      run(state, steerTo(car.pos.x, car.pos.y + 400), 1);
       expect(Math.abs(yaw(car))).toBeLessThanOrEqual(CAR.maxYaw + 1e-9);
     }
     // It really did turn as far as it is allowed to…
@@ -180,6 +186,55 @@ describe("the steering", () => {
     // Pinned against the stop, the driver straightens up rather than sitting
     // on a lock he is getting nothing for.
     expect(Math.abs(car.steer)).toBeLessThan(CAR.steerLock);
+  });
+
+  it("carries on when the wheel is let go, instead of coasting to a stop", () => {
+    // THE CONTROL MODEL IN ONE TEST. Letting go means "carry on as you are",
+    // the way it does in a car — braking is something the driver ASKS for, with
+    // a push against the nose. The car used to stop the instant nothing was
+    // held, which made the throttle a thing you held down for a whole drive and
+    // made letting go to think identical to braking.
+    const state = startHub();
+    const car = board(state);
+    const ahead = () =>
+      steerTo(
+        car.pos.x + Math.cos(car.heading) * 300,
+        car.pos.y + Math.sin(car.heading) * 300,
+      );
+    run(state, ahead(), 60);
+    const cruising = car.speed;
+    expect(cruising).toBeGreaterThan(0);
+    // Hands off for a second: still going, near enough the same speed.
+    run(state, idle, 60);
+    expect(car.speed).toBeGreaterThan(cruising * 0.9);
+    // …and the wheel has straightened itself out.
+    expect(car.steer).toBe(0);
+  });
+
+  it("brakes to a stop when the push comes back against the nose", () => {
+    const state = startHub();
+    const car = board(state);
+    run(
+      state,
+      steerTo(
+        car.pos.x + Math.cos(car.heading) * 300,
+        car.pos.y + Math.sin(car.heading) * 300,
+      ),
+      60,
+    );
+    expect(car.speed).toBeGreaterThan(0);
+    // Push back down the car's own axis — the brake pedal.
+    for (let i = 0; i < 120 && car.speed > 0; i++) {
+      run(
+        state,
+        steerTo(
+          car.pos.x - Math.cos(car.heading) * 300,
+          car.pos.y - Math.sin(car.heading) * 300,
+        ),
+        1,
+      );
+    }
+    expect(car.speed).toBeLessThanOrEqual(0);
   });
 
   it("keeps the nose on its side through a full lap of the compass", () => {

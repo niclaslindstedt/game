@@ -3314,6 +3314,41 @@
       "portrait": "player",
       "speaker": "{HERO}"
     },
+    "drive_arrive_bumpy": {
+      "id": "drive_arrive_bumpy",
+      "pages": [["BIT BUMPY TONIGHT. SHE'S FEELING HER AGE."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_clean": {
+      "id": "drive_arrive_clean",
+      "pages": [["CLEAN RUN. NOT A MARK ON HER."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_some": {
+      "id": "drive_arrive_some",
+      "pages": [["ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_broke_down": {
+      "id": "drive_broke_down",
+      "pages": [["COME ON. NOT HERE. NOT TONIGHT."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_out_welfare": {
+      "id": "drive_out_welfare",
+      "pages": [
+        [
+          "THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT."
+        ],
+        ["THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE."]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "garage_on_foot": {
       "id": "garage_on_foot",
       "pages": [

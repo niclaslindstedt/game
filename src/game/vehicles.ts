@@ -146,12 +146,18 @@ export const CAR = {
    * the other way is what REVERSE is for.
    */
   maxYaw: Math.PI * 0.48,
-  /** The intent arcs, against the angle between the steer target and the
-   * nose: inside `forwardArc` the driver means GO, beyond `reverseArc` he
-   * means BRAKE/BACK UP, and the band between is pure steering — the car
-   * coasts while the nose comes around. */
-  forwardArc: Math.PI * 0.42,
-  reverseArc: Math.PI * 0.75,
+  /**
+   * THE HANDBRAKE-OFF DRAG — what a car with NOTHING held sheds per second
+   * (px/s²), and it is deliberately almost nothing.
+   *
+   * A released wheel does not stop the car. Letting go means "carry on as you
+   * are": the car holds its speed and straightens up, exactly like taking your
+   * hands off at a cruise. Braking is a thing you ASK for (the pedal the other
+   * way), not something that happens to you the moment you stop asking for
+   * throttle — which is what makes a minute of road playable with one thumb,
+   * and what makes the garage and the road the same car to drive.
+   */
+  idleDragPx: 6,
   /** How far out of the driver's door a hero steps when he gets out
    * (`exitCar`, world px, abeam the nose) — clear of the body he was just
    * inside, so the shove-out has nothing left to do in the common case. */
@@ -203,16 +209,15 @@ export const DEPARTURE = {
   /**
    * The most the departing car's steer point may sit off its own nose (rad).
    *
-   * MUST STAY INSIDE `CAR.forwardArc`, and that is the whole reason this knob
-   * exists. A car joins the road across it, so the road's far end is a right
-   * angle off the bumper — and a target that far round is the wheel's BAND, not
-   * the throttle's: the driver means "come about", the car coasts while the nose
-   * swings, and steering authority is proportional to ground speed. Aimed
-   * straight at the end of the road the departing car therefore slowed itself to
-   * a halt, and a stopped car cannot turn at all, so it sat on the tarmac with
-   * its indicator on until the screen went black. Aiming at a lead point held
-   * inside the forward arc keeps the throttle down, and the nose comes round on
-   * an arc — which is how a car turns onto a road anyway.
+   * KEEPS THE THROTTLE DOWN WHILE THE NOSE COMES ROUND, and that is the whole
+   * reason this knob exists. The pedal is the push read ALONG the nose
+   * (`carControl`), so a target square off the bumper is all wheel and no
+   * throttle — and a car joins a road across it, so the road's far end IS a
+   * right angle off the bumper. Aimed straight at it the departing car slowed
+   * itself to a halt, and a stopped car cannot turn at all, so it sat on the
+   * tarmac with its indicator on until the screen went black. Aiming at a lead
+   * point held near the nose keeps most of the push on the accelerator, and the
+   * nose comes round on an arc — which is how a car turns onto a road anyway.
    */
   steerArc: Math.PI * 0.3,
   /** How far ahead of the bumper that lead point is thrown (world px). */
@@ -245,7 +250,11 @@ const VEHICLE_LANDMARKS: Record<string, Vehicle["kind"]> = {
   rocket: "ship",
 };
 
-function createCar(pos: Vec2, heading: number): CarVehicle {
+/** Mint a car, parked and cold, facing `heading`. Exported for the DRIVING
+ * MINIGAME, which needs the same wagon on a road with no carve under it
+ * (src/game/drive/index.ts) — every other caller gets one from
+ * `createVehicles` below. */
+export function createCar(pos: Vec2, heading: number): CarVehicle {
   // The facing axis is settled HERE and never again: the art has one profile,
   // so the yaw stop holds the nose on whichever side the car was parked
   // facing (see `CAR.maxYaw` / `steerCar`), and a parking bearing already
@@ -330,7 +339,7 @@ export function createVehicles(
  * square-on camera that bearing is +x and this is the plain `pos.x + along`
  * these sums all used to be.
  */
-function alongBody(pos: Vec2, along: number): Vec2 {
+export function alongBody(pos: Vec2, along: number): Vec2 {
   const bearing = billboardBearing();
   return {
     x: pos.x + Math.cos(bearing) * along,
@@ -567,6 +576,91 @@ export function exitCar(state: GameState, hero: Player): boolean {
 }
 
 /**
+ * ONE CAR'S OWN CLOCKWORK — the roll, the springs and the hung parts, with no
+ * world around it at all.
+ *
+ * Split out of `stepVehicles` because the DRIVING MINIGAME needs exactly this
+ * and nothing else it does. On the road there is no level: no obstacle chain to
+ * shove the body out of, no garage door to trip, no departure to book, no seat
+ * to pin a driver into — but the wagon still has to bob over what it hits, spin
+ * its wheels from its own speed, and rattle a bumper that is working free, or it
+ * stops reading as the same car that pulled out of the bay. So the body's
+ * physics lives here, taking a car and a timestep, and BOTH callers run it:
+ * `stepVehicles` for a parked or pottering car inside a run
+ * (src/game/vehicles.ts) and `stepDrive` for the same car at 120 mph
+ * (src/game/drive/index.ts).
+ *
+ * Semi-implicit Euler throughout — stable at the fixed step — and every clamp
+ * kills the velocity with it, so nothing rings against its own limits.
+ */
+export function integrateCarBody(car: CarVehicle, dt: number): void {
+  if (car.speed !== 0) {
+    const tau = Math.PI * 2;
+    car.wheelAngle =
+      (((car.wheelAngle + (car.speed / CAR.wheelRadius) * dt) % tau) + tau) %
+      tau;
+  }
+  let shake = 0;
+  for (let axle = 0; axle < 2; axle++) {
+    // An axle whose wheel is gone sits on the bump stop; nothing to spring.
+    if (car.wheelStates[axle] === 3) {
+      car.suspension[axle] = CAR.maxCompress;
+      car.suspensionVel[axle] = 0;
+      continue;
+    }
+    const s = car.suspension[axle] as number;
+    const v = car.suspensionVel[axle] as number;
+    const accel = -CAR.springK * s - CAR.springDamping * v;
+    let vel = v + accel * dt;
+    let pos = s + vel * dt;
+    if (pos < 0) {
+      pos = 0;
+      vel = Math.max(0, vel);
+    } else if (pos > CAR.maxCompress) {
+      pos = CAR.maxCompress;
+      vel = Math.min(0, vel);
+    }
+    // Snap the tail of the wobble to dead rest, so a parked car's
+    // snapshot deltas go quiet instead of carrying micro-motion forever.
+    if (Math.abs(pos) < 0.01 && Math.abs(vel) < 0.01) {
+      pos = 0;
+      vel = 0;
+    }
+    car.suspension[axle] = pos;
+    car.suspensionVel[axle] = vel;
+    shake += Math.abs(vel);
+  }
+  // The hung parts ride the same bumps: a spring under load shakes every
+  // loose or dangling part; LOOSE stays pinched to a rattle, DANGLING
+  // gets the whole arc. Bolted (or gone) parts never move.
+  for (const part of CAR.detachables) {
+    const fix = car.fixes[part];
+    if (fix !== CAR_FIX.loose && fix !== CAR_FIX.dangling) {
+      continue;
+    }
+    const swing = fix === CAR_FIX.loose ? CAR.looseSwing : CAR.dangleSwing;
+    const s = car.dangle[part] as number;
+    const v = (car.dangleVel[part] as number) + shake * CAR.dangleDrive;
+    const accel = -CAR.dangleK * s - CAR.dangleDamping * v;
+    let vel = v + accel * dt;
+    let pos = s + vel * dt;
+    if (pos > swing) {
+      pos = swing;
+      vel = Math.min(0, vel);
+    } else if (pos < -swing) {
+      pos = -swing;
+      vel = Math.max(0, vel);
+    }
+    if (Math.abs(pos) < 0.01 && Math.abs(vel) < 0.01) {
+      pos = 0;
+      vel = 0;
+    }
+    car.dangle[part] = pos;
+    car.dangleVel[part] = vel;
+  }
+}
+
+/**
  * One tick of vehicle clockwork: roll the car's wheels from its speed,
  * settle its springs, swing whatever hangs off it, and bounce any wheel
  * that came off (all semi-implicit Euler — stable at the fixed step, and
@@ -592,7 +686,11 @@ export function stepVehicles(
       state,
       vehicle,
       dt,
-      scene ? departureInput(vehicle, scene) : inputs,
+      scene
+        ? departureControl(vehicle, scene)
+        : inputs && vehicle.driver !== null
+          ? carControl(vehicle, inputs(vehicle.driver))
+          : null,
     );
     // The running engine's rumble cadence: one grain every `engineCueMs`
     // while somebody is at the wheel, its intensity the throttle's answer —
@@ -632,71 +730,7 @@ export function stepVehicles(
     } else {
       vehicle.grindCueMs = 0;
     }
-    if (vehicle.speed !== 0) {
-      const tau = Math.PI * 2;
-      vehicle.wheelAngle =
-        (((vehicle.wheelAngle + (vehicle.speed / CAR.wheelRadius) * dt) % tau) +
-          tau) %
-        tau;
-    }
-    let shake = 0;
-    for (let axle = 0; axle < 2; axle++) {
-      // An axle whose wheel is gone sits on the bump stop; nothing to spring.
-      if (vehicle.wheelStates[axle] === 3) {
-        vehicle.suspension[axle] = CAR.maxCompress;
-        vehicle.suspensionVel[axle] = 0;
-        continue;
-      }
-      const s = vehicle.suspension[axle] as number;
-      const v = vehicle.suspensionVel[axle] as number;
-      const accel = -CAR.springK * s - CAR.springDamping * v;
-      let vel = v + accel * dt;
-      let pos = s + vel * dt;
-      if (pos < 0) {
-        pos = 0;
-        vel = Math.max(0, vel);
-      } else if (pos > CAR.maxCompress) {
-        pos = CAR.maxCompress;
-        vel = Math.min(0, vel);
-      }
-      // Snap the tail of the wobble to dead rest, so a parked car's
-      // snapshot deltas go quiet instead of carrying micro-motion forever.
-      if (Math.abs(pos) < 0.01 && Math.abs(vel) < 0.01) {
-        pos = 0;
-        vel = 0;
-      }
-      vehicle.suspension[axle] = pos;
-      vehicle.suspensionVel[axle] = vel;
-      shake += Math.abs(vel);
-    }
-    // The hung parts ride the same bumps: a spring under load shakes every
-    // loose or dangling part; LOOSE stays pinched to a rattle, DANGLING
-    // gets the whole arc. Bolted (or gone) parts never move.
-    for (const part of CAR.detachables) {
-      const fix = vehicle.fixes[part];
-      if (fix !== CAR_FIX.loose && fix !== CAR_FIX.dangling) {
-        continue;
-      }
-      const swing = fix === CAR_FIX.loose ? CAR.looseSwing : CAR.dangleSwing;
-      const s = vehicle.dangle[part] as number;
-      const v = (vehicle.dangleVel[part] as number) + shake * CAR.dangleDrive;
-      const accel = -CAR.dangleK * s - CAR.dangleDamping * v;
-      let vel = v + accel * dt;
-      let pos = s + vel * dt;
-      if (pos > swing) {
-        pos = swing;
-        vel = Math.min(0, vel);
-      } else if (pos < -swing) {
-        pos = -swing;
-        vel = Math.max(0, vel);
-      }
-      if (Math.abs(pos) < 0.01 && Math.abs(vel) < 0.01) {
-        pos = 0;
-        vel = 0;
-      }
-      vehicle.dangle[part] = pos;
-      vehicle.dangleVel[part] = vel;
-    }
+    integrateCarBody(vehicle, dt);
   }
   for (const wheel of state.wheelDebris) {
     if (wheel.settled) continue;
@@ -764,31 +798,124 @@ function steerCar(car: CarVehicle, wantSteer: number, dt: number): void {
 }
 
 /**
- * CAR PHYSICS — a nose, a throttle, and a wheel, not a point that chases
- * the pointer. The car carries a `heading` and a SIGNED `speed` along it;
- * the steer target only expresses INTENT against that nose:
+ * WHAT THE DRIVER IS ASKING FOR — one push, read as a PEDAL and a WHEEL in the
+ * car's own frame. The single control model, shared by the garage and by the
+ * driving minigame (src/game/drive/), so a car handles the same in both.
  *
- *   - target AHEAD (inside `forwardArc`)      → throttle up toward
- *     `driveSpeed` — this is W, or the held pointer out in front;
- *   - target BEHIND (beyond `reverseArc`)     → brake, then BACK UP toward
- *     `reverseSpeed` — this is S, or the pointer held behind the trunk;
- *   - the band between (roughly abeam)        → pure steering: no throttle,
- *     no brake, the car coasts while the nose comes around — A/D alone
- *     curve the MOVING car and do nothing to a parked one.
+ * THE MODEL IS THE ARCADE ONE, AND IT IS THE RIGHT ONE FOR THIS CAR, because
+ * the car is drawn in SIDE PROFILE and can never come about (`CAR.maxYaw`). So
+ * the screen has a permanent meaning: the way the nose points is FORWARD, the
+ * other way is SLOW DOWN, and up and down the screen are the wheel.
  *
- * The wheel turns the nose toward the target (toward the TAIL's target when
- * reversing — backing up swings the rear the way a real car does), with
- * authority proportional to ground speed (`turnRefSpeed`): a standing car
- * cannot pivot on the spot, however hard the wheel is cranked. Releasing
- * every control coasts the car to a stop.
+ *   ALONG THE NOSE      → throttle. Nose-right, that is a push right; nose-left
+ *                         it is a push LEFT. "Drag the pad the way the car is
+ *                         pointing" is the whole of the accelerator, and it is
+ *                         the same gesture on both legs of the drive.
+ *   AGAINST THE NOSE    → brake, and then reverse.
+ *   ACROSS IT           → the wheel: up swings the nose up the screen, down
+ *                         swings it down.
+ *   NOTHING AT ALL      → carry on. The car HOLDS its speed and straightens up.
  *
- * The crank itself goes through the RACK (`steerCar`): the target only ever
- * asks for wheel angle, held at `steerLock`, and the nose may never come past
- * `maxYaw` off the side the body faces.
+ * That last line is the one that changed, and it is the important one. The car
+ * used to coast to a standstill the instant nothing was held, which meant the
+ * throttle had to be held down for the entire length of a drive just to stay
+ * moving, and letting go to think was the same input as braking. Now letting go
+ * means what it means in a car: you keep going. Stopping is something you ask
+ * for. (`CAR.idleDragPx` is the whisper of drag left on top — a released car
+ * loses about six px/s each second, so it eventually rolls to rest in a garage
+ * over many seconds rather than never.)
  *
- * The app composes the target FROM the car for the keyboard (W/A/S/D in the
- * nose's own frame — see player-input.ts); a held pointer/touch works
- * unchanged, and the car simply drives at it like a car.
+ * The push arrives as `GameInput.target`, which is read as a DIRECTION off the
+ * car rather than as a destination to chase — the app simply points it where the
+ * player is pushing (player-input.ts), and one composer now serves the pad, the
+ * stick, the keyboard and the pointer alike.
+ */
+export type CarControl = {
+  /** -1 (full brake / reverse) … +1 (full throttle), 0 = hold this speed. */
+  pedal: number;
+  /** -1 (nose swings up the screen) … +1 (down), 0 = straighten up. */
+  wheel: number;
+};
+
+/** Read one tick's push as the pedal and the wheel. */
+export function carControl(car: CarVehicle, input: GameInput): CarControl {
+  if (!input.steering) return { pedal: 0, wheel: 0 };
+  const dx = input.target.x - car.pos.x;
+  const dy = input.target.y - car.pos.y;
+  const len = Math.hypot(dx, dy);
+  if (len <= 1) return { pedal: 0, wheel: 0 };
+  // The nose's SIDE, not its bearing: the body is one side-profile assembly
+  // that never comes about, so which way it faces is a sign and nothing more.
+  const nose = car.faceLeft ? -1 : 1;
+  const throttle = input.throttle ?? 1;
+  return {
+    pedal: clamp((dx / len) * nose * throttle, -1, 1),
+    wheel: clamp(dy / len, -1, 1),
+  };
+}
+
+/**
+ * Apply one tick of pedal and wheel to a car — the shared half of the physics,
+ * so the garage's pottering car and the minigame's 120 mph one answer the
+ * controls identically. The CALLER owns the top speed (`topSpeed`), because
+ * that is the one thing the two genuinely disagree about: a wagon pulling out of
+ * a bay is capped at a crawl and the same wagon on the open road is not.
+ */
+export function applyCarControl(
+  car: CarVehicle,
+  control: CarControl,
+  dt: number,
+  topSpeed: number,
+  reverseSpeed: number,
+): void {
+  applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed);
+  // The wheel: the crank the driver is asking for, held at the lock. Reversing
+  // works the rack the other way round, because backing up with the wheel over
+  // swings the tail — `steerCar` owns that half.
+  const roll = car.speed < 0 ? -1 : 1;
+  steerCar(car, clamp(control.wheel, -1, 1) * CAR.steerLock * roll, dt);
+}
+
+/**
+ * THE PEDAL ALONE — accelerate, brake, or hold, with nothing said about the
+ * nose.
+ *
+ * Split out because the DRIVING MINIGAME wants exactly this half and not the
+ * other: on a straight four-lane road the car changes lanes by SLIDING across
+ * them rather than by turning, because the road (and the whole impact model
+ * standing on it) is axis-aligned and the body is a side profile that never
+ * comes about. It still visibly cranks the rack — the renderer draws `steer` —
+ * it simply does not let the crank walk the heading off the road.
+ */
+export function applyCarPedal(
+  car: CarVehicle,
+  pedal: number,
+  dt: number,
+  topSpeed: number,
+  reverseSpeed: number,
+): void {
+  if (pedal > 0) {
+    car.speed = Math.min(topSpeed * pedal, car.speed + CAR.driveAccel * dt);
+  } else if (pedal < 0) {
+    // Brake first, then back up — a car does not go from forward to reverse
+    // through anything but a stop.
+    car.speed =
+      car.speed > 0
+        ? Math.max(0, car.speed - CAR.driveBrake * dt)
+        : Math.max(reverseSpeed * pedal, car.speed - CAR.driveAccel * dt);
+  } else {
+    // NOTHING HELD: carry on. Only the whisper of drag.
+    const drop = CAR.idleDragPx * dt;
+    car.speed =
+      car.speed > 0
+        ? Math.max(0, car.speed - drop)
+        : Math.min(0, car.speed + drop);
+  }
+}
+
+/**
+ * CAR PHYSICS inside a run — the controls above, plus everything that only
+ * exists because there is a level around the car.
  *
  * The body collides: `resolveObstacles` shoves it out of walls and
  * furniture with its own radius, so the shut garage door really is shut.
@@ -808,67 +935,10 @@ function driveCar(
   state: GameState,
   car: CarVehicle,
   dt: number,
-  inputs?: (seat: number) => GameInput,
+  control: CarControl | null,
 ): void {
-  if (car.driver === null || !inputs) return;
-  const input = inputs(car.driver);
-  // What the driver is asking of the WHEEL this tick, in rack angle. Nothing
-  // held (or nothing to steer at) asks for straight ahead, and the rack walks
-  // itself back to centre — see `steerCar`, which owns both halves.
-  let wantSteer = 0;
-  if (input.steering) {
-    const dx = input.target.x - car.pos.x;
-    const dy = input.target.y - car.pos.y;
-    if (Math.hypot(dx, dy) > 1) {
-      const want = Math.atan2(dy, dx);
-      const ahead = angleDiff(want, car.heading);
-      const throttle = input.throttle ?? 1;
-      if (Math.abs(ahead) < CAR.forwardArc) {
-        car.speed = Math.min(
-          CAR.driveSpeed * throttle,
-          car.speed + CAR.driveAccel * dt,
-        );
-      } else if (Math.abs(ahead) > CAR.reverseArc) {
-        car.speed =
-          car.speed > 0
-            ? Math.max(0, car.speed - CAR.driveBrake * dt)
-            : Math.max(
-                -CAR.reverseSpeed * throttle,
-                car.speed - CAR.driveAccel * dt,
-              );
-      } else {
-        // The band between the arcs is pure steering — and COASTING, as the
-        // doc above has always promised: no throttle keeps a car rolling, so
-        // the speed bleeds off exactly as it does with every control
-        // released. Holding whatever speed the car happened to carry made a
-        // stray push abeam preserve momentum forever — a car nudged into
-        // reverse by a glancing input kept creeping and slowly pivoting for
-        // as long as a sideways push was held.
-        const drop = CAR.driveBrake * dt;
-        car.speed =
-          car.speed > 0
-            ? Math.max(0, car.speed - drop)
-            : Math.min(0, car.speed + drop);
-      }
-      // Reversing steers the TAIL at the target, and the rack works the other
-      // way round doing it — so the crank is the error read in the direction
-      // the car is actually rolling, held at the lock.
-      const err =
-        car.speed < 0 ? angleDiff(want + Math.PI, car.heading) : ahead;
-      const roll = car.speed < 0 ? -1 : 1;
-      wantSteer = clamp(err * roll, -CAR.steerLock, CAR.steerLock);
-    }
-  } else {
-    // Nothing held: coast down to a stop from either direction.
-    const drop = CAR.driveBrake * dt;
-    car.speed =
-      car.speed > 0
-        ? Math.max(0, car.speed - drop)
-        : Math.min(0, car.speed + drop);
-  }
-  // The wheels turn every tick, held or not — a released wheel self-centres —
-  // and the nose follows them as far as the car is rolling.
-  steerCar(car, wantSteer, dt);
+  if (car.driver === null || !control) return;
+  applyCarControl(car, control, dt, CAR.driveSpeed, CAR.reverseSpeed);
   if (car.speed !== 0) {
     car.pos.x += Math.cos(car.heading) * car.speed * dt;
     car.pos.y += Math.sin(car.heading) * car.speed * dt;
@@ -1053,30 +1123,30 @@ function roadTarget(road: readonly Zone[], from: Vec2): Vec2 {
 }
 
 /**
- * The departing car's steering, as an INPUT the ordinary driver reads.
+ * THE DEPARTING CAR'S OWN HANDS ON THE WHEEL — full throttle down the road, and
+ * the wheel taking whatever error is left between the nose and the road's end.
  *
- * A lead point thrown `DEPARTURE.lead` off the bumper, on a bearing stepped
- * toward the end of the road but never further round than `DEPARTURE.steerArc`
- * — see that knob for why the obvious version (aim at the end of the road)
- * parks the car instead of driving it.
+ * IT IS EXPRESSED IN THE CAR'S FRAME, and that is the whole reason it is not
+ * just a synthetic `GameInput`. The player's push is read on the SCREEN
+ * (`carControl`): the horizontal axis is the accelerator and the vertical is the
+ * wheel, which is the right model for a side-profile car a thumb is steering.
+ * The drive-out is not a thumb — it is a script that means "keep your foot down
+ * and aim there" — and fed through the screen-frame reading it lost its own
+ * throttle the moment the nose came round toward the road, because a car
+ * pointing up the screen has almost no horizontal component left to read a
+ * pedal off. It slowed to a crawl on the tarmac with the fade already running.
+ *
+ * So the beat asks for the two things directly: the pedal flat, and the wheel
+ * proportional to the bearing error (held at `DEPARTURE.steerArc`, so the nose
+ * comes round on an arc — which is how a car joins a road anyway).
  */
-function departureInput(
-  car: CarVehicle,
-  scene: DepartureState,
-): (seat: number) => GameInput {
+function departureControl(car: CarVehicle, scene: DepartureState): CarControl {
   const want = Math.atan2(
     scene.target.y - car.pos.y,
     scene.target.x - car.pos.x,
   );
   const err = angleDiff(want, car.heading);
-  const bearing =
-    car.heading +
-    Math.max(-DEPARTURE.steerArc, Math.min(DEPARTURE.steerArc, err));
-  const target = {
-    x: car.pos.x + Math.cos(bearing) * DEPARTURE.lead,
-    y: car.pos.y + Math.sin(bearing) * DEPARTURE.lead,
-  };
-  return () => ({ steering: true, target, throttle: 1, jump: false });
+  return { pedal: 1, wheel: clamp(err / DEPARTURE.steerArc, -1, 1) };
 }
 
 /**

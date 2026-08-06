@@ -55,6 +55,54 @@ thoughts:
     portrait: hero
     pages:
       - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
+  # ── THE DRIVE TO GOODCO (src/game/drive/) ─────────────────────────────────
+  # The earthbound leg, played rather than cut. These five are NOT pinned by a
+  # level: the drive is not a level, so the app plays them off the road's own
+  # beats (`DriveEvent`) rather than through `placeThoughts`.
+  #
+  # THE SHAPE OF THE SET IS THE JOKE, and it only works if nothing is added
+  # between the ends of it. He worries about the people BEFORE he meets any,
+  # and afterwards he reports on the ROAD SURFACE. A line acknowledging a body
+  # would turn the bit from a joke into a confession — so there isn't one, and
+  # there must never be one.
+  #
+  # THE ROAD AHEAD, said on an empty stretch well short of the crowd — the only
+  # place that promise costs him nothing. Read once ever, not once per trip: a
+  # man promising to be careful for the fourth time is a much worse joke.
+  drive_out_welfare:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
+      - - THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
+  # ARRIVING, HAVING HIT NOBODY. Only reachable by a genuinely exceptional
+  # drive — the road is laid down to make it nearly impossible. Modest pride in
+  # his own driving, which is as far as his reflection ever goes.
+  drive_arrive_clean:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - CLEAN RUN. NOT A MARK ON HER.
+  # ARRIVING, HAVING HIT A FEW.
+  drive_arrive_some:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN.
+  # ARRIVING, HAVING HIT A GREAT MANY — the line the whole minigame is built to
+  # earn. He is talking about the suspension.
+  drive_arrive_bumpy:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - BIT BUMPY TONIGHT. SHE'S FEELING HER AGE.
+  # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
+  # road — never the thing that actually broke it.
+  drive_broke_down:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - COME ON. NOT HERE. NOT TONIGHT.
   # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
   # before GOODCO HQ has fallen plays this instead of the travel picker (the
   # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do

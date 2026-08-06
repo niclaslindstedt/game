@@ -313,6 +313,15 @@ screens:
         help:
           on: THE PRELUDE SCENES PLAY BEFORE A LEVEL
           off: A LEVEL STARTS STRAIGHT AWAY - NO PRELUDE
+      # Sits under CUTSCENES because it is the same kind of answer — whether
+      # the game hands you something between one place and the next. A minigame
+      # pays no loot and no XP and cannot cost you the run, so this is not a
+      # difficulty row; a party skips them whatever it says.
+      - id: minigames
+        label: MINIGAMES
+        help:
+          on: DRIVE THE CAR YOURSELF BETWEEN THE GARAGE AND GOODCO
+          off: THE TRIP IS A STRAIGHT CUT - NO DRIVING
       # Sits under CUTSCENES because it is the same kind of answer — whether the
       # game stops to show you something. Deliberately NOT beside the blood
       # knobs on VIDEO: those decide what a death LOOKS like, this decides

@@ -526,6 +526,7 @@ type OnOffKey =
   | "healthBars"
   | "dialogue"
   | "cutscenes"
+  | "minigames"
   | "deathScenes";
 
 /**

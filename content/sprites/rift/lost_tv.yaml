@@ -3,12 +3,12 @@ family: rift
 size: [16, 16]
 description: >
   Decor — a boxy retro TV with rabbit-ears, its screen glowing teal with static,
-  still tuned to WEBFLIX and lost in the void.
+  still tuned to the streaming service and lost in the void.
 subject:
   kind: decor prop
   build: a boxy retro television with two bent rabbit-ear antennae
   features: dark casing, a screen glowing teal with static
-  flavor: someone's living-room set still tuned to WEBFLIX, floating lost in the void
+  flavor: someone's living-room set still tuned to the streaming service, floating lost in the void
 palette:
   N: "#2a2e46" # navy casing
   O: "#1a1c2c" # outline

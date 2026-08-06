@@ -12,6 +12,7 @@ import {
   setBalanceTuning,
   setCameraYaw,
   setCutscenesEnabled,
+  setMinigamesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
   type BalanceTuning,
@@ -255,6 +256,28 @@ export type DialogueScenes = "on" | "off";
  * presentation gate only. */
 export type Cutscenes = "on" | "off";
 
+/**
+ * MINIGAMES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's playable
+ * interludes — today the DRIVE between the garage and GOODCO, in both
+ * directions (src/game/drive/).
+ *
+ * `on` (the default) plays them; `off` makes the trip the straight cut it was
+ * before, with the destination built the moment the car reaches the road.
+ * Applied to the engine via `setMinigamesEnabled`.
+ *
+ * IT IS NOT A DIFFICULTY SWITCH AND NOT A GORE SWITCH. A minigame awards no
+ * loot and no XP and cannot be failed in any way that costs the run — a broken
+ * car simply starts the road again — so turning it off skips a scene rather
+ * than skipping a challenge, which is why it sits beside CUTSCENES rather than
+ * anywhere near the difficulty rungs. What the drive does to the people on the
+ * road answers to the GORE page like everything else (`gore-gate.ts`).
+ *
+ * A PARTY SKIPS THEM WHATEVER THIS SAYS. One car, one seat, no loot, no XP:
+ * there is nothing in a minigame for the other six people to do but watch, so
+ * a hosted session takes the straight cut (see `driveParamsFor`).
+ */
+export type Minigames = "on" | "off";
+
 /** DEATH SCENES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's two
  * scripted death cinematics — the BOSS DEATH RITE played over a felled boss
  * (the finisher: it goes to its knees, the horde is held off, the hero closes
@@ -380,6 +403,8 @@ export type GameSettings = {
   dialogue: DialogueScenes;
   /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
   cutscenes: Cutscenes;
+  /** Gameplay preference: the playable interludes (see Minigames). */
+  minigames: Minigames;
   /** Gameplay preference: the scripted death cinematics — the boss finisher and
    * the hero's death tableau (see DeathScenes). */
   deathScenes: DeathScenes;
@@ -602,6 +627,9 @@ function defaults(): GameSettings {
     // talking turns dialogue and/or cutscenes off.
     dialogue: "on",
     cutscenes: "on",
+    // The drive to GOODCO ships ON: it is the shipped experience, and the whole
+    // of the hero's first trip out of his own garage.
+    minigames: "on",
     // The finisher and the death tableau both play out of the box — they are
     // the shipped experience. A player replaying a map they have cleared five
     // times turns them off to keep the pace up.
@@ -1057,6 +1085,10 @@ function load(): GameSettings {
         stored.cutscenes === "on" || stored.cutscenes === "off"
           ? stored.cutscenes
           : base.cutscenes,
+      minigames:
+        stored.minigames === "on" || stored.minigames === "off"
+          ? stored.minigames
+          : base.minigames,
       deathScenes:
         stored.deathScenes === "on" || stored.deathScenes === "off"
           ? stored.deathScenes
@@ -1120,6 +1152,7 @@ setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
+setMinigamesEnabled(settings.minigames === "on");
 setDeathScenesEnabled(settings.deathScenes === "on");
 setStoreForced(settings.storeForce === "on");
 setWorldProjection({
@@ -1152,6 +1185,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setAutoEquipEnabled(settings.autoEquip === "on");
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");
+  setMinigamesEnabled(settings.minigames === "on");
   setDeathScenesEnabled(settings.deathScenes === "on");
   setStoreForced(settings.storeForce === "on");
   setWorldProjection({

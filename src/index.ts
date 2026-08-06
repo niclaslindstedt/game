@@ -917,6 +917,50 @@ export {
   unmuteDialogue,
 } from "./game/story.ts";
 
+// THE DRIVE — the playable interlude between the garage and GOODCO, and the
+// same road home (src/game/drive/). RUN-FACING ONLY: it must never reach
+// `src/menu.ts`, because the road drags the crowd, the traffic, the impact
+// model and the car behind it, and the startup path's budget has no room for
+// any of that. The app imports it from the GAME screen, never from the title.
+export {
+  createDrive,
+  driveMph,
+  driveRideQuality,
+  laneCenter,
+  restartDrive,
+  roadEdges,
+  solveImpact,
+  stepDrive,
+  CROWD_VARIANTS,
+  DRIVE,
+  DRIVE_OUTCOME,
+  DRIVE_UNITS,
+  IDLE_DRIVE_INPUT,
+  TRAFFIC_VARIANTS,
+} from "./game/drive/index.ts";
+export type {
+  DriveDirection,
+  DriveEvent,
+  DriveInput,
+  DriveOutcome,
+  DriveParams,
+  DrivePedestrian,
+  DriveState,
+  DriveStrike,
+  DriveTraffic,
+  Impact,
+  PedestrianMode,
+} from "./game/drive/index.ts";
+
+// THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf
+// rather than through the system it gates (the way the dialogue and cutscene
+// flags come through story.ts), because that system is the DRIVE — and having
+// `@game/core` re-export a boolean through src/game/drive/ would put the road,
+// the crowd, the traffic and the impact model behind an import of the engine's
+// front door. The flag leaf has no imports at all, which is the whole point of
+// it.
+export { areMinigamesEnabled, setMinigamesEnabled } from "./game/flags.ts";
+
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
 // renders scenes from CutsceneState + def; `currentLine` is the text on
 // screen this frame.
