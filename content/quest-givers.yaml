@@ -37,16 +37,16 @@ questGivers:
       home means staring at the phone. She was never once scared for her
       daughter — she raised her — and what she asks for is the one thing a
       search party cannot bring back: something of Ada's.
-    # THE MEETING COMES FIRST. Her three errands all come out of one talk on
-    # the night she arrived, so the first tap plays that talk and the slate
-    # opens from the tap after it (the greeting below is the header she then
-    # wears every time he comes back).
+    # THE MEETING COMES FIRST, AND IT ASKS FOR NOTHING. The first tap plays two
+    # beats of her arriving; the slate opens from the tap after it, and each
+    # errand sets itself up in its own offer rather than in that talk (the
+    # greeting below is the header she wears every time he comes back).
     intro:
       conversation: ruth_arrival
       until: ruth_met
     greeting:
       - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-      - I'VE HAD ANOTHER THINK ABOUT WHAT TO ASK YOU FOR.
+      - THERE'S SOMETHING I'D ASK OF YOU.
     farewell:
       - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
