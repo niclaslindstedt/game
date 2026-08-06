@@ -18,6 +18,8 @@ import {
   MAP_BLUEPRINTS,
   QUEST_DEFS,
   QUEST_GIVER_DEFS,
+  // The module-local `QUESTS` below is the CATALOG; this is the tuning block.
+  QUESTS as QUEST_TUNING,
   giversForLevel,
   questsForLevel,
   type QuestDef,
@@ -197,16 +199,60 @@ describe("the campaign's errands", () => {
   });
 
   it("ask for a number of kills a map's horde can actually supply", () => {
-    // A `kill 40` on a map that spawns eight of that breed is the same
-    // impossible-but-silent failure as naming a breed that isn't there.
+    // A `kill 400` on a map whose knots queue eighty of that breed is the same
+    // impossible-but-silent failure as naming a breed that isn't there — the
+    // tracker sits short with nothing left alive to count.
+    //
+    // The ceiling is FORTY, not the eight and ten the errands opened at: a run
+    // of GOODCO HQ kills a hundred and seventy-six monsters in three minutes,
+    // so a ten-kill job was over before the offer box had been read twice. What
+    // makes forty safe on the scarcer breeds is `quests/restock.ts` — an errand
+    // tops the horde up as it is taken when the field can no longer pay for it
+    // — and that is a top-up rather than a licence: the field still has to be
+    // able to hold the fight, which is what keeps this bounded at all.
     for (const quest of QUESTS) {
       for (const objective of quest.objectives) {
         if (objective.kind !== "kill") continue;
-        expect(objective.count, `${quest.id}`).toBeLessThanOrEqual(20);
+        expect(objective.count, `${quest.id}`).toBeLessThanOrEqual(40);
+      }
+    }
+  });
+
+  it("never let a fetch piece off a horde breed fall out faster than 1 in 8", () => {
+    // THE SAME RULE THE BUILD REFUSES (asset-tools/quest-schema.mjs), held here
+    // against the COMPILED catalog so it also covers the pieces that name no
+    // `dropChance` at all and inherit `QUESTS.dropChance` — the config knob
+    // could be raised back past the ceiling without a single YAML file
+    // changing, and every fetch errand in the game would quietly become a
+    // two-room detour with a counter on it.
+    const CEILING = 0.125;
+    for (const quest of QUESTS) {
+      const hub = LEVELS[quest.level]!.objective.type === "hub";
+      const horde = hub ? allHordeBreeds() : hordeBreeds(quest.level);
+      for (const item of quest.items ?? []) {
+        const farmed = (item.dropFrom ?? []).filter((b) => horde.has(b));
+        if (farmed.length === 0) continue; // a one-off carrier — see the schema
+        expect(
+          item.dropChance ?? QUEST_TUNING.dropChance,
+          `${quest.id} drops off ${farmed.join(", ")}`,
+        ).toBeLessThanOrEqual(CEILING);
       }
     }
   });
 });
+
+/** The breeds the venue's blueprint horde is MADE of — the farmable ones. An
+ * elite, a guardian, a bystander or a hellborn is met once and is not here. */
+function hordeBreeds(levelId: string): Set<string> {
+  const members = MAP_BLUEPRINTS[levelId]?.horde?.members ?? [];
+  return new Set(members.map((m) => m.enemy));
+}
+
+/** Every map's horde at once — what a HUB errand's carriers are checked
+ * against, since a campaign chain is carried wherever the trail goes. */
+function allHordeBreeds(): Set<string> {
+  return new Set(Object.keys(LEVELS).flatMap((id) => [...hordeBreeds(id)]));
+}
 
 /** Every enemy id the mission `levelId` can put on the field, from every source
  * it has — the blueprint's horde, its elites, guardians, bystanders, hellborn

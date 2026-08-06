@@ -6,11 +6,11 @@ name: PEST CONTROL
 lore: >
   The scout rovers drive through the botanist's beds because nobody put the
   beds on their map. It is routing rather than malice, which is why thinning
-  them works: eight, and the survivors plot a way round. That they learn is
+  them works: forty, and the survivors plot a way round. That they learn is
   the part she says nobody believes.
 offer:
   - - THE SCOUTS DRIVE THROUGH MY BEDS. NOT MALICE — NOBODY PUT THE BEDS ON THEIR MAP.
-  - - EIGHT OF THEM AND THE SURVIVORS WILL ROUTE ROUND.
+  - - FORTY OF THEM AND THE SURVIVORS WILL ROUTE ROUND. THEY LEARN SLOWLY.
 incomplete:
   - THEY'RE STILL COMING THROUGH. LOOK AT THIS ROW.
 complete:
@@ -19,7 +19,7 @@ complete:
 objectives:
   - kind: kill
     enemy: scout_rover
-    count: 8
+    count: 40
 reward:
   xpShare: 0.45
   coins: 110

@@ -75,7 +75,8 @@ and the alternative is a page whose only prose sits behind a spoiler cover.
 | `reachLevel` | be level N | Keep rare: a wall, not a task. Tracker words it as the climb |
 
 **`items:`** are the quest's own tokens (id, name, icon), found via `dropFrom`
-breeds (`dropChance`, with a pity floor so a fetch quest is always finishable)
+breeds (`dropChance`, capped at one in eight off a horde breed, with a pity
+floor so a fetch quest is always finishable)
 and/or `at:` spots laid out on ACCEPT. A piece with neither can never appear —
 the build refuses it.
 
@@ -179,11 +180,25 @@ reason:
 - **A campaign errand:** `xpShare` 0.06–1.0 (median **0.26**), coins 40–2000.
   They start deliberately tiny (a typewriter ribbon pays 0.06) and the last link
   pays the game's only respec.
-- **Kill counts** run 1–10, and `tests/content/quests_test.ts` fails anything
-  over 20 — a map's horde is finite, and a count the field cannot supply is an
-  errand that can never be finished and looks exactly like bad luck. That suite
-  also checks the breed is one the named map actually spawns, which the schema
+- **Kill counts** are **40** for a breed the map's horde is thick with and
+  **20** for a scarce or heavy one, and `tests/content/quests_test.ts` fails
+  anything over 40. They used to run 1–10 and that was the wrong size of job:
+  a measured MEDIUM run of GOODCO HQ kills 176 monsters in three minutes, so a
+  ten-kill errand was finished before its offer box had been read twice. What
+  makes 40 safe on the scarce breeds is that an errand TOPS THE HORDE UP as it
+  is taken (`src/game/quests/restock.ts`) when the field can no longer pay for
+  it — a carved map's monsters are finite, so an errand accepted on ground the
+  hero already swept would otherwise sit at 0/40 forever. That suite also
+  checks the breed is one the named map actually spawns, which the schema
   cannot: it only knows the id exists.
+- **A fetch piece's `dropChance`** defaults to **0.08** and the build REFUSES
+  anything above **0.125** off a breed the map's blueprint `horde` is made of.
+  With the pity floor at 25 that is ~11 kills a piece, so a four-piece fetch
+  errand and a forty-kill cull are deliberately the same size of job. The
+  ceiling binds only FARMABLE carriers: off a one-off — an elite, a guardian, a
+  bystander, a rampage-only hellborn — any rate is allowed and 1 is often
+  right, because there is one of that mob and the roll decides whether the beat
+  happens at all rather than how long the hunt is.
 - **`xpShare` above 1** is a whole free level for one errand and out-paces the
   kills-per-level table the campaign is tuned on. The schema warns past 2.
 
@@ -377,6 +392,9 @@ with nothing on screen to explain it. That is why they are hard errors.
   runs.
 - **A `collect` item nothing drops and nothing placed**, or one the `items:`
   block does not define; same for an `escort` id.
+- **A `dropChance` above 0.125 off a breed the map's `horde` is made of** — a
+  piece falling out of every second or third body is a counter rather than a
+  hunt. Off a ONE-OFF carrier it is silent (and 1 is often correct there).
 - **A conversation** whose `start`/`goto`/`reentry` names a missing node, two
   nodes with the same id, or a `gives:` handing over a piece the named quest
   does not define in its own `items:` — the hero would pick up a token no

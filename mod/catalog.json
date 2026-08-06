@@ -3219,6 +3219,7 @@
     "questPieceBought",
     "questPieceSold",
     "questProgress",
+    "questRestocked",
     "questTurnedIn",
     "repairKitUsed",
     "sandstormHit",

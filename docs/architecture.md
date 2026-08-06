@@ -212,6 +212,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   three conditions with no moment to be booked at — a place stood in, a flag
   set, a level reached — are polled over the RUNNING errands only). See
   the QUESTS section of `CLAUDE.md` for the rules that are load-bearing.
+- **`src/game/quests/restock.ts`** — TOPPING THE HORDE UP FOR AN ERRAND. A
+  carved map drops `waves` entirely, so its monsters are finite: an errand taken
+  on ground the hero has already swept has nothing left to count, and the
+  failure is silent. Accepting one therefore reads what the field can still
+  deliver and queues any shortfall into the ordinary SPAWN POINTS — never onto
+  the field, so the top-up inherits the whole summon machine (off-screen
+  arrival, the alive caps, the level's own mob scaling, the foe readout). A
+  shortfall top-up rather than a stocking pass: a map still good for the job is
+  left alone, because a mob mix is a difficulty knob. See `docs/game-content.md`
+  → What an errand costs.
 - **`src/game/quests/campaign.ts` + `campaign-save.ts`** — the CAMPAIGN chain:
   errands marked `campaign: true` belong to the HERO rather than to the run, so
   their log and their flags are banked on the character per difficulty and

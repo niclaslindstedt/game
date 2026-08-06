@@ -35,15 +35,59 @@ export const QUESTS = {
   repelRadius: 44,
   /** Drawn body radius, for the ward's own collision and the app's hit test. */
   radius: 8,
-  /** A quest item's default drop chance off a breed that carries it. */
-  dropChance: 0.34,
+  /**
+   * A quest item's default drop chance off a breed that carries it.
+   *
+   * ROUGHLY ONE IN TWELVE, AND THE SMALLNESS IS THE POINT. A fetch piece that
+   * falls off every third body is not a hunt, it is a two-room detour with a
+   * counter on it: this game's hero clears a hundred and seventy mobs in three
+   * minutes, so at the old third-of-a-chance a four-piece errand was over
+   * before the player had finished reading what it asked for. At this rate the
+   * same four pieces cost about forty-five kills (see `dropPity` for the
+   * arithmetic) — the same order as a `kill` objective, which is what makes
+   * the two kinds feel like the same size of job.
+   *
+   * A piece that falls off a ONE-OFF named body is the deliberate exception and
+   * authors its own `dropChance: 1` — there is only ever one of that mob, so
+   * the roll is not a farm rate, it is whether the beat happens at all.
+   */
+  dropChance: 0.08,
   /**
    * THE PITY FLOOR for a `collect` objective: after this many kills of a
    * carrying breed with nothing to show for it, the next one drops for
    * certain. A fetch quest gated on a coin flip is a fetch quest some players
    * simply cannot finish, and the horde is finite.
+   *
+   * IT MOVES WITH `dropChance` AND IS MEANINGLESS ALONE. The pair is what sets
+   * the real cost of a piece: `(1 − (1 − p)^pity) / p` kills on average, which
+   * at 0.08 and 25 is ~11. Left at the old 6 while the chance fell it would
+   * have become the DOMINANT term — every piece landing on the sixth body,
+   * dead certain, which is a worse fetch quest than a generous one because it
+   * is not even a gamble.
    */
-  dropPity: 6,
+  dropPity: 25,
+  /**
+   * RESTOCKING THE HORDE FOR AN ERRAND (see quests/restock.ts): how many times
+   * over the field must still be able to supply what a fresh errand asks for
+   * before it is left to the map's own horde.
+   *
+   * WELL above 1, because a queued mob is not a met mob. A spawn point only
+   * pours while the hero stands in its trigger radius, so most of a map's
+   * horde is never fought at all: a measured MEDIUM run of GOODCO HQ killed
+   * 176 of the 1247 monsters its knots had queued. Counting the whole queue as
+   * supply at face value would tell a forty-kill errand that a map holding
+   * fifty of the breed — in twenty rooms the hero will visit three of — is
+   * comfortably stocked.
+   */
+  restockHeadroom: 2.5,
+  /**
+   * The most bodies ONE errand may add to the field when it tops the horde up.
+   * A ceiling rather than a target: the shortfall is normally far smaller, and
+   * this only bites where an errand is taken onto a map that has been swept
+   * clean, which is exactly the case where dumping the whole need at once
+   * would turn a quiet walk back to the giver into an ambush.
+   */
+  restockMax: 60,
   /** An escort's hit points when its def names none. */
   escortHp: 220,
   /** How fast an escort walks (world px/s) — a touch under the hero's, so

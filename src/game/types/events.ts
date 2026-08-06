@@ -822,6 +822,15 @@ export type GameEvent =
   /** An errand was taken on. The app cues the parchment and starts tracking it. */
   | { type: "questAccepted"; questId: string; giverId: string }
   /**
+   * An errand TOPPED THE HORDE UP as it was taken (see quests/restock.ts):
+   * `count` more of `enemy` were queued into the map's spawn points because
+   * what was left could not have supplied the job. Nothing in the app has to
+   * draw this — the mobs announce themselves by arriving — but it is the one
+   * record that the field was changed, which is what a balance run reads to
+   * tell a restocked map from a naturally busy one.
+   */
+  | { type: "questRestocked"; enemy: string; count: number }
+  /**
    * An objective's tally moved — a kill counted, a piece picked up, an escort
    * delivered. `index` is which objective (parallel to `QuestDef.objectives`),
    * `count`/`need` where it now stands. The app floats the WoW-style

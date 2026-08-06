@@ -25,6 +25,10 @@ items:
     name: SPARE AIR BOTTLE
     icon: icon_quest_bottle
     dropFrom: [successor]
+    # The ceiling rather than the default (see QUESTS.dropChance): the
+    # SUCCESSOR is the moon's deep-window breed and the only thing carrying a
+    # bottle, so a piece off one is the scarcest farm an errand asks for.
+    dropChance: 0.125
     at: [{ x: 1020, y: 780 }, { x: 1420, y: 470 }]
 reward:
   xpShare: 0.4

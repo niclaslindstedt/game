@@ -90,6 +90,34 @@ for (const id of levels) {
   }
 }
 
+// WHICH BREEDS THE HORDE IS MADE OF, per venue — the blueprint's `horde.members`
+// and nothing else. It is what separates a FARMABLE carrier from a one-off: an
+// elite, a guardian, a bystander or a rampage-only hellborn is met once (or
+// never), so a piece falling off one at a certainty is a beat, while the same
+// certainty on a breed the knots pour out by the hundred is an errand that
+// finishes before it has been read. Read from `content/maps/` for the same
+// reason `levelSizes` is read from `content/levels/`: the YAML is already on
+// disk here, and this pipeline learns nothing else about a map.
+const hordeBreeds = new Map();
+for (const id of levels) {
+  const breeds = new Set();
+  try {
+    const bp = parse(readFileSync(engine(`content/maps/${id}.yaml`), "utf8"));
+    for (const member of bp?.horde?.members ?? []) {
+      if (typeof member?.enemy === "string") breeds.add(member.enemy);
+    }
+  } catch {
+    // A venue need not be carved from a blueprint (the hub is not).
+  }
+  hordeBreeds.set(id, breeds);
+}
+// A HUB errand is carried across the campaign, so its carriers are checked
+// against every map's horde at once — the same widening `tests/content` does
+// for a hub chain's breeds, and for the same reason.
+const anyHordeBreed = new Set(
+  [...hordeBreeds.values()].flatMap((set) => [...set]),
+);
+
 const powerups = parse(readFileSync(engine("content/powerups.yaml"), "utf8"));
 const abilities = new Set(Object.keys(powerups?.powerups ?? {}));
 
@@ -131,6 +159,8 @@ const refs = {
   conversations: new Set(Object.keys(conversations)),
   maxHeroLevel,
   levelSizes,
+  hordeBreeds,
+  anyHordeBreed,
   // questId → the pieces some conversation branch hands over, so a piece that
   // is given rather than found is not reported as one nothing produces.
   givenPieces: collectGivenPieces(conversations),

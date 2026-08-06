@@ -35,7 +35,6 @@ items:
       - scientist
       - engineer
       - guard
-    dropChance: 0.34
 reward:
   xpShare: 0.14
   coins: 120

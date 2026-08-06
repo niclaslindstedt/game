@@ -5,20 +5,21 @@ order: 1
 name: THE WARDROBE
 lore: >
   The longhorns are through the drying lines again, and eight seasons of the
-  park's wardrobe is hanging out there. Eight of them — one a season, which
-  the wardrobe mistress considers fair — and the lines are hers again.
+  park's wardrobe is hanging out there. Twenty of them — the wardrobe
+  mistress has costed the damage by the season and considers that fair — and
+  the lines are hers again.
 offer:
   - - THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN. THAT'S EIGHT SEASONS OF WORK OUT THERE.
-  - - EIGHT OF THEM. ONE PER SEASON. THAT'S FAIR.
+  - - TWENTY OF THEM. I'VE COSTED IT BY THE SEASON. THAT'S FAIR.
 incomplete:
   - THEY'RE STILL IN MY LINES. LOOK AT THE STATE OF IT.
 complete:
-  - - EIGHT. MY LINES ARE MINE.
+  - - TWENTY. MY LINES ARE MINE.
   - - I MADE THIS FOR A HAND WHO NEVER GOT A SCENE. IT'LL FIT YOU.
 objectives:
   - kind: kill
     enemy: longhorn
-    count: 8
+    count: 20
 reward:
   xpShare: 0.45
   coins: 130

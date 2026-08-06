@@ -63,12 +63,14 @@ import type {
 import { clearEscorts, spawnEscort, stepEscorts } from "./escort.ts";
 import { questSpot } from "./placement.ts";
 import { questRewardChoices } from "./reward-choices.ts";
+import { restockQuestBreeds } from "./restock.ts";
 import { payQuestReward, type QuestPayout } from "./rewards.ts";
 
 export * from "./campaign.ts";
 export * from "./escort.ts";
 export * from "./placement.ts";
 export * from "./merchant.ts";
+export * from "./restock.ts";
 export * from "./reward-choices.ts";
 export * from "./rewards.ts";
 
@@ -483,6 +485,11 @@ export function acceptQuest(state: GameState, hero: Player): boolean {
   const giver = state.questGivers.find((g) => g.id === offer.giverId);
   const from = giver?.pos ?? hero.pos;
   placeQuestItems(state, def);
+  // AND TOP THE HORDE UP IF IT CANNOT PAY FOR THIS. A carved map's monsters are
+  // finite, so an errand taken on ground the hero has already swept has nothing
+  // left to count — see restock.ts. A no-op whenever the field is still good
+  // for the job, which is most of the time.
+  restockQuestBreeds(state, def);
   for (const objective of def.objectives) {
     if (objective.kind !== "escort") continue;
     spawnEscort(state, def.id, objective.escort, objective.to, from);
