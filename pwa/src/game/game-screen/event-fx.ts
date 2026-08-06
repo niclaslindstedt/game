@@ -53,7 +53,7 @@ import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { bossRitePresentation } from "./boss-rite.ts";
 import { pushDamage, pushFloat } from "./float-lane.ts";
 import { collectGoldPickup } from "./gold-float.ts";
-import { goreFamily } from "./gore.ts";
+import { charredRemains, goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
 import { splashOnly } from "./gore-gate.ts";
 import { soakHero } from "./hero-soak.ts";
@@ -590,15 +590,22 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // the rest of the level. Rolls a topple side so the horde doesn't
     // all fall the same way.
     if (event.type === "enemyKilled" && incinerated) {
-      // Burned up by the bomb: flames engulf the body and a smoking charred
-      // skeleton is left where it fell, smouldering a beat before it fades.
+      // Burned up by the bomb: flames engulf the body and what is left of it
+      // smoulders a beat before it fades. WHAT is left is this kind of body's
+      // own — scorched bone, a slagged chassis, a guttering veil, a cold husk —
+      // resolved HERE, where the victim's def is still to hand, because by the
+      // time the bones show the mob is gone (game-screen/charred-remains.ts).
+      // On the KILL'S OWN SEED like everything else it left behind, so a nuked
+      // screenful burns down to a field of different marks rather than to one
+      // decal stamped forty times.
       effects.push({
         kind: "incinerate",
         pos: { x: event.pos.x, y: event.pos.y },
         untilMs: state.stats.timeMs + 1600,
         durationMs: 1600,
         sprite: def.sprite,
-        seed: Math.floor(Math.random() * 997),
+        remains: charredRemains(family.id, def.anatomy ?? "humanoid", seed),
+        seed,
       });
     } else if (event.type === "enemyKilled" && burst) {
       // THE BODY CAME APART — cut in two by an edge, or burst by a blunt blow.

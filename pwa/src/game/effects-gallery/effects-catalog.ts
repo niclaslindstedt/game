@@ -440,14 +440,68 @@ const FIELD_EXHIBITS: Exhibit[] = [
     id: "incinerate",
     icon: "spell_inferno",
     label: "INCINERATION",
-    blurb: "THE BODY BURNS UP AND LEAVES A SMOKING CHARRED SKELETON",
+    blurb: "BODIES BURN UP AND LEAVE THEIR OWN SMOKING REMAINS",
     group: "IMPACT",
-    keywords: ["fire", "burn", "skeleton", "smoke", "nuke kill"],
+    keywords: ["fire", "burn", "skeleton", "ash", "smoke", "nuke kill"],
     stage: { spawns: horde(8, 34, 90) },
-    showMs: 1800,
+    showMs: 2600,
     fire: (ctx) => {
-      const mob = ctx.kill();
-      if (mob) ctx.emit(killEvent(mob, { incinerated: true }));
+      // THE WHOLE POOL AT ONCE, and that is the exhibit: a nuke and a
+      // flamethrower burn a screenful together, so the claim being made — that
+      // one body does not burn down to the same char mark as the one beside it
+      // — can only be judged with several of them alight side by side.
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { incinerated: true }));
+      }
+    },
+  },
+  {
+    id: "incinerate-bot",
+    icon: "spell_inferno",
+    label: "A MACHINE BURNS UP",
+    blurb: "IT DOES NOT CHAR - IT SLAGS, AND LEAVES A SHAPE THAT WAS A MACHINE",
+    group: "IMPACT",
+    keywords: ["fire", "burn", "machine", "robot", "slag", "sparks", "nuke kill"],
+    stage: { spawns: horde(6, 34, 90, "servo_bot") },
+    showMs: 2600,
+    fire: (ctx) => {
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { incinerated: true }));
+      }
+    },
+  },
+  {
+    id: "incinerate-ecto",
+    icon: "spell_inferno",
+    label: "A HAUNTING BURNS UP",
+    blurb: "THE GOO WAS THE ONLY PART THAT WAS EVER THERE, AND IT DROPS",
+    group: "IMPACT",
+    keywords: ["fire", "burn", "ghost", "ecto", "veil", "nuke kill"],
+    stage: { spawns: horde(6, 34, 90, "ghost") },
+    showMs: 2600,
+    fire: (ctx) => {
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { incinerated: true }));
+      }
+    },
+  },
+  {
+    id: "incinerate-cosmic",
+    icon: "spell_inferno",
+    label: "A RIFT-THING BURNS UP",
+    blurb: "FIRE HAS NOTHING TO BURN - ONLY THE DARK IT WAS WRAPPED AROUND",
+    group: "IMPACT",
+    keywords: ["fire", "burn", "rift", "cosmic", "void", "husk", "nuke kill"],
+    stage: { spawns: horde(6, 34, 90, "voidling") },
+    showMs: 2600,
+    fire: (ctx) => {
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        if (mob) ctx.emit(killEvent(mob, { incinerated: true }));
+      }
     },
   },
   {

@@ -1,0 +1,34 @@
+name: charred_ash_pile
+family: effects
+size: [16, 16]
+description: >
+  Nothing left but a heap of ash with the skull sitting on top of it and one
+  long bone still standing out of the side, embers glowing down in the heap.
+subject:
+  kind: aftermath effect
+  build: a low mound of grey ash with a bumpy crown, a scorched skull resting on the peak of it, and a single bone leaning out of the right shoulder of the heap
+  accent: ember-orange sockets in the skull and two coals still alive in the ash
+  flavor: the body that went all the way — the fire finished this one where it stood
+palette:
+  O: "#15100f" # scorched char outline
+  a: "#2e2823" # ash shadow, the seams between what is left
+  A: "#574c42" # ash
+  b: "#b8b0a0" # dirty bone
+  e: "#ff6a1e" # ember glow
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ................
+  .....OOOOOO.....
+  .....ObbbbO.OOO.
+  .....OebbeO.ObO.
+  .....OObbOO.ObO.
+  .....OOOOOO.ObO.
+  ..OO.OOOOOO.ObO.
+  .OAAOOAAAAOOAbO.
+  OAAAAaAAAAaAAAAO
+  OAAAeAAAAAAAaAAO
+  .OaAAAAAeAAAAAO.
+  ..OOOOOOOOOOOO..

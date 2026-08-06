@@ -197,6 +197,13 @@ export type Effect = {
    * frames are re-hued onto and what hangs in the air afterwards
    * (game-screen/gore.ts). A cleave/gib carries its own on the burst. */
   family?: GoreFamilyId;
+  /** Incinerate: the art the burned body leaves behind — what THIS kind of body
+   * burns down to (game-screen/charred-remains.ts). Resolved where the victim's
+   * def is still to hand rather than looked up here, exactly as an elite burst's
+   * colours are: by the time the bones show, the mob is long gone. Absent falls
+   * back to the human skeleton, which is what every body left before there was
+   * a catalog. */
+  remains?: string;
   /** Cleave/gib: what the body came apart INTO — the pieces, their bearings,
    * their arcs and their bounces (game-screen/gore-burst.ts, drawn by
    * ./gibs.ts). The very same shape the floor's blood was laid out from, so a
@@ -620,8 +627,8 @@ function drawEffectPass(
 
     if (effect.kind === "incinerate") {
       // A screen-nuke kill's send-off: the body BURNS UP — engulfed in flame as
-      // it fades — and leaves a smoking, charred skeleton where it stood, which
-      // smoulders a beat and then fades out. World-anchored (it rides the field
+      // it fades — and leaves its own smoking remains where it stood, which
+      // smoulder a beat and then fade out. World-anchored (it rides the field
       // as the camera pans), seeded so a whole incinerated horde flickers and
       // smokes out of step. Timeline over `duration` (~1600ms): burn (flames up,
       // body fades) → the skeleton emerges as the fire dies to embers → smoke
@@ -641,10 +648,16 @@ function drawEffectPass(
         ctx.globalAlpha = bodyFade;
         ctx.drawImage(body, x - Math.round(w / 2), groundY - Math.round(h / 2));
       }
-      // The charred skeleton left behind: emerges as the fire dies (0.3 → 0.48),
-      // holds, then fades out over the last stretch (0.82 → 1). Scaled up whole
-      // for a bigger mob so a giant leaves a bigger skeleton.
-      const skel = spriteByName(assets.sprites, "charred_skeleton");
+      // What is left of it: emerges as the fire dies (0.3 → 0.48), holds, then
+      // fades out over the last stretch (0.82 → 1). Scaled up whole for a bigger
+      // mob so a giant leaves bigger remains. WHICH remains is the victim's own
+      // — scorched bone, a slagged chassis, a guttering veil — decided where the
+      // kill was (game-screen/charred-remains.ts) and carried here on the
+      // effect; the fallback is the human skeleton every body used to leave.
+      const skel = spriteByName(
+        assets.sprites,
+        effect.remains ?? "charred_skeleton",
+      );
       if (skel) {
         const appear =
           clamp01((t - 0.3) / 0.18) * (1 - clamp01((t - 0.82) / 0.18));

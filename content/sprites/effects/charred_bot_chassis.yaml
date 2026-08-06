@@ -1,0 +1,35 @@
+name: charred_bot_chassis
+family: effects
+size: [16, 16]
+description: >
+  A machine that did not char but SLAGGED — a square hull run down like a spent
+  candle, narrow and still boxy at the top, widening into drips and a pool of
+  cooling slag at the floor.
+subject:
+  kind: aftermath effect
+  build: a boxy grey hull melted out of shape — a square crown with a dead sensor slot in it, sides bulging wider as they go down, and vertical oil-black drip lines running into a wide cooling pool at the base
+  accent: one amber power cell still glowing in the middle of the running plate
+  flavor: fire does not leave a machine bones — it leaves a shape that used to be a machine
+palette:
+  O: "#15100f" # scorched char outline
+  A: "#6e7278" # plate
+  b: "#3f4553" # dead sensor slot
+  k: "#342c26" # oil running down, and the slag it pools into
+  y: "#ffb02e" # a cell still lit
+grid: |
+  ................
+  ................
+  ....OOOO........
+  ...OAAAAO.......
+  ...ObbbbO.......
+  ...OAAAAOO......
+  ..OAAAAAAAO.....
+  ..OAAyyAAAAO....
+  ..OAAyyAAAAAO...
+  .OAAAAAAAAAAAO..
+  .OAkAAAkAAAkAAO.
+  OAAkAAAkAAAkAAAO
+  OAkkAAkkAAkkAAkO
+  OkkkkkkkkkkkkkkO
+  .OkkkkkkkkkkkkO.
+  ..OOOOOOOOOOOO..

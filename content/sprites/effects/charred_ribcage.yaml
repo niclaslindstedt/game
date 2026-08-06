@@ -1,0 +1,34 @@
+name: charred_ribcage
+family: effects
+size: [16, 16]
+description: >
+  A burned body the fire got most of the way through — the skull and the arms
+  gone, an open ribcage still standing on its pelvis with the spine showing
+  through the gaps and coals still alive inside the chest.
+subject:
+  kind: aftermath effect
+  build: a headless scorched ribcage standing on a wide pelvis — a stub of spine at the top, four ribs arching out either side with dark gaps between them, and the spine visible through the gaps
+  accent: ember-orange coals still burning down inside the chest cavity
+  flavor: the fire took the head and left the cage it was sitting on
+palette:
+  O: "#15100f" # scorched char outline
+  b: "#b8b0a0" # dirty bone
+  w: "#e7e0d0" # bone highlight
+  e: "#ff6a1e" # ember glow
+grid: |
+  ................
+  ................
+  .......OO.......
+  ......ObbO......
+  ...OOOObbOOOO...
+  ..ObwOObbOOwbO..
+  ..ObO.ObbO.ObO..
+  ..ObwOObbOOwbO..
+  ..ObO.OeeO.ObO..
+  ..ObwOObbOOwbO..
+  ..OOO.ObbO.OOO..
+  .....OObbOO.....
+  ....ObbbbbbO....
+  ....OObOObOO....
+  ......OOOO......
+  ................

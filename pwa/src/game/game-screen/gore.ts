@@ -8,7 +8,7 @@
 // file plus its art, not an edit to the spray, the burst, the cleave, the floor
 // and the effect pass.
 //
-// A FAMILY IS NOT A PALETTE SWAP. Four things vary, and each of them is a
+// A FAMILY IS NOT A PALETTE SWAP. Five things vary, and each of them is a
 // different reason a burst reads as one kind of thing rather than another:
 //
 //   THE PIECES.   A rover has no liver and a collapsed star has no ribcage. Each
@@ -23,12 +23,19 @@
 //                 deliberate speckle; only the colour is the family's.
 //   THE AIR.      What hangs after the pieces land: a red haze, a puff of goo, a
 //                 column of smoke, a drift of glimmer. It is the cheapest of the
-//                 four and the one that names the family from across a room.
+//                 five and the one that names the family from across a room.
 //   THE FLOOR.    Whether it STAYS. Blood, oil and a ghost's goo are all matter
 //                 and all stay for the rest of the level, each in its own colour.
 //                 A rift-thing is the one exception: it is light, and light goes
 //                 out — so it marks nothing, which is a fact about it rather than
 //                 a saving.
+//   THE REMAINS.  What is left when a body of this kind is BURNED rather than
+//                 opened — scorched bone, a slagged chassis, a heap of dropped
+//                 veil, a cold husk (`remains`, read by `charredRemains` at the
+//                 bottom of this file). It is here for the same reason the rest
+//                 is: a nuke and a flamethrower kill every family in the game,
+//                 and one skeleton for all of them says the fire never looked at
+//                 what it burned.
 //
 // The blood family's own numbers are unchanged: it is the first row here rather
 // than a special case, and the other three were built to its shape.
@@ -96,6 +103,16 @@ export type GoreFamily = {
   /** Pieces only a `humanoid` body has (blood's `EnemyDef.anatomy`). Empty for
    * the families that have no such distinction — a machine is a machine. */
   humanOnly: ReadonlySet<string>;
+  /** What a body of this kind BURNS DOWN TO — see `charredRemains` below. */
+  remains: GoreRemains;
+};
+
+/** The art a burned body of one family leaves where it stood. `beast` is
+ * omitted by every family that draws no such distinction (a machine is a
+ * machine whichever way it walked) and falls back to `humanoid`. */
+export type GoreRemains = {
+  humanoid: readonly string[];
+  beast?: readonly string[];
 };
 
 const FAMILIES: Record<GoreFamilyId, GoreFamily> = {
@@ -159,6 +176,15 @@ const FAMILIES: Record<GoreFamilyId, GoreFamily> = {
     ]),
     // A cranium with a row of human teeth in it is not in a giant lizard.
     humanOnly: new Set(["gib_skull"]),
+    // Scorched bone, on a ladder of how much of it the fire got: a whole
+    // skeleton still standing, an open ribcage with the head burned off it, or
+    // nothing but a heap of ash with the skull sitting on top. A BEAST is the
+    // one anatomy split here, for the same reason `humanOnly` is one — it goes
+    // down on all fours and leaves a long-skulled carcass.
+    remains: {
+      humanoid: ["charred_skeleton", "charred_ribcage", "charred_ash_pile"],
+      beast: ["charred_carcass"],
+    },
   },
 
   // A HAUNTING: goo wrapped around a cold light, and the shapes the goo held.
@@ -220,6 +246,10 @@ const FAMILIES: Record<GoreFamilyId, GoreFamily> = {
     // The two pieces that went HARD. Everything else is goo and sticks.
     bouncy: new Set(["gib_ecto_shard", "gib_ecto_core"]),
     humanOnly: new Set(),
+    // The goo is the only part of it that was ever matter, so what is left is
+    // what the goo held: the veil dropped in a heap of folds, or the face-mask
+    // cooling in a puddle of it.
+    remains: { humanoid: ["charred_ecto_veil", "charred_ecto_mask"] },
   },
 
   // A MACHINE: plate over a loom of wire, with cells and servos in it and oil
@@ -288,6 +318,16 @@ const FAMILIES: Record<GoreFamilyId, GoreFamily> = {
       "gib_bot_piston",
     ]),
     humanOnly: new Set(),
+    // It does not char, it SLAGS: the plate runs down over the frame, the frame
+    // is left standing bare, or the whole thing goes to a pool with the one
+    // piston that would not melt still sticking out of it.
+    remains: {
+      humanoid: [
+        "charred_bot_chassis",
+        "charred_bot_frame",
+        "charred_bot_slag",
+      ],
+    },
   },
 
   // A RIFT-THING: light, and the dark between light. It leaves nothing: the
@@ -349,6 +389,10 @@ const FAMILIES: Record<GoreFamilyId, GoreFamily> = {
     // Only the collapsed heart has weight; light does not bounce.
     bouncy: new Set(["gib_cosmic_core"]),
     humanOnly: new Set(),
+    // Fire has nothing in a rift-thing to burn, so what is left is the dark it
+    // was wrapped around — and the effect fades it out, because light goes out
+    // where a body would have lain there (`stains: false`, above).
+    remains: { humanoid: ["charred_cosmic_husk"] },
   },
 };
 
@@ -363,3 +407,32 @@ export function goreFamily(id: string | undefined): GoreFamily {
 
 /** Every family, for the tests and the effects gallery. */
 export const GORE_FAMILIES: readonly GoreFamily[] = Object.values(FAMILIES);
+
+/**
+ * WHAT A BURNED BODY LEAVES — the sprite an incinerated mob of this kind leaves
+ * where it stood (`render/effects.ts`'s `incinerate` pass).
+ *
+ * It is `remains` above read through two axes and only two. THE FAMILY is the
+ * one that does the work: a machine has no ribcage to char and a rift-thing has
+ * no bones at all, so "burned up" has to leave something that was recognisably
+ * THAT KIND OF BODY a moment ago. Before this catalog there was one piece of
+ * art for every mob in the game, and a nuked screenful of rovers left a
+ * screenful of human skeletons. THE VARIANT is the second: a nuke kills a whole
+ * screenful at once, and one char mark stamped forty times reads as a decal
+ * rather than as forty bodies that burned.
+ *
+ * PICKED OFF THE KILL'S OWN SEED, NEVER ROLLED — the same seed the spray, the
+ * stains and the pieces scatter off. So the remains are stable across every
+ * redraw of the frame and the choice costs the run no `state.rng()` draw, which
+ * is the rule the whole presentation layer works under.
+ */
+export function charredRemains(
+  family: GoreFamilyId | undefined,
+  anatomy: "humanoid" | "beast",
+  seed: number,
+): string {
+  const remains = goreFamily(family).remains;
+  const pool =
+    (anatomy === "beast" ? remains.beast : undefined) ?? remains.humanoid;
+  return pool[Math.abs(Math.trunc(seed)) % pool.length]!;
+}
