@@ -76,7 +76,9 @@ export type Synth = {
    * browser/OS suspend or an iOS interruption). Unlike `unlock` it never
    * creates a context, so it is safe to call from a timer or a browser event
    * outside a user gesture — a no-op while still locked. Lets the music
-   * scheduler self-heal instead of waiting on the next gesture. */
+   * scheduler self-heal instead of waiting on the next gesture. Also a no-op
+   * while the page is BACKGROUNDED: the suspend that silenced it there is
+   * deliberate, not a fault to heal. */
   resume: () => void;
   tone: (options: ToneOptions) => void;
   noise: (options: NoiseOptions) => void;
@@ -110,6 +112,11 @@ const LIMITER_RELEASE_S = 0.18;
 // (~3 ms), so a third of a second of stillness is unambiguous.
 const ZOMBIE_PROBE_MS = 350;
 
+/** Is the page in the background right now? Treated as visible wherever there
+ * is no document (a test, a headless host) so nothing is silenced by accident. */
+const pageHidden = (): boolean =>
+  typeof document !== "undefined" && document.visibilityState === "hidden";
+
 export function createSynth(): Synth {
   let ctx: AudioContext | null = null;
   let echoInput: GainNode | null = null;
@@ -121,10 +128,44 @@ export function createSynth(): Synth {
 
   // iOS puts the context into a non-standard "interrupted" state on app
   // switch / lock; treat anything that isn't running or closed as resumable.
+  //
+  // Never while the page is BACKGROUNDED, though: every revival path funnels
+  // through here (the scheduler's self-heal tick, a dropped voice, a stray
+  // focus event), and a resume that lands on a hidden page is the app playing
+  // out loud from behind another one.
   const resumeCtx = (c: AudioContext): void => {
+    if (pageHidden()) return;
     if (c.state !== "running" && c.state !== "closed") {
       c.resume().catch(() => {});
     }
+  };
+
+  // BACKGROUNDING THE APP MUST SILENCE IT — and only an explicit suspend does.
+  //
+  // iOS stops our sound on an app switch only when the app switched TO claims
+  // the audio session (Safari, YouTube): that interrupts the context and the
+  // music stops looking like it stopped for a reason. Switch to an app that
+  // makes no sound — another home-screen PWA — and nothing interrupts
+  // anything, so the context stays "running" and the game plays on from the
+  // background. It plays SLOWLY, which is the tell: a hidden page's timers are
+  // throttled to about 1 Hz, so the chiptune scheduler's 90 ms tick fires once
+  // a second and books LOOKAHEAD_S (0.28 s) of notes each time — the theme
+  // grinds along at roughly a quarter speed, out of an app the player isn't
+  // even looking at.
+  //
+  // Suspending is also what hands the audio route back to the OS, so the phone
+  // stops treating a backgrounded game as something that is playing.
+  const suspendCtx = (): void => {
+    const c = ctx;
+    if (!c || c.state !== "running" || typeof c.suspend !== "function") return;
+    // A probe scheduled while visible would land on the suspended context and
+    // read its (legitimately) frozen clock as a zombie.
+    if (probeTimer !== null) {
+      clearTimeout(probeTimer);
+      probeTimer = null;
+    }
+    healAttempted = false;
+    c.suspend().catch(() => {});
   };
 
   // Discard the current context and its per-context buses so ensure() builds
@@ -158,6 +199,7 @@ export function createSynth(): Synth {
   const probeZombie = (): void => {
     const c = ctx;
     if (!c || probeTimer !== null || c.state !== "running") return;
+    if (pageHidden()) return; // a backgrounded context is meant to be frozen
     const t0 = c.currentTime;
     probeTimer = setTimeout(() => {
       probeTimer = null;
@@ -169,7 +211,9 @@ export function createSynth(): Synth {
       if (!healAttempted && typeof c.suspend === "function") {
         healAttempted = true;
         c.suspend()
-          .then(() => c.resume())
+          // The page can go away mid-cycle; finishing the heal then would
+          // hand a backgrounded app its sound back.
+          .then(() => (pageHidden() ? undefined : c.resume()))
           .catch(() => {})
           .then(() => probeZombie()); // verify the heal actually took
       } else {
@@ -191,9 +235,17 @@ export function createSynth(): Synth {
       if (ctx) resumeCtx(ctx);
       probeZombie();
     };
-    document.addEventListener("visibilitychange", onVisible);
+    // The same event carries both directions — going away silences us (see
+    // suspendCtx), coming back revives us.
+    document.addEventListener("visibilitychange", () => {
+      if (pageHidden()) suspendCtx();
+      else onVisible();
+    });
     window.addEventListener("pageshow", onVisible);
     window.addEventListener("focus", onVisible);
+    // A page being frozen, bfcached or navigated away doesn't always announce
+    // itself through visibilitychange; `pagehide` is the backstop.
+    window.addEventListener("pagehide", suspendCtx);
     // iOS revives an interrupted context (app switch, incoming call, screen
     // lock) only from a REAL user gesture — the visibility/focus resumes
     // above are best-effort and routinely no-op on iOS PWA. Re-resume on the
@@ -225,6 +277,10 @@ export function createSynth(): Synth {
   const ensure = (): AudioContext | null => {
     if (typeof AudioContext === "undefined") return null;
     if (!ctx) {
+      // A sound fired by a backgrounded page must not be what builds the one
+      // context: born outside a gesture it lands in a state iOS won't resume
+      // (see now()), and it would be born to play into another app anyway.
+      if (pageHidden()) return null;
       ctx = new AudioContext();
       armListeners();
       const c = ctx;
