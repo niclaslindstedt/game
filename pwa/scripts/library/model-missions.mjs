@@ -73,7 +73,8 @@ export const LEVEL_FIELDS = {
   riftExit: "the prose — that the way onward from here is a tear",
   travelDoors: "the DOORS list — the hub's standing doors and their roads",
   driveOut: "the DOORS list — that the car door is driven out to a real road",
-  merchantBeat: "the merchant section — the ground the trader paces, if he does",
+  merchantBeat:
+    "the merchant section — the ground the trader paces, if he does",
   wells: "the map render and the hazards section",
   chests: "the map render and the CHESTS note",
   placedItems: "the loot section's hand-placed finds",
@@ -412,7 +413,9 @@ function missionModel(level, order) {
           // carved into `merchantBeat`), which is a fact about how you shop
           // here rather than an engine detail.
           line: level.merchant.line ?? null,
-          beat: level.merchant.beat === true && (level.merchantBeat ?? []).length > 0,
+          beat:
+            level.merchant.beat === true &&
+            (level.merchantBeat ?? []).length > 0,
           parked: level.merchant.parked === true,
           stock: (level.merchant.stockUniques ?? [])
             .map((id) => itemLink(id))
