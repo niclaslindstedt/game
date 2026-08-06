@@ -1247,7 +1247,11 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     sandstormDamageFrac: 0.1,
     stampedeDamageFrac: 0.1,
     stampedeTelegraphMult: 1.5,
-    drive: { pedestrianMassMult: 0.6, trafficMassMult: 0.7 },
+    drive: {
+      pedestrianMassMult: 0.6,
+      trafficMassMult: 0.7,
+      trafficDensity: 1,
+    },
   },
   medium: {
     id: "medium",
@@ -1302,7 +1306,11 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     sandstormDamageFrac: 0.15,
     stampedeDamageFrac: 0.15,
     stampedeTelegraphMult: 1.3,
-    drive: { pedestrianMassMult: 1, trafficMassMult: 1 },
+    drive: {
+      pedestrianMassMult: 1,
+      trafficMassMult: 1,
+      trafficDensity: 1,
+    },
   },
   hard: {
     id: "hard",
@@ -1356,7 +1364,11 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     sandstormDamageFrac: 0.2,
     stampedeDamageFrac: 0.2,
     stampedeTelegraphMult: 1.0,
-    drive: { pedestrianMassMult: 1.4, trafficMassMult: 1.7 },
+    drive: {
+      pedestrianMassMult: 1.4,
+      trafficMassMult: 1.7,
+      trafficDensity: 1,
+    },
   },
   nightmare: {
     id: "nightmare",
@@ -1400,7 +1412,11 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     sandstormDamageFrac: 0.28,
     stampedeDamageFrac: 0.3,
     stampedeTelegraphMult: 0.7,
-    drive: { pedestrianMassMult: 1.9, trafficMassMult: 2.8 },
+    drive: {
+      pedestrianMassMult: 1.9,
+      trafficMassMult: 2.8,
+      trafficDensity: 1,
+    },
   },
   jesus: {
     id: "jesus",
@@ -1443,7 +1459,11 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     sandstormDamageFrac: 0.4,
     stampedeDamageFrac: 0.4,
     stampedeTelegraphMult: 0.4,
-    drive: { pedestrianMassMult: 2.5, trafficMassMult: 4.5 },
+    drive: {
+      pedestrianMassMult: 2.5,
+      trafficMassMult: 4.5,
+      trafficDensity: 1,
+    },
   },
 };
 

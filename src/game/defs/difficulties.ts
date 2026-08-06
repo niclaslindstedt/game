@@ -575,6 +575,17 @@ export type DifficultyDef = {
     pedestrianMassMult: number;
     /** Multiplies `DRIVE_UNITS.trafficMassKg` for this rung. */
     trafficMassMult: number;
+    /**
+     * Multiplies `DRIVE.trafficPerKPx` — HOW MUCH OTHER TRAFFIC is out there.
+     *
+     * The one knob on this road that changes what is in front of the player
+     * rather than what it weighs, and it is here because traffic is the only
+     * hazard that can take a LANE away. On the gentle rungs the road is nearly
+     * the hero's own — about one other car in view — so there is always
+     * somewhere to put the wagon; on the hard ones a lane is regularly shut
+     * and the gap in the crowd has to be taken when it is offered.
+     */
+    trafficDensity: number;
   };
 };
 
@@ -671,11 +682,18 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.1,
     stampedeDamageFrac: 0.1,
     stampedeTelegraphMult: 1.5,
-    // The road forgives too: a body meeting the bumper costs about six in ten
-    // of what MEDIUM's costs, and the other cars are a light shunt. The gentle
-    // rung is where a player learns the wheel, so the wagon still reaches
-    // GOODCO with the throttle held down.
-    drive: { pedestrianMassMult: 0.6, trafficMassMult: 0.7 },
+    // THE ROAD IS MADE OF PAPER on the gentlest rung, and unashamedly so: a
+    // body weighs a quarter of what a body weighs, the other cars a third of a
+    // car. Nothing about that is realistic and it is not trying to be — EASY is
+    // where a player learns the wheel, and a wagon that can be driven flat out
+    // through a crowd and still arrive is what makes the joke land before the
+    // road starts asking for skill. A hit costs about a quarter of what MEDIUM
+    // charges for the same blow.
+    drive: {
+      pedestrianMassMult: 0.25,
+      trafficMassMult: 0.35,
+      trafficDensity: 0.6,
+    },
   },
   medium: {
     id: "medium",
@@ -752,7 +770,11 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     stampedeTelegraphMult: 1.3,
     // THE ROAD AS IT WAS MEASURED — the 1.0 baseline `DRIVE.coursePx`'s table
     // was driven against. Every other rung is a multiple of this one.
-    drive: { pedestrianMassMult: 1, trafficMassMult: 1 },
+    drive: {
+      pedestrianMassMult: 1,
+      trafficMassMult: 1,
+      trafficDensity: 1,
+    },
   },
   hard: {
     id: "hard",
@@ -818,10 +840,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.2,
     stampedeDamageFrac: 0.2,
     stampedeTelegraphMult: 1.0,
-    // A body now costs about 1.4× the speed and 1.4× the car it costs on
-    // MEDIUM, and trading paint about 1.3× — the first rung on which flat out
-    // through the crowd stops being a way of getting there sooner.
-    drive: { pedestrianMassMult: 1.4, trafficMassMult: 1.7 },
+    // Half again as heavy as the baseline: the first rung on which holding the
+    // throttle down through a crowd stops being a way of getting there sooner.
+    drive: {
+      pedestrianMassMult: 1.6,
+      trafficMassMult: 2,
+      trafficDensity: 1.15,
+    },
   },
   nightmare: {
     id: "nightmare",
@@ -892,9 +917,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.28,
     stampedeDamageFrac: 0.3,
     stampedeTelegraphMult: 0.7,
-    // Nearly double, and the crowd is where the trip is lost: a driver who
-    // does not thread arrives on a wreck, and a driver who does arrives late.
-    drive: { pedestrianMassMult: 1.9, trafficMassMult: 2.8 },
+    // The crowd is where the trip is lost now: a driver who does not thread
+    // arrives on a wreck, and a driver who does arrives late.
+    drive: {
+      pedestrianMassMult: 2.3,
+      trafficMassMult: 3.4,
+      trafficDensity: 1.3,
+    },
   },
   jesus: {
     id: "jesus",
@@ -965,9 +994,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     sandstormDamageFrac: 0.4,
     stampedeDamageFrac: 0.4,
     stampedeTelegraphMult: 0.4,
-    // The road hits back like a wall. Holding the throttle down through the
-    // crowd ends the leg, every time; the way to GOODCO is the gaps.
-    drive: { pedestrianMassMult: 2.5, trafficMassMult: 4.5 },
+    // The road hits back like a wall — three people to the tonne and every
+    // other car a skip lorry. Holding the throttle down through the crowd ends
+    // the leg, every time; the way to GOODCO is the gaps.
+    drive: {
+      pedestrianMassMult: 3,
+      trafficMassMult: 5,
+      trafficDensity: 1.5,
+    },
   },
 };
 

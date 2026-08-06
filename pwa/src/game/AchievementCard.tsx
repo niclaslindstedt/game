@@ -12,7 +12,7 @@
 //   - a centered POP-UP modal on narrow phones, opened by tapping a row
 //     (`AchievementCard`), dismissed by the backdrop, the CLOSE button, or ESC.
 
-import { useEffect } from "react";
+import { useEffect, type CSSProperties } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -22,6 +22,7 @@ import {
   CATEGORY_LABELS,
   type AchievementDef,
 } from "./achievement-defs.ts";
+import { TIER_LOOK, tierStyle } from "./achievement-tiers.ts";
 import type { AchievementUnlockMeta } from "./achievements.ts";
 import type { LifetimeTotals } from "./achievement-totals.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
@@ -84,6 +85,7 @@ export function AchievementCardBody({
 }: AchievementCardProps) {
   const icon = spriteDataUrl(sprites, def.icon);
   const points = ACHIEVEMENT_POINTS[def.tier];
+  const look = TIER_LOOK[def.tier];
   const progress = def.progress?.(totals);
   const character = meta?.character;
 
@@ -99,11 +101,15 @@ export function AchievementCardBody({
         scale={2}
         color={DIM}
       />
+      {/* An earned badge wears its TIER, not the one gold every badge used to
+          be: the name is written in the ladder's own color, so the shelf shows
+          at a glance which rows were the hard ones. A locked row stays slate —
+          the color is part of the trophy. */}
       <PixelText
         font={font}
         text={def.name}
         scale={3}
-        color={unlocked ? GOLD : DIM}
+        color={unlocked ? look.color : DIM}
         maxWidth={CARD_REM}
       />
       <PixelText
@@ -167,11 +173,13 @@ export function AchievementCardBody({
         </div>
       )}
 
+      {/* The worth line, tier first: "LEGEND · 250 PTS" says both what the
+          badge cost and why it costs that, which the number alone never did. */}
       <PixelText
         font={font}
-        text={`${points} PTS`}
+        text={`${look.label} · ${points} PTS`}
         scale={2}
-        color={unlocked ? "#c8b078" : DIM}
+        color={unlocked ? look.color : DIM}
       />
     </>
   );
@@ -207,9 +215,12 @@ export function AchievementCard({
       }}
     >
       <div
-        className={`achievement-card ${body.unlocked ? "unlocked" : "locked"}`}
+        className={`achievement-card badge-tier-${body.def.tier} ${
+          body.unlocked ? "unlocked" : "locked"
+        }`}
         role="dialog"
         aria-label={`achievement-card-${body.def.id}`}
+        style={tierStyle(body.def.tier) as CSSProperties}
         onClick={(event) => event.stopPropagation()}
       >
         <AchievementCardBody {...body} />

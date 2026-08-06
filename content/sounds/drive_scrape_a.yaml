@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_scrape_a
+description: >-
+  Trading paint — the wagon's flank against another car's at speed. A
+  bandpass band of grinding noise with a thin metallic squeal sliding down
+  over it, and no low end at all: a scrape is a surface event, and giving it
+  a boom would make every glancing touch read as a crash.
+voices:
+  - call: noise
+    durationMs: 260
+    volume: 0.036
+    filter:
+      type: bandpass
+      frequency: 2500
+  - call: tone
+    type: sawtooth
+    from: 2100
+    to: 1450
+    durationMs: 220
+    volume: 0.012
+    detuneCents: 18
+  - call: noise
+    durationMs: 140
+    volume: 0.016
+    delayMs: 120
+    filter:
+      type: highpass
+      frequency: 3600

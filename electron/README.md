@@ -57,6 +57,7 @@ On top of the web game it adds the things a browser can't give a desktop player:
 | `src/*-provider.ts`                             | The three platform seams                                                  |
 | `src/{cloud,achievements}-steam.ts`             | The Steam implementations                                                 |
 | `scripts/bundle-web.mjs`                        | Builds the site and copies it to `webroot/`                               |
+| `modtools-lua/` (generated)                     | The Lua VM compiled for the packaged mod compiler — `npm run modtools`    |
 
 ## Developing
 

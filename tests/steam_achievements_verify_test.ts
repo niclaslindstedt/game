@@ -15,6 +15,7 @@
 // put in it. It is not a model of Valve's validation.
 
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,6 +24,19 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const SCRIPT = path.join(root, "scripts", "steam-achievements-portal.mjs");
+
+/** How many rows the committed manifest holds, read rather than typed: the
+ * curated list moves whenever the badge catalog does (a hero rung added, a
+ * family sent home), and a number typed into a dozen assertions here turns
+ * every such change into a sweep through this file. */
+const ROWS = (
+  JSON.parse(
+    readFileSync(
+      new URL("../electron/store/steam-achievements.json", import.meta.url),
+      "utf8",
+    ),
+  ) as { achievements: unknown[] }
+).achievements.length;
 const APP_ID = "1234560";
 const KEY = "0123456789abcdef0123456789abcdef";
 
@@ -155,20 +169,22 @@ describe("the worksheet", () => {
   it("prints every row without touching the network", async () => {
     const result = await run([]);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("── 1/86 ── clear_goodco_hq");
+    expect(result.stdout).toContain(`── 1/${ROWS} ── clear_goodco_hq`);
     expect(result.stdout).toContain("  API Name         clear_goodco_hq");
     expect(result.stdout).toContain(
       "  Achieved icon    electron/store/achievements/clear_goodco_hq-achieved.png",
     );
-    expect(result.stderr).toContain("86 rows for App Admin → Achievements");
+    expect(result.stderr).toContain(
+      `${ROWS} rows for App Admin → Achievements`,
+    );
     expect(partner.log).toHaveLength(0);
   });
 
-  it("emits a header row and 86 data rows as TSV", async () => {
+  it("emits a header row and one data row per manifest entry as TSV", async () => {
     const result = await run(["--format", "tsv"]);
     expect(result.status).toBe(0);
     const lines = result.stdout.trimEnd().split("\n");
-    expect(lines).toHaveLength(87);
+    expect(lines).toHaveLength(ROWS + 1);
     expect(lines[0]!.split("\t")[0]).toBe("API Name");
     expect(lines[1]!.split("\t")).toHaveLength(6);
   });
@@ -180,8 +196,8 @@ describe("the verification pass", () => {
     const result = await run(["--verify", "--app", APP_ID]);
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("86 row(s) in the partner site");
-    expect(result.stdout).toContain("86 correct");
+    expect(result.stdout).toContain(`${ROWS} row(s) in the partner site`);
+    expect(result.stdout).toContain(`${ROWS} correct`);
     expect(result.stdout).toContain(
       "every id in the manifest exists in the partner site",
     );
@@ -296,9 +312,9 @@ describe("the verification pass", () => {
 
 describe("the reads that succeed and mean nothing", () => {
   // Valve answers an app the key cannot see with HTTP 200 and `{"game":{}}` —
-  // byte-identical to a real app with no rows created yet. Reporting "86
+  // byte-identical to a real app with no rows created yet. Reporting "every
   // missing" for that would send somebody to re-enter rows they already have.
-  it("refuses to read an empty schema as 86 missing rows", async () => {
+  it("refuses to read an empty schema as a whole manifest gone missing", async () => {
     partner.blank = true;
     try {
       const result = await run(["--verify", "--app", APP_ID]);

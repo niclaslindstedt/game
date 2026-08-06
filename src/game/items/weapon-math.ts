@@ -14,6 +14,7 @@ import {
   weaponDef,
   type WeaponDef,
 } from "../defs/equipment.ts";
+import { hookWeaponDamage } from "../script/bindings.ts";
 import { talentBerserkMult } from "../talent-effects.ts";
 import type { Equipment, GameState, Player } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
@@ -55,10 +56,11 @@ export function weaponDamageFor(
   // while a mage's INT is already buying reach, cleave, cadence, and crit.
   const perPoint =
     STATS.damageBonusPerPoint[damageStat as "strength" | "intelligence"];
-  let multiplier = 1 + stat * perPoint;
+  let damagePct = 0;
   for (const affix of weapon.affixes) {
-    if (affix.kind === "damagePct") multiplier += affix.value;
+    if (affix.kind === "damagePct") damagePct += affix.value;
   }
+  const multiplier = 1 + stat * perPoint + damagePct;
   // ENHANCED DAMAGE (D2's +X% Enhanced Damage): the roll a MAGIC-or-better
   // weapon carries on its base's catalog damage, drawn inside its tier's band
   // at mint and frozen for life (`Equipment.enhancedDamage`). This is what
@@ -75,12 +77,13 @@ export function weaponDamageFor(
   // none is up. Applied here — the one source of stat-scaled damage — so combat
   // and every readout move together while it burns (auto-equip rankings are
   // unchanged: it's one factor on every candidate alike).
-  return (
-    def.damage *
-    multiplier *
-    enhanced *
-    qualityMult(weapon) *
-    abilitySurge(state, player).damage
+  const quality = qualityMult(weapon);
+  const surge = abilitySurge(state, player).damage;
+  return hookWeaponDamage(
+    { base: def.damage, damageStat, stat, damagePct, enhanced, quality, surge },
+    () => def.damage * multiplier * enhanced * quality * surge,
+    state,
+    player,
   );
 }
 

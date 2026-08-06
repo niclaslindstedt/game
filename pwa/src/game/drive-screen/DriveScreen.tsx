@@ -10,11 +10,12 @@
 // `onArrived` and the crossing happens exactly as it would have a minute
 // earlier.
 //
-// THE GORE GATE IS ASKED ONCE, AT THE TOP (`driveGib` below), and the answer
-// rides on the drive as a plain boolean. That is the house rule — the gate goes
-// where the thing is DECIDED — and here it also has to be a single answer for
-// the whole road: a switch flipped mid-drive would leave half the tarmac gibbed
-// and half of it lying in the gutter.
+// THE GORE GATE IS ASKED ONCE, BEFORE THE ROAD EXISTS (`driveParamsFor`), and
+// the answer rides in on `DriveParams.gib`. That is the house rule — the gate
+// goes where the thing is DECIDED — and here it also has to be a single answer
+// for the whole road: a switch flipped mid-drive would leave half the tarmac
+// gibbed and half of it lying in the gutter. So this screen never asks: it
+// reads what the drive was built with, exactly like the difficulty beside it.
 
 import type { CSSProperties, ReactElement } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,13 +35,41 @@ import {
   type DriveState,
 } from "@game/core";
 
-import { type GameAssets } from "../assets.ts";
+import { PixelText } from "@ui/lib/PixelText.tsx";
+
+import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { synth } from "../audio.ts";
 import { carKeyControl } from "../car-keys.ts";
 import { getSettings } from "../settings.ts";
-import { dismemberAllowed, goreAmount } from "../game-screen/gore-gate.ts";
 import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
 import { drawGore } from "../render/gibs.ts";
 import { viewScaleFor } from "../render/view.ts";
+import { playDriveSound } from "../sfx/index.ts";
+import {
+  engineGrainMs,
+  engineNote,
+  playDriveEngine,
+  playDriveShift,
+} from "../sfx/drive.ts";
+import {
+  clearDriveFx,
+  createDriveFx,
+  drawDriveFx,
+  driveBodyHit,
+  driveBreakdown,
+  drivePartHit,
+  driveTrafficHit,
+  shakeCamera,
+  stepDriveFx,
+  type DriveFxState,
+} from "./drive-fx.ts";
+import {
+  bodyHitSound,
+  BREAKDOWN_SOUND,
+  panelSound,
+  SHED_SOUND,
+  trafficHitSound,
+} from "./drive-sounds.ts";
 import { drawDrive, driveCamera } from "./render.ts";
 import { CROWD_SPRITES } from "./scenery.ts";
 
@@ -50,24 +79,6 @@ const STEP_MS = 16;
 /** The most catch-up a single frame may do, so a backgrounded tab does not
  * resolve four seconds of collisions in one go. */
 const MAX_CATCHUP_MS = 100;
-
-/**
- * WHETHER BODIES COME APART ON THIS ROAD — the gore gate, asked once.
- *
- * Both halves have to say yes: the family's own switch (people bleed → `blood`)
- * AND the dismemberment switch for a body BURST rather than cut. That pairing is
- * the whole of the setting matrix the drive was asked for:
- *
- *   gore on                → they gib, and the car wears it
- *   blood off, gibs ON     → they still gib (the pieces fly, the road stays clean)
- *   gibs off               → nobody comes apart; they are knocked aside instead
- *
- * …and the car breaks either way, because that is damage to a car rather than
- * anything gory.
- */
-function driveGib(): boolean {
-  return goreAmount("blood") !== null && dismemberAllowed("gib");
-}
 
 /** One body coming apart, held for as long as its pieces are in the air. */
 type Burst = {
@@ -85,20 +96,39 @@ export function DriveScreen({
   params,
   assets,
   onArrived,
+  stage,
 }: {
   params: DriveParams;
   assets: GameAssets;
   /** The road is behind him: make the crossing that was waiting on it. */
   onArrived: (to: string, bodies: number) => void;
+  /**
+   * DEVELOPER STAGING, run once on the fresh road before its first tick — the
+   * hook the `?drive` workbench plants a body or a van in front of the bumper
+   * with. A real drive passes nothing, so the road a player gets is the road
+   * `createDrive` built and this parameter does not exist for them.
+   */
+  stage?: (drive: DriveState) => void;
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const driveRef = useRef<DriveState>(createDrive(params));
+  const driveRef = useRef<DriveState>(
+    (() => {
+      const drive = createDrive(params);
+      stage?.(drive);
+      return drive;
+    })(),
+  );
   const burstsRef = useRef<Burst[]>([]);
+  const fxRef = useRef<DriveFxState>(createDriveFx());
+  /** The engine's own little scheduler: when the next grain is due (drive-clock
+   * ms) and which gear the last one was in, so an upshift can be HEARD rather
+   * than merely computed. */
+  const engineRef = useRef({ dueMs: 0, gear: 0 });
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
   const [speech, setSpeech] = useState<string[] | null>(null);
-  const [hud, setHud] = useState({ mph: 0, bodies: 0, wear: 0 });
+  const [hud, setHud] = useState({ mph: 0, gear: 0, bodies: 0, wear: 0 });
   const speechRef = useRef<string[] | null>(null);
 
   /** Raise one of the hero's four lines. Held on a ref as well as in state so
@@ -154,7 +184,6 @@ export function DriveScreen({
     let raf = 0;
     let last = performance.now();
     let acc = 0;
-    const gib = driveGib();
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -198,7 +227,16 @@ export function DriveScreen({
         acc -= STEP_MS;
         if (!paused) {
           stepDrive(drive, STEP_MS, inputRef.current);
-          drainDrive(drive, burstsRef.current, now, gib, say, onArrived);
+          drainDrive(drive, burstsRef.current, fxRef.current, now, {
+            say,
+            onArrived,
+          });
+          // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
+          // fixed step — so a slow frame never skips a grain or fast-forwards a
+          // spark, and the speech box's freeze stops both dead exactly as it
+          // stops the road.
+          stepDriveFx(fxRef.current, STEP_MS, drive.ms);
+          runEngineNote(drive, engineRef.current);
         }
       }
 
@@ -207,7 +245,16 @@ export function DriveScreen({
       const viewH = h / (scale * dpr);
       ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      const camera = driveCamera(drive, viewW, viewH);
+      // THE CAMERA IS SHAKEN, NOT THE CONTEXT: everything drawn this frame —
+      // the road, the crowd, the gore and the sparks — reads the same camera,
+      // so the whole picture moves as one instead of the effects sliding
+      // against the world they are standing in.
+      const camera = shakeCamera(
+        fxRef.current,
+        driveCamera(drive, viewW, viewH),
+        drive.ms,
+        Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
+      );
       drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, now);
 
       // The bodies coming apart, over the finished picture — the same pass the
@@ -233,13 +280,19 @@ export function DriveScreen({
         );
       }
 
+      // The sparks, the grit, the smoke and the bloom — over the finished
+      // picture, on the same camera it was drawn with.
+      drawDriveFx(ctx, fxRef.current, camera, drive.ms, viewW, viewH);
+
       setHud((prev) => {
         const next = {
           mph: driveMph(drive),
+          gear: engineNote(Math.abs(drive.car.speed) / DRIVE.topSpeedPx).gear,
           bodies: drive.bodies,
           wear: Math.round(drive.car.wear * 100),
         };
         return prev.mph === next.mph &&
+          prev.gear === next.gear &&
           prev.bodies === next.bodies &&
           prev.wear === next.wear
           ? prev
@@ -252,6 +305,12 @@ export function DriveScreen({
 
   const damage = hud.wear;
   const failing = damage > 70;
+  // The run's own HUD frame sprite, 9-sliced behind the dials (see
+  // `.drive-hud-plate`) — the same panel the vitals wear in a fight.
+  const frame = spriteDataUrl(assets.sprites, "hud_frame");
+  const plate: CSSProperties | undefined = frame
+    ? { borderImageSource: `url(${frame})` }
+    : undefined;
 
   return (
     // The class carries ONE thing — the stacking band (styles.css). It has to
@@ -259,13 +318,32 @@ export function DriveScreen({
     // a drive and would otherwise hide the entire road.
     <div className="drive-screen" style={SHELL}>
       <canvas ref={canvasRef} style={CANVAS} />
+      {/* THE DIALS, IN THE GAME'S OWN FONT. Everything else the player reads
+          in this game is the pixel font (`PixelText`) — a browser monospace
+          here made the minigame look like a different program, which is
+          exactly what an interlude must not do.
+
+          SPEED AND THE GEAR IT IS BEING MADE IN: the gear is `engineNote`'s
+          own reading, the same one the sound is built from, so what the player
+          hears climbing and dropping is what the dial says. A readout, not a
+          control — the wagon shifts itself. */}
       <div style={HUD_BAR}>
-        <span>
-          {hud.mph} <small style={{ opacity: 0.6 }}>MPH</small>
-        </span>
-        <span style={{ color: failing ? "#e8635a" : undefined }}>
-          DAMAGE {damage}%
-        </span>
+        <div className="drive-hud-plate" style={plate}>
+          <PixelText
+            font={assets.font}
+            text={`${hud.mph} MPH  GEAR ${hud.gear + 1}`}
+            scale={2}
+            color="#e8e4d8"
+          />
+        </div>
+        <div className="drive-hud-plate" style={plate}>
+          <PixelText
+            font={assets.font}
+            text={`DAMAGE ${damage}%`}
+            scale={2}
+            color={failing ? "#e8635a" : "#e8e4d8"}
+          />
+        </div>
       </div>
       {/* THE PAD — one thumb, anywhere on the picture. Dragging from where the
           thumb went down is the push; letting go means carry on, which is the
@@ -301,11 +379,21 @@ export function DriveScreen({
       {speech && (
         <button type="button" style={SPEECH} onClick={dismiss}>
           {speech.map((line, i) => (
-            <p key={i} style={{ margin: "0 0 0.4em" }}>
-              {line}
-            </p>
+            <PixelText
+              key={i}
+              font={assets.font}
+              text={line}
+              scale={2}
+              color="#e8e4d8"
+              maxWidth={40}
+            />
           ))}
-          <span style={{ opacity: 0.5, fontSize: "0.8em" }}>TAP TO GO ON</span>
+          <PixelText
+            font={assets.font}
+            text="TAP TO GO ON"
+            scale={1}
+            color="#8b8f99"
+          />
         </button>
       )}
     </div>
@@ -322,13 +410,44 @@ let padOrigin: { x: number; y: number } | null = null;
  * The BEATS are the four lines; the STRIKES are the bodies. Kept out of the
  * component body so the loop reads as a loop.
  */
+/**
+ * ONE GRAIN OF THE ENGINE, if one is due — the running note, made out of
+ * one-shots on a cadence that quickens with the revs (see `sfx/drive.ts`).
+ *
+ * Scheduled on the DRIVE's clock rather than the wall's, so it keeps step with
+ * the physics through a stutter and stops with the world when a line is up. A
+ * dead engine says nothing at all: the wreck rolls in silence, which is most of
+ * why the breakdown lands.
+ */
+function runEngineNote(
+  drive: DriveState,
+  engine: { dueMs: number; gear: number },
+): void {
+  if (drive.outcome === DRIVE_OUTCOME.broken) return;
+  if (drive.ms < engine.dueMs) return;
+  const frac = Math.abs(drive.car.speed) / DRIVE.topSpeedPx;
+  const { gear, rev } = engineNote(frac);
+  // THE SHIFT IS HEARD BEFORE THE NEXT GRAIN: the note the player follows is
+  // the climb inside a gear, so the moment it resets has to be marked or the
+  // pitch simply appears to jump backwards for no reason.
+  if (gear > engine.gear) playDriveShift(synth, frac);
+  engine.gear = gear;
+  playDriveEngine(synth, frac, drive.car.wear);
+  engine.dueMs = drive.ms + engineGrainMs(rev);
+}
+
 function drainDrive(
   drive: DriveState,
   bursts: Burst[],
+  fx: DriveFxState,
   now: number,
-  gib: boolean,
-  say: (id: string) => void,
-  onArrived: (to: string, bodies: number) => void,
+  {
+    say,
+    onArrived,
+  }: {
+    say: (id: string) => void;
+    onArrived: (to: string, bodies: number) => void;
+  },
 ): void {
   for (const strike of drive.strikes) {
     const frames = CROWD_SPRITES[strike.variant % CROWD_SPRITES.length];
@@ -352,6 +471,38 @@ function drainDrive(
     });
   }
   for (const event of drive.events) {
+    // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
+    // Every collision the engine books gets both. The WEIGHT of it comes from
+    // the collision's own joules — the same number the gore burst is priced
+    // off — so a body clipped at 40 gives a thud and a puff of grit, and a van
+    // met square at 120 gives a crunch, a shower of sparks and a shove of the
+    // whole frame. Nothing here decides how hard anything was; it only asks.
+    if (event.type === "pedestrianHit") {
+      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(
+        synth,
+        bodyHitSound(event.pos.x, event.pos.y, event.joules),
+      );
+    }
+    if (event.type === "trafficHit") {
+      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(
+        synth,
+        trafficHitSound(event.pos.x, event.pos.y, event.joules),
+      );
+    }
+    if (event.type === "panelBent") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
+    }
+    if (event.type === "partShed") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      playDriveSound(synth, SHED_SOUND);
+    }
+    if (event.type === "breakdown") {
+      driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
+      playDriveSound(synth, BREAKDOWN_SOUND);
+    }
     if (event.type === "monologue") say("drive_out_welfare");
     if (event.type === "breakdown") say("drive_broke_down");
     if (event.type === "arrived") {
@@ -375,6 +526,7 @@ function drainDrive(
   ) {
     Object.assign(drive, restartDrive(drive));
     bursts.length = 0;
+    clearDriveFx(fx);
   }
   if (
     drive.outcome === DRIVE_OUTCOME.arrived &&
@@ -382,7 +534,6 @@ function drainDrive(
   ) {
     onArrived(drive.params.to, drive.bodies);
   }
-  void gib;
 }
 
 const SHELL: CSSProperties = {
@@ -401,15 +552,12 @@ const CANVAS: CSSProperties = {
 };
 const HUD_BAR: CSSProperties = {
   position: "absolute",
-  top: 8,
+  top: 14,
   left: 12,
   right: 12,
   display: "flex",
   justifyContent: "space-between",
-  color: "#e8e4d8",
-  font: "16px monospace",
-  letterSpacing: "0.08em",
-  textShadow: "0 1px 0 #000",
+  alignItems: "flex-start",
   pointerEvents: "none",
 };
 const PAD: CSSProperties = {
@@ -426,9 +574,9 @@ const SPEECH: CSSProperties = {
   padding: "14px 18px",
   background: "rgba(10, 12, 20, 0.92)",
   border: "2px solid #4a4f5c",
-  color: "#e8e4d8",
-  font: "15px monospace",
-  lineHeight: 1.45,
-  textAlign: "left",
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+  alignItems: "flex-start",
   cursor: "pointer",
 };

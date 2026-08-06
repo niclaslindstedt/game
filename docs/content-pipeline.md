@@ -2,7 +2,8 @@
 
 **Nothing the game plays is hand-written TypeScript.** Every catalog — levels,
 maps, enemies, items, powerups, talents, companions, quests, sounds, music, the
-story, the title menu, the bot's knobs — is authored as YAML under `content/`,
+story, the title menu, the bot's knobs, and now a dozen of the RULES themselves
+— is authored under `content/`,
 validated against the live engine catalogs at build time, and emitted into a
 **gitignored, regenerated-on-build** module under `src/generated/` (engine
 concerns) or `pwa/src/generated/` (app concerns). Never edit or commit a
@@ -26,6 +27,14 @@ exception — a mod may not bring one), and `CONTRIBUTING.md` indexes them again
 the file each validates. A new field is added to the schema first, with its rule
 and its error message, before any generator reads it.
 
+**One catalog is not YAML at all.** `content/scripts/*.lua` holds the rules the
+engine hands out rather than keeping — the XP curve's shape, the rarity roll,
+weapon damage, the horde's scaling — because a rule is code, and authoring code
+as a quoted string inside a data file would cost every author their editor's
+highlighting, their line numbers and their diff. Its "schema" is the game's own
+Lua VM: `script-schema.mjs` COMPILES each file with the interpreter that will
+run it and inspects what the module exported. → `docs/scripting.md`
+
 ## The order, and why it is that order
 
 `make levels` runs the generators in a fixed chain. That chain lives in
@@ -39,6 +48,8 @@ The order is a DEPENDENCY order, not a preference — each generator validates i
 authored ids against the catalogs the earlier ones emitted:
 
 ```
+generate-scripts       leaf: its only engine imports are the Lua VM and the
+                       import-free hook list, and nothing cross-refs a hook
 generate-leveling      leaf: the XP curve, nothing cross-refs it
 generate-items         imports nothing from the engine; every later generator
                        reads the equipment catalogs
@@ -113,6 +124,21 @@ an intentional change with the matching `node scripts/update-*-snapshot.mjs` —
 never by editing the fixture.
 
 ## Per-catalog notes
+
+- **The RULES are compiled from Lua, and the compile is a real one.**
+  `content/scripts/<id>.lua` is parsed and its top level LOADED by the engine's
+  own VM, so a syntax error, a missing `return M`, a hook that is not a function
+  and a typo'd hook name all fail `npm run levels` with a file and a line. That
+  last one is why the check runs the file instead of reading it: a mis-spelled
+  hook is silent at play time forever — the shipped rule quietly stands in and
+  the author's file appears to do nothing. What is EMITTED is the source text,
+  not a compiled form: the VM parses at load, once per run, and shipping an AST
+  would freeze the interpreter's internal shape into a build artifact for no
+  measurable gain. The catalog's snapshot guard is
+  `tests/content/script_parity_test.ts`, which is a parity test rather than a
+  round-trip one — it pins every shipped formula against the TypeScript fallback
+  its binding carries, bit-for-bit, over the whole plausible input range.
+  → `docs/scripting.md`
 
 - **Levels are compiled from YAML**, the same way — and a level YAML is a
   MISSION, not a map: the geometry lives in `content/maps/<id>.yaml` and is

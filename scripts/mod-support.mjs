@@ -239,6 +239,10 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
   };
 
   let capThoughts = CAP_THOUGHT_IDS;
+  /** The mods' rule scripts, accumulated in load order. Starts EMPTY, unlike
+   * the catalogs above: the script registry holds overrides, not a merged
+   * catalog. */
+  const SCRIPTS = {};
   for (const [i, bundle] of bundles.entries()) {
     fold(
       LEVELS,
@@ -260,6 +264,11 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
     fold(STORY_ITEM_DEFS, bundle.storyItems, "story item", bundle.id);
     fold(QUEST_DEFS, bundle.quests, "quest", bundle.id);
     fold(QUEST_GIVER_DEFS, bundle.questGivers, "quest giver", bundle.id);
+    // THE RULES a mod takes over. Folded like every other catalog so a
+    // measurement (`simulate-run --mod`, `drop-rate --mod`) reads the mod's
+    // formulas rather than the shipped ones — which is the whole point of
+    // measuring a mod that changed them.
+    fold(SCRIPTS, bundle.scripts, "rule script", bundle.id);
     if (bundle.capRotation?.length) capThoughts = bundle.capRotation;
     // The ladder's VOICE is a partial overlay, never a replacement: a mod says
     // what a rung is CALLED and the numbers behind it stay the game's.
@@ -326,6 +335,10 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
     storyItems: STORY_ITEM_DEFS,
     quests: QUEST_DEFS,
     questGivers: QUEST_GIVER_DEFS,
+    // Overrides ONLY — the shipped scripts live permanently under these in the
+    // host, so an empty record here means "the game's own rules", not "no
+    // rules".
+    scripts: SCRIPTS,
   });
 }
 

@@ -264,6 +264,11 @@ module.exports = {
     { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
     { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
     { from: "../scripts/quest-data", to: "modtools/scripts/quest-data" },
+    { from: "../scripts/script-data", to: "modtools/scripts/script-data" },
+    // The Lua VM, compiled (scripts/build-lua.mjs). The script validator IS the
+    // engine's own interpreter and this process has no TypeScript, so the
+    // compiled copy has to travel beside the toolchain that imports it.
+    { from: "modtools-lua", to: "modtools/lua-vm" },
     { from: "../scripts/set-data", to: "modtools/scripts/set-data" },
     { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
     { from: "../scripts/story-data", to: "modtools/scripts/story-data" },

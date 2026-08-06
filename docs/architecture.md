@@ -248,9 +248,29 @@ escort.ts` walks the people an escort errand puts on the field, and
   STEERS: a tree of what a speaker says and what the hero may say back, opened
   by tapping a neutral mob and frozen in its own `talk` phase. A branch may set
   a run FLAG, provoke the speaker, hand over a quest piece, or move to another
-  node — and nothing else, because a mod ships these files and there is
-  deliberately no scripting hook. The FLAGS (`GameState.questFlags`) are the one
-  thing a branch leaves behind for the rest of the game to read.
+  node — and nothing else. A conversation is DATA even though a mod may now ship
+  Lua (`docs/scripting.md`): the scripting seam answers a formula's question, it
+  is not a place to hang a behaviour off, and a branch that could run code would
+  be a second, unbounded way for a talk to change the world. The FLAGS
+  (`GameState.questFlags`) are the one thing a branch leaves behind for the rest
+  of the game to read.
+- **`src/game/script/` + `src/lib/lua/`** — THE RULES THE ENGINE HANDS OUT.
+  Twelve formulas (the XP curve, what a kill pays, the horde's hp and level, the
+  drop chance, the rarity roll, weapon damage, mob armor) are authored in
+  `content/scripts/*.lua` and called through a sandboxed Lua VM, so a total
+  conversion changes how the game WORKS rather than only what is in it. The
+  split is four modules: `src/lib/lua/` is the VM (generic — lexer, parser, tree
+  walker, a stdlib whose absent half IS the security model); `script/catalog.ts`
+  is an IMPORT-FREE LEAF holding what a mod registered, for the same reason
+  `flags.ts` and `mapgen/blueprints.ts` are leaves — `registerDefs` is reachable
+  from the startup path and the 200 KB budget has no room for an interpreter, so
+  what a mod registers is SOURCE TEXT and the compile happens on the first hook
+  call, inside a run; `script/env.ts` builds the frozen `game.config` /
+  `game.balance` / `game.run` views; `script/host.ts` resolves a hook, contains
+  its failures (a broken override falls back to the file it overrode and reports
+  itself once) and memoizes the calls that read nothing but their arguments.
+  `script/bindings.ts` is the ONLY place the rest of the engine touches any of
+  it. → `docs/scripting.md`
 - **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its
@@ -808,7 +828,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   the wagon in the bay. `impact.ts` is the heart of it — a real inelastic
   collision in real units, where the SWEEP of the car's flank decides whether a
   body was hit and how hard it is thrown, and the contact normal's alignment
-  with the nose decides how much speed and damage the car takes back. Damage
+  with the nose decides how much speed and damage the car takes back. The
+  street around it is a street: pavements the crowd genuinely stands on
+  (`crowdEdges`, wider than the car's own `roadEdges`), painted crossings on a
+  fixed pitch that half the crowd is gathered onto (`crossingsBetween`), and a
+  town on one building line. Its presentation lives beside it —
+  `drive-screen/drive-fx.ts` (sparks, grit, shards, the wreck's smoke, the
+  speed-scaled shake) and `sfx/drive.ts` (the geared engine note, made of
+  grains on a quickening cadence) — and the whole frame is drawn INSIDE
+  `applyWorldProjection`, because that is the space `drawWorldSprite`
+  billboards into. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off
@@ -1461,14 +1490,27 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
   unlock banner, which raises the same shelf over the run and PAUSES it
   (`game-screen/use-achievements-shelf.ts`) — and
-  `AchievementToast.tsx` the gold unlock banner that still fires in-run as
-  badges are earned; `platform-achievements.ts` / `achievement-sync.ts`
+  `AchievementToast.tsx` the in-run unlock celebration;
+  `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —
-  see the native section below),
+  see the native section below).
+
+  **A badge's TIER is the whole design.** `AchievementDef.tier` is one of five
+  effort rungs (BEGINNER → INTERMEDIATE → PRO → EXPERT → LEGEND), it is what
+  the badge is worth (`ACHIEVEMENT_POINTS`, 10/25/50/100/250), and
+  `achievement-tiers.ts` turns that one field into everything the celebration
+  does: the banner's frame weight, halo and fleck count, how long it holds the
+  screen, the chime (`sfx/jingles.ts`) and the buzz (`haptics.ts`) — and, for
+  LEGEND alone, a full-screen card REVEAL instead of the corner banner, which
+  is what the level cap, the campaign on its cruelest setting, every relic and
+  every ally land as. Keeping the ladder in one table is what keeps it
+  monotone; `tests/achievements_test.ts` pins that no counter ladder ever pays
+  less for asking more, and that exactly one tier gets the reveal,
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
   hand-edited).
+
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias:
   `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
@@ -1655,11 +1697,12 @@ seams a browser can't provide on iOS:
   grant a badge the game didn't award; because both platforms keep the highest
   percentage they have seen for an id, a report is idempotent and a failed one
   is simply retried. Game Center caps a game at 100 achievements and 1,000
-  points total against the game's 226 badges, so
-  `pwa/src/game/platform-achievements.ts` carries 86 of them — dropping the
+  points total against the game's 249 badges, so
+  `pwa/src/game/platform-achievements.ts` carries 87 of them — dropping the
   per-unique `unique_*` wall and the `equip_*` onboarding nudges, both already
-  rolled up by ladders that do travel — and apportions the point budget from the
-  badges' own tiers. The resulting list is generated and committed
+  rolled up by ladders that do travel, plus every other rung of the hero
+  ladder, where the stores take one every twenty levels (10/30/50/70/90) plus
+  the cap — and apportions the point budget from the badges' own tiers. The resulting list is generated and committed
   (`native/store/game-center-achievements.json`, via
   `scripts/game-center-achievements.mjs`) because an achievement only exists
   once it has been created in App Store Connect. Reports are throttled to

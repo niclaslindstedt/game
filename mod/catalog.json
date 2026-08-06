@@ -3137,6 +3137,7 @@
   "sounds": [
     "ability_ended",
     "ability_started",
+    "achievement_legend",
     "achievement_unlocked",
     "apparition_vanished",
     "armor_broke",
@@ -3156,6 +3157,19 @@
     "defeat",
     "dialogue_started",
     "door_opened",
+    "drive_body_a",
+    "drive_body_b",
+    "drive_body_c",
+    "drive_body_hard_a",
+    "drive_body_hard_b",
+    "drive_breakdown",
+    "drive_crunch_a",
+    "drive_crunch_b",
+    "drive_panel_a",
+    "drive_panel_b",
+    "drive_part_shed",
+    "drive_scrape_a",
+    "drive_scrape_b",
     "enemy_dodge",
     "enemy_hit",
     "enemy_hit_crit",
@@ -3401,5 +3415,27 @@
     "weaponDry",
     "wellDeath",
     "wellSwallowed"
-  ]
+  ],
+  "scriptHooks": {
+    "combat": [
+      "mob_armor_reduction",
+      "weapon_damage"
+    ],
+    "loot": [
+      "drop_chance",
+      "magic_find_factor",
+      "tier_chance"
+    ],
+    "menace": [
+      "mob_hp_level_factor",
+      "mob_level",
+      "overkill_efficiency"
+    ],
+    "progression": [
+      "mob_xp",
+      "stat_diminish",
+      "xp_cap_multiplier",
+      "xp_to_level_up"
+    ]
+  }
 }

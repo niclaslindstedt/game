@@ -98,6 +98,7 @@ import {
   maybeFirstKillThought,
   startDeathWords,
 } from "./story.ts";
+import { hookMobArmorReduction } from "./script/bindings.ts";
 import { BALANCE } from "./tuning.ts";
 import { splitXp } from "./xp-share.ts";
 import type {
@@ -400,14 +401,16 @@ function applyRangedShotProcs(
  * so a difficulty's mob-level cap also caps its armor.
  */
 export function mobArmorReduction(mlvl: number, difficulty: string): number {
-  const ramp =
-    MOB_ARMOR.maxLevelReduction *
-    clamp01((Math.max(1, mlvl) - 1) / (LEVELING.maxLevel - 1));
   const bonus = difficultyDef(difficulty).mobArmor ?? 0;
-  return Math.max(
-    0,
-    Math.min(MOB_ARMOR.maxReduction, (ramp + bonus) * BALANCE.mobArmor),
-  );
+  return hookMobArmorReduction(mlvl, bonus, () => {
+    const ramp =
+      MOB_ARMOR.maxLevelReduction *
+      clamp01((Math.max(1, mlvl) - 1) / (LEVELING.maxLevel - 1));
+    return Math.max(
+      0,
+      Math.min(MOB_ARMOR.maxReduction, (ramp + bonus) * BALANCE.mobArmor),
+    );
+  });
 }
 
 /**

@@ -36,6 +36,10 @@ const here = (p) => fileURLToPath(new URL(p, import.meta.url));
  * `docs/content-pipeline.md` for the reasoning behind each position.
  */
 const STEPS = [
+  {
+    id: "scripts",
+    why: "leaf: its only engine imports are the VM and the hook list, and nothing cross-refs a hook",
+  },
   { id: "leveling", why: "leaf: the XP curve, nothing cross-refs it" },
   { id: "items", why: "every later generator reads the equipment catalogs" },
   { id: "sets", why: "the kits the set items belong to" },

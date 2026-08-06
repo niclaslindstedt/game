@@ -34,6 +34,7 @@ document and a schema disagree, the schema is right.**
 | `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)           |
 | `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)           |
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
+| `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
 
 ---
 
@@ -1544,6 +1545,87 @@ the sprites, the relics, the powers — has to resolve.
 **Your errands are yours**, exactly as your story is: nobody reviews the lines,
 and nothing has to agree with the campaign.
 
+## `scripts/<id>.lua` — a RULE
+
+The one file in a mod that is not data. Everything else here changes what is in
+the game; a script changes how the game WORKS — what a level costs, what a kill
+pays, how tough the horde is, whether anything drops and how rare, what a blow
+is worth.
+
+Four files, and the shipped versions under
+[`../content/scripts/`](../content/scripts) are the reference: they are exactly
+what the game runs, a few dozen commented lines each. **Copy one and edit it.**
+
+| File              | The rules in it                                                  |
+| ----------------- | ---------------------------------------------------------------- |
+| `progression.lua` | `xp_to_level_up`, `mob_xp`, `xp_cap_multiplier`, `stat_diminish` |
+| `menace.lua`      | `mob_hp_level_factor`, `mob_level`, `overkill_efficiency`        |
+| `loot.lua`        | `drop_chance`, `tier_chance`, `magic_find_factor`                |
+| `combat.lua`      | `weapon_damage`, `mob_armor_reduction`                           |
+
+A script is a Lua module — a table of functions, returned at the end:
+
+```lua
+local M = {}
+
+function M.overkill_efficiency(damage, max_hp)
+  return 1          -- farming pays full value in this mod
+end
+
+return M
+```
+
+A hook you do not implement keeps the shipped rule, and so does a file you do
+not ship. An override is a PATCH, not a replacement — so the file above changes
+how overkill is judged and leaves the other two rules in `menace.lua` exactly as
+they shipped.
+
+### What you can read
+
+One global, `game`, and everything under it is READ-ONLY (a write is an error
+naming the field):
+
+- **`game.config`** — every tuning table the engine reads, lower-cased at the
+  top: `game.config.loot.dropChance`, `game.config.menace.mobHpGrowthKnee`,
+  `game.config.leveling.maxLevel`, … The leaf keys keep the spelling the engine
+  uses, so a name you find in the shipped script is the name you write.
+- **`game.balance`** — the DEVELOPER → BALANCE knobs, live.
+- **`game.run`** — the run this call is about: `difficulty`, `level`, `biome`,
+  `time_ms`, `kills`, `menace`, `enemies_alive`, `party_size`, `hero` (with
+  `level`, `hp`, `stats`, `talents`, `weapon`) and more. `nil` outside a run, so
+  guard it.
+- **`game.log(…)`** — a line into the game's log buffer, while you are working.
+
+### The rules your rule obeys
+
+- **Return a finite number.** A `nil` return would put NaN into the economy,
+  where it is invisible until a save — so the game refuses it, says so once, and
+  stands the shipped rule back up.
+- **A hook is a formula, not a loop.** Every call is metered; a runaway one is
+  killed. There is no `io`, `os`, `require`, `load`, `debug`, `_G`, `coroutine`
+  or `math.random`, and no clock. A seeded run and a multiplayer session both
+  need two machines to get the same numbers.
+- **You cannot roll dice.** The engine spends the run's randomness and asks you
+  only what a draw is measured against. `tier_chance` returning 0 turns a tier
+  off without spending a draw, which is how a mod removes one without shifting
+  every roll after it.
+
+### When yours is wrong
+
+Nothing stops the run. A file that will not compile falls back whole; a hook
+that throws, blows its budget or returns the wrong kind of thing falls back for
+the rest of the run. Each is reported once with the file and the line.
+
+`node mod/tools/cli.mjs check` compiles your scripts with the game's own
+interpreter, so a syntax error is caught before you publish — and so is a typo'd
+hook name, which is the one that matters: `overkil_efficiency` is otherwise
+silent forever, with the shipped rule quietly standing in and your file
+appearing to do nothing.
+
+The full reference is [`docs/scripting.md`](../docs/scripting.md).
+
+---
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly
@@ -1562,6 +1644,7 @@ asks the other question, and this is the whole list of what it allows:
 | `mod.yaml`                                                       | the manifest                                                                                                                                                  |
 | `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                   |
 | `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                      |
+| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                   |
 | the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml` |
 | alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                         |
 

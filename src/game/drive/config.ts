@@ -147,12 +147,56 @@ export const DRIVE = {
   leadSeconds: 0.55,
   /** A person's radius on the ground (world px) — the collision circle. */
   pedestrianRadiusPx: 5,
+  /**
+   * THE CROSSINGS — how far apart the painted crossings are (world px), how
+   * wide the paint is, and what share of the crowd is standing on one.
+   *
+   * THEY ARE WHAT MAKES THE ROAD A STREET RATHER THAN A CORRIDOR. A crowd
+   * strewn evenly down a mile of tarmac is a texture: it has no rhythm, so
+   * there is nothing to read ahead and nothing to plan for, and the wheel ends
+   * up being used as a nervous twitch. Clumping half of the same crowd onto
+   * crossings turns the trip into a series of DECISIONS — a knot of people
+   * visible a screen ahead, a gap to pick, a lane to be in before it arrives —
+   * without adding one body to the road or changing what a body costs.
+   *
+   * The crossings are laid on WORLD X (multiples of the pitch) rather than on
+   * course distance, so the same paint is in the same place on the way home as
+   * on the way out. The people standing on them are placed by a HASH of the
+   * spawn mark, never a fresh `rng()` draw: a road's bodies, their variants and
+   * their wander phases all come off the seeded stream in a fixed order, and
+   * spending a draw here would have moved every one of them.
+   */
+  crossingPitchPx: 760,
+  crossingWidthPx: 30,
+  crossingCrowdShare: 0.5,
+  /**
+   * THE PAVEMENT either side of the road (world px deep), and a WORLD fact
+   * rather than a painted one — which is the whole reason it lives here beside
+   * the lane width instead of in the renderer's palette.
+   *
+   * People STAND on it. The crowd's band is the tarmac plus these two strips
+   * (`crowdEdges`), so somebody waiting at a crossing is genuinely on the
+   * pavement and steps OFF it into the road, rather than hugging an invisible
+   * line at the kerb because that was as far out as the sim would let them go.
+   * The car is still held to the tarmac and its gutter (`roadEdges`) — mounting
+   * the kerb is not something this wagon does.
+   */
+  pavementPx: 16,
 
   // ── THE TRAFFIC ───────────────────────────────────────────────────────────
-  /** Other cars per 1000 px of course. Sparse next to the crowd: traffic is
-   * the thing that makes a lane unavailable, and a road jammed nose-to-tail
-   * would remove the steering decision rather than sharpen it. */
-  trafficPerKPx: 1.35,
+  /**
+   * Other cars per 1000 px of course, on MEDIUM — laddered per rung by
+   * `DifficultyDef.drive.trafficDensity`.
+   *
+   * SPARSE, AND THE NUMBER IS SMALLER THAN IT LOOKS. A screenful of road is
+   * about 420 px, so this is roughly one other car in view at a time: traffic
+   * is the thing that makes a LANE unavailable, and its job is to take a
+   * choice away for a moment, not to fill the road. Nose-to-tail traffic
+   * removes the steering decision rather than sharpening it — with every lane
+   * occupied there is nothing to decide and the crowd cannot be threaded at
+   * all, which is the one way this minigame can actually become unfair.
+   */
+  trafficPerKPx: 1,
   /** What the other traffic does, world px/s. The near lanes dawdle (the hero
    * overtakes them), the far lanes come the other way. */
   trafficSpeedPx: { min: 150, max: 300 },

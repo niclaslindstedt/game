@@ -202,6 +202,12 @@ export async function applyMods(
     ...(baseDefs.companions ?? {}),
   };
   const sets: Record<string, unknown> = { ...(baseDefs.sets ?? {}) };
+  // THE RULES start EMPTY rather than from the shipped catalog, unlike every
+  // other line here — because the script registry holds OVERRIDES only. The
+  // shipped `content/scripts/*.lua` live under it permanently (the host falls
+  // through to them for a file, and for a HOOK, no mod took over), which is
+  // also what makes a broken override recoverable instead of fatal.
+  const scripts: Record<string, unknown> = {};
   // The ladder's rungs are MERGED per rung, not replaced: a mod supplies a name
   // and a tagline, and everything else about the rung — the mob multipliers,
   // the xp rates, the mercy curves, the starting weapon — is the game's economy
@@ -239,6 +245,7 @@ export async function applyMods(
   const talentOwners = new Map<string, string[]>();
   const companionOwners = new Map<string, string[]>();
   const setOwners = new Map<string, string[]>();
+  const scriptOwners = new Map<string, string[]>();
   const difficultyOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
@@ -301,6 +308,13 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.sets ?? {})) {
       sets[id] = def;
       claim(setOwners, id, bundle.id);
+    }
+    // THE RULES. Claimed per FILE rather than per hook, because a file is what
+    // a player can see themselves losing on the MODS screen ("this mod's
+    // loot.lua is being overridden") and what they can fix by moving a row.
+    for (const [id, def] of Object.entries(bundle.scripts ?? {})) {
+      scripts[id] = def;
+      claim(scriptOwners, id, bundle.id);
     }
     for (const [id, voice] of Object.entries(bundle.difficulties ?? {})) {
       // Fold, never assign: an unknown rung is impossible (the compiler checks
@@ -374,6 +388,10 @@ export async function applyMods(
     talents: talents as DefOverrides["talents"],
     companions: companions as DefOverrides["companions"],
     sets: sets as DefOverrides["sets"],
+    // ALWAYS passed, even when no enabled mod ships a rule: an empty record is
+    // what clears a previous mod's formulas, and `registerDefs` bumps the
+    // script host's generation off the assignment either way.
+    scripts: scripts as DefOverrides["scripts"],
     difficulties: difficulties as DefOverrides["difficulties"],
     cutscenes: cutscenes as DefOverrides["cutscenes"],
     thoughts: thoughts as DefOverrides["thoughts"],
@@ -406,6 +424,7 @@ export async function applyMods(
     ...contested("talent", talentOwners),
     ...contested("companion", companionOwners),
     ...contested("set", setOwners),
+    ...contested("rule script", scriptOwners),
     ...contested("difficulty", difficultyOwners),
     ...contested("music", musicOwners),
     ...contested("cutscene", cutsceneOwners),

@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crunch_a
+description: >-
+  A real collision with another car — the sound that means the drive may be
+  over. Three layers, the way every big impact in the game is built: a saw
+  diving to the floor for the mass of it, a lowpass boom for the air it
+  moved, and delayed highpass sizzle for the glass and trim landing after.
+  Near the mix ceiling, because it is rare and it should frighten.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 220
+    to: 42
+    durationMs: 260
+    volume: 0.072
+    detuneCents: 18
+  - call: noise
+    durationMs: 300
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 260
+    echo: 0.2
+  - call: noise
+    durationMs: 90
+    volume: 0.04
+    filter:
+      type: bandpass
+      frequency: 1600
+  - call: noise
+    durationMs: 240
+    volume: 0.022
+    delayMs: 130
+    filter:
+      type: highpass
+      frequency: 4200

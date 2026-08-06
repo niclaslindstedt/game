@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_breakdown
+description: >-
+  The engine giving up in the middle of the road: the note sags away down
+  the scale, the block knocks twice as it dies, and then there is nothing
+  but steam out of a split hose while the wreck rolls to a stop. The mirror
+  of `car_start`'s catch, played backwards and badly.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 96
+    to: 22
+    durationMs: 620
+    volume: 0.055
+    detuneCents: 22
+  - call: tone
+    type: square
+    from: 88
+    to: 58
+    durationMs: 90
+    volume: 0.03
+    delayMs: 180
+  - call: tone
+    type: square
+    from: 70
+    to: 44
+    durationMs: 110
+    volume: 0.026
+    delayMs: 330
+  - call: noise
+    durationMs: 900
+    volume: 0.026
+    delayMs: 520
+    filter:
+      type: highpass
+      frequency: 5200

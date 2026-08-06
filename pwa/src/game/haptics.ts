@@ -12,6 +12,8 @@
 
 import { createHaptics, type HapticPattern } from "@ui/lib/haptics.ts";
 
+import type { AchievementTier } from "./achievement-tiers.ts";
+
 /** The one haptics surface the whole app shares. */
 export const haptics = createHaptics();
 
@@ -97,10 +99,19 @@ export function playMenuHaptic(): void {
 // a kill so unlocking a feat is felt as a reward, not a hit.
 const ACHIEVEMENT_PATTERN: HapticPattern = [30, 45, 55];
 
-/** Buzz an achievement unlock — paired with the toast + jingle. A noop when
- * haptics are off/unsupported. */
-export function playAchievementHaptic(): void {
-  haptics.vibrate(ACHIEVEMENT_PATTERN);
+// The LEGEND roll, for the handful of badges that take the whole screen (see
+// achievement-tiers.ts): the same rising three-beat with a heavy landing jolt
+// under it, so the card's arrival is felt as impact before the roll lifts off
+// it. Deliberately shorter and lighter than the level-up hammer — a legend
+// badge stands beside the ding, not over it.
+const ACHIEVEMENT_LEGEND_PATTERN: HapticPattern = [90, 60, 40, 40, 55, 40, 70];
+
+/** Buzz an achievement unlock — paired with the toast + jingle, and sized by
+ * the badge's own tier. A noop when haptics are off/unsupported. */
+export function playAchievementHaptic(tier: AchievementTier = "pro"): void {
+  haptics.vibrate(
+    tier === "legend" ? ACHIEVEMENT_LEGEND_PATTERN : ACHIEVEMENT_PATTERN,
+  );
 }
 
 // The LEVEL-UP detonation: a heavy opening jolt for the light explosion (past

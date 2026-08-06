@@ -28,6 +28,12 @@
 // So the art says which it is (`plane:` in the sprite's YAML, reaching the app as
 // `isFloorPlaneSprite` / `wallPlaneRise`) and this is the one place that acts on
 // it.
+//
+// …with ONE knob over the top of it: STANDING WALLS (DEVELOPER → VISUALS). The
+// extrusion earns itself under a YAW and is a matter of taste square-on, so a
+// developer may turn it off — and "off" means the third case collapses back into
+// the second, not into the first. `drawnWallRise` and `laidFlat` are the pair
+// that says so, and every pass asks them rather than the catalog.
 
 import {
   isDirectionalSprite,
@@ -36,7 +42,7 @@ import {
 } from "../assets.ts";
 import { flatSprite, wallBlock } from "./caches.ts";
 import { seatX, seatY } from "./shared.ts";
-import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
+import { billboard, bodyAnchorX, bodyAnchorY, standingWalls } from "./tilt.ts";
 
 /**
  * Directional art is authored running SOUTH — down the sprite's own rows — so a
@@ -44,6 +50,28 @@ import { billboard, bodyAnchorX, bodyAnchorY } from "./tilt.ts";
  * `isDirectionalSprite`.
  */
 const AUTHORED_BEARING = Math.PI / 2;
+
+/**
+ * HOW FAR THIS PIECE RISES OFF ITS FOOTPRINT AS DRAWN — the art's own `rise`,
+ * or 0 while STANDING WALLS is off (DEVELOPER → VISUALS, `standingWalls` in
+ * ./tilt.ts). **Every pass asks THIS, never `wallPlaneRise`**, which is the
+ * catalog's answer and does not know about the switch.
+ */
+export function drawnWallRise(name: string): number {
+  return standingWalls() ? wallPlaneRise(name) : 0;
+}
+
+/**
+ * DOES THIS PIECE LIE DOWN WITH THE FLOOR? — `plane: floor` always, and
+ * `plane: wall` whenever it is not standing, because the whole of the switch's
+ * meaning is "draw it the way it was drawn before the extrusion existed": the
+ * same footprint on the same floor, taking the projection whole. Falling through
+ * to the upright branch instead would stand a plan view up, which is the exact
+ * mistake `plane:` exists to stop.
+ */
+function laidFlat(name: string): boolean {
+  return isFloorPlaneSprite(name) || wallPlaneRise(name) > 0;
+}
 
 /** The turn a piece of art takes to run along `facing` — zero for art with no
  * bearing to state, and for a placement that never supplied one. */
@@ -74,7 +102,7 @@ export function drawWorldSprite(
   anchor: "center" | "base" = "center",
   facing?: number,
 ): void {
-  const rise = wallPlaneRise(name);
+  const rise = drawnWallRise(name);
   if (rise > 0) {
     // THE WALL: the same footprint the flat branch below would have drawn, with
     // the block standing on it. The bake's BOTTOM slice is that footprint
@@ -92,7 +120,7 @@ export function drawWorldSprite(
     );
     return;
   }
-  if (isFloorPlaneSprite(name)) {
+  if (laidFlat(name)) {
     // Pre-projected once (`flatSprite`) and blitted 1:1 here, rather than drawn
     // through the live transform — a per-frame resample of pixel art boils as
     // the camera pans. The blit happens INSIDE the billboard because the baked
@@ -154,10 +182,10 @@ export function drawWorldSpriteTop(
   camera: { x: number; y: number },
   keep: number,
 ): void {
-  const rise = wallPlaneRise(name);
+  const rise = drawnWallRise(name);
   const art = rise
     ? wallBlock(sprite, name, rise)
-    : isFloorPlaneSprite(name)
+    : laidFlat(name)
       ? flatSprite(sprite, name)
       : sprite;
   if (!art) return;

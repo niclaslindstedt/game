@@ -8,21 +8,39 @@ import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+import type { AchievementTier } from "../achievement-tiers.ts";
+
 /**
  * The ACHIEVEMENT chime: a badge landing on the shelf. App-triggered (the
  * unlock ledger lives app-side, so there is no engine event to key on), and
  * deliberately a notch below the level-up DING — a quick major arpeggio with
  * glass octaves and one high sparkle, no root swell, no landing chord, so a
  * badge feels great without outshining a ding or a unique find.
+ *
+ * IT GROWS WITH THE BADGE, on one knob and no branches: `weight` (0…1, off the
+ * tier) scales the volume of every layer and adds the two the chime otherwise
+ * refuses itself — a root swell under the rise, and a landing fifth after it.
+ * So a ten-point badge is the same three notes it always was, and an EXPERT
+ * arrives with body. The LEGEND tier does not come through here at all: it
+ * gets a fanfare of its own below, because a louder chime is not what "the
+ * player will remember where they were sitting" sounds like.
  */
-export function playAchievementJingle(synth: Synth): void {
+export function playAchievementJingle(
+  synth: Synth,
+  tier: AchievementTier = "pro",
+): void {
+  if (tier === "legend") {
+    playLegendJingle(synth);
+    return;
+  }
+  const weight = TIER_WEIGHT[tier];
   // The rise: G-C-E skyward, glass octave riding each step.
   [784, 1047, 1319].forEach((freq, i) => {
     synth.tone({
       type: "triangle",
       from: freq,
       durationMs: 120,
-      volume: 0.05,
+      volume: 0.05 * weight,
       delayMs: i * 70,
       echo: 0.3,
     });
@@ -30,7 +48,7 @@ export function playAchievementJingle(synth: Synth): void {
       type: "sine",
       from: freq * 2,
       durationMs: 100,
-      volume: 0.018,
+      volume: 0.018 * weight,
       delayMs: i * 70,
       echo: 0.35,
     });
@@ -38,7 +56,7 @@ export function playAchievementJingle(synth: Synth): void {
   // A thin shimmer under the rise — air, not a note.
   synth.noise({
     durationMs: 260,
-    volume: 0.01,
+    volume: 0.01 * weight,
     delayMs: 40,
     filter: { type: "highpass", frequency: 6800 },
     echo: 0.35,
@@ -49,9 +67,133 @@ export function playAchievementJingle(synth: Synth): void {
     from: 2093,
     to: 2637,
     durationMs: 220,
-    volume: 0.014,
+    volume: 0.014 * weight,
     delayMs: 260,
     echo: 0.5,
+  });
+  // PRO and up earn the ground under the rise and the note it settles on —
+  // the two things the base chime gives up to stay under a ding.
+  if (weight < 1) return;
+  synth.tone({
+    type: "triangle",
+    from: 262, // C4, the tonic the arpeggio climbs from
+    durationMs: 620,
+    volume: 0.026,
+    attackMs: 12,
+    echo: 0.3,
+  });
+  synth.tone({
+    type: "sine",
+    from: 1568, // G6 — the fifth, landing as the rise tops out
+    durationMs: 320,
+    volume: 0.022,
+    delayMs: 210,
+    echo: 0.45,
+  });
+}
+
+/** How loud a tier's chime plays, and whether it earns the swell + landing
+ * note (at 1). LEGEND never reads this — it has its own fanfare. */
+const TIER_WEIGHT: Record<AchievementTier, number> = {
+  beginner: 0.72,
+  intermediate: 0.86,
+  pro: 1,
+  expert: 1,
+  legend: 1,
+};
+
+/**
+ * THE LEGEND FANFARE — the sound of the card reveal (AchievementToast), and
+ * the only achievement cue in the game allowed to stand beside the level-up
+ * ding rather than under it.
+ *
+ * Built as the reveal is drawn, in the same four beats: the RIP as the rays
+ * tear open, the CHOIR swelling behind them, the ARPEGGIO climbing with the
+ * card as it flies in, and the CHORD landing under the bloom. Timed so the
+ * chord hits where the card does (~640ms) rather than where the animation
+ * ends — sound and light have to be one event or the reveal reads as a video
+ * with a soundtrack.
+ */
+function playLegendJingle(synth: Synth): void {
+  // 1. THE RIP — filtered noise sweeping up as the rays flare out of the dark,
+  //    with a sub under it so the moment has a floor.
+  synth.noise({
+    durationMs: 620,
+    volume: 0.03,
+    filter: { type: "highpass", frequency: 2200 },
+    echo: 0.4,
+  });
+  synth.tone({
+    type: "sine",
+    from: 60,
+    to: 180,
+    durationMs: 560,
+    volume: 0.07,
+    attackMs: 40,
+    echo: 0.2,
+  });
+  // 2. THE CHOIR — a slow triad swelling behind everything (C3/G3/E4), long
+  //    enough to still be ringing when the card lands on it.
+  [131, 196, 330].forEach((freq, i) =>
+    synth.tone({
+      type: "triangle",
+      from: freq,
+      durationMs: 1500,
+      volume: 0.03,
+      attackMs: 180,
+      delayMs: i * 40,
+      echo: 0.4,
+    }),
+  );
+  // 3. THE CLIMB — the badge chime's own arpeggio, carried two octaves further
+  //    and racing the card in: C-E-G-C-E, glass octave on every step.
+  [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+    synth.tone({
+      type: "square",
+      from: freq,
+      durationMs: 140,
+      volume: 0.032,
+      delayMs: 120 + i * 90,
+      echo: 0.35,
+    });
+    synth.tone({
+      type: "sine",
+      from: freq * 2,
+      durationMs: 120,
+      volume: 0.016,
+      delayMs: 120 + i * 90,
+      echo: 0.4,
+    });
+  });
+  // 4. THE LANDING — the full chord under the bloom, plus the impact that
+  //    makes the card feel like it hit something.
+  [523, 659, 784, 1047].forEach((freq) =>
+    synth.tone({
+      type: "triangle",
+      from: freq,
+      durationMs: 1100,
+      volume: 0.038,
+      attackMs: 6,
+      delayMs: 640,
+      echo: 0.5,
+    }),
+  );
+  synth.noise({
+    durationMs: 320,
+    volume: 0.05,
+    delayMs: 640,
+    filter: { type: "lowpass", frequency: 420 },
+    echo: 0.15,
+  });
+  // …and the shimmer drifting off it, the tail the echo carries out.
+  synth.tone({
+    type: "sine",
+    from: 2093,
+    to: 3136,
+    durationMs: 520,
+    volume: 0.018,
+    delayMs: 900,
+    echo: 0.6,
   });
 }
 

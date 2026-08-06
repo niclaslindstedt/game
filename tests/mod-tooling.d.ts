@@ -61,6 +61,9 @@ declare module "*/mod/tools/build.mjs" {
     thoughts: Record<string, unknown>;
     capRotation: string[];
     storyItems: Record<string, unknown>;
+    /** The mod's own RULES, keyed by script id — the Lua it ships to replace a
+     * shipped formula. The one catalog that is behaviour rather than data. */
+    scripts: Record<string, { id: string; source: string }>;
     /** The manifest's inventory — every file the game loads, with the author's
      * own line about what it is. Empty for a mod that ships no `contents:`. */
     contents: { path: string; summary: string; change: "adds" | "replaces" }[];
@@ -72,6 +75,31 @@ declare module "*/mod/tools/build.mjs" {
     modDir: string,
     catalog: unknown,
   ): { bundle: ModBundle | null; errors: string[]; warnings: string[] };
+}
+
+declare module "*/scripts/asset-tools/script-schema.mjs" {
+  /**
+   * Validate one authored Lua rule by COMPILING it with the engine's own VM —
+   * the mod compiler and the content pipeline both run this, so "it works in my
+   * mod" and "it works in the game" mean the same thing.
+   */
+  export function validateScript(
+    id: string,
+    source: string,
+    opts?: { shipped?: boolean },
+  ): { errors: string[]; warnings: string[]; hooks: string[] };
+
+  /** The whole-catalog rule for the SHIPPED scripts: every hook has an
+   * implementation somewhere. */
+  export function validateScriptCatalog(implemented: string[]): {
+    errors: string[];
+    warnings: string[];
+  };
+
+  /** hook name → the script id that owns it. */
+  export const HOOK_OWNER: Map<string, string>;
+  /** script id → the hooks it is expected to implement. */
+  export const SCRIPT_HOOKS: Map<string, string[]>;
 }
 
 declare module "*/mod/tools/validate.mjs" {

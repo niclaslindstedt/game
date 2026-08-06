@@ -267,6 +267,20 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
           onState: s.cameraYaw > 0 ? "on" : "idle",
         },
       ),
+      // …and the switch that decides whether a `plane: wall` piece STANDS on its
+      // footprint or lies down with the floor (render/tilt.ts `standingWalls`).
+      // It sits with the camera because it is a question ABOUT the camera: the
+      // extrusion earns itself under a yaw, where a flat panel stops reading as
+      // a wall at all, and square-on it is a look to have an opinion about. NOT
+      // folded together with the yaw the way ANTI-ALIASING is — the knob means
+      // "I do not want the faces", so sweeping the camera round to compare the
+      // two looks must not switch the answer out from under it.
+      "standing-walls": onOffRow(
+        ctx,
+        "visuals",
+        "standing-walls",
+        "standingWalls",
+      ),
       // THE THREE WASHES OVER THE FINISHED PICTURE (render/postfx.ts). They come
       // last because everything above decides what is DRAWN and these three
       // decide what the drawn frame is seen THROUGH — and they are developer

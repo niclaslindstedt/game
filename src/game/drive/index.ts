@@ -71,7 +71,13 @@ import type { DriveInput, DriveParams, DriveState } from "./types.ts";
 
 export { DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
 export type { DriveOutcome } from "./config.ts";
-export { CROWD_VARIANTS, laneCenter, roadEdges } from "./crowd.ts";
+export {
+  crossingsBetween,
+  crowdEdges,
+  CROWD_VARIANTS,
+  laneCenter,
+  roadEdges,
+} from "./crowd.ts";
 export { TRAFFIC_VARIANTS, laneRunsWithHero } from "./traffic.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";

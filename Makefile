@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench mod-check mod-catalog
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -63,6 +63,13 @@ assets:
 # `make assets`; this target is the fast path when only a level changed.
 levels:
 	npm run levels
+
+# The Lua VM, compiled to plain ESM for the SHIPPED mod compiler — the desktop
+# shell's main process has no TypeScript, and the script validator IS the
+# engine's own interpreter (see scripts/build-lua.mjs). Runs inside
+# `npm run electron:*`; this target is for checking it on its own.
+lua-vm:
+	node scripts/build-lua.mjs
 
 # Compile a MOD — the same validator the desktop game runs on every mod it
 # loads, so a mod that passes here is a mod the game accepts. See mod/README.md.

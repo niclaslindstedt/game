@@ -65,6 +65,19 @@ export const SHIPPED_SOUND_KEYS = GENERATED_SOUND_KEYS;
 // banks with it (see pwa/scripts/check-seo.mjs's critical-path budget). This
 // barrel is the RUN's event bus; `sfx/ui.ts` is the interface's.
 
+/**
+ * Fire one of the ROAD's sounds by id (`content/sounds/drive_*.yaml`).
+ *
+ * BY ID RATHER THAN BY EVENT, because the drive is not a run: it emits
+ * `DriveEvent`s off its own clock and never touches `state.events`, so there is
+ * no `GameEvent` for the key table to match. It still reads the LIVE bank, so a
+ * mod that reskins the road's sounds is heard on the road exactly as it is
+ * heard in a fight.
+ */
+export function playDriveSound(synth: Synth, id: string): void {
+  playSound(synth, catalog, id);
+}
+
 /** The fields that pick which sound an event plays. Everything else on an
  * event (positions, ids, damage numbers) never reaches the synth. */
 function soundKey(event: GameEvent): string {

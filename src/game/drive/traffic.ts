@@ -24,9 +24,21 @@
 
 import { randomRange } from "@game/lib/rng.ts";
 
+import { difficultyDef } from "../defs/difficulties.ts";
 import { DRIVE } from "./config.ts";
 import { laneCenter } from "./crowd.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
+
+/** How thick the traffic is on this drive's rung — the baseline density
+ * through the difficulty's own multiplier (`DifficultyDef.drive`). The gentle
+ * rungs leave the road nearly the hero's own; the hard ones shut a lane on him
+ * regularly. */
+function trafficPerKPx(state: DriveState): number {
+  return (
+    DRIVE.trafficPerKPx *
+    difficultyDef(state.params.difficulty).drive.trafficDensity
+  );
+}
 
 /** How many distinct cars the traffic is drawn from — the app's sprite table is
  * this long (see pwa/src/game/drive-screen/scenery.ts), and the same table
@@ -53,7 +65,7 @@ export function spawnTraffic(state: DriveState): void {
   const reach = state.distance + DRIVE.spawnAheadPx * 1.6;
   while (state.nextTrafficAt < reach) {
     const at = state.nextTrafficAt;
-    state.nextTrafficAt += 1000 / DRIVE.trafficPerKPx;
+    state.nextTrafficAt += 1000 / trafficPerKPx(state);
     if (at < DRIVE.crowdStartPx * 0.5) continue;
     if (at > DRIVE.coursePx) break;
     const lane = Math.floor(rng() * DRIVE.laneCount) % DRIVE.laneCount;
