@@ -182,6 +182,10 @@ export function paramsFor(
     clearedLevels: clearedAfter(from.params.clearedLevels, from.state),
     campaignQuests: bankCampaignQuests(from.state),
     seenThoughts: [...from.state.thoughtsSeen],
+    // THE TOOL TRAVELS WITH HIM. A keepsake is the character's, not the run's,
+    // so a crossing that dropped it would strand a hero who walked through his
+    // own seam — the one trip that must never take the way home away.
+    keepsakes: [...from.state.keepsakes],
     // The loadout's banked purse IS the purse: the wealth fold happened when
     // the run was first built.
     coins: null,

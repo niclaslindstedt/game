@@ -817,8 +817,27 @@ function holdsKeyFor(state: GameState, doorId: string): boolean {
 export function stepGates(state: GameState): void {
   for (const gate of state.gates) {
     if (gate.entered) continue;
-    // ANY hero steps through for the party — a gate is a doorway, not a
-    // turnstile, and the app answers the crossing for the whole run.
+    // A SEAM ONE HERO TORE IS THAT HERO'S DOOR, and only theirs. A level's own
+    // gate is the opposite — ANY hero steps through for the party, because a
+    // gate is a doorway rather than a turnstile and the app answers the
+    // crossing for the whole run. So the seam asks who is standing in it: it
+    // takes the hero who tore it home and leaves everybody else fighting.
+    if (gate.solo) {
+      const seat = soloSeatFor(gate.id);
+      if (seat === null) continue;
+      const hero = state.players[seat];
+      if (!hero || !heroInPlay(hero)) continue;
+      if (distance(hero.pos, gate.pos) > GATES.enterRadius) continue;
+      gate.entered = true;
+      state.events.push({
+        type: "gateEntered",
+        pos: { ...gate.pos },
+        to: gate.to,
+        solo: true,
+        seat,
+      });
+      continue;
+    }
     if (!anyHeroWithin(state, gate.pos, GATES.enterRadius)) continue;
     gate.entered = true;
     state.events.push({
@@ -827,6 +846,15 @@ export function stepGates(state: GameState): void {
       to: gate.to,
     });
   }
+}
+
+/** Which seat a torn seam belongs to, read off its id (`rift_seam_home_<n>` —
+ * see rift-tool.ts), or null when the id is not one. */
+function soloSeatFor(gateId: string): number | null {
+  const match = /^rift_seam_home_(\d+)$/.exec(gateId);
+  if (!match) return null;
+  const seat = Number(match[1]);
+  return Number.isInteger(seat) ? seat : null;
 }
 
 /**

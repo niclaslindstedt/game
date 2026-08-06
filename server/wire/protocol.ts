@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 26;
+export const PROTOCOL_VERSION = 27;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -103,6 +103,11 @@ export type SessionParams = {
   coins?: number | null;
   /** The inner monologues this hero has already read on this difficulty. */
   seenThoughts?: string[];
+  /** KEEPSAKES the hero arrived carrying — story items banked on the character
+   * for good (chiefly the RIFT CREATOR). Holding the rig is what lets a hero
+   * tear a seam home mid-run, so a joining client's own copy of the run has to
+   * agree about it (see `src/game/rift-tool.ts`). */
+  keepsakes?: string[];
   /** How much of the opening to skip: `none`, `story` (already watched on this
    * difficulty), or `all` (a developer warp-in). Structural, so this leaf needs
    * no engine import to name it. */

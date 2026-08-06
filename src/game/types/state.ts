@@ -675,6 +675,16 @@ export type GameState = {
   /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
   storyItems: string[];
   /**
+   * KEEPSAKES the hero arrived carrying — story items banked on the character
+   * across every run (`StoryItemDef.keepsake`), handed in as a session
+   * parameter because no run can know them for itself.
+   *
+   * Distinct from `storyItems`, which is what THIS run has found. The rift
+   * tool is the one that does anything: holding it is what lets a hero tear a
+   * seam home from wherever he stands (`src/game/rift-tool.ts`).
+   */
+  keepsakes: string[];
+  /**
    * Level ids the hero has already CLEARED on this run's difficulty (seeded by
    * the app from the character's clears; empty on a dev jump or fresh hero).
    * Read only by `requiresClear`-gated guaranteed drops — the bunker key

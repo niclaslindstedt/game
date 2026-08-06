@@ -322,6 +322,11 @@ export function createRunSession(deps: {
     // Already-read inner monologues are pre-marked so a die-and-retry loop does
     // not replay them.
     seenThoughts: seenThoughts(characterRef.current, difficulty),
+    // THE KEEPSAKES HE ARRIVED CARRYING — the RIFT CREATOR among them, which is
+    // what lets him tear a seam home mid-run. Banked on the CHARACTER across
+    // every run, so the roster is the only thing that knows and the run has to
+    // be told (src/game/rift-tool.ts).
+    keepsakes: characterRef.current.keepsakes ?? [],
     openingSkip: wantsScenario
       ? "none"
       : skipOpening
