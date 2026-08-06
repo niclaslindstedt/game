@@ -54,7 +54,7 @@ export function TravelPanel({
     (d) => d.id === doorId,
   );
   if (!door) return null;
-  const roads = openRoads(character, difficulty, door);
+  const roads = openRoads(state, character, difficulty, door);
   return (
     <div className="game-splash">
       <PixelText font={font} text={door.name} scale={5} color="#7ef0c8" />

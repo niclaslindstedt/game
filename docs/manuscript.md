@@ -1546,6 +1546,19 @@ takes a difficulty-scaled bite of his health (20% on EASY up to 75% on JESUS)._
 - SOMETHING CAME OUT OF THE DARK AND HIT LIKE A TRUCK. A ROCK. A FLYING ROCK.
 - BETTER WATCH OUT FOR THESE ASTEROIDS. THEY HURT.
 
+### Hero's thought — trying THE FAR DOOR before the coward is routed
+
+_The second line in the game pinned to a DOOR rather than to a mob (the
+rocket's on the garage lawn is the other), and it works the same way: tapping
+the tear at the end of the rift's road while THE FOUNDER is still standing
+plays this instead of the travel picker, and it REPLAYS — it answers the tap,
+not a story beat the player is owed once. He is not waiting on a lock, so the
+line names the stake and not the mechanic: the far side is right there, and he
+did not come two universes to leave in front of the man he came for. Once the
+coward is routed the same tap asks which road he takes instead._
+
+1. THE FAR SIDE, RIGHT THERE. BUT I CAME IN HERE FOR HIM, AND HE'S STILL BREATHING.
+
 ### Apparitions (dialogue only — they speak, then walk off and dissolve)
 
 Nothing can touch an apparition and its touch is cold air; it has no last

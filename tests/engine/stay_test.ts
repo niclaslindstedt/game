@@ -15,6 +15,7 @@ import {
   killEnemy,
   reopenVictoryChoice,
   RUN,
+  runLevelDef,
   stayOnField,
 } from "@game/core";
 import type { GameState } from "@game/core";
@@ -100,6 +101,26 @@ describe("stayOnField", () => {
     // Mid-run, boss still alive: nothing to stay on.
     expect(stayOnField(state)).toBe(false);
     expect(state.phase).toBe("playing");
+  });
+
+  it("takes on a corpse-less clear when a travel door is what he walks back to", () => {
+    const state = startGame();
+    reachVictory(state);
+    // A COWARD LEAVES NOTHING (boss-death.ts): a boss that FLEES books the win
+    // and leaves no body, so the usual tap target simply is not on the field —
+    // and with nothing else there, the run is over at the menu.
+    state.bossCorpse = null;
+    expect(stayOnField(state)).toBe(false);
+    expect(state.phase).toBe("victory");
+    // A standing door is the other thing worth going back for, and it carries
+    // the way onward itself. This is the rift, whose far door is the end of its
+    // road and used to be unreachable for exactly this reason.
+    runLevelDef(state).travelDoors = [
+      { id: "test_far_door", name: "TEST FAR DOOR", to: ["test_level_2"] },
+    ];
+    expect(stayOnField(state)).toBe(true);
+    expect(state.phase).toBe("playing");
+    expect(state.staying).toBe(true);
   });
 });
 

@@ -403,6 +403,16 @@ export function validateLevel(def, refs, description = "", options = {}) {
       // withheld precisely BECAUSE there is a line to play instead.
       if (d.unready !== undefined && !refs.thoughts.has(d.unready))
         err(`travel door "${d.id}" names unknown thought "${d.unready}"`);
+      if (d.afterClear !== undefined && typeof d.afterClear !== "boolean")
+        err(`travel door "${d.id}" afterClear must be a boolean`);
+      // A DOOR THAT SPENDS MOST OF THE LEVEL REFUSING MUST SAY SO. Without a
+      // line, an `afterClear` door is a prop that swallows every tap until the
+      // field is clear — which teaches the player it is scenery, and they do
+      // not come back to it once it works.
+      if (d.afterClear && d.unready === undefined)
+        err(
+          `travel door "${d.id}" is afterClear and needs an "unready" thought — a door that refuses in silence reads as scenery`,
+        );
     }
   }
   if (

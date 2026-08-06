@@ -49,6 +49,24 @@ gates:
     to: the_bunker
     opensWith: severed_hand
     sprite: bunker_gate
+# THE FAR DOOR — the tear the level's own intro sends him to find ("FIND THE FAR
+# SIDE. CATCH THE COWARD."), standing at the end of the road where the boss is.
+# It was scenery: the rift's only way onward was the victory splash's one NEXT
+# LEVEL button, so the door the whole chapter is about could not be used.
+#
+# `afterClear` is what keeps it honest — the end of the road is not an escape
+# hatch from a fight still going on, so until the coward is routed the door
+# refuses and the hero says why (`unready`, which REPLAYS on every tap). Once
+# the field is clear it asks the only question left: on through after the trail,
+# or home to the garage with what he is carrying. Both roads gate on campaign
+# progress like any picker row, so a first run through the rift is offered the
+# garage until BOOT HILL is earned.
+travelDoors:
+  - id: far_door
+    name: THE FAR DOOR
+    to: [boot_hill, garage]
+    afterClear: true
+    unready: rift_far_door_shut
 # BLACK HOLES STREWN ACROSS THE ROAD - the void's real geometry, FLANKING the
 # road the hero threads. He never stands ON one - a core devours on contact - so
 # the way through any room with a hole in it is the floor BESIDE it. The mission

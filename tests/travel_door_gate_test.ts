@@ -26,6 +26,20 @@ import {
 
 const home = (): GameState => createGame(42, "garage", "medium");
 
+/** The rift, mid-run: the coward is still on his feet and the field is live. */
+const rift = (): GameState => createGame(42, "the_rift", "medium");
+
+/** The rift on a CLEARED field — the win banked and the player back on it via
+ * the victory menu's STAY, which is the only state the far door ever opens in. */
+const clearedRift = (): GameState => {
+  const state = rift();
+  state.staying = true;
+  return state;
+};
+
+const riftDoor = (id: string) =>
+  (LEVELS.the_rift!.travelDoors ?? []).find((d) => d.id === id)!;
+
 const doorNamed = (id: string) =>
   (LEVELS.garage!.travelDoors ?? []).find((d) => d.id === id)!;
 
@@ -45,10 +59,13 @@ describe("the picker names only the roads that are open", () => {
     const rocket = doorNamed("rocket");
     // GOODCO cleared: the moon is the one road, and MARS is not on the panel.
     const afterHq = hero(["medium:goodco_hq"]);
-    expect(openRoads(afterHq, "medium", rocket)).toEqual(["moon"]);
+    expect(openRoads(home(), afterHq, "medium", rocket)).toEqual(["moon"]);
     // The moon cleared too: now both are named, in authored order.
     const afterMoon = hero(["medium:goodco_hq", "medium:moon"]);
-    expect(openRoads(afterMoon, "medium", rocket)).toEqual(["moon", "mars"]);
+    expect(openRoads(home(), afterMoon, "medium", rocket)).toEqual([
+      "moon",
+      "mars",
+    ]);
   });
 
   it("names no deep road until the RIFT CREATOR is banked", () => {
@@ -63,13 +80,16 @@ describe("the picker names only the roads that are open", () => {
       "medium:mars",
       "medium:the_rift",
     ];
-    expect(openRoads(hero(toTheRift), "medium", seam)).toEqual([]);
+    expect(openRoads(home(), hero(toTheRift), "medium", seam)).toEqual([]);
     const kept = hero(toTheRift, [], ["rift_creator"]);
-    expect(openRoads(kept, "medium", seam)).toEqual(["the_rift", "boot_hill"]);
+    expect(openRoads(home(), kept, "medium", seam)).toEqual([
+      "the_rift",
+      "boot_hill",
+    ]);
   });
 
   it("always names the road out — the car's is the campaign's first level", () => {
-    expect(openRoads(hero(), "medium", doorNamed("car"))).toEqual([
+    expect(openRoads(home(), hero(), "medium", doorNamed("car"))).toEqual([
       "goodco_hq",
     ]);
   });
@@ -137,6 +157,55 @@ describe("the rift seam — it simply isn't there", () => {
     );
     expect(hiddenTravelDoors(home(), kept, "medium")).not.toContain(
       "rift_seam",
+    );
+  });
+});
+
+describe("the far door at the end of the rift", () => {
+  // The hero has walked far enough that BOTH its roads are earned on their own
+  // terms — so anything the door withholds below is the CLEAR gate and nothing
+  // else.
+  const walker = () =>
+    hero(["medium:goodco_hq", "medium:moon", "medium:mars", "medium:the_rift"]);
+
+  it("names no road while the coward is still standing", () => {
+    expect(openRoads(rift(), walker(), "medium", riftDoor("far_door"))).toEqual(
+      [],
+    );
+  });
+
+  it("says why, rather than swallowing the tap", () => {
+    // The whole reason `afterClear` may not ship without an `unready` line: a
+    // door that refuses in silence for most of a level reads as scenery.
+    expect(groundedDoorThought(rift(), walker(), "medium", "far_door")).toBe(
+      "rift_far_door_shut",
+    );
+  });
+
+  it("asks which road once the field is cleared", () => {
+    expect(
+      openRoads(clearedRift(), walker(), "medium", riftDoor("far_door")),
+    ).toEqual(["boot_hill", "garage"]);
+    expect(
+      groundedDoorThought(clearedRift(), walker(), "medium", "far_door"),
+    ).toBeNull();
+  });
+
+  it("offers the way home on a first walk, before BOOT HILL is earned", () => {
+    // The rift itself is not cleared on the character yet the first time
+    // through it, so its onward road is still shut — and the door must not
+    // therefore go silent, or the run's only exit is the splash it replaced.
+    const firstTime = hero(["medium:goodco_hq", "medium:moon", "medium:mars"]);
+    expect(
+      openRoads(clearedRift(), firstTime, "medium", riftDoor("far_door")),
+    ).toEqual(["garage"]);
+  });
+
+  it("stands at the end of the road the whole level — it is never hidden", () => {
+    // It carries an `unready` line, so the hide rule never reaches it: the
+    // tear the intro sends him to FIND has to be visible while he looks.
+    expect(hiddenTravelDoors(rift(), walker(), "medium")).not.toContain(
+      "far_door",
     );
   });
 });

@@ -353,6 +353,13 @@ anywhere it has already been. "Keep the rift, garage man" turns out to be
 literal. The hero bolts it to the garage wall, and from then on the seam home
 reaches the deep roads both ways — the going-back the rest of the campaign
 walks on.
+**The far door is a door.** The intro sends him to find the far side, and once
+the coward is routed the tear standing at the end of the road stops being
+scenery: it asks the only question left, which is which way he goes — on through
+after the trail, or home to the garage with what he is carrying. Tried while THE
+FOUNDER is still on his feet it refuses, and the hero says why. It is the first
+road in the campaign the player chooses rather than is handed.
+
 **Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
 wrapped around a scale she pried off a lizard god. She is fighting back, and the

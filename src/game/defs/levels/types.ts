@@ -552,6 +552,22 @@ export type LevelDef = {
      */
     requires?: string;
     /**
+     * A DOOR THAT DOES NOT WORK UNTIL THE FIELD IS CLEARED — the rift's far
+     * door, which is the end of the road and cannot be the way out of a fight
+     * still going on.
+     *
+     * The distinction from `requires` is what it gates on: `requires` is the
+     * CHARACTER's (a keepsake banked across every run), this is the RUN's, and
+     * a run only ever answers it one way — the win is banked and the hero has
+     * chosen to stay on the cleared field (`state.staying`). So it never opens
+     * mid-fight and never needs a mid-run recheck: the app reads it at the tap.
+     *
+     * Pair it with `unready`, always. A door that refuses in silence for the
+     * whole level teaches the player it is scenery, and they will not come back
+     * to it once it works.
+     */
+    afterClear?: boolean;
+    /**
      * WHAT HE THINKS WHEN THE DOOR CAN TAKE HIM NOWHERE YET — a thought id
      * (`content/thoughts.yaml`) played INSTEAD of the picker on a tap that
      * finds every one of `to` still locked.
