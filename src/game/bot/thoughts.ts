@@ -130,6 +130,15 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
   "CRACK CHEST": { family: "chest", rank: 20, tier: "state" },
   "TO SHOP": { family: "shop", rank: 20, tier: "state" },
+  // AT HOME (hub.ts): the three things there are to do in the garage. SEE FOLK
+  // and TO CAR get their own families — they are committed destinations that
+  // never oscillate, like the caches above them — and TO SHOP is the counter's
+  // own label either way. DRIVE OUT is ranked with the reflexes and latched as
+  // an EVENT because it is not a decision that competes with anything: the
+  // hero is in a car, and nothing else he could be thinking is true.
+  "SEE FOLK": { family: "folk", rank: 20, tier: "state" },
+  "TO CAR": { family: "car", rank: 20, tier: "state" },
+  "DRIVE OUT": { family: "drive", rank: 90, tier: "event" },
   // The running errands (errands.ts): one family, so walking to a quest's
   // token and hunting its breed read as one sustained intent.
   "ON ERRAND": { family: "errand", rank: 20, tier: "state" },
