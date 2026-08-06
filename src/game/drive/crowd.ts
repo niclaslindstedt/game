@@ -46,11 +46,63 @@ export function roadEdges(): { top: number; bottom: number } {
   return { top: -half - DRIVE.vergePx, bottom: half + DRIVE.vergePx };
 }
 
+/**
+ * WHERE A PERSON MAY BE — the tarmac, its gutters, AND the pavement each side.
+ *
+ * The crowd's band is deliberately wider than the CAR's (`roadEdges`): a street
+ * whose people stop dead at the kerb line reads as a corridor with figures
+ * pressed against its walls, and the moment the pavement was drawn it became
+ * obvious that nobody was ever standing ON it. Widening the band is also what
+ * makes a crossing mean anything — somebody waits on the kerb, then steps out.
+ */
+export function crowdEdges(): { top: number; bottom: number } {
+  const edges = roadEdges();
+  return {
+    top: edges.top - DRIVE.pavementPx,
+    bottom: edges.bottom + DRIVE.pavementPx,
+  };
+}
+
 /** The centre of a lane in world y — lane 0 is the far side of the road (the
  * top of the screen), the last lane the near side. */
 export function laneCenter(lane: number): number {
   const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
   return -half + (lane + 0.5) * DRIVE.laneWidth;
+}
+
+/**
+ * WHERE THE CROSSINGS ARE — every painted crossing whose centre falls between
+ * two world-x bounds, in ascending x.
+ *
+ * On world x rather than course distance so the paint sits in the same places
+ * whichever way the car is pointing, and pure (no state, no draw) so the
+ * renderer can ask about the stretch it is about to paint without the sim
+ * having to tell it anything.
+ */
+export function crossingsBetween(fromX: number, toX: number): number[] {
+  const pitch = DRIVE.crossingPitchPx;
+  const out: number[] = [];
+  for (let k = Math.floor(fromX / pitch); k <= Math.ceil(toX / pitch); k++) {
+    const x = k * pitch;
+    if (x >= fromX && x <= toX) out.push(x);
+  }
+  return out;
+}
+
+/** The first crossing the car has not passed yet, given which way it is going. */
+function crossingAhead(x: number, dir: 1 | -1): number {
+  const pitch = DRIVE.crossingPitchPx;
+  return dir === 1
+    ? Math.ceil(x / pitch) * pitch
+    : Math.floor(x / pitch) * pitch;
+}
+
+/** A stable 0→1 off a spawn mark — the crossing decision, made without
+ * touching the drive's seeded stream (see `DRIVE.crossingCrowdShare`). */
+function markHash(at: number): number {
+  let h = Math.imul(Math.round(at) ^ 0x9e3779b9, 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
 /** Lay down the next stretch of crowd as the road unrolls under the car.
@@ -60,7 +112,7 @@ export function spawnCrowd(state: DriveState): void {
   const { rng } = state;
   const dir = state.params.direction;
   const reach = state.distance + DRIVE.spawnAheadPx;
-  const edges = roadEdges();
+  const edges = crowdEdges();
   while (state.nextPedestrianAt < reach) {
     const at = state.nextPedestrianAt;
     state.nextPedestrianAt += 1000 / DRIVE.pedestriansPerKPx;
@@ -69,10 +121,21 @@ export function spawnCrowd(state: DriveState): void {
     // way. See `DRIVE.crowdStartPx`.
     if (at < DRIVE.crowdStartPx) continue;
     if (at > DRIVE.coursePx) break;
+    // ON A CROSSING, OR STREWN. Half the crowd is gathered onto the next
+    // painted crossing ahead, spread across its width — which is what gives
+    // the trip a rhythm to read instead of an even smear of people. The
+    // decision is hashed off the mark, so the seeded stream below is untouched
+    // and a road replays body for body.
+    const strewnX = state.car.home.x + dir * at;
+    const onCrossing = markHash(at) < DRIVE.crossingCrowdShare;
+    const x = onCrossing
+      ? crossingAhead(strewnX, dir) +
+        (markHash(at * 3 + 11) - 0.5) * DRIVE.crossingWidthPx
+      : strewnX;
     state.pedestrians.push({
       id: state.nextId++,
       pos: {
-        x: state.car.home.x + dir * at,
+        x,
         y: randomRange(rng, edges.top, edges.bottom),
       },
       vel: { x: 0, y: 0 },
@@ -97,7 +160,7 @@ export function spawnCrowd(state: DriveState): void {
 export function stepCrowd(state: DriveState, dt: number): void {
   const { car } = state;
   const dir = state.params.direction;
-  const edges = roadEdges();
+  const edges = crowdEdges();
   const seconds = state.ms / 1000;
   for (const ped of state.pedestrians) {
     if (ped.mode === "tumbling") {
@@ -121,7 +184,8 @@ export function stepCrowd(state: DriveState, dt: number): void {
     }
     ped.pos.x += ped.vel.x * dt;
     ped.pos.y += ped.vel.y * dt;
-    // Nobody wanders off the road — there is nothing out there for them.
+    // Nobody wanders off the street — past the pavement there is nothing out
+    // there for them.
     if (ped.pos.y < edges.top) {
       ped.pos.y = edges.top;
       ped.vel.y = Math.abs(ped.vel.y);

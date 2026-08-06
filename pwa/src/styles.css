@@ -464,6 +464,25 @@ html.app-locked body {
   image-rendering: pixelated;
 }
 
+/* THE DRIVE'S DIALS wear the run's own plate. The minigame is an interlude in
+   the same game, so its speed/gear readout and its damage percentage sit on the
+   same 9-sliced `hud_frame` panel the vitals plate does (the sprite URL comes in
+   inline from DriveScreen) — a bare drop-shadowed string over the road made the
+   road look like a different program. */
+.drive-hud-plate {
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0.35rem;
+  background: rgba(11, 13, 16, 0.5);
+  border-style: solid;
+  border-width: 8px;
+  border-color: #2a3444;
+  border-image-slice: 4 fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+}
+
 /* One MERGED bar stack: the three color bars butted together inside a single
    border (the frame color fills the hairline gaps between them), all the same
    width. */

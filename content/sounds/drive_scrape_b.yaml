@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_scrape_b
+description: >-
+  The second scrape — shorter and higher, the touch that costs a wing mirror
+  rather than a door.
+voices:
+  - call: noise
+    durationMs: 190
+    volume: 0.032
+    filter:
+      type: bandpass
+      frequency: 3100
+  - call: tone
+    type: sawtooth
+    from: 2600
+    to: 1900
+    durationMs: 160
+    volume: 0.011
+    detuneCents: 14

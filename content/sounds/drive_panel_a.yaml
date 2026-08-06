@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_panel_a
+description: >-
+  A panel giving up a rung: the dull metallic bonk of a wing folding one
+  step further, with a short click of the seam letting go. Quiet — it plays
+  under a hit that already made its own noise, and is there to tell the
+  player the damage was structural rather than cosmetic.
+voices:
+  - call: tone
+    type: triangle
+    from: 320
+    to: 176
+    durationMs: 110
+    volume: 0.03
+    detuneCents: 12
+  - call: noise
+    durationMs: 40
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 1900

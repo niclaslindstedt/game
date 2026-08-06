@@ -961,6 +961,8 @@ export {
 // any of that. The app imports it from the GAME screen, never from the title.
 export {
   createDrive,
+  crossingsBetween,
+  crowdEdges,
   driveMph,
   driveRideQuality,
   impactMasses,

@@ -21,7 +21,12 @@
 // lane is drawn before a car in the near one. Get it wrong and the picture
 // reads as flat.
 
-import { DRIVE, type DriveState } from "@game/core";
+import {
+  crossingsBetween,
+  crowdEdges,
+  DRIVE,
+  type DriveState,
+} from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "../render/plane.ts";
@@ -40,10 +45,20 @@ import {
 const SKY = "#141826";
 /** The ground either side of the tarmac. */
 const VERGE = "#2b3327";
+/** The pavement each side of the road, and the kerb that steps up to it. A
+ * touch warmer and lighter than the tarmac so the eye reads a different surface
+ * at a glance rather than a wider road. */
+const PAVEMENT = "#4a4741";
+const KERB = "#605c53";
 /** The tarmac, and the paint on it. */
 const ROAD = "#31333c";
 const ROAD_EDGE = "#3c3f4a";
 const PAINT = "#c9c4a8";
+
+/** The kerb's own step up off the tarmac (world px). The pavement's DEPTH is
+ * not a drawing decision at all — it is `DRIVE.pavementPx`, because people
+ * stand on it (`crowdEdges`). */
+const KERB_DEPTH = 2;
 
 /** How far ahead of the car the camera sits (world px) — the car rides in the
  * trailing third of the picture so the player can read the crowd coming. */
@@ -84,9 +99,19 @@ export function drawDrive(
 
   // ── THE GROUND ────────────────────────────────────────────────────────────
   // Flat fills rather than tiles: the road is 24,000 px long and a baked tile
-  // layer for it would be a megabyte of atlas for four flat colours. Drawn
-  // INSIDE the world projection so the tarmac rakes away with everything
-  // standing on it.
+  // layer for it would be a megabyte of atlas for four flat colours.
+  //
+  // THE WHOLE PASS IS DRAWN IN THE PROJECTED SPACE — the ground AND everything
+  // standing on it — and that is not a detail. `drawWorldSprite` billboards a
+  // body by translating and then applying the INVERSE projection, which only
+  // comes out where the body belongs if the context it lands in already has the
+  // projection on it (that is the space `drawFrame` hands the run's own passes).
+  // Projecting the tarmac alone, as this file first did, left every sprite's
+  // seat divided by the pitch: the lamp posts and the parked cars sat a good
+  // twenty world px below the pavement they were authored onto, out in the
+  // grass, and the far row floated above the kerb by the same amount. One
+  // `save`/`projection`/`restore` around the lot, and the road and the things
+  // on it cannot disagree.
   ctx.fillStyle = SKY;
   ctx.fillRect(0, 0, viewW, viewH);
   ctx.save();
@@ -98,8 +123,42 @@ export function drawDrive(
     ctx.fillRect(left - camera.x, top - camera.y, right - left, bottom - top);
   };
   band(bands.top - 400, bands.bottom + 400, VERGE);
+  // THE PAVEMENTS, drawn exactly as wide as the sim lets a person stand
+  // (`crowdEdges` — `DRIVE.pavementPx`), so somebody waiting at a crossing is
+  // standing ON the paving rather than hovering over its inside edge.
+  // THE PAVING RUNS RIGHT UP TO THE TARMAC. The car's own gutter (`roadEdges`,
+  // the ten px it may stray past the outer lane marking) used to be left as
+  // bare verge between the road and the paving, which put a green strip down
+  // both sides of the street and left every lamp post looking marooned in the
+  // middle of its pavement. A kerb is at the road's edge; so is this one.
+  const walk = crowdEdges();
+  band(walk.top, bands.top, PAVEMENT);
+  band(bands.bottom, walk.bottom, PAVEMENT);
+  band(bands.top - KERB_DEPTH, bands.top, KERB);
+  band(bands.bottom, bands.bottom + KERB_DEPTH, KERB);
   band(bands.top - 2, bands.bottom + 2, ROAD_EDGE);
   band(bands.top, bands.bottom, ROAD);
+
+  // THE CROSSINGS — the same paint the crowd is gathered onto
+  // (`crossingsBetween`, and `DRIVE.crossingCrowdShare` in the sim), so what
+  // the player reads a screen ahead is exactly where the people will be.
+  //
+  // THE STRIPES RUN THE WAY THE CARS DO, stacked across the road: a zebra is a
+  // ladder the pedestrian steps over and the driver drives along, and drawn the
+  // other way round it reads as a cattle grid.
+  for (const cx of crossingsBetween(left, right)) {
+    const bars = 6;
+    const step = (bands.bottom - bands.top) / bars;
+    for (let i = 0; i < bars; i++) {
+      ctx.fillStyle = PAINT;
+      ctx.fillRect(
+        cx - DRIVE.crossingWidthPx / 2 - camera.x,
+        bands.top + i * step + step * 0.2 - camera.y,
+        DRIVE.crossingWidthPx,
+        Math.max(1, step * 0.6),
+      );
+    }
+  }
 
   // The lane paint. The centre line is solid (it divides the two directions of
   // travel and is the one line that means something); the rest are dashes.
@@ -117,7 +176,6 @@ export function drawDrive(
       ctx.fillRect(x - camera.x, y - camera.y, dash, 1);
     }
   }
-  ctx.restore();
 
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────
   // One list, one sort, one pass. A drive holds four kinds of standing thing
@@ -190,4 +248,5 @@ export function drawDrive(
 
   drawn.sort((a, b) => a.y - b.y);
   for (const item of drawn) item.draw();
+  ctx.restore();
 }

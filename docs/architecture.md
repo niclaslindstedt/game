@@ -828,7 +828,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   the wagon in the bay. `impact.ts` is the heart of it — a real inelastic
   collision in real units, where the SWEEP of the car's flank decides whether a
   body was hit and how hard it is thrown, and the contact normal's alignment
-  with the nose decides how much speed and damage the car takes back. Damage
+  with the nose decides how much speed and damage the car takes back. The
+  street around it is a street: pavements the crowd genuinely stands on
+  (`crowdEdges`, wider than the car's own `roadEdges`), painted crossings on a
+  fixed pitch that half the crowd is gathered onto (`crossingsBetween`), and a
+  town on one building line. Its presentation lives beside it —
+  `drive-screen/drive-fx.ts` (sparks, grit, shards, the wreck's smoke, the
+  speed-scaled shake) and `sfx/drive.ts` (the geared engine note, made of
+  grains on a quickening cadence) — and the whole frame is drawn INSIDE
+  `applyWorldProjection`, because that is the space `drawWorldSprite`
+  billboards into. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off
