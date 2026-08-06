@@ -438,6 +438,15 @@ reason to be exempt. The two exemptions are real and narrow: a fitting that
 genuinely hangs off the ground plane, and a pool pinned to something the game
 already draws (the trader's back-lit machine, which is why `at: counter` exists).
 
+**AND THE FIXTURE RIDES THE LIGHT, NOT THE LANDMARK LIST — because of the draw
+order.** Landmarks are painted before the level's obstacles, so a barn light
+bolted to a wall came out with its top half cut off by the stone in front of it,
+and standing it clear of the wall to dodge that left the lamp hanging in
+mid-driveway. `LevelLight.sprite` plus a `drawLamps` pass immediately AFTER
+`drawObstacles` is what lets a fitting sit on the wall it is bolted to. That
+pass runs in daylight too: a lamp is hardware, and a wall that grows a light
+fitting at dusk is a bug — only the pool under it belongs to the night.
+
 **A CAR'S HEADLIGHTS ARE A BEAM, AND THE SHAPE IS THE POINT.** Two round pools
 ahead of the bumper was the first attempt: a pool has no direction, so a car
 crossing the drive looked like it was carrying a lantern. The wedge — narrow at

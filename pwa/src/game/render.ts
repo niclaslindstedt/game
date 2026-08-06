@@ -39,7 +39,7 @@ import { drawEliteAuras } from "./render/elite-fx.ts";
 import { drawBossRite } from "./render/boss-rite.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
-import { drawNight } from "./render/night.ts";
+import { drawLamps, drawNight } from "./render/night.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
 import {
   drawAsteroids,
@@ -224,6 +224,11 @@ export function drawFrame(
   drawVehicles(ctx, state, sprites, camera, inView, timeMs);
   drawBossCorpseRing(ctx, state, camera, inView, timeMs);
   drawObstacles(ctx, state, sprites, camera, inView);
+  // THE LAMPS — the fittings themselves (render/night.ts), immediately after
+  // the walls and for that reason: a barn light is BOLTED to one, and painted
+  // any earlier its top half is cut off by the stone in front of it. Drawn in
+  // daylight too — only the light it throws belongs to the night.
+  drawLamps(ctx, state, sprites, camera, inView);
   drawWells(ctx, state, sprites, camera, inView, timeMs);
   // The door on an occupied house, over the structure it is set into.
   drawLairs(ctx, state, sprites, camera, inView);

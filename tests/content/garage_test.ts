@@ -143,7 +143,7 @@ describe("the night", () => {
     expect(lights.length).toBe(4);
     const door = carved.doors?.find((d) => d.id === "garage_door");
     expect(door).toBeDefined();
-    const flanking = carved.landmarks.filter((l) => l.sprite === "wall_lamp");
+    const flanking = lights.filter((l) => l.sprite === "wall_lamp");
     expect(
       flanking.length,
       "the roll-up door has no lamps beside it — the drive is dark at night",
@@ -158,20 +158,19 @@ describe("the night", () => {
     }
     // EVERY pool has something drawn throwing it. A light with no fixture over
     // it reads as a bug rather than as a lamp — the one exception is the
-    // trader's own machine, which is drawn where it stands.
-    const fixtures = carved.landmarks.filter((l) =>
-      ["wall_lamp", "lamp_post"].includes(l.sprite ?? ""),
-    );
-    expect(fixtures.length).toBe(3);
-    for (const fixture of fixtures) {
-      expect(
-        lights.some(
-          (l) =>
-            Math.abs(l.pos.x - fixture.pos.x) <= 1 &&
-            Math.abs(l.pos.y - fixture.pos.y) <= 1,
-        ),
-        `the ${fixture.sprite} at ${fixture.pos.x},${fixture.pos.y} throws no light`,
-      ).toBe(true);
+    // trader's own machine, which is drawn where it stands, so its pool is the
+    // only one on this map allowed to carry no sprite.
+    const sourceless = lights.filter((l) => !l.sprite);
+    expect(sourceless.length).toBe(1);
+    expect(
+      sourceless[0]!.pos,
+      "the only lamp with no fixture must be the trader's own machine",
+    ).toEqual(carved.merchantSpawns?.[0]);
+    // …and a fixture is never a LANDMARK: landmarks are painted before the
+    // walls are, so a lamp bolted to one would have its top cut off (it rides
+    // the light instead — see `LevelLight.sprite`).
+    for (const mark of carved.landmarks) {
+      expect(["wall_lamp", "lamp_post"]).not.toContain(mark.sprite);
     }
     // Every lamp lands on the lot rather than off the edge of it, and none is
     // so wide it lights the whole venue back to daylight.

@@ -1166,18 +1166,14 @@ export function generateLevel(
       Math.min(width, Math.max(0, at.x + (o.offset?.x ?? 0))),
       Math.min(height, Math.max(0, at.y + (o.offset?.y ?? 0))),
     );
-    lights.push({ pos, ...o.light });
-    // …and the thing throwing it, when the fitting is on the ground plane at
-    // all. A landmark rather than an obstacle: a lamp post is scenery the decor
-    // pass keeps clear of, not a wall to walk into.
-    if (o.fixture) {
-      landmarks.push({
-        kind: o.id,
-        pos,
-        sprite: o.fixture,
-        anchor: "base",
-      });
-    }
+    // …carrying the thing throwing it, when the fitting is on the ground plane
+    // at all (see `LevelLight.sprite` for why it rides the light rather than
+    // being a landmark).
+    lights.push({
+      pos,
+      ...(o.fixture ? { sprite: o.fixture } : {}),
+      ...o.light,
+    });
   }
 
   // --- Assemble -------------------------------------------------------------
@@ -1262,13 +1258,12 @@ export function generateLevel(
       // opening was punched through, on any size and any seed.
       const lamps = obj.lamps;
       if (lamps) {
-        // CLEAR OF THE WALL, and the default is sized to make sure of it. The
-        // fixture is a LANDMARK, and landmarks are painted before the obstacles
-        // are (render.ts's draw order), so a lamp standing inside the wall
-        // chain's own footprint comes out with its top half cut off by the
-        // stone in front of it. The chain's radius plus a body's width of
-        // daylight puts the whole fitting on the open side of the wall.
-        const inset = lamps.inset ?? radius + 8;
+        // ON the wall, not beside it: half the chain's radius leaves the
+        // fitting overlapping the stone it is bolted to and proud of its outer
+        // face, which is where a barn light actually hangs. It survives being
+        // drawn there because a lamp is painted with the LIGHTS, after the
+        // walls — see `LevelLight.sprite`.
+        const inset = lamps.inset ?? Math.round(radius / 2);
         const mid = chamberCenter(spawn);
         // Outward is simply "away from the room the door belongs to", along
         // the axis the chain does NOT run down.
@@ -1286,13 +1281,7 @@ export function generateLevel(
             Math.round(end.x + out.x + (gap.axis === "v" ? 0 : step)),
             Math.round(end.y + out.y + (gap.axis === "v" ? step : 0)),
           );
-          landmarks.push({
-            kind: `${obj.id}_lamp`,
-            pos,
-            sprite: lamps.sprite,
-            anchor: "base",
-          });
-          lights.push({ pos, ...lamps.light });
+          lights.push({ pos, sprite: lamps.sprite, ...lamps.light });
         });
       }
     }

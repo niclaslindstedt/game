@@ -336,6 +336,24 @@ export type LevelLitZone = {
 export type LevelLight = {
   /** Where it falls on the floor (world px). */
   pos: Vec2;
+  /**
+   * THE FIXTURE — the sprite of the thing throwing it (a barn light on a wall,
+   * a post on a lawn), drawn at `pos` with its foot on the ground.
+   *
+   * It rides the LIGHT rather than being a landmark, and that is not a
+   * bookkeeping choice: a landmark is painted before the level's obstacles are,
+   * so a lamp bolted to a wall came out with its top half cut off by the stone
+   * in front of it. The renderer draws these in their own pass AFTER the walls
+   * (`drawLamps`), which is what lets a fitting sit ON the wall it is bolted to
+   * instead of standing shyly clear of it in the driveway. It also keeps
+   * `landmarks` meaning what it means — a story prop the scatter avoids and the
+   * app hit-tests.
+   *
+   * Omitted where the fitting genuinely is not on the ground plane (a gantry
+   * light) or where something already drawn is obviously the source (the
+   * trader's back-lit machine).
+   */
+  sprite?: string;
   /** How far the pool reaches (world px) — the radius its light fades to
    * nothing at. */
   radius: number;

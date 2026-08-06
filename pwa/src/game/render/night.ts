@@ -31,7 +31,9 @@
 import { heroInPlay, heroes, nightAmount, runLevelDef } from "@game/core";
 import type { GameState } from "@game/core";
 
+import { spriteByName, type Sprites } from "../assets.ts";
 import { glowSprite } from "./caches.ts";
+import { drawWorldSprite } from "./plane.ts";
 import { type ViewSize } from "./shared.ts";
 import { type Camera } from "./view.ts";
 import { worldPitch, worldToCanvas } from "./tilt.ts";
@@ -176,6 +178,41 @@ function lampGlow(
   // `wave` is in [-1, 1]; take only the dips, so a lamp flickers DOWN from its
   // rated output rather than surging above it.
   return intensity * (1 - flicker * (0.5 - 0.5 * wave));
+}
+
+/** The frame's cull test, as every other pass here declares it. */
+type InView = (x: number, y: number, margin: number) => boolean;
+
+/**
+ * THE FIXTURES — the lamps themselves, drawn as world props.
+ *
+ * A pass of its own, and it has to be: a fitting bolted to a wall must be
+ * painted AFTER that wall. Drawn as landmarks (the obvious first move) they
+ * came out with their tops cut off by the stone in front of them, and standing
+ * them clear of the wall to dodge that left the lot with barn lights hanging in
+ * mid-driveway. So the lamps ride the LIGHTS and are drawn here, one pass later
+ * than the obstacles.
+ *
+ * ALWAYS DRAWN, day or night: a lamp is a thing bolted to a wall, and a wall
+ * with a lamp on it at midnight and nothing at noon is a wall that grows
+ * hardware at dusk. Only its LIGHT is a night thing.
+ *
+ * Call inside the tilted world, with the other upright props.
+ */
+export function drawLamps(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+): void {
+  for (const light of runLevelDef(state).lights ?? []) {
+    if (!light.sprite) continue;
+    if (!inView(light.pos.x, light.pos.y, 32)) continue;
+    const sprite = spriteByName(sprites, light.sprite);
+    if (!sprite) continue;
+    drawWorldSprite(ctx, light.sprite, sprite, light.pos, camera, "base");
+  }
 }
 
 /** One headlight beam, in WORLD units — where it starts, which way it points,

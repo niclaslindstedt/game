@@ -247,8 +247,10 @@ or the pool reads as a bug rather than as a lamp:
 ```
 
 **A `door` MAY HANG ITS OWN PAIR.** `lamps:` on the map's approach door bolts a
-fixture at each END of every chain it hangs, pushed to the outside face — so the
-opening is flanked wherever the carve happened to punch it:
+fixture at each END of every chain it hangs, half a wall's radius onto its
+outside face — so the opening is flanked wherever the carve happened to punch
+it, and the fittings sit ON the wall (the game draws lamps one pass after the
+walls, which is what makes that possible):
 
 ```yaml
 - id: garage_door
