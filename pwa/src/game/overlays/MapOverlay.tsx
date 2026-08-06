@@ -23,6 +23,7 @@ import {
 } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
+import { onCanvasWake } from "@ui/lib/canvas-wake.ts";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import {
@@ -237,12 +238,19 @@ export function MapOverlay({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawMap(canvas, state, assets);
+    const paint = () => drawMap(canvas, state, assets);
+    paint();
     // Second pass: the first fit ran before the card existed in the layout, so
     // it had no chrome height to subtract. Re-fit once the card is measurable
     // (the drawing itself is unaffected — only the CSS box changes).
     const raf = requestAnimationFrame(() => fitMapCanvas(canvas));
-    return () => cancelAnimationFrame(raf);
+    // The map is drawn once and then stared at with the run halted, so like a
+    // PixelText label it cannot heal itself from a tab switch (canvas-wake.ts).
+    const offWake = onCanvasWake(canvas, paint);
+    return () => {
+      cancelAnimationFrame(raf);
+      offWake();
+    };
   }, [state, assets]);
 
   const stop = (event: { stopPropagation: () => void }) =>

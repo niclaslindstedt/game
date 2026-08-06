@@ -357,6 +357,24 @@ once, which reads as the one surface in the game being out of focus. The
 staircase on a yawed floor seam is the honest cost of turning pixel art; the fix
 is iso-drawn tile art, not a filter.
 
+**A CANVAS THAT IS DRAWN ONCE MUST REPAINT WHEN THE PAGE WAKES UP.** The field,
+the minimap and a cutscene's stage are redrawn every frame, so whatever a
+backgrounded page does to their bitmaps is gone by the next frame after it
+returns. The DOM's pixel canvases are the opposite: every `PixelText` label and
+the map card draw once and are then left alone, and a browser does not promise
+to hand back what was drawn. A hidden page stops compositing, its canvas
+bitmaps can be hibernated or lost outright, and a draw that lands WHILE it is
+hidden — a dialogue crawl typing on through a throttled timer, a page turn — is
+never composited at all, so the tile can come back rastered from the snapshot
+taken when the player alt-tabbed away. That shipped as the dialogue box wearing
+the bottom rows of its previous screen's text under the current line, and it
+looked exactly like a canvas that had been 95% cleared. So a draw-once canvas
+registers its paint with `onCanvasWake` (`@ui/lib/canvas-wake.ts`), which runs
+it again on the animation frame after the page becomes visible and on the
+canvas's own `contextrestored` — the paint must therefore draw the canvas from
+scratch, sizing included, since a restored context comes back blank. Nothing
+else in the app may assume a canvas it drew is still on screen.
+
 ## Mobile-first, landscape — and the scale tiers
 
 **Mobile-first, landscape.** The reference device is a phone held
