@@ -3625,7 +3625,7 @@
         ]
       ],
       "portrait": "player",
-      "speaker": "ME"
+      "speaker": "{HERO}"
     },
     "moon_successor": {
       "id": "moon_successor",

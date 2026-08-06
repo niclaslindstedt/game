@@ -231,7 +231,7 @@ thoughts:
   # is owed once — and its job is to send him back for the thing he stepped
   # over: a hole in the universe is not a door until you hold the handle.
   mars_tear_no_rig:
-    speaker: ME
+    speaker: "{HERO}"
     portrait: player
     pages:
       - - IT'S STILL HANGING OPEN. BUT IT'S HIS HOLE, AND HE TOOK THE HANDLE WITH HIM - FIND IT.
