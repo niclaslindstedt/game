@@ -11,7 +11,12 @@
 import { fieldLive, localHero, localScreen } from "../local-seat.ts";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
-import { canOpenInventory, type Bot, type GameState } from "@game/core";
+import {
+  canOpenInventory,
+  canPauseGame,
+  type Bot,
+  type GameState,
+} from "@game/core";
 
 import { trackPointer, type PointerTracker } from "@ui/lib/pointer.ts";
 
@@ -290,7 +295,9 @@ export function createControls(deps: {
         takeScreenshot();
         return;
       case "pause":
-        if (fieldLive(state)) {
+        // The bound key reads the same rule Escape does — including over an
+        // in-world dialogue (canPauseGame).
+        if (canPauseGame(state, localHero(state))) {
           pause(true);
           playUiSound(synth, "confirm");
         } else if (localScreen(state) === "paused") {
@@ -375,12 +382,17 @@ export function createControls(deps: {
     // intro, title card, in-world dialogue). Space alone doubles as jump once
     // the run is live; Enter is scene-only so it never fires an action.
     const advanceKey = event.code === "Space" || event.key === "Enter";
+    // …but only while the scene actually has the stage. A screen the player
+    // raised OVER one (the pause menu on an in-world dialogue, the bag on an
+    // arrival stare-down) owns the keyboard, and a page turned blind behind it
+    // is a line of speech the player never saw.
     const inScene =
-      state.phase === "cutscene" ||
-      state.phase === "intro" ||
-      state.phase === "outro" ||
-      state.phase === "title" ||
-      state.phase === "dialogue";
+      screen === undefined &&
+      (state.phase === "cutscene" ||
+        state.phase === "intro" ||
+        state.phase === "outro" ||
+        state.phase === "title" ||
+        state.phase === "dialogue");
     if (advanceKey && inScene) {
       event.preventDefault();
       if (state.phase === "cutscene") {
@@ -460,7 +472,12 @@ export function createControls(deps: {
       } else if (screen === "paused") {
         resume();
         playUiSound(synth, "back");
-      } else if (fieldLive(state)) {
+      } else if (canPauseGame(state, localHero(state))) {
+        // Mid-run, or over an in-world DIALOGUE: a scene runs for as many pages
+        // as it was written for, and ESCAPE is the control a player reaches for
+        // when life interrupts — so it raises the menu over the speaker rather
+        // than doing nothing at all. The scene keeps the stage underneath and
+        // takes it back on RESUME.
         pause(true);
         playUiSound(synth, "confirm");
       }

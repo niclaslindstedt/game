@@ -30,6 +30,7 @@ import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { heroSoak } from "../game-screen/hero-soak.ts";
+import { localScreen } from "../local-seat.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 import { bustSrc, portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
@@ -118,14 +119,22 @@ export function DialogueOverlay({
   const hasMoreScreens = activeScreen < screens.length - 1;
 
   // Blip on every other printed character — a dense-enough "typing" chatter
-  // without a machine-gun at the per-character crawl rate.
+  // without a machine-gun at the per-character crawl rate. A screen the player
+  // raised over the scene (the pause menu, or the bag at an arrival
+  // stare-down) HOLDS the crawl: the box is behind a modal there, so letters
+  // printing on would be a speech delivered to a covered stage, blips
+  // included. It picks up on the character it stopped at.
   const {
     rows,
     done: crawlDone,
     skip,
-  } = useTypewriter(currentLines, (visibleIndex) => {
-    if (visibleIndex % 2 === 0) onBlip?.();
-  });
+  } = useTypewriter(
+    currentLines,
+    (visibleIndex) => {
+      if (visibleIndex % 2 === 0) onBlip?.();
+    },
+    { paused: localScreen(state) !== undefined },
+  );
 
   // The tap's staged action: finish the crawl, else scroll to the next screen.
   // Once the crawl is done AND there is no more to scroll, the tap is a page

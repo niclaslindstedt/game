@@ -389,6 +389,7 @@ export {
   scrapInferiorLoot,
   moveInventoryItem,
   openInventory,
+  canPauseGame,
   pauseGame,
   resumeGame,
   stayOnField,

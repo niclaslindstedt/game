@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { ENEMY_DEFS, LEVELS, STORY_ITEM_DEFS } from "@game/core";
 
-import { pauseAfter } from "@ui/lib/typewriter.ts";
+import { countVisible, pauseAfter } from "@ui/lib/typewriter.ts";
 
 describe("pauseAfter", () => {
   it("gives plain letters the base crawl", () => {
@@ -41,6 +41,17 @@ describe("pauseAfter", () => {
 
   it("breathes between rows", () => {
     expect(pauseAfter("A\nB", 1)).toBe(180);
+  });
+});
+
+describe("countVisible", () => {
+  // What a HELD crawl re-arms its blip counter from (a screen raised over the
+  // scene stops the reveal where it stands): the printed characters only, so
+  // the every-other-character blip keeps its rhythm across the hold.
+  it("counts printed characters, never spaces or breaks", () => {
+    expect(countVisible("A B\nC", 5)).toBe(3);
+    expect(countVisible("A B\nC", 0)).toBe(0);
+    expect(countVisible("A B\nC", 2)).toBe(1); // "A " — the space is silent
   });
 });
 

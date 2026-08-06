@@ -815,7 +815,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`canOpenInventory` in items.ts): `openInventory` works mid-scene so
   the player can equip a fitting weapon for the fight, and
   `closeInventory` hands the stage back to the speaker on the same page;
-  every other scene (last words, thoughts, lore) stays read-only.
+  every other scene (last words, thoughts, lore) stays read-only. The PAUSE
+  MENU is lent the stage by EVERY dialogue (`canPauseGame` in items/flow.ts):
+  a speech runs for as many pages as it was written for, so ESCAPE raises the
+  menu over the speaker rather than doing nothing, and RESUME hands the scene
+  back on the page — and the character — it was holding. The crawl itself is
+  held while any screen covers it (`useTypewriter`'s `paused`), so no line is
+  printed to a stage nobody can see.
 - **`src/game/drive/`** — THE DRIVE: the playable leg between the garage and
   GOODCO, and the same road home. **Not a level and not a `GamePhase`** — a
   drive is its own small world (one car, four lanes, a minute of road) with its
