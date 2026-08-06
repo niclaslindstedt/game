@@ -105,7 +105,7 @@ function clearSpot(
   for (let ring = 1; ring <= 6; ring++) {
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2;
-      const reach = ring * QUESTS.repelRadius * 0.5;
+      const reach = ring * QUESTS.displaceStep;
       const candidate = {
         x: at.x + Math.cos(angle) * reach,
         y: at.y + Math.sin(angle) * reach,
@@ -887,27 +887,4 @@ export function giverMark(state: GameState, giverId: string): QuestMark {
 /** What the dialogue box calls this person. */
 export function questGiverName(giverId: string): string {
   return questGiverDef(giverId).name;
-}
-
-/**
- * THE WARD (config `QUESTS.repelRadius`) — the merchant's, applied to every
- * giver: a monster that strays inside is pushed back out to the rim, so the
- * conversation is always reachable. Called from the enemy pass beside the
- * merchant's own ward; the caller decides who is exempt.
- */
-export function repelFromQuestGivers(state: GameState, pos: Vec2): void {
-  const r = QUESTS.repelRadius;
-  for (const giver of state.questGivers) {
-    const dx = pos.x - giver.pos.x;
-    const dy = pos.y - giver.pos.y;
-    const dSq = dx * dx + dy * dy;
-    if (dSq >= r * r) continue;
-    if (dSq === 0) {
-      pos.x = giver.pos.x + r;
-      continue;
-    }
-    const d = Math.sqrt(dSq);
-    pos.x = giver.pos.x + (dx / d) * r;
-    pos.y = giver.pos.y + (dy / d) * r;
-  }
 }

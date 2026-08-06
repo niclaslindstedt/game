@@ -16,9 +16,12 @@
 # docs/story.md and docs/manuscript.md already establish — never introduce a
 # plot fact of its own. A mod's givers answer to nobody; see mod/FORMAT.md.
 #
-# The horde is warded off each of them (QUESTS.repelRadius) and nothing can
-# hurt them, exactly as with the merchant: an errand you have to clear a pack
-# off to accept is a pack, not an errand.
+# Nothing can hurt them, exactly as with the merchant — but unlike the merchant
+# they carry NO WARD. The horde used to be pushed out of a bubble around each of
+# them, which made a giver a safe spot to farm from on every map in the game;
+# now the horde closes on a hero standing beside one exactly as it does anywhere
+# else. Placing a giver is therefore placing somebody you may have to fight your
+# way to.
 
 questGivers:
   # ------------------------------------------------------ THE GARAGE (hub)

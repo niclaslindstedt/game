@@ -30,7 +30,6 @@ import {
   QUESTS,
   questXpReward,
   registerDefs,
-  repelFromQuestGivers,
   resumeGame,
   seatHero,
   skipCutscene,
@@ -43,7 +42,7 @@ import {
   type QuestGiverDef,
 } from "@game/core";
 
-import { DT, idle, makeEnemy, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
 
 // The fixture level's own spawn, so a giver can be placed a few steps from the
 // hero and reached by walking rather than by teleporting him.
@@ -326,12 +325,34 @@ describe("quest givers", () => {
     expect(state.players[0].pos).toEqual(at);
   });
 
-  it("ward the horde off, so the conversation is always reachable", () => {
+  // A GIVER WARDS OFF NOTHING, and this is the exploit test rather than a
+  // flavour one. They used to carry the merchant's repel, which put a bubble
+  // the horde physically could not enter around somebody standing on every map
+  // in the game — so the hero could park on one and farm a pack that was unable
+  // to swing back. Both halves are pinned: the mob is not pushed out, and it
+  // still bites.
+  it("ward off nothing: a minion stands where a giver stands", () => {
     const state = questRun();
-    const pos = { x: GIVER_AT.x + 4, y: GIVER_AT.y };
-    repelFromQuestGivers(state, pos);
-    const distance = Math.hypot(pos.x - GIVER_AT.x, pos.y - GIVER_AT.y);
-    expect(distance).toBeCloseTo(QUESTS.repelRadius, 5);
+    clearStage(state);
+    // Out of the way, so the mob is not merely walking off to chase the hero.
+    state.players[0].pos = { x: GIVER_AT.x, y: GIVER_AT.y - 300 };
+    const mob = makeEnemy({ pos: { ...GIVER_AT }, speed: 0 }, "test_minion");
+    state.enemies.push(mob);
+    step(state, idle, DT);
+    expect(
+      Math.hypot(mob.pos.x - GIVER_AT.x, mob.pos.y - GIVER_AT.y),
+    ).toBeLessThan(1);
+  });
+
+  it("give the hero no sanctuary: the horde hits him where he talks", () => {
+    const state = questRun();
+    clearStage(state);
+    const hero = state.players[0];
+    hero.pos = { ...GIVER_AT };
+    const before = hero.hp;
+    state.enemies.push(makeEnemy({ pos: { ...GIVER_AT } }, "test_minion"));
+    for (let i = 0; i < 60 && hero.hp === before; i++) step(state, idle, DT);
+    expect(hero.hp).toBeLessThan(before);
   });
 });
 

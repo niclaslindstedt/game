@@ -602,10 +602,10 @@ export function questsModel() {
     quests,
     givers,
     groups,
-    // The ward and the escort's own numbers — true of every errand rather than
-    // of any one, so they are stated once, on the index.
+    // The reach a conversation opens at and the escort's own numbers — true of
+    // every errand rather than of any one, so they are stated once, on the
+    // index.
     tuning: {
-      repelRadius: QUESTS.repelRadius,
       talkRadius: QUESTS.talkRadius,
       dropChance: QUESTS.dropChance,
       dropPity: QUESTS.dropPity,

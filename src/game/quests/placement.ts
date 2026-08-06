@@ -48,7 +48,7 @@ export function questSpot(state: GameState, at: Vec2): Vec2 {
   for (let ring = 1; ring <= 8; ring++) {
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2;
-      const reach = ring * QUESTS.repelRadius * 0.5;
+      const reach = ring * QUESTS.displaceStep;
       const candidate: Vec2 = {
         x: clamp(
           home.x + Math.cos(angle) * reach,

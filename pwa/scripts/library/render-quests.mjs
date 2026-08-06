@@ -632,8 +632,9 @@ ${orphans.length > 0 ? rack(orphans, base) : ""}`;
       <p>Everyone else on every map is either trying to kill you or is a boss
       explaining why. These ${model.givers.length} are the counterweight — people the horde was
       inflicted on rather than people the horde is, still doing a job that
-      stopped making sense some time ago. Nothing can hurt them, and the horde is
-      warded ${model.tuning.repelRadius} px back off each of them, exactly as it is off the merchant.</p>
+      stopped making sense some time ago. Nothing can hurt them — but unlike the
+      merchant they are warded by nothing, so the horde crosses the ground they
+      stand on and will kill you where you talk.</p>
       <p>An errand is offered on one map, taken and finished on one visit, and
       chained only to other errands from the same person: the quest log belongs
       to the run you are in rather than to the hero, so a chain can never cross

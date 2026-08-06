@@ -588,7 +588,6 @@ export {
   questGiverName,
   questRewardChoices,
   questXpReward,
-  repelFromQuestGivers,
   stepQuests,
   talkToQuestGiver,
   trackedQuests,

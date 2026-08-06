@@ -1720,8 +1720,8 @@ compiled from. Nine sections, ~560 pages, plus the landing page that leads them:
   what odds, what it pays — with the reward's XP SHARE priced out per rung
   against the hero the ladder intends, by calling the engine's own
   `questXpReward` — and what turning it in opens), and a page per QUEST GIVER
-  (their authored paragraph, their whole chain, and the ward that keeps the
-  horde off them). The nesting is the feature's own shape rather than a filing
+  (their authored paragraph, their whole chain, and the fact that nothing can
+  hurt them and nothing is kept off them). The nesting is the feature's own shape rather than a filing
   choice: an errand is offered on one map, a chain may not cross one, and two
   people stand on every venue. The spoken half — the ask, the nag, the handover
   and an escort's two lines — sits behind a cover like any other dialogue, and

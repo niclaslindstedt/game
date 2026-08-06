@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// QUEST tuning — the distances a conversation happens at, the ward that keeps
-// the horde off a civilian, and the escort's own numbers.
+// QUEST tuning — the distances a conversation happens at, and the escort's own
+// numbers.
 //
 // Every radius here is sized against the PHONE viewport (~422×260 world units
 // at the shipped projection), not against a desktop: a talk radius a player
@@ -21,19 +21,21 @@ export const QUESTS = {
    */
   tapRadius: 96,
   /**
-   * THE WARD (`MERCHANT.repelRadius` plus a hair): a monster that strays inside
-   * is pushed back out to the rim, so a giver never drowns in the horde and the
-   * hero can always reach the conversation. The point of the errand is the
-   * errand — a quest you have to clear a pack off to accept is a pack.
+   * THERE IS NO WARD. A giver used to push the horde out of a 44 px bubble the
+   * way the merchant's stall does, and it was an exploit rather than a comfort:
+   * a giver stands on every map near the intended route, so the hero could park
+   * on top of one and farm a pack that was physically unable to reach him. The
+   * horde now closes on a hero standing beside a giver exactly as it does
+   * anywhere else — givers themselves are still untouchable, so an errand can
+   * never be lost to the horde, it just has to be accepted in the open.
    *
-   * It is DELIBERATELY barely wider than the trader's, and that restraint is
-   * load-bearing: there are two givers on every map and they stand near the
-   * intended route, so a generous ward is a pair of invisible walls across the
-   * level. At this size it clears the conversation and nothing else — a wide
-   * one measurably changed how the horde closed on the hero.
+   * How far a giver (or a quest spot) steps per ring when a carved map puts a
+   * wall under its authored coordinates. Half the old ward, kept as its own
+   * number so the displacement search no longer depends on a repel radius that
+   * does not exist.
    */
-  repelRadius: 44,
-  /** Drawn body radius, for the ward's own collision and the app's hit test. */
+  displaceStep: 22,
+  /** Drawn body radius, for placement collision and the app's hit test. */
   radius: 8,
   /** A quest item's default drop chance off a breed that carries it. */
   dropChance: 0.34,
