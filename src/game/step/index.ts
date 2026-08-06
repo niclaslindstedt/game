@@ -161,6 +161,16 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
     if (state.cutscene && !state.cutscene.done) {
       stepCutscene(state.cutscene, cutsceneDef(state.cutscene.defId), dtMs);
     }
+    // A `sound` beat only WRITES ITS NAME DOWN (stepping a scene is pure), so
+    // the queue is emptied into events here — including whatever the player's
+    // own tap settled between ticks, which lands on this step rather than
+    // being lost with the events that were cleared at the top of it.
+    if (state.cutscene) {
+      for (const sfx of state.cutscene.sounds) {
+        state.events.push({ type: "cutsceneSound", sfx });
+      }
+      state.cutscene.sounds.length = 0;
+    }
     if (!state.cutscene || state.cutscene.done) {
       advanceCutsceneChain(state);
     }

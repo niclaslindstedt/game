@@ -606,6 +606,7 @@ export function buildMod(modDir, catalog) {
   // name any rung the game ships, which is why the catalog carries them.
   const storyRefs = {
     sprites: spriteNames,
+    sounds: soundIds,
     difficulties: new Set(catalog.difficulties ?? []),
   };
   for (const { doc } of cutscenes?.entries ?? []) {

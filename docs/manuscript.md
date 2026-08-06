@@ -178,7 +178,8 @@ per-difficulty variants are the `variants:` block of
 
 **ADA:** FIVE MINUTES. KEEP MY SPOT WARM.
 
-_(Ada crosses to the door and exits.)_
+_(Ada crosses to the door, opens it — the night lot is right there behind her,
+the lawn and the road — and goes out. The door shuts behind her.)_
 
 > **CAPTION:** SHE TOOK HER JACKET. / THE ONE I FIXED THE ZIPPER ON.
 >
@@ -194,19 +195,25 @@ _(He gets up off the couch — the first time all night — crosses under the
 mount, and leaps for it. The weapon leaves the wall at the top of the jump and
 is in his hand when he lands. The closing caption names it, per difficulty:)_
 
-- **EASY** (SAWED-OFF SHOTGUN):
-  > **CAPTION:** GRANDPA'S SAWED-OFF, OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
-- **MEDIUM** (MEDIEVAL SWORD):
-  > **CAPTION:** THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
-- **HARD** (COMBAT KNIFE):
-  > **CAPTION:** THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH.
-- **NIGHTMARE** (BRASS KNUCKLES):
-  > **CAPTION:** THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH.
-- **JESUS CHRIST!** (A STICK):
-  > **CAPTION:** THE STICK OFF THE WALL. GOD HELP US BOTH.
+_(He names it and nothing else — the caption is the shortest line in the scene
+on every rung, and the verdict on the end of it gets thinner as the rung gets
+harder.)_
 
-_(He walks out the door Ada left by, carrying it. Fade to black — and the
-monologue on the far side shows him still holding it.)_
+- **EASY** (SAWED-OFF SHOTGUN):
+  > **CAPTION:** GRANDPA'S SAWED-OFF. THAT'LL DO IT.
+- **MEDIUM** (MEDIEVAL SWORD):
+  > **CAPTION:** THE OLD SWORD. IT'LL DO.
+- **HARD** (COMBAT KNIFE):
+  > **CAPTION:** THE COMBAT KNIFE. IT'LL HAVE TO DO.
+- **NIGHTMARE** (BRASS KNUCKLES):
+  > **CAPTION:** THE KNUCKLES. THEY'LL HAVE TO DO.
+- **JESUS CHRIST!** (A STICK):
+  > **CAPTION:** A STICK. GOD HELP US BOTH.
+
+_(He opens the door Ada left by and walks out carrying it — the step, the lawn
+and the road show through the opening for as long as it stands open, and it
+shuts behind him on an empty living room. Fade to black — and the monologue on
+the far side shows him still holding it.)_
 
 ---
 

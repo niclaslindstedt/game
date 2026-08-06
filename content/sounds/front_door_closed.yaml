@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: front_door_closed
+description: >-
+  The same door swinging shut: a short pull of air, the leaf meeting its frame
+  in a low wooden thud, and the latch snapping home a moment behind it. The
+  mirror of `front_door_opened` — everything falls where that one rises, and
+  the latch lands LAST, which is what makes it read as shut rather than as a
+  knock.
+voices:
+  # The swing: a soft lowpass rush, no transient — the leaf moving, not hitting.
+  - call: noise
+    durationMs: 130
+    volume: 0.020
+    filter:
+      type: lowpass
+      frequency: 900
+  # The frame taking it: a falling triangle with a lowpass body under it. The
+  # weight of the sound, and the loudest thing in it.
+  - call: tone
+    type: triangle
+    from: 156
+    to: 68
+    durationMs: 190
+    volume: 0.042
+    delayMs: 120
+    detuneCents: 8
+  - call: noise
+    durationMs: 90
+    volume: 0.026
+    delayMs: 120
+    filter:
+      type: lowpass
+      frequency: 380
+  # The latch catching, a beat after the wood — the sound of shut.
+  - call: noise
+    durationMs: 20
+    volume: 0.030
+    delayMs: 180
+    filter:
+      type: bandpass
+      frequency: 3100
+      q: 1.8
