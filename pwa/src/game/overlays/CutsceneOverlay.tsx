@@ -30,7 +30,11 @@ import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteByName, spriteCursor, type GameAssets } from "../assets.ts";
-import { drawRiftPortal, riftPortalLook } from "../render/rift-portal.ts";
+import {
+  drawRiftPortal,
+  riftPortalBob,
+  riftPortalLook,
+} from "../render/rift-portal.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard advance can
  * share the tap's two-step semantics (finish the crawl, then turn the beat). */
@@ -232,12 +236,17 @@ function paintOne(
       );
     }
   };
+  // A HANGING TEAR RIDES. Applied around the whole drawing so the art and the
+  // churn inside it move as one piece (render/rift-portal.ts).
+  const bob = portal
+    ? riftPortalBob(portal, cutscene.timeMs, item.x * 0.017)
+    : 0;
   ctx.save();
   if (item.flip) {
-    ctx.translate(x + sprite.width, y);
+    ctx.translate(x + sprite.width, y - bob);
     ctx.scale(-1, 1);
   } else {
-    ctx.translate(x, y);
+    ctx.translate(x, y - bob);
   }
   draw();
   ctx.restore();

@@ -82,6 +82,9 @@ const MOTE_MS = 2200;
 const SMOKE_MS = 3600;
 /** The slow breath under everything, so a resting tear is never quite still. */
 const BREATH_MS = 3100;
+/** One rise and fall of a hanging tear. Deliberately slower than the breath and
+ * not a multiple of it, so the two never lock into one motion. */
+const BOB_MS = 4300;
 
 /**
  * What one kind of tear looks like. Keyed by the SPRITE the landmark or the
@@ -128,6 +131,18 @@ export type RiftPortalLook = {
    * down here.
    */
   glow: number;
+  /**
+   * How far the tear RIDES UP AND DOWN, in world px — 0 for a thing that is
+   * bolted to something.
+   *
+   * A hole in space is not standing on the floor, it is HANGING in it, and the
+   * cheapest way to say so is to stop it sitting still: a slow bob over a
+   * couple of pixels reads as "this is not attached to the world" long before
+   * the throat's fold is noticed. The blast gate is the exception and its 0 is
+   * the point — that one is a slab of steel in a frame, and a bobbing door
+   * would read as a bug rather than as physics.
+   */
+  bob: number;
 };
 
 /**
@@ -154,6 +169,7 @@ const PORTALS: Record<string, RiftPortalLook> = {
     motes: 22,
     smoke: 18,
     glow: 1,
+    bob: 2.2,
   },
   rift_seam: {
     halfW: 5,
@@ -166,6 +182,7 @@ const PORTALS: Record<string, RiftPortalLook> = {
     motes: 13,
     smoke: 11,
     glow: 0.5,
+    bob: 1.4,
   },
   rift_west: {
     halfW: 10,
@@ -178,6 +195,7 @@ const PORTALS: Record<string, RiftPortalLook> = {
     motes: 16,
     smoke: 4,
     glow: 0.4,
+    bob: 2,
   },
   bunker_gate: {
     halfW: 5,
@@ -191,8 +209,28 @@ const PORTALS: Record<string, RiftPortalLook> = {
     motes: 11,
     smoke: 9,
     glow: 0.4,
+    bob: 0,
   },
 };
+
+/**
+ * HOW FAR THIS TEAR HAS RIDDEN UP, in whole px, at `timeMs`.
+ *
+ * Exported because the ART has to move with it: the caller draws the sprite and
+ * this module draws what churns inside it, so a bob applied only here would
+ * slide the throat out of its own lips. Whole pixels, because the sprite is
+ * pixel art and a fractional offset resamples it into mush.
+ */
+export function riftPortalBob(
+  look: RiftPortalLook,
+  timeMs: number,
+  seed: number,
+): number {
+  if (look.bob <= 0) return 0;
+  return Math.round(
+    Math.sin((timeMs / BOB_MS + seed) * Math.PI * 2) * look.bob,
+  );
+}
 
 /** The look for a landmark's or a scene prop's sprite, or null when the art is
  * not a tear in anything. */

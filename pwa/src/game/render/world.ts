@@ -15,7 +15,11 @@ import {
 } from "./caches.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
 import { drawWorldSprite } from "./plane.ts";
-import { drawRiftPortal, riftPortalLook } from "./rift-portal.ts";
+import {
+  drawRiftPortal,
+  riftPortalBob,
+  riftPortalLook,
+} from "./rift-portal.ts";
 import { drawSpriteCentered, seatX, seatY, type ViewSize } from "./shared.ts";
 import { billboard, cameraAnchorX, cameraAnchorY } from "./tilt.ts";
 import { VEHICLE_LANDMARK_KINDS } from "./vehicles.ts";
@@ -201,6 +205,13 @@ export function drawRiftPortals(
     if (!look) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     const base = landmark.anchor === "base";
+    const seed = landmark.pos.x * 0.017 + landmark.pos.y * 0.031;
+    // THE TEAR HANGS, so it rides. The ART moves with it — the bob wraps the
+    // sprite AND the churn inside it, because shifting only one slides the
+    // throat out of its own lips.
+    const bob = riftPortalBob(look, timeMs, seed);
+    ctx.save();
+    ctx.translate(0, -bob);
     drawWorldSprite(
       ctx,
       landmark.sprite,
@@ -220,9 +231,10 @@ export function drawRiftPortals(
         seatX(landmark.pos.x, camera.x),
         seatY(landmark.pos.y, camera.y) + midY,
         timeMs,
-        landmark.pos.x * 0.017 + landmark.pos.y * 0.031,
+        seed,
       ),
     );
+    ctx.restore();
   }
 }
 
