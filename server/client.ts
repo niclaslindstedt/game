@@ -46,11 +46,7 @@ import {
   type GameState,
   type GameInput,
 } from "@game/core";
-import {
-  setGeneratedMapSize,
-  type CommandArg,
-  type GeneratedMapSizeSetting,
-} from "@game/core";
+import { type CommandArg } from "@game/core";
 
 import { createPredictor } from "./client-predict.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
@@ -445,19 +441,13 @@ export function createNetClient(options: NetClientOptions): NetClient {
 /**
  * Build the RUN locally from the session parameters.
  *
- * The map SIZE is an engine FLAG rather than an argument, so it is applied
- * first — a client that carved with the host's seed but its own map-size
- * setting would build a different world and then spend the whole run being
- * corrected by deltas about geometry it should never have had.
- *
- * Everything else goes through `createRunFromParams`, the SAME function the
+ * Everything goes through `createRunFromParams`, the SAME function the
  * session used. That is the whole of why the first delta is empty: not that the
  * two happen to agree, but that one function built both. A field applied here
  * and not there (or there and not here) is sent as a "change" on the very first
  * publish, for a run whose entire design is that the two start identical.
  */
 export function buildLocalState(params: SessionParams): GameState {
-  setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
   return createRunFromParams(params);
 }
 

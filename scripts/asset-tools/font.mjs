@@ -107,6 +107,12 @@ export const GLYPHS = {
   // fast-forwards the run), a hamburger for MENU, and a STOP square for
   // STOP AUTO PILOT. Monochrome so they inherit the button's text color.
   "▶": ["#..", "##.", "###", "##.", "#.."],
+  // …and its mirror, for the screenshot gallery's PREVIOUS step. A pair of
+  // triangles is the one arrow shape a 3x5 cell can draw unambiguously — the
+  // "<" and ">" a keyboard would reach for are not in this font at all, and a
+  // missing glyph falls back to "?", which is what shipped the gallery with two
+  // question marks either side of the picture.
+  "◀": ["..#", ".##", "###", ".##", "..#"],
   "»": ["#.#..", ".#.#.", "..#.#", ".#.#.", "#.#.."],
   "≡": ["###", "...", "###", "...", "###"],
   "■": ["...", "###", "###", "###", "..."],

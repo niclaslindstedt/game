@@ -10,7 +10,13 @@
 // the same machinery but only SOMETIMES pay, with themed drop weights.
 // Extracted from step//loot.ts so the crate rules live in one place.
 
-import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
+import {
+  clamp,
+  distanceSq,
+  segmentDistanceSq,
+  segmentIntersectsBox,
+  type Vec2,
+} from "@game/lib/vec.ts";
 import { AMMO, CHESTS, CRATES, LEVELING } from "./config/index.ts";
 import {
   ammoAppetite,
@@ -52,12 +58,22 @@ export function crateMaxHp(playerLevel: number, difficulty: string): number {
  * or on ground the hero has not uncovered, is exactly as invisible as a mob
  * standing there, so the auto-attack does not swing at it. Walk up and it is a
  * target.
+ *
+ * `reachable` is the caller's own reading of what stands in the way, and a GUN
+ * has to supply one, because the line to a box is the ROUND's rather than the
+ * eye's: `lineOfSight` — the default here, and the right answer for a blade —
+ * deliberately looks past a lone boulder, and that same boulder eats every shot
+ * fired past it. A box never moves, so a pick the round cannot get to is not one
+ * wasted shot but an endless one: the same crate fed the whole pouch for as long
+ * as the hero stands there. See stepWeapon, which hands its projectile's own
+ * physical probe down.
  */
 export function nearestCrate(
   state: GameState,
   from: Vec2,
   range: number,
   owner: Player | undefined,
+  reachable?: (obstacle: Obstacle) => boolean,
 ): Obstacle | undefined {
   const rangeSq = range * range;
   let best: Obstacle | undefined;
@@ -67,7 +83,11 @@ export function nearestCrate(
     const dSq = distanceSq(from, obstacle.pos);
     if (dSq > bestSq) continue;
     if (!visibleTo(state, owner, obstacle.pos)) continue;
-    if (!lineOfSight(state, from, obstacle.pos)) continue;
+    if (
+      reachable ? !reachable(obstacle) : !lineOfSight(state, from, obstacle.pos)
+    ) {
+      continue;
+    }
     best = obstacle;
     bestSq = dSq;
   }
@@ -106,6 +126,55 @@ export function cratesInCone(
     hit.push(obstacle);
   }
   return hit;
+}
+
+/**
+ * The breakable a swept shot `from`→`to` (a circle of `radius`) ran into — the
+ * box that STOPPED it.
+ *
+ * The twin of {@link crateHitByCircle}, for the other half of the field. A
+ * hoppable crate is not solid to a round: the shot flies into it and is spent
+ * where it overlaps, which is the circle test. A SOLID breakable — a vending
+ * machine, a wine rack — stops the round at its face instead, so the overlap
+ * never happens and the shot has to be credited to the box it died on
+ * (stepProjectiles). Solid is not indestructible, and a hero whose auto-attack
+ * cannot break the box in front of him just feeds it the whole pouch.
+ *
+ * Only run on the tick a shot is actually stopped, so the linear scan over a
+ * level's breakables is paid once per dead round rather than per tick.
+ */
+export function breakableHitBySweep(
+  state: GameState,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+): Obstacle | undefined {
+  for (const obstacle of state.obstacles) {
+    if (!obstacle.breakable) continue;
+    const half = obstacle.half;
+    if (half) {
+      if (
+        segmentIntersectsBox(
+          from.x,
+          from.y,
+          to.x,
+          to.y,
+          obstacle.pos.x,
+          obstacle.pos.y,
+          half.x + radius,
+          half.y + radius,
+        )
+      ) {
+        return obstacle;
+      }
+      continue;
+    }
+    const reach = obstacle.radius + radius;
+    if (segmentDistanceSq(from, to, obstacle.pos) <= reach * reach) {
+      return obstacle;
+    }
+  }
+  return undefined;
 }
 
 /** The breakable crate a circle at `pos` (radius `radius`) overlaps, if any —

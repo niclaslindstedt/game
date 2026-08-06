@@ -35,7 +35,6 @@
 import {
   error,
   freezeRun,
-  generatedMapSizeSetting,
   step,
   type GameInput,
   type GameState,
@@ -204,10 +203,6 @@ export function createRunDriver(session: RunSession): RunDriver {
  * because a wire that let a field be absent would be a wire on which "absent"
  * and "false" are the same message. So the defaults are spelled out here, once,
  * on the way across.
- *
- * The two generated-map knobs are engine FLAGS rather than run arguments, so
- * they are not on `RunParams` at all: the client applies them before it builds,
- * exactly as the session does.
  */
 function wireParams(params: RunParams): SessionParams {
   return {
@@ -217,7 +212,6 @@ function wireParams(params: RunParams): SessionParams {
     clearedLevels: [...(params.clearedLevels ?? [])],
     merchantDiscovered: params.merchantDiscovered ?? false,
     seenThoughts: [...(params.seenThoughts ?? [])],
-    generatedMapSize: generatedMapSizeSetting(),
   };
 }
 
@@ -239,7 +233,6 @@ function adoptedParams(state: GameState, hardcore: boolean): SessionParams {
     respec: false,
     clearedLevels: [],
     merchantDiscovered: false,
-    generatedMapSize: generatedMapSizeSetting(),
     // The hardcore door gate is real for an adopted run too — a RETRY'd hardcore
     // checkpoint is still a hardcore game.
     hardcore,

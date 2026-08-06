@@ -177,6 +177,36 @@ export function weaponRangeFor(
 }
 
 /**
+ * HOW FAR A SHOT ACTUALLY LANDS — {@link weaponRangeFor} cut down to the
+ * distance this weapon's round can physically fly before it expires
+ * (`speed × lifetimeMs`, the timer `stepProjectiles` counts down).
+ *
+ * THE TWO NUMBERS ARE NOT THE SAME, AND THE GAP IS A WASTED ROUND. A ranged or
+ * magic weapon's reach is widened by INTELLIGENCE without any ceiling
+ * (`STATS.rangePerInt`, +3% a point), while the round it fires expires on a
+ * FIXED timer authored on the def: a shotgun's pellets die at ~163 px however
+ * clever the hero got, so a modest-INT build was picking targets clean out to
+ * the edge of the screen and spending a shell on every one of them — the pellets
+ * winking out in mid-air short of a monster that was never in danger.
+ *
+ * So this is the reach every AUTOMATIC pick measures against (step/weapon.ts,
+ * and the bot's stand-off in bot/perception.ts), while `weaponRangeFor` stays
+ * the weapon's paper reach for the item card, the damage budget and the
+ * weapon-vs-weapon comparisons. MELEE has no flight at all — the blade lands
+ * where it reaches — so its reach passes through untouched.
+ */
+export function weaponFiringRange(
+  state: GameState,
+  player: Player,
+  weapon: Equipment,
+): number {
+  const range = weaponRangeFor(state, player, weapon);
+  const spec = weaponDef(weapon.defId).projectile;
+  if (!spec) return range;
+  return Math.min(range, (spec.speed * spec.lifetimeMs) / 1000);
+}
+
+/**
  * The ms between this weapon's attacks for this player — the weapon's OWN
  * catalog cadence, quickened by its SPEED stat (DEX for melee & ranged, INT
  * for magic; see `SPEED_STAT`). Like the damage above, the authored number is

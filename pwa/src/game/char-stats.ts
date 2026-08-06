@@ -35,7 +35,7 @@ import {
   statBreakdown,
   totalArmor,
   weaponDamageRange,
-  weaponRangeFor,
+  weaponFiringRange,
   type GameState,
   type Player,
   type StatName,
@@ -219,12 +219,14 @@ export function characterStatGroups(state: GameState): StatGroup[] {
     ),
     // How far the held weapon actually reaches for THIS hero — the stat that
     // decides whether a fight is fought at arm's length or across the room,
-    // and the one number a weapon swap changes most visibly.
+    // and the one number a weapon swap changes most visibly. The FIRING reach,
+    // not the paper one: a round that expires in mid-air is not reach, and this
+    // is the figure the auto-attack itself measures a target against.
     row(
       "reach",
       "REACH",
       state,
-      (s) => weaponRangeFor(s, localHero(s), localHero(s).equipment.weapon),
+      (s) => weaponFiringRange(s, localHero(s), localHero(s).equipment.weapon),
       whole,
       [
         "HOW FAR THE HELD WEAPON",

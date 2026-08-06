@@ -30,7 +30,7 @@ import { clearStage, DT, idle, makeEnemy, SEED } from "../helpers.ts";
 const bunker = LEVELS.the_bunker!;
 const BLUEPRINT = MAP_BLUEPRINTS.the_bunker!;
 /** One representative vault — the map a run of the bunker actually builds. */
-const carved = resolveLevelDef("the_bunker", SEED, "medium");
+const carved = resolveLevelDef("the_bunker", SEED);
 const rift = LEVELS.the_rift!;
 
 /** A rift run built with `clearedLevels`, armed, staged down to one RASPUTIN

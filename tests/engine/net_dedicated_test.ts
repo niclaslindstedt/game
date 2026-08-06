@@ -60,7 +60,6 @@ describe("the dedicated server's command line", () => {
       "--password=hunter2",
       "--players=4",
       "--seed=7",
-      "--map-size=large",
       "--bots=3",
       "--verbose",
     ]);
@@ -70,7 +69,6 @@ describe("the dedicated server's command line", () => {
       password: "hunter2",
       maxPlayers: 4,
       seed: 7,
-      generatedMapSize: "large",
       bots: 3,
       verbose: true,
     });

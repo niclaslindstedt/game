@@ -24,7 +24,7 @@
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import {
   advanceDialogue,
@@ -42,17 +42,14 @@ import {
   parseRegion,
   regionRect,
   resolveLevelDef,
-  resolveMapSize,
   runLevelDef,
   SECRET_LEVEL_ORDER,
-  setGeneratedMapSize,
   skipCutscene,
   skipStoryOpening,
   step,
   zoneContains,
   type Difficulty,
   type LevelDef,
-  type MapSizeName,
 } from "@game/core";
 
 // @ts-expect-error — the level checker is plain JS tooling, deliberately shared
@@ -65,14 +62,13 @@ import { STORY_ITEM_DEFS } from "../../src/game/defs/story.ts";
 import { THOUGHT_DEFS } from "../../src/game/defs/thoughts.ts";
 import { UNIQUE_DEFS, WORLD_UNIQUES } from "../../src/game/defs/uniques.ts";
 
-const SIZES: MapSizeName[] = ["small", "medium", "large"];
 // Enough seeds that a one-in-twenty layout quirk shows up, few enough that the
 // suite stays under a few seconds.
 const SEEDS = [1, 2, 3, 5, 8, 13, 21, 34];
 // Reachability builds a WHOLE RUN per case to get an honest nav grid, so it walks
-// a smaller spread than the pure-def checks — every mission at every size, on
-// four seeds, rather than eight.
-const WALK_SEEDS = [1, 3, 8, 21];
+// a smaller spread than the pure-def checks — every mission on six seeds rather
+// than eight.
+const WALK_SEEDS = [1, 3, 5, 8, 13, 21];
 const MISSIONS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
 
 /** The HUB is a different kind of venue — STATIC (`carveSeed` pinned), no
@@ -81,12 +77,6 @@ const MISSIONS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
  * properties it rides. Everything structural (schema, reachability, locks)
  * still runs on it unexempted. */
 const isHub = (id: string) => levelDef(id).objective.type === "hub";
-
-// The SIZE is a process-global flag, so any test that names one must put it
-// back — vitest shares a module graph across the files in a worker.
-afterAll(() => {
-  setGeneratedMapSize("medium");
-});
 
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
@@ -145,87 +135,78 @@ describe("generated levels", () => {
   it("pass the same schema a hand-authored level does", () => {
     const errors: string[] = [];
     for (const id of MISSIONS)
-      for (const size of SIZES)
-        for (const seed of SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          const res = validateLevel(def, refs, "generated", {
-            carved: true,
-          }) as {
-            errors: string[];
-          };
-          for (const e of res.errors)
-            errors.push(`${id}/${size}/${seed}: ${e}`);
-        }
+      for (const seed of SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        const res = validateLevel(def, refs, "generated", {
+          carved: true,
+        }) as {
+          errors: string[];
+        };
+        for (const e of res.errors) errors.push(`${id}/${seed}: ${e}`);
+      }
     expect(errors.slice(0, 8)).toEqual([]);
   });
 
   it("leave the objective, every cache and every placed item reachable", () => {
     const unreachable: string[] = [];
+    // The grid has to come from a run of THE SAME map: building it from one
+    // run and pathing a different def's coordinates through it silently checks
+    // nothing, so the def and the run below share an id and a seed.
     for (const id of MISSIONS)
-      for (const size of SIZES) {
-        // The grid has to come from a run of THE SAME map. `createGame` carves
-        // its own level at whatever size the flag names, so the flag has to be
-        // told which one — building the grid from a default run and pathing a
-        // different def's coordinates through it silently checks nothing.
-        setGeneratedMapSize(size);
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          // Built from a real run, so it sees the walls, the scattered rock and
-          // the crates exactly as the autopilot does — with the KEYED DOORS
-          // dissolved, because a vault's cache is meant to be behind one and the
-          // key that opens it is proven reachable by the test below. What is
-          // asked here is that the map has a way to everything, not that it has
-          // one before the hero has earned it.
-          const run = createGame(seed, id, "medium");
-          const doorParts = new Set(run.doors.flatMap((d) => d.obstacleIds));
-          const grid = buildNavGrid({
-            ...run,
-            obstacles: run.obstacles.filter((o) => !doorParts.has(o.id)),
-          });
-          const targets: [string, { x: number; y: number }][] = [];
-          const goal = goalOf(def);
-          if (goal) targets.push(["objective", goal]);
-          def.chests?.forEach((c, i) => targets.push([`chest ${i}`, c.at]));
-          def.placedItems?.forEach((p, i) =>
-            targets.push([`item ${i} (${p.kind})`, p.pos]),
-          );
-          // A LIFT is a walkable edge the nav grid knows nothing about: the
-          // annex it rides to has no corridor at all, which is the whole point
-          // of it (see `MapAnnex`). So reachability is asked in two legs — walk
-          // to the pad, ride, walk on from where the car put you down — and a
-          // target is reachable if EITHER leg reaches it. Without this the test
-          // would demand the boss be walkable to, which is exactly the property
-          // the feature exists to remove.
-          // The origin set is GROWN through the lifts rather than fixed: a pad
-          // reachable on foot from anywhere already reachable adds wherever its
-          // car sets you down. The return pad inside the annex is the case that
-          // matters — it is not walkable to from the landing, and must not be,
-          // so demanding that it were would assert the opposite of the feature.
-          const origins = [def.playerSpawn];
-          const lifts = [...(def.elevators ?? [])];
-          for (let grew = true; grew;) {
-            grew = false;
-            for (let i = lifts.length - 1; i >= 0; i--) {
-              const lift = lifts[i] as NonNullable<
-                LevelDef["elevators"]
-              >[number];
-              if (!origins.some((from) => findPath(grid, from, lift.pos)))
-                continue;
-              origins.push(lift.to);
-              lifts.splice(i, 1);
-              grew = true;
-            }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        // Built from a real run, so it sees the walls, the scattered rock and
+        // the crates exactly as the autopilot does — with the KEYED DOORS
+        // dissolved, because a vault's cache is meant to be behind one and the
+        // key that opens it is proven reachable by the test below. What is
+        // asked here is that the map has a way to everything, not that it has
+        // one before the hero has earned it.
+        const run = createGame(seed, id, "medium");
+        const doorParts = new Set(run.doors.flatMap((d) => d.obstacleIds));
+        const grid = buildNavGrid({
+          ...run,
+          obstacles: run.obstacles.filter((o) => !doorParts.has(o.id)),
+        });
+        const targets: [string, { x: number; y: number }][] = [];
+        const goal = goalOf(def);
+        if (goal) targets.push(["objective", goal]);
+        def.chests?.forEach((c, i) => targets.push([`chest ${i}`, c.at]));
+        def.placedItems?.forEach((p, i) =>
+          targets.push([`item ${i} (${p.kind})`, p.pos]),
+        );
+        // A LIFT is a walkable edge the nav grid knows nothing about: the
+        // annex it rides to has no corridor at all, which is the whole point
+        // of it (see `MapAnnex`). So reachability is asked in two legs — walk
+        // to the pad, ride, walk on from where the car put you down — and a
+        // target is reachable if EITHER leg reaches it. Without this the test
+        // would demand the boss be walkable to, which is exactly the property
+        // the feature exists to remove.
+        // The origin set is GROWN through the lifts rather than fixed: a pad
+        // reachable on foot from anywhere already reachable adds wherever its
+        // car sets you down. The return pad inside the annex is the case that
+        // matters — it is not walkable to from the landing, and must not be,
+        // so demanding that it were would assert the opposite of the feature.
+        const origins = [def.playerSpawn];
+        const lifts = [...(def.elevators ?? [])];
+        for (let grew = true; grew;) {
+          grew = false;
+          for (let i = lifts.length - 1; i >= 0; i--) {
+            const lift = lifts[i] as NonNullable<LevelDef["elevators"]>[number];
+            if (!origins.some((from) => findPath(grid, from, lift.pos)))
+              continue;
+            origins.push(lift.to);
+            lifts.splice(i, 1);
+            grew = true;
           }
-          // Every lift has to be reachable in the end, or the map ships a car
-          // nobody can call.
-          for (const lift of lifts)
-            unreachable.push(`${id}/${size}/${seed}: lift ${lift.id}`);
-          for (const [what, at] of targets)
-            if (!origins.some((from) => findPath(grid, from, at)))
-              unreachable.push(`${id}/${size}/${seed}: ${what}`);
         }
+        // Every lift has to be reachable in the end, or the map ships a car
+        // nobody can call.
+        for (const lift of lifts)
+          unreachable.push(`${id}/${seed}: lift ${lift.id}`);
+        for (const [what, at] of targets)
+          if (!origins.some((from) => findPath(grid, from, at)))
+            unreachable.push(`${id}/${seed}: ${what}`);
       }
-    setGeneratedMapSize("medium");
     expect(unreachable.slice(0, 8)).toEqual([]);
   }, 120_000);
 
@@ -238,90 +219,78 @@ describe("generated levels", () => {
     // everything the mission requires has to be reachable without opening one.
     const trapped: string[] = [];
     for (const id of MISSIONS)
-      for (const size of SIZES) {
-        setGeneratedMapSize(size);
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          const doors = def.doors ?? [];
-          if (doors.length === 0) continue;
-          const state = createGame(seed, id, "medium");
-          // TWO grids, and the difference between them is the whole test. One of
-          // a run with its doors STANDING (a locked door is a solid chain of
-          // obstacles, so this is the map before any key), one with the doors
-          // dissolved exactly as their keycards dissolve them. A thing reachable
-          // in the second and not the first is behind a lock; a thing reachable
-          // in neither is a carve problem, and the reachability suite above owns
-          // that one — this test is about the KEYS.
-          // An APPROACH door (the garage door) opens for anybody who walks
-          // up — it can never trap anything, so its chain reads as open
-          // floor in BOTH grids and only KEY doors are interrogated.
-          const approachParts = new Set(
-            state.doors.filter((d) => d.approach).flatMap((d) => d.obstacleIds),
-          );
-          const grid = buildNavGrid({
-            ...state,
-            obstacles: state.obstacles.filter((o) => !approachParts.has(o.id)),
-          });
-          const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
-          const unlocked = buildNavGrid({
-            ...state,
-            obstacles: state.obstacles.filter((o) => !doorParts.has(o.id)),
-          });
-          const shut: [string, { x: number; y: number }][] = [];
-          const goal = goalOf(def);
-          if (goal) shut.push(["objective", goal]);
-          for (const s of def.spawns)
-            if ("at" in s) shut.push([`spawn ${s.enemy}`, s.at]);
-          def.placedItems?.forEach((p, i) =>
-            shut.push([`item ${i} (${p.kind})`, p.pos]),
-          );
-          for (const at of def.merchantSpawns ?? [])
-            shut.push(["the trader", at]);
-          const origins = [def.playerSpawn];
-          for (const lift of def.elevators ?? [])
-            if (origins.some((from) => findPath(unlocked, from, lift.pos)))
-              origins.push(lift.to);
-          for (const [what, at] of shut) {
-            const withKey = origins.some((from) =>
-              findPath(unlocked, from, at),
-            );
-            const withoutKey = origins.some((from) => findPath(grid, from, at));
-            if (withKey && !withoutKey)
-              trapped.push(
-                `${id}/${size}/${seed}: ${what} is behind a locked door`,
-              );
-          }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        const doors = def.doors ?? [];
+        if (doors.length === 0) continue;
+        const state = createGame(seed, id, "medium");
+        // TWO grids, and the difference between them is the whole test. One of
+        // a run with its doors STANDING (a locked door is a solid chain of
+        // obstacles, so this is the map before any key), one with the doors
+        // dissolved exactly as their keycards dissolve them. A thing reachable
+        // in the second and not the first is behind a lock; a thing reachable
+        // in neither is a carve problem, and the reachability suite above owns
+        // that one — this test is about the KEYS.
+        // An APPROACH door (the garage door) opens for anybody who walks
+        // up — it can never trap anything, so its chain reads as open
+        // floor in BOTH grids and only KEY doors are interrogated.
+        const approachParts = new Set(
+          state.doors.filter((d) => d.approach).flatMap((d) => d.obstacleIds),
+        );
+        const grid = buildNavGrid({
+          ...state,
+          obstacles: state.obstacles.filter((o) => !approachParts.has(o.id)),
+        });
+        const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
+        const unlocked = buildNavGrid({
+          ...state,
+          obstacles: state.obstacles.filter((o) => !doorParts.has(o.id)),
+        });
+        const shut: [string, { x: number; y: number }][] = [];
+        const goal = goalOf(def);
+        if (goal) shut.push(["objective", goal]);
+        for (const s of def.spawns)
+          if ("at" in s) shut.push([`spawn ${s.enemy}`, s.at]);
+        def.placedItems?.forEach((p, i) =>
+          shut.push([`item ${i} (${p.kind})`, p.pos]),
+        );
+        for (const at of def.merchantSpawns ?? [])
+          shut.push(["the trader", at]);
+        const origins = [def.playerSpawn];
+        for (const lift of def.elevators ?? [])
+          if (origins.some((from) => findPath(unlocked, from, lift.pos)))
+            origins.push(lift.to);
+        for (const [what, at] of shut) {
+          const withKey = origins.some((from) => findPath(unlocked, from, at));
+          const withoutKey = origins.some((from) => findPath(grid, from, at));
+          if (withKey && !withoutKey)
+            trapped.push(`${id}/${seed}: ${what} is behind a locked door`);
         }
       }
-    setGeneratedMapSize("medium");
     expect(trapped.slice(0, 8)).toEqual([]);
   }, 120_000);
 
   it("hang every locked door on a key somebody actually drops", () => {
     // A door id has to be the `unlocks` of a story item, or the room is sealed
     // for good. The blueprint schema checks the id exists; this checks the
-    // CARVE only ever emits ids from that list, on every seed and size.
+    // CARVE only ever emits ids from that list, on every seed.
     const keys = new Set(
       Object.values(STORY_ITEM_DEFS)
         .map((d) => d.unlocks)
         .filter(Boolean),
     );
     for (const id of MISSIONS)
-      for (const size of SIZES)
-        for (const seed of SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          for (const door of def.doors ?? []) {
-            // An approach door (the garage door) has no key by design.
-            if (door.opens === "approach") continue;
-            expect(keys.has(door.id), `${id}/${size}/${seed} door`).toBe(true);
-          }
-          for (const lift of def.elevators ?? [])
-            if (lift.opensWith)
-              expect(
-                keys.has(lift.opensWith),
-                `${id}/${size}/${seed} lift`,
-              ).toBe(true);
+      for (const seed of SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        for (const door of def.doors ?? []) {
+          // An approach door (the garage door) has no key by design.
+          if (door.opens === "approach") continue;
+          expect(keys.has(door.id), `${id}/${seed} door`).toBe(true);
         }
+        for (const lift of def.elevators ?? [])
+          if (lift.opensWith)
+            expect(keys.has(lift.opensWith), `${id}/${seed} lift`).toBe(true);
+      }
   });
 
   it("walk the sentries a real beat inside their own room", () => {
@@ -330,23 +299,22 @@ describe("generated levels", () => {
     // gave him) — so what is checked is that the beat is real: long enough to
     // read as a walk, and inside the map.
     for (const id of MISSIONS)
-      for (const size of SIZES)
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          for (const spawn of def.spawns) {
-            if (!("at" in spawn) || !spawn.patrol) continue;
-            const end = spawn.patrol[0] as { x: number; y: number };
-            const leg = Math.hypot(end.x - spawn.at.x, end.y - spawn.at.y);
-            expect(
-              leg,
-              `${id}/${size}/${seed} ${spawn.enemy} paces on the spot`,
-            ).toBeGreaterThan(120);
-            expect(end.x).toBeGreaterThanOrEqual(0);
-            expect(end.x).toBeLessThanOrEqual(def.width);
-            expect(end.y).toBeGreaterThanOrEqual(0);
-            expect(end.y).toBeLessThanOrEqual(def.height);
-          }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        for (const spawn of def.spawns) {
+          if (!("at" in spawn) || !spawn.patrol) continue;
+          const end = spawn.patrol[0] as { x: number; y: number };
+          const leg = Math.hypot(end.x - spawn.at.x, end.y - spawn.at.y);
+          expect(
+            leg,
+            `${id}/${seed} ${spawn.enemy} paces on the spot`,
+          ).toBeGreaterThan(120);
+          expect(end.x).toBeGreaterThanOrEqual(0);
+          expect(end.x).toBeLessThanOrEqual(def.width);
+          expect(end.y).toBeGreaterThanOrEqual(0);
+          expect(end.y).toBeLessThanOrEqual(def.height);
         }
+      }
   });
 
   it("keeps the sentries walking — the beat is not just data", () => {
@@ -380,7 +348,7 @@ describe("generated levels", () => {
     // would walk the player straight to the thing they are meant to search for.
     for (const id of MISSIONS)
       for (const seed of SEEDS)
-        expect(resolveLevelDef(id, seed, "medium").path).toBeUndefined();
+        expect(resolveLevelDef(id, seed).path).toBeUndefined();
   });
 
   it("put the boss somewhere new from run to run", () => {
@@ -388,7 +356,7 @@ describe("generated levels", () => {
       if (isHub(id)) continue; // no boss to place
       const spots = new Set(
         SEEDS.map((seed) => {
-          const goal = goalOf(resolveLevelDef(id, seed, "large"));
+          const goal = goalOf(resolveLevelDef(id, seed));
           return goal ? `${goal.x},${goal.y}` : "none";
         }),
       );
@@ -403,7 +371,7 @@ describe("generated levels", () => {
   it("start the hero a long walk from what he has to find", () => {
     for (const id of MISSIONS)
       for (const seed of SEEDS) {
-        const def = resolveLevelDef(id, seed, "large");
+        const def = resolveLevelDef(id, seed);
         // What the SEARCH is for. On a mission with a lift that is the pad, not
         // the boss: the boss is in a sealed annex whose straight-line distance
         // from the landing means nothing (it is below the map, so a hero landing
@@ -426,10 +394,10 @@ describe("generated levels", () => {
 
   it("carve the same map from the same seed", () => {
     for (const id of MISSIONS) {
-      const a = resolveLevelDef(id, 7, "medium");
-      const b = resolveLevelDef(id, 7, "medium");
+      const a = resolveLevelDef(id, 7);
+      const b = resolveLevelDef(id, 7);
       expect(JSON.stringify(b)).toEqual(JSON.stringify(a));
-      const c = resolveLevelDef(id, 8, "medium");
+      const c = resolveLevelDef(id, 8);
       if (MAP_BLUEPRINTS[id]?.carveSeed !== undefined) {
         // A PINNED blueprint (the hub) carves the same map from EVERY seed —
         // home does not rearrange its walls between errands.
@@ -442,42 +410,40 @@ describe("generated levels", () => {
     }
   });
 
-  it("grow with the size, in floor and in rooms", () => {
+  it("carve the floor the blueprint priced, with a knot in every room", () => {
     for (const id of MISSIONS) {
       if (MAP_BLUEPRINTS[id]?.carveSeed !== undefined) continue; // static: one look
-      const [small, medium, large] = SIZES.map((size) =>
-        resolveLevelDef(id, 4, size),
-      ) as [LevelDef, LevelDef, LevelDef];
-      expect(small.width * small.height).toBeLessThan(
-        medium.width * medium.height,
-      );
-      expect(medium.width * medium.height).toBeLessThan(
-        large.width * large.height,
-      );
-      // A bigger rectangle with the same handful of rooms would be a stretched
-      // map, not a longer search — the knots are one per carved cell.
-      const knots = (def: LevelDef) =>
-        (def.spawners ?? []).filter((s) => !s.hellgate).length;
-      expect(knots(small)).toBeLessThan(knots(large));
+      const bp = MAP_BLUEPRINTS[id];
+      if (!bp) continue;
+      const def = resolveLevelDef(id, 4);
+      // The carve is the blueprint's own rectangle — an annex adds a band of
+      // its own PAST it, and nothing else may resize the map.
+      expect(def.width).toBe(bp.size.width);
+      expect(def.height).toBeGreaterThanOrEqual(bp.size.height);
+      // A rectangle with a handful of rooms in it would be a stretched map
+      // rather than a search — the knots are one per carved cell, so the count
+      // has to track the chambers the blueprint asked for.
+      const knots = (d: LevelDef) =>
+        (d.spawners ?? []).filter((s) => !s.hellgate).length;
+      expect(knots(def)).toBeGreaterThanOrEqual(bp.size.rooms / 2);
     }
   });
 
   it("keep every spawner, set piece and chest inside the map", () => {
-    for (const id of MISSIONS)
-      for (const size of SIZES) {
-        const def = resolveLevelDef(id, 11, size);
-        const inside = (p: { x: number; y: number }) =>
-          p.x >= 0 && p.x <= def.width && p.y >= 0 && p.y <= def.height;
-        for (const s of def.spawners ?? []) expect(inside(s.at)).toBe(true);
-        for (const s of def.spawns)
-          if ("at" in s) expect(inside(s.at)).toBe(true);
-        for (const c of def.chests ?? []) expect(inside(c.at)).toBe(true);
-        expect(inside(def.playerSpawn)).toBe(true);
-      }
+    for (const id of MISSIONS) {
+      const def = resolveLevelDef(id, 11);
+      const inside = (p: { x: number; y: number }) =>
+        p.x >= 0 && p.x <= def.width && p.y >= 0 && p.y <= def.height;
+      for (const s of def.spawners ?? []) expect(inside(s.at)).toBe(true);
+      for (const s of def.spawns)
+        if ("at" in s) expect(inside(s.at)).toBe(true);
+      for (const c of def.chests ?? []) expect(inside(c.at)).toBe(true);
+      expect(inside(def.playerSpawn)).toBe(true);
+    }
   });
 });
 
-describe("the map size", () => {
+describe("the carve", () => {
   it("carves every run, with no authored map to fall back to", () => {
     // The mission in the catalog has no geometry on it at all, so a carve is
     // not an alternative to it — it is the only thing a run can be built from.
@@ -490,14 +456,17 @@ describe("the map size", () => {
     expect(resolveLevelDef(id, 3).playerSpawn).toEqual(def.playerSpawn);
   });
 
-  it("rolls a size per seed when asked to, and honours a named one", () => {
-    const bp = MAP_BLUEPRINTS[LEVEL_ORDER[0] as string];
-    if (!bp) throw new Error("no blueprint to size");
-    for (const size of SIZES) expect(resolveMapSize(bp, size, 99)).toBe(size);
-    const rolled = new Set(
-      SEEDS.map((seed) => resolveMapSize(bp, "random", seed)),
-    );
-    expect(rolled.size).toBeGreaterThan(1);
+  it("prices ONE set of extents per blueprint — there is no size to pick", () => {
+    // The setting that used to choose between three carves is gone; a
+    // blueprint names its own rectangle and every run of it gets that one.
+    for (const [id, bp] of Object.entries(MAP_BLUEPRINTS)) {
+      expect(bp.size.width, `${id} width`).toBeGreaterThan(0);
+      expect(bp.size.height, `${id} height`).toBeGreaterThan(0);
+      expect(
+        resolveLevelDef(id, 2).width,
+        `${id} carves its priced width`,
+      ).toBe(bp.size.width);
+    }
   });
 });
 
@@ -511,7 +480,6 @@ describe("a run on a generated map", () => {
   // opened, and the bunker streamed the authored wave budget the carve had
   // deliberately dropped. `runLevelDef` is the one answer; these hold it to it.
   const carved = (levelId: string, difficulty: Difficulty = "medium") => {
-    setGeneratedMapSize("medium");
     return createGame(7, levelId, difficulty);
   };
 
@@ -621,14 +589,11 @@ describe("the story on a generated map", () => {
         ...(bp.bystanders ?? []).map((b) => b.enemy),
         ...(bp.boss ? [bp.boss.enemy] : []),
       ].filter(speaks);
-      for (const size of SIZES)
-        for (const seed of WALK_SEEDS) {
-          const cast = castOf(resolveLevelDef(id, seed, size));
-          const missing = authored.filter((who) => !cast.has(who));
-          expect(missing, `${id}/${size}/${seed} lost a speaking part`).toEqual(
-            [],
-          );
-        }
+      for (const seed of WALK_SEEDS) {
+        const cast = castOf(resolveLevelDef(id, seed));
+        const missing = authored.filter((who) => !cast.has(who));
+        expect(missing, `${id}/${seed} lost a speaking part`).toEqual([]);
+      }
     }
   });
 
@@ -641,7 +606,7 @@ describe("the story on a generated map", () => {
     // his blade. No hand-authored map spends a safe zone on the landing.
     for (const id of MISSIONS)
       for (const seed of WALK_SEEDS) {
-        const def = resolveLevelDef(id, seed, "medium");
+        const def = resolveLevelDef(id, seed);
         const safe = (def.safeZones ?? []).filter((z) =>
           zoneContains(z, def.playerSpawn),
         );
@@ -669,26 +634,25 @@ describe("the story on a generated map", () => {
         ? base.firstSightThoughts?.find((t) => t.thought === gate)
         : undefined;
       if (!pin) continue;
-      for (const size of SIZES)
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          const reach = pin.radius ?? 96;
-          const near = def.spawns.filter(
-            (s) =>
-              s.enemy === pin.enemy &&
-              "at" in s &&
-              Math.hypot(
-                s.at.x - def.playerSpawn.x,
-                s.at.y - def.playerSpawn.y,
-              ) <= reach,
-          );
-          expect(
-            near.length,
-            `${id}/${size}/${seed} lands the hero away from the beat's crowd`,
-          ).toBeGreaterThan(0);
-          // And the rusher itself is within the touch it has to land.
-          expect(def.openingStrike).toBeDefined();
-        }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        const reach = pin.radius ?? 96;
+        const near = def.spawns.filter(
+          (s) =>
+            s.enemy === pin.enemy &&
+            "at" in s &&
+            Math.hypot(
+              s.at.x - def.playerSpawn.x,
+              s.at.y - def.playerSpawn.y,
+            ) <= reach,
+        );
+        expect(
+          near.length,
+          `${id}/${seed} lands the hero away from the beat's crowd`,
+        ).toBeGreaterThan(0);
+        // And the rusher itself is within the touch it has to land.
+        expect(def.openingStrike).toBeDefined();
+      }
     }
   });
 
@@ -697,19 +661,18 @@ describe("the story on a generated map", () => {
     // breed. Carve a map without that breed and the monologue simply never plays
     // — silently, on that seed only.
     for (const id of MISSIONS)
-      for (const size of SIZES)
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          const cast = castOf(def);
-          const pinned = [
-            ...(def.firstKillThoughts ?? []),
-            ...(def.firstSightThoughts ?? []),
-          ];
-          const unfireable = pinned
-            .filter((t) => !cast.has(t.enemy))
-            .map((t) => `${t.enemy}→${t.thought}`);
-          expect(unfireable, `${id}/${size}/${seed}`).toEqual([]);
-        }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        const cast = castOf(def);
+        const pinned = [
+          ...(def.firstKillThoughts ?? []),
+          ...(def.firstSightThoughts ?? []),
+        ];
+        const unfireable = pinned
+          .filter((t) => !cast.has(t.enemy))
+          .map((t) => `${t.enemy}→${t.thought}`);
+        expect(unfireable, `${id}/${seed}`).toEqual([]);
+      }
   });
 });
 
@@ -717,7 +680,6 @@ describe("the generated horde", () => {
   it("stands a spawn point in the map on every rung", () => {
     for (const id of MISSIONS.filter((id) => !isHub(id)))
       for (const difficulty of DIFFICULTY_ORDER) {
-        setGeneratedMapSize("medium");
         const state = createGame(7, id, difficulty);
         const knots = state.spawners.filter((s) => !(s.openStage ?? 0));
         const gates = state.spawners.filter((s) => (s.openStage ?? 0) > 0);
@@ -748,27 +710,25 @@ describe("the generated horde", () => {
     // size — a large carve going empty is the same bug wearing a bigger map.
     const MILLION = 1_000_000;
     for (const id of MISSIONS.filter((id) => !isHub(id)))
-      for (const size of SIZES)
-        for (const seed of WALK_SEEDS) {
-          const def = resolveLevelDef(id, seed, size);
-          const knots = (def.spawners ?? []).filter((s) => !s.hellgate);
-          const perMillion =
-            knots.length / ((def.width * def.height) / MILLION);
-          expect(
-            perMillion,
-            `${id}/${size}/${seed} carves an empty map (${perMillion.toFixed(2)} knots/Mpx²)`,
-          ).toBeGreaterThan(1);
-          // …and the horde in them, so density is not met with a scatter of
-          // three-mob knots.
-          const mobs = knots.reduce(
-            (n, k) => n + k.members.reduce((a, m) => a + m.count, 0),
-            0,
-          );
-          expect(
-            mobs / ((def.width * def.height) / MILLION),
-            `${id}/${size}/${seed} queues too little horde`,
-          ).toBeGreaterThan(25);
-        }
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        const knots = (def.spawners ?? []).filter((s) => !s.hellgate);
+        const perMillion = knots.length / ((def.width * def.height) / MILLION);
+        expect(
+          perMillion,
+          `${id}/${seed} carves an empty map (${perMillion.toFixed(2)} knots/Mpx²)`,
+        ).toBeGreaterThan(1);
+        // …and the horde in them, so density is not met with a scatter of
+        // three-mob knots.
+        const mobs = knots.reduce(
+          (n, k) => n + k.members.reduce((a, m) => a + m.count, 0),
+          0,
+        );
+        expect(
+          mobs / ((def.width * def.height) / MILLION),
+          `${id}/${seed} queues too little horde`,
+        ).toBeGreaterThan(25);
+      }
   });
 
   it("walks the blueprint's whole level ladder, top rung included", () => {
@@ -784,7 +744,7 @@ describe("the generated horde", () => {
       if (!ramps) throw new Error(`no blueprint for "${id}"`);
       const used = new Set<string>();
       for (const seed of SEEDS)
-        for (const knot of resolveLevelDef(id, seed, "medium").spawners ?? []) {
+        for (const knot of resolveLevelDef(id, seed).spawners ?? []) {
           if (knot.hellgate) continue;
           const band = JSON.stringify(knot.mobLevels);
           // Every knot stands on a rung of the authored ladder — never a number

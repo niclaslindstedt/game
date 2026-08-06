@@ -62,6 +62,12 @@ import {
   type StoreEvent,
   type StoreRequest,
 } from "./src/store-purchases";
+import {
+  createShotsBridge,
+  type ShotsBridge,
+  type ShotsEvent,
+  type ShotsRequest,
+} from "./src/screenshots";
 
 // Keep the native splash up until the WebView paints its first frame, so the
 // player never sees a white flash or a half-loaded page.
@@ -81,6 +87,8 @@ type BridgeMessage = {
   __gisAchievements?: boolean;
   // Game Center leaderboards (pwa/src/app/scores-bridge.ts).
   __gisScores?: boolean;
+  // The screenshot share sheet (pwa/src/app/screenshot-bridge.ts).
+  __gisShots?: boolean;
 };
 
 /**
@@ -222,6 +230,15 @@ export default function App() {
     [inject],
   );
 
+  // SCREENSHOTS (src/screenshots.ts): the picture the game took, handed to the
+  // platform's share sheet. Same shape again — it holds nothing to tear down,
+  // because a share sheet is a round trip like any other request.
+  const shotsRef = useRef<ShotsBridge | null>(null);
+  const emitShotsEvent = useCallback(
+    (shotsEvent: ShotsEvent) => inject("__gisShotsEvent", shotsEvent),
+    [inject],
+  );
+
   // THE DEVICE CONTENT SWITCHES (src/device-settings.ts). The odd one out: it
   // is pushed, never asked for, and its first delivery is not an event at all
   // but the script below — read ONCE, at mount, and injected before the page
@@ -285,8 +302,20 @@ export default function App() {
         }
         scoresRef.current.handle(data as ScoresRequest);
       }
+      if (data.__gisShots) {
+        if (!shotsRef.current) {
+          shotsRef.current = createShotsBridge(emitShotsEvent);
+        }
+        shotsRef.current.handle(data as ShotsRequest);
+      }
     },
-    [emitStoreEvent, emitCloudEvent, emitAchievementsEvent, emitScoresEvent],
+    [
+      emitStoreEvent,
+      emitCloudEvent,
+      emitAchievementsEvent,
+      emitScoresEvent,
+      emitShotsEvent,
+    ],
   );
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {

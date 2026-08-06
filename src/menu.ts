@@ -74,9 +74,6 @@ export {
   setCutscenesEnabled,
   setDeathScenesEnabled,
   setDialogueEnabled,
-  setGeneratedMapSize,
-  type GeneratedMapSizeSetting,
-  type MapSizeName,
 } from "./game/flags.ts";
 export {
   BALANCE_TUNING_DEFAULTS,

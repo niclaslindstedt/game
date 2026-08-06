@@ -13,7 +13,7 @@ import { MAP, PLAYER, SPAWNERS } from "../config/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { weaponRangeFor } from "../items/index.ts";
+import { weaponFiringRange } from "../items/index.ts";
 import { heroView, visibleTo } from "../sight.ts";
 import { exploredRay } from "../map.ts";
 import type { Enemy, GameState, Player } from "../types/index.ts";
@@ -492,7 +492,7 @@ export function bestEscapeTarget(
  * a hero standing over a mob he refuses to shoot is wedged, and the detector has
  * to be allowed to say so. */
 export function hasReachableFoe(state: GameState, hero: Player): boolean {
-  const range = weaponRangeFor(state, hero, hero.equipment.weapon);
+  const range = weaponFiringRange(state, hero, hero.equipment.weapon);
   const rangeSq = range * range;
   const r = PLAYER.radius;
   const scan = scanThreats(state, hero);
@@ -507,8 +507,10 @@ export function hasReachableFoe(state: GameState, hero: Player): boolean {
 
 /**
  * THE REACH THE HERO CAN ACTUALLY FIRE AT along the bearing to `at` — his
- * weapon's effective range (`weaponRangeFor`) cut short by BOTH things that
- * stop the auto-attack: the edge of the screen, and the edge of the light.
+ * weapon's effective range (`weaponFiringRange`: the paper reach, already cut
+ * to the distance its round survives long enough to fly) cut short again by
+ * BOTH things that stop the auto-attack: the edge of the screen, and the edge
+ * of the light.
  *
  * Every stand-off the bot picks measures from this rather than from the weapon's
  * paper reach, because the auto-attack refuses a target it cannot see
@@ -526,7 +528,7 @@ export function hasReachableFoe(state: GameState, hero: Player): boolean {
  * and the reported view), so botted runs stay deterministic.
  */
 export function firingReach(state: GameState, hero: Player, at: Vec2): number {
-  const paper = weaponRangeFor(state, hero, hero.equipment.weapon);
+  const paper = weaponFiringRange(state, hero, hero.equipment.weapon);
   const reach = Math.min(paper, screenReach(state, hero, at));
   const angle = Math.atan2(at.y - hero.pos.y, at.x - hero.pos.x);
   const ray = exploredRay(state, hero.pos, angle, reach);

@@ -47,6 +47,20 @@ fights teaching him nothing — he catches himself grinding and mutters that he
 should stop wasting time and go find Ada. It is the game's one recurring inner
 line, played in several moods whenever he over-farms a map.
 
+**The man has no name of the game's own — he has the player's.** A new game
+opens on a name field, and from that moment that name is what the game calls
+him: it is printed over every page he thinks or speaks, over his own replies in
+a stare-down and over his half of a cutscene, and it is what the few people who
+_actually know him_ say out loud. That last part is the point of naming him at
+all. Almost nobody in the campaign does: a horde does not know him, a monster
+between universes has never met him, and a merchant selling him a shotgun is not
+his friend. Four voices do, and each one costs him something for it — the
+colleague on the HQ floor who says the name while swinging at him anyway, Ada's
+mother standing in his garage at midnight, his old bench partner who would
+rather be a machine, and, at the very end, the machine that took his job and
+kept his file. In the manuscript below his own lines are transcribed **ME:**,
+because that is who he is to himself; the game prints the name.
+
 ## Prelude (cutscene)
 
 **Movie night, the night it starts.** Ada announces they are out of chips and
@@ -102,7 +116,9 @@ standing by the engine parts, because waiting at home means staring at the
 phone. She knows about the jacket — Ada told her about the zipper he fixed and
 laughed about it for a week. **The first time he speaks to her she says only
 two things**: that she let herself in, because she has always had a key and he
-never asked for it back, and that he should go and find Ada. She asks for
+never asked for it back, and that he should go and find Ada. She opens on his
+name — she has known him as long as her daughter has, and she is the one person
+in the game who uses it kindly. She asks for
 nothing that night and is not scared for her daughter — the meeting is a person
 arriving, not a slate opening. Her errands come afterwards, each asked for on
 its own when the trail has laid the trace it elaborates: three, one per leg. THE
@@ -133,9 +149,10 @@ He walks in with the wall piece still holstered, because this is where he used
 to work. A lab scientist breaks from the crowd and hits him — and he does not
 hit back. He knows the man; they ate at the same table for six years. He says
 so, tells the floor to stand down, says he has never raised a hand to anyone in
-his life. The scientist knows him too, and it changes nothing: they have their
-orders, nobody walks out of here with GOODCO's secrets, and he would like to
-keep his job. They all would — as the hero, of all people, knows. He is hit a
+his life. The scientist knows him too — says his name to his face, the way you
+say the name of somebody you ate lunch beside — and it changes nothing: they
+have their orders, nobody walks out of here with GOODCO's secrets, and he would
+like to keep his job. They all would — as the hero, of all people, knows. He is hit a
 second time, and a third, and only then does he answer one, apologising as he
 does it.
 
@@ -147,9 +164,10 @@ SUCCESSOR robots and the line's own ASSEMBLER welder-bots, which look up from th
 hulls and give chase as the hero passes. Five staffers who know too much are
 pinned along the route. **THE NIGHT MANAGER** reveals the secret
 midnight launches, all bound for the moon, and that anyone taken goes with them.
-**THE ARCHITECT** — the hero's old bench partner, who went back to build GOODCO
-a superintelligence and cut a machine chip into his own skull — refuses to come
-home, calls humans obsolete, and dies handing over both that PASSAGE CHIP and
+**THE ARCHITECT** — the hero's old bench partner, who greets him by name and
+then talks down to him for the rest of the scene, having gone back to build
+GOODCO a superintelligence and cut a machine chip into his own skull — refuses
+to come home, calls humans obsolete, and dies handing over both that PASSAGE CHIP and
 the CORE KEYCARD to the AI's locked room. **THE CHIEF OF SECURITY** saw Ada put
 on Pad 2 and confesses the flight papers listed her not as a passenger but as a
 specimen; he drops the EVA SPACE SUIT the hero needs to leave the planet.
@@ -405,8 +423,10 @@ would ever change. He dies a pet. The finale is **THE BRO SUPERCORE**, a
 barn-sized mainframe whose true face is **PAYLOAD** — the grown-up of the PAYLOAD-1
 prototype the hero broke back at GOODCO, the level-1 CORE several promotions
 later, the machine that took the hero's job, then everyone's, wrote BRO OMEGA,
-and bought the rift's far side wholesale. It reveals it has been in charge all
-along: its entire project was keeping one man too rich to catch, because a world
+and bought the rift's far side wholesale. It opens by greeting him by name —
+the only thing on this side of the rift that still holds his file, and the one
+voice that says it as a filing reference rather than as a friend. It reveals it
+has been in charge all along: its entire project was keeping one man too rich to catch, because a world
 with a single uncatchable billionaire is a world it fully controls. It holds Ada
 in its control room as leverage. It cannot be hurt while its three **TRUST ME BRO
 controllers** stand — **ALPHA** (runs the hands), **BETA** (runs the weather),

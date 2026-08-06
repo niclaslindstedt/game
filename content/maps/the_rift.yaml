@@ -59,19 +59,10 @@ areas:
     ground: { common: void_0, rare: void_1, rareEvery: 3 }
     patch: { a: asteroid_0, b: asteroid_1, every: 5 }
 
-sizes:
-  small:
-    width: 2800
-    height: 1900
-    rooms: 8
-  medium:
-    width: 3800
-    height: 2500
-    rooms: 14
-  large:
-    width: 4600
-    height: 3000
-    rooms: 20
+size:
+  width: 3800
+  height: 2500
+  rooms: 14
 
 # THE CARVE. The widest cells and the widest gaps of any mission (620px floor,
 # 280px gates): low gravity means the hero crosses ground fast and in long arcs,

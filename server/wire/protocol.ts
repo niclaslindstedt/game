@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 24;
+export const PROTOCOL_VERSION = 25;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -127,10 +127,6 @@ export type SessionParams = {
    * mid-fight.
    */
   lootMode?: string;
-  /** MAP SIZE: which of the three sizes this session's maps are carved at. An
-   * engine FLAG rather than a `createGame` argument, so it travels separately
-   * and the client applies it before it builds. */
-  generatedMapSize: string;
   /**
    * THE SESSION IS A HARDCORE GAME — hosted by a hardcore character.
    *

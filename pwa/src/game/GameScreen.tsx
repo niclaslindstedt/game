@@ -69,6 +69,7 @@ import {
 } from "./render.ts";
 import { setHiddenLandmarks } from "./render/hidden-landmarks.ts";
 import { fxStyleVars } from "./render/postfx.ts";
+import { bindingLabel } from "./keybindings.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import { spectatorCharacter, type Character } from "./characters.ts";
@@ -155,7 +156,10 @@ import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
-import { useAchievementsShelf } from "./game-screen/use-achievements-shelf.ts";
+import { useRunShelf } from "./game-screen/use-run-shelf.ts";
+import { ScreenshotFlash } from "./game-screen/ScreenshotFlash.tsx";
+import { useScreenshotFlash } from "./game-screen/use-screenshot-flash.ts";
+import { ScreenshotsScreen } from "./screenshots-gallery.ts";
 
 import { runCommand, runCommandOk } from "./run-commands.ts";
 
@@ -476,7 +480,7 @@ export function GameScreen({
   const { achievementToast, celebrateAchievements } = useAchievementToasts();
   // …and the shelf those badges live on, raised over the run by the
   // ACHIEVEMENTS bind or a tap on the toast — it pauses the run on the way up
-  // (see use-achievements-shelf.ts). Destructured because every member but
+  // (see use-run-shelf.ts). Destructured because every member but
   // `open` is stable, which is what lets the run effect list them.
   const {
     open: achievementsOpen,
@@ -485,10 +489,28 @@ export function GameScreen({
     openShelf: openAchievements,
     toggle: toggleAchievements,
     close: closeAchievements,
-  } = useAchievementsShelf();
+  } = useRunShelf();
   // The live toast element, so a tap over the (inert) banner can open that
   // shelf instead of jumping — the pickup card's arrangement exactly.
   const achievementToastElRef = useRef<HTMLDivElement | null>(null);
+
+  // THE SCREENSHOT KEY and what it raises. The flash is the receipt (a
+  // miniature against the right edge, inert like the toast above); the SHELF is
+  // the same gallery the title menu's EXTRAS row opens, frozen over the run
+  // because pressing the miniature is a request to LOOK at the picture.
+  const {
+    flash: shotFlash,
+    shotFlashElRef,
+    takeScreenshot,
+  } = useScreenshotFlash(screenRef);
+  const {
+    open: shotsOpen,
+    openRef: shotsOpenRef,
+    bind: bindShots,
+    openShelf: openShots,
+    close: closeShots,
+    canOpen: canOpenShots,
+  } = useRunShelf();
 
   useEffect(() => {
     let alive = true;
@@ -797,6 +819,11 @@ export function GameScreen({
     bindAchievements(
       demo || suppressAchievements ? null : { state, pause, resume: resumeRun },
     );
+    // The SCREENSHOT gallery freezes the run the same way, and stands down in
+    // the DEMO for the same reason the shelf does: pausing there raises the
+    // exit confirm, which owns the frozen screen. Taking the picture still
+    // works — only the flash's press-to-open does not, and it says so.
+    bindShots(demo ? null : { state, pause, resume: resumeRun });
 
     const controls = createControls({
       canvas,
@@ -810,6 +837,13 @@ export function GameScreen({
       openAchievements,
       toggleAchievements,
       achievementsOpenRef,
+      shotFlashElRef,
+      openShots,
+      shotsOpenRef,
+      // The caption is the venue the picture was taken in, read at the press:
+      // the gallery lists a roll of pictures, and "which level was that" is the
+      // one thing a thumbnail cannot say for itself.
+      takeScreenshot: () => takeScreenshot(runLevelDef(state).name),
       userPausedRef,
       dialogueRevealRef,
       introRevealRef,
@@ -1267,9 +1301,10 @@ export function GameScreen({
       powerupAura.dispose();
       cardQueue.dispose();
       demoDirector.dispose();
-      // The run this shelf was pausing is gone — drop it rather than leave it
-      // holding a stale state's pause pair.
+      // The run these shelves were pausing is gone — drop them rather than
+      // leave either holding a stale state's pause pair.
       bindAchievements(null);
+      bindShots(null);
     };
   }, [
     assets,
@@ -1289,6 +1324,11 @@ export function GameScreen({
     bindAchievements,
     openAchievements,
     toggleAchievements,
+    shotFlashElRef,
+    shotsOpenRef,
+    bindShots,
+    openShots,
+    takeScreenshot,
     autopilot.sessionRef,
     autopilot.syncView,
     celebrateAchievements,
@@ -1705,6 +1745,7 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
+          heroName={character.name}
           onAdvance={() => {
             runCommand(state, "advanceTalk");
             playUiSound(synth, "move");
@@ -1736,6 +1777,7 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
+          heroName={character.name}
           onAdvance={() => {
             runCommand(state, "advanceQuestDialogue");
             playUiSound(synth, "move");
@@ -1842,6 +1884,40 @@ export function GameScreen({
           toast={achievementToast}
           toastRef={achievementToastElRef}
         />
+      )}
+
+      {/* The SCREENSHOT receipt — any phase, like the badge banner above: a
+          picture taken on the winning blow still gets its miniature. Inert;
+          the canvas routes a press over it into the gallery below.
+
+          …but never WHILE the gallery is up: the picture is already on screen
+          at full size, so the miniature would be a duplicate of it floating
+          over its own viewer. */}
+      {shotFlash && !shotsOpen && (
+        <ScreenshotFlash
+          key={`shot-${shotFlash.id}`}
+          font={font}
+          flash={shotFlash}
+          flashRef={shotFlashElRef}
+          pressable={canOpenShots()}
+        />
+      )}
+
+      {/* The SCREENSHOT gallery over the run: the same viewer EXTRAS opens,
+          raised by pressing the flash, with the run frozen behind it. Opens on
+          the picture that was just taken rather than on the newest in the
+          roll — they are the same shot unless the flash has been sitting
+          through another one. */}
+      {shotsOpen && (
+        <Suspense fallback={null}>
+          <ScreenshotsScreen
+            font={font}
+            closeKey={getSettings().keybindings.screenshot}
+            keyName={bindingLabel(getSettings().keybindings.screenshot)}
+            startId={shotFlash?.id}
+            onClose={closeShots}
+          />
+        </Suspense>
       )}
 
       {/* The ACHIEVEMENTS shelf over the run: the title menu's own browser,

@@ -161,19 +161,10 @@ areas:
     label: SECURE STORE
     ground: { common: lab_0, rare: lab_1, rareEvery: 7 }
 
-sizes:
-  small:
-    width: 2600
-    height: 1700
-    rooms: 10
-  medium:
-    width: 3400
-    height: 2200
-    rooms: 16
-  large:
-    width: 4200
-    height: 2800
-    rooms: 24
+size:
+  width: 3400
+  height: 2200
+  rooms: 16
 
 # THE CARVE. Smaller DISTRICTS than the outdoor maps (520px) — an office floor is
 # not a plain — and then the interior districts are cut into ROOMS again on top

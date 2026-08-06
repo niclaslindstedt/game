@@ -7,7 +7,7 @@ description: "Use when improving the MAP GENERATOR — the GENERATED MAPS featur
 
 `map-improvement` improves ONE hand-authored map. This skill improves the thing
 that carves **every** map, fresh, per run — so a change here lands on six
-missions × three sizes × every seed at once. That leverage cuts both ways: a
+missions × every seed at once. That leverage cuts both ways: a
 regression you cannot see on the seed you happened to render is still shipping
 on the other several thousand.
 
@@ -107,11 +107,12 @@ Each of these was a bug first. Re-deriving them costs a session.
   whichever type it rolled first swallows the map, and a palette weighted 4:3:2
   comes out as one biome with freckles. Seeding decouples the knobs: `cluster`
   controls how BIG a district is, the weights control WHICH appear.
-- **Counts are DENSITIES (per 1,000,000 world px²), never numbers.** A blueprint
-  is carved at three sizes; a fixed count leaves LARGE bare. And the remainder is
+- **Counts are DENSITIES (per 1,000,000 world px²), never numbers.** A cell's
+  floor is whatever the split rolled it, so a fixed count piles up in a small
+  chamber and leaves a plaza bare. And the remainder is
   settled stochastically (`densityCount`) — a density of 0.3 per cell must mean
   "one cell in three", not "every cell" (rounding up) or "never" (rounding down).
-- **Every presentational layer gets its OWN rng stream** (layout, size, walls,
+- **Every presentational layer gets its OWN rng stream** (layout, walls,
   canopy, fauna each have their own salt). Draw a new feature from the main
   stream and every obstacle and spawn on every existing map shifts.
 - **Ground zones are snapped to the 16px tile grid AND clamped to the map.**
@@ -271,7 +272,7 @@ and it could be in any of thirty rooms. Two details carry it: the annex joins th
 grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
 it as the district it is, with no special cases — only the wall pass knows, and
 gives it a sealed box), and `widthFrac` sizes it off the map so the band it costs
-stays mostly room at all three sizes. Boot Hill ends in the buried ZAI CONTROL
+stays mostly room. Boot Hill ends in the buried ZAI CONTROL
 ROOM; the bunker's vault is below its floor, because you do not walk to a vault.
 
 **FAUNA is the canopy's twin on the ground plane.** A level whose only moving
@@ -321,15 +322,13 @@ precisely the quiet ones.
 more than the rest of the file:
 
 **1. The nav grid and the def must come from the SAME carve.** `createGame`
-resolves its own level through the flag, so a grid built from a default run and a
-def resolved at another size silently checks nothing — the coordinates path
-through a different map's walls and every assertion passes. Set the flag AND the
-size before building the run:
+resolves its own level from the id and the seed it is handed, so a grid built
+from one run and a def resolved on another seed silently checks nothing — the
+coordinates path through a different map's walls and every assertion passes.
+Resolve the def and build the run from the SAME (id, seed):
 
 ```ts
-setGeneratedMapsEnabled(true);
-setGeneratedMapSize(size);
-const def = resolveLevelDef(id, seed, size);
+const def = resolveLevelDef(id, seed);
 const grid = buildNavGrid(createGame(seed, id, "medium"));
 ```
 

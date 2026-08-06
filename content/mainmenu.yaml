@@ -195,6 +195,15 @@ screens:
         icon: icon_bag
         help: BUY BACK WHAT THE AUTO PILOT THREW AWAY
         opens: vault
+      # The pictures the player took with the SCREENSHOT key. Desktop only —
+      # the roll is filled by a KEY, so on a phone (which has its own system
+      # screenshot gesture anyway) the row would open a gallery nothing on that
+      # device can put a picture into.
+      - id: screenshots
+        label: SCREENSHOTS
+        icon: icon_menu_screenshots
+        help: THE PICTURES YOU TOOK - VIEW, SHARE, SAVE
+        opens: screenshots
       # Leaves the app for the static reference site. A real link, not a screen:
       # the library is documents, and carries none of the game's JavaScript.
       - id: library
@@ -659,7 +668,7 @@ screens:
       - id: join-game
         label: JOIN GAME
         icon: icon_menu_load
-        help: WATCH A GAME SOMEBODY IS HOSTING
+        help: TAKE A SEAT IN A GAME SOMEBODY IS HOSTING
         opens: sessions
       - id: join-address
         label: JOIN BY ADDRESS
@@ -703,7 +712,7 @@ screens:
         label: PASSWORD
         help:
           set: JOINERS MUST TYPE IT - PRESS TO CHANGE IT
-          none: ANYBODY WHO FINDS THE GAME CAN WATCH IT
+          none: ANYBODY WHO FINDS THE GAME CAN JOIN IT
       # The port the socket TRIES. What it GOT is a different number and is
       # printed by the session panel in the run (server/net/udp.ts), which is
       # the rule this row exists to not break.
@@ -857,6 +866,13 @@ screens:
     surface: full
 
   vault:
+    parent: extras
+    tone: player
+    surface: full
+
+  # The screenshot roll — its own viewer, and the same one a live run raises
+  # when the player presses the flash the SCREENSHOT key throws up.
+  screenshots:
     parent: extras
     tone: player
     surface: full
@@ -1018,15 +1034,6 @@ screens:
       - id: bot-view
         label: BOT VIEW
         help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
-      # Every mission is carved from its blueprint, so the size is the only
-      # knob left over the generator.
-      - id: map-size
-        label: MAP SIZE
-        help:
-          small: A TIGHT MAP - THE BOSS IS A FEW ROOMS AWAY
-          medium: A FULL MAP - A REAL SEARCH FOR THE BOSS
-          large: A SPRAWLING MAP - THE BOSS IS A LONG WAY OFF
-          random: THE MAP ROLLS ITS OWN SIZE EACH RUN
       - id: auto-level-stats
         label: AUTO LEVEL STATS
         help:

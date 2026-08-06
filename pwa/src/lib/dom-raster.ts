@@ -31,6 +31,16 @@ export type RasterizeOptions = {
   scale?: number;
   /** Transparent margin (CSS px) around the root, so an outer glow isn't cut off. */
   padPx?: number;
+  /**
+   * Leave this element (and everything under it) out of the picture.
+   *
+   * The walk is over the LIVE, laid-out DOM, so anything that is on screen is
+   * in the raster — including chrome that exists to talk ABOUT the picture. The
+   * screenshot flash is the case that forced this: press the key twice in a
+   * row and the second picture has the first one's miniature pasted in the
+   * corner. Hiding the element instead would cost a reflow and a frame.
+   */
+  skip?: (el: Element) => boolean;
 };
 
 /**
@@ -481,8 +491,10 @@ export function rasterizeElement(
   // Everything below draws in CSS px relative to the root's top-left corner.
   ctx.setTransform(scale, 0, 0, scale, pad * scale, pad * scale);
 
+  const skip = options.skip;
   const paint = (el: Element, alpha: number) => {
     if (!(el instanceof HTMLElement) && !(el instanceof SVGElement)) return;
+    if (skip?.(el)) return;
     const style = getComputedStyle(el);
     if (style.display === "none" || style.visibility === "hidden") return;
     const opacity = alpha * (Number(style.opacity) || 0);

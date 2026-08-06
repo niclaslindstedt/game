@@ -40,12 +40,14 @@ import {
   type GameAssets,
 } from "./assets.ts";
 import { AchievementsScreen } from "./achievements-shelf.ts";
+import { ScreenshotsScreen } from "./screenshots-gallery.ts";
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
 import {
+  bindingLabel,
   mouseButtonCode,
   wheelCode,
   withBinding,
@@ -1008,6 +1010,22 @@ export function TitleScreen({
             onClose={() => {
               setScreen("extras");
               setCursor(ctx.rowIndexIn("extras", "lost-found"));
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* The SCREENSHOT gallery: the pictures the SCREENSHOT key took, browsed
+          one at a time. The same viewer a live run raises when the player
+          presses the flash — see screenshots-gallery.ts. */}
+      {screen === "screenshots" && (
+        <Suspense fallback={<LoadingScreen />}>
+          <ScreenshotsScreen
+            font={font}
+            keyName={bindingLabel(getSettings().keybindings.screenshot)}
+            onClose={() => {
+              setScreen("extras");
+              setCursor(ctx.rowIndexIn("extras", "screenshots"));
             }}
           />
         </Suspense>

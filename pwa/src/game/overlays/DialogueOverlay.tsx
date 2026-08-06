@@ -68,10 +68,14 @@ export function DialogueOverlay({
   onBlip,
   onMute,
   revealRef,
+  heroName,
 }: {
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
+  /** The name the player gave this hero — printed over his own pages and put
+   * into any authored line that names him (`{HERO}`). */
+  heroName?: string;
   /** Turn the page (the engine ends the scene on the last). */
   onAdvance: () => void;
   /** Play the letter-print blip — fired as characters land. */
@@ -82,7 +86,7 @@ export function DialogueOverlay({
   revealRef?: MutableRefObject<DialogueReveal>;
 }) {
   const dialogue = state.dialogue;
-  const content = dialogue ? dialogueContent(dialogue) : null;
+  const content = dialogue ? dialogueContent(dialogue, heroName) : null;
   const page = content?.pages[dialogue!.page] ?? EMPTY_PAGE;
 
   // The rendered text column's width, in unscaled font pixels — the unit

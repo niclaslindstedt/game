@@ -76,8 +76,9 @@ export type CutsceneActorDef = {
   id: string;
   /** Sprite key the renderer draws (poses swap it mid-scene). */
   sprite: string;
-  /** Display name shown over this actor's speech ("ME", "ADA"); omitted =
-   * the id upper-cased. */
+  /** Display name shown over this actor's speech ("ADA", or "{HERO}" for the
+   * player's own character — see `src/game/hero-name.ts`); omitted = the id
+   * upper-cased. */
   name?: string;
   at: Vec2;
   /** Which way the sprite mirrors initially (walks update it). */

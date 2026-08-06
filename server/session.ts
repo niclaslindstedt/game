@@ -51,13 +51,11 @@ import {
   seatHero,
   seatOf,
   setBalanceTuning,
-  setGeneratedMapSize,
   step,
   validateLoadout,
   type GameInput,
   type GameState,
   type Loadout,
-  type GeneratedMapSizeSetting,
 } from "@game/core";
 
 import { createChatRoom, type ChatRoom } from "./chat-room.ts";
@@ -121,11 +119,6 @@ export function createSession(options: SessionOptions): Session {
   // params are what a LATER joiner's welcome carries, so after a travel they
   // must describe the level the party is actually on.
   let params = options.params;
-  // The map SIZE is a process-global FLAG, not a `createGame` argument — which
-  // is precisely why one session per process is the topology (`server/main.ts`
-  // opens with the reasoning). Applied here so the carve a client rebuilds
-  // from the same `SessionParams` matches the server's.
-  setGeneratedMapSize(params.generatedMapSize as GeneratedMapSizeSetting);
 
   // TWO DOORS INTO A RUN, and which one was used decides what an arriving
   // client is sent.

@@ -33,7 +33,12 @@ export type ThoughtPage = string[] | { them: string[] };
 
 export type ThoughtDef = {
   id: string;
-  /** Name shown in the dialogue header — the hero's own voice ("ME"). */
+  /**
+   * Name shown in the dialogue header. Every shipped beat is the hero's own
+   * voice, so every one of them writes `{HERO}` — the name the player gave
+   * this character (`src/game/hero-name.ts`), resolved by whichever box draws
+   * the beat.
+   */
   speaker: string;
   /** Portrait sprite family (frame `<portrait>_0`) drawn beside the words. */
   portrait: string;

@@ -55,7 +55,6 @@ node scripts/simulate-run.mjs --class all --jobs 1       # …one spec at a time
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
-node scripts/simulate-run.mjs --map-size large  # every map is carved; this picks the SCALE
 node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
@@ -242,29 +241,25 @@ dies everywhere and tells you nothing about the map. Keep the immortal
 default for calibration sweeps: mortal restarts reset in-level progress, so
 pacing/loot reads come from the immortal instrument.
 
-### Map size — `--map-size`
+### The maps — carved, one size, no knob
 
 Every mission's map is CARVED from its blueprint per run (see `AGENTS.md`
-§ GENERATED MAPS), so the only choice left is the SCALE:
-`--map-size small|medium|large|random` (default `medium`, the shipped one). It is
-latched around each run inside the engine and restored after, so one process can
-measure several sizes.
-
-The point is the A/B — the same sweep at two sizes:
+§ GENERATED MAPS), at the ONE size that blueprint prices — there is no map knob
+to sweep. The carve is the run's own (same seed → same map), so two sweeps on
+the same seeds are a like-for-like read:
 
 ```sh
-node scripts/simulate-run.mjs --difficulty all --level all --json medium.json
-node scripts/simulate-run.mjs --difficulty all --level all --map-size large --json large.json
-node scripts/simulate-run.mjs --difficulty all --level all --map-size large --compare medium.json
+node scripts/simulate-run.mjs --difficulty all --level all --json baseline.json
+node scripts/simulate-run.mjs --difficulty all --level all --balance mobHp=1.2 --compare baseline.json
 ```
 
-Two things to know before reading the diff. A LARGE map is far bigger than a
-medium one (a medium moon is 8.6M px²), so
-per-run TOTALS are not comparable — read the rates (`k/min`, `dpsOut`,
-damage-per-hit) and the per-Mpx² densities instead. And the autopilot has no
-`path` to follow on a carved map (that is the feature: no guidance arrow), so it
-wedges more often — pass `--stuck-limit 0` for a balance read, or the cancelled
-runs truncate the sweep and read as a balance change that isn't one.
+Two things to know before reading a diff. Map FLOOR differs mission to mission
+(the moon is 8.6M px²), so per-run TOTALS are not comparable ACROSS missions —
+read the rates (`k/min`, `dpsOut`, damage-per-hit) and the per-Mpx² densities
+instead. And the autopilot has no `path` to follow on a carved map (that is the
+feature: no guidance arrow), so it wedges more often — pass `--stuck-limit 0`
+for a balance read, or the cancelled runs truncate the sweep and read as a
+balance change that isn't one.
 
 ### The analytic sibling — `progression-sim`
 

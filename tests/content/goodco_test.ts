@@ -44,7 +44,7 @@ import {
 const HQ = LEVELS.goodco_hq!;
 const BLUEPRINT = MAP_BLUEPRINTS.goodco_hq!;
 /** One representative floor — the map a run of GOODCO HQ actually builds. */
-const carved = resolveLevelDef("goodco_hq", SEED, "medium");
+const carved = resolveLevelDef("goodco_hq", SEED);
 import { distance as dist } from "@game/lib/vec.ts";
 
 describe("GOODCO HQ level def", () => {
@@ -610,7 +610,7 @@ describe("level catalog integrity", () => {
   // CARVED, because that is the level a run is played on: the mission carries
   // the loot pools and the story, the map carried the cast.
   const levels: LevelDef[] = Object.keys(LEVELS).map((id) =>
-    resolveLevelDef(id, SEED, "medium"),
+    resolveLevelDef(id, SEED),
   );
 
   it("gives every level a unique story index and an intro", () => {
