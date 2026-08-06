@@ -521,6 +521,7 @@ type OnOffKey =
   | "autoLevelStats"
   | "storeForce"
   | "cameraAntialias"
+  | "standingWalls"
   | "vibration"
   | "muted"
   | "xpFloat"

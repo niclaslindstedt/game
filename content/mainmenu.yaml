@@ -1097,6 +1097,13 @@ screens:
           on: THE TURNED FLOOR IS SMOOTHED INSTEAD OF STAIRCASED
           idle: NOTHING TO SMOOTH UNTIL CAMERA YAW TURNS THE FLOOR
           off: THE TURNED FLOOR KEEPS ITS HARD PIXEL STAIRCASE
+      # …and the other thing the camera decides about the level's own furniture:
+      # whether a wall panel stands on its footprint or lies down on it.
+      - id: standing-walls
+        label: STANDING WALLS
+        help:
+          on: WALL PANELS STAND UP OFF THE FLOOR ON THEIR FOOTPRINT
+          off: WALL PANELS LIE FLAT WITH THE FLOOR, AS PLAIN TILES
       # THE THREE WASHES LAID OVER THE FINISHED PICTURE (render/postfx.ts), so
       # they come last: everything above decides what is drawn, these three
       # decide what the drawn frame is then seen through. All three are CSS on

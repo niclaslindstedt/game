@@ -12,7 +12,7 @@ import {
   type Obstacle,
 } from "@game/core";
 
-import { spriteByName, wallPlaneRise, type Sprites } from "../assets.ts";
+import { spriteByName, type Sprites } from "../assets.ts";
 import {
   DECOR_FRAME_MS,
   decorFrames,
@@ -22,7 +22,7 @@ import {
 } from "./caches.ts";
 import { drawConjuringSprite } from "./conjure.ts";
 import { isLandmarkHidden } from "./hidden-landmarks.ts";
-import { drawWorldSprite } from "./plane.ts";
+import { drawnWallRise, drawWorldSprite } from "./plane.ts";
 import {
   drawRiftPortal,
   riftPortalBob,
@@ -368,7 +368,7 @@ export function drawObstacles(
     // A vehicle's footprint blockers are collision only — the machine over
     // them is ./vehicles.ts's to draw.
     if (obstacle.kind === "vehicle") continue;
-    if (wallPlaneRise(obstacle.sprite) > 0) {
+    if (drawnWallRise(obstacle.sprite) > 0) {
       wallQueue.push({
         obstacle,
         depth: projectY(obstacle.pos.x, obstacle.pos.y),

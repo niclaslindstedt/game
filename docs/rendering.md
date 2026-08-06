@@ -139,6 +139,19 @@ slice's, so it is still right at every pitch and yaw.
 cube: a wall a hero tall, which is what it takes to read as one. A piece that is
 deliberately lower than it is deep (a parapet, a kerb) says so with `rise:`.
 
+**AND IT IS A KNOB — STANDING WALLS (DEVELOPER → VISUALS).** The extrusion earns
+itself under a yaw and is a matter of taste square-on, where the floor grid is
+still rectangles and the flat panel already read as a wall, so a developer may
+turn it off — and off means the THIRD case collapses back into the SECOND, not
+into the first: the same footprint on the same floor, taking the projection
+whole, exactly as it was drawn before the extrusion existed. `drawnWallRise` and
+`laidFlat` (render/plane.ts) are the pair that says so, and **every pass asks
+them, never `wallPlaneRise`** — that is the catalog's answer and does not know
+about the switch. It is deliberately NOT folded together with the yaw the way
+`projectionSmoothing` is: the knob means "I do not want the faces", so sweeping
+the camera round to compare the two looks must not switch the answer out from
+under it.
+
 Three consequences worth carrying. **The walls are drawn LAST in the obstacle pass
 and back-to-front**, by PROJECTED y — the axis that actually runs into the screen
 once the camera is turned — because an extruded panel is tall enough to slice the
