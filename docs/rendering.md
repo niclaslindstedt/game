@@ -419,6 +419,31 @@ merchant, the fauna) is animated by HOW IT MOVES. Two things make it work:
   V8 monomorphism, so a new `EnemyDef` field must be added THERE too or it
   silently reads `undefined` with every check still green.
 
+**A MACHINE CARRIES ITSELF TOO — AND THE CAR STEERS**
+(`pwa/src/game/render/vehicles.ts`). The hatchback's front wheels are drawn at
+the rack's own angle (`CarVehicle.steer`, simulated in `src/game/vehicles.ts`,
+which is why a car standing still with the wheel cranked shows it), warped a
+COLUMN AT A TIME out of the same eleven pixels rather than from a second
+sprite — the trick the pitched shell beside it already uses, because a real
+rotation resamples pixel art into mush while a per-column warp keeps every
+texel and degenerates to the plain blit at dead centre. Three moves, all the
+same fact — the tyre now stands across the line of sight rather than along it:
+foreshortened to `cos(steer)` of its width, SHEARED by each column's own
+displacement toward the camera (this is the Z), and drawn a pixel taller on the
+near half off its own contact patch. The lean is deliberately NOT the ground
+plane's pitch: the assembly is a billboard, and eleven pixels sheared by 0.75
+read as a wheel BENT — a state this car really has — rather than turned. Only
+the front axle gets any of it. Judge it from `node scripts/car-viewer.mjs
+--steer`, which warps the same way.
+
+**AND THE CAR MAY NEVER COME ABOUT.** The body is one side-profile assembly and
+nothing mirrors it, so a car free to turn round drove away still facing the way
+it came. The engine's yaw stop (`CAR.maxYaw`) holds the nose just short of
+square to its own facing axis: it steers all the way up and down the screen —
+which is the whole of left and right in a side view — and reverses to get back
+the other way. `CarVehicle.faceLeft` is therefore settled where the car is
+parked and never moves again.
+
 **A JUMP HAS THREE BEATS: takeoff, flight, landing.** The engine's `jump`/`land`
 events carry the point, the `impact` (touchdown speed as a fraction of a
 standing hop, so a Spring Heels launch lands heavy) and the ground `speed`. The

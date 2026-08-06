@@ -12,6 +12,7 @@
 //
 //   node scripts/car-viewer.mjs                 # the ladder: all rungs 0..3
 //   node scripts/car-viewer.mjs --mixed         # + a hard-luck mix row
+//   node scripts/car-viewer.mjs --steer         # THE RACK, lock to lock
 //   node scripts/car-viewer.mjs --out some.png  # elsewhere
 //
 // Output defaults to pwa/assets-preview/car_states.png.
@@ -37,6 +38,11 @@ const PANELS = [
 ];
 const WHEEL_AT = [10, 36]; // wheel centers on the 48-wide part canvas
 const CANVAS = { w: 48, h: 26 };
+// The steered wheel's lean and height cue (render/vehicles.ts STEER_LEAN /
+// STEER_GROW) — the numbers this preview has to match for its warp to be the
+// one the game draws.
+const STEER_LEAN = 0.35;
+const STEER_GROW = 0.3;
 
 function loadSprite(name) {
   const doc = parse(readFileSync(`${SPRITES}/${name}.yaml`, "utf8"));
@@ -49,6 +55,40 @@ function loadSprite(name) {
 
 function hex(colour) {
   return [1, 3, 5].map((i) => parseInt(colour.slice(i, i + 2), 16));
+}
+
+/**
+ * THE STEERED FRONT WHEEL, warped a column at a time — the same three moves
+ * `drawSteeredWheel` (pwa/src/game/render/vehicles.ts) makes, and it must stay
+ * the same three: foreshortened to `cos(steer)` of its width, sheared by each
+ * column's own displacement toward the camera, and drawn a pixel taller on the
+ * near half, anchored at the contact patch. Nearest-neighbour on both axes,
+ * which is what the game's canvas does with smoothing off.
+ */
+function stampSteered(px, wheel, cx, baseY, steer) {
+  const width = Math.max(1, Math.round(wheel.w * Math.abs(Math.cos(steer))));
+  const swing = Math.sin(steer);
+  const left = cx - Math.round(width / 2);
+  for (let i = 0; i < width; i++) {
+    const across = (i + 0.5) / width;
+    const sx = Math.min(wheel.w - 1, Math.floor(across * wheel.w));
+    const depth = (across - 0.5) * wheel.w * swing;
+    const dy = Math.round(depth * STEER_LEAN);
+    const grow = Math.max(-1, Math.min(1, Math.round(depth * STEER_GROW)));
+    const h = wheel.h + grow;
+    for (let y = 0; y < h; y++) {
+      const sy = Math.min(wheel.h - 1, Math.floor(((y + 0.5) / h) * wheel.h));
+      const ch = wheel.rows[sy]?.[sx];
+      if (!ch || ch === ".") continue;
+      const colour = wheel.palette[ch];
+      if (!colour) continue;
+      const tx = left + i;
+      const ty = baseY + dy - grow + y;
+      if (ty >= 0 && ty < px.length && tx >= 0 && tx < CANVAS.w) {
+        px[ty][tx] = hex(colour);
+      }
+    }
+  }
 }
 
 /**
@@ -100,6 +140,13 @@ function assemble(panelRungs, wheelStates, opts = {}) {
           ? "car_wheel_bent_0"
           : "car_wheel_0";
     const wheel = loadSprite(name);
+    // The FRONT axle rides the rack: cranked, it is warped exactly the way
+    // render/vehicles.ts warps it (drawSteeredWheel), so this sheet is how the
+    // turn is judged without driving anything.
+    if (i === 1 && Math.abs(opts.steer ?? 0) > 0.05) {
+      stampSteered(px, wheel, WHEEL_AT[i], CANVAS.h - wheel.h, opts.steer);
+      return;
+    }
     stamp(wheel, WHEEL_AT[i] - Math.floor(wheel.w / 2), CANVAS.h - wheel.h);
   });
   const fixes = opts.fixes ?? {};
@@ -230,6 +277,14 @@ if (args.includes("--mixed")) {
       { fixes: { doors: 2, hood: 3, bumper: 3, roof: 3 } },
     ),
   );
+}
+if (args.includes("--steer")) {
+  // THE RACK, lock to lock: the front wheel cranked full right, half right,
+  // straight, half left and full left (CAR.steerLock ≈ 34°, vehicles.ts).
+  const LOCK = Math.PI * 0.19;
+  for (const steer of [LOCK, LOCK / 2, 0, -LOCK / 2, -LOCK]) {
+    cars.push(assemble(flat(0), [0, 0], { steer }));
+  }
 }
 writePng(cars, out);
 console.log(`wrote ${out} (${cars.length} states)`);

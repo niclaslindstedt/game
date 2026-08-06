@@ -7,6 +7,12 @@
 //   - the car's WHEELS roll from `speed` (angle = distance / wheel radius),
 //     so the renderer picks a spin frame instead of animating on a timer —
 //     a car pushed twice as fast spins twice as fast, for free;
+//   - the car's FRONT WHEELS also STEER: `steer` is the rack's own angle,
+//     wound on at a finite rate and stopped at a road car's lock, and the
+//     nose comes round in proportion to it and to the roll. The nose stops
+//     at the beam (`maxYaw`) because the body is one side-profile assembly
+//     that nothing mirrors — the car steers up and down the screen and backs
+//     up, but it never comes about;
 //   - the car's SUSPENSION is two damped springs, one per axle, integrated
 //     every tick. Parked they settle to rest; `nudgeCar` gives an axle a
 //     shove (the minigame's potholes) and the body bobs the way a
@@ -109,6 +115,29 @@ export const CAR = {
    * and a creeping one comes around slowly. */
   turnRate: 3,
   turnRefSpeed: 40,
+  /** THE LOCK — how far the front wheels may ever be cranked off the body's
+   * centreline (rad). A road car's rack stops at about a third of a right
+   * angle and so does this one, so a target further round than the lock is
+   * not a sharper turn: it is the same turn, held longer. */
+  steerLock: Math.PI * 0.19,
+  /** How fast the rack moves (rad/s) — straight to full lock in about a
+   * fifth of a second, and the rate it walks back to centre at when the wheel
+   * is let go. Finite on purpose: the crank is the thing the renderer draws,
+   * and a wheel that snapped between angles would strobe rather than steer. */
+  steerRate: 3,
+  /**
+   * THE YAW STOP — how far off its own facing axis the nose may ever come
+   * (rad), measured from the side the car was parked on.
+   *
+   * The body is drawn from ONE side-profile assembly and is never mirrored,
+   * so a car free to come about drove away still facing the way it came —
+   * the sprite cannot turn around, so the car may not either. Just short of
+   * square: the nose swings all the way up and down the screen, which is the
+   * whole of steering left and right in a side view, and stops before the
+   * beam where a side-on car has no profile left to show at all. Getting back
+   * the other way is what REVERSE is for.
+   */
+  maxYaw: Math.PI * 0.48,
   /** The intent arcs, against the angle between the steer target and the
    * nose: inside `forwardArc` the driver means GO, beyond `reverseArc` he
    * means BRAKE/BACK UP, and the band between is pure steering — the car
@@ -209,17 +238,23 @@ const VEHICLE_LANDMARKS: Record<string, Vehicle["kind"]> = {
 };
 
 function createCar(pos: Vec2, heading: number): CarVehicle {
+  // The facing axis is settled HERE and never again: the art has one profile,
+  // so the yaw stop holds the nose on whichever side the car was parked
+  // facing (see `CAR.maxYaw` / `steerCar`), and a parking bearing already
+  // past the stop is brought back onto it rather than driven off it.
+  const faceLeft = Math.cos(heading) < 0;
   return {
     kind: "car",
     pos: { x: pos.x, y: pos.y },
     home: { x: pos.x, y: pos.y },
-    heading,
+    heading: clampYaw(heading, faceLeft),
     departed: false,
     engineCueMs: 0,
     grindCueMs: 0,
-    faceLeft: Math.cos(heading) < 0,
+    faceLeft,
     speed: 0,
     wheelAngle: 0,
+    steer: 0,
     suspension: [0, 0],
     suspensionVel: [0, 0],
     wear: 0,
@@ -650,6 +685,56 @@ function angleDiff(to: number, from: number): number {
   return d;
 }
 
+/** A bearing held inside the yaw stop, on the side the body faces
+ * (`CAR.maxYaw`) — and normalized around that axis while it is there, so a
+ * heading never accumulates turns it is not allowed to have made. */
+function clampYaw(heading: number, faceLeft: boolean): number {
+  const axis = faceLeft ? Math.PI : 0;
+  return axis + clamp(angleDiff(heading, axis), -CAR.maxYaw, CAR.maxYaw);
+}
+
+/**
+ * THE RACK AND THE YAW STOP — one tick of the front wheels, and what the nose
+ * does about them.
+ *
+ * `wantSteer` is what the DRIVER is asking for: the bearing error, cranked no
+ * further than the lock. `car.steer` is where the wheels actually are, walked
+ * toward it at `CAR.steerRate` rather than snapped, so they visibly wind on
+ * and unwind — and walk back to centre the moment the wheel is let go, the
+ * way a real rack self-centres. That angle is the one the renderer warps the
+ * front wheel sprite by, which is why it is simulated state rather than
+ * something the app infers from the turn: a car standing still with its wheels
+ * cranked is a picture the driver expects to see.
+ *
+ * The NOSE then comes round in proportion to the crank AND the roll — full
+ * lock at a crawl turns almost nothing (`turnRefSpeed`, the same authority the
+ * heading always had, now read through the rack), and REVERSE turns it the
+ * other way for the same crank, because backing up with the wheel cranked left
+ * swings the tail left.
+ *
+ * …and it stops at the beam (`CAR.maxYaw`). A driver asking for more than the
+ * stop has left STRAIGHTENS UP rather than sitting on a lock he is getting
+ * nothing for — a car pinned against its own limit with the wheels hard over
+ * reads as a broken steering column.
+ */
+function steerCar(car: CarVehicle, wantSteer: number, dt: number): void {
+  const roll = car.speed < 0 ? -1 : 1;
+  const off = angleDiff(car.heading, car.faceLeft ? Math.PI : 0);
+  const pushing = wantSteer * roll;
+  if (
+    (off >= CAR.maxYaw && pushing > 0) ||
+    (off <= -CAR.maxYaw && pushing < 0)
+  ) {
+    wantSteer = 0;
+  }
+  const step = CAR.steerRate * dt;
+  car.steer += clamp(wantSteer - car.steer, -step, step);
+  const authority = Math.min(1, Math.abs(car.speed) / CAR.turnRefSpeed);
+  const swing =
+    CAR.turnRate * dt * authority * (car.steer / CAR.steerLock) * roll;
+  car.heading = clampYaw(car.heading + swing, car.faceLeft);
+}
+
 /**
  * CAR PHYSICS — a nose, a throttle, and a wheel, not a point that chases
  * the pointer. The car carries a `heading` and a SIGNED `speed` along it;
@@ -668,6 +753,10 @@ function angleDiff(to: number, from: number): number {
  * authority proportional to ground speed (`turnRefSpeed`): a standing car
  * cannot pivot on the spot, however hard the wheel is cranked. Releasing
  * every control coasts the car to a stop.
+ *
+ * The crank itself goes through the RACK (`steerCar`): the target only ever
+ * asks for wheel angle, held at `steerLock`, and the nose may never come past
+ * `maxYaw` off the side the body faces.
  *
  * The app composes the target FROM the car for the keyboard (W/A/S/D in the
  * nose's own frame — see player-input.ts); a held pointer/touch works
@@ -695,6 +784,10 @@ function driveCar(
 ): void {
   if (car.driver === null || !inputs) return;
   const input = inputs(car.driver);
+  // What the driver is asking of the WHEEL this tick, in rack angle. Nothing
+  // held (or nothing to steer at) asks for straight ahead, and the rack walks
+  // itself back to centre — see `steerCar`, which owns both halves.
+  let wantSteer = 0;
   if (input.steering) {
     const dx = input.target.x - car.pos.x;
     const dy = input.target.y - car.pos.y;
@@ -729,13 +822,13 @@ function driveCar(
             ? Math.max(0, car.speed - drop)
             : Math.min(0, car.speed + drop);
       }
-      // The wheel only bites as far as the car rolls; reversing steers the
-      // TAIL at the target, which is what cranking the wheel in reverse does.
-      const authority = Math.min(1, Math.abs(car.speed) / CAR.turnRefSpeed);
+      // Reversing steers the TAIL at the target, and the rack works the other
+      // way round doing it — so the crank is the error read in the direction
+      // the car is actually rolling, held at the lock.
       const err =
         car.speed < 0 ? angleDiff(want + Math.PI, car.heading) : ahead;
-      const swing = CAR.turnRate * dt * authority;
-      car.heading += Math.max(-swing, Math.min(swing, err));
+      const roll = car.speed < 0 ? -1 : 1;
+      wantSteer = clamp(err * roll, -CAR.steerLock, CAR.steerLock);
     }
   } else {
     // Nothing held: coast down to a stop from either direction.
@@ -745,6 +838,9 @@ function driveCar(
         ? Math.max(0, car.speed - drop)
         : Math.min(0, car.speed + drop);
   }
+  // The wheels turn every tick, held or not — a released wheel self-centres —
+  // and the nose follows them as far as the car is rolling.
+  steerCar(car, wantSteer, dt);
   if (car.speed !== 0) {
     car.pos.x += Math.cos(car.heading) * car.speed * dt;
     car.pos.y += Math.sin(car.heading) * car.speed * dt;
@@ -752,11 +848,11 @@ function driveCar(
     // out, so the shut garage door (its obstacle chain) really stops the bumper.
     collideCarBody(state, car);
   }
-  // The side-profile art has two poses; the nose's x-sign picks one. The
-  // dead zone keeps a car driving straight up/down the screen from
-  // flickering between them.
-  const nose = Math.cos(car.heading);
-  if (Math.abs(nose) > 0.2) car.faceLeft = nose < 0;
+  // `faceLeft` was settled at the parking spot and never moves again: the yaw
+  // stop holds the nose on its own side of the beam, so the side-profile art
+  // is never asked to answer for a car that came about. (It used to flip on
+  // the nose's x-sign — which is exactly the lie, since NOTHING mirrors the
+  // assembly: a car that turned round drove away still facing the way it came.)
   // The driver rides IN the car: his body lands exactly where the car
   // ends the tick (the party loop already pinned him before the move —
   // this is the post-move half, so nothing ever reads him a tick behind).

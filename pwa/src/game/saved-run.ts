@@ -408,6 +408,17 @@ export function loadSavedRun(): ParkedRun | null {
       // a SAVE_VERSION bump that bins every parked run for a list that starts
       // empty anyway.
       corpses: payload.state.corpses ?? [],
+      // THE RACK (`CarVehicle.steer`) is defaulted on the same reasoning, and
+      // it is the case where it MATTERS: `steerCar` integrates that number
+      // every tick somebody is at the wheel, so a car parked before the front
+      // wheels steered would thaw with `undefined` there and take its heading —
+      // then its position — to NaN the moment the key was turned. One zero
+      // beats a SAVE_VERSION bump that bins every parked run over it.
+      vehicles: (payload.state.vehicles ?? []).map((vehicle) =>
+        vehicle.kind === "car"
+          ? { ...vehicle, steer: vehicle.steer ?? 0 }
+          : vehicle,
+      ),
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).

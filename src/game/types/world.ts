@@ -643,6 +643,19 @@ export type CarVehicle = VehicleBase & {
   grindCueMs: number;
   /** Wheel roll angle (radians) — picks the spin frame per wheel. */
   wheelAngle: number;
+  /**
+   * THE RACK — how far the FRONT wheels stand off the body's centreline
+   * (radians, signed like `heading`: positive cranks the nose toward +y).
+   *
+   * The driver's crank rather than the car's turn: it winds on and unwinds at
+   * a finite rate, stops dead at the lock (`CAR.steerLock`, a road car's
+   * third of a right angle), and self-centres when the wheel is let go. The
+   * nose then comes round as far as the wheels are cranked AND the car rolls,
+   * so a standing car's wheels turn while the car itself does not — which is
+   * exactly what a driver sitting in a parked car sees, and what the renderer
+   * warps the front wheel sprite by (`render/vehicles.ts`).
+   */
+  steer: number;
   /** Spring compression per axle, [rear, front], world px downward. */
   suspension: [number, number];
   /** Spring velocity per axle (px/s) — the integrator's other half. */

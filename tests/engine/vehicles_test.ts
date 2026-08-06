@@ -102,6 +102,102 @@ describe("the wheels", () => {
   });
 });
 
+// THE RACK — the front wheels are the driver's crank (`CarVehicle.steer`),
+// simulated rather than inferred from the turn, because the renderer warps the
+// front wheel sprite by it. And THE YAW STOP: the assembly is one side-profile
+// stack that nothing mirrors, so the nose may swing up and down the screen but
+// may never come about — a car that turned round used to drive away still
+// facing the way it came.
+describe("the steering", () => {
+  const board = (state: ReturnType<typeof startHub>): CarVehicle => {
+    const car = carOf(state);
+    state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
+    applyRunCommand(state, "enterCar");
+    return car;
+  };
+  /** How far off the body's facing axis the nose stands, signed. */
+  const yaw = (car: CarVehicle): number =>
+    Math.atan2(Math.sin(car.heading), Math.cos(car.heading));
+
+  it("mints the wheels dead straight", () => {
+    expect(carOf(startHub()).steer).toBe(0);
+  });
+
+  it("cranks the wheels of a car that is standing still — but not the car", () => {
+    const state = startHub();
+    const car = board(state);
+    const heading = car.heading;
+    // Abeam: the pure-steering band, so there is no throttle and no roll.
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 30);
+    expect(car.steer).toBeGreaterThan(0);
+    expect(car.speed).toBe(0);
+    expect(car.heading).toBe(heading); // …and a parked car does not pivot
+  });
+
+  it("never cranks past the lock, however far round the target is", () => {
+    const state = startHub();
+    const car = board(state);
+    for (let i = 0; i < 240; i++) {
+      run(state, steerTo(car.pos.x, car.pos.y - 400), 1);
+      expect(Math.abs(car.steer)).toBeLessThanOrEqual(CAR.steerLock + 1e-9);
+    }
+  });
+
+  it("self-centres the moment the wheel is let go", () => {
+    const state = startHub();
+    const car = board(state);
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 30);
+    expect(Math.abs(car.steer)).toBeGreaterThan(0.1);
+    run(state, idle, 60);
+    expect(car.steer).toBe(0);
+  });
+
+  it("holds the nose short of the beam — the car can never come about", () => {
+    const state = startHub();
+    const car = board(state);
+    // THROTTLE AND FULL LEFT LOCK, held: a target off the bow inside the
+    // forward arc, recomposed off the nose every tick — which is what W+A is
+    // (game-screen/player-input.ts). The car turns as hard as it turns for as
+    // long as the key is down, which used to walk it right round the compass.
+    for (let i = 0; i < 600; i++) {
+      const ang = car.heading - Math.PI / 4;
+      run(
+        state,
+        steerTo(
+          car.pos.x + Math.cos(ang) * 300,
+          car.pos.y + Math.sin(ang) * 300,
+        ),
+        1,
+      );
+      expect(Math.abs(yaw(car))).toBeLessThanOrEqual(CAR.maxYaw + 1e-9);
+    }
+    // It really did turn as far as it is allowed to…
+    expect(Math.abs(yaw(car))).toBeGreaterThan(CAR.maxYaw - 0.05);
+    // …and the profile it is drawn with never had to flip.
+    expect(Math.cos(car.heading)).toBeGreaterThan(0);
+    expect(car.faceLeft).toBe(false);
+    // Pinned against the stop, the driver straightens up rather than sitting
+    // on a lock he is getting nothing for.
+    expect(Math.abs(car.steer)).toBeLessThan(CAR.steerLock);
+  });
+
+  it("keeps the nose on its side through a full lap of the compass", () => {
+    const state = startHub();
+    const car = board(state);
+    // Chase a target dragged the whole way round the car: heading used to
+    // follow it round and round, and the sprite stayed pointing east.
+    for (let i = 0; i < 720; i++) {
+      const a = (i / 720) * Math.PI * 2;
+      run(
+        state,
+        steerTo(car.pos.x + Math.cos(a) * 300, car.pos.y + Math.sin(a) * 300),
+        1,
+      );
+      expect(Math.cos(car.heading)).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe("the fix ladder", () => {
   it("mints every part bolted down, nothing dangling, no debris", () => {
     const state = startHub();
