@@ -51,6 +51,14 @@ const EffectsGallery = /* @__PURE__ */ lazy(() =>
     default: m.EffectsGallery,
   })),
 );
+// THE ROAD (`?drive`), lazy for the same reason and then some: the drive pulls
+// the engine's whole simulation, the renderer and the sprite atlas in behind it,
+// and it is a developer deep link nobody who is playing ever types.
+const DriveWorkbench = /* @__PURE__ */ lazy(() =>
+  import("./game/drive-screen/DriveWorkbench.tsx").then((m) => ({
+    default: m.DriveWorkbench,
+  })),
+);
 // The cutscene workbench (`?cutscene=<id>`), lazy for the same reason: it is a
 // developer deep link reached by URL, and a static import parked the whole
 // cutscene catalog (and the overlay that plays it) in the entry chunk for every
@@ -329,6 +337,31 @@ export function App() {
             onClose={() => {
               const url = new URL(window.location.href);
               url.searchParams.delete("effects");
+              window.location.replace(url.toString());
+            }}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  // THE DRIVE WORKBENCH (`?drive`, `?drive=home`, `&difficulty=`, `&seed=`,
+  // `&gore=off`): the minigame on its own, without the five-minute walk to the
+  // garage it otherwise sits behind — the road's own iteration loop, and what a
+  // screenshot of it is taken through. Developer tooling, folded out of a store
+  // build with the gallery.
+  if (__DEV_TOOLS__ && params.has("drive")) {
+    return (
+      <ErrorBoundary
+        fallback={<RunLoadError />}
+        onError={(e) => warn(`drive workbench failed: ${String(e)}`)}
+      >
+        <Suspense fallback={null}>
+          <DriveWorkbench
+            params={params}
+            onClose={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("drive");
               window.location.replace(url.toString());
             }}
           />

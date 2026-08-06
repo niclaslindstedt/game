@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_b
+description: >-
+  The second body thud — the same blow caught a touch lower and softer, so a
+  run of hits reads as different people rather than one repeated event.
+voices:
+  - call: tone
+    type: square
+    from: 158
+    to: 88
+    durationMs: 88
+    volume: 0.04
+    detuneCents: 10
+  - call: noise
+    durationMs: 54
+    volume: 0.028
+    filter:
+      type: bandpass
+      frequency: 760
+  - call: noise
+    durationMs: 130
+    volume: 0.013
+    delayMs: 44
+    filter:
+      type: lowpass
+      frequency: 360

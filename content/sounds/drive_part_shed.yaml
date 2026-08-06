@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_part_shed
+description: >-
+  A part working free and going: the tear of the last fixing, then the
+  piece skipping away down the tarmac behind — three bright clatters in
+  quick succession, each quieter than the last, so the ear puts it in the
+  mirror rather than on the car.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.034
+    filter:
+      type: bandpass
+      frequency: 2300
+  - call: tone
+    type: square
+    from: 520
+    to: 300
+    durationMs: 90
+    volume: 0.022
+    detuneCents: 18
+  - call: noise
+    durationMs: 60
+    volume: 0.022
+    delayMs: 140
+    filter:
+      type: bandpass
+      frequency: 2800
+  - call: noise
+    durationMs: 50
+    volume: 0.014
+    delayMs: 260
+    filter:
+      type: bandpass
+      frequency: 3200

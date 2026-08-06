@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_c
+description: >-
+  The third body thud — brighter and shorter, the one that reads as a
+  clipping blow on the wing rather than a square hit on the nose.
+voices:
+  - call: tone
+    type: square
+    from: 214
+    to: 132
+    durationMs: 62
+    volume: 0.038
+    detuneCents: 6
+  - call: noise
+    durationMs: 70
+    volume: 0.032
+    filter:
+      type: bandpass
+      frequency: 1180

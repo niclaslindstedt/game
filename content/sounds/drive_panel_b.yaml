@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_panel_b
+description: >-
+  The second panel bend — lower and duller, the one that sounds like the
+  car is running out of straight metal to bend.
+voices:
+  - call: tone
+    type: triangle
+    from: 248
+    to: 132
+    durationMs: 140
+    volume: 0.03
+    detuneCents: 16
+  - call: noise
+    durationMs: 52
+    volume: 0.018
+    filter:
+      type: bandpass
+      frequency: 1400

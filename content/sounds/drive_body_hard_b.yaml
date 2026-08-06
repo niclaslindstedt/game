@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_b
+description: >-
+  The second heavy body hit — a shade deeper and longer, with a scatter of
+  highpass debris after it, for the one that came apart over the bonnet.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 150
+    to: 38
+    durationMs: 170
+    volume: 0.056
+    detuneCents: 16
+  - call: noise
+    durationMs: 210
+    volume: 0.032
+    filter:
+      type: lowpass
+      frequency: 260
+  - call: noise
+    durationMs: 130
+    volume: 0.018
+    delayMs: 90
+    filter:
+      type: highpass
+      frequency: 3200

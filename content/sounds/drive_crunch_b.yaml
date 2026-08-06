@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crunch_b
+description: >-
+  The second heavy collision — the same shape pitched lower and given a
+  metallic wrench in the middle of it, for the hit that folds a wing rather
+  than shattering a light cluster.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 190
+    to: 34
+    durationMs: 300
+    volume: 0.07
+    detuneCents: 22
+  - call: noise
+    durationMs: 320
+    volume: 0.048
+    filter:
+      type: lowpass
+      frequency: 220
+    echo: 0.22
+  - call: tone
+    type: square
+    from: 640
+    to: 320
+    durationMs: 130
+    volume: 0.024
+    delayMs: 40
+    detuneCents: 20
+  - call: noise
+    durationMs: 220
+    volume: 0.02
+    delayMs: 160
+    filter:
+      type: highpass
+      frequency: 3800

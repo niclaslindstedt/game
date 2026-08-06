@@ -17,7 +17,7 @@
 // car left at the roadside: enough to close the picture in, nothing that can
 // swallow a pedestrian.
 
-import { DRIVE, roadEdges } from "@game/core";
+import { crowdEdges, DRIVE } from "@game/core";
 
 /**
  * THE CROWD's bodies — the twenty people the welfare did not reach.
@@ -98,8 +98,22 @@ export const HOUSE_SPRITES: readonly string[] = [
 /** How far apart the buildings stand (world px) — they are 40 wide, so this
  * leaves a gap of alley between them rather than a solid wall. */
 const HOUSE_PITCH = 52;
-/** …and how far back off the road's far edge they are set. */
-const HOUSE_SETBACK = 30;
+/**
+ * …and how far back the frontages stand from the FAR PAVEMENT's outer edge.
+ *
+ * TWO RULES, BOTH LEARNED BY LOOKING. The town stands CLOSE — set back the
+ * thirty pixels it opened with, it read as a village on the horizon rather than
+ * a street the hero is driving down, and the whole top third of the frame was
+ * empty verge. And it stands CLEAR: measured off the pavement's edge rather
+ * than the road's, so no frontage is ever drawn over the pavement people are
+ * walking on.
+ *
+ * The setback carries NO jitter, which is the other half of it. A doorway's
+ * depth of variation sounded like realism and drew a ragged saw of a frontage
+ * line; a real street's buildings share one building line, and at this size the
+ * shared line is what makes the row read as a street at all.
+ */
+const HOUSE_SETBACK = 11;
 /** The near verge's furniture pitch — sparser, because it is in front of the
  * player and everything here costs him a view of the road. */
 const KERB_PITCH = 104;
@@ -131,7 +145,8 @@ function hash(n: number): number {
  * but behind the traffic on it.
  */
 export function sceneryBetween(fromX: number, toX: number): SceneryProp[] {
-  const edges = roadEdges();
+  const bands = roadBands();
+  const walk = crowdEdges();
   const props: SceneryProp[] = [];
   const first = Math.floor(fromX / HOUSE_PITCH) - 1;
   const last = Math.ceil(toX / HOUSE_PITCH) + 1;
@@ -142,20 +157,32 @@ export function sceneryBetween(fromX: number, toX: number): SceneryProp[] {
     props.push({
       sprite,
       x: i * HOUSE_PITCH,
-      // A little jitter in the setback so the frontages are not one flat wall —
-      // a real street steps in and out by a doorway's depth.
-      y: edges.top - HOUSE_SETBACK - Math.round(hash(i * 7 + 1) * 6),
+      y: walk.top - HOUSE_SETBACK,
+    });
+  }
+  // THE FAR PAVEMENT gets lamp posts of its own, between the town and the
+  // kerb — a street lit from one side only reads as a road with a film set
+  // along it. Offset half a pitch from the near side's so the two rows
+  // interleave rather than marching in pairs.
+  const lampFirst = Math.floor(fromX / KERB_PITCH) - 1;
+  const lampLast = Math.ceil(toX / KERB_PITCH) + 1;
+  for (let i = lampFirst; i <= lampLast; i++) {
+    props.push({
+      sprite: "lamp_post",
+      x: i * KERB_PITCH + KERB_PITCH / 2,
+      y: bands.top - 4,
     });
   }
   const kerbFirst = Math.floor(fromX / KERB_PITCH) - 1;
   const kerbLast = Math.ceil(toX / KERB_PITCH) + 1;
   for (let i = kerbFirst; i <= kerbLast; i++) {
     const roll = hash(i * 31 + 5);
-    // Two thirds lamp posts, one third somebody's car left at the kerb — which
-    // also quietly tells the player that a car CAN be at the roadside and not
-    // be traffic he has to dodge.
+    // MOSTLY EMPTY KERB, and one car in six. A third of the kerb slots being
+    // parked cars put one in the frame at all times, and a car in the picture
+    // is read as TRAFFIC however far off the tarmac it is standing — the
+    // player brakes for scenery. Rare enough to be a detail, not a hazard.
     const sprite =
-      roll < 0.66
+      roll < 0.84
         ? "lamp_post"
         : (TRAFFIC_SPRITES[
             Math.floor(hash(i * 13 + 3) * TRAFFIC_SPRITES.length)
@@ -163,7 +190,9 @@ export function sceneryBetween(fromX: number, toX: number): SceneryProp[] {
     props.push({
       sprite,
       x: i * KERB_PITCH,
-      y: edges.bottom + 16 + Math.round(hash(i * 17 + 9) * 5),
+      // Standing ON the near pavement — kerbside furniture belongs on the
+      // pavement, not out in the grass behind it.
+      y: bands.bottom + 4,
     });
   }
   return props;

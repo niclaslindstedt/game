@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_a
+description: >-
+  A body taken square at the top end — the sound the arrival lines are
+  refusing to talk about. A sawtooth dive to the floor for the weight of it,
+  a lowpass boom under that, and a short wet burst of contact. Louder than
+  the ordinary thud because the physics says it was: the app picks this over
+  `drive_body_a` off the collision's own joules, not at random.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 168
+    to: 46
+    durationMs: 150
+    volume: 0.058
+    detuneCents: 14
+  - call: noise
+    durationMs: 190
+    volume: 0.034
+    filter:
+      type: lowpass
+      frequency: 300
+  - call: noise
+    durationMs: 70
+    volume: 0.038
+    filter:
+      type: bandpass
+      frequency: 820

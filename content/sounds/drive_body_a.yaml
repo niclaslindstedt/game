@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_a
+description: >-
+  A body meeting the bumper at speed — the FIRST of three, so a road with
+  twenty people on it never plays one sample twenty times. A dull square
+  thud with no ring to it (a person is not a bell), a wet bandpass slap of
+  contact over the top, and a scuff of grit as they go under. Kept quiet:
+  this fires more often than anything else in the minigame.
+voices:
+  - call: tone
+    type: square
+    from: 186
+    to: 104
+    durationMs: 76
+    volume: 0.042
+    detuneCents: 8
+  - call: noise
+    durationMs: 62
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 940
+  - call: noise
+    durationMs: 120
+    volume: 0.014
+    delayMs: 50
+    filter:
+      type: lowpass
+      frequency: 420

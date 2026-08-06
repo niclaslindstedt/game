@@ -12,6 +12,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   createDrive,
+  crossingsBetween,
+  crowdEdges,
   driveRideQuality,
   DRIVE,
   DRIVE_OUTCOME,
@@ -19,6 +21,7 @@ import {
   impactMasses,
   laneCenter,
   restartDrive,
+  roadEdges,
   solveImpact,
   stepDrive,
   type DriveParams,
@@ -176,17 +179,91 @@ describe("the difficulty ladder on the road", () => {
       ...PARAMS,
       difficulty: DIFFICULTY_ORDER.at(-1) as Difficulty,
     });
-    const target = 12000;
-    for (const drive of [gentle, brutal]) {
-      while (
-        drive.distance < target &&
-        drive.outcome === DRIVE_OUTCOME.driving
-      ) {
+    // A FIXED STRETCH OF CLOCK rather than a fixed distance, because the two
+    // ways a harder rung punishes a driver are "you got less far" and "you did
+    // not get there at all" — and timing a fixed distance cannot see the
+    // second one (a wreck simply stops the loop early, which reads as FASTER).
+    for (let t = 0; t < 20000; t += 16) {
+      for (const drive of [gentle, brutal]) {
         stepDrive(drive, 16, { pedal: 1, wheel: 0 });
       }
     }
     expect(brutal.car.wear).toBeGreaterThan(gentle.car.wear);
-    expect(brutal.ms).toBeGreaterThan(gentle.ms);
+    expect(brutal.distance).toBeLessThan(gentle.distance);
+  });
+});
+
+describe("the street", () => {
+  it("lets the crowd stand on the pavement, and keeps the car off it", () => {
+    const walk = crowdEdges();
+    const road = roadEdges();
+    expect(walk.top).toBeLessThan(road.top);
+    expect(walk.bottom).toBeGreaterThan(road.bottom);
+    expect(road.bottom - walk.bottom).toBeCloseTo(-DRIVE.pavementPx, 6);
+
+    // Nobody is ever laid down outside the paving, and nobody wanders off it.
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 30000);
+    for (const ped of drive.pedestrians) {
+      if (ped.mode === "tumbling") continue; // thrown bodies land where physics says
+      expect(ped.pos.y).toBeGreaterThanOrEqual(walk.top - 0.001);
+      expect(ped.pos.y).toBeLessThanOrEqual(walk.bottom + 0.001);
+    }
+    // …and the car is still held to the tarmac and its gutter.
+    expect(Math.abs(drive.car.pos.y)).toBeLessThanOrEqual(road.bottom + 0.001);
+  });
+
+  it("paints its crossings on a regular pitch, both legs alike", () => {
+    const marks = crossingsBetween(0, DRIVE.crossingPitchPx * 3.5);
+    expect(marks.length).toBe(4);
+    for (const [i, x] of marks.entries()) {
+      expect(x).toBeCloseTo(i * DRIVE.crossingPitchPx, 6);
+    }
+    // World x, not course distance — so the way home meets the same paint.
+    expect(crossingsBetween(-DRIVE.crossingPitchPx, 0)).toEqual([
+      -DRIVE.crossingPitchPx,
+      0,
+    ]);
+  });
+
+  it("gathers a good share of the crowd onto the crossings", () => {
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 60000);
+    // Counted at birth would be cleaner, but a body lunges the moment it sees
+    // the car — so this asks the looser question the paint has to answer: were
+    // people PUT on the crossings at all?
+    const near = drive.pedestrians.filter((ped) => {
+      const off = Math.abs(
+        ped.pos.x -
+          Math.round(ped.pos.x / DRIVE.crossingPitchPx) * DRIVE.crossingPitchPx,
+      );
+      return off < DRIVE.crossingWidthPx;
+    });
+    expect(near.length).toBeGreaterThan(0);
+  });
+
+  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
+    const count = (difficulty: Difficulty) => {
+      const drive = createDrive({ ...PARAMS, difficulty });
+      let seen = 0;
+      const ids = new Set<number>();
+      for (let t = 0; t < 40000; t += 16) {
+        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+        for (const car of drive.traffic) {
+          if (!ids.has(car.id)) {
+            ids.add(car.id);
+            seen++;
+          }
+        }
+      }
+      return seen / Math.max(1, drive.distance / 1000);
+    };
+    const gentle = count("easy");
+    const brutal = count(DIFFICULTY_ORDER.at(-1) as Difficulty);
+    expect(gentle).toBeLessThan(brutal);
+    // And even the worst rung leaves the road drivable: about one other car in
+    // view at a time, not a jam. A screen is ~420 px.
+    expect(brutal).toBeLessThan(4);
   });
 });
 
