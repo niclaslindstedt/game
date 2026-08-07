@@ -37,20 +37,56 @@ import { difficultyDef } from "../defs/difficulties.ts";
 import { courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
 import type { Impact } from "./impact.ts";
 import { crowdEdges, laneCenter, roadBandEdges, roadEdges } from "./crowd.ts";
-import { PAVEMENT_SHARE, rollVehicle, vehicleDef } from "./fleet.ts";
+import { rollVehicle, vehicleDef } from "./fleet.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
 export { TRAFFIC_VARIANTS } from "./fleet.ts";
 
-/** How thick the traffic is on this drive's rung — the baseline density
- * through the difficulty's own multiplier (`DifficultyDef.drive`). The gentle
- * rungs leave the road nearly the hero's own; the hard ones shut a lane on him
- * regularly. */
-function trafficPerKPx(state: DriveState): number {
+/** How thick the traffic is on this drive's rung — the baseline gap through the
+ * difficulty's own multiplier (`DifficultyDef.drive`), which DIVIDES it. The
+ * gentle rungs leave the road nearly the hero's own; the hard ones put a
+ * vehicle in every lane on every screen. */
+function laneGapPx(state: DriveState): number {
   return (
-    DRIVE.trafficPerKPx *
+    DRIVE.laneTraffic.gapPx /
     difficultyDef(state.params.difficulty).drive.trafficDensity
   );
+}
+
+/** …and the same rung applied to the footway's own rate (riders per 1000 px). */
+function pavementPerKPx(state: DriveState): number {
+  return (
+    DRIVE.pavementPerKPx *
+    difficultyDef(state.params.difficulty).drive.trafficDensity
+  );
+}
+
+/**
+ * TURN A GAP ON THE SCREEN INTO A PITCH ON THE COURSE — the one piece of
+ * arithmetic that makes "one in every lane on every screen" a thing the
+ * spawner can actually lay down.
+ *
+ * The road is minted at fixed marks along the COURSE, and a mark is reached
+ * when the hero's own reach crosses it — so vehicles are born at a fixed
+ * distance ahead of him, one every `pitch / v` seconds. Once born they drift in
+ * his frame at `v - u`, where `u` is their own speed along his direction of
+ * travel. So the spacing he actually SEES is `pitch × (v - u) / v`, and the
+ * pitch that leaves him a gap of `g` is `g × v / |v - u|`.
+ *
+ * Which is the whole reason a single rate could never populate this road: `u`
+ * is +225-ish in the lanes running his way and −225-ish in the ones coming at
+ * him, so the same picture wants pitches nearly eight times apart. Slow traffic
+ * on his own side lingers in the mirror for the best part of half a minute and
+ * needs laying down sparsely; an oncoming lane is gone in a second and a half
+ * and needs laying down thick.
+ *
+ * `along` is the vehicle's speed measured along the HERO's direction of travel:
+ * positive for a lane running his way, negative for one coming at him.
+ */
+function lanePitch(state: DriveState, along: number): number {
+  const { refSpeedPx: ref, maxPitchMult } = DRIVE.laneTraffic;
+  const closing = Math.max(Math.abs(ref - along), ref / maxPitchMult);
+  return laneGapPx(state) * (ref / closing);
 }
 
 /** Whether a lane runs the hero's way. Right-hand traffic: outbound he has the
@@ -133,39 +169,70 @@ export function createTraffic(
   };
 }
 
-/** Lay down traffic ahead as the road unrolls. Like the crowd, minted once at a
- * running mark so a seed always yields the same road. */
+/**
+ * Lay down traffic ahead as the road unrolls. Like the crowd, minted once at a
+ * running mark so a seed always yields the same road.
+ *
+ * ONE MARK PER LANE, PLUS ONE FOR THE FOOTWAY, and that is the change that
+ * makes the road a road. A single mark with a lane rolled onto it cannot
+ * populate four lanes: the lane is a fresh draw every time, so a stretch of
+ * course lands three vehicles in lane 1 and none anywhere else about as often
+ * as it deals one each, and the player is shown an empty carriageway with an
+ * occasional huddle in it. A mark per lane is the same total traffic laid down
+ * where it can be seen — every lane is served, every screen.
+ *
+ * The lanes are walked in a fixed order and the footway last, so the seeded
+ * stream is spent in a fixed order and a seed still yields the same road.
+ */
 export function spawnTraffic(state: DriveState): void {
+  for (let lane = 0; lane < DRIVE.laneCount; lane++) spawnLane(state, lane);
+  spawnPavement(state);
+}
+
+/** Where a lane's marks stop being laid — past the finish there is no more road
+ * to put anything on, and the mark is retired rather than re-tested every tick.
+ */
+function retire(): number {
+  return Number.POSITIVE_INFINITY;
+}
+
+/** Lay down one lane's share of the traffic. */
+function spawnLane(state: DriveState, lane: number): void {
   const { rng } = state;
   const dir = state.params.direction;
-  // Oncoming cars close at the sum of both speeds, so the far lanes have to be
-  // populated from further out or a head-on would appear out of nothing.
-  const reach = state.distance + DRIVE.spawnAheadPx * 1.6;
-  while (state.nextTrafficAt < reach) {
-    const at = state.nextTrafficAt;
-    state.nextTrafficAt += 1000 / trafficPerKPx(state);
-    if (at < DRIVE.crowdStartPx * 0.5) continue;
-    if (at > courseLength(state.params)) break;
-    // THE FOOTWAY OR THE ROAD, decided first — because it settles which pool
-    // the vehicle comes out of, and a pool is one draw whatever is in it.
-    const onPavement = rng() < PAVEMENT_SHARE;
-    const lane = Math.floor(rng() * DRIVE.laneCount) % DRIVE.laneCount;
-    const withHero = laneRunsWithHero(lane, dir);
-    const variant = rollVehicle(rng, onPavement);
+  const withHero = laneRunsWithHero(lane, dir);
+  // HOW FAR OUT A LANE IS POPULATED, and the two sides want different answers.
+  // Oncoming cars close at the SUM of both speeds, so the far lanes have to be
+  // laid from further out or a head-on would appear out of nothing. The hero's
+  // own side is the opposite problem: he catches it at the DIFFERENCE, which is
+  // a crawl, so a car minted a screen and a half ahead takes the better part of
+  // fifteen seconds to enter the picture — and the lane he is actually driving
+  // in would read as empty for the whole opening of the leg.
+  const reach = state.distance + DRIVE.spawnAheadPx * (withHero ? 1 : 1.6);
+  const finish = courseLength(state.params);
+  while (state.nextTrafficAt[lane]! < reach) {
+    const at = state.nextTrafficAt[lane]!;
+    if (at > finish) {
+      state.nextTrafficAt[lane] = retire();
+      break;
+    }
+    const variant = rollVehicle(rng, false);
     const def = vehicleDef(variant);
     const pace =
       randomRange(rng, DRIVE.trafficSpeedPx.min, DRIVE.trafficSpeedPx.max) *
       randomRange(rng, def.pace.min, def.pace.max);
+    // The pitch is the ROLLED vehicle's, because the gap it leaves behind it
+    // depends on how fast it is going — so the roll happens even for a mark in
+    // the opening stretch that puts nothing on the road.
+    state.nextTrafficAt[lane] = at + lanePitch(state, withHero ? pace : -pace);
+    if (at < DRIVE.crowdStartPx * 0.5) continue;
     // Signed in world +x, like the hero's own velocity: his way or against it.
     const speed = (withHero ? dir : -dir) * pace;
-    const y = onPavement
-      ? pavementY(laneRunsWithHero(lane, dir) === (dir === 1))
-      : laneCenter(lane);
     state.traffic.push(
       createTraffic(
         state.nextId++,
         variant,
-        { x: state.car.home.x + dir * at, y },
+        { x: state.car.home.x + dir * at, y: laneCenter(lane) },
         speed,
         // The weave's phase, derived from the spawn mark rather than drawn, so
         // adding a rider to the road can never move one rolled after it.
@@ -173,6 +240,74 @@ export function spawnTraffic(state: DriveState): void {
       ),
     );
   }
+}
+
+/** …and the delivery trade, which is not in a lane at all: its own stream, its
+ * own pool and its own rate, so the footway neither takes a lane's vehicle away
+ * nor gets busier every time the lanes do. */
+function spawnPavement(state: DriveState): void {
+  const { rng } = state;
+  const dir = state.params.direction;
+  const reach = state.distance + DRIVE.spawnAheadPx * 1.6;
+  const finish = courseLength(state.params);
+  const pitch = 1000 / pavementPerKPx(state);
+  while (state.nextPavementAt < reach) {
+    const at = state.nextPavementAt;
+    if (at > finish) {
+      state.nextPavementAt = retire();
+      break;
+    }
+    state.nextPavementAt = at + pitch;
+    if (at < DRIVE.crowdStartPx * 0.5) continue;
+    // WHICH FOOTWAY, and the side settles the direction: the delivery trade
+    // travels with the flow like everything else, so a rider on the near
+    // pavement runs the hero's way on the leg out and against it on the leg
+    // home — exactly the near/far split the lanes use.
+    const nearSide = rng() < 0.5;
+    const withHero = nearSide === (dir === 1);
+    const variant = rollVehicle(rng, true);
+    const def = vehicleDef(variant);
+    const pace =
+      randomRange(rng, DRIVE.trafficSpeedPx.min, DRIVE.trafficSpeedPx.max) *
+      randomRange(rng, def.pace.min, def.pace.max);
+    state.traffic.push(
+      createTraffic(
+        state.nextId++,
+        variant,
+        { x: state.car.home.x + dir * at, y: pavementY(nearSide) },
+        (withHero ? dir : -dir) * pace,
+        (at * 0.017) % (Math.PI * 2),
+      ),
+    );
+  }
+}
+
+/**
+ * STOP THE SPAWNER laying any more traffic — the exhibits stage their own, and
+ * several suites need a road holding nothing but what they planted.
+ *
+ * It lives here beside the marks it sets because there are `laneCount + 1` of
+ * them now: a caller silencing the road by hand gets one lane quiet and three
+ * still serving cars, and would have to be re-visited every time the road grows
+ * another lane.
+ */
+export function haltTraffic(state: DriveState, at = retire()): void {
+  state.nextTrafficAt.fill(at);
+  state.nextPavementAt = at;
+}
+
+/** Where a fresh leg's marks start — the opening stretch is deliberately clear
+ * (`crowdStartPx`), and the lanes are STAGGERED across one gap so the first
+ * vehicles do not arrive four abreast like the start of a race. */
+export function resetTrafficMarks(): { lanes: number[]; pavement: number } {
+  const open = DRIVE.crowdStartPx * 0.5;
+  return {
+    lanes: Array.from(
+      { length: DRIVE.laneCount },
+      (_, lane) => open + (lane * DRIVE.laneTraffic.gapPx) / DRIVE.laneCount,
+    ),
+    pavement: open,
+  };
 }
 
 /** One tick of the other traffic: roll on, work off any slew, weave if this is

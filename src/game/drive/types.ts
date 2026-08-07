@@ -761,8 +761,34 @@ export type DriveState = {
    * the course) — the spawner's running marks, so the crowd is laid down once
    * as the road unrolls rather than re-rolled every tick. */
   nextPedestrianAt: number;
-  /** …and the same for traffic. */
-  nextTrafficAt: number;
+  /**
+   * …and the same for traffic, ONE MARK PER LANE — `DRIVE.laneCount` of them,
+   * indexed by lane.
+   *
+   * A single mark with the lane rolled onto it cannot keep four lanes served:
+   * the lane is a fresh draw each time, so the road comes out clumped and the
+   * player is shown an empty carriageway. A mark per lane is what makes "a
+   * vehicle in every lane on every screen" something the spawner can promise
+   * (`spawnLane`). Set them together through `haltTraffic` / `resetTrafficMarks`
+   * rather than by hand.
+   */
+  nextTrafficAt: number[];
+  /** …and one more for the footway, which is not a lane and keeps its own rate
+   * (`DRIVE.pavementPerKPx`). */
+  nextPavementAt: number;
+  /**
+   * WHO STILL HAS SOMETHING TO THINK — the crowd's thoughts, shuffled once at
+   * the top of the leg and dealt out as the road unrolls (see `CROWD_THOUGHTS`
+   * and `dealThought`). A dealt one is GONE: the whole catalogue plays across a
+   * trip, each line exactly once, which is what keeps a road of two hundred
+   * people from repeating the same six sad little sentences at the windscreen.
+   */
+  thoughtDeck: number[];
+  /** How far along the next of them is due (world px along the course) — the
+   * thoughts have their own spacing, far wider than the crowd's own, because a
+   * line over every head is a wall of text and a line every so often is a
+   * person. */
+  nextThoughtAt: number;
   /** The next kerb slot the street has not put its furniture down at — an
    * INDEX rather than a distance, because the furniture stands on a fixed
    * pitch in world x (so the way home passes the same posts) and it walks in

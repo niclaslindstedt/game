@@ -21,6 +21,14 @@
 import { GENERATED_ENEMIES } from "../../src/generated/enemies.ts";
 import { GENERATED_GEAR } from "../../src/generated/items.ts";
 import { FLEET } from "../../src/game/drive/fleet.ts";
+import { TOWN } from "../../src/game/drive/town.ts";
+import { FACADE_COLOURWAYS, facadeShell } from "../asset-tools/facade.mjs";
+import {
+  FACADE_PARTS_PALETTE,
+  FACADE_SPECKLE_EXEMPT,
+  facadeParts,
+  facadePartsCheck,
+} from "../asset-tools/facade-parts.mjs";
 import {
   CAST_RIM_CHAR,
   CAST_RIM_RGBA,
@@ -279,6 +287,48 @@ export function deriveWrecks(fleet) {
 }
 
 deriveWrecks(FLEET);
+
+// ---- The town ---------------------------------------------------------------
+// Every building on the road to GOODCO, and every loose piece it is dressed
+// with (asset-tools/facade.mjs + facade-parts.mjs). Generated for the same
+// reason the wreck ladder is: 26 archetypes in 3 colourways is 78 grids, and
+// hand-drawing them means a street that can only grow at the speed somebody can
+// pixel a wall.
+//
+// The roster is the ENGINE's own (`src/game/drive/town.ts`), read exactly the
+// way the fleet is — so the art the atlas holds and the buildings the road can
+// actually stand are the same list by construction.
+
+/** Derive every shell and every part for a town roster, over the sprites
+ * currently loaded. A function for the same reason `deriveWrecks` is one: a mod
+ * that ships its own high street earns the identical treatment. */
+export function deriveTown(town) {
+  const family = FAMILIES.find((f) => f.name === "earth");
+  if (!family) return;
+  for (const def of town) {
+    for (let i = 0; i < FACADE_COLOURWAYS.length; i++) {
+      const { grid, palette } = facadeShell(def, i);
+      register(family, `${def.id}${FACADE_COLOURWAYS[i]}`, grid, palette);
+    }
+  }
+  const parts = facadeParts();
+  const errors = facadePartsCheck(parts);
+  if (errors.length) throw new Error(errors.join("\n"));
+  for (const [name, grid] of Object.entries(parts)) {
+    register(family, name, grid, FACADE_PARTS_PALETTE);
+    // A part is a PIECE of a building rather than a thing standing on grass —
+    // half of them are drawn to sit inside a hole in a wall — so holding one to
+    // a contrast floor against a grass tile measures nothing. (The shells are
+    // not exempt: a building really does stand on the verge.)
+    family.contrastExempt.push(name);
+  }
+  family.speckleExempt = [
+    ...(family.speckleExempt ?? []),
+    ...FACADE_SPECKLE_EXEMPT,
+  ];
+}
+
+deriveTown(TOWN);
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —

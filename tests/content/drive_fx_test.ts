@@ -208,10 +208,20 @@ describe("the engine note", () => {
     // in two different gears is impossible — the box picks one — but the same
     // NOTE at two very different speeds is exactly what a gearbox does, and
     // that is what this asserts.
+    //
+    // The DIVISOR is the engine's cylinder count and is deliberately not pinned
+    // here — a four fires twice a revolution and a six three times, and which
+    // one is under the bonnet is the brochure's business. What must hold is that
+    // there IS one: the same constant at every speed, so the note tracks the
+    // crank rather than being shaped by ear.
+    const perRpm = at(0.02).hz / at(0.02).rpm;
     for (let frac = 0.02; frac <= 1; frac += 0.02) {
       const note = at(frac);
-      expect(note.hz).toBeCloseTo(note.rpm / 30, 6);
-      expect(note.rpm).toBeLessThanOrEqual(DRIVETRAIN.redlineRpm + 1);
+      expect(note.hz).toBeCloseTo(note.rpm * perRpm, 6);
+      // Never past where the BOX lets go of it — which on this wagon is a good
+      // thousand revs short of the redline, and the whole reason the dashboard
+      // reads like an instrument rather than a rev limiter with steps in it.
+      expect(note.rpm).toBeLessThanOrEqual(DRIVETRAIN.shiftUpRpm + 1);
       expect(note.rpm).toBeGreaterThanOrEqual(DRIVETRAIN.idleRpm);
     }
   });
@@ -223,8 +233,17 @@ describe("the engine note", () => {
   });
 
   it("quickens the putter as the revs climb", () => {
-    expect(engineGrainMs(DRIVETRAIN.redlineRpm)).toBeLessThan(
+    // Measured across the band the engine is actually ASKED for — idle to the
+    // shift point. A cadence stretched to the redline instead would spend the
+    // whole trip in its slow third, and the top of a gear would putter along at
+    // very nearly the rate of the same car sitting at the lights.
+    expect(engineGrainMs(DRIVETRAIN.shiftUpRpm)).toBeLessThan(
       engineGrainMs(DRIVETRAIN.idleRpm),
+    );
+    const half = (DRIVETRAIN.idleRpm + DRIVETRAIN.shiftUpRpm) / 2;
+    expect(engineGrainMs(half)).toBeLessThan(engineGrainMs(DRIVETRAIN.idleRpm));
+    expect(engineGrainMs(half)).toBeGreaterThan(
+      engineGrainMs(DRIVETRAIN.shiftUpRpm),
     );
   });
 });

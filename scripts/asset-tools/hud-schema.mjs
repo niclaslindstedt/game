@@ -97,6 +97,13 @@ export const HUD_BINDINGS = {
   // because it is a fact about what this viewer is looking at rather than about
   // the run: two people in one session hold it up independently.
   "ui.scoreboard": "flag",
+  // THIS DEVICE TAKES TOUCH AT ALL (`any-pointer: coarse`). Distinct from
+  // `!ui.keyHints`, which is a SETTING about whether the keyboard is steering,
+  // and distinct from "has no mouse", because a touch laptop is both. What it
+  // gates is a button that exists only because a THUMB has no other way to ask
+  // for the thing — the shutter is the case: the SCREENSHOT bind is a key, and
+  // a key is not something a phone has.
+  "ui.touch": "flag",
   // THE ROAD. The drive minigame is its own surface with its own dials, and it
   // is content for exactly the reason the fight's HUD is: an interlude that
   // looked like a different program is precisely what an interlude must not do,
@@ -107,15 +114,28 @@ export const HUD_BINDINGS = {
   "drive.gear": "number",
   "drive.gearLabel": "number",
   "drive.gearCount": "number",
-  // THE CRANK, three ways. `rev` is how far up the CURRENT GEAR the wagon is;
-  // `rpm` is what the engine is actually turning at and `rpmFrac` the same
-  // measured against the redline, which is the arc a tachometer sweeps. A dial
-  // that only knew road speed would sit still through a whole upshift — and the
-  // note coming out of the speaker is read off the same rpm (`sfx/drive.ts`),
-  // so the needle and the noise cannot drift apart.
+  // THE CRANK, four ways, and the two FRACS are different questions. `rev` is
+  // how far up the CURRENT GEAR the wagon is; `rpm` is what the engine is
+  // actually turning at; `rpmFrac` is that against the REDLINE, which is the
+  // arc a tachometer sweeps because the redline is the last number on the face;
+  // and `shiftFrac` is the same crank against the SHIFT POINT — where the box
+  // will let go of it — which is the reading a driver actually has and the only
+  // one worth colouring a warning off.
+  //
+  // THEY ARE NOT INTERCHANGEABLE AND THE DIFFERENCE IS THE WHOLE POINT. The box
+  // changes up a good thousand revs short of the stop, so `rpmFrac` never gets
+  // past about two thirds on the shipped wagon — a dial that warned off it would
+  // never warn, and one that swept `shiftFrac` would be a tachometer whose face
+  // ended at a number the engine is perfectly happy at.
+  //
+  // A dial that only knew road speed would sit still through a whole upshift —
+  // and the note coming out of the speaker is read off the same rpm
+  // (`sfx/drive.ts`), so the needle and the noise cannot drift apart.
   "drive.rev": "frac",
   "drive.rpm": "number",
   "drive.rpmFrac": "frac",
+  "drive.shiftFrac": "frac",
+  "drive.shiftUpRpm": "number",
   "drive.redlineRpm": "number",
   "drive.reversing": "flag",
   "drive.bodies": "number",
@@ -198,6 +218,11 @@ export const HUD_ACTIONS = new Set([
   "openCharacter",
   "pauseGame",
   "toggleWeaponMenu",
+  // TAKE A PICTURE — the SCREENSHOT bind's own verb, on a button, because a
+  // bind is a KEY and half the players have no keyboard. It is the one action
+  // here that refuses nothing: a picture of the death splash, a cutscene or the
+  // pause menu is as wanted as one of the fight (game/screenshots.ts).
+  "takeScreenshot",
   // The road's own three, which only the drive surface supplies. An action the
   // mounting screen does not provide is a press that does nothing rather than a
   // build error: the set is one vocabulary across every surface, so a mod may
@@ -349,6 +374,7 @@ const ELEMENT_FIELDS = new Set([
   "sweep",
   "start",
   "track",
+  "zone",
   "width",
   "height",
   "children",
@@ -568,8 +594,9 @@ function checkNode(node, where, refs, errors, warnings, top, row) {
       }
     }
     checkColor(node.track, `${where} track`, refs, errors);
+    checkZone(node.zone, `${where} zone`, refs, errors);
   } else {
-    for (const key of ["thickness", "sweep", "start", "track"]) {
+    for (const key of ["thickness", "sweep", "start", "track", "zone"]) {
       if (node[key] !== undefined) {
         errors.push(`${where}: only a gauge has a ${key}`);
       }
@@ -762,6 +789,45 @@ function checkPart(part, where, refs, errors, required) {
   checkColor(part.color, where, refs, errors);
 }
 
+/**
+ * A GAUGE'S PAINTED ZONE — the band printed on the FACE of the dial, behind
+ * everything the needle does.
+ *
+ * IT IS THE ONE THING THAT MAKES A DIAL READ AS AN INSTRUMENT rather than as a
+ * progress ring. A tachometer's red is not a colour the needle turns; it is
+ * paint, it is there when the engine is off, and it tells you where the trouble
+ * WOULD be long before you are anywhere near it — which is exactly the reading
+ * a wagon whose gearbox lets go at two thirds of the face needs. The same field
+ * paints a fuel gauge's reserve or a temperature dial's cold end; nothing about
+ * it is about revs.
+ *
+ * `from` is where the band opens, as a fraction of the SWEEP (so it moves with
+ * an arc of any length), and it runs to the end of the dial.
+ */
+function checkZone(zone, where, refs, errors) {
+  if (zone === undefined) return;
+  if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
+    errors.push(`${where}: expected a mapping`);
+    return;
+  }
+  for (const key of Object.keys(zone)) {
+    if (!["from", "color"].includes(key)) {
+      errors.push(`${where}: unknown field "${key}"`);
+    }
+  }
+  const from = zone.from;
+  if (typeof from !== "number" || !(from >= 0) || !(from < 1)) {
+    errors.push(
+      `${where}: from must be a number from 0 to 1 — where on the sweep the ` +
+        "band opens, running to the end of the dial",
+    );
+  }
+  if (zone.color === undefined) {
+    errors.push(`${where}: a zone needs a color — it is paint on the face`);
+  }
+  checkColor(zone.color, where, refs, errors);
+}
+
 function checkPress(press, where, refs, errors) {
   if (!press || typeof press !== "object" || Array.isArray(press)) {
     errors.push(`${where}: press must be a mapping`);
@@ -780,6 +846,13 @@ function checkPress(press, where, refs, errors) {
   if (press.sound !== undefined) {
     if (typeof press.sound !== "string") {
       errors.push(`${where}: press sound must be a sound id`);
+    } else if (press.sound === "none") {
+      // SILENCE, said out loud — the counterpart of `action: none`, and not the
+      // same thing as omitting the field (which takes the `hud.press` default).
+      // It is for a press whose sound belongs to the thing it STARTED rather
+      // than to the button: the shutter's picture already makes the camera
+      // noise, and a click in front of it is that sound arriving twice. A mod
+      // that disagrees re-points it to a real id like any other press.
     } else if (!refs.sounds.has(press.sound)) {
       errors.push(
         `${where}: press sound "${press.sound}" is not a sound this build ` +

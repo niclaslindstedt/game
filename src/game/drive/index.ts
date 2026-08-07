@@ -60,6 +60,7 @@ import {
   laneCenter,
   roadEdges,
   resetCrowdMarks,
+  resetThoughtDeck,
   spawnCrowd,
   stepCrowd,
 } from "./crowd.ts";
@@ -90,6 +91,7 @@ import {
   breakTrafficLamps,
   knockDown,
   laneRunsWithHero,
+  resetTrafficMarks,
   shunt,
   spawnTraffic,
   stepTraffic,
@@ -103,6 +105,7 @@ import {
   tearMachine,
   wreckForce,
 } from "./eject.ts";
+import { driveTripMs } from "./score.ts";
 import type { Impact } from "./impact.ts";
 import type {
   DriveInput,
@@ -133,6 +136,7 @@ export type { DriveOutcome } from "./config.ts";
 export {
   crossingsBetween,
   crowdEdges,
+  CROWD_THOUGHTS,
   CROWD_VARIANTS,
   laneAt,
   laneCenter,
@@ -141,6 +145,7 @@ export {
 } from "./crowd.ts";
 export {
   createTraffic,
+  haltTraffic,
   TRAFFIC_VARIANTS,
   laneRunsWithHero,
   trafficMass,
@@ -156,6 +161,54 @@ export {
   vehicleDef,
 } from "./fleet.ts";
 export type { DriveVehicleClass, DriveVehicleDef } from "./fleet.ts";
+// THE TOWN — the backdrop's own catalog, and the street it lays out. The app
+// composes what the planner hands it (`pwa/src/game/drive-screen/town-art.ts`);
+// nothing in the sim reads any of it, because nothing on the far verge can be
+// hit. It travels through here rather than through `src/menu.ts` for the reason
+// the whole drive does: the road is run-facing, and the startup budget has no
+// room for it.
+export {
+  TOWN_ALLEY_PX,
+  TOWN_ART_SIZE,
+  TOWN_DECALS,
+  TOWN_DOORS,
+  TOWN_FRONTS,
+  TOWN_GARAGE_DOORS,
+  TOWN_HOLE_STATES,
+  TOWN_FRONTAGE_SETBACK_PX,
+  TOWN_JUNK,
+  TOWN_PLOT_PX,
+  TOWN_PORCHES,
+  TOWN_SETBACK_PX,
+  TOWN_SIGNS,
+} from "./town-parts.ts";
+export type { TownDecalDef, TownHoleState, TownPartDef } from "./town-parts.ts";
+export {
+  TOWN,
+  TOWN_COLOURWAYS,
+  TOWN_VARIANTS,
+  townDef,
+  townHeight,
+  townPorchSlot,
+  townSignSlot,
+  townSlots,
+  townWidth,
+} from "./town.ts";
+export type {
+  TownBuildingDef,
+  TownFront,
+  TownRoof,
+  TownSlot,
+  TownWall,
+  TownWindow,
+} from "./town.ts";
+export {
+  planTown,
+  resetTownPlan,
+  townDistrict,
+  townRoad,
+} from "./town-plan.ts";
+export type { TownLayer, TownProp, TownRoad } from "./town-plan.ts";
 export { wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
@@ -179,6 +232,10 @@ export {
   tipsOver,
 } from "./crush.ts";
 export { remainForce, splitsBody } from "./remains.ts";
+// WHAT THE LEG WAS WORTH — the arcade score the high-score board ranks, twinned
+// with `driveVerdict` below (score.ts explains why both live here).
+export { drivePar, driveScore, driveTripMs } from "./score.ts";
+export type { DriveScorecard } from "./score.ts";
 export type {
   DriveDirection,
   DriveEvent,
@@ -222,6 +279,7 @@ export function createDrive(params: DriveParams): DriveState {
   // that is already leaving, not starting one from a standstill.
   car.speed = DRIVE.topSpeedPx * 0.28;
   car.driver = 0;
+  const trafficMarks = resetTrafficMarks();
   return {
     params,
     rng,
@@ -251,7 +309,12 @@ export function createDrive(params: DriveParams): DriveState {
       glass: 0,
     },
     nextPedestrianAt: resetCrowdMarks(rng),
-    nextTrafficAt: DRIVE.crowdStartPx * 0.5,
+    nextTrafficAt: trafficMarks.lanes,
+    nextPavementAt: trafficMarks.pavement,
+    // A fresh deck of things to be thinking, in this seed's own order — and the
+    // first of them due with the first person the road puts out.
+    thoughtDeck: resetThoughtDeck(params.seed),
+    nextThoughtAt: DRIVE.crowdStartPx,
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
     blockadeDone: false,
@@ -572,6 +635,19 @@ function collide(drive: DriveState): void {
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
     drive.shunts++;
+    // ONE CONTACT IS ONE IMPACT — and the cooldown is stamped HERE, before the
+    // three answers below, because it used to be stamped inside them and one
+    // path had no answer at all.
+    //
+    // A machine that is ALREADY DOWN takes neither branch: it cannot be knocked
+    // over twice, and a light one at low speed is under the force that snaps it
+    // — so a bicycle lying in the road that the wagon was sitting on top of was
+    // collided with EVERY TICK, sixty times a second, each one booking a shunt,
+    // an event and a sound for a blow worth almost no energy at all. It went
+    // unnoticed while the road was empty enough that the wagon rarely came to
+    // rest on anything; filling the lanes made it constant, and it is the
+    // spawner that found it rather than caused it.
+    other.hitCooldownMs = DRIVE.shuntImmuneMs;
     drive.events.push({
       type: "trafficHit",
       pos: { x: hit.contact.x, y: hit.contact.y },
@@ -648,9 +724,11 @@ function collide(drive: DriveState): void {
       // A SHOVE, NOT A WRECK — until it is. It is punted up the road, slewed
       // out of the lane and spun about the point it was struck at, all off the
       // momentum sum's own answer over its own mass.
+      // The cooldown that used to be the `else` of this branch is stamped at
+      // the top of the loop now (see "ONE CONTACT IS ONE IMPACT" above), which
+      // covers the paths that never had one.
       if (!other.downed) {
         if (!other.wrecked) shunt(other, hit, car.pos.y);
-        else other.hitCooldownMs = DRIVE.shuntImmuneMs;
         // …UNLESS THE SHOVE BEAT ITS OWN WHEELS, in which case it is not being
         // shunted anywhere. It is going over.
         if (tipsOver(other, hit)) {
@@ -924,12 +1002,22 @@ export function driveVerdict(drive: DriveState): string {
   // The car, if it barely made it. Nothing else gets a word in.
   if (drive.car.wear >= verdict.wreckWear) return "drive_arrive_wreck";
   // Then the two things that are somebody ELSE's property, which is the only
-  // category of damage he has ever been able to see.
-  if (posts >= verdict.posts && posts >= shunts) return "drive_arrive_posts";
+  // category of damage he has ever been able to see. Which of the two he brings
+  // up is whichever is further past ITS OWN line, never whichever is the bigger
+  // number: a busy road hands out cars by the dozen and street lights three at a
+  // time, so a raw `posts >= shunts` compares a tally against a tally on a
+  // completely different scale and the council never gets mentioned again.
+  if (posts >= verdict.posts && posts / verdict.posts >= shunts / verdict.cars)
+    return "drive_arrive_posts";
   if (shunts >= verdict.cars) return "drive_arrive_cars";
-  // Then the clock, at either end of it.
-  if (drive.ms <= verdict.quickMs) return "drive_arrive_quick";
-  if (drive.ms >= verdict.slowMs) return "drive_arrive_slow";
+  // Then the clock, at either end of it — the TRIP's clock, stopped at the
+  // finish line. `drive.ms` is the road's whole lifetime and keeps running
+  // through the arrival hold, so reading it directly made a 51-second leg that
+  // sat on the arrival beat for a second and a half stop being a quick one
+  // (`driveTripMs`, score.ts).
+  const tripMs = driveTripMs(drive);
+  if (tripMs <= verdict.quickMs) return "drive_arrive_quick";
+  if (tripMs >= verdict.slowMs) return "drive_arrive_slow";
   // And finally the road surface, which is where the people went.
   return bodies >= verdict.bumpyBodies
     ? "drive_arrive_bumpy"

@@ -24,6 +24,15 @@
 //   node scripts/drive-bench.mjs --home              # the leg back
 //   node scripts/drive-bench.mjs --straight 0.8      # NOBODY steering, 80% pedal
 //   node scripts/drive-bench.mjs --knob cruiseFrac=0.75,floorFrac=0.3
+//   node scripts/drive-bench.mjs --lanes             # HOW BUSY EACH LANE LOOKS
+//
+// `--lanes` answers the one question about traffic that cannot be read off a
+// density: how many other vehicles are actually IN THE PICTURE, per lane, at an
+// average moment. `DRIVE.laneTraffic.gapPx` is authored against exactly this
+// reading (one per lane on screen), and it is not a number that can be checked
+// by looking at the constant — the spacing the player sees is the spawn pitch
+// worked through the closing speed, which differs by a factor of eight between
+// the hero's own side and the oncoming one.
 //
 // `--straight` is the old measurement, kept and driven by the same harness so
 // the two columns can be compared without one of them being folklore. Note what
@@ -51,7 +60,9 @@ const {
   createDrive,
   createDriveDriver,
   driveDriverInput,
+  laneAt,
   stepDrive,
+  vehicleDef,
   DRIVE,
   DRIVE_BOT_DEFAULTS,
   DRIVE_OUTCOME,
@@ -103,6 +114,33 @@ for (const rung of rungs) {
  * leg and a played leg are the same leg. */
 const STEP_MS = 16;
 
+const lanes = args.includes("--lanes");
+/**
+ * WHAT THE PLAYER CAN SEE, in world px along the road: from a little behind the
+ * bumper to the far edge of the frame.
+ *
+ * Taken off the shipped camera rather than picked — it holds the car in the
+ * trailing quarter of a ~420 px frame and shows about 308 px past the nose
+ * (`CAMERA_LEAD_FRAC`, pwa/src/game/drive-screen/render.ts). A vehicle inside
+ * this band is one the player is looking at.
+ */
+const VIEW_AHEAD_PX = 308;
+const VIEW_BEHIND_PX = 112;
+
+/** Add this tick's in-shot vehicles to the per-lane tally. The footway's own
+ * riders are left out: they are not in a lane, and `laneAt` clamps — so counted
+ * they would be booked against whichever outside lane they are nearest and read
+ * as traffic that is not there. */
+function laneOccupancy(drive, into) {
+  const dir = drive.params.direction;
+  for (const other of drive.traffic) {
+    if (vehicleDef(other.variant).pavement) continue;
+    const ahead = (other.pos.x - drive.car.pos.x) * dir;
+    if (ahead > VIEW_AHEAD_PX || ahead < -VIEW_BEHIND_PX) continue;
+    into[laneAt(other.pos.y)] += 1;
+  }
+}
+
 /** Play one whole leg and hand back what it cost. */
 function driveOne(difficulty, seed) {
   const params = {
@@ -116,13 +154,23 @@ function driveOne(difficulty, seed) {
   };
   const drive = createDrive(params);
   const driver = straight === null ? createDriveDriver(knobs) : null;
+  const seen = new Array(DRIVE.laneCount).fill(0);
+  let ticks = 0;
   while (drive.outcome === DRIVE_OUTCOME.driving && drive.ms < capMs) {
     const input = driver
       ? driveDriverInput(driver, drive)
       : { pedal: straight, wheel: 0 };
     stepDrive(drive, STEP_MS, input);
+    // Only once the road is peopled — the opening stretch is deliberately empty
+    // and averaging it in would report a road a third quieter than the one the
+    // player spends the trip on.
+    if (lanes && drive.distance > DRIVE.crowdStartPx) {
+      laneOccupancy(drive, seen);
+      ticks += 1;
+    }
   }
   return {
+    lanes: seen.map((n) => (ticks === 0 ? 0 : n / ticks)),
     arrived: drive.outcome === DRIVE_OUTCOME.arrived,
     seconds: drive.ms / 1000,
     bodies: drive.bodies,
@@ -153,9 +201,13 @@ console.log(
   `\nDRIVE BENCH — ${seeds} seed(s) a rung, ${home ? "the leg HOME" : "the leg OUT"}, ` +
     `${(course / 1000).toFixed(1)}k px of road, driven by ${who}${knobNote}\n`,
 );
+const laneCols = lanes
+  ? [...Array(DRIVE.laneCount).keys()].map((i) => padL(`LANE ${i}`, 9)).join("")
+  : "";
 console.log(
   `${pad("RUNG", 10)}${padL("ARRIVED", 9)}${padL("TRIP", 9)}${padL("BODIES", 9)}` +
-    `${padL("SHUNTS", 9)}${padL("END WEAR", 10)}${padL("TOP MPH", 9)}${padL("BROKE AT", 10)}`,
+    `${padL("SHUNTS", 9)}${padL("END WEAR", 10)}${padL("TOP MPH", 9)}${padL("BROKE AT", 10)}` +
+    laneCols,
 );
 
 for (const difficulty of rungs) {
@@ -187,7 +239,10 @@ for (const difficulty of rungs) {
           ? `${(100 * mean(broke.map((l) => l.reached))).toFixed(0)}%`
           : "-",
         10,
-      ),
+      ) +
+      [...Array(lanes ? DRIVE.laneCount : 0).keys()]
+        .map((i) => padL(mean(legs.map((l) => l.lanes[i])).toFixed(2), 9))
+        .join(""),
   );
 }
 
@@ -197,3 +252,12 @@ console.log(
     "stopped being a rung. BODIES cannot reach zero by design — the crowd is\n" +
     "tuned so a good driver still arrives with a count (DRIVE.pedestriansPerKPx).\n",
 );
+
+if (lanes)
+  console.log(
+    "LANE n is how many other vehicles are IN SHOT in that lane at an average\n" +
+      "moment, once the road is peopled. About 1.0 across all four is what\n" +
+      "DRIVE.laneTraffic.gapPx is authored for: every lane occupied somewhere,\n" +
+      "none of them shut. A lane near 0 is a lane the player never has to read;\n" +
+      "much past 1.5 and there is no gap left to move into.\n",
+  );

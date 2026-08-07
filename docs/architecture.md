@@ -911,7 +911,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   — which travel on the same physics and differ only in what they are made of), and `blockade.ts` supplies most of their customers — THE
   GLUED, twenty demonstrators sitting across every lane at one point in the
   course, the one thing on this road that does not move and cannot be driven
-  around. What any of it is MADE of is still the app's
+  around. The crowd itself carries the leg's other words: forty THOUGHTS
+  (`CROWD_THOUGHTS`, dealt from a per-trip deck in `crowd.ts` so no line ever
+  plays twice), floated over a walker's head for well under a second each and
+  written to be missed — the words are the app's (`drive-screen/placards.ts`),
+  which is also where the shout-versus-thought difference lives. What any of it is MADE of is still the app's
   (`drive-screen/drive-gore.ts`), which cuts the victim's OWN sprite at the
   bumper's line with the run's own `slicedPiece` and lays the marks the road
   keeps: the splash, the drag smear, the paste under a wheel, and the tread
@@ -944,7 +948,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   admire a collision spends it. What he MAKES of the trip is not said on the road at all: `driveVerdict`
   reads the whole journey and hands the arriving run one line
   (`RunParams.arrivalThought`), spoken as the last page of the destination's
-  opening monologue. Damage
+  opening monologue.
+  WHAT THE CABINET MAKES OF IT is the road's OTHER end-of-trip reading, and the
+  two are deliberately twins: `driveScore` (`drive/score.ts`) reads the same five
+  numbers and answers with an arcade SCORE, which the arrival raises a Frogger
+  board over (`drive-screen/DriveScores.tsx`) — five rows, the row you just took
+  highlighted, and three letters to sign it with. It PAYS FOR THE COMMUTE and
+  NOTHING FOR A PERSON: arriving, the clock against a par derived from the
+  course, the top end, and the paint still on the car, less somebody else's lamp
+  posts and somebody else's wings — with the body count printed on the card at a
+  value of exactly zero, which is the road's own joke stated as arithmetic
+  (`DRIVE.score`). The board is device-local (`pwa/src/game/drive-scores.ts`,
+  carried by cloud save beside the campaign board) and is never raised for an
+  AUTO-DRIVEN leg: a screen waiting on a keypress would park the attract loop
+  forever, and a board full of the demo's initials is not a high-score table. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off
@@ -954,7 +971,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   traffic and the wagon are identical on every rung. The app half is
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
-  loot, no XP). `drive/driver.ts` is the AUTO-DRIVER — the hands on the wheel
+  loot, no XP). **The road answers the run's own binds itself**, because while a
+  drive is up the run's control layer is not listening (there is no live
+  `GameState` under an interlude for it to be built around): PAUSE (and ESCAPE,
+  whatever the bind says), SCREENSHOT, and the auto-pause a LOST WINDOW is —
+  alt-tab, a tab switch, a phone's app switcher — which also drops every held
+  control, since a key the browser never delivered the `keyup` for is a wagon
+  that resumes at full throttle a minute later. An `auto` road (the attract
+  loop, a playtest, a shot recipe) is exempt from that last one: nothing would
+  ever lift the card again. `drive/driver.ts` is the AUTO-DRIVER — the hands on the wheel
   when nobody's are: the title-screen demo, a `?bot=` playtest, `?drive&bot=1`
   in the workbench, and `make drive-bench`, which plays N seeds a rung and
   reports arrival rate, trip time, bodies and ending wear. It lives in the
@@ -1664,9 +1689,13 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   gestures that raise it have no render of their own), `long-press.ts` (the
   press-and-hold state machine: it tells a HOLD apart from a drag that moved
   and from a tap that must not fire twice), `dom-raster.ts` (draws a laid-out
-  DOM subtree of canvases, sprites and framed panels onto one canvas — how an
-  item card becomes a picture; see the note in the file for why this cannot be
-  html2canvas or a `<foreignObject>` when every word on screen is a canvas),
+  DOM subtree of canvases, sprites, framed panels and stroked `<svg>` gauge
+  rings onto one canvas — how an item card becomes a picture; see the note in
+  the file for why this cannot be html2canvas or a `<foreignObject>` when every
+  word on screen is a canvas. It paints in the SCREEN's order rather than the
+  markup's — every full-screen surface here is banded with a `z-index`, so a
+  walk that went by document order would draw a different arrangement than the
+  one being photographed),
   `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
 - **`content/sprites/` + `scripts/asset-tools/` +
@@ -1875,11 +1904,19 @@ seams a browser can't provide on iOS:
 - **Screenshots — the picture leaves the game through the platform's own share
   sheet.** The SCREENSHOT bind (ENTER in a browser, F12 in a store shell — see
   `defaultKeybindings`, because a page may not swallow the developer-tools key)
-  rasterizes the whole screen — world canvas
+  — or, where there is no keyboard to press it on, the SHUTTER on the HUD's
+  gear rail (`content/hud/elements/screenshot_slot.yaml`, gated on the
+  `ui.touch` binding) — rasterizes the whole screen — world canvas
   AND interface — into a PNG, files it in a capped IndexedDB roll
   (`pwa/src/lib/shot-store.ts`), and flashes a miniature the player can press to
   freeze the run and open the gallery on it (EXTRAS → SCREENSHOTS, the same
-  viewer the title menu opens). Sending one on is the platform's answer rather
+  viewer the title menu opens — offered on every build now that every build can
+  fill the roll; it was desktop-only for as long as a KEY was the only way in). **Whatever is on screen is what is in the
+  picture, the DRIVE included** — the road answers the bind itself and owns the
+  whole picture while it is up, so the receipt is banded above even that (the
+  band map in `styles.css`) and the raster follows those bands rather than the
+  markup. It offers no press there: the tap is routed by the field's own canvas,
+  which the road has covered. Sending one on is the platform's answer rather
   than ours: `pwa/src/lib/share-image.ts` probes what the BROWSER can do with
   this exact file (`navigator.share` with a `files` payload, an `image/png`
   clipboard write, a download) and offers only the buttons that will work, while

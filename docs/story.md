@@ -102,13 +102,33 @@ himself at it — Ada is not down the street; get in the car.
 ways, and it is the blackest joke in the game. The road out of the block runs
 four lanes through what is left of the neighbourhood: shuttered trades, boarded
 windows, and a lit one every third house where somebody's welfare still lands.
-The ones it did not reach are out on the tarmac, because a road is where the
-cars are and a car is where the money is, and they walk straight at him with
-their hands out. There are far too many of them to miss. Before he meets the
+It does not stay that way for the whole hour. **The street gets better the
+further from his own front door he drives** — the boards come off, the fences go
+back up, the fly-tipping stops, and by the last mile it is clipped hedges,
+glass frontages and a car park with a barrier on it, because that is what is
+next to GOODCO. Nobody remarks on it and nothing marks where it changed; the
+hero has driven this road every working day of his life. That the block he lives
+on is the worst thing on it is simply the shape of the commute.
+The ones the welfare did not reach are out on the tarmac, because a road is
+where the cars are and a car is where the money is, and they walk straight at
+him with their hands out. There are far too many of them to miss. Before he meets the
 first one he has the decent thought — these are his neighbours, they got
 nothing, mind how you go — and he says it to himself at the wheel, without
 slowing down, which is the only place a promise like that costs nothing. Then he
 drives through them at a hundred and twenty and never mentions it again.
+
+**What they are thinking.** Every so often one of the people on that road has a
+thought over their head, and it is never about him. It is the rent, the soup,
+the boy who asked for meat again, a sister who has stopped picking up, a
+giveaway at FOODCO somebody hopes is on again this week — small, domestic, entirely
+unremarkable, and a few of them hopeful, which is the worst of it. Forty of
+them play across a trip and none of them twice. They are legible for about half
+a second each, from a car doing a hundred and twenty, and the player will catch
+perhaps a third of them and the hero none at all: he never reads one, never
+slows for one, and never refers to one afterwards. That is the joke and it is
+the same joke as the rest of the leg — these are people with insides, and the
+only thing the man in the car will ever be able to tell you about them is what
+they did to the suspension.
 
 **THE GLUED.** Halfway along the leg the road is shut. Twenty people are sitting
 in the carriageway with their hands set into the resin — kerb to kerb, every

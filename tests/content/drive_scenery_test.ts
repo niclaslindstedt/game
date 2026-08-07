@@ -29,7 +29,6 @@ import {
 
 import {
   CROWD_SPRITES,
-  HOUSE_SPRITES,
   RIDER_SEATS,
   RIDER_SPRITES,
   TRAFFIC_SPRITES,
@@ -48,7 +47,6 @@ const NAMED = [
   ...CROWD_SPRITES.flat(),
   ...TRAFFIC_SPRITES,
   ...RIDER_SPRITES,
-  ...HOUSE_SPRITES,
   // …and every rung of every vehicle's DAMAGE LADDER, which is derived at build
   // time (`scripts/asset-tools/wreck.mjs`) and is therefore exactly the kind of
   // thing that silently stops being generated: a car that loses its `_dent2`
@@ -124,9 +122,5 @@ describe("the drive's sprite tables", () => {
     expect(delivery / total).toBeGreaterThan(0.15);
     const heaviest = [...FLEET].sort((a, b) => b.weight - a.weight)[0];
     expect(heaviest?.id).toBe("traffic_delivery_moped");
-  });
-
-  it("keeps a town to put beside the road", () => {
-    expect(HOUSE_SPRITES.length).toBeGreaterThan(4);
   });
 });

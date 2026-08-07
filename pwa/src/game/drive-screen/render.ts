@@ -25,6 +25,8 @@ import {
   crossingsBetween,
   crowdEdges,
   DRIVE,
+  planTown,
+  townRoad,
   vehicleDef,
   type DriveRemain,
   type DriveState,
@@ -45,7 +47,7 @@ import { drawCarAssembly, drawLightCones } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import type { Camera } from "../render/view.ts";
+import { VIEW_SCALE, type Camera } from "../render/view.ts";
 import {
   bodySprite,
   drawRemain,
@@ -55,7 +57,14 @@ import {
 import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
 import { drawSkidMarks, type SkidState } from "./skid.ts";
 import { drawTrafficBody } from "./wreck-draw.ts";
-import { drawPlacard, GLUED_BARKS, MAX_PLACARDS } from "./placards.ts";
+import {
+  CROWD_THOUGHTS,
+  drawPlacard,
+  GLUED_BARKS,
+  MAX_PLACARDS,
+  PLACARD_READ_PX,
+  type PlacardVoice,
+} from "./placards.ts";
 import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
@@ -66,12 +75,12 @@ import {
   ROAD_LAMP_NEAR_SPRITE,
   ROAD_LAMP_HEAD_PX,
   ROAD_LAMP_POOL_PX,
-  sceneryBetween,
   RIDER_SEATS,
   RIDER_SPRITES,
   trafficSprite,
 } from "./scenery.ts";
 import { drawDriveSky } from "./sky.ts";
+import { drawTownProp, ensureTownArt } from "./town-art.ts";
 
 /** The ground either side of the tarmac. */
 const VERGE = "#2b3327";
@@ -120,19 +129,29 @@ const NEAR_MARGIN = 6;
  * sides have to agree on by hand. It is arithmetic rather than taste, and the
  * arithmetic is worth writing down because the pieces move:
  *
- *   the dash's height          `--drive-dial-size`   77
- *   …its offset off the bottom `.drive-dash`         10
- *   …and the verge above it                          14
+ *   the dials' INK          0.8 × `--drive-dial-size`   77
+ *   …their baseline         `.drive-dash`              12
+ *   …and the verge above                               12
  *
- * WHICH ALSO CENTRES THE SPEECH WINDOW ON THE VERGE, and that is what the
- * number is actually tuned to. The window is 77 px tall sitting 12 px off the
- * bottom, so a band of 101 leaves exactly 12 px of grass above it as well —
- * the same strip top and bottom. Any other value reads as a dialogue box that
- * has slipped down the frame, because the eye measures it against the two
- * edges it can see.
+ * IT IS THE INK AND NOT THE BOX, because the last fifth of a dial's box is the
+ * empty mouth of its 250° sweep and it is hung off the bottom of the frame on
+ * purpose (`--drive-dial-tail`, styles.css) so the arcs level with the speech
+ * window rather than floating above it. Reserving road for air nobody draws in
+ * would push the tarmac up for nothing.
  *
- * Read in CSS px and converted by the scale tier, because the dials are a fixed
- * size on the glass while the world behind them is not.
+ * WHICH ALSO CLEARS THE SPEECH WINDOW BESIDE IT: that window is 77 px on the
+ * same baseline, so one band covers both to the pixel. Any smaller and the
+ * instruments print over the lane the crowd is walking into, which is the one
+ * thing the band exists to stop.
+ *
+ * IN CSS PX AT THE 1× TIER, which is what the rem column above resolves to on a
+ * phone — and the conversion below is a division by `VIEW_SCALE` alone rather
+ * than by the whole zoom. The dashboard is rem all the way down now, so it
+ * DOUBLES with the root font on a desktop exactly as the canvas doubles beneath
+ * it: the two step together, and the band it needs is therefore a constant
+ * number of WORLD px. (It was a division by the whole zoom when the dials were
+ * fixed px, and that was right then — a dial that did not grow needed a band
+ * that shrank.)
  *
  * A speedometer half over the road was legible — the shadow saw to that — but it
  * read as a HUD dropped on top of a picture rather than as a dashboard the
@@ -204,15 +223,15 @@ export function driveCamera(
   drive: DriveState,
   viewW: number,
   viewH: number,
-  /** The integer scale tier the canvas is drawn at (`viewScaleFor`), which is
-   * what turns the dashboard's CSS px into this frame's own. */
-  scale: number,
 ): Camera {
   const dir = drive.params.direction;
   // Portrait is the taller-than-wide frame, and it is the one that also has to
   // find room for the hero talking to himself.
   const bandCss = DASH_BAND_CSS + (viewH > viewW ? BARK_BAND_CSS : 0);
-  const band = Math.min(viewH * 0.6, bandCss / Math.max(1, scale));
+  // CSS px at the 1× tier → world px. `VIEW_SCALE` alone, because the UI tier's
+  // own multiplier cancels: the dashboard is rem-sized, so it grows by exactly
+  // the factor the canvas zooms by (`viewScaleFor` is `VIEW_SCALE × uiScale`).
+  const band = Math.min(viewH * 0.6, bandCss / VIEW_SCALE);
   return {
     x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
     y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH - band),
@@ -384,11 +403,14 @@ export function drawDrive(
   // houses — so sorting them together is not a shortcut, it is the requirement.
   type Drawn = { y: number; draw: () => void };
   const drawn: Drawn[] = [];
-  /** What THE GLUED are saying, collected as the field is walked and drawn over
-   * the finished picture — a bubble sorted in with the bodies would be painted
-   * over by whoever is sitting in the next row back. */
-  const bubbles: { line: string; ped: DriveState["pedestrians"][number] }[] =
-    [];
+  /** What the road is saying and thinking, collected as the field is walked and
+   * drawn over the finished picture — a bubble sorted in with the bodies would
+   * be painted over by whoever is standing in the next row back. */
+  const bubbles: {
+    line: string;
+    voice: PlacardVoice;
+    ped: DriveState["pedestrians"][number];
+  }[] = [];
 
   const put = (
     name: string,
@@ -496,8 +518,18 @@ export function drawDrive(
     });
   };
 
-  for (const prop of sceneryBetween(left, right)) {
-    put(prop.sprite, prop.x, prop.y);
+  // THE TOWN. Planned by the engine and ASSEMBLED here (`town-art.ts`) — a
+  // building is a stack of parts rather than a sprite, so what goes into the
+  // painter's list is a composed canvas and its own base rather than a name.
+  // Sorted in with everything else for the usual reason: a frontage fence
+  // stands nearer the camera than the house it fences, and both stand behind
+  // every body on the pavement.
+  ensureTownArt(sprites);
+  for (const prop of planTown(left, right, townRoad(drive.params))) {
+    drawn.push({
+      y: prop.y,
+      draw: () => drawTownProp(ctx, sprites, prop, camera),
+    });
   }
   // THE KERB, drawn from the SIM rather than derived here — the furniture is
   // world now, so what is painted is exactly what the bumper can reach
@@ -714,9 +746,23 @@ export function drawDrive(
       // back is painted over its own neighbour's words.
       if (font && ped.bark >= 0) {
         const line = GLUED_BARKS[ped.bark % GLUED_BARKS.length];
-        if (line) bubbles.push({ line, ped });
+        if (line) bubbles.push({ line, voice: "shout", ped });
       }
       continue;
+    }
+    // …AND WHAT ONE OF THE WALKING IS THINKING, every so often (`CROWD_THOUGHTS`,
+    // dealt by the sim). Gathered into the same list as a shout and told apart by
+    // its VOICE, so the one bubble the picture can carry is decided once, over
+    // the whole road, rather than by two passes that would print over each other
+    // the moment a walker happened to be standing beside the blockade.
+    //
+    // ONLY WHILE THEY ARE ON THEIR FEET. A body that has been hit is mid-flight
+    // or lying in the gutter, and a private thought still hanging over it would
+    // be the game making a remark about what just happened — which is the one
+    // thing this whole minigame refuses to do.
+    if (font && ped.bark >= 0 && ped.mode === "afoot") {
+      const line = CROWD_THOUGHTS[ped.bark % CROWD_THOUGHTS.length];
+      if (line) bubbles.push({ line, voice: "thought", ped });
     }
     const frames =
       ped.kind === "glued"
@@ -788,14 +834,22 @@ export function drawDrive(
   // reads as a SEQUENCE of lines rather than as a wall of overprinted text.
   if (font) {
     const dir = drive.params.direction;
-    const near = bubbles
+    const ahead = bubbles
       .map((bubble) => ({
         ...bubble,
         away: (bubble.ped.pos.x - drive.car.pos.x) * dir,
       }))
-      .filter((bubble) => bubble.away > 0)
-      .sort((a, b) => a.away - b.away)
-      .slice(0, MAX_PLACARDS);
+      .filter((bubble) => bubble.away > 0 && bubble.away <= PLACARD_READ_PX)
+      .sort((a, b) => a.away - b.away);
+    // AND A SHOUT OUTRANKS A THOUGHT, whatever the order on the road is. The
+    // blockade is a SET PIECE — twenty people, four voices, one demonstration a
+    // trip — and the crowd walks straight through it like everywhere else on this
+    // road, so without this the one line the picture can carry gets handed to a
+    // passer-by's thought about the bus fare in the middle of it. The thoughts
+    // are a texture and there are forty of them; missing one costs nothing, and
+    // one of them stepping on the set piece costs the set piece.
+    const shouts = ahead.filter((bubble) => bubble.voice === "shout");
+    const near = (shouts.length > 0 ? shouts : ahead).slice(0, MAX_PLACARDS);
     for (const bubble of near) {
       drawPlacard(
         ctx,
@@ -805,6 +859,7 @@ export function drawDrive(
         bubble.ped.pos.y,
         camera,
         bubble.away,
+        bubble.voice,
       );
     }
   }

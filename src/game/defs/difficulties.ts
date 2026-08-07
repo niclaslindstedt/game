@@ -576,14 +576,16 @@ export type DifficultyDef = {
     /** Multiplies `DRIVE_UNITS.trafficMassKg` for this rung. */
     trafficMassMult: number;
     /**
-     * Multiplies `DRIVE.trafficPerKPx` — HOW MUCH OTHER TRAFFIC is out there.
+     * HOW MUCH OTHER TRAFFIC is out there — it DIVIDES `DRIVE.laneTraffic.gapPx`
+     * (and multiplies the footway's own `DRIVE.pavementPerKPx`), so a higher
+     * number leaves less road between one vehicle and the next in a lane.
      *
      * The one knob on this road that changes what is in front of the player
      * rather than what it weighs, and it is here because traffic is the only
-     * hazard that can take a LANE away. On the gentle rungs the road is nearly
-     * the hero's own — about one other car in view — so there is always
-     * somewhere to put the wagon; on the hard ones a lane is regularly shut
-     * and the gap in the crowd has to be taken when it is offered.
+     * hazard that can take a LANE away. On the gentle rungs the gap is half as
+     * big again, so there is usually somewhere to put the wagon; on the hard
+     * ones every lane is served on every screen and the gap in the crowd has to
+     * be taken when it is offered.
      */
     trafficDensity: number;
   };

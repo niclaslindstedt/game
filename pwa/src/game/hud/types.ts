@@ -114,6 +114,17 @@ export type HudNodeDef = {
   start?: number;
   /** The unfilled remainder's colour. */
   track?: HudColor;
+  /**
+   * PAINT ON THE FACE — a band from `from` (a fraction of the sweep) to the end
+   * of the dial, drawn behind the needle's own arc.
+   *
+   * A tachometer's red is not a colour the needle turns: it is printed on the
+   * instrument, it is there with the engine off, and it says where the trouble
+   * would be rather than where it is. That is the whole difference between a
+   * dial and a progress ring, and it is why the wagon's rev counter can sit at
+   * two thirds all trip and still read as a rev counter.
+   */
+  zone?: { from: number; color: HudColor };
   /** A canvas's raster size, in pixels — it is painted by code, so it is sized
    * in the units the painting is done in rather than in CSS ones. */
   width?: number;

@@ -29,11 +29,11 @@
 // — five speed thresholds picked so the note would sawtooth nicely — which
 // meant the sound had a gearbox and the CAR did not. It is real physics now
 // (`src/game/drive/drivetrain.ts`): ratios, a torque curve, an automatic that
-// changes up at the redline, and the wagon's acceleration solved through all
-// three. So this module has one job left, which is to VOICE what the engine is
-// already doing. The tachometer on the dashboard, the shove in the player's
-// back and the noise out of the speaker are three readings of one model, and
-// none of them can drift.
+// changes up a good thousand revs short of the redline, and the wagon's
+// acceleration solved through all three. So this module has one job left, which
+// is to VOICE what the engine is already doing. The tachometer on the
+// dashboard, the shove in the player's back and the noise out of the speaker
+// are three readings of one model, and none of them can drift.
 
 import { DRIVE, DRIVETRAIN, engineRpm, gearFor, gearRev } from "@game/core";
 
@@ -42,13 +42,21 @@ import type { Synth } from "@ui/lib/synth.ts";
 /**
  * RPM PER HERTZ — how the crank becomes a pitch.
  *
- * A four-cylinder four-stroke fires twice per revolution, so the note it makes
- * is `rpm / 60 * 2` — which is this constant and nothing chosen by ear. It is
- * the whole of "the sound matches the rpm": idle is a 27 Hz chug you feel more
- * than hear, and the redline is 193 Hz of a tired engine being asked for more
- * than it has.
+ * A SIX-cylinder four-stroke fires three times per revolution, so the note it
+ * makes is `rpm / 60 * 3` — which is this constant and nothing chosen by ear.
+ * It is the whole of "the sound matches the rpm": idle is a 40 Hz chug you feel
+ * more than hear, and the top of a gear is 165 Hz of a tired engine being asked
+ * for more than it has.
+ *
+ * IT IS A SIX BECAUSE THE BROCHURE SAYS SO. The wagon's engine makes four
+ * hundred newton-metres and gives up before five thousand
+ * (`src/game/drive/drivetrain.ts`), which is a big lazy oil-burner and not the
+ * four-cylinder this used to divide by — and the arithmetic is not cosmetic:
+ * the same note over half the rev range would have dropped the whole engine an
+ * octave the day the gearing became realistic, straight into the part of the
+ * spectrum a phone speaker cannot reproduce.
  */
-const RPM_PER_HZ = 30;
+const RPM_PER_HZ = 20;
 
 /**
  * What the engine is doing at a given road speed (world px/s) — the gear the
@@ -73,20 +81,33 @@ export function engineNote(speedPx: number): {
   };
 }
 
-/** Ms between engine grains at idle and at the redline — the putter rate,
+/** Ms between engine grains at idle and at the shift point — the putter rate,
  * which quickens with the crank exactly as a real one does. */
 const GRAIN_SLOW_MS = 190;
 const GRAIN_FAST_MS = 96;
+
+/**
+ * HOW FAR UP THE USABLE BAND a set of revs is — idle at 0, the shift point at
+ * 1, and everything the ear cares about in between.
+ *
+ * MEASURED TO THE SHIFT POINT AND NOT TO THE REDLINE, which is the whole reason
+ * this is a function rather than two copies of a subtraction. The box lets go a
+ * thousand revs short of the stop (`DRIVETRAIN.shiftUpRpm`), so a band drawn to
+ * the redline would spend the entire trip in its bottom two thirds: the note
+ * would never get its edge, the putter would never quicken, and a car at the top
+ * of third would sound like the same car idling at the lights.
+ */
+function revBandAt(rpm: number): number {
+  const span = Math.max(1, DRIVETRAIN.shiftUpRpm - DRIVETRAIN.idleRpm);
+  return Math.min(1, Math.max(0, (rpm - DRIVETRAIN.idleRpm) / span));
+}
 
 /** How long to wait before the next grain, at these revs. Keyed to the RPM
  * rather than to how far up a gear the car is: the cadence is the engine
  * turning over, and an upshift slows it down again the way it slows the note
  * down. */
 export function engineGrainMs(rpm: number): number {
-  const band =
-    (rpm - DRIVETRAIN.idleRpm) / (DRIVETRAIN.redlineRpm - DRIVETRAIN.idleRpm);
-  const frac = Math.min(1, Math.max(0, band));
-  return GRAIN_SLOW_MS - (GRAIN_SLOW_MS - GRAIN_FAST_MS) * frac;
+  return GRAIN_SLOW_MS - (GRAIN_SLOW_MS - GRAIN_FAST_MS) * revBandAt(rpm);
 }
 
 /**
@@ -104,16 +125,10 @@ export function playDriveEngine(
 ): void {
   const { hz, rev, rpm } = engineNote(speedPx);
   const load = Math.min(1, Math.abs(speedPx) / DRIVE.topSpeedPx);
-  // How far up the whole rev band the crank is — which is what the timbre
+  // How far up the usable rev band the crank is — which is what the timbre
   // follows, rather than road speed: a labouring engine in top and a screaming
   // one in first are at the same mph and do not sound remotely alike.
-  const revBand = Math.min(
-    1,
-    Math.max(
-      0,
-      (rpm - DRIVETRAIN.idleRpm) / (DRIVETRAIN.redlineRpm - DRIVETRAIN.idleRpm),
-    ),
-  );
+  const revBand = revBandAt(rpm);
   // The chug: the firing note itself. A triangle for the body, detuned into a
   // pair so it reads as an engine rather than a test tone, sagging very slightly
   // across the grain so consecutive grains sound like strokes instead of a held
@@ -127,8 +142,8 @@ export function playDriveEngine(
     detuneCents: 10 + 14 * wear,
   });
   // ITS OCTAVE, which is what carries the note at all down at the bottom of the
-  // band: a 28 Hz idle is a thing a phone speaker cannot reproduce and a player
-  // would hear as silence. It fades out as the crank climbs and the fundamental
+  // band: a 40 Hz idle is barely a thing a phone speaker can reproduce, and a
+  // player would hear most of it as silence. It fades out as the crank climbs and the fundamental
   // comes up into its own — the same way a real engine stops sounding boomy and
   // starts sounding sharp.
   synth.tone({
@@ -165,16 +180,18 @@ export function playDriveEngine(
  * The blip of an upshift — throttle off, the note falls away, and the next
  * grain comes in on the new gear's floor.
  *
- * It falls from the REDLINE, because that is where the box always lets go: a
- * shift happens at exactly the revs that would have passed it, so the drop the
+ * It falls from the SHIFT POINT, because that is where the box always lets go:
+ * a shift happens at exactly the revs that would have passed it, so the drop the
  * player hears is the real interval between the two gears rather than a
- * decoration on top of the new one.
+ * decoration on top of the new one. (It is emphatically NOT the redline — the
+ * wagon never gets within a thousand revs of that, and a blip that fell from
+ * there would be a note the engine was never making.)
  */
 export function playDriveShift(synth: Synth, speedPx: number): void {
   const { hz } = engineNote(speedPx);
   synth.tone({
     type: "sawtooth",
-    from: DRIVETRAIN.redlineRpm / RPM_PER_HZ,
+    from: DRIVETRAIN.shiftUpRpm / RPM_PER_HZ,
     to: hz * 0.94,
     durationMs: 90,
     volume: 0.018,

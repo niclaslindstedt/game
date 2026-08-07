@@ -39,6 +39,11 @@ export type HudUiState = {
   /** The SHOW SCORES key is held (or the board was raised by hand) — the
    * session scoreboard is up over the field. */
   scoreboard: boolean;
+  /** This device takes touch at all (`any-pointer: coarse`). Gates the chrome
+   * that only exists because a thumb has no key to press instead — the
+   * SHUTTER. Not `!keyHints`: that is a setting about the keyboard steering,
+   * and a touch laptop answers yes to both. */
+  touch: boolean;
 };
 
 /** What a binding can answer with. */
@@ -120,6 +125,7 @@ export function hudBindings(
     "ui.wide": ui.wide,
     "ui.autopilot": ui.autopilot || state.autopilot.active,
     "ui.scoreboard": ui.scoreboard,
+    "ui.touch": ui.touch,
   };
 }
 
@@ -165,7 +171,10 @@ export type DriveDials = {
   rev: number;
   /** What the crank is actually turning at. */
   rpm: number;
-  /** …and where it stops being asked to — the tacho's last number. */
+  /** …where the box lets go of it and changes up. */
+  shiftUpRpm: number;
+  /** …and where it would stop being asked to — the tacho's last number, and a
+   * limit rather than a target: the box hands over well short of it. */
   redlineRpm: number;
   reversing: boolean;
   bodies: number;
@@ -191,13 +200,25 @@ export function driveBindings(drive: DriveDials): HudValues {
     "drive.gearCount": drive.gearCount,
     "drive.rev": Math.max(0, Math.min(1, drive.rev)),
     "drive.rpm": Math.round(drive.rpm),
+    "drive.shiftUpRpm": Math.round(drive.shiftUpRpm),
     "drive.redlineRpm": Math.round(drive.redlineRpm),
-    // The tacho's own sweep. Worked out here rather than authored as a division
-    // in every dial that wants it — and clamped, because a rev limiter is a
-    // thing the engine has and an arc past its own end is not.
+    // The tacho's own sweep — the crank against the LAST NUMBER ON THE FACE,
+    // which is the redline and not the shift point. Worked out here rather than
+    // authored as a division in every dial that wants it, and clamped, because
+    // a rev limiter is a thing the engine has and an arc past its own end is
+    // not. On the shipped wagon it tops out around two thirds: the box changes
+    // up a thousand revs early, so the paint at the end of the dial is
+    // something the player is shown rather than something they reach.
     "drive.rpmFrac": Math.max(
       0,
       Math.min(1, drive.redlineRpm > 0 ? drive.rpm / drive.redlineRpm : 0),
+    ),
+    // …and the crank against where the box will LET GO of it, which is the
+    // reading a driver actually has: 1 is the upshift, and the approach to it is
+    // the only thing on this dial worth warning about.
+    "drive.shiftFrac": Math.max(
+      0,
+      Math.min(1, drive.shiftUpRpm > 0 ? drive.rpm / drive.shiftUpRpm : 0),
     ),
     "drive.reversing": drive.reversing,
     "drive.bodies": drive.bodies,

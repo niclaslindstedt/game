@@ -279,7 +279,7 @@ export function runDriveExhibit(deps: {
       ctx.imageSmoothingEnabled = false;
       // THE CAMERA IS SHAKEN, NOT THE CONTEXT: the road, the gore and the sparks
       // all read the same camera, so the whole picture moves as one.
-      const tracking = driveCamera(drive, viewW, viewH, scale);
+      const tracking = driveCamera(drive, viewW, viewH);
       const held =
         holdAtX === null
           ? tracking

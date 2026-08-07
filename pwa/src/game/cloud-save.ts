@@ -27,6 +27,14 @@
 //   deleted  tombstones, so a deletion is a fact that travels — otherwise the
 //            cloud's copy would walk back in on the next merge.
 //   scores   a union: the hardcore board is finished history, never edited.
+//   drive    the same, for the minigame's arcade board (drive-scores.ts) — a
+//            banked leg is a finished trip and a union is the whole merge.
+//
+// ADDING A FIELD DOES NOT BUMP `CLOUD_VERSION`, and `driveScores` is the worked
+// example: an older build reads the payload, ignores the key it does not know
+// and keeps syncing everything it does. Bumping would make that build see a
+// FUTURE save and stop syncing altogether — losing a hero's progress to protect
+// a scoreboard. A missing key defaults to an empty board on the way in.
 //
 // What is NOT synced, on purpose: settings, key bindings, the active-character
 // selection, and the parked run. Those are device-shaped — a phone's touch
@@ -64,6 +72,13 @@ import {
   trimCampaignScores,
   type CampaignScore,
 } from "./highscores.ts";
+import {
+  driveScoreKey,
+  driveScoresSnapshot,
+  mergeDriveScores,
+  trimDriveScores,
+  type DriveScoreEntry,
+} from "./drive-scores.ts";
 import {
   coinLedger,
   mergeCoinLedgers,
@@ -113,6 +128,8 @@ export type CloudSave = {
   coins: CoinLedger;
   /** Banked hardcore campaigns, keyed by difficulty. */
   scores: Record<string, CampaignScore[]>;
+  /** The DRIVE minigame's arcade board — one list, best first. */
+  driveScores: DriveScoreEntry[];
 };
 
 /** Where the sync stands, for the SETTINGS → DATA status line. */
@@ -195,6 +212,7 @@ export function localSnapshot(): CloudSave {
     tombstones: characterTombstones(),
     coins: coinLedger(),
     scores: campaignScoresSnapshot(),
+    driveScores: driveScoresSnapshot(),
   };
 }
 
@@ -242,6 +260,11 @@ export function parseCloudSave(raw: string | null): CloudSave | null {
     tombstones,
     coins: normalizeLedger(save.coins),
     scores,
+    // Absent on a payload written before the board existed — an empty list,
+    // never a refusal (see the format note at the top of this file).
+    driveScores: Array.isArray(save.driveScores)
+      ? trimDriveScores(save.driveScores)
+      : [],
   };
 }
 
@@ -321,6 +344,13 @@ export function mergeSaves(local: CloudSave, remote: CloudSave): CloudSave {
     scores[difficulty] = trimCampaignScores([...mine, ...fresh]);
   }
 
+  const mineDrive = local.driveScores;
+  const seenDrive = new Set(mineDrive.map(driveScoreKey));
+  const driveScores = trimDriveScores([
+    ...mineDrive,
+    ...remote.driveScores.filter((row) => !seenDrive.has(driveScoreKey(row))),
+  ]);
+
   return {
     format: CLOUD_FORMAT,
     version: CLOUD_VERSION,
@@ -330,6 +360,7 @@ export function mergeSaves(local: CloudSave, remote: CloudSave): CloudSave {
     tombstones,
     coins: mergeCoinLedgers(local.coins, remote.coins),
     scores,
+    driveScores,
   };
 }
 
@@ -347,6 +378,7 @@ export function applySave(save: CloudSave): void {
   setCharacterTombstones(save.tombstones);
   setCoinLedger(save.coins);
   mergeCampaignScores(save.scores);
+  mergeDriveScores(save.driveScores);
   // The hero this device had selected may have been deleted on another one.
   const active = getActiveCharacterId();
   if (active && !save.characters.some((c) => c.id === active)) {
