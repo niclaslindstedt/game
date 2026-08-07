@@ -13,13 +13,17 @@ import { describe, expect, it } from "vitest";
 import {
   breakTrafficLamps,
   createDrive,
+  createDriveDriver,
   createTraffic,
+  driveDriverInput,
+  CROWD_THOUGHTS,
   crossingsBetween,
   crowdEdges,
   driveMph,
   driveVerdict,
   engineRpm,
   gearFor,
+  haltTraffic,
   solvedTopSpeedPx,
   DRIVETRAIN,
   GEAR_COUNT,
@@ -28,6 +32,7 @@ import {
   DRIVE_OUTCOME,
   DRIVE_UNITS,
   impactMasses,
+  laneAt,
   laneCenter,
   restartDrive,
   roadBandEdges,
@@ -60,6 +65,56 @@ function floorIt(drive: DriveState, ms: number, wheel = 0): void {
   }
 }
 
+/**
+ * Drive the WHOLE leg and hand back every walker the road put a thought over,
+ * in the order they were laid down.
+ *
+ * THE WAGON IS HELD IMMORTAL FOR IT (`car.wear = 0` every tick), which is the
+ * simulator's own trick and is the only way to see the tail of the deck: a car
+ * driven flat out through this crowd breaks down a third of the way along, and a
+ * test that stopped there would pass just as happily on a deck that repeats
+ * itself after fifteen cards.
+ */
+function eachWalker(
+  drive: DriveState,
+  visit: (ped: DriveState["pedestrians"][number]) => void,
+): void {
+  const seen = new Set<number>();
+  for (let t = 0; t < 240_000; t += 16) {
+    drive.car.wear = 0;
+    stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    for (const ped of drive.pedestrians) {
+      if (ped.kind !== "walker" || seen.has(ped.id)) continue;
+      seen.add(ped.id);
+      visit(ped);
+    }
+    if (drive.outcome !== DRIVE_OUTCOME.driving) break;
+  }
+}
+
+/** …which thought each of the ones carrying one had. */
+function harvestThoughts(drive: DriveState): number[] {
+  const out: number[] = [];
+  eachWalker(drive, (ped) => {
+    if (ped.bark >= 0) out.push(ped.bark);
+  });
+  return out;
+}
+
+/** …and how many of the leg's people were thinking anything at all. */
+function harvestCrowd(drive: DriveState): {
+  thinking: number;
+  walking: number;
+} {
+  let thinking = 0;
+  let walking = 0;
+  eachWalker(drive, (ped) => {
+    walking++;
+    if (ped.bark >= 0) thinking++;
+  });
+  return { thinking, walking };
+}
+
 /** How long, flat out from a standstill on an empty road, to reach `mph`. */
 function secondsTo(mph: number): number {
   const drive = createDrive(PARAMS);
@@ -76,7 +131,7 @@ function secondsTo(mph: number): number {
  * end of the course, so an acceleration run is not measuring collisions. */
 function silence(drive: DriveState): void {
   drive.nextPedestrianAt = DRIVE.coursePx * 2;
-  drive.nextTrafficAt = DRIVE.coursePx * 2;
+  haltTraffic(drive, DRIVE.coursePx * 2);
 }
 
 describe("the wagon's drivetrain", () => {
@@ -522,28 +577,75 @@ describe("the street", () => {
     expect(near.length).toBeGreaterThan(0);
   });
 
-  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
-    const count = (difficulty: Difficulty) => {
-      const drive = createDrive({ ...PARAMS, difficulty });
-      let seen = 0;
-      const ids = new Set<number>();
-      for (let t = 0; t < 40000; t += 16) {
-        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
-        for (const car of drive.traffic) {
-          if (!ids.has(car.id)) {
-            ids.add(car.id);
-            seen++;
-          }
-        }
+  /**
+   * HOW BUSY EACH LANE LOOKS, averaged over a leg — the number the traffic is
+   * actually authored against (`DRIVE.laneTraffic.gapPx`), and the only one
+   * worth asserting.
+   *
+   * It has to be measured ON SCREEN rather than counted per 1000 px of course,
+   * because those two are not the same fact and the difference is the whole
+   * reason the spawner works the way it does: the hero's own side is caught at
+   * the DIFFERENCE of the two speeds and lingers, the oncoming side closes at
+   * their SUM and is gone, so the same course pitch shows up eight times
+   * denser in one than the other. A per-course count would pass on a road with
+   * two empty lanes in it.
+   *
+   * The pavement's own riders are left out — they are not in a lane, and
+   * `laneAt` clamps, so they would be booked against whichever outside lane
+   * they are nearest.
+   */
+  const laneOccupancy = (difficulty: Difficulty): number[] => {
+    const drive = createDrive({ ...PARAMS, difficulty });
+    // DRIVEN BY THE AUTO-DRIVER, because the reading is about what a PLAYER
+    // sees and a car held dead straight does not see the road — it bulldozes
+    // one lane of it. A shunt shoves a car AWAY from the wagon, so a straight
+    // line empties the lane it opens in and stacks the neighbour with what it
+    // shoved out, and the two read three times apart on a spawner that treated
+    // them identically.
+    const driver = createDriveDriver();
+    const seen = new Array<number>(DRIVE.laneCount).fill(0);
+    let ticks = 0;
+    for (let t = 0; t < 70000; t += 16) {
+      stepDrive(drive, 16, driveDriverInput(driver, drive));
+      // Only once the road is peopled — the opening stretch is deliberately
+      // clear and averaging it in reports a quieter road than the one played.
+      if (drive.distance <= DRIVE.crowdStartPx) continue;
+      ticks++;
+      for (const car of drive.traffic) {
+        if (vehicleDef(car.variant).pavement) continue;
+        const ahead = (car.pos.x - drive.car.pos.x) * PARAMS.direction;
+        // What the camera shows: the car rides in the trailing quarter of a
+        // ~420 px frame (`CAMERA_LEAD_FRAC`, pwa/src/game/drive-screen).
+        if (ahead > 308 || ahead < -112) continue;
+        seen[laneAt(car.pos.y)]! += 1;
       }
-      return seen / Math.max(1, drive.distance / 1000);
-    };
-    const gentle = count("easy");
-    const brutal = count(DIFFICULTY_ORDER.at(-1) as Difficulty);
-    expect(gentle).toBeLessThan(brutal);
-    // And even the worst rung leaves the road drivable: about one other car in
-    // view at a time, not a jam. A screen is ~420 px.
-    expect(brutal).toBeLessThan(4);
+    }
+    return seen.map((n) => n / Math.max(1, ticks));
+  };
+
+  it("keeps a vehicle in every lane on every screen", () => {
+    // THE PROMISE THE TRAFFIC IS TUNED TO MAKE. Not "some traffic exists" —
+    // every lane, all the time, because a lane the player never has to read is
+    // a lane the wheel is not being used for, and four of them made the road a
+    // corridor with the occasional car in it.
+    for (const lane of laneOccupancy("medium")) {
+      // Loose at the bottom on purpose: the lane the wagon is actually IN
+      // reads lighter than the rest however carefully it is driven, because
+      // what it meets there it shoves out of the way.
+      expect(lane).toBeGreaterThan(0.5);
+      // …and the other wall: past about one and a half a lane there is no gap
+      // left to move into, and a road with nowhere to put the wagon has taken
+      // the steering decision away rather than sharpened it.
+      expect(lane).toBeLessThan(1.7);
+    }
+  });
+
+  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
+    const total = (difficulty: Difficulty) =>
+      laneOccupancy(difficulty).reduce((a, b) => a + b, 0);
+    expect(total("easy")).toBeLessThan(
+      total(DIFFICULTY_ORDER.at(-1) as Difficulty),
+    );
   });
 });
 
@@ -582,6 +684,51 @@ describe("a drive", () => {
     floorIt(drive, 40000);
     expect(drive.pedestrians.length + drive.bodies).toBeGreaterThan(0);
     expect(drive.bodies).toBeGreaterThan(0);
+  });
+
+  it("gives the crowd things to think, and never the same thing twice", () => {
+    // THE RULE THE WHOLE FEATURE HANGS ON. A road of two hundred people rolling
+    // a thought each would repeat inside ten seconds, and a repeat turns a crowd
+    // into one person copy-pasted — so the lines are DEALT from a deck
+    // (`DriveState.thoughtDeck`) and a dealt one never comes back.
+    const drive = createDrive(PARAMS);
+    const thoughts = harvestThoughts(drive);
+    expect(thoughts.length).toBeGreaterThan(20);
+    expect(new Set(thoughts).size).toBe(thoughts.length);
+    for (const thought of thoughts) {
+      expect(thought).toBeGreaterThanOrEqual(0);
+      expect(thought).toBeLessThan(CROWD_THOUGHTS);
+    }
+  });
+
+  it("thinks them at their own pace, not the crowd's", () => {
+    // The crowd stands a body every hundred pixels; a line over every head would
+    // be a scrolling wall of grey. What is wanted is one, then a stretch of road
+    // with nobody thinking anything at all, so the player is left with the sense
+    // that he MISSED something rather than that he has been shown a list.
+    const drive = createDrive(PARAMS);
+    const { thinking, walking } = harvestCrowd(drive);
+    // A DOZEN WALKERS FOR EVERY THOUGHT, or thereabouts — the pitch against the
+    // crowd's own spacing. The number that matters is that it is a small
+    // minority; the ratio itself is `DRIVE.thoughtPitchPx` and free to tune.
+    expect(thinking).toBeLessThan(walking / 4);
+    // …AND THE WHOLE DECK GETS ITS TURN over a leg driven end to end, which is
+    // what the pitch is set against: forty lines, twenty thousand peopled
+    // pixels, one trip.
+    expect(thinking).toBeGreaterThan(CROWD_THOUGHTS * 0.7);
+    expect(thinking).toBeLessThanOrEqual(CROWD_THOUGHTS);
+  });
+
+  it("deals the same thoughts in the same order for the same seed", () => {
+    // A restart after a breakdown is the same road, and that has to include what
+    // the people on it were thinking — otherwise the one stretch a player drives
+    // four times is a lottery.
+    const a = harvestThoughts(createDrive(PARAMS));
+    const b = harvestThoughts(restartDrive(createDrive(PARAMS)));
+    expect(b).toEqual(a);
+    // …and a DIFFERENT seed genuinely reorders them.
+    const other = harvestThoughts(createDrive({ ...PARAMS, seed: 987 }));
+    expect(other).not.toEqual(a);
   });
 
   it("lays the same road down for the same seed", () => {
@@ -699,11 +846,32 @@ describe("the gore switch", () => {
   });
 
   it("splits bodies with CLEAVES on and merely drags them with it off", () => {
-    const cut = createDrive({ ...PARAMS, gib: false, split: true });
-    const dragged = createDrive({ ...PARAMS, gib: false, split: false });
+    // THE WHOLE LEG, ON THE RUNG WHERE A BODY WEIGHS THE MOST — and both halves
+    // of that are what keep this from being a coin toss rather than a test.
+    //
+    // A split is a hit over `gore.splitJoules`, which is a fast SQUARE one: the
+    // auto-driver arrives having managed a couple on MEDIUM across a whole
+    // minute and a half, and none at all on EASY, where a person weighs a
+    // quarter of what they do here (`DifficultyDef.drive.pedestrianMassMult`).
+    // Sampling the first forty seconds of a MEDIUM leg was sampling the half of
+    // the trip the wagon spends getting up to speed, and it passed on how
+    // little traffic there used to be to slow it down. The switch is what is
+    // under test, not the odds — so this drives the whole road on the rung
+    // where the line is comfortably cleared.
+    const rung = { difficulty: DIFFICULTY_ORDER.at(-1) as Difficulty };
+    const cut = createDrive({ ...PARAMS, ...rung, gib: false, split: true });
+    const dragged = createDrive({
+      ...PARAMS,
+      ...rung,
+      gib: false,
+      split: false,
+    });
     let splits = 0;
     let unsplit = 0;
-    for (let t = 0; t < 40000; t += 16) {
+    while (
+      cut.outcome === DRIVE_OUTCOME.driving ||
+      dragged.outcome === DRIVE_OUTCOME.driving
+    ) {
       stepDrive(cut, 16, { pedal: 1, wheel: 0 });
       stepDrive(dragged, 16, { pedal: 1, wheel: 0 });
       splits += cut.strikes.filter((strike) => strike.split).length;

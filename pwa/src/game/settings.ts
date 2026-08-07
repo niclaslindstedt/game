@@ -20,6 +20,7 @@ import {
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
 
+import { shellPlatform } from "../app/shell-bridge.ts";
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
@@ -47,8 +48,8 @@ import {
 import { setStoreForced } from "./store.ts";
 import { PICKUP_CARD_TIER_ORDER, type PickupCardTier } from "./tiers.ts";
 import {
-  DEFAULT_KEYBINDINGS,
   codeForChar,
+  defaultKeybindings,
   sanitizeBindings,
   type KeyBindings,
 } from "./keybindings.ts";
@@ -656,8 +657,11 @@ function defaults(): GameSettings {
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
     // The shipped WASD + action-key scheme; rebindable in CONTROLS → KEY
-    // BINDINGS.
-    keybindings: { ...DEFAULT_KEYBINDINGS },
+    // BINDINGS. Asked of this BUILD rather than taken from the constant: the
+    // SCREENSHOT key differs between a store shell and a browser tab, where
+    // F12 belongs to the developer tools and can never reach the game (see
+    // `defaultKeybindings`).
+    keybindings: shippedKeybindings(),
     // Vibration is a touch-device affordance — on out of the box where a
     // motor exists, and inert on iOS and pointer devices anyway.
     vibration: "on",
@@ -957,6 +961,16 @@ function clampGameSpeed(v: unknown): number {
   return GAME_SPEEDS.includes(n) ? n : 1;
 }
 
+/**
+ * THE SCHEME THIS BUILD SHIPS — the catalog's map with the one key that depends
+ * on where the game is running settled (`defaultKeybindings`). Exported because
+ * the RESET row in KEY BINDINGS restores exactly this, and a reset that handed
+ * a browser the shell's F12 would be a reset into a key the page cannot have.
+ */
+export function shippedKeybindings(): KeyBindings {
+  return defaultKeybindings(shellPlatform());
+}
+
 /** Load the control scheme, migrating a pre-KEY-BINDINGS save: those stored the
  * consumable dock as single-char `keyMedkit`/`keyStamina` and had no
  * `keybindings` block, so fold those two into the defaults as physical codes. */
@@ -966,8 +980,9 @@ function loadKeybindings(
     keyStamina?: unknown;
   },
 ): KeyBindings {
-  if (stored.keybindings) return sanitizeBindings(stored.keybindings);
-  const binds = { ...DEFAULT_KEYBINDINGS };
+  if (stored.keybindings)
+    return sanitizeBindings(stored.keybindings, shippedKeybindings());
+  const binds = shippedKeybindings();
   const medkit = codeForChar(stored.keyMedkit);
   const stamina = codeForChar(stored.keyStamina);
   if (medkit) binds.medkit = medkit;

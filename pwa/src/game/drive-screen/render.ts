@@ -54,7 +54,14 @@ import {
 } from "./drive-gore.ts";
 import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
 import { drawSkidMarks, type SkidState } from "./skid.ts";
-import { drawPlacard, GLUED_BARKS, MAX_PLACARDS } from "./placards.ts";
+import {
+  CROWD_THOUGHTS,
+  drawPlacard,
+  GLUED_BARKS,
+  MAX_PLACARDS,
+  PLACARD_READ_PX,
+  type PlacardVoice,
+} from "./placards.ts";
 import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
@@ -393,11 +400,14 @@ export function drawDrive(
   // houses — so sorting them together is not a shortcut, it is the requirement.
   type Drawn = { y: number; draw: () => void };
   const drawn: Drawn[] = [];
-  /** What THE GLUED are saying, collected as the field is walked and drawn over
-   * the finished picture — a bubble sorted in with the bodies would be painted
-   * over by whoever is sitting in the next row back. */
-  const bubbles: { line: string; ped: DriveState["pedestrians"][number] }[] =
-    [];
+  /** What the road is saying and thinking, collected as the field is walked and
+   * drawn over the finished picture — a bubble sorted in with the bodies would
+   * be painted over by whoever is standing in the next row back. */
+  const bubbles: {
+    line: string;
+    voice: PlacardVoice;
+    ped: DriveState["pedestrians"][number];
+  }[] = [];
 
   const put = (
     name: string,
@@ -715,9 +725,23 @@ export function drawDrive(
       // back is painted over its own neighbour's words.
       if (font && ped.bark >= 0) {
         const line = GLUED_BARKS[ped.bark % GLUED_BARKS.length];
-        if (line) bubbles.push({ line, ped });
+        if (line) bubbles.push({ line, voice: "shout", ped });
       }
       continue;
+    }
+    // …AND WHAT ONE OF THE WALKING IS THINKING, every so often (`CROWD_THOUGHTS`,
+    // dealt by the sim). Gathered into the same list as a shout and told apart by
+    // its VOICE, so the one bubble the picture can carry is decided once, over
+    // the whole road, rather than by two passes that would print over each other
+    // the moment a walker happened to be standing beside the blockade.
+    //
+    // ONLY WHILE THEY ARE ON THEIR FEET. A body that has been hit is mid-flight
+    // or lying in the gutter, and a private thought still hanging over it would
+    // be the game making a remark about what just happened — which is the one
+    // thing this whole minigame refuses to do.
+    if (font && ped.bark >= 0 && ped.mode === "afoot") {
+      const line = CROWD_THOUGHTS[ped.bark % CROWD_THOUGHTS.length];
+      if (line) bubbles.push({ line, voice: "thought", ped });
     }
     const frames =
       ped.kind === "glued"
@@ -789,14 +813,22 @@ export function drawDrive(
   // reads as a SEQUENCE of lines rather than as a wall of overprinted text.
   if (font) {
     const dir = drive.params.direction;
-    const near = bubbles
+    const ahead = bubbles
       .map((bubble) => ({
         ...bubble,
         away: (bubble.ped.pos.x - drive.car.pos.x) * dir,
       }))
-      .filter((bubble) => bubble.away > 0)
-      .sort((a, b) => a.away - b.away)
-      .slice(0, MAX_PLACARDS);
+      .filter((bubble) => bubble.away > 0 && bubble.away <= PLACARD_READ_PX)
+      .sort((a, b) => a.away - b.away);
+    // AND A SHOUT OUTRANKS A THOUGHT, whatever the order on the road is. The
+    // blockade is a SET PIECE — twenty people, four voices, one demonstration a
+    // trip — and the crowd walks straight through it like everywhere else on this
+    // road, so without this the one line the picture can carry gets handed to a
+    // passer-by's thought about the bus fare in the middle of it. The thoughts
+    // are a texture and there are forty of them; missing one costs nothing, and
+    // one of them stepping on the set piece costs the set piece.
+    const shouts = ahead.filter((bubble) => bubble.voice === "shout");
+    const near = (shouts.length > 0 ? shouts : ahead).slice(0, MAX_PLACARDS);
     for (const bubble of near) {
       drawPlacard(
         ctx,
@@ -806,6 +838,7 @@ export function drawDrive(
         bubble.ped.pos.y,
         camera,
         bubble.away,
+        bubble.voice,
       );
     }
   }

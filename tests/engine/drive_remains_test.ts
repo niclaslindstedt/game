@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createDrive,
+  haltTraffic,
   stepDrive,
   DRIVE,
   GLUED_VARIANTS,
@@ -44,7 +45,7 @@ const COAST = { pedal: 0, wheel: 0 };
  * test planted. The blockade's own latch is set for the same reason. */
 function silence(drive: DriveState): void {
   drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
-  drive.nextTrafficAt = Number.POSITIVE_INFINITY;
+  haltTraffic(drive);
   drive.blockadeDone = true;
 }
 
@@ -256,7 +257,7 @@ describe("THE GLUED", () => {
   it("lays a blockade across every lane, once, at its place in the course", () => {
     const drive = createDrive(PARAMS);
     drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
-    drive.nextTrafficAt = Number.POSITIVE_INFINITY;
+    haltTraffic(drive);
     const at = blockadeAt(drive.params);
     // Drive until the spawner reaches it.
     for (let t = 0; t < 200000 && !drive.blockadeDone; t += 16) {
@@ -281,7 +282,7 @@ describe("THE GLUED", () => {
   it("does not move, however close the car gets", () => {
     const drive = createDrive(PARAMS);
     drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
-    drive.nextTrafficAt = Number.POSITIVE_INFINITY;
+    haltTraffic(drive);
     for (let t = 0; t < 200000 && !drive.blockadeDone; t += 16) {
       stepDrive(drive, 16, FLAT_OUT);
     }
@@ -300,7 +301,7 @@ describe("THE GLUED", () => {
   it("wears its own art and gives a few of them something to say", () => {
     const drive = createDrive(PARAMS);
     drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
-    drive.nextTrafficAt = Number.POSITIVE_INFINITY;
+    haltTraffic(drive);
     for (let t = 0; t < 200000 && !drive.blockadeDone; t += 16) {
       stepDrive(drive, 16, FLAT_OUT);
     }
@@ -319,7 +320,7 @@ describe("THE GLUED", () => {
   it("is a wall the car cannot get through clean", () => {
     const drive = createDrive(PARAMS);
     drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
-    drive.nextTrafficAt = Number.POSITIVE_INFINITY;
+    haltTraffic(drive);
     for (let t = 0; t < 200000 && !drive.blockadeDone; t += 16) {
       stepDrive(drive, 16, FLAT_OUT);
     }

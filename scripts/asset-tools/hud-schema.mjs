@@ -211,13 +211,16 @@ export const HUD_ACTIONS = new Set([
   "openCharacter",
   "pauseGame",
   "toggleWeaponMenu",
-  // The road's own two, which only the drive surface supplies. An action the
+  // The road's own three, which only the drive surface supplies. An action the
   // mounting screen does not provide is a press that does nothing rather than a
   // build error: the set is one vocabulary across every surface, so a mod may
   // put PULL OVER on a button of its own without the compiler having to know
-  // which screen that button will end up on.
+  // which screen that button will end up on. `driveMenu` leaves the GAME rather
+  // than the road — the host banks the hero and drops to the title — and is
+  // absent on a road with no game behind it (the `?drive` workbench).
   "driveResume",
   "driveSkip",
+  "driveMenu",
   // Silence one speaker, locally and unsent. The SEAT comes from the row the
   // press was drawn in, not from the YAML — which is what makes one authored
   // press work for every card on the rail.

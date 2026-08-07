@@ -24,6 +24,7 @@ import {
   createDrive,
   createDriveDriver,
   driveDriverInput,
+  driveScore,
   driveVerdict,
   restartDrive,
   stepDrive,
@@ -52,6 +53,11 @@ import { driveBindings, type DriveDials } from "../hud/bindings.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import type { HudContext } from "../hud/context.ts";
 import { DrivePause } from "./DrivePause.tsx";
+import {
+  DriveScores,
+  driveBoardResult,
+  type DriveBoardResult,
+} from "./DriveScores.tsx";
 import {
   clearDriveFx,
   createDriveFx,
@@ -125,6 +131,7 @@ export function DriveScreen({
   heroName,
   heroPortrait,
   onScreenshot,
+  onMenu,
   auto = false,
 }: {
   params: DriveParams;
@@ -159,6 +166,18 @@ export function DriveScreen({
    * screen, so the caller owns the roll and the flash; all this does is notice
    * the key, because while a drive is up the run's controls are not listening. */
   onScreenshot?: () => void;
+  /**
+   * LEAVE THE GAME from the road — the pause card's MAIN MENU, once its confirm
+   * has been answered.
+   *
+   * The road cannot hand a PARKED run back the way the fight's pause menu does:
+   * the car is already away down a road that only exists while this screen is
+   * up, and the run behind it is a level the hero has driven out of. So what
+   * this means is settled by the host (GameScreen banks the hero as he sits and
+   * ends the run), and the road only raises it. Absent — the `?drive`
+   * workbench, which has no game behind it — and the row is not drawn.
+   */
+  onMenu?: () => void;
   /**
    * SOMEBODY ELSE AT THE WHEEL — the engine's own auto-driver
    * (`createDriveDriver`) supplies the input and the pad and the keys sit out.
@@ -214,6 +233,20 @@ export function DriveScreen({
   );
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [paused, setPaused] = useState(false);
+  /**
+   * THE CABINET'S BOARD, once the road is behind him — the leg's score, where it
+   * landed, and the board it landed on (`DriveScores.tsx`).
+   *
+   * It holds the road: the crossing that was waiting on the drive does not
+   * happen until the player has signed off, which is the one place in this
+   * minigame that DOES wait for a thumb. That is safe here and nowhere else,
+   * because the board is never raised for an unattended drive (see `arrive`).
+   *
+   * Mirrored on a ref because the loop reads it every step and must not
+   * re-bind on it.
+   */
+  const [board, setBoard] = useState<DriveBoardResult | null>(null);
+  const boardRef = useRef<DriveBoardResult | null>(null);
   /**
    * THE DIALS — what the dashboard reads, republished only when one of them
    * actually moves.
@@ -291,6 +324,97 @@ export function DriveScreen({
     setPaused(on);
   }, []);
 
+  /** Every control let go of at once — the accelerator, the wheel, both hands.
+   * What a lost window leaves behind (see below), and what the pause card is
+   * raised on top of, so nothing is still held when the road starts again. */
+  const dropControls = useCallback(() => {
+    keysRef.current.clear();
+    padIdRef.current = null;
+    padRef.current = null;
+    padOrigin = null;
+    brakeIdsRef.current.clear();
+  }, []);
+
+  // LOSING THE WINDOW PARKS THE CAR — the run's own auto-pause (alt-tab, a tab
+  // switch, an app switch on a phone), which the road was missing for the
+  // reason it was missing PAUSE and SCREENSHOT: while a drive is up the run's
+  // control layer is not listening, so every rule that layer enforces has to be
+  // enforced here too (controls.ts `onBlur`/`onVisibility`). Both signals are
+  // watched because browsers disagree about which one a backgrounding fires,
+  // and parking twice is parking once.
+  //
+  // Two things go with it, and the second is the one that bites: a key held
+  // when the window went away never sees its `keyup`, so a wagon paused with
+  // the accelerator down resumes at full throttle a minute later — which is
+  // exactly the stuck-key the run clears on the same event.
+  //
+  // NOBODY'S THUMB, NO PAUSE. An `auto` road — the attract loop, a playtest, a
+  // shot recipe — has no driver to come back and lift the card, so a pause it
+  // cannot clear is a car parked for the rest of its life. The run reaches the
+  // same outcome from the other end: it pauses, and the bot's input loop clears
+  // it again on the next tick.
+  useEffect(() => {
+    if (auto) return;
+    const park = () => {
+      dropControls();
+      // …BUT NEVER OVER THE BOARD. Once the leg is scored the road is already
+      // stopped and there is nothing held to come back to, so a pause card
+      // raised here would only cover the one thing on screen worth reading —
+      // and it would be a card the board's own key handler is not listening to
+      // dismiss. Dropping the controls above still matters: a key held when the
+      // window went is a key with no `keyup` coming.
+      if (boardRef.current) return;
+      setPause(true);
+    };
+    const onVisibility = () => {
+      if (document.hidden) park();
+    };
+    window.addEventListener("blur", park);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("blur", park);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [auto, dropControls, setPause]);
+
+  /**
+   * THE ROAD IS BEHIND HIM. Either the cabinet gets its moment, or the crossing
+   * happens exactly as it did before there was a board.
+   *
+   * NOBODY'S THUMB, NO BOARD. The attract loop, a `?bot=` playtest and every
+   * screenshot recipe drive this road with the engine's own driver, and a
+   * high-score screen waiting on a keypress would park the demo on it forever —
+   * the same failure an unattended drive with nothing on the throttle is, one
+   * screen later. So an auto-driven leg arrives silently, and it is not merely
+   * that the board is hidden: it is never scored and never banked, because a
+   * board full of the demo's own initials is not a high-score table.
+   */
+  const arrive = useCallback(
+    (drive: DriveState) => {
+      const to = drive.params.to;
+      const verdict = driveVerdict(drive);
+      if (auto) {
+        onArrived(to, drive.bodies, verdict);
+        return;
+      }
+      const result = driveBoardResult(
+        driveScore(drive),
+        drive.params.difficulty,
+      );
+      boardRef.current = result;
+      setBoard(result);
+    },
+    [auto, onArrived],
+  );
+
+  /** Signed off: give the road back and make the crossing it was holding. */
+  const leaveBoard = useCallback(() => {
+    const drive = driveRef.current;
+    boardRef.current = null;
+    setBoard(null);
+    onArrived(drive.params.to, drive.bodies, driveVerdict(drive));
+  }, [onArrived]);
+
   /** A finger has left the picture: whichever of the two jobs it had stops. A
    * leftover brake finger never inherits the pad — the next press re-anchors
    * deliberately, which is the same rule the run's own tracker follows and for
@@ -337,6 +461,13 @@ export function DriveScreen({
         onScreenshot?.();
         return;
       }
+      // WHILE THE BOARD IS UP, NOTHING HERE IS LISTENING. The screen owns the
+      // keyboard (its own capture-phase handler turns the wheels), and the road
+      // it would be steering is over — a PAUSE card raised over a high-score
+      // table would cover the one thing on screen worth reading. The shutter
+      // above is the deliberate exception: a player who just took the board is
+      // exactly the player who wants a picture of it.
+      if (boardRef.current) return;
       // ESCAPE is the pause on this screen whatever the bind says: it is what
       // every player reaches for, and the road has no other menu for it to
       // mean.
@@ -438,12 +569,12 @@ export function DriveScreen({
           ? { pedal: pad.x * nose, wheel: pad.y, handbrake }
           : { ...keys, handbrake };
 
-      // ONE THING PARKS THE CAR, and it is the pause card. A LINE DOES NOT —
+      // TWO THINGS PARK THE CAR: the pause card, and the high-score board at
+      // the end of the leg. A LINE DOES NOT —
       // his thoughts are barked over a road that keeps moving (see `Speech`),
       // which is the only way a man muttering at the wheel reads as a man
       // muttering at the wheel, and it is also what leaves an UNATTENDED drive
       // (the attract loop, a playtest) nothing to be stuck on.
-      const frozen = pausedRef.current;
 
       // ── THE MOMENT ────────────────────────────────────────────────────────
       // THERE ISN'T ONE, AND THAT IS A DECISION. The road used to drop to a
@@ -461,7 +592,10 @@ export function DriveScreen({
       last = now;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
-        if (frozen) break;
+        // RE-READ EACH STEP rather than latched once a frame: `endDrive` below
+        // can raise the board mid-batch, and a latched flag would keep stepping
+        // a road the player is already reading a scoreboard over.
+        if (pausedRef.current || boardRef.current) break;
         stepDrive(drive, STEP_MS, inputRef.current);
         drainDrive(
           drive,
@@ -484,7 +618,7 @@ export function DriveScreen({
           fxRef.current,
           goreRef.current,
           skidRef.current,
-          onArrived,
+          arrive,
         );
       }
 
@@ -543,7 +677,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, assets, nose, onArrived, say]);
+  }, [ageSpeech, arrive, assets, nose, say]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {
@@ -569,6 +703,12 @@ export function DriveScreen({
     actions: {
       driveResume: () => setPause(false),
       driveSkip: skipDrive,
+      // THE WAY OUT OF THE GAME, offered to an authored dashboard exactly as
+      // the other two are — and absent, rather than dead, wherever the host has
+      // no menu to drop to. An action the mounting screen does not supply is a
+      // press that does nothing, which is the answer the vocabulary is built
+      // around (hud-schema.mjs).
+      ...(onMenu ? { driveMenu: onMenu } : {}),
     },
   };
 
@@ -661,7 +801,14 @@ export function DriveScreen({
           font={assets.font}
           onResume={() => setPause(false)}
           onSkip={skipDrive}
+          onMenu={onMenu}
         />
+      )}
+      {/* THE CABINET'S BOARD, over a stopped road. Last in the tree so it sits
+          over the dashboard and the bark alike — it is the only thing on this
+          screen worth reading once the course is behind him. */}
+      {board && (
+        <DriveScores font={assets.font} result={board} onDone={leaveBoard} />
       )}
     </div>
   );
@@ -689,7 +836,10 @@ function endDrive(
   fx: DriveFxState,
   gore: DriveGoreState,
   skids: SkidState,
-  onArrived: (to: string, bodies: number, verdict: string) => void,
+  /** What the arrival hands the leg to — the screen's own `arrive`, which is
+   * where the choice between the high-score board and a silent crossing is
+   * made. */
+  onArrived: (drive: DriveState) => void,
 ): void {
   if (
     drive.outcome === DRIVE_OUTCOME.broken &&
@@ -711,7 +861,7 @@ function endDrive(
     // spoken as the last page of the destination's opening monologue, which is
     // where a man's opinion of a journey belongs: standing beside the car,
     // having finished it. (`RunParams.arrivalThought` → `introPages`.)
-    onArrived(drive.params.to, drive.bodies, driveVerdict(drive));
+    onArrived(drive);
   }
 }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TAKING A PICTURE OF THE GAME — what the SCREENSHOT bind (F12) actually does,
-// and the one place the roll, the shells and the gallery meet.
+// TAKING A PICTURE OF THE GAME — what the SCREENSHOT bind (ENTER on the web,
+// F12 in a store shell) actually does, and the one place the roll, the shells
+// and the gallery meet.
 //
 // WHAT IS IN THE PICTURE is the whole screen as the player is seeing it: the
 // world canvas AND the interface over it — the vitals, the minimap, the docks,
