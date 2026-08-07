@@ -183,6 +183,14 @@ export type VoiceProvider = {
  * which belong in a chunk loaded by a player who never opens a session.
  */
 const PROVIDERS: (() => Promise<VoiceProvider>)[] = [
+  // THE FILE SOURCE COMES FIRST, and it is not a special case in the picker:
+  // it simply reports itself UNAVAILABLE unless a developer has pointed it at an
+  // audio file (`useVoiceFile`), so on every ordinary launch the loop falls
+  // straight through to the microphone. Being first is what lets it stand in for
+  // the device when one IS set. It folds away entirely in a store build.
+  ...(__DEV_TOOLS__
+    ? [async () => (await import("./file.ts")).fileVoiceProvider]
+    : []),
   async () => (await import("./opus.ts")).opusProvider,
 ];
 

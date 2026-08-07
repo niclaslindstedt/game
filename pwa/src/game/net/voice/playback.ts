@@ -45,6 +45,11 @@ import {
 
 import { decoderFor, type VoiceDecoder, type VoicePcm } from "./codecs.ts";
 import type { VoiceRoom } from "./room.ts";
+// The developer's recorder — a no-op until `startVoiceTap()`. Imported directly
+// rather than injected because it is two module-level functions with no state of
+// their own here, and threading a recorder through the graph would put test
+// scaffolding in the shape of the shipped path.
+import { tapVoicePacket, tapVoicePcm } from "./tap.ts";
 
 /**
  * How far ahead of now a speaker's first frame is scheduled, in ms.
@@ -218,6 +223,11 @@ export function createVoicePlayback(
     let sum = 0;
     for (let i = 0; i < pcm.length; i++) sum += pcm[i]! * pcm[i]!;
     room.heard(seatIndex, Math.sqrt(sum / pcm.length), performance.now());
+    // WHAT THIS LISTENER ACTUALLY HEARD, when somebody is recording. Taken here
+    // rather than inside the decoder so it captures the audio that is genuinely
+    // about to be played — including a frame the overrun rule below is about to
+    // drop, which is itself worth seeing.
+    tapVoicePcm(seatIndex, pcm);
 
     const frameSeconds = pcm.length / VOICE_SAMPLE_RATE;
     const now = ctx.currentTime;
@@ -242,6 +252,10 @@ export function createVoicePlayback(
   return {
     play(packet, atMs) {
       if (closed) return;
+      // THE FAR END OF THE BYTE-IDENTITY CLAIM: recorded as the bytes ARRIVED,
+      // before anything decodes or copies them, so a digest taken here can be
+      // compared with what the sender emitted. See `tap.ts`.
+      tapVoicePacket(packet);
       // MUTED: NOT DECODED, BUT STILL SHOWN. Skipping the decode is the point of
       // a mute (it costs nothing and plays nothing), while still registering the
       // speaker keeps their card on screen with a MUTED badge and a flat line —

@@ -29,11 +29,38 @@ import { warn } from "@game/core";
 
 import type { VoicePacket } from "@game/wire/voice.ts";
 
+import { downloadBlob } from "@ui/lib/files.ts";
+
 import { getSettings, type VoiceSettings } from "../../settings.ts";
 
 import { pickVoiceProvider, type VoiceSource } from "./codecs.ts";
 import { createVoicePlayback, type VoicePlayback } from "./playback.ts";
 import { createVoiceRoom, type VoiceRoom } from "./room.ts";
+import {
+  startVoiceTap,
+  voiceTapReport,
+  voiceTapRunning,
+  voiceTapWav,
+  type VoiceTapReport,
+} from "./tap.ts";
+
+declare global {
+  interface Window {
+    /**
+     * ?debug hook: stream an audio FILE into the comms instead of the
+     * microphone, so a known signal can be put through and compared with what
+     * comes out (`voice/file.ts`). A URL, or null to give the microphone back.
+     * `{ once: true }` plays it through and stops instead of looping.
+     */
+    __voiceFile?: (url: string | null, options?: { once?: boolean }) => void;
+    /** ?debug hook: start recording what this machine RECEIVES, or — once
+     * running — print the per-seat packet/digest/duration report (`voice/tap.ts`). */
+    __voiceTap?: () => VoiceTapReport[] | undefined;
+    /** ?debug hook: download one seat's decoded audio as a .wav, to open beside
+     * the file that was streamed in. */
+    __voiceWav?: (seat?: number) => void;
+  }
+}
 
 /** How often the policy runs, in ms. ~30 Hz: fast enough that an open-mic gate
  * opens within a syllable and a released key stops the wire within a frame,
@@ -246,6 +273,48 @@ export function createVoiceLink(options: VoiceLinkOptions): VoiceLink {
     return getSettings().keybindings.pushToTalk;
   }
 
+  /**
+   * THE DEVELOPER'S INSTRUMENT — a file in, and a recording of what came out.
+   *
+   * Installed here rather than in `run-setup.ts` with the run's other `?debug`
+   * hooks because these three are about the SESSION rather than about the run:
+   * they only mean anything while a voice link exists, and they must go away with
+   * it. Folded out of a store build entirely (`__DEV_TOOLS__` is a literal).
+   *
+   * Why it earns its place: everything else about voice is testable from CI
+   * except what a person actually hears, and that test needs a repeatable input.
+   * See `file.ts` for the whole reasoning, including why the ENCODED PACKETS can
+   * be compared byte-for-byte and the decoded audio can never be.
+   */
+  function installDebugHooks(): void {
+    window.__voiceFile = (url, hookOptions) => {
+      void (async () => {
+        const { useVoiceFile } = await import("./file.ts");
+        useVoiceFile(url, hookOptions);
+        // REOPENED, not merely re-pointed: the provider is chosen when the
+        // source opens, so a live microphone has to be given back before the
+        // file can stand in for it (and vice versa).
+        close();
+        if (wanted().mode !== "off") void open();
+      })();
+    };
+    window.__voiceTap = () => {
+      if (!voiceTapRunning()) {
+        startVoiceTap();
+        return undefined;
+      }
+      return voiceTapReport();
+    };
+    window.__voiceWav = (seat = 0) => {
+      const wav = voiceTapWav(seat);
+      if (!wav) {
+        warn(`voice: nothing recorded for seat ${seat} — window.__voiceTap()`);
+        return;
+      }
+      downloadBlob(`voice-seat${seat}.wav`, wav);
+    };
+  }
+
   if (typeof window !== "undefined") {
     playback = createVoicePlayback({
       room,
@@ -256,6 +325,21 @@ export function createVoiceLink(options: VoiceLinkOptions): VoiceLink {
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", release);
     timer = window.setInterval(tick, TICK_MS);
+    if (__DEV_TOOLS__) {
+      installDebugHooks();
+      // `?voice=<url>` points the file source at an audio file BEFORE anything
+      // opens, which is the difference between it and the hook above: a session
+      // launched with it is streaming the file from the first frame, so the
+      // pair of machines in a two-sided test need no console typing in between.
+      const wantedFile = new URLSearchParams(window.location.search).get(
+        "voice",
+      );
+      if (wantedFile) {
+        void import("./file.ts").then(({ useVoiceFile }) =>
+          useVoiceFile(wantedFile),
+        );
+      }
+    }
   }
 
   return {
@@ -283,6 +367,13 @@ export function createVoiceLink(options: VoiceLinkOptions): VoiceLink {
         window.removeEventListener("keyup", onKeyUp);
         window.removeEventListener("blur", release);
         document.removeEventListener("visibilitychange", release);
+        // The hooks go with the link — one left behind would reopen a
+        // microphone against a session that has ended.
+        if (__DEV_TOOLS__) {
+          delete window.__voiceFile;
+          delete window.__voiceTap;
+          delete window.__voiceWav;
+        }
       }
       close();
       playback?.close();

@@ -42,17 +42,26 @@ const PARAMS: SessionParams = {
   merchantDiscovered: false,
 };
 
-/** One client's inbox, kept as decoded voice packets. */
+/** One client's inbox, kept as decoded voice packets — plus the raw bytes, for
+ * the byte-identity assertions further down (text would mangle them). */
 function inbox() {
   const voice: { seat: number; codec: number; last: boolean; text: string }[] =
     [];
+  /** Each packet's SPEECH bytes, as they arrived. */
+  const raw: Uint8Array[] = [];
+  /** Each packet's WHOLE payload — sub-header included. */
+  const rawPayloads: Uint8Array[] = [];
   return {
     voice,
+    raw,
+    rawPayloads,
     send(frame: ArrayBuffer) {
       const decoded = decodeFrame(frame);
       if (!decoded || decoded.type !== FRAME.voice) return;
       const packet = decodeVoice(decoded.payload);
       if (!packet) return;
+      raw.push(packet.bytes);
+      rawPayloads.push(decoded.payload as Uint8Array);
       voice.push({
         seat: packet.seat,
         codec: packet.codec,
@@ -209,6 +218,79 @@ describe("who may talk", () => {
     live.addClient(1, host.send, true, "HOST");
     expect(() => talk(live, 999, "who am i")).not.toThrow();
     expect(host.voice).toEqual([]);
+  });
+});
+
+describe("byte identity — what the wire is actually responsible for", () => {
+  // **THE HALF THAT CAN BE PINNED, AND WHY ONLY THIS HALF.** Opus is lossy, so
+  // decoded audio is never the samples that went in and comparing them
+  // byte-for-byte proves nothing. What must be byte-identical is the PACKET
+  // STREAM: the bytes a sender's encoder emitted have to reach the far end's
+  // decoder unchanged and in order. That covers everything this repo owns — the
+  // framing, the sub-header, the seat stamp, the relay, the ordering — and the
+  // codec itself is Chromium's. The developer's file source and receive-side tap
+  // (`pwa/src/game/net/voice/file.ts`, `tap.ts`) are the same claim measured in a
+  // real browser, where an encoder exists; this is it measured in CI, where one
+  // does not.
+  it("delivers every packet's bytes unchanged, in order", () => {
+    const live = session();
+    const host = inbox();
+    const listener = inbox();
+    live.addClient(1, host.send, true, "HOST");
+    live.addClient(2, listener.send, true, "FRIEND");
+
+    // A stand-in for a stream of Opus packets: 50 frames — one second of speech
+    // — of pseudo-random bytes at a believable size, each one distinguishable
+    // from every other so a reorder or a duplicate cannot pass.
+    const sent: Uint8Array[] = [];
+    for (let frame = 0; frame < 50; frame++) {
+      const bytes = new Uint8Array(60);
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = (frame * 131 + i * 17 + 7) & 0xff;
+      }
+      sent.push(bytes);
+      live.receive(
+        1,
+        FRAME.voice,
+        0,
+        encodeVoice({ codec: VOICE_CODEC.opus, bytes }),
+      );
+    }
+
+    // The inbox above decodes to text, which would mangle arbitrary bytes — so
+    // this assertion reads the raw payloads back off the frames themselves.
+    expect(listener.raw).toHaveLength(sent.length);
+    for (let i = 0; i < sent.length; i++) {
+      expect([...listener.raw[i]!], `packet ${i}`).toEqual([...sent[i]!]);
+    }
+  });
+
+  it("changes exactly ONE byte on the way through — the seat", () => {
+    // The relay's whole mutation, pinned as such: a decode-and-re-encode would
+    // pass the test above and still be the wrong implementation, because voice
+    // is the hottest per-packet path a session has (one speaker, seven
+    // listeners, fifty times a second).
+    const live = session();
+    const host = inbox();
+    const listener = inbox();
+    live.addClient(1, host.send, true, "HOST");
+    live.addClient(2, listener.send, true, "FRIEND");
+
+    const bytes = new Uint8Array([9, 8, 7, 6, 5, 4, 3, 2, 1]);
+    const payload = encodeVoice({ codec: VOICE_CODEC.opus, bytes });
+    const before = [...payload];
+    live.receive(1, FRAME.voice, 0, payload);
+
+    const after = [...listener.rawPayloads[0]!];
+    expect(after).toHaveLength(before.length);
+    for (let i = 0; i < before.length; i++) {
+      // Byte 0 is the seat and is expected to change; every other byte —
+      // header and speech alike — must be what the speaker sent.
+      if (i === 0) continue;
+      expect(after[i], `payload byte ${i}`).toBe(before[i]);
+    }
+    expect(after[0]).toBe(0);
+    expect(before[0]).toBe(VOICE_SEAT_UNSET);
   });
 });
 

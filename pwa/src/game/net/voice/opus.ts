@@ -39,7 +39,6 @@ import { error as logError, warn } from "@game/core";
 import { describeError } from "@ui/lib/describe-error.ts";
 
 import {
-  MAX_VOICE_BYTES,
   VOICE_BITRATE,
   VOICE_CODEC,
   VOICE_FRAME_MS,
@@ -56,17 +55,9 @@ import type {
   VoiceSourceOptions,
 } from "./codecs.ts";
 import { micWorkletUrl, MIC_PROCESSOR, type MicFrame } from "./mic-worklet.ts";
-
-/** WebCodecs' own name for what we encode. */
-const CODEC = "opus";
-
-/** The config both ends are built from — one object, so an encoder and a
- * decoder can never be configured to disagree about the stream between them. */
-const CONFIG = {
-  codec: CODEC,
-  sampleRate: VOICE_SAMPLE_RATE,
-  numberOfChannels: 1,
-} as const;
+// The encoder is SHARED with the file source (`file.ts`) — see that module for
+// why the test tool must not have an encoder of its own.
+import { openOpusEncoder, OPUS_CONFIG as CONFIG } from "./opus-encode.ts";
 
 /**
  * Is Opus voice possible here at all?
@@ -110,17 +101,6 @@ async function createSource(
   let transmitting = false;
   let level = 0;
   let closed = false;
-  /**
-   * The encoder's clock, in microseconds of speech encoded so far.
-   *
-   * It has to be MONOTONIC and gap-free — WebCodecs uses it to order and to
-   * pace — and it is deliberately not `performance.now()`: a wall clock would
-   * make the timestamps drift against the number of samples actually handed
-   * over (the audio device's clock is its own), and a frame whose timestamp
-   * went backwards is one the encoder rejects outright.
-   */
-  let stamp = 0;
-
   // THE DEVICE FIRST, IN ITS OWN TRY, because its failure is the one that is
   // not a failure: the ordinary case is the player saying no, and that must be
   // reported rather than logged as a fault. Everything after it is real
@@ -157,34 +137,12 @@ async function createSource(
     });
     await context.audioWorklet.addModule(micWorkletUrl());
 
-    const encoder = new AudioEncoder({
-      output: (chunk) => {
-        if (closed || !transmitting) return;
-        if (chunk.byteLength > MAX_VOICE_BYTES) {
-          // Cannot happen at this bitrate and frame size, and is dropped rather
-          // than trimmed if it ever does: the wire refuses an oversized packet
-          // at the far end anyway (`MAX_VOICE_BYTES`), so sending a truncated
-          // one would spend the bandwidth to be rejected.
-          warn(`voice: dropping ${chunk.byteLength}-byte packet (over cap)`);
-          return;
-        }
-        const bytes = new Uint8Array(chunk.byteLength);
-        chunk.copyTo(bytes);
-        options.onPacket(bytes, false);
-      },
-      error: (err) => {
-        options.onError(describeError(err));
-      },
+    const encoder = openOpusEncoder({
+      onPacket: (bytes) => options.onPacket(bytes, false),
+      onError: options.onError,
+      wanted: () => !closed && transmitting,
     });
-    encoder.configure({
-      ...CONFIG,
-      bitrate: VOICE_BITRATE,
-      // Ask for OUR frame size explicitly, in microseconds. Opus' own default
-      // is 20 ms, but the wire's `VOICE_FRAME_MS` is the number the whole
-      // design is priced against (the packet rate the hub budgets, the jitter
-      // buffer's steps), so it is stated rather than inherited.
-      opus: { frameDuration: VOICE_FRAME_MS * 1000 },
-    });
+    if (!encoder) throw new Error("could not open an Opus encoder");
 
     const node = new AudioWorkletNode(context, MIC_PROCESSOR, {
       numberOfInputs: 1,
@@ -206,27 +164,9 @@ async function createSource(
       // but nothing is encoded. Encoding while silent would spend the CPU and
       // then throw the packet away in `output` above.
       if (!transmitting) return;
-      const pcm = frame.pcm;
-      if (gain !== 1) {
-        for (let i = 0; i < pcm.length; i++) pcm[i] = (pcm[i] ?? 0) * gain;
-      }
-      const data = new AudioData({
-        format: "f32-planar",
-        sampleRate: VOICE_SAMPLE_RATE,
-        numberOfFrames: pcm.length,
-        numberOfChannels: 1,
-        timestamp: stamp,
-        data: pcm,
-      });
-      stamp += Math.round((pcm.length * 1_000_000) / VOICE_SAMPLE_RATE);
-      try {
-        encoder.encode(data);
-      } finally {
-        // CLOSED WHATEVER HAPPENS. `AudioData` holds a reference the platform
-        // does not collect on its own, and one leaked per 20 ms is a leak with
-        // a units-per-second rate on it.
-        data.close();
-      }
+      // The gain is applied by the encoder, in place, so the meter above and the
+      // wire cannot disagree about how loud this frame was.
+      encoder.encode(frame.pcm, gain);
     };
 
     const source = context.createMediaStreamSource(stream);
@@ -276,11 +216,9 @@ async function createSource(
         // alone leaves the microphone light on, which a player rightly reads as
         // the game still listening.
         for (const track of graph.stream.getTracks()) track.stop();
-        try {
-          if (graph.encoder.state !== "closed") graph.encoder.close();
-        } catch {
-          // Already closed by an error callback; nothing to do.
-        }
+        // Idempotent, and it swallows an encoder already closed by its own error
+        // callback — see `openOpusEncoder`.
+        graph.encoder.close();
         void graph.context.close().catch(() => {
           // Tearing down a context that is already gone is not a failure.
         });

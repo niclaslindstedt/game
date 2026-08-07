@@ -618,7 +618,10 @@ at all.
 ```
 pwa/src/game/net/voice/codecs.ts   the PROVIDER seam — one interface, N codecs
 pwa/src/game/net/voice/opus.ts     the shipped provider: WebCodecs Opus
+pwa/src/game/net/voice/opus-encode.ts  the encoder, shared by both capture sources
 pwa/src/game/net/voice/mic-worklet.ts  the capture worklet (frames + loudness)
+pwa/src/game/net/voice/file.ts     a FILE in place of the mic — the test instrument
+pwa/src/game/net/voice/tap.ts      what a listener received: packets, digest, .wav
 pwa/src/game/net/voice/playback.ts a decoder and a jitter buffer per speaker
 pwa/src/game/net/voice/room.ts     WHO is talking and HOW LOUD — pure, testable
 pwa/src/game/net/voice/index.ts    the link: the policy, the talk key, the gate
@@ -830,6 +833,53 @@ and forgotten. **There is no Steam mute/blocklist integration**, because that
 needs the `friends` namespace `steamworks.js` does not bind; the per-player mute
 is the game's own and lives on the machine that set it.
 
+### Testing it with a file instead of a microphone
+
+**The one thing about voice that CI cannot answer is what a person hears**, and
+that test is not repeatable with two people talking — nobody says the same
+sentence twice at the same volume. So the developer tooling makes the input
+exact:
+
+```sh
+# the TALKING machine, at the game's console:
+window.__voiceFile("https://example.test/line.wav")   # looping; null gives the mic back
+# …or launch straight into it, with ?voice=<url> on the page URL
+npm run electron -- --multiplayer --voice
+
+# the LISTENING machine, at its console:
+window.__voiceTap()        # start recording what arrives
+window.__voiceTap()        # again -> the per-seat packet/digest/duration report
+window.__voiceWav(0)       # write seat 0's DECODED audio out as a .wav
+```
+
+`file.ts` is a `VoiceProvider` like the microphone, which is the property that
+makes it an instrument rather than a second code path: the platform decodes and
+resamples the file (so .wav, .mp3 and anything else the browser reads all work,
+mixed down to mono), and from there it goes through **the same encoder** the
+microphone uses into the same wire. A listener cannot tell the two apart. It is
+also the provider seam's own proof — adding it changed nothing outside its own
+file and one entry in `PROVIDERS`.
+
+**AND THE ANSWER TO "IS THE OUTPUT BYTE-IDENTICAL", WHICH IS HALF YES.**
+
+- **The PACKET STREAM is, and it is asserted.** The bytes a sender's encoder
+  emitted must reach the far end's decoder unchanged and in order — which covers
+  everything this repo owns: the framing, the 4-byte sub-header, the seat stamp,
+  the relay, the transport, the ordering. `tests/engine/net_voice_test.ts` pins
+  it over a real session (50 packets, byte-for-byte, plus a test that the relay
+  changes **exactly one byte** — the seat — so a decode-and-re-encode
+  implementation fails even though it would deliver the same audio). The tap's
+  FNV digest is the same claim measured in a real browser, where an encoder
+  exists.
+- **The AUDIO is not, and no setting makes it.** Opus is lossy: what comes out is
+  a perceptual reconstruction, so comparing input and output samples
+  byte-for-byte fails always and proves nothing when it does. Judge it by opening
+  the tap's .wav beside the source file — same length, same envelope, same words
+  — or by correlating the two numerically. Do not pin a digest of the ENCODED
+  stream either: libopus is deterministic only for a fixed version and settings,
+  and an Electron upgrade moves both, so that test would go red on a dependency
+  bump rather than on a regression.
+
 ### What is tested
 
 | Suite                                 | What it holds                                                                    |
@@ -1021,6 +1071,7 @@ compiler.
 | `tests/engine/wire_voice_test.ts`        | The voice payload, and the three shapes a decoder on an open port refuses      |
 | `tests/engine/net_voice_test.ts`         | Voice's four relay rules — the seat stamp, the echo, the spectator, the worlds |
 | `tests/voice_room_test.ts`               | The voice HUD's model: the mute's two seat rules, and what must not notify     |
+| `tests/voice_tap_test.ts`                | The developer tap: its WAV header, and a digest that catches a reorder         |
 | `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                           |
 | `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link               |
 | `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                         |
