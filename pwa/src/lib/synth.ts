@@ -98,6 +98,28 @@ export type SampleOptions = {
   echo?: number;
   /** Playback rate; 1 (the default) is the recording's own pitch. */
   rate?: number;
+  /**
+   * Play the recording round and round until something stops it — a room
+   * tone, an engine layer, weather. A looping source has no natural end, so it
+   * is the one kind of sound whose handle the caller MUST keep (see the return
+   * of `sample`); dropping it leaks a voice for the life of the context.
+   */
+  loop?: boolean;
+  /** Ramp up over this long instead of starting at full level. A loop that
+   * hard-starts on a room tone is a click; a one-shot rarely wants it. */
+  fadeInMs?: number;
+};
+
+/**
+ * A started recording, for the one case that needs taking back: a loop.
+ *
+ * `stop` is idempotent and safe after the source has ended on its own, so a
+ * caller holding a handle to a one-shot never has to ask whether it is still
+ * playing.
+ */
+export type SampleHandle = {
+  /** Ramp down over `fadeMs` (0 = immediately) and release the source. */
+  stop: (fadeMs?: number) => void;
 };
 
 export type Synth = {
@@ -123,8 +145,12 @@ export type Synth = {
   noise: (options: NoiseOptions) => void;
   /** Play an already-decoded recording through the same pan/limiter/echo
    * chain a voice takes. Nothing in the shipped game calls this — see
-   * `SampleOptions`. */
-  sample: (options: SampleOptions) => void;
+   * `SampleOptions`.
+   *
+   * Returns a handle for stopping it, or null when there was no audio to play
+   * it through (a locked or missing context). A one-shot caller may drop the
+   * handle; a `loop` caller may not. */
+  sample: (options: SampleOptions) => SampleHandle | null;
   /** Decode an encoded audio file (WAV, MP3) into a buffer `sample` can play.
    *
    * Null rather than a throw for every failure there is: no context yet (the
@@ -591,25 +617,63 @@ export function createSynth(): Synth {
       pan = 0,
       echo = 0,
       rate = 1,
+      loop = false,
+      fadeInMs = 0,
     }) {
       const c = ensure();
-      if (!c) return;
+      if (!c) return null;
       if (c.state !== "running") {
         resumeCtx(c); // nudge a suspended/interrupted context back; this one
-        return; //       sound is dropped, but audio recovers for the next.
+        return null; //  sound is dropped, but audio recovers for the next.
       }
       const t0 = at ?? c.currentTime + delayMs / 1000;
       const source = c.createBufferSource();
       source.buffer = buffer;
       source.playbackRate.value = Math.max(0.05, rate);
+      source.loop = loop;
       const gain = c.createGain();
-      // No envelope: a recording carries its own attack and release, and
-      // ramping one on top is the difference between playing somebody's sound
-      // and playing our idea of it. The limiter still catches the sum.
-      gain.gain.setValueAtTime(Math.max(0.0001, volume), t0);
+      const level = Math.max(0.0001, volume);
+      // No envelope by default: a recording carries its own attack and
+      // release, and ramping one on top is the difference between playing
+      // somebody's sound and playing our idea of it. The limiter still catches
+      // the sum. A FADE is the exception a caller asks for by name, and a loop
+      // that hard-starts on a room tone is exactly the click it exists for.
+      if (fadeInMs > 0) {
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(level, t0 + fadeInMs / 1000);
+      } else {
+        gain.gain.setValueAtTime(level, t0);
+      }
       source.connect(gain);
       output(c, gain, pan, echo);
       source.start(t0);
+
+      let stopped = false;
+      return {
+        stop(fadeMs = 0) {
+          if (stopped) return;
+          stopped = true;
+          try {
+            const now = c.currentTime;
+            if (fadeMs > 0) {
+              // Ramp from wherever the gain actually is — a stop landing mid
+              // fade-in must not jump to full level first.
+              gain.gain.cancelScheduledValues(now);
+              gain.gain.setValueAtTime(Math.max(0.0001, gain.gain.value), now);
+              gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                now + fadeMs / 1000,
+              );
+              source.stop(now + fadeMs / 1000);
+            } else {
+              source.stop();
+            }
+          } catch {
+            // Already ended, or a context torn down under us. Stopping a
+            // finished source throws in some engines and means nothing here.
+          }
+        },
+      };
     },
 
     async decode(bytes) {

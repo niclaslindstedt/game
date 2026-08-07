@@ -34,22 +34,41 @@ const events = new Set(
   ].map((m) => m[1]),
 );
 
+// The CUES the app raises directly (`Cue` in pwa/src/game/sfx/cues.ts), read
+// the same way and for the same reason: a sound answering a cue nobody raises
+// is a sound that can never play, and that should be a build error rather than
+// a silence somebody chases at 2am.
+const cues = new Set(
+  [
+    ...(readFileSync(
+      path.join(root, "pwa", "src", "game", "sfx", "cues.ts"),
+      "utf8",
+    ).match(/export type Cue =([^;]+);/)?.[1] ?? ""),
+  ]
+    .join("")
+    .split("|")
+    .map((part) => part.trim().replace(/^"|"$/g, ""))
+    .filter(Boolean),
+);
+
 const { entries } = loadSounds();
 
 const errors = [];
 const warnings = [];
 for (const { doc } of entries) {
-  const res = validateSound(doc, { events, shipped: true });
+  const res = validateSound(doc, { events, cues, shipped: true });
   errors.push(...res.errors);
   warnings.push(...res.warnings);
 }
 
-// Two sounds may not answer the SAME event shape: which one wins would be
-// decided by file order, which is not a decision anybody made.
+// Two sounds may not answer the SAME event shape (or the same cue): which one
+// wins would be decided by file order, which is not a decision anybody made.
+// Events and cues are separate key spaces, so they are claimed separately —
+// `footstep|metal` and an event key can never collide.
 const claimed = new Map();
 for (const { id, doc } of entries) {
   if (!doc.on) continue;
-  const key = matchKey(doc.on);
+  const key = isCue(doc.on) ? `cue ${cueKey(doc.on)}` : matchKey(doc.on);
   if (claimed.has(key)) {
     errors.push(
       `sounds "${claimed.get(key)}" and "${id}" both answer ${key} — ` +
@@ -67,8 +86,14 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+/** Does this `on:` block answer a CUE rather than an event? */
+function isCue(on) {
+  return on.cue !== undefined;
+}
+
 /** An `on:` block as the string the runtime looks a sound up by. Mirrors
- * `soundKey` in pwa/src/game/sfx/index.ts — keep the two in step. */
+ * `routeKey` in pwa/src/game/sfx/index.ts — keep the two in step, and see the
+ * comment there for what it costs when they drift. */
 function matchKey(on) {
   return [
     on.type,
@@ -79,12 +104,38 @@ function matchKey(on) {
   ].join("|");
 }
 
+/** …and the same for a cue. Mirrors `playCue` in pwa/src/game/sfx/cues.ts. */
+function cueKey(on) {
+  return [on.cue, on.surface ?? ""].join("|");
+}
+
 const byKey = Object.fromEntries(
-  entries.filter((e) => e.doc.on).map((e) => [matchKey(e.doc.on), e.id]),
+  entries
+    .filter((e) => e.doc.on && !isCue(e.doc.on))
+    .map((e) => [matchKey(e.doc.on), e.id]),
 );
+const byCue = Object.fromEntries(
+  entries
+    .filter((e) => e.doc.on && isCue(e.doc.on))
+    .map((e) => [cueKey(e.doc.on), e.id]),
+);
+
+/** One entry as the runtime holds it. The staging fields are emitted ONLY when
+ * the author set them: a catalog in which every sound carries four `undefined`s
+ * is four bytes a sound of nothing, and the whole bank is on the wire. */
 const cook = (list) =>
   Object.fromEntries(
-    list.map((e) => [e.id, { id: e.id, voices: e.doc.voices }]),
+    list.map((e) => [
+      e.id,
+      {
+        id: e.id,
+        voices: e.doc.voices,
+        ...(e.doc.spatial ? { spatial: true } : {}),
+        ...(e.doc.loop ? { loop: true } : {}),
+        ...(e.doc.stopOn === undefined ? {} : { stopOn: e.doc.stopOn }),
+        ...(e.doc.fadeMs === undefined ? {} : { fadeMs: e.doc.fadeMs }),
+      },
+    ]),
   );
 
 // SPLIT IN TWO, for the same reason `sfx/ui.ts` is not re-exported from the sfx
@@ -114,8 +165,13 @@ import type { SoundDef } from "../game/sfx/types.ts";
  * scripts/generate-sounds.mjs. */
 export const GENERATED_SOUNDS: Record<string, SoundDef> = ${JSON.stringify(cook(runEntries), null, 2)} as unknown as Record<string, SoundDef>;
 
-/** Event shape → sound id, keyed exactly as \`soundKey\` builds it. */
+/** Event shape → sound id, keyed exactly as \`routeKey\` builds it. */
 export const GENERATED_SOUND_KEYS: Record<string, string> = ${JSON.stringify(byKey, null, 2)};
+
+/** Cue → sound id, keyed \`cue|surface\` exactly as \`playCue\` builds it. A
+ * cue is a moment the APP raises rather than one the engine emits — see
+ * pwa/src/game/sfx/cues.ts. */
+export const GENERATED_CUE_KEYS: Record<string, string> = ${JSON.stringify(byCue, null, 2)};
 `,
 );
 
@@ -131,7 +187,9 @@ export const GENERATED_UI_SOUNDS: Record<string, SoundDef> = ${JSON.stringify(co
 
 console.log(
   `wrote pwa/src/generated/sounds.ts — ${runEntries.length} run sounds ` +
-    `(${Object.keys(byKey).length} event-triggered); sounds-ui.ts — ` +
+    `(${Object.keys(byKey).length} event-triggered, ` +
+    `${Object.keys(byCue).length} cue-triggered); sounds-ui.ts — ` +
     `${uiEntries.length} ui sounds; ` +
-    `${entries.reduce((n, e) => n + e.doc.voices.length, 0)} voices total`,
+    `${entries.reduce((n, e) => n + (e.doc.voices?.length ?? 0), 0)} ` +
+    "voices total",
 );

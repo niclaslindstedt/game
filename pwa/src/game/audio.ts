@@ -40,10 +40,14 @@ function scaledView(volume: () => number): Synth {
     // mastered by whoever made it, so full scale is "as authored" — but it
     // still passes through the master volume, or a mod's sounds would ignore
     // the SFX slider and the mute switch alike.
+    // Muted returns null rather than a dead handle: there IS no source, so a
+    // loop's owner must be told it started nothing. (A handle that silently
+    // stopped nothing would leave the caller believing the loop is running,
+    // and the next unmute would never start it.)
     sample(options) {
       const scaled = (options.volume ?? 1) * volume();
-      if (scaled < 0.001) return;
-      raw.sample({ ...options, volume: scaled });
+      if (scaled < 0.001) return null;
+      return raw.sample({ ...options, volume: scaled });
     },
     // Decoding is volume-free, so both views share the one context's decoder.
     decode: (bytes) => raw.decode(bytes),

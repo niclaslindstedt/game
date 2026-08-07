@@ -56,7 +56,9 @@ import { synth } from "./audio.ts";
 import type { Sprites } from "./assets.ts";
 import { setModTracks } from "./music/index.ts";
 import {
+  setCueCatalog,
   setSoundCatalog,
+  SHIPPED_CUE_KEYS,
   SHIPPED_SOUNDS,
   SHIPPED_SOUND_KEYS,
 } from "./sfx/index.ts";
@@ -252,10 +254,13 @@ export async function applyMods(
   // download the combat bank to click a button. A mod merges into both, or
   // `sounds/ui_confirm.yaml` compiles, ships, and is never heard.
   const uiSounds: SoundCatalog = { ...SHIPPED_UI_SOUNDS };
-  // The RECORDINGS, keyed by the sound id each one stands in for. One ledger
-  // with the synthesized sounds (`soundOwners`), because to a player they are
-  // one thing — "which mod's kill sound am I hearing" — and the answer must
-  // not depend on whether the mod that won authored voices or shipped a file.
+  const cueKeys: Record<string, string> = { ...SHIPPED_CUE_KEYS };
+  // The CLIPS — a mod's audio files, by name. Merged like every other catalog
+  // (later wins), and NOT owner-claimed: what the player hears is a sound def,
+  // and that is what `soundOwners` already tracks. One ledger, because to a
+  // player it is one thing — "which mod's kill sound am I hearing" — and the
+  // answer must not depend on whether the mod that won authored voices or
+  // shipped a file.
   const samples = new Map<string, LoadedSample>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
@@ -356,19 +361,24 @@ export async function applyMods(
       if (id in uiSounds) uiSounds[id] = def as SoundDef;
       claim(soundOwners, id, bundle.id);
     }
-    // A RECORDING wins over voices for the same id no matter which order the
-    // two arrived in — a mod that ships `enemy_killed.wav` beside its own
-    // `enemy_killed.yaml` meant the file, and the compiler already said so.
+    // THE CLIPS — the audio itself. A recording is no longer a second kind of
+    // sound consulted ahead of the catalog: the compiler emitted a def for it
+    // in `bundle.sounds` above (a `call: sample` voice naming this clip), so
+    // the merge that just happened is the whole of the routing, and this is
+    // only the bytes it will reach for.
+    //
+    // NOT claimed in `soundOwners`: the def that names the clip already was,
+    // one loop up. Claiming here too would report a sound pack as two mods
+    // fighting over every sound in it.
     for (const sample of bundle.samples ?? []) {
       samples.set(sample.id, {
         id: sample.id,
-        bytes: base64ToBytes(sample.data),
-        ...(sample.volume === undefined ? {} : { volume: sample.volume }),
-        ...(sample.pan === undefined ? {} : { pan: sample.pan }),
-        ...(sample.echo === undefined ? {} : { echo: sample.echo }),
+        takes: sample.takes.map(base64ToBytes),
       });
-      claim(soundOwners, sample.id, bundle.id);
     }
+    // A mod's CUE routing, last for the same reason the event routing is: a
+    // later mod answering the same cue wins it.
+    Object.assign(cueKeys, bundle.cueKeys ?? {});
     for (const [id, track] of Object.entries(bundle.music ?? {})) {
       music[id] = track as ChiptuneTrack;
       claim(musicOwners, id, bundle.id);
@@ -406,6 +416,7 @@ export async function applyMods(
   }
 
   setSoundCatalog(sounds, soundKeys);
+  setCueCatalog(sounds, cueKeys);
   setUiSoundCatalog(uiSounds);
   // The recordings go in as bytes and are decoded by the browser's own audio
   // decoder. Warming here rather than on first play so the kill that starts a
@@ -516,6 +527,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
     Object.assign(sprites, baseSprites);
   }
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+  setCueCatalog(SHIPPED_SOUNDS, SHIPPED_CUE_KEYS);
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);
   clearSamples();
   setModTracks({});

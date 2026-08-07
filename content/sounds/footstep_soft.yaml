@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_soft
+description: >-
+  Carpet: the sound of a floor absorbing a boot. The dullest and quietest in
+  the set — a very low lowpass and nothing on top of it at all. What sells it
+  is the ABSENCE of the click every other surface has.
+on:
+  cue: footstep
+  surface: soft
+spatial: true
+voices:
+  - call: noise
+    durationMs: 42
+    volume: 0.009
+    filter:
+      type: lowpass
+      frequency: 240

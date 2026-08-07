@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep
+description: >-
+  The generic boot — the step heard on any ground nobody wrote a specific
+  sound for. A soft, dry lowpass scuff with no character of its own, on
+  purpose: it is the floor of the ladder, and a distinctive generic would
+  make every unnamed surface sound like the same wrong thing. Very quiet and
+  very short; this plays twice a second for the whole run.
+on:
+  cue: footstep
+spatial: true
+voices:
+  - call: noise
+    durationMs: 34
+    volume: 0.013
+    filter:
+      type: lowpass
+      frequency: 520

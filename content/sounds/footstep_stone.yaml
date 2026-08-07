@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_stone
+description: >-
+  Cement and bunker slab: a flat, hard slap. The lowpass body of the dust
+  step with the cutoff opened up and a short bandpass click of grit over the
+  top — the click is what says "hard floor" rather than "loud floor", which
+  is why it is barely above a whisper.
+on:
+  cue: footstep
+  surface: stone
+spatial: true
+voices:
+  - call: noise
+    durationMs: 30
+    volume: 0.014
+    filter:
+      type: lowpass
+      frequency: 850
+  - call: noise
+    durationMs: 14
+    volume: 0.008
+    filter:
+      type: bandpass
+      frequency: 2400

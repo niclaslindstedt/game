@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_gravel
+description: >-
+  Loose stones underfoot: the scatter. A lowpass body with a highpass sizzle
+  hung a few milliseconds behind it, so the step and the stones it kicked are
+  two events rather than one — which is the whole difference between gravel
+  and a hard floor.
+on:
+  cue: footstep
+  surface: gravel
+spatial: true
+voices:
+  - call: noise
+    durationMs: 28
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 700
+  - call: noise
+    durationMs: 46
+    volume: 0.009
+    delayMs: 14
+    filter:
+      type: highpass
+      frequency: 4200
