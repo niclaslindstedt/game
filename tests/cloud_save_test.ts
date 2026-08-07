@@ -175,6 +175,7 @@ function save(over: Partial<CloudSave> = {}): CloudSave {
     tombstones: {},
     coins: { counters: {}, seen: {} },
     scores: {},
+    driveScores: [],
     ...over,
   };
 }

@@ -921,7 +921,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   admire a collision spends it. What he MAKES of the trip is not said on the road at all: `driveVerdict`
   reads the whole journey and hands the arriving run one line
   (`RunParams.arrivalThought`), spoken as the last page of the destination's
-  opening monologue. Damage
+  opening monologue.
+  WHAT THE CABINET MAKES OF IT is the road's OTHER end-of-trip reading, and the
+  two are deliberately twins: `driveScore` (`drive/score.ts`) reads the same five
+  numbers and answers with an arcade SCORE, which the arrival raises a Frogger
+  board over (`drive-screen/DriveScores.tsx`) — five rows, the row you just took
+  highlighted, and three letters to sign it with. It PAYS FOR THE COMMUTE and
+  NOTHING FOR A PERSON: arriving, the clock against a par derived from the
+  course, the top end, and the paint still on the car, less somebody else's lamp
+  posts and somebody else's wings — with the body count printed on the card at a
+  value of exactly zero, which is the road's own joke stated as arithmetic
+  (`DRIVE.score`). The board is device-local (`pwa/src/game/drive-scores.ts`,
+  carried by cloud save beside the campaign board) and is never raised for an
+  AUTO-DRIVEN leg: a screen waiting on a keypress would park the attract loop
+  forever, and a board full of the demo's initials is not a high-score table. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off

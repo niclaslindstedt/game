@@ -6135,6 +6135,260 @@ html.app-locked body {
   }
 }
 
+/* ---- THE DRIVE'S HIGH-SCORE BOARD (drive-screen/DriveScores.tsx) ---------
+
+   THE CABINET AT THE END OF THE ROAD: what the leg was worth, counted up in a
+   column, and the five rows it might have got onto. It wears the shared window
+   skin (`.intro-box`) because everything else in this game does and a minigame
+   that suddenly looked like a different program would undo the reason the road
+   is drawn in the game's own font at all — but everything INSIDE it is arcade:
+   a tally, a ranked list, and three wheels.
+
+   TIGHTER THAN THE OTHER MODALS ON PURPOSE. `.intro-box`'s 1.75rem padding and
+   1.25rem gap are sized for a card with a title and two buttons on it; this one
+   carries a tally, a five-row board and a text entry, and the reference viewport
+   is a phone held sideways with 390 CSS px of height. The trims below are what
+   fit all three on it with room over. */
+.drive-scores-box {
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(44rem, 96vw);
+}
+
+.drive-scores-title {
+  text-align: center;
+}
+
+/* A RECORD ANNOUNCES ITSELF. Only the #1 row's headline pulses — a board you
+   merely got onto says so in words and holds still, because a screen where
+   everything flashes is a screen where nothing does. */
+.drive-scores-title.is-record {
+  animation: drive-record-flash 700ms steps(2, end) infinite;
+}
+
+@keyframes drive-record-flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* LANDSCAPE IS THE LAYOUT: the tally on the left, the board on the right, which
+   is the shape a 844x390 frame actually has room for. It WRAPS rather than being
+   media-queried into a column, so a phone held upright stacks the two without a
+   breakpoint to keep in step with anything. */
+.drive-scores-cols {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem 2rem;
+  width: 100%;
+}
+
+.drive-tally,
+.drive-board {
+  display: flex;
+  flex-direction: column;
+  min-width: 14rem;
+  flex: 1 1 14rem;
+}
+
+/* THE BILL BREATHES. The tally is the half of this card that is read line by
+   line rather than scanned, so its rows carry real air between them — packed to
+   the leading they inherit, four bonuses and a total read as one grey block. */
+.drive-tally {
+  gap: 0.45rem;
+}
+
+.drive-board {
+  gap: 0.3rem;
+}
+
+/* Label left, points right — an itemised bill, which is what a tally is. */
+.drive-tally-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.drive-tally-row.is-total {
+  margin-top: 0.2rem;
+}
+
+.drive-tally-rule {
+  height: 2px;
+  margin: 0.25rem 0;
+  background: var(--panel-rail, #2a2f36);
+}
+
+/* THE TRIP'S OWN NUMBERS, under the line that adds up — facts about the drive
+   rather than money. BODIES is one of them and it is worth nothing, which is
+   the joke this whole road is built on printed as a layout decision. */
+/* TWO BY TWO rather than a wrapping row: the tally column is about eleven rem
+   wide and four readings do not fit across it, so a flex row broke 3+1 and left
+   the fourth hanging under the third. A fixed pair of columns is square, and it
+   keeps BODIES in the same place every time — which matters for the one reading
+   on this card that is deliberately worth nothing. */
+.drive-tally-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem 1.5rem;
+  margin-top: 0.55rem;
+}
+
+.drive-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.drive-board-head {
+  margin-bottom: 0.25rem;
+}
+
+/* RANK | NAME | SCORE, on a grid rather than a flex row so the three columns
+   line up down the whole board — including past the entry row, which is four
+   times the height of the ones around it. A ragged score column is the one thing
+   that stops a list of five numbers reading as a ranking. */
+.drive-board-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 2px;
+}
+
+/* THE ROW YOU JUST TOOK. A filled band rather than a colour change alone: the
+   board is read at a glance from a metre away and a gold row against ivory rows
+   is a difference you have to look for. */
+.drive-board-row.is-new {
+  background: rgba(255, 215, 94, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.45);
+  /* The wheels are four times the height of a printed name, and the nudge
+     arrows sit right at the top and bottom of them — without this the band's
+     own edge crops them. */
+  padding: 0.3rem 0.25rem;
+}
+
+/* …and the row for a leg that MISSED the board: set apart under it, dim, with
+   no rank against it, because it is not on the list. */
+.drive-board-row.is-miss {
+  margin-top: 0.35rem;
+  border-top: 2px solid var(--panel-rail, #2a2f36);
+  padding-top: 0.3rem;
+}
+
+.drive-board-score {
+  justify-self: end;
+}
+
+/* THE THREE WHEELS. Each is a column — nudge up, the letter, nudge down. */
+.drive-wheel {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.drive-wheel-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* THE CURSOR IS THE LETTER, not only the line under it. A gold underline under
+   a gold letter is a cursor you have to hunt for; the live wheel wears the gold
+   and the two either side of it go quiet, which is legible at arm's length and
+   is what a cabinet's blinking slot was ever saying. */
+.drive-wheel-slot.is-active .drive-wheel-char {
+  border-bottom: 2px solid #ffd75e;
+}
+
+.drive-wheel-slot .drive-wheel-step {
+  opacity: 0.45;
+}
+
+.drive-wheel-slot.is-active .drive-wheel-step {
+  opacity: 1;
+}
+
+.drive-wheel-step,
+.drive-wheel-char {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* A THUMB TARGET, not a glyph. The arrow is 15 CSS px of ink; the box around
+     it is what a finger actually hits, and two of these stacked either side of
+     the letter clear the 44 px touch floor on the reference phone. */
+  min-width: 1.9rem;
+  min-height: 1.15rem;
+}
+
+.drive-wheel-char {
+  min-height: 1.6rem;
+  border-bottom: 2px solid transparent;
+}
+
+.drive-wheel-step:active {
+  opacity: 0.6;
+}
+
+/* The pixel font ships a triangle pointing UP and none pointing down
+   (scripts/asset-tools/font.mjs), so the down nudge is the same glyph flipped.
+   Adding a second glyph would put a new tooth on every font atlas in the game
+   for the sake of one screen. */
+.drive-wheel-step.is-down canvas {
+  transform: scaleY(-1);
+}
+
+/* THE SE FLOOR. 320 CSS px of height is the shortest screen this game is held
+   to, and the card laid out for a 390 px phone runs the ENTER button off the
+   bottom of it — a button below the fold on a screen whose whole job is to be
+   pressed once. The type does NOT shrink (that is what makes the card readable
+   in the first place); the AIR between it does, which is the only thing on this
+   card that is not carrying information. Keyed under 380 px so the reference
+   viewport keeps every bit of its spacing. */
+@media (max-height: 380px) {
+  .drive-scores-box {
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .drive-scores-cols {
+    gap: 0.45rem 1.5rem;
+  }
+
+  .drive-tally {
+    gap: 0.2rem;
+  }
+
+  .drive-tally-stats {
+    gap: 0.3rem 1.2rem;
+    margin-top: 0.25rem;
+  }
+
+  .drive-tally-rule {
+    margin: 0.1rem 0;
+  }
+
+  .drive-board-row.is-new {
+    padding: 0.15rem 0.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive-scores-title.is-record {
+    animation: none;
+  }
+}
+
 /* ---- The level-name card (name alone on black before the drop) ------------ */
 
 /* Opaque from the first frame — the world keeps rendering underneath, so a
@@ -9399,7 +9653,17 @@ canvas.tier-artifact {
    equal-weight override. Keyed off the ROW classes (not `.item-card`) so
    ItemCardBody used bare — the shop's deal card — centers too. */
 .tooltip-name-row canvas,
-.card-foot canvas {
+.card-foot canvas,
+/* THE DRIVE'S HIGH-SCORE BOARD. Its tally rows, board rows and letter wheels are
+   all one-line groupings of text against text, so every canvas in them centres on
+   its row; left-pinned they ride high of the taller glyphs beside them (the
+   score against the entry wheel is a 0.625rem canvas next to a 1.25rem one, so
+   it sat clear of the row it belongs to). Here rather than beside the board's own
+   block for the reason this whole group exists — the parking it has to beat is
+   source order, not specificity. */
+.drive-tally-row canvas,
+.drive-stat canvas,
+.drive-board-row canvas {
   align-self: center;
 }
 
