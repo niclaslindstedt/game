@@ -13,11 +13,13 @@ import {
   applyRunCommand,
   CAR,
   CAR_FIX,
+  carSkidding,
   detachWheel,
   nudgeCar,
   setCameraYaw,
   shedPart,
   type CarVehicle,
+  type GameInput,
 } from "@game/core";
 import { DT, idle, run, startGame, steerTo } from "./helpers.ts";
 
@@ -328,6 +330,139 @@ describe("the steering", () => {
       );
       expect(Math.cos(car.heading)).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("the pedals and the lever", () => {
+  const board = (state: ReturnType<typeof startHub>): CarVehicle => {
+    const car = carOf(state);
+    state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
+    applyRunCommand(state, "enterCar");
+    return car;
+  };
+  /** A push straight down the nose — the accelerator — as hard as `throttle`
+   * says. A push straight BACK down it is the brake, at the same grading. */
+  const along = (car: CarVehicle, way: 1 | -1, throttle = 1): GameInput => ({
+    ...steerTo(
+      car.pos.x + Math.cos(car.heading) * 300 * way,
+      car.pos.y + Math.sin(car.heading) * 300 * way,
+    ),
+    throttle,
+  });
+  /** Get a car rolling and hand it back at cruise. */
+  const rolling = (): {
+    state: ReturnType<typeof startHub>;
+    car: CarVehicle;
+  } => {
+    const state = startHub();
+    const car = board(state);
+    for (let i = 0; i < 90; i++) run(state, along(car, 1), 1);
+    expect(car.speed).toBeGreaterThan(0);
+    return { state, car };
+  };
+
+  // THE BUG THIS PINS, and it is the one that made the pad unusable. A
+  // part-open throttle used to name a SPEED (`min(topSpeed * pedal, …)`), so a
+  // thumb dragged a little way toward the nose — which is the gesture that
+  // steers a gentle line, and the commonest one there is — dropped the car to a
+  // fraction of its speed in a single tick. It braked harder than the brake
+  // did, from the input that means ACCELERATE.
+  it("never takes speed off for a push toward the nose, however light", () => {
+    const { state, car } = rolling();
+    for (let i = 0; i < 60; i++) {
+      const was = car.speed;
+      run(state, along(car, 1, 0.3), 1);
+      expect(car.speed).toBeGreaterThanOrEqual(was);
+    }
+  });
+
+  it("gathers speed gently on a light push and hard on a full one", () => {
+    const gained = (throttle: number): number => {
+      const state = startHub();
+      const car = board(state);
+      for (let i = 0; i < 20; i++) run(state, along(car, 1, throttle), 1);
+      return car.speed;
+    };
+    const light = gained(0.3);
+    expect(light).toBeGreaterThan(0);
+    expect(gained(1)).toBeGreaterThan(light * 2);
+  });
+
+  // …and the other half of the same rule: the BRAKE is graded too, so a nudge
+  // back against the nose trims the approach to a gap and a shove is the whole
+  // of what the pads have. It used to be all-or-nothing in the other direction —
+  // the faintest push against the nose braked as hard as a stamp.
+  it("scrubs speed in proportion to how hard the brake is pushed", () => {
+    const left = (throttle: number): number => {
+      const { state, car } = rolling();
+      for (let i = 0; i < 20; i++) run(state, along(car, -1, throttle), 1);
+      return car.speed;
+    };
+    const feathered = left(0.25);
+    const stamped = left(1);
+    expect(stamped).toBeLessThan(feathered);
+    expect(feathered).toBeGreaterThan(0);
+  });
+
+  /** How many ticks it takes to bring a rolling car to a dead stop under
+   * `hold`, or the cap if it never gets there. */
+  const ticksToStop = (hold: (car: CarVehicle) => GameInput): number => {
+    const { state, car } = rolling();
+    for (let i = 0; i < 400; i++) {
+      if (car.speed <= 0) return i;
+      run(state, hold(car), 1);
+    }
+    return 400;
+  };
+
+  it("stops the car faster on the lever than on the brake pedal", () => {
+    const pedal = ticksToStop((car) => along(car, -1));
+    // THE LEVER OVERRULES THE THROTTLE, which is why this one holds the
+    // accelerator down while it hauls: a handbrake is not a harder brake pedal,
+    // it is a different control, and a driver who grabs it with a thumb still
+    // resting toward the nose is stopping rather than negotiating.
+    const lever = ticksToStop((car) => ({ ...along(car, 1), handbrake: true }));
+    expect(lever).toBeGreaterThan(0);
+    expect(lever).toBeLessThan(pedal);
+  });
+
+  it("throws the weight onto the nose while the lever is up, then settles", () => {
+    const { state, car } = rolling();
+    for (let i = 0; i < 15; i++) {
+      run(state, { ...along(car, 1), handbrake: true }, 1);
+    }
+    // The front springs are loaded and the back end is light — which is all the
+    // renderer needs, because it already pitches the whole shell between the two
+    // axle drops (`drawShellLayer`).
+    expect(car.suspension[1]).toBeGreaterThan(0.5);
+    expect(car.suspension[1]).toBeGreaterThan(car.suspension[0]);
+    // Let it go and the body rings back level rather than staying nose-down.
+    run(state, idle, 120);
+    expect(car.suspension[1]).toBeLessThan(0.05);
+    expect(car.handbrake).toBe(false);
+  });
+
+  it("does not nod a car that is already stopped", () => {
+    const state = startHub();
+    const car = board(state);
+    expect(car.speed).toBe(0);
+    for (let i = 0; i < 60; i++) {
+      run(state, { ...along(car, 1, 0), handbrake: true }, 1);
+    }
+    expect(car.suspension).toEqual([0, 0]);
+  });
+
+  it("marks the road only while the locked wheels are still moving", () => {
+    const { state, car } = rolling();
+    expect(carSkidding(car)).toBe(false); // the lever is not up yet
+    run(state, { ...along(car, 1), handbrake: true }, 1);
+    expect(carSkidding(car)).toBe(true);
+    for (let i = 0; i < 400 && car.speed > 0; i++) {
+      run(state, { ...along(car, 1), handbrake: true }, 1);
+    }
+    // A car dragged down to a walking pace has already laid its skid.
+    expect(Math.abs(car.speed)).toBeLessThanOrEqual(CAR.skidMinSpeed);
+    expect(carSkidding(car)).toBe(false);
   });
 });
 

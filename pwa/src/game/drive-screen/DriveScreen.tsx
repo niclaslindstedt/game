@@ -66,6 +66,7 @@ import {
   createDriveGore,
   type DriveGoreState,
 } from "./drive-gore.ts";
+import { clearSkids, createSkids, type SkidState } from "./skid.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -192,10 +193,20 @@ export function DriveScreen({
    * leg and thrown away on a restart, exactly like the effect layer beside it:
    * the mess is a record of THIS attempt at the road. */
   const goreRef = useRef<DriveGoreState>(createDriveGore());
+  /** …and what the DRIVER left on it: the rubber off every handbrake stop.
+   * Thrown away on a restart with the rest of the mess — the marks are a record
+   * of THIS attempt at the road. */
+  const skidRef = useRef<SkidState>(createSkids());
   const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
+  /** Which pointer anchored the pad, and every OTHER one currently down — the
+   * second thumb, which is the handbrake for as long as it stays there. A SET
+   * rather than a flag so a third finger arriving cannot release the lever the
+   * second one is still holding. */
+  const padIdRef = useRef<number | null>(null);
+  const brakeIdsRef = useRef<Set<number>>(new Set());
   /** The hands on the wheel when nobody's are — minted once, because the driver
    * carries the line it has committed to and rebuilding it every frame would be
    * a driver that never commits to anything. */
@@ -286,6 +297,21 @@ export function DriveScreen({
     setPaused(on);
   }, []);
 
+  /** A finger has left the picture: whichever of the two jobs it had stops. A
+   * leftover brake finger never inherits the pad — the next press re-anchors
+   * deliberately, which is the same rule the run's own tracker follows and for
+   * the same reason: steering from an anchor somebody set down half a second
+   * ago for something else is a car that darts. */
+  const releasePad = useCallback((id: number) => {
+    if (padIdRef.current === id) {
+      padIdRef.current = null;
+      padRef.current = null;
+      padOrigin = null;
+      return;
+    }
+    brakeIdsRef.current.delete(id);
+  }, []);
+
   // ── THE CONTROLS ──────────────────────────────────────────────────────────
   // THE SAME CONTROLS THE GARAGE READS, and the engine resolves them the same
   // way: a pedal, a wheel, and nothing held holds the speed.
@@ -297,6 +323,13 @@ export function DriveScreen({
   //
   // THE KEYS ARE FIXED: D accelerates, A slows and backs up, W and S are the
   // wheel, on both legs and whichever way the wagon is facing.
+  //
+  // AND THE HANDBRAKE IS THE OTHER HAND — a second thumb anywhere on the
+  // picture, or SPACE (the JUMP bind, which is the one action a man in a car
+  // cannot perform). It is the fastest way this wagon stops by a long way, and
+  // it is the only control on the road that needs no aim: what a driver wants
+  // when a wall of people appears in lane two is one thing he can hit without
+  // thinking about where.
   //
   // TWO OF THE RUN'S OWN BINDS ARE ANSWERED HERE TOO, and they have to be:
   // while a drive is up the run's control layer is not listening (there is no
@@ -367,6 +400,11 @@ export function DriveScreen({
       const pad = padRef.current;
       const drive = driveRef.current;
       const driver = driverRef.current;
+      const keys = carKeyControl(keysRef.current, getSettings().keybindings);
+      // THE LEVER IS NOT A PUSH, so it is composed rather than read off one: a
+      // second thumb anywhere on the picture and the JUMP bind both haul on it,
+      // and either does so whether the first thumb is saying anything or not.
+      const handbrake = brakeIdsRef.current.size > 0 || keys.handbrake;
       inputRef.current = driver
         ? // NOBODY IS PLAYING THIS. The engine's own driver reads the road and
           // the thumb and the keyboard are ignored outright — not merely
@@ -375,8 +413,8 @@ export function DriveScreen({
           // different road than the one it asked for.
           driveDriverInput(driver, drive)
         : pad
-          ? { pedal: pad.x * nose, wheel: pad.y }
-          : carKeyControl(keysRef.current, getSettings().keybindings);
+          ? { pedal: pad.x * nose, wheel: pad.y, handbrake }
+          : { ...keys, handbrake };
 
       // ONE THING PARKS THE CAR, and it is the pause card. A LINE DOES NOT —
       // his thoughts are barked over a road that keeps moving (see `Speech`),
@@ -408,6 +446,7 @@ export function DriveScreen({
           burstsRef.current,
           fxRef.current,
           goreRef.current,
+          skidRef.current,
           say,
         );
         ageSpeech(drive.ms);
@@ -422,6 +461,7 @@ export function DriveScreen({
           burstsRef.current,
           fxRef.current,
           goreRef.current,
+          skidRef.current,
           onArrived,
         );
       }
@@ -451,6 +491,7 @@ export function DriveScreen({
         drive.ms,
         goreRef.current,
         assets.font,
+        skidRef.current,
       );
 
       burstsRef.current = drawBursts(
@@ -547,15 +588,28 @@ export function DriveScreen({
 
       {/* THE PAD — one thumb, anywhere on the picture. Dragging from where the
           thumb went down is the push; letting go means carry on, which is the
-          whole of the control model. */}
+          whole of the control model.
+
+          …AND THE OTHER THUMB IS THE HANDBRAKE. Every pointer after the first
+          is a lever rather than a second pad: it needs no aim, no anchor and no
+          drag, which is exactly right for the one control a driver reaches for
+          without looking. The first finger down owns the pad and keeps it
+          (`padIdRef`) — without that, a second thumb landing re-anchored the
+          steering under the first one and the car snapped straight. */}
       <div
         style={PAD}
         onPointerDown={(e) => {
           (e.target as Element).setPointerCapture(e.pointerId);
+          if (padIdRef.current !== null) {
+            brakeIdsRef.current.add(e.pointerId);
+            return;
+          }
+          padIdRef.current = e.pointerId;
           padRef.current = { x: 0, y: 0 };
           padOrigin = { x: e.clientX, y: e.clientY };
         }}
         onPointerMove={(e) => {
+          if (e.pointerId !== padIdRef.current) return;
           if (!padRef.current || !padOrigin) return;
           const dx = e.clientX - padOrigin.x;
           const dy = e.clientY - padOrigin.y;
@@ -563,14 +617,8 @@ export function DriveScreen({
           const reach = Math.min(1, len / 48);
           padRef.current = { x: (dx / len) * reach, y: (dy / len) * reach };
         }}
-        onPointerUp={() => {
-          padRef.current = null;
-          padOrigin = null;
-        }}
-        onPointerCancel={() => {
-          padRef.current = null;
-          padOrigin = null;
-        }}
+        onPointerUp={(e) => releasePad(e.pointerId)}
+        onPointerCancel={(e) => releasePad(e.pointerId)}
       />
       {/* HIS OWN VOICE, IN THE GAME'S OWN WINDOW. The very same box every
           other line in the game is delivered in (`DialogueBox`): the grained
@@ -652,6 +700,7 @@ function endDrive(
   bursts: Burst[],
   fx: DriveFxState,
   gore: DriveGoreState,
+  skids: SkidState,
   onArrived: (to: string, bodies: number, verdict: string) => void,
 ): void {
   if (
@@ -662,6 +711,7 @@ function endDrive(
     bursts.length = 0;
     clearDriveFx(fx);
     clearDriveGore(gore);
+    clearSkids(skids);
   }
   if (
     drive.outcome === DRIVE_OUTCOME.arrived &&

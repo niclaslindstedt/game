@@ -35,7 +35,18 @@ type DriveFxKind =
   /** A panel giving, or a part tearing off: dark shards, no light. */
   | "shard"
   /** The dead engine's smoke, rising off the bonnet. */
-  | "smoke";
+  | "smoke"
+  /**
+   * Locked tyres burning off under the handbrake — a pale, low, fast cloud
+   * boiling sideways off the back axle.
+   *
+   * Its own kind rather than the engine's smoke tuned down, because the two are
+   * different sights and only one of them is about a column: a dead engine
+   * issues a slow dark plume that CLIMBS for four seconds, and burning rubber
+   * dumps a wide pale mass at road level that is gone in half of one. Sharing
+   * the draw would have meant one of them looking wrong for the whole of a leg.
+   */
+  | "tyresmoke";
 
 /** One live effect on the road. */
 type DriveFx = {
@@ -62,6 +73,17 @@ type DriveFx = {
    * engine died and the wreck rolled silently out from under it.
    */
   follow?: boolean;
+  /**
+   * WHICH WAY DOWN THE ROAD IT FALLS AWAY, as a sign (+1 world east, -1 west).
+   *
+   * Only the tyre smoke wants one, and it is the difference between a cloud the
+   * car is leaving behind and a cloud stuck to its back bumper. A constant would
+   * have been right on the leg OUT and exactly backwards on the leg HOME, where
+   * the same road is driven the other way — the class of bug the drive's
+   * `direction` exists to stop, and the reason this is a field rather than a
+   * `-1` written into the draw.
+   */
+  drift?: number;
 };
 
 /** The road's live effects, its shake and its flash — one object the screen
@@ -157,6 +179,28 @@ export function driveBreakdown(
   kick(state, 0.7, 0.2);
 }
 
+/**
+ * A LOCKED TYRE, BURNING — one puff off the back axle, raised on a cadence for
+ * as long as the handbrake is dragging the car down (`stepSkids`).
+ *
+ * It shakes NOTHING. Every other effect on this road is a collision and shoves
+ * the frame to say so; a stop is the player getting something RIGHT, and a
+ * camera that punished a good handbrake exactly as it punishes hitting a van
+ * would be telling him the opposite of what happened. The picture says it with
+ * smoke, the rubber on the road and the nose going down.
+ */
+export function driveTyreSmoke(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+  force: number,
+  /** Which way the car is going, so the cloud falls away BEHIND it. */
+  direction: 1 | -1,
+): void {
+  push(state, "tyresmoke", x, y, nowMs, 620, force, false, -direction);
+}
+
 /** Everything the road throws away when the leg restarts. */
 export function clearDriveFx(state: DriveFxState): void {
   state.fx.length = 0;
@@ -173,6 +217,7 @@ function push(
   lifeMs: number,
   force: number,
   follow = false,
+  drift = 0,
 ): void {
   state.fx.push({
     kind,
@@ -182,6 +227,7 @@ function push(
     lifeMs,
     force,
     follow,
+    drift,
     // The seed is the spawn POSITION rather than a draw — a `Math.random` here
     // would be fine (it is spawn-time, not per-frame), but deriving it means an
     // identical road replays with an identical picture, which is what makes a
@@ -277,6 +323,7 @@ export function drawDriveFx(
     if (fx.kind === "spark") drawSparks(ctx, fx, t, sx, sy);
     else if (fx.kind === "grit") drawGrit(ctx, fx, t, sx, sy);
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);
+    else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
     else drawSmoke(ctx, fx, t, sx, sy);
   }
   // THE BLOOM GOES LAST AND GOES ADDITIVE: a heavy hit whites the frame out
@@ -372,6 +419,58 @@ function drawShards(
     const py = sy + Math.sin(angle) * reach * t * 0.4 - hop;
     ctx.fillStyle = `rgba(58, 60, 68, ${((1 - t) * 0.85).toFixed(3)})`;
     ctx.fillRect(Math.round(px), Math.round(py), 2, 1);
+  }
+  ctx.restore();
+}
+
+/**
+ * BURNING RUBBER — a low pale cloud that boils OUT rather than up, and is gone
+ * in half a second.
+ *
+ * Everything about it is the dead engine's smoke inverted, because a locked tyre
+ * is the opposite event: it spreads wide instead of climbing (the smoke comes
+ * off a contact patch on the road, not out of a bonnet), it is PALE rather than
+ * grey (it is lit by the same headlights the road grit is, and dark smoke on
+ * dark tarmac is nothing at all — the lesson `drawGrit` learned first), and it
+ * dies fast, because a stop lasts under a second and smoke still hanging there
+ * afterwards reads as a fire.
+ *
+ * It also DRIFTS BACKWARD along the road, which is the cheap trick that sells it
+ * at speed: the car is still moving, so what it left behind is falling away
+ * from it, and a cloud pinned dead over the axle would read as attached.
+ */
+function drawTyreSmoke(
+  ctx: CanvasRenderingContext2D,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const puffs = Math.round(8 + fx.force * 10);
+  const drift = fx.drift ?? -1;
+  ctx.save();
+  for (let i = 0; i < puffs; i++) {
+    // EVERY PUFF HAS ITS OWN AGE. Aged together they are one expanding ring of
+    // circles — a handful of grey balloons rather than smoke — because a dozen
+    // hard-edged discs that grow and fade in lockstep read as exactly what they
+    // are. Staggered, the tyre keeps ISSUING for the whole life of the effect
+    // and the mass is built out of overlap, which is the same trick the road's
+    // blood marks use to make a pool.
+    const phase = Math.min(1, t + scatter(fx.seed, i, 10) * 0.7);
+    const ease = phase * (2 - phase);
+    const back = (4 + scatter(fx.seed, i, 11) * 26) * drift;
+    const spread = (scatter(fx.seed, i, 12) - 0.5) * 14;
+    const r = 1.5 + ease * (3 + fx.force * 3);
+    ctx.fillStyle = `rgba(198, 194, 188, ${((1 - phase) * 0.19).toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(
+      Math.round(sx + back * ease),
+      Math.round(sy - 2 - ease * 4 + spread * ease * 0.4),
+      r,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
   ctx.restore();
 }

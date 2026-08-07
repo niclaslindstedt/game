@@ -166,6 +166,40 @@ export const CAR = {
    */
   maxYaw: Math.PI * 0.48,
   /**
+   * THE LEVER BETWEEN THE SEATS — what the handbrake sheds per second (px/s²),
+   * and it is the fastest way to stop this car by a wide margin.
+   *
+   * Four and a half times the pedal, which is the whole point of it: the brake
+   * is what you drive with and this is what you reach for when driving is no
+   * longer the plan. From the road's top end the pedal takes over three seconds
+   * to bring the wagon down and this takes about two thirds of one — the
+   * difference between "I am not going to make that gap" and "I am not going
+   * through those people".
+   */
+  handbrakePx: 900,
+  /**
+   * …AND THE WEIGHT GOING FORWARD WITH IT (px/s² onto the front spring).
+   *
+   * A car stopping that hard does not stop level. The load transfers onto the
+   * nose, the front springs compress and the back end comes light — which the
+   * body already knows how to draw, because the suspension is two real springs
+   * and the renderer pitches the whole shell between them (`drawShellLayer`).
+   * So the handbrake does not animate anything: it leans on the front axle and
+   * the picture follows, exactly as it does over a pothole.
+   *
+   * Sized against the spring rate: a steady push settles at `force / springK`,
+   * so this is about two pixels of dive — enough to read at the shipped scale
+   * (the drops are drawn at whole pixels) and short of the bump stop, which
+   * would read as a broken axle rather than as a stop.
+   */
+  brakeDivePx: 190,
+  /**
+   * The speed below which locked wheels stop marking the road (px/s). A car
+   * being dragged to a halt has already laid its skid by the time it is down to
+   * a walking pace, and marks laid under a stationary car pool into a blob.
+   */
+  skidMinSpeed: 30,
+  /**
    * THE HANDBRAKE-OFF DRAG — what a car with NOTHING held sheds per second
    * (px/s²), and it is deliberately almost nothing.
    *
@@ -297,6 +331,7 @@ export function createCar(pos: Vec2, heading: number): CarVehicle {
     grindCueMs: 0,
     faceLeft,
     speed: 0,
+    handbrake: false,
     wheelAngle: 0,
     steer: 0,
     suspension: [0, 0],
@@ -576,9 +611,11 @@ export function exitCar(state: GameState, hero: Player): boolean {
   );
   if (!car) return false;
   car.driver = null;
-  // The key comes out: no speed, and both cue clocks re-armed so the next
-  // start coughs from the top rather than a grain into an idle it left.
+  // The key comes out: no speed, the lever forgotten with the seat, and both
+  // cue clocks re-armed so the next start coughs from the top rather than a
+  // grain into an idle it left.
   car.speed = 0;
+  car.handbrake = false;
   car.engineCueMs = 0;
   car.grindCueMs = 0;
   parkVehicle(state, car);
@@ -909,6 +946,18 @@ function applyWheel(car: CarVehicle, wheel: number, dt: number): void {
  *   ACROSS IT           → the wheel: up swings the nose up the screen, down
  *                         swings it down.
  *   NOTHING AT ALL      → carry on. The car HOLDS its speed and straightens up.
+ *   A SECOND THUMB      → the handbrake, which overrules every one of the above.
+ *
+ * …AND THE PEDAL IS A PEDAL RATHER THAN A DIAL, which is the half that had to be
+ * fixed. A part-open throttle used to name a SPEED (`min(topSpeed * pedal, …)`),
+ * so a thumb dragged a little way toward the nose — the gesture that steers a
+ * gentle line, and the commonest one there is — slammed the car down to a fifth
+ * of its speed in a single tick. It braked harder than the brake did, from the
+ * input that means ACCELERATE. Now the pedal names a RATE: any push toward the
+ * nose speeds the car up, a small one slowly and a big one hard, and NOTHING on
+ * that side of the pad ever takes speed off. Losing it is what the other half of
+ * the pad is for, and it is graded the same way — a nudge against the nose is a
+ * feathered brake and a shove is the whole of it.
  *
  * That last line is the one that changed, and it is the important one. The car
  * used to coast to a standstill the instant nothing was held, which meant the
@@ -933,19 +982,35 @@ function applyWheel(car: CarVehicle, wheel: number, dt: number): void {
  * out along the nose, so what arrives here is the same push it always was.
  */
 export type CarControl = {
-  /** -1 (full brake / reverse) … +1 (full throttle), 0 = hold this speed. */
+  /** How hard the driver is on a pedal: -1 (full brake, then reverse) … +1
+   * (full throttle), 0 = hold this speed. A RATE, not a speed to settle at. */
   pedal: number;
   /** -1 (nose swings up the screen) … +1 (down), 0 = straighten up. */
   wheel: number;
+  /**
+   * THE LEVER IS UP. Overrules the pedal outright — a driver hauling on the
+   * handbrake is not asking for anything else — and stops the car at
+   * `CAR.handbrakePx` with the nose diving onto its front springs.
+   *
+   * Optional because it is a thing you do rather than a thing you are always
+   * doing: absent is off, which is what every synthetic driver, every headless
+   * step and every test that predates the lever means.
+   */
+  handbrake?: boolean;
 };
 
-/** Read one tick's push as the pedal and the wheel. */
+/** Read one tick's push as the pedal, the wheel and the lever. */
 export function carControl(car: CarVehicle, input: GameInput): CarControl {
-  if (!input.steering) return { pedal: 0, wheel: 0 };
+  // THE LEVER IS READ FIRST AND ON ITS OWN, because it is not a push: a second
+  // thumb pressed anywhere is the handbrake whether or not the first one is
+  // still saying something, and a driver who lets go of the pad mid-stop has
+  // not let go of the lever.
+  const handbrake = input.handbrake === true;
+  if (!input.steering) return { pedal: 0, wheel: 0, handbrake };
   const dx = input.target.x - car.pos.x;
   const dy = input.target.y - car.pos.y;
   const len = Math.hypot(dx, dy);
-  if (len <= 1) return { pedal: 0, wheel: 0 };
+  if (len <= 1) return { pedal: 0, wheel: 0, handbrake };
   // The nose's SIDE, not its bearing: the body is one side-profile assembly
   // that never comes about, so which way it faces is a sign and nothing more.
   const nose = car.faceLeft ? -1 : 1;
@@ -953,6 +1018,7 @@ export function carControl(car: CarVehicle, input: GameInput): CarControl {
   return {
     pedal: clamp((dx / len) * nose * throttle, -1, 1),
     wheel: clamp(dy / len, -1, 1),
+    handbrake,
   };
 }
 
@@ -975,13 +1041,77 @@ export function applyCarControl(
   topSpeed: number,
   reverseSpeed: number,
 ): void {
-  applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed);
+  applyCarPedals(car, control, dt, topSpeed, reverseSpeed);
   applyWheel(car, control.wheel, dt);
 }
 
 /**
+ * THE PEDALS AND THE LEVER — everything the driver can do about the car's
+ * SPEED, in the one place, with nothing said about the nose.
+ *
+ * The lever wins. A handbrake is not a harder brake pedal, it is a different
+ * control that takes the car away from whatever else was being asked of it, so
+ * the throttle is not consulted at all while it is up — a player who hauls on it
+ * with a thumb still resting toward the nose is stopping, not negotiating.
+ *
+ * `car.handbrake` is stamped here rather than kept by the caller because it is a
+ * fact about the CAR: the renderer draws the locked wheels' marks off it, a
+ * joined client is handed it in the snapshot, and both would otherwise have to
+ * be told separately what the physics already knows.
+ */
+export function applyCarPedals(
+  car: CarVehicle,
+  control: CarControl,
+  dt: number,
+  topSpeed: number,
+  reverseSpeed: number,
+): void {
+  car.handbrake = control.handbrake === true;
+  if (car.handbrake) {
+    applyHandbrake(car, dt);
+    return;
+  }
+  applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed);
+}
+
+/**
+ * ONE TICK OF THE LEVER: the car dragged down at `CAR.handbrakePx`, and its
+ * weight thrown onto the nose while it happens.
+ *
+ * THE DIVE IS A FORCE, NOT A POSE. It is spent on the front spring's own
+ * velocity — the same place a pothole's kick lands (`nudgeCar`) — so the body
+ * squats over the front axle while the lever is up, rings back level when it is
+ * let go, and does both through the suspension the renderer was already pitching
+ * the shell between. A pose written straight into `suspension` would fight the
+ * integrator and snap flat the instant a bump arrived.
+ *
+ * A CAR ALREADY STOPPED DOES NOT DIVE. There is no weight left to transfer, and
+ * a parked wagon nodding on its nose because a thumb is resting on the screen is
+ * the picture nobody asked for.
+ */
+function applyHandbrake(car: CarVehicle, dt: number): void {
+  if (car.speed === 0) return;
+  const drop = CAR.handbrakePx * dt;
+  car.speed =
+    car.speed > 0
+      ? Math.max(0, car.speed - drop)
+      : Math.min(0, car.speed + drop);
+  const shift = CAR.brakeDivePx * dt;
+  car.suspensionVel[1] += shift;
+  car.suspensionVel[0] -= shift;
+}
+
+/** THE LOCKED WHEELS ARE MARKING THE ROAD — the car is on the lever and still
+ * moving fast enough for it to show. The one question the renderers ask about a
+ * handbrake, asked once here so the skid, its smoke and its noise can never
+ * disagree about when a stop started. */
+export function carSkidding(car: CarVehicle): boolean {
+  return car.handbrake && Math.abs(car.speed) > CAR.skidMinSpeed;
+}
+
+/**
  * THE PEDAL ALONE — accelerate, brake, or hold, with nothing said about the
- * nose.
+ * nose or the lever.
  *
  * Split out because the DRIVING MINIGAME wants exactly this half and not the
  * other: on a straight four-lane road the car changes lanes by SLIDING across
@@ -989,6 +1119,14 @@ export function applyCarControl(
  * standing on it) is axis-aligned and the body is a side profile that never
  * comes about. It still visibly cranks the rack — the renderer draws `steer` —
  * it simply does not let the crank walk the heading off the road.
+ *
+ * HOW FAR DOWN THE PEDAL IS SETS THE RATE, NEVER THE SPEED, and that is the one
+ * rule to keep hold of here (see `CarControl` for what it cost to learn). A
+ * part-open throttle is a car gathering speed gently — it is not a cruise
+ * control, and it can never, at any opening, take speed OFF. A part-pressed
+ * brake is the same statement the other way: it scrubs proportionally, so a
+ * feathered pedal trims the approach to a gap and a stamped one is the whole of
+ * what the pads have. Only the LEVER stops harder (`applyHandbrake`).
  */
 export function applyCarPedal(
   car: CarVehicle,
@@ -998,14 +1136,18 @@ export function applyCarPedal(
   reverseSpeed: number,
 ): void {
   if (pedal > 0) {
-    car.speed = Math.min(topSpeed * pedal, car.speed + CAR.driveAccel * dt);
+    // Up through zero from a reverse, and on to the top end — one expression,
+    // because backing off the reverse IS accelerating as far as the car is
+    // concerned.
+    car.speed = Math.min(topSpeed, car.speed + CAR.driveAccel * pedal * dt);
   } else if (pedal < 0) {
     // Brake first, then back up — a car does not go from forward to reverse
     // through anything but a stop.
+    const force = -pedal;
     car.speed =
       car.speed > 0
-        ? Math.max(0, car.speed - CAR.driveBrake * dt)
-        : Math.max(reverseSpeed * pedal, car.speed - CAR.driveAccel * dt);
+        ? Math.max(0, car.speed - CAR.driveBrake * force * dt)
+        : Math.max(-reverseSpeed, car.speed - CAR.driveAccel * force * dt);
   } else {
     // NOTHING HELD: carry on. Only the whisper of drag.
     const drop = CAR.idleDragPx * dt;
@@ -1267,7 +1409,11 @@ function departureControl(car: CarVehicle, scene: DepartureState): CarControl {
   // the SCREEN's, and for a nose-left car those run opposite ways — so the
   // synthetic driver flips it exactly as the player's own push is flipped.
   const nose = car.faceLeft ? -1 : 1;
-  return { pedal: 1, wheel: clamp(err / DEPARTURE.steerArc, -1, 1) * nose };
+  return {
+    pedal: 1,
+    wheel: clamp(err / DEPARTURE.steerArc, -1, 1) * nose,
+    handbrake: false,
+  };
 }
 
 /**

@@ -25,6 +25,7 @@ import {
   roadEdges,
   solveImpact,
   stepDrive,
+  type DriveInput,
   type DriveParams,
   type DriveState,
 } from "../../src/game/drive/index.ts";
@@ -341,14 +342,22 @@ describe("the car breaking up", () => {
   it("breaks down sooner when driven fast than when driven slow", () => {
     // Same road, same distance covered — the only difference is the speed the
     // bodies were met at, and energy goes as the square of it.
+    //
+    // THE SLOW DRIVER HOLDS HIS SPEED WITH THE PEDALS, not with a part-open
+    // throttle, because a part-open throttle is not a speed: the pedal names a
+    // RATE (`applyCarPedal`), so a third of it is a car that gets to the top end
+    // gently rather than one that cruises at a third of it. Bang-bang against a
+    // target is how the auto-driver holds a cruise and how a person drives.
     const fast = createDrive(PARAMS);
     const slow = createDrive(PARAMS);
     const target = 12000;
     while (fast.distance < target && fast.outcome === DRIVE_OUTCOME.driving) {
       stepDrive(fast, 16, { pedal: 1, wheel: 0 });
     }
+    const cruise = DRIVE.topSpeedPx * 0.35;
     while (slow.distance < target && slow.outcome === DRIVE_OUTCOME.driving) {
-      stepDrive(slow, 16, { pedal: 0.35, wheel: 0 });
+      const pedal = Math.abs(slow.car.speed) < cruise ? 1 : -1;
+      stepDrive(slow, 16, { pedal, wheel: 0 });
     }
     expect(fast.car.wear).toBeGreaterThan(slow.car.wear);
   });
@@ -479,6 +488,44 @@ describe("the traffic", () => {
     floorIt(home, 8000);
     expect(out.traffic.length).toBeGreaterThan(0);
     expect(home.traffic.length).toBeGreaterThan(0);
+  });
+});
+
+describe("the handbrake", () => {
+  /** How far the car travels bringing itself to a stop from the top end under
+   * `hold` — the number that matters to a driver, which is not how long it took
+   * but how much road it ate doing it. */
+  function stoppingDistance(hold: DriveInput): number {
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 4000);
+    const from = drive.car.pos.x;
+    for (let t = 0; t < 20000 && drive.car.speed > 0; t += 16) {
+      stepDrive(drive, 16, hold);
+    }
+    return Math.abs(drive.car.pos.x - from);
+  }
+
+  it("is the fastest way this wagon stops", () => {
+    // The pedal against the accelerator, and the lever WITH it — a handbrake
+    // overrules the throttle rather than adding to the brake, so the second one
+    // is a driver stopping with his foot still down.
+    const pedal = stoppingDistance({ pedal: -1, wheel: 0 });
+    const lever = stoppingDistance({ pedal: 1, wheel: 0, handbrake: true });
+    expect(lever).toBeGreaterThan(0);
+    expect(lever).toBeLessThan(pedal);
+  });
+
+  it("takes the lever out of the wreck's hands when the leg is over", () => {
+    // A road that has ended is not being driven any more, whatever a thumb that
+    // was down when the engine gave up is still doing — and a wreck coasting to
+    // a halt must not go on laying rubber.
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 2000);
+    stepDrive(drive, 16, { pedal: 1, wheel: 0, handbrake: true });
+    expect(drive.car.handbrake).toBe(true);
+    drive.outcome = DRIVE_OUTCOME.broken;
+    stepDrive(drive, 16, { pedal: 1, wheel: 0, handbrake: true });
+    expect(drive.car.handbrake).toBe(false);
   });
 });
 
