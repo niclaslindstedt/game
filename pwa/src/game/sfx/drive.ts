@@ -31,6 +31,11 @@ import type { Synth } from "@ui/lib/synth.ts";
  * quarter of the speed range is one gear, so flat out is a sustained thrash
  * rather than another shift. */
 const GEARS = [0, 0.13, 0.3, 0.5, 0.72] as const;
+
+/** …and how many that is, for a dial that draws the gate rather than the note.
+ * Exported so the HUD's own gear readout counts the same gears the engine
+ * sounds — two counts of the same box is a dial that lies at the top end. */
+export const GEAR_COUNT = GEARS.length;
 /** The note a gear opens at, and the note it screams at (Hz). Both climb with
  * the gear so an upshift DROPS the pitch without ever dropping it back to where
  * the car pulled away from. */

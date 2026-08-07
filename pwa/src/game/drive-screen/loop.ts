@@ -56,6 +56,7 @@ import {
   trafficHitSound,
 } from "./drive-sounds.ts";
 import { soakCarFromStrike } from "./car-soak.ts";
+import { stepSkids, type SkidState } from "./skid.ts";
 import {
   bodySprite,
   crushRemain,
@@ -134,6 +135,7 @@ export function drainDrive(
   bursts: Burst[],
   fx: DriveFxState,
   gore: DriveGoreState,
+  skids: SkidState,
   say?: (id: string, nowMs: number) => void,
 ): void {
   for (const strike of drive.strikes) {
@@ -181,6 +183,11 @@ export function drainDrive(
   // this runs on the drive's own fixed step and a draw runs on the frame rate —
   // a trail laid at 144 fps would be twice the trail laid at 72.
   stepDriveGore(gore, drive);
+  // …and what the DRIVER left, which is the other kind of mark this road keeps:
+  // the rubber a handbrake scrubs off, and the smoke coming off it. Walked here
+  // beside the blood for the same reason — on the drive's own fixed step, so a
+  // stop lays one line however fast the frames are arriving.
+  stepSkids(skids, drive, fx);
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from

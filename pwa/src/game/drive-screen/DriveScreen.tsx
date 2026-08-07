@@ -38,9 +38,7 @@ import {
   type DriveState,
 } from "@game/core";
 
-import { PixelText } from "@ui/lib/PixelText.tsx";
-
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
 import { actionForCode } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
@@ -50,7 +48,10 @@ import {
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
 import { viewScaleFor } from "../render/view.ts";
-import { engineNote } from "../sfx/drive.ts";
+import { engineNote, GEAR_COUNT } from "../sfx/drive.ts";
+import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+import { HudRoot } from "../hud/HudRoot.tsx";
+import type { HudContext } from "../hud/context.ts";
 import { DrivePause } from "./DrivePause.tsx";
 import {
   clearDriveFx,
@@ -65,6 +66,7 @@ import {
   createDriveGore,
   type DriveGoreState,
 } from "./drive-gore.ts";
+import { clearSkids, createSkids, type SkidState } from "./skid.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -191,10 +193,20 @@ export function DriveScreen({
    * leg and thrown away on a restart, exactly like the effect layer beside it:
    * the mess is a record of THIS attempt at the road. */
   const goreRef = useRef<DriveGoreState>(createDriveGore());
+  /** …and what the DRIVER left on it: the rubber off every handbrake stop.
+   * Thrown away on a restart with the rest of the mess — the marks are a record
+   * of THIS attempt at the road. */
+  const skidRef = useRef<SkidState>(createSkids());
   const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
   const padRef = useRef<{ x: number; y: number } | null>(null);
+  /** Which pointer anchored the pad, and every OTHER one currently down — the
+   * second thumb, which is the handbrake for as long as it stays there. A SET
+   * rather than a flag so a third finger arriving cannot release the lever the
+   * second one is still holding. */
+  const padIdRef = useRef<number | null>(null);
+  const brakeIdsRef = useRef<Set<number>>(new Set());
   /** The hands on the wheel when nobody's are — minted once, because the driver
    * carries the line it has committed to and rebuilding it every frame would be
    * a driver that never commits to anything. */
@@ -203,7 +215,32 @@ export function DriveScreen({
   );
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [paused, setPaused] = useState(false);
-  const [hud, setHud] = useState({ mph: 0, gear: 0, bodies: 0, wear: 0 });
+  /**
+   * THE DIALS — what the dashboard reads, republished only when one of them
+   * actually moves.
+   *
+   * More than the two shipped plates use, on purpose: the revs, the gear count
+   * and the top end are what a TACHOMETER and a GEARBOX are drawn from, and a
+   * dial that had to wait for this screen to start publishing its number would
+   * be a dial nobody could author. `rev` is the one continuous value here, so it
+   * is quantised to a sixteenth — a needle wants smooth, but a needle that
+   * re-rendered React sixty times a second would be paying for the whole HUD
+   * every frame. (A genuinely 60fps needle is a render-loop handle, the way the
+   * stamina bar is.)
+   */
+  const [hud, setHud] = useState<DriveDials>({
+    mph: 0,
+    topSpeedMph: DRIVE.topSpeedMph,
+    speedFrac: 0,
+    gear: 0,
+    gearCount: GEAR_COUNT,
+    rev: 0,
+    reversing: false,
+    bodies: 0,
+    wear: 0,
+    failing: false,
+    paused: false,
+  });
   const speechRef = useRef<Speech | null>(null);
   const pausedRef = useRef(false);
   /** What the speech box says its tap means — the same seam the run's own
@@ -260,6 +297,21 @@ export function DriveScreen({
     setPaused(on);
   }, []);
 
+  /** A finger has left the picture: whichever of the two jobs it had stops. A
+   * leftover brake finger never inherits the pad — the next press re-anchors
+   * deliberately, which is the same rule the run's own tracker follows and for
+   * the same reason: steering from an anchor somebody set down half a second
+   * ago for something else is a car that darts. */
+  const releasePad = useCallback((id: number) => {
+    if (padIdRef.current === id) {
+      padIdRef.current = null;
+      padRef.current = null;
+      padOrigin = null;
+      return;
+    }
+    brakeIdsRef.current.delete(id);
+  }, []);
+
   // ── THE CONTROLS ──────────────────────────────────────────────────────────
   // THE SAME CONTROLS THE GARAGE READS, and the engine resolves them the same
   // way: a pedal, a wheel, and nothing held holds the speed.
@@ -271,6 +323,13 @@ export function DriveScreen({
   //
   // THE KEYS ARE FIXED: D accelerates, A slows and backs up, W and S are the
   // wheel, on both legs and whichever way the wagon is facing.
+  //
+  // AND THE HANDBRAKE IS THE OTHER HAND — a second thumb anywhere on the
+  // picture, or SPACE (the JUMP bind, which is the one action a man in a car
+  // cannot perform). It is the fastest way this wagon stops by a long way, and
+  // it is the only control on the road that needs no aim: what a driver wants
+  // when a wall of people appears in lane two is one thing he can hit without
+  // thinking about where.
   //
   // TWO OF THE RUN'S OWN BINDS ARE ANSWERED HERE TOO, and they have to be:
   // while a drive is up the run's control layer is not listening (there is no
@@ -341,6 +400,11 @@ export function DriveScreen({
       const pad = padRef.current;
       const drive = driveRef.current;
       const driver = driverRef.current;
+      const keys = carKeyControl(keysRef.current, getSettings().keybindings);
+      // THE LEVER IS NOT A PUSH, so it is composed rather than read off one: a
+      // second thumb anywhere on the picture and the JUMP bind both haul on it,
+      // and either does so whether the first thumb is saying anything or not.
+      const handbrake = brakeIdsRef.current.size > 0 || keys.handbrake;
       inputRef.current = driver
         ? // NOBODY IS PLAYING THIS. The engine's own driver reads the road and
           // the thumb and the keyboard are ignored outright — not merely
@@ -349,8 +413,8 @@ export function DriveScreen({
           // different road than the one it asked for.
           driveDriverInput(driver, drive)
         : pad
-          ? { pedal: pad.x * nose, wheel: pad.y }
-          : carKeyControl(keysRef.current, getSettings().keybindings);
+          ? { pedal: pad.x * nose, wheel: pad.y, handbrake }
+          : { ...keys, handbrake };
 
       // ONE THING PARKS THE CAR, and it is the pause card. A LINE DOES NOT —
       // his thoughts are barked over a road that keeps moving (see `Speech`),
@@ -382,6 +446,7 @@ export function DriveScreen({
           burstsRef.current,
           fxRef.current,
           goreRef.current,
+          skidRef.current,
           say,
         );
         ageSpeech(drive.ms);
@@ -396,6 +461,7 @@ export function DriveScreen({
           burstsRef.current,
           fxRef.current,
           goreRef.current,
+          skidRef.current,
           onArrived,
         );
       }
@@ -425,6 +491,7 @@ export function DriveScreen({
         drive.ms,
         goreRef.current,
         assets.font,
+        skidRef.current,
       );
 
       burstsRef.current = drawBursts(
@@ -448,18 +515,26 @@ export function DriveScreen({
       );
 
       setHud((prev) => {
-        const next = {
+        const speedFrac = Math.min(
+          1,
+          Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
+        );
+        const note = engineNote(speedFrac);
+        const wearPercent = Math.round(drive.car.wear * 100);
+        const next: DriveDials = {
           mph: driveMph(drive),
-          gear: engineNote(Math.abs(drive.car.speed) / DRIVE.topSpeedPx).gear,
+          topSpeedMph: DRIVE.topSpeedMph,
+          speedFrac: Math.round(speedFrac * 64) / 64,
+          gear: note.gear,
+          gearCount: GEAR_COUNT,
+          rev: Math.round(note.rev * 16) / 16,
+          reversing: drive.car.speed < 0,
           bodies: drive.bodies,
-          wear: Math.round(drive.car.wear * 100),
+          wear: wearPercent / 100,
+          failing: wearPercent > FAILING_WEAR_PERCENT,
+          paused: pausedRef.current,
         };
-        return prev.mph === next.mph &&
-          prev.gear === next.gear &&
-          prev.bodies === next.bodies &&
-          prev.wear === next.wear
-          ? prev
-          : next;
+        return sameDials(prev, next) ? prev : next;
       });
     };
     raf = requestAnimationFrame(frame);
@@ -475,14 +550,23 @@ export function DriveScreen({
     onArrived(params.to, drive.bodies, driveVerdict(drive));
   }, [onArrived, params.to, setPause]);
 
-  const damage = hud.wear;
-  const failing = damage > 70;
-  // The run's own HUD frame sprite, 9-sliced behind the dials (see
-  // `.drive-hud-plate`) — the same panel the vitals wear in a fight.
-  const frame = spriteDataUrl(assets.sprites, "hud_frame");
-  const plate: CSSProperties | undefined = frame
-    ? { borderImageSource: `url(${frame})` }
-    : undefined;
+  /**
+   * WHAT THE DASHBOARD READS. The road's half of the same context the fight's
+   * HUD is handed — no run state at all, because a drive has no hero, no bag
+   * and no horde, and the union's tag is what stops a widget built for one
+   * surface being drawn on the other.
+   */
+  const hudContext: HudContext = {
+    surface: "drive",
+    assets,
+    font: assets.font,
+    values: driveBindings(hud),
+    refs: {},
+    actions: {
+      driveResume: () => setPause(false),
+      driveSkip: skipDrive,
+    },
+  };
 
   return (
     // The class carries ONE thing — the stacking band (styles.css). It has to
@@ -490,44 +574,42 @@ export function DriveScreen({
     // a drive and would otherwise hide the entire road.
     <div className="drive-screen" style={SHELL}>
       <canvas ref={canvasRef} style={CANVAS} />
-      {/* THE DIALS, IN THE GAME'S OWN FONT. Everything else the player reads
-          in this game is the pixel font (`PixelText`) — a browser monospace
-          here made the minigame look like a different program, which is
-          exactly what an interlude must not do.
+      {/* THE DASHBOARD — authored, exactly like the fight's HUD
+          (`content/hud/elements/drive_*.yaml`, region `drive_bar`). What each
+          dial SAYS is a Lua judgement in `content/hud/scripts/drive.lua`, so a
+          conversion can give the wagon a rally's pace note or a delivery run's
+          order slip without a line of code here.
 
-          SPEED AND THE GEAR IT IS BEING MADE IN: the gear is `engineNote`'s
-          own reading, the same one the sound is built from, so what the player
-          hears climbing and dropping is what the dial says. A readout, not a
-          control — the wagon shifts itself. */}
-      <div style={HUD_BAR}>
-        <div className="drive-hud-plate" style={plate}>
-          <PixelText
-            font={assets.font}
-            text={`${hud.mph} MPH  GEAR ${hud.gear + 1}`}
-            scale={2}
-            color="#e8e4d8"
-          />
-        </div>
-        <div className="drive-hud-plate" style={plate}>
-          <PixelText
-            font={assets.font}
-            text={`DAMAGE ${damage}%`}
-            scale={2}
-            color={failing ? "#e8635a" : "#e8e4d8"}
-          />
-        </div>
-      </div>
+          IN THE GAME'S OWN FONT, on the run's own frame sprite: everything else
+          the player reads in this game is the pixel font, and a browser
+          monospace here made the minigame look like a different program —
+          exactly what an interlude must not do. */}
+      <HudRoot ctx={hudContext} />
+
       {/* THE PAD — one thumb, anywhere on the picture. Dragging from where the
           thumb went down is the push; letting go means carry on, which is the
-          whole of the control model. */}
+          whole of the control model.
+
+          …AND THE OTHER THUMB IS THE HANDBRAKE. Every pointer after the first
+          is a lever rather than a second pad: it needs no aim, no anchor and no
+          drag, which is exactly right for the one control a driver reaches for
+          without looking. The first finger down owns the pad and keeps it
+          (`padIdRef`) — without that, a second thumb landing re-anchored the
+          steering under the first one and the car snapped straight. */}
       <div
         style={PAD}
         onPointerDown={(e) => {
           (e.target as Element).setPointerCapture(e.pointerId);
+          if (padIdRef.current !== null) {
+            brakeIdsRef.current.add(e.pointerId);
+            return;
+          }
+          padIdRef.current = e.pointerId;
           padRef.current = { x: 0, y: 0 };
           padOrigin = { x: e.clientX, y: e.clientY };
         }}
         onPointerMove={(e) => {
+          if (e.pointerId !== padIdRef.current) return;
           if (!padRef.current || !padOrigin) return;
           const dx = e.clientX - padOrigin.x;
           const dy = e.clientY - padOrigin.y;
@@ -535,14 +617,8 @@ export function DriveScreen({
           const reach = Math.min(1, len / 48);
           padRef.current = { x: (dx / len) * reach, y: (dy / len) * reach };
         }}
-        onPointerUp={() => {
-          padRef.current = null;
-          padOrigin = null;
-        }}
-        onPointerCancel={() => {
-          padRef.current = null;
-          padOrigin = null;
-        }}
+        onPointerUp={(e) => releasePad(e.pointerId)}
+        onPointerCancel={(e) => releasePad(e.pointerId)}
       />
       {/* HIS OWN VOICE, IN THE GAME'S OWN WINDOW. The very same box every
           other line in the game is delivered in (`DialogueBox`): the grained
@@ -582,6 +658,29 @@ export function DriveScreen({
 
 const EMPTY_PAGE: string[] = [];
 
+/** Where the damage readout stops being a scratch and starts being trouble.
+ * The wagon takes cosmetic knocks the whole way down, and a dial that alarmed
+ * at the first one would teach the player to ignore it — so this is the point
+ * where the next real hit ends the trip. What the dial DOES about it is the
+ * content's call (`hud/scripts/drive.lua`); this is only the fact. */
+const FAILING_WEAR_PERCENT = 70;
+
+/** Have any of the dials actually moved? Compared field by field rather than
+ * by a key string: this runs every frame of a drive. */
+function sameDials(a: DriveDials, b: DriveDials): boolean {
+  return (
+    a.mph === b.mph &&
+    a.speedFrac === b.speedFrac &&
+    a.gear === b.gear &&
+    a.rev === b.rev &&
+    a.reversing === b.reversing &&
+    a.bodies === b.bodies &&
+    a.wear === b.wear &&
+    a.failing === b.failing &&
+    a.paused === b.paused
+  );
+}
+
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */
 let padOrigin: { x: number; y: number } | null = null;
@@ -601,6 +700,7 @@ function endDrive(
   bursts: Burst[],
   fx: DriveFxState,
   gore: DriveGoreState,
+  skids: SkidState,
   onArrived: (to: string, bodies: number, verdict: string) => void,
 ): void {
   if (
@@ -611,6 +711,7 @@ function endDrive(
     bursts.length = 0;
     clearDriveFx(fx);
     clearDriveGore(gore);
+    clearSkids(skids);
   }
   if (
     drive.outcome === DRIVE_OUTCOME.arrived &&
@@ -639,16 +740,6 @@ const CANVAS: CSSProperties = {
   width: "100%",
   height: "100%",
   imageRendering: "pixelated",
-};
-const HUD_BAR: CSSProperties = {
-  position: "absolute",
-  top: 14,
-  left: 12,
-  right: 12,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  pointerEvents: "none",
 };
 const PAD: CSSProperties = {
   position: "absolute",

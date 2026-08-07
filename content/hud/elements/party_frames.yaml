@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE PARTY FRAMES — every other hero in play, down the same left rail the
+# companion rides. The portrait is that hero's own dressed paper-doll bust, the
+# sliver is their hp, DOWN greys the frame where they fell, and a BAG badge is
+# D2's own "in their menus" affordance. A press ASKS for a trade and raises
+# nothing on their screen.
+#
+# Empty solo, so it costs a party-less run nothing to leave in place.
+region: left
+order: 2
+kind: widget
+widget: partyFrames

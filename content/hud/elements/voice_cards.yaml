@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# WHO IS TALKING — a card per speaker in voice chat: their own dressed
+# paper-doll bust, their roster name, and a live waveform, so one person
+# whispering and another shouting are visibly different. A press mutes them,
+# locally and unsent.
+#
+# LAST ON THE LEFT RAIL, under the party frames whose portraits it echoes and
+# under the trade asks. That order is deliberate: voice cards come and go
+# constantly while an ask is rare and needs answering, so an arriving card must
+# not push something urgent off the edge.
+#
+# Empty on every run without voice — a build with no `voice` capability, a
+# machine with no microphone, a player who turned it off, and every single-player
+# game — so it costs those runs nothing to leave in place, exactly as the party
+# frames cost a solo run nothing.
+#
+# The cards themselves are sized for a DESKTOP window rather than the phone
+# reference the rest of the HUD obeys, which is safe only because voice is gated
+# on a capability only the desktop shell is stamped with. See
+# `pwa/src/game/game-screen/VoiceOverlay.tsx`.
+region: left
+order: 4
+kind: widget
+widget: voiceCards

@@ -4,7 +4,8 @@
 // Unifies mouse/touch/pen via Pointer Events and reports the raw gestures a
 // control scheme is built from: hold state with its anchor point (virtual
 // dpad/joystick steering), mouse hover position (cursor-follow steering),
-// taps with their finger count (jump vs second-hand actions), and
+// taps with their finger count (jump vs second-hand actions), EXTRA FINGERS
+// STILL DOWN (a second thumb as a lever — a handbrake, a horn), and
 // button-press edges (click actions).
 
 export type PointerState = {
@@ -19,6 +20,18 @@ export type PointerState = {
   /** Where the current hold began — the virtual-dpad anchor (CSS px). */
   originX: number;
   originY: number;
+  /**
+   * How many EXTRA pointers are down right now, on top of the primary.
+   *
+   * The second hand as a HOLD rather than as a tap. `onTap({fingers: 2})`
+   * already reports the second thumb pressing and releasing, which is the right
+   * shape for a discrete action and the wrong one for a lever somebody keeps
+   * hold of — a game with a handbrake, a horn or a sprint needs to know the
+   * finger is still down, not that it once went down. Counted rather than
+   * flagged so a third finger arriving does not clear the second one's hold on
+   * its way out.
+   */
+  extras: number;
   /** The current/last primary pointer's type: "mouse" | "touch" | "pen". */
   pointerType: string;
 };
@@ -59,6 +72,7 @@ export function trackPointer(
     y: 0,
     originX: 0,
     originY: 0,
+    extras: 0,
     pointerType: "mouse",
   };
   let primaryId: number | null = null;
@@ -85,6 +99,7 @@ export function trackPointer(
       primaryId = null;
       state.held = false;
       extras.clear();
+      state.extras = 0;
     }
     // Capture so steering keeps tracking when the pointer leaves the canvas.
     element.setPointerCapture(event.pointerId);
@@ -100,6 +115,7 @@ export function trackPointer(
       downAt = performance.now();
     } else {
       extras.set(event.pointerId, { at: performance.now(), x: p.x, y: p.y });
+      state.extras = extras.size;
     }
     onPress?.({ pointerType: event.pointerType });
   };
@@ -135,6 +151,7 @@ export function trackPointer(
     const extra = extras.get(event.pointerId);
     if (extra) {
       extras.delete(event.pointerId);
+      state.extras = extras.size;
       const p = localPos(event);
       if (
         onTap &&

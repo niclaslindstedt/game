@@ -2,7 +2,8 @@
 // The AUTO PILOT's in-HUD control panel wiring — the speed rung, STOP, the
 // LOOT chip, and the draining purse — bound to the session (autopilot-director.ts) so a
 // rung change or a STOP updates both the engine meter and the session intent.
-// PlayingHud mounts it under the minimap while the engine meter runs.
+// The HUD mounts it under the minimap while the engine meter runs — an
+// authored element (content/hud/elements/autopilot.yaml), so a mod can move it.
 
 import { AUTOPILOT, type GameState } from "@game/core";
 

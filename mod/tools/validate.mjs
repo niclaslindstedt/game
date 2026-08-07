@@ -35,6 +35,7 @@ import {
   CHANGE_KINDS,
   MANIFEST,
   SIDECARS,
+  NESTED,
   TREES,
   classify,
   junkReason,
@@ -203,12 +204,18 @@ function classifyDir(rel) {
     };
   }
   if (parts.length === 1) {
-    return TREES[name]
+    return TREES[name] || NESTED[name]
       ? { role: "ok" }
       : {
           role: "stray",
           why: `nothing is loaded from "${name}/" — see mod/FORMAT.md for the folders the compiler reads`,
         };
+  }
+  // `hud/` is the one folder with folders of its own (its elements and its
+  // judgements), so its second level is as legitimate as a biome's.
+  const nested = NESTED[parts[0]];
+  if (nested && parts.length === 2 && parts[1] in nested.trees) {
+    return { role: "ok" };
   }
   const tree = TREES[parts[0]];
   if (tree && tree.depth === 2 && parts.length === 2) return { role: "ok" };

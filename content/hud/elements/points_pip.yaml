@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE POINTS PIP — the round slot once more, at the row's end, worn only while
+# the hero has stat or talent points BANKED. In a party a ding never forces the
+# chooser open (the run cannot wait on one player reading stat blurbs), and solo
+# it is what a LATER leaves behind.
+#
+# Gold like the quest button's alert, because it too means "something is waiting
+# for you". Pressing it opens the chooser on demand — and, because that press IS
+# the player engaging it, one with no reveal lockout.
+region: gear
+order: 3
+kind: button
+class: hud-bag-slot hud-quest-slot has-quests
+aria: spend-points
+visible: hud.pointsWaiting
+classes:
+  hud-slot-yielded: ui.weaponMenuOpen
+press:
+  action: openPoints
+  sound: ui_confirm
+  close: true
+children:
+  - id: points_mark
+    kind: text
+    text: "+"
+    scale: 3
+    color: "#ffd75e"

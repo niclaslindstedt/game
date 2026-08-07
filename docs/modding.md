@@ -307,6 +307,58 @@ Three rules, each earned:
   for it. Mapping the unknown onto `dust` instead would have made every mod's
   new ground silently sound like regolith with no way to say otherwise.
 
+### A mod may replace the HUD — the one piece of chrome that IS content
+
+The bars, the pouch, the quest button, the party rail, the minimap hub, the
+docks and the drive minigame's dashboard are authored under `content/hud/` and
+compiled to `pwa/src/generated/hud.ts` (→ [content pipeline](content-pipeline.md)).
+A mod ships the same four things in its own `hud/` folder — the frame, the
+elements, the event sounds, the judgements — through the same loader and the
+same schema.
+
+**Why this and not the title menu.** The two questions look alike and are not.
+A menu tree decides which SCREENS exist and which rows reach them, so a mod that
+could ship one could hand itself the hidden developer tree — the level warp, the
+balance multipliers, the coin grant — on a shipped store build. A HUD hands out
+nothing. Its buttons carry `action:` names out of a fixed list of verbs the app
+already had, its values are READS of the HUD snapshot, and the one place it can
+compute anything is a Lua judgement in the same metered sandbox the rules run in.
+So the HUD is as safe to replace as a monster, and the menu is still refused.
+
+Four things make it work as a format rather than as a theme:
+
+- **The id is the whole merge rule.** Elements merge by id, later wins
+  (`mergeHud`), so a file named after one of ours REPLACES that element and a
+  file named anything else ADDS one. That single rule is both "re-skin my pouch"
+  and "give me a WoW-style panel of my own", and a mod that ships one element
+  keeps the player the rest of their HUD — the alternative ("last mod to mention
+  the HUD owns all of it") would make a tweak and an addon mutually exclusive
+  for no reason a player could see.
+- **A WIDGET is the honest limit.** The minimap is a canvas the render loop
+  paints; the party frames are portraits composed per frame by the paper-doll
+  compositor; the docks are gesture surfaces. Those stay TypeScript and are
+  PLACED by content (`kind: widget`), so a mod moves, hides, reorders and
+  re-sounds them without any of them having to be re-authorable as boxes. A
+  widget may still take authored PARTS — the weapon slot's round count is an
+  ordinary text node in the YAML.
+- **The scripts are judgements, not draw calls.** `{ script: "vitals.gauge_color" }`
+  is called when the HUD's snapshot PUBLISHES — on a real change, a few times a
+  second — never per element per frame, which is the same rule the engine's own
+  hooks keep. A judgement may answer a colour, a yes/no, a whole line or a
+  value, and a broken one falls back to what the element would have done with no
+  script at all, reported once.
+- **Nothing plays an interface sound outside the catalog.** Every press names its
+  sound on the element that carries it, and every app-raised moment is answered
+  by `hud/events.yaml` — so "what does this HUD sound like" is one file, and
+  replacing the sound `ui_confirm` itself is the other way to answer it.
+
+The drive minigame is the second SURFACE: one catalog, two mounts (the fight's
+`GameScreen`, the road's `DriveScreen`), with a top-level region naming which.
+Its dials read the `drive.*` bindings — speed, the gear and how far up it the
+wagon is, the bodies, the wear — and what they SAY is `content/hud/scripts/drive.lua`,
+which makes the dashboard the cheapest place in the game for a conversion to put
+its own voice.
+
 ### A mod's venue is CARVED, like every other
 
 `maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in

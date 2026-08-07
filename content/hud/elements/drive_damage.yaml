@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# WHAT THE TRIP HAS COST THE WAGON — the right dial, which turns red once the
+# damage is past the point where the road starts winning.
+#
+# Where that point IS is a judgement rather than a read, so it is a Lua function
+# (`hud/scripts/drive.lua`) and a mod can move it — a harder road might redden at
+# half, a gentler one only at the very end.
+region: drive_bar
+order: 1
+kind: text
+class: drive-hud-plate
+frame: hud_frame
+text:
+  script: drive.damage_label
+scale: 2
+color:
+  script: drive.damage_color

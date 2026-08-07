@@ -264,6 +264,10 @@ module.exports = {
       to: "modtools/scripts/difficulty-data",
     },
     { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
+    // THE HUD, which a mod may replace outright — its loader travels for the
+    // same reason every other one here does: the compiler reads a mod's `hud/`
+    // folder with the game's own loader and schema.
+    { from: "../scripts/hud-data", to: "modtools/scripts/hud-data" },
     { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
     { from: "../scripts/map-data", to: "modtools/scripts/map-data" },

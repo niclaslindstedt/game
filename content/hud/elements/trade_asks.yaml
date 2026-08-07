@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE ASKS — somebody wants to trade. A pip under the party frames, never a
+# screen: a request that halted the target would be exactly the interruption the
+# consent step exists to prevent. The hero keeps fighting behind it; YES raises
+# the table on both seats, NO costs nobody anything, and ignoring it lets the ask
+# lapse on its own.
+region: left
+order: 3
+kind: widget
+widget: tradeAsks

@@ -73,6 +73,14 @@ my-mod/
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out
+  scripts/<id>.lua             a RULE the engine hands out — the XP curve, the
+                               drop chance, weapon damage
+  hud/hud.yaml                 THE HUD's frame: the boxes elements sit in
+  hud/elements/<id>.yaml       one HUD element each — replacing one of ours by
+                               its name, or adding one of your own
+  hud/events.yaml              what the HUD's own moments sound like
+  hud/scripts/<id>.lua         the HUD's judgements: what colour "nearly out"
+                               is, what a dial says, when a panel is worth it
   README.md                    what your mod is, for a person
   preview.png                  the Workshop thumbnail (optional but do it)
 ```

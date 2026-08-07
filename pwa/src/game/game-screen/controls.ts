@@ -32,6 +32,7 @@ import {
   type BindableAction,
 } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
+import { playHudEvent } from "../hud/sounds.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
 import type { CharTab } from "./SceneOverlays.tsx";
@@ -266,7 +267,10 @@ export function createControls(deps: {
       case "weaponMenu":
         if (fieldLive(state)) {
           setWeaponMenuOpen((open) => !open);
-          playUiSound(synth, "confirm");
+          // The HUD's own press sound, not the menus' — the key and the slot
+          // are the same act, and a mod that re-points one has re-pointed both
+          // (content/hud/events.yaml).
+          playHudEvent("hud.press");
         }
         return;
       case "inventory":
@@ -275,10 +279,10 @@ export function createControls(deps: {
         if (canOpenInventory(state, localHero(state))) {
           setCharTab("bag");
           runCommand(state, "openInventory");
-          playUiSound(synth, "confirm");
+          playHudEvent("hud.press");
         } else if (localScreen(state) === "inventory") {
           runCommand(state, "closeInventory");
-          playUiSound(synth, "back");
+          playHudEvent("hud.back");
         }
         bumpUi();
         return;
@@ -286,11 +290,11 @@ export function createControls(deps: {
         // Toggles the fog-of-war level map (same freeze as the bag).
         if (fieldLive(state)) {
           runCommand(state, "openMap");
-          playUiSound(synth, "confirm");
+          playHudEvent("hud.press");
           bumpUi();
         } else if (localScreen(state) === "map") {
           runCommand(state, "closeMap");
-          playUiSound(synth, "back");
+          playHudEvent("hud.back");
           bumpUi();
         }
         return;
@@ -392,6 +396,14 @@ export function createControls(deps: {
     }
     if (event.code === binds.walk) {
       queues.walkingRef.current = true;
+    }
+    // The JUMP bind is also the HANDBRAKE at a wheel, and a lever is HELD —
+    // so its down-state is tracked here beside the walk modifier, while the
+    // one-shot jump edge is still banked below. Only `readHumanInput` decides
+    // which of the two a press means, and it decides on whether the player is
+    // in a car.
+    if (event.code === binds.jump) {
+      queues.handbrakeKeyRef.current = true;
     }
     if (event.repeat) return;
     // Space and Enter both turn the page through any waiting scene (cutscene,
@@ -531,6 +543,9 @@ export function createControls(deps: {
     if (event.code === binds.walk) {
       queues.walkingRef.current = false;
     }
+    if (event.code === binds.jump) {
+      queues.handbrakeKeyRef.current = false;
+    }
   };
   // A mouse button / wheel notch can be bound to any discrete action too (see
   // keybindings.ts). Both no-op unless the player bound a pointer control —
@@ -573,6 +588,7 @@ export function createControls(deps: {
   const onBlur = () => {
     queues.heldMoveKeysRef.current.clear();
     queues.walkingRef.current = false;
+    queues.handbrakeKeyRef.current = false;
     pause();
   };
   // Tab hidden (mobile app-switch, backgrounded tab): same auto-pause. Both

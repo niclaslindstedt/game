@@ -4,6 +4,7 @@
 //
 //   D  ACCELERATE          A  DECELERATE (then reverse)
 //   W  TURN LEFT (UP)      S  TURN RIGHT (DOWN)
+//   SPACE  HANDBRAKE (the JUMP bind — see `CarKeyControl.handbrake`)
 //
 // AND THEY MEAN THAT WHEREVER THE NOSE IS POINTING, which is the whole reason
 // this module exists. A thumb on a pad says a DIRECTION — "go that way" — and
@@ -41,10 +42,25 @@ export type CarKeyControl = {
   pedal: number;
   /** -1 (nose swings up the screen) … +1 (down), 0 = straighten up. */
   wheel: number;
+  /**
+   * THE HANDBRAKE, on the JUMP bind — SPACE as it ships.
+   *
+   * A borrowed key rather than a fifteenth row in the KEY BINDINGS menu, and it
+   * is the right borrow twice over: space is where every driving game in
+   * existence puts the lever, and JUMP is the one action on the board that a man
+   * sitting in a car cannot perform. Nothing is taken from anybody — the bind
+   * still jumps on foot, and it only ever reads as the lever with hands on a
+   * wheel, because this whole module is only ever called at one.
+   */
+  handbrake: boolean;
 };
 
 /** Nothing held: carry on as you are (see `CAR.idleDragPx`). */
-export const CAR_KEYS_IDLE: CarKeyControl = { pedal: 0, wheel: 0 };
+export const CAR_KEYS_IDLE: CarKeyControl = {
+  pedal: 0,
+  wheel: 0,
+  handbrake: false,
+};
 
 /** The arrow cluster, as the same four controls. The player's OWN binds are
  * read first (so a rebound WASD drives); the arrows are a fallback for a key
@@ -71,7 +87,9 @@ export function carKeyControl(
 ): CarKeyControl {
   let pedal = 0;
   let wheel = 0;
+  let handbrake = false;
   for (const code of held) {
+    if (code === binds.jump) handbrake = true;
     const bound = moveVectorForCode(code, binds);
     // An arrow only drives while it is spare: a player who put the MAP on
     // ArrowUp meant the map, and `moveVectorForCode` has already answered for
@@ -82,7 +100,11 @@ export function carKeyControl(
     pedal += vector.x;
     wheel += vector.y;
   }
-  return { pedal: clamp(pedal, -1, 1), wheel: clamp(wheel, -1, 1) };
+  return {
+    pedal: clamp(pedal, -1, 1),
+    wheel: clamp(wheel, -1, 1),
+    handbrake,
+  };
 }
 
 /** Is this code bound to nothing at all? (Steering, the walk modifier and

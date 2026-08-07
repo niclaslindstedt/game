@@ -62,6 +62,7 @@ import {
   stepDriveFx,
 } from "../drive-screen/drive-fx.ts";
 import { clearDriveGore, createDriveGore } from "../drive-screen/drive-gore.ts";
+import { clearSkids, createSkids } from "../drive-screen/skid.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -126,6 +127,11 @@ export function runDriveExhibit(deps: {
   let bursts: Burst[] = [];
   const fx = createDriveFx();
   const gore = createDriveGore();
+  // The rubber a handbrake leaves. No exhibit hauls on the lever today, so this
+  // stays empty — it is carried because the two hosts run the SAME drain and the
+  // same draw, and a parameter one of them quietly omitted is exactly how an
+  // exhibit becomes a diorama of a road that no longer exists.
+  const skids = createSkids();
   const engine = createEngineNote();
   /**
    * Where the car was when this take's collision landed, or null while the take
@@ -149,6 +155,7 @@ export function runDriveExhibit(deps: {
     bursts = [];
     clearDriveFx(fx);
     clearDriveGore(gore);
+    clearSkids(skids);
     engine.dueMs = 0;
     engine.gear = 0;
     holdAtX = null;
@@ -200,7 +207,7 @@ export function runDriveExhibit(deps: {
       while (owedMs >= STEP_MS) {
         owedMs -= STEP_MS;
         stepDrive(drive, STEP_MS, input);
-        drainDrive(drive, bursts, fx, gore);
+        drainDrive(drive, bursts, fx, gore, skids);
         // The moment this exhibit's own collision lands, the camera stops here.
         // Latched off the car's position rather than the event's, so the shift
         // below is exactly "how far the car has come since" and the shipped
@@ -265,6 +272,7 @@ export function runDriveExhibit(deps: {
         drive.ms,
         gore,
         assets.font,
+        skids,
       );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
       drawDriveFx(ctx, fx, camera, drive.ms, viewW, viewH, drive.car.pos);

@@ -53,8 +53,17 @@ import { validateMap } from "../../scripts/asset-tools/map-schema.mjs";
 import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSet } from "../../scripts/asset-tools/set-schema.mjs";
+import {
+  validateHudCatalog,
+  validateHudElement,
+  validateHudEvents,
+  validateHudRegions,
+} from "../../scripts/asset-tools/hud-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
-import { validateScript } from "../../scripts/asset-tools/script-schema.mjs";
+import {
+  moduleExports,
+  validateScript,
+} from "../../scripts/asset-tools/script-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import {
   validateTalent,
@@ -90,6 +99,7 @@ import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadScripts } from "../../scripts/script-data/load-lua.mjs";
 import { loadSets } from "../../scripts/set-data/load-yaml.mjs";
+import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 import { loadTalents } from "../../scripts/talent-data/load-yaml.mjs";
 import {
@@ -289,6 +299,18 @@ export function buildMod(modDir, catalog) {
   // to be a different GAME rather than a re-skin of this one. Optional, and
   // absent from almost every mod: an addon that adds monsters changes no rules.
   const scripts = loadTree(() => loadScripts(modDir), "scripts", fail);
+  // THE HUD. A mod's `hud/` folder is the game's own `content/hud/` in the same
+  // format, through the same loader and the same schema — the frame, the
+  // elements, the event sounds and the Lua judgements behind them. It merges
+  // per ELEMENT at load (later wins), so a mod may re-skin one pouch, move the
+  // minimap, re-point one press's sound, or hang a whole panel of its own off
+  // the rail — and a mod that ships none leaves the HUD exactly as it found it.
+  //
+  // CHECKED far below, once the sprite and sound names this mod may reach are
+  // known: an element's icon, its plate and its press's click are all
+  // cross-references, and checking them before those sets exist would only be
+  // able to check their punctuation.
+  const hud = loadTree(() => loadHud(modDir), "hud", fail);
   // HOW THE ART MOVES. Parsed here and CHECKED far below, once the sprite names
   // this mod may reach are known — a clip is nothing but a list of frames, so
   // validating it before the sprite tree has been read would only be able to
@@ -663,6 +685,58 @@ export function buildMod(modDir, catalog) {
     catalog.sprites,
     sprites.map((s) => s.name),
   );
+  // THE HUD, against everything this mod may actually reach: the sprite names
+  // above (an element's icon and its 9-slice plate), the sound ids (a press's
+  // click), the REGIONS the merged frame will have — the game's own plus this
+  // mod's, because an element may sit in a shipped region or in one of its own
+  // — and its own scripts, which are compiled with the game's VM here so a
+  // broken judgement fails on the author's machine rather than in a run.
+  const modHudScripts = {};
+  const hudScriptExports = new Map();
+  for (const script of hud?.scripts ?? []) {
+    const res = moduleExports(script.source, script.file);
+    errors.push(...res.errors);
+    hudScriptExports.set(script.id, res.functions);
+    modHudScripts[script.id] = { id: script.id, source: script.source };
+  }
+  // The frame as this mod will see it: the game's own regions plus the ones it
+  // ships itself — the same base ∪ mod rule every other cross-reference here
+  // follows, so an element may sit in a shipped rail or in a panel of its own.
+  const hudRegions = union(
+    catalog.hudRegions ?? [],
+    Object.keys(hud?.regions ?? {}),
+  );
+  {
+    const res = validateHudRegions(hud?.regions ?? {}, {
+      sprites: spriteNames,
+      scripts: hudScriptExports,
+    });
+    errors.push(...prefix(res.errors, "hud/hud.yaml"));
+    warnings.push(...prefix(res.warnings, "hud/hud.yaml"));
+  }
+  const hudRefs = {
+    sprites: spriteNames,
+    sounds: soundIds,
+    scripts: hudScriptExports,
+    regions: hudRegions,
+  };
+  for (const element of hud?.elements ?? []) {
+    const res = validateHudElement(element, hudRefs);
+    errors.push(...prefix(res.errors, `hud/elements/${element.id}`));
+    warnings.push(...prefix(res.warnings, `hud/elements/${element.id}`));
+  }
+  if (Object.keys(hud?.events ?? {}).length > 0) {
+    const res = validateHudEvents(hud.events, { sounds: soundIds });
+    errors.push(...prefix(res.errors, "hud"));
+    // NOT its warnings: the shipped catalog warns about a moment nothing
+    // answers, and a mod that re-points one moment answers exactly one on
+    // purpose.
+  }
+  {
+    const res = validateHudCatalog(hud?.elements ?? []);
+    errors.push(...res.errors);
+  }
+
   // HOW THE ART MOVES, against the sprite names this mod may actually reach.
   // Every frame is checked here for the same reason a monster's `sprite:` is:
   // a clip naming art nobody shipped fails SILENTLY at draw time — the frame
@@ -1095,6 +1169,22 @@ export function buildMod(modDir, catalog) {
       // by the schema. Empty for the overwhelming majority of mods, which draw
       // the two frames the game's own renderer already knows what to do with.
       clips: modClips,
+      // THE HUD this mod ships — its frame, its elements, its event sounds and
+      // its judgements. Merged per element at load rather than wholesale, so a
+      // mod that re-skins one pouch keeps the rest of the player's HUD (see
+      // `mergeHud`). Omitted entirely by the many mods that leave it alone.
+      hud:
+        (hud?.elements.length ?? 0) > 0 ||
+        Object.keys(hud?.regions ?? {}).length > 0 ||
+        Object.keys(hud?.events ?? {}).length > 0 ||
+        Object.keys(modHudScripts).length > 0
+          ? {
+              regions: hud.regions,
+              elements: hud.elements,
+              events: hud.events,
+              scripts: modHudScripts,
+            }
+          : undefined,
       // The manifest's inventory — what the MOD INFO screen reads to tell a
       // player what this mod puts in their game. Empty for a mod authored
       // before the block existed (see `readContents`).

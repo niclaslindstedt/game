@@ -74,6 +74,13 @@ import {
 } from "./sfx/samples.ts";
 import { setUiSoundCatalog, SHIPPED_UI_SOUNDS } from "./sfx/ui.ts";
 import {
+  mergeHud,
+  restoreHudLayout,
+  setHudLayout,
+  SHIPPED_HUD,
+} from "./hud/layout.ts";
+import type { HudElementDef, HudLayout, HudRegionDef } from "./hud/types.ts";
+import {
   clearSpriteClips,
   setSpriteClips,
   type ClipState,
@@ -147,6 +154,11 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
     // the game's bodies, or a pack that only re-times how they move.
     (bundle.samples?.length ?? 0) +
     (bundle.musicSamples?.length ?? 0) +
+    // …nor does one whose whole contribution is a HUD: a re-skinned dashboard
+    // or a WoW-style panel of its own is a mod, and refusing it as "empty"
+    // would be the page disagreeing with the compiler about what a mod is.
+    (bundle.hud?.elements?.length ?? 0) +
+    Object.keys(bundle.hud?.regions ?? {}).length +
     bundle.sprites.length +
     Object.keys(bundle.clips ?? {}).length;
   return adds === 0 ? "empty" : null;
@@ -287,6 +299,13 @@ export async function applyMods(
   // pack mutually exclusive for no reason a player could see.
   const clips: SpriteClips = {};
   const clipOwners = new Map<string, string[]>();
+  // THE HUD. Merged per ELEMENT rather than wholesale, so a mod that re-skins
+  // the bag pouch and a later one that adds a panel both land — "last mod to
+  // mention the HUD owns all of it" would make a HUD tweak and a HUD addon
+  // mutually exclusive for no reason a player could see. The rule itself lives
+  // in `hud/layout.ts` beside the shipped layout it merges onto.
+  let hud: HudLayout = SHIPPED_HUD;
+  const hudOwners = new Map<string, string[]>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const blueprintOwners = new Map<string, string[]>();
@@ -450,6 +469,19 @@ export async function applyMods(
       (sprites as Record<string, ImageBitmap>)[name] = bitmap;
       claim(spriteOwners, name, bundle.id);
     }
+    if (bundle.hud) {
+      const merged = mergeHud(hud, {
+        regions: bundle.hud.regions as Record<string, HudRegionDef> | undefined,
+        elements: bundle.hud.elements as HudElementDef[] | undefined,
+        events: bundle.hud.events as HudLayout["events"] | undefined,
+        scripts: bundle.hud.scripts,
+      });
+      hud = merged.layout;
+      // Claimed per element, region, moment and script file — each is a thing
+      // the player can see themselves losing on the MODS screen, and can fix by
+      // moving a row.
+      for (const id of merged.claimed) claim(hudOwners, id, bundle.id);
+    }
     for (const [subject, states] of Object.entries(bundle.clips ?? {})) {
       for (const [state, clip] of Object.entries(states)) {
         (clips[subject] ??= {})[state as ClipState] = clip as SpriteClip;
@@ -464,6 +496,7 @@ export async function applyMods(
   setSoundCatalog(sounds, soundKeys);
   setCueCatalog(sounds, cueKeys);
   setUiSoundCatalog(uiSounds);
+  setHudLayout(hud);
   // The recordings go in as bytes and are decoded by the browser's own audio
   // decoder. Warming here rather than on first play so the kill that starts a
   // modded run is heard: a decode takes milliseconds, but a frame is 16 of
@@ -538,6 +571,7 @@ export async function applyMods(
     ...contested("thought", thoughtOwners),
     ...contested("story item", storyItemOwners),
     ...contested("quest", questOwners),
+    ...contested("hud", hudOwners),
   ]);
   return stamps;
 }
@@ -581,6 +615,9 @@ export function restoreBaseDefs(sprites: Sprites): void {
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
   setCueCatalog(SHIPPED_SOUNDS, SHIPPED_CUE_KEYS);
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);
+  // …and the HUD, which is applied to a RUN like everything else here: a mod's
+  // dashboard must not still be on the screen of the next unmodded one.
+  restoreHudLayout();
   clearSamples();
   // …and the clips with the frames they named. Left behind, they would point
   // every call site at sprites that have just been deleted, which draws the

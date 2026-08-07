@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE SPRINT POOL — the shorter white sliver under the health bar.
+#
+# Its fill carries the `staminaFill` render-loop handle: the pool moves EVERY
+# tick while sprinting, and a 60fps bar is what makes the drain and the regain
+# read as one motion, so the loop writes this width straight to the DOM. The
+# binding here only seeds the mount; the next frame owns it.
+region: vitals
+order: 1
+kind: bar
+class: vital-bar vital-st
+bind: hud.staminaFrac
+fill:
+  class: vital-fill
+  ref: staminaFill

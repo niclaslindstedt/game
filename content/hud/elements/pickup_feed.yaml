@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE PICKUP FEED — what was just picked up, scrolling quietly up the side
+# opposite the powerup dock.
+region: docks
+order: 3
+kind: widget
+widget: pickupFeed
+visible: hud.fieldLive

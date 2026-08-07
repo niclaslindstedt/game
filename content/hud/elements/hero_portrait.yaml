@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE HERO'S BUST — the dressed paper doll, cropped to a face, wearing the
+# level badge. Pressing it raises the CHARACTER SHEET.
+#
+# A widget rather than an icon: the portrait is COMPOSED per frame from the
+# hero's worn kit by the paper-doll compositor the roster and the arrival scene
+# share, so what YAML owns here is where it sits, not how it is drawn.
+region: portrait
+order: 0
+kind: widget
+widget: heroPortrait
