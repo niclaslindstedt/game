@@ -4699,6 +4699,7 @@
     "drive.topSpeedMph": "number",
     "drive.wear": "frac",
     "drive.wearPercent": "number",
+    "drive.wearSettled": "frac",
     "hud.abilityCount": "number",
     "hud.ammoCap": "number",
     "hud.ammoCount": "number",
