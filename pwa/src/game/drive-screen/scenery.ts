@@ -24,7 +24,13 @@
 // gets the town, and the near verge gets nothing taller than the kerb the
 // engine already stands its furniture on.
 
-import { crowdEdges, roadBandEdges, DRIVE } from "@game/core";
+import {
+  crowdEdges,
+  isMastSlot,
+  laneCenter,
+  roadBandEdges,
+  DRIVE,
+} from "@game/core";
 
 /**
  * THE CROWD's bodies — the twenty people the welfare did not reach.
@@ -197,6 +203,105 @@ export function sceneryBetween(fromX: number, toX: number): SceneryProp[] {
     });
   }
   return props;
+}
+
+/**
+ * THE STREET LIGHTING — which of the kerb's lamp posts is a TALL MAST.
+ *
+ * IT IS NOT A SECOND ROW OF FURNITURE, and that is the whole design. Street
+ * lights belong at the kerb, and the kerb is inside the band the wagon can
+ * reach (`roadEdges`) — so a mast drawn there and simulated nowhere is exactly
+ * the lie this road already learned not to tell: the player hits it once,
+ * learns the street is paint, and stops reading the kerb at all. The engine
+ * already stands a collidable post at every kerb slot (`src/game/drive/
+ * street.ts`), on both sides, offset half a pitch. So every third one of those
+ * is simply DRAWN as a mast instead of as a yard light, and it collides,
+ * shears off its base and cartwheels down the road exactly as it always did.
+ * Nothing about the simulation changes; the column is the same column.
+ *
+ * The slot is recovered from the post's own x, because a `DriveProp` carries no
+ * slot number — and it is a pure function of position, so the masts land on the
+ * same stretches of road every run and on the way home as on the way out.
+ *
+ * A MAST SLOT IS THE ALIGNED ONE, which is what makes the recovery work at all:
+ * the sim drops the far row's usual half-pitch offset there so the two masts
+ * face each other across the carriageway (`street.ts`), so a post sitting
+ * exactly on a slot boundary is a mast on EITHER row, and one sitting half a
+ * pitch along is a yard light on the far one.
+ */
+/** How far across the pool of light reaches (world px). Centred on the lamp's
+ * own outermost lane, it covers that lane and most of the one beside it. */
+export const ROAD_LAMP_POOL_PX = 32;
+
+/**
+ * How far up the mast the lens burns (world px off the base) — read off the
+ * sprite, and the apex its cone is thrown from.
+ *
+ * IT HAS TO CLEAR ITS OWN POOL ON SCREEN, which is why these masts are as tall
+ * as they are. A billboard stands at full size while the GROUND foreshortens,
+ * so a lamp lighting the tarmac 17 px across the road throws its light only 13
+ * screen px — and the near row, whose light lands UP the screen from its own
+ * feet, had a head sitting below the patch it was supposed to be lighting. The
+ * cone came out as a sliver pointing the wrong way. Height is the whole fix.
+ */
+export const ROAD_LAMP_HEAD_PX = 46;
+
+/**
+ * THE TWO PICTURES OF ONE MAST. The far row throws its light TOWARD the eye, so
+ * you look up into a burning lens; the near row throws it away, so what shows
+ * is the back of the cowl. Not a mirror of one sprite — a mirrored head would
+ * put a lens on a lamp that is pointing away, which a night scene reads as
+ * wrong immediately.
+ */
+export const ROAD_LAMP_SPRITE = "road_lamp";
+export const ROAD_LAMP_NEAR_SPRITE = "road_lamp_near";
+
+/**
+ * WHERE THE LENS IS on whichever lamp stands here (world px off the base) — the
+ * height its glass comes out of when a car takes the post off its foot.
+ *
+ * The little yard light carries its lens near the top of a 15-px post; a mast
+ * carries it up a storey. One number for both would put a handful of glass
+ * hanging in the air beside a yard light, or dropping out of the middle of a
+ * mast's column.
+ */
+export function lampHeadLift(pos: { x: number; y: number }): number {
+  return mastAt(pos) ? ROAD_LAMP_HEAD_PX : 12;
+}
+
+/**
+ * HOW MUCH OF THE COLUMN STAYS BOLTED DOWN (sprite rows).
+ *
+ * A slip-base light shears LOW — that is the whole point of the base — so what
+ * is left is a stump rather than half a post. Four rows reads as a break at
+ * ground level on the yard light and on the mast alike, which is what makes the
+ * two pieces obviously one broken column instead of two objects.
+ */
+export const LAMP_STUB_PX = 4;
+
+/**
+ * Is this kerb post one of the tall ones — and if so, what does it light?
+ *
+ * `null` for the yard lights, which is most of them. The pool goes on the
+ * lamp's OWN OUTERMOST LANE (lane 0 for the far row, the last lane for the
+ * near one), so the two rows between them light the two edges of the road
+ * rather than both crowding the centre line.
+ */
+export function mastAt(pos: {
+  x: number;
+  y: number;
+}): { poolY: number; sprite: string } | null {
+  const { pitchPx } = DRIVE.street;
+  const slot = Math.round(pos.x / pitchPx);
+  // Half a pitch off a boundary is the far row's ordinary interleaved yard
+  // light, never a mast.
+  if (Math.abs(pos.x - slot * pitchPx) > 1) return null;
+  if (!isMastSlot(slot)) return null;
+  const far = pos.y < 0;
+  return {
+    poolY: laneCenter(far ? 0 : DRIVE.laneCount - 1),
+    sprite: far ? ROAD_LAMP_SPRITE : ROAD_LAMP_NEAR_SPRITE,
+  };
 }
 
 /** The tarmac's own edges — the engine's (`roadBandEdges`, because the kerb's

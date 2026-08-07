@@ -134,6 +134,8 @@ function stagerFor(
         speed: direction * DRIVE.trafficSpeedPx.min,
         slew: 0,
         variant: 0,
+        noseOut: false,
+        tailOut: false,
         faceLeft: direction === -1,
         hitCooldownMs: 0,
       });

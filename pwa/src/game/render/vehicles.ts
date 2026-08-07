@@ -542,20 +542,38 @@ export function drawCarAssembly(
  * THE LAMPS ARE BOLTED TO THE BODY, so the cones are laid out in the car's own
  * screen space off `sx` — whole pixels along the drawn body, like the wheel
  * arches — and `CarVehicle.heading` is deliberately nowhere in here. The picture
- * never turns (one side-profile assembly, nothing mirrors it), so a cone that
- * followed the steered heading would swing across a car that had not moved,
- * which is a swivelling cornering lamp rather than a headlight. The night pass's
- * beam obeys the same rule and for the same reason — render/night.ts, HEADLIGHT.
+ * never turns, so a cone that followed the steered heading would swing across a
+ * car that had not moved, which is a swivelling cornering lamp rather than a
+ * headlight. The night pass's beam obeys the same rule and for the same reason
+ * — render/night.ts, HEADLIGHT.
+ *
+ * `faceLeft` is the ONE thing that mirrors, and it is not the heading: it is
+ * which way the ART is drawn. Oncoming traffic on the drive's road wears the
+ * same 48x26 side profile flipped (`DriveTraffic.faceLeft`), so its lamps are at
+ * the other end of the same body — and a beam that did not flip with them lit
+ * the road out of the boot.
+ *
+ * EXPORTED because the drive's traffic is lit by this and nothing else. Every
+ * car in this game throws the same light, which is the rule the garage and the
+ * minigame already share (docs/rendering.md); a second cone written for the
+ * traffic would be a second thing to keep in step with it.
  */
-function drawLightCones(
+export function drawLightCones(
   ctx: CanvasRenderingContext2D,
   at: { x: number; y: number },
   camera: Camera,
   timeMs: number,
   rearDrop = 0,
   frontDrop = 0,
+  faceLeft = false,
+  /** Lamps the road has already taken out — the END of the body, not the side
+   * of the screen (`DriveTraffic.noseOut`). A car with a dead nose still shows
+   * its tail lights, which is exactly what makes a rear-ended one read. */
+  noseOut = false,
+  tailOut = false,
 ): void {
   const flicker = 0.88 + 0.12 * (Math.floor(timeMs / 90) % 2);
+  const face = faceLeft ? -1 : 1;
   billboard(ctx, at.x, at.y, camera.x, camera.y, () => {
     const sx = at.x - camera.x;
     // The lamps sit around row 12.5 of the 26-high canvas; the base anchor
@@ -563,33 +581,36 @@ function drawLightCones(
     // end riding its own axle's drop, so a nose-down wreck's beam dips.
     const lampY = at.y - camera.y - 11;
     // The HEADLIGHT cone: out of the nose, widening as it goes.
-    const noseX = sx + 23;
+    const noseX = sx + 23 * face;
     const noseDip = Math.round(frontDrop);
     const tailDip = Math.round(rearDrop);
-    const beam = ctx.createLinearGradient(noseX, 0, noseX + 42, 0);
-    beam.addColorStop(0, `rgba(255, 242, 180, ${0.38 * flicker})`);
-    beam.addColorStop(0.6, `rgba(255, 232, 150, ${0.16 * flicker})`);
-    beam.addColorStop(1, "rgba(255, 232, 150, 0)");
-    ctx.fillStyle = beam;
-    ctx.beginPath();
-    ctx.moveTo(noseX, lampY + noseDip - 2);
-    // A pitched nose rakes the beam into the ground ahead of the car.
-    ctx.lineTo(noseX + 42, lampY - 10 + noseDip * 3);
-    ctx.lineTo(noseX + 42, lampY + 14 + noseDip * 3);
-    ctx.lineTo(noseX, lampY + noseDip + 4);
-    ctx.closePath();
-    ctx.fill();
+    if (!noseOut) {
+      const beam = ctx.createLinearGradient(noseX, 0, noseX + 42 * face, 0);
+      beam.addColorStop(0, `rgba(255, 242, 180, ${0.38 * flicker})`);
+      beam.addColorStop(0.6, `rgba(255, 232, 150, ${0.16 * flicker})`);
+      beam.addColorStop(1, "rgba(255, 232, 150, 0)");
+      ctx.fillStyle = beam;
+      ctx.beginPath();
+      ctx.moveTo(noseX, lampY + noseDip - 2);
+      // A pitched nose rakes the beam into the ground ahead of the car.
+      ctx.lineTo(noseX + 42 * face, lampY - 10 + noseDip * 3);
+      ctx.lineTo(noseX + 42 * face, lampY + 14 + noseDip * 3);
+      ctx.lineTo(noseX, lampY + noseDip + 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+    if (tailOut) return;
     // The TAIL glow: a short red fan behind the car, dimmer and stubbier —
     // brake lamps, not a second pair of headlights.
-    const tailX = sx - 22;
-    const glow = ctx.createLinearGradient(tailX, 0, tailX - 15, 0);
+    const tailX = sx - 22 * face;
+    const glow = ctx.createLinearGradient(tailX, 0, tailX - 15 * face, 0);
     glow.addColorStop(0, `rgba(255, 74, 58, ${0.32 * flicker})`);
     glow.addColorStop(1, "rgba(255, 74, 58, 0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.moveTo(tailX, lampY + tailDip - 2);
-    ctx.lineTo(tailX - 15, lampY + tailDip - 6);
-    ctx.lineTo(tailX - 15, lampY + tailDip + 9);
+    ctx.lineTo(tailX - 15 * face, lampY + tailDip - 6);
+    ctx.lineTo(tailX - 15 * face, lampY + tailDip + 9);
     ctx.lineTo(tailX, lampY + tailDip + 4);
     ctx.closePath();
     ctx.fill();

@@ -221,6 +221,8 @@ function plantCar(
     speed: (towardHero ? -dir : dir) * pace,
     slew: 0,
     variant: variant % TRAFFIC_VARIANTS,
+    noseOut: false,
+    tailOut: false,
     faceLeft: towardHero ? dir === 1 : dir === -1,
     hitCooldownMs: 0,
   });

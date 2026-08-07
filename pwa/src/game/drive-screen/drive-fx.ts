@@ -46,7 +46,13 @@ type DriveFxKind =
    * dumps a wide pale mass at road level that is gone in half of one. Sharing
    * the draw would have meant one of them looking wrong for the whole of a leg.
    */
-  | "tyresmoke";
+  | "tyresmoke"
+  /**
+   * A STREET LIGHT'S LENS GOING — the one burst on this road thrown from up in
+   * the AIR rather than off the tarmac, and the only one that was LIT a moment
+   * before it existed.
+   */
+  | "glass";
 
 /** One live effect on the road. */
 type DriveFx = {
@@ -84,6 +90,16 @@ type DriveFx = {
    * `-1` written into the draw.
    */
   drift?: number;
+  /**
+   * HOW FAR OFF THE ROAD IT WAS THROWN FROM (world px).
+   *
+   * Everything else here happens at bumper height, which is near enough to the
+   * ground that nothing had to say so. A lamp's lens is up a column — four feet
+   * for a yard light and the better part of a storey for a street-lighting mast
+   * — and glass raised at road level reads as something falling out from under
+   * the car rather than as a light being taken off its post.
+   */
+  lift?: number;
 };
 
 /** The road's live effects, its shake and its flash — one object the screen
@@ -201,6 +217,26 @@ export function driveTyreSmoke(
   push(state, "tyresmoke", x, y, nowMs, 620, force, false, -direction);
 }
 
+/**
+ * A STREET LIGHT HAS BEEN TAKEN OFF ITS POST: its lens, in pieces, out of the
+ * air where the lamp head was.
+ *
+ * The force is not the collision's. A lamp is glass on the end of a lever, and
+ * what shatters it is the column whipping over rather than the joules the
+ * bumper spent — so a light clipped at forty comes apart much like one hit at a
+ * hundred, and tying the burst to the impact made a slow nudge produce three
+ * apologetic specks.
+ */
+export function driveLampGlass(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  lift: number,
+  nowMs: number,
+): void {
+  push(state, "glass", x, y, nowMs, 1100, 0.85, false, 0, lift);
+}
+
 /** Everything the road throws away when the leg restarts. */
 export function clearDriveFx(state: DriveFxState): void {
   state.fx.length = 0;
@@ -218,6 +254,7 @@ function push(
   force: number,
   follow = false,
   drift = 0,
+  lift = 0,
 ): void {
   state.fx.push({
     kind,
@@ -228,6 +265,7 @@ function push(
     force,
     follow,
     drift,
+    lift,
     // The seed is the spawn POSITION rather than a draw — a `Math.random` here
     // would be fine (it is spawn-time, not per-frame), but deriving it means an
     // identical road replays with an identical picture, which is what makes a
@@ -324,6 +362,7 @@ export function drawDriveFx(
     else if (fx.kind === "grit") drawGrit(ctx, fx, t, sx, sy);
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);
     else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
+    else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy);
     else drawSmoke(ctx, fx, t, sx, sy);
   }
   // THE BLOOM GOES LAST AND GOES ADDITIVE: a heavy hit whites the frame out
@@ -394,6 +433,51 @@ function drawGrit(
     const size = scatter(fx.seed, i, 9) > 0.6 ? 2 : 1;
     ctx.fillStyle = `rgba(206, 198, 178, ${((1 - t) * 0.55).toFixed(3)})`;
     ctx.fillRect(Math.round(px), Math.round(py), size, size);
+  }
+  ctx.restore();
+}
+
+/**
+ * A LAMP'S LENS, COMING APART IN THE AIR.
+ *
+ * Three things separate it from the panel shards below, and each is the
+ * difference between glass and steel. It starts UP (`fx.lift`) and falls the
+ * whole way down under gravity rather than lobbing, so the eye follows it off
+ * the post. It is PALE and lit — the pieces were burning a moment ago, so they
+ * open warm and cool to a cold glitter as they drop, which is also the only way
+ * a fragment reads at all against night tarmac. And it TWINKLES: each piece
+ * catches the light on its own cycle, because a tumbling shard is only bright
+ * when a face happens to point at you, and a field of steady dots reads as
+ * confetti.
+ */
+function drawGlass(
+  ctx: CanvasRenderingContext2D,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const count = Math.round(14 + fx.force * 18);
+  const lift = fx.lift ?? 0;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < count; i++) {
+    const angle = scatter(fx.seed, i, 11) * Math.PI * 2;
+    const reach = (4 + scatter(fx.seed, i, 12) * 22) * (0.4 + fx.force);
+    const px = sx + Math.cos(angle) * reach * t;
+    // Out of the head, then down: a small upward kick spent almost at once, and
+    // the whole drop from the lens to the road underneath it.
+    const kick = 5 + scatter(fx.seed, i, 13) * 7;
+    const fall = lift - kick * t * 2 + (lift + 20) * t * t;
+    const py =
+      sy + Math.sin(angle) * reach * t * 0.4 - Math.max(0, lift - fall);
+    const spin = Math.sin(t * (7 + scatter(fx.seed, i, 14) * 9) * Math.PI);
+    const glint = Math.max(0, spin) * (1 - t * 0.7);
+    const warm = Math.max(0, 1 - t * 2.4);
+    ctx.fillStyle = `rgba(255, ${Math.round(240 - warm * 24)}, ${Math.round(
+      214 + warm * 20,
+    )}, ${(glint * 0.85).toFixed(3)})`;
+    ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
   }
   ctx.restore();
 }

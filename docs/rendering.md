@@ -613,6 +613,135 @@ its counter, the ship's work lamp) with real dark between them, plus a small one
 every hero in play carries — the concession that makes a dark venue playable
 without either brightening the night or inventing a flashlight item.
 
+## The road, and the night over it
+
+The drive minigame draws through the same projection as everything else
+(`drive-screen/render.ts` reuses `drawWorldSprite`, which is why the rake, the
+billboarding and the pixel seating all come free), but it frames itself
+differently from a run, and it is the one screen in the game with a **sky**.
+
+**The camera hangs off the BOTTOM of the frame, not the middle.** The ground a
+drive shows is a fixed band of world — the far pavement, four lanes and the near
+pavement come to 167 px whatever the screen is — while the frame is not. A
+centred road therefore handed every spare pixel to the NEAR verge, which has
+nothing on it by design (the town stands on the far side, so a row of houses
+this side would hide the lane the crowd walks into); on a phone held upright
+that was more than half the picture, a road across the top and an empty field
+under it. `driveCamera` pins the near kerb a fixed margin above the bottom edge
+instead, so a taller screen buys more SKY rather than more grass. Two traps live
+in that one line: the drop must be measured in PROJECTED px (`unprojectY`,
+exactly as `computeCamera` does it) because the view is taller in world units
+than the canvas is in pixels, and the forward LEAD is a share of the frame's
+width rather than a distance, or "the trailing third" stops being the trailing
+third the moment the frame changes shape.
+
+**The sky is the one pass that is NOT in world space** (`drive-screen/sky.ts`).
+It sits at infinity, so running it through a transform that foreshortens
+distance would squash the moon toward the horizon as though it were lying in a
+field. It is painted first, in plain canvas px, and the projected world — the
+strip of verge behind the frontages, the town's roofline, the gaps between the
+houses — is drawn over it. The ground stops at a `skylineY` set back behind the
+building line; before this it ran 400 px past the road on both sides, which on
+any screen meant "everywhere", and the night was a field of grass.
+
+**The depth is PARALLAX, and the fractions are a height ordering.** Five bands
+scroll at five shares of the car's own travel — the moon barely at all, then the
+stars, then a high wisp, mid puffs, and a low bank that slides past fastest
+because it hangs nearest. Reverse any pair and the sky reads as a broken texture
+rather than as distance. Two rules keep it honest: every cloud is DERIVED from
+the cell it sits in (the same hash the town is dressed from, so the sky costs no
+state, no rng draw, and a restart puts the same weather back over the stretch of
+road that just killed you), and each band carries a slow drift on the render
+clock as well — parallax alone freezes the sky when the car stops, which is
+exactly when the player is looking at it. A band is a GRID rather than a line,
+its row count derived from its own slice, because the sky is a strip on a phone
+held sideways and most of the picture on one held upright.
+
+The stars are the one thing up there that is not a sprite, and deliberately: a
+star IS one pixel, so the whole drawing is where and how bright. The shipped
+`stars_a`/`stars_b` tiles are cutscene-scale and laid a wallpaper of fat white
+crosses over the road's sky; a tile also repeats, which across a 422-px frame is
+seven copies of one constellation. They thin and dim toward the horizon, which
+is the depth cue they have instead of parallax.
+
+**Between the weather and the town stand three ridges of open country**, drawn
+on the bottom edge of the sky band and each nearer than every cloud — which is
+where the parallax ladder steps up toward the road. Without them the frontages
+were cut out against stars, and a street on the edge of a place read as a stage
+flat. Their crests are DERIVED like everything else up there (smooth value
+noise between hashed control points, cosine-eased — linear interpolation gives
+the land creases, and farmland does not have corners in it), with hedgerows
+sitting on top as bumps, because at six canvas px a tree IS a bump and a field
+without any is a dune. Each layer is one shape filled twice, a pixel apart, so
+the sliver left showing along the top is the moonlight on the crest — cheaper
+and crisper than a stroke, which straddles the line and comes out half-lit on a
+grid this coarse.
+
+Their LIFT is in canvas px and deliberately not a share of the sky, because the
+measurement that matters is against the town's roofline — a fixed 19 px above
+the horizon whatever the screen is, since the houses are 30-px billboards
+standing 11 px of projected ground behind the kerb. A ridge lifted less than
+that is only ever seen through the alleys between frontages, which is the right
+answer for the nearest one and the wrong answer for all of them.
+
+**The street lighting is the one thing on this road that lights the road**, and
+it is not a second row of furniture: every third of the kerb posts the ENGINE
+already stands (`src/game/drive/street.ts`) is simply DRAWN as a tall mast
+instead of as a yard light, throwing a cone down over its own carriageway and
+laying a warm pool on the tarmac. Nothing about the simulation changes — the
+column is the same column, at the same radius, and it still shears off its base
+and cartwheels down the road. That is the point: street lights belong at the
+KERB, the kerb is inside the band the wagon can reach, and a mast drawn there
+and simulated nowhere is exactly the lie this road already learned not to tell.
+`mastAt` recovers the slot from the post's own x, so the masts land on the same
+stretches every run. Four things about them are worth carrying:
+
+- **The pool is drawn in the PROJECTED space and the cone in the mast's own
+  BILLBOARD.** A circle in the first comes out as the ellipse a downward lamp
+  actually casts; the second is 1:1 screen px, so the pool it lands in has to be
+  converted with `projectY` off the mast's feet — dropping the raw world offset
+  in put every beam short of its own light by exactly the pitch.
+- **The beam is sorted where the light LANDS, not where the lamp stands.** Light
+  travels from the head to the tarmac, so the lit volume sits between the two —
+  in front of its own post for the far row and BEHIND it for the near one.
+  Sorted with the post instead, the near row painted its cone over every car it
+  was supposed to be lighting.
+- **The two rows are two SPRITES, not a mirror.** The far row throws its light
+  toward the eye, so you look up into a burning lens (`road_lamp`); the near row
+  throws it away, so what shows is the dark back of the cowl with the glow
+  escaping round its edge (`road_lamp_near`). A mirrored head would put a lens
+  on a lamp that is pointing away, which a night scene reads as wrong at once.
+- **The masts are as tall as they are for a geometric reason.** A billboard
+  stands at full size while the ground foreshortens, so a lamp lighting tarmac
+  17 px across the road throws its light only 13 screen px. The near row's light
+  lands up-screen from its own feet, and at any modest height its head sat below
+  the patch it was lighting — the cone came out as a sliver pointing the wrong
+  way. Height is the whole fix, and it is why a post-top head beats a cobra head
+  here: an arm reaching out over the carriageway reaches toward or away from the
+  eye, which a billboard cannot show at all.
+
+**A lamp the car takes out says so three ways.** It goes DARK — the beam and the
+pool are gated on `felled`, and both rows then wear the head with no lens in it.
+It comes apart in TWO PIECES: a slip-base column shears at its foot, so the
+stump stays bolted where it was (`DriveProp.stub`, minted by `fellLamp` — a
+felled post's own `pos` is the flying half's and is moving by the next tick,
+so there is no way back to the foot from it) and the rest cartwheels away with
+its bottom rows cropped off. And its LENS goes: a `glass` burst thrown from the
+lamp head rather than off the tarmac, which is the only effect on this road that
+carries a `lift`. Its force is not the collision's — a lamp is glass on the end
+of a lever, so what shatters it is the column whipping over rather than the
+joules the bumper spent, and tying the burst to the impact made a slow nudge
+produce three apologetic specks.
+
+**The other traffic runs with its lights on**, through the hero's own
+`drawLightCones` rather than a second implementation — every car in this game
+throws the same light, the rule the garage and the minigame already share. Two
+things fall out of it: `faceLeft` mirrors the lamps with the body (a beam that
+did not flip lit the road out of an oncoming car's boot), and only
+`DriveState.traffic` gets them. The cars somebody left at the kerb are
+`DriveState.props` and stay dark, which is most of what tells the two apart at a
+glance on a road where both wear the same ten sprites.
+
 ## Mobile-first, landscape — and the scale tiers
 
 **Mobile-first, landscape.** The reference device is a phone held

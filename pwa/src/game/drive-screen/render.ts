@@ -32,8 +32,14 @@ import {
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "../render/plane.ts";
 import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
-import { applyWorldProjection, billboard } from "../render/tilt.ts";
-import { drawCarAssembly } from "../render/vehicles.ts";
+import {
+  applyWorldProjection,
+  billboard,
+  projectX,
+  projectY,
+  unprojectY,
+} from "../render/tilt.ts";
+import { drawCarAssembly, drawLightCones } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -51,15 +57,24 @@ import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
   LAMP_SPRITE,
+  LAMP_STUB_PX,
+  mastAt,
   roadBands,
+  ROAD_LAMP_NEAR_SPRITE,
+  ROAD_LAMP_HEAD_PX,
+  ROAD_LAMP_POOL_PX,
   sceneryBetween,
   TRAFFIC_SPRITES,
 } from "./scenery.ts";
+import { drawDriveSky } from "./sky.ts";
 
-/** The night the whole first trip happens on — the sky behind the town. */
-const SKY = "#141826";
 /** The ground either side of the tarmac. */
 const VERGE = "#2b3327";
+/** …and the same ground going away from the eye, at the far edge of what can be
+ * seen of it. A flat verge running right up to the skyline reads as a wall of
+ * grass standing behind the town; darkening the last stretch of it is what
+ * turns the same fill into ground receding. */
+const VERGE_FAR = "#232a20";
 /** The pavement each side of the road, and the kerb that steps up to it. A
  * touch warmer and lighter than the tarmac so the eye reads a different surface
  * at a glance rather than a wider road. */
@@ -75,9 +90,29 @@ const PAINT = "#c9c4a8";
  * stand on it (`crowdEdges`). */
 const KERB_DEPTH = 2;
 
-/** How far ahead of the car the camera sits (world px) — the car rides in the
- * trailing third of the picture so the player can read the crowd coming. */
-const CAMERA_LEAD = 96;
+/**
+ * How far ahead of the car the camera sits, as a share of the frame's width —
+ * the car rides in the trailing third of the picture so the player can read the
+ * crowd coming.
+ *
+ * A SHARE rather than a distance, because "the trailing third" is a statement
+ * about the PICTURE. Held as a flat 96 world px it was the trailing third of a
+ * phone on its side and very nearly the left edge of one held upright, where
+ * the frame is less than half as wide — the wagon drove with its nose in the
+ * bezel.
+ */
+const CAMERA_LEAD_FRAC = 0.23;
+
+/** How much ground is kept below the near pavement (world px) — the strip of
+ * verge between the kerb and the bottom of the frame. */
+const NEAR_MARGIN = 14;
+
+/** Where the ground stops and the sky starts, measured back from the far
+ * pavement (world px). The town's frontages stand 11 px back from that same
+ * edge (`HOUSE_SETBACK`), so this leaves a strip of verge visible BEHIND the
+ * houses and through the alleys between them — without it the roofline would be
+ * the horizon, and the gaps in the row would show sky at street level. */
+const SKYLINE_SETBACK = 26;
 
 /** How high off the road something has to be to be OVER the car rather than
  * behind it (world px). The wagon's own assembly is 26 px tall on a 16-px body
@@ -86,7 +121,33 @@ const CAMERA_LEAD = 96;
  * sent it. */
 const ROOF_PX = 20;
 
-/** Where the camera stands for a drive. */
+/**
+ * Where the camera stands for a drive.
+ *
+ * IT IS HUNG OFF THE BOTTOM OF THE FRAME, NOT THE MIDDLE, and both halves of
+ * that are load-bearing.
+ *
+ * THE BOTTOM, because the ground is a FIXED band of world — the kerb, the four
+ * lanes and the far pavement are 167 px however big the screen is — while the
+ * frame is not. Centring the road handed every spare pixel to the near verge,
+ * which has nothing on it by design (the town stands on the FAR side, so a row
+ * of houses this side would hide the lane the crowd is walking into). On a
+ * phone held upright that was more than half the picture: a road across the top
+ * and an empty field under it. Pinning the near kerb near the bottom edge sends
+ * the spare room UP instead, where the sky is (`sky.ts`), and a taller screen
+ * now buys more night rather than more grass.
+ *
+ * AND IN PROJECTED PX, because the view is TALLER in world units than the
+ * canvas is in pixels — that is what the pitch does (`render/tilt.ts`). The old
+ * `-viewH / 2` measured the drop in canvas px and used it as world px, so the
+ * road sat at 37% of the frame rather than where it was asked to; `unprojectY`
+ * is the same conversion the run's own camera makes (`computeCamera`).
+ *
+ * The y is pinned to the ROAD rather than to the car, exactly as it always was:
+ * a camera that tracked the car across the lanes would make changing lanes look
+ * like the WORLD moving, which is the one thing that must not happen in a lane
+ * game.
+ */
 export function driveCamera(
   drive: DriveState,
   viewW: number,
@@ -94,12 +155,14 @@ export function driveCamera(
 ): Camera {
   const dir = drive.params.direction;
   return {
-    x: drive.car.pos.x + dir * CAMERA_LEAD - viewW / 2,
-    // Pinned to the road's middle rather than to the car: a camera that tracked
-    // the car across the lanes would make changing lanes look like the WORLD
-    // moving, which is the one thing that must not happen in a lane game.
-    y: -viewH / 2,
+    x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
+    y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH),
   };
+}
+
+/** The world y at which the ground gives out and the sky takes over. */
+function skylineY(): number {
+  return crowdEdges().top - SKYLINE_SETBACK;
 }
 
 /**
@@ -146,8 +209,15 @@ export function drawDrive(
   // grass, and the far row floated above the kerb by the same amount. One
   // `save`/`projection`/`restore` around the lot, and the road and the things
   // on it cannot disagree.
-  ctx.fillStyle = SKY;
-  ctx.fillRect(0, 0, viewW, viewH);
+  //
+  // …EXCEPT THE SKY, which is drawn BEFORE the projection is on and is the one
+  // pass in this file that stays in canvas px (`sky.ts` — a moon run through a
+  // transform that foreshortens distance would be squashed toward the horizon
+  // as though it were lying in a field). It is painted first because it is
+  // behind everything: the town's roofline, the gaps between the frontages and
+  // the strip of verge behind them are all drawn over it.
+  const horizon = projectY(0, skylineY() - camera.y);
+  drawDriveSky(ctx, sprites, camera.x, viewW, horizon, timeMs);
   ctx.save();
   applyWorldProjection(ctx);
   const left = camera.x - 64;
@@ -156,7 +226,11 @@ export function drawDrive(
     ctx.fillStyle = fill;
     ctx.fillRect(left - camera.x, top - camera.y, right - left, bottom - top);
   };
-  band(bands.top - 400, bands.bottom + 400, VERGE);
+  // THE GROUND STOPS AT THE SKYLINE. It used to run 400 px past the road on
+  // both sides, which on any screen meant "everywhere" — so the sky colour
+  // underneath it was never once visible and the night was a field of grass.
+  band(skylineY(), bands.bottom + 400, VERGE);
+  band(skylineY(), skylineY() + SKYLINE_SETBACK * 0.6, VERGE_FAR);
   // THE PAVEMENTS, drawn exactly as wide as the sim lets a person stand
   // (`crowdEdges` — `DRIVE.pavementPx`), so somebody waiting at a crossing is
   // standing ON the paving rather than hovering over its inside edge.
@@ -223,6 +297,26 @@ export function drawDrive(
   // splash on top of a skid is the order those two things happened in.
   if (skids) drawSkidMarks(ctx, skids, camera, viewW);
   if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW);
+
+  // ── AND WHAT THE STREET LIGHTING PUTS ON IT ───────────────────────────────
+  // The pools go down LAST of everything lying on the road, because light falls
+  // ON the paint and on the mess rather than under it — a pool drawn before the
+  // blood is a pool with the blood painted over it, which reads as a wet patch.
+  // They are drawn in the PROJECTED space with the rest of the ground, so a
+  // circle here comes out as the ellipse a downward lamp actually casts; the
+  // masts themselves stand up out of the y-sorted pass below.
+  for (const prop of drive.props) {
+    if (prop.kind !== "lamp_post" || prop.felled) continue;
+    const mast = mastAt(prop.pos);
+    if (!mast) continue;
+    ctx.save();
+    ctx.translate(prop.pos.x - camera.x, mast.poolY - camera.y);
+    ctx.fillStyle = lampPool(ctx);
+    ctx.beginPath();
+    ctx.arc(0, 0, ROAD_LAMP_POOL_PX, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────
   // One list, one sort, one pass. A drive holds four kinds of standing thing
@@ -295,19 +389,79 @@ export function drawDrive(
       if (name) put(name, prop.pos.x, prop.pos.y);
       continue;
     }
+    // A STANDING POST IS ONE OF TWO PICTURES OF THE SAME COLUMN: most are the
+    // little yard light, every third is a street-lighting mast that actually
+    // throws light on the tarmac (`mastAt`). The cone is drawn WITH the mast
+    // rather than in a pass of its own — a beam is part of the lamp, and one
+    // sorted separately would be thrown by a post the picture had already
+    // covered up.
+    const mast = prop.felled ? null : mastAt(prop.pos);
+    if (mast) {
+      // THE BEAM IS SORTED WHERE THE LIGHT LANDS, not where the lamp stands,
+      // and that is the whole of getting the near row right. Light travels from
+      // the head to the tarmac, so the lit volume sits BETWEEN the two — which
+      // for the far row is in front of its own post and for the near row is
+      // BEHIND it. Sorted with the post instead, the near row painted its cone
+      // over every car it was supposed to be lighting.
+      drawn.push({
+        y: mast.poolY,
+        draw: () => drawLampBeam(ctx, prop.pos, mast.poolY, camera),
+      });
+      put(mast.sprite, prop.pos.x, prop.pos.y);
+      continue;
+    }
     if (!prop.felled) {
       put(LAMP_SPRITE, prop.pos.x, prop.pos.y);
       continue;
     }
-    const sprite = spriteByName(sprites, LAMP_SPRITE);
+    // A FELLED post has BROKEN, and the picture has to say so in three ways.
+    //
+    // It is DARK. Whatever it was lighting a moment ago, the lens is on the
+    // road now — so both rows wear the head with no lens in it, and the beam
+    // and the pool above are already gone (they are gated on `felled`).
+    //
+    // It is in TWO PIECES. A slip-base column shears at its foot, so the stump
+    // stays bolted to the pavement where it always was (`prop.stub`, minted by
+    // `fellLamp`) and the rest of the column goes down the road WITHOUT it —
+    // the flying half is drawn with its own bottom rows cropped away, so the
+    // two together are one broken post rather than a whole one plus a spare.
+    //
+    // And it TURNS ABOUT ITS BREAK, which is where it broke: a post pivoting
+    // around its own middle reads as a spinning stick rather than as something
+    // that was bolted to the pavement a moment ago.
+    const sprite = spriteByName(
+      sprites,
+      mastAt(prop.pos) ? ROAD_LAMP_NEAR_SPRITE : LAMP_SPRITE,
+    );
     if (!sprite) continue;
+    const stump = prop.stub;
+    if (stump) {
+      const foot = spriteByName(sprites, LAMP_SPRITE);
+      if (foot) {
+        drawn.push({
+          y: stump.y,
+          draw: () =>
+            billboard(ctx, stump.x, stump.y, camera.x, camera.y, () => {
+              ctx.drawImage(
+                foot,
+                0,
+                foot.height - LAMP_STUB_PX,
+                foot.width,
+                LAMP_STUB_PX,
+                seatX(stump.x, camera.x) - Math.round(foot.width / 2),
+                seatY(stump.y, camera.y) - Math.round(LAMP_STUB_PX - 2),
+                foot.width,
+                LAMP_STUB_PX,
+              );
+            }),
+        });
+      }
+    }
+    const flying = sprite.height - LAMP_STUB_PX;
     drawn.push({
       y: prop.pos.y,
       draw: () =>
         billboard(ctx, prop.pos.x, prop.pos.y, camera.x, camera.y, () => {
-          // Turned about its FOOT, which is where it broke: a post pivoting
-          // around its own middle reads as a spinning stick rather than as
-          // something that was bolted to the pavement a moment ago.
           const cx = seatX(prop.pos.x, camera.x);
           const cy = seatY(prop.pos.y - prop.z, camera.y);
           ctx.save();
@@ -315,16 +469,46 @@ export function drawDrive(
           ctx.rotate(prop.angle);
           ctx.drawImage(
             sprite,
+            0,
+            0,
+            sprite.width,
+            flying,
             -Math.round(sprite.width / 2),
-            -Math.round(sprite.height - 2),
+            -Math.round(flying - 2),
+            sprite.width,
+            flying,
           );
           ctx.restore();
         }),
     });
   }
+  // THE OTHER TRAFFIC, WITH ITS LIGHTS ON. Everything in this list is a car
+  // that is RUNNING — the ones somebody left at the kerb are `drive.props` and
+  // are dark, which is most of what tells the two apart at a glance on a road
+  // where both are the same ten sprites. The cones are the hero's own
+  // (`render/vehicles.ts` → `drawLightCones`), mirrored by the same `faceLeft`
+  // the body is, so an oncoming car lights the road ahead of it rather than out
+  // of its boot. They are pushed BEFORE the body at the same y, so a car's own
+  // beam never paints over the car in front of it.
   for (const other of drive.traffic) {
     const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];
-    if (name) put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
+    if (!name) continue;
+    drawn.push({
+      y: other.pos.y - 0.001,
+      draw: () =>
+        drawLightCones(
+          ctx,
+          other.pos,
+          camera,
+          timeMs,
+          0,
+          0,
+          other.faceLeft,
+          other.noseOut,
+          other.tailOut,
+        ),
+    });
+    put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
   }
   // WHAT IS LEFT OF THE ONES HE HAS ALREADY MET — halves, whole bodies and
   // chunks, each at its OWN place on the road, y-sorted in with everything else
@@ -458,4 +642,92 @@ export function drawDrive(
       );
     }
   }
+}
+
+/**
+ * THE POOL a street lamp lays on the tarmac, cached and drawn under a
+ * translate.
+ *
+ * Built once rather than once per lamp per frame: a `createRadialGradient` at
+ * each mast's own coordinates is three fresh gradient objects a frame for the
+ * whole length of a drive, and the shape is the same every time — only the
+ * place changes, which is what the translate is for.
+ */
+let poolCache: CanvasGradient | null = null;
+
+/** …and the BEAM, cached per reach. There are exactly two shapes on this road —
+ * the far row's and the near row's — so keying on the reach is keying on which
+ * side of the street a lamp is standing, and the gradient is built in the cone's
+ * own space so the same one serves every lamp in that row. */
+const beamCache = new Map<number, CanvasGradient>();
+
+function lampBeam(
+  ctx: CanvasRenderingContext2D,
+  reach: number,
+): CanvasGradient {
+  const held = beamCache.get(reach);
+  if (held) return held;
+  const beam = ctx.createLinearGradient(
+    0,
+    -ROAD_LAMP_HEAD_PX,
+    projectX(0, reach),
+    projectY(0, reach),
+  );
+  beam.addColorStop(0, "rgba(255, 242, 190, 0.20)");
+  beam.addColorStop(0.7, "rgba(255, 230, 155, 0.07)");
+  beam.addColorStop(1, "rgba(255, 226, 150, 0)");
+  beamCache.set(reach, beam);
+  return beam;
+}
+
+function lampPool(ctx: CanvasRenderingContext2D): CanvasGradient {
+  if (poolCache) return poolCache;
+  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, ROAD_LAMP_POOL_PX);
+  pool.addColorStop(0, "rgba(255, 238, 186, 0.22)");
+  pool.addColorStop(0.5, "rgba(255, 226, 150, 0.11)");
+  pool.addColorStop(1, "rgba(255, 226, 150, 0)");
+  poolCache = pool;
+  return pool;
+}
+
+/**
+ * THE CONE ONE MAST THROWS — the light, not the lamp. The post itself goes
+ * through `put` like any other body on this road; only the beam is drawn here,
+ * because it is sorted somewhere else (see the call site).
+ *
+ * IT IS DRAWN IN THE MAST'S OWN BILLBOARD, which is 1:1 screen px, so the pool
+ * it lands in has to be CONVERTED rather than dropped in as a world coordinate:
+ * the ground foreshortens and the billboard does not. `projectY` off the mast's
+ * feet is that conversion — the same one the projection itself makes — and
+ * using the raw world offset instead put every beam short of the light it was
+ * supposed to be casting, by exactly the pitch.
+ *
+ * Light has no pixels, so the beam is a gradient rather than a sprite, and it
+ * speaks the same vocabulary as the car's own headlights (`render/vehicles.ts`
+ * → `drawLightCones`): a warm fill faded out along its length, laid over the
+ * picture rather than added to it. Additive blending was tried and blows the
+ * lane paint out to white the moment two beams overlap.
+ */
+function drawLampBeam(
+  ctx: CanvasRenderingContext2D,
+  at: { x: number; y: number },
+  poolY: number,
+  camera: Camera,
+): void {
+  billboard(ctx, at.x, at.y, camera.x, camera.y, () => {
+    const reach = poolY - at.y;
+    const baseX = projectX(0, reach);
+    const baseY = projectY(0, reach);
+    ctx.save();
+    ctx.translate(seatX(at.x, camera.x), seatY(at.y, camera.y));
+    ctx.fillStyle = lampBeam(ctx, reach);
+    ctx.beginPath();
+    ctx.moveTo(-2, -ROAD_LAMP_HEAD_PX);
+    ctx.lineTo(2, -ROAD_LAMP_HEAD_PX);
+    ctx.lineTo(baseX + ROAD_LAMP_POOL_PX * 0.8, baseY);
+    ctx.lineTo(baseX - ROAD_LAMP_POOL_PX * 0.8, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
 }

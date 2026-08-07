@@ -86,6 +86,8 @@ export function spawnTraffic(state: DriveState): void {
       variant: Math.floor(rng() * TRAFFIC_VARIANTS) % TRAFFIC_VARIANTS,
       // Every car is drawn nose-first down its own direction of travel.
       faceLeft: speed < 0,
+      noseOut: false,
+      tailOut: false,
       hitCooldownMs: 0,
     });
   }
@@ -140,6 +142,21 @@ export function stepTraffic(state: DriveState, dt: number): void {
  *   aside, which is neither dramatic nor survivable.
  *   IT SLOWS DOWN, because nobody carries on at the same speed after being hit.
  */
+/**
+ * PUT OUT THE LAMPS AT THE END THAT WAS HIT.
+ *
+ * `fromX` is where the blow came from, and the whole of the reasoning is that a
+ * car's nose is not always on its right: the road runs both ways and an
+ * oncoming body is drawn flipped. So the end struck is worked out from the side
+ * the hit landed on AND the way the car is facing, never from the side alone —
+ * which lit the wrong lamp for exactly half the traffic on the road.
+ */
+export function breakTrafficLamps(other: DriveTraffic, fromX: number): void {
+  const hitLeft = fromX < other.pos.x;
+  if (hitLeft === other.faceLeft) other.noseOut = true;
+  else other.tailOut = true;
+}
+
 export function shunt(
   other: DriveTraffic,
   lateralPx: number,
