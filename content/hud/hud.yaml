@@ -112,9 +112,16 @@ regions:
     order: 0
     wrap: none
 
-  # The dial bar across the top of the road (`.drive-hud-bar`), tap-transparent
-  # so a dial never eats the thumb that is steering.
-  drive_bar:
+  # THE DASHBOARD, along the BOTTOM of the windscreen (`.drive-dash`) — which is
+  # where a dashboard is. The dials sat across the top for as long as they were
+  # two words on a plate, and a plate can live anywhere; a speedometer cannot,
+  # because a driver reads it by dropping his eyes rather than by looking up.
+  #
+  # Tap-transparent (the whole picture is the steering pad, and a dial must
+  # never eat the thumb), and centred rather than pushed into the corners: the
+  # steering thumb lands where it lands, and the far bottom corners are the two
+  # places it is most likely to be.
+  drive_dash:
     parent: drive
     order: 0
-    class: drive-hud-bar
+    class: drive-dash

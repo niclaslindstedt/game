@@ -964,6 +964,7 @@ export {
 // model and the car behind it, and the startup path's budget has no room for
 // any of that. The app imports it from the GAME screen, never from the title.
 export {
+  coastDecelPx,
   courseLength,
   createDrive,
   createDriveDriver,
@@ -971,7 +972,16 @@ export {
   crowdEdges,
   driveDriverInput,
   driveMph,
+  driveThrustPx,
   driveVerdict,
+  // THE DRIVETRAIN — the gearbox and the engine curve the road's pull is solved
+  // from. The app reads the same functions the physics does, so the tachometer
+  // on the dashboard and the note coming out of the speaker are the engine's
+  // own revs rather than two guesses at them.
+  engineRpm,
+  engineTorqueNm,
+  gearFor,
+  gearRev,
   impactMasses,
   isMastSlot,
   blockadeAt,
@@ -981,15 +991,20 @@ export {
   resolveDriveBotTuning,
   restartDrive,
   roadBandEdges,
+  roadDragPx,
   roadEdges,
   solveImpact,
+  solvedTopSpeedPx,
   splitsBody,
   stepDrive,
+  throttleAccelPx,
   CROWD_VARIANTS,
   DRIVE,
   DRIVE_BOT_DEFAULTS,
   DRIVE_OUTCOME,
   DRIVE_UNITS,
+  DRIVETRAIN,
+  GEAR_COUNT,
   GLUED_BARKS,
   GLUED_VARIANTS,
   IDLE_DRIVE_INPUT,

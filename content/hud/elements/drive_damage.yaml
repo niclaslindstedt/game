@@ -1,18 +1,96 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 #
-# WHAT THE TRIP HAS COST THE WAGON — the right dial, which turns red once the
-# damage is past the point where the road starts winning.
+# THE DAMAGEOMETER — what the trip has cost the wagon, at the dashboard's right
+# hand and built as a dial rather than a line of text, so it reads against the
+# speedometer beside it: two arcs, one of them filling up as the other one is
+# enjoyed.
 #
-# Where that point IS is a judgement rather than a read, so it is a Lua function
-# (`hud/scripts/drive.lua`) and a mod can move it — a harder road might redden at
-# half, a gentler one only at the very end.
-region: drive_bar
-order: 1
-kind: text
-class: drive-hud-plate
-frame: hud_frame
-text:
-  script: drive.damage_label
-scale: 2
-color:
-  script: drive.damage_color
+# THE SAME DIAL AS THE SPEEDOMETER, to the pixel — same size, same 250° sweep
+# from the same lower-left opening, same big figure in the middle and same word
+# down in the gap. Two dials that were nearly alike read as a mistake; two that
+# are exactly alike read as a dashboard, and the player learns one shape and
+# uses it twice.
+#
+# What differs is the direction of the sentiment: a full sweep on the left is
+# the best the wagon has, and a full sweep here is a wrecked car. Where it stops
+# being a scratch and starts being trouble is a judgement rather than a read, so
+# it is Lua (`hud/scripts/drive.lua`) and a mod can move it: a harder road might
+# redden at half, a gentler one only at the very end.
+region: drive_dash
+order: 2
+kind: panel
+class: drive-dial
+children:
+  # THE EMPTY RING FIRST, on its own node. It would ordinarily be the `track:` of
+  # the arc that sits on it — but the fresh slice below GLOWS, and a filter
+  # applies to a whole element, so the hit's halo was coming off the dark ring
+  # as well and lighting the entire dial. So the ring is drawn once here, and
+  # the two live arcs above it carry no track at all.
+  - id: damage_ring
+    kind: gauge
+    class: drive-dial-ring
+    bind: drive.wear
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color: "#00000000"
+    track: "#1b2431"
+
+  # THE HIT YOU JUST TOOK, drawn FIRST and therefore underneath: the arc swept
+  # all the way to the live figure, in a colour that means "this is new". It is
+  # the XP strip's kill heat wearing the other hat — damage on this road creeps
+  # up a point at a time while the player is watching the crowd, and a
+  # percentage one point higher than it was is a percentage nobody notices.
+  - id: damage_fresh
+    kind: gauge
+    class: drive-dial-ring drive-dial-ring-fresh
+    bind: drive.wear
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: drive.fresh_color
+    track: "#00000000"
+
+  # …and the settled damage OVER it, stopping short of the fresh slice for as
+  # long as the slice is lit and then gliding up to cover it. Its own track is
+  # transparent — a second opaque ring here would paint the highlight out before
+  # anybody saw it.
+  - id: damage_arc
+    kind: gauge
+    class: drive-dial-ring drive-dial-ring-settle
+    bind: drive.wearSettled
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: drive.damage_color
+    track: "#00000000"
+  - id: damage_face
+    kind: panel
+    class: drive-dial-face
+    children:
+      # THE FIGURE FOLLOWS THE ARC, so it reads the settling value rather than
+      # the live one: a hit lights its slice, and then the percentage counts up
+      # into it as the calm arc sweeps over. A number that snapped while its own
+      # ring glided read as two readouts disagreeing about the same car.
+      - id: damage_number
+        kind: text
+        bind: drive.wearSettled
+        format: percent
+        scale: 3
+        color:
+          script: drive.damage_color
+
+  # …and the word down in the gap, where the speedometer keeps its revs. It is
+  # the one that CHANGES: a wagon past the point where the next real hit ends
+  # the trip stops saying what it is measuring and starts saying what is about
+  # to happen.
+  - id: damage_caption
+    kind: text
+    class: drive-dial-foot
+    text:
+      script: drive.damage_label
+    scale: 1
+    color:
+      script: drive.damage_color

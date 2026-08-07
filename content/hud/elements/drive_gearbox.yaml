@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE GEARBOX — the shift gate itself, between the two dials.
+#
+# A PICTURE RATHER THAN A NUMBER, and that is the point of it. The gearbox was a
+# digit and a row of notches first, and a digit is a thing you have to READ: at
+# 100 mph with a crowd coming, "3" and "4" are the same glyph until you look
+# properly. A lever in a gate is a POSITION, and a position registers out of the
+# corner of an eye — which is the only kind of attention this readout is ever
+# going to get.
+#
+# It is the shipped five-speed H pattern with reverse at the bottom right, and
+# WHICH of the seven pictures is on screen is a Lua judgement
+# (`hud/scripts/drive.lua`) rather than a binding, because "the wagon is rolling
+# backwards" and "the wagon is standing still in neutral" are readings of the
+# road rather than facts the engine publishes. A mod that gives its vehicle a
+# six-speed, a two-speed transfer box or a tiller draws its own gate and answers
+# with its own names.
+#
+# A READOUT, NEVER A CONTROL: the player has a pedal and a wheel, and the box
+# changes up on its own at the redline (`src/game/drive/drivetrain.ts`).
+region: drive_dash
+order: 1
+kind: icon
+class: drive-gate
+sprite:
+  script: drive.gear_sprite

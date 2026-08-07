@@ -55,6 +55,7 @@ import {
 } from "../vehicles.ts";
 import type { CarDetachable, CarPanelId } from "../types/index.ts";
 import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
+import { coastDecelPx, throttleAccelPx } from "./drivetrain.ts";
 import {
   laneCenter,
   roadEdges,
@@ -88,6 +89,23 @@ import {
 import type { DriveInput, DriveParams, DriveState } from "./types.ts";
 
 export { courseLength, DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
+// THE WAGON'S BROCHURE — the gearbox and the engine curve the road's pull is
+// solved from, and the readings the DASHBOARD and the ENGINE NOTE are both
+// taken off (`pwa/src/game/hud`, `pwa/src/game/sfx/drive.ts`). One model, read
+// by the physics, the dial and the speaker alike.
+export {
+  coastDecelPx,
+  DRIVETRAIN,
+  driveThrustPx,
+  engineRpm,
+  engineTorqueNm,
+  gearFor,
+  gearRev,
+  GEAR_COUNT,
+  roadDragPx,
+  solvedTopSpeedPx,
+  throttleAccelPx,
+} from "./drivetrain.ts";
 export type { DriveOutcome } from "./config.ts";
 export {
   crossingsBetween,
@@ -261,7 +279,18 @@ export function stepDrive(
   // it means in the bay too, which on a road with a wall of people across it is
   // the difference between the two endings.
   const top = DRIVE.topSpeedPx * (1 - car.wear * DRIVE.wearTopSpeedLoss);
-  applyCarPedals(car, input, dt, top, DRIVE.topSpeedPx * 0.1);
+  // …plus the one thing the road does NOT share with the bay: the pull. Out
+  // here the shove is a torque curve through an automatic gearbox and the coast
+  // is the air, both solved from the wagon's own brochure
+  // (`drive/drivetrain.ts`) at whatever speed it is doing this instant — so the
+  // car is gutless off the line, strongest in the middle of a gear, pauses at
+  // every upshift, and spends the last twenty miles an hour arguing with the
+  // wind. `top` is still the ceiling, but on an undamaged wagon the physics
+  // runs out of pull before the cap is ever reached.
+  applyCarPedals(car, input, dt, top, DRIVE.topSpeedPx * 0.1, {
+    accelPx: throttleAccelPx(car.speed),
+    coastPx: coastDecelPx(car.speed),
+  });
   const speed = Math.abs(car.speed);
   if (speed > drive.topSpeed) drive.topSpeed = speed;
 

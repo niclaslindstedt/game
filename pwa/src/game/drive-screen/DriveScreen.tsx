@@ -24,7 +24,6 @@ import {
   createDrive,
   createDriveDriver,
   driveDriverInput,
-  driveMph,
   driveVerdict,
   restartDrive,
   stepDrive,
@@ -48,7 +47,7 @@ import {
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
 import { viewScaleFor } from "../render/view.ts";
-import { engineNote, GEAR_COUNT } from "../sfx/drive.ts";
+import { createWearTrail, driveDials, sameDials } from "./dials.ts";
 import { driveBindings, type DriveDials } from "../hud/bindings.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import type { HudContext } from "../hud/context.ts";
@@ -219,28 +218,23 @@ export function DriveScreen({
    * THE DIALS — what the dashboard reads, republished only when one of them
    * actually moves.
    *
-   * More than the two shipped plates use, on purpose: the revs, the gear count
-   * and the top end are what a TACHOMETER and a GEARBOX are drawn from, and a
-   * dial that had to wait for this screen to start publishing its number would
-   * be a dial nobody could author. `rev` is the one continuous value here, so it
-   * is quantised to a sixteenth — a needle wants smooth, but a needle that
-   * re-rendered React sixty times a second would be paying for the whole HUD
-   * every frame. (A genuinely 60fps needle is a render-loop handle, the way the
-   * stamina bar is.)
+   * More than the shipped dashboard uses, on purpose: a dial that had to wait
+   * for this screen to start publishing its number would be a dial nobody could
+   * author. The continuous ones are QUANTISED — the revs to a sixteenth, the
+   * crank to the nearest fifty rpm — because a needle wants smooth and a needle
+   * that re-rendered React sixty times a second would be paying for the whole
+   * HUD every frame. (A genuinely 60fps needle is a render-loop handle, the way
+   * the stamina bar is.)
    */
-  const [hud, setHud] = useState<DriveDials>({
-    mph: 0,
-    topSpeedMph: DRIVE.topSpeedMph,
-    speedFrac: 0,
-    gear: 0,
-    gearCount: GEAR_COUNT,
-    rev: 0,
-    reversing: false,
-    bodies: 0,
-    wear: 0,
-    failing: false,
-    paused: false,
-  });
+  // Seeded from a road built here rather than from the live one, because a ref
+  // must not be read during a render — and a fresh drive's dials are exactly
+  // what the live one is about to publish on its first frame anyway.
+  const [hud, setHud] = useState<DriveDials>(() =>
+    driveDials(createDrive(params), false),
+  );
+  /** The damage dial's fresh-slice anchor. Held across ticks (and across a
+   * restart, which lays a clean car and snaps it back to nothing on its own). */
+  const wearTrailRef = useRef(createWearTrail());
   const speechRef = useRef<Speech | null>(null);
   const pausedRef = useRef(false);
   /** What the speech box says its tap means — the same seam the run's own
@@ -477,7 +471,7 @@ export function DriveScreen({
       // against the world they are standing in.
       const camera = shakeCamera(
         fxRef.current,
-        driveCamera(drive, viewW, viewH),
+        driveCamera(drive, viewW, viewH, scale),
         drive.ms,
       );
       ctx.setTransform(unit, 0, 0, unit, 0, 0);
@@ -515,25 +509,7 @@ export function DriveScreen({
       );
 
       setHud((prev) => {
-        const speedFrac = Math.min(
-          1,
-          Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
-        );
-        const note = engineNote(speedFrac);
-        const wearPercent = Math.round(drive.car.wear * 100);
-        const next: DriveDials = {
-          mph: driveMph(drive),
-          topSpeedMph: DRIVE.topSpeedMph,
-          speedFrac: Math.round(speedFrac * 64) / 64,
-          gear: note.gear,
-          gearCount: GEAR_COUNT,
-          rev: Math.round(note.rev * 16) / 16,
-          reversing: drive.car.speed < 0,
-          bodies: drive.bodies,
-          wear: wearPercent / 100,
-          failing: wearPercent > FAILING_WEAR_PERCENT,
-          paused: pausedRef.current,
-        };
+        const next = driveDials(drive, pausedRef.current, wearTrailRef.current);
         return sameDials(prev, next) ? prev : next;
       });
     };
@@ -631,10 +607,17 @@ export function DriveScreen({
           NO BACKDROP AND NO POINTER. It is a bark over a road that is still
           moving, so it neither dims the picture nor takes the thumb: the wrapper
           is inert, and the box's own `pointer-events: none` means a player who
-          puts a thumb down over it is steering, not reading. */}
+          puts a thumb down over it is steering, not reading.
+
+          AND IT SITS BESIDE THE DASHBOARD (`.drive-bark`), not over it. The
+          shipped window is centred along the bottom of the screen, which is
+          where the dials are; on the road it takes the room to their right, and
+          on a portrait screen — where there is no such room — it moves to the
+          top instead. */}
       {speech && (
         <div style={BARK} aria-live="polite">
           <DialogueBox
+            className="drive-bark"
             font={assets.font}
             lines={speech.pages[speech.page] ?? EMPTY_PAGE}
             speaker={heroName ?? "YOU"}
@@ -657,29 +640,6 @@ export function DriveScreen({
 }
 
 const EMPTY_PAGE: string[] = [];
-
-/** Where the damage readout stops being a scratch and starts being trouble.
- * The wagon takes cosmetic knocks the whole way down, and a dial that alarmed
- * at the first one would teach the player to ignore it — so this is the point
- * where the next real hit ends the trip. What the dial DOES about it is the
- * content's call (`hud/scripts/drive.lua`); this is only the fact. */
-const FAILING_WEAR_PERCENT = 70;
-
-/** Have any of the dials actually moved? Compared field by field rather than
- * by a key string: this runs every frame of a drive. */
-function sameDials(a: DriveDials, b: DriveDials): boolean {
-  return (
-    a.mph === b.mph &&
-    a.speedFrac === b.speedFrac &&
-    a.gear === b.gear &&
-    a.rev === b.rev &&
-    a.reversing === b.reversing &&
-    a.bodies === b.bodies &&
-    a.wear === b.wear &&
-    a.failing === b.failing &&
-    a.paused === b.paused
-  );
-}
 
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */

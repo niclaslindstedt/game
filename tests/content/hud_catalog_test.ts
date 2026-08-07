@@ -104,9 +104,12 @@ describe("the HUD's vocabulary", () => {
       gear: 2,
       gearCount: 5,
       rev: 0.5,
+      rpm: 3400,
+      redlineRpm: 5800,
       reversing: false,
       bodies: 4,
       wear: 0.3,
+      wearSettled: 0.24,
       failing: false,
       paused: false,
     });
@@ -370,9 +373,12 @@ const DIALS = {
   gear: 2,
   gearCount: 5,
   rev: 0.25,
+  rpm: 2900,
+  redlineRpm: 5800,
   reversing: false,
   bodies: 0,
   wear: 0.31,
+  wearSettled: 0.31,
   failing: false,
   paused: false,
 };
@@ -420,20 +426,55 @@ describe("resolving", () => {
       text: { script: "drive.damage_label" },
     };
     const drive = resolveContext({ ...VALUES, ...driveBindings(DIALS) });
-    expect(resolveNode(node, drive).text).toBe("DAMAGE 31%");
+    expect(resolveNode(node, drive).text).toBe("DAMAGE");
+    // …and the FRESH slice's colour, which is the one judgement on the
+    // dashboard that answers differently for the same wear depending on whether
+    // any of it just happened.
+    const hot = resolveContext({
+      ...VALUES,
+      ...driveBindings({ ...DIALS, wearSettled: 0.2 }),
+    });
     expect(
       resolveNode(
-        { kind: "text", text: { script: "drive.speed_label" } },
+        {
+          kind: "gauge",
+          bind: "drive.wear",
+          color: { script: "drive.fresh_color" },
+        },
+        hot,
+      ).color,
+    ).not.toBe(
+      resolveNode(
+        {
+          kind: "gauge",
+          bind: "drive.wear",
+          color: { script: "drive.fresh_color" },
+        },
         drive,
-      ).text,
-    ).toBe("42 MPH  GEAR 3");
+      ).color,
+    );
+    expect(
+      resolveNode({ kind: "text", text: { script: "drive.rpm_label" } }, drive)
+        .text,
+    ).toBe("2900 RPM");
+    // …and the gearbox, which is the judgement with the most to say: it picks a
+    // PICTURE, one shift-gate sprite per position, and the two answers that are
+    // not gears at all (reverse, and standing still in neutral).
+    const gate = (dials: typeof DIALS): string | undefined =>
+      resolveNode(
+        { kind: "icon", sprite: { script: "drive.gear_sprite" } },
+        resolveContext({ ...VALUES, ...driveBindings(dials) }),
+      ).sprite;
+    expect(gate(DIALS)).toBe("gear_gate_3");
+    expect(gate({ ...DIALS, reversing: true })).toBe("gear_gate_r");
+    expect(gate({ ...DIALS, mph: 0 })).toBe("gear_gate_n");
   });
 
   it("leaves the road's judgements alive after a fight has been resolved", () => {
     // THE ONE THAT SHIPPED BROKEN. A resolve CALLS every judgement it walks
     // past, and `disown` is for the rest of the run — so resolving the WHOLE
-    // tree on the fight's snapshot ran `drive.speed_label` against an empty
-    // `state.drive`, it threw on the first `..`, and both dials were dead
+    // tree on the fight's snapshot ran the road's judgements against an empty
+    // `state.drive`, they threw on the first `..`, and the dials were dead
     // before the player ever reached a road. The plates still drew: two empty
     // frames in the corners of the windscreen.
     //
@@ -449,11 +490,9 @@ describe("resolving", () => {
     );
     const drive = resolveContext(driveBindings(DIALS));
     expect(
-      resolveNode(
-        { kind: "text", text: { script: "drive.speed_label" } },
-        drive,
-      ).text,
-    ).toBe("42 MPH  GEAR 3");
+      resolveNode({ kind: "text", text: { script: "drive.rpm_label" } }, drive)
+        .text,
+    ).toBe("2900 RPM");
   });
 
   it("weaves bindings into a line, and leaves an unknown one alone", () => {

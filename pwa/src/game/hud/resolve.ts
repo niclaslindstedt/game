@@ -100,7 +100,7 @@ export function resolveRow(
  * THE SURFACE IS A PARAMETER, NOT A FILTER ON THE RESULT, and that is
  * load-bearing rather than tidy. A resolve CALLS every judgement it walks past,
  * and a judgement is written against the bindings its own surface publishes —
- * `drive.speed_label` reads `state.drive.mph`, which on the fight's values is
+ * `drive.rpm_label` reads `state.drive.rpm`, which on the fight's values is
  * an empty group. Resolving the whole tree on the fight's snapshot therefore
  * ran the road's scripts against nothing, they threw on the first `..`, and
  * `script.ts` did exactly what it promises for a misbehaving judgement: it

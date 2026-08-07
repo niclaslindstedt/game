@@ -254,7 +254,7 @@ function worn(drive: DriveState, wear: number, panelRung: number): void {
 }
 
 /**
- * THE SHELF. Eight exhibits, and between them every picture and every one of the
+ * THE SHELF. Nine exhibits, and between them every picture and every one of the
  * thirteen sounds the road can throw.
  */
 export function driveExhibits(): DriveExhibit[] {
@@ -629,6 +629,49 @@ export function driveExhibits(): DriveExhibit[] {
             true,
           );
         }
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-gearbox",
+      icon: "car_wheel_1",
+      label: "PULLING AWAY",
+      blurb: "STANDSTILL TO THIRD - THE BOX CHANGES UP AND THE REVS FALL BACK",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "gear",
+        "gearbox",
+        "shift",
+        "rpm",
+        "rev",
+        "tacho",
+        "speed",
+        "accelerate",
+        "engine",
+      ],
+      // LONG, BECAUSE THE SUBJECT IS SLOW. The wagon is a heavy thing with a
+      // tired engine: first is gone in three and a half seconds, second takes
+      // another three, and third is still climbing when the take ends. Cutting
+      // it shorter would show one upshift, and one upshift does not read as a
+      // gearbox — two does.
+      showMs: 11000,
+      // THE TWO THINGS THIS EXHIBIT IS: the note, which is the whole of what a
+      // shift SOUNDS like, and the dashboard, which is the whole of what one
+      // LOOKS like. Every other exhibit on this shelf has neither, and this one
+      // is nothing at all without both — an empty road with a car on it.
+      engine: true,
+      dash: true,
+      road: (drive) => {
+        silence(drive);
+        // FROM A DEAD STOP, which is the one thing the road never does on its
+        // own: a played drive is handed over with the car already at 28% (the
+        // hero is taking over a wagon that is leaving), so the first two gears
+        // are over before the player ever sees the dashboard. Here they are the
+        // entire show.
+        openAt(drive, 0);
       },
     },
   ];

@@ -42,6 +42,8 @@ import {
 import { synth } from "../audio.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/ui.ts";
+import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+import { HudRoot } from "../hud/HudRoot.tsx";
 import { runDriveExhibit } from "./drive-exhibit.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
 import {
@@ -165,6 +167,10 @@ export function EffectsGallery({
   // The live staged run, so the field's tap (and PLAY) can run the show again
   // without rebuilding the diorama.
   const runRef = useRef<ExhibitRun | null>(null);
+  // THE ROAD'S DASHBOARD, when the exhibit on screen draws one. Null for every
+  // other exhibit in the gallery, which is what keeps the HUD off the ninety-odd
+  // shows that are about a picture rather than a reading.
+  const [dials, setDials] = useState<DriveDials | null>(null);
   const [query, setQuery] = useState("");
   // H: strip the gallery's own chrome, leaving the effect alone in the frame —
   // what the contact-sheet script presses before it shoots.
@@ -307,7 +313,14 @@ export function EffectsGallery({
     // teardown, beside the cleave pin.
     pinEliteCaster(caster);
     const run = isDriveExhibit(exhibit)
-      ? runDriveExhibit({ exhibit, canvas, ctx, assets, speed })
+      ? runDriveExhibit({
+          exhibit,
+          canvas,
+          ctx,
+          assets,
+          speed,
+          onDials: setDials,
+        })
       : runExhibit({
           exhibit,
           canvas,
@@ -321,6 +334,11 @@ export function EffectsGallery({
     return () => {
       runRef.current = null;
       run.stop();
+      // …and the dashboard goes with the road it belonged to. Without this the
+      // dials of the exhibit just left would hang over the next one, which on a
+      // shelf where only one show draws them is a HUD that appears to have
+      // wandered in from another screen.
+      setDials(null);
     };
     // `speed` is deliberately NOT a dependency: changing it pushes into the
     // live run (below) instead of tearing the diorama down and re-staging it,
@@ -431,6 +449,24 @@ export function EffectsGallery({
           dragRef.current = null;
         }}
       />
+
+      {/* THE WAGON'S DASHBOARD, for the one exhibit whose subject is a reading
+          rather than a picture (`dash`). It is the authored HUD — the same
+          elements, the same Lua, the same mount the minigame uses — so the
+          gearbox exhibit shows the dials the game actually draws rather than a
+          gallery-only copy of them. */}
+      {dials && assets && (
+        <HudRoot
+          ctx={{
+            surface: "drive",
+            assets,
+            font,
+            values: driveBindings(dials),
+            refs: {},
+            actions: {},
+          }}
+        />
+      )}
 
       {/* The two full-screen CSS bursts the run fires into (the nuke's flash /
           fire / smoke and the ding's light explosion), exactly as the playing

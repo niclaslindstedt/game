@@ -136,11 +136,16 @@ export function weaponSlotColors(hud: Hud): { bg: string; border: string } {
  * this only answers whether the wagon is past the point the engine itself treats
  * as trouble.
  *
- * IT PUBLISHES MORE THAN THE TWO PLATES READ, on purpose. The revs, the gear
- * count and the top end are what a TACHOMETER and a GEARBOX are drawn from, and
- * the shipped dashboard uses none of them — but a dial that had to wait for the
- * app to start publishing its number would be a dial nobody could author. They
+ * IT PUBLISHES MORE THAN THE SHIPPED DASHBOARD READS, on purpose — the top end,
+ * the gear count, the revs both ways. A dial that had to wait for the app to
+ * start publishing its number would be a dial nobody could author, and they
  * cost one object per publish.
+ *
+ * THE CRANK IS PUBLISHED TWICE AND BOTH ARE READS. `rpm` is the number a
+ * tachometer PRINTS and `rpmFrac` is the arc it SWEEPS, and neither is a
+ * judgement: where the needle goes red, what the gate says at a standstill and
+ * when the damage dial starts shouting are all the Lua's call
+ * (`hud/scripts/drive.lua`).
  */
 export type DriveDials = {
   mph: number;
@@ -154,10 +159,18 @@ export type DriveDials = {
   gearCount: number;
   /** How far up THIS gear the wagon is: the revs. */
   rev: number;
+  /** What the crank is actually turning at. */
+  rpm: number;
+  /** …and where it stops being asked to — the tacho's last number. */
+  redlineRpm: number;
   reversing: boolean;
   bodies: number;
   /** 0..1 — how worn the wagon is. */
   wear: number;
+  /** …and how worn it was before the last second's hits — the anchor the
+   * damage dial's FRESH slice is drawn from. Level with `wear` whenever nothing
+   * has just happened. */
+  wearSettled: number;
   failing: boolean;
   paused: boolean;
 };
@@ -173,9 +186,22 @@ export function driveBindings(drive: DriveDials): HudValues {
     "drive.gearLabel": drive.gear + 1,
     "drive.gearCount": drive.gearCount,
     "drive.rev": Math.max(0, Math.min(1, drive.rev)),
+    "drive.rpm": Math.round(drive.rpm),
+    "drive.redlineRpm": Math.round(drive.redlineRpm),
+    // The tacho's own sweep. Worked out here rather than authored as a division
+    // in every dial that wants it — and clamped, because a rev limiter is a
+    // thing the engine has and an arc past its own end is not.
+    "drive.rpmFrac": Math.max(
+      0,
+      Math.min(1, drive.redlineRpm > 0 ? drive.rpm / drive.redlineRpm : 0),
+    ),
     "drive.reversing": drive.reversing,
     "drive.bodies": drive.bodies,
     "drive.wear": Math.max(0, Math.min(1, drive.wear)),
+    "drive.wearSettled": Math.max(
+      0,
+      Math.min(1, Math.min(drive.wearSettled, drive.wear)),
+    ),
     "drive.wearPercent": Math.round(100 * drive.wear),
     "drive.failing": drive.failing,
     "drive.paused": drive.paused,

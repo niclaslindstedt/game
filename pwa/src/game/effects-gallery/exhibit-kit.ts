@@ -272,12 +272,24 @@ export type DriveExhibit = ExhibitCard & {
   shows?: DriveEvent["type"];
   bank?: readonly string[];
   /**
-   * Run the ENGINE NOTE under this exhibit. Off by default and on for exactly
-   * one entry (the ride itself), because the note is a continuous drone and a
-   * drone under a 200 ms crunch is the one thing that would stop the crunch
-   * being judgeable — which is what this shelf is for.
+   * Run the ENGINE NOTE under this exhibit. Off by default and on for the two
+   * entries whose subject IS the engine (the ride and the gearbox), because the
+   * note is a continuous drone and a drone under a 200 ms crunch is the one
+   * thing that would stop the crunch being judgeable — which is what this shelf
+   * is for.
    */
   engine?: boolean;
+  /**
+   * Draw the wagon's own DASHBOARD over the take — the authored dials
+   * (`content/hud/elements/drive_*.yaml`), exactly as the minigame draws them.
+   *
+   * Off by default, for the same reason the note is: a collision exhibit is
+   * about seven shards and where they went, and furniture along the bottom of
+   * the frame is furniture in the way. On for the one exhibit whose subject is
+   * a READING rather than a picture — a gearbox changing up is a number
+   * changing and a needle snapping back, and there is nothing else to see.
+   */
+  dash?: boolean;
 };
 
 export type Exhibit = RunExhibit | DriveExhibit;

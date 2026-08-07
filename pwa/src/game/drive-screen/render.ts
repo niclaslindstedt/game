@@ -104,8 +104,36 @@ const KERB_DEPTH = 2;
 const CAMERA_LEAD_FRAC = 0.23;
 
 /** How much ground is kept below the near pavement (world px) — the strip of
- * verge between the kerb and the bottom of the frame. */
-const NEAR_MARGIN = 14;
+ * verge between the kerb and the dashboard's own band. */
+const NEAR_MARGIN = 6;
+
+/**
+ * THE DASHBOARD'S BAND — how many CSS px at the bottom of the frame the road is
+ * kept OUT of, so the dials have grass under them instead of tarmac.
+ *
+ * The HUD is DOM and the road is a canvas, so this is the one number the two
+ * sides have to agree on by hand: it is the dash's own height plus its bottom
+ * offset (`.drive-dash` / `--drive-dial-size`, pwa/src/styles.css). Read in CSS
+ * px and converted by the scale tier, because the dials are a fixed size on the
+ * glass while the world behind them is not.
+ *
+ * A speedometer half over the road was legible — the shadow saw to that — but it
+ * read as a HUD dropped on top of a picture rather than as a dashboard the
+ * player is looking over, and the arcs fought the lane markings the whole way.
+ */
+const DASH_BAND_CSS = 116;
+
+/**
+ * …and what PORTRAIT adds to it: the hero's speech window, which on a tall
+ * screen has nowhere beside the dials to go and sits above them instead
+ * (`.drive-bark`'s portrait rule). Landscape puts it to their right and pays
+ * nothing.
+ *
+ * The road can afford it there and cannot here: a portrait frame is mostly sky
+ * (the ground is a fixed 167 px band however tall the screen is), so this
+ * spends the room the sky had going spare.
+ */
+const BARK_BAND_CSS = 132;
 
 /** Where the ground stops and the sky starts, measured back from the far
  * pavement (world px). The town's frontages stand 11 px back from that same
@@ -147,16 +175,30 @@ const ROOF_PX = 20;
  * a camera that tracked the car across the lanes would make changing lanes look
  * like the WORLD moving, which is the one thing that must not happen in a lane
  * game.
+ *
+ * AND THE BOTTOM OF THE FRAME IS NOT THE BOTTOM OF THE ROAD. A band is held
+ * back for the DASHBOARD (`DASH_BAND_CSS`, plus the speech window's own in
+ * portrait), so the dials sit on the verge rather than over the lane the crowd
+ * is walking into. Reserving it is exactly "pretend the frame is shorter":
+ * everything else about the framing — the fixed ground band, the spare room
+ * going to the sky — is unchanged above it.
  */
 export function driveCamera(
   drive: DriveState,
   viewW: number,
   viewH: number,
+  /** The integer scale tier the canvas is drawn at (`viewScaleFor`), which is
+   * what turns the dashboard's CSS px into this frame's own. */
+  scale: number,
 ): Camera {
   const dir = drive.params.direction;
+  // Portrait is the taller-than-wide frame, and it is the one that also has to
+  // find room for the hero talking to himself.
+  const bandCss = DASH_BAND_CSS + (viewH > viewW ? BARK_BAND_CSS : 0);
+  const band = Math.min(viewH * 0.6, bandCss / Math.max(1, scale));
   return {
     x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
-    y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH),
+    y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH - band),
   };
 }
 
