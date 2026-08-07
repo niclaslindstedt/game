@@ -19,6 +19,16 @@ export type GameInput = {
    * dpad center. Absent (headless tests, bots) defaults to full speed.
    */
   throttle?: number;
+  /**
+   * THE HANDBRAKE, HELD — true for every step the player is hauling on it.
+   *
+   * A HOLD rather than an edge, which is what separates it from `jump` beside
+   * it: a handbrake is a lever you keep hold of, so it is sampled every tick
+   * like `steering` is rather than banked and spent once. It reaches the car
+   * through `carControl` and means nothing at all on foot (the hero has no
+   * lever), so a stray true from a second finger outside a car is harmless.
+   */
+  handbrake?: boolean;
   /** True on the step a jump was requested (tap / space edge, not hold). */
   jump: boolean;
   /**

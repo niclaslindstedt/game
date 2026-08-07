@@ -675,6 +675,17 @@ export type CarVehicle = VehicleBase & {
   /** Ms until the next `carGrind` spark burst (only ticks while a bare
    * axle is dragging under way) — the grind's own cadence. */
   grindCueMs: number;
+  /**
+   * THE LEVER IS UP — the driver is on the handbrake this tick.
+   *
+   * State on the car rather than a fact the caller keeps, because everything
+   * that has to know is somewhere else: the renderer lays the locked wheels'
+   * skid off it, the road smokes off it, and a joined client is handed it in the
+   * snapshot like every other thing the wagon is doing. Stamped by
+   * `applyCarPedals` every tick a control reaches the car, and cleared with the
+   * seat when the driver gets out.
+   */
+  handbrake: boolean;
   /** Wheel roll angle (radians) — picks the spin frame per wheel. */
   wheelAngle: number;
   /**

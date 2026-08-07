@@ -160,6 +160,11 @@ export type InputQueues = {
    * now, and whether the walk modifier is down. */
   heldMoveKeysRef: MutableRefObject<Set<string>>;
   walkingRef: MutableRefObject<boolean>;
+  /** The JUMP bind is DOWN — a hold rather than the edge `jumpQueuedRef` banks,
+   * because at a wheel that key is the handbrake (`carKeyControl`) and a lever
+   * is a thing you keep hold of. Read only while driving; on foot the edge
+   * beside it is still what jumps. */
+  handbrakeKeyRef: MutableRefObject<boolean>;
 };
 
 /** The queues plus the imperative enqueue helpers the DOM handlers call —
@@ -196,6 +201,8 @@ export function useInputQueues(): InputQueuesApi {
   // resolves each held code to a direction via the player's key bindings).
   const heldMoveKeysRef = useRef<Set<string>>(new Set());
   const walkingRef = useRef(false);
+  // The JUMP bind held down — the desktop handbrake at a wheel (see the type).
+  const handbrakeKeyRef = useRef(false);
   return useMemo(
     () => ({
       jumpQueuedRef,
@@ -207,6 +214,7 @@ export function useInputQueues(): InputQueuesApi {
       shopTapRef,
       heldMoveKeysRef,
       walkingRef,
+      handbrakeKeyRef,
       queueConsumable: (kind) => {
         if (kind === "medkit") useMedkitQueuedRef.current = true;
         else if (kind === "stamina") useStaminaQueuedRef.current = true;
@@ -302,6 +310,21 @@ export function readHumanInput(
     pointer.state.held &&
     pointer.state.pointerType !== "mouse";
   const car = drivenCar(state);
+  // ── THE LEVER ─────────────────────────────────────────────────────────────
+  // THE SECOND THUMB IS THE HANDBRAKE, and only ever at a wheel. A finger
+  // pressed while the dpad is held is already the game's "second hand" gesture
+  // (`PointerState.extras`), and the one thing a man in a car wants from his
+  // other hand is the thing between the seats — so at the wheel it hauls on it
+  // for as long as it stays down, and on foot it goes on meaning what it always
+  // meant.
+  //
+  // The desktop half is the JUMP bind held, which is the same borrow
+  // `carKeyControl` makes and is made here rather than there because THIS path
+  // is a push rather than a set of keys: a player steering the car with the
+  // mouse or a stick still gets a lever.
+  input.handbrake =
+    car !== null &&
+    (pointer.state.extras > 0 || queues.handbrakeKeyRef.current);
   if (gamepadSteering && stick) {
     // A direction, not a destination, projected far enough ahead that the walk
     // never "arrives" — and at the wheel the SAME push, which the engine reads
@@ -446,7 +469,11 @@ export function readHumanInput(
         ? pointer.state.held
         : undefined;
   }
-  input.jump = queues.jumpQueuedRef.current;
+  // AT A WHEEL THERE IS NOTHING TO JUMP. He is sitting in a car, and both the
+  // gestures that jump have been given to the lever there — the second thumb
+  // and the JUMP bind — so a banked edge is DROPPED rather than held, or every
+  // stop the player made would be paid out as a hop the moment he got out.
+  input.jump = car === null && queues.jumpQueuedRef.current;
   queues.jumpQueuedRef.current = false;
   // Instant item use (opt-in) pops pickups the moment they are
   // carried; manual waits for the player's edge — a dock slot tap

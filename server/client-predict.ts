@@ -339,6 +339,7 @@ function copyInput(input: GameInput): GameInput {
     useItem: input.useItem,
   };
   if (input.throttle !== undefined) copy.throttle = input.throttle;
+  if (input.handbrake !== undefined) copy.handbrake = input.handbrake;
   if (input.aim) copy.aim = { x: input.aim.x, y: input.aim.y };
   if (input.useItemIndex !== undefined) copy.useItemIndex = input.useItemIndex;
   if (input.moveItem) copy.moveItem = { ...input.moveItem };

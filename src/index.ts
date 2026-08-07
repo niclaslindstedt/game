@@ -570,6 +570,7 @@ export {
   SHIP,
   WHEEL_DEBRIS,
   nudgeCar,
+  carSkidding,
   enterCar,
   exitCar,
   shedPart,

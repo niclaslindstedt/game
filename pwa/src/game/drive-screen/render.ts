@@ -45,6 +45,7 @@ import {
   type DriveGoreState,
 } from "./drive-gore.ts";
 import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
+import { drawSkidMarks, type SkidState } from "./skid.ts";
 import { drawPlacard, GLUED_BARKS, MAX_PLACARDS } from "./placards.ts";
 import {
   CROWD_FRAME_MS,
@@ -124,6 +125,9 @@ export function drawDrive(
    * in it — THE GLUED's lines. Omitted draws the blockade silently, which is
    * still a blockade. */
   font?: PixelFont,
+  /** The rubber the DRIVER left — every handbrake stop's two black lines
+   * (`skid.ts`). Optional on the same terms as the gore beside it. */
+  skids?: SkidState,
 ): void {
   const bands = roadBands();
 
@@ -214,6 +218,10 @@ export function drawDrive(
   // painted over the finished frame, so a player driving back through his own
   // mess would have chunks of somebody laid across the bonnet. (The run's own
   // gore learned this one the hard way — `restsOnFloor` in render/effects.ts.)
+  // The RUBBER goes down first, under the blood: a skid is laid by a car that
+  // was still moving and the mess is laid by what it then arrived at, so a
+  // splash on top of a skid is the order those two things happened in.
+  if (skids) drawSkidMarks(ctx, skids, camera, viewW);
   if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW);
 
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────

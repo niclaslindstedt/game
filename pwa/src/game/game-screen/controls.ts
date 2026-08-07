@@ -393,6 +393,14 @@ export function createControls(deps: {
     if (event.code === binds.walk) {
       queues.walkingRef.current = true;
     }
+    // The JUMP bind is also the HANDBRAKE at a wheel, and a lever is HELD —
+    // so its down-state is tracked here beside the walk modifier, while the
+    // one-shot jump edge is still banked below. Only `readHumanInput` decides
+    // which of the two a press means, and it decides on whether the player is
+    // in a car.
+    if (event.code === binds.jump) {
+      queues.handbrakeKeyRef.current = true;
+    }
     if (event.repeat) return;
     // Space and Enter both turn the page through any waiting scene (cutscene,
     // intro, title card, in-world dialogue). Space alone doubles as jump once
@@ -531,6 +539,9 @@ export function createControls(deps: {
     if (event.code === binds.walk) {
       queues.walkingRef.current = false;
     }
+    if (event.code === binds.jump) {
+      queues.handbrakeKeyRef.current = false;
+    }
   };
   // A mouse button / wheel notch can be bound to any discrete action too (see
   // keybindings.ts). Both no-op unless the player bound a pointer control —
@@ -573,6 +584,7 @@ export function createControls(deps: {
   const onBlur = () => {
     queues.heldMoveKeysRef.current.clear();
     queues.walkingRef.current = false;
+    queues.handbrakeKeyRef.current = false;
     pause();
   };
   // Tab hidden (mobile app-switch, backgrounded tab): same auto-pause. Both

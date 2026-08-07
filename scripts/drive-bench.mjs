@@ -22,11 +22,16 @@
 //   node scripts/drive-bench.mjs --seeds 100         # a real reading
 //   node scripts/drive-bench.mjs --difficulty jesus  # one rung
 //   node scripts/drive-bench.mjs --home              # the leg back
-//   node scripts/drive-bench.mjs --straight 0.8      # NOBODY steering, 80% throttle
+//   node scripts/drive-bench.mjs --straight 0.8      # NOBODY steering, 80% pedal
 //   node scripts/drive-bench.mjs --knob cruiseFrac=0.75,floorFrac=0.3
 //
 // `--straight` is the old measurement, kept and driven by the same harness so
-// the two columns can be compared without one of them being folklore.
+// the two columns can be compared without one of them being folklore. Note what
+// its number MEANS: the pedal is a RATE rather than a speed to settle at
+// (`applyCarPedal`), so `--straight 0.8` is a car that gathers speed at four
+// fifths of the wagon's acceleration and then sits at the top end — not one that
+// cruises at four fifths of it. Only `--straight 0` and a negative are cruises,
+// and the auto-driver holds every other one bang-bang, as a person does.
 //
 // IT IS FAST, unlike the run simulator beside it: a drive is one car and a few
 // dozen bodies, so a hundred legs a rung is a few seconds rather than a coffee

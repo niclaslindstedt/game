@@ -45,7 +45,7 @@ import { createRng } from "@game/lib/rng.ts";
 import { clamp } from "@game/lib/vec.ts";
 
 import {
-  applyCarPedal,
+  applyCarPedals,
   CAR,
   carCrossing,
   createCar,
@@ -229,6 +229,10 @@ export function stepDrive(
     // the road keeps moving under an arriving car, and everything already in
     // the air lands where physics says.
     drive.outcomeMs += dtMs;
+    // The wheel is out of the player's hands, and so is the lever: a wreck
+    // coasting to a stop must not go on laying skid marks because a thumb was
+    // down when the engine gave up.
+    car.handbrake = false;
     if (drive.outcome === DRIVE_OUTCOME.broken && car.speed !== 0) {
       car.speed = Math.max(
         0,
@@ -245,14 +249,16 @@ export function stepDrive(
     return;
   }
 
-  // ── THE PEDAL ─────────────────────────────────────────────────────────────
-  // THE SAME PEDAL THE GARAGE HAS, on a much longer leash: `applyCarPedal` is
-  // the run's own accelerate / brake / HOLD, and the only thing the road
-  // changes is the number at the top of it — which drops as the car breaks up.
-  // So letting go of everything on the motorway means what it means in the bay:
-  // carry on as you are.
+  // ── THE PEDALS AND THE LEVER ──────────────────────────────────────────────
+  // THE SAME PEDALS THE GARAGE HAS, on a much longer leash: `applyCarPedals` is
+  // the run's own accelerate / brake / HOLD plus the handbrake, and the only
+  // thing the road changes is the number at the top of it — which drops as the
+  // car breaks up. So letting go of everything on the motorway means what it
+  // means in the bay: carry on as you are. And hauling on the lever means what
+  // it means in the bay too, which on a road with a wall of people across it is
+  // the difference between the two endings.
   const top = DRIVE.topSpeedPx * (1 - car.wear * DRIVE.wearTopSpeedLoss);
-  applyCarPedal(car, input.pedal, dt, top, DRIVE.topSpeedPx * 0.1);
+  applyCarPedals(car, input, dt, top, DRIVE.topSpeedPx * 0.1);
   const speed = Math.abs(car.speed);
   if (speed > drive.topSpeed) drive.topSpeed = speed;
 

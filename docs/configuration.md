@@ -222,8 +222,19 @@ up, **W** turns left (up the screen) and **S** turns right (down) — on the way
 out of the garage, on the way home, and whichever way the wagon is facing. (The
 arrow keys drive too, while they are bound to nothing else.) A **thumb or a
 mouse still pushes**: dragging the way the car is pointing is the accelerator,
-against it the brake, across it the wheel. Letting go of everything holds the
-speed rather than stopping — braking is something you ask for. On touch, tapping the on-screen clock / foe counter in the HUD pauses
+against it the brake, across it the wheel. How far you drag is **how hard you
+are on that pedal**, not a speed to settle at — a small drag toward the nose
+gathers speed gently and a big one hard, and no amount of it ever slows the car
+down; a small drag against the nose feathers the brake and a big one stamps on
+it. Letting go of everything holds the speed rather than stopping — braking is
+something you ask for.
+
+**The handbrake is the other hand**: a **second thumb** pressed anywhere on the
+picture while you are steering, or **Space** (the JUMP bind — a man in a car
+cannot jump, so the key is free at a wheel and follows the bind if you move it).
+It is the fastest way this wagon stops by a wide margin, it overrules the
+throttle for as long as it is held, and it throws the car's weight onto its nose
+— on the road it leaves two black lines and a cloud of tyre smoke behind it. On touch, tapping the on-screen clock / foe counter in the HUD pauses
 too. The run also auto-pauses when the tab or app loses focus; clicking the
 screen or pressing the pause key / **Escape** again resumes. During a cutscene,
 intro, or dialogue, **Space** or **Enter** turns the page (the first press

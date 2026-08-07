@@ -868,10 +868,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   as the hero's bootprints are. Both gore-page switches ride in on
   `DriveParams` (`gib` for the lumps torn off, `split` for the bumper going
   through somebody), asked once by `driveParamsFor` and fixed for the whole
-  road. Its presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
-  shards, the wreck's smoke, and a camera that moves only when something is
-  actually struck; every effect is anchored to the ROAD and left behind except
-  the dead engine's smoke, which rides the car it came out of) and
+  road. The one mark on that tarmac the DRIVER makes rather than a body is
+  `drive-screen/skid.ts` — the two black lines a handbrake stop scrubs off the
+  back axle, laid by ground covered like every trail in this game and drawn under
+  everything standing on the road, with the tyre smoke going the other way,
+  through the effect layer. Its presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
+  shards, the wreck's smoke, the burning rubber, and a camera that moves only when
+  something is actually struck; every effect is anchored to the ROAD and left
+  behind except the dead engine's smoke, which rides the car it came out of) and
   `sfx/drive.ts` (the geared engine note, made of grains on a quickening
   cadence) — with what a tick OWES those two lifted into
   `drive-screen/loop.ts` (`drainDrive`, `drawBursts`, `runEngineNote`), because
