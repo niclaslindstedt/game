@@ -1909,8 +1909,8 @@ export function createHero(
       // the one thing he grabs to go after Ada. FINITE: minted with its
       // catalog durability so it wears out and has to be replaced by
       // whatever the run yields (see wearEquippedWeapon). When it finally
-      // shatters with an empty bag the engine draws the unbreakable
-      // blaster fallback.
+      // shatters with an empty bag the hand is left holding nothing, which is
+      // to say the hero's own BARE HANDS (see `bareHands` in items/hands.ts).
       weapon: {
         id: mintId(),
         defId: diff.startingWeapon,

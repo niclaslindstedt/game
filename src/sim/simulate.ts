@@ -205,10 +205,10 @@ export type SimulateLevelOptions = {
   realisticPacing?: boolean;
   /**
    * Use the MERCHANT the way a real player would. The bot itself never shops,
-   * so a weapon that breaks with an empty bag strands the hero on the
-   * unbreakable sidearm (`blaster`) — a death spiral the bot can't escape,
-   * which overstates high-difficulty pressure. With this on, whenever the hero
-   * is weapon-starved (on the sidearm, or his weapon is nearly worn out) and a
+   * so a weapon that breaks with an empty bag strands the hero on his BARE
+   * HANDS (`UNARMED_DEF_ID`) — a death spiral the bot can't escape, which
+   * overstates high-difficulty pressure. With this on, whenever the hero is
+   * weapon-starved (bare-handed, or his weapon is nearly worn out) and a
    * merchant has been met, the sim walks him to the counter and runs the
    * recovery a player would: sell the bag for coins, repair the kit, buy the
    * best affordable weapon he can wield, and equip it. Lets a run measure

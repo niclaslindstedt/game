@@ -105,7 +105,7 @@ jobs:
       # `library-images.yml` warms the same key so a deploy rarely pays for it.
       - name: Restore the library's generated pictures
         id: images
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .library-images
           key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}

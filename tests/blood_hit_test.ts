@@ -95,7 +95,7 @@ describe("bloodBlow", () => {
 
   it("prices the blow in the victim's own bars, not in raw damage", () => {
     // The same fraction of health taken reads the same, whether the numbers are
-    // a level-1 blaster's or a legendary's — this is what stops the late game
+    // a level-1 starter's or a legendary's — this is what stops the late game
     // drowning in blood purely because the damage figures got bigger.
     const early = bloodBlow(20, 40, "minion", false)!;
     const late = bloodBlow(20_000, 40_000, "minion", false)!;

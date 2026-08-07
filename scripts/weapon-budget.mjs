@@ -18,7 +18,7 @@
 //   damage = budget(levelReq) × cooldown/1000 ÷ targets ÷ critLift
 //
 // Prints every weapon's current vs suggested damage and flags anything
-// outside ±TOLERANCE. Starters and the fallback blaster are exempt (the
+// outside ±TOLERANCE. Starters and the empty hand are exempt (the
 // difficulty ladder is calibrated on them); specials carry a premium.
 //
 //   node scripts/weapon-budget.mjs [--strict]   # --strict: exit 1 on drift

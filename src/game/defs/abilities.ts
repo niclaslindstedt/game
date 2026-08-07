@@ -430,7 +430,7 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = GENERATED_POWERUPS;
  * from.
  *
  * So the id is a constant rather than a string literal repeated at five call
- * sites, exactly as `SIDEARM_DEF_ID` is for the other thing the engine mints
+ * sites, exactly as `UNARMED_DEF_ID` is for the other thing the engine mints
  * without a catalog asking it to.
  */
 export const NUKE_DEF_ID = "screen_nuke";

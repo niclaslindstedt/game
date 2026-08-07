@@ -11,8 +11,8 @@
 // STARTING HEALTHBARS (`damage / maxHp`) — exactly what the kill launch prices
 // its throw on. A nick sprays a few drops; a blow that takes most of the bar
 // opens a wound; a one-shot throws the lot. Pricing it in bars rather than in
-// raw damage is what makes it hold across the campaign: a level-1 blaster round
-// on a moon rat and a legendary slam on a rift horror read the same way relative
+// raw damage is what makes it hold across the campaign: a level-1 jab at a
+// moon rat and a legendary slam on a rift horror read the same way relative
 // to what they did, instead of the whole late game drowning in blood because the
 // numbers got bigger.
 

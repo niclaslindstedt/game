@@ -32,6 +32,7 @@ import {
   STORY_ITEM_DEFS,
   TALENT_DEFS,
   THOUGHT_DEFS,
+  UNARMED_DEF_ID,
   UNIQUE_DEFS,
   WEAPON_DEFS,
   abilityDef,
@@ -227,12 +228,21 @@ describe("library coverage", () => {
   it("gives every ITEM in the catalogs a page, or a page that speaks for it", () => {
     // A generated grade variant (the exceptional/elite version of a pool base)
     // deliberately has no route: it is described on its ancestor's page, which
-    // is where its numbers actually mean something. Everything else — every
-    // hand-authored base, every named relic — is a page of its own, and a new
-    // item file must not be able to appear without one.
+    // is where its numbers actually mean something. THE EMPTY HAND has none
+    // either, and for a different reason: it is never a drop, never sits in a
+    // bag cell, and is deliberately drawn with NO ICON ("unarmed" has to look
+    // unarmed), so there is no art to build a sprite-driven page out of.
+    // Everything else — every hand-authored base, every named relic — is a
+    // page of its own, and a new item file must not be able to appear
+    // without one.
     const paged = new Set(model.items.map((item: { id: string }) => item.id));
     const missing = [...Object.values(WEAPON_DEFS), ...Object.values(GEAR_DEFS)]
-      .filter((def) => def.grade === undefined && !paged.has(def.id))
+      .filter(
+        (def) =>
+          def.grade === undefined &&
+          def.id !== UNARMED_DEF_ID &&
+          !paged.has(def.id),
+      )
       .map((def) => def.id);
     expect(missing).toEqual([]);
     expect(Object.keys(UNIQUE_DEFS).filter((id) => !paged.has(id))).toEqual([]);

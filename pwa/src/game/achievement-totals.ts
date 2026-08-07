@@ -14,6 +14,7 @@ import {
   DIFFICULTY_DEFS,
   enemyDef,
   LEVEL_ORDER,
+  UNARMED_DEF_ID,
   type GameEvent,
   type GameStats,
 } from "@game/core";
@@ -204,14 +205,15 @@ const TIER_RANK: Record<string, number> = {
 /** One currently-worn piece, as GameScreen summarizes the hero each tick. */
 export type WornPiece = { slot: string; tier: string; defId: string };
 
-/** Gear the hero is ISSUED rather than loots: the built-in sidearm, every
- * difficulty's wall weapon (the prelude's starting piece), and the clothes
- * on his back (`DifficultyDef.startingGear` — t-shirt, jeans, boots).
+/** Gear the hero is ISSUED rather than loots: THE EMPTY HAND (what the weapon
+ * slot falls back to holding nothing), every difficulty's wall weapon (the
+ * prelude's starting piece), and the clothes on his back
+ * (`DifficultyDef.startingGear` — t-shirt, jeans, boots).
  * Spawning dressed must not book first-equip feats — those are for the
  * first pieces the player actually picked up and wore. (A looted copy of
  * an issued base also skips; any other piece in the slot still books.) */
 const ISSUED_GEAR = new Set([
-  "blaster",
+  UNARMED_DEF_ID,
   ...Object.values(DIFFICULTY_DEFS).flatMap((d) => [
     d.startingWeapon,
     ...(d.startingGear ?? []),
@@ -394,8 +396,8 @@ export function applyKillRate(
 
 /**
  * Book the hero's currently-worn gear, IN PLACE: which slots have ever been
- * filled (the built-in sidearm doesn't count as arming the weapon slot — the
- * hero spawns with it), and, when EVERY slot is filled at once, the outfit's
+ * filled (BARE HANDS don't count as arming the weapon slot — the hand is
+ * never empty), and, when EVERY slot is filled at once, the outfit's
  * rank (the lowest tier worn — a full set of rares ranks 2). Returns true
  * when something new was booked. Fed by GameScreen once per change (it keeps
  * a cheap signature of the worn set, so this never runs on a quiet frame).
