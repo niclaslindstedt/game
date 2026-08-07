@@ -43,8 +43,12 @@ export function HudNode({
   const style = frameStyle(view.style, def.frame, ctx);
 
   switch (def.kind) {
+    // WHOSE registry answers a widget is the CONTEXT's: the HUD's own by
+    // default, an in-game menu's when a window is drawing (`ctx.widgets`). The
+    // node itself does not care — a bag pouch and a bag GRID are placed,
+    // gated and framed identically, and only their insides differ.
     case "widget":
-      return renderWidget(view, ctx);
+      return <>{(ctx.widgets ?? renderWidget)(view, ctx)}</>;
 
     case "bar":
       return (

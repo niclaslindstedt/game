@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE CLEAN SLATE, being spent — the one window among the run's screens that
+# cannot be waved away: it refunds every point into a pool the player then has
+# to place, and it closes when they are all back down (`confirmRespec`).
+#
+# Which is why it draws no dismissable backdrop of its own: `wrap: none` hands
+# that decision to the panel, and the panel does not offer one.
+screen: respec
+wrap: none
+body:
+  - id: chooser
+    kind: widget
+    widget: respecPanel

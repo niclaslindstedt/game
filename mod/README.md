@@ -81,6 +81,15 @@ my-mod/
   hud/events.yaml              what the HUD's own moments sound like
   hud/scripts/<id>.lua         the HUD's judgements: what colour "nearly out"
                                is, what a dial says, when a panel is worth it
+  menus/<id>.yaml              a WINDOW the run puts up — the pause menu, the
+                               bag's frame, the map — named after the screen
+                               the game already parks the hero behind
+  menus/modals/<id>.yaml       a modal of your own, raised by a button or by
+                               its own `when:` (a flag, or a judgement)
+  menus/elements/<id>.yaml     one ROW placed in somebody else's window —
+                               a button on the pause menu is one small file
+  menus/scripts/<id>.lua       the windows' judgements: when a modal is worth
+                               raising, what a row's label counts
   README.md                    what your mod is, for a person
   preview.png                  the Workshop thumbnail (optional but do it)
 ```

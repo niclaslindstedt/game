@@ -35,7 +35,7 @@ import { getSettings } from "../settings.ts";
 import { playHudEvent } from "../hud/sounds.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
-import type { CharTab } from "./SceneOverlays.tsx";
+import type { CharTab } from "./menu-panels.tsx";
 import type { InputQueues } from "./player-input.ts";
 
 import { runCommand, runCommandOk } from "../run-commands.ts";

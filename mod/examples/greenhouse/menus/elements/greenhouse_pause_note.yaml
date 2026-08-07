@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# ONE ROW ON SOMEBODY ELSE'S WINDOW — the addon half of the format, the way the
+# seed tally is the addon half of the HUD's.
+#
+# `menu:` names the window (the game's pause menu) and `into:` names the
+# container inside it (its action stack). `order: 15` puts this between the
+# shipped AUTO PILOT row (10) and its STOP (20) — the shipped rows are numbered
+# in tens for exactly this reason, so a mod can land between two of them without
+# either file knowing about the other.
+#
+# THE ID IS THE FILENAME, and an id the game already uses REPLACES that row.
+# `greenhouse_pause_note` is ours alone, so this ADDS. Name the file `resume.yaml`
+# instead and you have re-worded the pause menu's RESUME button.
+menu: pause
+into: actions
+order: 15
+kind: button
+class: pixel-button secondary
+aria: greenhouse-vault-report
+press:
+  # Any verb the game owns can hang off a mod's own button. This one raises OUR
+  # modal, which is the same door the script's `when:` comes through.
+  action: openModal
+  arg: greenhouse_bloom_warning
+children:
+  - kind: text
+    text:
+      script: greenhouse_menus.report_label
+    scale: 3
+    color: "#7ef0c8"

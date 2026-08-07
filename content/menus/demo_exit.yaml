@@ -1,0 +1,69 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# HOW TO PLAY's exit confirm — the demo's pause menu.
+#
+# The demo is a self-playing showcase a newcomer only WATCHES, so it has no
+# pause menu of its own: a tap ANYWHERE freezes the run and raises this. KEEP
+# WATCHING (or a tap on the backdrop) resumes where it froze; MAIN MENU drops
+# the demo for good.
+#
+# TWO WINDOWS, ONE SCREEN — and this is the pattern worth copying. Both this
+# file and `pause.yaml` answer the run's `paused` screen; each carries a
+# `visible:`, they are checked in `order`, and the first one that holds is
+# drawn. A mod that wants its own window on some runs and the shipped one on the
+# rest ships a file exactly like this one.
+
+screen: paused
+order: 0
+visible: menu.demo
+
+backdrop: game-overlay demo-exit-overlay
+class: intro-box
+# Tapping the backdrop keeps watching.
+dismiss:
+  action: resumeRun
+  sound: none
+
+body:
+  - id: title
+    kind: text
+    text: LEAVE THE DEMO?
+    scale: 5
+    color: "#ffd75e"
+
+  - id: hint
+    kind: text
+    text: RETURN TO THE MAIN MENU
+    scale: 2
+    color: "#9aa3ad"
+
+  - id: actions
+    kind: panel
+    class: splash-buttons
+    children:
+      - id: keep_watching
+        kind: button
+        class: pixel-button
+        aria: demo-keep-watching
+        order: 0
+        press:
+          action: resumeRun
+          sound: none
+        children:
+          - kind: text
+            text: KEEP WATCHING
+            scale: 3
+            color: "#0b0d10"
+
+      - id: quit
+        kind: button
+        class: pixel-button secondary
+        aria: demo-exit-menu
+        order: 10
+        press:
+          action: quitRun
+          sound: ui_back
+        children:
+          - kind: text
+            text: MAIN MENU
+            scale: 3

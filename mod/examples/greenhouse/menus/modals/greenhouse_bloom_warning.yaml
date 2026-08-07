@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# A MODAL OF OUR OWN, raised from Lua — the other half of the mod format's
+# window story.
+#
+# THE TWO HALVES. This file says WHAT the window is: its backdrop, its box, its
+# lines and its buttons, in exactly the grammar the game's own pause menu is
+# written in. `menus/scripts/greenhouse_menus.lua` says WHEN — `when:` is a
+# judgement, and the modal goes up on the EDGE, the moment the answer turns
+# yes. It does not come back the instant it is dismissed, and `once: true`
+# below means it is said one time per run rather than every time the vault gets
+# dangerous.
+#
+# A MODAL IS CHROME, NOT A SCREEN. It does not park the hero and does not freeze
+# the world — the run goes on behind it, which is why this one is a warning and
+# not a question. A window that genuinely has to hold the player is one of the
+# game's own screens (`menus/<id>.yaml` with a `screen:`), and those are the
+# engine's to raise.
+
+when:
+  script: greenhouse_menus.vault_is_hot
+once: true
+
+backdrop: game-overlay
+class: intro-box
+# Tapping anywhere outside puts it down — a warning is read, not answered.
+dismiss:
+  action: closeModal
+  sound: ui_back
+
+body:
+  - id: title
+    kind: text
+    text: THE VAULT IS AWAKE
+    scale: 5
+    color: "#7ef0c8"
+
+  # A line the script writes, because it counts what is out there. A read would
+  # be a binding; a sentence assembled out of one is a judgement.
+  - id: line
+    kind: text
+    text:
+      script: greenhouse_menus.warning_line
+    scale: 2
+    color: "#9aa3ad"
+
+  - id: actions
+    kind: panel
+    class: splash-buttons
+    children:
+      - id: understood
+        kind: button
+        class: pixel-button
+        aria: greenhouse-warning-dismiss
+        press:
+          action: closeModal
+          sound: ui_confirm
+        children:
+          - kind: text
+            text: UNDERSTOOD
+            scale: 3
+            color: "#0b0d10"

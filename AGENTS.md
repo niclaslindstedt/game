@@ -381,6 +381,23 @@ the playing HUD makes goes through the element's own `press.sound` or
 `content/hud/events.yaml` — a `playUiSound` call added back into the HUD is a
 sound no mod can reach. → `docs/modding.md`, `docs/content-pipeline.md`
 
+**AND SO IS EVERY WINDOW THE RUN PUTS IN FRONT OF THE PLAYER — `content/menus/`,
+NEVER A COMPONENT.** The pause menu, the bag's frame, the map, the stall, the
+chooser, the conversations and the trade table are one file each, named after the
+`PlayerScreen` they answer, drawn by `pwa/src/game/menus/`. A ROW IS A HUD NODE
+— same kinds, bindings, presses, judgements, style block, renderer — so the HUD's
+four rules above are these rules, and only the FURNITURE is new (a `backdrop:`
+you can press, the box's `class:`, a `dismiss:`). Four more bite here: EVERY
+top-level row has an id, because that id is how a mod replaces it and `into:` +
+`order:` is how one lands between two of ours; TWO WINDOWS MAY SHARE ONE SCREEN,
+checked in `order`, first `visible:` that holds wins (which is how the demo's
+confirm and the pause menu both answer `paused`); a MODAL is raised by
+`action: openModal` or by its own `when:` — EDGE-triggered, and failing CLOSED
+where a `visible:` fails open — and it is app-side CHROME that must never park a
+hero or freeze a world (that is `PlayerScreen`'s job, and a session's); and the
+CATALOG must answer every screen the engine can raise, which the generator
+refuses to skip. → `docs/modding.md`, `docs/content-pipeline.md`
+
 **A BODY'S FRAME IS A CONVENTION WITH A TABLE IN FRONT OF IT, AND THE FALLBACK
 IS THE SHIPPED GAME.** Every pass that draws a character asks
 `clipFrameName(subject, state, at)` (`pwa/src/game/render/clips.ts`) FIRST and
@@ -544,33 +561,35 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 **Content is data.** Every catalog below is authored YAML under `content/`,
 compiled by `make levels`. The skill named is the one to load before authoring.
 
-| Authoring                                                     | File                                                                                                                                    | Skill                                   |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| A level (mission — the venue MINUS its floor)                 | `content/levels/<id>.yaml`                                                                                                              | `level-design`                          |
-| The map it is CARVED from, per run                            | `content/maps/<id>.yaml`                                                                                                                | `mapgen-improvement`, `map-improvement` |
-| An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml`                                                                                                     | `enemy-design`                          |
-| A boss's set-piece MOVE                                       | `src/game/defs/enemies/abilities.ts` + `src/game/mechanics/<id>.ts`                                                                     | `boss-abilities`                        |
-| A boss's DEATH RITE                                           | `src/game/death-rites/` + `death:` on the def                                                                                           | `boss-abilities`, `enemy-design`        |
-| An item, a named unique, a set                                | `content/items/<rarity>/<id>.yaml`, `content/sets.yaml`                                                                                 | `weapon-system`                         |
-| The loot economy knobs                                        | `content/item_quality.yaml`, `content/item_rarity.yaml`                                                                                 | `weapon-system`                         |
-| A powerup (a timed pickup power)                              | `content/powerups.yaml`                                                                                                                 | `visual-effects`                        |
-| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                                       | `engine-system`                         |
-| A passive TALENT                                              | `content/talents.yaml`                                                                                                                  | `talent-fx`                             |
-| A new PROC a talent can fire                                  | a block on `TalentDef` + `TALENT_BLOCKS` + one reader in `talent-effects.ts` + `PROC_BLOCKS` — never a branch on a talent id            | `engine-system`, `talent-fx`            |
-| A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                               | `enemy-design`                          |
-| An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                              | `quest-design`                          |
-| A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                      | `update-story`                          |
-| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                                | `pixel-assets`, `art-improvement`       |
-| A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                   | `sound-effects`                         |
-| The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                | `menu-design`                           |
-| THE HUD — the fight's chrome AND the road's dashboard         | `content/hud/` (`hud.yaml`, `elements/<id>.yaml`, `events.yaml`, `scripts/<id>.lua`); a WIDGET's insides in `pwa/src/game/hud/widgets/` | `menu-design`, `ui-review`              |
-| The hero level curve                                          | `content/leveling.yaml`                                                                                                                 | `leveling-balance`                      |
-| The campaign ladder / the autopilot's knobs                   | `content/ladder.yaml`, `content/bot.yaml`                                                                                               | `level-design`, `bot-improvement`       |
-| A GORE piece, organ or family                                 | `content/sprites/effects/gib_*` + the pools in `gore-burst.ts` / `gore.ts`                                                              | `gore-system`                           |
+| Authoring                                                     | File                                                                                                                                      | Skill                                   |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| A level (mission — the venue MINUS its floor)                 | `content/levels/<id>.yaml`                                                                                                                | `level-design`                          |
+| The map it is CARVED from, per run                            | `content/maps/<id>.yaml`                                                                                                                  | `mapgen-improvement`, `map-improvement` |
+| An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml`                                                                                                       | `enemy-design`                          |
+| A boss's set-piece MOVE                                       | `src/game/defs/enemies/abilities.ts` + `src/game/mechanics/<id>.ts`                                                                       | `boss-abilities`                        |
+| A boss's DEATH RITE                                           | `src/game/death-rites/` + `death:` on the def                                                                                             | `boss-abilities`, `enemy-design`        |
+| An item, a named unique, a set                                | `content/items/<rarity>/<id>.yaml`, `content/sets.yaml`                                                                                   | `weapon-system`                         |
+| The loot economy knobs                                        | `content/item_quality.yaml`, `content/item_rarity.yaml`                                                                                   | `weapon-system`                         |
+| A powerup (a timed pickup power)                              | `content/powerups.yaml`                                                                                                                   | `visual-effects`                        |
+| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                                         | `engine-system`                         |
+| A passive TALENT                                              | `content/talents.yaml`                                                                                                                    | `talent-fx`                             |
+| A new PROC a talent can fire                                  | a block on `TalentDef` + `TALENT_BLOCKS` + one reader in `talent-effects.ts` + `PROC_BLOCKS` — never a branch on a talent id              | `engine-system`, `talent-fx`            |
+| A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                                 | `enemy-design`                          |
+| An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                                | `quest-design`                          |
+| A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                        | `update-story`                          |
+| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                                  | `pixel-assets`, `art-improvement`       |
+| A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                     | `sound-effects`                         |
+| The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                  | `menu-design`                           |
+| AN IN-GAME WINDOW — the pause menu, the bag's frame, a modal  | `content/menus/<id>.yaml`, `modals/<id>.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`; its code-backed insides in `pwa/src/game/menus/` | `menu-design`, `ui-review`              |
+| THE HUD — the fight's chrome AND the road's dashboard         | `content/hud/` (`hud.yaml`, `elements/<id>.yaml`, `events.yaml`, `scripts/<id>.lua`); a WIDGET's insides in `pwa/src/game/hud/widgets/`   | `menu-design`, `ui-review`              |
+| The hero level curve                                          | `content/leveling.yaml`                                                                                                                   | `leveling-balance`                      |
+| The campaign ladder / the autopilot's knobs                   | `content/ladder.yaml`, `content/bot.yaml`                                                                                                 | `level-design`, `bot-improvement`       |
+| A GORE piece, organ or family                                 | `content/sprites/effects/gib_*` + the pools in `gore-burst.ts` / `gore.ts`                                                                | `gore-system`                           |
 
 | Presentation                                      | Goes in                                                                        | Reference             |
 | ------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------- |
 | A HUD element (a bar, a slot, a readout, a dial)  | `content/hud/elements/<id>.yaml` — never a component                           | `ui-review`           |
+| A row on an in-game window, or a modal            | `content/menus/` — never a component                                           | `ui-review`           |
 | A transient visual effect                         | `pwa/src/game/render/effects.ts` or a CSS overlay driver                       | `visual-effects`      |
 | Blood, a cleave, a gib, a gore family             | `pwa/src/game/game-screen/` + `render/blood*`                                  | `gore-system`         |
 | A weapon's signature slash/muzzle                 | `fx:` on the item + `pwa/src/game/weapon-elements.ts`                          | `weapon-system`       |
@@ -599,25 +618,26 @@ engine catalogs → a gitignored module regenerated on every build.** Never edit
 commit a generated file. `make levels` runs the chain; the ORDER is a dependency
 order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.md`.
 
-| Catalog       | Source                                                    | Generator                 | Output                                              | Snapshot guard                |
-| ------------- | --------------------------------------------------------- | ------------------------- | --------------------------------------------------- | ----------------------------- |
-| Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`    | `src/generated/scripts.ts`                          | `script_parity_test.ts`       |
-| Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`      | `src/generated/items.ts`                            | `item_roundtrip_test.ts`      |
-| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`      | `src/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
-| Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`    | `src/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
-| Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`   | `src/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
-| Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`     | `pwa/src/game/assets/`                              | —                             |
-| Levels        | `content/levels/`, `ladder.yaml`                          | `generate-levels.mjs`     | `src/generated/levels.ts`                           | `yaml_roundtrip_test.ts`      |
-| Maps          | `content/maps/`                                           | `generate-maps.mjs`       | `src/generated/map-blueprints.ts`                   | `generated_maps_test.ts`      |
-| Quests        | `content/quests/`, `quest-givers.yaml`, `conversations/`  | `generate-quests.mjs`     | `src/generated/quests.ts`                           | —                             |
-| Talents       | `content/talents.yaml`                                    | `generate-talents.mjs`    | `src/generated/talents.ts`                          | `talent_roundtrip_test.ts`    |
-| Companions    | `content/companions.yaml`                                 | `generate-companions.mjs` | `src/generated/companions.ts`                       | `companion_roundtrip_test.ts` |
-| Leveling      | `content/leveling.yaml`                                   | `generate-leveling.mjs`   | `src/generated/leveling.ts`                         | —                             |
-| Bot tuning    | `content/bot.yaml`                                        | `generate-bot-tuning.mjs` | `src/generated/botTuning.ts`                        | —                             |
-| Sounds        | `content/sounds/`                                         | `generate-sounds.mjs`     | `pwa/src/generated/sounds{,-ui}.ts`                 | `sound_catalog_test.ts`       |
-| Music         | `content/music/`                                          | `generate-music.mjs`      | `pwa/src/generated/music/`                          | `music_roundtrip_test.ts`     |
-| Title menu    | `content/mainmenu.yaml`                                   | `generate-menu.mjs`       | `pwa/src/generated/menu.ts`                         | `menu_tree_test.ts`           |
-| HUD           | `content/hud/`                                            | `generate-hud.mjs`        | `pwa/src/generated/hud.ts`                          | `hud_catalog_test.ts`         |
+| Catalog       | Source                                                    | Generator                   | Output                                              | Snapshot guard                |
+| ------------- | --------------------------------------------------------- | --------------------------- | --------------------------------------------------- | ----------------------------- |
+| Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`      | `src/generated/scripts.ts`                          | `script_parity_test.ts`       |
+| Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`        | `src/generated/items.ts`                            | `item_roundtrip_test.ts`      |
+| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `src/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
+| Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`      | `src/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
+| Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`     | `src/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
+| Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`       | `pwa/src/game/assets/`                              | —                             |
+| Levels        | `content/levels/`, `ladder.yaml`                          | `generate-levels.mjs`       | `src/generated/levels.ts`                           | `yaml_roundtrip_test.ts`      |
+| Maps          | `content/maps/`                                           | `generate-maps.mjs`         | `src/generated/map-blueprints.ts`                   | `generated_maps_test.ts`      |
+| Quests        | `content/quests/`, `quest-givers.yaml`, `conversations/`  | `generate-quests.mjs`       | `src/generated/quests.ts`                           | —                             |
+| Talents       | `content/talents.yaml`                                    | `generate-talents.mjs`      | `src/generated/talents.ts`                          | `talent_roundtrip_test.ts`    |
+| Companions    | `content/companions.yaml`                                 | `generate-companions.mjs`   | `src/generated/companions.ts`                       | `companion_roundtrip_test.ts` |
+| Leveling      | `content/leveling.yaml`                                   | `generate-leveling.mjs`     | `src/generated/leveling.ts`                         | —                             |
+| Bot tuning    | `content/bot.yaml`                                        | `generate-bot-tuning.mjs`   | `src/generated/botTuning.ts`                        | —                             |
+| Sounds        | `content/sounds/`                                         | `generate-sounds.mjs`       | `pwa/src/generated/sounds{,-ui}.ts`                 | `sound_catalog_test.ts`       |
+| Music         | `content/music/`                                          | `generate-music.mjs`        | `pwa/src/generated/music/`                          | `music_roundtrip_test.ts`     |
+| Title menu    | `content/mainmenu.yaml`                                   | `generate-menu.mjs`         | `pwa/src/generated/menu.ts`                         | `menu_tree_test.ts`           |
+| HUD           | `content/hud/`                                            | `generate-hud.mjs`          | `pwa/src/generated/hud.ts`                          | `hud_catalog_test.ts`         |
+| In-game menus | `content/menus/`                                          | `generate-ingame-menus.mjs` | `pwa/src/generated/ingame-menus.ts`                 | `ingame_menu_catalog_test.ts` |
 
 Accept an intentional change with the matching `node scripts/update-*-snapshot.mjs`
 — never by editing a fixture. **The sound, music and menu catalogs emit into the
@@ -684,6 +704,7 @@ are regenerated in the same commit as the content change that moves them:
 | engine public API (`src/index.ts`)                                     | `docs/architecture.md`, `README.md` Usage                                 |
 | the title menu (a screen, a row, an order, a page name)                | `content/mainmenu.yaml` only — the compiled tree is the one source        |
 | the HUD (an element, where it sits, what it says or sounds like)       | `content/hud/` only; a new BINDING/ACTION/WIDGET owes the schema a row    |
+| an IN-GAME WINDOW (the pause menu, a modal, a row on either)           | `content/menus/` only; a new WIDGET or SCREEN owes the schema a row       |
 | how the picture is drawn (projection, postfx, gait, loot presentation) | `docs/rendering.md`                                                       |
 | a catalog's compile pipeline, or a parity rule                         | `docs/content-pipeline.md`                                                |
 | a RULE the catalogs sit inside (a carry-over, an economy, a gate)      | `docs/game-content.md` — never a per-item or per-venue entry              |
@@ -791,6 +812,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Generated maps, blueprints, a venue's feel            | `mapgen-improvement`, `map-improvement`, `level-design` |
 | Errands, givers, conversations, campaign chains       | `quest-design`                                          |
 | The title menu, a settings row, the developer menu    | `menu-design`                                           |
+| An IN-GAME window — the pause menu, a modal, a row    | `menu-design`, `ui-review`                              |
 | Blood, cleaves, gibs, gore families, the NSFW gate    | `gore-system`                                           |
 | A boss's set-piece move or death rite                 | `boss-abilities`                                        |
 | A transient effect, the effects gallery               | `visual-effects`                                        |
@@ -811,35 +833,35 @@ skill is the source of truth — load that, not a search of the tree.
 Load the relevant `SKILL.md` **before** starting that kind of work — each one
 carries the workflow, the quality bar and the traps for its subject.
 
-| Skill                 | Use for                                                              |
-| --------------------- | -------------------------------------------------------------------- |
-| `mod-authoring`       | Creating a MOD, or updating a published one — the scope and the loop |
-| `new-game`            | Turning a clone of this repo into a new game/sequel                  |
-| `engine-system`       | Adding/changing a gameplay system — the engine-first workflow        |
-| `level-design`        | Adding a venue (the mission + the blueprint its map is carved from)  |
-| `map-improvement`     | Improving an EXISTING venue's design and feel                        |
-| `mapgen-improvement`  | Improving the map GENERATOR, which lands on every venue at once      |
-| `enemy-design`        | Adding or reworking a minion/elite/boss, or a companion              |
-| `boss-abilities`      | Giving a boss a set-piece MOVE, or a death rite                      |
-| `quest-design`        | An errand, its giver, its conversation, a campaign chain             |
-| `weapon-system`       | Weapons, loot, tiers/affixes, named uniques, the off-hand            |
-| `leveling-balance`    | How fast the hero levels — the XP curve and its pacing               |
-| `simulate-run`        | MEASURING actual balance by running the real engine headlessly       |
-| `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs           |
-| `art-improvement`     | Finding and replacing the game's WORST art                           |
-| `sound-effects`       | Synthesized SFX, the tracker music, and a MOD's recorded audio       |
-| `talent-fx`           | The passive talent trees and their always-on looks                   |
-| `visual-effects`      | A transient effect — explosion, flash, aura, screen wash             |
-| `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate      |
-| `playtest`            | Verifying a change in the running game with the autoplay bot         |
-| `bot-improvement`     | Improving the autopilot toward human-capability play                 |
-| `debug-game`          | Investigating a gameplay/render/input/audio bug                      |
-| `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball        |
-| `menu-design`         | The title menu, a settings row, the developer menu                   |
-| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports    |
-| `store-shots`         | Regenerating the App Store / Play Store screenshot set               |
-| `update-story`        | Writing, rewriting or retoning ANY line the game speaks              |
-| `library-improvement` | Building or improving the generated `/library/` site                 |
+| Skill                 | Use for                                                               |
+| --------------------- | --------------------------------------------------------------------- |
+| `mod-authoring`       | Creating a MOD, or updating a published one — the scope and the loop  |
+| `new-game`            | Turning a clone of this repo into a new game/sequel                   |
+| `engine-system`       | Adding/changing a gameplay system — the engine-first workflow         |
+| `level-design`        | Adding a venue (the mission + the blueprint its map is carved from)   |
+| `map-improvement`     | Improving an EXISTING venue's design and feel                         |
+| `mapgen-improvement`  | Improving the map GENERATOR, which lands on every venue at once       |
+| `enemy-design`        | Adding or reworking a minion/elite/boss, or a companion               |
+| `boss-abilities`      | Giving a boss a set-piece MOVE, or a death rite                       |
+| `quest-design`        | An errand, its giver, its conversation, a campaign chain              |
+| `weapon-system`       | Weapons, loot, tiers/affixes, named uniques, the off-hand             |
+| `leveling-balance`    | How fast the hero levels — the XP curve and its pacing                |
+| `simulate-run`        | MEASURING actual balance by running the real engine headlessly        |
+| `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs            |
+| `art-improvement`     | Finding and replacing the game's WORST art                            |
+| `sound-effects`       | Synthesized SFX, the tracker music, and a MOD's recorded audio        |
+| `talent-fx`           | The passive talent trees and their always-on looks                    |
+| `visual-effects`      | A transient effect — explosion, flash, aura, screen wash              |
+| `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate       |
+| `playtest`            | Verifying a change in the running game with the autoplay bot          |
+| `bot-improvement`     | Improving the autopilot toward human-capability play                  |
+| `debug-game`          | Investigating a gameplay/render/input/audio bug                       |
+| `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball         |
+| `menu-design`         | The title menu, a settings row, the developer menu, an in-game window |
+| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports     |
+| `store-shots`         | Regenerating the App Store / Play Store screenshot set                |
+| `update-story`        | Writing, rewriting or retoning ANY line the game speaks               |
+| `library-improvement` | Building or improving the generated `/library/` site                  |
 
 ## Maintenance skills
 

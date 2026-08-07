@@ -41,7 +41,12 @@ import {
   HUD_SURFACES,
   HUD_WIDGETS,
 } from "../../scripts/asset-tools/hud-schema.mjs";
+import {
+  MENU_SCREENS,
+  MENU_WIDGETS,
+} from "../../scripts/asset-tools/ingame-menu-schema.mjs";
 import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
+import { loadMenus } from "../../scripts/menu-data/load-ingame-yaml.mjs";
 
 // Engine modules under src/lib use the @game/lib alias — map it so the def
 // catalogs import cleanly under plain node.
@@ -281,6 +286,13 @@ function loadHudRegions() {
   return loadHud(engine("content")).regions;
 }
 
+/** The shipped WINDOWS, read off the authored tree — every menu and modal a
+ * mod's own row may be aimed at, and every one it may replace by naming. */
+function loadMenuIds() {
+  const { menus, modals } = loadMenus(engine("content"));
+  return sorted([...menus, ...modals].map((window) => window.id));
+}
+
 function shippedSpriteNames() {
   const atlas = JSON.parse(
     readFileSync(engine("pwa/src/game/assets/atlas.json"), "utf8"),
@@ -407,6 +419,17 @@ const catalog = {
   hudWidgets: sorted(HUD_WIDGETS),
   hudEvents: sorted(HUD_EVENTS),
   hudSurfaces: sorted(HUD_SURFACES),
+  // THE RUN'S OWN WINDOWS: every menu and modal this build ships (a mod's row
+  // is aimed at one of these or at one it ships itself, and a mod REPLACES one
+  // by naming it), the screens a window may answer, and the code-backed insides
+  // it may place. Read off the authored `content/menus/` tree and the schema,
+  // for the reason everything here is snapshotted.
+  //
+  // The bindings and actions a window's rows may say are the HUD's own above —
+  // one vocabulary, drawn by one renderer.
+  menus: loadMenuIds(),
+  menuScreens: sorted(MENU_SCREENS),
+  menuWidgets: sorted(MENU_WIDGETS),
   // THE RULES a mod may take over: script file → the hooks that file owns.
   // Not an id set either — it is the shape of the scripting seam, and it is in
   // here for the same reason `talentProcs` is: the mod compiler runs in the

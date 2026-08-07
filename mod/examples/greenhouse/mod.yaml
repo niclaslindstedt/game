@@ -61,6 +61,12 @@ contents:
     summary: A tally on the HUD's left rail counting what the vault has lost so far.
   - path: hud/scripts/greenhouse_hud.lua
     summary: What that tally says, when it is worth showing, and what colour it goes.
+  - path: menus/modals/greenhouse_bloom_warning.yaml
+    summary: A warning window that raises itself when the vault turns dangerous.
+  - path: menus/elements/greenhouse_pause_note.yaml
+    summary: A VAULT REPORT row on the pause menu, which raises that same window.
+  - path: menus/scripts/greenhouse_menus.lua
+    summary: When the warning goes up, what it says, and what the pause row is called.
   - path: powerups.yaml
     summary: SPORE BLOOM - a power that lays burning ground behind you and rings you in it.
   - path: talents.yaml

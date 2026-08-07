@@ -365,6 +365,63 @@ The shipped one is three pieces along the bottom of the windscreen: a
 speedometer with the tachometer drawn inside it, the shift gate (an `icon` whose
 sprite a judgement picks, one picture per position), and the damage dial.
 
+### …and the RUN'S OWN WINDOWS, which are the same act
+
+The pause menu, the bag's frame, the map, the stall, the chooser, the two
+conversation boxes and the trade table are authored under `content/menus/` and
+compiled to `pwa/src/generated/ingame-menus.ts` (→ [content
+pipeline](content-pipeline.md)). A mod ships the same files in its own `menus/`
+folder, through the same loader and the same schema — and the reasoning is the
+HUD's, unchanged: a window hands out nothing. It draws a screen the ENGINE
+already raised, its rows carry `action:` names out of the same fixed list, its
+values are the same reads, and the one place it can compute anything is a Lua
+judgement in the same metered sandbox. The title menu stays refused for the same
+reason it always was: that tree decides which screens EXIST.
+
+**A ROW IS A HUD NODE.** Same kinds, same bindings, same presses, same
+judgements, same bounded style block, same renderer. If you can author a HUD
+element you can author a menu row, and the only new vocabulary is the furniture
+a window has that a HUD has not — a `backdrop:` you can press, the `class:` of
+the box it stops at, a `dismiss:`, and the widgets a window places (the bag
+grid, the map, the talk box) instead of the HUD's.
+
+Three things beyond the HUD's four are worth knowing:
+
+- **Every top-level row has a NAME, and the id is the whole merge rule again.**
+  A window merges by id (yours replaces ours), and so does a ROW: ship
+  `menus/elements/<id>.yaml` with `menu: pause` and you have added a button to
+  the pause menu; give it the id `resume` and you have re-worded ours instead.
+  `into:` names a container inside the window (the pause menu's action stack)
+  and `order:` places it — the shipped rows are numbered in tens, so `order: 15`
+  lands between the second and the third without either file knowing about the
+  other. A row with no order REPLACES in place, or goes to the end if it
+  replaces nothing.
+- **TWO WINDOWS MAY SHARE ONE SCREEN.** Each carries a `visible:`, they are
+  checked in `order`, and the first that holds is drawn — which is how the
+  demo's exit confirm and the ordinary pause menu both answer `paused`. It is
+  also how a conversion gives itself its own pause menu on its own levels and
+  leaves the game's alone everywhere else.
+- **A MODAL IS THE ONE WINDOW YOU RAISE YOURSELF**, and it has two doors.
+  `press: { action: openModal, arg: <id> }` on any button in the game — a HUD
+  element, a menu row, a row inside another modal — or the modal's own `when:`,
+  which is a flag, a list of flags, or a Lua judgement. `when:` raises it on the
+  EDGE (the publish the answer turns yes, not again until it has turned no), so
+  a window you dismiss stays dismissed; `once: true` makes it once a run. That
+  pair — a `.lua` that says WHEN, a `.yaml` that says WHAT — is the whole of
+  drawing your own window from a script. `mod/examples/greenhouse/menus/` is a
+  worked one.
+
+  A modal is app-side CHROME: it does not park the hero and does not freeze the
+  world, because a window content raised must never be able to stop a session.
+  One that wants the hero parked puts an engine verb on one of its rows.
+
+Two refusals catch the common mistakes: a `when:` fails CLOSED where a
+`visible:` fails open (a modal raised on a binding this build has never heard of
+would stand in the player's face for the rest of the run), and the glyph check
+reads your YAML rather than your Lua — a line a judgement RETURNS is not checked
+against the pixel font, so a character outside `glyphs` in `mod/catalog.json`
+comes out as a question mark with every check green.
+
 ### A mod's venue is CARVED, like every other
 
 `maps/<id>.yaml` is the map half of a venue (the `mapgen-improvement` skill in

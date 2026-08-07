@@ -59,6 +59,10 @@ import {
   validateHudEvents,
   validateHudRegions,
 } from "../../scripts/asset-tools/hud-schema.mjs";
+import {
+  validateMenu,
+  validateMenuElement,
+} from "../../scripts/asset-tools/ingame-menu-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import {
   moduleExports,
@@ -100,6 +104,7 @@ import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadScripts } from "../../scripts/script-data/load-lua.mjs";
 import { loadSets } from "../../scripts/set-data/load-yaml.mjs";
 import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
+import { loadMenus } from "../../scripts/menu-data/load-ingame-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 import { loadTalents } from "../../scripts/talent-data/load-yaml.mjs";
 import {
@@ -311,6 +316,17 @@ export function buildMod(modDir, catalog) {
   // cross-references, and checking them before those sets exist would only be
   // able to check their punctuation.
   const hud = loadTree(() => loadHud(modDir), "hud", fail);
+  // THE RUN'S OWN WINDOWS. A mod's `menus/` folder is the game's own
+  // `content/menus/` in the same format, through the same loader and the same
+  // schema — the pause menu, the bag's frame, a modal of its own, and the Lua
+  // that decides when one goes up. It merges per WINDOW and per ROW at load
+  // (later wins), so a mod may re-word one button, add a row to the pause menu,
+  // re-draw a whole window or ship a modal nothing else has — and a mod that
+  // ships none leaves every window exactly as it found it.
+  //
+  // CHECKED far below with the HUD, and for the same reason: a window's frame
+  // sprite and a row's press sound are cross-references.
+  const menus = loadTree(() => loadMenus(modDir), "menus", fail);
   // HOW THE ART MOVES. Parsed here and CHECKED far below, once the sprite names
   // this mod may reach are known — a clip is nothing but a list of frames, so
   // validating it before the sprite tree has been read would only be able to
@@ -735,6 +751,50 @@ export function buildMod(modDir, catalog) {
   {
     const res = validateHudCatalog(hud?.elements ?? []);
     errors.push(...res.errors);
+  }
+
+  // THE WINDOWS, against the same sprite and sound names — plus this mod's own
+  // menu judgements, compiled with the game's VM here so a broken one fails on
+  // the author's machine rather than in a run.
+  //
+  // The CATALOG check (`validateMenuCatalog`) is deliberately NOT run: it
+  // refuses a catalog that leaves one of the run's screens unanswered, which is
+  // exactly what a mod shipping a single window looks like. The game's own
+  // catalog is what has to answer every screen, and its generator checks that.
+  const modMenuScripts = {};
+  const menuScriptExports = new Map();
+  for (const script of menus?.scripts ?? []) {
+    const res = moduleExports(script.source, script.file);
+    errors.push(...res.errors);
+    menuScriptExports.set(script.id, res.functions);
+    modMenuScripts[script.id] = { id: script.id, source: script.source };
+  }
+  const menuRefs = {
+    sprites: spriteNames,
+    sounds: soundIds,
+    scripts: menuScriptExports,
+    // The windows this mod's rows may be aimed at: the game's own plus the ones
+    // it ships itself — the same base ∪ mod rule every other cross-reference
+    // here follows.
+    menus: union(catalog.menus ?? [], [
+      ...(menus?.menus ?? []).map((menu) => menu.id),
+      ...(menus?.modals ?? []).map((modal) => modal.id),
+    ]),
+  };
+  for (const menu of menus?.menus ?? []) {
+    const res = validateMenu(menu, menuRefs);
+    errors.push(...prefix(res.errors, `menus/${menu.id}`));
+    warnings.push(...prefix(res.warnings, `menus/${menu.id}`));
+  }
+  for (const modal of menus?.modals ?? []) {
+    const res = validateMenu(modal, menuRefs, { modal: true });
+    errors.push(...prefix(res.errors, `menus/modals/${modal.id}`));
+    warnings.push(...prefix(res.warnings, `menus/modals/${modal.id}`));
+  }
+  for (const element of menus?.elements ?? []) {
+    const res = validateMenuElement(element, menuRefs);
+    errors.push(...prefix(res.errors, `menus/elements/${element.id}`));
+    warnings.push(...prefix(res.warnings, `menus/elements/${element.id}`));
   }
 
   // HOW THE ART MOVES, against the sprite names this mod may actually reach.
@@ -1183,6 +1243,23 @@ export function buildMod(modDir, catalog) {
               elements: hud.elements,
               events: hud.events,
               scripts: modHudScripts,
+            }
+          : undefined,
+      // THE WINDOWS this mod ships — its menus, its modals, the rows it hangs
+      // off ours and the judgements behind them. Merged per window and per row
+      // at load rather than wholesale (see `mergeMenus`), so a mod that re-words
+      // one button keeps the player the rest of their pause menu. Omitted
+      // entirely by the many mods that leave the windows alone.
+      menus:
+        (menus?.menus.length ?? 0) > 0 ||
+        (menus?.modals.length ?? 0) > 0 ||
+        (menus?.elements.length ?? 0) > 0 ||
+        Object.keys(modMenuScripts).length > 0
+          ? {
+              menus: menus.menus,
+              modals: menus.modals,
+              elements: menus.elements,
+              scripts: modMenuScripts,
             }
           : undefined,
       // The manifest's inventory — what the MOD INFO screen reads to tell a

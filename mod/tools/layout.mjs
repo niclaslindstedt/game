@@ -150,14 +150,18 @@ export const ITEM_RARITIES = new Set([
 ]);
 
 /**
- * THE ONE FOLDER THAT IS A TREE OF TREES: `hud/`.
+ * THE TWO FOLDERS THAT ARE TREES OF TREES: `hud/` and `menus/`.
  *
- * The HUD is authored the way the game's own is (`content/hud/`) — two files
- * describing the frame and its sounds, a folder of elements, a folder of Lua
- * judgements — so it is the one catalog whose shape the flat `TREES` table
- * above cannot describe. Kept as its own table rather than bent into that one,
- * because the shape is real: an element and the judgement it calls are
+ * Both are authored the way the game's own are (`content/hud/`,
+ * `content/menus/`) — some files at the root, then folders of elements and of
+ * Lua judgements — so they are the catalogs whose shape the flat `TREES` table
+ * above cannot describe. Kept as their own table rather than bent into that
+ * one, because the shape is real: an element and the judgement it calls are
  * different kinds of file and belong in different folders.
+ *
+ * `files` is a fixed name list; `loose` is "any `<id>.<ext>` at this folder's
+ * root is content", which is what `menus/` needs — a window's filename IS its
+ * id, so the set cannot be written down in advance.
  */
 export const NESTED = {
   hud: {
@@ -169,6 +173,16 @@ export const NESTED = {
     trees: {
       elements: { ext: "yaml", what: "a HUD element" },
       scripts: { ext: "lua", what: "a HUD judgement" },
+    },
+  },
+  menus: {
+    what: "the in-game menus",
+    files: {},
+    loose: { ext: "yaml", what: "a window — one of the run's own screens" },
+    trees: {
+      modals: { ext: "yaml", what: "a modal you raise yourself" },
+      elements: { ext: "yaml", what: "a row placed in somebody else's window" },
+      scripts: { ext: "lua", what: "a menu judgement" },
     },
   },
 };
@@ -357,12 +371,22 @@ function classifyNested(parts, nested) {
   const [root, ...rest] = parts;
   const shapes = [
     ...Object.keys(nested.files),
+    ...(nested.loose ? [`<id>.${nested.loose.ext}`] : []),
     ...Object.entries(nested.trees).map(
       ([dir, tree]) => `${dir}/<id>.${tree.ext}`,
     ),
   ].map((shape) => `${root}/${shape}`);
   if (rest.length === 1) {
     if (rest[0] in nested.files) return { role: "content", catalog: root };
+    // A folder whose ROOT takes any `<id>.<ext>` — `menus/`, where the filename
+    // is the window's id.
+    if (
+      nested.loose &&
+      !rest[0].startsWith("_") &&
+      rest[0].endsWith(`.${nested.loose.ext}`)
+    ) {
+      return { role: "content", catalog: root };
+    }
     return {
       role: "stray",
       why: `${nested.what} is loaded from ${shapes.join(", ")} — nothing reads "${parts.join("/")}"`,

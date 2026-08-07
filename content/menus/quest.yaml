@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE ERRAND BOX — the conversation with somebody who has work for you: the
+# offer, the topics, the turn-in and the reward picker.
+screen: quest
+wrap: none
+body:
+  - id: conversation
+    kind: widget
+    widget: questBox

@@ -124,7 +124,7 @@ export function DemoChrome({
   bumpUi: () => void;
 }) {
   // HOW TO PLAY: a tap ANYWHERE freezes the demo and raises the exit confirm
-  // (DemoExitOverlay). Reuses the pause machinery — latched so the bot's input
+  // (`content/menus/demo_exit.yaml`). Reuses the pause machinery — latched so the bot's input
   // loop leaves it alone (like a hand-opened pause) — so KEEP WATCHING resumes
   // exactly where it froze. The developer BOT VIEW keeps the normal pause menu.
   // Exception: while a teaching tooltip is up, the tap dismisses THAT and keeps

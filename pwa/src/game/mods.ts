@@ -81,6 +81,13 @@ import {
 } from "./hud/layout.ts";
 import type { HudElementDef, HudLayout, HudRegionDef } from "./hud/types.ts";
 import {
+  mergeMenus,
+  restoreMenuLayout,
+  setMenuLayout,
+  SHIPPED_MENUS,
+} from "./menus/layout.ts";
+import type { MenuDef, MenuElementDef, MenuLayout } from "./menus/types.ts";
+import {
   clearSpriteClips,
   setSpriteClips,
   type ClipState,
@@ -159,6 +166,11 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
     // would be the page disagreeing with the compiler about what a mod is.
     (bundle.hud?.elements?.length ?? 0) +
     Object.keys(bundle.hud?.regions ?? {}).length +
+    // …nor does one whose whole contribution is a WINDOW: a re-drawn pause menu
+    // or a modal of its own is a mod for the same reason a HUD is.
+    (bundle.menus?.menus?.length ?? 0) +
+    (bundle.menus?.modals?.length ?? 0) +
+    (bundle.menus?.elements?.length ?? 0) +
     bundle.sprites.length +
     Object.keys(bundle.clips ?? {}).length;
   return adds === 0 ? "empty" : null;
@@ -306,6 +318,12 @@ export async function applyMods(
   // in `hud/layout.ts` beside the shipped layout it merges onto.
   let hud: HudLayout = SHIPPED_HUD;
   const hudOwners = new Map<string, string[]>();
+  // THE RUN'S OWN WINDOWS, merged per WINDOW and per ROW for exactly the reason
+  // the HUD is merged per element: a mod that re-draws the pause menu and a
+  // later one that adds a row to the bag are not in conflict, and "last mod to
+  // mention the menus owns all of them" would make them so.
+  let menus: MenuLayout = SHIPPED_MENUS;
+  const menuOwners = new Map<string, string[]>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const blueprintOwners = new Map<string, string[]>();
@@ -482,6 +500,18 @@ export async function applyMods(
       // moving a row.
       for (const id of merged.claimed) claim(hudOwners, id, bundle.id);
     }
+    if (bundle.menus) {
+      const merged = mergeMenus(menus, {
+        menus: bundle.menus.menus as MenuDef[] | undefined,
+        modals: bundle.menus.modals as MenuDef[] | undefined,
+        elements: bundle.menus.elements as MenuElementDef[] | undefined,
+        scripts: bundle.menus.scripts,
+      });
+      menus = merged.layout;
+      // Claimed per window, per row and per script file — each is a thing the
+      // player can see themselves losing on the MODS screen.
+      for (const id of merged.claimed) claim(menuOwners, id, bundle.id);
+    }
     for (const [subject, states] of Object.entries(bundle.clips ?? {})) {
       for (const [state, clip] of Object.entries(states)) {
         (clips[subject] ??= {})[state as ClipState] = clip as SpriteClip;
@@ -497,6 +527,7 @@ export async function applyMods(
   setCueCatalog(sounds, cueKeys);
   setUiSoundCatalog(uiSounds);
   setHudLayout(hud);
+  setMenuLayout(menus);
   // The recordings go in as bytes and are decoded by the browser's own audio
   // decoder. Warming here rather than on first play so the kill that starts a
   // modded run is heard: a decode takes milliseconds, but a frame is 16 of
@@ -572,6 +603,7 @@ export async function applyMods(
     ...contested("story item", storyItemOwners),
     ...contested("quest", questOwners),
     ...contested("hud", hudOwners),
+    ...contested("menu", menuOwners),
   ]);
   return stamps;
 }
@@ -618,6 +650,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
   // …and the HUD, which is applied to a RUN like everything else here: a mod's
   // dashboard must not still be on the screen of the next unmodded one.
   restoreHudLayout();
+  restoreMenuLayout();
   clearSamples();
   // …and the clips with the frames they named. Left behind, they would point
   // every call site at sprites that have just been deleted, which draws the

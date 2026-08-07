@@ -366,6 +366,36 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   the app already had — so replacing it is exactly as safe as replacing a
   monster. `mod/tools/build.mjs` runs this same loader and schema over a mod's
   own `hud/` folder, and the layouts merge per element (later wins).
+- **THE RUN'S OWN WINDOWS are compiled from YAML too, beside the HUD.**
+  `content/menus/` is the source of truth for every window the run puts in front
+  of the player: `<id>.yaml` is a MENU (one file per window, its `screen:`
+  naming the `PlayerScreen` the engine parks the hero behind — the pause menu,
+  the bag, the map, the stall, the chooser, the two conversation boxes, the
+  trade table), `modals/<id>.yaml` is a MODAL (a window with no screen behind
+  it, raised by a press or by its own `when:`), `elements/<id>.yaml` is a ROW
+  hung off somebody else's window, and `scripts/*.lua` are the judgements.
+  `make levels` runs `generate-ingame-menus.mjs` (schema
+  `scripts/asset-tools/ingame-menu-schema.mjs`, loader
+  `scripts/menu-data/load-ingame-yaml.mjs`) to emit
+  `pwa/src/generated/ingame-menus.ts` — into the APP's tree, like the HUD, and
+  it runs LAST beside it, for the same reason and against the same two trees
+  (a window's frame sprite, a row's press sound).
+  **A ROW IS A HUD NODE.** The kinds, bindings, presses, judgements and bounded
+  style block are the HUD's own — `validateHudNode` is the shared checker and
+  `pwa/src/game/hud/nodes.tsx` is the shared renderer — so authoring a menu row
+  and authoring a HUD element are one skill and the two grammars cannot drift.
+  What a window adds is the FURNITURE a HUD has not: a `backdrop:` you can
+  press, the `class:` of the box it stops at, and a `dismiss:`.
+  The one refusal worth knowing is the CATALOG's: a `PlayerScreen` no window
+  answers fails the build, because the engine parks heroes behind screens
+  without asking whether the app has anything to draw. (A MOD's catalog is not
+  held to it — a mod ships one window, not twelve.)
+  **The title menu is still the exception, and now it has a neighbour to
+  contrast with**: `content/mainmenu.yaml` decides which screens EXIST, so a mod
+  may not ship one; these draw screens the ENGINE already raises, so a mod may
+  ship all of them. The two loaders sit in the same folder and are opposites on
+  purpose (`scripts/menu-data/load-yaml.mjs` takes no directory;
+  `load-ingame-yaml.mjs` takes a mod's root like every other content loader).
 - **THE COMPANION ROSTER is compiled from YAML too.**
   `content/companions.yaml` (a `companions:` map of id → companion — who a spared
   elite BECOMES when it joins the party) is the source of truth; `make levels`

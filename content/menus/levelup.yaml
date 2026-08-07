@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE LEVEL-UP CHOOSER — where a ding's banked points are spent. Raised by the
+# celebration burning out (solo) or by the HUD's points pip (a party), never by
+# this file: a window's MOMENT is the engine's, its LOOK is content's.
+screen: levelup
+wrap: none
+body:
+  - id: chooser
+    kind: widget
+    widget: levelupChooser

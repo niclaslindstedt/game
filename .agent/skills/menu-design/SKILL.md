@@ -23,9 +23,22 @@ derive it.
 **Before starting, read past lessons:**
 `node scripts/skill-lessons.mjs menu-design`.
 
-This skill covers the TITLE menu (the front door and everything under it). The
-in-run menus are separate surfaces — `pwa/src/game/overlays/PauseOverlay.tsx`
-and friends — and none of them reads the tree.
+This skill covers the TITLE menu (the front door and everything under it) —
+`content/mainmenu.yaml`, which is the one catalog a MOD may not ship, because
+the tree decides which screens EXIST and a mod that could re-author it could
+hand itself the DEVELOPER screen.
+
+**THE IN-RUN WINDOWS ARE A DIFFERENT CATALOG WITH THE SAME SHAPE.** The pause
+menu, the bag's frame, the map, the stall, the chooser, the conversations and
+the trade table are `content/menus/` — one file per window, named after the
+`PlayerScreen` the engine parks the hero behind, drawn by
+`pwa/src/game/menus/`. They read no part of the title tree and none of the
+vocabulary below applies to them: a menu ROW is a HUD NODE (the kinds, bindings,
+presses and judgements in `scripts/asset-tools/hud-schema.mjs`), and the window
+around it is `ingame-menu-schema.mjs`. A mod may ship all of them, including
+MODALS of its own raised from Lua. Working on one of those, read
+`docs/modding.md` → the run's own windows and `mod/FORMAT.md` → `menus/`, then
+come back here only for the title screen.
 
 ## Where everything lives
 
@@ -44,6 +57,7 @@ and friends — and none of them reads the tree.
 | Widgets | `@ui/lib/PixelSlider.tsx`, `PixelToggle.tsx`, `PixelCheckbox.tsx`, `PixelText.tsx`, `PixelShinyText.tsx` |
 | Styles | `pwa/src/styles.css` — `.menu-item`, `.menu-label`, `.menu-icon`, `.menu-cursor`, `.menu-item-control`, `.menu-item-blurb`, `.menu-item-subtitle`, `.menu-help`, `.title-menu.settings-menu`, `.title-header.sub`, `.title-plate` |
 | Row icons | `content/sprites/icons/icon_menu_*.yaml` — authored like any sprite (see the `pixel-assets` skill) |
+| **The IN-RUN windows** (a different catalog — see above) | `content/menus/` → schema `scripts/asset-tools/ingame-menu-schema.mjs`, loader `scripts/menu-data/load-ingame-yaml.mjs`, generator `scripts/generate-ingame-menus.mjs`, renderer `pwa/src/game/menus/`, test `tests/content/ingame_menu_catalog_test.ts` |
 | Test | `tests/content/menu_tree_test.ts` — builds EVERY screen for real |
 | Screenshots | `pwa/scripts/ui-shots.mjs` (see the `ui-review` skill) |
 

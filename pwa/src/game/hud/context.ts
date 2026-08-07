@@ -30,7 +30,8 @@ import type { Hud } from "../game-screen/hud-model.ts";
 import type { SessionLink } from "../net/session-link.ts";
 import type { VoiceLink } from "../net/voice/index.ts";
 import type { HudUiState, HudValues } from "./bindings.ts";
-import type { HudSurface } from "./types.ts";
+import type { HudNodeView } from "./resolve.ts";
+import type { HudActionArg, HudSurface } from "./types.ts";
 
 /** The DOM handles the render loop writes to every frame. A surface supplies
  * the ones it has; an element asking for one this screen lacks simply is not
@@ -54,9 +55,7 @@ export type HudRefs = {
  */
 export type HudAction = (arg?: HudActionArg) => void;
 
-/** A press's `arg:` — a SCALAR, for the same reason a run command's arguments
- * are: anything richer would be a structure two sides have to agree about. */
-export type HudActionArg = string | number | boolean;
+export type { HudActionArg } from "./types.ts";
 
 export type HudActions = Partial<Record<string, HudAction>> & {
   /** Named on the type because the renderer itself calls it — a press marked
@@ -85,6 +84,24 @@ type HudCommon = {
   values: HudValues;
   refs: HudRefs;
   actions: HudActions;
+  /**
+   * THIS TREE IS AN IN-GAME MENU'S, not the HUD's.
+   *
+   * Two things turn on it, both about the same fact — the hero is standing
+   * BEHIND a window rather than on the field. A press is allowed (the field-live
+   * gate every HUD button obeys would refuse every button on the pause menu),
+   * and a `kind: widget` is answered by the menus' registry rather than the
+   * HUD's. See `../menus/MenuLayer.tsx`.
+   */
+  inMenu?: boolean;
+  /**
+   * How a `kind: widget` node is answered — the HUD's own registry when this is
+   * absent, the menus' when a window is drawing.
+   *
+   * A function rather than a second renderer, because everything else about
+   * drawing a node is identical and a copy of `nodes.tsx` is a copy that drifts.
+   */
+  widgets?: (view: HudNodeView, ctx: HudContext) => ReactNode;
 };
 
 /** The fight's HUD. */

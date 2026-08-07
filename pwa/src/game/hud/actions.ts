@@ -62,6 +62,11 @@ export function runHudPress(
 export function hudPressAllowed(press: HudPress, ctx: HudContext): boolean {
   if (press.action === "none" || press.action === "toggleWeaponMenu")
     return true;
+  // A MENU'S OWN BUTTON IS THE EXCEPTION THAT PROVES THE RULE. The gate below
+  // refuses a press that arrived while the hero is behind a screen, because
+  // such a press was meant for that screen — and a menu row IS that screen, so
+  // the same rule would refuse every button on the pause menu.
+  if (ctx.inMenu === true) return true;
   // The road has no such rule: a drive is never behind a hero's own screen.
   if (ctx.surface !== "field") return true;
   return fieldLive(ctx.state);

@@ -17,6 +17,16 @@
  * app's own view state. */
 export type HudBinding = string;
 
+/**
+ * A press's `arg:` — a SCALAR, for the same reason a run command's arguments
+ * are: anything richer would be a structure two sides have to agree about.
+ *
+ * It lives in this types-only leaf rather than beside the context that carries
+ * it, because the modal stack (`../menus/modals.ts`) needs to name it and must
+ * not pull a file of React components in behind it.
+ */
+export type HudActionArg = string | number | boolean;
+
 /** A condition: a flag binding, a negated one (`!ui.swipeBars`), a list of
  * either (which holds when every entry does), or a Lua judgement. */
 export type HudCondition = string | string[] | HudScriptRef;
@@ -70,6 +80,16 @@ export type HudBarPart = {
  * widget-free box. */
 export type HudNodeDef = {
   id?: string;
+  /**
+   * Where this node sits among its siblings.
+   *
+   * A HUD element gets one from its region (`HudElementDef`) and its children
+   * never carry one — there is nothing inside a HUD element to insert into. An
+   * IN-GAME MENU's rows do, at every depth, because a window has containers (the
+   * pause menu's action stack) and a mod's own row has to be able to land
+   * between two of ours. See `../menus/types.ts`.
+   */
+  order?: number;
   kind:
     | "panel"
     | "bar"

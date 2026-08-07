@@ -112,6 +112,9 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | What the five difficulty rungs are CALLED                           | `difficulties.yaml`                                         |
 | The mod's identity, kind, and (a conversion's) own title screen     | `mod.yaml` — `kind:`, `brand:`                              |
 | What the mod says it puts in the game (the MODS screen reads it)    | `mod.yaml` — `contents:`                                    |
+| The HUD — a bar, a slot, a readout, or a whole dashboard            | `hud/hud.yaml`, `hud/elements/<id>.yaml`, `hud/events.yaml`, `hud/scripts/<id>.lua` |
+| THE RUN'S OWN WINDOWS — the pause menu, the bag's frame, a row on either | `menus/<id>.yaml`, `menus/elements/<id>.yaml`             |
+| A MODAL of your own, raised by a button or from Lua                 | `menus/modals/<id>.yaml` + `menus/scripts/<id>.lua` (`when:`) |
 | What it is, for the person installing it                            | `README.md`                                                 |
 
 ### What it does NOT support — stop rather than work around
@@ -123,7 +126,8 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | `grades:` ladders (exceptional/elite variants)                     | Minted at engine load from a compiled catalog — the compiler refuses the block. Author them as items.   |
 | The loot economy — `item_quality.yaml`, `item_rarity.yaml`         | Moving the tier ladder rebalances the campaign rather than adding to it.                                |
 | The hero's XP curve (`leveling.yaml`), the autopilot's knobs       | The game's, and nothing in a mod can reach them.                                                        |
-| The title menu (`mainmenu.yaml`)                                   | Chrome, not content — refused as a security rule. A conversion renames the game through `brand:` only.  |
+| The title menu (`mainmenu.yaml`)                                   | Chrome, not content — refused as a security rule. A conversion renames the game through `brand:` only. The IN-RUN windows (`menus/`) are yours, though: they draw screens the engine already raises. |
+| A new SCREEN for a window to answer                                | `PlayerScreen` is the engine's. A window with no screen behind it is a MODAL — author one of those.      |
 | The sprite ATLAS                                                   | A mod's sprites merge at load; they never enter the built atlas, which is why `make assets` is not part of a mod's loop. |
 
 If the user asks for one of these, say so plainly and offer the nearest thing
