@@ -44,6 +44,10 @@ const SHELVES = [
   "BOSSES",
   "ELITES",
   "WORLD",
+  // THE INTERFACE — chrome the gallery draws in the DOM over a staged run
+  // (`RunExhibit.chrome`), for the pieces that cannot be looked at any other
+  // way: the party scoreboard only draws inside a live session of two or more.
+  "UI",
   // THE ROAD — hosted by a `DriveState` rather than a run, and composed onto the
   // end of the catalog like every other shelf, so the same "is it actually
   // reachable" check covers it.

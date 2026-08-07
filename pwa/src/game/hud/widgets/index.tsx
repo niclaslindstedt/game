@@ -31,6 +31,7 @@ import { playHudEvent } from "../sounds.ts";
 import type { HudNodeView } from "../resolve.ts";
 import { VoiceCards } from "./VoiceCards.tsx";
 import { CompanionRail, PartyFrames, TradeAsks } from "./PartyRail.tsx";
+import { Scoreboard } from "./Scoreboard.tsx";
 export { HUD_WIDGET_NAMES } from "./names.ts";
 import { WeaponSlot } from "./WeaponSlot.tsx";
 
@@ -68,6 +69,13 @@ export function renderWidget(view: HudNodeView, ctx: HudContext) {
 
     case "partyFrames":
       return <PartyFrames ctx={ctx} />;
+
+    case "scoreboard":
+      // QuakeWorld's player list: portraits composited per cast and a row count
+      // that is the session's, so it is a widget for the same two reasons the
+      // party frames above it are. Draws nothing offline and nothing for a
+      // session of one.
+      return <Scoreboard ctx={ctx} />;
 
     case "tradeAsks":
       return <TradeAsks ctx={ctx} />;

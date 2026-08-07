@@ -107,6 +107,16 @@ export function createControls(deps: {
   /** Whether the in-HUD weapon switcher is expanded (live mirror + setter). */
   weaponMenuOpenRef: MutableRefObject<boolean>;
   setWeaponMenuOpen: Dispatch<SetStateAction<boolean>>;
+  /**
+   * HOLD THE SCOREBOARD UP (`showScores`) — QuakeWorld's TAB board.
+   *
+   * A HELD control like WALK rather than a one-shot action, so it is wired here
+   * on both edges instead of through `actionForCode`: a board that latched
+   * would be a board somebody leaves standing over the horde. Set false on
+   * every teardown and blur for the same reason the walk modifier is — a key
+   * whose keyup lands in another window is a key the page never sees released.
+   */
+  setShowScores: Dispatch<SetStateAction<boolean>>;
   /** Pick which face of the character screen the `inventory` freeze shows.
    * The INVENTORY key means the BAG — the stat sheet is the portrait's. */
   setCharTab: Dispatch<SetStateAction<CharTab>>;
@@ -138,6 +148,7 @@ export function createControls(deps: {
     cutsceneRevealRef,
     weaponMenuOpenRef,
     setWeaponMenuOpen,
+    setShowScores,
     setCharTab,
     pause,
     resume,
@@ -405,6 +416,13 @@ export function createControls(deps: {
     if (event.code === binds.jump) {
       queues.handbrakeKeyRef.current = true;
     }
+    // SHOW SCORES, held. Tab's own job is to move focus, so the press is
+    // swallowed — the run has no focus ring to walk, and letting it through
+    // sends the browser hunting through the furniture behind the canvas.
+    if (event.code === binds.showScores) {
+      event.preventDefault();
+      setShowScores(true);
+    }
     if (event.repeat) return;
     // Space and Enter both turn the page through any waiting scene (cutscene,
     // intro, title card, in-world dialogue). Space alone doubles as jump once
@@ -546,6 +564,9 @@ export function createControls(deps: {
     if (event.code === binds.jump) {
       queues.handbrakeKeyRef.current = false;
     }
+    if (event.code === binds.showScores) {
+      setShowScores(false);
+    }
   };
   // A mouse button / wheel notch can be bound to any discrete action too (see
   // keybindings.ts). Both no-op unless the player bound a pointer control —
@@ -589,6 +610,11 @@ export function createControls(deps: {
     queues.heldMoveKeysRef.current.clear();
     queues.walkingRef.current = false;
     queues.handbrakeKeyRef.current = false;
+    // The board is held, so it is one of the keys a lost focus would otherwise
+    // leave stuck down — and a scoreboard nailed over the field is a worse
+    // stuck key than a walk modifier, because there is no way to guess what
+    // released it.
+    setShowScores(false);
     pause();
   };
   // Tab hidden (mobile app-switch, backgrounded tab): same auto-pause. Both

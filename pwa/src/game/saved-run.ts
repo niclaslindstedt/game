@@ -493,6 +493,17 @@ function readRun(key: string): ParkedRun | null {
           ? { ...vehicle, steer: vehicle.steer ?? 0 }
           : vehicle,
       ),
+      // THE HERO'S OWN FRAG COUNT (`Player.kills`, the party scoreboard's
+      // column) is defaulted on exactly the rack's reasoning: `killEnemy`
+      // increments it on every kill, so a run parked before the board shipped
+      // would thaw with `undefined` there and take the count to NaN on the
+      // first thing the hero felled — a readout that reads NaN for the rest of
+      // the run. One zero beats a SAVE_VERSION bump that bins every parked run
+      // over a number that starts at zero anyway.
+      players: payload.state.players.map((hero) => ({
+        ...hero,
+        kills: hero.kills ?? 0,
+      })) as GameState["players"],
     };
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).

@@ -5,8 +5,9 @@
 // proves the read lands on the right one: kill XP prices against the killer's
 // level, the accuracy roll reads the killer's build, a projectile carries its
 // shooter's seat to the impact, the spare-or-kill verdict belongs to whoever
-// forced the kneel, and the boss death rite is performed by the hero whose
-// blow felled the boss. See docs/multiplayer.md.
+// forced the kneel, the boss death rite is performed by the hero whose blow
+// felled the boss, and the FRAG COUNT the party scoreboard ranks on is booked
+// against that same hero. See docs/multiplayer.md.
 
 import { describe, expect, it } from "vitest";
 
@@ -18,6 +19,7 @@ import {
   hitEnemy,
   killEnemy,
   playerMissChance,
+  recruitCompanion,
   resolveChoice,
   seatHero,
   step,
@@ -200,5 +202,54 @@ describe("the boss death rite's executioner", () => {
     killEnemy(state, boss, 9999, false, undefined, { attacker: b });
     departHero(state, 1);
     expect(bossDeathExecutioner(state)).toBe(state.players[0]);
+  });
+});
+
+describe("the frag count is the killer's own", () => {
+  it("books the kill on the hero who landed it, not on seat 0", () => {
+    const { state, a, b } = party();
+    const at = { ...a.pos };
+    parkAway(state, at);
+    const mob = makeEnemy(
+      { id: state.nextId++, pos: { ...at }, hp: 30, maxHp: 30, mlvl: 3 },
+      "test_minion",
+    );
+    killEnemy(state, mob, 30, false, undefined, { attacker: b });
+    expect(b.kills).toBe(1);
+    expect(a.kills).toBe(0);
+    // The run's own tally counts it exactly once whoever swung — the two
+    // numbers answer different questions (see `Player.kills`).
+    expect(state.stats.kills).toBe(1);
+  });
+
+  it("falls back to seat 0 when no caller names an attacker", () => {
+    const { state, a, b } = party();
+    const mob = makeEnemy({ pos: { ...a.pos }, mlvl: 3 }, "test_minion");
+    killEnemy(state, mob, 30, false);
+    expect(a.kills).toBe(1);
+    expect(b.kills).toBe(0);
+  });
+
+  it("credits NOBODY's frag count for a companion's kill", () => {
+    const { state, a, b } = party();
+    const companion = recruitCompanion(state, "test_companion", {
+      x: a.pos.x + 60,
+      y: a.pos.y,
+    });
+    const mob = makeEnemy({ pos: { ...a.pos }, mlvl: 3 }, "test_minion");
+    // A companion's blow names no attacker (loot.ts credits it by
+    // `companionId`), so without the guard the seat-0 fallback above would
+    // hand every recruit's kill to the host.
+    killEnemy(state, mob, 30, false, undefined, { companionId: companion.id });
+    expect(a.kills).toBe(0);
+    expect(b.kills).toBe(0);
+    expect(state.stats.kills).toBe(1);
+  });
+
+  it("starts every seated hero at zero, the run's own tally beside it", () => {
+    const { state, a, b } = party();
+    expect(a.kills).toBe(0);
+    expect(b.kills).toBe(0);
+    expect(seatHero(state, null).kills).toBe(0);
   });
 });

@@ -304,6 +304,7 @@ export function createSession(options: SessionOptions): Session {
   }
 
   function rosterEntries(): RosterEntry[] {
+    const at = now();
     return [...clients.values()]
       .sort((a, b) => a.slot - b.slot)
       .map((client) => ({
@@ -311,6 +312,13 @@ export function createSession(options: SessionOptions): Session {
         name: client.name,
         playing: client.recipient.seat !== null,
         seat: client.recipient.seat,
+        // HOW LONG THEY HAVE BEEN HERE — the scoreboard's TIME column, off the
+        // session's own clock rather than any world's (see `Client.joinedAt`).
+        joinedMs: Math.max(0, at - client.joinedAt),
+        // A SESSION BOT rather than a person. The board says so instead of
+        // printing a ping and a clock for something that has neither a wire
+        // nor an opinion about how long it has been playing.
+        bot: client.bot || undefined,
         // The host's own renderer reaches this process over a MessagePort
         // inside the same machine; there is no wire to time, and -1 is the
         // seam's word for that rather than a flattering 0.
@@ -1016,6 +1024,8 @@ export function createSession(options: SessionOptions): Session {
         sentWindow: 0,
         windowStart: now(),
         sendRate: 0,
+        // The scoreboard's TIME column starts here (see `Client.joinedAt`).
+        joinedAt: now(),
       };
       clients.set(id, client);
       options.log?.(

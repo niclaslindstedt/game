@@ -13917,3 +13917,121 @@ canvas.tier-artifact {
 .session-copy:hover {
   border-color: #7ef0c8;
 }
+
+/* ---- THE SCOREBOARD ------------------------------------------------------ */
+/* QuakeWorld's TAB board (hud/widgets/Scoreboard.tsx). Two homes, one skin: it
+   is held up over the middle of the field by the SHOW SCORES key, and it is the
+   player list on the pause screen where a touch player reads it.
+
+   `.hud-scores` is the field's frame — the region content places it in. It
+   covers the whole screen so the board can sit in the middle of it, and it is
+   TAP-TRANSPARENT for exactly that reason: a full-screen box over the steering
+   pad that ate presses would make holding the board up cost the fight. The
+   board itself takes its presses back (`pointer-events: auto`) only where it
+   actually has one, which on the field is nowhere. */
+.hud-scores {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  /* OVER THE DOCKS, UNDER THE MODALS. The bottom furniture climbs to 41 (the
+     swipe bars and the powerup drag ghost), and a board half-hidden behind a
+     dock is a board nobody can read; `.game-overlay` sits at 100 and must stay
+     over everything, because a scoreboard drawn on top of the pause menu is a
+     scoreboard covering the way out. */
+  z-index: 45;
+}
+
+/* THE TABLE. A grid rather than flexed rows, because the columns have to line
+   up down the whole board — a ragged kill column is unreadable at the glance
+   this is meant to be read in, and a glance is all a player holding it up
+   mid-fight has. `auto` for the name so a party of long names still fits, fixed
+   ends so the numbers never dance as they grow. */
+.scoreboard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) repeat(4, auto);
+  align-items: center;
+  gap: 0.15rem 0.7rem;
+  max-width: min(94vw, 34rem);
+  padding: 0.5rem 0.7rem;
+  box-sizing: border-box;
+  /* NEARLY OPAQUE, and that is a correction rather than a taste. The damage
+     numbers, the XP popups and the gold floats are drawn on the CANVAS, so
+     they pass straight through a translucent panel — at 0.82 a board held up
+     mid-fight had four-digit orange crits sitting on top of the kill column,
+     which is unreadable exactly when the board is most worth reading. The
+     field still shows through enough to say the fight is still going. */
+  background: rgba(11, 13, 16, 0.94);
+  border: 3px solid #2a3442;
+  pointer-events: auto;
+}
+
+/* The ASK column only exists on the pause screen's copy — the in-fight board is
+   a readout and carries no verbs (see the widget's header). */
+.scoreboard.asks {
+  grid-template-columns: auto minmax(0, 1fr) repeat(5, auto);
+}
+
+/* A ROW is `display: contents` so its cells are the GRID's children: that is
+   what makes the columns line up across rows without every row restating the
+   widths. The row still gets to carry state (self, downed, away) because its
+   cells inherit the colour and opacity from it. */
+.scoreboard-row {
+  display: contents;
+}
+
+.scoreboard-row.away .scoreboard-cell,
+.scoreboard-row.away .scoreboard-portrait {
+  opacity: 0.55;
+}
+
+.scoreboard-row.downed .scoreboard-portrait img {
+  filter: grayscale(1) brightness(0.6);
+}
+
+/* The header rule: a hairline under the column names, drawn on the cells rather
+   than on the row (which draws no box of its own). */
+.scoreboard-row.head .scoreboard-cell,
+.scoreboard-row.head .scoreboard-portrait {
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid #2a3442;
+}
+
+.scoreboard-portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.scoreboard-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.scoreboard-cell {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* The numbers right-align so they compare down the column, which is the whole
+   job of a highscore list. */
+.scoreboard-cell.num {
+  justify-content: flex-end;
+  min-width: 2.2rem;
+}
+
+.scoreboard-cell.num.wide {
+  min-width: 3rem;
+}
+
+.scoreboard-ask {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 2.4rem;
+}

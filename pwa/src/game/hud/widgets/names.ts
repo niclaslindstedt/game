@@ -13,6 +13,7 @@ export const HUD_WIDGET_NAMES = new Set([
   "weaponSlot",
   "companionRail",
   "partyFrames",
+  "scoreboard",
   "tradeAsks",
   "minimap",
   "autopilot",

@@ -27,6 +27,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import type { GameAssets } from "../assets.ts";
 import type { PickupMessage } from "../PickupFeed.tsx";
 import type { Hud } from "../game-screen/hud-model.ts";
+import type { SessionLink } from "../net/session-link.ts";
 import type { VoiceLink } from "../net/voice/index.ts";
 import type { HudUiState, HudValues } from "./bindings.ts";
 import type { HudSurface } from "./types.ts";
@@ -112,6 +113,16 @@ export type HudFieldContext = HudCommon & {
    * nothing rather than needing a gate in the layout.
    */
   voice?: VoiceLink | null;
+  /**
+   * THE SESSION BEHIND THIS RUN, for the `scoreboard` widget — who is in it,
+   * what each of them is called, their ping and how long they have been here.
+   *
+   * Beside `seatName` and `voice` for the same reason both are: a fact about
+   * the SESSION rather than about the run, which the engine's state cannot
+   * answer at all. Null for every offline run, which is what makes the board
+   * draw nothing rather than needing a gate in the layout.
+   */
+  session?: SessionLink | null;
   /** Latched so BOT VIEW's autopilot won't clear a timer-tap pause before the
    * menu can show (see the sim loop). */
   userPausedRef: MutableRefObject<boolean>;

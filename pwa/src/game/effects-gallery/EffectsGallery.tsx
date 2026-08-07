@@ -6,8 +6,8 @@
 //
 // Browse with the side buttons (or ←/→), or swipe the field on a touch device;
 // each button carries the ICON of the exhibit it leads to. ↑/↓ jump a whole
-// SHELF at a time (IMPACT → MELEE → SHOTS → POWERS → TALENTS → WORLD), which is
-// what makes a catalog this size walkable. The search box narrows it ("nuke",
+// SHELF at a time (IMPACT → MELEE → SHOTS → POWERS → TALENTS → WORLD → UI →
+// DRIVE), which is what makes a catalog this size walkable. The search box narrows it ("nuke",
 // "unique slash", "frost"). Nothing sits over the field: the show loops on its
 // own, and a tap on it (or Enter) runs it again on the spot. H hides the
 // gallery's own chrome, so an effect can be judged — or screenshotted — with
@@ -26,6 +26,8 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+
+import type { GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -55,6 +57,8 @@ import {
   type ExhibitRun,
 } from "./exhibit-kit.ts";
 import { runExhibit } from "./run-exhibit.ts";
+import { gallerySession } from "./ui-exhibits.ts";
+import { ScoreboardTable } from "../hud/widgets/Scoreboard.tsx";
 
 /** How far a drag must travel (CSS px) before it counts as a swipe rather than
  * a tap. A thumb's flick on a phone clears this easily; a tap never does. */
@@ -171,6 +175,11 @@ export function EffectsGallery({
   // other exhibit in the gallery, which is what keeps the HUD off the ninety-odd
   // shows that are about a picture rather than a reading.
   const [dials, setDials] = useState<DriveDials | null>(null);
+  // THE UI SHELF's staged run — handed up by the host so a chrome exhibit's
+  // component reads the very state the diorama is ticking (see
+  // `RunExhibit.chrome`). Null for every other shelf, and cleared with the
+  // exhibit for the same reason the dials are.
+  const [shown, setShown] = useState<GameState | null>(null);
   const [query, setQuery] = useState("");
   // H: strip the gallery's own chrome, leaving the effect alone in the frame —
   // what the contact-sheet script presses before it shoots.
@@ -329,6 +338,7 @@ export function EffectsGallery({
           nukeFxRef,
           levelUpFxRef,
           speed,
+          onState: setShown,
         });
     runRef.current = run;
     return () => {
@@ -339,6 +349,10 @@ export function EffectsGallery({
       // shelf where only one show draws them is a HUD that appears to have
       // wandered in from another screen.
       setDials(null);
+      // …and the UI shelf's staged run goes with it, on the same reasoning: a
+      // board left reading the run the previous exhibit was ticking is a table
+      // that has wandered in from another screen.
+      setShown(null);
     };
     // `speed` is deliberately NOT a dependency: changing it pushes into the
     // live run (below) instead of tearing the diorama down and re-staging it,
@@ -467,6 +481,26 @@ export function EffectsGallery({
           }}
         />
       )}
+
+      {/* THE UI SHELF's chrome — a real piece of the game's interface over the
+          diorama, for the exhibits whose subject is not something drawn on the
+          field (`RunExhibit.chrome`). The scoreboard is the case that needs it:
+          it only draws inside a live session of two or more, so this is the one
+          way to look at it without a listen server and a second machine. Real
+          component, real staged run, invented roster — see `ui-exhibits.ts`. */}
+      {exhibit?.kind !== "drive" &&
+        exhibit?.chrome === "scoreboard" &&
+        shown && (
+          <div className="hud-scores">
+            <ScoreboardTable
+              font={font}
+              sprites={sprites}
+              state={shown}
+              session={gallerySession()}
+              mySeat={0}
+            />
+          </div>
+        )}
 
       {/* The two full-screen CSS bursts the run fires into (the nuke's flash /
           fire / smoke and the ding's light explosion), exactly as the playing

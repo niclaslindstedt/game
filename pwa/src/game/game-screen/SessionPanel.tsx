@@ -16,6 +16,13 @@
 // three independent facts with three different remedies, and a player who is
 // told only "not connectable" cannot act on any of them.
 //
+// **THE PLAYER LIST IS THE SCOREBOARD, not a fourth kind of row.** Who is in
+// the seats is the one question here that is not about plumbing, and it has a
+// board of its own (`hud/widgets/Scoreboard.tsx`) that the SHOW SCORES key
+// holds up over the field. Drawing it here too is what gives a TOUCH player the
+// board at all — a phone has no key to hold — and it means the party is
+// described in exactly one place rather than in two that drift.
+//
 // **AND THE HONEST LIMIT IS PRINTED, NOT IMPLIED.** Reachability from the
 // outside cannot be self-tested without an outside. Every row here is something
 // this machine can check about itself; the only proof that the internet can
@@ -24,10 +31,14 @@
 
 import { useEffect, useState } from "react";
 
+import type { GameState } from "@game/core";
+
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { sessionStatus, type SessionStatus } from "../../app/net-bridge.ts";
+import type { Sprites } from "../assets.ts";
+import { ScoreboardTable } from "../hud/widgets/Scoreboard.tsx";
 import type { SessionLink } from "../net/session-link.ts";
 
 /** How often the rows are re-read. A status poll is a JSON round trip to
@@ -35,26 +46,35 @@ import type { SessionLink } from "../net/session-link.ts";
  * a second is far faster than any of these facts actually change. */
 const POLL_MS = 1_000;
 
-export function SessionPanel({
-  font,
-  link,
-  onTrade,
-  mySeat,
-}: {
+type SessionPanelProps = {
   font: PixelFont;
   /** The roster comes off the session's own frames rather than out of the
    * status poll: it changes when somebody joins, which is exactly when the
    * server sends one. */
   link: SessionLink;
+  /** The frozen run behind the pause screen — the scoreboard's other half.
+   * Who is here is the roster's answer; what they have DONE is this one's. */
+  state: GameState;
+  /** The atlas, for the busts down the board's left edge. */
+  sprites: Sprites;
   /** ASK this SEAT for a trade (`requestTrade`). Nothing opens on either
    * screen — they answer on their own HUD. Absent when this client cannot
    * trade: a spectator, or a session with nobody else seated. The press leaves
    * the pause screen behind it, so it lives with the pause overlay's wiring. */
   onTrade?: (seat: number) => void;
-  /** This client's own seat — its roster row gets no ASK button (a table
+  /** This client's own seat — its board row gets no ASK button (a table
    * with yourself is refused by the engine anyway). */
   mySeat?: number | null;
-}) {
+};
+
+export function SessionPanel({
+  font,
+  link,
+  state,
+  sprites,
+  onTrade,
+  mySeat,
+}: SessionPanelProps) {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [copied, setCopied] = useState("");
 
@@ -121,23 +141,37 @@ export function SessionPanel({
         align="center"
         maxWidth={24}
       />
-      {link.roster.map((seat) => (
-        <Row
-          key={seat.slot}
-          font={font}
-          label={seat.name.toUpperCase()}
-          value={`${seat.playing ? "PLAYING" : "WATCHING"}${
-            seat.ping >= 0 ? ` - ${seat.ping} MS` : ""
-          }${seat.rate > 0 ? ` - ${(seat.rate / 1024).toFixed(1)} KB/S` : ""}`}
-          action={
-            onTrade && seat.seat !== null && seat.seat !== mySeat
-              ? { label: "ASK TRADE", run: () => onTrade(seat.seat!) }
-              : undefined
-          }
-        />
-      ))}
+      {/* THE PLAYER LIST, as the scoreboard rather than as one status row per
+          seat. It is the same table the SHOW SCORES key holds up over the
+          field (hud/widgets/Scoreboard.tsx), and it is how a TOUCH player
+          reaches the board at all: a phone has no key to hold, and the pause
+          screen is one tap on the timer away.
+
+          The ASK button rides a row here and nowhere else — see the widget's
+          header for why the in-fight board carries no verbs. */}
+      <ScoreboardTable
+        font={font}
+        sprites={sprites}
+        state={state}
+        session={link}
+        mySeat={mySeat ?? null}
+        onTrade={onTrade}
+      />
+      {/* The per-seat BANDWIDTH readout the roster rows used to carry. It is a
+          diagnostic rather than a score, so it sits with the other three
+          diagnostics above instead of as a column on a board about the fight —
+          and it is summed, because what a host wants to know is whether the
+          session as a whole is asking too much of their uplink. */}
+      <Row font={font} label="SENDING" value={sendRate(link.roster)} />
     </div>
   );
+}
+
+/** What the session is pushing out, all seats together — `-` while no window
+ * has completed (the figure is measured over a second; see `Client.sendRate`). */
+function sendRate(roster: SessionPanelProps["link"]["roster"]): string {
+  const total = roster.reduce((sum, seat) => sum + Math.max(0, seat.rate), 0);
+  return total > 0 ? `${(total / 1024).toFixed(1)} KB/S` : "-";
 }
 
 function Row({

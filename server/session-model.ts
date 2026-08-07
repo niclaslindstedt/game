@@ -100,6 +100,18 @@ export type Client = {
   /** The last completed window's rate, in bytes per second. What the roster
    * reports — a live counter would flicker with the publish beat. */
   sendRate: number;
+  /**
+   * WHEN THIS CLIENT WAS ADMITTED, on the host's own monotonic clock — what
+   * the roster's TIME IN SESSION is measured from.
+   *
+   * The session's clock rather than the run's, because that is the question
+   * the scoreboard asks: a run's `stats.timeMs` is one WORLD's, and a session
+   * may hold two carves at once (`server/worlds.ts`), so somebody who stepped
+   * through a town portal would have their clock start over on the other side.
+   * A reconnect is a fresh client record and so a fresh stamp, which is the
+   * honest reading of "how long have you been here".
+   */
+  joinedAt: number;
 };
 
 /**

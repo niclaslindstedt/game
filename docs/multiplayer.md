@@ -1049,6 +1049,77 @@ ever after the first minute. The divisor is the party in play, so a departed
 seat and a downed hero both stop diluting the read the moment they stop
 fighting.
 
+## The scoreboard — who is playing, ranked
+
+QuakeWorld's TAB board, in the game's own pixel font: a portrait, a name, a
+level, a kill count, how long that player has been in the session and their
+ping, one row per client, sorted on the frags. Held up over the field with the
+**SHOW SCORES** key (Tab by default, rebindable in SETTINGS → CONTROLS) and
+drawn on the PAUSE screen, which is how a touch player reaches it — a phone has
+no key to hold.
+
+It is a HUD element like every other, so a mod moves it, gates it or drops it
+without touching a line of code: `content/hud/elements/scoreboard.yaml` places
+the `scoreboard` widget in the `scores` region, and that region is gated on the
+`ui.scoreboard` binding — a fact about what THIS viewer is looking at, so two
+people in one session hold the board up independently.
+
+**A ROW IS A JOIN OF TWO SOURCES, AND EITHER CAN BE MISSING THE OTHER'S HALF.**
+Who is in the session is the ROSTER's answer — the engine's `Player` carries no
+name, and `RosterEntry` is the only thing that pairs a name (and a ping, and a
+join time) to a seat. What each of them has DONE is the RUN's answer, read off
+`state.players[seat]`. `scoreRows` (`pwa/src/game/game-screen/scoreboard.ts`)
+is the join, and it owns every judgement the board makes; the widget draws what
+it is handed, which is what lets the ranking be tested without a canvas, a
+session or a run.
+
+Three rules fall out of that, and each is a way the board could otherwise lie:
+
+- **A DASH IS A REAL ANSWER.** A teammate who stepped through a town portal is
+  simulating in another world, and all this client holds in their chair is the
+  departed placeholder its own `ensureSeats` built — fresh, and so all zeroes.
+  Printing `0` for them would be a lie about the one column the board sorts on,
+  so an `away` row prints a dash and ranks below anybody who actually scored.
+  The tell is `RosterEntry.level` differing from the reader's own world.
+- **THE FRAG COUNT IS THE HERO'S OWN, NOT THE RUN'S.** `GameStats.kills` is one
+  number a party of four shares, and a board built on it would print the same
+  figure four times. `Player.kills` is booked in `killEnemy` against the hero
+  whose killing blow it was — the same `attacker` thread the kill's XP pricing,
+  accuracy roll and drop economy already ride — and never on a COMPANION's blow,
+  which names no attacker and would otherwise land on seat 0 by way of the
+  fallback. It is PUBLIC (not on `PRIVATE_PLAYER_FIELDS`): a frag count is the
+  one number a scoreboard exists to compare.
+- **TIME IN SESSION IS THE SESSION'S CLOCK, NEVER A WORLD'S.**
+  `RosterEntry.joinedMs` is measured from the moment the client was admitted
+  (`Client.joinedAt`), because a run's `stats.timeMs` belongs to one carve and a
+  session may hold two at once — so the portal-crosser's clock would start over
+  on the other side. A reconnect is a fresh client record and so a fresh stamp,
+  which is the honest reading of "how long have you been here". A roster is
+  broadcast when it CHANGES rather than on a beat, so the board adds the elapsed
+  since the frame landed (`SessionLink.rosterAt`) instead of the wire spending a
+  broadcast a second on eight rows nobody is looking at.
+
+A session BOT is a full client (`server/local-bots.ts`) and so a full row —
+which is what keeps a party of one human and three bots from reading as a
+one-player session — flagged `RosterEntry.bot` so the board can label it rather
+than print a ping nothing measured. A SPECTATOR sinks below every player
+whatever the run says: a watcher at the top of a kill table is a lie about what
+the column means.
+
+**THE IN-FIGHT BOARD CARRIES NO VERBS.** ASK TRADE rides a row on the PAUSE
+screen, where the player has already stopped to read; a press target that
+appears under a held key, over the field, while the horde keeps coming is a
+mis-tap waiting to happen.
+
+**TO LOOK AT IT WITHOUT A SESSION**, the EFFECTS GALLERY has a UI shelf whose
+one exhibit stages a four-seat party and mounts the real component over it
+(`?effects=scoreboard`, or `node scripts/effects-gallery.mjs --only scoreboard`
+from `pwa/`). Standing a listen server, a second client and a router up to look
+at a table is why the board went two rounds unlooked-at; the exhibit is how it
+stops being that. Everything it stages is real but the ROSTER — names, pings
+and join times are a fact about a session, and there is no session
+(`pwa/src/game/effects-gallery/ui-exhibits.ts`).
+
 ## The engine's Node ship target
 
 `@game/core` is consumed by Vite (for the browser) and by

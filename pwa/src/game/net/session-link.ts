@@ -34,6 +34,17 @@ export type SessionLink = {
   readonly lines: readonly ChatLine[];
   /** Who is in the session. Empty until the first roster lands. */
   readonly roster: readonly RosterEntry[];
+  /**
+   * WHEN THAT ROSTER LANDED (`Date.now()`), or 0 while none has.
+   *
+   * A roster is broadcast when it CHANGES — somebody joins, leaves, crosses a
+   * portal — and not on a beat, which is right for a list and wrong for the two
+   * numbers riding along on it that are really clocks: the ping and the time in
+   * session. The scoreboard adds the elapsed since this stamp to each row's
+   * `joinedMs` so its TIME column ticks, instead of the wire spending a
+   * broadcast a second on eight rows nobody is looking at.
+   */
+  readonly rosterAt: number;
   /** Be told when either changes — one callback, because both redraw the same
    * overlay and two would be two re-renders for one frame's news. */
   subscribe(listener: () => void): () => void;
@@ -59,6 +70,7 @@ export function createSessionLink(
 } {
   let lines: ChatLine[] = [];
   let roster: RosterEntry[] = [];
+  let rosterAt = 0;
   let watching = spectating;
   const listeners = new Set<() => void>();
   const changed = () => {
@@ -72,6 +84,9 @@ export function createSessionLink(
       },
       get roster() {
         return roster;
+      },
+      get rosterAt() {
+        return rosterAt;
       },
       subscribe(listener) {
         listeners.add(listener);
@@ -87,6 +102,7 @@ export function createSessionLink(
     },
     seat(entries) {
       roster = entries;
+      rosterAt = Date.now();
       changed();
     },
     spectate(flag) {

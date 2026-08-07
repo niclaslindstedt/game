@@ -202,10 +202,26 @@ export type RunExhibit = ExhibitCard & {
    * radius is in world px; the hero laps it every `periodMs`.
    */
   walk?: { radius: number; periodMs: number };
+  /**
+   * DRAW A PIECE OF THE GAME'S OWN INTERFACE over the diorama — the UI shelf,
+   * whose exhibits are chrome rather than something drawn on the field.
+   *
+   * The road's `dash` is the same idea on the other host, and it is here for
+   * the same reason: an exhibit whose subject is a READING has nothing to show
+   * on the canvas. Off everywhere else, because furniture over a collision or a
+   * cleave is furniture in the way.
+   *
+   * The gallery draws the REAL component against the exhibit's own staged run,
+   * so what the shelf shows is what ships.
+   */
+  chrome?: ExhibitChrome;
   /** Put the effect on the screen. Absent for an exhibit whose staging IS the
    * show — a talent's conjurations, a running powerup, a level's own hazard. */
   fire?: (ctx: ExhibitCtx) => void;
 };
+
+/** The interface pieces the UI shelf can put up (see `RunExhibit.chrome`). */
+export type ExhibitChrome = "scoreboard";
 
 /**
  * AN EXHIBIT HOSTED BY THE ROAD — the DRIVE shelf, and the one kind of exhibit

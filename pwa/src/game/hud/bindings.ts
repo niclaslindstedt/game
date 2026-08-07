@@ -36,6 +36,9 @@ export type HudUiState = {
   wide: boolean;
   /** The autopilot's engine meter is running. */
   autopilot: boolean;
+  /** The SHOW SCORES key is held (or the board was raised by hand) — the
+   * session scoreboard is up over the field. */
+  scoreboard: boolean;
 };
 
 /** What a binding can answer with. */
@@ -116,6 +119,7 @@ export function hudBindings(
     "ui.swipeBars": ui.swipeBars,
     "ui.wide": ui.wide,
     "ui.autopilot": ui.autopilot || state.autopilot.active,
+    "ui.scoreboard": ui.scoreboard,
   };
 }
 
