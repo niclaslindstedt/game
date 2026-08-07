@@ -51,7 +51,7 @@
      own element, both of these were simply undefined there — every dial fell to
      `width: auto` and the exhibit whose whole subject is the dashboard showed
      two bare figures with no arcs around them. */
-  --drive-dial-size: 92px;
+  --drive-dial-size: 77px;
   --drive-dash-w: calc(2 * var(--drive-dial-size) + 64px + 24px);
 }
 
@@ -501,7 +501,11 @@ html.app-locked body {
    steering pad, and a dial must never eat a thumb. */
 .drive-dash {
   position: absolute;
-  bottom: 10px;
+  /* THE SAME 12 px THE SPEECH WINDOW SITS ON (`.dialogue-box`'s `bottom`), so
+     the dials and the window beside them share one baseline and one height —
+     two boxes on a shelf rather than two things that happen to be near the
+     bottom of the screen. */
+  bottom: 12px;
   left: 12px;
   width: var(--drive-dash-w);
   display: flex;

@@ -740,7 +740,31 @@ things fall out of it: `faceLeft` mirrors the lamps with the body (a beam that
 did not flip lit the road out of an oncoming car's boot), and only
 `DriveState.traffic` gets them. The cars somebody left at the kerb are
 `DriveState.props` and stay dark, which is most of what tells the two apart at a
-glance on a road where both wear the same ten sprites.
+glance on a road where both wear the same sprites — and a vehicle that has been
+FINISHED (`wrecked`) or knocked over (`downed`) loses its beams too, because a
+wreck coasting to a halt still throwing light down the road undoes the whole
+read.
+
+**A vehicle wears its damage** (`trafficSprite(variant, rung)`): every model in
+the fleet ships one clean grid and earns a three-rung ladder of dented,
+de-glazed and folded-in-the-middle art at build time
+(`scripts/asset-tools/wreck.mjs`), exactly as an enemy ships two frames and
+earns its wounds. Nothing is authored per rung, so a new vehicle — a mod's
+included — is destructible the moment it exists.
+
+**A rider is drawn SEPARATELY from the machine under them** (`RIDER_SEATS`,
+`drive-screen/scenery.ts`), and that is not an art decision: a person baked
+into a moped cannot be thrown off it, cut in half, or left in the road while
+the machine goes on down it without one. The seat offset is per MACHINE rather
+than per rider — a scooter's saddle is not a motorcycle's — and the lift is a
+SCREEN offset rather than a world one, because raising a rider in world y would
+move them up the ROAD as well as up the screen.
+
+**And what comes off a machine is drawn out of the machine.** A torn-off lump
+is a crop of that vehicle's own sprite chosen off the piece's seed, and the two
+halves of one that has snapped are the picture cut at `DriveRemain.cut`. So a
+police cruiser sheds white and blue, a hot-box sheds amber, and a mod's vehicle
+sheds itself — with no debris art authored anywhere in the repo.
 
 ## Mobile-first, landscape — and the scale tiers
 

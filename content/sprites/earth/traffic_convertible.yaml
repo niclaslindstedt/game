@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
+name: traffic_convertible
+family: earth
+space: outside
+size: [48, 26]
+description: >
+  An open-top convertible seen side on — cream over a tan interior, roof down, a lone windscreen standing up out of a low body.
+subject:
+  kind: traffic vehicle prop
+  build: a low open two-seater with the roof folded away, nothing above the shoulder line but a windscreen
+  features: a single raked windscreen, two headrest humps behind the seats, a tan cabin visible over the door line
+  accent: cream over tan hide
+  flavor: top down in the wrong weather, as ever
+palette:
+  O: "#1a1c2c" # outline ink
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
+  c: "#7fd0d8" # light streaking off the glass
+  r: "#d84a3a" # tail lamp
+  y: "#e8d9a8" # headlamp
+  T: "#c0c5cf" # wheel rim
+  G: "#171d2b" # cabin glass
+  B: "#ddd3b6" # cream body paint
+  s: "#f4ecd6" # body highlight
+  d: "#8f8770" # sill shadow
+  E: "#8a5c3a" # tan hide interior
+grid: |
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  .............................OOOO...............
+  ...............OOO...OOO....OGGGGO..............
+  .............OOEEEOOOEEEOOOOOGcGGGO.............
+  ............OEEEEEEEEEEEEEEEEEGGGGO.............
+  ...OOOOOOOOOOEEEEEEEEEEEEEEEEEGGGGGOOOOOOOOOO...
+  ..OssssssssssssssssssssssssssssssssssssssssssO..
+  .OBBBBBBBBBBBBBBBBBBBBBBbBBBBBBBBBBBBBBBBBBBBBO.
+  .OrrrBBBBBBBBBBBBBBBBBBBbBBBBBBBBBBBBBBBBBByyyO.
+  .OrrrBBBBBBBBBBBBBBBBBBBbBBbbBBBBBBBBBBBBBByyyO.
+  .ObbBBBBBBOOOOOBBBBBBBBBbBBBBBBBBBOOOOOBBBBBbbO.
+  .ObbBBBBBOkkkkkOBBBBBBBBbBBBBBBBBOkkkkkOBBBBbbO.
+  .ObbBBBBOkkbbbkkOBBBBBBBbBBBBBBBOkkbbbkkOBBBbbO.
+  .ObbBBBBOkbbTbbkOBBBBBBBbBBBBBBBOkbbTbbkOBBBbbO.
+  .OddddddOkbbTbbkOdddddddddddddddOkbbTbbkOdddddO.
+  ..OdddddOkkbbbkkOdddddddddddddddOkkbbbkkOddddO..
+  ...OOOOO.OkkkkkO.OOOOOOOOOOOOOOO.OkkkkkO.OOOO...
+  ..........OkkkO...................OkkkO.........
+  ...........OOO.....................OOO..........
+  ................................................

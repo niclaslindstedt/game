@@ -120,14 +120,34 @@ function mint(
  * the caller's to delete: this function does not know what a `DriveState`'s
  * crowd list is for.
  */
+/**
+ * HOW A BURST DIFFERS WHEN THE BODY WAS ALREADY IN THE AIR.
+ *
+ * A body coming apart ON THE TARMAC has half of itself caught under a car; one
+ * that has just been thrown out of a windscreen has nothing under it at all, and
+ * every piece of it is still travelling. So an airborne burst is the same burst
+ * with two things switched off and one turned up — nothing is caught, everything
+ * lifts, and it all goes further.
+ */
+export type BurstOptions = {
+  /** How much extra lift and along-road carry every piece takes. */
+  boost?: number;
+  /** The body was already off the ground: nothing is caught under the car,
+   * because the car is underneath it. */
+  airborne?: boolean;
+};
+
 export function burstBody(
   drive: DriveState,
   ped: DrivePedestrian,
   hit: Impact,
   split: boolean,
   gib: boolean,
+  options: BurstOptions = {},
 ): DriveRemain[] {
   const { gore } = DRIVE;
+  const boost = options.boost ?? 1;
+  const airborne = options.airborne ?? false;
   const force = remainForce(hit.joules);
   const seed = Math.abs(Math.round(ped.pos.x * 7 + ped.pos.y * 13)) + ped.id;
   const dir = drive.params.direction;
@@ -148,27 +168,43 @@ export function burstBody(
     // playing an animation of one.
     const upper = mint(drive, ped, "upper", cut, seed ^ 0x51);
     upper.vel = {
-      x: carVx * gore.overRoofCarry,
-      y: hit.launch.y * 0.55 + (hash(seed, 11) - 0.5) * 40,
+      x: carVx * (airborne ? gore.overRoofCarry * boost : gore.overRoofCarry),
+      y: (hit.launch.y * 0.55 + (hash(seed, 11) - 0.5) * 40) * boost,
     };
-    upper.vz = gore.overRoofLiftPx.base + gore.overRoofLiftPx.perForce * force;
-    upper.z = 4;
+    upper.vz =
+      (gore.overRoofLiftPx.base + gore.overRoofLiftPx.perForce * force) * boost;
+    upper.z = airborne ? ped.z : 4;
     upper.spin = (hash(seed, 13) < 0.5 ? -1 : 1) * (3 + force);
     pieces.push(upper);
 
     // …AND THE LOWER HALF GOES UNDER. No lift at all: it drops where it stood
-    // and the front wheels are already there.
+    // and the front wheels are already there — unless the body was already off
+    // the ground, in which case there is nothing to catch it ON and it simply
+    // travels with everything else.
     const lower = mint(drive, ped, "lower", cut, seed ^ 0xa3);
-    lower.vel = { x: carVx * 0.5, y: hit.launch.y * 0.3 };
-    pieces.push(catchOnCar(drive, lower, force));
+    lower.vel = { x: carVx * 0.5 * boost, y: hit.launch.y * 0.3 * boost };
+    if (airborne) {
+      lower.z = ped.z;
+      lower.vz = ped.vz * 0.7;
+      lower.spin = (hash(seed, 19) < 0.5 ? -1 : 1) * (2 + force);
+      pieces.push(lower);
+    } else {
+      pieces.push(catchOnCar(drive, lower, force));
+    }
   } else {
     // NOT FAST ENOUGH TO GO THROUGH: knocked flat, and caught whole. This is the
     // ordinary hit and it is most of the road — the wagon does not butcher
     // everybody, it mostly just runs them down.
     const whole = mint(drive, ped, "whole", cut, seed ^ 0x7f);
-    whole.vel = { x: carVx * 0.5, y: hit.launch.y * 0.4 };
+    whole.vel = { x: carVx * 0.5 * boost, y: hit.launch.y * 0.4 * boost };
     whole.spin = (hash(seed, 17) < 0.5 ? -1 : 1) * 1.4;
-    pieces.push(catchOnCar(drive, whole, force));
+    if (airborne) {
+      whole.z = ped.z;
+      whole.vz = ped.vz;
+      pieces.push(whole);
+    } else {
+      pieces.push(catchOnCar(drive, whole, force));
+    }
   }
 
   // THE LUMPS TORN OFF ON THE WAY PAST. These are the only gore this file makes
@@ -191,13 +227,17 @@ export function burstBody(
       // having been dropped rather than carried.
       chunk.vel = {
         x:
-          carVx * DRIVE.impact.carryFraction * (0.5 + 0.5 * hash(seed, 53 + i)),
+          carVx *
+          DRIVE.impact.carryFraction *
+          (0.5 + 0.5 * hash(seed, 53 + i)) *
+          boost,
         y: Math.sin(spread) * reach,
       };
       chunk.vz =
         (gore.chunkLiftPx.base + gore.chunkLiftPx.perForce * force) *
-        (0.35 + 0.65 * hash(seed, 67 + i));
-      chunk.z = 3;
+        (0.35 + 0.65 * hash(seed, 67 + i)) *
+        boost;
+      chunk.z = airborne ? ped.z : 3;
       chunk.spin = (hash(seed, 71 + i) < 0.5 ? -1 : 1) * (4 + force * 2);
       pieces.push(chunk);
     }
@@ -265,10 +305,16 @@ export function stepRemains(drive: DriveState, dt: number): void {
       if (piece.z <= 0) {
         piece.z = 0;
         // Meat keeps almost nothing off the tarmac: it lands, it slaps, and the
-        // little that is left is the slither before it stops.
-        piece.vz = piece.vz < -70 ? -piece.vz * gore.bounce : 0;
-        piece.vel.x *= 0.6;
-        piece.vel.y *= 0.6;
+        // little that is left is the slither before it stops. STEEL DOES NOT —
+        // a torn-off wheel or a hot-box lid skips down the road, and that
+        // difference is most of what tells the two materials apart in the air
+        // without either of them being drawn differently.
+        const bounce =
+          piece.part === "machine" ? DRIVE.traffic.debrisBounce : gore.bounce;
+        piece.vz = piece.vz < -70 ? -piece.vz * bounce : 0;
+        const keep = piece.part === "machine" ? 0.82 : 0.6;
+        piece.vel.x *= keep;
+        piece.vel.y *= keep;
       }
     }
 

@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
+name: traffic_ambulance
+family: earth
+space: outside
+size: [48, 26]
+description: >
+  A box-body ambulance seen side on — white with a yellow-green battenburg band, blue beacons on the roof and rear doors at the back.
+subject:
+  kind: traffic vehicle prop
+  build: a tall box-body ambulance on a van chassis, the patient box taller and squarer than the cab ahead of it
+  features: a battenburg band along the box, blue roof beacons, twin rear doors with a window in each
+  accent: white with a yellow-green battenburg
+  flavor: somebody else's worst day, going the other way
+palette:
+  O: "#1a1c2c" # outline ink
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
+  r: "#d84a3a" # tail lamp
+  y: "#e8d9a8" # headlamp
+  T: "#c0c5cf" # wheel rim
+  G: "#171d2b" # cabin glass
+  H: "#25304a" # sky caught in the top of the glass
+  B: "#eef1f5" # ambulance white
+  s: "#ffffff" # body highlight
+  d: "#969aa4" # sill shadow
+  l: "#9ad83e" # battenburg lime
+  j: "#3a63d8" # blue beacon
+  J: "#22337a" # battenburg blue
+grid: |
+  ............OOO.....OOO.........................
+  ...........OjjjO...OjjjO........................
+  ..OOOOOOOOOOjjjOOOOOjjjOOOOOO...................
+  .OBBBBBBBBBBBBBBBBBBBBBBBBBBBO..................
+  .OBHHHHHbBBBBBBBBBBBBBBBBBBBBOOOOO..............
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBBBBBO.............
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBHHHHO.............
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBGGGGBO............
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBGGGGHBO...........
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBGGGGGHOOOOOOOOO...
+  .OBGGGGGbBBBBBBBBBBBBBBBBBBBBBGGGGGGBBBBBBBBBO..
+  .OssssssbsssssssssssssssssssssssssssssssssssssO.
+  .OBBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBBBBbBBBBBBBBBO.
+  .OrrrBBBbllJJllJJllJJllJJllJJBBBBBBBbBBBBBByyyO.
+  .OrrrBBBbllJJllJJllJJllJJllJJBBBBbbBbBBBBBByyyO.
+  .ObbBBBBbOOOOOlJJllJJllJJllJJBBBBBBOOOOOBBBBbbO.
+  .ObbBBBBOkkkkkOBBBBBBBBBBBBBBBBBBBOkkkkkOBBBbbO.
+  .ObbBBBOkkbbbkkOBBBBBBBBBBBBBBBBBOkkbbbkkOBBbbO.
+  .ObbBBBOkbbbbbkOBBBBBBBBBBBBBBBBBOkbbbbbkOBBbbO.
+  .ObbBBBOkbTTTbkOBBBBBBBBBBBBBBBBBOkbTTTbkOBBbbO.
+  .OdddddOkbbTbbkOdddddddddddddddddOkbbTbbkOddddO.
+  ..OddddOkkbbbkkOdddddddddddddddddOkkbbbkkOdddO..
+  ...OOOOOkkkkkkkOOOOOOOOOOOOOOOOOOOkkkkkkkOOOO...
+  ........OOkkkOO...................OOkkkOO.......
+  ..........OOO.......................OOO.........
+  ................................................

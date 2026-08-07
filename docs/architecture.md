@@ -848,6 +848,33 @@ escort.ts` walks the people an escort errand puts on the field, and
   down the road and takes a slice of the car with it — and the auto-driver
   reads the furniture like everything else, or it settles in the gutter and
   grinds itself to a halt on the emptiest-looking line on the road.
+  WHAT IS ON THE ROAD is a CATALOG rather than a variant index — `fleet.ts`,
+  twenty-two vehicles each carrying its own mass, collision extent, speed band,
+  spawn weight and passenger list. It has to be, because the whole minigame is a
+  momentum sum and mass is its only real input: a twelve-tonne bus that answered
+  a bumper the way a thirty-kilo bicycle does was the physics being told a lie.
+  Everything else falls out of that one table. A vehicle keeps its OWN damage
+  (`DriveTraffic.wear`) on the same absorbed-energy currency the hero's car
+  does, scaled by its own mass — so the same blow writes off a moped, folds a
+  hatchback and barely marks a bus — climbing three visible rungs and then dying
+  in the lane it was driving in, which leaves an obstacle nobody placed. And an
+  `open` vehicle (a motorcycle, a moped, a bicycle, a board — anything with
+  somebody riding it in the weather) is not shunted at all: it goes DOWN, and
+  past `snapForce` it stops being a vehicle and becomes two large halves of its
+  own picture. The delivery trade rides the PAVEMENT and weaves across the kerb,
+  which is the one change that alters the shape of the minigame rather than its
+  furniture — the gutter used to be the safe line.
+  WHO LEAVES A VEHICLE, AND HOW, is `eject.ts`, and it is two populations rather
+  than one. A RIDER sits in the open on something lighter than they are: nothing
+  holds them on, so any real contact takes them off it, and the only question is
+  how far they go. An OCCUPANT is belted into a steel box with exactly one way
+  out, so it takes a SQUARE blow rather than merely a hard one — which is the
+  single condition that makes the sight legible instead of random, and a player
+  learns inside three collisions that hitting a car head-on empties it and that
+  clipping the same car does not. Either way what leaves becomes an ordinary
+  `DrivePedestrian` of `kind: "rider"`, so it is counted, caught by the wheels,
+  bled onto the tarmac and cut out of its own art by every system already on the
+  road, none of which had to learn that riders exist.
   WHAT IT LEAVES OF SOMEBODY is the road's own body physics, and it is SIM
   rather than presentation for one reason: a car is not a blow. A sword opens a
   body in an instant and the pieces are down again inside a second, which a
@@ -857,7 +884,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   where a thing IS. So `remains.ts` holds the pieces (`DriveRemain`: an upper
   half thrown over the roof with less along-road speed than the car, so the
   wagon passes underneath it; a lower half caught and dragged; the lumps torn
-  off on the way past), and `blockade.ts` supplies most of their customers — THE
+  off on the way past; and the STEEL ones — a piece of machine, or half of one
+  — which travel on the same physics and differ only in what they are made of), and `blockade.ts` supplies most of their customers — THE
   GLUED, twenty demonstrators sitting across every lane at one point in the
   course, the one thing on this road that does not move and cannot be driven
   around. What any of it is MADE of is still the app's

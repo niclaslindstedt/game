@@ -356,6 +356,34 @@ export function DriveScreen({
     };
   }, [onScreenshot, setPause]);
 
+  // ?debug — THE ROAD'S OWN `window.__game`.
+  //
+  // A run has been reachable from the console since the beginning
+  // (`run-setup.ts`), and the drive never was, which made every question about
+  // it ("is that moped carrying a rider", "did that car climb a rung", "how far
+  // did the body actually go") one you could only answer by squinting at a
+  // screenshot. The road is a simulation like any other and gets the same
+  // handle: `window.__drive` is the live `DriveState`, so a staged collision is
+  // a couple of lines in DevTools rather than a minute of hoping.
+  //
+  // IN AN EFFECT, and it has to be: writing to `window` and reading a ref
+  // during render are both things React's own lint refuses (and is right to —
+  // a render is not allowed to be the thing that has the side effect). One
+  // shot on mount is enough because the ref's OBJECT never changes: a restart
+  // is `Object.assign(drive, restartDrive(drive))`, which keeps the identity
+  // the handle is pointing at.
+  //
+  // AND IT IS NOT CLEANED UP ON UNMOUNT, deliberately. The workbench remounts
+  // this screen on every lap (its `key` carries the seed), so a teardown that
+  // deleted the handle would run AFTER the next lap's setup had installed one
+  // and leave the console holding nothing — the debug surface breaking exactly
+  // when the road restarts, which is when it is most wanted. The run's own
+  // `window.__game` is left standing for the same reason.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("debug")) return;
+    (window as { __drive?: DriveState }).__drive = driveRef.current;
+  }, []);
+
   const nose = params.direction === 1 ? 1 : -1;
 
   // ── THE LOOP ──────────────────────────────────────────────────────────────

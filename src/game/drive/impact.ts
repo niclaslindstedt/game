@@ -66,6 +66,22 @@ export type Impact = {
   /** How far along the car's own body that contact sat, in px from its centre
    * and signed toward the nose — which panel wears it (`panelAt`). */
   along: number;
+  /**
+   * HOW SQUARE THE BLOW WAS: the contact normal read onto the nose. 1 is dead
+   * centre on the bumper, 0 is a body that never got in front of the car at
+   * all.
+   *
+   * It was always computed here and always thrown away, which was fine while
+   * the only thing that read it was the car's own share of the impulse. It is
+   * carried now because it is the ONE condition that decides whether somebody
+   * comes out through a windscreen (`eject.ts`), and re-deriving it at the call
+   * site would be a second answer to a question this function has already
+   * settled — the same reason `panel` travels rather than being guessed at.
+   */
+  squareness: number;
+  /** Which panel of the HERO's car wore it — `panelAt(along)`, carried so
+   * nobody downstream has to re-derive it and disagree. */
+  panel: CarPanelId;
 };
 
 /**
@@ -84,6 +100,7 @@ export function solveImpact(
   bodyVel: Vec2,
   bodyRadius: number,
   bodyMassKg: number,
+  bodyHalfLength = 0,
 ): Impact | null {
   // THE CONTACT POINT: the nearest spot on the car's own axis segment. The
   // segment is the 48-px body laid along the road, so a thing off the END of it
@@ -92,7 +109,19 @@ export function solveImpact(
   const alongRaw = bodyPos.x - carPos.x;
   const along = Math.max(-HALF_BODY, Math.min(HALF_BODY, alongRaw));
   const contact: Vec2 = { x: carPos.x + along, y: carPos.y };
-  let nx = bodyPos.x - contact.x;
+  // …AND THE OTHER THING IS A SEGMENT TOO, when it is long enough to matter.
+  //
+  // A bus is 48 px of art and used to be a 12-px circle, so the hero could put
+  // his nose a third of the way into one before the model noticed. Measuring to
+  // the nearest point of the struck vehicle's OWN extent rather than to its
+  // centre makes a long vehicle actually long — and it costs nothing for
+  // everything that is honestly a point (a person, a lamp post), which passes
+  // `bodyHalfLength` of 0 and gets exactly the sum it always got.
+  const nearestX = Math.max(
+    bodyPos.x - bodyHalfLength,
+    Math.min(bodyPos.x + bodyHalfLength, contact.x),
+  );
+  let nx = nearestX - contact.x;
   let ny = bodyPos.y - contact.y;
   const dist = Math.hypot(nx, ny);
   if (dist > BODY_RADIUS + bodyRadius) return null;
@@ -136,7 +165,9 @@ export function solveImpact(
   const impulse = (1 + restitution) * reducedMass * sweepMs; // N·s
   // HOW SQUARE THE BLOW WAS: the contact normal read onto the nose. 1 is dead
   // centre on the bumper, 0 is a body that never got in front of the car at
-  // all — and the car's whole answer for the collision is scaled by it.
+  // all — and the car's whole answer for the collision is scaled by it. It is
+  // also what decides who leaves a car through its windscreen (`eject.ts`),
+  // which is why it now travels on the result.
   const alongNose = Math.abs(nx * carDir);
   const normalMs = sweepMs * alongNose;
   const joules =
@@ -161,6 +192,8 @@ export function solveImpact(
     joules,
     contact,
     along: along * carDir,
+    squareness: alongNose,
+    panel: panelAt(along * carDir),
   };
 }
 
@@ -182,13 +215,25 @@ export function panelAt(along: number): CarPanelId {
 /** The mass to solve each kind of thing on the road against. */
 export type ImpactMasses = {
   pedestrian: number;
-  traffic: number;
-  /** A car left at the kerb — laddered on the traffic's own multiplier,
-   * because it is a car. */
-  parked: number;
+  /**
+   * THE RUNG'S MULTIPLIER ON A VEHICLE'S OWN MASS, rather than one mass for
+   * everything with wheels.
+   *
+   * It has to be a multiplier now that the fleet carries its own weights
+   * (`drive/fleet.ts`): the difficulty ladder is a statement about how heavy the
+   * ROAD is, and applying it as a flat number would have thrown away the
+   * distinction between a bus and a bicycle that the fleet exists to make.
+   */
+  vehicleMult: number;
+  /** …and what a car left at the kerb carries on top of its own mass, laddered
+   * the same way. */
+  parkedExtra: number;
   /** A street light. NOT laddered: the difficulty is about what the ROAD
    * weighs, and the council's lighting is the same steel on every rung. */
   lamp: number;
+  /** A person, for adding to a two-wheeler that still has one aboard — the
+   * crowd's own mass, because it is one of the crowd. */
+  rider: number;
 };
 
 /**
@@ -208,8 +253,9 @@ export function impactMasses(difficulty: Difficulty): ImpactMasses {
   const { drive } = difficultyDef(difficulty);
   return {
     pedestrian: DRIVE_UNITS.pedestrianMassKg * drive.pedestrianMassMult,
-    traffic: DRIVE_UNITS.trafficMassKg * drive.trafficMassMult,
-    parked: DRIVE_UNITS.parkedCarMassKg * drive.trafficMassMult,
+    vehicleMult: drive.trafficMassMult,
+    parkedExtra: DRIVE_UNITS.parkedExtraKg * drive.trafficMassMult,
     lamp: DRIVE_UNITS.lampPostMassKg,
+    rider: DRIVE_UNITS.pedestrianMassKg * drive.pedestrianMassMult,
   };
 }

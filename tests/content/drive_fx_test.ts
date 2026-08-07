@@ -25,6 +25,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createDrive,
+  vehicleDef,
   DRIVE,
   DRIVETRAIN,
   GEAR_COUNT,
@@ -117,7 +118,7 @@ describe("the road's sound banks", () => {
         // A van dawdling along in the same lane — the rear-ender.
         { x: DRIVE.trafficSpeedPx.min, y: 0 },
         CAR.footprint.radius,
-        mass.traffic,
+        vehicleDef(0).massKg * mass.vehicleMult,
       )?.joules ?? 0;
 
     // A CAREFUL DRIVER, at forty percent of the top end.

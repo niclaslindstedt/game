@@ -25,8 +25,10 @@ import {
   crossingsBetween,
   crowdEdges,
   DRIVE,
+  vehicleDef,
   type DriveRemain,
   type DriveState,
+  type DriveTraffic,
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
@@ -64,7 +66,9 @@ import {
   ROAD_LAMP_HEAD_PX,
   ROAD_LAMP_POOL_PX,
   sceneryBetween,
-  TRAFFIC_SPRITES,
+  RIDER_SEATS,
+  RIDER_SPRITES,
+  trafficSprite,
 } from "./scenery.ts";
 import { drawDriveSky } from "./sky.ts";
 
@@ -112,16 +116,28 @@ const NEAR_MARGIN = 6;
  * kept OUT of, so the dials have grass under them instead of tarmac.
  *
  * The HUD is DOM and the road is a canvas, so this is the one number the two
- * sides have to agree on by hand: it is the dash's own height plus its bottom
- * offset (`.drive-dash` / `--drive-dial-size`, pwa/src/styles.css). Read in CSS
- * px and converted by the scale tier, because the dials are a fixed size on the
- * glass while the world behind them is not.
+ * sides have to agree on by hand. It is arithmetic rather than taste, and the
+ * arithmetic is worth writing down because the pieces move:
+ *
+ *   the dash's height          `--drive-dial-size`   77
+ *   …its offset off the bottom `.drive-dash`         10
+ *   …and the verge above it                          14
+ *
+ * WHICH ALSO CENTRES THE SPEECH WINDOW ON THE VERGE, and that is what the
+ * number is actually tuned to. The window is 77 px tall sitting 12 px off the
+ * bottom, so a band of 101 leaves exactly 12 px of grass above it as well —
+ * the same strip top and bottom. Any other value reads as a dialogue box that
+ * has slipped down the frame, because the eye measures it against the two
+ * edges it can see.
+ *
+ * Read in CSS px and converted by the scale tier, because the dials are a fixed
+ * size on the glass while the world behind them is not.
  *
  * A speedometer half over the road was legible — the shadow saw to that — but it
  * read as a HUD dropped on top of a picture rather than as a dashboard the
  * player is looking over, and the arcs fought the lane markings the whole way.
  */
-const DASH_BAND_CSS = 116;
+const DASH_BAND_CSS = 101;
 
 /**
  * …and what PORTRAIT adds to it: the hero's speech window, which on a tall
@@ -416,6 +432,69 @@ export function drawDrive(
     });
   };
 
+  /**
+   * A RIDER, SEATED ON WHAT THEY ARE RIDING.
+   *
+   * Drawn as its OWN entry at the machine's lane rather than composited into
+   * it, and sorted a hair behind so it lands on top of the saddle it belongs to
+   * — which is what lets the machine keep going down the road without one the
+   * instant the road takes them off it.
+   *
+   * The lift is a SCREEN offset rather than a world one, and that is the whole
+   * of getting a seated body onto a machine: raising the rider in world y would
+   * move them UP THE ROAD as well as up the screen (the ground foreshortens),
+   * so at the shipped pitch a rider seated five px above the frame would also be
+   * sitting most of a metre behind it.
+   */
+  const putRider = (
+    name: string,
+    x: number,
+    y: number,
+    lift: number,
+    faceLeft: boolean,
+  ) => {
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) return;
+    drawn.push({
+      y: y + 0.001,
+      draw: () =>
+        billboard(ctx, x, y, camera.x, camera.y, () =>
+          drawSpriteFacing(
+            ctx,
+            sprite,
+            seatX(x, camera.x) - Math.round(sprite.width / 2),
+            seatY(y, camera.y) - Math.round(sprite.height - 2) - lift,
+            faceLeft,
+          ),
+        ),
+    });
+  };
+
+  /** …and a machine that has gone over: turned about its own centre and lifted
+   * by whatever it is still off the road, exactly as a felled lamp post is. */
+  const putTumbling = (name: string, other: DriveTraffic) => {
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) return;
+    drawn.push({
+      y: other.pos.y,
+      draw: () =>
+        billboard(ctx, other.pos.x, other.pos.y, camera.x, camera.y, () => {
+          ctx.save();
+          ctx.translate(
+            seatX(other.pos.x, camera.x),
+            seatY(other.pos.y, camera.y) - Math.round(other.z),
+          );
+          ctx.rotate(other.angle);
+          ctx.drawImage(
+            sprite,
+            -Math.round(sprite.width / 2),
+            -Math.round(sprite.height / 2),
+          );
+          ctx.restore();
+        }),
+    });
+  };
+
   for (const prop of sceneryBetween(left, right)) {
     put(prop.sprite, prop.x, prop.y);
   }
@@ -427,16 +506,21 @@ export function drawDrive(
   // information.
   for (const prop of drive.props) {
     if (prop.kind === "parked_car") {
-      const name = TRAFFIC_SPRITES[prop.variant % TRAFFIC_SPRITES.length];
-      if (name) put(name, prop.pos.x, prop.pos.y);
+      // Somebody's own vehicle, left at the kerb — undamaged, because nobody
+      // parks a wreck.
+      put(trafficSprite(prop.variant, 0), prop.pos.x, prop.pos.y);
       continue;
     }
-    // A STANDING POST IS ONE OF TWO PICTURES OF THE SAME COLUMN: most are the
-    // little yard light, every third is a street-lighting mast that actually
-    // throws light on the tarmac (`mastAt`). The cone is drawn WITH the mast
-    // rather than in a pass of its own — a beam is part of the lamp, and one
-    // sorted separately would be thrown by a post the picture had already
-    // covered up.
+    // EVERY POST ON THIS ROAD IS A MAST. The little yard lights that used to
+    // stand between them are gone (`street.ts`): once the masts were tall
+    // enough to throw real light on the tarmac, the short ones stopped reading
+    // as lighting and started reading as a row of sticks along the kerb. What
+    // is still one of TWO pictures is which WAY it points — the far row burns
+    // toward the eye, the near row shows the back of its cowl (`mastAt`).
+    //
+    // The cone is drawn WITH the mast rather than in a pass of its own — a beam
+    // is part of the lamp, and one sorted separately would be thrown by a post
+    // the picture had already covered up.
     const mast = prop.felled ? null : mastAt(prop.pos);
     if (mast) {
       // THE BEAM IS SORTED WHERE THE LIGHT LANDS, not where the lamp stands,
@@ -478,7 +562,11 @@ export function drawDrive(
     if (!sprite) continue;
     const stump = prop.stub;
     if (stump) {
-      const foot = spriteByName(sprites, LAMP_SPRITE);
+      // THE STUMP IS CROPPED FROM THE SAME COLUMN THAT FLEW OFF IT. It used to
+      // come off the yard light whatever had actually been standing there,
+      // which was invisible while most posts WERE yard lights and is a
+      // mast-sized column over a doll's-house foot now that none of them are.
+      const foot = sprite;
       if (foot) {
         drawn.push({
           y: stump.y,
@@ -533,24 +621,51 @@ export function drawDrive(
   // of its boot. They are pushed BEFORE the body at the same y, so a car's own
   // beam never paints over the car in front of it.
   for (const other of drive.traffic) {
-    const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];
-    if (!name) continue;
-    drawn.push({
-      y: other.pos.y - 0.001,
-      draw: () =>
-        drawLightCones(
-          ctx,
-          other.pos,
-          camera,
-          timeMs,
-          0,
-          0,
-          other.faceLeft,
-          other.noseOut,
-          other.tailOut,
-        ),
-    });
+    const def = vehicleDef(other.variant);
+    const name = trafficSprite(other.variant, other.rung);
+    // ITS LIGHTS GO OUT WHEN IT DOES. A wreck coasting to a halt and a moped
+    // lying on its side are both still drawn, and a beam thrown down the road
+    // out of either one would undo the whole read.
+    if (!other.downed && !other.wrecked) {
+      drawn.push({
+        y: other.pos.y - 0.001,
+        draw: () =>
+          drawLightCones(
+            ctx,
+            other.pos,
+            camera,
+            timeMs,
+            0,
+            0,
+            other.faceLeft,
+            other.noseOut,
+            other.tailOut,
+          ),
+      });
+    }
+    if (other.downed) {
+      // ON ITS SIDE, and turned about its own centre — the one thing on this
+      // road besides a felled lamp post whose ORIENTATION carries information.
+      putTumbling(name, other);
+      continue;
+    }
     put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
+    // …AND THE PERSON ON IT, drawn on top at the machine's own saddle. Seated
+    // separately rather than baked in, because the whole point of a rider is
+    // that the machine can lose them (`ejectRider`).
+    if (other.rider && def.rider !== null) {
+      const seat = RIDER_SEATS[def.id];
+      const rider = RIDER_SPRITES[def.rider];
+      if (seat && rider) {
+        putRider(
+          rider,
+          other.pos.x + (other.faceLeft ? -seat.dx : seat.dx),
+          other.pos.y,
+          seat.dy,
+          other.faceLeft,
+        );
+      }
+    }
   }
   // WHAT IS LEFT OF THE ONES HE HAS ALREADY MET — halves, whole bodies and
   // chunks, each at its OWN place on the road, y-sorted in with everything else

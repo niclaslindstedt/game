@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
+name: traffic_box_truck
+family: earth
+space: outside
+size: [48, 26]
+description: >
+  A two-axle box truck seen side on — a slab white cargo body standing over a low blue cab, a roller shutter at the back.
+subject:
+  kind: traffic vehicle prop
+  build: a big slab-sided cargo box carried on a chassis, with a lower separate cab tucked in ahead of it
+  features: a roller-shutter tail, a chassis rail under the box, a low cab with a deep windscreen
+  accent: white box over a blue cab
+  flavor: whatever is in it, it is late
+palette:
+  O: "#1a1c2c" # outline ink
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
+  r: "#d84a3a" # tail lamp
+  y: "#e8d9a8" # headlamp
+  T: "#c0c5cf" # wheel rim
+  G: "#171d2b" # cabin glass
+  H: "#25304a" # sky caught in the top of the glass
+  B: "#dcdde2" # white cargo body
+  s: "#f6f7fa" # body highlight
+  d: "#8b8d97" # sill shadow
+  J: "#3f63bd" # cab blue
+  j: "#7a9ce6" # cab blue highlight
+grid: |
+  ................................................
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO................
+  .OBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO...............
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBO...............
+  .OBddddbBBBBBBBBBBBBBBBBBBBBBBBBO...............
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBO...............
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBOOOOOOOOOOOOOO..
+  .OBddddbBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO.
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBJJHHHHHHHHHHJJO.
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBJJGGGGGGGGGGJJO.
+  .OBddddbBBBBBBBBBBBBBBBBBBBBBBBBJJGGGGGGGGGGJJO.
+  .OBBBBBbBBBBBBBBBBBBBBBBBBBBBBBBJJGGGGGGGGGGJJO.
+  .OsssssbssssssssssssssssssssssssJjjjjjjjjjjjjjO.
+  .OBddddbBBBBBBBBBBBBBBBBBBBBBBBBJJJJJJJJJJJJJJO.
+  .OrrrBBbBOOOBBBBBBBBBBBBBBBBBBBBJJJJOOOJJJJyyyO.
+  .OrrrBBOkkkkkOBBBBBBBBBBBBBBBBBBJJOkkkkkOJJyyyO.
+  .ObdddOkkkbkkkOBBBBBBBBBBBBBBBBBJOkkkbkkkOJJbbO.
+  .ObbBBkkbbbbbkkBBBBBBBBBBBBBBBBBJkkbbbbbkkJJbbO.
+  .ObbBBkkbTTTbkkBBBBBBBBBBBBBBBBBJkkbTTTbkkJJbbO.
+  .OddddkkbTTTbkkbbbbbbbbbbbbbbbbdJkkbTTTbkkJJJJO.
+  ..OdddkkbTTTbkkddddddddddddddddddkkbTTTbkkdddO..
+  ...OOOOkbbbbbkOOOOOOOOOOOOOOOOOOOOkbbbbbkOOOO...
+  ......OkkkkkkkO..................OkkkkkkkO......
+  .......OOkkkOO....................OOkkkOO.......
+  .........OOO........................OOO.........
+  ................................................
