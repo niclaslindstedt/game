@@ -250,6 +250,27 @@ export const DRIVE = {
   /** A person's radius on the ground (world px) — the collision circle. */
   pedestrianRadiusPx: 5,
   /**
+   * HOW OFTEN SOMEBODY OUT HERE IS THINKING SOMETHING WHERE IT CAN BE READ
+   * (world px of course between one thought and the next).
+   *
+   * NOT A DENSITY — A PACE. The crowd stands a body every hundred pixels, and a
+   * thought over each of them would be a scrolling wall of grey that says one
+   * thing ("these people are props with captions"). What is wanted is the
+   * opposite: a line comes up out of the traffic, is gone before it is quite
+   * read, and there is a stretch of nothing at all before the next one, so the
+   * player is left with the sense that he MISSED something rather than that he
+   * has been shown a list.
+   *
+   * It is set against the catalogue rather than picked: about five hundred
+   * pixels spreads all forty lines (`CROWD_THOUGHTS`) across the leg's twenty
+   * thousand peopled pixels, so a trip runs the whole set almost exactly once
+   * and a trip driven fast simply misses the tail of it. At the car's own top
+   * speed the reading window is under half a second — which is the joke,
+   * measured: the words are there, they are legible, and there is no version of
+   * driving this road where he takes them in.
+   */
+  thoughtPitchPx: 520,
+  /**
    * THE CROSSINGS — how far apart the painted crossings are (world px), how
    * wide the paint is, and what share of the crowd is standing on one.
    *

@@ -60,6 +60,7 @@ import {
   laneCenter,
   roadEdges,
   resetCrowdMarks,
+  resetThoughtDeck,
   spawnCrowd,
   stepCrowd,
 } from "./crowd.ts";
@@ -126,6 +127,7 @@ export type { DriveOutcome } from "./config.ts";
 export {
   crossingsBetween,
   crowdEdges,
+  CROWD_THOUGHTS,
   CROWD_VARIANTS,
   laneAt,
   laneCenter,
@@ -233,6 +235,10 @@ export function createDrive(params: DriveParams): DriveState {
     },
     nextPedestrianAt: resetCrowdMarks(rng),
     nextTrafficAt: DRIVE.crowdStartPx * 0.5,
+    // A fresh deck of things to be thinking, in this seed's own order — and the
+    // first of them due with the first person the road puts out.
+    thoughtDeck: resetThoughtDeck(params.seed),
+    nextThoughtAt: DRIVE.crowdStartPx,
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
     blockadeDone: false,

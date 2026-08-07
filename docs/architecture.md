@@ -888,7 +888,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   — which travel on the same physics and differ only in what they are made of), and `blockade.ts` supplies most of their customers — THE
   GLUED, twenty demonstrators sitting across every lane at one point in the
   course, the one thing on this road that does not move and cannot be driven
-  around. What any of it is MADE of is still the app's
+  around. The crowd itself carries the leg's other words: forty THOUGHTS
+  (`CROWD_THOUGHTS`, dealt from a per-trip deck in `crowd.ts` so no line ever
+  plays twice), floated over a walker's head for well under a second each and
+  written to be missed — the words are the app's (`drive-screen/placards.ts`),
+  which is also where the shout-versus-thought difference lives. What any of it is MADE of is still the app's
   (`drive-screen/drive-gore.ts`), which cuts the victim's OWN sprite at the
   bumper's line with the run's own `slicedPiece` and lays the marks the road
   keeps: the splash, the drag smear, the paste under a wheel, and the tread
