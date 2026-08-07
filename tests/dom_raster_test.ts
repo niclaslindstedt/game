@@ -9,9 +9,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   opaqueBounds,
+  paintOrder,
   parseBoxShadows,
+  parseDashArray,
   parseLinearGradient,
   splitCssLayers,
+  viewBoxFit,
 } from "@ui/lib/dom-raster.ts";
 
 describe("css layer splitting", () => {
@@ -139,6 +142,97 @@ describe("trimming to the ink", () => {
         2,
       ),
     ).toEqual([0, 0, 2, 1]);
+  });
+});
+
+describe("the order the picture is painted in", () => {
+  /** `paintOrder` over a list of `[name, computed z-index]` pairs. */
+  const order = (bands: [string, string][]) =>
+    paintOrder(bands, (band) => band[1]);
+
+  it("keeps siblings in the order they were written", () => {
+    // The overwhelming majority: everything at `auto`, layered by markup.
+    const { above } = order([
+      ["field", "auto"],
+      ["hud", "auto"],
+      ["dock", "auto"],
+    ]);
+    expect(above.map((e) => e[0])).toEqual(["field", "hud", "dock"]);
+  });
+
+  it("paints a raised sibling last however early it was mounted", () => {
+    // THE REGRESSION THIS PINS: a drive is mounted before the departure
+    // curtain and beats it with a z-index (styles.css's band map), so a walk
+    // that went by document order painted the curtain over the whole minigame
+    // — every screenshot of the road came back a solid black sheet.
+    const { above } = order([
+      ["drive", "300"],
+      ["hud", "auto"],
+      ["curtain", "200"],
+    ]);
+    expect(above.map((e) => e[0])).toEqual(["hud", "curtain", "drive"]);
+  });
+
+  it("still paints a negative band before the parent's own content", () => {
+    // The item card's kind glyph: a watermark BEHIND every line, written last.
+    const { behind, above } = order([
+      ["name", "auto"],
+      ["stats", "auto"],
+      ["watermark", "-1"],
+    ]);
+    expect(behind.map((e) => e[0])).toEqual(["watermark"]);
+    expect(above.map((e) => e[0])).toEqual(["name", "stats"]);
+  });
+
+  it("sorts the negative bands among themselves too", () => {
+    const { behind } = order([
+      ["near", "-1"],
+      ["far", "-5"],
+    ]);
+    expect(behind.map((e) => e[0])).toEqual(["far", "near"]);
+  });
+});
+
+describe("the gauge rings", () => {
+  it("reads the dash lengths a fraction is drawn with", () => {
+    // `pathLength={1}` + `stroke-dasharray: 0.42 1` is "42% of the way round",
+    // and the browser hands the computed value back in px.
+    expect(parseDashArray("0.42px, 1px")).toEqual([0.42, 1]);
+    expect(parseDashArray("4px 2px")).toEqual([4, 2]);
+  });
+
+  it("has nothing to say about an undashed stroke", () => {
+    expect(parseDashArray("none")).toEqual([]);
+    expect(parseDashArray("")).toEqual([]);
+  });
+
+  it("fits a round gauge inside its box and centres it", () => {
+    // The speedometer: a 44×44 viewBox in a box wider than it is tall. `meet`
+    // scales to the SHORT side, so the ring stays round rather than an oval.
+    const fit = viewBoxFit({ w: 100, h: 44 }, { width: 44, height: 44 }, "");
+    expect(fit.sx).toBe(1);
+    expect(fit.sy).toBe(1);
+    expect(fit.dx).toBe(28);
+    expect(fit.dy).toBe(0);
+  });
+
+  it("stretches the one that asked to be stretched", () => {
+    // The minimap's rampage ring: an oblong frame around an oblong map.
+    const fit = viewBoxFit(
+      { w: 200, h: 66 },
+      { width: 100, height: 66 },
+      "none",
+    );
+    expect(fit).toEqual({ sx: 2, sy: 1, dx: 0, dy: 0 });
+  });
+
+  it("leaves a box alone when there is no viewBox to fit", () => {
+    expect(viewBoxFit({ w: 40, h: 40 }, { width: 0, height: 0 }, "")).toEqual({
+      sx: 1,
+      sy: 1,
+      dx: 0,
+      dy: 0,
+    });
   });
 });
 

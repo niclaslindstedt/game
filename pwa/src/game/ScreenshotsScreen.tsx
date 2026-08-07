@@ -77,7 +77,7 @@ export function ScreenshotsScreen({
   /** The physical code of the SCREENSHOT bind, so the key that took the
    * picture also closes the gallery it opened. Omit for ESC only. */
   closeKey?: string;
-  /** That bind's PRINTABLE name ("F12"), for the empty state — which is the
+  /** That bind's PRINTABLE name ("ENTER"), for the empty state — which is the
    * one place in the game the feature is explained, so it has to name the key
    * the player actually holds rather than send them to a settings page.
    * Passed in already formatted: both callers hold the settings, and reaching

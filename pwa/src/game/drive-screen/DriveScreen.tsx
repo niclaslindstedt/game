@@ -131,6 +131,7 @@ export function DriveScreen({
   heroName,
   heroPortrait,
   onScreenshot,
+  onMenu,
   auto = false,
 }: {
   params: DriveParams;
@@ -165,6 +166,18 @@ export function DriveScreen({
    * screen, so the caller owns the roll and the flash; all this does is notice
    * the key, because while a drive is up the run's controls are not listening. */
   onScreenshot?: () => void;
+  /**
+   * LEAVE THE GAME from the road — the pause card's MAIN MENU, once its confirm
+   * has been answered.
+   *
+   * The road cannot hand a PARKED run back the way the fight's pause menu does:
+   * the car is already away down a road that only exists while this screen is
+   * up, and the run behind it is a level the hero has driven out of. So what
+   * this means is settled by the host (GameScreen banks the hero as he sits and
+   * ends the run), and the road only raises it. Absent — the `?drive`
+   * workbench, which has no game behind it — and the row is not drawn.
+   */
+  onMenu?: () => void;
   /**
    * SOMEBODY ELSE AT THE WHEEL — the engine's own auto-driver
    * (`createDriveDriver`) supplies the input and the pad and the keys sit out.
@@ -310,6 +323,59 @@ export function DriveScreen({
     pausedRef.current = on;
     setPaused(on);
   }, []);
+
+  /** Every control let go of at once — the accelerator, the wheel, both hands.
+   * What a lost window leaves behind (see below), and what the pause card is
+   * raised on top of, so nothing is still held when the road starts again. */
+  const dropControls = useCallback(() => {
+    keysRef.current.clear();
+    padIdRef.current = null;
+    padRef.current = null;
+    padOrigin = null;
+    brakeIdsRef.current.clear();
+  }, []);
+
+  // LOSING THE WINDOW PARKS THE CAR — the run's own auto-pause (alt-tab, a tab
+  // switch, an app switch on a phone), which the road was missing for the
+  // reason it was missing PAUSE and SCREENSHOT: while a drive is up the run's
+  // control layer is not listening, so every rule that layer enforces has to be
+  // enforced here too (controls.ts `onBlur`/`onVisibility`). Both signals are
+  // watched because browsers disagree about which one a backgrounding fires,
+  // and parking twice is parking once.
+  //
+  // Two things go with it, and the second is the one that bites: a key held
+  // when the window went away never sees its `keyup`, so a wagon paused with
+  // the accelerator down resumes at full throttle a minute later — which is
+  // exactly the stuck-key the run clears on the same event.
+  //
+  // NOBODY'S THUMB, NO PAUSE. An `auto` road — the attract loop, a playtest, a
+  // shot recipe — has no driver to come back and lift the card, so a pause it
+  // cannot clear is a car parked for the rest of its life. The run reaches the
+  // same outcome from the other end: it pauses, and the bot's input loop clears
+  // it again on the next tick.
+  useEffect(() => {
+    if (auto) return;
+    const park = () => {
+      dropControls();
+      // …BUT NEVER OVER THE BOARD. Once the leg is scored the road is already
+      // stopped and there is nothing held to come back to, so a pause card
+      // raised here would only cover the one thing on screen worth reading —
+      // and it would be a card the board's own key handler is not listening to
+      // dismiss. Dropping the controls above still matters: a key held when the
+      // window went is a key with no `keyup` coming.
+      if (boardRef.current) return;
+      setPause(true);
+    };
+    const onVisibility = () => {
+      if (document.hidden) park();
+    };
+    window.addEventListener("blur", park);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("blur", park);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [auto, dropControls, setPause]);
 
   /**
    * THE ROAD IS BEHIND HIM. Either the cabinet gets its moment, or the crossing
@@ -637,6 +703,12 @@ export function DriveScreen({
     actions: {
       driveResume: () => setPause(false),
       driveSkip: skipDrive,
+      // THE WAY OUT OF THE GAME, offered to an authored dashboard exactly as
+      // the other two are — and absent, rather than dead, wherever the host has
+      // no menu to drop to. An action the mounting screen does not supply is a
+      // press that does nothing, which is the answer the vocabulary is built
+      // around (hud-schema.mjs).
+      ...(onMenu ? { driveMenu: onMenu } : {}),
     },
   };
 
@@ -729,6 +801,7 @@ export function DriveScreen({
           font={assets.font}
           onResume={() => setPause(false)}
           onSkip={skipDrive}
+          onMenu={onMenu}
         />
       )}
       {/* THE CABINET'S BOARD, over a stopped road. Last in the tree so it sits

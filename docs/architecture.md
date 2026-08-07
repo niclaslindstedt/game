@@ -888,7 +888,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   — which travel on the same physics and differ only in what they are made of), and `blockade.ts` supplies most of their customers — THE
   GLUED, twenty demonstrators sitting across every lane at one point in the
   course, the one thing on this road that does not move and cannot be driven
-  around. What any of it is MADE of is still the app's
+  around. The crowd itself carries the leg's other words: forty THOUGHTS
+  (`CROWD_THOUGHTS`, dealt from a per-trip deck in `crowd.ts` so no line ever
+  plays twice), floated over a walker's head for well under a second each and
+  written to be missed — the words are the app's (`drive-screen/placards.ts`),
+  which is also where the shout-versus-thought difference lives. What any of it is MADE of is still the app's
   (`drive-screen/drive-gore.ts`), which cuts the victim's OWN sprite at the
   bumper's line with the run's own `slicedPiece` and lays the marks the road
   keeps: the splash, the drag smear, the paste under a wheel, and the tread
@@ -944,7 +948,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   traffic and the wagon are identical on every rung. The app half is
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
-  loot, no XP). `drive/driver.ts` is the AUTO-DRIVER — the hands on the wheel
+  loot, no XP). **The road answers the run's own binds itself**, because while a
+  drive is up the run's control layer is not listening (there is no live
+  `GameState` under an interlude for it to be built around): PAUSE (and ESCAPE,
+  whatever the bind says), SCREENSHOT, and the auto-pause a LOST WINDOW is —
+  alt-tab, a tab switch, a phone's app switcher — which also drops every held
+  control, since a key the browser never delivered the `keyup` for is a wagon
+  that resumes at full throttle a minute later. An `auto` road (the attract
+  loop, a playtest, a shot recipe) is exempt from that last one: nothing would
+  ever lift the card again. `drive/driver.ts` is the AUTO-DRIVER — the hands on the wheel
   when nobody's are: the title-screen demo, a `?bot=` playtest, `?drive&bot=1`
   in the workbench, and `make drive-bench`, which plays N seeds a rung and
   reports arrival rate, trip time, bodies and ending wear. It lives in the
@@ -1654,9 +1666,13 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   gestures that raise it have no render of their own), `long-press.ts` (the
   press-and-hold state machine: it tells a HOLD apart from a drag that moved
   and from a tap that must not fire twice), `dom-raster.ts` (draws a laid-out
-  DOM subtree of canvases, sprites and framed panels onto one canvas — how an
-  item card becomes a picture; see the note in the file for why this cannot be
-  html2canvas or a `<foreignObject>` when every word on screen is a canvas),
+  DOM subtree of canvases, sprites, framed panels and stroked `<svg>` gauge
+  rings onto one canvas — how an item card becomes a picture; see the note in
+  the file for why this cannot be html2canvas or a `<foreignObject>` when every
+  word on screen is a canvas. It paints in the SCREEN's order rather than the
+  markup's — every full-screen surface here is banded with a `z-index`, so a
+  walk that went by document order would draw a different arrangement than the
+  one being photographed),
   `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
 - **`content/sprites/` + `scripts/asset-tools/` +
@@ -1863,11 +1879,18 @@ seams a browser can't provide on iOS:
   on drift, exactly as for achievements.
 
 - **Screenshots — the picture leaves the game through the platform's own share
-  sheet.** The SCREENSHOT bind (F12) rasterizes the whole screen — world canvas
+  sheet.** The SCREENSHOT bind (ENTER in a browser, F12 in a store shell — see
+  `defaultKeybindings`, because a page may not swallow the developer-tools key)
+  rasterizes the whole screen — world canvas
   AND interface — into a PNG, files it in a capped IndexedDB roll
   (`pwa/src/lib/shot-store.ts`), and flashes a miniature the player can press to
   freeze the run and open the gallery on it (EXTRAS → SCREENSHOTS, the same
-  viewer the title menu opens). Sending one on is the platform's answer rather
+  viewer the title menu opens). **Whatever is on screen is what is in the
+  picture, the DRIVE included** — the road answers the bind itself and owns the
+  whole picture while it is up, so the receipt is banded above even that (the
+  band map in `styles.css`) and the raster follows those bands rather than the
+  markup. It offers no press there: the tap is routed by the field's own canvas,
+  which the road has covered. Sending one on is the platform's answer rather
   than ours: `pwa/src/lib/share-image.ts` probes what the BROWSER can do with
   this exact file (`navigator.share` with a `files` payload, an `image/png`
   clipboard write, a download) and offers only the buttons that will work, while
@@ -1995,8 +2018,9 @@ answer**, and `screenshots-provider.ts` argues it at the seam: steamworks.js
 binds no `ISteamScreenshots`, but the overlay this shell injects already hooks
 Steam's own screenshot key at the swap chain, so a press files a copy in the
 player's Steam library with the game entirely uninvolved. The game's bind ships
-on F12 to match and never grabs the key away from it — one press on a Steam
-build gives the player Steam's copy AND the game's own, the latter in the
+on F12 IN A SHELL to match and never grabs the key away from it (a browser tab
+gets ENTER instead, where F12 belongs to the developer tools) — one press on a
+Steam build gives the player Steam's copy AND the game's own, the latter in the
 in-game gallery and as a real file in their pictures folder
 (`electron/src/screenshots.ts`, whose `share` puts the PNG on the clipboard and
 opens the file manager on it — the desktop's honest version of a share sheet).

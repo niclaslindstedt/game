@@ -432,6 +432,12 @@ thought on an empty road BEFORE he meets anybody, and afterwards he reports on
 the road surface. Nothing in between, ever. He must never acknowledge a single
 body, or the bit stops being funny and starts being a confession._
 
+_AND NOT ALL OF THE LEG'S WORDS ARE HIS. Two other things on this road have
+something to say and neither is answered: THE GLUED shout at him from the
+blockade, and the crowd he is driving through THINK — forty small, ordinary
+thoughts, one to a walker, none of them about him. He reads neither. Both are
+below._
+
 _TWO PLACES, AND THE SPLIT IS THE JOKE'S MACHINERY. The road's own lines are
 BARKED over a car that keeps moving — nothing on that screen ever stops for him
 to talk, because a man muttering at the wheel is funny and a cutscene about
@@ -448,6 +454,83 @@ joke._
 
 1. THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
 2. THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
+
+### THE CROWD — what they are thinking as he goes past
+
+_Forty thoughts, dealt one to a walker every few hundred pixels of road, each
+played at most once a trip. They are not spoken and they are not aimed at the
+car: THE GLUED shout at a driver they can see, and these people have not noticed
+him at all. Each floats over its owner's head in the road's own pixel font, a
+stop quieter than a shout, for rather less than a second._
+
+_THE RULE IS SMALL, NOT TRAGIC. Five to eight words, one sentence, and not one
+of them about dying. The beat lands on SCALE: a man hoping his shoes last the
+winter, a woman whose sister has stopped picking up, somebody who was waved at
+this morning and is still thinking about it. A catalogue of catastrophes reads
+as an author asking to be felt sorry for; a catalogue of Tuesdays reads as
+people. The hopeful ones are the cruellest and the reason the list is not a
+misery column — those are the ones standing on the tarmac when the bumper
+arrives._
+
+_AND THEY ARE WRITTEN TO BE MISSED. The window is under a second at speed, one
+line on screen at a time, with stretches of road where nobody is thinking
+anything. A player catches perhaps a third of them in a trip. The hero catches
+none: he never reads one, never slows for one, and the arrival verdict has a
+line for the suspension and nothing for any of these. That is the whole joke,
+and it only works because the lines are genuinely there to be read._
+
+_The words live with the road's own presentation (`CROWD_THOUGHTS`,
+`pwa/src/game/drive-screen/placards.ts`) rather than in a thought catalog — same
+reason as THE GLUED's: no speaker's name, no portrait, no box, nobody to tap._
+
+1. AT LEAST LOVE IS FREE
+2. I WISH I WAS ON WELFARE
+3. I HOPE FOODCO DOES ANOTHER GIVEAWAY
+4. I AM SO TIRED OF BEGGING
+5. THE BOY ASKED FOR MEAT AGAIN
+6. THE SOUP CAN LAST THREE MORE DAYS
+7. SOMEBODY WAVED AT ME THIS MORNING
+8. MY SISTER STOPPED PICKING UP
+9. I HAD A DESK ONCE
+10. THE SHELTER TAKES NAMES AT SIX
+11. NOBODY HAS LOOKED AT ME TODAY
+12. THE LETTER SAYS FINAL NOTICE AGAIN
+13. I CAN SLEEP RIGHT THROUGH LUNCH NOW
+14. THEY CALLED ME A VALUED TEAM MEMBER
+15. THE DOG EATS BEFORE I DO
+16. THESE SHOES MIGHT SEE THE WINTER OUT
+17. I STILL KNOW HOW TO WELD
+18. TWENTY-TWO YEARS AND THEN A PAPER CUP
+19. A WARM DAY IS SOMETHING AT LEAST
+20. THE BUS COSTS MORE THAN BREAD NOW
+21. MY DAUGHTER SENDS WHAT SHE CAN
+22. SIXTY MORE AND I SLEEP INSIDE
+23. NOBODY TELLS YOU HOW LOUD HUNGER IS
+24. I USED TO GIVE TO COLLECTIONS
+25. THEY SAY THE JOBS WENT TO MARS
+26. MY WIFE WOULD HATE SEEING ME HERE
+27. THE LIBRARY STAYS WARM UNTIL FIVE
+28. I NEVER LEARNED HOW TO ASK
+29. THIS COAT WAS SOMEBODY'S FATHER'S
+30. I SAVED A STAMP FOR THE APPEAL
+31. THE PHONE DIED AND SO DID THE INTERVIEWS
+32. ONE OF THESE CARS MIGHT STOP
+33. I WAS GOING TO BE SOMETHING
+34. THEY GAVE MY LOCKER TO A MACHINE
+35. I TALK TO THE CAT MOSTLY
+36. FORTY YEARS AND NOTHING TO SHOW
+37. THE CLINIC WANTS PAYING UP FRONT
+38. I DREAMED ABOUT A FULL FRIDGE
+39. SOMEBODY WILL NOTICE ME EVENTUALLY
+40. MY NAME IS ON A LIST SOMEWHERE
+
+_Two of these are doing more than their share and are worth keeping where they
+are. "I HOPE FOODCO DOES ANOTHER GIVEAWAY" is a person whose plan for eating this
+week is a maybe — FOODCO is the block's cut-price grocer, invented and
+deliberately NOT GOODCO, because a line that made the giveaway come from the
+company that took their jobs would be arguing where this one is only hungry.
+"SOMEBODY WILL NOTICE ME EVENTUALLY" is standing in a road the hero is about to
+come down._
 
 ### THE GLUED — the blockade, spoken from the road itself
 
@@ -3298,31 +3381,32 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                                | Canonical data file                                                                                                                                                                            |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cutscenes — prelude + travel scenes (captions, `say` beats)           | `content/cutscenes/<id>.yaml` (compiled to `src/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                       |
-| Per-level opening monologues (`intro`) + epilogues (`outro`)          | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                                                                                            |
-| Elite/boss `dialogue` + `lastWords`                                   | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                                                                                                  |
-| Hero's inner thoughts (`firstKillThoughts`)                           | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                                                    |
-| The scripted opening strike's blows (`openingStrike`)                 | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                      |
-| Hero's HELLBORN first-sighting reads (`hellborn_*`)                   | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                         |
-| What he says at a door with no open road                              | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `src/game/story.ts`)                                                |
-| What he thinks about being SOMEWHERE (`placeThoughts`)                | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `src/game/story.ts`)                       |
-| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                   | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                                                  |
-| What the DRIVE leaves him saying (`drive_arrive_*`)                   | `content/thoughts.yaml` (picked by `driveVerdict` in `src/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`) |
-| What he mutters ON the road (`drive_out_welfare`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze)                                                                                   |
-| What THE GLUED say from the blockade                                  | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)     |
-| Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                                               |
-| Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                                       |
-| The wandering merchant's greetings                                    | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                                            |
-| A trader's counter line (said every visit, shop panel)                | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                         |
-| Quest givers' greetings + farewells                                   | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                                                             |
-| Every errand's ask, nag and handover                                  | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                                                    |
-| A talk the player STEERS (speaker lines + the hero's rows)            | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                       |
-| The merchant's "welcome back" (return visits)                         | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                          |
-| Bestiary lore (`EnemyDef.lore` — described, not spoken)               | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                             |
-| Loose UI copy (how-to-play, not story)                                | `pwa/src/game/copy.ts`                                                                                                                                                                         |
-| Brand strings (title, tagline — not story)                            | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                     |
+| Story/dialogue element                                                | Canonical data file                                                                                                                                                                                      |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)           | `content/cutscenes/<id>.yaml` (compiled to `src/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                                 |
+| Per-level opening monologues (`intro`) + epilogues (`outro`)          | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                                                                                                      |
+| Elite/boss `dialogue` + `lastWords`                                   | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                                                                                                            |
+| Hero's inner thoughts (`firstKillThoughts`)                           | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                                                              |
+| The scripted opening strike's blows (`openingStrike`)                 | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)                   | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                   |
+| What he says at a door with no open road                              | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `src/game/story.ts`)                                                          |
+| What he thinks about being SOMEWHERE (`placeThoughts`)                | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `src/game/story.ts`)                                 |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                   | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                                                            |
+| What the DRIVE leaves him saying (`drive_arrive_*`)                   | `content/thoughts.yaml` (picked by `driveVerdict` in `src/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`)           |
+| What he mutters ON the road (`drive_out_welfare`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze)                                                                                             |
+| What THE GLUED say from the blockade                                  | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)               |
+| What the CROWD on that road are thinking                              | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car) |
+| Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                                                         |
+| Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                                                 |
+| The wandering merchant's greetings                                    | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                                                      |
+| A trader's counter line (said every visit, shop panel)                | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                   |
+| Quest givers' greetings + farewells                                   | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                                                                       |
+| Every errand's ask, nag and handover                                  | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                                                              |
+| A talk the player STEERS (speaker lines + the hero's rows)            | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                 |
+| The merchant's "welcome back" (return visits)                         | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                    |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)               | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                       |
+| Loose UI copy (how-to-play, not story)                                | `pwa/src/game/copy.ts`                                                                                                                                                                                   |
+| Brand strings (title, tagline — not story)                            | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                               |
 
 **A quest giver's `lore` is DESCRIBED, not spoken** — it is the paragraph the
 offer box and the quest log print under their name, in the same register as an

@@ -110,6 +110,19 @@ nothing, mind how you go — and he says it to himself at the wheel, without
 slowing down, which is the only place a promise like that costs nothing. Then he
 drives through them at a hundred and twenty and never mentions it again.
 
+**What they are thinking.** Every so often one of the people on that road has a
+thought over their head, and it is never about him. It is the rent, the soup,
+the boy who asked for meat again, a sister who has stopped picking up, a
+giveaway at FOODCO somebody hopes is on again this week — small, domestic, entirely
+unremarkable, and a few of them hopeful, which is the worst of it. Forty of
+them play across a trip and none of them twice. They are legible for about half
+a second each, from a car doing a hundred and twenty, and the player will catch
+perhaps a third of them and the hero none at all: he never reads one, never
+slows for one, and never refers to one afterwards. That is the joke and it is
+the same joke as the rest of the leg — these are people with insides, and the
+only thing the man in the car will ever be able to tell you about them is what
+they did to the suspension.
+
 **THE GLUED.** Halfway along the leg the road is shut. Twenty people are sitting
 in the carriageway with their hands set into the resin — kerb to kerb, every
 lane, some cross-legged, some kneeling, some lying flat on their backs where

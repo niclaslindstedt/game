@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import { captureScale, shotFileName } from "../pwa/src/game/screenshots.ts";
 import {
   bindingLabel,
+  defaultKeybindings,
   DEFAULT_KEYBINDINGS,
 } from "../pwa/src/game/keybindings.ts";
 import { IDENTITY } from "../pwa/src/identity.ts";
@@ -75,14 +76,30 @@ describe("what the picture is called", () => {
 });
 
 describe("the screenshot bind", () => {
-  it("ships on F12 — Steam's own screenshot key", () => {
+  it("ships on F12 in a shell — Steam's own screenshot key", () => {
     // The whole Steam integration rests on this default: the overlay hooks F12
     // and files its own copy, and the game never grabs the key away from it
     // (electron/src/screenshots-provider.ts).
     expect(DEFAULT_KEYBINDINGS.screenshot).toBe("F12");
+    expect(defaultKeybindings("steam").screenshot).toBe("F12");
+  });
+
+  it("moves to ENTER in a browser, which cannot have F12 at all", () => {
+    // F12 is the developer-tools key and no page may swallow it, so on the web
+    // the default has to be a key the game can actually receive.
+    expect(defaultKeybindings(null).screenshot).toBe("Enter");
+  });
+
+  it("leaves every other key where it was", () => {
+    const web = defaultKeybindings(null);
+    for (const [action, code] of Object.entries(DEFAULT_KEYBINDINGS)) {
+      if (action === "screenshot") continue;
+      expect(web[action as keyof typeof web]).toBe(code);
+    }
   });
 
   it("prints a name the pixel font can draw", () => {
     expect(bindingLabel(DEFAULT_KEYBINDINGS.screenshot)).toBe("F12");
+    expect(bindingLabel(defaultKeybindings(null).screenshot)).toBe("ENTER");
   });
 });

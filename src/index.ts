@@ -1005,6 +1005,7 @@ export {
   trafficMass,
   vehicleDef,
   wreckForce,
+  CROWD_THOUGHTS,
   CROWD_VARIANTS,
   FLEET,
   PAVEMENT_SHARE,

@@ -5502,6 +5502,18 @@ html.app-locked body {
               its moment over the victory splash), and the demo's teaching tip
               (the "levelstat" tip points at a button inside the level-up modal)
      150/200  the HOW TO PLAY demo's tap catcher and its exit confirm
+     200      the departure curtain (`.departure-curtain`) — the wash to black
+              a drive-out hands the trip over behind
+     300      THE DRIVE (`.drive-screen`) — while a road is up there is no run
+              to look at, so it owns the whole picture, curtain included
+     310      the CAMERA (`.shot-flash-burst`, `.shot-flash`) — the white frame
+              and the receipt for a picture just taken. It is the one surface
+              that has to clear even the drive, because the drive RAISES it:
+              the road answers the SCREENSHOT bind itself (the run's control
+              layer is not listening under an interlude), and a receipt that
+              printed under the thing it is a receipt for is a key that looks
+              broken. It is inert at every band, so out-bidding a modal costs
+              that modal nothing.
 
    Keep new full-screen surfaces inside a band rather than out-bidding one;
    `tests/overlay_layers_test.ts` pins the ordering. */
@@ -13260,13 +13272,14 @@ canvas.tier-artifact {
    shelf (`.arsenal-overlay` / `.arsenal-panel`), so every full-screen browser
    in the game keeps reading as one family. */
 
-/* The camera's own flash: one white frame over the whole field. Above the
-   screen-space FX bands and below the modal one, because it is a lighting
-   event rather than a thing to press. */
+/* The camera's own flash: one white frame over the whole PICTURE — and the
+   picture is whatever was captured, which is the whole screen subtree, modals
+   and the drive included (see the band map above `.game-overlay`). A lighting
+   event rather than a thing to press, so nothing it covers loses a tap to it. */
 .shot-flash-burst {
   position: absolute;
   inset: 0;
-  z-index: 98;
+  z-index: 310;
   background: #ffffff;
   pointer-events: none;
   opacity: 0;
@@ -13291,7 +13304,11 @@ canvas.tier-artifact {
   position: absolute;
   right: max(0.6rem, env(safe-area-inset-right));
   top: 50%;
-  z-index: 110;
+  /* The camera's band — over everything, the DRIVE included: the road answers
+     the SCREENSHOT bind itself and owns the whole picture while it is up, so a
+     receipt in the modal band printed underneath the minigame it was a receipt
+     FOR, and the key read as dead. See the band map above `.game-overlay`. */
+  z-index: 310;
   display: flex;
   align-items: center;
   gap: 0.45rem;

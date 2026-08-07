@@ -20,6 +20,15 @@
 // makes him a man who is not thinking about it at all, which is the funny one
 // and the one the arrival lines are written against. `pedestriansPerKPx` is
 // tuned to that, not to fairness.
+//
+// AND EVERY SO OFTEN ONE OF THEM IS THINKING SOMETHING (`CROWD_THOUGHTS`, and
+// the deck the deal comes out of). That is the other half of the same joke and
+// the half that costs nothing: the hero cannot be made to notice a person, so
+// the crowd is given an inside instead — the rent, a daughter who still calls,
+// a giveaway somebody is hoping is on again — and it is put where the player
+// technically CAN read it and practically will not, half a second at a time,
+// through a windscreen at a hundred and twenty. Nobody in the wagon ever
+// mentions one. Nothing in the game ever refers to one again.
 
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 
@@ -30,6 +39,19 @@ import type { DrivePedestrian, DriveState } from "./types.ts";
  * this long (`CROWD_SPRITES`, pwa/src/game/drive-screen/scenery.ts) — keep the
  * two in step, or the road quietly stops using its last body. */
 export const CROWD_VARIANTS = 20;
+
+/**
+ * HOW MANY THINGS THE CROWD IS THINKING — the length of the app's own list
+ * (`CROWD_THOUGHTS`, pwa/src/game/drive-screen/placards.ts), which is where the
+ * words live, because the engine has never been told this game has words in it.
+ *
+ * EVERY ONE OF THEM PLAYS ONCE A TRIP AND THEN IS DONE (`DriveState.thoughtDeck`).
+ * A road of two hundred people rolling a line each would repeat itself inside
+ * the first ten seconds, and a repeat is the moment the crowd stops being two
+ * hundred people and becomes one person copy-pasted — which is the exact
+ * feeling the whole beat exists to work against.
+ */
+export const CROWD_THOUGHTS = 40;
 
 /** How fast a tumbling body sheds its speed on the tarmac (1/s), and the speed
  * under which it has stopped for good. */
@@ -128,6 +150,49 @@ function markHash(at: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+/**
+ * THE THOUGHTS, SHUFFLED — the order this trip's crowd will think them in.
+ *
+ * DEALT FROM A DECK RATHER THAN ROLLED PER BODY, which is the whole of the rule
+ * the user of this list cares about: each line plays once a trip. A roll would
+ * hand the same sentence to two people four seconds apart, and two people
+ * thinking the identical thing is the one thing that would make the crowd read
+ * as wallpaper.
+ *
+ * SHUFFLED OFF THE SEED, NOT OFF `state.rng()`, exactly as the crossings and the
+ * blockade's seating are. The road's bodies, their variants and their wander
+ * phases all come off the seeded stream in a fixed order; spending forty draws
+ * here would have moved every person on the leg one place along, which is a
+ * different road for the same seed and a broken restart-after-a-breakdown.
+ *
+ * The deck is POPPED from the end, so this returns it in the order the trip will
+ * think it, back to front.
+ */
+export function resetThoughtDeck(seed: number): number[] {
+  const deck = [...Array(CROWD_THOUGHTS).keys()];
+  // Fisher–Yates, driven by the seed's own hash chain.
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(markHash(seed * 1013 + i * 7 + 3) * (i + 1));
+    [deck[i], deck[j]] = [deck[j] as number, deck[i] as number];
+  }
+  return deck;
+}
+
+/**
+ * WHAT THE PERSON AT THIS MARK IS THINKING, or −1 for the great majority of
+ * them who are simply walking.
+ *
+ * The pace is `DRIVE.thoughtPitchPx` and the mark that gets the card is the
+ * first one PAST it — so the thoughts keep their spacing whatever the crowd's
+ * own density is set to, and a trip that runs the deck out (a long course, or a
+ * slow enough drive) simply goes quiet rather than starting the set again.
+ */
+function dealThought(state: DriveState, at: number): number {
+  if (at < state.nextThoughtAt) return -1;
+  state.nextThoughtAt = at + DRIVE.thoughtPitchPx;
+  return state.thoughtDeck.pop() ?? -1;
+}
+
 /** Lay down the next stretch of crowd as the road unrolls under the car.
  * Bodies are minted ONCE, at a running mark, rather than re-rolled per tick —
  * so the same seed lays the same people down however the car is driven. */
@@ -170,9 +235,13 @@ export function spawnCrowd(state: DriveState): void {
       vz: 0,
       counted: false,
       crushed: false,
-      // Nobody on their way somewhere has anything to say about it — the road's
-      // only voices are THE GLUED's (`blockade.ts`).
-      bark: -1,
+      // …AND EVERY SO OFTEN, WHAT ONE OF THEM IS THINKING. Not said — nobody out
+      // here is talking to the car, and a shout would make them a crowd with an
+      // opinion, which is THE GLUED's job and not theirs. It is the small,
+      // domestic, entirely unremarkable thing a person is turning over while
+      // they walk: the rent, the boy, the soup, whether anybody has looked at
+      // them today. The hero goes past it at a hundred and twenty.
+      bark: dealThought(state, at),
     });
   }
 }
