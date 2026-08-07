@@ -15,11 +15,22 @@
 //
 // WHAT IT UNDERSTANDS is deliberately the vocabulary of the game's own skins
 // and nothing more: background colour, ONE linear-gradient fill, borders (with
-// radius), outer box-shadows, <canvas>, <img>, and nesting. It does NOT render
-// DOM text — there is none to render — and it does not reproduce the panel
-// GRAIN (the four checker tiles and two turbulence washes `--panel-grain`
-// layers over the fill), because that is texture rather than information and a
-// pasted card reads cleaner without it.
+// radius), outer box-shadows, <canvas>, <img>, the stroked <svg> shapes every
+// gauge ring in the game is, and nesting. It does NOT render DOM text — there
+// is none to render — and it does not reproduce the panel GRAIN (the four
+// checker tiles and two turbulence washes `--panel-grain` layers over the
+// fill), because that is texture rather than information and a pasted card
+// reads cleaner without it.
+//
+// AND IT PAINTS IN THE SCREEN'S ORDER, NOT THE MARKUP'S. The walk is over the
+// laid-out DOM, so it inherits the browser's boxes for free — but not the
+// browser's STACKING, which is the one thing document order does not give you.
+// Every full-screen surface in this game is banded with a `z-index` (the band
+// map in styles.css), so a tree walk that ignored them would produce a picture
+// of a different arrangement than the one on screen: the DRIVE is the case
+// that proved it, mounted early and raised over the departure curtain that
+// follows it in the markup, so every screenshot of the minigame came back as a
+// solid black sheet of that curtain.
 
 export type RasterizeOptions = {
   /**
@@ -238,6 +249,36 @@ export function parseBoxShadows(value: string): BoxShadowSpec[] {
     });
   }
   return shadows;
+}
+
+/**
+ * Split a set of children into the ones painted BEFORE the parent's own
+ * content and the ones painted after, each already in painting order.
+ *
+ * CSS's rule for a stacking context is: negative-z children, then the parent's
+ * background and content, then everything else in ascending z-index, with
+ * document order breaking a tie. That last clause is why the sort has to be a
+ * STABLE one — two siblings in the same band (the overwhelming majority, since
+ * `auto` reads as 0 here) must keep the order they were written in, or a HUD
+ * whose layering has always come out of the markup would start rearranging
+ * itself in the picture.
+ *
+ * `zIndexOf` hands back the computed value, so `auto` — and anything else that
+ * is not a number — is band 0.
+ */
+export function paintOrder<T>(
+  children: readonly T[],
+  zIndexOf: (child: T) => string,
+): { behind: T[]; above: T[] } {
+  const banded = children.map((child, order) => {
+    const z = Number(zIndexOf(child));
+    return { child, order, z: Number.isFinite(z) ? z : 0 };
+  });
+  banded.sort((a, b) => a.z - b.z || a.order - b.order);
+  return {
+    behind: banded.filter((e) => e.z < 0).map((e) => e.child),
+    above: banded.filter((e) => e.z >= 0).map((e) => e.child),
+  };
 }
 
 /** A box in the output's own coordinates (CSS px from the root's top-left). */
@@ -471,6 +512,212 @@ function objectFitBox(img: HTMLImageElement, box: Box, fit: string): Box {
 }
 
 /**
+ * The lengths in a computed `stroke-dasharray`, in user units — `none` and
+ * anything unparseable come back empty, which is the same as no dashing.
+ */
+export function parseDashArray(value: string): number[] {
+  if (!value || value === "none") return [];
+  const lengths: number[] = [];
+  for (const token of splitCssLayers(value.replace(/\s+/g, " "))) {
+    for (const part of token.split(" ")) {
+      const n = Number.parseFloat(part);
+      if (Number.isFinite(n)) lengths.push(n);
+    }
+  }
+  return lengths;
+}
+
+/**
+ * How a `viewBox` is fitted into the box the layout gave the `<svg>`.
+ *
+ * `preserveAspectRatio` has a whole grammar and the game uses exactly two
+ * points of it: the default (`xMidYMid meet` — fit inside, centred, which is
+ * every round gauge) and `none` (stretch, which is the minimap's ring around
+ * its own oblong). So those are the two answered here; anything else is read
+ * as the default, which is what an unrecognised alignment falls back to
+ * anyway.
+ */
+export function viewBoxFit(
+  box: { w: number; h: number },
+  view: { width: number; height: number },
+  preserveAspectRatio: string,
+): { sx: number; sy: number; dx: number; dy: number } {
+  if (view.width <= 0 || view.height <= 0) {
+    return { sx: 1, sy: 1, dx: 0, dy: 0 };
+  }
+  if (preserveAspectRatio.trim().split(/\s+/)[0] === "none") {
+    return { sx: box.w / view.width, sy: box.h / view.height, dx: 0, dy: 0 };
+  }
+  const s = Math.min(box.w / view.width, box.h / view.height);
+  return {
+    sx: s,
+    sy: s,
+    dx: (box.w - view.width * s) / 2,
+    dy: (box.h - view.height * s) / 2,
+  };
+}
+
+/** The shape an SVG geometry element traces, in its own user units. Returns
+ * null for a tag this module has no vocabulary for. */
+function svgPath(el: SVGElement): Path2D | null {
+  const num = (name: string, fallback = 0) => {
+    const raw = el.getAttribute(name);
+    const n = raw === null ? NaN : Number.parseFloat(raw);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const path = new Path2D();
+  switch (el.tagName) {
+    case "path": {
+      const d = el.getAttribute("d");
+      // Path2D parses SVG path data itself — there is no reason to write a
+      // second parser for the grammar the platform already owns.
+      return d ? new Path2D(d) : null;
+    }
+    case "circle": {
+      const r = num("r");
+      if (r <= 0) return null;
+      path.arc(num("cx"), num("cy"), r, 0, Math.PI * 2);
+      return path;
+    }
+    case "ellipse": {
+      const rx = num("rx");
+      const ry = num("ry");
+      if (rx <= 0 || ry <= 0) return null;
+      path.ellipse(num("cx"), num("cy"), rx, ry, 0, 0, Math.PI * 2);
+      return path;
+    }
+    case "rect": {
+      const w = num("width");
+      const h = num("height");
+      if (w <= 0 || h <= 0) return null;
+      path.rect(num("x"), num("y"), w, h);
+      return path;
+    }
+    case "line": {
+      path.moveTo(num("x1"), num("y1"));
+      path.lineTo(num("x2"), num("y2"));
+      return path;
+    }
+    case "polygon":
+    case "polyline": {
+      const points = (el.getAttribute("points") ?? "")
+        .trim()
+        .split(/[\s,]+/)
+        .map(Number)
+        .filter(Number.isFinite);
+      if (points.length < 4) return null;
+      path.moveTo(points[0] as number, points[1] as number);
+      for (let i = 2; i + 1 < points.length; i += 2) {
+        path.lineTo(points[i] as number, points[i + 1] as number);
+      }
+      if (el.tagName === "polygon") path.closePath();
+      return path;
+    }
+    default:
+      return null;
+  }
+}
+
+/** Apply an element's own `transform` (whatever syntax it was written in — the
+ * browser has already consolidated it into a matrix for us). */
+function applySvgTransform(
+  ctx: CanvasRenderingContext2D,
+  el: SVGElement,
+): void {
+  const list = (el as SVGGraphicsElement).transform?.baseVal;
+  const matrix =
+    list && list.numberOfItems > 0 ? list.consolidate()?.matrix : null;
+  if (matrix) {
+    ctx.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
+  }
+}
+
+/** One shape, filled and/or stroked as its computed presentation says. */
+function paintSvgShape(ctx: CanvasRenderingContext2D, el: SVGElement): void {
+  const path = svgPath(el);
+  if (!path) return;
+  const style = getComputedStyle(el);
+  const fill = style.fill;
+  if (fill && fill !== "none" && !transparent(fill)) {
+    ctx.save();
+    ctx.globalAlpha *= Number(style.fillOpacity) || 0;
+    ctx.fillStyle = fill;
+    ctx.fill(path);
+    ctx.restore();
+  }
+  const stroke = style.stroke;
+  const width = Number.parseFloat(style.strokeWidth) || 0;
+  if (!stroke || stroke === "none" || transparent(stroke) || width <= 0) return;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = width;
+  const cap = style.strokeLinecap;
+  ctx.lineCap = cap === "round" || cap === "square" ? cap : "butt";
+  const join = style.strokeLinejoin;
+  ctx.lineJoin = join === "round" || join === "bevel" ? join : "miter";
+  // `pathLength` RESCALES the dash units — it is how every gauge in this game
+  // draws a FRACTION without knowing its own circumference (`pathLength={1}`
+  // and a dash array of `0.42 1` is "42% of the way round"). The canvas has no
+  // such notion, so the ratio is applied here against the real length.
+  const dashes = parseDashArray(style.strokeDasharray);
+  if (dashes.length > 0) {
+    const declared = Number.parseFloat(el.getAttribute("pathLength") ?? "");
+    const total =
+      typeof (el as SVGGeometryElement).getTotalLength === "function"
+        ? (el as SVGGeometryElement).getTotalLength()
+        : 0;
+    const unit = declared > 0 && total > 0 ? total / declared : 1;
+    ctx.setLineDash(dashes.map((d) => d * unit));
+  }
+  ctx.stroke(path);
+  ctx.setLineDash([]);
+}
+
+/**
+ * Draw an `<svg>` — every gauge ring in the game, and nothing else today.
+ *
+ * The whole subtree is drawn HERE rather than by the outer element walk,
+ * because an SVG's children have no CSS boxes to walk: they are geometry in
+ * the viewBox's own units, which is a different coordinate system and a
+ * different painting model. Groups nest; the shapes this understands are the
+ * ones `svgPath` lists.
+ */
+function paintSvg(
+  ctx: CanvasRenderingContext2D,
+  svg: SVGSVGElement,
+  box: Box,
+): void {
+  const view = svg.viewBox?.baseVal;
+  const fit = viewBoxFit(
+    box,
+    { width: view?.width ?? 0, height: view?.height ?? 0 },
+    svg.getAttribute("preserveAspectRatio") ?? "",
+  );
+  ctx.save();
+  ctx.translate(box.x + fit.dx, box.y + fit.dy);
+  ctx.scale(fit.sx, fit.sy);
+  if (view) ctx.translate(-view.x, -view.y);
+  const alpha = ctx.globalAlpha;
+  const walk = (parent: Element) => {
+    for (const child of parent.children) {
+      if (!(child instanceof SVGElement)) continue;
+      const style = getComputedStyle(child);
+      if (style.display === "none" || style.visibility === "hidden") continue;
+      const opacity = ctx.globalAlpha * (Number(style.opacity) || 0);
+      if (opacity <= 0) continue;
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      applySvgTransform(ctx, child);
+      if (child.tagName === "g") walk(child);
+      else paintSvgShape(ctx, child);
+      ctx.restore();
+    }
+  };
+  walk(svg);
+  ctx.globalAlpha = alpha;
+  ctx.restore();
+}
+
+/**
  * Draw `root` and everything inside it onto a fresh canvas. The element must be
  * laid out (in the document, not `display: none`) — every position comes from
  * the browser's own boxes, which is the whole point: nothing here re-implements
@@ -506,18 +753,15 @@ export function rasterizeElement(
       w: rect.width,
       h: rect.height,
     };
-    // A NEGATIVE z-index PAINTS EARLY — after this element's own background,
-    // before its content. It is the one bit of CSS's stacking order a tree walk
-    // cannot infer from document order, and the one the item card leans on: its
-    // kind glyph is a watermark BEHIND every line, written last in the markup.
-    // Drawn in tree order it would land on top of the text, and the copied
-    // picture would disagree with the card on screen.
-    const behind: Element[] = [];
-    const above: Element[] = [];
-    for (const child of el.children) {
-      const z = Number(getComputedStyle(child).zIndex);
-      (Number.isFinite(z) && z < 0 ? behind : above).push(child);
-    }
+    // THE STACKING ORDER, which document order does not give you (see the note
+    // at the top of the file). A NEGATIVE band paints EARLY — after this
+    // element's own background, before its content — which is what the item
+    // card leans on: its kind glyph is a watermark BEHIND every line, written
+    // last in the markup. Everything else paints after, in ascending band.
+    const { behind, above } = paintOrder(
+      [...el.children],
+      (child) => getComputedStyle(child).zIndex,
+    );
     ctx.globalAlpha = opacity;
     if (box.w > 0 && box.h > 0) {
       const radii = cornerRadii(style, box);
@@ -545,6 +789,15 @@ export function rasterizeElement(
               h: rect.h,
             }
           : rect;
+      if (el instanceof SVGSVGElement) {
+        // A GAUGE RING — the shape a speedometer, a tachometer, a durability
+        // ring and the rampage meter all are, and the one primitive in this UI
+        // that is neither a canvas nor a box. Its own shapes ARE its content,
+        // so nothing walks into it afterwards.
+        paintSvg(ctx, el, box);
+        ctx.globalAlpha = alpha;
+        return;
+      }
       if (el instanceof HTMLCanvasElement && el.width > 0 && el.height > 0) {
         const at = place(box);
         ctx.drawImage(el, at.x, at.y, at.w, at.h);

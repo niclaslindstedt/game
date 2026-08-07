@@ -2208,7 +2208,12 @@ export function GameScreen({
           font={font}
           flash={shotFlash}
           flashRef={shotFlashElRef}
-          pressable={canOpenShots()}
+          // …and NOT while a road is up. The press is routed by the field's
+          // own canvas (controls.ts), which the drive has covered with its
+          // pad — so the offer could not be taken even though the run under
+          // the interlude still looks live. It prints where the shot was
+          // taken instead.
+          pressable={!drive && canOpenShots()}
         />
       )}
 

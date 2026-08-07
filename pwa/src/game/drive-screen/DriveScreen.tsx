@@ -291,6 +291,52 @@ export function DriveScreen({
     setPaused(on);
   }, []);
 
+  /** Every control let go of at once — the accelerator, the wheel, both hands.
+   * What a lost window leaves behind (see below), and what the pause card is
+   * raised on top of, so nothing is still held when the road starts again. */
+  const dropControls = useCallback(() => {
+    keysRef.current.clear();
+    padIdRef.current = null;
+    padRef.current = null;
+    padOrigin = null;
+    brakeIdsRef.current.clear();
+  }, []);
+
+  // LOSING THE WINDOW PARKS THE CAR — the run's own auto-pause (alt-tab, a tab
+  // switch, an app switch on a phone), which the road was missing for the
+  // reason it was missing PAUSE and SCREENSHOT: while a drive is up the run's
+  // control layer is not listening, so every rule that layer enforces has to be
+  // enforced here too (controls.ts `onBlur`/`onVisibility`). Both signals are
+  // watched because browsers disagree about which one a backgrounding fires,
+  // and parking twice is parking once.
+  //
+  // Two things go with it, and the second is the one that bites: a key held
+  // when the window went away never sees its `keyup`, so a wagon paused with
+  // the accelerator down resumes at full throttle a minute later — which is
+  // exactly the stuck-key the run clears on the same event.
+  //
+  // NOBODY'S THUMB, NO PAUSE. An `auto` road — the attract loop, a playtest, a
+  // shot recipe — has no driver to come back and lift the card, so a pause it
+  // cannot clear is a car parked for the rest of its life. The run reaches the
+  // same outcome from the other end: it pauses, and the bot's input loop clears
+  // it again on the next tick.
+  useEffect(() => {
+    if (auto) return;
+    const park = () => {
+      dropControls();
+      setPause(true);
+    };
+    const onVisibility = () => {
+      if (document.hidden) park();
+    };
+    window.addEventListener("blur", park);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("blur", park);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [auto, dropControls, setPause]);
+
   /** A finger has left the picture: whichever of the two jobs it had stops. A
    * leftover brake finger never inherits the pad — the next press re-anchors
    * deliberately, which is the same rule the run's own tracker follows and for
