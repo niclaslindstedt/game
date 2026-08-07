@@ -48,7 +48,12 @@ import { fract, seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 import { cleanCar, soakCarFromDrag, type CarSoak } from "./car-soak.ts";
-import { CROWD_SPRITES, GLUED_SPRITES } from "./scenery.ts";
+import {
+  CROWD_SPRITES,
+  GLUED_SPRITES,
+  RIDER_SPRITES,
+  TRAFFIC_SPRITES,
+} from "./scenery.ts";
 
 /** One mark on the tarmac: a drag streak, a tyre print, a splash, or a body
  * pressed into the road. */
@@ -261,14 +266,57 @@ export function wetTyres(state: DriveGoreState): void {
   state.tyre = 1;
 }
 
-/** Which crowd's art a piece or a body wears — the two tables, chosen by the
- * `PedestrianKind` the engine carried through. */
+/** Which crowd's art a piece or a body wears — the three tables, chosen by the
+ * `PedestrianKind` the engine carried through. A `rider` is somebody who was on
+ * (or in) a vehicle a moment ago, and is drawn SEATED, which is why they are a
+ * table of their own rather than more crowd. */
 export function bodySprite(kind: string, variant: number): string {
   if (kind === "glued") {
     return GLUED_SPRITES[variant % GLUED_SPRITES.length] ?? GLUED_SPRITES[0]!;
   }
+  if (kind === "rider") {
+    return RIDER_SPRITES[variant % RIDER_SPRITES.length] ?? RIDER_SPRITES[0]!;
+  }
   const frames = CROWD_SPRITES[variant % CROWD_SPRITES.length];
   return frames?.[0] ?? "walker_hoodie_0";
+}
+
+/**
+ * A TORN-OFF PIECE OF MACHINE, drawn as a piece of the machine.
+ *
+ * The trick is worth stating because it is the whole reason there is no debris
+ * art anywhere in this repo: a lump off a moped IS a rectangle of that moped's
+ * own sprite, so the piece is a CROP of the vehicle's picture chosen off the
+ * piece's own seed. A wheel comes off looking like that wheel, the hot-box
+ * throws amber, the police cruiser throws white and blue — and a MOD's vehicle,
+ * which nobody has drawn a single gib for, throws itself in exactly the same
+ * way.
+ *
+ * The crop is taken from the LOWER two thirds, where a side-on vehicle keeps
+ * its bodywork; the top third is mostly glass and sky and produces pieces that
+ * read as nothing at all.
+ */
+function drawMachinePiece(
+  ctx: CanvasRenderingContext2D,
+  piece: DriveRemain,
+  art: ImageBitmap,
+): void {
+  const size = 4 + Math.floor(fract(piece.seed * 0.618) * 4);
+  const sx = Math.floor(fract(piece.seed * 0.317) * (art.width - size - 8)) + 4;
+  const sy =
+    Math.floor(fract(piece.seed * 0.911) * (art.height * 0.45)) +
+    Math.round(art.height * 0.3);
+  ctx.drawImage(
+    art,
+    sx,
+    sy,
+    size,
+    size,
+    -Math.round(size / 2),
+    -Math.round(size / 2),
+    size,
+    size,
+  );
 }
 
 /**
@@ -289,6 +337,10 @@ export function stepDriveGore(state: DriveGoreState, drive: DriveState): void {
     // piece in the AIR is not touching the road — a smear under something four
     // feet up is the bug the shadow pass exists to prevent, drawn permanently.
     if (!was || piece.z > 2) continue;
+    // A PIECE OF MACHINE HAS NOTHING TO LEAVE. It scrapes and it sparks, but it
+    // does not soak the tarmac, and a bumper dragging a red streak behind it is
+    // the one thing that would give the whole material away.
+    if (piece.part.startsWith("machine")) continue;
     let wet = state.wet.get(piece.id);
     if (wet === undefined) {
       // A whole body carries more than a chunk does, and a piece that has been
@@ -524,6 +576,61 @@ function drawRemainAt(
   const sx = seatX(piece.pos.x, camera.x);
   const sy = seatY(piece.pos.y, camera.y) - Math.round(piece.z) - BODY_LIFT;
 
+  if (piece.part === "machine_front" || piece.part === "machine_rear") {
+    // HALF A MACHINE — the vehicle's own art, cut where it broke. The cut is a
+    // fraction ALONG the thing rather than down it (a bike snaps at the middle
+    // of its spine, not at its waist), which is the one way this differs from
+    // the body's own `upper`/`lower`, and it is why these get their own branch
+    // rather than borrowing `slicedPiece`.
+    const art = spriteByName(
+      sprites,
+      TRAFFIC_SPRITES[piece.variant % TRAFFIC_SPRITES.length] ?? "",
+    );
+    if (!art) return;
+    const at = Math.round(art.width * piece.cut);
+    const front = piece.part === "machine_front";
+    const sxCrop = front ? at : 0;
+    const width = front ? art.width - at : at;
+    if (width <= 0) return;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(piece.angle);
+    ctx.drawImage(
+      art,
+      sxCrop,
+      0,
+      width,
+      art.height,
+      // Each half keeps its own centre of mass rather than the whole
+      // vehicle's — drawn about the machine's old centre they would overlap
+      // and read as one object that had been duplicated and rotated twice.
+      -Math.round(width / 2),
+      -Math.round(art.height / 2),
+      width,
+      art.height,
+    );
+    ctx.restore();
+    return;
+  }
+
+  if (piece.part === "machine") {
+    // STEEL, NOT MEAT. Drawn out of the vehicle's own art, and never crushed
+    // into a paste — a wheel that has been run over is a flatter wheel, not a
+    // mark on the tarmac, so it keeps its shape for the whole of its life on
+    // this road.
+    const art = spriteByName(
+      sprites,
+      TRAFFIC_SPRITES[piece.variant % TRAFFIC_SPRITES.length] ?? "",
+    );
+    if (!art) return;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(piece.angle);
+    drawMachinePiece(ctx, piece, art);
+    ctx.restore();
+    return;
+  }
+
   if (piece.part === "chunk") {
     const art = spriteByName(
       sprites,
@@ -620,6 +727,9 @@ export function crushRemain(
       Math.abs(candidate.pos.x - x) < 2 &&
       Math.abs(candidate.pos.y - y) < 2,
   );
+  // Steel leaves no paste. A wheel that has been driven over is a flatter
+  // wheel; the noise is the engine's and the mark is nobody's.
+  if (piece?.part.startsWith("machine")) return;
   if (piece) {
     pasteAt(state, piece);
     // Whatever it had left goes into that one mark.

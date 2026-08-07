@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 import {
   breakTrafficLamps,
   createDrive,
+  createTraffic,
   crossingsBetween,
   crowdEdges,
   driveMph,
@@ -33,6 +34,7 @@ import {
   roadEdges,
   solveImpact,
   stepDrive,
+  vehicleDef,
   type DriveInput,
   type DriveParams,
   type DriveState,
@@ -267,12 +269,12 @@ describe("the difficulty ladder on the road", () => {
   it("makes the road heavier every rung, with MEDIUM the baseline", () => {
     const medium = impactMasses("medium");
     expect(medium.pedestrian).toBeCloseTo(DRIVE_UNITS.pedestrianMassKg, 6);
-    expect(medium.traffic).toBeCloseTo(DRIVE_UNITS.trafficMassKg, 6);
+    expect(medium.vehicleMult).toBeCloseTo(1, 6);
     for (let i = 1; i < DIFFICULTY_ORDER.length; i++) {
       const prev = impactMasses(DIFFICULTY_ORDER[i - 1] as Difficulty);
       const next = impactMasses(DIFFICULTY_ORDER[i] as Difficulty);
       expect(next.pedestrian).toBeGreaterThan(prev.pedestrian);
-      expect(next.traffic).toBeGreaterThan(prev.traffic);
+      expect(next.vehicleMult).toBeGreaterThan(prev.vehicleMult);
     }
   });
 
@@ -420,17 +422,11 @@ describe("the street", () => {
     // A car's nose is not always on its right — the road runs both ways and an
     // oncoming body is drawn flipped — so the end is the side of the hit AND
     // the facing, never the side alone.
-    const car = (faceLeft: boolean): DriveTraffic => ({
-      id: 1,
-      pos: { x: 100, y: 0 },
-      speed: 0,
-      slew: 0,
-      variant: 0,
-      faceLeft,
-      noseOut: false,
-      tailOut: false,
-      hitCooldownMs: 0,
-    });
+    const car = (faceLeft: boolean): DriveTraffic => {
+      const one = createTraffic(1, 0, { x: 100, y: 0 }, 0);
+      one.faceLeft = faceLeft;
+      return one;
+    };
     // Nose right: hit from behind (the left) kills the tail, from ahead the nose.
     const rearEnded = car(false);
     breakTrafficLamps(rearEnded, 60);
@@ -826,8 +822,9 @@ describe("the kerb", () => {
     const mass = impactMasses("medium");
     const square = (bodyVel: { x: number; y: number }, m: number) =>
       solveImpact({ x: 0, y: 0 }, 1, speed, { x: 30, y: 0 }, bodyVel, 9, m);
-    const parked = square({ x: 0, y: 0 }, mass.parked);
-    const rolling = square({ x: DRIVE.trafficSpeedPx.min, y: 0 }, mass.traffic);
+    const sedan = vehicleDef(0).massKg * mass.vehicleMult;
+    const parked = square({ x: 0, y: 0 }, sedan + mass.parkedExtra);
+    const rolling = square({ x: DRIVE.trafficSpeedPx.min, y: 0 }, sedan);
     expect(parked!.joules).toBeGreaterThan(rolling!.joules * 1.5);
     expect(parked!.speedLoss).toBeGreaterThan(rolling!.speedLoss);
   });
@@ -845,7 +842,9 @@ describe("the kerb", () => {
         m,
       )!.joules;
     expect(at(mass.lamp)).toBeGreaterThan(at(mass.pedestrian));
-    expect(at(mass.lamp)).toBeLessThan(at(mass.parked));
+    expect(at(mass.lamp)).toBeLessThan(
+      at(vehicleDef(0).massKg * mass.vehicleMult + mass.parkedExtra),
+    );
   });
 
   it("keeps the difficulty ladder off the council's lighting", () => {

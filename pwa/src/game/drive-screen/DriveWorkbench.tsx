@@ -27,7 +27,7 @@ import {
 
 import { DIFFICULTY_ORDER, type Difficulty } from "@game/menu";
 
-import { DRIVE, type DriveState } from "@game/core";
+import { createTraffic, DRIVE, type DriveState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
@@ -126,19 +126,16 @@ function stagerFor(
       });
     }
     if (what !== "body") {
-      drive.traffic.push({
-        id: drive.nextId++,
-        pos: { x: ahead(1900), y: lane },
-        // Dawdling the same way, so the stage is a rear-end rather than the
-        // head-on that ends the leg in one hit.
-        speed: direction * DRIVE.trafficSpeedPx.min,
-        slew: 0,
-        variant: 0,
-        noseOut: false,
-        tailOut: false,
-        faceLeft: direction === -1,
-        hitCooldownMs: 0,
-      });
+      drive.traffic.push(
+        createTraffic(
+          drive.nextId++,
+          0,
+          { x: ahead(1900), y: lane },
+          // Dawdling the same way, so the stage is a rear-end rather than the
+          // head-on that ends the leg in one hit.
+          direction * DRIVE.trafficSpeedPx.min,
+        ),
+      );
     }
   };
 }

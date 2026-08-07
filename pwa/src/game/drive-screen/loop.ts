@@ -87,6 +87,18 @@ export const BURST_LIFE_MS = 2600;
  * than merely computed. */
 export type EngineNoteState = { dueMs: number; gear: number };
 
+/**
+ * HOW HIGH A WINDSCREEN SITS (world px off the road) — where the shards come
+ * out of when somebody leaves through one.
+ *
+ * Read off the fleet's own art: every vehicle on this road carries its glass in
+ * the band just above the shoulder line, so one number covers a hatchback and a
+ * bus without either of them having to say so. Thrown from the ROAD instead, the
+ * burst appears under the car that made it, which reads as the glass having
+ * fallen out of the floor.
+ */
+const WINDSCREEN_LIFT = 12;
+
 export function createEngineNote(): EngineNoteState {
   return { dueMs: 0, gear: 0 };
 }
@@ -240,6 +252,54 @@ export function drainDrive(
       playDriveSound(
         synth,
         trafficHitSound(event.pos.x, event.pos.y, event.joules),
+      );
+    }
+    // A CAR VISIBLY FOLDING UP — the same panel noise the hero's own wagon
+    // makes, because it is the same event happening to somebody else's car.
+    // Deliberately NOT a new bank: what the player is being told is "that one
+    // took a rung", and he has already learnt that sound on his own bonnet.
+    if (event.type === "trafficBent") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
+    }
+    // …AND ONE GIVING UP ENTIRELY. The breakdown noise, for the same reason:
+    // the player knows it as the sound of an engine dying, and this is one.
+    if (event.type === "trafficWrecked") {
+      driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
+      playDriveSound(synth, BREAKDOWN_SOUND);
+    }
+    // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
+    // machine hitting tarmac on its side actually is.
+    if (event.type === "machineDown") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      playDriveSound(
+        synth,
+        trafficHitSound(event.pos.x, event.pos.y, event.joules),
+      );
+    }
+    // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the heavy
+    // shelf, whatever the joules say: a machine breaking in half has no gentle
+    // version to play.
+    if (event.type === "machineSnapped") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+    }
+    // THE SCREEN GOING OUT, with somebody through it. The glass burst is the
+    // lamp's own — a lens leaving a fitting and a windscreen leaving a frame
+    // are the same shower of shards at 16 px — thrown from the height a
+    // windscreen actually sits at rather than off the road.
+    if (event.type === "windscreenOut") {
+      driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
+      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+    }
+    // …and the body itself, arriving in the air. The heavy bank whatever the
+    // joules say: there is no gentle version of coming out of a vehicle.
+    if (event.type === "occupantThrown") {
+      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(
+        synth,
+        bodyHitSound(event.pos.x, event.pos.y, event.joules),
       );
     }
     // A STREET LIGHT LEAVING ITS BASE — the shards a car sheds, plus the

@@ -5,18 +5,18 @@
 # shared: this model carries its own wheelbase, wheel size, ride height,
 # overhangs and roofline, because a saloon and a box van that agree about any
 # of those read as one silhouette with different paint.
-name: traffic_sedan
+name: traffic_minivan
 family: earth
 space: outside
 size: [48, 26]
 description: >
-  A four-door saloon seen side on — deep fleet blue, a formal glasshouse over a long boot, wheels tucked up into their arches.
+  A people carrier seen side on — teal, one unbroken curve from a long sloping windscreen up over the roof and down to the tail.
 subject:
   kind: traffic vehicle prop
-  build: a mid-size four-door saloon, a formal cabin centred between a long bonnet and a long boot
-  features: raked windscreen, a B-pillar between two side windows, door shut lines and handles, a dark bumper at each end
-  accent: deep fleet blue
-  flavor: somebody's commute, in the lane you wanted
+  build: a one-box people carrier, the windscreen sloping so far forward it runs straight into the roof line
+  features: a long sliding-door track, four side windows, a high tailgate
+  accent: teal metallic
+  flavor: seven seats, one occupant
 palette:
   O: "#1a1c2c" # outline ink
   b: "#3f4553" # dark trim, tyre shadow, shut lines
@@ -27,30 +27,30 @@ palette:
   T: "#c0c5cf" # wheel rim
   G: "#171d2b" # cabin glass
   H: "#25304a" # sky caught in the top of the glass
-  B: "#3f5f9e" # fleet blue body paint
-  s: "#6f92d6" # body highlight
-  d: "#22335c" # sill shadow
+  B: "#3d7f86" # teal body paint
+  s: "#6bb2b6" # body highlight
+  d: "#25545a" # sill shadow
 grid: |
   ................................................
   ................................................
   ................................................
   ................................................
-  ................................................
-  .................OOOOOOOOOOOOO..................
-  ................OBBBBBBBBBBBBBO.................
-  ...............OBHHHHcHbHHHHHHBO................
-  ...............OHGGGcGGbGGGcGGHO................
-  ..............OBGGGcGGGbGGcGGGGBO...............
-  ...OOOOOOOOOOOBHGGGGGGGbGGGGGGGHBOOOOOOOOOOOO...
-  ..OBBBBBBBBBBBHGGGGGGGGbGGGGGGGGHBBBBBBBBBBBBO..
-  .OssssssssssssssssssssssssssssssssssssssssssssO.
-  .OBBBBBBBBBBBBBBbBBBBBBBbBBBBBBBBBBBBBBBBBBBBBO.
-  .OrrrBBBBBBBBBBBbBBBBBBBbBBBBBBBBBBBBBBBBBByyyO.
-  .OrrrBBBBBBBBBBBbBBBbbBBbBBbbBBBBBBBBBBBBBByyyO.
-  .ObbBBBBBOOOOOBBbBBBBBBBbBBBBBBBBBOOOOOBBBBBbbO.
-  .ObbBBBBOkkkkkOBbBBBBBBBbBBBBBBBBOkkkkkOBBBBbbO.
-  .ObbBBBOkkbbbkkObBBBBBBBbBBBBBBBOkkbbbkkOBBBbbO.
-  .ObbBBBOkbbTbbkObBBBBBBBbBBBBBBBOkbbTbbkOBBBbbO.
+  .......OOOOOOOOOOOOOOOOOOOOO....................
+  .....OOBBBBBBBBBBBBBBBBBBBBBO...................
+  ....OBBHHHHHHHbHHHHcHHbHHHHHcOO.................
+  ...OBBHGGGGGGGbGGGcGGGbGGGGcHBBO................
+  ..OBBBGGGGGGGGbGGcGGGGbGGGcGGHHBO...............
+  ..OBBBGGGGGGGGbGGGGGGGbGGGGGGGGHBOO.............
+  ..OBBBGGGGGGGGbGGGGGGGbGGGGGGGGGHBBOOOOOOOOOO...
+  ..OssssssssssssssssssssssssssssssssssssssssssO..
+  .OBBBBBBBBBBBBBbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBO.
+  .OrrrBBBBBBBBBBbBBBBBBBbBBBBBBBBBBBBBBBBBBByyyO.
+  .OrrrBBBBBBBBBBbBBBbbBBbBBBbbBBBBBBBBBBBBBByyyO.
+  .ObbBBBBBBBBBBBbBBBBBBBbBBBBBBBBBBBBBBBBBBBBbbO.
+  .ObbBBBBBOOOOOBbBBBBBBBbBBBBBBBBBBOOOOOBBBBBbbO.
+  .ObbBBBBOkkkkkObBBBBBBBbBBBBBBBBBOkkkkkOBBBBbbO.
+  .ObbBBBOkkbbbkkOBBBBBBBbBBBBBBBBOkkbbbkkOBBBbbO.
+  .ObbBBBOkbbTbbkOBBBBBBBbBBBBBBBBOkbbTbbkOBBBbbO.
   .OdddddOkbbTbbkOddddddddddddddddOkbbTbbkOdddddO.
   ..OddddOkkbbbkkOddddddddddddddddOkkbbbkkOddddO..
   ...OOOO.OkkkkkO.OOOOOOOOOOOOOOOO.OkkkkkO.OOOO...

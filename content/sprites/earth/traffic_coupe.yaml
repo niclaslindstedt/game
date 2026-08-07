@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
+name: traffic_coupe
+family: earth
+space: outside
+size: [48, 26]
+description: >
+  A two-door coupe seen side on — graphite grey, one long fastback roof falling in an unbroken line into the tail.
+subject:
+  kind: traffic vehicle prop
+  build: a low two-door coupe, the roof falling in one unbroken fastback line from its peak into the tail
+  features: a single long side window with a frameless top edge, no B-pillar, a long bonnet
+  accent: graphite grey
+  flavor: bought on finance, parked in the road
+palette:
+  O: "#1a1c2c" # outline ink
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
+  c: "#7fd0d8" # light streaking off the glass
+  r: "#d84a3a" # tail lamp
+  y: "#e8d9a8" # headlamp
+  T: "#c0c5cf" # wheel rim
+  G: "#171d2b" # cabin glass
+  H: "#25304a" # sky caught in the top of the glass
+  B: "#5b5f6b" # graphite body paint
+  s: "#8f95a3" # body highlight
+  d: "#33363f" # sill shadow
+grid: |
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  .................OOOOOOOOOO.....................
+  .............OOOOBBBBBBBBBBO....................
+  ...........OOBBBBHHHHHcHHHHBO...................
+  ..........OBBHHHHGGGGcGGGGGHBOO.................
+  ........OOBBBGGGGGGGcGGGGGGGHBBO................
+  ...OOOOOBBBBBGGGGGGGGGGGGGGGGHHBOOOOOOOOOOOOO...
+  ..OssssssssssssssssssssssssssssssssssssssssssO..
+  .OBBBBBBBBBBBBBBBBBBBBBBbBBBBBBBBBBBBBBBBBBBBBO.
+  .OrrrBBBBBBBBBBBBBBBBBBBbBBBBBBBBBBBBBBBBBByyyO.
+  .OrrrBBBBBBBOBBBBBBBBBBBbBBbbBBBBBBBOBBBBBByyyO.
+  .ObbBBBBBBOkkkOBBBBBBBBBbBBBBBBBBBOkkkOBBBBBbbO.
+  .ObbBBBBBOkkkkkOBBBBBBBBbBBBBBBBBOkkkkkOBBBBbbO.
+  .ObbBBBBOkkbbbkkOBBBBBBBbBBBBBBBOkkbbbkkOBBBbbO.
+  .ObbBBBBOkbbTbbkOBBBBBBBbBBBBBBBOkbbTbbkOBBBbbO.
+  .OddddddOkbbTbbkOdddddddddddddddOkbbTbbkOdddddO.
+  ..OdddddOkkbbbkkOdddddddddddddddOkkbbbkkOddddO..
+  ...OOOOO.OkkkkkO.OOOOOOOOOOOOOOO.OkkkkkO.OOOO...
+  ..........OkkkO...................OkkkO.........
+  ...........OOO.....................OOO..........
+  ................................................

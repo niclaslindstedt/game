@@ -185,6 +185,25 @@ export function DriveScreen({
       return drive;
     })(),
   );
+  // ?debug — THE ROAD'S OWN `window.__game`.
+  //
+  // A run has been reachable from the console since the beginning
+  // (`run-setup.ts`), and the drive never was, which made every question about
+  // it ("is that moped carrying a rider", "did that car climb a rung", "how far
+  // did the body actually go") a question you could only answer by squinting at
+  // a screenshot. The road is a simulation like any other and gets the same
+  // handle: `window.__drive` is the live `DriveState`, and a staged collision is
+  // a couple of lines in DevTools rather than a minute of hoping.
+  //
+  // Set on the ref's first read rather than in an effect, so the very first
+  // frame is already inspectable — a bug in the opening beat is exactly the one
+  // an effect-mounted handle misses.
+  if (
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("debug")
+  ) {
+    (window as { __drive?: DriveState }).__drive = driveRef.current;
+  }
   const burstsRef = useRef<Burst[]>([]);
   const fxRef = useRef<DriveFxState>(createDriveFx());
   /** What the road is holding of the people it has met — the marks on the

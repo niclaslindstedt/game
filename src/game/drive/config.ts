@@ -45,25 +45,34 @@ export const DRIVE_UNITS = {
   carMassKg: 1600,
   /** A person (kg), on MEDIUM — laddered per rung, see above. */
   pedestrianMassKg: 78,
-  /** Another car on the road (kg), on MEDIUM — a bit lighter than the hero's
-   * barge, which is why they get shoved and he does not. Laddered per rung. */
-  trafficMassKg: 1300,
   /**
-   * A car left at the kerb (kg), on MEDIUM — laddered on the traffic's own
-   * multiplier, because it is a car.
+   * THE REFERENCE CAR (kg) — a mid-size saloon, and no longer what every other
+   * vehicle on the road weighs.
    *
-   * HEAVIER THAN ONE THAT IS DRIVING, on purpose and honestly: this one is in
-   * gear with the handbrake on and a kerb behind its wheels, so shoving it
-   * means shoving the kerb too. But the mass is the SMALL half of why hitting
-   * one hurts. The big half is free: the collision is solved on the SWEEP (the
-   * speed the car's surface runs at the thing), and a car parked dead still is
-   * met at the hero's WHOLE speed, where one dawdling along in the same
-   * direction is met at the difference. At 120 mph that is 624 px/s against
-   * about 400 — and the energy the crumple absorbs goes as the SQUARE of it, so
-   * the parked one does about two and a half times the damage for the same
-   * geometry. Nobody had to write that down; it falls out of `solveImpact`.
+   * Each vehicle carries its own mass now (`DriveVehicleDef.massKg`,
+   * drive/fleet.ts), because the collision is a momentum sum and mass is its
+   * only real input: a twelve-tonne bus that answered a bumper the way a 30 kg
+   * bicycle does was the physics being told a lie, and the player felt it before
+   * he could name it. What is left here is the YARDSTICK — the mass a vehicle's
+   * own durability is scaled against, so "hit it hard enough to write it off"
+   * means the same thing to a moped and to a lorry.
    */
-  parkedCarMassKg: 1700,
+  trafficMassKg: 1400,
+  /**
+   * WHAT A CAR LEFT AT THE KERB CARRIES ON TOP OF ITS OWN MASS (kg) — the
+   * handbrake, the gear it was left in, and the kerb behind its wheels, all of
+   * which have to be shoved too.
+   *
+   * The mass is the SMALL half of why hitting one hurts. The big half is free:
+   * the collision is solved on the SWEEP (the speed the car's surface runs at
+   * the thing), and a car parked dead still is met at the hero's WHOLE speed,
+   * where one dawdling along in the same direction is met at the difference. At
+   * 120 mph that is 624 px/s against about 400 — and the energy the crumple
+   * absorbs goes as the SQUARE of it, so the parked one does about two and a
+   * half times the damage for the same geometry. Nobody had to write that down;
+   * it falls out of `solveImpact`.
+   */
+  parkedExtraKg: 400,
   /**
    * A lamp post's column (kg) — the mass the car actually has to deal with,
    * which is the POST rather than the installation.
@@ -449,9 +458,36 @@ export const DRIVE = {
    * all, which is the one way this minigame can actually become unfair.
    */
   trafficPerKPx: 1,
-  /** What the other traffic does, world px/s. The near lanes dawdle (the hero
-   * overtakes them), the far lanes come the other way. */
+  /** What the other traffic does, world px/s, before its own def's `pace`
+   * multiplies it. The near lanes dawdle (the hero overtakes them), the far
+   * lanes come the other way. */
   trafficSpeedPx: { min: 150, max: 300 },
+  /**
+   * THE DELIVERY TRADE, WHICH DOES NOT USE THE ROAD.
+   *
+   * Mopeds and e-bikes ride the PAVEMENT, and that one fact changes the shape
+   * of the whole minigame. The gutter has always been the safe line: the crowd
+   * thins toward the kerb, the traffic stays inside the lane markings, and the
+   * only thing punishing a driver who hugs the edge is the council's lighting.
+   * Putting the delivery trade out there means the safe line has traffic on it
+   * — and, because the pavement is where the CROWD is, it means the mopeds are
+   * threading pedestrians too, which is exactly what they do.
+   *
+   * They also WEAVE, and cut in. A rider holding a straight line along the
+   * footway is scenery; one drifting into the gutter and back out again is the
+   * thing you brake for, and the reason the near verge stops being free.
+   */
+  pavementRiders: {
+    /** How far a rider drifts across the footway (world px) and how fast. */
+    weavePx: 7,
+    weaveHz: 0.28,
+    /**
+     * …and how far into the carriageway the drift may actually reach (world
+     * px), measured in from the tarmac's edge. They do not stay on the
+     * pavement, because they do not stay on the pavement.
+     */
+    cutInPx: 9,
+  },
   /** How far a shunted car is shoved sideways per unit of impulse it takes,
    * and the most it can be shoved in one hit (world px/s of lateral speed).
    * A shunt is a SHOVE, not a wreck: it slews out of the lane, scrubs off and
@@ -469,6 +505,176 @@ export const DRIVE = {
   /** …and how long it cannot be hit again for (ms), which closes the rest of
    * the same hole. One contact is one impact. */
   shuntImmuneMs: 450,
+
+  // ── DESTROYING THE OTHER TRAFFIC ──────────────────────────────────────────
+  /**
+   * WHAT IT TAKES TO FINISH SOMEBODY ELSE'S CAR — the other half of the trade
+   * the hero has always been on the losing end of.
+   *
+   * A shunt used to have no memory. Hit the same van ten times and it was the
+   * same van: it slewed, it scrubbed, it settled, and the only thing on this
+   * road that ever showed a mark was the hero's own wagon. That is a strange
+   * asymmetry in a minigame about driving into things — the player is being
+   * shown, ten times, that his car is the only breakable object in the world.
+   *
+   * So the traffic keeps its own wear (`DriveTraffic.wear`), on exactly the
+   * currency everything else here is priced in: absorbed energy over a
+   * threshold. Three visible rungs on the way, and then it is done.
+   */
+  traffic: {
+    /**
+     * ABSORBED ENERGY THAT FINISHES A 1400 kg CAR (joules) — scaled per vehicle
+     * by its own mass, so a bus takes about nine times as much as a saloon and
+     * a moped folds up on the first real contact.
+     *
+     * WELL UNDER `impact.wearJoules`, and that asymmetry is the design rather
+     * than a slip: the hero's wagon is the one thing on this road that has to
+     * survive a whole minute of collisions, and everything else exists to come
+     * apart on camera. A square hit at the top end writes off a hatchback in
+     * two; the same two hits cost the hero about a seventh of his own car.
+     */
+    wreckJoules: 1.1e6,
+    /**
+     * The wear each visible damage rung is reached at.
+     *
+     * THREE RUNGS AND THEN THE WRECK, matching the hero's own panel ladder
+     * (`panelRungs`) on purpose — it is the same ladder of pictures, derived by
+     * the same generator (`asset-tools/wreck.mjs`), so a player who has learnt
+     * to read his own bonnet can read a stranger's.
+     */
+    rungs: [0.25, 0.52, 0.8],
+    /** How fast a wrecked vehicle sheds its speed once the engine has died
+     * (1/s), and the speed under which it has stopped for good — at which point
+     * it is a stationary obstacle in a live lane, which is the whole payoff. */
+    wreckDragPerSec: 1.1,
+    wreckRestPx: 12,
+    /**
+     * A TWO-WHEELER GOES DOWN rather than being shunted, past this much wear in
+     * one blow. Low: a car meeting a bicycle at any speed at all ends with the
+     * bicycle on its side, and a moped that merely slid sideways and carried on
+     * upright would be the same lie the parked cars used to tell.
+     */
+    downWear: 0.12,
+    /** How fast a downed machine slides and turns over: drag (1/s), the speed
+     * it has stopped at, gravity for one in the air (px/s²), what a bounce
+     * keeps, and how fast it cartwheels per px/s it left at. */
+    downDragPerSec: 1.6,
+    downRestPx: 10,
+    downGravityPx: 640,
+    downBounce: 0.24,
+    downSpinPerSpeed: 0.009,
+    /**
+     * PAST THIS MUCH FORCE THE MACHINE COMES APART IN THE MIDDLE, in the same
+     * wrecks as everything else here.
+     *
+     * A MOTORCYCLE IS A SPINE WITH A WHEEL AT EACH END, and there is no version
+     * of a car meeting one at speed where the spine survives — so past this the
+     * vehicle stops existing and becomes two large pieces of itself
+     * (`RemainPart`'s `machine_front` / `machine_rear`).
+     *
+     * The number looks high and is not, because the force is scaled by the
+     * vehicle's OWN mass: a bus would need thirty times a fatal collision to
+     * reach it and never will, a moped reaches it at about half the top end,
+     * and a BICYCLE or a SKATEBOARD clears it on any contact whatsoever. That
+     * ladder is the whole of "it's a big difference in weight" and not one rung
+     * of it is written down anywhere — it falls out of `wreckForce` dividing by
+     * the mass in the def.
+     */
+    snapForce: 2.2,
+    /** How much of the closing speed the FRONT half leaves with, against the
+     * back half's — the front is what the bumper is actually pushing, so it
+     * goes up the road while the back end is left behind to cartwheel. */
+    snapCarry: { front: 1.15, rear: 0.45 },
+    /** How hard the two halves are thrown apart across the road, and how high
+     * (world px/s). */
+    snapSpreadPx: 90,
+    snapLiftPx: 210,
+    /** How many pieces come off a machine that has been hit — at the wreck
+     * line, and per unit of force past it, capped. */
+    debris: { base: 1, perForce: 2.4, max: 6 },
+    /** How far a torn-off piece of machine carries and how high it hops (world
+     * px), at the wreck line and per unit of force past it. Steel goes further
+     * and bounces harder than meat does, which is most of what tells the two
+     * apart in the air. */
+    debrisReachPx: { base: 40, perForce: 44 },
+    debrisLiftPx: { base: 150, perForce: 130 },
+    /** …and how much of a bounce it keeps when it lands. */
+    debrisBounce: 0.34,
+  },
+
+  // ── THROWING PEOPLE OUT OF VEHICLES ───────────────────────────────────────
+  /**
+   * WHO LEAVES, WHEN, AND HOW FAR THEY GO.
+   *
+   * TWO POPULATIONS AND THEY ARE NOT THE SAME PROBLEM. A RIDER is sitting in
+   * the open on a machine that weighs less than they do; there is nothing
+   * holding them on and nothing to hold them back, so any real contact takes
+   * them off it and the only question is how far they go. An OCCUPANT is
+   * belted into a steel box, and the ONLY way out is forward through the screen
+   * — which means it takes a SQUARE blow, not merely a hard one, and that is
+   * the one condition that makes the sight legible: the player learns that
+   * hitting a car head-on empties it and that clipping the same car does not.
+   *
+   * The squareness is `solveImpact`'s own `alongNose`, so the rule costs
+   * nothing to evaluate and cannot disagree with the damage it was booked
+   * against.
+   */
+  eject: {
+    /** How square a blow has to be (0 abeam → 1 dead on the nose) before
+     * anybody comes out through a windscreen. */
+    squareness: 0.62,
+    /** …and how much absorbed energy, as a fraction of `traffic.wreckJoules`.
+     * Both conditions, not either: a hard sideswipe leaves everybody in their
+     * seats, which is what a hard sideswipe does. */
+    joules: 0.34,
+    /**
+     * WHAT AN OPEN CAR NEEDS INSTEAD, as a multiple of both thresholds above.
+     *
+     * The convertible is the one vehicle on this road with nothing over its
+     * people, and the model gets that for free: there is no screen to go
+     * through, so the bar is less than half of everybody else's and the sight
+     * the whole feature was built for turns up on the car that most deserves
+     * it.
+     */
+    openScale: 0.4,
+    /** …and how much a RIDER needs, on the same scale. Nearly nothing: being
+     * knocked off is what happens. */
+    riderScale: 0.06,
+    /**
+     * HOW FAR THEY GO. `carry` is the share of the closing speed a thrown body
+     * leaves with along the road — over 1 on purpose, because a body that left
+     * at the car's own speed would hang exactly in front of the bumper for the
+     * whole of its flight and be run over on landing, which is a much duller
+     * picture than the one that clears the roof and goes up the road.
+     */
+    carry: 1.3,
+    /** The upward kick (px/s) at the threshold and per unit of force past it,
+     * and the cap. THE NUMBERS ARE LARGE AND THAT IS THE POINT: against the
+     * tumble's own 620 px/s² a body leaving at the cap reaches about 300 px —
+     * most of the frame — and is in the air for two whole seconds, which is
+     * long enough for the wagon to pass underneath it and for the player to
+     * watch the landing. */
+    liftPx: { base: 300, perForce: 240 },
+    maxLiftPx: 660,
+    /** How much a body thrown out of a vehicle spins (rad/s), base and per unit
+     * of force. */
+    spin: { base: 4, perForce: 3 },
+    /**
+     * PAST THIS MUCH FORCE THEY DO NOT LAND IN ONE PIECE — the gib line for a
+     * thrown body, in the same units as everything else here.
+     *
+     * Higher than the crowd's own `gore.splitJoules` relative to its threshold,
+     * because a body that leaves a vehicle has already been decelerated by the
+     * vehicle: the whole blow did not land on the person. What it buys is the
+     * ladder the request asked for out loud — knocked off, thrown far, and then
+     * past a line, thrown far in several directions at once.
+     */
+    gibForce: 1.15,
+    /** How much extra lift and along-road carry the PIECES of a gibbed thrown
+     * body get over an ordinary burst's. They were already in the air when they
+     * came apart, and they read as it. */
+    gibBoost: 2.1,
+  },
 
   // ── THE IMPACT ────────────────────────────────────────────────────────────
   impact: {

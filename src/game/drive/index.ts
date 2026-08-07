@@ -81,12 +81,28 @@ import {
 } from "./street.ts";
 import {
   breakTrafficLamps,
+  knockDown,
   laneRunsWithHero,
   shunt,
   spawnTraffic,
   stepTraffic,
+  trafficMass,
 } from "./traffic.ts";
-import type { DriveInput, DriveParams, DriveState } from "./types.ts";
+import { vehicleDef } from "./fleet.ts";
+import {
+  ejectOccupants,
+  ejectRider,
+  snapMachine,
+  tearMachine,
+  wreckForce,
+} from "./eject.ts";
+import type { Impact } from "./impact.ts";
+import type {
+  DriveInput,
+  DriveParams,
+  DriveState,
+  DriveTraffic,
+} from "./types.ts";
 
 export { courseLength, DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
 // THE WAGON'S BROCHURE — the gearbox and the engine curve the road's pull is
@@ -116,7 +132,24 @@ export {
   roadBandEdges,
   roadEdges,
 } from "./crowd.ts";
-export { TRAFFIC_VARIANTS, laneRunsWithHero } from "./traffic.ts";
+export {
+  createTraffic,
+  TRAFFIC_VARIANTS,
+  laneRunsWithHero,
+  trafficMass,
+} from "./traffic.ts";
+// THE ROLLING STOCK — what every vehicle on this road weighs, how long it is,
+// who is on it and how common it is. The app reads it to know which sprite a
+// variant wears and where to seat a rider.
+export {
+  FLEET,
+  PAVEMENT_SHARE,
+  RIDER_VARIANTS,
+  rollVehicle,
+  vehicleDef,
+} from "./fleet.ts";
+export type { DriveVehicleClass, DriveVehicleDef } from "./fleet.ts";
+export { wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
 export type { DriveDriver } from "./driver.ts";
@@ -489,32 +522,82 @@ function collide(drive: DriveState): void {
   }
   drive.pedestrians = drive.pedestrians.filter((ped) => ped.z >= 0);
 
+  // Machines that came apart in the middle this tick — they are dropped from
+  // the traffic AFTER the walk, because removing from a list being iterated is
+  // how a collision quietly starts skipping the vehicle behind the one it just
+  // destroyed.
+  const snapped = new Set<number>();
+
+  // ── EVERYTHING ELSE WITH WHEELS ───────────────────────────────────────────
+  // One collision, three quite different answers, and which one a vehicle gives
+  // is a property of the vehicle rather than a branch on its id: what it
+  // WEIGHS decides how far it goes, what CLASS it is decides whether it is
+  // shoved or knocked over, and who is ON or IN it decides who leaves.
   for (const other of drive.traffic) {
     if (other.hitCooldownMs > 0) continue;
+    const def = vehicleDef(other.variant);
     const hit = solveImpact(
       car.pos,
       dir,
       car.speed,
       other.pos,
       { x: other.speed, y: other.slew },
-      CAR.footprint.radius,
-      mass.traffic,
+      def.radiusPx,
+      trafficMass(other, mass.rider) * mass.vehicleMult,
+      def.halfLengthPx,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
     drive.shunts++;
-    // A SHOVE, NOT A WRECK: it slews out of the lane and scrubs off. The hero's
-    // own car takes the exchange properly, which is what makes trading paint
-    // the expensive mistake it should be.
-    shunt(other, hit.launch.y, car.pos.y);
-    // …and its lamps at that end go with the paint.
-    breakTrafficLamps(other, car.pos.x);
     drive.events.push({
       type: "trafficHit",
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
     });
+    // …and its lamps at that end go with the paint.
+    breakTrafficLamps(other, car.pos.x);
+    hurtTraffic(drive, other, hit);
+
+    if (def.class === "open") {
+      // A CAR MEETING A BICYCLE PUTS THE BICYCLE ON ITS SIDE. There is no
+      // version of this that is a shove — so the machine goes down and starts
+      // shedding itself, and the person on it leaves by an entirely different
+      // door.
+      const force = wreckForce(other, hit.joules);
+      drive.remains.push(...ejectRider(drive, other, hit));
+      if (force >= DRIVE.traffic.snapForce) {
+        // …AND PAST A LINE IT STOPS BEING A VEHICLE AT ALL. The spine goes, the
+        // two ends go their own ways, and the machine leaves `traffic`
+        // entirely — there is nothing left for the road to steer or shunt.
+        drive.remains.push(...snapMachine(drive, other, hit, force));
+        drive.remains.push(...tearMachine(drive, other, hit, force));
+        snapped.add(other.id);
+      } else if (!other.downed && force >= DRIVE.traffic.downWear) {
+        knockDown(other, hit.launch.y, hit.liftZ, car.pos.y);
+        drive.remains.push(...tearMachine(drive, other, hit, force));
+        drive.events.push({
+          type: "machineDown",
+          pos: { x: hit.contact.x, y: hit.contact.y },
+          joules: hit.joules,
+        });
+      }
+    } else {
+      // A SHOVE, NOT A WRECK — until it is. It slews out of the lane and
+      // scrubs off, but it REMEMBERS now (`hurtTraffic` above), so the tenth
+      // shunt is visibly the tenth and the last one leaves it dead in a lane.
+      if (!other.wrecked) shunt(other, hit.launch.y, car.pos.y);
+      else other.hitCooldownMs = DRIVE.shuntImmuneMs;
+      // …AND THE PEOPLE INSIDE COME OUT THROUGH THE SCREEN, if the blow was
+      // square enough and hard enough. Both conditions live in `eject.ts`.
+      drive.remains.push(...ejectOccupants(drive, other, hit, car.pos.x));
+    }
+    // The hero's own car takes the exchange properly, which is what makes
+    // trading paint the expensive mistake it should be.
     damage(drive, hit.joules, hit.along, DRIVE.impact.trafficWearScale);
+  }
+
+  if (snapped.size > 0) {
+    drive.traffic = drive.traffic.filter((other) => !snapped.has(other.id));
   }
 
   // ── THE KERB ──────────────────────────────────────────────────────────────
@@ -527,14 +610,21 @@ function collide(drive: DriveState): void {
     if (prop.hitCooldownMs > 0) continue;
     if (prop.felled) continue;
     const parked = prop.kind === "parked_car";
+    // A parked car is one of the FLEET with the handbrake on, so it argues with
+    // the bumper using its own mass rather than a single "parked car" number —
+    // which is why shunting a parked bus is a mistake you make once.
+    const parkedDef = parked ? vehicleDef(prop.variant) : null;
     const hit = solveImpact(
       car.pos,
       dir,
       car.speed,
       prop.pos,
       { x: 0, y: 0 },
-      propRadius(prop.kind),
-      parked ? mass.parked : mass.lamp,
+      parkedDef ? parkedDef.radiusPx : propRadius(prop.kind),
+      parkedDef
+        ? parkedDef.massKg * mass.vehicleMult + mass.parkedExtra
+        : mass.lamp,
+      parkedDef ? parkedDef.halfLengthPx : 0,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
@@ -643,6 +733,52 @@ function rungFor(total: number, rungs: readonly number[]): number {
   let rung = 0;
   for (const at of rungs) if (total >= at) rung++;
   return rung;
+}
+
+/**
+ * WHAT A HIT DOES TO SOMEBODY ELSE'S VEHICLE — the other half of the trade the
+ * hero has always been the only loser in.
+ *
+ * It is the hero's own `damage()` with the same shape and the same currency:
+ * absorbed energy over a threshold, a ladder of visible rungs on the way, and a
+ * terminal state at the top. What is different is only WHOSE threshold — a
+ * vehicle's is scaled by its own mass (`wreckForce`), so the identical blow
+ * writes off a moped, folds a hatchback and barely marks a bus, and nobody had
+ * to author a durability per model to get that.
+ */
+function hurtTraffic(
+  drive: DriveState,
+  other: DriveTraffic,
+  hit: Impact,
+): void {
+  if (other.wrecked) return;
+  other.wear = Math.min(2, other.wear + wreckForce(other, hit.joules));
+  const rung = rungFor(other.wear, DRIVE.traffic.rungs);
+  if (rung > other.rung) {
+    other.rung = rung;
+    drive.events.push({
+      type: "trafficBent",
+      pos: { x: hit.contact.x, y: hit.contact.y },
+      joules: hit.joules,
+    });
+  }
+  if (other.wear < 1) return;
+  // FINISHED. The engine dies, the thing coasts to a halt in whatever lane it
+  // was in, and the road has an obstacle in it nobody placed — which is the
+  // whole payoff, and the reason a driver who spends the trip smashing traffic
+  // arrives at a road he made worse.
+  other.wrecked = true;
+  other.slew = 0;
+  drive.events.push({
+    type: "trafficWrecked",
+    pos: { x: other.pos.x, y: other.pos.y },
+    joules: hit.joules,
+  });
+  drive.remains.push(
+    ...tearMachine(drive, other, hit, wreckForce(other, hit.joules)),
+  );
+  // Whoever was still inside it is not staying inside it.
+  drive.remains.push(...ejectOccupants(drive, other, hit, drive.car.pos.x));
 }
 
 /** Throw a wheel — the run's own `detachWheel` needs a `GameState` for the

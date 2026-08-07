@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
+name: traffic_estate
+family: earth
+space: outside
+size: [48, 26]
+description: >
+  A long estate car seen side on — oxblood red, the roof carried flat all the way to a vertical tailgate, a roof rail along it.
+subject:
+  kind: traffic vehicle prop
+  build: a long-roofed estate, the glasshouse carried flat to the very back and closed by a vertical tailgate
+  features: a roof rail, three side windows including a rear quarter light, a low load lip
+  accent: oxblood red
+  flavor: the dog's in the back, or was
+palette:
+  O: "#1a1c2c" # outline ink
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
+  c: "#7fd0d8" # light streaking off the glass
+  r: "#d84a3a" # tail lamp
+  y: "#e8d9a8" # headlamp
+  T: "#c0c5cf" # wheel rim
+  G: "#171d2b" # cabin glass
+  H: "#25304a" # sky caught in the top of the glass
+  B: "#8f3a3f" # oxblood body paint
+  s: "#c46a6c" # body highlight
+  d: "#5a2126" # sill shadow
+grid: |
+  ................................................
+  ................................................
+  ................................................
+  ................................................
+  .....OOOOOOOOOOOOOOOOOOOOOOOO...................
+  ....ObbbbbbbbbbbbbbbbbbbbbbbbO..................
+  ...OOBBBBBBBBBBBBBBBBBBBBBBBBBO.................
+  ..OBBHHHHHHHHHbHHHHHcHHHbHHHHHBO................
+  ..OBHGGGGGGGGGbGGGGcGGGGbGGGcGHO................
+  ..OBGGGGGGGGGGbGGGcGGGGGbGGcGGGBO...............
+  ..OBGGGGGGGGGGbGGGGGGGGGbGGGGGGHBOOOOOOOOOOOO...
+  ..OssssssssssssssssssssssssssssssssssssssssssO..
+  .OBBBBBBBBBBBBBbBBBBBBBBBbBBBBBBBBBBBBBBBBBBBBO.
+  .OrrrBBBBBBBBBBbBBBBBBBBBbBBBBBBBBBBBBBBBBByyyO.
+  .OrrrBBBBBBBBBBbBBBbbBBBBbBBbbBBBBBBBBBBBBByyyO.
+  .ObbBBBBBBBBBBBbBBBBBBBBBbBBBBBBBBBBBBBBBBBBbbO.
+  .ObbBBBBBBOOOOObBBBBBBBBBbBBBBBBBBOOOOOBBBBBbbO.
+  .ObbBBBBBOkkkkkOBBBBBBBBBbBBBBBBBOkkkkkOBBBBbbO.
+  .ObbBBBBOkkbbbkkOBBBBBBBBbBBBBBBOkkbbbkkOBBBbbO.
+  .ObbBBBBOkbbTbbkOBBBBBBBBbBBBBBBOkbbTbbkOBBBbbO.
+  .OddddddOkbbTbbkOdddddddddddddddOkbbTbbkOdddddO.
+  ..OdddddOkkbbbkkOdddddddddddddddOkkbbbkkOddddO..
+  ...OOOOO.OkkkkkO.OOOOOOOOOOOOOOO.OkkkkkO.OOOO...
+  ..........OkkkO...................OkkkO.........
+  ...........OOO.....................OOO..........
+  ................................................

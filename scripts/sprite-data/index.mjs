@@ -20,6 +20,7 @@
 // grids are in (see `deriveWounds` / `deriveWorn` below).
 import { GENERATED_ENEMIES } from "../../src/generated/enemies.ts";
 import { GENERATED_GEAR } from "../../src/generated/items.ts";
+import { FLEET } from "../../src/game/drive/fleet.ts";
 import {
   CAST_RIM_CHAR,
   CAST_RIM_RGBA,
@@ -27,6 +28,7 @@ import {
   castsAnything,
 } from "../asset-tools/cast.mjs";
 import { woundedFrames } from "../asset-tools/damage.mjs";
+import { wreckedFrames } from "../asset-tools/wreck.mjs";
 import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
@@ -244,6 +246,39 @@ export function deriveCastPoses(defs) {
 }
 
 deriveCastPoses(GENERATED_ENEMIES);
+
+// ---- The fleet's damage ladder ----------------------------------------------
+// The dented, de-glazed and written-off looks of every vehicle on the drive to
+// GOODCO (asset-tools/wreck.mjs) — derived, never hand-drawn, for exactly the
+// reason the wounds are. Twenty vehicles is sixty wreck grids, and the
+// sixty-first is whatever gets added next; deriving them means a new model
+// ships ONE picture and earns its ladder, and means a retuned base sprite can
+// never be left with three stale wrecks standing behind it.
+//
+// The roster is the ENGINE's own (`src/game/drive/fleet.ts`), read the same way
+// the enemy roster is read from the compiled catalog — so the art the atlas
+// holds and the vehicles the road can actually spawn are the same list by
+// construction rather than by anybody remembering.
+
+/** Derive the wreck rungs for every vehicle in a fleet, over the sprites
+ * currently loaded. A function for the same reason `deriveWounds` is one: a mod
+ * that ships its own traffic earns the identical ladder. */
+export function deriveWrecks(fleet) {
+  for (const def of fleet) {
+    const grid = SPRITES[def.id];
+    if (!grid) throw new Error(`fleet vehicle "${def.id}": no sprite`);
+    const family = FAMILIES.find((f) => f.name === SPRITE_FAMILY[def.id]);
+    if (!family) continue;
+    // A derived look may only paint in chars the BASE sprite's palette defines,
+    // or it renders in nothing at all.
+    const palette = { ...family.palette, ...SPRITE_PALETTES[def.id] };
+    for (const [name, rows] of Object.entries(wreckedFrames(def.id, grid))) {
+      register(family, name, rows, palette);
+    }
+  }
+}
+
+deriveWrecks(FLEET);
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —

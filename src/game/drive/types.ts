@@ -49,6 +49,42 @@ export type RemainPart =
    * is the one that goes OVER: launched with less along-road speed than the car
    * has, so the wagon passes underneath it while it is up there. */
   | "upper"
+  /**
+   * A PIECE OF MACHINE — a wheel, a panel, a mirror, a hot-box — torn off
+   * something that was never alive.
+   *
+   * It is in this list rather than in a list of its own because it is the same
+   * FACT: a lump of a known size is at this spot doing this, and the road has to
+   * carry it, drag it, drop it and drive over it exactly as it does a lump of
+   * somebody. What is different is only what it is MADE of — it throws sparks
+   * rather than blood, it does not soak the tarmac, and it is drawn out of the
+   * VEHICLE's art rather than the victim's (`variant` names the vehicle for a
+   * piece of this part, not a person). All three of those are the app's, which
+   * is the same fence every other piece on this road is drawn along.
+   *
+   * It is the second half of "these need new gib engines since they are half
+   * human and half machine": a struck moped sheds a rider AND a wheel, and the
+   * two lie in the road together answering to different physics of taste.
+   */
+  | "machine"
+  /**
+   * …AND THE TWO ENDS OF A MACHINE THAT CAME APART IN THE MIDDLE.
+   *
+   * A two-wheeler is a spine with a wheel bolted to each end of it, and there is
+   * no version of a car meeting one at speed where the spine survives. So past
+   * `DRIVE.traffic.snapForce` the machine STOPS EXISTING as a vehicle and
+   * becomes these: the front end, with the forks and the wheel that were pushed
+   * through it, and the back end with everything else. They are much bigger
+   * pieces than `machine` debris and are drawn as the two halves of the
+   * vehicle's own art, cut where `DriveRemain.cut` says it broke.
+   *
+   * It is the same trick the body's own `upper`/`lower` pull, and it is here for
+   * the same reason: the two ends have entirely different afternoons. The front
+   * is punted up the road by the bumper that hit it; the back is left behind and
+   * cartwheels.
+   */
+  | "machine_front"
+  | "machine_rear"
   /** Everything below the bumper line. The HEAVY half, and the one that goes
    * UNDER: no lift at all, straight down onto the tarmac in front of the front
    * wheels, where it is caught and dragged. */
@@ -81,9 +117,17 @@ export type DriveRemain = {
   /** Stable id — the app keys its per-piece presentation (which gib art it
    * wears, how much blood it still has to leave) off it. */
   id: number;
-  /** Which crowd, and which of its bodies, it came off — so the halves are cut
-   * out of the art of the person who was actually hit rather than out of a
-   * stand-in. */
+  /**
+   * WHOSE ART THIS PIECE IS CUT OUT OF.
+   *
+   * For every flesh part it is the body that was hit — the crowd it belonged to
+   * and which of that crowd's sprites it was wearing, so a half of somebody is a
+   * half of the PERSON rather than of a stand-in.
+   *
+   * For a `machine` piece it is the VEHICLE instead: `kind` is meaningless and
+   * `variant` indexes the FLEET. One pair of fields for one question ("what does
+   * this lump look like"), answered against whichever table the part names.
+   */
   kind: PedestrianKind;
   variant: number;
   part: RemainPart;
@@ -150,6 +194,20 @@ export type PedestrianKind =
   /** One of the people the welfare did not reach, out on the road because a
    * road is where the cars are. Walks, mills, and lunges at a car it has seen. */
   | "walker"
+  /**
+   * SOMEBODY WHO WAS ON A VEHICLE A MOMENT AGO — a rider thrown off a moped, or
+   * a passenger who has just come through a windscreen.
+   *
+   * A KIND rather than a mode, because what this type answers is "whose art is
+   * this" and theirs is neither a walker's nor one of THE GLUED's: a rider is
+   * drawn in a helmet and seated, and THAT is the picture the road has to cut in
+   * half. Everything else about one — that they tumble, that they are counted,
+   * that the wheels can find them — is exactly a pedestrian's, which is why they
+   * are routed through this list rather than given a body type of their own.
+   *
+   * `variant` indexes the app's `RIDER_SPRITES` for one of these.
+   */
+  | "rider"
   /**
    * ONE OF THE GLUED — a demonstrator sitting in the carriageway with their
    * hands in the resin, holding the road for the climate.
@@ -236,8 +294,68 @@ export type DriveTraffic = {
   speed: number;
   /** Lateral speed (world px/s) — zero until something shunts it. */
   slew: number;
-  /** Which of the traffic sprites it wears. */
+  /** Which of the traffic sprites it wears — an index into the FLEET
+   * (`drive/fleet.ts`), which is also what says what it weighs. */
   variant: number;
+  /**
+   * HOW BROKEN IT IS, 0 → 1 — the energy this vehicle has personally absorbed,
+   * as a fraction of what it takes to finish one off.
+   *
+   * THE OTHER CARS ARE DESTRUCTIBLE NOW, and this is the whole of it. A shunt
+   * used to be a shove with no memory: hit the same van ten times and it was
+   * the same van. What the player is owed for ten hits is a van that LOOKS like
+   * it has been hit ten times, so the wear drives a damage rung
+   * (`DRIVE.trafficRungs`) the renderer swaps art for, and past 1 the thing is
+   * finished — dead in the road, which is the last rung and the one that
+   * changes the road rather than the picture.
+   */
+  wear: number;
+  /** …and the rung that wear has reached, latched so it only ever climbs. The
+   * renderer reads it; the engine raises an event when it moves. */
+  rung: number;
+  /**
+   * IT IS FINISHED — engine dead, rolling to a stop, and about to be a
+   * stationary obstacle in a live lane.
+   *
+   * Worth its own flag rather than `wear >= 1` because it is a LATCH with
+   * consequences: a wrecked car stops steering, stops being shunted like a live
+   * one, and becomes the most dangerous thing on the road, which is a state
+   * rather than a threshold.
+   */
+  wrecked: boolean;
+  /**
+   * THE PERSON IS STILL ON IT. Only ever meaningful for an `open` vehicle, whose
+   * def names which rider they are — and the moment this goes false the machine
+   * is lighter, riderless, and usually on its side.
+   */
+  rider: boolean;
+  /** How many people are still INSIDE — decremented as they leave through the
+   * screen. Starts at the def's `occupants`. */
+  occupants: number;
+  /**
+   * IT HAS GONE DOWN. An `open` vehicle only: hit by a car, a bike does not slew
+   * out of the lane and carry on — it falls over, slides, and comes to rest.
+   *
+   * Everything below is meaningless until this is true, which is why a car
+   * carries the fields and never uses them: one shape for one list, rather than
+   * a second list to iterate, sort, replicate and forget about.
+   */
+  downed: boolean;
+  /** Height off the road (px) and its rate — a machine kicked into the air. */
+  z: number;
+  vz: number;
+  /** How far it has turned over (radians) and how fast. */
+  angle: number;
+  spin: number;
+  /**
+   * THE WEAVE'S PHASE — a fixed per-vehicle number the footway drift is derived
+   * FROM rather than a per-tick draw, exactly as the crowd's wander is.
+   *
+   * Only a pavement rider reads it. It is derived from the spawn mark rather
+   * than rolled, so adding a moped to the fleet can never move a body, a car or
+   * a lamp post that the seed laid down after it.
+   */
+  phase: number;
   /** Which way its own art faces, so an oncoming car is drawn nose-first. */
   faceLeft: boolean;
   /**
@@ -391,6 +509,33 @@ export type DriveEvent =
   | { type: "debrisStruck"; pos: Vec2; joules: number }
   /** Traded paint with another car — moving, or parked at the kerb. */
   | { type: "trafficHit"; pos: Vec2; joules: number }
+  /** …and it climbed a damage rung for it: a panel folded, a light went, glass
+   * left the frame. Its own beat because a car visibly deforming is a different
+   * noise from the paint trade that caused it, and one the player is meant to
+   * learn to want. */
+  | { type: "trafficBent"; pos: Vec2; joules: number }
+  /** A vehicle has been finished — engine dead, rolling to a halt, and about to
+   * be a stationary obstacle in a live lane. */
+  | { type: "trafficWrecked"; pos: Vec2; joules: number }
+  /** A two-wheeler has gone over: the machine is down, sliding, and shedding
+   * itself down the road. */
+  | { type: "machineDown"; pos: Vec2; joules: number }
+  /** …and one has come apart in the middle, which is a different noise and a
+   * different picture: the thing has stopped being a vehicle. */
+  | { type: "machineSnapped"; pos: Vec2; joules: number }
+  /**
+   * SOMEBODY HAS LEFT A VEHICLE THEY WERE ON OR IN — a rider off a moped, or a
+   * passenger through a windscreen.
+   *
+   * ONE EVENT FOR BOTH, and deliberately: what the player hears is a body
+   * arriving in the air out of a machine, and whether it came off a saddle or
+   * through a screen is a difference the PICTURE carries, not the noise. The
+   * glass that went with it is `windscreenOut`, which is its own sound and only
+   * fires for the ones who were behind one.
+   */
+  | { type: "occupantThrown"; pos: Vec2; joules: number }
+  /** …and the screen they came through. */
+  | { type: "windscreenOut"; pos: Vec2; joules: number }
   /** A street light has left its base and is on its way down the road. */
   | { type: "lampFelled"; pos: Vec2; joules: number }
   /** A panel climbed a damage rung. */

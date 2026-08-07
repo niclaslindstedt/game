@@ -1,58 +1,60 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# TRAFFIC — one of the cars sharing the road on the drive to GOODCO, and the
-# same table that dresses the GOODCO car park. Drawn SIDE ON on the 48x26 canvas
-# the hero's own car assembly uses (`car_*` — src/game/vehicles.ts), with the
-# sills and wheels stamped from the shared chassis so nothing drifts between
-# variants; what tells these apart is the silhouette ABOVE the sills.
+# TRAFFIC — one of the vehicles sharing the road on the drive to GOODCO, and
+# the same table that dresses the GOODCO car park. Drawn SIDE ON, nose to the
+# RIGHT, on the 48x26 canvas the whole fleet shares — but NOTHING else is
+# shared: this model carries its own wheelbase, wheel size, ride height,
+# overhangs and roofline, because a saloon and a box van that agree about any
+# of those read as one silhouette with different paint.
 name: traffic_bus
 family: earth
 space: outside
 size: [48, 26]
 description: >
-  A stub city bus seen side on — municipal red, a long row of windows over a deep slab flank.
+  A short city bus seen side on — municipal red, a long band of square windows over a deep flank, a destination panel above the screen.
 subject:
   kind: traffic vehicle prop
-  build: a short city bus seen side on, a long window band over a deep slab flank
-  features: a row of square windows, a door seam forward, a destination panel
+  build: a short single-deck city bus, a long unbroken window band running the whole length over a deep flank
+  features: a destination panel over the windscreen, a folding door seam behind the front axle, square windows on a regular pitch
   accent: municipal red
   flavor: the route they cut, still running empty
 palette:
   O: "#1a1c2c" # outline ink
-  b: "#3f4553" # dark trim, tyre tread, shut lines
-  k: "#0a0910" # cabin glass and tyre
+  b: "#3f4553" # dark trim, tyre shadow, shut lines
+  k: "#0a0910" # tyre
   c: "#7fd0d8" # light streaking off the glass
   r: "#d84a3a" # tail lamp
   y: "#e8d9a8" # headlamp
-  T: "#c0c5cf" # hubcap steel
+  T: "#c0c5cf" # wheel rim
   G: "#171d2b" # cabin glass
   H: "#25304a" # sky caught in the top of the glass
   B: "#a83c46" # municipal red body paint
-  s: "#cf6a72" # body highlight
-  d: "#722229" # sill shadow
+  s: "#d4757c" # body highlight
+  d: "#6c2027" # sill shadow
+  W: "#f4f4f4" # destination panel
 grid: |
   ................................................
-  ....OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO....
-  ....OsBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO....
-  ....OHHHHHcHHHHHHHHHHHHHHHHHHHcHHHHHHHHHHHHO....
-  ....OGGGGGGGGBGGGGGGGGBGGGGGGGGBGGGGGGBGGGGO....
-  ....OGGGGGGGGBGGGGGGGGBGGGGGGGGBGGGGGGBGGGGO....
-  ....OGGGGGGGGBGGGGGGGGBGGGGGGGGBGGGGGGBGGGGO....
-  ....OGGGGGGGGBGGGGGGGGBGGGGGGGGBGGGGGGBGGGGO....
-  .....OsssssssssssssssssssssssssssssssssssssssO..
-  ....OrrrBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBByyyO...
-  ....OrrrBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBByyyO...
-  ....OBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO...
-  ....OBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO...
-  ....OBBBBOOkkkOOBBBBBBbBBBBBBBOOkkkOOBBBBBBBO...
-  ....OsssOkkkkkkkOssssssssssssOkkkkkkkOssssssO...
-  ....OdddOkbbbTbkOddddddddddddOkbbbTbkOddddddO...
-  ....OOOOkkTTTbbkkOOOOOOOOOOOOkkTTTbbkkOOOOOOO...
-  .......OkkbbTTTkkO..........OkkbbTTTkkO.........
-  .......OkkTTTbbkkO..........OkkTTTbbkkO.........
-  ........OkbbbTbkO............OkbbbTbkO..........
-  ........OkkkkkkkO............OkkkkkkkO..........
-  .........OOkkkOO..............OOkkkOO...........
-  ...........OOO..................OOO.............
   ................................................
-  ................................................
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  .OBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBO.
+  .OBHHHHHHHbHHHHHHbHHHHHHbHHHHHHbHHHHHbHHHHHHHBBO
+  .OBGGGGGGGbGGGGGGbGGGGGGbGGGGGGbGGGGGbWWWWWWWBBO
+  .OBGGGGGGGbGGGGGGbGGGGGGbGGGGGGbGGGGGbWWWWWWWBBO
+  .OBGGGGGGGbGGGcGGbGGGGGGbGGGcGGbGGGGGbGGGGGGGBBO
+  .OBGGGGGGGbGGcGGGbGGGGGGbGGcGGGbGGGGGbGGGGGGGBBO
+  .OBGGGGGGGbGcGGGGbGGGGGGbGcGGGGbGGGGGbGGGGGGGBBO
+  .OBGGGGGGGbGGGGGGbGGGGGGbGGGGGGbGGGGGbGGGGGGGBBO
+  .OBGGGGGGGbGGGGGGbGGGGGGbGGGGGGbGGGGGbGGGGGGGBBO
+  .OssssssssssssssssssssssssssssbsssbssssssssssssO
+  .OBdddddddddddddddddddddddddddddddddddddddddddBO
+  .OBBBBBBOOOBBBBBBBBBBBBBBBBBBBbBBBbBBOOOBBBBBBBO
+  .OrrrBOkkkkkOBBBBBBBBBBBBBBBBBbBBBbOkkkkkOBByyyO
+  .OrrrOkkkbkkkOBBBBBBBBBBBBBBBBbBBBOkkkbkkkOByyyO
+  .ObbBkkbbbbbkkBBBBBBBBBBBBBBBBbBBBkkbbbbbkkBBbbO
+  .ObbBkkbTTTbkkBBBBBBBBBBBBBBBBbBBBkkbTTTbkkBBbbO
+  .ObbBkkbTTTbkkBBBBBBBBBBBBBBBBbBBBkkbTTTbkkBBbbO
+  .OdddkkbTTTbkkddddddddddddddddddddkkbTTTbkkddddO
+  ..OddOkbbbbbkOddddddddddddddddddddOkbbbbbkOdddO.
+  ...OOOkkkkkkkOOOOOOOOOOOOOOOOOOOOOOkkkkkkkOOOO..
+  ......OOkkkOO......................OOkkkOO......
+  ........OOO..........................OOO........
   ................................................

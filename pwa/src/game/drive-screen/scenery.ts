@@ -30,6 +30,7 @@ import {
   laneCenter,
   roadBandEdges,
   DRIVE,
+  FLEET,
 } from "@game/core";
 
 /**
@@ -110,23 +111,84 @@ export const GLUED_SPRITES: readonly string[] = [
 ];
 
 /**
- * THE TRAFFIC — ten cars, in the order `DriveTraffic.variant` indexes them.
- * The same table dresses the GOODCO car park, which is why they live in the
- * `earth` family rather than under the road: they are the town's cars, and the
- * town is where GOODCO's staff park.
+ * THE TRAFFIC — every vehicle on the road, in the order `DriveTraffic.variant`
+ * indexes them. The same table dresses the GOODCO car park, which is why they
+ * live in the `earth` family rather than under the road: they are the town's
+ * vehicles, and the town is where GOODCO's staff park.
+ *
+ * READ OFF THE ENGINE'S OWN FLEET rather than restated here, and that is the
+ * one thing about this table worth saying out loud. It used to be a hand-kept
+ * list in the same order as a hand-kept list in the engine, with a test holding
+ * the two at the same LENGTH — which catches somebody adding a car and forgetting
+ * the sprite, and cheerfully misses somebody REORDERING one, at which point
+ * every van on the road weighs what a scooter does and nothing fails. The def
+ * carries its own sprite stem (`DriveVehicleDef.id`), so there is now one list
+ * and no order to keep.
  */
-export const TRAFFIC_SPRITES: readonly string[] = [
-  "traffic_sedan",
-  "traffic_sports",
-  "traffic_suv",
-  "traffic_hatch",
-  "traffic_electric",
-  "traffic_police",
-  "traffic_van",
-  "traffic_pickup",
-  "traffic_taxi",
-  "traffic_bus",
+export const TRAFFIC_SPRITES: readonly string[] = FLEET.map((def) => def.id);
+
+/**
+ * THE PEOPLE ON THE TWO-WHEELERS — in the order `DriveVehicleDef.rider` indexes
+ * them, and the order a `PedestrianKind` of `"rider"` wears.
+ *
+ * THEY ARE THEIR OWN TABLE AND NOT PART OF THE CROWD, for a reason that is
+ * mechanical rather than tidy: a rider is drawn SEATED, and the crowd's art is
+ * all drawn walking. A thrown rider has to be cut in half out of the picture the
+ * player was actually looking at a moment ago (`slicedPiece`), so the seated
+ * body is the one the road has to be holding — and the same table answers for a
+ * passenger who has just come through a windscreen, who was also sitting down.
+ *
+ * One frame each. Everything else on this road that is alive walks; these
+ * people are carried, and a walk cycle on somebody sitting on a moped is the
+ * kind of wrong that is hard to name and impossible to unsee.
+ */
+export const RIDER_SPRITES: readonly string[] = [
+  "rider_biker",
+  "rider_commuter",
+  "rider_courier",
+  "rider_delivery",
+  "rider_cyclist",
+  "rider_skater",
 ];
+
+/**
+ * WHERE A RIDER SITS ON WHAT THEY ARE RIDING — px right of the machine's own
+ * centre, and px up off the road.
+ *
+ * Per MACHINE rather than per rider, because the saddle is the machine's: a
+ * scooter's rider sits further back and higher than a motorcyclist does, and
+ * the same person moved between the two would be standing on the engine of one
+ * and floating over the tail of the other.
+ */
+export const RIDER_SEATS: Readonly<Record<string, { dx: number; dy: number }>> =
+  {
+    traffic_motorcycle: { dx: 4, dy: 3 },
+    traffic_scooter: { dx: 2, dy: 4 },
+    // The two delivery machines carry a box where a pillion would be, so their
+    // riders sit further FORWARD than anybody else's — seated over the saddle
+    // they are simply behind the crate and invisible, which is the one way to
+    // draw a rider that is worse than not drawing one.
+    traffic_ebike: { dx: 6, dy: 5 },
+    traffic_delivery_moped: { dx: 5, dy: 4 },
+    traffic_bicycle: { dx: 3, dy: 5 },
+    // A skater STANDS ON the deck rather than sitting in it, so the seat is
+    // barely off the road — and the board is the one machine here whose rider
+    // is most of the silhouette.
+    traffic_skateboard: { dx: 1, dy: 1 },
+  };
+
+/** The damage rungs a vehicle's art climbs as it is battered, derived at build
+ * time from its clean grid (`scripts/asset-tools/wreck.mjs`). Index 0 is the
+ * undamaged sprite, so this is read with `DriveTraffic.rung` directly. */
+const WRECK_SUFFIX = ["", "_dent1", "_dent2", "_dent3"];
+
+/** Which picture a vehicle is wearing right now. */
+export function trafficSprite(variant: number, rung: number): string {
+  const base = TRAFFIC_SPRITES[variant % TRAFFIC_SPRITES.length] ?? "";
+  const suffix =
+    WRECK_SUFFIX[Math.max(0, Math.min(WRECK_SUFFIX.length - 1, rung))] ?? "";
+  return `${base}${suffix}`;
+}
 
 /** THE TOWN — the buildings lining the far verge, authored already cropped. */
 export const HOUSE_SPRITES: readonly string[] = [

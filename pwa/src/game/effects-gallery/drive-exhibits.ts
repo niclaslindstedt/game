@@ -28,6 +28,7 @@
 
 import {
   courseLength,
+  createTraffic,
   CROWD_VARIANTS,
   DRIVE,
   GLUED_BARKS,
@@ -215,17 +216,16 @@ function plantCar(
   towardHero = false,
 ): void {
   const dir = drive.params.direction;
-  drive.traffic.push({
-    id: drive.nextId++,
-    pos: { x: drive.car.pos.x + dir * ahead, y },
-    speed: (towardHero ? -dir : dir) * pace,
-    slew: 0,
-    variant: variant % TRAFFIC_VARIANTS,
-    noseOut: false,
-    tailOut: false,
-    faceLeft: towardHero ? dir === 1 : dir === -1,
-    hitCooldownMs: 0,
-  });
+  // Minted by the engine's own factory, so a car staged for the gallery is
+  // built exactly the way a car on the road is — riders, occupants and all.
+  drive.traffic.push(
+    createTraffic(
+      drive.nextId++,
+      variant % TRAFFIC_VARIANTS,
+      { x: drive.car.pos.x + dir * ahead, y },
+      (towardHero ? -dir : dir) * pace,
+    ),
+  );
 }
 
 /**
