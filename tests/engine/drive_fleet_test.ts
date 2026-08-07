@@ -17,6 +17,7 @@ import {
   DRIVE,
   FLEET,
   impactMasses,
+  roadBandEdges,
   solveImpact,
   stepDrive,
   tipsOver,
@@ -635,5 +636,90 @@ describe("the delivery trade on the pavement", () => {
       }
     }
     expect(cutIn).toBe(true);
+  });
+});
+
+describe("the kerb, and the way things get clear", () => {
+  it("moves a struck car by SPEED rather than placing it", () => {
+    // THE TELEPORT. Getting the struck car out of the wagon's way used to be a
+    // positional hop — twenty-two px sideways, most of a lane, on the frame of
+    // the blow — because two overlapping bodies re-collided every tick and
+    // something had to separate them. The hit cooldown does that job now, so
+    // the hop was pure artefact, and it was the loudest one on the road: a car
+    // rear-ended DEAD SQUARE, where the physics says the whole answer is along
+    // the road, still snapped most of a lane sideways for no reason the picture
+    // could account for.
+    //
+    // The assertion is the shape of the fix rather than a number off the
+    // screen: no single tick may move the struck car further sideways than its
+    // own lateral speed could carry it.
+    const state = drive();
+    floorIt(state, 3000);
+    const one = createTraffic(
+      state.nextId++,
+      indexOf("traffic_sedan"),
+      { x: state.car.pos.x + 120, y: state.car.pos.y },
+      150,
+    );
+    state.traffic.push(one);
+    state.car.speed = DRIVE.topSpeedPx * 0.95;
+
+    const dt = 16 / 1000;
+    let previous = one.pos.y;
+    let worst = 0;
+    let hit = false;
+    for (let t = 0; t < 1200; t += 16) {
+      tick(state, 1);
+      if (saidBy(state).includes("trafficHit")) hit = true;
+      worst = Math.max(worst, Math.abs(one.pos.y - previous));
+      previous = one.pos.y;
+    }
+    expect(hit).toBe(true);
+    // Everything it moved sideways, it drove. The cap is the slew ceiling's own
+    // travel in one tick plus a pixel of slack for the ordering inside a step.
+    expect(worst).toBeLessThan(DRIVE.shuntMaxPx * dt + 1);
+    // …and comfortably under what the hop used to be in a single frame.
+    expect(worst).toBeLessThan(DRIVE.separationPx * dt + 1);
+  });
+
+  it("stops a parked car being furniture the moment it is hit", () => {
+    // A parked car was a `DriveProp` for its whole life, and a prop has no
+    // velocity, no crush, no yaw and nothing to roll — so the collision could
+    // only shove it sideways and leave. It joins the TRAFFIC now and takes the
+    // blow the way every other car does.
+    const state = drive();
+    floorIt(state, 3000);
+    const kerb = roadBandEdges().bottom + DRIVE.street.kerbOffsetPx;
+    state.props.length = 0;
+    state.car.pos.y = kerb;
+    state.props.push({
+      id: state.nextId++,
+      kind: "parked_car",
+      pos: { x: state.car.pos.x + 60, y: kerb },
+      variant: indexOf("traffic_estate"),
+      felled: false,
+      vel: { x: 0, y: 0 },
+      z: 0,
+      vz: 0,
+      angle: 0,
+      spin: 0,
+      hitCooldownMs: 0,
+    });
+    const wasTraffic = state.traffic.length;
+    state.car.speed = DRIVE.topSpeedPx * 0.95;
+    floorIt(state, 300);
+
+    // It has left the kerb's furniture and joined the road's vehicles.
+    expect(state.props.some((prop) => prop.kind === "parked_car")).toBe(false);
+    expect(state.traffic.length).toBeGreaterThan(wasTraffic);
+    const car = state.traffic.at(-1)!;
+    // …and it took a REAL collision: it folded, and it is moving.
+    expect(car.crushNose + car.crushTail).toBeGreaterThan(0);
+    expect(Math.abs(car.speed) + Math.abs(car.slew)).toBeGreaterThan(0);
+    // Nobody was in it and nobody is driving it — so no lights, and nothing
+    // comes out through the screen.
+    expect(car.driverless).toBe(true);
+    expect(car.occupants).toBe(0);
+    expect(saidBy(state)).not.toContain("windscreenOut");
   });
 });

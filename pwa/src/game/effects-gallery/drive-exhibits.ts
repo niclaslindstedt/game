@@ -35,9 +35,11 @@ import {
   DRIVE,
   FLEET,
   GLUED_BARKS,
+  isMastSlot,
   GLUED_VARIANTS,
   haltTraffic,
   laneCenter,
+  roadBandEdges,
   roadEdges,
   TRAFFIC_VARIANTS,
   type DriveState,
@@ -107,6 +109,20 @@ function silence(drive: DriveState): void {
   const past = courseLength(drive.params) + 1;
   drive.nextPedestrianAt = past;
   haltTraffic(drive, past);
+}
+
+/**
+ * …AND THE KERB WITH IT. `silence` stops the CROWD and the TRAFFIC; the street
+ * lays its furniture on a fixed pitch along the course and would carry on
+ * standing lamp posts and parked cars through the middle of a show that is
+ * about one of them.
+ */
+function clearKerb(drive: DriveState): void {
+  drive.props.length = 0;
+  // Past anything the spawner's reach can get to, in the direction it walks.
+  drive.nextPropSlot =
+    Math.round(drive.car.pos.x / DRIVE.street.pitchPx) +
+    drive.params.direction * 10_000;
 }
 
 /** How fast a car this bent can go — the road's own `1 - wear × loss`, so a
@@ -211,6 +227,38 @@ function plantBlockade(drive: DriveState, ahead: number, rows: number): void {
       n++;
     }
   }
+}
+
+/**
+ * A PIECE OF KERB, `ahead` px up the road — one of the two things the street
+ * stands on its own pavements (`src/game/drive/street.ts`).
+ *
+ * Minted by hand rather than through the spawner because the spawner lays
+ * furniture on a fixed PITCH along the course: what stands in front of the
+ * bumper is a property of where the hero happens to be, which is exactly what
+ * an exhibit cannot have. The shape is `DriveProp`'s own and the sim treats it
+ * identically — the only thing staged is where it is.
+ */
+function plantProp(
+  drive: DriveState,
+  kind: "parked_car" | "lamp_post",
+  ahead: number,
+  y: number,
+  variant = 0,
+): void {
+  drive.props.push({
+    id: drive.nextId++,
+    kind,
+    pos: { x: drive.car.pos.x + drive.params.direction * ahead, y },
+    variant: variant % TRAFFIC_VARIANTS,
+    felled: false,
+    vel: { x: 0, y: 0 },
+    z: 0,
+    vz: 0,
+    angle: 0,
+    spin: 0,
+    hitCooldownMs: 0,
+  });
 }
 
 /** Another car, `ahead` px up the road at `y`, dawdling along at `pace` in the
@@ -584,6 +632,89 @@ export function driveExhibits(): DriveExhibit[] {
           0,
           FLEET.findIndex((def) => def.id === "traffic_minivan"),
         );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-parked",
+      icon: "traffic_estate",
+      label: "SOMEBODY'S PARKED CAR",
+      blurb: "IT IS NOT FURNITURE - IT FOLDS, IT SPINS, IT ROLLS UP THE KERB",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "kerb",
+        "parked",
+        "car",
+        "crash",
+        "crush",
+        "handbrake",
+      ],
+      showMs: 2600,
+      shows: "trafficHit",
+      road: (drive) => {
+        silence(drive);
+        clearKerb(drive);
+        // THE CASE THAT USED TO DO NOTHING. A parked car was a `DriveProp`, and
+        // a prop has no velocity, no crush, no yaw and nothing to roll — so the
+        // only answer the collision had was to move it sideways by a fixed
+        // twenty-two px and carry on. It stops being furniture the moment it is
+        // touched now (`unparkCar`) and takes the blow exactly as the road's own
+        // cars do.
+        const speed = openAt(drive);
+        // Out at the near kerb, where the street actually parks them, with the
+        // hero pulled over onto the same line.
+        const kerb = roadBandEdges().bottom + DRIVE.street.kerbOffsetPx;
+        drive.car.pos.y = kerb;
+        plantProp(
+          drive,
+          "parked_car",
+          leadPx(speed) + 40,
+          kerb,
+          FLEET.findIndex((def) => def.id === "traffic_estate"),
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-lamp",
+      icon: "road_lamp_near",
+      label: "A STREET LIGHT GOES",
+      blurb: "IT SHEARS OFF ITS FOOT - THE STUMP STAYS, THE COLUMN DOES NOT",
+      group: "DRIVE",
+      keywords: ["drive", "road", "kerb", "lamp", "post", "mast", "glass"],
+      showMs: 2600,
+      shows: "lampFelled",
+      road: (drive) => {
+        silence(drive);
+        clearKerb(drive);
+        // ON A REAL MAST SLOT, which matters: the street stands its lighting on
+        // a fixed pitch and the renderer asks `mastAt` which of the two
+        // pictures a post is wearing. A lamp planted between slots is a garden
+        // yard light, which is a different sprite and not the thing this shows.
+        const speed = openAt(drive);
+        const kerb = roadBandEdges().bottom + DRIVE.street.kerbOffsetPx;
+        drive.car.pos.y = kerb;
+        const { pitchPx } = DRIVE.street;
+        const want = drive.car.pos.x + drive.params.direction * leadPx(speed);
+        let slot = Math.round(want / pitchPx);
+        // …and the NEXT one that is genuinely a mast, in the direction of
+        // travel, so the post is always in front of the bumper.
+        while (!isMastSlot(slot)) slot += drive.params.direction;
+        drive.props.push({
+          id: drive.nextId++,
+          kind: "lamp_post",
+          pos: { x: slot * pitchPx, y: kerb },
+          variant: 0,
+          felled: false,
+          vel: { x: 0, y: 0 },
+          z: 0,
+          vz: 0,
+          angle: 0,
+          spin: 0,
+          hitCooldownMs: 0,
+        });
       },
     },
     {

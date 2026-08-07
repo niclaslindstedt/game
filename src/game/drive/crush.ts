@@ -148,14 +148,21 @@ export function tipVehicle(
   // and onto the verge inside a fifth of a second — so the most dramatic thing
   // on the road happens too fast to watch. A rollover still ENDS on the verge;
   // it takes long enough getting there to be seen.
+  // …and never under the speed it takes to get out from under the wagon, which
+  // is the floor every shove keeps now that nothing is placed clear on the spot
+  // (`separationPx`). A car that went over and then sat exactly where it was
+  // would be rolled again by the same bumper a breath later.
   other.slew =
-    side * Math.min(DRIVE.shuntMaxPx, Math.abs(hit.dv.y) * crush.rollSlew);
+    side *
+    Math.min(
+      DRIVE.shuntMaxPx,
+      Math.max(DRIVE.separationPx, Math.abs(hit.dv.y) * crush.rollSlew),
+    );
   other.spin =
     side * Math.min(crush.maxRollSpin, lateralMs * crush.rollSpinPerMs);
   other.vz = Math.min(crush.maxRollLiftPx, lateralMs * crush.rollLiftPerMs);
   other.z = Math.max(other.z, 1);
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
-  other.pos.y += side * DRIVE.separationPx * 0.5;
 }
 
 /**
