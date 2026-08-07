@@ -49,3 +49,10 @@ sounds:
 
   # A banked powerup thrown away rather than spent.
   powerup.discard: ui_back
+
+  # VOICE CHAT: somebody silenced on the rail, and somebody let back in. Two
+  # moments rather than one because they are opposite answers, and a player who
+  # pressed a card wants to hear which one they just gave — the card's own
+  # colours have already changed by the time they look back at it.
+  voice.mute: ui_back
+  voice.unmute: ui_confirm

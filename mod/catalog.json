@@ -4718,11 +4718,31 @@
     "ui.keyHints": "flag",
     "ui.swipeBars": "flag",
     "ui.weaponMenuOpen": "flag",
-    "ui.wide": "flag"
+    "ui.wide": "flag",
+    "voice.fault": "text",
+    "voice.faulted": "flag",
+    "voice.level": "frac",
+    "voice.live": "flag",
+    "voice.speakerCount": "number",
+    "voice.transmitting": "flag"
+  },
+  "hudRowBindings": {
+    "speaker.level": "frac",
+    "speaker.muted": "flag",
+    "speaker.name": "text",
+    "speaker.peak": "frac",
+    "speaker.seat": "number",
+    "speaker.self": "flag",
+    "speaker.talking": "flag",
+    "speaker.unheard": "flag"
+  },
+  "hudRowWidgets": {
+    "voiceCards": "speaker"
   },
   "hudActions": [
     "driveResume",
     "driveSkip",
+    "muteSpeaker",
     "none",
     "openBag",
     "openCharacter",
@@ -4756,6 +4776,8 @@
     "trade.accept",
     "trade.ask",
     "trade.decline",
+    "voice.mute",
+    "voice.unmute",
     "weapon.switch"
   ],
   "hudSurfaces": [

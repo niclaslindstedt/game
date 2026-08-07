@@ -24,6 +24,8 @@ import {
   HUD_BINDINGS,
   HUD_EVENTS,
   HUD_REFS,
+  HUD_ROW_BINDINGS,
+  HUD_ROW_WIDGETS,
   HUD_SURFACES,
   HUD_WIDGETS,
   validateHudCatalog,
@@ -40,19 +42,32 @@ import {
   HUD_REGIONS,
   HUD_SCRIPTS,
 } from "../../pwa/src/generated/hud.ts";
-import { driveBindings, scriptState } from "../../pwa/src/game/hud/bindings.ts";
-import { HUD_WIDGET_NAMES } from "../../pwa/src/game/hud/widgets/names.ts";
+import {
+  driveBindings,
+  scriptState,
+  speakerBindings,
+  voiceBindings,
+} from "../../pwa/src/game/hud/bindings.ts";
+import {
+  HUD_ROW_WIDGET_NAMES,
+  HUD_WIDGET_NAMES,
+} from "../../pwa/src/game/hud/widgets/names.ts";
 import { mergeHud, SHIPPED_HUD } from "../../pwa/src/game/hud/layout.ts";
 import {
   resolveCondition,
   resolveContext,
   resolveLayout,
   resolveNode,
+  resolveRow,
 } from "../../pwa/src/game/hud/resolve.ts";
 import type {
   HudElementDef,
   HudNodeDef,
 } from "../../pwa/src/game/hud/types.ts";
+import type {
+  HudNodeView,
+  HudRegionView,
+} from "../../pwa/src/game/hud/resolve.ts";
 
 /** Every value the shipped HUD could ask for, with plausible answers — a stand
  * -in for a live run, so the resolver can be exercised without one. */
@@ -105,6 +120,59 @@ describe("the HUD's vocabulary", () => {
       id.startsWith("drive."),
     );
     expect(Object.keys(drive).sort()).toEqual(driveBindingIds.sort());
+  });
+
+  it("answers every VOICE binding the schema accepts", () => {
+    const voice = voiceBindings({
+      live: true,
+      transmitting: true,
+      level: 0.4,
+      speakerCount: 2,
+      fault: "",
+    });
+    const authored = Object.keys(HUD_BINDINGS).filter((id) =>
+      id.startsWith("voice."),
+    );
+    expect(Object.keys(voice).sort()).toEqual(authored.sort());
+    // …and OFF is a real answer rather than an absent one: an element that
+    // reads one of these on a solo run must get "no voice", not `undefined`.
+    const silent = voiceBindings(null);
+    expect(silent["voice.live"]).toBe(false);
+    expect(silent["voice.speakerCount"]).toBe(0);
+    expect(silent["voice.fault"]).toBe("");
+  });
+
+  it("answers every ROW binding the schema accepts", () => {
+    const row = speakerBindings({
+      seat: 2,
+      name: "ADA",
+      level: 0.3,
+      peak: 0.5,
+      muted: false,
+      unheard: false,
+      talking: true,
+      self: false,
+    });
+    expect(Object.keys(row).sort()).toEqual(
+      Object.keys(HUD_ROW_BINDINGS).sort(),
+    );
+    // Every row group the schema knows about is one some widget actually
+    // supplies — a group nothing publishes is a binding that would compile and
+    // then read empty for ever.
+    const supplied = new Set(Object.values(HUD_ROW_WIDGETS));
+    for (const id of Object.keys(HUD_ROW_BINDINGS)) {
+      expect(supplied.has(id.split(".")[0]!), id).toBe(true);
+    }
+    for (const widget of Object.keys(HUD_ROW_WIDGETS)) {
+      expect(HUD_WIDGETS.has(widget), widget).toBe(true);
+    }
+    // The RESOLVER's copy of that list is what stops the layout walking a row's
+    // template without a row. A widget the schema calls a list and the resolver
+    // does not is the drive-surface bug again: judgements called with an empty
+    // row, thrown, and disowned for the rest of the run.
+    expect([...HUD_ROW_WIDGET_NAMES].sort()).toEqual(
+      Object.keys(HUD_ROW_WIDGETS).sort(),
+    );
   });
 
   it("renders every widget the schema accepts", () => {
@@ -212,6 +280,65 @@ describe("the shipped HUD", () => {
           true,
         );
       });
+    }
+  });
+
+  it("leaves a list's template alone until it has a row", () => {
+    // THE BUG THIS PINS, and it is the drive surface's again in another shape:
+    // a resolve CALLS every judgement it walks past, and a voice card's are
+    // written against a speaker. Walking the card at RAIL level calls them with
+    // an empty row — which throws, and a thrown judgement is disowned for the
+    // rest of the run, so every card on the rail loses its colours for good.
+    const ctx = resolveContext(VALUES);
+    const tops = resolveLayout(HUD_REGIONS, HUD_ELEMENTS, ctx, "field");
+    const found: HudNodeView[] = [];
+    const visit = (children: HudRegionView["children"]) => {
+      for (const child of children) {
+        if ("region" in child) visit(child.region.children);
+        else if (child.element.def.widget === "voiceCards") {
+          found.push(child.element);
+        }
+      }
+    };
+    for (const top of tops) visit(top.children);
+    expect(found).toHaveLength(1);
+    expect(found[0]!.children).toEqual([]);
+
+    // …and the judgements it did not call still answer, per row.
+    const card = resolveNode(
+      found[0]!.def,
+      resolveRow(
+        VALUES,
+        speakerBindings({
+          seat: 0,
+          name: "ADA",
+          level: 0.9,
+          peak: 0.9,
+          muted: false,
+          unheard: false,
+          talking: true,
+          self: false,
+        }),
+      ),
+      true,
+    );
+    expect(card.children.length).toBeGreaterThan(0);
+    expect(card.className).toContain("voice-card");
+    expect(card.className).toContain("shouting");
+
+    // EVERY part the widget asks for by name is on that resolved card — the
+    // rail's own copy is empty by design, so a widget that reached for a part
+    // there (the fault notice did) would draw nothing at all.
+    const parts = card.children.map((child) => child.def.id);
+    for (const part of [
+      "name",
+      "wave",
+      "status",
+      "self_name",
+      "fault_title",
+      "fault_reason",
+    ]) {
+      expect(parts, part).toContain(part);
     }
   });
 
@@ -383,6 +510,87 @@ describe("resolving", () => {
     expect(view.trackColor).toBeDefined();
   });
 
+  it("resolves a row's parts against that row's own values", () => {
+    // The whole of what makes a LIST authorable: the same node, walked twice
+    // with a different speaker in scope, says two different things.
+    const card: HudNodeDef = {
+      kind: "text",
+      bind: "speaker.name",
+      color: { script: "voice.name_color" },
+    };
+    const quiet = resolveNode(
+      card,
+      resolveRow(
+        VALUES,
+        speakerBindings({
+          seat: 0,
+          name: "ADA",
+          level: 0.02,
+          peak: 0.02,
+          muted: false,
+          unheard: false,
+          talking: true,
+          self: false,
+        }),
+      ),
+    );
+    const loud = resolveNode(
+      card,
+      resolveRow(
+        VALUES,
+        speakerBindings({
+          seat: 1,
+          name: "RUTH",
+          level: 0.8,
+          peak: 0.8,
+          muted: false,
+          unheard: false,
+          talking: true,
+          self: false,
+        }),
+      ),
+    );
+    expect(quiet.text).toBe("ADA");
+    expect(loud.text).toBe("RUTH");
+    // …and the shipped ladder turns the shouting one's name hot.
+    expect(quiet.color).toBe("#e8ecf1");
+    expect(loud.color).toBe("#ffd75e");
+  });
+
+  it("gives the voice card's status line its shipped precedence", () => {
+    const status: HudNodeDef = {
+      kind: "text",
+      text: { script: "voice.status_text" },
+    };
+    const say = (row: Partial<Parameters<typeof speakerBindings>[0]>) =>
+      resolveNode(
+        status,
+        resolveRow(
+          VALUES,
+          speakerBindings({
+            seat: 0,
+            name: "ADA",
+            level: 0.2,
+            peak: 0.2,
+            muted: false,
+            unheard: false,
+            talking: true,
+            self: false,
+            ...row,
+          }),
+        ),
+      ).text;
+    // UNHEARD wins over everything: somebody IS talking and this machine cannot
+    // decode them, and silence would be indistinguishable from a mute.
+    expect(say({ unheard: true, muted: true })).toBe("CANNOT PLAY THIS VOICE");
+    expect(say({ muted: true })).toBe("MUTED");
+    expect(say({ peak: 0.01 })).toBe("WHISPERING");
+    expect(say({ peak: 0.9 })).toBe("SHOUTING");
+    // Ordinary speech says nothing — a card that is always captioned is a card
+    // nobody reads.
+    expect(say({})).toBe("");
+  });
+
   it("clamps a bar's fill to its track", () => {
     const over = resolveContext({ ...VALUES, "hud.hpFrac": 4 });
     expect(resolveNode({ kind: "bar", bind: "hud.hpFrac" }, over).value).toBe(
@@ -456,6 +664,47 @@ describe("a mod's HUD", () => {
     });
     expect(layout.scripts.vitals?.source).toBe("return {}");
     expect(layout.scripts.drive?.source).toBe(HUD_SCRIPTS.drive?.source);
+  });
+
+  it("refuses a row binding outside the list that supplies it", () => {
+    // A mod's `speaker.peak` on the gear row would print nothing for ever, so
+    // the compiler names the widget whose rows DO answer it rather than
+    // reporting a typo that is not there.
+    const refs = {
+      sprites: new Set<string>(),
+      sounds: new Set<string>(),
+      scripts: new Map<string, Set<string>>(),
+      regions: new Set(["gear"]),
+    };
+    const stray = validateHudElement(
+      {
+        id: "my_meter",
+        region: "gear",
+        order: 0,
+        kind: "text",
+        bind: "speaker.peak",
+      },
+      refs,
+    );
+    expect(stray.errors).toHaveLength(1);
+    expect(stray.errors[0]).toContain("only means something inside one ROW");
+    expect(stray.errors[0]).toContain("voiceCards");
+
+    // …and the same binding inside the row widget's own parts is fine, as is
+    // one on the widget node itself, which IS the row template.
+    const inRow = validateHudElement(
+      {
+        id: "my_cards",
+        region: "gear",
+        order: 0,
+        kind: "widget",
+        widget: "voiceCards",
+        classes: { hot: "speaker.talking" },
+        children: [{ id: "name", kind: "text", bind: "speaker.name" }],
+      },
+      refs,
+    );
+    expect(inRow.errors).toEqual([]);
   });
 
   it("survives a region whose parent chain loops", () => {

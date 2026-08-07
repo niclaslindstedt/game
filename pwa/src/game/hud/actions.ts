@@ -17,20 +17,37 @@
 import { fieldLive } from "../local-seat.ts";
 import type { HudContext } from "./context.ts";
 import { playHudPress } from "./sounds.ts";
-import type { HudPress } from "./types.ts";
+import type { HudEvent, HudPress } from "./types.ts";
 
 /** Run one authored press. Unknown verbs are impossible in the shipped tree
  * (the schema refuses them) and silent from a mod compiled against a newer
  * game — never a crashed frame in the middle of a fight. */
-export function runHudPress(press: HudPress, ctx: HudContext): void {
+export function runHudPress(
+  press: HudPress,
+  ctx: HudContext,
+  opts: {
+    /** The ROW this press was drawn in, for a press inside a list — a voice
+     * card's seat. */
+    arg?: string | number | boolean;
+    /** What this press sounds like when the content named no sound of its own,
+     * decided by the OUTCOME rather than by the button: muting somebody and
+     * letting them back in are one press and two answers, and the player wants
+     * to hear which one they gave. An authored `press.sound` still wins. */
+    event?: HudEvent;
+  } = {},
+): void {
   if (press.close) ctx.actions.toggleWeaponMenu?.(false);
   if (press.action !== "none") {
     // The verb is looked up by NAME, which is what lets a mod's own button
     // carry one. A screen that does not supply this verb (the road has no bag)
     // is a press that does nothing but make its noise.
-    ctx.actions[press.action]?.(press.arg);
+    //
+    // THE ROW WINS OVER THE AUTHORED ARGUMENT, and it has to: a press drawn
+    // once per speaker means the seat, and an author who typed one in would
+    // have every card muting the same person.
+    ctx.actions[press.action]?.(opts.arg ?? press.arg);
   }
-  playHudPress(press.sound);
+  playHudPress(press.sound, opts.event);
 }
 
 /**

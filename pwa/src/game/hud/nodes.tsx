@@ -24,7 +24,20 @@ import type { HudContext } from "./context.ts";
 import type { HudNodeView } from "./resolve.ts";
 import { renderWidget } from "./widgets/index.tsx";
 
-export function HudNode({ view, ctx }: { view: HudNodeView; ctx: HudContext }) {
+export function HudNode({
+  view,
+  ctx,
+  onPress,
+  canvasRef,
+}: {
+  view: HudNodeView;
+  ctx: HudContext;
+  /** A widget's own press, for a part drawn inside one — a card's button knows
+   * which row it is standing in, and the node does not. */
+  onPress?: () => void;
+  /** Where a `kind: canvas` part hands its node to whoever paints it. */
+  canvasRef?: (node: HTMLCanvasElement | null) => void;
+}) {
   if (!view.visible) return null;
   const def = view.def;
   const style = frameStyle(view.style, def.frame, ctx);
@@ -99,6 +112,24 @@ export function HudNode({ view, ctx }: { view: HudNodeView; ctx: HudContext }) {
       );
     }
 
+    // A CANVAS is a rectangle a widget PAINTS — the voice card's waveform is the
+    // first of them. Content owns where it sits, how big it is and what class it
+    // wears; the pixels are code's, because a strip redrawn thirty times a
+    // second is not a row of divs. It is drawn here only when something handed
+    // it a `ref` to paint through — a canvas nobody paints is an empty box, and
+    // a widget's own parts (`HudPart`) is where one gets its painter.
+    case "canvas":
+      return (
+        <canvas
+          className={view.className}
+          style={style}
+          width={def.width ?? 1}
+          height={def.height ?? 1}
+          ref={canvasRef}
+          aria-hidden="true"
+        />
+      );
+
     case "icon": {
       const src = view.sprite
         ? spriteDataUrl(ctx.assets.sprites, view.sprite)
@@ -138,6 +169,7 @@ export function HudNode({ view, ctx }: { view: HudNodeView; ctx: HudContext }) {
           style={style}
           aria-label={def.aria}
           onClick={() => {
+            if (onPress) return onPress();
             if (!def.press) return;
             if (!hudPressAllowed(def.press, ctx)) return;
             runHudPress(def.press, ctx);

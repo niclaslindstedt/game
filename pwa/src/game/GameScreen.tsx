@@ -108,7 +108,7 @@ import {
 } from "./game-screen/event-fx.ts";
 import { flushGoldPickups } from "./game-screen/gold-float.ts";
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
-import { hudBindings } from "./hud/bindings.ts";
+import { hudBindings, voiceBindings } from "./hud/bindings.ts";
 import { playHudEvent } from "./hud/sounds.ts";
 import { HudRoot } from "./hud/HudRoot.tsx";
 import type { HudContext } from "./hud/context.ts";
@@ -1614,13 +1614,26 @@ export function GameScreen({
             wide,
             autopilot: state.autopilot.active,
           },
-          values: hudBindings(hud, state, {
-            keyHints,
-            weaponMenuOpen,
-            swipeBars,
-            wide,
-            autopilot: state.autopilot.active,
-          }),
+          values: {
+            ...voiceBindings(
+              voiceLink
+                ? {
+                    live: voiceLink.live,
+                    transmitting: voiceLink.room.local.transmitting,
+                    level: voiceLink.room.local.level,
+                    speakerCount: voiceLink.room.speakers.length,
+                    fault: voiceLink.room.local.fault,
+                  }
+                : null,
+            ),
+            ...hudBindings(hud, state, {
+              keyHints,
+              weaponMenuOpen,
+              swipeBars,
+              wide,
+              autopilot: state.autopilot.active,
+            }),
+          },
           refs: {
             minimapCanvas: minimapRef,
             xpHeat: xpHeatRef,
@@ -1665,6 +1678,15 @@ export function GameScreen({
               setWeaponMenuOpen(
                 open === undefined ? !weaponMenuOpen : open === true,
               ),
+            // SILENCE ONE SPEAKER, locally and unsent — the voice rail's own
+            // press, whose seat comes from the card it was drawn on. Local and
+            // per-session: nothing is sent, the speaker is not told, and the
+            // mute dies with their seat (`room.forget`).
+            muteSpeaker: (seat) => {
+              const room = voiceLink?.room;
+              if (!room || typeof seat !== "number") return;
+              room.setMuted(seat, !room.muted(seat));
+            },
           },
           docks: {
             consumableSide,

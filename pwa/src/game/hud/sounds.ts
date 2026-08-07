@@ -48,8 +48,22 @@ export function playHudEvent(event: HudEvent): void {
   playHudSound(hudLayout().events[event]);
 }
 
-/** What a press sounds like: the sound the element named, or the generic HUD
- * press when it named none. */
-export function playHudPress(sound: string | undefined): void {
-  playHudSound(sound ?? hudLayout().events["hud.press"]);
+/**
+ * What a press sounds like: the sound the element named, or — when it named
+ * none — the moment its OUTCOME belongs to, falling back to the generic HUD
+ * press.
+ *
+ * The outcome matters for exactly one shape of button, and it is a shape the
+ * HUD will keep growing: one press with two answers (mute / unmute, follow /
+ * unfollow, pin / unpin). Authoring two sounds on one element could not express
+ * it, and hard-coding them in the widget is the thing this whole seam exists to
+ * prevent.
+ */
+export function playHudPress(
+  sound: string | undefined,
+  event: HudEvent = "hud.press",
+): void {
+  playHudSound(
+    sound ?? hudLayout().events[event] ?? hudLayout().events["hud.press"],
+  );
 }

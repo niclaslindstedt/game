@@ -36,6 +36,8 @@ import {
   HUD_ACTIONS,
   HUD_BINDINGS,
   HUD_EVENTS,
+  HUD_ROW_BINDINGS,
+  HUD_ROW_WIDGETS,
   HUD_SURFACES,
   HUD_WIDGETS,
 } from "../../scripts/asset-tools/hud-schema.mjs";
@@ -393,6 +395,14 @@ const catalog = {
   hudBindings: Object.fromEntries(
     Object.entries(HUD_BINDINGS).sort(([a], [b]) => a.localeCompare(b)),
   ),
+  // …and the ones that only mean anything inside ONE ROW of a list (a voice
+  // card's speaker), beside the widgets that supply them. Separated for the
+  // same reason the schema separates them: reading one anywhere else is a
+  // compile error, not a value.
+  hudRowBindings: Object.fromEntries(
+    Object.entries(HUD_ROW_BINDINGS).sort(([a], [b]) => a.localeCompare(b)),
+  ),
+  hudRowWidgets: HUD_ROW_WIDGETS,
   hudActions: sorted(HUD_ACTIONS),
   hudWidgets: sorted(HUD_WIDGETS),
   hudEvents: sorted(HUD_EVENTS),

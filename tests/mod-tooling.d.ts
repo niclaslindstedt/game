@@ -281,6 +281,12 @@ declare module "*/scripts/asset-tools/hud-schema.mjs" {
    * `number`, `sprite` or `text`. The last word on what a HUD file may SAY;
    * `tests/content/hud_catalog_test.ts` pins the app to it. */
   export const HUD_BINDINGS: Record<string, string>;
+  /** The bindings that only mean anything inside ONE ROW of a list — a voice
+   * card's own speaker. Reading one anywhere else is a compile error. */
+  export const HUD_ROW_BINDINGS: Record<string, string>;
+  /** Which widgets draw a list, and what one of their rows is called — the
+   * group name is also what decides where a row binding is legal. */
+  export const HUD_ROW_WIDGETS: Record<string, string>;
   export const HUD_SURFACES: Set<string>;
   export const HUD_ACTIONS: Set<string>;
   export const HUD_WIDGETS: Set<string>;
