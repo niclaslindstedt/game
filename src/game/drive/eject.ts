@@ -209,7 +209,7 @@ export function ejectRider(
 }
 
 /**
- * …AND EMPTY A CAR THROUGH ITS OWN WINDSCREEN.
+ * …AND EMPTY A CAR — through its own windscreen, or into its own upholstery.
  *
  * WHICH END THEY GO OUT OF is the same question `breakTrafficLamps` already
  * answers, and for the same reason. A struck car ACCELERATES; an unbelted
@@ -218,16 +218,38 @@ export function ejectRider(
  * windscreen — which is the sight worth having — and rear-end one and it is the
  * back window, which is also correct and which nobody had to write a second
  * rule for.
+ *
+ * AND THE ONES WHO DO NOT GO OUT DO NOT WALK AWAY. That is the half this had
+ * missing, and it made the road tell a strange lie: a car could be folded in
+ * half, rolled, and left dead in a lane with its passengers sitting neatly
+ * inside it because the geometry of the blow was two degrees off. Squareness
+ * decides HOW somebody leaves the car; the force decides WHETHER they survived
+ * it (`eject.killForce`), and those are two different questions that were being
+ * answered by one number. A seat that is killed rather than thrown raises
+ * `occupantKilled` and puts blood on the glass — which is the only way the road
+ * can show a death nobody saw happen.
+ *
+ * `forced` is passed by the write-off (`hurtTraffic`): a car whose structure has
+ * given up entirely is not keeping anybody, whatever the last blow's angle was.
  */
 export function ejectOccupants(
   drive: DriveState,
   other: DriveTraffic,
   hit: Impact,
   fromX: number,
+  forced = false,
 ): DriveRemain[] {
   if (other.occupants <= 0) return [];
   const force = wreckForce(other, hit.joules);
-  if (!ejects(other, hit, force)) return [];
+  const out = forced || ejects(other, hit, force);
+  if (!out) {
+    // NOT OPEN, BUT FATAL. Nobody comes through the glass — the blow was down
+    // the flank, or the car folded rather than opened — and everybody in it is
+    // still dead. It is the same body count either way; only the picture
+    // differs, and this is the picture.
+    if (force >= DRIVE.eject.killForce) killInside(drive, other, hit);
+    return [];
+  }
   const def = vehicleDef(other.variant);
   // The end that was struck, in world x — where the glass is.
   const side = fromX < other.pos.x ? -1 : 1;
@@ -263,7 +285,45 @@ export function ejectOccupants(
       ),
     );
   }
+  // …AND WHOEVER WAS IN THE BACK. The screen takes the front pair and the seats
+  // behind them are not in front of it, so a minivan does not empty itself
+  // through one hole — the rest of it is killed where it sits, by the same blow,
+  // on the same tally.
+  if (other.occupants > 0 && force >= DRIVE.eject.killForce) {
+    killInside(drive, other, hit);
+  }
   return pieces;
+}
+
+/**
+ * KILL WHOEVER IS LEFT IN THE CAR — the death this road could not previously
+ * show, because it happens behind glass and nothing comes out.
+ *
+ * SO THE GLASS IS WHAT SHOWS IT. `DriveTraffic.gore` is raised to full on the
+ * spot rather than laddered by how many died: one is enough to cover the inside
+ * of a windscreen, and a scale of redness that counted bodies would be a number
+ * the player cannot read off the picture anyway.
+ *
+ * GATED AT THE DECISION, NEVER AT THE DRAW — the umbrella rule the whole gore
+ * system obeys. With the run's dismemberment switches off the people in the car
+ * are just as dead and are counted just the same; the windows simply do not say
+ * so, exactly as a body outside the car is knocked down rather than opened.
+ */
+function killInside(drive: DriveState, other: DriveTraffic, hit: Impact): void {
+  if (other.occupants <= 0) return;
+  drive.bodies += other.occupants;
+  other.occupants = 0;
+  if (drive.params.gib || drive.params.split) {
+    other.gore = 1;
+    // Blood on the INSIDE of a window nobody can see through is not a picture.
+    // The glass goes with them.
+    other.glassOut = true;
+  }
+  drive.events.push({
+    type: "occupantKilled",
+    pos: { x: other.pos.x, y: other.pos.y },
+    joules: hit.joules,
+  });
 }
 
 /**
@@ -294,22 +354,36 @@ export function tearMachine(
   other: DriveTraffic,
   hit: Impact,
   force: number,
+  /**
+   * How many pieces, when the caller has already worked it out.
+   *
+   * A CAR sheds on its own ladder (`shedCount`, crush.ts — it only starts once
+   * the body has genuinely folded), and an OBLITERATED machine sheds on a
+   * multiple of the ordinary one. Left off, the ladder here is the two-wheeler's
+   * own, which is what every existing caller wants.
+   */
+  pieceCount?: number,
+  /** …and how much further and higher they go than an ordinary tear's. */
+  throwScale = 1,
 ): DriveRemain[] {
   const { debris, debrisReachPx, debrisLiftPx } = DRIVE.traffic;
   const dir = drive.params.direction;
   const carVx = dir * drive.car.speed;
   const seed =
     Math.abs(Math.round(other.pos.x * 11 + other.pos.y * 5)) + other.id;
-  const count = Math.min(
-    debris.max,
-    Math.round(debris.base + debris.perForce * Math.max(0, force)),
-  );
+  const count =
+    pieceCount ??
+    Math.min(
+      debris.max,
+      Math.round(debris.base + debris.perForce * Math.max(0, force)),
+    );
   const pieces: DriveRemain[] = [];
   for (let i = 0; i < count; i++) {
     const spread = (hash(seed, 17 + i) - 0.5) * 2.4;
     const reach =
       (debrisReachPx.base + debrisReachPx.perForce * force) *
-      (0.4 + 0.6 * hash(seed, 29 + i));
+      (0.4 + 0.6 * hash(seed, 29 + i)) *
+      throwScale;
     pieces.push({
       id: drive.nextId++,
       kind: "rider",
@@ -325,7 +399,8 @@ export function tearMachine(
       z: 3,
       vz:
         (debrisLiftPx.base + debrisLiftPx.perForce * force) *
-        (0.35 + 0.65 * hash(seed, 53 + i)),
+        (0.35 + 0.65 * hash(seed, 53 + i)) *
+        throwScale,
       angle: hash(seed, 59 + i) * Math.PI * 2,
       spin: (hash(seed, 61 + i) < 0.5 ? -1 : 1) * (5 + force * 3),
       dragMs: 0,

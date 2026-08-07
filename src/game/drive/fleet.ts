@@ -16,7 +16,7 @@
 // own speed band and its own share of the traffic, and everything the collision
 // does with it falls out of those rather than out of a branch on its id.
 //
-// THREE FACTS EACH DEF SETTLES, and each of them buys something the road could
+// FOUR FACTS EACH DEF SETTLES, and each of them buys something the road could
 // not do before:
 //
 //   WHAT IT WEIGHS      — a scooter is shoved out of the way and barely slows
@@ -32,6 +32,11 @@
 //                         (`drive/eject.ts`). One field each, and the two
 //                         behaviours are genuinely different rather than one
 //                         drawn twice.
+//   HOW IT CARRIES IT   — `topHeavy`, the one thing about a body's shape that
+//                         mass and width cannot say. It decides whether a
+//                         sideways shove ends with the vehicle sliding or with
+//                         it upside down, which is why a van goes over and a
+//                         sports car of the same weight does not.
 //
 // THE ORDER OF THIS TABLE IS `DriveTraffic.variant`, and the app's sprite table
 // (`TRAFFIC_SPRITES`, pwa/src/game/drive-screen/scenery.ts) is the same order.
@@ -128,6 +133,27 @@ export type DriveVehicleDef = {
    * through people is what these actually do.
    */
   pavement: boolean;
+  /**
+   * HOW EASILY IT GOES OVER — 1 is an ordinary saloon, above 1 tips sooner,
+   * below 1 slides instead.
+   *
+   * It is the one fact about a vehicle's SHAPE that the collision needs and
+   * cannot get from the three numbers above. Mass, width and length say nothing
+   * about how high the weight is carried, and how high the weight is carried is
+   * the whole of whether a sideways shove turns into a roll: a box van and a
+   * sports car of identical mass answer the same clip completely differently,
+   * and everybody watching knows which is which before it happens.
+   *
+   * It is deliberately NOT derived from `class`. The class is about how a hit
+   * is ANSWERED (shunted, or knocked down); this is about the body's own
+   * proportions, and the two disagree exactly where it is interesting — a bus
+   * is `heavy` and desperately top-heavy, while a box truck is `heavy` and so
+   * hard to budge that it will never see the Δv it would need.
+   *
+   * An `open` vehicle carries 0: it does not tip, it goes down, and it does
+   * that at the first contact by an entirely different rule (`knockDown`).
+   */
+  topHeavy: number;
 };
 
 /**
@@ -153,6 +179,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 1,
   },
   {
     id: "traffic_hatch",
@@ -165,6 +192,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 1,
   },
   {
     id: "traffic_estate",
@@ -177,6 +205,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 1.05,
   },
   {
     id: "traffic_coupe",
@@ -189,6 +218,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 0.8,
   },
   {
     id: "traffic_sports",
@@ -201,6 +231,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 0.65,
   },
   {
     id: "traffic_convertible",
@@ -217,6 +248,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 0.75,
   },
   {
     id: "traffic_suv",
@@ -229,6 +261,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 1.45,
   },
   {
     id: "traffic_pickup",
@@ -241,6 +274,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 1.35,
   },
   {
     id: "traffic_minivan",
@@ -253,6 +287,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 3,
     pavement: false,
+    topHeavy: 1.4,
   },
   {
     id: "traffic_taxi",
@@ -265,6 +300,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 1,
   },
   {
     id: "traffic_police",
@@ -277,6 +313,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 0.95,
   },
   {
     id: "traffic_electric",
@@ -289,6 +326,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 0.7,
   },
 
   // ── THE HEAVY STUFF ───────────────────────────────────────────────────────
@@ -303,6 +341,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 1.5,
   },
   {
     id: "traffic_ambulance",
@@ -315,6 +354,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    topHeavy: 1.6,
   },
   {
     id: "traffic_box_truck",
@@ -327,6 +367,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    topHeavy: 1.7,
   },
   {
     id: "traffic_bus",
@@ -340,6 +381,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     // Empty, and the sprite's own description says so. The route was cut.
     occupants: 0,
     pavement: false,
+    topHeavy: 1.75,
   },
 
   // ── TWO WHEELS AND SOMEBODY ON THEM ───────────────────────────────────────
@@ -354,6 +396,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 0,
     occupants: 0,
     pavement: false,
+    topHeavy: 0,
   },
   {
     id: "traffic_scooter",
@@ -366,6 +409,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 1,
     occupants: 0,
     pavement: false,
+    topHeavy: 0,
   },
   {
     id: "traffic_ebike",
@@ -378,6 +422,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 2,
     occupants: 0,
     pavement: true,
+    topHeavy: 0,
   },
   {
     id: "traffic_bicycle",
@@ -397,6 +442,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 4,
     occupants: 0,
     pavement: false,
+    topHeavy: 0,
   },
   {
     id: "traffic_skateboard",
@@ -413,6 +459,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 5,
     occupants: 0,
     pavement: true,
+    topHeavy: 0,
   },
   {
     id: "traffic_delivery_moped",
@@ -429,6 +476,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 3,
     occupants: 0,
     pavement: true,
+    topHeavy: 0,
   },
 ] as const;
 

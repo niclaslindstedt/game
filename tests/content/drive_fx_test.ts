@@ -49,6 +49,7 @@ import {
   HARD_BODY_SOUNDS,
   SCRAPE_SOUNDS,
   SHED_SOUND,
+  SMASH_SOUNDS,
 } from "../../pwa/src/game/drive-screen/drive-sounds.ts";
 import {
   clearDriveFx,
@@ -78,6 +79,7 @@ describe("the road's sound banks", () => {
     expect(HARD_BODY_SOUNDS.length).toBeGreaterThan(1);
     expect(SCRAPE_SOUNDS.length).toBeGreaterThan(1);
     expect(CRUNCH_SOUNDS.length).toBeGreaterThan(1);
+    expect(SMASH_SOUNDS.length).toBeGreaterThan(1);
     // …and the two that fire once a leg do not need one.
     expect(GENERATED_SOUNDS[SHED_SOUND]).toBeDefined();
     expect(GENERATED_SOUNDS[BREAKDOWN_SOUND]).toBeDefined();
@@ -123,10 +125,34 @@ describe("the road's sound banks", () => {
 
     // A CAREFUL DRIVER, at forty percent of the top end.
     expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(0.4)));
-    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.4)));
+    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.4)).id);
     // …and one holding the throttle down.
     expect(HARD_BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(1)));
-    expect(CRUNCH_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(1)));
+    expect(CRUNCH_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.8)).id);
+
+    // …AND THE TOP SHELF, which is the one that had to exist: there was NO
+    // shelf above the crunch, so a clip that cost some paint and a square
+    // head-on into a stopped car that folded both of them played the identical
+    // 260 ms sample. That identity was the whole of "the sound is way too small
+    // for big crashes". Both of these reach it — a rear-ender at the top of the
+    // dial closes at eighty-odd, and a stopped car is met at the whole 120.
+    const parkedAt = (frac: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx * frac,
+        { x: 30, y: 0 },
+        { x: 0, y: 0 },
+        CAR.footprint.radius,
+        vehicleDef(0).massKg * mass.vehicleMult,
+      )?.joules ?? 0;
+    const big = trafficHitSound(10, 4, parkedAt(1));
+    expect(SMASH_SOUNDS).toContain(big.id);
+    expect(SMASH_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(1)).id);
+    // …and it asks for the sub to be laid under it, which is the half of
+    // "bigger" that turning a synthesized crunch up cannot buy.
+    expect(big.sub).toBe(true);
+    expect(trafficHitSound(10, 4, vanAt(0.4)).sub).toBe(false);
   });
 
   it("picks the same take for the same spot, and different ones across the road", () => {

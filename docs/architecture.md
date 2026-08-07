@@ -861,9 +861,28 @@ escort.ts` walks the people an escort errand puts on the field, and
   `open` vehicle (a motorcycle, a moped, a bicycle, a board — anything with
   somebody riding it in the weather) is not shunted at all: it goes DOWN, and
   past `snapForce` it stops being a vehicle and becomes two large halves of its
-  own picture. The delivery trade rides the PAVEMENT and weaves across the kerb,
-  which is the one change that alters the shape of the minigame rather than its
-  furniture — the gutter used to be the safe line.
+  own picture — with a second line past that (`obliterateForce`) where the
+  halves are joined by a cloud of the machine's own steel. The delivery trade
+  rides the PAVEMENT and weaves across the kerb, which is the one change that
+  alters the shape of the minigame rather than its furniture — the gutter used
+  to be the safe line.
+  WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
+  answers rather than one. The shunt used to BE the answer — a struck car slid
+  sideways out of its lane and that was the event, which is why a head-on and a
+  nudge read as the same thing at two speeds. Now: it FOLDS (a crumple zone eats
+  energy over a distance, so the depth an end loses is the absorbed energy over
+  the force that structure holds with, which goes with its mass — and the fold
+  is kept per END, so a rear-ended car is short at the back and straight at the
+  front); its GLASS goes, at a fraction of the energy the body needs to bend; it
+  SPINS, because an impulse that misses the centre of mass is a torque and the
+  contact point is already solved; it is PUNTED bodily up the road, which is
+  `impulse / massKg` and the single biggest reason weight is now legible; and
+  past a lateral Δv its own shape cannot hold (`DriveVehicleDef.topHeavy`) it
+  goes OVER — a rolling estate reusing the same ballistics a dropped bicycle
+  always did. A sideswipe is no longer free either: `solveImpact` absorbs a
+  share of the TANGENTIAL energy for anything with bodywork
+  (`impact.scrapeFriction`), because two cars grinding down each other's flanks
+  at 120 booking exactly zero joules was the model's one silent hole.
   WHO LEAVES A VEHICLE, AND HOW, is `eject.ts`, and it is two populations rather
   than one. A RIDER sits in the open on something lighter than they are: nothing
   holds them on, so any real contact takes them off it, and the only question is
@@ -871,7 +890,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   out, so it takes a SQUARE blow rather than merely a hard one — which is the
   single condition that makes the sight legible instead of random, and a player
   learns inside three collisions that hitting a car head-on empties it and that
-  clipping the same car does not. Either way what leaves becomes an ordinary
+  clipping the same car does not. But squareness decides HOW somebody leaves,
+  never WHETHER they survived: past `eject.killForce` the ones the geometry will
+  not post through the screen die where they sit, which the road shows the only
+  way it can — blood on the windows (`DriveTraffic.gore`, the derived
+  `<sprite>_gore` overlay). Either way what leaves becomes an ordinary
   `DrivePedestrian` of `kind: "rider"`, so it is counted, caught by the wheels,
   bled onto the tarmac and cut out of its own art by every system already on the
   road, none of which had to learn that riders exist.

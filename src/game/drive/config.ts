@@ -546,6 +546,16 @@ export const DRIVE = {
      * to read his own bonnet can read a stranger's.
      */
     rungs: [0.25, 0.52, 0.8],
+    /**
+     * HOW FAST A SHOVED CAR GETS BACK ON ITS PACE (1/s).
+     *
+     * Slow enough that the punt is a thing the player watches happen — the car
+     * he just rear-ended visibly runs away from him for the better part of two
+     * seconds — and fast enough that the road is not left full of vehicles
+     * travelling at speeds nobody chose. A WRECK never reads it: nobody is
+     * driving a wreck, which is why it coasts to a halt instead.
+     */
+    recoverPerSec: 0.8,
     /** How fast a wrecked vehicle sheds its speed once the engine has died
      * (1/s), and the speed under which it has stopped for good — at which point
      * it is a stationary obstacle in a live lane, which is the whole payoff. */
@@ -582,8 +592,33 @@ export const DRIVE = {
      * ladder is the whole of "it's a big difference in weight" and not one rung
      * of it is written down anywhere — it falls out of `wreckForce` dividing by
      * the mass in the def.
+     *
+     * IT WAS 2.2 AND THAT WAS A NUMBER NOTHING COULD REACH. Measured against
+     * `solveImpact`'s own answers on MEDIUM, a 210 kg motorcycle met DEAD
+     * SQUARE AT THE FULL 120 comes out at 1.6 wrecks and a delivery moped at
+     * 1.7 — so the two most common machines on this road could not be broken in
+     * half by the hardest blow the minigame is capable of, and every one of
+     * them politely lay down and slid instead. The reasoning above was right
+     * and the arithmetic under it was not. At 0.35 a moped is in two pieces
+     * from about 55 mph, which is what a car meeting a moped is; the bicycle
+     * and the skateboard still clear it on contact, and the bus would still
+     * need thirty fatal collisions and will never see one.
      */
-    snapForce: 2.2,
+    snapForce: 0.35,
+    /**
+     * …AND PAST THIS MUCH, IT IS NOT WRECKAGE — IT IS A CLOUD.
+     *
+     * The top of the same ladder, and the difference between "broken in half"
+     * and what the request asked for by name: a machine met at speed does not
+     * leave two identifiable halves lying in a lane, it leaves a shower of
+     * itself down fifty metres of tarmac. The halves still go (they are the
+     * silhouette that says WHAT was destroyed), but the debris count, the
+     * spread and the lift are all opened right up.
+     */
+    obliterateForce: 1.2,
+    /** What the debris ladder is multiplied by once a machine has been
+     * obliterated rather than merely snapped — pieces, reach and lift alike. */
+    obliterateScale: 2.2,
     /** How much of the closing speed the FRONT half leaves with, against the
      * back half's — the front is what the bumper is actually pushing, so it
      * goes up the road while the back end is left behind to cartwheel. */
@@ -603,6 +638,132 @@ export const DRIVE = {
     debrisLiftPx: { base: 150, perForce: 130 },
     /** …and how much of a bounce it keeps when it lands. */
     debrisBounce: 0.34,
+  },
+
+  // ── BREAKING A VEHICLE, PHYSICALLY ────────────────────────────────────────
+  /**
+   * HOW A CAR BENDS, WHERE ITS GLASS GOES, AND WHAT PUTS IT ON ITS ROOF.
+   *
+   * The damage rungs above are a LADDER OF PICTURES: three derived looks a
+   * vehicle climbs as it absorbs energy, which is exactly right for "this thing
+   * has been hit a lot" and says nothing at all about one collision. What this
+   * block is, is the collision itself — the three things that happen to a
+   * structure when something arrives at it, each solved rather than staged:
+   *
+   *   IT FOLDS      A crumple zone is a spring that does not come back: it eats
+   *                 energy over a DISTANCE. So the depth an end folds in is the
+   *                 absorbed energy over the force the structure can hold, and
+   *                 the force a structure can hold goes with its mass. A hatch
+   *                 met square at the top end folds four metres, which is more
+   *                 hatchback than there is — and that is the correct answer,
+   *                 clamped to the end that is doing the folding.
+   *   ITS GLASS GOES  Glass is not structure. It is out long before the body has
+   *                 finished bending, which is why it has a line of its own well
+   *                 under the first damage rung.
+   *   IT GOES OVER  A wheeled thing tips when the sideways shove at its centre
+   *                 of mass beats what the outside wheels can hold it down with.
+   *                 That is a Δv threshold, and the whole of why an estate rolls
+   *                 and a low sports car slides: it is scaled by the vehicle's
+   *                 own `topHeavy` (`fleet.ts`) and by nothing else.
+   */
+  crush: {
+    /**
+     * WHAT A STRUCTURE HOLDS BACK WITH, in newtons per kg of vehicle.
+     *
+     * Real, and worth keeping real because it is what makes the depths land in
+     * the right place: a 1400 kg car absorbs its 50 km/h barrier crash — about
+     * 135 kJ — in roughly half a metre of nose, which is 270 kN, which is this
+     * number times its mass. So a bus resists nine times as hard as a saloon
+     * for the same reason it weighs nine times as much, and neither had to be
+     * told.
+     */
+    forceNPerKg: 190,
+    /**
+     * …AND THE MOST OF ONE END THAT CAN GO, as a share of its half-length.
+     *
+     * Something has to stop the sum, because the physics genuinely says a car
+     * met at 120 folds past its own windscreen. Past this the vehicle is not
+     * bending any more, it is being written off — which the wear ladder is
+     * already saying at the same moment.
+     */
+    maxShare: 0.62,
+    /**
+     * HOW MUCH OF A FOLDED END THE RENDERER ACTUALLY TAKES OUT, as a share of
+     * the crush depth.
+     *
+     * A view knob and honest about it: the depth is solved in world px and the
+     * art is 32 px of car, so a metre of fold is a third of the vehicle gone.
+     * That reads as a car being eaten rather than a car being crumpled, and the
+     * eye reads a shortened, tilted end as "folded" at a fraction of the true
+     * distance. The DAMAGE is the physics' own; this is how much of it is drawn.
+     */
+    drawShare: 0.8,
+    /** Absorbed energy that takes the glass out, in the vehicle's own wrecks
+     * (`wreckForce`). Well under the first damage rung: the windows are the
+     * first thing to go in any collision worth the name. */
+    glassForce: 0.1,
+    /**
+     * HOW HARD A SIDEWAYS SHOVE HAS TO BE TO PUT A VEHICLE OVER (m/s of lateral
+     * Δv, for a vehicle of `topHeavy` 1).
+     *
+     * The one number in this block picked by feel rather than derived, and the
+     * feel it is picked for is scarcity: a rollover is the biggest thing that
+     * happens on this road and it has to stay the thing that happens when the
+     * hero really means it. At 7 m/s a hatchback clipped square across the
+     * flank at the top end goes over, a shunt at half speed does not, and the
+     * bus never does — its Δv is its impulse over twelve tonnes.
+     *
+     * MEASURED against the model's own answers rather than picked: a full-flank
+     * clip at 120 hands a hatchback 36 m/s of lateral Δv, the same clip at 72
+     * hands it 22, and a bus 7. So at 25 an ordinary car goes over when it is
+     * caught hard at the top end, a tall one (`topHeavy` 1.4–1.6) goes over a
+     * little sooner, a low sports car never does, and nothing on this road can
+     * roll a bus or a box truck — which is the whole point of them.
+     */
+    tipMs: 25,
+    /** How much of its lateral Δv a rolling vehicle actually leaves with —
+     * held to the shunt's own ceiling on top of this, so the biggest thing on
+     * the road takes long enough crossing it to be watched. */
+    rollSlew: 0.25,
+    /** How fast a rolling vehicle turns over (rad/s per m/s of the Δv that put
+     * it over), and how hard it is thrown into the air (px/s per m/s). */
+    rollSpinPerMs: 0.5,
+    rollLiftPerMs: 9,
+    /** …and the most of either, because a car that has been met by the bumper
+     * of another car leaves the ground — it does not leave the frame. */
+    maxRollSpin: 6,
+    maxRollLiftPx: 120,
+    /**
+     * HOW MUCH OF THE ALONG-ROAD SHOVE A STRUCK VEHICLE ACTUALLY KEEPS.
+     *
+     * The momentum sum is the momentum sum, and it is applied whole. What this
+     * scales is the fact that a car is not a hockey puck: it is on wheels
+     * pointing the way it was going, and a shove up the road is partly spent
+     * scrubbing tyres rather than accelerating it. Under 1, so the wagon still
+     * closes on what it hit and can hit it again — which is the whole shape of
+     * bullying a car down the road in front of you.
+     */
+    punt: 0.7,
+    /** How much YAW a shove off the vehicle's centre puts on it (rad/s per m/s
+     * of Δv, at a full half-length of lever arm). A blow dead in the middle
+     * spins nothing; one on the corner spins it out, which is the thing every
+     * player who has ever seen a police video expects to happen. */
+    yawPerMs: 0.42,
+    /** …and the most one blow can add, so a corner clip is a spin rather than a
+     * top. A car turning faster than this is one that is off its wheels, and
+     * that is `tipMs`'s question. */
+    maxYawSpin: 3.4,
+    /** How fast a spun-out car's yaw bleeds off (1/s), and the rate under which
+     * it is straight again. */
+    yawDampPerSec: 1.1,
+    yawRestRad: 0.25,
+    /** How many pieces a CAR sheds when it folds — a car coming apart throws
+     * bumper, trim and glass down the road, and it is the same `tearMachine`
+     * the two-wheelers use, cut out of the car's own art. Per unit of force,
+     * capped, and it only starts once the thing has genuinely folded. */
+    shedForce: 0.3,
+    shedPerForce: 2.2,
+    shedMax: 7,
   },
 
   // ── THROWING PEOPLE OUT OF VEHICLES ───────────────────────────────────────
@@ -625,7 +786,23 @@ export const DRIVE = {
   eject: {
     /** How square a blow has to be (0 abeam → 1 dead on the nose) before
      * anybody comes out through a windscreen. */
-    squareness: 0.62,
+    squareness: 0.52,
+    /**
+     * …AND WHAT KILLS THE ONES WHO DO NOT GET OUT, in the vehicle's own wrecks.
+     *
+     * THE OTHER HALF OF THE SAME QUESTION, and until it existed the road only
+     * had the happy answer. A car folded up around the people in it is a car
+     * that killed them; whether the blow happened to be square enough to post
+     * one of them through the screen is a fact about the GEOMETRY, not about
+     * whether anybody survived. So a hit this hard settles both seats: square
+     * enough and they leave through the glass, and otherwise they die in them —
+     * and what the road gets to see of that is the windows
+     * (`DriveTraffic.gore`).
+     *
+     * Under the wreck line rather than at it, because a car does not have to be
+     * finished to be fatal — it has to be hit properly once.
+     */
+    killForce: 0.7,
     /** …and how much absorbed energy, as a fraction of `traffic.wreckJoules`.
      * Both conditions, not either: a hard sideswipe leaves everybody in their
      * seats, which is what a hard sideswipe does. */
@@ -701,6 +878,24 @@ export const DRIVE = {
      * saves. The RATIOS are the physics; this is the volume knob.
      */
     speedLossScale: 1.6,
+    /**
+     * HOW MUCH OF A SIDESWIPE IS ABSORBED — the share of the TANGENTIAL energy
+     * two things with bodywork grind out of each other.
+     *
+     * The complaint this answers, in one number. The collision was a purely
+     * NORMAL sum, and a sideswipe's normal runs across the road, which the car
+     * is not closing along — so two cars could grind down each other's entire
+     * length at the top of the dial and the model booked nothing: no energy, no
+     * damage, no noise, no mark. The struck car slid neatly aside and that was
+     * the whole event.
+     *
+     * At 0.12 a full-length clip at 120 costs the hero about a ninth of his
+     * wagon and takes the other car's glass out — plainly an event — while
+     * still costing a fifth of what centring the same car does, which keeps the
+     * ordering the whole minigame teaches. Only things with PANELS pay it: see
+     * `solveImpact`'s `scrape` parameter for why flesh does not.
+     */
+    scrapeFriction: 0.12,
     /**
      * How much of the car's own speed a struck body carries away along the
      * road, on top of the impulse it takes square in the chest. A person hit at

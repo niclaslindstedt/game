@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_rollover
+description: >-
+  A car going over — the longest sound on this road, and the only one that
+  is a SEQUENCE rather than an event. A rollover is not an impact: it is a
+  vehicle leaving the ground, coming down on a corner, and then grinding
+  along the tarmac on its roof for the better part of a second. So the
+  layers are laid out in TIME rather than stacked on the same instant — the
+  launch, the first corner landing a beat later, and a long scraping roar
+  under both of them that outlasts them and is what actually says the thing
+  is still going.
+voices:
+  # THE LAUNCH — the suspension letting go and the body leaving the road.
+  - call: tone
+    type: sawtooth
+    from: 180
+    to: 44
+    durationMs: 280
+    volume: 0.078
+    detuneCents: 30
+  - call: tone
+    type: sine
+    from: 70
+    to: 24
+    durationMs: 700
+    volume: 0.095
+  # THE FIRST CORNER DOWN, a beat later. This is the one the eye is waiting
+  # for, so it is the hardest transient in the sound.
+  - call: noise
+    durationMs: 110
+    volume: 0.058
+    delayMs: 190
+    filter:
+      type: bandpass
+      frequency: 900
+  # …AND THE GRIND. Long, low and rough — a roof on tarmac, still going after
+  # everything above it has stopped.
+  - call: noise
+    durationMs: 820
+    volume: 0.05
+    delayMs: 210
+    filter:
+      type: lowpass
+      frequency: 420
+    echo: 0.34
+  - call: noise
+    durationMs: 620
+    volume: 0.024
+    delayMs: 300
+    filter:
+      type: highpass
+      frequency: 3800

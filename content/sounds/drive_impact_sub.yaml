@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_impact_sub
+description: >-
+  THE WEIGHT UNDER A BIG HIT — a bare sub-bass drop with no transient of its
+  own, layered underneath whatever else the collision is playing.
+  It exists because a bank cannot be made bigger by turning it up: the mix
+  has a ceiling and a synthesized crunch hits it long before it sounds
+  heavy. What the ear actually reads as SIZE is energy below about 60 Hz and
+  a tail that outlasts the crack, and neither of those fits inside a sound
+  that also has to be a crack. So the biggest events on this road play their
+  own noise AND this, and the pair is what a lorry-sized collision sounds
+  like. Alone it is almost nothing — which is the test that it is doing its
+  job as a layer rather than as a sound.
+voices:
+  - call: tone
+    type: sine
+    from: 62
+    to: 19
+    durationMs: 760
+    volume: 0.11
+  - call: noise
+    durationMs: 700
+    volume: 0.038
+    filter:
+      type: lowpass
+      frequency: 120
+    echo: 0.3

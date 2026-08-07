@@ -41,6 +41,7 @@ import {
   driveBreakdown,
   driveLampGlass,
   drivePartHit,
+  driveSmash,
   driveTrafficHit,
   type DriveFxState,
 } from "./drive-fx.ts";
@@ -51,10 +52,15 @@ import {
   crushSound,
   DEBRIS_SOUND,
   DRAG_SOUND,
+  glassSound,
   lampHitSound,
   panelSound,
+  pickSmash,
+  ROLLOVER_SOUND,
   SHED_SOUND,
+  SMASH_SOUNDS,
   splitSound,
+  SUB_SOUND,
   trafficHitSound,
 } from "./drive-sounds.ts";
 import { soakCarFromStrike } from "./car-soak.ts";
@@ -248,11 +254,41 @@ export function drainDrive(
       playDriveSound(synth, DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
-      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(
-        synth,
-        trafficHitSound(event.pos.x, event.pos.y, event.joules),
-      );
+      const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
+      // PAST THE TOP SHELF IT IS NOT A HIT, IT IS A CRASH: the big bank, the
+      // frame's own ceiling, and the sub laid underneath it. Nothing here
+      // decides how hard it was — the shelf is picked off the collision's own
+      // joules, same as the two under it.
+      if (hit.sub) {
+        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+        playDriveSound(synth, SUB_SOUND);
+      } else {
+        driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      }
+      playDriveSound(synth, hit.id);
+    }
+    // A CAR'S WINDOWS LEAVING IT, with nobody through them. Its own beat, and
+    // played OVER whatever else the collision made: the crunch is the steel and
+    // this is the glass, and they are one event.
+    if (event.type === "glassSmashed") {
+      driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
+      playDriveSound(synth, glassSound(event.pos.x, event.pos.y));
+    }
+    // SOMEBODY DIED IN THEIR SEAT — the death this road cannot show in the air,
+    // so it shows it on the windows (`DriveTraffic.gore`). The noise is the
+    // body's own wet tear under the glass rather than a bank of its own: what
+    // happened is a person, and the player has already learnt that sound.
+    if (event.type === "occupantKilled") {
+      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
+      playDriveSound(synth, glassSound(event.pos.x, event.pos.y));
+    }
+    // …AND A CAR GOING OVER. The longest sound and the biggest shove on this
+    // road, and the only collision outcome the player cannot mistake for
+    // another one.
+    if (event.type === "trafficRolled") {
+      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, ROLLOVER_SOUND);
+      playDriveSound(synth, SUB_SOUND);
     }
     // A CAR VISIBLY FOLDING UP — the same panel noise the hero's own wagon
     // makes, because it is the same event happening to somebody else's car.
@@ -266,6 +302,13 @@ export function drainDrive(
     // the player knows it as the sound of an engine dying, and this is one.
     if (event.type === "trafficWrecked") {
       driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
+      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      // THREE AT ONCE, because a car being finished is three things happening:
+      // the structure going (the big bank), the mass of it (the sub), and the
+      // engine dying under all of it (the noise the player already knows as
+      // exactly that, off his own bonnet).
+      playDriveSound(synth, SMASH_SOUNDS[0]);
+      playDriveSound(synth, SUB_SOUND);
       playDriveSound(synth, BREAKDOWN_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
@@ -274,16 +317,20 @@ export function drainDrive(
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       playDriveSound(
         synth,
-        trafficHitSound(event.pos.x, event.pos.y, event.joules),
+        trafficHitSound(event.pos.x, event.pos.y, event.joules).id,
       );
     }
-    // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the heavy
-    // shelf, whatever the joules say: a machine breaking in half has no gentle
-    // version to play.
+    // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the BIG shelf,
+    // whatever the joules say: a machine breaking in half has no gentle version
+    // to play, and the joules of a 30 kg bicycle never will reach the line on
+    // their own however completely it has been destroyed. That is the one place
+    // on this road where the shelf is picked off WHAT HAPPENED rather than off
+    // the energy — and it is right, because what happened is total.
     if (event.type === "machineSnapped") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, pickSmash(event.pos.x, event.pos.y));
+      playDriveSound(synth, SUB_SOUND);
     }
     // THE SCREEN GOING OUT, with somebody through it. The glass burst is the
     // lamp's own — a lens leaving a fitting and a windscreen leaving a frame
