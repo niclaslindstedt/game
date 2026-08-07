@@ -52,6 +52,7 @@ import { createWearTrail, driveDials, sameDials } from "./dials.ts";
 import { driveBindings, type DriveDials } from "../hud/bindings.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import type { HudContext } from "../hud/context.ts";
+import { DriveIntro } from "./DriveIntro.tsx";
 import { DrivePause } from "./DrivePause.tsx";
 import {
   DriveScores,
@@ -234,6 +235,23 @@ export function DriveScreen({
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [paused, setPaused] = useState(false);
   /**
+   * THE TITLE CARD, up until it isn't (`DriveIntro.tsx`) — "ROAD TO GOODCO"
+   * over the black the garage's dim handed across.
+   *
+   * It HOLDS the road, exactly as the pause card and the board do: the fixed
+   * step below breaks on it, so the first crowd of the leg is not walked into
+   * during a title card.
+   *
+   * NOBODY'S THUMB, NO CARD. An `auto` road — the title-screen attract loop, a
+   * `?bot=` playtest, a screenshot recipe — is not somebody arriving at a
+   * minigame, and every one of those wants the road itself in the first frame.
+   * (It is safe either way: the card times out on its own, so this is about
+   * what those surfaces should LOOK like rather than about getting them
+   * unstuck.) Mirrored onto a ref for the loop, which must not re-bind on it.
+   */
+  const [intro, setIntro] = useState(!auto);
+  const introRef = useRef(!auto);
+  /**
    * THE CABINET'S BOARD, once the road is behind him — the leg's score, where it
    * landed, and the board it landed on (`DriveScores.tsx`).
    *
@@ -324,6 +342,14 @@ export function DriveScreen({
     setPaused(on);
   }, []);
 
+  /** The card has had its beat (or its tap): let the road run. Idempotent — the
+   * timer and the touch both call it, and the loser must not restart anything. */
+  const endIntro = useCallback(() => {
+    if (!introRef.current) return;
+    introRef.current = false;
+    setIntro(false);
+  }, []);
+
   /** Every control let go of at once — the accelerator, the wheel, both hands.
    * What a lost window leaves behind (see below), and what the pause card is
    * raised on top of, so nothing is still held when the road starts again. */
@@ -363,7 +389,11 @@ export function DriveScreen({
       // and it would be a card the board's own key handler is not listening to
       // dismiss. Dropping the controls above still matters: a key held when the
       // window went is a key with no `keyup` coming.
-      if (boardRef.current) return;
+      //
+      // Nor over the TITLE CARD, for the same reason twice over: the road it
+      // would be pausing is already held, and the card's own listeners are not
+      // watching for a card to be lifted off them.
+      if (boardRef.current || introRef.current) return;
       setPause(true);
     };
     const onVisibility = () => {
@@ -468,6 +498,12 @@ export function DriveScreen({
       // above is the deliberate exception: a player who just took the board is
       // exactly the player who wants a picture of it.
       if (boardRef.current) return;
+      // …AND THE TITLE CARD OWNS THE FIRST KEYPRESS. Whatever it was going to
+      // mean, it means "get on with it" (`DriveIntro` has its own listener for
+      // that) — a PAUSE card raised over a card that is already holding the
+      // road would be a hold on a hold, and a key banked into `keysRef` here
+      // would be a control held down before the road ever moved.
+      if (introRef.current) return;
       // ESCAPE is the pause on this screen whatever the bind says: it is what
       // every player reaches for, and the road has no other menu for it to
       // mean.
@@ -595,7 +631,13 @@ export function DriveScreen({
         // RE-READ EACH STEP rather than latched once a frame: `endDrive` below
         // can raise the board mid-batch, and a latched flag would keep stepping
         // a road the player is already reading a scoreboard over.
-        if (pausedRef.current || boardRef.current) break;
+        //
+        // THREE THINGS PARK THE CAR and this is the first of them: the title
+        // card at the top of the leg, the pause card, and the board at the end.
+        // The road is PAINTED under all three — the frame below runs whatever
+        // the step did — which is what makes the card lift onto a road that is
+        // already there instead of onto a black rectangle.
+        if (introRef.current || pausedRef.current || boardRef.current) break;
         stepDrive(drive, STEP_MS, inputRef.current);
         drainDrive(
           drive,
@@ -809,6 +851,13 @@ export function DriveScreen({
           screen worth reading once the course is behind him. */}
       {board && (
         <DriveScores font={assets.font} result={board} onDone={leaveBoard} />
+      )}
+      {/* …AND THE TITLE CARD AT THE OTHER END OF THE LEG, last of all because
+          for its beat and a half it is the whole picture: it opens at the same
+          full black the garage's dim handed across, names the road, and lifts
+          off a car that has not moved an inch (the step above breaks on it). */}
+      {intro && (
+        <DriveIntro font={assets.font} to={params.to} onDone={endIntro} />
       )}
     </div>
   );

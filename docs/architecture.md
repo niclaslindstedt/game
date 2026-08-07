@@ -971,7 +971,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   traffic and the wagon are identical on every rung. The app half is
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
-  loot, no XP). **The road answers the run's own binds itself**, because while a
+  loot, no XP).
+  HOW THE ROAD OPENS is three moves that read as one. The bumper touches the
+  garage's `driveOut` tarmac, the run's picture DIMS over a car that is simply
+  coasting (`DEPARTURE`, `src/game/vehicles.ts` — half a second, no synthetic
+  driver, no aim; a car driving itself away was a cutscene about the exact
+  activity the player was a half-second from doing), and the drive mounts into
+  that same black behind a TITLE CARD — "ROAD TO GOODCO",
+  `drive-screen/DriveIntro.tsx`, which HOLDS the road while it is up (the fixed
+  step breaks on it, exactly as it does on the pause card and the board) so the
+  leg's first crowd is not walked into during a title. A tap or any key takes
+  it, and an `auto` road never raises it at all — the attract loop and every
+  shot recipe want the road in their first frame. **The road answers the run's own binds itself**, because while a
   drive is up the run's control layer is not listening (there is no live
   `GameState` under an interlude for it to be built around): PAUSE (and ESCAPE,
   whatever the bind says), SCREENSHOT, and the auto-pause a LOST WINDOW is —

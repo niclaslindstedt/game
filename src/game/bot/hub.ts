@@ -302,8 +302,7 @@ export function botScreenCommand(
  * The point is deliberately the nearest one INSIDE the strip rather than its
  * far end: the departure books on the bumper touching the tarmac at all, and
  * aiming further down the road only bends the approach. From there the
- * drive-out beat takes the wheel and aims it off the map (`stepDeparture`).
- * Pure.
+ * handover takes the wheel and the picture dims (`stepDeparture`). Pure.
  */
 export function driveOutTarget(state: GameState, car: CarVehicle): Vec2 | null {
   const road = runLevelDef(state).driveOut;
@@ -348,8 +347,9 @@ function nearestZonePoint(zones: readonly Zone[], from: Vec2): Vec2 {
 }
 
 /** Is the car already standing on the ground that ends the level? From here
- * the departure has fired and the beat owns the wheel, so the bot stops
- * steering rather than fighting it for the tick. Pure. */
+ * the departure has fired and the car's controls are released for the dim, so
+ * the bot stops steering rather than talking to a car nobody is driving. Pure.
+ */
 export function carHasArrived(state: GameState, car: CarVehicle): boolean {
   const road = runLevelDef(state).driveOut;
   return road !== undefined && anyZoneContains(road, car.pos);
@@ -369,8 +369,8 @@ export function carHasArrived(state: GameState, car: CarVehicle): boolean {
  * (`CAR.doorReach`, well before the bumper).
  *
  * Two ticks it deliberately does nothing on: once the tarmac is under the
- * wheels (the departure has booked and its beat is steering, see
- * `stepDeparture`), and on a level that names no way out at all — where holding
+ * wheels (the departure has booked and the car is coasting through the dim,
+ * see `stepDeparture`), and on a level that names no way out at all — where holding
  * the throttle down would only drive the hero's own car into his own wall.
  */
 export function driveOutInput(

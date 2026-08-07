@@ -156,11 +156,16 @@ describe("car physics", () => {
   it("a rolling car carves toward an off-bow target", () => {
     const state = startGarage();
     const car = board(state);
-    // Ahead-and-up: inside the forward arc, so it throttles AND turns.
+    const axis = car.heading;
+    // Ahead-and-up: inside the forward arc, so it throttles AND steers.
     run(state, steerTo(car.pos.x + 400, car.pos.y - 400), 45);
     expect(car.speed).toBeGreaterThan(0);
-    expect(car.heading).toBeLessThan(0); // nose swung up-screen
+    // The BODY goes up the screen while the car goes forward — a carve made of
+    // a pedal and a crossing, with no nose swing anywhere in it. The nose is
+    // the axis the car was parked on and stays there (`applyCarWheel`).
     expect(car.pos.y).toBeLessThan(car.home.y);
+    expect(car.pos.x).toBeGreaterThan(car.home.x);
+    expect(car.heading).toBe(axis);
   });
 
   it("keeps rolling when every control is released — letting go is not braking", () => {

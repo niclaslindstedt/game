@@ -31,7 +31,8 @@
 // THE ROAD IS AXIS-ALIGNED, ON PURPOSE. A drive runs along ±x with lanes across
 // y, and the car's nose never leaves that axis — it changes lanes by sliding
 // across them, not by turning, because the body is one side-profile assembly
-// that nothing mirrors or rotates (see `CAR.maxYaw`). So the geometry below is
+// that nothing mirrors or rotates (`CarVehicle.heading` never moves). So the
+// geometry below is
 // plain x/y rather than `alongBody`'s billboard bearing: the road IS the
 // bearing at the shipped square-on camera, and a drive is not carved on a map
 // that a developer's yaw knob could turn under it.

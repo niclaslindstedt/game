@@ -105,12 +105,16 @@ describe("the wheels", () => {
   });
 });
 
-// THE RACK — the front wheels are the driver's crank (`CarVehicle.steer`),
-// simulated rather than inferred from the turn, because the renderer warps the
-// front wheel sprite by it. And THE YAW STOP: the assembly is one side-profile
-// stack that nothing mirrors, so the nose may swing up and down the screen but
-// may never come about — a car that turned round used to drive away still
-// facing the way it came.
+// THE WHEEL IS THE ROAD'S WHEEL (`applyCarWheel`, shared verbatim with
+// src/game/drive/): it puts the BODY across, this tick and no later one, and
+// the rack (`CarVehicle.steer`) is the picture of it — simulated rather than
+// inferred, because the renderer warps the front wheel sprite by it.
+//
+// AND THE NOSE NEVER MOVES. `heading` is the axis the car was parked on, full
+// stop. It used to swing inside a yaw stop, which nothing anywhere drew, so the
+// only thing it could do was outlive the input: a moment of W and the car went
+// on curving for as long as it rolled, with the player's hands off everything.
+// That is the whole of what made the bay feel sticky beside the road.
 describe("the steering", () => {
   const board = (state: ReturnType<typeof startHub>): CarVehicle => {
     const car = carOf(state);
@@ -155,9 +159,10 @@ describe("the steering", () => {
     expect(car.steer).toBe(0);
   });
 
-  it("holds the nose short of the beam — the car can never come about", () => {
+  it("never swings the nose, however long the wheel is held", () => {
     const state = startHub();
     const car = board(state);
+    const axis = car.heading;
     // GET IT ROLLING FIRST: a push straight down the nose is all accelerator
     // and no wheel (`carControl` reads the push ALONG the nose as the pedal).
     for (let i = 0; i < 60; i++) {
@@ -171,23 +176,39 @@ describe("the steering", () => {
       );
     }
     expect(car.speed).toBeGreaterThan(0);
-    // …THEN HOLD THE WHEEL HARD OVER: a push straight ACROSS the nose is all
-    // wheel and no pedal, and a car with nothing on the pedal HOLDS its speed
-    // rather than coasting down — so it keeps turning for as long as the key is
-    // held, which is exactly the input that used to walk it right round the
-    // compass.
+    // …THEN HOLD THE WHEEL HARD OVER for ten seconds: a push straight ACROSS
+    // the nose is all wheel and no pedal, and a car with nothing on the pedal
+    // HOLDS its speed rather than coasting down. This is the input that used to
+    // wind the nose all the way round to the yaw stop and leave it there.
     for (let i = 0; i < 600; i++) {
       run(state, steerTo(car.pos.x, car.pos.y + 400), 1);
-      expect(Math.abs(yaw(car))).toBeLessThanOrEqual(CAR.maxYaw + 1e-9);
+      expect(car.heading).toBe(axis);
     }
-    // It really did turn as far as it is allowed to…
-    expect(Math.abs(yaw(car))).toBeGreaterThan(CAR.maxYaw - 0.05);
-    // …and the profile it is drawn with never had to flip.
-    expect(Math.cos(car.heading)).toBeGreaterThan(0);
+    // The body went a long way down the screen — the wheel is doing its job —
+    // and the profile it is drawn with never had anything to answer for.
+    expect(yaw(car)).toBe(0);
     expect(car.faceLeft).toBe(false);
-    // Pinned against the stop, the driver straightens up rather than sitting
-    // on a lock he is getting nothing for.
-    expect(Math.abs(car.steer)).toBeLessThan(CAR.steerLock);
+  });
+
+  it("stops steering the tick the wheel is let go", () => {
+    // THE STICKY CAR, PINNED. Steer for a moment, then take everything off: the
+    // car must carry on in a straight line, not keep curving away down a nose
+    // nobody can see. This is the whole difference the road always had.
+    const state = startHub();
+    const car = board(state);
+    const ahead = () =>
+      steerTo(
+        car.pos.x + Math.cos(car.heading) * 300,
+        car.pos.y + Math.sin(car.heading) * 300,
+      );
+    run(state, ahead(), 90);
+    run(state, steerTo(car.pos.x, car.pos.y + 400), 30);
+    const y = car.pos.y;
+    // Half a second of hands-off. The car is still rolling…
+    run(state, idle, 30);
+    expect(car.speed).toBeGreaterThan(0);
+    // …and has not crossed so much as a pixel further down the screen.
+    expect(Math.abs(car.pos.y - y)).toBeLessThan(0.5);
   });
 
   // THE WHEEL MOVES THE CAR, THIS TICK — the driving minigame's own lateral
@@ -214,12 +235,11 @@ describe("the steering", () => {
     expect(car.pos.y - y0).toBeGreaterThan(4);
   });
 
-  it("swings the nose off the WHEEL, not off the rack", () => {
+  it("moves the body off the WHEEL, not off the rack", () => {
     // The rack is the picture — it winds on at `steerRate` and the renderer
-    // warps the front wheel sprite by it. Reading the swing off it cost a fifth
-    // of a second before the nose moved at all; the swing now answers the
-    // player's own wheel, so the nose is committed while the rack is still
-    // winding on.
+    // warps the front wheel sprite by it. The BODY does not wait for it: the
+    // crossing answers the player's own wheel, so the car is committed while
+    // the rack is still winding on.
     const state = startHub();
     const car = board(state);
     const ahead = () =>
@@ -228,9 +248,10 @@ describe("the steering", () => {
         car.pos.y + Math.sin(car.heading) * 300,
       );
     run(state, ahead(), 90);
+    const y0 = car.pos.y;
     run(state, steerTo(car.pos.x, car.pos.y + 400), 6);
-    // A tenth of a second in: the nose is already meaningfully over…
-    expect(yaw(car)).toBeGreaterThan(0.15);
+    // A tenth of a second in: the car has visibly moved down the screen…
+    expect(car.pos.y - y0).toBeGreaterThan(4);
     // …while the rack is still short of full lock.
     expect(car.steer).toBeLessThan(CAR.steerLock);
   });
@@ -261,9 +282,8 @@ describe("the steering", () => {
     run(state, steerTo(car.pos.x - 300, car.pos.y), 90);
     expect(car.speed).toBeGreaterThan(0);
     const y0 = car.pos.y;
-    // Push UP the screen: the nose must come up and the body must follow it up.
+    // Push UP the screen: the body must go up the screen, not down it.
     run(state, steerTo(car.pos.x, car.pos.y - 400), 30);
-    expect(Math.sin(car.heading)).toBeLessThan(0);
     expect(car.pos.y).toBeLessThan(y0);
   });
 
@@ -316,9 +336,10 @@ describe("the steering", () => {
     expect(car.speed).toBeLessThanOrEqual(0);
   });
 
-  it("keeps the nose on its side through a full lap of the compass", () => {
+  it("keeps the nose on its axis through a full lap of the compass", () => {
     const state = startHub();
     const car = board(state);
+    const axis = car.heading;
     // Chase a target dragged the whole way round the car: heading used to
     // follow it round and round, and the sprite stayed pointing east.
     for (let i = 0; i < 720; i++) {
@@ -328,7 +349,7 @@ describe("the steering", () => {
         steerTo(car.pos.x + Math.cos(a) * 300, car.pos.y + Math.sin(a) * 300),
         1,
       );
-      expect(Math.cos(car.heading)).toBeGreaterThan(0);
+      expect(car.heading).toBe(axis);
     }
   });
 });
@@ -568,9 +589,10 @@ describe("the footprint", () => {
     const car = carOf(state);
     state.players[0]!.pos = { x: car.pos.x - 30, y: car.pos.y };
     expect(applyRunCommand(state, "enterCar")).toBe(true);
-    // Hard over, which is as far off its own axis as the yaw stop lets a nose
-    // come — and the drawn body is exactly where it was.
-    car.heading = CAR.maxYaw;
+    // A nose square off its own axis — which the steering can no longer produce
+    // at all, and which the chain would have to ignore even if it could, since
+    // the drawn body is exactly where it was.
+    car.heading = Math.PI * 0.48;
     expect(applyRunCommand(state, "exitCar")).toBe(true);
     const prints = carPrints(state);
     expect(prints).toHaveLength(3);

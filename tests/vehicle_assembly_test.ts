@@ -60,6 +60,13 @@ afterEach(() => {
 const PART = { width: 48, height: 26 };
 const WHEEL = { width: 11, height: 11 };
 
+/** A nose bearing square off the body's own axis — where every "the picture
+ * ignores the heading" bug was loudest. Written down here rather than read off
+ * a config knob because the engine no longer has one: a car's heading is the
+ * axis it was parked on and never moves (see `applyCarWheel`), so this is a
+ * value only a test can produce, which is exactly why the test produces it. */
+const HARD_OVER = Math.PI * 0.48;
+
 /** One recorded blit, with the sprite it drew and where it landed ON SCREEN. */
 type Blit = { name: string; centre: { x: number; y: number } };
 
@@ -268,8 +275,18 @@ describe("the car assembly", () => {
       return state;
     }
 
-    /** Every heading the yaw stop lets the nose reach, and both ends of it. */
-    const HEADINGS = [0, 0.4, 1, -1, CAR.maxYaw, -CAR.maxYaw];
+    /**
+     * A spread of nose bearings, out to square either way.
+     *
+     * THE ENGINE CAN NO LONGER PRODUCE ANY BUT THE FIRST — `heading` is the
+     * axis a car was parked on and the wheel moves the body rather than the
+     * nose (`applyCarWheel`) — and the picture still has to be blind to all of
+     * them, because "the lamps are bolted to a shell nothing rotates" is a fact
+     * about the ART rather than a consequence of the physics. A renderer that
+     * quietly started swivelling a cone off a heading would fail here on the
+     * day something wrote one, rather than on the day somebody noticed.
+     */
+    const HEADINGS = [0, 0.4, 1, -1, HARD_OVER, -HARD_OVER];
 
     it("burns only with somebody at the wheel", () => {
       const off = drawAt(carAt(0, false), PROJECTIONS[0]!);
@@ -297,8 +314,8 @@ describe("the car assembly", () => {
 
     it("rides the body's own anchor at every camera angle", () => {
       for (const projection of PROJECTIONS) {
-        // Hard over, which is where the old bug was loudest.
-        const blits = drawAt(carAt(CAR.maxYaw, true), projection);
+        // Square off its axis, which is where the old bug was loudest.
+        const blits = drawAt(carAt(HARD_OVER, true), projection);
         const body = blits.find((b) => b.name === "car_doors_0");
         const lit = blits.find((b) => b.name === "car_lights");
         expect(body).toBeDefined();

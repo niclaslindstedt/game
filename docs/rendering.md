@@ -595,10 +595,12 @@ minigame's road looked like a different vehicle. It is gone;
 are sealed beams in a shell, not steering-linked cornering lamps: they turn when
 the CAR turns and not one degree otherwise, and the car's picture never turns.
 The body is one side-profile assembly cut nose-right that nothing mirrors or
-rotates (which is the whole reason the engine carries a yaw stop), while the
-heading it is steered on swings the better part of 180° inside that stop — so
-anything walked down the heading swept a 172° arc across a car that had not
-visibly moved a pixel, and read as a pair of lamps swivelling on their own.
+rotates, while the heading it used to be steered on swung the better part of
+180° — so anything walked down the heading swept a 172° arc across a car that
+had not visibly moved a pixel, and read as a pair of lamps swivelling on their
+own. (The swing itself is gone now — see below — but the rule stands on the
+ART, not on the physics: the day something writes a heading again, the lamps
+must still not care.)
 That is what killed the night pass's wedge. The cones are laid out in SCREEN px
 along the drawn body off the body's own anchor, exactly as the wheel arches are
 (see the billboard rule below). `tests/vehicle_assembly_test.ts` holds the line.
@@ -966,13 +968,18 @@ PARKED car's chain off its own picture at the yaw's own angle. Both read the sam
 way from inside the game — the hero walks through the drawn bonnet and is stopped
 by open floor half a car away, and hops onto a roof that is not there.
 
-**AND THE CAR MAY NEVER COME ABOUT.** The body is one side-profile assembly and
-nothing mirrors it, so a car free to turn round drove away still facing the way
-it came. The engine's yaw stop (`CAR.maxYaw`) holds the nose just short of
-square to its own facing axis: it steers all the way up and down the screen —
-which is the whole of left and right in a side view — and reverses to get back
-the other way. `CarVehicle.faceLeft` is therefore settled where the car is
-parked and never moves again.
+**AND THE CAR'S NOSE NEVER MOVES AT ALL.** The body is one side-profile
+assembly and nothing mirrors it, so a car free to turn round drove away still
+facing the way it came. There was a yaw stop for a while, holding the nose just
+short of square to its own axis — and then the last reason for a heading to move
+went with it, because NOTHING IN THE GAME DRAWS ONE. The wheel puts the BODY
+across instead (`applyCarWheel`, src/game/vehicles.ts — the driving minigame's
+own steering, shared with it verbatim), so `CarVehicle.heading` is the axis the
+car was parked on and `CarVehicle.faceLeft` is which way that axis points, both
+settled at the parking spot and neither moving again. An invisible integrator
+can only ever be felt rather than seen, and what this one was felt as was a car
+that went on steering itself after the player let go — the garage's whole
+handling difference from the road, in one field.
 
 **A JUMP HAS THREE BEATS: takeoff, flight, landing.** The engine's `jump`/`land`
 events carry the point, the `impact` (touchdown speed as a fraction of a
