@@ -71,16 +71,19 @@ type StreetPiece = {
 /**
  * WHAT STANDS AT ONE KERB SLOT — up to two pieces, and pure.
  *
- * The FAR pavement gets a lamp post every slot, offset half a pitch so the two
- * rows interleave rather than marching in pairs; a street lit from one side
- * only reads as a road with a film set along it. The NEAR pavement gets a lamp
- * post most of the time and somebody's parked car the rest (`parkedShare`).
+ * THE STREET IS LIT BY MASTS AND NOTHING ELSE. It used to carry a little yard
+ * light at every slot with a tall mast every third one, which was two pieces of
+ * street furniture doing one job: once the masts were tall enough to actually
+ * throw light on the tarmac, the short ones stopped reading as lighting at all
+ * and read as a row of sticks along the kerb. So a lamp post now stands ONLY on
+ * a mast slot, both rows, facing each other across the carriageway — which is
+ * what street lighting does, and is why the mast slots drop the half-pitch
+ * offset the interleaved yard lights needed.
  *
- * …EXCEPT ON A MAST SLOT (`mastEvery`), where the offset is dropped and the two
- * rows line up. Those are the tall street-lighting columns, and street lighting
- * faces itself across a carriageway — a mast fifty px down the road from its
- * opposite number reads as two lamps rather than as a pair. The interleave is
- * still right for every yard light between them.
+ * The NEAR pavement still parks somebody's car on the slots between
+ * (`parkedShare`), so the gutter keeps exactly the obstacle density it was
+ * tuned with — thinning THOSE out would be a difficulty change wearing a
+ * lighting change's clothes.
  */
 function piecesAt(slot: number): StreetPiece[] {
   const { pitchPx } = DRIVE.street;
@@ -99,19 +102,21 @@ function piecesAt(slot: number): StreetPiece[] {
   const { mastEvery, parkedShare } = DRIVE.street;
   const share = (parkedShare * mastEvery) / Math.max(1, mastEvery - 1);
   const parked = !mast && slotHash(slot, 5) < share;
-  return [
-    {
-      kind: "lamp_post",
-      pos: { x: mast ? x : x + pitchPx / 2, y: y.far },
-      variant: 0,
-    },
-    {
-      kind: parked ? "parked_car" : "lamp_post",
+  const pieces: StreetPiece[] = [];
+  if (mast) {
+    pieces.push({ kind: "lamp_post", pos: { x, y: y.far }, variant: 0 });
+    pieces.push({ kind: "lamp_post", pos: { x, y: y.near }, variant: 0 });
+    return pieces;
+  }
+  if (parked) {
+    pieces.push({
+      kind: "parked_car",
       pos: { x, y: y.near },
       variant:
         Math.floor(slotHash(slot, 3) * TRAFFIC_VARIANTS) % TRAFFIC_VARIANTS,
-    },
-  ];
+    });
+  }
+  return pieces;
 }
 
 /**

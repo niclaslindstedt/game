@@ -116,16 +116,28 @@ const NEAR_MARGIN = 6;
  * kept OUT of, so the dials have grass under them instead of tarmac.
  *
  * The HUD is DOM and the road is a canvas, so this is the one number the two
- * sides have to agree on by hand: it is the dash's own height plus its bottom
- * offset (`.drive-dash` / `--drive-dial-size`, pwa/src/styles.css). Read in CSS
- * px and converted by the scale tier, because the dials are a fixed size on the
- * glass while the world behind them is not.
+ * sides have to agree on by hand. It is arithmetic rather than taste, and the
+ * arithmetic is worth writing down because the pieces move:
+ *
+ *   the dash's height          `--drive-dial-size`   77
+ *   …its offset off the bottom `.drive-dash`         10
+ *   …and the verge above it                          14
+ *
+ * WHICH ALSO CENTRES THE SPEECH WINDOW ON THE VERGE, and that is what the
+ * number is actually tuned to. The window is 77 px tall sitting 12 px off the
+ * bottom, so a band of 101 leaves exactly 12 px of grass above it as well —
+ * the same strip top and bottom. Any other value reads as a dialogue box that
+ * has slipped down the frame, because the eye measures it against the two
+ * edges it can see.
+ *
+ * Read in CSS px and converted by the scale tier, because the dials are a fixed
+ * size on the glass while the world behind them is not.
  *
  * A speedometer half over the road was legible — the shadow saw to that — but it
  * read as a HUD dropped on top of a picture rather than as a dashboard the
  * player is looking over, and the arcs fought the lane markings the whole way.
  */
-const DASH_BAND_CSS = 116;
+const DASH_BAND_CSS = 101;
 
 /**
  * …and what PORTRAIT adds to it: the hero's speech window, which on a tall
@@ -499,12 +511,16 @@ export function drawDrive(
       put(trafficSprite(prop.variant, 0), prop.pos.x, prop.pos.y);
       continue;
     }
-    // A STANDING POST IS ONE OF TWO PICTURES OF THE SAME COLUMN: most are the
-    // little yard light, every third is a street-lighting mast that actually
-    // throws light on the tarmac (`mastAt`). The cone is drawn WITH the mast
-    // rather than in a pass of its own — a beam is part of the lamp, and one
-    // sorted separately would be thrown by a post the picture had already
-    // covered up.
+    // EVERY POST ON THIS ROAD IS A MAST. The little yard lights that used to
+    // stand between them are gone (`street.ts`): once the masts were tall
+    // enough to throw real light on the tarmac, the short ones stopped reading
+    // as lighting and started reading as a row of sticks along the kerb. What
+    // is still one of TWO pictures is which WAY it points — the far row burns
+    // toward the eye, the near row shows the back of its cowl (`mastAt`).
+    //
+    // The cone is drawn WITH the mast rather than in a pass of its own — a beam
+    // is part of the lamp, and one sorted separately would be thrown by a post
+    // the picture had already covered up.
     const mast = prop.felled ? null : mastAt(prop.pos);
     if (mast) {
       // THE BEAM IS SORTED WHERE THE LIGHT LANDS, not where the lamp stands,
@@ -546,7 +562,11 @@ export function drawDrive(
     if (!sprite) continue;
     const stump = prop.stub;
     if (stump) {
-      const foot = spriteByName(sprites, LAMP_SPRITE);
+      // THE STUMP IS CROPPED FROM THE SAME COLUMN THAT FLEW OFF IT. It used to
+      // come off the yard light whatever had actually been standing there,
+      // which was invisible while most posts WERE yard lights and is a
+      // mast-sized column over a doll's-house foot now that none of them are.
+      const foot = sprite;
       if (foot) {
         drawn.push({
           y: stump.y,

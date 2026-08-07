@@ -410,9 +410,12 @@ export const DRIVE = {
      * tarmac's own edge (world px). */
     kerbOffsetPx: 4,
     /**
-     * Every nth slot carries a STREET-LIGHTING MAST instead of a yard light —
-     * the tall ones the renderer throws a cone and a pool of light off
-     * (`drive-screen/scenery.ts`, `mastAt`).
+     * Every nth slot carries a STREET-LIGHTING MAST, and the slots between
+     * carry no lighting at all — the little yard lights that used to stand on
+     * them are gone (`street.ts`). Two rather than three, because they were the
+     * only thing lighting the stretches BETWEEN the masts: at every third slot
+     * the road came out with a pool of light and most of a screen of darkness
+     * either side of it.
      *
      * IT IS A SIM KNOB AND NOT A DRAWING ONE, because the two rows are ALIGNED
      * on a mast slot: street lighting comes in pairs facing each other across
@@ -423,7 +426,7 @@ export const DRIVE = {
      * furniture is MINTED rather than where it is drawn, or the picture and the
      * thing the bumper hits disagree.
      */
-    mastEvery: 3,
+    mastEvery: 2,
     /** A lamp post's collision circle at the ground (world px) — the column,
      * not the hood it carries. */
     lampRadiusPx: 4,
