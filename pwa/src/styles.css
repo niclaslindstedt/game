@@ -6215,11 +6215,31 @@ html.app-locked body {
     right: auto;
     /* Clear of the dials' INK rather than of their boxes — the last fifth of
        a dial's box is the empty mouth of its sweep, and it is hung off the
-       bottom of the frame (`.drive-dash`). */
+       bottom of the frame (`.drive-dash`).
+
+       AND OFF THE SAME FLOOR THE DASHBOARD STANDS ON, which is the half this
+       used to get wrong. `.drive-dash` sits on `max(0.75rem, safe-area)`, and
+       this restated only the 0.75rem of it — so on any phone with a home
+       indicator the dials rose by the inset and the window did not, and the
+       two met. Reading the same `max()` here means the gap between them is the
+       0.75rem it says it is on every device, notch or no notch. */
     bottom: calc(
-      var(--drive-dial-size) * (1 - var(--drive-dial-tail)) + 1.375rem
+      max(0.75rem, env(safe-area-inset-bottom)) + var(--drive-dial-size) *
+        (1 - var(--drive-dial-tail)) + 0.75rem
     );
     width: min(92vw, 36rem);
+    transform: translateX(-50%);
+  }
+
+  /* …AND THE DASHBOARD CENTRED UNDER IT. Landscape pins the dials hard left
+     because the speech window has to have the room to their right; portrait
+     stacks that window ABOVE them instead, so nothing is competing for the
+     right-hand side any more — and a shelf still pinned left under a centred
+     window reads as two pieces of chrome that were never meant for each other.
+     Centred, the window, the gate between the dials and the car itself all
+     share one axis. */
+  .drive-dash {
+    left: 50%;
     transform: translateX(-50%);
   }
 }

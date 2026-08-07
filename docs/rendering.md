@@ -635,6 +635,31 @@ than the canvas is in pixels, and the forward LEAD is a share of the frame's
 width rather than a distance, or "the trailing third" stops being the trailing
 third the moment the frame changes shape.
 
+**The chrome on it changes shape with the frame, and the camera is told.**
+Landscape pins the dashboard hard left (`.drive-dash`) and gives the hero's
+speech window the room to its right; portrait has no such room, so the window
+goes back to the middle of the screen and stacks ABOVE the dials — and the dials
+centre under it, because a shelf still pinned left under a centred window reads
+as two pieces of chrome that were never meant for each other. `DASH_BAND_CSS`
+plus `BARK_BAND_CSS` (the second only when the frame is taller than it is wide)
+is the band the camera holds back for the pair, which is why none of it prints
+over the lane the crowd is walking into. Both the dials and the window sit on
+`max(0.75rem, env(safe-area-inset-bottom))`: state that floor in one of them and
+not the other, and a phone with a home indicator lifts one and not the other
+until they meet.
+
+**The steering pad draws itself, with the run's own parts.** A thumb anywhere on
+the picture anchors the wheel, and the anchor is invisible until it is drawn —
+so the road wears `.touch-dpad` (`ScreenChrome.tsx`'s markup, positioned and lit
+from the drive's own frame loop): four arrows ringing the anchor that brighten
+toward the push, and a nub that trails the finger. Two numbers differ from the
+run's on purpose. The THROW is longer (`PAD_REACH_PX` vs `DPAD_RING_PX`) because
+on foot the thumb is picking a heading and wants full tilt at once, while here it
+is holding a line between two lanes; and the deadzone is the HINT's alone — the
+wheel answers the first pixel of drag, and only the arrows wait for a push worth
+calling a direction. Hidden for a mouse and for an auto-driven road, the same two
+exemptions the run makes.
+
 **The sky is the one pass that is NOT in world space** (`drive-screen/sky.ts`).
 It sits at infinity, so running it through a transform that foreshortens
 distance would squash the moon toward the horizon as though it were lying in a
@@ -656,6 +681,18 @@ clock as well — parallax alone freezes the sky when the car stops, which is
 exactly when the player is looking at it. A band is a GRID rather than a line,
 its row count derived from its own slice, because the sky is a strip on a phone
 held sideways and most of the picture on one held upright.
+
+**The moon is placed by a fraction of the sky, plus a fixed drop on a phone
+held upright.** The fraction alone (`MOON_HOME_Y`) is right in landscape and
+wrong in portrait, because the two frames do not disagree about the sky — they
+disagree about what is in FRONT of the top of it. Upright, that is where the
+phone keeps its clock, its signal and its notch, and a sixth of a tall sky
+parked the one thing up there worth looking at squarely behind them.
+`MOON_PORTRAIT_DROP` is the height of that furniture, in world px rather than as
+a bigger fraction: a fraction would grow with the sky, and a tablet held upright
+(no notch, a great deal of sky) would end up with its moon halfway to the
+roofline. The whole-moon clamp still has the last word, so a sky too shallow to
+spend the drop simply does not spend it.
 
 The stars are the one thing up there that is not a sprite, and deliberately: a
 star IS one pixel, so the whole drawing is where and how bright. The shipped

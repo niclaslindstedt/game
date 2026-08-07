@@ -50,6 +50,9 @@ import {
 import { viewScaleFor } from "../render/view.ts";
 import { createWearTrail, driveDials, sameDials } from "./dials.ts";
 import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+// The run's own dpad-hint geometry, borrowed rather than restated: the road
+// wears the same control and must not drift off it by a pixel.
+import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "../game-screen/player-input.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import type { HudContext } from "../hud/context.ts";
 import { DrivePause } from "./DrivePause.tsx";
@@ -87,6 +90,14 @@ const STEP_MS = 16;
 /** The most catch-up a single frame may do, so a backgrounded tab does not
  * resolve four seconds of collisions in one go. */
 const MAX_CATCHUP_MS = 100;
+
+/** How far the thumb has to travel from its anchor for the pad to be pushed all
+ * the way over (client px). Deliberately a longer throw than the run's own walk
+ * dpad (`DPAD_RING_PX`): on foot the thumb is picking a HEADING and wants to
+ * reach full tilt at once, while here it is holding a LINE between two lanes,
+ * and a pad that saturates in the first few px is a car that only ever steers
+ * fully left or fully right. */
+const PAD_REACH_PX = 48;
 
 /**
  * One of the hero's thoughts, mid-delivery — which one, its pages, how far
@@ -197,6 +208,11 @@ export function DriveScreen({
   auto?: boolean;
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  /** THE STEERING HINT — the run's own virtual dpad (`ScreenChrome.tsx`), worn
+   * by the road. Written straight onto DOM styles from the frame loop, exactly
+   * as the run writes its own: a hint that re-rendered React on every pointer
+   * move would be the most expensive thing on this screen. */
+  const dpadRef = useRef<HTMLDivElement | null>(null);
   const driveRef = useRef<DriveState>(
     (() => {
       const drive = createDrive(params);
@@ -225,6 +241,15 @@ export function DriveScreen({
    * second one is still holding. */
   const padIdRef = useRef<number | null>(null);
   const brakeIdsRef = useRef<Set<number>>(new Set());
+  /** The pad's RAW drag, in client px, kept beside the -1…1 the car is steered
+   * by. The two are not the same fact: the input is a clamped direction, and
+   * the hint has to draw a nub that stops travelling at the ring while the
+   * thumb keeps going. Presentation, so it is never read by the loop's input. */
+  const padDragRef = useRef<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  /** …and WHAT anchored it. A mouse gets no dpad — the same rule the run
+   * follows (`render-frame.ts`): the hint exists to show a finger where the
+   * anchor it cannot see is, and a cursor is already visible. */
+  const padTypeRef = useRef<string>("touch");
   /** The hands on the wheel when nobody's are — minted once, because the driver
    * carries the line it has committed to and rebuilding it every frame would be
    * a driver that never commits to anything. */
@@ -522,6 +547,12 @@ export function DriveScreen({
     let raf = 0;
     let last = performance.now();
     let acc = 0;
+    // Resolved once per mount rather than per frame, exactly as the run
+    // resolves its own (`render-frame.ts`): the hint is written to sixty times
+    // a second and a `querySelector` in that loop is a lookup per frame for an
+    // element that never changes.
+    const dpad = dpadRef.current;
+    const dpadNub = dpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -670,6 +701,53 @@ export function DriveScreen({
         drive.car.pos,
       );
 
+      // ── THE STEERING HINT ─────────────────────────────────────────────────
+      // THE RUN'S OWN VIRTUAL DPAD, ON THE ROAD. The road's pad is anchored
+      // wherever the thumb lands, exactly like the run's, and until now it drew
+      // nothing at all: a player holding a line had no idea where the anchor he
+      // was steering against actually was, and every re-anchor (a finger lifted
+      // and put back down an inch away) was invisible. Same markup, same
+      // classes, same DOM-per-frame writes as `render-frame.ts` — a control
+      // scheme the player has already learned on foot must not be drawn a
+      // second way in an interlude.
+      if (dpad) {
+        const show =
+          !driver &&
+          padIdRef.current !== null &&
+          padTypeRef.current !== "mouse" &&
+          !pausedRef.current &&
+          !boardRef.current;
+        dpad.style.display = show ? "block" : "none";
+        if (show && padOrigin) {
+          dpad.style.left = `${padOrigin.x}px`;
+          dpad.style.top = `${padOrigin.y}px`;
+          const { dx, dy } = padDragRef.current;
+          const len = Math.hypot(dx, dy);
+          const ux = len > 0 ? dx / len : 0;
+          const uy = len > 0 ? dy / len : 0;
+          // THE DEADZONE HERE IS THE HINT'S, NOT THE CAR'S. The wheel answers
+          // the very first pixel of drag — that is what makes this pad feel
+          // like a wheel rather than a switch — but four arrows flickering
+          // around a resting thumb is noise, so only the ARROWS wait for a push
+          // worth calling a direction. The nub follows from the first px.
+          const lit = len >= DPAD_DEADZONE_PX;
+          // cos(67°) ≈ 0.38: diagonals light up both of their arrows.
+          dpad.dataset.left = lit && ux < -0.38 ? "1" : "";
+          dpad.dataset.right = lit && ux > 0.38 ? "1" : "";
+          dpad.dataset.up = lit && uy < -0.38 ? "1" : "";
+          dpad.dataset.down = lit && uy > 0.38 ? "1" : "";
+          if (dpadNub) {
+            // The nub travels the drawn RING while the thumb travels the THROW:
+            // the two are different lengths (`PAD_REACH_PX` vs `DPAD_RING_PX`),
+            // so the head is on the rim exactly when the wheel is hard over
+            // rather than a third of the way there.
+            const reach =
+              (Math.min(len, PAD_REACH_PX) / PAD_REACH_PX) * DPAD_RING_PX;
+            dpadNub.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
+          }
+        }
+      }
+
       setHud((prev) => {
         const next = driveDials(drive, pausedRef.current, wearTrailRef.current);
         return sameDials(prev, next) ? prev : next;
@@ -749,7 +827,9 @@ export function DriveScreen({
             return;
           }
           padIdRef.current = e.pointerId;
+          padTypeRef.current = e.pointerType;
           padRef.current = { x: 0, y: 0 };
+          padDragRef.current = { dx: 0, dy: 0 };
           padOrigin = { x: e.clientX, y: e.clientY };
         }}
         onPointerMove={(e) => {
@@ -757,13 +837,32 @@ export function DriveScreen({
           if (!padRef.current || !padOrigin) return;
           const dx = e.clientX - padOrigin.x;
           const dy = e.clientY - padOrigin.y;
+          padDragRef.current = { dx, dy };
           const len = Math.hypot(dx, dy) || 1;
-          const reach = Math.min(1, len / 48);
+          const reach = Math.min(1, len / PAD_REACH_PX);
           padRef.current = { x: (dx / len) * reach, y: (dy / len) * reach };
         }}
         onPointerUp={(e) => releasePad(e.pointerId)}
         onPointerCancel={(e) => releasePad(e.pointerId)}
       />
+      {/* …AND WHERE THAT THUMB PUT IT DOWN. The run's own virtual dpad, part
+          for part (`ScreenChrome.tsx`, `.touch-dpad` in styles.css): four
+          arrows ringing the anchor that brighten toward the push, and a nub
+          that trails the finger. The road had the same anchored pad and drew
+          none of it, which left the one control the whole minigame is played
+          with invisible — and re-anchoring (a finger lifted and set down an
+          inch away) impossible to see at all.
+
+          Positioned and lit by the frame loop, never by React. Hidden outright
+          for a mouse and for an auto-driven road, the same two exemptions the
+          run makes. */}
+      <div ref={dpadRef} className="touch-dpad" aria-hidden="true">
+        <span className="dpad-arrow dpad-up" />
+        <span className="dpad-arrow dpad-down" />
+        <span className="dpad-arrow dpad-left" />
+        <span className="dpad-arrow dpad-right" />
+        <span className="dpad-nub" />
+      </div>
       {/* HIS OWN VOICE, IN THE GAME'S OWN WINDOW. The very same box every
           other line in the game is delivered in (`DialogueBox`): the grained
           panel, his face beside his name, the letter-by-letter crawl, and copy

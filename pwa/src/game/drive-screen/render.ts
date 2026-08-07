@@ -295,7 +295,10 @@ export function drawDrive(
   // behind everything: the town's roofline, the gaps between the frontages and
   // the strip of verge behind them are all drawn over it.
   const horizon = projectY(0, skylineY() - camera.y);
-  drawDriveSky(ctx, sprites, camera.x, viewW, horizon, timeMs);
+  // The same taller-than-wide test the camera makes above, and the sky spends
+  // it on exactly one thing: bringing the moon down clear of the phone's own
+  // status bar (`sky.ts`).
+  drawDriveSky(ctx, sprites, camera.x, viewW, horizon, timeMs, viewH > viewW);
   ctx.save();
   applyWorldProjection(ctx);
   const left = camera.x - 64;

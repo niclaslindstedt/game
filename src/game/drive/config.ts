@@ -132,8 +132,17 @@ export const DRIVE = {
   laneWidth: 26,
   /** How fast the car crosses lanes (world px/s of lateral travel) at full
    * tilt. Scaled by how fast it is actually going — see `laneRefSpeedPx` —
-   * because a car parked in the road cannot change lanes. */
-  lateralPx: 150,
+   * because a car parked in the road cannot change lanes.
+   *
+   * A LANE IS 26 px AND A THUMB IS NOT A STEERING WHEEL. At 150 the wagon
+   * crossed the whole four-lane road in under a second at speed, which meant
+   * every correction was an overcorrection: the player aimed at the gap in lane
+   * two and arrived in lane four, and the only way to hold a line was to tap
+   * the pad rather than steer with it. At 105 a full lane still takes a
+   * quarter-second — quick enough that the gaps this road opens are genuinely
+   * takeable — but the travel is now something a thumb can MEASURE, which is
+   * the difference between driving and flicking. */
+  lateralPx: 105,
   /** The ground speed at which the car gains its full lateral authority. */
   laneRefSpeedPx: 220,
   /** How far past the outer lane markings the car may stray before the verge
