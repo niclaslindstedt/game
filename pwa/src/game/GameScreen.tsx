@@ -1621,6 +1621,7 @@ export function GameScreen({
             wide,
             autopilot: state.autopilot.active,
             scoreboard: showScores,
+            touch: hasTouch,
           },
           values: {
             ...voiceBindings(
@@ -1641,6 +1642,7 @@ export function GameScreen({
               wide,
               autopilot: state.autopilot.active,
               scoreboard: showScores,
+              touch: hasTouch,
             }),
           },
           refs: {
@@ -1683,6 +1685,15 @@ export function GameScreen({
               pauseMusic();
               bumpUi();
             },
+            // THE SHUTTER, and the one verb on this list that refuses nothing:
+            // every other action here is gated on a live field, because opening
+            // the bag over a cutscene is a press that should not land. A
+            // PICTURE is the opposite — of the death splash, the victory
+            // screen, a scene, the pause menu — so it takes the same path the
+            // SCREENSHOT key takes and asks nothing first. It is captioned with
+            // the venue exactly as the key's is, because the caption is about
+            // where the picture was taken and not about who asked for it.
+            takeScreenshot: () => takeScreenshot(runLevelDef(state).name),
             toggleWeaponMenu: (open) =>
               setWeaponMenuOpen(
                 open === undefined ? !weaponMenuOpen : open === true,

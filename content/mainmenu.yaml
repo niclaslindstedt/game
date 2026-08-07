@@ -195,10 +195,8 @@ screens:
         icon: icon_bag
         help: BUY BACK WHAT THE AUTO PILOT THREW AWAY
         opens: vault
-      # The pictures the player took with the SCREENSHOT key. Desktop only —
-      # the roll is filled by a KEY, so on a phone (which has its own system
-      # screenshot gesture anyway) the row would open a gallery nothing on that
-      # device can put a picture into.
+      # The pictures the player took — with the SCREENSHOT key, or with the
+      # SHUTTER on the gear rail, which is what a thumb has instead of a key.
       - id: screenshots
         label: SCREENSHOTS
         icon: icon_menu_screenshots

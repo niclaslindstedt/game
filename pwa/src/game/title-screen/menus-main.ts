@@ -115,17 +115,17 @@ export function buildExtrasMenu(ctx: MenuContext): MenuEntry[] {
       // The LOST & FOUND — only once a paid AUTO PILOT ride has actually thrown
       // something away; there is nothing to buy back otherwise.
       "lost-found": ctx.hasVault ? navRow(ctx, "extras", "lost-found") : null,
-      // The SCREENSHOT roll. Offered wherever there is a key to fill it with —
-      // i.e. a fine pointer, the same predicate KEY BINDINGS is gated on. Not
-      // gated on the roll being non-empty, unlike the two rows above: this one
-      // is where the feature is EXPLAINED (its empty state names the key), and
-      // a row that only appears once you have found the key it documents is a
-      // row nobody ever sees. On a touch device it stays absent — the roll can
-      // only be filled by a keypress, and a phone has its own screenshot
-      // gesture that puts pictures somewhere the player already knows.
-      screenshots: ctx.hasFinePointer
-        ? navRow(ctx, "extras", "screenshots")
-        : null,
+      // The SCREENSHOT roll — on every build, because every build can now fill
+      // it: a keyboard has the SCREENSHOT bind and a thumb has the SHUTTER on
+      // the gear rail (`content/hud/elements/screenshot_slot.yaml`). It was
+      // gated on `hasFinePointer` for as long as the key was the only way in,
+      // which made this the one EXTRAS row whose absence was about the DEVICE
+      // rather than about the player not having earned it yet.
+      //
+      // Not gated on the roll being non-empty, unlike the two rows above: this
+      // is where the feature is EXPLAINED, and a row that only appears once you
+      // have found the thing it documents is a row nobody ever sees.
+      screenshots: navRow(ctx, "extras", "screenshots"),
       // Leaves the app for the static reference site. A plain navigation, not a
       // screen: the library is documents, deliberately carrying none of the
       // game's JavaScript, so it cannot be a route inside the shell.

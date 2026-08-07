@@ -1061,6 +1061,21 @@ html.app-locked body {
   box-shadow: 0 0 0.35rem rgba(255, 215, 94, 0.35);
 }
 
+/* THE SHUTTER — the quietest circle on the rail, and deliberately. The three
+   slots to its left are all things the run is telling you about (what is in
+   your hand, whether the bag is full, that points are waiting); this one is
+   telling you nothing at all, it is only WAITING to be pressed. So it wears the
+   quest slot's unlit rim and sits at two thirds, and comes up to full on the
+   press — the same "this is furniture until you want it" the swipe bars get. */
+.hud-shutter-slot {
+  border-color: #3f4a5c;
+  opacity: 0.66;
+}
+
+.hud-shutter-slot:active {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-bag-slot.bag-full {
     animation: none;

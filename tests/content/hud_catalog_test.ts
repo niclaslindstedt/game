@@ -286,6 +286,24 @@ describe("the shipped HUD", () => {
     }
   });
 
+  it("keeps a way to take a picture on a device with no keyboard", () => {
+    // THE GAP THIS PINS: the whole screenshot feature — the capture, the roll,
+    // the receipt, the gallery, the share sheet — was reachable only through a
+    // KEY, so on a phone none of it could be asked for and EXTRAS hid its own
+    // SCREENSHOTS row rather than open a gallery nothing could fill. The
+    // shutter is the missing half, so it is gated on `ui.touch` and on nothing
+    // else: not on the field being live (a picture of a death splash is as
+    // wanted as one of a fight), and not on a setting a player has to find.
+    const shutter = HUD_ELEMENTS.find(
+      (el) => el.press?.action === "takeScreenshot",
+    );
+    expect(shutter, "no element carries takeScreenshot").toBeDefined();
+    expect(shutter?.visible).toBe("ui.touch");
+    // It makes no noise of its own — the picture already plays the camera, and
+    // a click in front of it is that sound arriving twice.
+    expect(shutter?.press?.sound).toBe("none");
+  });
+
   it("leaves a list's template alone until it has a row", () => {
     // THE BUG THIS PINS, and it is the drive surface's again in another shape:
     // a resolve CALLS every judgement it walks past, and a voice card's are

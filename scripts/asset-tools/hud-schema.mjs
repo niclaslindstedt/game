@@ -97,6 +97,13 @@ export const HUD_BINDINGS = {
   // because it is a fact about what this viewer is looking at rather than about
   // the run: two people in one session hold it up independently.
   "ui.scoreboard": "flag",
+  // THIS DEVICE TAKES TOUCH AT ALL (`any-pointer: coarse`). Distinct from
+  // `!ui.keyHints`, which is a SETTING about whether the keyboard is steering,
+  // and distinct from "has no mouse", because a touch laptop is both. What it
+  // gates is a button that exists only because a THUMB has no other way to ask
+  // for the thing — the shutter is the case: the SCREENSHOT bind is a key, and
+  // a key is not something a phone has.
+  "ui.touch": "flag",
   // THE ROAD. The drive minigame is its own surface with its own dials, and it
   // is content for exactly the reason the fight's HUD is: an interlude that
   // looked like a different program is precisely what an interlude must not do,
@@ -198,6 +205,11 @@ export const HUD_ACTIONS = new Set([
   "openCharacter",
   "pauseGame",
   "toggleWeaponMenu",
+  // TAKE A PICTURE — the SCREENSHOT bind's own verb, on a button, because a
+  // bind is a KEY and half the players have no keyboard. It is the one action
+  // here that refuses nothing: a picture of the death splash, a cutscene or the
+  // pause menu is as wanted as one of the fight (game/screenshots.ts).
+  "takeScreenshot",
   // The road's own three, which only the drive surface supplies. An action the
   // mounting screen does not provide is a press that does nothing rather than a
   // build error: the set is one vocabulary across every surface, so a mod may
@@ -780,6 +792,13 @@ function checkPress(press, where, refs, errors) {
   if (press.sound !== undefined) {
     if (typeof press.sound !== "string") {
       errors.push(`${where}: press sound must be a sound id`);
+    } else if (press.sound === "none") {
+      // SILENCE, said out loud — the counterpart of `action: none`, and not the
+      // same thing as omitting the field (which takes the `hud.press` default).
+      // It is for a press whose sound belongs to the thing it STARTED rather
+      // than to the button: the shutter's picture already makes the camera
+      // noise, and a click in front of it is that sound arriving twice. A mod
+      // that disagrees re-points it to a real id like any other press.
     } else if (!refs.sounds.has(press.sound)) {
       errors.push(
         `${where}: press sound "${press.sound}" is not a sound this build ` +

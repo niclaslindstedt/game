@@ -1881,11 +1881,14 @@ seams a browser can't provide on iOS:
 - **Screenshots — the picture leaves the game through the platform's own share
   sheet.** The SCREENSHOT bind (ENTER in a browser, F12 in a store shell — see
   `defaultKeybindings`, because a page may not swallow the developer-tools key)
-  rasterizes the whole screen — world canvas
+  — or, where there is no keyboard to press it on, the SHUTTER on the HUD's
+  gear rail (`content/hud/elements/screenshot_slot.yaml`, gated on the
+  `ui.touch` binding) — rasterizes the whole screen — world canvas
   AND interface — into a PNG, files it in a capped IndexedDB roll
   (`pwa/src/lib/shot-store.ts`), and flashes a miniature the player can press to
   freeze the run and open the gallery on it (EXTRAS → SCREENSHOTS, the same
-  viewer the title menu opens). **Whatever is on screen is what is in the
+  viewer the title menu opens — offered on every build now that every build can
+  fill the roll; it was desktop-only for as long as a KEY was the only way in). **Whatever is on screen is what is in the
   picture, the DRIVE included** — the road answers the bind itself and owns the
   whole picture while it is up, so the receipt is banded above even that (the
   band map in `styles.css`) and the raster follows those bands rather than the

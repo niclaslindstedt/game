@@ -39,6 +39,11 @@ export type HudUiState = {
   /** The SHOW SCORES key is held (or the board was raised by hand) — the
    * session scoreboard is up over the field. */
   scoreboard: boolean;
+  /** This device takes touch at all (`any-pointer: coarse`). Gates the chrome
+   * that only exists because a thumb has no key to press instead — the
+   * SHUTTER. Not `!keyHints`: that is a setting about the keyboard steering,
+   * and a touch laptop answers yes to both. */
+  touch: boolean;
 };
 
 /** What a binding can answer with. */
@@ -120,6 +125,7 @@ export function hudBindings(
     "ui.wide": ui.wide,
     "ui.autopilot": ui.autopilot || state.autopilot.active,
     "ui.scoreboard": ui.scoreboard,
+    "ui.touch": ui.touch,
   };
 }
 
