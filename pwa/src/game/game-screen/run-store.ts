@@ -32,13 +32,16 @@ export function useRunStore({
   characterRef,
   bumpUi,
 }: {
-  state: GameState;
+  /** Null before the run is up: the pause menu's wiring is built every render,
+   * so the buy runner has to exist before there is anything to buy for. */
+  state: GameState | null;
   characterRef: MutableRefObject<Character>;
   bumpUi: () => void;
 }): RunBuy {
   // Not memoized: it closes over the live run state, and the one consumer (the
   // in-run store modal) calls it straight from a tap.
   return async (pack: CoinPack) => {
+    if (!state) return { ok: false, reason: "unavailable" as const };
     const heroId = characterRef.current.id;
     const result = await buyCoinPackForHero(pack, heroId);
     if (!result.ok || result.coins <= 0) return result;

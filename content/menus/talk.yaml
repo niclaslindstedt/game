@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE TALK BOX — a conversation the player STEERS: what a bystander says, and
+# what the hero may say back. Every branch is an engine mutator, so the box owns
+# none of the rules.
+screen: talk
+wrap: none
+body:
+  - id: conversation
+    kind: widget
+    widget: talkBox

@@ -58,7 +58,11 @@ const STEPS = [
   { id: "music", why: "…and the engine has no idea the game makes noise" },
   {
     id: "hud",
-    why: "last: it cross-refs sprite stems and sound ids, and nothing reads it",
+    why: "late: it cross-refs sprite stems and sound ids, and nothing reads it",
+  },
+  {
+    id: "ingame-menus",
+    why: "last, beside the HUD: the same sprite stems and sound ids, and nothing reads it either",
   },
 ];
 

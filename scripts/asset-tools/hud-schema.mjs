@@ -161,6 +161,39 @@ export const HUD_BINDINGS = {
   "voice.speakerCount": "number",
   "voice.faulted": "flag",
   "voice.fault": "text",
+  // THE IN-GAME MENUS — which window the player is standing behind, and what
+  // is stacked over it. A binding group like any other, and deliberately
+  // readable from the HUD as well: "there is a modal up" is exactly the kind of
+  // thing a HUD element wants to stand aside for. See
+  // `scripts/asset-tools/ingame-menu-schema.mjs` for the catalog that draws
+  // them.
+  "menu.screen": "text",
+  "menu.open": "flag",
+  "menu.modal": "text",
+  "menu.modalOpen": "flag",
+  /** Whatever the press that raised the modal carried — a scalar, as an
+   * action's argument always is. Empty when nothing was passed. */
+  "menu.modalArg": "text",
+  /** Which face of the character screen is showing — `bag` or `stats`. The two
+   * flags beside it are the same fact in the form a `visible:` can read. */
+  "menu.charTab": "text",
+  "menu.charBag": "flag",
+  "menu.charStats": "flag",
+  /** Clean slates the hero is carrying — the pause menu's THE BIBLE row, which
+   * is on screen only while there is one and prints the count only past one. */
+  "menu.cleanSlates": "number",
+  "menu.hasCleanSlate": "flag",
+  /** This run may be handed to the AUTO PILOT at all (not the demo, not BOT
+   * VIEW, not a hardcore hero). */
+  "menu.autopilotOffered": "flag",
+  /** …and it is flying right now. */
+  "menu.autopilotActive": "flag",
+  /** This run is the HOW TO PLAY demo — a showcase the player only watches. */
+  "menu.demo": "flag",
+  /** …the hero is hardcore (permadeath). */
+  "menu.hardcore": "flag",
+  /** …and there is a multiplayer session behind it. */
+  "menu.session": "flag",
 };
 
 /**
@@ -237,6 +270,30 @@ export const HUD_ACTIONS = new Set([
   // press was drawn in, not from the YAML — which is what makes one authored
   // press work for every card on the rail.
   "muteSpeaker",
+  // ---- THE IN-GAME MENUS ---------------------------------------------------
+  // The verbs a menu's own rows carry, and the two that raise and lower a
+  // MODAL. They are on the one list with everything above for the reason the
+  // road's three are: the vocabulary spans surfaces, and an action the mounting
+  // screen does not supply is a press that does nothing rather than a build
+  // error — so a mod may put CONFIRM on a button without the compiler having to
+  // know where that button will end up.
+  //
+  // `openModal` takes the modal's id as its `arg:`; `closeModal` lowers the top
+  // one (or, given an id, that one wherever it sits in the stack).
+  "openModal",
+  "closeModal",
+  // Lower whatever window the press was drawn in — the engine verb that closes
+  // this hero's screen, whichever screen it is.
+  "closeMenu",
+  // The pause menu's own rows. `exitToMenu` keeps the frozen run in memory so
+  // CONTINUE resumes it; `quitRun` drops it — which is what the demo's MAIN
+  // MENU does, there being nothing to come back to.
+  "resumeRun",
+  "exitToMenu",
+  "quitRun",
+  "openAutopilot",
+  "stopAutopilot",
+  "useCleanSlate",
   "none",
 ]);
 
@@ -347,7 +404,11 @@ const JUSTIFIES = new Set(["start", "center", "end", "between"]);
  * and a size that did not divide its own data evenly would alias. */
 const MAX_CANVAS_SIDE = 4096;
 
-const ELEMENT_FIELDS = new Set([
+/** Every field a node of this grammar may carry, `region`/`order` included —
+ * exported so a catalog that places these nodes somewhere other than the HUD
+ * (the in-game menus) can check its own top-level rows against the same list
+ * instead of keeping a copy that drifts. */
+export const HUD_NODE_FIELDS = new Set([
   "id",
   "region",
   "order",
@@ -439,10 +500,38 @@ export function validateHudElement(element, refs) {
     errors.push(`${where}: order must be a number`);
   }
   for (const key of Object.keys(element)) {
-    if (!ELEMENT_FIELDS.has(key))
+    if (!HUD_NODE_FIELDS.has(key))
       errors.push(`${where}: unknown field "${key}"`);
   }
   checkNode(element, where, refs, errors, warnings, true, null);
+  return { errors, warnings };
+}
+
+/**
+ * Validate ONE node of the same grammar, standing on its own.
+ *
+ * This is the seam the IN-GAME MENU catalog is built on: a menu's rows are the
+ * HUD's own nodes — the same kinds, the same bindings, the same presses, the
+ * same judgements — placed in a window instead of in a region. Sharing the
+ * checker is what makes "I know how to author a HUD element" and "I know how to
+ * author a menu row" the same sentence, and what stops the two grammars
+ * drifting apart the first time either grows a field.
+ *
+ * `refs.widgets` and `refs.scriptDir` are what a caller narrows: a menu places
+ * MENU widgets (the bag grid, the map) rather than HUD ones, and its judgements
+ * live under its own `scripts/` folder, so a wrong name has to name the right
+ * folder back.
+ *
+ * @param {object} node the authored node.
+ * @param {string} where what to call it in an error.
+ * @param {object} refs `{ sprites, sounds, scripts, regions?, widgets?, scriptDir? }`
+ * @param {boolean} top the caller checks this node's own field list (its
+ *        placement fields are its catalog's, not the HUD's).
+ */
+export function validateHudNode(node, where, refs, top = false) {
+  const errors = [];
+  const warnings = [];
+  checkNode(node, where, refs, errors, warnings, top, null);
   return { errors, warnings };
 }
 
@@ -455,9 +544,15 @@ function checkNode(node, where, refs, errors, warnings, top, row) {
   }
   if (!top) {
     for (const key of Object.keys(node)) {
+      // A NESTED `order:` is the in-game menus' own affordance: the rows inside
+      // a container (the pause menu's action stack) are ordered so a mod's row
+      // can be INSERTED between two of them. The HUD has no such container, so
+      // an order down here means an author expected a placement they will not
+      // get — hence the refusal everywhere else.
+      if (key === "order" && refs.nestedOrder === true) continue;
       if (key === "region" || key === "order") {
         errors.push(`${where}: only a top-level element carries "${key}"`);
-      } else if (!ELEMENT_FIELDS.has(key)) {
+      } else if (!HUD_NODE_FIELDS.has(key)) {
         errors.push(`${where}: unknown field "${key}"`);
       }
     }
@@ -512,10 +607,14 @@ function checkNode(node, where, refs, errors, warnings, top, row) {
 
   // ---- per kind ----------------------------------------------------------
   if (kind === "widget") {
-    if (!HUD_WIDGETS.has(node.widget)) {
+    // WHICH widgets are placeable is the CALLER's, because it depends on what
+    // is drawing the tree: the HUD places the minimap and the docks, an in-game
+    // menu places the bag grid and the map. Same escape hatch, two vocabularies.
+    const widgets = refs.widgets ?? HUD_WIDGETS;
+    if (!widgets.has(node.widget)) {
       errors.push(
         `${where}: widget "${node.widget}" — expected one of ` +
-          `${[...HUD_WIDGETS].sort().join(", ")}`,
+          `${[...widgets].sort().join(", ")}`,
       );
     }
     // A widget's children are its PARTS: named nodes the widget draws in the
@@ -828,6 +927,20 @@ function checkZone(zone, where, refs, errors) {
   checkColor(zone.color, where, refs, errors);
 }
 
+/**
+ * Validate a PRESS on its own — a verb, its argument and its sound, with no
+ * button around it.
+ *
+ * The in-game menus need this for a window's `dismiss:`, which is a press on
+ * the BACKDROP: same grammar, same verbs, same sounds, but nothing to put an
+ * `aria:` label on.
+ */
+export function validateHudPress(press, where, refs) {
+  const errors = [];
+  checkPress(press, where, refs, errors);
+  return { errors, warnings: [] };
+}
+
 function checkPress(press, where, refs, errors) {
   if (!press || typeof press !== "object" || Array.isArray(press)) {
     errors.push(`${where}: press must be a mapping`);
@@ -1021,10 +1134,13 @@ function checkScriptRef(value, where, refs, errors) {
     return;
   }
   const [file, fn] = ref.split(".");
+  // Which folder the judgements live in — `hud/scripts` unless the caller says
+  // otherwise (an in-game menu's are its own catalog's).
+  const dir = refs.scriptDir ?? "hud/scripts";
   const exported = refs.scripts.get(file);
   if (!exported) {
     errors.push(
-      `${where}: script "${ref}" — there is no hud/scripts/${file}.lua` +
+      `${where}: script "${ref}" — there is no ${dir}/${file}.lua` +
         (refs.scripts.size > 0
           ? ` (this build has ${[...refs.scripts.keys()].sort().join(", ")})`
           : ""),
@@ -1033,7 +1149,7 @@ function checkScriptRef(value, where, refs, errors) {
   }
   if (!exported.has(fn)) {
     errors.push(
-      `${where}: hud/scripts/${file}.lua exports no "${fn}" ` +
+      `${where}: ${dir}/${file}.lua exports no "${fn}" ` +
         `(it exports ${[...exported].sort().join(", ") || "nothing"})`,
     );
   }

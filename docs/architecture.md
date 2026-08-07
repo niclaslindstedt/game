@@ -1552,7 +1552,17 @@ deploy-shaped:
   and where BACK goes — is authored in `content/mainmenu.yaml` and compiled
   to `pwa/src/generated/menu.ts`; the builders supply only what a row DOES,
   matched on its id. A mod may not replace that file: the tree decides
-  which screens exist at all, so the mod compiler refuses one outright),
+  which screens exist at all, so the mod compiler refuses one outright.
+  **The windows a RUN puts up are a different catalog and a mod may ship all of
+  them**: the pause menu, the bag's frame, the map, the stall, the chooser, the
+  conversations and the trade table are `content/menus/`, one file per window
+  named after the `PlayerScreen` the engine parks the hero behind, compiled to
+  `pwa/src/generated/ingame-menus.ts` and drawn by `pwa/src/game/menus/` —
+  which is the HUD's own renderer with a backdrop and a box around it, since a
+  menu ROW is a HUD node. The code-backed insides listed below are placed by
+  those files as `kind: widget` and supplied by
+  `game-screen/menu-panels.tsx`; MODALS stacked over them live in
+  `menus/modals.ts`, raised by a press or by an authored `when:`),
   `GameScreen.tsx` (canvas
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),

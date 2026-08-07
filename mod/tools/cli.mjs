@@ -405,6 +405,12 @@ function compile() {
       [Object.keys(b.hud?.regions ?? {}).length, "hud region"],
       [Object.keys(b.hud?.events ?? {}).length, "hud sound"],
       [Object.keys(b.hud?.scripts ?? {}).length, "hud script"],
+      // …and the run's own windows, counted the same way: the files the author
+      // wrote. A window, a modal, a row hung off one of ours, a judgement.
+      [(b.menus?.menus ?? []).length, "menu"],
+      [(b.menus?.modals ?? []).length, "modal"],
+      [(b.menus?.elements ?? []).length, "menu row"],
+      [Object.keys(b.menus?.scripts ?? {}).length, "menu script"],
     ]
       .filter(([n]) => n > 0)
       .map(([n, one]) => fmt(n, one));

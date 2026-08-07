@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE TRADE WINDOW — raised on BOTH seats at once by `openTrade`, and lowered by
+# whatever ends the trade. A hero at the table is a hero in a screen: no
+# steering, still standing on the field, still killable.
+screen: trade
+wrap: none
+body:
+  - id: table
+    kind: widget
+    widget: tradeTable

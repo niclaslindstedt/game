@@ -311,6 +311,9 @@ export function scriptState(
     ui: {},
     drive: {},
     voice: {},
+    // The IN-GAME MENUS' own group (`../menus/bindings.ts`) — which window the
+    // player is standing behind, and what is stacked over it.
+    menu: {},
     // The ROW group, empty everywhere but inside a list's own parts — present
     // regardless so a script that reads it off the wrong surface gets an empty
     // table rather than an error out of the middle of a fight.

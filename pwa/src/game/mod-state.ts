@@ -221,6 +221,24 @@ export type ModBundle = {
     events?: Record<string, string>;
     scripts?: Record<string, { id: string; source: string }>;
   };
+  /**
+   * THE IN-GAME MENUS a mod ships: its windows, the modals it can raise, the
+   * rows it hangs off ours, and the Lua behind them — from the mod's own
+   * `menus/` folder.
+   *
+   * Structurally typed for the same reason the HUD above is: this leaf is on
+   * the startup path and may name nothing that drags the renderer along. The
+   * real types are `menus/types.ts`.
+   *
+   * Absent from the many mods that leave the windows alone. A mod that ships
+   * one row replaces THAT row and nothing else.
+   */
+  menus?: {
+    menus?: unknown[];
+    modals?: unknown[];
+    elements?: unknown[];
+    scripts?: Record<string, { id: string; source: string }>;
+  };
   /** The manifest's own inventory — what the MOD INFO screen reads. Empty for
    * a mod authored before `contents:` existed, which is why the screen still
    * has to be able to say something without it. */
@@ -255,7 +273,9 @@ export type ModClash = {
     | "quest"
     | "rule script"
     | "animation"
-    | "hud";
+    | "hud"
+    // A window, a modal or one row of either.
+    | "menu";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

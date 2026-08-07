@@ -30,7 +30,6 @@ import {
   debugDetonateNuke,
   debugLevelUpFx,
   error,
-  tradePartner,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -63,7 +62,6 @@ import {
   resumeMusic,
   stopMusic,
 } from "./music/index.ts";
-import { playTypewriterHaptic } from "./haptics.ts";
 import { type PickupMessage } from "./PickupFeed.tsx";
 import { PickupModal, type PickupCard } from "./PickupModal.tsx";
 import {
@@ -109,16 +107,22 @@ import {
 import { flushGoldPickups } from "./game-screen/gold-float.ts";
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { hudBindings, voiceBindings } from "./hud/bindings.ts";
+import { menuBindings } from "./menus/bindings.ts";
+import { closeLocalScreen } from "./menus/close.ts";
+import { MenuLayer } from "./menus/MenuLayer.tsx";
+import { closeModal, openModal, useModalStack } from "./menus/modals.ts";
+import type { MenuPanels } from "./menus/widgets.ts";
+import { screenPanels, type CharTab } from "./game-screen/menu-panels.tsx";
 import { playHudEvent } from "./hud/sounds.ts";
 import { HudRoot } from "./hud/HudRoot.tsx";
-import type { HudContext } from "./hud/context.ts";
+import type { HudFieldContext } from "./hud/context.ts";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
 import { createEliteFx } from "./game-screen/elite-css-fx.ts";
 import { createNukeFx } from "./game-screen/nuke-fx.ts";
 import { createPowerupAura } from "./game-screen/powerup-aura.ts";
 import { createLevelUpFx } from "./game-screen/levelup-fx.ts";
-import { RunPausedOverlay } from "./game-screen/PausedOverlays.tsx";
+import { usePauseMenu } from "./game-screen/PausedOverlays.tsx";
 import {
   handleFieldTaps,
   readHumanInput,
@@ -130,9 +134,6 @@ import {
   createPickupFeed,
 } from "./game-screen/pickup-ui.ts";
 import { QuestFlash } from "./game-screen/QuestFlash.tsx";
-import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
-import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
-import { TradeOverlay } from "./overlays/TradeOverlay.tsx";
 import {
   createRenderFrame,
   type AreaCaptionState,
@@ -164,7 +165,7 @@ import type { VoiceLink } from "./net/voice/index.ts";
 import { ChatOverlay } from "./overlays/ChatOverlay.tsx";
 import type { JoinIntent } from "./session-intent.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
-import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
+import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
 import { useRunShelf } from "./game-screen/use-run-shelf.ts";
@@ -1503,6 +1504,32 @@ export function GameScreen({
     setDemoTip,
   ]);
 
+  // THE MODALS standing over the run right now (`menus/modals.ts`). Read here
+  // rather than only in the layer that draws them, because their bindings ride
+  // on the same table every element resolves against: a HUD element that stands
+  // aside while a modal is up gates on `menu.modalOpen`, and a binding that only
+  // refreshed on the next HUD publish would be a frame late.
+  const openModals = useModalStack();
+
+  // THE PAUSE MENU'S OWN HALF — the verbs its authored rows carry and the
+  // panels it places (`game-screen/PausedOverlays.tsx`). The window itself is
+  // `content/menus/pause.yaml`.
+  const pauseMenu = usePauseMenu({
+    state,
+    assets,
+    demo,
+    botView,
+    hardcore: character.hardcore,
+    userPausedRef,
+    characterRef,
+    difficulty,
+    autopilot,
+    onQuit,
+    onExitToMenu,
+    bumpUi,
+    sessionLink,
+  });
+
   // A run that failed before its first complete frame (see the loop's
   // onError): re-throw during render so App's ErrorBoundary catches it and
   // shows the RELOAD screen. The parked run (if this was a resume) was already
@@ -1606,7 +1633,7 @@ export function GameScreen({
    * decides what uses them. Adding a panel to the HUD is a YAML file; it is
    * never a new prop here.
    */
-  const hudContext: HudContext | null =
+  const hudContext: HudFieldContext | null =
     hud && state
       ? {
           surface: "field",
@@ -1644,6 +1671,22 @@ export function GameScreen({
               scoreboard: showScores,
               touch: hasTouch,
             }),
+            // …and what the run's own WINDOWS are doing: which one the hero is
+            // parked behind, what is stacked over it, and the handful of facts
+            // the shipped windows gate their rows on.
+            ...menuBindings(
+              {
+                screen: hud.screen,
+                charTab,
+                cleanSlates: localHero(state).cleanSlates,
+                autopilotOffered: pauseMenu.autopilotOffered,
+                autopilotActive: state.autopilot.active,
+                demo,
+                hardcore: character.hardcore,
+                session: sessionLink !== null && sessionLink !== undefined,
+              },
+              openModals,
+            ),
           },
           refs: {
             minimapCanvas: minimapRef,
@@ -1707,6 +1750,23 @@ export function GameScreen({
               if (!room || typeof seat !== "number") return;
               room.setMuted(seat, !room.muted(seat));
             },
+            // ---- THE WINDOWS ------------------------------------------------
+            // Raising and lowering a MODAL is a verb like any other, so any
+            // button in the game can carry it — a HUD element, a menu row, a
+            // row inside a modal already up.
+            openModal: (id) => {
+              if (typeof id === "string") openModal(id);
+            },
+            closeModal: (id) =>
+              closeModal(typeof id === "string" ? id : undefined),
+            // Lower whatever window the press was drawn in, whichever it is.
+            closeMenu: () => {
+              if (closeLocalScreen(state)) bumpUi();
+            },
+            // …and the pause menu's own (resume, exit, the AUTO PILOT rows,
+            // the clean slate), which reach into music, the flight and the
+            // character on disk.
+            ...pauseMenu.actions,
           },
           docks: {
             consumableSide,
@@ -1743,6 +1803,35 @@ export function GameScreen({
           bumpUi,
         }
       : null;
+
+  /**
+   * THE CODE-BACKED INSIDES the run's windows place, by name — the bag grid,
+   * the map, the stall, the two conversation boxes, the trade table, and the
+   * pause menu's own pair.
+   *
+   * Built here and handed over whole for the same reason the HUD's context is:
+   * this screen cannot know which windows are on the catalog, so it supplies
+   * everything a window COULD name and the content decides what is used. A
+   * panel nothing places costs one closure.
+   */
+  const menuPanels: MenuPanels =
+    state && hud
+      ? {
+          ...screenPanels({
+            state,
+            assets,
+            font,
+            heroName: character.name,
+            hardcore: character.hardcore,
+            onCharTab: setCharTab,
+            levelupByPress,
+            demoLevelupFocus: demo ? demoLevelupFocus : null,
+            sessionLink,
+            bumpUi,
+          }),
+          ...pauseMenu.panels,
+        }
+      : pauseMenu.panels;
 
   /**
    * Put the DRIVE HOME on screen instead of crossing, and say whether it took
@@ -1994,17 +2083,12 @@ export function GameScreen({
           cutsceneRevealRef={cutsceneRevealRef}
           introRevealRef={introRevealRef}
           dialogueRevealRef={dialogueRevealRef}
-          demoLevelupFocus={demo ? demoLevelupFocus : null}
           demoTalentFocus={demo ? demoTalentFocus : null}
-          levelupByPress={levelupByPress}
           heroAvatar={heroAvatarFor("bag")}
-          charTab={charTab}
-          onCharTab={setCharTab}
-          // Both are immutable for a hero's whole life, so the mounting prop
-          // is as fresh as the ref the victories rewrite (and readable during
-          // render, which the ref is not).
+          // Immutable for a hero's whole life, so the mounting prop is as fresh
+          // as the ref the victories rewrite (and readable during render, which
+          // the ref is not).
           heroName={character.name}
-          hardcore={character.hardcore}
           onBeginRun={() => {
             // Leave the level-name card and drop into the run — the level
             // music rolls the moment play begins.
@@ -2084,132 +2168,15 @@ export function GameScreen({
         />
       )}
 
-      {/* THE TALK BOX — a conversation the player STEERS: what a bystander
-          says, and what the hero may say back. The hero's own `talk` screen,
-          parked exactly as the errand box is; every branch is an engine
-          mutator, so the box owns none of the rules. */}
-      {state && hud?.screen === "talk" && (
-        <TalkOverlay
-          state={state}
-          assets={assets}
-          font={font}
-          heroName={character.name}
-          onAdvance={() => {
-            runCommand(state, "advanceTalk");
-            playUiSound(synth, "move");
-            bumpUi();
-          }}
-          onPick={(index) => {
-            runCommandOk(state, "pickTalkChoice", index);
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          onBlip={() => {
-            playUiSound(synth, "blip");
-            playTypewriterHaptic();
-          }}
-          onClose={() => {
-            runCommand(state, "closeTalk");
-            playUiSound(synth, "back");
-            bumpUi();
-          }}
-        />
-      )}
-
-      {/* THE QUEST BOX — the conversation with somebody who has an errand.
-          The hero is parked behind it on their own `quest` screen, exactly as
-          behind the shop; every action here is an engine mutator, so the box
-          owns none of the rules. */}
-      {state && hud?.screen === "quest" && (
-        <QuestOverlay
-          state={state}
-          assets={assets}
-          font={font}
-          heroName={character.name}
-          onAdvance={() => {
-            runCommand(state, "advanceQuestDialogue");
-            playUiSound(synth, "move");
-            bumpUi();
-          }}
-          onAccept={() => {
-            runCommandOk(state, "acceptQuest");
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          onDecline={() => {
-            runCommandOk(state, "declineQuest");
-            playUiSound(synth, "back");
-            bumpUi();
-          }}
-          onTurnIn={() => {
-            runCommand(state, "turnInQuest");
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          onPick={(questId) => {
-            runCommandOk(state, "pickQuestTopic", questId);
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          onChooseReward={(index) => {
-            runCommandOk(state, "chooseQuestReward", index);
-            playUiSound(synth, "move");
-            bumpUi();
-          }}
-          onBlip={() => {
-            playUiSound(synth, "blip");
-            playTypewriterHaptic();
-          }}
-          onClose={() => {
-            runCommand(state, "closeQuestDialogue");
-            playUiSound(synth, "back");
-            bumpUi();
-          }}
-        />
-      )}
-
-      {/* THE TRADE WINDOW — the hero's own `trade` screen, raised on
-          both seats at once by `openTrade` — which only an accepted REQUEST
-          reaches (trade.ts rule 5). The overlay only shows the table
-          and sends verbs; every rule is the engine's. The partner's NAME comes
-          from the session roster — the engine's Player carries no name. */}
-      {state && hud?.screen === "trade" && (
-        <TradeOverlay
-          state={state}
-          assets={assets}
-          font={font}
-          partnerName={(() => {
-            const seat = tradePartner(state, localHero(state));
-            if (seat === null) return null;
-            return (
-              sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
-              null
-            );
-          })()}
-          bumpUi={bumpUi}
-        />
-      )}
-
-      {/* The paused-screen menus: the demo's exit confirm, or the ordinary
-          pause menu with its AUTO PILOT engage row (PausedOverlays.tsx). */}
-      {state && hud?.screen === "paused" && (
-        <RunPausedOverlay
-          state={state}
-          font={font}
-          relicFonts={assets.relicFonts}
-          sprites={assets.sprites}
-          demo={demo}
-          botView={botView}
-          hardcore={character.hardcore}
-          userPausedRef={userPausedRef}
-          characterRef={characterRef}
-          difficulty={difficulty}
-          autopilot={autopilot}
-          onQuit={onQuit}
-          onExitToMenu={onExitToMenu}
-          bumpUi={bumpUi}
-          sessionLink={sessionLink}
-        />
+      {/* THE RUN'S OWN WINDOWS — the pause menu, the bag, the map, the stall,
+          the chooser, the conversations, the trade table — and any MODAL
+          standing over them. Which window answers which screen, what is in it
+          and what each row does are `content/menus/`; this mount hands the
+          layer the run's values, its verbs and the code-backed panels, and
+          knows nothing else about them. A mod that re-draws the pause menu
+          does not touch this file. */}
+      {hudContext && (
+        <MenuLayer ctx={hudContext} screen={hud?.screen} panels={menuPanels} />
       )}
 
       {/* YOU FELL — the local hero is down while the party still

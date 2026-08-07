@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE COMPANION'S KIT — what a spared elite is carrying and what you may hand
+# it, raised off the party rail's portrait.
+screen: companion
+wrap: none
+body:
+  - id: kit
+    kind: widget
+    widget: companionPanel

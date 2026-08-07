@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE FULL-SCREEN MAP — what the hero has uncovered of the venue, raised from
+# the minimap. A widget: it is the fog grid painted onto a canvas, which is not
+# expressible as boxes and words.
+screen: map
+wrap: none
+body:
+  - id: map
+    kind: widget
+    widget: mapPanel

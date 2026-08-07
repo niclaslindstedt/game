@@ -291,26 +291,34 @@ export function resolveColor(
 
 /**
  * A condition: a flag binding, a negated one, a list of either (which holds
- * when EVERY entry does), or a judgement. Absent means "always", and a script
- * that cannot answer means "always" too.
+ * when EVERY entry does), or a judgement. Absent means "always".
+ *
+ * `unanswered` is what a question NOTHING can answer comes back as — a binding
+ * this build does not have, a judgement that will not run — and the caller
+ * chooses it because the safe answer depends on what is being asked.
+ *
+ *   VISIBILITY fails OPEN (the default): a mod authored against a newer game
+ *              must not be able to make the HUD disappear.
+ *   A TRIGGER  fails CLOSED (`../menus/modals.ts`): a window that raises itself
+ *              on a question nobody understood is a modal in the player's face
+ *              in the middle of a fight, for ever.
  */
 export function resolveCondition(
   condition: HudCondition | undefined,
   ctx: HudResolveContext,
+  unanswered = true,
 ): boolean {
   if (condition === undefined) return true;
   if (typeof condition === "string") {
     const negated = condition.startsWith("!");
     const value = ctx.values[negated ? condition.slice(1) : condition];
-    // A binding this build does not answer shows the element: a mod authored
-    // against a newer game must not be able to make the HUD disappear.
-    if (value === undefined) return true;
+    if (value === undefined) return unanswered;
     return negated ? !value : Boolean(value);
   }
   if (Array.isArray(condition)) {
-    return condition.every((entry) => resolveCondition(entry, ctx));
+    return condition.every((entry) => resolveCondition(entry, ctx, unanswered));
   }
-  return hudScriptFlag(condition.script, ctx.state) ?? true;
+  return hudScriptFlag(condition.script, ctx.state) ?? unanswered;
 }
 
 function resolveText(
@@ -385,7 +393,7 @@ function clampFrac(raw: string | number | boolean | undefined): number {
  * pixels. The schema has already refused anything that is not a plain length,
  * colour or border, so nothing arriving here can carry a `url()` or a `calc()`.
  */
-function resolveStyle(
+export function resolveStyle(
   style: HudStyle | undefined,
 ): Record<string, string | number> | undefined {
   if (!style) return undefined;

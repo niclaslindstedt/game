@@ -18,25 +18,26 @@ comments, and the mod compiler runs the **same** modules the game's own build
 runs — so what a schema accepts is exactly what your mod may say. **When this
 document and a schema disagree, the schema is right.**
 
-| Your file                                         | Schema (`../scripts/asset-tools/…`)                                     |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| `mod.yaml`, `ladder.yaml`, `levels/<id>.yaml`     | [`level-schema.mjs`](../scripts/asset-tools/level-schema.mjs)           |
-| `maps/<id>.yaml`                                  | [`map-schema.mjs`](../scripts/asset-tools/map-schema.mjs)               |
-| `enemies/<biome>/<id>.yaml`                       | [`enemy-schema.mjs`](../scripts/asset-tools/enemy-schema.mjs)           |
-| `items/<rarity>/<id>.yaml`                        | [`item-schema.mjs`](../scripts/asset-tools/item-schema.mjs)             |
-| `sets.yaml`                                       | [`set-schema.mjs`](../scripts/asset-tools/set-schema.mjs)               |
-| `companions.yaml`                                 | [`companion-schema.mjs`](../scripts/asset-tools/companion-schema.mjs)   |
-| `powerups.yaml`                                   | [`powerup-schema.mjs`](../scripts/asset-tools/powerup-schema.mjs)       |
-| `talents.yaml`                                    | [`talent-schema.mjs`](../scripts/asset-tools/talent-schema.mjs)         |
-| `quests/<id>.yaml`, `quest-givers.yaml`           | [`quest-schema.mjs`](../scripts/asset-tools/quest-schema.mjs)           |
-| `cutscenes/`, `thoughts.yaml`, `story-items.yaml` | [`story-schema.mjs`](../scripts/asset-tools/story-schema.mjs)           |
-| `sprites/<family>/<name>.yaml`                    | [`sprite-schema.mjs`](../scripts/asset-tools/sprite-schema.mjs)         |
-| `animations.yaml`                                 | [`animation-schema.mjs`](../scripts/asset-tools/animation-schema.mjs)   |
-| `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)           |
-| `hud/**`                                          | [`hud-schema.mjs`](../scripts/asset-tools/hud-schema.mjs)               |
-| `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)           |
-| `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
-| `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
+| Your file                                         | Schema (`../scripts/asset-tools/…`)                                       |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| `mod.yaml`, `ladder.yaml`, `levels/<id>.yaml`     | [`level-schema.mjs`](../scripts/asset-tools/level-schema.mjs)             |
+| `maps/<id>.yaml`                                  | [`map-schema.mjs`](../scripts/asset-tools/map-schema.mjs)                 |
+| `enemies/<biome>/<id>.yaml`                       | [`enemy-schema.mjs`](../scripts/asset-tools/enemy-schema.mjs)             |
+| `items/<rarity>/<id>.yaml`                        | [`item-schema.mjs`](../scripts/asset-tools/item-schema.mjs)               |
+| `sets.yaml`                                       | [`set-schema.mjs`](../scripts/asset-tools/set-schema.mjs)                 |
+| `companions.yaml`                                 | [`companion-schema.mjs`](../scripts/asset-tools/companion-schema.mjs)     |
+| `powerups.yaml`                                   | [`powerup-schema.mjs`](../scripts/asset-tools/powerup-schema.mjs)         |
+| `talents.yaml`                                    | [`talent-schema.mjs`](../scripts/asset-tools/talent-schema.mjs)           |
+| `quests/<id>.yaml`, `quest-givers.yaml`           | [`quest-schema.mjs`](../scripts/asset-tools/quest-schema.mjs)             |
+| `cutscenes/`, `thoughts.yaml`, `story-items.yaml` | [`story-schema.mjs`](../scripts/asset-tools/story-schema.mjs)             |
+| `sprites/<family>/<name>.yaml`                    | [`sprite-schema.mjs`](../scripts/asset-tools/sprite-schema.mjs)           |
+| `animations.yaml`                                 | [`animation-schema.mjs`](../scripts/asset-tools/animation-schema.mjs)     |
+| `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)             |
+| `hud/**`                                          | [`hud-schema.mjs`](../scripts/asset-tools/hud-schema.mjs)                 |
+| `menus/**`                                        | [`ingame-menu-schema.mjs`](../scripts/asset-tools/ingame-menu-schema.mjs) |
+| `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)             |
+| `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs)   |
+| `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)           |
 
 The files with no schema are the ones with no fields — a recording
 (`sounds/<id>.<ext>`, `music/<id>.<ext>`) and a drawn sprite
@@ -810,6 +811,128 @@ put a conversion's own voice: a rally's pace note, a delivery run's order slip, 
 hearse's body count. Nothing about the wagon's own gearbox is authored in the
 HUD — the box is real physics and shifts itself at its own shift point, so
 `drive.gear` and `drive.rpm` are the same numbers the engine note is built from.
+
+## `menus/` — THE RUN'S OWN WINDOWS, which you may replace too
+
+The pause menu, the bag's frame, the map, the stall, the level-up chooser, the
+two conversation boxes and the trade table are authored the way the HUD is —
+under `content/menus/` in the game and under `menus/` in your mod. Ship one row
+and you have added a button to the pause menu; ship a folder and the game's
+windows are yours.
+
+**A ROW IS A HUD NODE.** Everything in `hud/elements/<id>.yaml` above — the
+kinds, the bindings, `press:`, `visible:`, `classes:`, `style:`, `{ script: }` —
+is exactly what a menu row says, checked by the same code and drawn by the same
+renderer. What follows is only what a WINDOW adds.
+
+```
+menus/
+  <id>.yaml              a MENU — one of the run's own screens, drawn
+  modals/<id>.yaml       a MODAL — a window you raise yourself
+  elements/<id>.yaml     a ROW placed in somebody else's window
+  scripts/<id>.lua       the judgements behind them
+```
+
+`node mod/tools/cli.mjs ids --kind menus` lists the windows you may aim a row
+at or replace; `mod/catalog.json` carries `menuScreens` (the screens a window
+may answer) and `menuWidgets` (the code-backed insides it may place) beside the
+HUD's own vocabulary, which menu rows share.
+
+### `menus/<id>.yaml` — a window
+
+```yaml
+screen: paused # WHICH of the run's screens this draws. Required.
+order: 10 # among the windows answering that screen
+visible: "!menu.demo" # …the first one that HOLDS is the one drawn
+backdrop: game-overlay pause-overlay # the full-screen layer behind it
+class: intro-box pause-menu # …and the box your rows sit in
+frame: hud_frame # a sprite as the box's 9-slice border
+dismiss: { action: resumeRun } # what a press on the BACKDROP does
+sound: ui_confirm # what it sounds like when it opens
+body:
+  - id: title # EVERY top-level row needs one — see below
+    kind: text
+    text: PAUSED
+    scale: 6
+    color: "#7ef0c8"
+```
+
+| Field      | What it is                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| `screen`   | the run's screen this window draws. A menu needs one; a modal has none.                                  |
+| `order`    | among the windows answering the same screen.                                                             |
+| `visible`  | a condition — same grammar as an element's.                                                              |
+| `wrap`     | `window` (default) draws the backdrop and the box; `none` draws neither, for a body that paints its own. |
+| `backdrop` | the class of the full-screen layer behind the box.                                                       |
+| `class`    | the class of the box itself.                                                                             |
+| `style`    | the same bounded set an element's `style:` is. **A mod cannot ship CSS.**                                |
+| `frame`    | a sprite drawn as the box's 9-slice border.                                                              |
+| `dismiss`  | a `press:` run when the BACKDROP is pressed. Leave it out and the window cannot be waved away.           |
+| `sound`    | a sound id, played when it opens.                                                                        |
+| `body`     | the rows. Each is a HUD node with an `id`, in order.                                                     |
+
+**TWO WINDOWS MAY SHARE ONE SCREEN.** They are checked in `order` and the first
+whose `visible:` holds is drawn — which is how the game's own demo confirm and
+its pause menu both answer `paused`, and how your conversion gives itself its
+own pause menu on its own levels only.
+
+### `menus/elements/<id>.yaml` — one row, in somebody else's window
+
+```yaml
+menu: pause # the window (ours or yours)
+into: actions # …and the container row inside it, if any
+order: 15 # the shipped rows are numbered in TENS, so this lands between two
+kind: button
+class: pixel-button secondary
+aria: my-own-row
+press: { action: openModal, arg: my_warning }
+children:
+  - kind: text
+    text: MY OWN ROW
+    scale: 3
+```
+
+**The id is the whole merge rule again.** A row merges into the window's body by
+id, later wins: a new id ADDS, and one of ours REPLACES that row — so
+`menus/elements/resume.yaml` re-words the pause menu's RESUME and leaves the
+rest alone. A row with no `order:` takes the place of the row it replaced, or
+goes to the end if it replaces nothing.
+
+### `menus/modals/<id>.yaml` — a window you raise yourself
+
+Everything a menu says except `screen:`, plus the two fields that decide when it
+comes up on its own:
+
+```yaml
+when: { script: "my_menus.worth_saying" } # a flag, a list of flags, or a judgement
+once: true # …and say it one time per run
+```
+
+Two doors, and you may use both: `press: { action: openModal, arg: <id> }` on
+any button in the game, and `when:`, which raises it on the EDGE — the moment
+the answer turns yes, and not again until it has turned no. So a window the
+player dismisses stays dismissed. `closeModal` lowers the top one.
+
+A modal is CHROME: it does not park the hero and does not freeze the world (a
+window your mod raised must never be able to stop somebody's co-op session). If
+you want the hero parked, put an engine verb on one of your rows.
+
+`when:` FAILS CLOSED where a `visible:` fails open — a modal raised on a binding
+this build has never heard of would stand in the player's face for the rest of
+the run.
+
+### `menus/scripts/<id>.lua` — the judgements
+
+The HUD's scripts exactly: `f(state)` with the bindings grouped by prefix,
+`state.menu` being what the windows are doing (`menu.screen`, `menu.modalOpen`,
+`menu.cleanSlates`, …). One trap worth stating: **the glyph check reads your
+YAML, not your Lua.** A line a judgement RETURNS is not checked against the
+pixel font, so a character outside `glyphs` in `mod/catalog.json` comes out as a
+question mark with every check green.
+
+`mod/examples/greenhouse/menus/` is a worked one: a modal raised from Lua, a row
+added to the game's pause menu that raises the same window, and the judgements
+behind both.
 
 ## `sprites/<family>/<name>.yaml` — pixel art
 

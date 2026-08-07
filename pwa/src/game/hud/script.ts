@@ -36,6 +36,7 @@ import {
   type LuaValue,
 } from "@game/lib/lua/index.ts";
 
+import { menuGeneration, menuLayout } from "../menus/layout.ts";
 import { hudGeneration, hudLayout } from "./layout.ts";
 
 /** What one judgement may spend. A HUD script picks a colour off a ladder or
@@ -55,37 +56,54 @@ let cache: Cache = fresh();
 
 function fresh(): Cache {
   return {
-    generation: hudGeneration(),
+    generation: generation(),
     modules: new Map(),
     functions: new Map(),
     disowned: new Set(),
   };
 }
 
-/** Everything is thrown away when the layout is swapped — which is what makes
- * a mod's replacement judgements take effect, and `restoreHudLayout()` put the
- * shipped ones back. */
+/**
+ * ONE HOST, TWO CATALOGS. The HUD's judgements and the in-game menus' are the
+ * same kind of thing — a formula about the run, called when the values publish
+ * — so they share a host, a budget and a namespace: `{ script: "pause.label" }`
+ * finds `menus/scripts/pause.lua` from a menu row and `hud/scripts/` from a HUD
+ * element, and a file stem in both is the HUD's (nothing ships one).
+ */
+function generation(): number {
+  return hudGeneration() + menuGeneration();
+}
+
+/** Everything is thrown away when either layout is swapped — which is what
+ * makes a mod's replacement judgements take effect, and what makes
+ * `restoreHudLayout()` / `restoreMenuLayout()` put the shipped ones back. */
 function current(): Cache {
-  if (cache.generation !== hudGeneration()) cache = fresh();
+  if (cache.generation !== generation()) cache = fresh();
   return cache;
 }
 
 function moduleFor(file: string): LuaModule | null {
   const cached = current().modules.get(file);
   if (cached) return "mod" in cached ? cached.mod : null;
-  const source = hudLayout().scripts[file]?.source;
+  const script =
+    hudLayout().scripts[file] ?? menuLayout().scripts[file] ?? undefined;
+  const source = script?.source;
+  const where =
+    hudLayout().scripts[file] === undefined
+      ? `menus/scripts/${file}.lua`
+      : `hud/scripts/${file}.lua`;
   if (source === undefined) {
     current().modules.set(file, { failed: true });
-    warn(`hud: no script hud/scripts/${file}.lua — its readers fall back`);
+    warn(`hud: no script named ${file}.lua — its readers fall back`);
     return null;
   }
   try {
-    const mod = load(compile(source, `hud/scripts/${file}.lua`), {});
+    const mod = load(compile(source, where), {});
     current().modules.set(file, { mod });
     return mod;
   } catch (err) {
     current().modules.set(file, { failed: true });
-    warn(`hud/scripts/${file}.lua: ${(err as Error).message}`);
+    warn(`${where}: ${(err as Error).message}`);
     return null;
   }
 }
@@ -100,7 +118,7 @@ function functionFor(ref: string): LuaFunction | null {
     return null;
   }
   const fn = moduleFunction(mod, name) ?? null;
-  if (!fn) warn(`hud: hud/scripts/${file}.lua exports no "${name}"`);
+  if (!fn) warn(`hud: script ${file}.lua exports no "${name}"`);
   current().functions.set(ref, fn);
   return fn;
 }

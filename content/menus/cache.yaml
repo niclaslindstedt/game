@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE CACHE — the garage chest (src/game/cache.ts), raised by a tap on the thing
+# itself. A screen like the stall.
+screen: cache
+wrap: none
+body:
+  - id: chest
+    kind: widget
+    widget: cachePanel

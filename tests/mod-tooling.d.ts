@@ -324,6 +324,55 @@ declare module "*/scripts/asset-tools/hud-schema.mjs" {
   };
 }
 
+declare module "*/scripts/asset-tools/ingame-menu-schema.mjs" {
+  /** The run's own screens a window may answer — `PlayerScreen`, which is the
+   * ENGINE's list. A mod may not add to it: a screen nothing raises is a window
+   * nobody would ever see. */
+  export const MENU_SCREENS: Set<string>;
+  /** The code-backed insides a window may place — the bag grid, the map, the
+   * talk box. `pwa/src/game/menus/widgets.ts` answers these names. */
+  export const MENU_WIDGETS: Set<string>;
+
+  /** What a window's cross-references are resolved against: the atlas, the
+   * sound bank, this catalog's Lua exports and the windows a row may be aimed
+   * at (the game's own plus the mod's). */
+  export type MenuRefs = {
+    sprites: Set<string>;
+    sounds: Set<string>;
+    scripts: Map<string, Set<string>>;
+    menus?: Set<string>;
+  };
+
+  export function validateMenu(
+    menu: unknown,
+    refs: MenuRefs,
+    opts?: { modal?: boolean },
+  ): { errors: string[]; warnings: string[] };
+
+  export function validateMenuElement(
+    element: unknown,
+    refs: MenuRefs,
+  ): { errors: string[]; warnings: string[] };
+
+  /** The refusals no single file can see — chiefly a screen no window answers. */
+  export function validateMenuCatalog(
+    menus: { id: string; screen?: string }[],
+    modals: { id: string }[],
+    elements: { id: string; menu: string }[],
+  ): { errors: string[]; warnings: string[] };
+}
+
+declare module "*/scripts/menu-data/load-ingame-yaml.mjs" {
+  /** The in-game menu tree, loaded from a base directory — the game's
+   * `content/`, or a mod's root. The same loader both go through. */
+  export function loadMenus(baseDir?: string): {
+    menus: { id: string; screen?: string; [key: string]: unknown }[];
+    modals: { id: string; [key: string]: unknown }[];
+    elements: { id: string; menu: string; [key: string]: unknown }[];
+    scripts: { id: string; source: string; file: string }[];
+  };
+}
+
 declare module "*/scripts/hud-data/load-yaml.mjs" {
   /** The HUD tree, loaded from a base directory — the game's `content/`, or a
    * mod's root. The same loader both go through, which is what makes "it works

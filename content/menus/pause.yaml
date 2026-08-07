@@ -1,0 +1,159 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE PAUSE MENU — the run's own window, authored.
+#
+# This file is the whole of what the pause screen IS: the backdrop you tap to
+# resume, the box, the two lines at the top, every row in the stack and what
+# each one does. There is no component behind it — `pwa/src/game/menus/` draws
+# whatever this says, exactly as `pwa/src/game/hud/` draws the HUD.
+#
+# WHAT A MOD CAN DO WITH IT, in rising order of ambition:
+#
+#   * one row of its own — ship `menus/elements/<id>.yaml` with `menu: pause`,
+#     `into: actions` and an order between two of the shipped ones (they are
+#     0, 10, 20, 30, 40, so 15 lands in the middle of the stack).
+#   * a different RESUME — ship an element with the id `resume`. Same id, later
+#     wins, and the shipped row is gone.
+#   * a different pause menu entirely — ship `menus/pause.yaml`. Same id, same
+#     rule.
+#
+# THE ROWS ARE GATED, NOT HIDDEN BY CODE. AUTO PILOT is offered on a run that
+# may be flown (not the demo, not BOT VIEW, not a hardcore hero — a hardcore
+# death is permanent, so an unattended bot could permakill the hero), THE BIBLE
+# only exists while the hero carries one, and the session panel only while
+# there is a session. Every one of those is a `visible:` a mod can change.
+
+screen: paused
+# The demo's own exit confirm answers this same screen and is checked FIRST
+# (`demo_exit.yaml`, order 0) — the first window whose `visible:` holds is the
+# one drawn.
+order: 10
+visible: "!menu.demo"
+
+backdrop: game-overlay pause-overlay
+class: intro-box pause-menu
+# Tapping the backdrop resumes; the RESUME row below just makes it explicit.
+dismiss:
+  action: resumeRun
+  sound: none
+
+body:
+  - id: title
+    kind: text
+    text: PAUSED
+    scale: 6
+    color: "#7ef0c8"
+
+  - id: hint
+    kind: text
+    text: CLICK OR PRESS P TO RESUME
+    scale: 2
+    color: "#9aa3ad"
+
+  # A full-width vertical stack — clean in both orientations, no awkward wrap.
+  # RESUME leads (mint), AUTO PILOT is the amber accent CTA (the paid feature,
+  # tying into its picker's theme), MENU is the quiet exit.
+  - id: actions
+    kind: panel
+    class: pause-actions
+    children:
+      - id: resume
+        kind: button
+        class: pixel-button
+        aria: resume
+        order: 0
+        press:
+          action: resumeRun
+          sound: none
+        children:
+          - kind: text
+            text: ▶ RESUME
+            scale: 3
+            color: "#0b0d10"
+
+      - id: autopilot_start
+        kind: button
+        class: pixel-button autopilot
+        aria: autopilot-start
+        order: 10
+        visible:
+          - menu.autopilotOffered
+          - "!menu.autopilotActive"
+        press:
+          action: openAutopilot
+        children:
+          - kind: text
+            text: » AUTO PILOT
+            scale: 3
+            color: "#0b0d10"
+
+      - id: autopilot_stop
+        kind: button
+        class: pixel-button secondary
+        aria: autopilot-stop
+        order: 20
+        visible: menu.autopilotActive
+        press:
+          action: stopAutopilot
+          sound: ui_back
+        children:
+          - kind: text
+            text: ■ STOP AUTO PILOT
+            scale: 3
+            color: "#e06a6a"
+
+      # THE BIBLE — a clean slate the hero is carrying, spent when he decides.
+      # It lives on the PAUSE screen rather than in the bag for the reason the
+      # charge itself does: a thing that must never be dropped, sold, or lost to
+      # a full bag does not belong in a container the player empties. The row is
+      # absent entirely when he has none, so the one errand in the game that
+      # pays a respec is also the only thing that ever reveals it.
+      #
+      # Its LABEL is a judgement rather than a line, because it counts: one
+      # charge reads THE BIBLE and two read THE BIBLE (2). That is the whole
+      # split — a read is a binding, a decision is Lua.
+      - id: clean_slate
+        kind: button
+        class: pixel-button secondary
+        aria: use-clean-slate
+        order: 30
+        visible: menu.hasCleanSlate
+        press:
+          action: useCleanSlate
+        children:
+          - kind: text
+            text:
+              script: pause.bible_label
+            scale: 3
+            color: "#e0b955"
+
+      - id: exit
+        kind: button
+        class: pixel-button secondary
+        aria: pause-menu
+        order: 40
+        press:
+          action: exitToMenu
+          sound: ui_back
+        children:
+          - kind: text
+            text: ≡ MENU
+            scale: 3
+
+  # THE SESSION, when this run has one: the address a friend types, what the
+  # router said, and who is in the seats. It hangs here because a session exists
+  # only while a run does, and because the pause screen is the one place in a
+  # run a player is reading rather than fighting.
+  - id: session
+    kind: widget
+    widget: sessionPanel
+    visible: menu.session
+
+  # The AUTO PILOT pickers, which stack over this window when the row above
+  # raises them: the speed rungs, the in-run coin store behind their STORE
+  # button, and the last call before a ride bins the LOST & FOUND. A widget
+  # because each of them is a live price list rather than a box of words.
+  - id: pickers
+    kind: widget
+    widget: autopilotPickers
+    visible: menu.autopilotOffered

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE STALL — a trader's stock and the hero's purse. This hero stands at it
+# while the rest of the party plays on; solo, the world holds.
+screen: shop
+wrap: none
+body:
+  - id: stall
+    kind: widget
+    widget: shopPanel

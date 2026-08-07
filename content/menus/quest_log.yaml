@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE QUEST LOG — every errand the hero is carrying, raised by the HUD's `!`
+# button, parking him on his own screen exactly as the map does.
+screen: questLog
+wrap: none
+body:
+  - id: log
+    kind: widget
+    widget: questLogPanel

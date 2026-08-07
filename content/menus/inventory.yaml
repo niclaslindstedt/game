@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE CHARACTER SCREEN, in its two D2 faces. Both share the hero's `inventory`
+# screen — pressing the bag pouch or the hero's portrait parks him identically —
+# and which face shows is the app's own `menu.charTab`, so a swap between them
+# is instant and CLOSE leaves both.
+#
+# `wrap: none` because each face already paints its own full-screen furniture:
+# the window here places, gates and orders them, and does not draw a second box
+# around a box. A mod that wants the bag inside its OWN frame drops the `none`,
+# names a backdrop and a class, and the same widget lands inside it.
+screen: inventory
+wrap: none
+body:
+  - id: bag
+    kind: widget
+    widget: inventoryPanel
+    visible: menu.charBag
+  - id: sheet
+    kind: widget
+    widget: characterSheet
+    visible: menu.charStats
