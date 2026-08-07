@@ -271,6 +271,15 @@ module.exports = {
     { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
     { from: "../scripts/map-data", to: "modtools/scripts/map-data" },
+    // THE RUN'S OWN WINDOWS, which a mod may replace like the HUD. ONE FILE
+    // rather than the folder it sits in, and deliberately: `scripts/menu-data/`
+    // also holds the TITLE menu's loader, which is the one catalog a mod may
+    // not ship — and a toolchain that carries a loader it must never call is a
+    // toolchain inviting somebody to call it.
+    {
+      from: "../scripts/menu-data/load-ingame-yaml.mjs",
+      to: "modtools/scripts/menu-data/load-ingame-yaml.mjs",
+    },
     { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
     { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
     { from: "../scripts/quest-data", to: "modtools/scripts/quest-data" },
