@@ -19,82 +19,105 @@
 //
 // AND IT HAS A GEARBOX, which is the whole reason the note is interesting. A
 // pitch that rose smoothly from standstill to 120 is a siren, not a car; what a
-// car does is climb, DROP, and climb again. So the speed range is cut into
-// gears: within a gear the note rises with the revs, and crossing into the next
-// one drops it back down to a higher floor than the last gear started at. That
-// sawtooth is what the ear hears as "accelerating", and it is why the drive
-// sounds like it is being driven rather than like it is being faded up.
+// car does is climb, DROP, and climb again. So the note is not a function of
+// road speed at all — it is a function of the CRANK, and the crank is what the
+// gearbox stands between. That sawtooth is what the ear hears as
+// "accelerating", and it is why the drive sounds like it is being driven rather
+// than like it is being faded up.
+//
+// AND THE CRANK IS THE ENGINE'S, NOT THIS FILE'S. The gearbox used to live here
+// — five speed thresholds picked so the note would sawtooth nicely — which
+// meant the sound had a gearbox and the CAR did not. It is real physics now
+// (`src/game/drive/drivetrain.ts`): ratios, a torque curve, an automatic that
+// changes up at the redline, and the wagon's acceleration solved through all
+// three. So this module has one job left, which is to VOICE what the engine is
+// already doing. The tachometer on the dashboard, the shove in the player's
+// back and the noise out of the speaker are three readings of one model, and
+// none of them can drift.
+
+import { DRIVE, DRIVETRAIN, engineRpm, gearFor, gearRev } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-/** How many gears the wagon has. Five, and the top one is long — the last
- * quarter of the speed range is one gear, so flat out is a sustained thrash
- * rather than another shift. */
-const GEARS = [0, 0.13, 0.3, 0.5, 0.72] as const;
+/**
+ * RPM PER HERTZ — how the crank becomes a pitch.
+ *
+ * A four-cylinder four-stroke fires twice per revolution, so the note it makes
+ * is `rpm / 60 * 2` — which is this constant and nothing chosen by ear. It is
+ * the whole of "the sound matches the rpm": idle is a 27 Hz chug you feel more
+ * than hear, and the redline is 193 Hz of a tired engine being asked for more
+ * than it has.
+ */
+const RPM_PER_HZ = 30;
 
-/** …and how many that is, for a dial that draws the gate rather than the note.
- * Exported so the HUD's own gear readout counts the same gears the engine
- * sounds — two counts of the same box is a dial that lies at the top end. */
-export const GEAR_COUNT = GEARS.length;
-/** The note a gear opens at, and the note it screams at (Hz). Both climb with
- * the gear so an upshift DROPS the pitch without ever dropping it back to where
- * the car pulled away from. */
-const GEAR_FLOOR = 58;
-const GEAR_FLOOR_STEP = 11;
-const GEAR_REACH = 74;
-
-/** What the engine is doing at a given fraction of top speed. Pure, and
- * exported because it is the part worth testing — the sound of it is judged by
- * ear, but "the pitch drops on an upshift" is a fact a test can hold. */
-export function engineNote(speedFrac: number): {
+/**
+ * What the engine is doing at a given road speed (world px/s) — the gear the
+ * box has chosen, how far up it the car is, the revs, and the note that makes.
+ *
+ * A thin read of the drivetrain plus the one thing that IS this module's: the
+ * pitch. Exported because it is the part worth testing — the sound of it is
+ * judged by ear, but "the pitch drops on an upshift" is a fact a test can hold.
+ */
+export function engineNote(speedPx: number): {
   gear: number;
   rev: number;
+  rpm: number;
   hz: number;
 } {
-  const frac = Math.min(1, Math.max(0, speedFrac));
-  let gear = 0;
-  for (let i = GEARS.length - 1; i >= 0; i--) {
-    if (frac >= (GEARS[i] ?? 0)) {
-      gear = i;
-      break;
-    }
-  }
-  const from = GEARS[gear] ?? 0;
-  const to = GEARS[gear + 1] ?? 1;
-  // How far up THIS gear the car is — the revs. The top gear is measured
-  // against the top of the range, so holding the throttle down keeps climbing.
-  const rev = to > from ? Math.min(1, (frac - from) / (to - from)) : 0;
-  const hz = GEAR_FLOOR + gear * GEAR_FLOOR_STEP + rev * GEAR_REACH;
-  return { gear, rev, hz };
+  const rpm = engineRpm(speedPx);
+  return {
+    gear: gearFor(speedPx),
+    rev: gearRev(speedPx),
+    rpm,
+    hz: rpm / RPM_PER_HZ,
+  };
 }
 
-/** Ms between engine grains at idle and at the top of a gear — the putter rate,
- * which quickens with the revs exactly as a real one does. */
+/** Ms between engine grains at idle and at the redline — the putter rate,
+ * which quickens with the crank exactly as a real one does. */
 const GRAIN_SLOW_MS = 190;
 const GRAIN_FAST_MS = 96;
 
-/** How long to wait before the next grain, given where the revs are. */
-export function engineGrainMs(rev: number): number {
-  return GRAIN_SLOW_MS - (GRAIN_SLOW_MS - GRAIN_FAST_MS) * Math.min(1, rev);
+/** How long to wait before the next grain, at these revs. Keyed to the RPM
+ * rather than to how far up a gear the car is: the cadence is the engine
+ * turning over, and an upshift slows it down again the way it slows the note
+ * down. */
+export function engineGrainMs(rpm: number): number {
+  const band =
+    (rpm - DRIVETRAIN.idleRpm) / (DRIVETRAIN.redlineRpm - DRIVETRAIN.idleRpm);
+  const frac = Math.min(1, Math.max(0, band));
+  return GRAIN_SLOW_MS - (GRAIN_SLOW_MS - GRAIN_FAST_MS) * frac;
 }
 
 /**
  * One grain of the running engine, plus the wind and tyre roar over it.
  *
- * `speedFrac` is road speed over the car's own top end; `wear` fattens the note
- * as the wagon comes apart — a car with its bonnet gone and a wheel off does not
- * sound like one fresh out of the bay.
+ * `speedPx` is the car's own road speed — the same number the physics is
+ * integrating, so the note is the engine's actual revs rather than a rendering
+ * of them; `wear` fattens it as the wagon comes apart, because a car with its
+ * bonnet gone and a wheel off does not sound like one fresh out of the bay.
  */
 export function playDriveEngine(
   synth: Synth,
-  speedFrac: number,
+  speedPx: number,
   wear: number,
 ): void {
-  const { hz, rev } = engineNote(speedFrac);
-  const load = Math.min(1, Math.max(0, speedFrac));
-  // The chug. A triangle for the body, detuned into a pair so it reads as an
-  // engine rather than a test tone, sagging very slightly across the grain so
-  // consecutive grains sound like strokes instead of a held pipe.
+  const { hz, rev, rpm } = engineNote(speedPx);
+  const load = Math.min(1, Math.abs(speedPx) / DRIVE.topSpeedPx);
+  // How far up the whole rev band the crank is — which is what the timbre
+  // follows, rather than road speed: a labouring engine in top and a screaming
+  // one in first are at the same mph and do not sound remotely alike.
+  const revBand = Math.min(
+    1,
+    Math.max(
+      0,
+      (rpm - DRIVETRAIN.idleRpm) / (DRIVETRAIN.redlineRpm - DRIVETRAIN.idleRpm),
+    ),
+  );
+  // The chug: the firing note itself. A triangle for the body, detuned into a
+  // pair so it reads as an engine rather than a test tone, sagging very slightly
+  // across the grain so consecutive grains sound like strokes instead of a held
+  // pipe.
   synth.tone({
     type: "triangle",
     from: hz,
@@ -103,13 +126,27 @@ export function playDriveEngine(
     volume: 0.022 + 0.026 * load,
     detuneCents: 10 + 14 * wear,
   });
-  // The exhaust's edge — a thin sawtooth an octave down, only really audible
-  // once the revs are up, which is what makes the top of a gear sound strained.
+  // ITS OCTAVE, which is what carries the note at all down at the bottom of the
+  // band: a 28 Hz idle is a thing a phone speaker cannot reproduce and a player
+  // would hear as silence. It fades out as the crank climbs and the fundamental
+  // comes up into its own — the same way a real engine stops sounding boomy and
+  // starts sounding sharp.
+  synth.tone({
+    type: "triangle",
+    from: hz * 2,
+    to: hz * 1.94,
+    durationMs: 220,
+    volume: 0.018 - 0.013 * revBand,
+    detuneCents: 8,
+  });
+  // The exhaust's edge — a thin sawtooth on the firing note, only really
+  // audible once the revs are up, which is what makes the top of a gear sound
+  // strained.
   if (rev > 0.35) {
     synth.tone({
       type: "sawtooth",
-      from: hz * 0.5,
-      to: hz * 0.49,
+      from: hz,
+      to: hz * 0.98,
       durationMs: 210,
       volume: 0.006 + 0.016 * rev,
       detuneCents: 16,
@@ -124,14 +161,21 @@ export function playDriveEngine(
   });
 }
 
-/** The blip of an upshift — throttle off, the note falls away, and the next
- * grain comes in on the new gear's floor. */
-export function playDriveShift(synth: Synth, speedFrac: number): void {
-  const { hz } = engineNote(speedFrac);
+/**
+ * The blip of an upshift — throttle off, the note falls away, and the next
+ * grain comes in on the new gear's floor.
+ *
+ * It falls from the REDLINE, because that is where the box always lets go: a
+ * shift happens at exactly the revs that would have passed it, so the drop the
+ * player hears is the real interval between the two gears rather than a
+ * decoration on top of the new one.
+ */
+export function playDriveShift(synth: Synth, speedPx: number): void {
+  const { hz } = engineNote(speedPx);
   synth.tone({
     type: "sawtooth",
-    from: hz * 1.12,
-    to: hz * 0.72,
+    from: DRIVETRAIN.redlineRpm / RPM_PER_HZ,
+    to: hz * 0.94,
     durationMs: 90,
     volume: 0.018,
     detuneCents: 12,

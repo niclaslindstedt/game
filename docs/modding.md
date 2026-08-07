@@ -354,10 +354,13 @@ Four things make it work as a format rather than as a theme:
 
 The drive minigame is the second SURFACE: one catalog, two mounts (the fight's
 `GameScreen`, the road's `DriveScreen`), with a top-level region naming which.
-Its dials read the `drive.*` bindings — speed, the gear and how far up it the
-wagon is, the bodies, the wear — and what they SAY is `content/hud/scripts/drive.lua`,
-which makes the dashboard the cheapest place in the game for a conversion to put
-its own voice.
+Its dials read the `drive.*` bindings — speed, the gear the box has chosen and
+how far up it the wagon is, the crank's own rpm against its redline, the bodies,
+the wear — and what they SAY is `content/hud/scripts/drive.lua`, which makes the
+dashboard the cheapest place in the game for a conversion to put its own voice.
+The shipped one is three pieces along the bottom of the windscreen: a
+speedometer with the tachometer drawn inside it, the shift gate (an `icon` whose
+sprite a judgement picks, one picture per position), and the damage dial.
 
 ### A mod's venue is CARVED, like every other
 

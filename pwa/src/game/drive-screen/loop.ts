@@ -21,7 +21,7 @@
 // what lets the gallery play a 200 ms collision at an eighth speed with the gore,
 // the sparks and the physics all stretching together.
 
-import { DRIVE, DRIVE_OUTCOME, type DriveState } from "@game/core";
+import { DRIVE_OUTCOME, type DriveState } from "@game/core";
 
 import { type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -106,15 +106,15 @@ export function runEngineNote(
 ): void {
   if (drive.outcome === DRIVE_OUTCOME.broken) return;
   if (drive.ms < engine.dueMs) return;
-  const frac = Math.abs(drive.car.speed) / DRIVE.topSpeedPx;
-  const { gear, rev } = engineNote(frac);
+  const speed = drive.car.speed;
+  const { gear, rpm } = engineNote(speed);
   // THE SHIFT IS HEARD BEFORE THE NEXT GRAIN: the note the player follows is
   // the climb inside a gear, so the moment it resets has to be marked or the
   // pitch simply appears to jump backwards for no reason.
-  if (gear > engine.gear) playDriveShift(synth, frac);
+  if (gear > engine.gear) playDriveShift(synth, speed);
   engine.gear = gear;
-  playDriveEngine(synth, frac, drive.car.wear);
-  engine.dueMs = drive.ms + engineGrainMs(rev);
+  playDriveEngine(synth, speed, drive.car.wear);
+  engine.dueMs = drive.ms + engineGrainMs(rpm);
 }
 
 /**

@@ -769,12 +769,20 @@ publishes — on a real change, a few times a second — never per element per f
 ### The road
 
 The drive minigame is the second surface. Its region carries `surface: drive`,
-its bindings are the `drive.*` group (speed, the gear and how far up it the
-wagon is, the bodies, the wear), and its two verbs are `driveResume` and
-`driveSkip`. The shipped dashboard is two plates whose lines and colours are all
-`hud/scripts/drive.lua` — which is the cheapest place in the game to put a
-conversion's own voice: a rally's pace note, a delivery run's order slip, a
-hearse's body count.
+its bindings are the `drive.*` group (speed, the gear the box has chosen and how
+far up it the wagon is, the CRANK — `rpm`, `rpmFrac`, `redlineRpm` — the bodies,
+the wear), and its two verbs are `driveResume` and `driveSkip`.
+
+The shipped dashboard sits along the bottom of the windscreen and is three
+pieces: a SPEEDOMETER with the tachometer drawn inside it (two `kind: gauge`
+arcs on one face), the GEARBOX (an `icon` whose sprite a script picks — the
+shift gate, one picture per position), and the DAMAGEOMETER (the same dial
+again, sweeping the wear). Every colour, every line and the choice of gate
+picture is `hud/scripts/drive.lua`, which is the cheapest place in the game to
+put a conversion's own voice: a rally's pace note, a delivery run's order slip, a
+hearse's body count. Nothing about the wagon's own gearbox is authored in the
+HUD — the box is real physics and shifts itself at the redline, so `drive.gear`
+and `drive.rpm` are the same numbers the engine note is built from.
 
 ## `sprites/<family>/<name>.yaml` — pixel art
 

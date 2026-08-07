@@ -15,7 +15,13 @@ import {
   createDrive,
   crossingsBetween,
   crowdEdges,
+  driveMph,
   driveVerdict,
+  engineRpm,
+  gearFor,
+  solvedTopSpeedPx,
+  DRIVETRAIN,
+  GEAR_COUNT,
   fellLamp,
   DRIVE,
   DRIVE_OUTCOME,
@@ -51,6 +57,126 @@ function floorIt(drive: DriveState, ms: number, wheel = 0): void {
     stepDrive(drive, 16, { pedal: 1, wheel });
   }
 }
+
+/** How long, flat out from a standstill on an empty road, to reach `mph`. */
+function secondsTo(mph: number): number {
+  const drive = createDrive(PARAMS);
+  silence(drive);
+  drive.car.speed = 0;
+  for (let t = 0; t < 120_000; t += 16) {
+    stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    if (driveMph(drive) >= mph) return t / 1000;
+  }
+  return Infinity;
+}
+
+/** Nothing on the road but the car — the crowd and the traffic pushed past the
+ * end of the course, so an acceleration run is not measuring collisions. */
+function silence(drive: DriveState): void {
+  drive.nextPedestrianAt = DRIVE.coursePx * 2;
+  drive.nextTrafficAt = DRIVE.coursePx * 2;
+}
+
+describe("the wagon's drivetrain", () => {
+  // THE BROCHURE IS THE TEST. Everything below is a claim the source makes out
+  // loud (`drive/drivetrain.ts`) about a heavy, tired, tall car — and every one
+  // of them is a shape rather than a stopwatch reading, because the ratios and
+  // the torque curve are meant to be tuned freely and a pinned figure would
+  // make every tuning pass a test edit.
+
+  it("takes the better part of ten seconds to reach sixty", () => {
+    // THE ONE NUMBER WITH A FLOOR UNDER IT. The road used to accelerate at
+    // 2.3 g — nought to sixty in about a second and a quarter — which is not a
+    // car, and it made the whole minigame a question of whether you were
+    // holding the throttle rather than of how you were driving. Eight seconds
+    // is the slowest a wagon like this could plausibly be quick, and it is the
+    // floor rather than the target.
+    const sixty = secondsTo(60);
+    expect(sixty).toBeGreaterThan(8);
+    expect(sixty).toBeLessThan(14);
+  });
+
+  it("takes longer for every twenty after that", () => {
+    // Drag goes as the square of speed and the power to beat it as the cube, so
+    // each bite is dearer than the last. This is what makes the top of the dial
+    // something a driver spends a whole straight earning.
+    const marks = [40, 60, 80, 100].map(secondsTo);
+    const steps = marks.slice(1).map((t, i) => t - (marks[i] ?? 0));
+    for (let i = 1; i < steps.length; i++) {
+      expect(steps[i]).toBeGreaterThan(steps[i - 1] ?? 0);
+    }
+  });
+
+  it("changes up on its own, at the redline, and never past it", () => {
+    // THE BOX IS AN AUTOMATIC and nobody drives its clutch: the gear is
+    // whichever one carries this road speed without over-revving, so a walk up
+    // the whole range must climb through every gear exactly once and never show
+    // the crank past its limit.
+    const seen: number[] = [];
+    for (let px = 0; px <= DRIVE.topSpeedPx; px += 1) {
+      const gear = gearFor(px);
+      if (seen[seen.length - 1] !== gear) seen.push(gear);
+      expect(engineRpm(px)).toBeLessThanOrEqual(DRIVETRAIN.redlineRpm + 1);
+      expect(engineRpm(px)).toBeGreaterThanOrEqual(DRIVETRAIN.idleRpm);
+    }
+    expect(seen).toEqual([...Array(GEAR_COUNT).keys()]);
+  });
+
+  it("drops the revs on every upshift, and never below the one before", () => {
+    // What a gearbox IS, as a fact rather than as a noise: the crank falls back
+    // when the box changes up, and it falls back a little less each time as the
+    // ratios close.
+    let prevGear = gearFor(0);
+    let prevRpm = engineRpm(0);
+    const drops: number[] = [];
+    for (let px = 1; px <= DRIVE.topSpeedPx; px += 1) {
+      const gear = gearFor(px);
+      const rpm = engineRpm(px);
+      if (gear > prevGear) {
+        expect(rpm).toBeLessThan(prevRpm);
+        drops.push(rpm);
+      }
+      prevGear = gear;
+      prevRpm = rpm;
+    }
+    expect(drops).toHaveLength(GEAR_COUNT - 1);
+    for (let i = 1; i < drops.length; i++) {
+      expect(drops[i]).toBeGreaterThan(drops[i - 1] ?? 0);
+    }
+  });
+
+  it("runs out of pull just about where the dial runs out of numbers", () => {
+    // A TOP SPEED IS A BALANCE, not a clamp: the wagon accelerates until the air
+    // is pushing back as hard as the tyres are pushing forward. It has to land
+    // near the authored ceiling from BELOW — a car that could not get close to
+    // its own speedometer would make the top of the dial a lie, and one that
+    // sailed past it would mean the cap was doing the work instead of the
+    // physics.
+    const solved = solvedTopSpeedPx();
+    expect(solved).toBeGreaterThan(DRIVE.topSpeedPx * 0.9);
+    expect(solved).toBeLessThanOrEqual(DRIVE.topSpeedPx);
+  });
+
+  it("coasts a great deal more gently than it brakes", () => {
+    // "Nothing held means carry on" is the road's whole control model, and it is
+    // only honest if letting go is nearly free: a lifted throttle is the air and
+    // the engine, which at any speed is a fraction of what the pedal beside it
+    // can do.
+    const shed = (pedal: number): number => {
+      const drive = createDrive(PARAMS);
+      silence(drive);
+      floorIt(drive, 12_000);
+      const from = drive.car.speed;
+      for (let t = 0; t < 1000; t += 16)
+        stepDrive(drive, 16, { pedal, wheel: 0 });
+      return from - drive.car.speed;
+    };
+    const coasted = shed(0);
+    const braked = shed(-1);
+    expect(coasted).toBeGreaterThan(0);
+    expect(coasted).toBeLessThan(braked * 0.5);
+  });
+});
 
 describe("the impact model", () => {
   it("costs more speed square on the nose than clipped on the wing", () => {

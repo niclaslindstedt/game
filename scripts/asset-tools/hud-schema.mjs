@@ -102,14 +102,27 @@ export const HUD_BINDINGS = {
   "drive.gear": "number",
   "drive.gearLabel": "number",
   "drive.gearCount": "number",
-  // How far up THIS gear the wagon is — the revs. Published because a
-  // TACHOMETER is the obvious next dial and a needle that only knew road speed
-  // would sit still through a whole upshift.
+  // THE CRANK, three ways. `rev` is how far up the CURRENT GEAR the wagon is;
+  // `rpm` is what the engine is actually turning at and `rpmFrac` the same
+  // measured against the redline, which is the arc a tachometer sweeps. A dial
+  // that only knew road speed would sit still through a whole upshift — and the
+  // note coming out of the speaker is read off the same rpm (`sfx/drive.ts`),
+  // so the needle and the noise cannot drift apart.
   "drive.rev": "frac",
+  "drive.rpm": "number",
+  "drive.rpmFrac": "frac",
+  "drive.redlineRpm": "number",
   "drive.reversing": "flag",
   "drive.bodies": "number",
   "drive.speedFrac": "frac",
   "drive.wear": "frac",
+  // …and what it was before the last second's hits. The damage dial draws its
+  // arc TWICE — once to `wear` in a hot colour and once to this in the calm one
+  // over the top — which is what makes a single collision's cost visible on a
+  // readout that otherwise only ever creeps. It is the XP strip's kill heat,
+  // and it is a READ: how long the slice stays lit is the app's (`WEAR_HOT_MS`)
+  // and what colour it is, the Lua's.
+  "drive.wearSettled": "frac",
   "drive.wearPercent": "number",
   "drive.failing": "flag",
   "drive.paused": "flag",

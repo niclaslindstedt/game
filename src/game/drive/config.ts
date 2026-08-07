@@ -88,21 +88,21 @@ export const DRIVE = {
   /** …and the same number in the unit the HUD says out loud, so the dial and
    * the physics can never drift apart. */
   topSpeedMph: 120,
-  /**
-   * How hard the car pulls (px/s²) and how hard it stops.
-   *
-   * The pull is deliberately LONG — nought to 120 takes about five seconds,
-   * which is both what a tired estate does and what makes speed feel like
-   * something you spend a run building rather than a button you hold. It is
-   * also the whole cost of a hit: the second of throttle it takes to win back
-   * what a body just took off you is the punishment, and it lands without a
-   * single point of damage having to be explained.
-   */
-  accelPx: 132,
-  brakePx: 300,
-  /** What the car sheds per second with nothing held — engine braking and the
-   * drag of a shape that was never wind-tunnelled. */
-  coastPx: 60,
+  //
+  // HOW HARD THE CAR PULLS IS NOT A NUMBER HERE ANY MORE. It used to be three
+  // of them — `accelPx`, `brakePx`, `coastPx` — and the road read NONE of them:
+  // the pedal was taking the GARAGE's constants (`CAR.driveAccel`, 260 px/s²,
+  // which is 2.3 g, and `CAR.idleDragPx` for the coast),
+  // so the wagon reached sixty in a second and a quarter and the whole minigame
+  // was a question of whether the throttle was held. It is solved from the car's
+  // own engine, gearbox and frontal area now (`drivetrain.ts`): weakest at
+  // idle, strongest in the middle of a gear, dipping at every upshift, and
+  // running out against the air somewhere just short of the top of the dial.
+  // Nought to sixty takes the better part of ten seconds and the twenty after
+  // that takes longer still, which is what a heavy thing with a tired engine
+  // does — and it is also the whole cost of a hit, since the seconds of throttle
+  // it takes to win back what a body took off you is the punishment, landing
+  // without a single point of damage having to be explained.
   /**
    * HOW FAST A BROKEN CAR GOES. Top speed is scaled by `1 - wear * this`, so a
    * half-dead wagon tops out around 85 and a car on the point of failing barely
@@ -135,39 +135,44 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED with `make drive-bench`, 60 seeds a rung on MEDIUM, and re-taken
-   * on the crowd this road now carries (`pedestriansPerKPx`). First the
-   * PESSIMAL case — a dead straight line, never dodging once:
+   * MEASURED with `make drive-bench`, 30 seeds a rung on MEDIUM, and RE-TAKEN
+   * on the wagon's real drivetrain (`drivetrain.ts`) — every figure below moved
+   * when the car stopped accelerating like a dragster. First the PESSIMAL case
+   * — a dead straight line, never dodging once:
    *
-   *   throttle   trip      bodies   ending wear
-   *   1.00       51 s      41       breaks 40 legs in 60, most of them late
-   *   0.80       61 s      56       survives 58 in 60, barely (74%)
-   *   0.55       77 s      74       survives every one, comfortably (40%)
-   *
-   * Which is the shape the whole thing wants: flat out is genuinely faster and
-   * genuinely might not get there, and the safe pace costs you thirty seconds
-   * and hits MORE people, because you are on the road longer.
+   *   throttle   trip      bodies   ending wear   arrived
+   *   1.00       79 s      79       49%           30/30
+   *   0.80       85 s      84       41%           30/30
+   *   0.55       94 s      90       31%           30/30
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        59 s    50         7%          60/60
-   *   medium      64 s    55        22%          60/60
-   *   hard        67 s    59        33%          60/60
-   *   nightmare   69 s    62        42%          60/60
-   *   jesus       72 s    65        51%          60/60
+   *   easy        75 s    61         8%          30/30
+   *   medium      83 s    67        23%          30/30
+   *   hard        88 s    73        32%          30/30
+   *   nightmare   94 s    77        41%          30/30
+   *   jesus       99 s    83        46%          30/30
    *
-   * Read the two together, because between them they are the design: steering
-   * is worth the whole of the car — a straight line at full throttle breaks two
-   * legs in three, and a driver who steers arrives every time on every rung —
-   * while the ladder still costs a JESUS driver thirteen seconds and seven
-   * times the damage an EASY one takes. And note the column that does NOT come
-   * down: even driven properly the leg cannot be threaded, because the crowd is
-   * laid down thick enough that the good driver arrives with fifty people on
-   * the count. That is the joke the course length exists to land, and it is why
-   * the arrival lines are read off the CAR and the CLOCK rather than off the
-   * tally (`DRIVE.verdict`).
+   * TWO THINGS TO READ OUT OF THAT, and the second is a debt rather than a
+   * result. The one that still holds is the joke the course length exists to
+   * land: the leg cannot be threaded at any pace, because the crowd is laid
+   * down thick enough that even a good driver arrives with sixty-odd people on
+   * the count — which is why the arrival lines are read off the CAR and the
+   * CLOCK rather than off the tally (`DRIVE.verdict`).
+   *
+   * THE ONE THAT NO LONGER HOLDS is the tension in the top row. A straight line
+   * at full throttle used to break forty legs in sixty; now it arrives every
+   * time, on half a car. Nothing about the road changed — the CAR did: it tops
+   * out around eighty in traffic instead of touching 120, absorbed energy goes
+   * as the SQUARE of the closing speed, and a collision at eighty is therefore
+   * worth well under half of what the same collision used to cost. The spread
+   * between a careful pace and a reckless one narrowed with it. Restoring it is
+   * a knob rather than a rewrite (`DRIVE.impact.wearJoules` is what a full car's
+   * worth of damage costs, and the ladder's masses sit beside it) — but which
+   * way to move it is a DESIGN call about how punishing this interlude should
+   * be, and it is deliberately left open rather than guessed at here.
    */
   coursePx: 24000,
   /**

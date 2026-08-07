@@ -464,38 +464,117 @@ html.app-locked body {
   image-rendering: pixelated;
 }
 
-/* THE DRIVE'S DIALS wear the run's own plate. The minigame is an interlude in
-   the same game, so its speed/gear readout and its damage percentage sit on the
-   same 9-sliced `hud_frame` panel the vitals plate does (the sprite URL comes in
-   inline from DriveScreen) — a bare drop-shadowed string over the road made the
-   road look like a different program. */
-/* THE DASHBOARD'S BAR — where the road's dials sit, across the top of the
-   picture. A class rather than the drive screen's own inline object, because
-   the bar is a REGION of the authored HUD now (content/hud/hud.yaml) and a
-   region wears a class the same way an element does. Tap-transparent: the whole
-   picture is the steering pad, and a dial must never eat a thumb. */
-.drive-hud-bar {
+/* ---- THE ROAD'S DASHBOARD ------------------------------------------------- */
+
+/* THE DIALS ARE NAKED — no plate, no frame, no box. Every other readout in this
+   game sits on the 9-sliced `hud_frame` panel, and the road's first two did too,
+   because they were WORDS and a word over a moving picture needs something
+   behind it. A dial does not: the arc IS its own furniture, the dark track ring
+   gives it a shape against any tarmac, and the boxes only ever fenced off three
+   rectangles of windscreen the player was trying to see through at 100 mph.
+   Whatever legibility the plates were buying is bought instead by the shadow
+   below, which costs no pixels at all.
+
+   ALONG THE BOTTOM, WHICH IS WHERE A DASHBOARD IS: a driver reads one by
+   dropping his eyes, not by looking up. HARD LEFT rather than centred, because
+   the hero talks to himself the whole way to work and his window has to go
+   somewhere — see `.drive-bark`, which takes the room to the right of this.
+
+   Classes rather than the drive screen's own inline objects, because the dash
+   is a REGION of the authored HUD (content/hud/hud.yaml) and a region wears a
+   class the same way an element does. Tap-transparent: the whole picture is the
+   steering pad, and a dial must never eat a thumb. */
+.drive-dash {
   position: absolute;
-  top: 14px;
+  bottom: 10px;
   left: 12px;
-  right: 12px;
+  width: var(--drive-dash-w);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-start;
+  /* Centred on the row rather than sat on its floor: the two dials read from
+     their middles and the gate between them is half their height, so aligning
+     the BOXES would leave the gate's cross bar down by the tarmac. */
+  align-items: center;
+  gap: 12px;
   pointer-events: none;
+  /* The one thing the plates were carrying: a hard pixel edge under every arc
+     and every glyph, so the whole dashboard stays readable over a pale road, a
+     lit shopfront or a set of oncoming headlights. */
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
 }
 
-.drive-hud-plate {
+/* A ROUND DIAL: the arcs are absolutely placed over each other and the face
+   sits in the middle of them, so a speedometer with a rev counter inside it is
+   two `kind: gauge` nodes and a stack of words rather than a widget. Sized in
+   px because a dial is a physical thing on the glass — it must not grow with
+   the type. */
+.drive-dial {
+  position: relative;
   display: flex;
   align-items: center;
-  padding: 0.2rem 0.35rem;
-  background: rgba(11, 13, 16, 0.5);
-  border-style: solid;
-  border-width: 8px;
-  border-color: #2a3444;
-  border-image-slice: 4 fill;
-  border-image-width: 8px;
-  border-image-repeat: stretch;
+  justify-content: center;
+  width: var(--drive-dial-size);
+  height: var(--drive-dial-size);
+}
+
+.drive-dial-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* THE DAMAGE DIAL'S FRESH SLICE, which glows and jumps the instant a collision
+   lands. The calm arc's climb over it a second later is NOT a CSS transition:
+   the percentage in the middle of the dial has to count up with the ring, and a
+   number cannot be transitioned — so both are drawn from one eased value the
+   dials publish (`WEAR_CATCH_MS`, drive-screen/dials.ts) and arrive together. */
+.drive-dial-ring-fresh {
+  filter: drop-shadow(0 0 3px rgba(255, 157, 74, 0.75));
+}
+
+/* The tachometer, inside the speed arc with daylight between them. */
+.drive-dial-ring-inner {
+  inset: 13px;
+  width: auto;
+  height: auto;
+}
+
+/* The big figure in the middle of the arcs. */
+.drive-dial-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* The unit hangs a couple of pixels clear of the figure. Butted straight up
+     under it, the two read as one glyph block — "62MPH" — rather than as a
+     number with its unit under it. */
+  gap: 3px;
+  line-height: 1;
+}
+
+/* …and the small one DOWN IN THE GAP. A 250° sweep leaves 110° of open air at
+   the bottom of the dial, which is both the only place a second readout fits
+   and the place a real dial keeps its trip meter. Absolute, so it overhangs the
+   ring rather than squeezing the figure above it. */
+.drive-dial-foot {
+  position: absolute;
+  /* INSIDE THE RING, in the mouth of the sweep's own gap — not under the dial.
+     Hung below it, the line read as a caption for the whole dashboard and the
+     bottom of the screen cropped it; up here it is plainly part of the dial it
+     belongs to, and it still clears the big figure above. */
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* THE SHIFT GATE — a sprite (`content/sprites/ui/gear_gate_*.yaml`), drawn at a
+   whole 2× so the H pattern stays on the pixel grid it was authored on. */
+.drive-gate {
+  width: 64px;
+  height: 48px;
   image-rendering: pixelated;
 }
 
@@ -5991,6 +6070,43 @@ html.app-locked body {
    it has to win. */
 .drive-screen {
   z-index: 300;
+  /* THE DASHBOARD'S FOOTPRINT, in one place — two dials, the gate between them
+     and the gaps. The dash is laid out from it and the hero's speech window is
+     parked to the RIGHT of it (`.drive-bark`), so the two can never be sized
+     apart into an overlap. */
+  --drive-dial-size: 92px;
+  --drive-dash-w: calc(2 * var(--drive-dial-size) + 64px + 24px);
+}
+
+/* HIS VOICE, BESIDE THE DASHBOARD RATHER THAN ON TOP OF IT. The shipped
+   dialogue window is centred at the bottom of the screen, which is exactly
+   where the dials now live — so on the road it gives up the centring and takes
+   the whole of the room to the right of them. Same window, same skin, same
+   crawl; only the box it is laid out in changes. */
+.dialogue-box.drive-bark {
+  left: calc(12px + var(--drive-dash-w) + 12px);
+  right: max(0.75rem, env(safe-area-inset-right));
+  width: auto;
+  transform: none;
+}
+
+/* …AND DIRECTLY ABOVE THEM WHEN THE SCREEN IS TALLER THAN IT IS WIDE. There is
+   no room BESIDE a dashboard on a portrait phone — the pair would be two thirds
+   of a line each — so the window goes back to the middle of the frame and
+   stacks on top of the dials, on the same strip of verge: the road's camera
+   holds a band back for both of them (`BARK_BAND_CSS`, drive-screen/render.ts),
+   which is why this does not print over the tarmac. The road is landscape-first
+   (a phone held sideways is the reference viewport), so this is the fallback
+   rather than the layout — but a tablet held upright is a real thing a player
+   does. */
+@media (orientation: portrait) {
+  .dialogue-box.drive-bark {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--drive-dial-size) + 22px);
+    width: min(92vw, 36rem);
+    transform: translateX(-50%);
+  }
 }
 
 /* ---- The level-name card (name alone on black before the drop) ------------ */

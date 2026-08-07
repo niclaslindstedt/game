@@ -70,8 +70,14 @@ import {
   runEngineNote,
   type Burst,
 } from "../drive-screen/loop.ts";
+import {
+  createWearTrail,
+  driveDials,
+  sameDials,
+} from "../drive-screen/dials.ts";
 import { drawDrive, driveCamera } from "../drive-screen/render.ts";
 import { viewScaleFor } from "../render/view.ts";
+import type { DriveDials } from "../hud/bindings.ts";
 import type { DriveExhibit, ExhibitRun } from "./exhibit-kit.ts";
 
 /** The drive's own fixed step (ms) — the engine's, so an exhibit ticks at the
@@ -105,8 +111,17 @@ export function runDriveExhibit(deps: {
   assets: GameAssets;
   /** Slow motion for judging a collision (see `EXHIBIT_SPEEDS`). Default 1. */
   speed?: number;
+  /**
+   * THE DASHBOARD'S NUMBERS, for an exhibit that draws it (`dash`).
+   *
+   * The dials are React's (the HUD is content, resolved and rendered by
+   * `HudRoot`) and this host is a canvas loop, so it hands them out rather than
+   * drawing them — called only when one of them actually moves, which on the
+   * gearbox exhibit is a handful of times a second.
+   */
+  onDials?: (dials: DriveDials) => void;
 }): ExhibitRun {
-  const { exhibit, canvas, ctx, assets } = deps;
+  const { exhibit, canvas, ctx, assets, onDials } = deps;
   // Live, so changing the speed keeps the road exactly where it is instead of
   // restarting the show under the viewer.
   let speed = deps.speed ?? 1;
@@ -140,6 +155,12 @@ export function runDriveExhibit(deps: {
    * that made it carries on out of it.
    */
   let holdAtX: number | null = null;
+  /** The last dashboard published, so a take that draws one only pushes into
+   * React when a dial has actually moved. */
+  let dials: DriveDials | null = null;
+  /** …and the damage dial's fresh-slice anchor, which a re-stage resets with
+   * the road it was measuring. */
+  let wearTrail = createWearTrail();
 
   /**
    * Lay a fresh road and plant the exhibit's collision on it.
@@ -159,6 +180,7 @@ export function runDriveExhibit(deps: {
     engine.dueMs = 0;
     engine.gear = 0;
     holdAtX = null;
+    wearTrail = createWearTrail();
     return drive;
   };
   // Replaced outright on every take; every read below goes through this binding
@@ -225,6 +247,13 @@ export function runDriveExhibit(deps: {
         stepDriveFx(fx, STEP_MS, drive.ms);
         if (exhibit.engine) runEngineNote(drive, engine);
       }
+      if (onDials && exhibit.dash) {
+        const next = driveDials(drive, false, wearTrail);
+        if (!dials || !sameDials(dials, next)) {
+          dials = next;
+          onDials(next);
+        }
+      }
       // NO TERMINAL BEATS. A breakdown does not restart the road and an arrival
       // hands nothing on — those are the SCREEN's policy (`endDrive`), and here
       // the wreck is exactly what the exhibit came to show. The loop's own
@@ -250,7 +279,7 @@ export function runDriveExhibit(deps: {
       ctx.imageSmoothingEnabled = false;
       // THE CAMERA IS SHAKEN, NOT THE CONTEXT: the road, the gore and the sparks
       // all read the same camera, so the whole picture moves as one.
-      const tracking = driveCamera(drive, viewW, viewH);
+      const tracking = driveCamera(drive, viewW, viewH, scale);
       const held =
         holdAtX === null
           ? tracking

@@ -23,7 +23,15 @@
 
 import { describe, expect, it } from "vitest";
 
-import { DRIVE, impactMasses, solveImpact } from "@game/core";
+import {
+  createDrive,
+  DRIVE,
+  DRIVETRAIN,
+  GEAR_COUNT,
+  impactMasses,
+  solveImpact,
+  type DriveState,
+} from "@game/core";
 
 import { CAR } from "../../src/game/vehicles.ts";
 
@@ -50,6 +58,10 @@ import {
   stepDriveFx,
 } from "../../pwa/src/game/drive-screen/drive-fx.ts";
 import { engineGrainMs, engineNote } from "../../pwa/src/game/sfx/drive.ts";
+import {
+  createWearTrail,
+  driveDials,
+} from "../../pwa/src/game/drive-screen/dials.ts";
 
 describe("the road's sound banks", () => {
   it("names only sounds the shipped catalog actually holds", () => {
@@ -127,14 +139,19 @@ describe("the road's sound banks", () => {
 });
 
 describe("the engine note", () => {
+  // The note is voiced from ROAD SPEED, in the px/s the physics integrates —
+  // the same number the car itself is carrying — so these walk the wagon's
+  // whole range rather than a fraction of it.
+  const at = (frac: number) => engineNote(DRIVE.topSpeedPx * frac);
+
   it("climbs inside a gear and DROPS across the shift", () => {
     // Walk the whole speed range and check the note is a sawtooth rather than
     // a ramp: it must fall at least once (a shift) and rise between shifts.
     let drops = 0;
     let rises = 0;
-    let prev = engineNote(0);
+    let prev = at(0);
     for (let frac = 0.01; frac <= 1; frac += 0.01) {
-      const note = engineNote(frac);
+      const note = at(frac);
       if (note.gear > prev.gear) {
         expect(note.hz).toBeLessThan(prev.hz);
         drops++;
@@ -150,32 +167,124 @@ describe("the engine note", () => {
   it("never drops a shift below where the gear before it started", () => {
     // The floor climbs with the gear, so an upshift is a dip rather than a
     // reset — which is what keeps acceleration audible across the whole range.
-    for (let gear = 1; gear < 5; gear++) {
-      const opening = engineNote(0.0001).hz;
+    for (let gear = 1; gear < GEAR_COUNT; gear++) {
+      const opening = at(0.0001).hz;
       const here = engineNote(gearOpening(gear)).hz;
       expect(here).toBeGreaterThan(opening);
     }
   });
 
-  it("puts idle in first and the top end in the last gear", () => {
-    expect(engineNote(0).gear).toBe(0);
-    expect(engineNote(1).gear).toBe(4);
-    expect(engineNote(1).rev).toBeCloseTo(1, 5);
+  it("is the CRANK's own note, not road speed's", () => {
+    // The one fact that makes the sound worth having: the pitch is the firing
+    // frequency of the revs the physics says the engine is turning at, so it
+    // moves with the tachometer and not with the speedometer. Same road speed
+    // in two different gears is impossible — the box picks one — but the same
+    // NOTE at two very different speeds is exactly what a gearbox does, and
+    // that is what this asserts.
+    for (let frac = 0.02; frac <= 1; frac += 0.02) {
+      const note = at(frac);
+      expect(note.hz).toBeCloseTo(note.rpm / 30, 6);
+      expect(note.rpm).toBeLessThanOrEqual(DRIVETRAIN.redlineRpm + 1);
+      expect(note.rpm).toBeGreaterThanOrEqual(DRIVETRAIN.idleRpm);
+    }
+  });
+
+  it("puts idle in first and the top of the range in the last gear", () => {
+    expect(at(0).gear).toBe(0);
+    expect(at(0).rpm).toBe(DRIVETRAIN.idleRpm);
+    expect(at(1).gear).toBe(GEAR_COUNT - 1);
   });
 
   it("quickens the putter as the revs climb", () => {
-    expect(engineGrainMs(1)).toBeLessThan(engineGrainMs(0));
+    expect(engineGrainMs(DRIVETRAIN.redlineRpm)).toBeLessThan(
+      engineGrainMs(DRIVETRAIN.idleRpm),
+    );
   });
 });
 
-/** The speed fraction a gear opens at — walked up from the note itself so the
- * test never has to know the gear table. */
+/** The road speed (px/s) a gear opens at — walked up from the note itself so
+ * the test never has to know the ratios. */
 function gearOpening(gear: number): number {
-  for (let frac = 0; frac <= 1; frac += 0.001) {
-    if (engineNote(frac).gear === gear) return frac;
+  for (let px = 0; px <= DRIVE.topSpeedPx; px += 0.5) {
+    if (engineNote(px).gear === gear) return px;
   }
-  return 1;
+  return DRIVE.topSpeedPx;
 }
+
+describe("the damage dial's fresh slice", () => {
+  // THE ONE PIECE OF THE DASHBOARD WITH A CLOCK IN IT. Everything else on the
+  // road's HUD is a read of this instant; this holds the dial where it was,
+  // lights what the last second cost, and then counts up into it — so what is
+  // worth asserting is the SHAPE of that beat rather than any frame of it.
+  const staged = (wear: number, ms: number): DriveState => {
+    const drive = createDrive({
+      seed: 7,
+      direction: 1,
+      to: "goodco_hq",
+      difficulty: "medium",
+      gib: true,
+      split: true,
+    });
+    drive.car.wear = wear;
+    drive.ms = ms;
+    return drive;
+  };
+
+  it("holds the figure behind the damage, then catches it up", () => {
+    const trail = createWearTrail();
+    const drive = staged(0, 0);
+    expect(driveDials(drive, false, trail).wearSettled).toBe(0);
+
+    // A hit lands: the live wear jumps and the dial does not.
+    drive.car.wear = 0.2;
+    drive.ms = 100;
+    const hit = driveDials(drive, false, trail);
+    expect(hit.wear).toBeCloseTo(0.2, 5);
+    expect(hit.wearSettled).toBe(0);
+
+    // …it is still lit most of a second later…
+    drive.ms = 900;
+    expect(driveDials(drive, false, trail).wearSettled).toBe(0);
+
+    // …then the climb, which is under way and not yet arrived…
+    drive.ms = 1300;
+    const climbing = driveDials(drive, false, trail).wearSettled;
+    expect(climbing).toBeGreaterThan(0);
+    expect(climbing).toBeLessThan(0.2);
+
+    // …and lands on the figure.
+    drive.ms = 2000;
+    expect(driveDials(drive, false, trail).wearSettled).toBeCloseTo(0.2, 3);
+  });
+
+  it("lets a second hit extend the same slice", () => {
+    // Drive into a crowd and the whole crowd lights up as one slice — the XP
+    // strip's chained-kill rule, and the reason the hold is re-armed by the hit
+    // rather than by the first one of a burst.
+    const trail = createWearTrail();
+    const drive = staged(0.1, 0);
+    driveDials(drive, false, trail);
+    drive.ms = 600;
+    drive.car.wear = 0.3;
+    driveDials(drive, false, trail);
+    // 1.1 s after the FIRST hit, which would have been long enough on its own.
+    drive.ms = 1100;
+    expect(driveDials(drive, false, trail).wearSettled).toBe(0);
+  });
+
+  it("snaps back when the road lays a fresh car", () => {
+    const trail = createWearTrail();
+    const drive = staged(0.4, 0);
+    driveDials(drive, false, trail);
+    // Past the hold and the climb, so the dial has caught up with the wreck.
+    drive.ms = 3000;
+    expect(driveDials(drive, false, trail).wearSettled).toBeCloseTo(0.4, 3);
+    // A breakdown restarts the leg on an undamaged wagon: nothing to animate.
+    drive.car.wear = 0;
+    drive.ms = 3016;
+    expect(driveDials(drive, false, trail).wearSettled).toBe(0);
+  });
+});
 
 describe("the road's shake", () => {
   it("stands perfectly still until something is actually hit", () => {

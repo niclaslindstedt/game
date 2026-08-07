@@ -1065,14 +1065,34 @@ export function applyCarPedals(
   dt: number,
   topSpeed: number,
   reverseSpeed: number,
+  pull?: CarPull,
 ): void {
   car.handbrake = control.handbrake === true;
   if (car.handbrake) {
     applyHandbrake(car, dt);
     return;
   }
-  applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed);
+  applyCarPedal(car, control.pedal, dt, topSpeed, reverseSpeed, pull);
 }
+
+/**
+ * WHAT THE CAR HAS TO PUSH AND SLOW WITH THIS TICK (px/s²), when the flat
+ * numbers on `CAR` are not the answer.
+ *
+ * The GARAGE has no use for it: a wagon pottering out of a bay at a walking
+ * pace is a constant shove and a constant scrub, and pretending otherwise would
+ * be arithmetic nobody can see. The ROAD does, because out there the pull is a
+ * torque curve through a gearbox and the coast is the air (see
+ * `drive/drivetrain.ts`) — the two genuinely disagree, exactly as they already
+ * disagree about the top speed, so it travels the same way: as a parameter the
+ * caller owns rather than a branch inside the shared physics.
+ */
+export type CarPull = {
+  /** What the pedal buys, net of whatever is pushing back. */
+  accelPx: number;
+  /** …and what nothing held costs. */
+  coastPx: number;
+};
 
 /**
  * ONE TICK OF THE LEVER: the car dragged down at `CAR.handbrakePx`, and its
@@ -1134,12 +1154,15 @@ export function applyCarPedal(
   dt: number,
   topSpeed: number,
   reverseSpeed: number,
+  pull?: CarPull,
 ): void {
+  const accel = pull?.accelPx ?? CAR.driveAccel;
+  const coast = pull?.coastPx ?? CAR.idleDragPx;
   if (pedal > 0) {
     // Up through zero from a reverse, and on to the top end — one expression,
     // because backing off the reverse IS accelerating as far as the car is
     // concerned.
-    car.speed = Math.min(topSpeed, car.speed + CAR.driveAccel * pedal * dt);
+    car.speed = Math.min(topSpeed, car.speed + accel * pedal * dt);
   } else if (pedal < 0) {
     // Brake first, then back up — a car does not go from forward to reverse
     // through anything but a stop.
@@ -1147,10 +1170,10 @@ export function applyCarPedal(
     car.speed =
       car.speed > 0
         ? Math.max(0, car.speed - CAR.driveBrake * force * dt)
-        : Math.max(-reverseSpeed, car.speed - CAR.driveAccel * force * dt);
+        : Math.max(-reverseSpeed, car.speed - accel * force * dt);
   } else {
-    // NOTHING HELD: carry on. Only the whisper of drag.
-    const drop = CAR.idleDragPx * dt;
+    // NOTHING HELD: carry on. Only what the air and the closed throttle take.
+    const drop = coast * dt;
     car.speed =
       car.speed > 0
         ? Math.max(0, car.speed - drop)

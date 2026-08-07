@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE SPEEDOMETER — the big dial in the middle of the dashboard, with the
+# TACHOMETER drawn inside it.
+#
+# TWO ARCS ON ONE FACE, and that pairing is the whole reading. The outer sweep
+# is road speed against the wagon's top end and it climbs steadily; the inner
+# one is the crank, and it climbs, SNAPS BACK on every upshift, and climbs
+# again. Seeing the two together is what tells a player what the box just did
+# without a word of tutorial — and it is the same rpm the engine note is built
+# from (`pwa/src/game/sfx/drive.ts`), so the needle and the noise cannot
+# disagree.
+#
+# The gearbox shifts itself: the inner arc reaching the red IS the shift, every
+# time, because the box changes up at exactly the revs that would pass it.
+#
+# WHERE THE RED STARTS is a judgement rather than a read, so it lives in
+# `hud/scripts/drive.lua` and a mod can move it — a rebuilt engine might pull to
+# the stop, a tired one might start warning at two-thirds.
+region: drive_dash
+order: 0
+kind: panel
+class: drive-dial
+children:
+  # THE OUTER ARC: how fast. A 250° sweep opening at the lower left, which is
+  # the arc a real needle travels — a full ring reads as a progress wheel, and
+  # the gap at the bottom is what makes this one read as a dial.
+  - id: speed_arc
+    kind: gauge
+    class: drive-dial-ring
+    bind: drive.speedFrac
+    sweep: 250
+    start: 235
+    thickness: 3.5
+    color:
+      script: drive.speed_color
+    track: "#1b2431"
+
+  # THE INNER ARC: the revs, on the same sweep so the two can be read against
+  # each other at a glance.
+  - id: rev_arc
+    kind: gauge
+    class: drive-dial-ring drive-dial-ring-inner
+    bind: drive.rpmFrac
+    sweep: 250
+    start: 235
+    thickness: 3
+    color:
+      script: drive.rpm_color
+    track: "#161d28"
+
+  # …and the face inside them: the number and its unit.
+  - id: speed_face
+    kind: panel
+    class: drive-dial-face
+    children:
+      - id: speed_number
+        kind: text
+        bind: drive.mph
+        scale: 3
+        color:
+          script: drive.speed_color
+      - id: speed_unit
+        kind: text
+        text: MPH
+        scale: 1
+        color: "#7d8899"
+
+  # THE REV COUNTER'S FIGURE, DOWN IN THE GAP. A 250° sweep leaves 110° of open
+  # air at the bottom of the dial, and that is exactly where a rev figure goes:
+  # inside the face it crowded the speed and struck both arcs on the way past,
+  # and there is nothing else this piece of the dial is for.
+  - id: rev_number
+    kind: text
+    class: drive-dial-foot
+    text:
+      script: drive.rpm_label
+    scale: 1
+    color:
+      script: drive.rpm_color
