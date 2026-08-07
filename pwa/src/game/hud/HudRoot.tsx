@@ -4,10 +4,17 @@
 //   <HudRoot ctx={ctx} />
 //
 // It reads the LIVE layout (shipped, or shipped with a mod's merged on top),
-// resolves it against this instant's values, and draws the regions of its own
-// surface in order. Two screens mount it: the fight (`GameScreen`) and the
-// road's minigame (`DriveScreen`), and neither of them knows what is on the HUD
-// — which is the point. A mod that adds a panel does not touch either.
+// resolves ITS OWN SURFACE's regions against this instant's values, and draws
+// them in order. Two screens mount it: the fight (`GameScreen`) and the road's
+// minigame (`DriveScreen`), and neither of them knows what is on the HUD —
+// which is the point. A mod that adds a panel does not touch either.
+//
+// THE SURFACE GOES INTO THE RESOLVE, NOT OVER ITS RESULT. Resolving is what
+// CALLS the HUD's judgements, and each one is written against the bindings its
+// own surface publishes — so a whole-tree resolve ran the road's dials on the
+// fight's snapshot, where `state.drive` is empty, and got them disowned for the
+// rest of the run (see `resolveLayout`). Passing the surface down is both the
+// fix and the cheaper walk.
 //
 // THE RESOLVE IS MEMOISED ON THE VALUES, not done per render. React re-renders
 // the game screen for plenty of reasons that are not a HUD change (a toast, a
@@ -31,18 +38,17 @@ import type { HudContext } from "./context.ts";
 export function HudRoot({ ctx }: { ctx: HudContext }) {
   const { regions, elements } = hudLayout();
   const tree = useMemo(
-    () => resolveLayout(regions, elements, resolveContext(ctx.values)),
+    () =>
+      resolveLayout(regions, elements, resolveContext(ctx.values), ctx.surface),
     // The layout objects are swapped wholesale when a mod is applied, so
     // identity is exactly the right dependency for them.
-    [regions, elements, ctx.values],
+    [regions, elements, ctx.values, ctx.surface],
   );
   return (
     <>
-      {tree
-        .filter((region) => (region.def.surface ?? "field") === ctx.surface)
-        .map((region) => (
-          <HudRegion key={region.def.id} region={region} ctx={ctx} />
-        ))}
+      {tree.map((region) => (
+        <HudRegion key={region.def.id} region={region} ctx={ctx} />
+      ))}
     </>
   );
 }

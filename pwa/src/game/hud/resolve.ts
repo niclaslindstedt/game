@@ -26,6 +26,7 @@ import type {
   HudNodeDef,
   HudRegionDef,
   HudStyle,
+  HudSurface,
 } from "./types.ts";
 
 /** One resolved node — what the renderer draws, with nothing left to decide. */
@@ -73,7 +74,25 @@ export function resolveContext(values: HudValues): HudResolveContext {
 }
 
 /**
- * Resolve the whole layout into the TOP-LEVEL regions, in order.
+ * Resolve ONE SURFACE's top-level regions, in order.
+ *
+ * THE SURFACE IS A PARAMETER, NOT A FILTER ON THE RESULT, and that is
+ * load-bearing rather than tidy. A resolve CALLS every judgement it walks past,
+ * and a judgement is written against the bindings its own surface publishes —
+ * `drive.speed_label` reads `state.drive.mph`, which on the fight's values is
+ * an empty group. Resolving the whole tree on the fight's snapshot therefore
+ * ran the road's scripts against nothing, they threw on the first `..`, and
+ * `script.ts` did exactly what it promises for a misbehaving judgement: it
+ * disowned them FOR THE REST OF THE RUN. The road then started with two empty
+ * plates on it — the dials had been killed minutes earlier, by a screen they
+ * are not even drawn on.
+ *
+ * It is also the cheaper answer by the same amount: neither surface pays to
+ * resolve the other's elements on every publish.
+ *
+ * Only a TOP-LEVEL region names a surface (the schema refuses it anywhere
+ * else), so this is the one place the question can be asked — everything below
+ * belongs to whichever surface its root does.
  *
  * An element whose region does not exist is dropped rather than orphaned —
  * which only a mod can cause (the compiler refuses it for the shipped tree),
@@ -84,6 +103,7 @@ export function resolveLayout(
   regions: Record<string, HudRegionDef>,
   elements: HudElementDef[],
   ctx: HudResolveContext,
+  surface: HudSurface,
 ): HudRegionView[] {
   const byParent = new Map<string | undefined, HudRegionDef[]>();
   for (const region of Object.values(regions)) {
@@ -139,7 +159,7 @@ export function resolveLayout(
   };
 
   return (byParent.get(undefined) ?? [])
-    .slice()
+    .filter((region) => (region.surface ?? "field") === surface)
     .sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : 1))
     .map((region) => build(region, 0));
 }

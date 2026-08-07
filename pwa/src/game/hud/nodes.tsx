@@ -110,12 +110,20 @@ export function HudNode({ view, ctx }: { view: HudNodeView; ctx: HudContext }) {
       return <img src={src} alt="" className={view.className} style={style} />;
     }
 
+    // NOTHING SAID DRAWS NOTHING — not an empty frame. `undefined` here is the
+    // resolver's "no answer" (a judgement that could not run, a binding this
+    // build does not know), and it is distinct from the empty STRING a binding
+    // may legitimately hold. A plate is furniture around a line, so furniture
+    // with no line in it is not "as if nothing was said": when the road's dials
+    // were disowned it left two empty frames sitting in the corners of the
+    // windscreen, which read as a broken game rather than a quiet fallback.
     case "text":
+      if (view.text === undefined) return null;
       return (
         <span className={view.className} style={style}>
           <PixelText
             font={ctx.font}
-            text={view.text ?? ""}
+            text={view.text}
             scale={def.scale ?? 2}
             color={view.color}
           />

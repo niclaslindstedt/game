@@ -217,12 +217,38 @@ describe("the shipped HUD", () => {
 
   it("draws both surfaces — the fight and the road", () => {
     const ctx = resolveContext(VALUES);
-    const tops = resolveLayout(HUD_REGIONS, HUD_ELEMENTS, ctx);
-    const surfaces = new Set(tops.map((r) => r.def.surface ?? "field"));
-    expect(surfaces.has("field")).toBe(true);
-    expect(surfaces.has("drive")).toBe(true);
+    for (const surface of HUD_SURFACES) {
+      const tops = resolveLayout(
+        HUD_REGIONS,
+        HUD_ELEMENTS,
+        ctx,
+        surface as "field" | "drive",
+      );
+      expect(tops.length, surface).toBeGreaterThan(0);
+      // …and nothing from the OTHER one came with it. A resolve CALLS the
+      // judgements it walks past, so a surface that resolved its neighbour's
+      // elements would be running them on values that surface never publishes.
+      for (const top of tops) {
+        expect(top.def.surface ?? "field", top.def.id).toBe(surface);
+      }
+    }
   });
 });
+
+/** A wagon mid-trip: what the road publishes for its own dials. */
+const DIALS = {
+  mph: 42,
+  topSpeedMph: 70,
+  speedFrac: 0.6,
+  gear: 2,
+  gearCount: 5,
+  rev: 0.25,
+  reversing: false,
+  bodies: 0,
+  wear: 0.31,
+  failing: false,
+  paused: false,
+};
 
 describe("resolving", () => {
   const ctx = resolveContext({
@@ -266,23 +292,35 @@ describe("resolving", () => {
       kind: "text",
       text: { script: "drive.damage_label" },
     };
-    const drive = resolveContext({
-      ...VALUES,
-      ...driveBindings({
-        mph: 42,
-        topSpeedMph: 70,
-        speedFrac: 0.6,
-        gear: 2,
-        gearCount: 5,
-        rev: 0.25,
-        reversing: false,
-        bodies: 0,
-        wear: 0.31,
-        failing: false,
-        paused: false,
-      }),
-    });
+    const drive = resolveContext({ ...VALUES, ...driveBindings(DIALS) });
     expect(resolveNode(node, drive).text).toBe("DAMAGE 31%");
+    expect(
+      resolveNode(
+        { kind: "text", text: { script: "drive.speed_label" } },
+        drive,
+      ).text,
+    ).toBe("42 MPH  GEAR 3");
+  });
+
+  it("leaves the road's judgements alive after a fight has been resolved", () => {
+    // THE ONE THAT SHIPPED BROKEN. A resolve CALLS every judgement it walks
+    // past, and `disown` is for the rest of the run — so resolving the WHOLE
+    // tree on the fight's snapshot ran `drive.speed_label` against an empty
+    // `state.drive`, it threw on the first `..`, and both dials were dead
+    // before the player ever reached a road. The plates still drew: two empty
+    // frames in the corners of the windscreen.
+    //
+    // The surface is a parameter of the resolve now, so this cannot happen —
+    // and the assertion is written with FIELD-ONLY values on purpose, because
+    // `VALUES` answers every binding the schema knows (the road's included),
+    // which is exactly why the old whole-tree resolve looked fine here.
+    resolveLayout(
+      HUD_REGIONS,
+      HUD_ELEMENTS,
+      resolveContext({ "hud.fieldLive": true }),
+      "field",
+    );
+    const drive = resolveContext(driveBindings(DIALS));
     expect(
       resolveNode(
         { kind: "text", text: { script: "drive.speed_label" } },
@@ -430,7 +468,12 @@ describe("a mod's HUD", () => {
       },
     });
     expect(() =>
-      resolveLayout(layout.regions, layout.elements, resolveContext(VALUES)),
+      resolveLayout(
+        layout.regions,
+        layout.elements,
+        resolveContext(VALUES),
+        "field",
+      ),
     ).not.toThrow();
   });
 
@@ -442,6 +485,7 @@ describe("a mod's HUD", () => {
       layout.regions,
       layout.elements,
       resolveContext(VALUES),
+      "field",
     );
     const ids: string[] = [];
     const visit = (
