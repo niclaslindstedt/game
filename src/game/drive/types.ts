@@ -675,8 +675,21 @@ export type DriveState = {
    * the course) — the spawner's running marks, so the crowd is laid down once
    * as the road unrolls rather than re-rolled every tick. */
   nextPedestrianAt: number;
-  /** …and the same for traffic. */
-  nextTrafficAt: number;
+  /**
+   * …and the same for traffic, ONE MARK PER LANE — `DRIVE.laneCount` of them,
+   * indexed by lane.
+   *
+   * A single mark with the lane rolled onto it cannot keep four lanes served:
+   * the lane is a fresh draw each time, so the road comes out clumped and the
+   * player is shown an empty carriageway. A mark per lane is what makes "a
+   * vehicle in every lane on every screen" something the spawner can promise
+   * (`spawnLane`). Set them together through `haltTraffic` / `resetTrafficMarks`
+   * rather than by hand.
+   */
+  nextTrafficAt: number[];
+  /** …and one more for the footway, which is not a lane and keeps its own rate
+   * (`DRIVE.pavementPerKPx`). */
+  nextPavementAt: number;
   /**
    * WHO STILL HAS SOMETHING TO THINK — the crowd's thoughts, shuffled once at
    * the top of the leg and dealt out as the road unrolls (see `CROWD_THOUGHTS`

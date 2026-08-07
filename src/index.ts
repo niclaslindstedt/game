@@ -982,6 +982,7 @@ export {
   engineTorqueNm,
   gearFor,
   gearRev,
+  haltTraffic,
   impactMasses,
   isMastSlot,
   blockadeAt,

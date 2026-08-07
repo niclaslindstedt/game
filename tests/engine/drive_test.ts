@@ -13,7 +13,9 @@ import { describe, expect, it } from "vitest";
 import {
   breakTrafficLamps,
   createDrive,
+  createDriveDriver,
   createTraffic,
+  driveDriverInput,
   CROWD_THOUGHTS,
   crossingsBetween,
   crowdEdges,
@@ -21,6 +23,7 @@ import {
   driveVerdict,
   engineRpm,
   gearFor,
+  haltTraffic,
   solvedTopSpeedPx,
   DRIVETRAIN,
   GEAR_COUNT,
@@ -29,6 +32,7 @@ import {
   DRIVE_OUTCOME,
   DRIVE_UNITS,
   impactMasses,
+  laneAt,
   laneCenter,
   restartDrive,
   roadBandEdges,
@@ -127,7 +131,7 @@ function secondsTo(mph: number): number {
  * end of the course, so an acceleration run is not measuring collisions. */
 function silence(drive: DriveState): void {
   drive.nextPedestrianAt = DRIVE.coursePx * 2;
-  drive.nextTrafficAt = DRIVE.coursePx * 2;
+  haltTraffic(drive, DRIVE.coursePx * 2);
 }
 
 describe("the wagon's drivetrain", () => {
@@ -526,28 +530,75 @@ describe("the street", () => {
     expect(near.length).toBeGreaterThan(0);
   });
 
-  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
-    const count = (difficulty: Difficulty) => {
-      const drive = createDrive({ ...PARAMS, difficulty });
-      let seen = 0;
-      const ids = new Set<number>();
-      for (let t = 0; t < 40000; t += 16) {
-        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
-        for (const car of drive.traffic) {
-          if (!ids.has(car.id)) {
-            ids.add(car.id);
-            seen++;
-          }
-        }
+  /**
+   * HOW BUSY EACH LANE LOOKS, averaged over a leg — the number the traffic is
+   * actually authored against (`DRIVE.laneTraffic.gapPx`), and the only one
+   * worth asserting.
+   *
+   * It has to be measured ON SCREEN rather than counted per 1000 px of course,
+   * because those two are not the same fact and the difference is the whole
+   * reason the spawner works the way it does: the hero's own side is caught at
+   * the DIFFERENCE of the two speeds and lingers, the oncoming side closes at
+   * their SUM and is gone, so the same course pitch shows up eight times
+   * denser in one than the other. A per-course count would pass on a road with
+   * two empty lanes in it.
+   *
+   * The pavement's own riders are left out — they are not in a lane, and
+   * `laneAt` clamps, so they would be booked against whichever outside lane
+   * they are nearest.
+   */
+  const laneOccupancy = (difficulty: Difficulty): number[] => {
+    const drive = createDrive({ ...PARAMS, difficulty });
+    // DRIVEN BY THE AUTO-DRIVER, because the reading is about what a PLAYER
+    // sees and a car held dead straight does not see the road — it bulldozes
+    // one lane of it. A shunt shoves a car AWAY from the wagon, so a straight
+    // line empties the lane it opens in and stacks the neighbour with what it
+    // shoved out, and the two read three times apart on a spawner that treated
+    // them identically.
+    const driver = createDriveDriver();
+    const seen = new Array<number>(DRIVE.laneCount).fill(0);
+    let ticks = 0;
+    for (let t = 0; t < 70000; t += 16) {
+      stepDrive(drive, 16, driveDriverInput(driver, drive));
+      // Only once the road is peopled — the opening stretch is deliberately
+      // clear and averaging it in reports a quieter road than the one played.
+      if (drive.distance <= DRIVE.crowdStartPx) continue;
+      ticks++;
+      for (const car of drive.traffic) {
+        if (vehicleDef(car.variant).pavement) continue;
+        const ahead = (car.pos.x - drive.car.pos.x) * PARAMS.direction;
+        // What the camera shows: the car rides in the trailing quarter of a
+        // ~420 px frame (`CAMERA_LEAD_FRAC`, pwa/src/game/drive-screen).
+        if (ahead > 308 || ahead < -112) continue;
+        seen[laneAt(car.pos.y)]! += 1;
       }
-      return seen / Math.max(1, drive.distance / 1000);
-    };
-    const gentle = count("easy");
-    const brutal = count(DIFFICULTY_ORDER.at(-1) as Difficulty);
-    expect(gentle).toBeLessThan(brutal);
-    // And even the worst rung leaves the road drivable: about one other car in
-    // view at a time, not a jam. A screen is ~420 px.
-    expect(brutal).toBeLessThan(4);
+    }
+    return seen.map((n) => n / Math.max(1, ticks));
+  };
+
+  it("keeps a vehicle in every lane on every screen", () => {
+    // THE PROMISE THE TRAFFIC IS TUNED TO MAKE. Not "some traffic exists" —
+    // every lane, all the time, because a lane the player never has to read is
+    // a lane the wheel is not being used for, and four of them made the road a
+    // corridor with the occasional car in it.
+    for (const lane of laneOccupancy("medium")) {
+      // Loose at the bottom on purpose: the lane the wagon is actually IN
+      // reads lighter than the rest however carefully it is driven, because
+      // what it meets there it shoves out of the way.
+      expect(lane).toBeGreaterThan(0.5);
+      // …and the other wall: past about one and a half a lane there is no gap
+      // left to move into, and a road with nowhere to put the wagon has taken
+      // the steering decision away rather than sharpened it.
+      expect(lane).toBeLessThan(1.7);
+    }
+  });
+
+  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
+    const total = (difficulty: Difficulty) =>
+      laneOccupancy(difficulty).reduce((a, b) => a + b, 0);
+    expect(total("easy")).toBeLessThan(
+      total(DIFFICULTY_ORDER.at(-1) as Difficulty),
+    );
   });
 });
 
@@ -748,11 +799,32 @@ describe("the gore switch", () => {
   });
 
   it("splits bodies with CLEAVES on and merely drags them with it off", () => {
-    const cut = createDrive({ ...PARAMS, gib: false, split: true });
-    const dragged = createDrive({ ...PARAMS, gib: false, split: false });
+    // THE WHOLE LEG, ON THE RUNG WHERE A BODY WEIGHS THE MOST — and both halves
+    // of that are what keep this from being a coin toss rather than a test.
+    //
+    // A split is a hit over `gore.splitJoules`, which is a fast SQUARE one: the
+    // auto-driver arrives having managed a couple on MEDIUM across a whole
+    // minute and a half, and none at all on EASY, where a person weighs a
+    // quarter of what they do here (`DifficultyDef.drive.pedestrianMassMult`).
+    // Sampling the first forty seconds of a MEDIUM leg was sampling the half of
+    // the trip the wagon spends getting up to speed, and it passed on how
+    // little traffic there used to be to slow it down. The switch is what is
+    // under test, not the odds — so this drives the whole road on the rung
+    // where the line is comfortably cleared.
+    const rung = { difficulty: DIFFICULTY_ORDER.at(-1) as Difficulty };
+    const cut = createDrive({ ...PARAMS, ...rung, gib: false, split: true });
+    const dragged = createDrive({
+      ...PARAMS,
+      ...rung,
+      gib: false,
+      split: false,
+    });
     let splits = 0;
     let unsplit = 0;
-    for (let t = 0; t < 40000; t += 16) {
+    while (
+      cut.outcome === DRIVE_OUTCOME.driving ||
+      dragged.outcome === DRIVE_OUTCOME.driving
+    ) {
       stepDrive(cut, 16, { pedal: 1, wheel: 0 });
       stepDrive(dragged, 16, { pedal: 1, wheel: 0 });
       splits += cut.strikes.filter((strike) => strike.split).length;

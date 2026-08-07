@@ -35,6 +35,7 @@ import {
   DRIVE,
   GLUED_BARKS,
   GLUED_VARIANTS,
+  haltTraffic,
   laneCenter,
   roadEdges,
   TRAFFIC_VARIANTS,
@@ -103,7 +104,7 @@ function leadPx(speedPx: number): number {
 function silence(drive: DriveState): void {
   const past = courseLength(drive.params) + 1;
   drive.nextPedestrianAt = past;
-  drive.nextTrafficAt = past;
+  haltTraffic(drive, past);
 }
 
 /** How fast a car this bent can go — the road's own `1 - wear × loss`, so a
