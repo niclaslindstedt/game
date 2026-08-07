@@ -27,6 +27,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import type { GameAssets } from "../assets.ts";
 import type { PickupMessage } from "../PickupFeed.tsx";
 import type { Hud } from "../game-screen/hud-model.ts";
+import type { VoiceLink } from "../net/voice/index.ts";
 import type { HudUiState, HudValues } from "./bindings.ts";
 import type { HudSurface } from "./types.ts";
 
@@ -100,6 +101,17 @@ export type HudFieldContext = HudCommon & {
   /** A seat's display name off the session roster — the engine's Player carries
    * none. Null when nothing can answer (offline, a test). */
   seatName?: (seat: number) => string | null;
+  /**
+   * VOICE CHAT for this session — who is talking and how loud, for the
+   * `voiceCards` widget.
+   *
+   * Beside `seatName` because it is the same kind of thing: a fact about the
+   * SESSION that the engine's state cannot answer, owned by GameScreen and read
+   * by one widget. Absent for every run without voice — a build with no `voice`
+   * capability, a local game, a browser — which is what makes the widget draw
+   * nothing rather than needing a gate in the layout.
+   */
+  voice?: VoiceLink | null;
   /** Latched so BOT VIEW's autopilot won't clear a timer-tap pause before the
    * menu can show (see the sim loop). */
   userPausedRef: MutableRefObject<boolean>;

@@ -46,6 +46,11 @@ on:
         required: false
         type: boolean
         default: false
+      enable_voice:
+        description: "Package the desktop downloads with voice chat enabled (opens a microphone; needs multiplayer)."
+        required: false
+        type: boolean
+        default: false
       enable_licensed:
         description: "Package the desktop downloads as licensed to admit players."
         required: false
@@ -238,6 +243,10 @@ jobs:
       GIS_ENABLE_MULTIPLAYER: ${{ inputs.enable_multiplayer && '1' || '0' }}
       GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
       GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
+      # VOICE is off unless asked for: a GitHub download is not the Steam
+      # edition, and a microphone is not something a plain download should open
+      # because somebody clicked release.
+      GIS_ENABLE_VOICE: ${{ inputs.enable_voice && '1' || '0' }}
       GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
       # macOS SIGNING — optional here, but the build is never unsigned.
       #

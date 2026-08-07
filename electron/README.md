@@ -19,6 +19,19 @@ On top of the web game it adds the things a browser can't give a desktop player:
   official downloaded binary solely to build and test their own local mods;
   regular players may not use that exception, and it never licenses
   multiplayer.
+- **Voice chat.** Talk to the party while you play — push-to-talk by default, or
+  an open mic — with a card per speaker on the HUD carrying their portrait, their
+  name and a live waveform, so one person whispering and another shouting are
+  visibly different. It travels inside the session as a new unreliable frame
+  (`FRAME.voice`), which means it rides the Steam relay for Steam peers and
+  works just as well over a direct address, on a LAN, and against the dedicated
+  server. It is its own build capability (`GIS_ENABLE_VOICE`) — the depot build
+  carries it, a plain download does not — because it opens a microphone and
+  because the host relays every speaker to every listener. Encoding is Opus
+  through the platform's own WebCodecs, behind a provider seam
+  (`pwa/src/game/net/voice/codecs.ts`) shaped so Valve's `ISteamUser` voice API
+  can be added as a second implementation the day `steamworks.js` binds it. See
+  [`docs/multiplayer.md`](../docs/multiplayer.md) → Voice.
 - **Steam Cloud.** The roster, the coin bank and the hardcore score board follow
   the player between machines, through the same payload and the same merge the
   iOS app uses over iCloud — the web side never learns the platform changed.
@@ -81,7 +94,10 @@ the game cannot be started from the repo on Windows at all. Anything that needs 
 variable set goes in a Node launcher that sets it on the child;
 `tests/content/npm_scripts_portable_test.ts` keeps every manifest honest.
 
-Arguments reach the game: `npm run electron -- --multiplayer`.
+Arguments reach the game: `npm run electron -- --multiplayer`. Voice needs both:
+`npm run electron -- --multiplayer --voice` (`--voice` alone is refused by name
+rather than ignored — voice travels inside a session, so there is nothing for a
+microphone to talk into without one).
 
 ### When it does not start
 

@@ -38,6 +38,7 @@ import {
   netBridgeAvailable,
   onSessionPort,
   stopSession,
+  voiceBridgeAvailable,
   type ConnectOptions,
   type ListenOptions,
 } from "../../app/net-bridge.ts";
@@ -48,6 +49,44 @@ import { createNetClient } from "@game/client";
 import { setLocalSeat } from "../local-seat.ts";
 import { portTransport } from "./port-transport.ts";
 import { createSessionLink } from "./session-link.ts";
+import { createVoiceLink, type VoiceLink } from "./voice/index.ts";
+
+/**
+ * Open VOICE CHAT for a session, or answer null where this build has none.
+ *
+ * Shared by both drivers because voice is identical on the two paths, and that
+ * is worth stating: a host's own renderer is a client like any other, so its
+ * microphone travels the same `FRAME.voice` through the same session relay as a
+ * joiner's. Nothing here has an "and also, when you are the host" clause,
+ * exactly as nothing else in this feature does.
+ *
+ * Null for a build without the `voice` capability, which is a plain download and
+ * every unstamped tree — see `voiceBridgeAvailable`. It is deliberately NOT null
+ * merely because the player has voice switched off: the link is what watches the
+ * setting, so building it is what lets a player turn voice on mid-run.
+ */
+function openVoice(
+  send: (bytes: Uint8Array, codec: number, last: boolean) => void,
+  spectating: () => boolean,
+): VoiceLink | null {
+  if (!voiceBridgeAvailable()) return null;
+  return createVoiceLink({ send, spectating });
+}
+
+/**
+ * The seats a roster says are actually occupied.
+ *
+ * Spectators are excluded (they have no seat and cannot speak) and so is every
+ * entry whose seat is null, which is the same thing said twice — the roster's
+ * shape allows it, so the read has to.
+ */
+function seatedSeats(
+  entries: readonly { seat: number | null }[],
+): readonly number[] {
+  return entries
+    .map((entry) => entry.seat)
+    .filter((seat): seat is number => seat !== null);
+}
 
 export type NetDriverOptions = {
   /** The run this renderer already built, and the object the loop reads. */
@@ -109,6 +148,14 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
   let travelHook: ((state: GameState) => void) | null = null;
   // The HOST steers the hero, so its own seat is not a spectator's.
   const link = createSessionLink((text) => client?.sendChat(text), false);
+  // VOICE, when this build carries it. Built here rather than lazily on the
+  // first packet, because the microphone has to be open BEFORE anybody speaks —
+  // and null when the capability is absent, which is what keeps the HUD's
+  // speaker cards off a build that has no voice to show.
+  const voice = openVoice(
+    (bytes, codec, last) => client?.sendVoice(bytes, codec, last),
+    () => false,
+  );
 
   // REGISTERED BEFORE THE HOST REQUEST, ALWAYS. The shell hands the port over
   // with the same message that starts the session, so a listener installed
@@ -134,7 +181,14 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
         options.onClosed?.(reason, detail);
       },
       onChat: (lines) => link.receive(lines),
-      onRoster: (entries) => link.seat(entries),
+      onRoster: (entries) => {
+        link.seat(entries);
+        // A DEPARTED SEAT LOSES ITS CARD AND ITS MUTE. A mute is keyed by seat
+        // and seats are handed out again, so keeping one would silence whoever
+        // sits down next for no reason they could discover.
+        voice?.present(seatedSeats(entries));
+      },
+      onVoice: (packet) => voice?.receive(packet),
       // WHICH HERO THIS SCREEN IS ABOUT. The client is shared with headless
       // joiners now (`server/client.ts`), so the seat arrives as a callback and
       // the PAGE is what knows `local-seat.ts` exists.
@@ -171,6 +225,7 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
 
   return {
     session: link.link,
+    voice,
     hosting: options.listen !== undefined,
     advance(input) {
       // No stepping here, ever. The server owns the clock; this hands over what
@@ -204,6 +259,10 @@ export function createNetDriver(options: NetDriverOptions): RunDriver | null {
       // down: a sink outliving its client is a command posted into a closed
       // port on the next screen the player opens.
       setCommandSink(null);
+      // THE DEVICE GOES BACK FIRST. A microphone still held after a run ends is
+      // a microphone light still on over a title screen, which a player rightly
+      // reads as the game listening to them for no reason.
+      voice?.dispose();
       client?.dispose();
       client = null;
       void stopSession();
@@ -255,6 +314,13 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
   // as the host's does.
   let travelHook: ((state: GameState) => void) | null = null;
   const link = createSessionLink((text) => client?.sendChat(text), true);
+  // A JOINER STARTS AS A SPECTATOR AND IS SEATED A MOMENT LATER, which is why
+  // the spectator test is a function rather than the `true` this link is built
+  // with: voice has to come up when the seat arrives, not at the next reload.
+  const voice = openVoice(
+    (bytes, codec, last) => client?.sendVoice(bytes, codec, last),
+    () => link.link.spectating,
+  );
 
   // BEFORE the connect request, for the same reason the host path registers
   // before hosting: the shell hands the port over with the message that starts
@@ -278,7 +344,11 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
         options.onClosed?.(reason, detail);
       },
       onChat: (lines) => link.receive(lines),
-      onRoster: (entries) => link.seat(entries),
+      onRoster: (entries) => {
+        link.seat(entries);
+        voice?.present(seatedSeats(entries));
+      },
+      onVoice: (packet) => voice?.receive(packet),
       // WHICH HERO THIS SCREEN IS ABOUT. The client is shared with headless
       // joiners now (`server/client.ts`), so the seat arrives as a callback and
       // the PAGE is what knows `local-seat.ts` exists.
@@ -313,6 +383,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
 
   return {
     session: link.link,
+    voice,
     advance(input) {
       // The session decides whether this steering counts: a seated player's is
       // applied to THEIR hero, a spectator's is dropped at the one place that
@@ -338,6 +409,7 @@ export function createJoinDriver(options: JoinDriverOptions): RunDriver | null {
       disposed = true;
       live = false;
       setCommandSink(null);
+      voice?.dispose();
       client?.dispose();
       client = null;
       state = null;

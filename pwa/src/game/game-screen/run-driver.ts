@@ -46,6 +46,7 @@ import type { SessionParams } from "@game/wire/protocol.ts";
 import { activeDefOverrides, activeMods } from "../mod-state.ts";
 import { createNetDriver } from "../net/driver.ts";
 import type { SessionLink } from "../net/session-link.ts";
+import type { VoiceLink } from "../net/voice/index.ts";
 import { takeHostIntent } from "../session-intent.ts";
 import type { RunSession } from "./run-setup.ts";
 
@@ -60,6 +61,16 @@ export type RunDriver = {
    * to cannot be drawn over a game that has none.
    */
   readonly session?: SessionLink | null;
+  /**
+   * VOICE CHAT for this session, or null when there is none.
+   *
+   * Beside `session` rather than folded into it, for the same reason it is a
+   * separate build capability: a session may exist without voice (an unstamped
+   * build, a machine with no microphone, a player who turned it off), and the
+   * HUD's speaker cards must be mounted off "is there voice" rather than off
+   * "is there a session".
+   */
+  readonly voice?: VoiceLink | null;
   /**
    * The doors were armed for this run — HOST GAME's open-doors bit, consumed
    * by the driver that opened them. Read by the crossing decision: a

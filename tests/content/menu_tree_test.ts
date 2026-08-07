@@ -43,6 +43,7 @@ const UNION: MenuScreen[] = [
   "interface",
   "gore",
   "audio",
+  "voice",
   "data",
   "export",
   "developer",

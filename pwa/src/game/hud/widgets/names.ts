@@ -21,4 +21,5 @@ export const HUD_WIDGET_NAMES = new Set([
   "swipeDock",
   "questTracker",
   "pickupFeed",
+  "voiceCards",
 ]);

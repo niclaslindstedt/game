@@ -85,12 +85,23 @@ const LIMITER_IDLE_MS = 60_000;
  * What an ADMITTED peer may send, per second, before its extras are dropped.
  *
  * Sized off what a client legitimately sends rather than off a round number: an
- * input frame per simulation tick is 60/s, an ack per publish is 20/s, and chat
- * and run commands are a handful between them. 240/s is four times that
- * ceiling, so no honest client comes near it and a flood is throttled within a
- * frame of starting.
+ * input frame per simulation tick is 60/s, an ack per publish is 20/s, a
+ * TALKING client's voice is `VOICE_PACKET_RATE` (50/s at 20 ms frames), and
+ * chat and run commands are a handful between them. That is ~130/s at the
+ * honest ceiling; the allowance is three times it, so no real client comes near
+ * and a flood is throttled within a frame of starting.
+ *
+ * **VOICE IS IN THIS ARITHMETIC ON PURPOSE, and leaving it out was a real bug
+ * waiting rather than a tidiness point.** Before voice existed the honest
+ * ceiling was ~80/s against an allowance of 240, so a talking player would have
+ * sat at 130 — still under, and therefore silently fine — while a player
+ * talking through a connection that stalled and recovered delivers the
+ * reliability layer's whole backlog AND a second of banked voice in one go.
+ * That is the burst this bucket exists to tolerate, and pricing the steady rate
+ * without the feature that made up 40% of it is how a friend gets dropped for
+ * flooding in the middle of a sentence.
  */
-const PEER_PACKET_RATE = 240;
+const PEER_PACKET_RATE = 400;
 
 /**
  * …and how much of that allowance may be banked and spent at once.
@@ -290,11 +301,18 @@ export function createPeerHub(options: HubOptions): PeerHub {
    * and retransmitting it would deliver stale ground late, which is worse than
    * not delivering it. Everything else here is one small packet that has to
    * arrive.
+   *
+   * VOICE joins the unreliable half for the same reason stated the other way
+   * round: 20 ms of speech is only worth anything at the moment it was meant to
+   * be heard. A retransmitted syllable arrives after the word it belonged to,
+   * so it does not repair the gap — it adds a second one, in the wrong place,
+   * and the listener's jitter buffer has to throw it away anyway. A lost voice
+   * packet is a click nobody notices; a late one is a stutter everybody does.
    */
   function sendTo(peer: Admitted, frame: ArrayBuffer): void {
     const type = new Uint8Array(frame)[0] ?? 0;
     const mode: SendMode =
-      type === FRAME.delta || type === FRAME.snapshot
+      type === FRAME.delta || type === FRAME.snapshot || type === FRAME.voice
         ? "unreliable"
         : "reliable";
     peer.transport.send(peer.key, new Uint8Array(frame), mode);

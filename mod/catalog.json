@@ -4744,6 +4744,7 @@
     "questTracker",
     "swipeDock",
     "tradeAsks",
+    "voiceCards",
     "weaponSlot"
   ],
   "hudEvents": [

@@ -162,6 +162,7 @@ export const HUD_WIDGETS = new Set([
   "swipeDock",
   "questTracker",
   "pickupFeed",
+  "voiceCards",
 ]);
 
 /** The DOM handles the render loop writes to every frame. An element carrying

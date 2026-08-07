@@ -29,6 +29,7 @@ import { hudPressAllowed, runHudPress } from "../actions.ts";
 import type { HudContext } from "../context.ts";
 import { playHudEvent } from "../sounds.ts";
 import type { HudNodeView } from "../resolve.ts";
+import { VoiceOverlay } from "../../game-screen/VoiceOverlay.tsx";
 import { CompanionRail, PartyFrames, TradeAsks } from "./PartyRail.tsx";
 export { HUD_WIDGET_NAMES } from "./names.ts";
 import { WeaponSlot } from "./WeaponSlot.tsx";
@@ -56,6 +57,20 @@ export function renderWidget(view: HudNodeView, ctx: HudContext) {
 
     case "companionRail":
       return <CompanionRail ctx={ctx} />;
+
+    case "voiceCards":
+      // Drawn only where there IS voice — see `HudFieldContext.voice`. The
+      // component keeps its own subscription and its own animation frame,
+      // because a level is a stream that must never reach React (`room.ts`).
+      return ctx.voice ? (
+        <VoiceOverlay
+          room={ctx.voice.room}
+          state={ctx.state}
+          assets={ctx.assets}
+          font={ctx.font}
+          seatName={ctx.seatName}
+        />
+      ) : null;
 
     case "partyFrames":
       return <PartyFrames ctx={ctx} />;

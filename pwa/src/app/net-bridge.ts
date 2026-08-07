@@ -219,6 +219,25 @@ export function netBridgeAvailable(): boolean {
   );
 }
 
+/**
+ * True where VOICE CHAT may be used: a session-capable shell that was also
+ * stamped with the `voice` capability.
+ *
+ * TWO CAPABILITIES, NOT ONE, and the pair is the point. Hosting a session and
+ * talking inside one are separately sold: the depot build carries both, a plain
+ * download carries neither unless somebody asked, and a build with sessions but
+ * no voice is a perfectly good silent co-op game rather than a broken noisy one
+ * (`electron/src/capabilities.ts` explains why a microphone is its own
+ * capability rather than part of multiplayer).
+ *
+ * Read before anything opens a device or draws a settings page: the capability
+ * list arrives on the preload's command line, so the answer is available on the
+ * first frame and a VOICE CHAT row never appears and then vanishes.
+ */
+export function voiceBridgeAvailable(): boolean {
+  return netBridgeAvailable() && shellCapability("voice");
+}
+
 /** Install the shell's callbacks. Idempotent; safe to call on every mount. */
 export function initNetBridge(): void {
   if (!netBridgeAvailable()) return;

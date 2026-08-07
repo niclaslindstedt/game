@@ -28,7 +28,8 @@ export type BindableAction =
   | "medkit"
   | "stamina"
   | "repair"
-  | "riftSeam";
+  | "riftSeam"
+  | "pushToTalk";
 
 /** The live control scheme: one physical binding code per action. An empty
  * string means the action is unbound (a rebind cleared it off a key that got
@@ -72,6 +73,14 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   // in a fight, because the one thing this must never be is a fat-finger away
   // from a swing.
   riftSeam: "KeyG",
+  // PUSH TO TALK. T for "talk", which is where every game that has this control
+  // puts it, and it is HELD rather than pressed — so it belongs beside WALK in
+  // kind rather than beside the one-shot actions, and is deliberately absent
+  // from DISCRETE_ACTIONS below. The voice link reads it live off the settings
+  // (pwa/src/game/net/voice/index.ts) instead of being dispatched through
+  // `actionForCode`, because a talk key has to work while a screen is up: a
+  // player in their bag saying "wait, don't go in yet" is the whole point.
+  pushToTalk: "KeyT",
 };
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
@@ -145,6 +154,11 @@ export const KEYBIND_ROWS: {
     action: "riftSeam",
     label: "TEAR A SEAM HOME",
     blurb: "OPEN A WAY BACK TO THE GARAGE, WHEREVER YOU ARE STANDING",
+  },
+  {
+    action: "pushToTalk",
+    label: "PUSH TO TALK",
+    blurb: "HOLD TO SPEAK TO YOUR PARTY - SETTINGS - VOICE CHAT",
   },
 ];
 
