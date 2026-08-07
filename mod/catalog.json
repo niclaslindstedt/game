@@ -4867,6 +4867,7 @@
     "voiceCards": "speaker"
   },
   "hudActions": [
+    "driveMenu",
     "driveResume",
     "driveSkip",
     "muteSpeaker",

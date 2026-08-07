@@ -20,11 +20,12 @@ import { nsfwAllowed } from "../../app/device-policy.ts";
 import { voiceBridgeAvailable } from "../../app/net-bridge.ts";
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
-import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
+import { KEYBIND_ROWS } from "../keybindings.ts";
 import {
   GORE_SWITCHES,
   VOICE_MIC_GAIN_MAX,
   getSettings,
+  shippedKeybindings,
   updateSettings,
   type GameSettings,
   type GoreSwitchKey,
@@ -276,7 +277,7 @@ export function buildKeybindingsMenu(ctx: MenuContext): MenuEntry[] {
       reset: actionRow("keybindings", "reset", () => {
         playUiSound(synth, "confirm");
         ctx.setCaptureBind(null);
-        updateSettings({ keybindings: { ...DEFAULT_KEYBINDINGS } });
+        updateSettings({ keybindings: shippedKeybindings() });
         ctx.bumpSettings();
       }),
     }),

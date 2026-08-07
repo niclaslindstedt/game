@@ -1796,6 +1796,36 @@ export function GameScreen({
           // The SCREENSHOT bind, which the run's own control layer is not
           // listening for while a road is up.
           onScreenshot={() => takeScreenshot("THE DRIVE")}
+          // ESCAPE → MAIN MENU, from the road. It ENDS the run rather than
+          // parking it, which is the one thing that makes it different from the
+          // fight's own pause menu, and the difference is the road's: a parked
+          // run is a frozen `GameState` to be thawed, and the state behind a
+          // drive is a level the hero has already driven out of — its departure
+          // is booked and latched (`stepDeparture`), so a thaw would put him
+          // back behind a black curtain in a garage the car has left, with
+          // nothing left to book the trip a second time.
+          //
+          // So the trip is what is given up, and NOTHING ELSE IS. The hero is
+          // banked as he sits — the same bank the crossing on the far side of
+          // the road would have done (`bankHero`), everything in the bag and
+          // the purse with him — and the campaign puts him back at home next
+          // time, which is where a man who turned the car around would be.
+          // The card asks before it comes to this (DrivePause's confirm).
+          onMenu={() => {
+            driveRef.current = null;
+            setDrive(null);
+            const pending = pendingTravelRef.current;
+            pendingTravelRef.current = null;
+            // …unless the trip's far side was never going to bank: the victory
+            // splash's drive home carries `banked`, because the win already put
+            // this hero on the character (`recordVictory`), and banking a
+            // second time from a state that has moved on is how a farmed field
+            // loses what it earned.
+            if (state && !pending?.opts?.banked) {
+              progressRef.current?.bankHero(state);
+            }
+            onQuit();
+          }}
           // NOBODY'S THUMB IS ON THIS ONE. A demo or a BOT VIEW run is the
           // autopilot playing the game, and the road is part of the game: with
           // no driver it coasts down from its opening 28% throttle, stops, and
