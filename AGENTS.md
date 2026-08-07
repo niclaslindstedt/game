@@ -363,6 +363,23 @@ are raised through `playCue` (`pwa/src/game/sfx/cues.ts`) and answered by
 `on: { cue, surface }` in their own key space. Every cue is rate-limited IN THE
 FUNNEL, because a cap each caller reimplements is a cap somebody forgets.
 
+**THE HUD IS CONTENT, AND A NEW PIECE OF IT IS A YAML FILE — NEVER A COMPONENT.**
+Every bar, slot, readout, rail and dock (and the drive minigame's dashboard) is
+authored under `content/hud/` and rendered by `pwa/src/game/hud/`, so "move the
+pouch", "re-colour the ammo count", "add a panel" and "give that press a
+different sound" are all edits to `content/hud/elements/<id>.yaml`. Four rules
+carry the seam and each is load-bearing: a BINDING is a READ of the HUD snapshot
+and a JUDGEMENT (a colour ladder, a dial's line, whether a row is worth the
+space) is Lua in `content/hud/scripts/`; a WIDGET is the escape hatch for the
+pieces whose insides are irreducible (the minimap's canvas, the paper-doll party
+frames, the gesture docks) and content still places, gates and sounds them; the
+VOCABULARY lives in `scripts/asset-tools/hud-schema.mjs` and adding a binding,
+an action, a widget or a moment means adding it THERE and answering it in the
+app, which `tests/content/hud_catalog_test.ts` pins; and every interface sound
+the playing HUD makes goes through the element's own `press.sound` or
+`content/hud/events.yaml` — a `playUiSound` call added back into the HUD is a
+sound no mod can reach. → `docs/modding.md`, `docs/content-pipeline.md`
+
 **A BODY'S FRAME IS A CONVENTION WITH A TABLE IN FRONT OF IT, AND THE FALLBACK
 IS THE SHIPPED GAME.** Every pass that draws a character asks
 `clipFrameName(subject, state, at)` (`pwa/src/game/render/clips.ts`) FIRST and
@@ -526,31 +543,33 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 **Content is data.** Every catalog below is authored YAML under `content/`,
 compiled by `make levels`. The skill named is the one to load before authoring.
 
-| Authoring                                                     | File                                                                                                                         | Skill                                   |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| A level (mission — the venue MINUS its floor)                 | `content/levels/<id>.yaml`                                                                                                   | `level-design`                          |
-| The map it is CARVED from, per run                            | `content/maps/<id>.yaml`                                                                                                     | `mapgen-improvement`, `map-improvement` |
-| An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml`                                                                                          | `enemy-design`                          |
-| A boss's set-piece MOVE                                       | `src/game/defs/enemies/abilities.ts` + `src/game/mechanics/<id>.ts`                                                          | `boss-abilities`                        |
-| A boss's DEATH RITE                                           | `src/game/death-rites/` + `death:` on the def                                                                                | `boss-abilities`, `enemy-design`        |
-| An item, a named unique, a set                                | `content/items/<rarity>/<id>.yaml`, `content/sets.yaml`                                                                      | `weapon-system`                         |
-| The loot economy knobs                                        | `content/item_quality.yaml`, `content/item_rarity.yaml`                                                                      | `weapon-system`                         |
-| A powerup (a timed pickup power)                              | `content/powerups.yaml`                                                                                                      | `visual-effects`                        |
-| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                            | `engine-system`                         |
-| A passive TALENT                                              | `content/talents.yaml`                                                                                                       | `talent-fx`                             |
-| A new PROC a talent can fire                                  | a block on `TalentDef` + `TALENT_BLOCKS` + one reader in `talent-effects.ts` + `PROC_BLOCKS` — never a branch on a talent id | `engine-system`, `talent-fx`            |
-| A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                    | `enemy-design`                          |
-| An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                   | `quest-design`                          |
-| A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                           | `update-story`                          |
-| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                     | `pixel-assets`, `art-improvement`       |
-| A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                        | `sound-effects`                         |
-| The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                     | `menu-design`                           |
-| The hero level curve                                          | `content/leveling.yaml`                                                                                                      | `leveling-balance`                      |
-| The campaign ladder / the autopilot's knobs                   | `content/ladder.yaml`, `content/bot.yaml`                                                                                    | `level-design`, `bot-improvement`       |
-| A GORE piece, organ or family                                 | `content/sprites/effects/gib_*` + the pools in `gore-burst.ts` / `gore.ts`                                                   | `gore-system`                           |
+| Authoring                                                     | File                                                                                                                                    | Skill                                   |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| A level (mission — the venue MINUS its floor)                 | `content/levels/<id>.yaml`                                                                                                              | `level-design`                          |
+| The map it is CARVED from, per run                            | `content/maps/<id>.yaml`                                                                                                                | `mapgen-improvement`, `map-improvement` |
+| An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml`                                                                                                     | `enemy-design`                          |
+| A boss's set-piece MOVE                                       | `src/game/defs/enemies/abilities.ts` + `src/game/mechanics/<id>.ts`                                                                     | `boss-abilities`                        |
+| A boss's DEATH RITE                                           | `src/game/death-rites/` + `death:` on the def                                                                                           | `boss-abilities`, `enemy-design`        |
+| An item, a named unique, a set                                | `content/items/<rarity>/<id>.yaml`, `content/sets.yaml`                                                                                 | `weapon-system`                         |
+| The loot economy knobs                                        | `content/item_quality.yaml`, `content/item_rarity.yaml`                                                                                 | `weapon-system`                         |
+| A powerup (a timed pickup power)                              | `content/powerups.yaml`                                                                                                                 | `visual-effects`                        |
+| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                                       | `engine-system`                         |
+| A passive TALENT                                              | `content/talents.yaml`                                                                                                                  | `talent-fx`                             |
+| A new PROC a talent can fire                                  | a block on `TalentDef` + `TALENT_BLOCKS` + one reader in `talent-effects.ts` + `PROC_BLOCKS` — never a branch on a talent id            | `engine-system`, `talent-fx`            |
+| A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                               | `enemy-design`                          |
+| An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                              | `quest-design`                          |
+| A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                      | `update-story`                          |
+| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                                | `pixel-assets`, `art-improvement`       |
+| A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                   | `sound-effects`                         |
+| The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                | `menu-design`                           |
+| THE HUD — the fight's chrome AND the road's dashboard         | `content/hud/` (`hud.yaml`, `elements/<id>.yaml`, `events.yaml`, `scripts/<id>.lua`); a WIDGET's insides in `pwa/src/game/hud/widgets/` | `menu-design`, `ui-review`              |
+| The hero level curve                                          | `content/leveling.yaml`                                                                                                                 | `leveling-balance`                      |
+| The campaign ladder / the autopilot's knobs                   | `content/ladder.yaml`, `content/bot.yaml`                                                                                               | `level-design`, `bot-improvement`       |
+| A GORE piece, organ or family                                 | `content/sprites/effects/gib_*` + the pools in `gore-burst.ts` / `gore.ts`                                                              | `gore-system`                           |
 
 | Presentation                                      | Goes in                                                                        | Reference             |
 | ------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------- |
+| A HUD element (a bar, a slot, a readout, a dial)  | `content/hud/elements/<id>.yaml` — never a component                           | `ui-review`           |
 | A transient visual effect                         | `pwa/src/game/render/effects.ts` or a CSS overlay driver                       | `visual-effects`      |
 | Blood, a cleave, a gib, a gore family             | `pwa/src/game/game-screen/` + `render/blood*`                                  | `gore-system`         |
 | A weapon's signature slash/muzzle                 | `fx:` on the item + `pwa/src/game/weapon-elements.ts`                          | `weapon-system`       |
@@ -596,6 +615,7 @@ order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.m
 | Sounds        | `content/sounds/`                                         | `generate-sounds.mjs`     | `pwa/src/generated/sounds{,-ui}.ts`                 | `sound_catalog_test.ts`       |
 | Music         | `content/music/`                                          | `generate-music.mjs`      | `pwa/src/generated/music/`                          | `music_roundtrip_test.ts`     |
 | Title menu    | `content/mainmenu.yaml`                                   | `generate-menu.mjs`       | `pwa/src/generated/menu.ts`                         | `menu_tree_test.ts`           |
+| HUD           | `content/hud/`                                            | `generate-hud.mjs`        | `pwa/src/generated/hud.ts`                          | `hud_catalog_test.ts`         |
 
 Accept an intentional change with the matching `node scripts/update-*-snapshot.mjs`
 — never by editing a fixture. **The sound, music and menu catalogs emit into the
@@ -661,6 +681,7 @@ are regenerated in the same commit as the content change that moves them:
 | game identity (title, domain, …)                                       | `game.config.json` only — the single source of truth; then `make icons`   |
 | engine public API (`src/index.ts`)                                     | `docs/architecture.md`, `README.md` Usage                                 |
 | the title menu (a screen, a row, an order, a page name)                | `content/mainmenu.yaml` only — the compiled tree is the one source        |
+| the HUD (an element, where it sits, what it says or sounds like)       | `content/hud/` only; a new BINDING/ACTION/WIDGET owes the schema a row    |
 | how the picture is drawn (projection, postfx, gait, loot presentation) | `docs/rendering.md`                                                       |
 | a catalog's compile pipeline, or a parity rule                         | `docs/content-pipeline.md`                                                |
 | a RULE the catalogs sit inside (a carry-over, an economy, a gate)      | `docs/game-content.md` — never a per-item or per-venue entry              |

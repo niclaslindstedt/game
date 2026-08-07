@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# SPEED, AND THE GEAR IT IS BEING MADE IN — the left dial on the road.
+#
+# The gear is the engine's own reading, the same one the sound is built from, so
+# what the player hears climbing and dropping is what the dial says. A readout,
+# not a control: the wagon shifts itself.
+#
+# IN THE GAME'S OWN FONT, on the run's own frame sprite. Everything else the
+# player reads in this game is the pixel font, and a browser monospace here made
+# the minigame look like a different program — which is exactly what an
+# interlude must not do.
+region: drive_bar
+order: 0
+kind: text
+class: drive-hud-plate
+frame: hud_frame
+#
+# WHAT IT SAYS is a script's call (`hud/scripts/drive.lua`), not a template:
+# what a dial reads at a crawl and what it reads at the redline are the same
+# question, and answering it in Lua is what lets a mod give the wagon a rally's
+# pace note or a delivery run's order slip without touching the app.
+text:
+  script: drive.speed_label
+scale: 2
+color: "#e8e4d8"

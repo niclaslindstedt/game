@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE XP STRIP — full width along the very top, the top-scroller staple. The
+# level itself reads off the avatar's corner badge, so this stays a bare bar.
+#
+# The `overlay` is the KILL HEAT: only the freshly-earned slice glows. It
+# carries the `xpHeat` render-loop handle, which means the loop sizes and lights
+# it straight on the DOM when a kill lands — no React re-render for a flash that
+# happens several times a second.
+region: hud
+order: 0
+kind: bar
+class: hud-xp
+bind: hud.xpFrac
+fill:
+  class: hud-xp-fill
+overlay:
+  class: hud-xp-heat
+  ref: xpHeat

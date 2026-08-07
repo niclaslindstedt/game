@@ -16,7 +16,8 @@
 // the engine state, controls/player-input/bot-driver feed the sim, event-fx /
 // run-progress / autopilot-director / bot-feedback react to engine events,
 // render-frame draws and writes the per-frame DOM, and the JSX surfaces
-// (PlayingHud, docks, SceneOverlays, EndSplash) render from the HUD snapshot.
+// (the content-authored HUD, SceneOverlays, EndSplash) render from the HUD
+// snapshot.
 
 import { fieldLive, localHero, localScreen } from "./local-seat.ts";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -63,7 +64,7 @@ import {
   stopMusic,
 } from "./music/index.ts";
 import { playTypewriterHaptic } from "./haptics.ts";
-import { PickupFeed, type PickupMessage } from "./PickupFeed.tsx";
+import { type PickupMessage } from "./PickupFeed.tsx";
 import { PickupModal, type PickupCard } from "./PickupModal.tsx";
 import {
   canvasToWorld,
@@ -90,7 +91,6 @@ import {
 } from "./game-screen/AutopilotPanel.tsx";
 import { createBotDriver } from "./game-screen/bot-driver.ts";
 import { createBotFeedback, createTapFx } from "./game-screen/bot-feedback.ts";
-import { ConsumableDock } from "./game-screen/ConsumableDock.tsx";
 import { createControls } from "./game-screen/controls.ts";
 import { fatalBlow, killerLabel } from "./game-screen/death-cause.ts";
 import {
@@ -108,6 +108,10 @@ import {
 } from "./game-screen/event-fx.ts";
 import { flushGoldPickups } from "./game-screen/gold-float.ts";
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
+import { hudBindings } from "./hud/bindings.ts";
+import { playHudEvent } from "./hud/sounds.ts";
+import { HudRoot } from "./hud/HudRoot.tsx";
+import type { HudContext } from "./hud/context.ts";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
 import { createEliteFx } from "./game-screen/elite-css-fx.ts";
@@ -125,14 +129,10 @@ import {
   createPickupCardQueue,
   createPickupFeed,
 } from "./game-screen/pickup-ui.ts";
-import { PlayingHud } from "./game-screen/PlayingHud.tsx";
 import { QuestFlash } from "./game-screen/QuestFlash.tsx";
-import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
 import { TradeOverlay } from "./overlays/TradeOverlay.tsx";
-import { PowerupDock } from "./game-screen/PowerupDock.tsx";
-import { SwipeDock } from "./game-screen/SwipeDock.tsx";
 import {
   createRenderFrame,
   type AreaCaptionState,
@@ -1554,7 +1554,6 @@ export function GameScreen({
     setWeaponMenuOpen(false);
     setCharTab(tab);
     runCommand(state, "openInventory");
-    playUiSound(synth, "confirm");
     bumpUi();
   };
 
@@ -1572,10 +1571,123 @@ export function GameScreen({
         level={hud.level}
         assets={assets}
         font={font}
-        onOpen={() => openCharScreen(tab)}
+        onOpen={() => {
+          // The portrait is a button the HUD's own catalog does not draw (the
+          // arrival scene mounts this very node too), so it raises the generic
+          // HUD press itself — the verb below no longer makes any noise of its
+          // own, or a press routed through an authored element would sound
+          // twice.
+          playHudEvent("hud.press");
+          openCharScreen(tab);
+        }}
       />
     );
   const heroAvatar = heroAvatarFor("stats");
+
+  /**
+   * EVERYTHING THE HUD READS, in one object.
+   *
+   * The HUD is assembled from `content/hud/` now, so this screen cannot know
+   * which widgets are on it — it hands over the run, the app's own view state,
+   * the render loop's handles and the verbs a press may carry, and the layout
+   * decides what uses them. Adding a panel to the HUD is a YAML file; it is
+   * never a new prop here.
+   */
+  const hudContext: HudContext | null =
+    hud && state
+      ? {
+          surface: "field",
+          hud,
+          state,
+          assets,
+          font,
+          ui: {
+            keyHints,
+            weaponMenuOpen,
+            swipeBars,
+            wide,
+            autopilot: state.autopilot.active,
+          },
+          values: hudBindings(hud, state, {
+            keyHints,
+            weaponMenuOpen,
+            swipeBars,
+            wide,
+            autopilot: state.autopilot.active,
+          }),
+          refs: {
+            minimapCanvas: minimapRef,
+            xpHeat: xpHeatRef,
+            staminaFill: staminaFillRef,
+            powerupDock: powerupDockRef,
+          },
+          actions: {
+            openBag: () => openCharScreen("bag"),
+            openCharacter: () => openCharScreen("stats"),
+            openQuestLog: () => {
+              if (!fieldLive(state)) return;
+              setWeaponMenuOpen(false);
+              runCommand(state, "openQuestLog");
+              bumpUi();
+            },
+            openPoints: () => {
+              // Re-check against the live state (the HUD snapshot that showed
+              // the pip may be a frame stale) before opening the chooser on the
+              // banked points. The press IS the engagement, so the chooser it
+              // raises skips its reveal lockout — latched only if the verb
+              // actually opened one, so a refused press can't leave the flag
+              // standing for a later ding's reveal to spend.
+              if (!fieldLive(state)) return;
+              setWeaponMenuOpen(false);
+              if (runCommandOk(state, "promptPendingPoints")) {
+                setLevelupByPress(true);
+              }
+            },
+            openMap: () => {
+              if (!fieldLive(state)) return;
+              setWeaponMenuOpen(false);
+              runCommand(state, "openMap");
+              bumpUi();
+            },
+            pauseGame: () => {
+              if (!fieldLive(state)) return;
+              runCommand(state, "pauseGame");
+              pauseMusic();
+              bumpUi();
+            },
+            toggleWeaponMenu: (open) =>
+              setWeaponMenuOpen(
+                open === undefined ? !weaponMenuOpen : open === true,
+              ),
+          },
+          docks: {
+            consumableSide,
+            powerupSide,
+            pickups,
+            onUseConsumable: queues.queueConsumable,
+            onSpendPowerup: queues.queueDockSpend,
+            onDiscardPowerup: (index) =>
+              runCommandOk(state, "discardHeldAbility", index),
+          },
+          heroAvatar,
+          autopilotPanel: state.autopilot.active ? (
+            <AutopilotPanel
+              state={state}
+              font={font}
+              sprites={assets.sprites}
+              coins={hud.coins}
+              characterRef={characterRef}
+              autopilot={autopilot}
+              bumpUi={bumpUi}
+            />
+          ) : null,
+          seatName: (seat) =>
+            sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
+            null,
+          userPausedRef,
+          bumpUi,
+        }
+      : null;
 
   /**
    * Put the DRIVE HOME on screen instead of crossing, and say whether it took
@@ -1713,123 +1825,13 @@ export function GameScreen({
         />
       )}
 
-      {hud && hud.fieldLive && state && (
-        <PlayingHud
-          hud={hud}
-          state={state}
-          assets={assets}
-          font={font}
-          weaponMenuOpen={weaponMenuOpen}
-          onToggleWeaponMenu={setWeaponMenuOpen}
-          keyHints={keyHints}
-          minimapRef={minimapRef}
-          xpHeatRef={xpHeatRef}
-          staminaFillRef={staminaFillRef}
-          heroAvatar={heroAvatar}
-          onOpenBag={() => openCharScreen("bag")}
-          onOpenQuestLog={() => {
-            if (!fieldLive(state)) return;
-            setWeaponMenuOpen(false);
-            runCommand(state, "openQuestLog");
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          onOpenPoints={() => {
-            // Re-check against the live state (the HUD snapshot that showed
-            // the pip may be a frame stale) before opening the chooser on the
-            // banked points.
-            if (!fieldLive(state)) return;
-            setWeaponMenuOpen(false);
-            // The press IS the engagement, so the chooser it raises skips its
-            // reveal lockout (see `levelupByPress`) — latched only if the verb
-            // actually opened one, so a refused press can't leave the flag
-            // standing for a later ding's reveal to spend.
-            if (runCommandOk(state, "promptPendingPoints")) {
-              setLevelupByPress(true);
-            }
-            playUiSound(synth, "confirm");
-            bumpUi();
-          }}
-          autopilotOverlay={
-            state.autopilot.active && (
-              <AutopilotPanel
-                state={state}
-                font={font}
-                sprites={assets.sprites}
-                coins={hud.coins}
-                characterRef={characterRef}
-                autopilot={autopilot}
-                bumpUi={bumpUi}
-              />
-            )
-          }
-          userPausedRef={userPausedRef}
-          seatName={(seat) =>
-            sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
-            null
-          }
-          bumpUi={bumpUi}
-        />
-      )}
-
-      {hud?.fieldLive && !swipeBars && (
-        <ConsumableDock
-          hud={hud}
-          assets={assets}
-          font={font}
-          keyHints={keyHints}
-          side={consumableSide}
-          wide={wide}
-          onUse={queues.queueConsumable}
-        />
-      )}
-
-      {!swipeBars && (
-        <PowerupDock
-          hud={hud?.fieldLive ? hud : null}
-          assets={assets}
-          font={font}
-          keyHints={keyHints}
-          weaponMenuOpen={weaponMenuOpen}
-          side={powerupSide}
-          dockRef={powerupDockRef}
-          onSpend={queues.queueDockSpend}
-          onDiscard={(index) => {
-            if (state && runCommand(state, "discardHeldAbility", index)) {
-              playUiSound(synth, "back");
-              return true;
-            }
-            return false;
-          }}
-        />
-      )}
-
-      {/* SWIPE BARS: the fixed docks' stand-in — an edge swipe reveals both
-          slot groups where the thumb is (SwipeDock.tsx). The render loop's
-          cooldown writes ride the same dockRef either way. */}
-      {swipeBars && (
-        <SwipeDock
-          hud={hud?.fieldLive ? hud : null}
-          assets={assets}
-          font={font}
-          dockRef={powerupDockRef}
-          onSpend={queues.queueDockSpend}
-          onUse={queues.queueConsumable}
-        />
-      )}
-
-      {hud?.fieldLive && (
-        <PickupFeed
-          font={font}
-          messages={pickups}
-          side={powerupSide === "left" ? "right" : "left"}
-        />
-      )}
-
-      {/* THE ON-SCREEN QUEST TRACKER — what is running, in the corner, over
-          the fight (game-screen/QuestTracker.tsx). Tap-transparent: the strip
-          annotates the run, it must never eat a steering press. */}
-      {state && hud?.fieldLive && <QuestTracker state={state} font={font} />}
+      {/* THE HUD — every part of it, assembled from `content/hud/`.
+          `HudRoot` reads the LIVE layout (ours, or ours with a mod's merged on
+          top), resolves it against this instant's values and draws it. This
+          screen no longer knows what is on the HUD, which is the whole point:
+          a mod that moves the minimap, restyles the pouch or hangs a new panel
+          off the left rail touches nothing here. */}
+      {hudContext && <HudRoot ctx={hudContext} />}
 
       {/* The AUTO PILOT LOOT history — a full-shell modal. */}
       {state && state.autopilot.active && autopilot.historyOpen && (

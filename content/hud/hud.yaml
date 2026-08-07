@@ -1,0 +1,120 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE HUD'S FRAME — the boxes every element sits in.
+#
+# Compiled by `make levels` (scripts/generate-hud.mjs) into the gitignored
+# `pwa/src/generated/hud.ts`, which `pwa/src/game/hud/` renders. A MOD ships
+# this same file in its own `hud/` folder and the regions merge by id, later
+# wins — so a mod can restyle the portrait plate, hang a new rail off the left
+# column, or move the minimap without restating the rest of the HUD.
+#
+# ---------------------------------------------------------------------------
+# A REGION
+#
+#   parent:   the region this one nests inside. A region with none is a TOP
+#             LEVEL box, drawn as a sibling of the others in `order` — which is
+#             how the docks sit outside `.game-hud` instead of inside it.
+#   order:    where it sits among its siblings. Regions and ELEMENTS share one
+#             ordering inside a parent, so an element can be authored between
+#             two regions.
+#   class:    the CSS class its box wears. The stylesheet is the app's
+#             (pwa/src/styles.css); content chooses which of its classes to
+#             wear, and a mod that needs a look the stylesheet has no class for
+#             uses `style:` (a short, bounded set of properties — see the
+#             schema) rather than shipping CSS.
+#   wrap:     `div` (the default) draws a box; `none` draws nothing at all and
+#             renders its children in place. `none` is for a GROUP that exists
+#             only to be ordered — the docks, each of which already draws its
+#             own full-screen furniture.
+#   frame:    a sprite drawn as the box's 9-slice border (the sci-fi plate
+#             behind the portrait). Replaced like any other sprite — including
+#             by a PNG a mod drew somewhere else.
+#   visible:  a flag binding, `!flag`, a list of them, or a { script: } — the
+#             box and everything in it are on screen only while it holds.
+#
+# THE ONE RULE THAT BITES: `.game-hud` and everything under it is gated on
+# `hud.fieldLive` — "my hero is on the field and I have nothing open". That is
+# not decoration. A HUD drawn over the bag screen would eat the presses meant
+# for it, and a HUD drawn over a cutscene is the interruption the scene exists
+# to avoid.
+
+regions:
+  # The playing HUD proper: the top chrome, drawn only while the field is live.
+  hud:
+    order: 0
+    class: game-hud
+    visible: hud.fieldLive
+
+  # The top row: the left status column and the right minimap column.
+  top:
+    parent: hud
+    order: 1
+    class: hud-top
+
+  # THE LEFT RAIL — the one screen edge with no absolute competitor, and well
+  # clear of the steering thumb's bottom thirds. The framed status unit, then
+  # the companion portraits, the party frames and the trade asks under it.
+  left:
+    parent: top
+    order: 0
+    class: hud-left
+
+  status:
+    parent: left
+    order: 0
+    class: hud-status
+
+  # The portrait and the vitals share ONE framed plate so the two read as a
+  # single unit — the bust at left, the colour bars nested at its right.
+  portrait:
+    parent: status
+    order: 0
+    class: hud-portrait-unit
+    frame: hud_frame
+
+  # The vitals stack: red HP over a shorter white stamina sliver. Same width,
+  # butted together; the colour IS the label.
+  vitals:
+    parent: portrait
+    order: 1
+    class: vital-stack
+
+  # Below the portrait unit, floating free: the round slots — the held weapon,
+  # the bag pouch, the quest log, the points pip.
+  gear:
+    parent: status
+    order: 1
+    class: hud-gear-row
+
+  # THE MINIMAP HUB, top right: the fog-of-war map with the run's edge widgets
+  # hung off it, and the AUTO PILOT panel tucked under it.
+  clock:
+    parent: top
+    order: 1
+    class: hud-clock-stack
+
+  # The bottom furniture. `wrap: none` because each of these draws its own
+  # full-screen layer already — a box around them would be a second one.
+  docks:
+    order: 1
+    wrap: none
+
+  # ---------------------------------------------------------------------------
+  # THE ROAD — the drive minigame's dashboard, its own surface.
+  #
+  # A separate screen mounts it (`DriveScreen`), so it is a top-level region
+  # with `surface: drive` rather than a corner of the fight's HUD. Everything
+  # else about it is the same: the dials are elements, the plate behind each one
+  # is the same 9-sliced HUD frame sprite the vitals wear, and a mod re-skins
+  # the dashboard exactly as it re-skins the fight.
+  drive:
+    surface: drive
+    order: 0
+    wrap: none
+
+  # The dial bar across the top of the road (`.drive-hud-bar`), tap-transparent
+  # so a dial never eats the thumb that is steering.
+  drive_bar:
+    parent: drive
+    order: 0
+    class: drive-hud-bar

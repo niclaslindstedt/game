@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE POWERUP DOCK — the banked powers, oldest first, each spendable on a tap and
+# showing its countdown radial in place while it runs.
+#
+# It carries the `powerupDock` handle: the render loop writes each running
+# power's countdown straight onto the slot, so a dock full of timers costs no
+# React re-renders.
+region: docks
+order: 1
+kind: widget
+widget: powerupDock
+ref: powerupDock
+visible: "!ui.swipeBars"

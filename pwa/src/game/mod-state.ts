@@ -201,6 +201,26 @@ export type ModBundle = {
     string,
     Record<string, { frames: string[]; delayMs: number; drive: string }>
   >;
+  /**
+   * THE HUD a mod ships: its regions, its elements, its event sounds and its
+   * Lua judgements, from the mod's own `hud/` folder.
+   *
+   * Structurally typed here rather than importing `HudLayout`, for the reason
+   * this whole leaf exists: the MODS screen is on the startup path and this
+   * module may name nothing that drags the renderer along behind it. The real
+   * types are `hud/types.ts`, and `mods.ts` — which is allowed to know both —
+   * is where the two meet.
+   *
+   * Absent from the many mods that leave the HUD alone. A mod that ships one
+   * element replaces THAT element and nothing else: the merge is per id, so a
+   * pouch re-skin does not cost the player the rest of their HUD.
+   */
+  hud?: {
+    regions?: Record<string, unknown>;
+    elements?: unknown[];
+    events?: Record<string, string>;
+    scripts?: Record<string, { id: string; source: string }>;
+  };
   /** The manifest's own inventory — what the MOD INFO screen reads. Empty for
    * a mod authored before `contents:` existed, which is why the screen still
    * has to be able to say something without it. */
@@ -234,7 +254,8 @@ export type ModClash = {
     | "story item"
     | "quest"
     | "rule script"
-    | "animation";
+    | "animation"
+    | "hud";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

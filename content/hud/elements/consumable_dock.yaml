@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE CONSUMABLE DOCK — medkits, stamina draughts and repair kits, along the
+# bottom where the thumb already is.
+#
+# It stands down entirely when the player has asked for SWIPE BARS instead (the
+# edge swipe summons both slot groups where the thumb is, rather than parking
+# them at fixed corners).
+region: docks
+order: 0
+kind: widget
+widget: consumableDock
+visible:
+  - hud.fieldLive
+  - "!ui.swipeBars"

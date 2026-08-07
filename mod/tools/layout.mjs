@@ -149,6 +149,30 @@ export const ITEM_RARITIES = new Set([
   "artifact",
 ]);
 
+/**
+ * THE ONE FOLDER THAT IS A TREE OF TREES: `hud/`.
+ *
+ * The HUD is authored the way the game's own is (`content/hud/`) — two files
+ * describing the frame and its sounds, a folder of elements, a folder of Lua
+ * judgements — so it is the one catalog whose shape the flat `TREES` table
+ * above cannot describe. Kept as its own table rather than bent into that one,
+ * because the shape is real: an element and the judgement it calls are
+ * different kinds of file and belong in different folders.
+ */
+export const NESTED = {
+  hud: {
+    what: "the HUD",
+    files: {
+      "hud.yaml": "the frame — the regions your elements sit in",
+      "events.yaml": "what the HUD's own moments sound like",
+    },
+    trees: {
+      elements: { ext: "yaml", what: "a HUD element" },
+      scripts: { ext: "lua", what: "a HUD judgement" },
+    },
+  },
+};
+
 /** Catalogs that are a single FILE at the mod's root. */
 export const ROOT_CONTENT = {
   "animations.yaml":
@@ -276,6 +300,9 @@ export function classify(rel) {
     };
   }
 
+  const nested = NESTED[parts[0]];
+  if (nested) return classifyNested(parts, nested);
+
   const tree = TREES[parts[0]];
   if (!tree) {
     return {
@@ -322,4 +349,43 @@ export function classify(rel) {
     };
   }
   return { role: "content", catalog: parts[0] };
+}
+
+/** A path inside a TREE OF TREES (`hud/`) — either one of its two root files,
+ * or a file in one of its two folders. */
+function classifyNested(parts, nested) {
+  const [root, ...rest] = parts;
+  const shapes = [
+    ...Object.keys(nested.files),
+    ...Object.entries(nested.trees).map(
+      ([dir, tree]) => `${dir}/<id>.${tree.ext}`,
+    ),
+  ].map((shape) => `${root}/${shape}`);
+  if (rest.length === 1) {
+    if (rest[0] in nested.files) return { role: "content", catalog: root };
+    return {
+      role: "stray",
+      why: `${nested.what} is loaded from ${shapes.join(", ")} — nothing reads "${parts.join("/")}"`,
+    };
+  }
+  const tree = rest.length === 2 ? nested.trees[rest[0]] : undefined;
+  if (!tree) {
+    return {
+      role: "stray",
+      why: `${nested.what} is loaded from ${shapes.join(", ")} — this one sits where nothing reads`,
+    };
+  }
+  if (rest[1].startsWith("_")) {
+    return {
+      role: "stray",
+      why: `${root}/${rest[0]}/ skips a name starting with "_", so this one never loads`,
+    };
+  }
+  if (!rest[1].endsWith(`.${tree.ext}`)) {
+    return {
+      role: "stray",
+      why: `${root}/${rest[0]}/ holds .${tree.ext} files only — the compiler skips everything else`,
+    };
+  }
+  return { role: "content", catalog: root };
 }

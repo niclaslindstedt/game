@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE QUEST LOG — the same round slot again, one further right, wearing the `!`
+# every quest surface in the game is marked with. The log is then one press away
+# from the fight instead of two presses into the pause menu.
+#
+# It appears only once this run has TAKEN an errand: the log lists accepted work,
+# so before the first acceptance it could only open empty. A giver's untaken
+# offer deliberately does not surface it — the log must not reveal who stands on
+# the map before the player has met them, and the offer is already announced
+# where it belongs, on that person's own head.
+region: gear
+order: 2
+kind: button
+class: hud-bag-slot hud-quest-slot has-quests
+aria: open-quest-log
+visible: hud.questAlert
+classes:
+  hud-slot-yielded: ui.weaponMenuOpen
+press:
+  action: openQuestLog
+  sound: ui_confirm
+  close: true
+children:
+  - id: quest_mark
+    kind: text
+    text: "!"
+    scale: 3
+    color: "#ffd75e"

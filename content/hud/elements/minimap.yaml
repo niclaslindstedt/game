@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE MINIMAP HUB — the live fog-of-war map in a rounded frame, with the run's
+# edge widgets hung off it: the survival timer at the inner top (which also
+# PAUSES the run), the kill count as a bare number at the inner bottom, and
+# RAMPAGE as a gauge that fills and reddens around the border. Tapping the map
+# body opens the full-screen map (M on desktop).
+#
+# Its canvas carries the `minimapCanvas` handle — the render loop paints the fog
+# and the blips onto it every frame.
+region: clock
+order: 0
+kind: widget
+widget: minimap
+ref: minimapCanvas
+press:
+  action: openMap
+  sound: ui_confirm

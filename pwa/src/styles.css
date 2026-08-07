@@ -469,6 +469,22 @@ html.app-locked body {
    same 9-sliced `hud_frame` panel the vitals plate does (the sprite URL comes in
    inline from DriveScreen) — a bare drop-shadowed string over the road made the
    road look like a different program. */
+/* THE DASHBOARD'S BAR — where the road's dials sit, across the top of the
+   picture. A class rather than the drive screen's own inline object, because
+   the bar is a REGION of the authored HUD now (content/hud/hud.yaml) and a
+   region wears a class the same way an element does. Tap-transparent: the whole
+   picture is the steering pad, and a dial must never eat a thumb. */
+.drive-hud-bar {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
 .drive-hud-plate {
   display: flex;
   align-items: center;
@@ -943,8 +959,8 @@ html.app-locked body {
 }
 
 /* A HUD control that gets out of the switcher's way while it's open (the bag
-   pouch — see PlayingHud). `visibility`, not `display`, so the gear row keeps
-   its shape and the weapon circle the switcher is anchored to can't shift
+   pouch — see content/hud/elements/). `visibility`, not `display`, so the
+   gear row keeps its shape and the weapon circle the switcher is anchored to can't shift
    under the panel that just opened; hidden also stops it swallowing a tap
    meant for the slot drawn over it. */
 .hud-slot-yielded {

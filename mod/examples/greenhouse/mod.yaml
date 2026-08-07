@@ -57,6 +57,10 @@ contents:
     summary: THE PRUNING SAW - a new base weapon, meant for stems the thickness of an arm.
   - path: items/unique/greenhouse_first_cutting.yaml
     summary: FIRST CUTTING - a named relic, the saw the vault's first graft was taken with.
+  - path: hud/elements/greenhouse_seed_tally.yaml
+    summary: A tally on the HUD's left rail counting what the vault has lost so far.
+  - path: hud/scripts/greenhouse_hud.lua
+    summary: What that tally says, when it is worth showing, and what colour it goes.
   - path: powerups.yaml
     summary: SPORE BLOOM - a power that lays burning ground behind you and rings you in it.
   - path: talents.yaml

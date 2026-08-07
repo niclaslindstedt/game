@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE BAG POUCH — the same round slot as the weapon, sitting to its right. It
+# wears the WORN bag's own icon (so the pouch matches the gear), prints the free
+# cells (red at zero), pulses when a full bag turns loot away, and opens the
+# inventory on tap.
+#
+# It STANDS ASIDE while the switcher is open (`hud-slot-yielded`): the switcher
+# unrolls to the right of the weapon circle, straight across this seat, and the
+# pouch would otherwise paint over its first slot and eat the tap meant for it.
+region: gear
+order: 1
+kind: button
+class: hud-bag-slot
+aria: open-bag
+classes:
+  bag-full: hud.bagFullHint
+  hud-slot-yielded: ui.weaponMenuOpen
+press:
+  action: openBag
+  sound: ui_confirm
+  close: true
+children:
+  - id: bag_icon
+    kind: icon
+    class: pixel-img hud-bag-img
+    spriteBind: hud.bagIcon
+  - id: bag_count
+    kind: text
+    class: hud-bag-count
+    bind: hud.bagFree
+    scale: 1
+    color:
+      script: vitals.bag_color

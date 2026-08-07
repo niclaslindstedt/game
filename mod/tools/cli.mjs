@@ -398,6 +398,13 @@ function compile() {
       [Object.keys(b.thoughts ?? {}).length, "thought"],
       [Object.keys(b.storyItems ?? {}).length, "story item"],
       [Object.keys(b.scripts ?? {}).length, "rule script"],
+      // The HUD, counted the way an author counts it: elements are the things
+      // they wrote a file for. A mod that only re-points a press's sound or
+      // adds a region shows up through those two lines instead.
+      [(b.hud?.elements ?? []).length, "hud element"],
+      [Object.keys(b.hud?.regions ?? {}).length, "hud region"],
+      [Object.keys(b.hud?.events ?? {}).length, "hud sound"],
+      [Object.keys(b.hud?.scripts ?? {}).length, "hud script"],
     ]
       .filter(([n]) => n > 0)
       .map(([n, one]) => fmt(n, one));

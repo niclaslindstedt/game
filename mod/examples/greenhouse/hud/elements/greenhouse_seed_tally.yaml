@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: CC0-1.0
+#
+# A HUD ELEMENT OF OUR OWN — the WoW-addon half of the mod format.
+#
+# The vault counts what you have cleared out of it. It sits on the run's own
+# left rail (region `left`, a region the GAME ships), under the party frames,
+# and it is nothing but a text node reading a binding through a judgement of
+# ours — no code, no CSS, no new sprite.
+#
+# The two things worth copying out of this file:
+#
+#   * the ID IS THE FILENAME, and an id the game already uses REPLACES that
+#     element. `greenhouse_seed_tally` is ours alone, so this ADDS. Name a file
+#     `bag_slot.yaml` instead and you have re-skinned the pouch.
+#   * `visible:` is a script, so the tally is not on screen at all until the
+#     first kill — a HUD element that is permanently on screen saying "0" is
+#     furniture, not information.
+id: greenhouse_seed_tally
+region: left
+order: 4
+kind: text
+scale: 2
+text:
+  script: greenhouse_hud.tally
+visible:
+  script: greenhouse_hud.worth_showing
+color:
+  script: greenhouse_hud.tally_color

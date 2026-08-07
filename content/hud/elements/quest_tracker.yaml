@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE ON-SCREEN QUEST TRACKER — what is running, in the corner, over the fight.
+# Tap-transparent: the strip annotates the run, it must never eat a steering
+# press.
+region: docks
+order: 4
+kind: widget
+widget: questTracker
+visible: hud.fieldLive

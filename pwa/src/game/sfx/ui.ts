@@ -43,6 +43,14 @@ export function setUiSoundCatalog(sounds: SoundCatalog): void {
   uiCatalog = sounds;
 }
 
+/** The live interface bank, for a caller that plays a sound the HUD's own
+ * content named rather than one of the fixed `UiSound` moments — see
+ * `hud/sounds.ts`. Read through a function rather than exported directly so a
+ * mod's merge is picked up by callers that imported before it landed. */
+export function uiSoundCatalog(): SoundCatalog {
+  return uiCatalog;
+}
+
 export function playUiSound(synth: Synth, sound: UiSound): void {
   // The interface's sounds are content like every other (content/sounds/ui_*),
   // and this file keeps only the ones the catalog cannot hold — see

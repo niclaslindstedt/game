@@ -33,6 +33,7 @@ document and a schema disagree, the schema is right.**
 | `sprites/<family>/<name>.yaml`                    | [`sprite-schema.mjs`](../scripts/asset-tools/sprite-schema.mjs)         |
 | `animations.yaml`                                 | [`animation-schema.mjs`](../scripts/asset-tools/animation-schema.mjs)   |
 | `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)           |
+| `hud/**`                                          | [`hud-schema.mjs`](../scripts/asset-tools/hud-schema.mjs)               |
 | `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)           |
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
 | `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
@@ -580,6 +581,167 @@ the free coin grant — on any player's install. The compiler refuses a
 `mainmenu.yaml` in a mod folder rather than ignoring it, so you learn the rule
 instead of wondering why your file does nothing. A conversion may still rename
 the game itself on the title screen — that is `brand:`.
+
+## `hud/` — THE HUD, which you may replace outright
+
+The bars, the pouch, the minimap, the quest button, the party rail, the docks —
+and the drive minigame's dashboard — are authored the way everything else here
+is, under `content/hud/` in the game and under `hud/` in your mod. Ship one file
+and you have replaced one element; ship a folder and you have replaced the HUD.
+
+**Why this one and not the menu.** A menu tree decides which SCREENS exist, so a
+mod that could ship one could hand itself the developer tooling. A HUD hands out
+nothing: it reads the run, and its buttons carry verbs the game already had. So
+replacing the HUD is exactly as safe as replacing a monster, and it is allowed
+for the same reason.
+
+```
+hud/
+  hud.yaml               the FRAME — the boxes elements sit in, nested
+  events.yaml            what the HUD's own moments sound like
+  elements/<id>.yaml     one element each; the stem IS its id
+  scripts/<id>.lua       the judgements behind them
+```
+
+### The rule that decides everything: **the id**
+
+Elements merge **by id, later wins**. Name your file after one of ours and you
+have REPLACED that element; name it something of your own and you have ADDED
+one. There is no third mode, and nothing else about your mod changes: a mod that
+ships `hud/elements/bag_slot.yaml` and nothing else re-skins the pouch and leaves
+the player the rest of their HUD.
+
+`node mod/tools/cli.mjs ids --kind hudRegions` lists the boxes you may sit in;
+`mod/catalog.json` carries the rest of the vocabulary (`hudBindings` with each
+one's type, `hudActions`, `hudWidgets`, `hudEvents`, `hudSurfaces`).
+
+### `hud/hud.yaml` — the frame
+
+```yaml
+regions:
+  my_rail:
+    parent: left # a box of OURS, or one of yours
+    order: 5 # regions and elements share one order inside a parent
+    class: my-own-rail # a class from the game's stylesheet
+    style: { direction: column, gap: 4 } # …or a bounded style of your own
+```
+
+| Field     | What it is                                                                                                      |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
+| `parent`  | the region this one nests in. None makes it TOP LEVEL.                                                          |
+| `surface` | `field` (the fight) or `drive` (the road). Top-level regions only; children inherit.                            |
+| `order`   | where it sits among its siblings.                                                                               |
+| `class`   | a CSS class out of the game's own stylesheet.                                                                   |
+| `style`   | a short, bounded set of properties — sizes, colours, flex. **A mod cannot ship CSS**; this is what replaces it. |
+| `frame`   | a sprite drawn as the box's 9-slice border.                                                                     |
+| `wrap`    | `div` (default) or `none` — draw no box at all and render the children in place.                                |
+| `visible` | a condition (below).                                                                                            |
+
+### `hud/elements/<id>.yaml` — one element
+
+```yaml
+region: gear
+order: 1
+kind: button # panel | bar | gauge | icon | text | button | widget
+class: hud-bag-slot
+aria: open-bag # a button needs one — the tests and a screen reader find it by name
+classes: # extra classes, each worn while its condition holds
+  bag-full: hud.bagFullHint
+press:
+  action: openBag # a verb the game already had — `hudActions` lists them
+  sound: ui_confirm # any sound id, yours or ours
+  close: true # stand the weapon switcher down first
+children:
+  - id: bag_icon
+    kind: icon
+    spriteBind: hud.bagIcon # whichever bag the hero is wearing
+    class: pixel-img hud-bag-img
+  - id: bag_count
+    kind: text
+    bind: hud.bagFree
+    color: { script: vitals.bag_color }
+```
+
+**The kinds.** `panel` is a box; `bar` fills a track to a fraction (`fill:` and
+an optional `overlay:`, each with its own class); `gauge` sweeps that fraction
+round an arc (`thickness`, `sweep`, `start`, `track` — a ring, a cooldown wheel
+or a speedometer); `icon` draws a sprite (`sprite:` for a fixed one,
+`spriteBind:` for whichever one the run is holding); `text` draws a line;
+`button` is a box with a `press:`; and `widget` places one of the game's own
+code-backed pieces (`hudWidgets` — the minimap, the party frames, the docks),
+which you can move, hide, reorder and re-sound but not re-author.
+
+**A widget's `children:` are its PARTS.** The weapon slot keeps a place for one
+called `ammo_count`, and what goes there is an ordinary text node with your class,
+your scale and your colour. A part it does not know about is not drawn.
+
+**A value** comes from `bind:` (a binding — `hudBindings` lists every one with
+its type) or from a `{ script: }`. A LINE may also weave bindings into itself:
+`text: "{drive.mph} MPH  GEAR {drive.gearLabel}"`. Numbers can be written out
+with `format:` — `number`, `compact`, `time` or `percent`.
+
+**A condition** — `visible:` and each entry of `classes:` — is a flag binding
+(`hud.pointsWaiting`), a negated one (`!ui.swipeBars`), a list of either (which
+holds when every entry does), or a `{ script: }`. There is deliberately no
+expression language: the game already ships a sandboxed Lua, and two ways to
+write a condition is one too many.
+
+### `hud/events.yaml` — what the HUD sounds like
+
+A press names its own sound on the element that carries it, because a button's
+click belongs to the button. This file is for the moments no button owns:
+
+```yaml
+sounds:
+  hud.press: ui_confirm # the generic press, and every element's fallback
+  trade.ask: ui_blip # a trade request ARRIVING on your rail
+  weapon.switch: ui_equip # a weapon landing in the hand
+```
+
+The keys are a fixed set (`hudEvents`) — you may re-point any of them, but not
+invent one, because nothing in the game would ever raise it. The values are sound
+ids, so the other way to change what a press sounds like is to replace the SOUND
+`ui_confirm` with your own synthesis or a recorded `.wav`.
+
+### `hud/scripts/<id>.lua` — the judgements
+
+Anything that DECIDES rather than reads. Same VM, same sandbox and same rules as
+`scripts/<id>.lua` (no io, no os, no clock, no randomness, a step budget), and
+the same fail-open promise: a broken judgement leaves the element as it would
+have been with no script at all, reported once, and the run keeps playing.
+
+```lua
+local M = {}
+
+--- Called as f(state): state.hud is the run, state.ui the app's view state,
+--- state.drive the road's dials. Every binding is in mod/catalog.json.
+function M.bag_color(state)
+  if state.hud.bagFree == 0 then
+    return "#d83a3a"
+  end
+  return "#f4f4f4"
+end
+
+return M
+```
+
+A judgement may answer a **colour** (`color:`), a **yes/no** (`visible:`, a
+`classes:` entry), a **line** (`text:`) or a **value** (`bind:`) — so a dial can
+read one way at a crawl and another at the redline, and a panel can decide it is
+not worth the space at all.
+
+**It is a FORMULA, never a frame.** Every call happens when the HUD's snapshot
+publishes — on a real change, a few times a second — never per element per frame.
+
+### The road
+
+The drive minigame is the second surface. Its region carries `surface: drive`,
+its bindings are the `drive.*` group (speed, the gear and how far up it the
+wagon is, the bodies, the wear), and its two verbs are `driveResume` and
+`driveSkip`. The shipped dashboard is two plates whose lines and colours are all
+`hud/scripts/drive.lua` — which is the cheapest place in the game to put a
+conversion's own voice: a rally's pace note, a delivery run's order slip, a
+hearse's body count.
 
 ## `sprites/<family>/<name>.yaml` — pixel art
 

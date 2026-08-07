@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE HELD WEAPON — a round slot whose ring is the gauge of HOW MANY MORE
+# ATTACKS THIS THING HAS IN IT: durability for a melee or magic weapon,
+# AMMUNITION for a ranged one, which never wears out. Tapping it opens the
+# quick-draw switcher (Q).
+#
+# A widget, because the switcher it unrolls is a list of the hero's other
+# weapons with their damage figures — a shape no element vocabulary should try
+# to grow. What content owns is everything around that: the ring's colour ladder
+# (a script, so a mod can re-grade "nearly out"), whether the round count is
+# printed at all, and what the press sounds like.
+region: gear
+order: 0
+kind: widget
+widget: weaponSlot
+aria: switch-weapon
+color:
+  script: vitals.gauge_color
+press:
+  action: toggleWeaponMenu
+  sound: ui_confirm
+# THE PARTS a widget keeps a place for. The weapon slot draws one: THE ROUNDS
+# LEFT, printed on the slot exactly as the bag prints its free cells — same
+# corner, same scale, same red-at-zero. The ring says "running low" at a glance
+# and the number answers "how low" without opening anything, which is the pair
+# the bag already taught the player to read. Only a weapon that eats ammunition
+# carries one.
+children:
+  - id: ammo_count
+    kind: text
+    class: wpn-ammo-count
+    bind: hud.ammoCount
+    scale: 1
+    visible: hud.hasAmmo
+    color:
+      script: vitals.ammo_color
