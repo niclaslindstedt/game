@@ -119,16 +119,20 @@ const NEAR_MARGIN = 6;
  * sides have to agree on by hand. It is arithmetic rather than taste, and the
  * arithmetic is worth writing down because the pieces move:
  *
- *   the dash's height          `--drive-dial-size`   6rem   96
- *   …its offset off the bottom `.drive-dash`         0.75   12
- *   …and the verge above it                          0.75   12
+ *   the dials' INK          0.8 × `--drive-dial-size`   77
+ *   …their baseline         `.drive-dash`              12
+ *   …and the verge above                               12
  *
- * WHICH ALSO CLEARS THE SPEECH WINDOW BESIDE IT. The window is 77 px tall
- * sitting on the same offset, so a band cut for the taller of the two leaves
- * grass above both — and it is the DIALS that are taller, because they are
- * sized so their ARCS match the window's height rather than their boxes (see
- * `--drive-dial-size`). Any smaller and the instruments print over the lane the
- * crowd is walking into, which is the one thing the band exists to stop.
+ * IT IS THE INK AND NOT THE BOX, because the last fifth of a dial's box is the
+ * empty mouth of its 250° sweep and it is hung off the bottom of the frame on
+ * purpose (`--drive-dial-tail`, styles.css) so the arcs level with the speech
+ * window rather than floating above it. Reserving road for air nobody draws in
+ * would push the tarmac up for nothing.
+ *
+ * WHICH ALSO CLEARS THE SPEECH WINDOW BESIDE IT: that window is 77 px on the
+ * same baseline, so one band covers both to the pixel. Any smaller and the
+ * instruments print over the lane the crowd is walking into, which is the one
+ * thing the band exists to stop.
  *
  * IN CSS PX AT THE 1× TIER, which is what the rem column above resolves to on a
  * phone — and the conversion below is a division by `VIEW_SCALE` alone rather
@@ -143,7 +147,7 @@ const NEAR_MARGIN = 6;
  * read as a HUD dropped on top of a picture rather than as a dashboard the
  * player is looking over, and the arcs fought the lane markings the whole way.
  */
-const DASH_BAND_CSS = 120;
+const DASH_BAND_CSS = 101;
 
 /**
  * …and what PORTRAIT adds to it: the hero's speech window, which on a tall

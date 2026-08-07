@@ -74,6 +74,13 @@
      rather than over the lane the crowd is walking into. Move one and move the
      other. */
   --drive-dial-size: 6rem;
+  /* …and how much of that box is EMPTY AIR below the arc — the mouth of a 250°
+     sweep, which is where the rev figure sits and where the dial stops being
+     drawn. Geometry rather than taste: the lowest ink on a 44-unit face is
+     `22 + 20·sin35° + half the stroke`, a fifth of the way up from the bottom.
+     `.drive-dash` hangs exactly this off the bottom of the frame so the ARCS
+     level with the speech window instead of the boxes doing it. */
+  --drive-dial-tail: 0.2;
   /* The gate between them (`.drive-gate`) and the two gaps either side of it,
      in the same units — a whole 4×3 rem so the sprite lands on an integer
      upscale at every tier. */
@@ -526,13 +533,25 @@ html.app-locked body {
    steering pad, and a dial must never eat a thumb. */
 .drive-dash {
   position: absolute;
-  /* THE SAME OFFSET THE SPEECH WINDOW SITS ON (`.dialogue-box`'s `bottom`), so
-     the dials and the window beside them share one baseline and one height —
-     two boxes on a shelf rather than two things that happen to be near the
-     bottom of the screen. In rem and not px for exactly the reason the dial's
-     own size is: the window it is levelling with is rem all the way down, so a
-     px offset here would drift off it the moment the root font stepped up. */
-  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  /* THE SAME BASELINE THE SPEECH WINDOW SITS ON (`.dialogue-box`'s `bottom`),
+     so the dials and the window beside them read as two things on one shelf
+     rather than two things that happen to be near the bottom of the screen. In
+     rem and not px for exactly the reason the dial's own size is: the window it
+     is levelling with is rem all the way down, so a px offset here would drift
+     off it the moment the root font stepped up.
+
+     AND THE BASELINE IS THE INK'S, WHICH IS WHY THIS GOES NEGATIVE. A dial
+     sweeps 250° with the mouth of it at the bottom, so the last fifth of its
+     box is empty air below the arc — level the BOXES and the instruments float
+     a fifth of a dial above the window they are supposed to be sitting beside,
+     which is exactly how it looked. So the empty fifth is hung off the bottom
+     of the frame instead: the arcs' two ends and the rev figure in the mouth
+     between them all land on the window's own bottom edge. Nothing is clipped,
+     because nothing is drawn down there. */
+  bottom: calc(
+    max(0.75rem, env(safe-area-inset-bottom)) - var(--drive-dial-size) *
+      var(--drive-dial-tail)
+  );
   left: 0.75rem;
   width: var(--drive-dash-w);
   display: flex;
@@ -639,6 +658,12 @@ html.app-locked body {
 .drive-gate {
   width: 4rem;
   height: 3rem;
+  /* Lifted onto the dials' ARCS. The row centres the BOXES, and a dial's box
+     hangs a fifth of itself below its own ink — so a gate that only obeyed
+     `align-items: center` sat visibly low between the two instruments it is
+     meant to read level with. A bottom margin shifts a centred item by HALF
+     itself, so this is the whole tail to buy half a tail of lift. */
+  margin-bottom: calc(var(--drive-dial-size) * var(--drive-dial-tail));
   image-rendering: pixelated;
 }
 
@@ -6161,7 +6186,12 @@ html.app-locked body {
   .dialogue-box.drive-bark {
     left: 50%;
     right: auto;
-    bottom: calc(var(--drive-dial-size) + 1.375rem);
+    /* Clear of the dials' INK rather than of their boxes — the last fifth of
+       a dial's box is the empty mouth of its sweep, and it is hung off the
+       bottom of the frame (`.drive-dash`). */
+    bottom: calc(
+      var(--drive-dial-size) * (1 - var(--drive-dial-tail)) + 1.375rem
+    );
     width: min(92vw, 36rem);
     transform: translateX(-50%);
   }
