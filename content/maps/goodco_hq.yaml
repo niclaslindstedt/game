@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 description: |-
   GENERATED GOODCO HQ — the campus as a floorplan that is different every shift.
-  THE READ: THE HERO ARRIVES OUTSIDE. He parks in the STAFF LOT — tarmac, bay
-  lines, the night shift's cars still in them, one lamp burning — and the
-  building is the wall in front of him with a door in it. Everything past that
+  THE READ: THE HERO ARRIVES OUTSIDE, AND HE ARRIVES DRIVING. The trip in is the
+  DRIVE minigame, so the level opens on the end of it: his own car standing in
+  the STAFF LOT with him beside it, door shut — tarmac, bay lines, the night
+  shift's cars still in them, one lamp burning — and the building is the wall in
+  front of him with a door in it. Everything past that
   door is INSIDE (`space: inside`), and inside is not four halls, it is rooms:
   the OFFICE WING is cut into cubicle-sized rooms, the CLEANROOMS into labs, the
   PRODUCTION FLOOR into halls, and every doorway between them carries a real
@@ -533,9 +535,53 @@ objects:
     type: decor
     density: 9
     areas: [bay]
-  - id: entrance
+  # HIS CAR, PARKED WHERE HE LEFT IT — the one landmark on this map that is not
+  # scenery, and the reason the lot is where he lands.
+  #
+  # HE DROVE HERE. The trip in is the DRIVE (`driveParamsFor` → the minigame),
+  # and the arriving run is built by the same parameters the road hands over
+  # (`startInCar`, session-setup.ts, whose own note says it is "a no-op on any
+  # level whose carve pins no car"). GOODCO pinned none, so the beat had no
+  # object in it: the man who had just spent a minute at the wheel got out of
+  # nothing. A `car` landmark IS the wagon — `createVehicles` mints the machine
+  # off it and the assembly renderer draws the same body, wheels and glass the
+  # road does, so the thing in this car park and the thing he drove are one
+  # object rather than two pictures of a car.
+  #
+  # WHAT USED TO STAND HERE was the HQ's front door — the `entrance` sprite, a
+  # pair of sliding glass doors, pinned `at: spawn`. `spawn` is the middle of the
+  # STAFF PARKING lot, so the building's threshold was planted out on the tarmac
+  # with the hero standing in it: a door lying in the floor of a car park, a
+  # district away from the wall it belongs to. The lot is not the lobby, and the
+  # thing he is standing beside when the level opens should be the car.
+  #
+  # A FEW STEPS OFF HIS LANDING, not on it — he has already shut the door and
+  # walked away from it, which is the beat.
+  #
+  # OFF THE `y` AXIS, AND THAT IS NOT A TASTE CALL. A parked car is three real
+  # blockers (`CAR.footprint`, ±23 px of its anchor along the drawn body), and
+  # the OPENING STRIKE places its lone rusher on the hero's own `y`, a step to
+  # the east or the west depending on which side of the landing has the floor
+  # (`mapgen/generate.ts`, `def.openingStrike.at`). A car parked along `x`
+  # therefore lands on the rusher's approach on the seeds that pick its side —
+  # and the rusher's touch is what draws the blade, so a hero it cannot reach is
+  # a hero who never gets armed. `tests/content/opening_strike_test.ts` caught
+  # exactly that, on every seed it checks. North of the landing the car is clear
+  # of that line, and a car parked in the next bay along is what a car park
+  # looks like anyway.
+  #
+  # AND FAR ENOUGH THAT IT IS NOT ASKING TO BE PRESSED. The amber "you can get
+  # in this" glow fades in from `CAR.boardRadius + BOARD_FADE_PX` — 84 px
+  # (pwa/src/game/render/vehicles.ts) — so anything closer lights the car up on
+  # frame one and calls the player back to the lot, on a mission whose opening
+  # beat is walking INTO the building. 90 clears that with room, and is a third
+  # of a landscape phone's height (~260 units), so what he sees when the
+  # monologue lifts is himself standing in a car park beside his own wagon.
+  - id: car
     type: landmark
+    sprite: car_doors_0
     at: spawn
+    offset: { x: 0, y: -90 }
   - id: rocket
     type: landmark
     at: goal

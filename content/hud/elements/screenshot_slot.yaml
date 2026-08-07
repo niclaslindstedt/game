@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE SHUTTER — the round slot once more, at the end of the gear row, wearing
+# the same camera the EXTRAS shelf is marked with.
+#
+# IT EXISTS BECAUSE THE SCREENSHOT BIND IS A KEY. Everything else about taking a
+# picture already worked on a phone — the capture, the roll, the receipt, the
+# gallery and the share sheet — and none of it could be REACHED, because the one
+# way in was F12. That is why the EXTRAS row was desktop-only: a gallery a
+# device cannot put a picture into is a shelf of nothing. So this is the missing
+# half rather than a second way to do something, and the menu row stops being
+# desktop-only in the same change.
+#
+# TOUCH ONLY (`ui.touch`), which is the whole of its case. A device with a
+# keyboard has the bind, and a fifth circle on the rail of somebody who already
+# has a key for it is clutter on the one row the thumb reaches for mid-fight. A
+# touch laptop answers yes to both and gets both, which is right: the button is
+# the one that will be pressed there.
+#
+# NOT GATED ON THE FIELD BEING LIVE, and deliberately so — but the rail it hangs
+# on is (`hud.fieldLive`, see hud.yaml), so it goes away over the bag and the
+# pause menu with the rest of the HUD. A picture of THOSE is taken from the
+# gallery's own side; what this button is for is the fight.
+region: gear
+order: 4
+kind: button
+class: hud-bag-slot hud-shutter-slot
+aria: take-screenshot
+visible: ui.touch
+classes:
+  # Stands aside with its neighbours while the quick-draw switcher unrolls
+  # across the row — the switcher's first slot lands on this seat.
+  hud-slot-yielded: ui.weaponMenuOpen
+press:
+  action: takeScreenshot
+  # SILENCE OF ITS OWN — not `ui_confirm`, which is what every other slot on
+  # this row answers with. The press already gets a SHUTTER: the camera noise
+  # the capture plays on the way out (game-screen/use-screenshot-flash.ts), and
+  # a click in front of it is one sound arriving twice. A mod that wants the
+  # click back re-points this to a real id like any other press.
+  sound: none
+  # …and it does NOT stand the switcher down. Every other slot here opens a
+  # screen, so closing the switcher first is tidying up after a press that was
+  # about to cover it anyway; this one leaves the field exactly as it was, which
+  # is the point — a player who unrolled the switcher to photograph their arsenal
+  # would otherwise watch it roll shut as the picture was taken.
+  close: false
+children:
+  - id: shutter_icon
+    kind: icon
+    class: pixel-img hud-bag-img
+    sprite: icon_menu_screenshots

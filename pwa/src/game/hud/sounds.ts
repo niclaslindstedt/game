@@ -58,11 +58,17 @@ export function playHudEvent(event: HudEvent): void {
  * unfollow, pin / unpin). Authoring two sounds on one element could not express
  * it, and hard-coding them in the widget is the thing this whole seam exists to
  * prevent.
+ *
+ * `none` is SILENCE said out loud, and is not what omitting the field means —
+ * omitting takes the default above. It is for the press whose noise belongs to
+ * what it started rather than to the button: the SHUTTER's own picture already
+ * plays the camera, and a click in front of it is one sound arriving twice.
  */
 export function playHudPress(
   sound: string | undefined,
   event: HudEvent = "hud.press",
 ): void {
+  if (sound === "none") return;
   playHudSound(
     sound ?? hudLayout().events[event] ?? hudLayout().events["hud.press"],
   );

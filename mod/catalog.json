@@ -4844,6 +4844,7 @@
     "ui.keyHints": "flag",
     "ui.scoreboard": "flag",
     "ui.swipeBars": "flag",
+    "ui.touch": "flag",
     "ui.weaponMenuOpen": "flag",
     "ui.wide": "flag",
     "voice.fault": "text",
@@ -4878,6 +4879,7 @@
     "openPoints",
     "openQuestLog",
     "pauseGame",
+    "takeScreenshot",
     "toggleWeaponMenu"
   ],
   "hudWidgets": [
