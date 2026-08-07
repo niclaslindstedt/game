@@ -46,13 +46,12 @@ export type KeyBindings = Record<BindableAction, string>;
  * achievement pane with, and a player who has one of those in their fingers
  * should find the trophy shelf where they already reach for it.
  *
- * SCREENSHOT is F12 for the same reason, and it is the one default with a known
- * cost: F12 is also Steam's screenshot key (which is exactly why players reach
- * for it, and why the desktop shell leaves the press to Steam's overlay as
- * well as taking its own picture) — and it is the browser's developer-tools
- * key, which no page is allowed to swallow. So in a browser tab a press does
- * both, and a player who minds rebinds it; in either store shell, where there
- * are no developer tools to open, it is simply the screenshot key. */
+ * SCREENSHOT is F12 for the same reason, and it is the one default that DEPENDS
+ * ON WHERE THE GAME IS RUNNING — see `defaultKeybindings` below. F12 is Steam's
+ * own screenshot key, which is exactly why a desktop player reaches for it and
+ * why the Steam shell leaves the press to the overlay as well as taking its own
+ * picture; this map is that shell's, and the browser's is the same map with the
+ * one key moved. */
 export const DEFAULT_KEYBINDINGS: KeyBindings = {
   moveUp: "KeyW",
   moveDown: "KeyS",
@@ -92,6 +91,37 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   // the browser hunting through the page furniture behind the canvas.
   showScores: "Tab",
 };
+
+/**
+ * The shipped scheme AS THIS BUILD SHOULD SHIP IT — one map, one key different.
+ *
+ * F12 is the right screenshot key inside a store shell and the wrong one in a
+ * browser, and the difference is not taste: **a page is not allowed to swallow
+ * F12**. It is the developer-tools key, the browser takes it first, and a
+ * default a player cannot press without a debugger opening over the game is a
+ * default that does not work. ENTER is the safe one on the web — it is not the
+ * browser's, and inside the run it is already ceded to whatever owns the
+ * keyboard (a scene turns its page with it, an overlay chooses a row with it,
+ * and both are answered before the bind dispatch ever sees the press — see
+ * game-screen/controls.ts), so binding it here can only fire on a screen where
+ * nothing else wanted it.
+ *
+ * In a shell F12 stays, because there are no developer tools to open and Steam
+ * hooks the key itself: one press then puts a picture in the player's Steam
+ * library AND in the game's own roll, which is exactly what a Steam player
+ * expects the key to do.
+ *
+ * PURE, and takes the answer rather than reading it: this module is the catalog
+ * — no DOM, no storage — so the caller supplies `shellPlatform()`.
+ */
+export function defaultKeybindings(
+  /** Which store shell this is, or null in a browser/PWA (`shellPlatform`). */
+  platform: string | null,
+): KeyBindings {
+  return platform === null
+    ? { ...DEFAULT_KEYBINDINGS, screenshot: "Enter" }
+    : { ...DEFAULT_KEYBINDINGS };
+}
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
  * the label shown at the left and the one-line blurb under a selected row. */
@@ -320,9 +350,14 @@ export function codeForChar(ch: unknown): string {
 }
 
 /** Sanitize a stored bindings object: every action falls back to its default
- * unless a non-empty string is stored for it (an unbound "" is preserved). */
-export function sanitizeBindings(stored: unknown): KeyBindings {
-  const binds = { ...DEFAULT_KEYBINDINGS };
+ * unless a non-empty string is stored for it (an unbound "" is preserved). The
+ * fallback map is a parameter so a browser's saved scheme fills its gaps from
+ * the browser's own defaults (`defaultKeybindings`) rather than the shell's. */
+export function sanitizeBindings(
+  stored: unknown,
+  base: KeyBindings = DEFAULT_KEYBINDINGS,
+): KeyBindings {
+  const binds = { ...base };
   if (typeof stored !== "object" || stored === null) return binds;
   for (const action of Object.keys(binds) as BindableAction[]) {
     const value = (stored as Record<string, unknown>)[action];

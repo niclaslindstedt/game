@@ -125,6 +125,7 @@ export function DriveScreen({
   heroName,
   heroPortrait,
   onScreenshot,
+  onMenu,
   auto = false,
 }: {
   params: DriveParams;
@@ -159,6 +160,18 @@ export function DriveScreen({
    * screen, so the caller owns the roll and the flash; all this does is notice
    * the key, because while a drive is up the run's controls are not listening. */
   onScreenshot?: () => void;
+  /**
+   * LEAVE THE GAME from the road — the pause card's MAIN MENU, once its confirm
+   * has been answered.
+   *
+   * The road cannot hand a PARKED run back the way the fight's pause menu does:
+   * the car is already away down a road that only exists while this screen is
+   * up, and the run behind it is a level the hero has driven out of. So what
+   * this means is settled by the host (GameScreen banks the hero as he sits and
+   * ends the run), and the road only raises it. Absent — the `?drive`
+   * workbench, which has no game behind it — and the row is not drawn.
+   */
+  onMenu?: () => void;
   /**
    * SOMEBODY ELSE AT THE WHEEL — the engine's own auto-driver
    * (`createDriveDriver`) supplies the input and the pad and the keys sit out.
@@ -569,6 +582,12 @@ export function DriveScreen({
     actions: {
       driveResume: () => setPause(false),
       driveSkip: skipDrive,
+      // THE WAY OUT OF THE GAME, offered to an authored dashboard exactly as
+      // the other two are — and absent, rather than dead, wherever the host has
+      // no menu to drop to. An action the mounting screen does not supply is a
+      // press that does nothing, which is the answer the vocabulary is built
+      // around (hud-schema.mjs).
+      ...(onMenu ? { driveMenu: onMenu } : {}),
     },
   };
 
@@ -661,6 +680,7 @@ export function DriveScreen({
           font={assets.font}
           onResume={() => setPause(false)}
           onSkip={skipDrive}
+          onMenu={onMenu}
         />
       )}
     </div>

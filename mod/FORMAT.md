@@ -771,7 +771,9 @@ publishes — on a real change, a few times a second — never per element per f
 The drive minigame is the second surface. Its region carries `surface: drive`,
 its bindings are the `drive.*` group (speed, the gear the box has chosen and how
 far up it the wagon is, the CRANK — `rpm`, `rpmFrac`, `redlineRpm` — the bodies,
-the wear), and its two verbs are `driveResume` and `driveSkip`.
+the wear), and its three verbs are `driveResume`, `driveSkip` and `driveMenu`
+(leave the game, not just the road — the hero is banked as he sits and the
+title screen comes up).
 
 The shipped dashboard sits along the bottom of the windscreen and is three
 pieces: a SPEEDOMETER with the tachometer drawn inside it (two `kind: gauge`

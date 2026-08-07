@@ -23,8 +23,9 @@
 //     presented frame and Steam's own screenshot key — F12 by default, and
 //     whatever the player rebound it to in Steam's settings — so a press files
 //     a copy in their Steam library with the game entirely uninvolved. The
-//     game's SCREENSHOT bind ships on F12 for that reason and never captures
-//     the key away from the overlay (the page listens on `keydown`; it does not
+//     game's SCREENSHOT bind ships on F12 IN A SHELL for that reason (a browser
+//     tab defaults to ENTER instead — a page may not swallow F12) and never
+//     captures the key away from the overlay (the page listens on `keydown`; it does not
 //     grab), so one press on a Steam build gives the player BOTH: Steam's copy
 //     in their Steam library, and the game's own copy in the in-game gallery
 //     and on disk.

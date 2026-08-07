@@ -1850,7 +1850,9 @@ seams a browser can't provide on iOS:
   on drift, exactly as for achievements.
 
 - **Screenshots — the picture leaves the game through the platform's own share
-  sheet.** The SCREENSHOT bind (F12) rasterizes the whole screen — world canvas
+  sheet.** The SCREENSHOT bind (ENTER in a browser, F12 in a store shell — see
+  `defaultKeybindings`, because a page may not swallow the developer-tools key)
+  rasterizes the whole screen — world canvas
   AND interface — into a PNG, files it in a capped IndexedDB roll
   (`pwa/src/lib/shot-store.ts`), and flashes a miniature the player can press to
   freeze the run and open the gallery on it (EXTRAS → SCREENSHOTS, the same
@@ -1982,8 +1984,9 @@ answer**, and `screenshots-provider.ts` argues it at the seam: steamworks.js
 binds no `ISteamScreenshots`, but the overlay this shell injects already hooks
 Steam's own screenshot key at the swap chain, so a press files a copy in the
 player's Steam library with the game entirely uninvolved. The game's bind ships
-on F12 to match and never grabs the key away from it — one press on a Steam
-build gives the player Steam's copy AND the game's own, the latter in the
+on F12 IN A SHELL to match and never grabs the key away from it (a browser tab
+gets ENTER instead, where F12 belongs to the developer tools) — one press on a
+Steam build gives the player Steam's copy AND the game's own, the latter in the
 in-game gallery and as a real file in their pictures folder
 (`electron/src/screenshots.ts`, whose `share` puts the PNG on the clipboard and
 opens the file manager on it — the desktop's honest version of a share sheet).
