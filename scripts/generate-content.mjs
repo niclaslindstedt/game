@@ -56,6 +56,10 @@ const STEPS = [
   { id: "menu", why: "leaf: sprite stems and the font's glyphs" },
   { id: "sounds", why: "into pwa/src/generated/ — a sound is an APP concern" },
   { id: "music", why: "…and the engine has no idea the game makes noise" },
+  {
+    id: "hud",
+    why: "last: it cross-refs sprite stems and sound ids, and nothing reads it",
+  },
 ];
 
 const PREVIEW_MODES = ["full", "sprites", "none"];

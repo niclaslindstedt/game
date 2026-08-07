@@ -199,6 +199,60 @@ export function validateScript(id, source, opts = {}) {
 }
 
 /**
+ * Compile and load a Lua module that is NOT a hook script, and report what it
+ * exported.
+ *
+ * The HUD's scripts are the case: their function names are referenced by hand
+ * from `content/hud/**` rather than resolved off a fixed hook list, so what
+ * matters is that the file loads and which functions came back. Everything else
+ * about them — that the name a HUD element asks for exists, that it is a
+ * function — is the HUD schema's call.
+ *
+ * The VM is the game's own, for the reason in this file's header: a second
+ * parser would drift, and the drift would land as "compiles in the SDK,
+ * refuses in the game".
+ *
+ * @param source  the Lua text.
+ * @param name    what to call the chunk in an error (`hud/scripts/vitals.lua`).
+ * @returns `{ errors, functions }` — `functions` being the exported names that
+ *          are actually callable.
+ */
+export function moduleExports(source, name) {
+  const errors = [];
+  const functions = new Set();
+  let mod;
+  try {
+    mod = load(compile(source, name), { game: stubGame() });
+  } catch (err) {
+    return { errors: [`${err.message}`], functions };
+  }
+  const exported = [...mod.exports.entries()];
+  if (exported.length === 0) {
+    errors.push(
+      `${name}: returned no functions — a script ends with \`return M\`, ` +
+        "where M is the table its functions were added to.",
+    );
+    return { errors, functions };
+  }
+  for (const [key, value] of exported) {
+    if (typeof key !== "string") continue;
+    const isFunction =
+      value !== undefined &&
+      typeof value === "object" &&
+      !(value instanceof LuaTable);
+    if (isFunction) functions.add(key);
+    else {
+      errors.push(
+        `${name}: "${key}" is a ${
+          value instanceof LuaTable ? "table" : typeof value
+        }, not a function — a HUD script exports functions only.`,
+      );
+    }
+  }
+  return { errors, functions };
+}
+
+/**
  * The whole-catalog rule for the SHIPPED scripts: every hook in `hooks.ts` must
  * have an implementation somewhere, or the engine falls back to arithmetic that
  * no content file describes — a rule with no source of truth.

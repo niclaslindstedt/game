@@ -32,6 +32,15 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
+import {
+  HUD_ACTIONS,
+  HUD_BINDINGS,
+  HUD_EVENTS,
+  HUD_SURFACES,
+  HUD_WIDGETS,
+} from "../../scripts/asset-tools/hud-schema.mjs";
+import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
+
 // Engine modules under src/lib use the @game/lib alias — map it so the def
 // catalogs import cleanly under plain node.
 register("../../scripts/game-alias-loader.mjs", import.meta.url);
@@ -262,6 +271,14 @@ function raisedCues() {
 
 /** The sprite names the atlas ships, so a mod naming one gets a real check
  * rather than an invisible blank where a sprite should be. */
+/** The shipped HUD's frame, read off the authored tree. A mod's element may sit
+ * in one of these regions or in one it ships itself; naming neither is a
+ * compile error with a filename on it, rather than a panel that renders
+ * nowhere. */
+function loadHudRegions() {
+  return loadHud(engine("content")).regions;
+}
+
 function shippedSpriteNames() {
   const atlas = JSON.parse(
     readFileSync(engine("pwa/src/game/assets/atlas.json"), "utf8"),
@@ -362,6 +379,24 @@ const catalog = {
   // The moments the APP raises, which a sound answers with `on.cue` rather
   // than `on.type` — see `raisedCues`.
   cues: raisedCues(),
+  // THE HUD'S FRAME: the regions a mod's own element may sit in, and the
+  // vocabulary it is built out of. Read straight off the authored
+  // `content/hud/` tree and the schema rather than off a generated module, for
+  // the reason everything here is snapshotted: the compiler runs in the shipped
+  // app's main process, where neither exists.
+  //
+  // The BINDINGS, ACTIONS, WIDGETS and MOMENTS travel with them because they
+  // are what a HUD file may SAY — the equivalent of the sprite names for an
+  // icon — and a modder browsing this repository should be able to find out
+  // what their dashboard can read without building anything.
+  hudRegions: sorted(Object.keys(loadHudRegions())),
+  hudBindings: Object.fromEntries(
+    Object.entries(HUD_BINDINGS).sort(([a], [b]) => a.localeCompare(b)),
+  ),
+  hudActions: sorted(HUD_ACTIONS),
+  hudWidgets: sorted(HUD_WIDGETS),
+  hudEvents: sorted(HUD_EVENTS),
+  hudSurfaces: sorted(HUD_SURFACES),
   // THE RULES a mod may take over: script file → the hooks that file owns.
   // Not an id set either — it is the shape of the scripting seam, and it is in
   // here for the same reason `talentProcs` is: the mod compiler runs in the

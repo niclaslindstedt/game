@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# HEALTH — the red bar at the top of the vitals stack. No label: the colour IS
+# the label, which is what lets the pair be this small.
+region: vitals
+order: 0
+kind: bar
+class: vital-bar vital-hp
+bind: hud.hpFrac
+fill:
+  class: vital-fill

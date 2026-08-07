@@ -32,6 +32,7 @@ import {
   type BindableAction,
 } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
+import { playHudEvent } from "../hud/sounds.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
 import type { CharTab } from "./SceneOverlays.tsx";
@@ -266,7 +267,10 @@ export function createControls(deps: {
       case "weaponMenu":
         if (fieldLive(state)) {
           setWeaponMenuOpen((open) => !open);
-          playUiSound(synth, "confirm");
+          // The HUD's own press sound, not the menus' — the key and the slot
+          // are the same act, and a mod that re-points one has re-pointed both
+          // (content/hud/events.yaml).
+          playHudEvent("hud.press");
         }
         return;
       case "inventory":
@@ -275,10 +279,10 @@ export function createControls(deps: {
         if (canOpenInventory(state, localHero(state))) {
           setCharTab("bag");
           runCommand(state, "openInventory");
-          playUiSound(synth, "confirm");
+          playHudEvent("hud.press");
         } else if (localScreen(state) === "inventory") {
           runCommand(state, "closeInventory");
-          playUiSound(synth, "back");
+          playHudEvent("hud.back");
         }
         bumpUi();
         return;
@@ -286,11 +290,11 @@ export function createControls(deps: {
         // Toggles the fog-of-war level map (same freeze as the bag).
         if (fieldLive(state)) {
           runCommand(state, "openMap");
-          playUiSound(synth, "confirm");
+          playHudEvent("hud.press");
           bumpUi();
         } else if (localScreen(state) === "map") {
           runCommand(state, "closeMap");
-          playUiSound(synth, "back");
+          playHudEvent("hud.back");
           bumpUi();
         }
         return;

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# WHAT THE HUD SOUNDS LIKE — the moments the app raises, and the sound each one
+# makes.
+#
+# A PRESS names its own sound on the element that carries it (`press.sound` in
+# `elements/*.yaml`), because a button's click belongs to the button. This file
+# is for the moments no button owns: a trade request ARRIVING on the rail, a
+# weapon actually landing in the hand, a companion being mended out of the
+# pouch. Nothing in the app plays an interface sound outside these two places —
+# `playHudEvent` and the elements' own `press.sound` are the whole of it — so a
+# mod that wants a different HUD to sound different has one file to write.
+#
+# The right-hand side is a SOUND ID: `content/sounds/<id>.yaml`, which is
+# itself content, which a mod may replace with its own synthesis or with a
+# recorded `.wav`/`.mp3`. So there are two ways to change what a press sounds
+# like and they are both legitimate:
+#
+#   * re-point the moment here (`hud.press: my_click`), or
+#   * replace the sound `ui_confirm` itself, which changes every menu that
+#     already used it.
+#
+# THE MOMENTS ARE A FIXED SET. A mod may re-point any of them; it cannot invent
+# one, because nothing in the app would ever raise it. The schema names the set
+# when it refuses an unknown key.
+
+sounds:
+  # The generic HUD press and its opposite — what an element's `press:` falls
+  # back to when it names no sound of its own.
+  hud.press: ui_confirm
+  hud.back: ui_back
+
+  # A weapon lands in the hand from the quick-draw switcher (or a hotkey).
+  weapon.switch: ui_equip
+
+  # A NEW ASK CHIRPS ONCE. The trade pip is deliberately quiet furniture on a
+  # rail nobody is looking at mid-fight, so the ARRIVAL gets a sound of its own
+  # — driven off the standing asks rather than an engine event, so a client
+  # whose snapshot arrived late still hears it and a re-render does not repeat
+  # it.
+  trade.ask: ui_blip
+  trade.accept: ui_confirm
+  trade.decline: ui_back
+
+  # The party rail's press: a medkit spent out of the hero's own pouch, or the
+  # companion's equip screen raised.
+  companion.heal: ui_confirm
+  companion.open: ui_confirm
+
+  # A banked powerup thrown away rather than spent.
+  powerup.discard: ui_back

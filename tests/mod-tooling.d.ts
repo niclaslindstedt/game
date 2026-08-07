@@ -122,6 +122,14 @@ declare module "*/scripts/asset-tools/script-schema.mjs" {
     warnings: string[];
   };
 
+  /** Compile and load a Lua module that is NOT a hook script — the HUD's
+   * judgements, whose function names are referenced by hand from
+   * `content/hud/**` rather than resolved off a fixed hook list. */
+  export function moduleExports(
+    source: string,
+    name: string,
+  ): { errors: string[]; functions: Set<string> };
+
   /** hook name → the script id that owns it. */
   export const HOOK_OWNER: Map<string, string>;
   /** script id → the hooks it is expected to implement. */
@@ -265,5 +273,62 @@ declare module "*/scripts/asset-tools/animation-schema.mjs" {
         { frames: string[]; delayMs: number; drive: "clock" | "stride" }
       >
     >;
+  };
+}
+
+declare module "*/scripts/asset-tools/hud-schema.mjs" {
+  /** Every live value a HUD element may read, and its type — `frac`, `flag`,
+   * `number`, `sprite` or `text`. The last word on what a HUD file may SAY;
+   * `tests/content/hud_catalog_test.ts` pins the app to it. */
+  export const HUD_BINDINGS: Record<string, string>;
+  export const HUD_SURFACES: Set<string>;
+  export const HUD_ACTIONS: Set<string>;
+  export const HUD_WIDGETS: Set<string>;
+  export const HUD_REFS: Set<string>;
+  export const HUD_EVENTS: Set<string>;
+
+  /** What the schema is handed to resolve an element's cross-references: the
+   * atlas, the sound bank, the HUD scripts' exports and the regions that will
+   * exist once this mod's own frame is merged onto the game's. */
+  export type HudRefs = {
+    sprites: Set<string>;
+    sounds: Set<string>;
+    scripts: Map<string, Set<string>>;
+    regions: Set<string>;
+  };
+
+  export function validateHudElement(
+    element: unknown,
+    refs: HudRefs,
+  ): { errors: string[]; warnings: string[] };
+
+  export function validateHudRegions(
+    regions: unknown,
+    refs?: { sprites?: Set<string>; scripts?: Map<string, Set<string>> },
+  ): { errors: string[]; warnings: string[] };
+
+  export function validateHudEvents(
+    events: unknown,
+    refs: { sounds: Set<string> },
+  ): { errors: string[]; warnings: string[] };
+
+  export function validateHudCatalog(elements: unknown[]): {
+    errors: string[];
+    warnings: string[];
+  };
+}
+
+declare module "*/scripts/hud-data/load-yaml.mjs" {
+  /** The HUD tree, loaded from a base directory — the game's `content/`, or a
+   * mod's root. The same loader both go through, which is what makes "it works
+   * in my mod" and "it works in the game" the same sentence. */
+  export function loadHud(baseDir?: string): {
+    regions: Record<
+      string,
+      { id: string; frame?: string; [key: string]: unknown }
+    >;
+    elements: { id: string; [key: string]: unknown }[];
+    events: Record<string, string>;
+    scripts: { id: string; source: string; file: string }[];
   };
 }

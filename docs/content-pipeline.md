@@ -68,6 +68,8 @@ generate-bot-tuning    per-level overrides, so it needs the level ids
 generate-menu          leaf: its inputs are sprite stems and the font's glyphs
 generate-sounds        \ into pwa/src/generated/ — a sound is an APP concern
 generate-music         /   and the engine has no idea the game makes noise
+generate-hud           last: it cross-refs the sprite stems and the sound ids,
+                       and nothing downstream reads the HUD
 ```
 
 `make assets` runs the SAME chain with one extra step spliced in:
@@ -343,6 +345,27 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   in the chain waits on it and it has no downstream dependents. See **THE TITLE
   MENU IS CONTENT** for the tree's shape, what the compiler refuses, and why the
   loader takes no directory.
+- **THE HUD is compiled from YAML too — and unlike the title menu, a MOD may
+  replace it.** `content/hud/` is the source of truth for the whole playing HUD
+  AND the drive minigame's dashboard: `hud.yaml` (the regions, nested), one file
+  per element under `elements/`, `events.yaml` (what the HUD's own moments
+  sound like) and `scripts/*.lua` (the judgements — a ring's colour ladder, a
+  dial's line). `make levels` runs `generate-hud.mjs` (schema
+  `scripts/asset-tools/hud-schema.mjs`, loader `scripts/hud-data/`) to emit
+  `pwa/src/generated/hud.ts` — into the APP's tree, like the sound bank and the
+  menu, because the engine has no idea the game has a screen.
+  It runs LAST: it cross-references sprite stems (an element's icon and its
+  9-slice plate) and sound ids (a press's click), and nothing reads it.
+  The SCRIPTS are compiled the way the engine's rules are — the output is the
+  source text, the CHECK is a real compile with the game's own VM, so a function
+  a YAML file asks for and the file does not export fails the build with a
+  filename instead of falling back silently on a phone.
+  **Why the menu is a mod's business and the HUD is:** a menu tree decides which
+  SCREENS exist, so a mod that could ship one could hand itself the hidden
+  DEVELOPER tree. A HUD hands out nothing — it reads the run and presses verbs
+  the app already had — so replacing it is exactly as safe as replacing a
+  monster. `mod/tools/build.mjs` runs this same loader and schema over a mod's
+  own `hud/` folder, and the layouts merge per element (later wins).
 - **THE COMPANION ROSTER is compiled from YAML too.**
   `content/companions.yaml` (a `companions:` map of id → companion — who a spared
   elite BECOMES when it joins the party) is the source of truth; `make levels`

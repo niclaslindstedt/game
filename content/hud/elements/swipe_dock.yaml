@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE SWIPE BARS — the fixed docks' stand-in. An edge swipe reveals both slot
+# groups where the thumb landed, instead of parking them at the screen's corners.
+# The render loop's cooldown writes ride the same dock handle either way.
+region: docks
+order: 2
+kind: widget
+widget: swipeDock
+visible: ui.swipeBars

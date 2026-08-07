@@ -38,9 +38,7 @@ import {
   type DriveState,
 } from "@game/core";
 
-import { PixelText } from "@ui/lib/PixelText.tsx";
-
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
 import { actionForCode } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
@@ -50,7 +48,10 @@ import {
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
 import { viewScaleFor } from "../render/view.ts";
-import { engineNote } from "../sfx/drive.ts";
+import { engineNote, GEAR_COUNT } from "../sfx/drive.ts";
+import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+import { HudRoot } from "../hud/HudRoot.tsx";
+import type { HudContext } from "../hud/context.ts";
 import { DrivePause } from "./DrivePause.tsx";
 import {
   clearDriveFx,
@@ -203,7 +204,32 @@ export function DriveScreen({
   );
   const [speech, setSpeech] = useState<Speech | null>(null);
   const [paused, setPaused] = useState(false);
-  const [hud, setHud] = useState({ mph: 0, gear: 0, bodies: 0, wear: 0 });
+  /**
+   * THE DIALS — what the dashboard reads, republished only when one of them
+   * actually moves.
+   *
+   * More than the two shipped plates use, on purpose: the revs, the gear count
+   * and the top end are what a TACHOMETER and a GEARBOX are drawn from, and a
+   * dial that had to wait for this screen to start publishing its number would
+   * be a dial nobody could author. `rev` is the one continuous value here, so it
+   * is quantised to a sixteenth — a needle wants smooth, but a needle that
+   * re-rendered React sixty times a second would be paying for the whole HUD
+   * every frame. (A genuinely 60fps needle is a render-loop handle, the way the
+   * stamina bar is.)
+   */
+  const [hud, setHud] = useState<DriveDials>({
+    mph: 0,
+    topSpeedMph: DRIVE.topSpeedMph,
+    speedFrac: 0,
+    gear: 0,
+    gearCount: GEAR_COUNT,
+    rev: 0,
+    reversing: false,
+    bodies: 0,
+    wear: 0,
+    failing: false,
+    paused: false,
+  });
   const speechRef = useRef<Speech | null>(null);
   const pausedRef = useRef(false);
   /** What the speech box says its tap means — the same seam the run's own
@@ -448,18 +474,26 @@ export function DriveScreen({
       );
 
       setHud((prev) => {
-        const next = {
+        const speedFrac = Math.min(
+          1,
+          Math.abs(drive.car.speed) / DRIVE.topSpeedPx,
+        );
+        const note = engineNote(speedFrac);
+        const wearPercent = Math.round(drive.car.wear * 100);
+        const next: DriveDials = {
           mph: driveMph(drive),
-          gear: engineNote(Math.abs(drive.car.speed) / DRIVE.topSpeedPx).gear,
+          topSpeedMph: DRIVE.topSpeedMph,
+          speedFrac: Math.round(speedFrac * 64) / 64,
+          gear: note.gear,
+          gearCount: GEAR_COUNT,
+          rev: Math.round(note.rev * 16) / 16,
+          reversing: drive.car.speed < 0,
           bodies: drive.bodies,
-          wear: Math.round(drive.car.wear * 100),
+          wear: wearPercent / 100,
+          failing: wearPercent > FAILING_WEAR_PERCENT,
+          paused: pausedRef.current,
         };
-        return prev.mph === next.mph &&
-          prev.gear === next.gear &&
-          prev.bodies === next.bodies &&
-          prev.wear === next.wear
-          ? prev
-          : next;
+        return sameDials(prev, next) ? prev : next;
       });
     };
     raf = requestAnimationFrame(frame);
@@ -475,14 +509,23 @@ export function DriveScreen({
     onArrived(params.to, drive.bodies, driveVerdict(drive));
   }, [onArrived, params.to, setPause]);
 
-  const damage = hud.wear;
-  const failing = damage > 70;
-  // The run's own HUD frame sprite, 9-sliced behind the dials (see
-  // `.drive-hud-plate`) — the same panel the vitals wear in a fight.
-  const frame = spriteDataUrl(assets.sprites, "hud_frame");
-  const plate: CSSProperties | undefined = frame
-    ? { borderImageSource: `url(${frame})` }
-    : undefined;
+  /**
+   * WHAT THE DASHBOARD READS. The road's half of the same context the fight's
+   * HUD is handed — no run state at all, because a drive has no hero, no bag
+   * and no horde, and the union's tag is what stops a widget built for one
+   * surface being drawn on the other.
+   */
+  const hudContext: HudContext = {
+    surface: "drive",
+    assets,
+    font: assets.font,
+    values: driveBindings(hud),
+    refs: {},
+    actions: {
+      driveResume: () => setPause(false),
+      driveSkip: skipDrive,
+    },
+  };
 
   return (
     // The class carries ONE thing — the stacking band (styles.css). It has to
@@ -490,33 +533,18 @@ export function DriveScreen({
     // a drive and would otherwise hide the entire road.
     <div className="drive-screen" style={SHELL}>
       <canvas ref={canvasRef} style={CANVAS} />
-      {/* THE DIALS, IN THE GAME'S OWN FONT. Everything else the player reads
-          in this game is the pixel font (`PixelText`) — a browser monospace
-          here made the minigame look like a different program, which is
-          exactly what an interlude must not do.
+      {/* THE DASHBOARD — authored, exactly like the fight's HUD
+          (`content/hud/elements/drive_*.yaml`, region `drive_bar`). What each
+          dial SAYS is a Lua judgement in `content/hud/scripts/drive.lua`, so a
+          conversion can give the wagon a rally's pace note or a delivery run's
+          order slip without a line of code here.
 
-          SPEED AND THE GEAR IT IS BEING MADE IN: the gear is `engineNote`'s
-          own reading, the same one the sound is built from, so what the player
-          hears climbing and dropping is what the dial says. A readout, not a
-          control — the wagon shifts itself. */}
-      <div style={HUD_BAR}>
-        <div className="drive-hud-plate" style={plate}>
-          <PixelText
-            font={assets.font}
-            text={`${hud.mph} MPH  GEAR ${hud.gear + 1}`}
-            scale={2}
-            color="#e8e4d8"
-          />
-        </div>
-        <div className="drive-hud-plate" style={plate}>
-          <PixelText
-            font={assets.font}
-            text={`DAMAGE ${damage}%`}
-            scale={2}
-            color={failing ? "#e8635a" : "#e8e4d8"}
-          />
-        </div>
-      </div>
+          IN THE GAME'S OWN FONT, on the run's own frame sprite: everything else
+          the player reads in this game is the pixel font, and a browser
+          monospace here made the minigame look like a different program —
+          exactly what an interlude must not do. */}
+      <HudRoot ctx={hudContext} />
+
       {/* THE PAD — one thumb, anywhere on the picture. Dragging from where the
           thumb went down is the push; letting go means carry on, which is the
           whole of the control model. */}
@@ -582,6 +610,29 @@ export function DriveScreen({
 
 const EMPTY_PAGE: string[] = [];
 
+/** Where the damage readout stops being a scratch and starts being trouble.
+ * The wagon takes cosmetic knocks the whole way down, and a dial that alarmed
+ * at the first one would teach the player to ignore it — so this is the point
+ * where the next real hit ends the trip. What the dial DOES about it is the
+ * content's call (`hud/scripts/drive.lua`); this is only the fact. */
+const FAILING_WEAR_PERCENT = 70;
+
+/** Have any of the dials actually moved? Compared field by field rather than
+ * by a key string: this runs every frame of a drive. */
+function sameDials(a: DriveDials, b: DriveDials): boolean {
+  return (
+    a.mph === b.mph &&
+    a.speedFrac === b.speedFrac &&
+    a.gear === b.gear &&
+    a.rev === b.rev &&
+    a.reversing === b.reversing &&
+    a.bodies === b.bodies &&
+    a.wear === b.wear &&
+    a.failing === b.failing &&
+    a.paused === b.paused
+  );
+}
+
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */
 let padOrigin: { x: number; y: number } | null = null;
@@ -639,16 +690,6 @@ const CANVAS: CSSProperties = {
   width: "100%",
   height: "100%",
   imageRendering: "pixelated",
-};
-const HUD_BAR: CSSProperties = {
-  position: "absolute",
-  top: 14,
-  left: 12,
-  right: 12,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "flex-start",
-  pointerEvents: "none",
 };
 const PAD: CSSProperties = {
   position: "absolute",

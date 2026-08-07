@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE AUTO PILOT PANEL — the speed rung, STOP, the LOOT chip and the draining
+# purse, mounted under the minimap while the engine meter runs.
+#
+# It sits here rather than pinned to the top edge so it clears the Dynamic Island
+# and aligns to the minimap column.
+region: clock
+order: 1
+kind: widget
+widget: autopilot
+visible: ui.autopilot

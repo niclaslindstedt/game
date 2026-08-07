@@ -148,7 +148,8 @@ export type Hud = {
   /**
    * THE PARTY FRAMES — every OTHER hero in play, in seat order, empty
    * solo (and for a departed seat, which is nobody's). Portraits are composed
-   * in PlayingHud through the paper-doll compositor from the live state; the
+   * in the party-frames widget through the paper-doll compositor from the live
+   * state; the
    * name is NOT here because the engine's Player carries none — the session
    * roster answers it, and GameScreen wires the two together by seat. `busy`
    * is the hero's screen state, D2's own affordance: "in their bag" is a fact
