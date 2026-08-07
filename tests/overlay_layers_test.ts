@@ -124,6 +124,36 @@ describe("game shell layer bands", () => {
     expect(bandOf(".drive-screen")).toBeGreaterThan(shellTop);
   });
 
+  it("prints the screenshot receipt over the drive that raised it", () => {
+    // THE REGRESSION THIS PINS: the road answers the SCREENSHOT bind itself
+    // (the run's control layer is not listening under an interlude), and then
+    // owns the whole picture — so a receipt left in the modal band printed
+    // UNDERNEATH the thing it was a receipt for, and the key looked dead on
+    // the one screen a player most wants a picture of.
+    for (const selector of [".shot-flash", ".shot-flash-burst"]) {
+      expect(
+        bandOf(selector),
+        `${selector} must clear the drive`,
+      ).toBeGreaterThan(bandOf(".drive-screen"));
+    }
+  });
+
+  it("leaves the screenshot receipt inert at that band", () => {
+    // It out-bids every modal in the shell, so it had better never take a
+    // press: the canvas hit-tests the banner and routes the tap instead.
+    for (const selector of [
+      ".shot-flash",
+      ".shot-flash *",
+      ".shot-flash-burst",
+    ]) {
+      const rule = new RegExp(
+        `(^|\\n)${selector.replace(/[.*]/g, (c) => `\\${c}`)}\\s*\\{([^}]*)\\}`,
+      ).exec(CSS);
+      expect(rule, `no rule for ${selector}`).not.toBeNull();
+      expect(rule?.[2], selector).toMatch(/pointer-events:\s*none/);
+    }
+  });
+
   it("leaves the legend reveal inert while it covers the whole screen", () => {
     // The top-tier unlock takes the ENTIRE viewport for six seconds while a
     // hero is still being steered under it. `pointer-events` only inherits to
