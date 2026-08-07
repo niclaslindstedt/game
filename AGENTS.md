@@ -716,7 +716,7 @@ skill is the source of truth — load that, not a search of the tree.
 | The passive talent trees and their always-on looks    | `talent-fx`                                             |
 | Enemies, companions, presentation fields              | `enemy-design`                                          |
 | Sprites and the pixel font                            | `pixel-assets`, `art-improvement`                       |
-| Audio                                                 | `sound-effects`                                         |
+| Audio (including a mod's recorded .wav/.mp3)          | `sound-effects`                                         |
 | The generated `/library/` site                        | `library-improvement`                                   |
 | Balance, the XP curve, measuring a real run           | `simulate-run`, `leveling-balance`, `playtest`          |
 | The autopilot                                         | `bot-improvement`                                       |
@@ -745,7 +745,7 @@ carries the workflow, the quality bar and the traps for its subject.
 | `simulate-run`        | MEASURING actual balance by running the real engine headlessly       |
 | `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs           |
 | `art-improvement`     | Finding and replacing the game's WORST art                           |
-| `sound-effects`       | Synthesized SFX and the tracker-style music                          |
+| `sound-effects`       | Synthesized SFX, the tracker music, and a MOD's recorded audio       |
 | `talent-fx`           | The passive talent trees and their always-on looks                   |
 | `visual-effects`      | A transient effect — explosion, flash, aura, screen wash             |
 | `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate      |

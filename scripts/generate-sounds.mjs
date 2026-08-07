@@ -39,7 +39,7 @@ const { entries } = loadSounds();
 const errors = [];
 const warnings = [];
 for (const { doc } of entries) {
-  const res = validateSound(doc, { events });
+  const res = validateSound(doc, { events, shipped: true });
   errors.push(...res.errors);
   warnings.push(...res.warnings);
 }

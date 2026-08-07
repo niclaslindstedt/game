@@ -61,6 +61,16 @@ const EXAMPLE = path.join(here, "..", "examples", "greenhouse");
  * cannot drift apart silently. */
 const EXAMPLE_ID = "greenhouse";
 
+/** Everything a mod folder holds that is AUTHORED rather than produced. An
+ * allow-list rather than a list of binaries, so a media format the mod format
+ * grows later is safe by default rather than corrupt by default: `new`
+ * rewrites the example's id through every file it copies, and reading a `.wav`
+ * or a `.png` as UTF-8 and writing it back mangles it whether or not the id
+ * appears in its bytes. Those carry the id in their NAME, which `renamePaths`
+ * handles. */
+const TEXT_EXTS = new Set([".yaml", ".yml", ".md", ".lua", ".json", ".txt"]);
+const isText = (file) => TEXT_EXTS.has(path.extname(file).toLowerCase());
+
 const argv = process.argv.slice(2);
 const command = argv[0];
 const positional = argv.slice(1).filter((a) => !a.startsWith("--"));
@@ -91,6 +101,10 @@ const USAGE = `usage:
   node mod/tools/cli.mjs ids [pattern] [--kind <kind>] [--limit <n>]
       Search the ids a mod may reference.
 
+  node mod/tools/cli.mjs sounds [pattern] [--limit <n>]
+      Every sound a recording can replace: the id to name your .wav or .mp3
+      after, what fires it, and what it is meant to sound like.
+
   node mod/tools/cli.mjs where
       Print the folder to drop a mod in so the game picks it up.
 
@@ -109,6 +123,7 @@ async function main() {
   if (command === "validate") return audit();
   if (command === "package") return zipItUp();
   if (command === "ids") return searchIds();
+  if (command === "sounds") return listSounds();
   if (command === "where") return whereToPutIt();
   console.error(`${USAGE}\n\nid kinds: ${kinds().join(", ")}`);
   process.exit(2);
@@ -149,8 +164,9 @@ function newMod() {
   // (`greenhouse_creeper.yaml`, `sprites/greenhouse/`, `id: greenhouse`), so
   // all three are rewritten. Content first, then paths — renaming as we walk
   // would invalidate the paths we are walking.
+  // TEXT ONLY — see `TEXT_EXTS`.
   const title = flag("title") ?? name.replace(/-/g, " ").toUpperCase();
-  for (const file of walkFiles(dest)) {
+  for (const file of walkFiles(dest).filter(isText)) {
     const before = readFileSync(file, "utf8");
     const after = before
       .replace(new RegExp(EXAMPLE_ID, "g"), name.replace(/-/g, "_"))
@@ -346,6 +362,7 @@ function compile() {
   const extras = (b, fmt) =>
     [
       [Object.keys(b.blueprints ?? {}).length, "map blueprint"],
+      [(b.samples ?? []).length, "recording"],
       [Object.keys(b.talents ?? {}).length, "talent"],
       [Object.keys(b.companions ?? {}).length, "companion"],
       [Object.keys(b.cutscenes ?? {}).length, "scene"],
@@ -496,6 +513,73 @@ function searchIds() {
     return;
   }
   console.log(`\n${shown} shown of ${total} match(es).`);
+}
+
+// ---------------------------------------------------------------------------
+// sounds — the index a sound designer works from
+// ---------------------------------------------------------------------------
+
+/**
+ * Every sound a recording may replace.
+ *
+ * `ids --kind sound` already prints the names, and for a sound that is not
+ * enough: naming a file `enemy_killed.wav` is a commitment about WHEN it will
+ * be heard, and 135 bare ids do not say when. This prints the id, the event
+ * that fires it (blank for the ones played by name — the interface, the road,
+ * a weapon's own `sfx:`), and the sentence the shipped effect was designed to.
+ *
+ * It is the whole interface of the feature: name your file after one of these,
+ * drop it in `sounds/`, and it is heard everywhere that sound was.
+ */
+function listSounds() {
+  const catalog = readCatalog(CATALOG);
+  const index = catalog.soundIndex ?? {};
+  const pattern = positional[0]?.toLowerCase() ?? "";
+  const limit = Number(flag("limit") ?? 200);
+
+  const hits = Object.entries(index).filter(
+    ([id, entry]) =>
+      id.toLowerCase().includes(pattern) ||
+      (entry.on?.type ?? "").toLowerCase().includes(pattern) ||
+      (entry.what ?? "").toLowerCase().includes(pattern),
+  );
+  if (hits.length === 0) {
+    console.log(
+      `nothing matches "${pattern}" among ${Object.keys(index).length} sounds.`,
+    );
+    return;
+  }
+
+  const idWidth = Math.max(...hits.map(([id]) => id.length));
+  const fireWidth = Math.max(
+    ...hits.map(([, e]) => describeOn(e.on).length),
+    "PLAYED BY".length,
+  );
+  console.log(
+    `\nDrop sounds/<id>.wav or sounds/<id>.mp3 into your mod and it replaces\n` +
+      `that sound everywhere the game plays it. The id IS the routing.\n`,
+  );
+  console.log(
+    `  ${"ID".padEnd(idWidth)}  ${"PLAYED BY".padEnd(fireWidth)}  WHAT IT IS`,
+  );
+  for (const [id, entry] of hits.slice(0, limit)) {
+    const what = entry.what ?? "";
+    console.log(
+      `  ${id.padEnd(idWidth)}  ${describeOn(entry.on).padEnd(fireWidth)}  ` +
+        (what.length > 72 ? `${what.slice(0, 71)}…` : what),
+    );
+  }
+  if (hits.length > limit) console.log(`  … ${hits.length - limit} more`);
+  console.log(`\n${Math.min(hits.length, limit)} shown of ${hits.length}.`);
+}
+
+/** An `on:` block as one column: the event, plus whatever narrows it. */
+function describeOn(on) {
+  if (!on) return "(by name)";
+  const narrow = Object.entries(on)
+    .filter(([key]) => key !== "type")
+    .map(([key, value]) => `${key}=${value}`);
+  return narrow.length > 0 ? `${on.type} ${narrow.join(" ")}` : on.type;
 }
 
 // ---------------------------------------------------------------------------

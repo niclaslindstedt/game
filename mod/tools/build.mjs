@@ -101,6 +101,12 @@ import {
   loadQuests,
 } from "../../scripts/quest-data/load-yaml.mjs";
 
+// WHAT A MOD FOLDER MAY HOLD lives in one place, and the compiler reads the
+// audio extensions from it rather than repeating them — the validator refusing
+// a file the compiler is about to load is the exact failure that module exists
+// to prevent.
+import { sampleStem } from "./layout.mjs";
+
 /** The bundle format the game loads. Bumped on a breaking change so an old
  * build refuses a new bundle loudly instead of half-reading it. */
 export const BUNDLE_FORMAT = 1;
@@ -230,6 +236,12 @@ export function buildMod(modDir, catalog) {
     "sounds",
     fail,
   );
+  // The RECORDINGS beside them — the same folder, read a second time for the
+  // files `loadSounds` skips. Two readers rather than one because they answer
+  // to different halves of the toolchain: the YAML goes through the shipped
+  // content loader (so "it works in my mod" and "it works in the game" mean
+  // the same thing), and a media file has no shipped counterpart at all.
+  const samples = loadSamples(path.join(modDir, "sounds"), errors, warnings);
   const music = loadTree(
     () => loadMusic(path.join(modDir, "music")),
     "music",
@@ -306,6 +318,10 @@ export function buildMod(modDir, catalog) {
   const modItems = splitItems(items?.entries ?? []);
 
   const modSounds = sounds?.entries ?? [];
+  /** The sound ids this mod ships a RECORDING for. Read by the clash check,
+   * by the schema (it is what makes `voices:` optional) and by every
+   * cross-reference — a recorded sound is a sound. */
+  const sampledIds = new Set(samples.map((s) => s.id));
   const modMusic = music?.entries ?? [];
   const modPowerups = powerups?.powerups ?? {};
   const modTalents = talents?.talents ?? {};
@@ -325,6 +341,10 @@ export function buildMod(modDir, catalog) {
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
     modSounds.length +
+    // A SOUND PACK is a real mod and often the whole point of one: a folder of
+    // recordings named after the sounds they replace, with not a line of YAML
+    // in it.
+    samples.length +
     modMusic.length +
     Object.keys(modPowerups).length +
     Object.keys(modTalents).length +
@@ -342,9 +362,9 @@ export function buildMod(modDir, catalog) {
   if (adds === 0) {
     fail(
       "a mod must add at least one level, map blueprint, enemy, item, sound, " +
-        "track, powerup, talent, companion, cutscene, thought, story item, " +
-        "quest or rule script — a bundle of nothing would install and do " +
-        "nothing at all",
+        "recording, track, powerup, talent, companion, cutscene, thought, " +
+        "story item, quest or rule script — a bundle of nothing would install " +
+        "and do nothing at all",
     );
   }
 
@@ -357,6 +377,7 @@ export function buildMod(modDir, catalog) {
     items: modItems,
     sprites,
     sounds: modSounds,
+    sampled: sampledIds,
     music: modMusic,
     powerups: modPowerups,
     talents: modTalents,
@@ -447,10 +468,13 @@ export function buildMod(modDir, catalog) {
   // Items validate against the base catalogs PLUS this mod's own, so a mod's
   // unique may sit on a mod's base weapon. Sprites are the base atlas plus the
   // mod's — an item names ONE sprite (its icon), unlike a mob's two frames.
-  const soundIds = union(
-    catalog.sounds ?? [],
-    modSounds.map((e) => e.id),
-  );
+  // A RECORDING is a sound like any other as far as every reference goes: a
+  // weapon's `sfx:` may name one, and so may a powerup's. The routing is the
+  // only thing that differs, and only for an id the base game does not have.
+  const soundIds = union(catalog.sounds ?? [], [
+    ...modSounds.map((e) => e.id),
+    ...sampledIds,
+  ]);
   for (const entry of modMusic) {
     const res = validateTrack(entry.doc);
     errors.push(...prefix(res.errors, `music/${entry.id}`));
@@ -458,7 +482,13 @@ export function buildMod(modDir, catalog) {
   }
   const claimed = new Map();
   for (const entry of modSounds) {
-    const res = validateSound(entry.doc, { events: refs.events });
+    // Only the compiler can see the folder, so only it can tell the schema
+    // that a recording sits beside this file — which is what lets the YAML
+    // carry an `on:` block and no `voices:` at all.
+    const res = validateSound(entry.doc, {
+      events: refs.events,
+      sampled: sampledIds.has(entry.id),
+    });
     errors.push(...prefix(res.errors, `sounds/${entry.id}`));
     warnings.push(...prefix(res.warnings, `sounds/${entry.id}`));
     // Two of a mod's OWN sounds answering one event shape is the same error the
@@ -486,6 +516,38 @@ export function buildMod(modDir, catalog) {
           "mod ships or the game has",
       );
     }
+  }
+
+  // A RECORDING NOBODY CAN HEAR is the one way to get this feature wrong, and
+  // it is a typo away: `sounds/enemy_kiled.wav` compiles perfectly, ships,
+  // installs, and never makes a sound. A recording is heard when it is named
+  // after a SHIPPED sound (it replaces it), or when something in this mod
+  // points at the id — an `on:` block in its own YAML, or a weapon's or a
+  // power's `sfx:`.
+  const shippedSounds = new Set(catalog.sounds ?? []);
+  const routedByMod = new Set([
+    ...modSounds.filter((e) => e.doc.on).map((e) => e.id),
+    ...(items?.entries ?? []).map((e) => e.doc.sfx),
+    ...Object.values(modPowerups).map((def) => def.sfx),
+  ]);
+  for (const sample of samples) {
+    if (shippedSounds.has(sample.id) || routedByMod.has(sample.id)) continue;
+    warnings.push(
+      `sounds/${sample.id}.${sample.format}: "${sample.id}" is not a sound ` +
+        "the game has, and nothing in this mod plays it — name it after the " +
+        "sound it replaces (`cli.mjs sounds`), or give it a " +
+        `sounds/${sample.id}.yaml with an \`on:\` block`,
+    );
+  }
+  // A `sample:` block is a mod saying "this sound is a recording"; without the
+  // recording it is a sound with no voices and no file, which is silence.
+  for (const entry of modSounds) {
+    if (entry.doc.sample === undefined || sampledIds.has(entry.id)) continue;
+    errors.push(
+      `sounds/${entry.id}.yaml: has a \`sample:\` block but no recording — ` +
+        `add ${entry.id}.wav or ${entry.id}.mp3 beside it, or drop the block ` +
+        "and author `voices:`",
+    );
   }
 
   // The atlas as this mod will see it: the base game's names plus its own. Every
@@ -833,11 +895,26 @@ export function buildMod(modDir, catalog) {
       weapons: toRecord(modItems.weapons, baseDef),
       gear: toRecord(modItems.gear, baseDef),
       uniques: toRecord(modItems.uniques, uniqueDef),
+      // SYNTHESIZED sounds only — a sampled one has no voices to carry, and a
+      // def with `voices: undefined` in the bank is a crash waiting for the
+      // day a recording fails to decode and the player falls back to it.
       sounds: Object.fromEntries(
-        modSounds.map((e) => [e.id, { id: e.id, voices: e.doc.voices }]),
+        modSounds
+          .filter((e) => Array.isArray(e.doc.voices))
+          .map((e) => [e.id, { id: e.id, voices: e.doc.voices }]),
       ),
+      // RECORDED sounds — the bytes, and the mixing its own YAML asked for
+      // (if it has one at all; most do not). `id` is the routing: the sound
+      // this recording is heard in place of.
+      samples: samples.map((sample) => ({
+        ...sample,
+        ...mixOf(sounds?.sounds?.[sample.id]?.sample),
+      })),
       // Event shape → sound id, keyed exactly as the game's own catalog is, so
-      // a mod can replace a shipped sound by answering the same event.
+      // a mod can replace a shipped sound by answering the same event. A
+      // RECORDING is routed by this table too whenever its YAML carries an
+      // `on:` — which is how a mod gives a brand-new event moment a real
+      // sound rather than only re-recording an existing one.
       soundKeys: Object.fromEntries(
         modSounds
           .filter((e) => e.doc.on)
@@ -990,6 +1067,152 @@ function rasterize(sprite) {
   };
 }
 
+/** How big one recording may be. 2 MiB is about twelve seconds of CD-quality
+ * stereo WAV — far past any sound effect, and short of the 16 MiB ceiling the
+ * shell's zip reader puts on a single entry (`electron/src/mod-archive.ts`). */
+const MAX_SAMPLE_BYTES = 2 * 1024 * 1024;
+/** How much recorded audio one mod may ship. A whole 135-sound overhaul in
+ * WAV fits; the warning below lands long before the refusal does. */
+const MAX_SAMPLES_BYTES = 24 * 1024 * 1024;
+/** Past this, say so: the bundle is base64 JSON that crosses to the page in
+ * one message, alongside every OTHER installed mod's. */
+const WARN_SAMPLES_BYTES = 8 * 1024 * 1024;
+
+/**
+ * RECORDED SOUNDS — `sounds/<id>.wav` and `sounds/<id>.mp3`.
+ *
+ * This is the one place a mod hands the game a media file rather than a
+ * description of one, and the reason is that a sound designer's work IS the
+ * waveform: `content/sounds/` describes every shipped effect as oscillators
+ * because that keeps the app free of audio files, but nobody is going to spell
+ * a recorded orchestral hit as a list of detunes.
+ *
+ * THE STEM IS THE ROUTING. A file named `enemy_killed.wav` replaces the sound
+ * `enemy_killed`, everywhere it plays — no `on:` block, no manifest entry, no
+ * new table. The event routing the shipped catalog already carries keeps
+ * pointing where it pointed.
+ *
+ * The bytes are passed through UNTOUCHED and decoded by the browser's own
+ * audio decoder in the page. This module therefore checks only what it can
+ * check honestly: that the name is an id, that the container is one of the two
+ * every WebView decodes, that the magic bytes agree with the extension, and
+ * that the size is sane. It does not parse audio, and it must not start: a
+ * decoder written here would be a decoder written by us for a stranger's file.
+ *
+ * @returns `[{ id, format, data }]` — `data` base64, ready for the bundle.
+ */
+function loadSamples(soundsDir, errors, warnings) {
+  const out = [];
+  if (!existsSync(soundsDir)) return out;
+
+  const files = readdirSync(soundsDir)
+    .filter((f) => sampleStem(f) !== null)
+    .sort();
+
+  const claimed = new Map();
+  let total = 0;
+  for (const file of files) {
+    const label = `sounds/${file}`;
+    const id = sampleStem(file);
+    const format = file.slice(id.length + 1);
+    if (!/^[a-z][a-z0-9_]*$/.test(id)) {
+      errors.push(
+        `${label}: "${id}" is not a sound id — the file name IS the sound it ` +
+          "replaces, so it takes lowercase letters, digits and underscores",
+      );
+      continue;
+    }
+    // One id, one recording. Which of a `.wav` and an `.mp3` won would be
+    // decided by alphabetical order, which is not a decision anybody made.
+    if (claimed.has(id)) {
+      errors.push(
+        `${label}: "${id}" is already recorded by ${claimed.get(id)} — one ` +
+          "sound, one file",
+      );
+      continue;
+    }
+    claimed.set(id, label);
+
+    const bytes = readFileSync(path.join(soundsDir, file));
+    if (bytes.length === 0) {
+      errors.push(`${label}: the file is empty`);
+      continue;
+    }
+    if (bytes.length > MAX_SAMPLE_BYTES) {
+      errors.push(
+        `${label}: ${mib(bytes.length)} is over the ${mib(MAX_SAMPLE_BYTES)} ` +
+          "limit for one sound — trim it, or ship it as .mp3",
+      );
+      continue;
+    }
+    const actual = sniffAudio(bytes);
+    if (actual === null) {
+      errors.push(
+        `${label}: not a WAV or an MP3 — the first bytes are neither, so the ` +
+          "game would have nothing to play",
+      );
+      continue;
+    }
+    if (actual !== format) {
+      errors.push(
+        `${label}: the contents are ${actual.toUpperCase()}, not ` +
+          `${format.toUpperCase()} — rename it to "${id}.${actual}"`,
+      );
+      continue;
+    }
+    total += bytes.length;
+    out.push({ id, format, data: bytes.toString("base64") });
+  }
+
+  if (total > MAX_SAMPLES_BYTES) {
+    errors.push(
+      `sounds/: ${mib(total)} of recordings is over the ` +
+        `${mib(MAX_SAMPLES_BYTES)} a mod may ship — every enabled mod's audio ` +
+        "is held in memory at once",
+    );
+  } else if (total > WARN_SAMPLES_BYTES) {
+    warnings.push(
+      `sounds/: ${mib(total)} of recordings — .mp3 is a tenth the size of ` +
+        ".wav and every shell decodes it",
+    );
+  }
+  return out;
+}
+
+/** A `sample:` block's knobs, as the bundle carries them — omitted entirely
+ * when the author set none, so a plain dropped-in file stays three fields. */
+function mixOf(sample) {
+  if (!sample) return {};
+  const out = {};
+  for (const key of ["volume", "pan", "echo"]) {
+    if (typeof sample[key] === "number") out[key] = sample[key];
+  }
+  return out;
+}
+
+/** What a file's first bytes say it is: "wav", "mp3", or null. */
+function sniffAudio(bytes) {
+  // RIFF....WAVE
+  if (
+    bytes.length >= 12 &&
+    bytes.toString("latin1", 0, 4) === "RIFF" &&
+    bytes.toString("latin1", 8, 12) === "WAVE"
+  ) {
+    return "wav";
+  }
+  // An ID3 tag, or a bare frame sync (11 set bits) for a tagless file.
+  if (bytes.toString("latin1", 0, 3) === "ID3") return "mp3";
+  if (bytes.length >= 2 && bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) {
+    return "mp3";
+  }
+  return null;
+}
+
+/** A byte count, for a message a human reads. */
+function mib(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
 /**
  * Id collisions, which mean different things per kind.
  *
@@ -1021,6 +1244,8 @@ function checkIds({
   items,
   sprites,
   sounds,
+  /** The ids this mod ships a RECORDING for — see the sound clash below. */
+  sampled,
   music,
   powerups,
   talents,
@@ -1058,8 +1283,18 @@ function checkIds({
   for (const s of sprites) {
     if (shipped.sprite.has(s.name)) clashes.push(`sprite "${s.name}"`);
   }
+  // A SHIPPED SOUND'S ID IS ALLOWED TO AN ADDON WHEN THE MOD RECORDED IT,
+  // and only then. The rule everywhere else — an addon shadowing a shipped id
+  // is a bug, because it silently ate something the player already had —
+  // inverts for a recording: naming a file after the sound it stands in for is
+  // the ONLY way to ship one, and a sound pack that had to declare itself a
+  // total conversion to replace a footstep would be lying about what it does.
+  // A synthesized `sounds/<id>.yaml` still has to be a conversion, because
+  // that one CAN add a sound of its own and shadowing is likelier a typo.
   for (const s of sounds) {
-    if (shipped.sound.has(s.id)) clashes.push(`sound "${s.id}"`);
+    if (shipped.sound.has(s.id) && !sampled.has(s.id)) {
+      clashes.push(`sound "${s.id}"`);
+    }
   }
   for (const t of music) {
     if (shipped.music.has(t.id)) clashes.push(`track "${t.id}"`);

@@ -56,6 +56,9 @@ function makeFakeSynth(): {
       now: () => clock.t,
       tone: (o) => tones.push(o),
       noise: (o) => noises.push(o),
+      // A score is written, never recorded — a track's notes are the format.
+      sample() {},
+      decode: () => Promise.resolve(null),
     },
     tones,
     noises,

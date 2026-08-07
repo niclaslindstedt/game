@@ -9,6 +9,12 @@
 // game replays, not a program it runs — the same rule the rest of the mod
 // format keeps.
 //
+// A MOD may also skip the voices entirely and ship a RECORDING — a `.wav` or
+// `.mp3` named after the sound it replaces (see `sample:` below). The shipped
+// game authors none: everything in `content/sounds/` is synthesized, which is
+// what keeps the PWA free of audio files. But a mod is somebody else's work,
+// and no list of oscillators is the orchestral hit they recorded.
+//
 // The field list mirrors `ToneOptions` / `NoiseOptions`. Keep them in step: a
 // field the synth grew and this did not is a field an author cannot reach, and
 // a field here the synth dropped is one that silently does nothing.
@@ -41,9 +47,15 @@ const TONE_ONLY = new Set([
  * Validate one parsed sound file.
  *
  * @param {object} doc   the parsed YAML
- * @param {object} refs  `{ events }` — the engine's GameEvent type names, so an
- *                       `on.type` that no event carries fails here rather than
- *                       becoming a sound that can never play.
+ * @param {object} refs  `{ events, sampled }` — `events` is the engine's
+ *                       GameEvent type names, so an `on.type` that no event
+ *                       carries fails here rather than becoming a sound that
+ *                       can never play. `sampled` says a RECORDING
+ *                       (`sounds/<id>.wav|.mp3`) sits beside this file, which
+ *                       is what makes `voices:` optional — only the compiler
+ *                       can see the folder, so only it can answer that.
+ *                       `shipped` is this repo's own content pipeline, which
+ *                       has no recordings at all.
  * @returns `{ errors, warnings }`
  */
 export function validateSound(doc, refs = {}) {
@@ -84,6 +96,64 @@ export function validateSound(doc, refs = {}) {
         }
       }
     }
+  }
+
+  // `sample` is a MOD's business and the game itself never authors one: it
+  // says this sound comes out of `sounds/<id>.wav` (or `.mp3`) sitting beside
+  // this file, and carries the three knobs that are ours rather than the
+  // recording's — how loud to run it, where to put it, how much hall to send
+  // it into. There is no `file:` field on purpose: the stem IS the id, so
+  // there is exactly one place the recording can be and one thing it can
+  // replace.
+  const sampled = doc.sample !== undefined || refs.sampled === true;
+  if (doc.sample !== undefined && refs.shipped) {
+    // The game ships no audio files, and nothing under `content/sounds/` reads
+    // one — a `sample:` here would compile into a sound with no voices at all.
+    err("`sample:` is a mod's — the shipped game synthesizes every sound");
+  } else if (doc.sample !== undefined) {
+    if (
+      typeof doc.sample !== "object" ||
+      Array.isArray(doc.sample) ||
+      doc.sample === null
+    ) {
+      err("`sample` must be a mapping (volume/pan/echo), or be left out");
+    } else {
+      for (const key of Object.keys(doc.sample)) {
+        if (!SAMPLE_FIELDS.has(key)) {
+          err(
+            `\`sample.${key}\` is not a field a recording takes ` +
+              `(${[...SAMPLE_FIELDS].join(", ")})` +
+              (key === "file"
+                ? " — the file is sounds/<id> with a .wav or .mp3 extension, " +
+                  "named after this sound"
+                : ""),
+          );
+        }
+      }
+      const num = (key, lo, hi) => {
+        const value = doc.sample[key];
+        if (value === undefined) return;
+        if (typeof value !== "number" || value < lo || value > hi) {
+          err(`\`sample.${key}\` must be a number in ${lo}–${hi}`);
+        }
+      };
+      num("volume", 0, 1);
+      num("pan", -1, 1);
+      num("echo", 0, 1);
+    }
+  }
+
+  if (sampled) {
+    // ONE SOUND, ONE SOURCE. Voices under a recording are voices that can
+    // never be heard, and "why is my sound design ignored" is a far worse
+    // half-hour than this error.
+    if (doc.voices !== undefined) {
+      err(
+        "carries both a recording and `voices` — a sound is played from one " +
+          "or the other, so drop the voices or drop the file",
+      );
+    }
+    return { errors, warnings };
   }
 
   if (!Array.isArray(doc.voices) || doc.voices.length === 0) {
@@ -144,6 +214,11 @@ export function validateSound(doc, refs = {}) {
 
   return { errors, warnings };
 }
+
+/** What a `sample:` block may say. Deliberately three knobs and no more: the
+ * recording carries its own envelope, pitch and length, and a field that
+ * reshaped it would be this codebase overruling the person who mixed it. */
+export const SAMPLE_FIELDS = new Set(["volume", "pan", "echo"]);
 
 /** The event fields a sound may be matched on — exactly the ones `soundKey`
  * builds its key from. */

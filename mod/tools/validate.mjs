@@ -38,6 +38,7 @@ import {
   TREES,
   classify,
   junkReason,
+  sampleStem,
 } from "./layout.mjs";
 
 /** A README shorter than this is a placeholder rather than a description. */
@@ -379,8 +380,17 @@ function checkContents(manifest, files, catalog, errors, warnings) {
   // A mod whose every line says "replaces" is almost always an addon that
   // copied the field down the list rather than one that really takes over the
   // shipped game, and the MODS screen would tell the player so.
+  //
+  // A SOUND PACK is the honest exception, and the only one: a folder of
+  // recordings named after the sounds they stand in for replaces every time,
+  // by construction — there is no other thing a `.wav` in `sounds/` can do.
+  const soundPack = contents.every(
+    (entry) =>
+      entry.path.startsWith("sounds/") && sampleStem(entry.path) !== null,
+  );
   if (
     contents.length > 1 &&
+    !soundPack &&
     contents.every((entry) => entry.change === "replaces") &&
     manifest.kind !== "conversion"
   ) {

@@ -51,6 +51,44 @@ function copyOfExample(edit: (dir: string) => void = () => {}): string {
   return dir;
 }
 
+/** A real, tiny WAV — enough of a header that the compiler's sniffer accepts
+ * it, and enough randomness that a zip cannot deflate it to nothing. */
+const WAV = (() => {
+  const body = Buffer.alloc(64);
+  for (let i = 0; i < body.length; i += 1) body[i] = (i * 37) & 0xff;
+  const head = Buffer.alloc(44);
+  head.write("RIFF", 0);
+  head.writeUInt32LE(36 + body.length, 4);
+  head.write("WAVE", 8);
+  head.write("fmt ", 12);
+  head.writeUInt32LE(16, 16);
+  head.writeUInt16LE(1, 20);
+  head.writeUInt16LE(1, 22);
+  head.writeUInt32LE(8000, 24);
+  head.writeUInt32LE(16_000, 28);
+  head.writeUInt16LE(2, 32);
+  head.writeUInt16LE(16, 34);
+  head.write("data", 36);
+  head.writeUInt32LE(body.length, 40);
+  return Buffer.concat([head, body]);
+})();
+
+/** Declare one more file in a mod's manifest inventory — every file the game
+ * loads owes a `contents:` line, so a test that adds one owes it too. */
+function appendContents(
+  dir: string,
+  rel: string,
+  summary: string,
+  change: "adds" | "replaces",
+): void {
+  const file = path.join(dir, "mod.yaml");
+  writeFileSync(
+    file,
+    `${readFileSync(file, "utf8").trimEnd()}\n` +
+      `  - path: ${rel}\n    summary: ${summary}\n    change: ${change}\n`,
+  );
+}
+
 /** Add a file to a mod folder, making its directory if it is new. */
 function write(dir: string, rel: string, body = "x: 1\n"): void {
   const file = path.join(dir, rel);
@@ -114,6 +152,58 @@ describe("validateMod", () => {
       write(at, "sprites/greenhouse/old/creeper_0.yaml", "name: creeper_0\n"),
     );
     expect(complains(dir, /nothing is loaded this deep/)).toBe(true);
+  });
+
+  it("takes a recording in sounds/ as content the game loads", () => {
+    // `sounds/` is the one tree that holds media beside its YAML, and the
+    // audit and the compiler have to agree about that or the validator refuses
+    // the very file the compiler is about to read.
+    const dir = copyOfExample((at) => {
+      writeFileSync(path.join(at, "sounds", "crate_broken.wav"), WAV);
+      appendContents(
+        at,
+        "sounds/crate_broken.wav",
+        "A real recorded splinter of wood when a crate goes, in place of the " +
+          "synthesized one.",
+        "replaces",
+      );
+    });
+    const { errors } = validateMod(dir, { catalog });
+    expect(errors).toEqual([]);
+    expect(validateMod(dir, { catalog }).files.content).toContain(
+      "sounds/crate_broken.wav",
+    );
+  });
+
+  it("refuses an audio format no shell decodes", () => {
+    const dir = copyOfExample((at) =>
+      writeFileSync(path.join(at, "sounds", "crate_broken.flac"), WAV),
+    );
+    expect(complains(dir, /holds \.yaml or \.wav or \.mp3 files only/)).toBe(
+      true,
+    );
+  });
+
+  it("carries a recording into the package byte for byte", () => {
+    const dir = copyOfExample((at) => {
+      writeFileSync(path.join(at, "sounds", "crate_broken.wav"), WAV);
+      appendContents(
+        at,
+        "sounds/crate_broken.wav",
+        "A real recorded splinter of wood when a crate goes, in place of the " +
+          "synthesized one.",
+        "replaces",
+      );
+    });
+    const out = path.join(path.dirname(dir), "m.zip");
+    const result = packageMod(dir, { catalog, out });
+    const entry = readZip(readFileSync(result.file)).find(
+      (e) => e.name === "greenhouse/sounds/crate_broken.wav",
+    );
+    // A zip that deflated the audio into something that no longer decodes
+    // would be a mod that plays perfectly for its author and silently for
+    // everybody who installed it.
+    expect(entry?.data).toEqual(WAV);
   });
 
   it("refuses an item under a rarity that does not exist", () => {

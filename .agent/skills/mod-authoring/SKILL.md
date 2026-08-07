@@ -48,6 +48,7 @@ schema, read the shipped file beside it, and author.
 ```sh
 node mod/tools/cli.mjs new my-mod --title "MY MOD"   # 1. scaffold (it already compiles)
 node mod/tools/cli.mjs ids <pattern> [--kind <kind>] # 2. verify every id BEFORE authoring it
+node mod/tools/cli.mjs sounds [pattern]              #    …and for audio, the sound a recording replaces
 node mod/tools/cli.mjs check my-mod                  # 3. compile — fast, writes nothing
 node scripts/simulate-run.mjs --mod ../my-mod …      # 4. measure (every instrument takes --mod)
 node mod/tools/cli.mjs validate my-mod               # 5. audit the FOLDER before anybody sees it
@@ -104,7 +105,8 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | Who a spared elite joins you as                                     | `companions.yaml`                                           |
 | Errands, their givers, their conversations                          | `quests/<id>.yaml`, `quest-givers.yaml`                     |
 | Story — scenes, the hero's thoughts, found lore                     | `cutscenes/<id>.yaml`, `thoughts.yaml`, `story-items.yaml`  |
-| Pixel art, sounds, music                                            | `sprites/<family>/<name>.yaml`, `sounds/`, `music/`         |
+| Pixel art, sounds, music                                            | `sprites/<family>/<name>.yaml`, `sounds/<id>.yaml`, `music/` |
+| RECORDED sound — a real audio file replacing a synthesized one      | `sounds/<id>.wav`, `sounds/<id>.mp3` (the name IS the sound it replaces — `cli.mjs sounds`) |
 | What the five difficulty rungs are CALLED                           | `difficulties.yaml`                                         |
 | The mod's identity, kind, and (a conversion's) own title screen     | `mod.yaml` — `kind:`, `brand:`                              |
 | What the mod says it puts in the game (the MODS screen reads it)    | `mod.yaml` — `contents:`                                    |
@@ -154,7 +156,7 @@ add `content/levels/<id>.yaml` means `levels/<id>.yaml` in the mod.
 | A weapon, gear piece or relic    | `weapon-system`      | The def-first workflow and every calculator; `grades:` and the rarity economy stay the game's              |
 | An errand or a conversation      | `quest-design`       | The objective kinds and reward pricing apply; the giver stands on one of YOUR levels                       |
 | Any sprite                       | `pixel-assets`, `art-improvement` | The generate → LOOK → judge loop; a mod's grids are compiled by `cli.mjs`, not by `make assets`  |
-| A sound or a score               | `sound-effects`      | The synth vocabulary and the tracker format are the same files                                             |
+| A sound or a score               | `sound-effects`      | The synth vocabulary and the tracker format are the same files — plus the one thing the shipped game cannot do: drop `sounds/<id>.wav` (or `.mp3`) in and it replaces that sound outright. `cli.mjs sounds` is the id list, and the id IS the routing |
 | A power's look and sound         | `visual-effects`     | Authoring the colour kit is yours; new effect IMPLEMENTATIONS are engine code a mod cannot add             |
 | "Is this balanced"               | `simulate-run`       | Run it with `--mod`; the verdict's bands are the game's, and yours should meet them                        |
 | Seeing it run, tuning feel       | `playtest`, `test-scenario` | `pwa/scripts/playtest.mjs --mod`; `--scenario` rides along with it                                  |

@@ -36,6 +36,17 @@ function scaledView(volume: () => number): Synth {
       if (scaled < 0.001) return;
       raw.noise({ ...options, volume: scaled });
     },
+    // A recording defaults to 1 rather than to a voice's ~0.05: the file was
+    // mastered by whoever made it, so full scale is "as authored" — but it
+    // still passes through the master volume, or a mod's sounds would ignore
+    // the SFX slider and the mute switch alike.
+    sample(options) {
+      const scaled = (options.volume ?? 1) * volume();
+      if (scaled < 0.001) return;
+      raw.sample({ ...options, volume: scaled });
+    },
+    // Decoding is volume-free, so both views share the one context's decoder.
+    decode: (bytes) => raw.decode(bytes),
   };
 }
 

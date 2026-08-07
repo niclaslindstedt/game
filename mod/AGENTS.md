@@ -68,7 +68,8 @@ shipped file is a worked example of its kind.
 | An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)                  |
 | What the difficulty rungs are CALLED           | `difficulties.yaml`            | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                     |
-| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
+| A sound, synthesized from voices               | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
+| A sound, RECORDED (a real audio file)          | `sounds/<id>.wav` or `.mp3`    | [`FORMAT.md`](FORMAT.md#soundsidwav--soundsidmp3--a-recording)  |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
 | A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
 | A passive TALENT the hero ranks up             | `talents.yaml`                 | [`../content/talents.yaml`](../content/talents.yaml)            |
@@ -97,12 +98,19 @@ extra.
 node mod/tools/cli.mjs ids boots              # anything with "boots" in it
 node mod/tools/cli.mjs ids ghost --kind enemies
 node mod/tools/cli.mjs ids --kind abilities   # everything of one kind
+node mod/tools/cli.mjs sounds killed          # sounds, with what fires each
 ```
 
 Your level's loot pools, your monster's drops and your relic's `base` all name
 ids. `ids` is faster and more reliable than reading `catalog.json`, which is
 1,400 entries long. **An id you did not verify is the single most common reason
 a mod fails to compile.**
+
+`sounds` is the same question for AUDIO, and the answer a recording needs: it
+prints every sound the game ships with the event that fires it and a line on
+what it is meant to feel like, because naming a file `enemy_killed.wav` is the
+entire act of replacing that sound — get the name wrong and the mod installs
+perfectly and is silent.
 
 ## 4. Check it
 
@@ -118,18 +126,22 @@ means the game will accept it.
 
 ### Reading the errors
 
-| Message                                    | What it means                                                                                                                  |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `sprite "x" has no frames`                 | A monster's `sprite:` names a family; the renderer needs `x_0` and `x_1`. Both must exist in your `sprites/` or the base game. |
-| `already exist in the base game`           | An `addon` cannot shadow a shipped id. Prefix yours, or set `kind: conversion` if you _mean_ to replace it.                    |
-| `ladder.yaml: missing entry for level "x"` | Step 3b. Add the four difficulty rows.                                                                                         |
-| `grades: is not available to mods`         | The exceptional/elite ladder is compiled into the game. Author those versions as their own items.                              |
-| `campaign names "x"`                       | A conversion's `campaign:` lists a level it does not ship.                                                                     |
-| `is not a level this mod ships`            | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
-| `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
-| `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
-| `is not one of the game's rungs`           | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
-| `fx.element "x" is not one of…`            | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
+| Message                                                         | What it means                                                                                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `sprite "x" has no frames`                                      | A monster's `sprite:` names a family; the renderer needs `x_0` and `x_1`. Both must exist in your `sprites/` or the base game. |
+| `already exist in the base game`                                | An `addon` cannot shadow a shipped id. Prefix yours, or set `kind: conversion` if you _mean_ to replace it.                    |
+| `ladder.yaml: missing entry for level "x"`                      | Step 3b. Add the four difficulty rows.                                                                                         |
+| `grades: is not available to mods`                              | The exceptional/elite ladder is compiled into the game. Author those versions as their own items.                              |
+| `campaign names "x"`                                            | A conversion's `campaign:` lists a level it does not ship.                                                                     |
+| `is not a level this mod ships`                                 | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
+| `unknown compass region "x"`                                    | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
+| `belongs to no set`                                             | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
+| `is not one of the game's rungs`                                | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
+| `fx.element "x" is not one of…`                                 | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
+| `not a WAV or an MP3`                                           | A file in `sounds/` is not audio, or is not one of the two containers every shell decodes. Read from the bytes, not the name.  |
+| `the contents are WAV, not MP3`                                 | A recording's extension disagrees with what is in it. Rename it as the message says.                                           |
+| `carries both a recording and `voices``                         | One sound, one source. Drop the `voices:`, or drop the file.                                                                   |
+| `is not a sound the game has, and nothing in this mod plays it` | A WARNING, and almost always a typo in a recording's name — `cli.mjs sounds` has the list.                                     |
 
 ### 4b. Audit the folder — `validate`
 
@@ -378,7 +390,7 @@ skill's list, with the reasoning behind each.
 - [`README.md`](README.md) — the guide
 - [`FORMAT.md`](FORMAT.md) — every file and field, what may be in the folder at all, and `contents:`
 - [`examples/greenhouse`](examples/greenhouse) — the worked mod `new` copies
-- [`catalog.json`](catalog.json) — every referenceable id (`cli.mjs ids` searches it)
+- [`catalog.json`](catalog.json) — every referenceable id (`cli.mjs ids` searches it), and every sound with what fires it (`cli.mjs sounds`)
 - [`LICENSE.md`](LICENSE.md) — samples are CC0; your mod is yours
 - [`../docs/modding.md`](../docs/modding.md) — how the game loads a mod
 - [`../scripts/mod-support.mjs`](../scripts/mod-support.mjs) — what `--mod` does

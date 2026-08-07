@@ -16,6 +16,12 @@
 // here, or the validator will refuse the very files the compiler is about to
 // read.
 
+/** The audio containers a mod's recording may be in — the two every browser
+ * decodes, which is what a shell's WebView is. Kept here rather than in the
+ * compiler so the folder audit and the compiler cannot disagree about what a
+ * `sounds/` file is. */
+export const SAMPLE_EXTS = ["wav", "mp3"];
+
 /** Directories the compiler loads, and how deep the YAML sits in each.
  *
  * `depth: 1` is `<dir>/<id>.yaml`; `depth: 2` is `<dir>/<group>/<id>.yaml`,
@@ -29,7 +35,12 @@ export const TREES = {
   enemies: { depth: 2, group: "biome", what: "a monster" },
   items: { depth: 2, group: "rarity", what: "a weapon, gear piece or relic" },
   sprites: { depth: 2, group: "family", what: "pixel art" },
-  sounds: { depth: 1, what: "a sound" },
+  // The one tree that takes MEDIA beside its YAML: `sounds/<id>.wav` (or
+  // `.mp3`) is a RECORDING that replaces the synthesized sound of the same id,
+  // which is how a mod ships professionally produced audio instead of a list
+  // of oscillators. The YAML stays optional and does the same job it always
+  // did — routing a NEW sound to an event, or trimming a recording's level.
+  sounds: { depth: 1, exts: ["yaml", ...SAMPLE_EXTS], what: "a sound" },
   music: { depth: 1, what: "a score" },
   cutscenes: { depth: 1, what: "a scene" },
   quests: { depth: 1, what: "an errand" },
@@ -43,8 +54,17 @@ export const TREES = {
   },
 };
 
-/** A tree's file extension — YAML unless the tree says otherwise. */
-const treeExt = (tree) => tree.ext ?? "yaml";
+/** Every extension a tree accepts — YAML unless the tree says otherwise. The
+ * FIRST one is the tree's own shape, and the one an error message names. */
+const treeExts = (tree) => tree.exts ?? [tree.ext ?? "yaml"];
+
+/** The sound id a recording replaces, or null when the file is not one. */
+export function sampleStem(name) {
+  for (const ext of SAMPLE_EXTS) {
+    if (name.endsWith(`.${ext}`)) return name.slice(0, -(ext.length + 1));
+  }
+  return null;
+}
 
 /** The rarity directories `items/` may group by — the loader takes the
  * directory name AS the rarity, so a typo is a rarity that does not exist
@@ -190,22 +210,22 @@ export function classify(rel) {
       why: `"${parts[0]}/" is not a folder the compiler reads — see mod/FORMAT.md`,
     };
   }
+  const exts = treeExts(tree);
   if (parts.length !== tree.depth + 1) {
-    const ext = treeExt(tree);
     const shape =
       tree.depth === 1
-        ? `${parts[0]}/<id>.${ext}`
-        : `${parts[0]}/<${tree.group}>/<id>.${ext}`;
+        ? `${parts[0]}/<id>.${exts[0]}`
+        : `${parts[0]}/<${tree.group}>/<id>.${exts[0]}`;
     return {
       role: "stray",
       why: `${tree.what} is loaded from ${shape} — this one sits at a depth nothing reads`,
     };
   }
-  const ext = treeExt(tree);
-  if (!name.endsWith(`.${ext}`)) {
+  if (!exts.some((ext) => name.endsWith(`.${ext}`))) {
+    const list = exts.map((ext) => `.${ext}`).join(" or ");
     return {
       role: "stray",
-      why: `${parts[0]}/ holds .${ext} files only — the compiler skips everything else`,
+      why: `${parts[0]}/ holds ${list} files only — the compiler skips everything else`,
     };
   }
   // `sprites/` and `quests/` are the two loaders that SKIP an underscored file

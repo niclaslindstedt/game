@@ -16,6 +16,20 @@ declare module "*/mod/tools/build.mjs" {
     rgba: string;
   };
 
+  /** One RECORDED sound: a `.wav` or `.mp3` a mod ships in place of a
+   * synthesized one. `id` is the routing — the sound this stands in for,
+   * taken from the file's own stem. */
+  export type ModSample = {
+    id: string;
+    format: "wav" | "mp3";
+    /** The encoded file, base64'd and otherwise untouched. */
+    data: string;
+    /** Mixing from an accompanying `sounds/<id>.yaml`'s `sample:` block. */
+    volume?: number;
+    pan?: number;
+    echo?: number;
+  };
+
   export type ModBundle = {
     formatVersion: number;
     id: string;
@@ -36,6 +50,9 @@ declare module "*/mod/tools/build.mjs" {
     uniques: Record<string, unknown>;
     sprites: ModSprite[];
     sounds: Record<string, unknown>;
+    /** The `.wav`/`.mp3` files it ships, each named after the sound it
+     * replaces. Absent from a bundle that ships none. */
+    samples?: ModSample[];
     /** Event shape → sound id, keyed as `soundKey` builds it. */
     soundKeys: Record<string, string>;
     /** The mod's own scores, cooked into `ChiptuneTrack` shape. */
