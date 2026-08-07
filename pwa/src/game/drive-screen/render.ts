@@ -25,6 +25,8 @@ import {
   crossingsBetween,
   crowdEdges,
   DRIVE,
+  planTown,
+  townRoad,
   vehicleDef,
   type DriveRemain,
   type DriveState,
@@ -65,12 +67,12 @@ import {
   ROAD_LAMP_NEAR_SPRITE,
   ROAD_LAMP_HEAD_PX,
   ROAD_LAMP_POOL_PX,
-  sceneryBetween,
   RIDER_SEATS,
   RIDER_SPRITES,
   trafficSprite,
 } from "./scenery.ts";
 import { drawDriveSky } from "./sky.ts";
+import { drawTownProp, ensureTownArt } from "./town-art.ts";
 
 /** The ground either side of the tarmac. */
 const VERGE = "#2b3327";
@@ -495,8 +497,18 @@ export function drawDrive(
     });
   };
 
-  for (const prop of sceneryBetween(left, right)) {
-    put(prop.sprite, prop.x, prop.y);
+  // THE TOWN. Planned by the engine and ASSEMBLED here (`town-art.ts`) — a
+  // building is a stack of parts rather than a sprite, so what goes into the
+  // painter's list is a composed canvas and its own base rather than a name.
+  // Sorted in with everything else for the usual reason: a frontage fence
+  // stands nearer the camera than the house it fences, and both stand behind
+  // every body on the pavement.
+  ensureTownArt(sprites);
+  for (const prop of planTown(left, right, townRoad(drive.params))) {
+    drawn.push({
+      y: prop.y,
+      draw: () => drawTownProp(ctx, sprites, prop, camera),
+    });
   }
   // THE KERB, drawn from the SIM rather than derived here — the furniture is
   // world now, so what is painted is exactly what the bumper can reach

@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench mod-check mod-catalog
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog
 
 build:
 	npm run build
@@ -100,6 +100,16 @@ sim-bench:
 # `make drive-bench ARGS="--straight 0.8"` is the same road with NOBODY steering.
 drive-bench:
 	node scripts/drive-bench.mjs $(ARGS)
+
+# LOOK AT THE TOWN on the road to GOODCO — the real planner, at five stops along
+# the leg, composed the way the game composes it and written as a sheet PNG. The
+# buildings are ASSEMBLED at runtime (src/game/drive/town-plan.ts), so there is
+# no file anywhere whose contents are what the player sees; this is the only way
+# to judge the street rather than a wall.
+# `make town ARGS="--shells"` is every archetype in every colourway instead.
+# `make town ARGS="--at 0.5"` is one stretch, in detail.
+town:
+	node scripts/town-viewer.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

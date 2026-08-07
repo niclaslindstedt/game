@@ -149,6 +149,54 @@ export {
   vehicleDef,
 } from "./fleet.ts";
 export type { DriveVehicleClass, DriveVehicleDef } from "./fleet.ts";
+// THE TOWN — the backdrop's own catalog, and the street it lays out. The app
+// composes what the planner hands it (`pwa/src/game/drive-screen/town-art.ts`);
+// nothing in the sim reads any of it, because nothing on the far verge can be
+// hit. It travels through here rather than through `src/menu.ts` for the reason
+// the whole drive does: the road is run-facing, and the startup budget has no
+// room for it.
+export {
+  TOWN_ALLEY_PX,
+  TOWN_ART_SIZE,
+  TOWN_DECALS,
+  TOWN_DOORS,
+  TOWN_FRONTS,
+  TOWN_GARAGE_DOORS,
+  TOWN_HOLE_STATES,
+  TOWN_FRONTAGE_SETBACK_PX,
+  TOWN_JUNK,
+  TOWN_PLOT_PX,
+  TOWN_PORCHES,
+  TOWN_SETBACK_PX,
+  TOWN_SIGNS,
+} from "./town-parts.ts";
+export type { TownDecalDef, TownHoleState, TownPartDef } from "./town-parts.ts";
+export {
+  TOWN,
+  TOWN_COLOURWAYS,
+  TOWN_VARIANTS,
+  townDef,
+  townHeight,
+  townPorchSlot,
+  townSignSlot,
+  townSlots,
+  townWidth,
+} from "./town.ts";
+export type {
+  TownBuildingDef,
+  TownFront,
+  TownRoof,
+  TownSlot,
+  TownWall,
+  TownWindow,
+} from "./town.ts";
+export {
+  planTown,
+  resetTownPlan,
+  townDistrict,
+  townRoad,
+} from "./town-plan.ts";
+export type { TownLayer, TownProp, TownRoad } from "./town-plan.ts";
 export { wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
