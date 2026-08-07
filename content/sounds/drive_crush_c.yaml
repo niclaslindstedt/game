@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crush_c
+description: >-
+  The third crush take — the flattest of them, almost all air: what is left
+  under the wheel this time had already been under one.
+voices:
+  - call: noise
+    durationMs: 110
+    volume: 0.022
+    filter:
+      type: lowpass
+      frequency: 280
+  - call: noise
+    durationMs: 34
+    volume: 0.009
+    delayMs: 54
+    filter:
+      type: bandpass
+      frequency: 2400

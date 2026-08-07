@@ -72,6 +72,17 @@ speckleExempt:
   - blood_burst_0
   - blood_burst_1
   - blood_burst_2
+  # THE ROAD'S OWN MARKS. Every one of these is a mess laid down flat on tarmac
+  # by something travelling at speed, and the loose pixels are the drops FLUNG
+  # CLEAR of it — a smear whose every pixel touched its neighbour would be a
+  # painted stripe, which is what a decal looks like and not what a body being
+  # dragged looks like. Same authored-speckle case as the burst above.
+  - gib_road_smear_1
+  - gib_road_smear_2
+  - gib_road_splat_0
+  - gib_road_splat_1
+  - gib_road_paste_0
+  - gib_road_paste_1
   - blood_fringe_h
   - blood_fringe_v
   - blood_tile_0a

@@ -449,6 +449,37 @@ joke._
 1. THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
 2. THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
 
+### THE GLUED — the blockade, spoken from the road itself
+
+_The one set piece on this leg, and the only lines in the minigame that are not
+the hero's. Twenty people are sitting across all four lanes with their hands in
+the resin; four of them have something to say, and they say it in bubbles over
+their own heads on the moving road rather than in a box — a BARK, like a boss's,
+so its rows are hard rows and nothing on the screen stops for them._
+
+_THEY ARE RIGHT AND THEY ARE ABOUT TO BE DRIVEN THROUGH, and the lines have to
+carry both halves. Nothing here is a strawman: no chanting, no slogans that
+argue with themselves, no line written to be laughed at. They are polite, they
+are patient, they have thought about this more carefully than he has, and one of
+them apologises. What makes it play is that the hero — who agrees with every
+word — reads none of it, says nothing about it before or afterwards, and cannot
+stop the car._
+
+_NOTHING NAMES A REAL CAMPAIGN, GROUP OR PERSON, here or in the art
+(`docs/naming.md`). They are THE GLUED, which is a role: there has been somebody
+sitting in a road since there have been roads._
+
+_The lines live with the road's own presentation (`GLUED_BARKS`,
+`pwa/src/game/drive-screen/placards.ts`) rather than in a thought catalog — they
+have no speaker's name and no portrait, exactly as a boss's set-piece bark
+does._
+
+1. WE'VE GLUED OURSELVES TO THE TARMAC FOR THE CLIMATE
+2. NO CARS ON A DEAD PLANET
+3. MY HANDS ARE IN THE ROAD. THEY DON'T COME OUT.
+4. THE ROAD IS CLOSED TODAY
+5. SORRY FOR THE DISRUPTION
+
 ### Hero's thought — the car giving up on the road
 
 _Barked on the road itself, the one time it happens: the wagon has taken more
@@ -3280,6 +3311,7 @@ at the top of this file).
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)                   | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                                                                  |
 | What the DRIVE leaves him saying (`drive_arrive_*`)                   | `content/thoughts.yaml` (picked by `driveVerdict` in `src/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`) |
 | What he mutters ON the road (`drive_out_welfare`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze)                                                                                   |
+| What THE GLUED say from the blockade                                  | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)     |
 | Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                                                               |
 | Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                                                       |
 | The wandering merchant's greetings                                    | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                                                            |

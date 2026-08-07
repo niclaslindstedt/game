@@ -39,11 +39,15 @@ import {
 import {
   bodyHitSound,
   BREAKDOWN_SOUND,
+  crushSound,
   panelSound,
   SHED_SOUND,
+  splitSound,
   trafficHitSound,
   BODY_SOUNDS,
   CRUNCH_SOUNDS,
+  DEBRIS_SOUND,
+  DRAG_SOUND,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
@@ -66,6 +70,7 @@ function play(exhibit: DriveExhibit): { event: DriveEvent; atMs: number }[] {
     difficulty: exhibit.difficulty ?? "medium",
     to: "goodco_hq",
     gib: exhibit.gib ?? true,
+    split: exhibit.split ?? exhibit.gib ?? true,
   });
   exhibit.road?.(drive);
   const out: { event: DriveEvent; atMs: number }[] = [];
@@ -87,12 +92,16 @@ function soundFor(event: DriveEvent): string | undefined {
   if (event.type === "panelBent") return panelSound(event.pos.x, event.pos.y);
   if (event.type === "partShed") return SHED_SOUND;
   if (event.type === "breakdown") return BREAKDOWN_SOUND;
+  if (event.type === "bodySplit") return splitSound(event.pos.x, event.pos.y);
+  if (event.type === "bodyCaught") return DRAG_SOUND;
+  if (event.type === "bodyCrushed") return crushSound(event.pos.x, event.pos.y);
+  if (event.type === "debrisStruck") return DEBRIS_SOUND;
   return undefined;
 }
 
 describe("effects gallery / the DRIVE shelf", () => {
   it("has a shelf to check, or this suite proves nothing", () => {
-    expect(SHELF.length).toBeGreaterThanOrEqual(8);
+    expect(SHELF.length).toBeGreaterThanOrEqual(10);
   });
 
   for (const exhibit of SHELF) {

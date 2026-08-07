@@ -1,0 +1,21 @@
+name: gib_road_smear_0
+family: effects
+size: [14, 5]
+plane: floor
+description: >
+  The lightest of the three drag marks a body leaves on the tarmac — a thin
+  streak of blood with the beads already breaking off it.
+subject:
+  kind: ground decal
+  build: a narrow horizontal streak of blood four rows deep at its middle and one at each end, wet in its core, clotted along its lower edge, with two or three beads flung clear of its trailing end
+  flavor: the first rung of the trail behind a piece of somebody the wheels are still carrying — this is what a slow drag or the last of a long one lays down
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...dd.........
+  ..ddrdd.d.....
+  .ddrrrdddiid..
+  ..dddiii.i....
+  ...di.........

@@ -46,12 +46,25 @@ import {
 import {
   bodyHitSound,
   BREAKDOWN_SOUND,
+  crushSound,
+  DEBRIS_SOUND,
+  DRAG_SOUND,
   lampHitSound,
   panelSound,
   SHED_SOUND,
+  splitSound,
   trafficHitSound,
 } from "./drive-sounds.ts";
-import { CROWD_SPRITES } from "./scenery.ts";
+import { soakCarFromStrike } from "./car-soak.ts";
+import {
+  bodySprite,
+  crushRemain,
+  splashAt,
+  splashForce,
+  stepDriveGore,
+  wetTyres,
+  type DriveGoreState,
+} from "./drive-gore.ts";
 
 /** One body coming apart, held for as long as its pieces are in the air. */
 export type Burst = {
@@ -120,14 +133,20 @@ export function drainDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
+  gore: DriveGoreState,
   say?: (id: string, nowMs: number) => void,
 ): void {
   for (const strike of drive.strikes) {
-    const frames = CROWD_SPRITES[strike.variant % CROWD_SPRITES.length];
     bursts.push({
       // The burst's force is priced off the collision's own energy, so a body
       // taken at 120 comes apart harder than one clipped at 40 — the physics
       // reaches the picture rather than being re-decided here.
+      //
+      // WHAT IT IS NOW FOR IS THE INSTANT, and only that. The body's own PIECES
+      // are the sim's (`DriveRemain`) and are drawn where the road is holding
+      // them; this is the shower of what was inside, thrown at the point of
+      // contact and gone in a second — which is the one part of a collision
+      // that genuinely has no afterwards.
       burst: goreBurst(
         "gib",
         Math.atan2(strike.vel.y, strike.vel.x),
@@ -140,9 +159,28 @@ export function drainDrive(
       x: strike.pos.x,
       y: strike.pos.y,
       bornMs: drive.ms,
-      sprite: frames?.[0] ?? "stampede_a_0",
+      sprite: bodySprite(strike.kind, strike.variant),
     });
+    // …the splash it puts on the tarmac, which is the one mark on this road
+    // laid at the moment of a collision rather than by something travelling…
+    splashAt(gore, strike.pos.x, strike.pos.y, splashForce(strike.joules));
+    // …and what it puts on the CAR. Which panel wore it is the physics' own
+    // answer (`DriveStrike.panel`, the same number the damage is booked
+    // against), and how far UP the car the body got is its own lift — so the
+    // wagon gets bloody where it was actually hit, and only reaches the
+    // windscreen and the roof when somebody was properly thrown.
+    soakCarFromStrike(
+      gore.car,
+      strike.panel,
+      strike.vz,
+      splashForce(strike.joules),
+    );
   }
+  // The trail: whatever is being dragged, skidded or carried leaves its blood on
+  // the road it covered this tick. Walked here rather than at the draw, because
+  // this runs on the drive's own fixed step and a draw runs on the frame rate —
+  // a trail laid at 144 fps would be twice the trail laid at 72.
+  stepDriveGore(gore, drive);
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
@@ -156,6 +194,37 @@ export function drainDrive(
         synth,
         bodyHitSound(event.pos.x, event.pos.y, event.joules),
       );
+    }
+    // A BUMPER GOING THROUGH SOMEBODY. Its own sound over the thud rather than
+    // instead of it: the thud is the steel arriving and this is the person, and
+    // they are one collision. It also takes the frame harder — a body coming in
+    // two is the biggest thing that happens on this road that is not a car.
+    if (event.type === "bodySplit") {
+      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
+    }
+    // Something is caught under the floorpan and travelling with the car — the
+    // long wet scrape underneath, which is the only sound on this road that
+    // says a collision is still HAPPENING rather than having happened.
+    if (event.type === "bodyCaught") {
+      // The back axle is turning in it, so the tyres are loaded — and what they
+      // print is the only part of this the driver takes with him.
+      wetTyres(gore);
+      playDriveSound(synth, DRAG_SOUND);
+    }
+    // A wheel has found something already down. Quiet, and it has to be: in the
+    // middle of a blockade this fires several times a second, and a crush that
+    // announced itself would drown the collision that made the mess.
+    if (event.type === "bodyCrushed") {
+      crushRemain(gore, drive, event.pos.x, event.pos.y);
+      wetTyres(gore);
+      playDriveSound(synth, crushSound(event.pos.x, event.pos.y));
+    }
+    // Dead steel already on the tarmac, kicked further down it: a hollow clout
+    // with no crumple in it, because nothing here is giving way.
+    if (event.type === "debrisStruck") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      playDriveSound(synth, DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
       driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);

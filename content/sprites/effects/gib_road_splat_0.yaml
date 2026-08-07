@@ -1,0 +1,25 @@
+name: gib_road_splat_0
+family: effects
+size: [12, 9]
+plane: floor
+description: >
+  A wide flat splash thrown across the tarmac where something landed hard —
+  broader and shallower than a wound's spray, because a road is flat.
+subject:
+  kind: ground decal
+  build: an irregular splash a dozen across and nine deep, bright wet in its middle, midtone through its body, clotted at its ragged rim, with half a dozen beads flung clear on their own bearings
+  flavor: what a piece of somebody makes when it stops being in the air — the flat-on-the-ground answer to the wound splash a blade throws
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...r..d.....
+  ..rrd..dd...
+  .drrrrdd.d..
+  drrrrrrddi..
+  .rrrrrddii.i
+  .drrrddii...
+  ..ddiid..i..
+  ...di.d.....
+  ....i.......

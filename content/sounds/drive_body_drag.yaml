@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_drag
+description: >-
+  Something has caught under the car and started to travel with it — a long
+  bandpass scrape with a wet lowpass wash beneath it and a slow tail, so the
+  ear places it UNDERNEATH rather than out in front. It runs about as long
+  as a middling drag does; a piece carried further simply has the road noise
+  over the top of it, which is what happens in a real one.
+voices:
+  - call: noise
+    durationMs: 520
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 640
+    echo: 0.18
+  - call: noise
+    durationMs: 620
+    volume: 0.02
+    delayMs: 40
+    filter:
+      type: lowpass
+      frequency: 240
+  - call: tone
+    type: sawtooth
+    from: 96
+    to: 62
+    durationMs: 460
+    volume: 0.014
+    detuneCents: 20

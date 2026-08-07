@@ -33,6 +33,7 @@ const PARAMS: DriveParams = {
   direction: 1,
   to: "goodco_hq",
   gib: true,
+  split: true,
   difficulty: "medium",
 };
 
@@ -159,11 +160,14 @@ describe("the auto-driver", () => {
       pos: { x: drive.car.pos.x + 400, y: drive.car.pos.y },
       vel: { x: 0, y: 0 },
       mode: "afoot",
+      kind: "walker",
+      bark: -1,
       variant: 0,
       phase: 0,
       z: 0,
       vz: 0,
       counted: false,
+      crushed: false,
     });
     const wheel = driveDriverInput(driver, drive).wheel;
     expect(Math.abs(wheel)).toBeGreaterThan(0);

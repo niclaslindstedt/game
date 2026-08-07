@@ -106,6 +106,7 @@ function driveOne(difficulty, seed) {
     to: home ? "garage" : "goodco_hq",
     difficulty,
     gib: true,
+    split: true,
     ...(course === DRIVE.coursePx ? {} : { coursePx: course }),
   };
   const drive = createDrive(params);

@@ -163,11 +163,16 @@ export function spawnCrowd(state: DriveState): void {
       },
       vel: { x: 0, y: 0 },
       mode: "afoot",
+      kind: "walker",
       variant: Math.floor(rng() * CROWD_VARIANTS) % CROWD_VARIANTS,
       phase: rng() * Math.PI * 2,
       z: 0,
       vz: 0,
       counted: false,
+      crushed: false,
+      // Nobody on their way somewhere has anything to say about it — the road's
+      // only voices are THE GLUED's (`blockade.ts`).
+      bark: -1,
     });
   }
 }
@@ -190,6 +195,13 @@ export function stepCrowd(state: DriveState, dt: number): void {
       stepTumble(ped, dt);
       continue;
     }
+    // THE GLUED DO NOT MOVE, and that is the whole of them (see
+    // `PedestrianKind`). No wander, no lunge, no flinch as the car arrives —
+    // they sat down on purpose and their hands are in the resin. It is also
+    // what makes the set piece READ: everything else on this road drifts, so a
+    // formation that is perfectly still is legible as a decision from a screen
+    // away.
+    if (ped.kind === "glued") continue;
     const ahead = (ped.pos.x - car.pos.x) * dir;
     const gap = Math.hypot(ped.pos.x - car.pos.x, ped.pos.y - car.pos.y);
     if (gap < DRIVE.noticePx && ahead > 0) {
@@ -219,9 +231,27 @@ export function stepCrowd(state: DriveState, dt: number): void {
   }
   // Forget what is well behind the car — including the bodies, which is its own
   // small mercy: the hero never has to drive past his own morning.
-  state.pedestrians = state.pedestrians.filter(
-    (ped) => (ped.pos.x - car.pos.x) * dir > -DRIVE.despawnBehindPx,
-  );
+  //
+  // EXCEPT THE GLUED, WHO ARE STILL THERE. They are a SET PIECE rather than a
+  // stream, and forgetting them at the crowd's own reach told a lie about it:
+  // the wagon physically reaches four to six of the twenty, but the marks it
+  // leaves are the app's and persist for the whole leg, so a stretch of road
+  // holding fifteen people who are perfectly fine and a great deal of somebody
+  // else was drawn as gore with nobody in it. Anyone looking back — a player
+  // glancing in the mirror, a reviewer in the effects gallery — read a massacre
+  // of the lot.
+  //
+  // So they are kept for as long as their own blood is (`MARK` range in
+  // drive-gore.ts is the whole visible road), which is also the honest answer
+  // in fiction: everybody else out here is walking somewhere and is genuinely
+  // gone a second later. These people are not going anywhere. That is the whole
+  // of what they are.
+  state.pedestrians = state.pedestrians.filter((ped) => {
+    const behind = (ped.pos.x - car.pos.x) * dir;
+    return ped.kind === "glued"
+      ? behind > -DRIVE.blockade.rememberPx
+      : behind > -DRIVE.despawnBehindPx;
+  });
 }
 
 /** A struck body that did NOT come apart (the gore-off path): it flies, lands,

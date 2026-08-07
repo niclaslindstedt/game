@@ -1,0 +1,29 @@
+name: gib_road_paste_1
+family: effects
+size: [16, 11]
+plane: floor
+description: >
+  A whole person pressed into the road — the same mark as its smaller sibling,
+  at the size a body makes rather than a half of one.
+subject:
+  kind: ground decal
+  build: a wide flattened mass with a long axis, wet red through its middle, midtone spread either side, clotted and ragged at the rim, two chips of bone and a scrap of dark cloth showing through
+  flavor: the mark a body that was never taken in two leaves once the wheels have finished with it — bigger, longer, and unmistakably one person rather than a piece of one
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  b: "#e8e0c8" # bone
+  k: "#3a3444" # a shred of cloth
+grid: |
+  .....dd.........
+  ...ddrrdd...d...
+  ..ddrrrrddd..i..
+  .ddrrrbrrrddi.i.
+  ddrrrrrrrrrddiid
+  drrrrrbrrrrdkiid
+  .drrrrrrrrrddi.i
+  ..ddrrrrrrddii..
+  .d.ddrrkrddi.i..
+  ....ddiiid...i..
+  .....dii........

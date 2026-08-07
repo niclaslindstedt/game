@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# ONE OF THE GLUED — see glued_cross_legged.yaml for the naming rule and the
+# construction these all share.
+name: glued_hands_down
+family: earth
+size: [16, 16]
+description: >
+  A demonstrator sitting in the road in a hi-vis orange jacket with both arms
+  straight out and both palms set into the resin.
+subject:
+  kind: demonstrator glued to the road
+  build: a person seated square to the camera with both arms straight out to the sides, hands flat on the tarmac well wide of the hips — the widest silhouette in the formation
+  attire: a hi-vis orange jacket with a darker band across it, over dark trousers
+  features: blonde hair, two dark eyes, both hands set into the road at the full stretch of the arms
+  accent: the orange, which is the one colour on this road that means STOP
+  flavor: the hands are the whole argument — they are not holding on, they are stuck, and everyone involved knows it
+  pose: seated, arms straight out, palms down
+palette:
+  O: "#1a1c2c" # outline
+  H: "#d8c07a" # blonde hair
+  P: "#e8b891" # skin
+  K: "#e8b891" # hands
+  J: "#d98a3a" # hi-vis orange jacket
+  S: "#a8672a" # the jacket's darker band
+  T: "#3a3444" # dark trousers
+  B: "#241f2c" # shoes
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OHPPPPHO....
+  ....OPOPPOPO....
+  ...OJJJJJJJJO...
+  .OOJJJJSSJJJJOO.
+  OKKOJJJJJJJJOKKO
+  OOOOJJJJJJJJOOOO
+  ...OTTTTTTTTO...
+  ..OBBTTTTTTBBO..
+  ................
+  ................

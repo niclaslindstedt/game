@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# ONE OF THE GLUED — see glued_cross_legged.yaml.
+name: glued_arms_up
+family: earth
+size: [16, 16]
+description: >
+  A demonstrator sitting in the road with both arms held straight up — the one
+  silhouette in the formation that reads from a screen away.
+subject:
+  kind: demonstrator glued to the road
+  build: a person seated square to the camera with both arms held straight up above the head, turning a low wide shape into a tall narrow one
+  attire: a dark red jacket over dark trousers
+  features: long brown hair either side of the face, two dark eyes, both hands open at the top of the reach
+  accent: the two raised arms, which are what makes the formation read as PEOPLE from a distance rather than as a stripe across the road
+  flavor: whether the arms are a cheer or a plea depends entirely on how far away the car still is
+  pose: seated, both arms raised
+palette:
+  O: "#1a1c2c" # outline
+  H: "#6b4a35" # long brown hair
+  P: "#f0cbaa" # skin
+  R: "#b8443a" # dark red jacket
+  S: "#8e3029" # the jacket's shadow side
+  T: "#3a3444" # dark trousers
+  B: "#241f2c" # shoes
+grid: |
+  ................
+  ................
+  ................
+  ..OPO......OPO..
+  ..OPO......OPO..
+  ..OPO.OHHHHO.OPO
+  ..OPO.OHPPHO.OPO
+  ..OPO.OPOPPO.OPO
+  ..OPOOORRRROOOPO
+  ...OORRRSSRROO..
+  ....ORRRRRRRRO..
+  ....ORRRRRRRRO..
+  ...OTTTTTTTTTTO.
+  ...OBBTTTTTTBBO.
+  ................
+  ................

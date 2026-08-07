@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# ONE OF THE GLUED — a demonstrator sitting in the carriageway with their hands
+# in the resin. Named for the ROLE and never for any real campaign, group or
+# person (docs/naming.md): there has been somebody sitting in a road since there
+# have been roads.
+#
+# BUILT ON THE WALKERS' OWN HEAD, deliberately — the same hair band, the same
+# face row with the eyes punched out of it in outline, the same one-pixel rim.
+# A seated body that did not share the crowd's construction read as a different
+# KIND of object beside them (the first cut was a symmetrical flat trapezoid
+# with a skin rectangle on top, which is a traffic cone), and the whole point of
+# these people is that they are the same people.
+name: glued_cross_legged
+family: earth
+size: [16, 16]
+description: >
+  A demonstrator sitting cross-legged in the middle of the road in a green
+  jacket, hands resting on their knees.
+subject:
+  kind: demonstrator glued to the road
+  build: a person seated cross-legged and square to the camera, about two thirds the height of a standing body, the shoulders wider than the head
+  attire: a green outdoor jacket with a darker panel down its front, over dark trousers
+  features: brown hair, two dark eyes, bare hands resting on the knees, shoes tucked in at the ends of the crossed shins
+  accent: the green of the jacket against the tarmac
+  flavor: they are right about the road and right about the cars, and they are sitting in front of the one man on it who is not listening to anything
+  pose: seated cross-legged, still
+palette:
+  O: "#1a1c2c" # outline
+  H: "#6b4a35" # brown hair
+  P: "#f0cbaa" # skin
+  K: "#f0cbaa" # hands
+  G: "#4f8f4a" # green jacket
+  S: "#3d7038" # the jacket's darker front panel
+  T: "#3a3444" # dark trousers
+  B: "#241f2c" # shoes
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OGGGGGGGGO...
+  ..OKOGGSSGGOKO..
+  ..OKOGGSSGGOKO..
+  ...OGGGGGGGGO...
+  ..OTTTTTTTTTTO..
+  .OBBTTTTTTTTBBO.
+  ................
+  ................

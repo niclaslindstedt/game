@@ -61,6 +61,7 @@ import {
   shakeCamera,
   stepDriveFx,
 } from "../drive-screen/drive-fx.ts";
+import { clearDriveGore, createDriveGore } from "../drive-screen/drive-gore.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -118,11 +119,13 @@ export function runDriveExhibit(deps: {
     // gore exhibit in it does: what a body coming apart at 120 looks like is
     // half of what this shelf is for.
     gib: exhibit.gib ?? true,
+    split: exhibit.split ?? exhibit.gib ?? true,
   };
   const showMs = exhibit.showMs ?? DEFAULT_SHOW_MS;
 
   let bursts: Burst[] = [];
   const fx = createDriveFx();
+  const gore = createDriveGore();
   const engine = createEngineNote();
   /**
    * Where the car was when this take's collision landed, or null while the take
@@ -145,6 +148,7 @@ export function runDriveExhibit(deps: {
     exhibit.road?.(drive);
     bursts = [];
     clearDriveFx(fx);
+    clearDriveGore(gore);
     engine.dueMs = 0;
     engine.gear = 0;
     holdAtX = null;
@@ -196,7 +200,7 @@ export function runDriveExhibit(deps: {
       while (owedMs >= STEP_MS) {
         owedMs -= STEP_MS;
         stepDrive(drive, STEP_MS, input);
-        drainDrive(drive, bursts, fx);
+        drainDrive(drive, bursts, fx, gore);
         // The moment this exhibit's own collision lands, the camera stops here.
         // Latched off the car's position rather than the event's, so the shift
         // below is exactly "how far the car has come since" and the shipped
@@ -251,7 +255,17 @@ export function runDriveExhibit(deps: {
       // EVERY CLOCK HANDED DOWN IS THE DRIVE'S, including the walk cycle's:
       // the wall clock would leave the crowd striding on through a show being
       // watched at an eighth speed.
-      drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, drive.ms);
+      drawDrive(
+        ctx,
+        drive,
+        camera,
+        assets.sprites,
+        viewW,
+        viewH,
+        drive.ms,
+        gore,
+        assets.font,
+      );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
       drawDriveFx(ctx, fx, camera, drive.ms, viewW, viewH, drive.car.pos);
     },

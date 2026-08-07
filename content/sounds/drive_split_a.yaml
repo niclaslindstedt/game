@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_split_a
+description: >-
+  A bumper going THROUGH somebody rather than merely into them — the sound
+  the heavy body bank cannot make on its own. Three layers in the order the
+  event happens: a bandpass tear that rips upward as the steel parts the
+  body, a hard dry snap of bone under it, and a low wet slump as what is
+  left of them arrives on the tarmac. Louder than the thud it plays over,
+  and it has to be: the two fire on the same tick and this is the one
+  carrying the news.
+voices:
+  - call: noise
+    durationMs: 130
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 1250
+  - call: tone
+    type: square
+    from: 300
+    to: 88
+    durationMs: 70
+    volume: 0.038
+    detuneCents: 22
+  - call: noise
+    durationMs: 180
+    volume: 0.03
+    delayMs: 70
+    filter:
+      type: lowpass
+      frequency: 340
+    echo: 0.12

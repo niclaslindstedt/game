@@ -1,0 +1,25 @@
+name: gib_spine
+family: effects
+size: [5, 10]
+description: >
+  A length of spine, vertebrae and all — the one piece of a person only a car
+  ever gets out whole.
+subject:
+  kind: gore piece
+  build: a vertical column of pale vertebrae stacked with dark gaps between them, the bone bright at the top and clotted over toward the bottom, blood clinging down both sides
+  flavor: something that was on the INSIDE, like every gore piece in the game — and a road-sized one, because a blade takes a body apart across and a bumper takes it apart along
+palette:
+  b: "#e8e0c8" # bone
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .bbd.
+  dbbbd
+  .dbd.
+  dbbbd
+  .dbd.
+  dbbbi
+  .dbd.
+  ibbid
+  .ibi.
+  ..i..

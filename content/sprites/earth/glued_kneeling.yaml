@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# ONE OF THE GLUED — see glued_cross_legged.yaml.
+name: glued_kneeling
+family: earth
+size: [16, 16]
+description: >
+  A demonstrator kneeling upright in the carriageway in a mustard coat, arms
+  folded across their chest.
+subject:
+  kind: demonstrator glued to the road
+  build: a person kneeling upright — the tallest of the seated postures, standing a head above the ones sitting either side of them
+  attire: a mustard-yellow coat over dark trousers
+  features: black hair, two dark eyes, arms folded high across the chest with the bare forearms showing
+  accent: the mustard coat
+  flavor: the one of them not touching the road at all, and not going anywhere either
+  pose: kneeling upright, arms folded, chin level
+palette:
+  O: "#1a1c2c" # outline
+  H: "#2c2536" # black hair
+  P: "#c68a5e" # skin
+  K: "#c68a5e" # bare forearms
+  M: "#c8a340" # mustard coat
+  T: "#4a4235" # dark trousers
+  B: "#241f2c" # shoes
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ....OHHHHHHO....
+  ....OPPPPPPO....
+  ....OPOPPOPO....
+  ...OMMMMMMMMO...
+  ..OMMMMMMMMMMO..
+  ..OMKKPPPPKKMO..
+  ..OMMMMMMMMMMO..
+  ...OTTTTTTTTO...
+  ..OTTTTTTTTTTO..
+  ..OBBOOOOOOBBO..
+  ................
+  ................

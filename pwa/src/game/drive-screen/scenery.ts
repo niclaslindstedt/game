@@ -72,6 +72,38 @@ export const CROWD_SPRITES: readonly (readonly [string, string])[] = [
 export const CROWD_FRAME_MS = 220;
 
 /**
+ * THE GLUED — the eight postures the blockade is built from.
+ *
+ * ONE FRAME EACH, and that is the point of them rather than an economy. Every
+ * other body on this road has a walk cycle because every other body on this road
+ * is going somewhere; these people sat down, put their hands in the resin, and
+ * are not going to move again. A formation that breathed would undo the one
+ * thing the set piece is: from a screen away it is the only perfectly still
+ * thing on a road where everything drifts, which is what makes it read as a
+ * DECISION rather than as more crowd.
+ *
+ * The variety is in the POSTURE, for the same reason the walkers' is in their
+ * silhouettes: cross-legged, palms down, kneeling, on their back, face down, a
+ * board on a stick, both arms up, and one hunched in a hood who has plainly been
+ * out here for hours. Sitting and lying tell each other apart across four lanes
+ * at speed; two different jackets do not.
+ *
+ * The order is `DrivePedestrian.variant`'s for a body of `kind: "glued"`, and
+ * its length must match the engine's `GLUED_VARIANTS`
+ * (src/game/drive/blockade.ts).
+ */
+export const GLUED_SPRITES: readonly string[] = [
+  "glued_cross_legged",
+  "glued_hands_down",
+  "glued_kneeling",
+  "glued_on_back",
+  "glued_face_down",
+  "glued_placard",
+  "glued_arms_up",
+  "glued_slumped",
+];
+
+/**
  * THE TRAFFIC — ten cars, in the order `DriveTraffic.variant` indexes them.
  * The same table dresses the GOODCO car park, which is why they live in the
  * `earth` family rather than under the road: they are the town's cars, and the

@@ -1,0 +1,22 @@
+name: gib_slab_0
+family: effects
+size: [8, 6]
+description: >
+  A slab of meat torn off whole — the size a car takes, not the size a blade
+  does.
+subject:
+  kind: gore piece
+  build: a ragged slab of muscle two or three times the size of the burst gibs, wet red along its lit upper edge, a seam of pale yellow fat through its middle, clotted dark underneath
+  flavor: the lump a bumper tears off on the way past — the run's own gibs are what a swing leaves and these are what four metres of steel at speed does, so they are bigger and they are cruder
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  y: "#e8c49a" # fat
+grid: |
+  ..dry...
+  .drryydd
+  drrrydii
+  drrddiid
+  .ddiid..
+  ..dii...

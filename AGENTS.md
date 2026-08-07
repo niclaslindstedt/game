@@ -109,6 +109,29 @@ the embedded site and is the ONLY correct target for a store build, and the
   the PR-only checks against it, nobody is asked to look at it, and the work
   sits done and unmergeable until somebody notices. If a PR is already open
   for the branch, the push updates it and there is nothing more to do.
+- **RUN EVERY CHECK CI RUNS, AND RUN THE CHEAP ONES BEFORE THE COMMIT.**
+  `.github/workflows/ci.yml` is the list, and there is nothing on it a local
+  clone cannot run. The split is by COST, not by importance:
+
+  | Before the commit is written (seconds)                                                   | Alongside the push (minutes)  |
+  | ---------------------------------------------------------------------------------------- | ----------------------------- |
+  | `make fmt`, then `make fmt-check`                                                        | `make test` (CI shards it 3×) |
+  | `make lint` (typecheck + the zero-warning linter)                                        | `make build`                  |
+  | `make actionlint` / `make shellcheck` — only if a workflow or a `.sh` was touched        |                               |
+  | the changeset call: a fragment under `.changes/unreleased/`, or the `no-changelog` label |                               |
+
+  **`make fmt` is the one that gets skipped, and it is the one that costs
+  nothing to run.** It is not a check that can be reasoned past: Prettier has
+  an opinion about some line nobody thought about, the `format` job runs
+  `fmt-check` on every push, and a red CI on whitespace burns a whole
+  round-trip and buries any real failure underneath it. It is also the only
+  check whose fix is GENERATED rather than authored, so there is no version of
+  "push and see" that is faster than just running it.
+
+  Pushing while the SLOW column runs is the whole point of the rule above.
+  Pushing while the FAST column has not run is how a branch goes red on
+  something the machine would have fixed in four seconds.
+
 - **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
   just `| tail`. A run that ends `1 failed` with the failure scrolled past is
   a run that has to be done again to learn anything, and the second run is

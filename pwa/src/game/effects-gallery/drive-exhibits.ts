@@ -30,7 +30,10 @@ import {
   courseLength,
   CROWD_VARIANTS,
   DRIVE,
+  GLUED_BARKS,
+  GLUED_VARIANTS,
   laneCenter,
+  roadEdges,
   TRAFFIC_VARIANTS,
   type DriveState,
 } from "@game/core";
@@ -39,10 +42,12 @@ import {
   BODY_SOUNDS,
   BREAKDOWN_SOUND,
   CRUNCH_SOUNDS,
+  DRAG_SOUND,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
   SHED_SOUND,
+  SPLIT_SOUNDS,
 } from "../drive-screen/drive-sounds.ts";
 import type { DriveExhibit } from "./exhibit-kit.ts";
 
@@ -141,12 +146,62 @@ function plantBody(
     },
     vel: { x: 0, y: 0 },
     mode: "afoot",
+    kind: "walker",
+    bark: -1,
     variant: variant % CROWD_VARIANTS,
     phase: 0,
     z: 0,
     vz: 0,
     counted: false,
+    crushed: false,
   });
+}
+
+/**
+ * A SMALL BLOCKADE, `ahead` px up the road — THE GLUED, laid across every lane
+ * exactly as `spawnBlockade` lays them, but planted in front of the bumper
+ * rather than at its place in the course.
+ *
+ * FEWER OF THEM THAN THE ROAD CARRIES, and deliberately: the shipped
+ * demonstration is twenty and takes the car three or four seconds to get
+ * through, which is a whole minigame rather than an exhibit. Three rows is
+ * enough to show the two things worth looking at — a wall that has no line
+ * through it, and what a wagon at 120 does to the front row of one.
+ */
+function plantBlockade(drive: DriveState, ahead: number, rows: number): void {
+  const dir = drive.params.direction;
+  const edges = roadEdges();
+  const span = edges.bottom - edges.top;
+  const perRow = Math.max(1, Math.floor(span / DRIVE.blockade.seatPitchPx));
+  let n = 0;
+  for (let row = 0; row < rows; row++) {
+    for (let seat = 0; seat < perRow; seat++) {
+      drive.pedestrians.push({
+        id: drive.nextId++,
+        pos: {
+          x: drive.car.pos.x + dir * (ahead + row * DRIVE.blockade.rowPitchPx),
+          y:
+            edges.top +
+            (span - (perRow - 1) * DRIVE.blockade.seatPitchPx) / 2 +
+            seat * DRIVE.blockade.seatPitchPx,
+        },
+        vel: { x: 0, y: 0 },
+        mode: "afoot",
+        kind: "glued",
+        variant: n % GLUED_VARIANTS,
+        phase: 0,
+        z: 0,
+        vz: 0,
+        counted: false,
+        crushed: false,
+        // Every third of them has something to say — the shipped formation's
+        // own share (`DRIVE.blockade.voices` over its count), so the exhibit
+        // shows the density of bubbles a player actually meets.
+        bark: n % 3 === 0 ? n % GLUED_BARKS : -1,
+      });
+      n++;
+    }
+  }
 }
 
 /** Another car, `ahead` px up the road at `y`, dawdling along at `pace` in the
@@ -234,8 +289,9 @@ export function driveExhibits(): DriveExhibit[] {
       kind: "drive",
       id: "drive-body-square",
       icon: "blood_burst_2",
-      label: "TAKEN SQUARE",
-      blurb: "A BODY MET DEAD ON AT 120 - THE HEAVY TAKE, AND EVERYTHING IN IT",
+      label: "TAKEN IN TWO",
+      blurb:
+        "MET DEAD ON AT 120 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -258,6 +314,78 @@ export function driveExhibits(): DriveExhibit[] {
         silence(drive);
         const speed = openAt(drive);
         plantBody(drive, leadPx(speed) + 34, 0, 3);
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-drag",
+      icon: "gib_road_smear_2",
+      label: "CARRIED",
+      blurb: "WHAT GOES UNDER STAYS UNDER - A BODY DRAGGED, AND THE ROAD AFTER",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "body",
+        "drag",
+        "smear",
+        "blood",
+        "trail",
+        "tyre",
+      ],
+      // Long, because the SUBJECT is long: a piece caught at the top end rides
+      // for the better part of a second and a half and paints a screen and a
+      // half of tarmac doing it (`DRIVE.gore.dragMs`).
+      showMs: 3400,
+      shows: "bodyCaught",
+      bank: [DRAG_SOUND],
+      // IT HOLDS LIKE EVERYTHING ELSE ON THIS SHELF, and following the car was
+      // tried first and was wrong. The subject travels WITH the wagon, so
+      // following it sounded right — but what the exhibit is actually of is the
+      // TARMAC BEHIND, and the camera rides only 115 world px behind the car, so
+      // a followed take put the entire trail off the left edge and showed an
+      // empty road with a clean car on it. Held at the collision, the streak
+      // unrolls away from a fixed point and every pixel of it stays in frame.
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        plantBody(drive, leadPx(speed) + 34, 0, 9);
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-blockade",
+      icon: "glued_arms_up",
+      label: "THE GLUED",
+      blurb: "A ROAD WITH NO LINE THROUGH IT - AND NO TIME TO FIND ONE",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "protest",
+        "blockade",
+        "glued",
+        "climate",
+        "sit",
+        "placard",
+      ],
+      // Long enough to READ them before he reaches them, which is the whole
+      // beat: the bubbles fade up as the car closes (`READ_PX`, placards.ts) and
+      // then there is nothing at all the player can do with what they just read.
+      showMs: 3600,
+      shows: "bodySplit",
+      bank: SPLIT_SOUNDS,
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // Planted further out than anything else on this shelf, and that is the
+        // exhibit: the crowd arrives at the bumper in a couple of hundred
+        // milliseconds, and a wall you can see coming for a second and a half is
+        // a different feeling entirely. Three rows, because twenty is a minigame
+        // rather than a display case (`plantBlockade`).
+        plantBlockade(drive, leadPx(speed) * 2.4, 3);
       },
     },
     {

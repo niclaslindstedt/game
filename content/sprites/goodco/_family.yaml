@@ -75,3 +75,13 @@ contrastExempt: [
     asphalt_1,
     road_dash,
   ]
+
+# THE BLOOD FILM's loose pixels are the whole point of it. It is a spatter over
+# paintwork, MASKED to whichever panel it is laid on — beads flung clear of the
+# wash are what stop an even film reading as a flat red tint, and the sparse
+# rung is nearly all beads by design. Same authored-speckle case as the blood
+# family's own burst and coat art (content/sprites/effects/_family.yaml).
+speckleExempt:
+  - car_gore_0
+  - car_gore_1
+  - car_gore_2

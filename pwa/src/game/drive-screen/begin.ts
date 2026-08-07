@@ -82,11 +82,14 @@ export function driveParamsFor(
     to,
     difficulty,
     ...(attract ? { coursePx: DRIVE.attractCoursePx } : {}),
-    // THE GORE GATE, ASKED ONCE AND CARRIED. Both halves have to say yes: the
-    // family switch (people bleed) and the switch for a body BURST rather than
-    // cut. Fixed for the whole road on purpose — a switch flipped mid-drive
-    // would leave half the tarmac gibbed and half of it in the gutter.
+    // THE GORE GATE, ASKED ONCE AND CARRIED. The family switch (people bleed)
+    // has to say yes for either, and then each way a body can come apart
+    // answers for itself — the lumps torn off on the way past are GIBS, and the
+    // bumper going through somebody is a CLEAVE. Both fixed for the whole road
+    // on purpose: a switch flipped mid-drive would leave half the tarmac gibbed
+    // and half of it in the gutter.
     gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
+    split: goreAmount("blood") !== null && dismemberAllowed("cleave"),
   };
 }
 

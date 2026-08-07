@@ -1,0 +1,28 @@
+name: gib_road_paste_0
+family: effects
+size: [14, 10]
+plane: floor
+description: >
+  Half of somebody, pressed into the road by a wheel — flattened out of any
+  shape but with a fleck of bone and a shred of cloth still in it.
+subject:
+  kind: ground decal
+  build: a flattened mass of a person spread wide and low, wet red through the middle where the wheel went over, midtone spreading out of it, clotted at the ragged edges, one pale chip of bone and one dark scrap of cloth caught in the mess
+  flavor: what a piece that has been RUN OVER becomes — the moment it stops being a shape with a silhouette and becomes a mark on the road, which is the whole difference between a body lying there and a body that was driven over
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  b: "#e8e0c8" # bone
+  k: "#3a3444" # a shred of cloth
+grid: |
+  ....dd........
+  ..ddrrdd..d...
+  .ddrrbrddd.i..
+  ddrrrrrrddii..
+  drrrrbrrddiid.
+  .drrrrrrrdki.i
+  ..ddrrrrddii..
+  .d.ddrkddi.i..
+  ....ddii......
+  .....di.......

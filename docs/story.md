@@ -110,6 +110,23 @@ nothing, mind how you go — and he says it to himself at the wheel, without
 slowing down, which is the only place a promise like that costs nothing. Then he
 drives through them at a hundred and twenty and never mentions it again.
 
+**THE GLUED.** Halfway along the leg the road is shut. Twenty people are sitting
+in the carriageway with their hands set into the resin — kerb to kerb, every
+lane, some cross-legged, some kneeling, some lying flat on their backs where
+nobody can carry them off by an elbow. A few hold boards up, and a few of them
+are saying so out loud: they have glued themselves to the tarmac for the
+climate, there are no cars on a dead planet, the road is closed, and they are
+sorry for the disruption. They are the only people on this road who are RIGHT,
+and they are the only ones who cannot get out of the way. The hero arrives at
+them at a hundred and twenty in a thirty-year-old estate with the brakes it left
+the factory with. He does not stop. He does not really slow. He never says a
+word about it, before or after — the arrival verdict has a line for the
+suspension and a line for the council's lighting and nothing at all for this —
+and the player watches a man who agrees with every word on those boards drive
+straight through the people holding them, because he is late for a job he hates
+and the car will not stop in time. Nobody in the scene gets to be the sensible
+one. That is the whole of it.
+
 He does his reflecting on the far side, standing beside the car with the engine
 ticking, and it is the last thing he says before he starts on the job he came
 for. It is never about the people. It is about the SUSPENSION, the CLOCK, the

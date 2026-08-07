@@ -1,0 +1,28 @@
+name: gib_tyre_print
+family: effects
+size: [10, 8]
+plane: floor
+description: >
+  A tread pattern printed in blood — one turn of a wheel that has just rolled
+  through somebody.
+subject:
+  kind: ground decal
+  build: three ribs running the length of the print, each broken into two-pixel blocks by transverse grooves, with clear empty grooves between the ribs; the top two ribs in the blood midtone and the last in clotted, so a print reads as drier at one end
+  flavor: >-
+    the one mark on this road that names its cause outright — a smear could be
+    anything being dragged, and a tread pattern could only be a car. It has to
+    read as a PATTERN rather than as a red block, which is what it was when the
+    grooves were one pixel wide: the empty rows are doing more work than the
+    filled ones
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  dd.dd.dd.d
+  dd.dd.dd.d
+  ..........
+  dd.dd.dd.d
+  dd.dd.dd.d
+  ..........
+  ii.ii.ii.i
+  ii.ii.ii.i

@@ -25,6 +25,7 @@ import {
   CAR,
   CAR_FIX,
   type CarDetachable,
+  type CarPanelId,
   type GameState,
   type Vehicle,
 } from "@game/core";
@@ -32,11 +33,20 @@ import {
 import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { glowSprite } from "./caches.ts";
+import { soaked } from "./hero-coat.ts";
+import type { CoatLayer } from "./soak-ladder.ts";
 import { drawWorldSprite } from "./plane.ts";
 import { seatX, seatY } from "./shared.ts";
 import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 import type { InView } from "./world.ts";
+
+/**
+ * HOW FAST THE TWO ROLL FRAMES MAY ALTERNATE (Hz) — the ceiling that stops a
+ * wheel at 120 mph strobing into a vibration. Fourteen is fast enough to read
+ * as a blur and slow enough to be a rate rather than an aliasing artefact.
+ */
+const WHEEL_SPIN_HZ = 14;
 
 /** The landmark kinds the assemblies replace — drawLandmarks skips these. */
 export const VEHICLE_LANDMARK_KINDS = new Set(["car", "rocket"]);
@@ -311,7 +321,7 @@ const STEER_GROW = 0.3;
  * assembly's screen space. */
 function drawSteeredWheel(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: ImageBitmap | HTMLCanvasElement,
   cx: number,
   top: number,
   steer: number,
@@ -353,7 +363,7 @@ const TILT_BAND = 8;
  */
 function drawShellLayer(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: ImageBitmap | HTMLCanvasElement,
   pos: { x: number; y: number },
   camera: Camera,
   rearDrop: number,
@@ -395,6 +405,17 @@ export function drawCarAssembly(
   sprites: Sprites,
   camera: Camera,
   timeMs: number,
+  /**
+   * HOW BLOODY EACH PANEL IS, as the film to lay over it
+   * (`drive-screen/car-soak.ts`). Omitted — every caller but the road — draws
+   * the wagon exactly as it always was: a garage bay has nothing to be bloody
+   * about, and a clean panel costs no composite even when a record is passed.
+   */
+  coat?: Partial<Record<CarPanelId, readonly CoatLayer[]>>,
+  /** …and what the TYRES are wearing, which is its own record because a wheel
+   * is not a panel: it picks blood up by rolling through it rather than by
+   * being hit, and it loses it again as the tread wears clean. */
+  wheels?: readonly CoatLayer[],
 ): void {
   // The shell's attitude: each corner sinks by its own spring AND whatever
   // its wheel no longer holds up, and the whole body pitches between the
@@ -420,7 +441,21 @@ export function drawCarAssembly(
   }
   // Two roll frames half a spoke apart; the angle comes from the
   // simulation, so a parked car never flickers.
-  const frame = Math.floor(car.wheelAngle / (Math.PI / 5)) % 2;
+  //
+  // AND THE ALTERNATION IS RATE-CAPPED, which matters at exactly one place in
+  // the game and matters a lot there. A spoke every π/5 is a readable roll at
+  // the walking pace a car does inside a run; on the ROAD the wheel turns at
+  // 125 rad/s, which is two hundred bucket changes a second — several per
+  // FRAME. Sampled at 60 Hz that is not a fast wheel, it is a coin toss: the
+  // two frames strobe at random and the wheels read as VIBRATING rather than
+  // turning, which is the one thing on a car doing 120 that must not look
+  // broken. So the arc a bucket covers grows with the speed until the
+  // alternation settles at `WHEEL_SPIN_HZ` — a fast, legible blur — while a
+  // parked or pottering car keeps the honest spoke-by-spoke roll it always had,
+  // and both are still driven by the SIMULATED angle rather than a clock.
+  const spinRate = Math.abs(car.speed) / CAR.wheelRadius;
+  const spinArc = Math.max(Math.PI / 5, spinRate / WHEEL_SPIN_HZ);
+  const frame = Math.floor(car.wheelAngle / spinArc) % 2;
   // Both axles inside the BODY's billboard — an axle is a column of the part
   // canvas, not a spot on the floor (see THE ASSEMBLY IS ONE BILLBOARD).
   billboard(ctx, car.pos.x, car.pos.y, camera.x, camera.y, () => {
@@ -431,12 +466,23 @@ export function drawCarAssembly(
       const sprite = spriteByName(sprites, wheelSprite(wheelState, frame));
       if (!sprite) return;
       const { cx, top } = wheelSeat(car, camera, i, sprite);
+      // A TYRE THAT HAS BEEN THROUGH SOMEBODY. The wheels are the one part of
+      // the car that is in it by definition, so they take the film too — and
+      // they are the part the player watches, because they are the part that is
+      // moving. Masked to the wheel's own art like every other panel, so a flat
+      // tyre and a bent rim wear it correctly for free.
+      const wet =
+        wheels && wheels.length > 0
+          ? (soaked(`car:wheel${i}`, sprites, wheels, sprite, (g) =>
+              g.drawImage(sprite, 0, 0),
+            ) ?? sprite)
+          : sprite;
       // The FRONT axle (index 1) is the one on the rack, and it is warped only
       // once the crank is worth a pixel; everything else is a plain blit.
       if (i === 1 && Math.abs(car.steer) > STEER_MIN) {
-        drawSteeredWheel(ctx, sprite, cx, top, car.steer, car.faceLeft);
+        drawSteeredWheel(ctx, wet, cx, top, car.steer, car.faceLeft);
       } else {
-        ctx.drawImage(sprite, cx - Math.round(sprite.width / 2), top);
+        ctx.drawImage(wet, cx - Math.round(wet.width / 2), top);
       }
     });
   });
@@ -450,9 +496,23 @@ export function drawCarAssembly(
       : { name: `car_${panel}_${rung}`, dy: 0 };
     const sprite = spriteByName(sprites, pick.name);
     if (sprite) {
+      // THE BLOOD THE PANEL HAS PICKED UP, masked to the panel's own art and
+      // multiplied into it — the hero's coat, on a car (`soaked`, and
+      // `drive-screen/car-soak.ts` for what fills the record). One film covers
+      // all seven panels at every damage rung because each one trims it to its
+      // own silhouette, so a bent bumper's blood follows the bend for free. A
+      // clean panel skips the composite entirely and is the plain blit it
+      // always was.
+      const film = coat?.[panel];
+      const layer =
+        film && film.length > 0
+          ? (soaked(`car:${panel}`, sprites, film, sprite, (g) =>
+              g.drawImage(sprite, 0, 0),
+            ) ?? sprite)
+          : sprite;
       drawShellLayer(
         ctx,
-        sprite,
+        layer,
         car.pos,
         camera,
         rearDrop + pick.dy,

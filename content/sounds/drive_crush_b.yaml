@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crush_b
+description: >-
+  The second crush take — the one where something in there was hard. Same
+  squelch, with a short square pop through it for a rib or a skull going
+  under the tread.
+voices:
+  - call: noise
+    durationMs: 80
+    volume: 0.024
+    filter:
+      type: lowpass
+      frequency: 320
+  - call: tone
+    type: square
+    from: 210
+    to: 96
+    durationMs: 36
+    volume: 0.02
+    detuneCents: 14
+  - call: noise
+    durationMs: 46
+    volume: 0.011
+    delayMs: 46
+    filter:
+      type: bandpass
+      frequency: 1900
