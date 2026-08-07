@@ -187,9 +187,10 @@ export function autoStatGainsOn(): boolean {
 // The CAR is not round. It is a long, low side-profile assembly that nothing
 // mirrors and nothing rotates, so the ground it visibly covers turns with the
 // CAMERA and with nothing else — and its blockers have to lie under it
-// (`vehicleFootprint`, vehicles.ts). The engine already carries the other half
-// of that same fact: `CAR.maxYaw` stops the nose short of the beam because the
-// art has one profile.
+// (`vehicleFootprint`, vehicles.ts). The engine carries the other half of that
+// same fact: a car's `heading` is the axis it was parked on and never moves,
+// because the art has one profile and the wheel moves the body rather than the
+// nose (`applyCarWheel`).
 //
 // It ships at 0 — square-on, where the bearing below is +x and every sum that
 // reads it is the identity it always was.

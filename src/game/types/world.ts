@@ -659,15 +659,23 @@ export type CarVehicle = VehicleBase & {
    * measures departure from here (on maps with no garage door). */
   home: Vec2;
   /**
-   * The nose's bearing (radians, world frame: 0 = +x, π/2 = +y/down-screen).
-   * The car MOVES along this — W throttles down it, S backs up it, A/D turn
-   * it while rolling — while the renderer keeps the side-profile art and
-   * reads only its sign (`faceLeft`). `speed` is SIGNED against it: positive
-   * rolls nose-first, negative backs up.
+   * THE AXIS THE BODY WAS PARKED ON (radians, world frame: 0 = +x, π = -x), and
+   * it never changes after the car is minted (`createCar`). The pedals push the
+   * car along it — `speed` is SIGNED against it, positive nose-first, negative
+   * backing up — and the wheel puts the body ACROSS it, which is the world's
+   * own y (`applyCarWheel`).
+   *
+   * IT IS ONE OF TWO VALUES, DEAD SQUARE, and never anything between. Nothing
+   * in the game draws a heading: the car is one side-profile assembly that
+   * nothing mirrors or rotates (render/vehicles.ts, render/night.ts), so a nose
+   * free to swing was an invisible integrator whose only observable effect was
+   * to keep steering the car after the player let go. It used to swing, inside
+   * a yaw stop, and taking it out is what made the bay and the road the same
+   * car to drive. `faceLeft` carries the same fact for the renderer.
    */
   heading: number;
-  /** True once the drive-out has been booked (`carDeparted` fired) — the
-   * latch, so the event never fires twice while the app fades out. */
+  /** True once the departure has been booked (`carDeparted` fired) — the
+   * latch, so the event never fires twice while the app dims out. */
   departed: boolean;
   /** Ms until the next `carEngine` rumble grain (only ticks with a driver
    * seated) — the running engine's sound cadence, stampede-rumble style. */
@@ -692,13 +700,14 @@ export type CarVehicle = VehicleBase & {
    * THE RACK — how far the FRONT wheels stand off the body's centreline
    * (radians, signed like `heading`: positive cranks the nose toward +y).
    *
-   * The driver's crank rather than the car's turn: it winds on and unwinds at
-   * a finite rate, stops dead at the lock (`CAR.steerLock`, a road car's
-   * third of a right angle), and self-centres when the wheel is let go. The
-   * nose then comes round as far as the wheels are cranked AND the car rolls,
-   * so a standing car's wheels turn while the car itself does not — which is
-   * exactly what a driver sitting in a parked car sees, and what the renderer
-   * warps the front wheel sprite by (`render/vehicles.ts`).
+   * IT IS THE PICTURE OF THE STEERING, NEVER THE STEERING ITSELF. The wheel
+   * moves the BODY across (`applyCarWheel`, src/game/vehicles.ts — the road's
+   * own steering, shared with it); this winds on and unwinds at a finite rate,
+   * stops dead at the lock (`CAR.steerLock`, a road car's third of a right
+   * angle), and self-centres when the wheel is let go, purely so the renderer
+   * has something to warp the front wheel sprite by (`render/vehicles.ts`). A
+   * standing car's wheels therefore turn while the car itself does not — which
+   * is exactly what a driver sitting in a parked car sees.
    */
   steer: number;
   /** Spring compression per axle, [rear, front], world px downward. */

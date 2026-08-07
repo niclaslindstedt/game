@@ -6188,6 +6188,79 @@ html.app-locked body {
   z-index: 300;
 }
 
+/* THE ROAD'S TITLE CARD (`DriveIntro.tsx`) — "ROAD TO GOODCO" over the black
+   the garage's dim handed across, and then the road.
+
+   IT OPENS AT FULL BLACK AND LIFTS, which is the whole trick: the departure
+   curtain behind this is already opaque when the drive mounts, so a card that
+   faded IN would fade in over black and read as two separate transitions. This
+   one simply IS that black, keeps it while the type arrives, and takes it away
+   in one move — so the hub, the card and the first frame of road are one
+   continuous handover rather than three.
+
+   Inside the drive screen's own stacking band, over the canvas and the dash. */
+.drive-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #05060a;
+  z-index: 40;
+  /* The card is a hold — the road behind it is not ticking — so a thumb that
+     lands on it means "get on with it" and nothing else. */
+  touch-action: none;
+  animation: drive-intro-lift 1900ms ease-in forwards;
+}
+
+/* The type: a beat of black, then it arrives. Held on the CARD rather than on
+   the layer so the words can come up while the backdrop stays solid — a
+   backdrop that faded with them would show a moving road under a half-drawn
+   title. */
+.drive-intro-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  text-align: center;
+  animation: drive-intro-type 700ms ease-out both;
+}
+
+@keyframes drive-intro-type {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Opaque for three quarters of the hold, then out — so the road is already
+   moving under the tail of it rather than starting on a clean cut. The
+   percentages are `DRIVE_INTRO_MS`'s own budget; move one and move the other. */
+@keyframes drive-intro-lift {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* A player who has said they would rather not be moved gets the card without
+   the movement: the words are the point and the rise is decoration. The LIFT is
+   kept — it is a fade between two pictures rather than motion, and cutting it
+   would put a hard black frame in the middle of the handover. */
+@media (prefers-reduced-motion: reduce) {
+  .drive-intro-card {
+    animation: none;
+  }
+}
+
 /* HIS VOICE, BESIDE THE DASHBOARD RATHER THAN ON TOP OF IT. The shipped
    dialogue window is centred at the bottom of the screen, which is exactly
    where the dials now live — so on the road it gives up the centring and takes

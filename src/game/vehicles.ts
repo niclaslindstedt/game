@@ -7,12 +7,13 @@
 //   - the car's WHEELS roll from `speed` (angle = distance / wheel radius),
 //     so the renderer picks a spin frame instead of animating on a timer —
 //     a car pushed twice as fast spins twice as fast, for free;
-//   - the car's FRONT WHEELS also STEER: `steer` is the rack's own angle,
-//     wound on at a finite rate and stopped at a road car's lock, and the
-//     nose comes round in proportion to it and to the roll. The nose stops
-//     at the beam (`maxYaw`) because the body is one side-profile assembly
-//     that nothing mirrors — the car steers up and down the screen and backs
-//     up, but it never comes about;
+//   - the car's WHEEL puts the body ACROSS its own line, this tick and only
+//     this tick (`applyCarWheel` — the driving minigame's own steering, shared
+//     with it verbatim), and the FRONT WHEELS are the picture of it: `steer`
+//     is the rack's own angle, wound on at a finite rate, stopped at a road
+//     car's lock and self-centring the moment the wheel is let go. The body
+//     never comes about, because it is one side-profile assembly that nothing
+//     mirrors — `heading` is the axis it was parked on and never moves;
 //   - the car's SUSPENSION is two damped springs, one per axle, integrated
 //     every tick. Parked they settle to rest; `nudgeCar` gives an axle a
 //     shove (the minigame's potholes) and the body bobs the way a
@@ -45,12 +46,11 @@ import { billboardBearing } from "./flags.ts";
 import { killMerchant } from "./merchant.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
-import { anyZoneContains, zonesBounds, type Zone } from "./zones.ts";
+import { anyZoneContains } from "./zones.ts";
 import {
   CAR_FIX,
   type CarDetachable,
   type CarVehicle,
-  type DepartureState,
   type GameInput,
   type GameState,
   type Player,
@@ -118,28 +118,29 @@ export const CAR = {
   driveBrake: 200,
   /** Reverse tops out slower — nobody backs out of a garage at road speed. */
   reverseSpeed: 70,
-  /** The wheel: how fast the nose swings at full authority (rad/s), and the
-   * ground speed (px/s) at which steering GAINS that full authority — a car
-   * only turns as far as it rolls, so a standing car's wheel does nothing
-   * and a creeping one comes around slowly. */
-  turnRate: 3,
+  /** The ground speed (px/s) at which the wheel GAINS its full authority — a
+   * car only crosses as far as it rolls, so a standing car's wheel moves
+   * nothing and a creeping one drifts across slowly. The minigame's own knob
+   * (`DRIVE.laneRefSpeedPx`) at the bay's much lower top end, so the two
+   * answer a thumb alike at the same fraction of their own top speed. */
   turnRefSpeed: 40,
   /**
-   * THE WHEEL'S IMMEDIATE HALF — how far the body slides ACROSS its own line
-   * per second at full wheel and full authority (px/s), before the nose has
-   * come round at all. Scaled by `turnRefSpeed` like the swing is, so a parked
-   * car still cannot be crabbed sideways.
+   * THE WHEEL, WHOLE — how far the body slides ACROSS its own line per second
+   * at full wheel and full authority (px/s). Scaled by `turnRefSpeed`, so a
+   * parked car still cannot be crabbed sideways.
    *
    * IT IS THE DRIVING MINIGAME'S OWN LATERAL (`DRIVE.lateralPx`,
-   * src/game/drive/config.ts), and it is here for the reason the minigame
-   * feels better to drive than the garage did: on the road the wheel MOVES THE
-   * CAR, this tick, and the rack and the nose are the picture that catches up.
-   * In the bay the wheel only ever wound a rack, which turned a nose, which
-   * eventually pointed the speed somewhere else — two integrators of dead time
-   * between the thumb and the body, which reads as a car that is thinking
-   * about it. A car's length per second: enough that the body visibly commits
-   * the instant the wheel goes over, small enough that it reads as the nose
-   * biting rather than as crabbing.
+   * src/game/drive/config.ts) AND, LIKE THE ROAD'S, IT IS THE WHOLE OF THE
+   * STEERING. The wheel moves the car, this tick, and lets go of it the tick
+   * the thumb does — nothing is wound on, banked or carried into the next
+   * second. The bay used to spend the wheel on a NOSE as well: an invisible
+   * heading (nothing anywhere draws it — render/vehicles.ts) that integrated
+   * while the wheel was held and then kept pointing the speed wherever it had
+   * got to, so a car went on steering itself long after W was let go. That is
+   * the whole of what made the bay feel sticky beside the road, and it is
+   * gone. A car's length per second: enough that the body visibly commits the
+   * instant the wheel goes over, small enough that it reads as the car biting
+   * rather than as crabbing.
    */
   lateralPx: 48,
   /** THE LOCK — how far the front wheels may ever be cranked off the body's
@@ -152,19 +153,6 @@ export const CAR = {
    * is let go. Finite on purpose: the crank is the thing the renderer draws,
    * and a wheel that snapped between angles would strobe rather than steer. */
   steerRate: 3,
-  /**
-   * THE YAW STOP — how far off its own facing axis the nose may ever come
-   * (rad), measured from the side the car was parked on.
-   *
-   * The body is drawn from ONE side-profile assembly and is never mirrored,
-   * so a car free to come about drove away still facing the way it came —
-   * the sprite cannot turn around, so the car may not either. Just short of
-   * square: the nose swings all the way up and down the screen, which is the
-   * whole of steering left and right in a side view, and stops before the
-   * beam where a side-on car has no profile left to show at all. Getting back
-   * the other way is what REVERSE is for.
-   */
-  maxYaw: Math.PI * 0.48,
   /**
    * THE LEVER BETWEEN THE SEATS — what the handbrake sheds per second (px/s²),
    * and it is the fastest way to stop this car by a wide margin.
@@ -243,46 +231,32 @@ export const CAR = {
 } as const;
 
 /**
- * THE DRIVE-OUT — the departure beat between a driven car reaching the level's
- * road out and the next level being built (see `GameState.departure`).
+ * THE DIM — the handover between a driven car touching the level's road out and
+ * whatever comes next (see `GameState.departure`).
  *
- * It exists because a cut is not a departure. The trip used to book the instant
- * the bumper crossed the garage door, and the frame after it the hero was
- * somewhere else entirely — the car never went anywhere, it was merely switched
- * off in its own driveway. So the road is where the level lets go, and letting
- * go takes a moment: the wheel comes out of the player's hands, the car drives
- * on down the tarmac, and the picture washes to black over it. The app paints
- * the wash off `ms`; everything else here is simulation.
+ * IT IS A FADE AND NOTHING ELSE, AND THAT IS THE WHOLE OF THE DESIGN. What sits
+ * on the far side of the garage's tarmac is the DRIVING MINIGAME — a road, the
+ * same wagon, and a minute of actually driving it — so the bumper touching the
+ * road is a cue to get out of the way rather than an occasion. It used to be a
+ * scene: the wheel was taken out of the player's hands, a synthetic driver held
+ * the throttle flat and aimed the car at a point past the end of the road, and
+ * the picture washed to black over nearly two seconds of a car driving itself.
+ * That is a cutscene in front of a minigame about driving, played every single
+ * time the player leaves the hub, and the second half of it says the same thing
+ * the first half already did.
+ *
+ * So the car simply carries on at whatever it was doing — no synthetic hands,
+ * no aim, no throttle — the screen dims, and the road picks it up. The app
+ * paints the dim off `ms`; the clock is the only thing simulated.
  */
 export const DEPARTURE = {
-  /** How long the whole beat runs before the trip is booked (ms). Long enough
-   * that the car visibly gets down the road and short enough that a player who
-   * has driven this door fifty times is not made to sit through a cutscene. */
-  durationMs: 1700,
-  /** The fraction of the beat the wash takes to reach full black. Short of 1
+  /** How long the handover runs before the trip is booked (ms). Long enough to
+   * read as a dim rather than a cut, short enough that nobody waits on it. */
+  durationMs: 600,
+  /** The fraction of the beat the dim takes to reach full black. Short of 1
    * on purpose: the picture is GONE before the run is torn down, so the swap
    * happens behind black rather than under a fade that is still lifting. */
   fadeAt: 0.8,
-  /** How far beyond the end of the road the car is aimed (world px) — a target
-   * off the map, so the car drives at it flat out instead of easing onto a
-   * point it is about to reach. */
-  overshoot: 260,
-  /**
-   * The most the departing car's steer point may sit off its own nose (rad).
-   *
-   * KEEPS THE THROTTLE DOWN WHILE THE NOSE COMES ROUND, and that is the whole
-   * reason this knob exists. The pedal is the push read ALONG the nose
-   * (`carControl`), so a target square off the bumper is all wheel and no
-   * throttle — and a car joins a road across it, so the road's far end IS a
-   * right angle off the bumper. Aimed straight at it the departing car slowed
-   * itself to a halt, and a stopped car cannot turn at all, so it sat on the
-   * tarmac with its indicator on until the screen went black. Aiming at a lead
-   * point held near the nose keeps most of the push on the accelerator, and the
-   * nose comes round on an arc — which is how a car turns onto a road anyway.
-   */
-  steerArc: Math.PI * 0.3,
-  /** How far ahead of the bumper that lead point is thrown (world px). */
-  lead: 300,
 } as const;
 
 /** The shed wheel's highway physics: gravity, the bounce's keep-fraction,
@@ -316,16 +290,18 @@ const VEHICLE_LANDMARKS: Record<string, Vehicle["kind"]> = {
  * (src/game/drive/index.ts) — every other caller gets one from
  * `createVehicles` below. */
 export function createCar(pos: Vec2, heading: number): CarVehicle {
-  // The facing axis is settled HERE and never again: the art has one profile,
-  // so the yaw stop holds the nose on whichever side the car was parked
-  // facing (see `CAR.maxYaw` / `steerCar`), and a parking bearing already
-  // past the stop is brought back onto it rather than driven off it.
+  // The facing axis is settled HERE and never again — the art has one profile,
+  // nothing mirrors or rotates it, and the wheel moves the BODY rather than the
+  // nose (`applyCarWheel`). So the parking bearing is read for its SIDE and
+  // then thrown away: the heading a car keeps for the rest of its life is the
+  // axis it was parked on, dead square, which is exactly the frame the road
+  // drives the same wagon in.
   const faceLeft = Math.cos(heading) < 0;
   return {
     kind: "car",
     pos: { x: pos.x, y: pos.y },
     home: { x: pos.x, y: pos.y },
-    heading: clampYaw(heading, faceLeft),
+    heading: faceLeft ? Math.PI : 0,
     departed: false,
     engineCueMs: 0,
     grindCueMs: 0,
@@ -739,19 +715,20 @@ export function stepVehicles(
 ): void {
   const dt = dtMs / 1000;
   stepDeparture(state, dtMs);
-  // THE DRIVE-OUT TAKES THE WHEEL. While the departure beat runs the car steers
-  // itself down the road, whatever the player's thumb is doing — fed in as a
-  // synthetic input rather than as a second movement path, so the car that
-  // drives away is the same car, with the same arcs, grip and body.
-  const scene = state.departure;
+  // THE DIM TAKES THE CONTROLS OFF THE CAR AND PUTS NOTHING BACK. Once the
+  // bumper is on the road the player's thumb stops reaching the wagon — the
+  // trip is committed and a last-instant swerve would only argue with a picture
+  // already on its way out — but nothing steers it either. It coasts, dead
+  // straight, for the half-second the screen takes to go dark (see DEPARTURE).
+  const leaving = state.departure !== null;
   for (const vehicle of state.vehicles) {
     if (vehicle.kind !== "car") continue;
     driveCar(
       state,
       vehicle,
       dt,
-      scene
-        ? departureControl(vehicle, scene)
+      leaving
+        ? COASTING
         : inputs && vehicle.driver !== null
           ? carControl(vehicle, inputs(vehicle.driver))
           : null,
@@ -808,23 +785,6 @@ export function stepVehicles(
   }
 }
 
-/** Shortest signed angle from `from` to `to`, in (-π, π]. */
-function angleDiff(to: number, from: number): number {
-  const tau = Math.PI * 2;
-  let d = (to - from) % tau;
-  if (d > Math.PI) d -= tau;
-  if (d <= -Math.PI) d += tau;
-  return d;
-}
-
-/** A bearing held inside the yaw stop, on the side the body faces
- * (`CAR.maxYaw`) — and normalized around that axis while it is there, so a
- * heading never accumulates turns it is not allowed to have made. */
-function clampYaw(heading: number, faceLeft: boolean): number {
-  const axis = faceLeft ? Math.PI : 0;
-  return axis + clamp(angleDiff(heading, axis), -CAR.maxYaw, CAR.maxYaw);
-}
-
 /**
  * HOW MUCH OF THE WHEEL A CAR THIS FAST ACTUALLY GETS — 0 standing still, 1 at
  * `refSpeed` and above. A car only turns as far as it rolls, so a parked car's
@@ -840,14 +800,15 @@ export function wheelAuthority(speed: number, refSpeed: number): number {
 }
 
 /**
- * THE WHEEL'S IMMEDIATE HALF — how far the body crosses its own line this tick
+ * THE WHEEL, AS DISTANCE — how far the body crosses its own line this tick
  * (world px, signed the way the wheel is pushed).
  *
- * The minigame's lane change and the garage's turn-in are the same movement:
- * the wheel goes over and the body starts across NOW, with no rack and no nose
- * swing in between. What differs is only the axis it is spent on — the road is
- * axis-aligned so the drive spends it straight down the screen, while a car in
- * a bay spends it along its own beam.
+ * The minigame's lane change and the garage's turn-in are the same movement,
+ * and since the bay stopped swinging a nose they are the same movement all the
+ * way down: the wheel goes over and the body starts across NOW, it stops the
+ * tick the wheel is let go, and nothing carries over. What differs between the
+ * two is a pair of numbers (how far, and how fast the car must be going to earn
+ * it) — which is why they travel as parameters rather than as a branch.
  */
 export function carCrossing(
   speed: number,
@@ -860,70 +821,56 @@ export function carCrossing(
 }
 
 /**
- * ONE TICK OF THE WHEEL — what the body does about it, what the nose does, and
- * only then what the front wheels are drawn doing.
+ * ONE TICK OF THE WHEEL — the body across, and the front wheels drawn doing it.
+ * THE GARAGE AND THE DRIVING MINIGAME BOTH CALL THIS ONE FUNCTION, which is the
+ * whole reason it takes parameters instead of reading `CAR`.
  *
- * THE ORDER IS THE POINT, AND IT IS THE MINIGAME'S. `wheel` is the player's own
- * -1…+1 in the SCREEN's frame (-1 is up the screen, whichever way the nose
- * happens to point — see `CarControl`), and it is spent in the same three
- * places `stepDrive` spends it:
+ * `wheel` is the driver's own -1…+1 in the SCREEN's frame (-1 is up the screen,
+ * whichever way the nose happens to point — see `CarControl`), and it is spent
+ * in exactly two places:
  *
- *   THE BODY  — `CAR.lateralPx` of crossing, immediately. This is the half the
- *               garage used not to have, and the whole of why the road felt
- *               like driving and the bay felt like asking.
- *   THE NOSE  — `CAR.turnRate` of swing, in proportion to the WHEEL rather than
- *               to the rack. The rack used to sit inside this loop, which put a
- *               fifth of a second of dead time between the thumb going over and
- *               the nose moving at all; it is the picture, not the control.
+ *   THE BODY  — `lateralPx` of crossing, immediately, straight down the screen.
+ *               This is the WHOLE of the steering. It arrives the tick the
+ *               wheel goes over and it is gone the tick the wheel comes back,
+ *               so a car steers exactly as long as somebody is steering it.
  *   THE RACK  — `car.steer`, walked toward the crank the driver is asking for
  *               at `CAR.steerRate` so the front wheels visibly wind on and
  *               unwind, and self-centre the moment the wheel is let go. It is
- *               simulated rather than inferred from the turn because the
+ *               simulated rather than inferred from the crossing because the
  *               renderer warps the front wheel sprite by it: a car standing
  *               still with its wheels cranked is a picture the driver expects.
  *               REVERSE cranks it the other way for the same wheel, because
  *               backing up with the rack over swings the tail.
  *
- * …and it stops at the beam (`CAR.maxYaw`). A driver asking for more than the
- * stop has left STRAIGHTENS UP rather than sitting on a lock he is getting
- * nothing for — a car pinned against its own limit with the wheels hard over
- * reads as a broken steering column, and the body stops crossing with it.
+ * THERE IS NO THIRD PLACE, AND THAT IS THE FIX. The garage used to spend a
+ * share of the wheel on the car's HEADING — which nothing anywhere draws
+ * (render/vehicles.ts, render/night.ts: the assembly never turns) — and then
+ * pointed the speed down it. So the only thing an invisible nose swing could do
+ * was outlive the input that caused it: hold W for a moment and the car went on
+ * curving away for as long as it kept rolling, with the player's hands off
+ * everything. The road never had it, the road has always been the better car to
+ * drive, and this is the difference.
+ *
+ * `sign` is which way the body faces (+1 nose-right, -1 nose-left) — the rack's
+ * only use for it, since the crossing is already in the screen's frame.
  */
-function applyWheel(car: CarVehicle, wheel: number, dt: number): void {
-  // The body is one side-profile assembly that never comes about, so which way
-  // it faces is a sign and nothing more — and the sign is what turns a SCREEN
-  // wheel into the heading's own frame. Without it a nose-left car steered
-  // backwards, which is the contract `car_controls_test.ts` pins at the door
-  // ("W turns up the screen whichever way the nose points") and the engine
-  // quietly broke on the far side of it.
-  const nose = car.faceLeft ? -1 : 1;
+export function applyCarWheel(
+  car: CarVehicle,
+  wheel: number,
+  dt: number,
+  lateralPx: number,
+  refSpeed: number,
+  sign: number,
+): void {
+  const command = clamp(wheel, -1, 1);
+  // DOWN THE SCREEN, not down a beam: the body is a side profile drawn
+  // straight-on and the heading is the axis it was parked on, so "across its
+  // own line" is the world's own y — the same axis `stepDrive` crosses lanes
+  // on, and the same one `carKeyTarget` hands the wheel back in.
+  car.pos.y += carCrossing(car.speed, command, dt, lateralPx, refSpeed);
+
   const roll = car.speed < 0 ? -1 : 1;
-  const off = angleDiff(car.heading, car.faceLeft ? Math.PI : 0);
-  const pushing = wheel * nose;
-  const command =
-    (off >= CAR.maxYaw && pushing > 0) || (off <= -CAR.maxYaw && pushing < 0)
-      ? 0
-      : clamp(wheel, -1, 1);
-
-  const cross = carCrossing(
-    car.speed,
-    command,
-    dt,
-    CAR.lateralPx,
-    CAR.turnRefSpeed,
-  );
-  if (cross !== 0) {
-    // The beam: square off the nose, on the screen's down side, so a positive
-    // wheel puts the body down the screen exactly as it swings the nose there.
-    car.pos.x += -Math.sin(car.heading) * cross * nose;
-    car.pos.y += Math.cos(car.heading) * cross * nose;
-  }
-
-  const authority = wheelAuthority(car.speed, CAR.turnRefSpeed);
-  const swing = CAR.turnRate * dt * authority * command * nose;
-  car.heading = clampYaw(car.heading + swing, car.faceLeft);
-
-  const wantSteer = command * CAR.steerLock * nose * roll;
+  const wantSteer = command * CAR.steerLock * sign * roll;
   const step = CAR.steerRate * dt;
   car.steer += clamp(wantSteer - car.steer, -step, step);
 }
@@ -1042,7 +989,14 @@ export function applyCarControl(
   reverseSpeed: number,
 ): void {
   applyCarPedals(car, control, dt, topSpeed, reverseSpeed);
-  applyWheel(car, control.wheel, dt);
+  applyCarWheel(
+    car,
+    control.wheel,
+    dt,
+    CAR.lateralPx,
+    CAR.turnRefSpeed,
+    car.faceLeft ? -1 : 1,
+  );
 }
 
 /**
@@ -1191,13 +1145,14 @@ export function applyCarPedal(
  * THE DEPARTURE: a driven car near a garage door (an `approach` DoorState)
  * rolls it open, but the door is no longer where the trip books. A map with a
  * ROAD OUT (`LevelDef.driveOut` — the strip of public tarmac the garage's
- * driveway runs onto) commits when the car reaches THAT, because a car sitting
+ * driveway runs onto) commits when the car TOUCHES that, because a car sitting
  * on its own drive with the roll-up open behind it has not gone anywhere yet.
- * Reaching it opens the DRIVE-OUT beat (`stepDeparture`) rather than booking
- * the trip outright. A map with a door and no road keeps the threshold latch
- * (`departRadius` of an open door's center); one with neither keeps the oldest
- * latch of all (`departDistance` from home). Driving circles inside, or out
- * onto the lawn through nothing, still commits nothing.
+ * Touching it opens the DIM (`stepDeparture`) rather than booking the trip
+ * outright — half a second of the picture going dark, and then the road. A map
+ * with a door and no road keeps the threshold latch (`departRadius` of an open
+ * door's center); one with neither keeps the oldest latch of all
+ * (`departDistance` from home). Driving circles inside, or out onto the lawn
+ * through nothing, still commits nothing.
  */
 function driveCar(
   state: GameState,
@@ -1214,11 +1169,12 @@ function driveCar(
     // out, so the shut garage door (its obstacle chain) really stops the bumper.
     collideCarBody(state, car);
   }
-  // `faceLeft` was settled at the parking spot and never moves again: the yaw
-  // stop holds the nose on its own side of the beam, so the side-profile art
-  // is never asked to answer for a car that came about. (It used to flip on
-  // the nose's x-sign — which is exactly the lie, since NOTHING mirrors the
-  // assembly: a car that turned round drove away still facing the way it came.)
+  // `faceLeft` and `heading` were both settled at the parking spot and neither
+  // moves again: the wheel puts the BODY across rather than swinging a nose, so
+  // the side-profile art is never asked to answer for a car that came about.
+  // (`faceLeft` used to flip on the nose's x-sign — which is exactly the lie,
+  // since NOTHING mirrors the assembly: a car that turned round drove away
+  // still facing the way it came.)
   // The driver rides IN the car: his body lands exactly where the car
   // ends the tick (the party loop already pinned him before the move —
   // this is the post-move half, so nothing ever reads him a tick behind).
@@ -1260,20 +1216,15 @@ function driveCar(
       const to = door?.to[0];
       if (to) {
         car.departed = true;
-        // With a road there is a beat to play before the trip books: the car
-        // drives on and the picture goes to black (`stepDeparture`). Without
-        // one there is nowhere to drive to, so the crossing books it outright,
-        // exactly as it always did.
+        // With a road there is a dim to play before the trip books: the car
+        // carries on and the picture goes dark over it (`stepDeparture`).
+        // Without one there is no road to be on, so the crossing books it
+        // outright, exactly as it always did.
         if (road) {
-          state.departure = {
-            ms: 0,
-            to,
-            target: roadTarget(road, car.pos),
-            booked: false,
-          };
-          // Nobody watches a departure through their own bag. A screen left up
-          // would also halt the world (`partyBlocked`) and freeze the beat
-          // mid-fade, so every seat's is dropped as the wheel is taken.
+          state.departure = { ms: 0, to, booked: false };
+          // Nobody watches a handover through their own bag. A screen left up
+          // would also halt the world (`partyBlocked`) and freeze the dim
+          // half-lit, so every seat's is dropped as the road takes over.
           for (const p of state.players) p.screen = undefined;
         } else
           state.events.push({
@@ -1364,87 +1315,26 @@ function runDownMerchant(state: GameState, car: CarVehicle): void {
 }
 
 /**
- * Where a departing car is aimed: down the middle of the road, past whichever
- * of its two ends is FARTHER off — the longer runway, so the last thing on
- * screen is a car still going rather than one that ran out of tarmac.
+ * HANDS OFF, EVERYTHING RELEASED — what the car is handed for the length of the
+ * dim (see DEPARTURE). Nothing held means "carry on as you are" everywhere else
+ * in this module and it means it here too, so the wagon keeps its speed, keeps
+ * its line, and straightens its wheels while the picture goes dark over it.
  *
- * Derived from the road's own bounds and the car's position, so it costs no rng
- * draw and lands the same way on every client that simulates the same tick.
+ * Frozen and shared rather than built per tick: it is the same three constants
+ * every time, and a departing car that allocated one a frame would be the only
+ * thing in this file that did.
  */
-function roadTarget(road: readonly Zone[], from: Vec2): Vec2 {
-  const bounds = zonesBounds(road);
-  if (!bounds) return { ...from };
-  const { minX, minY, maxX, maxY } = bounds;
-  // A road runs along its LONG axis; the target is the far end of that axis,
-  // held on the strip's centre line so the car straightens up as it goes.
-  const alongY = maxY - minY >= maxX - minX;
-  const midX = (minX + maxX) / 2;
-  const midY = (minY + maxY) / 2;
-  // AWAY from the half the car came in on: a car that joins the road in its
-  // southern half has the whole northern length to drive, and aiming it at the
-  // near end instead parks it against the map's edge with a second of fade
-  // still to run.
-  //
-  // …and a QUARTER of the road's width to the right of that, which is the lane.
-  // Aimed down the middle the car drives away straddling the painted line, and
-  // a centre line is the one piece of road furniture every player reads without
-  // being told. Right-hand traffic, like the pickup it is.
-  const quarter = (alongY ? maxX - minX : maxY - minY) / 4;
-  if (alongY) {
-    const north = from.y > midY;
-    return {
-      x: midX + (north ? quarter : -quarter),
-      y: north ? minY - DEPARTURE.overshoot : maxY + DEPARTURE.overshoot,
-    };
-  }
-  const west = from.x > midX;
-  return {
-    x: west ? minX - DEPARTURE.overshoot : maxX + DEPARTURE.overshoot,
-    y: midY + (west ? -quarter : quarter),
-  };
-}
+const COASTING: CarControl = Object.freeze({
+  pedal: 0,
+  wheel: 0,
+  handbrake: false,
+});
 
 /**
- * THE DEPARTING CAR'S OWN HANDS ON THE WHEEL — full throttle down the road, and
- * the wheel taking whatever error is left between the nose and the road's end.
- *
- * IT IS EXPRESSED IN THE CAR'S FRAME, and that is the whole reason it is not
- * just a synthetic `GameInput`. The player's push is read on the SCREEN
- * (`carControl`): the horizontal axis is the accelerator and the vertical is the
- * wheel, which is the right model for a side-profile car a thumb is steering.
- * The drive-out is not a thumb — it is a script that means "keep your foot down
- * and aim there" — and fed through the screen-frame reading it lost its own
- * throttle the moment the nose came round toward the road, because a car
- * pointing up the screen has almost no horizontal component left to read a
- * pedal off. It slowed to a crawl on the tarmac with the fade already running.
- *
- * So the beat asks for the two things directly: the pedal flat, and the wheel
- * proportional to the bearing error (held at `DEPARTURE.steerArc`, so the nose
- * comes round on an arc — which is how a car joins a road anyway).
- */
-function departureControl(car: CarVehicle, scene: DepartureState): CarControl {
-  const want = Math.atan2(
-    scene.target.y - car.pos.y,
-    scene.target.x - car.pos.x,
-  );
-  const err = angleDiff(want, car.heading);
-  // The bearing error is in the HEADING's frame and a `CarControl.wheel` is in
-  // the SCREEN's, and for a nose-left car those run opposite ways — so the
-  // synthetic driver flips it exactly as the player's own push is flipped.
-  const nose = car.faceLeft ? -1 : 1;
-  return {
-    pedal: 1,
-    wheel: clamp(err / DEPARTURE.steerArc, -1, 1) * nose,
-    handbrake: false,
-  };
-}
-
-/**
- * One tick of THE DRIVE-OUT (see `GameState.departure`). Runs from
- * `stepVehicles`, ahead of the car's own physics, and does two things: hold the
- * throttle down toward the end of the road — the steering itself is `driveCar`'s,
- * fed a synthetic input, so the departing car obeys exactly the physics the
- * player was just driving — and book the trip when the clock runs out.
+ * One tick of THE DIM (see `GameState.departure`). Runs from `stepVehicles`,
+ * ahead of the car's own physics, and does exactly one thing: book the trip
+ * when the clock runs out. The car itself is simply coasting (`COASTING`) —
+ * there is nothing to steer, because the whole beat is the screen going dark.
  */
 function stepDeparture(state: GameState, dtMs: number): void {
   const scene = state.departure;

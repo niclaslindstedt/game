@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE DRIVE-OUT (src/game/vehicles.ts `driveCar`/`stepDeparture`, config
-// DEPARTURE): what happens between a driven car reaching the level's ROAD OUT
+// THE DIM (src/game/vehicles.ts `driveCar`/`stepDeparture`, config DEPARTURE):
+// what happens between a driven car TOUCHING the level's ROAD OUT
 // (`LevelDef.driveOut`) and the trip being booked.
 //
 // The rules under test, in the order they bite:
 //   1. the ROAD OUTRANKS THE DOOR — crossing the open garage-door threshold
 //      books nothing on a map that has tarmac beyond it, because a car in its
 //      own driveway has not gone anywhere;
-//   2. reaching the tarmac opens a SCENE rather than firing the departure: the
-//      wheel leaves the player's hands and `carDeparted` is still unfired;
-//   3. the scene DRIVES — the car keeps going, down the road, whatever the
-//      player's thumb says, and every run command is refused for the beat;
+//   2. touching the tarmac opens the HANDOVER rather than firing the departure:
+//      the wheel leaves the player's hands and `carDeparted` is still unfired;
+//   3. nothing DRIVES it — the beat is the screen going dark, so the car simply
+//      coasts on with its controls released, and every run command is refused;
 //   4. the trip books ONCE, at `DEPARTURE.durationMs`, carrying the car door's
 //      own destination.
 //
-// The fade itself is the app's (an opacity written off `departure.ms`), so
+// The dim itself is the app's (an opacity written off `departure.ms`), so
 // nothing here asserts a colour — only the clock the app reads.
 
 import { describe, expect, it } from "vitest";
@@ -58,6 +58,25 @@ const driveEast = (state: GameState, ticks: number): string[] => {
   return departs;
 };
 
+/**
+ * Drive east until the bumper touches the tarmac, and stop on that tick.
+ *
+ * A fixed tick count no longer reaches the road WITHOUT overrunning the beat on
+ * the far side of it: the handover is a dim rather than a scene now
+ * (`DEPARTURE.durationMs`), so the window between touching the road and the
+ * trip booking is well under a second. Every test below wants the state at the
+ * moment of the touch, so they all ask for that rather than for a number of
+ * ticks that happened to land there.
+ */
+const driveToRoad = (state: GameState): string[] => {
+  const departs: string[] = [];
+  for (let i = 0; i < 400 && state.departure === null; i++) {
+    departs.push(...driveEast(state, 1));
+  }
+  if (state.departure === null) throw new Error("never reached the road");
+  return departs;
+};
+
 describe("the road out", () => {
   it("outranks the garage door — the threshold books nothing", () => {
     const state = startRoad();
@@ -73,10 +92,10 @@ describe("the road out", () => {
     expect(state.departure).toBeNull();
   });
 
-  it("opens the DEPARTURE scene on the tarmac, and books nothing yet", () => {
+  it("opens the DIM on the tarmac, and books nothing yet", () => {
     const state = startRoad();
     board(state);
-    const departs = driveEast(state, 260);
+    const departs = driveToRoad(state);
     expect(carOf(state).pos.x).toBeGreaterThanOrEqual(1000);
     expect(state.departure).not.toBeNull();
     expect(state.departure?.to).toBe("test_level_2");
@@ -86,29 +105,28 @@ describe("the road out", () => {
     expect(departs).toEqual([]);
   });
 
-  it("takes the wheel: the car keeps driving with every control released", () => {
+  it("takes the wheel and asks the car for nothing: it coasts on, straight", () => {
     const state = startRoad();
     const car = board(state);
-    driveEast(state, 260);
-    expect(state.departure).not.toBeNull();
+    driveToRoad(state);
     const was = { ...car.pos };
-    // Hands off. A car under the player's control merely holds the speed it
-    // had (the garage-door suite proves that); a departing one has the beat's
-    // own foot flat to the floor and is still gathering pace. Measured as
-    // DISTANCE rather than as x: by now the nose is coming round onto the
-    // road's own axis, so the car is leaving on a curve.
+    const cruising = car.speed;
+    // THE PLAYER'S THUMB IS OFF THE CAR — the beat refuses input — and so is
+    // everything else's: the departing car is handed `COASTING`, which is the
+    // same "nothing held" every other car in the game answers to. So it keeps
+    // its speed (bar the idle drag), keeps its line, and just carries on down
+    // the road while the picture goes dark over it.
     run(state, idle, 20);
     expect(car.speed).toBeGreaterThan(0);
-    expect(Math.hypot(car.pos.x - was.x, car.pos.y - was.y)).toBeGreaterThan(
-      20,
-    );
+    expect(car.speed).toBeLessThanOrEqual(cruising);
+    expect(car.pos.x - was.x).toBeGreaterThan(20);
+    expect(Math.abs(car.pos.y - was.y)).toBeLessThan(0.5);
   });
 
   it("refuses every run command while the beat plays", () => {
     const state = startRoad();
     board(state);
-    driveEast(state, 260);
-    expect(state.departure).not.toBeNull();
+    driveToRoad(state);
     expect(applyRunCommand(state, "openInventory")).toBeUndefined();
     expect(state.players[0]?.screen).toBeUndefined();
   });
@@ -116,7 +134,7 @@ describe("the road out", () => {
   it("books the trip ONCE, when the beat's clock runs out", () => {
     const state = startRoad();
     board(state);
-    const departs = driveEast(state, 260);
+    const departs = driveToRoad(state);
     expect(departs).toEqual([]);
     // Long enough to overrun the beat several times over: the latch, not the
     // tick count, is what makes this one event.

@@ -280,38 +280,35 @@ export type DeathSceneState = {
 };
 
 /**
- * THE DRIVE-OUT — the beat that plays once a driven car reaches the level's
- * road out (`LevelDef.driveOut`), between the wheel leaving the player's hands
- * and the next level being built. Null every other tick of the run.
+ * THE DIM — the handover that plays once a driven car TOUCHES the level's road
+ * out (`LevelDef.driveOut`), between the wheel leaving the player's hands and
+ * whatever comes next. Null every other tick of the run.
  *
  * The hub's departure used to be a CUT: the bumper crossed the garage door's
- * threshold and the next frame was somewhere else. A drive away deserves the
- * two things a cut cannot give it — the car actually leaving (the engine steers
- * it on down the road at `target`, so the last thing seen is the car going) and
- * the picture LETTING GO rather than being switched off (the app reads `ms`
- * against `DEPARTURE.durationMs` and washes the screen to black over it).
+ * threshold and the next frame was somewhere else. Then it was a SCENE, nearly
+ * two seconds of the engine driving the car away down the tarmac under a wash
+ * to black. Both are gone, and for the same reason: the thing on the far side
+ * of the garage's road is the DRIVING MINIGAME, so a car driving itself is a
+ * cutscene about the exact activity the player is a half-second away from
+ * doing. Touching the road dims the picture and hands over — the car just
+ * coasts on while it happens (`COASTING`, src/game/vehicles.ts).
  *
- * The scene is engine-owned for the same reason the death scene is: it is the
+ * It is engine-owned for the same reason the death scene is: it is the
  * simulation that knows where the road runs and when the trip is really booked,
  * so the whole beat stays deterministic, replicable and headless-testable, and
  * the app only paints what the clock says.
  */
 export type DepartureState = {
-  /** Ms elapsed since the car reached the road — the scene's own clock,
-   * advanced each playing tick. Drives the auto-drive and (app-side) the wash
-   * to black. */
+  /** Ms elapsed since the car reached the road — the beat's own clock, advanced
+   * each playing tick. The app dims the picture against it. */
   ms: number;
   /** The level the car is bound for — the `car` travel door's first
    * destination, resolved at the moment of the commit so the app need not look
-   * it up again. Carried onto the `carDeparted` event when the scene ends. */
+   * it up again. Carried onto the `carDeparted` event when the beat ends. */
   to: string;
-  /** Where the car is steered while the screen fades: a point beyond the far
-   * end of the road, so the car swings onto the tarmac and drives off it
-   * rather than trundling into the map's edge. */
-  target: Vec2;
   /** Latched once `carDeparted` has been pushed, so the trip is booked exactly
-   * once however many ticks the app takes to tear the run down. The wash stays
-   * at full black from here. */
+   * once however many ticks the app takes to tear the run down. The picture
+   * stays at full black from here. */
   booked: boolean;
 };
 
@@ -1020,9 +1017,9 @@ export type GameState = {
    */
   deathScene: DeathSceneState | null;
   /**
-   * THE DRIVE-OUT: the departure beat that plays once a driven car reaches the
-   * level's road out — the car steering itself away while the picture goes to
-   * black (see `vehicles.ts`). Null every other tick.
+   * THE DIM: the handover that plays once a driven car touches the level's road
+   * out — the picture going dark over a coasting car, and then the road (see
+   * `vehicles.ts`). Null every other tick.
    */
   departure: DepartureState | null;
   /**

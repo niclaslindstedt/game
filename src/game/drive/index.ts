@@ -46,12 +46,11 @@ import { clamp } from "@game/lib/vec.ts";
 
 import {
   applyCarPedals,
+  applyCarWheel,
   CAR,
-  carCrossing,
   createCar,
   integrateCarBody,
   nudgeCar,
-  wheelAuthority,
 } from "../vehicles.ts";
 import type { CarDetachable, CarPanelId } from "../types/index.ts";
 import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
@@ -412,34 +411,28 @@ export function stepDrive(
   // ── ACROSS THE LANES ──────────────────────────────────────────────────────
   // The WHEEL, answered by sliding rather than by turning. The road and the
   // whole impact model standing on it are axis-aligned, and the body is a side
-  // profile that never comes about (`CAR.maxYaw`), so the car crosses lanes
-  // instead of changing its heading — which is also what a lane change looks
-  // like from above at 120 mph. Authority scales with ground speed for the same
-  // reason the run's own steering does: a stopped car does not change lanes.
+  // profile that never comes about, so the car crosses lanes instead of
+  // changing its heading — which is also what a lane change looks like from
+  // above at 120 mph. Authority scales with ground speed: a stopped car does
+  // not change lanes.
   //
-  // `carCrossing` is the run's own (src/game/vehicles.ts) and the garage spends
-  // it on the car's own beam — the immediacy is the SHARED half, and the axis
-  // is the only thing the road and the bay disagree about.
-  const authority = wheelAuthority(speed, DRIVE.laneRefSpeedPx);
-  const wheel = clamp(input.wheel, -1, 1);
-  car.pos.y += carCrossing(
-    speed,
-    wheel,
+  // IT IS `applyCarWheel`, THE RUN'S OWN (src/game/vehicles.ts), and that is
+  // the whole of the steering in both places. The road and the bay differ by a
+  // pair of numbers — how far the body crosses per second, and how fast it has
+  // to be going to earn all of it — so those travel as parameters and the code
+  // is shared verbatim. The rack it winds on is the same rack too: the renderer
+  // draws `steer`, and without it the front wheel would sit dead straight
+  // through the entire minigame.
+  applyCarWheel(
+    car,
+    input.wheel,
     dt,
     DRIVE.lateralPx,
     DRIVE.laneRefSpeedPx,
+    dir,
   );
   const edges = roadEdges();
   car.pos.y = clamp(car.pos.y, edges.top, edges.bottom);
-  // …but the RACK still answers it, so the front wheel is visibly cranked the
-  // way the car is going. The renderer draws `steer`, and without this it would
-  // sit dead straight through the entire minigame.
-  const wantSteer = wheel * CAR.steerLock * authority * dir;
-  car.steer += clamp(
-    wantSteer - car.steer,
-    -CAR.steerRate * dt,
-    CAR.steerRate * dt,
-  );
 
   advanceCar(drive, dt);
 
