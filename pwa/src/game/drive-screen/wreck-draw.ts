@@ -107,7 +107,7 @@ export function drawTrafficBody(
  */
 function drawFolded(
   ctx: CanvasRenderingContext2D,
-  sprite: CanvasImageSource & { width: number; height: number },
+  sprite: ImageBitmap,
   ox: number,
   oy: number,
   nose: number,
