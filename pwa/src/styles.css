@@ -38,6 +38,21 @@
   --muted: #7a8088;
   --line: #2a2f36;
   --accent: #7ef0c8;
+
+  /* THE DASHBOARD'S FOOTPRINT, in one place — two dials, the gate between them
+     and the gaps. The dash is laid out from it and the hero's speech window is
+     parked to the RIGHT of it (`.drive-bark`), so the two can never be sized
+     apart into an overlap.
+
+     AT THE ROOT RATHER THAN ON `.drive-screen`, because the road is not the
+     only host that mounts the authored dash: the effects gallery's gearbox
+     exhibit mounts `HudRoot` on its own (EffectsGallery.tsx) precisely so the
+     shelf shows the dials the game actually draws. Declared on the minigame's
+     own element, both of these were simply undefined there — every dial fell to
+     `width: auto` and the exhibit whose whole subject is the dashboard showed
+     two bare figures with no arcs around them. */
+  --drive-dial-size: 92px;
+  --drive-dash-w: calc(2 * var(--drive-dial-size) + 64px + 24px);
 }
 
 /* The FF6-style window skin (`--panel-*` + `.pixel-panel`) is imported above
@@ -533,11 +548,24 @@ html.app-locked body {
   filter: drop-shadow(0 0 3px rgba(255, 157, 74, 0.75));
 }
 
-/* The tachometer, inside the speed arc with daylight between them. */
+/* The tachometer, inside the speed arc with daylight between them.
+
+   SIZED EXPLICITLY, NEVER BY `inset` ALONE — an `<svg>` is a REPLACED element,
+   so an absolutely positioned one does NOT stretch between `left` and `right`
+   when its width is `auto`: it takes its INTRINSIC width, which for an
+   outermost svg carrying only a viewBox is 100% of the containing block. The
+   ring therefore came out at the speedometer's own full diameter with `right`
+   and `bottom` silently dropped as over-constrained, i.e. the whole tachometer
+   shoved 13px down and to the right and straddling the arc it belongs inside.
+   The durability ring around the weapon slot (`.wpn-ring`) states its size the
+   same way for the same reason; a gauge that only sets `inset` is a bug. */
 .drive-dial-ring-inner {
-  inset: 13px;
-  width: auto;
-  height: auto;
+  /* The daylight between the two arcs, once — the inset and the size it takes
+     out of the box are one number and must not be able to drift apart. */
+  --drive-tacho-inset: 13px;
+  inset: var(--drive-tacho-inset);
+  width: calc(100% - 2 * var(--drive-tacho-inset));
+  height: calc(100% - 2 * var(--drive-tacho-inset));
 }
 
 /* The big figure in the middle of the arcs. */
@@ -6070,12 +6098,6 @@ html.app-locked body {
    it has to win. */
 .drive-screen {
   z-index: 300;
-  /* THE DASHBOARD'S FOOTPRINT, in one place — two dials, the gate between them
-     and the gaps. The dash is laid out from it and the hero's speech window is
-     parked to the RIGHT of it (`.drive-bark`), so the two can never be sized
-     apart into an overlap. */
-  --drive-dial-size: 92px;
-  --drive-dash-w: calc(2 * var(--drive-dial-size) + 64px + 24px);
 }
 
 /* HIS VOICE, BESIDE THE DASHBOARD RATHER THAN ON TOP OF IT. The shipped
