@@ -19,6 +19,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { formatTime } from "../game-screen/hud-model.ts";
 import { callHudScript, hudScriptColor, hudScriptFlag } from "./script.ts";
 import { scriptState, type HudValue, type HudValues } from "./bindings.ts";
+import { HUD_ROW_WIDGET_NAMES } from "./widgets/names.ts";
 import type {
   HudCondition,
   HudColor,
@@ -71,6 +72,26 @@ export type HudResolveContext = {
 
 export function resolveContext(values: HudValues): HudResolveContext {
   return { values, state: scriptState(values) };
+}
+
+/**
+ * ONE ROW's context — the run's values with a row's own merged over them.
+ *
+ * This is the whole of what makes a LIST authorable. A voice card's parts are
+ * resolved once per speaker with `speaker.*` in scope, so the same authored
+ * nodes say something different on every card, and a judgement reads that
+ * card's own numbers out of `state.speaker`. The schema refuses a row binding
+ * outside a row widget's parts, so nothing can read one where it would be empty.
+ *
+ * A fresh context per row rather than a mutated one: the resolve is memoised on
+ * the values object, and a table that changed under the cache would be a card
+ * showing the previous speaker's answer.
+ */
+export function resolveRow(
+  values: HudValues,
+  row: HudValues,
+): HudResolveContext {
+  return resolveContext({ ...values, ...row });
 }
 
 /**
@@ -164,16 +185,30 @@ export function resolveLayout(
     .map((region) => build(region, 0));
 }
 
-/** Resolve one node and everything under it. */
+/**
+ * Resolve one node and everything under it.
+ *
+ * `asRow` is what a LIST WIDGET passes when it walks its own template again
+ * with one row in scope: it turns off the guard that stops the layout resolving
+ * a row's parts without a row (see `isRowWidget`). Nothing else ever sets it.
+ */
 export function resolveNode(
   def: HudNodeDef,
   ctx: HudResolveContext,
+  asRow = false,
 ): HudNodeView {
   const visible = resolveCondition(def.visible, ctx);
+  // A ROW WIDGET's own class list is that ROW's — it is the card, not the rail
+  // — so it is left to the per-row resolve for the same reason its children
+  // are. `visible:` is the exception and gates the whole list, which is why it
+  // is read above rather than here.
+  const row = isRowWidget(def) && !asRow;
   const classes: string[] = [];
   if (def.class) classes.push(def.class);
-  for (const [name, condition] of Object.entries(def.classes ?? {})) {
-    if (resolveCondition(condition, ctx)) classes.push(name);
+  if (!row) {
+    for (const [name, condition] of Object.entries(def.classes ?? {})) {
+      if (resolveCondition(condition, ctx)) classes.push(name);
+    }
   }
   const raw = resolveBound(def.bind, ctx);
   return {
@@ -186,7 +221,8 @@ export function resolveNode(
     value: def.kind === "bar" || def.kind === "gauge" ? clampFrac(raw) : 0,
     text: resolveText(def, raw, ctx),
     sprite: resolveSprite(def, ctx),
-    color: resolveColor(def.color, ctx),
+    // …and its colour, for the same reason.
+    color: row ? undefined : resolveColor(def.color, ctx),
     // The default is the faint ring the weapon slot has always drawn behind its
     // gauge; an authored `track:` replaces it, and a fully transparent one is
     // how an element asks for a bare sweep with nothing behind it.
@@ -196,9 +232,16 @@ export function resolveNode(
         : undefined,
     // A resolve is not a render: an invisible node's children are not walked,
     // which is what keeps a hidden panel's scripts from being called at all.
-    children: visible
-      ? (def.children ?? []).map((child) => resolveNode(child, ctx))
-      : [],
+    //
+    // …and a ROW WIDGET's children are not walked HERE at all, whatever it is
+    // showing. They are a template — they mean nothing until one row is in
+    // scope — and resolving them without one calls every judgement on them
+    // against an empty row, which throws and gets that judgement disowned for
+    // the rest of the run. The widget resolves them per row (`resolveRow`).
+    children:
+      visible && !row
+        ? (def.children ?? []).map((child) => resolveNode(child, ctx))
+        : [],
   };
 }
 
@@ -219,6 +262,12 @@ function resolveBound(
     typeof answered === "boolean"
     ? answered
     : undefined;
+}
+
+/** Does this node draw a LIST, whose parts belong to a row rather than to the
+ * layout? See `HUD_ROW_WIDGET_NAMES` for why the answer changes the walk. */
+function isRowWidget(def: HudNodeDef): boolean {
+  return def.kind === "widget" && HUD_ROW_WIDGET_NAMES.has(def.widget ?? "");
 }
 
 /** A colour, wherever one is authored — a literal, or a judgement. */

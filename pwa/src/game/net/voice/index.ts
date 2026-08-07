@@ -4,7 +4,7 @@
 // transmitting.
 //
 // Everything provider-specific is behind `codecs.ts` and everything visual is in
-// `VoiceOverlay.tsx`; what lives here is the half-dozen decisions that are
+// `hud/widgets/VoiceCards.tsx`; what lives here is the half-dozen decisions that are
 // neither, and each one is a rule:
 //
 // **THE POLICY IS HERE, THE MECHANISM IS IN THE PROVIDER.** A source knows how

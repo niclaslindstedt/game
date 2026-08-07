@@ -70,7 +70,15 @@ export type HudBarPart = {
  * widget-free box. */
 export type HudNodeDef = {
   id?: string;
-  kind: "panel" | "bar" | "gauge" | "icon" | "text" | "button" | "widget";
+  kind:
+    | "panel"
+    | "bar"
+    | "gauge"
+    | "icon"
+    | "text"
+    | "button"
+    | "canvas"
+    | "widget";
   widget?: string;
   class?: string;
   /** Extra classes, each worn while its condition holds. */
@@ -106,6 +114,10 @@ export type HudNodeDef = {
   start?: number;
   /** The unfilled remainder's colour. */
   track?: HudColor;
+  /** A canvas's raster size, in pixels — it is painted by code, so it is sized
+   * in the units the painting is done in rather than in CSS ones. */
+  width?: number;
+  height?: number;
   children?: HudNodeDef[];
 };
 
@@ -145,6 +157,8 @@ export type HudSurface = "field" | "drive";
 export type HudEvent =
   | "hud.press"
   | "hud.back"
+  | "voice.mute"
+  | "voice.unmute"
   | "weapon.switch"
   | "trade.ask"
   | "trade.accept"

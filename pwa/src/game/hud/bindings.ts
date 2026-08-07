@@ -183,6 +183,65 @@ export function driveBindings(drive: DriveDials): HudValues {
 }
 
 /**
+ * VOICE CHAT's session-wide half — what the player's own microphone is doing
+ * and how many people are on the rail.
+ *
+ * A session fact rather than a run fact: the engine's state knows nothing about
+ * who is talking, and `GameScreen` owns the link. Every value is answered even
+ * when there is no voice at all, so an element that reads one on a solo run
+ * gets "off" rather than nothing — a mod's MIC LIVE pip must not need its own
+ * gate to stay off in single player.
+ */
+export function voiceBindings(
+  voice: {
+    live: boolean;
+    transmitting: boolean;
+    level: number;
+    speakerCount: number;
+    fault: string;
+  } | null,
+): HudValues {
+  return {
+    "voice.live": voice?.live === true,
+    "voice.transmitting": voice?.transmitting === true,
+    "voice.level": Math.max(0, Math.min(1, voice?.level ?? 0)),
+    "voice.speakerCount": voice?.speakerCount ?? 0,
+    "voice.faulted": (voice?.fault ?? "") !== "",
+    "voice.fault": voice?.fault ?? "",
+  };
+}
+
+/**
+ * ONE ROW of the voice rail — the values a card's parts are resolved against.
+ *
+ * A row's bindings live in their own group (`speaker.*`) and are merged OVER
+ * the run's for the length of one card, which is what lets an authored part say
+ * "this one is shouting" without the layout knowing how many cards there are.
+ * The same shape is what a unit frame, a threat list or a raid grid would use.
+ */
+export function speakerBindings(speaker: {
+  seat: number;
+  name: string;
+  level: number;
+  peak: number;
+  muted: boolean;
+  unheard: boolean;
+  talking: boolean;
+  self: boolean;
+}): HudValues {
+  return {
+    "speaker.seat": speaker.seat,
+    "speaker.name": speaker.name,
+    "speaker.level": Math.max(0, Math.min(1, speaker.level)),
+    "speaker.peak": Math.max(0, Math.min(1, speaker.peak)),
+    "speaker.muted": speaker.muted,
+    "speaker.unheard": speaker.unheard,
+    "speaker.talking": speaker.talking,
+    "speaker.self": speaker.self,
+  };
+}
+
+/**
  * The table a Lua judgement is called with: the bindings, split back into their
  * groups with the prefixes dropped — `state.hud.bagFree`, `state.ui.keyHints`,
  * `state.drive.wear`.
@@ -200,6 +259,11 @@ export function scriptState(
     hud: {},
     ui: {},
     drive: {},
+    voice: {},
+    // The ROW group, empty everywhere but inside a list's own parts — present
+    // regardless so a script that reads it off the wrong surface gets an empty
+    // table rather than an error out of the middle of a fight.
+    speaker: {},
   };
   for (const [key, value] of Object.entries(values)) {
     const dot = key.indexOf(".");

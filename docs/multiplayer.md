@@ -625,7 +625,12 @@ pwa/src/game/net/voice/tap.ts      what a listener received: packets, digest, .w
 pwa/src/game/net/voice/playback.ts a decoder and a jitter buffer per speaker
 pwa/src/game/net/voice/room.ts     WHO is talking and HOW LOUD — pure, testable
 pwa/src/game/net/voice/index.ts    the link: the policy, the talk key, the gate
-pwa/src/game/game-screen/VoiceOverlay.tsx   the cards, with portraits + waveform
+pwa/src/game/hud/widgets/VoiceCards.tsx  the LIST — who is on the rail, their
+                                   portraits, the waveform's pixels
+content/hud/elements/voice_cards.yaml  the CARD — its classes, its words, its
+                                   press; drawn once per speaker
+content/hud/scripts/voice.lua      what a card says and what colour it says it
+                                   in, thresholds included
 server/wire/voice.ts               the payload format — the wire's ONE binary one
 server/session.ts  `relayVoice`    the four relay rules
 electron/src/main.ts `installPermissionHandlers`  the microphone gate
@@ -768,13 +773,32 @@ hear.
 this repo's phone-first rule and is safe only because voice cannot appear anywhere
 else: it is gated on a capability only the desktop shell is stamped with, so there
 is no phone or browser build in which those cards render. If voice ever reaches a
-phone, `VoiceOverlay.tsx` and its CSS block need a pass at 844×390.
+phone, `VoiceCards.tsx`, the card's own YAML and its CSS block need a pass at
+844×390.
 
 **The list is a STATE and the levels are a STREAM**, read differently on purpose.
 `room.subscribe` fires only on structural change (somebody started or stopped
-talking, was muted, went unheard); loudness is polled inside the overlay's own
+talking, was muted, went unheard); loudness is polled inside the widget's own
 animation frame and painted to a canvas. Pushing levels instead would be a React
 reconciliation per 20 ms of speech per person — up to 350 a second.
+
+**The CARD is content, and the RAIL is code.** Voice chat is a HUD element like
+every other (`docs/modding.md` → "A mod may replace the HUD"), and the split is
+the one that rule always makes: this file's widget owns what cannot be authored
+— who is on the rail, each speaker's composited bust, the waveform's pixels —
+and the card's classes, its wording, both loudness thresholds and every colour
+are `content/hud/`. What is new here is that a card is a ROW: the authored parts
+are resolved once per speaker with `speaker.*` in scope, so one YAML file says
+something different on every card, and the press it carries takes the seat of
+the row it was drawn on. A mod re-words a card, re-grades what counts as
+shouting or drops the waveform without touching the app.
+
+**A row's template is NOT resolved with the rail.** Resolving is what calls the
+HUD's judgements, and a card's are written against a speaker — so walking them
+at rail level would call them with no speaker at all, which throws and gets them
+disowned for the rest of the run. `resolveNode` stops at a list widget and the
+widget walks the template again per row. It is the same shape of bug the drive
+surface had (#1003), and the same fix: the scope goes INTO the resolve.
 
 ### Mute, and the two rules about a seat
 

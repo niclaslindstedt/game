@@ -21,12 +21,23 @@ export function HudPart({
   view,
   part,
   ctx,
+  canvasRef,
 }: {
   view: HudNodeView;
   part: string;
   ctx: HudContext;
+  /** For a `kind: canvas` part — the widget paints it, so it has to be handed
+   * the node the content placed. */
+  canvasRef?: (node: HTMLCanvasElement | null) => void;
 }) {
   const found = view.children.find((child) => child.def.id === part);
   if (!found) return null;
-  return <HudNode view={found} ctx={ctx} />;
+  return <HudNode view={found} ctx={ctx} canvasRef={canvasRef} />;
+}
+
+/** Whether the content supplied a part at all — what a widget asks before it
+ * lays out a place for one. A dropped part is a legitimate authored answer
+ * ("no waveform on my cards"), not a missing feature. */
+export function hasHudPart(view: HudNodeView, part: string): boolean {
+  return view.children.some((child) => child.def.id === part);
 }

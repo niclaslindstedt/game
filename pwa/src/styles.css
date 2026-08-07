@@ -7923,7 +7923,8 @@ canvas.tier-artifact {
 }
 
 /* ---- Voice cards ---------------------------------------------------------- */
-/* WHO IS TALKING (VoiceOverlay.tsx) — one card per speaker on the same left
+/* WHO IS TALKING (hud/widgets/VoiceCards.tsx, content/hud/elements/voice_cards.yaml)
+   — one card per speaker on the same left
    rail as the party frames above them, because that rail already means
    "somebody on your side".
 

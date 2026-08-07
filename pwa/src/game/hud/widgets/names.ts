@@ -23,3 +23,17 @@ export const HUD_WIDGET_NAMES = new Set([
   "pickupFeed",
   "voiceCards",
 ]);
+
+/**
+ * The widgets that draw a LIST, and the binding group one of their rows
+ * publishes — the runtime half of the schema's `HUD_ROW_WIDGETS`.
+ *
+ * IT IS LOAD-BEARING FOR THE RESOLVER, not documentation. A row widget's parts
+ * are a TEMPLATE: they mean nothing until a row is in scope, and resolving them
+ * without one calls every judgement on them against an empty `state.speaker` —
+ * which throws, and a thrown judgement is disowned for the rest of the run
+ * (`script.ts`). So the resolver stops at these nodes and the widget walks them
+ * again per row. This is the same shape of bug the drive surface had: a resolve
+ * is not free, it CALLS things.
+ */
+export const HUD_ROW_WIDGET_NAMES = new Set(["voiceCards"]);

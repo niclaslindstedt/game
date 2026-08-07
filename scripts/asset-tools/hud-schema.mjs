@@ -113,7 +113,54 @@ export const HUD_BINDINGS = {
   "drive.wearPercent": "number",
   "drive.failing": "flag",
   "drive.paused": "flag",
+  // VOICE CHAT. A session fact rather than a run fact — the engine's state
+  // knows nothing about who is talking — but the HUD is where a player reads
+  // it, so it is a binding group like any other. Empty on every run without
+  // voice: a build with no `voice` capability, a local game, a browser.
+  "voice.live": "flag",
+  "voice.transmitting": "flag",
+  "voice.level": "frac",
+  "voice.speakerCount": "number",
+  "voice.faulted": "flag",
+  "voice.fault": "text",
 };
+
+/**
+ * THE ROW BINDINGS — the ones that only mean anything INSIDE one row of a list.
+ *
+ * A voice card is drawn once per speaker, and "how loud is this one" is a
+ * question about that card rather than about the run. So a widget that draws a
+ * list resolves its authored PARTS once per row with the row's own values
+ * merged over the run's, and these are the names it merges in. Everything else
+ * about them is ordinary: a row binding types like any other, a script reads it
+ * out of `state.speaker`, and a mod may author against it.
+ *
+ * They are separated from `HUD_BINDINGS` because they are only ANSWERABLE in a
+ * row: an element that reads `speaker.peak` from the gear row would print
+ * nothing for ever, so the schema refuses it there and names the widgets that
+ * do supply rows.
+ */
+export const HUD_ROW_BINDINGS = {
+  "speaker.seat": "number",
+  "speaker.name": "text",
+  "speaker.level": "frac",
+  "speaker.peak": "frac",
+  "speaker.muted": "flag",
+  "speaker.unheard": "flag",
+  "speaker.talking": "flag",
+  /** The player's own card, which has no portrait and cannot be muted. */
+  "speaker.self": "flag",
+};
+
+/**
+ * Which widgets draw a LIST, and what one of its rows is called.
+ *
+ * The name is the binding group a row publishes, so this table is also what
+ * decides where a `speaker.*` reference is legal. One entry today; the shape is
+ * the general one because a unit frame, a threat list and a raid grid are all
+ * the same thing with a different row.
+ */
+export const HUD_ROW_WIDGETS = { voiceCards: "speaker" };
 
 /**
  * The SURFACES a HUD is drawn on. A top-level region declares which one it
@@ -140,6 +187,10 @@ export const HUD_ACTIONS = new Set([
   // which screen that button will end up on.
   "driveResume",
   "driveSkip",
+  // Silence one speaker, locally and unsent. The SEAT comes from the row the
+  // press was drawn in, not from the YAML — which is what makes one authored
+  // press work for every card on the rail.
+  "muteSpeaker",
   "none",
 ]);
 
@@ -186,6 +237,11 @@ export const HUD_EVENTS = new Set([
   "companion.heal",
   "companion.open",
   "powerup.discard",
+  // Somebody silenced, and somebody let back in. Two moments rather than one
+  // because they are opposite answers and a player wants to hear which one they
+  // just gave.
+  "voice.mute",
+  "voice.unmute",
   "hud.press",
   "hud.back",
 ]);
@@ -207,6 +263,7 @@ const KINDS = new Set([
   "icon",
   "text",
   "button",
+  "canvas",
   "widget",
 ]);
 
@@ -239,6 +296,10 @@ const DIRECTIONS = new Set(["row", "column"]);
 const ALIGNS = new Set(["start", "center", "end", "stretch"]);
 const JUSTIFIES = new Set(["start", "center", "end", "between"]);
 
+/** A canvas is sized in RASTER pixels, not CSS ones — it is painted by code,
+ * and a size that did not divide its own data evenly would alias. */
+const MAX_CANVAS_SIDE = 4096;
+
 const ELEMENT_FIELDS = new Set([
   "id",
   "region",
@@ -266,6 +327,8 @@ const ELEMENT_FIELDS = new Set([
   "sweep",
   "start",
   "track",
+  "width",
+  "height",
   "children",
 ]);
 
@@ -331,13 +394,13 @@ export function validateHudElement(element, refs) {
     if (!ELEMENT_FIELDS.has(key))
       errors.push(`${where}: unknown field "${key}"`);
   }
-  checkNode(element, where, refs, errors, warnings, true);
+  checkNode(element, where, refs, errors, warnings, true, null);
   return { errors, warnings };
 }
 
 /** A child node — the same grammar minus the id/region/order a top-level
  * element needs to be placed and replaced. */
-function checkNode(node, where, refs, errors, warnings, top) {
+function checkNode(node, where, refs, errors, warnings, top, row) {
   if (!node || typeof node !== "object" || Array.isArray(node)) {
     errors.push(`${where}: expected a mapping`);
     return;
@@ -363,10 +426,22 @@ function checkNode(node, where, refs, errors, warnings, top) {
     return;
   }
 
+  /**
+   * THE ROW SCOPE STARTS AT THE ROW WIDGET ITSELF, not at its children.
+   *
+   * A list's widget node IS the row template: it is drawn once per row, so its
+   * `class`, its `classes` and its `color` are that row's — a voice card wears
+   * `muted` because THAT speaker is muted. Its `visible:` is the exception and
+   * the only one, because it gates the whole list before there are any rows to
+   * ask about, so it stays on the outer scope.
+   */
+  const rowScope =
+    kind === "widget" ? (HUD_ROW_WIDGETS[node.widget] ?? row) : row;
+
   if (node.class !== undefined && typeof node.class !== "string") {
     errors.push(`${where}: class must be a string`);
   }
-  checkClasses(node.classes, where, refs, errors);
+  checkClasses(node.classes, where, refs, errors, rowScope);
   if (node.frame !== undefined) {
     if (typeof node.frame !== "string") {
       errors.push(`${where}: frame must be a sprite id (a 9-slice border)`);
@@ -378,7 +453,7 @@ function checkNode(node, where, refs, errors, warnings, top) {
     errors.push(`${where}: aria must be a string`);
   }
   checkStyle(node.style, where, errors);
-  checkVisible(node.visible, where, refs, errors);
+  checkVisible(node.visible, where, refs, errors, row);
   checkColor(node.color, where, refs, errors);
 
   if (node.ref !== undefined && !HUD_REFS.has(node.ref)) {
@@ -413,7 +488,7 @@ function checkNode(node, where, refs, errors, warnings, top) {
   }
 
   if (kind === "bar") {
-    const type = bindingType(node.bind);
+    const type = bindingType(node.bind, row);
     if (node.bind === undefined) {
       errors.push(`${where}: a bar needs a bind (the fraction it fills to)`);
     } else if (typeof node.bind !== "string") {
@@ -443,9 +518,9 @@ function checkNode(node, where, refs, errors, warnings, top) {
       errors.push(`${where}: a gauge needs a bind (the fraction it sweeps to)`);
     } else if (typeof node.bind !== "string") {
       checkScriptRef(node.bind, `${where} bind`, refs, errors);
-    } else if (bindingType(node.bind) !== "frac") {
+    } else if (bindingType(node.bind, row) !== "frac") {
       errors.push(
-        `${where}: bind "${node.bind}" is a ${bindingType(node.bind)} — a ` +
+        `${where}: bind "${node.bind}" is a ${bindingType(node.bind, row)} — a ` +
           "gauge sweeps a frac",
       );
     }
@@ -479,6 +554,39 @@ function checkNode(node, where, refs, errors, warnings, top) {
     }
   }
 
+  // A CANVAS is a rectangle a widget PAINTS — the voice card's waveform is the
+  // first, and a dial's needle will be the next. Content owns where it is, how
+  // big it is and what class it wears; the pixels are code's, because a strip
+  // redrawn thirty times a second is not a row of divs.
+  if (kind === "canvas") {
+    for (const field of ["width", "height"]) {
+      const value = node[field];
+      if (value === undefined) {
+        errors.push(`${where}: a canvas needs a ${field} (in raster pixels)`);
+      } else if (
+        typeof value !== "number" ||
+        !Number.isInteger(value) ||
+        value < 1 ||
+        value > MAX_CANVAS_SIDE
+      ) {
+        errors.push(
+          `${where}: ${field} must be a whole number of pixels, 1 to ${MAX_CANVAS_SIDE}`,
+        );
+      }
+    }
+    if (node.children) {
+      errors.push(`${where}: a canvas is painted, so it takes no children`);
+    }
+  } else {
+    for (const key of ["width", "height"]) {
+      if (node[key] !== undefined) {
+        errors.push(
+          `${where}: only a canvas has a ${key} — a box is sized with style:`,
+        );
+      }
+    }
+  }
+
   if (kind === "icon") {
     if ((node.sprite === undefined) === (node.spriteBind === undefined)) {
       errors.push(
@@ -494,9 +602,9 @@ function checkNode(node, where, refs, errors, warnings, top) {
       errors.push(`${where}: sprite "${node.sprite}" is not in the atlas`);
     }
     if (node.spriteBind !== undefined) {
-      const type = bindingType(node.spriteBind);
+      const type = bindingType(node.spriteBind, row);
       if (type === undefined)
-        errors.push(unknownBinding(where, node.spriteBind));
+        errors.push(unknownBinding(where, node.spriteBind, row));
       else if (type !== "sprite") {
         errors.push(
           `${where}: spriteBind "${node.spriteBind}" is a ${type}, not a sprite`,
@@ -522,8 +630,8 @@ function checkNode(node, where, refs, errors, warnings, top) {
         // elements butted together) is a layout an author has to maintain to
         // say one sentence.
         for (const [, binding] of node.text.matchAll(/\{([^}]*)\}/g)) {
-          if (bindingType(binding) === undefined) {
-            errors.push(unknownBinding(where, binding));
+          if (bindingType(binding, row) === undefined) {
+            errors.push(unknownBinding(where, binding, row));
           }
         }
         const bad = unrenderable(node.text.replace(/\{[^}]*\}/g, ""));
@@ -549,11 +657,11 @@ function checkNode(node, where, refs, errors, warnings, top) {
   // A bar and a gauge have had their `bind` checked above — both fill to a
   // fraction. What is left is the one a WORD reads.
   if (node.bind !== undefined && kind !== "bar" && kind !== "gauge") {
-    const type = bindingType(node.bind);
+    const type = bindingType(node.bind, row);
     if (typeof node.bind !== "string") {
       checkScriptRef(node.bind, `${where} bind`, refs, errors);
     } else if (type === undefined)
-      errors.push(unknownBinding(where, node.bind));
+      errors.push(unknownBinding(where, node.bind, row));
     else if (kind !== "text" && kind !== "button") {
       errors.push(
         `${where}: only a text, a button, a bar or a gauge reads a bind`,
@@ -599,9 +707,13 @@ function checkNode(node, where, refs, errors, warnings, top) {
     } else if (kind === "bar" || kind === "icon" || kind === "text") {
       errors.push(`${where}: a ${kind} draws itself — it takes no children`);
     } else {
+      // A row widget's children are drawn ONCE PER ROW, so from here down the
+      // row's own bindings (`speaker.*`) are answerable — and only from here
+      // down. Nesting cannot stack two rows: a widget inside a widget's parts
+      // is not a thing the renderer draws.
       node.children.forEach((child, i) => {
         const label = child?.id ? `${where} › ${child.id}` : `${where} › #${i}`;
-        checkNode(child, label, refs, errors, warnings, false);
+        checkNode(child, label, refs, errors, warnings, false, rowScope);
       });
     }
   }
@@ -729,11 +841,11 @@ function checkStyle(style, where, errors) {
  * deliberately no expression language here, because the game already ships a
  * sandboxed Lua and two ways to write a condition is one too many.
  */
-function checkCondition(condition, where, refs, errors) {
+function checkCondition(condition, where, refs, errors, row) {
   if (typeof condition === "string") {
     const binding = condition.startsWith("!") ? condition.slice(1) : condition;
-    const type = bindingType(binding);
-    if (type === undefined) errors.push(unknownBinding(where, binding));
+    const type = bindingType(binding, row);
+    if (type === undefined) errors.push(unknownBinding(where, binding, row));
     else if (type !== "flag") {
       errors.push(
         `${where}: "${condition}" is a ${type} — a condition is a flag, a ` +
@@ -753,7 +865,7 @@ function checkCondition(condition, where, refs, errors) {
         );
         continue;
       }
-      checkCondition(entry, where, refs, errors);
+      checkCondition(entry, where, refs, errors, row);
     }
     return;
   }
@@ -761,9 +873,9 @@ function checkCondition(condition, where, refs, errors) {
 }
 
 /** `visible:` — the condition that decides whether the element is on screen. */
-function checkVisible(visible, where, refs, errors) {
+function checkVisible(visible, where, refs, errors, row) {
   if (visible === undefined) return;
-  checkCondition(visible, `${where} visible`, refs, errors);
+  checkCondition(visible, `${where} visible`, refs, errors, row);
 }
 
 /**
@@ -771,7 +883,7 @@ function checkVisible(visible, where, refs, errors) {
  * how an authored element keeps the states the shipped stylesheet already draws
  * (`bag-full`, `hud-slot-yielded`) without a line of code deciding them.
  */
-function checkClasses(classes, where, refs, errors) {
+function checkClasses(classes, where, refs, errors, row) {
   if (classes === undefined) return;
   if (!classes || typeof classes !== "object" || Array.isArray(classes)) {
     errors.push(`${where}: classes must be a mapping of class → condition`);
@@ -782,7 +894,7 @@ function checkClasses(classes, where, refs, errors) {
       errors.push(`${where}: "${name}" is not a CSS class name`);
       continue;
     }
-    checkCondition(condition, `${where} class "${name}"`, refs, errors);
+    checkCondition(condition, `${where} class "${name}"`, refs, errors, row);
   }
 }
 
@@ -832,13 +944,39 @@ function checkScriptRef(value, where, refs, errors) {
   }
 }
 
-function bindingType(binding) {
-  return typeof binding === "string" ? HUD_BINDINGS[binding] : undefined;
+/**
+ * What kind of value a binding answers with — or `undefined` when nothing here
+ * answers it at all.
+ *
+ * `row` is the row group in scope (`"speaker"` inside a voice card's parts, null
+ * everywhere else), and it is what makes `speaker.peak` legal on a card and
+ * meaningless on the gear row.
+ */
+function bindingType(binding, row) {
+  if (typeof binding !== "string") return undefined;
+  const own = HUD_BINDINGS[binding];
+  if (own !== undefined) return own;
+  const group = binding.slice(0, binding.indexOf("."));
+  return row !== null && group === row ? HUD_ROW_BINDINGS[binding] : undefined;
 }
 
-function unknownBinding(where, binding) {
+function unknownBinding(where, binding, row = null) {
+  const group = String(binding).split(".")[0];
+  // The most useful thing to say about a ROW binding used outside a row is
+  // not "no such name" — the name is right and the PLACE is wrong, and an
+  // author reading "not a HUD binding" would go looking for a typo.
+  if (HUD_ROW_BINDINGS[binding] !== undefined && group !== row) {
+    const widgets = Object.entries(HUD_ROW_WIDGETS)
+      .filter(([, name]) => name === group)
+      .map(([widget]) => widget);
+    return (
+      `${where}: "${binding}" only means something inside one ROW of a list — ` +
+      `author it under ${widgets.join(" or ")}, whose parts are drawn once per ` +
+      `${group}`
+    );
+  }
   const near = Object.keys(HUD_BINDINGS)
-    .filter((id) => id.split(".")[0] === String(binding).split(".")[0])
+    .filter((id) => id.split(".")[0] === group)
     .slice(0, 8);
   return (
     `${where}: "${binding}" is not a HUD binding` +
@@ -937,6 +1075,9 @@ export function validateHudRegions(regions, refs = {}) {
         regions: ids,
       },
       errors,
+      // A region is never inside a row — a list's rows are a WIDGET's parts,
+      // and a widget draws no regions.
+      null,
     );
   }
   // Loops. Walk each region to a root; a chain longer than the catalog is one.

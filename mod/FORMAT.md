@@ -667,13 +667,46 @@ an optional `overlay:`, each with its own class); `gauge` sweeps that fraction
 round an arc (`thickness`, `sweep`, `start`, `track` — a ring, a cooldown wheel
 or a speedometer); `icon` draws a sprite (`sprite:` for a fixed one,
 `spriteBind:` for whichever one the run is holding); `text` draws a line;
-`button` is a box with a `press:`; and `widget` places one of the game's own
-code-backed pieces (`hudWidgets` — the minimap, the party frames, the docks),
-which you can move, hide, reorder and re-sound but not re-author.
+`canvas` is a rectangle a widget PAINTS (`width:` and `height:` in raster
+pixels — the voice card's waveform is one); `button` is a box with a `press:`;
+and `widget` places one of the game's own code-backed pieces (`hudWidgets` —
+the minimap, the party frames, the docks), which you can move, hide, reorder
+and re-sound but not re-author.
 
 **A widget's `children:` are its PARTS.** The weapon slot keeps a place for one
 called `ammo_count`, and what goes there is an ordinary text node with your class,
 your scale and your colour. A part it does not know about is not drawn.
+
+**A LIST widget's parts are drawn once per ROW.** `voiceCards` is the first
+(`hudRowWidgets` names them all): the widget draws who is on the rail, their
+composited portrait and the waveform's pixels, and its parts are resolved again
+for every speaker with that person's own values in scope — the `speaker.*` group
+in `hudRowBindings`. So one authored card says something different on every row:
+
+```yaml
+kind: widget
+widget: voiceCards
+class: voice-card
+classes:
+  shouting: { script: voice.is_shouting } # this speaker, not the rail
+  muted: speaker.muted
+press:
+  action: muteSpeaker # the SEAT comes from the row, not from here
+children:
+  - id: name
+    kind: text
+    bind: speaker.name
+  - id: status
+    kind: text
+    text: { script: voice.status_text }
+```
+
+Three rules go with it. A row binding is **only** legal inside a list widget —
+`speaker.peak` on the gear row is a compile error naming the widget that would
+have answered it. The list widget's own `class`, `classes` and `color` belong to
+the ROW (it is the card); only its `visible:` gates the whole list. And a press
+inside a row takes that row as its argument, which is why one `muteSpeaker`
+serves every card.
 
 **A value** comes from `bind:` (a binding — `hudBindings` lists every one with
 its type) or from a `{ script: }`. A LINE may also weave bindings into itself:
