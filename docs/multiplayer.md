@@ -1111,6 +1111,15 @@ screen, where the player has already stopped to read; a press target that
 appears under a held key, over the field, while the horde keeps coming is a
 mis-tap waiting to happen.
 
+**TO LOOK AT IT WITHOUT A SESSION**, the EFFECTS GALLERY has a UI shelf whose
+one exhibit stages a four-seat party and mounts the real component over it
+(`?effects=scoreboard`, or `node scripts/effects-gallery.mjs --only scoreboard`
+from `pwa/`). Standing a listen server, a second client and a router up to look
+at a table is why the board went two rounds unlooked-at; the exhibit is how it
+stops being that. Everything it stages is real but the ROSTER — names, pings
+and join times are a fact about a session, and there is no session
+(`pwa/src/game/effects-gallery/ui-exhibits.ts`).
+
 ## The engine's Node ship target
 
 `@game/core` is consumed by Vite (for the browser) and by

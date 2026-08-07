@@ -38,6 +38,7 @@ import {
 import { riftPortalLook } from "../render/rift-portal.ts";
 import { driveExhibits } from "./drive-exhibits.ts";
 import { talentExhibits } from "./talent-exhibits.ts";
+import { uiExhibits } from "./ui-exhibits.ts";
 import { weaponExhibits } from "./weapon-exhibits.ts";
 
 const FIELD_EXHIBITS: Exhibit[] = [
@@ -2232,6 +2233,11 @@ export function effectsCatalog(): Exhibit[] {
     ...FIELD_EXHIBITS.filter((e) => e.group === "BOSSES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "ELITES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "WORLD"),
+    // THE INTERFACE — the chrome that cannot be looked at any other way. The
+    // scoreboard only draws inside a live session of two or more, which on a
+    // developer's machine is a listen server, a second client and a router; the
+    // shelf stages one instead (`ui-exhibits.ts`).
+    ...uiExhibits(),
     // THE ROAD, hosted by a `DriveState` rather than a run (see
     // `drive-exhibit.ts`). It sits in this catalog rather than in a gallery of
     // its own because everything ABOUT an exhibit — the search, the shelf jump,

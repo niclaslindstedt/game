@@ -111,6 +111,17 @@ export function runExhibit(deps: {
   levelUpFxRef: RefObject<HTMLDivElement | null>;
   /** Slow motion for judging an effect (see `EXHIBIT_SPEEDS`). Default 1. */
   speed?: number;
+  /**
+   * THE STAGED RUN, handed up whenever it is (re)built — for a UI exhibit,
+   * whose chrome is a React component the gallery mounts over this canvas and
+   * which therefore needs the very state the diorama is running
+   * (`RunExhibit.chrome`). The road's `onDials` is the same seam.
+   *
+   * Called again on a REBUILD rather than only at mount: `stage()` replaces the
+   * state object outright when an exhibit ends its run, and chrome left holding
+   * the old one would be reading a run nothing is ticking.
+   */
+  onState?: (state: GameState) => void;
 }): ExhibitRun {
   const { exhibit, canvas, ctx, assets, nukeFxRef, levelUpFxRef } = deps;
   // Live, so changing the speed keeps the diorama exactly where it is instead
@@ -159,6 +170,9 @@ export function runExhibit(deps: {
     // A walking exhibit laps around wherever the staging just put him.
     walkCentre.x = localHero(state).pos.x;
     walkCentre.y = localHero(state).pos.y;
+    // …and a UI exhibit's chrome is told which run it is reading, on every
+    // staging — the rebuild above swaps the object out from under it.
+    deps.onState?.(state);
   };
   stage();
 

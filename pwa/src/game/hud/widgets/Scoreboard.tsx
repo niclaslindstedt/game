@@ -30,6 +30,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import type { GameState } from "@game/core";
+import { MAX_NAME_CHARS } from "@game/wire/handshake.ts";
 
 import { dollDataUrl } from "../../paper-doll.ts";
 import { localSeat } from "../../local-seat.ts";
@@ -48,16 +49,27 @@ import type { HudFieldContext } from "../context.ts";
  * tick a second; anything faster is a re-render nobody can see. */
 const TICK_MS = 1_000;
 
-/** How much of a name the board draws. Long enough for the names people
- * actually pick, short enough that the columns after it stay in the same place
- * down the whole table — a ragged score column is unreadable at a glance, which
- * is the only way a board held open mid-fight is ever read. */
-const NAME_CHARS = 12;
+/**
+ * How much of a name the board draws — the SESSION's own cap, not a second,
+ * tighter one of its own.
+ *
+ * `sanitizeName` already cuts an arriving name to `MAX_NAME_CHARS`, and its
+ * comment says why that number: it is "the width the roster can show". A board
+ * that cut shorter would truncate names the session had already promised to
+ * display in full, which reads as a bug rather than as a limit (THE FULFILLER
+ * arriving as THE FULFILLE). The narrow party-frame rail genuinely has to cut
+ * to eight; a table 34rem wide does not.
+ */
+const NAME_CHARS = MAX_NAME_CHARS;
 
 const HEAD = "#7c8798";
 const TEXT = "#e6e9ef";
 const DIM = "#9aa3ad";
 const MINE = "#ffd75e";
+/** DOWN where they fell. The party frame says it with a red border and a grey
+ * portrait; a row has no border, so it says it in the text — a drained red, at
+ * a glance, without spending a column on a state that is usually empty. */
+const FALLEN = "#b0757c";
 
 export function Scoreboard({ ctx }: { ctx: HudFieldContext }) {
   const session = ctx.session ?? null;
@@ -209,7 +221,9 @@ function Row({
   ]
     .filter(Boolean)
     .join(" ");
-  const color = row.self ? MINE : row.downed ? DIM : TEXT;
+  // DOWN outranks "mine": a player reading their own row while dead wants to be
+  // told they are dead, not that the row is theirs.
+  const color = row.downed ? FALLEN : row.self ? MINE : TEXT;
   return (
     <div className={classes}>
       <span className="scoreboard-portrait">

@@ -13953,7 +13953,13 @@ canvas.tier-artifact {
   max-width: min(94vw, 34rem);
   padding: 0.5rem 0.7rem;
   box-sizing: border-box;
-  background: rgba(11, 13, 16, 0.82);
+  /* NEARLY OPAQUE, and that is a correction rather than a taste. The damage
+     numbers, the XP popups and the gold floats are drawn on the CANVAS, so
+     they pass straight through a translucent panel — at 0.82 a board held up
+     mid-fight had four-digit orange crits sitting on top of the kill column,
+     which is unreadable exactly when the board is most worth reading. The
+     field still shows through enough to say the fight is still going. */
+  background: rgba(11, 13, 16, 0.94);
   border: 3px solid #2a3442;
   pointer-events: auto;
 }
