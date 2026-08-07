@@ -225,7 +225,8 @@ export function drawDrive(
   /** What THE GLUED are saying, collected as the field is walked and drawn over
    * the finished picture — a bubble sorted in with the bodies would be painted
    * over by whoever is sitting in the next row back. */
-  const bubbles: { line: string; ped: DriveState["pedestrians"][number] }[] = [];
+  const bubbles: { line: string; ped: DriveState["pedestrians"][number] }[] =
+    [];
 
   const put = (
     name: string,
@@ -360,7 +361,10 @@ export function drawDrive(
     }
     const frames =
       ped.kind === "glued"
-        ? ([bodySprite("glued", ped.variant), bodySprite("glued", ped.variant)] as const)
+        ? ([
+            bodySprite("glued", ped.variant),
+            bodySprite("glued", ped.variant),
+          ] as const)
         : CROWD_SPRITES[ped.variant % CROWD_SPRITES.length];
     if (!frames) continue;
     if (ped.mode === "tumbling") {

@@ -290,7 +290,8 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-body-square",
       icon: "blood_burst_2",
       label: "TAKEN IN TWO",
-      blurb: "MET DEAD ON AT 120 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
+      blurb:
+        "MET DEAD ON AT 120 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
       group: "DRIVE",
       keywords: [
         "drive",

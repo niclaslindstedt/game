@@ -294,7 +294,10 @@ export function stepDriveGore(state: DriveGoreState, drive: DriveState): void {
     // ALONG THE GROUND IT ACTUALLY COVERED, not at the point it reached: at the
     // top end a tick is ten pixels and a drag is a couple of hundred, so a mark
     // per tick would be a dotted line down the road.
-    const steps = Math.min(6, Math.max(1, Math.round(travelled / MARK_STEP_PX)));
+    const steps = Math.min(
+      6,
+      Math.max(1, Math.round(travelled / MARK_STEP_PX)),
+    );
     for (let i = 1; i <= steps && wet > 0; i++) {
       const t = i / steps;
       // The tread print is what names the cause: a smear could be anything
@@ -315,8 +318,10 @@ export function stepDriveGore(state: DriveGoreState, drive: DriveState): void {
   }
   // Drop the bookkeeping for pieces the road has forgotten. Cheap: this walks
   // the maps rather than the road, and both are the size of what is on screen.
-  for (const id of [...state.wet.keys()]) if (!live.has(id)) state.wet.delete(id);
-  for (const id of [...state.last.keys()]) if (!live.has(id)) state.last.delete(id);
+  for (const id of [...state.wet.keys()])
+    if (!live.has(id)) state.wet.delete(id);
+  for (const id of [...state.last.keys()])
+    if (!live.has(id)) state.last.delete(id);
 
   layTreads(state, drive);
 }
@@ -393,8 +398,7 @@ export function splashAt(
  * and pointing the way it was travelling. */
 function pasteAt(state: DriveGoreState, piece: DriveRemain): void {
   push(state, {
-    sprite:
-      (piece.part === "whole" ? PASTES[1] : PASTES[0]) ?? PASTES[0]!,
+    sprite: (piece.part === "whole" ? PASTES[1] : PASTES[0]) ?? PASTES[0]!,
     x: piece.pos.x,
     y: piece.pos.y,
     angle: Math.atan2(piece.vel.y, piece.vel.x),
@@ -460,7 +464,9 @@ export function drawRemain(
   camera: Camera,
   sprites: Sprites,
 ): void {
-  const sx = Math.round(bodyAnchorX(piece.pos.x, piece.pos.y, camera.x, camera.y));
+  const sx = Math.round(
+    bodyAnchorX(piece.pos.x, piece.pos.y, camera.x, camera.y),
+  );
   const sy =
     Math.round(bodyAnchorY(piece.pos.x, piece.pos.y, camera.x, camera.y)) -
     Math.round(piece.z) -

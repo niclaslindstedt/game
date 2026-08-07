@@ -70,7 +70,10 @@ export function splitsBody(joules: number): boolean {
 /** A stable 0→1 off a piece's own seed and a salt — the road's gore has no dice
  * of its own on purpose (see the header). */
 function hash(seed: number, salt: number): number {
-  let h = Math.imul((seed ^ 0x9e3779b9) + Math.imul(salt, 0x27d4eb2f), 0x85ebca6b);
+  let h = Math.imul(
+    (seed ^ 0x9e3779b9) + Math.imul(salt, 0x27d4eb2f),
+    0x85ebca6b,
+  );
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
@@ -135,8 +138,7 @@ export function burstBody(
   // because a bumper is at one height and a crowd is not: the same car takes a
   // child through the chest and an old man bent over a cane through the neck.
   const cut =
-    gore.cutBand.from +
-    (gore.cutBand.to - gore.cutBand.from) * hash(seed, 3);
+    gore.cutBand.from + (gore.cutBand.to - gore.cutBand.from) * hash(seed, 3);
 
   const takenInTwo = split && force >= 1;
   if (takenInTwo) {
@@ -188,7 +190,8 @@ export function burstBody(
       // across it by the spread — a chunk that only went sideways would read as
       // having been dropped rather than carried.
       chunk.vel = {
-        x: carVx * DRIVE.impact.carryFraction * (0.5 + 0.5 * hash(seed, 53 + i)),
+        x:
+          carVx * DRIVE.impact.carryFraction * (0.5 + 0.5 * hash(seed, 53 + i)),
         y: Math.sin(spread) * reach,
       };
       chunk.vz =
@@ -380,7 +383,6 @@ export function crushRemains(drive: DriveState): void {
 export function forgetRemains(drive: DriveState): void {
   const dir = drive.params.direction;
   drive.remains = drive.remains.filter(
-    (piece) =>
-      (piece.pos.x - drive.car.pos.x) * dir > -DRIVE.despawnBehindPx,
+    (piece) => (piece.pos.x - drive.car.pos.x) * dir > -DRIVE.despawnBehindPx,
   );
 }

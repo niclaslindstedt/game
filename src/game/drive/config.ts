@@ -538,15 +538,22 @@ export const DRIVE = {
      * centre (negative is toward the back) and how far it may sit off the car's
      * own line.
      *
-     * PAST THE REAR BUMPER, and that number was found by looking. The car's own
-     * body is 48 px, so anything inside ±24 is drawn UNDERNEATH the wagon and
-     * the player sees precisely nothing of the feature: at −15 the drag was a
-     * sound and a trail with no visible cause. Out at −26 the piece trails just
-     * clear of the back, which is what a body caught on a towbar actually looks
-     * like from behind and — more to the point — is the only place the eye can
-     * connect the red streak to the thing making it.
+     * AT THE VERY BACK OF THE CAR, AND THAT NUMBER IS PINNED BETWEEN TWO WALLS.
+     *
+     * Too far FORWARD and the feature is invisible: the wagon's body is 48 px,
+     * so a piece riding inside ±20 is drawn entirely underneath it and the drag
+     * is a sound and a trail with no visible cause (it shipped at −15 and looked
+     * like a bug). Too far BACK and it is worse than invisible — past the car's
+     * own half-length the piece is outside the footprint `crushRemains` tests,
+     * so when the drag lets go the rear wheels are no longer over it and the
+     * body is never run over at all (−26 did exactly that, and the engine suite
+     * caught it: not one crush in a whole staged collision).
+     *
+     * −22 is inside the footprint by two pixels and hangs the piece's own 16-px
+     * sprite six px clear of the back bumper. So it SHOWS while it is dragged,
+     * and the instant it works free the axle is still on top of it.
      */
-    dragAlongPx: -26,
+    dragAlongPx: -22,
     dragAcrossPx: 5,
     /** What share of the car's own travel a piece keeps as it works free — so
      * it skids out from under the back rather than being dropped dead in the

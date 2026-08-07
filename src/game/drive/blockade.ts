@@ -86,7 +86,8 @@ export function spawnBlockade(state: DriveState): void {
   const rows = Math.ceil(blockade.count / perRow);
   // Centred on the mark, so the formation's MIDDLE is where the course says it
   // is however many rows it takes.
-  const frontX = state.car.home.x + dir * (at - (rows * blockade.rowPitchPx) / 2);
+  const frontX =
+    state.car.home.x + dir * (at - (rows * blockade.rowPitchPx) / 2);
   // WHICH OF THEM SPEAKS: spread evenly through the formation rather than
   // rolled, so the bubbles are never all in one row and never all in the row the
   // bumper reaches first.
@@ -95,7 +96,8 @@ export function spawnBlockade(state: DriveState): void {
   for (let i = 0; i < blockade.count; i++) {
     const row = Math.floor(i / perRow);
     const seat = i % perRow;
-    const jitter = (n: number) => (hash(i * 31 + n) - 0.5) * 2 * blockade.jitterPx;
+    const jitter = (n: number) =>
+      (hash(i * 31 + n) - 0.5) * 2 * blockade.jitterPx;
     state.pedestrians.push({
       id: state.nextId++,
       pos: {

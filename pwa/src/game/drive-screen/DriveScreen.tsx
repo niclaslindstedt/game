@@ -382,7 +382,13 @@ export function DriveScreen({
         acc -= STEP_MS;
         if (frozen) break;
         stepDrive(drive, STEP_MS, inputRef.current);
-        drainDrive(drive, burstsRef.current, fxRef.current, goreRef.current, say);
+        drainDrive(
+          drive,
+          burstsRef.current,
+          fxRef.current,
+          goreRef.current,
+          say,
+        );
         ageSpeech(drive.ms);
         // Ask the road whether the next hit is already settled, and take the
         // moment if it is. AFTER the step, so the question is asked of where

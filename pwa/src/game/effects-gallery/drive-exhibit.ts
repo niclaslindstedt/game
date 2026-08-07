@@ -61,10 +61,7 @@ import {
   shakeCamera,
   stepDriveFx,
 } from "../drive-screen/drive-fx.ts";
-import {
-  clearDriveGore,
-  createDriveGore,
-} from "../drive-screen/drive-gore.ts";
+import { clearDriveGore, createDriveGore } from "../drive-screen/drive-gore.ts";
 import {
   createEngineNote,
   drainDrive,

@@ -117,8 +117,7 @@ export function drawPlacard(
   awayPx: number,
 ): void {
   if (awayPx > READ_PX) return;
-  const alpha =
-    awayPx > READ_PX - FADE_PX ? (READ_PX - awayPx) / FADE_PX : 1;
+  const alpha = awayPx > READ_PX - FADE_PX ? (READ_PX - awayPx) / FADE_PX : 1;
   const lines = font.wrap(text, WRAP_PX);
   const width =
     Math.max(...lines.map((line) => font.measure(line))) * TEXT_SCALE;
