@@ -677,6 +677,19 @@ export type DriveState = {
   nextPedestrianAt: number;
   /** …and the same for traffic. */
   nextTrafficAt: number;
+  /**
+   * WHO STILL HAS SOMETHING TO THINK — the crowd's thoughts, shuffled once at
+   * the top of the leg and dealt out as the road unrolls (see `CROWD_THOUGHTS`
+   * and `dealThought`). A dealt one is GONE: the whole catalogue plays across a
+   * trip, each line exactly once, which is what keeps a road of two hundred
+   * people from repeating the same six sad little sentences at the windscreen.
+   */
+  thoughtDeck: number[];
+  /** How far along the next of them is due (world px along the course) — the
+   * thoughts have their own spacing, far wider than the crowd's own, because a
+   * line over every head is a wall of text and a line every so often is a
+   * person. */
+  nextThoughtAt: number;
   /** The next kerb slot the street has not put its furniture down at — an
    * INDEX rather than a distance, because the furniture stands on a fixed
    * pitch in world x (so the way home passes the same posts) and it walks in

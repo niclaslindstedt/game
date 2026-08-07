@@ -29,6 +29,8 @@
 import {
   courseLength,
   createTraffic,
+  crowdEdges,
+  CROWD_THOUGHTS,
   CROWD_VARIANTS,
   DRIVE,
   GLUED_BARKS,
@@ -138,6 +140,9 @@ function plantBody(
   ahead: number,
   across: number,
   variant: number,
+  /** Which of the crowd's thoughts is over their head, or −1 for the ones
+   * simply walking — every exhibit but THE THINGS THEY CARRY. */
+  thought = -1,
 ): void {
   drive.pedestrians.push({
     id: drive.nextId++,
@@ -148,7 +153,7 @@ function plantBody(
     vel: { x: 0, y: 0 },
     mode: "afoot",
     kind: "walker",
-    bark: -1,
+    bark: thought,
     variant: variant % CROWD_VARIANTS,
     phase: 0,
     z: 0,
@@ -254,7 +259,7 @@ function worn(drive: DriveState, wear: number, panelRung: number): void {
 }
 
 /**
- * THE SHELF. Nine exhibits, and between them every picture and every one of the
+ * THE SHELF. Twelve exhibits, and between them every picture and every one of the
  * thirteen sounds the road can throw.
  */
 export function driveExhibits(): DriveExhibit[] {
@@ -627,6 +632,56 @@ export function driveExhibits(): DriveExhibit[] {
             DRIVE.trafficSpeedPx.min + (i % 3) * 60,
             i * 3 + 1,
             true,
+          );
+        }
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-thoughts",
+      icon: "walker_old_woman_0",
+      label: "THE THINGS THEY CARRY",
+      blurb: "WHAT THE PEOPLE ON THIS ROAD ARE THINKING - AT 120, IN PASSING",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "crowd",
+        "pedestrian",
+        "thought",
+        "text",
+        "bubble",
+        "placard",
+        "words",
+      ],
+      // LONG ENOUGH FOR THREE OF THEM, which is the only way the beat is
+      // reviewable at all: one line on its own is a caption, and three arriving
+      // and leaving in turn is the cadence — up out of the traffic, read or not
+      // read, gone, then a stretch of road with nobody thinking anything.
+      showMs: 5200,
+      // NOTHING IS HIT, and that is declared by leaving `shows` off (see the
+      // suite): they are stood on the FAR pavement, the opposite side of the
+      // road from the lane the wagon opens in, so the show is the words and only
+      // the words. What it looks like when one of them goes under the car is
+      // four other exhibits on this same shelf.
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // On the pavement furthest from the car's own line, which on either leg
+        // is simply the edge of the crowd's band the car is not near.
+        const edges = crowdEdges();
+        const kerb = drive.car.pos.y > 0 ? edges.top + 4 : edges.bottom - 4;
+        // Spaced roughly as the road spaces them (`DRIVE.thoughtPitchPx`) so the
+        // gaps between the lines are the gaps a player gets, and given three
+        // thoughts far apart in the catalogue — a hope, a debt and a kindness.
+        const lines = [0, Math.floor(CROWD_THOUGHTS / 3), CROWD_THOUGHTS - 4];
+        for (const [i, thought] of lines.entries()) {
+          plantBody(
+            drive,
+            leadPx(speed) * 1.6 + i * DRIVE.thoughtPitchPx,
+            kerb - drive.car.pos.y,
+            i * 6 + 2,
+            thought,
           );
         }
       },

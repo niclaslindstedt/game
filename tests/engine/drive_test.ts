@@ -14,6 +14,7 @@ import {
   breakTrafficLamps,
   createDrive,
   createTraffic,
+  CROWD_THOUGHTS,
   crossingsBetween,
   crowdEdges,
   driveMph,
@@ -58,6 +59,56 @@ function floorIt(drive: DriveState, ms: number, wheel = 0): void {
   for (let t = 0; t < ms; t += 16) {
     stepDrive(drive, 16, { pedal: 1, wheel });
   }
+}
+
+/**
+ * Drive the WHOLE leg and hand back every walker the road put a thought over,
+ * in the order they were laid down.
+ *
+ * THE WAGON IS HELD IMMORTAL FOR IT (`car.wear = 0` every tick), which is the
+ * simulator's own trick and is the only way to see the tail of the deck: a car
+ * driven flat out through this crowd breaks down a third of the way along, and a
+ * test that stopped there would pass just as happily on a deck that repeats
+ * itself after fifteen cards.
+ */
+function eachWalker(
+  drive: DriveState,
+  visit: (ped: DriveState["pedestrians"][number]) => void,
+): void {
+  const seen = new Set<number>();
+  for (let t = 0; t < 240_000; t += 16) {
+    drive.car.wear = 0;
+    stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    for (const ped of drive.pedestrians) {
+      if (ped.kind !== "walker" || seen.has(ped.id)) continue;
+      seen.add(ped.id);
+      visit(ped);
+    }
+    if (drive.outcome !== DRIVE_OUTCOME.driving) break;
+  }
+}
+
+/** …which thought each of the ones carrying one had. */
+function harvestThoughts(drive: DriveState): number[] {
+  const out: number[] = [];
+  eachWalker(drive, (ped) => {
+    if (ped.bark >= 0) out.push(ped.bark);
+  });
+  return out;
+}
+
+/** …and how many of the leg's people were thinking anything at all. */
+function harvestCrowd(drive: DriveState): {
+  thinking: number;
+  walking: number;
+} {
+  let thinking = 0;
+  let walking = 0;
+  eachWalker(drive, (ped) => {
+    walking++;
+    if (ped.bark >= 0) thinking++;
+  });
+  return { thinking, walking };
 }
 
 /** How long, flat out from a standstill on an empty road, to reach `mph`. */
@@ -535,6 +586,51 @@ describe("a drive", () => {
     floorIt(drive, 40000);
     expect(drive.pedestrians.length + drive.bodies).toBeGreaterThan(0);
     expect(drive.bodies).toBeGreaterThan(0);
+  });
+
+  it("gives the crowd things to think, and never the same thing twice", () => {
+    // THE RULE THE WHOLE FEATURE HANGS ON. A road of two hundred people rolling
+    // a thought each would repeat inside ten seconds, and a repeat turns a crowd
+    // into one person copy-pasted — so the lines are DEALT from a deck
+    // (`DriveState.thoughtDeck`) and a dealt one never comes back.
+    const drive = createDrive(PARAMS);
+    const thoughts = harvestThoughts(drive);
+    expect(thoughts.length).toBeGreaterThan(20);
+    expect(new Set(thoughts).size).toBe(thoughts.length);
+    for (const thought of thoughts) {
+      expect(thought).toBeGreaterThanOrEqual(0);
+      expect(thought).toBeLessThan(CROWD_THOUGHTS);
+    }
+  });
+
+  it("thinks them at their own pace, not the crowd's", () => {
+    // The crowd stands a body every hundred pixels; a line over every head would
+    // be a scrolling wall of grey. What is wanted is one, then a stretch of road
+    // with nobody thinking anything at all, so the player is left with the sense
+    // that he MISSED something rather than that he has been shown a list.
+    const drive = createDrive(PARAMS);
+    const { thinking, walking } = harvestCrowd(drive);
+    // A DOZEN WALKERS FOR EVERY THOUGHT, or thereabouts — the pitch against the
+    // crowd's own spacing. The number that matters is that it is a small
+    // minority; the ratio itself is `DRIVE.thoughtPitchPx` and free to tune.
+    expect(thinking).toBeLessThan(walking / 4);
+    // …AND THE WHOLE DECK GETS ITS TURN over a leg driven end to end, which is
+    // what the pitch is set against: forty lines, twenty thousand peopled
+    // pixels, one trip.
+    expect(thinking).toBeGreaterThan(CROWD_THOUGHTS * 0.7);
+    expect(thinking).toBeLessThanOrEqual(CROWD_THOUGHTS);
+  });
+
+  it("deals the same thoughts in the same order for the same seed", () => {
+    // A restart after a breakdown is the same road, and that has to include what
+    // the people on it were thinking — otherwise the one stretch a player drives
+    // four times is a lottery.
+    const a = harvestThoughts(createDrive(PARAMS));
+    const b = harvestThoughts(restartDrive(createDrive(PARAMS)));
+    expect(b).toEqual(a);
+    // …and a DIFFERENT seed genuinely reorders them.
+    const other = harvestThoughts(createDrive({ ...PARAMS, seed: 987 }));
+    expect(other).not.toEqual(a);
   });
 
   it("lays the same road down for the same seed", () => {
