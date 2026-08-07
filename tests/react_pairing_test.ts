@@ -31,7 +31,9 @@ const lock = JSON.parse(
 
 function resolvedVersion(name: string): string {
   const version = lock.packages?.[`node_modules/${name}`]?.version;
-  expect(version, `${name} missing from package-lock.json`).toBeTypeOf("string");
+  expect(version, `${name} missing from package-lock.json`).toBeTypeOf(
+    "string",
+  );
   return version as string;
 }
 
