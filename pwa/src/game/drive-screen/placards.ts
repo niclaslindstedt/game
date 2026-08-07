@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHAT THE GLUED HAVE TO SAY, AND THE BUBBLE IT IS SAID IN.
+// WHAT THE GLUED HAVE TO SAY, AND HOW IT REACHES THE SCREEN.
 //
 // THE WORDS ARE HERE RATHER THAN IN A THOUGHT CATALOG, and the reason is the
 // shape of the line rather than a filing preference. `content/thoughts.yaml`
 // holds BEATS: a speaker's name, a portrait family, pages the dialogue box
 // flows into a measured column and the player taps through. Not one of those
-// four things exists here — a bubble over somebody's head on a road going past
-// at 120 mph has no name plate, no face, no column and nobody to tap it. It is a
+// four things exists here — a line shouted from a road going past at 120 mph has
+// no name plate, no face, no column and nobody to tap it. It is a
 // BARK, the same kind of line a boss shouts over its own head mid-fight
 // (`AbilityDef`), and the shipped barks are authored in code for the same
 // reason. `docs/manuscript.md` transcribes them either way — the story chain
@@ -44,25 +44,36 @@ export const GLUED_BARKS: readonly string[] = [
   "SORRY FOR THE DISRUPTION",
 ];
 
-/** The bubble's own colours — the game's window skin, so a placard on the road
- * belongs to the same object as every other panel the player reads. */
-const FILL = "#e8e4d8";
-const RIM = "#1a1c2c";
-const INK = "#1a1c2c";
+/**
+ * BARE FLOATING TEXT, THE WAY THE RUN ALREADY SPEAKS — the ink, and the hard
+ * one-pixel shadow under it.
+ *
+ * IT IS NOT A SPEECH BUBBLE, and it stopped being one after a look at it. A
+ * panel with a rim, a fill and a tail is the game's WINDOW skin, and a window is
+ * a thing the player is meant to stop and read — it takes a fifth of a
+ * 844×390 frame, it covers the town, and over a road going past at 120 mph it
+ * reads as the game having paused when it plainly has not. What the run already
+ * uses for a word that has to be read WITHOUT stopping anything is the float
+ * (`kind: "text"` in render/effects.ts): pixel glyphs, a hard near-black
+ * shadow a pixel down-right so they keep contrast over anything, and no
+ * furniture at all. That is what a line shouted from a road is, so that is what
+ * these are.
+ *
+ * The shadow is the whole reason it works over tarmac AND over the pale
+ * crossing paint the blockade is usually standing on — a low-contrast glyph is
+ * invisible on exactly one of those two, whichever colour you pick.
+ */
+const INK = "#e8e4d8";
+const SHADOW = "#0b0d10";
 
-/** How wide a bubble is allowed to get, in unscaled font px, and the scale its
- * text is drawn at. NARROW on purpose: the reference viewport is 422 world px
- * across and a bubble a third of that wide over four different heads is a wall
- * of text with a road somewhere behind it. */
-const WRAP_PX = 46;
+/** How wide a line is allowed to get, in unscaled font px, and the scale it is
+ * drawn at. Wider than the boxed version could afford now there is no padding
+ * or rim to pay for, which is fewer lines for the same words. */
+const WRAP_PX = 62;
 const TEXT_SCALE = 1;
-/** Padding inside the bubble, and the height of the tail under it. */
-const PAD_X = 3;
-const PAD_Y = 2;
-const TAIL_H = 3;
-/** How far above the body's own anchor the bubble's point sits (world px) — a
- * seated person is half the height of a standing one, so this clears a head
- * rather than a sprite. */
+/** How far above the body's own anchor the text sits (world px) — a seated
+ * person is half the height of a standing one, so this clears a head rather
+ * than a sprite. */
 const LIFT = 13;
 
 /**
@@ -78,16 +89,19 @@ const READ_PX = 260;
 const FADE_PX = 90;
 
 /**
- * ONE BUBBLE AT A TIME, AND THAT NUMBER WAS ARRIVED AT BY LOOKING — twice.
+ * ONE VOICE AT A TIME, AND THAT NUMBER WAS ARRIVED AT BY LOOKING — three times.
  *
  * The blockade holds four voices spread through twenty people, all of them
- * inside a couple of hundred pixels of road. Four bubbles overprint into a
- * single block of illegible grey, which turns four people who have something to
- * say into one smudge. Stacking them in lanes fixed that and broke something
- * else: the formation spans the carriageway kerb to kerb, so the speaker nearest
- * the top edge has barely a body's height of sky above them, and the stack ran
+ * inside a couple of hundred pixels of road. Four lines overprint into a single
+ * block of illegible grey, which turns four people who have something to say
+ * into one smudge. Stacking them in lanes fixed that and broke something else:
+ * the formation spans the carriageway kerb to kerb, so the speaker nearest the
+ * top edge has barely a body's height of sky above them, and the stack ran
  * straight off the top of the frame — clamped back down, the lanes collapsed
- * into each other and it was the smudge again.
+ * into each other and it was the smudge again. Dropping the boxes for bare
+ * floating text bought a great deal of room back, and it did not change this
+ * answer: two voices a lane apart still overprint, because what overlaps is the
+ * TEXT and the boxes were only ever making it worse.
  *
  * So the NEAREST one speaks and the rest hold their placards in silence. As the
  * car closes, that one is passed and the next takes its place, which turns a
@@ -96,16 +110,16 @@ const FADE_PX = 90;
  * a picket line through a windscreen.
  */
 const MAX_BUBBLES = 1;
-/** How close to the top of the picture a bubble may get (canvas px) — the top
- * row of the formation has almost no sky above it. */
-const CEILING_PX = 3;
+/** How close to the top of the picture a line may get (canvas px) — the top row
+ * of the formation has almost no sky above it. */
+const CEILING_PX = 6;
 
 /** …read by the renderer, which is what decides WHICH one speaks: it has the
  * whole field and can pick the nearest, where this module only ever sees one
- * bubble at a time. */
+ * line at a time. */
 export const MAX_PLACARDS = MAX_BUBBLES;
 
-/** One bubble, at a body's world spot. Returns nothing — this is a draw. */
+/** One speaker's line, floating over their own spot. This is a draw. */
 export function drawPlacard(
   ctx: CanvasRenderingContext2D,
   font: PixelFont,
@@ -119,46 +133,28 @@ export function drawPlacard(
   if (awayPx > READ_PX) return;
   const alpha = awayPx > READ_PX - FADE_PX ? (READ_PX - awayPx) / FADE_PX : 1;
   const lines = font.wrap(text, WRAP_PX);
-  const width =
-    Math.max(...lines.map((line) => font.measure(line))) * TEXT_SCALE;
-  const height = lines.length * (font.height + 1) * TEXT_SCALE;
-  const boxW = width + PAD_X * 2;
-  const boxH = height + PAD_Y * 2;
+  const lineH = (font.height + 1) * TEXT_SCALE;
   // IN CANVAS SPACE, NOT THE WORLD'S — the one thing on this road drawn outside
   // the projection, and deliberately. Everything with a PLACE on the road is
   // raked with the tarmac it stands on; WORDS are not a thing on the road, they
-  // are a thing being read, and a skewed paragraph is a worse paragraph. The
-  // bubble's POINT still comes from the world (`worldToCanvas` of the speaker's
-  // own spot), so it stays over its owner as the road slides past.
+  // are a thing being read, and a skewed paragraph is a worse paragraph. Where
+  // it POINTS still comes from the world (`worldToCanvas` of the speaker's own
+  // spot), so it stays over its owner as the road slides past.
   const seat = worldToCanvas(worldX, worldY, camera);
   const sx = Math.round(seat.x);
-  const sy = Math.round(seat.y) - LIFT;
-  const left = Math.round(sx - boxW / 2);
-  const top = Math.max(CEILING_PX, Math.round(sy - boxH - TAIL_H));
+  const bottom = Math.round(seat.y) - LIFT;
+  const top = Math.max(CEILING_PX, bottom - lines.length * lineH);
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  // The rim first as a fattened copy of the box, then the fill inside it — the
-  // same one-pixel near-black outline every solid thing in this game is built
-  // on, which is what stops a pale panel reading as a hole in the picture.
-  ctx.fillStyle = RIM;
-  ctx.fillRect(left - 1, top - 1, boxW + 2, boxH + 2);
-  // The tail reaches all the way down to the head it belongs to, however far the
-  // ceiling above pushed the box up — a bubble that has been shoved clear of the
-  // top of the frame still has to say WHOSE it is.
-  const tail = Math.max(TAIL_H, sy - top - boxH);
-  ctx.fillRect(sx - 2, top + boxH, 4, tail + 1);
-  ctx.fillStyle = FILL;
-  ctx.fillRect(left, top, boxW, boxH);
-  ctx.fillRect(sx - 1, top + boxH, 2, tail);
   for (const [i, line] of lines.entries()) {
-    font.draw(
-      ctx,
-      line,
-      left + PAD_X,
-      top + PAD_Y + i * (font.height + 1) * TEXT_SCALE,
-      { scale: TEXT_SCALE, color: INK },
-    );
+    const width = font.measure(line) * TEXT_SCALE;
+    const x = Math.round(sx - width / 2);
+    const y = top + i * lineH;
+    // The shadow first, a pixel down-right, then the glyphs over it — the run's
+    // own float, exactly (render/effects.ts).
+    font.draw(ctx, line, x + 1, y + 1, { scale: TEXT_SCALE, color: SHADOW });
+    font.draw(ctx, line, x, y, { scale: TEXT_SCALE, color: INK });
   }
   ctx.restore();
   ctx.globalAlpha = 1;

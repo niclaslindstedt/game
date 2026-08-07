@@ -1,23 +1,26 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# ONE OF THE GLUED — see glued_cross_legged.yaml for the naming rule.
+# ONE OF THE GLUED — see glued_cross_legged.yaml.
 name: glued_on_back
 family: earth
 size: [16, 16]
 description: >
-  A demonstrator lying flat on their back across the lane, head to one side and
-  one arm flung out.
+  A demonstrator lying flat on their back across the lane, head to the left and
+  one arm flung out along the tarmac.
 subject:
   kind: demonstrator glued to the road
-  build: a person lying full length ACROSS the frame rather than standing in it — head at the left, denim-blue torso through the middle, legs trailing to the right, one arm out
+  build: a person lying full length ACROSS the frame rather than standing in it — head at the left, denim torso through the middle, legs trailing right, one arm stretched out past the head
   attire: a denim-blue jacket over dark trousers
-  features: face up, one arm stretched out along the tarmac
-  accent: the pale of the face, the only thing at this size that says which end is the head
-  flavor: lying down is the version of this that cannot be carried away by two officers holding an elbow each, which is why some of them do it
-  pose: supine, laid out along the road, arm out
+  features: auburn hair, a face turned up to the sky, one bare arm out on the road
+  accent: the pale of the upturned face, which is the only thing at this size that says which end is the head
+  flavor: lying down is the version of this that cannot be carried off by two officers holding an elbow each, which is why some of them do it
+  pose: supine, laid out along the road, one arm out
 palette:
   O: "#1a1c2c" # outline
-  P: "#f0cbaa" # skin
-  B: "#3f5f8f" # denim-blue jacket
+  H: "#8a5a3a" # auburn hair
+  P: "#f0cbaa" # face
+  K: "#f0cbaa" # the outstretched arm
+  D: "#3f5f8f" # denim jacket
+  S: "#2f4a70" # the jacket's shadow side
   T: "#3a3444" # dark trousers
 grid: |
   ................
@@ -28,11 +31,11 @@ grid: |
   ................
   ................
   ................
-  ......OO........
-  .OOO.OPPO..OO...
-  OPPOOOPPOBBBOTTO
-  OPPOBBBBBBBBTTTO
-  .OOOOBBBBBBBOTTO
-  ...OOOOOOOOOOOO.
+  ......OOO.......
+  .OKO.OHPPO..OO..
+  OKKOOODDDDDDOTTO
+  OKKODDDSSDDDTTTO
+  .OOOODDDDDDOTTTO
+  ....OOOOOOOOOOO.
   ................
   ................

@@ -1,25 +1,26 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# ONE OF THE GLUED — see glued_cross_legged.yaml for the naming rule.
+# ONE OF THE GLUED — see glued_cross_legged.yaml.
 name: glued_face_down
 family: earth
 size: [16, 16]
 description: >
   A demonstrator lying face down across the lane with both arms stretched out
-  ahead of them and their hands in the resin.
+  ahead and their hands in the resin.
 subject:
   kind: demonstrator glued to the road
-  build: a person lying prone ACROSS the frame — the back of a dark head at the left, a green jacket through the middle, legs to the right, arms reaching forward
+  build: a person lying prone ACROSS the frame — the back of a dark head at the left, a green jacket through the middle, legs trailing right, arms reaching forward past the head
   attire: a green outdoor jacket over dark trousers
-  features: the back of the head, arms out ahead, hands set into the road
+  features: the back of a black-haired head, both arms out ahead, hands set into the road
   accent: the green against the tarmac
   flavor: face down is the one posture out here that reads as somebody who has already thought about being dragged
   pose: prone, arms extended, motionless
 palette:
   O: "#1a1c2c" # outline
-  P: "#f0cbaa" # skin
-  H: "#2c2536" # dark hair
+  H: "#2c2536" # black hair
+  K: "#c68a5e" # the reaching hands
   G: "#4f8f4a" # green jacket
-  T: "#3a3444" # dark trousers
+  S: "#3d7038" # the jacket's shadow side
+  T: "#4a4235" # dark trousers
 grid: |
   ................
   ................
@@ -29,11 +30,11 @@ grid: |
   ................
   ................
   ................
-  .....OOO........
-  ...OOOHHOO..OO..
-  .OOOGGGGGGOOTTO.
-  OPPOGGGGGGGGTTTO
-  .OOOGGGGGGOOTTO.
+  .....OOOO.......
+  ...OOHHHHOO..OO.
+  .OKOGGGGGGGGOTTO
+  OKKOGGGSSGGGTTTO
+  .OOOGGGGGGGGOTTO
   ....OOOOOOOOOOO.
   ................
   ................

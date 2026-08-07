@@ -70,8 +70,16 @@ function scratch(key: string, width: number, height: number): Scratch | null {
  * it clipped to its own alpha, and hand the canvas back. Null when there is no
  * coat to lay on, or no 2D context to build it in — both meaning "draw it
  * plainly", which every caller falls back to.
+ *
+ * EXPORTED, because the hero is no longer the only thing in this game that
+ * wears what it did. A CAR PANEL is the same problem in a different silhouette
+ * (`drive-screen/car-soak.ts`): a bloodied twin of seven panels at four damage
+ * rungs is 84 sprites nobody would keep in step, and one film masked to
+ * whichever panel is being drawn is the identical trick — including the reason
+ * it has to be `multiply` rather than paint, since a car's own outline and
+ * paint colour have to keep reading through the mess exactly as his gear does.
  */
-function soaked(
+export function soaked(
   key: string,
   sprites: Sprites,
   coat: readonly CoatLayer[],

@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# 48x26 canvas. This one is NOT a panel — it is the blood film, drawn over the
+# whole shell area and MASKED to whichever panel is being soaked
+# (pwa/src/game/drive-screen/car-soak.ts), exactly as the hero's coat is clipped
+# to his own silhouette. One set of three rungs therefore covers all seven
+# panels at every damage rung, with nothing authored per panel.
+#
+# TWO CONSTRAINTS SHAPE THE ART, and both were learned by looking at a car.
+#
+# IT COVERS EVERY COLUMN. A panel is a narrow slice of these 48 columns — the
+# bumper is about six of them — so a film built as scattered blots leaves whole
+# panels with nothing to mask, and the first cut drew a clean nose on a wagon
+# whose bumper was measurably drenched.
+#
+# AND THE TOP RUNG LEAVES NO BARE PIXEL AT ALL. A car covered in blood may be
+# light red and dark red and every value between; it may not still have white
+# paintwork showing through in patches, which is what a film with gaps in it
+# draws once the panel underneath is a white hatchback. The variation at rung 2
+# is in the VALUE — wet red, midtone, clotted — never in the coverage.
+name: car_gore_0
+family: goodco
+size: [48, 26]
+description: >
+  Rung 0 of the blood a car picks up running people down — spatter across the
+  shell with runs where it has started to travel down the paintwork.
+subject:
+  kind: vehicle overlay
+  build: >-
+    a blood film over a 48x26 area: wet red, midtone and clotted pixels mixed
+    across it, WETTEST at the top and most clotted at the bottom where it has
+    run and dried, solid wet blots through it, and short vertical runs trailing
+    down; it must read as a FILM over paintwork rather than as a shape, since it
+    is masked to whichever panel it is laid on
+  flavor: >-
+    the first few bodies: spatter and a run or two, the paint still plainly white between them
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..id...dr..rddr.rd.rid..d.d..ii.i.dd...r.rr.rir.
+  dd..r.d..didrrrddrirrr..ddrdrrd.rdd..r.dr...i.ii
+  ii.i.i...ii.dddr.drr.ddrdrrrdd.d.r.dr..d.rr.dd..
+  .id.rdrri..i.dd..iird.iidrrddd.d..r.iirdrdrir..r
+  .dddii..rd..r....r.idrrd..dd.dddd...i..dridd.idd
+  ...i.idr..diidd.id..drrrdidd.drirrrd..idiiidd.dr
+  dridr...rd..rdi.i.dr.rddd.ddr.ridi.rddddid.dir.d
+  ...i.....ir.i..dd..ddi...drrrddd.i.drrrdi.d...r.
+  ..didi.d.r...ddddd..d.iiiiddddi..id.rddi.....i..
+  d...i.d..r..drrdrddd.r..dd..r..ddd....di......id
+  .irddd..dii.iddddd..r..dddd....ri.....d.....ii..
+  .ddrdd.d.id..rdd.d...ii.ri......dd...dd.ddii.ir.
+  ddrrrdd...i..d.ii.dddr.d.dd.d.rd..i.d.di.d.i.i.d
+  .ddrdd.........i...d...dd..d..i.d..ir.ddd...r...
+  ...d..i..riddid..dd...rd....di.....i.ii.d......i
+  ii...i.dri.iir.d...rii.dd...i.i..r.d.di.......i.
+  ddd.irdd..d.d.....ddd..d...ddiid.dd...i..r.d....
+  rrrd...i.i.........i.ddd.......dd...di.........d
+  dddi.d.i....i..di.di.r.ii.d.......d.di.ii..dd.i.
+  .i...i........id..d.idii..ddr.ririid.id.......i.
+  d..ddr..ii.d....d....d..ii.r.i....r.....i...d..d
+  dddrrrdr....id...ri..di.......d..d......r.di.d..
+  ...dddrr.r.i.d..i..r.d.iid....d......i...dr.r...
+  .di..d.......i.......did......i....i....di.i....
+  ....ir.i......i.i..i.dd.i....i......d.di........
+  i.d...d.d.i..i....id.di...i.....i....iii...id...

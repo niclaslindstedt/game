@@ -26,7 +26,6 @@ import {
   driveDriverInput,
   driveMph,
   driveVerdict,
-  inevitableHit,
   restartDrive,
   stepDrive,
   thoughtDef,
@@ -50,7 +49,6 @@ import {
   IDLE_REVEAL,
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
-import { worldToCanvas } from "../render/tilt.ts";
 import { viewScaleFor } from "../render/view.ts";
 import { engineNote } from "../sfx/drive.ts";
 import { DrivePause } from "./DrivePause.tsx";
@@ -62,15 +60,6 @@ import {
   stepDriveFx,
   type DriveFxState,
 } from "./drive-fx.ts";
-import {
-  armDrama,
-  clearDrama,
-  createDriveDrama,
-  dramaDepth,
-  dramaTimeScale,
-  dramaZoom,
-  type DriveDrama,
-} from "./drive-time.ts";
 import {
   clearDriveGore,
   createDriveGore,
@@ -202,7 +191,6 @@ export function DriveScreen({
    * leg and thrown away on a restart, exactly like the effect layer beside it:
    * the mess is a record of THIS attempt at the road. */
   const goreRef = useRef<DriveGoreState>(createDriveGore());
-  const dramaRef = useRef<DriveDrama>(createDriveDrama());
   const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
   const keysRef = useRef<Set<string>>(new Set());
@@ -372,11 +360,18 @@ export function DriveScreen({
       const frozen = pausedRef.current;
 
       // ── THE MOMENT ────────────────────────────────────────────────────────
-      // How much simulation a real millisecond buys right now. 1 nearly always;
-      // a quarter for the length of a collision nobody could have avoided (see
-      // drive-time.ts, and `inevitableHit` for who decides "nobody could").
-      const depth = frozen ? 0 : dramaDepth(dramaRef.current, now);
-      acc += Math.min(MAX_CATCHUP_MS, now - last) * dramaTimeScale(depth);
+      // THERE ISN'T ONE, AND THAT IS A DECISION. The road used to drop to a
+      // quarter speed and lean the camera in the instant a collision stopped
+      // being avoidable — a predictor in the engine (`inevitableHit`) armed a
+      // dilation in the app. It was cut, both halves, because it was answering
+      // the wrong question: a bullet-time beat is for a moment the player might
+      // still do something about, and this one was fired precisely when they
+      // could not. What it actually did was interrupt the DRIVING — the thing
+      // the minigame is — several times a leg, on a road laid down so thick
+      // that a hit is a couple of seconds away at all times. The tension here
+      // is the wheel and the speed; slowing the world to admire a collision
+      // spends it.
+      acc += Math.min(MAX_CATCHUP_MS, now - last);
       last = now;
       while (acc >= STEP_MS) {
         acc -= STEP_MS;
@@ -390,11 +385,6 @@ export function DriveScreen({
           say,
         );
         ageSpeech(drive.ms);
-        // Ask the road whether the next hit is already settled, and take the
-        // moment if it is. AFTER the step, so the question is asked of where
-        // the bumper actually got to rather than where it was a frame ago —
-        // the same ordering the collision itself is resolved on.
-        if (inevitableHit(drive)) armDrama(dramaRef.current, now);
         // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
         // fixed step — so a slow frame never skips a grain or fast-forwards a
         // spark, the pause card's freeze stops both dead exactly as it stops
@@ -406,7 +396,6 @@ export function DriveScreen({
           burstsRef.current,
           fxRef.current,
           goreRef.current,
-          dramaRef.current,
           onArrived,
         );
       }
@@ -425,27 +414,7 @@ export function DriveScreen({
         driveCamera(drive, viewW, viewH),
         drive.ms,
       );
-      // …but the LEAN-IN is a context scale, about the car's own screen point —
-      // the run's own death push-in, exactly (render/death.ts, and the note in
-      // game-screen/render-frame.ts for why it is a transform rather than a
-      // smaller view rect). Everything below still draws in unzoomed view
-      // units, so no pass downstream knows or cares that the camera leaned in,
-      // and the whole-view fills still cover the canvas for any anchor inside
-      // the frame.
-      const zoom = dramaZoom(depth);
-      if (zoom > 1) {
-        const seat = worldToCanvas(drive.car.pos.x, drive.car.pos.y, camera);
-        ctx.setTransform(
-          unit * zoom,
-          0,
-          0,
-          unit * zoom,
-          unit * seat.x * (1 - zoom),
-          unit * seat.y * (1 - zoom),
-        );
-      } else {
-        ctx.setTransform(unit, 0, 0, unit, 0, 0);
-      }
+      ctx.setTransform(unit, 0, 0, unit, 0, 0);
       drawDrive(
         ctx,
         drive,
@@ -632,7 +601,6 @@ function endDrive(
   bursts: Burst[],
   fx: DriveFxState,
   gore: DriveGoreState,
-  drama: DriveDrama,
   onArrived: (to: string, bodies: number, verdict: string) => void,
 ): void {
   if (
@@ -643,7 +611,6 @@ function endDrive(
     bursts.length = 0;
     clearDriveFx(fx);
     clearDriveGore(gore);
-    clearDrama(drama);
   }
   if (
     drive.outcome === DRIVE_OUTCOME.arrived &&

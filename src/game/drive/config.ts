@@ -318,6 +318,49 @@ export const DRIVE = {
     jitterPx: 4,
     /** How many of them have something to say — see `DrivePedestrian.bark`. */
     voices: 4,
+    /**
+     * HOW FAR BEHIND THE CAR THEY ARE STILL THERE (world px) — far past the
+     * `despawnBehindPx` everybody else on this road is forgotten at, and that
+     * is the whole point of the number.
+     *
+     * The wagon physically reaches four to six of the twenty; the other fifteen
+     * are unharmed and still sitting exactly where they sat down. Forgetting
+     * them at the crowd's own reach deleted them while the blood they were
+     * nowhere near stayed on the tarmac, so the aftermath was drawn as gore
+     * with nobody in it and read as a massacre of the whole demonstration.
+     * Keeping them for the length of the visible road is what makes the picture
+     * true — and it is what the fiction says anyway: everybody else out here is
+     * walking somewhere, and these people are not going anywhere at all.
+     */
+    rememberPx: 1400,
+    /**
+     * WHAT ONE OF THEM WEIGHS, as a multiple of an ordinary pedestrian — and
+     * this is the number that makes the set piece a WALL rather than a thicker
+     * patch of crowd.
+     *
+     * IT IS HONEST PHYSICS, not a difficulty knob. A walker met by a bumper is
+     * 78 kg standing loose on the tarmac: the collision throws them, and the car
+     * hands over a twentieth of its momentum doing it. Somebody SEATED, braced,
+     * with their hands set into the resin and their arms through their
+     * neighbours' is not a loose 78 kg — they are anchored to the road and
+     * coupled to the people either side, and what the wagon has to shift is that
+     * whole assembly. Four is a person plus the share of the road and the
+     * neighbours they are attached to.
+     *
+     * WHAT IT BUYS, measured against `solveImpact` on MEDIUM: a square hit at
+     * the top end costs about 46 mph instead of 13, so the car is stopped inside
+     * roughly THREE bodies rather than sailing through twenty. That is the
+     * picture the whole thing was written for and the code did not do — he
+     * ploughs into the front row, wrecks it, and grinds to a crawl among the
+     * rest, which is what actually happens and is far worse to watch than
+     * driving cleanly through a crowd of twenty.
+     *
+     * The energy goes up with it (damage is the same sum), so the front row is
+     * expensive — but only the FIRST hits are, because absorbed energy goes as
+     * the SQUARE of the closing speed and the car has already lost most of it by
+     * the second body. The blockade costs a leg its bumper, not its engine.
+     */
+    massMult: 4,
   },
 
   // ── THE KERB ──────────────────────────────────────────────────────────────
@@ -522,6 +565,19 @@ export const DRIVE = {
      * line and per unit of force past it. */
     chunkReachPx: { base: 26, perForce: 30 },
     chunkLiftPx: { base: 90, perForce: 70 },
+    /**
+     * HOW MUCH OF THAT REACH GOES ACROSS THE ROAD rather than along it.
+     *
+     * A CAR THROWS THINGS FORWARD. It is a surface moving at 53 m/s in one
+     * direction, and what comes off a body it meets goes up the road with it —
+     * the sideways component is only what the body's own splash contributes,
+     * and it is small. Undamped it is not merely wrong, it MISREPORTS THE
+     * EVENT: the blockade is twenty people of whom the wagon physically reaches
+     * four to six, and a full-width scatter put pieces in all four lanes, so an
+     * aftermath in which fifteen of them are still sitting there unharmed read
+     * as a massacre of the lot. The damping is what lets the survivors be seen.
+     */
+    chunkAcross: 0.4,
     /**
      * HOW LONG A PIECE STAYS CAUGHT UNDER THE CAR (ms) — at the split line, and
      * per unit of force past it, capped.

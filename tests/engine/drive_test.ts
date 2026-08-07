@@ -19,7 +19,6 @@ import {
   DRIVE_OUTCOME,
   DRIVE_UNITS,
   impactMasses,
-  inevitableHit,
   laneCenter,
   restartDrive,
   roadBandEdges,
@@ -574,66 +573,6 @@ describe("the kerb", () => {
     for (const difficulty of DIFFICULTY_ORDER) {
       expect(impactMasses(difficulty).lamp).toBe(impactMasses("medium").lamp);
     }
-  });
-});
-
-describe("the moment before a hit", () => {
-  it("says nothing while the wheel can still save it", () => {
-    const drive = createDrive(PARAMS);
-    // An empty opening stretch at speed: there is nobody to be inevitable.
-    floorIt(drive, 2000);
-    expect(inevitableHit(drive)).toBeNull();
-  });
-
-  it("calls a body dead ahead and close inevitable, and one across the road not", () => {
-    const drive = createDrive(PARAMS);
-    floorIt(drive, 3000);
-    drive.pedestrians.length = 0;
-    const plant = (dy: number, dx: number) => {
-      drive.pedestrians.length = 0;
-      drive.pedestrians.push({
-        id: 1,
-        pos: { x: drive.car.pos.x + dx, y: drive.car.pos.y + dy },
-        vel: { x: 0, y: 0 },
-        mode: "afoot",
-        kind: "walker",
-        bark: -1,
-        variant: 0,
-        phase: 0,
-        z: 0,
-        vz: 0,
-        counted: false,
-        crushed: false,
-      });
-      return inevitableHit(drive);
-    };
-    // Right in front of the bumper, a couple of frames out: no wheel saves it.
-    expect(plant(0, 40)).not.toBeNull();
-    // The same distance ahead but a lane and a half over: plenty of room.
-    expect(plant(DRIVE.laneWidth * 1.5, 40)).toBeNull();
-    // …and dead ahead but a long way off: still avoidable, so still silent.
-    expect(plant(0, 500)).toBeNull();
-  });
-
-  it("stays quiet at a crawl, where there is no drama to be had", () => {
-    const drive = createDrive(PARAMS);
-    for (let t = 0; t < 4000; t += 16)
-      stepDrive(drive, 16, { pedal: -1, wheel: 0 });
-    drive.pedestrians.push({
-      id: 1,
-      pos: { x: drive.car.pos.x + 30, y: drive.car.pos.y },
-      vel: { x: 0, y: 0 },
-      mode: "afoot",
-      kind: "walker",
-      bark: -1,
-      variant: 0,
-      phase: 0,
-      z: 0,
-      vz: 0,
-      counted: false,
-      crushed: false,
-    });
-    expect(inevitableHit(drive)).toBeNull();
   });
 });
 

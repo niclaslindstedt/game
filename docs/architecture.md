@@ -878,13 +878,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   the effects gallery's DRIVE shelf is a second host that has to drain a road
   exactly as the screen does. The whole frame is drawn INSIDE
   `applyWorldProjection`, because that is the space `drawWorldSprite`
-  billboards into. THE MOMENT a hit stops being avoidable, the world drops to a
-  quarter speed and the camera leans in on the wagon: `predict.ts` answers
-  WHETHER (the wheel's own authority against the crowd's own velocity) and
-  `drive-screen/drive-time.ts` decides what that is worth, by dilating how much
-  real time buys a fixed step — the simulation is untouched, so a drive that
-  spent half its length in slow motion arrives with the same bodies and the same
-  road. What he MAKES of the trip is not said on the road at all: `driveVerdict`
+  billboards into. THERE IS NO BULLET TIME, and there used to be: the world
+  dropped to a quarter speed and the camera leaned in the instant a hit stopped
+  being avoidable (an engine predictor arming an app-side dilation). Both halves
+  were cut, because they answered the wrong question — a slow-motion beat is for
+  a moment the player might still act on, and that one fired precisely when they
+  could not. What it did in practice was interrupt the DRIVING several times a
+  leg on a road laid down thick enough that a hit is always a second or two
+  away. The tension here is the wheel and the speed, and slowing the world to
+  admire a collision spends it. What he MAKES of the trip is not said on the road at all: `driveVerdict`
   reads the whole journey and hands the arriving run one line
   (`RunParams.arrivalThought`), spoken as the last page of the destination's
   opening monologue. Damage

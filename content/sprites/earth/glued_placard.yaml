@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# ONE OF THE GLUED — see glued_cross_legged.yaml for the naming rule. The board
-# carries MARKS rather than letters: at sixteen pixels a legible slogan is four
-# grey smudges, and what they are actually saying is said in the bubble over
-# their head instead (pwa/src/game/drive-screen/placards.ts).
+# ONE OF THE GLUED — see glued_cross_legged.yaml. The board carries MARKS rather
+# than letters: at sixteen pixels a legible slogan is four grey smudges, and
+# what they are actually saying is said over their head instead
+# (pwa/src/game/drive-screen/placards.ts).
 name: glued_placard
 family: earth
 size: [16, 16]
@@ -11,34 +11,35 @@ description: >
   stick.
 subject:
   kind: demonstrator glued to the road
-  build: a person seated in the lower right of the frame with one arm raised holding a stick, and a pale rectangular board filling the upper left
-  attire: a green jacket over dark trousers
-  features: a cardboard board on a stick, hand-lettered in a dark marker that reads as writing without being any
+  build: a person seated in the lower right of the frame with one arm raised gripping a stick, and a pale rectangular board filling the upper left
+  attire: a grey-green jacket over dark trousers
+  features: ginger hair, two dark eyes, one hand up on the stick; the board hand-lettered in a dark marker that reads as writing without being any
   accent: the pale board, which is the brightest thing on this road at night
   flavor: the board is doing the work the hero is not reading, which is the entire scene in one prop
   pose: seated, one arm up holding the board
 palette:
   O: "#1a1c2c" # outline
-  P: "#f0cbaa" # skin
-  G: "#4f8f4a" # green jacket
-  T: "#3a3444" # dark trousers
   W: "#e0dccb" # cardboard board
-  K: "#2c2536" # marker pen
+  N: "#2c2536" # marker pen
   S: "#8a7358" # the stick
+  H: "#b06a3a" # ginger hair
+  P: "#f0cbaa" # skin
+  G: "#5a7a5a" # grey-green jacket
+  T: "#3a3444" # dark trousers
 grid: |
   .OOOOOOOOO......
   .OWWWWWWWO......
-  .OWKKKKWWO......
-  .OWWKKKKWO......
-  .OWKKKWWWO......
+  .OWNNNNWWO......
+  .OWWNNNNWO......
+  .OWNNNWWWO......
   .OOOOOOOOO......
   ....OSO.........
-  ....OSO.OOOO....
-  ....OSO.OPPO....
-  ...OPPO.OPPO....
-  ...OPO.OOGGGO...
-  ...OPOOOGGGGO...
-  ...OOGGGGGGGO...
-  ..OOTTTTTTTTOO..
+  ....OSO.OHHHHO..
+  ....OSO.OHPPHO..
+  ...OPSO.OPOPPO..
+  ...OPOOOGGGGGGO.
+  ...OOOGGGGGGGGO.
+  ....OGGGGGGGGGO.
+  ....OTTTTTTTTTO.
   ................
   ................

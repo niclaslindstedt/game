@@ -55,6 +55,7 @@ import {
   splitSound,
   trafficHitSound,
 } from "./drive-sounds.ts";
+import { soakCarFromStrike } from "./car-soak.ts";
 import {
   bodySprite,
   crushRemain,
@@ -160,9 +161,20 @@ export function drainDrive(
       bornMs: drive.ms,
       sprite: bodySprite(strike.kind, strike.variant),
     });
-    // …and the splash it puts on the tarmac, which is the one mark on this road
-    // laid at the moment of a collision rather than by something travelling.
+    // …the splash it puts on the tarmac, which is the one mark on this road
+    // laid at the moment of a collision rather than by something travelling…
     splashAt(gore, strike.pos.x, strike.pos.y, splashForce(strike.joules));
+    // …and what it puts on the CAR. Which panel wore it is the physics' own
+    // answer (`DriveStrike.panel`, the same number the damage is booked
+    // against), and how far UP the car the body got is its own lift — so the
+    // wagon gets bloody where it was actually hit, and only reaches the
+    // windscreen and the roof when somebody was properly thrown.
+    soakCarFromStrike(
+      gore.car,
+      strike.panel,
+      strike.vz,
+      splashForce(strike.joules),
+    );
   }
   // The trail: whatever is being dragged, skidded or carried leaves its blood on
   // the road it covered this tick. Walked here rather than at the draw, because

@@ -44,9 +44,10 @@ import { DRIVE, type DriveRemain, type DriveState } from "@game/core";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { goreFamily } from "../game-screen/gore.ts";
 import { slicedPiece, splitSprite } from "../render/sprite-split.ts";
-import { fract } from "../render/shared.ts";
-import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
+import { fract, seatX, seatY } from "../render/shared.ts";
+import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
+import { cleanCar, soakCarFromDrag, type CarSoak } from "./car-soak.ts";
 import { CROWD_SPRITES, GLUED_SPRITES } from "./scenery.ts";
 
 /** One mark on the tarmac: a drag streak, a tyre print, a splash, or a body
@@ -103,6 +104,14 @@ export type DriveGoreState = {
    * is measured in GROUND COVERED rather than in ticks — the same accumulator
    * the hero's own gait spends. */
   tyreAt: { x: number; y: number } | null;
+  /**
+   * HOW FILTHY EACH PANEL OF THE CAR IS — the hero's coat, on a wagon
+   * (`car-soak.ts`). It rides here rather than on the car itself for the same
+   * reason the marks do: it is what the ROAD did to it, thrown away with the
+   * rest of the mess when the leg restarts, where `CarVehicle.panels` is
+   * damage the garage still has to fix.
+   */
+  car: CarSoak;
 };
 
 /** The three drag rungs, lightest first — picked by how wet the piece still is,
@@ -222,6 +231,7 @@ export function createDriveGore(): DriveGoreState {
     cells: new Map(),
     tyre: 0,
     tyreAt: null,
+    car: cleanCar(),
   };
 }
 
@@ -233,6 +243,7 @@ export function clearDriveGore(state: DriveGoreState): void {
   state.cells.clear();
   state.tyre = 0;
   state.tyreAt = null;
+  state.car = cleanCar();
 }
 
 /**
@@ -324,7 +335,19 @@ export function stepDriveGore(state: DriveGoreState, drive: DriveState): void {
     if (!live.has(id)) state.last.delete(id);
 
   layTreads(state, drive);
+
+  // …and the underside, for as long as something is wedged under it. A rate
+  // rather than a hit, because a drag is the one thing on this road that is
+  // still happening a second after it started.
+  if (drive.remains.some((piece) => piece.dragMs > 0)) {
+    soakCarFromDrag(state.car, STEP_MS);
+  }
 }
+
+/** The drive's fixed step (ms) — the rate `stepDriveGore` is called at, which
+ * is what the drag soak above is measured against. The engine's own, so a
+ * slow frame wets the car by exactly as much as a fast one. */
+const STEP_MS = 16;
 
 /**
  * THE CAR'S OWN TRAIL — a pair of tread prints laid every so much ground
@@ -424,6 +447,23 @@ function push(state: DriveGoreState, mark: RoadMark): void {
  * own gore learned the hard way: anything drawn in the effect layer is painted
  * over the actors, and a player driving through his own mess had chunks of
  * somebody laid across the bonnet for the rest of the leg.
+ *
+ * **AND THAT DECIDES THE ANCHOR, which is the trap this file fell into.** There
+ * are TWO conventions for putting a world point on this screen and they differ
+ * by the projection itself:
+ *
+ *   INSIDE the projected context (this pass, the road bands, every actor) a
+ *   world point is a PLAIN CAMERA SUBTRACT — `seatX`/`seatY` — and the context's
+ *   own transform rakes it.
+ *   OUTSIDE it (`drawDriveFx`, the placards) the projection has to be applied by
+ *   hand, which is what `bodyAnchorX`/`bodyAnchorY` are for.
+ *
+ * Using the OUTSIDE anchor in here projects everything twice. At the shipped
+ * camera that is a y multiplied by 0.75 twice over, so a mark on the near lane
+ * came out about 28 world px high — taller than the car — and the tyre trail
+ * appeared to pour out of the ROOF rather than off the wheels. It is invisible
+ * in a still of an empty road and obvious the moment anything is drawn beside
+ * the thing that made it.
  */
 export function drawRoadMarks(
   ctx: CanvasRenderingContext2D,
@@ -440,10 +480,10 @@ export function drawRoadMarks(
     if (!art) continue;
     ctx.save();
     ctx.globalAlpha = mark.alpha;
-    ctx.translate(
-      Math.round(bodyAnchorX(mark.x, mark.y, camera.x, camera.y)),
-      Math.round(bodyAnchorY(mark.x, mark.y, camera.x, camera.y)),
-    );
+    // A PLAIN CAMERA SUBTRACT, because this pass runs INSIDE the world
+    // projection — see the note on `drawRoadMarks` for why that is not the same
+    // anchor the effect layer uses.
+    ctx.translate(seatX(mark.x, camera.x), seatY(mark.y, camera.y));
     ctx.rotate(mark.angle);
     ctx.drawImage(art, -Math.round(art.width / 2), -Math.round(art.height / 2));
     ctx.restore();
@@ -464,13 +504,25 @@ export function drawRemain(
   camera: Camera,
   sprites: Sprites,
 ): void {
-  const sx = Math.round(
-    bodyAnchorX(piece.pos.x, piece.pos.y, camera.x, camera.y),
+  // A BILLBOARD, like every other body on this road: the caller has the world
+  // projection on the context, so the piece is un-projected around its own
+  // anchor and drawn standing at full size rather than squashed into the
+  // tarmac. Anchored with `seatX`/`seatY` for the reason `drawRoadMarks`
+  // explains at length — the effect layer's anchor would project it twice and
+  // hang it a lane and a half above the road it is lying on.
+  billboard(ctx, piece.pos.x, piece.pos.y, camera.x, camera.y, () =>
+    drawRemainAt(ctx, piece, camera, sprites),
   );
-  const sy =
-    Math.round(bodyAnchorY(piece.pos.x, piece.pos.y, camera.x, camera.y)) -
-    Math.round(piece.z) -
-    BODY_LIFT;
+}
+
+function drawRemainAt(
+  ctx: CanvasRenderingContext2D,
+  piece: DriveRemain,
+  camera: Camera,
+  sprites: Sprites,
+): void {
+  const sx = seatX(piece.pos.x, camera.x);
+  const sy = seatY(piece.pos.y, camera.y) - Math.round(piece.z) - BODY_LIFT;
 
   if (piece.part === "chunk") {
     const art = spriteByName(

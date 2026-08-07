@@ -105,8 +105,6 @@ export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
 export { blockadeAt, GLUED_BARKS, GLUED_VARIANTS } from "./blockade.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
-export { inevitableHit } from "./predict.ts";
-export type { InevitableHit } from "./predict.ts";
 export { remainForce, splitsBody } from "./remains.ts";
 export type {
   DriveDirection,
@@ -380,7 +378,12 @@ function collide(drive: DriveState): void {
       ped.pos,
       ped.vel,
       DRIVE.pedestrianRadiusPx,
-      mass.pedestrian,
+      // ONE OF THE GLUED IS NOT A PEDESTRIAN'S WEIGHT, and that is the whole
+      // difference between a wall and a thicker crowd — see
+      // `DRIVE.blockade.massMult`.
+      ped.kind === "glued"
+        ? mass.pedestrian * DRIVE.blockade.massMult
+        : mass.pedestrian,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
@@ -410,6 +413,7 @@ function collide(drive: DriveState): void {
         joules: hit.joules,
         kind: ped.kind,
         variant: ped.variant,
+        panel: panelAt(hit.along),
         split: cutInTwo,
       });
       const pieces = burstBody(drive, ped, hit, split, gib);

@@ -328,6 +328,18 @@ export type DriveStrike = {
   kind: PedestrianKind;
   variant: number;
   /**
+   * WHICH PANEL WORE IT — the same `panelAt(hit.along)` the damage is booked
+   * against, carried out so the app does not have to guess where on the car a
+   * body actually landed.
+   *
+   * It is the one number that makes the wagon get BLOODY where it was hit
+   * rather than uniformly: hit things square and it is the bumper every time,
+   * sideswipe the crowd and it is the doors — which is exactly the record the
+   * PANEL DAMAGE already keeps, and the two now agree because they are the same
+   * number rather than two guesses at it.
+   */
+  panel: CarPanelId;
+  /**
    * THEY CAME IN TWO. False for a hit that merely knocked somebody down and
    * dragged them, true for one the bumper went through — which is the same
    * question `DRIVE.gore.splitJoules` answers for the sim, asked once and

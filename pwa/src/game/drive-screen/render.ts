@@ -44,6 +44,7 @@ import {
   drawRoadMarks,
   type DriveGoreState,
 } from "./drive-gore.ts";
+import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
 import { drawPlacard, GLUED_BARKS, MAX_PLACARDS } from "./placards.ts";
 import {
   CROWD_FRAME_MS,
@@ -120,7 +121,7 @@ export function drawDrive(
    * that only wants the road can have it). */
   gore?: DriveGoreState,
   /** The game's own pixel font, for the one thing on this road that has WORDS
-   * in it — THE GLUED's bubbles. Omitted draws the blockade silently, which is
+   * in it — THE GLUED's lines. Omitted draws the blockade silently, which is
    * still a blockade. */
   font?: PixelFont,
 ): void {
@@ -396,10 +397,16 @@ export function drawDrive(
   }
 
   // The hero's own car, drawn by the RUN's own assembly pass so it is the same
-  // wagon, panel for panel, that was parked in the bay a minute ago.
+  // wagon, panel for panel, that was parked in the bay a minute ago — now
+  // wearing whatever it has been driven through (`car-soak.ts`), masked to each
+  // panel's own art. A clean wagon passes nothing and is the blit it always
+  // was, which is what every other caller of that pass still gets.
+  const coat = gore && !carIsClean(gore.car) ? carCoat(gore.car) : undefined;
+  const tyres = gore ? wheelCoat(gore.tyre) : undefined;
   drawn.push({
     y: drive.car.pos.y,
-    draw: () => drawCarAssembly(ctx, drive.car, sprites, camera, timeMs),
+    draw: () =>
+      drawCarAssembly(ctx, drive.car, sprites, camera, timeMs, coat, tyres),
   });
 
   // A thrown wheel, bouncing down the road behind the wreck.
