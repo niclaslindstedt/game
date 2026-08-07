@@ -4798,6 +4798,8 @@
     "drive.reversing": "flag",
     "drive.rpm": "number",
     "drive.rpmFrac": "frac",
+    "drive.shiftFrac": "frac",
+    "drive.shiftUpRpm": "number",
     "drive.speedFrac": "frac",
     "drive.topSpeedMph": "number",
     "drive.wear": "frac",

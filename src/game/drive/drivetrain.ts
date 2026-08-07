@@ -30,8 +30,18 @@
 // each ask their own question on their own tick and get answers that agree, and
 // it is why the gearbox can be an AUTOMATIC without anybody storing which gear
 // it is in: the box is in the lowest gear that can carry this road speed
-// without passing the redline, which is what an automatic at full throttle
-// does anyway.
+// without passing its SHIFT POINT, which is what an automatic with the pedal
+// down does anyway.
+//
+// AND THE SHIFT POINT IS NOT THE REDLINE. It used to be, and that one shortcut
+// was the whole of why the dashboard read like nothing anybody has ever driven:
+// the crank was held to 5800 in every gear, each shift dropped it no further
+// than the high threes, and a wagon pottering along at forty was sitting in the
+// top third of its own tachometer with the red paint in sight. A real engine
+// idles at eight hundred, is asked for about three thousand and is let go there;
+// the redline is a limit it never meets. So `shiftUpRpm` and `redlineRpm` are
+// two different numbers now, and the needle lives in the bottom half of the dial
+// where it belongs.
 
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 
@@ -46,30 +56,57 @@ const AIR_DENSITY = 1.225;
  * THE BROCHURE. Every number the road's acceleration is solved from, and the
  * only place any of them is written down.
  *
- * The car is a tired, heavy, tall thing with a big-ish engine that does its
- * best work high up and nothing much below three thousand — which is precisely
- * why it is slow away from the lights and still, given a long enough road, sees
- * the far end of the speedometer.
+ * The car is a tired, heavy, tall thing with a big lazy oil-burner in the nose:
+ * a lot of torque very low down, no interest whatever in revving, and a gearbox
+ * geared to loaf. That is why it is slow away from the lights, why it is out of
+ * breath long before the far end of the speedometer, and why the tachometer
+ * spends the whole trip between one and three thousand — which is where a
+ * tachometer in a working car actually spends its life.
  */
 export const DRIVETRAIN = {
   /** The crank's floor. It is running whether or not the wheels agree, so the
    * tachometer never reads below this and the note never stops. */
   idleRpm: 800,
   /**
-   * …and where it stops being asked. THE SHIFT POINTS ARE NOT AUTHORED: the box
-   * changes up wherever the revs would pass this, which is what makes the gear
-   * spacing below the only thing that decides where the shifts land.
+   * WHERE THE BOX CHANGES UP — and it is NOT the redline, which is the whole of
+   * what makes a tachometer read like one.
+   *
+   * The box used to shift at the stop: every gear was held to 5800, every shift
+   * dropped the needle into the high threes or the mid fours, and the crank
+   * spent an entire trip in the top half of the dial with the red permanently a
+   * few hundred revs away. That is not what any car does. A real one idles at
+   * eight hundred, pulls to about three thousand, changes up, and lands back
+   * around two — the needle lives in the BOTTOM half of its own face and the
+   * red paint is a thing you are told about rather than shown.
+   *
+   * So the shift point is its own number and the redline is only the limit
+   * behind it. THE SHIFT POINTS ARE STILL NOT AUTHORED: the box changes up
+   * wherever the revs would pass THIS, so the gear spacing below is still the
+   * only thing that decides where the shifts land — they just land where a
+   * driver would put them. 3300 is a heavy automatic with the pedal flat, which
+   * is the only way this wagon is ever driven; a lift-and-cruise box would
+   * change up nearer 2500 and this one never gets the chance.
    */
-  redlineRpm: 5800,
+  shiftUpRpm: 3300,
   /**
-   * THE GEARS, first to fifth. A five-speed with the usual closing spread: the
-   * bottom two are gone almost at once, fourth is where most of a trip is
-   * spent, and fifth is a long overdrive that flatters the fuel figure and
-   * leaves nothing at all in reserve.
+   * …and where the engine stops being asked at all. A limit rather than a
+   * target: the box hands over a thousand revs early, so on an undamaged wagon
+   * nothing ever takes the needle past about two thirds of the dial and the
+   * paint at the end of it is never reached. That is deliberate and it is what
+   * a working car looks like.
    */
-  gears: [4.2, 2.49, 1.67, 1.24, 1.0] as const,
-  /** What the diff multiplies all of them by. */
-  finalDrive: 3.73,
+  redlineRpm: 4600,
+  /**
+   * THE GEARS, first to fifth. A five-speed automatic of the sort that was
+   * bolted behind every big estate of this vintage: a deep first, a direct
+   * fourth, and a long overdrive fifth that flatters the fuel figure and leaves
+   * nothing at all in reserve. The spread closes as it climbs, which is what
+   * makes each upshift drop the crank a little less than the one before.
+   */
+  gears: [3.59, 2.19, 1.41, 1.0, 0.83] as const,
+  /** What the diff multiplies all of them by. Tall, because the engine below
+   * has no interest in revving and the whole car is geared to loaf. */
+  finalDrive: 2.65,
   /** The rolling radius of a tyre (m) — a 235/65 R17, which is what is on it,
    * two of them past the wear markers. */
   tyreRadiusM: 0.36,
@@ -79,16 +116,24 @@ export const DRIVETRAIN = {
    * THE TORQUE CURVE, as a peak and the shape of the hill around it.
    *
    * `torque = peak * (1 - falloff * ((rpm - peakRpm) / spreadRpm)^2)`, which is
-   * a broad parabola: about 45% of peak at idle, all of it at four thousand,
-   * and most of it still there at the redline. THE FALLOFF IS THE WHOLE
-   * CHARACTER OF THE CAR — a flat curve would make it quick away from a
-   * standstill, and this one deliberately does not: in first gear at walking
-   * pace the engine is down near a hundred newton-metres and the wagon simply
-   * will not go.
+   * a broad parabola: about 55% of peak at idle, all of it at two and a half
+   * thousand, and most of it gone by the time the needle reaches paint nobody
+   * ever sees. A BIG LAZY LUMP, in other words — four hundred newton-metres and
+   * about 175 horsepower out of a tired turbodiesel, which is the only kind of
+   * engine that makes the gearing above honest: you cannot shift at three
+   * thousand unless the engine has already done its best work by then.
+   *
+   * IT IS THE SAME CAR IT ALWAYS WAS. The old brochure said 240 Nm at 4200 and
+   * ran the crank half as fast again through gears half as tall; every figure
+   * here is that curve with the rev axis squeezed and the torque axis stretched
+   * by the same factor, so the FORCE AT THE TYRE at any given road speed is
+   * within a few per cent of what it has always been. Nought to sixty is still
+   * the better part of nine seconds and the top of the dial still costs a whole
+   * straight — only the number under the needle changed.
    */
-  peakTorqueNm: 240,
-  peakTorqueRpm: 4200,
-  torqueSpreadRpm: 3400,
+  peakTorqueNm: 400,
+  peakTorqueRpm: 2600,
+  torqueSpreadRpm: 2000,
   torqueFalloff: 0.55,
   /**
    * THE AIR IT HAS TO PUSH — drag coefficient times frontal area (m²).
@@ -133,7 +178,7 @@ function wheelRpm(speedPx: number): number {
 
 /**
  * WHICH GEAR THE BOX HAS CHOSEN at this road speed — the lowest one that can
- * carry it without passing the redline, counting from zero.
+ * carry it without passing the SHIFT POINT, counting from zero.
  *
  * THE BOX SHIFTS ITSELF, and this is the whole of it. Nobody drives the wagon's
  * clutch — the player has a pedal and a wheel and that is the entire control
@@ -149,20 +194,32 @@ export function gearFor(speedPx: number): number {
   while (
     gear < GEAR_COUNT - 1 &&
     wheel * DRIVETRAIN.finalDrive * (DRIVETRAIN.gears[gear] ?? 0) >
-      DRIVETRAIN.redlineRpm
+      DRIVETRAIN.shiftUpRpm
   ) {
     gear++;
   }
   return gear;
 }
 
-/** What the CRANK is turning at, in the gear the box has chosen — never below
- * idle, because the engine is running whatever the wheels are doing. */
+/**
+ * What the CRANK is turning at, in the gear the box has chosen.
+ *
+ * Never below idle, because the engine is running whatever the wheels are
+ * doing — and never past the redline either, because a limiter is a thing every
+ * engine built in the last forty years has. On the shipped wagon the stop is
+ * unreachable: there IS no gear above fifth, but fifth runs out of road speed
+ * (`DRIVE.topSpeedPx`) a good thousand revs before the paint. A mod that gears
+ * its vehicle short enough to hit it gets a limiter rather than a tachometer
+ * reading past its own last number.
+ */
 export function engineRpm(speedPx: number): number {
   const gear = gearFor(speedPx);
-  return Math.max(
-    DRIVETRAIN.idleRpm,
-    wheelRpm(speedPx) * DRIVETRAIN.finalDrive * (DRIVETRAIN.gears[gear] ?? 1),
+  return Math.min(
+    DRIVETRAIN.redlineRpm,
+    Math.max(
+      DRIVETRAIN.idleRpm,
+      wheelRpm(speedPx) * DRIVETRAIN.finalDrive * (DRIVETRAIN.gears[gear] ?? 1),
+    ),
   );
 }
 
@@ -173,13 +230,13 @@ export function gearRev(speedPx: number): number {
   const gear = gearFor(speedPx);
   const below = DRIVETRAIN.gears[gear - 1];
   const here = DRIVETRAIN.gears[gear] ?? 1;
-  // The revs a shift into this gear drops to: the redline scaled by how close
-  // this ratio is to the one below it. First gear opens at idle instead.
+  // The revs a shift into this gear drops to: the shift point scaled by how
+  // close this ratio is to the one below it. First gear opens at idle instead.
   const floor =
     below === undefined
       ? DRIVETRAIN.idleRpm
-      : (DRIVETRAIN.redlineRpm * here) / below;
-  const span = Math.max(1, DRIVETRAIN.redlineRpm - floor);
+      : (DRIVETRAIN.shiftUpRpm * here) / below;
+  const span = Math.max(1, DRIVETRAIN.shiftUpRpm - floor);
   return Math.min(1, Math.max(0, (engineRpm(speedPx) - floor) / span));
 }
 
@@ -200,7 +257,7 @@ export function engineTorqueNm(rpm: number): number {
  *
  * This is the number that used to be the constant `260`, and every interesting
  * thing about the way the wagon drives now falls out of it: it is weakest at a
- * standstill (the engine is at idle and making 45% of its torque), strongest in
+ * standstill (the engine is at idle and making 55% of its torque), strongest in
  * the middle of a gear, and it DROPS at every upshift — which is the pause in
  * the shove a real automatic gives you, arriving for free rather than being
  * animated.

@@ -33,6 +33,7 @@ import {
   validateHudEvents,
   validateHudRegions,
 } from "../../scripts/asset-tools/hud-schema.mjs";
+import { DRIVE, DRIVETRAIN, engineRpm } from "../../src/game/drive/index.ts";
 import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
 import { moduleExports } from "../../scripts/asset-tools/script-schema.mjs";
 
@@ -105,7 +106,8 @@ describe("the HUD's vocabulary", () => {
       gearCount: 5,
       rev: 0.5,
       rpm: 3400,
-      redlineRpm: 5800,
+      shiftUpRpm: 3300,
+      redlineRpm: 4600,
       reversing: false,
       bodies: 4,
       wear: 0.3,
@@ -275,6 +277,34 @@ describe("the shipped HUD", () => {
     expect(claims.get("xpHeat")).toBe("xp_bar");
   });
 
+  it("paints the tachometer's red where the engine cannot reach it", () => {
+    // THE DASHBOARD'S ONE CROSS-CATALOG FACT: the red band is authored in the
+    // HUD (`drive_speedo.yaml`), the needle's range is decided by the gearbox
+    // (`drive/drivetrain.ts`), and nothing but this holds the two together.
+    //
+    // A tachometer's red is PAINT. It is on the instrument with the engine off,
+    // and a working car never puts the needle in it — which is exactly what the
+    // dial used to get wrong, because the box changed up AT the redline and the
+    // arc therefore arrived in the red eight times a minute. So: the band must
+    // exist, and it must open above anything the wagon can do to itself.
+    let zone: { from: number } | undefined;
+    for (const element of HUD_ELEMENTS) {
+      walk(element, (node) => {
+        if (node.bind === "drive.rpmFrac" && node.zone) zone = node.zone;
+      });
+    }
+    expect(zone, "the rev counter has no redline painted on it").toBeDefined();
+    // The arc sweeps rpm over the REDLINE, so the band's opening fraction is a
+    // rev figure — and the box lets go a good way below it.
+    const opensAt = (zone?.from ?? 0) * DRIVETRAIN.redlineRpm;
+    expect(opensAt).toBeGreaterThan(DRIVETRAIN.shiftUpRpm);
+    let peak = 0;
+    for (let px = 0; px <= DRIVE.topSpeedPx; px += 1) {
+      peak = Math.max(peak, engineRpm(px));
+    }
+    expect(peak).toBeLessThan(opensAt);
+  });
+
   it("names an action the app supplies on every press", () => {
     for (const element of HUD_ELEMENTS) {
       walk(element, (node) => {
@@ -374,7 +404,8 @@ const DIALS = {
   gearCount: 5,
   rev: 0.25,
   rpm: 2900,
-  redlineRpm: 5800,
+  shiftUpRpm: 3300,
+  redlineRpm: 4600,
   reversing: false,
   bodies: 0,
   wear: 0.31,

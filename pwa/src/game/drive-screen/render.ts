@@ -45,7 +45,7 @@ import { drawCarAssembly, drawLightCones } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import type { Camera } from "../render/view.ts";
+import { VIEW_SCALE, type Camera } from "../render/view.ts";
 import {
   bodySprite,
   drawRemain,
@@ -119,25 +119,31 @@ const NEAR_MARGIN = 6;
  * sides have to agree on by hand. It is arithmetic rather than taste, and the
  * arithmetic is worth writing down because the pieces move:
  *
- *   the dash's height          `--drive-dial-size`   77
- *   …its offset off the bottom `.drive-dash`         10
- *   …and the verge above it                          14
+ *   the dash's height          `--drive-dial-size`   6rem   96
+ *   …its offset off the bottom `.drive-dash`         0.75   12
+ *   …and the verge above it                          0.75   12
  *
- * WHICH ALSO CENTRES THE SPEECH WINDOW ON THE VERGE, and that is what the
- * number is actually tuned to. The window is 77 px tall sitting 12 px off the
- * bottom, so a band of 101 leaves exactly 12 px of grass above it as well —
- * the same strip top and bottom. Any other value reads as a dialogue box that
- * has slipped down the frame, because the eye measures it against the two
- * edges it can see.
+ * WHICH ALSO CLEARS THE SPEECH WINDOW BESIDE IT. The window is 77 px tall
+ * sitting on the same offset, so a band cut for the taller of the two leaves
+ * grass above both — and it is the DIALS that are taller, because they are
+ * sized so their ARCS match the window's height rather than their boxes (see
+ * `--drive-dial-size`). Any smaller and the instruments print over the lane the
+ * crowd is walking into, which is the one thing the band exists to stop.
  *
- * Read in CSS px and converted by the scale tier, because the dials are a fixed
- * size on the glass while the world behind them is not.
+ * IN CSS PX AT THE 1× TIER, which is what the rem column above resolves to on a
+ * phone — and the conversion below is a division by `VIEW_SCALE` alone rather
+ * than by the whole zoom. The dashboard is rem all the way down now, so it
+ * DOUBLES with the root font on a desktop exactly as the canvas doubles beneath
+ * it: the two step together, and the band it needs is therefore a constant
+ * number of WORLD px. (It was a division by the whole zoom when the dials were
+ * fixed px, and that was right then — a dial that did not grow needed a band
+ * that shrank.)
  *
  * A speedometer half over the road was legible — the shadow saw to that — but it
  * read as a HUD dropped on top of a picture rather than as a dashboard the
  * player is looking over, and the arcs fought the lane markings the whole way.
  */
-const DASH_BAND_CSS = 101;
+const DASH_BAND_CSS = 120;
 
 /**
  * …and what PORTRAIT adds to it: the hero's speech window, which on a tall
@@ -203,15 +209,15 @@ export function driveCamera(
   drive: DriveState,
   viewW: number,
   viewH: number,
-  /** The integer scale tier the canvas is drawn at (`viewScaleFor`), which is
-   * what turns the dashboard's CSS px into this frame's own. */
-  scale: number,
 ): Camera {
   const dir = drive.params.direction;
   // Portrait is the taller-than-wide frame, and it is the one that also has to
   // find room for the hero talking to himself.
   const bandCss = DASH_BAND_CSS + (viewH > viewW ? BARK_BAND_CSS : 0);
-  const band = Math.min(viewH * 0.6, bandCss / Math.max(1, scale));
+  // CSS px at the 1× tier → world px. `VIEW_SCALE` alone, because the UI tier's
+  // own multiplier cancels: the dashboard is rem-sized, so it grows by exactly
+  // the factor the canvas zooms by (`viewScaleFor` is `VIEW_SCALE × uiScale`).
+  const band = Math.min(viewH * 0.6, bandCss / VIEW_SCALE);
   return {
     x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
     y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH - band),

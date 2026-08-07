@@ -109,19 +109,66 @@ describe("the wagon's drivetrain", () => {
     }
   });
 
-  it("changes up on its own, at the redline, and never past it", () => {
+  it("changes up on its own, at the shift point, and never past it", () => {
     // THE BOX IS AN AUTOMATIC and nobody drives its clutch: the gear is
     // whichever one carries this road speed without over-revving, so a walk up
     // the whole range must climb through every gear exactly once and never show
-    // the crank past its limit.
+    // the crank past where the box lets go of it.
     const seen: number[] = [];
     for (let px = 0; px <= DRIVE.topSpeedPx; px += 1) {
       const gear = gearFor(px);
       if (seen[seen.length - 1] !== gear) seen.push(gear);
-      expect(engineRpm(px)).toBeLessThanOrEqual(DRIVETRAIN.redlineRpm + 1);
+      expect(engineRpm(px)).toBeLessThanOrEqual(DRIVETRAIN.shiftUpRpm + 1);
       expect(engineRpm(px)).toBeGreaterThanOrEqual(DRIVETRAIN.idleRpm);
     }
     expect(seen).toEqual([...Array(GEAR_COUNT).keys()]);
+  });
+
+  it("reads like a tachometer in a car somebody has driven", () => {
+    // THE ONE THE WHOLE RE-GEARING EXISTS FOR, and it is four claims about the
+    // NUMBER UNDER THE NEEDLE rather than about how the wagon goes.
+    //
+    // The box used to change up at the redline: every gear was held to 5800,
+    // every shift dropped the crank no further than the high threes, and a
+    // wagon pottering along at forty sat in the top third of its own dial with
+    // the red in sight. A real car idles at eight hundred, is asked for about
+    // three thousand, and lands back around two — and the red paint at the end
+    // of the face is a thing it is told about rather than shown.
+
+    // It idles where an engine idles, and standing still is not a gear.
+    expect(engineRpm(0)).toBe(DRIVETRAIN.idleRpm);
+    expect(DRIVETRAIN.idleRpm).toBeGreaterThanOrEqual(600);
+    expect(DRIVETRAIN.idleRpm).toBeLessThanOrEqual(1000);
+
+    // It is let go somewhere a driver would let go of it — not at the stop.
+    expect(DRIVETRAIN.shiftUpRpm).toBeGreaterThan(2500);
+    expect(DRIVETRAIN.shiftUpRpm).toBeLessThan(4200);
+    expect(DRIVETRAIN.shiftUpRpm).toBeLessThan(DRIVETRAIN.redlineRpm * 0.85);
+
+    // Every upshift lands back down the band rather than near the top of it:
+    // between a third and four fifths of the way up, which is the difference
+    // between a gearbox and a rev limiter with steps in it. The window is wide
+    // at the top on purpose — the ratios close as they climb, so the last shift
+    // of a five-speed drops the crank least and would be the one to trip a
+    // tighter bound.
+    let prev = gearFor(0);
+    for (let px = 1; px <= DRIVE.topSpeedPx; px += 1) {
+      const gear = gearFor(px);
+      if (gear === prev) continue;
+      prev = gear;
+      const landed =
+        (engineRpm(px) - DRIVETRAIN.idleRpm) /
+        (DRIVETRAIN.shiftUpRpm - DRIVETRAIN.idleRpm);
+      expect(landed).toBeGreaterThan(0.33);
+      expect(landed).toBeLessThan(0.8);
+    }
+
+    // And nothing the wagon can do on its own puts the needle in the paint.
+    // Flat out in top, with no sixth gear to escape into, is the worst case the
+    // road has — and it is a comfortable distance short.
+    for (let px = 0; px <= DRIVE.topSpeedPx; px += 1) {
+      expect(engineRpm(px)).toBeLessThan(DRIVETRAIN.redlineRpm * 0.8);
+    }
   });
 
   it("drops the revs on every upshift, and never below the one before", () => {

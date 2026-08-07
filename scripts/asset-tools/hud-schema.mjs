@@ -107,15 +107,28 @@ export const HUD_BINDINGS = {
   "drive.gear": "number",
   "drive.gearLabel": "number",
   "drive.gearCount": "number",
-  // THE CRANK, three ways. `rev` is how far up the CURRENT GEAR the wagon is;
-  // `rpm` is what the engine is actually turning at and `rpmFrac` the same
-  // measured against the redline, which is the arc a tachometer sweeps. A dial
-  // that only knew road speed would sit still through a whole upshift — and the
-  // note coming out of the speaker is read off the same rpm (`sfx/drive.ts`),
-  // so the needle and the noise cannot drift apart.
+  // THE CRANK, four ways, and the two FRACS are different questions. `rev` is
+  // how far up the CURRENT GEAR the wagon is; `rpm` is what the engine is
+  // actually turning at; `rpmFrac` is that against the REDLINE, which is the
+  // arc a tachometer sweeps because the redline is the last number on the face;
+  // and `shiftFrac` is the same crank against the SHIFT POINT — where the box
+  // will let go of it — which is the reading a driver actually has and the only
+  // one worth colouring a warning off.
+  //
+  // THEY ARE NOT INTERCHANGEABLE AND THE DIFFERENCE IS THE WHOLE POINT. The box
+  // changes up a good thousand revs short of the stop, so `rpmFrac` never gets
+  // past about two thirds on the shipped wagon — a dial that warned off it would
+  // never warn, and one that swept `shiftFrac` would be a tachometer whose face
+  // ended at a number the engine is perfectly happy at.
+  //
+  // A dial that only knew road speed would sit still through a whole upshift —
+  // and the note coming out of the speaker is read off the same rpm
+  // (`sfx/drive.ts`), so the needle and the noise cannot drift apart.
   "drive.rev": "frac",
   "drive.rpm": "number",
   "drive.rpmFrac": "frac",
+  "drive.shiftFrac": "frac",
+  "drive.shiftUpRpm": "number",
   "drive.redlineRpm": "number",
   "drive.reversing": "flag",
   "drive.bodies": "number",
@@ -346,6 +359,7 @@ const ELEMENT_FIELDS = new Set([
   "sweep",
   "start",
   "track",
+  "zone",
   "width",
   "height",
   "children",
@@ -565,8 +579,9 @@ function checkNode(node, where, refs, errors, warnings, top, row) {
       }
     }
     checkColor(node.track, `${where} track`, refs, errors);
+    checkZone(node.zone, `${where} zone`, refs, errors);
   } else {
-    for (const key of ["thickness", "sweep", "start", "track"]) {
+    for (const key of ["thickness", "sweep", "start", "track", "zone"]) {
       if (node[key] !== undefined) {
         errors.push(`${where}: only a gauge has a ${key}`);
       }
@@ -757,6 +772,45 @@ function checkPart(part, where, refs, errors, required) {
     errors.push(`${where}: ref "${part.ref}" is not a render-loop handle`);
   }
   checkColor(part.color, where, refs, errors);
+}
+
+/**
+ * A GAUGE'S PAINTED ZONE — the band printed on the FACE of the dial, behind
+ * everything the needle does.
+ *
+ * IT IS THE ONE THING THAT MAKES A DIAL READ AS AN INSTRUMENT rather than as a
+ * progress ring. A tachometer's red is not a colour the needle turns; it is
+ * paint, it is there when the engine is off, and it tells you where the trouble
+ * WOULD be long before you are anywhere near it — which is exactly the reading
+ * a wagon whose gearbox lets go at two thirds of the face needs. The same field
+ * paints a fuel gauge's reserve or a temperature dial's cold end; nothing about
+ * it is about revs.
+ *
+ * `from` is where the band opens, as a fraction of the SWEEP (so it moves with
+ * an arc of any length), and it runs to the end of the dial.
+ */
+function checkZone(zone, where, refs, errors) {
+  if (zone === undefined) return;
+  if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
+    errors.push(`${where}: expected a mapping`);
+    return;
+  }
+  for (const key of Object.keys(zone)) {
+    if (!["from", "color"].includes(key)) {
+      errors.push(`${where}: unknown field "${key}"`);
+    }
+  }
+  const from = zone.from;
+  if (typeof from !== "number" || !(from >= 0) || !(from < 1)) {
+    errors.push(
+      `${where}: from must be a number from 0 to 1 — where on the sweep the ` +
+        "band opens, running to the end of the dial",
+    );
+  }
+  if (zone.color === undefined) {
+    errors.push(`${where}: a zone needs a color — it is paint on the face`);
+  }
+  checkColor(zone.color, where, refs, errors);
 }
 
 function checkPress(press, where, refs, errors) {

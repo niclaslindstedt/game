@@ -76,6 +76,14 @@ export function HudNode({
       const width = def.thickness ?? 3.5;
       const color = view.color ?? "#c2ccd6";
       const track = view.trackColor;
+      // THE BAND PRINTED ON THE FACE — from its opening fraction to the end of
+      // the sweep, laid over the track and under the needle's own arc. A dash
+      // OFFSET rather than a second sweep, so it starts where it is told to
+      // instead of at twelve o'clock: at `pathLength={1}` the offset is the
+      // fraction itself, negated because SVG counts a dash offset backwards.
+      const zoneFrom = Math.max(0, Math.min(1, def.zone?.from ?? 0));
+      const zone = view.zoneColor;
+      const spin = `rotate(${(def.start ?? 0) - 90} 22 22)`;
       return (
         <svg
           className={view.className}
@@ -93,7 +101,21 @@ export function HudNode({
               strokeWidth={width}
               pathLength={1}
               strokeDasharray={`${sweep} 1`}
-              transform={`rotate(${(def.start ?? 0) - 90} 22 22)`}
+              transform={spin}
+            />
+          )}
+          {zone && zoneFrom < 1 && (
+            <circle
+              cx="22"
+              cy="22"
+              r="20"
+              fill="none"
+              stroke={zone}
+              strokeWidth={width}
+              pathLength={1}
+              strokeDasharray={`${sweep * (1 - zoneFrom)} 1`}
+              strokeDashoffset={-sweep * zoneFrom}
+              transform={spin}
             />
           )}
           <circle
@@ -106,7 +128,7 @@ export function HudNode({
             strokeLinecap="round"
             pathLength={1}
             strokeDasharray={`${sweep * view.value} 1`}
-            transform={`rotate(${(def.start ?? 0) - 90} 22 22)`}
+            transform={spin}
           />
         </svg>
       );

@@ -150,19 +150,25 @@ export const DRIVE = {
    * — a dead straight line, never dodging once:
    *
    *   throttle   trip      bodies   ending wear   arrived
-   *   1.00       79 s      79       49%           30/30
-   *   0.80       85 s      84       41%           30/30
-   *   0.55       94 s      90       31%           30/30
+   *   1.00       83 s      83       49%           30/30
+   *   0.80       88 s      87       41%           30/30
+   *   0.55       98 s      96       31%           30/30
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        75 s    61         8%          30/30
-   *   medium      83 s    67        23%          30/30
-   *   hard        88 s    73        32%          30/30
-   *   nightmare   94 s    77        41%          30/30
-   *   jesus       99 s    83        46%          30/30
+   *   easy        76 s    66         9%          30/30
+   *   medium      84 s    71        24%          30/30
+   *   hard        91 s    76        33%          30/30
+   *   nightmare   95 s    78        40%          30/30
+   *   jesus      100 s    82        46%          30/30
+   *
+   * (Both tables were taken again when the gearbox was re-geared to read like a
+   * tachometer in a real car — a shift at three thousand three instead of at a
+   * 5800 redline, through taller ratios and a torquier engine. The point of
+   * that change was that the FORCE AT THE TYRE would not move, and it did not:
+   * every trip above is within a second or two of what it was.)
    *
    * TWO THINGS TO READ OUT OF THAT, and the second is a debt rather than a
    * result. The one that still holds is the joke the course length exists to
