@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE MIDDLE OF THE THREE CLOUD LAYERS on the road out to GOODCO — smaller and
+# rounder than the bank below it, and slower across the sky because it hangs
+# further off. Same light: moon on the crown, shadow in the belly.
+name: night_cloud_puff
+family: earth
+space: outside
+size: [20, 8]
+description: >
+  A single rounded puff of night cloud — a compact mound with a moonlit crown
+  and a dark belly, no outline.
+subject:
+  kind: sky backdrop / cloud
+  build: a compact rounded mound, about twice as wide as it is tall
+  features: a moonlit crown, a body of dull blue-grey, a shadowed underside
+  accent: the pale blue moonlight on the crown
+  flavor: the weather the hero drives under, and never once looks up at
+palette:
+  Z: "#404a70" # moonlit crown
+  e: "#2b3350" # cloud body
+  u: "#1e2438" # shadowed belly
+grid: |
+  ......ZZZZZ.........
+  .....ZeeeeeZ........
+  ....ZeeeeeeeZZZZZ...
+  ...ZeeeeeeeeeeeeeZ..
+  ...eeeeeeeeeeeeeeee.
+  ...eeeeeeeeeeeeeeuu.
+  ...uuuuuuuuuuuuuuuu.
+  ...uuuuuuuuuuuuuu...

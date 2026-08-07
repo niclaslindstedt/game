@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE NIGHT SKY over the road out to GOODCO — the lowest and largest of the
+# three cloud layers, the one that slides past fastest because it hangs
+# nearest. Lit from ABOVE by the moon rather than from the town below, so the
+# crown is the light and the belly is the shadow — a cloud lit from underneath
+# reads as smoke off a fire.
+name: night_cloud_bank
+family: earth
+space: outside
+size: [40, 9]
+description: >
+  A long, low bank of night cloud — a lumpy mass with a moonlit crown and a
+  dark, flat-bottomed belly, no outline.
+subject:
+  kind: sky backdrop / cloud
+  build: a long low bank, wider than it is tall, lumpier along the top than the bottom
+  features: a moonlit crown along the upper lumps, a body of dull blue-grey, a dark flat belly
+  accent: the pale blue moonlight on the crown
+  flavor: the weather the hero drives under, and never once looks up at
+palette:
+  Z: "#404a70" # moonlit crown
+  e: "#2b3350" # cloud body
+  u: "#1e2438" # shadowed belly
+grid: |
+  ......ZZZZZZZ...........................
+  ....ZZeeeeeeeZZ.........................
+  ...ZeeeeeeeeeeeZ..ZZZZZZZ...............
+  ..ZeeeeeeeeeeeeeZZeeeeeeeZZ.ZZZZZZZ.....
+  .eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee...
+  .eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..
+  .uuuuueeeeeeeeeeeeeeeeeeeeeeeeeeeeuuuu..
+  .uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu..
+  ......uuuuuuuuuuuuuuuuuuuuuuuuuuuu......

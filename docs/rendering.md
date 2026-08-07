@@ -613,6 +613,57 @@ its counter, the ship's work lamp) with real dark between them, plus a small one
 every hero in play carries — the concession that makes a dark venue playable
 without either brightening the night or inventing a flashlight item.
 
+## The road, and the night over it
+
+The drive minigame draws through the same projection as everything else
+(`drive-screen/render.ts` reuses `drawWorldSprite`, which is why the rake, the
+billboarding and the pixel seating all come free), but it frames itself
+differently from a run, and it is the one screen in the game with a **sky**.
+
+**The camera hangs off the BOTTOM of the frame, not the middle.** The ground a
+drive shows is a fixed band of world — the far pavement, four lanes and the near
+pavement come to 167 px whatever the screen is — while the frame is not. A
+centred road therefore handed every spare pixel to the NEAR verge, which has
+nothing on it by design (the town stands on the far side, so a row of houses
+this side would hide the lane the crowd walks into); on a phone held upright
+that was more than half the picture, a road across the top and an empty field
+under it. `driveCamera` pins the near kerb a fixed margin above the bottom edge
+instead, so a taller screen buys more SKY rather than more grass. Two traps live
+in that one line: the drop must be measured in PROJECTED px (`unprojectY`,
+exactly as `computeCamera` does it) because the view is taller in world units
+than the canvas is in pixels, and the forward LEAD is a share of the frame's
+width rather than a distance, or "the trailing third" stops being the trailing
+third the moment the frame changes shape.
+
+**The sky is the one pass that is NOT in world space** (`drive-screen/sky.ts`).
+It sits at infinity, so running it through a transform that foreshortens
+distance would squash the moon toward the horizon as though it were lying in a
+field. It is painted first, in plain canvas px, and the projected world — the
+strip of verge behind the frontages, the town's roofline, the gaps between the
+houses — is drawn over it. The ground stops at a `skylineY` set back behind the
+building line; before this it ran 400 px past the road on both sides, which on
+any screen meant "everywhere", and the night was a field of grass.
+
+**The depth is PARALLAX, and the fractions are a height ordering.** Five bands
+scroll at five shares of the car's own travel — the moon barely at all, then the
+stars, then a high wisp, mid puffs, and a low bank that slides past fastest
+because it hangs nearest. Reverse any pair and the sky reads as a broken texture
+rather than as distance. Two rules keep it honest: every cloud is DERIVED from
+the cell it sits in (the same hash the town is dressed from, so the sky costs no
+state, no rng draw, and a restart puts the same weather back over the stretch of
+road that just killed you), and each band carries a slow drift on the render
+clock as well — parallax alone freezes the sky when the car stops, which is
+exactly when the player is looking at it. A band is a GRID rather than a line,
+its row count derived from its own slice, because the sky is a strip on a phone
+held sideways and most of the picture on one held upright.
+
+The stars are the one thing up there that is not a sprite, and deliberately: a
+star IS one pixel, so the whole drawing is where and how bright. The shipped
+`stars_a`/`stars_b` tiles are cutscene-scale and laid a wallpaper of fat white
+crosses over the road's sky; a tile also repeats, which across a 422-px frame is
+seven copies of one constellation. They thin and dim toward the horizon, which
+is the depth cue they have instead of parallax.
+
 ## Mobile-first, landscape — and the scale tiers
 
 **Mobile-first, landscape.** The reference device is a phone held

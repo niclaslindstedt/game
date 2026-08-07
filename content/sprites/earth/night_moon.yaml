@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE MOON over the road out to GOODCO — the one fixed thing in the drive's
+# whole picture, and the furthest: it barely moves while the town tears past
+# (`drive-screen/sky.ts`).
+#
+# NOT `sky_moon`. That one is a CUTSCENE prop — a small grey globe hanging in a
+# spaceship window, drawn to be looked at against black with an outline round
+# it. Up in a night sky over a lit street it read as a pebble somebody had
+# thrown. This one is bigger, brighter, and carries NO outline, because the moon
+# is the light source in this picture rather than an object in it.
+name: night_moon
+family: earth
+space: outside
+size: [18, 18]
+description: >
+  A near-full moon, high and bright — a pale disc lit from the upper left, with
+  a soft grey terminator down its lower right and a scatter of faint maria.
+subject:
+  kind: sky backdrop / moon
+  build: a plain round disc filling most of the grid
+  features: a bright pale face, a soft grey shaded lower-right edge, a few faint darker maria
+  accent: the near-white of the lit face
+  flavor: the only witness to the whole trip, and it does not intervene
+palette:
+  A: "#8d9196" # deepest shaded edge
+  T: "#c0c5cf" # terminator grey
+  W: "#f4f4f4" # lit face
+  a: "#d6dce4" # half-lit face
+  f: "#888a96" # maria
+grid: |
+  ........aa........
+  .....WWWWWaaT.....
+  ...WWWWWWWWaaTA...
+  ..WWWWWWWWWWaaTA..
+  ..WWWWWWWWfWaaTT..
+  .WWWWWffWWWWaaTTA.
+  .WWWWWffWWWWaaTTA.
+  .WWWWWWWWWWWaaTTA.
+  aWWWWWWWWWWaffTTAA
+  aWWWWWWWWWaafTTAAA
+  .aWWWffWWaaaaTTAA.
+  .aaWWfWWaaaaTTAAA.
+  .TaaaaaaaaaTTTAAA.
+  ..TaaaaaaffTTAAA..
+  ..ATTTTTTTTAAAAA..
+  ...ATTTTTAAAAAA...
+  .....AAAAAAAA.....
+  ........AA........

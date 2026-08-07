@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE HIGHEST OF THE THREE CLOUD LAYERS on the road out to GOODCO — thin, torn
+# and barely there, and the slowest across the sky of anything with a shape,
+# because it hangs the furthest off. Only the stars behind it move less.
+name: night_cloud_wisp
+family: earth
+space: outside
+size: [30, 4]
+description: >
+  A thin, torn wisp of high night cloud — a shallow streak with a moonlit top
+  edge and a faint shadowed trailing edge, no outline.
+subject:
+  kind: sky backdrop / cloud
+  build: a shallow horizontal streak, many times wider than it is tall
+  features: a moonlit upper edge, a thin body of dull blue-grey, a faint shadowed underside
+  accent: the pale blue moonlight on the top edge
+  flavor: the weather the hero drives under, and never once looks up at
+palette:
+  Z: "#404a70" # moonlit upper edge
+  e: "#2b3350" # cloud body
+  u: "#1e2438" # shadowed underside
+grid: |
+  .......ZZZZZZZZZZZ............
+  ....ZZZeeeeeeeeeeeZZZZZZZ.....
+  ...ZeeeeeeeeeeeeeeeeeeeeeZZ...
+  .....uuuuuuuuuuuuuuuuuuuu.....

@@ -32,7 +32,12 @@ import {
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "../render/plane.ts";
 import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
-import { applyWorldProjection, billboard } from "../render/tilt.ts";
+import {
+  applyWorldProjection,
+  billboard,
+  projectY,
+  unprojectY,
+} from "../render/tilt.ts";
 import { drawCarAssembly } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -55,11 +60,15 @@ import {
   sceneryBetween,
   TRAFFIC_SPRITES,
 } from "./scenery.ts";
+import { drawDriveSky } from "./sky.ts";
 
-/** The night the whole first trip happens on — the sky behind the town. */
-const SKY = "#141826";
 /** The ground either side of the tarmac. */
 const VERGE = "#2b3327";
+/** …and the same ground going away from the eye, at the far edge of what can be
+ * seen of it. A flat verge running right up to the skyline reads as a wall of
+ * grass standing behind the town; darkening the last stretch of it is what
+ * turns the same fill into ground receding. */
+const VERGE_FAR = "#232a20";
 /** The pavement each side of the road, and the kerb that steps up to it. A
  * touch warmer and lighter than the tarmac so the eye reads a different surface
  * at a glance rather than a wider road. */
@@ -75,9 +84,29 @@ const PAINT = "#c9c4a8";
  * stand on it (`crowdEdges`). */
 const KERB_DEPTH = 2;
 
-/** How far ahead of the car the camera sits (world px) — the car rides in the
- * trailing third of the picture so the player can read the crowd coming. */
-const CAMERA_LEAD = 96;
+/**
+ * How far ahead of the car the camera sits, as a share of the frame's width —
+ * the car rides in the trailing third of the picture so the player can read the
+ * crowd coming.
+ *
+ * A SHARE rather than a distance, because "the trailing third" is a statement
+ * about the PICTURE. Held as a flat 96 world px it was the trailing third of a
+ * phone on its side and very nearly the left edge of one held upright, where
+ * the frame is less than half as wide — the wagon drove with its nose in the
+ * bezel.
+ */
+const CAMERA_LEAD_FRAC = 0.23;
+
+/** How much ground is kept below the near pavement (world px) — the strip of
+ * verge between the kerb and the bottom of the frame. */
+const NEAR_MARGIN = 14;
+
+/** Where the ground stops and the sky starts, measured back from the far
+ * pavement (world px). The town's frontages stand 11 px back from that same
+ * edge (`HOUSE_SETBACK`), so this leaves a strip of verge visible BEHIND the
+ * houses and through the alleys between them — without it the roofline would be
+ * the horizon, and the gaps in the row would show sky at street level. */
+const SKYLINE_SETBACK = 26;
 
 /** How high off the road something has to be to be OVER the car rather than
  * behind it (world px). The wagon's own assembly is 26 px tall on a 16-px body
@@ -86,7 +115,33 @@ const CAMERA_LEAD = 96;
  * sent it. */
 const ROOF_PX = 20;
 
-/** Where the camera stands for a drive. */
+/**
+ * Where the camera stands for a drive.
+ *
+ * IT IS HUNG OFF THE BOTTOM OF THE FRAME, NOT THE MIDDLE, and both halves of
+ * that are load-bearing.
+ *
+ * THE BOTTOM, because the ground is a FIXED band of world — the kerb, the four
+ * lanes and the far pavement are 167 px however big the screen is — while the
+ * frame is not. Centring the road handed every spare pixel to the near verge,
+ * which has nothing on it by design (the town stands on the FAR side, so a row
+ * of houses this side would hide the lane the crowd is walking into). On a
+ * phone held upright that was more than half the picture: a road across the top
+ * and an empty field under it. Pinning the near kerb near the bottom edge sends
+ * the spare room UP instead, where the sky is (`sky.ts`), and a taller screen
+ * now buys more night rather than more grass.
+ *
+ * AND IN PROJECTED PX, because the view is TALLER in world units than the
+ * canvas is in pixels — that is what the pitch does (`render/tilt.ts`). The old
+ * `-viewH / 2` measured the drop in canvas px and used it as world px, so the
+ * road sat at 37% of the frame rather than where it was asked to; `unprojectY`
+ * is the same conversion the run's own camera makes (`computeCamera`).
+ *
+ * The y is pinned to the ROAD rather than to the car, exactly as it always was:
+ * a camera that tracked the car across the lanes would make changing lanes look
+ * like the WORLD moving, which is the one thing that must not happen in a lane
+ * game.
+ */
 export function driveCamera(
   drive: DriveState,
   viewW: number,
@@ -94,12 +149,14 @@ export function driveCamera(
 ): Camera {
   const dir = drive.params.direction;
   return {
-    x: drive.car.pos.x + dir * CAMERA_LEAD - viewW / 2,
-    // Pinned to the road's middle rather than to the car: a camera that tracked
-    // the car across the lanes would make changing lanes look like the WORLD
-    // moving, which is the one thing that must not happen in a lane game.
-    y: -viewH / 2,
+    x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
+    y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH),
   };
+}
+
+/** The world y at which the ground gives out and the sky takes over. */
+function skylineY(): number {
+  return crowdEdges().top - SKYLINE_SETBACK;
 }
 
 /**
@@ -146,8 +203,15 @@ export function drawDrive(
   // grass, and the far row floated above the kerb by the same amount. One
   // `save`/`projection`/`restore` around the lot, and the road and the things
   // on it cannot disagree.
-  ctx.fillStyle = SKY;
-  ctx.fillRect(0, 0, viewW, viewH);
+  //
+  // …EXCEPT THE SKY, which is drawn BEFORE the projection is on and is the one
+  // pass in this file that stays in canvas px (`sky.ts` — a moon run through a
+  // transform that foreshortens distance would be squashed toward the horizon
+  // as though it were lying in a field). It is painted first because it is
+  // behind everything: the town's roofline, the gaps between the frontages and
+  // the strip of verge behind them are all drawn over it.
+  const horizon = projectY(0, skylineY() - camera.y);
+  drawDriveSky(ctx, sprites, camera.x, viewW, horizon, timeMs);
   ctx.save();
   applyWorldProjection(ctx);
   const left = camera.x - 64;
@@ -156,7 +220,11 @@ export function drawDrive(
     ctx.fillStyle = fill;
     ctx.fillRect(left - camera.x, top - camera.y, right - left, bottom - top);
   };
-  band(bands.top - 400, bands.bottom + 400, VERGE);
+  // THE GROUND STOPS AT THE SKYLINE. It used to run 400 px past the road on
+  // both sides, which on any screen meant "everywhere" — so the sky colour
+  // underneath it was never once visible and the night was a field of grass.
+  band(skylineY(), bands.bottom + 400, VERGE);
+  band(skylineY(), skylineY() + SKYLINE_SETBACK * 0.6, VERGE_FAR);
   // THE PAVEMENTS, drawn exactly as wide as the sim lets a person stand
   // (`crowdEdges` — `DRIVE.pavementPx`), so somebody waiting at a crossing is
   // standing ON the paving rather than hovering over its inside edge.
