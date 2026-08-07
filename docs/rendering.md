@@ -679,10 +679,53 @@ grid this coarse.
 
 Their LIFT is in canvas px and deliberately not a share of the sky, because the
 measurement that matters is against the town's roofline — a fixed 19 px above
-the horizon whatever the screen is, since the houses are 30-px billboards
-standing 11 px of projected ground behind the kerb. A ridge lifted less than
-that is only ever seen through the alleys between frontages, which is the right
-answer for the nearest one and the wrong answer for all of them.
+the horizon whatever the screen is, with the buildings standing 13 px of
+projected ground behind the kerb. A ridge lifted less than that is only ever
+seen through the alleys between frontages, which is the right answer for the
+nearest one and the wrong answer for all of them.
+
+### The town — a building is an ASSEMBLY, not a picture
+
+Everything on the far verge is composed at draw time from a plan the engine
+hands over, and the split is worth carrying because it is the same one the
+hero's car uses (`render/vehicles.ts` stacks six panels and two wheels):
+
+- **The catalog and the layout are the ENGINE's** — `src/game/drive/town.ts`
+  holds 26 archetypes and the parts bin they are dressed from;
+  `town-plan.ts` tiles them onto a 20-px plot grid, a BLOCK at a time, and
+  dresses each one from its own plot's hash. Nothing is simulated: the town
+  stands behind the pavement where the wagon can never reach it. Nothing spends
+  a draw of `drive.rng` either, which is load-bearing rather than tidy — that
+  stream also lays the crowd and the traffic down, so a town that rolled dice
+  would move every body on the road the moment somebody added a house.
+- **The composition is the APP's** — `drive-screen/town-art.ts` stacks the
+  planned layers onto one canvas and caches it by the plan's own `key`, so two
+  identical semis a mile apart are one canvas and a hot loop is one blit per
+  building.
+- **The art is GENERATED, in two halves that are generated differently.**
+  `asset-tools/facade.mjs` RULES each shell — the wall gauge, the bay rhythm,
+  the roofline — because a facade is the most regular thing this game draws and
+  regularity is what a loop gets right at 1x and a hand does not.
+  `facade-parts.mjs` DRAWS every loose piece — the doors, the four faces a hole
+  wears (dark, lit, boarded, smashed), the porches, signs, stains, fences and
+  the junk in the front gardens — because a wheelie bin drawn from a formula
+  reads as a formula.
+
+Two things fall out of that and both show on screen. **The row has a
+silhouette**: buildings are 16–96 px wide and 18–53 tall against 40×30 for
+every house that used to stand there, so the skyline is a shape rather than the
+ruled line it was. And **the road has a gradient**: `townDistrict(x)` runs 0 at
+the hero's block to 1 at GOODCO's gate, and it picks the archetype, the wear
+rung, the door, the fence, the junk and whether a window is lit — so the
+neighbourhood becomes the business park without ever announcing it. The rosters
+overlap across the middle third on purpose; a changeover at a line would put a
+seam across the road. `tests/content/drive_town_test.ts` measures the gradient
+rather than trusting it, because "the hero's end is worse" is a claim about a
+mile of road and cannot be eyeballed from one frame.
+
+`scripts/town-viewer.mjs` is how it is judged: it runs the real planner at five
+stops along the leg and writes a sheet, which is the only way to look at a
+street that exists in no file.
 
 **The street lighting is the one thing on this road that lights the road**, and
 it is not a second row of furniture: every third of the kerb posts the ENGINE

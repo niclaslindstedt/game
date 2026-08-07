@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHAT THE ROAD IS MADE OF — the sprite tables the drive draws from, and the
-// deterministic street it dresses itself with.
+// kerbside lighting it reads off the sim.
 //
-// WHAT IS LEFT HERE IS THE BACKDROP, and the split is deliberate. The KERB —
-// the lamp posts and the cars parked along it — used to be derived here too,
-// and that made it a lie: the sim knew nothing about any of it, so the wagon
-// drove through a parked van at 120 mph and the posts were paint. Furniture the
-// player can hit is WORLD, so it moved into the engine (`src/game/drive/
-// street.ts`) and this file draws what the sim is holding. The TOWN stayed,
-// because a house on the far verge is scenery in the honest sense: it is behind
-// the pavement, nothing can reach it, and nothing about it has to be simulated.
+// WHAT IS LEFT HERE IS THE BODIES AND THE LAMPS, and the two things that USED to
+// be here both left for the same reason: a table in the app that has to agree
+// with a table in the engine is a drift waiting to happen. The KERB went first —
+// the lamp posts and the parked cars were derived here, and the sim knew nothing
+// about any of it, so the wagon drove through a parked van at 120 mph. Furniture
+// the player can hit is WORLD (`src/game/drive/street.ts`), and this file draws
+// what the sim is holding.
 //
-// THE BACKDROP IS STILL DERIVED, NOT SPAWNED. Every building is a pure function
-// of the distance it stands at, so it costs the drive no state, no rng draw and
-// no spawner — and the same road looks the same on a restart, which matters
-// more than it sounds: the player is re-driving a stretch he just died on, and a
-// backdrop that reshuffled would make it read as a different road.
+// THE TOWN WENT SECOND, and it is worth saying why, because unlike the kerb it
+// was never a lie: a building on the far verge really is behind the pavement,
+// really cannot be reached, and really does not have to be simulated. What it
+// could not stay was EIGHT PICTURES ON A FIXED PITCH. The town is now a catalog
+// with a layout (`src/game/drive/town.ts`, `town-plan.ts`) and an assembly
+// (`town-art.ts`) — buildings of their own widths and heights, dressed per site
+// and worn by how far along the road to GOODCO they stand.
 //
 // HOUSES STAND ON THE FAR SIDE ONLY. Under the shipped projection the camera
 // looks DOWN at the road, so anything below it in world y sits between the
@@ -25,7 +26,6 @@
 // engine already stands its furniture on.
 
 import {
-  crowdEdges,
   isMastSlot,
   laneCenter,
   roadBandEdges,
@@ -190,82 +190,12 @@ export function trafficSprite(variant: number, rung: number): string {
   return `${base}${suffix}`;
 }
 
-/** THE TOWN — the buildings lining the far verge, authored already cropped. */
-export const HOUSE_SPRITES: readonly string[] = [
-  "town_house_clapboard",
-  "town_house_brick",
-  "town_apartment_block",
-  "town_shop_shuttered",
-  "town_laundromat",
-  "town_row_house",
-  "town_motel",
-  "town_gas_station",
-];
-
 /** THE KERB'S own furniture is no longer here — it is the engine's, because it
  * is collidable (`DRIVE.street`, src/game/drive/street.ts). The renderer reads
  * `DriveState.props` for it and names the one sprite a lamp post wears; the
  * parked cars wear `TRAFFIC_SPRITES` above, since they are the town's cars
  * parked rather than a second set of art. */
 export const LAMP_SPRITE = "lamp_post";
-
-/** How far apart the buildings stand (world px) — they are 40 wide, so this
- * leaves a gap of alley between them rather than a solid wall. */
-const HOUSE_PITCH = 52;
-/**
- * …and how far back the frontages stand from the FAR PAVEMENT's outer edge.
- *
- * TWO RULES, BOTH LEARNED BY LOOKING. The town stands CLOSE — set back the
- * thirty pixels it opened with, it read as a village on the horizon rather than
- * a street the hero is driving down, and the whole top third of the frame was
- * empty verge. And it stands CLEAR: measured off the pavement's edge rather
- * than the road's, so no frontage is ever drawn over the pavement people are
- * walking on.
- *
- * The setback carries NO jitter, which is the other half of it. A doorway's
- * depth of variation sounded like realism and drew a ragged saw of a frontage
- * line; a real street's buildings share one building line, and at this size the
- * shared line is what makes the row read as a street at all.
- */
-const HOUSE_SETBACK = 11;
-
-/** One piece of standing scenery. */
-export type SceneryProp = {
-  sprite: string;
-  x: number;
-  y: number;
-};
-
-/**
- * A HASH, NOT A DRAW. Every prop's identity comes from its own position, so the
- * street is reproducible without holding a single byte of state — and, unlike an
- * rng, a prop can be asked about out of order, which is what lets the renderer
- * populate only the stretch actually on screen.
- */
-function hash(n: number): number {
-  let h = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b);
-  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-}
-
-/** The buildings standing between `fromX` and `toX`, along the far verge. */
-export function sceneryBetween(fromX: number, toX: number): SceneryProp[] {
-  const walk = crowdEdges();
-  const props: SceneryProp[] = [];
-  const first = Math.floor(fromX / HOUSE_PITCH) - 1;
-  const last = Math.ceil(toX / HOUSE_PITCH) + 1;
-  for (let i = first; i <= last; i++) {
-    const roll = hash(i);
-    const sprite = HOUSE_SPRITES[Math.floor(roll * HOUSE_SPRITES.length)];
-    if (!sprite) continue;
-    props.push({
-      sprite,
-      x: i * HOUSE_PITCH,
-      y: walk.top - HOUSE_SETBACK,
-    });
-  }
-  return props;
-}
 
 /**
  * THE STREET LIGHTING — which of the kerb's lamp posts is a TALL MAST.

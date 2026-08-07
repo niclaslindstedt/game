@@ -102,9 +102,16 @@ himself at it — Ada is not down the street; get in the car.
 ways, and it is the blackest joke in the game. The road out of the block runs
 four lanes through what is left of the neighbourhood: shuttered trades, boarded
 windows, and a lit one every third house where somebody's welfare still lands.
-The ones it did not reach are out on the tarmac, because a road is where the
-cars are and a car is where the money is, and they walk straight at him with
-their hands out. There are far too many of them to miss. Before he meets the
+It does not stay that way for the whole hour. **The street gets better the
+further from his own front door he drives** — the boards come off, the fences go
+back up, the fly-tipping stops, and by the last mile it is clipped hedges,
+glass frontages and a car park with a barrier on it, because that is what is
+next to GOODCO. Nobody remarks on it and nothing marks where it changed; the
+hero has driven this road every working day of his life. That the block he lives
+on is the worst thing on it is simply the shape of the commute.
+The ones the welfare did not reach are out on the tarmac, because a road is
+where the cars are and a car is where the money is, and they walk straight at
+him with their hands out. There are far too many of them to miss. Before he meets the
 first one he has the decent thought — these are his neighbours, they got
 nothing, mind how you go — and he says it to himself at the wheel, without
 slowing down, which is the only place a promise like that costs nothing. Then he
