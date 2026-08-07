@@ -79,6 +79,7 @@ import {
   stepProps,
 } from "./street.ts";
 import {
+  breakTrafficLamps,
   laneRunsWithHero,
   shunt,
   spawnTraffic,
@@ -103,6 +104,8 @@ export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
 export type { DriveDriver } from "./driver.ts";
 export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
 export { blockadeAt, GLUED_BARKS, GLUED_VARIANTS } from "./blockade.ts";
+export { fellLamp, isMastSlot } from "./street.ts";
+export { breakTrafficLamps } from "./traffic.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
 export { remainForce, splitsBody } from "./remains.ts";
@@ -475,6 +478,8 @@ function collide(drive: DriveState): void {
     // own car takes the exchange properly, which is what makes trading paint
     // the expensive mistake it should be.
     shunt(other, hit.launch.y, car.pos.y);
+    // …and its lamps at that end go with the paint.
+    breakTrafficLamps(other, car.pos.x);
     drive.events.push({
       type: "trafficHit",
       pos: { x: hit.contact.x, y: hit.contact.y },

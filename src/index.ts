@@ -973,6 +973,7 @@ export {
   driveMph,
   driveVerdict,
   impactMasses,
+  isMastSlot,
   blockadeAt,
   laneAt,
   laneCenter,

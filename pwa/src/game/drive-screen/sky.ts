@@ -109,6 +109,79 @@ const BANDS: readonly Band[] = [
 ];
 
 /**
+ * ONE RIDGE OF OPEN COUNTRY behind the town.
+ *
+ * The town stands with its back to something, and until these existed that
+ * something was the night itself — the frontages were cut out against stars,
+ * which reads as a stage flat rather than as a street on the edge of a place.
+ *
+ * `lift` is in CANVAS px and deliberately NOT a share of the sky, because the
+ * measurement that matters is against the town's ROOFLINE, and that is a fixed
+ * 19 px above the horizon whatever the screen is (the houses are 30-px
+ * billboards standing 11 px of projected ground behind the kerb). A layer
+ * lifted less than that is only ever seen through the alleys between
+ * frontages — which is the right answer for the nearest one and the wrong
+ * answer for all of them.
+ */
+type Field = {
+  /** How far its crest rides above the horizon, on average (canvas px). */
+  readonly lift: number;
+  /** …and how much that crest wanders either side of it. */
+  readonly roll: number;
+  /** How far apart the crest's control points sit — the wavelength of the
+   * land. Wide and low is farmland; tight and tall would be moor. */
+  readonly node: number;
+  /** How often a HEDGEROW stands on the crest, and how big it gets. At this
+   * size a tree IS a bump: three px of it is a hawthorn, seven is a copse, and
+   * a field without any is a dune. */
+  readonly tuft: { pitch: number; fill: number; size: number };
+  /** How much of the car's travel it shows. Every one of these is nearer than
+   * every cloud and further than the road. */
+  readonly parallax: number;
+  readonly body: string;
+  /** The moonlight that catches the crest — the one line that separates a
+   * layer from the one behind it. */
+  readonly rim: string;
+};
+
+/** How often the crest is sampled across the frame (canvas px). Two is the
+ * whole of the trade: at one the land is smooth and costs twice as much to
+ * walk, at four the hedgerows start looking chipped. */
+const SAMPLE = 2;
+
+/** Furthest first: drawn in that order, so each nearer ridge covers the one
+ * behind it from its own crest down. */
+const FIELDS: readonly Field[] = [
+  {
+    lift: 30,
+    roll: 3.5,
+    node: 68,
+    tuft: { pitch: 34, fill: 0.3, size: 3 },
+    parallax: 0.3,
+    body: "#2a3348",
+    rim: "#3d4a6b",
+  },
+  {
+    lift: 21,
+    roll: 4,
+    node: 52,
+    tuft: { pitch: 27, fill: 0.42, size: 4.5 },
+    parallax: 0.45,
+    body: "#232e37",
+    rim: "#33424e",
+  },
+  {
+    lift: 12,
+    roll: 4,
+    node: 39,
+    tuft: { pitch: 21, fill: 0.5, size: 5.5 },
+    parallax: 0.64,
+    body: "#1d2a23",
+    rim: "#2c3f2f",
+  },
+];
+
+/**
  * THE STARS — the furthest band, and the one thing in this file that is NOT a
  * sprite.
  *
@@ -228,6 +301,13 @@ export function drawDriveSky(
   drawMoon(ctx, sprites, cameraX, viewW, skyH);
   for (const band of BANDS) {
     drawBand(ctx, sprites, band, cameraX, viewW, skyH, timeMs);
+  }
+  // THE COUNTRY BETWEEN, standing on the bottom edge of the sky: the ground the
+  // town has its back to. Painted after the weather (it is under it) and before
+  // the glow (which is in front of it), and each layer is nearer than every
+  // cloud, so this is where the parallax ladder steps up toward the road.
+  for (const field of FIELDS) {
+    drawField(ctx, field, cameraX, viewW, skyH);
   }
 
   // THE TOWN'S OWN GLOW, last, over everything in the sky — a sodium wash off
@@ -363,4 +443,87 @@ function drawBand(
       );
     }
   }
+}
+
+/**
+ * ONE LAYER OF OPEN COUNTRY, from its own rolling crest down to the horizon.
+ *
+ * THE CREST IS DERIVED, NOT DRAWN, for the same reason the stars are: a ridge
+ * this long has no art to place. A tiled silhouette would repeat every few
+ * hundred px, and the eye finds a repeating skyline immediately — it is the one
+ * shape in a picture it has nothing else to compare against.
+ *
+ * It is smooth VALUE NOISE — hashed heights at control points `node` apart,
+ * cosine-eased between them — plus hedgerows sitting on top. Straight linear
+ * interpolation was tried first and gives the land creases: farmland does not
+ * have corners in it, and the ease is the whole difference between a field and
+ * a saw blade.
+ */
+function drawField(
+  ctx: CanvasRenderingContext2D,
+  field: Field,
+  cameraX: number,
+  viewW: number,
+  skyH: number,
+): void {
+  const shift = -cameraX * field.parallax;
+  const salt = Math.round(field.lift * 1000);
+  /** The rolling land at a point, in canvas px above the horizon. */
+  const land = (at: number): number => {
+    const cell = Math.floor(at / field.node);
+    // Cosine ease between the two control points this column sits between.
+    const t = at / field.node - cell;
+    const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+    const a = hash(cell + salt);
+    const b = hash(cell + 1 + salt);
+    return field.lift + (a + (b - a) * ease - 0.5) * 2 * field.roll;
+  };
+  /** …and what is standing on it there. */
+  const hedge = (at: number): number => {
+    const { pitch, fill, size } = field.tuft;
+    let tall = 0;
+    // The two neighbouring cells are asked as well, so a hedge whose centre is
+    // just off screen still puts its shoulder on screen — without that a copse
+    // pops into being whole as the car reaches it.
+    for (
+      let cell = Math.floor(at / pitch) - 1;
+      cell <= Math.ceil(at / pitch);
+      cell++
+    ) {
+      const seed = cell * 6151 + salt;
+      if (hash(seed) > fill) continue;
+      const cx = (cell + hash(seed ^ 0x27d4eb2f)) * pitch;
+      const half = size * (0.6 + 0.8 * hash(seed ^ 0x165667b1));
+      const d = Math.abs(at - cx) / half;
+      if (d >= 1) continue;
+      tall = Math.max(tall, size * Math.sqrt(1 - d * d));
+    }
+    return tall;
+  };
+
+  // THE CREST IS WALKED ONCE, not once per fill. It is the expensive half of
+  // this file — a hash per control point and three more per hedgerow cell, at
+  // every sample — and the two fills below want the identical line anyway.
+  const crest: number[] = [];
+  for (let x = -2; x <= viewW + 2; x += SAMPLE) {
+    const at = x - shift;
+    crest.push(Math.round(skyH - land(at) - hedge(at)));
+  }
+
+  // ONE SHAPE, FILLED TWICE — the second a pixel lower, so the sliver of rim
+  // colour left showing along the top IS the moonlight on the crest. Cheaper
+  // and crisper than stroking it: a stroke straddles the line and comes out
+  // half-lit on both sides of a pixel grid this coarse.
+  const trace = (drop: number) => {
+    ctx.beginPath();
+    ctx.moveTo(-2, skyH + 2);
+    for (const [i, y] of crest.entries()) ctx.lineTo(-2 + i * SAMPLE, y + drop);
+    ctx.lineTo(-2 + (crest.length - 1) * SAMPLE, skyH + 2);
+    ctx.closePath();
+    ctx.fill();
+  };
+  ctx.fillStyle = field.rim;
+  trace(0);
+  ctx.fillStyle = field.body;
+  trace(1);
 }

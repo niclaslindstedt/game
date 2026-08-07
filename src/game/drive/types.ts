@@ -241,6 +241,22 @@ export type DriveTraffic = {
   /** Which way its own art faces, so an oncoming car is drawn nose-first. */
   faceLeft: boolean;
   /**
+   * WHICH OF ITS OWN LAMPS THE ROAD HAS TAKEN OUT — the nose's, the tail's, or
+   * by now both.
+   *
+   * They are the END that was struck rather than a share of some damage bar,
+   * because that is what a player can actually see happening: he clips a car's
+   * back corner and its brake lights die, he shunts one out of a junction nose
+   * first and it drives off down the road blind. A car remembers each end
+   * separately for the same reason it remembers them at all.
+   *
+   * NOSE and TAIL are the BODY's ends, not the screen's — an oncoming car's
+   * nose is on its left (`faceLeft`), so which one a hit puts out depends on
+   * which way the thing was pointing.
+   */
+  noseOut: boolean;
+  tailOut: boolean;
+  /**
    * Ms of immunity left after being hit.
    *
    * ONE CONTACT IS ONE IMPACT, and without this it is not. Two car bodies that
@@ -285,6 +301,14 @@ export type DriveProp = {
    * one flag.
    */
   felled: boolean;
+  /**
+   * WHERE IT SHEARED — the foot's own place, kept after the rest of the column
+   * has left it. A slip-base light does not vanish off the pavement when it is
+   * hit: it snaps low and leaves its stump bolted to the concrete, and the
+   * renderer needs somewhere to put that. Undefined until it is felled, and
+   * never moves after.
+   */
+  stub?: Vec2;
   /** Ground velocity while it is on its way somewhere (world px/s). */
   vel: Vec2;
   /** Height off the road (px) and its rate. */

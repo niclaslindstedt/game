@@ -11,10 +11,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  breakTrafficLamps,
   createDrive,
   crossingsBetween,
   crowdEdges,
   driveVerdict,
+  fellLamp,
   DRIVE,
   DRIVE_OUTCOME,
   DRIVE_UNITS,
@@ -28,6 +30,7 @@ import {
   type DriveInput,
   type DriveParams,
   type DriveState,
+  type DriveTraffic,
 } from "../../src/game/drive/index.ts";
 import { DIFFICULTY_ORDER } from "../../src/game/defs/difficulties.ts";
 import type { Difficulty } from "../../src/game/types/index.ts";
@@ -214,6 +217,111 @@ describe("the street", () => {
     }
     // …and the car is still held to the tarmac and its gutter.
     expect(Math.abs(drive.car.pos.y)).toBeLessThanOrEqual(road.bottom + 0.001);
+  });
+
+  it("stands its lighting masts in ALIGNED pairs, unlike the yard lights", () => {
+    // The two kerbs are interleaved half a pitch apart so a lit street does not
+    // march past in couples — except on a mast slot, where street lighting
+    // faces itself across the carriageway and the offset is dropped. The
+    // renderer recovers a mast from that alignment alone (`mastAt`), so if the
+    // two ever drift apart the masts stop being drawn at all.
+    const { pitchPx, mastEvery } = DRIVE.street;
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 20000);
+    const posts = drive.props.filter(
+      (prop) => prop.kind === "lamp_post" && !prop.felled,
+    );
+    expect(posts.length).toBeGreaterThan(4);
+    for (const post of posts) {
+      // Read the slot off the x directly: a post sits either ON its slot or
+      // half a pitch past it, and rounding cannot tell those apart (a
+      // half-offset post rounds UP into its neighbour, which is precisely why
+      // `mastAt` rejects on the DISTANCE to a boundary rather than trusting the
+      // rounded slot).
+      const step = post.pos.x / pitchPx;
+      const aligned = Math.abs(step - Math.round(step)) < 1e-6;
+      const slot = aligned ? Math.round(step) : Math.floor(step);
+      const mast = ((slot % mastEvery) + mastEvery) % mastEvery === 0;
+      const where = `${post.pos.x} @ y=${post.pos.y}`;
+      // The NEAR kerb is never offset, so every one of its posts sits on a slot
+      // boundary. The FAR kerb is offset by half a pitch EXCEPT on a mast slot,
+      // which is exactly the alignment the renderer reads a mast off — so on
+      // that side, sitting on a boundary and being a mast are the same fact.
+      if (post.pos.y > 0) expect(aligned, where).toBe(true);
+      else expect(aligned, where).toBe(mast);
+    }
+    // …and a mast slot really does carry one on each side. The ENDS of the
+    // spawned window are dropped: the street is laid down slot by slot as the
+    // road unrolls and forgotten behind it, so the outermost x can legitimately
+    // have had only one of its two minted yet.
+    const byX = new Map<number, number[]>();
+    for (const post of posts) {
+      const slot = post.pos.x / pitchPx;
+      // Every NEAR post sits on a boundary, so alignment alone is not the
+      // question — a mast slot is.
+      if (Math.abs(slot - Math.round(slot)) > 1e-6) continue;
+      if (((Math.round(slot) % mastEvery) + mastEvery) % mastEvery !== 0) {
+        continue;
+      }
+      byX.set(post.pos.x, [...(byX.get(post.pos.x) ?? []), post.pos.y]);
+    }
+    // Only a handful of mast slots are ever in the window at once, and both
+    // outermost ones are dropped, so one survivor is the honest bar here.
+    const xs = [...byX.keys()].sort((a, b) => a - b).slice(1, -1);
+    expect(xs.length).toBeGreaterThanOrEqual(1);
+    for (const x of xs) {
+      const ys = byX.get(x) ?? [];
+      expect(ys.length, `pair at ${x}`).toBe(2);
+      expect(Math.sign(ys[0]!)).toBe(-Math.sign(ys[1]!));
+    }
+  });
+
+  it("leaves a stump where a post sheared, and keeps it there", () => {
+    const drive = createDrive(PARAMS);
+    floorIt(drive, 20000);
+    const post = drive.props.find((prop) => prop.kind === "lamp_post");
+    expect(post).toBeDefined();
+    expect(post!.stub).toBeUndefined();
+    const stood = { x: post!.pos.x, y: post!.pos.y };
+    fellLamp(post!, { x: 40, y: 12 }, 60);
+    expect(post!.stub).toEqual(stood);
+    // The flying half moves; the foot it left does not.
+    floorIt(drive, 600);
+    expect(post!.stub).toEqual(stood);
+  });
+
+  it("puts out the lamps at the END that was struck, whichever way it faces", () => {
+    // A car's nose is not always on its right — the road runs both ways and an
+    // oncoming body is drawn flipped — so the end is the side of the hit AND
+    // the facing, never the side alone.
+    const car = (faceLeft: boolean): DriveTraffic => ({
+      id: 1,
+      pos: { x: 100, y: 0 },
+      speed: 0,
+      slew: 0,
+      variant: 0,
+      faceLeft,
+      noseOut: false,
+      tailOut: false,
+      hitCooldownMs: 0,
+    });
+    // Nose right: hit from behind (the left) kills the tail, from ahead the nose.
+    const rearEnded = car(false);
+    breakTrafficLamps(rearEnded, 60);
+    expect([rearEnded.noseOut, rearEnded.tailOut]).toEqual([false, true]);
+    const headOn = car(false);
+    breakTrafficLamps(headOn, 140);
+    expect([headOn.noseOut, headOn.tailOut]).toEqual([true, false]);
+    // Nose LEFT — the same two blows land on the other ends.
+    const oncoming = car(true);
+    breakTrafficLamps(oncoming, 60);
+    expect([oncoming.noseOut, oncoming.tailOut]).toEqual([true, false]);
+    const chased = car(true);
+    breakTrafficLamps(chased, 140);
+    expect([chased.noseOut, chased.tailOut]).toEqual([false, true]);
+    // Both ends can go, and one never puts the other back.
+    breakTrafficLamps(rearEnded, 140);
+    expect([rearEnded.noseOut, rearEnded.tailOut]).toEqual([true, true]);
   });
 
   it("paints its crossings on a regular pitch, both legs alike", () => {

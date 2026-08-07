@@ -39,10 +39,12 @@ import {
 import {
   driveBodyHit,
   driveBreakdown,
+  driveLampGlass,
   drivePartHit,
   driveTrafficHit,
   type DriveFxState,
 } from "./drive-fx.ts";
+import { lampHeadLift } from "./scenery.ts";
 import {
   bodyHitSound,
   BREAKDOWN_SOUND,
@@ -246,6 +248,17 @@ export function drainDrive(
     if (event.type === "lampFelled") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      // …AND THE LENS, out of the air where the head was. The event's position
+      // is the post's while it is still standing, which is the one tick this
+      // can be asked — a felled prop's `pos` is the flying half's and is moving
+      // by the next one.
+      driveLampGlass(
+        fx,
+        event.pos.x,
+        event.pos.y,
+        lampHeadLift(event.pos),
+        drive.ms,
+      );
       playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
     }
     if (event.type === "panelBent") {

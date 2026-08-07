@@ -395,6 +395,21 @@ export const DRIVE = {
     /** How far onto the pavement the furniture stands, measured off the
      * tarmac's own edge (world px). */
     kerbOffsetPx: 4,
+    /**
+     * Every nth slot carries a STREET-LIGHTING MAST instead of a yard light —
+     * the tall ones the renderer throws a cone and a pool of light off
+     * (`drive-screen/scenery.ts`, `mastAt`).
+     *
+     * IT IS A SIM KNOB AND NOT A DRAWING ONE, because the two rows are ALIGNED
+     * on a mast slot: street lighting comes in pairs facing each other across
+     * the carriageway, and the far row's usual half-pitch offset — which is
+     * right for yard lights, and there so a lit street does not march past in
+     * couples — puts a mast fifty px down the road from its partner. So the
+     * offset is dropped on these slots, and it has to be dropped where the
+     * furniture is MINTED rather than where it is drawn, or the picture and the
+     * thing the bumper hits disagree.
+     */
+    mastEvery: 3,
     /** A lamp post's collision circle at the ground (world px) — the column,
      * not the hood it carries. */
     lampRadiusPx: 4,

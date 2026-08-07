@@ -75,14 +75,36 @@ type StreetPiece = {
  * rows interleave rather than marching in pairs; a street lit from one side
  * only reads as a road with a film set along it. The NEAR pavement gets a lamp
  * post most of the time and somebody's parked car the rest (`parkedShare`).
+ *
+ * …EXCEPT ON A MAST SLOT (`mastEvery`), where the offset is dropped and the two
+ * rows line up. Those are the tall street-lighting columns, and street lighting
+ * faces itself across a carriageway — a mast fifty px down the road from its
+ * opposite number reads as two lamps rather than as a pair. The interleave is
+ * still right for every yard light between them.
  */
 function piecesAt(slot: number): StreetPiece[] {
   const { pitchPx } = DRIVE.street;
   const y = kerbY();
   const x = slot * pitchPx;
-  const parked = slotHash(slot, 5) < DRIVE.street.parkedShare;
+  const mast = isMastSlot(slot);
+  // A MAST SLOT IS NEVER A PARKING SPACE. The two rows have to pair up on it,
+  // and somebody's car in the near one leaves a mast lighting the road on its
+  // own from the far kerb.
+  //
+  // The share is lifted on the slots that CAN park, so the street keeps the
+  // number of parked cars it was tuned with. Without that this quietly took a
+  // third of the parking off the road — and a parked car is an OBSTACLE, so
+  // thinning them out is a difficulty change wearing a lighting change's
+  // clothes.
+  const { mastEvery, parkedShare } = DRIVE.street;
+  const share = (parkedShare * mastEvery) / Math.max(1, mastEvery - 1);
+  const parked = !mast && slotHash(slot, 5) < share;
   return [
-    { kind: "lamp_post", pos: { x: x + pitchPx / 2, y: y.far }, variant: 0 },
+    {
+      kind: "lamp_post",
+      pos: { x: mast ? x : x + pitchPx / 2, y: y.far },
+      variant: 0,
+    },
     {
       kind: parked ? "parked_car" : "lamp_post",
       pos: { x, y: y.near },
@@ -90,6 +112,18 @@ function piecesAt(slot: number): StreetPiece[] {
         Math.floor(slotHash(slot, 3) * TRAFFIC_VARIANTS) % TRAFFIC_VARIANTS,
     },
   ];
+}
+
+/**
+ * Is this slot one of the tall street-lighting masts?
+ *
+ * The RENDERER asks the same question of a post's own position rather than of
+ * its slot (a `DriveProp` carries no slot number) — see `mastAt`. Both answers
+ * come off `DRIVE.street.mastEvery`, so there is one knob and not two.
+ */
+export function isMastSlot(slot: number): boolean {
+  const every = DRIVE.street.mastEvery;
+  return ((slot % every) + every) % every === 0;
 }
 
 /** The slot a world x sits in, rounded the way this leg is travelling. */
@@ -187,6 +221,11 @@ export function stepProps(state: DriveState, dt: number): void {
  */
 export function fellLamp(prop: DriveProp, launch: Vec2, liftZ: number): void {
   prop.felled = true;
+  // The stump stays where the column was standing. Recorded HERE rather than
+  // derived in the renderer, because a felled post's `pos` is the flying half's
+  // and is already moving by the next tick — there is no way back to the foot
+  // from it.
+  prop.stub = { x: prop.pos.x, y: prop.pos.y };
   prop.vel.x = launch.x;
   prop.vel.y = launch.y;
   prop.vz = liftZ;

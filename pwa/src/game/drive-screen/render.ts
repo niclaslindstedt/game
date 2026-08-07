@@ -35,10 +35,11 @@ import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
 import {
   applyWorldProjection,
   billboard,
+  projectX,
   projectY,
   unprojectY,
 } from "../render/tilt.ts";
-import { drawCarAssembly } from "../render/vehicles.ts";
+import { drawCarAssembly, drawLightCones } from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -56,7 +57,12 @@ import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
   LAMP_SPRITE,
+  LAMP_STUB_PX,
+  mastAt,
   roadBands,
+  ROAD_LAMP_NEAR_SPRITE,
+  ROAD_LAMP_HEAD_PX,
+  ROAD_LAMP_POOL_PX,
   sceneryBetween,
   TRAFFIC_SPRITES,
 } from "./scenery.ts";
@@ -292,6 +298,26 @@ export function drawDrive(
   if (skids) drawSkidMarks(ctx, skids, camera, viewW);
   if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW);
 
+  // ── AND WHAT THE STREET LIGHTING PUTS ON IT ───────────────────────────────
+  // The pools go down LAST of everything lying on the road, because light falls
+  // ON the paint and on the mess rather than under it — a pool drawn before the
+  // blood is a pool with the blood painted over it, which reads as a wet patch.
+  // They are drawn in the PROJECTED space with the rest of the ground, so a
+  // circle here comes out as the ellipse a downward lamp actually casts; the
+  // masts themselves stand up out of the y-sorted pass below.
+  for (const prop of drive.props) {
+    if (prop.kind !== "lamp_post" || prop.felled) continue;
+    const mast = mastAt(prop.pos);
+    if (!mast) continue;
+    ctx.save();
+    ctx.translate(prop.pos.x - camera.x, mast.poolY - camera.y);
+    ctx.fillStyle = lampPool(ctx);
+    ctx.beginPath();
+    ctx.arc(0, 0, ROAD_LAMP_POOL_PX, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────
   // One list, one sort, one pass. A drive holds four kinds of standing thing
   // and every one of them has to interleave with the others by depth — a
@@ -363,19 +389,79 @@ export function drawDrive(
       if (name) put(name, prop.pos.x, prop.pos.y);
       continue;
     }
+    // A STANDING POST IS ONE OF TWO PICTURES OF THE SAME COLUMN: most are the
+    // little yard light, every third is a street-lighting mast that actually
+    // throws light on the tarmac (`mastAt`). The cone is drawn WITH the mast
+    // rather than in a pass of its own — a beam is part of the lamp, and one
+    // sorted separately would be thrown by a post the picture had already
+    // covered up.
+    const mast = prop.felled ? null : mastAt(prop.pos);
+    if (mast) {
+      // THE BEAM IS SORTED WHERE THE LIGHT LANDS, not where the lamp stands,
+      // and that is the whole of getting the near row right. Light travels from
+      // the head to the tarmac, so the lit volume sits BETWEEN the two — which
+      // for the far row is in front of its own post and for the near row is
+      // BEHIND it. Sorted with the post instead, the near row painted its cone
+      // over every car it was supposed to be lighting.
+      drawn.push({
+        y: mast.poolY,
+        draw: () => drawLampBeam(ctx, prop.pos, mast.poolY, camera),
+      });
+      put(mast.sprite, prop.pos.x, prop.pos.y);
+      continue;
+    }
     if (!prop.felled) {
       put(LAMP_SPRITE, prop.pos.x, prop.pos.y);
       continue;
     }
-    const sprite = spriteByName(sprites, LAMP_SPRITE);
+    // A FELLED post has BROKEN, and the picture has to say so in three ways.
+    //
+    // It is DARK. Whatever it was lighting a moment ago, the lens is on the
+    // road now — so both rows wear the head with no lens in it, and the beam
+    // and the pool above are already gone (they are gated on `felled`).
+    //
+    // It is in TWO PIECES. A slip-base column shears at its foot, so the stump
+    // stays bolted to the pavement where it always was (`prop.stub`, minted by
+    // `fellLamp`) and the rest of the column goes down the road WITHOUT it —
+    // the flying half is drawn with its own bottom rows cropped away, so the
+    // two together are one broken post rather than a whole one plus a spare.
+    //
+    // And it TURNS ABOUT ITS BREAK, which is where it broke: a post pivoting
+    // around its own middle reads as a spinning stick rather than as something
+    // that was bolted to the pavement a moment ago.
+    const sprite = spriteByName(
+      sprites,
+      mastAt(prop.pos) ? ROAD_LAMP_NEAR_SPRITE : LAMP_SPRITE,
+    );
     if (!sprite) continue;
+    const stump = prop.stub;
+    if (stump) {
+      const foot = spriteByName(sprites, LAMP_SPRITE);
+      if (foot) {
+        drawn.push({
+          y: stump.y,
+          draw: () =>
+            billboard(ctx, stump.x, stump.y, camera.x, camera.y, () => {
+              ctx.drawImage(
+                foot,
+                0,
+                foot.height - LAMP_STUB_PX,
+                foot.width,
+                LAMP_STUB_PX,
+                seatX(stump.x, camera.x) - Math.round(foot.width / 2),
+                seatY(stump.y, camera.y) - Math.round(LAMP_STUB_PX - 2),
+                foot.width,
+                LAMP_STUB_PX,
+              );
+            }),
+        });
+      }
+    }
+    const flying = sprite.height - LAMP_STUB_PX;
     drawn.push({
       y: prop.pos.y,
       draw: () =>
         billboard(ctx, prop.pos.x, prop.pos.y, camera.x, camera.y, () => {
-          // Turned about its FOOT, which is where it broke: a post pivoting
-          // around its own middle reads as a spinning stick rather than as
-          // something that was bolted to the pavement a moment ago.
           const cx = seatX(prop.pos.x, camera.x);
           const cy = seatY(prop.pos.y - prop.z, camera.y);
           ctx.save();
@@ -383,16 +469,46 @@ export function drawDrive(
           ctx.rotate(prop.angle);
           ctx.drawImage(
             sprite,
+            0,
+            0,
+            sprite.width,
+            flying,
             -Math.round(sprite.width / 2),
-            -Math.round(sprite.height - 2),
+            -Math.round(flying - 2),
+            sprite.width,
+            flying,
           );
           ctx.restore();
         }),
     });
   }
+  // THE OTHER TRAFFIC, WITH ITS LIGHTS ON. Everything in this list is a car
+  // that is RUNNING — the ones somebody left at the kerb are `drive.props` and
+  // are dark, which is most of what tells the two apart at a glance on a road
+  // where both are the same ten sprites. The cones are the hero's own
+  // (`render/vehicles.ts` → `drawLightCones`), mirrored by the same `faceLeft`
+  // the body is, so an oncoming car lights the road ahead of it rather than out
+  // of its boot. They are pushed BEFORE the body at the same y, so a car's own
+  // beam never paints over the car in front of it.
   for (const other of drive.traffic) {
     const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];
-    if (name) put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
+    if (!name) continue;
+    drawn.push({
+      y: other.pos.y - 0.001,
+      draw: () =>
+        drawLightCones(
+          ctx,
+          other.pos,
+          camera,
+          timeMs,
+          0,
+          0,
+          other.faceLeft,
+          other.noseOut,
+          other.tailOut,
+        ),
+    });
+    put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
   }
   // WHAT IS LEFT OF THE ONES HE HAS ALREADY MET — halves, whole bodies and
   // chunks, each at its OWN place on the road, y-sorted in with everything else
@@ -526,4 +642,92 @@ export function drawDrive(
       );
     }
   }
+}
+
+/**
+ * THE POOL a street lamp lays on the tarmac, cached and drawn under a
+ * translate.
+ *
+ * Built once rather than once per lamp per frame: a `createRadialGradient` at
+ * each mast's own coordinates is three fresh gradient objects a frame for the
+ * whole length of a drive, and the shape is the same every time — only the
+ * place changes, which is what the translate is for.
+ */
+let poolCache: CanvasGradient | null = null;
+
+/** …and the BEAM, cached per reach. There are exactly two shapes on this road —
+ * the far row's and the near row's — so keying on the reach is keying on which
+ * side of the street a lamp is standing, and the gradient is built in the cone's
+ * own space so the same one serves every lamp in that row. */
+const beamCache = new Map<number, CanvasGradient>();
+
+function lampBeam(
+  ctx: CanvasRenderingContext2D,
+  reach: number,
+): CanvasGradient {
+  const held = beamCache.get(reach);
+  if (held) return held;
+  const beam = ctx.createLinearGradient(
+    0,
+    -ROAD_LAMP_HEAD_PX,
+    projectX(0, reach),
+    projectY(0, reach),
+  );
+  beam.addColorStop(0, "rgba(255, 242, 190, 0.20)");
+  beam.addColorStop(0.7, "rgba(255, 230, 155, 0.07)");
+  beam.addColorStop(1, "rgba(255, 226, 150, 0)");
+  beamCache.set(reach, beam);
+  return beam;
+}
+
+function lampPool(ctx: CanvasRenderingContext2D): CanvasGradient {
+  if (poolCache) return poolCache;
+  const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, ROAD_LAMP_POOL_PX);
+  pool.addColorStop(0, "rgba(255, 238, 186, 0.22)");
+  pool.addColorStop(0.5, "rgba(255, 226, 150, 0.11)");
+  pool.addColorStop(1, "rgba(255, 226, 150, 0)");
+  poolCache = pool;
+  return pool;
+}
+
+/**
+ * THE CONE ONE MAST THROWS — the light, not the lamp. The post itself goes
+ * through `put` like any other body on this road; only the beam is drawn here,
+ * because it is sorted somewhere else (see the call site).
+ *
+ * IT IS DRAWN IN THE MAST'S OWN BILLBOARD, which is 1:1 screen px, so the pool
+ * it lands in has to be CONVERTED rather than dropped in as a world coordinate:
+ * the ground foreshortens and the billboard does not. `projectY` off the mast's
+ * feet is that conversion — the same one the projection itself makes — and
+ * using the raw world offset instead put every beam short of the light it was
+ * supposed to be casting, by exactly the pitch.
+ *
+ * Light has no pixels, so the beam is a gradient rather than a sprite, and it
+ * speaks the same vocabulary as the car's own headlights (`render/vehicles.ts`
+ * → `drawLightCones`): a warm fill faded out along its length, laid over the
+ * picture rather than added to it. Additive blending was tried and blows the
+ * lane paint out to white the moment two beams overlap.
+ */
+function drawLampBeam(
+  ctx: CanvasRenderingContext2D,
+  at: { x: number; y: number },
+  poolY: number,
+  camera: Camera,
+): void {
+  billboard(ctx, at.x, at.y, camera.x, camera.y, () => {
+    const reach = poolY - at.y;
+    const baseX = projectX(0, reach);
+    const baseY = projectY(0, reach);
+    ctx.save();
+    ctx.translate(seatX(at.x, camera.x), seatY(at.y, camera.y));
+    ctx.fillStyle = lampBeam(ctx, reach);
+    ctx.beginPath();
+    ctx.moveTo(-2, -ROAD_LAMP_HEAD_PX);
+    ctx.lineTo(2, -ROAD_LAMP_HEAD_PX);
+    ctx.lineTo(baseX + ROAD_LAMP_POOL_PX * 0.8, baseY);
+    ctx.lineTo(baseX - ROAD_LAMP_POOL_PX * 0.8, baseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  });
 }
