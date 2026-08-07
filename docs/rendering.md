@@ -795,6 +795,23 @@ de-glazed and folded-in-the-middle art at build time
 earns its wounds. Nothing is authored per rung, so a new vehicle — a mod's
 included — is destructible the moment it exists.
 
+**…and it wears its collision as a POSE, not a picture**
+(`drive-screen/wreck-draw.ts`). The rungs are a ladder of how battered a
+vehicle is in general; one crash is a change to how it is standing, and no
+amount of sprite-swapping says it. So the vehicle pass folds the end the
+physics folded (`crushShare`, drawn as that half of the sprite squeezed toward
+the middle, which leaves the axle under the OTHER half exactly where the eye
+last saw it), turns it by whatever spun it, lifts it by whatever put it in the
+air — and the fold is applied in the SPRITE's own frame, before the facing
+flip, or every oncoming car in the game crumples at the wrong end.
+
+**Blood on the windows is an OVERLAY, not a fifth rung** (`<sprite>_gore`,
+derived beside the ladder). Whether anybody died inside a car is independent of
+how battered it is — a saloon can be folded up and empty, or barely marked with
+two people dead in the front — so four rungs times two states is eight grids
+nobody would keep in step, and one overlay laid over whichever rung is showing
+lands correctly on all four because the windows do not move.
+
 **A rider is drawn SEPARATELY from the machine under them** (`RIDER_SEATS`,
 `drive-screen/scenery.ts`), and that is not an art decision: a person baked
 into a moped cannot be thrown off it, cut in half, or left in the road while

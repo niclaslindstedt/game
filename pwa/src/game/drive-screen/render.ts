@@ -56,6 +56,7 @@ import {
 } from "./drive-gore.ts";
 import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
 import { drawSkidMarks, type SkidState } from "./skid.ts";
+import { drawTrafficBody } from "./wreck-draw.ts";
 import {
   CROWD_THOUGHTS,
   drawPlacard,
@@ -675,13 +676,21 @@ export function drawDrive(
           ),
       });
     }
-    if (other.downed) {
-      // ON ITS SIDE, and turned about its own centre — the one thing on this
-      // road besides a felled lamp post whose ORIENTATION carries information.
+    if (other.downed && def.class === "open") {
+      // ON ITS SIDE, and turned about its own centre — a dropped machine is
+      // drawn about its MIDDLE rather than its wheels, because a thing lying
+      // down has no wheels underneath it any more.
       putTumbling(name, other);
       continue;
     }
-    put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
+    // EVERYTHING ELSE GOES THROUGH THE WRECK PASS — folded at whichever end was
+    // hit, turned by whatever spun it, lifted by whatever put it in the air,
+    // and wearing whatever happened to the people inside it. An undamaged car
+    // comes out of it as the plain blit it always was.
+    drawn.push({
+      y: other.pos.y,
+      draw: () => drawTrafficBody(ctx, other, sprites, camera),
+    });
     // …AND THE PERSON ON IT, drawn on top at the machine's own saddle. Seated
     // separately rather than baked in, because the whole point of a rider is
     // that the machine can lose them (`ejectRider`).

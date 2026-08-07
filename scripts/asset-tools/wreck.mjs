@@ -301,8 +301,85 @@ export function wreckedFrames(name, grid, reroll = 0) {
     }
     out[`${name}_${rung.name}`] = rows;
   }
+  out[`${name}_gore`] = goreFrame(name, grid, rng);
   return out;
+}
+
+/**
+ * WHAT THE INSIDE OF A CAR LOOKS LIKE FROM OUTSIDE IT — the glass, and only the
+ * glass, wearing what happened to the people behind it.
+ *
+ * IT IS AN OVERLAY RATHER THAN A RUNG, and that is the whole design. A car's
+ * damage is a ladder of four pictures and whether anybody died in it is an
+ * INDEPENDENT fact — a saloon can be folded up and empty, or barely marked with
+ * two people dead in the front. Four rungs times two states is eight grids per
+ * vehicle and nobody would keep them in step; one overlay drawn OVER whichever
+ * rung is showing is one grid, and it lands correctly on all four because the
+ * windows do not move.
+ *
+ * EVERY OTHER PIXEL IS TRANSPARENT, so the car underneath keeps its paint, its
+ * dents and its outline. What goes in the apertures is a spatter rather than a
+ * fill: a flat red window reads as tinted glass, and what this has to read as
+ * from a lane away at 1x is a window somebody is up against.
+ *
+ * The rng is the LADDER'S OWN, taken after the rungs have been dealt, so the
+ * spatter is deterministic per vehicle and adding it cannot move a single dent
+ * on any of the four pictures above it.
+ */
+function goreFrame(name, grid, rng) {
+  const frame = grid.map((row) => ".".repeat(row.length));
+  // THE NOISE IS COARSE — one roll per 2×2 BLOCK rather than one per pixel, so
+  // what lands on the pane is a smear with an edge to it rather than static.
+  // That is a legibility rule at this size (a checkerboard of red and clear
+  // reads as dithering, not as blood) and it is also what keeps the build's
+  // orphan check quiet without an exemption: every mark is at least two pixels
+  // of something.
+  const blot = new Map();
+  const roll = (x, y) => {
+    const key = `${x >> 1},${y >> 1}`;
+    if (!blot.has(key)) blot.set(key, rng());
+    return blot.get(key);
+  };
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[y].length; x++) {
+      if (!GLASS.has(grid[y][x])) continue;
+      const r = roll(x, y);
+      // A fifth of the glass is left alone, so the window still reads as a
+      // window with something on it. The rest is two depths: the dark core
+      // where somebody is actually against the pane, and the brighter spray
+      // around it.
+      if (r < 0.2) continue;
+      set(frame, x, y, r < 0.6 ? "r" : "i");
+    }
+  }
+  // …and a last sweep for anything the pane's own shape left stranded: a one-
+  // pixel window, or a corner the block grid clipped to a single cell. A lone
+  // red pixel on an otherwise clean car reads as a rendering fault rather than
+  // as blood, which is the same reason the build warns about them.
+  const lit = (x, y) =>
+    y >= 0 && y < frame.length && x >= 0 && x < frame[y].length
+      ? frame[y][x] !== "."
+      : false;
+  for (let pass = 0; pass < 3; pass++) {
+    let cleared = 0;
+    for (let y = 0; y < frame.length; y++) {
+      for (let x = 0; x < frame[y].length; x++) {
+        if (!lit(x, y)) continue;
+        if (lit(x - 1, y) || lit(x + 1, y) || lit(x, y - 1) || lit(x, y + 1)) {
+          continue;
+        }
+        set(frame, x, y, ".");
+        cleared++;
+      }
+    }
+    if (cleared === 0) break;
+  }
+  return frame;
 }
 
 /** The rung names, in order — what the renderer indexes into. */
 export const WRECK_RUNGS = RUNGS.map((r) => r.name);
+
+/** …and the name of the blood-on-the-glass overlay a vehicle derives beside
+ * them, which the renderer lays over whichever rung is showing. */
+export const WRECK_GORE = "gore";

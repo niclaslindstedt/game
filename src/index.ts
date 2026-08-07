@@ -970,6 +970,10 @@ export {
   createDriveDriver,
   crossingsBetween,
   crowdEdges,
+  // HOW FAR EACH END OF A STRUCK VEHICLE HAS FOLDED IN — the collision's own
+  // answer in the vehicle's own units, so the renderer squashes the end the
+  // physics folded rather than deciding for itself which one looks hit.
+  crushShare,
   driveDriverInput,
   driveMph,
   drivePar,

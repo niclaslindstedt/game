@@ -57,6 +57,27 @@ export type Impact = {
   speedLoss: number;
   /** The struck thing's launch velocity (world px/s, ground plane). */
   launch: Vec2;
+  /**
+   * THE MOMENTUM THE STRUCK THING ACTUALLY TOOK (world px/s), over its own
+   * mass — the collision's answer with nothing added to it.
+   *
+   * `launch` is the same number PLUS the share of the car's own travel a body
+   * is carried up the road on (`carryFraction`) and whatever it was already
+   * doing. That is right for a person, who is scooped up and taken along; it is
+   * a lie for a vehicle, which is not carried by anything — a bus with the
+   * hero's carry term added to it would set off up the road at his speed for
+   * having been leant on.
+   *
+   * So a VEHICLE's response reads this and a BODY's reads `launch`, and the
+   * difference between a hatchback that is punted half a lane and a bus that
+   * barely notices is nothing but `impulse / massKg` — which is the whole of
+   * "their weight is of great importance", stated once, here.
+   */
+  dv: Vec2;
+  /** The impulse the pair exchanged (N·s) — what `dv` was derived from, carried
+   * for the things that are about the BLOW rather than about either party's
+   * answer to it (the yaw a shove off-centre puts on, the rollover test). */
+  impulse: number;
   /** …and its upward kick (px/s). */
   liftZ: number;
   /** The energy the crumple absorbed (joules) — what damages the car. */
@@ -101,6 +122,31 @@ export function solveImpact(
   bodyRadius: number,
   bodyMassKg: number,
   bodyHalfLength = 0,
+  /**
+   * HOW MUCH THE TWO OF THEM GRIND, 0 (flesh) → 1 (steel on steel).
+   *
+   * THE HALF OF A COLLISION THIS MODEL DID NOT HAVE, and the whole of why
+   * trading paint down a flank used to do literally nothing. Everything above is
+   * the NORMAL sum: energy absorbed along the contact normal, which for a
+   * sideswipe is a normal running straight across the road, which the car is not
+   * closing along, which is zero. So two cars could grind down each other's
+   * whole length at 120 mph and the model booked no energy, no damage, no
+   * sound and no mark — the struck car slid politely aside and that was the
+   * event.
+   *
+   * A real sideswipe is not free, and what it costs is FRICTION: the two
+   * surfaces are sliding past each other under load, and the work that does
+   * comes out of the same kinetic energy. So a share of the TANGENTIAL energy is
+   * absorbed too, and it is a share rather than the lot because most of a
+   * sideswipe genuinely is survived — a clip stays a great deal cheaper than
+   * centring somebody, which is the ordering the whole minigame is built on.
+   *
+   * IT IS A PARAMETER BECAUSE FLESH DOES NOT GRIND. A body brushed by a wing is
+   * flung, not sanded, and adding a friction term to the crowd would make a
+   * glancing pedestrian hit as gory as a square one — so people and lamp posts
+   * pass 0 and everything with bodywork passes 1.
+   */
+  scrape = 0,
 ): Impact | null {
   // THE CONTACT POINT: the nearest spot on the car's own axis segment. The
   // segment is the 48-px body laid along the road, so a thing off the END of it
@@ -170,8 +216,16 @@ export function solveImpact(
   // which is why it now travels on the result.
   const alongNose = Math.abs(nx * carDir);
   const normalMs = sweepMs * alongNose;
+  const kinetic = 0.5 * reducedMass * (1 - restitution ** 2);
+  // THE CRUSH: energy absorbed along the contact normal, which is the collision
+  // everybody means by the word.
+  // …AND THE SCRAPE: the tangential share, absorbed by two surfaces grinding
+  // rather than by either of them folding. Zero for anything soft, so the crowd
+  // is untouched by it — see the parameter's own note.
+  const tangentMs = sweepMs * Math.sqrt(Math.max(0, 1 - alongNose * alongNose));
   const joules =
-    0.5 * reducedMass * normalMs * normalMs * (1 - restitution ** 2);
+    kinetic * normalMs * normalMs +
+    kinetic * tangentMs * tangentMs * scrape * DRIVE.impact.scrapeFriction;
 
   // WHAT THE CAR LOSES. The share of the impulse that acted down its own axis.
   const carDvMs = (impulse * alongNose) / carMassKg;
@@ -181,13 +235,16 @@ export function solveImpact(
   // mass — plus the share of the car's own travel it is carried up the road on,
   // which is what makes a hit at 120 throw somebody a whole screen.
   const bodyDvPx = impulse / bodyMassKg / mPerPx;
+  const dv: Vec2 = { x: nx * bodyDvPx, y: ny * bodyDvPx };
   const launch: Vec2 = {
-    x: bodyVel.x + nx * bodyDvPx + carVx * carryFraction,
-    y: bodyVel.y + ny * bodyDvPx,
+    x: bodyVel.x + dv.x + carVx * carryFraction,
+    y: bodyVel.y + dv.y,
   };
   return {
     speedLoss: Math.min(speedLoss, Math.abs(speed)),
     launch,
+    dv,
+    impulse,
     liftZ: bodyDvPx * liftFraction,
     joules,
     contact,

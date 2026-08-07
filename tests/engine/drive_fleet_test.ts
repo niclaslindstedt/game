@@ -13,11 +13,13 @@ import { describe, expect, it } from "vitest";
 import {
   createDrive,
   createTraffic,
+  crushDepthPx,
   DRIVE,
   FLEET,
   impactMasses,
   solveImpact,
   stepDrive,
+  tipsOver,
   trafficMass,
   vehicleDef,
   wreckForce,
@@ -81,7 +83,7 @@ function coast(state: DriveState, ms: number): void {
  * because the footway is somewhere the hero's car cannot go: it weaves out to
  * meet him rather than the other way round.
  */
-function plant(state: DriveState, variant: number): DriveTraffic {
+function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
   const one = createTraffic(
     state.nextId++,
     variant,
@@ -89,7 +91,7 @@ function plant(state: DriveState, variant: number): DriveTraffic {
     0,
   );
   state.traffic.push(one);
-  state.car.speed = DRIVE.topSpeedPx * 0.95;
+  state.car.speed = DRIVE.topSpeedPx * share;
   tick(state, 1);
   state.car.pos.y = one.pos.y;
   one.pos.x = state.car.pos.x + 26;
@@ -230,14 +232,15 @@ describe("people leaving vehicles", () => {
     // the pavement and weaves out to meet you, so it cannot be parked in the
     // hero's lane to be hit on cue. The ejection is the same code path for
     // every `open` vehicle in the fleet — what differs is only where they are.
-    // …and on the HEAVIEST of them, because the ladder is a mass ladder: at
-    // 95% of the dial a scooter is already past `snapForce` and a bicycle is
-    // past it by an order of magnitude, so the motorcycle is the only machine
-    // in the fleet that still merely GOES DOWN at this speed. That is the model
-    // working, not a staging convenience.
+    //
+    // AND IT IS STAGED SLOW, which is the whole of the ladder. At the top of
+    // the dial the heaviest machine in the fleet is torn in half (the test
+    // below); a machine merely GOES DOWN when the blow is under `snapForce`,
+    // and finding the speed at which that is still true is finding the bottom
+    // rung of a ladder whose rungs are mass and nothing else.
     const state = drive();
     floorIt(state, 5000);
-    const moped = plant(state, indexOf("traffic_motorcycle"));
+    const moped = plant(state, indexOf("traffic_motorcycle"), 0.35);
     floorIt(state, 100);
     expect(moped.rider).toBe(false);
     expect(moped.downed).toBe(true);
@@ -249,6 +252,27 @@ describe("people leaving vehicles", () => {
     ];
     expect(thrown.length).toBeGreaterThan(0);
     expect(saidBy(state)).toContain("occupantThrown");
+  });
+
+  it("tears the heaviest machine in the fleet in half at the top end", () => {
+    // THE COMPLAINT THIS ANSWERS, IN ONE ASSERTION. `snapForce` was 2.2 wrecks
+    // and a 210 kg motorcycle met DEAD SQUARE AT THE FULL 120 comes out at
+    // 1.6 — so the two most common machines on this road could not be broken by
+    // the hardest blow the minigame can produce, and every one of them lay down
+    // politely and slid instead.
+    const state = drive();
+    floorIt(state, 5000);
+    const bike = plant(state, indexOf("traffic_motorcycle"));
+    const id = bike.id;
+    floorIt(state, 100);
+    // It has stopped being a vehicle: it is off the road's list entirely, and
+    // what is left is the two halves of it and a cloud of its own steel.
+    expect(state.traffic.some((one) => one.id === id)).toBe(false);
+    expect(saidBy(state)).toContain("machineSnapped");
+    const halves = state.remains.filter((piece) =>
+      piece.part.startsWith("machine_"),
+    );
+    expect(halves.length).toBe(2);
   });
 
   it("sheds steel off the machine as well as the person", () => {
@@ -395,6 +419,180 @@ describe("people leaving vehicles", () => {
     floorIt(state, 100);
     expect(bus.occupants).toBe(0);
     expect(saidBy(state)).not.toContain("windscreenOut");
+  });
+
+  it("kills the ones the geometry will not let out, and bloodies the glass", () => {
+    // THE HALF THE ROAD USED TO GET WRONG. Squareness decides HOW somebody
+    // leaves a car; it has no business deciding WHETHER they survived it. A
+    // minivan folded up by a blow two degrees off square used to drive on with
+    // three people sitting neatly inside it.
+    const state = drive();
+    floorIt(state, 5000);
+    const seats = vehicleDef(indexOf("traffic_minivan")).occupants;
+    // Three rows: more people than the screen can post out in one instant, so
+    // the ones the front pair leaves behind are the whole point of the case.
+    expect(seats).toBeGreaterThan(2);
+    const van = plant(state, indexOf("traffic_minivan"));
+    floorIt(state, 200);
+    // Nobody is left in it: the front pair went through the screen and the row
+    // behind them — who were never in front of it — died where they sat.
+    expect(van.occupants).toBe(0);
+    expect(saidBy(state)).toContain("occupantKilled");
+    // …and what the road shows of a death nobody could see is the windows.
+    expect(van.gore).toBeGreaterThan(0);
+    expect(van.glassOut).toBe(true);
+    // Every seat is on the tally, however they left. A body count that only
+    // counted the ones who made it into the air would be the collision
+    // reporting its own prettiest half.
+    expect(state.bodies).toBeGreaterThanOrEqual(seats);
+  });
+
+  it("leaves the glass alone when the gore switches are off", () => {
+    // The umbrella rule: gated at the DECISION, never at the draw. The people
+    // in the car are just as dead and just as counted — the windows simply do
+    // not say so, exactly as a body outside the car is knocked down rather than
+    // opened.
+    const state = drive({ gib: false, split: false });
+    floorIt(state, 5000);
+    const van = plant(state, indexOf("traffic_minivan"));
+    floorIt(state, 200);
+    expect(van.occupants).toBe(0);
+    expect(van.gore).toBe(0);
+    expect(state.bodies).toBeGreaterThan(0);
+  });
+});
+
+describe("breaking a car, physically", () => {
+  it("folds the end that was hit and leaves the other one straight", () => {
+    // A car rear-ended is SHORT AT THE BACK. Three whole-body dent rungs can
+    // never say that, which is why the crush is a length per end rather than a
+    // rung — and which end folds falls out of which way the thing was pointing,
+    // exactly as its lamps do.
+    const state = drive();
+    floorIt(state, 5000);
+    const hatch = plant(state, indexOf("traffic_hatch"));
+    // Planted ahead of the hero and facing the same way, so the bumper reaches
+    // its TAIL.
+    expect(hatch.faceLeft).toBe(false);
+    floorIt(state, 100);
+    expect(hatch.crushTail).toBeGreaterThan(0);
+    expect(hatch.crushNose).toBe(0);
+  });
+
+  it("folds a moped flat and barely marks a bus with the same blow", () => {
+    // THE WEIGHT IS THE WHOLE MODEL. One sum, two masses, and nothing anywhere
+    // says "a bus dents less" — it resists nine times as hard because it
+    // weighs nine times as much.
+    const joules = DRIVE.traffic.wreckJoules;
+    const moped = vehicleDef(indexOf("traffic_delivery_moped"));
+    const bus = vehicleDef(indexOf("traffic_bus"));
+    expect(crushDepthPx(moped.massKg, joules)).toBeGreaterThan(
+      crushDepthPx(bus.massKg, joules) * 20,
+    );
+  });
+
+  it("puts an ordinary car over at the top end, and never the bus", () => {
+    // THE ROLLOVER IS TWO FACTS AND NOTHING ELSE: the lateral Δv the momentum
+    // sum handed the vehicle, and how high that vehicle carries its weight
+    // (`topHeavy`). So the same full-flank clip at the top of the dial is
+    // solved for each of them through the real collision — a hatchback goes
+    // over, a low sports car of near enough the same mass slides, and a bus
+    // never sees a Δv within sight of the line because a bus is twelve tonnes.
+    const mass = impactMasses("medium");
+    const clipAt = (id: string) => {
+      const def = vehicleDef(indexOf(id));
+      const hit = solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx,
+        // Abeam, and deep enough into its flank that the contact normal runs
+        // straight across the road — which is what a sideswipe is.
+        { x: 24 + def.halfLengthPx - 2, y: 12 },
+        { x: 0, y: 0 },
+        def.radiusPx,
+        def.massKg * mass.vehicleMult,
+        def.halfLengthPx,
+        1,
+      )!;
+      return tipsOver(createTraffic(1, indexOf(id), { x: 0, y: 0 }, 0), hit);
+    };
+    expect(clipAt("traffic_hatch")).toBe(true);
+    expect(clipAt("traffic_van")).toBe(true);
+    expect(clipAt("traffic_sports")).toBe(false);
+    expect(clipAt("traffic_bus")).toBe(false);
+    expect(clipAt("traffic_box_truck")).toBe(false);
+  });
+
+  it("charges a sideswipe for the paint it takes off", () => {
+    // THE OTHER HALF OF "NOTHING HAPPENS". The collision was a purely NORMAL
+    // sum and a sideswipe's normal runs across the road, which the car is not
+    // closing along — so two cars could grind down each other's whole length at
+    // 120 and the model booked ZERO joules, zero damage and zero noise.
+    const mass = impactMasses("medium");
+    const def = vehicleDef(indexOf("traffic_sedan"));
+    const clip = (scrape: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx,
+        { x: 24 + def.halfLengthPx - 2, y: 12 },
+        { x: 0, y: 0 },
+        def.radiusPx,
+        def.massKg * mass.vehicleMult,
+        def.halfLengthPx,
+        scrape,
+      )!;
+    expect(clip(0).joules).toBe(0);
+    expect(clip(1).joules).toBeGreaterThan(0);
+    // …and it stays a great deal cheaper than centring the same car, which is
+    // the ordering the whole minigame teaches.
+    const square = solveImpact(
+      { x: 0, y: 0 },
+      1,
+      DRIVE.topSpeedPx,
+      { x: 24 + def.halfLengthPx - 2, y: 0 },
+      { x: 0, y: 0 },
+      def.radiusPx,
+      def.massKg * mass.vehicleMult,
+      def.halfLengthPx,
+      1,
+    )!;
+    expect(clip(1).joules).toBeLessThan(square.joules * 0.3);
+  });
+
+  it("punts a light car up the road and hardly moves a heavy one", () => {
+    // THE HALF THE SHUNT DID NOT HAVE: the ONE axis a car travels on was the
+    // one axis the collision was not allowed to touch, so a struck car stepped
+    // politely aside and that was the whole event. What it gains now is
+    // `impulse / massKg` and nothing else — which is why this asserts a RATIO
+    // between two vehicles rather than a number for either.
+    const CRUISE = 120;
+    const punt = (id: string) => {
+      const state = drive();
+      floorIt(state, 5000);
+      // Rear-ended while genuinely rolling, which is the collision this is
+      // about — a stopped car is a different (and much harder) sum.
+      const one = createTraffic(
+        state.nextId++,
+        indexOf(id),
+        { x: state.car.pos.x + 34, y: state.car.pos.y },
+        CRUISE,
+      );
+      state.traffic.push(one);
+      state.car.speed = DRIVE.topSpeedPx * 0.95;
+      let best = CRUISE;
+      for (let t = 0; t < 400; t += 16) {
+        tick(state, 1);
+        best = Math.max(best, one.speed);
+      }
+      return best - CRUISE;
+    };
+    const hatch = punt("traffic_hatch");
+    const bus = punt("traffic_bus");
+    // It is shoved bodily up the road — a real change of speed, not a nudge.
+    expect(hatch).toBeGreaterThan(80);
+    // …and twelve tonnes takes the same blow and barely notices it.
+    expect(hatch).toBeGreaterThan(bus * 4);
   });
 });
 

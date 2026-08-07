@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_glass_a
+description: >-
+  A car's windows leaving it — the noise laminated glass makes when a body
+  folds around it, which is not a smash so much as a long bright shatter and
+  then a second of it arriving on the road. Layered OVER the collision that
+  caused it rather than played instead: the crunch is the steel and this is
+  the glass, and they are one event. Bright and thin on purpose, so it sits
+  on top of the smash bank's sub rather than fighting it.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.05
+    filter:
+      type: highpass
+      frequency: 3400
+  - call: noise
+    durationMs: 420
+    volume: 0.034
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 5600
+    echo: 0.3
+  # The frame itself, going. One short mid-band ring under the shards, or the
+  # whole thing reads as a dropped bottle rather than as a windscreen.
+  - call: tone
+    type: triangle
+    from: 1450
+    to: 620
+    durationMs: 130
+    volume: 0.028

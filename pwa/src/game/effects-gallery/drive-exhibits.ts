@@ -33,6 +33,7 @@ import {
   CROWD_THOUGHTS,
   CROWD_VARIANTS,
   DRIVE,
+  FLEET,
   GLUED_BARKS,
   GLUED_VARIANTS,
   haltTraffic,
@@ -51,6 +52,7 @@ import {
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
   SHED_SOUND,
+  SMASH_SOUNDS,
   SPLIT_SOUNDS,
 } from "../drive-screen/drive-sounds.ts";
 import type { DriveExhibit } from "./exhibit-kit.ts";
@@ -435,7 +437,7 @@ export function driveExhibits(): DriveExhibit[] {
       icon: "traffic_van",
       label: "INTO THE BACK OF A VAN",
       blurb:
-        "MET SQUARE AT 120 - THE CRUNCH, THE BUMPER GONE, THE WHOLE FRAME SHOVED",
+        "MET SQUARE AT NINETY - THE CRUNCH, THE BUMPER GONE, THE FRAME SHOVED",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -450,21 +452,137 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 2200,
       shows: "trafficHit",
       bank: CRUNCH_SOUNDS,
+      input: throttle(0.8),
       road: (drive) => {
         silence(drive);
-        const speed = openAt(drive);
+        // AT EIGHTY PERCENT, WHICH IS WHERE THE CRUNCH SHELF LIVES. It opened at
+        // the top of the dial, and the road grew a shelf ABOVE the crunch
+        // (`SMASH_SOUNDS`) that a full-speed rear-ender comfortably reaches —
+        // so the exhibit advertising the crunch was quietly demonstrating the
+        // one above it. The big one has its own exhibit now, below.
+        const speed = openAt(drive, 0.8);
         // THE WHOLE CASCADE, ON PURPOSE — and the one exhibit here that does not
-        // isolate its event. A rear-ender at the top end is worth a fifth of
-        // `wearJoules`, which is over the crunch line, over a panel rung and
-        // over the first fix rung all at once: the crunch, the bend and the
-        // bumper leaving are ONE thing that happens, and an exhibit that staged
-        // them apart would be showing a collision the road cannot produce.
+        // isolate its event. A rear-ender at this speed is over the crunch line,
+        // over a panel rung and over the first fix rung all at once: the crunch,
+        // the bend and the bumper leaving are ONE thing that happens, and an
+        // exhibit that staged them apart would be showing a collision the road
+        // cannot produce.
         plantCar(
           drive,
           leadPx(speed) + 40,
           drive.car.pos.y,
           DRIVE.trafficSpeedPx.min,
           6,
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-smash",
+      icon: "traffic_sedan_dent3",
+      label: "THE BIG ONE",
+      blurb: "A STOPPED CAR MET AT 120 - IT FOLDS, IT SPINS, IT EMPTIES",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "crash",
+        "smash",
+        "wreck",
+        "crush",
+        "fold",
+        "eject",
+        "windscreen",
+      ],
+      showMs: 2600,
+      shows: "trafficHit",
+      bank: SMASH_SOUNDS,
+      road: (drive) => {
+        silence(drive);
+        // THE TOP OF THE LADDER, AND THE ONE WORTH LOOKING AT. Everything the
+        // collision learned lands in this single event: the struck car's tail
+        // folds in by the depth the energy bought (`crushShare`), its glass
+        // goes, it is punted bodily up the road, the driver leaves through the
+        // screen, and the noise is the smash bank with the sub underneath it. A
+        // STOPPED car rather than a dawdling one, because the sweep is then the
+        // hero's whole speed — which is what makes this the biggest collision
+        // the road can produce.
+        const speed = openAt(drive);
+        plantCar(drive, leadPx(speed) + 40, drive.car.pos.y, 0, 0);
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-rollover",
+      icon: "traffic_suv",
+      label: "PUT ON ITS ROOF",
+      blurb: "A TALL ONE CAUGHT ACROSS THE FLANK AT 120 - IT LEAVES THE ROAD",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "roll",
+        "rollover",
+        "flip",
+        "crash",
+      ],
+      showMs: 2600,
+      shows: "trafficRolled",
+      road: (drive) => {
+        silence(drive);
+        // AN SUV, BECAUSE THE ROLLOVER IS ABOUT SHAPE RATHER THAN SPEED. The
+        // test is the lateral Δv the sum hands the vehicle against its own
+        // `topHeavy`, so the identical clip that puts this one over leaves a
+        // low sports car of nearly the same weight sliding — which is the
+        // whole reason the field exists and the thing this exhibit is for.
+        const speed = openAt(drive);
+        plantCar(
+          drive,
+          leadPx(speed) + 30,
+          drive.car.pos.y - 13,
+          0,
+          FLEET.findIndex((def) => def.id === "traffic_suv"),
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-inside",
+      icon: "traffic_minivan_gore",
+      label: "THE ONES WHO STAY IN",
+      blurb: "THE FRONT PAIR GO THROUGH THE SCREEN - THE BACK ROW DOES NOT",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "gore",
+        "blood",
+        "glass",
+        "occupant",
+        "windscreen",
+      ],
+      showMs: 2400,
+      shows: "occupantKilled",
+      road: (drive) => {
+        silence(drive);
+        // A THREE-ROW MINIVAN, because the case only exists when there are more
+        // people in a car than one windscreen can post out. Two go through the
+        // glass and the row behind them — who were never in front of it — die
+        // where they sit, which the road can only show one way: on the windows
+        // (`DriveTraffic.gore`, the derived `<sprite>_gore` overlay).
+        const speed = openAt(drive);
+        plantCar(
+          drive,
+          leadPx(speed) + 40,
+          drive.car.pos.y,
+          0,
+          FLEET.findIndex((def) => def.id === "traffic_minivan"),
         );
       },
     },

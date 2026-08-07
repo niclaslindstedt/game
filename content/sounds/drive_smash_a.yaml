@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_smash_a
+description: >-
+  THE BIG ONE — two tonnes of estate meeting somebody else's car at the top
+  of the dial, and the loudest thing on this road by a wide margin. The
+  crunch bank above it is a collision; this is a collision that ends
+  somebody's car, and it had to be a shelf of its own because the old top
+  end was a 260 ms saw and a boom, which is a fender-bender at any volume
+  you play it at. Five layers, and the length is doing as much work as the
+  level: a sub-sine falling to nearly nothing for the mass, a detuned saw
+  dive for the structure failing, a long lowpass roar for the air it moved,
+  a hard bandpass crack for the instant of contact, and a slow highpass rain
+  of glass and trim still landing half a second later.
+voices:
+  # THE MASS. A sine under the whole thing, falling from a note you can hear
+  # to one you can only feel. It is the layer that separates a big impact
+  # from a loud one — the ear reads sub-bass content as SIZE, not volume,
+  # which is why the old bank could not be made bigger by turning it up.
+  - call: tone
+    type: sine
+    from: 96
+    to: 26
+    durationMs: 620
+    volume: 0.1
+  - call: tone
+    type: sawtooth
+    from: 260
+    to: 34
+    durationMs: 380
+    volume: 0.085
+    detuneCents: 26
+  - call: noise
+    durationMs: 540
+    volume: 0.062
+    filter:
+      type: lowpass
+      frequency: 230
+    echo: 0.28
+  # THE INSTANT. Short, bright and early — the crack of the first contact,
+  # before any of the above has got going.
+  - call: noise
+    durationMs: 60
+    volume: 0.055
+    filter:
+      type: bandpass
+      frequency: 2100
+  # …AND EVERYTHING STILL COMING DOWN. Delayed, long and thin: the glass and
+  # the trim arriving on the tarmac after the car has already gone past.
+  - call: noise
+    durationMs: 480
+    volume: 0.03
+    delayMs: 170
+    filter:
+      type: highpass
+      frequency: 4600
+    echo: 0.2

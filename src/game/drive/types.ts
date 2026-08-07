@@ -292,6 +292,20 @@ export type DriveTraffic = {
   pos: Vec2;
   /** Along-road speed (world px/s), SIGNED in world +x like the hero's own. */
   speed: number;
+  /**
+   * …AND THE SPEED IT WAS DOING BEFORE ANYBODY HIT IT.
+   *
+   * A struck vehicle is now genuinely punted along the road (`shunt`), which is
+   * most of what makes a collision read as having weight — and a car that was
+   * punted and left there would carry on at its new speed for the rest of the
+   * leg, which is a car that has been permanently converted into a projectile.
+   * There is somebody in it: they lift off, or they brake, and either way the
+   * thing eases back to the pace it was travelling at. This is that pace.
+   *
+   * A WRECK NEVER READS IT — nobody is driving a wreck, which is exactly why it
+   * coasts to a halt instead.
+   */
+  cruise: number;
   /** Lateral speed (world px/s) — zero until something shunts it. */
   slew: number;
   /** Which of the traffic sprites it wears — an index into the FLEET
@@ -385,6 +399,54 @@ export type DriveTraffic = {
    * separation below does most of the work; this closes the rest.
    */
   hitCooldownMs: number;
+  /**
+   * HOW FAR EACH END HAS FOLDED IN, in world px of crush depth — the vehicle's
+   * own structural deformation, kept per END because that is where a collision
+   * happens.
+   *
+   * IT IS NOT THE DAMAGE RUNG AND IT IS NOT A DUPLICATE OF IT. `wear` is the
+   * energy budget and `rung` is which of the three derived pictures the art has
+   * climbed to; this is a LENGTH, solved from the same energy against the
+   * vehicle's own crumple stiffness (`crush.ts`), and it is what lets the
+   * renderer squash the struck half of the body by the number of pixels the
+   * physics says it lost. A car that has been rear-ended is short at the back
+   * and straight at the front, which three dent rungs painted over the whole
+   * silhouette can never say.
+   *
+   * NOSE and TAIL are the BODY's ends, not the screen's — which one a blow
+   * folds depends on which way the thing is pointing (`faceLeft`), exactly as
+   * its lamps do.
+   */
+  crushNose: number;
+  crushTail: number;
+  /**
+   * ITS GLASS HAS GONE. Latched, because glass does not come back and because
+   * the renderer draws an empty aperture rather than a window from here on.
+   */
+  glassOut: boolean;
+  /**
+   * …AND WHAT IS ON THE INSIDE OF IT, 0 → 1.
+   *
+   * The people in a car that is folded up around them do not all come out
+   * through the screen: past a point the car is simply not open, and what the
+   * player sees of them is what is on the windows. It is raised where somebody
+   * DIED IN THEIR SEAT (`crush.ts`), never merely where a car was hit hard, so
+   * the sight is a fact about the collision rather than decoration on a rung —
+   * and it is gated on the run's own gore switch at the point of DECISION like
+   * everything else that is not safe for kids.
+   */
+  gore: number;
+  /**
+   * IT IS UPSIDE DOWN, OR ON ITS ROOF, OR STILL GOING OVER.
+   *
+   * `downed` says a thing has stopped being a vehicle and is now an object
+   * sliding down the tarmac, and it is true of a rolled CAR for exactly the
+   * same reasons it is true of a dropped moped — same ballistics, same drag,
+   * same cartwheel. This is the one extra fact a car needs and a moped does
+   * not: how many times it has been over, which is what decides whether it
+   * comes to rest on its wheels or on its roof.
+   */
+  rolls: number;
 };
 
 /** What a piece of kerbside furniture is. */
@@ -523,6 +585,30 @@ export type DriveEvent =
   /** …and one has come apart in the middle, which is a different noise and a
    * different picture: the thing has stopped being a vehicle. */
   | { type: "machineSnapped"; pos: Vec2; joules: number }
+  /**
+   * A VEHICLE HAS GONE OVER — off its wheels, into the air, and turning.
+   *
+   * The biggest single thing that happens on this road, and its own beat
+   * because it is the one collision outcome the player cannot mistake for
+   * another: a shunted car is still a car, a wrecked one is a car that has
+   * stopped, and a rolling one is two tonnes of somebody's estate coming down
+   * the carriageway upside down.
+   */
+  | { type: "trafficRolled"; pos: Vec2; joules: number }
+  /**
+   * A CAR'S GLASS HAS LEFT IT, with nobody through it.
+   *
+   * Distinct from `windscreenOut`, which is the same shower WITH a body in it:
+   * this is the one that fires when the blow was hard enough to blow the
+   * windows out and the people inside stayed where they were — which, past a
+   * point, is what happens, because the car is no longer open.
+   */
+  | { type: "glassSmashed"; pos: Vec2; joules: number }
+  /**
+   * SOMEBODY DIED IN THEIR SEAT. Not a body in the air — the opposite of one:
+   * the car folded up on them and what the road gets to see is the windows.
+   */
+  | { type: "occupantKilled"; pos: Vec2; joules: number }
   /**
    * SOMEBODY HAS LEFT A VEHICLE THEY WERE ON OR IN — a rider off a moped, or a
    * passenger through a windscreen.

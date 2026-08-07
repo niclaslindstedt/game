@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_glass_b
+description: >-
+  The second take of a window going — a side pane rather than a screen, so
+  it is a harder, drier burst with far less of it still falling afterwards.
+  Two takes for the same reason the crunch has two: a car with four windows
+  in it can lose them one at a time.
+voices:
+  - call: noise
+    durationMs: 70
+    volume: 0.048
+    filter:
+      type: highpass
+      frequency: 4200
+  - call: noise
+    durationMs: 240
+    volume: 0.03
+    delayMs: 50
+    filter:
+      type: highpass
+      frequency: 6400
+  - call: tone
+    type: triangle
+    from: 1900
+    to: 900
+    durationMs: 100
+    volume: 0.026

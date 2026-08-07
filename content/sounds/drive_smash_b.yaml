@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_smash_b
+description: >-
+  The second take of the big one — the same collision landing squarer, so it
+  is shorter and harder rather than longer and rounder. Two takes because a
+  driver who is enjoying himself hears this several times a leg, and one
+  take at that rate stops being a collision and starts being a jingle. The
+  sub goes lower and dies sooner, the saw is pitched under the first take's,
+  and the debris tail is drier: less of it in the air, more of it already
+  down.
+voices:
+  - call: tone
+    type: sine
+    from: 84
+    to: 22
+    durationMs: 520
+    volume: 0.1
+  - call: tone
+    type: sawtooth
+    from: 205
+    to: 30
+    durationMs: 300
+    volume: 0.09
+    detuneCents: 34
+  - call: noise
+    durationMs: 460
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 190
+    echo: 0.22
+  - call: noise
+    durationMs: 70
+    volume: 0.052
+    filter:
+      type: bandpass
+      frequency: 1500
+  - call: noise
+    durationMs: 340
+    volume: 0.026
+    delayMs: 140
+    filter:
+      type: highpass
+      frequency: 5200

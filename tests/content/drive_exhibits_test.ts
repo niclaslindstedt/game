@@ -88,7 +88,7 @@ function soundFor(event: DriveEvent): string | undefined {
   if (event.type === "pedestrianHit")
     return bodyHitSound(event.pos.x, event.pos.y, event.joules);
   if (event.type === "trafficHit")
-    return trafficHitSound(event.pos.x, event.pos.y, event.joules);
+    return trafficHitSound(event.pos.x, event.pos.y, event.joules).id;
   if (event.type === "panelBent") return panelSound(event.pos.x, event.pos.y);
   if (event.type === "partShed") return SHED_SOUND;
   if (event.type === "breakdown") return BREAKDOWN_SOUND;

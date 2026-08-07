@@ -170,6 +170,41 @@ export function driveTrafficHit(
   kick(state, force, force);
 }
 
+/**
+ * THE BIG ONE — a car folded up, put on its roof, or destroyed outright.
+ *
+ * ITS OWN FUNCTION BECAUSE IT HAS ITS OWN CEILING. Every other effect on this
+ * road shares one shake clamp, and it is set where it is on purpose: the road
+ * has to stay readable while it is being hit, and a frame thrown about by every
+ * body under the bumper is punishing the player twice. But the same clamp
+ * applied to a wreck meant the largest thing that can happen out here shoved the
+ * frame exactly as hard as clipping a lamp post did — which is the picture's
+ * half of "the crashes feel thin". So the terminal events get a ceiling of their
+ * own, a third higher, and nothing else can reach it.
+ *
+ * It is also three effects rather than one: sparks off the contact, shards off
+ * the bodywork, and glass out of the air where the windows were.
+ */
+export function driveSmash(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  joules: number,
+  nowMs: number,
+): void {
+  const force = forceOf(joules);
+  push(state, "spark", x, y, nowMs, 520, 1);
+  push(state, "shard", x, y, nowMs, 1100, 1);
+  push(state, "glass", x, y, nowMs, 900, 0.9, false, 0, WRECK_GLASS_LIFT);
+  kick(state, 1.1 + force, 0.8, SMASH_SHAKE_MAX);
+}
+
+/** How far off the road a car carries its windows (world px) — where the
+ * shards come out of when a wreck loses them. The same figure the ejection's
+ * own screen burst uses, kept here because a wreck's glass and a body's exit
+ * are the same pane at the same height. */
+const WRECK_GLASS_LIFT = 12;
+
 /** A panel climbed a rung, or a part worked free: shards off the car. */
 export function drivePartHit(
   state: DriveFxState,
@@ -274,12 +309,31 @@ function push(
   });
 }
 
-/** Shove the frame and bloom it, unless the viewer asked for calm. */
-function kick(state: DriveFxState, shake: number, flash: number): void {
+/**
+ * Shove the frame and bloom it, unless the viewer asked for calm.
+ *
+ * `most` is the ceiling this particular event may push the shake to — the
+ * ordinary one for everything, and a higher one for the handful of terminal
+ * events that are allowed to be the biggest thing that has happened (see
+ * `driveSmash`). It is a ceiling rather than a multiplier so a wreck landing in
+ * the middle of a blockade cannot stack the two into something unreadable.
+ */
+function kick(
+  state: DriveFxState,
+  shake: number,
+  flash: number,
+  most = SHAKE_MAX,
+): void {
   if (state.calm) return;
-  state.shake = Math.min(1.6, state.shake + shake);
+  state.shake = Math.min(most, state.shake + shake);
   state.flash = Math.min(0.5, state.flash + flash * 0.35);
 }
+
+/** The ordinary shake ceiling, and the one a wreck may reach. Both in the same
+ * units `SHAKE_PER_FORCE` turns into world px — so the everyday worst is about
+ * a fifth of a lane and a rollover is about a third of one. */
+const SHAKE_MAX = 1.6;
+const SMASH_SHAKE_MAX = 2.4;
 
 /** Age everything by one step of the DRIVE's own clock. */
 export function stepDriveFx(

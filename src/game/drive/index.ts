@@ -67,6 +67,13 @@ import {
 import { spawnBlockade } from "./blockade.ts";
 import { impactMasses, panelAt, solveImpact } from "./impact.ts";
 import {
+  crushVehicle,
+  tipVehicle,
+  shatterGlass,
+  shedCount,
+  tipsOver,
+} from "./crush.ts";
+import {
   burstBody,
   crushRemains,
   forgetRemains,
@@ -212,6 +219,18 @@ export { fellLamp, isMastSlot } from "./street.ts";
 export { breakTrafficLamps } from "./traffic.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
+// HOW A VEHICLE BREAKS — the fold, the glass, the spin and the roll. The app
+// reads `crushShare` to draw the fold and nothing else here; the rest is the
+// collision's own, exported so the tests can hold the physics to real units.
+export {
+  crushDepthPx,
+  crushShare,
+  crushVehicle,
+  tipVehicle,
+  shatterGlass,
+  shedCount,
+  tipsOver,
+} from "./crush.ts";
 export { remainForce, splitsBody } from "./remains.ts";
 // WHAT THE LEG WAS WORTH — the arcade score the high-score board ranks, twinned
 // with `driveVerdict` below (score.ts explains why both live here).
@@ -608,6 +627,10 @@ function collide(drive: DriveState): void {
       def.radiusPx,
       trafficMass(other, mass.rider) * mass.vehicleMult,
       def.halfLengthPx,
+      // STEEL ON STEEL: a clip down the flank grinds, and the friction is
+      // absorbed by both of them. Without it a sideswipe at the top end was
+      // free (`DRIVE.impact.scrapeFriction`).
+      1,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
@@ -634,22 +657,41 @@ function collide(drive: DriveState): void {
     breakTrafficLamps(other, car.pos.x);
     hurtTraffic(drive, other, hit);
 
+    const force = wreckForce(other, hit.joules);
+
     if (def.class === "open") {
       // A CAR MEETING A BICYCLE PUTS THE BICYCLE ON ITS SIDE. There is no
       // version of this that is a shove — so the machine goes down and starts
       // shedding itself, and the person on it leaves by an entirely different
       // door.
-      const force = wreckForce(other, hit.joules);
       drive.remains.push(...ejectRider(drive, other, hit));
       if (force >= DRIVE.traffic.snapForce) {
         // …AND PAST A LINE IT STOPS BEING A VEHICLE AT ALL. The spine goes, the
         // two ends go their own ways, and the machine leaves `traffic`
         // entirely — there is nothing left for the road to steer or shunt.
+        //
+        // PAST A SECOND LINE IT IS NOT WRECKAGE, IT IS A CLOUD. The halves
+        // still go, because the silhouette of half a moped is what tells the
+        // player WHAT he just destroyed; everything else is opened right up.
+        // This is the ladder the request asked for by name — knocked over,
+        // broken in half, and obliterated — and every rung of it is the same
+        // force divided by the machine's own mass.
+        const gone = force >= DRIVE.traffic.obliterateForce;
+        const scale = gone ? DRIVE.traffic.obliterateScale : 1;
         drive.remains.push(...snapMachine(drive, other, hit, force));
-        drive.remains.push(...tearMachine(drive, other, hit, force));
+        drive.remains.push(
+          ...tearMachine(
+            drive,
+            other,
+            hit,
+            force,
+            gone ? Math.round(DRIVE.traffic.debris.max * scale) : undefined,
+            scale,
+          ),
+        );
         snapped.add(other.id);
       } else if (!other.downed && force >= DRIVE.traffic.downWear) {
-        knockDown(other, hit.launch.y, hit.liftZ, car.pos.y);
+        knockDown(other, hit.dv.y, hit.liftZ, car.pos.y);
         drive.remains.push(...tearMachine(drive, other, hit, force));
         drive.events.push({
           type: "machineDown",
@@ -658,12 +700,49 @@ function collide(drive: DriveState): void {
         });
       }
     } else {
-      // A SHOVE, NOT A WRECK — until it is. It slews out of the lane and
-      // scrubs off, but it REMEMBERS now (`hurtTraffic` above), so the tenth
-      // shunt is visibly the tenth and the last one leaves it dead in a lane.
-      if (!other.wrecked) shunt(other, hit.launch.y, car.pos.y);
+      // ── WHAT THE STRUCTURE DID ────────────────────────────────────────────
+      // The body FOLDS at the end that was hit, by a depth the collision's own
+      // energy buys against the vehicle's own stiffness (`crush.ts`) — so the
+      // same blow shortens a hatchback by a foot and marks a bus.
+      const folded = crushVehicle(other, hit.joules, car.pos.x);
+      // Its glass is not structure and goes long before the body does.
+      if (shatterGlass(other, force)) {
+        drive.events.push({
+          type: "glassSmashed",
+          pos: { x: other.pos.x, y: other.pos.y },
+          joules: hit.joules,
+        });
+      }
+      // …and a car that has genuinely folded throws pieces of ITSELF down the
+      // road, cut out of its own art by the same tear a motorcycle uses.
+      const shed = folded > 0 ? shedCount(force) : 0;
+      if (shed > 0) {
+        drive.remains.push(...tearMachine(drive, other, hit, force, shed));
+      }
+
+      // ── AND WHAT THE WHOLE VEHICLE DID ────────────────────────────────────
+      // A SHOVE, NOT A WRECK — until it is. It is punted up the road, slewed
+      // out of the lane and spun about the point it was struck at, all off the
+      // momentum sum's own answer over its own mass.
+      // The cooldown that used to be the `else` of this branch is stamped at
+      // the top of the loop now (see "ONE CONTACT IS ONE IMPACT" above), which
+      // covers the paths that never had one.
+      if (!other.downed) {
+        if (!other.wrecked) shunt(other, hit, car.pos.y);
+        // …UNLESS THE SHOVE BEAT ITS OWN WHEELS, in which case it is not being
+        // shunted anywhere. It is going over.
+        if (tipsOver(other, hit)) {
+          tipVehicle(other, hit, car.pos.y);
+          drive.events.push({
+            type: "trafficRolled",
+            pos: { x: other.pos.x, y: other.pos.y },
+            joules: hit.joules,
+          });
+        }
+      }
       // …AND THE PEOPLE INSIDE COME OUT THROUGH THE SCREEN, if the blow was
-      // square enough and hard enough. Both conditions live in `eject.ts`.
+      // square enough — or die in their seats if it was merely hard enough.
+      // Both conditions live in `eject.ts`.
       drive.remains.push(...ejectOccupants(drive, other, hit, car.pos.x));
     }
     // The hero's own car takes the exchange properly, which is what makes
@@ -700,6 +779,10 @@ function collide(drive: DriveState): void {
         ? parkedDef.massKg * mass.vehicleMult + mass.parkedExtra
         : mass.lamp,
       parkedDef ? parkedDef.halfLengthPx : 0,
+      // A parked car grinds like any other; a lamp post is a column that shears
+      // rather than a surface that scrapes, and it is met square nearly every
+      // time anyway.
+      parked ? 1 : 0,
     );
     if (!hit) continue;
     car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
@@ -852,8 +935,18 @@ function hurtTraffic(
   drive.remains.push(
     ...tearMachine(drive, other, hit, wreckForce(other, hit.joules)),
   );
-  // Whoever was still inside it is not staying inside it.
-  drive.remains.push(...ejectOccupants(drive, other, hit, drive.car.pos.x));
+  // A CAR THAT HAS GIVEN UP HAS NO GLASS LEFT IN IT, whatever the last blow's
+  // energy was — the windows went several hits ago on any honest reading, and
+  // the renderer would otherwise draw a written-off shell with its screens
+  // neatly intact.
+  other.glassOut = true;
+  // Whoever was still inside it is not staying inside it — through the screen
+  // if the blow will let them, and dead in the seat if it will not. FORCED,
+  // because a structure that has given up entirely is not holding anybody in
+  // on a technicality about the angle of the last hit.
+  drive.remains.push(
+    ...ejectOccupants(drive, other, hit, drive.car.pos.x, true),
+  );
 }
 
 /** Throw a wheel — the run's own `detachWheel` needs a `GameState` for the

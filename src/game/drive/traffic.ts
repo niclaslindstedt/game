@@ -34,7 +34,8 @@ import { randomRange } from "@game/lib/rng.ts";
 import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
-import { courseLength, DRIVE } from "./config.ts";
+import { courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
+import type { Impact } from "./impact.ts";
 import { crowdEdges, laneCenter, roadBandEdges, roadEdges } from "./crowd.ts";
 import { rollVehicle, vehicleDef } from "./fleet.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -141,6 +142,7 @@ export function createTraffic(
     id,
     pos: { x: pos.x, y: pos.y },
     speed,
+    cruise: speed,
     slew: 0,
     variant,
     // Every vehicle is drawn nose-first down its own direction of travel.
@@ -150,6 +152,11 @@ export function createTraffic(
     hitCooldownMs: 0,
     wear: 0,
     rung: 0,
+    crushNose: 0,
+    crushTail: 0,
+    glassOut: false,
+    gore: 0,
+    rolls: 0,
     wrecked: false,
     rider: def.rider !== null,
     occupants: def.occupants,
@@ -344,8 +351,43 @@ export function stepTraffic(state: DriveState, dt: number): void {
           other.spin = 0;
         }
       }
-      other.pos.y = clamp(other.pos.y, walk.top, walk.bottom);
+      // A DROPPED MACHINE ENDS UP WHEREVER IT SLIDES, pavement included — that
+      // is what a bicycle does. A ROLLED CAR is held to the carriageway and its
+      // gutter, and the difference is worth the branch: two tonnes of estate
+      // thrown clean across the footway comes to rest in somebody's front
+      // garden, drawn up among the houses, which reads as the collision having
+      // deleted it rather than rolled it. It stops against the kerb instead,
+      // which is where a rolled car stops.
+      const rest = def.class === "open" ? walk : edges;
+      other.pos.y = clamp(other.pos.y, rest.top, rest.bottom);
+      if (other.pos.y === rest.top || other.pos.y === rest.bottom) {
+        other.slew *= 0.5;
+      }
       continue;
+    }
+
+    // SPUN OUT, BUT STILL ON ITS WHEELS. A car that has been clipped off-centre
+    // is turning, and the turn bleeds off against its own tyres — which is a
+    // different motion from a rolled one's cartwheel and has to keep running
+    // while the car does everything else it was doing. Ahead of the wreck check
+    // on purpose: an engine that has died does not stop the body rotating.
+    if (other.spin !== 0) {
+      other.angle += other.spin * dt;
+      const damp = Math.max(0, 1 - DRIVE.crush.yawDampPerSec * dt);
+      other.spin *= damp;
+      if (Math.abs(other.spin) < 0.2) {
+        other.spin = 0;
+        // …and it straightens back up, because a car whose driver still has the
+        // wheel does not spend the rest of the road at an angle. A WRECK does:
+        // nobody is correcting it.
+        if (!other.wrecked) other.angle *= 0.9;
+        if (Math.abs(other.angle) < 0.02) other.angle = 0;
+      }
+      // Held well short of a quarter turn while it is still a car being driven
+      // — past that it is not spinning, it is over, and that is `tipsOver`'s
+      // question rather than this one's.
+      const cap = DRIVE.crush.yawRestRad * 4;
+      other.angle = clamp(other.angle, -cap, cap);
     }
 
     if (other.wrecked) {
@@ -360,6 +402,17 @@ export function stepTraffic(state: DriveState, dt: number): void {
     }
 
     other.pos.x += other.speed * dt;
+    // …AND THE DRIVER GETS BACK ON THE PACE. A shove up the road is a real
+    // change of speed and it has to be, or a collision is weightless; a shove
+    // that never wore off would leave every car the hero has ever touched
+    // running down the carriageway at his speed. Somebody is still driving it,
+    // so it eases back to what it was doing (`DriveTraffic.cruise`). Nobody is
+    // driving a WRECK, which is why that case has already `continue`d.
+    if (other.speed !== other.cruise) {
+      const ease = Math.min(1, cfg.recoverPerSec * dt);
+      other.speed += (other.cruise - other.speed) * ease;
+      if (Math.abs(other.cruise - other.speed) < 1) other.speed = other.cruise;
+    }
 
     if (def.pavement) {
       // THE FOOTWAY WEAVE. Derived from the rider's own phase and its position
@@ -435,37 +488,64 @@ export function breakTrafficLamps(other: DriveTraffic, fromX: number): void {
 }
 
 /**
- * Shove a car out of its lane — the whole of what a shunt does, and the reason
- * the hero gets THROUGH rather than stuck behind what he just hit.
+ * SHOVE A CAR — the whole of what one vehicle meeting another does to the one
+ * that was met, and the reason the hero gets THROUGH rather than stuck behind
+ * it.
  *
- * Three things, in the order they matter:
+ * IT USED TO BE ONE THING: a sideways slide out of the lane, at a slew read off
+ * the impulse's lateral component and a flat 12% off the speed. That is a car
+ * politely stepping aside, and it is why hitting one felt like nothing — the
+ * ONE axis a car actually travels on was the one axis the collision was not
+ * allowed to touch.
  *
- *   IT GOES SIDEWAYS, away from whatever hit it, at a slew proportional to the
- *   blow. This is the visible half and the one the player reads.
+ * It is four things now, and every one of them is the momentum sum's own answer
+ * divided by the struck vehicle's own mass (`Impact.dv`) rather than a number
+ * picked per outcome:
+ *
+ *   IT IS PUNTED UP THE ROAD, which is the half that was missing. A hatchback
+ *   met square is shoved bodily forward and spends the next second being
+ *   pushed; a bus takes the identical blow and gains about a mile an hour. That
+ *   difference is `impulse / massKg` and nothing else, and it is the single
+ *   biggest reason the crashes read as having weight now.
+ *   IT GOES SIDEWAYS, as it always did, away from whatever hit it.
+ *   IT SPINS, because the blow did not land on its centre of mass. The lever
+ *   arm is the contact point the collision already solved (`Impact.along`), so
+ *   a corner clip spins a car out and a hit dead in the door does not — and
+ *   nobody had to write either sentence down.
  *   IT IS SEPARATED, immediately and positionally. Two overlapping bodies do
  *   not un-overlap on their own for many ticks, and while they overlap they
- *   keep colliding — so the shunt puts real daylight between them on the spot.
- *   Without it the hero grinds to a halt against a van he has already knocked
- *   aside, which is neither dramatic nor survivable.
- *   IT SLOWS DOWN, because nobody carries on at the same speed after being hit.
+ *   keep colliding — so the shove puts real daylight between them on the spot.
  */
 export function shunt(
   other: DriveTraffic,
-  lateralPx: number,
+  hit: Impact,
   awayFrom: number,
 ): void {
-  const push = lateralPx * DRIVE.shuntPx * 0.01;
+  const { crush } = DRIVE;
   // Always AWAY from the car that hit it, however the impulse came out — a
   // shunted car sliding back INTO the hero is the one outcome nobody reads as
   // a shove.
   const side = other.pos.y >= awayFrom ? 1 : -1;
+  const push = Math.abs(hit.dv.y) * DRIVE.shuntPx * 0.01;
   other.slew = Math.max(
     -DRIVE.shuntMaxPx,
-    Math.min(DRIVE.shuntMaxPx, side * Math.abs(push)),
+    Math.min(DRIVE.shuntMaxPx, side * push),
   );
+  // THE PUNT. Signed with the blow rather than with the road, so rear-ending
+  // somebody sends them up the road and meeting one head-on drives it back down
+  // its own lane — which is what a head-on does, and what a struck car sliding
+  // meekly to the verge never said.
+  other.speed += hit.dv.x * crush.punt;
+  // THE SPIN, off the lever arm the contact already gives us. `hit.along` is
+  // measured from the HERO's centre toward his nose, so what it says about the
+  // OTHER vehicle is how far up the flank the two of them met — which is the
+  // arm, in the only frame both cars share.
+  const def = vehicleDef(other.variant);
+  const arm = Math.min(1, Math.abs(hit.along) / Math.max(1, def.halfLengthPx));
+  const yaw = Math.abs(hit.dv.y) * DRIVE_UNITS.mPerPx * crush.yawPerMs * arm;
+  other.spin += side * Math.min(crush.maxYawSpin, yaw);
   other.pos.y += side * DRIVE.separationPx;
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
-  other.speed *= 0.88;
 }
 
 /**
