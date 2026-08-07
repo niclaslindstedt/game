@@ -20,8 +20,12 @@
 --   rev          0..1 of the way up THIS gear: 0 at the shift in, 1 at the
 --                shift out
 --   rpm          what the crank is actually turning at
---   redlineRpm   …and where it stops being asked to
+--   shiftUpRpm   …where the box lets go of it and changes up
+--   redlineRpm   …and where it would stop being asked to — a limit the box
+--                never takes it near, and the tacho's last number
 --   rpmFrac      rpm over the redline — the tachometer's arc
+--   shiftFrac    rpm over the SHIFT POINT — 1 is the upshift, and the only
+--                thing on this dial worth a warning
 --   reversing    the wagon is going backwards
 --   bodies       how many people the trip has cost so far
 --   wear         0..1 of the wagon's ruin
@@ -33,9 +37,14 @@
 -- drive has no hero, no bag and no horde.
 --
 -- THE GEARBOX SHIFTS ITSELF and nothing here can stop it: the box changes up at
--- exactly the revs that would pass the redline, so the tacho arriving in the red
--- IS the shift. What this file decides is where that red starts, which is why a
--- mod can make the wagon feel highly strung or long-legged without touching a
+-- exactly the revs that would pass its SHIFT POINT, which on this wagon is a
+-- good thousand short of the redline. So the needle spends the whole trip in
+-- the bottom two thirds of the dial and the red paint at the end of the face is
+-- never reached — which is what a tachometer in a working car does, and what
+-- this file used to get wrong by treating the two numbers as one.
+--
+-- What this file decides is what the ARC is coloured as it climbs, which is why
+-- a mod can make the wagon feel highly strung or long-legged without touching a
 -- line of code.
 --
 -- WHY THIS IS THE INTERESTING FILE FOR A MOD. The road is where a total
@@ -52,13 +61,26 @@ local WARN = "#ffb14a"
 local ALARM = "#e8635a"
 local FRESH = "#ff9d4a"
 
---- WHERE THE TACHOMETER GOES RED — the last stretch before the box changes up.
+--- WHERE THE TACHOMETER WARMS UP — the last stretch before the box changes up,
+-- as a fraction of the SHIFT POINT rather than of the redline.
 --
--- Not at the redline itself: a warning that arrives at the same instant as the
--- shift is a warning nobody has time to read. Nine tenths gives the needle a
--- moment in the red first, which is what makes the upshift read as something
--- the car did on purpose.
-local REDLINE_FRAC = 0.9
+-- Not at the shift itself: a warning that arrives at the same instant as the
+-- upshift is a warning nobody has time to read. Six sevenths gives the needle a
+-- moment of amber first, which is what makes the upshift read as something the
+-- car did on purpose.
+--
+-- IT CANNOT BE MEASURED OFF THE REDLINE, which is what it used to be. The box
+-- lets go at about seven tenths of the face, so a ladder hung off `rpmFrac`
+-- would sit at COOL for the entire trip and the dial would never say anything
+-- at all.
+local SHIFT_WARN_FRAC = 0.86
+
+--- …and where the crank is genuinely past what the engine has. The paint on the
+-- face opens here too (`hud/elements/drive_speedo.yaml`), so the colour and the
+-- printed band are the same line rather than two numbers somebody has to keep
+-- in step. On an undamaged wagon the needle never arrives: there is no gear
+-- above fifth and fifth runs out of road a thousand revs short of it.
+local REDLINE_FRAC = 0.8
 
 --- …and where the DAMAGE dial stops being a scratch. The wagon takes cosmetic
 -- knocks the whole way down and a dial that alarms at the first one teaches the
@@ -77,10 +99,17 @@ function M.speed_color(state)
 end
 
 --- THE TACHOMETER — the arc inside the speedometer, and the figure under it.
+--
+-- TWO DIFFERENT READINGS OF THE SAME CRANK, and mixing them up is the whole
+-- trap. The red is the ENGINE's limit (`rpmFrac`, against the redline) and
+-- ordinarily nothing takes the needle there; the amber is the GEARBOX's
+-- (`shiftFrac`, against the shift point) and arrives a moment before every
+-- upshift, which is the one thing a driver could act on if the wagon had a
+-- lever.
 function M.rpm_color(state)
   if state.drive.rpmFrac >= REDLINE_FRAC then
     return ALARM
-  elseif state.drive.rpmFrac >= 0.7 then
+  elseif state.drive.shiftFrac >= SHIFT_WARN_FRAC then
     return WARN
   end
   return COOL

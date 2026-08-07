@@ -45,6 +45,8 @@ export type HudNodeView = {
   color: string | undefined;
   /** A gauge's unfilled remainder — the faint ring behind the sweep. */
   trackColor: string | undefined;
+  /** …and the band painted on its face, if it has one. */
+  zoneColor: string | undefined;
   children: HudNodeView[];
 };
 
@@ -229,6 +231,13 @@ export function resolveNode(
     trackColor:
       def.kind === "gauge"
         ? (resolveColor(def.track, ctx) ?? "rgba(255,255,255,0.2)")
+        : undefined,
+    // The band printed on the face. Resolved like any other colour, so a
+    // judgement may paint it — a dial whose red moves with the engine's own
+    // condition is a thing a conversion is welcome to build.
+    zoneColor:
+      def.kind === "gauge" && def.zone
+        ? resolveColor(def.zone.color, ctx)
         : undefined,
     // A resolve is not a render: an invisible node's children are not walked,
     // which is what keeps a hidden panel's scripts from being called at all.

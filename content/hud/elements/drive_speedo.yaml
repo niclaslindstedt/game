@@ -11,12 +11,21 @@
 # from (`pwa/src/game/sfx/drive.ts`), so the needle and the noise cannot
 # disagree.
 #
-# The gearbox shifts itself: the inner arc reaching the red IS the shift, every
-# time, because the box changes up at exactly the revs that would pass it.
+# THE TACHOMETER'S FACE RUNS TO THE REDLINE AND THE NEEDLE NEVER GETS THERE, and
+# that is the point rather than an oversight. The box changes up at three
+# thousand three of a forty-six hundred redline
+# (`src/game/drive/drivetrain.ts`), so the crank lives between one and three —
+# the bottom two thirds of the dial — exactly as it does in a car anybody has
+# driven. The red at the end is PAINT (`zone:`), printed on the instrument the
+# way it is on a real one: it is there with the engine off, and it says where
+# the trouble would be rather than where it is. A tachometer whose scale ended
+# at the shift point, with the needle slamming into it eight times a minute, is
+# what this dial used to be and what nothing on any road does.
 #
-# WHERE THE RED STARTS is a judgement rather than a read, so it lives in
-# `hud/scripts/drive.lua` and a mod can move it — a rebuilt engine might pull to
-# the stop, a tired one might start warning at two-thirds.
+# WHERE THE ARC GOES AMBER is a judgement rather than a read, so it lives in
+# `hud/scripts/drive.lua` and a mod can move it — the warning worth having is
+# the approach to the UPSHIFT (`drive.shiftFrac`), which is the one thing about
+# to happen.
 region: drive_dash
 order: 0
 kind: panel
@@ -36,8 +45,11 @@ children:
       script: drive.speed_color
     track: "#1b2431"
 
-  # THE INNER ARC: the revs, on the same sweep so the two can be read against
-  # each other at a glance.
+  # THE INNER ARC: the revs against the redline, on the same sweep so the two
+  # can be read against each other at a glance. The last fifth of the face is
+  # painted red — from about 3700 rpm of a 4600 dial, which is where a lump like
+  # this one has nothing left to give and a good way above anything the gearbox
+  # will ever ask for.
   - id: rev_arc
     kind: gauge
     class: drive-dial-ring drive-dial-ring-inner
@@ -48,6 +60,9 @@ children:
     color:
       script: drive.rpm_color
     track: "#161d28"
+    zone:
+      from: 0.8
+      color: "#4a1d24"
 
   # …and the face inside them: the number and its unit.
   - id: speed_face

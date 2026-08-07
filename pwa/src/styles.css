@@ -50,9 +50,41 @@
      shelf shows the dials the game actually draws. Declared on the minigame's
      own element, both of these were simply undefined there — every dial fell to
      `width: auto` and the exhibit whose whole subject is the dashboard showed
-     two bare figures with no arcs around them. */
-  --drive-dial-size: 77px;
-  --drive-dash-w: calc(2 * var(--drive-dial-size) + 64px + 24px);
+     two bare figures with no arcs around them.
+
+     AND THE SIZE IS THE ARC'S RATHER THAN THE BOX'S. A dial sweeps 250° with
+     the mouth of it at the bottom, so its INK stops about four fifths of the
+     way down the box it is laid out in — which is why a 77 px dial beside a
+     77 px speech window read as the smaller of the two, and why the figure in
+     the middle of it looked oversized for the ring around it. Sized so the
+     ARCS are as tall as the window next to them, the numbers sit inside with
+     air and the shelf reads level.
+
+     AND IN REM, WHICH IS THE HALF THAT WAS ACTUALLY BROKEN. This was authored
+     in px on the reasoning that a dial is a physical thing on the glass and
+     must not grow with the type — but the type grows anyway (the root font
+     doubles at 700 px and trebles at 1200, and PixelText sizes its canvas in
+     rem), so on any desktop the figures came out at twice the size inside a
+     ring that had stayed exactly where it was: "37" straddling the tachometer,
+     the rev figure running off the side of the instrument, DAMAGE printed over
+     its own arc. A dashboard is UI like the rest of the UI; it scales with it.
+
+     `DASH_BAND_CSS` (drive-screen/render.ts) is this number plus its margins,
+     and the camera holds that band of road back so the dials sit on the verge
+     rather than over the lane the crowd is walking into. Move one and move the
+     other. */
+  --drive-dial-size: 6rem;
+  /* …and how much of that box is EMPTY AIR below the arc — the mouth of a 250°
+     sweep, which is where the rev figure sits and where the dial stops being
+     drawn. Geometry rather than taste: the lowest ink on a 44-unit face is
+     `22 + 20·sin35° + half the stroke`, a fifth of the way up from the bottom.
+     `.drive-dash` hangs exactly this off the bottom of the frame so the ARCS
+     level with the speech window instead of the boxes doing it. */
+  --drive-dial-tail: 0.2;
+  /* The gate between them (`.drive-gate`) and the two gaps either side of it,
+     in the same units — a whole 4×3 rem so the sprite lands on an integer
+     upscale at every tier. */
+  --drive-dash-w: calc(2 * var(--drive-dial-size) + 4rem + 1.5rem);
 }
 
 /* The FF6-style window skin (`--panel-*` + `.pixel-panel`) is imported above
@@ -501,12 +533,26 @@ html.app-locked body {
    steering pad, and a dial must never eat a thumb. */
 .drive-dash {
   position: absolute;
-  /* THE SAME 12 px THE SPEECH WINDOW SITS ON (`.dialogue-box`'s `bottom`), so
-     the dials and the window beside them share one baseline and one height —
-     two boxes on a shelf rather than two things that happen to be near the
-     bottom of the screen. */
-  bottom: 12px;
-  left: 12px;
+  /* THE SAME BASELINE THE SPEECH WINDOW SITS ON (`.dialogue-box`'s `bottom`),
+     so the dials and the window beside them read as two things on one shelf
+     rather than two things that happen to be near the bottom of the screen. In
+     rem and not px for exactly the reason the dial's own size is: the window it
+     is levelling with is rem all the way down, so a px offset here would drift
+     off it the moment the root font stepped up.
+
+     AND THE BASELINE IS THE INK'S, WHICH IS WHY THIS GOES NEGATIVE. A dial
+     sweeps 250° with the mouth of it at the bottom, so the last fifth of its
+     box is empty air below the arc — level the BOXES and the instruments float
+     a fifth of a dial above the window they are supposed to be sitting beside,
+     which is exactly how it looked. So the empty fifth is hung off the bottom
+     of the frame instead: the arcs' two ends and the rev figure in the mouth
+     between them all land on the window's own bottom edge. Nothing is clipped,
+     because nothing is drawn down there. */
+  bottom: calc(
+    max(0.75rem, env(safe-area-inset-bottom)) - var(--drive-dial-size) *
+      var(--drive-dial-tail)
+  );
+  left: 0.75rem;
   width: var(--drive-dash-w);
   display: flex;
   justify-content: flex-start;
@@ -514,7 +560,7 @@ html.app-locked body {
      their middles and the gate between them is half their height, so aligning
      the BOXES would leave the gate's cross bar down by the tarmac. */
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
   pointer-events: none;
   /* The one thing the plates were carrying: a hard pixel edge under every arc
      and every glyph, so the whole dashboard stays readable over a pale road, a
@@ -565,8 +611,11 @@ html.app-locked body {
    same way for the same reason; a gauge that only sets `inset` is a bug. */
 .drive-dial-ring-inner {
   /* The daylight between the two arcs, once — the inset and the size it takes
-     out of the box are one number and must not be able to drift apart. */
-  --drive-tacho-inset: 13px;
+     out of the box are one number and must not be able to drift apart. A
+     FRACTION of the dial rather than a fixed 13px: the gap between two arcs is
+     a proportion of the instrument, and pinned in px it would swallow the
+     tachometer on a smaller dial and lose it inside a larger one. */
+  --drive-tacho-inset: calc(var(--drive-dial-size) * 0.17);
   inset: var(--drive-tacho-inset);
   width: calc(100% - 2 * var(--drive-tacho-inset));
   height: calc(100% - 2 * var(--drive-tacho-inset));
@@ -594,8 +643,10 @@ html.app-locked body {
   /* INSIDE THE RING, in the mouth of the sweep's own gap — not under the dial.
      Hung below it, the line read as a caption for the whole dashboard and the
      bottom of the screen cropped it; up here it is plainly part of the dial it
-     belongs to, and it still clears the big figure above. */
-  bottom: 16px;
+     belongs to, and it still clears the big figure above. A fraction of the
+     dial for the same reason the tachometer's inset is one — the mouth of the
+     sweep is where it is whatever the instrument's size. */
+  bottom: calc(var(--drive-dial-size) * var(--drive-dial-tail));
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
@@ -605,8 +656,14 @@ html.app-locked body {
 /* THE SHIFT GATE — a sprite (`content/sprites/ui/gear_gate_*.yaml`), drawn at a
    whole 2× so the H pattern stays on the pixel grid it was authored on. */
 .drive-gate {
-  width: 64px;
-  height: 48px;
+  width: 4rem;
+  height: 3rem;
+  /* Lifted onto the dials' ARCS. The row centres the BOXES, and a dial's box
+     hangs a fifth of itself below its own ink — so a gate that only obeyed
+     `align-items: center` sat visibly low between the two instruments it is
+     meant to read level with. A bottom margin shifts a centred item by HALF
+     itself, so this is the whole tail to buy half a tail of lift. */
+  margin-bottom: calc(var(--drive-dial-size) * var(--drive-dial-tail));
   image-rendering: pixelated;
 }
 
@@ -6137,7 +6194,7 @@ html.app-locked body {
    the whole of the room to the right of them. Same window, same skin, same
    crawl; only the box it is laid out in changes. */
 .dialogue-box.drive-bark {
-  left: calc(12px + var(--drive-dash-w) + 12px);
+  left: calc(0.75rem + var(--drive-dash-w) + 0.75rem);
   right: max(0.75rem, env(safe-area-inset-right));
   width: auto;
   transform: none;
@@ -6156,7 +6213,12 @@ html.app-locked body {
   .dialogue-box.drive-bark {
     left: 50%;
     right: auto;
-    bottom: calc(var(--drive-dial-size) + 22px);
+    /* Clear of the dials' INK rather than of their boxes — the last fifth of
+       a dial's box is the empty mouth of its sweep, and it is hung off the
+       bottom of the frame (`.drive-dash`). */
+    bottom: calc(
+      var(--drive-dial-size) * (1 - var(--drive-dial-tail)) + 1.375rem
+    );
     width: min(92vw, 36rem);
     transform: translateX(-50%);
   }

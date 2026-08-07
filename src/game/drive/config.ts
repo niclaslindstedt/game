@@ -144,16 +144,21 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED with `make drive-bench`, and RE-TAKEN twice: once on the wagon's
-   * real drivetrain (`drivetrain.ts`), and again once every LANE carried
-   * traffic (`laneTraffic`), which is what the figures below are. First the
-   * PESSIMAL case — a dead straight line on MEDIUM, never dodging once, 30
-   * seeds a row:
+   * MEASURED with `make drive-bench`, and RE-TAKEN three times: on the wagon's
+   * real drivetrain (`drivetrain.ts`), once every LANE carried traffic
+   * (`laneTraffic`), and again when the gearbox was re-geared to read like a
+   * tachometer in a real car — a shift at three thousand three instead of at a
+   * 5800 redline, through taller ratios and a torquier engine. That last one
+   * was DESIGNED to move nothing: the rev axis was squeezed and the torque axis
+   * stretched by the same factor, so the force at the tyre at any road speed is
+   * what it always was, and every figure below came back within a second or two
+   * of where it stood. First the PESSIMAL case — a dead straight line on
+   * MEDIUM, never dodging once, 30 seeds a row:
    *
    *   throttle   trip      bodies   ending wear   arrived
-   *   1.00       91 s      92       68%           30/30
-   *   0.80       96 s      95       57%           30/30
-   *   0.55      106 s     103       41%           30/30
+   *   1.00       93 s      92       64%           30/30
+   *   0.80       98 s      95       53%           30/30
+   *   0.55      106 s     103       39%           30/30
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears;
@@ -161,10 +166,10 @@ export const DRIVE = {
    *
    *   rung        trip    bodies   ending wear   arrived
    *   easy        81 s    72        13%          40/40
-   *   medium      90 s    79        32%          40/40
-   *   hard        97 s    85        41%          40/40
-   *   nightmare  104 s    88        49%          40/40
-   *   jesus      110 s    92        54%          40/40
+   *   medium      91 s    80        32%          40/40
+   *   hard        97 s    85        40%          40/40
+   *   nightmare  103 s    87        47%          40/40
+   *   jesus      109 s    91        51%          40/40
    *
    * TWO THINGS TO READ OUT OF THAT. The first is the joke the course length
    * exists to land: the leg cannot be threaded at any pace, because the crowd
@@ -181,7 +186,7 @@ export const DRIVE = {
    * touching a single damage number: there is simply more out there to hit, so
    * the reckless line now ends the trip on two thirds of a car against the
    * steering one's third, and on the top two rungs it no longer always arrives
-   * (27/30 on NIGHTMARE, 24/30 on JESUS). MEDIUM still gets home every time.
+   * (27/30 on both NIGHTMARE and JESUS). MEDIUM still gets home every time.
    * Whether it should is a DESIGN call about how punishing this interlude
    * ought to be, and the knob for it is `DRIVE.impact.wearJoules` with the
    * ladder's masses beside it — deliberately left open rather than guessed at.

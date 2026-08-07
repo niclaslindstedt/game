@@ -633,7 +633,7 @@ export function DriveScreen({
       // against the world they are standing in.
       const camera = shakeCamera(
         fxRef.current,
-        driveCamera(drive, viewW, viewH, scale),
+        driveCamera(drive, viewW, viewH),
         drive.ms,
       );
       ctx.setTransform(unit, 0, 0, unit, 0, 0);

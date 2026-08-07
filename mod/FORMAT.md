@@ -664,14 +664,31 @@ children:
 
 **The kinds.** `panel` is a box; `bar` fills a track to a fraction (`fill:` and
 an optional `overlay:`, each with its own class); `gauge` sweeps that fraction
-round an arc (`thickness`, `sweep`, `start`, `track` — a ring, a cooldown wheel
-or a speedometer); `icon` draws a sprite (`sprite:` for a fixed one,
+round an arc (`thickness`, `sweep`, `start`, `track`, and a `zone:` — a ring, a
+cooldown wheel or a speedometer); `icon` draws a sprite (`sprite:` for a fixed one,
 `spriteBind:` for whichever one the run is holding); `text` draws a line;
 `canvas` is a rectangle a widget PAINTS (`width:` and `height:` in raster
 pixels — the voice card's waveform is one); `button` is a box with a `press:`;
 and `widget` places one of the game's own code-backed pieces (`hudWidgets` —
 the minimap, the party frames, the docks), which you can move, hide, reorder
 and re-sound but not re-author.
+
+**A gauge's `zone:` is PAINT ON THE FACE** — a band from `from:` (a fraction of
+the sweep) to the end of the dial, in its own `color:`, drawn behind the sweep
+and there whether or not the needle ever arrives:
+
+```yaml
+kind: gauge
+bind: drive.rpmFrac
+sweep: 250
+start: 235
+zone: { from: 0.8, color: "#4a1d24" } # the tachometer's red, printed
+```
+
+It is what separates an INSTRUMENT from a progress ring. A tachometer's red is
+on the dial with the engine off; a fuel gauge's reserve is marked before you are
+anywhere near it. The shipped wagon never reaches its own — the gearbox changes
+up a thousand revs short — and that is what the band is FOR.
 
 **A widget's `children:` are its PARTS.** The weapon slot keeps a place for one
 called `ammo_count`, and what goes there is an ordinary text node with your class,
@@ -770,10 +787,18 @@ publishes — on a real change, a few times a second — never per element per f
 
 The drive minigame is the second surface. Its region carries `surface: drive`,
 its bindings are the `drive.*` group (speed, the gear the box has chosen and how
-far up it the wagon is, the CRANK — `rpm`, `rpmFrac`, `redlineRpm` — the bodies,
-the wear), and its three verbs are `driveResume`, `driveSkip` and `driveMenu`
-(leave the game, not just the road — the hero is banked as he sits and the
-title screen comes up).
+far up it the wagon is, the CRANK — `rpm`, `rpmFrac`, `shiftFrac`, `shiftUpRpm`,
+`redlineRpm` — the bodies, the wear), and its three verbs are `driveResume`,
+`driveSkip` and `driveMenu` (leave the game, not just the road — the hero is
+banked as he sits and the title screen comes up).
+
+THE TWO CRANK FRACTIONS ARE DIFFERENT QUESTIONS and a dial wants both.
+`rpmFrac` is the revs against the REDLINE, which is the last number on a
+tachometer's face and therefore the arc one sweeps; `shiftFrac` is the same revs
+against the SHIFT POINT, where the box will let go of them. The wagon changes up
+a good thousand revs short of its redline — as every car does — so a warning
+hung off `rpmFrac` would never fire, and a face that ended at the shift point
+would be a tachometer whose scale stops somewhere the engine is perfectly happy.
 
 The shipped dashboard sits along the bottom of the windscreen and is three
 pieces: a SPEEDOMETER with the tachometer drawn inside it (two `kind: gauge`
@@ -783,8 +808,8 @@ again, sweeping the wear). Every colour, every line and the choice of gate
 picture is `hud/scripts/drive.lua`, which is the cheapest place in the game to
 put a conversion's own voice: a rally's pace note, a delivery run's order slip, a
 hearse's body count. Nothing about the wagon's own gearbox is authored in the
-HUD — the box is real physics and shifts itself at the redline, so `drive.gear`
-and `drive.rpm` are the same numbers the engine note is built from.
+HUD — the box is real physics and shifts itself at its own shift point, so
+`drive.gear` and `drive.rpm` are the same numbers the engine note is built from.
 
 ## `sprites/<family>/<name>.yaml` — pixel art
 

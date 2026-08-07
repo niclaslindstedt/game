@@ -188,6 +188,7 @@ function compileNode(node, top) {
     sweep: node.sweep,
     start: node.start,
     track: node.track,
+    zone: node.zone,
     width: node.width,
     height: node.height,
     children: node.children?.map((child) => compileNode(child, false)),

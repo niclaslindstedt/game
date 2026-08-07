@@ -128,6 +128,7 @@ export function driveDials(
     gearCount: GEAR_COUNT,
     rev: Math.round(gearRev(speed) * 16) / 16,
     rpm: Math.round(engineRpm(speed) / 50) * 50,
+    shiftUpRpm: DRIVETRAIN.shiftUpRpm,
     redlineRpm: DRIVETRAIN.redlineRpm,
     reversing: drive.car.speed < 0,
     bodies: drive.bodies,
