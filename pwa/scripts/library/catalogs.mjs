@@ -338,9 +338,10 @@ export const TIERS = equipment.TIERS;
 export const TIER_LADDER = equipment.TIER_LADDER;
 export const QUALITY_ORDER = equipment.QUALITY_ORDER;
 export const QUALITY_PREFIX = equipment.QUALITY_PREFIX;
-/** Engine: the def id of the built-in sidearm — the one weapon that is never
- * a drop, and the only one minted unbreakable. */
-export const SIDEARM_DEF_ID = equipment.SIDEARM_DEF_ID;
+/** Engine: THE EMPTY HAND's def id — what the engine puts in a hand holding
+ * nothing. Never a drop, never carried, and drawn with no icon at all, so it
+ * claims no arsenal page (see `baseItemDefs`). */
+export const UNARMED_DEF_ID = equipment.UNARMED_DEF_ID;
 
 /** Engine: the scale a make quality applies to a base's authored numbers. */
 export const qualityMult = quality.qualityMult;
@@ -593,12 +594,10 @@ function freshDrop(defId) {
     tier: "regular",
     quality: "normal",
     qualityRoll: 1,
-    // The built-in sidearm is never a drop: the engine mints it into an empty
-    // holster UNBREAKABLE (`drawSidearm`). Give it durability here and the
-    // page would quote a wear budget the blaster never carries.
-    ...(def.durability !== undefined && defId !== equipment.SIDEARM_DEF_ID
-      ? { durability: def.durability }
-      : {}),
+    // A ranged weapon has no wear budget at all (it eats ammunition instead),
+    // and neither has the empty hand — a hand cannot snap. Both simply author
+    // no `durability`, so the presence of the field is the whole test.
+    ...(def.durability !== undefined ? { durability: def.durability } : {}),
   };
 }
 
@@ -657,13 +656,18 @@ export function gearStatRequirement(defId) {
 export const isGradeVariant = (def) => def.grade !== undefined;
 
 /** Every hand-authored BASE, weapons and gear together, grade variants left
- * out. The blaster is engine machinery rather than content but still drops into
- * the hero's hands, so it keeps its page. */
+ * out — and THE EMPTY HAND left out with them. `fists` is engine machinery
+ * that is never a drop, never sits in a bag cell and is deliberately drawn
+ * with no icon ("unarmed" has to LOOK unarmed), so there is no art to build a
+ * page around: the library is sprite-driven and `copySprites` throws on a
+ * page with a hole in it. */
 export function baseItemDefs() {
   return [
     ...Object.values(WEAPON_DEFS).map((def) => ({ family: "weapon", def })),
     ...Object.values(GEAR_DEFS).map((def) => ({ family: "gear", def })),
-  ].filter((entry) => !isGradeVariant(entry.def));
+  ].filter(
+    (entry) => !isGradeVariant(entry.def) && entry.def.id !== UNARMED_DEF_ID,
+  );
 }
 
 /**

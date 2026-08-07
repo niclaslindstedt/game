@@ -78,11 +78,11 @@ const { weapons, gear, uniques } = splitItems(entries);
 // A unique's `base` may name a plain base OR one of its generated grade
 // variants (defs/grades.ts mints those at engine load), so the ref sets
 // include every `grades:` id alongside the authored ids. The engine's
-// built-in sidearm (`blaster`, authored in defs/equipment.ts — see the
+// built-in EMPTY HAND (`fists`, authored in defs/equipment.ts — see the
 // ENGINE_WEAPONS note there) rides along as a weapon ref.
 const refs = {
   weapons: new Set([
-    "blaster",
+    "fists",
     ...weapons.map((e) => e.id),
     ...gradeIds(weapons),
   ]),

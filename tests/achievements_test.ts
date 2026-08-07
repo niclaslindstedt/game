@@ -15,6 +15,7 @@ import {
   DIFFICULTY_ORDER,
   ENEMY_DEFS,
   LEVEL_ORDER,
+  UNARMED_DEF_ID,
   UNIQUE_IDS,
   type GameEvent,
   type GameStats,
@@ -256,13 +257,16 @@ describe("lifetime totals reducer", () => {
     expect(totals.totalDamage).toBe(150);
   });
 
-  it("books worn slots, skipping the built-in sidearm, and ranks outfits", () => {
+  it("books worn slots, skipping issued gear and BARE HANDS, and ranks outfits", () => {
     const totals = emptyTotals();
-    // The spawn loadout — the sidearm (or a wall weapon) plus the issued
-    // clothes — books nothing: first-equip feats are for looted pieces.
+    // The spawn loadout — a wall weapon (or nothing at all, which is to say
+    // the hero's own hands) plus the issued clothes — books nothing:
+    // first-equip feats are for looted pieces. The empty hand matters most
+    // here, because the weapon slot is NEVER empty: miss it and the "fill
+    // every slot" feat books its hardest slot before the run has started.
     expect(
       applyWornEquipment(totals, [
-        { slot: "weapon", tier: "regular", defId: "blaster" },
+        { slot: "weapon", tier: "regular", defId: UNARMED_DEF_ID },
         { slot: "chest", tier: "regular", defId: "t_shirt" },
         { slot: "legs", tier: "regular", defId: "jeans" },
         { slot: "feet", tier: "regular", defId: "leather_boots" },

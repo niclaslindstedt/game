@@ -95,13 +95,6 @@ export function itemLead(item, sources) {
     return lines;
   }
 
-  if (item.sidearm) {
-    lines.push(
-      `${item.name} is the weapon the run starts with, and the only one that is never a drop: the game mints it into an empty holster and it cannot break. It is also the one weapon that swings for its full catalog weight — everything scavenged off a corpse is cut to half, and this is not.`,
-    );
-    return lines;
-  }
-
   const what =
     item.family === "weapon"
       ? CLASS_NOUN[item.weaponClass]

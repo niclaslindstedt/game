@@ -41,9 +41,9 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // The weapon ids a companion's signature piece may name. Imported DIRECTLY (never
 // @game/core) so nothing pulls the file we are about to write — the same
 // bootstrap rule generate-enemies.mjs and generate-levels.mjs follow. It is the
-// engine's catalog rather than the content tree's because the built-in `blaster`
-// sidearm is authored in `equipment.ts` as engine machinery, and a companion may
-// legitimately carry it.
+// engine's catalog rather than the content tree's because the built-in `fists`
+// empty hand is authored in `equipment.ts` as engine machinery, and a companion
+// may legitimately fight with it.
 const { WEAPON_DEFS } = await import(
   pathToFileURL(engine("src/game/defs/equipment.ts")).href
 );

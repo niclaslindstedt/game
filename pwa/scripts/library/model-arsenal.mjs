@@ -21,7 +21,6 @@ import {
   QUALITY_ORDER,
   QUALITY_PREFIX,
   SET_DEFS,
-  SIDEARM_DEF_ID,
   TIERS,
   UNIQUE_DEFS,
   UNIQUE_TUNING,
@@ -331,7 +330,6 @@ export function qualityLadder(headline) {
 
 /** The catalog id an arsenal page's own YAML lives under. */
 function itemSourceFiles(id, tier) {
-  if (id === SIDEARM_DEF_ID) return ["src/game/defs/equipment.ts"];
   const dir = tier === "regular" ? "*" : tier;
   return [`content/items/${dir}/${id}.yaml`];
 }
@@ -447,7 +445,6 @@ function baseModel(family, def, sources) {
     // — see `itemQuote`. Distinct from `description` above it, which is the
     // library-only paragraph the running game never shows.
     quote: def.quote ?? null,
-    sidearm: def.id === SIDEARM_DEF_ID,
     stats,
     ladder,
     // A plain base rolls make quality; a charm or a bag never does (the D2
@@ -576,7 +573,6 @@ function namedModel(def, sources) {
     description: null,
     material: base.material ?? null,
     dropWeight: null,
-    sidearm: false,
     ladder: [],
     ladderSources: [],
     quality: null,

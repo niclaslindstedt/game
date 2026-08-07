@@ -124,7 +124,7 @@ function sampleLoadout(coins: number, level = 3): Loadout {
     equipment: {
       weapon: {
         id: 0,
-        defId: "blaster",
+        defId: "fists",
         slot: "weapon",
         tier: "regular",
         ilvl: 1,
