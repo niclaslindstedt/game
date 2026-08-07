@@ -1,0 +1,25 @@
+name: gib_road_smear_2
+family: effects
+size: [18, 9]
+plane: floor
+description: >
+  The heaviest drag mark — the wide wet band a body carried under a car at speed
+  paints down the middle of a lane.
+subject:
+  kind: ground decal
+  build: a broad horizontal smear nine rows deep, a thick bright wet core running its whole length, the midtone banked either side of it and clotted dark along both outer edges, ragged at the leading end and trailing off into flung beads at the other
+  flavor: the top rung, and the one that says how fast he was going — this is what a screen and a half of tarmac looks like after something was dragged along it
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .....dd...d.......
+  ...ddrrdd..dd.....
+  ..ddrrrrddd.ddi...
+  .dddrrrrrdddd.dii.
+  dddrrrrrrrddddiiid
+  .dddrrrrrddddd.di.
+  ..ddrrrrdddd.ii...
+  ...dddiiid..i.....
+  .....dii..........

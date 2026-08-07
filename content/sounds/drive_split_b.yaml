@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_split_b
+description: >-
+  The second take of a body coming in two — the same three layers pitched
+  and timed differently, so a blockade taken at speed does not play one
+  sample twenty times in four seconds. Wetter and shorter than its sibling:
+  this is the one where the bone gave first.
+voices:
+  - call: tone
+    type: square
+    from: 264
+    to: 74
+    durationMs: 58
+    volume: 0.04
+    detuneCents: 26
+  - call: noise
+    durationMs: 150
+    volume: 0.046
+    filter:
+      type: bandpass
+      frequency: 980
+  - call: noise
+    durationMs: 210
+    volume: 0.028
+    delayMs: 60
+    filter:
+      type: lowpass
+      frequency: 300
+    echo: 0.14

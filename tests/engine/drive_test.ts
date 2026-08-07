@@ -37,6 +37,7 @@ const PARAMS: DriveParams = {
   direction: 1,
   to: "goodco_hq",
   gib: true,
+  split: true,
   // The baseline rung — every measured number about the road is MEDIUM's.
   difficulty: "medium",
 };
@@ -390,8 +391,10 @@ describe("the gore switch", () => {
     expect(drive.bodies).toBeGreaterThan(0);
   });
 
-  it("only knocks people aside with the gore off, and never bursts one", () => {
-    const drive = createDrive({ ...PARAMS, gib: false });
+  it("only knocks people aside with BOTH switches off, and never bursts one", () => {
+    // BOTH, because there are two of them now and either one is enough for a
+    // body to come apart: `gib` tears lumps off, `split` takes them in two.
+    const drive = createDrive({ ...PARAMS, gib: false, split: false });
     let strikes = 0;
     let tumbled = 0;
     for (let t = 0; t < 40000; t += 16) {
@@ -405,13 +408,31 @@ describe("the gore switch", () => {
     expect(drive.bodies).toBeGreaterThan(0);
     // Nobody came apart…
     expect(strikes).toBe(0);
+    expect(drive.remains).toHaveLength(0);
     // …but somebody was plainly knocked over.
     expect(tumbled).toBeGreaterThan(0);
   });
 
+  it("splits bodies with CLEAVES on and merely drags them with it off", () => {
+    const cut = createDrive({ ...PARAMS, gib: false, split: true });
+    const dragged = createDrive({ ...PARAMS, gib: false, split: false });
+    let splits = 0;
+    let unsplit = 0;
+    for (let t = 0; t < 40000; t += 16) {
+      stepDrive(cut, 16, { pedal: 1, wheel: 0 });
+      stepDrive(dragged, 16, { pedal: 1, wheel: 0 });
+      splits += cut.strikes.filter((strike) => strike.split).length;
+      unsplit += dragged.strikes.length;
+    }
+    // A road driven flat out is nothing but hits over the split line.
+    expect(splits).toBeGreaterThan(0);
+    // …and with the switch off not one of them comes apart at all.
+    expect(unsplit).toBe(0);
+  });
+
   it("still breaks the car either way", () => {
     const bloody = createDrive({ ...PARAMS, gib: true });
-    const clean = createDrive({ ...PARAMS, gib: false });
+    const clean = createDrive({ ...PARAMS, gib: false, split: false });
     floorIt(bloody, 30000);
     floorIt(clean, 30000);
     expect(bloody.car.wear).toBeGreaterThan(0);
@@ -575,11 +596,14 @@ describe("the moment before a hit", () => {
         pos: { x: drive.car.pos.x + dx, y: drive.car.pos.y + dy },
         vel: { x: 0, y: 0 },
         mode: "afoot",
+        kind: "walker",
+        bark: -1,
         variant: 0,
         phase: 0,
         z: 0,
         vz: 0,
         counted: false,
+        crushed: false,
       });
       return inevitableHit(drive);
     };
@@ -600,11 +624,14 @@ describe("the moment before a hit", () => {
       pos: { x: drive.car.pos.x + 30, y: drive.car.pos.y },
       vel: { x: 0, y: 0 },
       mode: "afoot",
+      kind: "walker",
+      bark: -1,
       variant: 0,
       phase: 0,
       z: 0,
       vz: 0,
       counted: false,
+      crushed: false,
     });
     expect(inevitableHit(drive)).toBeNull();
   });

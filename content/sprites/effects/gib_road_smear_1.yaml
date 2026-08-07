@@ -1,0 +1,23 @@
+name: gib_road_smear_1
+family: effects
+size: [16, 7]
+plane: floor
+description: >
+  The middle drag mark — a proper red band down the tarmac, running wet at its
+  core and drying out at both edges.
+subject:
+  kind: ground decal
+  build: a horizontal smear seven rows deep at its centre, a bright wet spine running its whole length, the midtone spreading either side of it and clotted dark at the top and bottom edges, with beads shed off the trailing end
+  flavor: the rung a body dragged at a working speed lays down — heavy enough to read as a continuous mark from a lane away rather than as a line of separate spots
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ....dd..d.......
+  ..ddrrdd..dd....
+  .ddrrrrddd.dii..
+  dddrrrrrdddddiid
+  .ddrrrrdddd.di..
+  ..dddiiid...i...
+  ...dii..........

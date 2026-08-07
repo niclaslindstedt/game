@@ -62,6 +62,7 @@ export function driveFromParams(params: URLSearchParams): {
   direction: 1 | -1;
   to: string;
   gib: boolean;
+  split: boolean;
   difficulty: Difficulty;
   bot: boolean;
 } {
@@ -76,6 +77,7 @@ export function driveFromParams(params: URLSearchParams): {
     direction: home ? -1 : 1,
     to: home ? GARAGE : GOODCO,
     gib: (params.get("gore") ?? "").toLowerCase() !== "off",
+    split: (params.get("gore") ?? "").toLowerCase() !== "off",
     difficulty,
     // Bare `&bot` counts, like every other flag in the query string; only an
     // explicit "0"/"off" turns it back off.
@@ -113,6 +115,9 @@ function stagerFor(
         pos: { x: ahead(900), y: lane },
         vel: { x: 0, y: 0 },
         mode: "afoot",
+        kind: "walker",
+        bark: -1,
+        crushed: false,
         variant: 0,
         phase: 0,
         z: 0,

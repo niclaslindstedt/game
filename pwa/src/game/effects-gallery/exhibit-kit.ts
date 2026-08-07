@@ -235,6 +235,10 @@ export type DriveExhibit = ExhibitCard & {
    * outside the player's gore gate the same way every other gore exhibit in the
    * gallery does. */
   gib?: boolean;
+  /** …and whether a fast enough hit takes them in TWO. Defaults to whatever
+   * `gib` says, so an exhibit that wants a road with nobody coming apart on it
+   * (the two CAR-damage ones) still only has to say so once. */
+  split?: boolean;
   /**
    * PLANT WHAT THE EXHIBIT IS OF in front of the bumper, and set the speed it
    * should be met at — run once on a fresh road before its first tick.

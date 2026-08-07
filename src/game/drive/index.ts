@@ -62,7 +62,15 @@ import {
   spawnCrowd,
   stepCrowd,
 } from "./crowd.ts";
+import { spawnBlockade } from "./blockade.ts";
 import { impactMasses, panelAt, solveImpact } from "./impact.ts";
+import {
+  burstBody,
+  crushRemains,
+  forgetRemains,
+  splitsBody,
+  stepRemains,
+} from "./remains.ts";
 import {
   fellLamp,
   firstPropSlot,
@@ -94,10 +102,12 @@ export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
 export type { DriveDriver } from "./driver.ts";
 export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
+export { blockadeAt, GLUED_BARKS, GLUED_VARIANTS } from "./blockade.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
 export { inevitableHit } from "./predict.ts";
 export type { InevitableHit } from "./predict.ts";
+export { remainForce, splitsBody } from "./remains.ts";
 export type {
   DriveDirection,
   DriveEvent,
@@ -106,10 +116,13 @@ export type {
   DrivePedestrian,
   DriveProp,
   DrivePropKind,
+  DriveRemain,
   DriveState,
   DriveStrike,
   DriveTraffic,
+  PedestrianKind,
   PedestrianMode,
+  RemainPart,
 } from "./types.ts";
 export { IDLE_DRIVE_INPUT } from "./types.ts";
 
@@ -145,6 +158,7 @@ export function createDrive(params: DriveParams): DriveState {
     distance: 0,
     ms: 0,
     pedestrians: [],
+    remains: [],
     traffic: [],
     props: [],
     wheelDebris: [],
@@ -169,6 +183,7 @@ export function createDrive(params: DriveParams): DriveState {
     nextTrafficAt: DRIVE.crowdStartPx * 0.5,
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
+    blockadeDone: false,
     nextId: 1,
   };
 }
@@ -224,6 +239,7 @@ export function stepDrive(
     }
     advanceCar(drive, dt);
     stepCrowd(drive, dt);
+    stepRemains(drive, dt);
     stepTraffic(drive, dt);
     stepProps(drive, dt);
     integrateCarBody(car, dt);
@@ -277,12 +293,20 @@ export function stepDrive(
   advanceCar(drive, dt);
 
   spawnCrowd(drive);
+  spawnBlockade(drive);
   spawnTraffic(drive);
   spawnProps(drive);
   stepCrowd(drive, dt);
+  stepRemains(drive, dt);
   stepTraffic(drive, dt);
   stepProps(drive, dt);
   collide(drive);
+  // WHAT THE WHEELS FIND, AFTER what the bumper met — the order is the car's
+  // own: the nose reaches a thing before the axles do, so a body knocked down
+  // this tick is run over on a later one rather than being met and crushed in
+  // the same instant, which would collapse two beats into one noise.
+  crushRemains(drive);
+  forgetRemains(drive);
   integrateCarBody(car, dt);
   stepDebris(drive, dt);
 
@@ -369,17 +393,44 @@ function collide(drive: DriveState): void {
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
     });
-    if (drive.params.gib) {
-      // The body comes apart, so it leaves the sim entirely and the app is
-      // handed everything it needs to burst it.
+    const { gib, split } = drive.params;
+    if (gib || split) {
+      // THE BODY COMES APART, so the person leaves the crowd — but not the
+      // road. What replaces them is `remains`: the pieces, with physics of
+      // their own, which the wagon then drags, drops and drives over
+      // (`remains.ts`). The STRIKE is still handed over as well, because the
+      // instant of the collision is a picture in its own right — the spray, the
+      // shower of what was inside — and that one is the app's alone.
+      const cutInTwo = split && splitsBody(hit.joules);
       drive.strikes.push({
         id: ped.id,
         pos: { x: ped.pos.x, y: ped.pos.y },
         vel: { x: hit.launch.x, y: hit.launch.y },
         vz: hit.liftZ,
         joules: hit.joules,
+        kind: ped.kind,
         variant: ped.variant,
+        split: cutInTwo,
       });
+      const pieces = burstBody(drive, ped, hit, split, gib);
+      drive.remains.push(...pieces);
+      if (cutInTwo) {
+        drive.events.push({
+          type: "bodySplit",
+          pos: { x: hit.contact.x, y: hit.contact.y },
+          joules: hit.joules,
+        });
+      }
+      // Something is under the car and travelling with it — the noise of a body
+      // being carried rather than met, which is a different sound and a beat
+      // later than the thud.
+      if (pieces.some((piece) => piece.dragMs > 0)) {
+        drive.events.push({
+          type: "bodyCaught",
+          pos: { x: hit.contact.x, y: hit.contact.y },
+          joules: hit.joules,
+        });
+      }
       ped.mode = "tumbling";
       ped.z = -1; // flagged for removal below — it is gone, not lying there
     } else {

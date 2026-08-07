@@ -1,0 +1,26 @@
+name: gib_road_splat_1
+family: effects
+size: [14, 10]
+plane: floor
+description: >
+  The big splash — what goes down where a body was met square rather than
+  clipped.
+subject:
+  kind: ground decal
+  build: a broad irregular splash fourteen across and ten deep, a wide bright wet centre, midtone banked around it, a clotted ragged rim, and beads thrown well clear on every bearing
+  flavor: the second rung; a splash this size is a whole person's worth arriving at once, and it is the mark the eye finds first when it looks back down a lane
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ....rd...d....
+  ..drrrd..dd...
+  .drrrrrdd.d.i.
+  drrrrrrrrdd.d.
+  drrrrrrrrddiid
+  .drrrrrrdddi.i
+  ..drrrrddii...
+  ..ddrddiid..i.
+  ...ddiii..d...
+  ....di...i....

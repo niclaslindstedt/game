@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crush_a
+description: >-
+  A wheel finding something already lying in the road. The first of three,
+  and the quietest thing on this road that still counts as an event: a
+  short lowpass squelch of the mass giving way, and a dry tick of grit as
+  the tyre climbs back off it. Deliberately small — this fires several
+  times a second in the middle of a blockade, and a crush that announced
+  itself would drown the collision that made the mess.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.026
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: noise
+    durationMs: 40
+    volume: 0.012
+    delayMs: 40
+    filter:
+      type: bandpass
+      frequency: 2100

@@ -72,6 +72,11 @@ import {
   type DriveDrama,
 } from "./drive-time.ts";
 import {
+  clearDriveGore,
+  createDriveGore,
+  type DriveGoreState,
+} from "./drive-gore.ts";
+import {
   createEngineNote,
   drainDrive,
   drawBursts,
@@ -192,6 +197,11 @@ export function DriveScreen({
   );
   const burstsRef = useRef<Burst[]>([]);
   const fxRef = useRef<DriveFxState>(createDriveFx());
+  /** What the road is holding of the people it has met — the marks on the
+   * tarmac and the bookkeeping behind them (`drive-gore.ts`). Held for the whole
+   * leg and thrown away on a restart, exactly like the effect layer beside it:
+   * the mess is a record of THIS attempt at the road. */
+  const goreRef = useRef<DriveGoreState>(createDriveGore());
   const dramaRef = useRef<DriveDrama>(createDriveDrama());
   const engineRef = useRef(createEngineNote());
   const inputRef = useRef<DriveInput>({ pedal: 0, wheel: 0 });
@@ -372,7 +382,7 @@ export function DriveScreen({
         acc -= STEP_MS;
         if (frozen) break;
         stepDrive(drive, STEP_MS, inputRef.current);
-        drainDrive(drive, burstsRef.current, fxRef.current, say);
+        drainDrive(drive, burstsRef.current, fxRef.current, goreRef.current, say);
         ageSpeech(drive.ms);
         // Ask the road whether the next hit is already settled, and take the
         // moment if it is. AFTER the step, so the question is asked of where
@@ -389,6 +399,7 @@ export function DriveScreen({
           drive,
           burstsRef.current,
           fxRef.current,
+          goreRef.current,
           dramaRef.current,
           onArrived,
         );
@@ -429,7 +440,17 @@ export function DriveScreen({
       } else {
         ctx.setTransform(unit, 0, 0, unit, 0, 0);
       }
-      drawDrive(ctx, drive, camera, assets.sprites, viewW, viewH, drive.ms);
+      drawDrive(
+        ctx,
+        drive,
+        camera,
+        assets.sprites,
+        viewW,
+        viewH,
+        drive.ms,
+        goreRef.current,
+        assets.font,
+      );
 
       burstsRef.current = drawBursts(
         ctx,
@@ -604,6 +625,7 @@ function endDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
+  gore: DriveGoreState,
   drama: DriveDrama,
   onArrived: (to: string, bodies: number, verdict: string) => void,
 ): void {
@@ -614,6 +636,7 @@ function endDrive(
     Object.assign(drive, restartDrive(drive));
     bursts.length = 0;
     clearDriveFx(fx);
+    clearDriveGore(gore);
     clearDrama(drama);
   }
   if (

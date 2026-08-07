@@ -25,6 +25,7 @@ import {
   crossingsBetween,
   crowdEdges,
   DRIVE,
+  type DriveRemain,
   type DriveState,
 } from "@game/core";
 
@@ -34,7 +35,16 @@ import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
 import { applyWorldProjection, billboard } from "../render/tilt.ts";
 import { drawCarAssembly } from "../render/vehicles.ts";
 
+import type { PixelFont } from "@ui/lib/pixel-font.ts";
+
 import type { Camera } from "../render/view.ts";
+import {
+  bodySprite,
+  drawRemain,
+  drawRoadMarks,
+  type DriveGoreState,
+} from "./drive-gore.ts";
+import { drawPlacard, GLUED_BARKS, MAX_PLACARDS } from "./placards.ts";
 import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
@@ -67,6 +77,13 @@ const KERB_DEPTH = 2;
  * trailing third of the picture so the player can read the crowd coming. */
 const CAMERA_LEAD = 96;
 
+/** How high off the road something has to be to be OVER the car rather than
+ * behind it (world px). The wagon's own assembly is 26 px tall on a 16-px body
+ * scale; a piece past this has cleared the roofline, and the painter's order
+ * has to say so or a body sent over the top is drawn tidily behind the car that
+ * sent it. */
+const ROOF_PX = 20;
+
 /** Where the camera stands for a drive. */
 export function driveCamera(
   drive: DriveState,
@@ -97,6 +114,15 @@ export function drawDrive(
   viewW: number,
   viewH: number,
   timeMs: number,
+  /** What the road is holding of the people it has met — the marks on the
+   * tarmac and the pieces standing on it (`drive-gore.ts`). Omitted by a host
+   * that has none (nothing does today; the parameter is optional so a caller
+   * that only wants the road can have it). */
+  gore?: DriveGoreState,
+  /** The game's own pixel font, for the one thing on this road that has WORDS
+   * in it — THE GLUED's bubbles. Omitted draws the blockade silently, which is
+   * still a blockade. */
+  font?: PixelFont,
 ): void {
   const bands = roadBands();
 
@@ -180,6 +206,15 @@ export function drawDrive(
     }
   }
 
+  // ── WHAT THE ROAD REMEMBERS ───────────────────────────────────────────────
+  // The blood, the drag marks, the tread prints and the pressed-flat remains,
+  // ON the tarmac and UNDER everything standing on it. The order is the whole
+  // reason this call is here rather than in the effect layer: that layer is
+  // painted over the finished frame, so a player driving back through his own
+  // mess would have chunks of somebody laid across the bonnet. (The run's own
+  // gore learned this one the hard way — `restsOnFloor` in render/effects.ts.)
+  if (gore) drawRoadMarks(ctx, gore, camera, sprites, viewW);
+
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────
   // One list, one sort, one pass. A drive holds four kinds of standing thing
   // and every one of them has to interleave with the others by depth — a
@@ -187,6 +222,10 @@ export function drawDrive(
   // houses — so sorting them together is not a shortcut, it is the requirement.
   type Drawn = { y: number; draw: () => void };
   const drawn: Drawn[] = [];
+  /** What THE GLUED are saying, collected as the field is walked and drawn over
+   * the finished picture — a bubble sorted in with the bodies would be painted
+   * over by whoever is sitting in the next row back. */
+  const bubbles: { line: string; ped: DriveState["pedestrians"][number] }[] = [];
 
   const put = (
     name: string,
@@ -277,8 +316,52 @@ export function drawDrive(
     const name = TRAFFIC_SPRITES[other.variant % TRAFFIC_SPRITES.length];
     if (name) put(name, other.pos.x, other.pos.y, 0, other.faceLeft);
   }
+  // WHAT IS LEFT OF THE ONES HE HAS ALREADY MET — halves, whole bodies and
+  // chunks, each at its OWN place on the road, y-sorted in with everything else
+  // standing on the tarmac. A half of somebody in lane one has to interleave
+  // with the van in lane three exactly as a whole one does.
+  //
+  // A piece in the AIR is the one exception and it is the point of the whole
+  // feature: past the car's own roof it is drawn LAST, over everything, because
+  // it is above the wagon rather than behind it. Sorting it by its ground y
+  // would put the upper half of somebody neatly behind the car it has just gone
+  // over the top of.
+  const overhead: DriveRemain[] = [];
+  if (gore) {
+    for (const piece of drive.remains) {
+      if (piece.z > ROOF_PX) {
+        overhead.push(piece);
+        continue;
+      }
+      drawn.push({
+        // A piece caught UNDER the car is drawn a hair in front of it so the
+        // wagon covers it — what the player is meant to see of a body being
+        // dragged is the red coming out from under the back, not the body.
+        y: piece.dragMs > 0 ? piece.pos.y - 0.01 : piece.pos.y,
+        draw: () => drawRemain(ctx, piece, camera, sprites),
+      });
+    }
+  }
+
   for (const ped of drive.pedestrians) {
-    const frames = CROWD_SPRITES[ped.variant % CROWD_SPRITES.length];
+    // THE GLUED wear their own art and never animate — they sat down (see
+    // `GLUED_SPRITES`). Everybody else walks.
+    if (ped.kind === "glued" && ped.mode === "afoot") {
+      const seated = bodySprite("glued", ped.variant);
+      put(seated, ped.pos.x, ped.pos.y, ped.z);
+      // …and a handful of them are saying so. The bubble is drawn AFTER the
+      // whole y-sorted field rather than inside it, or the body in the next row
+      // back is painted over its own neighbour's words.
+      if (font && ped.bark >= 0) {
+        const line = GLUED_BARKS[ped.bark % GLUED_BARKS.length];
+        if (line) bubbles.push({ line, ped });
+      }
+      continue;
+    }
+    const frames =
+      ped.kind === "glued"
+        ? ([bodySprite("glued", ped.variant), bodySprite("glued", ped.variant)] as const)
+        : CROWD_SPRITES[ped.variant % CROWD_SPRITES.length];
     if (!frames) continue;
     if (ped.mode === "tumbling") {
       // KNOCKED ASIDE, NOT KILLED — the gore-off outcome. Laid over on its side
@@ -323,5 +406,37 @@ export function drawDrive(
 
   drawn.sort((a, b) => a.y - b.y);
   for (const item of drawn) item.draw();
+  // OVER THE ROOF: the half of somebody the bumper sent up. It is above the car
+  // rather than behind it, so it is painted after the car whatever its ground y
+  // says — which is exactly what the eye reads as "he went over the top".
+  for (const piece of overhead) drawRemain(ctx, piece, camera, sprites);
   ctx.restore();
+
+  // …AND THE WORDS, LAST OF ALL, OVER EVERYBODY — but only the NEAREST of them
+  // (`MAX_PLACARDS`), which is the whole layout rule and is explained where that
+  // number lives. Nearest-first is the honest cut: as the car closes, each
+  // speaker in turn is passed and the next takes the bubble, so a picket line
+  // reads as a SEQUENCE of lines rather than as a wall of overprinted text.
+  if (font) {
+    const dir = drive.params.direction;
+    const near = bubbles
+      .map((bubble) => ({
+        ...bubble,
+        away: (bubble.ped.pos.x - drive.car.pos.x) * dir,
+      }))
+      .filter((bubble) => bubble.away > 0)
+      .sort((a, b) => a.away - b.away)
+      .slice(0, MAX_PLACARDS);
+    for (const bubble of near) {
+      drawPlacard(
+        ctx,
+        font,
+        bubble.line,
+        bubble.ped.pos.x,
+        bubble.ped.pos.y,
+        camera,
+        bubble.away,
+      );
+    }
+  }
 }

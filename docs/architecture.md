@@ -847,8 +847,28 @@ escort.ts` walks the people an escort errand puts on the field, and
   met at the hero's whole speed; a lamp post shears off its base, cartwheels
   down the road and takes a slice of the car with it — and the auto-driver
   reads the furniture like everything else, or it settles in the gutter and
-  grinds itself to a halt on the emptiest-looking line on the road. Its
-  presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
+  grinds itself to a halt on the emptiest-looking line on the road.
+  WHAT IT LEAVES OF SOMEBODY is the road's own body physics, and it is SIM
+  rather than presentation for one reason: a car is not a blow. A sword opens a
+  body in an instant and the pieces are down again inside a second, which a
+  renderer can own by itself; a four-metre surface travelling at 53 m/s goes
+  THROUGH a body, CARRIES what it caught, LAYS it back down somewhere else, and
+  then drives over what it laid down — and every one of those is a fact about
+  where a thing IS. So `remains.ts` holds the pieces (`DriveRemain`: an upper
+  half thrown over the roof with less along-road speed than the car, so the
+  wagon passes underneath it; a lower half caught and dragged; the lumps torn
+  off on the way past), and `blockade.ts` supplies most of their customers — THE
+  GLUED, twenty demonstrators sitting across every lane at one point in the
+  course, the one thing on this road that does not move and cannot be driven
+  around. What any of it is MADE of is still the app's
+  (`drive-screen/drive-gore.ts`), which cuts the victim's OWN sprite at the
+  bumper's line with the run's own `slicedPiece` and lays the marks the road
+  keeps: the splash, the drag smear, the paste under a wheel, and the tread
+  prints the tyres carry out onto clean tarmac — a CARRY that runs out, exactly
+  as the hero's bootprints are. Both gore-page switches ride in on
+  `DriveParams` (`gib` for the lumps torn off, `split` for the bumper going
+  through somebody), asked once by `driveParamsFor` and fixed for the whole
+  road. Its presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
   shards, the wreck's smoke, and a camera that moves only when something is
   actually struck; every effect is anchored to the ROAD and left behind except
   the dead engine's smoke, which rides the car it came out of) and

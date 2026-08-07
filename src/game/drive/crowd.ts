@@ -163,11 +163,16 @@ export function spawnCrowd(state: DriveState): void {
       },
       vel: { x: 0, y: 0 },
       mode: "afoot",
+      kind: "walker",
       variant: Math.floor(rng() * CROWD_VARIANTS) % CROWD_VARIANTS,
       phase: rng() * Math.PI * 2,
       z: 0,
       vz: 0,
       counted: false,
+      crushed: false,
+      // Nobody on their way somewhere has anything to say about it — the road's
+      // only voices are THE GLUED's (`blockade.ts`).
+      bark: -1,
     });
   }
 }
@@ -190,6 +195,13 @@ export function stepCrowd(state: DriveState, dt: number): void {
       stepTumble(ped, dt);
       continue;
     }
+    // THE GLUED DO NOT MOVE, and that is the whole of them (see
+    // `PedestrianKind`). No wander, no lunge, no flinch as the car arrives —
+    // they sat down on purpose and their hands are in the resin. It is also
+    // what makes the set piece READ: everything else on this road drifts, so a
+    // formation that is perfectly still is legible as a decision from a screen
+    // away.
+    if (ped.kind === "glued") continue;
     const ahead = (ped.pos.x - car.pos.x) * dir;
     const gap = Math.hypot(ped.pos.x - car.pos.x, ped.pos.y - car.pos.y);
     if (gap < DRIVE.noticePx && ahead > 0) {

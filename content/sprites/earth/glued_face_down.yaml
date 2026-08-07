@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# ONE OF THE GLUED — see glued_cross_legged.yaml for the naming rule.
+name: glued_face_down
+family: earth
+size: [16, 16]
+description: >
+  A demonstrator lying face down across the lane with both arms stretched out
+  ahead of them and their hands in the resin.
+subject:
+  kind: demonstrator glued to the road
+  build: a person lying prone ACROSS the frame — the back of a dark head at the left, a green jacket through the middle, legs to the right, arms reaching forward
+  attire: a green outdoor jacket over dark trousers
+  features: the back of the head, arms out ahead, hands set into the road
+  accent: the green against the tarmac
+  flavor: face down is the one posture out here that reads as somebody who has already thought about being dragged
+  pose: prone, arms extended, motionless
+palette:
+  O: "#1a1c2c" # outline
+  P: "#f0cbaa" # skin
+  H: "#2c2536" # dark hair
+  G: "#4f8f4a" # green jacket
+  T: "#3a3444" # dark trousers
+grid: |
+  ................
+  ................
+  ................
+  ................
+  ................
+  ................
+  ................
+  ................
+  .....OOO........
+  ...OOOHHOO..OO..
+  .OOOGGGGGGOOTTO.
+  OPPOGGGGGGGGTTTO
+  .OOOGGGGGGOOTTO.
+  ....OOOOOOOOOOO.
+  ................
+  ................

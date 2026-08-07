@@ -35,9 +35,138 @@ import type { DriveOutcome } from "./config.ts";
  */
 export type DriveDirection = 1 | -1;
 
+/**
+ * WHICH PIECE OF SOMEBODY THIS IS — the four things the road can leave of a
+ * person, and the only vocabulary the sim has for it.
+ *
+ * The engine does not know what any of them LOOK like. It knows that a lump of
+ * a person of roughly this size is at this spot doing this, and the app answers
+ * the rest (pwa/src/game/drive-screen/drive-gore.ts) — the same fence
+ * `DriveStrike` is drawn along, for the same reason.
+ */
+export type RemainPart =
+  /** Everything above where the bumper caught them. It is the LIGHT half and it
+   * is the one that goes OVER: launched with less along-road speed than the car
+   * has, so the wagon passes underneath it while it is up there. */
+  | "upper"
+  /** Everything below the bumper line. The HEAVY half, and the one that goes
+   * UNDER: no lift at all, straight down onto the tarmac in front of the front
+   * wheels, where it is caught and dragged. */
+  | "lower"
+  /** A body that was not going fast enough to come in two — knocked flat,
+   * caught under the car whole, and run over as one piece. */
+  | "whole"
+  /** A lump torn off on the way past. Scatters, bounces, and is not caught. */
+  | "chunk";
+
+/**
+ * A PIECE OF SOMEBODY, OUT ON THE ROAD — where it is, what it is doing, and
+ * whether the wheels have been over it yet.
+ *
+ * WHY THIS IS SIM AND NOT PRESENTATION, when the burst it replaced was neither.
+ * A body that comes apart in the air and is gone in a second is a picture, and
+ * that is what the road used to draw. What the road does now is not: a half of
+ * somebody is CAUGHT under the car and travels with it, is DROPPED, SKIDS,
+ * comes to rest on the tarmac, and can be run over — by these wheels, on a
+ * later tick, at a place the physics decides. Every one of those is a fact
+ * about where a thing is, which is the sim's business and nothing the renderer
+ * could be trusted to invent, since the two would then disagree about where the
+ * blood goes.
+ *
+ * WHAT IS STILL THE APP'S: what it is made of. There is no sprite name here, no
+ * colour, no blood and no "how wet is it still" — the app keeps that beside its
+ * own record, keyed on the id, and asks this list only where things ARE.
+ */
+export type DriveRemain = {
+  /** Stable id — the app keys its per-piece presentation (which gib art it
+   * wears, how much blood it still has to leave) off it. */
+  id: number;
+  /** Which crowd, and which of its bodies, it came off — so the halves are cut
+   * out of the art of the person who was actually hit rather than out of a
+   * stand-in. */
+  kind: PedestrianKind;
+  variant: number;
+  part: RemainPart;
+  /**
+   * WHERE THE BUMPER CAUGHT THEM, as a fraction of the body's height measured
+   * from the top of the sprite — the cut line, and the one number that makes an
+   * `upper` and a `lower` two pieces of ONE person rather than two independent
+   * lumps. Both halves of a split carry the same value.
+   *
+   * A fraction rather than pixels because the sim has never been told how tall
+   * a person's art is, and should not be.
+   */
+  cut: number;
+  pos: Vec2;
+  /** Ground velocity (world px/s). */
+  vel: Vec2;
+  /** Height off the road (px) and its rate. */
+  z: number;
+  vz: number;
+  /** How far it has turned over (radians) and how fast — a half of somebody
+   * thrown by a car cartwheels, and one skidding along the tarmac keeps
+   * turning until friction stops it. */
+  angle: number;
+  spin: number;
+  /**
+   * MS IT IS STILL CAUGHT ON THE CAR. Above zero the piece is not integrated at
+   * all: it is pinned to the wagon at (`dragAlong`, `dragAcross`) and goes
+   * wherever the wagon goes, which is the whole of "it drags with the car".
+   *
+   * It ends two ways and both matter. The clock runs out — friction has worked
+   * it free — or the car slows below `DRIVE.gore.dragMinSpeedPx`, because a
+   * wagon that has stopped is not dragging anything. Either way it is handed
+   * the car's own travel on the way out (`dragSlip`) rather than being dropped
+   * dead, so it skids out from under the back of the car instead of appearing
+   * there.
+   */
+  dragMs: number;
+  /** Where on the car it is caught: px along the nose from the body's centre
+   * (negative is toward the back) and px across it. */
+  dragAlong: number;
+  dragAcross: number;
+  /** THE WHEELS HAVE BEEN OVER IT. Latched — a piece that has been run over is
+   * run over, and a second crush of the same lump is the "one contact is one
+   * impact" bug the traffic's cooldown exists to stop. */
+  crushed: boolean;
+  /** It has stopped moving for good: no more integration, no more blood. */
+  settled: boolean;
+  /** The piece's own seed — everything the app rolls about it (which gib art a
+   * chunk wears, how it lies when it stops) comes off this rather than off the
+   * road's stream, which lays the crowd down and must not be spent on gore. */
+  seed: number;
+};
+
+/**
+ * WHO SOMEBODY OUT HERE IS — which of the two crowds this body belongs to, and
+ * therefore which set of art it wears and whether it moves at all.
+ *
+ * It is deliberately separate from `PedestrianMode` (what they are DOING),
+ * because the two answer different questions and a body changes one without
+ * changing the other: somebody glued to the tarmac who is struck stops being
+ * seated and starts tumbling, and is still one of THE GLUED while they do it.
+ */
+export type PedestrianKind =
+  /** One of the people the welfare did not reach, out on the road because a
+   * road is where the cars are. Walks, mills, and lunges at a car it has seen. */
+  | "walker"
+  /**
+   * ONE OF THE GLUED — a demonstrator sitting in the carriageway with their
+   * hands in the resin, holding the road for the climate.
+   *
+   * THEY ARE THE ONE THING ON THIS ROAD THAT DOES NOT MOVE, and that is the
+   * whole of them mechanically: no wander, no lunge, no stepping back. The
+   * crowd is a hazard you can be quick enough for; this is a WALL, laid across
+   * every lane at one point in the trip, and a wagon at 120 with a stopping
+   * distance measured in hundreds of pixels arrives at it having already
+   * decided. Nobody has to be told what happens next.
+   */
+  | "glued";
+
 /** What somebody on the road is doing. */
 export type PedestrianMode =
-  /** Upright: wandering, or working their way toward a car they have seen. */
+  /** In one piece and in play: wandering, working their way toward a car they
+   * have seen, or — one of THE GLUED — sitting exactly where they sat down. */
   | "afoot"
   /**
    * Hit, and still in one piece — the GORE-OFF outcome. They are knocked off
@@ -59,8 +188,20 @@ export type DrivePedestrian = {
   /** Ground velocity (world px/s). */
   vel: Vec2;
   mode: PedestrianMode;
-  /** Which of the crowd's body sprites this one wears. */
+  kind: PedestrianKind;
+  /** Which of their own crowd's body sprites this one wears — an index into
+   * the WALKERS or into THE GLUED, by `kind`. */
   variant: number;
+  /**
+   * WHAT THEY HAVE TO SAY, as an index into their crowd's lines, or −1 for the
+   * ones saying nothing.
+   *
+   * Only THE GLUED ever carry one. A blockade where everybody has a bubble over
+   * their head is an unreadable wall of text at 16 px, and — worse — it makes
+   * twenty people into one placard; a handful of voices in a crowd of twenty is
+   * what a demonstration actually looks like from a car.
+   */
+  bark: number;
   /**
    * The wander seed — a fixed per-body number the idle drift is derived FROM
    * rather than a per-tick draw, so the crowd mills about without spending the
@@ -74,6 +215,17 @@ export type DrivePedestrian = {
   /** True once this body has been counted against the hero's tally. Latched, so
    * a tumbling body rolling back under the wheels is not counted twice. */
   counted: boolean;
+  /**
+   * THE WHEELS HAVE BEEN OVER THIS ONE. Only ever true of a `tumbling` body —
+   * the GORE-OFF outcome, where a struck person is still a person lying in the
+   * road and the car can quite easily go over them on the way past.
+   *
+   * It buys a SOUND rather than a picture, which is why it exists even with the
+   * gore switched off: what the player hears when a wheel finds somebody is not
+   * gore, it is a wheel finding somebody, and a road that went silent for it
+   * would be the one place in the game where a collision made no noise.
+   */
+  crushed: boolean;
 };
 
 /** Another car on the road. */
@@ -171,8 +323,17 @@ export type DriveStrike = {
   /** The collision's absorbed energy (joules) — how hard this was, for the
    * app to scale the burst, the sound and the camera by. */
   joules: number;
-  /** Which body sprite it was wearing, so the pieces match the person. */
+  /** Which crowd they belonged to and which of its bodies they were wearing, so
+   * the spray comes off the person who was actually hit. */
+  kind: PedestrianKind;
   variant: number;
+  /**
+   * THEY CAME IN TWO. False for a hit that merely knocked somebody down and
+   * dragged them, true for one the bumper went through — which is the same
+   * question `DRIVE.gore.splitJoules` answers for the sim, asked once and
+   * carried so the app never has to re-derive it and disagree.
+   */
+  split: boolean;
 };
 
 /** Something worth a sound or a flash, drained by the app each tick — the
@@ -180,6 +341,18 @@ export type DriveStrike = {
 export type DriveEvent =
   /** A person went under the car. */
   | { type: "pedestrianHit"; pos: Vec2; joules: number }
+  /** …and the bumper went THROUGH them: a body taken in two at speed. Its own
+   * event rather than a flag on the one above, because it is its own noise —
+   * the wet tear a thud does not contain — and because the two are heard
+   * together on the tick a fast hit lands, which is the point of them. */
+  | { type: "bodySplit"; pos: Vec2; joules: number }
+  /** Something is caught under the car and has started to travel with it. */
+  | { type: "bodyCaught"; pos: Vec2; joules: number }
+  /** A wheel has gone over a piece of somebody lying in the road. */
+  | { type: "bodyCrushed"; pos: Vec2; joules: number }
+  /** The car has clouted something dead and steel already lying on the tarmac —
+   * a felled street light, kicked further down the road. */
+  | { type: "debrisStruck"; pos: Vec2; joules: number }
   /** Traded paint with another car — moving, or parked at the kerb. */
   | { type: "trafficHit"; pos: Vec2; joules: number }
   /** A street light has left its base and is on its way down the road. */
@@ -243,8 +416,23 @@ export type DriveParams = {
    * settings screen — and because the answer must be fixed for the whole drive
    * rather than asked per collision, or a player toggling the switch mid-run
    * would leave half the road gibbed and half of it lying in the gutter.
+   *
+   * It is the GIB half of the gore page's two dismemberment switches: the
+   * chunks torn off on the way past, and the shower of what was inside.
    */
   gib: boolean;
+  /**
+   * …AND WHETHER A FAST ENOUGH HIT TAKES THEM IN TWO — the CLEAVE half, asked
+   * of the same page and carried the same way.
+   *
+   * Two switches rather than one because they are two sights, exactly as they
+   * are inside a run: a bumper going through somebody is a body cut in two, and
+   * a player who turned CLEAVES off did not mean "only when a sword does it".
+   * Either one on is enough for a body to come apart at all; with both off
+   * nobody does, and the road falls back to the tumble
+   * (see `PedestrianMode`).
+   */
+  split: boolean;
 };
 
 /** The whole of a drive. */
@@ -264,6 +452,9 @@ export type DriveState = {
   ms: number;
   /** Everybody currently on the road, upright or in the gutter. */
   pedestrians: DrivePedestrian[];
+  /** …and what is left of the ones who are neither. Empty on a road driven
+   * with the gore switched off, where a struck body stays a body. */
+  remains: DriveRemain[];
   /** Everything else with wheels. */
   traffic: DriveTraffic[];
   /** The kerbside furniture the road has unrolled so far — the lamp posts and
@@ -312,6 +503,9 @@ export type DriveState = {
   nextPropSlot: number;
   /** Latched once the hero has had his think about the people ahead. */
   monologueDone: boolean;
+  /** …and once THE GLUED have been laid down. A blockade that could be laid
+   * twice is a wall the player drives into and then into again. */
+  blockadeDone: boolean;
   /** The id counter for everything the road mints. */
   nextId: number;
 };

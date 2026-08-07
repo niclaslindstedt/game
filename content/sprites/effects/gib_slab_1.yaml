@@ -1,0 +1,23 @@
+name: gib_slab_1
+family: effects
+size: [7, 7]
+description: >
+  The second torn slab — squarer than its sibling, so a road strewn with them
+  does not read as one shape stamped over and over.
+subject:
+  kind: gore piece
+  build: a roughly square lump of muscle with a torn corner, wet along its upper-left, a streak of fat through it, clotted and dark down its lower-right
+  flavor: the other half of the pair a collision throws — a stretch of road with a dozen of these on it has to read as a mess rather than as a tile pattern
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  y: "#e8c49a" # fat
+grid: |
+  ..drd..
+  .drryd.
+  drrrydd
+  drryddi
+  drddiid
+  .ddiid.
+  ..dii..

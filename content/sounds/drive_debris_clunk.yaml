@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_debris_clunk
+description: >-
+  The car clouting something dead and steel already lying on the tarmac — a
+  felled street light, kicked on down the road. A hollow triangle bonk with
+  a short metallic ring after it and no crumple at all, which is the whole
+  difference between this and the crunch: nothing here is giving way, it is
+  just being moved.
+voices:
+  - call: tone
+    type: triangle
+    from: 420
+    to: 156
+    durationMs: 120
+    volume: 0.038
+    detuneCents: 10
+  - call: noise
+    durationMs: 70
+    volume: 0.024
+    filter:
+      type: bandpass
+      frequency: 2600
+  - call: tone
+    type: sine
+    from: 880
+    to: 700
+    durationMs: 220
+    volume: 0.012
+    delayMs: 60
+    echo: 0.22

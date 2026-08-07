@@ -271,6 +271,55 @@ export const DRIVE = {
    */
   pavementPx: 16,
 
+  // ── THE BLOCKADE ──────────────────────────────────────────────────────────
+  /**
+   * THE GLUED — the one set piece on this road, and the only thing on it that
+   * is not a hazard so much as a FACT.
+   *
+   * Everything else out here can be driven around. The crowd is thick but it is
+   * people, and people are 5 px wide with gaps between them; the traffic takes
+   * a lane away and leaves three. A demonstration sitting across all four lanes
+   * with their hands in the resin takes the whole carriageway, and the wagon
+   * meets it at 120 mph with a stopping distance measured in hundreds of
+   * pixels. There is no line through it. The player works out what is about to
+   * happen roughly a second before it does, and there is nothing whatever they
+   * can do with that second, which is the joke and the entire reason the thing
+   * exists.
+   *
+   * IT IS NOT TUNED FOR FAIRNESS AND IT IS NOT TUNED TO KILL YOU EITHER.
+   * Measured against `solveImpact` on MEDIUM: a body met square at the top end
+   * costs about a fifth of the speed and 0.036 of the car, so ploughing in at
+   * 120 scrubs the wagon down to a crawl inside half a dozen bodies and hands it
+   * a fifth of a breakdown. That is the shape it wants — the blockade WORKS. It
+   * stops the car, exactly as it was meant to. It just does not stop it in time.
+   */
+  blockade: {
+    /**
+     * HOW FAR INTO THE COURSE IT SITS, as a fraction of the leg.
+     *
+     * Past the middle on purpose: the trip has to have taught the player what
+     * the road is and what the wheel is worth before it shows them something the
+     * wheel cannot answer. It is a FRACTION rather than a world position so the
+     * attract loop's short leg (`attractCoursePx`) gets one too — the demo is
+     * fifteen seconds of showing somebody what this game is, and this is the
+     * fifteen seconds' worth.
+     */
+    atFrac: 0.55,
+    /** How many of them are sitting there. Twenty: enough that it reads as a
+     * demonstration rather than as four people, few enough that the car is
+     * through it rather than stopped in it. */
+    count: 20,
+    /** How far apart their rows stand along the road (world px), and how far
+     * apart they sit across it. Tight — they are linked. */
+    rowPitchPx: 15,
+    seatPitchPx: 13,
+    /** How far a body may sit off its slot in either direction (world px), so
+     * the rows read as people who sat down rather than as a grid. */
+    jitterPx: 4,
+    /** How many of them have something to say — see `DrivePedestrian.bark`. */
+    voices: 4,
+  },
+
   // ── THE KERB ──────────────────────────────────────────────────────────────
   /**
    * THE STREET FURNITURE — the lamp posts down both pavements and the cars
@@ -415,6 +464,130 @@ export const DRIVE = {
     /** How hard a hit shoves the suspension (px/s per unit of wear dealt) —
      * `nudgeCar`'s own units, so the body visibly takes the blow. */
     nudgePerWear: 900,
+  },
+
+  // ── WHAT IS LEFT OF SOMEBODY ──────────────────────────────────────────────
+  /**
+   * THE ROAD'S OWN BODY PHYSICS — how a person comes apart under a car, where
+   * the pieces go, and how long they travel with the wagon that found them.
+   *
+   * IT IS NOT THE RUN'S GORE, AND THAT IS THE WHOLE REASON IT IS HERE. Inside a
+   * run a body is opened by something SWUNG at it: one blow, one instant, and
+   * the pieces are in the air and down again inside a second (`GORE_BURST_MS`).
+   * A car is not a blow. It is a four-metre surface travelling at 53 m/s that
+   * arrives, stays, and keeps going — so what it does to somebody is a sequence
+   * rather than a moment: it goes THROUGH them, CARRIES what it caught, LAYS it
+   * back down somewhere else, and then drives over what it laid down. Every
+   * number below is one beat of that, and none of them has an equivalent in the
+   * run's own gore because the run has nothing that travels.
+   *
+   * Everything is spent against the collision's own absorbed energy, as a
+   * fraction of `impact.wearJoules` — the same currency the sound banks, the
+   * panel rungs and the burst are already priced in, so nothing here re-decides
+   * what a hard hit is.
+   */
+  gore: {
+    /**
+     * ABSORBED ENERGY AT WHICH THE BUMPER GOES THROUGH somebody rather than
+     * merely knocking them down, as a fraction of `wearJoules`.
+     *
+     * DELIBERATELY THE SAME LINE THE HEAVY SOUND BANK SITS ON
+     * (`HARD_BODY_JOULES`, pwa/src/game/drive-screen/drive-sounds.ts). What the
+     * player hears and what the player sees have to be the same fact about the
+     * hit, or the road is telling them two stories: the take that crunches is
+     * the take that takes somebody in two. Against `solveImpact`'s own measured
+     * shares on MEDIUM (see that file's table), it lands a square hit above
+     * about 48 mph and a hard clip at the top end on the split side, and leaves
+     * every gentle contact a knock-down.
+     */
+    splitJoules: 0.009,
+    /**
+     * WHERE THE BUMPER CATCHES THEM, as a fraction of the body's height from
+     * the top of the sprite — the band the cut line is rolled inside.
+     *
+     * A bumper is at one height and a crowd is not one height: a child, a
+     * cyclist and an old man bent over a cane meet the same steel in three
+     * different places, which is why this is a band rather than a number. Kept
+     * off the extremities at both ends for the reason `CUT_OFFSET_MAX` is
+     * (gore-burst.ts): a cut at the very top or the very bottom of a 16 px body
+     * draws one whole person and one empty canvas.
+     */
+    cutBand: { from: 0.3, to: 0.62 },
+    /** How many lumps are torn off on the way past — at the split line, and per
+     * unit of force beyond it, capped. Small on purpose: the big pieces are the
+     * two halves and the shower is the app's own burst; these are the few
+     * things solid enough to bounce down the road and be run over. */
+    chunks: { base: 1, perForce: 1.6, max: 5 },
+    /** How far a chunk carries and how high it hops (world px), at the split
+     * line and per unit of force past it. */
+    chunkReachPx: { base: 26, perForce: 30 },
+    chunkLiftPx: { base: 90, perForce: 70 },
+    /**
+     * HOW LONG A PIECE STAYS CAUGHT UNDER THE CAR (ms) — at the split line, and
+     * per unit of force past it, capped.
+     *
+     * This is the number the whole feature is built to buy. At the top end the
+     * car covers 624 px a second, so a second of drag is a screen and a half of
+     * tarmac with somebody underneath it — which is what puts the long red
+     * streak on the road behind a driver who was going too fast, and what makes
+     * that streak a record of HIS speed rather than a decal.
+     */
+    dragMs: { base: 260, perForce: 340, max: 1400 },
+    /**
+     * WHERE UNDER THE CAR A CAUGHT PIECE RIDES: px along the nose from the car's
+     * centre (negative is toward the back) and how far it may sit off the car's
+     * own line.
+     *
+     * PAST THE REAR BUMPER, and that number was found by looking. The car's own
+     * body is 48 px, so anything inside ±24 is drawn UNDERNEATH the wagon and
+     * the player sees precisely nothing of the feature: at −15 the drag was a
+     * sound and a trail with no visible cause. Out at −26 the piece trails just
+     * clear of the back, which is what a body caught on a towbar actually looks
+     * like from behind and — more to the point — is the only place the eye can
+     * connect the red streak to the thing making it.
+     */
+    dragAlongPx: -26,
+    dragAcrossPx: 5,
+    /** What share of the car's own travel a piece keeps as it works free — so
+     * it skids out from under the back rather than being dropped dead in the
+     * road, which reads as the piece having been deleted and re-created. */
+    dragSlip: 0.55,
+    /** …and the ground speed under which the car is no longer dragging anything
+     * (world px/s). A wagon that has stopped is not dragging. */
+    dragMinSpeedPx: 60,
+    /**
+     * THE HALF THAT GOES OVER THE ROOF — what share of the car's own along-road
+     * speed the upper half keeps, and how hard it is thrown up (px/s at the
+     * split line, and per unit of force past it).
+     *
+     * THE CARRY IS BELOW 1 ON PURPOSE and it is the entire trick. A piece
+     * thrown FASTER than the car lands in front of it and gets run over again,
+     * which is a fine picture and the wrong one; a piece thrown SLOWER is
+     * overtaken while it is up there, so the wagon passes underneath it and the
+     * eye reads exactly what happened — he went over the roof. Nothing anywhere
+     * plays an "over the roof" animation.
+     */
+    overRoofCarry: 0.62,
+    overRoofLiftPx: { base: 190, perForce: 90 },
+    /** Gravity for a piece in the air (px/s²), and what a bounce keeps. Meat
+     * keeps very little: it lands, it slaps, it stays. */
+    gravityPx: 620,
+    bounce: 0.22,
+    /** How fast a piece on the tarmac sheds its speed (1/s), and the speed under
+     * which it has stopped for good. Higher drag than a felled post's — a body
+     * does not roll. */
+    dragPerSec: 2.6,
+    restPx: 9,
+    /** How fast a piece turns over, in radians per second per px/s of the speed
+     * it is travelling at. */
+    spinPerSpeed: 0.014,
+    /** WHAT THE WHEELS DO TO A PIECE THEY FIND: how far past the car's own
+     * footprint a lump has to be to be missed (world px), how much of the car's
+     * speed the crush kicks it along the road with, and how long the car cannot
+     * find the same thing again for (ms). */
+    crushReachPx: 7,
+    crushShove: 0.35,
+    crushCooldownMs: 300,
   },
 
   // ── THE CAR'S HEALTH ──────────────────────────────────────────────────────

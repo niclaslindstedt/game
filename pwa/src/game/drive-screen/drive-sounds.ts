@@ -36,10 +36,27 @@ export const SCRAPE_SOUNDS = ["drive_scrape_a", "drive_scrape_b"] as const;
 export const CRUNCH_SOUNDS = ["drive_crunch_a", "drive_crunch_b"] as const;
 /** A panel folding one rung further. */
 export const PANEL_SOUNDS = ["drive_panel_a", "drive_panel_b"] as const;
-/** The two singletons — one part comes off a car exactly one way, and an engine
- * only dies once a leg. */
+/** A body taken in TWO — the wet tear the thud does not contain. Played OVER
+ * the thud rather than instead of it: the two are one collision, and the thud is
+ * the steel while this is the person. */
+export const SPLIT_SOUNDS = ["drive_split_a", "drive_split_b"] as const;
+/** A wheel finding something already lying in the road. Three takes, because
+ * this is the most repeated noise on the road by a long way — driving through a
+ * blockade fires it several times a second, and two takes at that rate is a
+ * stutter. */
+export const CRUSH_SOUNDS = [
+  "drive_crush_a",
+  "drive_crush_b",
+  "drive_crush_c",
+] as const;
+/** The three singletons — one part comes off a car exactly one way, an engine
+ * only dies once a leg, and there is only one noise a body caught under a
+ * floorpan makes. */
 export const SHED_SOUND = "drive_part_shed";
 export const BREAKDOWN_SOUND = "drive_breakdown";
+export const DRAG_SOUND = "drive_body_drag";
+/** …and one for dead steel already on the tarmac being kicked further down it. */
+export const DEBRIS_SOUND = "drive_debris_clunk";
 
 /**
  * Where the body's thud becomes a body's crunch, as a fraction of the energy
@@ -109,13 +126,27 @@ export function lampHitSound(x: number, y: number): string {
   return pick(CRUNCH_SOUNDS, x, y);
 }
 
+/** The sound of a bumper going through somebody. */
+export function splitSound(x: number, y: number): string {
+  return pick(SPLIT_SOUNDS, x, y);
+}
+
+/** The sound of a wheel going over something already down. */
+export function crushSound(x: number, y: number): string {
+  return pick(CRUSH_SOUNDS, x, y);
+}
+
 /** Every id the road can ask the bank for — what the content test walks. */
 export const DRIVE_SOUND_IDS: readonly string[] = [
   ...BODY_SOUNDS,
   ...HARD_BODY_SOUNDS,
+  ...SPLIT_SOUNDS,
+  ...CRUSH_SOUNDS,
   ...SCRAPE_SOUNDS,
   ...CRUNCH_SOUNDS,
   ...PANEL_SOUNDS,
   SHED_SOUND,
   BREAKDOWN_SOUND,
+  DRAG_SOUND,
+  DEBRIS_SOUND,
 ];
