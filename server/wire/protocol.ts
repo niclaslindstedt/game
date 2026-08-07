@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 31;
+export const PROTOCOL_VERSION = 32;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -433,6 +433,27 @@ export type RosterEntry = {
    * Absent for a spectator, who is watching the primary world by definition.
    */
   level?: string;
+  /**
+   * HOW LONG THIS CLIENT HAS BEEN IN THE SESSION, in ms — the scoreboard's
+   * TIME column (`Scoreboard`, the QuakeWorld player list).
+   *
+   * Measured on the SESSION's clock, from the moment the client was admitted,
+   * rather than off any world's `stats.timeMs`: a session may hold two carves
+   * at once, so a run clock restarts for whoever steps through a town portal
+   * and "time in session" is precisely the thing that must not. A reconnect is
+   * a new client record and so a fresh stamp.
+   */
+  joinedMs?: number;
+  /**
+   * This seat is one of the SESSION's OWN BOTS — an autopilot hero filling an
+   * empty chair, not a person who joined. Absent for everybody else.
+   *
+   * A bot is a full client (`server/local-bots.ts`) and so a full roster row,
+   * which is what keeps a party of one human and three bots from reading as a
+   * one-player session — but it has no wire to time, so the board labels the
+   * row instead of printing a ping nothing measured.
+   */
+  bot?: boolean;
 };
 
 /** A `roster` frame. */

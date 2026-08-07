@@ -92,6 +92,11 @@ export const HUD_BINDINGS = {
   "ui.swipeBars": "flag",
   "ui.wide": "flag",
   "ui.autopilot": "flag",
+  // THE SCOREBOARD IS BEING HELD UP — the SHOW SCORES key is down, or a touch
+  // player has raised the board off the pause screen. `ui.` rather than `hud.`
+  // because it is a fact about what this viewer is looking at rather than about
+  // the run: two people in one session hold it up independently.
+  "ui.scoreboard": "flag",
   // THE ROAD. The drive minigame is its own surface with its own dials, and it
   // is content for exactly the reason the fight's HUD is: an interlude that
   // looked like a different program is precisely what an interlude must not do,
@@ -218,6 +223,7 @@ export const HUD_WIDGETS = new Set([
   "weaponSlot",
   "companionRail",
   "partyFrames",
+  "scoreboard",
   "tradeAsks",
   "minimap",
   "autopilot",

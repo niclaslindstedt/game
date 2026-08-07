@@ -250,6 +250,25 @@ export type Player = {
   xp: number;
   /** XP still needed to reach the next level. */
   xpToNext: number;
+  /**
+   * FOES THIS HERO FELLED THIS RUN — the frag count the party scoreboard
+   * ranks on.
+   *
+   * Distinct from `GameStats.kills`, which is the RUN's total: the run tally
+   * is what the menace meter and the score board read, and a party of four
+   * splitting one number between them tells nobody who is carrying the fight.
+   * Booked in `killEnemy` against the hero whose killing blow it was — never
+   * on a COMPANION's, whose kill earns the recruit its own XP and would
+   * otherwise land on seat 0 by way of the attacker fallback.
+   *
+   * PUBLIC, deliberately: a frag count is the one number a scoreboard exists
+   * to compare, so it is not on `PRIVATE_PLAYER_FIELDS` and replicates to
+   * every seat like the hero's level and health do.
+   *
+   * The RUN's, not the character's: it starts at zero on every level exactly
+   * as `GameStats.kills` does, and never travels in a loadout.
+   */
+  kills: number;
   /** Stat points awarded but not yet spent (spent via `allocateStat`). A ding
    * BANKS them here rather than freezing the run — the chooser is a
    * non-blocking {@link PlayerScreen} opened on demand; the HUD

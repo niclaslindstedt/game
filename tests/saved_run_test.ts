@@ -379,6 +379,11 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "hurtFlashMs",
       "inventory",
       "itemSpells",
+      // The hero's OWN frag count, for the party scoreboard — arithmetic on
+      // every kill, so `loadSavedRun` defaults it to 0 rather than paying a
+      // SAVE_VERSION bump that would bin every parked run over a number that
+      // starts at zero anyway (the `steer` precedent).
+      "kills",
       "knockMs",
       "knockVel",
       "knockoutMs",

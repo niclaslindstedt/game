@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE SCOREBOARD — who is in this session, ranked by frags. QuakeWorld's TAB
+# board: a portrait, a name, a level, a kill count, how long they have been
+# here and their ping, one row per player, in the game's own pixel font.
+#
+# A WIDGET because the row count is the session's and every row leads with a
+# paper-doll bust composited per cast — the same two reasons the party frames
+# are one. What this file owns is the rest: that the board exists, where it
+# sits (the `scores` region, centred over the field) and what raises it.
+#
+# Empty offline and for a session of one, so it costs a solo run nothing.
+region: scores
+order: 0
+kind: widget
+widget: scoreboard

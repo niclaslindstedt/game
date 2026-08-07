@@ -4678,6 +4678,7 @@
     "hud",
     "left",
     "portrait",
+    "scores",
     "status",
     "top",
     "vitals"
@@ -4739,6 +4740,7 @@
     "hud.xpToNext": "number",
     "ui.autopilot": "flag",
     "ui.keyHints": "flag",
+    "ui.scoreboard": "flag",
     "ui.swipeBars": "flag",
     "ui.weaponMenuOpen": "flag",
     "ui.wide": "flag",
@@ -4785,6 +4787,7 @@
     "pickupFeed",
     "powerupDock",
     "questTracker",
+    "scoreboard",
     "swipeDock",
     "tradeAsks",
     "voiceCards",

@@ -99,6 +99,19 @@ regions:
     order: 1
     wrap: none
 
+  # THE SCOREBOARD, held up over the middle of the field — QuakeWorld's TAB
+  # board. Its own top-level region rather than a corner of `hud`, for two
+  # reasons: it is centred on the whole screen instead of hanging off a rail,
+  # and it is gated on the player HOLDING it up rather than on the field being
+  # live, so it stays readable through a level-up, a bag or a pause.
+  #
+  # Tap-transparent (`.hud-scores`): a board that appears under a held key must
+  # never eat the steering thumb underneath it.
+  scores:
+    order: 2
+    class: hud-scores
+    visible: ui.scoreboard
+
   # ---------------------------------------------------------------------------
   # THE ROAD — the drive minigame's dashboard, its own surface.
   #

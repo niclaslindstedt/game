@@ -29,7 +29,8 @@ export type BindableAction =
   | "stamina"
   | "repair"
   | "riftSeam"
-  | "pushToTalk";
+  | "pushToTalk"
+  | "showScores";
 
 /** The live control scheme: one physical binding code per action. An empty
  * string means the action is unbound (a rebind cleared it off a key that got
@@ -81,6 +82,15 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   // `actionForCode`, because a talk key has to work while a screen is up: a
   // player in their bag saying "wait, don't go in yet" is the whole point.
   pushToTalk: "KeyT",
+  // SHOW SCORES. Tab, which is where it has been since QuakeWorld, and HELD
+  // like the walk modifier rather than pressed — the board is something you
+  // glance at mid-fight and let go of, and a toggle is a board somebody leaves
+  // up over the horde. Absent from DISCRETE_ACTIONS below for that reason.
+  //
+  // Tab's own default is to move focus, so the hold cancels it — which costs
+  // nothing here (the run has no focus ring to walk) and would otherwise send
+  // the browser hunting through the page furniture behind the canvas.
+  showScores: "Tab",
 };
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
@@ -159,6 +169,11 @@ export const KEYBIND_ROWS: {
     action: "pushToTalk",
     label: "PUSH TO TALK",
     blurb: "HOLD TO SPEAK TO YOUR PARTY - SETTINGS - VOICE CHAT",
+  },
+  {
+    action: "showScores",
+    label: "SHOW SCORES",
+    blurb: "HOLD TO SEE WHO IS PLAYING - PORTRAIT, LEVEL, KILLS, TIME, PING",
   },
 ];
 

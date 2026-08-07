@@ -484,6 +484,12 @@ export function GameScreen({
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
   // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  // THE SCOREBOARD IS BEING HELD UP (the SHOW SCORES key, Tab by default). Held
+  // rather than toggled — QuakeWorld's `+showscores` — so this is set on both
+  // key edges and cleared on a lost focus (controls.ts). Read by the HUD as
+  // `ui.scoreboard`; the board itself is `content/hud/elements/scoreboard.yaml`
+  // and draws nothing outside a session of two or more.
+  const [showScores, setShowScores] = useState(false);
   // WHO OPENED THE LEVEL-UP CHOOSER: true while the one on screen came from
   // the player's own press on the HUD's points pip rather than from the ding
   // raising it (solo — see `openLevelupAfterDing`). Only the reveal lockout
@@ -952,6 +958,7 @@ export function GameScreen({
       cutsceneRevealRef,
       weaponMenuOpenRef,
       setWeaponMenuOpen,
+      setShowScores,
       setCharTab,
       pause,
       resume: resumeRun,
@@ -1613,6 +1620,7 @@ export function GameScreen({
             swipeBars,
             wide,
             autopilot: state.autopilot.active,
+            scoreboard: showScores,
           },
           values: {
             ...voiceBindings(
@@ -1632,6 +1640,7 @@ export function GameScreen({
               swipeBars,
               wide,
               autopilot: state.autopilot.active,
+              scoreboard: showScores,
             }),
           },
           refs: {
@@ -1712,6 +1721,10 @@ export function GameScreen({
           seatName: (seat) =>
             sessionLink?.roster.find((entry) => entry.seat === seat)?.name ??
             null,
+          // THE SESSION ITSELF, for the `scoreboard` widget — the roster is the
+          // only thing that can say who is here, what they are called and how
+          // long they have been. Null for every offline run.
+          session: sessionLink,
           // VOICE CHAT for this session, read by the `voiceCards` widget. Null
           // for every local run and every build without the capability.
           voice: voiceLink,

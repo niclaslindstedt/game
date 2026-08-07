@@ -140,7 +140,9 @@ export function RunPausedOverlay({
             <SessionPanel
               font={font}
               link={sessionLink}
-              mySeat={localSeat()}
+              state={state}
+              sprites={sprites}
+              mySeat={sessionLink.spectating ? null : localSeat()}
               // ASK FOR A TRADE, from the roster row. The press has to leave
               // the pause screen first — `requestTrade` refuses a hero with
               // any other screen up, the same "be standing on the field to

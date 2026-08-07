@@ -1874,6 +1874,9 @@ export function createHero(
     level: 1,
     xp: 0,
     xpToNext: xpToLevelUp(1, difficulty),
+    // This hero's own frag count, for the party scoreboard. The RUN's, like
+    // `GameStats.kills` beside it — a level starts everybody at nothing.
+    kills: 0,
     pendingStatPoints: 0,
     // The talent-picker queue — reconciled from the hero's stats/ranks after
     // the loadout applies (a fresh hero has none). `screen` and

@@ -1027,6 +1027,14 @@ export function killEnemy(
   // the hero's bar.
   if (opts?.companionId !== undefined) {
     creditCompanionKill(state, opts.companionId, def, enemy);
+  } else if (attacker) {
+    // …and a HERO's blow is booked to that hero, beside the run's own tally.
+    // It is the party scoreboard's whole content: `state.stats.kills` is one
+    // number four people share, and the board exists to say who earned it.
+    // Guarded on `companionId` rather than added to `creditCompanionKill`'s
+    // other branch, because a companion's blow names no attacker and the
+    // fallback above would quietly credit seat 0 for every recruit's kill.
+    attacker.kills++;
   }
 
   state.stats.kills++;
