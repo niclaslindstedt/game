@@ -156,6 +156,11 @@ export type ModBundle = {
   /** The mod's own scores, by track id — already cooked into the shape the
    * chiptune player takes, since the shell compiled them. */
   music: Record<string, unknown>;
+  /** …and the RECORDED ones: `{ id, data }` with `data` base64. A separate
+   * field rather than a variant inside `music` because they are played by a
+   * different player — an `<audio>` element rather than the sequencer, so a
+   * three-minute score streams instead of sitting in memory as decoded PCM. */
+  musicSamples?: { id: string; data: string }[];
   /** THE STORY. `cutscenes` arrives with its per-difficulty `variants:` already
    * expanded into `<id>_<difficulty>` scenes, so what the page registers is
    * exactly what `cutsceneVariant` looks up; `capRotation` is the cap-farm

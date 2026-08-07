@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_flag_planted
+description: >-
+  A claim staked in the floor: a hard bandpass thunk of the pole going in,
+  then a held square note ringing out over it. Ceremonial — the boss is
+  making a statement, and the ring is the statement.
+on:
+  type: bossFlagPlanted
+spatial: true
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 800
+  - call: tone
+    type: square
+    from: 330
+    durationMs: 420
+    volume: 0.035
+    delayMs: 70
+    attackMs: 20
+    detuneCents: 10
+    echo: 0.4

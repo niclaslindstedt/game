@@ -42,6 +42,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -50,6 +51,7 @@ import { parse } from "yaml";
 
 import { buildMod } from "./build.mjs";
 import { readCatalog } from "./catalog-read.mjs";
+import { sampleStem } from "./layout.mjs";
 import { ModPackageError, packageMod } from "./package.mjs";
 import { README_TODO, validateMod } from "./validate.mjs";
 
@@ -73,11 +75,26 @@ const isText = (file) => TEXT_EXTS.has(path.extname(file).toLowerCase());
 
 const argv = process.argv.slice(2);
 const command = argv[0];
-const positional = argv.slice(1).filter((a) => !a.startsWith("--"));
 const flag = (name) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : undefined;
 };
+/**
+ * The bare arguments — everything that is neither a `--flag` nor THE VALUE OF
+ * ONE.
+ *
+ * That second half is the part worth spelling out: dropping only the
+ * `--`-prefixed words leaves a flag's value sitting in the positional list, so
+ * `sounds --play my-mod` read `my-mod` as the search pattern and matched
+ * nothing. Which flags take a value is not knowable from the strings alone, so
+ * the rule is positional: an argument immediately after a flag belongs to it.
+ * (Every flag this CLI has does take a value.)
+ */
+const positional = argv
+  .slice(1)
+  .filter(
+    (arg, at) => !arg.startsWith("--") && !argv[at]?.startsWith("--"),
+  );
 
 const USAGE = `usage:
   node mod/tools/cli.mjs new <name> [--in <dir>] [--title "MY MOD"]
@@ -102,8 +119,13 @@ const USAGE = `usage:
       Search the ids a mod may reference.
 
   node mod/tools/cli.mjs sounds [pattern] [--limit <n>]
-      Every sound a recording can replace: the id to name your .wav or .mp3
+      Every sound a recording can replace: the id to name your audio file
       after, what fires it, and what it is meant to sound like.
+
+  node mod/tools/cli.mjs sounds [pattern] --play <mod-dir>
+      AUDITION your own recordings instead — plays every file in
+      <mod-dir>/sounds/ whose name matches, back to back, so you can hear a
+      variant set the way a player will. Needs ffplay, mpv, afplay or paplay.
 
   node mod/tools/cli.mjs where
       Print the folder to drop a mod in so the game picks it up.
@@ -537,6 +559,10 @@ function listSounds() {
   const pattern = positional[0]?.toLowerCase() ?? "";
   const limit = Number(flag("limit") ?? 200);
 
+  // `--play <mod-dir>` auditions YOUR recordings rather than listing ours.
+  const playIn = flag("play");
+  if (playIn !== undefined) return auditionSounds(playIn, pattern);
+
   const hits = Object.entries(index).filter(
     ([id, entry]) =>
       id.toLowerCase().includes(pattern) ||
@@ -556,8 +582,11 @@ function listSounds() {
     "PLAYED BY".length,
   );
   console.log(
-    `\nDrop sounds/<id>.wav or sounds/<id>.mp3 into your mod and it replaces\n` +
-      `that sound everywhere the game plays it. The id IS the routing.\n`,
+    `\nDrop sounds/<id>.{wav,mp3,ogg,opus,flac} into your mod and it replaces\n` +
+      `that sound everywhere the game plays it. The id IS the routing.\n` +
+      `Add <id>.1.wav, <id>.2.wav … for takes it cycles between, so a sound\n` +
+      `heard hundreds of times a run is not one waveform hundreds of times.\n` +
+      `Hear your own with:  cli.mjs sounds [pattern] --play <mod-dir>\n`,
   );
   console.log(
     `  ${"ID".padEnd(idWidth)}  ${"PLAYED BY".padEnd(fireWidth)}  WHAT IT IS`,
@@ -573,13 +602,94 @@ function listSounds() {
   console.log(`\n${Math.min(hits.length, limit)} shown of ${hits.length}.`);
 }
 
-/** An `on:` block as one column: the event, plus whatever narrows it. */
+/**
+ * AUDITION a mod's own recordings, without launching the game.
+ *
+ * The slowest part of doing sound for a mod was the loop: to hear a file you
+ * had shipped, you had to start the game, begin a run, and provoke the event.
+ * A recording needs none of that — it is already audio, so the machine's own
+ * player can play it. (The SHIPPED sounds are the other case and deliberately
+ * not covered here: they are oscillator parameters, and a renderer written in
+ * this file would be a second synth that disagrees with the real one. Those are
+ * auditioned in the game, which is where they exist.)
+ *
+ * Plays every recording whose name matches `pattern`, in order, so
+ * `--play . kill` walks a pack's takedowns back to back — which is how the
+ * repetition a variant set exists to fix is actually noticed.
+ */
+function auditionSounds(modDir, pattern) {
+  const dir = path.join(modDir === "" ? "." : modDir, "sounds");
+  if (!existsSync(dir)) {
+    console.error(`no sounds/ folder in ${modDir || "."} — nothing to play.`);
+    process.exit(1);
+  }
+  const files = readdirSync(dir)
+    .filter((f) => sampleStem(f) !== null)
+    .filter((f) => f.toLowerCase().includes(pattern))
+    .sort();
+  if (files.length === 0) {
+    console.log(
+      pattern
+        ? `no recording in ${dir} matches "${pattern}".`
+        : `no recordings in ${dir} yet.`,
+    );
+    return;
+  }
+
+  const player = findPlayer();
+  if (!player) {
+    console.error(
+      "no audio player found. Install one of: ffplay (ffmpeg), mpv, afplay " +
+        "(macOS), paplay or aplay (Linux).",
+    );
+    process.exit(1);
+  }
+
+  console.log(`\nPlaying ${files.length} recording(s) with ${player.cmd}:\n`);
+  for (const file of files) {
+    console.log(`  ${file}`);
+    const res = spawnSync(player.cmd, [...player.args, path.join(dir, file)], {
+      stdio: "ignore",
+    });
+    if (res.status !== 0) {
+      console.error(`    ✗ ${player.cmd} could not play it`);
+    }
+  }
+  console.log("");
+}
+
+/** The first audio player on this machine that can play a file and exit. */
+function findPlayer() {
+  const candidates = [
+    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet"] },
+    { cmd: "mpv", args: ["--no-video", "--really-quiet"] },
+    { cmd: "afplay", args: [] },
+    { cmd: "paplay", args: [] },
+    { cmd: "aplay", args: ["-q"] },
+  ];
+  for (const player of candidates) {
+    const probe = spawnSync(
+      process.platform === "win32" ? "where" : "which",
+      [player.cmd],
+      { stdio: "ignore" },
+    );
+    if (probe.status === 0) return player;
+  }
+  return null;
+}
+
+/** An `on:` block as one column: what plays it, plus whatever narrows it.
+ *
+ * Two shapes, because there are two kinds of moment. `type:` is an ENGINE
+ * event; `cue:` is one the app raises for something the simulation never
+ * reported (a footfall) — see pwa/src/game/sfx/cues.ts. */
 function describeOn(on) {
   if (!on) return "(by name)";
+  const head = on.cue !== undefined ? `cue ${on.cue}` : on.type;
   const narrow = Object.entries(on)
-    .filter(([key]) => key !== "type")
+    .filter(([key]) => key !== "type" && key !== "cue")
     .map(([key, value]) => `${key}=${value}`);
-  return narrow.length > 0 ? `${on.type} ${narrow.join(" ")}` : on.type;
+  return narrow.length > 0 ? `${head} ${narrow.join(" ")}` : head;
 }
 
 // ---------------------------------------------------------------------------

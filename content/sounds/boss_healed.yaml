@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_healed
+description: >-
+  The health bar going the wrong way: a rising sine swell with a sour detuned
+  saw under it. Consonant on top and sour underneath on purpose — it is a
+  heal, and it is bad news, and the sound should carry both.
+on:
+  type: bossHealed
+spatial: true
+voices:
+  - call: tone
+    type: sine
+    from: 440
+    to: 660
+    durationMs: 400
+    volume: 0.032
+    attackMs: 60
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 110
+    to: 165
+    durationMs: 420
+    volume: 0.022
+    detuneCents: 16

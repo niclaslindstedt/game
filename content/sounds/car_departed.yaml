@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: car_departed
+description: >-
+  The car pulling away without you: a lowpass engine note falling and thinning
+  out, with the road hiss going with it. Everything in it recedes, which is
+  the whole message.
+on:
+  type: carDeparted
+voices:
+  - call: tone
+    type: triangle
+    from: 140
+    to: 70
+    durationMs: 700
+    volume: 0.035
+    detuneCents: 12
+  - call: noise
+    durationMs: 620
+    volume: 0.02
+    delayMs: 40
+    filter:
+      type: lowpass
+      frequency: 800

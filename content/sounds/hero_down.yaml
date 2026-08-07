@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: hero_down
+description: >-
+  A party member going down. A heavy detuned saw collapsing with a lowpass
+  body under it, then a long hollow echo tail — the tail is what separates it
+  from the player's own death sting: this is somebody ELSE's, heard across the
+  room, and it should hang in the mix while the survivors decide what to do.
+on:
+  type: heroDown
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 220
+    to: 55
+    durationMs: 420
+    volume: 0.055
+    detuneCents: 12
+    echo: 0.35
+  - call: noise
+    durationMs: 240
+    volume: 0.035
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: tone
+    type: sine
+    from: 165
+    durationMs: 500
+    volume: 0.018
+    delayMs: 220
+    attackMs: 80
+    echo: 0.45

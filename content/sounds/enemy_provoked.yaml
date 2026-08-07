@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_provoked
+description: >-
+  A neutral turning hostile: a short, sour two-note fall. Quiet — this fires
+  whenever the hero makes an enemy of somebody who was not one, and it is a
+  notification rather than a threat.
+on:
+  type: enemyProvoked
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 400
+    to: 300
+    durationMs: 90
+    volume: 0.03
+    detuneCents: 6

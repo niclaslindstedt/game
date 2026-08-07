@@ -318,7 +318,18 @@ never by editing the fixture.
   TypeScript scores the moment before the lift, so it is a PROOF that nothing
   changed, not merely a baseline; accept an intentional change with `node
 scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
-  sounds' equivalent, replaying the old imperative bank against the catalog.
+  sounds' equivalent, replaying the old imperative bank against the catalog —
+  and `tests/catalog_routing_test.ts` is the half it cannot cover: that a
+  compiled sound is REACHED. The route key
+  (`type|weaponClass|crit|kind|tier`) is built in four places — `routeKey` in
+  the app, `matchKey` in the generator, `soundMatchKey` in the mod compiler,
+  `MATCHABLE` in the schema — and a sixth field on any one of them makes every
+  lookup miss with no error, because the imperative fallbacks were recorded FROM
+  the catalog and keep playing the identical sound. Only a MOD's `on:`-routed
+  replacement goes quiet, which is why the routing test asserts THROUGH the
+  runtime rather than restating its formula. The generator also emits a second
+  table, `GENERATED_CUE_KEYS` (`cue|surface`), for the moments the app raises
+  rather than the engine — see `docs/modding.md` → a CUE.
   **A level's `music:` is cross-checked** against `content/music/` by the level
   schema — an unknown id used to be silent, the player falling back to the
   default theme so the venue quietly played the moon's music.

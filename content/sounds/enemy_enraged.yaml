@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_enraged
+description: >-
+  Something just got worse: the enrage threshold crossed. A detuned sawtooth
+  climbing and holding, with a slow vibrato on it — the held note is the
+  point, since this is a state change rather than a hit, and the player should
+  feel the fight tilt rather than hear an impact.
+on:
+  type: enemyEnraged
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 140
+    to: 210
+    durationMs: 420
+    volume: 0.05
+    attackMs: 60
+    detuneCents: 14
+    echo: 0.2
+    vibrato:
+      rateHz: 5.5
+      depthCents: 30
+      delayMs: 160

@@ -69,7 +69,8 @@ shipped file is a worked example of its kind.
 | What the difficulty rungs are CALLED           | `difficulties.yaml`            | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                     |
 | A sound, synthesized from voices               | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
-| A sound, RECORDED (a real audio file)          | `sounds/<id>.wav` or `.mp3`    | [`FORMAT.md`](FORMAT.md#soundsidwav--soundsidmp3--a-recording)  |
+| A sound, RECORDED (a real audio file)          | `sounds/<id>.{wav,mp3,ogg,opus,flac}` (`<id>.1.wav`, `<id>.2.wav` … for takes it cycles) | [`FORMAT.md`](FORMAT.md#soundsidext--a-recording) |
+| A whole SCORE, recorded                        | `music/<id>.opus`              | [`FORMAT.md`](FORMAT.md#musicidext--a-recorded-score)           |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
 | A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
 | A passive TALENT the hero ranks up             | `talents.yaml`                 | [`../content/talents.yaml`](../content/talents.yaml)            |
@@ -109,7 +110,11 @@ a mod fails to compile.**
 `sounds` is the same question for AUDIO, and the answer a recording needs: it
 prints every sound the game ships with the event that fires it and a line on
 what it is meant to feel like, because naming a file `enemy_killed.wav` is the
-entire act of replacing that sound — get the name wrong and the mod installs
+entire act of replacing that sound. `--play <mod-dir>` auditions YOUR OWN
+recordings back to back without launching the game, which is the fastest way to
+hear the one trap here: a recording repeats EXACTLY and the synthesized sound it
+replaced did not, so a frequent sound wants either `<id>.1.wav`/`<id>.2.wav`
+takes or a `pitchJitter: 0.05`. Get the name wrong and the mod installs
 perfectly and is silent.
 
 ## 4. Check it
@@ -138,9 +143,9 @@ means the game will accept it.
 | `belongs to no set`                                             | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
 | `is not one of the game's rungs`                                | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
 | `fx.element "x" is not one of…`                                 | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
-| `not a WAV or an MP3`                                           | A file in `sounds/` is not audio, or is not one of the two containers every shell decodes. Read from the bytes, not the name.  |
+| `the first bytes are not audio the game can play`               | A file in `sounds/` is not audio, or is not one of the five containers the desktop shell decodes. Read from the bytes, not the name. |
 | `the contents are WAV, not MP3`                                 | A recording's extension disagrees with what is in it. Rename it as the message says.                                           |
-| `carries both a recording and `voices``                         | One sound, one source. Drop the `voices:`, or drop the file.                                                                   |
+| `carries both a recording named after it and `voices``          | One sound, one source. Drop the `voices:` — or rename the file and reach it from a `call: sample` voice, which is how you LAYER a recording rather than swap one. |
 | `is not a sound the game has, and nothing in this mod plays it` | A WARNING, and almost always a typo in a recording's name — `cli.mjs sounds` has the list.                                     |
 
 ### 4b. Audit the folder — `validate`

@@ -31,6 +31,7 @@ function countingSynth(): { synth: Synth; calls: () => number } {
       },
       sample() {
         count++;
+        return null;
       },
       decode: () => Promise.resolve(null),
     },

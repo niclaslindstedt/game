@@ -176,12 +176,14 @@ describe("validateMod", () => {
   });
 
   it("refuses an audio format no shell decodes", () => {
+    // `.m4a` rather than `.flac`: recordings only reach the game through the
+    // Steam shell, so the decoder is always Chromium, and the accepted list is
+    // what THAT decodes — wav, mp3, ogg, opus and flac. An AAC-in-MP4 is the
+    // format an author actually reaches for that it will not take.
     const dir = copyOfExample((at) =>
-      writeFileSync(path.join(at, "sounds", "crate_broken.flac"), WAV),
+      writeFileSync(path.join(at, "sounds", "crate_broken.m4a"), WAV),
     );
-    expect(complains(dir, /holds \.yaml or \.wav or \.mp3 files only/)).toBe(
-      true,
-    );
+    expect(complains(dir, /files only/)).toBe(true);
   });
 
   it("carries a recording into the package byte for byte", () => {

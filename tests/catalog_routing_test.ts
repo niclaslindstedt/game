@@ -119,6 +119,58 @@ describe("what the routing key is made of", () => {
     }
   });
 
+  it("lets a sound that names only a type answer every variant of it", () => {
+    // The specificity ladder. Without it an `on:` naming only a type builds
+    // `enemyTelegraph||||` while the event builds `enemyTelegraph|||charge|`,
+    // and the sound never plays — with no error, because both halves are
+    // individually right. Authors reach for the general case first.
+    setSoundCatalog(
+      { ...SHIPPED_SOUNDS, any_tell: { id: "any_tell", voices: SENTINEL } },
+      { ...SHIPPED_SOUND_KEYS, "enemyTelegraph||||": "any_tell" },
+    );
+    try {
+      const { calls, synth } = recorder();
+      playEventSounds(synth, [
+        { type: "enemyTelegraph", kind: "charge", pos: { x: 0, y: 0 } } as never,
+      ]);
+      expect(calls).toEqual(SENTINEL);
+    } finally {
+      setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+    }
+  });
+
+  it("prefers the exact shape over the general one", () => {
+    const EXACT: typeof SENTINEL = [
+      { call: "tone", type: "square", from: 111, durationMs: 3 },
+    ];
+    setSoundCatalog(
+      {
+        ...SHIPPED_SOUNDS,
+        any_tell: { id: "any_tell", voices: SENTINEL },
+        charge_tell: { id: "charge_tell", voices: EXACT },
+      },
+      {
+        ...SHIPPED_SOUND_KEYS,
+        "enemyTelegraph||||": "any_tell",
+        "enemyTelegraph|||charge|": "charge_tell",
+      },
+    );
+    try {
+      const { calls, synth } = recorder();
+      playEventSounds(synth, [
+        { type: "enemyTelegraph", kind: "charge", pos: { x: 0, y: 0 } } as never,
+      ]);
+      expect(calls).toEqual(EXACT);
+      const other = recorder();
+      playEventSounds(other.synth, [
+        { type: "enemyTelegraph", kind: "slam", pos: { x: 0, y: 0 } } as never,
+      ]);
+      expect(other.calls).toEqual(SENTINEL);
+    } finally {
+      setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+    }
+  });
+
   it("still plays two sounds when one step throws two different sfx", () => {
     // The dedupe is per (route + sfx), so a step in which two powers each
     // throw `abilityStarted` with their own sound is two sounds, not one.

@@ -51,7 +51,13 @@ export const TREES = {
   // of oscillators. The YAML stays optional and does the same job it always
   // did — routing a NEW sound to an event, or trimming a recording's level.
   sounds: { depth: 1, exts: ["yaml", ...SAMPLE_EXTS], what: "a sound" },
-  music: { depth: 1, what: "a score" },
+  // …and the same for MUSIC, for a reason that is stronger there than for the
+  // effects: a conversion that has commissioned a score has a finished mix,
+  // and asking its author to re-enter it as sixteenth-note tokens is asking
+  // them to throw the work away. A recorded track plays through an `<audio>`
+  // element rather than the sequencer, so it streams instead of sitting in
+  // memory as decoded PCM (see pwa/src/game/music/recorded.ts).
+  music: { depth: 1, exts: ["yaml", ...SAMPLE_EXTS], what: "a score" },
   cutscenes: { depth: 1, what: "a scene" },
   quests: { depth: 1, what: "an errand" },
   // The one tree that is not YAML: a RULE is code, and authoring code as a

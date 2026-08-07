@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_lockdown_lifted
+description: >-
+  The shutters going back up: the lockdown's slam run in reverse — a rising
+  mechanical slide with the pressure releasing behind it. Relief, and short:
+  the fight is still on.
+on:
+  type: bossLockdownLifted
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 140
+    to: 380
+    durationMs: 320
+    volume: 0.04
+    detuneCents: 8
+    echo: 0.25
+  - call: noise
+    durationMs: 220
+    volume: 0.03
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 2600

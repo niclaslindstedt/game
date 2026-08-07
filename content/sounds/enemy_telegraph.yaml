@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_telegraph
+description: >-
+  THE TELL — something big is about to commit. A rising detuned sawtooth
+  wind-up under a thin bandpass hiss, so it reads as a charge building rather
+  than as a hit landing. One sound for every telegraph kind on purpose: the
+  player does not need to know WHICH move is coming from the audio (the
+  telegraph is drawn), they need to know that one IS. Loud enough to cut
+  through a fight, short enough to leave room for the move itself.
+on:
+  type: enemyTelegraph
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 90
+    to: 260
+    durationMs: 260
+    volume: 0.05
+    attackMs: 40
+    detuneCents: 10
+  - call: noise
+    durationMs: 220
+    volume: 0.018
+    filter:
+      type: bandpass
+      frequency: 1600

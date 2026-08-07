@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_identified
+description: >-
+  The scroll doing its work: a rising sine arpeggio with a glass octave over
+  the top and a long echo — the reveal is a small ceremony, and the card that
+  follows is the payoff. Deliberately tier-agnostic: the LOOT SHINE already
+  says how good the piece is, and doubling that here would make identifying a
+  blue sound like identifying an orange.
+on:
+  type: itemIdentified
+voices:
+  - call: tone
+    type: sine
+    from: 523
+    durationMs: 90
+    volume: 0.03
+    echo: 0.25
+  - call: tone
+    type: sine
+    from: 659
+    durationMs: 90
+    volume: 0.03
+    delayMs: 80
+    echo: 0.25
+  - call: tone
+    type: sine
+    from: 880
+    durationMs: 220
+    volume: 0.032
+    delayMs: 160
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 1760
+    durationMs: 160
+    volume: 0.014
+    delayMs: 180
+    echo: 0.35

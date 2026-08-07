@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: lair_opened
+description: >-
+  Something's home opening up: a deep lowpass groan with a slow detuned saw
+  under it and a heavy echo send. Low, long, and unfriendly — this is an
+  invitation the player should feel slightly bad about accepting.
+on:
+  type: lairOpened
+spatial: true
+voices:
+  - call: noise
+    durationMs: 420
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 260
+  - call: tone
+    type: sawtooth
+    from: 70
+    to: 44
+    durationMs: 520
+    volume: 0.04
+    attackMs: 90
+    detuneCents: 14
+    echo: 0.4

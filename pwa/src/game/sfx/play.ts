@@ -90,10 +90,9 @@ export function playDef(
   let heard = 0;
   for (const voice of def.voices) {
     if (voice.call === "sample") {
-      const { call: _call, ...options } = voice;
       const claimed = playSample(
         synth,
-        options,
+        voice,
         at,
         def.loop ? { key: def.id, fadeMs: def.fadeMs ?? 0 } : undefined,
       );

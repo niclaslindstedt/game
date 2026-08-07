@@ -12,10 +12,29 @@ const raw = createSynth();
 let sfxVolume = 1;
 let musicVolume = 1;
 
+/** Told when the music volume moves. The chiptune player reads its level per
+ * voice through `musicSynth`, but a MOD's recorded score plays through an
+ * `<audio>` element that never touches this context — so it has to be pushed
+ * the new level rather than reading it at the next note. */
+const musicListeners = new Set<(level: number) => void>();
+
+/** Watch the music volume. Returns the unsubscribe. */
+export function onMusicVolume(fn: (level: number) => void): () => void {
+  musicListeners.add(fn);
+  fn(musicVolume);
+  return () => musicListeners.delete(fn);
+}
+
+/** The music volume right now, for a player that cannot wait to be told. */
+export function musicLevel(): number {
+  return musicVolume;
+}
+
 /** Set the 0–1 master volumes (called by settings.ts). */
 export function setAudioVolumes(v: { music: number; sfx: number }): void {
   musicVolume = clamp01(v.music);
   sfxVolume = clamp01(v.sfx);
+  for (const fn of musicListeners) fn(musicVolume);
 }
 
 /** A synth view whose every sound is scaled by a live master volume.

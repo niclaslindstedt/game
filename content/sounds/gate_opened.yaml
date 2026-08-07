@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: gate_opened
+description: >-
+  A way onward unlocking: a low mechanical release and a long square slide
+  upward over it. Bigger and slower than a door — a gate is the shape of the
+  level changing, not a room opening.
+on:
+  type: gateOpened
+spatial: true
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 520
+  - call: tone
+    type: square
+    from: 160
+    to: 420
+    durationMs: 420
+    volume: 0.04
+    delayMs: 80
+    detuneCents: 8
+    echo: 0.3

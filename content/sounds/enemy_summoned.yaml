@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_summoned
+description: >-
+  Adds coming out of the ground: a lowpass earth-swell and a square figure
+  climbing over it. Rises rather than falls — things are ARRIVING — and keeps
+  a good echo send so it reads as a summoning rather than as a footstep.
+on:
+  type: enemySummoned
+spatial: true
+voices:
+  - call: noise
+    durationMs: 300
+    volume: 0.04
+    filter:
+      type: lowpass
+      frequency: 400
+  - call: tone
+    type: square
+    from: 180
+    to: 340
+    durationMs: 240
+    volume: 0.035
+    delayMs: 60
+    detuneCents: 8
+    echo: 0.28

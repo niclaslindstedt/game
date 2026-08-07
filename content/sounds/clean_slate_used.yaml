@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: clean_slate_used
+description: >-
+  A build wiped and handed back: a downward glass sweep, then a single clean
+  sine settling — the descent is the old build coming apart and the note is
+  the empty sheet. Big echo; this happens once in a very long while.
+on:
+  type: cleanSlateUsed
+voices:
+  - call: tone
+    type: sine
+    from: 1760
+    to: 440
+    durationMs: 420
+    volume: 0.03
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 340
+    volume: 0.032
+    delayMs: 380
+    attackMs: 60
+    echo: 0.4

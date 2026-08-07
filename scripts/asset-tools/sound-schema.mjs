@@ -320,12 +320,17 @@ function validateVoice(voice, where, refs, err, warnings, id) {
           `sounds/${voice.clip}.1.<ext> … for variants)`,
       );
     }
-    // Everything but `clip` and `delayMs` is a `sample:` block's field, so it
-    // is checked by exactly the same code and cannot drift from it.
-    const { call: _c, clip: _clip, delayMs, ...mix } = voice;
+    // Everything but `call`, `clip` and `delayMs` is a `sample:` block's
+    // field, so it is checked by exactly the same code and cannot drift.
+    const { delayMs } = voice;
     if (delayMs !== undefined && (typeof delayMs !== "number" || delayMs < 0)) {
       err(`${where}: delayMs must be a non-negative number`);
     }
+    const mix = Object.fromEntries(
+      Object.entries(voice).filter(
+        ([key]) => !["call", "clip", "delayMs"].includes(key),
+      ),
+    );
     validateSampleBlock(mix, err, where);
     for (const key of Object.keys(voice)) {
       if (SHARED.has(key) || SAMPLE_ONLY.has(key)) continue;

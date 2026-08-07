@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: elevator_locked
+description: >-
+  The call button refusing: a flat mechanical clunk with no travel after it.
+  What sells "locked" is the SILENCE where the motor should have started, so
+  the sound is deliberately over almost before it began.
+on:
+  type: elevatorLocked
+voices:
+  - call: noise
+    durationMs: 45
+    volume: 0.04
+    filter:
+      type: lowpass
+      frequency: 700
+  - call: tone
+    type: square
+    from: 200
+    durationMs: 55
+    volume: 0.024
+    delayMs: 30

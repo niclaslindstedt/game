@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: projectile_bounced
+description: >-
+  A shot coming off a wall instead of stopping: a thin, bright bandpass tick
+  with a short square ring. Very quiet — a ricochet is information about
+  geometry, and in a firefight it happens constantly.
+on:
+  type: projectileBounced
+spatial: true
+voices:
+  - call: noise
+    durationMs: 16
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 3200
+  - call: tone
+    type: square
+    from: 1400
+    to: 1900
+    durationMs: 40
+    volume: 0.014
+    echo: 0.15

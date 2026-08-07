@@ -54,7 +54,11 @@ import type { ChiptuneTrack } from "@ui/lib/chiptune.ts";
 
 import { synth } from "./audio.ts";
 import type { Sprites } from "./assets.ts";
-import { setModTracks } from "./music/index.ts";
+import {
+  setModTracks,
+  setRecordedTracks,
+  type RecordedTrack,
+} from "./music/index.ts";
 import {
   setCueCatalog,
   setSoundCatalog,
@@ -129,8 +133,10 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.quests,
     ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0) +
     // A mod whose whole contribution is a folder of recordings — the point of
-    // shipping real audio at all — adds nothing to any catalog above.
-    (bundle.samples?.length ?? 0);
+    // shipping real audio at all — adds nothing to any catalog above. Nor does
+    // one whose contribution is a recorded soundtrack.
+    (bundle.samples?.length ?? 0) +
+    (bundle.musicSamples?.length ?? 0);
   return adds === 0 ? "empty" : null;
 }
 
@@ -275,6 +281,9 @@ export async function applyMods(
   const scriptOwners = new Map<string, string[]>();
   const difficultyOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
+  // The RECORDED scores share the music clash ledger: to a player "this mod's
+  // theme" is one thing, and which player renders it is not their problem.
+  const recordedMusic = new Map<string, RecordedTrack>();
   const musicOwners = new Map<string, string[]>();
   const cutsceneOwners = new Map<string, string[]>();
   const thoughtOwners = new Map<string, string[]>();
@@ -381,7 +390,16 @@ export async function applyMods(
     Object.assign(cueKeys, bundle.cueKeys ?? {});
     for (const [id, track] of Object.entries(bundle.music ?? {})) {
       music[id] = track as ChiptuneTrack;
+      recordedMusic.delete(id); // an arrangement replacing an earlier mod's mix
       claim(musicOwners, id, bundle.id);
+    }
+    for (const track of bundle.musicSamples ?? []) {
+      recordedMusic.set(track.id, {
+        id: track.id,
+        bytes: base64ToBytes(track.data),
+      });
+      delete music[track.id]; // …and a mix replacing an earlier arrangement
+      claim(musicOwners, track.id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.cutscenes ?? {})) {
       cutscenes[id] = def;
@@ -429,6 +447,7 @@ export async function applyMods(
   // imports and stay exactly where they are, so a mod that replaces one does it
   // by claiming its id here rather than by anything being rebuilt.
   setModTracks(music);
+  setRecordedTracks([...recordedMusic.values()]);
   const defs: DefOverrides = {
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
@@ -531,6 +550,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);
   clearSamples();
   setModTracks({});
+  setRecordedTracks([]);
   setActiveMods([], []);
   setActiveDefs(null);
 }

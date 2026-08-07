@@ -307,15 +307,20 @@ describe("the worked example", () => {
     expect(soundWarnings(warnings)).toEqual([]);
     expect(bundle!.samples).toHaveLength(1);
     expect(bundle!.samples?.[0]?.id).toBe("enemy_killed");
-    expect(bundle!.samples?.[0]?.format).toBe("wav");
-    // The bytes travel base64'd and UNTOUCHED — the page hands them to the
-    // browser's decoder, so anything we re-encoded would be a lossy step in a
-    // pipeline that has none.
-    expect(Buffer.from(bundle!.samples?.[0]?.data ?? "", "base64")).toEqual(
-      Buffer.from(wav()),
-    );
-    // And it is NOT in `sounds`, which holds only what the synth can play.
-    expect(bundle!.sounds).toEqual({});
+    // One CLIP with one TAKE. The bytes travel base64'd and UNTOUCHED — the
+    // page hands them to the browser's decoder, so anything we re-encoded
+    // would be a lossy step in a pipeline that has none.
+    expect(bundle!.samples?.[0]?.takes).toHaveLength(1);
+    expect(
+      Buffer.from(bundle!.samples?.[0]?.takes?.[0] ?? "", "base64"),
+    ).toEqual(Buffer.from(wav()));
+    // …and the compiler wrote the SOUND that plays it: an ordinary def whose
+    // one voice names the clip. That is what makes a recording routable,
+    // mergeable and composable by exactly the code a synthesized sound uses.
+    expect(bundle!.sounds.enemy_killed).toEqual({
+      id: "enemy_killed",
+      voices: [{ call: "sample", clip: "enemy_killed" }],
+    });
   });
 
   it("counts a folder of recordings as a mod that adds something", () => {
@@ -361,16 +366,22 @@ describe("the worked example", () => {
     });
     const { bundle, errors } = buildMod(dir, catalog);
     expect(errors).toEqual([]);
-    expect(bundle!.samples?.[0]).toMatchObject({
+    expect(bundle!.samples?.[0]?.id).toBe("enemy_killed");
+    // The mixing rides the VOICE, not the clip: a clip is bytes, and how loud
+    // and where is a property of this use of it. (Which is what lets a second
+    // sound reach the same clip and place it differently.)
+    expect(bundle!.sounds.enemy_killed).toEqual({
       id: "enemy_killed",
-      volume: 0.6,
-      pan: -0.3,
-      echo: 0.2,
+      voices: [
+        {
+          call: "sample",
+          clip: "enemy_killed",
+          volume: 0.6,
+          pan: -0.3,
+          echo: 0.2,
+        },
+      ],
     });
-    // The YAML carried no voices, so nothing lands in the synth's catalog —
-    // a def with `voices: undefined` in there is a crash on the day a
-    // recording fails to decode and the player falls back to it.
-    expect(bundle!.sounds).toEqual({});
   });
 
   it("routes a recording for a brand-new sound through its own on: block", () => {
@@ -1107,7 +1118,9 @@ describe("what the compiler refuses", () => {
       "mod.yaml": MANIFEST,
       "sounds/enemy_killed.wav": Buffer.from("MZ this is an executable"),
     });
-    expect(buildMod(dir, catalog).errors.join()).toMatch(/not a WAV or an MP3/);
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /the first bytes are not audio the game can play/,
+    );
   });
 
   it("a recording whose contents disagree with its extension", () => {
@@ -1128,7 +1141,7 @@ describe("what the compiler refuses", () => {
       "sounds/enemy_killed.mp3": mp3(),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /already recorded by sounds\/enemy_killed\.mp3 — one sound, one file/,
+      /already recorded by sounds\/enemy_killed\.mp3 — one take, one file/,
     );
   });
 
@@ -1138,7 +1151,7 @@ describe("what the compiler refuses", () => {
       "sounds/enemy_killed.wav": wav(1_200_000),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /is over the 2\.0 MiB limit for one sound/,
+      /is over the 2\.0 MiB limit for one recording/,
     );
   });
 
@@ -1158,7 +1171,7 @@ describe("what the compiler refuses", () => {
       ].join("\n"),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /carries both a recording and `voices`/,
+      /carries both a recording named after it and `voices`/,
     );
   });
 
@@ -1191,7 +1204,7 @@ describe("what the compiler refuses", () => {
       ].join("\n"),
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /`sample.file` is not a field a recording takes/,
+      /`sample`\.file is not a field a recording takes/,
     );
   });
 

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: pickup_blocked
+description: >-
+  You may not have that: a short, flat, slightly sour square blip that does
+  not resolve. The refusal has to be instantly distinguishable from the
+  pickup it is refusing, so it is the same register and the OPPOSITE gesture —
+  the pickups all rise, and this one sits still.
+on:
+  type: pickupBlocked
+voices:
+  - call: tone
+    type: square
+    from: 300
+    durationMs: 70
+    volume: 0.028
+    detuneCents: 20

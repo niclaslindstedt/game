@@ -22,6 +22,16 @@ import {
 import { TITLE_TRACK, TRACK_LOADERS } from "../../generated/music/index.ts";
 import { musicSynth } from "../audio.ts";
 
+import {
+  isRecorded,
+  pauseRecorded,
+  playRecorded,
+  resumeRecorded,
+  stopRecorded,
+} from "./recorded.ts";
+
+export { setRecordedTracks, type RecordedTrack } from "./recorded.ts";
+
 /**
  * Themes already fetched this session, so a revisit never refetches — and the
  * only place a MOD's score can live, since it arrives as data with no module
@@ -74,6 +84,16 @@ function ensurePlayer(): ChiptunePlayer {
 function playTrack(id: string): void {
   if (current === id) return;
   current = id;
+  // A MOD'S RECORDED SCORE ANSWERS FIRST, and the sequencer is silenced when it
+  // does: the two are one player as far as the game is concerned, and a
+  // conversion whose theme is an .opus must not have a chiptune arrangement
+  // playing under it. (`playRecorded` is a no-op for a track it does not hold,
+  // so this is one branch rather than a lookup and a branch.)
+  if (playRecorded(id)) {
+    player?.stop();
+    return;
+  }
+  stopRecorded();
   const ready = modTracks[id] ?? trackCache.get(id);
   if (ready) {
     ensurePlayer().play(ready);
@@ -155,7 +175,7 @@ export function playLevelMusic(trackId?: string): void {
   const known =
     trackId !== undefined &&
     trackId !== TITLE_TRACK &&
-    (trackId in TRACK_LOADERS || trackId in modTracks);
+    (trackId in TRACK_LOADERS || trackId in modTracks || isRecorded(trackId));
   playTrack(known ? (trackId as string) : DEFAULT_LEVEL_TRACK);
 }
 
@@ -163,15 +183,18 @@ export function playLevelMusic(trackId?: string): void {
 export function stopMusic(): void {
   current = null;
   player?.stop();
+  stopRecorded();
 }
 
 /** Freeze the current theme in place (the pause screen) — keeps `current` so
  * a repeated request for the same track after resume stays a no-op. */
 export function pauseMusic(): void {
   player?.pause();
+  pauseRecorded();
 }
 
 /** Pick the frozen theme back up where `pauseMusic` left it. */
 export function resumeMusic(): void {
   player?.resume();
+  resumeRecorded();
 }

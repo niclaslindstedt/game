@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: pod_opened
+description: >-
+  A pod cracking: a pressurised hiss venting, then the shell letting go with a
+  bandpass clack. The hiss leads because that is the part that says SEALED —
+  the clack alone would just be a crate.
+on:
+  type: podOpened
+spatial: true
+voices:
+  - call: noise
+    durationMs: 240
+    volume: 0.04
+    filter:
+      type: highpass
+      frequency: 2200
+  - call: noise
+    durationMs: 50
+    volume: 0.045
+    delayMs: 150
+    filter:
+      type: bandpass
+      frequency: 900
+  - call: tone
+    type: square
+    from: 240
+    to: 180
+    durationMs: 120
+    volume: 0.028
+    delayMs: 170

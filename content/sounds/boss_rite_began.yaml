@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_rite_began
+description: >-
+  THE DEATH RITE opening. A long low swell with a detuned saw underneath and a
+  glassy fifth over the top, all on a heavy echo send — the biggest, slowest
+  sound the game makes. The boss is not fighting any more; something else is
+  starting, and the mix should make room for it.
+on:
+  type: bossRiteBegan
+voices:
+  - call: tone
+    type: sawtooth
+    from: 55
+    to: 82
+    durationMs: 1200
+    volume: 0.05
+    attackMs: 300
+    detuneCents: 18
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 330
+    durationMs: 900
+    volume: 0.022
+    delayMs: 300
+    attackMs: 250
+    echo: 0.5
+  - call: noise
+    durationMs: 900
+    volume: 0.016
+    delayMs: 200
+    filter:
+      type: lowpass
+      frequency: 300

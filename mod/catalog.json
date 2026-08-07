@@ -3145,17 +3145,40 @@
     "achievement_unlocked",
     "apparition_vanished",
     "armor_broke",
+    "asteroid_kill",
     "auto_equipped",
+    "bait_detonated",
+    "bait_dropped",
     "barrier_absorbed",
     "barrier_broke",
+    "boss_airstrike",
+    "boss_beam",
     "boss_defeated",
+    "boss_flag_planted",
     "boss_fled",
+    "boss_healed",
+    "boss_horde",
+    "boss_lockdown",
+    "boss_lockdown_lifted",
+    "boss_recompile",
+    "boss_rite_began",
+    "boss_rite_ended",
+    "boss_rite_exit_opened",
+    "boss_rite_struck",
+    "boss_rite_vanished",
+    "boss_volley",
     "cache_given",
+    "car_departed",
     "car_start",
     "car_stop",
+    "clean_slate_used",
+    "companion_dismissed",
     "companion_downed",
+    "companion_healed",
     "companion_joined",
+    "companion_leveled_up",
     "companion_revived",
+    "corpse_recovered",
     "crate_broken",
     "crate_hit",
     "defeat",
@@ -3174,22 +3197,42 @@
     "drive_part_shed",
     "drive_scrape_a",
     "drive_scrape_b",
+    "elevator_locked",
+    "elevator_ride",
+    "elite_cast",
     "enemy_dodge",
+    "enemy_enraged",
     "enemy_hit",
     "enemy_hit_crit",
     "enemy_killed",
     "enemy_killed_crit",
     "enemy_last_words",
     "enemy_miss",
+    "enemy_provoked",
     "enemy_shielded",
     "enemy_shot",
+    "enemy_slam",
+    "enemy_summoned",
+    "enemy_telegraph",
     "escort_arrived",
+    "escort_died",
     "escort_hurt",
+    "footstep",
+    "footstep_dust",
+    "footstep_gravel",
+    "footstep_metal",
+    "footstep_soft",
+    "footstep_stone",
+    "footstep_void",
     "front_door_closed",
     "front_door_opened",
     "garage_door",
+    "gate_entered",
+    "gate_opened",
+    "gear_repaired",
     "hay_ball_hit",
     "hellgate_opened",
+    "hero_down",
     "item_collected_ability",
     "item_collected_ammo",
     "item_collected_drink",
@@ -3205,6 +3248,7 @@
     "item_collected_medkit",
     "item_collected_repair",
     "item_collected_xp",
+    "item_identified",
     "item_landed_blade",
     "item_landed_cloth",
     "item_landed_coin",
@@ -3220,6 +3264,7 @@
     "item_landed_wand",
     "jump",
     "knockout_recovered",
+    "lair_opened",
     "land",
     "level_up",
     "lightning",
@@ -3231,6 +3276,7 @@
     "loot_shine_unique",
     "medkit_used",
     "menace_rose",
+    "merchant_discovered",
     "merchant_run_down",
     "mercy_drop",
     "meteor_fall",
@@ -3239,26 +3285,35 @@
     "pack_awoken",
     "pack_cleared",
     "parry",
+    "pickup_blocked",
     "player_death",
     "player_dodge",
     "player_hurt",
     "player_phased",
+    "pod_opened",
+    "projectile_bounced",
     "quest_accepted",
     "quest_completed",
     "quest_failed",
     "quest_giver_met",
+    "quest_piece_bought",
+    "quest_piece_sold",
     "quest_progress",
+    "quest_restocked",
     "quest_turned_in",
     "repair_kit_used",
+    "scorch_burn",
     "seismic_landing",
     "shot_magic",
     "shot_ranged",
     "shot_sawed_off",
     "singularity",
     "spare_offered",
+    "spawner_alarmed",
     "stamina_potion_used",
     "story_item_collected",
     "swing",
+    "talk_opened",
     "ui_back",
     "ui_blip",
     "ui_boom",
@@ -3272,6 +3327,7 @@
     "void_wave",
     "ward_held",
     "weapon_broke",
+    "weapon_dry",
     "well_death",
     "well_swallowed"
   ],
@@ -3306,11 +3362,29 @@
       },
       "what": "Something rigid giving way — a hard bandpassed crack, a ringing shard above it, then a sawtooth plunging two octaves as the piece falls off."
     },
+    "asteroid_kill": {
+      "on": {
+        "type": "asteroidKill"
+      },
+      "what": "The sky doing your job for you: the impact's boom with a wet crunch folded into it. Distinct from an ordinary takedown on purpose — nobody swung, and the player should be able to hear that the kill was not theirs."
+    },
     "auto_equipped": {
       "on": {
         "type": "autoEquipped"
       },
       "what": "The replacement clacking into the hand (mirrors the UI equip)."
+    },
+    "bait_detonated": {
+      "on": {
+        "type": "baitDetonated"
+      },
+      "what": "The trap paying off: a sharp bandpass crack, a lowpass thump under it, and debris sizzling out behind. Shorter and nastier than a nuke, and pitched up from a slam so the two never blur in a busy fight."
+    },
+    "bait_dropped": {
+      "on": {
+        "type": "baitDropped"
+      },
+      "what": "Something tempting hitting the floor: a light metallic clink with a soft ping over it. It has to read as an OBJECT arriving, not as a threat — the threat is bait_detonated, and the gap between them is the whole mechanic."
     },
     "barrier_absorbed": {
       "on": {
@@ -3324,11 +3398,29 @@
       },
       "what": "The shell giving up: a bright shatter — a hard noise crack, then two falling shards. The player must hear that the protection is GONE."
     },
+    "boss_airstrike": {
+      "on": {
+        "type": "bossAirstrike"
+      },
+      "what": "Something being called down from above: a long falling whistle over a swelling lowpass rumble. The whistle is the tell the player tracks — it falls for most of a second before anything lands, which is exactly the window they have to move."
+    },
+    "boss_beam": {
+      "on": {
+        "type": "bossBeam"
+      },
+      "what": "The beam opening and sweeping: a held detuned sawtooth with a bandpass roar riding it, long enough to cover the sweep it describes. One event carries the WHOLE move, so this is one long sound rather than a per-frame texture — the loudest thing the boss does, and it should be."
+    },
     "boss_defeated": {
       "on": {
         "type": "bossDefeated"
       },
       "what": "The giant coming down: a long rumble under descending detuned saws, ending in a floor-shaking thud."
+    },
+    "boss_flag_planted": {
+      "on": {
+        "type": "bossFlagPlanted"
+      },
+      "what": "A claim staked in the floor: a hard bandpass thunk of the pole going in, then a held square note ringing out over it. Ceremonial — the boss is making a statement, and the ring is the statement."
     },
     "boss_fled": {
       "on": {
@@ -3336,11 +3428,83 @@
       },
       "what": "The coward's exit: reality unzipping — a long rising saw sweep with a glassy shimmer on top, snapped shut by a bright crack instead of a corpse hitting the floor."
     },
+    "boss_healed": {
+      "on": {
+        "type": "bossHealed"
+      },
+      "what": "The health bar going the wrong way: a rising sine swell with a sour detuned saw under it. Consonant on top and sour underneath on purpose — it is a heal, and it is bad news, and the sound should carry both."
+    },
+    "boss_horde": {
+      "on": {
+        "type": "bossHorde"
+      },
+      "what": "The call that brings everything else in the room: a low detuned saw horn with a long rise and a heavy echo. Architectural rather than personal — the ROOM is answering, and the player should hear the fight get bigger before they see it."
+    },
+    "boss_lockdown": {
+      "on": {
+        "type": "bossLockdown"
+      },
+      "what": "The shutters coming down: a heavy mechanical slam repeated twice, with a low boom under the second. This is the room becoming a cage, so it is blunt and final rather than musical."
+    },
+    "boss_lockdown_lifted": {
+      "on": {
+        "type": "bossLockdownLifted"
+      },
+      "what": "The shutters going back up: the lockdown's slam run in reverse — a rising mechanical slide with the pressure releasing behind it. Relief, and short: the fight is still on."
+    },
+    "boss_recompile": {
+      "on": {
+        "type": "bossRecompile"
+      },
+      "what": "The thing rebuilding itself: a stuttering square ladder climbing in steps, glitchy and quantised, with a thin digital hiss under it. The only sound in the bank that is deliberately MECHANICAL rather than physical — this is software repairing software."
+    },
+    "boss_rite_began": {
+      "on": {
+        "type": "bossRiteBegan"
+      },
+      "what": "THE DEATH RITE opening. A long low swell with a detuned saw underneath and a glassy fifth over the top, all on a heavy echo send — the biggest, slowest sound the game makes. The boss is not fighting any more; something else is starting, and the mix should make room for it."
+    },
+    "boss_rite_ended": {
+      "on": {
+        "type": "bossRiteEnded"
+      },
+      "what": "The rite closing: the opening swell inverted — everything falls and thins out, and the echo is left to carry the tail. Resolves downward and lands on a clean consonant note, so the room reads as SAFE again."
+    },
+    "boss_rite_exit_opened": {
+      "on": {
+        "type": "bossRiteExitOpened"
+      },
+      "what": "The way out appearing. A rising consonant triangle pair with a glass octave and a wide echo — the first genuinely warm sound after the rite, and the cue the player has been waiting for. Deliberately the reward shape (rising, consonant, sparkling) rather than the door shape."
+    },
+    "boss_rite_struck": {
+      "on": {
+        "type": "bossRiteStruck"
+      },
+      "what": "A beat of the rite landing: a bright bandpass crack over a short lowpass boom. This is the one part of the rite the player must react to, so it is the sharpest thing in the sequence — everything else around it is slow."
+    },
+    "boss_rite_vanished": {
+      "on": {
+        "type": "bossRiteVanished"
+      },
+      "what": "It is not here any more: a swept highpass whisper going up and out with a sine chasing it. Weightless, and the only thing in the rite with no low end at all — the absence of body is what makes it read as disappearance."
+    },
+    "boss_volley": {
+      "on": {
+        "type": "bossVolley"
+      },
+      "what": "A fan of shots leaving at once: three quick square launches stepped 60 ms apart over a lowpass push. Stepped rather than simultaneous because a simultaneous volley is one loud shot — the stagger is what makes the player hear COUNT."
+    },
     "cache_given": {
       "on": {
         "type": "cacheGiven"
       },
       "what": "THE CACHE arriving: a long shimmering swell that rises rather than strikes — a low drone opening under two voices climbing a fifth apart, a wash of high-passed noise gathering over the top, and a bright bell landing on the snap at the end, when the chest is finally a thing in the room. Wet with echo, and pitched clear of the handover's coin figure so the two layer instead of clashing."
+    },
+    "car_departed": {
+      "on": {
+        "type": "carDeparted"
+      },
+      "what": "The car pulling away without you: a lowpass engine note falling and thinning out, with the road hiss going with it. Everything in it recedes, which is the whole message."
     },
     "car_start": {
       "on": {
@@ -3354,11 +3518,29 @@
       },
       "what": "The hero switches the thirty-year-old hatchback off and gets out: the idle sags away down the scale as the engine dies, one last dry cough after it lets go, and the door handle clacks. The mirror of `car_start` — shorter, because a car takes longer to talk into life than out of it."
     },
+    "clean_slate_used": {
+      "on": {
+        "type": "cleanSlateUsed"
+      },
+      "what": "A build wiped and handed back: a downward glass sweep, then a single clean sine settling — the descent is the old build coming apart and the note is the empty sheet. Big echo; this happens once in a very long while."
+    },
+    "companion_dismissed": {
+      "on": {
+        "type": "companionDismissed"
+      },
+      "what": "Sending somebody away: the joining flourish turned around — two triangle notes falling, with the echo left open behind them. Quiet and a little sad, which is the honest reading of the moment."
+    },
     "companion_downed": {
       "on": {
         "type": "companionDowned"
       },
       "what": "A companion beaten to its knees: a dull body-drop thud under a short falling tone — heavy, but under playerHurt's ceiling (an ally, not the hero)."
+    },
+    "companion_healed": {
+      "on": {
+        "type": "companionHealed"
+      },
+      "what": "Patching up whoever is following you: a warm rising sine pair with a soft attack. Deliberately rounder and quieter than the hero's own medkit — this is care given, not taken."
     },
     "companion_joined": {
       "on": {
@@ -3366,11 +3548,23 @@
       },
       "what": "A spared figure takes the hero's side: a warm little oath — a rising third with a glassy top, brighter than the dialogue knock but far short of a jingle (the joining scene follows anyway)."
     },
+    "companion_leveled_up": {
+      "on": {
+        "type": "companionLeveledUp"
+      },
+      "what": "Your companion getting better at this: a small three-note triangle rise. It is the hero's level-up fanfare in miniature and a fifth of the volume — same shape, so it is legible as a ding; much smaller, so it never competes with the player's own."
+    },
     "companion_revived": {
       "on": {
         "type": "companionRevived"
       },
       "what": "Back on its feet: the downed thud inverted — a quick rising triangle with a soft top, more relief than fanfare."
+    },
+    "corpse_recovered": {
+      "on": {
+        "type": "corpseRecovered"
+      },
+      "what": "Getting your things back off your own body: a soft rising triangle pair with a breath of echo. Consonant and warm — it is a relief, not a triumph, so it sits well under the pickup fanfares."
     },
     "crate_broken": {
       "on": {
@@ -3441,11 +3635,35 @@
     "drive_scrape_b": {
       "what": "The second scrape — shorter and higher, the touch that costs a wing mirror rather than a door."
     },
+    "elevator_locked": {
+      "on": {
+        "type": "elevatorLocked"
+      },
+      "what": "The call button refusing: a flat mechanical clunk with no travel after it. What sells \"locked\" is the SILENCE where the motor should have started, so the sound is deliberately over almost before it began."
+    },
+    "elevator_ride": {
+      "on": {
+        "type": "elevatorRide"
+      },
+      "what": "The car moving: a lowpass motor swell that rises and settles, with a faint cable hiss over it. Long by this bank's standards because the ride is long, and quiet because it is the floor under a transition rather than an event."
+    },
+    "elite_cast": {
+      "on": {
+        "type": "eliteCast"
+      },
+      "what": "An elite's move committing: a bright detuned square swell with a glassy octave over it and a long echo send. One sound for every elite primitive — the DRAW says which move it is, and eighteen near-identical casts would be eighteen files nobody could tell apart anyway. Pitched well above the boss material so an elite reads as personal rather than architectural."
+    },
     "enemy_dodge": {
       "on": {
         "type": "enemyDodge"
       },
       "what": "A blow that hit only air: a short dry whiff, no impact body. Quieter and higher than the hero's own dodge so a whiffed swing reads as a near-miss, not a takedown — it fires often, so it stays out of the way."
+    },
+    "enemy_enraged": {
+      "on": {
+        "type": "enemyEnraged"
+      },
+      "what": "Something just got worse: the enrage threshold crossed. A detuned sawtooth climbing and holding, with a slow vibrato on it — the held note is the point, since this is a state change rather than a hit, and the player should feel the fight tilt rather than hear an impact."
     },
     "enemy_hit": {
       "on": {
@@ -3487,6 +3705,12 @@
       },
       "what": "A blow going past — one short breathy band of noise, quiet enough to read as a near thing rather than as a hit."
     },
+    "enemy_provoked": {
+      "on": {
+        "type": "enemyProvoked"
+      },
+      "what": "A neutral turning hostile: a short, sour two-note fall. Quiet — this fires whenever the hero makes an enemy of somebody who was not one, and it is a notification rather than a threat."
+    },
     "enemy_shielded": {
       "on": {
         "type": "enemyShielded"
@@ -3499,17 +3723,89 @@
       },
       "what": "A hostile pew: lower and meaner than the hero's own shot, so return fire reads as a threat arriving, not the player's output."
     },
+    "enemy_slam": {
+      "on": {
+        "type": "enemySlam"
+      },
+      "what": "The telegraph paying off: a heavy body hitting the ground. A saw dive to the floor with a lowpass boom under it and the shockwave's dust hissing out behind — the same three-layer weight a kill gets, tuned lower and longer so it lands as a floor event rather than as a death."
+    },
+    "enemy_summoned": {
+      "on": {
+        "type": "enemySummoned"
+      },
+      "what": "Adds coming out of the ground: a lowpass earth-swell and a square figure climbing over it. Rises rather than falls — things are ARRIVING — and keeps a good echo send so it reads as a summoning rather than as a footstep."
+    },
+    "enemy_telegraph": {
+      "on": {
+        "type": "enemyTelegraph"
+      },
+      "what": "THE TELL — something big is about to commit. A rising detuned sawtooth wind-up under a thin bandpass hiss, so it reads as a charge building rather than as a hit landing. One sound for every telegraph kind on purpose: the player does not need to know WHICH move is coming from the audio (the telegraph is drawn), they need to know that one IS. Loud enough to cut through a fight, short enough to leave room for the move itself."
+    },
     "escort_arrived": {
       "on": {
         "type": "escortArrived"
       },
       "what": "They made it: a short relieved rising pair on a triangle, with an airy breath over the top. Deliberately modest — the objective's own completion fanfare fires on the same frame, and two fanfares are one mess."
     },
+    "escort_died": {
+      "on": {
+        "type": "escortDied"
+      },
+      "what": "The person you were supposed to keep alive, not being alive: a low saw collapse with a hollow sine hanging after it. This is a FAILURE sting — the errand is lost — so it is allowed to be one of the bleaker sounds in the bank, and the tail is long enough to be uncomfortable."
+    },
     "escort_hurt": {
       "on": {
         "type": "escortHurt"
       },
       "what": "The person the hero is walking somewhere takes a blow: a short strained square-wave cry falling away, with a thin body-thud under it. Pitched well clear of the hero's own hurt cue so the player can tell instantly that it was not them."
+    },
+    "footstep": {
+      "on": {
+        "cue": "footstep"
+      },
+      "what": "The generic boot — the step heard on any ground nobody wrote a specific sound for. A soft, dry lowpass scuff with no character of its own, on purpose: it is the floor of the ladder, and a distinctive generic would make every unnamed surface sound like the same wrong thing. Very quiet and very short; this plays twice a second for the whole run."
+    },
+    "footstep_dust": {
+      "on": {
+        "cue": "footstep",
+        "surface": "dust"
+      },
+      "what": "Regolith, hardpan and scrub: the powdery one. A dull lowpass puff with the cutoff well down, so it reads as a boot sinking into dust rather than landing on anything. The quietest surface in the set — most of the campaign is walked on this, so it has to disappear."
+    },
+    "footstep_gravel": {
+      "on": {
+        "cue": "footstep",
+        "surface": "gravel"
+      },
+      "what": "Loose stones underfoot: the scatter. A lowpass body with a highpass sizzle hung a few milliseconds behind it, so the step and the stones it kicked are two events rather than one — which is the whole difference between gravel and a hard floor."
+    },
+    "footstep_metal": {
+      "on": {
+        "cue": "footstep",
+        "surface": "metal"
+      },
+      "what": "Deck plating and rusted grating: a boot on a panel that answers back. A bandpass tick of contact and a very short square ring under it — the ring is the panel flexing, and it is pitched high and cut off fast so a corridor of these does not turn into a melody."
+    },
+    "footstep_soft": {
+      "on": {
+        "cue": "footstep",
+        "surface": "soft"
+      },
+      "what": "Carpet: the sound of a floor absorbing a boot. The dullest and quietest in the set — a very low lowpass and nothing on top of it at all. What sells it is the ABSENCE of the click every other surface has."
+    },
+    "footstep_stone": {
+      "on": {
+        "cue": "footstep",
+        "surface": "stone"
+      },
+      "what": "Cement and bunker slab: a flat, hard slap. The lowpass body of the dust step with the cutoff opened up and a short bandpass click of grit over the top — the click is what says \"hard floor\" rather than \"loud floor\", which is why it is barely above a whisper."
+    },
+    "footstep_void": {
+      "on": {
+        "cue": "footstep",
+        "surface": "void"
+      },
+      "what": "Walking on nothing much: the nebula and the void deck. An airy highpass breath with a long echo send and no body under it — nothing lands, it just displaces. The one footstep in the set allowed any echo at all, because it is the one surface where the room is the point."
     },
     "front_door_closed": {
       "what": "The same door swinging shut: a short pull of air, the leaf meeting its frame in a low wooden thud, and the latch snapping home a moment behind it. The mirror of `front_door_opened` — everything falls where that one rises, and the latch lands LAST, which is what makes it read as shut rather than as a knock."
@@ -3523,6 +3819,24 @@
       },
       "what": "The garage door rolling up: the chain drive taking up with a clack, then the long rattling climb of thirty-year-old slats on their track."
     },
+    "gate_entered": {
+      "on": {
+        "type": "gateEntered"
+      },
+      "what": "Stepping through: a swept lowpass whoosh and a sine falling away behind it. The whole sound is DEPARTURE — everything in it moves away from the listener, which is what makes it read as a transition rather than an arrival."
+    },
+    "gate_opened": {
+      "on": {
+        "type": "gateOpened"
+      },
+      "what": "A way onward unlocking: a low mechanical release and a long square slide upward over it. Bigger and slower than a door — a gate is the shape of the level changing, not a room opening."
+    },
+    "gear_repaired": {
+      "on": {
+        "type": "gearRepaired"
+      },
+      "what": "Work done on a broken piece: two dull hammer taps on metal and a triangle note settling after them. The taps are bandpass noise rather than tone — what says \"repaired\" is the MATERIAL being worked, not a melody."
+    },
     "hay_ball_hit": {
       "on": {
         "type": "hayBallHit"
@@ -3534,6 +3848,12 @@
         "type": "hellgateOpened"
       },
       "what": "A HELLGATE tears open: reality ripping, not a monster arriving. A long filtered noise SWEEP up (the tear widening) under a descending tritone — the interval that refuses to resolve — capped by a sub-bass boom as whatever is on the other side steps through."
+    },
+    "hero_down": {
+      "on": {
+        "type": "heroDown"
+      },
+      "what": "A party member going down. A heavy detuned saw collapsing with a lowpass body under it, then a long hollow echo tail — the tail is what separates it from the player's own death sting: this is somebody ELSE's, heard across the room, and it should hang in the mix while the survivors decide what to do."
     },
     "item_collected_ability": {
       "on": {
@@ -3648,6 +3968,12 @@
       },
       "what": "An XP SCROLL read on the run: parchment unrolling in a short dry rasp, then the script catching — a rising arcane shimmer with a bell over the top. Airier and longer than the pickups around it because it isn't a pickup, it's a spell going off, and the thirty seconds it lights are worth announcing."
     },
+    "item_identified": {
+      "on": {
+        "type": "itemIdentified"
+      },
+      "what": "The scroll doing its work: a rising sine arpeggio with a glass octave over the top and a long echo — the reveal is a small ceremony, and the card that follows is the payoff. Deliberately tier-agnostic: the LOOT SHINE already says how good the piece is, and doubling that here would make identifying a blue sound like identifying an orange."
+    },
     "item_landed_blade": {
       "on": {
         "type": "itemLanded",
@@ -3751,6 +4077,12 @@
       },
       "what": "He shakes it off and gets up: a quick, light rising triangle — relief, not fanfare, well under the hurt ceiling."
     },
+    "lair_opened": {
+      "on": {
+        "type": "lairOpened"
+      },
+      "what": "Something's home opening up: a deep lowpass groan with a slow detuned saw under it and a heavy echo send. Low, long, and unfriendly — this is an invitation the player should feel slightly bad about accepting."
+    },
     "land": {
       "on": {
         "type": "land"
@@ -3823,6 +4155,12 @@
       },
       "what": "The horde evolves: a dark, rising swell — three detuned sawtooth steps climbing a minor triad under a low growl, so a rampage feels answered rather than rewarded."
     },
+    "merchant_discovered": {
+      "on": {
+        "type": "merchantDiscovered"
+      },
+      "what": "Finding somebody selling something out here: a bright little three-note triangle flourish with a coin-bright sine on the end. It is one of the few genuinely GOOD surprises a level hands out, so it is allowed to be a small fanfare — but a short one, and well under a boss's."
+    },
     "merchant_run_down": {
       "on": {
         "type": "merchantKilled"
@@ -3871,6 +4209,12 @@
       },
       "what": "A blow turned aside on steel: a bright metallic clang — a high bandpassed tick over a quick ringing tone that snaps shut."
     },
+    "pickup_blocked": {
+      "on": {
+        "type": "pickupBlocked"
+      },
+      "what": "You may not have that: a short, flat, slightly sour square blip that does not resolve. The refusal has to be instantly distinguishable from the pickup it is refusing, so it is the same register and the OPPOSITE gesture — the pickups all rise, and this one sits still."
+    },
     "player_death": {
       "on": {
         "type": "playerDeath"
@@ -3894,6 +4238,18 @@
         "type": "playerPhased"
       },
       "what": "A blow passing clean through the spectral hero: a breath of air where a hit should have been. Deliberately almost nothing — the ABSENCE of the usual thud is the feedback."
+    },
+    "pod_opened": {
+      "on": {
+        "type": "podOpened"
+      },
+      "what": "A pod cracking: a pressurised hiss venting, then the shell letting go with a bandpass clack. The hiss leads because that is the part that says SEALED — the clack alone would just be a crate."
+    },
+    "projectile_bounced": {
+      "on": {
+        "type": "projectileBounced"
+      },
+      "what": "A shot coming off a wall instead of stopping: a thin, bright bandpass tick with a short square ring. Very quiet — a ricochet is information about geometry, and in a firefight it happens constantly."
     },
     "quest_accepted": {
       "on": {
@@ -3919,11 +4275,29 @@
       },
       "what": "Somebody with an errand notices the hero: a soft two-note greeting on a sine, quieter than the merchant's till — this is a person looking up, not a shop opening."
     },
+    "quest_piece_bought": {
+      "on": {
+        "type": "questPieceBought"
+      },
+      "what": "Coins leaving the purse for something the errand needed: a short coin chitter and a triangle note under it, falling. Money going OUT falls; money coming in rises (see quest_piece_sold)."
+    },
+    "quest_piece_sold": {
+      "on": {
+        "type": "questPieceSold"
+      },
+      "what": "Coins arriving: the same chitter and the same triangle, rising instead. The pair is deliberately one sound played two ways — a player should be able to tell a purchase from a sale with their eyes shut, and direction is the cheapest possible way to say it."
+    },
     "quest_progress": {
       "on": {
         "type": "questProgress"
       },
       "what": "A tally moved: one clipped high tick, a tally mark going down on paper. Under a twentieth of the completion cue's volume — this fires once per kill on a long errand, so it has to sit UNDER the combat rather than on top of it."
+    },
+    "quest_restocked": {
+      "on": {
+        "type": "questRestocked"
+      },
+      "what": "The stall filling up again: a soft double triangle tap, low and unhurried. Bookkeeping the player may want to notice and must never be bothered by, so it sits near the bottom of the mix."
     },
     "quest_turned_in": {
       "on": {
@@ -3936,6 +4310,12 @@
         "type": "repairKitUsed"
       },
       "what": "Spending a repair kit: the toolbox at work — two ratchet clicks, then the mended edge rings bright (the chime that used to fire on pickup)."
+    },
+    "scorch_burn": {
+      "on": {
+        "type": "scorchBurn"
+      },
+      "what": "Standing in something that is still burning: a short highpass sizzle with a faint low ember under it. This repeats while the hero is in the fire, so it is among the quietest and shortest sounds in the bank — a texture, not an alarm. The damage numbers are the alarm."
     },
     "seismic_landing": {
       "on": {
@@ -3972,6 +4352,12 @@
       },
       "what": "A beaten unique kneels and the verdict lands on the table: a held low question mark — two slow detuned steps that don't resolve, hanging in the echo until the player answers."
     },
+    "spawner_alarmed": {
+      "on": {
+        "type": "spawnerAlarmed"
+      },
+      "what": "A nest noticing the hero: a two-pulse alarm, square and mechanical, on a falling interval. It is a warning the player can act on — the nest is about to start producing — so it is dry and legible rather than atmospheric."
+    },
     "stamina_potion_used": {
       "on": {
         "type": "staminaPotionUsed"
@@ -3989,6 +4375,12 @@
         "type": "swing"
       },
       "what": "Air being cut: a band-shaped whoosh over a low triangle thunk."
+    },
+    "talk_opened": {
+      "on": {
+        "type": "talkOpened"
+      },
+      "what": "Somebody has something to say: a soft two-note triangle rise, quieter and rounder than a menu confirm. It opens a conversation rather than a window, so it is warm rather than clicky."
     },
     "ui_back": {
       "what": "The confirm inverted: two falling steps, drier."
@@ -4040,6 +4432,12 @@
         "type": "weaponBroke"
       },
       "what": "Something giving out: a metallic crack, a ping of shrapnel, and the pieces sagging away down a saw drop. Armor wearing through shares the weapon's snap — same \"your kit just failed\" alarm, same urgency."
+    },
+    "weapon_dry": {
+      "on": {
+        "type": "weaponDry"
+      },
+      "what": "The empty gun: a dry mechanical CLICK and nothing behind it. The single most important piece of feedback the game was missing — a trigger pull that does nothing has to be audibly different from one that missed, or the player reads \"out of ammo\" as \"the game dropped my input\". Deliberately thin and toneless: it is the sound of a mechanism moving with no charge to answer it."
     },
     "well_death": {
       "on": {
@@ -4198,6 +4596,9 @@
     "weaponDry",
     "wellDeath",
     "wellSwallowed"
+  ],
+  "cues": [
+    "footstep"
   ],
   "scriptHooks": {
     "combat": [

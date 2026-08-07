@@ -118,7 +118,10 @@ describe("named-item drop gates", () => {
     lo.players[0].level = 45;
     const { ids: loIds } = rollMany(lo, 40_000);
     expect(loIds.has("test_leg_low")).toBe(true);
-  });
+    // Eighty thousand rolls across two hero levels — the same runner flake the
+    // artifact test below documents, and the same fix: headroom rather than
+    // fewer rolls, since the count is what makes the retirement observable.
+  }, 20_000);
 
   it("the ARTIFACT tier lands at the cap (its own rarer roll, HARD+)", () => {
     installNamed();

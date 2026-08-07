@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_rite_struck
+description: >-
+  A beat of the rite landing: a bright bandpass crack over a short lowpass
+  boom. This is the one part of the rite the player must react to, so it is
+  the sharpest thing in the sequence — everything else around it is slow.
+on:
+  type: bossRiteStruck
+spatial: true
+voices:
+  - call: noise
+    durationMs: 34
+    volume: 0.055
+    filter:
+      type: bandpass
+      frequency: 2200
+  - call: noise
+    durationMs: 180
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: tone
+    type: sawtooth
+    from: 240
+    to: 60
+    durationMs: 220
+    volume: 0.03
+    echo: 0.25

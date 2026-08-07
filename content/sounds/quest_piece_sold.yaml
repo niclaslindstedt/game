@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_piece_sold
+description: >-
+  Coins arriving: the same chitter and the same triangle, rising instead. The
+  pair is deliberately one sound played two ways — a player should be able to
+  tell a purchase from a sale with their eyes shut, and direction is the
+  cheapest possible way to say it.
+on:
+  type: questPieceSold
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.025
+    filter:
+      type: highpass
+      frequency: 4500
+  - call: tone
+    type: triangle
+    from: 392
+    to: 523
+    durationMs: 130
+    volume: 0.03
+    delayMs: 30

@@ -30,7 +30,7 @@ import {
 
 import { playCombatSound } from "./combat.ts";
 import { playJingle } from "./jingles.ts";
-import { clearListener, setListener } from "./listener.ts";
+import { clearListener } from "./listener.ts";
 import { playPickupSound } from "./pickups.ts";
 import { playPowerupSound } from "./powerups.ts";
 import { playSound, stopSound } from "./play.ts";
@@ -136,13 +136,48 @@ export function playDriveSound(synth: Synth, id: string): void {
  * through this function rather than restating it.)
  */
 function routeKey(event: GameEvent): string {
+  return routeFields(event).join("|");
+}
+
+function routeFields(event: GameEvent): string[] {
   return [
-    event.type,
-    "weaponClass" in event ? event.weaponClass : "",
-    "crit" in event ? event.crit : "",
-    "kind" in event ? event.kind : "",
-    "tier" in event ? (event.tier ?? "") : "",
-  ].join("|");
+    String(event.type),
+    "weaponClass" in event ? String(event.weaponClass) : "",
+    "crit" in event ? String(event.crit) : "",
+    "kind" in event ? String(event.kind) : "",
+    "tier" in event ? String(event.tier ?? "") : "",
+  ];
+}
+
+/**
+ * THE SPECIFICITY LADDER: every key this event could be answered by, most
+ * specific first.
+ *
+ * A sound may leave a discriminator OFF, and then it answers every value of it
+ * — `on: { type: enemyTelegraph }` is the sound of a wind-up, whichever of the
+ * twenty telegraph kinds is winding up, while `on: { type: enemyTelegraph,
+ * kind: charge }` beside it still takes the charge.
+ *
+ * This is not a nicety. Without it, an `on:` block naming only a `type` builds
+ * the key `enemyTelegraph||||` while the event builds
+ * `enemyTelegraph|||charge|`, and the sound is compiled, shipped, and never
+ * once played — with no error anywhere, because both halves are individually
+ * correct. Authors reach for the general case first and should get it.
+ *
+ * The rungs drop discriminators RIGHT TO LEFT (tier, then kind, then crit, then
+ * weaponClass) because that is their order of specificity: a tier is a variant
+ * of a kind, a kind a variant of the event. Exact matches are unaffected —
+ * they are rung one.
+ */
+function routeLadder(event: GameEvent): string[] {
+  const fields = routeFields(event);
+  const out = [fields.join("|")];
+  for (let drop = fields.length - 1; drop >= 1; drop--) {
+    if (fields[drop] === "") continue; // already blank — same key, no new rung
+    fields[drop] = "";
+    out.push(fields.join("|"));
+  }
+  return out;
 }
 
 /** The fields that decide two events in one step are THE SAME NOISE, and so
@@ -196,11 +231,14 @@ export function playEventSounds(
     ) {
       continue;
     }
-    if (
-      playSound(synth, catalog, keys[routeKey(event)], ctx, GENERATED_SOUNDS)
-    ) {
-      continue;
+    let routed = false;
+    for (const key of routeLadder(event)) {
+      if (playSound(synth, catalog, keys[key], ctx, GENERATED_SOUNDS)) {
+        routed = true;
+        break;
+      }
     }
+    if (routed) continue;
 
     // What the catalog cannot hold: sounds whose shape rides a CONTINUOUS
     // parameter (a sandstorm's intensity, a stampede's distance). A static

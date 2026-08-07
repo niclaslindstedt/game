@@ -57,7 +57,9 @@ function makeFakeSynth(): {
       tone: (o) => tones.push(o),
       noise: (o) => noises.push(o),
       // A score is written, never recorded — a track's notes are the format.
-      sample() {},
+      // (A MOD may record one, but it plays through an `<audio>` element
+      // rather than the sequencer; see pwa/src/game/music/recorded.ts.)
+      sample: () => null,
       decode: () => Promise.resolve(null),
     },
     tones,

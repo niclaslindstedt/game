@@ -257,6 +257,10 @@ export function buildMod(modDir, catalog) {
     "music",
     fail,
   );
+  const musicRecordings = loadMusicRecordings(
+    path.join(modDir, "music"),
+    errors,
+  );
   // The catalogs that are a single FILE rather than a tree, so they take the
   // mod's root — `powerups.yaml` and `companions.yaml`, exactly like
   // `ladder.yaml`.
@@ -371,6 +375,9 @@ export function buildMod(modDir, catalog) {
     // in it.
     samples.length +
     modMusic.length +
+    // A mod whose whole contribution is a recorded soundtrack is a real mod
+    // and adds nothing to any catalog above.
+    musicRecordings.length +
     Object.keys(modPowerups).length +
     Object.keys(modTalents).length +
     Object.keys(modCompanions).length +
@@ -402,7 +409,11 @@ export function buildMod(modDir, catalog) {
     items: modItems,
     sprites,
     sounds: modSounds,
-    sampled: sampledIds,
+    // The id-clash exemption asks "did this mod ship a RECORDING for that
+    // id", which is `clipNames` — shipping one is the only way to replace a
+    // sound, and it is the one clash an addon is allowed. `sampledIds` is the
+    // narrower "and it is played AS that sound", which is not the question.
+    sampled: clipNames,
     music: modMusic,
     powerups: modPowerups,
     talents: modTalents,
@@ -588,10 +599,40 @@ export function buildMod(modDir, catalog) {
         "`call: sample` voice",
     );
   }
+  // …and the same trap for a recorded SCORE: `music/regolith_rde.opus` compiles
+  // perfectly and is never played. A track is heard when it replaces a shipped
+  // one, or when one of this mod's levels names it.
+  const shippedTracks = new Set(catalog.music ?? []);
+  const trackedByMod = new Set([
+    ...modMusic.map((e) => e.id),
+    ...modLevels.map((def) => def.music),
+  ]);
+  for (const track of musicRecordings) {
+    if (shippedTracks.has(track.id) || trackedByMod.has(track.id)) continue;
+    warnings.push(
+      `music/${track.id}: "${track.id}" is not a track the game has, and no ` +
+        "level in this mod names it — name it after the theme it replaces, " +
+        "or point a level's `music:` at it",
+    );
+  }
+  // One id, ONE player. A recorded track beside a YAML arrangement of the same
+  // name is two scores for one theme, and which won would be decided by the
+  // page's lookup order rather than by anybody's intent.
+  for (const track of musicRecordings) {
+    if (!music?.music?.[track.id]) continue;
+    errors.push(
+      `music/${track.id}: shipped both as a recording and as a YAML ` +
+        "arrangement — a theme is played from one or the other",
+    );
+  }
   // A `sample:` block is a mod saying "this sound is a recording"; without the
   // recording it is a sound with no voices and no file, which is silence.
   for (const entry of modSounds) {
-    if (entry.doc.sample === undefined || sampledIds.has(entry.id)) continue;
+    // `clipNames`, not `sampledIds`: the question is whether a FILE is there
+    // to be trimmed, and a YAML that (wrongly) also authors voices is out of
+    // `sampledIds` — which would make this fire on a mod that did ship the
+    // recording, on top of the schema error that is the real complaint.
+    if (entry.doc.sample === undefined || clipNames.has(entry.id)) continue;
     errors.push(
       `sounds/${entry.id}.yaml: has a \`sample:\` block but no recording — ` +
         `add ${entry.id}.wav (or ${SAMPLE_EXTS.slice(1).join("/.")}) beside ` +
@@ -955,7 +996,7 @@ export function buildMod(modDir, catalog) {
       // tail writes the same def out longhand instead. (It used to be a
       // parallel bank consulted ahead of the catalog, which worked for
       // replacing a sound and made composing one impossible.)
-      sounds: Object.fromEntries(soundDefs(modSounds, sampledIds, sounds)),
+      sounds: Object.fromEntries(soundDefs(modSounds, sampledIds)),
       // The recordings themselves: an id and its TAKES, base64, in order.
       samples: samples.map((sample) => ({
         id: sample.id,
@@ -983,6 +1024,12 @@ export function buildMod(modDir, catalog) {
       // are rasterized here: the renderer gets data it can use directly, and
       // the only YAML parser in the build stays in the main process.
       music: Object.fromEntries(modMusic.map((e) => [e.id, cookTrack(e.doc)])),
+      // …and the RECORDED scores, which are bytes rather than arrangements.
+      // Their own field rather than a variant inside `music`: the page plays
+      // them through an `<audio>` element and the sequencer never sees them,
+      // so a shape that made the two interchangeable would be a lie about
+      // which player is involved.
+      musicSamples: musicRecordings,
       // Already `{ id → def }` with each id stamped in by the loader, which is
       // exactly the shape `registerDefs` takes.
       powerups: modPowerups,
@@ -1137,6 +1184,15 @@ const MAX_SAMPLES_BYTES = 24 * 1024 * 1024;
  * one message, alongside every OTHER installed mod's. */
 const WARN_SAMPLES_BYTES = 8 * 1024 * 1024;
 
+/** How big one recorded TRACK may be. Far larger than an effect's, because a
+ * track is minutes rather than a second — 8 MiB is about eleven minutes of
+ * Opus, past any loop this game asks for. It streams rather than decoding
+ * whole (`music/recorded.ts`), so this bounds the BUNDLE, not memory. */
+const MAX_TRACK_BYTES = 8 * 1024 * 1024;
+/** …and how much recorded music one mod may ship. The bundle is base64 JSON
+ * crossing to the page in one message, which is the real ceiling here. */
+const MAX_TRACKS_BYTES = 32 * 1024 * 1024;
+
 /**
  * RECORDED SOUNDS — `sounds/<id>.wav` and `sounds/<id>.mp3`.
  *
@@ -1264,6 +1320,89 @@ function loadSamples(soundsDir, errors, warnings) {
   }));
 }
 
+/**
+ * RECORDED SCORES — `music/<id>.<ext>`.
+ *
+ * The same bargain as a recorded effect, made for stronger reasons: a mod that
+ * has a finished mix should not have to re-enter it as tracker tokens. The stem
+ * is the routing here too — `music/regolith_ride.opus` replaces the theme of
+ * that name, and a brand-new id is named by a level's `music:`.
+ *
+ * Deliberately simpler than `loadSamples`: a track has no takes (nothing about
+ * a two-minute loop repeats often enough to fatigue) and no mix block (it plays
+ * at the music volume, like every other track).
+ */
+function loadMusicRecordings(musicDir, errors) {
+  if (!existsSync(musicDir)) return [];
+  const files = readdirSync(musicDir)
+    .filter((f) => sampleStem(f) !== null)
+    .sort();
+
+  const out = [];
+  const claimed = new Map();
+  let total = 0;
+  for (const file of files) {
+    const label = `music/${file}`;
+    const id = sampleStem(file);
+    const format = file.slice(file.lastIndexOf(".") + 1);
+    if (!/^[a-z][a-z0-9_]*$/.test(id)) {
+      errors.push(
+        `${label}: "${id}" is not a track id — the file name IS the track it ` +
+          "replaces, so it takes lowercase letters, digits and underscores",
+      );
+      continue;
+    }
+    if (claimed.has(id)) {
+      errors.push(
+        `${label}: "${id}" is already recorded by ${claimed.get(id)} — one ` +
+          "track, one file",
+      );
+      continue;
+    }
+    claimed.set(id, label);
+
+    const bytes = readFileSync(path.join(musicDir, file));
+    if (bytes.length === 0) {
+      errors.push(`${label}: the file is empty`);
+      continue;
+    }
+    if (bytes.length > MAX_TRACK_BYTES) {
+      errors.push(
+        `${label}: ${mib(bytes.length)} is over the ${mib(MAX_TRACK_BYTES)} ` +
+          "limit for one track — ship it as .opus, which is about a third of " +
+          "MP3 at the same quality",
+      );
+      continue;
+    }
+    const actual = sniffAudio(bytes);
+    if (actual === null) {
+      errors.push(
+        `${label}: the first bytes are not audio the game can play ` +
+          `(${SAMPLE_EXTS.join(", ")})`,
+      );
+      continue;
+    }
+    if (actual !== format) {
+      errors.push(
+        `${label}: the contents are ${actual.toUpperCase()}, not ` +
+          `${format.toUpperCase()} — rename it to "${id}.${actual}"`,
+      );
+      continue;
+    }
+    total += bytes.length;
+    out.push({ id, data: bytes.toString("base64") });
+  }
+
+  if (total > MAX_TRACKS_BYTES) {
+    errors.push(
+      `music/: ${mib(total)} of recorded score is over the ` +
+        `${mib(MAX_TRACKS_BYTES)} a mod may ship — the compiled bundle crosses ` +
+        "to the game in one message",
+    );
+  }
+  return out;
+}
+
 /** A `sample:` block's knobs, as the bundle carries them — omitted entirely
  * when the author set none, so a plain dropped-in file stays a bare clip. */
 function mixOf(sample) {
@@ -1347,7 +1486,7 @@ function mib(bytes) {
  *   * a bare recording with no YAML at all — a one-voice def, which is what
  *     keeps "the file name is the whole of the routing" true.
  */
-function soundDefs(modSounds, sampledIds, sounds) {
+function soundDefs(modSounds, sampledIds) {
   const out = [];
   const authored = new Set();
   for (const entry of modSounds) {
