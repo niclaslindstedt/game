@@ -98,6 +98,7 @@ import {
   tearMachine,
   wreckForce,
 } from "./eject.ts";
+import { driveTripMs } from "./score.ts";
 import type { Impact } from "./impact.ts";
 import type {
   DriveInput,
@@ -164,6 +165,10 @@ export { breakTrafficLamps } from "./traffic.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
 export type { Impact, ImpactMasses } from "./impact.ts";
 export { remainForce, splitsBody } from "./remains.ts";
+// WHAT THE LEG WAS WORTH — the arcade score the high-score board ranks, twinned
+// with `driveVerdict` below (score.ts explains why both live here).
+export { drivePar, driveScore, driveTripMs } from "./score.ts";
+export type { DriveScorecard } from "./score.ts";
 export type {
   DriveDirection,
   DriveEvent,
@@ -864,9 +869,14 @@ export function driveVerdict(drive: DriveState): string {
   if (posts >= verdict.posts && posts / verdict.posts >= shunts / verdict.cars)
     return "drive_arrive_posts";
   if (shunts >= verdict.cars) return "drive_arrive_cars";
-  // Then the clock, at either end of it.
-  if (drive.ms <= verdict.quickMs) return "drive_arrive_quick";
-  if (drive.ms >= verdict.slowMs) return "drive_arrive_slow";
+  // Then the clock, at either end of it — the TRIP's clock, stopped at the
+  // finish line. `drive.ms` is the road's whole lifetime and keeps running
+  // through the arrival hold, so reading it directly made a 51-second leg that
+  // sat on the arrival beat for a second and a half stop being a quick one
+  // (`driveTripMs`, score.ts).
+  const tripMs = driveTripMs(drive);
+  if (tripMs <= verdict.quickMs) return "drive_arrive_quick";
+  if (tripMs >= verdict.slowMs) return "drive_arrive_slow";
   // And finally the road surface, which is where the people went.
   return bodies >= verdict.bumpyBodies
     ? "drive_arrive_bumpy"

@@ -1055,6 +1055,65 @@ export const DRIVE = {
      * has to sit near the middle of that or one of the two lines never plays. */
     bumpyBodies: 85,
   },
+
+  /**
+   * WHAT THE CABINET PAYS — the arcade score a finished leg is worth, and the
+   * board the drive's high-score screen ranks (`driveScore`, ./score.ts).
+   *
+   * IT PAYS FOR THE COMMUTE, AND IT PAYS NOTHING FOR A PERSON. That is the same
+   * joke `verdict` above is machinery for, said a second way and much more
+   * plainly: the machine tallies the four things a man is proud of on a drive
+   * home — that he got there, that he made good time, that he had it flat out,
+   * and that the car is unmarked — and the body count sits on the results card
+   * as a STAT worth exactly zero. Score the crowd and the minigame becomes a
+   * game about mowing people down, which is the one reading this whole road was
+   * built to refuse: the player does the noticing, not the scoreboard.
+   *
+   * The two things that DO cost you are the two the hero can actually see —
+   * somebody else's lamp post and somebody else's paintwork — which is the same
+   * ordering `verdict` reads its lines in.
+   *
+   * MEASURED against the shipped auto-driver (`make drive-bench`): a MEDIUM leg
+   * arrives around 65 s with the wagon half wrecked and a handful of cars
+   * shoved, which lands near 13,000 — a chunky five-figure arcade number with
+   * plenty of room above it for a clean, fast run and plenty below for a bad
+   * one.
+   */
+  score: {
+    /** Flat, for getting there at all. Only an ARRIVAL scores: a breakdown
+     * restarts the road and a SKIP is a trip the player gave up on, so neither
+     * reaches the board. */
+    arrival: 2000,
+    /**
+     * THE TIME BONUS, per second under par — the biggest single term, because
+     * beating the clock is what a driver is actually racing and it is the one
+     * number a player can chase on the next attempt.
+     *
+     * PAR is derived from the course rather than fixed, so the attract loop's
+     * short leg is scored on its own length and not against a minute of road it
+     * never drove.
+     */
+    perSecondUnderPar: 250,
+    /** The pace par is set at (px/s) — 24000 px at 320 px/s is 75 s, which sits
+     * just above the 59–72 s a good driver takes and well above the 51 s a
+     * reckless straight line does. So par is beatable by driving well and
+     * comfortably missed by dawdling. */
+    parSpeedPx: 320,
+    /** Per mph of the fastest the wagon went. Flat out for even a moment is
+     * worth 6000, which is a real chunk — the pedal is the minigame. */
+    perTopMph: 50,
+    /** The whole of it, for arriving without a mark on the car — scaled down by
+     * the wear actually taken, so a bent wagon still collects something. */
+    paint: 8000,
+    /** Off the total, per street light left in the gutter. */
+    perPost: 500,
+    /** …and per car shoved out of the way. Cheaper than a post because the road
+     * hands a few out for free (see `verdict.cars`). */
+    perShunt: 300,
+    /** Scores are rounded to this, the way an arcade cabinet's are — a score
+     * ending in a stray 7 reads as a spreadsheet. */
+    round: 10,
+  },
 } as const;
 
 /** HOW LONG THIS LEG IS — the whole road unless the params shortened it (the

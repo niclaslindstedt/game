@@ -56,6 +56,13 @@ const GOODCO = "goodco_hq";
  * spark tune or a "does the engine note drop when it shifts" needs the car
  * moving, and holding a key down while judging a picture is how a tuning pass
  * becomes a wrestling match.
+ *
+ * `&course=1200` SHORTENS THE LEG, on the same knob the attract loop uses
+ * (`DriveParams.coursePx`) — the whole road otherwise, exactly as a player
+ * drives it. It exists for the END of the road: the arrival beat and the
+ * high-score board are a minute of driving away, which is the same five-minute
+ * walk this workbench was built to abolish, one screen further along. The road
+ * it lays is the same road — the finish line simply comes sooner.
  */
 export function driveFromParams(params: URLSearchParams): {
   seed: number;
@@ -65,6 +72,7 @@ export function driveFromParams(params: URLSearchParams): {
   split: boolean;
   difficulty: Difficulty;
   bot: boolean;
+  coursePx?: number;
 } {
   const home = (params.get("drive") ?? "").toLowerCase() === "home";
   const wanted = (params.get("difficulty") ?? "").toLowerCase();
@@ -72,7 +80,12 @@ export function driveFromParams(params: URLSearchParams): {
     DIFFICULTY_ORDER.includes(wanted as Difficulty) ? wanted : "medium"
   ) as Difficulty;
   const bot = params.get("bot");
+  // A course is only carried when it is a real length: `DriveParams.coursePx`
+  // is optional and an absent one means the whole road, so a zero or a typo
+  // must fall through to that rather than lay a leg with no road in it.
+  const course = Number(params.get("course"));
   return {
+    ...(Number.isFinite(course) && course > 0 ? { coursePx: course } : {}),
     seed: Number(params.get("seed")) || 1234,
     direction: home ? -1 : 1,
     to: home ? GARAGE : GOODCO,
@@ -193,7 +206,7 @@ export function DriveWorkbench({
   return (
     <div ref={rootRef} style={{ position: "absolute", inset: 0 }}>
       <DriveScreen
-        key={`${lap}:${trip.seed}:${trip.difficulty}:${trip.direction}`}
+        key={`${lap}:${trip.seed}:${trip.difficulty}:${trip.direction}:${trip.coursePx ?? 0}`}
         params={trip}
         assets={assets}
         auto={trip.bot}

@@ -972,7 +972,10 @@ export {
   crowdEdges,
   driveDriverInput,
   driveMph,
+  drivePar,
+  driveScore,
   driveThrustPx,
+  driveTripMs,
   driveVerdict,
   // THE DRIVETRAIN — the gearbox and the engine curve the road's pull is solved
   // from. The app reads the same functions the physics does, so the tachometer
@@ -1032,6 +1035,7 @@ export type {
   DriveProp,
   DrivePropKind,
   DriveRemain,
+  DriveScorecard,
   DriveState,
   DriveStrike,
   DriveTraffic,
