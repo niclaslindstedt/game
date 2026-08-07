@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: bait_detonated
+description: >-
+  The trap paying off: a sharp bandpass crack, a lowpass thump under it, and
+  debris sizzling out behind. Shorter and nastier than a nuke, and pitched up
+  from a slam so the two never blur in a busy fight.
+on:
+  type: baitDetonated
+spatial: true
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.055
+    filter:
+      type: bandpass
+      frequency: 1800
+  - call: noise
+    durationMs: 200
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 420
+  - call: noise
+    durationMs: 180
+    volume: 0.022
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 3400

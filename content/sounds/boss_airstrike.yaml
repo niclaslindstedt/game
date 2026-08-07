@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_airstrike
+description: >-
+  Something being called down from above: a long falling whistle over a
+  swelling lowpass rumble. The whistle is the tell the player tracks — it
+  falls for most of a second before anything lands, which is exactly the
+  window they have to move.
+on:
+  type: bossAirstrike
+spatial: true
+voices:
+  - call: tone
+    type: sine
+    from: 1800
+    to: 300
+    durationMs: 780
+    volume: 0.035
+    echo: 0.25
+  - call: noise
+    durationMs: 700
+    volume: 0.03
+    delayMs: 80
+    filter:
+      type: lowpass
+      frequency: 420

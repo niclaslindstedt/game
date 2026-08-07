@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_horde
+description: >-
+  The call that brings everything else in the room: a low detuned saw horn
+  with a long rise and a heavy echo. Architectural rather than personal — the
+  ROOM is answering, and the player should hear the fight get bigger before
+  they see it.
+on:
+  type: bossHorde
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 90
+    to: 160
+    durationMs: 700
+    volume: 0.055
+    attackMs: 120
+    detuneCents: 18
+    echo: 0.4
+  - call: tone
+    type: sawtooth
+    from: 45
+    to: 80
+    durationMs: 760
+    volume: 0.03
+    detuneCents: 10
+    echo: 0.3

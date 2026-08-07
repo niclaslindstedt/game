@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: asteroid_kill
+description: >-
+  The sky doing your job for you: the impact's boom with a wet crunch folded
+  into it. Distinct from an ordinary takedown on purpose — nobody swung, and
+  the player should be able to hear that the kill was not theirs.
+on:
+  type: asteroidKill
+spatial: true
+voices:
+  - call: noise
+    durationMs: 220
+    volume: 0.055
+    filter:
+      type: lowpass
+      frequency: 300
+  - call: noise
+    durationMs: 70
+    volume: 0.035
+    delayMs: 30
+    filter:
+      type: bandpass
+      frequency: 700
+  - call: tone
+    type: sawtooth
+    from: 160
+    to: 40
+    durationMs: 260
+    volume: 0.035
+    delayMs: 20

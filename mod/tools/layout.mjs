@@ -16,11 +16,21 @@
 // here, or the validator will refuse the very files the compiler is about to
 // read.
 
-/** The audio containers a mod's recording may be in — the two every browser
- * decodes, which is what a shell's WebView is. Kept here rather than in the
- * compiler so the folder audit and the compiler cannot disagree about what a
- * `sounds/` file is. */
-export const SAMPLE_EXTS = ["wav", "mp3"];
+/**
+ * The audio containers a mod's recording may be in.
+ *
+ * RECORDINGS ARE A DESKTOP FEATURE, and that is what sets this list. A mod only
+ * ever reaches the game through the Steam shell (`mods-bridge.ts` refuses to
+ * even look anywhere else), so the decoder on the other side of these bytes is
+ * always the same Chromium — not "every browser", which is what the list was
+ * originally cut down to. Ogg/Opus and FLAC are decoded there as surely as WAV
+ * is, and Opus is roughly a third of MP3 at the same quality, which is real
+ * headroom against the per-mod budget rather than a nicety.
+ *
+ * Kept here rather than in the compiler so the folder audit and the compiler
+ * cannot disagree about what a `sounds/` file is.
+ */
+export const SAMPLE_EXTS = ["wav", "mp3", "ogg", "opus", "flac"];
 
 /** Directories the compiler loads, and how deep the YAML sits in each.
  *
@@ -41,7 +51,13 @@ export const TREES = {
   // of oscillators. The YAML stays optional and does the same job it always
   // did — routing a NEW sound to an event, or trimming a recording's level.
   sounds: { depth: 1, exts: ["yaml", ...SAMPLE_EXTS], what: "a sound" },
-  music: { depth: 1, what: "a score" },
+  // …and the same for MUSIC, for a reason that is stronger there than for the
+  // effects: a conversion that has commissioned a score has a finished mix,
+  // and asking its author to re-enter it as sixteenth-note tokens is asking
+  // them to throw the work away. A recorded track plays through an `<audio>`
+  // element rather than the sequencer, so it streams instead of sitting in
+  // memory as decoded PCM (see pwa/src/game/music/recorded.ts).
+  music: { depth: 1, exts: ["yaml", ...SAMPLE_EXTS], what: "a score" },
   cutscenes: { depth: 1, what: "a scene" },
   quests: { depth: 1, what: "an errand" },
   // The one tree that is not YAML: a RULE is code, and authoring code as a
@@ -58,12 +74,43 @@ export const TREES = {
  * FIRST one is the tree's own shape, and the one an error message names. */
 const treeExts = (tree) => tree.exts ?? [tree.ext ?? "yaml"];
 
-/** The sound id a recording replaces, or null when the file is not one. */
+/**
+ * The CLIP a recording belongs to, or null when the file is not a recording.
+ *
+ * A clip may have several TAKES, named `<clip>.1.wav`, `<clip>.2.wav` … — the
+ * answer to the one thing a recording does that a synthesized sound does not,
+ * which is repeat itself exactly. (The shipped bank's `noise` voices redraw
+ * their buffer every play, so four hundred takedowns a run are four hundred
+ * slightly different sounds; a single recording is the same waveform four
+ * hundred times, and the ear notices long before the four hundredth.) So
+ * `enemy_hit.wav` and `enemy_hit.1.wav` name the SAME clip, and the take index
+ * is stripped here so every caller sees one name for one sound.
+ */
 export function sampleStem(name) {
   for (const ext of SAMPLE_EXTS) {
-    if (name.endsWith(`.${ext}`)) return name.slice(0, -(ext.length + 1));
+    if (!name.endsWith(`.${ext}`)) continue;
+    const stem = name.slice(0, -(ext.length + 1));
+    // `.1`, `.02`, `.17` — a trailing all-digit segment is a take number, not
+    // part of the name. A clip that genuinely wants to end in a number can
+    // still be `boom_2.wav`, since the separator is a dot.
+    const take = /\.(\d+)$/.exec(stem);
+    return take ? stem.slice(0, -take[0].length) : stem;
   }
   return null;
+}
+
+/**
+ * Which TAKE of its clip a recording is: 0 when the name carries no index, and
+ * the number itself when it does. Only the ORDER matters — the numbers pick the
+ * order the takes cycle in, and gaps in them are an author's business.
+ */
+export function sampleTake(name) {
+  for (const ext of SAMPLE_EXTS) {
+    if (!name.endsWith(`.${ext}`)) continue;
+    const take = /\.(\d+)$/.exec(name.slice(0, -(ext.length + 1)));
+    return take ? Number(take[1]) : 0;
+  }
+  return 0;
 }
 
 /** The rarity directories `items/` may group by — the loader takes the

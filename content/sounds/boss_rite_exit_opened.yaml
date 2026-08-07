@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_rite_exit_opened
+description: >-
+  The way out appearing. A rising consonant triangle pair with a glass octave
+  and a wide echo — the first genuinely warm sound after the rite, and the
+  cue the player has been waiting for. Deliberately the reward shape (rising,
+  consonant, sparkling) rather than the door shape.
+on:
+  type: bossRiteExitOpened
+spatial: true
+voices:
+  - call: tone
+    type: triangle
+    from: 440
+    durationMs: 180
+    volume: 0.034
+    attackMs: 30
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 320
+    volume: 0.034
+    delayMs: 160
+    attackMs: 30
+    echo: 0.45
+  - call: tone
+    type: sine
+    from: 1760
+    durationMs: 260
+    volume: 0.014
+    delayMs: 200
+    echo: 0.4

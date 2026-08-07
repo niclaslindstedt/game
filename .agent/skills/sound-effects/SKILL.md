@@ -25,12 +25,42 @@ unmistakably chip.
 | `content/music/<id>.yaml` | **The soundtrack.** One file per track — its instruments, its patterns and its order — with `id` the value a `LevelDef.music` names (`title` is the menu's). |
 | `pwa/src/game/sfx/` | The DISPATCH: `index.ts` looks a sound up in the compiled catalog by event shape (or by a weapon's own `sfx`) and plays it. The domain files (`combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts`, `ui.ts`) now hold only what a static entry cannot express — the handful of sounds whose pitch or volume scales with a continuous intensity. |
 | `pwa/src/game/music/index.ts` | The single player: play/stop/pause, which track is current, the per-track dynamic import, and `setModTracks` for a mod's scores. |
-| `pwa/src/game/sfx/samples.ts` | **A MOD'S RECORDINGS** — the one place audio comes out of a file. Consulted by `playSound` BEFORE the catalog, so it covers every sound in the game at once. Nothing shipped uses it. |
+| `pwa/src/game/sfx/samples.ts` | **A MOD'S RECORDINGS** — the one place audio comes out of a file. Holds CLIPS (a file stem with one or more takes); what plays one is an ordinary sound def with a `call: sample` voice, so nothing downstream can tell a recording from an oscillator. Nothing shipped uses it. |
+| `pwa/src/game/sfx/cues.ts` | **CUES** — moments the RENDERER knows and the engine never reported (a footfall). Matched by `on: { cue, surface }` in their own key space, rate-limited in the funnel. |
+| `pwa/src/game/sfx/listener.ts` | Where the player is listening from (the local seat's camera), for `spatial:` sounds. |
+| `pwa/src/game/render/footsteps.ts` | The first cue: steps off DISTANCE WALKED, surfaced from the level's own tile spec. |
 
 The engine emits `GameEvent`s from `step()`; `playEventSounds` translates
-them. A new sound therefore starts as an engine event (see the
-`engine-system` skill) — the app never invents audio moments the simulation
-didn't report.
+them. A new sound usually starts as an engine event (see the `engine-system`
+skill).
+
+**But not always, and knowing which is the job.** A moment the RENDERER knows
+and the simulation never reported — a footfall, cloth on a dodge, a weapon's
+idle hum — is a CUE (`sfx/cues.ts`), answered by `on: { cue: … }`. The test is
+frequency and origin: anything per-entity-per-frame must not become a
+`GameEvent`, because that list is replicated over the wire, and anything the
+receiving end could work out for itself should not travel at all.
+
+**Three fields decide how a sound sits, and all three are as available to a
+shipped sound as to a mod's:**
+
+- `spatial: true` — pan and trim against the local seat's camera
+  (`sfx/listener.ts`). Opt-in, because a menu click and a level-up fanfare are
+  the PLAYER's, not the world's.
+- `loop: true` + `stopOn:` + `fadeMs:` — a sustained source. Recording-only; a
+  loop of oscillators is what the music system is for.
+- A field LEFT OUT of `on:` answers every value of it. `on: { type: enemyHit }`
+  is any hit; a `crit: true` entry beside it still takes the crits.
+
+**THE ROUTE KEY IS FIVE FIELDS — `type|weaponClass|crit|kind|tier` — in four
+places, and they move together or nothing plays.** `routeKey`
+(`sfx/index.ts`), `matchKey` (`scripts/generate-sounds.mjs`), `soundMatchKey`
+(`mod/tools/build.mjs`) and `MATCHABLE` (the schema). A sixth field on any one
+of them makes every lookup miss, and it is INVISIBLE: the imperative fallbacks
+in `combat.ts` and friends were recorded FROM the catalog, so they keep playing
+the byte-identical sound and only a MOD's replacement goes quiet.
+`tests/catalog_routing_test.ts` asserts through the runtime rather than
+restating the formula, which is the only thing that keeps this honest.
 
 ## The shipped game synthesizes; a MOD may record
 
@@ -39,15 +69,27 @@ zero audio files is what keeps the app small, offline and diffable, and a sound
 you can read as a list of voices is one the next person can retune.
 
 **A mod is not under that constraint**, and this is the one asymmetry in the
-content format. Drop `sounds/<id>.wav` (or `.mp3`) into a mod folder and it is
-played in place of the synthesized sound of that name — a sound designer's work
-IS the waveform, and no list of detuned oscillators is the orchestral hit they
-recorded. THE FILE NAME IS THE ROUTING: there is no `on:` block to write and no
-manifest field, because the event already pointing at `enemy_killed` keeps
-pointing at it. `node mod/tools/cli.mjs sounds [pattern]` prints every id with
-what fires it, and an optional `sounds/<id>.yaml` carrying a `sample:` block
-(`volume`, `pan`, `echo` — nothing that reshapes the recording) trims how it
-sits in the mix. Details: `mod/FORMAT.md` → "a recording", `docs/modding.md`.
+content format. Drop `sounds/<id>.{wav,mp3,ogg,opus,flac}` into a mod folder and
+it is played in place of the synthesized sound of that name — a sound designer's
+work IS the waveform, and no list of detuned oscillators is the orchestral hit
+they recorded. A `music/<id>.opus` replaces a whole SCORE the same way (it plays
+through an `<audio>` element, so it streams rather than sitting in memory as
+decoded PCM). THE FILE NAME IS THE ROUTING: no `on:` block, no manifest field.
+
+**The trap to warn a modder about, every time:** a recording repeats EXACTLY,
+and the sound it replaced did not — `noise` voices redraw their buffer every
+play. Four hundred identical takedowns a run is more fatiguing than the
+oscillators. The cures are `<id>.1.wav`/`<id>.2.wav` takes (cycled round-robin)
+and `pitchJitter: 0.05`, and a sound pack without at least the latter is worse
+than what it replaced.
+
+`node mod/tools/cli.mjs sounds [pattern]` prints every id with what fires it;
+`--play <mod-dir>` auditions the modder's OWN recordings back to back without
+launching the game. A `sounds/<id>.yaml` with a `sample:` block trims how one
+sits (`volume`, `pan`, `echo`, `rate`, `pitchJitter`, `volumeJitter`, `pick`),
+and a `voices:` list with `call: sample` in it COMPOSES — clips layered under a
+synthesized tail, spaced with `delayMs`. Details: `mod/FORMAT.md` → "a
+recording", `docs/modding.md`.
 
 When the work lands in a mod folder, load `mod-authoring` too.
 

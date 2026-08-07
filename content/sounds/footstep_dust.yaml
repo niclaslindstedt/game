@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_dust
+description: >-
+  Regolith, hardpan and scrub: the powdery one. A dull lowpass puff with the
+  cutoff well down, so it reads as a boot sinking into dust rather than
+  landing on anything. The quietest surface in the set — most of the campaign
+  is walked on this, so it has to disappear.
+on:
+  cue: footstep
+  surface: dust
+spatial: true
+voices:
+  - call: noise
+    durationMs: 38
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 380

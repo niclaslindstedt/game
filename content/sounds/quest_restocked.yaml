@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_restocked
+description: >-
+  The stall filling up again: a soft double triangle tap, low and unhurried.
+  Bookkeeping the player may want to notice and must never be bothered by, so
+  it sits near the bottom of the mix.
+on:
+  type: questRestocked
+voices:
+  - call: tone
+    type: triangle
+    from: 330
+    durationMs: 70
+    volume: 0.022
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 110
+    volume: 0.022
+    delayMs: 80

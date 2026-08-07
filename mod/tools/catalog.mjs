@@ -238,6 +238,28 @@ function emittedEvents() {
   );
 }
 
+/**
+ * Every CUE the app raises — what a sound's `on.cue` may name.
+ *
+ * A cue is a moment the RENDERER knows about and the engine does not: a
+ * footfall is the one that forced the axis, because the simulation moves a body
+ * and only the renderer knows the body has legs and which frame of the walk it
+ * is on. Read off the `Cue` union for the same reason the events are read off
+ * theirs — a second hand-kept list would drift inside a release.
+ */
+function raisedCues() {
+  const source = readFileSync(engine("pwa/src/game/sfx/cues.ts"), "utf8");
+  const union = /export type Cue =([^;]+);/.exec(source)?.[1] ?? "";
+  return sorted(
+    new Set(
+      union
+        .split("|")
+        .map((part) => part.trim().replace(/^"|"$/g, ""))
+        .filter(Boolean),
+    ),
+  );
+}
+
 /** The sprite names the atlas ships, so a mod naming one gets a real check
  * rather than an invisible blank where a sprite should be. */
 function shippedSpriteNames() {
@@ -337,6 +359,9 @@ const catalog = {
   soundIndex: soundIndex(),
   music: shippedMusicIds(),
   events: emittedEvents(),
+  // The moments the APP raises, which a sound answers with `on.cue` rather
+  // than `on.type` — see `raisedCues`.
+  cues: raisedCues(),
   // THE RULES a mod may take over: script file → the hooks that file owns.
   // Not an id set either — it is the shape of the scripting seam, and it is in
   // here for the same reason `talentProcs` is: the mod compiler runs in the

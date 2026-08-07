@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_rite_ended
+description: >-
+  The rite closing: the opening swell inverted — everything falls and thins
+  out, and the echo is left to carry the tail. Resolves downward and lands on
+  a clean consonant note, so the room reads as SAFE again.
+on:
+  type: bossRiteEnded
+voices:
+  - call: tone
+    type: sawtooth
+    from: 110
+    to: 55
+    durationMs: 800
+    volume: 0.04
+    detuneCents: 14
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 220
+    durationMs: 700
+    volume: 0.026
+    delayMs: 400
+    attackMs: 200
+    echo: 0.5

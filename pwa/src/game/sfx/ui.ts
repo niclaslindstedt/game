@@ -47,7 +47,14 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
   // The interface's sounds are content like every other (content/sounds/ui_*),
   // and this file keeps only the ones the catalog cannot hold — see
   // `playSunCharge`, whose shape rides a continuous charge level.
-  if (playSound(synth, uiCatalog, `ui_${sound}`)) return;
+  // Never spatial and never positioned: the interface is the player's, not the
+  // world's. GENERATED_UI_SOUNDS is the fail-open bank — a mod whose recorded
+  // click will not decode gets ours rather than a dead menu.
+  if (
+    playSound(synth, uiCatalog, `ui_${sound}`, undefined, GENERATED_UI_SOUNDS)
+  ) {
+    return;
+  }
   switch (sound) {
     case "guide":
       // The "go this way" beacon: a soft sonar ping in step with the guidance

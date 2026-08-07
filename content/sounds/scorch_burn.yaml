@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: scorch_burn
+description: >-
+  Standing in something that is still burning: a short highpass sizzle with a
+  faint low ember under it. This repeats while the hero is in the fire, so it
+  is among the quietest and shortest sounds in the bank — a texture, not an
+  alarm. The damage numbers are the alarm.
+on:
+  type: scorchBurn
+spatial: true
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.02
+    filter:
+      type: highpass
+      frequency: 5000
+  - call: noise
+    durationMs: 70
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 600

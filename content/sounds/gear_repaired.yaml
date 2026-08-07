@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: gear_repaired
+description: >-
+  Work done on a broken piece: two dull hammer taps on metal and a triangle
+  note settling after them. The taps are bandpass noise rather than tone —
+  what says "repaired" is the MATERIAL being worked, not a melody.
+on:
+  type: gearRepaired
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.04
+    filter:
+      type: bandpass
+      frequency: 1500
+  - call: noise
+    durationMs: 40
+    volume: 0.035
+    delayMs: 110
+    filter:
+      type: bandpass
+      frequency: 1900
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 200
+    volume: 0.03
+    delayMs: 200
+    echo: 0.2

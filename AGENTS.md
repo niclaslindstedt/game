@@ -317,6 +317,29 @@ load-bearing (seeded runs, the simulator's A/B, every `rollEquipment` stream), s
 a cosmetic hop that consumes one shifts every roll after it. Derive from the
 item's or the victim's own hash, as the loot toss and the gore scatter do.
 
+**A SOUND'S ROUTE KEY IS FIVE FIELDS IN FOUR PLACES, AND A DRIFT IS INVISIBLE.**
+An event finds its sound by `type|weaponClass|crit|kind|tier` — built by
+`routeKey` (`pwa/src/game/sfx/index.ts`), `matchKey`
+(`scripts/generate-sounds.mjs`), `soundMatchKey` (`mod/tools/build.mjs`) and
+listed as `MATCHABLE` (the sound schema). A field added to one of them makes
+EVERY lookup miss, and nothing goes quiet: the imperative fallbacks in
+`sfx/combat.ts` and friends were recorded FROM the catalog, so they keep playing
+the byte-identical sound and only a MOD's `on:`-routed replacement is lost. What
+wants a sixth field is the DEDUPE key ("are these two events in one step the
+same noise" — that one takes the event's `sfx` too), which is a different
+question and a different function. `tests/catalog_routing_test.ts` asserts
+through the runtime rather than restating the formula, and is the only thing
+keeping the four honest. A field a sound LEAVES OUT answers every value of it
+(the specificity ladder), so `on: { type: X }` is a legitimate catch-all.
+
+**A SOUND THE ENGINE DOES NOT KNOW IT IS MAKING IS A CUE, NEVER AN EVENT.** A
+footfall is the case: the simulation moves a body and the RENDERER is what knows
+it has legs and which frame of the walk it is on. Per-entity-per-frame moments
+must not enter `state.events` — that list is replicated over the wire — so they
+are raised through `playCue` (`pwa/src/game/sfx/cues.ts`) and answered by
+`on: { cue, surface }` in their own key space. Every cue is rate-limited IN THE
+FUNNEL, because a cap each caller reimplements is a cap somebody forgets.
+
 **ANYTHING THE APP DOES TO A RUN BEFORE ITS FIRST TICK IS A SESSION PARAMETER.**
 That means a field on `RunParams`, a line in `createRunFromParams`
 (`src/game/session-setup.ts`), and the matching field on `SessionParams` — never

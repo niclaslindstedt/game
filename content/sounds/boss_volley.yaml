@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_volley
+description: >-
+  A fan of shots leaving at once: three quick square launches stepped 60 ms
+  apart over a lowpass push. Stepped rather than simultaneous because a
+  simultaneous volley is one loud shot — the stagger is what makes the player
+  hear COUNT.
+on:
+  type: bossVolley
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 760
+    to: 300
+    durationMs: 90
+    volume: 0.035
+  - call: tone
+    type: square
+    from: 700
+    to: 280
+    durationMs: 90
+    volume: 0.033
+    delayMs: 60
+  - call: tone
+    type: square
+    from: 640
+    to: 260
+    durationMs: 90
+    volume: 0.031
+    delayMs: 120
+  - call: noise
+    durationMs: 200
+    volume: 0.025
+    filter:
+      type: lowpass
+      frequency: 700

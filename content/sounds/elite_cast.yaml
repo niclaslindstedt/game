@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: elite_cast
+description: >-
+  An elite's move committing: a bright detuned square swell with a glassy
+  octave over it and a long echo send. One sound for every elite primitive —
+  the DRAW says which move it is, and eighteen near-identical casts would be
+  eighteen files nobody could tell apart anyway. Pitched well above the boss
+  material so an elite reads as personal rather than architectural.
+on:
+  type: eliteCast
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 520
+    to: 780
+    durationMs: 200
+    volume: 0.038
+    attackMs: 25
+    detuneCents: 9
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 1560
+    durationMs: 120
+    volume: 0.016
+    delayMs: 40
+    echo: 0.25

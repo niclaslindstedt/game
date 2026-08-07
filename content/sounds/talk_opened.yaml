@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: talk_opened
+description: >-
+  Somebody has something to say: a soft two-note triangle rise, quieter and
+  rounder than a menu confirm. It opens a conversation rather than a window,
+  so it is warm rather than clicky.
+on:
+  type: talkOpened
+voices:
+  - call: tone
+    type: triangle
+    from: 440
+    durationMs: 70
+    volume: 0.028
+    echo: 0.15
+  - call: tone
+    type: triangle
+    from: 587
+    durationMs: 110
+    volume: 0.028
+    delayMs: 70
+    echo: 0.2

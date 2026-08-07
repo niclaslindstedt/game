@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_leveled_up
+description: >-
+  Your companion getting better at this: a small three-note triangle rise. It
+  is the hero's level-up fanfare in miniature and a fifth of the volume —
+  same shape, so it is legible as a ding; much smaller, so it never competes
+  with the player's own.
+on:
+  type: companionLeveledUp
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 70
+    volume: 0.028
+    echo: 0.2
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 70
+    volume: 0.028
+    delayMs: 70
+    echo: 0.2
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 160
+    volume: 0.03
+    delayMs: 140
+    echo: 0.3

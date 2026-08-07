@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_slam
+description: >-
+  The telegraph paying off: a heavy body hitting the ground. A saw dive to the
+  floor with a lowpass boom under it and the shockwave's dust hissing out
+  behind — the same three-layer weight a kill gets, tuned lower and longer so
+  it lands as a floor event rather than as a death.
+on:
+  type: enemySlam
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 180
+    to: 34
+    durationMs: 300
+    volume: 0.06
+  - call: noise
+    durationMs: 260
+    volume: 0.055
+    filter:
+      type: lowpass
+      frequency: 320
+  - call: noise
+    durationMs: 200
+    volume: 0.022
+    delayMs: 70
+    filter:
+      type: highpass
+      frequency: 2800

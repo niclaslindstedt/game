@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: spawner_alarmed
+description: >-
+  A nest noticing the hero: a two-pulse alarm, square and mechanical, on a
+  falling interval. It is a warning the player can act on — the nest is about
+  to start producing — so it is dry and legible rather than atmospheric.
+on:
+  type: spawnerAlarmed
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 700
+    durationMs: 60
+    volume: 0.035
+  - call: tone
+    type: square
+    from: 560
+    durationMs: 80
+    volume: 0.035
+    delayMs: 90

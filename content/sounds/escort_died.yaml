@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: escort_died
+description: >-
+  The person you were supposed to keep alive, not being alive: a low saw
+  collapse with a hollow sine hanging after it. This is a FAILURE sting — the
+  errand is lost — so it is allowed to be one of the bleaker sounds in the
+  bank, and the tail is long enough to be uncomfortable.
+on:
+  type: escortDied
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 200
+    to: 60
+    durationMs: 380
+    volume: 0.05
+    detuneCents: 10
+  - call: tone
+    type: sine
+    from: 147
+    durationMs: 620
+    volume: 0.022
+    delayMs: 200
+    attackMs: 100
+    echo: 0.45

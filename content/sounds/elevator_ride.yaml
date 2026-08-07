@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: elevator_ride
+description: >-
+  The car moving: a lowpass motor swell that rises and settles, with a faint
+  cable hiss over it. Long by this bank's standards because the ride is long,
+  and quiet because it is the floor under a transition rather than an event.
+on:
+  type: elevatorRide
+voices:
+  - call: tone
+    type: triangle
+    from: 90
+    to: 130
+    durationMs: 620
+    volume: 0.03
+    attackMs: 120
+    detuneCents: 10
+  - call: noise
+    durationMs: 560
+    volume: 0.014
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 3200

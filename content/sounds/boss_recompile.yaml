@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_recompile
+description: >-
+  The thing rebuilding itself: a stuttering square ladder climbing in steps,
+  glitchy and quantised, with a thin digital hiss under it. The only sound in
+  the bank that is deliberately MECHANICAL rather than physical — this is
+  software repairing software.
+on:
+  type: bossRecompile
+spatial: true
+voices:
+  - call: tone
+    type: square
+    from: 220
+    durationMs: 50
+    volume: 0.032
+  - call: tone
+    type: square
+    from: 330
+    durationMs: 50
+    volume: 0.032
+    delayMs: 70
+  - call: tone
+    type: square
+    from: 440
+    durationMs: 50
+    volume: 0.032
+    delayMs: 140
+  - call: tone
+    type: square
+    from: 660
+    durationMs: 180
+    volume: 0.034
+    delayMs: 210
+    echo: 0.3
+  - call: noise
+    durationMs: 320
+    volume: 0.014
+    filter:
+      type: highpass
+      frequency: 6000

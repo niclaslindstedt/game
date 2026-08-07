@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: corpse_recovered
+description: >-
+  Getting your things back off your own body: a soft rising triangle pair with
+  a breath of echo. Consonant and warm — it is a relief, not a triumph, so it
+  sits well under the pickup fanfares.
+on:
+  type: corpseRecovered
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 110
+    volume: 0.035
+    echo: 0.2
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 160
+    volume: 0.035
+    delayMs: 110
+    echo: 0.25

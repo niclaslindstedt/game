@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_rite_vanished
+description: >-
+  It is not here any more: a swept highpass whisper going up and out with a
+  sine chasing it. Weightless, and the only thing in the rite with no low end
+  at all — the absence of body is what makes it read as disappearance.
+on:
+  type: bossRiteVanished
+spatial: true
+voices:
+  - call: noise
+    durationMs: 300
+    volume: 0.03
+    echo: 0.45
+    filter:
+      type: highpass
+      frequency: 3600
+  - call: tone
+    type: sine
+    from: 660
+    to: 2200
+    durationMs: 340
+    volume: 0.02
+    echo: 0.45

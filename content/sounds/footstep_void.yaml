@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_void
+description: >-
+  Walking on nothing much: the nebula and the void deck. An airy highpass
+  breath with a long echo send and no body under it — nothing lands, it just
+  displaces. The one footstep in the set allowed any echo at all, because it
+  is the one surface where the room is the point.
+on:
+  cue: footstep
+  surface: void
+spatial: true
+voices:
+  - call: noise
+    durationMs: 54
+    volume: 0.010
+    echo: 0.3
+    filter:
+      type: highpass
+      frequency: 3000

@@ -36,9 +36,10 @@ document and a schema disagree, the schema is right.**
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
 | `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
 
-A `sounds/<id>.wav` or `.mp3` is the one file with no schema, because it has no
-fields: it is a RECORDING, and the compiler checks only that it is one (see
-[`sounds/<id>.wav`](#soundsidwav--soundsidmp3--a-recording)).
+A recording — `sounds/<id>.<ext>` or `music/<id>.<ext>` — is the one file with
+no schema, because it has no fields: the compiler checks only that it IS one
+(see [a recording](#soundsidext--a-recording) and
+[a recorded score](#musicidext--a-recorded-score)).
 
 ---
 
@@ -724,8 +725,10 @@ swings the plain look, so the compiler refuses one.
 ## `sounds/<id>.yaml` — a sound
 
 The file stem is the id. A sound is a list of **voices** fired in order, each
-either a `tone` (an oscillator) or a `noise` (a filtered burst), optionally
-offset by `delayMs` so a sound can be a little phrase rather than one hit:
+a `tone` (an oscillator), a `noise` (a filtered burst) or — see
+[a recording](#soundsidext--a-recording) — a `sample` (one of your own audio
+files), optionally offset by `delayMs` so a sound can be a little phrase rather
+than one hit:
 
 ```yaml
 id: mymod_saw_swing
@@ -783,6 +786,17 @@ stray `0.9` is not a louder sound, it is a clipped one. The compiler warns above
   Two sounds may not answer the same shape — within one mod the compiler refuses
   it; between two mods the load order decides, like every other clash.
 
+  **A field you leave OUT answers every value of it.** `on: { type: enemyHit }`
+  is the sound of any hit; `on: { type: enemyHit, crit: true }` beside it still
+  takes the crits. The most specific match wins, so the general case is safe to
+  reach for first — which is what you want when an event has twenty `kind`s and
+  you have one sound for all of them.
+
+- **By CUE.** A few moments the engine never reports — a footfall — are raised
+  by the app instead, and answered with `on: { cue: … }` rather than
+  `on: { type: … }`. See
+  [answering a cue](#answering-a-cue-instead-of-an-event).
+
 An `addon` may not ship an AUTHORED sound with a shipped id (prefix yours, or
 switch to `conversion`) — a RECORDING is the exception, and the next section is
 about it. There is no control flow in the format and there is not going to be:
@@ -790,13 +804,18 @@ a mod's sound is data the game replays, never a program it runs.
 
 Full reference: [`../content/sounds/`](../content/sounds).
 
-## `sounds/<id>.wav` / `sounds/<id>.mp3` — a recording
+## `sounds/<id>.<ext>` — a recording
 
 The game itself ships **no audio files**: every shipped effect is synthesized
 from the voices above, which is what keeps it small and offline. Your mod is not
-under that constraint. Drop a `.wav` or an `.mp3` into `sounds/` and it is
-played in place of the synthesized sound of the same name — which is how a mod
-ships professionally produced audio instead of a list of oscillators.
+under that constraint. Drop a recording into `sounds/` and it is played in place
+of the synthesized sound of the same name — which is how a mod ships
+professionally produced audio instead of a list of oscillators.
+
+**Accepted:** `.wav`, `.mp3`, `.ogg`, `.opus`, `.flac`. Recordings only reach
+the game through the desktop build, so the decoder on the other side is always
+the same Chromium — `.opus` is about a third of `.mp3` at the same quality and
+is the right default for anything longer than a second.
 
 **THE FILE NAME IS THE ROUTING, and it is the whole of it.** There is no `on:`
 block to write, no manifest field, no id typed twice:
@@ -815,7 +834,7 @@ folder of recordings and not one line of YAML — is a complete, valid mod.
 
 ### Which names may I use?
 
-Every sound the game ships, and there are 135 of them:
+Every sound the game ships, and there are 191 of them:
 
 ```sh
 node mod/tools/cli.mjs sounds            # all of them
@@ -823,16 +842,49 @@ node mod/tools/cli.mjs sounds killed     # the ones about a kill
 node mod/tools/cli.mjs sounds enemyShot  # by the event that fires them
 ```
 
-It prints the id to name your file after, the event that fires it (or
+It prints the id to name your file after, what fires it (an event, a `cue`, or
 `(by name)` for the interface, the road, and the ones a weapon points at with
 `sfx:`), and a sentence saying what the shipped effect was designed to feel
 like — so you know what you are replacing before you replace it.
 
 A name that is **not** one of those is fine too, as long as something in your
-mod plays it: a weapon's `sfx:`, a power's `sfx:`, or a `sounds/<id>.yaml`
-beside it carrying an `on:` block. A recording named after nothing at all
-compiles, ships, installs and is never heard — so the compiler warns about it,
-which is almost always a typo in a name.
+mod plays it: a weapon's `sfx:`, a power's `sfx:`, a `sounds/<id>.yaml` beside
+it carrying an `on:` block, or a `call: sample` voice naming it as a clip. A
+recording named after nothing at all compiles, ships, installs and is never
+heard — so the compiler warns about it, which is almost always a typo.
+
+### Hearing it without launching the game
+
+```sh
+node mod/tools/cli.mjs sounds --play my-mod          # every recording, in order
+node mod/tools/cli.mjs sounds kill --play my-mod     # just the takedowns
+```
+
+Plays them back to back through `ffplay`, `mpv`, `afplay` or `paplay`, which is
+how you notice the one thing a recording does that the sound it replaced did
+not: repeat itself exactly. Which brings us to —
+
+### Variants — `<id>.1.wav`, `<id>.2.wav`, …
+
+**The single most important thing to know about replacing a frequent sound.**
+The shipped bank's noise voices regenerate their waveform on every play, so four
+hundred takedowns in a run are four hundred subtly different sounds. One
+recording is the same waveform four hundred times, and the ear catches that
+long before the four hundredth — the "machine gun" artifact.
+
+Ship several takes and the game cycles between them:
+
+```
+my-mod/
+  sounds/
+    enemy_hit.1.wav
+    enemy_hit.2.wav
+    enemy_hit.3.wav
+```
+
+They are one sound, `enemy_hit`, with three takes. The default pick is
+`cycle` — round-robin, which never plays the same take twice running; that is
+the artifact, and true randomness reproduces it about a third of the time.
 
 ### Trimming a recording — `sample:`
 
@@ -850,31 +902,131 @@ sample:
   volume: 0.7 # 0–1, trim; the default plays it as mastered
   pan: -0.3 # -1 (left) to 1 (right)
   echo: 0.2 # 0–1 send into the game's shared hall
+  rate: 1.0 # playback rate; 1 is the recording's own pitch
+  pitchJitter: 0.05 # ± this fraction of `rate`, redrawn every play
+  volumeJitter: 0.1 # ± this fraction of `volume`, likewise
+  pick: cycle # cycle | random | hash — which take, when there are several
 ```
 
-Those three fields are all a `sample:` block takes. There is deliberately no
-`file:` — the stem IS the id, so there is exactly one place the recording can
-be and exactly one sound it can replace. And a sound is played from **one**
-source: a YAML carrying both `sample:` and `voices:` is refused, because voices
-under a recording are voices that can never be heard.
+`pitchJitter` is the cheap half of the machine-gun cure and worth setting on
+anything frequent even with a single take: 0.04–0.08 is a semitone of life,
+past about 0.15 it reads as a broken tape.
+
+There is deliberately no `file:` — the stem IS the id, so there is exactly one
+place the recording can be and exactly one sound it can replace. And a sound is
+played from **one** source: a YAML with a `sample:` block and `voices:` both is
+refused, because voices under a recording are voices that can never be heard.
 
 The same file is also how you give a **brand-new** sound a recording — add an
 `on:` block (or point a weapon's `sfx:` at it) and no `voices:`, and the
 recording answers that event.
 
+### Composing with recordings — `call: sample`
+
+`sample:` replaces a sound with one file. A `voices:` list lets you BUILD one,
+mixing recordings and synthesis in the same sound with `delayMs` spacing them:
+
+```yaml
+# sounds/mymod_bighit.yaml — beside sounds/impact.wav and sounds/debris.wav
+id: mymod_bighit
+description: A body hitting a bulkhead, then what it knocked loose.
+on:
+  type: enemyKilled
+  crit: true
+voices:
+  - call: sample
+    clip: impact # sounds/impact.wav — a CLIP, not a sound id
+    volume: 0.9
+    pitchJitter: 0.05
+  - call: sample
+    clip: debris
+    delayMs: 120
+  - call: tone # …and the shipped vocabulary still available under it
+    type: sine
+    from: 60
+    durationMs: 400
+    delayMs: 90
+```
+
+A `clip` is a file stem in `sounds/`, and a clip reached only this way never
+needs to be a sound id at all — it is a part, not a sound. Every `sample:` field
+above is available on a `call: sample` voice, plus `delayMs`.
+
+### Where a sound sits, and how long it lasts
+
+Three fields on the sound itself, all optional and all as available to a
+synthesized sound as to a recorded one:
+
+```yaml
+spatial: true # pan and trim by WHERE it happened, against the player's camera
+loop: true # a sustained source — weather, a room tone, an engine layer
+stopOn: sandstormEnded # the event that ends it (a loop without one runs to
+fadeMs: 250 #             the end of the run); fade for its start and stop
+```
+
+`spatial` is opt-in because most sounds are not the world's: a menu click, a
+level-up fanfare and a defeat sting belong to the player, and drifting one
+off-centre because a body happened to be standing left is a bug rather than an
+effect. A sound with no position on its event plays centred, so marking one
+spatial is never a way to make it disappear.
+
+`loop` is recording-only — a loop of oscillators is what `music/` is for — and
+a loop is placed once, where it started, so it does not follow anything.
+
+### Answering a CUE instead of an event
+
+Most sounds answer a `GameEvent`. A few moments the simulation never reports at
+all — a footfall is one: the engine moves a body, and it is the renderer that
+knows the body has legs and that a boot just came down. Those are **cues**:
+
+```yaml
+on:
+  cue: footstep
+  surface: metal # optional; omit for every surface
+```
+
+`surface` for a footstep is the level's own ground family (`dust`, `stone`,
+`metal`, `gravel`, `soft`, `void` in the shipped game — and any ground family a
+conversion lays down, by its own name). A cue with no sound for its surface
+falls back to the one with no `surface:` at all.
+
 ### What the compiler refuses
 
-| Refusal                                       | Why                                                                                             |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Anything but `.wav` or `.mp3`                 | Those two are decoded by every shell the game runs in.                                          |
-| Contents that disagree with the extension     | Read from the first bytes, not the name — a mislabelled file would reach the player as silence. |
-| One id with both a `.wav` and an `.mp3`       | Which won would be decided by alphabetical order.                                               |
-| A single recording over **2 MiB**             | About twelve seconds of CD-quality stereo WAV. Trim it, or ship `.mp3`.                         |
-| More than **24 MiB** of recordings in one mod | Every enabled mod's audio is held in memory at once. Past 8 MiB it warns and points at `.mp3`.  |
-| A `sample:` block with no recording beside it | A sound with neither a file nor a voice is silence.                                             |
+| Refusal                                         | Why                                                                                             |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Anything but the five accepted containers       | Those are what the desktop shell's Chromium decodes.                                            |
+| Contents that disagree with the extension       | Read from the first bytes, not the name — a mislabelled file would reach the player as silence. |
+| One take with two containers                    | Which of a `.wav` and an `.opus` won would be decided by alphabetical order.                    |
+| A single recording over **2 MiB**               | About twelve seconds of CD-quality stereo WAV. Trim it, or ship `.opus`.                        |
+| More than **24 MiB** of recordings in one mod   | Every enabled mod's audio is held in memory at once. Past 8 MiB it warns and points at `.opus`. |
+| A `sample:` block with no recording beside it   | A sound with neither a file nor a voice is silence.                                             |
+| A `call: sample` naming a clip you did not ship | It would be a silent layer, and the sound would be missing whatever you meant it to carry.      |
+| `loop: true` on a sound with synthesized voices | A sustained source is a recording; an arrangement is what `music/` is for.                      |
 
-WAV is the honest choice for a short effect and MP3 for anything long — a
-minute of ambience is a tenth the size as MP3, and both decode everywhere.
+## `music/<id>.<ext>` — a recorded score
+
+The same bargain as a recorded effect, and for a stronger reason: a conversion
+that has commissioned a soundtrack has a finished mix, and asking its author to
+re-enter it as sixteenth-note tokens is asking them to throw the work away.
+
+```
+my-mod/
+  music/
+    regolith_ride.opus    ← replaces the theme of that name
+    mymod_hymn.opus       ← a new one; a level's `music:` names it
+```
+
+The stem is the routing here too. Accepted containers are the same five;
+`.opus` is strongly preferred, because a track is minutes rather than a second.
+A recorded track plays through the browser's own audio element rather than the
+sequencer, so it **streams** — a three-minute score does not sit in memory as
+decoded PCM — and it loops, pauses and resumes for free.
+
+| Refusal                                  | Why                                                          |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| One track over **8 MiB**                 | About eleven minutes of Opus. Past any loop this game needs. |
+| More than **32 MiB** of score in one mod | The compiled bundle crosses to the game in one message.      |
+| A recording and a YAML score with one id | A theme is played from one or the other.                     |
 
 ## `music/<id>.yaml` — a score
 
@@ -1730,15 +1882,15 @@ The compiler reads only where content lives, so anything else in the folder is
 invisible to it — and travels to everybody who installs your mod. `validate`
 asks the other question, and this is the whole list of what it allows:
 
-| Where                                                            | What                                                                                                                                                          |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mod.yaml`                                                       | the manifest                                                                                                                                                  |
-| `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                   |
-| `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                      |
-| `sounds/` also                                                   | `<id>.wav` and `<id>.mp3` — a RECORDING replacing the sound of that name; the one tree that holds media beside its YAML                                       |
-| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                   |
-| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml` |
-| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                         |
+| Where                                                            | What                                                                                                                                                                                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mod.yaml`                                                       | the manifest                                                                                                                                                                                                      |
+| `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                                                                       |
+| `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                                                                          |
+| `sounds/` and `music/` also                                      | `<id>.wav` / `.mp3` / `.ogg` / `.opus` / `.flac` — a RECORDING replacing the sound or track of that name (plus `<id>.1.wav`, `<id>.2.wav` … for a sound's takes); the two trees that hold media beside their YAML |
+| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                                                                       |
+| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml`                                                     |
+| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                                                                             |
 
 Everything else is refused by name, and each refusal says which of the two it
 is: **junk** (a `.DS_Store`, an editor backup, a layered `.psd`, a

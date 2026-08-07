@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_beam
+description: >-
+  The beam opening and sweeping: a held detuned sawtooth with a bandpass roar
+  riding it, long enough to cover the sweep it describes. One event carries
+  the WHOLE move, so this is one long sound rather than a per-frame texture —
+  the loudest thing the boss does, and it should be.
+on:
+  type: bossBeam
+spatial: true
+voices:
+  - call: tone
+    type: sawtooth
+    from: 300
+    to: 380
+    durationMs: 900
+    volume: 0.055
+    attackMs: 60
+    detuneCents: 16
+    echo: 0.3
+  - call: noise
+    durationMs: 860
+    volume: 0.03
+    delayMs: 40
+    filter:
+      type: bandpass
+      frequency: 2400

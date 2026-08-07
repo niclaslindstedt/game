@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: bait_dropped
+description: >-
+  Something tempting hitting the floor: a light metallic clink with a soft
+  ping over it. It has to read as an OBJECT arriving, not as a threat — the
+  threat is bait_detonated, and the gap between them is the whole mechanic.
+on:
+  type: baitDropped
+spatial: true
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 2000
+  - call: tone
+    type: sine
+    from: 1046
+    durationMs: 140
+    volume: 0.018
+    delayMs: 40
+    echo: 0.3

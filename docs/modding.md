@@ -115,19 +115,37 @@ The one asymmetry in the format, and a deliberate one. Every shipped effect is
 synthesized from parameters, because a PWA that ships no audio files stays small
 and offline and diffable. That reasoning does not transfer to a mod: a sound
 designer's work IS the waveform, and no list of detuned oscillators is going to
-be the orchestral hit they recorded. So `sounds/<id>.wav` and `sounds/<id>.mp3`
-are the one media file a mod may hand the game.
+be the orchestral hit they recorded. So a recording — `.wav`, `.mp3`, `.ogg`,
+`.opus` or `.flac`, under `sounds/` or `music/` — is the one media file a mod
+may hand the game. (The container list is set by where recordings can actually
+arrive: only through the Steam shell, so the decoder is always Chromium.)
 
 **The file name is the routing, and there is no second mechanism.** A recording
 named `enemy_killed.wav` replaces the sound `enemy_killed` — the event table the
-shipped catalog already carries keeps pointing exactly where it pointed, and the
-bank consulted at play time simply answers with the recording instead. That is
+shipped catalog already carries keeps pointing exactly where it pointed. That is
 what makes a SOUND PACK a complete mod with no YAML in it at all, and it is why
 this is the one id clash an ADDON is allowed: naming the sound it stands in for
 is the only way to ship a recording, so a footstep pack would otherwise have to
 declare itself a total conversion.
 
-Three rules hold the seam together, and each is one that would otherwise bite:
+**A RECORDING IS A SOUND DEF, NOT A SECOND KIND OF THING.** This is the piece
+worth understanding, because it is what makes composing possible at all. The
+compiler turns a dropped-in `enemy_killed.wav` into an ordinary catalog entry
+whose one voice is `call: sample, clip: enemy_killed`, so the page merges it,
+routes it and plays it through exactly the code that handles a synthesized
+sound. Writing that def out longhand is then just… writing it: two clips
+layered under a synthesized tail, spaced with `delayMs`, is a sound a mod can
+author. (It began as a parallel bank consulted AHEAD of the catalog, which
+worked for replacing a sound and made building one impossible.)
+
+**A clip may have several TAKES**, `enemy_hit.1.wav` and friends, cycled
+round-robin. This is not a flourish: the shipped bank's `noise` voices redraw
+their buffer every play, so four hundred takedowns a run are four hundred
+slightly different sounds, while one recording is one waveform four hundred
+times. A sound pack without takes (or at least a `pitchJitter`) is measurably
+more fatiguing than the oscillators it replaced.
+
+Rules that hold the seam together, each one that would otherwise bite:
 
 - **The check goes in the FUNNEL, not in a caller.** Every sound in the game —
   a run's events, the interface's clicks, the road's scrapes, a weapon's own
@@ -136,12 +154,30 @@ Three rules hold the seam together, and each is one that would otherwise bite:
   their OWN catalog so a title screen does not download the combat bank to click
   a button — which is why `applyMods` merges into both, or `ui_confirm.yaml`
   would compile, ship, and never be heard.)
+- **THE ROUTE KEY AND THE DEDUPE KEY ARE TWO KEYS.** An event picks its sound by
+  `type|weaponClass|crit|kind|tier` — the same five fields the generator and the
+  mod compiler build from an `on:` block, and a sixth field on any one of the
+  three makes every lookup miss. It did once, and the failure was invisible: the
+  imperative fallbacks in `sfx/combat.ts` and friends kept playing the
+  byte-identical sound they had been recorded FROM, so nothing in the shipped
+  game noticed, and the only casualty was every mod's `on:`-routed replacement.
+  What wanted the sixth field (an event's own `sfx`) is the question "are these
+  two events in one step the same noise" — a different question, and now a
+  different function. `tests/catalog_routing_test.ts` asserts THROUGH the
+  runtime rather than restating its formula, which is the only way this stays
+  fixed.
+- **A missing discriminator answers every value of it.** `on: { type: enemyHit }`
+  answers crits and non-crits alike; a more specific entry beside it still wins.
+  Without that ladder, an `on:` naming only a type builds `enemyHit||||` while
+  the event builds `enemyHit||true||`, and the sound is never played — with no
+  error, because both halves are individually correct.
 - **Decoding is lazy and FAILS OPEN.** `decodeAudioData` needs a running
   AudioContext, and there is none until the player has touched something, so a
   recording cannot be decoded at the moment a mod is applied; it is warmed as
   soon as audio is live and decoded on demand otherwise. A file the browser
-  refuses is DROPPED from the bank, which puts the synthesized sound back — a
-  corrupt download must not silence one sound for the rest of a run.
+  refuses is DROPPED, and a clip that loses its last take is dropped with it,
+  which puts the SHIPPED sound back — a corrupt download must not silence one
+  sound for the rest of a run.
 - **The bytes are never parsed by us.** They travel base64'd and untouched and
   go to the browser's own audio decoder, the same one every `<audio>` on the web
   uses. This is a real widening of what a mod reaches — the sprites deliberately
@@ -150,7 +186,50 @@ Three rules hold the seam together, and each is one that would otherwise bite:
   mastered audio into a container of ours would be the one lossy step in a
   pipeline that has none. What the compiler can check honestly, it does: the
   name is an id, the magic bytes agree with the extension, the size is sane
-  (2 MiB a file, 24 MiB a mod), and nothing deeper.
+  (2 MiB a file, 24 MiB a mod; 8 MiB and 32 MiB for music), and nothing deeper.
+- **A recorded SCORE streams; a recorded EFFECT decodes.** A track plays through
+  an `<audio>` element rather than `decodeAudioData`
+  (`pwa/src/game/music/recorded.ts`), because a decoded `AudioBuffer` is 32-bit
+  float PCM — a three-minute stereo score is over 60 MB resident, and a
+  conversion with six themes would be most of a gigabyte. It also loops
+  seamlessly and pauses in place for free, which the sequencer would otherwise
+  have to be rebuilt to do. The cost is that it bypasses the AudioContext, so
+  the music volume is PUSHED to it (`onMusicVolume`) rather than read per note.
+
+### A CUE is a sound the engine does not know it is making
+
+Most sounds answer a `GameEvent`: the simulation reports a thing and the catalog
+says what it sounds like. A few moments the simulation never reports at all, and
+a footfall is the one that forced a second axis. The engine moves a body from A
+to B; it is the RENDERER that knows the body has legs, how long its stride is,
+and that a boot just came down — and a party of four walking would put hundreds
+of events a second into `state.events`, a list replicated to every client, to
+describe something the receiving end works out for itself.
+
+So the app raises a CUE, matched through the same `on:` block in its own key
+space (`cue|surface`) rather than smuggled into the event key, since a cue has
+no event type and a blank one would be a thing an author could write:
+
+```yaml
+on:
+  cue: footstep
+  surface: metal
+```
+
+Three rules, each earned:
+
+- **The rate limit lives in the funnel** (`sfx/cues.ts`), not in the caller.
+  Cues are raised from per-frame code by definition, so every one needs a cap
+  and a cap each caller reimplements is a cap somebody forgets.
+- **A cue falls back to its generic.** `footstep|metal`, then `footstep|`. A
+  biome nobody wrote a specific sound for is still audible, and a mod may be as
+  specific as it likes without covering the board.
+- **The surface is the level's own ground family, not a fixed enum.** The
+  shipped families map down to six materials a boot can be told apart on
+  (`render/footsteps.ts`), and a family with no entry PASSES THROUGH AS ITSELF —
+  so a conversion that lays down `lava_0` gets `surface: lava` and can author
+  for it. Mapping the unknown onto `dust` instead would have made every mod's
+  new ground silently sound like regolith with no way to say otherwise.
 
 ### A mod's venue is CARVED, like every other
 

@@ -24,7 +24,7 @@ import {
   playNukeHaptic,
 } from "../haptics.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { playEventSounds } from "../sfx/index.ts";
+import { playEventSounds, setListener } from "../sfx/index.ts";
 import { makeWornEquipmentGate, wornEquipment } from "./run-progress.ts";
 
 export type TickReactions = {
@@ -55,6 +55,13 @@ export function createTickReactions(deps: {
   // mark it produces.
   const killRate = createKillRateWindow();
   const consume = (hpBeforeStep: number) => {
+    // WHERE THIS PLAYER IS LISTENING FROM, stamped before the events are
+    // sounded. The LOCAL hero's own camera, never seat 0's — a joiner hearing
+    // the host's screen would have every sound panned by somebody else's
+    // position. Absent on the first tick (the seat's view arrives with its
+    // first input), which `place()` answers as "centred" rather than as
+    // silence.
+    setListener(localHero(state).view);
     playEventSounds(synth, state.events);
     // Buzz back when the hero was bitten this tick, scaled to the share of his
     // max hp the blow cost. Gated on the playerHurt event (not a bare hp drop)

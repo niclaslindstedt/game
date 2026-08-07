@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: footstep_metal
+description: >-
+  Deck plating and rusted grating: a boot on a panel that answers back. A
+  bandpass tick of contact and a very short square ring under it — the ring
+  is the panel flexing, and it is pitched high and cut off fast so a corridor
+  of these does not turn into a melody.
+on:
+  cue: footstep
+  surface: metal
+spatial: true
+voices:
+  - call: noise
+    durationMs: 22
+    volume: 0.013
+    filter:
+      type: bandpass
+      frequency: 1800
+  - call: tone
+    type: square
+    from: 620
+    to: 470
+    durationMs: 30
+    volume: 0.008
+    echo: 0.12

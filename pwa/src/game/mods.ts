@@ -54,9 +54,15 @@ import type { ChiptuneTrack } from "@ui/lib/chiptune.ts";
 
 import { synth } from "./audio.ts";
 import type { Sprites } from "./assets.ts";
-import { setModTracks } from "./music/index.ts";
 import {
+  setModTracks,
+  setRecordedTracks,
+  type RecordedTrack,
+} from "./music/index.ts";
+import {
+  setCueCatalog,
   setSoundCatalog,
+  SHIPPED_CUE_KEYS,
   SHIPPED_SOUNDS,
   SHIPPED_SOUND_KEYS,
 } from "./sfx/index.ts";
@@ -127,8 +133,10 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.quests,
     ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0) +
     // A mod whose whole contribution is a folder of recordings — the point of
-    // shipping real audio at all — adds nothing to any catalog above.
-    (bundle.samples?.length ?? 0);
+    // shipping real audio at all — adds nothing to any catalog above. Nor does
+    // one whose contribution is a recorded soundtrack.
+    (bundle.samples?.length ?? 0) +
+    (bundle.musicSamples?.length ?? 0);
   return adds === 0 ? "empty" : null;
 }
 
@@ -252,10 +260,13 @@ export async function applyMods(
   // download the combat bank to click a button. A mod merges into both, or
   // `sounds/ui_confirm.yaml` compiles, ships, and is never heard.
   const uiSounds: SoundCatalog = { ...SHIPPED_UI_SOUNDS };
-  // The RECORDINGS, keyed by the sound id each one stands in for. One ledger
-  // with the synthesized sounds (`soundOwners`), because to a player they are
-  // one thing — "which mod's kill sound am I hearing" — and the answer must
-  // not depend on whether the mod that won authored voices or shipped a file.
+  const cueKeys: Record<string, string> = { ...SHIPPED_CUE_KEYS };
+  // The CLIPS — a mod's audio files, by name. Merged like every other catalog
+  // (later wins), and NOT owner-claimed: what the player hears is a sound def,
+  // and that is what `soundOwners` already tracks. One ledger, because to a
+  // player it is one thing — "which mod's kill sound am I hearing" — and the
+  // answer must not depend on whether the mod that won authored voices or
+  // shipped a file.
   const samples = new Map<string, LoadedSample>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
@@ -270,6 +281,9 @@ export async function applyMods(
   const scriptOwners = new Map<string, string[]>();
   const difficultyOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
+  // The RECORDED scores share the music clash ledger: to a player "this mod's
+  // theme" is one thing, and which player renders it is not their problem.
+  const recordedMusic = new Map<string, RecordedTrack>();
   const musicOwners = new Map<string, string[]>();
   const cutsceneOwners = new Map<string, string[]>();
   const thoughtOwners = new Map<string, string[]>();
@@ -356,22 +370,36 @@ export async function applyMods(
       if (id in uiSounds) uiSounds[id] = def as SoundDef;
       claim(soundOwners, id, bundle.id);
     }
-    // A RECORDING wins over voices for the same id no matter which order the
-    // two arrived in — a mod that ships `enemy_killed.wav` beside its own
-    // `enemy_killed.yaml` meant the file, and the compiler already said so.
+    // THE CLIPS — the audio itself. A recording is no longer a second kind of
+    // sound consulted ahead of the catalog: the compiler emitted a def for it
+    // in `bundle.sounds` above (a `call: sample` voice naming this clip), so
+    // the merge that just happened is the whole of the routing, and this is
+    // only the bytes it will reach for.
+    //
+    // NOT claimed in `soundOwners`: the def that names the clip already was,
+    // one loop up. Claiming here too would report a sound pack as two mods
+    // fighting over every sound in it.
     for (const sample of bundle.samples ?? []) {
       samples.set(sample.id, {
         id: sample.id,
-        bytes: base64ToBytes(sample.data),
-        ...(sample.volume === undefined ? {} : { volume: sample.volume }),
-        ...(sample.pan === undefined ? {} : { pan: sample.pan }),
-        ...(sample.echo === undefined ? {} : { echo: sample.echo }),
+        takes: sample.takes.map(base64ToBytes),
       });
-      claim(soundOwners, sample.id, bundle.id);
     }
+    // A mod's CUE routing, last for the same reason the event routing is: a
+    // later mod answering the same cue wins it.
+    Object.assign(cueKeys, bundle.cueKeys ?? {});
     for (const [id, track] of Object.entries(bundle.music ?? {})) {
       music[id] = track as ChiptuneTrack;
+      recordedMusic.delete(id); // an arrangement replacing an earlier mod's mix
       claim(musicOwners, id, bundle.id);
+    }
+    for (const track of bundle.musicSamples ?? []) {
+      recordedMusic.set(track.id, {
+        id: track.id,
+        bytes: base64ToBytes(track.data),
+      });
+      delete music[track.id]; // …and a mix replacing an earlier arrangement
+      claim(musicOwners, track.id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.cutscenes ?? {})) {
       cutscenes[id] = def;
@@ -406,6 +434,7 @@ export async function applyMods(
   }
 
   setSoundCatalog(sounds, soundKeys);
+  setCueCatalog(sounds, cueKeys);
   setUiSoundCatalog(uiSounds);
   // The recordings go in as bytes and are decoded by the browser's own audio
   // decoder. Warming here rather than on first play so the kill that starts a
@@ -418,6 +447,7 @@ export async function applyMods(
   // imports and stay exactly where they are, so a mod that replaces one does it
   // by claiming its id here rather than by anything being rebuilt.
   setModTracks(music);
+  setRecordedTracks([...recordedMusic.values()]);
   const defs: DefOverrides = {
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
@@ -516,9 +546,11 @@ export function restoreBaseDefs(sprites: Sprites): void {
     Object.assign(sprites, baseSprites);
   }
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+  setCueCatalog(SHIPPED_SOUNDS, SHIPPED_CUE_KEYS);
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);
   clearSamples();
   setModTracks({});
+  setRecordedTracks([]);
   setActiveMods([], []);
   setActiveDefs(null);
 }

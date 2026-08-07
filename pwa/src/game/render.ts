@@ -23,6 +23,7 @@ import {
 import { drawBloodGround } from "./render/blood-ground.ts";
 import { drawBloodTracks, stepBloodTracks } from "./render/blood-tracks.ts";
 import { ensureCaches } from "./render/caches.ts";
+import { stepFootsteps } from "./render/footsteps.ts";
 import {
   combatNoiseFade,
   drawDeathClouds,
@@ -205,6 +206,11 @@ export function drawFrame(
   // from the last frame, so it must be called exactly once per frame.
   stepBloodTracks(state);
   drawBloodTracks(ctx, state, sprites, camera, worldView);
+  // …and the sound of the same boots. Stepped here beside the trail because it
+  // is the same measurement — a stride since the last frame — and the two must
+  // agree: a print without a step, or a step without a print, reads as two
+  // characters walking. It draws nothing; the pairing is the point.
+  stepFootsteps(state);
 
   // …and from here to `ctx.restore()` below, the world is drawn TILTED: the
   // ground plane rakes away from the eye, and anything with a body to it stands

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_dismissed
+description: >-
+  Sending somebody away: the joining flourish turned around — two triangle
+  notes falling, with the echo left open behind them. Quiet and a little sad,
+  which is the honest reading of the moment.
+on:
+  type: companionDismissed
+voices:
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 90
+    volume: 0.026
+    echo: 0.25
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 200
+    volume: 0.026
+    delayMs: 90
+    echo: 0.35

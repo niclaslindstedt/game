@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: weapon_dry
+description: >-
+  The empty gun: a dry mechanical CLICK and nothing behind it. The single most
+  important piece of feedback the game was missing — a trigger pull that does
+  nothing has to be audibly different from one that missed, or the player
+  reads "out of ammo" as "the game dropped my input". Deliberately thin and
+  toneless: it is the sound of a mechanism moving with no charge to answer it.
+on:
+  type: weaponDry
+voices:
+  - call: noise
+    durationMs: 18
+    volume: 0.035
+    filter:
+      type: bandpass
+      frequency: 2600
+  - call: tone
+    type: square
+    from: 340
+    to: 300
+    durationMs: 26
+    volume: 0.02
+    delayMs: 12

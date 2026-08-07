@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_piece_bought
+description: >-
+  Coins leaving the purse for something the errand needed: a short coin
+  chitter and a triangle note under it, falling. Money going OUT falls; money
+  coming in rises (see quest_piece_sold).
+on:
+  type: questPieceBought
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.025
+    filter:
+      type: highpass
+      frequency: 4500
+  - call: tone
+    type: triangle
+    from: 523
+    to: 392
+    durationMs: 130
+    volume: 0.03
+    delayMs: 30

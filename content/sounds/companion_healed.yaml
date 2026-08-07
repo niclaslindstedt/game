@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_healed
+description: >-
+  Patching up whoever is following you: a warm rising sine pair with a soft
+  attack. Deliberately rounder and quieter than the hero's own medkit — this
+  is care given, not taken.
+on:
+  type: companionHealed
+spatial: true
+voices:
+  - call: tone
+    type: sine
+    from: 523
+    durationMs: 120
+    volume: 0.026
+    attackMs: 20
+    echo: 0.2
+  - call: tone
+    type: sine
+    from: 784
+    durationMs: 180
+    volume: 0.024
+    delayMs: 90
+    attackMs: 20
+    echo: 0.25

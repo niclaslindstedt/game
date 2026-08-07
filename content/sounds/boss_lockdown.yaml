@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_lockdown
+description: >-
+  The shutters coming down: a heavy mechanical slam repeated twice, with a low
+  boom under the second. This is the room becoming a cage, so it is blunt and
+  final rather than musical.
+on:
+  type: bossLockdown
+spatial: true
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.055
+    filter:
+      type: lowpass
+      frequency: 600
+  - call: noise
+    durationMs: 110
+    volume: 0.06
+    delayMs: 150
+    filter:
+      type: lowpass
+      frequency: 480
+  - call: tone
+    type: sawtooth
+    from: 110
+    to: 40
+    durationMs: 380
+    volume: 0.04
+    delayMs: 160
+    echo: 0.3

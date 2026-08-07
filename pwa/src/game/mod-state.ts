@@ -39,18 +39,20 @@ export type ModSprite = {
  * container would be the one lossy step in a pipeline that has none.
  */
 export type ModSample = {
+  /** The CLIP name — a file stem. What plays it, and how, is a sound def in
+   * `sounds` whose voice names this clip; the compiler writes that def even
+   * for a bare dropped-in recording, so there is only ever one mechanism. */
   id: string;
-  /** The container, for the log and for the compiler's own refusals. The page
-   * never branches on it: the browser's decoder sniffs the bytes. */
-  format: "wav" | "mp3";
-  /** The encoded file, base64'd. */
-  data: string;
-  /** Optional mixing, from an accompanying `sounds/<id>.yaml`'s `sample:`
-   * block — a recording that is simply dropped in carries none of these and
-   * plays as it was mastered. */
-  volume?: number;
-  pan?: number;
-  echo?: number;
+  /**
+   * The encoded files, base64'd, in take order.
+   *
+   * SEVERAL when the mod shipped `<clip>.1.wav`, `<clip>.2.wav` … — the answer
+   * to the one thing a recording does that a synthesized sound does not, which
+   * is repeat itself EXACTLY. The shipped bank's noise voices redraw their
+   * buffer every play; a lone recording is the same waveform four hundred
+   * times a run, and the ear catches that long before the four hundredth.
+   */
+  takes: string[];
 };
 
 /**
@@ -144,12 +146,21 @@ export type ModBundle = {
    * `{ rung → { name?, tagline? } }` folded onto the shipped defs. The numbers
    * behind a rung stay the game's — see the schema's header for why. */
   difficulties: Record<string, { name?: string; tagline?: string }>;
-  /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
+  /** Event shape → sound id, keyed as `routeKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
+  /** Cue → sound id, keyed `cue|surface`. The moments the APP raises rather
+   * than the engine (a footfall, and whatever joins it), so a mod can give the
+   * game boots on a surface nobody authored one for. */
+  cueKeys?: Record<string, string>;
   /** The mod's own scores, by track id — already cooked into the shape the
    * chiptune player takes, since the shell compiled them. */
   music: Record<string, unknown>;
+  /** …and the RECORDED ones: `{ id, data }` with `data` base64. A separate
+   * field rather than a variant inside `music` because they are played by a
+   * different player — an `<audio>` element rather than the sequencer, so a
+   * three-minute score streams instead of sitting in memory as decoded PCM. */
+  musicSamples?: { id: string; data: string }[];
   /** THE STORY. `cutscenes` arrives with its per-difficulty `variants:` already
    * expanded into `<id>_<difficulty>` scenes, so what the page registers is
    * exactly what `cutsceneVariant` looks up; `capRotation` is the cap-farm
