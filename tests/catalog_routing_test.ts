@@ -131,7 +131,11 @@ describe("what the routing key is made of", () => {
     try {
       const { calls, synth } = recorder();
       playEventSounds(synth, [
-        { type: "enemyTelegraph", kind: "charge", pos: { x: 0, y: 0 } } as never,
+        {
+          type: "enemyTelegraph",
+          kind: "charge",
+          pos: { x: 0, y: 0 },
+        } as never,
       ]);
       expect(calls).toEqual(SENTINEL);
     } finally {
@@ -158,7 +162,11 @@ describe("what the routing key is made of", () => {
     try {
       const { calls, synth } = recorder();
       playEventSounds(synth, [
-        { type: "enemyTelegraph", kind: "charge", pos: { x: 0, y: 0 } } as never,
+        {
+          type: "enemyTelegraph",
+          kind: "charge",
+          pos: { x: 0, y: 0 },
+        } as never,
       ]);
       expect(calls).toEqual(EXACT);
       const other = recorder();

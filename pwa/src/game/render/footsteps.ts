@@ -161,11 +161,7 @@ function walk(
 }
 
 /** Which material is under this spot. */
-function surfaceAt(
-  tiles: Tiles,
-  x: number,
-  y: number,
-): string {
+function surfaceAt(tiles: Tiles, x: number, y: number): string {
   const name = groundTileName(
     tiles,
     Math.floor(x / TILE),

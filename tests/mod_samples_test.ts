@@ -437,7 +437,10 @@ describe("spatial — where the sound is on the stage", () => {
     const seen: number[] = [];
     const spy: Synth = { ...synth, tone: (o) => seen.push(o.pan ?? 0) };
     const flat: SoundCatalog = {
-      boom: { id: "boom", voices: [{ call: "tone", from: 100, durationMs: 50 }] },
+      boom: {
+        id: "boom",
+        voices: [{ call: "tone", from: 100, durationMs: 50 }],
+      },
     };
 
     playSound(spy, flat, "boom", { pos: { x: 400, y: 100 } });

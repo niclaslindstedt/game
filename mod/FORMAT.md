@@ -992,16 +992,16 @@ falls back to the one with no `surface:` at all.
 
 ### What the compiler refuses
 
-| Refusal                                          | Why                                                                                                   |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Anything but the five accepted containers        | Those are what the desktop shell's Chromium decodes.                                                  |
-| Contents that disagree with the extension        | Read from the first bytes, not the name — a mislabelled file would reach the player as silence.       |
-| One take with two containers                     | Which of a `.wav` and an `.opus` won would be decided by alphabetical order.                          |
-| A single recording over **2 MiB**                | About twelve seconds of CD-quality stereo WAV. Trim it, or ship `.opus`.                              |
-| More than **24 MiB** of recordings in one mod    | Every enabled mod's audio is held in memory at once. Past 8 MiB it warns and points at `.opus`.       |
-| A `sample:` block with no recording beside it    | A sound with neither a file nor a voice is silence.                                                   |
-| A `call: sample` naming a clip you did not ship  | It would be a silent layer, and the sound would be missing whatever you meant it to carry.            |
-| `loop: true` on a sound with synthesized voices  | A sustained source is a recording; an arrangement is what `music/` is for.                            |
+| Refusal                                         | Why                                                                                             |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Anything but the five accepted containers       | Those are what the desktop shell's Chromium decodes.                                            |
+| Contents that disagree with the extension       | Read from the first bytes, not the name — a mislabelled file would reach the player as silence. |
+| One take with two containers                    | Which of a `.wav` and an `.opus` won would be decided by alphabetical order.                    |
+| A single recording over **2 MiB**               | About twelve seconds of CD-quality stereo WAV. Trim it, or ship `.opus`.                        |
+| More than **24 MiB** of recordings in one mod   | Every enabled mod's audio is held in memory at once. Past 8 MiB it warns and points at `.opus`. |
+| A `sample:` block with no recording beside it   | A sound with neither a file nor a voice is silence.                                             |
+| A `call: sample` naming a clip you did not ship | It would be a silent layer, and the sound would be missing whatever you meant it to carry.      |
+| `loop: true` on a sound with synthesized voices | A sustained source is a recording; an arrangement is what `music/` is for.                      |
 
 ## `music/<id>.<ext>` — a recorded score
 
@@ -1022,11 +1022,11 @@ A recorded track plays through the browser's own audio element rather than the
 sequencer, so it **streams** — a three-minute score does not sit in memory as
 decoded PCM — and it loops, pauses and resumes for free.
 
-| Refusal                                    | Why                                                        |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| One track over **8 MiB**                   | About eleven minutes of Opus. Past any loop this game needs. |
-| More than **32 MiB** of score in one mod   | The compiled bundle crosses to the game in one message.      |
-| A recording and a YAML score with one id   | A theme is played from one or the other.                     |
+| Refusal                                  | Why                                                          |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| One track over **8 MiB**                 | About eleven minutes of Opus. Past any loop this game needs. |
+| More than **32 MiB** of score in one mod | The compiled bundle crosses to the game in one message.      |
+| A recording and a YAML score with one id | A theme is played from one or the other.                     |
 
 ## `music/<id>.yaml` — a score
 
@@ -1882,15 +1882,15 @@ The compiler reads only where content lives, so anything else in the folder is
 invisible to it — and travels to everybody who installs your mod. `validate`
 asks the other question, and this is the whole list of what it allows:
 
-| Where                                                            | What                                                                                                                                                          |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mod.yaml`                                                       | the manifest                                                                                                                                                  |
-| `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                   |
-| `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                      |
+| Where                                                            | What                                                                                                                                                                                                              |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mod.yaml`                                                       | the manifest                                                                                                                                                                                                      |
+| `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                                                                       |
+| `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                                                                          |
 | `sounds/` and `music/` also                                      | `<id>.wav` / `.mp3` / `.ogg` / `.opus` / `.flac` — a RECORDING replacing the sound or track of that name (plus `<id>.1.wav`, `<id>.2.wav` … for a sound's takes); the two trees that hold media beside their YAML |
-| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                   |
-| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml` |
-| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                         |
+| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                                                                       |
+| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml`                                                     |
+| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                                                                             |
 
 Everything else is refused by name, and each refusal says which of the two it
 is: **junk** (a `.DS_Store`, an editor backup, a layered `.psd`, a

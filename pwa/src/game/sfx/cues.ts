@@ -35,7 +35,10 @@
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-import { GENERATED_CUE_KEYS, GENERATED_SOUNDS } from "../../generated/sounds.ts";
+import {
+  GENERATED_CUE_KEYS,
+  GENERATED_SOUNDS,
+} from "../../generated/sounds.ts";
 
 import { playSound } from "./play.ts";
 import type { SoundCatalog } from "./types.ts";
@@ -102,5 +105,11 @@ export function playCue(
   // to be missing from the bank: a bank that cannot answer must not become a
   // lookup on every single frame.
   lastAt.set(cue, nowMs);
-  return playSound(synth, catalog, id, pos ? { pos } : undefined, GENERATED_SOUNDS);
+  return playSound(
+    synth,
+    catalog,
+    id,
+    pos ? { pos } : undefined,
+    GENERATED_SOUNDS,
+  );
 }

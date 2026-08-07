@@ -92,9 +92,7 @@ const flag = (name) => {
  */
 const positional = argv
   .slice(1)
-  .filter(
-    (arg, at) => !arg.startsWith("--") && !argv[at]?.startsWith("--"),
-  );
+  .filter((arg, at) => !arg.startsWith("--") && !argv[at]?.startsWith("--"));
 
 const USAGE = `usage:
   node mod/tools/cli.mjs new <name> [--in <dir>] [--title "MY MOD"]

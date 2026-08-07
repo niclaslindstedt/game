@@ -10,7 +10,10 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { GENERATED_CUE_KEYS, GENERATED_SOUNDS } from "../pwa/src/generated/sounds.ts";
+import {
+  GENERATED_CUE_KEYS,
+  GENERATED_SOUNDS,
+} from "../pwa/src/generated/sounds.ts";
 import { playCue, resetCues, setCueCatalog } from "../pwa/src/game/sfx/cues.ts";
 import { clearListener } from "../pwa/src/game/sfx/listener.ts";
 import type { SoundCatalog } from "../pwa/src/game/sfx/types.ts";
@@ -27,7 +30,10 @@ function recorder() {
 
 /** A bank with one distinguishable sound per surface. */
 const BANK: SoundCatalog = {
-  step_any: { id: "step_any", voices: [{ call: "tone", from: 100, durationMs: 5 }] },
+  step_any: {
+    id: "step_any",
+    voices: [{ call: "tone", from: 100, durationMs: 5 }],
+  },
   step_metal: {
     id: "step_metal",
     voices: [{ call: "tone", from: 200, durationMs: 5 }],
@@ -75,7 +81,8 @@ describe("a cue is rate-limited in the funnel", () => {
     // 12 a second is the cap, so ~83 ms apart. Four bodies each asking on the
     // same frame is one footstep, not four.
     const { synth, tones } = recorder();
-    for (let i = 0; i < 4; i += 1) playCue(synth, "footstep", "metal", undefined, 0);
+    for (let i = 0; i < 4; i += 1)
+      playCue(synth, "footstep", "metal", undefined, 0);
     expect(tones).toHaveLength(1);
   });
 

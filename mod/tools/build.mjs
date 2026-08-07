@@ -1433,11 +1433,7 @@ function mixOf(sample) {
 function sniffAudio(bytes) {
   const head = (from, to) => bytes.toString("latin1", from, to);
   // RIFF....WAVE
-  if (
-    bytes.length >= 12 &&
-    head(0, 4) === "RIFF" &&
-    head(8, 12) === "WAVE"
-  ) {
+  if (bytes.length >= 12 && head(0, 4) === "RIFF" && head(8, 12) === "WAVE") {
     return "wav";
   }
   // fLaC — a native FLAC stream.

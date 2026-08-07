@@ -57,26 +57,26 @@ One file per thing, in the game's own format. The shipped content under
 [`../content/`](../content) is the reference — it is the same format, so any
 shipped file is a worked example of its kind.
 
-| What                                           | Where                          | Reference                                                       |
-| ---------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| A venue's MISSION (story, ladder, loot)        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
-| That venue's MAP, carved fresh every run       | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
-| Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)      |
-| A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                     |
-| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                         |
-| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)      |
-| An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)                  |
-| What the difficulty rungs are CALLED           | `difficulties.yaml`            | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
-| Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                     |
-| A sound, synthesized from voices               | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
-| A sound, RECORDED (a real audio file)          | `sounds/<id>.{wav,mp3,ogg,opus,flac}` (`<id>.1.wav`, `<id>.2.wav` … for takes it cycles) | [`FORMAT.md`](FORMAT.md#soundsidext--a-recording) |
-| A whole SCORE, recorded                        | `music/<id>.opus`              | [`FORMAT.md`](FORMAT.md#musicidext--a-recorded-score)           |
-| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
-| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
-| A passive TALENT the hero ranks up             | `talents.yaml`                 | [`../content/talents.yaml`](../content/talents.yaml)            |
-| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)                 |
-| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)          |
-| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml)    |
+| What                                           | Where                                                                                    | Reference                                                       |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| A venue's MISSION (story, ladder, loot)        | `levels/<id>.yaml`                                                                       | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
+| That venue's MAP, carved fresh every run       | `maps/<id>.yaml`                                                                         | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
+| Where your venues sit on the difficulty ladder | `ladder.yaml`                                                                            | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)      |
+| A monster                                      | `enemies/<biome>/<id>.yaml`                                                              | [`../content/enemies/`](../content/enemies)                     |
+| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`                                                               | [`../content/items/`](../content/items)                         |
+| A companion (a spared elite joining you)       | `companions.yaml`                                                                        | [`../content/companions.yaml`](../content/companions.yaml)      |
+| An item SET (a kit of green armor)             | `sets.yaml`                                                                              | [`../content/sets.yaml`](../content/sets.yaml)                  |
+| What the difficulty rungs are CALLED           | `difficulties.yaml`                                                                      | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
+| Pixel art                                      | `sprites/<family>/<name>.yaml`                                                           | [`../content/sprites/`](../content/sprites)                     |
+| A sound, synthesized from voices               | `sounds/<id>.yaml`                                                                       | [`../content/sounds/`](../content/sounds)                       |
+| A sound, RECORDED (a real audio file)          | `sounds/<id>.{wav,mp3,ogg,opus,flac}` (`<id>.1.wav`, `<id>.2.wav` … for takes it cycles) | [`FORMAT.md`](FORMAT.md#soundsidext--a-recording)               |
+| A whole SCORE, recorded                        | `music/<id>.opus`                                                                        | [`FORMAT.md`](FORMAT.md#musicidext--a-recorded-score)           |
+| A music track                                  | `music/<id>.yaml`                                                                        | [`../content/music/`](../content/music)                         |
+| A power                                        | `powerups.yaml`                                                                          | [`../content/powerups.yaml`](../content/powerups.yaml)          |
+| A passive TALENT the hero ranks up             | `talents.yaml`                                                                           | [`../content/talents.yaml`](../content/talents.yaml)            |
+| A cutscene                                     | `cutscenes/<id>.yaml`                                                                    | [`../content/cutscenes/`](../content/cutscenes)                 |
+| The hero's inner monologues                    | `thoughts.yaml`                                                                          | [`../content/thoughts.yaml`](../content/thoughts.yaml)          |
+| A story item and its lore                      | `story-items.yaml`                                                                       | [`../content/story-items.yaml`](../content/story-items.yaml)    |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -131,22 +131,22 @@ means the game will accept it.
 
 ### Reading the errors
 
-| Message                                                         | What it means                                                                                                                  |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `sprite "x" has no frames`                                      | A monster's `sprite:` names a family; the renderer needs `x_0` and `x_1`. Both must exist in your `sprites/` or the base game. |
-| `already exist in the base game`                                | An `addon` cannot shadow a shipped id. Prefix yours, or set `kind: conversion` if you _mean_ to replace it.                    |
-| `ladder.yaml: missing entry for level "x"`                      | Step 3b. Add the four difficulty rows.                                                                                         |
-| `grades: is not available to mods`                              | The exceptional/elite ladder is compiled into the game. Author those versions as their own items.                              |
-| `campaign names "x"`                                            | A conversion's `campaign:` lists a level it does not ship.                                                                     |
-| `is not a level this mod ships`                                 | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
-| `unknown compass region "x"`                                    | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
-| `belongs to no set`                                             | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
-| `is not one of the game's rungs`                                | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
-| `fx.element "x" is not one of…`                                 | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
-| `the first bytes are not audio the game can play`               | A file in `sounds/` is not audio, or is not one of the five containers the desktop shell decodes. Read from the bytes, not the name. |
-| `the contents are WAV, not MP3`                                 | A recording's extension disagrees with what is in it. Rename it as the message says.                                           |
+| Message                                                         | What it means                                                                                                                                                     |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sprite "x" has no frames`                                      | A monster's `sprite:` names a family; the renderer needs `x_0` and `x_1`. Both must exist in your `sprites/` or the base game.                                    |
+| `already exist in the base game`                                | An `addon` cannot shadow a shipped id. Prefix yours, or set `kind: conversion` if you _mean_ to replace it.                                                       |
+| `ladder.yaml: missing entry for level "x"`                      | Step 3b. Add the four difficulty rows.                                                                                                                            |
+| `grades: is not available to mods`                              | The exceptional/elite ladder is compiled into the game. Author those versions as their own items.                                                                 |
+| `campaign names "x"`                                            | A conversion's `campaign:` lists a level it does not ship.                                                                                                        |
+| `is not a level this mod ships`                                 | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).                                               |
+| `unknown compass region "x"`                                    | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                                                         |
+| `belongs to no set`                                             | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                                                            |
+| `is not one of the game's rungs`                                | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                                                     |
+| `fx.element "x" is not one of…`                                 | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                                                          |
+| `the first bytes are not audio the game can play`               | A file in `sounds/` is not audio, or is not one of the five containers the desktop shell decodes. Read from the bytes, not the name.                              |
+| `the contents are WAV, not MP3`                                 | A recording's extension disagrees with what is in it. Rename it as the message says.                                                                              |
 | `carries both a recording named after it and `voices``          | One sound, one source. Drop the `voices:` — or rename the file and reach it from a `call: sample` voice, which is how you LAYER a recording rather than swap one. |
-| `is not a sound the game has, and nothing in this mod plays it` | A WARNING, and almost always a typo in a recording's name — `cli.mjs sounds` has the list.                                     |
+| `is not a sound the game has, and nothing in this mod plays it` | A WARNING, and almost always a typo in a recording's name — `cli.mjs sounds` has the list.                                                                        |
 
 ### 4b. Audit the folder — `validate`
 

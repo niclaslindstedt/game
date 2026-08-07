@@ -66,10 +66,7 @@ export function playSound(
  * Stop a sustained sound by id. A sound that was never started is not an error
  * — the event that ends a loop fires whether or not the loop was raised.
  */
-export function stopSound(
-  catalog: SoundCatalog,
-  id: string | undefined,
-): void {
+export function stopSound(catalog: SoundCatalog, id: string | undefined): void {
   if (!id) return;
   stopLoop(id, catalog[id]?.fadeMs ?? 0);
 }
