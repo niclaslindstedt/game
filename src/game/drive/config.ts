@@ -144,44 +144,47 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED with `make drive-bench`, 30 seeds a rung on MEDIUM, and RE-TAKEN
-   * on the wagon's real drivetrain (`drivetrain.ts`) — every figure below moved
-   * when the car stopped accelerating like a dragster. First the PESSIMAL case
-   * — a dead straight line, never dodging once:
+   * MEASURED with `make drive-bench`, and RE-TAKEN twice: once on the wagon's
+   * real drivetrain (`drivetrain.ts`), and again once every LANE carried
+   * traffic (`laneTraffic`), which is what the figures below are. First the
+   * PESSIMAL case — a dead straight line on MEDIUM, never dodging once, 30
+   * seeds a row:
    *
    *   throttle   trip      bodies   ending wear   arrived
-   *   1.00       79 s      79       49%           30/30
-   *   0.80       85 s      84       41%           30/30
-   *   0.55       94 s      90       31%           30/30
+   *   1.00       91 s      92       68%           30/30
+   *   0.80       96 s      95       57%           30/30
+   *   0.55      106 s     103       41%           30/30
    *
    * And then the same road driven by something that STEERS — the shipped
-   * auto-driver (`drive/driver.ts`), which is the bar a decent human clears:
+   * auto-driver (`drive/driver.ts`), which is the bar a decent human clears;
+   * 40 seeds a rung:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        75 s    61         8%          30/30
-   *   medium      83 s    67        23%          30/30
-   *   hard        88 s    73        32%          30/30
-   *   nightmare   94 s    77        41%          30/30
-   *   jesus       99 s    83        46%          30/30
+   *   easy        81 s    72        13%          40/40
+   *   medium      90 s    79        32%          40/40
+   *   hard        97 s    85        41%          40/40
+   *   nightmare  104 s    88        49%          40/40
+   *   jesus      110 s    92        54%          40/40
    *
-   * TWO THINGS TO READ OUT OF THAT, and the second is a debt rather than a
-   * result. The one that still holds is the joke the course length exists to
-   * land: the leg cannot be threaded at any pace, because the crowd is laid
-   * down thick enough that even a good driver arrives with sixty-odd people on
-   * the count — which is why the arrival lines are read off the CAR and the
-   * CLOCK rather than off the tally (`DRIVE.verdict`).
+   * TWO THINGS TO READ OUT OF THAT. The first is the joke the course length
+   * exists to land: the leg cannot be threaded at any pace, because the crowd
+   * is laid down thick enough that even a good driver arrives with seventy-odd
+   * people on the count — which is why the arrival lines are read off the CAR
+   * and the CLOCK rather than off the tally (`DRIVE.verdict`).
    *
-   * THE ONE THAT NO LONGER HOLDS is the tension in the top row. A straight line
-   * at full throttle used to break forty legs in sixty; now it arrives every
-   * time, on half a car. Nothing about the road changed — the CAR did: it tops
-   * out around eighty in traffic instead of touching 120, absorbed energy goes
-   * as the SQUARE of the closing speed, and a collision at eighty is therefore
-   * worth well under half of what the same collision used to cost. The spread
-   * between a careful pace and a reckless one narrowed with it. Restoring it is
-   * a knob rather than a rewrite (`DRIVE.impact.wearJoules` is what a full car's
-   * worth of damage costs, and the ladder's masses sit beside it) — but which
-   * way to move it is a DESIGN call about how punishing this interlude should
-   * be, and it is deliberately left open rather than guessed at here.
+   * The second is the tension between the two tables, which had gone and is
+   * partly back. It vanished when the car got its real drivetrain: a collision
+   * at the eighty a wagon can actually reach in traffic costs well under half
+   * of one at 120 (absorbed energy goes as the SQUARE of the closing speed), so
+   * a straight line at full throttle stopped being punished at all — it arrived
+   * every time on half a car. Filling the lanes bought some of it back without
+   * touching a single damage number: there is simply more out there to hit, so
+   * the reckless line now ends the trip on two thirds of a car against the
+   * steering one's third, and on the top two rungs it no longer always arrives
+   * (27/30 on NIGHTMARE, 24/30 on JESUS). MEDIUM still gets home every time.
+   * Whether it should is a DESIGN call about how punishing this interlude
+   * ought to be, and the knob for it is `DRIVE.impact.wearJoules` with the
+   * ladder's masses beside it — deliberately left open rather than guessed at.
    */
   coursePx: 24000,
   /**
@@ -222,7 +225,7 @@ export const DRIVE = {
    * `drive_driver_test.ts`): the tarmac is now SATURATED, so per mile of road
    * the shipped auto-driver meets exactly as many people as a car driven in a
    * dead straight line does. The wheel did not stop mattering — steering is
-   * still worth the whole of the car (22% ending wear against 92%) — but what
+   * still worth half the car (32% ending wear against 65%, MEDIUM) — but what
    * it is FOR is the traffic, the kerb and the wagon. The tally is the one
    * thing on this road nobody can drive their way out of, which is precisely
    * the joke the arrival lines are written against.
@@ -470,18 +473,80 @@ export const DRIVE = {
 
   // ── THE TRAFFIC ───────────────────────────────────────────────────────────
   /**
-   * Other cars per 1000 px of course, on MEDIUM — laddered per rung by
-   * `DifficultyDef.drive.trafficDensity`.
+   * HOW THICK THE TRAFFIC IS — and it is stated as a GAP IN A LANE rather than
+   * as cars per 1000 px, because the old number could not say what it meant.
    *
-   * SPARSE, AND THE NUMBER IS SMALLER THAN IT LOOKS. A screenful of road is
-   * about 420 px, so this is roughly one other car in view at a time: traffic
-   * is the thing that makes a LANE unavailable, and its job is to take a
-   * choice away for a moment, not to fill the road. Nose-to-tail traffic
-   * removes the steering decision rather than sharpening it — with every lane
-   * occupied there is nothing to decide and the crowd cannot be threaded at
-   * all, which is the one way this minigame can actually become unfair.
+   * WHAT WENT WRONG WITH A RATE. Traffic was laid down at one vehicle per 1000
+   * px of course, a fifth of which rode the pavement, its lane picked at random
+   * out of four — so a lane got a car every 6250 px of course, and the road the
+   * player actually saw was empty. Worse, a rate cannot be read off the SCREEN
+   * at all, because a car's spacing in front of the windscreen is nothing like
+   * its spacing on the map: the hero's own side is caught up with at the
+   * DIFFERENCE of the two speeds (slowly — so it lingers, and a course pitch
+   * looks far denser than it is) and the far side closes at their SUM (fast —
+   * so the same pitch looks far sparser). One number could not be right for
+   * both, and it was wrong for both in the same direction.
+   *
+   * SO THE KNOB IS THE PICTURE. `gapPx` is how much road sits between one
+   * vehicle and the next IN ITS OWN LANE as the driver sees it, and the spawner
+   * converts that to a course pitch per vehicle using the speed it just rolled
+   * (`lanePitch`). At 360 against the ~420 world px of road a phone shows, that
+   * is about one vehicle per lane on screen at any moment — the road is
+   * populated in every lane, and the wheel is now worth something the whole way
+   * rather than for the two seconds a year a car happened to be in shot.
+   *
+   * IT IS NOT NOSE-TO-TAIL, and the difference matters: 360 px against a 40-px
+   * car is nine car lengths, so every lane is occupied SOMEWHERE and no lane is
+   * shut. The thing that would actually break this minigame is a road with no
+   * gap to move into — a player who cannot leave the lane he is in has no
+   * decision to make and cannot thread the crowd at all. A gap this size keeps
+   * the choice on the table and merely stops it being free.
+   *
+   * Laddered per rung by `DifficultyDef.drive.trafficDensity`, which DIVIDES it:
+   * the gentle rungs leave more road between cars, the hard ones less.
    */
-  trafficPerKPx: 1,
+  laneTraffic: {
+    /** The gap between one vehicle and the next in a lane, in the hero's own
+     * frame (world px), on MEDIUM. */
+    gapPx: 360,
+    /**
+     * THE PACE THE GAP IS CONVERTED AT (world px/s) — the speed the hero is
+     * ASSUMED to be doing when the spawner turns a gap into a course pitch.
+     *
+     * A reference rather than `car.speed`, and deliberately: the road is minted
+     * once at a running mark so a seed always yields the same road, and a pitch
+     * that read the live throttle would re-lay the traffic differently every
+     * time the same seed was driven differently. Set to what the leg is
+     * actually driven at — 24000 px in the 83 s a decent driver takes is about
+     * 290 (`coursePx`) — so the picture is right at the pace the player spends
+     * the trip at, and merely drifts sparse if he drives flat out.
+     */
+    refSpeedPx: 300,
+    /**
+     * …and the most the pitch may be stretched by, as a multiple of the gap.
+     *
+     * The conversion divides by the CLOSING speed, which goes to nothing for a
+     * car pacing the hero exactly — an unclamped pitch would put its lane's
+     * next vehicle a mile up the course. Five is generous enough that the
+     * clamp never binds on ordinary traffic and finite enough that it cannot
+     * run away.
+     */
+    maxPitchMult: 5,
+  },
+  /**
+   * THE DELIVERY TRADE'S OWN STREAM — pavement riders per 1000 px of course, on
+   * MEDIUM, and the one part of the traffic that is still a rate.
+   *
+   * It has to be its own number now, because it is no longer competing with the
+   * lanes for the same slots: a moped on the footway is not a car in lane 2 and
+   * a road that filled its lanes by taking mopeds off the pavement would be the
+   * same bug in the other direction. HELD AT WHAT THE OLD RATE ACTUALLY
+   * DELIVERED (one vehicle per 1000 px × the fleet's 20% pavement share), so
+   * the lanes are the only thing this tuning moves — how busy the footway
+   * should be beside a road that is now genuinely busy is a separate design
+   * call, and one number away.
+   */
+  pavementPerKPx: 0.2,
   /** What the other traffic does, world px/s, before its own def's `pace`
    * multiplies it. The near lanes dawdle (the hero overtakes them), the far
    * lanes come the other way. */
@@ -961,23 +1026,34 @@ export const DRIVE = {
     wreckWear: 0.7,
     /** Street lights taken out before the council becomes the story. */
     posts: 3,
-    /** …and cars traded paint with before the other drivers do. MEASURED: a
-     * driver who never touches the wheel still collects four down a course and
-     * a good one seven on JESUS (they include the cars parked at the kerb), so
-     * the line has to sit above what the road hands out for free. */
-    cars: 8,
-    /** The trip time (ms) under which he made unusually good going, and over
-     * which he plainly dawdled. Both sit outside the band the two measured
-     * tables in `coursePx` cover — a good driver takes 59–72 s and a reckless
-     * straight line 51 s — so neither is the line a player gets by default. */
-    quickMs: 52000,
-    slowMs: 78000,
+    /**
+     * …and cars traded paint with before the other drivers do. RE-MEASURED once
+     * every lane carried traffic (`laneTraffic`), which is a different road:
+     * the line was 8, set against one that handed out four to seven for free —
+     * and most of those seven were the cars parked at the KERB rather than
+     * anything moving, because there was hardly anything moving. A road with a
+     * vehicle in every lane hands out a median of 21 to the auto-driver and
+     * 28 at the ninetieth percentile (40 seeds a rung), so 26 is the point
+     * where a leg has genuinely been spent bouncing off other people rather
+     * than merely driving past them.
+     */
+    cars: 26,
+    /**
+     * The trip time (ms) under which he made unusually good going, and over
+     * which he plainly dawdled. Both sit outside the band a driver actually
+     * lands in, so neither is the line a player gets by default — RE-MEASURED
+     * with the lanes populated, which cost the leg about eight seconds a rung:
+     * the auto-driver now takes 80 s on EASY and 114 s on JESUS (40 seeds a
+     * rung), and a reckless straight line gets EASY home in 70.
+     */
+    quickMs: 76000,
+    slowMs: 118000,
     /** The body count that turns "roads are rough out this way" into "bit
-     * bumpy tonight". Scaled to the crowd the road actually carries: the
-     * shipped auto-driver arrives with fifty on MEDIUM and sixty-five on JESUS
-     * (see `coursePx`), so the line has to sit near the middle of that or one
-     * of the two lines never plays. */
-    bumpyBodies: 45,
+     * bumpy tonight". Scaled to the crowd the road actually carries: across
+     * every rung the auto-driver arrives with 64 to 100 on the count (a busier
+     * road is a slower one, and a slower one meets more people), so the line
+     * has to sit near the middle of that or one of the two lines never plays. */
+    bumpyBodies: 85,
   },
 } as const;
 

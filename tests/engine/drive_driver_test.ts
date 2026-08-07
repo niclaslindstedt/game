@@ -133,7 +133,8 @@ describe("the auto-driver", () => {
       stepDrive(byBot, 16, { pedal: 1, wheel: bot.wheel });
     }
     expect(byBot.nextPedestrianAt).toBeCloseTo(byHand.nextPedestrianAt, 6);
-    expect(byBot.nextTrafficAt).toBeCloseTo(byHand.nextTrafficAt, 6);
+    expect(byBot.nextTrafficAt).toEqual(byHand.nextTrafficAt);
+    expect(byBot.nextPavementAt).toBeCloseTo(byHand.nextPavementAt, 6);
     expect(byBot.pedestrians.map((p) => p.variant)).toEqual(
       byHand.pedestrians.map((p) => p.variant),
     );
