@@ -70,6 +70,42 @@ declare module "*/asset-tools/image.mjs" {
   ): Array<Array<Rgb | null>>;
 }
 
+declare module "*/asset-tools/trace.mjs" {
+  export function traceImage(
+    image: Surface,
+    fields: {
+      name: string;
+      family: string;
+      size: [number, number];
+      colors?: number;
+      description?: string;
+    },
+  ): {
+    name: string;
+    family: string;
+    size: [number, number];
+    description: string;
+    palette: Record<string, string>;
+    grid: string;
+  };
+}
+
+declare module "*/asset-tools/grid.mjs" {
+  export function validateGrid(
+    name: string,
+    grid: string[],
+    palette: Record<string, Rgba>,
+  ): void;
+  export function gridToSurface(
+    grid: string[],
+    palette: Record<string, Rgba>,
+  ): Surface;
+}
+
+declare module "*/asset-tools/preview.mjs" {
+  export function writePng(surface: Surface, path: string): Promise<void>;
+}
+
 declare module "*/asset-tools/quantize.mjs" {
   export function quantizeGrid(
     cells: Array<Array<Rgb | null>>,
@@ -121,6 +157,7 @@ declare module "*/asset-tools/surface.mjs" {
     y: number,
     rgba: number[],
   ): void;
+  export function upscale(surface: Surface, factor: number): Surface;
 }
 
 declare module "*/asset-tools/achievement-badge.mjs" {

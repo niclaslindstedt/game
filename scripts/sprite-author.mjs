@@ -51,14 +51,13 @@ import { parse } from "yaml";
 import { compareSurfaces } from "./asset-tools/compare.mjs";
 import { promptSelfCheck } from "./asset-tools/coherence.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
-import { loadImage, resampleToCells } from "./asset-tools/image.mjs";
+import { loadImage } from "./asset-tools/image.mjs";
 import { writePng } from "./asset-tools/preview.mjs";
 import {
   buildImagePrompt,
   paletteComments,
   provenanceRecord,
 } from "./asset-tools/prompt.mjs";
-import { quantizeGrid } from "./asset-tools/quantize.mjs";
 import { toYaml } from "./asset-tools/sprite-yaml.mjs";
 import {
   blit,
@@ -67,6 +66,7 @@ import {
   tileSurface,
   upscale,
 } from "./asset-tools/surface.mjs";
+import { traceImage } from "./asset-tools/trace.mjs";
 import { loadSprites } from "./sprite-data/load-yaml.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
@@ -129,20 +129,14 @@ async function analyze(positional, flags) {
     );
   }
 
-  const colors =
-    flags.colors && flags.colors !== true ? Number(flags.colors) : 16;
-  const cells = resampleToCells(image, size[0], size[1]);
-  const { palette, grid } = quantizeGrid(cells, colors);
-
-  const sprite = {
+  const sprite = traceImage(image, {
     name,
     family,
     size,
+    colors: flags.colors && flags.colors !== true ? Number(flags.colors) : 16,
     description:
       flags.description && flags.description !== true ? flags.description : "",
-    palette,
-    grid,
-  };
+  });
 
   const yaml = toYaml(sprite);
   if (flags.out && flags.out !== true) {
