@@ -380,6 +380,16 @@ function orderLevels(bundle, entries, order, secretOrder, levels) {
  * (char grid + palette), which is what the whole preview pipeline is built on,
  * and a rasterized bitmap would have to be un-rasterized to join it.
  *
+ * A mod's `.png` art has no grid to read, so it takes the other road: the
+ * bundle already carries it decoded (`png.mjs` ran at compile time), and
+ * `gridFromPixels` turns those pixels back into the char grid this side wants.
+ * That conversion needs one character per distinct colour and the format has 62
+ * of them, which is generous for pixel art and hopeless for a photograph — a
+ * sprite past the ceiling is SKIPPED with a line saying so, because a tool
+ * drawing a mod's boss in 62 of its 900 colours would be worse than one drawing
+ * a hole. The GAME is unaffected either way: it blits the same RGBA the
+ * compiler decoded, and never sees a grid at all.
+ *
  * `sprite-data/index.mjs` is imported here rather than at the top of this file
  * because loading it walks the entire shipped sprite tree and derives every
  * wound and worn frame — real work a simulation-only script must not pay for.
@@ -409,9 +419,11 @@ export async function installModSprites(loaded) {
         .sort();
       for (const name of familyNames) {
         const familyDir = path.join(spritesDir, name);
-        const files = readdirSync(familyDir)
-          .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
+        const entries = readdirSync(familyDir)
+          .filter((f) => !f.startsWith("_"))
           .sort();
+        const files = entries.filter((f) => f.endsWith(".yaml"));
+        const drawn = entries.filter((f) => f.endsWith(".png"));
         // A mod's family has no `_family.yaml`: every mod sprite carries its
         // own concrete palette, which is the whole of the format on that side
         // of the wall. The family palette is therefore the union of its
@@ -429,20 +441,39 @@ export async function installModSprites(loaded) {
           speckleExempt: [],
         };
         if (!FAMILIES.includes(family)) FAMILIES.push(family);
+        const install = (spriteName, grid, palette) => {
+          SPRITES[spriteName] = grid;
+          SPRITE_PALETTES[spriteName] = palette;
+          SPRITE_FAMILY[spriteName] = name;
+          family.sprites[spriteName] = grid;
+          Object.assign(family.palette, palette);
+          count += 1;
+        };
         for (const file of files) {
           const sprite = parse(
             readFileSync(path.join(familyDir, file), "utf8"),
           );
           // Already validated by `buildMod` — a mod whose sprite is malformed
           // never reaches this function.
-          const grid = gridRows(sprite.grid);
-          const palette = paletteFromHex(sprite.palette ?? {});
-          SPRITES[sprite.name] = grid;
-          SPRITE_PALETTES[sprite.name] = palette;
-          SPRITE_FAMILY[sprite.name] = name;
-          family.sprites[sprite.name] = grid;
-          Object.assign(family.palette, palette);
-          count += 1;
+          install(
+            sprite.name,
+            gridRows(sprite.grid),
+            paletteFromHex(sprite.palette ?? {}),
+          );
+        }
+        for (const file of drawn) {
+          const stem = file.slice(0, -".png".length);
+          const decoded = bundle.sprites.find((s) => s.name === stem);
+          if (!decoded) continue;
+          const converted = gridFromPixels(decoded);
+          if (converted === null) {
+            console.warn(
+              `! ${stem}: too many colours to preview as a pixel grid — it ` +
+                "draws correctly in the game, but node-side renders skip it",
+            );
+            continue;
+          }
+          install(stem, converted.grid, converted.palette);
         }
       }
     }
@@ -454,6 +485,52 @@ export async function installModSprites(loaded) {
     deriveWorn(bundle.gear ?? {});
   }
   return count;
+}
+
+/**
+ * A decoded sprite's pixels → the char grid + palette the preview tools render
+ * from, or null when the art has more distinct colours than the format has
+ * characters.
+ *
+ * The alphabet is fixed and the chars are handed out in FIRST-APPEARANCE order
+ * (reading order), so the same picture always converts to the same grid — the
+ * preview sheets diff, and two runs of the art audit compare.
+ *
+ * Fully transparent is `.`, the format's own reserved key. Partial alpha is a
+ * colour like any other: the palette carries `[r, g, b, a]`, so a soft edge
+ * survives the trip rather than being rounded to opaque or to nothing.
+ */
+function gridFromPixels({ width, height, rgba }) {
+  const bytes = Buffer.from(rgba, "base64");
+  if (bytes.length !== width * height * 4) return null;
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const palette = {};
+  const seen = new Map();
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    let row = "";
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const a = bytes[i + 3];
+      if (a === 0) {
+        row += ".";
+        continue;
+      }
+      const color = [bytes[i], bytes[i + 1], bytes[i + 2], a];
+      const packed = color.join(",");
+      let char = seen.get(packed);
+      if (char === undefined) {
+        if (seen.size >= chars.length) return null;
+        char = chars[seen.size];
+        seen.set(packed, char);
+        palette[char] = color;
+      }
+      row += char;
+    }
+    rows.push(row);
+  }
+  return { grid: rows, palette };
 }
 
 /**

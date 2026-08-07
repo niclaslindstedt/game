@@ -52,7 +52,7 @@ import { ItemIcon } from "../ItemCard.tsx";
 import { ItemTooltip } from "../ItemTooltip.tsx";
 import { tierGlowClass } from "../tiers.ts";
 import { label, objectiveLine } from "../quest-text.ts";
-import { bustSrc, SpritePortrait } from "../SpritePortrait.tsx";
+import { SpritePortrait, useSpeakingBust } from "../SpritePortrait.tsx";
 
 /**
  * A list row's mark and colour, by what picking it opens. The `!` / `?` are the
@@ -396,6 +396,17 @@ export function QuestOverlay({
         : [],
     [state, quest, listing],
   );
+  // THE GIVER'S FACE, MOVING WHILE THEY MAKE THEIR ASK — when a mod's art
+  // carries a `talk:` clip for them (`render/clips.ts`); the still bust
+  // otherwise, which is every giver the game ships. Resolved HERE, above the
+  // early returns below, because it is a hook: `giver` is undefined on the
+  // render where the offer has just closed, and a hook cannot be skipped for
+  // it.
+  const portrait = useSpeakingBust(
+    assets.sprites,
+    giver?.sprite ?? "",
+    giver !== undefined,
+  );
   const rewardPick = quest
     ? Math.min(
         Math.max(
@@ -408,8 +419,6 @@ export function QuestOverlay({
 
   if (!offer || !giver) return null;
   if (!listing && !quest) return null;
-
-  const portrait = bustSrc(assets.sprites, giver.sprite);
 
   // THE PICK LIST — this person's whole slate at once. Shown only when they
   // have more than one thing to say (the engine skips it otherwise), because a

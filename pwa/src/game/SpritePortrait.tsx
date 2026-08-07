@@ -31,7 +31,10 @@
 // speaker in the box that is not a person: a story item, which is an icon of a
 // thing and has no face to find.
 
+import { useFrameCycle } from "@ui/lib/frame-cycle.ts";
+
 import { spriteBustUrl, spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteClip } from "./render/clips.ts";
 
 /**
  * The FULL art for a portrait named by sprite: an exact sprite name, or a
@@ -59,6 +62,47 @@ export function bustSrc(sprites: Sprites, sprite: string): string | null {
     null
   );
 }
+
+/**
+ * THE SPEAKER'S FACE WHILE THEY ARE SPEAKING — a bust that MOVES, when the art
+ * behind it has frames to move through.
+ *
+ * This is the one animation in the game that had nowhere to live before mods
+ * could declare their own (`render/clips.ts`). The convention every body is
+ * drawn to — two frames, a walk cycle — has no notion of a mouth, so a portrait
+ * has always been one still picture beside a speech that crawls out a letter at
+ * a time. A mod that draws a talking head says so with a `talk:` clip, and this
+ * is what plays it.
+ *
+ * IT FALLS BACK TO THE STILL FACE, and that is the whole compatibility story:
+ * no clip, no cycle, no timer, and the same single bust the box has always
+ * shown. The shipped game takes that path for every speaker in it.
+ *
+ * A hook, so it must be called unconditionally — pass `active: false` for a
+ * speaker who is not talking rather than skipping the call.
+ */
+export function useSpeakingBust(
+  sprites: Sprites,
+  sprite: string,
+  active = true,
+): string | null {
+  const clip = spriteClip(sprite, "talk");
+  // Resolved to URLs before the cycle, not inside it: `spriteBustUrl` caches
+  // per name, so this is a map over a handful of strings rather than the
+  // head-crop canvas pass it looks like.
+  const frames =
+    clip === undefined
+      ? EMPTY_FRAMES
+      : clip.frames
+          .map((name) => spriteBustUrl(sprites, name))
+          .filter((url): url is string => url !== undefined);
+  const shown = useFrameCycle(frames, clip?.delayMs ?? 0, active);
+  return shown ?? bustSrc(sprites, sprite);
+}
+
+/** Shared so the no-clip path hands `useFrameCycle` the same array every
+ * render — see its note on why a fresh literal would restart the cycle. */
+const EMPTY_FRAMES: string[] = [];
 
 /**
  * The framed portrait, or NOTHING AT ALL when there is no art for the speaker —

@@ -22,9 +22,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import sharp from "sharp";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { buildMod } from "../../mod/tools/build.mjs";
+import { BUNDLE_FORMAT, buildMod } from "../../mod/tools/build.mjs";
 import { readCatalog } from "../../mod/tools/catalog-read.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -82,6 +83,28 @@ function wav(samples = 16): Uint8Array {
  * would otherwise drown out the finding a sound test is actually about. */
 function soundWarnings(warnings: string[]): string[] {
   return warnings.filter((w) => !w.includes("no contents: block"));
+}
+
+/**
+ * A real, tiny PNG — the same idea as `wav()` above, and for the same reason.
+ *
+ * Encoded by `sharp` rather than hand-rolled: the compiler's job here is to
+ * DECODE somebody else's export, so a fixture written by the same hand as the
+ * decoder would prove only that the two agree with each other. (The decoder's
+ * own agreement with sharp across every filter, depth and colour type is
+ * `mod_png_test.ts`.)
+ */
+async function png(width: number, height: number): Promise<Uint8Array> {
+  const px = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < px.length; i += 4) {
+    px[i] = i % 251;
+    px[i + 1] = (i * 7) % 241;
+    px[i + 2] = (i * 13) % 239;
+    px[i + 3] = 255;
+  }
+  return sharp(px, { raw: { width, height, channels: 4 } })
+    .png()
+    .toBuffer();
 }
 
 /** A tagless MP3's first bytes: a frame sync, then whatever. */
@@ -1310,7 +1333,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, map blueprint, enemy, item, sound, recording, track, powerup, talent, companion/,
+      /at least one level, map blueprint, enemy, item, sprite, animation, sound, recording, track/,
     );
   });
 
@@ -1999,5 +2022,230 @@ describe("scripts/", () => {
       "menace",
       "progression",
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PNG sprites and authored animations — the two halves of "somebody else drew
+// this". Everything the game itself ships is a character grid animated by the
+// renderer's own two-frame convention, for the same reason every shipped sound
+// is a list of oscillators: it keeps the app tiny, diffable and offline. A MOD
+// is somebody else's work, and a pixel artist's deliverable is a PICTURE with a
+// cycle behind it, not a legend of palette letters.
+// ---------------------------------------------------------------------------
+
+describe("sprites drawn as PNGs", () => {
+  it("takes a .png as the sprite its file name calls it", async () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/scratch_mob_0.png": await png(6, 5),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    const drawn = bundle?.sprites.find((s) => s.name === "scratch_mob_0");
+    expect(drawn).toBeDefined();
+    expect([drawn?.width, drawn?.height]).toEqual([6, 5]);
+    // Decoded HERE, never in the game: what travels is raw RGBA, exactly as a
+    // grid-authored sprite's pixels do, so nothing downstream can tell which
+    // way round the art was authored.
+    expect(Buffer.from(drawn?.rgba ?? "", "base64")).toHaveLength(6 * 5 * 4);
+  });
+
+  it("lets an ART PACK be the whole mod", async () => {
+    // A folder of pictures that redraws the game's own bodies adds no level, no
+    // rule and no id — and was refused as "a bundle of nothing" until this
+    // feature existed. It replaces what the player looks at for a whole run.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/hero/ghost_0.png": await png(16, 16),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle?.sprites).toHaveLength(1);
+  });
+
+  it("refuses a .png that is not one", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/scratch_mob_0.png": Buffer.from("GIF89a and then some"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /first bytes are not a PNG/,
+    );
+  });
+
+  it("refuses a file name that is not a sprite id", async () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/Scratch Mob.png": await png(4, 4),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /the file name IS the sprite/,
+    );
+  });
+
+  it("refuses the same sprite drawn twice, two ways", async () => {
+    // Which one won would be decided by the loader's sort order, which is not
+    // a decision anybody made — and the loser gets edited for an afternoon
+    // with nothing changing on screen.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/scratch_mob_0.png": await png(4, 4),
+      "sprites/x/scratch_mob_0.yaml": [
+        "name: scratch_mob_0",
+        "size: [2, 1]",
+        "description: a test sprite",
+        'palette: { a: "#ffffff" }',
+        "grid: |",
+        "  aa",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is already drawn by .*not as both/s,
+    );
+  });
+
+  it("warns about art drawn at the wrong scale", async () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/scratch_mob_0.png": await png(128, 128),
+    });
+    const { bundle, warnings } = buildMod(dir, catalog);
+    // A WARNING, not a refusal: an author drawing a screen-filling boss is
+    // allowed to mean it. But a sprite's pixels are world units, so this is
+    // nearly always art that was never scaled down.
+    expect(bundle).not.toBeNull();
+    expect(warnings.join()).toMatch(/world units/);
+  });
+});
+
+describe("animations.yaml", () => {
+  /** A mod with two frames of art and whatever `animations.yaml` the case is
+   * about — the smallest thing that can carry a clip. */
+  const withClips = async (yaml: string) =>
+    scratchMod({
+      "mod.yaml": MANIFEST,
+      "sprites/x/scratch_mob_0.png": await png(8, 8),
+      "sprites/x/scratch_mob_1.png": await png(8, 8),
+      "sprites/x/scratch_mob_talk_0.png": await png(8, 8),
+      "sprites/x/scratch_mob_talk_1.png": await png(8, 8),
+      "animations.yaml": yaml,
+    });
+
+  it("compiles a walk longer than the two frames the game draws", async () => {
+    const dir = await withClips(
+      [
+        "scratch_mob:",
+        "  walk:",
+        "    frames: [scratch_mob_0, scratch_mob_1, scratch_mob_talk_0, scratch_mob_talk_1]",
+      ].join("\n"),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle?.clips?.scratch_mob?.walk?.frames).toHaveLength(4);
+    // A WALK IS DRIVEN BY THE GROUND COVERED, never by a timer — decided by the
+    // state rather than authored, so a six-frame cycle speeds up, slows and
+    // stops with the body exactly as the two-frame one does.
+    expect(bundle?.clips?.scratch_mob?.walk?.drive).toBe("stride");
+  });
+
+  it("compiles a TALK clip, which the two-frame convention cannot express", async () => {
+    const dir = await withClips(
+      [
+        "scratch_mob:",
+        "  talk:",
+        "    frames: [scratch_mob_talk_0, scratch_mob_talk_1]",
+        "    delayMs: 90",
+      ].join("\n"),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle?.clips?.scratch_mob?.talk).toEqual({
+      frames: ["scratch_mob_talk_0", "scratch_mob_talk_1"],
+      delayMs: 90,
+      drive: "clock",
+    });
+  });
+
+  it("fills in the cadence a clip does not name", async () => {
+    const dir = await withClips(
+      "scratch_mob:\n  idle:\n    frames: [scratch_mob_0, scratch_mob_1]\n",
+    );
+    const { bundle } = buildMod(dir, catalog);
+    // The game's own idle shimmer, so a mod that says nothing about timing
+    // gets the timing the rest of the game is already animating at.
+    expect(bundle?.clips?.scratch_mob?.idle?.delayMs).toBe(300);
+  });
+
+  it("refuses a frame no sprite answers to", async () => {
+    // The failure this check exists for is SILENT: the renderer resolves the
+    // name to undefined and skips it, so the body flickers out of existence one
+    // frame in three with every check green.
+    const dir = await withClips(
+      "scratch_mob:\n  walk:\n    frames: [scratch_mob_0, scratch_mob_9]\n",
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /no sprite "scratch_mob_9"/,
+    );
+  });
+
+  it("lets a clip name art the BASE GAME draws", async () => {
+    // The same base ∪ mod rule every other cross-reference follows: a mod may
+    // re-time a shipped body without redrawing it.
+    const dir = await withClips(
+      "ghost:\n  idle:\n    frames: [ghost_0, ghost_1]\n    delayMs: 900\n",
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle?.clips?.ghost?.idle?.delayMs).toBe(900);
+  });
+
+  it("refuses a state the game never plays", async () => {
+    const dir = await withClips(
+      "scratch_mob:\n  swim:\n    frames: [scratch_mob_0]\n",
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /"swim" is not a state the game plays/,
+    );
+  });
+
+  it("refuses an unknown field rather than dropping it", async () => {
+    const dir = await withClips(
+      "scratch_mob:\n  idle:\n    frames: [scratch_mob_0]\n    loop: false\n",
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown field "loop"/,
+    );
+  });
+
+  it("says so when a walk's delayMs would be ignored", async () => {
+    const dir = await withClips(
+      "scratch_mob:\n  walk:\n    frames: [scratch_mob_0, scratch_mob_1]\n    delayMs: 80\n",
+    );
+    const { bundle, warnings } = buildMod(dir, catalog);
+    expect(bundle).not.toBeNull();
+    expect(warnings.join()).toMatch(/driven by the ground/);
+  });
+
+  it("refuses an empty frame list", async () => {
+    const dir = await withClips("scratch_mob:\n  idle:\n    frames: []\n");
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /at least one sprite name/,
+    );
+  });
+});
+
+describe("the bundle's format version", () => {
+  it("is the one the page will accept", async () => {
+    // These two numbers drifted apart once, and the failure is total and
+    // silent-looking: the compiler stamps a version the page has never heard
+    // of, `bundleProblem` answers "format", and every mod in the library is
+    // refused at load with nothing wrong in any of them.
+    const page = readFileSync(
+      path.join(repoRoot, "pwa", "src", "game", "mods.ts"),
+      "utf8",
+    );
+    const supported = /SUPPORTED_BUNDLE_FORMAT = (\d+)/.exec(page)?.[1];
+    expect(Number(supported)).toBe(BUNDLE_FORMAT);
   });
 });

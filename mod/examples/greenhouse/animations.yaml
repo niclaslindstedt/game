@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: CC0-1.0
+# HOW THIS MOD'S ART MOVES.
+#
+# Optional, and most mods want no such file. The game's own renderer already
+# knows how to animate a body from its two frames — `<sprite>_0` and
+# `<sprite>_1`, alternating on a clock while it stands and on the ground it
+# covers while it walks — so a mod that draws two frames per monster gets a walk
+# cycle, an idle shimmer and a cast pose without saying anything at all.
+#
+# This file is for the two things that convention cannot say:
+#
+#   1. **A cycle longer than two frames.** `frames:` takes as many as you drew.
+#      A six-frame walk covers the same ground the two-frame one did — the
+#      cadence is measured off the body's own stride, not off a timer — so it
+#      speeds up, slows and stops with the character rather than sliding.
+#   2. **A moment the game has no convention for.** `talk:` is the one that did
+#      not exist at all: nothing in the shipped game ever asked a body to move
+#      its mouth, so every speaker's portrait has been one still picture beside
+#      a speech that types itself out a letter at a time.
+#
+# THE SHAPE IS: sprite name, then state, then the frames.
+#
+#   <subject>:          the art's base name — a monster's `sprite:`, or a sprite
+#                       id with its "_0" taken off
+#     <state>:          idle | walk | talk | cast
+#       frames: [...]   sprite names, in play order. Yours, or the base game's.
+#       delayMs: 130    how long ONE frame is held. Ignored by `walk`, which
+#                       runs on the ground covered instead.
+#
+# Everything you leave out keeps doing what it always did: a subject with no
+# `idle:` still shimmers between its two frames, and a monster you say nothing
+# about here is animated exactly as the shipped ones are.
+
+# THE GARDENER TALKS. She is the one character in this mod with anything to say
+# — she is spareable, so beating her opens a conversation rather than ending
+# one — and this is what makes her face move while she says it. It plays in
+# three places at once: her portrait in the talk box, her portrait on the errand
+# panel, and her body standing on the field behind both.
+#
+# Drawn with the two frames she already walks on rather than a new mouth, which
+# is the honest cheap version of this: she shifts her weight as she speaks. Draw
+# `greenhouse_gardener_talk_0` and `_1` and name them here instead, and it is a
+# mouth — the format does not care which you did.
+greenhouse_gardener:
+  talk:
+    frames: [greenhouse_gardener_0, greenhouse_gardener_1]
+    # Slower than a walk and slower than a shimmer: this is a person speaking,
+    # not a person fidgeting.
+    delayMs: 220
+
+# THE CREEPER SWAYS. Its default idle is the game's 300ms shimmer, which reads
+# as an animal breathing; a vine is not breathing, it is moving in air that is
+# barely moving, so its stand is nearly twice as slow.
+greenhouse_creeper:
+  idle:
+    frames: [greenhouse_creeper_0, greenhouse_creeper_1]
+    delayMs: 560

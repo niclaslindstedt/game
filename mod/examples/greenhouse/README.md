@@ -29,6 +29,15 @@ conversion needs more than a sentence. Write yours for that person.
   magic pickers beside the game's own.
 - An arrival scene, the hero's own thoughts on the place, the seed log that
   spells its story out, a score and a sound.
+- **[`animations.yaml`](animations.yaml)** — how the art moves past what the
+  renderer does for free: the gardener's face while she talks (a moment the game
+  has no convention for at all), and a slower sway for the creeper.
+
+Its sprites are character grids, because a grid diffs pixel by pixel and reads
+in a pull request — which is what an example is for. **Yours can be PNGs**: drop
+`sprites/<family>/<name>.png` in and the file name is the sprite, the same way a
+recording's name is its sound. See
+[`FORMAT.md`](../../FORMAT.md#spritesfamilynamepng--pixel-art-you-drew-somewhere-else).
 
 The file-by-file version of this list is `contents:` in
 [`mod.yaml`](mod.yaml) — the game shows it on the MODS screen when a player taps

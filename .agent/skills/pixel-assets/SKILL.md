@@ -120,7 +120,13 @@ Rules of the pool:
 - **Animations are frame lists** in each family's `_family.yaml` `animations` map.
   Evaluate frames on the film strip (`<name>_strip.png` — the last cell is
   an onion-skin: a double image there means the anchor drifts) and motion
-  in the animated `<name>.webp`.
+  in the animated `<name>.webp`. That map drives the PREVIEWS; what the game
+  actually plays is the renderer's own convention (`<sprite>_0`/`_1` on a clock
+  standing and on the stride walking), so a shipped body is two frames and the
+  numbers here are for the review surface. A **mod** may declare something
+  richer — `animations.yaml`, a cycle of any length plus a `talk` state
+  (`mod/FORMAT.md`); the shipped tree does not, and adding a runtime clip here
+  means teaching `render/clips.ts` where a shipped table would come from.
 - **Enemy battle damage is generated, never drawn — and derived from the
   enemy catalog.** Every enemy ships wounded variants named
   `<sprite>_<stage>_<frame>`; `sprite-data/index.mjs` reads `ENEMY_DEFS`
@@ -347,6 +353,8 @@ actually looked at**:
 - Grid chars: `.` = transparent; every other char must exist in the
   family's merged palette (core + local).
 - Animation frames are separate grids named `<sprite>_0`, `<sprite>_1`, …
+  Two is what the renderer's convention draws for a shipped body; a mod that
+  wants six says so in its own `animations.yaml` (see `docs/modding.md`).
 - Enemy damage stages are named `<sprite>_<stage>_<frame>` (`hurt` /
   `wrecked` / `dying`); the renderer falls back to the base frame when a
   variant is missing, so a typo degrades silently — that's what

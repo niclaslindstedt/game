@@ -56,7 +56,7 @@ import {
 import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
-import { bustSrc, SpritePortrait } from "./SpritePortrait.tsx";
+import { SpritePortrait, useSpeakingBust } from "./SpritePortrait.tsx";
 import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
@@ -348,6 +348,10 @@ export function ShopPanel({
   const merchant = state.merchant;
   const player = localHero(state);
   const line = merchantLine(state.level.id);
+  // The counter is a conversation like any other, so the trader's face moves
+  // while he is behind it — when a mod's art gave him a `talk:` clip
+  // (`render/clips.ts`). The still bust otherwise, which is the shipped game.
+  const portrait = useSpeakingBust(sprites, merchant.sprite);
   // His line is a SENTENCE, so it wraps to the same width every other piece of
   // running copy in the overlays does rather than running off the phone.
   const wrapRem = useHelpWrapRem();
@@ -538,10 +542,7 @@ export function ShopPanel({
             for the venue), shown the way a quest giver's is, so the counter
             reads as a person rather than a vending machine. */}
         <div className="shop-header">
-          <SpritePortrait
-            src={bustSrc(sprites, merchant.sprite)}
-            frameClass="shop-portrait-frame"
-          />
+          <SpritePortrait src={portrait} frameClass="shop-portrait-frame" />
           <PixelText
             font={font}
             text={merchantName(state.level.id)}

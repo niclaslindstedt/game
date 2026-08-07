@@ -18,8 +18,18 @@
 // dialogue system to mute it, and a menu row must not import the simulation to
 // put "ON" beside a mod's name.
 
-/** One sprite as the compiler emits it: raw RGBA, base64'd. No palette, no
- * grid — the whole pixel format stays on the compiler's side of the wall. */
+/**
+ * One sprite as the compiler emits it: raw RGBA, base64'd.
+ *
+ * No palette, no grid, and — the part worth saying twice — NO PNG. A mod may
+ * AUTHOR its art either way (`sprites/<family>/<id>.yaml` as a character grid,
+ * or `<id>.png` straight out of an editor), and by the time it reaches this
+ * type the difference is gone: the compiler rasterizes the grid and decodes the
+ * picture, so the whole pixel format — every palette rule, every decoder —
+ * stays on its side of the wall. The page's job is `new ImageData(bytes, w, h)`
+ * over a buffer whose size it already knows, which is synchronous, infallible
+ * and has no format to get wrong.
+ */
 export type ModSprite = {
   name: string;
   width: number;
@@ -175,6 +185,22 @@ export type ModBundle = {
   quests: Record<string, unknown>;
   questGivers: Record<string, unknown>;
   sprites: ModSprite[];
+  /**
+   * HOW THE ART MOVES: subject → state → `{ frames, delayMs, drive }`.
+   *
+   * Structurally typed here rather than importing `SpriteClips`, for the reason
+   * this whole leaf exists: the MODS screen is on the startup path and this
+   * module may name nothing that drags the renderer along behind it. The real
+   * type is `render/clips.ts`, and `mods.ts` — which is allowed to know both —
+   * is where the two meet.
+   *
+   * Absent from a mod that ships none, which is nearly all of them: the shipped
+   * art is two frames a body and the renderer knows that convention by heart.
+   */
+  clips?: Record<
+    string,
+    Record<string, { frames: string[]; delayMs: number; drive: string }>
+  >;
   /** The manifest's own inventory — what the MOD INFO screen reads. Empty for
    * a mod authored before `contents:` existed, which is why the screen still
    * has to be able to say something without it. */
@@ -207,7 +233,8 @@ export type ModClash = {
     | "thought"
     | "story item"
     | "quest"
-    | "rule script";
+    | "rule script"
+    | "animation";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

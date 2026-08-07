@@ -196,6 +196,82 @@ Rules that hold the seam together, each one that would otherwise bite:
   have to be rebuilt to do. The cost is that it bypasses the AudioContext, so
   the music volume is PUSHED to it (`onMusicVolume`) rather than read per note.
 
+### A mod may ship DRAWN art, and animate it past two frames
+
+The same asymmetry as recorded sound, arrived at the same way. Every shipped
+sprite is a character grid with a palette legend
+(`content/sprites/<family>/<id>.yaml`), and that is a good format for what it
+is: it diffs per pixel, it reviews in a pull request, and it is authorable in
+the same editor as everything else. It is a poor way to RECEIVE a finished
+sprite from somebody who draws for a living. So a mod's sprite may be a
+`.png` — the file's stem is the sprite name, exactly as a recording's stem is
+its sound id.
+
+**The pixels are decoded by the COMPILER, and the page's contract does not
+move.** `ModSprite` is still `{ name, width, height, rgba }` with the bytes
+base64'd, and the page still does `new ImageData(bytes, w, h)` over a buffer
+whose size it already knows. That was a deliberate choice before PNGs existed
+(decoding a stranger's image in the process holding the player's save is an
+attack surface with no upside) and shipping PNG bytes through would have thrown
+it away for nothing. `mod/tools/png.mjs` is therefore a from-scratch
+non-interlaced PNG reader on `node:zlib`: the toolchain runs outside the app's
+asar and installs no packages of its own, which rules out `sharp`, and a decoder
+short enough to read end to end is a decoder whose refusals can be explained to
+an author by line. `tests/content/mod_png_test.ts` pins it byte-for-byte against
+`sharp` across every filter, depth and colour type.
+
+**Replacing a sprite is the second id clash an ADDON is allowed**, for the same
+reason a recording is the first: naming the sprite it stands in for is the ONLY
+way to redraw it, the monster's def and everything referencing it are untouched,
+and an art pack that had to declare itself a total conversion to give the hero a
+new coat would be lying about what it does. A reskin IS the addon-shaped change.
+
+**`animations.yaml` is the other half, and it is the half that was missing.**
+The renderer has always animated a body by convention — `<sprite>_0` and
+`_1` alternating, `<sprite>_cast_0/1` for a windup — which is exactly right for
+sixteen-pixel art and unsayable-past: a mod whose artist drew a six-frame walk
+had nowhere to put frames three through six, and a mod that drew a mouth moving
+had no MOMENT to hang it on, because nothing in the game had ever asked a body
+to talk. So a mod may declare CLIPS: subject → state → frames, with `idle`,
+`walk`, `talk` and `cast` as a closed vocabulary
+(`scripts/asset-tools/animation-schema.mjs`, played by
+`pwa/src/game/render/clips.ts`).
+
+Four rules hold it together, and each is a way replaced art could otherwise look
+worse than what it replaced:
+
+- **NO CLIP MEANS NO CHANGE.** Every call site keeps its own fallback and takes
+  it whenever the table says nothing — which, for the shipped game, is always.
+  The table cannot change how the game looks on its own; only a mod can.
+- **A WALK IS DRIVEN BY THE GROUND COVERED, and that is not authored.** The
+  drive follows the STATE (`walk` → the gait's own phase, everything else → the
+  clock), because it is a fact about what the state means rather than a
+  preference: a walk cycle on a timer moonwalks the instant its owner is slowed,
+  blocked or standing still, and an idle breath on a distance would stop at the
+  one moment it is the only thing keeping the body alive. Letting a file choose
+  would only be letting it choose wrong. Six frames therefore cover the same
+  ground two did.
+- **EVERY BODY KEEPS ITS OWN PHASE**, seeded off its entity id — the two-frame
+  shimmer always did (`timeMs / 300 + enemy.id`), and a clip that dropped it
+  would animate a horde of forty as one organism.
+- **A STATE EXISTS BECAUSE THE RENDERER ASKS IT.** A fifth state is a renderer
+  change first and a schema change second; a state nothing raises is a promise
+  to a mod author that the game silently breaks.
+
+`talk` is the one that is new rather than wider, and it is raised in three places
+at once for one speaker: the portrait in the dialogue box, the portrait on the
+errand or shop panel (`useSpeakingBust`), and the body standing on the field
+behind both. The field's clock is RENDER time rather than sim time, which is
+what lets a mouth keep moving while the run is frozen behind the modal — the
+same reason the horde keeps breathing through its own dialogue.
+
+The one body that is only half in: the HERO is a paper doll, not a sprite, and
+his worn armor overlays are derived per shipped pose. A `walk` clip on his
+appearance replaces the BODY layer and leaves the overlays on their two poses —
+a six-frame body in two-frame trousers, which reads fine and is a far better
+trade than refusing the body until somebody hand-draws six frames of every armor
+piece in the game.
+
 ### A CUE is a sound the engine does not know it is making
 
 Most sounds answer a `GameEvent`: the simulation reports a thing and the catalog

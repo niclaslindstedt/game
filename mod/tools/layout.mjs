@@ -32,6 +32,18 @@
  */
 export const SAMPLE_EXTS = ["wav", "mp3", "ogg", "opus", "flac"];
 
+/**
+ * The two ways a sprite may be authored.
+ *
+ * A `.yaml` grid is the game's own format and stays first, because it is what
+ * every refusal should name for somebody who has not read the docs. A `.png` is
+ * the same sprite drawn in an editor instead — decoded by the compiler, never
+ * by the game (see `png.mjs`). ONE image format on purpose: PNG is lossless,
+ * indexed-friendly and universally exported, and a second one would only be a
+ * second decoder for art that would come out worse.
+ */
+export const SPRITE_EXTS = ["yaml", "png"];
+
 /** Directories the compiler loads, and how deep the YAML sits in each.
  *
  * `depth: 1` is `<dir>/<id>.yaml`; `depth: 2` is `<dir>/<group>/<id>.yaml`,
@@ -44,7 +56,19 @@ export const TREES = {
   maps: { depth: 1, what: "a map blueprint" },
   enemies: { depth: 2, group: "biome", what: "a monster" },
   items: { depth: 2, group: "rarity", what: "a weapon, gear piece or relic" },
-  sprites: { depth: 2, group: "family", what: "pixel art" },
+  // The other tree that takes MEDIA beside its YAML, for the same reason
+  // `sounds/` does: a pixel artist's deliverable is a PICTURE. A grid of
+  // palette characters is a fine way to author sixteen pixels of moon rock in
+  // a text editor, and a terrible way to receive a finished sprite sheet from
+  // somebody who draws for a living — so `sprites/<family>/<id>.png` is the
+  // same sprite by the same name, decoded to raw pixels by the compiler
+  // (`png.mjs`) so the game still only ever sees a flat byte array.
+  sprites: {
+    depth: 2,
+    group: "family",
+    exts: SPRITE_EXTS,
+    what: "pixel art",
+  },
   // The one tree that takes MEDIA beside its YAML: `sounds/<id>.wav` (or
   // `.mp3`) is a RECORDING that replaces the synthesized sound of the same id,
   // which is how a mod ships professionally produced audio instead of a list
@@ -127,6 +151,8 @@ export const ITEM_RARITIES = new Set([
 
 /** Catalogs that are a single FILE at the mod's root. */
 export const ROOT_CONTENT = {
+  "animations.yaml":
+    "how your sprites move — the clips that replace the two-frame convention",
   "ladder.yaml": "where your levels sit on the difficulty ladder",
   "powerups.yaml": "the powers a pickup grants",
   "talents.yaml": "the passives the hero buys ranks in",

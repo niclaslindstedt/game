@@ -383,6 +383,15 @@ function compile() {
     [
       [Object.keys(b.blueprints ?? {}).length, "map blueprint"],
       [(b.samples ?? []).length, "recording"],
+      // Clips, not subjects: "3 animations" is what an author counts, and one
+      // subject with a walk and a talk is two of them.
+      [
+        Object.values(b.clips ?? {}).reduce(
+          (n, states) => n + Object.keys(states).length,
+          0,
+        ),
+        "animation",
+      ],
       [Object.keys(b.talents ?? {}).length, "talent"],
       [Object.keys(b.companions ?? {}).length, "companion"],
       [Object.keys(b.cutscenes ?? {}).length, "scene"],

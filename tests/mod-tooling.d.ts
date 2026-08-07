@@ -46,6 +46,15 @@ declare module "*/mod/tools/build.mjs" {
     gear: Record<string, unknown>;
     uniques: Record<string, unknown>;
     sprites: ModSprite[];
+    /** HOW THE ART MOVES: subject → state → clip. Absent from a mod that
+     * ships no `animations.yaml`, which is nearly all of them. */
+    clips?: Record<
+      string,
+      Record<
+        string,
+        { frames: string[]; delayMs: number; drive: "clock" | "stride" }
+      >
+    >;
     sounds: Record<string, unknown>;
     /** The audio files it ships, by clip name. Absent when it ships none. */
     samples?: ModSample[];
@@ -203,4 +212,58 @@ declare module "*/scripts/mod-support.mjs" {
     dirs: string[],
     options?: { quiet?: boolean },
   ): ReturnType<typeof applyMods>;
+}
+
+declare module "*/mod/tools/png.mjs" {
+  /** Is this file a PNG at all — the eight-byte signature, nothing more. */
+  export function isPng(bytes: Uint8Array): boolean;
+
+  /** The largest picture the decoder will take, per side. */
+  export const MAX_PNG_SIDE: number;
+
+  /**
+   * A non-interlaced PNG → straight-alpha RGBA. Throws with a message written
+   * for the mod author (interlaced, 16-bit, truncated, not a PNG at all).
+   */
+  export function decodePng(bytes: Uint8Array): {
+    width: number;
+    height: number;
+    rgba: Buffer;
+  };
+}
+
+declare module "*/scripts/asset-tools/animation-schema.mjs" {
+  /** The four states a clip may be authored for, each with its default
+   * cadence, its drive, and the shipped convention it overrides. */
+  export const CLIP_STATES: Record<
+    string,
+    {
+      delayMs: number;
+      drive: "clock" | "stride";
+      what: string;
+      fallback: string;
+    }
+  >;
+
+  /** The most frames one clip may hold. */
+  export const MAX_CLIP_FRAMES: number;
+
+  /**
+   * Validate a whole `animations.yaml`. `clips` is normalized with every
+   * default filled in, and EMPTY whenever `errors` is non-empty.
+   */
+  export function validateAnimations(
+    doc: unknown,
+    refs?: { sprites?: Set<string> },
+  ): {
+    errors: string[];
+    warnings: string[];
+    clips: Record<
+      string,
+      Record<
+        string,
+        { frames: string[]; delayMs: number; drive: "clock" | "stride" }
+      >
+    >;
+  };
 }

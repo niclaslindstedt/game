@@ -31,15 +31,19 @@ document and a schema disagree, the schema is right.**
 | `quests/<id>.yaml`, `quest-givers.yaml`           | [`quest-schema.mjs`](../scripts/asset-tools/quest-schema.mjs)           |
 | `cutscenes/`, `thoughts.yaml`, `story-items.yaml` | [`story-schema.mjs`](../scripts/asset-tools/story-schema.mjs)           |
 | `sprites/<family>/<name>.yaml`                    | [`sprite-schema.mjs`](../scripts/asset-tools/sprite-schema.mjs)         |
+| `animations.yaml`                                 | [`animation-schema.mjs`](../scripts/asset-tools/animation-schema.mjs)   |
 | `sounds/<id>.yaml`                                | [`sound-schema.mjs`](../scripts/asset-tools/sound-schema.mjs)           |
 | `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)           |
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs) |
 | `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)         |
 
-A recording — `sounds/<id>.<ext>` or `music/<id>.<ext>` — is the one file with
-no schema, because it has no fields: the compiler checks only that it IS one
-(see [a recording](#soundsidext--a-recording) and
-[a recorded score](#musicidext--a-recorded-score)).
+The files with no schema are the ones with no fields — a recording
+(`sounds/<id>.<ext>`, `music/<id>.<ext>`) and a drawn sprite
+(`sprites/<family>/<name>.png`). For those the compiler checks only that the
+file IS what it claims to be, and decodes it: see
+[a recording](#soundsidext--a-recording), [a recorded
+score](#musicidext--a-recorded-score) and [pixel art you drew somewhere
+else](#spritesfamilynamepng--pixel-art-you-drew-somewhere-else).
 
 ---
 
@@ -641,7 +645,130 @@ doors, elevator pads. Characters always stand up.
 
 A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble
-as it walks.
+as it walks. Want more than two? See
+[`animations.yaml`](#animationsyaml--how-your-art-moves).
+
+## `sprites/<family>/<name>.png` — pixel art you drew somewhere else
+
+The grid above is the game's own format, and it is a good one for authoring
+sixteen pixels of moon rock in a text editor: it diffs, it reviews, and its
+palette is a legend anybody can read. It is a poor way to RECEIVE a finished
+sprite from somebody who draws for a living.
+
+So a sprite may be a PNG instead, and the two are interchangeable:
+
+```
+my-mod/
+  sprites/
+    my_family/
+      my_monster_0.png     ← exactly the sprite `my_monster_0`
+      my_monster_1.png
+      my_monster_walk_2.png
+```
+
+**THE FILE NAME IS THE SPRITE**, the same way a recording's stem is its sound.
+Drop `ghost_0.png` in and the game's ghost is drawn with your picture — no
+manifest entry, no YAML beside it, nothing else to write. **An art pack is a
+complete mod**: a folder of PNGs named after the bodies they redraw, with no
+level, no monster and not one line of YAML in it.
+
+- **PNG only, 8 bits per channel, not interlaced.** Every editor exports that by
+  default; the compiler names the fix if yours did not. Indexed colour,
+  greyscale and full RGBA all work, with or without transparency.
+- **A sprite's pixels are WORLD UNITS.** The hero is 16 of them tall. A 64×64
+  body is four heroes tall on the field — which is a legitimate thing to draw
+  for a boss and almost never what somebody means at 128. The compiler warns
+  from 96 and refuses past 512.
+- **Transparency is alpha**, not a magic colour. Leave the background empty.
+- **The pixels are decoded here, not in the game.** By the time your art reaches
+  the renderer it is the same flat byte array a grid compiles to, so nothing
+  downstream can tell which way round you authored it.
+- **`plane:`, `rise:`, `directional:` and `space:` are grid-only.** They are
+  facts about the art that a picture has no way to carry, so art that needs one
+  of them stays a `.yaml`. Characters — which is nearly everything anybody wants
+  to redraw — need none of them.
+
+One sprite, one file: `my_monster_0.yaml` beside `my_monster_0.png` is refused
+rather than silently resolved, because which one won would be alphabetical order
+rather than a decision you made.
+
+## `animations.yaml` — how your art moves
+
+Optional, and most mods want no such file.
+
+The renderer already knows how to animate a body from its two frames:
+`<sprite>_0` and `<sprite>_1` alternate on a clock while it stands, and on the
+ground it covers while it walks, and `<sprite>_cast_0/1` is worn while it winds
+up a telegraphed move. Draw two frames per monster and you get all of that for
+free, exactly as the shipped game does.
+
+This file is for the two things that convention cannot say.
+
+```yaml
+# animations.yaml, at your mod's root
+my_monster: # the SUBJECT: a monster's `sprite:`, or a sprite id minus its "_0"
+  walk:
+    frames: [my_monster_w0, my_monster_w1, my_monster_w2, my_monster_w3]
+  talk:
+    frames: [my_monster_talk_0, my_monster_talk_1]
+    delayMs: 130
+```
+
+### The four states
+
+| state  | played when                                          | what you get without one                       |
+| ------ | ---------------------------------------------------- | ---------------------------------------------- |
+| `idle` | standing on the field                                | `_0` and `_1` alternating every 300ms          |
+| `walk` | covering ground                                      | `_0` and `_1`, one per half-stride             |
+| `talk` | a conversation, errand offer or shop counter is open | **nothing** — the portrait holds `_0` and sits |
+| `cast` | winding up a telegraphed move                        | `_cast_0` and `_cast_1` every 110ms            |
+
+Anything you leave out keeps doing exactly what it did. A subject you say
+nothing about at all is animated the way the shipped monsters are.
+
+`talk` is the one that did not exist before: nothing in the game had ever asked
+a body to move its mouth, so every speaker's portrait was one still picture
+beside a speech that types itself out. Author it and it plays in three places at
+once — the portrait in the dialogue box, the portrait on the errand panel, and
+the body standing on the field behind both.
+
+### `frames:` and `delayMs:`
+
+- **`frames:`** is sprite names in play order, as many as you drew (up to 64).
+  They may be your sprites or the base game's, so you can re-time a shipped body
+  without redrawing it. A frame nothing answers to is a compile error, because
+  the alternative is a body that flickers out of existence one frame in six with
+  every check green.
+- **`delayMs:`** is how long ONE frame is held. Leave it out for the cadence the
+  rest of the game animates at.
+- **`walk` ignores `delayMs`**, and that is not an oversight. A walk cycle is
+  driven by the ground the body covers, so four frames cover the same distance
+  two did: it speeds up, slows down and STOPS with the character. A walk on a
+  timer moonwalks the moment its owner is slowed, blocked, or standing still —
+  which is the single most obvious way for replaced art to look worse than what
+  it replaced.
+
+### Wound stages animate separately
+
+A monster's hurt, wrecked and dying looks are their own sprites
+(`<sprite>_hurt_0`, …), so they are their own subjects here:
+
+```yaml
+my_monster: { walk: { frames: [...] } }
+my_monster_hurt: { walk: { frames: [...] } } # optional — falls back to two frames
+```
+
+Say nothing about the wounded one and it keeps the two frames the pipeline
+derives for it, which is usually what you want.
+
+### The hero
+
+The hero is a paper doll rather than a sprite — his worn armor, his held weapon
+and the blood on his coat are separate layers composited per frame — so a `walk`
+clip on his appearance (`player` or `hero`) replaces his BODY and leaves the
+overlays on their two shipped poses. That is the right trade: a six-frame body
+in two-frame trousers reads fine, and the alternative would be hand-drawing six
+frames of every armor piece in the game before your first frame showed up.
 
 ## `items/<rarity>/<id>.yaml` — a weapon, a gear piece, a relic
 

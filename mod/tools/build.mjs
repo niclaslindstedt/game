@@ -43,6 +43,7 @@ import path from "node:path";
 
 import { parse } from "yaml";
 
+import { validateAnimations } from "../../scripts/asset-tools/animation-schema.mjs";
 import { validateCompanion } from "../../scripts/asset-tools/companion-schema.mjs";
 import { validateDifficultyVoice } from "../../scripts/asset-tools/difficulty-schema.mjs";
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
@@ -106,6 +107,7 @@ import {
 // a file the compiler is about to load is the exact failure that module exists
 // to prevent.
 import { SAMPLE_EXTS, sampleStem, sampleTake } from "./layout.mjs";
+import { decodePng, isPng, MAX_PNG_SIDE } from "./png.mjs";
 
 /**
  * The bundle format the game loads. Bumped on a breaking change so an old
@@ -287,6 +289,11 @@ export function buildMod(modDir, catalog) {
   // to be a different GAME rather than a re-skin of this one. Optional, and
   // absent from almost every mod: an addon that adds monsters changes no rules.
   const scripts = loadTree(() => loadScripts(modDir), "scripts", fail);
+  // HOW THE ART MOVES. Parsed here and CHECKED far below, once the sprite names
+  // this mod may reach are known — a clip is nothing but a list of frames, so
+  // validating it before the sprite tree has been read would only be able to
+  // check its punctuation.
+  const animationsDoc = readAnimations(modDir, errors);
   // THE LADDER'S VOICE — what the difficulty rungs are CALLED. A conversion set
   // somewhere else entirely still offered "JESUS CHRIST!"; the numbers behind
   // each rung stay the game's (see the schema's header).
@@ -369,6 +376,16 @@ export function buildMod(modDir, catalog) {
     modBlueprints.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
+    // AN ART PACK IS A REAL MOD, and for a long time it was the one kind this
+    // count refused: a folder of PNGs that redraws every monster in the game
+    // adds no level, no rule and no id, and was told it "would install and do
+    // nothing at all". It replaces what the player looks at for the whole run.
+    sprites.length +
+    // …and so is a mod whose whole contribution is how the art MOVES: a pack
+    // that re-times every idle, or gives the shipped bodies a longer walk.
+    (animationsDoc && typeof animationsDoc === "object"
+      ? Object.keys(animationsDoc).length
+      : 0) +
     modSounds.length +
     // A SOUND PACK is a real mod and often the whole point of one: a folder of
     // recordings named after the sounds they replace, with not a line of YAML
@@ -393,10 +410,10 @@ export function buildMod(modDir, catalog) {
     Object.keys(modScripts).length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, map blueprint, enemy, item, sound, " +
-        "recording, track, powerup, talent, companion, cutscene, thought, " +
-        "story item, quest or rule script — a bundle of nothing would install " +
-        "and do nothing at all",
+      "a mod must add at least one level, map blueprint, enemy, item, sprite, " +
+        "animation, sound, recording, track, powerup, talent, companion, " +
+        "cutscene, thought, story item, quest or rule script — a bundle of " +
+        "nothing would install and do nothing at all",
     );
   }
 
@@ -407,7 +424,6 @@ export function buildMod(modDir, catalog) {
     enemies: modEnemies,
     levels: modLevels,
     items: modItems,
-    sprites,
     sounds: modSounds,
     // The id-clash exemption asks "did this mod ship a RECORDING for that
     // id", which is `clipNames` — shipping one is the only way to replace a
@@ -647,6 +663,18 @@ export function buildMod(modDir, catalog) {
     catalog.sprites,
     sprites.map((s) => s.name),
   );
+  // HOW THE ART MOVES, against the sprite names this mod may actually reach.
+  // Every frame is checked here for the same reason a monster's `sprite:` is:
+  // a clip naming art nobody shipped fails SILENTLY at draw time — the frame
+  // resolves to undefined, the renderer skips it, and the body flickers out of
+  // existence one frame in six with every check green.
+  const { clips: modClips, ...animationCheck } = validateAnimations(
+    animationsDoc,
+    { sprites: spriteNames },
+  );
+  errors.push(...prefix(animationCheck.errors, "animations.yaml"));
+  warnings.push(...prefix(animationCheck.warnings, "animations.yaml"));
+
   const powerupRefs = { sprites: spriteNames, sounds: soundIds };
   for (const { id, def } of powerups?.entries ?? []) {
     const res = validatePowerup(id, def, powerupRefs);
@@ -1063,6 +1091,10 @@ export function buildMod(modDir, catalog) {
       quests: modQuests,
       questGivers: modQuestGivers,
       sprites,
+      // HOW THE ART MOVES: subject → state → frames, every default filled in
+      // by the schema. Empty for the overwhelming majority of mods, which draw
+      // the two frames the game's own renderer already knows what to do with.
+      clips: modClips,
       // The manifest's inventory — what the MOD INFO screen reads to tell a
       // player what this mod puts in their game. Empty for a mod authored
       // before the block existed (see `readContents`).
@@ -1089,9 +1121,14 @@ function loadTree(load, what, fail) {
  * Sprites, decoded to raw pixels here rather than in the game.
  *
  * The page gets `width × height × RGBA` bytes, base64'd — no palette, no grid,
- * no YAML. That keeps the whole pixel format on this side of the wall, so the
- * renderer's job stays "make an ImageBitmap out of these bytes" and a mod
- * cannot reach the atlas pipeline at all.
+ * no PNG, no YAML. That keeps the whole pixel format on this side of the wall,
+ * so the renderer's job stays "make an ImageBitmap out of these bytes" and a
+ * mod cannot reach the atlas pipeline at all.
+ *
+ * TWO WAYS IN, ONE WAY OUT. A `.yaml` grid is the game's own format; a `.png`
+ * is the same sprite drawn in an editor, decoded by `png.mjs`. Which one a
+ * sprite was authored as stops mattering at the `return` — the bundle carries
+ * bytes either way, and nothing downstream can tell them apart.
  */
 function loadSprites(spritesDir, errors, warnings) {
   const out = [];
@@ -1102,40 +1139,149 @@ function loadSprites(spritesDir, errors, warnings) {
     .map((e) => e.name)
     .sort();
 
-  const seen = new Set();
+  const seen = new Map();
+  let pngBytes = 0;
   for (const family of families) {
     const dir = path.join(spritesDir, family);
     const files = readdirSync(dir)
-      .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
+      .filter(
+        (f) =>
+          (f.endsWith(".yaml") || f.endsWith(".png")) && !f.startsWith("_"),
+      )
       .sort();
     for (const file of files) {
       const label = `sprites/${family}/${file}`;
-      let sprite;
-      try {
-        sprite = parse(readFileSync(path.join(dir, file), "utf8"));
-      } catch (e) {
-        errors.push(`${label}: not valid YAML — ${e.message}`);
-        continue;
-      }
-      const stem = file.slice(0, -".yaml".length);
-      if (sprite?.name !== stem) {
-        errors.push(`${label}: name is "${sprite?.name}", expected "${stem}"`);
-        continue;
-      }
-      const res = validateSprite(sprite);
-      errors.push(...prefix(res.errors, label));
-      warnings.push(...prefix(res.warnings, label));
-      if (res.errors.length > 0) continue;
+      const png = file.endsWith(".png");
+      const stem = file.slice(0, file.lastIndexOf("."));
 
-      if (seen.has(sprite.name)) {
-        errors.push(`${label}: duplicate sprite name "${sprite.name}"`);
+      // ONE SPRITE, ONE FILE. `ghoul_0.yaml` beside `ghoul_0.png` is not a
+      // choice anybody made — which won would be decided by the sort order
+      // above, and the loser would be edited for an afternoon with nothing
+      // changing on screen.
+      const already = seen.get(stem);
+      if (already !== undefined) {
+        errors.push(
+          `${label}: "${stem}" is already drawn by ${already} — a sprite is ` +
+            "authored as a grid or as a picture, not as both",
+        );
         continue;
       }
-      seen.add(sprite.name);
-      out.push(rasterize(sprite));
+
+      const sprite = png
+        ? readPngSprite(dir, file, stem, label, errors, warnings)
+        : readGridSprite(dir, file, stem, label, errors, warnings);
+      if (sprite === null) continue;
+      if (png) pngBytes += sprite.width * sprite.height * 4;
+      seen.set(stem, label);
+      out.push(sprite);
     }
   }
+
+  // The decoded pixels are what travels, and every enabled mod's travel at
+  // once — so the ceiling is on the PICTURES rather than on the files, which
+  // is the number a PNG's compression hides. (A 64×64 sprite is 16 KB here
+  // whether it exported at 2 KB or at 12.)
+  if (pngBytes > MAX_SPRITE_PIXEL_BYTES) {
+    errors.push(
+      `sprites/: ${mib(pngBytes)} of decoded picture is over the ` +
+        `${mib(MAX_SPRITE_PIXEL_BYTES)} a mod may ship — the bundle crosses ` +
+        "to the page in one message, alongside every other enabled mod's",
+    );
+  } else if (pngBytes > WARN_SPRITE_PIXEL_BYTES) {
+    warnings.push(
+      `sprites/: ${mib(pngBytes)} of decoded picture — a sprite's pixels are ` +
+        "world units, so art this large is usually art drawn at the wrong scale",
+    );
+  }
   return out;
+}
+
+/** How much decoded sprite art one mod may ship, and where to say so first.
+ * Held in memory as `ImageBitmap`s for as long as the mod is on. */
+const MAX_SPRITE_PIXEL_BYTES = 16 * 1024 * 1024;
+const WARN_SPRITE_PIXEL_BYTES = 6 * 1024 * 1024;
+
+/**
+ * The largest a sprite gets before it stops looking like this game.
+ *
+ * Not a refusal — `png.mjs` has the hard one, and an author drawing a
+ * screen-filling boss is allowed to mean it. But a sprite's pixels ARE world
+ * units (the hero is sixteen of them), so the overwhelmingly likely reason for
+ * a 512-px body is art drawn at 8× and never scaled down, which reads as a
+ * blurry giant rather than as a detailed anything.
+ */
+const WARN_SPRITE_SIDE = 96;
+
+/** One `<id>.yaml` pixel grid → the bundle's sprite shape, or null. */
+function readGridSprite(dir, file, stem, label, errors, warnings) {
+  let sprite;
+  try {
+    sprite = parse(readFileSync(path.join(dir, file), "utf8"));
+  } catch (e) {
+    errors.push(`${label}: not valid YAML — ${e.message}`);
+    return null;
+  }
+  if (sprite?.name !== stem) {
+    errors.push(`${label}: name is "${sprite?.name}", expected "${stem}"`);
+    return null;
+  }
+  const res = validateSprite(sprite);
+  errors.push(...prefix(res.errors, label));
+  warnings.push(...prefix(res.warnings, label));
+  if (res.errors.length > 0) return null;
+  return rasterize(sprite);
+}
+
+/**
+ * One `<id>.png` → the same shape, decoded.
+ *
+ * THE FILE NAME IS THE SPRITE, exactly as a recording's stem is its sound: drop
+ * `ghoul_0.png` in and the mob is drawn with it, with no manifest entry and no
+ * YAML beside it. What a PNG cannot say is the one thing the grid format
+ * carries that is not pixels — `space:`, the indoor/outdoor fact the map
+ * compiler reads — so art that needs it stays a grid. Nothing else is lost.
+ */
+function readPngSprite(dir, file, stem, label, errors, warnings) {
+  if (!/^[a-z][a-z0-9_]*$/.test(stem)) {
+    errors.push(
+      `${label}: "${stem}" is not a sprite name — the file name IS the sprite ` +
+        "it draws, so it takes lowercase letters, digits and underscores",
+    );
+    return null;
+  }
+  const bytes = readFileSync(path.join(dir, file));
+  if (bytes.length === 0) {
+    errors.push(`${label}: the file is empty`);
+    return null;
+  }
+  if (!isPng(bytes)) {
+    errors.push(
+      `${label}: the first bytes are not a PNG — export it as one rather than ` +
+        "renaming it, or author it as a .yaml grid",
+    );
+    return null;
+  }
+  let decoded;
+  try {
+    decoded = decodePng(bytes);
+  } catch (e) {
+    errors.push(`${label}: ${e.message}`);
+    return null;
+  }
+  if (decoded.width > WARN_SPRITE_SIDE || decoded.height > WARN_SPRITE_SIDE) {
+    warnings.push(
+      `${label}: ${decoded.width}×${decoded.height} — a sprite's pixels are ` +
+        `world units and the hero is 16 of them, so anything past ` +
+        `${WARN_SPRITE_SIDE} is usually art that was never scaled down ` +
+        `(the ceiling is ${MAX_PNG_SIDE})`,
+    );
+  }
+  return {
+    name: stem,
+    width: decoded.width,
+    height: decoded.height,
+    rgba: decoded.rgba.toString("base64"),
+  };
 }
 
 /** One validated sprite → `{ name, width, height, rgba }`, the pixels base64'd
@@ -1462,6 +1608,26 @@ function mib(bytes) {
 }
 
 /**
+ * The mod's `animations.yaml`, parsed but not yet judged.
+ *
+ * Absent from almost every mod, and absent by design: the game's own art is two
+ * frames per body and the renderer knows that convention by heart, so a mod
+ * that draws two frames per body needs no file at all. This one is for the mod
+ * that draws SIX — or that draws a mouth moving, which the convention has no
+ * name for. See `scripts/asset-tools/animation-schema.mjs`.
+ */
+function readAnimations(modDir, errors) {
+  const file = path.join(modDir, "animations.yaml");
+  if (!existsSync(file)) return null;
+  try {
+    return parse(readFileSync(file, "utf8"));
+  } catch (e) {
+    errors.push(`animations.yaml: not valid YAML — ${e.message}`);
+    return null;
+  }
+}
+
+/**
  * Id collisions, which mean different things per kind.
  *
  * An ADDON is playing alongside the shipped game, so a clash is a bug: the
@@ -1546,7 +1712,6 @@ function checkIds({
   enemies,
   levels,
   items,
-  sprites,
   sounds,
   /** The ids this mod ships a RECORDING for — see the sound clash below. */
   sampled,
@@ -1564,7 +1729,6 @@ function checkIds({
 }) {
   const shipped = {
     enemy: new Set(catalog.enemies),
-    sprite: new Set(catalog.sprites),
     sound: new Set(catalog.sounds ?? []),
     music: new Set(catalog.music ?? []),
     weapon: new Set(catalog.weapons),
@@ -1584,9 +1748,22 @@ function checkIds({
   for (const id of Object.keys(enemies)) {
     if (shipped.enemy.has(id)) clashes.push(`enemy "${id}"`);
   }
-  for (const s of sprites) {
-    if (shipped.sprite.has(s.name)) clashes.push(`sprite "${s.name}"`);
-  }
+  // A SHIPPED SPRITE'S ID IS ALLOWED TO AN ADDON, and this is the second place
+  // the "an addon may not shadow a shipped id" rule deliberately inverts — for
+  // the same reason the first one (a recording) does.
+  //
+  // Everywhere else, a shadowed id means the mod silently ate something the
+  // player already had: an addon's level replacing a venue, its monster
+  // replacing a breed, its quest replacing an errand. Art is not that. Naming a
+  // sprite after the one it stands in for is the ONLY way to redraw it — the
+  // mob is still `ghost`, its def, its drops and everything that references it
+  // are untouched, and the only thing that changed is the picture. A RESKIN IS
+  // THE ADDON-SHAPED CHANGE, and an art pack that had to declare itself a total
+  // conversion to give the hero a new coat would be lying about what it does.
+  //
+  // It is not silent, either: `applyMods` claims every sprite name and the MODS
+  // screen lists any two mods drawing the same one (`ModClash`), which is the
+  // question a player actually has when two art packs are on at once.
   // A SHIPPED SOUND'S ID IS ALLOWED TO AN ADDON WHEN THE MOD RECORDED IT,
   // and only then. The rule everywhere else — an addon shadowing a shipped id
   // is a bug, because it silently ate something the player already had —

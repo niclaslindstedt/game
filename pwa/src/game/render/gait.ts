@@ -288,6 +288,24 @@ export function walkFrame(gait: Gait): 0 | 1 {
   return gait.phase < 0.5 ? 0 : 1;
 }
 
+/**
+ * Is this body CROSSING GROUND, as against standing on it?
+ *
+ * The same threshold the tilt eases out at, published because the question is
+ * no longer only the gait's own: a body with an authored WALK clip
+ * (`render/clips.ts`) plays it while it is covering ground and its idle clip
+ * while it is not, and that has to be the SAME reading the lean and the step
+ * bounce are made from — or a mob would visibly finish a stride while standing
+ * perfectly upright.
+ *
+ * Measured off the smoothed speed rather than off an engine flag on purpose:
+ * the horde has no `moving` field, and one hero shoving another along has both
+ * of them covering ground while only one of them is walking anywhere.
+ */
+export function walking(gait: Gait): boolean {
+  return gait.speed > REST_SPEED;
+}
+
 /** A stable 0..1 offset for a body's own idle rhythms, hashed off its key. */
 function keyPhase(key: string): number {
   let h = 0;
