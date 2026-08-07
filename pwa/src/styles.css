@@ -7906,6 +7906,124 @@ canvas.tier-artifact {
   transform: translateY(2px);
 }
 
+/* ---- Voice cards ---------------------------------------------------------- */
+/* WHO IS TALKING (VoiceOverlay.tsx) — one card per speaker on the same left
+   rail as the party frames above them, because that rail already means
+   "somebody on your side".
+
+   SIZED FOR A DESKTOP WINDOW, which is a deliberate exception to this file's
+   phone-first rule and is safe only because voice cannot appear anywhere else:
+   it is gated on the `voice` build capability, which only the desktop shell is
+   stamped with. Hence a 2.6rem bust against the party frame's 1.8rem and a card
+   wide enough to hold a name over a readable waveform — proportions that would
+   eat a third of a 844x390 phone and are a corner of a 1920x1080 window. If
+   voice ever ships to a phone, this block is the pass to redo.
+
+   A card is a BUTTON: the press mutes that speaker, locally, for the session. */
+.voice-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  pointer-events: auto;
+}
+
+.voice-card {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.4rem;
+  min-width: 9.5rem;
+  background: rgba(11, 13, 16, 0.72);
+  /* The party rail's own green: this is a teammate, drawn like a teammate. */
+  border: 2px solid #2f4a3a;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: left;
+  /* A card appears mid-fight, so it slides in rather than popping — a new
+     rectangle materializing at the edge of vision reads as a glitch, while the
+     same rectangle arriving reads as somebody joining in. */
+  animation: voice-card-in 120ms ease-out;
+}
+
+@keyframes voice-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* SHOUTING: the HUD's own "look at this" amber, on the border and the glow, so
+   the loud one is identifiable from the corner of the eye without reading a
+   single bar. This is the whole point of the feature — one person whispering
+   and another screaming must not look the same. */
+.voice-card.shouting {
+  border-color: #7a6320;
+  box-shadow: 0 0 6px rgba(255, 215, 94, 0.45);
+}
+
+/* MUTED: drained, and the portrait with it — a muted speaker is still SHOWN
+   (they are talking, the player just cannot hear them), and the card has to make
+   which of those two it is unmistakable. */
+.voice-card.muted {
+  border-color: #3a3f47;
+  opacity: 0.62;
+}
+
+.voice-card.muted .voice-card-img {
+  filter: grayscale(1) brightness(0.7);
+}
+
+/* UNHEARD: their packets arrive in a codec nothing here can decode. Red,
+   because unlike a mute it is not something the player chose. */
+.voice-card.unheard {
+  border-color: #4a1d1d;
+}
+
+/* The microphone's own fault line — not a speaker, so not a button. */
+.voice-card.fault {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  max-width: 12rem;
+  border-color: #4a1d1d;
+  cursor: default;
+}
+
+/* The player's own transmitting card: no portrait, no press. */
+.voice-card.self {
+  border-color: #2f4a3a;
+  cursor: default;
+}
+
+.voice-card-img {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.voice-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+/* The waveform. `image-rendering: pixelated` keeps the bars hard-edged when the
+   canvas is scaled by the window's own device pixel ratio — a softened
+   waveform in a pixel-art game reads as a bug in the art. */
+.voice-card-wave {
+  display: block;
+  width: 6rem;
+  height: 1rem;
+  image-rendering: pixelated;
+}
+
 /* The SPARE-or-KILL verdict box (ChoiceOverlay): the kneeling figure's face
    over two big fates. Shares the level-up box's window skin. */
 .choice-box {

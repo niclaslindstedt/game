@@ -461,6 +461,68 @@ function routeMessage(window: BrowserWindow, raw: string): void {
 
 let mainWindow: BrowserWindow | null = null;
 
+/**
+ * WHAT THE PAGE MAY ASK THE OPERATING SYSTEM FOR — and it is a DENY-BY-DEFAULT
+ * list with exactly one entry on it.
+ *
+ * Electron's default, with no handler installed, is to grant most permissions
+ * to any page it is showing. That is a reasonable default for an app whose
+ * renderer is its own code and a poor one here: this renderer is a large web
+ * app with its own dependency tree, and the whole `contextIsolation` posture in
+ * `preload.ts` exists because it is not treated as trusted with the machine.
+ * Geolocation, notifications, MIDI, pointer lock, the clipboard, the file system
+ * and screen capture are all things nothing in this game needs, and a handler
+ * that says no to each of them costs nothing and removes them from the list of
+ * things a compromised dependency could reach for.
+ *
+ * **THE ONE GRANT IS THE MICROPHONE, AND IT IS GATED ON THE `voice`
+ * CAPABILITY.** That gate is the whole reason voice is a build capability rather
+ * than a setting (see `capabilities.ts`): a build that was not deliberately
+ * given voice cannot ask for the device at all — not because the page politely
+ * declines to, but because the shell refuses the request. So a plain download,
+ * an unstamped tree, and every build that predates voice are all incapable of
+ * opening a microphone regardless of what the page does.
+ *
+ * **VIDEO IS REFUSED EVEN WITH VOICE ON.** `media` is one Electron permission
+ * covering both, and this game has no camera feature; a request naming video is
+ * a request nothing here makes, so it is denied by naming the media types
+ * explicitly rather than by trusting the page to only ever ask for audio.
+ *
+ * Both halves are installed, and both are needed: the REQUEST handler answers
+ * `getUserMedia`, and the CHECK handler answers `navigator.permissions.query`
+ * and the synchronous pre-flight Chromium performs — a page allowed by one and
+ * refused by the other reads as an intermittent failure.
+ */
+function installPermissionHandlers(window: BrowserWindow): void {
+  const allowed = (permission: string, mediaTypes?: string[]): boolean => {
+    if (permission !== "media") return false;
+    if (!capabilities.voice) return false;
+    // An empty list is the check handler's ordinary shape for "is media
+    // allowed at all"; a list naming anything but audio is refused.
+    return (mediaTypes ?? []).every((type) => type === "audio");
+  };
+
+  const session = window.webContents.session;
+  session.setPermissionRequestHandler(
+    (_contents, permission, callback, details) => {
+      const mediaTypes = (details as { mediaTypes?: string[] }).mediaTypes;
+      const ok = allowed(permission, mediaTypes);
+      if (!ok) {
+        output.info(
+          `permission refused: ${permission}` +
+            (permission === "media" && !capabilities.voice
+              ? " (this build carries no voice capability)"
+              : ""),
+        );
+      }
+      callback(ok);
+    },
+  );
+  session.setPermissionCheckHandler((_contents, permission, _origin, details) =>
+    allowed(permission, (details as { mediaTypes?: string[] }).mediaTypes),
+  );
+}
+
 function createWindow(): BrowserWindow {
   const userData = app.getPath("userData");
   // window-state.ts is pure by design, so the displays come from here.
@@ -502,6 +564,8 @@ function createWindow(): BrowserWindow {
       backgroundThrottling: false,
     },
   });
+
+  installPermissionHandlers(window);
 
   if (state.maximized) window.maximize();
   if (state.fullscreen) window.setFullScreen(true);

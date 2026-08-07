@@ -49,14 +49,14 @@ import {
 import { type CommandArg } from "@game/core";
 
 import { createPredictor } from "./client-predict.ts";
-import { decodeFrame, encodeFrame } from "./wire/codec.ts";
+import { decodeFrame, encodeFrame, encodeFrameBytes } from "./wire/codec.ts";
 import {
   asBytes,
   patchState,
   type StatePatch,
   type WireState,
 } from "./wire/delta.ts";
-import { FRAME, type CommandName } from "./wire/frames.ts";
+import { FRAME, MAX_CLIENTS, type CommandName } from "./wire/frames.ts";
 import {
   PROTOCOL_VERSION,
   refuseHandshake,
@@ -72,6 +72,7 @@ import {
   type WelcomePayload,
 } from "./wire/protocol.ts";
 import { baselineFor, stripPrivate } from "./wire/snapshot.ts";
+import { decodeVoice, encodeVoice, type VoicePacket } from "./wire/voice.ts";
 import { BYTE_ARRAY_FIELDS } from "./wire/split.ts";
 
 /** The pipe, whatever it is. A `MessagePort` for a local host; a Steam P2P
@@ -123,6 +124,17 @@ export type NetClientOptions = {
    * a state rather than a stream, and merging one would leave a player who
    * quit on the party frames for ever. */
   onRoster?: (entries: RosterEntry[]) => void;
+  /**
+   * SOMEBODY IS TALKING — one 20 ms packet of another seat's voice.
+   *
+   * The bytes are the encoding provider's own and this client never looks
+   * inside them: the seat says whose voice it is, `packet.codec` says who can
+   * decode it, and the app's voice room does both (`pwa/src/game/net/voice/`).
+   * Absent everywhere that has no ears — a bot client, every replication test —
+   * which is why voice costs those paths nothing at all rather than needing to
+   * be switched off in them.
+   */
+  onVoice?: (packet: VoicePacket) => void;
   /**
    * WHICH CHAIR THE SERVER GAVE US, the moment the welcome says — and null on
    * dispose, because a stale seat outliving its session would point the next
@@ -196,6 +208,21 @@ export type NetClient = {
    * client is not entitled to an opinion about `/kick`. */
   sendChat(text: string): void;
   /**
+   * Say one 20 ms packet of your own voice out loud.
+   *
+   * NO SEAT IS PASSED, and that is the protocol rather than a convenience: the
+   * session stamps the seat it admitted this client into, so a client cannot
+   * claim to be anybody (`server/wire/voice.ts`). Fire and forget and
+   * deliberately lossy — see `FRAME.voice` for why a syllable is never
+   * retransmitted.
+   *
+   * Refused outright for a SPECTATOR, here as well as at the session. The
+   * server's check is the one that matters (it is the one a client cannot argue
+   * with); this one stops a seatless client spending 50 packets a second of its
+   * own allowance on speech nothing will relay.
+   */
+  sendVoice(bytes: Uint8Array, codec: number, last?: boolean): void;
+  /**
    * The net graph's client half: what the state stream is costing, measured
    * where it arrives. Clock-free on purpose — the window is counted in server
    * ticks off the frames themselves, so the same numbers come out of a page,
@@ -266,6 +293,24 @@ export function createNetClient(options: NetClientOptions): NetClient {
     if (frame.type === FRAME.roster) {
       const entries = (frame.payload as RosterPayload | null)?.entries;
       if (Array.isArray(entries)) options.onRoster?.(entries);
+      return;
+    }
+    if (frame.type === FRAME.voice) {
+      // A HOSTILE HOST IS THE DIRECTION THAT MATTERS HERE, and it is the one
+      // the fuzz pass found four real bugs in: a joiner applies whatever it is
+      // sent and has no more reason to trust this host than the host has to
+      // trust it. So the packet is decoded totally (`decodeVoice` refuses a
+      // short, empty or oversized one) and a seat outside the party is dropped
+      // — nothing downstream should have to wonder whether seat 700 is real.
+      const packet = decodeVoice(frame.payload);
+      if (!packet) return;
+      if (packet.seat >= (state?.players.length ?? MAX_CLIENTS)) return;
+      // OUR OWN SEAT COMING BACK IS NOT SPEECH, IT IS AN ECHO. The session
+      // already refuses to send it; a host that did anyway would have every
+      // player hearing themselves a network round trip late, which is the most
+      // disorienting thing an audio path can do to somebody.
+      if (packet.seat === seat) return;
+      options.onVoice?.(packet);
       return;
     }
     if (!state || !baseline) return; // nothing to apply it to yet
@@ -424,6 +469,23 @@ export function createNetClient(options: NetClientOptions): NetClient {
         encodeFrame(
           { type: FRAME.command, seq: ++frameSeq, ack: acked, tick },
           payload,
+        ),
+      );
+    },
+    sendVoice(bytes, codec, last) {
+      if (disposed) return;
+      // NO SEAT, NO VOICE. The session refuses a spectator's speech anyway (it
+      // has no seat to stamp it with), so sending it would be 50 packets a
+      // second spent out of this peer's rate allowance on something guaranteed
+      // to be dropped at the far end — and that allowance is shared with the
+      // steering.
+      if (seat === null) return;
+      transport.send(
+        encodeFrameBytes(
+          { type: FRAME.voice, seq: ++frameSeq, ack: acked, tick },
+          // The seat is left UNSET on purpose — the session writes it. See
+          // `server/wire/voice.ts`.
+          encodeVoice({ codec, last, bytes }),
         ),
       );
     },

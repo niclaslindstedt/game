@@ -145,6 +145,7 @@ import {
 } from "./game-screen/run-progress.ts";
 import { createAutosave } from "./game-screen/autosave.ts";
 import { TravelPanel } from "./game-screen/TravelPanel.tsx";
+import { VoiceOverlay } from "./game-screen/VoiceOverlay.tsx";
 import { clearRiftRun, loadRiftRun, type ParkedRun } from "./saved-run.ts";
 import { RunVaultScreen } from "./VaultScreen.tsx";
 import {
@@ -160,6 +161,7 @@ import { createRunSession } from "./game-screen/run-setup.ts";
 import { activeMods } from "./mod-state.ts";
 import { joinRefusalText } from "./net-text.ts";
 import type { SessionLink } from "./net/session-link.ts";
+import type { VoiceLink } from "./net/voice/index.ts";
 import { ChatOverlay } from "./overlays/ChatOverlay.tsx";
 import type { JoinIntent } from "./session-intent.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
@@ -637,6 +639,10 @@ export function GameScreen({
   );
   const [joinRefusal, setJoinRefusal] = useState<string | null>(null);
   const [sessionLink, setSessionLink] = useState<SessionLink | null>(null);
+  /** VOICE CHAT for this run, when the build carries it and there is a session
+   * to talk in — what the speaker cards are mounted from. Null for every local
+   * run and for every build without the `voice` capability. */
+  const [voiceLink, setVoiceLink] = useState<VoiceLink | null>(null);
   useEffect(() => {
     if (!join) return;
     let live = true;
@@ -786,6 +792,7 @@ export function GameScreen({
     // mounted from. Null for every local run, which is every browser, every
     // phone and every desktop game nobody opened the doors on.
     setSessionLink(driver.session ?? null);
+    setVoiceLink(driver.voice ?? null);
     setNewRecord(false);
     setKilledBy(null);
 
@@ -1760,6 +1767,20 @@ export function GameScreen({
                 characterRef={characterRef}
                 autopilot={autopilot}
                 bumpUi={bumpUi}
+              />
+            )
+          }
+          voiceOverlay={
+            voiceLink && (
+              <VoiceOverlay
+                room={voiceLink.room}
+                state={state}
+                assets={assets}
+                font={font}
+                seatName={(seat) =>
+                  sessionLink?.roster.find((entry) => entry.seat === seat)
+                    ?.name ?? null
+                }
               />
             )
           }

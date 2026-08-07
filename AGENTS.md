@@ -566,6 +566,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`; the page's half is `pwa/src/app/net-bridge.ts`                                                                                         |
 | A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`) |
 | A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
+| VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`        |
 | A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                 |
 
 Everything multiplayer: **`docs/multiplayer.md`** — the shipped architecture,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHAT THIS COPY OF THE APP MAY DO.
 //
-// Three of the shell's capabilities are decided when the binary is PACKAGED
+// Four of the shell's capabilities are decided when the binary is PACKAGED
 // rather than when it runs, because they are not the same product everywhere:
 // a depot build is sold with them, a plain download is not. The set is stamped
 // into the packaged `package.json` by `electron-builder.config.cjs` (which
@@ -15,10 +15,10 @@
 // for a player" mean the same thing, and none of this is a path that only ever
 // gets exercised on a release runner.
 //
-// Two of the three can be turned on for a single launch by command line —
-// `--multiplayer` and `--mods` — and the third deliberately cannot: a port
-// mapping is a change this program makes to somebody's ROUTER, so it is a
-// property of the build and of nothing else.
+// Three of the four can be turned on for a single launch by command line —
+// `--multiplayer`, `--mods` and `--voice` — and the fourth deliberately cannot:
+// a port mapping is a change this program makes to somebody's ROUTER, so it is
+// a property of the build and of nothing else.
 //
 // Kept free of Electron imports so the argument handling is testable without
 // launching the shell runtime — the same reason `dedicated-mode.ts` is.
@@ -28,6 +28,30 @@ export type BuildCapabilities = {
   multiplayer: boolean;
   mods: boolean;
   portMap: boolean;
+  /**
+   * VOICE CHAT in a session — the microphone, and other players' voices.
+   *
+   * Separate from `multiplayer` rather than folded into it, and the split is
+   * the same one `licensed` makes: a build can honestly host sessions without
+   * carrying voice, and that build should host a perfectly good silent game
+   * rather than a broken noisy one. It is its own capability for three
+   * reasons, each of which is a fact about the BUILD and not about the machine:
+   *
+   *  - **It opens a microphone.** Everything else this shell does reads the
+   *    player's own disk or talks to Valve; this listens to the room they are
+   *    sitting in. A capability is the honest place for that, because it means
+   *    a build that was not deliberately given voice cannot ask for the
+   *    permission at all — see the media handler in `main.ts`.
+   *  - **The host relays every speaker to every listener**, so it is the one
+   *    feature whose cost lands on somebody else's uplink.
+   *  - **It is moderation surface.** Voice in a game shipped to a store is a
+   *    thing the store asks about; a download nobody moderates is entitled to
+   *    a different answer from a depot build.
+   *
+   * So the depot build carries it (`make desktop-steam`) and a plain download
+   * does not (`make desktop-dist`), exactly as with the other three.
+   */
+  voice: boolean;
   /**
    * Whether this copy holds the multiplayer licence.
    *
@@ -59,6 +83,7 @@ export const ALL_CAPABILITIES: BuildCapabilities = {
   multiplayer: true,
   mods: true,
   portMap: true,
+  voice: true,
   licensed: true,
 };
 
@@ -67,6 +92,7 @@ export const NO_CAPABILITIES: BuildCapabilities = {
   multiplayer: false,
   mods: false,
   portMap: false,
+  voice: false,
   licensed: false,
 };
 
@@ -86,6 +112,7 @@ export function readBuildCapabilities(metadata: unknown): BuildCapabilities {
     multiplayer: stamped.multiplayer === true,
     mods: stamped.mods === true,
     portMap: stamped.portMap === true,
+    voice: stamped.voice === true,
     licensed: stamped.licensed === true,
   };
 }
@@ -128,6 +155,14 @@ function has(argv: readonly string[], name: string): boolean {
  * screen already, so naming one here only pins the direct door to it. The one
  * place it is not optional is `--dedicated`, which has no screen to read a
  * port off — that pairing is checked where the mode is entered.
+ *
+ * `--voice` is the one switch that DOES depend on another, and it is refused
+ * rather than silently ignored when it stands alone: voice travels inside a
+ * session (`FRAME.voice`, forwarded by the session server to the other seats),
+ * so on a build that cannot host or join one there is nothing for a microphone
+ * to talk into. Turning it on there would grant the media permission, put a
+ * VOICE CHAT page in the settings, and then never carry a syllable — which
+ * reads as a broken feature rather than as an absent one.
  */
 export function resolveCapabilities(
   built: BuildCapabilities,
@@ -137,6 +172,14 @@ export function resolveCapabilities(
 
   const multiplayer = built.multiplayer || has(argv, "multiplayer");
   const mods = built.mods || has(argv, "mods");
+  // VOICE NEEDS A SESSION TO TRAVEL IN — see the header. The refusal names the
+  // pairing rather than the flag, because "--voice does nothing" would leave
+  // somebody adding it a second time and louder.
+  const voiceAsked = built.voice || has(argv, "voice");
+  const voice = voiceAsked && multiplayer;
+  if (voiceAsked && !multiplayer) {
+    refusals.push("--voice does nothing without --multiplayer");
+  }
   // A DECLARATION rather than an unlock: `--licensed` is the person starting
   // the game saying they hold the multiplayer licence. Nothing here can check
   // that and nothing pretends to — what it does is put the claim on the record
@@ -165,8 +208,12 @@ export function resolveCapabilities(
       multiplayer,
       mods,
       portMap: built.portMap,
+      voice,
       licensed,
-      unlocked: (multiplayer && !built.multiplayer) || (mods && !built.mods),
+      unlocked:
+        (multiplayer && !built.multiplayer) ||
+        (mods && !built.mods) ||
+        (voice && !built.voice),
       direct,
       port: openPort,
     },
@@ -181,5 +228,11 @@ export function capabilityList(capabilities: Capabilities): string[] {
   const list: string[] = [];
   if (capabilities.multiplayer) list.push("multiplayer");
   if (capabilities.mods) list.push("mods");
+  // VOICE reaches the page for the same reason the other two do: the settings
+  // tree has to be built right the FIRST time it is drawn. A VOICE CHAT page
+  // that appears and then vanishes a round trip later is worse than one that
+  // was never offered — and this list is on the preload's command line, so the
+  // menus know before anything has been asked.
+  if (capabilities.voice) list.push("voice");
   return list;
 }

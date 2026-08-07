@@ -47,6 +47,7 @@ export type MenuScreen =
   | "interface"
   | "gore"
   | "audio"
+  | "voice"
   | "data"
   | "export"
   | "developer"

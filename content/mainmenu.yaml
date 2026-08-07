@@ -267,6 +267,21 @@ screens:
         label: AUDIO
         icon: icon_menu_sound
         opens: audio
+      # Absent on every build that carries no VOICE capability, which is every
+      # browser, every phone, and every desktop build not stamped with it — so
+      # this row is the one settings entry most players never see. It is its own
+      # page rather than three rows on AUDIO because it is not "how loud": it
+      # opens a microphone, which is a different kind of question and the one
+      # players go looking for under its own name.
+      # The COMMUNITY icon rather than the SOUND one, and for a better reason
+      # than the schema's one-icon-per-screen rule (AUDIO above already wears
+      # SOUND): this row is not about loudness, it is about the other people in
+      # the room. A dedicated microphone sprite would be better still and is
+      # deliberately left to an art pass rather than drawn here.
+      - id: voice
+        label: VOICE CHAT
+        icon: icon_menu_community
+        opens: voice
       - id: data
         label: DATA
         icon: icon_menu_data
@@ -541,6 +556,43 @@ screens:
       - id: sfx
         label: SOUND FX
         help: HOW LOUD BLASTERS, GHOSTS AND PICKUPS PLAY
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> VOICE CHAT — talking to the party, on the builds that carry it.
+  #
+  # MODE on top, because it is the only row that can turn the microphone on at
+  # all and every row under it is meaningless until it has: a page that opened
+  # with a level slider for a device nobody had opened would be three dead
+  # controls over the one that matters. Then what the OTHERS sound like, then
+  # what YOU sound like, then the gate that only OPEN MIC reads.
+  #
+  # THE KEY IS NOT ON THIS PAGE, deliberately — PUSH TO TALK is rebound in
+  # SETTINGS -> CONTROLS -> KEY BINDINGS with every other key, because a player
+  # looking for "which key do I hold" looks where the keys are.
+  # -------------------------------------------------------------------------
+  voice:
+    title: VOICE CHAT
+    parent: settings
+    tone: player
+    form: settings
+    rows:
+      - id: mode
+        label: VOICE
+        help:
+          off: YOUR MICROPHONE STAYS CLOSED - NOBODY HEARS YOU
+          ptt: HOLD THE TALK KEY TO SPEAK - SETTINGS - CONTROLS REBINDS IT
+          open: YOU ARE HEARD WHENEVER YOU SPEAK UP
+      - id: volume
+        label: THEIR VOICES
+        help: HOW LOUD THE REST OF YOUR PARTY IS
+      - id: mic
+        label: YOUR MICROPHONE
+        help: HOW LOUD YOU ARE TO THEM - WATCH THE BAR WHILE YOU TALK
+      - id: threshold
+        label: OPEN MIC GATE
+        help:
+          open: HOW LOUD YOU MUST BE BEFORE THEY HEAR YOU
+          idle: ONLY READ IN OPEN MIC - SET VOICE ABOVE TO OPEN MIC
 
   # -------------------------------------------------------------------------
   # SETTINGS -> DATA — the two ways a hero leaves this device, and each build

@@ -52,12 +52,17 @@ const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 /**
  * WHAT THE PACKAGE IS STAMPED WITH.
  *
- * Three capabilities belong to the build rather than to the machine that runs
+ * Four capabilities belong to the build rather than to the machine that runs
  * it, and they are read from the build environment (`ENABLE_MULTIPLAYER=1`
  * and friends, via the Makefile) and written into the packaged manifest, where
  * `electron/src/capabilities.ts` reads them back. Absent means OFF, here and
  * at the reading end both — a binary carries only what something deliberately
  * gave it.
+ *
+ * VOICE is the newest and the one most worth being deliberate about: it opens
+ * the player's microphone and makes the host relay every speaker to every
+ * listener. The depot build ships with it (`make desktop-steam`); a plain
+ * download does not unless somebody asks (`make desktop-dist`).
  */
 const enabled = (name) => process.env[`GIS_ENABLE_${name}`] === "1";
 const STAMPED = process.env.GIS_STAMP_CAPABILITIES === "1";
@@ -65,6 +70,7 @@ const CAPABILITIES = {
   multiplayer: enabled("MULTIPLAYER"),
   mods: enabled("MODS"),
   portMap: enabled("UPNP"),
+  voice: enabled("VOICE"),
   licensed: enabled("LICENSED"),
 };
 
@@ -338,6 +344,23 @@ module.exports = {
     ],
     extraFiles: STEAM_REDIST.mac,
     category: "public.app-category.action-games",
+    // THE MICROPHONE PROMPT'S SENTENCE, and it is stamped into EVERY macOS
+    // build rather than only into one carrying the voice capability.
+    //
+    // That is not belt-and-braces: on macOS a process that reaches for a
+    // device whose usage string is missing is not refused, it is KILLED by TCC
+    // — so a build where the key is absent and the capability is somehow on
+    // would exit the moment somebody pressed talk, with no dialog and nothing
+    // in the log. The key costs a build without voice nothing at all (the
+    // prompt only ever appears when something asks for the device, and
+    // `main.ts` refuses to ask without the capability), whereas getting the
+    // pairing wrong costs a crash that reproduces on exactly one platform.
+    extendInfo: {
+      NSMicrophoneUsageDescription:
+        "Ada's Trail uses your microphone for voice chat with the other " +
+        "players in your multiplayer session. Nothing is recorded or stored, " +
+        "and your microphone stays off until you turn voice chat on.",
+    },
     // NEVER unsigned — an unsigned arm64 app cannot run at all. See
     // MAC_IDENTITY above for what each value means and what the player sees.
     identity: MAC_IDENTITY,

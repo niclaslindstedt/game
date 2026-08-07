@@ -516,6 +516,16 @@ export type GameSettings = {
    * stripped from a store build: hosting is the feature.
    */
   multiplayer: SessionSettings;
+  /**
+   * VOICE CHAT — the microphone, and how loud everybody else is (see
+   * `VoiceSettings`).
+   *
+   * Its own block rather than three fields on `multiplayer`, because it is
+   * answered on its own screen and gated on its own build capability: a session
+   * and a conversation inside one are two different things a build may carry
+   * separately.
+   */
+  voice: VoiceSettings;
 };
 
 /** Which doors a hosted session opens. BOTH by default and it should be: Steam
@@ -536,6 +546,52 @@ export type SessionDoors = "both" | "steam" | "direct";
  * together, and a host running a public game should be able to say so.
  */
 export type SessionLoot = "free" | "allocated";
+
+/**
+ * VOICE CHAT (SETTINGS → VOICE CHAT): how the player's microphone is opened, or
+ * that it is not.
+ *
+ * `ptt` (PUSH TO TALK) ships, and it is the default because it is the only mode
+ * in which the wire carries nothing until the player physically holds a key —
+ * so a build sold with voice does not start relaying somebody's living room to
+ * seven strangers on the strength of a default. `open` (OPEN MIC) transmits
+ * whenever the input passes `threshold`, held together across the gaps between
+ * words; it is offered only where the chosen provider can actually measure its
+ * input (`VoiceProvider.openMic`), because a mode that silently never
+ * transmits is worse than one that is absent. `off` releases the device
+ * entirely — the microphone light goes out, which is the promise that switch
+ * makes.
+ *
+ * Desktop/Steam builds stamped with the `voice` capability only: voice travels
+ * inside a session and there is nothing for it to travel in anywhere else.
+ */
+export type VoiceMode = "off" | "ptt" | "open";
+
+export type VoiceSettings = {
+  mode: VoiceMode;
+  /**
+   * Microphone gain, 0–2, applied to the captured signal BEFORE it is encoded —
+   * so the level bar the player watches while they set it is the level their
+   * friends will hear. 1 is the device's own level, which is what the browser's
+   * auto gain control has already decided; above that is a boost for a quiet
+   * headset and below it is for one that clips.
+   */
+  micGain: number;
+  /**
+   * How loud other players are, 0–1.
+   *
+   * ITS OWN LEVEL, not the SFX slider's, and deliberately NOT silenced by the
+   * game's MUTE: muting the game means turning off blasters and music, not
+   * hanging up on the people you are playing with. See `playback.ts`.
+   */
+  outVolume: number;
+  /** OPEN MIC's gate, 0–1: the input level at which transmitting starts. Only
+   * read in `open` mode. */
+  threshold: number;
+};
+
+/** The loudest a microphone may be boosted (see `VoiceSettings.micGain`). */
+export const VOICE_MIC_GAIN_MAX = 2;
 
 export type SessionSettings = {
   /**
@@ -699,6 +755,18 @@ function defaults(): GameSettings {
       loot: "free",
       recent: [],
     },
+    voice: {
+      // PUSH TO TALK out of the box — see `VoiceMode` for why a default that
+      // transmits was not on offer. The device is only opened inside a session,
+      // and even then nothing leaves this machine until the key is held.
+      mode: "ptt",
+      micGain: 1,
+      outVolume: 1,
+      // A little above the noise floor of an ordinary room: loud enough that a
+      // fan, a fridge and a keyboard do not open the gate, quiet enough that
+      // normal speech does without anybody leaning in. Only read in OPEN MIC.
+      threshold: 0.06,
+    },
   };
 }
 
@@ -746,6 +814,32 @@ function loadSession(stored: unknown, base: SessionSettings): SessionSettings {
           .filter((entry): entry is string => typeof entry === "string")
           .slice(0, MAX_RECENT_SESSIONS)
       : base.recent,
+  };
+}
+
+/** The stored voice block, read defensively. Every field reaches something
+ * physical — a gain node, a microphone, a gate — so a hand-edited or
+ * older-version value must fall back rather than be applied. */
+function loadVoice(stored: unknown, base: VoiceSettings): VoiceSettings {
+  const held = stored as Partial<VoiceSettings> | null;
+  if (!held || typeof held !== "object") return base;
+  return {
+    mode:
+      held.mode === "off" || held.mode === "ptt" || held.mode === "open"
+        ? held.mode
+        : base.mode,
+    micGain:
+      typeof held.micGain === "number" && Number.isFinite(held.micGain)
+        ? clamp(held.micGain, 0, VOICE_MIC_GAIN_MAX)
+        : base.micGain,
+    outVolume:
+      typeof held.outVolume === "number" && Number.isFinite(held.outVolume)
+        ? clamp01(held.outVolume)
+        : base.outVolume,
+    threshold:
+      typeof held.threshold === "number" && Number.isFinite(held.threshold)
+        ? clamp01(held.threshold)
+        : base.threshold,
   };
 }
 
@@ -1164,6 +1258,7 @@ function load(): GameSettings {
       ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
       multiplayer: loadSession(stored.multiplayer, base.multiplayer),
+      voice: loadVoice(stored.voice, base.voice),
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults

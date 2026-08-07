@@ -379,13 +379,17 @@ export function createJoinLink(options: JoinLinkOptions): JoinLink {
       // The MODE is chosen from what the frame IS, exactly as the hub chooses
       // it in the other direction: an input frame carries the current state of
       // the stick and the next one supersedes it, so retransmitting a lost one
-      // delivers stale steering late. Everything else the page sends — a
+      // delivers stale steering late. VOICE is unreliable for the sharper
+      // version of the same rule — 20 ms of speech is worth nothing after the
+      // word it belonged to has been heard. Everything else the page sends — a
       // command, a chat line, the ack — has to arrive.
       const type = frame[0] ?? 0;
       transport.send(
         host,
         frame,
-        type === FRAME.input || type === FRAME.ack ? "unreliable" : "reliable",
+        type === FRAME.input || type === FRAME.ack || type === FRAME.voice
+          ? "unreliable"
+          : "reliable",
       );
     },
 

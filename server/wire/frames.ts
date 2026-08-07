@@ -110,6 +110,17 @@ export const FRAME = {
   chat: 11,
   /** server → client: who is in the session, and what they are doing. */
   roster: 12,
+  /**
+   * both ways: 20 ms of somebody's voice (`server/wire/voice.ts`).
+   *
+   * THE ONE FRAME WHOSE PAYLOAD IS NOT JSON, and the one that is forwarded
+   * rather than acted on: a client sends its own speech with no seat on it, and
+   * the session stamps the seat it admitted that client into and relays the
+   * bytes to the other seats. It is UNRELIABLE in both directions — a
+   * retransmitted syllable arrives after the word it belonged to, which is
+   * worse than the gap it was filling.
+   */
+  voice: 13,
 } as const;
 
 export type FrameType = (typeof FRAME)[keyof typeof FRAME];
@@ -268,7 +279,8 @@ export function isFrameType(value: number): value is FrameType {
     value === FRAME.challenge ||
     value === FRAME.join ||
     value === FRAME.chat ||
-    value === FRAME.roster
+    value === FRAME.roster ||
+    value === FRAME.voice
   );
 }
 

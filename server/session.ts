@@ -88,7 +88,13 @@ export type {
   SessionPeers,
 } from "./session-model.ts";
 import { hash32 } from "./wire/handshake.ts";
-import { encodeFrame, encodeFrameJson, HEADER_BYTES } from "./wire/codec.ts";
+import {
+  encodeFrame,
+  encodeFrameBytes,
+  encodeFrameJson,
+  HEADER_BYTES,
+} from "./wire/codec.ts";
+import { decodeVoice, stampVoiceSeat } from "./wire/voice.ts";
 import { playerScaling } from "./wire/players.ts";
 import {
   diffState,
@@ -460,6 +466,70 @@ export function createSession(options: SessionOptions): Session {
     if (!lines.length) return;
     const frame = chatFrame(lines);
     for (const client of clients.values()) client.send(frame);
+  }
+
+  /**
+   * RELAY ONE PACKET OF SOMEBODY'S VOICE TO EVERYBODY ELSE.
+   *
+   * Four decisions, and each one is a rule rather than a default:
+   *
+   * **THE SEAT IS STAMPED HERE.** The speaker sent `VOICE_SEAT_UNSET`; this is
+   * the only place entitled to say whose voice it is, exactly as a run command
+   * takes its acting hero from the admitted seat rather than from the frame.
+   * The HUD draws a portrait and a name off that byte, so a client permitted to
+   * write it could wear another player's face while it talked.
+   *
+   * **VOICE CROSSES WORLDS, and that is the one place it deliberately parts
+   * company with everything else this session sends.** A snapshot is cut per
+   * world (you receive the level you are standing in and nothing else) because
+   * what a client may SEE is a fact about where its hero is. Speech is not:
+   * somebody who stepped home through a portal to sell a sword is still in the
+   * room with their friends, and cutting them off mid-sentence because their
+   * body walked through a door would be a bug with a design document behind it.
+   * So the relay is party-wide and reads `clients`, never a world.
+   *
+   * **A SPECTATOR MAY TYPE BUT NOT TALK.** Chat is the one thing a seatless
+   * client may do (`FRAME.chat`) and voice is deliberately not the second: the
+   * identity a listener is shown is a SEAT — a portrait, a name, a party frame
+   * to light up — and a speaker with no seat has none of that to draw. The
+   * refusal is the seat check every other client frame already makes rather
+   * than a rule of its own.
+   *
+   * **THE BYTES ARE FORWARDED, NOT UNDERSTOOD.** The session never decodes
+   * speech, never mixes it and never re-encodes it: it writes one byte and
+   * hands the packet on. That is what keeps voice off the simulation's budget
+   * (a relay is a memcpy per listener, not work per tick) and it is also the
+   * only honest arrangement — a listen server that decoded voice would be a
+   * listen server that could quietly do something else with it.
+   */
+  function relayVoice(from: Client, payload: unknown): void {
+    const seat = from.recipient.seat;
+    // A spectator, or a client whose seat went away between the packet leaving
+    // and arriving. Nothing to stamp, so nothing to send.
+    if (seat === null) return;
+    const packet = decodeVoice(payload);
+    // Malformed, empty, or past `MAX_VOICE_BYTES` — dropped in silence. A
+    // voice packet is unreliable by design, so the answer to a bad one is the
+    // answer to a lost one, and the client recovers by talking.
+    if (!packet) return;
+    const bytes = stampVoiceSeat(payload as Uint8Array, seat);
+    const frame = encodeFrameBytes(
+      { type: FRAME.voice, seq, ack: 0, tick },
+      bytes,
+    );
+    for (const client of clients.values()) {
+      // NEVER BACK TO THE SPEAKER. Everybody has heard themselves already —
+      // through their own skull — and a voice looped back over the network is
+      // the classic echo that makes people think their microphone is broken.
+      // The local meter on the speaker's own HUD comes from their capture
+      // graph, not from this.
+      if (client === from) continue;
+      // A seatless watcher is not sent voice either. It cannot be heard, and
+      // hearing a party it is not in is not something the session promises —
+      // a spectator is watching a game, not sitting in the room.
+      if (client.recipient.seat === null) continue;
+      client.send(frame);
+    }
   }
 
   function broadcastRoster(): void {
@@ -1055,6 +1125,12 @@ export function createSession(options: SessionOptions): Session {
       // and the check belongs HERE — the one place a client cannot argue with
       // it.
       if (client.recipient.seat === null) return;
+      if (type === FRAME.voice) {
+        // A SEATED CLIENT'S SPEECH, ON ITS WAY TO THE OTHER SEATS. The seat
+        // gate above is the whole of the spectator refusal — see `relayVoice`.
+        relayVoice(client, payload);
+        return;
+      }
       if (type === FRAME.input) {
         if (applyInput(inputs, client.recipient.seat, payload)) {
           // Track the highest APPLIED seq — the fold itself stays latest-wins

@@ -31,6 +31,7 @@ describe("the package stamp", () => {
       multiplayer: true,
       mods: true,
       portMap: false,
+      voice: false,
       licensed: true,
     });
   });
@@ -190,6 +191,51 @@ describe("what a launch may do", () => {
         unlocked: false,
         direct: false,
       }),
-    ).toEqual(["multiplayer", "mods"]);
+    ).toEqual(["multiplayer", "mods", "voice"]);
+  });
+
+  // VOICE — a capability of its own, because it opens a microphone and makes the
+  // host relay every speaker to every listener. The depot build carries it; a
+  // plain download does not.
+  it("keeps voice off a build that was not given it", () => {
+    const { capabilities } = resolveCapabilities(NOTHING, ["game"]);
+    expect(capabilities.voice).toBe(false);
+    expect(capabilityList(capabilities)).not.toContain("voice");
+  });
+
+  it("lets the command line turn voice on for one launch, and says so", () => {
+    const { capabilities, refusals } = resolveCapabilities(NOTHING, [
+      "game",
+      "--multiplayer",
+      "--voice",
+    ]);
+    expect(capabilities.voice).toBe(true);
+    // `unlocked` is what makes the launch print the notice: a capability the
+    // package did not carry was turned on by hand.
+    expect(capabilities.unlocked).toBe(true);
+    expect(refusals).toEqual([]);
+  });
+
+  // THE PAIRING. Voice travels inside a session (`FRAME.voice`, relayed by the
+  // session server), so on a build that can neither host nor join one there is
+  // nothing for a microphone to talk into — and granting the device anyway
+  // would put a VOICE CHAT page in the settings that never carries a syllable.
+  it("refuses voice without multiplayer, by name rather than silently", () => {
+    const { capabilities, refusals } = resolveCapabilities(NOTHING, [
+      "game",
+      "--voice",
+    ]);
+    expect(capabilities.voice).toBe(false);
+    expect(refusals).toEqual(["--voice does nothing without --multiplayer"]);
+  });
+
+  it("refuses a STAMPED voice build that carries no multiplayer", () => {
+    // The same rule from the other direction: a packaging run that enabled
+    // voice and forgot multiplayer must not produce a build with an open
+    // microphone and nowhere to send it.
+    const { capabilities } = resolveCapabilities({ ...NOTHING, voice: true }, [
+      "game",
+    ]);
+    expect(capabilities.voice).toBe(false);
   });
 });

@@ -192,14 +192,21 @@ store-page-shot:
 # Desktop packaging
 # ---------------------------------------------------------------------------
 #
-# Three capabilities are decided when the binary is PACKAGED — they belong to
+# Five capabilities are decided when the binary is PACKAGED — they belong to
 # the build, not to the machine that runs it — and each target below says which
 # ones its output carries:
 #
 #   ENABLE_MULTIPLAYER=1   sessions, the server browser, the direct door
 #   ENABLE_MODS=1          the Workshop and the local mod folder
 #   ENABLE_UPNP=1          may ask the router to forward the bound port
+#   ENABLE_VOICE=1         voice chat in a session — opens the microphone
 #   ENABLE_LICENSED=1      sessions it hosts may admit players at all
+#
+# VOICE is off in a plain download on purpose rather than by omission: it opens
+# a microphone and makes the host relay every speaker to every listener, so the
+# depot build carries it and a download asks for it explicitly. It needs
+# ENABLE_MULTIPLAYER — voice travels inside a session, and the shell refuses
+# the pairing rather than granting a microphone nothing can talk into.
 #
 # Unset means off in a packaged target; a build from sources with no switches
 # at all keeps everything, so a checkout is always the whole game.
@@ -217,6 +224,7 @@ desktop-steam:
 	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),1) \
 	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),1) \
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
+	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),1) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),1) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)
 
@@ -226,5 +234,6 @@ desktop-dist:
 	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
 	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
 	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
+	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)

@@ -21,7 +21,8 @@
 // because a malformed packet is an ordinary event on an open port and must not
 // be able to stop a tick.
 //
-// **The payload is JSON, and that is a deliberate decision worth stating
+// **The payload is JSON, WITH ONE EXCEPTION, and that is a deliberate decision
+// worth stating
 // plainly.** Hand-rolled binary packing is the obvious alternative, and it is right
 // that the shapes are known at compile time — but there are ~120 of them, they
 // are the engine's own live types, and a hand-written packer per type is a
@@ -32,8 +33,18 @@
 // swapping `JSON.stringify` for a packer touches these two functions and
 // nothing else. Measure first (the snapshot rate is the risk) and pack what the
 // measurement says is expensive.
+//
+// **AND THE EXCEPTION IS `FRAME.voice`, which is what that last sentence
+// looks like when it comes true.** A voice packet's payload is already a
+// compressed bitstream, so the argument above (a hand-written packer per shape
+// is a second definition that drifts) simply does not apply — there is no
+// shape, only bytes, and JSON's price for carrying bytes is base64's extra
+// third on 50 packets a second per speaker. So voice frames carry their payload
+// RAW: `encodeFrameBytes` makes them and `decodeFrame` hands the payload back
+// as a `Uint8Array` instead of parsing it. `server/wire/voice.ts` owns what is
+// inside, and nothing here looks.
 
-import { isFrameType, type FrameType } from "./frames.ts";
+import { FRAME, isFrameType, type FrameType } from "./frames.ts";
 import type { FrameHeader } from "./protocol.ts";
 
 /** Bytes before the payload. Read `decodeFrame` before changing it. */
@@ -88,6 +99,28 @@ export function encodeFrameJson(
 }
 
 /**
+ * Pack one frame whose payload is RAW BYTES rather than JSON.
+ *
+ * `FRAME.voice` and nothing else — see the header. The bytes are copied into
+ * the frame, which a voice packet's own `encodeVoice` has already done once;
+ * the second copy is the price of one contiguous buffer to hand a socket, and
+ * at 84 bytes a packet it is not a cost worth a scatter-gather API.
+ */
+export function encodeFrameBytes(
+  header: FrameHeader,
+  body: Uint8Array,
+): ArrayBuffer {
+  const buffer = new ArrayBuffer(HEADER_BYTES + body.byteLength);
+  const view = new DataView(buffer);
+  view.setUint8(0, header.type);
+  view.setUint32(4, header.seq >>> 0);
+  view.setUint32(8, header.ack >>> 0);
+  view.setUint32(12, header.tick >>> 0);
+  new Uint8Array(buffer, HEADER_BYTES).set(body);
+  return buffer;
+}
+
+/**
  * Unpack one frame, or null if these bytes are not one.
  *
  * NEVER THROWS. Every refusal is a null: too short for a header, a type this
@@ -111,6 +144,16 @@ export function decodeFrame(
   };
   if (bytes.byteLength === HEADER_BYTES)
     return { ...header, payload: undefined };
+  // THE ONE NON-JSON PAYLOAD. Copied rather than handed over as a view,
+  // deliberately: what arrives here is a view over somebody else's buffer — a
+  // datagram `node:dgram` may reuse, a transferred `ArrayBuffer` — and a voice
+  // packet outlives its callback (it is queued for a decoder, or relayed to
+  // seven listeners). A view would play whatever landed in that memory next,
+  // which is a bug that sounds like a codec fault rather than a lifetime one.
+  // 60-odd bytes a packet is not a copy worth avoiding.
+  if (header.type === FRAME.voice) {
+    return { ...header, payload: bytes.slice(HEADER_BYTES) };
+  }
   let payload: unknown;
   try {
     payload = JSON.parse(

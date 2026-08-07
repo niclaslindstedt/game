@@ -14,14 +14,19 @@
 // The order and the wording are `content/mainmenu.yaml`'s; this file is what
 // each row does.
 
+import { clamp, clamp01 } from "@game/lib/vec.ts";
+
 import { nsfwAllowed } from "../../app/device-policy.ts";
+import { voiceBridgeAvailable } from "../../app/net-bridge.ts";
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
 import {
   GORE_SWITCHES,
+  VOICE_MIC_GAIN_MAX,
   getSettings,
   updateSettings,
+  type GameSettings,
   type GoreSwitchKey,
   type SteeringMode,
 } from "../settings.ts";
@@ -33,6 +38,7 @@ import {
   backRow,
   navRow,
   onOffRow,
+  sliderRow,
   volumeRow,
   type MenuContext,
   type MenuEntry,
@@ -81,6 +87,13 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
       // offers to turn the gore back on reads as one the player can defeat.
       gore: nsfwAllowed() ? navRow(ctx, "settings", "gore") : null,
       audio: navRow(ctx, "settings", "audio"),
+      // VOICE CHAT only where the build carries it — the `voice` capability,
+      // which the depot build has and a plain download does not. Hidden rather
+      // than locked, because unlike GORE this is not a control somebody took
+      // away from the player: on a build without it there is no microphone
+      // feature to explain, and a locked row would advertise one that does not
+      // exist in this copy of the game.
+      voice: voiceBridgeAvailable() ? navRow(ctx, "settings", "voice") : null,
       data: navRow(ctx, "settings", "data"),
       // Hidden until the secret sun gesture unlocks it (sixteen quick taps on
       // the title sun to arm it, then the click race — see use-sun-charge.ts); once
@@ -419,5 +432,124 @@ export function buildAudioMenu(ctx: MenuContext): MenuEntry[] {
       sfx: volumeRow(ctx, "audio", "sfx", "sfxVolume"),
     }),
     backRow(ctx, "audio"),
+  ];
+}
+
+/**
+ * SETTINGS → VOICE CHAT: the microphone, and how loud the party is.
+ *
+ * **THIS PAGE IS NOT PART OF AUDIO, AND THE SPLIT IS THE POINT.** AUDIO answers
+ * "how loud"; this answers "is the game listening to my room". They are
+ * different kinds of question, they are gated on different things (this page
+ * exists only on a build stamped with the `voice` capability), and the levels
+ * here are deliberately outside the MUTE switch on that other page — muting the
+ * game silences blasters and music, not the people you are playing with.
+ *
+ * The MODE row is a label-cycling row rather than a switch for the same reason
+ * POWERUPS is: there are three answers, and a switch would imply the middle one
+ * does not exist.
+ */
+export function buildVoiceMenu(ctx: MenuContext): MenuEntry[] {
+  const voice = getSettings().voice;
+  const set = (patch: Partial<GameSettings["voice"]>) => {
+    updateSettings({ voice: { ...getSettings().voice, ...patch } });
+    ctx.bumpSettings();
+  };
+  const openMic = voice.mode === "open";
+  return [
+    ...assembleRows("voice", {
+      mode: actionRow(
+        "voice",
+        "mode",
+        () => {
+          playUiSound(synth, "confirm");
+          // OFF → PUSH TO TALK → OPEN MIC → OFF. In that order because it is
+          // the order of increasing exposure: each press opens the microphone a
+          // little further, and nobody lands on "always transmitting" by
+          // pressing a row once.
+          set({
+            mode:
+              voice.mode === "off"
+                ? "ptt"
+                : voice.mode === "ptt"
+                  ? "open"
+                  : "off",
+          });
+        },
+        {
+          value:
+            voice.mode === "off"
+              ? "OFF"
+              : voice.mode === "ptt"
+                ? "PUSH TO TALK"
+                : "OPEN MIC",
+          state: voice.mode,
+        },
+      ),
+      // THEIR voices first: it is the row a player reaches for mid-session
+      // ("I can barely hear you"), and it is the only one that does something
+      // even when this player never speaks.
+      volume: sliderRow("voice", "volume", {
+        readout: `${Math.round(voice.outVolume * 100)}%`,
+        pos: voice.outVolume,
+        set: (pos) => set({ outVolume: Math.round(clamp01(pos) * 100) / 100 }),
+        nudge: (dir) =>
+          set({
+            outVolume:
+              Math.round(clamp01(voice.outVolume + dir * 0.05) * 100) / 100,
+          }),
+      }),
+      // …then YOUR microphone. The readout is a multiplier rather than a
+      // percentage because 1 is the device's own level (what the platform's auto
+      // gain already decided) and the range goes both ways around it — "120%"
+      // would imply a ceiling of 100 that this slider does not have.
+      mic: sliderRow("voice", "mic", {
+        readout: `${voice.micGain.toFixed(1)}×`,
+        pos: voice.micGain / VOICE_MIC_GAIN_MAX,
+        set: (pos) =>
+          set({
+            micGain: Math.round(clamp01(pos) * VOICE_MIC_GAIN_MAX * 10) / 10,
+          }),
+        nudge: (dir) =>
+          set({
+            micGain: clamp(
+              Math.round((voice.micGain + dir * 0.1) * 10) / 10,
+              0,
+              VOICE_MIC_GAIN_MAX,
+            ),
+          }),
+      }),
+      // The gate only OPEN MIC reads. Shown LOCKED in the other two modes
+      // rather than hidden — the same treatment a locked KEYS row gets, so the
+      // player can see where the control went instead of wondering whether the
+      // page changes shape behind their back.
+      threshold: openMic
+        ? sliderRow(
+            "voice",
+            "threshold",
+            {
+              readout: `${Math.round(voice.threshold * 100)}%`,
+              pos: voice.threshold,
+              set: (pos) =>
+                set({ threshold: Math.round(clamp01(pos) * 100) / 100 }),
+              nudge: (dir) =>
+                set({
+                  threshold:
+                    Math.round(clamp01(voice.threshold + dir * 0.02) * 100) /
+                    100,
+                }),
+            },
+            { state: "open" },
+          )
+        : actionRow(
+            "voice",
+            "threshold",
+            () => {
+              playUiSound(synth, "back");
+            },
+            { value: "—", color: "#5a6068", locked: true, state: "idle" },
+          ),
+    }),
+    backRow(ctx, "voice"),
   ];
 }

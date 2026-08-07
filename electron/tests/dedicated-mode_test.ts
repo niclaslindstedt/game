@@ -9,6 +9,7 @@ const caps = (over: Partial<Capabilities> = {}): Capabilities => ({
   multiplayer: true,
   mods: false,
   portMap: true,
+  voice: false,
   licensed: false,
   unlocked: false,
   direct: false,

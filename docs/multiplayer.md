@@ -603,6 +603,247 @@ Every check reports a rule being PRESENT; the only proof is the first joiner.
 **Steam hosting needs none of it**, which is why it is the default: P2P is
 outbound-initiated and Valve-relayed, so nothing inbound is ever bound.
 
+## Voice — talking to the party
+
+**Voice travels inside the session, as one more frame.** A client sends 20 ms of
+its own speech, the session stamps the seat it admitted that client into and
+relays the bytes to the other seats, and a listener decodes and plays them. That
+is the whole architecture, and choosing it rather than a second peer-to-peer
+channel is what makes voice work everywhere a session does: it rides the **Steam
+relay** for Steam peers, a **direct UDP** address for everybody else, a LAN with
+the internet off, and the **dedicated server** — none of which a Steam-only
+voice path could have served, since the dedicated server has no Steam handshake
+at all.
+
+```
+pwa/src/game/net/voice/codecs.ts   the PROVIDER seam — one interface, N codecs
+pwa/src/game/net/voice/opus.ts     the shipped provider: WebCodecs Opus
+pwa/src/game/net/voice/mic-worklet.ts  the capture worklet (frames + loudness)
+pwa/src/game/net/voice/playback.ts a decoder and a jitter buffer per speaker
+pwa/src/game/net/voice/room.ts     WHO is talking and HOW LOUD — pure, testable
+pwa/src/game/net/voice/index.ts    the link: the policy, the talk key, the gate
+pwa/src/game/game-screen/VoiceOverlay.tsx   the cards, with portraits + waveform
+server/wire/voice.ts               the payload format — the wire's ONE binary one
+server/session.ts  `relayVoice`    the four relay rules
+electron/src/main.ts `installPermissionHandlers`  the microphone gate
+```
+
+### It is its own build capability, and that is the point
+
+`GIS_ENABLE_VOICE` stamps it, `--voice` turns it on for one launch, and
+`electron/src/capabilities.ts` reads it back beside `multiplayer`, `mods`,
+`portMap` and `licensed`. The depot build carries it; a plain download does not.
+Three reasons, each a fact about the BUILD rather than about the machine:
+
+- **It opens a microphone.** Everything else this shell does reads the player's
+  own disk or talks to Valve; this listens to the room they are sitting in. As a
+  capability, a build that was not deliberately given voice cannot even ASK for
+  the device — the shell's permission handler refuses it, rather than the page
+  politely declining.
+- **The host pays for everybody.** A listen server relays every speaker to every
+  listener, so the cost of the feature lands on one player's uplink.
+- **It is moderation surface**, and a download nobody moderates is entitled to a
+  different answer from a depot build.
+
+**`--voice` REQUIRES `--multiplayer` and is refused by name without it.** Voice
+travels inside a session; on a build that can neither host nor join one, granting
+the microphone would put a settings page and a permission prompt in front of a
+feature that could never carry a syllable.
+
+### The frame, and why it is the wire's one binary payload
+
+Everything else on this wire is JSON, and `server/wire/codec.ts` explains why
+that is still right for ~120 live engine shapes. Voice is the case that argument
+does not cover: its payload is ALREADY a compressed bitstream, so JSON means
+base64 — an extra third on every syllable, 50 packets a second per speaker — and
+there is no schema to drift, only four bytes of header and an opaque blob. So
+`FRAME.voice` carries raw bytes, `encodeFrameBytes` makes them, and `decodeFrame`
+hands the payload back as a `Uint8Array` instead of parsing it.
+
+```
+u8  seat      the speaker — STAMPED BY THE SESSION (VOICE_SEAT_UNSET from a client)
+u8  codec     which provider made these bytes
+u8  flags     bit 0: the last packet of this utterance
+u8  reserved
+…   bytes     the provider's own, never looked inside
+```
+
+Four rules govern the relay (`relayVoice`), and each is load-bearing:
+
+- **THE SEAT IS THE SESSION'S TO WRITE, NEVER THE SPEAKER'S TO CLAIM.** A client
+  sends `VOICE_SEAT_UNSET` and the session writes the seat it admitted them into,
+  exactly as `FRAME.command` takes its acting hero from the admitted seat rather
+  than from a field on the frame. The HUD draws a PORTRAIT and a name off that
+  byte, so a client permitted to write it could wear another player's face while
+  it talked — impersonation with art on it.
+- **VOICE CROSSES WORLDS**, and it is the one thing this session does NOT cut per
+  world. A snapshot is cut that way because what a client may SEE is a fact about
+  where its hero is standing; speech is not. Somebody who stepped home through a
+  portal to sell a sword is still in the room with their friends, and cutting them
+  off mid-sentence because their body walked through a door would be a bug with a
+  design document behind it.
+- **A SPECTATOR MAY TYPE BUT NOT TALK.** Chat is the one thing a seatless client
+  may do and voice is deliberately not the second: the identity a listener is
+  SHOWN is a seat — a portrait, a name, a party frame — and a speaker with no seat
+  has none of it. They are sent nobody else's voice either; a watcher is watching
+  a game, not sitting in the room.
+- **THE BYTES ARE FORWARDED, NOT UNDERSTOOD.** The session never decodes, mixes
+  or re-encodes speech: it writes one byte and hands the packet on. That keeps
+  voice off the simulation's budget, and it is the only honest arrangement — a
+  listen server that decoded voice would be one that could quietly do something
+  else with it.
+
+**It is UNRELIABLE in both directions**, and that is the sharper version of the
+rule snapshots already follow: 20 ms of speech is worth something only at the
+moment it was meant to be heard. A retransmitted syllable does not repair the gap
+— it adds a second one, in the wrong place, and the listener's jitter buffer
+discards it anyway. A lost voice packet is a click nobody notices; a late one is
+a stutter everybody does.
+
+**And it is priced into the admitted-peer budget.** A talking client sends 50
+packets a second on top of 60 inputs and 20 acks, so `PEER_PACKET_RATE`
+(`server/net/hub.ts`) names voice in its arithmetic. Leaving it out was a real bug
+waiting rather than untidiness: the steady rate would have fitted under the old
+allowance while a player talking through a connection that stalled and recovered
+delivers the reliability layer's whole backlog AND a second of banked voice at
+once — which is exactly the burst that bucket exists to tolerate.
+
+### The provider seam — so Steam voice is a new file, not a rewrite
+
+`codecs.ts` defines a `VoiceProvider`: can it work here, give me a `VoiceSource`
+(packets of MY voice) and give me a `VoiceDecoder` (somebody else's packets back
+into sound). Everything around those two — the jitter buffer, the mixing graph,
+the per-speaker gain, the meters, the HUD, the wire — is provider-agnostic.
+
+**Three properties of that seam exist for the SECOND provider, not the first:**
+
+1. **Everything is async to create.** Valve's voice API cannot live in this
+   renderer at all — `steamworks.init()` is a single global handshake the MAIN
+   process owns — so a Steam source would be a sixth shell bridge with a round
+   trip per call. A seam with a synchronous `encode()` could not host it.
+2. **Capture and encode are ONE object.** `GetVoice` hands back speech already
+   compressed, so a seam that took PCM from shared plumbing and passed it to a
+   provider's encoder would have nowhere to put Steam's recorder.
+3. **Decoding is per-packet and separate from sourcing.** A listener must decode
+   whatever arrives, which is not necessarily what it would SEND: which provider
+   a machine got depends on what that machine can do, not on the build. So every
+   packet names its codec, a listener holds one decoder per codec it meets, and a
+   packet nobody here implements makes its speaker **UNHEARD** on the HUD —
+   readable and actionable, rather than silence indistinguishable from a mute.
+
+**Why Steam voice is not the shipped provider today:** `steamworks.js@0.4.0`
+binds no `voice` namespace and no `friends` namespace at all, so reaching
+`ISteamUser::GetVoice` means an N-API addon and the loss of the prebuilt binaries
+that let this shell install without a Rust toolchain — the same trade
+`electron/src/steam.ts` records for the missing `ISteamNetworkingSockets`. Its
+codec id (`VOICE_CODEC.steam`) is allocated and reserved so the day it lands it is
+a provider and a `case`, not a protocol bump that refuses everybody mid-session.
+It would bring three things this provider cannot: Valve's own game-chat tuning,
+the player's Steam-wide microphone and push-to-talk settings, and the only path
+that could ever honour a Steam MUTE or BLOCK.
+
+### What the player sees
+
+**A card per speaker, on the HUD's left rail under the party frames** — that rail
+already means "somebody on your side". Each card carries the speaker's own dressed
+paper-doll bust (the compositor the party frames and the hero avatar share), their
+roster name, and a live waveform; a press MUTES them locally. The card turns amber
+and glows when the recent PEAK crosses the shout threshold, and says SHOUTING or
+WHISPERING outright — which is the whole point of the visualisation: one person
+whispering and another screaming must not look the same.
+
+**THE LEVEL IS MEASURED FROM THE AUDIO ACTUALLY PLAYED**, never taken from the
+wire. There is deliberately no loudness field in the payload: it would be a number
+a client could set to 255 for ever, and the waveform's job is precisely to let a
+player tell a whisper from a shout. It is computed from the samples this machine
+is about to put through its own speakers, where nobody can lie about it. The
+speaker's own meter is measured in the capture worklet — the signal as it will be
+encoded, gain included — so the bar a player watches predicts what their friends
+hear.
+
+**The HUD is sized for a DESKTOP viewport**, which is a deliberate exception to
+this repo's phone-first rule and is safe only because voice cannot appear anywhere
+else: it is gated on a capability only the desktop shell is stamped with, so there
+is no phone or browser build in which those cards render. If voice ever reaches a
+phone, `VoiceOverlay.tsx` and its CSS block need a pass at 844×390.
+
+**The list is a STATE and the levels are a STREAM**, read differently on purpose.
+`room.subscribe` fires only on structural change (somebody started or stopped
+talking, was muted, went unheard); loudness is polled inside the overlay's own
+animation frame and painted to a canvas. Pushing levels instead would be a React
+reconciliation per 20 ms of speech per person — up to 350 a second.
+
+### Mute, and the two rules about a seat
+
+A mute is **local, per-session, and never sent**: the speaker is not told, nothing
+crosses the wire, and their packets are simply not decoded. It is keyed by SEAT,
+which gives it two rules that are easy to get backwards:
+
+- **It outlives the sentence.** Stored on the speaker's card it would last exactly
+  as long as that card — mute somebody, they pause, the card clears, and the next
+  word arrives at full volume.
+- **It does NOT outlive the seat.** A seat is handed out again to the next arrival
+  (`nextFreeSeat`), so keeping a mute meant for the person who left would silence
+  a stranger for a reason they could never discover. The roster is what says a seat
+  is gone.
+
+### Transmitting: the policy, and the stuck-key guard
+
+The provider knows how to capture and encode; it does not know what push-to-talk
+is. The link owns that:
+
+- **PUSH TO TALK is the default**, because it is the only mode in which the wire
+  carries nothing until the player physically holds a key. The key is `T`,
+  rebindable with every other key under CONTROLS → KEY BINDINGS, and it is a HELD
+  binding like WALK rather than a one-shot action — so it works while a screen is
+  up, which is the point: "wait, don't go in yet" is said from inside a bag.
+- **OPEN MIC** transmits while the input passes the gate, held for 350 ms past the
+  last loud frame. Without that hangover an open mic chops up every sentence:
+  speech dips under any usable threshold between words, and every close clips a
+  consonant. It is offered only where the provider can measure its input
+  (`VoiceProvider.openMic`) — a mode that silently never transmitted would be
+  worse than an absent one.
+- **THE STUCK-KEY GUARD.** A `keyup` goes to whichever window has focus, so
+  alt-tabbing with the talk key held means this page never hears the release —
+  and the microphone stays live in another application for as long as the game is
+  open. Losing focus, the page being hidden, and the pointer leaving the document
+  all release it. Every push-to-talk implementation ships this bug once.
+- **A device fault turns voice OFF and says so** on the HUD, in words with a
+  remedy in them ("MICROPHONE BLOCKED - ALLOW IT IN YOUR SYSTEM SETTINGS"). The
+  alternative — retrying quietly — leaves a player believing they are talking to
+  their friends when they are not, which is the worst state this feature has.
+
+### Voice is not silenced by MUTE, deliberately
+
+It has its own audio context, its own output level, and its own OFF — one screen
+away, SETTINGS → VOICE CHAT. Muting the game means turning off blasters and music,
+not hanging up on the people you are playing with, and a mute switch that did both
+would make the audio settings a way to leave a conversation by accident.
+
+### The honesty this owes
+
+**The host can hear everything, and could record it.** That is the accepted cost
+of a listen server, the same one the mode already accepts for the host being able
+to cheat — fine among friends, and stated rather than implied. There is no
+server-side moderation, no recording, and nothing is stored: a packet is relayed
+and forgotten. **There is no Steam mute/blocklist integration**, because that
+needs the `friends` namespace `steamworks.js` does not bind; the per-player mute
+is the game's own and lives on the machine that set it.
+
+### What is tested
+
+| Suite                                 | What it holds                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `tests/engine/wire_voice_test.ts`     | The payload round trip, and every refusal a decoder on an open port must make    |
+| `tests/engine/net_voice_test.ts`      | The four relay rules, through a real session: the stamp, the echo, the spectator |
+| `tests/voice_room_test.ts`            | The HUD model — the mute's two seat rules, and that a LEVEL never notifies       |
+| `electron/tests/capabilities_test.ts` | The capability, and that `--voice` without `--multiplayer` is refused by name    |
+
+What no diff can close: two machines, two microphones, and a person at each —
+mouth-to-ear delay on a real connection, whether the jitter buffer's 60 ms is the
+right number under real loss, and whether echo cancellation holds up with the
+game's own audio coming out of the same speakers.
+
 ## `/players N`
 
 `server/wire/players.ts` is the one thing entitled to say what it means, because
@@ -765,28 +1006,31 @@ compiler.
 
 ## What is tested
 
-| Suite                                    | What it holds                                                                 |
-| ---------------------------------------- | ----------------------------------------------------------------------------- |
-| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make    |
-| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately        |
-| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process            |
-| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send         |
-| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                        |
-| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine, and the loop reaching the client    |
-| `tests/engine/run_driver_test.ts`        | The driver seam's contract — who clears `state.events`, and who must not      |
-| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks   |
-| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in      |
-| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                          |
-| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                          |
-| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link              |
-| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                        |
-| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger      |
-| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's |
-| `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes    |
-| `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter    |
-| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it |
-| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop            |
-| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam   |
+| Suite                                    | What it holds                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make     |
+| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately         |
+| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process             |
+| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send          |
+| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                         |
+| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine, and the loop reaching the client     |
+| `tests/engine/run_driver_test.ts`        | The driver seam's contract — who clears `state.events`, and who must not       |
+| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks    |
+| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in       |
+| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                           |
+| `tests/engine/wire_voice_test.ts`        | The voice payload, and the three shapes a decoder on an open port refuses      |
+| `tests/engine/net_voice_test.ts`         | Voice's four relay rules — the seat stamp, the echo, the spectator, the worlds |
+| `tests/voice_room_test.ts`               | The voice HUD's model: the mute's two seat rules, and what must not notify     |
+| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                           |
+| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link               |
+| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                         |
+| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger       |
+| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's  |
+| `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes     |
+| `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter     |
+| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it  |
+| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop             |
+| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam    |
 
 ## The three doors, and where each half of the HOST screen lives
 
@@ -1502,7 +1746,23 @@ ordinary work, small, and deliberately left rather than forgotten.
   when they are run.
 - **The store surfaces**: the Steam listing's multiplayer categories, the
   depot's launch options, and store screenshots showing a party (`store-shots`
-  skill) are owed when the mode ships to the store.
+  skill) are owed when the mode ships to the store. **The listing's voice-chat
+  category and the platform disclosure that goes with it** join that list.
+- **VOICE needs two people and two microphones.** The code is complete and
+  tested (see _Voice — talking to the party_ above), and three of its questions
+  cannot be answered from CI: the mouth-to-ear delay on a real connection,
+  whether the jitter buffer's 60 ms is the right number under real loss, and
+  whether the platform's echo cancellation holds up with the game's own audio
+  coming out of the same speakers the microphone is next to. The permission
+  prompt on each OS — and the macOS entitlement/`NSMicrophoneUsageDescription`
+  pair, whose absence is a CRASH rather than a refusal — needs a packaged build
+  on each platform.
+- **Nothing moderates voice, and nothing can mute it Steam-side.** The
+  per-player mute is the game's own, local and unsent; honouring a Steam MUTE or
+  BLOCK needs the `friends` namespace `steamworks.js` does not bind — the same
+  blocker as the Steam voice provider itself. Worth its own decision before a
+  public release, since the audience for a public session is not the audience
+  for a friends game.
 
 **AND THREE MOD TAILS, which ARE closable by a diff.** Mod reconciliation
 shipped whole on the path that has lobby metadata to reconcile against; these

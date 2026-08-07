@@ -24,6 +24,17 @@
       Steam launches games with DYLD_* set (it injects the overlay this way).
       Without this the app is killed on launch when started FROM Steam, while
       working perfectly when double-clicked — a confusing failure to debug.
+
+    device.audio-input
+      VOICE CHAT records the player's microphone (a build stamped with the
+      `voice` capability — electron/src/capabilities.ts). The hardened runtime
+      refuses the device without this entitlement, and refuses it SILENTLY:
+      `getUserMedia` rejects with a permission error indistinguishable from
+      the player having said no. It pairs with NSMicrophoneUsageDescription in
+      electron-builder.config.cjs, and like that key it is present in every
+      macOS build — an entitlement nothing asks to use costs a build without
+      voice nothing, while a missing half of the pair is a feature that fails
+      on one platform only.
 -->
 <plist version="1.0">
   <dict>
@@ -34,6 +45,8 @@
     <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
     <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+    <key>com.apple.security.device.audio-input</key>
     <true/>
   </dict>
 </plist>

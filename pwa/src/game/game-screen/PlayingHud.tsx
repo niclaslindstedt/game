@@ -45,6 +45,7 @@ export function PlayingHud({
   onOpenQuestLog,
   onOpenPoints,
   autopilotOverlay,
+  voiceOverlay,
   userPausedRef,
   seatName,
   bumpUi,
@@ -82,6 +83,17 @@ export function PlayingHud({
   /** The AUTO PILOT control panel, mounted under the minimap while the
    * engine meter runs (GameScreen owns the session it drives). */
   autopilotOverlay: ReactNode;
+  /**
+   * WHO IS TALKING (VoiceOverlay.tsx) — the speaker cards, railed under the
+   * party frames on the left because that rail already means "somebody on your
+   * side". A node rather than a component call for the same reason
+   * `autopilotOverlay` is one: GameScreen owns the voice link and this
+   * component has no business knowing a session exists.
+   *
+   * Absent for every run without voice, which is every browser, every phone,
+   * every local game and every desktop build not stamped with the capability.
+   */
+  voiceOverlay?: ReactNode;
   /** Latched so BOT VIEW's autopilot won't clear the timer-tap pause before
    * the menu can show (see the sim loop). */
   userPausedRef: MutableRefObject<boolean>;
@@ -711,6 +723,12 @@ export function PlayingHud({
               ))}
             </div>
           )}
+
+          {/* WHO IS TALKING — last on the rail, under the party frames whose
+              portraits it echoes and under the trade asks, which are rarer and
+              need answering. Voice cards come and go constantly, so they sit
+              where an arriving one cannot push something urgent off the edge. */}
+          {voiceOverlay}
         </div>
 
         {/* Top-right: the WoW-style minimap hub. The live fog-of-war map
