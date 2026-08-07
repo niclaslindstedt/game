@@ -211,6 +211,23 @@ const MOON_PARALLAX = 0.006;
  * way home is the same sky seen from the other end. */
 const MOON_HOME_X = 0.55;
 const MOON_HOME_Y = 0.16;
+/**
+ * …AND HOW FAR DOWN IT COMES ON A PHONE HELD UPRIGHT (world px).
+ *
+ * A fraction of the sky is the right way to place it in landscape and the wrong
+ * way in portrait, because the two frames do not disagree about the SKY — they
+ * disagree about what is in front of the top of it. Upright, the top of the
+ * picture is where the phone keeps its clock, its signal and its notch, and a
+ * sixth of a tall sky lands the moon squarely behind that furniture: the one
+ * thing up there worth looking at, printed under the status bar.
+ *
+ * A FIXED DROP RATHER THAN A BIGGER FRACTION, because the fraction would grow
+ * with the sky and a tablet held upright — which has no notch and a great deal
+ * of sky — would end up with its moon halfway to the roofline. This is the
+ * height of the furniture, and the furniture is the same size on every phone.
+ * The whole-moon clamp below still has the last word on a short sky.
+ */
+const MOON_PORTRAIT_DROP = 9;
 
 /**
  * A HASH, NOT A DRAW — the same one the town is dressed from, and for the same
@@ -283,6 +300,10 @@ export function drawDriveSky(
   viewW: number,
   horizonY: number,
   timeMs: number,
+  /** Whether the frame is taller than it is wide — the ONE thing in this file
+   * the shape of the screen changes, and it changes it for the moon alone
+   * (`MOON_PORTRAIT_DROP`). */
+  portrait = false,
 ): void {
   const skyH = Math.max(0, horizonY);
   if (skyH <= 0) return;
@@ -298,7 +319,7 @@ export function drawDriveSky(
   ctx.fillRect(0, 0, viewW, skyH);
 
   drawStars(ctx, cameraX, viewW, skyH, timeMs);
-  drawMoon(ctx, sprites, cameraX, viewW, skyH);
+  drawMoon(ctx, sprites, cameraX, viewW, skyH, portrait);
   for (const band of BANDS) {
     drawBand(ctx, sprites, band, cameraX, viewW, skyH, timeMs);
   }
@@ -377,17 +398,21 @@ function drawMoon(
   cameraX: number,
   viewW: number,
   skyH: number,
+  portrait: boolean,
 ): void {
   const moon = spriteByName(sprites, MOON_SPRITE);
   if (!moon) return;
   const x = Math.round(viewW * MOON_HOME_X - cameraX * MOON_PARALLAX);
+  const home = skyH * MOON_HOME_Y + (portrait ? MOON_PORTRAIT_DROP : 0);
   // KEPT WHOLE. A phone on its side leaves a strip of sky barely deeper than
   // the moon itself, and the fraction alone put its top row off the frame —
   // which reads as a bug, not as a moon behind the roofline. Held inside its
-  // own band, it simply sits lower over the town on a short sky.
+  // own band, it simply sits lower over the town on a short sky. It is also
+  // what stops the portrait drop above from ever pushing the moon into the
+  // clouds on a sky too shallow to spend it.
   const room = Math.max(0, (skyH - moon.height) / 2);
   const y = Math.round(
-    skyH / 2 + Math.max(-room, Math.min(room, skyH * MOON_HOME_Y - skyH / 2)),
+    skyH / 2 + Math.max(-room, Math.min(room, home - skyH / 2)),
   );
   ctx.save();
   ctx.translate(x, y);
