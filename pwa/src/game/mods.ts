@@ -73,6 +73,13 @@ import {
   type LoadedSample,
 } from "./sfx/samples.ts";
 import { setUiSoundCatalog, SHIPPED_UI_SOUNDS } from "./sfx/ui.ts";
+import {
+  clearSpriteClips,
+  setSpriteClips,
+  type ClipState,
+  type SpriteClip,
+  type SpriteClips,
+} from "./render/clips.ts";
 import type { SoundCatalog, SoundDef } from "./sfx/types.ts";
 import {
   setActiveDefs,
@@ -96,8 +103,10 @@ export {
 
 /** The bundle format this build understands, mirroring `BUNDLE_FORMAT` in
  * mod/tools/build.mjs. A bundle from a newer game is refused with a readable
- * reason rather than half-loaded. */
-export const SUPPORTED_BUNDLE_FORMAT = 1;
+ * reason rather than half-loaded. The pair is pinned by
+ * `tests/content/mod_build_test.ts` — they drifted apart once, and a number
+ * this side that is one behind the compiler's refuses every mod there is. */
+export const SUPPORTED_BUNDLE_FORMAT = 2;
 
 /**
  * Why a bundle was refused. Kept as a code rather than a sentence because the
@@ -134,9 +143,12 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
     ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0) +
     // A mod whose whole contribution is a folder of recordings — the point of
     // shipping real audio at all — adds nothing to any catalog above. Nor does
-    // one whose contribution is a recorded soundtrack.
+    // one whose contribution is a recorded soundtrack, an ART PACK that redraws
+    // the game's bodies, or a pack that only re-times how they move.
     (bundle.samples?.length ?? 0) +
-    (bundle.musicSamples?.length ?? 0);
+    (bundle.musicSamples?.length ?? 0) +
+    bundle.sprites.length +
+    Object.keys(bundle.clips ?? {}).length;
   return adds === 0 ? "empty" : null;
 }
 
@@ -268,6 +280,13 @@ export async function applyMods(
   // answer must not depend on whether the mod that won authored voices or
   // shipped a file.
   const samples = new Map<string, LoadedSample>();
+  // HOW THE ART MOVES. Merged per SUBJECT+STATE rather than per subject, so a
+  // mod that gives the ghoul a talking mouth and a later one that gives it a
+  // longer walk both land — the alternative ("last mod to mention the ghoul
+  // owns every one of its animations") would make an art pack and an animation
+  // pack mutually exclusive for no reason a player could see.
+  const clips: SpriteClips = {};
+  const clipOwners = new Map<string, string[]>();
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const blueprintOwners = new Map<string, string[]>();
@@ -431,6 +450,15 @@ export async function applyMods(
       (sprites as Record<string, ImageBitmap>)[name] = bitmap;
       claim(spriteOwners, name, bundle.id);
     }
+    for (const [subject, states] of Object.entries(bundle.clips ?? {})) {
+      for (const [state, clip] of Object.entries(states)) {
+        (clips[subject] ??= {})[state as ClipState] = clip as SpriteClip;
+        // Claimed as "ghoul walk" rather than as "ghoul": the clash screen's
+        // job is to name the thing the player is looking at, and two mods that
+        // animate the same body in different states are not in conflict.
+        claim(clipOwners, `${subject} ${state}`, bundle.id);
+      }
+    }
   }
 
   setSoundCatalog(sounds, soundKeys);
@@ -443,6 +471,10 @@ export async function applyMods(
   // `samples.ts` picks those up on the player's first gesture.
   setSamples([...samples.values()]);
   warmSamples(synth);
+  // The clips go in beside the frames they name — both are art, both are
+  // replaced wholesale rather than merged onto the last run's, and a clip
+  // installed without its sprites would name frames nothing answers to.
+  setSpriteClips(clips);
   // Only the mods' scores travel: the shipped ones are behind their own dynamic
   // imports and stay exactly where they are, so a mod that replaces one does it
   // by claiming its id here rather than by anything being rebuilt.
@@ -489,6 +521,7 @@ export async function applyMods(
   }));
   setActiveMods(stamps, [
     ...contested("sprite", spriteOwners),
+    ...contested("animation", clipOwners),
     ...contested("level", levelOwners),
     ...contested("map blueprint", blueprintOwners),
     ...contested("enemy", enemyOwners),
@@ -549,6 +582,10 @@ export function restoreBaseDefs(sprites: Sprites): void {
   setCueCatalog(SHIPPED_SOUNDS, SHIPPED_CUE_KEYS);
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);
   clearSamples();
+  // …and the clips with the frames they named. Left behind, they would point
+  // every call site at sprites that have just been deleted, which draws the
+  // bodies that had a mod's animation as nothing at all.
+  clearSpriteClips();
   setModTracks({});
   setRecordedTracks([]);
   setActiveMods([], []);

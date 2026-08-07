@@ -675,6 +675,34 @@ merchant, the fauna) is animated by HOW IT MOVES. Two things make it work:
   V8 monomorphism, so a new `EnemyDef` field must be added THERE too or it
   silently reads `undefined` with every check still green.
 
+**HOW MANY FRAMES A BODY HAS IS A CONVENTION, AND A MOD MAY SAY OTHERWISE —
+`render/clips.ts`.** The shipped art is TWO frames per body and every pass that
+draws a character knows it by heart: `<sprite>_0` and `<sprite>_1` alternate on
+a 300ms clock while standing (offset by the mob's own id, or a horde of forty
+flips in lockstep) and on the stride phase while walking, with
+`<sprite>_cast_0/1` worn through a telegraph. Nothing about that is changing —
+it is what a sixteen-pixel body authored as a character grid wants to be.
+
+What it cannot express is a SIX-frame walk, or a mouth. So a mod may declare
+CLIPS (`animations.yaml` → `docs/modding.md`), and every frame pick on the
+field now asks the clip table first and falls through to the convention when it
+says nothing — which, for the shipped game, is always. Three things about the
+seam are worth carrying:
+
+- **The state picks the drive, not the author.** `walk` runs on the gait's own
+  phase, so six frames cover the ground two did and stop dead with the body;
+  everything else runs on the render clock at the clip's `delayMs`. Render time
+  never freezes, which is why an authored `talk` clip keeps a mouth moving while
+  the run is paused behind the conversation that raised it.
+- **The wound stage is the subject.** A clip is looked up under
+  `<sprite>_hurt` / `_wrecked` / `_dying` while the body is wearing one, because
+  the derived wound frames are their own art — so a mod may animate the bleeding
+  version differently, or say nothing and keep the two frames it gets free.
+- **The hero is half in.** He is a paper doll, so a clip replaces his BODY layer
+  and the worn overlays stay on the two shipped poses they were derived for
+  (`playerDollLayers`'s `body` option). A six-frame body in two-frame trousers
+  is the deliberate trade.
+
 **A MACHINE CARRIES ITSELF TOO — AND THE CAR STEERS**
 (`pwa/src/game/render/vehicles.ts`). The hatchback's front wheels are drawn at
 the rack's own angle (`CarVehicle.steer`, simulated in `src/game/vehicles.ts`,

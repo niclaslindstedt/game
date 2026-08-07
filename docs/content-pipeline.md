@@ -457,3 +457,12 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `pwa/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.
+- **A MOD's art does not go through any of that**, and the split is the same one
+  the sound catalog makes. The atlas is a build artifact of THIS tree; a mod's
+  sprites are merged into the loaded sprite record at run time instead
+  (`pwa/src/game/mods.ts`), which is why a mod may author a sprite as a `.png`
+  rather than as a grid: nothing about it has to survive the atlas packer. The
+  mod compiler decodes it (`mod/tools/png.mjs`) so the page still receives the
+  same raw RGBA a grid compiles to. Likewise `animations.yaml` — a mod-only
+  catalog, because the shipped art is two frames a body and the renderer's own
+  convention already describes that exactly. → `docs/modding.md`

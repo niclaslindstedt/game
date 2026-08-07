@@ -15,6 +15,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { actorFrame } from "./clips.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
 import { drawRunningPowerups } from "./powerups.ts";
 import {
@@ -56,7 +57,15 @@ export function drawMerchant(
   // measured off the ground he covers, so his legs and his tip keep his pace.
   const gait = walkGait("merchant", merchant.pos, timeMs);
   const frame = merchant.moving ? walkFrame(gait) : 0;
+  // A mod's own clip first (`render/clips.ts`); the two-frame convention behind
+  // it, and behind THAT the generic trader, so a level whose costume nobody
+  // drew still has somebody standing at the counter.
+  const clipName = actorFrame(merchant.sprite, merchant.moving, {
+    timeMs,
+    stride: gait.phase,
+  });
   const sprite =
+    (clipName === undefined ? undefined : spriteByName(sprites, clipName)) ??
     spriteByName(sprites, `${merchant.sprite}_${frame}`) ??
     spriteByName(sprites, `merchant_${frame}`);
   if (!sprite) {
@@ -108,7 +117,19 @@ export function drawCompanions(
     // kneeling, so it neither steps nor tips: it lies as still as the sprite.
     const gait = walkGait(`c${companion.id}`, companion.pos, timeMs);
     const frame = !downed && companion.moving ? walkFrame(gait) : 0;
+    // A DOWNED companion is not idling, it is kneeling — so it takes no clip at
+    // all and holds the still frame, exactly as it always has.
+    const clipName = downed
+      ? undefined
+      : actorFrame(def.sprite, companion.moving, {
+          timeMs,
+          stride: gait.phase,
+          phase: companion.id,
+        });
     const sprite =
+      (clipName === undefined
+        ? undefined
+        : spriteByName(assets.sprites, clipName)) ??
       spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
       spriteByName(assets.sprites, `${def.sprite}_0`);
     if (!sprite) {

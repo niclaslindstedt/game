@@ -46,7 +46,7 @@ import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { type GameAssets } from "../assets.ts";
-import { bustSrc, SpritePortrait } from "../SpritePortrait.tsx";
+import { SpritePortrait, useSpeakingBust } from "../SpritePortrait.tsx";
 
 /** The scale every spoken and printed surface in the game shares. */
 const TEXT_SCALE = 2;
@@ -111,6 +111,17 @@ export function TalkOverlay({
   // dependency list that would have to name the node AND every flag a
   // `requires:` row reads.
   const choices = talkChoices(state);
+  // THE FACE, MOVING WHILE IT SPEAKS — when the art behind the speaker carries
+  // a `talk:` clip (`render/clips.ts`). A hook, so it runs on every render and
+  // simply hands back the still bust for a speaker with no clip, which is every
+  // speaker in the shipped game. `talk` is null for exactly one render as the
+  // tree closes, so the name it is given then is a dead string rather than an
+  // early return — this is a hook, and hooks do not get to be conditional.
+  const speakingBust = useSpeakingBust(
+    assets.sprites,
+    talk?.speaker.sprite ?? "",
+    talk !== null,
+  );
   const [cursor, setCursor] = useState(0);
 
   // A fresh node re-homes the cursor. Adjusted DURING RENDER (React's supported
@@ -215,7 +226,7 @@ export function TalkOverlay({
             a layout the sibling gold box did not share. */}
         <div className="quest-vn">
           <SpritePortrait
-            src={bustSrc(assets.sprites, talk.speaker.sprite)}
+            src={speakingBust}
             frameClass="quest-portrait-frame"
           />
           <div className="quest-content">

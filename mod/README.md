@@ -43,8 +43,8 @@ see below.
 command for every step. Both are just as usable as a human checklist.
 
 What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
-one monster, one weapon, one relic, three sprites, one sound, one score, and a
-comment on every field explaining why it is there.
+one monster, one weapon, one relic, six sprites, two animations, one sound, one
+score, and a comment on every field explaining why it is there.
 
 ## What is in a mod
 
@@ -57,6 +57,10 @@ my-mod/
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
+  sprites/<family>/<name>.png  a DRAWN sprite, in place of the grid of that
+                               name — a folder of these is an art pack
+  animations.yaml              how your art moves: cycles longer than two
+                               frames, and a mouth that opens while it talks
   sounds/<id>.yaml             one synthesized sound each
   sounds/<id>.wav | .mp3       a RECORDING, played in place of the sound of
                                that name — a folder of these is a sound pack
@@ -207,9 +211,12 @@ that loads.
 
 ## Two mods, one sprite — the load order
 
-Yes, a mod can replace the game's sprites: a `conversion` may ship a sprite with
-a shipped name and it wins. (An `addon` may not — the compiler refuses it, and
-tells you to prefix the name or switch to `conversion`.)
+Yes, a mod can replace the game's sprites, and it does not have to be a total
+conversion to do it: ship a sprite (a grid or a `.png`) with a shipped name and
+it wins. Redrawing something is the one change an `addon` is FOR — the monster
+is still the same monster, its def and everything referencing it untouched, and
+only the picture moved. (Replacing a level, a monster or an errand still needs
+`kind: conversion`, because those really do take something away.)
 
 Two **mods** shipping the same sprite is a different problem, and it is not one
 the compiler can solve. Each mod is compiled on its own; your mod's author never

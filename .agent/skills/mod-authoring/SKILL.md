@@ -106,6 +106,8 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | Errands, their givers, their conversations                          | `quests/<id>.yaml`, `quest-givers.yaml`                     |
 | Story — scenes, the hero's thoughts, found lore                     | `cutscenes/<id>.yaml`, `thoughts.yaml`, `story-items.yaml`  |
 | Pixel art, sounds, music                                            | `sprites/<family>/<name>.yaml`, `sounds/<id>.yaml`, `music/` |
+| DRAWN pixel art — a real PNG replacing a grid                       | `sprites/<family>/<name>.png` (the name IS the sprite it draws; a folder of them is a whole mod) |
+| How that art MOVES — a walk past two frames, a talking mouth        | `animations.yaml` (subject → `idle`/`walk`/`talk`/`cast` → frames) |
 | RECORDED sound — a real audio file replacing a synthesized one      | `sounds/<id>.wav`, `sounds/<id>.mp3` (the name IS the sound it replaces — `cli.mjs sounds`) |
 | What the five difficulty rungs are CALLED                           | `difficulties.yaml`                                         |
 | The mod's identity, kind, and (a conversion's) own title screen     | `mod.yaml` — `kind:`, `brand:`                              |
@@ -155,7 +157,7 @@ add `content/levels/<id>.yaml` means `levels/<id>.yaml` in the mod.
 | A monster or a companion         | `enemy-design`       | `EnemyDef` anatomy, hp/damage against the scaling model, mechanics, spareable companions — all yours; the manuscript rules do NOT reach a mod's dialogue |
 | A weapon, gear piece or relic    | `weapon-system`      | The def-first workflow and every calculator; `grades:` and the rarity economy stay the game's              |
 | An errand or a conversation      | `quest-design`       | The objective kinds and reward pricing apply; the giver stands on one of YOUR levels                       |
-| Any sprite                       | `pixel-assets`, `art-improvement` | The generate → LOOK → judge loop; a mod's grids are compiled by `cli.mjs`, not by `make assets`  |
+| Any sprite                       | `pixel-assets`, `art-improvement` | The generate → LOOK → judge loop; a mod's grids are compiled by `cli.mjs`, not by `make assets`. A mod may also skip the grid entirely and drop a `.png` in — and say how it MOVES in `animations.yaml`, which is the only way to get a cycle past two frames or a mouth that opens |
 | A sound or a score               | `sound-effects`      | The synth vocabulary and the tracker format are the same files — plus the one thing the shipped game cannot do: drop `sounds/<id>.wav` (or `.mp3`) in and it replaces that sound outright. `cli.mjs sounds` is the id list, and the id IS the routing |
 | A power's look and sound         | `visual-effects`     | Authoring the colour kit is yours; new effect IMPLEMENTATIONS are engine code a mod cannot add             |
 | "Is this balanced"               | `simulate-run`       | Run it with `--mod`; the verdict's bands are the game's, and yours should meet them                        |

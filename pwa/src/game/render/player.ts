@@ -8,6 +8,7 @@ import {
   DEATH_SCENE,
   isWeaponDef,
   LEVELING,
+  playerAppearance,
   weaponDef,
   type GameState,
   type Player,
@@ -26,6 +27,7 @@ import {
 } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
+import { actorFrame } from "./clips.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
 import { drawCoatedLayers, drawCoatedSprite } from "./hero-coat.ts";
 import {
@@ -688,7 +690,24 @@ function drawHero(
     : player.moving && walkFrame(gait) === 1
       ? "1"
       : "0";
-  const layers = playerDollLayers(state, frame, { weapon: true, hero: player });
+  // A MOD'S OWN WALK, when it authored one. The hero is the one body whose art
+  // is a paper doll rather than a sprite, so the clip resolves the BODY layer
+  // only and the worn overlays keep the three shipped poses (see
+  // `playerDollLayers`). Airborne takes no clip at all: the jump is a single
+  // authored tuck, not a cycle, and playing a walk through an arc would have
+  // him running in mid-air.
+  const bodyClip = airborne
+    ? undefined
+    : actorFrame(playerAppearance(state), player.moving, {
+        timeMs,
+        stride: gait.phase,
+        phase: seat,
+      });
+  const layers = playerDollLayers(state, frame, {
+    weapon: true,
+    hero: player,
+    body: bodyClip,
+  });
   // THE BLOOD HE IS WEARING. The five numbers `hero-soak.ts` keeps become the
   // coat art the doll is soaked in, resolved once per frame and shared by all
   // three poses — the hero standing, the hero knocked flat and the hero dead all

@@ -83,3 +83,5 @@ contents:
     summary: The saw's icon, on the ground and in the bag.
   - path: sprites/greenhouse/icon_talent_greenhouse_deep_roots.yaml
     summary: The picker glyph for the DEEP ROOTS talent.
+  - path: animations.yaml
+    summary: How the art moves - the gardener's face while she talks, and the creeper's slower sway.

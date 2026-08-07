@@ -340,6 +340,19 @@ are raised through `playCue` (`pwa/src/game/sfx/cues.ts`) and answered by
 `on: { cue, surface }` in their own key space. Every cue is rate-limited IN THE
 FUNNEL, because a cap each caller reimplements is a cap somebody forgets.
 
+**A BODY'S FRAME IS A CONVENTION WITH A TABLE IN FRONT OF IT, AND THE FALLBACK
+IS THE SHIPPED GAME.** Every pass that draws a character asks
+`clipFrameName(subject, state, at)` (`pwa/src/game/render/clips.ts`) FIRST and
+falls through to the two-frame convention — `<sprite>_0`/`_1`, `_cast_0/1` —
+when it answers undefined, which for the shipped game is always. A mod fills the
+table from `animations.yaml`. Three rules bite: the STATE picks the drive (a
+`walk` runs on the gait's phase so N frames cover the ground two did; everything
+else runs on render time, which is why a `talk` clip keeps moving while the run
+is frozen behind the conversation), the SUBJECT is the wound stage's own sprite
+base (`ghoul_hurt`, not `ghoul`), and a new state is a RENDERER change before it
+is a schema change — one nothing raises is a promise to a mod author the game
+silently breaks. → `docs/modding.md`, `docs/rendering.md`
+
 **ANYTHING THE APP DOES TO A RUN BEFORE ITS FIRST TICK IS A SESSION PARAMETER.**
 That means a field on `RunParams`, a line in `createRunFromParams`
 (`src/game/session-setup.ts`), and the matching field on `SessionParams` — never

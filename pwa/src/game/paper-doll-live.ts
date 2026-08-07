@@ -43,10 +43,25 @@ import {
 export function playerDollLayers(
   state: GameState,
   frame: DollFrame,
-  opts: { weapon?: boolean; hero?: Player } = {},
+  opts: { weapon?: boolean; hero?: Player; body?: string } = {},
 ): DollLayer[] {
   const layers: DollLayer[] = [
-    { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
+    // THE BODY, and the one layer a mod may swap for a frame of its own.
+    //
+    // `opts.body` is how a longer walk cycle reaches the hero: the field
+    // renderer resolves the clip (`render/clips.ts`) and passes the frame it
+    // landed on, because only it has the gait to resolve it FROM. Everything
+    // else here still takes the three-pose `frame`, and deliberately: the worn
+    // overlays are DERIVED from the two shipped stride frames (`asset-tools/
+    // worn.mjs`), so a six-frame body wears trousers that alternate under it —
+    // which is exactly what a two-frame trouser drawn over a six-frame leg
+    // should do, and far better than refusing the body until somebody hand-draws
+    // six frames of every armor piece in the game.
+    {
+      sprite: opts.body ?? `${playerAppearance(state)}_${frame}`,
+      dx: 0,
+      dy: 0,
+    },
   ];
   // WHOSE doll defaults to the local seat's — the one-hero case and every
   // existing caller. A party frame or a field pass drawing a TEAMMATE names

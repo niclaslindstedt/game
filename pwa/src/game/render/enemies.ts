@@ -20,8 +20,15 @@ import { clamp01, seatX, seatY, spriteTopLeft } from "./shared.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
+import { clipFrameName } from "./clips.ts";
 import { fogDistanceAt, type FogField } from "./fog.ts";
-import { drawFloatShadow, floatLift, walkGait, withStance } from "./gait.ts";
+import {
+  drawFloatShadow,
+  floatLift,
+  walkGait,
+  walking,
+  withStance,
+} from "./gait.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -121,9 +128,23 @@ export function drawEnemies(
     // footprint is already an authored ellipse, so foreshortening it a second
     // time would flatten it to a line.
     beginBillboard(ctx, enemy.pos.x, enemy.pos.y, camera.x, camera.y);
+    // HOW IT GETS ABOUT (`EnemyDef.locomotion`, drawn by gait.ts). A mob on
+    // LEGS tips softly left and right about its feet, harder and faster the
+    // faster it is actually covering ground, and breathes where it stands. A
+    // FLOATER hangs a few px off the floor on a slow drift, over a shadow. A
+    // WHEELED thing does neither — a rover that rocked like a walker would read
+    // as a machine pretending to have legs.
+    //
+    // Read BEFORE the body is picked, because an authored walk clip is driven
+    // by this phase: `walkGait` must be called once per body per frame (it
+    // measures the step since the last call), so the gait cannot be sampled
+    // from inside the sprite pick.
+    const key = `e${enemy.id}`;
+    const loco = def.locomotion ?? "legs";
+    const floats = loco === "float";
+    const gait = loco === "legs" ? walkGait(key, enemy.pos, timeMs) : null;
     // The two-frame idle shimmer runs on render time, which never freezes, so a
-    // mob stays visibly alive through its own dialogue. Its GAIT is a separate
-    // thing entirely, measured below off the ground it actually covers.
+    // mob stays visibly alive through its own dialogue.
     const frame = Math.floor(timeMs / 300 + enemy.id) % 2;
     // Battle damage: sprites swap to wounded variants as hp falls — every
     // mob at half, elites and bosses heavier below a quarter, bosses in a
@@ -139,6 +160,18 @@ export function drawEnemies(
         : hpFrac <= WOUNDS.hurtAt
           ? variants.hurt
           : variants.base;
+    // WHOSE ANIMATION THIS IS, if a mod authored one. The subject is the wound
+    // STAGE's own sprite base, not the family's — `ghoul_hurt` is a different
+    // body from `ghoul` and the shipped pipeline already names it that way, so
+    // a mod may animate the bleeding one differently (or not at all, and keep
+    // the two derived frames it gets for free).
+    const subject = lastStand
+      ? `${def.sprite}_dying`
+      : def.role !== "minion" && hpFrac <= WOUNDS.wreckedAt
+        ? `${def.sprite}_wrecked`
+        : hpFrac <= WOUNDS.hurtAt
+          ? `${def.sprite}_hurt`
+          : def.sprite;
     // THE CAST POSE — a mob winding up a telegraphed move wears its OWN
     // authored frames for it (`<sprite>_cast_0/1`) when it has any. This is the
     // tell, and it deliberately sits on the CHARACTER rather than on the floor:
@@ -152,20 +185,35 @@ export function drawEnemies(
     // standing still, which is the one thing it must not read as.
     const casting = enemy.mech?.telegraph !== undefined;
     const castFrame = Math.floor(timeMs / 110) % 2;
+    // A MOD'S OWN CLIP FIRST, the shipped convention behind it. Three states
+    // are asked here, in the order they override each other: the cast pose beats
+    // everything (it is a tell, and a body mid-tell is not doing anything else),
+    // a body covering ground walks, and a body that is not, idles.
+    //
+    // `at` is shared by all three, and its two seeds are what keep a horde from
+    // animating as one organism: the STRIDE is this mob's own ground covered,
+    // and the PHASE is its id — the same offset the shimmer above has always
+    // used, so forty ghouls standing in a room are forty separate bodies.
+    const clipAt = { timeMs, stride: gait?.phase, phase: enemy.id };
+    // …and a NEUTRAL mob the hero has struck up a conversation with is talking,
+    // which outranks standing but not a telegraph: a body that starts winding
+    // up mid-sentence has stopped talking, whatever the box still says.
+    const talking =
+      state.talk?.speaker.kind === "enemy" &&
+      state.talk.speaker.id === enemy.id;
+    const clipName = casting
+      ? clipFrameName(def.sprite, "cast", clipAt)
+      : talking
+        ? clipFrameName(subject, "talk", clipAt)
+        : gait !== null && walking(gait)
+          ? clipFrameName(subject, "walk", clipAt)
+          : clipFrameName(subject, "idle", clipAt);
+    const clipped =
+      clipName === undefined ? undefined : spriteByName(sprites, clipName);
     const cast = casting
       ? spriteByName(sprites, `${def.sprite}_cast_${castFrame}`)
       : undefined;
-    const sprite = cast ?? stage[frame] ?? sprites.ghost_0;
-    // HOW IT GETS ABOUT (`EnemyDef.locomotion`, drawn by gait.ts). A mob on
-    // LEGS tips softly left and right about its feet, harder and faster the
-    // faster it is actually covering ground, and breathes where it stands. A
-    // FLOATER hangs a few px off the floor on a slow drift, over a shadow. A
-    // WHEELED thing does neither — a rover that rocked like a walker would read
-    // as a machine pretending to have legs.
-    const key = `e${enemy.id}`;
-    const loco = def.locomotion ?? "legs";
-    const floats = loco === "float";
-    const gait = loco === "legs" ? walkGait(key, enemy.pos, timeMs) : null;
+    const sprite = clipped ?? cast ?? stage[frame] ?? sprites.ghost_0;
     const lift = floats ? floatLift(key, timeMs) : (gait?.lift ?? 0);
     const at = spriteTopLeft(enemy.pos, sprite, camera);
     const x = at.x;

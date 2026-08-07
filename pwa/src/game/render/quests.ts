@@ -23,6 +23,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { actorFrame, clipFrameName } from "./clips.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
 import {
   drawSpriteFacing,
@@ -74,7 +75,26 @@ export function drawQuestGivers(
     // Standing still, `walkGait` gives the breathing idle rather than a stride,
     // so a giver reads as alive without ever leaving their post.
     const gait = walkGait(`quest_${giver.id}`, giver.pos, timeMs);
-    const sprite = spriteByName(sprites, `${def.sprite}_0`);
+    // IS THIS THE PERSON THE HERO IS TALKING TO? Two conversations count and
+    // they are different modals: the steered TREE (`state.talk`) and the errand
+    // OFFER. Either one is this body's mouth moving, and the field is drawn
+    // behind both — the overlays only dim it — so a mod that authored a `talk`
+    // clip gets it played where the player is already looking.
+    //
+    // The clock behind it never freezes (it is render time, not sim time),
+    // which is exactly right here and is why the horde keeps breathing through
+    // its own dialogue.
+    const talking =
+      (state.talk?.speaker.kind === "giver" &&
+        state.talk.speaker.id === giver.id) ||
+      state.questOffer?.giverId === giver.id;
+    const clipName = clipFrameName(def.sprite, talking ? "talk" : "idle", {
+      timeMs,
+      phase: phaseOf(giver.id) * 1000,
+    });
+    const sprite =
+      (clipName === undefined ? undefined : spriteByName(sprites, clipName)) ??
+      spriteByName(sprites, `${def.sprite}_0`);
     if (!sprite) {
       endBillboard(ctx);
       continue;
@@ -142,7 +162,15 @@ export function drawEscorts(
     beginBillboard(ctx, escort.pos.x, escort.pos.y, camera.x, camera.y);
     const gait = walkGait(`escort_${escort.id}`, escort.pos, timeMs);
     const frame = escort.moving ? walkFrame(gait) : 0;
-    const sprite = spriteByName(sprites, `${escortSprite(escort)}_${frame}`);
+    const family = escortSprite(escort);
+    const clipName = actorFrame(family, escort.moving, {
+      timeMs,
+      stride: gait.phase,
+      phase: escort.id,
+    });
+    const sprite =
+      (clipName === undefined ? undefined : spriteByName(sprites, clipName)) ??
+      spriteByName(sprites, `${family}_${frame}`);
     if (!sprite) {
       endBillboard(ctx);
       continue;

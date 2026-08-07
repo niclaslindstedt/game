@@ -29,7 +29,7 @@ import { heroSoak } from "../game-screen/hero-soak.ts";
 import { localScreen } from "../local-seat.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
-import { bustSrc, portraitSrc } from "../SpritePortrait.tsx";
+import { portraitSrc, useSpeakingBust } from "../SpritePortrait.tsx";
 import {
   DialogueBox,
   IDLE_REVEAL,
@@ -83,17 +83,36 @@ export function DialogueOverlay({
   const localReveal = useRef<DialogueReveal>(IDLE_REVEAL);
   const reveal = revealRef ?? localReveal;
 
-  if (!dialogue || !content) return null;
-
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
-  const isStoryItem = dialogue.source.kind === "story";
+  const isStoryItem = dialogue?.source.kind === "story";
   // WHO IS DELIVERING THIS PAGE. The engine resolves it per page (see
   // `DialogueVoice`), so the box draws a two-way exchange without knowing which
   // KIND of scene it is in: a mob's arrival the hero answers back in, and one
   // of his own monologues somebody answers back TO, arrive here identically.
-  const voice = content.voices[dialogue.page] ?? null;
+  const voice = (dialogue && content?.voices[dialogue.page]) ?? null;
   const heroSpeaks = voice?.hero ?? false;
+  // A speaker is cropped to head and shoulders like every other portrait in the
+  // game; a STORY ITEM is not a speaker — it is the thing you just picked up,
+  // drawn whole, because an icon has no face to find.
+  const speakerArt = voice?.portrait ?? content?.portrait ?? "";
+  // The speaking bust: the same face, MOVING, for a character whose art carries
+  // a `talk:` clip (`render/clips.ts`) — the still bust for everyone else,
+  // which is every speaker the game ships. A story item is not talking and the
+  // hero's face is a composed paper doll rather than a sprite, so neither takes
+  // it.
+  //
+  // Resolved HERE, above the early return below, because it is a hook: this
+  // overlay renders once more as its scene closes, and a hook cannot be skipped
+  // on that pass.
+  const speakingBust = useSpeakingBust(
+    assets.sprites,
+    speakerArt,
+    !heroSpeaks && !isStoryItem,
+  );
+
+  if (!dialogue || !content) return null;
+
   // The hero's inner monologue — and his replies in a two-way scene — show
   // HIM: the dressed paper-doll (worn armor + held weapon over the body), the
   // same avatar the HUD and inventory portray, so his lines are delivered by
@@ -103,10 +122,6 @@ export function DialogueOverlay({
   // opening monologue dresses him from the same doll — IntroOverlay.tsx.)
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon so the find stays on screen.
-  // A speaker is cropped to head and shoulders like every other portrait in the
-  // game; a STORY ITEM is not a speaker — it is the thing you just picked up,
-  // drawn whole, because an icon has no face to find.
-  const speakerArt = voice?.portrait ?? content.portrait;
   const portrait = heroSpeaks
     ? (dollDataUrl(
         assets.sprites,
@@ -121,7 +136,7 @@ export function DialogueOverlay({
       // either (see SpritePortrait.tsx).
       isStoryItem
       ? portraitSrc(assets.sprites, speakerArt)
-      : bustSrc(assets.sprites, speakerArt);
+      : speakingBust;
 
   return (
     <div
