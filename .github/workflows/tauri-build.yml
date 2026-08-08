@@ -92,6 +92,10 @@ jobs:
         working-directory: tauri
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -113,6 +117,15 @@ jobs:
         run: |
           mkdir -p webroot
           echo '<!doctype html><title>placeholder</title>' > webroot/index.html
+      # …and `tauri-build` refuses a MISSING ICON outright, so the compile needs
+      # one even though nothing here draws a window. `scripts/icons.mjs` is what
+      # makes them (Tauri refuses the paletted PNGs the website ships), and it
+      # needs `sharp` — which is a `pwa` devDependency hoisted to the root by
+      # the workspace install. `npm ci` at the ROOT is therefore the honest
+      # dependency, and it is cheap beside the apt step above.
+      - name: Install the workspace
+        working-directory: .
+        run: npm ci
       - name: icons
         run: node scripts/icons.mjs
       - name: clippy
