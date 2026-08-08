@@ -2516,6 +2516,21 @@ html.app-locked body {
   content: none;
 }
 
+/* …and the flat resting gradient underneath goes with them: the shaded sphere
+   covers the disc completely, and on a RINGED body — whose canvas is wider
+   than its planet and mostly transparent — leaving it on paints a square. */
+.title-planet.has-globe {
+  background: none;
+}
+
+/* A ringed world draws into a canvas WIDER than its own disc (the A ring's
+   outer edge is 2.27 planet radii out), so its element must not clip to a
+   circle the way every other body's does. */
+.title-planet.has-rings {
+  overflow: visible;
+  border-radius: 0;
+}
+
 /* Spherical shading + atmosphere, drawn BENEATH the night disc (::after) so the
    night disc masks it on the dark side and it only shows where the sun strikes.
    A gentle limb-darkening vignette rounds the disc into a ball, and a thin
@@ -2585,8 +2600,10 @@ html.app-locked body {
     radial-gradient(circle at 68% 70%, #b5623a 0 6%, transparent 7%),
     radial-gradient(circle at 42% 40%, #d9764a, #c05a30 55%, #9c4322);
   box-shadow: 0 0 18px rgba(235, 140, 90, 0.3);
-  /* A faint dusty-orange limb — Mars's thin atmosphere. */
-  --sky-rim: rgba(255, 180, 130, 0.4);
+  /* A faint dusty-orange limb. Mars HAS air — 0.6% of Earth's, enough for
+     dust storms and a thin twilight, nowhere near enough for Earth's bright
+     blue haze. */
+  --sky-rim: rgba(255, 186, 140, 0.3);
 }
 
 /* Mercury — a tiny scorched cinder on the innermost orbit; the driver sizes it
@@ -2600,7 +2617,10 @@ html.app-locked body {
     radial-gradient(circle at 60% 34%, #6b6157 0 14%, transparent 15%),
     radial-gradient(circle at 38% 62%, #5a5148 0 12%, transparent 13%),
     radial-gradient(circle at 44% 40%, #a89a88, #7c7062 58%, #574e44);
-  box-shadow: 0 0 8px rgba(200, 180, 150, 0.28);
+  /* NO halo and NO --sky-rim: Mercury has no atmosphere to catch the light.
+     Same for the Moon below. An airless body has a knife-edge terminator and a
+     hard limb, and hazing either is the quickest way to stop it reading as a
+     rock. */
 }
 
 /* Venus — small, veiled in featureless pale-gold cloud; the driver sizes it
@@ -2647,6 +2667,61 @@ html.app-locked body {
   left: 46%;
   width: clamp(16px, 3.4vmin, 30px);
   height: clamp(16px, 3.4vmin, 30px);
+  /* Airless, like Mercury — see there. */
+  box-shadow: none;
+}
+
+/* The four giants. They ride orbits wider than the frame, so most of the time
+   they are off it entirely and the driver hides them; these are their resting
+   spots for before it starts (and under prefers-reduced-motion), parked out
+   near the edges where their orbits actually pass. */
+.title-jupiter {
+  left: 12%;
+  top: 16%;
+  width: clamp(14px, 3vmin, 26px);
+  height: clamp(14px, 3vmin, 26px);
+  background:
+    linear-gradient(
+      to bottom,
+      #d9c8ac 0 18%,
+      #94624a 18% 30%,
+      #f0e3c6 30% 46%,
+      #8f5c44 46% 60%,
+      #e4d5b8 60% 78%,
+      #b08a6c 78% 100%
+    ),
+    radial-gradient(circle at 40% 34%, #f2e6cc, #b08a6c 70%);
+  box-shadow: 0 0 14px rgba(235, 205, 170, 0.22);
+  --sky-rim: rgba(255, 236, 206, 0.5);
+}
+
+.title-saturn {
+  left: 84%;
+  top: 14%;
+  width: clamp(12px, 2.6vmin, 22px);
+  height: clamp(12px, 2.6vmin, 22px);
+  background: radial-gradient(circle at 40% 36%, #f4e4b6, #c8a878 60%, #9c7f52);
+  --sky-rim: rgba(255, 240, 200, 0.45);
+}
+
+.title-uranus {
+  left: 8%;
+  top: 54%;
+  width: clamp(10px, 2.2vmin, 18px);
+  height: clamp(10px, 2.2vmin, 18px);
+  background: radial-gradient(circle at 40% 36%, #cfe4de, #9ec2c0 62%, #7ba0a0);
+  box-shadow: 0 0 10px rgba(190, 225, 225, 0.22);
+  --sky-rim: rgba(206, 240, 240, 0.5);
+}
+
+.title-neptune {
+  left: 89%;
+  top: 58%;
+  width: clamp(10px, 2.2vmin, 18px);
+  height: clamp(10px, 2.2vmin, 18px);
+  background: radial-gradient(circle at 40% 36%, #b6d4e2, #7ba0c0 62%, #5a7ea6);
+  box-shadow: 0 0 10px rgba(150, 190, 220, 0.22);
+  --sky-rim: rgba(180, 214, 240, 0.55);
 }
 
 /* Stacking: the planets and sun straddle a small z-band the driver sets inline

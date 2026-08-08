@@ -101,15 +101,20 @@ export function TitleBackdrop({
     [],
   );
 
-  // The backdrop's solar-system Easter egg — a rAF loop that spins Earth and
-  // Mars around a static sun (and the Moon around Earth), each lit from the
-  // sun's real position. Starts once the menu (and its elements) has mounted
-  // after the assets load.
+  // The backdrop's solar-system Easter egg — a rAF loop that wheels all eight
+  // planets around a static sun on one shared ecliptic (and the Moon around
+  // Earth), each on its real orbital elements and lit from the sun's real 3D
+  // position. Starts once the menu (and its elements) has mounted after the
+  // assets load.
   const moonRef = useRef<HTMLDivElement>(null);
   const mercuryRef = useRef<HTMLDivElement>(null);
   const venusRef = useRef<HTMLDivElement>(null);
   const earthRef = useRef<HTMLDivElement>(null);
   const marsRef = useRef<HTMLDivElement>(null);
+  const jupiterRef = useRef<HTMLDivElement>(null);
+  const saturnRef = useRef<HTMLDivElement>(null);
+  const uranusRef = useRef<HTMLDivElement>(null);
+  const neptuneRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
   // The backdrop asteroids, driven on a 3D fly-through in orbit mode (they keep
@@ -126,7 +131,12 @@ export function TitleBackdrop({
     const venus = venusRef.current;
     const earth = earthRef.current;
     const mars = marsRef.current;
+    const jupiter = jupiterRef.current;
+    const saturn = saturnRef.current;
+    const uranus = uranusRef.current;
+    const neptune = neptuneRef.current;
     if (!mercury || !venus || !earth || !mars) return;
+    if (!jupiter || !saturn || !uranus || !neptune) return;
     const asteroids = asteroidRefs.current.filter(
       (a): a is HTMLSpanElement => !!a,
     );
@@ -136,6 +146,10 @@ export function TitleBackdrop({
       venus,
       earth,
       mars,
+      jupiter,
+      saturn,
+      uranus,
+      neptune,
       sun,
       glare,
       asteroids,
@@ -211,9 +225,12 @@ export function TitleBackdrop({
         <span className="title-twinkle title-twinkle-6" />
         <span className="title-twinkle title-twinkle-7" />
       </div>
-      {/* Mercury, Venus, Earth and Mars, wheeling around the sun; the Moon
-          (below) orbits Earth. Positions and lighting are driven each frame by
-          startTitleSky (title-sky.ts) — the CSS only supplies each surface. */}
+      {/* All eight planets, wheeling around the sun on the one ecliptic they
+          share in life; the Moon (below) orbits Earth. The frame is sized to
+          the inner system, so the four giants spend most of their orbits off
+          the edge of it and swing through near conjunction. Positions and
+          lighting are driven each frame by startTitleSky (title-sky.ts) — the
+          CSS only supplies each surface's resting look. */}
       <div
         ref={mercuryRef}
         className="title-planet title-mercury"
@@ -232,6 +249,26 @@ export function TitleBackdrop({
       <div
         ref={marsRef}
         className="title-planet title-mars"
+        aria-hidden="true"
+      />
+      <div
+        ref={jupiterRef}
+        className="title-planet title-jupiter"
+        aria-hidden="true"
+      />
+      <div
+        ref={saturnRef}
+        className="title-planet title-saturn"
+        aria-hidden="true"
+      />
+      <div
+        ref={uranusRef}
+        className="title-planet title-uranus"
+        aria-hidden="true"
+      />
+      <div
+        ref={neptuneRef}
+        className="title-planet title-neptune"
         aria-hidden="true"
       />
       {/* The moon, riding its orbit around Earth (title-sky.ts). */}

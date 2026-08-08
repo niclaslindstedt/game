@@ -1,22 +1,52 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The main-menu sky, driven so every body is lit *correctly* from the sun's
-// real on-screen position:
+// The main-menu sky: the solar system, turning.
 //
-//   • startTitleSky — the orbital solar system: the sun sits still while
-//     Mercury, Venus, Earth (with its Moon) and Mars wheel around it on tilted
-//     3D orbits — each shrinks and slips *behind* the sun at the far side of
-//     its loop, then swells back on the near side — and the asteroids fly a
-//     perspective path toward the camera rather than sliding flat across.
+// The sun sits still at the centre and all eight planets wheel around it IN
+// ONE PLANE — the ecliptic — because that is how the real system is built: it
+// condensed out of a single spinning disc, and four and a half billion years
+// later the planets still ride within a few degrees of that disc. Each one
+// keeps its own true inclination to it (Mercury's 7.0° is the outlier;
+// Neptune's is 1.8°), so the plane reads as a plane rather than a drawn line.
 //
-// Each body is a real, per-pixel-lit rotating globe (planet-globe.ts) whose
-// terminator falls out of the geometry, so the lit limb always points at the
-// sun in any viewport orientation. Everything is set as inline styles / CSS
-// custom properties each frame; the stylesheet supplies only the static look
-// and a resting layout for when the driver never starts (prefers-reduced-motion).
+// Everything else is the real numbers too:
+//
+//   • REAL ORBITAL ELEMENTS at J2000 — semi-major axis, eccentricity,
+//     inclination, ascending node, perihelion and mean longitude. Kepler's
+//     equation is solved each frame, so the orbits are genuine ellipses with
+//     the sun at a FOCUS and each planet runs fastest at perihelion.
+//   • REAL AXIAL TILTS, held fixed in space as a planet goes round — which is
+//     what gives Earth its seasons and Uranus its rolled-over pole, and both
+//     fall out of the geometry here rather than being drawn on.
+//   • REAL SURFACES: every body wears its own geography (planet-maps.ts),
+//     lit per pixel by a software globe shader (planet-globe.ts) from the
+//     sun's actual 3D direction, so the terminator lands where the geometry
+//     puts it in any viewport orientation.
+//
+// TWO THINGS ARE DELIBERATELY NOT TO SCALE, and both have to be:
+//
+//   • DISTANCE. An honest solar system is almost entirely empty — at Earth's
+//     orbit drawn 0.46 of a screen wide, Neptune's would be thirteen screens
+//     out and the inner four would be a smudge on the sun. The radii below are
+//     hand-compressed to fit one frame, generously out to Mars (the inner
+//     system is the picture) and hard beyond it.
+//   • TIME, once — see SCREEN_KEPLER. Everything else follows from the
+//     compressed radii rather than being invented.
+//
+// The frame stays sized to the INNER system, so the giants spend most of their
+// orbits off the edge of it and swing into view around superior conjunction,
+// small and dim, on their way behind the sun. That is the intended sight of
+// them: distant, and rarely.
+//
+// Everything is set as inline styles / CSS custom properties each frame; the
+// stylesheet supplies only the static look and a resting layout for when the
+// driver never starts (prefers-reduced-motion).
 
-import { clamp, clamp01, normalize } from "@game/lib/vec.ts";
-import { PlanetGlobe } from "@ui/lib/planet-globe.ts";
-import type { GlobeKind, GlobeLight } from "@ui/lib/planet-globe.ts";
+import { clamp, clamp01 } from "@game/lib/vec.ts";
+import type {
+  GlobeKind,
+  GlobeLight,
+  PlanetGlobe,
+} from "@ui/lib/planet-globe.ts";
 
 /** Device pixel ratio, capped: the software globe shader renders one buffer
  * pixel per device pixel up to this, then upscales (which softens nicely). */
@@ -34,8 +64,23 @@ type SkyState = {
   earth?: Vec;
   mars?: Vec;
   sunUp: boolean;
-  /** Per-body geometry (centre, on-screen scale, depth) for the dev harness. */
-  bodies?: Record<string, { x: number; y: number; scale: number; far: number }>;
+  /** Per-body geometry for the dev harness: screen centre, on-screen scale,
+   * depth, and the unit vector toward the sun in view space (x right, y DOWN,
+   * z toward the camera) that the globe was lit with. The harness checks the
+   * light against the screen geometry, which is the one law the whole effect
+   * has to obey. */
+  bodies?: Record<
+    string,
+    {
+      x: number;
+      y: number;
+      scale: number;
+      far: number;
+      lx: number;
+      ly: number;
+      lz: number;
+    }
+  >;
 };
 
 declare global {
@@ -54,19 +99,6 @@ function prefersReducedMotion(): boolean {
   return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
-// ---------------------------------------------------------------------------
-// The orbital solar system.
-// ---------------------------------------------------------------------------
-//
-// The planets do NOT merely wheel around the sun in the screen plane — they
-// ride tilted 3D orbits seen almost edge-on, so each one shrinks and sinks
-// toward the sun at the far side of its loop (superior conjunction — it slips
-// *behind* the sun, occluded by z-order and drowned in the glare), then swells
-// back to full size as it swings round to the near side. Mercury and Venus run
-// tiny inner orbits; Earth (with its Moon) and Mars ride wider ones. The
-// asteroids likewise fly *through* space on a perspective path, rushing from a
-// far vanishing point toward the camera, rather than sliding flat across.
-
 export type SkyElements = {
   sun: HTMLElement;
   glare: HTMLElement;
@@ -74,6 +106,10 @@ export type SkyElements = {
   venus: HTMLElement;
   earth: HTMLElement;
   mars: HTMLElement;
+  jupiter: HTMLElement;
+  saturn: HTMLElement;
+  uranus: HTMLElement;
+  neptune: HTMLElement;
   moon: HTMLElement;
   /** Backdrop asteroids, driven on a 3D fly-through toward the camera. */
   asteroids: HTMLElement[];
@@ -91,87 +127,71 @@ const SUN_Y = 0.32;
  * orbital time, so a pinned frame reproduces the same geometry. */
 const CYCLE_MS = 240_000;
 
-/** Earth's revolution time on screen — the anchor for the whole system. The
- * on-screen *distances* are compressed (an honest solar system would be nearly
- * empty), but the relative *speeds* are real: each planet's period is scaled
- * from Earth's by its true sidereal ratio (REL_PERIOD below), so the inner
- * worlds genuinely race and the outer ones crawl, just sped up as a whole. */
+/** Earth's revolution time on screen — the anchor for the whole system. */
 const EARTH_PERIOD_MS = 64_000;
 
-/** True sidereal orbital period of each body, in Earth years — the real
- * proportions Kepler's third law fixes (T² ∝ a³). Multiplied by EARTH_PERIOD_MS
- * they give each on-screen period. The Moon's is its ~27.3-day month about the
- * Earth (0.0748 yr); a strict ratio whips it round every few seconds, so it is
- * eased below for watchability — the one place proportion yields to feel. */
-const REL_PERIOD = {
-  mercury: 0.2408,
-  venus: 0.6152,
-  earth: 1,
-  mars: 1.8808,
-  moon: 0.0748,
-} as const;
+const DEG = Math.PI / 180;
 
-/** The Moon's true month is so short next to Earth's year that a strict ratio
- * spins it round every ~5 s — a blur. Ease it by this factor for watchability;
- * it still laps the Earth several times per orbit, reading as a fast satellite
- * rather than a planet. */
-const MOON_EASE = 2.4;
+/**
+ * How far the camera sits above the ecliptic. Small, because the viewpoint is
+ * out at Mars's orbit and very nearly IN the plane — which is also what lets
+ * the outer planets, whose orbits are far wider than the frame, come back into
+ * it near conjunction instead of riding off the top of the screen. It is handed
+ * to every globe as well, because the axial tilts have to lean against the same
+ * plane the orbits are projected onto.
+ */
+const ECLIPTIC_PITCH = 17 * DEG;
 
-/** Turn a body's real period ratio into its on-screen revolution time (ms). */
-function orbitMs(rel: number): number {
-  return Math.round(EARTH_PERIOD_MS * rel);
+/** A slight roll of the whole plane, so the system sits at an angle across the
+ * frame rather than lying on a ruled horizontal line. */
+const ECLIPTIC_ROLL = -0.12;
+
+/**
+ * SCREEN KEPLER. The distances above are compressed, so the true periods would
+ * no longer belong to them — a Neptune on a Mars-ish orbit taking 165 years is
+ * not a slow planet, it is a broken one. Instead the periods are re-derived
+ * from the COMPRESSED radii by Kepler's own third law (T² ∝ a³), which keeps
+ * the orrery internally consistent: the inner worlds still race, the outer
+ * ones still crawl, and the ratios stay within about a tenth of the real ones
+ * across the inner system (Mercury's true 0.241 of an Earth year comes out
+ * 0.287 here). Within a single orbit the speed variation is the real thing —
+ * that comes from the eccentricity, not from this.
+ */
+function screenPeriodMs(rScreen: number, rEarth: number): number {
+  return Math.round(EARTH_PERIOD_MS * Math.pow(rScreen / rEarth, 1.5));
 }
 
-/** Earth's on-screen day (one rotation). The other worlds' spins scale from it
- * by their true sidereal rotation period, so Earth and Mars visibly turn while
- * the slow rotators barely drift. */
+/** Earth's on-screen day (one rotation). Every other world's spin scales from
+ * it by the world's true sidereal rotation period. */
 const EARTH_SPIN_MS = 22_000;
+const EARTH_ROT_DAYS = 0.99727;
 
-/** True sidereal rotation period of each body, in Earth days, SIGNED: negative
- * is retrograde. Venus turns backwards; Mercury and Venus turn so slowly that a
- * faithful scaling would freeze them on screen, so the magnitude is capped
- * (MAX_SPIN_MS) — they still creep, and keep their real direction. */
-const ROT_DAYS = {
-  mercury: 58.65,
-  venus: -243.02,
-  earth: 0.997,
-  mars: 1.026,
-};
-const MAX_SPIN_MS = 150_000;
-
-/** On-screen rotation time (ms, signed) for a body spinning `days` Earth-days
- * per turn — scaled from Earth's screen day and capped so the sluggish ones
- * still move. */
+/**
+ * On-screen rotation time (ms, signed — negative is retrograde) for a body
+ * turning once every `days` Earth days. One scale for every world, so the
+ * RATIOS are exactly the real ones: Jupiter's ten-hour day really does come
+ * out 2.4× faster than Earth's here, Mars's is a whisker slower, and Venus
+ * takes an hour and a half to turn once because Venus takes 243 days to turn
+ * once. Nothing is capped — a cap is what would break the comparison, and the
+ * two worlds it would have "helped" are the two whose whole character is that
+ * they barely move.
+ *
+ * THE ONE HONEST COMPROMISE IN THE WHOLE SKY: spins and orbits run on
+ * DIFFERENT clocks. They have to. A year here is 64 s, so a faithful day would
+ * be 0.175 s and every world would strobe; a day here is 22 s, so a faithful
+ * year would be over two hours. Each clock is internally exact — every spin is
+ * right against every other spin, every orbit right against every other orbit
+ * — and only the ratio BETWEEN the two clocks is invented.
+ */
 function spinMs(days: number): number {
-  const mag = Math.min(
-    MAX_SPIN_MS,
-    (Math.abs(days) / ROT_DAYS.earth) * EARTH_SPIN_MS,
-  );
-  return Math.round(days < 0 ? -mag : mag);
-}
-
-/** The depth (camera-z) component of one unit of `far`, for an orbit of the
- * given `tilt`. The tilted orbit spends `tilt` of `far` on the screen's vertical
- * axis and the rest, √(1−tilt²), pointing along the view axis — so a body at
- * `far` sits this much toward (near, far<0) or away from (behind the sun, far>0)
- * the camera. A flatter orbit (small tilt) swings deep in z and so through full
- * phases; a rounder one (large tilt) stays near the flanks (half-lit). */
-function zTilt(tilt: number): number {
-  return Math.sqrt(1 - tilt * tilt);
-}
-
-/** Illuminated fraction of the disc facing us, from a body's depth `far` on an
- * orbit of the given `tilt`. The Lambert phase law k = (1 + cosφ)/2 with
- * cosφ = L·view = far·√(1−tilt²): 0 at the near side (new), 1 behind the sun
- * (full), ½ at the flanks (half) — the "3D relation to the sun" the flat
- * LIT = ½ threw away. */
-function litFractionFor(far: number, tilt: number): number {
-  return clamp01((1 + clamp(far, -1, 1) * zTilt(tilt)) / 2);
+  return Math.round((days / EARTH_ROT_DAYS) * EARTH_SPIN_MS);
 }
 
 /** How hard depth swings a body's on-screen size: scale = 1 − DEPTH·far, with
- * far ∈ [−1 (near), +1 (behind the sun)]. Near swells, far shrinks. */
-const DEPTH = 0.52;
+ * far ∈ [−1 (near), +1 (behind the sun)]. Near swells, far shrinks. Kept
+ * modest: the giants ride orbits two and three times Earth's, so a big swing
+ * has Saturn filling half a phone screen on the near leg of its loop. */
+const DEPTH = 0.3;
 
 /** How far depth dims a body — the atmospheric fade that helps a shrinking
  * planet melt into the sun's glare at the back of its loop. */
@@ -182,43 +202,367 @@ const DEPTH_FADE = 0.32;
  * menu content (see .title-content z-index in styles.css). */
 const SUN_Z = 5;
 
-/** One orbiting body. Radii and base diameters are fractions of the viewport's
- * short side, so the layout stays proportional in any orientation. */
-type Orbit = {
+/**
+ * One world. The orbital elements are the standard J2000 set; `r` is the only
+ * invented number on the row, and `au` is kept beside it so the compression is
+ * visible at a glance rather than hidden.
+ */
+type Planet = {
   el: HTMLElement;
-  /** Orbit radius around the parent (sun, or Earth for the Moon). */
-  r: number;
-  /** Milliseconds for one revolution. */
-  ms: number;
-  /** Starting angle so the planets don't all line up. */
-  phase: number;
-  /** How edge-on this orbit is: the vertical squash of its tilted circle
-   * (0 = seen as a flat line, 1 = face-on). Varying it per body stops the
-   * system collapsing onto one shared plane. */
-  tilt: number;
-  /** Screen roll of the orbit's plane (radians): rotates the whole ellipse so
-   * each ring sits at its own angle and the bodies spread to different heights
-   * around the sun rather than strung along one line. */
-  roll: number;
-  /** Rest diameter at zero depth. */
-  base: number;
-  /** Halo colour template. */
-  halo: string;
   label: string;
-  /** Which world's skin the globe shader paints on this body. */
   kind: GlobeKind;
-  /** Milliseconds for the surface to spin one full turn under the light. */
-  spinMs: number;
-  /** The lit, textured globe drawn onto this element (created on start). */
+  /** True semi-major axis (AU) — documentation for the row below it. */
+  au: number;
+  /** Screen semi-major axis, as a fraction of the viewport's short side. */
+  r: number;
+  /** Orbital eccentricity: the real one, so the ellipse and the speed-up at
+   * perihelion are real even though the size is not. */
+  e: number;
+  /** Inclination to the ecliptic (deg). */
+  inc: number;
+  /** Longitude of the ascending node (deg). */
+  node: number;
+  /** Longitude of perihelion (deg). */
+  peri: number;
+  /** Mean longitude at J2000 (deg) — so the system starts in the arrangement
+   * the sky actually had on 1 January 2000, rather than a made-up fan. */
+  l0: number;
+  /** Rest diameter at zero depth, as a fraction of the short side. */
+  base: number;
+  /** Sidereal rotation period in Earth days, signed (negative = retrograde). */
+  rotDays: number;
+  /** The cloud deck's own circulation period in Earth days, where the world
+   * has weather that moves independently of the ground beneath it. */
+  cloudDays?: number;
+  /** The soft glow around the body: [r, g, b, blur px, peak alpha]. It is
+   * SCATTERED SUNLIGHT, so it is scaled each frame by how much of the lit face
+   * is turned toward us — a halo of constant strength around a planet showing
+   * its night side draws a bright ring around a black disc, which is the
+   * artefact this replaced. Undefined for an airless body, which must have no
+   * halo at all: a glow around a world with no atmosphere is a claim about its
+   * physics that isn't true. */
+  halo?: readonly [number, number, number, number, number];
+  /** True for the Moon: its ellipse is drawn about the EARTH, not the sun. */
+  satellite?: boolean;
+  // Filled in on start, from the fields above.
+  /** Orbital period on screen (ms). */
+  ms?: number;
+  /** Rotation period on screen (ms, signed). */
+  spin?: number;
+  /** Cloud-deck circulation period on screen (ms, signed), if it has one. */
+  cloudMs?: number;
   globe?: PlanetGlobe;
 };
 
-/** Map a body's depth (far ∈ [−1, 1]) to a z-index straddling the sun, so the
- * back half of every orbit tucks behind the sun and the front half rides over
- * it — one branchless expression that also orders the planets among themselves
- * by depth. */
-function depthZ(far: number): number {
-  return Math.round(SUN_Z - far * 4);
+/**
+ * TRUE EQUATORIAL DIAMETERS (km). The on-screen size of every body is derived
+ * from these, so the worlds read correctly AGAINST EACH OTHER — Jupiter the
+ * giant, Saturn just behind it, the two ice giants clearly above Earth,
+ * Mercury below Mars, the Moon smallest of all.
+ */
+const DIAMETER_KM = {
+  mercury: 4879,
+  venus: 12104,
+  earth: 12756,
+  moon: 3475,
+  mars: 6792,
+  jupiter: 142984,
+  saturn: 120536,
+  uranus: 51118,
+  neptune: 49528,
+} as const;
+
+/** Earth's disc, as a fraction of the viewport's short side — the anchor every
+ * other body is sized from. Big enough that its coastlines read on a phone. */
+const EARTH_DISC = 0.085;
+
+/**
+ * A LINEAR size scale is impossible and it is worth being exact about why:
+ * Jupiter is 11.2 Earths across and Mercury is 0.38, a 29:1 spread. Anchor
+ * Earth where its geography is legible and Jupiter is 350 px wide; anchor
+ * Jupiter where it fits the frame and Earth is a 5-px dot with no map on it.
+ *
+ * So the ratios are compressed by a power law — every size is
+ * (diameter / Earth's) ^ SIZE_POWER — which preserves the ORDER exactly and
+ * squeezes the spread from 29:1 down to about 3:1. Jupiter reads 2.2 Earths
+ * rather than 11.2 — still unmistakably the largest thing but the sun, with
+ * Saturn just under it, both ice giants clearly above Earth, Venus its near
+ * twin, then Mars, then Mercury, then the Moon.
+ */
+const SIZE_POWER = 0.32;
+
+function discSize(kind: keyof typeof DIAMETER_KM): number {
+  return (
+    EARTH_DISC * Math.pow(DIAMETER_KM[kind] / DIAMETER_KM.earth, SIZE_POWER)
+  );
+}
+
+/**
+ * THE DISTANCE COMPRESSION, stated once. Out to Mars the screen radii are close to
+ * proportional (Mars's true 1.52 AU lands at 1.39× Earth's screen orbit); past
+ * it they are squeezed hard — Jupiter's true 5.2 AU would be 2.4 screens out —
+ * so the giants sit just past the frame and sweep through it near conjunction.
+ */
+// The outer four are bunched close together and close behind Mars, and that is
+// a FRAMING constraint rather than a taste: a body at superior conjunction sits
+// r·sin(pitch) above the sun on screen, so an orbit much wider than this puts
+// Neptune off the top of a landscape phone at the exact moment it would
+// otherwise be visible — the one moment it is meant to be seen.
+const SCREEN_R = {
+  mercury: 0.2,
+  venus: 0.31,
+  earth: 0.46,
+  mars: 0.64,
+  jupiter: 0.86,
+  saturn: 0.98,
+  uranus: 1.06,
+  neptune: 1.14,
+} as const;
+
+function planetTable(els: SkyElements): Planet[] {
+  return [
+    {
+      el: els.mercury,
+      label: "1",
+      kind: "mercury",
+      au: 0.3871,
+      r: SCREEN_R.mercury,
+      e: 0.20563,
+      inc: 7.005,
+      node: 48.331,
+      peri: 77.456,
+      l0: 252.251,
+      base: discSize("mercury"),
+      rotDays: 58.646,
+      // Airless: no halo, and the globe draws no limb haze either.
+    },
+    {
+      el: els.venus,
+      label: "2",
+      kind: "venus",
+      au: 0.72333,
+      r: SCREEN_R.venus,
+      e: 0.00677,
+      inc: 3.395,
+      node: 76.68,
+      peri: 131.564,
+      l0: 181.98,
+      base: discSize("venus"),
+      // 243 days, backwards — the slowest rotation of any planet, and the only
+      // retrograde one among the inner four.
+      rotDays: -243.025,
+      // …under a cloud deck that laps the planet every FOUR days, sixty times
+      // faster than the ground it hides. Super-rotation: nobody is quite sure
+      // what drives it. Retrograde, with the surface.
+      cloudDays: -4,
+      halo: [235, 205, 150, 12, 0.3],
+    },
+    {
+      el: els.earth,
+      label: "3",
+      kind: "earth",
+      au: 1,
+      r: SCREEN_R.earth,
+      e: 0.01671,
+      inc: 0,
+      node: 0,
+      peri: 102.947,
+      l0: 100.464,
+      base: discSize("earth"),
+      rotDays: 0.99727,
+      // Weather runs a little ahead of the ground — the jet streams, drawn out
+      // here from a few per cent to something the eye can catch in a minute.
+      cloudDays: 0.845,
+      halo: [120, 170, 235, 26, 0.32],
+    },
+    {
+      el: els.mars,
+      label: "4",
+      kind: "mars",
+      au: 1.52371,
+      r: SCREEN_R.mars,
+      e: 0.09339,
+      inc: 1.85,
+      node: 49.558,
+      peri: 336.041,
+      l0: 355.453,
+      base: discSize("mars"),
+      rotDays: 1.02595,
+      halo: [235, 140, 90, 18, 0.26],
+    },
+    {
+      el: els.jupiter,
+      label: "5",
+      kind: "jupiter",
+      au: 5.20288,
+      r: SCREEN_R.jupiter,
+      e: 0.04839,
+      inc: 1.304,
+      node: 100.474,
+      peri: 14.728,
+      l0: 34.396,
+      base: discSize("jupiter"),
+      // Ten hours: the fastest day in the solar system, on the largest planet.
+      rotDays: 0.41354,
+      halo: [235, 205, 170, 14, 0.22],
+    },
+    {
+      el: els.saturn,
+      label: "6",
+      kind: "saturn",
+      au: 9.53667,
+      r: SCREEN_R.saturn,
+      e: 0.05386,
+      inc: 2.486,
+      node: 113.666,
+      peri: 92.599,
+      l0: 49.954,
+      base: discSize("saturn"),
+      rotDays: 0.44401,
+      // No halo: the rings ARE Saturn's outline, and a glow behind them only
+      // fogs the Cassini division.
+    },
+    {
+      el: els.uranus,
+      label: "7",
+      kind: "uranus",
+      au: 19.18916,
+      r: SCREEN_R.uranus,
+      e: 0.04726,
+      inc: 0.773,
+      node: 74.006,
+      peri: 170.954,
+      l0: 313.238,
+      base: discSize("uranus"),
+      // Tipped 98°, so it rolls along its orbit on its side — and turns
+      // backwards while it does.
+      rotDays: -0.71833,
+      halo: [190, 225, 225, 10, 0.22],
+    },
+    {
+      el: els.neptune,
+      label: "8",
+      kind: "neptune",
+      au: 30.06992,
+      r: SCREEN_R.neptune,
+      e: 0.00859,
+      inc: 1.77,
+      node: 131.784,
+      peri: 44.964,
+      l0: 304.88,
+      base: discSize("neptune"),
+      rotDays: 0.67125,
+      halo: [150, 190, 220, 10, 0.22],
+    },
+  ];
+}
+
+/** The Moon, orbiting the EARTH. Its true month is so short next to Earth's
+ * year that a strict ratio whips it round every ~5 s — a blur — so its period
+ * is eased for watchability, the one place proportion yields to feel. It still
+ * laps the Earth several times per Earth orbit, reading as a fast satellite
+ * rather than a planet. Airless, so no halo and no limb haze. */
+function moonBody(el: HTMLElement): Planet {
+  return {
+    el,
+    label: "M",
+    kind: "moon",
+    au: 0.00257,
+    /** Screen radius about the Earth (fraction of the short side). */
+    r: 0.1,
+    e: 0.0549,
+    /** 5.14° to the ecliptic — which is why eclipses are rare rather than
+     * monthly: most months the Moon passes above or below the sun. */
+    inc: 5.145,
+    node: 125.08,
+    peri: 83.23,
+    l0: 218.32,
+    base: discSize("moon"),
+    /** Tidally locked: one rotation per orbit, so it keeps one face to the
+     * Earth. Set from the orbital period below. */
+    rotDays: 0,
+    satellite: true,
+    ms: 11_500,
+  };
+}
+
+/**
+ * Solve Kepler's equation M = E − e·sin E for the eccentric anomaly, by
+ * Newton's method. Three iterations is plenty at these eccentricities (the
+ * worst is Mercury's 0.21) and it is the whole reason the planets sweep equal
+ * areas in equal times rather than sliding round at a constant rate.
+ */
+function eccentricAnomaly(m: number, e: number): number {
+  let ecc = m;
+  for (let i = 0; i < 3; i++) {
+    ecc -= (ecc - e * Math.sin(ecc) - m) / (1 - e * Math.cos(ecc));
+  }
+  return ecc;
+}
+
+/** A body's heliocentric position, in the ecliptic frame: x in the plane,
+ * y toward ecliptic north, z in the plane toward the camera's side. */
+type World = { x: number; y: number; z: number };
+
+/**
+ * Where is this body, in its own orbit, at time `t`? Standard Keplerian
+ * elements → heliocentric ecliptic coordinates, with `a` in whatever unit the
+ * caller wants back (here: fractions of the viewport's short side).
+ */
+function orbitAt(
+  t: number,
+  ms: number,
+  a: number,
+  e: number,
+  incDeg: number,
+  nodeDeg: number,
+  periDeg: number,
+  l0Deg: number,
+): World {
+  const node = nodeDeg * DEG;
+  const peri = periDeg * DEG;
+  const inc = incDeg * DEG;
+  // Mean anomaly: the mean longitude advances uniformly; perihelion does not.
+  const mean = (l0Deg * DEG + (2 * Math.PI * t) / ms - peri) % (2 * Math.PI);
+  const ecc = eccentricAnomaly(mean, e);
+  // In the orbital plane, with the SUN AT A FOCUS — not at the centre.
+  const xo = a * (Math.cos(ecc) - e);
+  const yo = a * Math.sqrt(1 - e * e) * Math.sin(ecc);
+  // Rotate by the argument of perihelion, the inclination, and the node.
+  const w = peri - node;
+  const cw = Math.cos(w);
+  const sw = Math.sin(w);
+  const cn = Math.cos(node);
+  const sn = Math.sin(node);
+  const ci = Math.cos(inc);
+  const si = Math.sin(inc);
+  const ex = xo * (cw * cn - sw * sn * ci) - yo * (sw * cn + cw * sn * ci);
+  const ey = xo * (cw * sn + sw * cn * ci) + yo * (cw * cn * ci - sw * sn);
+  const ez = xo * sw * si + yo * cw * si;
+  // The ecliptic's own plane is (ex, ey); ez is ecliptic north. Map onto the
+  // renderer's world frame: y is north, z lies in the plane toward the camera.
+  return { x: ex, y: ez, z: ey };
+}
+
+/** The camera: look down on the ecliptic by ECLIPTIC_PITCH, then roll the whole
+ * picture. Orthographic, so the projected x/y ARE the screen offsets (in short-
+ * side units) and z is depth toward the camera. */
+function project(p: World): { x: number; y: number; depth: number } {
+  const sp = Math.sin(ECLIPTIC_PITCH);
+  const cp = Math.cos(ECLIPTIC_PITCH);
+  const x = p.x;
+  // Screen y is DOWN, so the far half of the plane rides above the sun.
+  const y = p.z * sp - p.y * cp;
+  const depth = p.y * sp + p.z * cp;
+  const cr = Math.cos(ECLIPTIC_ROLL);
+  const sr = Math.sin(ECLIPTIC_ROLL);
+  return { x: x * cr - y * sr, y: x * sr + y * cr, depth };
+}
+
+/** Map a body's depth to a z-index straddling the sun, so the back half of
+ * every orbit tucks behind the sun and the front half rides over it. */
+function depthZ(depth: number): number {
+  return Math.round(clamp(SUN_Z + depth * 3.5, 1, 11));
 }
 
 /**
@@ -230,96 +574,53 @@ function depthZ(far: number): number {
 export function startTitleSky(els: SkyElements): () => void {
   if (prefersReducedMotion()) return () => {};
 
-  const { sun, glare, mercury, venus, earth, mars, moon, asteroids } = els;
+  const { sun, glare, earth, moon, asteroids } = els;
   let raf = 0;
 
-  // The four sun-orbiting planets, innermost first. Mercury and Venus stay tiny
-  // (you can just make out two more specks wheeling in close); Earth is the
-  // largest, with the Moon riding around it; Mars is the rusty outer wanderer.
-  const planets: Orbit[] = [
-    {
-      el: mercury,
-      r: 0.19,
-      ms: orbitMs(REL_PERIOD.mercury),
-      phase: 0.7,
-      base: 0.03,
-      halo: "0 0 8px rgba(200, 180, 150, 0.28)",
-      label: "1",
-      kind: "mercury",
-      spinMs: spinMs(ROT_DAYS.mercury),
-      tilt: 0.5,
-      roll: -0.55,
-    },
-    {
-      el: venus,
-      r: 0.31,
-      ms: orbitMs(REL_PERIOD.venus),
-      phase: 2.4,
-      base: 0.048,
-      halo: "0 0 12px rgba(235, 205, 150, 0.3)",
-      label: "2",
-      kind: "venus",
-      spinMs: spinMs(ROT_DAYS.venus),
-      tilt: 0.42,
-      roll: 0.4,
-    },
-    {
-      el: earth,
-      r: 0.47,
-      ms: orbitMs(REL_PERIOD.earth),
-      phase: 4.1,
-      base: 0.1,
-      halo: "0 0 26px rgba(120, 170, 235, 0.32)",
-      label: "3",
-      kind: "earth",
-      spinMs: spinMs(ROT_DAYS.earth),
-      tilt: 0.36,
-      roll: -0.22,
-    },
-    {
-      el: mars,
-      r: 0.68,
-      ms: orbitMs(REL_PERIOD.mars),
-      phase: 5.6,
-      base: 0.07,
-      halo: "0 0 18px rgba(235, 140, 90, 0.3)",
-      label: "4",
-      kind: "mars",
-      spinMs: spinMs(ROT_DAYS.mars),
-      tilt: 0.3,
-      roll: 0.3,
-    },
-  ];
-  const moonOrbit: Orbit = {
-    el: moon,
-    r: 0.1,
-    ms: orbitMs(REL_PERIOD.moon * MOON_EASE),
-    phase: 1.2,
-    base: 0.038,
-    halo: "0 0 14px rgba(220, 226, 235, 0.3)",
-    label: "M",
-    kind: "moon",
-    // Tidally locked: one rotation per orbit, so it keeps a face to the Earth.
-    spinMs: orbitMs(REL_PERIOD.moon * MOON_EASE),
-    tilt: 0.55,
-    roll: 0.5,
-  };
+  const planets = planetTable(els);
+  for (const p of planets) {
+    p.ms = screenPeriodMs(p.r, SCREEN_R.earth);
+    p.spin = spinMs(p.rotDays);
+    if (p.cloudDays) p.cloudMs = spinMs(p.cloudDays);
+  }
+  const moonOrbit = moonBody(moon);
+  // Tidal lock: the rotation IS the orbit.
+  moonOrbit.spin = moonOrbit.ms;
 
   // Give every body a real, textured, rotating globe: a canvas child that the
-  // shader (planet-globe.ts) paints each frame. It sits over the element's flat
-  // CSS gradient (the resting/reduced-motion look) and takes it over while the
-  // driver runs — `has-globe` drops the CSS terminator pseudo-elements so only
-  // the per-pixel-lit sphere shows.
+  // shader (planet-globe.ts) paints each frame.
+  //
+  // THE SHADER AND ITS GEOGRAPHY ARE LOADED LAZILY, and that is a budget
+  // decision rather than a style one: the title screen is the app's critical
+  // path (170 KB gzipped — see pwa/scripts/check-seo.mjs), and the world maps
+  // are ~11 KB of it. Nothing is lost by waiting, because the bodies already
+  // have a resting look — the flat CSS gradient the stylesheet gives them, and
+  // the same one prefers-reduced-motion never leaves — so the sky is correct
+  // from the first frame and simply gains its globes a moment later.
+  //
+  // Then they are built ONE PER FRAME rather than nine at once, because
+  // building one BAKES its surface texture and that costs tens of
+  // milliseconds: the difference between a hitch on the way into the menu and
+  // no hitch at all. (The bakes are cached per world, so coming back to the
+  // title screen is free.)
   const dpr = globeDpr();
-  for (const o of [...planets, moonOrbit]) {
-    const globe = new PlanetGlobe(o.kind);
+  const pending: Planet[] = [...planets, moonOrbit];
+  let Globe: typeof PlanetGlobe | undefined;
+  let stopped = false;
+  void import("@ui/lib/planet-globe.ts").then((m) => {
+    if (!stopped) Globe = m.PlanetGlobe;
+  });
+  const attachGlobe = (o: Planet): void => {
+    if (!Globe) return;
+    const globe = new Globe(o.kind, ECLIPTIC_PITCH);
     const c = globe.canvas;
     c.className = "title-globe";
     c.setAttribute("aria-hidden", "true");
     o.el.appendChild(c);
     o.el.classList.add("has-globe");
+    if (globe.padding > 1) o.el.classList.add("has-rings");
     o.globe = globe;
-  }
+  };
 
   // Size a disc (base diameter × depth-scale, floored so a far speck never
   // vanishes to nothing) and centre it via width/height + left/top. Sizing by
@@ -329,35 +630,12 @@ export function startTitleSky(els: SkyElements): () => void {
     el: HTMLElement,
     cx: number,
     cy: number,
-    u: number,
-    base: number,
-    scale: number,
-  ): number => {
-    const d = Math.max(6, base * u * scale);
+    d: number,
+  ): void => {
     el.style.width = `${d}px`;
     el.style.height = `${d}px`;
     el.style.left = `${cx - d / 2}px`;
     el.style.top = `${cy - d / 2}px`;
-    return d;
-  };
-
-  // The unit sun→body direction in view space, from the body's on-screen offset
-  // from the sun (the projected x/y) and its depth `far` (the z toward/away from
-  // the camera). This is the light the globe shader lights each pixel against —
-  // the body's genuine 3D relation to the sun, so it waxes and wanes and its
-  // terminator sits where the geometry actually puts it.
-  const lightVector = (
-    cx: number,
-    cy: number,
-    far: number,
-    tilt: number,
-    sx: number,
-    sy: number,
-  ): GlobeLight => {
-    const lz = clamp(far, -1, 1) * zTilt(tilt);
-    const sinP = Math.sqrt(Math.max(0, 1 - lz * lz));
-    const n = normalize(sx - cx, sy - cy);
-    return { x: n.x * sinP, y: n.y * sinP, z: lz };
   };
 
   const labelsOn = (): boolean => !!window.__skyLabels;
@@ -390,59 +668,80 @@ export function startTitleSky(els: SkyElements): () => void {
 
     const bodies: NonNullable<SkyState["bodies"]> = {};
 
-    // Solve one body's tilted 3D orbit around a centre. Returns its screen
-    // centre, on-screen scale and depth (far ∈ [−1, 1]).
-    const solve = (
-      o: Orbit,
-      ox: number,
-      oy: number,
-    ): { cx: number; cy: number; scale: number; far: number } => {
-      const a = (2 * Math.PI * t) / o.ms + o.phase;
-      // In the orbit's own plane: cos → the in-plane major axis, sin → the axis
-      // tilted away from us, foreshortened by `tilt` into a vertical bob and
-      // driving depth. far = +1 at the back (behind the sun).
-      const far = Math.sin(a);
-      const ex = o.r * u * Math.cos(a);
-      const ey = -o.r * u * o.tilt * far;
-      // Roll the whole ellipse about the view axis so each orbit sits at its own
-      // angle — the rings fan out in 3D instead of sharing one flat band.
-      const cr = Math.cos(o.roll);
-      const sr = Math.sin(o.roll);
-      const cx = ox + ex * cr - ey * sr;
-      const cy = oy + ex * sr + ey * cr;
-      const scale = 1 - DEPTH * far;
-      return { cx, cy, scale, far };
-    };
-
-    // Paint one body: size, place, light, depth-fade and z-order it. `far` also
-    // decides whether it sits in front of or behind the sun.
+    /**
+     * Paint one body from its heliocentric position: place it, light it from
+     * the sun's real 3D direction, scale and fade it by depth, and sort it
+     * around the sun. Returns nothing — everything lands in the DOM.
+     */
     const paint = (
-      o: Orbit,
-      cx: number,
-      cy: number,
-      scale: number,
-      far: number,
-    ): void => {
-      const d = placeSized(o.el, cx, cy, u, o.base, scale);
-      // Paint the textured, sun-lit sphere onto the body's canvas (unless the
-      // calibration overlay wants plain labelled discs). The outer halo stays a
-      // CSS box-shadow so the glow can bleed beyond the disc.
+      o: Planet,
+      world: World,
+      orbitR: number,
+      extraScale = 1,
+    ): { cx: number; cy: number; scale: number; far: number } => {
+      const s = project(world);
+      const cx = sunCx + s.x * u;
+      const cy = sunCy + s.y * u;
+      // Normalised depth: +1 is straight behind the sun, −1 nearest the camera.
+      const far = clamp(-s.depth / Math.max(orbitR, 1e-6), -1, 1);
+      const scale = (1 - DEPTH * far) * extraScale;
+      // The whole box, rings included: a ringed world's canvas is wider than
+      // its disc, and `base` is the DISC.
+      const pad = o.globe?.padding ?? 1;
+      const d = Math.max(6, o.base * u * scale * pad);
+
+      // Off-frame worlds cost nothing: the giants spend most of their orbits
+      // outside the viewport and there is no reason to shade a sphere nobody
+      // can see. (The margin keeps a body's halo from popping at the edge.)
+      const m = d;
+      if (cx < -m || cy < -m || cx > vw + m || cy > vh + m) {
+        o.el.style.display = "none";
+        return { cx, cy, scale, far };
+      }
+      o.el.style.display = "";
+      placeSized(o.el, cx, cy, d);
+
+      // The unit vector from the body TOWARD the sun, in view space — the same
+      // frame the globe's normals use. It comes straight out of the geometry
+      // (the sun is at the origin), so the terminator needs no fudging.
+      const len = Math.hypot(s.x, s.y, s.depth) || 1;
+      const light: GlobeLight = {
+        x: -s.x / len,
+        y: -s.y / len,
+        z: -s.depth / len,
+      };
+
       if (o.globe && !labels) {
         o.globe.canvas.style.display = "";
+        const spinTurns = t / (o.spin || EARTH_SPIN_MS);
         o.globe.render(
           d,
-          lightVector(cx, cy, far, o.tilt, sunCx, sunCy),
-          t / o.spinMs,
+          light,
+          spinTurns,
           dpr,
+          o.cloudMs ? t / o.cloudMs : spinTurns,
         );
       } else if (o.globe) {
         o.globe.canvas.style.display = "none";
       }
-      o.el.style.boxShadow = o.halo;
-      o.el.style.zIndex = String(depthZ(far));
-      // Fade with depth, and melt into the glare when a far body slips over the
-      // sun's disc (superior conjunction).
-      let op = 1 - DEPTH_FADE * Math.max(0, far);
+      // How much of the lit face is turned toward us: 1 at full, 0 at new.
+      const lit = clamp01((1 + light.z) / 2);
+      // The halo is scattered light, so it fades with the phase: full when the
+      // lit face is toward us, gone at new.
+      if (o.halo) {
+        const [hr, hg, hb, blur, alpha] = o.halo;
+        o.el.style.boxShadow = `0 0 ${blur}px rgba(${hr}, ${hg}, ${hb}, ${(alpha * (0.12 + 0.88 * lit)).toFixed(3)})`;
+      } else {
+        o.el.style.boxShadow = "none";
+      }
+      o.el.style.zIndex = String(depthZ(s.depth));
+      // Fade with depth — and, much more strongly, with PHASE. A world at the
+      // near point of its loop lies between us and the sun, so we are looking
+      // at its unlit side: a new moon, which is to say very nearly nothing at
+      // all. Letting it stay opaque paints a big black hole over the sky
+      // (Saturn is the worst offender), where the truth is a dim disc with a
+      // thread of lit atmosphere round its edge. The floor keeps that thread.
+      let op = (1 - DEPTH_FADE * Math.max(0, far)) * (0.18 + 0.82 * lit);
       if (far > 0) {
         const near = Math.hypot(cx - sunCx, cy - sunCy) / (sunD * 0.75 + d);
         if (near < 1) op *= 0.15 + 0.85 * near;
@@ -450,8 +749,6 @@ export function startTitleSky(els: SkyElements): () => void {
       o.el.style.opacity = String(op);
       if (labels) {
         o.el.textContent = o.label;
-        o.el.style.setProperty("--sky-sx", "300%");
-        o.el.style.setProperty("--sky-sy", "0px");
         o.el.style.color = "#fff";
         o.el.style.font = "700 13px/1 monospace";
         o.el.style.display = "flex";
@@ -462,45 +759,78 @@ export function startTitleSky(els: SkyElements): () => void {
         o.el.textContent = "";
         o.el.style.display = "";
       }
-      bodies[o.label] = { x: cx, y: cy, scale, far };
+      bodies[o.label] = {
+        x: cx,
+        y: cy,
+        scale,
+        far,
+        lx: light.x,
+        ly: light.y,
+        lz: light.z,
+      };
+      return { cx, cy, scale, far };
     };
 
-    let earthCx = sunCx;
-    let earthCy = sunCy;
-    let earthScale = 1;
-    let earthFar = 0;
+    let earthWorld: World = { x: 0, y: 0, z: 0 };
+    let earthPlaced = { cx: sunCx, cy: sunCy, scale: 1, far: 0 };
     for (const o of planets) {
-      const s = solve(o, sunCx, sunCy);
-      paint(o, s.cx, s.cy, s.scale, s.far);
+      const world = orbitAt(
+        t,
+        o.ms as number,
+        o.r,
+        o.e,
+        o.inc,
+        o.node,
+        o.peri,
+        o.l0,
+      );
+      const placed = paint(o, world, o.r);
       if (o.el === earth) {
-        earthCx = s.cx;
-        earthCy = s.cy;
-        earthScale = s.scale;
-        earthFar = s.far;
+        earthWorld = world;
+        earthPlaced = placed;
       }
     }
 
-    // The Moon rides its own tilted orbit around the Earth's live position,
-    // scaled by however big the Earth currently reads, so it can slip in front
-    // of and behind its planet as well as swing round the sun with it.
-    const ms = solve(moonOrbit, earthCx, earthCy);
-    const moonScale = earthScale * ms.scale;
-    // Its z-order blends Earth's depth (in front of/behind the sun) with its own
-    // little orbit (in front of/behind the Earth).
-    const moonFar = earthFar + ms.far * 0.3;
-    const moonCx = ms.cx;
-    const moonCy = ms.cy;
-    paint(moonOrbit, moonCx, moonCy, moonScale, moonFar);
+    // The Moon rides its own inclined orbit around the Earth's live position,
+    // scaled by however big the Earth currently reads — so it can slip in
+    // front of and behind its planet as well as swing round the sun with it.
+    const mo = orbitAt(
+      t,
+      moonOrbit.ms as number,
+      moonOrbit.r,
+      moonOrbit.e,
+      moonOrbit.inc,
+      moonOrbit.node,
+      moonOrbit.peri,
+      moonOrbit.l0,
+    );
+    const moonWorld: World = {
+      x: earthWorld.x + mo.x,
+      y: earthWorld.y + mo.y,
+      z: earthWorld.z + mo.z,
+    };
+    const moonPlaced = paint(
+      moonOrbit,
+      moonWorld,
+      SCREEN_R.earth,
+      earthPlaced.scale,
+    );
 
     driveAsteroids(asteroids, t, vw, vh, u, SUN_Z);
 
+    // One globe per frame, once the shader has arrived, until every world has
+    // one.
+    if (Globe && pending.length) attachGlobe(pending.shift() as Planet);
+
     window.__skyState = {
       p,
-      phase: litFractionFor(moonFar, moonOrbit.tilt),
+      // The Moon's lit fraction, straight off the geometry: k = (1 + cos φ)/2
+      // with cos φ the sun's direction along the view axis.
+      phase: clamp01((1 + moonPlaced.far) / 2),
       sun: { x: sunCx, y: sunCy },
-      earth: { x: earthCx, y: earthCy },
+      earth: { x: earthPlaced.cx, y: earthPlaced.cy },
       mars: bodies["4"] ? { x: bodies["4"].x, y: bodies["4"].y } : undefined,
-      moon: { x: moonCx, y: moonCy },
+      moon: { x: moonPlaced.cx, y: moonPlaced.cy },
       sunUp: true,
       bodies,
     };
@@ -511,15 +841,14 @@ export function startTitleSky(els: SkyElements): () => void {
   raf = window.requestAnimationFrame(frame);
 
   return () => {
+    stopped = true;
     window.cancelAnimationFrame(raf);
     for (const o of [...planets, moonOrbit]) {
       const el = o.el;
       o.globe?.canvas.remove();
       o.globe = undefined;
       el.classList.remove("has-globe");
-      el.style.removeProperty("--sky-sx");
-      el.style.removeProperty("--sky-sy");
-      el.style.removeProperty("--sky-soft");
+      el.classList.remove("has-rings");
       el.style.boxShadow = "";
       el.style.left = "";
       el.style.top = "";
