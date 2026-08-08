@@ -161,7 +161,7 @@ export function DriveWorkbench({
   params: URLSearchParams;
   onClose: () => void;
 }): ReactElement | null {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [assets, setAssets] = useState<GameAssets | null>(peekGameAssets);
   const [trip, setTrip] = useState(() => driveFromParams(params));
   // ARRIVING RESTARTS IT rather than ending: a workbench that emptied itself

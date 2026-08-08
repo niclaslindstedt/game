@@ -61,7 +61,7 @@ export type PowerupAura = {
  * caller owns the ref, this owns everything that happens inside it.
  */
 export function createPowerupAura(
-  layerRef: RefObject<HTMLDivElement | null>,
+  layerRef: RefObject<HTMLDivElement>,
 ): PowerupAura {
   const timers = new Set<ReturnType<typeof setTimeout>>();
   // What is currently on the layer, so a steady state costs no DOM writes.

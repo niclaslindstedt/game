@@ -208,12 +208,12 @@ export function DriveScreen({
    */
   auto?: boolean;
 }): ReactElement {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   /** THE STEERING HINT — the run's own virtual dpad (`ScreenChrome.tsx`), worn
    * by the road. Written straight onto DOM styles from the frame loop, exactly
    * as the run writes its own: a hint that re-rendered React on every pointer
    * move would be the most expensive thing on this screen. */
-  const dpadRef = useRef<HTMLDivElement | null>(null);
+  const dpadRef = useRef<HTMLDivElement>(null);
   const driveRef = useRef<DriveState>(
     (() => {
       const drive = createDrive(params);

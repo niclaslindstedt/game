@@ -79,26 +79,26 @@ export function createRenderFrame(deps: {
    * up" and "what is the wire costing") are asked in the same breath. */
   netStats?: () => { rate: number; perSec: number };
   demoDirector: DemoDirector;
-  minimapRef: RefObject<HTMLCanvasElement | null>;
-  fpsRef: RefObject<HTMLDivElement | null>;
-  xpHeatRef: RefObject<HTMLDivElement | null>;
+  minimapRef: RefObject<HTMLCanvasElement>;
+  fpsRef: RefObject<HTMLDivElement>;
+  xpHeatRef: RefObject<HTMLDivElement>;
   /** The HUD stamina bar's fill — width written here EVERY frame so the
    * sprint pool drains/refills glass-smooth (the pool moves every tick;
    * publishing it through React re-rendered the HUD dozens of times a
    * second and still stepped at the change-key's resolution). */
-  staminaFillRef: RefObject<HTMLDivElement | null>;
+  staminaFillRef: RefObject<HTMLDivElement>;
   /** The DRIVE-OUT curtain (`GameState.departure`) — a screen-space black
    * sheet over the whole game screen, its opacity written here every frame.
    * Not a canvas wash: the departure has to take the HUD and the overlays
    * with it, and those are DOM. */
-  departureRef: RefObject<HTMLDivElement | null>;
+  departureRef: RefObject<HTMLDivElement>;
   /** The deadline (rAF clock) the ARRIVING run lifts that same curtain off by
    * — parked by the departing run, since the arriving state has no memory of
    * the beat that brought it here. 0 on every ordinary run. */
   arrivalFadeRef: MutableRefObject<number>;
-  dpadRef: RefObject<HTMLDivElement | null>;
-  botDpadRef: RefObject<HTMLDivElement | null>;
-  powerupDockRef: RefObject<HTMLDivElement | null>;
+  dpadRef: RefObject<HTMLDivElement>;
+  botDpadRef: RefObject<HTMLDivElement>;
+  powerupDockRef: RefObject<HTMLDivElement>;
   /** The area caption's entry detector + remount sequence (component-lifetime
    * so a re-run of the effect doesn't replay the caption in place). */
   lastAreaRef: MutableRefObject<string | null>;

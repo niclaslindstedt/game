@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The NEW GAME name field's text rules (pwa/src/game/hero-name.ts). The
 // load-bearing one is that a field edit comes back VERBATIM: the input is a
-// controlled React input, so any rewrite of its value makes React assign
+// controlled input, so any rewrite of its value makes the renderer assign
 // `input.value` behind the keyboard's back — which is what made an iOS
 // predictive-text tap ("JO" → "Jonas") land nothing but a space. The uppercase
 // look belongs to the display, the uppercase name to the minted hero.
@@ -22,10 +22,10 @@ describe("clampHeroName", () => {
     }
   });
 
-  it("returns the very same string, so React writes nothing to the input", () => {
+  it("returns the very same string, so the renderer writes nothing to the input", () => {
     const typed = "Jonas";
     // Identity, not just equality: a fresh string would still equal `typed`,
-    // but React compares the rendered value against the live DOM value — the
+    // but the renderer compares the rendered value against the live DOM value — the
     // point is that nothing about the edit was rewritten.
     expect(clampHeroName(typed)).toBe(typed);
     expect(clampHeroName(typed).length).toBe(typed.length);

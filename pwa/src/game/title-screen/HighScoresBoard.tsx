@@ -183,11 +183,11 @@ export function HighScoresBoard({
   // Touch: a swipe on the board picks its axis by the dominant direction —
   // horizontal walks the difficulty ladder, vertical flips the ranking.
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
-  const onPointerDown = (event: ReactPointerEvent) => {
+  const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     unlockAudio();
     swipeStart.current = { x: event.clientX, y: event.clientY };
   };
-  const onPointerUp = (event: ReactPointerEvent) => {
+  const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     const start = swipeStart.current;
     swipeStart.current = null;
     if (!start) return;

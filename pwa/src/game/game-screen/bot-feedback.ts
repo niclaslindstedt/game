@@ -71,7 +71,7 @@ const TOP_BAND_PX = 120;
  * jumps (at the hero) and for each button the bot fires (see rippleOnEl).
  * Self-removes when its rings finish; only spawned while the bot drives.
  */
-export function createTapFx(tapFxRef: RefObject<HTMLDivElement | null>): TapFx {
+export function createTapFx(tapFxRef: RefObject<HTMLDivElement>): TapFx {
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const rippleAtClient = (
     clientX: number,
@@ -158,8 +158,8 @@ export function createBotFeedback(deps: {
     camera: { x: number; y: number },
   ) => { x: number; y: number };
   tapFx: TapFx;
-  powerupDockRef: RefObject<HTMLDivElement | null>;
-  screenRef: RefObject<HTMLDivElement | null>;
+  powerupDockRef: RefObject<HTMLDivElement>;
+  screenRef: RefObject<HTMLDivElement>;
   /** HOW TO PLAY teaching tooltips (a no-op outside the demo). `place` pins
    * which side of the anchor the box sits on; omitted, the tip picks its own. */
   showDemoTip: (

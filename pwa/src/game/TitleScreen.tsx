@@ -201,7 +201,7 @@ export function TitleScreen({
   // The scrollable menu column: each screen change starts reading from the
   // top (the selected row's scrollIntoView would otherwise land a tall screen
   // — SETTINGS — scrolled to its BACK row, hiding the content).
-  const contentRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   // The HIGH SCORES board's axes and its opened breakdown card (the board
   // itself steers them — see HighScoresBoard); kept here so leaving the board
   // and coming back lands where the player left off.
@@ -247,7 +247,7 @@ export function TitleScreen({
   // HTMLElement, not HTMLButtonElement: the LIBRARY row renders as an
   // `<a href>` (see `MenuEntry.href`), and only `scrollIntoView` is ever called
   // on this, which both element types have.
-  const selectedRowRef = useRef<HTMLElement | null>(null);
+  const selectedRowRef = useRef<HTMLElement>(null);
   const prevScreenRef = useRef(screen);
   useEffect(() => {
     if (prevScreenRef.current !== screen) {

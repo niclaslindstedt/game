@@ -40,7 +40,7 @@ import { useEffect, type RefObject } from "react";
  * @param active center only while true (e.g. while the input is focused)
  */
 export function useCenterWhileFocused(
-  ref: RefObject<HTMLElement | null>,
+  ref: RefObject<HTMLElement>,
   active: boolean,
 ): void {
   useEffect(() => {
@@ -60,7 +60,7 @@ export function useCenterWhileFocused(
   }, [ref, active]);
 }
 
-export function useVisualViewportBox(ref: RefObject<HTMLElement | null>): void {
+export function useVisualViewportBox(ref: RefObject<HTMLElement>): void {
   useEffect(() => {
     const el = ref.current;
     const vv = window.visualViewport;

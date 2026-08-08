@@ -116,13 +116,12 @@ export function usePwaUpdate(updateConfig: Config) {
       start();
       return () => listeners.delete(listener);
     },
+    // No third argument: that slot is `getServerSnapshot`, read only when a
+    // server-rendered tree is HYDRATED, and this app never hydrates — the
+    // prerendered boot shell is static HTML that `createRoot()` renders over
+    // (main.tsx). It was unreachable under React too, and `preact/compat`
+    // does not take it.
     () => state,
-    () => ({
-      progress: null,
-      needRefresh: false,
-      incomingVersion: null,
-      checking: false,
-    }),
   );
   return {
     ...snapshot,

@@ -100,7 +100,7 @@ export function VoiceCards({
   }, [seats, state, assets]);
 
   const canvases = useRef(new Map<number, HTMLCanvasElement | null>());
-  const localCanvas = useRef<HTMLCanvasElement | null>(null);
+  const localCanvas = useRef<HTMLCanvasElement>(null);
 
   /**
    * EVERY CARD, resolved against its own speaker's values.

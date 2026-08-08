@@ -68,9 +68,14 @@ export function modalStack(): readonly OpenModal[] {
   return stack;
 }
 
-/** …as a React read. */
+/** …as a hook read. */
 export function useModalStack(): readonly OpenModal[] {
-  return useSyncExternalStore(subscribe, modalStack, modalStack);
+  // Two arguments, not three: the third is `getServerSnapshot`, which is only
+  // ever called when a server-rendered tree is HYDRATED. This app never
+  // hydrates — the prerendered boot shell is static HTML that `createRoot()`
+  // renders straight over (main.tsx) — so it was dead weight even under React,
+  // and `preact/compat` does not take it.
+  return useSyncExternalStore(subscribe, modalStack);
 }
 
 /**

@@ -306,7 +306,7 @@ export function GameScreen({
   // canvas owns its tap instead. `pickupCardTapRef` carries what that tap does
   // for the card currently up: equip it (a tap-to-equip upgrade) or flick it
   // away (everything else). Both null when no card is up.
-  const pickupCardElRef = useRef<HTMLButtonElement | null>(null);
+  const pickupCardElRef = useRef<HTMLButtonElement>(null);
   const pickupCardTapRef = useRef<(() => void) | null>(null);
   // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
   // the live value without re-registering on every toggle.
@@ -535,7 +535,7 @@ export function GameScreen({
   const suppressAchievements =
     __DEV_TOOLS__ &&
     new URLSearchParams(window.location.search).has("noachievements");
-  const fpsRef = useRef<HTMLDivElement | null>(null);
+  const fpsRef = useRef<HTMLDivElement>(null);
   // Landscape (the reference orientation) splits the bottom docks across BOTH
   // corners — the powerup (+ spell) buttons in the player's chosen corner, the
   // consumable items in the opposite one — so neither stack crowds the middle of
@@ -548,17 +548,17 @@ export function GameScreen({
   // The XP strip's kill-heat overlay — the render loop sizes it to the
   // freshly-earned slice and toggles its `is-hot` class straight on the DOM
   // (like fpsRef) so a kill lights it up without a React re-render.
-  const xpHeatRef = useRef<HTMLDivElement | null>(null);
+  const xpHeatRef = useRef<HTMLDivElement>(null);
   // The stamina bar's fill — written by the render loop EVERY frame (like
   // fpsRef/xpHeatRef) so the sprint pool drains and refills glass-smooth;
   // React only mounts the bar (the pool is out of the HUD change-key).
-  const staminaFillRef = useRef<HTMLDivElement | null>(null);
+  const staminaFillRef = useRef<HTMLDivElement>(null);
   // THE DRIVE-OUT CURTAIN — the wash to black over the departing car (the
   // engine's `state.departure`). Mounted once and left at zero opacity, driven
   // straight on the DOM by the render loop: it has to cover the HUD and every
   // overlay as well as the field, so it is a screen-space div rather than
   // anything the world canvas could paint.
-  const departureRef = useRef<HTMLDivElement | null>(null);
+  const departureRef = useRef<HTMLDivElement>(null);
   // …and the far side of that same curtain: the deadline the ARRIVING run lifts
   // it back off by. Component-lifetime, because it is the one thing about the
   // departure that has to outlive the run that played it (see run-progress.ts).
@@ -584,7 +584,7 @@ export function GameScreen({
   } = useRunShelf();
   // The live toast element, so a tap over the (inert) banner can open that
   // shelf instead of jumping — the pickup card's arrangement exactly.
-  const achievementToastElRef = useRef<HTMLDivElement | null>(null);
+  const achievementToastElRef = useRef<HTMLDivElement>(null);
 
   // THE SCREENSHOT KEY and what it raises. The flash is the receipt (a
   // miniature against the right edge, inert like the toast above); the SHELF is

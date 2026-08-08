@@ -105,13 +105,13 @@ export function InfoTip({
   // finger has no hover to leave with. Both read `pointerType` rather than a
   // media query: a laptop with a touchscreen genuinely has both, and the
   // gesture in hand is the honest answer to which one this is.
-  const onPointerEnter = (event: ReactPointerEvent) => {
+  const onPointerEnter = (event: ReactPointerEvent<HTMLSpanElement>) => {
     if (event.pointerType === "mouse") setOpen(true);
   };
-  const onPointerLeave = (event: ReactPointerEvent) => {
+  const onPointerLeave = (event: ReactPointerEvent<HTMLSpanElement>) => {
     if (event.pointerType === "mouse") close();
   };
-  const onPointerDown = (event: ReactPointerEvent) => {
+  const onPointerDown = (event: ReactPointerEvent<HTMLSpanElement>) => {
     if (event.pointerType === "mouse") return;
     // Swallow the touch so the surface underneath (a modal backdrop's
     // tap-to-close, the bag's drag start) never also acts on it.

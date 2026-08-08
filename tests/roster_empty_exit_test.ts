@@ -12,7 +12,7 @@
 // emptied — never bounced back into it.
 //
 // Both are pinned from SOURCE rather than by driving the component: the suite
-// runs in a plain Node environment with no DOM and no React renderer (see
+// runs in a plain Node environment with no DOM and no renderer (see
 // vitest.config.ts), and these two lines are exactly the kind that a tidy-up
 // removes without noticing what they were for.
 

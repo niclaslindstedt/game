@@ -779,7 +779,7 @@ phone, `VoiceCards.tsx`, the card's own YAML and its CSS block need a pass at
 **The list is a STATE and the levels are a STREAM**, read differently on purpose.
 `room.subscribe` fires only on structural change (somebody started or stopped
 talking, was muted, went unheard); loudness is polled inside the widget's own
-animation frame and painted to a canvas. Pushing levels instead would be a React
+animation frame and painted to a canvas. Pushing levels instead would be a
 reconciliation per 20 ms of speech per person — up to 350 a second.
 
 **The CARD is content, and the RAIL is code.** Voice chat is a HUD element like

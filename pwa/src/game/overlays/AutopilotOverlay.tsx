@@ -528,7 +528,7 @@ const FIND_TEXT_FALLBACK_REM = 18;
  * is what keeps this from chasing its own tail.
  */
 function useFindTextRem(findCount: number): {
-  listRef: RefObject<HTMLDivElement | null>;
+  listRef: RefObject<HTMLDivElement>;
   textRem: number;
 } {
   const listRef = useRef<HTMLDivElement>(null);

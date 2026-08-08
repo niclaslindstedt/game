@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { StrictMode, Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./styles.css";
@@ -45,16 +45,19 @@ const page = path.endsWith("/privacy")
 // being locked.
 if (!page) document.documentElement.classList.add("app-locked");
 
+// NO <StrictMode> WRAPPER, deliberately. `preact/compat` exports it as a plain
+// Fragment — Preact has no development-mode double-invocation — so wrapping the
+// tree in it would render as a safety check that does not run, which is worse
+// than not claiming one. The rule it used to enforce still stands as a RULE
+// (a state updater must be pure); it is simply no longer machine-checked here.
 createRoot(root).render(
-  <StrictMode>
-    {page ? (
-      // No fallback UI: the prerendered shell already carries the page's gist,
-      // so a null fallback is a blink, not a blank page.
-      <Suspense fallback={null}>
-        {page === PrivacyPage ? <PrivacyPage /> : <ContactPage />}
-      </Suspense>
-    ) : (
-      <App />
-    )}
-  </StrictMode>,
+  page ? (
+    // No fallback UI: the prerendered shell already carries the page's gist,
+    // so a null fallback is a blink, not a blank page.
+    <Suspense fallback={null}>
+      {page === PrivacyPage ? <PrivacyPage /> : <ContactPage />}
+    </Suspense>
+  ) : (
+    <App />
+  ),
 );

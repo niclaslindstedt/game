@@ -36,10 +36,10 @@ export type ScreenshotFlash = {
 
 export function useScreenshotFlash(
   /** The screen root — everything in the picture, world canvas and HUD alike. */
-  rootRef: RefObject<HTMLDivElement | null>,
+  rootRef: RefObject<HTMLDivElement>,
 ): ScreenshotFlash {
   const [flash, setFlash] = useState<ShotFlashData | null>(null);
-  const shotFlashElRef = useRef<HTMLDivElement | null>(null);
+  const shotFlashElRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef(0);
   // The URL the flash on screen is showing, so it can be revoked when the next
   // picture (or the unmount) takes its place.

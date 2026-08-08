@@ -6,7 +6,7 @@
 // handful of rules that are invisible until they are wrong: that a MUTE outlives
 // the sentence it was applied to, that it does NOT outlive the seat, that a
 // speaker who goes quiet is retired rather than left on screen for ever, and —
-// the one that costs 400 React renders a second if it regresses — that a LEVEL
+// the one that costs 400 renders a second if it regresses — that a LEVEL
 // does not notify subscribers while a STRUCTURAL change does.
 
 import { describe, expect, it } from "vitest";
@@ -160,7 +160,7 @@ describe("what notifies, and what deliberately does not", () => {
 
   it("does NOT notify on a level — the stream is polled, never pushed", () => {
     // THE PERFORMANCE RULE, pinned as behaviour: 50 packets a second per
-    // speaker times up to seven speakers is 350 React reconciliations a second
+    // speaker times up to seven speakers is 350 reconciliations a second
     // if this ever starts publishing. See room.ts's header.
     const room = createVoiceRoom();
     room.heard(1, 0.2, 1_000);

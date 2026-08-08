@@ -289,7 +289,7 @@ export function createDemoDirector(deps: {
   /** The in-HUD weapon switcher's open latch — the played swap opens it on
    * the first tap and closes it on the second. */
   setWeaponMenuOpen: Dispatch<SetStateAction<boolean>>;
-  screenRef: RefObject<HTMLDivElement | null>;
+  screenRef: RefObject<HTMLDivElement>;
   tapFx: TapFx;
   bumpUi: () => void;
 }): DemoDirector {

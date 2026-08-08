@@ -27,7 +27,15 @@ export default defineConfig({
     // as-is, and the alias is what marks a module as belonging to one.
     // @ui/lib is aliased here so DOM-free UI-lib modules (the chiptune
     // sequencer) stay testable from tests/.
+    //
+    // The `react` entries are the app's Preact swap (see pwa/vite.config.ts):
+    // a UI-lib module that type-imports `react` must resolve to the same
+    // `preact/compat` the app builds against, or a suite reaching one would
+    // resolve a package that is no longer installed.
     alias: [
+      { find: "react-dom/client", replacement: "preact/compat/client" },
+      { find: "react-dom", replacement: "preact/compat" },
+      { find: "react", replacement: "preact/compat" },
       { find: "@game/core", replacement: here("./src/index.ts") },
       { find: "@game/menu", replacement: here("./src/menu.ts") },
       { find: "@game/lib", replacement: here("./src/lib") },

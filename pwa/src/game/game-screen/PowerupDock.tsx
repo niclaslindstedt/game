@@ -73,7 +73,7 @@ export function PowerupDock({
   side: "left" | "right";
   /** Forwarded to the dock element — the render loop writes each running
    * slot's cooldown sweep/countdown here, and BOT VIEW ripples index it. */
-  dockRef: RefObject<HTMLDivElement | null>;
+  dockRef: RefObject<HTMLDivElement>;
   /** Spend exactly this dock slot on the next sim tick (a plain tap). */
   onSpend: (index: number) => void;
   /** Discard the banked powerup in this slot; returns whether the engine
@@ -96,7 +96,7 @@ export function PowerupDock({
   // pointer on the slot so a touch keeps tracking off the button, and never
   // reaches the steering canvas (a separate element).
   const startDockDrag =
-    (index: number, defId: string) => (e: ReactPointerEvent) => {
+    (index: number, defId: string) => (e: ReactPointerEvent<HTMLElement>) => {
       e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
       dockDragRef.current = {
@@ -110,7 +110,7 @@ export function PowerupDock({
       setDockDrag(dockDragRef.current);
     };
 
-  const moveDockDrag = (e: ReactPointerEvent) => {
+  const moveDockDrag = (e: ReactPointerEvent<HTMLElement>) => {
     const d = dockDragRef.current;
     if (!d) return;
     const moved =
@@ -123,7 +123,7 @@ export function PowerupDock({
     setDockDrag(dockDragRef.current);
   };
 
-  const endDockDrag = (e: ReactPointerEvent) => {
+  const endDockDrag = (e: ReactPointerEvent<HTMLElement>) => {
     const d = dockDragRef.current;
     dockDragRef.current = null;
     setDockDrag(null);

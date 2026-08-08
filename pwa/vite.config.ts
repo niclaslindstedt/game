@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
+import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 import { gamePwa, prelaunchCss } from "./pwa-plugin.ts";
@@ -102,11 +102,18 @@ export default defineConfig({
     __COMMUNITY_URL__: JSON.stringify(process.env.COMMUNITY_URL ?? ""),
   },
   plugins: [
-    react(),
+    // The `react` → `preact/compat` aliases this plugin would install by
+    // default are OFF: the app's aliases live in ONE list (`resolve.alias`
+    // below), kept in lockstep with the three other maps, and a second set
+    // injected invisibly by a plugin is exactly the drift that rule exists to
+    // prevent. What the preset is here for is the rest — prefresh (the Fast
+    // Refresh `@vitejs/plugin-react` used to give), the devtools bridge in dev,
+    // and pointing the JSX transform at `preact` instead of `react`.
+    preact({ reactAliasesEnabled: false }),
     tailwindcss(),
     // Inlines the boot screen's stylesheet so the prerendered shell paints
     // without waiting on the app bundle. Unlike `gamePwa` it is not build-only:
-    // the shell is on screen in dev too, until React mounts over it.
+    // the shell is on screen in dev too, until the app mounts over it.
     prelaunchCss(),
     gamePwa({ base, version, appVersion }),
   ],
@@ -116,7 +123,24 @@ export default defineConfig({
     // @game/lib and @ui/lib are the generic pools earmarked for extraction
     // reusable code local while giving callers a stable import prefix.
     // Keep in lockstep with tsconfig `paths` here and at the root.
+    //
+    // THE APP RENDERS WITH PREACT, AND STILL SPELLS IT `react`. The three
+    // entries below are the whole of the swap: `preact/compat` implements the
+    // React API the app was written against, so the ~400 import sites did not
+    // have to be rewritten to move the renderer — and, more to the point, they
+    // do not have to be rewritten BACK if the compat layer ever stops being the
+    // right answer for one of them. The bytes are what this was for: dropping
+    // react-dom took the measured critical path from 183 KB gzipped to ~133 KB,
+    // which is what lets `check-seo.mjs` hold the budget at web.dev's 170 KB
+    // instead of the 200 KB React needed.
+    //
+    // MOST SPECIFIC FIRST — `react-dom/client` (where `createRoot` lives, and
+    // it is NOT re-exported from `preact/compat`) must be matched before the
+    // bare `react-dom`, and both before `react`.
     alias: [
+      { find: "react-dom/client", replacement: "preact/compat/client" },
+      { find: "react-dom", replacement: "preact/compat" },
+      { find: "react", replacement: "preact/compat" },
       { find: "@game/core", replacement: here("../src/index.ts") },
       { find: "@game/menu", replacement: here("../src/menu.ts") },
       { find: "@game/lib", replacement: here("../src/lib") },

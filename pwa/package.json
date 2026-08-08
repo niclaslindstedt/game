@@ -2,7 +2,7 @@
   "name": "game-app",
   "version": "1.0.0",
   "private": true,
-  "description": "The deployed game app — a Vite + React PWA shell around the engine in ../src.",
+  "description": "The deployed game app — a Vite + Preact PWA shell around the engine in ../src.",
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-source-data.mjs",
@@ -24,16 +24,13 @@
     "typecheck:only": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "preact": "^10.29.8",
     "workbox-window": "^7.0.0"
   },
   "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
     "@tailwindcss/vite": "^4.3.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.0",
     "@vite-pwa/assets-generator": "^1.0.1",
-    "@vitejs/plugin-react": "^6.0.4",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.0",

@@ -93,11 +93,11 @@ function PixelNameInput({
         // Only the spelling underline is off (the glyphs below are the visible
         // text); iOS autocorrect/predictive text stays ON so a tapped
         // suggestion fills the field.
-        spellCheck={false}
+        spellcheck={false}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onChange={(e) => {
-          const next = clampHeroName(e.target.value);
+          const next = clampHeroName(e.currentTarget.value);
           // `clampHeroName` hands a fitting edit straight back, so a keypress
           // against the full budget compares equal here and stays silent.
           if (next !== value) playUiSound(synth, "blip");

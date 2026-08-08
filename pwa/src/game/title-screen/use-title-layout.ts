@@ -111,8 +111,8 @@ export function useHelpWrapRem(): number {
  * over after the title/heading, so it never oscillates once a cap is applied.
  * Off the tall screens (`active` false) it stays false. */
 export function useMenuOverflow(
-  contentRef: RefObject<HTMLDivElement | null>,
-  menuRef: RefObject<HTMLElement | null>,
+  contentRef: RefObject<HTMLDivElement>,
+  menuRef: RefObject<HTMLElement>,
   active: boolean,
   entries: MenuEntry[],
 ): boolean {

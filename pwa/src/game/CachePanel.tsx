@@ -65,7 +65,7 @@ export function CachePanel({
   // The two grids are read straight off the live hero every render, so a move
   // shows up without either side being told what changed. `bump` is what a
   // successful command re-reads through — the same idiom the shop uses.
-  const [, bump] = useReducer((n: number) => n + 1, 0);
+  const [, bump] = useReducer<number, void>((n) => n + 1, 0);
   const player = localHero(state);
   const cache = player.cache;
   const bag = player.inventory;

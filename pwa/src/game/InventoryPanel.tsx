@@ -448,12 +448,13 @@ export function InventoryPanel({
   }, [dragActive, state, onChange]);
 
   // Raise (or update) the item tooltip, anchored to the cell under the pointer.
-  const inspectItem = (item: Equipment) => (e: ReactPointerEvent) =>
-    setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
+  const inspectItem =
+    (item: Equipment) => (e: ReactPointerEvent<HTMLElement>) =>
+      setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
 
   // Drop the tooltip when the mouse leaves a cell — but never on touch (which
   // has no hover, so the tooltip is the tap's own result) and never mid-drag.
-  const leaveItem = (e: ReactPointerEvent) => {
+  const leaveItem = (e: ReactPointerEvent<HTMLElement>) => {
     if (e.pointerType !== "touch" && !dragRef.current) setInspect(null);
   };
 
@@ -526,7 +527,8 @@ export function InventoryPanel({
   };
 
   const startDrag =
-    (item: Equipment, from: DragSource) => (e: ReactPointerEvent) => {
+    (item: Equipment, from: DragSource) =>
+    (e: ReactPointerEvent<HTMLElement>) => {
       e.preventDefault();
       // Captured BEFORE we overwrite the tooltip below: was this same item
       // already inspected? On touch that marks the second tap (commit); on

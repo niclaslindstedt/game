@@ -31,9 +31,11 @@ export function useAchievementToasts(): {
     useState<AchievementToastData | null>(null);
 
   // Bumped whenever badges join the queue, waking the stage effect below.
-  // The queue lives in a ref and is only ever shifted inside effects — state
-  // updaters must stay pure (StrictMode double-invokes them), which is why
-  // the stage never advances the queue from inside setAchievementToast.
+  // The queue lives in a ref and is only ever shifted inside effects — a state
+  // updater must stay pure, which is why the stage never advances the queue
+  // from inside setAchievementToast. (Nothing checks this any more: React's
+  // StrictMode caught an impure updater by double-invoking it, and Preact has
+  // no equivalent — see main.tsx. It is a rule now, not a guardrail.)
   const [tick, setTick] = useState(0);
 
   // The toast stage, two halves: a showing toast chimes once and clears

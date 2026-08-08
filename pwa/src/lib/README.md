@@ -1,6 +1,6 @@
 # pwa/src/lib — generic game UI
 
-React components and hooks that are **not specific to this game** (HUD
+Preact components and hooks that are **not specific to this game** (HUD
 widgets, touch-steering surfaces, pause overlays, virtual controls) live
 here, cleanly separated from game-specific app code.
 

@@ -105,7 +105,7 @@ const [
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
 // `pwa/src/lib/` precisely so a page can print the same line the item card
-// does without importing a React component. Its only import is a type, so a
+// does without importing a UI component. Its only import is a type, so a
 // plain `node` build loads it as-is.
 const affixText = await import(
   pathToFileURL(join(REPO, "pwa/src/lib/affix-line.ts")).href
