@@ -25,28 +25,28 @@
 //! are in-memory writes flushed by `store_stats`), so the pump is what keeps the
 //! queue drained rather than something the features wait for.
 //!
-//! **PHASE 3 CHANGES THAT, AND THIS IS THE PARAGRAPH IT HAS TO READ FIRST.**
-//! Steam P2P is POLLED and matchmaking is delivered as call-results THROUGH
-//! `run_callbacks`, so the moment the net bridge lands, the interval below stops
-//! being a housekeeping number and becomes the network's latency floor: at
-//! 200 ms a lobby round trip costs a fifth of a second and packet delivery is
-//! capped at 5 Hz. That would present as a broken session for a reason living in
-//! a constant nobody was looking at. Re-decide [`PUMP_INTERVAL`] there — do not
-//! inherit it.
+//! **PHASE 3 CHANGED THAT, AND THE PUMP IS NOW TWO GEARS.** Steam P2P is POLLED
+//! and matchmaking is delivered as call-results THROUGH `run_callbacks`, so a
+//! flat 200 ms would have made the interval the network's latency floor: a lobby
+//! round trip costing a fifth of a second and packet delivery capped at 5 Hz — a
+//! broken session for a reason living in a constant nobody was looking at. The
+//! decision is [`adastrail_shell::steam_pump`]; [`set_pump`] is how the net
+//! bridge changes gear, and the loop below ASKS on every tick rather than being
+//! re-armed, because a pump somebody has to remember to speed up is one they
+//! forget to on the path that mattered.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
-use std::time::Duration;
 
 use adastrail_shell::output;
 use adastrail_shell::steam::{
-    describe_status, is_placeholder_app_id, process_env, restart_wanted, steam_app_id,
-    steam_enabled, SteamStatus,
+    describe_status, is_placeholder_app_id, process_env, restart_wanted, steam_enabled, SteamStatus,
 };
+use adastrail_shell::steam_pump::{describe, interval, PumpState};
 use steamworks::{AppId, Client};
 
-/// How often the callback queue is drained. Far slower than a frame, because
-/// nothing here is waiting on one — see the module header.
-const PUMP_INTERVAL: Duration = Duration::from_millis(200);
+/// Whether anything asynchronous is in flight — see [`set_pump`].
+static PUMP_LIVE: AtomicBool = AtomicBool::new(false);
 
 /// `None` = there is no Steam here. Resolved exactly once.
 static CLIENT: OnceLock<Option<Client>> = OnceLock::new();
@@ -60,7 +60,7 @@ static CLIENT: OnceLock<Option<Client>> = OnceLock::new();
 /// The decision is [`restart_wanted`]'s — only for a real app id, never for
 /// Spacewar.
 pub fn restart_if_necessary() -> bool {
-    let app_id = steam_app_id(&process_env, crate::stamp::STEAM_APP_ID);
+    let app_id = steam_app_id();
     if !restart_wanted(steam_enabled(&process_env), app_id) {
         return false;
     }
@@ -85,7 +85,7 @@ fn connect() -> Option<Client> {
         output::info(&describe_status(&SteamStatus::Disabled));
         return None;
     }
-    let app_id = steam_app_id(&process_env, crate::stamp::STEAM_APP_ID);
+    let app_id = steam_app_id();
     match Client::init_app(app_id) {
         Ok(client) => {
             output::info(&describe_status(&SteamStatus::Connected {
@@ -105,6 +105,29 @@ fn connect() -> Option<Client> {
     }
 }
 
+/// WHICH STEAM APP this process is, resolved once from the launch environment
+/// and the packager's stamp.
+///
+/// Public because the Workshop needs it for every UGC call and the mods bridge
+/// needs it for the hub URL — and both must ask the same question the handshake
+/// asked, or a publish lands on a different app than the game is running as.
+pub fn steam_app_id() -> u32 {
+    adastrail_shell::steam::steam_app_id(&process_env, crate::stamp::STEAM_APP_ID)
+}
+
+/// Change the pump's gear.
+///
+/// `Live` the moment anything asynchronous is in flight — a session process, a
+/// lobby call, a relayed peer — and `Idle` when the shell is back to a title
+/// screen. See [`adastrail_shell::steam_pump`] for why the two numbers differ
+/// and what inheriting the slow one would have cost.
+pub fn set_pump(state: PumpState) {
+    let live = state == PumpState::Live;
+    if PUMP_LIVE.swap(live, Ordering::SeqCst) != live {
+        output::info(&describe(state));
+    }
+}
+
 /// Drain the callback queue for the life of the process.
 ///
 /// Detached on purpose: there is nothing to join it to. The thread holds a clone
@@ -115,7 +138,12 @@ fn start_pump(client: Client) {
         .name("steam-callbacks".to_string())
         .spawn(move || loop {
             client.run_callbacks();
-            std::thread::sleep(PUMP_INTERVAL);
+            // ASKED every tick rather than re-armed — see the module header.
+            std::thread::sleep(interval(if PUMP_LIVE.load(Ordering::SeqCst) {
+                PumpState::Live
+            } else {
+                PumpState::Idle
+            }));
         });
     if let Err(err) = spawned {
         // Everything this shell asks Steam for is answered synchronously, so a

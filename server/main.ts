@@ -62,6 +62,7 @@ import { createRelayTransport, type RelayTransport } from "./net/relay.ts";
 import type { Bound, SendMode } from "./net/transport.ts";
 import { createUdpTransport, keyFor } from "./net/udp.ts";
 import type { MappingState } from "./net/upnp.ts";
+import { startShellHost } from "./shell-host.ts";
 import { parseAddress } from "./wire/address.ts";
 import { decodeFrame, encodeFrame } from "./wire/codec.ts";
 import { FRAME, TICK_MS } from "./wire/frames.ts";
@@ -159,7 +160,15 @@ type ControlMessage =
 
 /** A message back up it. */
 type ControlReply =
-  | { kind: "ready"; protocol: number }
+  | {
+      kind: "ready";
+      protocol: number;
+      /** WHERE THE PAGE MUST OPEN THE SNAPSHOT CHANNEL — present only in the
+       * SIDECAR entry, where there is no `MessagePort` to hand anybody and the
+       * page connects a loopback socket instead (`shell-host.ts`). The
+       * Electron entry transfers a port and never sets this. */
+      snapshot?: { port: number; token: string; path: string };
+    }
   | { kind: "started"; levelId: string }
   | {
       kind: "status";
@@ -257,7 +266,27 @@ const resumeTickets = new Map<string, string>();
 
 const parent = (process as unknown as { parentPort?: ParentPort }).parentPort;
 
+/** The argv the two parentless entries read. */
+const argv = process.argv.slice(2);
+
+/**
+ * A SHELL SPAWNED US AS A PLAIN CHILD — the third entry, and the one the Tauri
+ * desktop shell uses because it has no `utilityProcess` and no port transfer.
+ * See `shell-host.ts` for the two pipes it puts in place of the one.
+ */
+const SHELL_FLAG = "--shell";
+
+/**
+ * Where an unsolicited reply goes, set by whichever entry is live.
+ *
+ * A function rather than the parent port itself, because the sidecar entry has
+ * no port — and because `post` is called from the session's own callbacks,
+ * which must not learn which of the three shapes this process took.
+ */
+let upstream: ((event: ControlReply) => void) | null = null;
+
 if (parent) {
+  upstream = (event) => parent.postMessage(event);
   parent.on("message", (event) => {
     const port = event.ports?.[0] as ClientPort | undefined;
     if (port) attachClient(port);
@@ -266,6 +295,8 @@ if (parent) {
     );
   });
   parent.postMessage({ kind: "ready", protocol: PROTOCOL_VERSION });
+} else if (argv.includes(SHELL_FLAG)) {
+  void startSidecar();
 } else {
   // NO PARENT MEANS NOBODY FORKED US, so this is a person running the server
   // from a terminal — the standalone dedicated server. It is the same process
@@ -273,7 +304,48 @@ if (parent) {
   // from (a config file and a signal, rather than a control channel) and where
   // the log goes. Making it the same ENTRY as well as the same code is what
   // stops the two drifting: there is no second binary to forget to update.
-  void dedicated(process.argv.slice(2));
+  void dedicated(argv);
+}
+
+/**
+ * THE SIDECAR ENTRY — two pipes where Electron has one, and nothing else
+ * different.
+ *
+ * The control channel is this process's own stdio and the snapshot channel is a
+ * loopback socket the PAGE opens; `shell-host.ts` owns both and the argument
+ * for them. Everything below this line — `handleControl`, `attachClient`, the
+ * session, the transports — is the same code the forked entry runs.
+ *
+ * A bind that fails is FATAL rather than degraded: the shell is waiting on the
+ * ready line to tell the page where to connect, and a session whose frames can
+ * reach nobody is not a session.
+ */
+async function startSidecar(): Promise<void> {
+  try {
+    const shell = await startShellHost({
+      onControl: (message, reply) =>
+        handleControl(message as ControlMessage, reply),
+      onClient: (port) => attachClient(port as ClientPort),
+      // The shell went away. Electron reaps its utility process in
+      // `before-quit`; a spawned child has to reap itself, and stdin's EOF is
+      // the signal it has.
+      onOrphaned: () => {
+        stop("orphaned");
+        process.exit(0);
+      },
+    });
+    upstream = (event) => shell.post(event);
+    shell.post({
+      kind: "ready",
+      protocol: PROTOCOL_VERSION,
+      snapshot: shell.snapshot,
+    } satisfies ControlReply);
+  } catch (err) {
+    process.stderr.write(
+      `session server: could not open the snapshot channel — ${String(err)}\n`,
+    );
+    process.exit(1);
+  }
 }
 
 /**
@@ -324,7 +396,7 @@ function joinHost(): void {
  * waiters by ORDER, so an unsolicited message must never wear a kind that
  * anything is waiting on. */
 function post(event: ControlReply): void {
-  parent?.postMessage(event);
+  upstream?.(event);
 }
 
 function handleControl(

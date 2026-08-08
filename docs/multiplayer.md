@@ -258,6 +258,40 @@ server/bot-client.ts          a headless joiner that PLAYS — the soak's engine
 scripts/bot-client.mjs        a fleet of them, pointed at an address
 ```
 
+**AND THE SAME SHAPE IN THE OTHER DESKTOP SHELL, with two pipes where Electron
+has one.** `tauri/` is a Rust process (`docs/tauri-migration.md`): it has no
+`utilityProcess.fork` and no way to transfer a `MessagePort` to the page, so the
+session server grew a THIRD entry rather than a second implementation.
+
+```
+tauri/src-tauri/src/main.rs   routes the __gisNet control protocol
+tauri/src-tauri/src/net.rs    the bridge: the process, the queue, the lobby
+tauri/src-tauri/src/session.rs the child's lifecycle, on a bundled Node runtime
+tauri/src-tauri/src/p2p.rs    the Steam P2P pump (shell only, same reason)
+tauri/src-tauri/src/lobby.rs  Steam matchmaking — the SAME metadata keys
+tauri/src-tauri/src/firewall.rs runs what tauri/shell/src/net_firewall.rs wrote
+        │  stdio, newline-delimited JSON (control only)
+        ▼
+server/shell-host.ts          the sidecar entry: `--shell`
+        │  a loopback WebSocket the PAGE opens — no shell in the path
+        ▼
+pwa/src/app/net-bridge.ts     unchanged: it asks for a MessagePort, gets one
+```
+
+Three things are worth carrying from that:
+
+- **THE METADATA KEYS ARE SHARED.** A lobby row written by one desktop build is
+  read by the other, so the two shells see each other's games — which they must,
+  because both are installable at once while they are being compared.
+- **STDIN'S EOF IS THE ORPHAN REAPER.** Electron kills its utility process in
+  `before-quit`; a spawned child watches its own control pipe instead, so a
+  shell that was killed rather than quit still takes its session with it.
+- **THE PAGE DID NOT CHANGE.** `__gisShell.onNetPort` still hands over a
+  `MessagePort`; the shell's initialization script mints the pair in the page
+  and bridges its own end to the socket. Every protocol on this page — including
+  the loot mode, the trade table and the voice payload — is byte-identical
+  across the two shells.
+
 **`server/client.ts` IS THE ONE CLIENT, and it is in `server/` rather than
 `pwa/` on purpose.** It is the only thing in the repo that turns snapshots back
 into a run — it builds the level for itself, applies what the server sends, and

@@ -146,12 +146,16 @@ describe("the mod toolchain's dependencies", () => {
     // toolchain imports and `extraResources` does not copy is a mod that
     // compiles in the repo and fails on a player's machine with a resolve error.
     // (`scripts/powerup-data` was exactly that for a release.)
-    const config = readFileSync(
-      path.join(repoRoot, "electron", "electron-builder.config.cjs"),
+    // The list lives in `scripts/modtools-manifest.cjs` and BOTH desktop
+    // packagers read it — one list, because two shells carrying two copies of
+    // it is the same bug wearing a hat. What is asserted here is the list
+    // itself, plus (below) that each packager still reads it.
+    const manifest = readFileSync(
+      path.join(repoRoot, "scripts", "modtools-manifest.cjs"),
       "utf8",
     );
     const copied = new Set(
-      [...config.matchAll(/from:\s*"\.\.\/([^"]+)"/g)].map((m) => m[1]!),
+      [...manifest.matchAll(/from:\s*"([^"]+)"/g)].map((m) => m[1]!),
     );
     const missing = [...walkToolchain(ENTRY).local]
       .map((file) => path.relative(repoRoot, file).split(path.sep))
@@ -178,5 +182,21 @@ describe("the mod toolchain's dependencies", () => {
     // The config builds its entries FROM this manifest rather than repeating
     // the names, so what is asserted is that it still reads it.
     expect(config).toMatch(/mod\/package\.json/);
+  });
+
+  it("is carried into the packaged app by BOTH desktop packagers", () => {
+    // `tauri/` packages the same compiler (docs/tauri-migration.md), so the
+    // same three gaps exist there — and the way they stay closed is that both
+    // shells read one list rather than keeping one each.
+    for (const packager of [
+      path.join("electron", "electron-builder.config.cjs"),
+      path.join("tauri", "scripts", "package.mjs"),
+    ]) {
+      const source = readFileSync(path.join(repoRoot, packager), "utf8");
+      expect(source, packager).toMatch(/modtools-manifest\.cjs/);
+      expect(source, packager).toMatch(
+        /mod\/package\.json|"mod", "package.json"/,
+      );
+    }
   });
 });

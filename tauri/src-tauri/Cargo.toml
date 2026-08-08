@@ -38,6 +38,11 @@ tauri = { version = "2", features = ["image-png"] }
 # reach either. `opener` also reveals a screenshot in the file manager.
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
+# A SECOND COPY OF THE GAME would fight the first over the same save files and
+# the same Steam session — and, worse, would swallow the `+connect_lobby` Steam
+# hands a friend's "accept". Electron has `requestSingleInstanceLock` built in;
+# this is its peer, and its callback is where an invite reaches a running game.
+tauri-plugin-single-instance = "2"
 # SHARE's other half: the picture on the clipboard, which is the part that
 # actually sends it somewhere. Rust-only, like the two above.
 tauri-plugin-clipboard-manager = "2"
@@ -50,6 +55,15 @@ tauri-plugin-clipboard-manager = "2"
 # STEAM_SDK_LOCATION and no separate download — which is what keeps a checkout
 # buildable with a Rust toolchain and the platform's webview libraries alone.
 steamworks = "0.13"
+
+# THE MICROPHONE GATE's Linux half. WebKitGTK raises `permission-request` on the
+# webview and Tauri hands the handle out through `PlatformWebview::inner()`, so
+# this is the one of the three desktops where the refusal is the OPERATING
+# SYSTEM's rather than the page's — see `src/media.rs` for what covers the other
+# two. The version tracks whatever `wry` links; Tauri says as much in its own
+# docs for `with_webview`.
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = { version = "2.0", features = ["v2_8"] }
 
 [lints.rust]
 unsafe_code = "forbid"

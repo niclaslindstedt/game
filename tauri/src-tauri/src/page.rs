@@ -3,7 +3,10 @@
 //! and of `native/src/injected.ts`.
 //!
 //! It is one initialization script, evaluated before the game's own scripts on
-//! every load, and it exposes exactly five things:
+//! every load, and it exposes exactly six things — five since phase 1, plus the
+//! snapshot channel's page-side half ([`adastrail_shell::snapshot`]), which is
+//! how a session's twenty frames a second reach the page without the shell in
+//! the path:
 //!
 //! | Global                | What it says                                              |
 //! | --------------------- | --------------------------------------------------------- |
@@ -12,6 +15,7 @@
 //! | `__GIS_SHELL__`       | WHICH BINARY — `tauri`, for a bug report and nothing else |
 //! | `__GIS_CAPS__`        | what this launch may honour, as plain names               |
 //! | `__gisShell.post`     | the page → shell pipe                                     |
+//! | `__gisShell.onNetPort`| a session's frames, as the `MessagePort` the page expects |
 //!
 //! **`__GIS_PLATFORM__` stays `steam` on purpose.** The page asks that question
 //! to decide whether a coin store exists and whether there is a vibration
@@ -34,6 +38,8 @@ use adastrail_shell::capabilities::{capability_list, Capabilities};
 use adastrail_shell::channels::{
     CAPS_GLOBAL, NATIVE_GLOBAL, PLATFORM_GLOBAL, SHELL_COMMAND, SHELL_GLOBAL, SHELL_ID_GLOBAL,
 };
+use adastrail_shell::media::lockout_script;
+use adastrail_shell::snapshot::{adapter_script, shell_member};
 
 /// Which PLATFORM the page is on. Not which binary — see the module header.
 pub const PLATFORM: &str = "steam";
@@ -55,6 +61,12 @@ pub const FULLSCREEN_COMMAND: &str = "shell_toggle_fullscreen";
 pub fn initialization_script(capabilities: &Capabilities) -> String {
     let caps =
         serde_json::to_string(&capability_list(capabilities)).unwrap_or_else(|_| "[]".to_string());
+    // THE SNAPSHOT CHANNEL's page-side half, and the MICROPHONE's floor. Both
+    // are decisions with tests, spliced in rather than written here — see
+    // `adastrail_shell::snapshot` and `adastrail_shell::media`.
+    let net = adapter_script();
+    let net_member = shell_member();
+    let lockout = lockout_script(capabilities.voice());
     format!(
         r#"(function () {{
   var define = function (name, value) {{
@@ -64,6 +76,8 @@ pub fn initialization_script(capabilities: &Capabilities) -> String {
   define({PLATFORM_GLOBAL:?}, {PLATFORM:?});
   define({SHELL_ID_GLOBAL:?}, {SHELL_ID:?});
   define({CAPS_GLOBAL:?}, Object.freeze({caps}));
+{lockout}
+{net}
 
   // The pipe is resolved on every call rather than captured: this script and
   // Tauri's own are both injected at document start, and depending on one
@@ -81,7 +95,8 @@ pub fn initialization_script(capabilities: &Capabilities) -> String {
       // to argue about, and the protocol is JSON on every other shell anyway.
       if (typeof message !== 'string') return;
       send({SHELL_COMMAND:?}, {{ message: message }});
-    }}
+    }},
+{net_member}
   }}));
 
   // F11 / Alt+Enter — see FULLSCREEN_COMMAND. Capture phase, so a game that

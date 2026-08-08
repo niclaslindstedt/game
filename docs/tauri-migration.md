@@ -32,14 +32,20 @@ other side of the ledger:
 | **`steamworks.js`**                                | Replaced by the `steamworks` Rust crate — a different binding, same SDK   |
 | **`electronEnableSteamOverlay`**                   | The overlay hooks a Chromium swap chain; a WKWebView/WebView2 has its own |
 
-Each of those is a phase-2 or phase-3 problem with a known shape, and each is
-named at its own seam in the code rather than left to be discovered.
+Each of those was a phase-2 or phase-3 problem with a known shape, and each is
+named at its own seam in the code rather than left to be discovered. All five
+are now settled, and three of them did not land where the row predicts:
 
-Phase 2 settled the bottom two, and neither landed where the row above
-predicted: the Rust binding turned out **richer** than `steamworks.js` (it binds
-screenshots and leaderboards, which the Node one does not), and the overlay
-turned out **impossible** rather than merely different. Both are worked through
-in that phase's own section below.
+- **The Rust Steam binding turned out RICHER** than `steamworks.js` — it binds
+  screenshots and the whole leaderboard surface, which the Node one does not.
+- **The overlay turned out IMPOSSIBLE** rather than merely different.
+- **The port transfer's replacement put the shell FURTHER out of the path than
+  Electron's does**, not closer: a loopback socket the page opens itself carries
+  no shell in either direction, where a `MessagePort` at least had to be minted
+  by one.
+
+The remaining two — the session server's pipe and the mod compiler being Node —
+landed roughly as predicted and are worked through in phase 3's section below.
 
 ## The one architectural difference, and why it is the right one
 
@@ -171,131 +177,164 @@ with a Steam client** — every decision above is covered by
 `cargo test -p adastrail-shell`, and nothing in a test suite can prove a
 handshake with a program that has to be running.
 
-**What it did NOT close** is four things, and they are the first four bullets of
-phase 3 rather than a list of their own: this tree is still absent from CI, the
-callback pump's interval is a phase-2 answer phase 3 invalidates, no real bundle
-has ever been installed, and voice's macOS entitlement shipped ahead of the gate
-that makes it mean anything.
+**What it did NOT close** was four things — CI, the callback pump's interval, a
+real bundle, and voice's gate — and all four are closed by phase 3 below.
 
-## Phase 3 — multiplayer, mods, and the hard pipe ← next
+## Phase 3 — multiplayer, mods, and the hard pipe ✅
 
-Everything that needs a second process, the one design problem this migration
-actually has, **and the four things phase 2 left behind** — which are listed
-first because two of them are traps phase 3 walks straight into.
+**Shipped.** Everything that needs a second process, the one design problem this
+migration actually had, and the four things phase 2 left behind. The shell is
+now feature-complete against the Electron one with a single exception, and that
+exception is not coming: Valve's overlay cannot be injected into a platform
+webview (phase 2's finding, unchanged).
 
-### The phase-2 leftovers, which phase 3 closes
+### The phase-2 leftovers, closed
 
-- **PUT THIS TREE IN CI — `tauri-build.yml`, the peer of `desktop-build.yml`.**
-  No workflow mentions `tauri/` today, so `make tauri-test` (103 tests) and
-  `make tauri-lint` (clippy at zero warnings) run only when a human remembers.
-  Phase 1 could survive that because it was a window; phase 2 made it ~1,000
-  lines of decision logic with real failure paths, and phase 3 doubles it. Copy
-  the Electron workflow's shape rather than inventing one — it is already split
-  by exactly the cost boundary this tree has:
+- **THE TREE IS IN CI — `.github/workflows/tauri-build.yml`**, the peer of
+  `desktop-build.yml` and split by the same cost boundary, which this tree
+  happens to have structurally rather than by discipline:
 
-  | Job       | Cost                | What it is here                                                                                                                                                                                              |
-  | --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-  | `check`   | cheap, automatic    | `cargo test -p adastrail-shell` on ubuntu. **No GUI libraries, no Steam SDK** — the entire point of the crate split, and the reason this half lands first                                                    |
-  | `lint`    | medium, automatic   | `cargo clippy --workspace --all-targets -- -D warnings`, which DOES need the webview development libraries (`libwebkit2gtk-4.1-dev`, `libgtk-3-dev`) — so it is an apt step and a `Swatinem/rust-cache` away |
-  | `package` | expensive, dispatch | Real Windows/macOS runners producing bundles. Dispatch-only for the same reason the Electron and EAS ones are: it runs when a human is shipping                                                              |
+  | Job       | Cost                | What it is here                                                                                                                                                         |
+  | --------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `check`   | cheap, automatic    | `cargo test -p adastrail-shell` plus `cargo fmt --check`. **No GUI libraries, no Steam SDK** — the entire point of the crate split                                      |
+  | `lint`    | medium, automatic   | `cargo clippy --workspace --all-targets -- -D warnings`, which DOES need `libwebkit2gtk-4.1-dev` and `libgtk-3-dev` — so it is an apt step and a `rust-cache` away      |
+  | `package` | expensive, dispatch | Real Windows/macOS/Linux runners producing the depot AND the bundles. Dispatch-only for the same reason the Electron and EAS ones are: it runs when a human is shipping |
 
-  Path-filter it on `tauri/**`, `pwa/src/app/**`, `scripts/**` and the workflow
-  itself — the same set the Electron workflow filters on, and for the same
-  reason: this shell answers those protocols, so a change to the web half can
-  break it without touching `tauri/` at all.
+  Path-filtered on `tauri/**`, `server/**`, `scripts/**`, `pwa/src/app/**` and
+  the workflow itself — the Electron set plus `server/**`, which this shell now
+  spawns.
 
-- **SHIP THE BINARIES BESIDE ELECTRON'S, SUFFIXED `-tauri`.** `release.yml`'s
-  `desktop` job attaches four archives to every GitHub Release; phase 3 adds a
-  `desktop-tauri` job beside it, reading the identical `GIS_ENABLE_*` inputs and
-  the identical macOS signing secrets, and uploading onto the same Release.
-  **The suffix is the whole mechanism and it is not cosmetic:** both shells
-  package the same product at the same version for the same platforms, so
-  without it the two jobs race to upload files with colliding names and the
-  Release ends up with whichever finished last. The `standalone` profile of
-  `package.mjs` therefore names its output
-  `adastrail-<version>-tauri-<os>-<arch>.<ext>`, against Electron's
-  `adastrail-<version>-<os>-<arch>.<ext>`.
+- **THE BINARIES SHIP BESIDE ELECTRON'S, SUFFIXED `-tauri`.** `release.yml` has
+  a `desktop-tauri` job beside `desktop`, reading the identical `GIS_ENABLE_*`
+  inputs and the identical macOS signing secret, uploading onto the same
+  Release. **The suffix is the whole mechanism and it is not cosmetic:** both
+  shells package the same product at the same version for the same platforms, so
+  without it the two jobs would race to upload files with colliding names.
+  `package.mjs`'s `standalone` profile renames its output to
+  `adastrail-<version>-tauri-<os>-<arch>.<ext>`.
 
-  That is also what makes phase 4 a real comparison rather than a thought
-  experiment: **the two builds are downloadable from the same release page**, so
-  the install-size and cold-start numbers the decision turns on are measured by
-  anybody who wants to, on their own machine, from artifacts nobody staged. The
-  suffix stays for exactly as long as both shells exist — retiring it is one of
-  the things phase 4's decision buys.
+  That is what makes phase 4 a real comparison rather than a thought experiment:
+  **the two builds are downloadable from the same release page**, so the
+  install-size and cold-start numbers the decision turns on are measured by
+  anybody who wants to, from artifacts nobody staged. The job is deliberately
+  NOT in `publish`'s `needs`: it is not the shipping build, so a Rust toolchain
+  failing must not hold back a release whose actual downloads are ready.
 
-- **RE-DECIDE THE CALLBACK PUMP BEFORE THE NET BRIDGE, NOT AFTER.**
-  `src-tauri/src/steam.rs` drains Steam's callback queue every 200 ms and argues
-  in its own header why that is fine — nothing phase 2 calls blocks on a
-  callback. **Phase 3's networking does.** Steam P2P is POLLED (the shape
-  `electron/src/net-steam-p2p.ts` is built around) and matchmaking arrives as
-  call-results delivered THROUGH `run_callbacks`, so at 200 ms a lobby round
-  trip costs a fifth of a second and packet delivery is capped at 5 Hz. Inherit
-  that number and the session presents as a broken network for a reason living
-  in a constant nobody is looking at. `PUMP_INTERVAL` is the net bridge's to
-  own, and the pump may need to become two (a slow one for stats, a fast one
-  for the socket).
-- **INSTALL A REAL BUNDLE AND SEE THE GAME.** Phase 2 built and inspected the
-  depot end to end on Linux — executable, `webroot/`, `libsteam_api.so`, the
-  rpath resolving out of the depot's own directory — but that path is
-  `--no-bundle` plus a copy. No `deb`, `appimage`, `dmg` or `nsis` has ever been
-  produced, so three things have never run: `bundle.resources`'
-  `{"../webroot": "webroot"}` mapping, `bundle.macOS.frameworks` putting Valve's
-  dylib into `Contents/Frameworks`, and `protocol::webroot_dir`'s PACKAGED
-  branch (every run so far took the checkout branch or `GIS_WEBROOT`). Each is a
-  single point of failure for an installed copy — a wrong resource path is a
-  blank window, a missing dylib is Steam silently unavailable — and one install
-  per platform checks all three at once. Phase 3 wants installable builds for
-  its own exit test anyway, so this is the phase that pays for it.
-- **VOICE'S macOS HALF IS IN THE TREE AND ITS GATE IS NOT.** The
-  hardened-runtime entitlement and `NSMicrophoneUsageDescription` shipped in
-  phase 2 deliberately — a build missing the usage string is KILLED by TCC
-  rather than refused, so the key belongs in every macOS build whether or not
-  that build carries voice. What is absent is the thing that REFUSES the
-  microphone on a build without the capability, which is the webview's own
-  permission handler and is listed as phase-3 work below. Until it lands the
-  entitlement is a promise nothing keeps; do not read its presence as the gate
-  being done.
+- **THE CALLBACK PUMP IS TWO GEARS**, decided before the net bridge rather than
+  after. `shell/src/steam_pump.rs` owns the numbers: 200 ms idle (phase 2's,
+  kept for exactly the case phase 2 described) and **50 ms live**, which is the
+  snapshot rate and the same number the P2P pump runs at. `src-tauri/src/steam.rs`
+  asks on every tick rather than being re-armed, because a pump somebody has to
+  remember to speed up is one they forget to on the path that mattered. A test
+  pins `FAST_INTERVAL_MS <= PUMP_MS`, since a callback queue drained less often
+  than packets arrive is a queue that grows for as long as the session lasts.
 
-### The new work
+- **VOICE'S GATE IS IN THE TREE, at two depths and honestly labelled.**
+  `shell/src/media.rs` is the decision — the microphone only with the `voice`
+  capability, the camera never, everything else never — and it is answered:
 
-- **The session server as a sidecar.** Electron forks the compiled Node server
-  with `utilityProcess.fork`; Tauri has no such thing, so the server is a
-  bundled sidecar binary (or a bundled Node runtime) supervised by the shell —
-  spawn, health, shutdown, and the orphan-reaping the Electron shell does in
-  `before-quit`.
-- **The snapshot channel — the decision this phase exists to make.** Electron
-  mints a `MessagePort` pair and hands the page one end, so 20 Hz of world state
-  never touches the main process. Tauri's IPC has no port transfer. The
-  candidates, to be measured rather than argued: a loopback **WebSocket** from
-  the page straight to the sidecar (no shell in the path, same property the
-  `MessagePort` bought, at the cost of a listening socket); Tauri's own IPC with
-  a binary channel (`tauri::ipc::Channel`, shell in the path); or a
-  `SharedArrayBuffer` ring with the site's COOP/COEP headers set by the scheme
-  handler. **Measured at the reference frame budget with a full party before one
-  is picked**, because "it works" and "it works at 20 Hz with 200 mobs" are
-  different claims.
-- **The net bridge and its neighbours**: lobby, invite (`+connect_lobby`, the
-  second-instance hand-off), firewall/UPnP, Steam P2P.
-- **Mods**: the bridge, the Workshop, the archive reader, and the packaged mod
-  toolchain — which is Node code the Rust shell has to invoke rather than
-  import, the mirror image of Electron's `resources.ts` problem.
-- **Voice** — the capability, and the media-permission gate it exists to make
-  refusable. The Electron shell refuses the microphone at the session; the Tauri
-  peer must refuse it in the webview's own permission handler, per platform.
-- **Dedicated mode** — `--dedicated` turning the one binary into the session
-  server, minus the window.
+  | Platform                 | What refuses                                                                                                                                                                             |
+  | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **WebKitGTK**            | the webview's own `permission-request`, so the page never reaches the device                                                                                                             |
+  | **WKWebView / WebView2** | nothing native: the equivalents are a `WKUIDelegate` method and a COM event Tauri does not surface                                                                                       |
+  | **all three**            | `navigator.mediaDevices` is REMOVED by the initialization script on a build without voice, as a non-configurable own property — so nothing in the page's dependency tree can put it back |
+
+  The floor is shell-enforced everywhere and OS-enforced on one of three. That
+  is stated at the seam rather than implied, and it is what phase 2's macOS
+  entitlement is now attached to.
+
+- **INSTALLABLE BUILDS COME OUT OF BOTH WORKFLOWS**, which is what pays for the
+  packaging leftover: `tauri-build.yml`'s `package` job and `release.yml`'s
+  `desktop-tauri` job both produce real `deb`/`AppImage`/`dmg`/`nsis` bundles, so
+  `bundle.resources`, `bundle.macOS.frameworks` and `protocol::webroot_dir`'s
+  PACKAGED branch are all exercised by CI rather than by nobody. **The one thing
+  a workflow cannot do is press the icon**, so "install it and see the game" is
+  still a line on phase 4's checklist — the difference is that the artifact to
+  install now exists on every release page.
+
+### The new work, and what it settled
+
+- **THE SESSION SERVER IS A SIDECAR, AND THE CONTROL CHANNEL IS STDIO.**
+  `server/main.ts` grew a THIRD entry beside the `parentPort` one and the
+  terminal one: `--shell`, which is `server/shell-host.ts`. The shell spawns it
+  on a bundled Node runtime and talks newline-delimited JSON over its stdin and
+  stdout — the same `ControlMessage`/`ControlReply` traffic `parentPort` carries
+  under Electron, needing no library on either side. **Stdin's EOF is the
+  orphan reaper**: Electron kills its utility process in `before-quit`, and a
+  spawned child has to reap itself.
+
+- **THE SNAPSHOT CHANNEL IS A LOOPBACK WEBSOCKET THE PAGE OPENS, and the page
+  does not know.** This was the decision the phase existed to make:
+
+  | Candidate                  | What it costs                                                                                                 |
+  | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+  | `tauri::ipc::Channel`      | Every frame crosses the SHELL's event loop — the exact cost the `MessagePort` was chosen to avoid, paid twice |
+  | A `SharedArrayBuffer` ring | COOP/COEP on the game's own origin, so the WEBSITE's serving changes to suit one shell                        |
+  | **A loopback WebSocket**   | One listening socket on 127.0.0.1, behind a per-session token                                                 |
+
+  The third keeps the one property that mattered — the shell is not in the path
+  — and changes nothing else. **`pwa/` did not change by a line**: the page asks
+  `__gisShell.onNetPort` for a `MessagePort` and gets one, because the shell's
+  initialization script mints the pair IN THE PAGE and bridges its own end to
+  the socket (`shell/src/snapshot.rs`). The listener binds 127.0.0.1 on an
+  ephemeral port the session process itself chose, answers 426 to everything
+  that is not the one upgrade path, and requires a secret that process minted
+  and told only the shell.
+
+  **What is still owed is the measurement, and it is the exit test's.** The
+  argument above is structural — no shell in the path, no header change — and
+  "it works at 20 Hz with 200 mobs and four players" is a claim only a played
+  session settles.
+
+- **THE NET BRIDGE AND ITS NEIGHBOURS**, each the peer of its Electron file:
+  `net.rs` (the protocol), `net_lobby.rs` (Steam matchmaking, with the SAME
+  metadata keys the Electron shell writes, so the two builds see each other's
+  games), `net_invite.rs` (`+connect_lobby`, handed over by
+  `tauri-plugin-single-instance` where Electron uses `second-instance`),
+  `net_firewall.rs` (every command and every READING of its output, which is a
+  half the TypeScript peer cannot test) and `steam_p2p.rs`.
+
+- **MODS, WITH THE COMPILER AS A CHILD PROCESS** — the mirror image of
+  Electron's `resources.ts` problem. There is one compiler and it is Node;
+  Electron imports it, this shell spawns it through
+  `tauri/scripts/mod-compile.mjs` and reads JSON back. Two things follow and
+  both are improvements: the reference catalog is read ONCE per list rather than
+  once per mod, and a compiler that throws takes down a child rather than a
+  thread of the shell's. The zip reader is `shell/src/mod_archive.rs`, refusal
+  for refusal with the TypeScript one.
+
+- **DEDICATED MODE** — `--dedicated`, decided before Tauri's builder exists so a
+  windowless server never registers a scheme or adopts a user-data directory.
+  Spawned rather than imported, which is the closer match to what an operator
+  expects: the thing in their process table is the server.
+
+- **AND A NODE RUNTIME TRAVELS WITH THE PACKAGE**, which is the one place this
+  shell is fatter than the promise Tauri makes. Both of the above are Node
+  programs and a player has no reason to have one, so `scripts/package.mjs`
+  copies the runtime it is itself packaging with — the version the server was
+  compiled against, on the platform it will run on. A build stamped with neither
+  multiplayer nor mods carries none of it.
 
 **Exit test:** a four-player session between a Tauri host and an Electron
 client, with a Workshop mod loaded and voice on, at parity frame times — played
-from **installed builds** rather than from `cargo run`, which is what closes the
-packaging leftover above in the same act.
+from **installed builds** rather than from `cargo run`. **Still needs humans
+with hardware**, exactly as phase 2's did: every decision above is covered by
+`cargo test -p adastrail-shell` and `npx vitest run tests/shell_host_test.ts`,
+and nothing in a test suite can prove four machines agree about a world.
 
 ---
 
-## Phase 4 — playtest, decide, and then act on the decision
+## Phase 4 — playtest, decide, and then act on the decision ← next
 
 - **The parity matrix.** Every platform feature, every screen, on all three
-  desktops and the Steam Deck, Tauri against Electron side by side.
+  desktops and the Steam Deck, Tauri against Electron side by side. **Four
+  things phase 3 could not check without a human**, and each is one press:
+  install a real bundle and see the game (the packaged resource branch, the
+  macOS dylib in `Contents/Frameworks`, the Node runtime's nested signature); a
+  four-player session at the reference frame budget, which is the snapshot
+  channel's own measurement; a Workshop publish and a subscription; and the
+  microphone gate on WKWebView and WebView2, where the refusal is the page-side
+  lockout rather than the platform's.
 - **The numbers that motivated the migration**, measured rather than assumed:
   install size, cold-start time, idle and in-fight memory, frame times at the
   reference viewport, battery on a handheld.
@@ -333,6 +372,13 @@ packaging leftover above in the same act.
   `adastrail` and the old name joins `LEGACY_DIR_NAMES` in
   `shell/src/user_data.rs`, which is the machinery that already exists for
   exactly this and is already tested against it.
+
+- **And one tidy-up that only makes sense once a shell is retired:** the
+  engine's Node ship target writes into `electron/server-dist/`, which both
+  shells now consume (`shell/src/runtime.rs`). That is history rather than
+  ownership — the directory predates this tree — and renaming it while both
+  shells exist would be churn in the shipping one for a reader's benefit. The
+  moment one shell goes, it moves beside `server/`.
 
 - Whatever is decided, the release plumbing for it: `tauri/RELEASING.md`,
   `steam:upload` pointed at the tauri output, and the two build workflows

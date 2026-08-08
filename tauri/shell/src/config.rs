@@ -91,18 +91,19 @@ pub const DEVELOPER_NOTICE: &str = concat!(
     "is not licensed for play, for sharing, or for distribution in any form."
 );
 
-/// WHAT A PHASE-2 BUILD IS, said once per launch.
+/// WHAT A PHASE-3 BUILD IS, said once per launch.
 ///
-/// The Tauri shell is mid-migration (`docs/tauri-migration.md`): it plays the
-/// whole game and carries the Steam seams, and it still has no mods and no
-/// multiplayer. A player handed this build and left to discover that the
-/// SERVER BROWSER silently does nothing would report it as a bug, so the shell
-/// says which shell it is and what it has not grown yet. This line goes away
-/// when phase 3 lands, not before.
+/// The Tauri shell is feature-complete as of phase 3 (`docs/tauri-migration.md`)
+/// and is still not the shipping desktop build — that decision belongs to phase
+/// 4, after the two shells have been played side by side. So the line no longer
+/// lists absent features, because there is one left and it is not coming: the
+/// Steam overlay cannot be injected into a platform webview
+/// (`crate::steam::overlay_support`). What it says instead is which binary this
+/// is and which one is the release, because that is the fact a bug report needs.
 pub const MIGRATION_NOTICE: &str = concat!(
-    "This is the TAURI desktop shell, which is still being built out. It runs ",
-    "the game itself in full, with Steam cloud save, achievements and ",
-    "screenshots — and it does not yet carry mods, multiplayer, voice or the ",
-    "Steam overlay. The Electron desktop build is the one that does. ",
+    "This is the TAURI desktop shell. It runs the whole game — Steam cloud ",
+    "save, achievements, screenshots, mods, multiplayer and voice — and it is ",
+    "NOT the shipping desktop build: the Electron one is, until the two have ",
+    "been compared. The Steam overlay is the one thing it cannot have. ",
     "See docs/tauri-migration.md."
 );

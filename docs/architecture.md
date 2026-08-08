@@ -2157,12 +2157,24 @@ time, so an installed copy has nothing to edit. `pwa/` needed no change to run
 inside it: `__GIS_PLATFORM__` stays `steam`, because it is the same product on
 the same store, and `__GIS_SHELL__` says which binary for a bug report.
 
-**At phase 2 it runs the whole game and carries the Steam seams** — cloud save,
-achievements, screenshots, and a package (`make desktop-tauri-steam` produces a
-depot directory, the peer of `make desktop-steam`). What it does NOT have is
-mods, multiplayer and voice, which are phase 3, and each of those protocols is
-routed to a seam that logs which phase fills it in, so a mid-migration build
-explains itself rather than leaving the page to wait out a timeout.
+**At phase 3 it runs the whole game and carries every platform seam** — cloud
+save, achievements, screenshots, mods, multiplayer and voice — plus a package
+(`make desktop-tauri-steam` produces a depot directory, the peer of
+`make desktop-steam`) and a `-tauri`-suffixed download on every release page.
+What it does NOT have is the Steam overlay, and that is not coming; see below.
+
+**The two features that need a second process needed a second pipe, and the
+page never learned.** Electron forks the compiled session server with
+`utilityProcess.fork` and transfers a `MessagePort` to the renderer; Tauri can
+spawn a child and nothing more. So the server is spawned on a Node runtime the
+package carries, its CONTROL channel is that child's stdio as newline-delimited
+JSON (`server/shell-host.ts`, the server's third entry), and its SNAPSHOT
+channel is a loopback WebSocket the PAGE opens straight to it — which keeps the
+one property the `MessagePort` bought, that no game byte crosses the shell. The
+page still asks `__gisShell.onNetPort` for a `MessagePort` and still gets one,
+because the shell's initialization script mints the pair in the page and bridges
+its own end. The mod compiler travels the same way: one compiler, spawned rather
+than imported, with JSON crossing.
 
 The platform seams are the **same three-file shape** the rest of the game uses —
 bridge → provider → platform — with the split falling exactly on the crate

@@ -33,6 +33,9 @@ export default [
       "tauri/webroot/**",
       "tauri/target/**",
       "tauri/release/**",
+      // The sidecars scripts/package.mjs stages: a copy of the compiled server,
+      // the mod toolchain and a Node runtime, all written by a build.
+      "tauri/resources/**",
       "tauri/node_modules/**",
       "tauri/src-tauri/**",
       "coverage/**",

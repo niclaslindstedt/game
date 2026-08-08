@@ -33,6 +33,12 @@ const { version } = require("../package.json");
  * this broke. `tests/content/mod_toolchain_deps_test.ts` proves the manifest
  * matches what the toolchain actually imports.
  */
+/**
+ * THE MOD TOOLCHAIN'S FILES, declared once for both desktop shells —
+ * `scripts/modtools-manifest.cjs` carries the list and the argument for it.
+ */
+const MODTOOLS = require("../scripts/modtools-manifest.cjs");
+
 const MOD_TOOLCHAIN_DEPS = Object.keys(
   require("../mod/package.json").dependencies ?? {},
 ).map((pkg) => ({
@@ -252,57 +258,19 @@ module.exports = {
   // a flattened copy would resolve to nothing. Its npm dependencies ride along
   // for the same reason (see MOD_TOOLCHAIN_DEPS above).
   extraResources: [
-    { from: "../mod/tools", to: "modtools/mod/tools" },
-    { from: "../mod/catalog.json", to: "modtools/mod/catalog.json" },
-    { from: "../scripts/asset-tools", to: "modtools/scripts/asset-tools" },
-    {
-      from: "../scripts/companion-data",
-      to: "modtools/scripts/companion-data",
-    },
-    {
-      from: "../scripts/difficulty-data",
-      to: "modtools/scripts/difficulty-data",
-    },
-    { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
-    // THE HUD, which a mod may replace outright — its loader travels for the
-    // same reason every other one here does: the compiler reads a mod's `hud/`
-    // folder with the game's own loader and schema.
-    { from: "../scripts/hud-data", to: "modtools/scripts/hud-data" },
-    { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
-    { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
-    { from: "../scripts/map-data", to: "modtools/scripts/map-data" },
-    // THE RUN'S OWN WINDOWS, which a mod may replace like the HUD. ONE FILE
-    // rather than the folder it sits in, and deliberately: `scripts/menu-data/`
-    // also holds the TITLE menu's loader, which is the one catalog a mod may
-    // not ship — and a toolchain that carries a loader it must never call is a
-    // toolchain inviting somebody to call it.
-    {
-      from: "../scripts/menu-data/load-ingame-yaml.mjs",
-      to: "modtools/scripts/menu-data/load-ingame-yaml.mjs",
-    },
-    { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
-    { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
-    { from: "../scripts/quest-data", to: "modtools/scripts/quest-data" },
-    { from: "../scripts/script-data", to: "modtools/scripts/script-data" },
+    // The loaders, the schemas and the three authored catalogs the compiler
+    // reads — ONE list, shared with `tauri/scripts/package.mjs`, because two
+    // shells carrying two copies of it is how a loader lands in one desktop
+    // build and not the other with nothing anywhere reporting it. Paths in the
+    // manifest are relative to the REPO ROOT; this config's are relative to
+    // `electron/`.
+    ...MODTOOLS.map(({ from, to }) => ({ from: `../${from}`, to })),
     // The Lua VM, compiled (scripts/build-lua.mjs). The script validator IS the
     // engine's own interpreter and this process has no TypeScript, so the
-    // compiled copy has to travel beside the toolchain that imports it.
+    // compiled copy has to travel beside the toolchain that imports it. Staged
+    // INSIDE this tree rather than at the repo root, which is why it is not in
+    // the shared manifest.
     { from: "modtools-lua", to: "modtools/lua-vm" },
-    { from: "../scripts/set-data", to: "modtools/scripts/set-data" },
-    { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
-    { from: "../scripts/story-data", to: "modtools/scripts/story-data" },
-    { from: "../scripts/talent-data", to: "modtools/scripts/talent-data" },
-    // The ladder and the loot economy: the compiler reads them so a mod's
-    // `savage` and a shipped `savage` mean the same thing.
-    { from: "../content/ladder.yaml", to: "modtools/content/ladder.yaml" },
-    {
-      from: "../content/item_quality.yaml",
-      to: "modtools/content/item_quality.yaml",
-    },
-    {
-      from: "../content/item_rarity.yaml",
-      to: "modtools/content/item_rarity.yaml",
-    },
     ...MOD_TOOLCHAIN_DEPS,
 
     // THE SESSION SERVER — the engine, compiled for Node

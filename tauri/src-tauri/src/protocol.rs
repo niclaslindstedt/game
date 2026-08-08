@@ -30,10 +30,8 @@ pub fn webroot_dir(app: &AppHandle) -> PathBuf {
     }
     // The packaged answer first, because a developer running a packaged build
     // has both trees on disk and only one of them is the one they installed.
-    if let Ok(resource) = app.path().resolve("webroot", BaseDirectory::Resource) {
-        if resource.join("index.html").is_file() {
-            return resource;
-        }
+    if let Some(resource) = packaged_resource_dir(app) {
+        return resource.join("webroot");
     }
     // A checkout: `src-tauri/` is one hop below the tree `bundle-web.mjs`
     // writes into, and `CARGO_MANIFEST_DIR` is resolved at compile time — which
@@ -42,6 +40,37 @@ pub fn webroot_dir(app: &AppHandle) -> PathBuf {
         .parent()
         .map(|tree| tree.join("webroot"))
         .unwrap_or_else(|| PathBuf::from("webroot"))
+}
+
+/// The bundle's resource directory, or `None` when this is a checkout.
+///
+/// **THE TEST IS THE SITE'S OWN `index.html`**, and it is the same test
+/// [`webroot_dir`] made before phase 3 gave the resource directory three more
+/// tenants (the session server, the mod toolchain, the Node runtime). They
+/// cannot be told apart by looking for a file each, because a build packaged
+/// without multiplayer legitimately has no server in there — but every packaged
+/// build has a site, or it is not a build of this game at all.
+pub fn packaged_resource_dir(app: &AppHandle) -> Option<PathBuf> {
+    let resource = app
+        .path()
+        .resolve("webroot", BaseDirectory::Resource)
+        .ok()?;
+    if !resource.join("index.html").is_file() {
+        return None;
+    }
+    resource.parent().map(std::path::Path::to_path_buf)
+}
+
+/// The repository root, for a checkout.
+///
+/// `CARGO_MANIFEST_DIR` is resolved at COMPILE time, which is exactly right:
+/// this answer is only ever used by the build that was compiled from that tree.
+pub fn checkout_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|tauri| tauri.parent())
+        .map(std::path::Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."))
 }
 
 fn not_found(path: &str) -> Response<Vec<u8>> {
