@@ -35,6 +35,43 @@ Store identities are wired in [`app.config.js`](app.config.js):
 The project is already linked to its EAS project (`extra.eas.projectId` in
 `app.config.js`), so `eas build` resolves it without `eas init`.
 
+### Enrolling as a COMPANY is the long pole, and it gates both stores at once
+
+An organization enrollment is not a signup — it is Apple verifying the legal
+entity, and it verifies it against **Dun & Bradstreet**, not against what you
+type. The legal name, the headquarters address and the phone on the D&B record
+must match what is entered, so a company whose D&B record is stale or wrong
+waits for **D&B to correct it** before enrollment can even be attempted. In
+Sweden that correction is fed from the Bolagsverket/SCB registers into D&B, and
+the round trip runs to **weeks**. Apple then needs up to two business days to
+pick the corrected record up.
+
+Three things follow, and each is worth knowing before the wait rather than
+after it:
+
+- **Google Play's organization account needs the same D-U-N-S number**, so the
+  one wait clears both storefronts. Have Play's paperwork ready to submit the
+  same day.
+- **Do not route around it with a personal account.** A personal Play account
+  created after 13 Nov 2023 must run **12 testers for 14 consecutive days** of
+  closed testing before it may ship to production; a D-U-N-S-verified
+  organization account is exempt. Waiting is faster than the workaround, and
+  the Apple side would need a re-enrollment later anyway.
+- **The paid-apps paperwork is a second, independent wait** — see below. It
+  cannot start until the membership exists, so treat the day enrollment clears
+  as the day that clock starts, not the day you are done.
+
+Nothing in this file's steps 1–5 can be started before the membership exists.
+Everything else can, and that is most of the work:
+
+```sh
+make store-preflight ARGS="--now"   # only what waits on no store account
+```
+
+That view is the checklist for the wait. It stays honest as things land: an
+item leaves the list when it is done, and the full run says how many are still
+parked behind each account.
+
 ### Know what is still missing, at any point
 
 Everything below that isn't code lives somewhere a repo can't hold — the app
@@ -50,6 +87,11 @@ make store-preflight
 Run it after every step in this file; it is the checklist. Its last section is
 Steam's — one command answers "are we ready to ship" for both storefronts; see
 [`electron/RELEASING.md`](../electron/RELEASING.md) for that half.
+
+Each finding that waits on a store account says so (`needs the Apple
+membership`, `needs the Steamworks app`), and the summary counts them
+separately — so a long list during an enrollment reads as what it is rather
+than as a project that cannot ship. `ARGS="--now"` hides them.
 
 ### The one that blocks everything else
 
