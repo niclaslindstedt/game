@@ -151,11 +151,15 @@ jobs:
         working-directory: .
         run: |
           set -euo pipefail
-          rc=$(ls /usr/lib/llvm-*/bin/llvm-rc 2>/dev/null | sort -V | tail -1 || true)
+          newest_rc() {
+            find /usr/lib -maxdepth 3 -name llvm-rc -type f 2>/dev/null |
+              sort -V | tail -1
+          }
+          rc=$(newest_rc)
           if [ -z "$rc" ]; then
             sudo apt-get update
             sudo apt-get install -y llvm
-            rc=$(ls /usr/lib/llvm-*/bin/llvm-rc 2>/dev/null | sort -V | tail -1 || true)
+            rc=$(newest_rc)
           fi
           if [ -z "$rc" ]; then
             echo "no llvm-rc found — the Windows-target check cannot run" >&2
