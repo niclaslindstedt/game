@@ -259,9 +259,23 @@ screenshots. The binary is still built and submitted by EAS below — the
 
 Authentication uses an **App Store Connect API key** (`.p8`, from Users and
 Access → Integrations) rather than an Apple ID, so no 2FA session can expire
-mid-upload. Export `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`, `APPLE_ID`,
-`APPLE_TEAM_ID`, `ASC_TEAM_ID` — in `native/.env` (gitignored) or the shell.
-Never commit the `.p8`.
+mid-upload. Export `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`, `APPLE_ID`
+and `APPLE_TEAM_ID` — in `native/.env` (gitignored) or the shell. Never commit
+the `.p8`.
+
+> **`ASC_TEAM_ID` is optional, and the two "team ids" are different things.**
+> `APPLE_TEAM_ID` is the developer portal's **10 alphanumerics**, on
+> [Membership details](https://developer.apple.com/account). `ASC_TEAM_ID` is
+> fastlane's `itc_team_id`, a **number**, and it only disambiguates an Apple
+> Account belonging to several App Store Connect teams when authenticating by
+> password — the API key is issued by one team, so it settles this itself.
+> Leave it unset unless something asks for it.
+>
+> It is also not shown anywhere in App Store Connect (**Users and Access does
+> not have it**). To get it: `bundle exec fastlane spaceship` then
+> `Spaceship::Tunes.select_team`, or read `contentProviderId` from
+> `https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/user/detail`
+> while logged in.
 
 ## 4. Build
 
