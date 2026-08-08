@@ -354,25 +354,34 @@ export function DriveScreen({
     [heroName],
   );
 
+  /** Take whatever is on the screen away right now — what a restart owes the
+   * box (see `endDrive`), and what the last page of a bark does to itself. */
+  const clearSpeech = useCallback(() => {
+    speechRef.current = null;
+    setSpeech(null);
+  }, []);
+
   /** The bark's own clock, run from inside the loop: turn the page when this
    * one has had its time, and take the box away after the last. */
-  const ageSpeech = useCallback((nowMs: number) => {
-    const live = speechRef.current;
-    if (!live || nowMs < live.untilMs) return;
-    if (live.page + 1 >= live.pages.length) {
-      speechRef.current = null;
-      setSpeech(null);
-      return;
-    }
-    const page = live.page + 1;
-    const next = {
-      ...live,
-      page,
-      untilMs: nowMs + barkMs(live.pages[page] ?? []),
-    };
-    speechRef.current = next;
-    setSpeech(next);
-  }, []);
+  const ageSpeech = useCallback(
+    (nowMs: number) => {
+      const live = speechRef.current;
+      if (!live || nowMs < live.untilMs) return;
+      if (live.page + 1 >= live.pages.length) {
+        clearSpeech();
+        return;
+      }
+      const page = live.page + 1;
+      const next = {
+        ...live,
+        page,
+        untilMs: nowMs + barkMs(live.pages[page] ?? []),
+      };
+      speechRef.current = next;
+      setSpeech(next);
+    },
+    [clearSpeech],
+  );
 
   const setPause = useCallback((on: boolean) => {
     pausedRef.current = on;
@@ -703,6 +712,7 @@ export function DriveScreen({
           fxRef.current,
           goreRef.current,
           skidRef.current,
+          clearSpeech,
           arrive,
         );
       }
@@ -809,7 +819,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, arrive, assets, nose, say]);
+  }, [ageSpeech, arrive, assets, clearSpeech, nose, say]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {
@@ -999,12 +1009,14 @@ let padOrigin: { x: number; y: number } | null = null;
  * than presentation and the drive's two hosts answer them differently — the
  * gallery's exhibit simply re-stages its show.
  */
-function endDrive(
+export function endDrive(
   drive: DriveState,
   bursts: Burst[],
   fx: DriveFxState,
   gore: DriveGoreState,
   skids: SkidState,
+  /** Take the speech box away — see the restart below. */
+  clearSpeech: () => void,
   /** What the arrival hands the leg to — the screen's own `arrive`, which is
    * where the choice between the high-score board and a silent crossing is
    * made. */
@@ -1015,6 +1027,15 @@ function endDrive(
     drive.outcomeMs > DRIVE.breakdownHoldMs
   ) {
     Object.assign(drive, restartDrive(drive));
+    // EVERYTHING THE OLD LEG LEFT BEHIND GOES WITH IT, AND HIS VOICE IS ONE OF
+    // THOSE THINGS. The wreck's own line ("COME ON. NOT HERE. NOT TONIGHT.") is
+    // about a car that no longer exists, so it must not be sitting over the
+    // clean one — and it would be, for two reasons that compound: the bark
+    // outlives `breakdownHoldMs` on its own (it is written to be readable, the
+    // hold is written not to punish), and `restartDrive` REWINDS THE CLOCK the
+    // bark retires itself on, so a page due at 41 000 ms is still due after the
+    // road goes back to 0 and the box sits there over the fresh leg.
+    clearSpeech();
     bursts.length = 0;
     clearDriveFx(fx);
     clearDriveGore(gore);
