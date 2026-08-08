@@ -32,6 +32,7 @@ import {
   createGame,
   DIFFICULTY_ORDER,
   ENEMY_DEFS,
+  ENTRANCE_DOOR,
   findPath,
   hasMapBlueprint,
   LEVEL_ORDER,
@@ -234,8 +235,17 @@ describe("generated levels", () => {
         // An APPROACH door (the garage door) opens for anybody who walks
         // up — it can never trap anything, so its chain reads as open
         // floor in BOTH grids and only KEY doors are interrogated.
+        //
+        // THE ENTRANCE is the same kind of thing said differently: it is a
+        // keyed door with no key, opened by a member of staff badging in
+        // (`LevelDef.arrivals`), and it opens whether or not the hero does
+        // anything at all. So it can no more trap the building behind it than
+        // the roll-up can — and reading it as a lock would say the whole of
+        // GOODCO is behind one, which is true and is the level.
         const approachParts = new Set(
-          state.doors.filter((d) => d.approach).flatMap((d) => d.obstacleIds),
+          state.doors
+            .filter((d) => d.approach || d.id === ENTRANCE_DOOR)
+            .flatMap((d) => d.obstacleIds),
         );
         const grid = buildNavGrid({
           ...state,
@@ -285,6 +295,12 @@ describe("generated levels", () => {
         for (const door of def.doors ?? []) {
           // An approach door (the garage door) has no key by design.
           if (door.opens === "approach") continue;
+          // …and so has THE ENTRANCE, which is the other exception and the
+          // deliberate one: a keyed door that no story item unlocks, because
+          // the only thing that ever opens it is a member of staff badging in
+          // (`LevelDef.arrivals` — src/game/arrivals.ts). A key for it would
+          // make the whole beat a lock the hero could pick.
+          if (door.id === ENTRANCE_DOOR) continue;
           expect(keys.has(door.id), `${id}/${seed} door`).toBe(true);
         }
         for (const lift of def.elevators ?? [])
@@ -622,11 +638,20 @@ describe("the story on a generated map", () => {
       }
   });
 
-  it("stands the opening beat's crowd where the hero lands", () => {
+  it("stands the opening beat's crowd around its own rusher", () => {
     // `openingStrike` is a two-parter held in order by `after`: the hero reads
-    // the crowd, and only then does the rusher draw his blade. Carve the crowd a
-    // district away and the gate never opens — the rusher strikes a hero the beat
-    // will not arm, and he walks the map holstered.
+    // the crowd, and only then does the rusher draw his blade. Carve the two
+    // apart and the gate never opens — the rusher strikes a hero the beat will
+    // not arm, and he walks the map holstered.
+    //
+    // The crowd is pinned around THE RUSHER rather than around the landing,
+    // which is a distinction the staff lot made real: on a venue with an
+    // entrance (`MapArea.arrivals`) the whole scene waits in the first room
+    // past the doors while the hero is still outside on the tarmac, so
+    // measuring it against `playerSpawn` would ask a beat that has deliberately
+    // moved to prove it has not. What has to hold either way is that the crowd
+    // and the man who breaks from it are in the SAME PLACE — one within a
+    // sighting of the other — because that is the whole of the ordering gate.
     for (const id of MISSIONS) {
       const base = levelDef(id);
       const gate = base.openingStrike?.after;
@@ -636,22 +661,20 @@ describe("the story on a generated map", () => {
       if (!pin) continue;
       for (const seed of WALK_SEEDS) {
         const def = resolveLevelDef(id, seed);
+        const at = def.openingStrike?.at;
+        expect(at, `${id}/${seed} has no rusher`).toBeDefined();
+        if (!at) continue;
         const reach = pin.radius ?? 96;
         const near = def.spawns.filter(
           (s) =>
             s.enemy === pin.enemy &&
             "at" in s &&
-            Math.hypot(
-              s.at.x - def.playerSpawn.x,
-              s.at.y - def.playerSpawn.y,
-            ) <= reach,
+            Math.hypot(s.at.x - at.x, s.at.y - at.y) <= reach,
         );
         expect(
           near.length,
-          `${id}/${seed} lands the hero away from the beat's crowd`,
+          `${id}/${seed} breaks the rusher away from its own crowd`,
         ).toBeGreaterThan(0);
-        // And the rusher itself is within the touch it has to land.
-        expect(def.openingStrike).toBeDefined();
       }
     }
   });

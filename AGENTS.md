@@ -406,6 +406,19 @@ standing, and the client can read a world change off a changed level id), and a
 world **ticks while a seat is assigned to it** — never `heroInPlay`, which would
 freeze the world on the tick a death needs. → `docs/multiplayer.md`
 
+**GOODCO'S FRONT DOOR HAS NO KEY, AND THAT IS THE FEATURE.** The campaign's
+first venue lands the hero on a STAFF LOT (`MapArea.arrivals`) whose entrance is
+a keyed door nothing in the game unlocks: it opens when a member of the night
+shift drives in, parks, walks up and badges through it, and following one is the
+way in (`LevelDef.arrivals`, `src/game/arrivals.ts`). Three rules hold it and
+each has already been paid for once — the lot's whole cast is NEUTRAL (the hero
+is holstered out there; the scripted first blow now waits INSIDE), the beat may
+never stop happening (a walker that stalls badges anyway, and a shut door with
+nobody walking pulls the next car forward), and it spends NOTHING off
+`state.rng` (a car park is presentation; the draws ride `ArrivalPlan.rng`). The
+autopilot has its own rung for it (`bot/entrance.ts`) — without one it presses
+the wall the objective is behind for the whole run. → `docs/game-content.md`
+
 **ANYTHING THAT ADDS OR REMOVES AN OBSTACLE MID-RUN MUST BUMP
 `state.obstaclesVersion`.** The autopilot builds its nav grid once per level and
 caches it; a wall that appears without the bump is a wall it routes straight

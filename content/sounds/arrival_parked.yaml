@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: arrival_parked
+description: >-
+  Somebody parking for a shift, heard from across a car park: the engine sags
+  off and dies, and a beat later a door goes — one flat slam, no cough and no
+  handle rattle. Deliberately thinner and further away than `car_stop`, which
+  is the hero's own car at his elbow; this one is the sound that makes him look
+  up, so it has to read as A CAR, over there, with somebody getting out of it.
+on:
+  type: arrivalParked
+voices:
+  # The idle dying away — the same sag as car_stop, quieter and quicker.
+  - call: tone
+    type: sawtooth
+    from: 54
+    to: 20
+    durationMs: 300
+    volume: 0.032
+    detuneCents: 12
+  - call: noise
+    durationMs: 260
+    volume: 0.016
+    filter:
+      type: lowpass
+      frequency: 300
+  # The door: one flat slam across the tarmac, with the low thump under it that
+  # distance leaves and the bright clack it takes away.
+  - call: noise
+    durationMs: 60
+    volume: 0.045
+    delayMs: 400
+    filter:
+      type: bandpass
+      frequency: 900
+  - call: tone
+    type: sine
+    from: 120
+    to: 60
+    durationMs: 90
+    volume: 0.03
+    delayMs: 400

@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: door_entrance
+family: goodco
+size: [16, 16]
+description: >
+  One segment of the GOODCO FRONT ENTRANCE — a full-height glazed automatic
+  door in a chrome frame under a red status light, tiled by the chain across
+  the opening in the building's outer wall. It stands shut for the hero: it
+  only moves for a badge (see src/game/arrivals.ts).
+subject:
+  kind: solid door obstacle prop
+  build: a full-height glazed lobby door seen head on, chrome frame all round
+  features: a red status light strip in the header, a chrome push rail across the middle, a brushed-metal kick panel
+  accent: pale-blue tinted glass over chrome, with one red light above it
+  flavor: the door the night shift taps a card against on the way in
+palette:
+  O: "#1a1c2c" # outline and frame
+  T: "#c0c5cf" # chrome rail highlight
+  V: "#9095a5" # brushed-metal kick panel
+  b: "#3f4553" # push-rail shadow
+  c: "#6f9cb8" # tinted glass edge
+  r: "#d83a3a" # red header status light
+  x: "#a8d8e6" # pale-blue glazing
+grid: |
+  OOOOOOOOOOOOOOOO
+  OrrrrrrrrrrrrrrO
+  OTTTTTTTTTTTTTTO
+  OccccccccccccccO
+  OcxxxxxxxxxxxxcO
+  OcxxxxxxxxxxxxcO
+  OcxxxxxxxxxxxxcO
+  OccccccccccccccO
+  OTTTTTTTTTTTTTTO
+  ObbbbbbbbbbbbbbO
+  OcxxxxxxxxxxxxcO
+  OcxxxxxxxxxxxxcO
+  OcxxxxxxxxxxxxcO
+  OccccccccccccccO
+  OVVVVVVVVVVVVVVO
+  OOOOOOOOOOOOOOOO

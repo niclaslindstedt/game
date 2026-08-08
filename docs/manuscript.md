@@ -648,10 +648,28 @@ fact — the tracker — and pays off the prelude's own quiet detail, the jacket
 6. THEY NEVER CHANGED THE LOCKS. EVERY DOOR STILL KNOWS MY HAND.
 7. SO TONIGHT I TAKE THE PART, FINISH THE SHIP, AND GO GET ADA BACK.
 
+### Hero's thought — the night shift clocking on, out on the STAFF LOT
+
+_Fires once, on the staff lot, the moment somebody gets out of an arriving car
+(the level's `arrivals` — see src/game/arrivals.ts). It is the first line of the
+level and the only instruction in it: the entrance is a keyed door nothing he
+carries opens, so the beat has to say out loud what to do about it._
+
+_It also settles the promise the monologue made six lines earlier. "EVERY DOOR
+STILL KNOWS MY HAND" is true of the doors INSIDE, and would be a hole in the
+plot standing on the tarmac if he could not reach them — so the perimeter reader
+is the one thing GOODCO replaced after it walked him out, which is both the
+answer and a small mean joke about where the money went._
+
+- THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
+- EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED.
+- SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE.
+
 ### Hero's thought — first INTERN sighted at GOODCO HQ
 
 _Fires once, the moment the first INTERN comes into view (in his own voice) —
-before a single blow. He worked in this building; a fully manned floor at
+before a single blow, and now INSIDE the building, which is where its own words
+belong: there are no desks in a car park. He worked here; a fully manned floor at
 midnight is wrong, and the NIGHT MANAGER's secret-night-shift reveal lands a
 few rooms later._
 
@@ -660,8 +678,10 @@ few rooms later._
 
 ### The opening strike — three blows, and he only answers the third
 
-_The level opens with the hero's weapon holstered: he walks in like it's still
-his old job. A lone LAB SCIENTIST breaks from the pack and hits him — and he
+_The hero's weapon is holstered from the first tick and stays that way until
+this beat lands — he walks in like it's still his old job, and the scene plays
+in the first room past the entrance, on the staff who were on the other side of
+those doors. A lone LAB SCIENTIST breaks from the pack and hits him — and he
 does not hit back. These are his old colleagues. He names the man, tells the
 floor to stand down, says he has never raised a hand to anyone; the scientist
 answers him — by name, on the second blow, which is the campaign's first proof

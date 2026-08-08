@@ -647,6 +647,18 @@ export type Enemy = {
    */
   vanguard?: boolean;
   /**
+   * SOMEBODY WALKING IN TO WORK (`GameState.arrivals` — see arrivals.ts): this
+   * body's feet belong to the arrival system, which walks it from its car to
+   * the doors and takes it off the field on the far side.
+   *
+   * It is a marker rather than a route, because the route lives on the
+   * `Arrival` that owns the body. What it buys is the one thing the idle AI
+   * must not do to a person with somewhere to be: `moveEnemy` leaves a marked
+   * body alone entirely, so the stroll never drags it back toward a `home` it
+   * was never going to stand at.
+   */
+  arrival?: boolean;
+  /**
    * The DORMANT "at work" stroll's bookkeeping (`EnemyDef.ai.idle === "work"`
    * — see working.ts; absent on everything else, and until the mob's first
    * dormant tick). `workRng` parks the mob's private rng stream (seeded off

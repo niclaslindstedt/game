@@ -185,6 +185,17 @@ export function venueNotes(mission) {
       `${mission.lockedDoors} ${mission.lockedDoors === 1 ? "door" : "doors"} that will not open until the right key is in the bag.`,
     ]);
   }
+  if (mission.arrivals) {
+    const guards = mission.arrivals.guards;
+    notes.push([
+      "THE WAY IN",
+      `You arrive in the car park, and the entrance does not open for you — it opens for a staff badge. ` +
+        `Every so often somebody turns up for their shift, parks, and walks to it. Follow one in. ` +
+        (guards > 0
+          ? `${guards === 1 ? "A parking guard is" : `${guards} parking guards are`} out there watching the bays, and neither of them is watching you.`
+          : `Nobody out there is looking for you.`),
+    ]);
+  }
   if (mission.fauna > 0) {
     notes.push([
       "LIVE HERE",

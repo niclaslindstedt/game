@@ -16,6 +16,7 @@ export * from "./loot.ts";
 export * from "./spawning.ts";
 export * from "./enemies.ts";
 export * from "./hazards.ts";
+export * from "./arrivals.ts";
 export * from "./world.ts";
 export * from "./consumables.ts";
 export * from "./ammo.ts";

@@ -11,6 +11,7 @@ import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { clamp, distance, normalize, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
+import { openArrivals } from "./arrivals.ts";
 import {
   CHESTS,
   ELEVATOR,
@@ -281,6 +282,41 @@ export function createGame(
     return companion !== undefined && partyCompanions.has(companion);
   };
 
+  /**
+   * A PINNED BODY STANDS WHERE IT IS PUT, UNLESS SOMETHING IS ALREADY THERE.
+   *
+   * A pinned spawn (`SpawnSpec` with an `at`) names a spot the CARVE chose —
+   * an elite's post, the opening strike's rusher and the crowd around him —
+   * and the carve chooses them before a single piece of furniture is scattered,
+   * so a scripted body can be minted standing inside a gantry rank. It is not a
+   * cosmetic problem: a wedged mob is shoved a fraction of a pixel a tick by
+   * the shared push-out and NEVER GETS ANYWHERE, so the vanguard whose touch
+   * arms the hero can sit in a jig for an entire run with the hero waiting for
+   * it. (Measured, on the first campaign level, on the first seed tried.)
+   *
+   * So a pinned spot that is occupied walks outward in a fixed spiral until it
+   * finds floor. Deterministic — no rng draw, so adding this moved nothing —
+   * and it gives up rather than wandering, because a body that has to go 100 px
+   * to find room is one the carve put in a cupboard, and moving it further is
+   * guessing at the author's intent instead of honouring it.
+   */
+  const clearOfFurniture = (at: Vec2, enemyId: string): Vec2 => {
+    const radius = enemyDef(enemyId).radius;
+    if (!blocked(at, radius)) return at;
+    for (let ring = 1; ring <= 5; ring++) {
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const step = ring * 20;
+        const pos = vec(
+          clamp(at.x + Math.cos(angle) * step, radius, def.width - radius),
+          clamp(at.y + Math.sin(angle) * step, radius, def.height - radius),
+        );
+        if (!blocked(pos, radius)) return pos;
+      }
+    }
+    return at;
+  };
+
   const enemies: Enemy[] = [];
   for (const spawn of def.spawns) {
     // Difficulty-gated spawns sit out the rungs below their `minDifficulty`.
@@ -292,7 +328,7 @@ export function createGame(
       const enemy = applyAuthored(
         spawnEnemy(
           spawn.enemy,
-          vec(spawn.at.x, spawn.at.y),
+          clearOfFurniture(vec(spawn.at.x, spawn.at.y), spawn.enemy),
           rng,
           nextId++,
           mobHp,
@@ -364,7 +400,10 @@ export function createGame(
     const s = scaleRegular();
     const rusher = spawnEnemy(
       def.openingStrike.enemy,
-      vec(def.openingStrike.at.x, def.openingStrike.at.y),
+      clearOfFurniture(
+        vec(def.openingStrike.at.x, def.openingStrike.at.y),
+        def.openingStrike.enemy,
+      ),
       rng,
       nextId++,
       s.hpMult,
@@ -757,6 +796,12 @@ export function createGame(
       : 0,
     stampedeRumbleMs: 0,
     stampedeWarn: null,
+    // The staff lot opens empty and stays that way on every level that has no
+    // arrivals; `openArrivals` (below, once the whole state exists) works out
+    // the lot's geometry and arms the clock for the first car.
+    arrivals: [],
+    arrivalTimerMs: 0,
+    arrivalPlan: null,
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
     staminaRegenLockMs: 0,
@@ -889,6 +934,14 @@ export function createGame(
   if (merchantDiscovered || def.merchant?.parked || def.merchant?.beat) {
     revealMerchant(state);
   }
+
+  // THE STAFF LOT (see arrivals.ts): the access lane, the rank of bays and the
+  // doorway the badge opens, all read off the finished carve — which is why it
+  // runs HERE rather than up with the obstacles: the lane is chosen where
+  // nothing stands, and the last of the furniture only just went down. Its
+  // draws come off a stream of its own, so a level that gains a car park full
+  // of people does not move a single roll of this run's own.
+  openArrivals(state, seed);
 
   return state;
 }

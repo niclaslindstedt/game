@@ -1,0 +1,18 @@
+id: arriving_intern
+name: NIGHT SHIFT INTERN
+lore: >-
+  Late, unpaid and badged onto a shift the roster does not admit exists. He
+  has the card because somebody upstairs could not be bothered to fill in the
+  form that would have stopped him having one.
+role: minion
+sprite: intern
+disposition: neutral
+hp: 18
+speed: 24
+radius: 8
+contactDamage: 6
+critChance: 0.05
+contactCooldownMs: 750
+ai:
+  aggroRadius: 340
+  idle: work

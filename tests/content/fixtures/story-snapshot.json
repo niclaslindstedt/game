@@ -3454,6 +3454,20 @@
         "speaker": "LAB SCIENTIST"
       }
     },
+    "goodco_follow_in": {
+      "id": "goodco_follow_in",
+      "pages": [
+        [
+          "THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT."
+        ],
+        [
+          "EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED."
+        ],
+        ["SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE."]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "goodco_second_blow": {
       "id": "goodco_second_blow",
       "pages": [

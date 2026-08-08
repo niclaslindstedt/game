@@ -85,8 +85,14 @@ export type MapObjectType =
  * carved: the hero's landing, the goal cell, the trader's own counter
  * (`counter`) or a step aside from it (`stall`), or a step off the landing
  * itself (`home` — the garage's rift seam hums on the bay wall beside the
- * car). */
-export type MapAnchor = "spawn" | "goal" | "stall" | "counter" | "home";
+ * car).
+ *
+ * `entrance` is the odd one out and is a DOOR's alone: it is not a spot at all
+ * but a RULE — hang this door across every opening between the staff lot and
+ * the building (`MapArea.arrivals`). A landmark pinned to it would have nothing
+ * to stand on, which the schema says so. */
+export type MapAnchor =
+  "spawn" | "goal" | "stall" | "counter" | "home" | "entrance";
 
 /**
  * A lamp's numbers as a blueprint authors them — the `LevelLight` a carve

@@ -166,6 +166,26 @@ thoughts:
     portrait: hero
     pages:
       - - STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+  # THE WAY IN (the level's `arrivals` — src/game/arrivals.ts). He lands on the
+  # staff lot with the building in front of him and the fog over every inch of
+  # its wall, and the first thing that happens is a car pulling in and somebody
+  # getting out of it. This is his read on that, fired the moment they step out
+  # — the beat has to say what to DO, because the door they are walking to is
+  # keyed and nothing he carries opens it.
+  #
+  # IT ALSO SETTLES THE ONE THING THE MONOLOGUE PROMISED. The doorstep intro
+  # says "THEY NEVER CHANGED THE LOCKS — EVERY DOOR STILL KNOWS MY HAND", which
+  # is true of the doors INSIDE and would be a plot hole standing on the tarmac
+  # if he could not get to them. The perimeter reader is the one thing they did
+  # replace, which is both the honest answer and a small, mean joke about what a
+  # company spends its money on after it fires everybody.
+  goodco_follow_in:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
+      - - EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED.
+      - - SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE.
   # Sighting the first INTERN at GOODCO HQ: it's past midnight and the
   # building is packed like a product launch. He worked here — nights were
   # never staffed like this. Fires on view, before any blow (a sight pin),

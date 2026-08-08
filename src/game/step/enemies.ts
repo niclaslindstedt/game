@@ -488,6 +488,11 @@ function moveEnemy(
   // the movement) the AI sits out, so the fling reads as a fling instead of the
   // chase immediately fighting it back.
   if (enemy.knockMs && enemy.knockMs > 0) return;
+  // SOMEBODY WALKING IN TO WORK (arrivals.ts) has somewhere to be, and this
+  // pass is not it: the arrival system owns those feet from the car door to the
+  // building's. Left to the idle stroll, a body halfway across the tarmac would
+  // be walked back toward a `home` it was never going to stand at.
+  if (enemy.arrival === true) return;
   // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
   // windup or riding a charge dash is owned by the mechanic this tick.
   if (stepEnemyMechanics(state, enemy, dt, dt * 1000)) return;

@@ -68,6 +68,10 @@ export const LEVEL_FIELDS = {
   walls: "the map render",
   buildings: "the map render",
   doors: "the map render, and the LOCKED note",
+  arrivals:
+    "the WAY IN note — that the entrance opens for somebody else's badge",
+  arrivalLot:
+    "not reader-facing: which stretch of tarmac the arrivals happen on is rolled per run",
   gates: "the secret-gate note",
   exitTo: "the RETURNS TO row",
   riftExit: "the prose — that the way onward from here is a tear",
@@ -362,6 +366,16 @@ function missionModel(level, order) {
     // of the driveway.
     driveOut: (level.driveOut ?? []).length > 0,
     lockedDoors: (level.doors ?? []).length,
+    // THE WAY IN (LevelDef.arrivals): this venue's entrance is a door the hero
+    // cannot open — it answers a staff badge, so getting inside means following
+    // somebody who has one. Reader-facing because it is the first thing the
+    // venue asks of the player and nothing on the page would otherwise say so.
+    arrivals: level.arrivals
+      ? {
+          guards: level.arrivals.guards?.count ?? 0,
+          everyMs: level.arrivals.everyMs,
+        }
+      : null,
     chests: (level.chests ?? []).length,
     safeZones: (level.safeZones ?? []).length,
     quietZones: (level.quietZones ?? []).length,

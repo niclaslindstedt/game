@@ -482,6 +482,18 @@ function readRun(key: string): ParkedRun | null {
       // a SAVE_VERSION bump that bins every parked run for a list that starts
       // empty anyway.
       corpses: payload.state.corpses ?? [],
+      // THE STAFF LOT (`GameState.arrivals`, src/game/arrivals.ts) is additive
+      // on the same reasoning, with one wrinkle worth stating: a run parked
+      // before it shipped thaws with NO PLAN, and no plan means the beat simply
+      // never runs — which is right. That run's entrance is already open (it
+      // was an approach door when the blob was written) or the run is on a
+      // level that never had one, so a resumed hero is never locked out by a
+      // door no arrival is coming to badge. `arrivalTimerMs` must not thaw
+      // undefined: it is counted down every tick, and NaN there is a car park
+      // whose next car never comes.
+      arrivals: payload.state.arrivals ?? [],
+      arrivalTimerMs: payload.state.arrivalTimerMs ?? 0,
+      arrivalPlan: payload.state.arrivalPlan ?? null,
       // THE RACK (`CarVehicle.steer`) is defaulted on the same reasoning, and
       // it is the case where it MATTERS: `steerCar` integrates that number
       // every tick somebody is at the wheel, so a car parked before the front

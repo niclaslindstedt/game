@@ -217,6 +217,21 @@ export type MapArea = {
    */
   beat?: boolean;
   /**
+   * THE STAFF LOT: people turn up for a shift on this district — a car every so
+   * often, and somebody getting out of it and walking to the way in (see
+   * `LevelDef.arrivals`, `arrivals.ts`).
+   *
+   * It is flagged on the district rather than derived from "the outdoor one",
+   * because the two are not the same question: a map may be all outdoors, and
+   * the one that matters is where the ROAD reaches. Every cell of it is compiled
+   * into `LevelDef.arrivalLot`, and every opening between one of these cells and
+   * the building gets the ENTRANCE hung across it (an object `at: entrance`).
+   *
+   * A lot wants to be a CORNER of the map: cars roll in over the map's own edge,
+   * so a district in from both x edges leaves them arriving out of nowhere.
+   */
+  arrivals?: boolean;
+  /**
    * ROOMS INSIDE THE DISTRICT: cut every cell of this area into rooms of at
    * least this edge (world px), each pair of them walled and doored by the same
    * derivation every other border goes through.

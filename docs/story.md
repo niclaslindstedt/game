@@ -225,6 +225,18 @@ the building — he built their engines here until the AI replaced him — and t
 never changed the locks. Tonight he takes the part, finishes the ship, and goes
 to get Ada back.
 
+**He arrives driving, and he arrives outside.** The trip in is the drive; it ends
+with him standing on GOODCO's STAFF LOT beside his own car, and the building is a
+wall in front of him with no door he can see. He is not noticed out there: the
+tarmac has two parking guards on it who are watching the bays rather than the
+gaps between them, and nothing else. What he watches instead is the NIGHT SHIFT
+CLOCKING ON — a car every so often, somebody getting out of it and walking to a
+door in that wall and tapping a card against it. Every lock inside the building
+still knows his hand, exactly as he said in the car; the reader on the OUTSIDE is
+the one thing they replaced after they walked him out. So he does not find a way
+in. He follows somebody who already has one, and goes through the doors behind
+them.
+
 He walks in with the wall piece still holstered, because this is where he used
 to work. A lab scientist breaks from the crowd and hits him — and he does not
 hit back. He knows the man; they ate at the same table for six years. He says

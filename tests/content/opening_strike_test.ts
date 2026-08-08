@@ -30,6 +30,7 @@ import {
   runLevelDef,
   skipCutscene,
   step,
+  unmuteDialogue,
   type Enemy,
   type GameState,
 } from "@game/core";
@@ -45,6 +46,36 @@ function disarmedHQ(seed = SEED): GameState {
   const state = createGame(seed, "goodco_hq");
   skipCutscene(state);
   dismissIntro(state);
+  return state;
+}
+
+/**
+ * …AND THE SAME RUN WITH HIM THROUGH THE DOORS.
+ *
+ * The whole scripted beat now waits INSIDE the building: the hero lands on the
+ * staff lot, and the crowd and the rusher he breaks from stand in the first room
+ * past the entrance (`LevelDef.arrivals` — src/game/arrivals.ts). So a suite
+ * about the ORDER of the beat has to start where the beat is, which means
+ * playing the lot's own business out first: wait, muted, for somebody to arrive
+ * and badge the doors open, then stand the hero a step through them.
+ *
+ * The wait is muted and the mute lifted afterwards because the lot has a read of
+ * its own ("follow somebody who already has one") and this suite is not about
+ * that one; the thoughts it IS about are all still unread when it returns.
+ */
+function insideHQ(seed = SEED): GameState {
+  const state = disarmedHQ(seed);
+  const inside = state.arrivalPlan?.inside;
+  if (!inside) throw new Error("goodco_hq carved no way in");
+  muteDialogue(state);
+  let opened = false;
+  for (let i = 0; i < 4000 && !opened; i++) {
+    step(state, idle, DT);
+    opened = !state.doors.some((d) => d.id === "entrance" && !d.open);
+  }
+  if (!opened) throw new Error("nobody ever badged the entrance open");
+  unmuteDialogue(state);
+  state.players[0].pos = { x: inside.x, y: inside.y };
   return state;
 }
 
@@ -418,31 +449,36 @@ describe("GOODCO HQ opening strike", () => {
   });
 
   it("plays the sighting read before the vanguard reaches him, on the real crowd", () => {
-    // The full level (packed opening ring + the placed vanguard), an idle hero.
-    const state = disarmedHQ();
+    // The full level (packed opening ring + the placed vanguard), an idle hero
+    // standing where the scene is: a step inside the doors somebody has just
+    // badged open for him (`insideHQ`).
+    const state = insideHQ();
     // The drop-in survey beat fires promptly — the crowd already fills the view,
     // so it must not wait for an intern to crawl to the tight default radius.
     let sawStaff = false;
-    let vgapAtStaff = Infinity;
+    let struckAtStaff = false;
     for (let i = 0; i < 400 && !sawStaff; i++) {
       step(state, idle, DT);
       if (state.dialogue?.source.kind === "playerThought") {
         const src = state.dialogue.source as { defId: string };
         if (src.defId === "goodco_staff") {
           sawStaff = true;
-          const v = vanguard(state);
-          vgapAtStaff = Math.hypot(
-            v.pos.x - state.players[0].pos.x,
-            v.pos.y - state.players[0].pos.y,
+          struckAtStaff = WARNINGS.some((id) =>
+            state.thoughtsSeen.includes(id),
           );
         }
       }
     }
     expect(sawStaff).toBe(true);
     expect(state.players[0].disarmed).toBe(true); // still holstered at this point
-    // The vanguard has NOT reached him yet — the read lands first, and the
-    // scientist is still out in the lobby (its 180 px start), not glued on.
-    expect(vgapAtStaff).toBeGreaterThan(100);
+    // THE READ LANDS FIRST — nothing has hit him yet when it plays. Asserted as
+    // the ORDER rather than as a gap in pixels: the beat used to be measured by
+    // how far the scientist still had to come, which was a proxy for "not glued
+    // on" that only made sense while the rusher started a screen's width from
+    // the LANDING. It waits in the first room past the doors now, and a hero who
+    // has just followed somebody through them is legitimately close to it, so
+    // the pixel bound would be measuring the staging rather than the rule.
+    expect(struckAtStaff).toBe(false);
     // Tap the read closed; now the vanguard breaks loose, closes, and its three
     // strikes walk the hero through both refusals and out the other side with
     // the weapon drawn — in order, on the real crowd.
@@ -491,12 +527,23 @@ describe("GOODCO HQ opening strike", () => {
     // the (damage-free, pre-combat-grace) hit. Holding position lets the pack
     // close, so a handful of bodies gather inside the ring — but he's armed in a
     // couple of seconds, far short of a real dive.
-    const state = disarmedHQ();
-    const startX = state.players[0].pos.x;
+    //
+    // STAGED FROM INSIDE THE DOORS, because that is where the beat is now: the
+    // hero lands on the staff lot and the whole scene waits in the first room
+    // past the entrance. Measured from the landing instead, the clock would be
+    // dominated by the ten or twenty seconds he spends waiting for somebody to
+    // arrive and badge him in — a wait the level is ASKING for, and one this
+    // test has nothing to say about. `insideHQ` plays that out and hands him
+    // over standing in the room, which is the moment this test is about.
+    const state = insideHQ();
+    const post = runLevelDef(state).openingStrike?.at;
+    expect(post).toBeDefined();
+    const start = { ...state.players[0].pos };
+    const toPost = post ? distance(start, post) : 0;
     const bot = createBot("survivor");
     let maxCrowdWhileDisarmed = 0;
     let armedStep = -1;
-    let backpedal = 0;
+    let retreat = 0;
     for (let i = 0; i < 1200; i++) {
       if (state.dialogue) {
         advanceDialogue(state);
@@ -508,7 +555,10 @@ describe("GOODCO HQ opening strike", () => {
         break;
       }
       const p = state.players[0].pos;
-      backpedal = Math.max(backpedal, startX - p.x);
+      // How much FURTHER from the scene he has got than he started — the honest
+      // reading of "he did not back away from it", and the one that survives the
+      // beat having a place of its own to walk to.
+      if (post) retreat = Math.max(retreat, distance(p, post) - toPost);
       const crowd = state.enemies.filter(
         (e) =>
           !enemyDef(e.defId).apparition &&
@@ -521,9 +571,8 @@ describe("GOODCO HQ opening strike", () => {
     // … quickly — he stood his ground instead of dragging the rusher across the
     // floor (the kite armed him at ~step 400, standing gets there in ~140).
     expect(armedStep).toBeLessThanOrEqual(250);
-    // … he stood his ground rather than fleeing into the wall (kiting backpedalled
-    // ~200px; standing holds the spawn).
-    expect(backpedal).toBeLessThanOrEqual(20);
+    // … and he never gave ground on the scene (kiting backpedalled ~200px).
+    expect(retreat).toBeLessThanOrEqual(20);
     // … without burying himself in the pack. This bound is DENSITY-RELATIVE,
     // not a fact about the bot: standing his ground while the pack closes reads
     // 14 bodies inside the ring at the shipped `mobCountMult` (it read 8 at the
@@ -552,7 +601,12 @@ describe("GOODCO HQ opening strike", () => {
       expect(state.players[0].disarmed).toBe(true);
       const bot = createBot("survivor");
       let armedStep = -1;
-      for (let i = 0; i < 1200; i++) {
+      // END TO END, from the landing — the one test in this suite that plays
+      // the WHOLE opening: the bot waits on the lot for somebody to badge the
+      // entrance, follows them through, and takes the blow inside. It is the
+      // long one on purpose, because the soft-lock it guards against is
+      // "holstered forever", and every link in that chain is a way to be.
+      for (let i = 0; i < 6000; i++) {
         step(state, botAct(bot, state, state.players[0]), DT);
         if (!state.players[0].disarmed) {
           armedStep = i;
@@ -561,5 +615,5 @@ describe("GOODCO HQ opening strike", () => {
       }
       expect(armedStep).toBeGreaterThanOrEqual(0);
     }
-  });
+  }, 60_000);
 });

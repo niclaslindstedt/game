@@ -52,6 +52,17 @@ areas:
   # out as the entire southern half of a small map. One cell is a car park; the
   # rest of the level is the building, which is what the mission is about. Paved, so `ragged: false` — a lot
   # is unwalled and its edge is still a kerb, laid to the inch.
+  #
+  # AND NOTHING AMBIENT STANDS ON IT (`horde: 0`). The lot used to carry half a
+  # district's worth of knots, which made the opening beat of the campaign a
+  # brawl on the tarmac with a holstered hero in the middle of it — the
+  # building's fight, played outside the building, in front of the one place on
+  # the map the mission wants quiet. What is out here instead is
+  # `arrivals: true`: two parking guards who are not looking for anybody, and a
+  # car every so often with somebody in it who knows where the door is. See
+  # `LevelDef.arrivals` and src/game/arrivals.ts — that walk is how the way in
+  # is found, because the ENTRANCE this flag hangs across the lot's openings is
+  # a keyed door nothing in the game unlocks.
   - id: lot
     enclosure: none
     space: outside
@@ -59,7 +70,8 @@ areas:
     once: true
     landing: true
     boss: false
-    horde: 0.5
+    horde: 0
+    arrivals: true
     ragged: false
     regions: [northwest, northeast, southwest, southeast]
     maxCells: 1
@@ -259,6 +271,25 @@ objects:
     type: door
     sprite: door_office
     openSprite: door_office_open
+    radius: 8
+
+  # THE FRONT ENTRANCE — `at: entrance`, which is not a spot but a RULE: hang
+  # this door across every opening between the STAFF LOT and the building.
+  # Claimed before the district doors above, so the way in never ends up wearing
+  # the office slab that slides aside for anybody who walks up.
+  #
+  # IT IS A KEYED DOOR AND THERE IS NO KEY. Nothing in the game unlocks the id
+  # `entrance` — no story item names it, so the hero can stand in front of it
+  # all night. What opens it is a member of staff arriving for a shift and
+  # tapping a card against it (`arrivals` on the mission, src/game/arrivals.ts),
+  # and following one through is how the campaign's first venue is entered. The
+  # doorway that stood here before opened for the hero on approach, which meant
+  # the whole of "get inside GOODCO" was walking at a wall until it moved.
+  - id: entrance
+    type: door
+    at: entrance
+    sprite: door_entrance
+    openSprite: door_entrance_open
     radius: 8
 
   # ── THE STAFF LOT ────────────────────────────────────────────────────────

@@ -19,8 +19,10 @@ import {
   allocateStat,
   createGame,
   dismissIntro,
+  muteDialogue,
   skipCutscene,
   step,
+  unmuteDialogue,
 } from "@game/core";
 
 import { DT, idle } from "../helpers.ts";
@@ -46,10 +48,21 @@ function timeToDeathMs(
   const state = createGame(SEED, level, difficulty);
   skipCutscene(state);
   dismissIntro(state);
+  // THE CLOCK STARTS WHERE THE FIGHT CAN REACH HIM, which on a level with an
+  // ENTRANCE is not where he lands. GOODCO opens on a staff lot with a keyed
+  // door in its wall (`LevelDef.arrivals`): nothing out there is hostile, and
+  // the building cannot get at him until somebody arrives and badges the doors
+  // open — which is the level working as designed, and which would otherwise be
+  // measured here as fifteen seconds of the horde failing to kill him. So the
+  // lot's own business is played out first, off the clock, and the hero is
+  // stood a step inside; what the benchmark then measures is the HORDE, which
+  // is the only thing it was ever about.
+  const inside = state.arrivalPlan?.inside;
+  const startedAt = inside ? stageInside(state) : 0;
   let guard = 0;
   while (
     state.phase !== "defeat" &&
-    state.stats.timeMs < capMs &&
+    state.stats.timeMs - startedAt < capMs &&
     guard < 400_000
   ) {
     // A stat point can drop mid-run; spend it so the sim resumes. LUCK is the
@@ -62,7 +75,27 @@ function timeToDeathMs(
     step(state, idle, DT);
     guard++;
   }
-  return state.phase === "defeat" ? state.stats.timeMs : capMs;
+  return state.phase === "defeat" ? state.stats.timeMs - startedAt : capMs;
+}
+
+/**
+ * Play the staff lot out and put the hero through the doors — returns the game
+ * clock at the moment the benchmark should start counting from.
+ *
+ * Idle throughout, and muted, because none of it is the measurement: it is the
+ * level's opening beat happening at its own pace while the probe waits for the
+ * building to become reachable.
+ */
+function stageInside(state: ReturnType<typeof createGame>): number {
+  muteDialogue(state);
+  for (let i = 0; i < 4000; i++) {
+    if (!state.doors.some((d) => d.id === "entrance" && !d.open)) break;
+    step(state, idle, DT);
+  }
+  unmuteDialogue(state);
+  const inside = state.arrivalPlan?.inside;
+  if (inside) state.players[0].pos = { x: inside.x, y: inside.y };
+  return state.stats.timeMs;
 }
 
 // Both shipped levels must honor the benchmark: goodco_hq is where the game

@@ -35,6 +35,7 @@ import {
   talentsForTree,
 } from "../defs/talents/index.ts";
 import { talentRank } from "../talent-effects.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import {
   bestAimTarget,
   pickPowerupBurn,
@@ -57,9 +58,10 @@ import { pushBoss, survive } from "./fight.ts";
 import { wantsMerchantVisit } from "./economy.ts";
 import { errandGiver, trackErrandAbandon } from "./errands.ts";
 import { atHub, driveOutInput, hubGoal, trackHubShop } from "./hub.ts";
+import { entranceGoal } from "./entrance.ts";
 import { macroSteer, trackEngagement, unstuckInput } from "./macro.ts";
 import { applyPartySpacing } from "./party-play.ts";
-import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
+import { holdOff, limitTurnRate, navSteer, routeSteer, steer } from "./nav.ts";
 import {
   contactEtaSec,
   firingReach,
@@ -326,6 +328,30 @@ function preemptInput(
   // it preempts (and skips the turn limit) like the reflexes.
   if (hero.disarmed) {
     think(bot, "ARM UP");
+    // …EXCEPT THAT THE BEAT MAY BE BEHIND A DOOR HE CANNOT OPEN. On GOODCO's
+    // staff lot the whole scene — the crowd, the rusher, the blade — is inside
+    // a building whose entrance opens for a badge and nothing else, so the read
+    // above is answered by `entrance.ts`: fall in behind somebody who has one.
+    const waiting = entranceGoal(state, hero);
+    if (waiting) {
+      think(bot, waiting.thought);
+      return routeSteer(bot, state, hero, waiting.pos);
+    }
+    // THE BEAT HAS A PLACE, AND HE HAS TO BE STANDING IN IT. The level pins the
+    // rusher and the crowd it breaks from at one spot (`openingStrike.at`), and
+    // reading only the NEAREST foe was an approximation that held exactly while
+    // that spot was a few steps from the landing: it stopped holding the moment
+    // the scene moved indoors, because the first bodies out of the door reach
+    // him first, plant him on the tarmac at their own standoff, and then STAND
+    // BETWEEN HIM AND THE RUSHER — which the mob separation grid keeps them
+    // doing, a body's width outside the strike radius, for the rest of the run.
+    // (Measured: holstered for the entire clock on the campaign's first level.)
+    // So he marches on the post itself, on a real route, and only settles into
+    // the standoff read once he is standing in the scene.
+    const post = runLevelDef(state).openingStrike?.at;
+    if (post && distance(hero.pos, post) > tune.armApproachStandoff) {
+      return routeSteer(bot, state, hero, post);
+    }
     const foe = nearestEnemy(state, hero);
     if (!foe) return idleInput();
     // Outside the standoff → close in (trip the sight beat, draw the rusher

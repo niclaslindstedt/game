@@ -235,6 +235,13 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
 
   it("knows every field of a fresh GameState", () => {
     expect(Object.keys(state).sort()).toEqual([
+      // THE STAFF LOT: the cars that have rolled in, the clock for the next
+      // one, and the lot's own geometry (src/game/arrivals.ts). All three
+      // default cleanly on a thaw — a run parked before the beat shipped has an
+      // entrance that was already open — so none of them cost a version bump.
+      "arrivalPlan",
+      "arrivalTimerMs",
+      "arrivals",
       "asteroidTimerMs",
       "asteroids",
       "autopilot",
