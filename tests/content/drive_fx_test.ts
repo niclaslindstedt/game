@@ -355,6 +355,30 @@ describe("the road's shake", () => {
     expect(heavy.fx).toHaveLength(0);
   });
 
+  it("lets a BODY move the frame, on the crowd's own scale", () => {
+    // THE PICTURE'S HALF OF "the pedestrians should be felt". Priced against
+    // `wearJoules` — the collision that totals the car — every person out here
+    // landed in the bottom fifteenth of the scale and shoved the frame by about
+    // a tenth of a pixel, which is to say by nothing. A body is now measured
+    // against the worst thing that can happen to a body (`BODY_FULL_SHARE`),
+    // and the ordering it always had is untouched: a wreck is still the biggest
+    // thing on this road.
+    const struck = createDriveFx();
+    const traded = createDriveFx();
+    // A person met DEAD SQUARE AT THE TOP OF THE DIAL on MEDIUM.
+    driveBodyHit(struck, 0, 0, DRIVE.impact.wearJoules * 0.036, 0);
+    // …and paint traded with a car at the same speed, which is a great deal
+    // more energy.
+    driveTrafficHit(traded, 0, 0, DRIVE.impact.wearJoules * 0.36, 0);
+    expect(struck.shake).toBeGreaterThan(0.5);
+    expect(struck.shake).toBeLessThan(traded.shake);
+    // A gentle contact is still a gentle contact — the scale moved, the ladder
+    // did not.
+    const clipped = createDriveFx();
+    driveBodyHit(clipped, 0, 0, DRIVE.impact.wearJoules * 0.004, 0);
+    expect(clipped.shake).toBeLessThan(struck.shake * 0.35);
+  });
+
   it("holds the camera perfectly still for a viewer who asked for calm", () => {
     const calm = createDriveFx();
     calm.calm = true;

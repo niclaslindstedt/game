@@ -981,10 +981,19 @@ escort.ts` walks the people an escort errand puts on the field, and
   goes as the square of the closing speed, which is the whole difficulty curve
   in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
   exactly one number — what the road WEIGHS (`impactMasses`, off
-  `DifficultyDef.drive`) — so a body costs a MEDIUM driver about a fifth of his
-  speed and a JESUS driver nearly half of it, and does proportionally more to
-  the car, both out of the same momentum sum; the course, the crowd, the
-  traffic and the wagon are identical on every rung. The app half is
+  `DifficultyDef.drive`) — so a body met square at the top of the dial costs a
+  MEDIUM driver about an eighth of his speed and a JESUS driver a third of it,
+  and does proportionally more to the car, both out of the same momentum sum;
+  the course, the crowd, the traffic and the wagon are identical on every rung.
+  THE CROWD CARRIES ITS OWN SHARE OF THE VOLUME KNOB on top of that
+  (`DRIVE.impact.crowdSpeedLossScale`), because a momentum transfer saturates
+  against the wagon's own 1600 kg and one scale cannot price both a person and a
+  bus: without it a body was arithmetically correct and, at the pace this leg is
+  driven, unnoticeable. The same split runs through the picture — the frame's
+  shove is measured against the worst thing that can happen to a BODY rather
+  than against the collision that totals the car (`BODY_FULL_SHARE`,
+  `drive-fx.ts`) — and through the wagon's own springs, which are shoved by the
+  speed it LOST rather than by the wear the blow dealt. The app half is
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
   loot, no XP).

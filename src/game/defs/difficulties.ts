@@ -685,14 +685,22 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     stampedeDamageFrac: 0.1,
     stampedeTelegraphMult: 1.5,
     // THE ROAD IS MADE OF PAPER on the gentlest rung, and unashamedly so: a
-    // body weighs a quarter of what a body weighs, the other cars a third of a
-    // car. Nothing about that is realistic and it is not trying to be — EASY is
-    // where a player learns the wheel, and a wagon that can be driven flat out
-    // through a crowd and still arrive is what makes the joke land before the
-    // road starts asking for skill. A hit costs about a quarter of what MEDIUM
-    // charges for the same blow.
+    // body weighs half of what a body weighs, the other cars a third of a car.
+    // Nothing about that is realistic and it is not trying to be — EASY is where
+    // a player learns the wheel, and a wagon that can be driven flat out through
+    // a crowd and still arrive is what makes the joke land before the road
+    // starts asking for skill.
+    //
+    // HALF RATHER THAN THE QUARTER IT OPENED WITH, because a quarter was not a
+    // gentle rung, it was a rung where the crowd had stopped being physics at
+    // all: 20 kg is a bag of shopping, and a body met at the pace this leg is
+    // driven at came off the speedometer at one mph in sixty. The player felt
+    // nothing whatever, learnt nothing about what a person costs, and then read
+    // a tally of seventy of them at the arrival. The step to MEDIUM stays the
+    // largest on the ladder — the crowd is still HALF price here — but a hit is
+    // now something that happened.
     drive: {
-      pedestrianMassMult: 0.25,
+      pedestrianMassMult: 0.5,
       trafficMassMult: 0.35,
       trafficDensity: 0.6,
     },

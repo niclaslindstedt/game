@@ -116,11 +116,34 @@ export type DriveFxState = {
   calm: boolean;
 };
 
-/** How much a hit's energy counts as "force" — `wearJoules` is the collision
- * that totals the car, so a full-force burst is one that would have done it. */
-function forceOf(joules: number): number {
-  return Math.min(1, joules / (DRIVE.impact.wearJoules * 0.12));
+/**
+ * How much a hit's energy counts as "force" — `wearJoules` is the collision
+ * that totals the car, so `full` is the share of the car a full-force hit of
+ * this KIND costs.
+ *
+ * IT IS A PARAMETER BECAUSE THE ROAD'S COLLISIONS SPAN THREE ORDERS OF
+ * MAGNITUDE. One yardstick for a wagon meeting a bus and a wagon meeting a
+ * person prices the top of that range or the bottom, never both — and it was
+ * pricing the top, so every single body under the bumper landed in the bottom
+ * fifteenth of the scale and came out as a puff of dust and a tenth of a pixel
+ * of shudder. It is the same complaint, and the same answer, as
+ * `DRIVE.impact.crowdSpeedLossScale` on the physics side of the glass.
+ */
+function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
+  return Math.min(1, joules / (DRIVE.impact.wearJoules * full));
 }
+
+/** What a full-force hit costs the car, for the two things this road hits.
+ *
+ * STEEL is the collision that takes an eighth of the wagon — trading paint at
+ * speed, and everything above it is off the top of the scale anyway. A BODY is
+ * priced on the crowd's own worst case instead: a person met DEAD SQUARE AT THE
+ * TOP OF THE DIAL on MEDIUM, which is about 3.6% of the car. So the ladder a
+ * player actually sees runs the whole way from a clip at walking pace to the
+ * worst thing that can happen to somebody, rather than sitting flat at nothing.
+ */
+const SMASH_FULL_SHARE = 0.12;
+const BODY_FULL_SHARE = 0.036;
 
 /** How hard the frame is shaken by a hit of this force (world px). Well under
  * a lane's width at its worst: the road must stay readable while it is being
@@ -143,7 +166,20 @@ export function createDriveFx(): DriveFxState {
   };
 }
 
-/** A body went under the car: grit off the tarmac, and a shove of the frame. */
+/**
+ * A body went under the car: grit off the tarmac, and a shove of the frame.
+ *
+ * ON THE CROWD'S OWN SCALE (`BODY_FULL_SHARE`), which is the whole of the
+ * picture's answer to "they should be felt". The shove is worth more of that
+ * scale than steel is worth of its own, and that is not the crowd being made
+ * more important than a car — it is the two scales being different sizes. A
+ * body at the top of the dial shoves the frame about three px; a wreck still
+ * reaches five and a half, and nothing about the ordering has moved.
+ *
+ * The BLOOM stays small on purpose. A crowd is met thirty-odd times a trip and
+ * a blockade several times a second, and a white flash on every one of them
+ * would leave the road unreadable at exactly the moment it most needs reading.
+ */
 export function driveBodyHit(
   state: DriveFxState,
   x: number,
@@ -151,9 +187,9 @@ export function driveBodyHit(
   joules: number,
   nowMs: number,
 ): void {
-  const force = forceOf(joules);
+  const force = forceOf(joules, BODY_FULL_SHARE);
   push(state, "grit", x, y, nowMs, 520, force);
-  kick(state, force * 0.55, force * 0.35);
+  kick(state, force * 0.9, force * 0.2);
 }
 
 /** Paint traded with another car: sparks, shards, and a much harder shove. */

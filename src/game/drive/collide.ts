@@ -32,7 +32,7 @@
 import { CAR, nudgeCar } from "../vehicles.ts";
 import type { CarDetachable } from "../types/index.ts";
 import { DRIVE, DRIVE_OUTCOME } from "./config.ts";
-import { impactMasses, panelAt, solveImpact } from "./impact.ts";
+import { impactMasses, solveImpact } from "./impact.ts";
 import {
   crushVehicle,
   shatterGlass,
@@ -85,7 +85,11 @@ export function collide(drive: DriveState): void {
         : mass.pedestrian,
     );
     if (!hit) continue;
-    car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
+    // …AND THE CROWD'S OWN SHARE OF THE VOLUME KNOB. A person is five percent
+    // of the wagon, which is the bottom of a range the road's one scale cannot
+    // price at both ends — see `DRIVE.impact.crowdSpeedLossScale`. It is the
+    // SPEED only: the energy, and so the damage, is untouched.
+    const loss = spend(drive, hit.speedLoss * DRIVE.impact.crowdSpeedLossScale);
     if (!ped.counted) {
       ped.counted = true;
       drive.bodies++;
@@ -112,7 +116,7 @@ export function collide(drive: DriveState): void {
         joules: hit.joules,
         kind: ped.kind,
         variant: ped.variant,
-        panel: panelAt(hit.along),
+        panel: hit.panel,
         split: cutInTwo,
       });
       const pieces = burstBody(drive, ped, hit, split, gib);
@@ -146,7 +150,7 @@ export function collide(drive: DriveState): void {
       ped.vz = hit.liftZ;
       ped.z = 0.01;
     }
-    damage(drive, hit.joules, hit.along, 1);
+    damage(drive, hit, 1, loss);
   }
   drive.pedestrians = drive.pedestrians.filter((ped) => ped.z >= 0);
 
@@ -179,7 +183,7 @@ export function collide(drive: DriveState): void {
       1,
     );
     if (!hit) continue;
-    car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
+    const loss = spend(drive, hit.speedLoss);
     drive.shunts++;
     // ONE CONTACT IS ONE IMPACT — and the cooldown is stamped HERE, before the
     // three answers below, because it used to be stamped inside them and one
@@ -252,7 +256,7 @@ export function collide(drive: DriveState): void {
     }
     // The hero's own car takes the exchange properly, which is what makes
     // trading paint the expensive mistake it should be.
-    damage(drive, hit.joules, hit.along, DRIVE.impact.trafficWearScale);
+    damage(drive, hit, DRIVE.impact.trafficWearScale, loss);
   }
 
   if (snapped.size > 0) {
@@ -296,7 +300,7 @@ export function collide(drive: DriveState): void {
       parked ? 1 : 0,
     );
     if (!hit) continue;
-    car.speed = Math.max(0, Math.abs(car.speed) - hit.speedLoss);
+    const loss = spend(drive, hit.speedLoss);
     if (parked) {
       drive.shunts++;
       // IT IS A CAR, SO IT TAKES IT LIKE ONE — which it could not do while it
@@ -320,7 +324,7 @@ export function collide(drive: DriveState): void {
         pos: { x: hit.contact.x, y: hit.contact.y },
         joules: hit.joules,
       });
-      damage(drive, hit.joules, hit.along, DRIVE.impact.trafficWearScale);
+      damage(drive, hit, DRIVE.impact.trafficWearScale, loss);
       continue;
     }
     drive.posts++;
@@ -330,7 +334,7 @@ export function collide(drive: DriveState): void {
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
     });
-    damage(drive, hit.joules, hit.along, DRIVE.impact.lampWearScale);
+    damage(drive, hit, DRIVE.impact.lampWearScale, loss);
   }
 
   if (unparkedProps.size > 0) {
@@ -339,26 +343,47 @@ export function collide(drive: DriveState): void {
 }
 
 /**
- * WHAT A HIT DOES TO THE CAR — the wear, the panel that wore it, the parts that
- * work free, and the moment the whole thing gives up.
+ * TAKE THE SPEED THE BLOW COST OFF THE SPEEDOMETER, and answer with how much
+ * actually came off.
  *
- * Everything here is driven by ABSORBED ENERGY rather than by a hit count, which
- * is the difference between "the car breaks after twenty people" and "the car
- * breaks after twenty people AT THIS SPEED". The second one is a game.
+ * The clamp is why it is a function: a hit can be worth more speed than the car
+ * has (a parked bus met at the top end is worth several times it), and what the
+ * body of the car then feels is the speed it LOST rather than the speed the sum
+ * asked for. Reading that back at every call site is how the shove and the
+ * speedometer end up disagreeing.
+ */
+function spend(drive: DriveState, loss: number): number {
+  const { car } = drive;
+  const had = Math.abs(car.speed);
+  car.speed = Math.max(0, had - loss);
+  return had - car.speed;
+}
+
+/**
+ * WHAT A HIT DOES TO THE CAR — the wear, the panel that wore it, the shove the
+ * body takes, the parts that work free, and the moment the whole thing gives up.
+ *
+ * The WEAR is driven by ABSORBED ENERGY rather than by a hit count, which is the
+ * difference between "the car breaks after twenty people" and "the car breaks
+ * after twenty people AT THIS SPEED". The second one is a game. The SHOVE is
+ * driven by the speed the car lost, which is a different quantity and belongs to
+ * a different question — see `DRIVE.impact.nudgePerLoss`.
  */
 function damage(
   drive: DriveState,
-  joules: number,
-  along: number,
+  hit: Impact,
   scale: number,
+  loss: number,
 ): void {
   const { car } = drive;
+  const { joules, along } = hit;
   const share = (joules / DRIVE.impact.wearJoules) * scale;
   const before = car.wear;
   car.wear = Math.min(1, car.wear + share);
 
-  // The panel that actually took it climbs its own ladder.
-  const panel = panelAt(along);
+  // The panel that actually took it climbs its own ladder — the collision's own
+  // answer, carried on the hit, rather than a second derivation of it.
+  const { panel } = hit;
   drive.panelJoules[panel] += share;
   const rung = rungFor(drive.panelJoules[panel], DRIVE.panelRungs);
   if (rung > (car.panels[panel] ?? 0)) {
@@ -374,9 +399,10 @@ function damage(
     car.panels.glass = Math.max(car.panels.glass, Math.min(3, rung));
   }
 
-  // The body takes the blow visibly: the springs get shoved, and every loose or
+  // The body takes the blow visibly: the springs get shoved by the DECELERATION
+  // — the mass is still going and the wheels are not — and every loose or
   // dangling part is shaken by the same hit.
-  const kick = share * DRIVE.impact.nudgePerWear;
+  const kick = loss * DRIVE.impact.nudgePerLoss;
   nudgeCar(car, along < 0 ? kick : kick * 0.4, along < 0 ? kick * 0.4 : kick);
 
   // THE FIX LADDER — the parts working free as the whole car gives up. Ordered
