@@ -57,8 +57,26 @@ pub const SHELL_ID: &str = "tauri";
 /// browser chrome this window does not have.
 pub const FULLSCREEN_COMMAND: &str = "shell_toggle_fullscreen";
 
+/// The internal command Shift+Tab invokes.
+///
+/// **The chord never reaches this process.** Valve's overlay catches Shift+Tab
+/// with an input hook inside the game's own process — which on the Electron
+/// build is the process showing the page, and here is not: the keystroke belongs
+/// to the webview's process, which this shell does not own. So the shell listens
+/// for it in the page, exactly as it does for F11, and asks Steam to raise the
+/// overlay itself.
+///
+/// The listener is installed ONLY on a launch that has an overlay to raise (see
+/// [`crate::overlay`]). Everywhere else Shift+Tab stays what the platform makes
+/// it — swallowing a browser's reverse-tab chord for a feature that is not there
+/// would be a small accessibility regression bought for nothing.
+pub const OVERLAY_COMMAND: &str = "shell_activate_overlay";
+
 /// The script the window is built with.
-pub fn initialization_script(capabilities: &Capabilities) -> String {
+///
+/// `overlay` is whether this launch forwards Shift+Tab — the plan
+/// (`adastrail_shell::steam::OverlayPlan`) reduced to the one bit the page needs.
+pub fn initialization_script(capabilities: &Capabilities, overlay: bool) -> String {
     let caps =
         serde_json::to_string(&capability_list(capabilities)).unwrap_or_else(|_| "[]".to_string());
     // THE SNAPSHOT CHANNEL's page-side half, and the MICROPHONE's floor. Both
@@ -67,6 +85,7 @@ pub fn initialization_script(capabilities: &Capabilities) -> String {
     let net = adapter_script();
     let net_member = shell_member();
     let lockout = lockout_script(capabilities.voice());
+    let overlay_key = overlay_script(overlay);
     format!(
         r#"(function () {{
   var define = function (name, value) {{
@@ -107,6 +126,33 @@ pub fn initialization_script(capabilities: &Capabilities) -> String {
     event.preventDefault();
     send({FULLSCREEN_COMMAND:?}, {{}});
   }}, true);
+{overlay_key}
 }})();"#
+    )
+}
+
+/// SHIFT+TAB → the overlay, or nothing at all.
+///
+/// Empty on a launch with no overlay behind it, so the chord keeps whatever the
+/// platform gives it — see [`OVERLAY_COMMAND`] for why the shell has to listen
+/// for this key in the page at all.
+///
+/// Capture phase and `preventDefault`, for the same reason F11 is: the game must
+/// not be able to swallow the window's own chrome, and Shift+Tab moving the
+/// focus ring backwards through a game the player is holding a pointer on is the
+/// browser behaviour the overlay is replacing.
+fn overlay_script(enabled: bool) -> String {
+    if !enabled {
+        return String::new();
+    }
+    format!(
+        r#"
+  // Shift+Tab — see OVERLAY_COMMAND. `event.key` is 'Tab' with the modifier
+  // reported separately, on every engine this shell runs on.
+  window.addEventListener('keydown', function (event) {{
+    if (event.key !== 'Tab' || !event.shiftKey) return;
+    event.preventDefault();
+    send({OVERLAY_COMMAND:?}, {{}});
+  }}, true);"#
     )
 }

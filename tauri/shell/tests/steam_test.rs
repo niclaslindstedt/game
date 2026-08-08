@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE HANDSHAKE'S DECISIONS — which app id, whether to relaunch, and what the
-//! shell says about an overlay it cannot draw.
+//! THE HANDSHAKE'S DECISIONS — which app id, whether to relaunch, whether to
+//! raise the overlay's decoy surface, and what the shell says about it either
+//! way.
 //!
 //! None of this needs Steam, which is the point: every one of these is a rule
 //! that has to hold on a machine with the client closed, because that machine is
 //! where the game is developed.
 
 use adastrail_shell::steam::{
-    describe_status, is_placeholder_app_id, overlay_explanation, overlay_support, restart_wanted,
-    steam_app_id, steam_enabled, steam_overlay_wanted, OverlaySupport, SteamStatus, Webview,
-    SPACEWAR_APP_ID,
+    describe_status, is_placeholder_app_id, overlay_explanation, overlay_plan, overlay_support,
+    restart_wanted, steam_app_id, steam_enabled, steam_overlay_wanted, OverlayPlan, OverlaySupport,
+    SteamStatus, Webview, OVERLAY_SURFACE_TITLE, SPACEWAR_APP_ID,
 };
 
 /// An environment built from a literal table, which is what makes every rule
@@ -106,18 +107,43 @@ fn the_overlay_switch_overrides_the_stamps_both_ways() {
 }
 
 #[test]
-fn no_webview_can_carry_valves_overlay() {
-    // The finding, pinned. If this ever stops being true it is a
-    // platform change worth a failing test and a paragraph, not a quiet flip.
+fn only_the_windows_webview_has_a_decoy_to_offer_the_overlay() {
+    // The decoy is a DXGI swap chain in this process, which is a Windows piece
+    // of work. If a Metal or a Vulkan one is ever written this is the line that
+    // moves — deliberately a failing test rather than a quiet flip.
     assert_eq!(
-        overlay_support(Webview::WkWebView),
-        OverlaySupport::Unsupported
+        overlay_support(Webview::WebView2),
+        OverlaySupport::DecoySurface
+    );
+    assert_eq!(overlay_support(Webview::WkWebView), OverlaySupport::NotYet);
+    assert_eq!(overlay_support(Webview::WebKitGtk), OverlaySupport::NotYet);
+}
+
+#[test]
+fn the_surface_is_raised_only_where_something_will_hook_it() {
+    // All three conditions, one at a time: a surface nobody hooks is a window,
+    // a GPU device and a thread presenting nothing for the whole session.
+    assert_eq!(
+        overlay_plan(Webview::WebView2, true, true),
+        OverlayPlan::Surface
     );
     assert_eq!(
-        overlay_support(Webview::WebKitGtk),
-        OverlaySupport::Unsupported
+        overlay_plan(Webview::WebView2, true, false),
+        OverlayPlan::NotInjected,
+        "Steam did not start us, so its library is not in this process"
     );
-    assert_eq!(overlay_support(Webview::WebView2), OverlaySupport::NotYet);
+    assert_eq!(
+        overlay_plan(Webview::WebView2, false, true),
+        OverlayPlan::NotInjected,
+        "GIS_STEAM=off talks to no Steam at all"
+    );
+    for webview in [Webview::WkWebView, Webview::WebKitGtk] {
+        assert_eq!(
+            overlay_plan(webview, true, true),
+            OverlayPlan::NoDecoy,
+            "{webview:?} has no decoy to raise, however the launch began"
+        );
+    }
 }
 
 #[test]
@@ -127,15 +153,34 @@ fn the_overlay_line_names_the_webview_and_where_to_read_more() {
         (Webview::WkWebView, "WKWebView"),
         (Webview::WebKitGtk, "WebKitGTK"),
     ] {
-        let line = overlay_explanation(webview, true);
-        assert!(line.contains(name), "{name} must be named");
-        assert!(line.contains("tauri/README.md"));
-        assert!(
-            line.contains("Steam started this process"),
-            "and how this launch began"
-        );
+        for plan in [
+            OverlayPlan::Surface,
+            OverlayPlan::NotInjected,
+            OverlayPlan::NoDecoy,
+        ] {
+            let line = overlay_explanation(plan, webview);
+            assert!(line.contains(name), "{name} must be named");
+            assert!(line.contains("tauri/README.md"));
+        }
     }
-    assert!(overlay_explanation(Webview::WkWebView, false).contains("Steam did not start"));
+    // Each of the three says what a reader with the log open is asking.
+    assert!(overlay_explanation(OverlayPlan::Surface, Webview::WebView2).contains("Shift+Tab"));
+    assert!(
+        overlay_explanation(OverlayPlan::NotInjected, Webview::WebView2)
+            .contains("GIS_STEAM_OVERLAY=1")
+    );
+    assert!(
+        overlay_explanation(OverlayPlan::NoDecoy, Webview::WkWebView).contains("files its own")
+    );
+}
+
+#[test]
+fn the_decoy_window_says_what_it_is_to_anything_enumerating_windows() {
+    // Nothing draws this title, but a capture picker and a task manager both
+    // list it — an unexplained "Tauri App" over somebody's desktop is a bug
+    // report.
+    assert!(OVERLAY_SURFACE_TITLE.contains("Ada's Trail"));
+    assert!(OVERLAY_SURFACE_TITLE.to_lowercase().contains("overlay"));
 }
 
 #[test]

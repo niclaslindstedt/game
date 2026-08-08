@@ -21,11 +21,12 @@
 //!     draw" (AGENTS.md). That is true of Game Center, which has a full built-in
 //!     board. It is NOT true of Steam: the overlay's dialogs are Friends,
 //!     Community, Players, Settings, OfficialGameGroup, Stats and Achievements —
-//!     there is no leaderboard page, and Steam games draw their own. **And on
-//!     this shell there is no overlay at all** ([`crate::steam::overlay_support`]),
-//!     so even the dialogs that do exist cannot be opened. A provider here would
-//!     therefore publish scores into a board no player on this platform could
-//!     ever look at.
+//!     there is no leaderboard page, and Steam games draw their own. That the
+//!     overlay itself now opens on this shell
+//!     ([`crate::steam::overlay_support`]) changes nothing here: the dialog a
+//!     board would need is one Valve does not have. A provider would therefore
+//!     publish scores into a board no player on this platform could ever look
+//!     at.
 //!
 //! So the honest state is: **submitting is now possible and showing is not**,
 //! and a provider that could do the first without the second would light up a

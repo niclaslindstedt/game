@@ -117,8 +117,9 @@ jobs:
         run: |
           mkdir -p webroot
           echo '<!doctype html><title>placeholder</title>' > webroot/index.html
-      # …and `tauri-build` refuses a MISSING ICON outright, so the compile needs
-      # one even though nothing here draws a window. `scripts/icons.mjs` is what
+      # …and `tauri-build` refuses a MISSING ICON outright — including the
+      # Windows `.ico`, without which the clippy run below for that target fails
+      # in the build script rather than in any code. `scripts/icons.mjs` is what
       # makes them (Tauri refuses the paletted PNGs the website ships), and it
       # needs `sharp` — which is a `pwa` devDependency hoisted to the root by
       # the workspace install. `npm ci` at the ROOT is therefore the honest
@@ -130,6 +131,44 @@ jobs:
         run: node scripts/icons.mjs
       - name: clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+      # AND THE WINDOWS-ONLY HALF, from this same Ubuntu runner. The overlay's
+      # decoy surface (`src-tauri/src/overlay.rs`) and the plugin behind it are
+      # `cfg(windows)`, so the run above compiles their no-op halves and agrees
+      # with itself. `clippy` never links, so the real half is checkable here
+      # with nothing but the target's std — no MSVC toolchain, and no waiting
+      # for somebody to dispatch a package build to find a typo.
+      - name: The Windows target
+        run: rustup target add x86_64-pc-windows-msvc
+      # `tauri-build` compiles a Windows RESOURCE FILE for that target (the icon
+      # and the version block) and shells out to `llvm-rc` to do it — so without
+      # one the run dies in the build script with `NotAttempted("llvm-rc")`,
+      # before a line of the code under test is looked at. The runner image
+      # ships LLVM but only under /usr/lib/llvm-*/bin, so the newest one is
+      # handed to `embed-resource` through the `RC` variable it reads. Loud
+      # rather than skipped: a Windows check that quietly did not run is worse
+      # than not having one.
+      - name: A Windows resource compiler
+        working-directory: .
+        run: |
+          set -euo pipefail
+          newest_rc() {
+            find /usr/lib -maxdepth 3 -name llvm-rc -type f 2>/dev/null |
+              sort -V | tail -1
+          }
+          rc=$(newest_rc)
+          if [ -z "$rc" ]; then
+            sudo apt-get update
+            sudo apt-get install -y llvm
+            rc=$(newest_rc)
+          fi
+          if [ -z "$rc" ]; then
+            echo "no llvm-rc found — the Windows-target check cannot run" >&2
+            exit 1
+          fi
+          echo "using $rc"
+          echo "RC=$rc" >> "$GITHUB_ENV"
+      - name: clippy (Windows target)
+        run: cargo clippy --target x86_64-pc-windows-msvc -p adastrail-tauri --all-targets -- -D warnings
 
   package:
     name: package (${{ matrix.os }})

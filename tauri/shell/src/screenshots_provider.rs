@@ -16,12 +16,15 @@
 //!  2. **Steam is NO LONGER already doing it.** That is the half worth being
 //!     careful about. Electron's argument for not needing the API is that the
 //!     overlay it injects hooks the presented frame and Steam's own screenshot
-//!     key files a copy with the game uninvolved. **There is no overlay on this
-//!     shell** ([`crate::steam::overlay_support`]) — so on a Tauri build, F12
-//!     reaches the page and nothing else happens. A player who took a picture in
-//!     the game would find it in the game's gallery and on disk, and NOT in
-//!     their Steam library, which on a Steam build reads as the feature being
-//!     broken.
+//!     key files a copy with the game uninvolved. **Steam's key photographs
+//!     nothing on this shell**, and that is true even where the overlay itself
+//!     works: what this shell hands the hook is a DECOY swap chain
+//!     ([`crate::steam::overlay_support`]) whose frames are transparent by
+//!     construction, so a key press would file an empty picture — and on the two
+//!     desktops with no decoy, F12 reaches the page and nothing else happens at
+//!     all. Either way a player who took a picture in the game would find it in
+//!     the game's gallery and on disk, and NOT in their Steam library, which on
+//!     a Steam build reads as the feature being broken.
 //!
 //! So the two shells reach opposite conclusions from the same principle, and
 //! both are right: the picture should end up where the player expects it, and
@@ -31,8 +34,9 @@
 //! **`hook_screenshots` remains the one call we would least want**, exactly as
 //! the Electron seam argues. It takes the screenshot key AWAY from Steam and
 //! makes the game responsible for answering it. That is the wrong trade where
-//! the overlay works, and here it is not even available to trade — there is no
-//! overlay key to hook. The library add is the whole of what this shell wants.
+//! the overlay's key photographs the game — and here there is nothing to trade
+//! for, since the frame it would photograph is the decoy's empty one. The
+//! library add is the whole of what this shell wants.
 
 use std::path::Path;
 

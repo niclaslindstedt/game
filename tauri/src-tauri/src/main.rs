@@ -20,9 +20,12 @@
 //!  1. **`--dedicated`** — the windowless mode, decided FIRST and before Tauri's
 //!     builder, so a session server never registers a scheme or adopts a
 //!     user-data directory.
-//!  2. **Was this process started BY Steam** — asked before the handshake below
-//!     stamps two of the three variables that answer it into our own
-//!     environment (`adastrail_shell::steam`).
+//!  2. **Was this process started BY Steam**, and what that means for VALVE'S
+//!     OVERLAY — asked before the handshake below stamps two of the three
+//!     variables that answer it into our own environment (`steam_launch`, and
+//!     `adastrail_shell::steam`). The overlay's answer has to be this early
+//!     because it decides a PLUGIN, and a plugin is registered before the
+//!     builder is finished (`overlay`).
 //!  3. **`restart_app_if_necessary`** — relaunch through the Steam client if the
 //!     player started the binary directly. Before the event loop, because a
 //!     process about to be replaced must not go on to build a window.
@@ -46,6 +49,7 @@ mod media;
 mod metrics;
 mod mods;
 mod net;
+mod overlay;
 mod p2p;
 mod page;
 mod protocol;
@@ -74,7 +78,8 @@ use adastrail_shell::runtime::Resources;
 use adastrail_shell::screenshots::ShotsOptions;
 use adastrail_shell::screenshots_provider::ScreenshotLibrary;
 use adastrail_shell::steam::{
-    current_webview, overlay_explanation, process_env, steam_overlay_wanted,
+    current_webview, overlay_explanation, overlay_plan, process_env, steam_enabled,
+    steam_overlay_wanted, OverlayPlan,
 };
 use adastrail_shell::user_data::{adopt_user_data, user_data_dir, APP_DIR_NAME};
 use adastrail_shell::webroot::webroot_exists;
@@ -117,6 +122,11 @@ pub struct Shell {
     /// Whether Steam started this process. Read BEFORE the handshake — see the
     /// module header.
     pub started_by_steam: bool,
+    /// What this launch does about Valve's overlay. Decided from the same
+    /// pre-handshake read, and carried rather than re-asked: the plugin is
+    /// registered from `main` and the callback is armed from `setup`, and the two
+    /// answering differently would be a surface nobody ever shows.
+    pub overlay: OverlayPlan,
     /// MULTIPLAYER, when this launch may host or join one. `None` is the
     /// ordinary state of a plain download.
     pub net: Option<Arc<NetBridge>>,
@@ -241,6 +251,14 @@ fn shell_toggle_fullscreen(app: AppHandle) {
     let _ = window.set_fullscreen(!full);
 }
 
+/// SHIFT+TAB, forwarded from the page's own key handler — see
+/// [`page::OVERLAY_COMMAND`] for why the chord cannot reach this process on its
+/// own, and [`overlay`] for what answers it.
+#[tauri::command]
+fn shell_activate_overlay() {
+    overlay::activate();
+}
+
 /// FAIL LOUDLY.
 ///
 /// The failure mode this exists to end: the shell hits something it cannot
@@ -261,7 +279,7 @@ fn fatal(app: &AppHandle, summary: &str) {
     app.exit(1);
 }
 
-/// Say what a developer build is and what the overlay is not, once per launch.
+/// Say what a developer build is and what the overlay is, once per launch.
 ///
 /// All of them are LOG LINES rather than dialogs, and that is still the
 /// difference from the Electron shell even now that this tree packages itself:
@@ -276,12 +294,10 @@ fn announce(shell: &Shell) {
         output::warn(&DEVELOPER_NOTICE.replace('\n', " "));
     }
     output::info(&SHELL_NOTICE.replace('\n', " "));
-    // The overlay's absence is a per-launch fact worth stating, because it is
-    // what somebody comparing the two desktop builds will notice first.
-    output::info(&overlay_explanation(
-        current_webview(),
-        shell.started_by_steam,
-    ));
+    // The overlay is a per-launch fact worth stating either way, because it is
+    // what somebody comparing the two desktop builds will notice first — and
+    // because two of the three answers are something the reader can change.
+    output::info(&overlay_explanation(shell.overlay, current_webview()));
     for refusal in &shell.refusals {
         output::warn(refusal);
     }
@@ -295,10 +311,15 @@ impl Shell {
         argv: Vec<String>,
         webroot: PathBuf,
         pictures: PathBuf,
+        launch: SteamLaunch,
     ) -> Self {
-        // FIRST, before the handshake below writes two of the three variables it
-        // reads — see the module header.
-        let started_by_steam = steam_overlay_wanted(&process_env);
+        // Both halves of `launch` were read in `main`, before the handshake
+        // below writes two of the three variables they read — see the module
+        // header, and `steam_launch`.
+        let SteamLaunch {
+            started_by_steam,
+            overlay,
+        } = launch;
 
         adopt_user_data(&app_data_root, &mut |line| output::info(line));
         let user_data = user_data_dir(&app_data_root);
@@ -351,6 +372,7 @@ impl Shell {
             shot_library: shots::screenshot_library(),
             shots_folder: pictures.join(APP_DIR_NAME),
             started_by_steam,
+            overlay,
             net,
             mods,
         }
@@ -364,16 +386,47 @@ impl Shell {
     fn shots_options(&self) -> ShotsOptions {
         ShotsOptions {
             folder: self.shots_folder.clone(),
-            // ALWAYS false on this shell, and load-bearing: there is no overlay,
-            // so Steam is not filing its own copy and the gallery must not tell
-            // the player it is. `shots::SteamLibrary` is what files the Steam
-            // copy here instead.
+            // ALWAYS false on this shell, and load-bearing — INCLUDING on a
+            // launch that has the overlay. Steam's screenshot key photographs
+            // the swap chain it hooked, and the one it hooked here is the decoy,
+            // whose frames are empty by construction. So Steam is still not
+            // filing a usable copy, the gallery must not tell the player it is,
+            // and `shots::SteamLibrary` goes on filing ours.
             steam_overlay: false,
             stamp: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .map(|since| since.as_secs())
                 .unwrap_or_default(),
         }
+    }
+}
+
+/// WHAT THE LAUNCH ENVIRONMENT SAYS ABOUT STEAM, read once and carried.
+pub struct SteamLaunch {
+    /// Whether Steam started this process.
+    started_by_steam: bool,
+    /// What that means for Valve's overlay.
+    overlay: OverlayPlan,
+}
+
+/// Ask the environment before anything answers for it.
+///
+/// **The one piece of ordering this file will not survive getting wrong.**
+/// `Client::init_app` STAMPS `SteamAppId` and `SteamGameId` into this process's
+/// own environment before handshaking, and those are two of the three variables
+/// [`steam_overlay_wanted`] reads — so asked after a handshake, every launch
+/// looks like a Steam launch. Called from `main` before the builder exists,
+/// which is the earliest moment there is, and the answer is carried from there
+/// rather than re-derived.
+fn steam_launch() -> SteamLaunch {
+    let started_by_steam = steam_overlay_wanted(&process_env);
+    SteamLaunch {
+        started_by_steam,
+        overlay: overlay_plan(
+            current_webview(),
+            steam_enabled(&process_env),
+            started_by_steam,
+        ),
     }
 }
 
@@ -492,15 +545,20 @@ fn main() {
         std::process::exit(1);
     }
 
-    // BEFORE THE EVENT LOOP, and before anything else touches Steam: if the
-    // player started this binary directly and it should have gone through the
-    // client, hand over and go. A process about to be replaced must not build a
-    // window, register a scheme, or write a launch log.
+    // BEFORE ANYTHING ELSE TOUCHES STEAM, in either direction: what this launch
+    // is, and what it therefore does about the overlay. See `steam_launch` for
+    // why the order rather than the answer is the fragile part.
+    let launch = steam_launch();
+
+    // BEFORE THE EVENT LOOP: if the player started this binary directly and it
+    // should have gone through the client, hand over and go. A process about to
+    // be replaced must not build a window, register a scheme, or write a launch
+    // log.
     if steam::restart_if_necessary() {
         return;
     }
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         // A SECOND COPY OF THE GAME would fight the first over the same save
         // files and the same Steam session, so the argument is handed to the
         // running instance instead — which is also the ONLY place a friend's
@@ -528,17 +586,25 @@ fn main() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_clipboard_manager::init());
+
+    // THE OVERLAY'S DECOY SURFACE, on a launch that has Valve's library in it to
+    // hook one — and no plugin at all on a launch that does not. AFTER the
+    // single-instance plugin, which has to stay first: it is what decides
+    // whether this process lives at all, and a second copy must exit before any
+    // other plugin's setup has run. See `overlay`.
+    overlay::install(builder, launch.overlay)
         .invoke_handler(tauri::generate_handler![
             shell_post,
-            shell_toggle_fullscreen
+            shell_toggle_fullscreen,
+            shell_activate_overlay
         ])
         .register_uri_scheme_protocol(APP_SCHEME, |ctx, request| {
             let app = ctx.app_handle();
             let root = app.state::<Shell>().webroot.clone();
             protocol::serve(app, &request, &root)
         })
-        .setup(|app| {
+        .setup(move |app| {
             let handle = app.handle().clone();
             let app_data_root = handle
                 .path()
@@ -554,6 +620,7 @@ fn main() {
                 std::env::args().skip(1).collect(),
                 protocol::webroot_dir(&handle),
                 pictures,
+                launch,
             );
             // Everything the shell can decide is decided, the platform seams
             // have been asked for (which is where a Steam handshake is paid
@@ -588,6 +655,12 @@ fn main() {
 
             app.manage(shell);
             let shell = app.state::<Shell>();
+            // BEFORE THE WINDOW, and that is the whole of why it is here rather
+            // than beside the plugin: the surface's GPU device is created when
+            // the window appears, and Valve's library has to be initialized
+            // before it — which asking for the client is what does. See
+            // `overlay`.
+            overlay::arm(&handle, shell.overlay);
             match window::build(&handle, &shell) {
                 Ok(window) => {
                     // THE MICROPHONE GATE, on the window rather than on the app:

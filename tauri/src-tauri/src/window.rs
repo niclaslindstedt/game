@@ -9,6 +9,7 @@ use adastrail_shell::config::{
     is_internal_url, remote_game_url, start_url, BRAND_BG, DEVELOPER_TITLE_SUFFIX, WINDOW_TITLE,
 };
 use adastrail_shell::output;
+use adastrail_shell::steam::OverlayPlan;
 use adastrail_shell::window_state::{
     load_window_state, save_window_state, DisplayArea, WindowState, MIN_HEIGHT, MIN_WIDTH,
 };
@@ -110,7 +111,12 @@ pub fn build(app: &AppHandle, shell: &Shell) -> tauri::Result<WebviewWindow> {
         // equivalent of the mobile shell holding its splash until the WebView's
         // first frame.
         .visible(false)
-        .initialization_script(initialization_script(&shell.capabilities))
+        // The second argument is whether this launch forwards Shift+Tab to
+        // Valve's overlay — see `crate::page::OVERLAY_COMMAND`.
+        .initialization_script(initialization_script(
+            &shell.capabilities,
+            shell.overlay == OverlayPlan::Surface,
+        ))
         .on_navigation(navigation_guard(
             app.clone(),
             origin.clone(),

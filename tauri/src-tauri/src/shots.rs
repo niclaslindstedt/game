@@ -12,8 +12,10 @@
 //!
 //! The second one exists on this shell and does NOT on Electron's, and that is
 //! the inversion [`adastrail_shell::screenshots_provider`] argues in full: the
-//! Electron build gets its Steam copy from Valve's overlay, which this shell
-//! cannot have, so here the game has to file it itself.
+//! Electron build gets its Steam copy from Valve's overlay, off the screenshot
+//! key, so here the game has to file it itself. **The decoy surface that carries
+//! the overlay on this shell does not change that** — Steam's key photographs
+//! the swap chain it hooked, and the decoy's frames are transparent by design.
 
 use std::fs;
 use std::path::Path;
