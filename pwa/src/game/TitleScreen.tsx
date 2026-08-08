@@ -60,6 +60,7 @@ import { MenuHeading } from "./title-screen/MenuHeading.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
 import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
 import { TitleBackdrop } from "./title-screen/TitleBackdrop.tsx";
+import { TitleFooter } from "./title-screen/TitleFooter.tsx";
 import {
   unlockAudio,
   type MenuContext,
@@ -668,6 +669,17 @@ export function TitleScreen({
         bumpSettings();
         return;
       }
+      // THE FOOTER KEEPS ITS OWN ENTER. The steering below `preventDefault()`s
+      // Enter and fires the row under the CURSOR — which is exactly right for a
+      // menu row (the browser's own activation of the focused button would
+      // otherwise fire it twice) and exactly wrong for anything else that can
+      // hold focus. Tab to the version link on a preview build without this and
+      // Enter starts a game instead of opening the commit.
+      if (
+        event.target instanceof Element &&
+        event.target.closest(".title-footer")
+      )
+        return;
       // The arsenal viewer, the achievements browser, the vault, the effects
       // gallery and the scores board run their own navigation (HighScoresBoard
       // reinterprets the arrows as its two axes); stay out of their way so the
@@ -1087,24 +1099,7 @@ export function TitleScreen({
         </Suspense>
       )}
 
-      {!browserOpen && !skyTest && (
-        <footer className="title-footer">
-          <PixelText
-            font={font}
-            // The build's commit rides beside the version everywhere the
-            // developer tooling ships — web, PWA, preview/branch slots, local
-            // builds, TestFlight. The production store build prints the bare
-            // version (the hash isn't embedded there at all).
-            text={
-              __DEV_TOOLS__
-                ? `v${__APP_VERSION__} · ${__BUILD_COMMIT__}`
-                : `v${__APP_VERSION__}`
-            }
-            scale={2}
-            color="#7a8088"
-          />
-        </footer>
-      )}
+      {!browserOpen && !skyTest && <TitleFooter font={font} />}
     </div>
   );
 }

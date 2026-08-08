@@ -4781,6 +4781,54 @@ html.app-locked body {
   z-index: 1;
 }
 
+/* The version stamp as a LINK — the `/preview/` and `/branch/` slots only,
+   where it opens the commit the build was cut from (TitleFooter.tsx).
+
+   THE PADDING AND THE MATCHING NEGATIVE MARGIN ARE ONE THING. The stamp is
+   two-scale pixel text, so a bare anchor around it is a ~14px-tall tap target
+   in the corner a thumb reaches worst; the padding grows that to something
+   findable, and the negative margin cancels it back out of the layout so the
+   text itself sits where it always sat, pixel for pixel. Change one and change
+   the other. */
+.title-version-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 0.85rem;
+  margin: -0.7rem -0.85rem;
+  cursor: pointer;
+  /* Undo the anchor defaults — the same reason `.menu-item` does. */
+  color: inherit;
+  text-decoration: none;
+  /* No 300ms tap delay on the one thing down here that is pressed. */
+  touch-action: manipulation;
+  /* The stamp is a CANVAS, so its colour is drawn in and not ours to restyle:
+     the affordance has to be a filter over the picture rather than a colour
+     swap. Brightening it is also the only hover this screen's corner can wear
+     without competing with the menu column's lit row. */
+  filter: brightness(1);
+  transition: filter 120ms ease-out;
+}
+
+.title-version-link:hover,
+.title-version-link:focus-visible {
+  filter: brightness(1.9);
+}
+
+.title-version-link:focus-visible {
+  outline: 2px solid var(--panel-rail-top);
+  outline-offset: 2px;
+}
+
+.title-version-link:active {
+  filter: brightness(1.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-version-link {
+    transition: none;
+  }
+}
+
 /* ---- PWA update prompt (sprite-styled "a new version is ready") ---------- */
 
 /* A bottom-anchored pixel panel in the same dressing as the intro/pause

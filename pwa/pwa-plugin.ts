@@ -79,11 +79,51 @@ const PUBLIC_SKIP = new Set([
   "screenshot-wide.png",
 ]);
 
+/**
+ * Is this base one of the DEVELOPMENT slots — `/preview/` (every `main` push)
+ * or `/branch/` (a parked branch) — rather than the released site at `/`?
+ *
+ * The two differ from the root slot in what they are FOR: nobody arrives at
+ * them by searching, they exist to be looked at by whoever pushed the commit.
+ * So they are the slots that must never be indexed, and the slots whose title
+ * footer links its commit hash back to the source (see `commitUrlForBase`).
+ *
+ * `endsWith`, not equality: a fork served from a sub-path (`/game/preview/`)
+ * is the same slot with a longer base.
+ */
+export function isSecondarySlot(base: string): boolean {
+  return base.endsWith("/preview/") || base.endsWith("/branch/");
+}
+
+/**
+ * The web URL for the commit a build was cut from — what the title footer's
+ * version links to — or EMPTY for a build that must not offer the link.
+ *
+ * Empty in three cases, each deliberate. A ROOT-slot build serves a release
+ * tag or a store binary, where a link into the source tree is developer
+ * furniture on a stranger's screen. A build with no resolvable sha (a source
+ * tarball with no git dir, a store build that embeds no hash at all) has
+ * nothing to point at. And a fork that cleared `repoUrl` has nowhere to point.
+ * In all three the footer stays the plain text it always was — the rule
+ * everywhere else in this tree: absent beats a link that leads nowhere.
+ *
+ * The path shape is GitHub's (`<repo>/commit/<sha>`), which is what `repoUrl`
+ * has always been; a fork hosting somewhere that spells it differently gets
+ * the honest fix of a spelling here rather than a dead link.
+ */
+export function commitUrlForBase(
+  base: string,
+  sha: string,
+  repoUrl: string = IDENTITY.repoUrl,
+): string {
+  if (!isSecondarySlot(base) || !sha || !repoUrl) return "";
+  return `${repoUrl.replace(/\/+$/, "")}/commit/${sha}`;
+}
+
 // Secondary slots must never be indexed (§11.5.1): only the production slot
 // carries an indexable robots meta.
 function robotsContentForBase(base: string): string {
-  const isSecondary = base.endsWith("/preview/") || base.endsWith("/branch/");
-  return isSecondary
+  return isSecondarySlot(base)
     ? "noindex,nofollow"
     : "index,follow,max-image-preview:large";
 }

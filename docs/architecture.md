@@ -2577,6 +2577,24 @@ worker scoped to its base, and a disjoint precache id (`game`,
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
 
+**THE TWO SECONDARY SLOTS KNOW WHO IS LOOKING AT THEM.** Nobody arrives at
+`/preview/` or `/branch/` by searching — they are looked at by the person who
+pushed the commit — which is what makes them `noindex`, and what makes the
+title footer's version a LINK there and plain text everywhere else: it opens
+the exact commit the build was cut from, so "is this my change, or did I beat
+the deploy here?" is a tap instead of a hash to copy and paste into a search
+box. Both facts read the same predicate (`isSecondarySlot`, pwa-plugin.ts) and
+the link itself is the build-time constant `__BUILD_COMMIT_URL__`, EMPTY on
+every other build — so the released site ships neither the anchor nor the URL.
+
+That commit is resolved with `git rev-parse HEAD` in the checkout, **not** from
+`GITHUB_SHA`, and the distinction is the whole of whether the link is honest:
+every leg builds from its own ref (the tag, the pushed sha, the dispatched
+branch) while `GITHUB_SHA` is fixed to the commit that TRIGGERED the run, so a
+`/branch/` build read from the environment stamps itself with whatever `main`
+commit kicked the deploy off. The environment is only the fallback for a tree
+with no git dir.
+
 **SEPARATELY MEANS ON ITS OWN RUNNER.** A run is `resolve → build (one leg per
 slot, in parallel) → assemble → deploy`: `resolve` answers the one question a
 leg cannot answer for itself (which tag, if any, `/` serves) and emits the slot
@@ -2609,8 +2627,9 @@ carries the DEVELOPER tooling — the hidden sun reveal (sixteen taps to arm, th
 first ten of them answered by nothing at all, then the click race —
 `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
 PLAYGROUND warps, the CHEATS, the BALANCE and VISUALS knobs, the GALLERIES and
-the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the version in the title
-footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
+the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the
+version in the title footer (a LINK to that commit on the two secondary slots —
+see above) — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
 dev, the installed PWA, and the native `preview`/`testflight` apps. The single
 exception is the binary uploaded to the App Store / Play Store, built from the
 `production` EAS profile: `native/scripts/bundle-web.mjs` builds the embedded

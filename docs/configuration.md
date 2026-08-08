@@ -36,7 +36,10 @@ own namespace, and a sequel changes it there once:
 
 **None of the DEVELOPER rows below — nor the gesture that reveals them, nor the
 commit hash in the title footer — exist in the build uploaded to the App Store
-/ Play Store.** They ship everywhere else: the website, the installed PWA, the
+/ Play Store.** (On the `/preview/` and `/branch/` slots that hash is also a
+LINK, opening the exact commit the build was cut from; everywhere else it is
+the plain text it has always been — see `docs/architecture.md` → Deployment
+topology.) They ship everywhere else: the website, the installed PWA, the
 `/preview/` and `/branch/` slots, local dev, and the native `preview` and
 `testflight` apps. The switch is the build flag `VITE_DEV_TOOLS` (below), and
 because it compiles to a literal the store build does not contain the developer
