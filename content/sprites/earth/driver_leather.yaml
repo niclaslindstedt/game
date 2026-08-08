@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# A DRIVER — see `driver_shirt.yaml` for why the drivers are their own table and
+# why the five of them differ most ABOVE the waist.
+#
+# THIS IS THE ONE THAT DIFFERS IN BUILD rather than only in colour, and it earns
+# its place for that: at sixteen pixels a palette swap is a person in a different
+# coat, and a different SILHOUETTE is a different person. The head is small and
+# bald, there is no neck, and the shoulders start a row higher than everyone
+# else's — so the torso that leaves the windscreen is a shape the eye can tell
+# from the other four at a lane's distance.
+name: driver_leather
+family: earth
+space: outside
+size: [16, 16]
+description: >
+  A heavy-set driver in a black leather jacket, bald with a ruddy face, no neck
+  to speak of, belted in with both hands forward on the wheel.
+subject:
+  kind: driver behind a windscreen
+  build: a heavy seated adult, broad through the shoulders and short in the neck
+  attire: a black leather jacket over a dark red shirt
+  features: a bald head, a ruddy face, a seatbelt sashed from the near shoulder
+  accent: the dark red shirt at the open collar
+  flavor: has not given way to anybody since the road was resurfaced
+  pose: seated square, shoulders filling the seat, both hands out on the wheel
+palette:
+  O: "#1a1c2c" # outline ink
+  P: "#c98066" # skin, ruddy
+  C: "#2b2830" # leather jacket, black
+  W: "#8a3a3a" # shirt, dark red
+  L: "#8d93a4" # seatbelt webbing, pale — it lies on black leather
+  K: "#c98066" # hand
+  T: "#39343d" # trousers
+  B: "#241f26" # boots
+grid: |
+  ................
+  ................
+  ......OPPO......
+  .....OPPPPO.....
+  ......OPPO......
+  ..OCCCCCWWLO....
+  ..OCCCCCCLCOKO..
+  ..OCCCCCLCCOKO..
+  ..OCCCCLCCCO....
+  ..OTTTTTTTTO....
+  ..OTTTTTTTTTO...
+  ..OTTO..OTTTO...
+  ..OTTO...OTTO...
+  ..OBBO..OBBBO...
+  ................
+  ................

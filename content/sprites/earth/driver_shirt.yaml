@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# A DRIVER — the person BEHIND A WINDSCREEN, drawn seated and belted on a canvas
+# of their own so the car can lose them.
+#
+# ITS OWN TABLE RATHER THAN MORE RIDERS, and the reason is what happens next: a
+# head-on posts the driver's upper half out through the glass and the gore system
+# CUTS THIS ART to do it (`slicedPiece`). Two seated sprites shared with the
+# two-wheelers meant every torso that ever came out of a windscreen was one of
+# two pictures. Five drivers is five torsos, and it costs the burst nothing.
+#
+# SO THE TOP HALF IS WHERE THE WORK GOES. The cut lands between three tenths and
+# six tenths of the way down (`DRIVE.gore.cutBand`), so what a player actually
+# sees flying is the HEAD, the SHOULDERS and the SEATBELT — which is why the five
+# differ most in hair, build and jacket, and hardly at all below the waist.
+name: driver_shirt
+family: earth
+space: outside
+size: [16, 16]
+description: >
+  An office driver in a pale blue shirt with a white collar, belted in, both
+  hands forward on the wheel — mid-brown hair, tan trousers.
+subject:
+  kind: driver behind a windscreen
+  build: a seated adult of ordinary build, upright against the seat back
+  attire: a pale blue shirt with a white open collar, tan trousers
+  features: mid-brown hair combed flat, a seatbelt sashed from the near shoulder
+  accent: the white collar
+  flavor: on the phone about a meeting he is already late for
+  pose: seated, both hands out on the wheel
+palette:
+  O: "#1a1c2c" # outline ink
+  H: "#6b4a2e" # hair, mid brown
+  P: "#deaa86" # skin
+  C: "#7fa8d4" # shirt, pale blue
+  W: "#eef2f7" # collar, white
+  L: "#3b3f4c" # seatbelt webbing
+  K: "#deaa86" # hand
+  T: "#a9865c" # trousers, tan
+  B: "#3a3038" # shoes
+grid: |
+  ................
+  ......OHHHO.....
+  .....OHHHHHO....
+  .....OPPPPO.....
+  ......OPPO......
+  ...OCCCWWLO.....
+  ..OCCCCCLCCOKO..
+  ..OCCCCLCCCOKO..
+  ..OCCCLCCCCO....
+  ..OTTTTTTTTO....
+  ..OTTTTTTTTTO...
+  ..OTTO..OTTTO...
+  ..OTTO...OTTO...
+  ..OBBO..OBBBO...
+  ................
+  ................

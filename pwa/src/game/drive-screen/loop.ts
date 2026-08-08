@@ -43,6 +43,7 @@ import {
   drivePartHit,
   driveSmash,
   driveTrafficHit,
+  driveWindscreenGore,
   type DriveFxState,
 } from "./drive-fx.ts";
 import { lampHeadLift } from "./scenery.ts";
@@ -347,6 +348,21 @@ export function drainDrive(
     if (event.type === "windscreenOut") {
       driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
       playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+    }
+    // …AND WHAT CAME THROUGH IT WITH THEM. Its own event rather than a second
+    // read of the one above, because the engine raises it ONLY for a head-on and
+    // only with the gore switches on — the gate is answered where the thing is
+    // decided, and this is the app doing as it is told. The wet tear plays over
+    // the glass: what the player is being shown is a person, not a window.
+    if (event.type === "windscreenGore") {
+      driveWindscreenGore(
+        fx,
+        event.pos.x,
+        event.pos.y,
+        WINDSCREEN_LIFT,
+        drive.ms,
+      );
+      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
     }
     // …and the body itself, arriving in the air. The heavy bank whatever the
     // joules say: there is no gentle version of coming out of a vehicle.

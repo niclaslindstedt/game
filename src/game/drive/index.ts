@@ -119,6 +119,7 @@ export {
 export {
   FLEET,
   PAVEMENT_SHARE,
+  DRIVER_VARIANTS,
   RIDER_VARIANTS,
   rollVehicle,
   vehicleDef,

@@ -135,8 +135,7 @@ export const TRAFFIC_SPRITES: readonly string[] = FLEET.map((def) => def.id);
  * mechanical rather than tidy: a rider is drawn SEATED, and the crowd's art is
  * all drawn walking. A thrown rider has to be cut in half out of the picture the
  * player was actually looking at a moment ago (`slicedPiece`), so the seated
- * body is the one the road has to be holding — and the same table answers for a
- * passenger who has just come through a windscreen, who was also sitting down.
+ * body is the one the road has to be holding.
  *
  * One frame each. Everything else on this road that is alive walks; these
  * people are carried, and a walk cycle on somebody sitting on a moped is the
@@ -149,6 +148,36 @@ export const RIDER_SPRITES: readonly string[] = [
   "rider_delivery",
   "rider_cyclist",
   "rider_skater",
+];
+
+/**
+ * THE DRIVERS — the people behind windscreens, and a table of their own.
+ *
+ * THE RIDERS USED TO ANSWER FOR THEM, on the argument that somebody who has
+ * just left a driving seat looks like somebody sitting down. True of the
+ * posture and false of everything else: it put crash helmets and hot-box
+ * jackets in the front of saloons, and it meant the biggest sight this road can
+ * produce — a head-on posting the driver's upper half out through the glass —
+ * threw one of TWO pictures, because only two of the six riders read as
+ * ordinary people in coats.
+ *
+ * FIVE, AND THEY DIFFER WHERE THE CUT LEAVES THEM DIFFERING. The bumper catches
+ * a body between three tenths and six tenths of the way down
+ * (`DRIVE.gore.cutBand`), so the half that flies is head, shoulders and
+ * seatbelt: a bald ruddy head over a black leather shoulder, a red flat-brim
+ * cap, white hair pinned up, a dark beanie over a hi-vis collar, a brown head
+ * over a pale blue shirt. Below the waist they are near enough the same person,
+ * because below the waist nobody ever sees them.
+ *
+ * Keep this in step with the engine's `DRIVER_VARIANTS`, which is what a car's
+ * occupant is rolled against.
+ */
+export const DRIVER_SPRITES: readonly string[] = [
+  "driver_shirt",
+  "driver_tracksuit",
+  "driver_cardigan",
+  "driver_hi_vis",
+  "driver_leather",
 ];
 
 /**

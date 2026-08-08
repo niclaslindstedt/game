@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# A DRIVER — see `driver_shirt.yaml` for why the drivers are their own table and
+# why the five of them differ most ABOVE the waist.
+name: driver_tracksuit
+family: earth
+space: outside
+size: [16, 16]
+description: >
+  A driver in a navy tracksuit with a white sleeve stripe and a red flat-brim
+  cap, belted in, both hands forward on the wheel.
+subject:
+  kind: driver behind a windscreen
+  build: a seated adult of ordinary build, slouched a little into the seat
+  attire: a navy tracksuit top with a white stripe down the sleeve
+  features: a red flat-brim cap worn level, a seatbelt sashed from the near shoulder
+  accent: the red cap
+  flavor: two lanes over from where he meant to be, and unbothered
+  pose: seated, both hands out on the wheel
+palette:
+  O: "#1a1c2c" # outline ink
+  R: "#c1382f" # cap, red
+  P: "#c98f63" # skin
+  C: "#2c3560" # tracksuit navy
+  W: "#e6ebf2" # sleeve stripe, white
+  L: "#9aa3b8" # seatbelt webbing, pale — it lies on navy
+  K: "#c98f63" # hand
+  T: "#232a48" # tracksuit bottoms
+  B: "#e6ebf2" # trainers
+grid: |
+  ................
+  .....ORRRRO.....
+  ....ORRRRRROOO..
+  .....OPPPPO.....
+  ......OPPO......
+  ...OCCCCCLO.....
+  ..OWCCCCLCCOKO..
+  ..OWCCCLCCCOKO..
+  ..OWCCLCCCCO....
+  ..OTTTTTTTTO....
+  ..OTTTTTTTTTO...
+  ..OTTO..OTTTO...
+  ..OTTO...OTTO...
+  ..OBBO..OBBBO...
+  ................
+  ................

@@ -40,7 +40,7 @@
 // below is hashed off the victim's own id and position.
 
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
-import { vehicleDef } from "./fleet.ts";
+import { DRIVER_VARIANTS, vehicleDef } from "./fleet.ts";
 import type { Impact } from "./impact.ts";
 import { burstBody, remainForce, splitsBody } from "./remains.ts";
 import type {
@@ -138,6 +138,14 @@ function throwBody(
   drive: DriveState,
   other: DriveTraffic,
   hit: Impact,
+  /**
+   * WHOSE ART LEAVES THE VEHICLE — a `rider` off a two-wheeler, or a `driver`
+   * out through a windscreen. It is the ONE thing that differs between the two
+   * populations by the time they are in the air, and it travels rather than
+   * being guessed at the far end: everything downstream (the tumble, the tally,
+   * the wheels, the cut) is identical.
+   */
+  kind: "rider" | "driver",
   variant: number,
   force: number,
   atX: number,
@@ -175,7 +183,7 @@ function throwBody(
       y: hit.launch.y * 0.5 + (hash(seed, 7) - 0.5) * 40,
     },
     mode: "tumbling",
-    kind: "rider",
+    kind,
     variant,
     bark: -1,
     phase: hash(seed, 11) * Math.PI * 2,
@@ -210,7 +218,7 @@ function throwBody(
       vel: { x: ped.vel.x, y: ped.vel.y },
       vz: ped.vz,
       joules: hit.joules,
-      kind: "rider",
+      kind,
       variant,
       panel: hit.panel,
       split: split && splitsBody(hit.joules),
@@ -245,7 +253,7 @@ export function ejectRider(
   const force = wreckForce(other, hit.joules);
   if (force < DRIVE.eject.joules * DRIVE.eject.riderScale) return [];
   other.rider = false;
-  return throwBody(drive, other, hit, def.rider, force, other.pos.x);
+  return throwBody(drive, other, hit, "rider", def.rider, force, other.pos.x);
 }
 
 /**
@@ -323,6 +331,13 @@ export function ejectOccupants(
   if (square && (drive.params.gib || drive.params.split)) {
     other.gore = 1;
     other.glassOut = true;
+    // …AND IT DOES NOT ALL STAY ON THE CAR. The glass going out is one event and
+    // what comes THROUGH it is another: the app answers this one with the spray.
+    drive.events.push({
+      type: "windscreenGore",
+      pos: { x: exitX, y: other.pos.y },
+      joules: hit.joules,
+    });
   }
 
   const pieces: DriveRemain[] = [];
@@ -340,6 +355,7 @@ export function ejectOccupants(
         drive,
         other,
         hit,
+        "driver",
         occupantVariant(other, i),
         force,
         exitX + spread * 0.2,
@@ -389,18 +405,22 @@ function killInside(drive: DriveState, other: DriveTraffic, hit: Impact): void {
 }
 
 /**
- * WHICH BODY A CAR'S OCCUPANT WEARS. They are drawn out of the RIDER table
- * (they are the only art on this road of a person in a seated posture, which is
- * what somebody who has just left a driving seat looks like) and picked off the
- * car's own id, so the same car always empties the same people.
+ * WHICH BODY A CAR'S OCCUPANT WEARS — one of the five DRIVERS, picked off the
+ * car's own id so the same car always empties the same people.
+ *
+ * IT USED TO BE THE RIDER TABLE, on the argument that a rider is the only art
+ * on this road of a person in a seated posture and that is what somebody who
+ * has just left a driving seat looks like. True of the POSTURE and false of
+ * everything else: it put crash helmets and hot-box jackets in the front of
+ * saloons, and — because only two of the six read as ordinary people in coats —
+ * it meant the biggest sight on this road threw one of TWO torsos. Five drivers
+ * with five different heads is the whole of the fix, and the cut lands high
+ * enough (`DRIVE.gore.cutBand`) that the head is most of what flies.
  */
 function occupantVariant(other: DriveTraffic, seat: number): number {
-  // Skip the two delivery riders: nobody is driving a saloon in a hot-box
-  // jacket, and the commuter and the biker read as ordinary people in coats.
-  const pool = [1, 0];
-  return pool[
-    Math.floor(hash(other.id, 31 + seat) * pool.length) % pool.length
-  ]!;
+  return (
+    Math.floor(hash(other.id, 31 + seat) * DRIVER_VARIANTS) % DRIVER_VARIANTS
+  );
 }
 
 /**

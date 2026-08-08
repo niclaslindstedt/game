@@ -50,6 +50,7 @@ import type { Camera } from "../render/view.ts";
 import { cleanCar, soakCarFromDrag, type CarSoak } from "./car-soak.ts";
 import {
   CROWD_SPRITES,
+  DRIVER_SPRITES,
   GLUED_SPRITES,
   RIDER_SPRITES,
   TRAFFIC_SPRITES,
@@ -276,6 +277,11 @@ export function bodySprite(kind: string, variant: number): string {
   }
   if (kind === "rider") {
     return RIDER_SPRITES[variant % RIDER_SPRITES.length] ?? RIDER_SPRITES[0]!;
+  }
+  if (kind === "driver") {
+    return (
+      DRIVER_SPRITES[variant % DRIVER_SPRITES.length] ?? DRIVER_SPRITES[0]!
+    );
   }
   const frames = CROWD_SPRITES[variant % CROWD_SPRITES.length];
   return frames?.[0] ?? "walker_hoodie_0";
