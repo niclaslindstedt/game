@@ -35,34 +35,59 @@ Store identities are wired in [`app.config.js`](app.config.js):
 The project is already linked to its EAS project (`extra.eas.projectId` in
 `app.config.js`), so `eas build` resolves it without `eas init`.
 
-### Enrolling as a COMPANY is the long pole, and it gates both stores at once
+### The company's ADDRESS is a gate, and it is not the one it looks like
 
-An organization enrollment is not a signup — it is Apple verifying the legal
-entity, and it verifies it against **Dun & Bradstreet**, not against what you
-type. The legal name, the headquarters address and the phone on the D&B record
-must match what is entered, so a company whose D&B record is stale or wrong
-waits for **D&B to correct it** before enrollment can even be attempted. In
-Sweden that correction is fed from the Bolagsverket/SCB registers into D&B, and
-the round trip runs to **weeks**. Apple then needs up to two business days to
-pick the corrected record up.
+Apple does not take an organization's legal details on trust: it verifies them
+against **Dun & Bradstreet**. The legal name, the headquarters address and the
+phone must match the D&B record, so a company whose record is stale waits for
+**D&B to correct it** — in Sweden fed from the Bolagsverket/SCB registers, a
+round trip of weeks. Apple then needs up to two business days to see the
+correction, and an address change on an **existing** membership is not
+self-service either: it goes through Apple Developer Support, with business
+documents.
 
-Three things follow, and each is worth knowing before the wait rather than
-after it:
+**Which of these it blocks depends on where you are, and the two cases are very
+different:**
 
-- **Google Play's organization account needs the same D-U-N-S number**, so the
-  one wait clears both storefronts. Have Play's paperwork ready to submit the
-  same day.
-- **Do not route around it with a personal account.** A personal Play account
+|                                    |                                                                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **No membership yet**              | Everything in steps 1–5 waits. There is no app record to create, no team id, no API key.                                    |
+| **Membership held, details wrong** | Steps 1–5 are all available. What waits is the COMMERCIAL layer below — which is what actually blocks the first submission. |
+
+The second case is the trap, because the pipeline looks unblocked and then the
+submission is refused at the end for reasons no build log mentions:
+
+- **The money.** App Store Connect → Business is where the **bank account** and
+  the **tax forms** go, and both are filed _as the legal entity_ — the bank
+  account must be held in that entity's name, and the tax forms carry its
+  registered address. Filing them against an address Apple has wrong is how you
+  get a rejected tax form and a second multi-day round trip, which is why this
+  section is the one to leave alone until the entity details are right. Until
+  the **Paid Applications Agreement** is _active_ the five coin-pack IAPs
+  cannot be created, reviewed or sold at all.
+- **EU trader status (DSA).** Articles 30–31 oblige Apple to verify a trader's
+  address, phone and email and **publish them on the product page** in all 27
+  EU territories. Since **17 February 2025** a new app submission or update for
+  EU distribution requires trader status already declared and verified, and
+  unverified apps are removed from sale in those regions. A Swedish company
+  shipping to the EU cannot route around this: the address Apple publishes is
+  the address Apple verified, so a wrong one is a hard gate on the first
+  submission. It is declared per-app under **App Store Connect → App
+  Information → Trader Status**, and the declaration is required even for an
+  app not distributed in the EU.
+- **Google Play's organization account needs the same D-U-N-S number**, so one
+  correction clears both storefronts. Have Play's paperwork ready to file the
+  same day. Do not route around it with a **personal** Play account: one
   created after 13 Nov 2023 must run **12 testers for 14 consecutive days** of
-  closed testing before it may ship to production; a D-U-N-S-verified
-  organization account is exempt. Waiting is faster than the workaround, and
-  the Apple side would need a re-enrollment later anyway.
-- **The paid-apps paperwork is a second, independent wait** — see below. It
-  cannot start until the membership exists, so treat the day enrollment clears
-  as the day that clock starts, not the day you are done.
+  closed testing before it may ship to production, and a D-U-N-S-verified
+  organization account is exempt.
 
-Nothing in this file's steps 1–5 can be started before the membership exists.
-Everything else can, and that is most of the work:
+> **If the legal NAME is being corrected too, not just the address:** that
+> changes the vendor name across every app and **resets `identifierForVendor`**
+> for existing users on their next update. It cannot be undone. Harmless before
+> a first release; expensive after one.
+
+Meanwhile, none of the work below waits on any of it:
 
 ```sh
 make store-preflight ARGS="--now"   # only what waits on no store account
@@ -88,10 +113,15 @@ Run it after every step in this file; it is the checklist. Its last section is
 Steam's — one command answers "are we ready to ship" for both storefronts; see
 [`electron/RELEASING.md`](../electron/RELEASING.md) for that half.
 
-Each finding that waits on a store account says so (`needs the Apple
-membership`, `needs the Steamworks app`), and the summary counts them
-separately — so a long list during an enrollment reads as what it is rather
-than as a project that cannot ship. `ARGS="--now"` hides them.
+Each finding that waits on a store record says so (`needs the App Store Connect
+record`, `needs the Steamworks app`), and the summary counts them separately —
+so a long list early on reads as what it is rather than as a project that
+cannot ship. `ARGS="--now"` hides them.
+
+It knows nothing about the commercial layer above — the agreement, the bank
+account, the tax forms, the trader declaration. None of those is visible from a
+checkout, so a fully green preflight still says nothing about whether the app
+may be _sold_.
 
 ### The one that blocks everything else
 
@@ -100,6 +130,12 @@ Paid Apps agreement and complete **banking and tax** details. Until that is
 _active_, in-app purchases cannot be created, reviewed, or sold — and it is a
 multi-day round trip if the tax forms bounce. Do it on day one, before writing
 a single screenshot.
+
+Day one means **the day the organization's legal details are correct**, not the
+day the membership is paid for — the bank account and the tax forms are filed as
+that entity, so filing them against an address Apple has wrong is what makes the
+forms bounce. See the address gate above; the same is true of the EU trader
+declaration, which is checked at submission rather than here.
 
 ### iOS capabilities the build needs
 

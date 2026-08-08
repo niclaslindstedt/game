@@ -54,20 +54,24 @@ const rel = (p) => path.relative(root, p);
 // Reporting. Findings are grouped so the output reads as a checklist of the
 // submission, not as a stack of unrelated assertions.
 //
-// A finding may also name a GATE: the account-level thing it waits on, which
-// no amount of work in this checkout can bring forward. Enrolling an
-// organization in the Apple Developer Program means Apple verifying the legal
-// entity against its Dun & Bradstreet record, and a D&B record that has to be
-// corrected first is weeks, not days — during which every Apple id, key,
-// product and portal entry below is simply unobtainable. Splitting them out is
-// what makes the rest of the list readable: the art, the screenshots, the
+// A finding may also name a GATE: the store record it waits on, which no
+// amount of work in this checkout can bring forward. Those records are their
+// own project — an organization's legal details are verified against Dun &
+// Bradstreet, and a stale D&B record is corrected in weeks rather than days —
+// so the list spends long stretches with most of it unobtainable. Splitting
+// them out is what makes the rest readable: the art, the screenshots, the
 // bundled site and the review phone number are all doable on day one, and each
 // is a thing the submission would otherwise stall on afterwards.
+//
+// The gate is the RECORD, not the membership. A held Apple membership with the
+// wrong address on it blocks none of these — it blocks the banking, tax and EU
+// trader details instead, which no checkout can see. native/RELEASING.md has
+// that half; this file only ever answers what is missing HERE.
 // ---------------------------------------------------------------------------
 const GATES = {
   apple: {
-    short: "needs the Apple membership",
-    long: "an Apple Developer Program membership",
+    short: "needs the App Store Connect record",
+    long: "an App Store Connect app record and its credentials",
   },
   steam: {
     short: "needs the Steamworks app",
