@@ -191,7 +191,7 @@ function plantBody(
  * demonstration is twenty and takes the car three or four seconds to get
  * through, which is a whole minigame rather than an exhibit. Three rows is
  * enough to show the two things worth looking at — a wall that has no line
- * through it, and what a wagon at 120 does to the front row of one.
+ * through it, and what a wagon at 174 does to the front row of one.
  */
 function plantBlockade(drive: DriveState, ahead: number, rows: number): void {
   const dir = drive.params.direction;
@@ -356,7 +356,7 @@ export function driveExhibits(): DriveExhibit[] {
       icon: "blood_burst_2",
       label: "TAKEN IN TWO",
       blurb:
-        "MET DEAD ON AT 120 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
+        "MET DEAD ON AT 174 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -547,7 +547,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-smash",
       icon: "traffic_sedan_dent3",
       label: "THE BIG ONE",
-      blurb: "A STOPPED CAR MET AT 120 - IT FOLDS, IT SPINS, IT EMPTIES",
+      blurb: "A STOPPED CAR MET AT 174 - IT FOLDS, IT SPINS, IT EMPTIES",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -584,7 +584,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-rollover",
       icon: "traffic_suv",
       label: "PUT ON ITS ROOF",
-      blurb: "A TALL ONE CAUGHT ACROSS THE FLANK AT 120 - IT LEAVES THE ROAD",
+      blurb: "A TALL ONE CAUGHT ACROSS THE FLANK AT 174 - IT LEAVES THE ROAD",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -649,6 +649,58 @@ export function driveExhibits(): DriveExhibit[] {
           drive.car.pos.y,
           0,
           FLEET.findIndex((def) => def.id === "traffic_minivan"),
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-head-on",
+      icon: "traffic_sedan_gore",
+      label: "MET NOSE TO NOSE",
+      blurb: "AN ONCOMING CAR TAKEN HEAD ON - THE DRIVER LEAVES THROUGH IT",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "head-on",
+        "oncoming",
+        "gore",
+        "blood",
+        "eject",
+        "windscreen",
+      ],
+      // Long enough to watch the landing: the torso leaves flat and fast and is
+      // most of a screen up the road before it comes down.
+      showMs: 3000,
+      shows: "windscreenOut",
+      road: (drive) => {
+        silence(drive);
+        // THE ONE COLLISION ON THIS ROAD WITH A GUARANTEED PICTURE, and the
+        // reason it needs an exhibit at all: it is not a rung of any ladder.
+        // Everything else out here is priced on the blow, so what it looks like
+        // depends on how hard it was; a head-on in the OPPOSING LANE always
+        // posts the driver's upper half out through the screen with his insides
+        // after it and leaves the car wearing the rest of him (`eject.ts`,
+        // `headOn`). That is what makes it something a player can decide to do.
+        //
+        // STAGED AT A MODEST SPEED for exactly that reason. Well under half the
+        // dial, and well under the force at which an ejected body would come
+        // apart on the ordinary ladder — the two of them CLOSED, and that is the
+        // whole of the rule.
+        const speed = openAt(drive, 0.4);
+        const pace = DRIVE.trafficSpeedPx.min;
+        // Planted against the CLOSING speed rather than the hero's own, or an
+        // oncoming car arrives at the bumper in half the beat everything else on
+        // this shelf is timed to.
+        plantCar(
+          drive,
+          leadPx(speed + pace) + 40,
+          drive.car.pos.y,
+          pace,
+          6,
+          true,
         );
       },
     },
@@ -865,7 +917,7 @@ export function driveExhibits(): DriveExhibit[] {
       kind: "drive",
       id: "drive-ride",
       icon: "car_wheel_0",
-      label: "THE RIDE AT 120",
+      label: "THE RIDE AT 174",
       blurb:
         "NO COLLISION AT ALL - JUST WHAT A WAGON THIS OLD DOES AT THE TOP END",
       group: "DRIVE",
@@ -909,7 +961,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-thoughts",
       icon: "walker_old_woman_0",
       label: "THE THINGS THEY CARRY",
-      blurb: "WHAT THE PEOPLE ON THIS ROAD ARE THINKING - AT 120, IN PASSING",
+      blurb: "WHAT THE PEOPLE ON THIS ROAD ARE THINKING - AT 174, IN PASSING",
       group: "DRIVE",
       keywords: [
         "drive",

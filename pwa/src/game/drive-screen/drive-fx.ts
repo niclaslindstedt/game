@@ -138,12 +138,19 @@ function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
  * STEEL is the collision that takes an eighth of the wagon — trading paint at
  * speed, and everything above it is off the top of the scale anyway. A BODY is
  * priced on the crowd's own worst case instead: a person met DEAD SQUARE AT THE
- * TOP OF THE DIAL on MEDIUM, which is about 3.6% of the car. So the ladder a
+ * TOP OF THE DIAL on MEDIUM, which is about 6.8% of the car. So the ladder a
  * player actually sees runs the whole way from a clip at walking pace to the
  * worst thing that can happen to somebody, rather than sitting flat at nothing.
+ *
+ * THE BODY FIGURE MOVES WITH THE TOP SPEED and it is not optional. It was 3.6%
+ * against a 120 mph dial, and absorbed energy goes as the SQUARE of the closing
+ * speed — so on a 174 mph one the same number saturates barely past halfway up
+ * the speedometer, and the top half of the range shakes the frame by exactly as
+ * much as the middle of it. That is the scale silently going flat at precisely
+ * the speeds the whole change was made for.
  */
 const SMASH_FULL_SHARE = 0.12;
-const BODY_FULL_SHARE = 0.036;
+const BODY_FULL_SHARE = 0.068;
 
 /** How hard the frame is shaken by a hit of this force (world px). Well under
  * a lane's width at its worst: the road must stay readable while it is being
