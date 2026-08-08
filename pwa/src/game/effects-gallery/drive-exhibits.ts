@@ -334,9 +334,16 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 1600,
       shows: "pedestrianHit",
       bank: BODY_SOUNDS,
+      input: throttle(0.6),
       road: (drive) => {
         silence(drive);
-        const speed = openAt(drive);
+        // NOT FLAT OUT, and it stopped being able to be. The LIGHT body shelf
+        // sits under the line where a bumper goes through somebody, and at 174
+        // even a blow taken mostly across the nose is past it — so the exhibit
+        // advertising the cheap thud was demonstrating the wet tear. A hundred
+        // is where a glance is still a glance; the heavy one is the exhibit
+        // below, met square.
+        const speed = openAt(drive, 0.6);
         // OFF THE CAR'S OWN LINE, so the contact normal runs mostly ACROSS the
         // nose and the car barely notices it — the cheap blow a driver who
         // learns to clip rather than centre gets to keep his speed with.
@@ -457,6 +464,7 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 1800,
       shows: "trafficHit",
       bank: SCRAPE_SOUNDS,
+      input: throttle(0.48),
       road: (drive) => {
         silence(drive);
         // A CAR THAT HAS BEEN OUT HERE A WHILE, because that is the car this
@@ -465,7 +473,13 @@ export function driveExhibits(): DriveExhibit[] {
         // BEND on the same tick, putting a second sound and a second burst over
         // the one under inspection.
         worn(drive, 0.2, 3);
-        const speed = openAt(drive);
+        // AT HALF THE DIAL, WHICH IS WHERE THE SCRAPE SHELF LIVES. It opened at
+        // the top of the dial and stayed correct until the wagon was re-engined:
+        // the shelves are priced in JOULES and did not move, but flat out is
+        // 174 mph now, and a full-length grind at 174 is a CRUNCH — so the
+        // exhibit advertising the scrape was demonstrating the shelf above it.
+        // Eighty-odd is where trading paint is still trading paint.
+        const speed = openAt(drive, 0.48);
         // HALF INTO THE NEXT LANE. A car passed cleanly a lane apart never
         // touches (the two footprints are 26 px apart and reach 18), so trading
         // paint means exactly what it says: drifting far enough over to catch a
@@ -500,15 +514,19 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 2200,
       shows: "trafficHit",
       bank: CRUNCH_SOUNDS,
-      input: throttle(0.8),
+      input: throttle(0.52),
       road: (drive) => {
         silence(drive);
-        // AT EIGHTY PERCENT, WHICH IS WHERE THE CRUNCH SHELF LIVES. It opened at
-        // the top of the dial, and the road grew a shelf ABOVE the crunch
-        // (`SMASH_SOUNDS`) that a full-speed rear-ender comfortably reaches —
-        // so the exhibit advertising the crunch was quietly demonstrating the
-        // one above it. The big one has its own exhibit now, below.
-        const speed = openAt(drive, 0.8);
+        // AT NINETY MILES AN HOUR, WHICH IS WHERE THE CRUNCH SHELF LIVES — and
+        // which is what the blurb has always said out loud. It opened flat out,
+        // and the road grew a shelf ABOVE the crunch (`SMASH_SOUNDS`) that a
+        // full-speed rear-ender comfortably reaches, so the exhibit advertising
+        // the crunch was quietly demonstrating the one above it; the big one has
+        // its own exhibit now, below. The SHARE moved again when the wagon was
+        // re-engined — ninety was eight tenths of a 120 mph dial and is barely
+        // half of a 174 one — while the speed the shelf sits at did not move at
+        // all, because the shelves are priced in joules.
+        const speed = openAt(drive, 0.52);
         // THE WHOLE CASCADE, ON PURPOSE — and the one exhibit here that does not
         // isolate its event. A rear-ender at this speed is over the crunch line,
         // over a panel rung and over the first fix rung all at once: the crunch,

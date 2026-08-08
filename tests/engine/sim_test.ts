@@ -292,7 +292,11 @@ describe("simulateLevel", () => {
         maxMinutes: 1,
       });
     expect(JSON.stringify(run())).toBe(JSON.stringify(run()));
-  });
+    // TWO WHOLE MINUTES OF SIMULATED RUN, on the default five-second budget its
+    // siblings above both had to opt out of. It fits on an idle machine and does
+    // not on a loaded one, which is the definition of a flake — so it takes the
+    // same 30 s the rest of this file does.
+  }, 30_000);
 });
 
 describe("simulateCampaign", () => {
