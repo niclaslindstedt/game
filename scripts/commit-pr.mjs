@@ -17,7 +17,7 @@ const CONVENTIONAL = new RegExp(`^(${TYPES})(\\([a-z0-9,-]+\\))?!?: .+`);
 // cosmetic anyway: PRs are squash-merged, so the PR TITLE is what becomes the
 // commit on `main`, and that is still held to Conventional Commits below. A
 // namespace that is not a type only warns.
-export const BRANCH = /^[a-z0-9][a-z0-9-]*(\/[a-z0-9][a-z0-9-]*)+$/;
+const BRANCH = /^[a-z0-9][a-z0-9-]*(\/[a-z0-9][a-z0-9-]*)+$/;
 const TYPE_NAMESPACE = new RegExp(`^(${TYPES})/`);
 const PROTECTED = new Set(["main", "master"]);
 
