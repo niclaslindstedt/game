@@ -361,6 +361,74 @@ html.app-locked body {
   color: #7a8088;
 }
 
+/* THE STUDIO CARD the app opens on (game/SplashScreen.tsx) — the publisher's
+   name over the same radial sky `.title-screen` and the prerendered boot shell
+   both stand on, so all three reads as one continuous screen and the card
+   lifting is the starfield fading UP rather than a background swapping out.
+
+   It sits above EVERYTHING, the title backdrop's own z-band included (the
+   planets straddle 500 ± 350 and the sun blast tops out at 980 — see the
+   `.orbits` block below), because the menu is live and mounting underneath it. */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
+  opacity: 1;
+  transition: opacity 320ms ease-out;
+  /* An opening card is not a document: nothing on it is selectable and no
+     long-press menu belongs on it. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Cleared — fade out of the way. The duration must match FADE_MS in
+   SplashScreen.tsx, which is what times the unmount behind it.
+
+   NO `pointer-events: none` HERE, and that is not an omission. A tap is three
+   events, and only the FIRST of them dismisses the card: letting the fading
+   card stop taking presses hands the `click` that follows its own `pointerdown`
+   — and, on touch, the synthetic one 300 ms later — straight to whatever menu
+   row happens to sit under the player's finger. It swallowed the card and
+   started a game in the same tap. The card keeps the pointer until it
+   unmounts. */
+.splash-screen.leaving {
+  opacity: 0;
+}
+
+.splash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  /* The same drop shadow the title logo wears, so the two pixel blocks sit on
+     the sky the same way. */
+  filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.55));
+  animation: splash-in 420ms ease-out both;
+}
+
+@keyframes splash-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: the card still shows and still fades away (an instant cut to
+   the menu is the harsher of the two), but it stops fading IN — that one is
+   pure flourish. */
+@media (prefers-reduced-motion: reduce) {
+  .splash-card {
+    animation: none;
+  }
+}
+
 /* CONNECTING to somebody else's session, and the refusal it can end in. The
    loading screen's own frame with a column of lines in it: the wait here is
    long enough (a probe, a handshake, a level built on another machine) that it

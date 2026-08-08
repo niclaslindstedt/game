@@ -1614,6 +1614,17 @@ deploy-shaped:
 
 - **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game,
   plus the cutscene workbench route (`?cutscene=<id>`).
+- **`pwa/src/game/SplashScreen.tsx`** — the STUDIO CARD the app opens on
+  (`splash.ts` holds its timing rules and the warm-up it fronts). It is the
+  only screen in the app that covers another LIVE one: the title menu mounts
+  underneath it on the first render and does its whole arrival behind it —
+  the sprite atlas decode, the planet shader's chunk, and the backdrop's nine
+  procedural surface bakes, which the sky would otherwise pay for one frame at
+  a time as a visible stutter on the way into the menu. It holds until the
+  load is done however long that takes, then clears on any input after a
+  second and by itself at three. Every press is swallowed while it is up,
+  because the menu behind it is listening. Suppressed for `?debug` / `?bot=` /
+  `?skytest` so no harness pays for it — see `docs/configuration.md`.
 - **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,

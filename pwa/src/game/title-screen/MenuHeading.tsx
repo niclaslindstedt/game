@@ -51,13 +51,16 @@ const TITLE_MAX = 5;
 const TITLE_MIN = 3;
 
 /**
- * The biggest scale in `[TITLE_MIN, TITLE_MAX]` at which `title` (plus the
- * trail already drawn beside it) fits the width budget.
+ * The biggest scale in `[min, max]` at which `title` (plus the trail already
+ * drawn beside it) fits the width budget.
  *
  * A PixelText canvas is displayed at `measure(text) × scale` font pixels, sized
  * in rem — so on screens past UI_SCALE_BREAKPOINT_PX, where the root font-size
  * doubles, it lands at twice that many CSS px. Multiplying by `uiScale` is what
  * makes one budget hold on a phone, a tablet and a desktop alike.
+ *
+ * The bounds default to a page header's; the opening studio card (see
+ * `game/SplashScreen.tsx`) borrows the same fit with a bigger ceiling.
  */
 export function fitScale(
   font: PixelFont,
@@ -66,13 +69,14 @@ export function fitScale(
   viewportWidth: number,
   uiScale: number,
   max = TITLE_MAX,
+  min = TITLE_MIN,
 ): number {
   const budget = viewportWidth * WIDTH_SHARE - trailWidth;
   const unit = font.measure(title) * uiScale;
-  for (let scale = max; scale > TITLE_MIN; scale -= 1) {
+  for (let scale = max; scale > min; scale -= 1) {
     if (unit * scale <= budget) return scale;
   }
-  return TITLE_MIN;
+  return min;
 }
 
 export function MenuHeading({

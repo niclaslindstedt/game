@@ -724,3 +724,31 @@ export function cloudSkin(kind: GlobeKind): CloudSkin | undefined {
   decks.set(kind, deck);
   return deck ?? undefined;
 }
+
+/** Every world this module can bake, read off the size table so it cannot fall
+ * behind the type. */
+export const GLOBE_KINDS = Object.keys(SKIN_SIZE) as GlobeKind[];
+
+/**
+ * Bake every world into the cache ahead of the first consumer, ONE PER TURN of
+ * the event loop.
+ *
+ * A bake costs tens of milliseconds, and the caller that would otherwise pay
+ * for them is the title screen putting its globes on (see `title-sky.ts`,
+ * which builds one body per frame for exactly this reason). Nine or ten of
+ * those land as a visible stutter on the way into the menu — so the app spends
+ * them behind its opening studio card instead, where there is nothing to
+ * stutter. The yield between worlds is what keeps that card's own animation
+ * running while they bake; `setTimeout` rather than `requestAnimationFrame`
+ * because a backgrounded tab stops handing out frames altogether and the
+ * warm-up would simply never finish.
+ *
+ * Idempotent — the caches below make a second call free.
+ */
+export async function warmPlanetSkins(): Promise<void> {
+  for (const kind of GLOBE_KINDS) {
+    surfaceSkin(kind);
+    cloudSkin(kind);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+}
