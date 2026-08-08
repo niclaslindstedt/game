@@ -2014,7 +2014,7 @@ seams a browser can't provide on iOS:
 `native/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the
-dispatch-only `.github/workflows/native-build.yml` — so paid EAS build minutes are
+dispatch-only `.github/workflows/native.yml` — so paid EAS build minutes are
 never spent on a push. See `native/README.md` for the full build/distribute flow.
 
 #### The device content switches — what the player's GUARDIAN owns
@@ -2139,7 +2139,7 @@ no overlay.
 **directory, not an installer** — Steam distributes by uploading a directory to
 a depot and its own client owns installing and updating. Linux is built too, so
 the Steam Deck runs the real binary rather than the Windows one under Proton.
-`.github/workflows/desktop-build.yml` typechecks and tests the shell on every
+`.github/workflows/desktop-electron.yml` typechecks and tests the shell on every
 relevant push, and packages the depot directories dispatch-only. See
 `electron/README.md`.
 

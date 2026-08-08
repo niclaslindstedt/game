@@ -6,9 +6,11 @@ concepts: [ci, workflow, quality-gates, deploy-slots, pages]
 ---
 
 Nothing in the fast column reads inside a `run:` block. `make fmt-check` sees
-YAML, `make lint` never opens `.github/`, and `make actionlint` is not
-installable in a remote session (no binary, and the GitHub release host is
-unreachable through the agent proxy). Even when actionlint DOES run it only
+YAML, `make lint` never opens `.github/`, and `make actionlint` fails outright
+in a remote session because no binary is installed — fetch one first, which the
+agent proxy does allow:
+`bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)`,
+then run `./actionlint`. Even when actionlint DOES run it only
 shellchecks the shell — a `jq` program sitting inside a single-quoted argument
 is an opaque string to it.
 

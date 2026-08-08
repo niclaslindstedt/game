@@ -17,7 +17,7 @@
 #            build, and electron-builder. Dispatch-only for the same reason the
 #            native EAS build is: it only runs when a human is actually
 #            shipping something.
-name: Desktop App (Electron)
+name: desktop-electron
 
 on:
   push:
@@ -29,7 +29,7 @@ on:
       # The shell answers these protocols; a change to the web half can break
       # the desktop build without touching electron/ at all.
       - "pwa/src/app/**"
-      - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/desktop-electron.yml"
   pull_request:
     paths:
       - "electron/**"
@@ -37,7 +37,7 @@ on:
       - "package*.json"
       - "pwa/package*.json"
       - "pwa/src/app/**"
-      - ".github/workflows/desktop-build.yml"
+      - ".github/workflows/desktop-electron.yml"
   workflow_dispatch:
     inputs:
       platform:
@@ -52,7 +52,7 @@ on:
         options: [preview, production]
 
 concurrency:
-  group: desktop-build-${{ github.ref }}
+  group: desktop-electron-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

@@ -178,7 +178,7 @@ split, and a test that would need one is a decision sitting in the wrong crate.
 
 **Neither is on the root suite's path**: `make test` and `make lint` stop at this
 tree's edge, because it has its own toolchain.
-`.github/workflows/tauri-build.yml` runs both on every push that touches
+`.github/workflows/desktop-tauri.yml` runs both on every push that touches
 `tauri/`, `server/`, `scripts/` or `pwa/src/app/`, so a tree somebody forgot to
 check is a red PR rather than a surprise.
 

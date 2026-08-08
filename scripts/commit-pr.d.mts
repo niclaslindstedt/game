@@ -13,3 +13,4 @@ export type CommitPrOptions = {
 
 export function parseArgs(argv: string[]): CommitPrOptions;
 export function validateOptions(opts: CommitPrOptions): void;
+export function repoSlug(remoteUrl: string): { owner: string; repo: string };

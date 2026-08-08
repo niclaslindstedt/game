@@ -1,7 +1,7 @@
 # Desktop (Tauri) shell — checks on every relevant push, and dispatch-only
 # packaging.
 #
-# The peer of desktop-build.yml, and split by the SAME cost boundary — which
+# The peer of desktop-electron.yml, and split by the SAME cost boundary — which
 # this tree happens to have structurally rather than by discipline, because it
 # is two crates:
 #
@@ -21,7 +21,7 @@
 # `tauri/` is not an npm workspace member and its crates are not on any other
 # job's path, so without this file `make tauri-test` and `make tauri-lint` run
 # only when somebody remembers.
-name: Desktop App (Tauri)
+name: desktop-tauri
 
 on:
   push:
@@ -33,7 +33,7 @@ on:
       # The shell answers these protocols; a change to the web half can break
       # the desktop build without touching tauri/ at all.
       - "pwa/src/app/**"
-      - ".github/workflows/tauri-build.yml"
+      - ".github/workflows/desktop-tauri.yml"
   pull_request:
     paths:
       - "tauri/**"
@@ -41,7 +41,7 @@ on:
       - "server/**"
       - "package*.json"
       - "pwa/src/app/**"
-      - ".github/workflows/tauri-build.yml"
+      - ".github/workflows/desktop-tauri.yml"
   workflow_dispatch:
     inputs:
       platform:
@@ -56,7 +56,7 @@ on:
         options: [steam, standalone]
 
 concurrency:
-  group: tauri-build-${{ github.ref }}
+  group: desktop-tauri-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
