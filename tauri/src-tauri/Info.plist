@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+  Extra Info.plist keys, merged into the generated one by the Tauri bundler —
+  the peer of `extendInfo` in electron/electron-builder.config.cjs.
+
+  There is exactly one, and it is stamped into EVERY macOS build rather than
+  only into one carrying the voice capability. That is not belt-and-braces: on
+  macOS a process that reaches for a device whose usage string is missing is not
+  refused, it is KILLED by TCC — so a build where the key is absent and the
+  capability is somehow on would exit the moment somebody pressed talk, with no
+  dialog and nothing in the log. The key costs a build without voice nothing
+  (the prompt only ever appears when something asks for the device, and voice is
+  refused without the capability), whereas getting the pairing wrong costs a
+  crash that reproduces on exactly one platform.
+
+  Its other half is `com.apple.security.device.audio-input` in
+  entitlements.mac.plist; neither is any use without the other.
+-->
+<plist version="1.0">
+  <dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Ada's Trail uses your microphone for voice chat with the other players in your multiplayer session. Nothing is recorded or stored, and your microphone stays off until you turn voice chat on.</string>
+  </dict>
+</plist>

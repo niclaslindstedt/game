@@ -11,9 +11,14 @@
     "bundle:copy": "node scripts/bundle-web.mjs --skip-build",
     "build": "npm run icons && cargo build",
     "start": "npm run build && cargo run --bin adastrail --",
-    "test": "cargo test --workspace",
+    "test": "cargo test -p adastrail-shell",
     "lint": "npm run icons && cargo clippy --workspace --all-targets -- -D warnings",
     "fmt": "cargo fmt --all",
-    "fmt:check": "cargo fmt --all -- --check"
+    "fmt:check": "cargo fmt --all -- --check",
+    "package": "node scripts/package.mjs",
+    "package:dist": "node scripts/package.mjs --profile standalone"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
   }
 }

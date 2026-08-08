@@ -15,6 +15,11 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+# The page hands the shell a screenshot as base64 down a JSON pipe, and the
+# bytes become a FILE. A pure-Rust decoder with no build script and no system
+# library keeps this crate buildable on a machine with nothing installed, which
+# is the property the whole two-crate split exists to protect.
+base64 = "0.22"
 serde = { workspace = true }
 serde_json = { workspace = true }
 

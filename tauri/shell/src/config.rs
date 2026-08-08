@@ -91,16 +91,18 @@ pub const DEVELOPER_NOTICE: &str = concat!(
     "is not licensed for play, for sharing, or for distribution in any form."
 );
 
-/// WHAT A PHASE-1 BUILD IS, said once per launch.
+/// WHAT A PHASE-2 BUILD IS, said once per launch.
 ///
-/// The Tauri shell is mid-migration (`docs/tauri-migration.md`): it shows the
-/// game and nothing else yet. A player handed this build and left to discover
-/// that cloud save silently does nothing would report it as a bug, so the shell
+/// The Tauri shell is mid-migration (`docs/tauri-migration.md`): it plays the
+/// whole game and carries the Steam seams, and it still has no mods and no
+/// multiplayer. A player handed this build and left to discover that the
+/// SERVER BROWSER silently does nothing would report it as a bug, so the shell
 /// says which shell it is and what it has not grown yet. This line goes away
 /// when phase 3 lands, not before.
 pub const MIGRATION_NOTICE: &str = concat!(
     "This is the TAURI desktop shell, which is still being built out. It runs ",
-    "the game itself in full, and it does not yet carry Steam, cloud save, ",
-    "achievements, screenshots, mods or multiplayer — the Electron desktop ",
-    "build is the one that does. See docs/tauri-migration.md."
+    "the game itself in full, with Steam cloud save, achievements and ",
+    "screenshots — and it does not yet carry mods, multiplayer, voice or the ",
+    "Steam overlay. The Electron desktop build is the one that does. ",
+    "See docs/tauri-migration.md."
 );

@@ -9,12 +9,16 @@
 //! same one the phone shell answers (minus haptics, which a desktop has no
 //! motor for) plus the two only a desktop can honour.
 //!
-//! **Every protocol is listed here from phase 1, including the ones this build
-//! cannot answer**, and that is the point: an unimplemented protocol is
+//! **Every protocol has been listed here since phase 1, including the ones this
+//! build cannot answer**, and that is the point: an unimplemented protocol is
 //! [`Route::Unimplemented`] carrying the phase that fills it in, so a
 //! mid-migration build explains itself in its own log instead of going quiet.
 //! The alternative — dropping unknown messages — is the failure mode where the
 //! page waits out a timeout and the shell has nothing to say about it.
+//!
+//! Phase 2 moved four of them (cloud, achievements, scores, shots) off that
+//! list and onto routes of their own; mods and net are what is left, and they
+//! are phase 3.
 
 use serde_json::Value;
 
@@ -25,6 +29,15 @@ pub enum Route {
     /// and no bridge module: the only successful outcome is the page ceasing to
     /// exist. Answered from phase 1, because it needs no platform behind it.
     Quit,
+    /// CLOUD SAVE — [`crate::cloud_save`]. Phase 2.
+    Cloud,
+    /// ACHIEVEMENTS — [`crate::achievements`]. Phase 2.
+    Achievements,
+    /// LEADERBOARDS — [`crate::leaderboards`], wired up with no provider behind
+    /// it. Phase 2.
+    Scores,
+    /// SCREENSHOTS — [`crate::screenshots`]. Phase 2.
+    Shots,
     /// A protocol this shell knows but has not grown yet, and the migration
     /// phase that grows it.
     Unimplemented {
@@ -61,10 +74,29 @@ const PROTOCOLS: &[(&str, &str, u8, Option<&str>)] = &[
     ("__gisNet", "net", 3, Some("multiplayer")),
 ];
 
-/// What this build can answer today. Phase 1 answers exactly one protocol, and
-/// the constant is what the routing test asserts against so a phase that lands
-/// without updating the router is a failing test rather than a quiet drop.
-pub const IMPLEMENTED_THROUGH_PHASE: u8 = 1;
+/// What this build can answer today.
+///
+/// The constant is what the routing test asserts against, in BOTH directions: a
+/// protocol whose phase has landed must have a route of its own, and one whose
+/// phase has not must still name that phase. So a phase that lands without
+/// updating the router — or a router updated without the phase — is a failing
+/// test rather than a quiet drop.
+pub const IMPLEMENTED_THROUGH_PHASE: u8 = 2;
+
+/// The route a protocol this build ANSWERS gets, by the protocol's own name.
+///
+/// Separate from the table above so the table stays one line per protocol, and
+/// so that a protocol whose phase has arrived but which nobody wired up is a
+/// `None` the test can catch rather than a silent `Unimplemented`.
+fn answered(protocol: &str) -> Option<Route> {
+    match protocol {
+        "cloud" => Some(Route::Cloud),
+        "achievements" => Some(Route::Achievements),
+        "scores" => Some(Route::Scores),
+        "shots" => Some(Route::Shots),
+        _ => None,
+    }
+}
 
 /// Read one message off the shell channel and say what it is.
 ///
@@ -92,12 +124,56 @@ pub fn route(raw: &str, allows: &dyn Fn(&str) -> bool) -> Route {
                 };
             }
         }
+        if *phase <= IMPLEMENTED_THROUGH_PHASE {
+            if let Some(route) = answered(protocol) {
+                return route;
+            }
+        }
         return Route::Unimplemented {
             protocol,
             phase: *phase,
         };
     }
     Route::Ignored
+}
+
+/// The whole message, parsed, for the bridge the [`Route`] named.
+///
+/// Every bridge module below validates its own fields, so this only has to get
+/// as far as "an object" — and answers `None` for anything else, which cannot
+/// happen after a successful [`route`] but keeps the two halves independently
+/// honest.
+pub fn parse_message(raw: &str) -> Option<Value> {
+    match serde_json::from_str::<Value>(raw) {
+        Ok(value) if value.is_object() => Some(value),
+        _ => None,
+    }
+}
+
+/// WHICH ACTION the page asked for, as the protocol spells it.
+///
+/// Shared by all four bridges rather than repeated in each: every one of them is
+/// an `action` string and a `requestId`, on every shell, and a fifth protocol
+/// arriving in phase 3 will want the same two.
+pub fn action(message: &Value) -> String {
+    message
+        .get("action")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string()
+}
+
+/// The page's own correlation id for one request.
+///
+/// Zero where the page sent none, which is what the TypeScript peers'
+/// `requestId ?? 0` does — the page's own timeout is what resolves a request
+/// that was never answerable, and inventing an id here would answer a different
+/// one.
+pub fn request_id(message: &Value) -> u64 {
+    message
+        .get("requestId")
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
 }
 
 /// The line the shell logs for a message it cannot yet answer.
@@ -117,7 +193,12 @@ pub fn explain(route: &Route) -> Option<String> {
         } => Some(format!(
             "bridge: {protocol} refused — this build carries no {capability} capability"
         )),
-        Route::Quit | Route::Ignored => None,
+        Route::Quit
+        | Route::Cloud
+        | Route::Achievements
+        | Route::Scores
+        | Route::Shots
+        | Route::Ignored => None,
     }
 }
 

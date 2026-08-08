@@ -16,5 +16,18 @@ src-tauri/icons/
 # compile, and what capabilities/*.json is validated against.
 src-tauri/gen/
 
+# The packaged output — the Steam depot directory that scripts/package.mjs
+# assembles. The peer of electron/release/.
+release/
+
+# This tree has its OWN dependency tree — it is not an npm workspace member.
+# Today it holds one thing: the Tauri CLI, which is what packages a build.
+node_modules/
+
+# The local dev app id (Valve's Spacewar, 480). Written by hand when running
+# against a local Steam client; never part of a build.
+steam_appid.txt
+
 # Cargo.lock IS committed (this tree builds binaries, not a library), so it is
-# deliberately absent from this file.
+# deliberately absent from this file. So is package-lock.json, for the same
+# reason electron/'s is committed: a packaging run has to be reproducible.

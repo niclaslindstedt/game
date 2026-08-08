@@ -2,14 +2,32 @@
 //! ROUTING — which protocol a page message belongs to, and what a shell that
 //! cannot yet answer it says about that.
 //!
-//! The second half is what makes this file worth having during the migration: a
-//! phase-1 build meets six protocols it has no platform behind, and the failure
-//! mode to avoid is the one where it drops them silently and the page waits out
-//! a timeout with nothing in the log to explain it.
+//! The second half is what makes this file worth having during the migration:
+//! a mid-migration build meets protocols it has no platform behind, and the
+//! failure mode to avoid is the one where it drops them silently and the page
+//! waits out a timeout with nothing in the log to explain it.
+//!
+//! The table below is walked in BOTH directions, which is what keeps the router
+//! and the migration honest with each other: a protocol whose phase has landed
+//! must have a route of its own, and one whose phase has not must still name
+//! that phase.
 
-use adastrail_shell::bridge::{emit_script, explain, route, Route, IMPLEMENTED_THROUGH_PHASE};
+use adastrail_shell::bridge::{
+    action, emit_script, explain, parse_message, request_id, route, Route,
+    IMPLEMENTED_THROUGH_PHASE,
+};
 use adastrail_shell::channels::event_global;
 use serde_json::json;
+
+/// Every protocol the page can post, its flag, and the phase that grows it.
+const PROTOCOLS: &[(&str, &str, u8)] = &[
+    ("__gisCloud", "cloud", 2),
+    ("__gisAchievements", "achievements", 2),
+    ("__gisScores", "scores", 2),
+    ("__gisShots", "shots", 2),
+    ("__gisMods", "mods", 3),
+    ("__gisNet", "net", 3),
+];
 
 /// A launch that may honour everything, so a refusal in a test is about the
 /// PHASE rather than about a capability.
@@ -31,27 +49,49 @@ fn quit_is_answered_from_phase_one() {
 }
 
 #[test]
-fn every_other_protocol_names_the_phase_that_grows_it() {
-    for (flag, protocol, phase) in [
-        ("__gisCloud", "cloud", 2),
-        ("__gisAchievements", "achievements", 2),
-        ("__gisScores", "scores", 2),
-        ("__gisShots", "shots", 2),
-        ("__gisMods", "mods", 3),
-        ("__gisNet", "net", 3),
+fn a_protocol_this_build_has_grown_routes_to_its_own_bridge() {
+    // Phase 2's four. A route that fell back to `Unimplemented` here would be a
+    // shell that logs a phase it has already shipped and answers nothing.
+    for (flag, expected) in [
+        ("__gisCloud", Route::Cloud),
+        ("__gisAchievements", Route::Achievements),
+        ("__gisScores", Route::Scores),
+        ("__gisShots", Route::Shots),
     ] {
-        let raw = json!({ flag: true, "id": 7 }).to_string();
+        let raw = json!({ flag: true, "action": "status" }).to_string();
+        assert_eq!(route(&raw, &anything), expected, "{flag}");
         assert_eq!(
-            route(&raw, &anything),
-            Route::Unimplemented { protocol, phase },
+            explain(&route(&raw, &anything)),
+            None,
+            "{flag} is answered, so there is nothing to apologise for"
+        );
+    }
+}
+
+#[test]
+fn every_protocol_is_either_answered_or_names_the_phase_that_grows_it() {
+    // The migration's own invariant, checked from both ends: nothing may sit
+    // between "this build answers it" and "this build says which phase will".
+    for (flag, protocol, phase) in PROTOCOLS {
+        let raw = json!({ *flag: true, "id": 7 }).to_string();
+        let routed = route(&raw, &anything);
+        if *phase <= IMPLEMENTED_THROUGH_PHASE {
+            assert!(
+                !matches!(routed, Route::Unimplemented { .. }),
+                "{protocol} claims a phase this build already shipped — route it \
+                 for real, or move it off Unimplemented"
+            );
+            continue;
+        }
+        assert_eq!(
+            routed,
+            Route::Unimplemented {
+                protocol,
+                phase: *phase
+            },
             "{flag} must route somewhere nameable"
         );
-        assert!(
-            phase > IMPLEMENTED_THROUGH_PHASE,
-            "{protocol} claims a phase this build already shipped — route it \
-             for real, or move it off Unimplemented"
-        );
-        let line = explain(&route(&raw, &anything)).expect("a line in the log");
+        let line = explain(&routed).expect("a line in the log");
         assert!(line.contains(protocol), "the log has to name the protocol");
         assert!(
             line.contains("docs/tauri-migration.md"),
@@ -107,13 +147,33 @@ fn anything_that_is_not_the_bridge_is_ignored() {
 fn every_protocol_has_a_way_back_to_the_page() {
     // A route with no event global is a request that can be received and never
     // answered — the shape of a bug that presents as a hang.
-    for protocol in ["cloud", "achievements", "scores", "mods", "net", "shots"] {
+    for (_, protocol, _) in PROTOCOLS {
         assert!(
             event_global(protocol).is_some(),
             "{protocol} has no return path"
         );
     }
     assert_eq!(event_global("quit"), None, "quit is one-way by design");
+}
+
+#[test]
+fn the_two_fields_every_bridge_reads_are_read_the_same_way() {
+    // Four bridges ask the same two questions of every message, so they ask
+    // them through one pair of functions rather than four copies that drift.
+    let message =
+        parse_message(r#"{"__gisCloud":true,"action":"save","requestId":12}"#).expect("an object");
+    assert_eq!(action(&message), "save");
+    assert_eq!(request_id(&message), 12);
+
+    // A message with neither is answered on request 0 with an action nothing
+    // matches — the page's own timeout is what resolves it, and inventing an id
+    // here would answer a DIFFERENT request.
+    let bare = parse_message(r#"{"__gisShots":true}"#).expect("an object");
+    assert_eq!(action(&bare), "");
+    assert_eq!(request_id(&bare), 0);
+
+    assert_eq!(parse_message("[]"), None, "a bridge message is an object");
+    assert_eq!(parse_message("nonsense"), None);
 }
 
 #[test]

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+  Hardened-runtime entitlements for the macOS build — the peer of
+  electron/build/entitlements.mac.plist, and DELIBERATELY SHORTER than it.
+
+  Apple's hardened runtime is required for notarization, and it switches off
+  several things an app may need. Each entry below is present because something
+  concrete breaks without it; each entry the Electron peer has and this one does
+  NOT is absent because this shell genuinely does not do that thing.
+
+    disable-library-validation
+      Valve's `libsteam_api.dylib` is not signed by Apple and is not signed with
+      OUR team id either. Library validation refuses it, which surfaces as the
+      game launching with Steam silently unavailable rather than as a crash.
+      (The Electron peer needs this for a second reason as well — steamworks.js'
+      native `.node` addon — which has no counterpart here: the Steam binding is
+      compiled INTO this binary and carries our own signature.)
+
+    allow-dyld-environment-variables
+      Steam launches games with DYLD_* set. Without this the app is killed on
+      launch when started FROM Steam, while working perfectly when
+      double-clicked — a confusing failure to debug.
+
+    device.audio-input
+      VOICE CHAT records the player's microphone (phase 3, and stamped per build
+      — shell/src/capabilities.rs). The hardened runtime refuses the device
+      without this entitlement, and refuses it SILENTLY: `getUserMedia` rejects
+      with a permission error indistinguishable from the player having said no.
+      It pairs with NSMicrophoneUsageDescription in the bundle's Info.plist, and
+      like that key it is present in every macOS build — an entitlement nothing
+      asks to use costs a build without voice nothing, while a missing half of
+      the pair is a feature that fails on one platform only.
+
+  WHAT IS NOT HERE, and why:
+
+    allow-jit / allow-unsigned-executable-memory
+      The Electron peer needs both because V8 lives inside the app and compiles
+      JavaScript to machine code in the app's own address space. WKWebView does
+      not: it runs the page in its own out-of-process content and JIT services,
+      which carry Apple's entitlements rather than ours. Granting an app
+      permission to write executable memory it never writes is a hole with no
+      feature behind it, so this shell does not ask for it.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key>
+    <true/>
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+  </dict>
+</plist>
