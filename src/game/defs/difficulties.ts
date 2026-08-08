@@ -588,6 +588,28 @@ export type DifficultyDef = {
      * be taken when it is offered.
      */
     trafficDensity: number;
+    /**
+     * HOW FAST THE WAGON IS ALLOWED TO GO on this rung, in the unit the dial
+     * says out loud — 120 on EASY, climbing to the car's own 174
+     * (`DRIVE.topSpeedMph`) at the top.
+     *
+     * SPEED IS THE DIFFICULTY, and that is the whole of why this is a rung
+     * rather than a constant. Every hazard on this road is priced in closing
+     * speed: the damage a hit does goes as its SQUARE, an oncoming lane arrives
+     * at the sum of both speeds, and the gap in the crowd a driver can still
+     * reach shrinks with every mile an hour. A player who cannot exceed 120 is
+     * not being handicapped — he is being given a road whose every collision is
+     * half the energy and whose every decision has half again as long to be
+     * made in.
+     *
+     * IT IS A CEILING, NOT A SCALE. `DRIVE_UNITS.mPerPx` does not move, so a
+     * world pixel is the same metre on every rung and 120 mph on EASY is 120
+     * real miles an hour — the wagon simply stops accelerating sooner. The
+     * dashboard is told the rung's own number too (`dials.ts`), so the
+     * speedometer's last figure reads 120 and the needle still sweeps the whole
+     * face rather than dying two thirds of the way round.
+     */
+    topSpeedMph: number;
   };
 };
 
@@ -702,7 +724,25 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     drive: {
       pedestrianMassMult: 0.5,
       trafficMassMult: 0.35,
-      trafficDensity: 0.6,
+      // A SCREEN between the cars on his own side and TWO between the ones
+      // coming at him (`DRIVE.laneTraffic`) — about two cars his way and one
+      // against in shot at any moment.
+      //
+      // IT WENT UP, AND THE ROAD GOT KINDER, which is only a contradiction if
+      // you read the number as "how much traffic". The rung used to be 0.6 with
+      // both sides priced alike, and both sides priced alike is what made EASY
+      // read as a hard rung: the far lanes close at the SUM of the two speeds,
+      // so the same gap delivered them at better than twice the rate, and the
+      // player's whole picture was oncoming cars he had no time to plan for.
+      // The oncoming half is now HALF AS THICK as it was and the near half —
+      // the one you can simply go round — carries the difference.
+      trafficDensity: 0.85,
+      // …and the kindest rung is the SLOWEST one. See the field's note: every
+      // hazard on this road is priced in closing speed, so 120 halves the
+      // energy of every collision and buys back half again as long to read the
+      // crowd — which is a gentler road than any amount of lightening the
+      // things on it.
+      topSpeedMph: 120,
     },
   },
   medium: {
@@ -784,6 +824,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 1,
       trafficMassMult: 1,
       trafficDensity: 1,
+      topSpeedMph: 135,
     },
   },
   hard: {
@@ -856,6 +897,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 1.6,
       trafficMassMult: 2,
       trafficDensity: 1.15,
+      topSpeedMph: 148,
     },
   },
   nightmare: {
@@ -933,6 +975,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 2.3,
       trafficMassMult: 3.4,
       trafficDensity: 1.3,
+      topSpeedMph: 161,
     },
   },
   jesus: {
@@ -1011,6 +1054,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 3,
       trafficMassMult: 5,
       trafficDensity: 1.5,
+      // The whole dial, which nothing below this rung is trusted with.
+      topSpeedMph: 174,
     },
   },
 };

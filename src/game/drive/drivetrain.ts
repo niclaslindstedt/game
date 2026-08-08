@@ -52,6 +52,8 @@
 // with the paint in sight and out of reach. A top gear that topped out at half
 // revs would say the car had another gear it was not being given.
 
+import { difficultyDef } from "../defs/difficulties.ts";
+import type { Difficulty } from "../types/index.ts";
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 
 /** Gravity (m/s²) — only ever used for the tyres' rolling resistance, which is
@@ -341,4 +343,26 @@ export function solvedTopSpeedPx(): number {
   let px = 0;
   while (px < DRIVE.topSpeedPx && throttleAccelPx(px) > 0.01) px += 1;
   return px;
+}
+
+/**
+ * THE CEILING THIS RUNG PUTS ON THE WAGON (world px/s), before its own wear
+ * takes any of it back.
+ *
+ * The one place `DifficultyDef.drive.topSpeedMph` is turned into the unit the
+ * physics works in, and it is a plain share of the car's own top end — so the
+ * WORLD does not change size with the rung (`DRIVE_UNITS.mPerPx` is pinned to
+ * `DRIVE.topSpeedPx` and must stay pinned to it), only how much of the dial the
+ * player is allowed. Everything that converts a speed back into miles an hour —
+ * the HUD's readout, the scorecard's TOP — keeps using the car's own pair, so
+ * 120 mph means 120 miles an hour on every rung.
+ *
+ * It lives here beside `solvedTopSpeedPx` because the two are the same
+ * question asked of different authorities: that one is what the AIR allows,
+ * this one is what the LADDER allows, and whichever is lower is what the player
+ * sees at the far end of a straight.
+ */
+export function rungTopSpeedPx(difficulty: Difficulty): number {
+  const { topSpeedMph } = difficultyDef(difficulty).drive;
+  return DRIVE.topSpeedPx * (topSpeedMph / DRIVE.topSpeedMph);
 }

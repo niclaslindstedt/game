@@ -41,6 +41,7 @@ import {
   laneCenter,
   roadBandEdges,
   roadEdges,
+  rungTopSpeedPx,
   TRAFFIC_VARIANTS,
   type DriveState,
 } from "@game/core";
@@ -125,10 +126,22 @@ function clearKerb(drive: DriveState): void {
     drive.params.direction * 10_000;
 }
 
-/** How fast a car this bent can go — the road's own `1 - wear × loss`, so a
- * staged wreck opens at the speed it would actually be doing. */
-function topFor(wear: number): number {
-  return DRIVE.topSpeedPx * (1 - wear * DRIVE.wearTopSpeedLoss);
+/** How fast a car this bent can go on THIS ROAD — the rung's own ceiling
+ * (`rungTopSpeedPx`, 120 mph on EASY climbing to the wagon's 174 at the top)
+ * through the road's `1 - wear × loss`, so a staged wreck opens at the speed it
+ * would actually be doing.
+ *
+ * IT HAS TO BE THE RUNG'S OR THE PAIRING BELOW COMES APART. `openAt` and
+ * `throttle` agree on a fraction of the top end precisely so the throttle does
+ * not take the staged speed back (see `openAt`) — and the top the throttle
+ * clamps to is the rung's, so a fraction of the CAR's would be handed straight
+ * back on the next frame, which is the moving target that pairing exists to
+ * stop. */
+function topFor(drive: DriveState): number {
+  return (
+    rungTopSpeedPx(drive.params.difficulty) *
+    (1 - drive.car.wear * DRIVE.wearTopSpeedLoss)
+  );
 }
 
 /**
@@ -141,7 +154,7 @@ function topFor(wear: number): number {
  * is a fine road and a moving target.
  */
 function openAt(drive: DriveState, frac = 1): number {
-  drive.car.speed = topFor(drive.car.wear) * frac;
+  drive.car.speed = topFor(drive) * frac;
   return drive.car.speed;
 }
 
@@ -334,16 +347,22 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 1600,
       shows: "pedestrianHit",
       bank: BODY_SOUNDS,
-      input: throttle(0.6),
+      input: throttle(0.77),
       road: (drive) => {
         silence(drive);
         // NOT FLAT OUT, and it stopped being able to be. The LIGHT body shelf
-        // sits under the line where a bumper goes through somebody, and at 174
-        // even a blow taken mostly across the nose is past it — so the exhibit
-        // advertising the cheap thud was demonstrating the wet tear. A hundred
-        // is where a glance is still a glance; the heavy one is the exhibit
-        // below, met square.
-        const speed = openAt(drive, 0.6);
+        // sits under the line where a bumper goes through somebody, and past
+        // about a hundred even a blow taken mostly across the nose is beyond it
+        // — so the exhibit advertising the cheap thud was demonstrating the wet
+        // tear. A hundred is where a glance is still a glance; the heavy one is
+        // the exhibit below, met square.
+        //
+        // AND THE SHARE MOVED A THIRD TIME, for the third version of the same
+        // reason: the shelves are priced in JOULES, so what this exhibit means
+        // is a SPEED, and the dial it is a share OF is now the RUNG's rather
+        // than the car's (`rungTopSpeedPx`). This shelf drives on MEDIUM, whose
+        // dial stops at 135, so a hundred is a bit over three quarters of it.
+        const speed = openAt(drive, 0.77);
         // OFF THE CAR'S OWN LINE, so the contact normal runs mostly ACROSS the
         // nose and the car barely notices it — the cheap blow a driver who
         // learns to clip rather than centre gets to keep his speed with.
@@ -550,7 +569,7 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 2200,
       shows: "trafficHit",
       bank: CRUNCH_SOUNDS,
-      input: throttle(0.52),
+      input: throttle(0.67),
       road: (drive) => {
         silence(drive);
         // AT NINETY MILES AN HOUR, WHICH IS WHERE THE CRUNCH SHELF LIVES — and
@@ -558,11 +577,14 @@ export function driveExhibits(): DriveExhibit[] {
         // and the road grew a shelf ABOVE the crunch (`SMASH_SOUNDS`) that a
         // full-speed rear-ender comfortably reaches, so the exhibit advertising
         // the crunch was quietly demonstrating the one above it; the big one has
-        // its own exhibit now, below. The SHARE moved again when the wagon was
-        // re-engined — ninety was eight tenths of a 120 mph dial and is barely
-        // half of a 174 one — while the speed the shelf sits at did not move at
-        // all, because the shelves are priced in joules.
-        const speed = openAt(drive, 0.52);
+        // its own exhibit now, below. The SHARE has moved twice more since — once
+        // when the wagon was re-engined (ninety was eight tenths of a 120 mph
+        // dial and barely half of a 174 one) and again when the DIAL became the
+        // RUNG's rather than the car's (`rungTopSpeedPx`; this shelf drives on
+        // MEDIUM, which stops at 135). The speed the shelf sits at has not moved
+        // once through any of it, because the shelves are priced in JOULES —
+        // which is the whole reason the share keeps having to.
+        const speed = openAt(drive, 0.67);
         // THE WHOLE CASCADE, ON PURPOSE — and the one exhibit here that does not
         // isolate its event. A rear-ender at this speed is over the crunch line,
         // over a panel rung and over the first fix rung all at once: the crunch,
@@ -956,6 +978,13 @@ export function driveExhibits(): DriveExhibit[] {
       label: "THE RIDE AT 174",
       blurb:
         "NO COLLISION AT ALL - JUST WHAT A WAGON THIS OLD DOES AT THE TOP END",
+      // THE ONE EXHIBIT THAT HAS TO NAME ITS RUNG, because it is the only one
+      // whose subject IS the top of the dial — and the dial is the ladder's now
+      // (`rungTopSpeedPx`): every rung under the last stops the wagon short of
+      // its own 174, so on the shelf's default MEDIUM this exhibit would be THE
+      // RIDE AT 135 with a label saying otherwise. It plants nothing and hits
+      // nothing, so the rung's own weights never come into it.
+      difficulty: "jesus",
       group: "DRIVE",
       keywords: [
         "drive",

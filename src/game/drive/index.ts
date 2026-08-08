@@ -20,11 +20,26 @@
 // and seats one person is not something to make seven people watch).
 //
 // AND IT IS PLAYED ON THE RUN'S OWN RUNG. The difficulty travels in on
-// `DriveParams.difficulty` and turns exactly one thing: what the road WEIGHS
-// (`impactMasses`). A body costs a MEDIUM driver about a fifth of his speed and
-// a JESUS driver nearly half of it, and does proportionally more to the car on
-// the way past, because both come out of the same momentum sum. Everything else
-// — the course, the crowd, the traffic, the wagon — is the same on every rung.
+// `DriveParams.difficulty` (`DifficultyDef.drive`) and turns three things, all
+// of which come out of the ONE line the whole road is priced by — damage goes
+// as the SQUARE of the closing speed:
+//
+//   what the road WEIGHS   `impactMasses` — a body costs a MEDIUM driver about
+//                          a fifth of his speed and a JESUS driver nearly half
+//                          of it, and does proportionally more to the car on
+//                          the way past, out of the same momentum sum.
+//   how much TRAFFIC       `trafficDensity`, dividing `DRIVE.laneTraffic` — and
+//                          the ONCOMING lanes are laid twice as thin as the
+//                          hero's own on every rung, because they close at the
+//                          SUM of both speeds and are gone in a second and a
+//                          half.
+//   how fast the WAGON     `rungTopSpeedPx` — 120 mph on EASY, climbing to the
+//                          car's own 174 at the top. It is a ceiling on the
+//                          THROTTLE and not a change of scale: `mPerPx` is
+//                          pinned, so 120 mph is 120 real miles an hour on
+//                          every rung.
+//
+// The COURSE and the CROWD are the same on every rung.
 //
 // ── HOW IT SITS IN THE GAME ─────────────────────────────────────────────────
 // It is NOT a `GamePhase` and NOT a level. The car reaching the garage's road
@@ -53,7 +68,7 @@ import {
 } from "../vehicles.ts";
 import type { CarPanelId } from "../types/index.ts";
 import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
-import { coastDecelPx, throttleAccelPx } from "./drivetrain.ts";
+import { coastDecelPx, rungTopSpeedPx, throttleAccelPx } from "./drivetrain.ts";
 import {
   laneCenter,
   roadEdges,
@@ -92,6 +107,7 @@ export {
   gearRev,
   GEAR_COUNT,
   roadDragPx,
+  rungTopSpeedPx,
   solvedTopSpeedPx,
   throttleAccelPx,
 } from "./drivetrain.ts";
@@ -357,16 +373,21 @@ export function stepDrive(
   // means in the bay: carry on as you are. And hauling on the lever means what
   // it means in the bay too, which on a road with a wall of people across it is
   // the difference between the two endings.
-  const top = DRIVE.topSpeedPx * (1 - car.wear * DRIVE.wearTopSpeedLoss);
+  // …and the number at the top of it is the LADDER's before it is the wear's:
+  // the gentle rungs stop the wagon well short of its own top end, because
+  // every hazard on this road is priced in closing speed (`rungTopSpeedPx`).
+  const rungTop = rungTopSpeedPx(drive.params.difficulty);
+  const top = rungTop * (1 - car.wear * DRIVE.wearTopSpeedLoss);
   // …plus the one thing the road does NOT share with the bay: the pull. Out
   // here the shove is a torque curve through an automatic gearbox and the coast
   // is the air, both solved from the wagon's own brochure
   // (`drive/drivetrain.ts`) at whatever speed it is doing this instant — so the
   // car is gutless off the line, strongest in the middle of a gear, pauses at
   // every upshift, and spends the last twenty miles an hour arguing with the
-  // wind. `top` is still the ceiling, but on an undamaged wagon the physics
-  // runs out of pull before the cap is ever reached.
-  applyCarPedals(car, input, dt, top, DRIVE.topSpeedPx * 0.1, {
+  // wind. `top` is still the ceiling, and on the gentle rungs it is now the
+  // thing that actually stops you: the physics runs out of pull at about 174,
+  // so anything below that is a genuine cap rather than a formality.
+  applyCarPedals(car, input, dt, top, rungTop * 0.1, {
     accelPx: throttleAccelPx(car.speed),
     coastPx: coastDecelPx(car.speed),
   });

@@ -1006,12 +1006,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   AUTO-DRIVEN leg: a screen waiting on a keypress would park the attract loop
   forever, and a board full of the demo's initials is not a high-score table. Damage
   goes as the square of the closing speed, which is the whole difficulty curve
-  in one line. The RUN'S RUNG rides in on `DriveParams.difficulty` and turns
-  exactly one number — what the road WEIGHS (`impactMasses`, off
-  `DifficultyDef.drive`) — so a body met square at the top of the dial costs a
-  MEDIUM driver about an eighth of his speed and a JESUS driver a third of it,
-  and does proportionally more to the car, both out of the same momentum sum;
-  the course, the crowd, the traffic and the wagon are identical on every rung.
+  in one line. The RUN'S RUNG rides in on `DriveParams.difficulty`
+  (`DifficultyDef.drive`) and turns THREE things, all of them priced in that one
+  line: what the road WEIGHS (`impactMasses`) — so a body met square at the top
+  of the dial costs a MEDIUM driver about an eighth of his speed and a JESUS
+  driver a third of it, and does proportionally more to the car, both out of the
+  same momentum sum; HOW MUCH OTHER TRAFFIC there is (`trafficDensity`, dividing
+  `DRIVE.laneTraffic` — and the ONCOMING lanes are laid twice as thin as the
+  hero's own on every rung, because they close at the SUM of both speeds and are
+  in shot for a second and a half); and HOW FAST THE WAGON MAY GO
+  (`rungTopSpeedPx` — 120 mph on EASY climbing to the car's own 174 at the top,
+  which halves the energy of every collision on the gentle rungs and buys half
+  again as long to read the crowd). The COURSE and the CROWD are identical on
+  every rung, and so is the world's scale: the cap is a ceiling on the throttle,
+  not a change to `DRIVE_UNITS.mPerPx`, so 120 mph means 120 miles an hour
+  wherever it is read.
   THE CROWD CARRIES ITS OWN SHARE OF THE VOLUME KNOB on top of that
   (`DRIVE.impact.crowdSpeedLossScale`), because a momentum transfer saturates
   against the wagon's own 1600 kg and one scale cannot price both a person and a

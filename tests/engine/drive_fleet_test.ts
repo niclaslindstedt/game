@@ -15,6 +15,7 @@ import {
   createTraffic,
   crushDepthPx,
   DRIVE,
+  haltTraffic,
   FLEET,
   impactMasses,
   roadBandEdges,
@@ -76,6 +77,27 @@ function coast(state: DriveState, ms: number): void {
 }
 
 /**
+ * ADVANCE THE ROAD WITHOUT TOUCHING THE SPEED A TEST HAS JUST STAGED.
+ *
+ * THE THROTTLE IS A CLAMP AS WELL AS A SHOVE (`applyCarPedal` —
+ * `Math.min(topSpeed, …)`), and the top it clamps to is the RUNG's now: the
+ * ladder caps the wagon at 120 mph on EASY and climbs it to the car's own 174
+ * only at the top (`rungTopSpeedPx`). So a suite that writes `car.speed`
+ * straight and then holds the pedal down has the number taken back off it on
+ * the very next frame — which is what quietly turned every head-on staged here
+ * into a slower one the moment MEDIUM stopped allowing the whole dial.
+ *
+ * Coasting is the fix and it costs nothing: a closed throttle at this speed is
+ * the air alone, about 25 px/s², so a frame or four of it is under a px/s of
+ * the staged number. Everything below is calibrated against an EXACT closing
+ * speed, so preserving it is the whole point — the pedal was only ever here to
+ * make the road move.
+ */
+function hold(state: DriveState, ms: number): void {
+  coast(state, ms);
+}
+
+/**
  * Put one vehicle dead ahead of the hero, stopped, and wind the hero up to
  * nearly the top of the dial — a square head-on at the speed the ejection
  * ladder is actually written against.
@@ -85,6 +107,31 @@ function coast(state: DriveState, ms: number): void {
  * meet him rather than the other way round.
  */
 function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
+  // A ROAD HOLDING NOTHING BUT WHAT THE TEST PLANTED, AND A LOG THAT STARTS
+  // HERE.
+  //
+  // The seconds of road each of these tests drives first (to clear
+  // `crowdStartPx`) are REAL road — live traffic in four lanes, a crowd walking
+  // into it and the council's lamp posts down both kerbs. So a blow staged 26
+  // px ahead of the bumper used to land in whatever neighbourhood the seed
+  // happened to deal: the hero arrived at it already crushed, or clouted a van
+  // on the same tick, or had shed somebody else's motorcycle into `remains`
+  // before the planted one was touched. Every assertion below then read the
+  // warm-up rather than the blow — `remains[0]` was another vehicle's, and
+  // "did the drive ever say `windscreenOut`" was answered by a car three
+  // hundred px back.
+  //
+  // That made this suite quietly an assertion about the SPAWNER's tuning, which
+  // it is not meant to be and which the road is allowed to change. Clearing the
+  // road is the idiom the engine already exports for exactly this
+  // (`haltTraffic` — "several suites need a road holding nothing but what they
+  // planted"); the log and the wreckage are wiped with it for the same reason.
+  haltTraffic(state);
+  state.traffic.length = 0;
+  state.pedestrians.length = 0;
+  state.props.length = 0;
+  state.remains.length = 0;
+  heard.set(state, []);
   const one = createTraffic(
     state.nextId++,
     variant,
@@ -93,7 +140,7 @@ function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
   );
   state.traffic.push(one);
   state.car.speed = DRIVE.topSpeedPx * share;
-  tick(state, 1);
+  hold(state, 16);
   state.car.pos.y = one.pos.y;
   one.pos.x = state.car.pos.x + 26;
   one.hitCooldownMs = 0;
@@ -108,7 +155,7 @@ function ramAgain(state: DriveState, one: DriveTraffic, share = 0.95): void {
   one.pos.y = state.car.pos.y;
   one.speed = 0;
   state.car.speed = DRIVE.topSpeedPx * share;
-  floorIt(state, 64);
+  hold(state, 64);
 }
 
 /**
@@ -212,7 +259,7 @@ describe("destroying the other traffic", () => {
 
   it("leaves a wreck standing dead in the lane it died in", () => {
     const state = drive();
-    floorIt(state, 4000);
+    hold(state, 4000);
     const car = plant(state, indexOf("traffic_hatch"));
     car.wear = 0.99;
     for (let i = 0; i < 8 && !car.wrecked; i++) ramAgain(state, car);
@@ -256,9 +303,9 @@ describe("people leaving vehicles", () => {
     // and finding the speed at which that is still true is finding the bottom
     // rung of a ladder whose rungs are mass and nothing else.
     const state = drive();
-    floorIt(state, 5000);
+    hold(state, 5000);
     const moped = plant(state, indexOf("traffic_motorcycle"), 0.24);
-    floorIt(state, 100);
+    hold(state, 100);
     expect(moped.rider).toBe(false);
     expect(moped.downed).toBe(true);
     // The person is out on the road as a body of their own — counted, tumbling
@@ -281,7 +328,7 @@ describe("people leaving vehicles", () => {
     floorIt(state, 5000);
     const bike = plant(state, indexOf("traffic_motorcycle"));
     const id = bike.id;
-    floorIt(state, 100);
+    hold(state, 100);
     // It has stopped being a vehicle: it is off the road's list entirely, and
     // what is left is the two halves of it and a cloud of its own steel.
     expect(state.traffic.some((one) => one.id === id)).toBe(false);
@@ -296,7 +343,7 @@ describe("people leaving vehicles", () => {
     const state = drive();
     floorIt(state, 5000);
     plant(state, indexOf("traffic_motorcycle"));
-    floorIt(state, 100);
+    hold(state, 100);
     // The half of a two-wheeler that was never alive. It carries the VEHICLE's
     // variant so the app can cut its art out of the machine that shed it.
     const steel = state.remains.filter((piece) => piece.part === "machine");
@@ -313,7 +360,7 @@ describe("people leaving vehicles", () => {
       const state = drive();
       floorIt(state, 5000);
       const machine = plant(state, indexOf(id));
-      floorIt(state, 100);
+      hold(state, 100);
       // The vehicle is GONE — not shunted, not lying down, not there.
       expect(state.traffic).not.toContain(machine);
       // …and what is left of it is two large halves of its own picture.
@@ -368,7 +415,7 @@ describe("people leaving vehicles", () => {
     const state = drive();
     floorIt(state, 5000);
     plant(state, indexOf("traffic_bicycle"));
-    floorIt(state, 100);
+    hold(state, 100);
     const flesh = state.remains.filter(
       (piece) => !piece.part.startsWith("machine"),
     );
@@ -388,7 +435,7 @@ describe("people leaving vehicles", () => {
     const state = drive();
     floorIt(state, 5000);
     plant(state, indexOf("traffic_scooter"));
-    floorIt(state, 100);
+    hold(state, 100);
     const airborne = [
       ...state.pedestrians.filter((p) => p.kind === "rider"),
       ...state.remains.filter((p) => p.part !== "machine"),
@@ -409,7 +456,7 @@ describe("people leaving vehicles", () => {
     const seats = vehicleDef(indexOf("traffic_sedan")).occupants;
     expect(seats).toBeGreaterThan(0);
     const head = plant(square, indexOf("traffic_sedan"));
-    floorIt(square, 100);
+    hold(square, 100);
     expect(head.occupants).toBeLessThan(seats);
     expect(saidBy(square)).toContain("windscreenOut");
 
@@ -534,7 +581,7 @@ describe("people leaving vehicles", () => {
     const state = drive();
     floorIt(state, 5000);
     const bus = plant(state, indexOf("traffic_bus"));
-    floorIt(state, 100);
+    hold(state, 100);
     expect(bus.occupants).toBe(0);
     expect(saidBy(state)).not.toContain("windscreenOut");
   });
@@ -551,7 +598,7 @@ describe("people leaving vehicles", () => {
     // the ones the front pair leaves behind are the whole point of the case.
     expect(seats).toBeGreaterThan(2);
     const van = plant(state, indexOf("traffic_minivan"));
-    floorIt(state, 200);
+    hold(state, 200);
     // Nobody is left in it: the front pair went through the screen and the row
     // behind them — who were never in front of it — died where they sat.
     expect(van.occupants).toBe(0);
@@ -573,7 +620,7 @@ describe("people leaving vehicles", () => {
     const state = drive({ gib: false, split: false });
     floorIt(state, 5000);
     const van = plant(state, indexOf("traffic_minivan"));
-    floorIt(state, 200);
+    hold(state, 200);
     expect(van.occupants).toBe(0);
     expect(van.gore).toBe(0);
     expect(state.bodies).toBeGreaterThan(0);
@@ -592,7 +639,7 @@ describe("breaking a car, physically", () => {
     // Planted ahead of the hero and facing the same way, so the bumper reaches
     // its TAIL.
     expect(hatch.faceLeft).toBe(false);
-    floorIt(state, 100);
+    hold(state, 100);
     expect(hatch.crushTail).toBeGreaterThan(0);
     expect(hatch.crushNose).toBe(0);
   });
@@ -715,6 +762,14 @@ describe("breaking a car, physically", () => {
     const punt = (id: string) => {
       const state = drive();
       floorIt(state, 5000);
+      // …onto a road holding nothing else, for the reason `plant` explains at
+      // length: the warm-up is real road, and a shunt measured with a van in
+      // the next lane and the hero's nose already folded is a measurement of
+      // the spawner rather than of the sum this test is about.
+      haltTraffic(state);
+      state.traffic.length = 0;
+      state.pedestrians.length = 0;
+      state.props.length = 0;
       // Rear-ended while genuinely rolling, which is the collision this is
       // about — a stopped car is a different (and much harder) sum.
       const one = createTraffic(
@@ -727,7 +782,7 @@ describe("breaking a car, physically", () => {
       state.car.speed = DRIVE.topSpeedPx * 0.95;
       let best = CRUISE;
       for (let t = 0; t < 400; t += 16) {
-        tick(state, 1);
+        tick(state, 0);
         best = Math.max(best, one.speed);
       }
       return best - CRUISE;

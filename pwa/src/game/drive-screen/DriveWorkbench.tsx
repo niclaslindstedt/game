@@ -27,7 +27,12 @@ import {
 
 import { DIFFICULTY_ORDER, type Difficulty } from "@game/menu";
 
-import { createTraffic, DRIVE, type DriveState } from "@game/core";
+import {
+  createTraffic,
+  DRIVE,
+  rungTopSpeedPx,
+  type DriveState,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
@@ -120,8 +125,13 @@ function stagerFor(
     const lane = drive.car.pos.y;
     const ahead = (px: number) => drive.car.pos.x + direction * px;
     // Flat out from the off, so the staged hit lands at the speed worth looking
-    // at rather than at the 28% the road opens on.
-    drive.car.speed = DRIVE.topSpeedPx;
+    // at rather than at the 28% the road opens on. FLAT OUT ON THIS RUNG, which
+    // is not the car's own dial any more (`rungTopSpeedPx` — EASY stops the
+    // wagon at 120 mph): the throttle would take a higher number straight back
+    // on the next frame, and the workbench would be staging a slower hit than
+    // it said it was while `&difficulty=` quietly changed the speed as well as
+    // the weights.
+    drive.car.speed = rungTopSpeedPx(drive.params.difficulty);
     if (what !== "traffic") {
       drive.pedestrians.push({
         id: drive.nextId++,

@@ -558,7 +558,17 @@ describe("the difficulty ladder on the road", () => {
     // ways a harder rung punishes a driver are "you got less far" and "you did
     // not get there at all" — and timing a fixed distance cannot see the
     // second one (a wreck simply stops the loop early, which reads as FASTER).
-    for (let t = 0; t < 20000; t += 16) {
+    //
+    // EIGHT SECONDS, AND THE LENGTH IS LOAD-BEARING. It was twenty, which is
+    // long enough that a wagon driven straight into everything is somewhere
+    // between half dead and finished ON EVERY RUNG — and a saturated dial
+    // cannot say which road was worse, so the assertion was really reading
+    // which car happened to break first. Measured across six seeds it agreed
+    // with the ladder on four of them and did not on two, which is a coin flip
+    // wearing a green tick. At eight seconds nothing has saturated (EASY sits
+    // around 0.1 and the top rung around 0.3) and the ladder is unanimous on
+    // every seed tried, which is what this test was always claiming.
+    for (let t = 0; t < 8000; t += 16) {
       for (const drive of [gentle, brutal]) {
         stepDrive(drive, 16, { pedal: 1, wheel: 0 });
       }

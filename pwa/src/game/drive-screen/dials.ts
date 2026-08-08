@@ -20,6 +20,7 @@ import {
   engineRpm,
   gearFor,
   gearRev,
+  rungTopSpeedPx,
   DRIVE,
   DRIVETRAIN,
   GEAR_COUNT,
@@ -113,7 +114,15 @@ export function driveDials(
    * Omitted (a still shot, a test) draws the dial with nothing lit. */
   trail?: WearTrail,
 ): DriveDials {
-  const speedFrac = Math.min(1, Math.abs(drive.car.speed) / DRIVE.topSpeedPx);
+  // THE FACE IS THE RUNG'S, NOT THE CAR'S. The gentle rungs cap the wagon well
+  // short of its own top end (`rungTopSpeedPx`), and a speedometer still drawn
+  // to 174 on a road that stops at 120 would leave the needle dying two thirds
+  // of the way round every straight — which reads as a broken car rather than
+  // as a kind road. So the dial's last figure and the arc it sweeps are both
+  // what this rung actually allows; `mph` underneath is the same real miles an
+  // hour it always was, because the world does not change size with the rung.
+  const topSpeedPx = rungTopSpeedPx(drive.params.difficulty);
+  const speedFrac = Math.min(1, Math.abs(drive.car.speed) / topSpeedPx);
   // The gearbox and the crank, read straight off the drivetrain the physics is
   // using this tick — the same functions the engine note is voiced from
   // (`sfx/drive.ts`), so the tachometer and the speaker cannot disagree.
@@ -122,7 +131,9 @@ export function driveDials(
   const wear = wearPercent / 100;
   return {
     mph: driveMph(drive),
-    topSpeedMph: DRIVE.topSpeedMph,
+    topSpeedMph: Math.round(
+      (topSpeedPx / DRIVE.topSpeedPx) * DRIVE.topSpeedMph,
+    ),
     speedFrac: Math.round(speedFrac * 64) / 64,
     gear: gearFor(speed),
     gearCount: GEAR_COUNT,
