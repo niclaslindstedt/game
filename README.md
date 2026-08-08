@@ -113,6 +113,7 @@ make test                                # the full test suite
 | `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
 | `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
 | `make tauri` / `make tauri-test`      | The second desktop shell (Tauri) — see `tauri/README.md` and `docs/tauri-migration.md`      |
+| `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                    |
 
 **Verify with `make test`, never with a bare `npx vitest run`.** The `make`
 targets open by rebuilding the generated content and the sprite atlas; a bare

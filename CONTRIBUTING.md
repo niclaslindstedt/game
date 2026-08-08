@@ -177,6 +177,9 @@ here rather than in a mod folder:
 5. Open a PR. The **title** must be conventional-commit format, because we
    squash-merge and it becomes the commit on `main`. CI must be green and a
    maintainer must approve.
+6. If `main` moves under you, catch up with `make sync` — it parks the branch at
+   a backup ref, fetches, and rebases, in that order. Rebasing onto a `main`
+   fetched a while ago re-raises conflicts that are already settled upstream.
 
 ## Code of Conduct
 

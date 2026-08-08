@@ -104,8 +104,8 @@ tree. Nothing in `src/` or `pwa/` may learn it exists: the page is told
 
 **Load the `commit` skill before committing or opening a PR.** It carries the
 whole procedure and the rules that used to sit here: conventional commits, the
-PR title becoming the squashed commit on `main`, the merge-conflict backup
-branch, and the two that get skipped most —
+PR title becoming the squashed commit on `main`, and the two that get skipped
+most —
 
 - **THE PUSH AND THE PR ARE ONE STEP.** A pushed branch with no PR is
   invisible: nothing runs the PR-only checks, nobody is asked to look, and the
@@ -114,6 +114,28 @@ branch, and the two that get skipped most —
   then `make fmt-check`, `make lint`, the changeset call) run BEFORE the commit
   is written; the minutes-long ones (`make test`, `make build`) run ALONGSIDE
   the push, not before it.
+
+## Merges and rebases — the `conflict` skill owns them
+
+**Load the `conflict` skill whenever a branch has to move onto another one** — a
+merge conflict has appeared, a PR is reported un-mergeable, or somebody says
+"rebase" / "sync" / "catch this up with main". One command does it:
+
+```sh
+node scripts/sync-branch.mjs        # park at a backup branch, FETCH, then rebase
+```
+
+Two rules from it are worth carrying here, because both are cheap and both are
+how work gets lost:
+
+- **CUT THE BACKUP BRANCH FIRST** (`backup/<branch>-premerge`). A conflicted
+  tree is the most fragile state a repo gets into, and `git stash`, `git reset`,
+  `git checkout <ref> -- .` and adding a worktree each throw the resolution
+  away. With the backup, recovery is one line.
+- **A REBASE ALWAYS FETCHES FIRST.** Rebasing onto a `main` fetched an hour ago
+  re-raises conflicts already settled upstream — and raises them again on the
+  next attempt, because the ref is still stale. There is no rebase in this repo
+  that starts anywhere but a fresh fetch.
 
 ## Changelog fragments
 
@@ -790,6 +812,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Any spoken or written line                            | `update-story`                                          |
 | A MOD — creating one, or updating a published one     | `mod-authoring`                                         |
 | A PR's changelog fragment, or the `no-changelog` call | `changelog`                                             |
+| A merge conflict, a rebase, catching a branch up      | `conflict`                                              |
 
 ## Game development skills
 
@@ -839,7 +862,8 @@ Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone 
 | `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
 | `sync-oss-spec`    | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
 | `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
-| `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR and merge-conflict rules. |
+| `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR conventions.              |
+| `conflict`         | On a merge conflict, an un-mergeable PR, or any "rebase / sync / catch up with main" — the backup branch, the fetch, the resolve. |
 | `skill-reflection` | At BOTH ends of any session that loads a skill — read its lessons first, reflect them back into it before committing.             |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the baseline commit hash). Run a skill by loading its `SKILL.md` and following the discovery process and update checklist. The skill rewrites `.last-updated` at the end of a successful run, and improves itself in place when it discovers new mapping entries. The `maintenance` skill owns a **Registry** table listing every `update-*` skill — add a row whenever you create a new sync skill.
