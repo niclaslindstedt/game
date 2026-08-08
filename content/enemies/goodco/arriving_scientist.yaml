@@ -1,0 +1,19 @@
+id: arriving_scientist
+name: NIGHT SHIFT SCIENTIST
+lore: >-
+  Badged on at half past midnight with a coffee going cold in the cupholder.
+  Nobody told the arriving shift the building was locked down, which is why
+  she is walking across the car park at a perfectly ordinary pace, and why
+  her card still opens the doors.
+role: minion
+sprite: scientist
+disposition: neutral
+hp: 30
+speed: 22
+radius: 8
+contactDamage: 9
+critChance: 0.05
+contactCooldownMs: 750
+ai:
+  aggroRadius: 340
+  idle: work

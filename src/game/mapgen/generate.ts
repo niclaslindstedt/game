@@ -28,7 +28,7 @@
 // the blueprint names, so a generated THE MOON is still the moon.
 
 import { createRng, type Rng } from "@game/lib/rng.ts";
-import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type {
@@ -38,8 +38,8 @@ import type {
   SpawnerSpec,
   SpawnSpec,
 } from "../defs/levels/types.ts";
-import type { Zone } from "../zones.ts";
-import { areaById, type MapArea } from "./areas.ts";
+import { zonesBounds, type Zone } from "../zones.ts";
+import { areaById, spaceOf, type MapArea } from "./areas.ts";
 import {
   annexWalls,
   buildBuildings,
@@ -68,6 +68,7 @@ import {
   wallSegments,
   type Chamber,
   type ChamberGrid,
+  type DoorGap,
 } from "./rooms.ts";
 import type {
   MapAnchor,
@@ -494,9 +495,23 @@ function buildHellgates(
   if (!hellborn || want <= 0) return [];
   // Never the hero's landing, and never the boss's room: a hellgate pouring into
   // the elevator's annex would turn the finale into an endless holding action.
-  const pool = grid.chambers.filter(
-    (c) => c.id !== spawn.id && c.id !== bossHome.id,
+  //
+  // AND NEVER OUTDOORS, on a map that has an inside at all. A gate is a tear in
+  // the world with a crop of hellborn coming out of it, and the ground outside a
+  // building is the ground a level uses for its quiet: the staff lot, the
+  // forecourt, the approach. A district authored with no ambient horde on it
+  // (`MapArea.horde: 0`) has said the same thing in the other direction, so both
+  // are read here — a quarter the map deliberately keeps empty is not a quarter
+  // to hang a rampage on.
+  const indoors = grid.chambers.some(
+    (c) => spaceOf(areaOf(bp.areas, c)) === "inside",
   );
+  const pool = grid.chambers.filter((c) => {
+    if (c.id === spawn.id || c.id === bossHome.id) return false;
+    const area = areaOf(bp.areas, c);
+    if ((area.horde ?? 1) <= 0) return false;
+    return !indoors || spaceOf(area) === "inside";
+  });
   if (pool.length === 0) return [];
   const stride = Math.max(1, Math.floor(pool.length / want));
   const out: SpawnerSpec[] = [];
@@ -512,6 +527,81 @@ function buildHellgates(
     });
   }
   return out;
+}
+
+/**
+ * HOW FAR PAST THE ENTRANCE THE FIRST ROOM'S BEAT STANDS (world px).
+ *
+ * Well clear of the doorway, because the scene it anchors is a CROWD with a
+ * rusher in it and the doorway is the one piece of floor the hero has to be
+ * able to walk through. Held to the room, so a small first room simply plays
+ * the beat at its middle instead of through its far wall.
+ */
+const ENTRANCE_INSIDE = 210;
+
+/** How far a doorway's mid-point is from the middle of the staff lot — the one
+ * ordering `planArrivals` and the carve both read "the entrance" off. */
+function gapNearness(
+  gap: DoorGap,
+  lot: { minX: number; minY: number; maxX: number; maxY: number } | null,
+): number {
+  if (!lot) return 0;
+  const mid = (gap.from + gap.to) / 2;
+  const at = gap.axis === "v" ? vec(gap.coord, mid) : vec(mid, gap.coord);
+  return distance(at, {
+    x: (lot.minX + lot.maxX) / 2,
+    y: (lot.minY + lot.maxY) / 2,
+  });
+}
+
+/**
+ * THE FIRST ROOM PAST THE WAY IN — the point a step inside the entrance, and
+ * the room it stands in.
+ *
+ * A doorway gap names the two cells it joins and the axis it was punched
+ * through, which is everything needed: the side that is NOT the staff lot is
+ * the building, the opening's midpoint is the threshold, and walking straight
+ * in off it along the wall's normal lands in the room. Returns null on a map
+ * with no entrance at all, which is every map but GOODCO.
+ */
+function insideEntrance(
+  grid: ChamberGrid,
+  gap: DoorGap | undefined,
+  isLot: (id: number) => boolean,
+): { at: Vec2; room: Chamber } | null {
+  if (!gap) return null;
+  const room = grid.chambers.find(
+    (c) => c.id === (isLot(gap.a) ? gap.b : gap.a),
+  );
+  if (!room) return null;
+  // The threshold, and the way through it: the opening runs down `axis`, so
+  // walking IN is a step along the other one, toward the room's own middle.
+  const mid = (gap.from + gap.to) / 2;
+  const threshold =
+    gap.axis === "v" ? vec(gap.coord, mid) : vec(mid, gap.coord);
+  const cx = room.x + room.w / 2;
+  const cy = room.y + room.h / 2;
+  const step = Math.min(
+    ENTRANCE_INSIDE,
+    // Never past the middle of a shallow room, or the beat plays in its far
+    // wall — and never so short that the crowd is standing in the doorway.
+    Math.max(WALL_INSET * 2, gap.axis === "v" ? room.w / 2 : room.h / 2),
+  );
+  const at =
+    gap.axis === "v"
+      ? vec(threshold.x + Math.sign(cx - threshold.x) * step, threshold.y)
+      : vec(threshold.x, threshold.y + Math.sign(cy - threshold.y) * step);
+  return {
+    at: vec(
+      Math.round(
+        clamp(at.x, room.x + WALL_INSET, room.x + room.w - WALL_INSET),
+      ),
+      Math.round(
+        clamp(at.y, room.y + WALL_INSET, room.y + room.h - WALL_INSET),
+      ),
+    ),
+    room,
+  };
 }
 
 /**
@@ -1233,6 +1323,21 @@ export function generateLevel(
       rect: { x: c.x, y: c.y, width: c.w, height: c.h },
     }));
 
+  // THE STAFF LOT — the ground the night shift parks on (`MapArea.arrivals`),
+  // as the whole cell like the road and the beat above: the lot IS the tarmac
+  // the arrivals happen on, so a circle inside it would leave half of it out.
+  const arrivalLot: Zone[] = grid.chambers
+    .filter((c) => areaOf(bp.areas, c).arrivals === true)
+    .map((c) => ({
+      shape: "rect",
+      rect: { x: c.x, y: c.y, width: c.w, height: c.h },
+    }));
+  const arrivalCells = new Set(
+    grid.chambers
+      .filter((c) => areaOf(bp.areas, c).arrivals === true)
+      .map((c) => c.id),
+  );
+
   // --- The errand cast ------------------------------------------------------
   // The blueprint's NON-COMBATANTS: the handful of neutral mobs an errand sends
   // the hero to talk to. They are cast rather than horde, so they are named one
@@ -1402,6 +1507,7 @@ export function generateLevel(
   const hangDoor = (
     obj: MapObject,
     gap: (typeof gaps)[number],
+    opens: "approach" | "key" = "approach",
   ): { from: Vec2; to: Vec2; radius: number } | null => {
     const from =
       gap.axis === "v" ? vec(gap.coord, gap.from) : vec(gap.from, gap.coord);
@@ -1422,10 +1528,36 @@ export function generateLevel(
       sprite: obj.sprite ?? obj.id,
       ...(obj.openSprite ? { openSprite: obj.openSprite } : {}),
       ...(obj.rollUp ? { rollUp: true } : {}),
-      opens: "approach",
+      opens,
     });
     return { from, to, radius };
   };
+  // THE ENTRANCE, HUNG FIRST — every opening between the staff lot and the
+  // building, on ONE id, as a KEYED door (see `LevelDef.arrivals`). Nothing in
+  // the game holds that key: it is opened by a member of staff badging in
+  // (arrivals.ts), which is what makes finding the way in a matter of watching
+  // where the night shift goes rather than walking the wall until it opens.
+  //
+  // Ahead of the district doors below because a doorway is claimed once, and
+  // the office door the building would otherwise hang across this same hole
+  // opens for anybody who walks up — which is the whole of what this is not.
+  const entranceObj = bp.objects.find(
+    (o) => o.type === "door" && o.at === "entrance",
+  );
+  // Nearest the middle of the tarmac FIRST, because `planArrivals` picks the
+  // door the same way and the two must agree: the scene waiting past the
+  // entrance is placed off `entranceGaps[0]`, and the walk is aimed at whichever
+  // opening the plan chose. Sorted rather than merely found, so a lot with three
+  // ways in still has ONE that is "the entrance" as far as the beat is concerned.
+  const lotMid = zonesBounds(arrivalLot);
+  const entranceGaps =
+    entranceObj && arrivalCells.size > 0
+      ? gaps
+          .filter((g) => arrivalCells.has(g.a) !== arrivalCells.has(g.b))
+          .sort((a, b) => gapNearness(a, lotMid) - gapNearness(b, lotMid))
+      : [];
+  for (const gap of entranceGaps)
+    hangDoor(entranceObj as MapObject, gap, "key");
   for (const gap of gaps) {
     const byArea = areaById(bp.areas, gap.owner).doors;
     const obj = byArea
@@ -1521,6 +1653,9 @@ export function generateLevel(
     merchantSpawns: [merchantAt],
     ...(driveOut.length > 0 ? { driveOut } : {}),
     ...(merchantBeat.length > 0 ? { merchantBeat } : {}),
+    // …and only when the way in was actually hung: a lot with no entrance in it
+    // is a lot the arrivals would drive onto and walk in circles on.
+    ...(arrivalLot.length > 0 && entranceGaps.length > 0 ? { arrivalLot } : {}),
     obstacles: buildObstacles(bp, grid, rng),
     decor: buildDecor(bp, grid, rng),
     walls,
@@ -1584,28 +1719,46 @@ export function generateLevel(
   // The scripted first-blow beat re-anchors beside the hero: it exists to put a
   // harmless swing on him in the opening seconds, which only works within sight.
   if (base.openingStrike) {
-    // THE RUSHER HAS TO ARRIVE, which means he must not START arrived. A quarter
-    // of the cell was fine while every cell was a district; it stops being fine
-    // the moment the landing can be a smaller room, because a quarter of a small
-    // room is a step. So the offset has a FLOOR — and it is taken toward
-    // whichever side of the landing has the floor to give, clamped off that
-    // side's wall, so the beat plays the same whichever corner the hero landed
-    // in.
-    const east = spawn.x + spawn.w - playerSpawn.x;
-    const west = playerSpawn.x - spawn.x;
-    const side = east >= west ? 1 : -1;
-    const room = Math.max(east, west) - WALL_INSET / 2;
-    const reach = Math.max(
-      OPENING_REACH,
-      Math.min(spawn.w / 4, OPENING_REACH_MAX),
+    // …UNLESS THE LANDING IS A CAR PARK HE HAS TO GET OFF FIRST. On a map with
+    // an ENTRANCE (`MapArea.arrivals`) the beat is not the first thing that
+    // happens: the hero lands outside a building nobody has noticed him at,
+    // and the first thing he does is find the way in and follow somebody
+    // through it. A rusher standing on the tarmac would break that in both
+    // directions — the man sneaking in opens by being assaulted in the open,
+    // and he takes those blows holstered in front of the two people whose whole
+    // job is watching the lot. So the scene moves to the FIRST ROOM INSIDE,
+    // a step past the doorway, and plays when he walks into it. (Which is also
+    // where its own words belong: the read it waits on is "every desk's manned,
+    // every lab lit", and there are no desks in a car park.)
+    const lobby = insideEntrance(grid, entranceGaps[0], (id) =>
+      arrivalCells.has(id),
     );
-    def.openingStrike = {
-      ...base.openingStrike,
-      at: vec(
-        Math.round(playerSpawn.x + side * Math.max(40, Math.min(reach, room))),
-        Math.round(playerSpawn.y),
-      ),
-    };
+    const at =
+      lobby?.at ??
+      (() => {
+        // THE RUSHER HAS TO ARRIVE, which means he must not START arrived. A
+        // quarter of the cell was fine while every cell was a district; it stops
+        // being fine the moment the landing can be a smaller room, because a
+        // quarter of a small room is a step. So the offset has a FLOOR — and it
+        // is taken toward whichever side of the landing has the floor to give,
+        // clamped off that side's wall, so the beat plays the same whichever
+        // corner the hero landed in.
+        const east = spawn.x + spawn.w - playerSpawn.x;
+        const west = playerSpawn.x - spawn.x;
+        const side = east >= west ? 1 : -1;
+        const room = Math.max(east, west) - WALL_INSET / 2;
+        const reach = Math.max(
+          OPENING_REACH,
+          Math.min(spawn.w / 4, OPENING_REACH_MAX),
+        );
+        return vec(
+          Math.round(
+            playerSpawn.x + side * Math.max(40, Math.min(reach, room)),
+          ),
+          Math.round(playerSpawn.y),
+        );
+      })();
+    def.openingStrike = { ...base.openingStrike, at };
     // …AND ITS SUPPORTING CAST COMES WITH IT. The beat is a two-parter held in
     // order by `after`: the hero reads the crowd ("these are STAFF"), and only
     // then does the one that rushes him draw his blade (`stepOpeningStrike`
@@ -1616,6 +1769,8 @@ export function generateLevel(
     // not arm, and he stayed HOLSTERED, chased around a map he could not fight
     // on until he happened to walk into one. So the crowd is pinned where he
     // lands, inside the pin's own sighting radius, exactly as it is authored.
+    // On an entrance map it goes with the rusher, for the same reason: the
+    // crowd is the room he walks into, not the tarmac he walks off.
     const pin = base.openingStrike.after
       ? base.firstSightThoughts?.find(
           (t) => t.thought === base.openingStrike?.after,
@@ -1623,14 +1778,26 @@ export function generateLevel(
       : undefined;
     if (pin) {
       const reach = Math.min((pin.radius ?? DIALOGUE.sightRadius) * 0.5, 120);
+      const room = lobby?.room;
       for (let i = 0; i < OPENING_CROWD; i++) {
         const angle = ((i + rng()) / OPENING_CROWD) * Math.PI * 2;
+        const x = at.x + Math.cos(angle) * reach;
+        const y = at.y + Math.sin(angle) * reach;
         def.spawns.push({
           enemy: pin.enemy,
-          at: vec(
-            Math.round(playerSpawn.x + Math.cos(angle) * reach),
-            Math.round(playerSpawn.y + Math.sin(angle) * reach),
-          ),
+          // Held inside the room the beat plays in, when there is one: a ring
+          // drawn round a point a step past a doorway puts a third of it back
+          // out on the tarmac and the rest of it in the wall.
+          at: room
+            ? vec(
+                Math.round(
+                  clamp(x, room.x + WALL_INSET, room.x + room.w - WALL_INSET),
+                ),
+                Math.round(
+                  clamp(y, room.y + WALL_INSET, room.y + room.h - WALL_INSET),
+                ),
+              )
+            : vec(Math.round(x), Math.round(y)),
         });
       }
     }

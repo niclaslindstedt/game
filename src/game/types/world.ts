@@ -768,6 +768,101 @@ export type ShipVehicle = VehicleBase & {
 
 export type Vehicle = CarVehicle | ShipVehicle;
 
+/**
+ * WHICH BEAT OF TURNING UP FOR WORK this arrival is on (see
+ * `src/game/arrivals.ts`). The five run strictly in order and every one of
+ * them ends by handing over to the next, so an arrival never sits between
+ * two of them.
+ */
+export type ArrivalPhase =
+  /** Rolling in off the road, down the access lane, toward its bay. */
+  | "driving"
+  /** Stopped in the bay. The engine dies, the body settles, the door opens. */
+  | "parking"
+  /** Somebody is out of the car and walking the footpath to the doors. */
+  | "walking"
+  /** Standing at the reader with the card out. */
+  | "badging"
+  /** Through the doorway and away down whatever is on the other side. */
+  | "entering";
+
+/**
+ * SOMEBODY TURNING UP FOR A SHIFT (`GameState.arrivals`, config `ARRIVALS`, a
+ * level turns them on with `LevelDef.arrivals`).
+ *
+ * A car rolls in off the road, parks in the rank, and the person in it gets
+ * out and walks to a door in the building's wall that the player cannot see
+ * from where he is standing. That walk is the whole feature: the ENTRANCE is
+ * a keyed door nothing the hero carries opens, so the way into GOODCO is
+ * discovered by watching where the night shift goes and following one of them
+ * through it (see `arrivals.ts`).
+ *
+ * THE CAR IS THE MINIGAME'S OWN WAGON — a real `CarVehicle`, minted by
+ * `createCar` and integrated by `integrateCarBody`, so the thing pulling into
+ * the bay is the same assembly the road draws and the same one the hero drove
+ * here in. It is deliberately NOT in `state.vehicles`: everything in that list
+ * is a machine a hero may climb into, and a visitor's car is furniture with an
+ * owner.
+ */
+export type Arrival = {
+  id: number;
+  /** The wagon, from the moment it appears to long after it is parked. */
+  car: CarVehicle;
+  phase: ArrivalPhase;
+  /** The bay it is pulling into (world) — the rank's next free slot. */
+  bay: Vec2;
+  /** The person, once out of the car: an `Enemy.id`, or null before that. */
+  staff: number | null;
+  /** The walk still to come, in order — the footpath, the doors, and the
+   * step past them where the body is taken off the field. */
+  route: Vec2[];
+  /** Ms left of the beat the phase is standing out (the pause at the wheel,
+   * the swipe at the reader). */
+  beatMs: number;
+  /** Latched once the parked body's blockers are on the field, so a car that
+   * stops twice does not lay two sets of them. */
+  parked: boolean;
+};
+
+/**
+ * WHERE THE ARRIVALS HAPPEN — the lot's own geometry, worked out ONCE when the
+ * run is built (`planArrivals`) and then read every tick.
+ *
+ * It is derived rather than authored because none of it exists until the carve
+ * has run: which wall the entrance landed in, which way round the lot is, and
+ * which strip of tarmac is clear enough to drive a car down are all facts about
+ * a floor plan that is different every shift. Deriving it once is also what
+ * keeps the per-tick work to arithmetic — and what keeps the lane a FACT rather
+ * than something re-rolled under a car already driving down it.
+ */
+export type ArrivalPlan = {
+  /** The doorway the badge opens — the mid-point of the entrance's chain. */
+  door: Vec2;
+  /** A step short of it, on the LOT's side: where the card comes out. */
+  apron: Vec2;
+  /** One step PAST it, inside the building: where the body is taken away. */
+  inside: Vec2;
+  /** The footpath's world-y — the line people walk along to the apron. */
+  walkY: number;
+  /** The access lane's world-y — where the cars drive and park, held off the
+   * footpath so nobody walks through a bumper. */
+  laneY: number;
+  /** The lot edge cars roll in from (world-x). */
+  entryX: number;
+  /** The rank's bays along the lane, nearest the doors first. */
+  bays: number[];
+  /**
+   * The lot's own parked rng stream (the `Enemy.workRng` pattern — a plain
+   * number, so a saved run resumes the exact car park).
+   *
+   * Its whole reason for existing is the rule that a cosmetic beat may never
+   * spend a draw off `state.rng`: who is in the next car and how long until it
+   * comes are decisions about scenery, and taking them off the run's own stream
+   * would shift every loot roll after them on a seeded run.
+   */
+  rng: number;
+};
+
 export type Merchant = {
   pos: Vec2;
   /**

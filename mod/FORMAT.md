@@ -187,16 +187,17 @@ levels — re-carving a shipped venue is a `kind: conversion`'s business.
 
 **A blueprint is a RECIPE, not a layout.** It carries only what the carve needs:
 
-| Field                  | What it says                                                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
-| `size`                 | the world rectangle the map is carved into — a width, a height and a chamber count                             |
-| `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
-| `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
-| `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
-| `elites` / `guardians` | the set pieces the carve places for you                                                                        |
-| `bystanders`           | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                   |
-| `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                          |
+| Field                   | What it says                                                                                                   |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `areas`                 | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
+| `size`                  | the world rectangle the map is carved into — a width, a height and a chamber count                             |
+| `layout`                | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
+| `objects`               | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
+| `horde`                 | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
+| `elites` / `guardians`  | the set pieces the carve places for you                                                                        |
+| `bystanders`            | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                   |
+| `arrivals` (on an area) | the STAFF LOT: people turn up here in cars, and the way in is the door one of them badges open (see below)     |
+| `boss`                  | who, and the candidate **compass regions** one is rolled from per run                                          |
 
 Everything else about the mission — its name, its story, its intro, its loot
 pools, its music, its merchant — is **inherited from the level it names**, so a
@@ -229,6 +230,37 @@ and it keeps the landing, the objective, every set piece and every placed item
 outside — so the key is always reachable without the key. `annex.lock` does the
 same to the boss annex's ELEVATOR: the pad is drawn and labelled, and the car
 does not come until the hero is carrying the pass.
+
+**…AND A DOOR SOMEBODY ELSE OPENS LOCKS A BUILDING.** The other kind of lock has
+no key at all: mark an area `arrivals: true` (an OUTSIDE district, `landing: true`,
+`horde: 0` — the schema insists on all three) and give the palette a door with
+`at: entrance`, and the carve hangs that door across every opening between the lot
+and everything else. Nothing unlocks it. What opens it is the MISSION's own
+`arrivals` block — people turning up for a shift:
+
+```yaml
+arrivals:
+  staff: [my_late_clerk, my_late_technician] # who gets out; NEUTRAL defs
+  guards: { enemy: my_lot_guard, count: 2 } # who is already out there
+  firstMs: 5000
+  everyMs: [18000, 26000]
+  maxCars: 3
+  thought: my_follow_them_in # the read that says what to do about it
+```
+
+Every so often a car rolls in off the map's edge, parks in a rank the carve lays
+along the lot, and somebody gets out and walks to the doors and badges through
+them. Following one is the way in — which makes the district's whole point a
+SEARCH: the lot is fogged like anything else, so the player has no idea which
+stretch of that wall has a door in it until he watches somebody use it. The
+autopilot understands the beat too, so a botted run plays it the same way.
+
+Two things to author around. The lot's cast is all **neutral**, because the hero
+is standing out there with nothing to do but watch — a hostile lot is a fight in
+the one place the venue wants quiet. And the beat is the ONLY way in, so keep the
+lot a **corner** of the map with room for a car to drive down: the carve needs a
+clear lane from an edge to the doors, and it will refuse the whole feature rather
+than lay one through a wall.
 
 **A VENUE MAY STAND UNDER A SKY, AND THEN IT KNOWS WHAT TIME IT IS.** Put
 `sky: earth` on the MISSION and the venue's light follows the player's own

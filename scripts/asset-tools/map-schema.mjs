@@ -583,6 +583,36 @@ export function validateMap(bp, refs, description = "") {
               `no idea which of its cells is a street`,
           );
       }
+      if (a.arrivals !== undefined) {
+        if (typeof a.arrivals !== "boolean")
+          err(`${where}: arrivals must be a boolean`);
+        // THE LOT IS WHERE THE HERO LANDS, and that is not a taste call: the
+        // whole beat is "you are standing outside a building you cannot see the
+        // way into", so a lot the hero never lands on is a car park with cars
+        // arriving on it that nobody watches.
+        else if (a.arrivals === true && a.landing !== true)
+          err(
+            `${where}: an \`arrivals\` district is where the hero lands — ` +
+              `set \`landing: true\` on it`,
+          );
+        // …and it is OUTSIDE, because the cars come in off the road.
+        else if (
+          a.arrivals === true &&
+          (a.space ?? DEFAULT_SPACE) !== "outside"
+        )
+          err(
+            `${where}: an \`arrivals\` district is outside — cars drive onto it`,
+          );
+        // …and NOTHING AMBIENT stands on it. The lot's cast is the level's own
+        // (`LevelDef.arrivals` — the guards and the staff arriving), all of it
+        // neutral; a knot of the building's horde on the same tarmac is the
+        // fight the beat exists to hold back until the hero is through the door.
+        else if (a.arrivals === true && (a.horde ?? 1) > 0)
+          err(
+            `${where}: an \`arrivals\` district carries no ambient horde — ` +
+              `set \`horde: 0\` (its people are the level's \`arrivals\` cast)`,
+          );
+      }
       if (a.lit !== undefined) {
         if (!isNum(a.lit) || a.lit < 0 || a.lit > 1)
           err(`${where}: lit must be a fraction in [0, 1]`);
@@ -659,6 +689,7 @@ export function validateMap(bp, refs, description = "") {
         "doors",
         "driveOut",
         "beat",
+        "arrivals",
         "label",
         "ground",
         "patch",
@@ -879,20 +910,32 @@ export function validateMap(bp, refs, description = "") {
           err(`${where}: trigger must be positive`);
       }
       if (o.type === "door") {
-        // A door has to be told WHERE to hang, and there are exactly two ways to
-        // say it. An entry that says neither compiles to a palette entry nothing
-        // ever reads — a door nobody hung, which looks from the YAML like a door
-        // that is simply never reached.
+        // A door has to be told WHERE to hang, and there are exactly three ways
+        // to say it. An entry that says none of them compiles to a palette entry
+        // nothing ever reads — a door nobody hung, which looks from the YAML
+        // like a door that is simply never reached.
         const byArea = (bp.areas ?? []).some((a) => a?.doors === o.id);
-        if (o.at !== undefined && o.at !== "spawn")
+        if (o.at !== undefined && o.at !== "spawn" && o.at !== "entrance")
           err(
             `${where}: a door only understands "at: spawn" (the hero's own ` +
-              `chamber); a district's doors are named by the district`,
+              `chamber) or "at: entrance" (every opening off an ` +
+              `\`arrivals\` district); a district's doors are named by the district`,
+          );
+        // …and `at: entrance` needs a lot to be the entrance TO. Without one the
+        // door hangs nowhere and the level's `arrivals` beat has no way in to
+        // walk to, which is a mission that cannot be started.
+        if (
+          o.at === "entrance" &&
+          !(bp.areas ?? []).some((a) => a?.arrivals === true)
+        )
+          err(
+            `${where}: "at: entrance" hangs a door between the staff lot and ` +
+              `the building, and no area is flagged \`arrivals: true\``,
           );
         if (o.at === undefined && !byArea)
           err(
-            `${where}: nothing hangs this door — give it "at: spawn", or name ` +
-              `it in an area's \`doors\``,
+            `${where}: nothing hangs this door — give it "at: spawn", ` +
+              `"at: entrance", or name it in an area's \`doors\``,
           );
         if (o.openSprite !== undefined) {
           if (typeof o.openSprite !== "string")

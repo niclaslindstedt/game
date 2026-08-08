@@ -160,6 +160,32 @@ export function drawVehicles(
       drawShip(ctx, vehicle, sprites, camera, timeMs);
     }
   }
+  // THE NIGHT SHIFT'S OWN CARS (`GameState.arrivals`, src/game/arrivals.ts) —
+  // the same assembly, drawn by the same function, because they ARE the same
+  // machine: one `CarVehicle` each, rolling in on its springs and then standing
+  // in the rank for the rest of the run.
+  //
+  // Two things they never get, and both are the same fact said twice — a
+  // visitor's car is somebody else's. NO BOARDABLE HALO: the amber "you can get
+  // in this" glow belongs to the wagon the hero drove here, and lighting up
+  // three more would be the lot advertising three cars he cannot take. And the
+  // ENGINE is read off the arrival's own phase rather than off a seat in the
+  // party, so the lamps and the idle shiver die when it parks.
+  for (const arrival of state.arrivals) {
+    const car = arrival.car;
+    if (!inView(car.pos.x, car.pos.y, 64)) continue;
+    const engineOn = arrival.phase === "driving" || arrival.phase === "parking";
+    drawCarAssembly(
+      ctx,
+      car,
+      sprites,
+      camera,
+      timeMs,
+      undefined,
+      undefined,
+      engineOn,
+    );
+  }
   // Wheels that came off, mid-bounce or at rest: drawn lifted by their own
   // height, spinning from their own run-out speed (see WheelDebris).
   for (const wheel of state.wheelDebris) {
@@ -416,6 +442,14 @@ export function drawCarAssembly(
    * is not a panel: it picks blood up by rolling through it rather than by
    * being hit, and it loses it again as the tread wears clean. */
   wheels?: readonly CoatLayer[],
+  /**
+   * IS THE ENGINE ON? Defaults to "somebody is at the wheel", which is the
+   * answer for every car a hero can climb into — and the wrong one for a
+   * VISITOR'S car (`GameState.arrivals`), which has a driver in it that is not
+   * a seat in the party. Passed rather than derived from `speed`, because a car
+   * that has pulled up and not yet opened its door is still running.
+   */
+  engineOn?: boolean,
 ): void {
   // The shell's attitude: each corner sinks by its own spring AND whatever
   // its wheel no longer holds up, and the whole body pitches between the
@@ -428,7 +462,7 @@ export function drawCarAssembly(
   // to for a whole minute) it read as the picture being broken rather than as
   // an engine turning over. A quarter of the rate is a lump, which is what an
   // old estate idling actually looks like from ten feet away.
-  const running = car.driver !== null;
+  const running = engineOn ?? car.driver !== null;
   const shiver = running ? (Math.floor(timeMs / 180) % 2 === 0 ? 0 : -1) : 0;
   const rearDrop = axleDrop(car, 0) + shiver;
   const frontDrop = axleDrop(car, 1) + shiver;

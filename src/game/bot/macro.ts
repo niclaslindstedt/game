@@ -42,6 +42,7 @@ import {
 import { allyCoverTarget, partyLeash } from "./party-play.ts";
 import { errandGiver, questObjectiveTarget } from "./errands.ts";
 import { hubGoal } from "./hub.ts";
+import { entranceGoal, lockedOut } from "./entrance.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
@@ -385,6 +386,16 @@ function ownMacroTarget(
   // other level, which leaves the ladder untouched.
   const home = hubGoal(bot, state, hero, errand);
   if (home) return home.pos;
+  // LOCKED OUT (`entrance.ts`). While the staff lot's entrance is shut there is
+  // no level to play: every rung below this one wants something behind a wall
+  // with a keyed door in it, and the key does not exist — it opens when a member
+  // of staff arrives and badges in, on a clock nothing the bot does can move. So
+  // the bot does what the beat is teaching and falls in behind whoever is
+  // crossing the tarmac. It sits ABOVE the hunt for the same reason the hub does:
+  // there is nothing under it to lose to, and everything under it points at a
+  // wall. Null on every map without arrivals, and the instant the doors move.
+  const waiting = entranceGoal(state, hero);
+  if (waiting) return waiting.pos;
   // The ANTI-LOITER hunt: gone too long without a fight, the bot marches on
   // the latched foe before any other errand — moving toward the enemy IS the
   // point (only the weapon-starved shop run above still outranks it).
@@ -528,6 +539,13 @@ function macroThought(
   const home = hubGoal(bot, state, hero, wantsMerchantVisit(state, hero));
   if (home && home.pos.x === goal.x && home.pos.y === goal.y)
     return home.thought;
+  // Waiting outside GOODCO's entrance, or walking in behind somebody who can
+  // open it (entrance.ts) — the two carry their own labels, because a hero
+  // crossing a car park toward nothing readable is exactly the picture a reader
+  // would otherwise go looking through the nav code to explain.
+  const waiting = entranceGoal(state, hero);
+  if (waiting && waiting.pos.x === goal.x && waiting.pos.y === goal.y)
+    return waiting.thought;
   const hunt = seekTarget(bot, state);
   if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
   if (
@@ -634,6 +652,20 @@ export function unstuckInput(
   // map with walls in it (see `navigatesWalls`). A genuinely open field never
   // wedged the old bot, so leave it untouched.
   if (!navigatesWalls(state)) return null;
+  // STANDING STILL ON PURPOSE IS NOT A WEDGE. Waiting at GOODCO's entrance for
+  // somebody to come and badge it (`entrance.ts`) is a hero who is exactly
+  // where he means to be with nothing to fight and nowhere to go — every
+  // condition the escape sweep tests for, and the one time acting on them is
+  // wrong. Left in, the sweep drags him off the doorstep every two and a half
+  // seconds and he is halfway down the lot when the doors finally move.
+  if (lockedOut(state, hero)) {
+    if (bot.nav) {
+      bot.nav.stuckMs = 0;
+      bot.nav.escaping = false;
+      bot.nav.escapeHeading = null;
+    }
+    return null;
+  }
   const p = hero.pos;
   const now = state.stats.timeMs;
   if (!bot.nav) {

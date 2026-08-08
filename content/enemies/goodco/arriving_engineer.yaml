@@ -1,0 +1,19 @@
+id: arriving_engineer
+name: NIGHT SHIFT ENGINEER
+lore: >-
+  Second one in tonight, and the only person on the campus who has read the
+  rota. He parks in the same bay every shift, walks the same forty steps, and
+  taps the same reader — which is the whole reason somebody watching from
+  behind a parked car learns anything at all.
+role: minion
+sprite: engineer
+disposition: neutral
+hp: 34
+speed: 21
+radius: 8
+contactDamage: 10
+critChance: 0.05
+contactCooldownMs: 750
+ai:
+  aggroRadius: 340
+  idle: work

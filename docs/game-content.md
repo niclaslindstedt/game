@@ -37,6 +37,39 @@ authored on the hub as `travelDoors`, and **a road the player has not earned is
 never named** — a door with no open destination either says so in the hero's own
 voice (`unready`) or is not drawn at all.
 
+## A door that only somebody else can open
+
+Most of what a venue keeps behind a lock, it keeps behind a **keycard** — a story
+item on a body, carried up to the chain (`LevelDef.doors`, `opens: "key"`). One
+door in the campaign is the other kind: it has no key anywhere in the game, and
+the only thing that ever opens it is **somebody else using it**.
+
+That is `LevelDef.arrivals` (`src/game/arrivals.ts`), and GOODCO's front door is
+the case it exists for. The hero lands on the **staff lot** — an arrival district
+(`MapArea.arrivals`) carrying no ambient horde at all — with the building's wall
+in front of him and the fog over every inch of it. Every so often a car rolls in
+off the road, parks in the rank, and a member of the night shift gets out and
+walks to a door in that wall and badges through it. Following one is how the way
+in is found, and it is the only way in there is.
+
+Three rules hold the beat together and each is load-bearing:
+
+- **The lot's whole cast is NEUTRAL** — the guards already standing on it and the
+  staff arriving. The hero walks onto it holstered (the level's scripted first
+  blow waits INSIDE, past the doors), so anything out there that could fight him
+  would be a fight he cannot answer.
+- **It may never stop happening.** The entrance is the only way on with the
+  mission, so an arrival that starts walking always badges — a walker whose leg
+  times out moves on rather than retrying — and a run whose door is still shut
+  with nobody walking toward it pulls the next car forward.
+- **It spends nothing off `state.rng`.** A car park is presentation, and a draw
+  spent on presentation shifts every loot roll after it, so the lot's own
+  decisions ride a private stream parked on `ArrivalPlan.rng`.
+
+The autopilot knows the beat too (`bot/entrance.ts`): locked out, it falls in
+behind whoever is crossing the tarmac instead of pressing the wall the objective
+is behind.
+
 ## Home knows what time it is
 
 A venue may stand under a **sky** (`sky: earth` on the mission), and then its

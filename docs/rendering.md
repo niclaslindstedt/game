@@ -1314,6 +1314,14 @@ every time.
   whether a fixture wants one — a rocket on a lawn is self-evidently a thing you
   press, and a thirty-year-old hatchback in a garage full of furniture is
   furniture until something says otherwise.
+  **A VISITOR'S CAR NEVER GETS ONE**, and the reason is the same test read the
+  other way: the night shift's cars on GOODCO's staff lot
+  (`GameState.arrivals` — src/game/arrivals.ts) are drawn by the same
+  `drawCarAssembly`, on the same springs, out of the same panels, but three
+  amber halos on a car park would be the lot advertising three machines the hero
+  cannot take. Their engines are read off the ARRIVAL's own phase rather than
+  off a seat in the party, so the lamps and the idle shiver die as each one
+  parks and it becomes what it now is — furniture with an owner.
 - **IT OBEYS THE XP VEIL'S THREE RULES** (`render/xp-veil.ts`, where the
   reasoning lives): closed-form off the render clock, so there is no state and
   nothing to desync; ONE baked `glowSprite` scaled and alpha'd at draw time,

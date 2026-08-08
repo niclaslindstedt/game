@@ -579,6 +579,12 @@ export {
   createVehicles,
   vehicleFootprint,
 } from "./game/vehicles.ts";
+// THE STAFF LOT — the night shift turning up for a shift, and the keyed
+// entrance one of them opens (see arrivals.ts). `ARRIVALS` and the door id are
+// what a test, a scenario or a mod's own lot reads; the two steps are the
+// engine's own and are called from `createGame` and `step`.
+export { ARRIVALS } from "./game/config/index.ts";
+export { ENTRANCE_DOOR, openArrivals, stepArrivals } from "./game/arrivals.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop, and so is the LOG
 // (`openQuestLog`, raised from the HUD's own `!` button, exactly as the map

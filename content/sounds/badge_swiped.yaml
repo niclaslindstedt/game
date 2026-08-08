@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: badge_swiped
+description: >-
+  A card against the reader at GOODCO's front door: one clean two-tone accept
+  chirp and the servo clunk of the lock letting go. It fires a beat BEFORE the
+  doors themselves move (`door_opened`), because the whole point of the sound
+  is that the player hears the CARD and then watches the building answer it —
+  which is the one thing the level needs him to learn.
+on:
+  type: badgeSwiped
+voices:
+  # The reader's accept: two clean square pips, up a fifth. Every door in every
+  # office building the player has ever walked into makes roughly this noise.
+  - call: tone
+    type: square
+    from: 1760
+    to: 1760
+    durationMs: 55
+    volume: 0.035
+  - call: tone
+    type: square
+    from: 2637
+    to: 2637
+    durationMs: 70
+    volume: 0.035
+    delayMs: 70
+  # The bolt letting go — a short dry servo clunk under the second pip.
+  - call: noise
+    durationMs: 50
+    volume: 0.04
+    delayMs: 150
+    filter:
+      type: bandpass
+      frequency: 620

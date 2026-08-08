@@ -300,6 +300,60 @@
     "sprite": "archive_unit",
     "xpMobMult": 1.4
   },
+  "arriving_engineer": {
+    "ai": {
+      "aggroRadius": 340,
+      "idle": "work"
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 10,
+    "critChance": 0.05,
+    "disposition": "neutral",
+    "hp": 34,
+    "id": "arriving_engineer",
+    "lore": "Second one in tonight, and the only person on the campus who has read the rota. He parks in the same bay every shift, walks the same forty steps, and taps the same reader — which is the whole reason somebody watching from behind a parked car learns anything at all.",
+    "name": "NIGHT SHIFT ENGINEER",
+    "radius": 8,
+    "role": "minion",
+    "speed": 21,
+    "sprite": "engineer"
+  },
+  "arriving_intern": {
+    "ai": {
+      "aggroRadius": 340,
+      "idle": "work"
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 6,
+    "critChance": 0.05,
+    "disposition": "neutral",
+    "hp": 18,
+    "id": "arriving_intern",
+    "lore": "Late, unpaid and badged onto a shift the roster does not admit exists. He has the card because somebody upstairs could not be bothered to fill in the form that would have stopped him having one.",
+    "name": "NIGHT SHIFT INTERN",
+    "radius": 8,
+    "role": "minion",
+    "speed": 24,
+    "sprite": "intern"
+  },
+  "arriving_scientist": {
+    "ai": {
+      "aggroRadius": 340,
+      "idle": "work"
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 9,
+    "critChance": 0.05,
+    "disposition": "neutral",
+    "hp": 30,
+    "id": "arriving_scientist",
+    "lore": "Badged on at half past midnight with a coffee going cold in the cupholder. Nobody told the arriving shift the building was locked down, which is why she is walking across the car park at a perfectly ordinary pace, and why her card still opens the doors.",
+    "name": "NIGHT SHIFT SCIENTIST",
+    "radius": 8,
+    "role": "minion",
+    "speed": 22,
+    "sprite": "scientist"
+  },
   "assembler": {
     "ai": {
       "aggroRadius": 400,
@@ -2232,6 +2286,24 @@
     "speed": 18,
     "sprite": "one_armed_bandit",
     "wealth": 3
+  },
+  "parking_guard": {
+    "ai": {
+      "aggroRadius": 420,
+      "idle": "work"
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.12,
+    "disposition": "neutral",
+    "hp": 64,
+    "id": "parking_guard",
+    "lore": "Contract security again, but the outdoor rotation: a car park, a clipboard, and a list of plates that are allowed to be on it. Nothing has ever happened out here and he has been told, in writing, that nothing is going to. He is watching the bays, not the tarmac between them.",
+    "name": "PARKING GUARD",
+    "radius": 9,
+    "role": "minion",
+    "speed": 24,
+    "sprite": "guard"
   },
   "payload_1": {
     "ai": {

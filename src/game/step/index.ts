@@ -28,6 +28,7 @@ import { stepElevators } from "../elevator.ts";
 import { stepLairs } from "../lairs.ts";
 import { stepCompanions } from "../companions.ts";
 import { GATES, RUN } from "../config/index.ts";
+import { stepArrivals } from "../arrivals.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
@@ -394,6 +395,12 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
   stepStampedes(state, dt, dtMs);
+  // THE STAFF LOT (arrivals.ts): a car rolls in, somebody gets out, walks to
+  // the entrance and badges in. It runs alongside the hazards because it is the
+  // same kind of thing — a beat the WORLD plays rather than the hero — and
+  // after the horde has moved, so the body it walks was already pushed clear of
+  // whatever it was standing in this tick.
+  stepArrivals(state, dtMs);
   // Burning floor a boss's beam laid — a hazard the FIGHT brings, not the map.
   stepScorches(state, dtMs);
   // BAIT a boss threw down — armed, aged, and set off by a hero who went for it.

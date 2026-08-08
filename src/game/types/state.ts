@@ -46,6 +46,8 @@ import type {
   StampedeWarn,
 } from "./hazards.ts";
 import type {
+  Arrival,
+  ArrivalPlan,
   Critter,
   Decor,
   DialogueState,
@@ -978,6 +980,19 @@ export type GameState = {
   /** Countdown to the next approach-rumble grain (config STAMPEDES.rumbleEveryMs);
    * the herd's roll is emitted on this cadence (levels with LevelDef.stampedes). */
   stampedeRumbleMs: number;
+  /**
+   * THE NIGHT SHIFT TURNING UP (levels with `LevelDef.arrivals`): every car
+   * that has rolled onto the lot this run, from the moment it appears at the
+   * kerb to long after it is parked and its driver has gone inside. A finished
+   * arrival is KEPT — the car it left behind is part of the car park now.
+   */
+  arrivals: Arrival[];
+  /** Ms until the next car rolls in (levels with `LevelDef.arrivals`). */
+  arrivalTimerMs: number;
+  /** The lot's geometry, worked out once when the run was built — the access
+   * lane, the rank, and the doorway the badge opens. Null on every level with
+   * no arrivals, and on one whose carve left the lot no way in. */
+  arrivalPlan: ArrivalPlan | null;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

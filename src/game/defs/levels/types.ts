@@ -706,6 +706,27 @@ export type LevelDef = {
    */
   merchantBeat?: Zone[];
   /**
+   * THE STAFF LOT'S OWN LIFE (see `src/game/arrivals.ts`): people turning up
+   * for a shift, in cars, and walking in through a door they have the badge
+   * for. Present, it turns the level's arrival district from a car park with a
+   * horde standing in it into a car park with a WAY IN somewhere along its
+   * wall — and following somebody who knows where that is, is the mission's
+   * opening puzzle rather than a corridor to walk down.
+   *
+   * The MISSION owns everything here; the CARVE owns where it happens
+   * ({@link LevelDef.arrivalLot} and the `entrance` door it hangs).
+   */
+  arrivals?: ArrivalsSpec;
+  /**
+   * WHERE THE CARS ROLL IN (carve-owned — the districts flagged
+   * `arrivals: true` on the blueprint, as plain rects). The whole cell, like
+   * the road out above: the lot IS the ground the arrivals happen on, so a
+   * circle inside it would leave half the tarmac out of the beat.
+   *
+   * Absent on a mission — a mission has no map to put a car park on.
+   */
+  arrivalLot?: Zone[];
+  /**
    * QUIET ZONES / DEAD AREAS (see `src/game/zones.ts`): regions where the
    * ambient wave/pack horde does NOT spawn — a lull in the pressure — but
    * authored content still lives: a `chest` to find, a lone rare/unique mob
@@ -1447,6 +1468,65 @@ export type PlaceThoughtTrigger = {
    * hub's "take the car" always lands before its "you are walking".
    */
   after?: string;
+};
+
+/**
+ * THE STAFF TURNING UP FOR A SHIFT (`LevelDef.arrivals`, `src/game/arrivals.ts`).
+ *
+ * A car rolls onto the lot every so often, parks in the rank, and whoever was
+ * driving it gets out and walks to a door in the building's wall — and BADGES
+ * IN. That door (`door`, hung by the carve across every opening between the lot
+ * and the building) is a KEYED door no story item in the game unlocks, so it is
+ * the one way in that the hero cannot simply walk up to: he has to see somebody
+ * else use it, and go through with them.
+ *
+ * THE POINT OF IT IS THE SEARCH, NOT THE LOCK. The lot is fogged like anything
+ * else, so a player who lands beside his own car has no idea which stretch of
+ * that wall has a door in it. Somebody arriving is a POINTER — the one thing on
+ * the tarmac that knows where it is going — and following one is the mission's
+ * first move. `thought` is the read that says so, out loud, the first time one
+ * of them steps out of a car.
+ *
+ * EVERYBODY NAMED HERE IS A NEUTRAL (the schema refuses a hostile def), which
+ * is what makes the lot a place the hero has not been noticed in yet rather
+ * than a fight he walks into holstered.
+ */
+export type ArrivalsSpec = {
+  /**
+   * Who turns up — ENEMY_DEFS ids, one rolled per car. A list rather than one
+   * id because a car park with the same person getting out of every car is a
+   * loop rather than a night shift.
+   */
+  staff: string[];
+  /**
+   * THE LOT'S OWN STANDING POPULATION: the people who are already there when
+   * the hero lands, minted once at level creation and spread over the tarmac.
+   * They are the whole of the lot's cast — the ambient horde is off out here
+   * (`MapArea.horde: 0`), because a car park full of staff to fight is the
+   * building's beat playing outside the building.
+   */
+  guards?: {
+    /** ENEMY_DEFS id — neutral, like everybody else on the lot. */
+    enemy: string;
+    count: number;
+  };
+  /** Ms before the FIRST car rolls in. Short: the beat it teaches is the one
+   * the player needs before he can do anything else. */
+  firstMs?: number;
+  /** Ms between the ones after it, rolled uniformly in the band. */
+  everyMs: [number, number];
+  /**
+   * How many cars may stand on the lot at once — the rank's length. Reached,
+   * the arrivals stop: a car park that keeps filling forever is a queue.
+   */
+  maxCars?: number;
+  /** THOUGHT_DEFS id fired once, when the first of them steps out of a car. */
+  thought?: string;
+  /**
+   * The door the badge opens (`LevelDef.doors[].id`). Defaults to `entrance`,
+   * which is what the carve hangs across the lot's own openings.
+   */
+  door?: string;
 };
 
 /**

@@ -61,6 +61,37 @@ stampedes:
   # SECOND-HALF beat of the assembly floor, so the opening aisles — where a
   # fresh player is still learning to steer and jump — stay clear of the herd.
   afterProgress: 0.5
+# THE STAFF LOT, AND THE WAY IN (src/game/arrivals.ts). The hero lands on a car
+# park with a building in front of him and no visible door — the fog is over the
+# whole wall — so the mission's first move is finding one. What tells him where
+# it is, is the night shift: a car rolls in every twenty seconds or so, somebody
+# gets out, walks to the entrance and TAPS A CARD, and the doors open. He goes
+# in behind them.
+#
+# The entrance is a KEYED door with no key anywhere in the game (the blueprint's
+# `entrance` object), so this is not a shortcut past a door he could have opened
+# himself — it is the door. Everybody out here is NEUTRAL: two parking guards
+# who are not looking for anybody, and staff who have not been told the building
+# is locked down. The lot's ambient horde is off (`horde: 0` on the blueprint's
+# `lot`), which is the other half of the same decision — the fight starts INSIDE,
+# where the opening strike now plays.
+arrivals:
+  staff:
+    - arriving_scientist
+    - arriving_engineer
+    - arriving_intern
+  guards:
+    enemy: parking_guard
+    count: 2
+  # Soon, but not instantly: long enough for the doorstep monologue to clear and
+  # for the player to have looked around the lot and found nothing.
+  firstMs: 5000
+  everyMs: [18000, 26000]
+  # Three cars over the opening minutes and then the lot is full. A car park
+  # that keeps filling forever is a queue, and the beat has done its work after
+  # the first one anyway.
+  maxCars: 3
+  thought: goodco_follow_in
 merchant:
   sprite: merchant_vendor
   # What he says across the counter, every visit (see `merchant.line`) — a

@@ -6,6 +6,9 @@
     "apollo_ghost",
     "architect",
     "archive_unit",
+    "arriving_engineer",
+    "arriving_intern",
+    "arriving_scientist",
     "assembler",
     "bro_alpha",
     "bro_beta",
@@ -57,6 +60,7 @@
     "nikola_tesla",
     "olympus_engine",
     "one_armed_bandit",
+    "parking_guard",
     "payload_1",
     "permafrost_saint",
     "phobos_shepherd",
@@ -117,6 +121,9 @@
     "apollo_ghost": "elite",
     "architect": "elite",
     "archive_unit": "minion",
+    "arriving_engineer": "minion",
+    "arriving_intern": "minion",
+    "arriving_scientist": "minion",
     "assembler": "minion",
     "bro_alpha": "boss",
     "bro_beta": "boss",
@@ -168,6 +175,7 @@
     "nikola_tesla": "elite",
     "olympus_engine": "minion",
     "one_armed_bandit": "minion",
+    "parking_guard": "minion",
     "payload_1": "boss",
     "permafrost_saint": "minion",
     "phobos_shepherd": "minion",
@@ -688,6 +696,7 @@
     "garage_take_the_car",
     "goodco_armed",
     "goodco_first_blow",
+    "goodco_follow_in",
     "goodco_second_blow",
     "goodco_staff",
     "goodco_successor",
@@ -1508,6 +1517,8 @@
     "derelict_rover_hurt_1",
     "desk",
     "door",
+    "door_entrance",
+    "door_entrance_open",
     "door_locked",
     "door_office",
     "door_office_open",
@@ -3464,8 +3475,10 @@
     "achievement_unlocked",
     "apparition_vanished",
     "armor_broke",
+    "arrival_parked",
     "asteroid_kill",
     "auto_equipped",
+    "badge_swiped",
     "bait_detonated",
     "bait_dropped",
     "barrier_absorbed",
@@ -3694,6 +3707,12 @@
       },
       "what": "Something rigid giving way — a hard bandpassed crack, a ringing shard above it, then a sawtooth plunging two octaves as the piece falls off."
     },
+    "arrival_parked": {
+      "on": {
+        "type": "arrivalParked"
+      },
+      "what": "Somebody parking for a shift, heard from across a car park: the engine sags off and dies, and a beat later a door goes — one flat slam, no cough and no handle rattle. Deliberately thinner and further away than `car_stop`, which is the hero's own car at his elbow; this one is the sound that makes him look up, so it has to read as A CAR, over there, with somebody getting out of it."
+    },
     "asteroid_kill": {
       "on": {
         "type": "asteroidKill"
@@ -3705,6 +3724,12 @@
         "type": "autoEquipped"
       },
       "what": "The replacement clacking into the hand (mirrors the UI equip)."
+    },
+    "badge_swiped": {
+      "on": {
+        "type": "badgeSwiped"
+      },
+      "what": "A card against the reader at GOODCO's front door: one clean two-tone accept chirp and the servo clunk of the lock letting go. It fires a beat BEFORE the doors themselves move (`door_opened`), because the whole point of the sound is that the player hears the CARD and then watches the building answer it — which is the one thing the level needs him to learn."
     },
     "bait_detonated": {
       "on": {
@@ -4836,10 +4861,12 @@
     "abilityStarted",
     "apparitionVanished",
     "armorBroke",
+    "arrivalParked",
     "asteroidImpact",
     "asteroidKill",
     "autoEquipped",
     "autopilotStopped",
+    "badgeSwiped",
     "baitDetonated",
     "baitDropped",
     "barrierAbsorbed",

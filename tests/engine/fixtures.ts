@@ -261,6 +261,25 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   // A dialogue-only APPARITION (mirrors the rift's historic residents): an
   // elite-role speaker nothing can hit — it rushes in, delivers its scene,
   // then walks off and dissolves (config APPARITION.lingerMs).
+  // A NEUTRAL body — somebody who is simply not fighting anybody (see
+  // disposition.ts `inert`). The staff lot's whole cast is this kind: the
+  // guards who are already there and the people arriving for a shift, none of
+  // whom the hero may hit and none of whom will hit him.
+  test_bystander: {
+    id: "test_bystander",
+    name: "TEST BYSTANDER",
+    lore: "A synthetic fixture bystander: a person going about their evening, who is not in the fight and cannot be talked into one.",
+    role: "minion",
+    sprite: "test_bystander",
+    disposition: "neutral",
+    hp: 30,
+    speed: 20,
+    radius: 8,
+    contactDamage: 0,
+    critChance: 0,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 300, idle: "work" },
+  },
   test_apparition: {
     id: "test_apparition",
     name: "TEST APPARITION",
@@ -1874,6 +1893,41 @@ export const FIX_STAMPEDE_LEVEL: LevelDef = hazardLevel("test_stampede_level", {
   stampedes: { everyMs: [800, 800] },
 });
 
+// A STAFF LOT with an entrance in it (`LevelDef.arrivals`, src/game/arrivals.ts).
+//
+// It is a FIXTURE for the same reason the locked-door level is: the shipped
+// venue carves its lot and its doorway fresh every run, and the ENGINE rule —
+// a car rolls in, somebody gets out, walks to a keyed door and opens it — is a
+// rule about any level that turns the beat on. So the geometry is hand-drawn
+// here: a rectangle of tarmac along the map's western edge, and a single
+// `entrance` door across the wall at its eastern side, with the hero landing on
+// the lot in front of it.
+//
+// The door carries NO `opens`, which makes it a KEY door — and nothing in this
+// ladder unlocks `entrance`, which is precisely the shipped arrangement: the
+// only thing that ever opens it is somebody badging in.
+export const FIX_ARRIVALS_LEVEL: LevelDef = hazardLevel("test_arrivals_level", {
+  playerSpawn: { x: 400, y: 800 },
+  arrivalLot: [
+    { shape: "rect", rect: { x: 0, y: 600, width: 700, height: 400 } },
+  ],
+  doors: [
+    {
+      id: "entrance",
+      from: { x: 700, y: 740 },
+      to: { x: 700, y: 860 },
+      radius: 10,
+    },
+  ],
+  arrivals: {
+    staff: ["test_bystander"],
+    guards: { enemy: "test_bystander", count: 2 },
+    firstMs: 1000,
+    everyMs: [4000, 4000],
+    maxCars: 2,
+  },
+});
+
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   "test_apparition_level",
@@ -2344,6 +2398,7 @@ export function installFixtures(force = false): void {
       test_spawner_early_level: FIX_SPAWNER_EARLY_LEVEL,
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
       test_alarm_level: FIX_ALARM_LEVEL,
+      test_arrivals_level: FIX_ARRIVALS_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

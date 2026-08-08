@@ -1,0 +1,19 @@
+id: parking_guard
+name: PARKING GUARD
+lore: >-
+  Contract security again, but the outdoor rotation: a car park, a clipboard,
+  and a list of plates that are allowed to be on it. Nothing has ever happened
+  out here and he has been told, in writing, that nothing is going to. He is
+  watching the bays, not the tarmac between them.
+role: minion
+sprite: guard
+disposition: neutral
+hp: 64
+speed: 24
+radius: 9
+contactDamage: 18
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 420
+  idle: work

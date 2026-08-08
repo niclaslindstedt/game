@@ -67,6 +67,14 @@ const SKIES = new Set(["earth"]);
 /** What `placeThoughts[].where` may say — the engine's `PlaceThoughtWhere`. */
 const PLACE_THOUGHT_WHERE = new Set(["arrival", "pastDoor"]);
 
+/**
+ * The one door id with no key behind it — the engine's `ENTRANCE_DOOR`
+ * (src/game/arrivals.ts), hung by the carve across every opening off an
+ * `arrivals` district. Spelled out here for the same reason the skies are: this
+ * file is tooling the compile runs BEFORE the engine catalogs exist.
+ */
+const ENTRANCE_DOOR = "entrance";
+
 const isVec = (v) => v && typeof v.x === "number" && typeof v.y === "number";
 
 /**
@@ -258,6 +266,37 @@ export function validateLevel(def, refs, description = "", options = {}) {
     if (carved && !isVec(def.openingStrike.at))
       err("openingStrike needs an { at }");
   }
+  // THE STAFF LOT (see `ArrivalsSpec`). Everything positional about it is the
+  // carve's — which district the cars roll onto, where the entrance landed — so
+  // what a mission can get wrong here is the CAST and the CLOCK, and both are
+  // silent failures: an empty `staff` list is a car nobody gets out of, and a
+  // door that no arrival ever reaches is a mission that cannot be started.
+  if (def.arrivals) {
+    const a = def.arrivals;
+    if (!Array.isArray(a.staff) || a.staff.length === 0)
+      err("arrivals needs a non-empty `staff` list — somebody has to get out");
+    for (const id of a.staff ?? []) enemy(id, "arrivals.staff");
+    if (a.guards) {
+      enemy(a.guards.enemy, "arrivals.guards");
+      if (!Number.isInteger(a.guards.count) || a.guards.count < 0)
+        err("arrivals.guards.count must be a whole number of people");
+    }
+    if (
+      !Array.isArray(a.everyMs) ||
+      a.everyMs.length !== 2 ||
+      !(a.everyMs[0] > 0) ||
+      a.everyMs[1] < a.everyMs[0]
+    ) {
+      err("arrivals.everyMs must be an ascending [min, max] pair of ms");
+    }
+    if (a.firstMs !== undefined && !(a.firstMs >= 0))
+      err("arrivals.firstMs must be a non-negative number of ms");
+    if (
+      a.maxCars !== undefined &&
+      (!Number.isInteger(a.maxCars) || a.maxCars < 1)
+    )
+      err("arrivals.maxCars must be at least 1 — the rank needs a bay in it");
+  }
 
   // ---- thought references ----------------------------------------------------
   const thought = (id, where) => {
@@ -294,6 +333,7 @@ export function validateLevel(def, refs, description = "", options = {}) {
       );
     }
   }
+  thought(def.arrivals?.thought, "arrivals");
   if (def.openingStrike) {
     thought(def.openingStrike.thought, "openingStrike");
     thought(def.openingStrike.after, "openingStrike.after");
@@ -443,6 +483,11 @@ export function validateLevel(def, refs, description = "", options = {}) {
     // An APPROACH door (the garage door) opens on proximity — no key exists
     // for it, by design. Every KEY door still owes a story item.
     if (d.opens === "approach") continue;
+    // …and so does THE ENTRANCE, for the opposite reason: it is a keyed door
+    // that DELIBERATELY has no key, because the only thing that opens it is a
+    // member of staff badging in (`arrivals`, src/game/arrivals.ts). A story
+    // item for it would hand the hero a way past the whole beat.
+    if (d.id === ENTRANCE_DOOR) continue;
     if (!refs.doorKeys.has(d.id))
       err(`locked door "${d.id}" has no story-item key that unlocks it`);
   }

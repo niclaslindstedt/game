@@ -826,6 +826,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   back on the page — and the character — it was holding. The crawl itself is
   held while any screen covers it (`useTypewriter`'s `paused`), so no line is
   printed to a stage nobody can see.
+- **`src/game/arrivals.ts`** — THE STAFF LOT, and the way into GOODCO. A level
+  with `LevelDef.arrivals` on it rolls a car onto its arrival district
+  (`MapArea.arrivals`) every so often; the car parks and becomes furniture,
+  somebody gets out and walks the footpath to the ENTRANCE, and BADGES IN. That
+  entrance is a keyed door no story item in the game unlocks, so following one
+  through is not the fastest way in, it is the only one — which turns "get inside
+  GOODCO" from walking at a wall until it opens into watching where the night
+  shift goes. It BORROWS THE CAR WHOLE, exactly as the drive below does: a real
+  `CarVehicle` through `createCar`/`integrateCarBody`, kept out of
+  `state.vehicles` because everything in that list is a machine a hero may climb
+  into. The lot's geometry is worked out ONCE, from the finished carve
+  (`ArrivalPlan` — the lane a car can actually be driven down, the rank, the
+  doorway), and nothing here draws on `state.rng`: the whole beat is
+  presentation, and a draw spent on presentation shifts every loot roll after
+  it. The autopilot has its own rung for it (`bot/entrance.ts`), because a bot
+  that did not know the door was coming pressed the wall the objective was
+  behind for the rest of the run.
 - **`src/game/drive/`** — THE DRIVE: the playable leg between the garage and
   GOODCO, and the same road home. **Not a level and not a `GamePhase`** — a
   drive is its own small world (one car, four lanes, a minute of road) with its

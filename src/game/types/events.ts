@@ -840,6 +840,20 @@ export type GameEvent =
    */
   | { type: "carDeparted"; pos: Vec2; to: string }
   /**
+   * A VISITOR'S CAR PULLED UP AND SHUT OFF (`stepArrivals`) — the night shift
+   * arriving. The app plays the engine dying and the door going, which is what
+   * makes a car that has stopped read as a car somebody is getting OUT of; the
+   * body itself follows a beat later.
+   */
+  | { type: "arrivalParked"; pos: Vec2 }
+  /**
+   * A BADGE WENT ACROSS THE READER at the entrance (`stepArrivals`) — the
+   * beep, and then the doors. It fires a beat BEFORE the door's own
+   * `doorOpened`, on purpose: the swipe is the thing the player has to see the
+   * doors answer, or the entrance reads as having opened by itself.
+   */
+  | { type: "badgeSwiped"; pos: Vec2 }
+  /**
    * The hero met the wandering merchant for the first time: he stops
    * wandering, pins the level map, and his stall is now open at `pos`. The
    * app toasts the meeting and can chime a till.
