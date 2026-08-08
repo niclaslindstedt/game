@@ -1232,10 +1232,11 @@ export const DRIVE = {
      * (`HARD_BODY_JOULES`, pwa/src/game/drive-screen/drive-sounds.ts). What the
      * player hears and what the player sees have to be the same fact about the
      * hit, or the road is telling them two stories: the take that crunches is
-     * the take that takes somebody in two. Against `solveImpact`'s own measured
-     * shares on MEDIUM (see that file's table), it lands a square hit above
-     * about 48 mph and a hard clip at the top end on the split side, and leaves
-     * every gentle contact a knock-down.
+     * the take that takes somebody in two. Measured against `solveImpact`'s own
+     * answers on MEDIUM, it lands a square hit above about 60 mph and a hard
+     * clip at the top end on the split side, and leaves every gentle contact a
+     * knock-down — which is a knock-down and not an absence: the wheels behind
+     * the bumper still cut what they find (`wheelCutPartPx`).
      */
     splitJoules: 0.009,
     /**
@@ -1265,12 +1266,15 @@ export const DRIVE = {
      * into three. A bumper going THROUGH somebody and a bumper taking them APART
      * are different amounts of violence and the road can afford to say so:
      *
-     *   under the split (~68 mph)   KNOCKED DOWN. A body in the road and blood
-     *                               on the tarmac, and nothing else at all.
-     *   the split to here           TAKEN IN TWO. Two halves with their cut
-     *                               faces open, dragged and run over — still no
-     *                               shower of anybody's insides.
-     *   past here (~86 mph)         OPENED UP. The halves, and what was between
+     *   under the split (~60 mph)   KNOCKED DOWN. A body in the road and blood
+     *                               on the tarmac, and nothing else at all —
+     *                               until the WHEELS reach it, which cut it in
+     *                               two where it lies (`wheelCutPartPx`) and are
+     *                               a different question from this ladder.
+     *   the split to here           TAKEN IN TWO BY THE BUMPER. Two halves with
+     *                               their cut faces open, dragged and run over —
+     *                               still no shower of anybody's insides.
+     *   past here (~78 mph)         OPENED UP. The halves, and what was between
      *                               them, all over the road.
      *
      * The middle rung is the one this number buys, and it is the rung a player
@@ -1397,6 +1401,26 @@ export const DRIVE = {
     crushReachPx: 7,
     crushShove: 0.35,
     crushCooldownMs: 300,
+    /**
+     * HOW FAR THE TWO HALVES PART WHEN A WHEEL CUTS A WHOLE BODY IN TWO (world
+     * px) — the OTHER way somebody is taken in two out here, and the one that
+     * needs no speed at all.
+     *
+     * `splitJoules` is a question about the BLOW: did the bumper go THROUGH
+     * them, which under about sixty it does not. A wheel is not asking that. A
+     * tonne and a half of estate rolling over somebody already lying in the road
+     * leaves two pieces of them whatever the speedometer said, and the road used
+     * to answer that moment by ERASING the body in favour of its own paste — so
+     * every collision under the split line ended as a pool of blood with nobody
+     * in it, which is the one thing out here that reads as a bug rather than as
+     * a collision.
+     *
+     * The number is small on purpose: this is a cut, not a burst. Five px is
+     * enough that the two halves are legibly two at the 16-px scale a body is
+     * drawn at, and little enough that they still read as having been one person
+     * a moment ago rather than as two lumps that happen to be near each other.
+     */
+    wheelCutPartPx: 5,
   },
 
   // ── THE CAR'S HEALTH ──────────────────────────────────────────────────────

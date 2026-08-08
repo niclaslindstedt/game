@@ -82,6 +82,28 @@ function run(
   return out;
 }
 
+/** …and the same run collecting the STRIKES too, which live for one tick
+ * exactly as the events do. A strike is the BUMPER's own answer for a
+ * collision, which is the only way to ask "did the steel go through them" now
+ * that the wheels have their own way of taking a body in two. */
+function play(
+  drive: DriveState,
+  ms: number,
+  input = FLAT_OUT,
+): {
+  events: DriveState["events"][number][];
+  strikes: DriveState["strikes"][number][];
+} {
+  const events: DriveState["events"][number][] = [];
+  const strikes: DriveState["strikes"][number][] = [];
+  for (let t = 0; t < ms; t += 16) {
+    stepDrive(drive, 16, input);
+    events.push(...drive.events);
+    strikes.push(...drive.strikes);
+  }
+  return { events, strikes };
+}
+
 describe("the split", () => {
   it("takes a body in two past the split line and merely drags it under", () => {
     const fast = createDrive(PARAMS);
@@ -93,15 +115,40 @@ describe("the split", () => {
     expect(fast.remains.some((piece) => piece.part === "upper")).toBe(true);
     expect(fast.remains.some((piece) => piece.part === "lower")).toBe(true);
 
-    // The same body at a walking pace: nobody goes through anybody.
+    // The same body at a walking pace: the BUMPER goes through nobody. What the
+    // wheels behind it then do to the body is a different question and the test
+    // under "the wheels" below — so this asks the strike, which is the steel's
+    // own answer, rather than the `bodySplit` event both causes share.
     const slow = createDrive(PARAMS);
     silence(slow);
     slow.car.speed = DRIVE.topSpeedPx * 0.15;
     plant(slow, 40);
-    const soft = run(slow, 900, COAST);
-    expect(soft.some((e) => e.type === "bodySplit")).toBe(false);
-    expect(slow.remains.some((piece) => piece.part === "whole")).toBe(true);
-    expect(slow.remains.some((piece) => piece.part === "upper")).toBe(false);
+    const { strikes } = play(slow, 900, COAST);
+    expect(strikes).toHaveLength(1);
+    expect(strikes[0]?.split).toBe(false);
+  });
+
+  it("leaves a body IN the road when the bumper only knocked it down", () => {
+    // THE COMPLAINT THIS ANSWERS, and it is the whole of "running slow just
+    // leaves a blood pool". Every sub-split body used to be caught under the car
+    // whatever the blow was worth — and `dragAlongPx` parks a caught piece two
+    // px INSIDE the footprint the wheels test, on purpose, so anything caught is
+    // run over the instant it works free. A crushed body was then drawn as
+    // nothing at all. Between them that deleted the person on every collision
+    // under the split line: a pool of blood, and nobody in it.
+    //
+    // Below the speed the wheels do anything at all there is simply a body.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.gore.dragMinSpeedPx * 0.8;
+    plant(drive, 20);
+    const events = run(drive, 1200, COAST);
+    expect(events.some((e) => e.type === "bodyCaught")).toBe(false);
+    expect(events.some((e) => e.type === "bodyCrushed")).toBe(false);
+    const body = drive.remains.find((piece) => piece.part === "whole");
+    expect(body, "a knocked-down body stays in the road").toBeDefined();
+    expect(body?.crushed).toBe(false);
+    expect(drive.remains).toHaveLength(1);
   });
 
   it("agrees with its own threshold — `splitsBody` IS the line the road uses", () => {
@@ -122,9 +169,13 @@ describe("the split", () => {
     drive.car.speed = DRIVE.topSpeedPx * 0.15;
     plant(drive, 40);
     run(drive, 900, COAST);
-    // A body in the road and nothing else: no halves, and above all no lumps.
-    expect(drive.remains.some((piece) => piece.part === "whole")).toBe(true);
+    // A body in the road — in two, because the wheels went over it — and above
+    // all no lumps: nothing is torn off anybody at a pace like this.
+    expect(drive.remains.length).toBeGreaterThan(0);
     expect(drive.remains.some((piece) => piece.part === "chunk")).toBe(false);
+    for (const piece of drive.remains) {
+      expect(["whole", "upper", "lower"]).toContain(piece.part);
+    }
   });
 
   it("opens a body up only well PAST the blow that goes through it", () => {
@@ -275,6 +326,72 @@ describe("the wheels", () => {
     expect(drive.remains.filter((p) => p.crushed).length).toBeLessThanOrEqual(
       crushes.length,
     );
+  });
+
+  it("cuts a whole body in two, at any speed the wheels are turning at", () => {
+    // THE OTHER WAY SOMEBODY IS TAKEN IN TWO OUT HERE. `splitJoules` is a
+    // question about the BLOW — a bumper under about sixty goes through nobody —
+    // and a wheel is not asking it: a tonne and a half of estate rolling over
+    // somebody lying in the road leaves two pieces of them whatever the
+    // speedometer said. The road used to answer that moment by ERASING the body
+    // in favour of its own paste, which is what left a pool of blood with nobody
+    // in it every time a slow driver ran somebody down.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx * 0.12;
+    plant(drive, 30);
+    const { events, strikes } = play(drive, 2000, COAST);
+    // The bumper did not do this…
+    expect(strikes).toHaveLength(1);
+    expect(strikes[0]?.split).toBe(false);
+    // …the wheels did, and it is heard as the same wet tear a fast hit makes.
+    expect(events.some((e) => e.type === "bodyCrushed")).toBe(true);
+    expect(events.some((e) => e.type === "bodySplit")).toBe(true);
+    const upper = drive.remains.find((piece) => piece.part === "upper");
+    const lower = drive.remains.find((piece) => piece.part === "lower");
+    expect(upper).toBeDefined();
+    expect(lower).toBeDefined();
+    // Two pieces of ONE person: the same cut line, the same body's art…
+    expect(upper?.cut).toBe(lower?.cut);
+    expect(upper?.variant).toBe(lower?.variant);
+    // …parted far enough to be legibly two at the scale a body is drawn at…
+    expect(
+      Math.hypot(
+        (upper?.pos.x ?? 0) - (lower?.pos.x ?? 0),
+        (upper?.pos.y ?? 0) - (lower?.pos.y ?? 0),
+      ),
+    ).toBeGreaterThan(0);
+    // …and nothing else at all: a wheel cuts, it does not open somebody up.
+    expect(drive.remains.some((piece) => piece.part === "chunk")).toBe(false);
+    expect(drive.remains.some((piece) => piece.part === "whole")).toBe(false);
+  });
+
+  it("cuts a body once and once only, however long the car sits on it", () => {
+    // A body under a wheel comes apart ONCE. Both halves leave flagged
+    // `crushed`, which is the same "one contact is one impact" latch the traffic
+    // carries — without it the wheel that cut a body finds its own halves on the
+    // next tick and the road fills up with a fresh pair of them every 16 ms.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx * 0.12;
+    plant(drive, 30);
+    const events = run(drive, 3000, COAST);
+    expect(events.filter((e) => e.type === "bodySplit")).toHaveLength(1);
+    expect(drive.remains).toHaveLength(2);
+  });
+
+  it("leaves the body whole when the SPLIT is switched off", () => {
+    // The gore page's own switch, obeyed by the wheels exactly as the bumper
+    // obeys it: a refusal falls back to the ordinary crushed body and its paste,
+    // never to some other kind of gore.
+    const drive = createDrive({ ...PARAMS, split: false });
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx * 0.12;
+    plant(drive, 30);
+    const events = run(drive, 2000, COAST);
+    expect(events.some((e) => e.type === "bodyCrushed")).toBe(true);
+    expect(events.some((e) => e.type === "bodySplit")).toBe(false);
+    expect(drive.remains.every((piece) => piece.part === "whole")).toBe(true);
   });
 
   it("makes a noise even with the gore switched off", () => {

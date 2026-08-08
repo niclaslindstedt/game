@@ -89,8 +89,16 @@ export type RemainPart =
    * UNDER: no lift at all, straight down onto the tarmac in front of the front
    * wheels, where it is caught and dragged. */
   | "lower"
-  /** A body that was not going fast enough to come in two — knocked flat,
-   * caught under the car whole, and run over as one piece. */
+  /**
+   * A body the BUMPER was not going fast enough to come through — knocked flat
+   * and left lying in the road, whole.
+   *
+   * It is a piece with a short life and that is the point of it: the wheels
+   * behind the bumper find it a moment later, and a wheel takes a body in two
+   * whatever the speedometer said (`severUnderWheel`). So a `whole` piece that
+   * is still whole is one nothing has driven over yet — or one on a road with
+   * the SPLIT switched off, which is the only place it is a lasting state.
+   */
   | "whole"
   /** A lump torn off on the way past. Scatters, bounces, and is not caught. */
   | "chunk";
@@ -169,9 +177,17 @@ export type DriveRemain = {
    * (negative is toward the back) and px across it. */
   dragAlong: number;
   dragAcross: number;
-  /** THE WHEELS HAVE BEEN OVER IT. Latched — a piece that has been run over is
+  /**
+   * THE WHEELS HAVE BEEN OVER IT. Latched — a piece that has been run over is
    * run over, and a second crush of the same lump is the "one contact is one
-   * impact" bug the traffic's cooldown exists to stop. */
+   * impact" bug the traffic's cooldown exists to stop.
+   *
+   * It is a STATE, not a deletion: a crushed half is still drawn, lying in the
+   * paste the wheel laid under it. The one thing it removes from the picture is
+   * a crushed WHOLE body, whose own mark is a whole person pressed into the
+   * road — and with the split switched on there is no such thing, because the
+   * wheel that crushed it took it in two.
+   */
   crushed: boolean;
   /** It has stopped moving for good: no more integration, no more blood. */
   settled: boolean;
@@ -592,10 +608,18 @@ export type DriveStrike = {
 export type DriveEvent =
   /** A person went under the car. */
   | { type: "pedestrianHit"; pos: Vec2; joules: number }
-  /** …and the bumper went THROUGH them: a body taken in two at speed. Its own
-   * event rather than a flag on the one above, because it is its own noise —
-   * the wet tear a thud does not contain — and because the two are heard
-   * together on the tick a fast hit lands, which is the point of them. */
+  /**
+   * …and somebody came apart in two: the bumper went THROUGH them at speed, or
+   * a WHEEL went over one already lying in the road, which takes a body in two
+   * at any speed at all.
+   *
+   * Its own event rather than a flag on the one above, because it is its own
+   * noise — the wet tear a thud does not contain — and because the two are heard
+   * together on the tick a fast hit lands, which is the point of them. The two
+   * causes share it deliberately: what the player is being told is that a person
+   * is now in two pieces, and the sound of that does not depend on which part of
+   * the car did it.
+   */
   | { type: "bodySplit"; pos: Vec2; joules: number }
   /** Something is caught under the car and has started to travel with it. */
   | { type: "bodyCaught"; pos: Vec2; joules: number }
