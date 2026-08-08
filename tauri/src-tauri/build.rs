@@ -25,6 +25,21 @@
 //! look beside the executable, so the binary is also given an rpath that says
 //! to. Windows searches the executable's own directory already and needs
 //! nothing.
+//!
+//! **AND THAT IS WHY `tauri.conf.json` NAMES NO `bundle.macOS.frameworks`.**
+//! `tauri_build::build()` resolves that list AT COMPILE TIME on macOS and
+//! fails the whole build with `Library not found: <path>` when an entry is
+//! missing — so a path written into the static config has to name the profile
+//! directory, and there is no profile a static string can name that is right
+//! more than once. `../target/release/libsteam_api.dylib` broke every DEBUG
+//! build on macOS (`npm run tauri`, `npm run tauri:lint`) on a checkout that
+//! had never made a release build, which is every fresh clone. The list is a
+//! COMPUTED thing — it depends on the profile and on `--target <triple>` — so
+//! `scripts/package.mjs` owns it and hands it over in its `--config` patch,
+//! the same way it owns every other value that cannot be static. A dev build
+//! needs no entry at all: the copy below plus `@executable_path` is already
+//! the whole of what the loader wants. `tests/content/tauri_config_test.ts`
+//! keeps a build-output path from creeping back in.
 
 use std::path::{Path, PathBuf};
 use std::{env, fs};

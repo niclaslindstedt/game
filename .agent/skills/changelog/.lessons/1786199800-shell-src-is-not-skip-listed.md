@@ -8,8 +8,17 @@ concepts: [skip-list, no-changelog, shells, false-red]
 The SKILL.md names `src/` and `pwa/src/` as the deliberate holes in the
 skip-list. The same trap applies to the desktop shells and is easier to walk
 into, because the skip-list entry beside them reads as if the whole tree were
-covered: what is skipped is **`electron|tauri/{scripts,tests,store}/`**, not
-`electron/src/` and not `tauri/shell/src/` or `tauri/src-tauri/src/`.
+covered: what is skipped is **`native|electron|tauri/scripts/`,
+`native|electron|tauri/tests/`, `native|electron/store/` and
+`tauri/{shell,src-tauri}/tests/`** — not `electron/src/`, and not
+`tauri/shell/src/`, `tauri/src-tauri/src/` or `tauri/src-tauri/tauri.conf.json`.
+
+Read the ALTERNATION, not the comment above it. That comment said "the store
+shells (native/, electron/)" while every pattern beside it listed only
+`(native|electron)` — the Tauri tree was added later and never joined the group,
+so a `tauri/scripts/`-only PR demanded a fragment for months. Fixed in the same
+pass that wrote this line; the lesson is that a third shell has to be added to
+each pattern by hand and nothing fails when it isn't.
 
 So a shell-only PR — a comment sweep across the Rust modules, a renamed
 constant, a new decision module nothing player-facing sits on — still demands a

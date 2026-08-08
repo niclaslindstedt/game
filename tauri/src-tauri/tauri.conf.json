@@ -33,8 +33,7 @@
     "copyright": "Copyright © Niclas Lindstedt",
     "macOS": {
       "entitlements": "entitlements.mac.plist",
-      "minimumSystemVersion": "10.15",
-      "frameworks": ["../target/release/libsteam_api.dylib"]
+      "minimumSystemVersion": "10.15"
     },
     "linux": {
       "deb": {
