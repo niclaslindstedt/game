@@ -27,6 +27,11 @@
 // KEEPING IT IN ONE FUNCTION is what makes "minigames are skipped in
 // multiplayer" a fact about the game rather than a thing three call sites
 // remember to check.
+//
+// THE ROAD HAS A SECOND DOOR, and none of the four questions above is asked at
+// it: the ARCADE SHELF (`arcadeDriveParams` below) plays the same leg on its own
+// for the score, once a campaign has driven it to the end. Both doors build
+// their `DriveParams` here so the gore gate is answered in one place.
 
 import {
   areMinigamesEnabled,
@@ -88,6 +93,33 @@ export function driveParamsFor(
     // bumper going through somebody is a CLEAVE. Both fixed for the whole road
     // on purpose: a switch flipped mid-drive would leave half the tarmac gibbed
     // and half of it in the gutter.
+    gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
+    split: goreAmount("blood") !== null && dismemberAllowed("cleave"),
+  };
+}
+
+/**
+ * THE SAME ROAD, OFF THE ARCADE SHELF — the trip out, played on its own for the
+ * score (the main menu's MINIGAMES screen → `MinigameScreen`).
+ *
+ * NONE OF THE FOUR GATES ABOVE APPLIES HERE, and that is the whole difference
+ * between the two doors. There is no crossing waiting on this road, no party to
+ * hold up and nobody's hands but the player's — and the SETTING is a decision
+ * about the trip to work, not a padlock on a cabinet the player has walked over
+ * and pressed. What still holds is the one thing that is about the CONTENT
+ * rather than the context: the gore gate, asked once and carried for the whole
+ * road exactly as it is for a campaign leg.
+ */
+export function arcadeDriveParams(
+  seed: number,
+  difficulty: Difficulty,
+): DriveParams {
+  return {
+    seed,
+    // The leg OUT, which is the one the shelf names: the road to GOODCO.
+    direction: 1,
+    to: GOODCO,
+    difficulty,
     gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
     split: goreAmount("blood") !== null && dismemberAllowed("cleave"),
   };

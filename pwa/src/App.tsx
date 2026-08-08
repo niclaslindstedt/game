@@ -24,6 +24,7 @@ import { initCloudSave } from "./game/cloud-save.ts";
 import type { JoinIntent } from "./game/session-intent.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
+import type { MinigameId } from "./game/minigames.ts";
 import { NewGame } from "./game/NewGame.tsx";
 import {
   clearSavedRun,
@@ -57,6 +58,15 @@ const EffectsGallery = /* @__PURE__ */ lazy(() =>
 const DriveWorkbench = /* @__PURE__ */ lazy(() =>
   import("./game/drive-screen/DriveWorkbench.tsx").then((m) => ({
     default: m.DriveWorkbench,
+  })),
+);
+// A MINIGAME OFF THE ARCADE SHELF, lazy for the same reason as the game screen
+// above it: it mounts the real minigame, which drags the engine's simulation,
+// the renderer and the sprite atlas in behind it. Not developer tooling — it
+// ships — so it takes no `__DEV_TOOLS__` guard and no purity annotation.
+const MinigameScreen = lazy(() =>
+  import("./game/MinigameScreen.tsx").then((m) => ({
+    default: m.MinigameScreen,
   })),
 );
 // The cutscene workbench (`?cutscene=<id>`), lazy for the same reason: it is a
@@ -138,6 +148,28 @@ export function App() {
       join ? (getActiveCharacter() ?? spectatorCharacter(join.name)) : null,
     [join],
   );
+
+  // A MINIGAME PLAYED ON ITS OWN, off the main menu's arcade shelf: the cabinet
+  // and the rung the shelf offered it at, or null on the menu. It is not a run
+  // and touches nothing a run touches — no hero, no parked state, no roster
+  // bookkeeping — so it sits beside `run` rather than inside it, and leaving one
+  // drops back onto the shelf it was started from.
+  //
+  // THE RUNG ARRIVES WITH THE PRESS rather than being read again here: which
+  // rungs a player may grind on is the shelf's own question (it is the set of
+  // campaigns they have beaten — see `minigames.ts`), and asking it twice is how
+  // the two answers eventually differ.
+  const [minigame, setMinigame] = useState<{
+    id: MinigameId;
+    difficulty: Difficulty;
+  } | null>(null);
+  // …and whether the title should mount on that shelf when it next shows,
+  // which is what makes a second go one press rather than three.
+  const [startOnMinigames, setStartOnMinigames] = useState(false);
+  // IT IS A ONE-SHOT LANDING, and it is spent by the next thing the player does
+  // from the title — every handoff below clears it, exactly as they clear the
+  // "open on the ladder" intent beside it. Otherwise a run that ends an hour
+  // later would drop them onto the arcade shelf instead of the front door.
 
   // The pending run: the difficulty and starting level chosen on the menu.
   // null = still on the menu (or roster).
@@ -397,6 +429,29 @@ export function App() {
     );
   }
 
+  // A MINIGAME IS BEING PLAYED ON ITS OWN, off the arcade shelf. Like the demo
+  // above it, it stands apart from a run — no hero of its own to mint, no
+  // parked-run bookkeeping, nothing banked but the cabinet's high-score board —
+  // so it is checked before the active character's run and leaves by simply
+  // clearing the flag, landing back on the shelf it was started from.
+  if (minigame) {
+    return (
+      <ErrorBoundary
+        fallback={<RunLoadError />}
+        onError={(e) => warn(`minigame failed: ${String(e)}`)}
+      >
+        <Suspense fallback={null}>
+          <MinigameScreen
+            id={minigame.id}
+            difficulty={minigame.difficulty}
+            heroName={character?.name}
+            onExit={() => setMinigame(null)}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
   // A session is being joined. Before the active hero's own run because it is
   // not one: the run on screen is the host's, the parked-run bookkeeping does
   // not apply, and leaving it drops the connection. What DOES apply is the
@@ -586,9 +641,10 @@ export function App() {
           // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);
           clearSavedRun();
-          // Consume the "open on the ladder" intent so returning to the title
-          // after this run lands on the main menu, not back on the ladder.
+          // Consume the "open on the ladder" (and "open on the shelf") intents
+          // so returning to the title after this run lands on the main menu.
           setStartOnDifficulty(false);
+          setStartOnMinigames(false);
           setRun({
             difficulty,
             levelId,
@@ -601,6 +657,7 @@ export function App() {
           // the difficulty ladder for the freshly-minted hero. CANCEL here
           // returns to the title (not the roster) — the form came from PLAY.
           setStartOnDifficulty(false);
+          setStartOnMinigames(false);
           setPickCreating(true);
           setPicking("play");
         }}
@@ -610,14 +667,29 @@ export function App() {
           // roster has nothing to load, so it opens straight on the create form
           // (whose CANCEL then backs out to the title).
           setStartOnDifficulty(false);
+          setStartOnMinigames(false);
           setPickCreating(loadCharacters().length === 0);
           setPicking("play");
         }}
-        onHowToPlay={() => setDemo(true)}
+        onHowToPlay={() => {
+          setStartOnMinigames(false);
+          setDemo(true);
+        }}
+        // MINIGAMES → a cabinet. It touches no run and no hero, so nothing is
+        // parked or cleared on the way in; the shelf is remembered so the title
+        // comes back up on it when the lap is over.
+        onMinigame={(id, difficulty) => {
+          setStartOnMinigames(true);
+          setMinigame({ id, difficulty });
+        }}
+        startOnMinigames={startOnMinigames}
         // JOIN GAME / JOIN BY ADDRESS: watch somebody else's session. It never
         // touches the parked run — a player who ducks out of their own game to
         // watch a friend's comes back to their own exactly where it was.
-        onJoin={setJoin}
+        onJoin={(intent) => {
+          setStartOnMinigames(false);
+          setJoin(intent);
+        }}
         startOnDifficulty={startOnDifficulty}
         onResume={
           // CONTINUE is the active hero's alone: only offer it when a hero is
@@ -627,6 +699,7 @@ export function App() {
           parked.characterId === character.id &&
           !character.dead
             ? () => {
+                setStartOnMinigames(false);
                 setRun({
                   difficulty: parked.difficulty,
                   levelId: parked.levelId,

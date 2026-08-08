@@ -988,6 +988,18 @@ escort.ts` walks the people an escort errand puts on the field, and
   `pwa/src/game/drive-screen/`; whether the road is played at all is
   `driveParamsFor` (the MINIGAMES setting, and never in a party — one seat, no
   loot, no XP).
+  THE ROAD HAS A SECOND DOOR: the ARCADE SHELF (`pwa/src/game/minigames.ts`,
+  the main menu's MINIGAMES screen, mounted by `MinigameScreen.tsx`), which
+  plays the same leg on its own for the board. It is what BEATING the game
+  buys — a cabinet appears once a hero on the roster has beaten a whole
+  campaign, and the rungs it may be driven on are exactly the rungs that has
+  been done on (`Character.beaten`, so nothing new is stored and the shelf
+  rides cloud save for free). None of `driveParamsFor`'s four gates applies
+  there (`arcadeDriveParams`): there is no crossing waiting, no party, nobody
+  but the player at the wheel, and the setting is a decision about the trip to
+  work rather than a padlock on a cabinet. The developer tree carries the same
+  shelf with its lock off — DEVELOPER → PLAYGROUND → MINIGAMES, every cabinet
+  on every rung.
   HOW THE ROAD OPENS is three moves that read as one. The bumper touches the
   garage's `driveOut` tarmac, the run's picture DIMS over a car that is simply
   coasting (`DEPARTURE`, `src/game/vehicles.ts` — half a second, no synthetic

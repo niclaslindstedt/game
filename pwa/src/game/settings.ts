@@ -7,6 +7,7 @@
 
 import {
   BALANCE_TUNING_DEFAULTS,
+  DIFFICULTY_ORDER,
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setBalanceTuning,
@@ -16,6 +17,7 @@ import {
   setDeathScenesEnabled,
   setDialogueEnabled,
   type BalanceTuning,
+  type Difficulty,
 } from "@game/menu";
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
@@ -416,6 +418,14 @@ export type GameSettings = {
   cutscenes: Cutscenes;
   /** Gameplay preference: the playable interludes (see Minigames). */
   minigames: Minigames;
+  /** Which rung a minigame played from the ARCADE SHELF (the main menu's
+   * MINIGAMES screen) is driven on. Not a difficulty the CAMPAIGN reads: an
+   * interlude played inside a run is always played on that run's own rung, and
+   * this is the standalone cabinet's own knob. Persisted because the shelf
+   * mounts its own screen — the title's component state does not survive a
+   * lap, and a rung that reset to MEDIUM after every go is a knob nobody can
+   * use. */
+  minigameDifficulty: Difficulty;
   /** Gameplay preference: the scripted death cinematics — the boss finisher and
    * the hero's death tableau (see DeathScenes). */
   deathScenes: DeathScenes;
@@ -712,6 +722,9 @@ function defaults(): GameSettings {
     // The drive to GOODCO ships ON: it is the shipped experience, and the whole
     // of the hero's first trip out of his own garage.
     minigames: "on",
+    // The arcade shelf opens on the middle rung — the one the road was tuned
+    // against, and the one a player who has never picked has been driving.
+    minigameDifficulty: "medium",
     // The finisher and the death tableau both play out of the box — they are
     // the shipped experience. A player replaying a map they have cleared five
     // times turns them off to keep the pace up.
@@ -1228,6 +1241,11 @@ function load(): GameSettings {
         stored.minigames === "on" || stored.minigames === "off"
           ? stored.minigames
           : base.minigames,
+      minigameDifficulty: DIFFICULTY_ORDER.includes(
+        stored.minigameDifficulty as Difficulty,
+      )
+        ? (stored.minigameDifficulty as Difficulty)
+        : base.minigameDifficulty,
       deathScenes:
         stored.deathScenes === "on" || stored.deathScenes === "off"
           ? stored.deathScenes

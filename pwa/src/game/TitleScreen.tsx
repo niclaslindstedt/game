@@ -46,6 +46,7 @@ import { playMenuHaptic } from "./haptics.ts";
 import { armTitleMusic } from "./music/index.ts";
 import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
+import type { MinigameId } from "./minigames.ts";
 import {
   bindingLabel,
   mouseButtonCode,
@@ -136,7 +137,9 @@ export function TitleScreen({
   onHowToPlay,
   onCharacterChange,
   onJoin,
+  onMinigame,
   startOnDifficulty = false,
+  startOnMinigames = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
    * on the title; PLAY then routes through character select). The difficulty
@@ -169,16 +172,29 @@ export function TitleScreen({
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
+  /** MINIGAMES → a cabinet: play it on its own, off the arcade shelf, on a rung
+   * the shelf offered. The menu never mounts a minigame itself — a minigame is a
+   * simulation, and the app owns those (the same handoff `onStart` makes for a
+   * run). */
+  onMinigame: (id: MinigameId, difficulty: Difficulty) => void;
+  /** Mount straight on the arcade shelf — set coming back off a cabinet, so
+   * another go is one press on the row the cursor is already on. */
+  startOnMinigames?: boolean;
   /** Go and watch somebody else's session (JOIN GAME / JOIN BY ADDRESS). The
    * menu never connects: joining is a RUN, and a run belongs to the app. */
   onJoin: (intent: JoinIntent) => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>(
-    startOnDifficulty && character ? "difficulty" : "main",
+    startOnDifficulty && character
+      ? "difficulty"
+      : startOnMinigames
+        ? "minigames"
+        : "main",
   );
   // Cursor position per screen; the difficulty ladder opens on the hero's
-  // furthest-unlocked rung (see furthestUnlockedDifficulty).
+  // furthest-unlocked rung (see furthestUnlockedDifficulty). The arcade shelf
+  // opens on its first cabinet, which is where it already opens by default.
   const [cursor, setCursor] = useState(() =>
     startOnDifficulty && character ? furthestUnlockedDifficulty(character) : 0,
   );
@@ -498,6 +514,7 @@ export function TitleScreen({
       onNewGame,
       onLoadGame,
       onHowToPlay,
+      onMinigame,
       difficulty,
       setDifficulty,
       warp,
@@ -567,6 +584,7 @@ export function TitleScreen({
     onNewGame,
     onLoadGame,
     onHowToPlay,
+    onMinigame,
     settingsTick,
     bumpSettings,
     captureBind,

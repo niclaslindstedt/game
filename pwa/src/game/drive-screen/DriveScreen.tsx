@@ -145,6 +145,7 @@ export function DriveScreen({
   onScreenshot,
   onMenu,
   auto = false,
+  arcade = false,
 }: {
   params: DriveParams;
   assets: GameAssets;
@@ -207,6 +208,17 @@ export function DriveScreen({
    * missing thumb to be stuck on.
    */
   auto?: boolean;
+  /**
+   * THE ROAD IS THE WHOLE GAME — a lap off the arcade shelf (`MinigameScreen`)
+   * rather than a leg of a run.
+   *
+   * It changes only what the PAUSE CARD offers and says: there is no crossing
+   * waiting on the far side to hand a skipped trip on to, and no hero to be
+   * banked as he sits. The road, the crowd, the scoring and the board are the
+   * same road, the same crowd, the same scoring and the same board — which is
+   * the whole reason a score set here belongs beside one set on the way to work.
+   */
+  arcade?: boolean;
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   /** THE STEERING HINT — the run's own virtual dpad (`ScreenChrome.tsx`), worn
@@ -941,8 +953,17 @@ export function DriveScreen({
         <DrivePause
           font={assets.font}
           onResume={() => setPause(false)}
-          onSkip={skipDrive}
+          // AN ARCADE LAP HAS NOTHING TO SKIP TO. "Hand the crossing on" and
+          // "leave" are one press there, so the card offers one row rather than
+          // two that do the same thing — and says what leaving a lap costs,
+          // which is the lap, because nothing about a hero is true here.
+          onSkip={arcade ? undefined : skipDrive}
           onMenu={onMenu}
+          cost={
+            arcade
+              ? "THE LAP ENDS HERE - AN UNFINISHED ROAD SCORES NOTHING"
+              : undefined
+          }
         />
       )}
       {/* THE CABINET'S BOARD, over a stopped road. Last in the tree so it sits

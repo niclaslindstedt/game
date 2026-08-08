@@ -17,6 +17,7 @@
 import { scoresBridgeAvailable } from "../../app/scores-bridge.ts";
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
+import { hasArcade } from "../minigames.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import {
   actionRow,
@@ -59,6 +60,15 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       playUiSound(synth, "start");
       ctx.onHowToPlay();
     }),
+    // MINIGAMES — the arcade shelf, and the game's one reward for FINISHING
+    // it: a cabinet appears once a hero on this roster has beaten a whole
+    // campaign. ABSENT until then, for the same reason LOAD GAME is absent
+    // before there is a hero — a front-door row that opens onto an empty page
+    // teaches nothing, and greying it would owe the player a line of
+    // explanation that this centred column has nowhere to put. It is also the
+    // better secret: a row that appears the day you win says more about the win
+    // than a locked row would have said for the fifty hours before it.
+    minigames: hasArcade(ctx.roster) ? navRow(ctx, "main", "minigames") : null,
     // The coin store row is meant to CATCH THE EYE: its label is struck out of
     // gold — a bevelled, glinting STORE — so the treasure row shines out of the
     // plain menu column. Native app builds only.

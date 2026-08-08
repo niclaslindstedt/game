@@ -32,6 +32,10 @@ import {
 } from "./menus-developer.ts";
 import { buildExtrasMenu, buildMainMenu } from "./menus-main.ts";
 import {
+  buildDevMinigamesMenu,
+  buildMinigamesMenu,
+} from "./menus-minigames.ts";
+import {
   buildModInfoMenu,
   buildModOrderMenu,
   buildModsMenu,
@@ -66,6 +70,13 @@ import {
 export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "main") return buildMainMenu(ctx);
   if (screen === "extras") return buildExtrasMenu(ctx);
+  if (screen === "minigames") return buildMinigamesMenu(ctx);
+  // The same shelf with its lock off, under DEVELOPER → PLAYGROUND. Gated on
+  // `__DEV_TOOLS__` like every other developer screen, so the store build folds
+  // the branch (and the row that opens it) away.
+  if (__DEV_TOOLS__ && screen === "devminigames") {
+    return buildDevMinigamesMenu(ctx);
+  }
   if (screen === "store") return buildStoreMenu(ctx);
   if (screen === "storeconfirm") return buildStoreConfirmMenu(ctx);
   if (screen === "storehero") return buildStoreHeroMenu(ctx);

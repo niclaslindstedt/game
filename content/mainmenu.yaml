@@ -127,6 +127,16 @@ screens:
       - id: how-to-play
         label: HOW TO PLAY
         icon: icon_menu_help
+      # MINIGAMES — the arcade shelf, played on its own for the score. With the
+      # PLAY block because that is what it is: a way to play, not a shelf to
+      # look at. Absent until a hero on this roster has BEATEN a whole campaign
+      # — the shelf is what finishing the game buys — and it carries no help
+      # line for the same reason the three verbs above it don't: a front-door
+      # row that needs a sentence is a row with the wrong label.
+      - id: minigames
+        label: MINIGAMES
+        icon: icon_menu_minigames
+        opens: minigames
       # MULTIPLAYER — Steam builds only (a phone has no listening socket and a
       # browser tab is not a server). It sits with the PLAY block because it is
       # a way to play rather than a preference, and below HOW TO PLAY because a
@@ -664,6 +674,37 @@ screens:
     rows: []
 
   # =========================================================================
+  # MINIGAMES — the arcade shelf: the cabinets a BEATEN CAMPAIGN has earned,
+  # played on their own for the score and nothing else.
+  #
+  # THE CABINETS COME FROM THE CATALOG, not from here, and they stand ABOVE the
+  # one authored row: a screen opened to play something should open with the
+  # cursor already on the thing to play. DIFFICULTY sits under them because it
+  # is an adjustment to the next go rather than a destination — it decides what
+  # the road WEIGHS, which is the only thing a rung changes about a minigame
+  # (src/game/drive/index.ts), and the board it feeds is one board for every
+  # rung and tags each row with the one it was set on.
+  #
+  # AND IT OFFERS ONLY WHAT HAS BEEN FINISHED: a rung is on this row once the
+  # whole campaign has been beaten on it, which is the same key that put the
+  # shelf on the front door. With one rung earned there is nothing to cycle and
+  # the row greys.
+  #
+  # NOT A LINE OF HELP ON THE SCREEN, deliberately. Every row here says what it
+  # is in its own label and its own value — a cabinet's name, a rung — and a
+  # grey second line under each of them was clutter around a list of three
+  # things. The front door above it makes the same call for the same reason.
+  # =========================================================================
+  minigames:
+    title: MINIGAMES
+    parent: main
+    tone: player
+    form: menu
+    rows:
+      - id: difficulty
+        label: DIFFICULTY
+
+  # =========================================================================
   # MULTIPLAYER — the three doors (HOST, the server browser, JOIN BY ADDRESS),
   # Steam builds only.
   #
@@ -1053,6 +1094,14 @@ screens:
       - id: bot-view
         label: BOT VIEW
         help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
+      # The arcade shelf with its lock off: every cabinet, every rung, no
+      # campaign to beat first. The player's own MINIGAMES screen offers only
+      # what has been earned, which is exactly what makes it useless for working
+      # ON a minigame.
+      - id: minigames
+        label: MINIGAMES
+        help: PLAY ANY MINIGAME ON ANY RUNG - NOTHING TO EARN FIRST
+        opens: devminigames
       - id: auto-level-stats
         label: AUTO LEVEL STATS
         help:
@@ -1063,6 +1112,22 @@ screens:
         help:
           on: THE FPS METER SHOWS DURING RUNS
           off: NO FPS METER DURING RUNS
+
+  # DEVELOPER -> PLAYGROUND -> MINIGAMES — the same shelf the player has, with
+  # the two gates off: every cabinet is listed whether or not a campaign has
+  # been beaten, and DIFFICULTY cycles the whole ladder rather than the rungs
+  # somebody finished. Same rows, same builder, same screen behind them, so
+  # what is judged here is what ships.
+  # -------------------------------------------------------------------------
+  devminigames:
+    title: MINIGAMES
+    parent: playground
+    tone: dev
+    form: menu
+    dev: true
+    rows:
+      - id: difficulty
+        label: DIFFICULTY
 
   # -------------------------------------------------------------------------
   # DEVELOPER -> CHEATS — everything that puts into the save what a run would

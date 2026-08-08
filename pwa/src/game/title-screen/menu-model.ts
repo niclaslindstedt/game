@@ -12,6 +12,7 @@ import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
 import type { CloudState } from "../cloud-save.ts";
 import type { BindableAction } from "../keybindings.ts";
+import type { MinigameId } from "../minigames.ts";
 import { playTitleMusic } from "../music/index.ts";
 import type { SeedTier } from "../seed-tiers.ts";
 import {
@@ -36,6 +37,7 @@ import { parentOf, rowAria, rowDef, rowHelp, screenDef } from "./menu-tree.ts";
 export type MenuScreen =
   | "main"
   | "extras"
+  | "minigames"
   | "difficulty"
   | "levels"
   | "botspeed"
@@ -52,6 +54,7 @@ export type MenuScreen =
   | "export"
   | "developer"
   | "playground"
+  | "devminigames"
   | "cheats"
   | "galleries"
   | "visuals"
@@ -292,6 +295,12 @@ export type MenuContext = {
   onNewGame: () => void;
   onLoadGame: () => void;
   onHowToPlay: () => void;
+  /** Play a minigame on its own, off the arcade shelf, on a rung the player has
+   * beaten the campaign at. The menu never mounts one: a minigame is a
+   * simulation, and the app owns those (the same rule `onStart` follows for a
+   * run) — and the RUNG travels with the press rather than being read again on
+   * the far side, so what is played is what the shelf offered. */
+  onMinigame: (id: MinigameId, difficulty: Difficulty) => void;
   // The campaign picker's carried state (difficulty → levels → botspeed).
   difficulty: Difficulty;
   setDifficulty: (difficulty: Difficulty) => void;

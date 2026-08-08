@@ -12,6 +12,8 @@
 
 import { describe, expect, it } from "vitest";
 
+import { difficultyDef } from "@game/menu";
+
 import { MENU_SCREENS } from "../../pwa/src/game/title-screen/menu-tree.ts";
 import type {
   MenuContext,
@@ -32,6 +34,7 @@ const SCREENS = Object.keys(MENU_SCREENS) as MenuScreen[];
 const UNION: MenuScreen[] = [
   "main",
   "extras",
+  "minigames",
   "difficulty",
   "levels",
   "botspeed",
@@ -48,6 +51,7 @@ const UNION: MenuScreen[] = [
   "export",
   "developer",
   "playground",
+  "devminigames",
   "cheats",
   "galleries",
   "visuals",
@@ -85,6 +89,9 @@ const HERO: Character = {
   merchantsMet: [],
 };
 
+/** A hero who has BEATEN a campaign — what the arcade shelf hangs on. */
+const CHAMPION: Character = { ...HERO, id: "champion", beaten: ["medium"] };
+
 /**
  * A MenuContext with every field a builder might read, wired to nothing.
  *
@@ -106,6 +113,7 @@ function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
     onNewGame: () => {},
     onLoadGame: () => {},
     onHowToPlay: () => {},
+    onMinigame: () => {},
     difficulty: "medium",
     setDifficulty: () => {},
     warp: false,
@@ -272,7 +280,13 @@ describe("the title menu tree", () => {
     // The one screen worth pinning row by row: it is the game's first
     // impression, and the order is the design (play block, then the shelf, then
     // the settings, then the way out).
-    const rows = buildMenu("main", ctxFor({ roster: [HERO] })).map(
+    //
+    // The roster's hero has BEATEN a campaign for this one, which is what puts
+    // the arcade shelf on the door: a row gated on state is absent from
+    // `ctxFor`'s bare build, and an "everything this build has" assertion that
+    // quietly omits it is testing the wrong build (see the ctxFor lesson in the
+    // menu-design skill).
+    const rows = buildMenu("main", ctxFor({ roster: [CHAMPION] })).map(
       (row) => row.aria,
     );
     expect(rows).toEqual([
@@ -280,6 +294,7 @@ describe("the title menu tree", () => {
       "main-new-game",
       "main-load-game",
       "main-how-to-play",
+      "main-minigames",
       "main-multiplayer",
       "main-store",
       "main-mods",
@@ -364,6 +379,47 @@ describe("the title menu tree", () => {
       "main-extras",
       "main-settings",
     ]);
+  });
+
+  it("hides MINIGAMES until a whole campaign has been beaten", () => {
+    // ABSENT rather than greyed, for the same reason LOAD GAME is: the row
+    // would open onto an empty shelf, and the front door has nowhere to put the
+    // line of text that would explain the grey. A hero mid-campaign is not
+    // enough — the shelf is the reward for FINISHING one.
+    expect(
+      buildMenu("main", ctxFor({ roster: [HERO] })).map((row) => row.aria),
+    ).not.toContain("main-minigames");
+    const beaten = ctxFor({ roster: [CHAMPION] });
+    expect(buildMenu("main", beaten).map((row) => row.aria)).toContain(
+      "main-minigames",
+    );
+    // …and the shelf behind it lists the cabinet, with the rung knob under it
+    // and a BACK under that.
+    expect(buildMenu("minigames", beaten).map((row) => row.aria)).toEqual([
+      "minigames-drive",
+      "minigames-difficulty",
+      "minigames-back",
+    ]);
+  });
+
+  it("greys the shelf's DIFFICULTY row until a second rung is beaten", () => {
+    // One campaign beaten is one rung to play on, so there is nothing to cycle
+    // — but the row still says WHICH rung, and its grey is the thing that says
+    // what would open it. That is the exception the "absent beats greyed" rule
+    // is for: a dead row that teaches something the player can act on.
+    const one = buildMenu("minigames", ctxFor({ roster: [CHAMPION] })).find(
+      (row) => row.aria === "minigames-difficulty",
+    );
+    expect(one?.locked).toBe(true);
+    expect(one?.value).toBe(difficultyDef("medium").name);
+
+    const two = buildMenu(
+      "minigames",
+      ctxFor({
+        roster: [CHAMPION, { ...CHAMPION, id: "b", beaten: ["hard"] }],
+      }),
+    ).find((row) => row.aria === "minigames-difficulty");
+    expect(two?.locked).toBe(false);
   });
 
   it("hides LOAD GAME until there is a hero to load", () => {
