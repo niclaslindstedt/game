@@ -2601,6 +2601,18 @@ branch) while `GITHUB_SHA` is fixed to the commit that TRIGGERED the run, so a
 commit kicked the deploy off. The environment is only the fallback for a tree
 with no git dir.
 
+**THE BUILD LABEL FOLLOWS THE SAME RULE, AND ON `/` IT IS NOT COSMETIC.** The
+label `version.json` publishes and the update prompt reads is the same resolved
+commit, stamped into `sw.js` as its `// Build:` line — so the ROOT slot, rebuilt
+from its tag on every deploy, now produces a byte-identical worker until the tag
+itself moves. Taken from the environment it did the opposite: every push to
+`main` restamped a build whose content had not changed, and since a worker's
+bytes changing IS how a browser discovers an update, an installed home-screen
+app on `/` was prompted to install what it already had. Nothing was lost by
+dropping the manufactured difference, because there was never anything to
+manufacture: the worker's `PRECACHE` is a list of content-hashed filenames, so a
+site that really changed changes `sw.js` on its own.
+
 **SEPARATELY MEANS ON ITS OWN RUNNER.** A run is `resolve → build (one leg per
 slot, in parallel) → assemble → deploy`: `resolve` answers the one question a
 leg cannot answer for itself (which tag, if any, `/` serves) and emits the slot

@@ -37,17 +37,31 @@ const commitSha = (() => {
   }
 })();
 
-// Unique reference for the incoming build. Prefer the deploying commit (the
-// workflow exposes GITHUB_SHA); fall back to a build timestamp locally.
-// Embedding it in the generated sw.js also guarantees the worker's bytes
-// change every deploy, so browsers reliably discover updates.
+// Reference for the incoming build — the label `version.json` publishes and the
+// update prompt reads, and the `// Build:` line stamped into the generated
+// sw.js.
 //
-// Deliberately still the ENVIRONMENT's sha rather than `commitSha` above: this
-// one's job is to be DIFFERENT every deploy, and a local rebuild of a dirty
-// tree sits on the same commit as the last one — a timestamp is the honest
-// answer there, where the footer's hash wants the commit.
+// THE COMMIT ACTUALLY BUILT, exactly like `commitSha` above and for the same
+// reason. Reading `GITHUB_SHA` here instead — which this did — stamps every
+// slot with the commit that TRIGGERED the run, and the root slot is the one it
+// lies to: it is rebuilt FROM ITS TAG on every deploy, so a push to `main` that
+// changed nothing it serves still moved its build label and therefore its
+// worker's bytes. An installed home-screen app on `/` was prompted to install
+// an update whose content was byte-identical to what it already had, and
+// `version.json` named a commit that was not what was deployed.
+//
+// The old rationale was that this value's job is to be DIFFERENT every deploy
+// so a browser reliably notices one. It does not have to be: `PRECACHE` in the
+// worker is a list of CONTENT-HASHED filenames, so any change to the site
+// changes sw.js on its own. Manufacturing a difference only matters when there
+// is none to find — which is precisely the case where an update prompt is
+// wrong.
+//
+// Locally there is no `GITHUB_SHA` and a dirty tree sits on the same commit as
+// the last build, so a timestamp stays the honest answer off CI. The env sha is
+// the last resort for a CI tree with no git dir, where `commitSha` is empty.
 const buildRef = process.env.GITHUB_SHA
-  ? process.env.GITHUB_SHA.slice(0, 7)
+  ? commitSha.slice(0, 7) || process.env.GITHUB_SHA.slice(0, 7)
   : new Date().toISOString();
 
 // DEVELOPER TOOLING — on in every build except the one uploaded to the App
