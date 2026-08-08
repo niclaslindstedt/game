@@ -77,6 +77,16 @@ export type GameIdentity = {
   /** Source repository URL. */
   repoUrl: string;
   author: { name: string; url: string };
+  /**
+   * The house the game ships under — the name on the studio card the app opens
+   * with (`game/SplashScreen.tsx`), drawn in the menu's own pixel font.
+   *
+   * Its own field rather than a second use of `author.name`: the author is the
+   * PERSON, credited in the JSON-LD and on the library's pages, and a studio
+   * card that says a person's name reads as a mistake. Drawn upper-cased, so
+   * write it however it is written everywhere else.
+   */
+  publisher: string;
   /** localStorage key prefix, namespacing all persisted keys. */
   storagePrefix: string;
   /** Precache cache-id prefix (e.g. `foo` → `foo`, `foo-preview`). */

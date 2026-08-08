@@ -32,6 +32,8 @@ import {
   saveRun,
   type ParkedRun,
 } from "./game/saved-run.ts";
+import { splashWanted } from "./game/splash.ts";
+import { SplashScreen } from "./game/SplashScreen.tsx";
 import { initCoinStore } from "./game/store.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
@@ -196,6 +198,19 @@ export function App() {
   // one an app update forces included — and CONTINUE is restored on load rather
   // than lost with the wiped memory.
   const [parked, setParked] = useState<ParkedRun | null>(() => loadSavedRun());
+
+  // THE STUDIO CARD (game/SplashScreen.tsx): up from the app's very first
+  // render, with the title menu mounting and warming UNDERNEATH it — the
+  // sprite atlas, the planet shader, the backdrop's surface bakes. It is the
+  // only screen in the app that covers another live one, which is the point:
+  // the arrival hitch the menu used to open with is spent behind it.
+  //
+  // Decided ONCE, from the URL, and never re-asked: a harness driving the app
+  // gets no card at all (see `splashWanted`), and the flag only ever falls to
+  // false — a card is an opening, not a screen the app can return to.
+  const [splash, setSplash] = useState(() =>
+    splashWanted(window.location.search),
+  );
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
   // lifecycle. The framework hook performs the actual
@@ -731,6 +746,11 @@ export function App() {
         onReload={() => pwa.reload()}
         onDismiss={() => pwa.dismiss()}
       />
+
+      {/* LAST in the tree, so the menu above it has already mounted (and
+          installed its listeners, the title theme's arrival unlock included)
+          by the time the card's own effects run. */}
+      {splash && <SplashScreen onDone={() => setSplash(false)} />}
     </>
   );
 }
