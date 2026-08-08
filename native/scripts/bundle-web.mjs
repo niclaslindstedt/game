@@ -5,16 +5,26 @@
 // is what makes the app self-contained: the game runs entirely on-device,
 // offline, and updates only when a new build ships to the store.
 //
-// The website build itself is untouched — a plain `vite build` (base `/`, the
-// default), which is exactly what a localhost origin wants. We only zip its
-// output; no website source or config is changed for the app.
+// The website build is a plain `vite build` (base `/`, the default), which is
+// exactly what a localhost origin wants; we only zip its output, and no website
+// source is changed for the app. TWO env vars change the build itself.
 //
-// The ONE thing the EAS profile changes about the website build is the
-// DEVELOPER tooling: the `production` profile — the build uploaded to the App
-// Store / Play Store — builds with VITE_DEV_TOOLS=off, which strips the hidden
-// sun-tap reveal, the whole DEVELOPER menu tree, and the commit hash in the
-// title footer (see pwa/vite.config.ts). Every other profile keeps them, so a
-// TestFlight or internal build behaves exactly like the website.
+// VITE_DEV_TOOLS follows the EAS PROFILE: the `production` profile — the build
+// uploaded to the App Store / Play Store — builds with it off, which strips the
+// hidden sun-tap reveal, the whole DEVELOPER menu tree, and the commit hash in
+// the title footer (see pwa/vite.config.ts). Every other profile keeps them, so
+// a TestFlight or internal build behaves exactly like the website.
+//
+// VITE_SHELL_BUILD is set on EVERY profile, because it is about the medium
+// rather than the audience: it drops the prerendered SEO boot shell from
+// `index.html` (`stripBootShell` in pwa/pwa-plugin.ts). Nothing crawls a zipped
+// webroot, JavaScript is never off in here, and the site is served off local
+// disk — so all that markup did was flash an SEO document between the native
+// splash lifting and the game's own studio card.
+//
+// BOTH ARE BUILD-TIME, so `--skip-build` re-zips whatever the last build left
+// in `pwa/dist/` — a webroot re-zipped from a plain website build carries the
+// boot shell and the developer tooling. Every release path builds.
 //
 // Usage:
 //   node scripts/bundle-web.mjs            # build the site, then zip dist/
@@ -67,7 +77,16 @@ if (!skipBuild) {
     // Windows command shims are batch files, which Node cannot execute
     // directly (EINVAL); cmd.exe must interpret them.
     shell: WINDOWS,
-    env: { ...process.env, VITE_DEV_TOOLS: devTools ? "on" : "off" },
+    // VITE_SHELL_BUILD is unconditional, on every profile: this is a
+    // compiled build, so the prerendered SEO boot shell has nothing to be
+    // read by and only flashes on the way to the game (see `stripBootShell`
+    // in pwa/pwa-plugin.ts). The developer tooling beside it is profile-led,
+    // because a preview build wants to behave exactly like the website.
+    env: {
+      ...process.env,
+      VITE_DEV_TOOLS: devTools ? "on" : "off",
+      VITE_SHELL_BUILD: "on",
+    },
   });
 }
 

@@ -66,6 +66,11 @@ type GamePwaOptions = {
   appVersion: string;
   // All deploy-slot bases sharing this origin. Defaults to `DEPLOY_SLOTS`.
   slots?: string[];
+  // Is this build going INSIDE a store shell (native / Electron / Tauri)
+  // rather than onto the web? Set from `VITE_SHELL_BUILD` by each shell's
+  // `bundle-web.mjs`. The one thing it changes is that `index.html` ships
+  // without the prerendered boot shell — see `stripBootShell`.
+  shellBuild?: boolean;
 };
 
 // Public assets we never want in the precache: source maps are dead weight
@@ -325,6 +330,39 @@ const DOC_PAGES = [
             <p>Coin packs are sold and refunded by Apple or Google rather than by us, and the game keeps your progress on your own device.</p>`,
   },
 ];
+
+/**
+ * TAKE THE BOOT SHELL OUT — what a STORE build's `index.html` gets instead.
+ *
+ * The `.prelaunch` markup is prerendered SEO: real, crawlable copy in front of
+ * a search engine and a no-JS reader, and the one thing on screen while the app
+ * bundle is still on the wire. In a browser it earns every byte.
+ *
+ * In a compiled, distributed shell it earns none of them. Nothing crawls an
+ * asar, a webroot.zip or a Tauri resource bundle; JavaScript is never off; and
+ * the bundle is on local disk, so the gap it fills is a few tens of
+ * milliseconds. What it does instead is flash — the platform splash lifts, an
+ * SEO document with a "SYSTEM ONLINE" console and four library links paints for
+ * one blink, and only then does the game's own studio card come up over it.
+ *
+ * So a shell build ships `<div id="root"></div>` and paints its brand
+ * background (styles.css `body`, a render-blocking link) until the card
+ * mounts. The DOCUMENT PAGES are untouched: `/privacy/` and `/contact/` wear
+ * the same classes, are required by both app stores, and are derived from this
+ * file BEFORE the strip runs — see `generateBundle`.
+ *
+ * The comment is removed with the markup on purpose: it explains an element
+ * that is no longer there, and it is the one place in the shipped HTML where a
+ * paragraph of developer prose is left behind.
+ */
+export function stripBootShell(html: string): string {
+  return html
+    .replace(/<main class="prelaunch">[\s\S]*?<\/main>/, "")
+    .replace(
+      /<div id="root">\s*(?:<!--[\s\S]*?-->\s*)*<\/div>/,
+      `<div id="root"></div>`,
+    );
+}
 
 // The prerendered body for a document page. Crawlers (and a no-JS reader) get
 // the gist without running the app, which is also what keeps check-seo's
@@ -720,6 +758,7 @@ export function gamePwa({
   version,
   appVersion,
   slots = DEPLOY_SLOTS,
+  shellBuild = false,
 }: GamePwaOptions): Plugin {
   const cacheId = cacheIdForBase(base);
   // Paths inside our scope whose navigations this worker must not answer: the
@@ -826,6 +865,34 @@ export function gamePwa({
         assets[urlPath] = bytes;
       };
 
+      // THE DOCUMENT PAGES ARE DERIVED FIRST, and the order is load-bearing.
+      // Each one is the built shell with its `.prelaunch` body swapped for its
+      // own (`renderDocHtml`) — so it has to read `index.html` while that body
+      // is still there, which a shell build removes two statements below. Doing
+      // it the other way round leaves `/privacy/` and `/contact/` — the two
+      // pages both app stores require — with no body at all in exactly the
+      // builds that are uploaded to those stores.
+      //
+      // They cost one HTML file each and no second bundle, and they are emitted
+      // from this hook rather than a plugin of their own so their bytes land in
+      // the precache and the pages work offline (and inside the native app's
+      // local server) like the game does.
+      const index = bundle["index.html"];
+      const docs =
+        index && index.type === "asset"
+          ? DOC_PAGES.map((page) => ({
+              page,
+              source: renderDocHtml(String(index.source), base, page),
+            }))
+          : [];
+
+      // A STORE BUILD SHIPS NO BOOT SHELL — see `stripBootShell`. Rewritten
+      // before the sizes below are taken, so the precache manifest reports what
+      // is actually served.
+      if (shellBuild && index && index.type === "asset") {
+        index.source = stripBootShell(String(index.source));
+      }
+
       // Hashed build output (JS, CSS, the HTML shell, any emitted assets).
       for (const [fileName, output] of Object.entries(bundle)) {
         const bytes =
@@ -854,21 +921,6 @@ export function gamePwa({
       const manifestSource = renderManifest();
       add(`${base}manifest.webmanifest`, Buffer.byteLength(manifestSource));
 
-      // The document pages (`/privacy/`, `/contact/`) the app stores require.
-      // Each is the built shell with its own head + prerendered body
-      // (`renderDocHtml`), loading the very same hashed assets, so they cost one
-      // HTML file each and no second bundle. Emitted here rather than in their
-      // own plugin so their bytes land in the precache alongside everything
-      // else and the pages work offline (and inside the native app's local
-      // server) like the game does.
-      const index = bundle["index.html"];
-      const docs =
-        index && index.type === "asset"
-          ? DOC_PAGES.map((page) => ({
-              page,
-              source: renderDocHtml(String(index.source), base, page),
-            }))
-          : [];
       for (const { page, source } of docs) {
         add(`${base}${page.slug}/index.html`, Buffer.byteLength(source));
       }

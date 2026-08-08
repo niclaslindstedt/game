@@ -10,15 +10,25 @@
 // neither can leave the other holding a stale one. If Tauri ships and Electron
 // is retired, one of these files goes away with it.
 //
-// The website build itself is untouched — a plain `vite build` with the default
-// base `/`, which is exactly what a single-origin shell wants.
+// The website build is a plain `vite build` with the default base `/`, which is
+// exactly what a single-origin shell wants, and TWO env vars change it.
 //
-// The ONE thing the profile changes about the website build is the DEVELOPER
-// tooling: the `production` profile — the build that would go to a store —
-// builds with VITE_DEV_TOOLS=off, which strips the hidden sun-tap reveal, the
-// whole DEVELOPER menu tree, and the commit hash in the title footer (see
-// pwa/vite.config.ts). Every other profile keeps them, so a local or preview
-// build behaves exactly like the website.
+// VITE_DEV_TOOLS follows the PROFILE: the `production` profile — the build that
+// would go to a store — builds with it off, which strips the hidden sun-tap
+// reveal, the whole DEVELOPER menu tree, and the commit hash in the title
+// footer (see pwa/vite.config.ts). Every other profile keeps them, so a local
+// or preview build behaves exactly like the website.
+//
+// VITE_SHELL_BUILD is set on EVERY profile, because it is about the medium
+// rather than the audience: it drops the prerendered SEO boot shell from
+// `index.html` (`stripBootShell` in pwa/pwa-plugin.ts). Nothing crawls a
+// resource bundle, JavaScript is never off in here, and the site is on local
+// disk — so all that markup did was flash an SEO document between the window
+// opening and the game's own studio card.
+//
+// BOTH ARE BUILD-TIME, so `--skip-build` copies whatever the last build left in
+// `pwa/dist/` — a webroot re-copied from a plain website build carries the boot
+// shell and the developer tooling. Every release path builds.
 //
 // Usage:
 //   node scripts/bundle-web.mjs                      # build the site, then copy
@@ -59,7 +69,16 @@ if (!skipBuild) {
     // Windows command shims are batch files, which Node cannot execute
     // directly (EINVAL); cmd.exe must interpret them.
     shell: WINDOWS,
-    env: { ...process.env, VITE_DEV_TOOLS: devTools ? "on" : "off" },
+    // VITE_SHELL_BUILD is unconditional, on every profile: this is a
+    // compiled build, so the prerendered SEO boot shell has nothing to be
+    // read by and only flashes on the way to the game (see `stripBootShell`
+    // in pwa/pwa-plugin.ts). The developer tooling beside it is profile-led,
+    // because a preview build wants to behave exactly like the website.
+    env: {
+      ...process.env,
+      VITE_DEV_TOOLS: devTools ? "on" : "off",
+      VITE_SHELL_BUILD: "on",
+    },
   });
 }
 
