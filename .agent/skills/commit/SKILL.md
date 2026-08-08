@@ -77,7 +77,17 @@ The command performs every step below, prints the PR URL, and never polls PR
 activity. Prefer repeated explicit `--stage` paths. Use `--all` only after
 reviewing the complete worktree and deliberately choosing to stage everything.
 Use `--dry-run` to validate inputs and print the command sequence without
-changing Git or GitHub state.
+changing Git or GitHub state — including which of the two PR paths it would
+take, since that is probed for real.
+
+**It works on an ASSIGNED branch and without `gh`,** which is what a remote
+session has: `--branch` takes any lowercase kebab-case `<namespace>/<name>`, so
+the harness's `claude/<topic>-<id>` is passed through as-is (the convention that
+matters is on `--title`, which becomes the squashed commit on `main`), and the
+PR is opened through the GitHub REST API — `GH_TOKEN` or `GITHUB_TOKEN` — when
+the CLI is not installed. If BOTH are missing the push still lands and the
+command fails loudly with the head/title/body to hand to whatever GitHub tooling
+the session does have, because a pushed branch with no PR is invisible.
 
 ## Manual fallback
 
