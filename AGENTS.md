@@ -126,10 +126,9 @@ most —
 - **AND NONE OF THEM BELONGS IN THE EDIT LOOP.** A whole-repo check costs the
   same whether one file changed or four hundred did, so running one after every
   small edit is the easiest way to turn a ten-minute session into an hour. While
-  iterating, check only what you touched — `npx eslint <paths>`,
-  `npx tsc --noEmit -p tsconfig.json` (or `pwa/`), `npx prettier --check <paths>`,
-  a single `npx vitest run tests/<one>_test.ts`. All sub-second. The full set is
-  the GATE on the commit, not a step on the way to it.
+  iterating, check only what you touched (`npx eslint`, `npx tsc --noEmit`, one
+  vitest file) — the `commit` skill has the table. The full set is the GATE on
+  the commit, not a step on the way to it.
 
 ## Merges and rebases — the `conflict` skill owns them
 

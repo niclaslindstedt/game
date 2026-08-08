@@ -87,12 +87,17 @@ changing Git or GitHub state.
 `.github/workflows/ci.yml` is the list, and there is nothing on it a local
 clone cannot run. The split is by COST, not by importance:
 
-| Before the commit is written (seconds)                                                     | Alongside the push (minutes)  |
-| ------------------------------------------------------------------------------------------ | ----------------------------- |
-| `make fmt`, then `make fmt-check`                                                          | `make test` (CI shards it 3×) |
-| `make lint` (typecheck + the zero-warning linter)                                          | `make build`                  |
-| `make actionlint` / `make shellcheck` — only if a workflow or a `.sh` was touched          |                               |
-| the changeset call: a fragment under `.changes/unreleased/`, or the `no-changelog` label   |                               |
+| Before the commit is written (seconds)                                                   | Alongside the push (minutes)             |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `make fmt`, then `make fmt-check`                                                        | `make lint` (rebuild + typecheck + lint) |
+| `make actionlint` / `make shellcheck` — only if a workflow or a `.sh` was touched        | `make test` (CI shards it 3×)            |
+| the changeset call: a fragment under `.changes/unreleased/`, or the `no-changelog` label | `make build`                             |
+
+**`make lint` IS IN THE MINUTES COLUMN, and it used to be listed in the other
+one.** It is not a linter: like `make test` and `make build` it opens by
+rebuilding the whole content tree — every catalog, the sprite atlas, the fonts —
+and then typechecks both workspaces. Calling it seconds-long is how a session
+ends up running it after every small edit.
 
 **`make fmt` is the one that gets skipped, and it is the one that costs
 nothing to run.** It is not a check that can be reasoned past: Prettier has
@@ -107,6 +112,22 @@ Pushing while the FAST column has not run is how a branch goes red on
 something the machine would have fixed in four seconds.
 
 Stop if a FAST check fails. Fix the issue, then re-run.
+
+**AND NONE OF THE WHOLE-REPO CHECKS BELONGS IN THE EDIT LOOP.** They cost the
+same whether one file changed or four hundred did, so running one after every
+small edit is the single easiest way to turn a ten-minute session into an hour.
+While ITERATING, check only what you touched — all of these are sub-second:
+
+| Just edited                  | Run                                                          |
+| ---------------------------- | ------------------------------------------------------------ |
+| a `.ts`/`.tsx`/`.mjs` file   | `npx eslint <paths>`                                         |
+| anything type-bearing        | `npx tsc --noEmit -p tsconfig.json` (or `pwa/tsconfig.json`) |
+| formatting you are unsure of | `npx prettier --check <paths>`                               |
+| a test's subject             | `npx vitest run tests/<that-one>_test.ts`                    |
+| a sprite grid                | `make assets` — the ONE generator worth re-running alone     |
+
+Then run the table above ONCE, at the end. A whole-repo check is the GATE on the
+commit, not a step on the way to it.
 
 ## Step 2: Create a Feature Branch
 

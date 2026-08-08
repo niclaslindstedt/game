@@ -1,6 +1,8 @@
 ---
 title: A share of the dial is not a speed — road gore thresholds are in JOULES
 date: 2026-08-08
+scope: src/game/drive/, pwa/src/game/drive-screen/, pwa/src/game/effects-gallery/
+concepts: [drive, gore-density, thresholds, top-speed, staging]
 ---
 
 Every gore threshold on the DRIVE is priced in absorbed energy as a fraction of
