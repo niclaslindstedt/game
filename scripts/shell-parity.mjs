@@ -31,6 +31,8 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import prettier from "prettier";
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "docs", "desktop-parity.md");
 
@@ -479,7 +481,21 @@ ${table(
 `;
 }
 
-function main() {
+/**
+ * Run the rendered document through Prettier before anything compares it.
+ *
+ * NOT a nicety: `make fmt-check` runs Prettier over the whole repo and this
+ * file is committed, so a generator that emitted its own idea of a markdown
+ * table would put `npm run parity` and `make fmt-check` permanently at odds —
+ * running either one would break the other, forever. Formatting here makes the
+ * two agree by construction, and it means the column padding of every table
+ * below is Prettier's problem rather than this file's.
+ */
+async function formatted(markdown) {
+  return prettier.format(markdown, { parser: "markdown" });
+}
+
+async function main() {
   const check = process.argv.includes("--check");
   const sections = {
     modules: modulePeers(),
@@ -491,7 +507,7 @@ function main() {
   const problems = Object.values(sections).flatMap(
     (section) => section.problems,
   );
-  const rendered = render(sections);
+  const rendered = await formatted(render(sections));
 
   if (check) {
     const current = (() => {
@@ -528,4 +544,4 @@ function main() {
   if (problems.length > 0) process.exitCode = 1;
 }
 
-main();
+await main();
