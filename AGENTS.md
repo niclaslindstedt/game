@@ -101,7 +101,7 @@ the two ships turns on measurements rather than taste. It is **Rust**, so
 `make tauri-test` (its decision layer, and DELIBERATELY only that crate — no GUI
 libraries and no Steam SDK needed) and `make tauri-lint` (clippy at zero
 warnings over both crates, which does need the webview libraries). A change to
-that tree runs both, and `.github/workflows/tauri-build.yml` runs them for you.
+that tree runs both, and `.github/workflows/desktop-tauri.yml` runs them for you.
 It packages itself with `make desktop-tauri-steam` / `make desktop-tauri-dist`,
 reading the SAME five `GIS_ENABLE_*` switches the Electron targets do — one
 vocabulary, two shells — and `release.yml` attaches its downloads to every

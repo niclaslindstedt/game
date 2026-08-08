@@ -3,7 +3,7 @@
 # run when a human asks. Requires an EXPO_TOKEN repo secret (an Expo access
 # token from https://expo.dev/settings/access-tokens); store submission also
 # needs the App Store Connect / Play credentials configured on the EAS project.
-name: Native App Build (EAS)
+name: native
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ on:
         default: false
 
 concurrency:
-  group: native-build-${{ github.ref }}
+  group: native-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:

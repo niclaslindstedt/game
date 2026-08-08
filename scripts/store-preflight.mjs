@@ -119,7 +119,7 @@ if (iosSubmit.appleId || easHasKey) {
   warn(
     "eas.json names neither an appleId nor an App Store Connect API key",
     "fine interactively (eas submit prompts and remembers), but a " +
-      "--non-interactive run — the native-build workflow with submit: true — " +
+      "--non-interactive run — the `native` workflow with submit: true — " +
       "needs one of them, or the credentials uploaded via `eas credentials`.",
   );
 }

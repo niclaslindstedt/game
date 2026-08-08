@@ -401,7 +401,7 @@ Three routes, cheapest first:
 ## Build & distribute
 
 Builds are **manual** to keep EAS costs down — locally, or via the
-`Native App Build (EAS)` GitHub Actions workflow (Actions tab → Run workflow → pick
+`native` GitHub Actions workflow (Actions tab → Run workflow → pick
 platform / profile / submit). CI never builds the app on push. The workflow
 (and the `build:*` scripts) run `npm run bundle` first so the on-device website
 is fresh.
