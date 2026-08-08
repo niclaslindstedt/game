@@ -235,8 +235,9 @@ for (const vp of VIEWPORTS) {
     // Isolate the Moon: on their real orbits the bodies can ride over each
     // other, the glare or the menu text, and an element screenshot composites
     // whatever overlaps its box — which would corrupt the measurement. Hide
-    // every sibling for the shot, and undo the driver's phase DIMMING so the
-    // measurement reads the shading rather than the opacity.
+    // every sibling for the shot, and force the alpha back to 1 so the one
+    // thing that still takes it off — a body passing behind the sun, where the
+    // glare swamps it — cannot be read as a lighting failure.
     await page.evaluate(() => {
       const s = document.createElement("style");
       s.id = "sky-solo-moon";
