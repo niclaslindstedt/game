@@ -155,6 +155,13 @@ most local work on this tree happens; without it, a machine with no Steam client
 running simply reports the handshake as unavailable and the game plays
 device-locally, which is the same thing it does in a browser.
 
+Valve's redistributable needs no setup for that: `steamworks` vendors it,
+`src-tauri/build.rs` copies it into the profile directory Cargo is writing to,
+and the binary carries an rpath that looks beside itself. Nothing about it is
+named in `tauri.conf.json` — a `bundle.macOS.frameworks` entry is resolved at
+COMPILE time on macOS and would have to name one profile, which is why the
+`.app`'s copy is computed by `scripts/package.mjs` instead.
+
 That entry point is `scripts/run-tauri.mjs` rather than a shell one-liner for
 one reason worth keeping: **an npm script may not set an environment variable
 with `VAR=value` shell syntax.** npm runs scripts through the platform's shell,

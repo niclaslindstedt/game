@@ -278,8 +278,13 @@ const patch = {
       // release wants, with notarization on top.
       signingIdentity: macIdentity(),
       // Valve's library, from wherever THIS target's profile directory is —
-      // which is why it is computed here rather than written into
-      // `tauri.conf.json`: a `--target <triple>` build puts it somewhere else.
+      // and THE ONLY PLACE IT IS DECLARED, because `tauri_build::build()`
+      // resolves this list at COMPILE time on macOS and fails the build over an
+      // entry that is not there. A static `../target/release/…` in
+      // `tauri.conf.json` therefore broke every DEBUG build on a checkout that
+      // had not made a release one — see `src-tauri/build.rs`. A dev build
+      // wants no entry at all; only the bundle does, and only a packaging run
+      // knows the profile and the `--target <triple>` that place the file.
       frameworks: [redistributablePath("libsteam_api.dylib")],
     },
   },

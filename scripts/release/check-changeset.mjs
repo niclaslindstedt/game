@@ -47,13 +47,16 @@ const SKIP_PATTERNS = [
   /^prompts\//,
   /^scripts\//,
   /^pwa\/scripts\//,
-  // The store shells (native/, electron/) are self-contained projects with
-  // their own tooling, tests and config. Their BUILD machinery is no more
+  // The store shells (native/, electron/, tauri/) are self-contained projects
+  // with their own tooling, tests and config. Their BUILD machinery is no more
   // player-facing than the root's is — but note `src/` is deliberately NOT
   // here: a change to what a shell DOES is a change to the shipped app.
-  /^(native|electron)\/scripts\//,
-  /^(native|electron)\/tests\//,
+  /^(native|electron|tauri)\/scripts\//,
+  /^(native|electron|tauri)\/tests\//,
   /^(native|electron)\/store\//,
+  // The Tauri shell is Rust, so its tests are integration tests living inside
+  // the crate whose public API they reach rather than in a tree-level tests/.
+  /^tauri\/(shell|src-tauri)\/tests\//,
   /^Makefile$/,
   /\.md$/,
   /^\.nvmrc$/,
