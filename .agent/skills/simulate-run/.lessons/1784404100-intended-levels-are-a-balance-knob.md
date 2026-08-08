@@ -1,6 +1,8 @@
 ---
 title: When a run stalls/races or meets the boss off-level, suspect the ladder's intended levels themselves — and remember a change cascades campaign-wide
 date: 2026-07-18
+scope: content/ladder.yaml
+concepts: [intended-level, ladder, cascade]
 ---
 
 A big thing every balance pass must look at: the ladder numbers

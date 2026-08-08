@@ -1,6 +1,8 @@
 ---
 title: Authored chests must clear wall circles by radius + wall radius + OBSTACLES.spacing — the content furniture tests enforce it
 date: 2026-07-23
+scope: content/maps/
+concepts: [chests, obstacles, clearance]
 ---
 
 A `chests:` entry is minted at its authored position with no placement retry,

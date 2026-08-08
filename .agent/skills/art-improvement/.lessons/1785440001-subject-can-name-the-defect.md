@@ -1,6 +1,8 @@
 ---
 title: When a sprite's own `subject` names the defect, the WORDS are what you fix first
 date: 2026-07-30
+scope: content/sprites/
+concepts: [subject-field, descriptions, regeneration]
 ---
 
 Phase 4 step 1 asks whether a pass is changing WHAT a sprite is or just drawing

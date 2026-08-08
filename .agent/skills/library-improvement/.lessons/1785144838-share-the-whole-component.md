@@ -1,6 +1,8 @@
 ---
 title: Sharing a component means sharing its wording and colours, not just its CSS
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [components, reuse, styling]
 ---
 
 Phase 1 settled that sharing a game surface means EXTRACTING the shared part into

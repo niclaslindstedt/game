@@ -32,6 +32,11 @@ playtest, and to answer the questions the analytic calculators can't:
 - What does a full campaign (easy → JESUS, every level, loadout carried)
   leave the hero with?
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs simulate-run --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## The tools
 
 - **Engine module: `src/sim/simulate.ts`** — `simulateLevel` (one map),

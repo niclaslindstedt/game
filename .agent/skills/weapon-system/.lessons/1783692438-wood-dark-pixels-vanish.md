@@ -1,6 +1,8 @@
 ---
 title: Wood-dark pixels vanish on weapon icons
 date: 2026-07-10
+scope: content/sprites/icons/
+concepts: [icons, contrast, palette]
 ---
 
 The core `k` wood char is near-outline dark; weapon hafts/stocks read better

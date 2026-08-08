@@ -1,6 +1,8 @@
 ---
 title: A new EnemyDef field must be added to canonicalEnemyDef or it vanishes at runtime
 date: 2026-07-28
+scope: src/game/defs/enemies/
+concepts: [enemy-def, canonicalization, generated-catalog]
 ---
 
 `src/game/defs/enemies/index.ts` rebuilds every compiled def through

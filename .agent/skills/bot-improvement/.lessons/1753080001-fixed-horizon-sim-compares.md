@@ -1,6 +1,8 @@
 ---
 title: Compare sim runs only at the SAME --max-minutes — the cap is part of the run's dynamics
 date: 2026-07-21
+scope: scripts/simulate-run.mjs
+concepts: [ab-testing, measurement, run-horizon]
 ---
 
 `scripts/simulate-run.mjs --max-minutes` is NOT just a cutoff: the same seed

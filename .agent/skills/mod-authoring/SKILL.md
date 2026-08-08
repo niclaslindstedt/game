@@ -149,7 +149,8 @@ a level" — ask the user first.
 
 A mod is authored in the game's own format with the game's own tools, so load
 the craft skill for the work and read its accumulated lessons first
-(`node scripts/skill-lessons.mjs <skill>`). Then: **run its commands with
+(`node scripts/skill-lessons.mjs <skill> --list`; the **`skill-reflection`**
+skill owns both reading them and reflecting on them before the commit). Then: **run its commands with
 `--mod <dir>`**, and **write its files into the MOD folder** — an instruction to
 add `content/levels/<id>.yaml` means `levels/<id>.yaml` in the mod.
 

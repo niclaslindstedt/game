@@ -15,6 +15,11 @@ and the output lands (gitignored) in `native/store/screenshots/<device>/`. The
 listing text is a separate pipeline — see
 [`native/store/README.md`](../../../native/store/README.md).
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs store-shots --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## The one rule
 
 **STAGE THE ENDGAME, MID-FIGHT.** A freshly spawned hero on an empty floor is

@@ -1,6 +1,8 @@
 ---
 title: A new way to FIRE a thought needs its own trigger kind in the library, or the line publishes nowhere
 date: 2026-08-01
+scope: pwa/scripts/library/
+concepts: [thoughts, triggers, publishing]
 ---
 
 The lesson about `thoughtsOn()` missing the opening strike has a general form,

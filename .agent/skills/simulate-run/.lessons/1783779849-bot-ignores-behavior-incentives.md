@@ -1,6 +1,8 @@
 ---
 title: The autopilot ignores behavioral incentives — A/B against main before trusting a regression
 date: 2026-07-11
+scope: scripts/simulate-run.mjs
+concepts: [autopilot, ab-testing, regressions]
 ---
 
 Mechanics that INCENTIVIZE player behavior (anti-camping starvation, "move on

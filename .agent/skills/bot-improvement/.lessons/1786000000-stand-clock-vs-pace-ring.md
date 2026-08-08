@@ -1,6 +1,8 @@
 ---
 title: Gate the bot's STANDS on a contact clock, but leave the recovery WALK on the distance ring — swapping both cost 9% of the kills per minute
 date: 2026-07-26
+scope: content/bot.yaml
+concepts: [stands, pacing, tuning-knobs]
 ---
 
 Making the autopilot "more stamina aware" splits cleanly into two questions

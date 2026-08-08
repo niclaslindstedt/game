@@ -1,6 +1,8 @@
 ---
 title: Write the meta description to the 160-char budget FIRST — the natural sentence is always 240
 date: 2026-07-31
+scope: pwa/scripts/library/
+concepts: [seo, meta-description, budget]
 ---
 
 `library_test.ts` asserts every page's description matches `[^"]{20,160}` —

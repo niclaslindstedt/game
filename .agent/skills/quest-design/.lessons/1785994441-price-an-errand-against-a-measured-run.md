@@ -1,6 +1,8 @@
 ---
 title: Price an errand against a MEASURED run, and check the map can supply it
 date: 2026-08-06
+scope: content/quests/
+concepts: [rewards, pricing, simulator]
 ---
 
 Every shipped kill errand opened at 6–10 kills and every fetch piece fell at a

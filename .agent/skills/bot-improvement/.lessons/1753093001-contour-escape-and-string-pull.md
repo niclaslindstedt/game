@@ -1,6 +1,8 @@
 ---
 title: Wedge livelocks came from a timed escape sweep and blind string-pulling — commit to an open heading, and replan when the next waypoint is blocked
 date: 2026-07-21
+scope: src/game/bot/nav.ts
+concepts: [navigation, livelock, string-pull]
 ---
 
 The 2026-07 stuck audit (12 of 15 easy runs cancelled by the sim's stuck

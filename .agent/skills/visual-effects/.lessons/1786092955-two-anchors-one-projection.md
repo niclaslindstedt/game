@@ -1,6 +1,8 @@
 ---
 title: TWO anchor conventions exist, and picking the wrong one is a 25% y error nothing catches
 date: 2026-08-07
+scope: pwa/src/game/render/
+concepts: [anchors, projection, coordinates]
 ---
 
 There are two ways to put a world point on this screen, and which is correct

@@ -1,6 +1,8 @@
 ---
 title: A map's intended hero level is a tunable, not a target to protect — and moving it cascades through every following map
 date: 2026-07-18
+scope: content/ladder.yaml
+concepts: [intended-level, ladder, cascade]
 ---
 
 When the hero's leveling pace doesn't line up with a map's `intendedLevel` /

@@ -1,6 +1,8 @@
 ---
 title: A catalog number is not always the number the game shows
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [numbers, accuracy, catalogs]
 ---
 
 "Grounded in truth" is easy to satisfy and still get wrong. Reading a value off

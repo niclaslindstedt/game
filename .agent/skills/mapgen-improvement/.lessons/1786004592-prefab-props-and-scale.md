@@ -1,6 +1,8 @@
 ---
 title: Prefab props obey no clearance rule, and props need sizing against a body
 date: 2026-08-06
+scope: content/maps/
+concepts: [prefabs, props, clearance, scale]
 ---
 
 Two things a static room (`prefabs`) gets wrong that the scatter cannot:

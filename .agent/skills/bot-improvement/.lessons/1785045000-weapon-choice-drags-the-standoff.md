@@ -1,6 +1,8 @@
 ---
 title: A weapon-pick change is a POSITIONING change — the standoff is derived from the held weapon's range
 date: 2026-07-26
+scope: src/game/bot/weapon-swap.ts
+concepts: [weapon-swap, standoff, positioning]
 ---
 
 Making the pocket arsenal context-aware (single-target round at a boss, spread

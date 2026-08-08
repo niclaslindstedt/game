@@ -1,6 +1,8 @@
 ---
 title: Crate density on OPEN ground is a difficulty knob — re-run balance_test after adding any
 date: 2026-07-31
+scope: content/maps/
+concepts: [crates, difficulty, balance-test]
 ---
 
 Nothing but the hero jumps, so every crate is a wall to the horde. Adding supply

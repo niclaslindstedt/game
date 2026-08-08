@@ -1,6 +1,8 @@
 ---
 title: The 16-bit palette rule — waveform roles
 date: 2026-07-10
+scope: content/sounds/
+concepts: [synthesis, waveforms, palette]
 ---
 
 The palette opened up from the old NES three-waves rule — sines are the

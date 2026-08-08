@@ -1,6 +1,8 @@
 ---
 title: JESUS is not a rung you tune — its uncapped menace balances it
 date: 2026-07-28
+scope: src/game/defs/difficulties.ts
+concepts: [difficulty, jesus, menace]
 ---
 
 Do NOT reach for the mob-hp knobs when a sweep reports JESUS walling or

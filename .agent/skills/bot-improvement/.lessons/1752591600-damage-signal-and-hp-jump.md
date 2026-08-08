@@ -1,6 +1,8 @@
 ---
 title: "Taking damage" and "low HP" are first-class bot signals — read player.hurtFlashMs and gate the escape hop on an HP threshold
 date: 2026-07-20
+scope: src/game/bot/
+concepts: [signals, hp-gating, escape-hop]
 ---
 
 Two cheap, deterministic player-state signals make the autopilot read as

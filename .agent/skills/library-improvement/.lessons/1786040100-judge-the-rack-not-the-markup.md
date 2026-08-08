@@ -1,6 +1,8 @@
 ---
 title: A fullPage shot of a library index is mostly empty until you un-lazy the images
 date: 2026-07-28
+scope: pwa/scripts/library/
+concepts: [screenshots, lazy-images, judging]
 ---
 
 Every sprite in a library rack carries `loading="lazy"`, which is right for a

@@ -1,6 +1,8 @@
 ---
 title: Spell play needs harness-side bar management, kill-credit in the thrift read, and an at-band late-map hard run to measure
 date: 2026-07-21
+scope: src/game/bot/
+concepts: [spells, harness-actions, measurement]
 ---
 
 Four findings from making the bot spell-aware (mana-thrift casting):

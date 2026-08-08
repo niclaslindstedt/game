@@ -11,6 +11,11 @@ run. Almost every gameplay bug can therefore be reduced to a **seed + input
 script**, reproduced headlessly, and locked in with a test. Prefer that
 route over clicking around in a browser.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs debug-game --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Instruments
 
 | Instrument | How |
@@ -54,9 +59,15 @@ route over clicking around in a browser.
 
 ## Skill self-improvement
 
-Record each diagnosed root-cause *class* (not the one-off) as a lesson
-fragment under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by
-appending to this file, which conflicts across parallel sessions. Read past
-ones with `node scripts/skill-lessons.mjs debug-game` before triaging.
-During a consolidation pass, promote recurring classes into the
-classification table above so triage gets faster.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the classification table above, so triage gets faster.
+
+```sh
+node scripts/skill-lessons.mjs debug-game --list
+```
+
+What is worth a fragment here is the diagnosed root-cause *class*, never the
+one-off bug.

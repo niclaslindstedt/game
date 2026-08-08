@@ -1,6 +1,8 @@
 ---
 title: A retone of a SCRIPTED scene is usually engine work, not just a text edit
 date: 2026-07-31
+scope: src/game/story.ts
+concepts: [scripted-scenes, retone, engine-work]
 ---
 
 "He shouldn't sound so cold" on a scripted beat (GOODCO HQ's `openingStrike`,

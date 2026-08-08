@@ -1,6 +1,8 @@
 ---
 title: Serve the built library WITHOUT the SPA fallback, or you screenshot the game
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [serving, spa-fallback, screenshots]
 ---
 
 `npx serve -s dist` is the obvious way to preview a build, and for this repo it

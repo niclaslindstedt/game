@@ -1,6 +1,8 @@
 ---
 title: A reader's map is the place drawn, not a diagram of it
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [maps, presentation, readability]
 ---
 
 The plan's open question — which map render the mission pages use — offered two

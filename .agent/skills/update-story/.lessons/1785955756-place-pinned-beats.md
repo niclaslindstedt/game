@@ -1,6 +1,8 @@
 ---
 title: A beat pinned to a PLACE — no monster, no door — and the two things it breaks that a mob-fired beat never does
 date: 2026-08-05
+scope: content/levels/
+concepts: [beats, place-pinned, story-triggers]
 ---
 
 Not every pinned line has a speaker to hang off. The HUB

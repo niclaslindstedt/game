@@ -1,6 +1,8 @@
 ---
 title: Hierarchy and identity are FAMILY properties — read the defs, then look at the family on one sheet
 date: 2026-07-30
+scope: content/sprites/
+concepts: [families, hierarchy, identity]
 ---
 
 Two defects that are invisible sprite-by-sprite and obvious the moment the

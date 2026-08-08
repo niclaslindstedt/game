@@ -1,6 +1,8 @@
 ---
 title: Widening an authored-plan map can move the hero's landing — the LONG WALK fallback overrules `spawn: false`
 date: 2026-08-01
+scope: src/game/mapgen/
+concepts: [spawn, authored-plan, hero-landing]
 ---
 
 `pickSpawnChamber` (`src/game/mapgen/generate.ts`) treats an area's

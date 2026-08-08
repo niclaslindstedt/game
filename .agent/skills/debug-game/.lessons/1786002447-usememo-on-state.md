@@ -1,6 +1,8 @@
 ---
 title: Never `useMemo(…, [state])` — the run state is mutated in place, so the memo never re-runs
 date: 2026-08-06
+scope: pwa/src/
+concepts: [preact, memoization, mutable-state]
 ---
 
 `GameState` has ONE object identity for a whole run: the step pipeline mutates

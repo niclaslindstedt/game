@@ -1,6 +1,8 @@
 ---
 title: "`onPathLevel` is not a proxy for \"this map has walls\" — and the sim's unstick hides the difference"
 date: 2026-07-28
+scope: src/game/bot/
+concepts: [path-levels, walls, unstick]
 ---
 
 The whole wall-handling stack — `navTarget`'s wall-end sense, `unstuckInput`'s

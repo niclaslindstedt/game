@@ -1,6 +1,8 @@
 ---
 title: "`scroll: true` on a page that only just overflows HIDES rows the plain layout would have shown"
 date: 2026-08-05
+scope: content/mainmenu.yaml
+concepts: [layout, scroll, overflow]
 ---
 
 `scroll: true` does not mean "scroll if needed" — it means "cap this list at

@@ -1,6 +1,8 @@
 ---
 title: A carved map is only half-installed until every runtime read goes through it
 date: 2026-07-28
+scope: src/game/
+concepts: [carve, run-level-def, runtime-reads]
 ---
 
 `resolveLevelDef` is described as the ONE seam the generator hangs off, and it is

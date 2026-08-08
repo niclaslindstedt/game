@@ -1,6 +1,8 @@
 ---
 title: Generated grade variants are real bases but invisible to grep
 date: 2026-07-10
+scope: src/game/defs/
+concepts: [variants, grep, generated-ids]
 ---
 
 The single worst unique-authoring bug: naming a base, greping the

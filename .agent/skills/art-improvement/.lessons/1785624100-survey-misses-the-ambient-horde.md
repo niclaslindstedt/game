@@ -1,6 +1,8 @@
 ---
 title: The survey sheet used to hide the mobs the player sees most — check the horde model
 date: 2026-07-30
+scope: scripts/art-audit.mjs
+concepts: [survey, horde, blind-spots]
 ---
 
 `art-audit.mjs level <id>` collected `def.spawns` and `def.waves.budget` only.

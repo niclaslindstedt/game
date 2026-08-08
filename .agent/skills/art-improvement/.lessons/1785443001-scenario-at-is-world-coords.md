@@ -1,6 +1,8 @@
 ---
 title: A scenario spawn's `at` is WORLD coordinates, and a landing zone will shove staged mobs off their marks
 date: 2026-07-30
+scope: content/levels/
+concepts: [scenario, world-coords, staging]
 ---
 
 Phase 4 step 7's pose check takes `"spawns":[{"enemy":"x","at":{...}}]`, and

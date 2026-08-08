@@ -1,6 +1,8 @@
 ---
 title: An `apron` on an unwalled district paints pale squares all over its edges
 date: 2026-07-28
+scope: content/maps/
+concepts: [blueprint, apron, districts]
 ---
 
 `buildTiles` emits an entrance apron at the midpoint of every border whose

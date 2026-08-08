@@ -1,6 +1,8 @@
 ---
 title: The pickup ladder — make a family of pickups distinct by REGISTER, MATERIAL and GESTURE at once
 date: 2026-08-05
+scope: pwa/src/game/sfx/
+concepts: [pickups, register, family-design]
 ---
 
 Four loose pickups (ammo, medkit, repair, coins) had drifted into near-identical

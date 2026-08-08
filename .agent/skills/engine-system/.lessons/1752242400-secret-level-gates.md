@@ -1,6 +1,8 @@
 ---
 title: Secret levels ride a registry split + latent travel gates
 date: 2026-07-11
+scope: src/game/
+concepts: [levels, registry, travel-gates, unlocks]
 ---
 
 A level OUTSIDE the campaign (the bunker cow level) is a registry concern,

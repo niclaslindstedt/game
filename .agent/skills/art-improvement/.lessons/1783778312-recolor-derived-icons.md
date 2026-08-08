@@ -1,6 +1,8 @@
 ---
 title: Recolor-derived icons — design in the SHIPPED color, keep the swap chars
 date: 2026-07-11
+scope: content/sprites/icons/
+concepts: [icons, recolour, swap-chars]
 ---
 
 Some item icons are `swapPalette(BASE_ICON, {...})` recolors, and the BASE

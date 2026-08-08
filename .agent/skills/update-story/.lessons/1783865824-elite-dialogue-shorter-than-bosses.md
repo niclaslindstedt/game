@@ -1,6 +1,8 @@
 ---
 title: Elite/resident dialogue must stay shorter than every boss scene, or story_test fails
 date: 2026-07-12
+scope: content/enemies/
+concepts: [dialogue, length-budget, testing]
 ---
 
 `tests/content/story_test.ts` asserts "bosses get longer scenes than any elite":

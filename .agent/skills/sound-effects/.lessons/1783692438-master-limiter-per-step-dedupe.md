@@ -1,6 +1,8 @@
 ---
 title: Master limiter + per-step dedupe
 date: 2026-07-10
+scope: pwa/src/game/sfx/
+concepts: [limiter, dedupe, mixing]
 ---
 
 Every voice and the echo bus sum into one `DynamicsCompressor` limiter

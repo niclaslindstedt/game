@@ -1,6 +1,8 @@
 ---
 title: A visual artifact only a tab switch reproduces is a draw-once canvas
 date: 2026-08-05
+scope: pwa/src/game/render/
+concepts: [canvas, stale-draw, tab-switch]
 ---
 
 Symptom class: a DOM surface built from pixel canvases (the dialogue box, a

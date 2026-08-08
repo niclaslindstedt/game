@@ -1,6 +1,8 @@
 ---
 title: Scripted early drops constrain levelReq
 date: 2026-07-10
+scope: content/items/
+concepts: [level-req, early-drops, scripted-drops]
 ---
 
 Anything in a level's `earlyDrops` (or dropped by kill ~2) must be

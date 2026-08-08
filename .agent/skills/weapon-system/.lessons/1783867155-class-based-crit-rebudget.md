@@ -1,6 +1,8 @@
 ---
 title: Class-based crit re-budgets fast/slow weapons — re-center the drifters
 date: 2026-07-12
+scope: content/items/
+concepts: [crit, rebalance, weapon-classes]
 ---
 
 Crit damage moved from cadence-weighted (`weaponCritMult(def)`: fast 1.6 /

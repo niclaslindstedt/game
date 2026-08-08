@@ -1,6 +1,8 @@
 ---
 title: A hub-accepted campaign chain crosses levels — and two tests care
 date: 2026-08-01
+scope: content/quests/
+concepts: [campaign-chain, hub, testing]
 ---
 
 A giver can stand on the HUB (`level: garage`) and hand out `campaign: true`

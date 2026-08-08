@@ -1,6 +1,8 @@
 ---
 title: The sweep re-stages per sample — never "optimise" it back to one run
 date: 2026-08-05
+scope: pwa/scripts/store-shots/
+concepts: [sweep, staging, determinism]
 ---
 
 `store-shot-sweep.mjs` walks the menus and stages the recipe again for EVERY

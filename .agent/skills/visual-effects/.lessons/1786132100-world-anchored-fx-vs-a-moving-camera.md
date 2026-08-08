@@ -1,6 +1,8 @@
 ---
 title: A world-anchored effect and a moving camera are a two-frame effect
 date: 2026-08-06
+scope: pwa/src/game/render/
+concepts: [camera, world-anchored, two-frame]
 ---
 
 Building the effects gallery's DRIVE shelf turned up a rule worth carrying to

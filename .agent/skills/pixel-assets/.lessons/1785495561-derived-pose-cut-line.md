@@ -1,6 +1,8 @@
 ---
 title: A derived POSE must delete rows from the legs, and the cut line has to be read off the sprite
 date: 2026-07-31
+scope: content/sprites/
+concepts: [poses, derived-sprites, anatomy]
 ---
 
 Deriving a second pose from a base sprite (a kneel, a slump, a buckle) is a

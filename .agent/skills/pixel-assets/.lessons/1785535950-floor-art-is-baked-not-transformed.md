@@ -1,6 +1,8 @@
 ---
 title: Art that lies on the FLOOR is baked through the projection, never drawn through it
 date: 2026-08-01
+scope: content/sprites/
+concepts: [floor-plane, projection, baking]
 ---
 
 A pass that blits pixel art inside `applyWorldProjection` is resampled every

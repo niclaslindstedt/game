@@ -1,6 +1,8 @@
 ---
 title: Durability "max" is an instance question
 date: 2026-07-10
+scope: src/game/items/
+concepts: [durability, instances]
 ---
 
 Anything comparing or refilling against `def.durability` (repair kits, mercy

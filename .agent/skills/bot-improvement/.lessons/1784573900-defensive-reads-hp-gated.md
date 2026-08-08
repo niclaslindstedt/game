@@ -1,6 +1,8 @@
 ---
 title: Arm defensive positioning reads on HP, not body count — and never A/B a bot change on one seed
 date: 2026-07-20
+scope: src/game/bot/
+concepts: [hp-gating, positioning, ab-testing]
 ---
 
 Two lessons from adding the escape-route guard (`escapeLaneMin`) and the

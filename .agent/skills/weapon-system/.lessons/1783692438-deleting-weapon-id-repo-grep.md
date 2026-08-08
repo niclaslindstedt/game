@@ -1,6 +1,8 @@
 ---
 title: Deleting a weapon id is a repo-wide grep
 date: 2026-07-10
+scope: content/items/
+concepts: [ids, retirement, migrations]
 ---
 
 Not a def deletion: level pools, `placedItems`, `earlyDrops`, enemy

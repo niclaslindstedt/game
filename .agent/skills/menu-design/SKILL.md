@@ -20,8 +20,10 @@ three other screens' back rows on the wrong thing. Anything that feels like it
 wants a second list of screen ids is almost certainly derivable from the tree;
 derive it.
 
-**Before starting, read past lessons:**
-`node scripts/skill-lessons.mjs menu-design`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs menu-design --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 This skill covers the TITLE menu (the front door and everything under it) —
 `content/mainmenu.yaml`, which is the one catalog a MOD may not ship, because

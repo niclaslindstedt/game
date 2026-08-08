@@ -1,6 +1,8 @@
 ---
 title: `sprite-author.mjs prompt` needs the exact frame key for an animated sprite
 date: 2026-07-30
+scope: scripts/sprite-author.mjs
+concepts: [prompts, frame-keys, animation]
 ---
 
 `node scripts/sprite-author.mjs prompt <base>` errors with *no base sprite

@@ -1,6 +1,8 @@
 ---
 title: Map renderers must ROUND world→screen coords — fractional y silently wraps labels/markers
 date: 2026-07-18
+scope: scripts/asset-tools/
+concepts: [renderers, coordinates, labels]
 ---
 
 The asset toolkit's `setPixel` (`scripts/asset-tools/surface.mjs`) writes

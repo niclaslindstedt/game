@@ -1,6 +1,8 @@
 ---
 title: Treat the README as the mod creator's front door
 date: 2026-08-04
+scope: README.md
+concepts: [audience, modding]
 ---
 
 The repository README is primarily for prospective and current mod creators.

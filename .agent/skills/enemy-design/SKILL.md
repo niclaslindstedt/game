@@ -12,7 +12,10 @@ surfaces the roles demand: elites and bosses speak, and what they say is
 manuscript canon. Load `pixel-assets` for the sprites, `level-design` for
 the map wiring, `weapon-system` for named drops.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs enemy-design`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs enemy-design --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 ## Where everything lives
 
@@ -212,9 +215,15 @@ field, is stepped from `src/game/boss-death.ts`, drawn by
 
 ## Skill self-improvement
 
-Record new patterns (a mechanic combination, a scaling gotcha, a wound
-override case) as lesson fragments under `.lessons/` (see
-[`../LESSONS.md`](../LESSONS.md)) — never by appending to this file. Read
-past ones with `node scripts/skill-lessons.mjs enemy-design` before
-starting; promote proven ones into the tables above during a consolidation
-pass.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the tables above.
+
+```sh
+node scripts/skill-lessons.mjs enemy-design --list
+```
+
+Worth recording here: a mechanic combination, a scaling gotcha, a wound
+override case.

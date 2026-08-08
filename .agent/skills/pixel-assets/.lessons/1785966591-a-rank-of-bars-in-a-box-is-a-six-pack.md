@@ -1,6 +1,8 @@
 ---
 title: A rank of upright bars in a box reads as a six-pack, whatever you colour it
 date: 2026-08-05
+scope: content/sprites/icons/
+concepts: [icons, readability, unintended-reading]
 ---
 
 The AMMUNITION pickups were three tall bars standing side by side inside a

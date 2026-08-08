@@ -1,6 +1,8 @@
 ---
 title: Filtering bot goals with plain routeReachable throws away everything behind a closed APPROACH door — and a march gauged flat is a march a fight cancels
 date: 2026-08-06
+scope: src/game/bot/errands.ts
+concepts: [errands, reachability, doors]
 ---
 
 Two traps, both found putting quest givers into the macro ladder

@@ -1,6 +1,8 @@
 ---
 title: Any change to per-drop rng draws shifts every seeded content test
 date: 2026-07-10
+scope: src/game/
+concepts: [rng-streams, determinism, seeded-tests]
 ---
 
 A change to how many `state.rng` draws a drop consumes shifts every seeded

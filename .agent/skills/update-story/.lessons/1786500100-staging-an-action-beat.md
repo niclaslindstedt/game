@@ -1,6 +1,8 @@
 ---
 title: Staging an ACTION into a scene — depth is `pos.y`, height is `lift`
 date: 2026-08-01
+scope: content/cutscenes/
+concepts: [cutscenes, staging, depth-and-lift]
 ---
 
 When a request turns a narrated beat into a played one ("he should actually

@@ -18,7 +18,10 @@ build will refuse, and how to check the result — plus the one thing no schema
 can check: whether the errand is worth doing at all. If you read one section
 before writing anything, make it **What makes an errand worth doing**.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs quest-design`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs quest-design --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 Load `pixel-assets` if the quest needs a new giver/escort sprite or item icon,
 `enemy-design` if it needs a new breed to kill or talk to, `update-story` if it
@@ -418,10 +421,17 @@ page, `lore` over 420 chars, `xpShare` over 2, an errand with no reward.
       exact silent omission the guard exists to prevent
 - [ ] Looked at the offer box and the tracker in the running game
 - [ ] Changeset fragment written
-- [ ] A lesson fragment if this pass taught you something
+- [ ] `skill-reflection` run: a lesson fragment if this pass taught you
+      something, and the stale/duplicate ones dealt with
 
 ## Skill self-improvement
 
-When a pass teaches you a gotcha, record it as a fragment under
-`.lessons/$(date +%s)-<slug>.md` (see `.agent/skills/LESSONS.md`) — in the same
-PR as the work that taught it. Never append to this file.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the tables and checklists above.
+
+```sh
+node scripts/skill-lessons.mjs quest-design --list
+```

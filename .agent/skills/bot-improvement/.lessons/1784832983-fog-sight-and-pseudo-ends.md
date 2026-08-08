@@ -1,6 +1,8 @@
 ---
 title: Wall sight is screen + minimap, and a wall "end" must pass the blocker along the goal line
 date: 2026-07-23
+scope: src/game/bot/
+concepts: [fog, sight, walls]
 ---
 
 Two lessons from making the bot trace walls by fog-of-war knowledge (#p86h1j):
