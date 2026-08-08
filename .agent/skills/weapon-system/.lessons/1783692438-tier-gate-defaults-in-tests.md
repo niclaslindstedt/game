@@ -1,6 +1,8 @@
 ---
 title: Tier-gate defaults in tests — mlvl 99 and powerScaled
 date: 2026-07-10
+scope: tests/engine/
+concepts: [tier-gates, testing, defaults]
 ---
 
 `tests/engine/helpers.ts` `makeEnemy` defaults `mlvl: 99` (past every gate)

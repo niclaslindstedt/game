@@ -1,6 +1,8 @@
 ---
 title: ENHANCED DAMAGE is the rarity lever — don't reintroduce a hidden multiplier
 date: 2026-07-28
+scope: content/item_rarity.yaml
+concepts: [rarity, enhanced-damage, multipliers]
 ---
 
 Weapon damage used to be moved by two invisible multipliers: a global ×0.5 on

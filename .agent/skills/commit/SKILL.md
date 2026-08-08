@@ -7,6 +7,53 @@ description: "Commit staged changes, push the branch, and create or update a PR 
 
 This skill handles the full workflow: verify quality gates → commit → push → create or update a PR. Use the repository command below; keep the manual steps only as a fallback when the command itself is being repaired.
 
+It is also the owner of this repo's **commit and PR conventions** and of the
+**merge-conflict procedure** — both below, and both pointed at from `AGENTS.md`
+rather than restated there.
+
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs commit --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
+## The conventions
+
+- All commits follow [Conventional Commits](https://www.conventionalcommits.org/).
+- PRs are squash-merged; the **PR title** becomes the single commit on `main`,
+  so it must follow conventional-commit format.
+- Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
+- **THE PUSH AND THE PR ARE ONE STEP.** The moment a branch is pushed as
+  finished work, open its pull request — same turn, no waiting for a suite, a
+  review, or permission. A pushed branch with no PR is invisible: nothing runs
+  the PR-only checks against it, nobody is asked to look at it, and the work
+  sits done and unmergeable until somebody notices. If a PR is already open
+  for the branch, the push updates it and there is nothing more to do.
+- **Push and open the PR WHILE the final verification runs, not after it.**
+  The full suite takes minutes and passes almost every time, so waiting for it
+  before pushing spends that time twice — once locally and again in CI, which
+  is about to run the same checks anyway. Start `make test` in the background,
+  push and open the PR, then read the result: green means the work is already
+  up, and red means a follow-up commit onto a branch that was going to need
+  one regardless. This applies to the FINAL check, not to the fast ones —
+  typecheck and the affected suite still run before the commit is written.
+- **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
+  just `| tail`. A run that ends `1 failed` with the failure scrolled past is
+  a run that has to be done again to learn anything, and the second run is
+  where a flake hides from you.
+- **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
+  out its URL and a short summary of what was done, then stop. Don't
+  proactively subscribe to PR activity, poll CI, or schedule check-ins, and
+  leave code review and the merge decision to a human.
+  - **Never call the PR-activity subscription tools** — in particular don't
+    `unsubscribe_pr_activity`. If the harness auto-subscribes the session,
+    leave the subscription alone: every such tool call burns tokens and delays
+    the human review that is the whole point of opening the PR.
+  - **Act on the events that subscription delivers when they're actionable:**
+    if a CI failure or a merge conflict arrives for the PR and you can fix it,
+    push the fix. Leave everything else (review comments, questions, style
+    nits) to the human — don't auto-push follow-up fixes for those. Only
+    otherwise return to a PR when explicitly asked.
+
 ## Preferred command
 
 Write the PR body from `.github/PULL_REQUEST_TEMPLATE.md` into a scratch file,
@@ -31,16 +78,30 @@ changing Git or GitHub state.
 
 ## Step 1: Quality Gates
 
-Run all checks before committing. All must pass:
+**RUN EVERY CHECK CI RUNS, AND RUN THE CHEAP ONES BEFORE THE COMMIT.**
+`.github/workflows/ci.yml` is the list, and there is nothing on it a local
+clone cannot run. The split is by COST, not by importance:
 
-```sh
-make build     # must compile cleanly
-make test      # all tests must pass
-make lint      # zero warnings
-make fmt-check # code formatted
-```
+| Before the commit is written (seconds)                                                     | Alongside the push (minutes)  |
+| ------------------------------------------------------------------------------------------ | ----------------------------- |
+| `make fmt`, then `make fmt-check`                                                          | `make test` (CI shards it 3×) |
+| `make lint` (typecheck + the zero-warning linter)                                          | `make build`                  |
+| `make actionlint` / `make shellcheck` — only if a workflow or a `.sh` was touched          |                               |
+| the changeset call: a fragment under `.changes/unreleased/`, or the `no-changelog` label   |                               |
 
-Stop if any check fails. Fix the issue, then re-run.
+**`make fmt` is the one that gets skipped, and it is the one that costs
+nothing to run.** It is not a check that can be reasoned past: Prettier has
+an opinion about some line nobody thought about, the `format` job runs
+`fmt-check` on every push, and a red CI on whitespace burns a whole
+round-trip and buries any real failure underneath it. It is also the only
+check whose fix is GENERATED rather than authored, so there is no version of
+"push and see" that is faster than just running it.
+
+Pushing while the SLOW column runs is the whole point of the convention above.
+Pushing while the FAST column has not run is how a branch goes red on
+something the machine would have fixed in four seconds.
+
+Stop if a FAST check fails. Fix the issue, then re-run.
 
 ## Step 2: Create a Feature Branch
 
@@ -152,10 +213,40 @@ EOF
 
 Re-evaluate the PR title and description to reflect the **combined** scope of all commits on the branch, then `gh pr edit --title ... --body ...` with the same template.
 
+## Resolving merge conflicts — cut a backup branch FIRST
+
+**Before starting a merge or a rebase that may conflict, park the branch:**
+
+```sh
+git branch -f backup/<branch-name>-premerge HEAD    # then merge
+```
+
+A conflicted working tree is the most fragile state a repo gets into, and the
+commands that feel like "let me just look at something else for a second" —
+`git stash`, `git checkout <ref> -- .`, `git reset`, adding a worktree — will
+happily throw the resolution away, clear `MERGE_HEAD`, and leave no obvious way
+back. With the backup branch in place the recovery is one line
+(`git reset --hard backup/<branch-name>-premerge`) instead of an archaeology
+session in the reflog; without it, any unpushed work in the merge is gone.
+
+Delete the backup once the merge is committed, verified, and pushed — it is a
+seatbelt, not a branch anybody should review.
+
+Two rules that go with it, both learned the same way:
+
+- **Never run an exploratory command against the working tree mid-conflict.**
+  To see what another ref says, ask git directly (`git show <ref>:<path>`,
+  `git diff <ref>`) — those read without touching a file. If a build genuinely
+  has to run on another ref, `git worktree add` a SEPARATE directory, and do it
+  before the merge starts, never during it.
+- **Resolve, `git add`, and commit in one unbroken stretch.** Don't leave a
+  conflicted tree parked across unrelated work.
+
 ## Key Reminders
 
 - **PR title = squashed commit on main.** Choose the type and summary carefully; individual branch commits disappear at merge.
 - **The changelog rides `.changes/unreleased/` fragments** — not the PR title. No user-visible change ships without one (Step 4).
 - If the branch touches multiple scopes, use comma-separated scopes: `feat(api,auth): ...`
 - Never skip hooks (`--no-verify`) — fix the underlying issue instead.
-- Per CLAUDE.md: once the PR is open, write out its URL and a short summary, then stop — don't subscribe to PR activity, poll CI, or schedule check-ins.
+- Once the PR is open, write out its URL and a short summary, then stop — don't subscribe to PR activity, poll CI, or schedule check-ins.
+- **Before the commit, run `skill-reflection`** for every skill this session loaded.

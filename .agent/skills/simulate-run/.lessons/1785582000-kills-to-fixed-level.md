@@ -1,6 +1,8 @@
 ---
 title: A/B a leveling faucet on KILLS-TO-A-FIXED-LEVEL, never on kills-per-ding
 date: 2026-08-01
+scope: scripts/simulate-run.mjs
+concepts: [xp-curve, ab-testing, measurement]
 ---
 
 Comparing two XP faucets across campaign sweeps, the obvious summary

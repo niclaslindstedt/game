@@ -1,6 +1,7 @@
 ---
 title: To judge a TRANSIENT moment, watch it from inside the page and freeze it — polling from Playwright misses it
 date: 2026-08-01
+concepts: [playwright, screenshots, transient-fx, freeze]
 ---
 
 `playtest.mjs` screenshots at fixed beats, which is fine for "does the HUD

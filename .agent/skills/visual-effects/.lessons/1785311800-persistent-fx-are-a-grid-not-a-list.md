@@ -1,6 +1,8 @@
 ---
 title: A PERSISTENT effect is a grid, not a list — and its top rung will draw rectangles
 date: 2026-07-29
+scope: pwa/src/game/render/
+concepts: [persistent-fx, grid, blood-floor]
 ---
 
 Transient FX are a list of `Effect`s and that is right — they expire. An effect

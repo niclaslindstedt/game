@@ -1,6 +1,8 @@
 ---
 title: Publish the tier that OWNS the words, not the tier that transcribes them
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [story-tiers, publishing]
 ---
 
 The plan said the story pages would be built from `docs/story.md` **and** the

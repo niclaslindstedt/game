@@ -1,6 +1,8 @@
 ---
 title: Making the sim run faster — the bot's per-tick economy walks and the megamorphic hidden-class traps that dominate the profile
 date: 2026-07-24
+scope: src/game/bot/
+concepts: [performance, hidden-classes, profiling]
 ---
 
 When simulations feel slow, profile the REAL loop with V8, not guesswork:

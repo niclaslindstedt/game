@@ -26,7 +26,10 @@ To improve an EXISTING venue's feel (rather than add one), use the
 **`map-improvement`** skill — it confirms the intended feel with the user first,
 then iterates render → evaluate → improve.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs level-design`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs level-design --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 ## The YAML format + compile pipeline
 
@@ -322,7 +325,15 @@ else to render — change the seed to see another run's map.
 
 ## Skill self-improvement
 
-When a pass teaches a new wiring point, record it as a lesson fragment under
-`.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by appending to this
-file. Read past ones with `node scripts/skill-lessons.mjs level-design` before
-starting. A consolidation pass promotes proven wiring points into the tables above.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the tables above.
+
+```sh
+node scripts/skill-lessons.mjs level-design --list
+```
+
+A new wiring point a pass had to discover is the thing most worth recording
+here.

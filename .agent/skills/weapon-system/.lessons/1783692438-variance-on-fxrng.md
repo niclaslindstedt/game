@@ -1,6 +1,8 @@
 ---
 title: Per-hit variance draws off state.fxRng, a SECOND stream — never state.rng
 date: 2026-07-10
+scope: src/game/
+concepts: [rng-streams, variance, determinism]
 ---
 
 This is the trick that let damage ranges land with zero seeded-loot-test

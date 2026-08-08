@@ -1,6 +1,8 @@
 ---
 title: A line with no speaker's name and no portrait cannot live in `content/thoughts.yaml`
 date: 2026-08-07
+scope: content/thoughts.yaml
+concepts: [barks, portraits, schema]
 ---
 
 The thought catalog models a BEAT: `speaker` and `portrait` are both REQUIRED by

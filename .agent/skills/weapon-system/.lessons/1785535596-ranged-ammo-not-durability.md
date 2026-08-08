@@ -1,6 +1,8 @@
 ---
 title: A ranged weapon's opening ammo must key off the DIFFICULTY'S starting weapon, not the sidearm
 date: 2026-07-31
+scope: src/game/items/ammo.ts
+concepts: [ammo, durability, starting-weapons]
 ---
 
 Ranged weapons carry `ammo:` and no `durability:` (the item schema enforces the

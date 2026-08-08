@@ -1,6 +1,8 @@
 ---
 title: Tune an additive glow's alpha against the floor it will actually appear on — a copied alpha is not a copied effect
 date: 2026-08-05
+scope: pwa/src/game/render/
+concepts: [additive-glow, alpha, tuning]
 ---
 
 The car's "you can get in this" halo (`pwa/src/game/render/vehicles.ts`) was

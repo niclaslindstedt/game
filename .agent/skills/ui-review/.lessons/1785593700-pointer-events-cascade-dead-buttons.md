@@ -1,6 +1,8 @@
 ---
 title: A visible button can be pointer-dead — verify with elementFromPoint, not the render
 date: 2026-08-01
+scope: pwa/src/
+concepts: [pointer-events, verification, buttons]
 ---
 
 The shop's floating deal card (`.item-tooltip.shop-deal-card`) shipped with

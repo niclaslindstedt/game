@@ -1,6 +1,8 @@
 ---
 title: A leaner/darker minion redraw can trip the 6px wound-visibility lint — budget for it
 date: 2026-07-11
+scope: content/sprites/
+concepts: [wounds, lint, contrast]
 ---
 
 `make assets` warns `hurt overlay visibly changes only N px` when the

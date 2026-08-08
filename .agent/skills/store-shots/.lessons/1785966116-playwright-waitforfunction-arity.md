@@ -1,6 +1,8 @@
 ---
 title: waitForFunction takes THREE arguments — options passed second are silently the page function's arg
 date: 2026-08-05
+scope: pwa/scripts/store-shots/
+concepts: [playwright, api-arity]
 ---
 
 `page.waitForFunction(pageFunction, arg, options)`. A recipe trigger that waits

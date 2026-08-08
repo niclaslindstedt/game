@@ -1,6 +1,8 @@
 ---
 title: A bot weapon-swap system is a harness action, and every junk predicate must skip its keep-set or the merchant errand loops
 date: 2026-07-21
+scope: src/game/bot/weapon-swap.ts
+concepts: [weapon-swap, harness-actions, errands]
 ---
 
 The POCKET ARSENAL (bot-economy.ts `stepBotWeaponSwap`) lets a blade hero

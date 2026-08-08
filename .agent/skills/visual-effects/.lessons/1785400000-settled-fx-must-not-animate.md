@@ -1,6 +1,8 @@
 ---
 title: A PERSISTENT effect must hold still — motion on it reads as the material misbehaving
 date: 2026-07-29
+scope: pwa/src/game/render/
+concepts: [persistent-fx, motion, blood-floor]
 ---
 
 Transient FX earn their motion: they exist for a third of a second and the

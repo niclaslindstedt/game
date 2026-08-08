@@ -1,6 +1,8 @@
 ---
 title: Straight-up jumps were mid-air branch churn — commit a hop to a plan and steer it to the landing
 date: 2026-07-21
+scope: src/game/bot/
+concepts: [jumps, commitment, branch-churn]
 ---
 
 "The bot jumps straight up in the air" was not a bad takeoff decision — the

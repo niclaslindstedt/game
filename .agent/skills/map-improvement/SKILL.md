@@ -36,7 +36,10 @@ This skill drives the loop that turns that visibility into better maps. Load the
 `level-design` skill for the format, fields, and the cross-cutting wiring; this
 skill is the *iteration method*.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs map-improvement`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs map-improvement --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 ## The whole design surface is on the table
 
@@ -233,7 +236,15 @@ A shipped level is content — treat the change like `level-design` says:
 
 ## Skill self-improvement
 
-Record a new heuristic (a tell in the heatmap, a lever that reliably fixes a feel
-problem) as a lesson fragment under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md));
-read past ones with `node scripts/skill-lessons.mjs map-improvement` before
-starting.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the loop above.
+
+```sh
+node scripts/skill-lessons.mjs map-improvement --list
+```
+
+Worth recording here: a tell in the heatmap, a lever that reliably fixes a feel
+problem.

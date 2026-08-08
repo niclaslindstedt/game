@@ -9,6 +9,11 @@ description: "Use when README.md may be stale. Discovers commits since the last 
 
 `README.md` is the primary user-facing documentation for game. Per §3 of `OSS_SPEC.md` it must cover the project description, installation, a quick-start, usage, contribution pointer, license, and a link to `OSS_SPEC.md`. It goes stale whenever a CLI flag, subcommand, default, or supported surface changes without a matching edit.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs update-readme --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Audience and editorial stance
 
 The README's primary audience is **prospective and current mod creators**. It
@@ -89,5 +94,5 @@ Extend this table every time you find a new source-of-truth file that feeds the 
 After a run, improve this file in place:
 
 1. **Grow the mapping table** with any new source → README relationship you discovered (operating data — edit it in place).
-2. **Record patterns** for recurring edits as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-readme`) — fragments never conflict across parallel sessions.
+2. **Record patterns** for recurring edits as lesson fragments — load the **`skill-reflection`** skill, which owns recording, scoping, pruning, merging and promoting them (`node scripts/skill-lessons.mjs update-readme --list`).
 3. **Commit the skill edit** together with the README edit so the knowledge compounds.

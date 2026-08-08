@@ -1,6 +1,8 @@
 ---
 title: A per-player rule ships as a latch flag + a sweep, and must be an exact no-op at one hero
 date: 2026-08-01
+scope: src/game/
+concepts: [party, multiplayer, latch, no-op]
 ---
 
 Per-player death (§4.2, `downed.ts`) crystallized the pattern every co-op rule

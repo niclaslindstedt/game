@@ -1,6 +1,8 @@
 ---
 title: Ground camouflage is a palette diff, not a judgement call — and fixing half a family is worse than none
 date: 2026-07-30
+scope: content/sprites/
+concepts: [camouflage, palette-diff, families]
 ---
 
 Two things worth doing mechanically before the eye gets involved.

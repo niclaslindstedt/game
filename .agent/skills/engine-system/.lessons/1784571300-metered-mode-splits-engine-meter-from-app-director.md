@@ -1,6 +1,8 @@
 ---
 title: A paid/metered MODE splits into an engine meter + an app flight director
 date: 2026-07-20
+scope: src/game/autopilot.ts
+concepts: [metered-mode, engine-app-split, autopilot]
 ---
 
 The AUTO PILOT (coin-drained self-play, `src/game/autopilot.ts`) needed state

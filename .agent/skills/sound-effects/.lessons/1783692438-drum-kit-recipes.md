@@ -1,6 +1,8 @@
 ---
 title: Drum kit recipes
 date: 2026-07-10
+scope: content/music/
+concepts: [drums, recipes, tracker]
 ---
 
 Kick = triangle A2, `slide 0.25`, gate 1; snare = noise, highpass 1400, vol

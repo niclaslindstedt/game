@@ -1,6 +1,8 @@
 ---
 title: A per-rank ladder is a reference hero PER RANK, not the authored slope times the rank
 date: 2026-07-30
+scope: pwa/scripts/library/
+concepts: [talents, ranks, accessors]
 ---
 
 The arsenal's reference-hero rule ("would a player ever see this number") has a

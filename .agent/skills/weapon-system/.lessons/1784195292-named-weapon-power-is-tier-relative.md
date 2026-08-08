@@ -1,6 +1,8 @@
 ---
 title: Judge named-weapon "overpowered" tier-relative, and watch the damagePct double-count
 date: 2026-07-16
+scope: content/items/
+concepts: [uniques, tier-relative, damage-pct]
 ---
 
 When auditing whether a named weapon (unique/legendary/artifact) is overpowered,

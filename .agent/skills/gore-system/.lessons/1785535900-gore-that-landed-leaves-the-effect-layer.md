@@ -1,6 +1,8 @@
 ---
 title: Gore that has LANDED belongs under the actors, not in the effect layer
 date: 2026-08-01
+scope: pwa/src/game/render/
+concepts: [render-layers, blood-floor, effects]
 ---
 
 The effect layer (`pwa/src/game/render/effects.ts`) is drawn AFTER the whole

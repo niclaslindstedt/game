@@ -1,6 +1,8 @@
 ---
 title: A multi-beat scene needs a STATE gate between beats, not a bigger distance
 date: 2026-07-31
+scope: content/cutscenes/
+concepts: [scenes, state-gate, verification]
 ---
 
 Sequenced beats driven by a proximity/contact trigger collapse into consecutive

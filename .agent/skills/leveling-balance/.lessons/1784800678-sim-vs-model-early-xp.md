@@ -1,6 +1,8 @@
 ---
 title: Opening-map XP runs 2–3× richer than kill counts — tune early rows against the simulator
 date: 2026-07-23
+scope: content/leveling.yaml
+concepts: [xp-curve, simulator, early-game]
 ---
 
 The analytic calculator (`leveling-curve.mjs`) prices levels in reference-mob

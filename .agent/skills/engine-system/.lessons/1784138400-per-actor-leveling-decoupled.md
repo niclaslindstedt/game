@@ -1,6 +1,8 @@
 ---
 title: Per-actor leveling decoupled from the hero rides the loadout + a cycle-free stat module
 date: 2026-07-15
+scope: src/game/
+concepts: [leveling, companions, module-cycles]
 ---
 
 Giving a secondary actor (companions) its OWN level/XP, growing FOREVER across

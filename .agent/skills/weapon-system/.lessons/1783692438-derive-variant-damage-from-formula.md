@@ -1,6 +1,8 @@
 ---
 title: Derive variant damage from the budget FORMULA, not by scaling the base
 date: 2026-07-10
+scope: content/items/
+concepts: [variants, damage-budget, formula]
 ---
 
 Ratio-scaling carries the base's within-tolerance drift into the variant,

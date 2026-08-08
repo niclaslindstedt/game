@@ -1,6 +1,8 @@
 ---
 title: Judge pixel alignment by MEASURING the canvases, never by looking at a screenshot
 date: 2026-07-31
+scope: pwa/src/game/
+concepts: [alignment, measurement, verification]
 ---
 
 The quest pick list's `!` sat visibly off the baseline of its row label. Two

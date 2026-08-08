@@ -1,6 +1,8 @@
 ---
 title: Starting weapons are lore, not economy
 date: 2026-07-10
+scope: content/items/
+concepts: [starting-weapons, lore, economy]
 ---
 
 The difficulty's wall weapons (wand/sword/knife/knuckles/stick) and the

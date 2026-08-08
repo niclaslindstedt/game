@@ -1,6 +1,8 @@
 ---
 title: The library stylesheet is a JS template literal — a backtick in a CSS comment breaks the build
 date: 2026-07-30
+scope: pwa/scripts/library/styles.mjs
+concepts: [stylesheet, template-literal, build-break]
 ---
 
 `pwa/scripts/library/styles.mjs` returns the whole stylesheet from one

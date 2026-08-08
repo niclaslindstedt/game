@@ -1,6 +1,8 @@
 ---
 title: Three "obviously human" ammunition behaviours for the bot all measured as losses — including refusing to draw a dry gun
 date: 2026-08-01
+scope: src/game/bot/
+concepts: [ammo, husbanding, measurement]
 ---
 
 Asked to make the autopilot ammunition-aware, I built four changes, measured

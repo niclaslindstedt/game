@@ -1,6 +1,8 @@
 ---
 title: def.damage is the MEAN of a range, not a fixed hit
 date: 2026-07-10
+scope: content/items/
+concepts: [damage, ranges, budget]
 ---
 
 Every blow rolls inside a band (`WEAPON.damageVariance` default, per-def

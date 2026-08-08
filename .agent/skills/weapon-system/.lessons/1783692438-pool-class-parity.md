@@ -1,6 +1,8 @@
 ---
 title: A level pool is 2 melee / 2 ranged / 2 magic
 date: 2026-07-10
+scope: content/levels/
+concepts: [loot-pool, class-parity]
 ---
 
 Magic shipped half-served (one base per level → 12 rungs vs 24). Bringing a

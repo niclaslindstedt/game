@@ -1,6 +1,8 @@
 ---
 title: A decaying knockback impulse rides new Enemy/Player velocity fields + one gate in moveEnemy
 date: 2026-07-19
+scope: src/game/
+concepts: [knockback, velocity, movement]
 ---
 
 A shockwave that FLINGS mobs and the hero to the sides (the meteor-blast

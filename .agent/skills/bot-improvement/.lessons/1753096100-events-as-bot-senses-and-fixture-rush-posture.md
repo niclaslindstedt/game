@@ -1,6 +1,8 @@
 ---
 title: state.events is the bot's clean channel for learned memory, and the boss-ready fixture flips posture rows under tests
 date: 2026-07-21
+scope: src/game/bot/
+concepts: [signals, events, testing]
 ---
 
 Two findings from the pass-over top-off + learned-arrow work:

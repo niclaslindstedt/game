@@ -1,6 +1,8 @@
 ---
 title: A single level can BE the whole 30-sprite long list
 date: 2026-07-11
+scope: content/sprites/
+concepts: [survey, scope, long-list]
 ---
 
 Some levels have ~30 total sprites, so the survey sheet already *is* the

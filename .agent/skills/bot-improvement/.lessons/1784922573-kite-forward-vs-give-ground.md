@@ -1,6 +1,8 @@
 ---
 title: On walled path levels a ranged hero must KITE FORWARD in the hold-band zone, not backpedal — the give-ground arc traps him in a basin
 date: 2026-07-24
+scope: src/game/bot/
+concepts: [kiting, positioning, path-levels]
 ---
 
 `survive()` in `fight.ts` used to fire GIVE GROUND for the WHOLE too-close zone

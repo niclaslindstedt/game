@@ -1,6 +1,8 @@
 ---
 title: Read `EnemyDef.locomotion` before you draw the lower body — and the `_1` frame
 date: 2026-07-30
+scope: content/enemies/
+concepts: [locomotion, anatomy, frames]
 ---
 
 Every haunting on THE MOON is `locomotion: float`, which means the renderer

@@ -72,5 +72,5 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 ## Skill self-improvement
 
 1. **Expand the mapping table** if a new source file started feeding the website (operating data — edit it in place).
-2. **Record extraction quirks** (e.g. "anchor X is parsed from heading Y") as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-website`) — fragments never conflict across parallel sessions.
+2. **Record extraction quirks** (e.g. "anchor X is parsed from heading Y") as lesson fragments — load the **`skill-reflection`** skill, which owns recording, scoping, pruning, merging and promoting them (`node scripts/skill-lessons.mjs update-website --list`).
 3. **Commit the skill edit** alongside the website update.

@@ -1,6 +1,8 @@
 ---
 title: The event→sound route key exists in four places, and a drift is silent
 date: 2026-08-07
+scope: pwa/src/game/sfx/
+concepts: [route-key, drift, mods]
 ---
 
 `type|weaponClass|crit|kind|tier` is built by `routeKey` (`sfx/index.ts`),

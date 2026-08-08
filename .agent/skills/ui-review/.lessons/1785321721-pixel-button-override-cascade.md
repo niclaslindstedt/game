@@ -1,6 +1,8 @@
 ---
 title: A single-class override of a single-class base only works BELOW it in styles.css
 date: 2026-08-01
+scope: pwa/src/styles.css
+concepts: [css-cascade, overrides, buttons]
 ---
 
 Three separate sweeps have now lost time to the same cause: `styles.css` is one

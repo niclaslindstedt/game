@@ -1,6 +1,8 @@
 ---
 title: The nav's last item vanishes without a trace when a section is added
 date: 2026-07-30
+scope: pwa/scripts/library/
+concepts: [navigation, clipping, layout]
 ---
 
 Adding a section to the library adds a name to `.site-nav`, and the nav was

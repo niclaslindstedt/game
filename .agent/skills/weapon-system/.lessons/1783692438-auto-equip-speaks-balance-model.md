@@ -1,6 +1,8 @@
 ---
 title: Auto-equip must speak the balance model — at realized AoE, not ceiling
 date: 2026-07-10
+scope: src/game/items/
+concepts: [auto-equip, balance-model, aoe]
 ---
 
 When per-target damage was budget-normalized, raw dps ranking

@@ -90,95 +90,20 @@ the embedded site and is the ONLY correct target for a store build, and the
 `native:ios*` scripts run `expo prebuild` first so a change to
 `native/app.config.js` re-syncs instead of shipping a stale native project.
 
-## Commit and PR conventions
+## Commit and PR conventions — the `commit` skill owns them
 
-- All commits follow [Conventional Commits](https://www.conventionalcommits.org/).
-- PRs are squash-merged; the **PR title** becomes the single commit on `main`,
-  so it must follow conventional-commit format.
-- Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
-- **Push and open the PR WHILE the final verification runs, not after it.**
-  The full suite takes minutes and passes almost every time, so waiting for it
-  before pushing spends that time twice — once locally and again in CI, which
-  is about to run the same checks anyway. Start `make test` in the background,
-  push and open the PR, then read the result: green means the work is already
-  up, and red means a follow-up commit onto a branch that was going to need
-  one regardless. This applies to the FINAL check, not to the fast ones —
-  typecheck and the affected suite still run before the commit is written.
-- **THE PUSH AND THE PR ARE ONE STEP.** The moment a branch is pushed as
-  finished work, open its pull request — same turn, no waiting for a suite, a
-  review, or permission. A pushed branch with no PR is invisible: nothing runs
-  the PR-only checks against it, nobody is asked to look at it, and the work
-  sits done and unmergeable until somebody notices. If a PR is already open
-  for the branch, the push updates it and there is nothing more to do.
-- **RUN EVERY CHECK CI RUNS, AND RUN THE CHEAP ONES BEFORE THE COMMIT.**
-  `.github/workflows/ci.yml` is the list, and there is nothing on it a local
-  clone cannot run. The split is by COST, not by importance:
+**Load the `commit` skill before committing or opening a PR.** It carries the
+whole procedure and the rules that used to sit here: conventional commits, the
+PR title becoming the squashed commit on `main`, the merge-conflict backup
+branch, and the two that get skipped most —
 
-  | Before the commit is written (seconds)                                                   | Alongside the push (minutes)  |
-  | ---------------------------------------------------------------------------------------- | ----------------------------- |
-  | `make fmt`, then `make fmt-check`                                                        | `make test` (CI shards it 3×) |
-  | `make lint` (typecheck + the zero-warning linter)                                        | `make build`                  |
-  | `make actionlint` / `make shellcheck` — only if a workflow or a `.sh` was touched        |                               |
-  | the changeset call: a fragment under `.changes/unreleased/`, or the `no-changelog` label |                               |
-
-  **`make fmt` is the one that gets skipped, and it is the one that costs
-  nothing to run.** It is not a check that can be reasoned past: Prettier has
-  an opinion about some line nobody thought about, the `format` job runs
-  `fmt-check` on every push, and a red CI on whitespace burns a whole
-  round-trip and buries any real failure underneath it. It is also the only
-  check whose fix is GENERATED rather than authored, so there is no version of
-  "push and see" that is faster than just running it.
-
-  Pushing while the SLOW column runs is the whole point of the rule above.
-  Pushing while the FAST column has not run is how a branch goes red on
-  something the machine would have fixed in four seconds.
-
-- **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
-  just `| tail`. A run that ends `1 failed` with the failure scrolled past is
-  a run that has to be done again to learn anything, and the second run is
-  where a flake hides from you.
-- **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
-  out its URL and a short summary of what was done, then stop. Don't
-  proactively subscribe to PR activity, poll CI, or schedule check-ins, and
-  leave code review and the merge decision to a human.
-  - **Never call the PR-activity subscription tools** — in particular don't
-    `unsubscribe_pr_activity`. If the harness auto-subscribes the session,
-    leave the subscription alone: every such tool call burns tokens and delays
-    the human review that is the whole point of opening the PR.
-  - **Act on the events that subscription delivers when they're actionable:**
-    if a CI failure or a merge conflict arrives for the PR and you can fix it,
-    push the fix. Leave everything else (review comments, questions, style
-    nits) to the human — don't auto-push follow-up fixes for those. Only
-    otherwise return to a PR when explicitly asked.
-
-## Resolving merge conflicts — cut a backup branch FIRST
-
-**Before starting a merge or a rebase that may conflict, park the branch:**
-
-```sh
-git branch -f backup/<branch-name>-premerge HEAD    # then merge
-```
-
-A conflicted working tree is the most fragile state a repo gets into, and the
-commands that feel like "let me just look at something else for a second" —
-`git stash`, `git checkout <ref> -- .`, `git reset`, adding a worktree — will
-happily throw the resolution away, clear `MERGE_HEAD`, and leave no obvious way
-back. With the backup branch in place the recovery is one line
-(`git reset --hard backup/<branch-name>-premerge`) instead of an archaeology
-session in the reflog; without it, any unpushed work in the merge is gone.
-
-Delete the backup once the merge is committed, verified, and pushed — it is a
-seatbelt, not a branch anybody should review.
-
-Two rules that go with it, both learned the same way:
-
-- **Never run an exploratory command against the working tree mid-conflict.**
-  To see what another ref says, ask git directly (`git show <ref>:<path>`,
-  `git diff <ref>`) — those read without touching a file. If a build genuinely
-  has to run on another ref, `git worktree add` a SEPARATE directory, and do it
-  before the merge starts, never during it.
-- **Resolve, `git add`, and commit in one unbroken stretch.** Don't leave a
-  conflicted tree parked across unrelated work.
+- **THE PUSH AND THE PR ARE ONE STEP.** A pushed branch with no PR is
+  invisible: nothing runs the PR-only checks, nobody is asked to look, and the
+  work sits done and unmergeable.
+- **RUN EVERY CHECK CI RUNS, SPLIT BY COST.** The seconds-long ones (`make fmt`
+  then `make fmt-check`, `make lint`, the changeset call) run BEFORE the commit
+  is written; the minutes-long ones (`make test`, `make build`) run ALONGSIDE
+  the push, not before it.
 
 ## Changelog fragments
 
@@ -884,29 +809,38 @@ carries the workflow, the quality bar and the traps for its subject.
 
 Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agent/skills/<name>/` and are also accessible via the `.claude/skills` symlink.
 
-| Skill            | When to run                                                                                                                       |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `maintenance`    | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order.        |
-| `update-docs`    | After any change to the public API, configuration keys, or error messages.                                                        |
-| `update-readme`  | After any change that alters user-visible behavior, commands, or install instructions.                                            |
-| `update-website` | After changes that affect the deployed app's SEO surfaces or source-derived content under `pwa/`.                                 |
-| `update-prompts` | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
-| `sync-oss-spec`  | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
-| `changelog`      | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
-| `commit`         | To commit, push, and open/update a PR with a conventional-commit title.                                                           |
+| Skill              | When to run                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `maintenance`      | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order.        |
+| `update-docs`      | After any change to the public API, configuration keys, or error messages.                                                        |
+| `update-readme`    | After any change that alters user-visible behavior, commands, or install instructions.                                            |
+| `update-website`   | After changes that affect the deployed app's SEO surfaces or source-derived content under `pwa/`.                                 |
+| `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
+| `sync-oss-spec`    | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
+| `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
+| `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR and merge-conflict rules. |
+| `skill-reflection` | At BOTH ends of any session that loads a skill — read its lessons first, reflect them back into it before committing.             |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the baseline commit hash). Run a skill by loading its `SKILL.md` and following the discovery process and update checklist. The skill rewrites `.last-updated` at the end of a successful run, and improves itself in place when it discovers new mapping entries. The `maintenance` skill owns a **Registry** table listing every `update-*` skill — add a row whenever you create a new sync skill.
 
-## Skill lessons — fragments, not SKILL.md edits
+## A SESSION THAT LOADS A SKILL OWES IT A REFLECTION — `skill-reflection`
 
-When a session learns a gotcha or heuristic while running any skill, it
-records it under `.agent/skills/<skill>/.lessons/<unix-timestamp>-<slug>.md`
-— one file per lesson, YAML front matter with `title`/`date`, the lesson in
-the body; the full convention is
-[`.agent/skills/LESSONS.md`](.agent/skills/LESSONS.md). Read a skill's
-lessons back with `node scripts/skill-lessons.mjs <skill>` before starting
-that kind of work. Never append lessons to a `SKILL.md`: parallel sessions
-editing one file cause merge conflicts, while fragments never collide. A
-periodic consolidation pass (its own commit) merges near-duplicate lessons,
-deletes stale ones, and promotes the load-bearing ones into the skill's main
-instruction — that is the only time lesson content moves into `SKILL.md`.
+Skills only get better if sessions make them better, so **`skill-reflection`
+runs twice in any session that loads another skill**, and it is the only skill
+allowed to rewrite another's `SKILL.md`:
+
+- **At the START**, right after loading a skill — read its accumulated lessons,
+  narrowed to what the task touches:
+  `node scripts/skill-lessons.mjs <skill> --list`, then `--scope=<path>` /
+  `--concepts=<tags>`.
+- **At the END, before the commit** — record what the pass learned as a fragment
+  under `.agent/skills/<skill>/.lessons/` (never by appending to a `SKILL.md`,
+  which conflicts across parallel sessions), fix anything the skill said that
+  turned out WRONG, delete what went stale, merge what now says the same thing
+  twice, and promote anything true in 100% of that skill's runs into the
+  `SKILL.md` itself.
+
+The skill owns the rest: the fragment format (`title`, `date`, and the optional
+`scope`/`concepts` that make the filters work), the consolidation sweep, and the
+standing question of whether a rule sitting in THIS file belongs in a skill
+instead.

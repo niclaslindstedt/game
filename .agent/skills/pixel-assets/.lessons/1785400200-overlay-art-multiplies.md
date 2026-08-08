@@ -1,6 +1,8 @@
 ---
 title: An overlay painted ON a character must MULTIPLY, not repaint
 date: 2026-07-30
+scope: content/sprites/
+concepts: [overlays, blending, hero-doll]
 ---
 
 Authoring a coating that goes over an existing sprite (blood, mud, frost, soot)

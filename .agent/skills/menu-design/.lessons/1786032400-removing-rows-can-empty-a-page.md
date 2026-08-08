@@ -1,6 +1,8 @@
 ---
 title: Taking rows off a settings page can leave the page itself unearned — check its parent before you stop
 date: 2026-08-06
+scope: content/mainmenu.yaml
+concepts: [mainmenu, pages, rows]
 ---
 
 A change framed as "remove this row / move these rows elsewhere" is also a

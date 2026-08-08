@@ -17,7 +17,10 @@ writing a BARK (it is manuscript-governed like every other spoken line),
 `visual-effects` for how the FX reach the screen, and `pixel-assets` for the
 cast pose and the ground art.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs boss-abilities`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs boss-abilities --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 ## Where everything lives
 
@@ -196,5 +199,12 @@ that covers the whole visible floor is not a hazard, it is a wall.
 
 ## Skill self-improvement
 
-Record what you learn as a fragment under `.lessons/` — see
-`.agent/skills/LESSONS.md`. Never append to this file.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the beats, tables and checklist above.
+
+```sh
+node scripts/skill-lessons.mjs boss-abilities --list
+```

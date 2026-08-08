@@ -1,6 +1,8 @@
 ---
 title: Multi-pellet volleys carry damage PER PELLET
 date: 2026-07-10
+scope: content/items/
+concepts: [volleys, pellets, damage]
 ---
 
 Compare volleys at ~60% pellet connect rate (what `weapon-stats.mjs` does),

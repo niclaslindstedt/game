@@ -1,6 +1,8 @@
 ---
 title: What the audit sheets DON'T show you — motion, context, and whose ground it is
 date: 2026-07-30
+scope: scripts/level-render.mjs
+concepts: [survey, blind-spots, context]
 ---
 
 Two ways the sheets mislead, merged from separate fragments because they are the

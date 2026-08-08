@@ -1,6 +1,8 @@
 ---
 title: A new burst needs BOTH an event-fx translation and a draw branch — one without the other draws nothing, silently
 date: 2026-07-26
+scope: pwa/src/game/game-screen/event-fx.ts
+concepts: [event-fx, wiring, silent-failure]
 ---
 
 Adding a one-shot effect touches three places, and skipping the middle one

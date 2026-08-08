@@ -1,6 +1,8 @@
 ---
 title: Continuous machine loops = cadenced sim events + overlapping grains
 date: 2026-08-01
+scope: content/sounds/
+concepts: [loops, grains, machinery]
 ---
 
 The synth has no looping voice, but a running engine (or any machine hum)
