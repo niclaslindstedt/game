@@ -23,6 +23,14 @@ name: library-images
 # date-keyed rebuild would do the opposite on both counts: work when nothing
 # moved, and a stale set whenever content lands between two runs.
 #
+# ONE SET PER REF, and this job warms BOTH the deploy needs: `main`'s, for the
+# `/preview/` slot, and the latest release tag's, for the `/` slot. They are
+# separate keys because they are hashes of separate content states, which is
+# what makes the released set survive a content change on main — see the cache
+# step in `pages.yml`. Warming the tag matters most right after a release: its
+# key is brand new and the first deploy would otherwise pay the whole browser
+# pass for it.
+#
 # WHAT THIS JOB DOES AND DOES NOT BUY. It is NOT what makes a deploy correct —
 # `pages.yml` generates the pictures itself on a cache miss, which is the only
 # thing that can be relied on. And it cannot get ahead of a content merge: the
@@ -31,7 +39,7 @@ name: library-images
 # push trigger here would not fix that either — it would race the deploy and do
 # the same four-minute browser job twice.)
 #
-# What it IS good for: warming the key on `main` by hand after changing the
+# What it IS good for: warming the keys on `main` by hand after changing the
 # generators or the card skin, so the next deploy restores instead of building;
 # and rebuilding if a deploy died before its cache was saved. The schedule is a
 # cheap safety net for the second case — on an unchanged key it is a hit and
@@ -51,10 +59,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  images:
+  # The refs whose picture sets the deploy will ask for. Mirrors `pages.yml`'s
+  # own resolve job, minus the slot base paths — the pictures do not know which
+  # slot they end up in (no URL is baked into any of them), only which content
+  # state they were drawn from.
+  resolve:
     runs-on: ubuntu-latest
+    outputs:
+      refs: ${{ steps.plan.outputs.refs }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Plan the sets
+        id: plan
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          # Same lookup and same refusal as pages.yml: the highest `v*` tag,
+          # unless it predates the removal of the GitHub Packages dependency
+          # and so cannot be installed here at all.
+          TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          if [ -n "$TAG" ] && git show "$TAG:.npmrc" 2>/dev/null | grep -q 'npm.pkg.github.com'; then
+            echo "::warning::$TAG cannot be rebuilt without a GitHub Packages token — warming only the default branch's set."
+            TAG=""
+          fi
+          # A tag cut at this very commit is the same content state and the
+          # same key; warming it twice would just race itself.
+          if [ -n "$TAG" ] && [ "$(git rev-parse "$TAG^{commit}")" = "$SHA" ]; then
+            echo "$TAG is this commit — one set covers both slots."
+            TAG=""
+          fi
+          REFS=$(jq -cn --arg sha "$SHA" --arg tag "$TAG" '
+            { include: [{ name: "main", ref: $sha }]
+              + (if $tag == "" then [] else [{ name: "release", ref: $tag }] end)
+            }')
+          echo "refs=$REFS" >> "$GITHUB_OUTPUT"
+          echo "$REFS" | jq .
+
+  images:
+    needs: resolve
+    name: pictures (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve.outputs.refs) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.ref }}
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -64,15 +117,8 @@ jobs:
       # Must match pages.yml's key exactly, or the deploy will never hit what
       # this builds. Both list the same sources, and so does `IMAGE_INPUTS` in
       # pwa/scripts/library/build.mjs, which keys the picture set INSIDE the
-      # cache by the same content.
-      #
-      # This job warms one set: the one belonging to the ref it checked out.
-      # After the first release the deploy also builds the release tag, whose
-      # content is a second state with a second set, and it generates that one
-      # itself. It cannot save it back here — `actions/cache` will not overwrite
-      # an existing key — so post-release deploys pay for that set each time.
-      # Correctness first; if that minute starts to matter, warm the tag here
-      # too rather than letting the slots share one set again.
+      # cache by the same content. `hashFiles` reads the checked-out ref, so
+      # this leg's key is that ref's content state.
       - name: Restore the library's generated pictures
         id: images
         uses: actions/cache@v6
@@ -98,9 +144,8 @@ jobs:
         run: |
           if [ -d .library-images ]; then
             # One subdirectory per content state — see `imagesFingerprint`
-            # in pwa/scripts/library/build.mjs. This job only ever produces
-            # the one it checked out; the deploy can hold a second, for the
-            # release tag it also builds.
+            # in pwa/scripts/library/build.mjs. This leg produces the one it
+            # checked out; a restored cache may carry an older neighbour.
             echo "sets:  $(find .library-images -mindepth 1 -maxdepth 1 -type d | wc -l)"
             echo "cards: $(find .library-images/*/cards -type f 2>/dev/null | wc -l)"
             echo "shots: $(find .library-images/*/shots -type f 2>/dev/null | wc -l)"
