@@ -1,0 +1,20 @@
+# Build artifacts — regenerated, never committed (OSS_SPEC §11.2).
+
+# The built website, copied in by scripts/bundle-web.mjs. It is the pwa/ build
+# output; committing it would duplicate the whole site in the history.
+webroot/
+
+# Cargo's build output for this workspace.
+target/
+
+# The app icon, re-encoded to RGBA from pwa/public/ by scripts/icons.mjs —
+# Tauri refuses a paletted PNG at compile time and every icon the website ships
+# is paletted. The ART is pwa/public/; these are a format conversion of it.
+src-tauri/icons/
+
+# Tauri's generated permission schemas — written by tauri-build on every
+# compile, and what capabilities/*.json is validated against.
+src-tauri/gen/
+
+# Cargo.lock IS committed (this tree builds binaries, not a library), so it is
+# deliberately absent from this file.

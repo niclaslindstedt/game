@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
+<!--
+  NOT THE GAME, and never shown to a player.
+
+  Tauri's build step requires a `frontendDist`, and this shell deliberately has
+  no frontend to give it: the game is the built website, copied into `webroot/`
+  by `scripts/bundle-web.mjs` and served from the private `game://` scheme
+  (`shell/src/webroot.rs`) — which is the whole reason the origin is stable and
+  the player's roster survives an update. So `frontendDist` points here, at one
+  page nothing ever navigates to, and the window opens on `game://` instead.
+
+  If you ARE looking at this page, the window was pointed at Tauri's own asset
+  protocol rather than at the game — see `src/main.rs`.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ada's Trail — shell placeholder</title>
+  </head>
+  <body style="background: #0b0d10; color: #8a8f98; font: 14px/1.6 system-ui">
+    <p>
+      This is the Tauri shell's build placeholder, not the game. The game is
+      served from the bundled <code>webroot/</code> over the
+      <code>game://</code> scheme.
+    </p>
+  </body>
+</html>

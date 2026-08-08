@@ -32,12 +32,13 @@ const ROOT = path.resolve(
 );
 
 /** Every package manifest whose scripts a human or a workflow runs directly.
- * The two store shells are outside the workspace and are included on purpose —
+ * The store shells are outside the workspace and are included on purpose —
  * `npm --prefix electron run start` is exactly the path that broke. */
 const MANIFESTS = [
   "package.json",
   "pwa/package.json",
   "electron/package.json",
+  "tauri/package.json",
   "native/package.json",
   "mod/package.json",
 ];

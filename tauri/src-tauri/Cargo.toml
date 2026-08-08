@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE EFFECTS. Everything in this crate opens, draws or talks to something; the
+# decisions behind all of it live in `adastrail-shell`, which knows nothing
+# about Tauri. See ../Cargo.toml.
+
+[package]
+name = "adastrail-tauri"
+description = "The Tauri desktop shell around the Ada's Trail website — one window, the bundled game, and the bridges the page speaks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# `adastrail` rather than the package name, so the executable, the user-data
+# folder and the docs all say the same word.
+[[bin]]
+name = "adastrail"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+adastrail-shell = { path = "../shell" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { version = "2", features = [] }
+# The fatal-error box, and the one way a credit link reaches the player's own
+# browser instead of replacing the game. Both are called from RUST only — they
+# are deliberately absent from `capabilities/default.json`, so the page cannot
+# reach either.
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

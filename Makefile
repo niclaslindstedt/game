@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt
 
 build:
 	npm run build
@@ -247,3 +247,34 @@ desktop-dist:
 	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)
+
+# ---------------------------------------------------------------------------
+# The Tauri desktop shell
+# ---------------------------------------------------------------------------
+#
+# A SECOND desktop wrapper around the same built website, beside electron/ and
+# not instead of it — it may take over as the release package once mature, and
+# that call is made after playtesting. `docs/tauri-migration.md` is the plan and
+# `tauri/README.md` is the tree.
+#
+# It is Rust, so it has its own toolchain and its own linter, and none of it is
+# on the root suite's path: `make test` and `make lint` stop at this tree's edge
+# exactly as they stop at electron/'s. These targets are how it is checked.
+
+.PHONY: tauri tauri-test tauri-lint tauri-fmt
+
+# Build the site into tauri/webroot/, compile the shell, and launch it.
+tauri:
+	npm run tauri -- $(ARGS)
+
+# The decision layer's whole test suite — no GUI libraries needed for it.
+tauri-test:
+	npm run tauri:test
+
+# clippy at zero warnings, the peer of `make lint` for this tree.
+tauri-lint:
+	npm run tauri:lint
+
+# rustfmt in place, the peer of `make fmt`.
+tauri-fmt:
+	npm --prefix tauri run fmt

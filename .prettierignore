@@ -14,6 +14,10 @@ native/android/
 electron/webroot/
 electron/dist/
 electron/release/
+# The Tauri shell's copied website. Its Rust is formatted by `cargo fmt`, which
+# Prettier has nothing to say about, and its placeholder page is a build stub.
+tauri/webroot/
+tauri/src-tauri/placeholder/
 site/
 node_modules/
 
