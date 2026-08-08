@@ -378,8 +378,11 @@ describe("the road's shake", () => {
     // thing on this road.
     const struck = createDriveFx();
     const traded = createDriveFx();
-    // A person met DEAD SQUARE AT THE TOP OF THE DIAL on MEDIUM.
-    driveBodyHit(struck, 0, 0, DRIVE.impact.wearJoules * 0.036, 0);
+    // A person met DEAD SQUARE AT THE TOP OF THE DIAL on MEDIUM — 6.8% of the
+    // car, which is `BODY_FULL_SHARE`'s own figure and moved with the top speed
+    // when the wagon was re-engined (it was 3.6% against a 120 mph dial, and
+    // absorbed energy goes as the SQUARE of the closing speed).
+    driveBodyHit(struck, 0, 0, DRIVE.impact.wearJoules * 0.068, 0);
     // …and paint traded with a car at the same speed, which is a great deal
     // more energy.
     driveTrafficHit(traded, 0, 0, DRIVE.impact.wearJoules * 0.36, 0);
