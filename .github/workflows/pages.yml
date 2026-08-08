@@ -141,12 +141,20 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           ROOT="${ROOT_REF:-$SHA}"
+          # THE PARENTHESES AROUND THE VALUE ARE LOAD-BEARING. An object value
+          # in jq is an `ExpD`, a grammar that admits a term and a `|` and
+          # nothing else — so a bare `[…] + (…)` after `include:` is a compile
+          # error ("unexpected '+', expecting '}'"), not a value. Wrapping it
+          # makes it a term again. Without them this job failed on every push,
+          # and because it is the one that plans the matrix, nothing downstream
+          # ran: the whole site stopped deploying while `main` moved on.
           SLOTS=$(jq -cn --arg root "$ROOT" --arg sha "$SHA" --arg branch "$BRANCH_REF" '
             { include:
-              [ { slot: "root",    base: "/",         ref: $root }
-              , { slot: "preview", base: "/preview/", ref: $sha  }
-              ]
-              + (if $branch == "" then [] else [{ slot: "branch", base: "/branch/", ref: $branch }] end)
+                ( [ { slot: "root",    base: "/",         ref: $root }
+                  , { slot: "preview", base: "/preview/", ref: $sha  }
+                  ]
+                  + (if $branch == "" then [] else [{ slot: "branch", base: "/branch/", ref: $branch }] end)
+                )
             }')
           echo "slots=$SLOTS" >> "$GITHUB_OUTPUT"
           echo "root_label=${ROOT_REF:-main}" >> "$GITHUB_OUTPUT"
