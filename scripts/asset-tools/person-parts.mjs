@@ -153,9 +153,12 @@ export const AIDS = {
 export const CARRY = {
   none: { rows: [], anchor: "hand" },
   // A carrier bag, hanging.
-  bag: { rows: ["GG", "GG", "GG"], anchor: "hand", dx: 1, dy: 0 },
-  // A briefcase — squarer, held still.
-  briefcase: { rows: ["GG", "GG"], anchor: "hand", dx: 1, dy: 1 },
+  bag: { rows: ["GG", "GG", "GG"], anchor: "hand", dx: 0, dy: 1 },
+  // A briefcase — squarer, held still. TWO COLUMNS STARTING AT THE HAND'S OWN,
+  // hanging from the row below it: measured off the shipped suit rather than
+  // guessed, and the reason the case and the hand touch instead of the hand
+  // floating above it.
+  briefcase: { rows: ["GG", "GG", "GG"], anchor: "hand", dx: 0, dy: 1 },
   // A shopping trolley, pushed ahead of both hands.
   trolley: {
     rows: ["GG", "GG", "GG", "GG", "~O"],

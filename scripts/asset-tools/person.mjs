@@ -30,9 +30,10 @@
 // FIVE AXES, AND THEY ARE THE FIVE THINGS YOU NOTICE ABOUT SOMEBODY AT A
 // GLANCE:
 //
-//   AGE      a child is shorter and bigger-headed, an elder stoops and stands
-//            closer to their own feet. It moves the GAUGE — every landmark on
-//            the body — which is why it cannot be a palette swap.
+//   AGE      a young adult is slighter, an elder stoops and stands closer to
+//            their own feet. It moves the GAUGE — every landmark on the body —
+//            which is why it cannot be a palette swap. There is no CHILD age and
+//            there is not going to be one; see `AGES`.
 //   BUILD    thin, average, heavy. It moves the WIDTH, and the arms move with
 //            it, because an arm hangs off a shoulder rather than at a column
 //            number.
@@ -72,17 +73,23 @@ const RIGHT = 7;
  * is, and how big it is relative to the rest of them.
  */
 export const AGES = {
-  /** Small, and mostly head — which is what actually reads as "child" at this
-   * size, rather than a shorter adult. */
-  child: {
-    headTop: 3,
-    shoulder: 7,
-    hip: 11,
-    foot: 13,
-    headHalf: 3,
-    torsoHalf: 3,
-  },
-  teen: {
+  /**
+   * A SLIGHT YOUNG ADULT — a row shorter than the rest and narrower through the
+   * shoulders, which is the youngest body this generator can draw.
+   *
+   * AND THERE IS DELIBERATELY NOTHING UNDER IT. A `child` age is four numbers
+   * and it is not here, because the one road this draws people for is a road you
+   * drive down at a hundred and seventy killing everybody on it. The whole joke
+   * is that the hero does not notice — he arrives and remarks on the SUSPENSION
+   * — and that only holds while the crowd is adults who could, in principle,
+   * have stepped back. A child under the bumper is not the same joke told
+   * harder; it is a different thing entirely, and not one this game is making.
+   *
+   * It is ABSENT rather than merely unused, which is the same move
+   * `townArtSizeCheck` makes next door: the roster cannot ask for one, so nobody
+   * has to remember not to.
+   */
+  young: {
     headTop: 2,
     shoulder: 6,
     hip: 10,
@@ -155,8 +162,7 @@ export const GENDERS = {
     shoulder: 0,
     hip: -1,
     hair: {
-      child: "crop",
-      teen: "crop",
+      young: "crop",
       adult: "crop",
       older: "thinning",
       elder: "bald",
@@ -167,8 +173,7 @@ export const GENDERS = {
     shoulder: -1,
     hip: 0,
     hair: {
-      child: "long",
-      teen: "long",
+      young: "long",
       adult: "long",
       older: "crop",
       elder: "crop",
@@ -182,8 +187,7 @@ export const GENDERS = {
     shoulder: 0,
     hip: 0,
     hair: {
-      child: "crop",
-      teen: "crop",
+      young: "crop",
       adult: "crop",
       older: "crop",
       elder: "thinning",
@@ -315,7 +319,7 @@ function paintHead(rows, cfg, hair) {
     if (to + 1 < PERSON_SIZE) rows[y][to + 1] = "O";
   }
   // …and whatever stands proud of the skull, drawn UPWARD from the crown so a
-  // mohawk is a mohawk on a child and on a heavy adult alike.
+  // mohawk is a mohawk on a slight young adult and on a heavy one alike.
   const over = hair.over ?? [];
   over.forEach((line, i) => {
     const y = headTop - (over.length - i);
@@ -345,7 +349,13 @@ function paintTorso(rows, cfg, garment) {
   }
   const from = LEFT - cfg.shoulderHalf;
   const to = RIGHT + cfg.shoulderHalf;
-  const mid = { wide: 2, narrow: 1, bib: 2, belt: 0, band: 0, none: 0 }[
+  // TWO PIXELS, NOT FOUR. A panel half the width of the torso stops being a
+  // shirt showing between the front edges of a jacket and becomes a BIB — and a
+  // roster of twenty people all wearing one is the single loudest thing on the
+  // sheet. What the panel is for is breaking the torso's flat block; it does
+  // that at any width, and the narrow one keeps the garment's own colour as the
+  // thing you actually read.
+  const mid = { wide: 1, narrow: 1, bib: 1, belt: 0, band: 0, none: 0 }[
     garment.panel
   ];
   if (garment.panel === "band") {
@@ -362,13 +372,12 @@ function paintTorso(rows, cfg, garment) {
     }
   } else if (mid > 0) {
     const top = shoulder + 1;
-    const bottom = garment.panel === "bib" ? hip - 1 : shoulder + 2;
+    const bottom = garment.panel === "bib" ? hip - 1 : shoulder + 3;
     for (let y = top; y <= bottom; y++) {
       // IT TAPERS AT THE COLLAR. A panel of one width top to bottom reads as a
       // stripe painted on a box; one pixel narrower on the first row reads as a
       // jacket open over a shirt, which is what it is.
-      const w = y === top && garment.panel !== "bib" ? mid - 1 : mid;
-      if (w > 0) span(rows, y, LEFT - w, RIGHT + w, "S", null);
+      span(rows, y, LEFT - mid, RIGHT + mid, "S", null);
     }
   }
 }
@@ -386,21 +395,35 @@ function paintArms(rows, cfg, frame, garment) {
   const { shoulder, hip, shoulderHalf } = cfg;
   const near = LEFT - shoulderHalf - 2;
   const far = RIGHT + shoulderHalf + 2;
+  // IT STARTS A ROW BELOW THE SHOULDER LINE, and that one pixel is the whole
+  // difference between an arm and a slab bolted to a torso. Level with the
+  // shoulders there is no shoulder left above it — the eye gets a rectangle
+  // whose top edge is the body's top edge, and reads the two of them as one
+  // wide object with lumps. Dropped a row, the shoulder line runs clear over
+  // the top and the arm hangs OFF something.
   const top = shoulder + 1;
-  // A ROW ABOVE THE HIP. An arm that reaches the hip line has no hand hanging
-  // below the jacket, which is where the shipped crowd has always put it.
+  // …and it stops a row above the hip, so the hand hangs clear of the jacket.
   const bottom = hip - 2;
-  for (const [x, handAtTop] of [
-    [near, frame === 1],
-    [far, frame === 0],
+  // ONLY THE NEAR ARM SWINGS, which is measured off the shipped crowd rather
+  // than assumed: on frame 0 both hands are down, and on frame 1 only the near
+  // one has come up. Swinging both is what a diagram of walking does; what the
+  // art does is move the arm the eye is actually on, and leave the far one to
+  // hold whatever the person is carrying.
+  for (const [x, isNear] of [
+    [near, true],
+    [far, false],
   ]) {
     if (x < 0 || x >= PERSON_SIZE) continue;
+    // INKED BOTH SIDES, as the shipped crowd's are. The inner column doubling
+    // the torso's own outline is not a mistake — it is the gap that separates an
+    // arm from a chest, and without it the two colours meet and the arm stops
+    // being a limb.
     for (let y = top; y <= bottom; y++) {
       rows[y][x] = garment.stripe && y < bottom ? "S" : "A";
       if (x - 1 >= 0) rows[y][x - 1] = "O";
       if (x + 1 < PERSON_SIZE) rows[y][x + 1] = "O";
     }
-    rows[handAtTop ? top : bottom][x] = "K";
+    rows[isNear && frame === 1 ? top : bottom][x] = "K";
   }
 }
 
@@ -472,11 +495,27 @@ function paintSeated(rows, cfg, frame, garment) {
   void garment;
 }
 
-/** Stamp one part over the body, honouring its `~` holes. */
-function stamp(rows, part, at, ink) {
+/**
+ * Stamp one part over the body, honouring its `~` holes — and CLOSE ITS
+ * OUTLINE.
+ *
+ * THE OUTLINE IS THE HALF THAT WAS MISSING, and it is not a nicety: every
+ * silhouette in this game is built on a dark rim, so a briefcase stamped as bare
+ * brown cells reads as a hole in the picture rather than as a thing somebody is
+ * holding. The parts cannot draw their own — a bag's left edge is the body's
+ * outline when it is against a hip and its own when it is swinging clear — so it
+ * is derived here, once, for every part: paint first, then ink any EMPTY cell
+ * orthogonally touching what was painted.
+ *
+ * Deriving it also means a part author never has to think about it. A cane, a
+ * dog, a board and a pram all get a correct rim from the shape alone, and a new
+ * one added tomorrow does too.
+ */
+function stamp(rows, part, at) {
   if (!part || !part.rows || part.rows.length === 0) return;
   const x0 = at.x + (part.dx ?? 0);
   const y0 = at.y + (part.dy ?? 0);
+  const painted = [];
   part.rows.forEach((line, ry) => {
     [...line].forEach((ch, rx) => {
       if (ch === KEEP) return;
@@ -484,12 +523,22 @@ function stamp(rows, part, at, ink) {
       const y = y0 + ry;
       if (x < 0 || x >= PERSON_SIZE || y < 0 || y >= PERSON_SIZE) return;
       rows[y][x] = ch;
-      if (ink && ch !== ".") {
-        // Close the part's own outline against whatever it is sitting on.
-        if (y - 1 >= 0 && rows[y - 1][x] === ".") rows[y - 1][x] = "O";
-      }
+      if (ch !== ".") painted.push([x, y]);
     });
   });
+  for (const [x, y] of painted) {
+    for (const [dx, dy] of [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ]) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || nx >= PERSON_SIZE || ny < 0 || ny >= PERSON_SIZE) continue;
+      if (rows[ny][nx] === ".") rows[ny][nx] = "O";
+    }
+  }
 }
 
 /**
@@ -536,13 +585,16 @@ export function personFrames(spec = {}) {
       x: LEFT - (cfg.headHalf - 1) + (cfg.stoop ?? 0),
       y: cfg.headTop,
     };
-    const handY = frame === 0 ? cfg.hip - 1 : cfg.shoulder + 1;
-    const hand = { x: RIGHT + cfg.shoulderHalf + 2, y: handY };
+    // THE FAR HAND, AND IT DOES NOT MOVE. A briefcase that hopped up the body
+    // between frame 0 and frame 1 is a briefcase being juggled — the shipped
+    // crowd keeps everything carried in the hand that does not swing, and this
+    // is why that hand exists.
+    const hand = { x: RIGHT + cfg.shoulderHalf + 2, y: cfg.hip - 2 };
     const hips = { x: LEFT - cfg.hipHalf, y: cfg.hip };
     const ground = { x: LEFT, y: cfg.foot };
     const anchors = { crown, hand, hips, ground };
-    stamp(rows, aid, anchors[aid.anchor] ?? hand, true);
-    stamp(rows, carry, anchors[carry.anchor] ?? hand, true);
+    stamp(rows, aid, anchors[aid.anchor] ?? hand);
+    stamp(rows, carry, anchors[carry.anchor] ?? hand);
     return rows.map((r) => r.join(""));
   });
 }

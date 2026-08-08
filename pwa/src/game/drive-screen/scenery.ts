@@ -58,8 +58,6 @@ export const CROWD_SPRITES: readonly (readonly [string, string])[] = [
   ["walker_old_woman_0", "walker_old_woman_1"],
   ["walker_hoodie_0", "walker_hoodie_1"],
   ["walker_young_woman_0", "walker_young_woman_1"],
-  ["walker_boy_0", "walker_boy_1"],
-  ["walker_girl_0", "walker_girl_1"],
   ["walker_suit_0", "walker_suit_1"],
   ["walker_hi_vis_0", "walker_hi_vis_1"],
   ["walker_trolley_0", "walker_trolley_1"],

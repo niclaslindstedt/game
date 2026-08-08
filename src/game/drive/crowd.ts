@@ -35,10 +35,24 @@ import { randomRange, type Rng } from "@game/lib/rng.ts";
 import { courseLength, DRIVE } from "./config.ts";
 import type { DrivePedestrian, DriveState } from "./types.ts";
 
-/** How many distinct bodies the crowd is drawn from. The app's sprite table is
+/**
+ * How many distinct bodies the crowd is drawn from. The app's sprite table is
  * this long (`CROWD_SPRITES`, pwa/src/game/drive-screen/scenery.ts) — keep the
- * two in step, or the road quietly stops using its last body. */
-export const CROWD_VARIANTS = 20;
+ * two in step, or the road quietly stops using its last body.
+ *
+ * EIGHTEEN, AND IT WAS TWENTY. The two that went were a boy and a girl, and
+ * there is no version of this road that should have children on it. Everything
+ * this minigame does is built on the hero not noticing what he is driving
+ * through — the joke is that he arrives and remarks on the SUSPENSION — and
+ * that reading only holds while the crowd is adults who could, in principle,
+ * have got out of the way. A child under the bumper is not the same joke told
+ * harder; it is a different thing entirely, and not one this game is making.
+ *
+ * The generator that draws the rest of them has no `child` age for the same
+ * reason (`scripts/asset-tools/person.mjs`): the roster cannot ask for one, so
+ * nobody has to remember not to.
+ */
+export const CROWD_VARIANTS = 18;
 
 /**
  * HOW MANY THINGS THE CROWD IS THINKING — the length of the app's own list
