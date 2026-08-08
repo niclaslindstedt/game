@@ -53,15 +53,42 @@ const rel = (p) => path.relative(root, p);
 // ---------------------------------------------------------------------------
 // Reporting. Findings are grouped so the output reads as a checklist of the
 // submission, not as a stack of unrelated assertions.
+//
+// A finding may also name a GATE: the store record it waits on, which no
+// amount of work in this checkout can bring forward. Those records are their
+// own project — an organization's legal details are verified against Dun &
+// Bradstreet, and a stale D&B record is corrected in weeks rather than days —
+// so the list spends long stretches with most of it unobtainable. Splitting
+// them out is what makes the rest readable: the art, the screenshots, the
+// bundled site and the review phone number are all doable on day one, and each
+// is a thing the submission would otherwise stall on afterwards.
+//
+// The gate is the RECORD, not the membership. A held Apple membership with the
+// wrong address on it blocks none of these — it blocks the banking, tax and EU
+// trader details instead, which no checkout can see. native/RELEASING.md has
+// that half; this file only ever answers what is missing HERE.
 // ---------------------------------------------------------------------------
+const GATES = {
+  apple: {
+    short: "needs the App Store Connect record",
+    long: "an App Store Connect app record and its credentials",
+  },
+  steam: {
+    short: "needs the Steamworks app",
+    long: "the Steamworks app record",
+  },
+};
+
 const findings = [];
 let group = "";
 const section = (title) => {
   group = title;
 };
 const ok = (msg) => findings.push({ level: "ok", group, msg });
-const warn = (msg, hint) => findings.push({ level: "warn", group, msg, hint });
-const fail = (msg, hint) => findings.push({ level: "fail", group, msg, hint });
+const warn = (msg, hint, gate) =>
+  findings.push({ level: "warn", group, msg, hint, gate });
+const fail = (msg, hint, gate) =>
+  findings.push({ level: "fail", group, msg, hint, gate });
 
 // ---------------------------------------------------------------------------
 // native/.env, read the way fastlane reads it — and the way the Game Center
@@ -94,6 +121,7 @@ if (/^\d+$/.test(String(iosSubmit.ascAppId ?? ""))) {
     "eas.json → submit.production.ios.ascAppId is not set",
     "create the app in App Store Connect first; it assigns a numeric Apple ID " +
       '(the id########## in the App Store URL). Paste it as "ascAppId".',
+    "apple",
   );
 }
 
@@ -103,6 +131,7 @@ if (/^[A-Z0-9]{10}$/i.test(String(iosSubmit.appleTeamId ?? ""))) {
   fail(
     "eas.json → submit.production.ios.appleTeamId is not set",
     "10 alphanumerics, from the developer portal's Membership page.",
+    "apple",
   );
 }
 
@@ -121,6 +150,7 @@ if (iosSubmit.appleId || easHasKey) {
     "fine interactively (eas submit prompts and remembers), but a " +
       "--non-interactive run — the native-build workflow with submit: true — " +
       "needs one of them, or the credentials uploaded via `eas credentials`.",
+    "apple",
   );
 }
 
@@ -171,6 +201,7 @@ if (!identity.appStoreUrl) {
     "game.config.json → appStoreUrl is empty",
     "fill it once the app is public: the library's pages link to the listing, " +
       "and that link stays hidden while this is empty.",
+    "apple",
   );
 } else if (!/^https:\/\/apps\.apple\.com\//.test(identity.appStoreUrl)) {
   fail(
@@ -195,7 +226,7 @@ const REQUIRED_ENV = [
 ];
 for (const [key, where] of REQUIRED_ENV) {
   if (envValue(key)) ok(`${key} set`);
-  else fail(`${key} is not set`, where);
+  else fail(`${key} is not set`, where, "apple");
 }
 
 const keyPath = envValue("ASC_KEY_PATH");
@@ -223,6 +254,7 @@ if (keyPath && keyContent) {
     "neither ASC_KEY_PATH nor ASC_KEY_CONTENT is set",
     "App Store Connect → Users and Access → Integrations → generate an " +
       "App Manager key. The .p8 downloads once.",
+    "apple",
   );
 }
 
@@ -319,6 +351,7 @@ warn(
   `${skus.length} consumable IAPs must exist: ${skus.join(", ")}`,
   "App Store Connect → your app → In-App Purchases. Submit them WITH the " +
     "first binary — IAPs reviewed separately get stuck waiting for one.",
+  "apple",
 );
 
 for (const [label, script, file] of [
@@ -341,6 +374,7 @@ for (const [label, script, file] of [
       `every row of ${file} — the id column is the ${label.slice(0, -1)} id. ` +
         "`make store-game-center` prints the diff against the portal and " +
         'pushes it with ARGS="--apply"; no hand entry needed.',
+      "apple",
     );
   } else if (drifted(result)) {
     fail(
@@ -446,6 +480,7 @@ if (steamAppId === 480) {
     "electron/store/steam.json → appId is not set",
     "create the app in Steamworks; the app id is the number in the " +
       "partner-site URL.",
+    "steam",
   );
 }
 
@@ -459,6 +494,7 @@ for (const os of ["windows", "macos", "linux"]) {
     fail(
       `electron/store/steam.json → depots.${os} is not set`,
       "App Admin → Depots → create one per platform, then paste its id here.",
+      "steam",
     );
 }
 
@@ -481,6 +517,7 @@ for (const os of ["windows", "macos", "linux"]) {
         "`make store-steam-achievements` prints them as a paste-ready " +
         'worksheet and ARGS="--verify" reads them back afterwards and names ' +
         "anything missing or mistyped.",
+      "steam",
     );
   } else if (drifted(result)) {
     fail(
@@ -574,6 +611,7 @@ if (!identity.steamUrl) {
     "game.config.json → steamUrl is empty",
     "fill it once the store page is public — the library's pages link to it " +
       "the same way they link to the App Store listing.",
+    "steam",
   );
 } else if (!/^https:\/\/store\.steampowered\.com\//.test(identity.steamUrl)) {
   fail(
@@ -586,23 +624,64 @@ if (!identity.steamUrl) {
 
 // ---------------------------------------------------------------------------
 // Output.
+//
+// `--now` narrows the list to the outstanding findings that wait on NOTHING —
+// the work this checkout can finish today. It is a VIEW, not a second set of
+// rules: the same findings are computed either way, and the exit code answers
+// the same question about whichever list was printed.
 // ---------------------------------------------------------------------------
+const nowOnly = process.argv.includes("--now");
+const outstanding = (f) => f.level !== "ok";
+const shown = nowOnly
+  ? findings.filter((f) => outstanding(f) && !f.gate)
+  : findings;
+
 const MARK = { ok: "  ok  ", warn: " todo ", fail: " FAIL " };
 let printed = "";
-for (const f of findings) {
+for (const f of shown) {
   if (f.group !== printed) {
     printed = f.group;
     console.log(`\n${printed}`);
   }
-  console.log(`${MARK[f.level]} ${f.msg}`);
+  const gate = f.gate && !nowOnly ? `  (${GATES[f.gate].short})` : "";
+  console.log(`${MARK[f.level]} ${f.msg}${gate}`);
   if (f.hint) console.log(`        ${f.hint.replace(/\n/g, "\n        ")}`);
 }
 
-const failed = findings.filter((f) => f.level === "fail").length;
-const todo = findings.filter((f) => f.level === "warn").length;
-console.log(
-  `\n${findings.length - failed - todo} ready, ${todo} to do, ${failed} blocking` +
-    "\nsee native/RELEASING.md (App Store / Play) and electron/RELEASING.md " +
-    "(Steam)\nfor the order these are done in",
-);
+const failed = shown.filter((f) => f.level === "fail").length;
+const todo = shown.filter((f) => f.level === "warn").length;
+
+if (nowOnly) {
+  const waiting = findings.filter((f) => outstanding(f) && f.gate).length;
+  console.log(
+    shown.length === 0
+      ? "\nnothing left that doesn't wait on an account — every outstanding " +
+          "item\nneeds a store record this checkout cannot create"
+      : `\n${shown.length} to do today (${waiting} more wait on an account; ` +
+          "drop --now to see them)",
+  );
+} else {
+  // The split is the useful number while an enrollment is pending: a wall of
+  // blocking items reads as "nothing can ship", when most of it is one signup
+  // away and the rest is work that can be finished this afternoon.
+  const doable = findings.filter((f) => outstanding(f) && !f.gate).length;
+  const byGate = Object.entries(GATES)
+    .map(([key, g]) => [g.long, findings.filter((f) => f.gate === key).length])
+    .filter(([, n]) => n > 0);
+  console.log(
+    `\n${findings.length - failed - todo} ready, ${todo} to do, ${failed} blocking`,
+  );
+  if (byGate.length > 0) {
+    const nowCmd = 'make store-preflight ARGS="--now"';
+    console.log(
+      `${doable} of those wait on nothing — \`${nowCmd}\` lists just those`,
+    );
+    for (const [label, n] of byGate)
+      console.log(`  ${String(n).padStart(3)} × ${label}`);
+  }
+  console.log(
+    "see native/RELEASING.md (App Store / Play) and electron/RELEASING.md " +
+      "(Steam)\nfor the order these are done in",
+  );
+}
 process.exit(failed > 0 ? 1 : 0);

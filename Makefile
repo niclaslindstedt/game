@@ -151,9 +151,11 @@ bump:
 # Check that this checkout is actually wired up to an App Store record: the
 # app id and team in native/eas.json, the credentials in native/.env, the
 # listing, and the portal entries the game reports into. Read-only. See
-# native/RELEASING.md.
+# native/RELEASING.md. `make store-preflight ARGS="--now"` narrows it to the
+# items that wait on no store account — the work doable before an enrollment
+# clears.
 store-preflight:
-	@node scripts/store-preflight.mjs
+	@node scripts/store-preflight.mjs $(ARGS)
 
 # Compile the App Store listing (native/store/listing.yaml) into the
 # store.config.json that `eas metadata:push` uploads, validating every one of
