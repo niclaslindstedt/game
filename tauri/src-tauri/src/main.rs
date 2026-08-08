@@ -8,25 +8,28 @@
 //! that file is: a window showing the bundled game, plus the routing that
 //! connects the page's bridge protocols to whatever is behind them.
 //!
-//! This is **phase 2** of `docs/tauri-migration.md`. Four of the six protocols
-//! are answered for real now — cloud save, achievements, leaderboards and
-//! screenshots — and the two that are not (mods, net) still answer by saying
-//! which phase grows them (`adastrail_shell::bridge`). That is deliberate: a
-//! mid-migration build that went quiet about a protocol would present as a hang
-//! the page waits out.
+//! This is **phase 3** of `docs/tauri-migration.md`, so all six protocols are
+//! answered for real — cloud save, achievements, leaderboards, screenshots,
+//! mods and multiplayer. `adastrail_shell::bridge` keeps its
+//! `Unimplemented` route anyway, because a seventh protocol will arrive on the
+//! web side before it arrives here and a shell that went quiet about one would
+//! present as a hang the page waits out.
 //!
-//! The ORDER of the startup work matters, and four things happen before the
+//! The ORDER of the startup work matters, and five things happen before the
 //! window exists:
 //!
-//!  1. **Was this process started BY Steam** — asked FIRST, because the
-//!     handshake below stamps two of the three variables that answer it into
-//!     our own environment (`adastrail_shell::steam`).
-//!  2. **`restart_app_if_necessary`** — relaunch through the Steam client if the
+//!  1. **`--dedicated`** — the windowless mode, decided FIRST and before Tauri's
+//!     builder, so a session server never registers a scheme or adopts a
+//!     user-data directory.
+//!  2. **Was this process started BY Steam** — asked before the handshake below
+//!     stamps two of the three variables that answer it into our own
+//!     environment (`adastrail_shell::steam`).
+//!  3. **`restart_app_if_necessary`** — relaunch through the Steam client if the
 //!     player started the binary directly. Before the event loop, because a
 //!     process about to be replaced must not go on to build a window.
-//!  3. **The user-data directory is named and adopted**, before anything reads
+//!  4. **The user-data directory is named and adopted**, before anything reads
 //!     a path out of it.
-//!  4. **The launch log is opened**, so the lines that matter most — the ones
+//!  5. **The launch log is opened**, so the lines that matter most — the ones
 //!     emitted immediately before the process dies — have somewhere to be.
 //!
 //! Everything security-shaped is deliberate and none of it is default: the
@@ -37,14 +40,24 @@
 
 mod achievements;
 mod cloud;
+mod dedicated;
+mod firewall;
+mod lobby;
+mod media;
+mod mods;
+mod net;
+mod p2p;
 mod page;
 mod protocol;
+mod session;
 mod shots;
 mod stamp;
 mod steam;
 mod window;
+mod workshop;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use adastrail_shell::achievements_provider::AchievementsProvider;
@@ -54,7 +67,9 @@ use adastrail_shell::channels::event_global;
 use adastrail_shell::cloud_provider::CloudProvider;
 use adastrail_shell::config::{remote_game_url, APP_SCHEME, DEVELOPER_NOTICE, MIGRATION_NOTICE};
 use adastrail_shell::leaderboards_provider::{leaderboards_provider, LeaderboardsProvider};
+use adastrail_shell::net_invite::read_invite;
 use adastrail_shell::output;
+use adastrail_shell::runtime::Resources;
 use adastrail_shell::screenshots::ShotsOptions;
 use adastrail_shell::screenshots_provider::ScreenshotLibrary;
 use adastrail_shell::steam::{
@@ -66,6 +81,9 @@ use adastrail_shell::{achievements as achievements_bridge, cloud_save, leaderboa
 use serde_json::Value;
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+
+use crate::mods::ModsBridge;
+use crate::net::NetBridge;
 
 /// Everything the shell resolved before the window existed, held for the life
 /// of the process.
@@ -98,6 +116,11 @@ pub struct Shell {
     /// Whether Steam started this process. Read BEFORE the handshake — see the
     /// module header.
     pub started_by_steam: bool,
+    /// MULTIPLAYER, when this launch may host or join one. `None` is the
+    /// ordinary state of a plain download.
+    pub net: Option<Arc<NetBridge>>,
+    /// MODS, when this launch may load them.
+    pub mods: Option<Arc<ModsBridge>>,
 }
 
 /// THE ONE COMMAND the page may reach — every bridge protocol travels down it
@@ -148,8 +171,29 @@ fn shell_post(app: AppHandle, shell: State<'_, Shell>, message: String) {
                 shell.shot_library.as_deref(),
             )
         }),
+        // The two phase-3 bridges do REAL WORK rather than forwarding JSON, so
+        // they are objects with a life of their own rather than pure functions
+        // — and each is `None` on a build whose capability list left it out,
+        // which the router has already refused above.
+        Route::Mods => {
+            if let Some(bridge) = shell.mods.as_ref() {
+                bridge.handle(&message_object(&message));
+            }
+        }
+        Route::Net => {
+            if let Some(bridge) = shell.net.as_ref() {
+                bridge.handle(&message_object(&message));
+            }
+        }
         Route::Unimplemented { .. } | Route::Refused { .. } | Route::Ignored => {}
     }
+}
+
+/// One bridge message, parsed. An unparseable one cannot reach here — [`route`]
+/// answered `Ignored` for it — so the fallback is an empty object rather than a
+/// branch nobody can take.
+fn message_object(raw: &str) -> Value {
+    parse_message(raw).unwrap_or_else(|| Value::Object(Default::default()))
 }
 
 /// Parse, answer, and hand the answer back to the page.
@@ -164,17 +208,19 @@ fn answer(app: &AppHandle, protocol: &str, raw: &str, reply: impl FnOnce(&Value)
     let Some(event) = reply(&request) else {
         return;
     };
-    let Some(global) = event_global(protocol) else {
-        return;
-    };
-    emit(app, global, &event);
+    emit_event(app, protocol, &event);
 }
 
 /// THE RETURN PATH — the shell calling the page's own `window.__gis*Event(...)`
 /// from outside, exactly as Electron's `executeJavaScript` and the phone's
 /// `injectJavaScript` do. It is why the web side needed no change to run here.
-fn emit(app: &AppHandle, global: &str, payload: &Value) {
-    let Some(window) = app.get_webview_window("main") else {
+///
+/// By PROTOCOL name rather than by global, so the two phase-3 bridges — which
+/// live in modules of their own and answer on threads of their own — have no
+/// business knowing what a callback is called.
+pub fn emit_event(app: &AppHandle, protocol: &str, payload: &Value) {
+    let (Some(global), Some(window)) = (event_global(protocol), app.get_webview_window("main"))
+    else {
         return;
     };
     // A page mid-navigation or tearing down has no callback yet; the web side
@@ -244,6 +290,7 @@ fn announce(shell: &Shell) {
 impl Shell {
     /// Everything the shell can decide before a window exists.
     fn resolve(
+        app: &AppHandle,
         app_data_root: PathBuf,
         argv: Vec<String>,
         webroot: PathBuf,
@@ -261,6 +308,35 @@ impl Shell {
 
         let (capabilities, refusals) =
             adastrail_shell::capabilities::resolve_capabilities(stamp::build_capabilities(), &argv);
+        let resources = resources(app);
+        // BUILT ONLY WHERE THE LAUNCH MAY HONOUR THEM. The router refuses a
+        // gated protocol before it reaches a bridge, so a `None` here is the
+        // second half of the same fact — and it means a plain download starts no
+        // Node runtime, opens no lobby and has nothing to reap.
+        let net = capabilities.multiplayer().then(|| {
+            NetBridge::new(
+                app.clone(),
+                capabilities,
+                resources.clone(),
+                lobby::lobby_provider(),
+            )
+        });
+        let mods = capabilities.mods().then(|| {
+            Arc::new(ModsBridge::new(
+                app.clone(),
+                resources.clone(),
+                user_data.clone(),
+                steam::steam_app_id(),
+                workshop::workshop_provider(),
+            ))
+        });
+        // `+connect_lobby <id>` (a friend accepted an invite while the game was
+        // closed) or `--connect <address>` (a shareable link). It arrives before
+        // the window exists, so it is parked and delivered on the page's load.
+        if let (Some(net), Some(invite)) = (net.as_ref(), read_invite(&argv)) {
+            net.park_invite(invite);
+        }
+
         Self {
             capabilities,
             user_data,
@@ -268,13 +344,15 @@ impl Shell {
             webroot,
             refusals,
             // The handshake happens on the first of these and is shared by all
-            // four — `steam::steam_client` is the one owner.
+            // of them — `steam::steam_client` is the one owner.
             cloud: cloud::cloud_provider(),
             achievements: achievements::achievements_provider(),
             scores: leaderboards_provider(),
             shot_library: shots::screenshot_library(),
             shots_folder: pictures.join(APP_DIR_NAME),
             started_by_steam,
+            net,
+            mods,
         }
     }
 
@@ -299,7 +377,58 @@ impl Shell {
     }
 }
 
+/// Where this shape of app keeps the things that are not Rust.
+///
+/// One question, asked once, and both answers are absolute — see
+/// [`adastrail_shell::runtime`] for why a checkout and a packaged copy cannot be
+/// told apart by looking for a file.
+fn resources(app: &AppHandle) -> Resources {
+    match protocol::packaged_resource_dir(app) {
+        Some(root) => Resources::packaged(root),
+        None => Resources::checkout(protocol::checkout_root()),
+    }
+}
+
+/// THE WINDOWLESS MODE, decided before Tauri exists.
+///
+/// A dedicated server must not register a scheme, open a window or adopt a
+/// user-data directory, and the cheapest way to guarantee all three is never to
+/// reach the code that does them. It also means the capability stamp is read
+/// twice on this path — once here and never again — which is the correct trade
+/// for keeping the branch above every piece of GUI machinery.
+fn dedicated_mode(argv: &[String]) -> Option<i32> {
+    let after = adastrail_shell::dedicated::dedicated_args(argv)?;
+    let (capabilities, refusals) =
+        adastrail_shell::capabilities::resolve_capabilities(stamp::build_capabilities(), argv);
+    if stamp::developer_build() {
+        output::warn(&DEVELOPER_NOTICE.replace('\n', " "));
+    }
+    for refusal in &refusals {
+        output::warn(refusal);
+    }
+    // The checkout root, because a dedicated server is either an operator's own
+    // build or a packaged one launched from its own directory — and the
+    // packaged answer needs an `AppHandle`, which is precisely the thing this
+    // branch exists to avoid creating.
+    let resources = match std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf))
+        .filter(|dir| dir.join("server").join("server").join("main.js").is_file())
+    {
+        Some(beside) => Resources::packaged(beside),
+        None => Resources::checkout(protocol::checkout_root()),
+    };
+    Some(dedicated::run(&after, &capabilities, &resources))
+}
+
 fn main() {
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+
+    // FIRST OF ALL: `--dedicated` never builds a window — see `dedicated_mode`.
+    if let Some(code) = dedicated_mode(&argv) {
+        std::process::exit(code);
+    }
+
     // BEFORE THE EVENT LOOP, and before anything else touches Steam: if the
     // player started this binary directly and it should have gone through the
     // client, hand over and go. A process about to be replaced must not build a
@@ -309,6 +438,31 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // A SECOND COPY OF THE GAME would fight the first over the same save
+        // files and the same Steam session, so the argument is handed to the
+        // running instance instead — which is also the ONLY place a friend's
+        // "accept" reaches a game that is already open, because Steam hands
+        // `+connect_lobby` to a process that is about to exit.
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+            // `try_state`, because a second copy started during this one's own
+            // setup would reach here before the shell is managed — and a panic
+            // in a plugin callback takes the FIRST copy down, which is the one
+            // the player is looking at.
+            let Some(net) = app.try_state::<Shell>().and_then(|shell| shell.net.clone()) else {
+                return;
+            };
+            // `argv[0]` is the second process's own path, exactly as it is for
+            // this one.
+            let Some(invite) = read_invite(&argv[1.min(argv.len())..]) else {
+                return;
+            };
+            net.park_invite(invite);
+            net.deliver_invite();
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -332,6 +486,7 @@ fn main() {
                 .picture_dir()
                 .unwrap_or_else(|_| app_data_root.clone());
             let shell = Shell::resolve(
+                &handle,
                 app_data_root,
                 std::env::args().skip(1).collect(),
                 protocol::webroot_dir(&handle),
@@ -359,14 +514,38 @@ fn main() {
 
             app.manage(shell);
             let shell = app.state::<Shell>();
-            if let Err(err) = window::build(&handle, &shell) {
-                fatal(
+            match window::build(&handle, &shell) {
+                Ok(window) => {
+                    // THE MICROPHONE GATE, on the window rather than on the app:
+                    // it is the webview's own handler, and it has to be
+                    // installed before the page can ask. See `media`.
+                    media::install(&window, shell.capabilities.voice());
+                    // An invite read off the command line, handed over now that
+                    // there is a page to hand it to.
+                    if let Some(net) = shell.net.as_ref() {
+                        net.deliver_invite();
+                    }
+                }
+                Err(err) => fatal(
                     &handle,
                     &format!("The game's window could not be opened — {err}"),
-                );
+                ),
             }
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("the game's event loop could not start");
+        .build(tauri::generate_context!())
+        .expect("the game's event loop could not start")
+        .run(|app, event| {
+            // A SESSION SERVER OUTLIVING THE WINDOW IT WAS STARTED FOR is an
+            // orphan holding a whole level in memory, and on a depot install
+            // nothing else will ever reap it. `Exit` fires for the QUIT row, for
+            // the last window closing and for a signal alike — the child also
+            // watches its own stdin for the case where none of the three
+            // happens, but this is the orderly path.
+            if matches!(event, tauri::RunEvent::Exit) {
+                if let Some(net) = app.try_state::<Shell>().and_then(|shell| shell.net.clone()) {
+                    net.shutdown();
+                }
+            }
+        });
 }

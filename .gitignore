@@ -49,6 +49,7 @@ tauri/src-tauri/icons/
 tauri/src-tauri/gen/
 tauri/node_modules/
 tauri/release/
+tauri/resources/
 
 # Node
 node_modules/

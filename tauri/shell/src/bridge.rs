@@ -17,8 +17,12 @@
 //! page waits out a timeout and the shell has nothing to say about it.
 //!
 //! Phase 2 moved four of them (cloud, achievements, scores, shots) off that
-//! list and onto routes of their own; mods and net are what is left, and they
-//! are phase 3.
+//! list and onto routes of their own; phase 3 moved the last two (mods, net),
+//! so [`Route::Unimplemented`] now describes nothing this shell ships. It stays
+//! anyway, and so does [`IMPLEMENTED_THROUGH_PHASE`]: a SEVENTH protocol will
+//! arrive one day on the web side before it arrives here, and the alternative —
+//! dropping unknown messages — is the failure mode where the page waits out a
+//! timeout and the shell has nothing to say about it.
 
 use serde_json::Value;
 
@@ -38,6 +42,10 @@ pub enum Route {
     Scores,
     /// SCREENSHOTS — [`crate::screenshots`]. Phase 2.
     Shots,
+    /// MODS — [`crate::mods`]. Phase 3.
+    Mods,
+    /// MULTIPLAYER — [`crate::net`]. Phase 3.
+    Net,
     /// A protocol this shell knows but has not grown yet, and the migration
     /// phase that grows it.
     Unimplemented {
@@ -81,7 +89,7 @@ const PROTOCOLS: &[(&str, &str, u8, Option<&str>)] = &[
 /// phase has not must still name that phase. So a phase that lands without
 /// updating the router — or a router updated without the phase — is a failing
 /// test rather than a quiet drop.
-pub const IMPLEMENTED_THROUGH_PHASE: u8 = 2;
+pub const IMPLEMENTED_THROUGH_PHASE: u8 = 3;
 
 /// The route a protocol this build ANSWERS gets, by the protocol's own name.
 ///
@@ -94,6 +102,8 @@ fn answered(protocol: &str) -> Option<Route> {
         "achievements" => Some(Route::Achievements),
         "scores" => Some(Route::Scores),
         "shots" => Some(Route::Shots),
+        "mods" => Some(Route::Mods),
+        "net" => Some(Route::Net),
         _ => None,
     }
 }
@@ -198,6 +208,8 @@ pub fn explain(route: &Route) -> Option<String> {
         | Route::Achievements
         | Route::Scores
         | Route::Shots
+        | Route::Mods
+        | Route::Net
         | Route::Ignored => None,
     }
 }

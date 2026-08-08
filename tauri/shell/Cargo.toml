@@ -20,6 +20,12 @@ publish.workspace = true
 # library keeps this crate buildable on a machine with nothing installed, which
 # is the property the whole two-crate split exists to protect.
 base64 = "0.22"
+# A MOD SOMEBODY WAS SENT ARRIVES AS A `.zip`, and the one compression method
+# inside a real one is deflate. `rust_backend` is what keeps this crate free of
+# a system library and a build script — the property the whole two-crate split
+# exists to protect, so that `cargo test -p adastrail-shell` runs on a machine
+# with nothing installed. See `mod_archive` for why the reader itself is ours.
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

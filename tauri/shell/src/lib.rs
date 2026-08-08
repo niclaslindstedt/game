@@ -26,6 +26,20 @@
 //! | [`leaderboards_provider`]  | `leaderboards-provider.ts`   | why there is no board on this shell |
 //! | [`screenshots`]            | `screenshots.ts`             | where a picture goes, and under what name |
 //! | [`screenshots_provider`]   | `screenshots-provider.ts`    | whether the platform keeps a copy   |
+//! | [`net`]                    | `net.ts`                     | what one multiplayer message means  |
+//! | [`net_lobby`]              | `net-lobby.ts`               | what a lobby row says               |
+//! | [`net_invite`]             | `net-invite.ts`              | what a launch argument asked to join |
+//! | [`net_firewall`]           | `net-firewall.ts`            | whether the port is open, and how to open it |
+//! | [`steam_p2p`]              | `net-steam-p2p.ts`           | when to accept a peer, and when it is gone |
+//! | [`session_host`]           | `session-host.ts`            | what the session process just said  |
+//! | [`snapshot`]               | (`net.ts`'s `MessagePort`)   | how twenty frames a second reach the page |
+//! | [`mods`]                   | `mods.ts`                    | which folders hold mods, and what may be published |
+//! | [`mod_archive`]            | `mod-archive.ts`             | what is safely inside a `.zip`      |
+//! | [`workshop`]               | `workshop.ts`                | what a mod portal has to be         |
+//! | [`runtime`]                | `resources.ts`               | where the things that are not Rust are |
+//! | [`dedicated`]              | `dedicated-mode.ts`          | what a windowless server is handed  |
+//! | [`media`]                  | `main.ts`'s permission handler | whether the page may open a microphone |
+//! | [`steam_pump`]             | (`steam.ts`'s callback loop) | how often Steam's queue is drained  |
 //!
 //! **The four platform seams are the SAME three-file shape the rest of the game
 //! uses** — bridge → provider → platform — with the third file the only one that
@@ -48,12 +62,26 @@ pub mod channels;
 pub mod cloud_provider;
 pub mod cloud_save;
 pub mod config;
+pub mod dedicated;
 pub mod leaderboards;
 pub mod leaderboards_provider;
+pub mod media;
+pub mod mod_archive;
+pub mod mods;
+pub mod net;
+pub mod net_firewall;
+pub mod net_invite;
+pub mod net_lobby;
 pub mod output;
+pub mod runtime;
 pub mod screenshots;
 pub mod screenshots_provider;
+pub mod session_host;
+pub mod snapshot;
 pub mod steam;
+pub mod steam_p2p;
+pub mod steam_pump;
 pub mod user_data;
 pub mod webroot;
 pub mod window_state;
+pub mod workshop;

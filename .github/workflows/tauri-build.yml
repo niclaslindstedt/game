@@ -1,0 +1,219 @@
+# Desktop (Tauri) shell — checks on every relevant push, and dispatch-only
+# packaging.
+#
+# The peer of desktop-build.yml, and split by the SAME cost boundary — which
+# this tree happens to have structurally rather than by discipline, because it
+# is two crates:
+#
+#   check    Cheap and automatic. `cargo test -p adastrail-shell` is the whole
+#            decision layer and needs NO GUI libraries and NO Steam SDK — that
+#            is the entire point of the crate split, and the reason this half
+#            lands in seconds on an ordinary runner.
+#
+#   lint     Medium. `cargo clippy --workspace` reaches the app crate too, which
+#            DOES need the platform's webview development libraries — so it is
+#            an apt step and a cache away.
+#
+#   package  Expensive and manual. Real Windows/macOS runners producing real
+#            bundles. Dispatch-only for the same reason the Electron and EAS
+#            ones are: it runs when a human is shipping.
+#
+# `tauri/` is not an npm workspace member and its crates are not on any other
+# job's path, so without this file `make tauri-test` and `make tauri-lint` run
+# only when somebody remembers.
+name: Desktop App (Tauri)
+
+on:
+  push:
+    paths:
+      - "tauri/**"
+      - "scripts/**"
+      - "server/**"
+      - "package*.json"
+      # The shell answers these protocols; a change to the web half can break
+      # the desktop build without touching tauri/ at all.
+      - "pwa/src/app/**"
+      - ".github/workflows/tauri-build.yml"
+  pull_request:
+    paths:
+      - "tauri/**"
+      - "scripts/**"
+      - "server/**"
+      - "package*.json"
+      - "pwa/src/app/**"
+      - ".github/workflows/tauri-build.yml"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to package
+        type: choice
+        default: all
+        options: [all, windows, macos, linux]
+      profile:
+        description: Package profile (steam is a depot directory; standalone is installers)
+        type: choice
+        default: steam
+        options: [steam, standalone]
+
+concurrency:
+  group: tauri-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: decision layer
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tauri
+      # `-p adastrail-shell` and DELIBERATELY only that crate: it depends on no
+      # GUI toolkit and no Steam SDK, so this job installs nothing beyond a Rust
+      # toolchain. A test that needed more than this is a decision sitting in
+      # the wrong crate.
+      - name: test
+        run: cargo test -p adastrail-shell
+      - name: format
+        run: cargo fmt --all -- --check
+
+  lint:
+    name: clippy (both crates)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tauri
+      # The app crate links the platform's webview, so clippy needs its headers
+      # even though nothing here opens a window.
+      - name: webview development libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev patchelf
+      # `tauri.conf.json` declares `webroot` as a bundle resource and the build
+      # script refuses a resource that is not there, so the tree needs one — an
+      # empty page is enough to compile against, and building the real site here
+      # would cost minutes to typecheck Rust.
+      - name: a placeholder webroot
+        run: |
+          mkdir -p webroot
+          echo '<!doctype html><title>placeholder</title>' > webroot/index.html
+      # …and `tauri-build` refuses a MISSING ICON outright, so the compile needs
+      # one even though nothing here draws a window. `scripts/icons.mjs` is what
+      # makes them (Tauri refuses the paletted PNGs the website ships), and it
+      # needs `sharp` — which is a `pwa` devDependency hoisted to the root by
+      # the workspace install. `npm ci` at the ROOT is therefore the honest
+      # dependency, and it is cheap beside the apt step above.
+      - name: Install the workspace
+        working-directory: .
+        run: npm ci
+      - name: icons
+        run: node scripts/icons.mjs
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  package:
+    name: package (${{ matrix.os }})
+    if: github.event_name == 'workflow_dispatch'
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: macos
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    env:
+      # The real binary must never be built against Valve's shared test app.
+      GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+      # A depot build is the full product: sessions, the Workshop, the router
+      # mapping the HOST screen's ROUTER row reports on, and VOICE CHAT.
+      GIS_STAMP_CAPABILITIES: "1"
+      GIS_ENABLE_MULTIPLAYER: "1"
+      GIS_ENABLE_MODS: "1"
+      GIS_ENABLE_UPNP: "1"
+      GIS_ENABLE_VOICE: "1"
+      GIS_ENABLE_LICENSED: "1"
+      # macOS signing, exactly as release.yml passes it: an absent secret means
+      # an ad-hoc signature, which is the minimum an arm64 app needs to run at
+      # all.
+      APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+    steps:
+      - name: Skip unselected platform
+        if: inputs.platform != 'all' && inputs.platform != matrix.target
+        run: echo "not selected" && exit 0
+
+      - uses: actions/checkout@v4
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+      - uses: actions/setup-node@v4
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+      - uses: Swatinem/rust-cache@v2
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        with:
+          workspaces: tauri
+
+      - name: Linux packaging libraries
+        if: matrix.target == 'linux' && (inputs.platform == 'all' || inputs.platform == 'linux')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      # The website build and the session server both live in the root
+      # workspace; the shell only carries their output.
+      - name: Install the workspace
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        run: npm ci
+
+      - name: Package
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        run: npm run tauri:package${{ inputs.profile == 'standalone' && ':dist' || '' }}
+
+      - name: Warn if the app id is still Valve's test app
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        shell: bash
+        run: |
+          if [ -z "${GIS_STEAM_APP_ID}" ] || [ "${GIS_STEAM_APP_ID}" = "480" ]; then
+            echo "::warning::Built against Spacewar (480). Set the STEAM_APP_ID repository variable before shipping this to a depot."
+          fi
+
+      # THE DEPOT and THE BUNDLES land in different places, and both are worth
+      # keeping: the depot is what Steam uploads, and the bundles are what
+      # phase 4 measures an install size from.
+      - uses: actions/upload-artifact@v7
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        with:
+          name: desktop-tauri-${{ matrix.target }}
+          path: |
+            tauri/release/depot
+            tauri/target/release/bundle
+          if-no-files-found: warn
+          retention-days: 7

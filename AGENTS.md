@@ -91,23 +91,28 @@ the embedded site and is the ONLY correct target for a store build, and the
 `native:ios*` scripts run `expo prebuild` first so a change to
 `native/app.config.js` re-syncs instead of shipping a stale native project.
 
-**`tauri/` IS A THIRD SUCH TREE AND SHIPS NOTHING YET** — a second desktop
-shell around the same site, being built out beside `electron/` while the two are
-compared, and it may or may not take over as the release package. It is **Rust**,
-so `make test` and `make lint` do not reach it at all: it is checked by
+**`tauri/` IS A THIRD SUCH TREE AND IS NOT THE RELEASE PACKAGE** — a second
+desktop shell around the same site, feature-complete beside `electron/` while
+the two are compared, and it may or may not take over. It is **Rust**, so
+`make test` and `make lint` do not reach it at all: it is checked by
 `make tauri-test` (its decision layer, and DELIBERATELY only that crate — no GUI
 libraries and no Steam SDK needed) and `make tauri-lint` (clippy at zero
 warnings over both crates, which does need the webview libraries). A change to
-that tree runs both. It packages itself with `make desktop-tauri-steam` /
-`make desktop-tauri-dist`, reading the SAME five `GIS_ENABLE_*` switches the
-Electron targets do — one vocabulary, two shells.
-→ **`docs/tauri-migration.md`** for the four phases (1 and 2 are shipped; 3 is
-multiplayer, mods and the snapshot pipe), `tauri/README.md` for the tree.
+that tree runs both, and `.github/workflows/tauri-build.yml` runs them for you.
+It packages itself with `make desktop-tauri-steam` / `make desktop-tauri-dist`,
+reading the SAME five `GIS_ENABLE_*` switches the Electron targets do — one
+vocabulary, two shells — and `release.yml` attaches its downloads to every
+release, suffixed `-tauri` so the two shells' artifacts cannot collide.
+→ **`docs/tauri-migration.md`** for the four phases (1, 2 and 3 are shipped; 4
+is the playtest and the decision), `tauri/README.md` for the tree.
 Nothing in `src/` or `pwa/` may learn it exists: the page is told
 `__GIS_PLATFORM__ = "steam"` because it is the same product on the same store —
 and **not one line of `pwa/` changed to give this shell cloud save,
-achievements or screenshots**, which is the whole test of whether the bridge
-seam was drawn in the right place.
+achievements, screenshots, mods, multiplayer OR voice**, which is the whole test
+of whether the bridge seam was drawn in the right place. The last of those is
+the sharpest: the page asks for a `MessagePort` and gets one, because the
+shell's initialization script mints the pair IN THE PAGE and bridges its own end
+to a loopback socket the session process opened.
 
 ## Commit and PR conventions — the `commit` skill owns them
 
@@ -579,17 +584,17 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | The projection, the postfx, a gait, the loot aura | `pwa/src/game/render/`                                                         | `docs/rendering.md`   |
 | A library page's content or look                  | `pwa/scripts/library/…` — the pages are build output and are NEVER hand-edited | `library-improvement` |
 
-| Multiplayer                                       | Goes in                                                                                                                                                                           |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The session server, or the wire either end speaks | `server/…` (`server/wire/*` imports NOTHING; never anything under `pwa/`)                                                                                                         |
-| A transport, admission, the router mapping        | `server/net/…` — Node builtins only                                                                                                                                               |
-| Turning SNAPSHOTS back into a run                 | `server/client.ts` — the ONE client, read as `@game/client`. Never a second one: a bot client and the page must prove the same thing playable                                     |
-| A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                               |
-| The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`; the page's half is `pwa/src/app/net-bridge.ts`                                                                                         |
-| A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`) |
-| A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                             |
-| VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`        |
-| A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                 |
+| Multiplayer                                       | Goes in                                                                                                                                                                                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The session server, or the wire either end speaks | `server/…` (`server/wire/*` imports NOTHING; never anything under `pwa/`). THREE ENTRIES, one server: a `parentPort` (Electron forked us), `--shell` (a plain child — `shell-host.ts`), or neither (`dedicated.ts`) |
+| A transport, admission, the router mapping        | `server/net/…` — Node builtins only                                                                                                                                                                                 |
+| Turning SNAPSHOTS back into a run                 | `server/client.ts` — the ONE client, read as `@game/client`. Never a second one: a bot client and the page must prove the same thing playable                                                                       |
+| A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                                                                 |
+| The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`, and their Tauri peers `tauri/shell/src/net*.rs` + `tauri/src-tauri/src/{net,session}.rs`; the page's half is `pwa/src/app/net-bridge.ts`                                 |
+| A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`)                                   |
+| A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                                                               |
+| VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`                                          |
+| A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                                                   |
 
 Everything multiplayer: **`docs/multiplayer.md`** — the shipped architecture,
 and the record of what still needs a human with hardware to accept.

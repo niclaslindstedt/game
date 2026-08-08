@@ -20,6 +20,12 @@ src-tauri/gen/
 # assembles. The peer of electron/release/.
 release/
 
+# The sidecars, staged by scripts/package.mjs before the bundler files them:
+# the compiled session server, the mod toolchain and a Node runtime. All three
+# are copies of things that live elsewhere in the repo (or of the runtime this
+# machine is packaging with), so none of them belongs in the history.
+resources/
+
 # This tree has its OWN dependency tree — it is not an npm workspace member.
 # Today it holds one thing: the Tauri CLI, which is what packages a build.
 node_modules/

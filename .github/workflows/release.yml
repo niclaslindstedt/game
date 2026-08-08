@@ -303,12 +303,119 @@ jobs:
           printf 'uploading %s\n' "${assets[@]}"
           gh release upload "$TAG" "${assets[@]}" --clobber
 
+  # THE SAME PRODUCT IN THE OTHER SHELL, onto the same release page.
+  #
+  # `tauri/` is a second desktop wrapper around the identical site
+  # (docs/tauri-migration.md), and it is NOT the shipping build — that decision
+  # belongs to phase 4, after the two have been played side by side. It attaches
+  # its downloads here anyway, and that is the whole point: **the numbers the
+  # decision turns on — install size, cold start — are then measured by anybody
+  # who wants to, on their own machine, from artifacts nobody staged.**
+  #
+  # **THE `-tauri` SUFFIX IS THE MECHANISM, NOT A DECORATION.** Both shells
+  # package the same product at the same version for the same platforms, so
+  # without it these two jobs race to upload files with colliding names and the
+  # release ends up with whichever finished last. `tauri/scripts/package.mjs`
+  # names its standalone output `adastrail-<version>-tauri-<os>-<arch>.<ext>`
+  # against Electron's `adastrail-<version>-<os>-<arch>.<ext>`.
+  #
+  # It reads the IDENTICAL capability inputs and the IDENTICAL macOS signing
+  # secrets, because it is the same product being packaged — a build stamped
+  # differently from its Electron twin would make the comparison meaningless.
+  desktop-tauri:
+    needs: release
+    name: desktop-tauri (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: macos
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    # contents: write — the artifacts are uploaded onto the GitHub Release.
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      GIS_STAMP_CAPABILITIES: "1"
+      GIS_ENABLE_MULTIPLAYER: ${{ inputs.enable_multiplayer && '1' || '0' }}
+      GIS_ENABLE_MODS: ${{ inputs.enable_mods && '1' || '0' }}
+      GIS_ENABLE_UPNP: ${{ inputs.enable_upnp && '1' || '0' }}
+      GIS_ENABLE_VOICE: ${{ inputs.enable_voice && '1' || '0' }}
+      GIS_ENABLE_LICENSED: ${{ inputs.enable_licensed && '1' || '0' }}
+      # A download is not the Steam edition, so it is packaged against the real
+      # app id only if one is configured — and `--allow-placeholder` is what
+      # lets a repo with no Steam app still produce downloads.
+      GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+      # NEVER UNSIGNED on macOS, for the reason the Electron job gives at
+      # length: Apple Silicon refuses to execute unsigned arm64 code and reports
+      # it to the player as "the app is damaged". An absent secret means the
+      # ad-hoc signature `scripts/package.mjs` falls back to.
+      APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tauri
+
+      - name: Linux packaging libraries
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      # The website build and the session server both live in the root
+      # workspace; the shell carries their output.
+      - run: npm ci
+
+      - name: Package
+        shell: bash
+        run: npm run tauri:package:dist -- --allow-placeholder
+
+      # Whatever this platform's bundler produced, by extension — a job that
+      # listed filenames would silently upload nothing the day a target changed
+      # its suffix. The DMG is skipped where a zip of the same .app exists for
+      # the same reason the Electron job ships archives: an unsigned installer
+      # is a promise this project cannot keep.
+      - name: Attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob globstar
+          assets=(tauri/target/release/bundle/**/*.{dmg,deb,AppImage,exe,msi})
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "::error::${{ matrix.target }} produced no distributable files"
+            ls -R tauri/target/release/bundle || true
+            exit 1
+          fi
+          printf 'uploading %s\n' "${assets[@]}"
+          gh release upload "$TAG" "${assets[@]}" --clobber
+
   # THE RELEASE BECOMES VISIBLE HERE, and nowhere else: `needs: desktop`
   # means every platform in the matrix has packaged AND uploaded before
   # anybody can see the release page. If one target fails, the draft stays
   # a draft — a release that is missing a download is a bug report from
   # every player on that platform, and the fix (re-dispatch, or upload the
   # archive by hand) is much cheaper while nobody has seen it yet.
+  #
+  # **`desktop-tauri` is deliberately NOT in that list.** It is not the
+  # shipping build, so a Rust toolchain failing on one runner must not hold
+  # back a release whose actual downloads are ready — the Tauri artifacts are
+  # a comparison aid until phase 4 says otherwise, and they can be uploaded to
+  # a published release afterwards exactly as they are here.
   publish:
     needs: [release, desktop]
     runs-on: ubuntu-latest

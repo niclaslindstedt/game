@@ -19,6 +19,7 @@ electron/release/
 # page is a build stub.
 tauri/webroot/
 tauri/release/
+tauri/resources/
 tauri/src-tauri/placeholder/
 site/
 node_modules/

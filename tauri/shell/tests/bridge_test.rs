@@ -50,13 +50,16 @@ fn quit_is_answered_from_phase_one() {
 
 #[test]
 fn a_protocol_this_build_has_grown_routes_to_its_own_bridge() {
-    // Phase 2's four. A route that fell back to `Unimplemented` here would be a
-    // shell that logs a phase it has already shipped and answers nothing.
+    // Phase 2's four and phase 3's two. A route that fell back to
+    // `Unimplemented` here would be a shell that logs a phase it has already
+    // shipped and answers nothing.
     for (flag, expected) in [
         ("__gisCloud", Route::Cloud),
         ("__gisAchievements", Route::Achievements),
         ("__gisScores", Route::Scores),
         ("__gisShots", Route::Shots),
+        ("__gisMods", Route::Mods),
+        ("__gisNet", Route::Net),
     ] {
         let raw = json!({ flag: true, "action": "status" }).to_string();
         assert_eq!(route(&raw, &anything), expected, "{flag}");

@@ -227,7 +227,11 @@ async function checkLinux(port: number): Promise<FirewallState> {
   }
   const firewalld = await tryRun("firewall-cmd", ["--state"]);
   if (firewalld !== null) {
-    if (!/running/i.test(firewalld)) {
+    // `--state` prints exactly `running` or `not running`, and the second
+    // CONTAINS the first — so a bare /running/ test reports a stopped firewalld
+    // as running and then offers a remedy for a problem this machine does not
+    // have.
+    if (!/running/i.test(firewalld) || /not\s+running/i.test(firewalld)) {
       return { status: "not-needed", detail: "FIREWALLD IS NOT RUNNING" };
     }
     const ports = await tryRun("firewall-cmd", ["--list-ports"]);
