@@ -994,13 +994,59 @@ export const DRIVE = {
      * The real number is small: a 78 kg body against 1600 kg of wagon is a
      * 4.5% momentum transfer, so a square hit at 120 costs about 6 mph. That is
      * correct and it is nearly unreadable in a minigame that lasts a minute —
-     * the player cannot tell a hit from a bump in the road. At 2.2 the same hit
-     * costs about 13 mph, which is a fifth of the top end: plainly felt, still
-     * recoverable, and still perfectly ordered — glancing blows stay cheap,
-     * square ones stay expensive, and speed still costs more than caution
-     * saves. The RATIOS are the physics; this is the volume knob.
+     * the player cannot tell a hit from a bump in the road. At 1.6 the same hit
+     * costs about 10 mph: plainly felt, still recoverable, and still perfectly
+     * ordered — glancing blows stay cheap, square ones stay expensive, and speed
+     * still costs more than caution saves. The RATIOS are the physics; this is
+     * the volume knob.
+     *
+     * IT IS THE WHOLE ROAD'S KNOB, which is why the crowd needs one of its own
+     * beside it — see `crowdSpeedLossScale`.
      */
     speedLossScale: 1.6,
+    /**
+     * …AND HOW MUCH MORE OF IT A PERSON TAKES OFF, on top of the road's own
+     * scale.
+     *
+     * THE CROWD IS THE ONE POPULATION THE VOLUME KNOB ABOVE CANNOT SERVE, and
+     * the reason is arithmetic rather than taste. A momentum transfer SATURATES
+     * against the wagon's own 1600 kg: everything with bodywork out here is
+     * within a factor of ten of the car and hands back a third to the whole of
+     * its speed, so a shunt is a wall whatever this number says and the ceiling
+     * (`speedLoss` is clamped to the speed the car had) is doing the work. A
+     * person is 78 kg — five percent of the car — and lands at the bottom of the
+     * same scale by a factor of twenty. One number for a road whose collisions
+     * span 78 kg to twelve tonnes prices the top end or the bottom, never both,
+     * and it was pricing the top: a body met at the pace this leg is actually
+     * driven at cost four mph off sixty, under a pixel of suspension travel and
+     * a tenth of a pixel of frame shake. It was a statistic rather than an
+     * event — the wagon walked through a crowd as though it were fog.
+     *
+     * So the crowd gets the rest of the volume, and ONLY the crowd: a body
+     * arrives as a THUMP the player feels in the wheel, while the traffic, the
+     * kerb and the ordering between all of them are exactly where they were.
+     * What it does NOT touch is the damage — a body's wear is the collision's
+     * own energy and nothing here scales it, because "felt" was the complaint
+     * and "the car dies in twenty people" was not.
+     *
+     * MEASURED (`make drive-bench`, 24 seeds a rung, the leg out, before →
+     * after) — the trip pays for the thump in seconds rather than in car, and
+     * every rung still arrives:
+     *
+     *   rung        trip           bodies        ending wear
+     *   easy        82 s →  85 s   71 →  76      15% → 19%
+     *   medium      93 s →  95 s   81 →  79      38% → 35%
+     *   hard        98 s → 102 s   85 →  86      44% → 39%
+     *   nightmare  105 s → 112 s   90 →  94      53% → 49%
+     *   jesus      110 s → 118 s   92 →  98      56% → 50%
+     *
+     * (EASY moves furthest because its own rung moved too — see
+     * `DifficultyDef.drive.pedestrianMassMult`. The wear column drifting DOWN
+     * everywhere is the model being consistent rather than a second change: a
+     * leg driven a few mph slower is a leg whose collisions carry less energy,
+     * and energy is what breaks the car.)
+     */
+    crowdSpeedLossScale: 1.5,
     /**
      * HOW MUCH OF A SIDESWIPE IS ABSORBED — the share of the TANGENTIAL energy
      * two things with bodywork grind out of each other.
@@ -1051,9 +1097,25 @@ export const DRIVE = {
      * end costs about a tenth of the wagon, and a couple of mph.
      */
     lampWearScale: 1.5,
-    /** How hard a hit shoves the suspension (px/s per unit of wear dealt) —
-     * `nudgeCar`'s own units, so the body visibly takes the blow. */
-    nudgePerWear: 900,
+    /**
+     * HOW HARD A HIT SHOVES THE SUSPENSION — px/s of spring velocity per px/s
+     * of GROUND SPEED the car actually lost (`nudgeCar`'s own units).
+     *
+     * IT USED TO BE PER UNIT OF WEAR, and that was the wrong quantity by the
+     * same reasoning `crowdSpeedLossScale` exists for. A car's springs are
+     * loaded by DECELERATION — the nose dips because the mass is still going and
+     * the wheels are not — so the shove is the Δv, not the share of the wagon's
+     * life the blow cost. Read off wear, a body at cruise moved the body work by
+     * two thirds of a pixel while a van moved it by nine hundred times as much;
+     * both of those are the spring on its stop, and only one of them was
+     * supposed to be.
+     *
+     * Set so the crowd lands in the visible part of three px of travel — a body
+     * at the pace this leg is driven at dips the nose about a third of the way
+     * and one met at the top end puts it on the bump stop — and everything with
+     * bodywork saturates it, which is what a shunt has always done.
+     */
+    nudgePerLoss: 0.42,
   },
 
   // ── WHAT IS LEFT OF SOMEBODY ──────────────────────────────────────────────

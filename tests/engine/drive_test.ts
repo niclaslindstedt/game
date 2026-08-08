@@ -39,12 +39,14 @@ import {
   roadEdges,
   solveImpact,
   stepDrive,
+  trafficMass,
   vehicleDef,
   type DriveInput,
   type DriveParams,
   type DriveState,
   type DriveTraffic,
 } from "../../src/game/drive/index.ts";
+import { CAR } from "../../src/game/vehicles.ts";
 import { DIFFICULTY_ORDER } from "../../src/game/defs/difficulties.ts";
 import type { Difficulty } from "../../src/game/types/index.ts";
 
@@ -355,6 +357,129 @@ describe("the impact model", () => {
   });
 });
 
+describe("what a body is actually FELT as", () => {
+  // THE COMPLAINT THIS ANSWERS: a person went under the wagon and nothing
+  // happened. The momentum sum was right and unreadable — 78 kg against 1600 is
+  // five percent of the car, which lands at the bottom of a scale whose top is
+  // a bus — so the crowd carries its own share of the volume knob
+  // (`DRIVE.impact.crowdSpeedLossScale`) and the springs are shoved by the speed
+  // the wagon LOST rather than by the fraction of its life the blow cost
+  // (`nudgePerLoss`). Neither touches the energy, so nothing here is a statement
+  // about damage.
+
+  /** Somebody standing still on the car's own line, `ahead` px up the road. */
+  const plant = (drive: DriveState, ahead: number): void => {
+    drive.pedestrians.push({
+      id: drive.nextId++,
+      pos: { x: drive.car.pos.x + ahead, y: drive.car.pos.y },
+      vel: { x: 0, y: 0 },
+      mode: "afoot",
+      kind: "walker",
+      variant: 0,
+      phase: 0,
+      z: 0,
+      vz: 0,
+      counted: false,
+      crushed: false,
+      bark: -1,
+    });
+  };
+
+  /**
+   * Coast one wagon into a planted body and an identical one down an empty
+   * road, and hand back the difference — which is the collision's own cost with
+   * the drag, the drivetrain and the tyres divided out of it.
+   */
+  const meet = (speed: number): { lost: number; dip: number } => {
+    const struck = createDrive(PARAMS);
+    const clear = createDrive(PARAMS);
+    let dip = 0;
+    for (const drive of [struck, clear]) {
+      silence(drive);
+      drive.car.speed = speed;
+    }
+    plant(struck, 40);
+    for (let t = 0; t < 400; t += 16) {
+      stepDrive(struck, 16, { pedal: 0, wheel: 0 });
+      stepDrive(clear, 16, { pedal: 0, wheel: 0 });
+      // The FRONT axle, because that is the end the blow arrives at.
+      dip = Math.max(dip, struck.car.suspension[1] as number);
+    }
+    expect(struck.bodies).toBe(1);
+    return { lost: clear.car.speed - struck.car.speed, dip };
+  };
+
+  it("takes more off the speedometer than the bare momentum sum does", () => {
+    const speed = DRIVE.topSpeedPx;
+    const raw = solveImpact(
+      { x: 0, y: 0 },
+      1,
+      speed,
+      { x: 30, y: 0 },
+      { x: 0, y: 0 },
+      DRIVE.pedestrianRadiusPx,
+      impactMasses(PARAMS.difficulty ?? "medium").pedestrian,
+    )!.speedLoss;
+    const { lost } = meet(speed);
+    // The whole point: plainly MORE than the sum's own answer…
+    expect(lost).toBeGreaterThan(raw * 1.2);
+    // …and still a hit rather than a wall — a body is not a parked bus.
+    expect(lost).toBeLessThan(speed * 0.25);
+  });
+
+  it("shoves the wagon's springs, and harder the faster it was going", () => {
+    const fast = meet(DRIVE.topSpeedPx);
+    const slow = meet(DRIVE.topSpeedPx * 0.3);
+    // A body at the top of the dial has to be VISIBLE in the body work — the
+    // axle has three px of travel, and a hit that moves it by a tenth of one is
+    // the thing this whole pass exists to stop shipping.
+    expect(fast.dip).toBeGreaterThan(CAR.maxCompress * 0.5);
+    expect(slow.dip).toBeGreaterThan(0);
+    expect(slow.dip).toBeLessThan(fast.dip * 0.75);
+    // …and the springs answer the SPEED THAT WAS LOST, so the two move together.
+    expect(fast.lost).toBeGreaterThan(slow.lost);
+  });
+
+  it("leaves the traffic on the momentum sum's own answer", () => {
+    // ONLY the crowd is scaled. A vehicle is within a factor of ten of the
+    // wagon, hands back a third to the whole of its speed on the sum alone, and
+    // is the end of the range the road's own `speedLossScale` was set for — so
+    // a second scale on top of it would be pricing a collision twice.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx;
+    const mass = impactMasses("medium");
+    const other = createTraffic(
+      drive.nextId++,
+      0,
+      { x: drive.car.pos.x + 40, y: drive.car.pos.y },
+      0,
+    );
+    drive.traffic.push(other);
+    const before = drive.car.speed;
+    const def = vehicleDef(other.variant);
+    const hit = solveImpact(
+      drive.car.pos,
+      1,
+      before,
+      other.pos,
+      { x: 0, y: 0 },
+      def.radiusPx,
+      trafficMass(other, mass.rider) * mass.vehicleMult,
+      def.halfLengthPx,
+      1,
+    )!;
+    stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+    expect(drive.shunts).toBe(1);
+    // The sum's own answer, give or take the tick of coasting that came with
+    // it — and comfortably short of what the crowd's multiplier would make it.
+    const lost = before - drive.car.speed;
+    expect(lost).toBeGreaterThan(hit.speedLoss * 0.95);
+    expect(lost).toBeLessThan(hit.speedLoss * 1.1);
+    expect(DRIVE.impact.crowdSpeedLossScale).toBeGreaterThan(1.1);
+  });
+});
+
 describe("the difficulty ladder on the road", () => {
   /** One square hit on the bumper, solved against a given mass. */
   const squareHit = (mass: number) =>
@@ -593,31 +718,44 @@ describe("the street", () => {
    * The pavement's own riders are left out — they are not in a lane, and
    * `laneAt` clamps, so they would be booked against whichever outside lane
    * they are nearest.
+   *
+   * OVER SEVERAL SEEDS, because one leg is not a reading. The occupancy is a
+   * statistical claim about the SPAWNER, and a single leg measures the spawner
+   * through one trajectory: the auto-driver settles into a lane and bulldozes
+   * it, so whichever lane it happened to pick that time reads far lighter than
+   * the road actually is. On one seed that showed up as a lane at 0.16 against
+   * the same road's 0.78 averaged — a false failure that any tuning touching the
+   * wagon's pace could trip, since a slightly different speed puts the driver in
+   * a different lane. Four legs average the trajectory out and leave the
+   * spawner, which is what is under test.
    */
+  const LANE_SEEDS = [1234, 5, 77, 909];
   const laneOccupancy = (difficulty: Difficulty): number[] => {
-    const drive = createDrive({ ...PARAMS, difficulty });
-    // DRIVEN BY THE AUTO-DRIVER, because the reading is about what a PLAYER
-    // sees and a car held dead straight does not see the road — it bulldozes
-    // one lane of it. A shunt shoves a car AWAY from the wagon, so a straight
-    // line empties the lane it opens in and stacks the neighbour with what it
-    // shoved out, and the two read three times apart on a spawner that treated
-    // them identically.
-    const driver = createDriveDriver();
     const seen = new Array<number>(DRIVE.laneCount).fill(0);
     let ticks = 0;
-    for (let t = 0; t < 70000; t += 16) {
-      stepDrive(drive, 16, driveDriverInput(driver, drive));
-      // Only once the road is peopled — the opening stretch is deliberately
-      // clear and averaging it in reports a quieter road than the one played.
-      if (drive.distance <= DRIVE.crowdStartPx) continue;
-      ticks++;
-      for (const car of drive.traffic) {
-        if (vehicleDef(car.variant).pavement) continue;
-        const ahead = (car.pos.x - drive.car.pos.x) * PARAMS.direction;
-        // What the camera shows: the car rides in the trailing quarter of a
-        // ~420 px frame (`CAMERA_LEAD_FRAC`, pwa/src/game/drive-screen).
-        if (ahead > 308 || ahead < -112) continue;
-        seen[laneAt(car.pos.y)]! += 1;
+    for (const seed of LANE_SEEDS) {
+      const drive = createDrive({ ...PARAMS, seed, difficulty });
+      // DRIVEN BY THE AUTO-DRIVER, because the reading is about what a PLAYER
+      // sees and a car held dead straight does not see the road — it bulldozes
+      // one lane of it. A shunt shoves a car AWAY from the wagon, so a straight
+      // line empties the lane it opens in and stacks the neighbour with what it
+      // shoved out, and the two read three times apart on a spawner that treated
+      // them identically.
+      const driver = createDriveDriver();
+      for (let t = 0; t < 50000; t += 16) {
+        stepDrive(drive, 16, driveDriverInput(driver, drive));
+        // Only once the road is peopled — the opening stretch is deliberately
+        // clear and averaging it in reports a quieter road than the one played.
+        if (drive.distance <= DRIVE.crowdStartPx) continue;
+        ticks++;
+        for (const car of drive.traffic) {
+          if (vehicleDef(car.variant).pavement) continue;
+          const ahead = (car.pos.x - drive.car.pos.x) * PARAMS.direction;
+          // What the camera shows: the car rides in the trailing quarter of a
+          // ~420 px frame (`CAMERA_LEAD_FRAC`, pwa/src/game/drive-screen).
+          if (ahead > 308 || ahead < -112) continue;
+          seen[laneAt(car.pos.y)]! += 1;
+        }
       }
     }
     return seen.map((n) => n / Math.max(1, ticks));
