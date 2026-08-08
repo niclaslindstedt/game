@@ -58,27 +58,31 @@ const FRAME_FILE = ".frame-stage.html";
 const SHOT_SCALE = 4;
 
 /**
- * HOW MANY CARDS ARE IN FRONT OF THE CAMERA AT ONCE.
+ * HOW MANY CARDS ARE IN FRONT OF A CAMERA AT ONCE.
  *
- * A shot is `innerHTML` + layout + font/image settle + a raster — all of it
- * work Chromium does in a renderer process, and one page means one such
- * process doing it while every other core on the machine waits. That was the
- * whole deploy's critical path: ~1000 pictures at a third of a second each,
- * serial.
+ * A shot is `innerHTML` + layout + font/image settle + a raster, and one page
+ * means one renderer process doing all of it while every other core on the
+ * machine waits. That was the whole deploy's critical path: ~1000 pictures at
+ * a third of a second each, serial.
  *
- * A LANE IS A PAIR OF PAGES (the element stage and the 1200x630 frame stage),
- * because a card job shoots both and a page can only hold one composition at a
- * time. The pages are all navigated to the same two `file://` stages, so the
- * stylesheet and the webfont are still parsed once per page and nothing about
- * a picture depends on which lane drew it — the whole set comes out
- * byte-identical to the serial one, which is the only reason this is allowed
- * to be a speedup rather than a rewrite.
+ * A LANE IS A WHOLE BROWSER, with a pair of pages on it — the element stage
+ * and the 1200x630 frame stage, because a card job shoots both and a page can
+ * only hold one composition at a time. **The browser is the unit, and that is
+ * the measurement, not a preference.** With one browser and four pages the set
+ * went 4m52 to 3m46 and stopped: the shots fan out across renderers, but every
+ * screenshot is still marshalled over CDP by the single BROWSER process, which
+ * sat pinned near a full core. Raising the page count to eight moved nothing —
+ * same 74% on the same one process. Four browsers spread that work too, and
+ * the same set takes 2m36.
  *
- * DON'T EXPECT LINEAR. Measured on a four-core machine the full set went 4m52
- * to 3m46 — the shots fan out but the BROWSER process does not, and it sits
- * near a full core marshalling every screenshot over CDP. So the cap is the
- * core count and not a number chosen to be brave: past it the lanes only take
- * turns more expensively, each one costing two more renderer processes.
+ * Every page is navigated to the same two `file://` stages, so the stylesheet
+ * and the webfont are parsed once per page and nothing about a picture depends
+ * on which lane drew it — the whole set comes out byte-identical to the serial
+ * one, which is the only reason this is allowed to be a speedup rather than a
+ * rewrite.
+ *
+ * Capped at the core count. Each lane is a browser process plus two renderers,
+ * so past it the lanes only take turns more expensively.
  */
 const LANES = Math.max(1, Math.min(4, availableParallelism()));
 
@@ -138,11 +142,12 @@ window.__settle = async () => {
 }
 
 /**
- * Open a browser and keep it open for the whole run.
+ * Open the browsers and keep them open for the whole run.
  *
- * One browser, `LANES` pages, one navigation each: the font and the stylesheet
- * are parsed once per page and every card after the first is an `innerHTML`
- * swap and a screenshot. Launching per card would dominate the build.
+ * `LANES` browsers, two pages each, one navigation per page: the font and the
+ * stylesheet are parsed once per page and every card after the first is an
+ * `innerHTML` swap and a screenshot. Launching per card would dominate the
+ * build.
  *
  * `shoot`/`shootFrame` are safe to call concurrently — each takes a free page
  * out of the pool and gives it back when its raster is in hand — so the caller
@@ -164,9 +169,11 @@ export async function openCardShooter(libraryDir) {
   // A sandbox may ship browsers that do not match the installed playwright's
   // expected build; PLAYWRIGHT_CHROMIUM points at one that does.
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM || undefined;
-  let browser;
+  let browsers;
   try {
-    browser = await chromium.launch({ executablePath });
+    browsers = await Promise.all(
+      Array.from({ length: LANES }, () => chromium.launch({ executablePath })),
+    );
   } catch (cause) {
     throw new Error(
       "library: could not launch chromium to render the item cards.\n" +
@@ -205,10 +212,10 @@ export async function openCardShooter(libraryDir) {
     stageHtml("#stage { display: block; width: 1200px; height: 630px; }"),
   );
 
-  /** Open `count` pages on one stage, all settled before the first shot. */
-  const openStage = (count, path, options) =>
+  /** One page per browser on the given stage, all settled before the first shot. */
+  const openStage = (path, options) =>
     Promise.all(
-      Array.from({ length: count }, async () => {
+      browsers.map(async (browser) => {
         const opened = await browser.newPage(options);
         await opened.goto(`file://${path}`, { waitUntil: "load" });
         return opened;
@@ -216,11 +223,11 @@ export async function openCardShooter(libraryDir) {
     );
 
   const [cardPages, framePages] = await Promise.all([
-    openStage(LANES, stagePath, {
+    openStage(stagePath, {
       viewport: { width: 1280, height: 900 },
       deviceScaleFactor: SHOT_SCALE,
     }),
-    openStage(LANES, framePath, {
+    openStage(framePath, {
       viewport: { width: 1200, height: 630 },
       deviceScaleFactor: 1,
     }),
@@ -254,7 +261,7 @@ export async function openCardShooter(libraryDir) {
       });
     },
     async close() {
-      await browser.close();
+      await Promise.all(browsers.map((browser) => browser.close()));
       for (const file of [stagePath, framePath]) {
         try {
           unlinkSync(file);

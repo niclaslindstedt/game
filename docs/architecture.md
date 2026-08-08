@@ -2417,10 +2417,13 @@ checkout, the tag's key is fixed between releases and hits every time. Two slots
 on the same content compute the same key and share the set, which is correct —
 no URL is baked into any picture.
 
-The browser pass itself runs a LANE PER CORE (`card-shot.mjs`): a lane is a pair
-of pages — the element stage and the 1200×630 frame stage — and a card job holds
-one of each while it shoots. One page meant one renderer process rasterising a
-thousand pictures while the rest of the machine waited.
+The browser pass itself runs a LANE PER CORE (`card-shot.mjs`), and **a lane is
+a whole browser** — with a pair of pages on it, the element stage and the
+1200×630 frame stage, because a card job shoots both. The unit is the browser
+rather than the page because that is where the ceiling was: one browser with
+four pages took the set from 4m52 to 3m46 and stopped, since every screenshot is
+still marshalled over CDP by the single browser process, which sat pinned near a
+full core (eight pages moved nothing). Four browsers spread that too — 2m36.
 
 Encoding is picked per surface. A search shot is WebP — Google Images handles it
 and it is a tenth of the PNG. A social card stays PNG, because some unfurlers
