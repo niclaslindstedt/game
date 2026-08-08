@@ -227,7 +227,7 @@ export const GARMENTS = {
 /** How wide the body is at a given row — the shoulder's width at the top, the
  * hip's at the bottom, and a straight walk between them. */
 function torsoHalfAt(cfg, y) {
-  const { shoulder, hip, shoulderHalf, hipHalf } = cfg;
+  const { hip, shoulderHalf, hipHalf } = cfg;
   // THE TAPER HAPPENS BELOW THE ARMS, and that is not a detail. An arm hangs
   // straight down at the shoulder's own width; a torso that narrowed under it
   // put its own outline one column inside the arm's, and the two of them read as
