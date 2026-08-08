@@ -647,6 +647,11 @@ export function TitleScreen({
   // and the ladder was never seen (key-handoff.ts).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // THE PROMPT OWNS THE KEYBOARD WHILE IT IS UP. Its field stops every key
+      // it sees, which covers the ordinary case; this covers the rest of the
+      // modal — a press on its OK button moves focus off the field, and without
+      // this the arrows would then walk the hidden row list underneath.
+      if (prompt) return;
       // A KEY BINDINGS rebind is listening: the next key IS the new bind, stored
       // by physical `code` so WASD stays WASD across layouts. Escape cancels
       // (it's the reserved menu-back key, never bindable); anything else is
@@ -755,7 +760,17 @@ export function TitleScreen({
       }
     };
     return onFreshKeyDown(onKeyDown);
-  }, [entries, cursor, screen, captureBind, warp, botView, ctx, bumpSettings]);
+  }, [
+    entries,
+    cursor,
+    screen,
+    captureBind,
+    warp,
+    botView,
+    ctx,
+    bumpSettings,
+    prompt,
+  ]);
 
   // While a KEY BINDINGS row is armed, a mouse button or wheel notch can be
   // bound too. The LEFT button (0) is left alone — it's how the menu is

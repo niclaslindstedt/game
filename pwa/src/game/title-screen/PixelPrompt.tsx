@@ -22,9 +22,18 @@
 // player is still looking at what they typed — not ten seconds later as "could
 // not connect", which is the worst possible answer because it blames the
 // network for a missing digit.
+//
+// **AND IT TAKES FOCUS IMPERATIVELY** (`useAutoFocus`), never with the
+// `autoFocus` prop: the modal is opened by a press on a menu row, that row is a
+// `<button>` and a click leaves it holding focus, and the browser drops an
+// autofocus candidate whenever anything else already has one. The prop's
+// failure is silent and total — the field will not take a single letter, and
+// the keystrokes go to the row list underneath instead
+// (see `@ui/lib/auto-focus.ts`).
 
 import { useEffect, useRef, useState } from "react";
 
+import { useAutoFocus } from "@ui/lib/auto-focus.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useCenterWhileFocused } from "@ui/lib/visual-viewport.ts";
@@ -43,9 +52,18 @@ export function PixelPrompt({
   onClose: () => void;
 }) {
   const [value, setValue] = useState(spec.value);
+  // Whether the field ACTUALLY holds focus, rather than the assumption that it
+  // must: the lit border and the caret are the player's only evidence that
+  // typing will land, so they follow the real thing.
+  const [focused, setFocused] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
-  useCenterWhileFocused(boxRef, true);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useAutoFocus(inputRef);
+  useCenterWhileFocused(boxRef, focused);
   const ok = value.trim() ? (spec.validate?.(value.trim()) ?? true) : false;
+  // The caret marks the INSERTION POINT, which on an empty field is the left
+  // edge — BEFORE the grey hint, not stranded after it.
+  const caret = focused ? <span className="pixel-caret" /> : null;
 
   const submit = () => {
     if (!ok) {
@@ -78,34 +96,41 @@ export function PixelPrompt({
         <PixelText font={font} text={spec.title} scale={3} color="#7ef0c8" />
         <div
           ref={boxRef}
-          className={`pixel-input focused${ok || !value ? "" : " invalid"}`}
+          className={`pixel-input${focused ? " focused" : ""}${ok || !value ? "" : " invalid"}`}
         >
           <div className="pixel-input-display" aria-hidden="true">
             {value ? (
-              <PixelText
-                font={font}
-                text={value.toUpperCase()}
-                scale={3}
-                color={ok ? "#ffd75e" : "#ff6d6d"}
-              />
+              <>
+                <PixelText
+                  font={font}
+                  text={value.toUpperCase()}
+                  scale={3}
+                  color={ok ? "#ffd75e" : "#ff6d6d"}
+                />
+                {caret}
+              </>
             ) : (
-              <PixelText
-                font={font}
-                text={spec.placeholder}
-                scale={3}
-                color="#4a515c"
-              />
+              <>
+                {caret}
+                <PixelText
+                  font={font}
+                  text={spec.placeholder}
+                  scale={3}
+                  color="#4a515c"
+                />
+              </>
             )}
-            <span className="pixel-caret" />
           </div>
           <input
+            ref={inputRef}
             className="pixel-input-field"
             aria-label={spec.title.toLowerCase()}
             value={value}
             maxLength={spec.maxLength}
-            autoFocus
             spellcheck={false}
             inputMode={spec.digits ? "numeric" : "text"}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             // `currentTarget`, not `target`: the element the handler is
             // attached to is the one being typed into, and it is the half the
             // event type actually knows is an <input>. `target` is a bare

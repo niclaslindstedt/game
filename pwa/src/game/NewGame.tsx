@@ -9,6 +9,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
+import { useAutoFocus } from "@ui/lib/auto-focus.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import {
@@ -66,6 +67,12 @@ function PixelNameInput({
   // keyboard leaves visible — otherwise the scrollable form stays top-anchored
   // and the input ends up cut off right at the keyboard's edge (iOS).
   const boxRef = useRef<HTMLDivElement>(null);
+  // The form is here to be typed into, so the field takes focus itself — and
+  // imperatively, because NEW GAME is reached by pressing a menu row and a
+  // clicked row keeps focus long enough for the `autoFocus` prop to be dropped
+  // (@ui/lib/auto-focus.ts).
+  const inputRef = useRef<HTMLInputElement>(null);
+  useAutoFocus(inputRef);
   useCenterWhileFocused(boxRef, focused);
   return (
     <div ref={boxRef} className={`pixel-input${focused ? " focused" : ""}`}>
@@ -85,11 +92,11 @@ function PixelNameInput({
         {focused && <span className="pixel-caret" />}
       </div>
       <input
+        ref={inputRef}
         className="pixel-input-field"
         aria-label="character-name"
         value={value}
         maxLength={MAX_HERO_NAME}
-        autoFocus
         // Only the spelling underline is off (the glyphs below are the visible
         // text); iOS autocorrect/predictive text stays ON so a tapped
         // suggestion fills the field.
