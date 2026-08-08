@@ -198,131 +198,114 @@ export function TitleBackdrop({
 
   return (
     <>
-      <div className="title-stars" aria-hidden="true" />
-      {/* Asteroids drift across the backdrop now and then, so the menu feels
-          alive rather than a static painting. */}
-      <div className="title-asteroids" aria-hidden="true">
-        {ASTEROID_BASE_SECONDS.map((baseSeconds, i) => (
-          <span
-            key={i}
-            ref={(el) => {
-              asteroidRefs.current[i] = el;
-            }}
-            className={`title-asteroid title-asteroid-${i + 1}`}
-            style={{ animationDuration: asteroidDurations[i] }}
-            onAnimationIteration={(e) => rerollAsteroid(e, baseSeconds)}
-          />
-        ))}
+      {/* THE SKY IS ONE LAYER, and this wrapper is what makes it one. The
+          driver sorts the bodies against each other with a WIDE inline z-band
+          (SUN_Z ± Z_SPREAD — hundreds, because z-index is an integer and two
+          solid worlds a hair apart in depth must not round onto the same
+          index), and those numbers used to compete with the app's own bands in
+          the title screen's stacking context: every full-screen browser the
+          menu raises sits at 70, so Jupiter drew over the SCREENSHOT gallery,
+          the trophy shelf and the arsenal alike. `.title-sky` is a stacking
+          context, so the whole band collapses to ONE band on the outside (see
+          the title band map in styles.css) and the depth sort stays a private
+          matter between the planets.
+
+          The glare, the blast and the white-out stay OUTSIDE it on purpose:
+          each is screen-blended over the finished sky (and the blast over the
+          menu as well), which is a thing they can only do from the same group
+          as the backdrop they are lighting up. */}
+      <div className="title-sky" aria-hidden="true">
+        <div className="title-stars" />
+        {/* Asteroids drift across the backdrop now and then, so the menu feels
+            alive rather than a static painting. */}
+        <div className="title-asteroids">
+          {ASTEROID_BASE_SECONDS.map((baseSeconds, i) => (
+            <span
+              key={i}
+              ref={(el) => {
+                asteroidRefs.current[i] = el;
+              }}
+              className={`title-asteroid title-asteroid-${i + 1}`}
+              style={{ animationDuration: asteroidDurations[i] }}
+              onAnimationIteration={(e) => rerollAsteroid(e, baseSeconds)}
+            />
+          ))}
+        </div>
+        {/* A handful of stars twinkle on their own long cycles, out of sync, so
+            the sky flickers with life rather than sitting as a flat backdrop. */}
+        <div className="title-twinkles">
+          <span className="title-twinkle title-twinkle-1" />
+          <span className="title-twinkle title-twinkle-2" />
+          <span className="title-twinkle title-twinkle-3" />
+          <span className="title-twinkle title-twinkle-4" />
+          <span className="title-twinkle title-twinkle-5" />
+          <span className="title-twinkle title-twinkle-6" />
+          <span className="title-twinkle title-twinkle-7" />
+        </div>
+        {/* All eight planets, wheeling around the sun on the one ecliptic they
+            share in life; the Moon (below) orbits Earth. The frame is sized to
+            the inner system, so the four giants spend most of their orbits off
+            the edge of it and swing through near conjunction. Positions and
+            lighting are driven each frame by startTitleSky (title-sky.ts) — the
+            CSS only supplies each surface's resting look. */}
+        <div ref={mercuryRef} className="title-planet title-mercury" />
+        <div ref={venusRef} className="title-planet title-venus" />
+        <div ref={earthRef} className="title-planet title-earth" />
+        <div ref={marsRef} className="title-planet title-mars" />
+        <div ref={jupiterRef} className="title-planet title-jupiter" />
+        <div ref={saturnRef} className="title-planet title-saturn" />
+        <div ref={uranusRef} className="title-planet title-uranus" />
+        <div ref={neptuneRef} className="title-planet title-neptune" />
+        {/* The moon, riding its orbit around Earth (title-sky.ts). */}
+        <div ref={moonRef} className="title-planet title-moon" />
+        {/* Easter egg sun: it sits still at the centre of the sky while the
+            planets wheel around it. Driven by title-sky.ts; the CSS is just the
+            look. It is also the hidden developer gesture's target —
+            `--sun-charge` (0..1) winds its glare, its fire and its shaking up
+            tap by tap from the eleventh on, and the sixteenth tap arms the
+            CLICK RACE, whose `--sun-race` swells the disc
+            while the beat is kept (and shrinks it half again as fast when it is
+            dropped) until the star lets go. */}
+        <div
+          ref={sunRef}
+          className={`title-sun${lit ? " charging" : ""}${racing ? " racing" : ""}${detonate ? " exploding" : ""}`}
+          style={chargeStyle}
+        >
+          {/* The build-up, mounted only once a tap has actually woken the star
+              (and through its ebb) — the silent ten mount nothing at all. Every
+              layer's opacity ramps off --sun-charge with its own threshold, so
+              the eleventh tap is a breath of extra glare and the fire only
+              starts licking from the twelfth. */}
+          {lit && (
+            <>
+              <span className="title-sun-flares" />
+              <span className="title-sun-fire">
+                {Array.from({ length: SUN_FLAMES }, (_, n) => (
+                  <span
+                    key={n}
+                    className="title-sun-flame"
+                    style={{ "--flame": n } as CSSProperties}
+                  />
+                ))}
+              </span>
+              <span className="title-sun-embers">
+                {Array.from({ length: SUN_EMBERS }, (_, n) => (
+                  <span
+                    key={n}
+                    className="title-sun-ember"
+                    style={{ "--ember": n } as CSSProperties}
+                  />
+                ))}
+              </span>
+            </>
+          )}
+        </div>
       </div>
-      {/* A handful of stars twinkle on their own long cycles, out of sync, so
-          the sky flickers with life rather than sitting as a flat backdrop. */}
-      <div className="title-twinkles" aria-hidden="true">
-        <span className="title-twinkle title-twinkle-1" />
-        <span className="title-twinkle title-twinkle-2" />
-        <span className="title-twinkle title-twinkle-3" />
-        <span className="title-twinkle title-twinkle-4" />
-        <span className="title-twinkle title-twinkle-5" />
-        <span className="title-twinkle title-twinkle-6" />
-        <span className="title-twinkle title-twinkle-7" />
-      </div>
-      {/* All eight planets, wheeling around the sun on the one ecliptic they
-          share in life; the Moon (below) orbits Earth. The frame is sized to
-          the inner system, so the four giants spend most of their orbits off
-          the edge of it and swing through near conjunction. Positions and
-          lighting are driven each frame by startTitleSky (title-sky.ts) — the
-          CSS only supplies each surface's resting look. */}
-      <div
-        ref={mercuryRef}
-        className="title-planet title-mercury"
-        aria-hidden="true"
-      />
-      <div
-        ref={venusRef}
-        className="title-planet title-venus"
-        aria-hidden="true"
-      />
-      <div
-        ref={earthRef}
-        className="title-planet title-earth"
-        aria-hidden="true"
-      />
-      <div
-        ref={marsRef}
-        className="title-planet title-mars"
-        aria-hidden="true"
-      />
-      <div
-        ref={jupiterRef}
-        className="title-planet title-jupiter"
-        aria-hidden="true"
-      />
-      <div
-        ref={saturnRef}
-        className="title-planet title-saturn"
-        aria-hidden="true"
-      />
-      <div
-        ref={uranusRef}
-        className="title-planet title-uranus"
-        aria-hidden="true"
-      />
-      <div
-        ref={neptuneRef}
-        className="title-planet title-neptune"
-        aria-hidden="true"
-      />
-      {/* The moon, riding its orbit around Earth (title-sky.ts). */}
-      <div
-        ref={moonRef}
-        className="title-planet title-moon"
-        aria-hidden="true"
-      />
-      {/* Easter egg sun: it sits still at the centre of the sky while the
-          planets wheel around it. Driven by title-sky.ts; the CSS is just the
-          look. It is also the hidden developer gesture's target — `--sun-charge`
-          (0..1) winds its glare, its fire and its shaking up tap by tap from the
-          eleventh on, and the sixteenth tap arms the CLICK RACE, whose
-          `--sun-race` swells the disc
-          while the beat is kept (and shrinks it half again as fast when it is
-          dropped) until the star lets go. */}
-      <div
-        ref={sunRef}
-        className={`title-sun${lit ? " charging" : ""}${racing ? " racing" : ""}${detonate ? " exploding" : ""}`}
-        style={chargeStyle}
-        aria-hidden="true"
-      >
-        {/* The build-up, mounted only once a tap has actually woken the star
-            (and through its ebb) — the silent ten mount nothing at all. Every
-            layer's opacity ramps off --sun-charge with its own threshold, so
-            the eleventh tap is a breath of extra glare and the fire only starts
-            licking from the twelfth. */}
-        {lit && (
-          <>
-            <span className="title-sun-flares" />
-            <span className="title-sun-fire">
-              {Array.from({ length: SUN_FLAMES }, (_, n) => (
-                <span
-                  key={n}
-                  className="title-sun-flame"
-                  style={{ "--flame": n } as CSSProperties}
-                />
-              ))}
-            </span>
-            <span className="title-sun-embers">
-              {Array.from({ length: SUN_EMBERS }, (_, n) => (
-                <span
-                  key={n}
-                  className="title-sun-ember"
-                  style={{ "--ember": n } as CSSProperties}
-                />
-              ))}
-            </span>
-          </>
-        )}
-      </div>
-      {/* The detonation, drawn as a sibling of the sun (which the flare layers
-          ride inside) so the flash, shockwave and debris can spill across the
-          whole sky. Anchored on the sun's seat and mounted only for the blast. */}
+      {/* The detonation, drawn OUTSIDE the sky (which the sun and its flare
+          layers ride inside) so the flash, shockwave and debris spill across
+          the whole screen — the menu column included, which is the one moment
+          the UI is meant to be swallowed rather than sat behind. Anchored on
+          the sun's seat and mounted only for the blast. */}
       {detonate && (
         <div className="sun-boom" aria-hidden="true">
           <span className="sun-boom-flash" />
