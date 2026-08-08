@@ -16,44 +16,44 @@ drift.
 
 ## The decision layer, module by module
 
-| Decision (Rust) | Peer (TypeScript) | Note |
-| --- | --- | --- |
-| achievements.rs | achievements.ts |  |
-| achievements_provider.rs | achievements-provider.ts |  |
-| bridge.rs | main.ts | Electron routes in main.ts's routeMessage |
-| capabilities.rs | capabilities.ts |  |
-| channels.rs | channels.ts |  |
-| cloud_provider.rs | cloud-provider.ts |  |
-| cloud_save.rs | cloud-save.ts |  |
-| config.rs | config.ts |  |
-| dedicated.rs | dedicated-mode.ts |  |
-| display.rs | — | Chromium refuses to start with no display and says so itself; a platform webview lets the event-loop library unwrap it instead |
-| leaderboards.rs | leaderboards.ts |  |
-| leaderboards_provider.rs | leaderboards-provider.ts |  |
-| media.rs | main.ts | Electron answers this in main.ts's permission handler |
-| metrics.rs | metrics.ts |  |
-| mod_archive.rs | mod-archive.ts |  |
-| mods.rs | mods.ts |  |
-| net.rs | net.ts |  |
-| net_firewall.rs | net-firewall.ts |  |
-| net_invite.rs | net-invite.ts |  |
-| net_lobby.rs | net-lobby.ts |  |
-| output.rs | output.ts |  |
-| roster.rs | roster.ts |  |
-| runtime.rs | resources.ts |  |
-| screenshots.rs | screenshots.ts |  |
-| screenshots_provider.rs | screenshots-provider.ts |  |
-| session_host.rs | session-host.ts |  |
-| snapshot.rs | net.ts | the Electron shell transfers a MessagePort, which is an API call rather than a module |
-| steam.rs | steam.ts |  |
-| steam_p2p.rs | net-steam-p2p.ts |  |
-| steam_pump.rs | steam.ts | Electron's callback loop lives inside its own steam.ts |
-| user_data.rs | user-data.ts |  |
-| webroot.rs | webroot.ts |  |
-| window_state.rs | window-state.ts |  |
-| workshop.rs | workshop.ts |  |
-| src-tauri/achievements.rs | achievements-steam.ts | an EFFECT — the one file of the seam that talks to Steam |
-| src-tauri/cloud.rs | cloud-steam.ts | an EFFECT — the one file of the seam that talks to Steam |
+| Decision (Rust)           | Peer (TypeScript)        | Note                                                                                                                           |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| achievements.rs           | achievements.ts          |                                                                                                                                |
+| achievements_provider.rs  | achievements-provider.ts |                                                                                                                                |
+| bridge.rs                 | main.ts                  | Electron routes in main.ts's routeMessage                                                                                      |
+| capabilities.rs           | capabilities.ts          |                                                                                                                                |
+| channels.rs               | channels.ts              |                                                                                                                                |
+| cloud_provider.rs         | cloud-provider.ts        |                                                                                                                                |
+| cloud_save.rs             | cloud-save.ts            |                                                                                                                                |
+| config.rs                 | config.ts                |                                                                                                                                |
+| dedicated.rs              | dedicated-mode.ts        |                                                                                                                                |
+| display.rs                | —                        | Chromium refuses to start with no display and says so itself; a platform webview lets the event-loop library unwrap it instead |
+| leaderboards.rs           | leaderboards.ts          |                                                                                                                                |
+| leaderboards_provider.rs  | leaderboards-provider.ts |                                                                                                                                |
+| media.rs                  | main.ts                  | Electron answers this in main.ts's permission handler                                                                          |
+| metrics.rs                | metrics.ts               |                                                                                                                                |
+| mod_archive.rs            | mod-archive.ts           |                                                                                                                                |
+| mods.rs                   | mods.ts                  |                                                                                                                                |
+| net.rs                    | net.ts                   |                                                                                                                                |
+| net_firewall.rs           | net-firewall.ts          |                                                                                                                                |
+| net_invite.rs             | net-invite.ts            |                                                                                                                                |
+| net_lobby.rs              | net-lobby.ts             |                                                                                                                                |
+| output.rs                 | output.ts                |                                                                                                                                |
+| roster.rs                 | roster.ts                |                                                                                                                                |
+| runtime.rs                | resources.ts             |                                                                                                                                |
+| screenshots.rs            | screenshots.ts           |                                                                                                                                |
+| screenshots_provider.rs   | screenshots-provider.ts  |                                                                                                                                |
+| session_host.rs           | session-host.ts          |                                                                                                                                |
+| snapshot.rs               | net.ts                   | the Electron shell transfers a MessagePort, which is an API call rather than a module                                          |
+| steam.rs                  | steam.ts                 |                                                                                                                                |
+| steam_p2p.rs              | net-steam-p2p.ts         |                                                                                                                                |
+| steam_pump.rs             | steam.ts                 | Electron's callback loop lives inside its own steam.ts                                                                         |
+| user_data.rs              | user-data.ts             |                                                                                                                                |
+| webroot.rs                | webroot.ts               |                                                                                                                                |
+| window_state.rs           | window-state.ts          |                                                                                                                                |
+| workshop.rs               | workshop.ts              |                                                                                                                                |
+| src-tauri/achievements.rs | achievements-steam.ts    | an EFFECT — the one file of the seam that talks to Steam                                                                       |
+| src-tauri/cloud.rs        | cloud-steam.ts           | an EFFECT — the one file of the seam that talks to Steam                                                                       |
 
 ## The bridge protocols
 
@@ -99,12 +99,12 @@ order would record different intervals under the same names.
 
 ## What only a human with the hardware can press
 
-| Check | Where | What is unproven without it |
-| --- | --- | --- |
-| Install a real bundle and see the game | all three | the packaged resource branch, the macOS dylib in Contents/Frameworks, and the nested signature on the bundled Node runtime. CI builds the bundle on every dispatch; the one thing a workflow cannot do is press the icon. |
-| A four-player session at the reference frame budget | all three | the snapshot channel's own measurement. The argument that it costs nothing is structural — no shell in the path, no header change — and "it works at 20 Hz with 200 mobs and four players" is a claim only a played session settles. |
-| A Workshop publish and a subscription | all three | the UGC round trip end to end: a mod compiled by a spawned child, uploaded, subscribed to from another account, and loaded into a run. |
-| The microphone gate on WKWebView and WebView2 | macOS, Windows | the page-side lockout, which is the whole floor on two of the three desktops — WebKitGTK refuses in the platform, the other two remove navigator.mediaDevices in the initialization script. |
-| Cloud save, both ways, with a real roster | all three | that a player switching between the two desktop builds keeps their heroes. localStorage belongs to the webview and one engine's store is not another's, so the platform cloud is the only bridge. `--roster-check` reduces this to one command per build — see docs/desktop-shells.md. |
-| The webview-quirk sweep | macOS, Windows, Linux | every rendering, audio and input surface the game uses, on an engine that is not Chromium. `npm run webview:sweep` runs the same probe headlessly wherever a Playwright engine is installed; the rest is the real webview. |
-| Battery on a handheld | Steam Deck | the one number a desktop cannot stand in for, and the one a smaller idle footprint is supposed to buy. |
+| Check                                               | Where                 | What is unproven without it                                                                                                                                                                                                                                                            |
+| --------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install a real bundle and see the game              | all three             | the packaged resource branch, the macOS dylib in Contents/Frameworks, and the nested signature on the bundled Node runtime. CI builds the bundle on every dispatch; the one thing a workflow cannot do is press the icon.                                                              |
+| A four-player session at the reference frame budget | all three             | the snapshot channel's own measurement. The argument that it costs nothing is structural — no shell in the path, no header change — and "it works at 20 Hz with 200 mobs and four players" is a claim only a played session settles.                                                   |
+| A Workshop publish and a subscription               | all three             | the UGC round trip end to end: a mod compiled by a spawned child, uploaded, subscribed to from another account, and loaded into a run.                                                                                                                                                 |
+| The microphone gate on WKWebView and WebView2       | macOS, Windows        | the page-side lockout, which is the whole floor on two of the three desktops — WebKitGTK refuses in the platform, the other two remove navigator.mediaDevices in the initialization script.                                                                                            |
+| Cloud save, both ways, with a real roster           | all three             | that a player switching between the two desktop builds keeps their heroes. localStorage belongs to the webview and one engine's store is not another's, so the platform cloud is the only bridge. `--roster-check` reduces this to one command per build — see docs/desktop-shells.md. |
+| The webview-quirk sweep                             | macOS, Windows, Linux | every rendering, audio and input surface the game uses, on an engine that is not Chromium. `npm run webview:sweep` runs the same probe headlessly wherever a Playwright engine is installed; the rest is the real webview.                                                             |
+| Battery on a handheld                               | Steam Deck            | the one number a desktop cannot stand in for, and the one a smaller idle footprint is supposed to buy.                                                                                                                                                                                 |
