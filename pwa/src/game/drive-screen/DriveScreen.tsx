@@ -26,12 +26,9 @@ import {
   driveDriverInput,
   driveScore,
   driveVerdict,
-  restartDrive,
   stepDrive,
   thoughtDef,
   withHeroNameLines,
-  DRIVE,
-  DRIVE_OUTCOME,
   type DriveDriver,
   type DriveInput,
   type DriveParams,
@@ -63,19 +60,14 @@ import {
   type DriveBoardResult,
 } from "./DriveScores.tsx";
 import {
-  clearDriveFx,
   createDriveFx,
   drawDriveFx,
   shakeCamera,
   stepDriveFx,
   type DriveFxState,
 } from "./drive-fx.ts";
-import {
-  clearDriveGore,
-  createDriveGore,
-  type DriveGoreState,
-} from "./drive-gore.ts";
-import { clearSkids, createSkids, type SkidState } from "./skid.ts";
+import { createDriveGore, type DriveGoreState } from "./drive-gore.ts";
+import { createSkids, type SkidState } from "./skid.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -83,6 +75,7 @@ import {
   runEngineNote,
   type Burst,
 } from "./loop.ts";
+import { endDrive } from "./end-drive.ts";
 import { drawDrive, driveCamera } from "./render.ts";
 
 /** The simulation's fixed step (ms) — the engine's own, so a drive ticks at the
@@ -354,25 +347,34 @@ export function DriveScreen({
     [heroName],
   );
 
+  /** Take whatever is on the screen away right now — what a restart owes the
+   * box (see `endDrive`), and what the last page of a bark does to itself. */
+  const clearSpeech = useCallback(() => {
+    speechRef.current = null;
+    setSpeech(null);
+  }, []);
+
   /** The bark's own clock, run from inside the loop: turn the page when this
    * one has had its time, and take the box away after the last. */
-  const ageSpeech = useCallback((nowMs: number) => {
-    const live = speechRef.current;
-    if (!live || nowMs < live.untilMs) return;
-    if (live.page + 1 >= live.pages.length) {
-      speechRef.current = null;
-      setSpeech(null);
-      return;
-    }
-    const page = live.page + 1;
-    const next = {
-      ...live,
-      page,
-      untilMs: nowMs + barkMs(live.pages[page] ?? []),
-    };
-    speechRef.current = next;
-    setSpeech(next);
-  }, []);
+  const ageSpeech = useCallback(
+    (nowMs: number) => {
+      const live = speechRef.current;
+      if (!live || nowMs < live.untilMs) return;
+      if (live.page + 1 >= live.pages.length) {
+        clearSpeech();
+        return;
+      }
+      const page = live.page + 1;
+      const next = {
+        ...live,
+        page,
+        untilMs: nowMs + barkMs(live.pages[page] ?? []),
+      };
+      speechRef.current = next;
+      setSpeech(next);
+    },
+    [clearSpeech],
+  );
 
   const setPause = useCallback((on: boolean) => {
     pausedRef.current = on;
@@ -703,6 +705,7 @@ export function DriveScreen({
           fxRef.current,
           goreRef.current,
           skidRef.current,
+          clearSpeech,
           arrive,
         );
       }
@@ -809,7 +812,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, arrive, assets, nose, say]);
+  }, [ageSpeech, arrive, assets, clearSpeech, nose, say]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {
@@ -988,51 +991,6 @@ const EMPTY_PAGE: string[] = [];
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */
 let padOrigin: { x: number; y: number } | null = null;
-
-/**
- * THE TWO TERMINAL BEATS, once their hold has run out. A BREAKDOWN puts the
- * player back at the top of the SAME road (the seed is kept, so the stretch
- * that killed him is the stretch he gets to learn); an ARRIVAL hands the
- * crossing back to the game screen.
- *
- * Not in `loop.ts` with the rest of the drain, because these are POLICY rather
- * than presentation and the drive's two hosts answer them differently — the
- * gallery's exhibit simply re-stages its show.
- */
-function endDrive(
-  drive: DriveState,
-  bursts: Burst[],
-  fx: DriveFxState,
-  gore: DriveGoreState,
-  skids: SkidState,
-  /** What the arrival hands the leg to — the screen's own `arrive`, which is
-   * where the choice between the high-score board and a silent crossing is
-   * made. */
-  onArrived: (drive: DriveState) => void,
-): void {
-  if (
-    drive.outcome === DRIVE_OUTCOME.broken &&
-    drive.outcomeMs > DRIVE.breakdownHoldMs
-  ) {
-    Object.assign(drive, restartDrive(drive));
-    bursts.length = 0;
-    clearDriveFx(fx);
-    clearDriveGore(gore);
-    clearSkids(skids);
-  }
-  if (
-    drive.outcome === DRIVE_OUTCOME.arrived &&
-    drive.outcomeMs > DRIVE.arrivalHoldMs
-  ) {
-    // WHAT HE MAKES OF THE TRIP goes with him rather than being said here.
-    // `driveVerdict` reads the whole drive — the clock, the car, the other
-    // drivers, the council's lighting and the people — and the line it picks is
-    // spoken as the last page of the destination's opening monologue, which is
-    // where a man's opinion of a journey belongs: standing beside the car,
-    // having finished it. (`RunParams.arrivalThought` → `introPages`.)
-    onArrived(drive);
-  }
-}
 
 const SHELL: CSSProperties = {
   position: "absolute",
