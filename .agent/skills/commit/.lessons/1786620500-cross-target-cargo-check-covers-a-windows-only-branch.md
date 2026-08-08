@@ -18,14 +18,24 @@ cargo check --target x86_64-pc-windows-msvc -p adastrail-tauri
 cargo clippy --target x86_64-pc-windows-msvc -p adastrail-tauri --all-targets -- -D warnings
 ```
 
-No MSVC toolchain is needed, because `check`/`clippy` never link. Two things
-this tree needs first, both cheap: `tauri/webroot/index.html` must exist (a
-placeholder is enough, same as the workflow makes), and **`tauri-build` refuses
-a Windows target without `src-tauri/icons/icon.ico`** — which
-`tauri/scripts/icons.mjs` does not emit, since it only writes the four PNGs
-Linux and macOS ask for. Wrapping the 256×256 PNG in a 22-byte ICO header is
-enough to get past it locally (the icons directory is gitignored, so nothing
-of that reaches a commit).
+No MSVC toolchain is needed, because `check`/`clippy` never link. Three things
+this tree needs first, and the third is the one that turns a green local run
+into a red CI:
+
+1. `tauri/webroot/index.html` must exist — a placeholder, same as the workflow
+   makes.
+2. **`tauri-build` refuses a Windows target without `src-tauri/icons/icon.ico`.**
+   `tauri/scripts/icons.mjs` now emits one; before this it wrote only the four
+   PNGs Linux and macOS ask for, which is why nothing could build for Windows
+   from a fresh checkout.
+3. **A RESOURCE COMPILER.** `tauri-build` builds a Windows resource file (icon
+   + version block) through `embed-resource`, which shells out to `llvm-rc` and
+   panics `NotAttempted("llvm-rc")` without one. A dev box with LLVM installed
+   has it on `PATH` and never notices; a GitHub runner keeps LLVM under
+   `/usr/lib/llvm-*/bin` and does not. `embed-resource` reads `RC` (and
+   `RC_<target>`), so pointing that at the newest `/usr/lib/llvm-*/bin/llvm-rc`
+   is the version-agnostic fix — and it is what
+   `.github/workflows/desktop-tauri.yml` now does.
 
 It does NOT prove the code RUNS — the decoy overlay surface still needs a
 Windows machine with Steam — but "it compiles on the OS it is for" is no longer

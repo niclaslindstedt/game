@@ -139,6 +139,30 @@ jobs:
       # for somebody to dispatch a package build to find a typo.
       - name: The Windows target
         run: rustup target add x86_64-pc-windows-msvc
+      # `tauri-build` compiles a Windows RESOURCE FILE for that target (the icon
+      # and the version block) and shells out to `llvm-rc` to do it — so without
+      # one the run dies in the build script with `NotAttempted("llvm-rc")`,
+      # before a line of the code under test is looked at. The runner image
+      # ships LLVM but only under /usr/lib/llvm-*/bin, so the newest one is
+      # handed to `embed-resource` through the `RC` variable it reads. Loud
+      # rather than skipped: a Windows check that quietly did not run is worse
+      # than not having one.
+      - name: A Windows resource compiler
+        working-directory: .
+        run: |
+          set -euo pipefail
+          rc=$(ls /usr/lib/llvm-*/bin/llvm-rc 2>/dev/null | sort -V | tail -1 || true)
+          if [ -z "$rc" ]; then
+            sudo apt-get update
+            sudo apt-get install -y llvm
+            rc=$(ls /usr/lib/llvm-*/bin/llvm-rc 2>/dev/null | sort -V | tail -1 || true)
+          fi
+          if [ -z "$rc" ]; then
+            echo "no llvm-rc found — the Windows-target check cannot run" >&2
+            exit 1
+          fi
+          echo "using $rc"
+          echo "RC=$rc" >> "$GITHUB_ENV"
       - name: clippy (Windows target)
         run: cargo clippy --target x86_64-pc-windows-msvc -p adastrail-tauri --all-targets -- -D warnings
 
