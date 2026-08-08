@@ -1011,6 +1011,7 @@ export {
   roadBandEdges,
   roadDragPx,
   roadEdges,
+  rungTopSpeedPx,
   solveImpact,
   solvedTopSpeedPx,
   splitsBody,

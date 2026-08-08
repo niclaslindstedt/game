@@ -42,13 +42,21 @@ import type { DriveState, DriveTraffic } from "./types.ts";
 
 export { TRAFFIC_VARIANTS } from "./fleet.ts";
 
-/** How thick the traffic is on this drive's rung — the baseline gap through the
+/**
+ * How thick the traffic is on this drive's rung — the baseline gap through the
  * difficulty's own multiplier (`DifficultyDef.drive`), which DIVIDES it. The
  * gentle rungs leave the road nearly the hero's own; the hard ones put a
- * vehicle in every lane on every screen. */
-function laneGapPx(state: DriveState): number {
+ * vehicle in every lane on every screen.
+ *
+ * AND THE TWO SIDES ARE NOT PRICED THE SAME. An ONCOMING lane gets
+ * `oncomingGapMult` times the road between its vehicles, because it is in shot
+ * for a fraction of the time and takes the lane away with no notice — see the
+ * field's own note in `config.ts`.
+ */
+function laneGapPx(state: DriveState, oncoming: boolean): number {
+  const { gapPx, oncomingGapMult } = DRIVE.laneTraffic;
   return (
-    DRIVE.laneTraffic.gapPx /
+    (gapPx * (oncoming ? oncomingGapMult : 1)) /
     difficultyDef(state.params.difficulty).drive.trafficDensity
   );
 }
@@ -86,7 +94,9 @@ function pavementPerKPx(state: DriveState): number {
 function lanePitch(state: DriveState, along: number): number {
   const { refSpeedPx: ref, maxPitchMult } = DRIVE.laneTraffic;
   const closing = Math.max(Math.abs(ref - along), ref / maxPitchMult);
-  return laneGapPx(state) * (ref / closing);
+  // The SIGN of `along` is already the answer to which side of the road this
+  // is: a lane running the hero's way is positive, one coming at him negative.
+  return laneGapPx(state, along < 0) * (ref / closing);
 }
 
 /** Whether a lane runs the hero's way. Right-hand traffic: outbound he has the

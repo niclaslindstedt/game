@@ -528,10 +528,9 @@ export const DRIVE = {
    * SO THE KNOB IS THE PICTURE. `gapPx` is how much road sits between one
    * vehicle and the next IN ITS OWN LANE as the driver sees it, and the spawner
    * converts that to a course pitch per vehicle using the speed it just rolled
-   * (`lanePitch`). At 360 against the ~420 world px of road a phone shows, that
-   * is about one vehicle per lane on screen at any moment — the road is
-   * populated in every lane, and the wheel is now worth something the whole way
-   * rather than for the two seconds a year a car happened to be in shot.
+   * (`lanePitch`). A SCREEN is `screenPx` below — the ~420 world px of road a
+   * desktop window or a phone on its side shows — so the gap is authored in
+   * screenfuls and the picture is what the number says.
    *
    * IT IS NOT NOSE-TO-TAIL, and the difference matters: 360 px against a 40-px
    * car is nine car lengths, so every lane is occupied SOMEWHERE and no lane is
@@ -541,12 +540,46 @@ export const DRIVE = {
    * the choice on the table and merely stops it being free.
    *
    * Laddered per rung by `DifficultyDef.drive.trafficDensity`, which DIVIDES it:
-   * the gentle rungs leave more road between cars, the hard ones less.
+   * the gentle rungs leave more road between cars, the hard ones less. On EASY
+   * (0.85) that lands the picture on ONE SCREEN between the cars running the
+   * hero's way and TWO between the ones coming at him — about two cars on his
+   * own side and one oncoming in shot at any moment.
    */
   laneTraffic: {
-    /** The gap between one vehicle and the next in a lane, in the hero's own
-     * frame (world px), on MEDIUM. */
+    /** The gap between one vehicle and the next in a lane RUNNING THE HERO'S
+     * WAY, in his own frame (world px), on MEDIUM. */
     gapPx: 360,
+    /**
+     * …and how much more road the ONCOMING lanes get, as a multiple of it.
+     *
+     * TWO, and it is a statement about DANGER rather than about traffic
+     * engineering. A car on the hero's own side is caught up with at the
+     * difference of the two speeds, so it sits in the picture for a long moment
+     * and can be gone round; one coming the other way closes at their SUM, is
+     * in shot for about a second and a half, and takes the lane away with no
+     * time to plan for it. Priced the same, the far side is where a leg is
+     * actually lost — so the far side is laid down half as thick, and the road
+     * reads as two cars his way to one against.
+     *
+     * It is a MULTIPLE rather than a second `gapPx` so the ladder's own knob
+     * still moves both sides together: a harder rung tightens the whole road,
+     * and the 2:1 shape survives every rung.
+     */
+    oncomingGapMult: 2,
+    /**
+     * A SCREENFUL OF ROAD (world px) — what the gaps above are measured in, and
+     * a number the road itself never reads.
+     *
+     * IT IS THE DESKTOP/LANDSCAPE SCREEN, deliberately the WIDE one. The view
+     * rect is the viewport over the zoom (`viewScaleFor`), which lands a
+     * landscape phone, a 1440p monitor and a laptop all within a few px of 420
+     * world units — but a phone held UPRIGHT is barely half that. Pricing the
+     * gap off the narrow screen would make the wide one look empty; pricing it
+     * off the wide one leaves the upright phone showing less traffic than it is
+     * told about, which is the right way round on the frame that is already the
+     * hardest to drive.
+     */
+    screenPx: 420,
     /**
      * THE PACE THE GAP IS CONVERTED AT (world px/s) — the speed the hero is
      * ASSUMED to be doing when the spawner turns a gap into a course pitch.

@@ -104,6 +104,23 @@ const PAINT = "#c9c4a8";
 const KERB_DEPTH = 2;
 
 /**
+ * …and the tarmac's own darker rim outside the outer lane markings (world px) —
+ * the gutter the paint stops short of.
+ *
+ * IT USED TO BE A LITERAL `2` PAINTED AFTER THE KERB, and the two numbers being
+ * the same number is exactly why the kerb was never once visible: the rim was
+ * laid from `bands.top - 2` to `bands.bottom + 2`, which is precisely the pair
+ * of strips the kerb had just been drawn into, so every frame of every drive
+ * painted the kerb and then painted over the whole of it. The pavement met the
+ * tarmac with nothing between them but a dark lip, which reads as a road that
+ * is four px wider rather than as a street with a kerb down each side.
+ *
+ * The three bands are disjoint now and stack outward from the paint: road, rim,
+ * kerb, pavement.
+ */
+const ROAD_LIP = 2;
+
+/**
  * How far ahead of the car the camera sits, as a share of the frame's width —
  * the car rides in the trailing third of the picture so the player can read the
  * crowd coming.
@@ -322,9 +339,13 @@ export function drawDrive(
   const walk = crowdEdges();
   band(walk.top, bands.top, PAVEMENT);
   band(bands.bottom, walk.bottom, PAVEMENT);
-  band(bands.top - KERB_DEPTH, bands.top, KERB);
-  band(bands.bottom, bands.bottom + KERB_DEPTH, KERB);
-  band(bands.top - 2, bands.bottom + 2, ROAD_EDGE);
+  // OUTWARD FROM THE PAINT, and each band strictly outside the last: the
+  // tarmac, its darker rim, then the KERB stepping up onto the pavement. Laid
+  // in any other order they overlap and one of them is simply not there — see
+  // `ROAD_LIP`, which is the mistake this ordering exists to hold shut.
+  band(bands.top - ROAD_LIP, bands.bottom + ROAD_LIP, ROAD_EDGE);
+  band(bands.top - ROAD_LIP - KERB_DEPTH, bands.top - ROAD_LIP, KERB);
+  band(bands.bottom + ROAD_LIP, bands.bottom + ROAD_LIP + KERB_DEPTH, KERB);
   band(bands.top, bands.bottom, ROAD);
 
   // THE CROSSINGS — the same paint the crowd is gathered onto

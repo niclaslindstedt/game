@@ -40,6 +40,7 @@ import { DRIVE_BOT_OVERRIDES } from "../../generated/botTuning.ts";
 import { CAR } from "../vehicles.ts";
 import { DRIVE, DRIVE_OUTCOME } from "./config.ts";
 import { laneAt, roadEdges } from "./crowd.ts";
+import { rungTopSpeedPx } from "./drivetrain.ts";
 import { propRadius } from "./street.ts";
 import { laneRunsWithHero } from "./traffic.ts";
 import {
@@ -161,9 +162,11 @@ export function driveDriverInput(
   const wheel = clamp((targetY - car.pos.y) / tune.steerGainPx, -1, 1);
 
   // ── THE PEDAL ─────────────────────────────────────────────────────────────
-  // The car's top end is already cut by wear (`stepDrive`), so cruising at a
-  // fraction of it is cruising at a fraction of what the wagon still has.
-  const top = DRIVE.topSpeedPx * (1 - car.wear * DRIVE.wearTopSpeedLoss);
+  // The car's top end is already cut by the RUNG and then by wear
+  // (`stepDrive`), so cruising at a fraction of it is cruising at a fraction of
+  // what the wagon still has on the road it is actually being driven on.
+  const rungTop = rungTopSpeedPx(drive.params.difficulty);
+  const top = rungTop * (1 - car.wear * DRIVE.wearTopSpeedLoss);
   let want = top * tune.cruiseFrac;
   // NURSE IT HOME. Past the ease point every further point of wear buys a
   // slower leg, because a car that breaks down has not arrived at all and the
@@ -180,7 +183,7 @@ export function driveDriverInput(
   want *= 1 - tune.threatSlowFrac * Math.min(1, lineCostNow);
   // …but never a crawl. Slow is not safe on this road — the crowd LEADS the
   // car (`DRIVE.leadSeconds`), so a dawdling wagon is one they can all reach.
-  want = Math.max(want, DRIVE.topSpeedPx * tune.floorFrac);
+  want = Math.max(want, rungTop * tune.floorFrac);
 
   // Bang-bang with a deadband, which is also how a person drives: foot down,
   // foot off, brake — never a millimetre of throttle modulation.

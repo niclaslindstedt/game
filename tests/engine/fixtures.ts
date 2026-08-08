@@ -1288,6 +1288,9 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       pedestrianMassMult: 0.6,
       trafficMassMult: 0.7,
       trafficDensity: 1,
+      // The whole dial: the engine suites measure the road's physics, not the
+      // ladder's throttle, so a fixture rung never caps the wagon.
+      topSpeedMph: 174,
     },
   },
   medium: {
@@ -1347,6 +1350,9 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       pedestrianMassMult: 1,
       trafficMassMult: 1,
       trafficDensity: 1,
+      // The whole dial: the engine suites measure the road's physics, not the
+      // ladder's throttle, so a fixture rung never caps the wagon.
+      topSpeedMph: 174,
     },
   },
   hard: {
@@ -1405,6 +1411,9 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       pedestrianMassMult: 1.4,
       trafficMassMult: 1.7,
       trafficDensity: 1,
+      // The whole dial: the engine suites measure the road's physics, not the
+      // ladder's throttle, so a fixture rung never caps the wagon.
+      topSpeedMph: 174,
     },
   },
   nightmare: {
@@ -1453,6 +1462,9 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       pedestrianMassMult: 1.9,
       trafficMassMult: 2.8,
       trafficDensity: 1,
+      // The whole dial: the engine suites measure the road's physics, not the
+      // ladder's throttle, so a fixture rung never caps the wagon.
+      topSpeedMph: 174,
     },
   },
   jesus: {
@@ -1500,6 +1512,9 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       pedestrianMassMult: 2.5,
       trafficMassMult: 4.5,
       trafficDensity: 1,
+      // The whole dial: the engine suites measure the road's physics, not the
+      // ladder's throttle, so a fixture rung never caps the wagon.
+      topSpeedMph: 174,
     },
   },
 };
