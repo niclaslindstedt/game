@@ -26,12 +26,9 @@ import {
   driveDriverInput,
   driveScore,
   driveVerdict,
-  restartDrive,
   stepDrive,
   thoughtDef,
   withHeroNameLines,
-  DRIVE,
-  DRIVE_OUTCOME,
   type DriveDriver,
   type DriveInput,
   type DriveParams,
@@ -63,19 +60,14 @@ import {
   type DriveBoardResult,
 } from "./DriveScores.tsx";
 import {
-  clearDriveFx,
   createDriveFx,
   drawDriveFx,
   shakeCamera,
   stepDriveFx,
   type DriveFxState,
 } from "./drive-fx.ts";
-import {
-  clearDriveGore,
-  createDriveGore,
-  type DriveGoreState,
-} from "./drive-gore.ts";
-import { clearSkids, createSkids, type SkidState } from "./skid.ts";
+import { createDriveGore, type DriveGoreState } from "./drive-gore.ts";
+import { createSkids, type SkidState } from "./skid.ts";
 import {
   createEngineNote,
   drainDrive,
@@ -83,6 +75,7 @@ import {
   runEngineNote,
   type Burst,
 } from "./loop.ts";
+import { endDrive } from "./end-drive.ts";
 import { drawDrive, driveCamera } from "./render.ts";
 
 /** The simulation's fixed step (ms) — the engine's own, so a drive ticks at the
@@ -998,62 +991,6 @@ const EMPTY_PAGE: string[] = [];
 /** The pad's anchor, in client px — module-scoped because it is read inside
  * handlers that must not re-bind every render. */
 let padOrigin: { x: number; y: number } | null = null;
-
-/**
- * THE TWO TERMINAL BEATS, once their hold has run out. A BREAKDOWN puts the
- * player back at the top of the SAME road (the seed is kept, so the stretch
- * that killed him is the stretch he gets to learn); an ARRIVAL hands the
- * crossing back to the game screen.
- *
- * Not in `loop.ts` with the rest of the drain, because these are POLICY rather
- * than presentation and the drive's two hosts answer them differently — the
- * gallery's exhibit simply re-stages its show.
- */
-export function endDrive(
-  drive: DriveState,
-  bursts: Burst[],
-  fx: DriveFxState,
-  gore: DriveGoreState,
-  skids: SkidState,
-  /** Take the speech box away — see the restart below. */
-  clearSpeech: () => void,
-  /** What the arrival hands the leg to — the screen's own `arrive`, which is
-   * where the choice between the high-score board and a silent crossing is
-   * made. */
-  onArrived: (drive: DriveState) => void,
-): void {
-  if (
-    drive.outcome === DRIVE_OUTCOME.broken &&
-    drive.outcomeMs > DRIVE.breakdownHoldMs
-  ) {
-    Object.assign(drive, restartDrive(drive));
-    // EVERYTHING THE OLD LEG LEFT BEHIND GOES WITH IT, AND HIS VOICE IS ONE OF
-    // THOSE THINGS. The wreck's own line ("COME ON. NOT HERE. NOT TONIGHT.") is
-    // about a car that no longer exists, so it must not be sitting over the
-    // clean one — and it would be, for two reasons that compound: the bark
-    // outlives `breakdownHoldMs` on its own (it is written to be readable, the
-    // hold is written not to punish), and `restartDrive` REWINDS THE CLOCK the
-    // bark retires itself on, so a page due at 41 000 ms is still due after the
-    // road goes back to 0 and the box sits there over the fresh leg.
-    clearSpeech();
-    bursts.length = 0;
-    clearDriveFx(fx);
-    clearDriveGore(gore);
-    clearSkids(skids);
-  }
-  if (
-    drive.outcome === DRIVE_OUTCOME.arrived &&
-    drive.outcomeMs > DRIVE.arrivalHoldMs
-  ) {
-    // WHAT HE MAKES OF THE TRIP goes with him rather than being said here.
-    // `driveVerdict` reads the whole drive — the clock, the car, the other
-    // drivers, the council's lighting and the people — and the line it picks is
-    // spoken as the last page of the destination's opening monologue, which is
-    // where a man's opinion of a journey belongs: standing beside the car,
-    // having finished it. (`RunParams.arrivalThought` → `introPages`.)
-    onArrived(drive);
-  }
-}
 
 const SHELL: CSSProperties = {
   position: "absolute",

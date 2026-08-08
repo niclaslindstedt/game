@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHAT A BREAKDOWN'S RESTART THROWS AWAY (DriveScreen.tsx `endDrive`) — and in
+// WHAT A BREAKDOWN'S RESTART THROWS AWAY (drive-screen/end-drive.ts) — and in
 // particular that the hero's VOICE is one of the things it throws.
 //
 // The bug this pins: the wreck's own line ("COME ON. NOT HERE. NOT TONIGHT.")
@@ -20,7 +20,7 @@ import {
   type DriveState,
 } from "@game/core";
 
-import { endDrive } from "../pwa/src/game/drive-screen/DriveScreen.tsx";
+import { endDrive } from "../pwa/src/game/drive-screen/end-drive.ts";
 import { createDriveFx } from "../pwa/src/game/drive-screen/drive-fx.ts";
 import { createDriveGore } from "../pwa/src/game/drive-screen/drive-gore.ts";
 import { createSkids } from "../pwa/src/game/drive-screen/skid.ts";
