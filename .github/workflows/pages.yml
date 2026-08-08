@@ -19,6 +19,31 @@ name: pages
 # Pre-requisites: the repo's Pages source must be set to "GitHub Actions"
 # and the custom domain set to `siteUrl` (Settings → Pages); the DNS CNAME
 # record must point at the GitHub Pages origin (`<owner>.github.io`).
+#
+# ---------------------------------------------------------------------------
+# THE SHAPE OF THE RUN — one runner per slot, and why
+#
+#   resolve  →  build (root ∥ preview ∥ branch)  →  assemble  →  deploy
+#
+# Every slot is a WHOLE build of the site at its own base path, from its own
+# ref: `/` from the release tag, `/preview/` from the triggering commit,
+# `/branch/` from whatever was dispatched. They share nothing except the
+# artifact they end up merged into — so they used to run one after another in
+# a single job, checking the tag out over the top of main, reinstalling its
+# dependencies, building, and checking main back out again. That is three
+# builds of wall-clock for three builds of work, plus the checkout juggling.
+#
+# `resolve` answers the one question the slots cannot answer for themselves
+# (which tag, if any, the root slot serves) and emits the slot list as a
+# matrix. Each leg then checks out ITS OWN ref directly — no juggling, no
+# reinstall — and uploads its `dist` as an artifact. `assemble` merges the
+# artifacts into the Pages tree and owns every git write (the `/branch/`
+# slot's orphan branch), which keeps that in one place rather than in the
+# middle of a build.
+#
+# THE OTHER HALF OF THE COST IS THE LIBRARY'S PICTURES, and the fix for that
+# is the cache key — see `Restore the library's generated pictures` below.
+# ---------------------------------------------------------------------------
 
 on:
   push:
@@ -56,61 +81,24 @@ env:
   # every run rehydrates the branch slot from here so regular deploys
   # preserve it.
   BRANCH_DEPLOY_REF: branch-deploy
-  # The support address the contact page and the privacy policy print, and the
-  # one App Store Connect lists as the app's support contact. Kept in a repo
-  # VARIABLE rather than the source so it can be changed without a commit and
-  # isn't sitting in a public tree for scrapers. Set it under
-  # Settings -> Secrets and variables -> Actions -> Variables. A build without
-  # it falls back to a placeholder (see pwa/vite.config.ts).
-  SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
-  # Signs exported character archives so a hand-edited save fails to re-import
-  # (see pwa/src/game/character-transfer.ts). Optional — an empty secret
-  # falls back to the committed default key baked into the bundle. Set the
-  # `CHARACTER_SIGNING_KEY` repo secret to rotate it. Inherited by every build
-  # step (preview / root / branch) since Vite only reads VITE_-prefixed vars.
-  VITE_CHARACTER_SIGNING_KEY: ${{ secrets.CHARACTER_SIGNING_KEY }}
-  # Where EXTRAS -> COMMUNITY sends a player: the chat server the players keep.
-  # A repo VARIABLE rather than a secret — the invite is printed on the page for
-  # anyone to click, so there is nothing to hide — and not a hardcoded constant,
-  # because chat invites expire and a leaked one gets spammed, so it has to be
-  # rotatable without a commit. Set it under Settings -> Secrets and variables
-  # -> Actions -> Variables. A build without it simply does not offer the row
-  # (see pwa/vite.config.ts and the EXTRAS builder).
-  COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
 
 jobs:
-  build:
+  # ---- Which ref each slot is built from -----------------------------------
+  # A small, fast job whose whole output is the build matrix. It exists
+  # because the root slot's ref is a lookup (the highest `v*` tag, if it can
+  # be rebuilt at all) and a matrix leg cannot resolve the ref it is supposed
+  # to have checked out.
+  resolve:
     runs-on: ubuntu-latest
+    outputs:
+      slots: ${{ steps.plan.outputs.slots }}
+      root_label: ${{ steps.plan.outputs.root_label }}
     steps:
+      # Tags and their trees only — no dependency install, no build.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
 
-      # THE LIBRARY'S PICTURES — the social cards and the search shots — are the
-      # only part of the build that needs a browser, and by far the slowest. So
-      # they are NOT built per commit: `LIBRARY_IMAGES_DIR` (set for the three
-      # slot builds below) turns them on here and nowhere else, and this cache
-      # usually means even the deploy does not have to make them.
-      #
-      # The key is the HASH OF EVERYTHING THEY ARE DRAWN FROM. A content change
-      # invalidates it and the set is rebuilt; anything else restores in
-      # seconds. That is better than a nightly rebuild in both directions — it
-      # never regenerates a set that nobody changed, and it can never serve a
-      # stale one, which a schedule can whenever content lands between runs.
-      # `library-images.yml` warms the same key so a deploy rarely pays for it.
-      - name: Restore the library's generated pictures
-        id: images
-        uses: actions/cache@v6
-        with:
-          path: .library-images
-          key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}
-
-      # ---- Resolve which tag to serve at the root slot (if any) ----
       - name: Resolve production tag
         id: tag
         run: |
@@ -123,7 +111,7 @@ jobs:
             REF=$(git tag --list 'v*' --sort=-v:refname | head -n1)
           fi
           # THE ROOT SLOT IS BUILT FROM ITS OWN REF, so that ref's dependency
-          # tree — not main's — has to install in this runner. Releases cut
+          # tree — not main's — has to install in its runner. Releases cut
           # before the repo went self-contained still carry an `.npmrc` that
           # points `@niclaslindstedt/*` at GitHub Packages, and installing one
           # needs a registry token this workflow no longer has; npm does not
@@ -135,134 +123,184 @@ jobs:
             echo "::warning::$REF predates the removal of the external framework dependency and cannot be rebuilt without a GitHub Packages token — serving main at the root slot until the next release."
             REF=""
           fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
           if [ -n "$REF" ]; then
-            echo "ref=$REF" >> "$GITHUB_OUTPUT"
-            echo "has_release=true" >> "$GITHUB_OUTPUT"
             echo "Resolved production ref: $REF"
           else
-            echo "ref=" >> "$GITHUB_OUTPUT"
-            echo "has_release=false" >> "$GITHUB_OUTPUT"
             echo "No buildable release tag — will serve main at the root slot."
           fi
 
-      # AFTER the tag is resolved, because whether a browser is needed depends
-      # on it. A cache hit means THIS content state's pictures are on disk — but
-      # once a release exists the root slot builds from the tag, whose content
-      # is its own state with its own picture set, and that set is only in the
-      # cache if some earlier run put it there. Installing when a release exists
-      # costs a deploy under a minute and is the difference between the released
-      # library having its pictures and silently going without them.
+      # The matrix, as JSON. `branch` is in it only when this run was
+      # dispatched with one; an ordinary push leaves the slot alone and
+      # `assemble` rehydrates it from the orphan branch instead.
+      - name: Plan the slots
+        id: plan
+        env:
+          ROOT_REF: ${{ steps.tag.outputs.ref }}
+          BRANCH_REF: ${{ inputs.branch_ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          ROOT="${ROOT_REF:-$SHA}"
+          SLOTS=$(jq -cn --arg root "$ROOT" --arg sha "$SHA" --arg branch "$BRANCH_REF" '
+            { include:
+              [ { slot: "root",    base: "/",         ref: $root }
+              , { slot: "preview", base: "/preview/", ref: $sha  }
+              ]
+              + (if $branch == "" then [] else [{ slot: "branch", base: "/branch/", ref: $branch }] end)
+            }')
+          echo "slots=$SLOTS" >> "$GITHUB_OUTPUT"
+          echo "root_label=${ROOT_REF:-main}" >> "$GITHUB_OUTPUT"
+          echo "$SLOTS" | jq .
+
+  # ---- One whole site per slot, in parallel --------------------------------
+  build:
+    needs: resolve
+    name: build ${{ matrix.slot }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Not fail-fast: when two slots break, seeing both failures in one run
+      # is the difference between one fix and two.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.resolve.outputs.slots) }}
+    env:
+      # The support address the contact page and the privacy policy print, and
+      # the one App Store Connect lists as the app's support contact. Kept in a
+      # repo VARIABLE rather than the source so it can be changed without a
+      # commit and isn't sitting in a public tree for scrapers. Set it under
+      # Settings -> Secrets and variables -> Actions -> Variables. A build
+      # without it falls back to a placeholder (see pwa/vite.config.ts).
+      SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+      # Signs exported character archives so a hand-edited save fails to
+      # re-import (see pwa/src/game/character-transfer.ts). Optional — an empty
+      # secret falls back to the committed default key baked into the bundle.
+      # Set the `CHARACTER_SIGNING_KEY` repo secret to rotate it.
+      VITE_CHARACTER_SIGNING_KEY: ${{ secrets.CHARACTER_SIGNING_KEY }}
+      # Where EXTRAS -> COMMUNITY sends a player: the chat server the players
+      # keep. A repo VARIABLE rather than a secret — the invite is printed on
+      # the page for anyone to click, so there is nothing to hide — and not a
+      # hardcoded constant, because chat invites expire and a leaked one gets
+      # spammed, so it has to be rotatable without a commit. Set it under
+      # Settings -> Secrets and variables -> Actions -> Variables. A build
+      # without it simply does not offer the row (see pwa/vite.config.ts).
+      COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
+    steps:
+      # THIS SLOT'S OWN REF, checked out directly. `fetch-depth: 0` because
+      # the library's `lastModified` (and the sitemap's `lastmod` with it) is
+      # the commit date of the newest commit touching each page's sources —
+      # a shallow clone answers "the build ran just now" for everything.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ matrix.ref }}
+          fetch-depth: 0
+
+      # AFTER the checkout, so the lockfile hash keying the npm cache is this
+      # slot's own — a tag installs the tree it was cut with.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # THE LIBRARY'S PICTURES — the social cards and the search shots — are the
+      # only part of the build that needs a browser, and by far the slowest. So
+      # they are NOT built per commit: `LIBRARY_IMAGES_DIR` (set for the slot
+      # build below) turns them on here and nowhere else, and this cache
+      # usually means even the deploy does not have to make them.
+      #
+      # THE KEY IS HASHED FROM THIS SLOT'S CHECKOUT, which is the whole reason
+      # the slots build in separate jobs rather than one. The key is the hash
+      # of everything the pictures are drawn from — so the root slot's key is
+      # the RELEASE TAG's content, which does not move between releases and
+      # therefore hits on every deploy after the first one that built it.
+      # Keyed off `main` (as it was when all three slots shared one runner)
+      # the tag's set was evicted by the next content change on main and
+      # regenerated from scratch on every single deploy — four minutes of
+      # browser work, per push, to redraw pictures of a release that had not
+      # changed. `library-images.yml` warms both keys so even the first deploy
+      # after a release rarely pays for it.
+      #
+      # Two slots on the same content compute the same key and share the set,
+      # which is correct — no URL is baked into any picture. If they also both
+      # MISS (the first deploy at a new content state) they both generate and
+      # both try to save; the loser logs "cache already exists" and moves on.
+      - name: Restore the library's generated pictures
+        id: images
+        uses: actions/cache@v6
+        with:
+          path: .library-images
+          key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}
+
       - name: Install Chromium for the library's card renderer
-        if: steps.images.outputs.cache-hit != 'true' || steps.tag.outputs.has_release == 'true'
+        if: steps.images.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
-      # ---- Resolve optional branch dispatch ----
-      - name: Resolve branch dispatch
-        id: dispatch
-        run: |
-          REF="${{ inputs.branch_ref }}"
-          if [ -z "$REF" ]; then
-            echo "has_dispatch=false" >> "$GITHUB_OUTPUT"
-            echo "No branch_ref input — preserving any previously-dispatched branch build."
-          else
-            echo "ref=$REF" >> "$GITHUB_OUTPUT"
-            echo "has_dispatch=true" >> "$GITHUB_OUTPUT"
-            echo "Dispatched: $REF -> /branch/"
-          fi
-
-      # ---- Preview build (current main) — always served at /preview/ ----
-      # The preview slot tracks the triggering commit on every push. Build it
-      # first, off the triggering ref, before any checkout juggling for the
-      # production tag or a dispatched branch moves HEAD away.
-      - name: Build preview
+      - name: Build ${{ matrix.slot }}
         run: npm run build --workspace pwa
         env:
-          VITE_BASE: /preview/
+          VITE_BASE: ${{ matrix.base }}
           LIBRARY_IMAGES_DIR: .library-images
 
-      - name: Stash preview site
-        run: mv pwa/dist site-preview
+      - name: Upload the ${{ matrix.slot }} slot
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-${{ matrix.slot }}
+          path: pwa/dist
+          retention-days: 1
+          # The tree is already mostly compressed images and hashed bundles;
+          # a second pass over ~50 MB buys little and costs the upload.
+          compression-level: 1
+          if-no-files-found: error
+          # The artifact stands in for the directory the merge step used to
+          # `cp -R`, so it has to carry everything that was in it. Dotfiles are
+          # dropped by default, and the day the site grows a `.well-known/` or
+          # a `.nojekyll` that would go missing from the deploy alone.
+          include-hidden-files: true
 
-      # ---- Root slot build ----
-      # Serves the latest release when one resolved above; otherwise it falls
-      # back to main (see `Resolve production tag`). Either way it is a
-      # separate build at the production base path.
-      - name: Checkout production tag
-        if: steps.tag.outputs.has_release == 'true'
-        run: git checkout ${{ steps.tag.outputs.ref }}
+  # ---- Merge the slots into the one Pages artifact -------------------------
+  # Also the only job that writes to git: the `/branch/` slot is persisted in
+  # an orphan branch so a dispatched build survives later deploys, and both
+  # halves of that (persisting a fresh one, rehydrating an old one) belong
+  # next to each other rather than inside a build.
+  assemble:
+    needs: [resolve, build]
+    runs-on: ubuntu-latest
+    steps:
+      # Only for its git remote and credentials — nothing here is built.
+      - uses: actions/checkout@v7
 
-      - name: Reinstall deps for production tag
-        if: steps.tag.outputs.has_release == 'true'
-        run: npm ci
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: site-*
+          path: slots
 
-      - name: Build root
-        run: npm run build --workspace pwa
-        env:
-          VITE_BASE: /
-          LIBRARY_IMAGES_DIR: .library-images
-
-      - name: Stash root site
-        run: mv pwa/dist site-root
-
-      - name: Return to triggering ref
-        if: steps.tag.outputs.has_release == 'true'
-        run: git checkout ${{ github.sha }}
-
-      - name: Reinstall main's deps
-        if: steps.tag.outputs.has_release == 'true'
-        run: npm ci
-
-      # ---- Optional branch build + persist to orphan branch ----
-      - name: Checkout dispatched ref
-        if: steps.dispatch.outputs.has_dispatch == 'true'
+      # A dispatched build is force-pushed to the orphan branch and used as
+      # is; any other run has no branch artifact and reads the last one back
+      # out of that branch. Force-push is safe: the branch is auto-managed and
+      # only ever written by this step.
+      - name: Assemble the branch slot
+        id: branch
         run: |
-          git fetch origin "${{ steps.dispatch.outputs.ref }}"
-          git checkout "${{ steps.dispatch.outputs.ref }}"
-
-      - name: Reinstall deps for dispatched ref
-        if: steps.dispatch.outputs.has_dispatch == 'true'
-        run: npm ci
-
-      - name: Build branch slot
-        if: steps.dispatch.outputs.has_dispatch == 'true'
-        run: npm run build --workspace pwa
-        env:
-          VITE_BASE: /branch/
-          LIBRARY_IMAGES_DIR: .library-images
-
-      - name: Persist branch build to orphan branch
-        if: steps.dispatch.outputs.has_dispatch == 'true'
-        run: |
-          mv pwa/dist site-branch
-          STAGE=$(mktemp -d)
-          cp -R site-branch/. "$STAGE/"
-          # Build an orphan tree containing just the build output and
-          # force-push it to BRANCH_DEPLOY_REF. Force-push is safe: the branch
-          # is auto-managed and only ever written by this step. The identity
-          # must be configured INSIDE the staging repo — `git init` creates a
-          # fresh repo with no inherited config.
-          cd "$STAGE"
-          git init -q -b "$BRANCH_DEPLOY_REF"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -q -m "branch deploy: ${{ steps.dispatch.outputs.ref }} (${{ github.run_id }})"
-          REMOTE_URL=$(git -C "$GITHUB_WORKSPACE" remote get-url origin)
-          AUTH_URL=$(printf '%s' "$REMOTE_URL" \
-            | sed "s|https://|https://x-access-token:${{ github.token }}@|")
-          git remote add origin "$AUTH_URL"
-          git push -f origin "HEAD:$BRANCH_DEPLOY_REF"
-          cd "$GITHUB_WORKSPACE"
-
-      - name: Return to triggering ref after dispatch build
-        if: steps.dispatch.outputs.has_dispatch == 'true'
-        run: git checkout ${{ github.sha }}
-
-      # ---- Rehydrate the branch slot from the orphan branch (every run) ----
-      - name: Rehydrate branch slot from orphan branch
-        id: rehydrate
-        run: |
-          if git ls-remote --exit-code --heads origin "$BRANCH_DEPLOY_REF" >/dev/null 2>&1; then
+          if [ -d slots/site-branch ]; then
+            STAGE=$(mktemp -d)
+            cp -R slots/site-branch/. "$STAGE/"
+            # The identity must be configured INSIDE the staging repo —
+            # `git init` creates a fresh repo with no inherited config.
+            cd "$STAGE"
+            git init -q -b "$BRANCH_DEPLOY_REF"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -q -m "branch deploy: ${{ inputs.branch_ref }} (${{ github.run_id }})"
+            REMOTE_URL=$(git -C "$GITHUB_WORKSPACE" remote get-url origin)
+            AUTH_URL=$(printf '%s' "$REMOTE_URL" \
+              | sed "s|https://|https://x-access-token:${{ github.token }}@|")
+            git remote add origin "$AUTH_URL"
+            git push -f origin "HEAD:$BRANCH_DEPLOY_REF"
+            cd "$GITHUB_WORKSPACE"
+            mv slots/site-branch site-branch
+            echo "has_branch_dist=true" >> "$GITHUB_OUTPUT"
+            echo "Persisted the dispatched branch build to $BRANCH_DEPLOY_REF."
+          elif git ls-remote --exit-code --heads origin "$BRANCH_DEPLOY_REF" >/dev/null 2>&1; then
             git fetch origin "$BRANCH_DEPLOY_REF"
             mkdir -p site-branch
             git --work-tree=site-branch checkout "origin/$BRANCH_DEPLOY_REF" -- .
@@ -273,17 +311,15 @@ jobs:
             echo "$BRANCH_DEPLOY_REF branch does not exist yet — skipping branch slot."
           fi
 
-      # ---- Merge slots into the artifact ----
       # The artifact root is the root slot (release tag, or main before the
       # first release); `preview/` always tracks the triggering commit.
       - name: Merge builds
         run: |
-          mv site-root site
+          mv slots/site-root site
           mkdir -p site/preview
-          cp -R site-preview/. site/preview/
-          ROOT_REF="${{ steps.tag.outputs.has_release == 'true' && steps.tag.outputs.ref || 'main' }}"
-          echo "Merged: /game/ = $ROOT_REF, /preview/ = ${{ github.sha }}"
-          if [ "${{ steps.rehydrate.outputs.has_branch_dist }}" = "true" ]; then
+          cp -R slots/site-preview/. site/preview/
+          echo "Merged: / = ${{ needs.resolve.outputs.root_label }}, /preview/ = ${{ github.sha }}"
+          if [ "${{ steps.branch.outputs.has_branch_dist }}" = "true" ]; then
             mkdir -p site/branch
             cp -R site-branch/. site/branch/
             echo "Merged: /branch/ from $BRANCH_DEPLOY_REF"
@@ -295,7 +331,7 @@ jobs:
           path: site
 
   deploy:
-    needs: build
+    needs: assemble
     runs-on: ubuntu-latest
     environment:
       name: github-pages

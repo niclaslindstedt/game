@@ -26,6 +26,7 @@
 /* global document, window -- `page.evaluate`'s callback is serialised and run
    by the browser, not by node, so its body legitimately reaches the DOM. */
 
+import { availableParallelism } from "node:os";
 import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -55,6 +56,57 @@ import { libraryCss } from "./styles.mjs";
 const STAGE_FILE = ".card-stage.html";
 const FRAME_FILE = ".frame-stage.html";
 const SHOT_SCALE = 4;
+
+/**
+ * HOW MANY CARDS ARE IN FRONT OF A CAMERA AT ONCE.
+ *
+ * A shot is `innerHTML` + layout + font/image settle + a raster, and one page
+ * means one renderer process doing all of it while every other core on the
+ * machine waits. That was the whole deploy's critical path: ~1000 pictures at
+ * a third of a second each, serial.
+ *
+ * A LANE IS A WHOLE BROWSER, with a pair of pages on it — the element stage
+ * and the 1200x630 frame stage, because a card job shoots both and a page can
+ * only hold one composition at a time. **The browser is the unit, and that is
+ * the measurement, not a preference.** With one browser and four pages the set
+ * went 4m52 to 3m46 and stopped: the shots fan out across renderers, but every
+ * screenshot is still marshalled over CDP by the single BROWSER process, which
+ * sat pinned near a full core. Raising the page count to eight moved nothing —
+ * same 74% on the same one process. Four browsers spread that work too, and
+ * the same set takes 2m36.
+ *
+ * Every page is navigated to the same two `file://` stages, so the stylesheet
+ * and the webfont are parsed once per page and nothing about a picture depends
+ * on which lane drew it — the whole set comes out byte-identical to the serial
+ * one, which is the only reason this is allowed to be a speedup rather than a
+ * rewrite.
+ *
+ * Capped at the core count. Each lane is a browser process plus two renderers,
+ * so past it the lanes only take turns more expensively.
+ */
+const LANES = Math.max(1, Math.min(4, availableParallelism()));
+
+/**
+ * Hand out one of `items` at a time, waiting when they are all out.
+ *
+ * The pool is what bounds the concurrency — callers may fire every job at
+ * once and the lanes queue them. Deliberately FIFO: a waiter that jumps the
+ * line would be invisible here and unpleasant anywhere else.
+ */
+function pool(items) {
+  const free = [...items];
+  const waiting = [];
+  return async function take(fn) {
+    const item = free.pop() ?? (await new Promise((r) => waiting.push(r)));
+    try {
+      return await fn(item);
+    } finally {
+      const next = waiting.shift();
+      if (next) next(item);
+      else free.push(item);
+    }
+  };
+}
 
 function stageHtml(extraCss = "") {
   return `<!doctype html>
@@ -90,11 +142,17 @@ window.__settle = async () => {
 }
 
 /**
- * Open a browser and keep it open for the whole run.
+ * Open the browsers and keep them open for the whole run.
  *
- * One browser, one page, one navigation: the font and the stylesheet are parsed
- * once and every card after the first is an `innerHTML` swap and a screenshot.
- * Launching per card would dominate the build.
+ * `LANES` browsers, two pages each, one navigation per page: the font and the
+ * stylesheet are parsed once per page and every card after the first is an
+ * `innerHTML` swap and a screenshot. Launching per card would dominate the
+ * build.
+ *
+ * `shoot`/`shootFrame` are safe to call concurrently — each takes a free page
+ * out of the pool and gives it back when its raster is in hand — so the caller
+ * decides how many jobs to have in flight and the pool decides how many of
+ * them touch a browser.
  */
 export async function openCardShooter(libraryDir) {
   let chromium;
@@ -111,9 +169,11 @@ export async function openCardShooter(libraryDir) {
   // A sandbox may ship browsers that do not match the installed playwright's
   // expected build; PLAYWRIGHT_CHROMIUM points at one that does.
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM || undefined;
-  let browser;
+  let browsers;
   try {
-    browser = await chromium.launch({ executablePath });
+    browsers = await Promise.all(
+      Array.from({ length: LANES }, () => chromium.launch({ executablePath })),
+    );
   } catch (cause) {
     throw new Error(
       "library: could not launch chromium to render the item cards.\n" +
@@ -138,11 +198,6 @@ export async function openCardShooter(libraryDir) {
   // fails to navigate rather than an obviously wrong path.
   const stagePath = resolve(libraryDir, STAGE_FILE);
   writeFileSync(stagePath, stageHtml());
-  const page = await browser.newPage({
-    viewport: { width: 1280, height: 900 },
-    deviceScaleFactor: SHOT_SCALE,
-  });
-  await page.goto(`file://${stagePath}`, { waitUntil: "load" });
 
   // A SECOND stage, for whole-frame pictures rather than one element: the
   // social card (og-card.mjs) is a fixed 1200x630 composition, and it is drawn
@@ -156,33 +211,57 @@ export async function openCardShooter(libraryDir) {
     framePath,
     stageHtml("#stage { display: block; width: 1200px; height: 630px; }"),
   );
-  const framePage = await browser.newPage({
-    viewport: { width: 1200, height: 630 },
-    deviceScaleFactor: 1,
-  });
-  await framePage.goto(`file://${framePath}`, { waitUntil: "load" });
+
+  /** One page per browser on the given stage, all settled before the first shot. */
+  const openStage = (path, options) =>
+    Promise.all(
+      browsers.map(async (browser) => {
+        const opened = await browser.newPage(options);
+        await opened.goto(`file://${path}`, { waitUntil: "load" });
+        return opened;
+      }),
+    );
+
+  const [cardPages, framePages] = await Promise.all([
+    openStage(stagePath, {
+      viewport: { width: 1280, height: 900 },
+      deviceScaleFactor: SHOT_SCALE,
+    }),
+    openStage(framePath, {
+      viewport: { width: 1200, height: 630 },
+      deviceScaleFactor: 1,
+    }),
+  ]);
+  const takeCardPage = pool(cardPages);
+  const takeFramePage = pool(framePages);
 
   return {
+    /** How many shots may be in flight at once — the caller's batch size. */
+    lanes: LANES,
     /** Screenshot `cardHtml` as a transparent PNG of the card element alone. */
-    async shoot(cardHtml) {
-      await page.evaluate(async (html) => {
-        document.getElementById("stage").innerHTML = html;
-        await window.__settle();
-      }, cardHtml);
-      return page.locator("#stage > *").first().screenshot({
-        omitBackground: true,
+    shoot(cardHtml) {
+      return takeCardPage(async (page) => {
+        await page.evaluate(async (html) => {
+          document.getElementById("stage").innerHTML = html;
+          await window.__settle();
+        }, cardHtml);
+        return page.locator("#stage > *").first().screenshot({
+          omitBackground: true,
+        });
       });
     },
     /** Screenshot a whole 1200x630 composition. */
-    async shootFrame(html) {
-      await framePage.evaluate(async (body) => {
-        document.getElementById("stage").innerHTML = body;
-        await window.__settle();
-      }, html);
-      return framePage.locator("#stage").screenshot();
+    shootFrame(html) {
+      return takeFramePage(async (page) => {
+        await page.evaluate(async (body) => {
+          document.getElementById("stage").innerHTML = body;
+          await window.__settle();
+        }, html);
+        return page.locator("#stage").screenshot();
+      });
     },
     async close() {
-      await browser.close();
+      await Promise.all(browsers.map((browser) => browser.close()));
       for (const file of [stagePath, framePath]) {
         try {
           unlinkSync(file);

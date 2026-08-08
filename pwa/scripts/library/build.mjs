@@ -544,36 +544,49 @@ async function buildImages({ cacheDir, dir, model, home }) {
   // background simply failed to load and the composition still rendered.
   const backdropDir = join(dir, ".backdrops");
   mkdirSync(backdropDir, { recursive: true });
+  // Memoized on the PROMISE, not on the finished backdrop: the card jobs run
+  // several at a time (see `shooter.lanes`), so two mobs sharing a venue reach
+  // this together and a value-memo would render the same crop twice and race
+  // to write the same file — which is the file the browser is about to load.
   const backdrops = new Map();
-  async function backdropFor(venueId, zoom, strength) {
+  function backdropFor(venueId, zoom, strength) {
     const venue = model.venues.find((v) => v.id === venueId);
-    if (!venue || !LEVELS[venue.id]) return null;
+    if (!venue || !LEVELS[venue.id]) return Promise.resolve(null);
     // Strength is part of the key: a mob wants its floor lighter than an
     // item card does, and at the same zoom the two would otherwise share one.
     const key = `${venue.slug}:${zoom}:${strength}`;
     if (!backdrops.has(key)) {
-      const png = await dimBackdrop(
-        await renderMapCrop(LEVELS[venue.id], {
-          width: SHOT_W,
-          height: SHOT_H,
-          zoom,
-        }),
-        strength,
+      backdrops.set(
+        key,
+        (async () => {
+          const png = await dimBackdrop(
+            await renderMapCrop(LEVELS[venue.id], {
+              width: SHOT_W,
+              height: SHOT_H,
+              zoom,
+            }),
+            strength,
+          );
+          const file = `${venue.slug}-${zoom}x-${strength}.png`;
+          writeFileSync(join(backdropDir, file), png);
+          return { png, src: `.backdrops/${file}` };
+        })(),
       );
-      const file = `${venue.slug}-${zoom}x-${strength}.png`;
-      writeFileSync(join(backdropDir, file), png);
-      backdrops.set(key, { png, src: `.backdrops/${file}` });
     }
     return backdrops.get(key);
   }
 
-  // The cards are PHOTOGRAPHED, one browser page for the whole run, and that
-  // page can only hold one card at a time — so this pass is serial by nature
-  // while the compositing below is not. Shooting everything first and then
-  // fanning out the image work is what keeps the browser from idling.
+  // The cards are PHOTOGRAPHED, and a browser page can only hold one card at a
+  // time — so the shooter keeps a lane per core and this pass runs that many
+  // jobs at once. Serial, it was the whole deploy's critical path: a thousand
+  // pictures at a third of a second each while three cores watched.
+  //
+  // Shooting the whole set first and then fanning out the image work is still
+  // what keeps the browser from idling — sharp's encodes are node's problem,
+  // not Chromium's, and interleaving them just makes each lane wait.
   const shooter = await openCardShooter(dir);
   try {
-    for (const job of cardJobs) {
+    await inBatches(cardJobs, shooter.lanes, async (job) => {
       const cell = spriteCell(job.spec.sprite);
       if (!cell) {
         throw new Error(
@@ -619,7 +632,7 @@ async function buildImages({ cacheDir, dir, model, home }) {
           brand: TITLE.toUpperCase(),
         }),
       );
-    }
+    });
   } finally {
     await shooter.close();
   }

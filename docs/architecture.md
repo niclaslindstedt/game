@@ -2404,9 +2404,28 @@ Actions cache is keyed on a HASH of everything the pictures are drawn from
 `game.config.json`), which beats a nightly rebuild in both directions: it never
 regenerates a set nobody changed, and it cannot serve a stale one. What makes a
 deploy correct is that `pages.yml` GENERATES on a cache miss — `library-images.yml`
-only warms the key, and cannot get ahead of a content merge, since the same push
+only warms the keys, and cannot get ahead of a content merge, since the same push
 that invalidates the key also starts the deploy. Keep the two workflows' key
 expressions identical or the deploy will never hit what the warm job builds.
+
+**THE HASH IS OF THE SLOT'S OWN CHECKOUT, which is why each slot builds on its
+own runner.** A set belongs to a CONTENT STATE, and the deploy holds two of
+them: `main`'s, for `/preview/`, and the release tag's, for `/`. Hashed from a
+single `main` checkout — as it was while all three slots shared one runner —
+the released set's key moved every time `main`'s content did, so the tag's
+pictures were evicted and redrawn from scratch on every deploy: four minutes of
+browser work per push, to repaint a release that had not changed. Keyed per
+checkout, the tag's key is fixed between releases and hits every time. Two slots
+on the same content compute the same key and share the set, which is correct —
+no URL is baked into any picture.
+
+The browser pass itself runs a LANE PER CORE (`card-shot.mjs`), and **a lane is
+a whole browser** — with a pair of pages on it, the element stage and the
+1200×630 frame stage, because a card job shoots both. The unit is the browser
+rather than the page because that is where the ceiling was: one browser with
+four pages took the set from 4m52 to 3m46 and stopped, since every screenshot is
+still marshalled over CDP by the single browser process, which sat pinned near a
+full core (eight pages moved nothing). Four browsers spread that too — 2m36.
 
 Encoding is picked per surface. A search shot is WebP — Google Images handles it
 and it is a tenth of the PNG. A social card stays PNG, because some unfurlers
@@ -2449,6 +2468,19 @@ worker scoped to its base, and a disjoint precache id (`game`,
 `game-preview`, `game-branch`) so the builds never poison each other. The
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
+
+**SEPARATELY MEANS ON ITS OWN RUNNER.** A run is `resolve → build (one leg per
+slot, in parallel) → assemble → deploy`: `resolve` answers the one question a
+leg cannot answer for itself (which tag, if any, `/` serves) and emits the slot
+list as the build matrix; each leg checks out ITS OWN ref, installs that ref's
+lockfile and uploads its `dist` as an artifact; `assemble` merges the artifacts
+into the Pages tree. The slots share nothing but that tree, so running them one
+after another inside a single job — checking the tag out over the top of `main`,
+reinstalling, building, checking `main` back out — spent three builds of
+wall-clock on three builds of work. `assemble` is also the only job that writes
+to git, which keeps the `/branch/` slot's orphan-branch bookkeeping (persist a
+freshly dispatched build, rehydrate the last one otherwise) in one place instead
+of in the middle of a build.
 
 **The production slot is REBUILT from its tag on every deploy, so a release is
 only servable while today's runner can still install that tag's own lockfile.**
