@@ -71,9 +71,10 @@ review stays a deliberate act — `bundle exec fastlane metadata submit:true`.
 Authentication is an **App Store Connect API key** (Users and Access →
 Integrations), not an Apple ID, because a `.p8` key carries no 2FA session to
 expire mid-upload. Set `ASC_KEY_ID`, `ASC_ISSUER_ID`, and either `ASC_KEY_PATH`
-or `ASC_KEY_CONTENT` (base64) — plus `APPLE_ID` / `APPLE_TEAM_ID` /
-`ASC_TEAM_ID` for the Appfile. Keep the `.p8` out of git; `native/*.p8` and
-`native/.env` are gitignored.
+or `ASC_KEY_CONTENT` (base64) — plus `APPLE_ID` and `APPLE_TEAM_ID` for the
+Appfile. (`ASC_TEAM_ID` is optional: the key names its own team. See
+[`../RELEASING.md`](../RELEASING.md) for how to find it if you ever need it.)
+Keep the `.p8` out of git; `native/*.p8` and `native/.env` are gitignored.
 
 **EAS (alternative)** — `cd native && npx eas metadata:push`, pointing at the
 config with `metadataPath` in `eas.json`'s submit profile.

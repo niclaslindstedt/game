@@ -219,14 +219,30 @@ section("CREDENTIALS");
 
 const REQUIRED_ENV = [
   ["APPLE_ID", "the Apple Account email the developer program is under"],
-  ["APPLE_TEAM_ID", "developer portal → Membership"],
-  ["ASC_TEAM_ID", "App Store Connect → Users and Access (a number)"],
+  ["APPLE_TEAM_ID", "10 alphanumerics — developer portal → Membership details"],
   ["ASC_KEY_ID", "the key id of the .p8"],
   ["ASC_ISSUER_ID", "one per team, above the key list (a UUID)"],
 ];
 for (const [key, where] of REQUIRED_ENV) {
   if (envValue(key)) ok(`${key} set`);
   else fail(`${key} is not set`, where, "apple");
+}
+
+// ASC_TEAM_ID is the ODD ONE OUT and is deliberately not required. It is
+// fastlane's `itc_team_id` — a NUMBER, and a different thing from the 10-char
+// APPLE_TEAM_ID above — which disambiguates an Apple Account that belongs to
+// several App Store Connect teams. An App Store Connect API key is issued BY
+// one team, so authenticating with the .p8 above settles the team on its own
+// and the id is never consulted. It is also genuinely hard to find: it appears
+// nowhere in the App Store Connect UI (Users and Access does NOT show it), so
+// requiring it sent people hunting for a value they did not need.
+if (envValue("ASC_TEAM_ID")) {
+  ok("ASC_TEAM_ID set (only consulted without an API key)");
+} else {
+  ok(
+    "ASC_TEAM_ID unset — fine: the API key names its own team " +
+      "(needed only for a multi-team Apple Account authenticating by password)",
+  );
 }
 
 const keyPath = envValue("ASC_KEY_PATH");
