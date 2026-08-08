@@ -73,8 +73,9 @@ impl Resources {
     /// ownership.** `scripts/build-server.mjs` is the ENGINE's Node ship target
     /// and predates this tree; both shells consume the same output, and
     /// building it twice would be two copies of the simulation that could
-    /// disagree. The directory is renamed when phase 4 retires a shell, which is
-    /// the moment it stops being confusing rather than merely inaccurate.
+    /// disagree. The directory moves beside `server/` the day only one desktop
+    /// wrapper is left, which is the moment it stops being confusing rather than
+    /// merely inaccurate.
     ///
     /// The compiled tree is self-contained ESM with its own `package.json`, so
     /// nothing here has to resolve anything inside it — the one path is the

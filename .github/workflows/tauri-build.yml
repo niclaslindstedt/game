@@ -206,8 +206,8 @@ jobs:
           fi
 
       # THE DEPOT and THE BUNDLES land in different places, and both are worth
-      # keeping: the depot is what Steam uploads, and the bundles are what
-      # phase 4 measures an install size from.
+      # keeping: the depot is what Steam uploads, and the bundles are what an
+      # install size is measured from (`npm run shell:bench --size`).
       - uses: actions/upload-artifact@v7
         if: inputs.platform == 'all' || inputs.platform == matrix.target
         with:

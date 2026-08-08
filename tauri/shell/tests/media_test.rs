@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE VOICE GATE — the thing phase 2's macOS entitlement was a promise of.
+//! THE VOICE GATE — the thing the macOS microphone entitlement is a promise of.
 //!
 //! A build that was not deliberately given voice cannot ask for the microphone
 //! at all: not because the page politely declines to, but because the shell

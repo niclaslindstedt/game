@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! HOW OFTEN STEAM'S CALLBACK QUEUE IS DRAINED — the phase-2 leftover that
-//! phase 3 had to settle before the net bridge, not after.
+//! HOW OFTEN STEAM'S CALLBACK QUEUE IS DRAINED — and why one number could not
+//! serve both a title screen and a session.
 //!
 //! Steamworks delivers results by callback, and a process that never runs them
 //! accumulates a queue. A game runs them once a frame; this shell has no frame
-//! of its own, because the webview owns the drawing. Phase 2 therefore drained
-//! the queue on a thread of its own every 200 ms and argued — correctly, for
-//! phase 2 — that nothing it called BLOCKED on a callback: the cloud reads wait
-//! on their own API call and the achievements are in-memory writes flushed by
-//! `store_stats`.
+//! of its own, because the webview owns the drawing. So the queue is drained on
+//! a thread of its own, and for a long time that was every 200 ms — which was
+//! correct while nothing the shell called BLOCKED on a callback: the cloud reads
+//! wait on their own API call and the achievements are in-memory writes flushed
+//! by `store_stats`.
 //!
-//! **PHASE 3 INVALIDATES THAT ARGUMENT, AND INHERITING THE NUMBER WOULD HAVE
-//! PRESENTED AS A BROKEN NETWORK.** Two things change the moment a session
+//! **MULTIPLAYER INVALIDATES THAT ARGUMENT, AND INHERITING THE NUMBER WOULD
+//! HAVE PRESENTED AS A BROKEN NETWORK.** Two things change the moment a session
 //! exists:
 //!
 //!  * **Matchmaking is delivered THROUGH `run_callbacks`.** Creating a lobby,
@@ -34,10 +34,9 @@ use std::time::Duration;
 
 /// The idle interval — nothing asynchronous is in flight.
 ///
-/// This is phase 2's number, kept for exactly the case phase 2 described: the
-/// queue still has to be drained (cloud writes and achievement flushes put
-/// results on it), and a shell showing a title screen has no reason to wake
-/// more often.
+/// The original number, kept for exactly the case it was chosen for: the queue
+/// still has to be drained (cloud writes and achievement flushes put results on
+/// it), and a shell showing a title screen has no reason to wake more often.
 pub const IDLE_INTERVAL_MS: u64 = 200;
 
 /// The live interval — a session is up, or one is being negotiated.

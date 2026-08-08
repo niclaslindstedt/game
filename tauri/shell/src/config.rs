@@ -91,19 +91,16 @@ pub const DEVELOPER_NOTICE: &str = concat!(
     "is not licensed for play, for sharing, or for distribution in any form."
 );
 
-/// WHAT A PHASE-3 BUILD IS, said once per launch.
+/// WHICH BINARY THIS IS, said once per launch.
 ///
-/// The Tauri shell is feature-complete as of phase 3 (`docs/tauri-migration.md`)
-/// and is still not the shipping desktop build — that decision belongs to phase
-/// 4, after the two shells have been played side by side. So the line no longer
-/// lists absent features, because there is one left and it is not coming: the
-/// Steam overlay cannot be injected into a platform webview
-/// (`crate::steam::overlay_support`). What it says instead is which binary this
-/// is and which one is the release, because that is the fact a bug report needs.
-pub const MIGRATION_NOTICE: &str = concat!(
-    "This is the TAURI desktop shell. It runs the whole game — Steam cloud ",
-    "save, achievements, screenshots, mods, multiplayer and voice — and it is ",
-    "NOT the shipping desktop build: the Electron one is, until the two have ",
-    "been compared. The Steam overlay is the one thing it cannot have. ",
-    "See docs/tauri-migration.md."
+/// A bug report about the desktop game arrives with a launch log and no way to
+/// tell which of the two desktop builds wrote it, so the log says. It also
+/// names the ONE feature this one cannot have — Valve's overlay cannot be
+/// injected into a platform webview (`crate::steam::overlay_support`) — because
+/// "Shift+Tab does nothing" is otherwise reported as a bug on every copy.
+pub const SHELL_NOTICE: &str = concat!(
+    "This is the platform-webview desktop build. It runs the whole game — ",
+    "Steam cloud save, achievements, screenshots, mods, multiplayer and voice ",
+    "— and the Steam overlay is the one thing it cannot have. ",
+    "See tauri/README.md."
 );

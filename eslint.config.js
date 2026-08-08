@@ -26,7 +26,7 @@ export default [
       // dependency tree, its own tsc, its own output module (electron/src/
       // output.ts), and not part of the npm workspace.
       "electron/**",
-      // The Tauri desktop shell (docs/tauri-migration.md) is Rust, with its own
+      // The Tauri desktop shell (tauri/README.md) is Rust, with its own
       // linter: `cargo clippy` at zero warnings, run by `npm run tauri:lint`.
       // Only its build output and the crates are ignored — its two Node build
       // scripts are ordinary repo tooling and are linted here like any other.
@@ -84,6 +84,17 @@ export default [
       globals: { ...globals.node },
     },
     rules: { "no-console": "off" },
+  },
+  {
+    // THE WEBVIEW PROBE is the one thing under `scripts/` that runs in a PAGE
+    // rather than in Node: it is served to a webview (headlessly by
+    // scripts/webview-sweep.mjs, or by a real shell through GIS_WEBROOT) and
+    // asks that engine what it has. It lives here because the sweep that reads
+    // it does, and because it is tooling rather than anything the game ships.
+    files: ["scripts/webview-probe/**"],
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
   },
   {
     // THE SESSION SERVER runs under Node, inside a `utilityProcess` — it is

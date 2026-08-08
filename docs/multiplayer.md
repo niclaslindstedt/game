@@ -259,7 +259,7 @@ scripts/bot-client.mjs        a fleet of them, pointed at an address
 ```
 
 **AND THE SAME SHAPE IN THE OTHER DESKTOP SHELL, with two pipes where Electron
-has one.** `tauri/` is a Rust process (`docs/tauri-migration.md`): it has no
+has one.** `tauri/` is a Rust process (`docs/desktop-shells.md`): it has no
 `utilityProcess.fork` and no way to transfer a `MessagePort` to the page, so the
 session server grew a THIRD entry rather than a second implementation.
 

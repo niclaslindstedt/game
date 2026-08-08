@@ -1,0 +1,135 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
+<!--
+  THE WEBVIEW PROBE.
+
+  A page that asks the engine showing it whether it has every web-platform
+  feature the game reaches for, and says what breaks for each one it does not.
+
+  Two ways to open it:
+
+    npm run webview:sweep            headlessly, under every installed
+                                     Playwright engine, diffed against Chromium
+
+    GIS_WEBROOT=scripts/webview-probe npm run tauri
+                                     inside a REAL shell, on a real machine,
+                                     which is the half a headless engine cannot
+                                     stand in for — it is the platform's own
+                                     webview, at the platform's own version,
+                                     with the shell's own initialization script
+                                     already applied.
+
+  The second one is the point. A build with no voice capability REMOVES
+  `navigator.mediaDevices` before the page runs, so `get-user-media` reading
+  "absent" there is the microphone gate being verified rather than a quirk.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>webview probe</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0d10;
+        --fg: #d8dee6;
+        --dim: #7d8794;
+        --line: #1e242c;
+        --good: #6fd08c;
+        --warn: #e0b341;
+        --bad: #e06c6c;
+      }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          14px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Consolas,
+          monospace;
+      }
+      h1 {
+        font-size: 1.1rem;
+        margin: 0 0 0.25rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      #agent {
+        color: var(--dim);
+        font-size: 0.8rem;
+        word-break: break-all;
+        margin: 0 0 1rem;
+      }
+      #verdict {
+        padding: 0.6rem 0.8rem;
+        border-left: 3px solid var(--dim);
+        margin: 0 0 1.5rem;
+      }
+      #verdict.good {
+        border-color: var(--good);
+        color: var(--good);
+      }
+      #verdict.warn {
+        border-color: var(--warn);
+        color: var(--warn);
+      }
+      #verdict.bad {
+        border-color: var(--bad);
+        color: var(--bad);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        max-width: 60rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.3rem 0.6rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        padding-top: 1.25rem;
+        color: var(--dim);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        border-bottom-color: var(--dim);
+      }
+      td:first-child {
+        white-space: nowrap;
+        width: 5rem;
+      }
+      td.ok {
+        color: var(--good);
+      }
+      td.warn {
+        color: var(--warn);
+      }
+      td.bad {
+        color: var(--bad);
+        font-weight: bold;
+      }
+      code {
+        color: var(--fg);
+      }
+      em {
+        color: var(--bad);
+        font-style: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Webview probe</h1>
+    <p id="agent"></p>
+    <p id="verdict">running…</p>
+    <table>
+      <tbody id="rows"></tbody>
+    </table>
+    <script type="module" src="./probe.mjs"></script>
+  </body>
+</html>

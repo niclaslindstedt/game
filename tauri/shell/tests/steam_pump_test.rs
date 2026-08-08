@@ -2,7 +2,7 @@
 //! THE CALLBACK PUMP's two gears, and the peer pump that has to keep up with
 //! one of them.
 //!
-//! This is the phase-2 leftover phase 3 had to settle BEFORE the net bridge:
+//! This had to be settled BEFORE the net bridge rather than after:
 //! matchmaking arrives as call-results through `run_callbacks`, so a 200 ms
 //! pump would cost every lobby round trip a fifth of a second and cap packet
 //! delivery at 5 Hz — a broken network for a reason living in a constant nobody

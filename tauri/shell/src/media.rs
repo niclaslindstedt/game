@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! WHAT THE PAGE MAY ASK THE OPERATING SYSTEM FOR — the peer of
-//! `installPermissionHandlers` in `electron/src/main.ts`, and the gate phase 2
+//! `installPermissionHandlers` in `electron/src/main.ts`, and the gate the macOS
 //! shipped an entitlement for without shipping the thing that makes it mean
 //! anything.
 //!
@@ -45,8 +45,8 @@
 //!
 //! The floor is therefore shell-enforced everywhere and OS-enforced on one of
 //! three, which is stated here rather than left to be discovered: the
-//! entitlement in `entitlements.mac.plist` is what phase 2 shipped, and this is
-//! what it is now attached to.
+//! entitlement in `entitlements.mac.plist` is the macOS half, and this is what
+//! it is attached to.
 
 /// What the page asked the platform for, in the vocabulary all three webviews
 /// can be reduced to.

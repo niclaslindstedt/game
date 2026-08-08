@@ -14,12 +14,6 @@
 // the child's environment instead, which every platform spells the same way.
 // `tests/content/npm_scripts_portable_test.ts` keeps every manifest honest.
 //
-// The Tauri shell has no Steam handshake yet (phase 2 of
-// docs/tauri-migration.md), so the variable it sets today is only the one that
-// says which build this is. The launcher exists NOW rather than at phase 2
-// because the alternative is a shell prefix somebody adds to package.json in
-// the meantime, which is exactly the line the test above is here to catch.
-//
 // Extra arguments are forwarded to the game: `npm run tauri -- --multiplayer`.
 
 import { spawn } from "node:child_process";

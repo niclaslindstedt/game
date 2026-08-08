@@ -2,7 +2,7 @@
   "name": "adas-trail-tauri",
   "version": "0.1.0",
   "author": "Niclas Lindstedt <niclas@agilator.se>",
-  "description": "Desktop (Tauri) wrapper around the Ada's Trail PWA — bundles the game on-device and serves it from a private scheme. The second desktop shell, beside electron/; see docs/tauri-migration.md.",
+  "description": "Desktop wrapper around the Ada's Trail PWA — bundles the game on-device and serves it from a private scheme, in the platform's own webview. See README.md.",
   "private": true,
   "scripts": {
     "icons": "node scripts/icons.mjs",
@@ -16,7 +16,8 @@
     "fmt": "cargo fmt --all",
     "fmt:check": "cargo fmt --all -- --check",
     "package": "node scripts/package.mjs",
-    "package:dist": "node scripts/package.mjs --profile standalone"
+    "package:dist": "node scripts/package.mjs --profile standalone",
+    "steam:upload": "node scripts/steam-upload.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"

@@ -3,7 +3,7 @@
 //! schemas the `capabilities/` files are checked against, and on Windows
 //! compiles the resource block that carries the icon and version.
 //!
-//! Plus the two things phase 2 needs from a build script.
+//! Plus the two things packaging needs from a build script.
 //!
 //! **THE CAPABILITY STAMP has to be declared a build input**, which is the one
 //! thing `src/stamp.rs` cannot do for itself. `option_env!` resolves at compile

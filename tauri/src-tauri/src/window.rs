@@ -12,9 +12,10 @@ use adastrail_shell::output;
 use adastrail_shell::window_state::{
     load_window_state, save_window_state, DisplayArea, WindowState, MIN_HEIGHT, MIN_WIDTH,
 };
+use tauri::webview::PageLoadEvent;
 use tauri::{
-    AppHandle, LogicalPosition, LogicalSize, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
-    WindowEvent,
+    AppHandle, LogicalPosition, LogicalSize, Manager, Url, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder, WindowEvent,
 };
 
 use crate::page::initialization_script;
@@ -115,7 +116,14 @@ pub fn build(app: &AppHandle, shell: &Shell) -> tauri::Result<WebviewWindow> {
             origin.clone(),
             remote.clone(),
         ))
+        // THE LAST COLD-START MARK, and the only one the shell cannot take for
+        // itself: everything before it happens in this process, and this one is
+        // the webview reporting that it finished with the document. It is not
+        // the title screen — see `adastrail_shell::metrics` for what the number
+        // therefore does not contain.
+        .on_page_load(page_load_mark())
         .build()?;
+    crate::metrics::mark("window-created");
 
     // NOW the monitors can be asked, so the remembered POSITION gets its
     // does-this-still-land-anywhere check — see `opening_state`.
@@ -131,9 +139,31 @@ pub fn build(app: &AppHandle, shell: &Shell) -> tauri::Result<WebviewWindow> {
         let _ = window.set_fullscreen(true);
     }
     let _ = window.show();
+    crate::metrics::mark("window-shown");
 
     remember_geometry(&window, shell.user_data.clone());
     Ok(window)
+}
+
+/// Stamp the last mark and write the launch down.
+///
+/// `Finished` only: `Started` fires again on every in-site navigation (the
+/// library, the privacy page), and a second stamp of a mark already taken would
+/// be dropped anyway — but writing the file again per navigation would fill
+/// `startup.jsonl` with rows that are not launches.
+fn page_load_mark(
+) -> impl Fn(WebviewWindow, tauri::webview::PageLoadPayload<'_>) + Send + Sync + 'static {
+    move |window, payload| {
+        if payload.event() != PageLoadEvent::Finished {
+            return;
+        }
+        crate::metrics::mark("page-loaded");
+        let app = window.app_handle();
+        let Some(shell) = app.try_state::<Shell>() else {
+            return;
+        };
+        crate::metrics::finish(&shell.user_data, &app.package_info().version.to_string());
+    }
 }
 
 /// The dark brand background, so no white flash shows through while the page

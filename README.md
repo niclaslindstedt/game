@@ -112,8 +112,11 @@ make test                                # the full test suite
 | `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                              |
 | `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
 | `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
-| `make tauri` / `make tauri-test`      | The second desktop shell (Tauri) — see `tauri/README.md` and `docs/tauri-migration.md`      |
+| `make tauri` / `make tauri-test`      | The second desktop shell — see `tauri/README.md` and `docs/desktop-shells.md`               |
 | `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)   |
+| `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                 |
+| `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                  |
+| `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                            |
 | `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                    |
 
 **Verify with `make test`, never with a bare `npx vitest run`.** The `make`
@@ -292,6 +295,7 @@ How a mod is compiled, loaded and resolved — the design behind all of the abov
 - [Story](docs/story.md) · [Manuscript](docs/manuscript.md) — the plot, and every spoken line
 - [Art style](docs/art-style.md) · [Naming](docs/naming.md)
 - [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
+- [The desktop builds](docs/desktop-shells.md) — the two wrappers, what is measured, and what decides which one ships
 - [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under
 - [`OSS_SPEC.md`](OSS_SPEC.md) — the layout and governance spec it conforms to
 

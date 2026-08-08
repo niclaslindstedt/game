@@ -3,7 +3,7 @@
 //! `electron/src/leaderboards-provider.ts`.
 //!
 //! **There is no Steam provider here either, and the reason has CHANGED — which
-//! is a phase-2 finding worth the paragraph.** The Electron seam gives two
+//! is a finding worth the paragraph.** The Electron seam gives two
 //! independent reasons and says either alone would be enough. Exactly one of
 //! them survived the move to Rust:
 //!

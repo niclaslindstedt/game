@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! THE WEBVIEW'S PERMISSION HANDLER — the effects half of
-//! [`adastrail_shell::media`], and the thing phase 2's macOS entitlement was a
+//! [`adastrail_shell::media`], and the thing the macOS microphone entitlement is a
 //! promise of.
 //!
 //! Electron has ONE permission handler for every webview it owns. The three

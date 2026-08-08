@@ -39,7 +39,10 @@
 //! | [`runtime`]                | `resources.ts`               | where the things that are not Rust are |
 //! | [`dedicated`]              | `dedicated-mode.ts`          | what a windowless server is handed  |
 //! | [`media`]                  | `main.ts`'s permission handler | whether the page may open a microphone |
+//! | [`display`]                | (Electron refuses this itself) | whether there is anywhere to put a window |
 //! | [`steam_pump`]             | (`steam.ts`'s callback loop) | how often Steam's queue is drained  |
+//! | [`metrics`]                | `metrics.ts`                 | how long the shell took to get out of the way |
+//! | [`roster`]                 | `roster.ts`                  | whether the cloud holds the roster that went into it |
 //!
 //! **The four platform seams are the SAME three-file shape the rest of the game
 //! uses** — bridge → provider → platform — with the third file the only one that
@@ -63,9 +66,11 @@ pub mod cloud_provider;
 pub mod cloud_save;
 pub mod config;
 pub mod dedicated;
+pub mod display;
 pub mod leaderboards;
 pub mod leaderboards_provider;
 pub mod media;
+pub mod metrics;
 pub mod mod_archive;
 pub mod mods;
 pub mod net;
@@ -73,6 +78,7 @@ pub mod net_firewall;
 pub mod net_invite;
 pub mod net_lobby;
 pub mod output;
+pub mod roster;
 pub mod runtime;
 pub mod screenshots;
 pub mod screenshots_provider;

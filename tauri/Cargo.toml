@@ -12,7 +12,8 @@
 # Electron shell keeps by hand (its window-state.ts takes the displays as an
 # argument precisely so it needs no Electron).
 #
-# See ../docs/tauri-migration.md for the four phases this tree is walking.
+# See ../README.md for the tree, and ../../docs/desktop-shells.md for how the
+# two desktop wrappers are held against each other.
 
 [workspace]
 members = ["shell", "src-tauri"]

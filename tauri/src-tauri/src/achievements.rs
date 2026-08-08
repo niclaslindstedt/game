@@ -123,7 +123,7 @@ impl AchievementsProvider for SteamAchievements {
         if !overlay_loaded() {
             output::info(
                 "steam achievements: no overlay in this process, so there is no board to open \
-                 (see docs/tauri-migration.md)",
+                 (see tauri/README.md)",
             );
             return false;
         }

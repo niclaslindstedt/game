@@ -21,8 +21,8 @@
 //             is not in the path — which is the one property Electron's
 //             `MessagePort` bought and the only one worth paying for.
 //
-// **WHY THE WEBSOCKET WON**, since this is the decision phase 3 exists to make
-// (`docs/tauri-migration.md`). The alternatives were Tauri's own IPC with a
+// **WHY THE WEBSOCKET WON** (`docs/desktop-shells.md` records the same
+// argument). The alternatives were Tauri's own IPC with a
 // binary channel, which puts the shell's event loop between the simulation and
 // the screen for every frame — the exact cost the `MessagePort` was chosen to
 // avoid — and a `SharedArrayBuffer` ring, which needs COOP/COEP on the game's

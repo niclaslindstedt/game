@@ -360,11 +360,11 @@ console.log(`✓ depot → ${depot}`);
  * Electron's are `adastrail-<version>-<os>-<arch>.<ext>`; these are
  * `adastrail-<version>-tauri-<os>-<arch>.<ext>`.
  *
- * That is also what makes phase 4 a real comparison rather than a thought
- * experiment: the two builds are downloadable from the same release page, so
- * the install-size and cold-start numbers the decision turns on are measured by
- * anybody who wants to, from artifacts nobody staged. The suffix stays for
- * exactly as long as both shells exist.
+ * That is also what makes the comparison real rather than a thought
+ * experiment: both builds are downloadable from the same release page, so the
+ * install-size and cold-start numbers the choice between them turns on can be
+ * measured by anybody, from artifacts nobody staged. The suffix stays for
+ * exactly as long as both wrappers exist — see docs/desktop-shells.md.
  *
  * Renamed AFTERWARDS rather than configured, because the bundler's own
  * `artifactName` is per-target and several of these targets do not honour one.

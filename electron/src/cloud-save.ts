@@ -19,8 +19,12 @@ import { cloudProvider, type CloudProvider } from "./cloud-provider";
 
 /** The iCloud / Saved Games key the blob lives under. Versioned so a future
  * format that can't be merged by old builds can move to its own key rather
- * than being mis-read by them. */
-const SAVE_KEY = "gis-save-v1";
+ * than being mis-read by them.
+ *
+ * Exported for ./roster.ts, which reads the same key from the command line —
+ * a second copy of the string there would be a verification tool that could
+ * pass while looking at the wrong file. */
+export const SAVE_KEY = "gis-save-v1";
 
 /** A message from the web side (already parsed; `__gisCloud` checked). */
 export type CloudRequest = {

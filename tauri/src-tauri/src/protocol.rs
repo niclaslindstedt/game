@@ -45,7 +45,7 @@ pub fn webroot_dir(app: &AppHandle) -> PathBuf {
 /// The bundle's resource directory, or `None` when this is a checkout.
 ///
 /// **THE TEST IS THE SITE'S OWN `index.html`**, and it is the same test
-/// [`webroot_dir`] made before phase 3 gave the resource directory three more
+/// [`webroot_dir`] made before the resource directory grew three more
 /// tenants (the session server, the mod toolchain, the Node runtime). They
 /// cannot be told apart by looking for a file each, because a build packaged
 /// without multiplayer legitimately has no server in there — but every packaged

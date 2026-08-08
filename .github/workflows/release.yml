@@ -306,11 +306,10 @@ jobs:
   # THE SAME PRODUCT IN THE OTHER SHELL, onto the same release page.
   #
   # `tauri/` is a second desktop wrapper around the identical site
-  # (docs/tauri-migration.md), and it is NOT the shipping build — that decision
-  # belongs to phase 4, after the two have been played side by side. It attaches
-  # its downloads here anyway, and that is the whole point: **the numbers the
-  # decision turns on — install size, cold start — are then measured by anybody
-  # who wants to, on their own machine, from artifacts nobody staged.**
+  # (docs/desktop-shells.md), and it is NOT the shipping build. It attaches its
+  # downloads here anyway, and that is the whole point: **the numbers the choice
+  # between the two turns on — install size, cold start — are then measured by
+  # anybody who wants to, on their own machine, from artifacts nobody staged.**
   #
   # **THE `-tauri` SUFFIX IS THE MECHANISM, NOT A DECORATION.** Both shells
   # package the same product at the same version for the same platforms, so
@@ -414,8 +413,8 @@ jobs:
   # **`desktop-tauri` is deliberately NOT in that list.** It is not the
   # shipping build, so a Rust toolchain failing on one runner must not hold
   # back a release whose actual downloads are ready — the Tauri artifacts are
-  # a comparison aid until phase 4 says otherwise, and they can be uploaded to
-  # a published release afterwards exactly as they are here.
+  # a comparison aid until that changes (docs/desktop-shells.md), and they can
+  # be uploaded to a published release afterwards exactly as they are here.
   publish:
     needs: [release, desktop]
     runs-on: ubuntu-latest

@@ -107,7 +107,7 @@ fn the_overlay_switch_overrides_the_stamps_both_ways() {
 
 #[test]
 fn no_webview_can_carry_valves_overlay() {
-    // The phase-2 finding, pinned. If this ever stops being true it is a
+    // The finding, pinned. If this ever stops being true it is a
     // platform change worth a failing test and a paragraph, not a quiet flip.
     assert_eq!(
         overlay_support(Webview::WkWebView),
@@ -129,7 +129,7 @@ fn the_overlay_line_names_the_webview_and_where_to_read_more() {
     ] {
         let line = overlay_explanation(webview, true);
         assert!(line.contains(name), "{name} must be named");
-        assert!(line.contains("docs/tauri-migration.md"));
+        assert!(line.contains("tauri/README.md"));
         assert!(
             line.contains("Steam started this process"),
             "and how this launch began"

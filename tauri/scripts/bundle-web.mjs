@@ -6,7 +6,7 @@
 //
 // The peer of `electron/scripts/bundle-web.mjs`, and deliberately a peer rather
 // than a shared module: the two shells are being compared against each other
-// (see docs/tauri-migration.md), so each owns its own copy of the site and
+// (see docs/desktop-shells.md), so each owns its own copy of the site and
 // neither can leave the other holding a stale one. If Tauri ships and Electron
 // is retired, one of these files goes away with it.
 //

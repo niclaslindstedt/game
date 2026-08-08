@@ -25,8 +25,8 @@
       double-clicked — a confusing failure to debug.
 
     device.audio-input
-      VOICE CHAT records the player's microphone (phase 3, and stamped per build
-      — shell/src/capabilities.rs). The hardened runtime refuses the device
+      VOICE CHAT records the player's microphone (stamped per build —
+      shell/src/capabilities.rs). The hardened runtime refuses the device
       without this entitlement, and refuses it SILENTLY: `getUserMedia` rejects
       with a permission error indistinguishable from the player having said no.
       It pairs with NSMicrophoneUsageDescription in the bundle's Info.plist, and

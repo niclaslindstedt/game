@@ -24,11 +24,11 @@ Two further layers wrap that same built site for the storefronts — `native/`
 (Expo, App Store / Play Store) and `electron/` (Steam, Windows/macOS/Linux).
 Neither is an npm workspace member, neither is imported by the engine or the
 app, and both answer the same four bridge protocols over their own transport;
-see their sections below. A third, `tauri/`, is a SECOND desktop shell being
-built out beside `electron/` — same site, same protocols, a native webview
-instead of a bundled Chromium. It is mid-migration and ships nothing;
-[`tauri-migration.md`](tauri-migration.md) is its plan and the section below is
-its shape.
+see their sections below. A third, `tauri/`, is a SECOND desktop shell beside
+`electron/` — same site, same protocols, the platform's own webview instead of a
+bundled Chromium. It is complete and ships its own downloads, but `electron/` is
+still the release package; [`desktop-shells.md`](desktop-shells.md) is how the
+two are held against each other and the section below is this one's shape.
 
 A fifth tree, `server/`, is the engine compiled for **Node** rather than for a
 browser: the authoritative session server multiplayer runs the simulation in.
@@ -2126,16 +2126,17 @@ the Steam Deck runs the real binary rather than the Windows one under Proton.
 relevant push, and packages the depot directories dispatch-only. See
 `electron/README.md`.
 
-### `tauri/` — the second desktop shell (mid-migration)
+### `tauri/` — the second desktop shell
 
 A **second** wrapper around the same built site, beside `electron/` rather than
 instead of it, so the two can be run back to back and judged against each other.
 Tauri uses the platform's own webview — WebView2, WKWebView, WebKitGTK — which
 takes the install from ~180 MB to about a tenth of that and the idle memory with
 it, at the cost of three rendering engines instead of one, no `utilityProcess`
-and no `steamworks.js`. Whether it takes over as the release package is decided
-after playtesting; the four phases, the open design questions and the criteria
-are [`tauri-migration.md`](tauri-migration.md).
+and no `steamworks.js`. Whether it takes over as the release package turns on
+measurements; the criteria, the tools and the outcomes are
+[`desktop-shells.md`](desktop-shells.md), and the machine-checked pairing
+between the two trees is [`desktop-parity.md`](desktop-parity.md).
 
 It is **Rust, in two crates**, and that split is the design rather than a layout
 preference: `tauri/shell/` holds every DECISION the shell makes (webroot
@@ -2157,11 +2158,16 @@ time, so an installed copy has nothing to edit. `pwa/` needed no change to run
 inside it: `__GIS_PLATFORM__` stays `steam`, because it is the same product on
 the same store, and `__GIS_SHELL__` says which binary for a bug report.
 
-**At phase 3 it runs the whole game and carries every platform seam** — cloud
-save, achievements, screenshots, mods, multiplayer and voice — plus a package
+**It runs the whole game and carries every platform seam** — cloud save,
+achievements, screenshots, mods, multiplayer and voice — plus a package
 (`make desktop-tauri-steam` produces a depot directory, the peer of
 `make desktop-steam`) and a `-tauri`-suffixed download on every release page.
 What it does NOT have is the Steam overlay, and that is not coming; see below.
+
+Two extra launch modes belong to it and to no other tree: `--dedicated` runs the
+session server in the terminal, and `--roster-check` prints what the platform
+cloud is holding — which is what reduces "a roster crosses between the two
+desktop builds" from an evening's play to one command per build.
 
 **The two features that need a second process needed a second pipe, and the
 page never learned.** Electron forks the compiled session server with
@@ -2190,7 +2196,7 @@ screenshot key on this build. Which means the game has to file its own copy into
 the Steam screenshot library (Electron leaves that to the overlay), and means
 leaderboards stay absent for a different reason than they do there — the Rust
 binding can publish a score, but there is no board on this platform anybody could
-open. `tauri/README.md` has the table; `tauri-migration.md` has the argument.
+open. `tauri/README.md` has the argument; `desktop-shells.md` has the table.
 
 ### `server/` — the session server (the fifth layer)
 

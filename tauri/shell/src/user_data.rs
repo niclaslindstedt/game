@@ -10,11 +10,11 @@
 //! own name — the same word `electron/src/user-data.ts` declares, for the same
 //! reason.
 //!
-//! **During the migration it is `adastrail-tauri`, not `adastrail`, and that is
-//! deliberate.** Both desktop shells are installable at once while the two are
-//! being compared (see `docs/tauri-migration.md`), and two running games sharing
-//! one `window-state.json` and one `launch.log` is a fight neither can win. If
-//! phase 4 decides Tauri ships, the name becomes `adastrail` and this one joins
+//! **It is `adastrail-tauri` rather than `adastrail`, and that is deliberate.**
+//! Both desktop wrappers are installable at once while the two are being
+//! compared (`docs/desktop-shells.md`), and two running games sharing one
+//! `window-state.json` and one `launch.log` is a fight neither can win. The day
+//! only one of them is left, the name becomes `adastrail` and this one joins
 //! [`LEGACY_DIR_NAMES`] — which is exactly the machinery below, used as
 //! designed.
 //!
@@ -23,7 +23,7 @@
 //! under the bundle identifier. A window rect is ours; a hero is the web
 //! platform's. That is also why the electron→tauri switch cannot carry a roster
 //! across on disk at all — Chromium's storage is not WebKit's — and why cloud
-//! save (phase 2) is the only bridge between them.
+//! save is the only bridge between them.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,8 +34,8 @@ pub const APP_DIR_NAME: &str = "adastrail-tauri";
 /// The names an install could already be using, newest guess first.
 ///
 /// Empty today: this shell has shipped under exactly one name. It is not an
-/// oversight and not dead code — it is the seam phase 4's rename walks through,
-/// and [`plan_user_data_move`] is already written and tested against it.
+/// oversight and not dead code — it is the seam a rename walks through, and
+/// [`plan_user_data_move`] is already written and tested against it.
 pub const LEGACY_DIR_NAMES: &[&str] = &[];
 
 /// This app's own directory under the OS's app-data root.
