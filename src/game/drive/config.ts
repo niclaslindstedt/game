@@ -33,13 +33,20 @@ export const DRIVE_UNITS = {
   /**
    * METRES PER WORLD PIXEL — the conversion the whole impact model rests on.
    *
-   * Pinned from the top end rather than measured off a sprite: 120 mph is
-   * 53.6 m/s and the car does that at `DRIVE.topSpeedPx` px/s, so a world pixel
-   * is 53.6/624 of a metre. Read the other way it is a sanity check on the art
+   * Pinned from the top end rather than measured off a sprite: 280 km/h is
+   * 77.8 m/s and the car does that at `DRIVE.topSpeedPx` px/s, so a world pixel
+   * is 77.8/905 of a metre. Read the other way it is a sanity check on the art
    * — the 48-px car comes out at 4.1 m long, which is a real estate wagon, and
    * the 26-px lane at 2.2 m, which is a real (narrow, town) lane.
+   *
+   * THE NUMBER HAS NOT MOVED, and that is the point of writing it as a ratio.
+   * It was pinned at 53.6/624 when the wagon stopped at 120 mph and it is
+   * 77.8/905 now that it does not — the same 0.0860 m to the pixel, because
+   * what changed is how fast the car goes rather than how big the world is. A
+   * scale that moved with the top speed would have quietly restated the length
+   * of every car, the width of every lane and the energy of every collision.
    */
-  mPerPx: 53.6 / 624,
+  mPerPx: 77.8 / 905,
   /** The wagon, kerb weight (kg). A thirty-year-old estate with a boot full of
    * somebody's tools. The one mass no rung touches: it is the hero's own car. */
   carMassKg: 1600,
@@ -67,7 +74,7 @@ export const DRIVE_UNITS = {
    * the collision is solved on the SWEEP (the speed the car's surface runs at
    * the thing), and a car parked dead still is met at the hero's WHOLE speed,
    * where one dawdling along in the same direction is met at the difference. At
-   * 120 mph that is 624 px/s against about 400 — and the energy the crumple
+   * the top end that is 905 px/s against about 680 — and the energy the crumple
    * absorbs goes as the SQUARE of it, so the parked one does about two and a
    * half times the damage for the same geometry. Nobody had to write that down;
    * it falls out of `solveImpact`.
@@ -92,11 +99,26 @@ export const DRIVE_UNITS = {
 
 export const DRIVE = {
   // ── THE THROTTLE ──────────────────────────────────────────────────────────
-  /** Top speed, world px/s — the 120 mph the whole minigame is scaled to. */
-  topSpeedPx: 624,
-  /** …and the same number in the unit the HUD says out loud, so the dial and
-   * the physics can never drift apart. */
-  topSpeedMph: 120,
+  /**
+   * TOP SPEED, world px/s — the 280 km/h the whole minigame is scaled to.
+   *
+   * IT IS A CEILING RATHER THAN A TARGET, and on an undamaged wagon the AIR
+   * gets there first: the drivetrain runs out of pull within a pixel or two of
+   * this number (`solvedTopSpeedPx`), so what stops you at the far end of a long
+   * empty straight is drag, not a clamp. What the clamp is genuinely for is the
+   * damaged car, whose top end is cut by its own wear (`wearTopSpeedLoss`).
+   */
+  topSpeedPx: 905,
+  /**
+   * …and the same number in the unit the HUD says out loud, so the dial and the
+   * physics can never drift apart.
+   *
+   * THE DIAL IS IN MILES AN HOUR AND THE CAR WAS BUILT IN KILOMETRES, which is
+   * the ordinary state of affairs for an imported estate and is why this is 174
+   * rather than a round number: 280 km/h is what the brochure claimed, and 174
+   * is what the instrument in front of the driver says about it.
+   */
+  topSpeedMph: 174,
   //
   // HOW HARD THE CAR PULLS IS NOT A NUMBER HERE ANY MORE. It used to be three
   // of them — `accelPx`, `brakePx`, `coastPx` — and the road read NONE of them:
@@ -107,15 +129,17 @@ export const DRIVE = {
   // own engine, gearbox and frontal area now (`drivetrain.ts`): weakest at
   // idle, strongest in the middle of a gear, dipping at every upshift, and
   // running out against the air somewhere just short of the top of the dial.
-  // Nought to sixty takes the better part of ten seconds and the twenty after
-  // that takes longer still, which is what a heavy thing with a tired engine
-  // does — and it is also the whole cost of a hit, since the seconds of throttle
-  // it takes to win back what a body took off you is the punishment, landing
+  // Nought to sixty takes five seconds, a hundred takes ten, and the last thirty
+  // miles an hour take the better part of a minute — because drag goes as the
+  // square of speed and the power to beat it as the CUBE, so the far end of the
+  // dial is somewhere you spend a straight getting to rather than somewhere you
+  // arrive. That is also the whole cost of a hit: the seconds of throttle it
+  // takes to win back what a body took off you is the punishment, landing
   // without a single point of damage having to be explained.
   /**
    * HOW FAST A BROKEN CAR GOES. Top speed is scaled by `1 - wear * this`, so a
-   * half-dead wagon tops out around 85 and a car on the point of failing barely
-   * breaks 65. It is the damage the player FEELS long before the breakdown —
+   * half-dead wagon tops out around 125 and a car on the point of failing barely
+   * breaks 95. It is the damage the player FEELS long before the breakdown —
    * without it, wear is an invisible number that ends the run without warning.
    */
   wearTopSpeedLoss: 0.45,
@@ -944,6 +968,63 @@ export const DRIVE = {
      * knocked off is what happens. */
     riderScale: 0.06,
     /**
+     * MEETING SOMEBODY NOSE TO NOSE — the one collision on this road that has a
+     * guaranteed picture rather than a rolled one.
+     *
+     * WHY IT IS ITS OWN RULE AND NOT A HIGHER RUNG. Everything else in this file
+     * is a LADDER: hit it harder and more happens. That is right for the road in
+     * general and it is wrong for the one event the player is deliberately
+     * aiming at, because a ladder makes the biggest thing he can do come out
+     * differently every time he does it. A head-on in the opposing lane is the
+     * most expensive mistake and the most deliberate act available out here —
+     * it costs the wagon more than anything else that is not a bus — and what it
+     * buys has to be the same every single time, or it is not a thing the player
+     * can decide to do.
+     *
+     * SO IT IS TWO FACTS, BOTH REQUIRED. The blow is SQUARE (this is a nose
+     * meeting a nose, not a wing catching one) and the other car is COMING THE
+     * OTHER WAY, which is what makes it a head-on rather than a rear-ending: the
+     * two close at the sum of both speeds and the energy is off the top of every
+     * scale here. A parked car answers the first and never the second, which is
+     * correct — furniture met square is a shunt, however hard.
+     */
+    headOn: {
+      /** How square, on `Impact.squareness`. Well above the ordinary eject's:
+       * this is the nose of one car on the nose of another. */
+      squareness: 0.78,
+      /** …and how fast the other one has to be coming AT you (world px/s of its
+       * own travel, against the hero's heading) before it is oncoming rather
+       * than merely stationary. A wreck rolling to a halt is not traffic. */
+      closingPx: 40,
+      /**
+       * HOW MUCH ENERGY IT STILL TAKES, as a fraction of `traffic.wreckJoules`
+       * — well under the ordinary bar, because "always" is the whole point of
+       * the rule and a head-on is above this before either driver has done
+       * anything. It is a floor against the pathological case (nosing into
+       * oncoming traffic at a walking pace) rather than a threshold anybody
+       * meets on the way up.
+       */
+      joules: 0.06,
+      /**
+       * …AND IT IS OVER QUICKLY. The share of the ordinary throw's lift a
+       * head-on's pieces leave with.
+       *
+       * UNDER 1 ON PURPOSE, which reads backwards until you watch one. The
+       * hardest blow on the road throwing things the HIGHEST is what the ladder
+       * would do and it is the wrong picture entirely: a torso lobbed three
+       * hundred pixels into the air hangs there for two seconds, and a body
+       * hanging in the air is a body nothing is happening to. What a head-on
+       * actually looks like is FLAT AND FAST — everything leaves at the closing
+       * speed, along the road, and is gone off the top of the frame before the
+       * player has finished flinching. The energy goes into `carry`, where it
+       * can be seen.
+       */
+      liftScale: 0.55,
+      /** …and how much MORE of the car's own travel they leave with, on top of
+       * `carry`. This is where the lift above went. */
+      carryScale: 1.3,
+    },
+    /**
      * HOW FAR THEY GO. `carry` is the share of the closing speed a thrown body
      * leaves with along the road — over 1 on purpose, because a body that left
      * at the car's own speed would hang exactly in front of the bumper for the
@@ -1045,6 +1126,10 @@ export const DRIVE = {
      * everywhere is the model being consistent rather than a second change: a
      * leg driven a few mph slower is a leg whose collisions carry less energy,
      * and energy is what breaks the car.)
+     *
+     * THE ABSOLUTE FIGURES ABOVE ARE HISTORY — they are the before-and-after of
+     * THIS knob, on the 120 mph wagon, and are kept because they are what it was
+     * set against. The re-engined car's own bench is on `verdict.quickMs`.
      */
     crowdSpeedLossScale: 1.5,
     /**
@@ -1165,6 +1250,58 @@ export const DRIVE = {
      * draws one whole person and one empty canvas.
      */
     cutBand: { from: 0.3, to: 0.62 },
+    /**
+     * THE FORCE AT WHICH LUMPS START COMING OFF SOMEBODY — the gib line, in the
+     * same units as everything else here (1 is the split).
+     *
+     * IT IS NOT ZERO, AND IT WAS. The chunk ladder below reads "at the split
+     * line, and per unit of force beyond it" and always has; the code measured
+     * it from a standstill instead, so `base` was paid out at any force at all
+     * and a wagon rolling into somebody at walking pace threw a length of gut
+     * onto the tarmac. That is the one thing on this road that read as a bug
+     * rather than as a collision.
+     *
+     * AND IT IS ABOVE THE SPLIT RATHER THAN ON IT, which is what turns two rungs
+     * into three. A bumper going THROUGH somebody and a bumper taking them APART
+     * are different amounts of violence and the road can afford to say so:
+     *
+     *   under the split (~68 mph)   KNOCKED DOWN. A body in the road and blood
+     *                               on the tarmac, and nothing else at all.
+     *   the split to here           TAKEN IN TWO. Two halves with their cut
+     *                               faces open, dragged and run over — still no
+     *                               shower of anybody's insides.
+     *   past here (~86 mph)         OPENED UP. The halves, and what was between
+     *                               them, all over the road.
+     *
+     * The middle rung is the one this number buys, and it is the rung a player
+     * spends most of a leg in.
+     */
+    chunkForce: 1.6,
+    /**
+     * …AND THE CEILING EVERY LADDER IN THIS FILE IS READ AGAINST.
+     *
+     * The same clamp `wreckForce` carries, for the same reason and against a
+     * worse case. `remainForce` prices a collision in a BODY's currency, and a
+     * CAR collision priced in it comes out at ten to fifty rather than at one to
+     * six — so an occupant posted through a windscreen had every ladder here
+     * evaluated a decade past the end of its own scale, left the car at nine
+     * thousand pixels a second, and was still climbing when the road forgot him.
+     * Nothing that should happen stops happening: eight is comfortably past a
+     * person met dead square at the top of the dial, which is the worst thing
+     * this road can do to somebody on foot.
+     */
+    maxForce: 8,
+    /**
+     * …and the fastest anything torn off a body may be thrown UPWARD (px/s).
+     *
+     * A SEPARATE CEILING BECAUSE IT IS A SEPARATE FAILURE. Against the tumble's
+     * own 620 px/s² a piece leaving at this speed is at the top of its arc in
+     * under a second and back on the tarmac inside two, which is a collision;
+     * one leaving at three times it spends six seconds off the top of the frame,
+     * which is nothing at all — the player watches an empty road and then finds
+     * a torso in it. Every burst is over quickly or it is not a burst.
+     */
+    maxLiftPx: 560,
     /** How many lumps are torn off on the way past — at the split line, and per
      * unit of force beyond it, capped. Small on purpose: the big pieces are the
      * two halves and the shower is the app's own burst; these are the few
@@ -1192,7 +1329,7 @@ export const DRIVE = {
      * per unit of force past it, capped.
      *
      * This is the number the whole feature is built to buy. At the top end the
-     * car covers 624 px a second, so a second of drag is a screen and a half of
+     * car covers 905 px a second, so a second of drag is two screens of
      * tarmac with somebody underneath it — which is what puts the long red
      * streak on the road behind a driver who was going too fast, and what makes
      * that streak a record of HIS speed rather than a decal.
@@ -1335,13 +1472,17 @@ export const DRIVE = {
     /**
      * The trip time (ms) under which he made unusually good going, and over
      * which he plainly dawdled. Both sit outside the band a driver actually
-     * lands in, so neither is the line a player gets by default — RE-MEASURED
-     * with the lanes populated, which cost the leg about eight seconds a rung:
-     * the auto-driver now takes 80 s on EASY and 114 s on JESUS (40 seeds a
-     * rung), and a reckless straight line gets EASY home in 70.
+     * lands in, so neither is the line a player gets by default.
+     *
+     * RE-MEASURED AFTER THE RE-ENGINING (`make drive-bench`, 24 seeds a rung).
+     * A car that reaches its cruise in a third of the time saves seconds at
+     * every crossing without going any faster down the straights, so the whole
+     * band moved in and tightened: the auto-driver now takes 79 s on EASY and
+     * 105 s on JESUS, against 80 and 114 before. The lines follow it — a player
+     * who is TOLD he dawdled has to have actually dawdled.
      */
-    quickMs: 76000,
-    slowMs: 118000,
+    quickMs: 74000,
+    slowMs: 112000,
     /** The body count that turns "roads are rough out this way" into "bit
      * bumpy tonight". Scaled to the crowd the road actually carries: across
      * every rung the auto-driver arrives with 64 to 100 on the count (a busier

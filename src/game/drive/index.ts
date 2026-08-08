@@ -194,7 +194,7 @@ export {
   shedCount,
   tipsOver,
 } from "./crush.ts";
-export { remainForce, splitsBody } from "./remains.ts";
+export { gibsBody, remainForce, splitsBody } from "./remains.ts";
 // WHAT THE LEG WAS WORTH — the arcade score the high-score board ranks, twinned
 // with `driveVerdict` below (score.ts explains why both live here).
 export { drivePar, driveScore, driveTripMs } from "./score.ts";
@@ -307,7 +307,7 @@ export function restartDrive(previous: DriveState): DriveState {
  * Order matters in exactly one place and it is the obvious one: the car MOVES
  * before anything is asked whether it was hit, so a collision is resolved
  * against where the bumper actually got to rather than where it was a frame
- * ago. At 624 px/s a tick's travel is ten pixels — the width of a person — so
+ * ago. At 905 px/s a tick's travel is fifteen pixels — wider than a person — so
  * testing before the move would let the crowd pass through the car at speed,
  * which is the one bug that would make the whole minigame read as broken.
  */
@@ -377,7 +377,7 @@ export function stepDrive(
   // whole impact model standing on it are axis-aligned, and the body is a side
   // profile that never comes about, so the car crosses lanes instead of
   // changing its heading — which is also what a lane change looks like from
-  // above at 120 mph. Authority scales with ground speed: a stopped car does
+  // above at speed. Authority scales with ground speed: a stopped car does
   // not change lanes.
   //
   // IT IS `applyCarWheel`, THE RUN'S OWN (src/game/vehicles.ts), and that is

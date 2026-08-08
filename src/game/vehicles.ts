@@ -627,7 +627,7 @@ export function exitCar(state: GameState, hero: Player): boolean {
  * stops reading as the same car that pulled out of the bay. So the body's
  * physics lives here, taking a car and a timestep, and BOTH callers run it:
  * `stepVehicles` for a parked or pottering car inside a run
- * (src/game/vehicles.ts) and `stepDrive` for the same car at 120 mph
+ * (src/game/vehicles.ts) and `stepDrive` for the same car at 174 mph
  * (src/game/drive/index.ts).
  *
  * Semi-implicit Euler throughout — stable at the fixed step — and every clamp
@@ -971,7 +971,7 @@ export function carControl(car: CarVehicle, input: GameInput): CarControl {
 
 /**
  * Apply one tick of pedal and wheel to a car — the shared half of the physics,
- * so the garage's pottering car and the minigame's 120 mph one answer the
+ * so the garage's pottering car and the minigame's 174 mph one answer the
  * controls identically. The CALLER owns the top speed (`topSpeed`), because
  * that is the one thing the two genuinely disagree about: a wagon pulling out of
  * a bay is capped at a crawl and the same wagon on the open road is not.

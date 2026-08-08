@@ -70,17 +70,18 @@ local FRESH = "#ff9d4a"
 -- car did on purpose.
 --
 -- IT CANNOT BE MEASURED OFF THE REDLINE, which is what it used to be. The box
--- lets go at about seven tenths of the face, so a ladder hung off `rpmFrac`
--- would sit at COOL for the entire trip and the dial would never say anything
--- at all.
+-- lets go at nine tenths of the face, so a ladder hung off `rpmFrac` would only
+-- ever fire in the last moments before a shift and the dial would say nothing
+-- for the whole of every gear.
 local SHIFT_WARN_FRAC = 0.86
 
 --- …and where the crank is genuinely past what the engine has. The paint on the
 -- face opens here too (`hud/elements/drive_speedo.yaml`), so the colour and the
 -- printed band are the same line rather than two numbers somebody has to keep
 -- in step. On an undamaged wagon the needle never arrives: there is no gear
--- above fifth and fifth runs out of road a thousand revs short of it.
-local REDLINE_FRAC = 0.8
+-- above fifth, and fifth runs out of road speed against the air about five
+-- hundred revs short of it.
+local REDLINE_FRAC = 0.94
 
 --- …and where the DAMAGE dial stops being a scratch. The wagon takes cosmetic
 -- knocks the whole way down and a dial that alarms at the first one teaches the

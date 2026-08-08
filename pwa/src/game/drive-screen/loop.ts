@@ -21,7 +21,7 @@
 // what lets the gallery play a 200 ms collision at an eighth speed with the gore,
 // the sparks and the physics all stretching together.
 
-import { DRIVE_OUTCOME, type DriveState } from "@game/core";
+import { DRIVE_OUTCOME, gibsBody, type DriveState } from "@game/core";
 
 import { type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -159,30 +159,38 @@ export function drainDrive(
   say?: (id: string, nowMs: number) => void,
 ): void {
   for (const strike of drive.strikes) {
-    bursts.push({
-      // The burst's force is priced off the collision's own energy, so a body
-      // taken at 120 comes apart harder than one clipped at 40 — the physics
-      // reaches the picture rather than being re-decided here.
-      //
-      // WHAT IT IS NOW FOR IS THE INSTANT, and only that. The body's own PIECES
-      // are the sim's (`DriveRemain`) and are drawn where the road is holding
-      // them; this is the shower of what was inside, thrown at the point of
-      // contact and gone in a second — which is the one part of a collision
-      // that genuinely has no afterwards.
-      burst: goreBurst(
-        "gib",
-        Math.atan2(strike.vel.y, strike.vel.x),
-        Math.min(6, 1 + strike.joules / 30000),
-        1,
-        "humanoid",
-        strike.id,
-        "blood",
-      ),
-      x: strike.pos.x,
-      y: strike.pos.y,
-      bornMs: drive.ms,
-      sprite: bodySprite(strike.kind, strike.variant),
-    });
+    // THE SHOWER ONLY HAPPENS IF ANYTHING CAME OFF — and that is the SIM's
+    // answer (`gibsBody`, the same line `burstBody` tears its chunks past),
+    // never a second threshold invented out here. Below it a body is knocked
+    // down and bleeds and nothing more: the splash and the mark on the wagon
+    // below still land, because a car that was barely moving still puts a
+    // person on the tarmac and still comes away with them on the bumper.
+    if (gibsBody(strike.joules)) {
+      bursts.push({
+        // The burst's force is priced off the collision's own energy, so a body
+        // taken at 120 comes apart harder than one clipped at 40 — the physics
+        // reaches the picture rather than being re-decided here.
+        //
+        // WHAT IT IS NOW FOR IS THE INSTANT, and only that. The body's own
+        // PIECES are the sim's (`DriveRemain`) and are drawn where the road is
+        // holding them; this is the shower of what was inside, thrown at the
+        // point of contact and gone in a second — which is the one part of a
+        // collision that genuinely has no afterwards.
+        burst: goreBurst(
+          "gib",
+          Math.atan2(strike.vel.y, strike.vel.x),
+          Math.min(6, 1 + strike.joules / 30000),
+          1,
+          "humanoid",
+          strike.id,
+          "blood",
+        ),
+        x: strike.pos.x,
+        y: strike.pos.y,
+        bornMs: drive.ms,
+        sprite: bodySprite(strike.kind, strike.variant),
+      });
+    }
     // …the splash it puts on the tarmac, which is the one mark on this road
     // laid at the moment of a collision rather than by something travelling…
     splashAt(gore, strike.pos.x, strike.pos.y, splashForce(strike.joules));

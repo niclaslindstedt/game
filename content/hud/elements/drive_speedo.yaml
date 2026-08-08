@@ -12,15 +12,15 @@
 # disagree.
 #
 # THE TACHOMETER'S FACE RUNS TO THE REDLINE AND THE NEEDLE NEVER GETS THERE, and
-# that is the point rather than an oversight. The box changes up at three
-# thousand three of a forty-six hundred redline
-# (`src/game/drive/drivetrain.ts`), so the crank lives between one and three —
-# the bottom two thirds of the dial — exactly as it does in a car anybody has
-# driven. The red at the end is PAINT (`zone:`), printed on the instrument the
-# way it is on a real one: it is there with the engine off, and it says where
-# the trouble would be rather than where it is. A tachometer whose scale ended
-# at the shift point, with the needle slamming into it eight times a minute, is
-# what this dial used to be and what nothing on any road does.
+# that is the point rather than an oversight. The box changes up at sixty-three
+# hundred of a seven thousand redline (`src/game/drive/drivetrain.ts`) and fifth
+# runs out of road speed at about six thousand one, so the crank works in the top
+# third of the dial when the car is being driven properly and still never
+# touches the paint. The red at the end is PAINT (`zone:`), printed on the
+# instrument the way it is on a real one: it is there with the engine off, and it
+# says where the trouble would be rather than where it is. A tachometer whose
+# scale ended at the shift point, with the needle slamming into it eight times a
+# minute, is what this dial used to be and what nothing on any road does.
 #
 # WHERE THE ARC GOES AMBER is a judgement rather than a read, so it lives in
 # `hud/scripts/drive.lua` and a mod can move it — the warning worth having is
@@ -46,10 +46,10 @@ children:
     track: "#1b2431"
 
   # THE INNER ARC: the revs against the redline, on the same sweep so the two
-  # can be read against each other at a glance. The last fifth of the face is
-  # painted red — from about 3700 rpm of a 4600 dial, which is where a lump like
-  # this one has nothing left to give and a good way above anything the gearbox
-  # will ever ask for.
+  # can be read against each other at a glance. The last sixteenth of the face is
+  # painted red — from 6580 rpm of a 7000 dial, which is above both the shift
+  # point (6300) and the revs fifth tops out at (about 6100), so the needle gets
+  # near the paint at every upshift and into it at none.
   - id: rev_arc
     kind: gauge
     class: drive-dial-ring drive-dial-ring-inner
@@ -61,7 +61,7 @@ children:
       script: drive.rpm_color
     track: "#161d28"
     zone:
-      from: 0.8
+      from: 0.94
       color: "#4a1d24"
 
   # …and the face inside them: the number and its unit.

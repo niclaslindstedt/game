@@ -43,7 +43,7 @@ import type { InView } from "./world.ts";
 
 /**
  * HOW FAST THE TWO ROLL FRAMES MAY ALTERNATE (Hz) — the ceiling that stops a
- * wheel at 120 mph strobing into a vibration. Fourteen is fast enough to read
+ * wheel at 174 mph strobing into a vibration. Fourteen is fast enough to read
  * as a blur and slow enough to be a rate rather than an aliasing artefact.
  */
 const WHEEL_SPIN_HZ = 14;

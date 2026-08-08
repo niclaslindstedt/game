@@ -997,6 +997,7 @@ export {
   laneAt,
   laneCenter,
   planTown,
+  gibsBody,
   remainForce,
   resetTownPlan,
   resolveDriveBotTuning,
