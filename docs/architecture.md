@@ -2157,11 +2157,28 @@ time, so an installed copy has nothing to edit. `pwa/` needed no change to run
 inside it: `__GIS_PLATFORM__` stays `steam`, because it is the same product on
 the same store, and `__GIS_SHELL__` says which binary for a bug report.
 
-**At phase 1 it runs the whole game and nothing else** — no Steam, cloud save,
-achievements, screenshots, mods or multiplayer. Every one of those protocols is
+**At phase 2 it runs the whole game and carries the Steam seams** — cloud save,
+achievements, screenshots, and a package (`make desktop-tauri-steam` produces a
+depot directory, the peer of `make desktop-steam`). What it does NOT have is
+mods, multiplayer and voice, which are phase 3, and each of those protocols is
 routed to a seam that logs which phase fills it in, so a mid-migration build
-explains itself rather than leaving the page to wait out a timeout. See
-`tauri/README.md`.
+explains itself rather than leaving the page to wait out a timeout.
+
+The platform seams are the **same three-file shape** the rest of the game uses —
+bridge → provider → platform — with the split falling exactly on the crate
+boundary: the bridge and the provider are decisions and live in `shell/`, and
+only the third file talks to Steam. So a protocol's whole behaviour, including
+the failure paths a real Steam client cannot be asked to produce on demand, is
+covered by `make tauri-test`.
+
+Two of the platform answers came out DIFFERENT from the Electron shell's, and
+both differences are downstream of one fact: **Valve's overlay cannot be
+injected into a platform webview**, so there is no Shift+Tab and no Steam
+screenshot key on this build. Which means the game has to file its own copy into
+the Steam screenshot library (Electron leaves that to the overlay), and means
+leaderboards stay absent for a different reason than they do there — the Rust
+binding can publish a score, but there is no board on this platform anybody could
+open. `tauri/README.md` has the table; `tauri-migration.md` has the argument.
 
 ### `server/` — the session server (the fifth layer)
 

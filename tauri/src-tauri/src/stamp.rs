@@ -20,6 +20,16 @@
 
 use adastrail_shell::capabilities::{read_build_capabilities, BuildCapabilities, BuildStamp};
 
+/// WHICH STEAM APP this binary talks to, baked in by the packager.
+///
+/// Not one of the capability switches — it is not something a build MAY do, it
+/// is who the build IS — but it travels the same way and for the same reason:
+/// an installed copy must not depend on the environment it happens to be
+/// started in. `adastrail_shell::steam::steam_app_id` lets the launch
+/// environment override it anyway, which is how a checkout points itself at
+/// somebody's test app.
+pub const STEAM_APP_ID: Option<&str> = option_env!("GIS_STEAM_APP_ID");
+
 /// What this binary was stamped with, exactly as the packager spelled it.
 pub const STAMP: BuildStamp<'static> = BuildStamp {
     stamped: option_env!("GIS_STAMP_CAPABILITIES"),

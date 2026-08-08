@@ -32,6 +32,8 @@ export default [
       // scripts are ordinary repo tooling and are linted here like any other.
       "tauri/webroot/**",
       "tauri/target/**",
+      "tauri/release/**",
+      "tauri/node_modules/**",
       "tauri/src-tauri/**",
       "coverage/**",
     ],

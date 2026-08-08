@@ -94,11 +94,19 @@ the embedded site and is the ONLY correct target for a store build, and the
 shell around the same site, being built out beside `electron/` while the two are
 compared, and it may or may not take over as the release package. It is **Rust**,
 so `make test` and `make lint` do not reach it at all: it is checked by
-`make tauri-test` (its whole decision layer, no GUI libraries needed) and
-`make tauri-lint` (clippy at zero warnings), which a change to that tree runs.
-→ **`docs/tauri-migration.md`** for the four phases, `tauri/README.md` for the
-tree. Nothing in `src/` or `pwa/` may learn it exists: the page is told
-`__GIS_PLATFORM__ = "steam"` because it is the same product on the same store.
+`make tauri-test` (its decision layer, and DELIBERATELY only that crate — no GUI
+libraries and no Steam SDK needed) and `make tauri-lint` (clippy at zero
+warnings over both crates, which does need the webview libraries). A change to
+that tree runs both. It packages itself with `make desktop-tauri-steam` /
+`make desktop-tauri-dist`, reading the SAME five `GIS_ENABLE_*` switches the
+Electron targets do — one vocabulary, two shells.
+→ **`docs/tauri-migration.md`** for the four phases (1 and 2 are shipped; 3 is
+multiplayer, mods and the snapshot pipe), `tauri/README.md` for the tree.
+Nothing in `src/` or `pwa/` may learn it exists: the page is told
+`__GIS_PLATFORM__ = "steam"` because it is the same product on the same store —
+and **not one line of `pwa/` changed to give this shell cloud save,
+achievements or screenshots**, which is the whole test of whether the bridge
+seam was drawn in the right place.
 
 ## Commit and PR conventions — the `commit` skill owns them
 
@@ -216,9 +224,12 @@ above it, and `docs/architecture.md` has the module-by-module map:
 - **`tauri/` — the second desktop wrapper, mid-migration.** The same site again,
   in a native webview instead of a bundled Chromium. **Rust, in two crates, and
   the split is the design**: `shell/` is every DECISION and depends on no GUI
-  (so its whole suite runs anywhere), `src-tauri/` is every EFFECT. Each module
-  in `shell/` is the named peer of a file in `electron/src/`. It ships nothing
-  and is not the desktop build. → `docs/tauri-migration.md`, `tauri/README.md`
+  and no Steam SDK (so its whole suite runs anywhere), `src-tauri/` is every
+  EFFECT. Each module in `shell/` is the named peer of a file in
+  `electron/src/` — including all four platform seams, whose bridge and
+  provider are decisions and whose only Steam-touching file is the third.
+  It ships nothing and is not the desktop build.
+  → `docs/tauri-migration.md`, `tauri/README.md`
 - **`server/` — the session server.** The engine compiled for **Node**, so a
   multiplayer session simulates in a process of its own rather than in the
   renderer; the same file IS the standalone dedicated server. It imports
@@ -672,7 +683,7 @@ are regenerated in the same commit as the content change that moves them:
 - Tests live in `tests/` and run with **Vitest** (`make test`, or `npx vitest run tests/engine/game_test.ts` for a single file). The include pattern (`tests/**/*_test.ts`) lives in `vitest.config.ts` — keep it in lockstep with the naming rule.
 - **`tests/engine/` vs `tests/content/`.** Engine-rule suites live in `tests/engine/` and run against **synthetic fixtures** (`tests/engine/fixtures.ts`, plain ids like `test_level`/`test_minion`) installed via the engine's `registerDefs` hook — so they survive content deletion. This-game content suites (levels, story, bosses, sprite atlas) live in `tests/content/` and use the shipped catalogs via the root `tests/helpers.ts`; a sequel deletes and rewrites them. Lib tests (`chiptune`, `synth`, `output`, …) stay at the `tests/` root. Rule of thumb: if a test asserts an engine rule, it belongs in `tests/engine/` and must not reference a shipped content id (only `fists`, the engine's built-in EMPTY HAND id, is shared).
 - No test-specific setup is needed today; engine tests run in a plain Node environment.
-- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test --workspace` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries; the root suite does not reach them.
+- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test -p adastrail-shell` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries and no Steam SDK; the root suite does not reach them. The app crate has no test target of its own — that is what the split buys, and a test that would need one is a decision sitting in the wrong crate.
 
 ## Source file size
 

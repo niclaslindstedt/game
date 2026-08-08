@@ -113,6 +113,7 @@ make test                                # the full test suite
 | `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
 | `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
 | `make tauri` / `make tauri-test`      | The second desktop shell (Tauri) — see `tauri/README.md` and `docs/tauri-migration.md`      |
+| `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)   |
 | `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                    |
 
 **Verify with `make test`, never with a bare `npx vitest run`.** The `make`
@@ -133,7 +134,7 @@ here are drift-tested against a fresh build.
 | `server/`        | The session server for co-op — the engine compiled for Node                                         |
 | `native/`        | The App Store / Play Store shell (Expo, its own dependency tree)                                    |
 | `electron/`      | The Steam shell (its own dependency tree, its own tests)                                            |
-| `tauri/`         | A second desktop shell in Rust, built out beside `electron/` — ships nothing yet                    |
+| `tauri/`         | A second desktop shell in Rust, built out beside `electron/` — packages, but ships nothing yet      |
 | `docs/`          | Reference documentation                                                                             |
 | `.agent/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills`                                |
 

@@ -48,6 +48,7 @@ tauri/target/
 tauri/src-tauri/icons/
 tauri/src-tauri/gen/
 tauri/node_modules/
+tauri/release/
 
 # Node
 node_modules/

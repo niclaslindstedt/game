@@ -35,6 +35,12 @@ other side of the ledger:
 Each of those is a phase-2 or phase-3 problem with a known shape, and each is
 named at its own seam in the code rather than left to be discovered.
 
+Phase 2 settled the bottom two, and neither landed where the row above
+predicted: the Rust binding turned out **richer** than `steamworks.js` (it binds
+screenshots and leaderboards, which the Node one does not), and the overlay
+turned out **impossible** rather than merely different. Both are worked through
+in that phase's own section below.
+
 ## The one architectural difference, and why it is the right one
 
 The Electron shell's main process is TypeScript, so its pure logic (path
@@ -94,36 +100,80 @@ window onto the game, and it says so.
 
 ---
 
-## Phase 2 — the platform seams: Steam, and a package
+## Phase 2 — the platform seams: Steam, and a package ✅
 
-The point at which the tauri build becomes something a player could be handed.
+**Shipped.** The point at which the tauri build becomes something a player could
+be handed — four of the six bridge protocols answered for real, and a package
+that comes out of the tree rather than out of somebody's `cargo build`.
 
 - **`steamworks` (the Rust crate) behind the same three-file shape** the other
-  shells use — bridge → provider → platform — so the web side never learns which
-  binding answered: `cloud-save` / `achievements` / `leaderboards`, their
-  providers, and the Steam implementations of the first two. Leaderboards stay
-  argued-and-absent, exactly as in `electron/src/leaderboards-provider.ts`.
-- **The handshake and its two pre-ready obligations**: `restart_app_if_necessary`
-  before the event loop, and the overlay. The overlay is the open question of
-  this phase — Valve's overlay hooks a rendering surface, and the switch
-  `steamworks.js` exposes for Electron (`electronEnableSteamOverlay`) is
-  Chromium-specific. Expect the honest answer to be "no overlay on some
-  platforms", stated at the seam like the missing leaderboards rather than
-  worked around.
-- **Screenshots** — the pictures folder, the clipboard, revealing the file. The
-  provider argues the Steam half exactly as Electron's does.
-- **Packaging.** `tauri.conf.json` bundle targets, the capability stamp (the peer
-  of `electron-builder.config.cjs` reading `GIS_ENABLE_*`), macOS signing and
-  entitlements, and a **depot directory** rather than an installer.
+  shells use — bridge → provider → platform. The bridge and the provider are
+  DECISIONS and live in `shell/` with their whole protocol tested against a fake;
+  only the third file talks to Steam. Cloud save, achievements, leaderboards and
+  screenshots all have all three.
+- **The handshake**, owned by exactly one module (`src-tauri/src/steam.rs`) so
+  the four features share one `Client`, with `restart_app_if_necessary` before
+  the event loop and a callback pump on its own thread.
+- **`libsteam_api` beside the executable**, placed by `build.rs` with an rpath
+  that says to look there — the difference between a build that links and a
+  build that runs.
+- **Packaging.** `scripts/package.mjs`, the peer of
+  `electron-builder.config.cjs`: it refuses an unstamped build and refuses a
+  Spacewar app id, builds the site with the developer tooling stripped, and
+  produces a **depot directory** (or, on the `standalone` profile, the
+  platform's own installers and archives). macOS is never signed with nothing —
+  ad hoc by default, a Developer ID when one is given — with its own
+  entitlements and the microphone usage string.
 - `make desktop-tauri-steam` / `make desktop-tauri-dist`, alongside the existing
-  targets rather than instead of them.
+  targets rather than instead of them, reading the SAME five `GIS_ENABLE_*`
+  switches. `build.rs` declares them as build inputs, which `option_env!` cannot
+  do for itself — without that, a `dist` build made straight after a `steam` one
+  would ship the depot build's capabilities.
+
+### The three findings, and two of them inverted
+
+The phase's own point was to find out what the platform actually allows. It
+disagreed with the prediction twice:
+
+| Seam             | Electron's answer                       | Here                                                                    |
+| ---------------- | --------------------------------------- | ----------------------------------------------------------------------- |
+| **Overlay**      | injected, via two Chromium switches     | **impossible**, on all three desktops — as predicted, and it is worse   |
+| **Screenshots**  | no provider; Valve's overlay files them | **a provider**, because there is no overlay to file them                |
+| **Leaderboards** | no provider; the binding cannot         | still no provider — but the binding CAN, so the reason changed entirely |
+
+- **The overlay cannot be injected, and the reason is structural.**
+  `electronEnableSteamOverlay()` is not a request to draw anything: it appends
+  `in-process-gpu` and `disable-direct-composition`, which leave a swap chain in
+  the process Steam has hooked. A platform webview has no such command line —
+  WebView2's GPU work happens in a browser process this shell does not start,
+  and WKWebView and WebKitGTK composite through the system compositor. The
+  verdict is stated per webview in `shell/src/steam.rs` and said out loud in
+  every launch log, and the runtime probe (`overlay_loaded`) is what the two
+  features that would use one ask before claiming to have opened anything.
+- **So screenshots grew a provider that Electron deliberately does not have.**
+  Electron's argument for not calling `AddScreenshotToLibrary` is that the
+  overlay already files a copy off the same key. That argument does not survive
+  here — with no overlay, a picture the player took would never reach their
+  Steam library at all — and the Rust binding, unlike `steamworks.js`, binds
+  ISteamScreenshots. Two shells, opposite conclusions, one principle: the
+  picture ends up where the player expects it.
+- **Leaderboards stay absent, for one reason instead of two.** The Rust binding
+  carries the whole leaderboard surface, so the API gap Electron records is
+  simply not a fact about this shell. What stands is the other half: Steam has
+  no leaderboard page in its overlay, the game deliberately ships no board of
+  its own, and this shell has no overlay either — so a provider could publish
+  scores into a board no player could ever look at. `shell/src/leaderboards_provider.rs`
+  now says what it would take: a board screen in `pwa/`, then four members.
 
 **Exit test:** a packaged build that plays the whole campaign offline, syncs a
-roster through Steam Cloud, and unlocks an achievement.
+roster through Steam Cloud, and unlocks an achievement. **Still needs a human
+with a Steam client** — every decision above is covered by
+`cargo test -p adastrail-shell`, and nothing in a test suite can prove a
+handshake with a program that has to be running.
 
 ---
 
-## Phase 3 — multiplayer, mods, and the hard pipe
+## Phase 3 — multiplayer, mods, and the hard pipe ← next
 
 Everything that needs a second process, and the one design problem this
 migration actually has.

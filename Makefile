@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -267,17 +267,64 @@ desktop-dist:
 tauri:
 	npm run tauri -- $(ARGS)
 
-# The decision layer's whole test suite — no GUI libraries needed for it.
+# The decision layer's whole test suite, and DELIBERATELY only that crate:
+# `adastrail-shell` depends on no GUI toolkit and no Steam SDK, so this target
+# runs on an ordinary CI runner with a Rust toolchain and nothing else. The app
+# crate has no tests of its own by design (every decision lives in the library),
+# and compiling it needs the platform's webview development libraries — which is
+# what `make tauri-lint` and `make tauri` are for.
 tauri-test:
 	npm run tauri:test
 
-# clippy at zero warnings, the peer of `make lint` for this tree.
+# clippy at zero warnings, the peer of `make lint` for this tree. This one DOES
+# need the webview libraries: it checks both crates.
 tauri-lint:
 	npm run tauri:lint
 
 # rustfmt in place, the peer of `make fmt`.
 tauri-fmt:
 	npm --prefix tauri run fmt
+
+# ---------------------------------------------------------------------------
+# Packaging the Tauri shell
+# ---------------------------------------------------------------------------
+#
+# The peers of `desktop-steam` / `desktop-dist` above, reading the SAME five
+# capability switches — one vocabulary drives both shells, so nobody has to
+# learn a second one. Here they are baked into the machine code at compile time
+# (`tauri/src-tauri/src/stamp.rs`) rather than written into a packaged manifest,
+# which is the one place this shell is stricter than the Electron one: an
+# installed copy has nothing to edit.
+#
+# `make desktop-tauri-steam` produces a DEPOT DIRECTORY, because that is what
+# Steam uploads and its client owns installing. `make desktop-tauri-dist`
+# produces the platform's own installers and archives for a plain download.
+#
+# A store build must also set GIS_STEAM_APP_ID — the packaging script refuses to
+# ship a build still pointed at Valve's Spacewar test app unless it is told to.
+#
+# NOTE: this tree ships NOTHING yet. `electron/` is still the release package
+# and the decision is phase 4's — see docs/tauri-migration.md.
+
+.PHONY: desktop-tauri-steam desktop-tauri-dist
+
+desktop-tauri-steam:
+	GIS_STAMP_CAPABILITIES=1 \
+	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),1) \
+	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),1) \
+	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),1) \
+	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),1) \
+	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),1) \
+	npm run tauri:package -- $(ARGS)
+
+desktop-tauri-dist:
+	GIS_STAMP_CAPABILITIES=1 \
+	GIS_ENABLE_MULTIPLAYER=$(or $(ENABLE_MULTIPLAYER),0) \
+	GIS_ENABLE_MODS=$(or $(ENABLE_MODS),0) \
+	GIS_ENABLE_UPNP=$(or $(ENABLE_UPNP),0) \
+	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
+	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
+	npm run tauri:package:dist -- $(ARGS)
 
 # ---------------------------------------------------------------------------
 # Catching a branch up with main

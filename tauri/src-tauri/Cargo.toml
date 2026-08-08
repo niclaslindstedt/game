@@ -27,13 +27,29 @@ tauri-build = { version = "2", features = [] }
 adastrail-shell = { path = "../shell" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tauri = { version = "2", features = [] }
+# `image-png` is what lets a screenshot reach the CLIPBOARD: the clipboard takes
+# an RGBA `tauri::image::Image`, and the page hands the shell a PNG. Without the
+# feature `Image::from_bytes` does not exist, and SHARE would be a button that
+# reveals a file and sends nothing.
+tauri = { version = "2", features = ["image-png"] }
 # The fatal-error box, and the one way a credit link reaches the player's own
 # browser instead of replacing the game. Both are called from RUST only — they
 # are deliberately absent from `capabilities/default.json`, so the page cannot
-# reach either.
+# reach either. `opener` also reveals a screenshot in the file manager.
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
+# SHARE's other half: the picture on the clipboard, which is the part that
+# actually sends it somewhere. Rust-only, like the two above.
+tauri-plugin-clipboard-manager = "2"
+# STEAM. The peer of `steamworks.js` on the Electron side, and a materially
+# richer one: it binds ISteamScreenshots and the whole leaderboard surface,
+# neither of which the Node binding has — see `shell/src/screenshots_provider.rs`
+# and `shell/src/leaderboards_provider.rs` for what each of those changed.
+#
+# It vendors Valve's redistributable SDK, so `cargo build` needs no
+# STEAM_SDK_LOCATION and no separate download — which is what keeps a checkout
+# buildable with a Rust toolchain and the platform's webview libraries alone.
+steamworks = "0.13"
 
 [lints.rust]
 unsafe_code = "forbid"
