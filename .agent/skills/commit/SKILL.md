@@ -7,9 +7,14 @@ description: "Commit staged changes, push the branch, and create or update a PR 
 
 This skill handles the full workflow: verify quality gates → commit → push → create or update a PR. Use the repository command below; keep the manual steps only as a fallback when the command itself is being repaired.
 
-It is also the owner of this repo's **commit and PR conventions** and of the
-**merge-conflict procedure** — both below, and both pointed at from `AGENTS.md`
-rather than restated there.
+It is also the owner of this repo's **commit and PR conventions** — below, and
+pointed at from `AGENTS.md` rather than restated there.
+
+**Merges, rebases and the conflicts they raise are the `conflict` skill's**, not
+this one's. Load it whenever a branch has to move onto another — a conflict has
+appeared, a PR is reported un-mergeable, or you are told to rebase or catch a
+branch up with `main`. It owns the backup branch, the always-fetch rule and the
+one-command `node scripts/sync-branch.mjs`.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs commit --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -213,34 +218,18 @@ EOF
 
 Re-evaluate the PR title and description to reflect the **combined** scope of all commits on the branch, then `gh pr edit --title ... --body ...` with the same template.
 
-## Resolving merge conflicts — cut a backup branch FIRST
+## If the branch has to move onto main — load the `conflict` skill
 
-**Before starting a merge or a rebase that may conflict, park the branch:**
+A merge, a rebase, an un-mergeable PR, or "catch this up with main" is that
+skill's job and not this one's:
 
 ```sh
-git branch -f backup/<branch-name>-premerge HEAD    # then merge
+node scripts/sync-branch.mjs      # park at a backup branch, FETCH, then rebase
 ```
 
-A conflicted working tree is the most fragile state a repo gets into, and the
-commands that feel like "let me just look at something else for a second" —
-`git stash`, `git checkout <ref> -- .`, `git reset`, adding a worktree — will
-happily throw the resolution away, clear `MERGE_HEAD`, and leave no obvious way
-back. With the backup branch in place the recovery is one line
-(`git reset --hard backup/<branch-name>-premerge`) instead of an archaeology
-session in the reflog; without it, any unpushed work in the merge is gone.
-
-Delete the backup once the merge is committed, verified, and pushed — it is a
-seatbelt, not a branch anybody should review.
-
-Two rules that go with it, both learned the same way:
-
-- **Never run an exploratory command against the working tree mid-conflict.**
-  To see what another ref says, ask git directly (`git show <ref>:<path>`,
-  `git diff <ref>`) — those read without touching a file. If a build genuinely
-  has to run on another ref, `git worktree add` a SEPARATE directory, and do it
-  before the merge starts, never during it.
-- **Resolve, `git add`, and commit in one unbroken stretch.** Don't leave a
-  conflicted tree parked across unrelated work.
+It carries the seatbelt, the always-fetch rule, the commands that silently
+destroy a resolution, and how to resolve honestly. Come back here to commit and
+push once the tree is clean.
 
 ## Key Reminders
 

@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -247,3 +247,72 @@ desktop-dist:
 	GIS_ENABLE_VOICE=$(or $(ENABLE_VOICE),0) \
 	GIS_ENABLE_LICENSED=$(or $(ENABLE_LICENSED),0) \
 	npm --prefix electron run $(DESKTOP_SCRIPT)
+
+# ---------------------------------------------------------------------------
+# The Tauri desktop shell
+# ---------------------------------------------------------------------------
+#
+# A SECOND desktop wrapper around the same built website, beside electron/ and
+# not instead of it — it may take over as the release package once mature, and
+# that call is made after playtesting. `docs/tauri-migration.md` is the plan and
+# `tauri/README.md` is the tree.
+#
+# It is Rust, so it has its own toolchain and its own linter, and none of it is
+# on the root suite's path: `make test` and `make lint` stop at this tree's edge
+# exactly as they stop at electron/'s. These targets are how it is checked.
+
+.PHONY: tauri tauri-test tauri-lint tauri-fmt
+
+# Build the site into tauri/webroot/, compile the shell, and launch it.
+tauri:
+	npm run tauri -- $(ARGS)
+
+# The decision layer's whole test suite — no GUI libraries needed for it.
+tauri-test:
+	npm run tauri:test
+
+# clippy at zero warnings, the peer of `make lint` for this tree.
+tauri-lint:
+	npm run tauri:lint
+
+# rustfmt in place, the peer of `make fmt`.
+tauri-fmt:
+	npm --prefix tauri run fmt
+
+# ---------------------------------------------------------------------------
+# Catching a branch up with main
+# ---------------------------------------------------------------------------
+#
+# Park the branch at backup/<branch>-premerge, FETCH the base, then rebase (or
+# merge) onto what was just fetched — in that order, which is the whole point.
+# A rebase onto a `main` fetched an hour ago re-raises conflicts that are
+# already settled upstream, and raises them again on the next attempt.
+#
+# Load the `conflict` skill before running these. It owns the seatbelt, the
+# always-fetch rule, the commands that silently destroy a resolution, and how
+# to resolve honestly rather than by picking a side.
+
+.PHONY: sync sync-merge sync-continue sync-abort sync-cleanup
+
+# The default: rebase onto the freshly fetched origin/main.
+# `make sync ARGS="--onto develop"` for a different base.
+sync:
+	node scripts/sync-branch.mjs $(ARGS)
+
+# Merge instead of rebasing — for a branch on an open PR somebody may have
+# checked out, where rewriting history under them is rude and hard to undo.
+sync-merge:
+	node scripts/sync-branch.mjs --merge $(ARGS)
+
+# After resolving and staging. A rebase replays one commit at a time, so this
+# may be needed more than once.
+sync-continue:
+	node scripts/sync-branch.mjs --continue
+
+# Give up: aborts whichever operation git actually has half-done.
+sync-abort:
+	node scripts/sync-branch.mjs --abort
+
+# Drop the seatbelt — only once the sync is verified AND pushed.
+sync-cleanup:
+	node scripts/sync-branch.mjs --cleanup

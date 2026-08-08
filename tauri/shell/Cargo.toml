@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE DECISION LAYER. Nothing in here may depend on `tauri`, on a GUI toolkit,
+# or on a window existing — see ../Cargo.toml for why that is structural rather
+# than a preference. A `tauri` dependency added here is the review comment.
+
+[package]
+name = "adastrail-shell"
+description = "The Tauri desktop shell's decision layer — every choice it makes, with no GUI behind any of them."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

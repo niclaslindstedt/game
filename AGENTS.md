@@ -79,7 +79,7 @@ that needs fresh content calls ONE of those three and then does its own work; it
 must never chain a second entry point that rebuilds again (which is what made
 `make lint` compile the whole content tree three times over).
 
-**The two store shells are OUTSIDE the npm workspace**, each with its own
+**The store shells are OUTSIDE the npm workspace**, each with its own
 dependency tree (and `electron/` with its own `tsc` and its own vitest, so the
 root suite stops at its edge). The root `package.json` forwards to them with
 `npm --prefix`: `npm run native:*` and `npm run electron:*`, listed with what
@@ -90,12 +90,22 @@ the embedded site and is the ONLY correct target for a store build, and the
 `native:ios*` scripts run `expo prebuild` first so a change to
 `native/app.config.js` re-syncs instead of shipping a stale native project.
 
+**`tauri/` IS A THIRD SUCH TREE AND SHIPS NOTHING YET** — a second desktop
+shell around the same site, being built out beside `electron/` while the two are
+compared, and it may or may not take over as the release package. It is **Rust**,
+so `make test` and `make lint` do not reach it at all: it is checked by
+`make tauri-test` (its whole decision layer, no GUI libraries needed) and
+`make tauri-lint` (clippy at zero warnings), which a change to that tree runs.
+→ **`docs/tauri-migration.md`** for the four phases, `tauri/README.md` for the
+tree. Nothing in `src/` or `pwa/` may learn it exists: the page is told
+`__GIS_PLATFORM__ = "steam"` because it is the same product on the same store.
+
 ## Commit and PR conventions — the `commit` skill owns them
 
 **Load the `commit` skill before committing or opening a PR.** It carries the
 whole procedure and the rules that used to sit here: conventional commits, the
-PR title becoming the squashed commit on `main`, the merge-conflict backup
-branch, and the two that get skipped most —
+PR title becoming the squashed commit on `main`, and the two that get skipped
+most —
 
 - **THE PUSH AND THE PR ARE ONE STEP.** A pushed branch with no PR is
   invisible: nothing runs the PR-only checks, nobody is asked to look, and the
@@ -104,6 +114,28 @@ branch, and the two that get skipped most —
   then `make fmt-check`, `make lint`, the changeset call) run BEFORE the commit
   is written; the minutes-long ones (`make test`, `make build`) run ALONGSIDE
   the push, not before it.
+
+## Merges and rebases — the `conflict` skill owns them
+
+**Load the `conflict` skill whenever a branch has to move onto another one** — a
+merge conflict has appeared, a PR is reported un-mergeable, or somebody says
+"rebase" / "sync" / "catch this up with main". One command does it:
+
+```sh
+node scripts/sync-branch.mjs        # park at a backup branch, FETCH, then rebase
+```
+
+Two rules from it are worth carrying here, because both are cheap and both are
+how work gets lost:
+
+- **CUT THE BACKUP BRANCH FIRST** (`backup/<branch>-premerge`). A conflicted
+  tree is the most fragile state a repo gets into, and `git stash`, `git reset`,
+  `git checkout <ref> -- .` and adding a worktree each throw the resolution
+  away. With the backup, recovery is one line.
+- **A REBASE ALWAYS FETCHES FIRST.** Rebasing onto a `main` fetched an hour ago
+  re-raises conflicts already settled upstream — and raises them again on the
+  next attempt, because the ref is still stale. There is no rebase in this repo
+  that starts anywhere but a fresh fetch.
 
 ## Changelog fragments
 
@@ -181,6 +213,12 @@ above it, and `docs/architecture.md` has the module-by-module map:
   is keyed by origin, and an opaque origin would orphan the player's whole
   roster). Its own dependency tree, its own `tsc`, its own vitest.
   → `electron/README.md`
+- **`tauri/` — the second desktop wrapper, mid-migration.** The same site again,
+  in a native webview instead of a bundled Chromium. **Rust, in two crates, and
+  the split is the design**: `shell/` is every DECISION and depends on no GUI
+  (so its whole suite runs anywhere), `src-tauri/` is every EFFECT. Each module
+  in `shell/` is the named peer of a file in `electron/src/`. It ships nothing
+  and is not the desktop build. → `docs/tauri-migration.md`, `tauri/README.md`
 - **`server/` — the session server.** The engine compiled for **Node**, so a
   multiplayer session simulates in a process of its own rather than in the
   renderer; the same file IS the standalone dedicated server. It imports
@@ -476,6 +514,8 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 | Generic UI game components (Preact)                                 | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                   |
 | Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `src/` or `pwa/`                                                                                                        |
 | Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                |
+| The SAME concern in the Tauri shell — a DECISION                    | `tauri/shell/src/…` + a test in `tauri/shell/tests/*_test.rs`; a `use tauri::` here is the review comment                                                   |
+| The SAME concern in the Tauri shell — an EFFECT (window, IPC, ACL)  | `tauri/src-tauri/src/…`                                                                                                                                     |
 | The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                     |
 | A RULE the engine hands to a script                                 | `content/scripts/<id>.lua` + a hook in `src/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows               |
 | Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                               |
@@ -632,6 +672,7 @@ are regenerated in the same commit as the content change that moves them:
 - Tests live in `tests/` and run with **Vitest** (`make test`, or `npx vitest run tests/engine/game_test.ts` for a single file). The include pattern (`tests/**/*_test.ts`) lives in `vitest.config.ts` — keep it in lockstep with the naming rule.
 - **`tests/engine/` vs `tests/content/`.** Engine-rule suites live in `tests/engine/` and run against **synthetic fixtures** (`tests/engine/fixtures.ts`, plain ids like `test_level`/`test_minion`) installed via the engine's `registerDefs` hook — so they survive content deletion. This-game content suites (levels, story, bosses, sprite atlas) live in `tests/content/` and use the shipped catalogs via the root `tests/helpers.ts`; a sequel deletes and rewrites them. Lib tests (`chiptune`, `synth`, `output`, …) stay at the `tests/` root. Rule of thumb: if a test asserts an engine rule, it belongs in `tests/engine/` and must not reference a shipped content id (only `fists`, the engine's built-in EMPTY HAND id, is shared).
 - No test-specific setup is needed today; engine tests run in a plain Node environment.
+- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test --workspace` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries; the root suite does not reach them.
 
 ## Source file size
 
@@ -654,6 +695,7 @@ are regenerated in the same commit as the content change that moves them:
 | story or dialogue text (any line)                                      | `docs/manuscript.md`, with `docs/story.md` above it — load `update-story` |
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
 | the co-op architecture                                                 | `docs/multiplayer.md`                                                     |
+| the Tauri shell, or which phase of its migration is done               | `docs/tauri-migration.md`, `tauri/README.md`                              |
 | the mod format or SDK                                                  | `docs/modding.md`, `mod/FORMAT.md`, and `make mod-catalog` if ids moved   |
 | a scripting hook, or what a script may read                            | `docs/scripting.md`, `mod/FORMAT.md`, then `make mod-catalog`             |
 | Make targets / npm scripts                                             | `README.md` Usage, `CONTRIBUTING.md`, this file                           |
@@ -741,6 +783,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                                          |
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
+| The Tauri shell: the four phases, what is done, the open design questions                                             | `docs/tauri-migration.md`, then `tauri/README.md`                                   |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
 | Scripting: the hooks, the sandbox, what a script may read, adding one                                                 | `docs/scripting.md`                                                                 |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |
@@ -769,6 +812,7 @@ skill is the source of truth — load that, not a search of the tree.
 | Any spoken or written line                            | `update-story`                                          |
 | A MOD — creating one, or updating a published one     | `mod-authoring`                                         |
 | A PR's changelog fragment, or the `no-changelog` call | `changelog`                                             |
+| A merge conflict, a rebase, catching a branch up      | `conflict`                                              |
 
 ## Game development skills
 
@@ -818,7 +862,8 @@ Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone 
 | `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
 | `sync-oss-spec`    | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
 | `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
-| `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR and merge-conflict rules. |
+| `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR conventions.              |
+| `conflict`         | On a merge conflict, an un-mergeable PR, or any "rebase / sync / catch up with main" — the backup branch, the fetch, the resolve. |
 | `skill-reflection` | At BOTH ends of any session that loads a skill — read its lessons first, reflect them back into it before committing.             |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the baseline commit hash). Run a skill by loading its `SKILL.md` and following the discovery process and update checklist. The skill rewrites `.last-updated` at the end of a successful run, and improves itself in place when it discovers new mapping entries. The `maintenance` skill owns a **Registry** table listing every `update-*` skill — add a row whenever you create a new sync skill.

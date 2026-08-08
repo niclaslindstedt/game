@@ -40,6 +40,15 @@ electron/dist/
 electron/release/
 electron/node_modules/
 
+# The Tauri desktop shell (docs/tauri-migration.md). Same shape as electron/'s
+# above: the copied website, Cargo's output, the RGBA re-encode of the app icon
+# (the ART is pwa/public/), and Tauri's generated permission schemas.
+tauri/webroot/
+tauri/target/
+tauri/src-tauri/icons/
+tauri/src-tauri/gen/
+tauri/node_modules/
+
 # Node
 node_modules/
 dist/

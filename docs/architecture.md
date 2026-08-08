@@ -24,7 +24,11 @@ Two further layers wrap that same built site for the storefronts — `native/`
 (Expo, App Store / Play Store) and `electron/` (Steam, Windows/macOS/Linux).
 Neither is an npm workspace member, neither is imported by the engine or the
 app, and both answer the same four bridge protocols over their own transport;
-see their sections below.
+see their sections below. A third, `tauri/`, is a SECOND desktop shell being
+built out beside `electron/` — same site, same protocols, a native webview
+instead of a bundled Chromium. It is mid-migration and ships nothing;
+[`tauri-migration.md`](tauri-migration.md) is its plan and the section below is
+its shape.
 
 A fifth tree, `server/`, is the engine compiled for **Node** rather than for a
 browser: the authoritative session server multiplayer runs the simulation in.
@@ -2121,6 +2125,43 @@ the Steam Deck runs the real binary rather than the Windows one under Proton.
 `.github/workflows/desktop-build.yml` typechecks and tests the shell on every
 relevant push, and packages the depot directories dispatch-only. See
 `electron/README.md`.
+
+### `tauri/` — the second desktop shell (mid-migration)
+
+A **second** wrapper around the same built site, beside `electron/` rather than
+instead of it, so the two can be run back to back and judged against each other.
+Tauri uses the platform's own webview — WebView2, WKWebView, WebKitGTK — which
+takes the install from ~180 MB to about a tenth of that and the idle memory with
+it, at the cost of three rendering engines instead of one, no `utilityProcess`
+and no `steamworks.js`. Whether it takes over as the release package is decided
+after playtesting; the four phases, the open design questions and the criteria
+are [`tauri-migration.md`](tauri-migration.md).
+
+It is **Rust, in two crates**, and that split is the design rather than a layout
+preference: `tauri/shell/` holds every DECISION the shell makes (webroot
+resolution, window geometry, capability parsing, bridge routing) and depends on
+no GUI at all, while `tauri/src-tauri/` holds every EFFECT. So the whole
+decision layer is testable — `make tauri-test` — on a machine with no webview
+libraries installed, which is the Rust-shaped version of the discipline
+`electron/src/window-state.ts` keeps by hand. Each module in `shell/` is the
+named peer of a file in `electron/src/`, so a change to one shell is a visible
+gap in the other.
+
+Three things differ from the Electron shell and all three are platform facts
+rather than judgements: the origin is `game://localhost` (and
+`http://game.localhost` on Windows, which is how WebView2 maps a registered
+scheme); the page's globals arrive in an initialization script instead of a
+preload, with one command — `shell_post` — carrying the identical JSON the other
+shells carry; and the capability stamp is read with `option_env!` at compile
+time, so an installed copy has nothing to edit. `pwa/` needed no change to run
+inside it: `__GIS_PLATFORM__` stays `steam`, because it is the same product on
+the same store, and `__GIS_SHELL__` says which binary for a bug report.
+
+**At phase 1 it runs the whole game and nothing else** — no Steam, cloud save,
+achievements, screenshots, mods or multiplayer. Every one of those protocols is
+routed to a seam that logs which phase fills it in, so a mid-migration build
+explains itself rather than leaving the page to wait out a timeout. See
+`tauri/README.md`.
 
 ### `server/` — the session server (the fifth layer)
 

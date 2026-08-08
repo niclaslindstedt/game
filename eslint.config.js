@@ -26,6 +26,13 @@ export default [
       // dependency tree, its own tsc, its own output module (electron/src/
       // output.ts), and not part of the npm workspace.
       "electron/**",
+      // The Tauri desktop shell (docs/tauri-migration.md) is Rust, with its own
+      // linter: `cargo clippy` at zero warnings, run by `npm run tauri:lint`.
+      // Only its build output and the crates are ignored — its two Node build
+      // scripts are ordinary repo tooling and are linted here like any other.
+      "tauri/webroot/**",
+      "tauri/target/**",
+      "tauri/src-tauri/**",
       "coverage/**",
     ],
   },

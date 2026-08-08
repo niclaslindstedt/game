@@ -1,0 +1,19 @@
+{
+  "name": "adas-trail-tauri",
+  "version": "0.1.0",
+  "author": "Niclas Lindstedt <niclas@agilator.se>",
+  "description": "Desktop (Tauri) wrapper around the Ada's Trail PWA — bundles the game on-device and serves it from a private scheme. The second desktop shell, beside electron/; see docs/tauri-migration.md.",
+  "private": true,
+  "scripts": {
+    "icons": "node scripts/icons.mjs",
+    "icons:check": "node scripts/icons.mjs --check",
+    "bundle": "node scripts/bundle-web.mjs",
+    "bundle:copy": "node scripts/bundle-web.mjs --skip-build",
+    "build": "npm run icons && cargo build",
+    "start": "npm run build && cargo run --bin adastrail --",
+    "test": "cargo test --workspace",
+    "lint": "npm run icons && cargo clippy --workspace --all-targets -- -D warnings",
+    "fmt": "cargo fmt --all",
+    "fmt:check": "cargo fmt --all -- --check"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the game's own window may reach. DENY BY DEFAULT, with one plugin on the list: the renderer here is the whole game — a large web app with its own dependency tree — and it has no business holding a handle to the filesystem, the shell, the clipboard or a second window. Everything it legitimately needs travels down the one `shell_post` command instead, which is the same JSON protocol it already speaks to the phone app. Tauri's own permissions are ACL entries rather than a runtime handler, and this file is that list.",
+  "windows": ["main"],
+  "permissions": ["core:default", "dialog:default"]
+}
