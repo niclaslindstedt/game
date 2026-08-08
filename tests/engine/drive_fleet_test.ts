@@ -472,6 +472,45 @@ describe("people leaving vehicles", () => {
     expect(lift).toBeLessThan(DRIVE.gore.maxLiftPx);
   });
 
+  it("counts a head-on that does NOT write the car off — the shunt runs first", () => {
+    // THE ONE THE ORIGINAL TEST WALKED STRAIGHT PAST, and the reason it did is
+    // worth keeping: it staged a blow hard enough to WRITE THE CAR OFF, and a
+    // write-off ejects from inside `hurtTraffic` — which runs BEFORE `breakCar`
+    // gets to `shunt`. So the head-on test read a still-oncoming car and passed.
+    //
+    // Every softer head-on took the other path: shunt first, eject second. And a
+    // head-on punt REVERSES an oncoming car, so by the time the rule looked at
+    // `other.speed` the car was travelling the hero's own way and the whole
+    // thing quietly never fired — no halves, no glass gore, no spray, on the one
+    // collision the rule exists for.
+    //
+    // Staged deliberately UNDER the write-off line, which is the case that was
+    // broken and the case a player actually meets.
+    const state = drive();
+    floorIt(state, 5000);
+    const coming = createTraffic(
+      state.nextId++,
+      indexOf("traffic_suv"),
+      { x: state.car.pos.x + 90, y: state.car.pos.y },
+      -DRIVE.trafficSpeedPx.min,
+    );
+    state.traffic.push(coming);
+    state.car.speed = DRIVE.topSpeedPx * 0.4;
+    floorIt(state, 400);
+
+    // It survived as a vehicle — this is not the write-off path…
+    expect(coming.wrecked).toBe(false);
+    // …and it still emptied itself over the road.
+    expect(saidBy(state)).toContain("windscreenGore");
+    expect(coming.gore).toBe(1);
+    expect(state.remains.some((piece) => piece.part === "upper")).toBe(true);
+    expect(state.remains.some((piece) => piece.part === "chunk")).toBe(true);
+    // …and nobody was thrown out in one piece.
+    expect(state.pedestrians.filter((p) => p.kind === "driver")).toHaveLength(
+      0,
+    );
+  });
+
   it("does NOT count rear-ending somebody as a head-on", () => {
     // The other half of the rule, and the one that keeps it legible: a car
     // travelling the hero's own way is met at the DIFFERENCE of two speeds, so

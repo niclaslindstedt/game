@@ -121,9 +121,14 @@ function headOn(drive: DriveState, other: DriveTraffic, hit: Impact): boolean {
   const { headOn: rule } = DRIVE.eject;
   if (hit.squareness < rule.squareness) return false;
   if (hit.joules < DRIVE.traffic.wreckJoules * rule.joules) return false;
-  // `DriveTraffic.speed` is signed in world +x and `direction` is the hero's
-  // heading in the same frame, so a negative product is a closing pair.
-  return other.speed * drive.params.direction < -rule.closingPx;
+  // OFF THE IMPACT, NEVER OFF THE CAR. `Impact.approach` is what the other
+  // vehicle was doing along the hero's heading AT THE MOMENT OF CONTACT, and it
+  // has to come from there because `other.speed` no longer holds the answer by
+  // the time anybody can ask: `shunt` runs first and a head-on punt REVERSES an
+  // oncoming car outright. Read off the car, this test saw a vehicle travelling
+  // the hero's own way and returned false on precisely the collision it exists
+  // to catch — the whole rule silently never fired.
+  return hit.approach < -rule.closingPx;
 }
 
 /**
