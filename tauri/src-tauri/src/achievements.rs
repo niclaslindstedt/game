@@ -21,13 +21,14 @@
 //! developer choose each achievement's API name, so the game's own badge id IS
 //! the Steam id and both sides read the same names.
 //!
-//! **`show` is the one member that answers differently from the Electron peer,
-//! and it is the overlay's absence rather than a gap here.** Electron opens the
-//! overlay's ACHIEVEMENTS dialog; this shell has no overlay to open
-//! ([`adastrail_shell::steam::overlay_support`]), so the call is made only when
-//! the overlay is genuinely loaded and answers false otherwise. Reporting
-//! success for a board that never appeared would be worse than the row staying
-//! shut.
+//! **`show` opens the overlay's ACHIEVEMENTS dialog exactly as the Electron peer
+//! does — on a launch that HAS an overlay.** This shell earns one by giving
+//! Valve's injected library a surface of its own to draw on
+//! ([`adastrail_shell::steam::overlay_support`], [`crate::overlay`]), which is a
+//! per-launch and per-platform fact rather than a build-wide one. So the call is
+//! made only when the overlay is genuinely loaded, and the row answers false
+//! otherwise: reporting success for a board that never appeared would be worse
+//! than the row staying shut.
 
 use adastrail_shell::achievements_provider::{
     AchievementEntry, AchievementsPlayer, AchievementsProvider,

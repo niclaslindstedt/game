@@ -37,11 +37,11 @@ shell writes every launch there, INFO included, and keeps the previous one as
 
 Three lines in it answer most of these:
 
-| Line                              | What happened                                                                                           |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `another copy is already running` | A previous copy (possibly wedged) still holds the single-instance lock. End it in the task manager.     |
-| `no bundled website was found`    | Incomplete install, or a checkout that never ran `npm run electron` from the repo root.                 |
-| `child process gone: GPU`         | A graphics-driver problem. Launching with `GIS_STEAM_OVERLAY=0` rules out the Steam overlay's switches. |
+| Line                              | What happened                                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `another copy is already running` | A previous copy (possibly wedged) still holds the single-instance lock. End it in the task manager.                                                                               |
+| `no bundled website was found`    | Incomplete install, or a checkout that never ran `npm run electron` from the repo root.                                                                                           |
+| `child process gone: GPU`         | A graphics-driver problem. Launching with `GIS_STEAM_OVERLAY=0` rules out the Steam overlay — the Chromium switches on the Electron build, the decoy swap chain on the Tauri one. |
 
 If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
 read it again.

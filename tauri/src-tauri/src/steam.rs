@@ -173,11 +173,12 @@ pub fn steam_player_id() -> Option<String> {
 ///
 /// A RUNTIME probe rather than the compile-time verdict in
 /// [`adastrail_shell::steam::overlay_support`], and both are wanted: the verdict
-/// is what the launch log explains, and this is what the two features that would
-/// USE an overlay (the achievements board, the screenshot key) ask before
-/// claiming to have opened anything. Today it answers false on every desktop —
-/// but it answers it by asking, so the day the situation changes nothing here
-/// has to be remembered.
+/// is what the launch log explains, and this is what everything that USES an
+/// overlay (the achievements board, Shift+Tab) asks before claiming to have
+/// opened anything. It answers true on a Windows launch Steam started — the
+/// decoy surface is what gives the injected library something to draw on
+/// ([`crate::overlay`]) — and false on a player who turned the overlay off in
+/// Steam's own settings, which no shell gets a say in.
 pub fn overlay_loaded() -> bool {
     steam_client().is_some_and(|client| client.utils().is_overlay_enabled())
 }

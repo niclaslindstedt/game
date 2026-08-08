@@ -56,6 +56,24 @@ tauri-plugin-clipboard-manager = "2"
 # buildable with a Rust toolchain and the platform's webview libraries alone.
 steamworks = "0.13"
 
+# THE STEAM OVERLAY, and the one dependency in this tree that is deliberately
+# WINDOWS-ONLY.
+#
+# Valve's overlay hooks a swap chain in the game's own process, and a webview
+# shell has none — so the plugin opens a transparent, click-through window over
+# the game and presents empty frames into it for the hook to find. That is a
+# DXGI arrangement: the plugin is a graceful no-op everywhere else, and it brings
+# `wgpu` with it, which is minutes of compile and megabytes of binary on two
+# desktops that would get nothing for either. Hence the target gate rather than a
+# plain dependency, and `crate::overlay`'s `#[cfg(windows)]` halves beside it.
+#
+# `tauri/unstable` is the plugin's own requirement: the decoy is a RAW window
+# (no webview), which is behind that feature. Cargo unions features across
+# target-specific entries, so this adds it on Windows alone.
+[target.'cfg(windows)'.dependencies]
+tauri = { version = "2", features = ["unstable"] }
+tauri-plugin-steam-overlay-surface = "0.1"
+
 # THE MICROPHONE GATE's Linux half. WebKitGTK raises `permission-request` on the
 # webview and Tauri hands the handle out through `PlatformWebview::inner()`, so
 # this is the one of the three desktops where the refusal is the OPERATING

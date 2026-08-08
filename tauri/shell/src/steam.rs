@@ -22,10 +22,11 @@
 //!     player started the binary directly. Same call, same rule, same reason:
 //!     Steam's APIs need the client, and a process that is about to be replaced
 //!     must not go on to build a window. [`restart_wanted`] is the decision.
-//!  2. **The overlay** — and this is the open question the migration doc names.
-//!     Electron's `electronEnableSteamOverlay()` appends two CHROMIUM command
-//!     line switches. There is no such call for a platform webview, because
-//!     there is no such switch: see [`OverlaySupport`].
+//!  2. **The overlay** — which the migration doc called impossible here and
+//!     which now works, by a different route than Electron's. Electron appends
+//!     two CHROMIUM command line switches; a platform webview has no command
+//!     line, so this shell gives Valve's injected library a SURFACE OF ITS OWN
+//!     to hook instead: see [`OverlaySupport`] and [`overlay_plan`].
 //!
 //! There is a third ordering trap that is specific to the Rust binding and bites
 //! silently: `Client::init_app` STAMPS `SteamAppId` and `SteamGameId` into this
@@ -147,10 +148,8 @@ pub fn current_webview() -> Webview {
 
 /// WHETHER VALVE'S OVERLAY CAN DRAW OVER THIS WINDOW.
 ///
-/// **The answer is "not by anything this shell can do".** It is written down
-/// here, at the seam,
-/// because this is the file somebody opens when they ask why Shift+Tab does
-/// nothing over the Tauri build.
+/// It is written down here, at the seam, because this is the file somebody opens
+/// when they ask why Shift+Tab does or does not answer over the Tauri build.
 ///
 /// The overlay is not something a game switches on. It is a library Steam
 /// injects into the process, which hooks the graphics API the game presents its
@@ -158,50 +157,104 @@ pub fn current_webview() -> Webview {
 /// gets it for free precisely because it owns that surface.
 ///
 /// A webview shell does not own that surface — the webview does — and the two
-/// shells differ in what follows:
+/// shells reach the overlay from opposite ends:
 ///
 ///  - **Electron** exposes `electronEnableSteamOverlay()`, which is not a
 ///    request to draw anything: it appends the Chromium switches
 ///    `in-process-gpu` and `disable-direct-composition`, moving the GPU work
 ///    into the browser process and off the compositor path, which is what leaves
 ///    a swap chain in the process Steam has hooked. That is a CHROMIUM
-///    arrangement, reached through Chromium's own command line.
-///  - **A platform webview has no such command line.** WebView2 runs its GPU
-///    work in a browser process this shell does not start and cannot pass
-///    switches to; WKWebView composites through the system compositor; WebKitGTK
-///    the same. There is no supported switch, and nothing to fake one with —
-///    which is why this returns a verdict rather than a call.
+///    arrangement, reached through Chromium's own command line, and a platform
+///    webview has no such command line to reach.
+///  - **This shell gives the injected library a surface of its own.** A
+///    transparent, click-through, undecorated window is opened over the game's
+///    window and a thread presents EMPTY frames into it at vsync through a real
+///    in-process swap chain. Steam's hook finds that swap chain, composites the
+///    overlay into the frames it was already presenting, and the player sees the
+///    overlay over the game exactly as they would over a native title — because
+///    everywhere the overlay does not draw, the sheet is transparent and the
+///    webview shows through. The decoy is only VISIBLE while the overlay is
+///    open; the rest of the time it is hidden, and hidden means not presenting.
 ///
-/// So the honest answer is the one the migration doc predicted: **no overlay on
-/// this shell**, on any of the three desktops, stated at the seam rather than
-/// worked around. What it costs the player is Shift+Tab, the in-game browser and
-/// Steam's own screenshot key — and the last of those is why
-/// [`crate::screenshots_provider`] exists at all on this shell and does not on
-/// Electron's.
+/// The technique is not ours: it is `tauri-plugin-steam-overlay-surface` (MIT),
+/// and every invariant that makes it safe rather than a black rectangle over the
+/// game lives in that crate with the failure that taught it. What lives HERE is
+/// the decision of whether to raise it at all — see [`overlay_plan`].
 ///
-/// It is a verdict per webview rather than a flat `false` because the WebView2
-/// case is the one with a plausible future: it is a Chromium, and if Microsoft
-/// ever exposes the additional-browser-arguments surface for the GPU process,
-/// this becomes the one place that changes.
+/// Two things the surface does NOT buy, and both are why
+/// [`crate::screenshots_provider`] still exists on this shell and does not on
+/// Electron's:
+///
+///  - **Steam's screenshot key still photographs the decoy**, whose frames are
+///    empty by construction. So the game goes on filing its own pictures through
+///    `AddScreenshotToLibrary` rather than leaving F12 to Valve.
+///  - **Shift+Tab is not seen by this process.** The keystroke goes to the
+///    webview's own process, so the shell listens for it in the PAGE and asks
+///    Steam to open the overlay itself — see `src-tauri/src/page.rs`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlaySupport {
-    /// The overlay cannot draw, and nothing this shell does will change that.
-    Unsupported,
-    /// The overlay cannot draw today, but the platform is one where it might
-    /// become possible — see the note on the variant's own line.
+    /// A decoy swap chain in this process gives Valve's injected library
+    /// something to hook. Windows, today.
+    DecoySurface,
+    /// No decoy on this platform yet. The same technique could be carried here —
+    /// the overlay IS injected into native games on both — but a Metal or a
+    /// Vulkan sheet is a different piece of work, and claiming one that does not
+    /// exist would be worse than saying so.
     NotYet,
 }
 
 /// The verdict for one webview. See [`OverlaySupport`].
 pub fn overlay_support(webview: Webview) -> OverlaySupport {
     match webview {
-        // A Chromium we do not start and cannot pass switches to. If the
-        // additional-browser-arguments surface ever reaches the GPU process,
-        // this is the line that moves.
-        Webview::WebView2 => OverlaySupport::NotYet,
-        // Both composite through the system compositor; there is no swap chain
-        // in this process for the overlay to hook, and no switch to make one.
-        Webview::WkWebView | Webview::WebKitGtk => OverlaySupport::Unsupported,
+        // Windows: `gameoverlayrenderer64.dll` is resident, and a DXGI swap
+        // chain in this process is all it was ever waiting for.
+        Webview::WebView2 => OverlaySupport::DecoySurface,
+        Webview::WkWebView | Webview::WebKitGtk => OverlaySupport::NotYet,
+    }
+}
+
+/// The title the decoy window carries.
+///
+/// Nothing draws it — the window has no decorations — but everything that
+/// ENUMERATES windows shows it: a capture picker, a task manager, a bug
+/// reporter's screenshot of both. So it names the game and says what it is,
+/// rather than being Tauri's default "Tauri App" floating over somebody's
+/// desktop with no explanation.
+pub const OVERLAY_SURFACE_TITLE: &str = "Ada's Trail — Steam overlay surface";
+
+/// WHAT THIS LAUNCH DOES ABOUT THE OVERLAY.
+///
+/// Three outcomes, and the two that raise nothing are ordinary rather than
+/// failures — which is the reason this is a type and not a bool.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OverlayPlan {
+    /// Raise the decoy surface: Steam started this process, so its library is
+    /// injected, and this webview's platform has a decoy to offer it.
+    Surface,
+    /// Nothing is injected into this process, so there is nothing to hand a
+    /// surface to. A checkout run from a terminal, or `GIS_STEAM=off`.
+    NotInjected,
+    /// The platform has no decoy yet — see [`OverlaySupport::NotYet`].
+    NoDecoy,
+}
+
+/// Whether to raise the decoy surface for THIS launch.
+///
+/// **A surface nobody is going to hook is pure cost**: a second window, a wgpu
+/// device, and a thread presenting a screenful of nothing at vsync for the whole
+/// session. So it is raised only where all three hold — the platform has a
+/// decoy, Steam is being talked to at all, and STEAM STARTED US, which is the
+/// one honest signal that its library is in this process.
+///
+/// `GIS_STEAM_OVERLAY=1` forces the last of those on, which is how the overlay
+/// is tested from a checkout launched under Spacewar; `=0` forces it off. Both
+/// are already [`steam_overlay_wanted`]'s, so the escape hatch is the same one
+/// the Electron shell has and is spelled the same way.
+pub fn overlay_plan(webview: Webview, enabled: bool, started_by_steam: bool) -> OverlayPlan {
+    match overlay_support(webview) {
+        OverlaySupport::NotYet => OverlayPlan::NoDecoy,
+        OverlaySupport::DecoySurface if enabled && started_by_steam => OverlayPlan::Surface,
+        OverlaySupport::DecoySurface => OverlayPlan::NotInjected,
     }
 }
 
@@ -209,32 +262,35 @@ pub fn overlay_support(webview: Webview) -> OverlaySupport {
 ///
 /// A sentence rather than a flag, because the reader is somebody comparing the
 /// two desktop builds with a log file open and wondering why Shift+Tab answers
-/// on one of them.
-pub fn overlay_explanation(webview: Webview, started_by_steam: bool) -> String {
+/// on one of them — and, now that it answers on both, wondering why the
+/// screenshot key still does not.
+pub fn overlay_explanation(plan: OverlayPlan, webview: Webview) -> String {
     let where_ = match webview {
         Webview::WebView2 => "WebView2",
         Webview::WkWebView => "WKWebView",
         Webview::WebKitGtk => "WebKitGTK",
     };
-    let prospect = match overlay_support(webview) {
-        OverlaySupport::NotYet => {
-            "it is a Chromium, so a future browser-argument surface could change that"
-        }
-        OverlaySupport::Unsupported => {
-            "it composites through the system compositor, so there is no swap chain to hook"
-        }
-    };
-    let launched = if started_by_steam {
-        "Steam started this process"
-    } else {
-        "Steam did not start this process"
-    };
-    format!(
-        "steam: no overlay on the Tauri shell — {launched}, and the game is drawn by {where_}, \
-         where Valve's overlay cannot be injected ({prospect}). Shift+Tab and Steam's own \
-         screenshot key are unavailable; the game files its own pictures instead. \
-         See tauri/README.md."
-    )
+    match plan {
+        OverlayPlan::Surface => format!(
+            "steam: the overlay draws on a decoy surface — Steam started this process and the \
+             game is drawn by {where_}, so the shell presents transparent frames in a window of \
+             its own for Valve's library to hook. Shift+Tab is forwarded from the page; Steam's \
+             own screenshot key is not, and the game files its own pictures instead. \
+             See tauri/README.md."
+        ),
+        OverlayPlan::NotInjected => format!(
+            "steam: no overlay this launch — Steam did not start this process, so nothing is \
+             injected into it and the decoy surface is not raised (it would cost a window and a \
+             swap chain to be hooked by nobody). {where_} is otherwise able to carry one: launch \
+             from the Steam library, or set GIS_STEAM_OVERLAY=1. See tauri/README.md."
+        ),
+        OverlayPlan::NoDecoy => format!(
+            "steam: no overlay on this desktop — the game is drawn by {where_}, which composites \
+             through the system compositor, and the decoy surface that carries the overlay on \
+             Windows has no counterpart here yet. Shift+Tab and Steam's own screenshot key are \
+             unavailable; the game files its own pictures instead. See tauri/README.md."
+        ),
+    }
 }
 
 /// How the handshake went, in the words the launch log wants.

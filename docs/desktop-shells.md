@@ -42,7 +42,7 @@ allowed different things.
 | The capability stamp   | the packaged `package.json`        | `option_env!`, so an installed copy has nothing to edit    |
 | A monitor's area       | `workArea` (excludes the taskbar)  | the whole monitor — no webview library exposes a work area |
 | The Steam binding      | `steamworks.js` (prebuilt N-API)   | the `steamworks` crate, compiled in — and richer           |
-| **Valve's overlay**    | injected via two Chromium switches | **not available on any desktop** — see below               |
+| **Valve's overlay**    | injected via two Chromium switches | **a decoy swap chain of its own** — Windows; see below     |
 | **A Steam screenshot** | filed by the overlay, off F12      | **filed by the game**, `AddScreenshotToLibrary`            |
 | The session server     | `utilityProcess.fork`              | a child process on a bundled Node runtime                  |
 | Its control channel    | the Node IPC channel               | the child's stdio, newline-delimited JSON                  |
@@ -54,14 +54,34 @@ allowed different things.
 
 `electronEnableSteamOverlay()` is not a request to draw anything: it appends
 `in-process-gpu` and `disable-direct-composition`, which leave a swap chain in
-the process Steam has hooked. **A platform webview has no such command line.**
-WebView2's GPU work happens in a browser process the shell does not start, and
-WKWebView and WebKitGTK composite through the system compositor. So there is no
-Shift+Tab, no in-game browser and no Steam screenshot key in that build, and it
-says so in every launch log rather than leaving it to be discovered.
+the process Steam has hooked. **A platform webview has no such command line** —
+WebView2's GPU work happens in a browser process the shell does not start — so
+for a long time this row was the one honest "Electron wins" in the table.
 
-The screenshot row is the consequence rather than a separate choice: with
-nothing filing a Steam copy for the player, the game files its own.
+It is not any more. The webview build reaches the same place from the other end:
+it opens a transparent, click-through window over the game and presents **empty
+frames** into it at vsync through a real in-process swap chain, so the injected
+hook has something to find and composites the overlay into frames the shell was
+already presenting. Shift+Tab opens it, the achievements board opens with it,
+and everywhere the overlay does not draw the sheet is transparent and the game
+shows through. `tauri/README.md` has the full mechanism and its caveats; the
+decision of whether to raise the surface at all is `shell/src/steam.rs`'s
+`overlay_plan`, and the wiring is `src-tauri/src/overlay.rs`.
+
+Two differences remain, and both are narrower than the row used to be:
+
+- **Windows only.** WKWebView and WebKitGTK composite through the system
+  compositor and have no decoy yet. The overlay IS injected into native games on
+  both, so the technique is portable in principle — a Metal or a Vulkan sheet is
+  simply a piece of work nobody has done.
+- **The screenshot row stands.** Steam's key photographs the swap chain it
+  hooked, and the decoy's frames are empty by construction, so the game goes on
+  filing its own copy. That is why `screenshots-provider` exists on the webview
+  build and not on the Chromium one.
+
+The chord itself is forwarded rather than caught: Shift+Tab belongs to the
+webview's process, so the shell listens for it in the page and asks Steam to
+raise the overlay — the same shape the F11 handler already had.
 
 ### The roster, which is the one that is not optional
 

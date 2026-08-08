@@ -117,8 +117,9 @@ jobs:
         run: |
           mkdir -p webroot
           echo '<!doctype html><title>placeholder</title>' > webroot/index.html
-      # …and `tauri-build` refuses a MISSING ICON outright, so the compile needs
-      # one even though nothing here draws a window. `scripts/icons.mjs` is what
+      # …and `tauri-build` refuses a MISSING ICON outright — including the
+      # Windows `.ico`, without which the clippy run below for that target fails
+      # in the build script rather than in any code. `scripts/icons.mjs` is what
       # makes them (Tauri refuses the paletted PNGs the website ships), and it
       # needs `sharp` — which is a `pwa` devDependency hoisted to the root by
       # the workspace install. `npm ci` at the ROOT is therefore the honest
@@ -130,6 +131,16 @@ jobs:
         run: node scripts/icons.mjs
       - name: clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+      # AND THE WINDOWS-ONLY HALF, from this same Ubuntu runner. The overlay's
+      # decoy surface (`src-tauri/src/overlay.rs`) and the plugin behind it are
+      # `cfg(windows)`, so the run above compiles their no-op halves and agrees
+      # with itself. `clippy` never links, so the real half is checkable here
+      # with nothing but the target's std — no MSVC toolchain, and no waiting
+      # for somebody to dispatch a package build to find a typo.
+      - name: The Windows target
+        run: rustup target add x86_64-pc-windows-msvc
+      - name: clippy (Windows target)
+        run: cargo clippy --target x86_64-pc-windows-msvc -p adastrail-tauri --all-targets -- -D warnings
 
   package:
     name: package (${{ matrix.os }})

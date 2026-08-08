@@ -2185,7 +2185,8 @@ the same store, and `__GIS_SHELL__` says which binary for a bug report.
 achievements, screenshots, mods, multiplayer and voice — plus a package
 (`make desktop-tauri-steam` produces a depot directory, the peer of
 `make desktop-steam`) and a `-tauri`-suffixed download on every release page.
-What it does NOT have is the Steam overlay, and that is not coming; see below.
+**Valve's overlay is here too, on Windows**, by a route Electron does not need;
+see below.
 
 Two extra launch modes belong to it and to no other tree: `--dedicated` runs the
 session server in the terminal, and `--roster-check` prints what the platform
@@ -2212,14 +2213,27 @@ only the third file talks to Steam. So a protocol's whole behaviour, including
 the failure paths a real Steam client cannot be asked to produce on demand, is
 covered by `make tauri-test`.
 
-Two of the platform answers came out DIFFERENT from the Electron shell's, and
-both differences are downstream of one fact: **Valve's overlay cannot be
-injected into a platform webview**, so there is no Shift+Tab and no Steam
-screenshot key on this build. Which means the game has to file its own copy into
-the Steam screenshot library (Electron leaves that to the overlay), and means
-leaderboards stay absent for a different reason than they do there — the Rust
-binding can publish a score, but there is no board on this platform anybody could
-open. `tauri/README.md` has the argument; `desktop-shells.md` has the table.
+**Valve's overlay reaches this shell from the other end.** It is a library Steam
+injects into the process, which hooks the swap chain the game presents its frames
+with — and a webview shell presents none, so the hook waits for a frame that
+never comes. Electron leaves one behind with two Chromium command line switches;
+a platform webview has no command line, so this shell opens a transparent,
+click-through window over the game and presents EMPTY frames into it at vsync
+through a real in-process swap chain. Steam composites the overlay into those,
+and everywhere it does not draw the sheet is transparent and the game shows
+through. Windows today (`tauri-plugin-steam-overlay-surface`, MIT); the decision
+of whether to raise it is `shell/src/steam.rs`'s `overlay_plan` and the wiring is
+`src-tauri/src/overlay.rs`. Shift+Tab is FORWARDED rather than caught — the chord
+belongs to the webview's process — which is the same shape the F11 handler
+already had.
+
+Two platform answers still come out DIFFERENT from the Electron shell's, and both
+survive the overlay: the game files its own copy into the Steam screenshot
+library, because Steam's key photographs the decoy's empty frames rather than the
+game (Electron leaves that to the overlay outright); and leaderboards stay absent
+for a different reason than they do there — the Rust binding can publish a score,
+but there is no board on this platform anybody could open. `tauri/README.md` has
+the argument; `desktop-shells.md` has the table.
 
 ### `server/` — the session server (the fifth layer)
 

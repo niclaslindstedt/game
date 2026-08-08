@@ -15,44 +15,47 @@ tab cannot give a game is added around it: Steam Cloud, achievements,
 screenshots, the Workshop, a session server in a process of its own, and voice
 chat.
 
-**One thing this app cannot have is Valve's in-game overlay**, and that is
-structural rather than unfinished — see [below](#the-overlay).
+**Valve's in-game overlay works here too, by a route Electron does not need** —
+the shell hands the injected library a surface of its own to draw on, because a
+webview shell has none to offer it. Windows today; see
+[below](#the-overlay).
 
 ---
 
 ## Layout — TWO crates, and the split is the design
 
-| Path                            | What it is                                                              |
-| ------------------------------- | ----------------------------------------------------------------------- |
-| `shell/`                        | **Every decision.** No Tauri, no GUI, no window                         |
-| `shell/tests/`                  | Its whole test suite — runs anywhere a Rust toolchain does              |
-| `src-tauri/src/main.rs`         | The process: the builder, the command routing, the lifecycle            |
-| `src-tauri/src/window.rs`       | The window, its geometry, and pinning it to our own origin              |
-| `src-tauri/src/protocol.rs`     | Answering `game://` off the bundled `webroot/`                          |
-| `src-tauri/src/page.rs`         | The initialization script — the page's whole view of the shell          |
-| `src-tauri/src/stamp.rs`        | The capability stamp, read at compile time                              |
-| `src-tauri/src/steam.rs`        | **The one owner of the Steam client**, and the callback pump            |
-| `src-tauri/src/cloud.rs`        | Steam Cloud                                                             |
-| `src-tauri/src/achievements.rs` | Steam's badge shelf                                                     |
-| `src-tauri/src/shots.rs`        | The pictures folder, the clipboard, and Steam's screenshot library      |
-| `src-tauri/src/session.rs`      | The session server, as a process                                        |
-| `src-tauri/src/net.rs`          | The multiplayer bridge's orchestration                                  |
-| `src-tauri/src/lobby.rs`        | Steam matchmaking, which IS the server browser                          |
-| `src-tauri/src/p2p.rs`          | The Steam relay's pump — the only game traffic that passes through us   |
-| `src-tauri/src/firewall.rs`     | Running the firewall commands the shell crate wrote                     |
-| `src-tauri/src/mods.rs`         | The mods bridge, and spawning the ONE compiler                          |
-| `src-tauri/src/workshop.rs`     | Steam UGC                                                               |
-| `src-tauri/src/media.rs`        | The webview's permission handler — the microphone gate                  |
-| `src-tauri/src/metrics.rs`      | The clock behind the cold-start marks                                   |
-| `src-tauri/src/roster.rs`       | `--roster-check`, as a process                                          |
-| `src-tauri/src/dedicated.rs`    | `--dedicated`, decided before Tauri's builder exists                    |
-| `src-tauri/build.rs`            | The stamp's rebuild triggers, and placing `libsteam_api` beside the app |
-| `src-tauri/capabilities/`       | **Tauri's own ACL** — what the window may reach. Not our capabilities   |
-| `scripts/bundle-web.mjs`        | Builds the site and copies it to `webroot/` (gitignored)                |
-| `scripts/icons.mjs`             | Re-encodes `pwa/public/`'s icon to the RGBA Tauri insists on            |
-| `scripts/package.mjs`           | Packaging — the depot, and the standalone installers                    |
-| `scripts/steam-upload.mjs`      | The depot upload, and the checks that guard it                          |
-| `scripts/mod-compile.mjs`       | The adapter the Rust shell reaches `mod/tools/build.mjs` through        |
+| Path                            | What it is                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------- |
+| `shell/`                        | **Every decision.** No Tauri, no GUI, no window                                       |
+| `shell/tests/`                  | Its whole test suite — runs anywhere a Rust toolchain does                            |
+| `src-tauri/src/main.rs`         | The process: the builder, the command routing, the lifecycle                          |
+| `src-tauri/src/window.rs`       | The window, its geometry, and pinning it to our own origin                            |
+| `src-tauri/src/protocol.rs`     | Answering `game://` off the bundled `webroot/`                                        |
+| `src-tauri/src/page.rs`         | The initialization script — the page's whole view of the shell                        |
+| `src-tauri/src/stamp.rs`        | The capability stamp, read at compile time                                            |
+| `src-tauri/src/steam.rs`        | **The one owner of the Steam client**, and the callback pump                          |
+| `src-tauri/src/cloud.rs`        | Steam Cloud                                                                           |
+| `src-tauri/src/achievements.rs` | Steam's badge shelf                                                                   |
+| `src-tauri/src/shots.rs`        | The pictures folder, the clipboard, and Steam's screenshot library                    |
+| `src-tauri/src/session.rs`      | The session server, as a process                                                      |
+| `src-tauri/src/net.rs`          | The multiplayer bridge's orchestration                                                |
+| `src-tauri/src/lobby.rs`        | Steam matchmaking, which IS the server browser                                        |
+| `src-tauri/src/p2p.rs`          | The Steam relay's pump — the only game traffic that passes through us                 |
+| `src-tauri/src/firewall.rs`     | Running the firewall commands the shell crate wrote                                   |
+| `src-tauri/src/mods.rs`         | The mods bridge, and spawning the ONE compiler                                        |
+| `src-tauri/src/workshop.rs`     | Steam UGC                                                                             |
+| `src-tauri/src/overlay.rs`      | Valve's overlay — the decoy surface, and Shift+Tab. Windows                           |
+| `src-tauri/src/media.rs`        | The webview's permission handler — the microphone gate                                |
+| `src-tauri/src/metrics.rs`      | The clock behind the cold-start marks                                                 |
+| `src-tauri/src/roster.rs`       | `--roster-check`, as a process                                                        |
+| `src-tauri/src/dedicated.rs`    | `--dedicated`, decided before Tauri's builder exists                                  |
+| `src-tauri/build.rs`            | The stamp's rebuild triggers, and placing `libsteam_api` beside the app               |
+| `src-tauri/capabilities/`       | **Tauri's own ACL** — what the window may reach. Not our capabilities                 |
+| `scripts/bundle-web.mjs`        | Builds the site and copies it to `webroot/` (gitignored)                              |
+| `scripts/icons.mjs`             | Re-encodes `pwa/public/`'s icon to the RGBA Tauri insists on, plus the Windows `.ico` |
+| `scripts/package.mjs`           | Packaging — the depot, and the standalone installers                                  |
+| `scripts/steam-upload.mjs`      | The depot upload, and the checks that guard it                                        |
+| `scripts/mod-compile.mjs`       | The adapter the Rust shell reaches `mod/tools/build.mjs` through                      |
 
 `cargo test -p adastrail-shell` therefore runs the entire decision layer on a
 machine with **no GUI libraries installed at all**, which is what makes this
@@ -115,18 +118,60 @@ multiplayer nor mods carries none of it.
 
 ### The overlay
 
-**Valve's in-game overlay is not available, on any of the three desktops.** The
-overlay is not something a game switches on: it is a library Steam injects into
-the process, which hooks the graphics API the game presents its frames with and
-draws over the swap chain. A game gets it for free precisely because it owns
-that surface — and a webview shell does not; the webview does, and composites
-through a process or a system compositor this app does not drive.
+**Valve's in-game overlay works on this shell, on Windows.** It is worth
+spelling out why that took anything at all, because for years the answer
+everywhere was that it could not.
 
-So there is no Shift+Tab, no in-game browser and no Steam screenshot key. It is
-stated in every launch log rather than left to be discovered, and the
-consequence is handled rather than ignored: **the game files its own Steam
-screenshots** through `AddScreenshotToLibrary`, so a picture the player takes
-still reaches their Steam library.
+The overlay is not something a game switches on: it is a library Steam injects
+into the process, which hooks the graphics API the game presents its frames with
+and draws over the swap chain. A game gets it for free precisely because it owns
+that surface — and a webview shell does not. WebView2 does its GPU work in a
+browser process this app never started, so the injected hook sits waiting for a
+frame that never comes and quietly gives up. Electron's
+`electronEnableSteamOverlay()` fixes that with two Chromium command line
+switches; a platform webview has no command line to pass them on.
+
+So the shell gives the hook something else to find. A transparent,
+click-through, undecorated window is opened over the game's window, and a thread
+presents **empty frames** into it at vsync through a real in-process swap chain.
+Steam composites the overlay into those frames, and everywhere it does not draw,
+the sheet is transparent and the game shows through. The decoy is only visible
+while the overlay is open; the rest of the time it is hidden, and hidden means
+not presenting.
+
+The technique and every invariant that keeps it from becoming a black rectangle
+over the game are
+[`tauri-plugin-steam-overlay-surface`](https://github.com/PSG-Team/tauri-steam-overlay-surface)
+(MIT). What this tree owns is the decision of whether to raise it —
+`shell/src/steam.rs`'s `overlay_plan` — and the wiring, `src-tauri/src/overlay.rs`.
+
+Three things follow, and each is a thing to know rather than a thing to fix:
+
+- **Shift+Tab is forwarded from the page.** The chord belongs to the webview's
+  process, which this shell does not own, so the initialization script listens
+  for it and asks Steam to open the overlay — exactly as it already does for
+  F11. That listener is installed only on a launch that has an overlay.
+- **Steam's screenshot key still does not work**, and cannot: it photographs the
+  swap chain Steam hooked, which is the decoy's, whose frames are empty by
+  design. So **the game goes on filing its own Steam screenshots** through
+  `AddScreenshotToLibrary`, which is why `screenshots-provider` exists on this
+  shell and not on Electron's.
+- **macOS and Linux have no decoy yet.** The overlay is injected into native
+  games on both, so the same trick is portable in principle — but a Metal or a
+  Vulkan sheet is a different piece of work, and until somebody writes it the
+  launch log says so rather than implying otherwise.
+
+The surface is raised only where all three of these hold: the platform has a
+decoy, Steam is being talked to at all, and **Steam started the process** — the
+one honest signal that its library is in here. A surface nobody hooks is a
+window, a GPU device and a thread presenting nothing for the whole session.
+`GIS_STEAM_OVERLAY=1` forces the last condition on, which is how the overlay is
+tested from a checkout launched under Spacewar.
+
+One known quirk, inherited from the technique: after alt-tabbing away and back,
+the game window needs one click before Shift+Tab answers again — Windows
+re-activates the native window without handing keyboard focus back to the
+webview.
 
 ---
 
@@ -229,14 +274,14 @@ and shown, and the page finishing its load. `npm run shell:bench` reads it back.
 
 ### Environment
 
-| Variable            | Effect                                                                    |
-| ------------------- | ------------------------------------------------------------------------- |
-| `GIS_GAME_URL`      | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot) |
-| `GIS_WEBROOT`       | Serve the site from somewhere else without rebuilding                     |
-| `GIS_VERBOSE=1`     | Keep the informational log in a release build                             |
-| `GIS_STEAM=off`     | Don't talk to Steam at all — how most local work on this tree happens     |
-| `GIS_STEAM_APP_ID`  | Which Steam app. Defaults to Valve's Spacewar (480), which is a test app  |
-| `GIS_STEAM_OVERLAY` | `1`/`0` forces "was this started by Steam", which the log reports         |
+| Variable            | Effect                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `GIS_GAME_URL`      | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot)                                         |
+| `GIS_WEBROOT`       | Serve the site from somewhere else without rebuilding                                                             |
+| `GIS_VERBOSE=1`     | Keep the informational log in a release build                                                                     |
+| `GIS_STEAM=off`     | Don't talk to Steam at all — how most local work on this tree happens                                             |
+| `GIS_STEAM_APP_ID`  | Which Steam app. Defaults to Valve's Spacewar (480), which is a test app                                          |
+| `GIS_STEAM_OVERLAY` | `1`/`0` forces "was this started by Steam", which decides the overlay's decoy surface and is what the log reports |
 
 From a checkout, MULTIPLAYER and MODS additionally need the things that are not
 Rust — the session server compiled for Node (`npm run server:build` at the repo

@@ -94,13 +94,13 @@ pub const DEVELOPER_NOTICE: &str = concat!(
 /// WHICH BINARY THIS IS, said once per launch.
 ///
 /// A bug report about the desktop game arrives with a launch log and no way to
-/// tell which of the two desktop builds wrote it, so the log says. It also
-/// names the ONE feature this one cannot have — Valve's overlay cannot be
-/// injected into a platform webview (`crate::steam::overlay_support`) — because
-/// "Shift+Tab does nothing" is otherwise reported as a bug on every copy.
+/// tell which of the two desktop builds wrote it, so the log says. What it does
+/// NOT try to say is where the overlay stands — that is a per-launch and
+/// per-platform answer with three outcomes, and it gets a line of its own
+/// immediately after this one (`crate::steam::overlay_explanation`).
 pub const SHELL_NOTICE: &str = concat!(
     "This is the platform-webview desktop build. It runs the whole game — ",
     "Steam cloud save, achievements, screenshots, mods, multiplayer and voice ",
-    "— and the Steam overlay is the one thing it cannot have. ",
+    "— and, on Windows, Valve's in-game overlay. ",
     "See tauri/README.md."
 );

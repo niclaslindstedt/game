@@ -374,6 +374,15 @@ const BY_HAND = [
       "subscribed to from another account, and loaded into a run.",
   ],
   [
+    "Shift+Tab over a Steam-launched build",
+    "Windows",
+    "the overlay's decoy surface end to end — that Steam's hook finds the swap " +
+      "chain, that the sheet is transparent everywhere the overlay does not " +
+      "draw, and that closing it gives the keyboard back to the game. The " +
+      "decision layer proves only WHETHER the surface is raised; a GPU " +
+      "compositing the wrong thing is a thing to look at.",
+  ],
+  [
     "The microphone gate on WKWebView and WebView2",
     "macOS, Windows",
     "the page-side lockout, which is the whole floor on two of the three " +
