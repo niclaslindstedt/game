@@ -24,6 +24,15 @@
 //! callback (the cloud reads wait on their own API call, and the achievements
 //! are in-memory writes flushed by `store_stats`), so the pump is what keeps the
 //! queue drained rather than something the features wait for.
+//!
+//! **PHASE 3 CHANGES THAT, AND THIS IS THE PARAGRAPH IT HAS TO READ FIRST.**
+//! Steam P2P is POLLED and matchmaking is delivered as call-results THROUGH
+//! `run_callbacks`, so the moment the net bridge lands, the interval below stops
+//! being a housekeeping number and becomes the network's latency floor: at
+//! 200 ms a lobby round trip costs a fifth of a second and packet delivery is
+//! capped at 5 Hz. That would present as a broken session for a reason living in
+//! a constant nobody was looking at. Re-decide [`PUMP_INTERVAL`] there — do not
+//! inherit it.
 
 use std::sync::OnceLock;
 use std::time::Duration;

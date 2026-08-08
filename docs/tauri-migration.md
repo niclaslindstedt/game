@@ -171,12 +171,92 @@ with a Steam client** — every decision above is covered by
 `cargo test -p adastrail-shell`, and nothing in a test suite can prove a
 handshake with a program that has to be running.
 
----
+**What it did NOT close** is four things, and they are the first four bullets of
+phase 3 rather than a list of their own: this tree is still absent from CI, the
+callback pump's interval is a phase-2 answer phase 3 invalidates, no real bundle
+has ever been installed, and voice's macOS entitlement shipped ahead of the gate
+that makes it mean anything.
 
 ## Phase 3 — multiplayer, mods, and the hard pipe ← next
 
-Everything that needs a second process, and the one design problem this
-migration actually has.
+Everything that needs a second process, the one design problem this migration
+actually has, **and the four things phase 2 left behind** — which are listed
+first because two of them are traps phase 3 walks straight into.
+
+### The phase-2 leftovers, which phase 3 closes
+
+- **PUT THIS TREE IN CI — `tauri-build.yml`, the peer of `desktop-build.yml`.**
+  No workflow mentions `tauri/` today, so `make tauri-test` (103 tests) and
+  `make tauri-lint` (clippy at zero warnings) run only when a human remembers.
+  Phase 1 could survive that because it was a window; phase 2 made it ~1,000
+  lines of decision logic with real failure paths, and phase 3 doubles it. Copy
+  the Electron workflow's shape rather than inventing one — it is already split
+  by exactly the cost boundary this tree has:
+
+  | Job       | Cost                | What it is here                                                                                                                                                                                              |
+  | --------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `check`   | cheap, automatic    | `cargo test -p adastrail-shell` on ubuntu. **No GUI libraries, no Steam SDK** — the entire point of the crate split, and the reason this half lands first                                                    |
+  | `lint`    | medium, automatic   | `cargo clippy --workspace --all-targets -- -D warnings`, which DOES need the webview development libraries (`libwebkit2gtk-4.1-dev`, `libgtk-3-dev`) — so it is an apt step and a `Swatinem/rust-cache` away |
+  | `package` | expensive, dispatch | Real Windows/macOS runners producing bundles. Dispatch-only for the same reason the Electron and EAS ones are: it runs when a human is shipping                                                              |
+
+  Path-filter it on `tauri/**`, `pwa/src/app/**`, `scripts/**` and the workflow
+  itself — the same set the Electron workflow filters on, and for the same
+  reason: this shell answers those protocols, so a change to the web half can
+  break it without touching `tauri/` at all.
+
+- **SHIP THE BINARIES BESIDE ELECTRON'S, SUFFIXED `-tauri`.** `release.yml`'s
+  `desktop` job attaches four archives to every GitHub Release; phase 3 adds a
+  `desktop-tauri` job beside it, reading the identical `GIS_ENABLE_*` inputs and
+  the identical macOS signing secrets, and uploading onto the same Release.
+  **The suffix is the whole mechanism and it is not cosmetic:** both shells
+  package the same product at the same version for the same platforms, so
+  without it the two jobs race to upload files with colliding names and the
+  Release ends up with whichever finished last. The `standalone` profile of
+  `package.mjs` therefore names its output
+  `adastrail-<version>-tauri-<os>-<arch>.<ext>`, against Electron's
+  `adastrail-<version>-<os>-<arch>.<ext>`.
+
+  That is also what makes phase 4 a real comparison rather than a thought
+  experiment: **the two builds are downloadable from the same release page**, so
+  the install-size and cold-start numbers the decision turns on are measured by
+  anybody who wants to, on their own machine, from artifacts nobody staged. The
+  suffix stays for exactly as long as both shells exist — retiring it is one of
+  the things phase 4's decision buys.
+
+- **RE-DECIDE THE CALLBACK PUMP BEFORE THE NET BRIDGE, NOT AFTER.**
+  `src-tauri/src/steam.rs` drains Steam's callback queue every 200 ms and argues
+  in its own header why that is fine — nothing phase 2 calls blocks on a
+  callback. **Phase 3's networking does.** Steam P2P is POLLED (the shape
+  `electron/src/net-steam-p2p.ts` is built around) and matchmaking arrives as
+  call-results delivered THROUGH `run_callbacks`, so at 200 ms a lobby round
+  trip costs a fifth of a second and packet delivery is capped at 5 Hz. Inherit
+  that number and the session presents as a broken network for a reason living
+  in a constant nobody is looking at. `PUMP_INTERVAL` is the net bridge's to
+  own, and the pump may need to become two (a slow one for stats, a fast one
+  for the socket).
+- **INSTALL A REAL BUNDLE AND SEE THE GAME.** Phase 2 built and inspected the
+  depot end to end on Linux — executable, `webroot/`, `libsteam_api.so`, the
+  rpath resolving out of the depot's own directory — but that path is
+  `--no-bundle` plus a copy. No `deb`, `appimage`, `dmg` or `nsis` has ever been
+  produced, so three things have never run: `bundle.resources`'
+  `{"../webroot": "webroot"}` mapping, `bundle.macOS.frameworks` putting Valve's
+  dylib into `Contents/Frameworks`, and `protocol::webroot_dir`'s PACKAGED
+  branch (every run so far took the checkout branch or `GIS_WEBROOT`). Each is a
+  single point of failure for an installed copy — a wrong resource path is a
+  blank window, a missing dylib is Steam silently unavailable — and one install
+  per platform checks all three at once. Phase 3 wants installable builds for
+  its own exit test anyway, so this is the phase that pays for it.
+- **VOICE'S macOS HALF IS IN THE TREE AND ITS GATE IS NOT.** The
+  hardened-runtime entitlement and `NSMicrophoneUsageDescription` shipped in
+  phase 2 deliberately — a build missing the usage string is KILLED by TCC
+  rather than refused, so the key belongs in every macOS build whether or not
+  that build carries voice. What is absent is the thing that REFUSES the
+  microphone on a build without the capability, which is the webview's own
+  permission handler and is listed as phase-3 work below. Until it lands the
+  entitlement is a promise nothing keeps; do not read its presence as the gate
+  being done.
+
+### The new work
 
 - **The session server as a sidecar.** Electron forks the compiled Node server
   with `utilityProcess.fork`; Tauri has no such thing, so the server is a
@@ -206,7 +286,9 @@ migration actually has.
   server, minus the window.
 
 **Exit test:** a four-player session between a Tauri host and an Electron
-client, with a Workshop mod loaded and voice on, at parity frame times.
+client, with a Workshop mod loaded and voice on, at parity frame times — played
+from **installed builds** rather than from `cargo run`, which is what closes the
+packaging leftover above in the same act.
 
 ---
 
@@ -238,8 +320,23 @@ client, with a Workshop mod loaded and voice on, at parity frame times.
      download, where install size matters most and Steam matters least.
   3. **Tauri is parked.** Written down with the reason, so nobody re-derives it
      in a year.
+- **The `-tauri` suffix is decided WITH the decision, not after it**, because it
+  is the one artifact-shaped thing that outlives the choice:
+
+  | Outcome     | What happens to the suffix                                                                                                                                                       |
+  | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | Tauri ships | It goes. The `desktop-tauri` job becomes `desktop`, the Electron one is deleted, and the download keeps the name players already have — a rename would break every existing link |
+  | Both ship   | It STAYS, and earns its keep: two downloads on one release page have to be tellable apart at a glance                                                                            |
+  | Parked      | Both the job and the suffix go, with the reason written down                                                                                                                     |
+
+  In outcome 1 the user-data folder moves too: `adastrail-tauri` becomes
+  `adastrail` and the old name joins `LEGACY_DIR_NAMES` in
+  `shell/src/user_data.rs`, which is the machinery that already exists for
+  exactly this and is already tested against it.
+
 - Whatever is decided, the release plumbing for it: `tauri/RELEASING.md`,
-  `steam:upload` pointed at the tauri output, the desktop-build workflow.
+  `steam:upload` pointed at the tauri output, and the two build workflows
+  collapsed to whichever shells survive.
 
 ---
 
