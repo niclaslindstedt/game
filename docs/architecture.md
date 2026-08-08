@@ -1625,6 +1625,13 @@ deploy-shaped:
   second and by itself at three. Every press is swallowed while it is up,
   because the menu behind it is listening. Suppressed for `?debug` / `?bot=` /
   `?skytest` so no harness pays for it — see `docs/configuration.md`.
+  **In a STORE SHELL it is the first thing painted**: a shell build strips the
+  prerendered boot shell out of `index.html` (`VITE_SHELL_BUILD`, applied by
+  `stripBootShell` in `pwa-plugin.ts`), because that markup is SEO and nothing
+  crawls an asar, a `webroot.zip` or a Tauri resource bundle — all it did in
+  there was flash an SEO document between the platform splash lifting and the
+  card. The web keeps it: it is the crawlable copy AND what a first-time
+  visitor reads while the bundle is still on the wire.
 - **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
