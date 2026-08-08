@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import type { LevelDef } from "@game/core";
 
-import { buildPropLines } from "../../src/game/create.ts";
+import { buildPropLines } from "../../engine/game/create.ts";
 
 /** A LevelDef carrying only the propLines under test (the expander reads
  * nothing else); cast through unknown so the fixture stays minimal. */

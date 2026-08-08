@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot's economy (src/game/bot/economy.ts): bag discipline — keep a
+// The autopilot's economy (engine/game/bot/economy.ts): bag discipline — keep a
 // cell open by shedding the LEAST PRECIOUS piece the bag can spare (the
 // outgrown junk first, and only then the cheapest keeper, which is banked in
 // the LOST & FOUND rather than destroyed) — and the merchant errand: want a

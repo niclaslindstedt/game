@@ -1,7 +1,7 @@
 ---
 title: On walled path levels a ranged hero must KITE FORWARD in the hold-band zone, not backpedal — the give-ground arc traps him in a basin
 date: 2026-07-24
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [kiting, positioning, path-levels]
 ---
 

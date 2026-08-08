@@ -7,7 +7,7 @@ description: "Use when tuning how fast the hero levels — the XP curve, kills-p
 
 Leveling is the game's long-game pacing: how many levels a day of play buys,
 how gear stays relevant, and how the climb tapers toward the level cap. Tune it
-here — **only in `src/game/config/leveling.ts` `LEVELING`** — and verify with the
+here — **only in `engine/game/config/leveling.ts` `LEVELING`** — and verify with the
 calculator and a bot run before it ships.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs leveling-balance --list`,
@@ -20,7 +20,7 @@ it at both ends of the session.
 The curve is a hand-authored TABLE, not a formula: `content/leveling.yaml`
 holds the XP each level costs, per level up to the cap, compiled by
 `make levels` (`scripts/generate-leveling.mjs`) into
-`src/generated/leveling.ts`, which `xpToLevelUp(L, difficulty)` reads:
+`engine/generated/leveling.ts`, which `xpToLevelUp(L, difficulty)` reads:
 
 ```
 xpToLevelUp(L) = XP_TO_NEXT[L] × endgameSteepenMult(L) × tierLevelCostMult(difficulty)
@@ -69,7 +69,7 @@ SIMULATOR's ding data stays the final yardstick — read it with
 
 > **Balance is per-BUILD — always check all four.** The hero's damage,
 > survivability, and hits-to-kill depend on the stat-distribution build
-> (`melee`/`ranged`/`magic`/`balanced` — `src/game/builds.ts`), so any toughness
+> (`melee`/`ranged`/`magic`/`balanced` — `engine/game/builds.ts`), so any toughness
 > or pace change must be verified across every build, not just the default. The
 > **pace/XP curve itself is build-INVARIANT** (kills-per-level cancels the hero's
 > damage — so `scripts/leveling-curve.mjs` needs no `--class`), but **the
@@ -132,7 +132,7 @@ pacing and boss-level verdicts read it, and the autopilot reads it to decide
 whether a scroll is still worth a detour); when the curve moves, re-read it off
 `--by-level` and update the level defs.
 
-## The knobs (`LEVELING` in `src/game/config/leveling.ts`)
+## The knobs (`LEVELING` in `engine/game/config/leveling.ts`)
 
 The per-level costs live in `content/leveling.yaml` (see its header for the
 shape story: a monotone rise from the cheapest level at L1 onto the gentle
@@ -310,7 +310,7 @@ entering nightmare as someone who played just one (`--full` shows it).
 
 ## Gotchas
 
-- `xpToLevelUp` is exported from `@game/core` (src/index.ts) and used by
+- `xpToLevelUp` is exported from `@game/core` (engine/index.ts) and used by
   `grantXp` (loot.ts), the initial bar (create.ts), and the arrival derivation
   (arrival.ts) — one curve everywhere. Don't re-implement it.
 - The cap lives in `grantXp`'s level loop AND `arrival.ts`'s derive loop —

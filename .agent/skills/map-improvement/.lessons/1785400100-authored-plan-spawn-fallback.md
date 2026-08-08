@@ -1,11 +1,11 @@
 ---
 title: Widening an authored-plan map can move the hero's landing — the LONG WALK fallback overrules `spawn: false`
 date: 2026-08-01
-scope: src/game/mapgen/
+scope: engine/game/mapgen/
 concepts: [spawn, authored-plan, hero-landing]
 ---
 
-`pickSpawnChamber` (`src/game/mapgen/generate.ts`) treats an area's
+`pickSpawnChamber` (`engine/game/mapgen/generate.ts`) treats an area's
 `spawn: false` as a PREFERENCE. If the winner among the eligible cells is closer
 to the goal than a third of the map's diagonal, it throws the preference away and
 re-picks from **every** chamber — the LONG WALK rule, there so a rolled carve that

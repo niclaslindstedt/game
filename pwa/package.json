@@ -2,7 +2,7 @@
   "name": "game-app",
   "version": "1.0.0",
   "private": true,
-  "description": "The deployed game app — a Vite + Preact PWA shell around the engine in ../src.",
+  "description": "The deployed game app — a Vite + Preact PWA shell around the engine in ../engine.",
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-source-data.mjs",

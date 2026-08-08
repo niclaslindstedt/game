@@ -5,7 +5,7 @@
 // mode, takes screenshots into pwa/assets-preview/playtest/, and reports
 // the run's outcome + stats as JSON on stdout.
 //
-// The strategies themselves live in the ENGINE (src/game/bot/index.ts) — the same
+// The strategies themselves live in the ENGINE (engine/game/bot/index.ts) — the same
 // bot that the headless tests drive — so this script is only a launcher and
 // observer. Add new strategies there, not here.
 //
@@ -156,7 +156,7 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // A frame that throws no longer escapes as an uncaught error — the game loop
 // catches it, keeps the run alive, and reports it through the output channel
 // (pwa/src/lib/game-loop.ts). That is right for a player and wrong for a
-// playtest, so anything the app itself logs at error level (src/output.ts
+// playtest, so anything the app itself logs at error level (engine/output.ts
 // stamps those with "✗") is surfaced here too: a broken frame must still fail
 // loudly in automation. Third-party console noise is left out of it.
 page.on("console", (m) => {

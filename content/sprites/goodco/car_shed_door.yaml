@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# Ground debris shed by the CAR (src/game/vehicles.ts shedPart): the part
+# Ground debris shed by the CAR (engine/game/vehicles.ts shedPart): the part
 # itself, flat on the road where it fell.
 name: car_shed_door
 family: goodco

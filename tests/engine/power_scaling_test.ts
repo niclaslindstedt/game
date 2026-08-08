@@ -17,8 +17,8 @@ import {
   statPointsAt,
   stasisRadius,
 } from "@game/core";
-import { rollMedkitTier } from "../../src/game/loot.ts";
-import { abilityDef } from "../../src/game/defs/abilities.ts";
+import { rollMedkitTier } from "../../engine/game/loot.ts";
+import { abilityDef } from "../../engine/game/defs/abilities.ts";
 
 import { startGame } from "./helpers.ts";
 

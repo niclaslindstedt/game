@@ -6,8 +6,8 @@
 // cast surfaces at `npm run levels` rather than as a blank frame or a throw
 // mid-scene.
 //
-// The contracts checked here live in `src/lib/cutscene.ts` (`CutsceneDef`),
-// `src/game/defs/thoughts.ts` (`ThoughtDef`) and `src/game/defs/story.ts`
+// The contracts checked here live in `engine/lib/cutscene.ts` (`CutsceneDef`),
+// `engine/game/defs/thoughts.ts` (`ThoughtDef`) and `engine/game/defs/story.ts`
 // (`StoryItemDef`) — keep the two in step when a field is added. What the
 // AUTHORED form changes on top of those types is documented in
 // `scripts/story-data/load-yaml.mjs`: a prop's sprite is `sprite:` rather than

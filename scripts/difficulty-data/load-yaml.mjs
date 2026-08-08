@@ -4,7 +4,7 @@
 // The one loader in this family with no shipped tree behind it, and that is the
 // point rather than an omission: the game's rungs ARE their numbers (mob
 // multipliers, xp rates, mercy curves, the stamina ladders), which live in
-// `src/game/defs/difficulties.ts` as engine tuning and are priced against
+// `engine/game/defs/difficulties.ts` as engine tuning and are priced against
 // `content/ladder.yaml`. What a mod may replace is what the ladder SAYS — the
 // label and the one-line blurb under it — so that a conversion's difficulty
 // screen speaks in its own register instead of this game's.

@@ -159,7 +159,7 @@ export function drawHighlights(c, highlights) {
 }
 
 export async function drawObstacles(c, seed, difficulty) {
-  const { createGame } = await import(engine("src/index.ts"));
+  const { createGame } = await import(engine("engine/index.ts"));
   const state = createGame(seed, c.def.id, difficulty);
   const { surf } = c;
   for (const o of state.obstacles) {

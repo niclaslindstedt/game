@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// TOPPING THE HORDE UP FOR AN ERRAND (src/game/quests/restock.ts), on synthetic
+// TOPPING THE HORDE UP FOR AN ERRAND (engine/game/quests/restock.ts), on synthetic
 // content.
 //
 // The rule this pins is the one that is silent when it breaks. A carved map's

@@ -1,7 +1,7 @@
 ---
 title: Mark urgent branches with an explicit sprint throttle — never infer urgency from thought labels
 date: 2026-07-23
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [sprint, urgency, pacing]
 ---
 

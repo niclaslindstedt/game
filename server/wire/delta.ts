@@ -7,7 +7,7 @@
 //
 // THE DIFFER IS GENERIC, AND THAT IS THE LOAD-BEARING DECISION. The obvious
 // alternative — a hand-written packer per engine type — is a SECOND definition
-// of every one of the ~120 shapes under `src/game/types/`, and its failure mode
+// of every one of the ~120 shapes under `engine/game/types/`, and its failure mode
 // is silence: a def grows a field, the packer does not, and the field simply
 // stops replicating with every test still green. A differ that walks whatever
 // it is given cannot drift, and what it costs is that it must be told the few

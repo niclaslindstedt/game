@@ -1,7 +1,7 @@
 ---
 title: Making the sim run faster — the bot's per-tick economy walks and the megamorphic hidden-class traps that dominate the profile
 date: 2026-07-24
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [performance, hidden-classes, profiling]
 ---
 
@@ -48,7 +48,7 @@ order) so all instances share one hidden class:
 - `EnemyDef`: canonicalized at load in `defs/enemies/index.ts` (+ `ai` sub-object).
 - `Enemy`: full-shape literal in `create.ts` `spawnEnemy`, so no lazy
   `enemy.vanishMs ??= …` / `enemy.awake = true` ever grows the shape.
-- `Projectile`: one `createProjectile` factory (`src/game/projectile.ts`) for all
+- `Projectile`: one `createProjectile` factory (`engine/game/projectile.ts`) for all
   three shot sites. `undefined` reads identically to an absent field at every
   site, and `.toEqual` / JSON ignore it, so round-trip snapshots are untouched —
   but check first that nothing does `'x' in obj` / `Object.keys` on the object.

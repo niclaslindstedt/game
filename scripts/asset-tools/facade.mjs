@@ -33,8 +33,12 @@
 // building at this size — two of the same archetype a hundred px apart in the
 // same colour is the repetition the eye actually catches.
 
-import { TOWN_ART_SIZE } from "../../src/game/drive/town-parts.ts";
-import { townHeight, townSlots, townWidth } from "../../src/game/drive/town.ts";
+import { TOWN_ART_SIZE } from "../../engine/game/drive/town-parts.ts";
+import {
+  townHeight,
+  townSlots,
+  townWidth,
+} from "../../engine/game/drive/town.ts";
 
 // ── COLOUR ───────────────────────────────────────────────────────────────────
 

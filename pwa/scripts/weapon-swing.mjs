@@ -57,10 +57,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "../..");
 
 const { WEAPON_DEFS } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
 const { UNIQUE_DEFS } = await import(
-  path.join(root, "src/game/defs/uniques.ts")
+  path.join(root, "engine/game/defs/uniques.ts")
 );
 
 const argv = process.argv.slice(2);

@@ -8,7 +8,7 @@
 -- your run levels differently. Everything you can read is listed in
 -- `docs/scripting.md`; the two you will want here are:
 --
---   game.config.leveling   the tuning table (src/game/config/leveling.ts)
+--   game.config.leveling   the tuning table (engine/game/config/leveling.ts)
 --   game.balance           the DEVELOPER -> BALANCE knobs, live
 --
 -- The engine passes the values that change per call and reads the rest from

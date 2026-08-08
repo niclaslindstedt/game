@@ -11919,7 +11919,7 @@ canvas.tier-artifact {
   margin-top: 0.4rem;
 }
 
-/* AUTO PILOT (src/game/autopilot.ts + AutopilotOverlay.tsx): the slim strip
+/* AUTO PILOT (engine/game/autopilot.ts + AutopilotOverlay.tsx): the slim strip
    pinned top-center while the coin-metered self-play runs, and the LOOT
    history modal behind its LOOT button. The strip sits below the transient
    top-center captions and never takes steering input (its buttons stop

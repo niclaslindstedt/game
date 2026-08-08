@@ -1,8 +1,8 @@
 # MAKE QUALITY — the craftsmanship axis every PLAIN (regular-rarity) weapon
-# and armor drop rolls at mint (see `rollQuality` in src/game/items.ts):
+# and armor drop rolls at mint (see `rollQuality` in engine/game/items.ts):
 # BROKEN and CRUDE work below the authored numbers, NORMAL at them, SUPERIOR
 # and PERFECT above. This file is the source of truth for the whole axis —
-# compiled into `src/generated/items.ts` by `scripts/generate-items.mjs`
+# compiled into `engine/generated/items.ts` by `scripts/generate-items.mjs`
 # (`make levels` / `make assets`); the engine reads it through config
 # `QUALITY` and the `QUALITY_ORDER`/`QUALITY_PREFIX` exports.
 #

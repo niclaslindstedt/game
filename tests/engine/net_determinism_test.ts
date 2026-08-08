@@ -34,7 +34,7 @@
 // only ever compared bare levels would have gone on passing while a session and
 // its client disagreed about every one of them. So the parameters below are a
 // REAL run's, and the assertion is that the run — not the terrain — is the same
-// on both sides. See `src/game/session-setup.ts`.
+// on both sides. See `engine/game/session-setup.ts`.
 
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -207,7 +207,7 @@ function buildRunInChildProcess(params: SessionParams): string {
   const source = `
     import { register } from "node:module";
     register("./scripts/game-alias-loader.mjs", "file://${repoRoot}");
-    const { createRunFromParams } = await import("./src/index.ts");
+    const { createRunFromParams } = await import("./engine/index.ts");
     const { STATIC_FIELDS } = await import("./server/wire/split.ts");
     const { canonicalJson } = await import("./pwa/src/lib/canonical-json.ts");
     const state = createRunFromParams(${JSON.stringify(params)});
@@ -241,7 +241,7 @@ function buildInChildProcess(
   const source = `
     import { register } from "node:module";
     register("./scripts/game-alias-loader.mjs", "file://${repoRoot}");
-    const { createGame } = await import("./src/index.ts");
+    const { createGame } = await import("./engine/index.ts");
     const { STATIC_FIELDS } = await import("./server/wire/split.ts");
     const { canonicalJson } = await import("./pwa/src/lib/canonical-json.ts");
     const state = createGame(${seed}, ${JSON.stringify(levelId)}, ${JSON.stringify(difficulty)});

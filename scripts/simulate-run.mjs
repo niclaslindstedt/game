@@ -7,7 +7,7 @@
 // per hit dealt and taken, per-mob hp / monster level / contact damage /
 // blows-to-kill / kill counts, every drop, the weapons the auto-equip
 // stepped through, deaths, and the XP the per-map caps withheld. The engine
-// side is src/sim/simulate.ts; this front-end parses flags (see
+// side is engine/sim/simulate.ts; this front-end parses flags (see
 // simulate-run/flags.mjs), dispatches the campaigns, and renders the tables
 // (simulate-run/reports.mjs).
 //
@@ -55,25 +55,25 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { simulateCampaign } = await import(
-  path.join(root, "src/sim/simulate.ts")
+  path.join(root, "engine/sim/simulate.ts")
 );
 const { synthesizeArrival } = await import(
-  path.join(root, "src/sim/arrival.ts")
+  path.join(root, "engine/sim/arrival.ts")
 );
 const { DIFFICULTY_ORDER } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 const { LEVEL_ORDER, levelDef } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { BALANCE_TUNING_DEFAULTS } = await import(
-  path.join(root, "src/game/tuning.ts")
+  path.join(root, "engine/game/tuning.ts")
 );
 const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
-  path.join(root, "src/game/bot/index.ts")
+  path.join(root, "engine/game/bot/index.ts")
 );
 const { STAT_BUILDS, metaLane } = await import(
-  path.join(root, "src/game/builds.ts")
+  path.join(root, "engine/game/builds.ts")
 );
 // `/players N` — D2's monster-hp and XP scaling. It lives in the WIRE because
 // both ends read it, and the CLI is the layer allowed to hold both halves: the

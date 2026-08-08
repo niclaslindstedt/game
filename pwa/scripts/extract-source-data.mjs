@@ -25,13 +25,15 @@ if (!pkg.description) fail("package.json has no description field");
 // invariant tests/version_test.ts guards, re-checked here so a website build
 // cannot ship a mismatched version label.
 const versionTs = fs.readFileSync(
-  path.join(repoRoot, "src", "version.ts"),
+  path.join(repoRoot, "engine", "version.ts"),
   "utf8",
 );
 const m = versionTs.match(/engineVersion = "([^"]+)"/);
-if (!m) fail("src/version.ts no longer declares engineVersion");
+if (!m) fail("engine/version.ts no longer declares engineVersion");
 if (m[1] !== pkg.version)
-  fail(`src/version.ts (${m[1]}) disagrees with package.json (${pkg.version})`);
+  fail(
+    `engine/version.ts (${m[1]}) disagrees with package.json (${pkg.version})`,
+  );
 
 const changelog = fs.readFileSync(path.join(repoRoot, "CHANGELOG.md"), "utf8");
 
@@ -48,4 +50,4 @@ fs.writeFileSync(
   path.join(dest, "sourceData.json"),
   JSON.stringify(out, null, 2),
 );
-console.log("wrote src/generated/sourceData.json");
+console.log("wrote pwa/src/generated/sourceData.json");

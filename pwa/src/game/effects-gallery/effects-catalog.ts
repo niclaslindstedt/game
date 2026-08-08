@@ -916,7 +916,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
   // of these events were emitted by the engine and drawn by nobody, so a boss's
   // slam landed for more than its contact damage with nothing on screen at all.
   // ── THE DEATH RITES ──────────────────────────────────────────────────────
-  // The scripted send-offs (src/game/boss-death.ts). Every one of these is the
+  // The scripted send-offs (engine/game/boss-death.ts). Every one of these is the
   // REAL scene: `ctx.fell()` hands the boss to the engine's own
   // `enterBossDeath` and the shipped `stepBossDeath` runs the three beats over
   // the diorama, so what the shelf shows is what the game does — and it stays
@@ -1394,7 +1394,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
 
   // ── ELITES: the tier built out of the hero's own kit ───────────────────────
   // Ten primitives, each shown in ONE elite's authored colours (see the `look`
-  // note in src/game/defs/enemies/abilities.ts) — which is also what these
+  // note in engine/game/defs/enemies/abilities.ts) — which is also what these
   // exhibits are FOR. The whole claim of the tier is that a shared primitive
   // reads as a different move in a different mob's hands, and the only way to
   // judge that claim is to look at one and then look at another.

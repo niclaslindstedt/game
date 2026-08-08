@@ -14,7 +14,7 @@
 //
 // This suite is the guard on that. It does not test what the bot DECIDES; it
 // tests that every decision it can reach for has a way to travel. A sixth
-// mutator added under `src/game/bot/` with no verb behind it is a bot that plays
+// mutator added under `engine/game/bot/` with no verb behind it is a bot that plays
 // correctly in the renderer and silently does nothing as a client — which is
 // exactly the failure that fails no other test in the repo.
 //

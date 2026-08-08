@@ -54,7 +54,7 @@ function disarmedHQ(seed = SEED): GameState {
  *
  * The whole scripted beat now waits INSIDE the building: the hero lands on the
  * staff lot, and the crowd and the rusher he breaks from stand in the first room
- * past the entrance (`LevelDef.arrivals` — src/game/arrivals.ts). So a suite
+ * past the entrance (`LevelDef.arrivals` — engine/game/arrivals.ts). So a suite
  * about the ORDER of the beat has to start where the beat is, which means
  * playing the lot's own business out first: wait, muted, for somebody to arrive
  * and badge the doors open, then stand the hero a step through them.

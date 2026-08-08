@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE LUA VM'S SHIP TARGET — `src/lib/lua/` compiled to plain ESM for the
+// THE LUA VM'S SHIP TARGET — `engine/lib/lua/` compiled to plain ESM for the
 // SHIPPED mod compiler.
 //
 // The problem it solves is the one `mod/catalog.json` solves for id sets, one
@@ -30,7 +30,7 @@
 // by relabelling somebody's licence. It is gitignored and rebuilt, like every
 // other generated tree here.
 //
-// Unlike the server's target this one needs NO staging step: `src/lib/lua/`
+// Unlike the server's target this one needs NO staging step: `engine/lib/lua/`
 // imports nothing but its own siblings by relative path, so there is no alias
 // for `tsc` to refuse (TS2877). That is worth keeping true.
 //
@@ -46,10 +46,10 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const outDir = path.join(root, "electron", "modtools-lua");
 /** What ships: the VM, and the import-free hook catalog the validator checks a
  * script's exports against. Both are leaves — the hook list deliberately
- * imports nothing — so the pair compiles standalone. The output MIRRORS `src/`
+ * imports nothing — so the pair compiles standalone. The output MIRRORS `engine/`
  * (`lib/lua/index.js`, `game/script/hooks.js` inside the out dir) so a reader
  * can map a shipped file back to its source without a table. */
-const SOURCES = ["src/lib/lua", "src/game/script/hooks.ts"];
+const SOURCES = ["engine/lib/lua", "engine/game/script/hooks.ts"];
 
 /** The compiler options, written out rather than inherited from the root
  * tsconfig: this target EMITS (the root is `noEmit`), needs no DOM, and must
@@ -73,9 +73,9 @@ const CONFIG = {
     sourceMap: false,
     types: [],
     outDir: "modtools-lua",
-    rootDir: "../src",
+    rootDir: "../engine",
   },
-  include: ["../src/lib/lua/**/*.ts", "../src/game/script/hooks.ts"],
+  include: ["../engine/lib/lua/**/*.ts", "../engine/game/script/hooks.ts"],
 };
 
 for (const rel of SOURCES) {

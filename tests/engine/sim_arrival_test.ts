@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Sim-only arrival helpers (src/sim/arrival.ts): `synthesizeArrival` mints a
+// Sim-only arrival helpers (engine/sim/arrival.ts): `synthesizeArrival` mints a
 // realistic leveled + geared hero to drop straight into a rung (so a top
 // difficulty is measured as it's actually played, not as a fresh rookie), and
 // `reviveHero` stands the immortal calibration hero back up AWAY from the swarm
@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createGame } from "@game/core";
-import { reviveHero, synthesizeArrival } from "../../src/sim/arrival.ts";
+import { reviveHero, synthesizeArrival } from "../../engine/sim/arrival.ts";
 // Installs the fixture catalogs before any game is built.
 import { makeEnemy, startGame } from "./helpers.ts";
 

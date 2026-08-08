@@ -17,11 +17,11 @@ here). Do this instead, once, at the very start:
 
 ```sh
 git worktree add /tmp/<scratch>/before HEAD
-cp -r src/generated /tmp/<scratch>/before/src/        # content is unchanged, so this is valid
+cp -r engine/generated /tmp/<scratch>/before/src/        # content is unchanged, so this is valid
 ln -s "$PWD/node_modules" /tmp/<scratch>/before/node_modules
 ```
 
-The `src/generated` copy is the trick that makes it cheap — an engine-only
+The `engine/generated` copy is the trick that makes it cheap — an engine-only
 change leaves the compiled catalogs byte-identical, so the worktree needs no
 generator run. Now `cd before && node scripts/simulate-run.mjs …` gives a true
 before reading at any moment, as many times as you want, with the same flags.
@@ -76,7 +76,7 @@ when `mobHpBase` moves by ×N, move their authored `damage` by ×N too, or the
 first minutes of every difficulty get N× harder while nothing else does.
 
 ```
-blaster (src/game/defs/equipment.ts — engine machinery, not content)
+blaster (engine/game/defs/equipment.ts — engine machinery, not content)
 content/items/regular/{fire_extinguisher,medieval_sword,combat_knife,brass_knuckles,stick}.yaml
 ```
 

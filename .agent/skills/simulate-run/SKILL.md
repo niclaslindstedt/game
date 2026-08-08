@@ -39,7 +39,7 @@ it at both ends of the session.
 
 ## The tools
 
-- **Engine module: `src/sim/simulate.ts`** — `simulateLevel` (one map),
+- **Engine module: `engine/sim/simulate.ts`** — `simulateLevel` (one map),
   `runLevel` (one map + the walked-out loadout), `simulateCampaign` (a
   difficulty × level sweep with carry). Deterministic per options; returns
   typed reports (`LevelReport` / `CampaignReport`). Deliberately NOT part of
@@ -96,7 +96,7 @@ stat-distribution build the hero levels as (`melee`/`ranged`/`magic` focus a
 weapon lane; `balanced` spreads across every stat), which through the stat-aware
 auto-equip also decides the weapon and gear. (`--profile` is the historical alias
 for the same axis, and also takes `auto`, the emergent lane.) The build catalog
-is one source of truth — `src/game/builds.ts` — shared with the analytic
+is one source of truth — `engine/game/builds.ts` — shared with the analytic
 progression graphs, so a build means the same thing in both tools.
 
 - **`--class all`** runs the MATRIX (one campaign per build) and prints
@@ -152,14 +152,14 @@ start→end` per rung and the final sweep level against a `--compare` baseline.
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 
 `--balance` applies the SAME ten runtime multipliers the DEVELOPER → BALANCE
-subpage exposes (`BalanceTuning` in `src/game/tuning.ts`: `xpGain`,
+subpage exposes (`BalanceTuning` in `engine/game/tuning.ts`: `xpGain`,
 `mobHp`, `mobDamage`, `hordeSize`, `dropRate`,
 `equipmentShare`, `gearQuality`, `uniqueDrops`, `menaceGain`) — as `key=×`
 pairs, where `1` is the shipped tuning and `0` turns a system off. The sim
 calls `setBalanceTuning` for the run and restores the prior tuning after, so
 you can measure a candidate balance with **no rebuild and no config edit**:
 change a knob, re-run, read the verdict, repeat. When a value earns its keep,
-paste it into `src/game/config/` (the knob's real read site) and re-verify at
+paste it into `engine/game/config/` (the knob's real read site) and re-verify at
 `1×` — the `--balance` flag is the fast probe, the config is the commit.
 
 ### Stuck cancellation — `--stuck-limit` and the STUCK AREAS map loop
@@ -189,7 +189,7 @@ directly and pulls the matching runs' `stuck.areas`. **Always pass the run's
 `--seed`** (the printed command does): stuck spots usually sit on the run's
 seed-scattered rocks, which only draw on the layout with that seed. This is the
 fast loop for navigation/obstacle-avoidance work: run → read STUCK AREAS →
-look at the highlighted map → fix `src/game/bot/`/geometry → re-run (see the
+look at the highlighted map → fix `engine/game/bot/`/geometry → re-run (see the
 `bot-improvement` skill). For pure balance sweeps where the old
 grind-through-the-clock behaviour is wanted, pass `--stuck-limit 0`.
 
@@ -278,7 +278,7 @@ ladder) once per mob at overkill efficiency 1, auto-equipping upgrades and
 spending level-up points on a **configurable** stat distribution, snapshotting
 the full stat block every N kills (default 25).
 
-- **Engine module: `src/sim/analytic.ts`** — `simulateProgression(options)`,
+- **Engine module: `engine/sim/analytic.ts`** — `simulateProgression(options)`,
   deterministic, returns a typed `ProgressionReport` (per-pass `LevelResult`s +
   a flat `Checkpoint` series). Not part of the public engine API.
 - **CLI: `scripts/progression-sim.mjs`** — prints a per-pass table (and every
@@ -327,7 +327,7 @@ The `--no-*` flags leave those tiers on the ground (via
 When the question is **"how many foes does a melee swing actually hit?"** — the
 input to the damage-budget model's AoE assumption (`weaponAssumedTargets` /
 config `WEAPON.meleeAoe`) — use `scripts/aoe-calibration.mjs` (engine side
-`src/sim/aoe-calibration.ts`). It arms the REAL autopilot with probe weapons,
+`engine/sim/aoe-calibration.ts`). It arms the REAL autopilot with probe weapons,
 plays representative levels, and records the UNCAPPED in-cone count on every
 swing (exposed on the `swing` event by `meleeSweep`). There are TWO axes:
 
@@ -549,7 +549,7 @@ to run many candidates without touching config:
    are chaotic — one A/B seed isn't a decision).
 4. **Commit the winner to config.** The `--balance` knobs are a probe, not a
    ship vehicle — settings-page tuning doesn't change the shipped game. Move
-   the earned value into `src/game/config/` at the knob's real read site (the
+   the earned value into `engine/game/config/` at the knob's real read site (the
    `tuning.ts` header names each site), then re-run at plain `1×` to confirm
    the config change reproduces the probe.
 5. For leveling-pace changes, cross-check the analytic view

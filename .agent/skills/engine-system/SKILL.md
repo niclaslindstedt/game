@@ -5,7 +5,7 @@ description: "Use when adding or changing a gameplay system (enemy type, weapon,
 
 # Adding a Gameplay System
 
-Gameplay lives in the **engine** (`src/`, framework-free TypeScript); the
+Gameplay lives in the **engine** (`engine/`, framework-free TypeScript); the
 **app** (`pwa/`) only draws state and reacts to events. Keep that
 direction: the engine never knows a renderer or a speaker exists. This is
 what makes every game rule unit-testable in plain Node.
@@ -19,16 +19,16 @@ it at both ends of the session.
 
 | Piece | File |
 | --- | --- |
-| GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config/` — cross-level knobs only, one module per system |
-| A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
-| A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
-| A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `src/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
-| State shapes & events | `src/game/types/` (one module per concern — entities reference defs by id, keep it that way) |
-| Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
-| Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items/` (split by concern behind `index.ts`) — safe to call from UI outside `step()`, but reach them through `src/game/commands.ts` (`applyRunCommand`) so a multiplayer client can run them too |
-| Per-tick behavior | `src/game/step/` — one `stepX()` function per system, each in its own module, called in a fixed order documented at the top of `index.ts` |
-| Generic helpers (any game could use) | `src/lib/` — the pool a later game keeps as-is |
-| Public surface | `src/index.ts` — export new types/constants the app needs |
+| GLOBAL tuning (player, XP curve, stat effects, loot rules) | `engine/game/config/` — cross-level knobs only, one module per system |
+| A new level (geometry, gravity, intro, spawns, objective, loot table) | `engine/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
+| A new monster (stats, AI radii, role, guaranteed drops) | `engine/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
+| A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `engine/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
+| State shapes & events | `engine/game/types/` (one module per concern — entities reference defs by id, keep it that way) |
+| Level/entity setup | `engine/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
+| Player-driven mutations (equip, stat allocation, phase toggles) | `engine/game/items/` (split by concern behind `index.ts`) — safe to call from UI outside `step()`, but reach them through `engine/game/commands.ts` (`applyRunCommand`) so a multiplayer client can run them too |
+| Per-tick behavior | `engine/game/step/` — one `stepX()` function per system, each in its own module, called in a fixed order documented at the top of `index.ts` |
+| Generic helpers (any game could use) | `engine/lib/` — the pool a later game keeps as-is |
+| Public surface | `engine/index.ts` — export new types/constants the app needs |
 | Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |
 | Drawing | `pwa/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
 | Sound | `pwa/src/game/sfx/` (+ the `sound-effects` skill) |
@@ -37,16 +37,16 @@ it at both ends of the session.
 ## Workflow
 
 1. **Config first.** Add the system's tuning block to its module under
-   `src/game/config/` (a new module for a new system, re-exported from the
+   `engine/game/config/` (a new module for a new system, re-exported from the
    `index.ts` barrel), with units in the comments (world px, ms, hp). If you
    can't express the knob there, the design isn't ready.
-2. **Types.** Extend `src/game/types/`. Anything the app must react to
+2. **Types.** Extend `engine/game/types/`. Anything the app must react to
    (sound, flash, particles) becomes a `GameEvent` variant — events are the
    ONLY channel from simulation to presentation. Events are cleared and
    refilled by every `step()`, so the app never misses or double-plays one.
 3. **Simulate.** Implement `stepX(state, …)` in the matching module under
-   `src/game/step/` (a new module for a new system) and slot
-   it into the documented order inside `step()` (`src/game/step/index.ts`). Mutate state in place;
+   `engine/game/step/` (a new module for a new system) and slot
+   it into the documented order inside `step()` (`engine/game/step/index.ts`). Mutate state in place;
    respect `phase !== "playing"` freezing. Keep per-tick allocation near
    zero (this runs 60×/s).
 4. **Test headlessly** in `tests/engine/`: build a state with
@@ -55,7 +55,7 @@ it at both ends of the session.
    `step(state, input, 16)` loops, assert on state + events. Every rule you
    claim ("cooldown blocks the second hit") gets an assertion.
    `npx vitest run tests/engine/<file>` to iterate.
-5. **Export** what the app needs from `src/index.ts`.
+5. **Export** what the app needs from `engine/index.ts`.
 6. **Present.** Sprites via the `pixel-assets` skill; draw order and
    animation in `render.ts`; event → sound mapping via the `sound-effects`
    skill; HUD numbers in `GameScreen.tsx`.
@@ -76,7 +76,7 @@ being judged. Composition is why `ActiveAbility.clocks` is keyed per block: one
 shared cooldown was safe only while every def carried exactly one block, and
 the moment one carries two, an orbit's bite resets a storm's strike timer.
 
-The effects themselves live ONCE, in `src/game/ability-effects.ts`, because a
+The effects themselves live ONCE, in `engine/game/ability-effects.ts`, because a
 powerup and a GRANTED SPELL (the `spell` affix on gear, and the magic tree's
 `conjure` talents) were two implementations of the same six things — same ring,
 same prefilter, same `hitEnemy` path, in two files drifting apart. A carrier

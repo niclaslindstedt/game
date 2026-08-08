@@ -108,7 +108,7 @@ export function loadQuestGivers(baseDir = SHIPPED_ROOT) {
 
 /**
  * Load the CONVERSATION tree catalog — the talks the hero steers (see
- * src/game/defs/conversations.ts). Loaded by the QUEST loader, and compiled
+ * engine/game/defs/conversations.ts). Loaded by the QUEST loader, and compiled
  * into the quest catalog, because a conversation exists to move an errand
  * along; a pipeline of its own would buy a second schema to keep in step and
  * nothing else.

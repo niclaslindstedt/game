@@ -6,7 +6,7 @@
 // rare/unique visitors, and its boss — and tracks how XP, loot, and the
 // hero's full stat block move, rung by rung, all the way to the level cap and
 // on through JESUS to level 99. Snapshots the hero every N kills (default 25).
-// The engine side is src/sim/analytic.ts.
+// The engine side is engine/sim/analytic.ts.
 //
 //   node scripts/progression-sim.mjs                              # full game → L99
 //   node scripts/progression-sim.mjs --difficulty easy --level goodco_hq
@@ -34,25 +34,25 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { simulateProgression } = await import(
-  pathToFileURL(path.join(root, "src/sim/analytic.ts")).href
+  pathToFileURL(path.join(root, "engine/sim/analytic.ts")).href
 );
 const { DIFFICULTY_ORDER } = await import(
-  pathToFileURL(path.join(root, "src/game/defs/difficulties.ts")).href
+  pathToFileURL(path.join(root, "engine/game/defs/difficulties.ts")).href
 );
 const { LEVEL_ORDER } = await import(
-  pathToFileURL(path.join(root, "src/game/defs/levels/index.ts")).href
+  pathToFileURL(path.join(root, "engine/game/defs/levels/index.ts")).href
 );
 const { STAT_NAMES } = await import(
-  pathToFileURL(path.join(root, "src/game/defs/equipment.ts")).href
+  pathToFileURL(path.join(root, "engine/game/defs/equipment.ts")).href
 );
 const { STAT_BUILDS } = await import(
-  pathToFileURL(path.join(root, "src/game/builds.ts")).href
+  pathToFileURL(path.join(root, "engine/game/builds.ts")).href
 );
 const { buildChartHtml, buildCompareChartHtml } = await import(
   pathToFileURL(path.join(here, "progression-chart.mjs")).href
 );
 const { setAutoStatGainsEnabled } = await import(
-  pathToFileURL(path.join(root, "src/game/leveling.ts")).href
+  pathToFileURL(path.join(root, "engine/game/leveling.ts")).href
 );
 
 // ---- Flags ---------------------------------------------------------------------

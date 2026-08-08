@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# Part of the CAR assembly (engine/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas. This one is NOT a panel — it is the blood film, drawn over the
 # whole shell area and MASKED to whichever panel is being soaked
 # (pwa/src/game/drive-screen/car-soak.ts), exactly as the hero's coat is clipped

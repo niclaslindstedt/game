@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE EXECUTIONER (src/game/items/execute.ts) — a melee weapon that does not
+// THE EXECUTIONER (engine/game/items/execute.ts) — a melee weapon that does not
 // deal damage to a body it can take, it takes the body: the blow is priced in
 // the VICTIM's own health, so the horde's numbers are not an answer to it.
 //

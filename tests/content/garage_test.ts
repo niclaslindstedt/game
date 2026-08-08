@@ -223,7 +223,7 @@ describe("the night", () => {
 
   it("is dark on the night the story opens, and daylight is only a parameter", () => {
     // The engine never reads a clock: a run is handed its hour, and a run
-    // handed none is in full daylight (see src/game/daylight.ts).
+    // handed none is in full daylight (see engine/game/daylight.ts).
     expect(nightAmount(startHome())).toBe(0);
     const night = startHome();
     night.daylight = 0;

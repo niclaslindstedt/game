@@ -5,7 +5,7 @@
 // kind, a sprite id nothing in the atlas answers to) FAIL the build, so a typo
 // in `content/powerups.yaml` surfaces at `npm run levels` instead of as a
 // crash mid-fight. The `AbilityDef` contract this checks against lives in
-// src/game/defs/abilities.ts — keep the two in step when a kind gains a field.
+// engine/game/defs/abilities.ts — keep the two in step when a kind gains a field.
 
 /** Every field a powerup must declare. */
 export const REQUIRED_FIELDS = ["name", "lore", "kind", "durationMs", "icon"];

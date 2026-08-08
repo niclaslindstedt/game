@@ -22,7 +22,7 @@ complete:
   - - IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
   - - I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
   # {CACHE} — the RUNG's own line about what she brought and where it came from
-  # (`DifficultyDef.cache.line`, src/game/cache.ts). Ruth hands the chest over
+  # (`DifficultyDef.cache.line`, engine/game/cache.ts). Ruth hands the chest over
   # on every difficulty and it is a grander thing each time, so the provenance
   # ramps with it: a flea-market box, her mother's, a crossing, a dowry, a king.
   # The errand is one file and the ladder is five; the rung owns the sentence.
@@ -46,7 +46,7 @@ items:
 reward:
   xpShare: 1
   coins: 800
-  # THE CACHE — the antique chest against the bay's north wall (src/game/
+  # THE CACHE — the antique chest against the bay's north wall (engine/game/
   # cache.ts). The last thing Ruth has to give, paid for the last errand she
   # has to give it for, and the only one in the game: from here on the hero has
   # somewhere to KEEP a piece instead of carrying it.

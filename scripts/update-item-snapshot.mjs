@@ -20,9 +20,9 @@ import { writeSnapshot } from "./snapshot-json.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
-const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
-const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
+const { WEAPON_DEFS } = await import(engine("engine/game/defs/equipment.ts"));
+const { GEAR_DEFS } = await import(engine("engine/game/defs/gear.ts"));
+const { UNIQUE_DEFS } = await import(engine("engine/game/defs/uniques.ts"));
 
 await writeSnapshot(engine("tests/content/fixtures/items-snapshot.json"), {
   weapons: WEAPON_DEFS,

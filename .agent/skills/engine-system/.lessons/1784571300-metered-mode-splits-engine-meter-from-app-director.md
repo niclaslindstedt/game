@@ -1,11 +1,11 @@
 ---
 title: A paid/metered MODE splits into an engine meter + an app flight director
 date: 2026-07-20
-scope: src/game/autopilot.ts
+scope: engine/game/autopilot.ts
 concepts: [metered-mode, engine-app-split, autopilot]
 ---
 
-The AUTO PILOT (coin-drained self-play, `src/game/autopilot.ts`) needed state
+The AUTO PILOT (coin-drained self-play, `engine/game/autopilot.ts`) needed state
 that outlives a single run — but the engine's `GameState` dies on every level
 change. The split that worked:
 

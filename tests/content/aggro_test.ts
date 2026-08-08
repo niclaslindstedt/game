@@ -26,7 +26,7 @@ import { distance as dist } from "@game/lib/vec.ts";
  * A wall segment (or a low rock) dropped between the player and +dx.
  *
  * A solid one is built as a PAIR, because that is what a wall is: a lone
- * narrow obstacle no longer hides anything (src/game/obstacles.ts, "What
+ * narrow obstacle no longer hides anything (engine/game/obstacles.ts, "What
  * blocks SIGHT"), so a single boulder would leave the player in plain view.
  */
 function placeObstacle(

@@ -34,7 +34,7 @@
 // campaign progress on the CHARACTER (`isLevelUnlocked`) and which keepsakes
 // are banked is the roster's (`hasKeepsake`) — no run carries either. The
 // engine owns the other half of the spoken case: the line itself, and the
-// reach test behind it (`tapTravelDoor` in src/game/story.ts).
+// reach test behind it (`tapTravelDoor` in engine/game/story.ts).
 
 import { runLevelDef, type Difficulty, type GameState } from "@game/core";
 

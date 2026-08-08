@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE HELLGATE TEAR — the world-anchored effect for the engine's
-// `hellgateOpened` event (config HELLGATES / src/game/spawners.ts): a rampage
+// `hellgateOpened` event (config HELLGATES / engine/game/spawners.ts): a rampage
 // has grown ugly enough that one of a map's rampage-only spawn points RIPS OPEN
 // and starts letting historic cross-universe horrors through.
 //

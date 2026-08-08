@@ -12,7 +12,7 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 | Surface | Derived from | By |
 |---|---|---|
 | `index.html` head, `manifest.webmanifest` | `game.config.json` (title, tagline, description, `siteUrl`, OG fields) | `pwa/pwa-plugin.ts` at build time |
-| `pwa/src/generated/sourceData.json` (version, description, changelog) | root `package.json`, `src/version.ts`, `CHANGELOG.md` | `pwa/scripts/extract-source-data.mjs` (runs on every build; **fails** if `src/version.ts` and `package.json` disagree) |
+| `pwa/src/generated/sourceData.json` (version, description, changelog) | root `package.json`, `engine/version.ts`, `CHANGELOG.md` | `pwa/scripts/extract-source-data.mjs` (runs on every build; **fails** if `engine/version.ts` and `package.json` disagree) |
 | `sitemap.xml`, `robots.txt`, `llms.txt`, `404.html` | `game.config.json` (`siteUrl`) | `pwa/scripts/generate-seo.mjs` (post-build) |
 | Icons + OG card art | `pwa/public/icon.svg` + `game.config.json` | `make icons` (never edit the emitted PNGs) |
 | Identity strings in app code | `game.config.json` via `pwa/src/identity.ts` | never re-hardcode a brand string |
@@ -33,9 +33,9 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
    ```sh
    git log --oneline "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     src/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
    git diff --name-only "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     src/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
    ```
 
 3. If anything changed, rebuild and check the derived surfaces.
@@ -46,7 +46,7 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 |---|---|
 | `game.config.json` (any identity field) | `index.html` head, manifest, SEO files, OG art — rebuild; rerun `make icons` if OG-relevant fields moved |
 | `game.config.json` `siteUrl` | `sitemap.xml` / `robots.txt` / canonical URLs; also verify `DEPLOY_SLOTS` in `pwa/pwa-plugin.ts` and `.github/workflows/pages.yml` still agree |
-| `package.json` / `src/version.ts` version | `sourceData.json` version label — versions must match (`scripts/update-versions.sh` owns them; never hand-edit) |
+| `package.json` / `engine/version.ts` version | `sourceData.json` version label — versions must match (`scripts/update-versions.sh` owns them; never hand-edit) |
 | `CHANGELOG.md` | `sourceData.json` changelog extraction |
 | `pwa/public/icon.svg` | `make icons` — regenerates every PNG and the OG card |
 | README / docs restructuring | Only matters if an extraction anchor moved — `extract-source-data.mjs` fails loudly when a marker is missing |

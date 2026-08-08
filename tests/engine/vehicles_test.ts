@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE VEHICLES — the car and the garage ship as machines (src/game/vehicles.ts):
+// THE VEHICLES — the car and the garage ship as machines (engine/game/vehicles.ts):
 // minted from their landmark kinds with solid footprints, wheels that roll
 // from speed (never from a timer), suspension springs that answer a shove
 // and settle to dead rest, and the wear/driver/thrust fields the driving
@@ -106,7 +106,7 @@ describe("the wheels", () => {
 });
 
 // THE WHEEL IS THE ROAD'S WHEEL (`applyCarWheel`, shared verbatim with
-// src/game/drive/): it puts the BODY across, this tick and no later one, and
+// engine/game/drive/): it puts the BODY across, this tick and no later one, and
 // the rack (`CarVehicle.steer`) is the picture of it — simulated rather than
 // inferred, because the renderer warps the front wheel sprite by it.
 //

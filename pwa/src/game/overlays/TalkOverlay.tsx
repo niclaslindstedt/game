@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE TALK BOX — a conversation the player STEERS, shown while
-// `phase === "talk"` (see src/game/conversation.ts).
+// `phase === "talk"` (see engine/game/conversation.ts).
 //
 // IT WEARS THE QUEST BOX'S GOLD, AND THAT IS THE POINT. Every window in the
 // game is on the shared steel skin except one: the errand box, which is gold

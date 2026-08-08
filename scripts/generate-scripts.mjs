@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The SCRIPT pipeline. Compiles `content/scripts/*.lua` — the authored rules the
 // engine hands out to a script instead of keeping in TypeScript — into
-// `src/generated/scripts.ts` (GENERATED_SCRIPTS), which `src/game/script/host.ts`
+// `engine/generated/scripts.ts` (GENERATED_SCRIPTS), which `engine/game/script/host.ts`
 // reads as the base catalog under whatever a mod registers on top.
 //
 // "Compiles" means two different things here, and both matter:
@@ -76,9 +76,9 @@ export const GENERATED_SCRIPTS: Record<string, ScriptSource> = ${JSON.stringify(
 )};
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/scripts.ts`, out);
 console.log(
-  `wrote src/generated/scripts.ts — ${entries.length} scripts, ${implemented.length} hooks`,
+  `wrote engine/generated/scripts.ts — ${entries.length} scripts, ${implemented.length} hooks`,
 );

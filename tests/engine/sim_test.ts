@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The headless campaign simulator (src/sim/simulate.ts): drives the real
+// The headless campaign simulator (engine/sim/simulate.ts): drives the real
 // engine — createGame, step, the autopilot, auto-equip, loadout carry — and
 // reports what happened. These are engine-rule smoke tests on the fixture
 // catalog; the balance-probing runs live in scripts/simulate-run.mjs.
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { simulateCampaign, simulateLevel } from "../../src/sim/simulate.ts";
+import { simulateCampaign, simulateLevel } from "../../engine/sim/simulate.ts";
 import {
   BALANCE_TUNING_DEFAULTS,
   getBalanceTuning,
   resetBalanceTuning,
-} from "../../src/game/tuning.ts";
+} from "../../engine/game/tuning.ts";
 // Installs the fixture catalogs before any simulation builds a game.
 import "./helpers.ts";
 

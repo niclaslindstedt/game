@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The AUTO PILOT session (src/game/autopilot.ts): the screen-lifetime ride
+// The AUTO PILOT session (engine/game/autopilot.ts): the screen-lifetime ride
 // state that survives the run remounts the ride itself causes (restart on
 // death, advance on victory, the bunker crossing), plus the flight director
 // that reacts to run events — booking special finds for the LOOT history,
@@ -39,7 +39,7 @@ import type { RunCheckpoint } from "./run-progress.ts";
 
 import { runCommand, runCommandOk } from "../run-commands.ts";
 
-// AUTO PILOT (src/game/autopilot.ts): the endgame FARM level the ride grinds
+// AUTO PILOT (engine/game/autopilot.ts): the endgame FARM level the ride grinds
 // once the campaign difficulty is beaten — the level that hosts the bunker
 // gate, so rift runs can find the severed hand and detour through the vault.
 const AUTOPILOT_FARM_LEVEL = "the_rift";

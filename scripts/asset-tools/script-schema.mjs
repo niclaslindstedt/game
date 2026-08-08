@@ -65,12 +65,12 @@ async function loadEngineModule(tsPath, shippedPath, what) {
 }
 
 const { compile, load, LuaTable } = await loadEngineModule(
-  "src/lib/lua/index.ts",
+  "engine/lib/lua/index.ts",
   "lua-vm/lib/lua/index.js",
   "the Lua VM",
 );
 const { HOOKS } = await loadEngineModule(
-  "src/game/script/hooks.ts",
+  "engine/game/script/hooks.ts",
   "lua-vm/game/script/hooks.js",
   "the hook catalog",
 );
@@ -136,7 +136,7 @@ export function validateScript(id, source, opts = {}) {
     const list = [...SCRIPT_HOOKS.keys()].sort().join(", ");
     errors.push(
       `scripts/${id}.lua: no such script — the engine reads ${list}. ` +
-        `A new script id needs an entry in src/game/script/hooks.ts.`,
+        `A new script id needs an entry in engine/game/script/hooks.ts.`,
     );
     return { errors, warnings, hooks: [] };
   }
@@ -264,7 +264,7 @@ export function validateScriptCatalog(implemented) {
       errors.push(
         `hook "${hook}" has no implementation — add it to ` +
           `content/scripts/${script}.lua, or drop its entry from ` +
-          `src/game/script/hooks.ts.`,
+          `engine/game/script/hooks.ts.`,
       );
     }
   }

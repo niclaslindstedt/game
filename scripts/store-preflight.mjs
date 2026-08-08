@@ -307,7 +307,7 @@ const crashHint = (result) => {
   const detail = (result.stderr || result.stdout || "").trim();
   if (/ERR_MODULE_NOT_FOUND|src\/generated/.test(detail)) {
     return (
-      "src/generated/ is missing — the compiled catalogs are build output " +
+      "engine/generated/ is missing — the compiled catalogs are build output " +
       "(§11.2), and the manifests are derived from them. Run `make levels`."
     );
   }

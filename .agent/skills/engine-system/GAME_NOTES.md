@@ -7,11 +7,11 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
 ## Pattern log
 
 - **Content catalogs (2026-07, moon level):** levels/enemies/equipment are
-  data registries under `src/game/defs/`; runtime entities carry a `defId`.
+  data registries under `engine/game/defs/`; runtime entities carry a `defId`.
   New content = new entries, not engine changes. Paused sub-states (intro
   text, level-up chooser, inventory) are `GamePhase` values — `step()`
   freezes on anything but `playing`, and the UI resumes via exported
-  mutators. Import `src/lib` through `@game/lib/*` (never relative) so
+  mutators. Import `engine/lib` through `@game/lib/*` (never relative) so
   reusable code can move without rewriting every caller.
 - **Cross-level modifiers (2026-07, difficulty ladder):** a setting that
   scales EVERY level (difficulty) is its own defs catalog
@@ -25,7 +25,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   app-side mutation, so bots (`botAct` sets the edge) and tests drive the
   same path.
 - **Cutscenes (2026-07, the prelude):** the beat-machine player is GENERIC
-  (`src/lib/cutscene.ts`, deterministic, no RNG); scenes are data in
+  (`engine/lib/cutscene.ts`, deterministic, no RNG); scenes are data in
   `defs/cutscenes.ts`; a level opts in via `LevelDef.prelude`. The run
   opens in a `cutscene` phase advanced by `step()` on the sim clock (world
   frozen), with `tapCutscene`/`skipCutscene` mutators beside `dismissIntro`.
@@ -43,7 +43,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `playerAppearance(state)` — so a new level/kind/biome/costume is data, not
   a `render.ts` edit.
 - **Rectangular obstacles (2026-07, moon rocks):** obstacle geometry moved out
-  of `step.ts` into a cohesive `src/game/obstacles.ts` (resolve/inside/
+  of `step.ts` into a cohesive `engine/game/obstacles.ts` (resolve/inside/
   lineOfSight/blockedBy) so the step stays under the line cap and the nuke +
   `create.ts` share one "is this blocked?" source. A round obstacle keeps its
   `radius`; a sized rock carries an optional `half` (footprint half-extents)
@@ -155,7 +155,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
 - **Fog-of-war level map (2026-07):** run-scoped exploration is a coarse
   byte grid on the state (`state.explored`, one cell per `MAP.cellSize`,
   stamped by `revealAround` right after `stepPlayer` each tick + once at
-  creation around the spawn) living in a cohesive `src/game/map.ts` next to
+  creation around the spawn) living in a cohesive `engine/game/map.ts` next to
   its phase toggles — `openMap`/`closeMap` and a `map` GamePhase that
   freezes like `inventory` (close yields to a pending level-up). Memorable
   events pin `state.mapMarkers` at their existing source of truth, not via
@@ -260,7 +260,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `tests/engine/leveling_test.ts` ("the ding" describe block).
 - **Ranged enemies & guarded bosses (2026-07, Boot Hill):** enemy shooters are
   data — `EnemyDef.ranged` (damage/cooldown/range/projectile, optional
-  `takesCover`) with the behavior in a cohesive `src/game/ranged.ts`
+  `takesCover`) with the behavior in a cohesive `engine/game/ranged.ts`
   (movement handed off from `moveEnemy`, a `stepRangedAttacks` firing pass
   after `stepEnemies`, and `resolveHostileHit` for the player collision).
   Hostile shots ride the EXISTING `state.projectiles` flagged

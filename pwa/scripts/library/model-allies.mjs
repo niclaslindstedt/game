@@ -374,6 +374,9 @@ export function alliesModel(venueList) {
     // same way (`reviveGearIds`), so a total conversion that renames the thing
     // still links to its own rather than to a page that isn't there.
     reviveItem: reviveItemModel(),
-    sourceFiles: ["content/companions.yaml", "src/game/config/companions.ts"],
+    sourceFiles: [
+      "content/companions.yaml",
+      "engine/game/config/companions.ts",
+    ],
   };
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// AUTO PILOT (src/game/autopilot.ts): the coin-metered self-playing mode.
+// AUTO PILOT (engine/game/autopilot.ts): the coin-metered self-playing mode.
 // The engine bills the purse per SIMULATED second (× the speed rung) inside
 // `step()`, refuses a ride the purse can't cover, disengages itself with an
 // `autopilotStopped` event when the coins run dry, and routes the next run

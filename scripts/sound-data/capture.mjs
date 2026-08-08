@@ -126,7 +126,7 @@ async function eventTypes() {
       path.dirname(fileURLToPath(import.meta.url)),
       "..",
       "..",
-      "src",
+      "engine",
       "game",
       "types",
       "events.ts",

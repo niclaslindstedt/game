@@ -6,8 +6,8 @@
 // content goes through, and that schema cross-references ids: a level names
 // enemies, a spawn names a ramp, an elite drops a unique. In the repo those id
 // sets come from importing the engine's TypeScript catalogs — which the SHIPPED
-// desktop app cannot do. It has no TypeScript toolchain, no `src/`, and its
-// main process is plain compiled JavaScript; `src/generated/` isn't even in the
+// desktop app cannot do. It has no TypeScript toolchain, no `engine/`, and its
+// main process is plain compiled JavaScript; `engine/generated/` isn't even in the
 // build. So the id sets are snapshotted here into one JSON file that travels
 // inside the app, and the compiler reads THAT instead of the engine.
 //
@@ -48,7 +48,7 @@ import {
 import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
 import { loadMenus } from "../../scripts/menu-data/load-ingame-yaml.mjs";
 
-// Engine modules under src/lib use the @game/lib alias — map it so the def
+// Engine modules under engine/lib use the @game/lib alias — map it so the def
 // catalogs import cleanly under plain node.
 register("../../scripts/game-alias-loader.mjs", import.meta.url);
 
@@ -59,20 +59,22 @@ const OUT = path.join(repoRoot, "mod", "catalog.json");
 // Import the def catalogs DIRECTLY rather than through @game/core, which pulls
 // the level registry and with it every map in the game — the same bootstrap
 // rule scripts/generate-levels.mjs follows.
-const { HOOKS } = await import(engine("src/game/script/hooks.ts"));
-const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
-const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
-const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
-const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
+const { HOOKS } = await import(engine("engine/game/script/hooks.ts"));
+const { ENEMY_DEFS } = await import(
+  engine("engine/game/defs/enemies/index.ts")
+);
+const { WEAPON_DEFS } = await import(engine("engine/game/defs/equipment.ts"));
+const { GEAR_DEFS } = await import(engine("engine/game/defs/gear.ts"));
+const { ABILITY_DEFS } = await import(engine("engine/game/defs/abilities.ts"));
 // THE SET-PIECE ABILITY CATALOG a mod's elite or boss may name in its
 // `mechanics.abilities` (boss tier AND elite tier alike — see
-// src/game/defs/enemies/abilities.ts). Enumerated from the RUNTIME REGISTRY
+// engine/game/defs/enemies/abilities.ts). Enumerated from the RUNTIME REGISTRY
 // rather than typed out, for the same reason the compass grammar is snapshotted
 // from the engine's own parser: this file is the only thing a modder can read
 // to find out what exists, and a hand-kept list drifts silently the moment an
 // ability is added.
 const { registeredAbilityIds } = await import(
-  engine("src/game/mechanics/index.ts")
+  engine("engine/game/mechanics/index.ts")
 );
 // The passive TREES, plus the two things a mod's own talents are judged
 // against: the shared rank CEILING (economy — a mod may go shallower, never
@@ -80,19 +82,21 @@ const { registeredAbilityIds } = await import(
 // carrier in the merged catalog and a mod re-carrying one must replace the
 // talent that has it.
 const { TALENT_DEFS, TALENT_BLOCKS, TALENT_MAX_RANK } = await import(
-  engine("src/game/defs/talents/index.ts")
+  engine("engine/game/defs/talents/index.ts")
 );
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
-  engine("src/game/defs/uniques.ts")
+  engine("engine/game/defs/uniques.ts")
 );
-const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
-const { deathRites } = await import(engine("src/game/death-rites/catalog.ts"));
+const { SET_DEFS } = await import(engine("engine/game/defs/sets.ts"));
+const { deathRites } = await import(
+  engine("engine/game/death-rites/catalog.ts")
+);
 const DEATH_RITES = deathRites();
 const { DIFFICULTY_DEFS } = await import(
-  engine("src/game/defs/difficulties.ts")
+  engine("engine/game/defs/difficulties.ts")
 );
 const { GENERATED_LEVEL_SUMMARIES } = await import(
-  engine("src/generated/level-index.ts")
+  engine("engine/generated/level-index.ts")
 );
 // The story and companion catalogs are read from `content/` through the same
 // loaders a mod's own go through, rather than from the engine — the ids are the
@@ -110,9 +114,9 @@ const { loadSpriteSpaces } = await import(
 // cannot travel in a JSON file, and the shipped app has no TypeScript to run
 // the engine's — so the names the engine's OWN parser accepts are enumerated
 // here and snapshotted, which keeps one grammar rather than a second one
-// living in the SDK. See `REGION_TERMS` in src/game/mapgen/regions.ts.
+// living in the SDK. See `REGION_TERMS` in engine/game/mapgen/regions.ts.
 const { REGION_TERMS, parseRegion } = await import(
-  engine("src/game/mapgen/regions.ts")
+  engine("engine/game/mapgen/regions.ts")
 );
 // The ELEMENT vocabulary a weapon's `fx:` may name. An import-free leaf on the
 // app side (the kits are pixels), snapshotted here for the same reason the
@@ -248,7 +252,7 @@ function fontGlyphs() {
 
 /** Every event the engine emits — what a sound's `on.type` may name. */
 function emittedEvents() {
-  const source = readFileSync(engine("src/game/types/events.ts"), "utf8");
+  const source = readFileSync(engine("engine/game/types/events.ts"), "utf8");
   return sorted(
     new Set([...source.matchAll(/type:\s*"([a-zA-Z]+)"/g)].map((m) => m[1])),
   );
@@ -361,7 +365,7 @@ const catalog = {
   // where the engine's parser cannot — see `regionNames`.
   regions: regionNames(),
   // The DEATH RITES a boss's `death:` may name — the scripted send-off it gets
-  // when it leaves the field (`src/game/death-rites/catalog.ts`). Split by
+  // when it leaves the field (`engine/game/death-rites/catalog.ts`). Split by
   // ENDING, because the two are not interchangeable: a boss that `flees:` needs
   // a flight rite and one that dies needs a death rite, and a mismatch is a
   // scene that could never play. Snapshotted like every other id set, for the

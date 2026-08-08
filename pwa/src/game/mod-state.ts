@@ -12,7 +12,7 @@
 // 200 KB gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what
 // notices.
 //
-// So this is the same move `src/game/flags.ts` makes for the engine's runtime
+// So this is the same move `engine/game/flags.ts` makes for the engine's runtime
 // toggles: the STATE lives in a leaf that imports nothing, and the module that
 // does the heavy work writes to it. A settings screen must not import the
 // dialogue system to mute it, and a menu row must not import the simulation to
@@ -181,7 +181,7 @@ export type ModBundle = {
   storyItems: Record<string, unknown>;
   /** THE ERRANDS a mod's maps hand out, and the people who hand them out —
    * two catalogs for the same reason the game splits them: one person owns a
-   * whole chain (see `src/game/defs/quests.ts`). */
+   * whole chain (see `engine/game/defs/quests.ts`). */
   quests: Record<string, unknown>;
   questGivers: Record<string, unknown>;
   sprites: ModSprite[];

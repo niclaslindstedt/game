@@ -4,7 +4,7 @@
 //
 // WHY IT IS ITS OWN FILE. The traffic used to be a blit: pick the damage rung's
 // sprite and put it down at the vehicle's own place. Everything the collision
-// now does to a vehicle (`src/game/drive/crush.ts`) is a change to its POSE
+// now does to a vehicle (`engine/game/drive/crush.ts`) is a change to its POSE
 // rather than to its picture — it is shorter at one end, it is turned, it is off
 // the ground, and there is blood on the inside of its windows — and none of
 // those is expressible as "which sprite". So the vehicle pass grew a transform

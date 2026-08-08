@@ -9,9 +9,9 @@ This repo is a **reusable game engine plus one game's content**. A sequel is
 a clone with the content stripped and new content authored on the same
 engine. This skill is the ordered playbook. The rule of thumb throughout:
 
-> **The engine (`src/`, minus `src/game/defs/`) and everything under
-> `src/lib/` and `pwa/src/lib/` are machinery — keep them. The content
-> catalogs (`src/game/defs/`), the generated assets, the scores, the story
+> **The engine (`engine/`, minus `engine/game/defs/`) and everything under
+> `engine/lib/` and `pwa/src/lib/` are machinery — keep them. The content
+> catalogs (`engine/game/defs/`), the generated assets, the scores, the story
 > docs/tests, and the brand identity are the game — replace them.**
 
 Work top to bottom; each step ends at a checkpoint you can verify.
@@ -40,7 +40,7 @@ should hardcode the old name.
 
 Delete or empty each of these — they are 100% this-game data:
 
-- [ ] **`src/game/defs/*` + `content/items/*`** — the content catalogs: the
+- [ ] **`engine/game/defs/*` + `content/items/*`** — the content catalogs: the
       `levels/` and `enemies/` directories (one module per level / roster),
       the item YAML tree (`content/items/<rarity>/*.yaml` — weapons, gear,
       uniques; the `content/item_quality.yaml` / `content/item_rarity.yaml`

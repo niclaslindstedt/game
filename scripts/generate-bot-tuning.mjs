@@ -3,8 +3,8 @@
 // The BOT TUNING pipeline (see the `bot-improvement` skill). Compiles the
 // hand-authored `content/bot.yaml` — the autopilot's positioning knobs,
 // a global `default` layer plus per-level overrides, and the DRIVE's own
-// auto-driver block beside them — into `src/generated/botTuning.ts`, the
-// `BOT_TUNING_OVERRIDES` object `src/game/bot/index.ts` resolves per level via
+// auto-driver block beside them — into `engine/generated/botTuning.ts`, the
+// `BOT_TUNING_OVERRIDES` object `engine/game/bot/index.ts` resolves per level via
 // `resolveBotTuning()` plus the `DRIVE_BOT_OVERRIDES` the drive's driver reads.
 // It:
 //   1. loads the engine's `BOT_TUNING_DEFAULTS` and `DRIVE_BOT_DEFAULTS` (the
@@ -12,7 +12,7 @@
 //      cross-ref checks,
 //   2. parses + validates bot.yaml (an unknown knob key or level id fails the
 //      build, same as a bad level id in generate-levels.mjs),
-//   3. writes src/generated/botTuning.ts.
+//   3. writes engine/generated/botTuning.ts.
 // The output is gitignored and regenerated on every build (like levels.ts), so
 // the YAML is the single source of truth.
 
@@ -22,7 +22,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { parse } from "yaml";
 
-// Engine modules under src/lib use the @game/lib alias at runtime — map it so
+// Engine modules under engine/lib use the @game/lib alias at runtime — map it so
 // the engine imports resolve cleanly under plain node.
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -35,12 +35,12 @@ const botYamlPath = fileURLToPath(
 
 // The engine defaults define the valid knob SCHEMA — never edit both by hand.
 const { BOT_TUNING_DEFAULTS } = await import(
-  pathToFileURL(engine("src/game/bot/tuning.ts")).href
+  pathToFileURL(engine("engine/game/bot/tuning.ts")).href
 );
 // …and the DRIVE's auto-driver, whose knobs live in the same YAML under their
 // own `drive:` block. Its own import-free leaf, for the same bootstrap reason.
 const { DRIVE_BOT_DEFAULTS } = await import(
-  pathToFileURL(engine("src/game/drive/driver-tuning.ts")).href
+  pathToFileURL(engine("engine/game/drive/driver-tuning.ts")).href
 );
 
 const DRIVE_KEYS = new Set(Object.keys(DRIVE_BOT_DEFAULTS));
@@ -170,12 +170,12 @@ export const DRIVE_BOT_OVERRIDES: DriveBotPatch = ${JSON.stringify(
 )};
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/botTuning.ts`, out);
 const levelCount = Object.keys(levels).length;
 console.log(
-  `wrote src/generated/botTuning.ts — ${Object.keys(defaultLayer).length} ` +
+  `wrote engine/generated/botTuning.ts — ${Object.keys(defaultLayer).length} ` +
     `default knob(s), ${levelCount} level override(s), ` +
     `${Object.keys(driveLayer).length} drive knob(s)`,
 );

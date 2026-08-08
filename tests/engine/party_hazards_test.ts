@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHERE THE WEATHER IS AIMED WHEN THERE IS A PARTY (`hazardFocus`,
-// src/game/hazards.ts) — and the autopilot's one party rule, the LEASH
-// (src/game/bot/party-play.ts). Both landed together, because the first was
+// engine/game/hazards.ts) — and the autopilot's one party rule, the LEASH
+// (engine/game/bot/party-play.ts). Both landed together, because the first was
 // found BY the instrument the second makes usable.
 //
 // **THE BUG THESE PIN WAS INVISIBLE TO EVERY SUITE IN THE REPO, and the reason

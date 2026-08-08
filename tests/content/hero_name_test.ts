@@ -3,7 +3,7 @@
 //
 // The player names their character, and the game says it: `{HERO}` is written
 // wherever an authored line means that name, and every surface that draws
-// authored text resolves it (`src/game/hero-name.ts`). Two things can go wrong
+// authored text resolves it (`engine/game/hero-name.ts`). Two things can go wrong
 // with a token, and only one of them is loud on its own:
 //
 //  1. A MALFORMED token — `{hero}`, `{ HERO }`, `{NAME}` — resolves to nothing
@@ -73,7 +73,7 @@ const ALL = Object.entries(CATALOGS).flatMap(([name, catalog]) =>
  *
  * The braces are a closed vocabulary, not a free-form template language: a line
  * may say the hero's name, and Ruth's handover may say whichever chest the
- * difficulty pays (`{CACHE}` — src/game/cache.ts). Anything else brace-shaped
+ * difficulty pays (`{CACHE}` — engine/game/cache.ts). Anything else brace-shaped
  * is a typo that ships as `?SOMETHING?` in a font with no brace glyph, which is
  * what the first assertion below exists to catch.
  *

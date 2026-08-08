@@ -85,7 +85,7 @@ export const SPRITE_SPACES = new Set(["inside", "outside"]);
  * NORTH-SOUTH picture is a machine visibly carrying its cargo sideways.
  *
  * The bearing is not the art's to know: a `propLine` runs whichever way the
- * chamber it was laid in is longest (`buildRows`, src/game/mapgen/place.ts), so
+ * chamber it was laid in is longest (`buildRows`, engine/game/mapgen/place.ts), so
  * the same belt is east-west in one bay and north-south in the next. So the art
  * declares that it HAS a direction, the placement supplies WHICH (`Decor.facing`
  * — the line's own bearing), and the renderer turns the piece to match before it

@@ -39,17 +39,17 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "../..");
 
-// The compiled catalog (`content/talents.yaml` → src/generated/talents.ts),
+// The compiled catalog (`content/talents.yaml` → engine/generated/talents.ts),
 // imported through the def module rather than the generated file so a swapped
 // registry — a `--mod`'s trees, say — would be read the same way.
 const { TALENT_DEFS } = await import(
-  path.join(root, "src/game/defs/talents/index.ts")
+  path.join(root, "engine/game/defs/talents/index.ts")
 );
 const { WEAPON_DEFS } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
 const { ENEMY_DEFS } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 
 // The catalog in authored order — the fx/sheet default set and the id→tree

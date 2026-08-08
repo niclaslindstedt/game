@@ -334,7 +334,7 @@ export function GameScreen({
   const [newRecord, setNewRecord] = useState(false);
   /**
    * THE DRIVE, WHEN ONE IS UP — the playable leg between the garage and GOODCO
-   * (src/game/drive/, pwa/src/game/drive-screen/). Null every other moment.
+   * (engine/game/drive/, pwa/src/game/drive-screen/). Null every other moment.
    *
    * It is component state rather than anything inside the run because a drive
    * is BETWEEN runs: the departing one has already washed to black and the

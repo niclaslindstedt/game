@@ -41,7 +41,7 @@ running along whichever world bearing comes out horizontal, and every body in th
 game is round enough not to care — except the CAR, whose blockers have to lie
 under a 48-px side profile that nothing rotates. So the app pushes the yaw into
 the engine's own import-free leaf (`setCameraYaw` → `billboardBearing`,
-src/game/flags.ts) beside `setWorldProjection`, and nothing else crosses. See
+engine/game/flags.ts) beside `setWorldProjection`, and nothing else crosses. See
 **SO THE GROUND IT BLOCKS…** under the vehicles below.
 
 The whole thing rests on one split, and getting it backwards is the only way to
@@ -322,7 +322,7 @@ uncovered. `fogDistanceAt` reads the drawn field, so the mob cull and the band
 stay the same frontier — a mob appears as the ground under it clears.
 
 **AND THE FRONTIER IS SHAPED BY THE WALLS, NOT BY A RADIUS.** The sweep that
-lifts the fog (`revealAround`, `src/game/fog.ts`) tests each cell of its disc
+lifts the fog (`revealAround`, `engine/game/fog.ts`) tests each cell of its disc
 with `lineOfSight` before uncovering it, so a wall inside the disc casts a
 shadow: the ground behind it stays dark until the hero stands somewhere it is in
 view. That is what makes a doorway show a CONE of the room rather than the room,
@@ -343,7 +343,7 @@ reading as seen — which draws as stipple anyway.
 sweep at all: it takes two obstacles standing in line — a wall's own chain, a
 rank of machinery, two rocks shoulder to shoulder — or one piece wider than a
 unit of ground (`OBSTACLES.loneSightSpan`, one fog cell) before the eye is
-stopped. The rule and its two tests live in `src/game/obstacles.ts`
+stopped. The rule and its two tests live in `engine/game/obstacles.ts`
 (`lineOfSight`, which is now a different question from the PHYSICAL
 `blockedByObstacle` a body and a bullet ask). Without it every dressed field
 was a fan of dark wedges the hero had to walk into one at a time, thrown by
@@ -355,7 +355,7 @@ past it.
 
 **THE SIMULATION ANSWERS THAT SAME QUESTION FOR ITSELF, AND MUST.** A mob the
 band hides is also a mob the hero refuses to fire at (`clearOfFog`,
-`src/game/fog.ts`, read through `visibleTo` in `src/game/sight.ts`) — otherwise
+`engine/game/fog.ts`, read through `visibleTo` in `engine/game/sight.ts`) — otherwise
 the character shoots into blackness on the player's behalf, which is what a long
 gun advancing into unexplored ground used
 to do. The engine cannot read `FogField.shown` to decide it: that field eases on
@@ -513,7 +513,7 @@ says whether the venue has a sky at all, the APP reads the hour and hands the
 run a `daylight` level as a session parameter (`RunParams.daylight`, because
 `step()` may not touch a clock and a party in two time zones must play in one
 night), and this file decides what the dark looks like. `nightAmount(state)`
-(`src/game/daylight.ts`) is the one accessor that folds the first two together.
+(`engine/game/daylight.ts`) is the one accessor that folds the first two together.
 
 **IT CHANGES NOTHING ABOUT THE SIMULATION, on purpose.** Sight, aggro, weapon
 reach and spawns are what they are at noon; a hero is not blinded by a sunset
@@ -729,7 +729,7 @@ Everything on the far verge is composed at draw time from a plan the engine
 hands over, and the split is worth carrying because it is the same one the
 hero's car uses (`render/vehicles.ts` stacks six panels and two wheels):
 
-- **The catalog and the layout are the ENGINE's** — `src/game/drive/town.ts`
+- **The catalog and the layout are the ENGINE's** — `engine/game/drive/town.ts`
   holds 26 archetypes and the parts bin they are dressed from;
   `town-plan.ts` tiles them onto a 20-px plot grid, a BLOCK at a time, and
   dresses each one from its own plot's hash. Nothing is simulated: the town
@@ -768,7 +768,7 @@ street that exists in no file.
 
 **The street lighting is the one thing on this road that lights the road**, and
 it is not a second row of furniture: every third of the kerb posts the ENGINE
-already stands (`src/game/drive/street.ts`) is simply DRAWN as a tall mast
+already stands (`engine/game/drive/street.ts`) is simply DRAWN as a tall mast
 instead of as a yard light, throwing a cone down over its own carriageway and
 laying a warm pool on the tarmac. Nothing about the simulation changes — the
 column is the same column, at the same radius, and it still shears off its base
@@ -973,7 +973,7 @@ seam are worth carrying:
 
 **A MACHINE CARRIES ITSELF TOO — AND THE CAR STEERS**
 (`pwa/src/game/render/vehicles.ts`). The hatchback's front wheels are drawn at
-the rack's own angle (`CarVehicle.steer`, simulated in `src/game/vehicles.ts`,
+the rack's own angle (`CarVehicle.steer`, simulated in `engine/game/vehicles.ts`,
 which is why a car standing still with the wheel cranked shows it), warped a
 COLUMN AT A TIME out of the same eleven pixels rather than from a second
 sprite — the trick the pitched shell beside it already uses, because a real
@@ -1006,10 +1006,10 @@ the floor — which stands on its own ground and keeps its own world anchor.
 
 **SO THE GROUND IT BLOCKS IS THE GROUND ITS PICTURE STANDS ON — AND THAT IS THE
 ONE NUMBER THE SIMULATION TAKES FROM THE PROJECTION.** A car's collision chain
-(`vehicleFootprint`, src/game/vehicles.ts) is three circles at three columns of
+(`vehicleFootprint`, engine/game/vehicles.ts) is three circles at three columns of
 that same 48-px canvas, so it has to lie along whichever world bearing comes out
 HORIZONTAL on screen — `billboardBearing()` in the import-free leaf
-`src/game/flags.ts`, which is `-yaw` and is exactly unit-preserving, so a drawn
+`engine/game/flags.ts`, which is `-yaw` and is exactly unit-preserving, so a drawn
 column and a world offset along it are the same number. The app pushes the yaw in
 beside `setWorldProjection` (pwa settings.ts) and never without it. Every other
 body in the game is round enough not to care — a mob, a rock, a barrel blocks the
@@ -1026,7 +1026,7 @@ assembly and nothing mirrors it, so a car free to turn round drove away still
 facing the way it came. There was a yaw stop for a while, holding the nose just
 short of square to its own axis — and then the last reason for a heading to move
 went with it, because NOTHING IN THE GAME DRAWS ONE. The wheel puts the BODY
-across instead (`applyCarWheel`, src/game/vehicles.ts — the driving minigame's
+across instead (`applyCarWheel`, engine/game/vehicles.ts — the driving minigame's
 own steering, shared with it verbatim), so `CarVehicle.heading` is the axis the
 car was parked on and `CarVehicle.faceLeft` is which way that axis points, both
 settled at the parking spot and neither moving again. An invisible integrator
@@ -1189,7 +1189,7 @@ presence than a medkit. So a drop now has three beats, and each one is owned by
 exactly one place:
 
 - **THE TOSS is the engine's, and it is a TIMER, not a trajectory**
-  (`src/game/items/toss.ts`, `LOOT.toss`). Every drop in the game goes through
+  (`engine/game/items/toss.ts`, `LOOT.toss`). Every drop in the game goes through
   the one funnel — `dropItem(state, item, from)` — which is what made the
   feature a two-line change at each of the twenty-odd sites that pay loot out.
   `item.pos` is the LANDING spot from the moment the item is minted, so the
@@ -1316,7 +1316,7 @@ every time.
   furniture until something says otherwise.
   **A VISITOR'S CAR NEVER GETS ONE**, and the reason is the same test read the
   other way: the night shift's cars on GOODCO's staff lot
-  (`GameState.arrivals` — src/game/arrivals.ts) are drawn by the same
+  (`GameState.arrivals` — engine/game/arrivals.ts) are drawn by the same
   `drawCarAssembly`, on the same springs, out of the same panels, but three
   amber halos on a car park would be the lot advertising three machines the hero
   cannot take. Their engines are read off the ARRIVAL's own phase rather than

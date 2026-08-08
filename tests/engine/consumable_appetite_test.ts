@@ -12,11 +12,11 @@ import { CONSUMABLES, MEDKIT } from "@game/core";
 import type { GameState } from "@game/core";
 // Engine-internal: the kill funnel every drop walks through, and the two
 // appetite reads the ladder scales its consumable slices by.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 import {
   consumableAppetite,
   medkitAppetite,
-} from "../../src/game/items/consumables.ts";
+} from "../../engine/game/items/consumables.ts";
 
 import { makeEnemy, startGame } from "./helpers.ts";
 

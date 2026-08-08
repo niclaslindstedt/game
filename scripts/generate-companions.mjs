@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The COMPANION pipeline. Compiles `content/companions.yaml` — the hand-authored
 // roster of who a spared unique BECOMES when it joins the party — into
-// `src/generated/companions.ts` (GENERATED_COMPANIONS), which
-// `src/game/defs/companions.ts` re-exposes as COMPANION_DEFS. It:
+// `engine/generated/companions.ts` (GENERATED_COMPANIONS), which
+// `engine/game/defs/companions.ts` re-exposes as COMPANION_DEFS. It:
 //   1. harvests the sprite stems from the content/sprites tree, so a companion
 //      whose two-frame family isn't in the atlas fails the build rather than
 //      walking beside the hero as nothing at all,
@@ -29,7 +29,7 @@ import { register } from "node:module";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Engine modules under src/lib use the @game/lib alias at runtime — map it so
+// Engine modules under engine/lib use the @game/lib alias at runtime — map it so
 // the equipment catalog imports cleanly under plain node.
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -45,7 +45,7 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // empty hand is authored in `equipment.ts` as engine machinery, and a companion
 // may legitimately fight with it.
 const { WEAPON_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+  pathToFileURL(engine("engine/game/defs/equipment.ts")).href
 );
 
 // ---- Sprite stems (content/sprites/<family>/<name>.yaml, stem == sprite id;
@@ -95,10 +95,10 @@ export const GENERATED_COMPANIONS: Record<string, CompanionDef> = ${JSON.stringi
 )} as unknown as Record<string, CompanionDef>;
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/companions.ts`, out);
 console.log(
-  `wrote src/generated/companions.ts — ` +
+  `wrote engine/generated/companions.ts — ` +
     `${Object.keys(companions).length} companions`,
 );

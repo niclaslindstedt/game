@@ -155,7 +155,7 @@ the user confirms the existing description is right, say so and keep it.
 
 The simulator books every death with its **cause** (the killer's enemy defId,
 or a `hazard:*` tag) and **world coordinates**, clustered into areas
-(`report.deathLog` in `src/sim/simulate.ts`) — so "this map is too hard" turns
+(`report.deathLog` in `engine/sim/simulate.ts`) — so "this map is too hard" turns
 into a specific spot on the picture with a named killer. Drive it as a loop:
 
 1. **Measure with a mortal run** at the map's intended arrival level (an

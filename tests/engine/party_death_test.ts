@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// PER-PLAYER DEATH (src/game/downed.ts): a hero who
+// PER-PLAYER DEATH (engine/game/downed.ts): a hero who
 // falls while the party still stands goes DOWN — their own toll, a corpse
 // holding their worn kit, and the `respawn` verb back — and one death never
 // ends anybody else's game. Every rule is pinned beside the one that matters

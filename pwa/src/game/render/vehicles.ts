@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE VEHICLE ASSEMBLIES — the car and the garage ship drawn as MACHINES
-// (src/game/vehicles.ts), part by part, in place of their landmarks:
+// (engine/game/vehicles.ts), part by part, in place of their landmarks:
 //
 //   CAR  = two wheels (sprite picked per wheel from its STATE — sound, flat
 //          tire, bent rim, gone — and its spin frame from the simulated
@@ -160,7 +160,7 @@ export function drawVehicles(
       drawShip(ctx, vehicle, sprites, camera, timeMs);
     }
   }
-  // THE NIGHT SHIFT'S OWN CARS (`GameState.arrivals`, src/game/arrivals.ts) —
+  // THE NIGHT SHIFT'S OWN CARS (`GameState.arrivals`, engine/game/arrivals.ts) —
   // the same assembly, drawn by the same function, because they ARE the same
   // machine: one `CarVehicle` each, rolling in on its springs and then standing
   // in the rank for the rest of the run.

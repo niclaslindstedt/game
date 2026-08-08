@@ -1,7 +1,7 @@
 ---
 title: Auto-equip must speak the balance model — at realized AoE, not ceiling
 date: 2026-07-10
-scope: src/game/items/
+scope: engine/game/items/
 concepts: [auto-equip, balance-model, aoe]
 ---
 

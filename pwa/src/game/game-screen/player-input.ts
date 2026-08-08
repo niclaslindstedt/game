@@ -99,7 +99,7 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 /** The car the LOCAL hero is at the wheel of, or null on foot. It changes two
  * things about the input: where a PUSH is measured from (the car, not the body
  * riding in it) — the engine turns that push into a pedal and a wheel itself
- * (`carControl`, src/game/vehicles.ts) — and that the KEYS stop being a push at
+ * (`carControl`, engine/game/vehicles.ts) — and that the KEYS stop being a push at
  * all, becoming the car's own pedals (`carKeyControl`, ../car-keys.ts). Every
  * pushing scheme still composes through `composePush`. */
 function drivenCar(state: GameState): CarVehicle | null {
@@ -121,7 +121,7 @@ function drivenCar(state: GameState): CarVehicle | null {
  * car chased, so every input path had to work out where to hang a point such
  * that the intent arcs would read the right thing off it. That is gone: the
  * engine now reads the target as a plain DIRECTION and resolves it into a pedal
- * and a wheel in the car's own frame (`carControl`, src/game/vehicles.ts), so
+ * and a wheel in the car's own frame (`carControl`, engine/game/vehicles.ts), so
  * every path here has the same job it has always had on foot — say which way
  * the player is pushing.
  *
@@ -678,7 +678,7 @@ export function handleFieldTaps(
       }
     }
   }
-  // A tap on THE CACHE opens the chest (src/game/cache.ts) — the stall gesture
+  // A tap on THE CACHE opens the chest (engine/game/cache.ts) — the stall gesture
   // again, on the one landmark in the game that is furniture rather than a
   // door. It runs after the travel doors because the doors are the older
   // gesture and the hub is crowded; `openCache` re-checks its own reach, the

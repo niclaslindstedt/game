@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE DIM (src/game/vehicles.ts `driveCar`/`stepDeparture`, config DEPARTURE):
+// THE DIM (engine/game/vehicles.ts `driveCar`/`stepDeparture`, config DEPARTURE):
 // what happens between a driven car TOUCHING the level's ROAD OUT
 // (`LevelDef.driveOut`) and the trip being booked.
 //

@@ -9,7 +9,7 @@
 // is a second answer to "is `armorPen` a real bonus", one of which is wrong
 // within a release.
 //
-// The lists mirror the engine's `Affix` union (src/game/types/) and its
+// The lists mirror the engine's `Affix` union (engine/game/types/) and its
 // `StatName`. Keep them in step when a kind is added — the compile step for
 // items and sets both read from here, so there is exactly one edit.
 
@@ -57,7 +57,7 @@ export const SPELL_KINDS = new Set([
  * granted ones, because a proc has to be one instantaneous blow.
  *
  * The narrowing is load-bearing rather than tidy: `PROC_RANK_ILVL`
- * (src/game/item-budget.ts) prices only these two, so a proc naming any other
+ * (engine/game/item-budget.ts) prices only these two, so a proc naming any other
  * spell budgets to NaN — and an item whose whole ilvl model has gone quiet
  * passes every check while being worth nothing the balance model can see.
  */

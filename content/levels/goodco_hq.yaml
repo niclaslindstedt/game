@@ -61,7 +61,7 @@ stampedes:
   # SECOND-HALF beat of the assembly floor, so the opening aisles — where a
   # fresh player is still learning to steer and jump — stay clear of the herd.
   afterProgress: 0.5
-# THE STAFF LOT, AND THE WAY IN (src/game/arrivals.ts). The hero lands on a car
+# THE STAFF LOT, AND THE WAY IN (engine/game/arrivals.ts). The hero lands on a car
 # park with a building in front of him and no visible door — the fog is over the
 # whole wall — so the mission's first move is finding one. What tells him where
 # it is, is the night shift: a car rolls in every twenty seconds or so, somebody
@@ -206,7 +206,7 @@ loot:
     - reliquary
   # POWERUPS: the four classics plus the assembly floor's own — the campaign
   # introduces TWO NEW POWERS PER MAP after this one, and every later pool keeps
-  # what came before (see src/game/defs/ability-catalog.ts). OVERPRESSURE sits
+  # what came before (see engine/game/defs/ability-catalog.ts). OVERPRESSURE sits
   # in the OPENING set rather than debuting on a later map for the ladder's own
   # sake: every map after this is spoken for by its own two, and a power the
   # whole campaign should be able to stumble into belongs where the campaign

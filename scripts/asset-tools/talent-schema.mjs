@@ -7,7 +7,7 @@
 // that silently does nothing for the rest of a campaign.
 //
 // The `TalentDef` contract this checks against lives in
-// src/game/defs/talents/index.ts — keep the two in step when a slope or a proc
+// engine/game/defs/talents/index.ts — keep the two in step when a slope or a proc
 // block gains a field. The shared rank ceiling comes in through `refs.maxRank`
 // (the engine's `TALENTS.maxRank`), because the cap is ECONOMY: a talent may
 // choose a shallower ladder, never a deeper one.

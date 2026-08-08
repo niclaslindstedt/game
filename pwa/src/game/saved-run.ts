@@ -141,7 +141,7 @@ const EMPTY_FOG = new Uint8Array(0);
 //
 // v27: THE TOWN PORTAL — the run grew `keepsakes`, the rift tool's own record
 // of where a seam has been torn home from.
-// v28: THE CACHE — the garage chest (src/game/cache.ts). `Player.cache` is a
+// v28: THE CACHE — the garage chest (engine/game/cache.ts). `Player.cache` is a
 // required list the engine indexes unguarded (`stashItem`), and the run grew
 // `cachePos`/`cacheSlots`, which decide whether the chest is standing at all
 // and how much of it the hero has earned. A v27 blob carries none of the three,
@@ -482,7 +482,7 @@ function readRun(key: string): ParkedRun | null {
       // a SAVE_VERSION bump that bins every parked run for a list that starts
       // empty anyway.
       corpses: payload.state.corpses ?? [],
-      // THE STAFF LOT (`GameState.arrivals`, src/game/arrivals.ts) is additive
+      // THE STAFF LOT (`GameState.arrivals`, engine/game/arrivals.ts) is additive
       // on the same reasoning, with one wrinkle worth stating: a run parked
       // before it shipped thaws with NO PLAN, and no plan means the beat simply
       // never runs — which is right. That run's entrance is already open (it

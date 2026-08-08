@@ -143,7 +143,7 @@ export function createPredictor(): Predictor {
   let ticksSinceSnapshot = 0;
 
   /** The hero this client may predict for RIGHT NOW, or null. Mirrors the
-   * step loop's own gate (`src/game/step/index.ts`): the world must be live
+   * step loop's own gate (`engine/game/step/index.ts`): the world must be live
    * (`playing`, party not blocked), the hero in play with no screen up, and
    * not riding — a driver's pointer steers the CAR, which only the server
    * simulates. */

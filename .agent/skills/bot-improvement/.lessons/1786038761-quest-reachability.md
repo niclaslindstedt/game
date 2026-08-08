@@ -1,12 +1,12 @@
 ---
 title: Filtering bot goals with plain routeReachable throws away everything behind a closed APPROACH door — and a march gauged flat is a march a fight cancels
 date: 2026-08-06
-scope: src/game/bot/errands.ts
+scope: engine/game/bot/errands.ts
 concepts: [errands, reachability, doors]
 ---
 
 Two traps, both found putting quest givers into the macro ladder
-(`src/game/bot/errands.ts`), and both silent — the feature simply never fired.
+(`engine/game/bot/errands.ts`), and both silent — the feature simply never fired.
 
 **`routeReachable` is the wrong reachability question on a map with interior
 doors.** The bot's nav grid is built from the obstacle field, and a closed

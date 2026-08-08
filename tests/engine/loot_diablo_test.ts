@@ -21,7 +21,7 @@ import {
 import type { Difficulty, Equipment, GameState, Tier } from "@game/core";
 // Engine-internal kill funnel — not public API, but the one door every drop
 // walks through, so the tierDrops rules are asserted right at it.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import {
   FIX_ABILITIES,

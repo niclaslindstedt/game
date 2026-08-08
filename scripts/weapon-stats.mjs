@@ -34,15 +34,15 @@ const {
   AFFIX_POOLS,
   weaponAssumedTargets,
   baseCritMult,
-} = await import(path.join(root, "src/game/defs/equipment.ts"));
+} = await import(path.join(root, "engine/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { ENEMY_DEFS } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 const { LOOT, STATS } = await import(
-  path.join(root, "src/game/config/index.ts")
+  path.join(root, "engine/game/config/index.ts")
 );
 const { applyModsWithSprites, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")
@@ -318,10 +318,10 @@ for (const def of Object.values(ENEMY_DEFS)) {
 
 if (argv.includes("--coverage")) {
   const { gradeVariantIds } = await import(
-    path.join(root, "src/game/defs/grades.ts")
+    path.join(root, "engine/game/defs/grades.ts")
   );
   const { DIFFICULTY_ORDER, difficultyDef } = await import(
-    path.join(root, "src/game/defs/difficulties.ts")
+    path.join(root, "engine/game/defs/difficulties.ts")
   );
   /**
    * The hero's level entering each story map per rung — the campaign curve's

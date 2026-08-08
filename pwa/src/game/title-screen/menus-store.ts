@@ -27,7 +27,7 @@ import { rowAria } from "./menu-tree.ts";
 
 export function buildStoreMenu(ctx: MenuContext): MenuEntry[] {
   // The COIN STORE: real-money coin packs that fund the AUTO PILOT (the purse
-  // drains per simulated second — see src/game/autopilot.ts). A tapped pack
+  // drains per simulated second — see engine/game/autopilot.ts). A tapped pack
   // goes straight to the platform pay sheet (the OS confirms the charge); the
   // coins land in the UNDISTRIBUTED bank, and the DISTRIBUTE row below hands
   // them out. The platform's localized price tag sits right-aligned like a

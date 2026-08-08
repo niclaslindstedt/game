@@ -1,7 +1,7 @@
 ---
 title: Making live foes (elites) macro objectives needs a readiness gate, sticky commitment, and bar-based stalemate gauges
 date: 2026-07-21
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [objectives, stickiness, stalemate]
 ---
 

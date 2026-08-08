@@ -43,7 +43,7 @@ make fmt           # format in place
 make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews (runs make levels)
 make levels        # recompile every content catalog from content/*.yaml
-make lua-vm        # compile src/lib/lua/ for the SHIPPED mod compiler
+make lua-vm        # compile engine/lib/lua/ for the SHIPPED mod compiler
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
@@ -113,7 +113,7 @@ desktop builds" is verified in one command per build instead of an evening.
 → **`tauri/README.md`** for the tree, **`docs/desktop-shells.md`** for how the
 two are held against each other, **`docs/desktop-parity.md`** for the pairing
 the build checks (`npm run parity:check`).
-Nothing in `src/` or `pwa/` may learn it exists: the page is told
+Nothing in `engine/` or `pwa/` may learn it exists: the page is told
 `__GIS_PLATFORM__ = "steam"` because it is the same product on the same store —
 and **not one line of `pwa/` changed to give this shell cloud save,
 achievements, screenshots, mods, multiplayer OR voice**, which is the whole test
@@ -188,8 +188,8 @@ picked-up weapons and items. `docs/architecture.md` is the full map; this is
 the part every task needs.
 
 **THE ENGINE HAS TWO ENTRY POINTS, and picking the wrong one is a silent
-regression.** `@game/core` (`src/index.ts`) is the whole public API, simulation
-included. `@game/menu` (`src/menu.ts`) is the narrow slice the app's STARTUP
+regression.** `@game/core` (`engine/index.ts`) is the whole public API, simulation
+included. `@game/menu` (`engine/menu.ts`) is the narrow slice the app's STARTUP
 path may reach: the catalogs, the saved-hero math, and the engine flags the
 settings screen applies — and nothing that simulates. **The app shell imports
 `@game/menu`; the game imports `@game/core`.** Because an import is an import:
@@ -200,7 +200,7 @@ keeps its bytes wherever its module was placed, and the module was on the
 startup path. Both aliases resolve to the SAME modules, so the split is purely
 about REACHABILITY. Two patterns keep it workable and both are the right move
 when a new one is needed: the engine's runtime toggles live in the import-free
-leaf `src/game/flags.ts`, and compiled content is emitted in menu-facing and
+leaf `engine/game/flags.ts`, and compiled content is emitted in menu-facing and
 run-facing halves (`generated/level-index.ts` beside `generated/levels.ts`),
 read through `defs/levels/summary.ts`. `pwa/scripts/check-seo.mjs` polices the
 result as a **170 KB gzipped critical-path budget** — web.dev's figure for a
@@ -222,10 +222,11 @@ themselves, how loot advertises itself — is `docs/rendering.md`.**
 **Five layers, one dependency direction** — each may import only from the ones
 above it, and `docs/architecture.md` has the module-by-module map:
 
-- **`src/` — the engine.** Framework-free TypeScript: the simulation plus the
-  content catalogs under `src/game/defs/` (content is data, referenced by id).
+- **`engine/` — the simulation and its catalogs.** Framework-free TypeScript:
+  every rule the game runs on, plus the content catalogs under
+  `engine/game/defs/` (content is data, referenced by id).
   It must stay importable from any renderer — no UI framework, no DOM
-  assumptions beyond what a browser provides. `src/output.ts` is the central
+  assumptions beyond what a browser provides. `engine/output.ts` is the central
   output module (OSS_SPEC §19.4); raw `console.*` elsewhere fails lint.
 - **`pwa/` — the app.** A Vite + Preact PWA shell that mounts the engine,
   renders it, and owns everything deploy-shaped (the service worker build,
@@ -259,7 +260,7 @@ above it, and `docs/architecture.md` has the module-by-module map:
   → `docs/multiplayer.md`
 
 `mod/` (the published mod SDK) and `content/` (every authored catalog) are
-top-level beside them. **Never leak shell-specific code into `src/` or `pwa/`**,
+top-level beside them. **Never leak shell-specific code into `engine/` or `pwa/`**,
 and never leak app code into the engine.
 
 **THE SHELLS DIFFER ONLY IN THEIR PIPE.** Both wrap the same built site and
@@ -301,8 +302,8 @@ about ONE hero and is a **parameter**, never a lookup:
 `effectiveStat(state, player, stat)`. A pass reaching for seat 0 to find a bag
 has not been parameterized yet. A GEOMETRY read is about the party and needs a
 party-aware answer — `nearestHero` / `anyHeroWithin` / `heroesWithin` /
-`partyCentroid` / `partyLevel` (`src/game/party.ts`) — and picking the wrong one
-is a design bug rather than a typo. A mob's own target is `src/game/aggro.ts`.
+`partyCentroid` / `partyLevel` (`engine/game/party.ts`) — and picking the wrong one
+is a design bug rather than a typo. A mob's own target is `engine/game/aggro.ts`.
 `state.players[0]` left in engine code is an un-migrated site, not an answer.
 → `docs/multiplayer.md`
 
@@ -408,13 +409,13 @@ silently breaks. → `docs/modding.md`, `docs/rendering.md`
 
 **ANYTHING THE APP DOES TO A RUN BEFORE ITS FIRST TICK IS A SESSION PARAMETER.**
 That means a field on `RunParams`, a line in `createRunFromParams`
-(`src/game/session-setup.ts`), and the matching field on `SessionParams` — never
+(`engine/game/session-setup.ts`), and the matching field on `SessionParams` — never
 a mutation after `createGame`. The app, the session and an arriving client all
 build the same run from the same parameters, so a field only one of them applies
 is a desync that presents as a replication bug.
 
 **A NEW VERB THE APP MAY RUN AGAINST A RUN EXISTS TWICE, ON PURPOSE.**
-`src/game/commands.ts` (arg shapes + the `case`) **and** `COMMANDS` in
+`engine/game/commands.ts` (arg shapes + the `case`) **and** `COMMANDS` in
 `server/wire/protocol.ts` (the literal copy the allow-list reads, because that
 leaf is read from the startup path where the budget forbids `@game/core`); the
 drift test enforces the pair, then bump `PROTOCOL_VERSION`. Arguments are
@@ -442,7 +443,7 @@ freeze the world on the tick a death needs. → `docs/multiplayer.md`
 first venue lands the hero on a STAFF LOT (`MapArea.arrivals`) whose entrance is
 a keyed door nothing in the game unlocks: it opens when a member of the night
 shift drives in, parks, walks up and badges through it, and following one is the
-way in (`LevelDef.arrivals`, `src/game/arrivals.ts`). Three rules hold it and
+way in (`LevelDef.arrivals`, `engine/game/arrivals.ts`). Three rules hold it and
 each has already been paid for once — the lot's whole cast is NEUTRAL (the hero
 is holstered out there; the scripted first blow now waits INSIDE), the beat may
 never stop happening (a walker that stalls badges anyway, and a shut door with
@@ -457,7 +458,7 @@ caches it; a wall that appears without the bump is a wall it routes straight
 through.
 
 **NOTHING THE PLAYER CANNOT SEE IS A TARGET — every automatic pick goes through
-`visibleTo(state, hero, pos)` (`src/game/sight.ts`), and it is TWO facts, not
+`visibleTo(state, hero, pos)` (`engine/game/sight.ts`), and it is TWO facts, not
 one.** A pass that picks its own mark without asking (a new power, a turret, an
 ally, a second weapon) has the character firing at something the player has no
 picture of, and there are two ways to have no picture of it:
@@ -481,8 +482,8 @@ than `weaponRangeFor`.
 sight-limited, so ground behind a wall stays dark until the hero can see it, and
 it deliberately reaches `MAP.fogWallDepth` PAST the blocker — a frontier along
 every wall's inside face would leave a mob pressed against one undrawn and
-unshootable. Both live in `src/game/fog.ts` and NOT in map.ts, because
-`src/menu.ts` re-exports map.ts's grid arithmetic — so that module is inside the
+unshootable. Both live in `engine/game/fog.ts` and NOT in map.ts, because
+`engine/menu.ts` re-exports map.ts's grid arithmetic — so that module is inside the
 170 KB budget and a run-only read added there is spent from the startup path's
 allowance. → `docs/rendering.md`
 
@@ -496,14 +497,14 @@ bullet get there" wants `blockedByObstacle`, and one asking "does anybody know
 this is here" wants `lineOfSight`. A test that stages cover has to build a WALL
 (two pieces in line, or a wide one); a single boulder hides nothing. The rule
 and both its tests are the "What blocks SIGHT" block in
-`src/game/obstacles.ts`.
+`engine/game/obstacles.ts`.
 
 **A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
 THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never
 breaks, it runs dry — so a ranged def authors `ammo:` and no `durability:`, and
 the item schema refuses either half being wrong. One round per TRIGGER PULL,
 never per pellet. Everything that touches the pouch goes through
-`src/game/items/ammo.ts`; a read of `player.ammo[...]` anywhere else is a cap,
+`engine/game/items/ammo.ts`; a read of `player.ammo[...]` anywhere else is a cap,
 an overflow remainder or a dry-swap that is about to disagree with the others.
 → `docs/game-content.md` → Ammunition
 
@@ -527,7 +528,7 @@ setting** — and it FAILS OPEN. → `gore-system`
 **A RULE THE ENGINE HANDS OUT IS CONTENT, AND IT LIVES IN LUA.** Twelve
 formulas — the XP curve, what a kill pays, the horde's hp and level, the drop
 chance, the rarity roll, weapon damage, mob armor — are authored in
-`content/scripts/*.lua` and called through a sandboxed VM (`src/lib/lua/`), so a
+`content/scripts/*.lua` and called through a sandboxed VM (`engine/lib/lua/`), so a
 total conversion can change how the game WORKS rather than only what is in it.
 Three rules govern the seam and each is load-bearing:
 **A HOOK IS A FORMULA, NEVER A FRAME** — every one is called per kill, per drop,
@@ -546,27 +547,27 @@ test fixtures use, and a mod applies to a RUN rather than an install
 `make mod-catalog` in the same commit. → `docs/modding.md`
 
 **A CATALOG IS AUTHORED IN YAML, COMPILED, AND THE OUTPUT IS GITIGNORED.** Never
-edit or commit anything under `src/generated/` or `pwa/src/generated/`.
+edit or commit anything under `engine/generated/` or `pwa/src/generated/`.
 → the table below, and `docs/content-pipeline.md`
 
 ## Where new code goes
 
-| Change type                                                         | Goes in                                                                                                                                                     |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game                         | `src/…` (framework-free TypeScript); exported from `src/index.ts` — add to `src/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
-| Generic engine code (usable by any game)                            | `src/lib/…` — imported as `@game/lib/*`                                                                                                                     |
-| App shell, rendering, PWA, game-specific UI                         | `pwa/src/…`                                                                                                                                                 |
-| Generic UI game components (Preact)                                 | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                   |
-| Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `src/` or `pwa/`                                                                                                        |
-| Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                |
-| The SAME concern in the Tauri shell — a DECISION                    | `tauri/shell/src/…` + a test in `tauri/shell/tests/*_test.rs`; a `use tauri::` here is the review comment                                                   |
-| The SAME concern in the Tauri shell — an EFFECT (window, IPC, ACL)  | `tauri/src-tauri/src/…`                                                                                                                                     |
-| The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                     |
-| A RULE the engine hands to a script                                 | `content/scripts/<id>.lua` + a hook in `src/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows               |
-| Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                               |
-| Tests                                                               | `tests/…`, named `*_test.ts`                                                                                                                                |
-| Docs / examples / LLM prompts                                       | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                       |
-| Mature, playtested generic code                                     | keep in the local `src/lib/` or `pwa/src/lib/` pool                                                                                                         |
+| Change type                                                         | Goes in                                                                                                                                                              |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game                         | `engine/…` (framework-free TypeScript); exported from `engine/index.ts` — add to `engine/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
+| Generic engine code (usable by any game)                            | `engine/lib/…` — imported as `@game/lib/*`                                                                                                                           |
+| App shell, rendering, PWA, game-specific UI                         | `pwa/src/…`                                                                                                                                                          |
+| Generic UI game components (Preact)                                 | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                            |
+| Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `engine/` or `pwa/`                                                                                                              |
+| Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                         |
+| The SAME concern in the Tauri shell — a DECISION                    | `tauri/shell/src/…` + a test in `tauri/shell/tests/*_test.rs`; a `use tauri::` here is the review comment                                                            |
+| The SAME concern in the Tauri shell — an EFFECT (window, IPC, ACL)  | `tauri/src-tauri/src/…`                                                                                                                                              |
+| The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                              |
+| A RULE the engine hands to a script                                 | `content/scripts/<id>.lua` + a hook in `engine/game/script/hooks.ts` + a binding in `script/bindings.ts` — never a formula only TypeScript knows                     |
+| Generators, analyzers, previews, maintenance commands               | `scripts/…` — executable tooling only; authored data belongs under `content/`                                                                                        |
+| Tests                                                               | `tests/…`, named `*_test.ts`                                                                                                                                         |
+| Docs / examples / LLM prompts                                       | `docs/…` / `examples/…` / `prompts/<name>/<major>_<minor>_<patch>.md`                                                                                                |
+| Mature, playtested generic code                                     | keep in the local `engine/lib/` or `pwa/src/lib/` pool                                                                                                               |
 
 **Content is data.** Every catalog below is authored YAML under `content/`,
 compiled by `make levels`. The skill named is the one to load before authoring.
@@ -576,12 +577,12 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A level (mission — the venue MINUS its floor)                 | `content/levels/<id>.yaml`                                                                                                                | `level-design`                          |
 | The map it is CARVED from, per run                            | `content/maps/<id>.yaml`                                                                                                                  | `mapgen-improvement`, `map-improvement` |
 | An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml`                                                                                                       | `enemy-design`                          |
-| A boss's set-piece MOVE                                       | `src/game/defs/enemies/abilities.ts` + `src/game/mechanics/<id>.ts`                                                                       | `boss-abilities`                        |
-| A boss's DEATH RITE                                           | `src/game/death-rites/` + `death:` on the def                                                                                             | `boss-abilities`, `enemy-design`        |
+| A boss's set-piece MOVE                                       | `engine/game/defs/enemies/abilities.ts` + `engine/game/mechanics/<id>.ts`                                                                 | `boss-abilities`                        |
+| A boss's DEATH RITE                                           | `engine/game/death-rites/` + `death:` on the def                                                                                          | `boss-abilities`, `enemy-design`        |
 | An item, a named unique, a set                                | `content/items/<rarity>/<id>.yaml`, `content/sets.yaml`                                                                                   | `weapon-system`                         |
 | The loot economy knobs                                        | `content/item_quality.yaml`, `content/item_rarity.yaml`                                                                                   | `weapon-system`                         |
 | A powerup (a timed pickup power)                              | `content/powerups.yaml`                                                                                                                   | `visual-effects`                        |
-| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                                         | `engine-system`                         |
+| A new EFFECT a power can carry                                | `engine/game/ability-effects.ts` + a block on `AbilityDef` + its `KIND_BLOCKS` entry                                                      | `engine-system`                         |
 | A passive TALENT                                              | `content/talents.yaml`                                                                                                                    | `talent-fx`                             |
 | A new PROC a talent can fire                                  | a block on `TalentDef` + `TALENT_BLOCKS` + one reader in `talent-effects.ts` + `PROC_BLOCKS` — never a branch on a talent id              | `engine-system`, `talent-fx`            |
 | A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                                 | `enemy-design`                          |
@@ -614,7 +615,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A headless player, or a soak                      | `server/bot-client.ts` + `scripts/bot-client.mjs`; the weather is `Impairment` on the UDP transport                                                                                                                 |
 | The shell's half (fork, supervise, hand the port) | `electron/src/net.ts` + `session-host.ts`, and their Tauri peers `tauri/shell/src/net*.rs` + `tauri/src-tauri/src/{net,session}.rs`; the page's half is `pwa/src/app/net-bridge.ts`                                 |
 | A HOST / JOIN screen                              | `content/mainmenu.yaml` + `title-screen/menus-net.ts` — STARTUP PATH, so never `pwa/src/game/net/`. A LIVE status row belongs to the RUN instead (`game-screen/SessionPanel.tsx`)                                   |
-| A rule about who may take, keep or move an item   | `src/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                                                               |
+| A rule about who may take, keep or move an item   | `engine/game/trade.ts` when TWO players are involved; `items/` otherwise                                                                                                                                            |
 | VOICE — a codec, the capture, the jitter buffer   | `pwa/src/game/net/voice/` behind the PROVIDER seam in `codecs.ts` (a new codec is one entry in `PROVIDERS`); the payload is `server/wire/voice.ts`, the relay `session.ts`                                          |
 | A SECOND LEVEL live in the same session           | `server/worlds.ts` (raising and populating a carve) + `server/crossing.ts` (moving a seat between two). `session.ts` owns only the LOOP over them                                                                   |
 
@@ -628,26 +629,26 @@ engine catalogs → a gitignored module regenerated on every build.** Never edit
 commit a generated file. `make levels` runs the chain; the ORDER is a dependency
 order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.md`.
 
-| Catalog       | Source                                                    | Generator                   | Output                                              | Snapshot guard                |
-| ------------- | --------------------------------------------------------- | --------------------------- | --------------------------------------------------- | ----------------------------- |
-| Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`      | `src/generated/scripts.ts`                          | `script_parity_test.ts`       |
-| Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`        | `src/generated/items.ts`                            | `item_roundtrip_test.ts`      |
-| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `src/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
-| Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`      | `src/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
-| Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`     | `src/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
-| Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`       | `pwa/src/game/assets/`                              | —                             |
-| Levels        | `content/levels/`, `ladder.yaml`                          | `generate-levels.mjs`       | `src/generated/levels.ts`                           | `yaml_roundtrip_test.ts`      |
-| Maps          | `content/maps/`                                           | `generate-maps.mjs`         | `src/generated/map-blueprints.ts`                   | `generated_maps_test.ts`      |
-| Quests        | `content/quests/`, `quest-givers.yaml`, `conversations/`  | `generate-quests.mjs`       | `src/generated/quests.ts`                           | —                             |
-| Talents       | `content/talents.yaml`                                    | `generate-talents.mjs`      | `src/generated/talents.ts`                          | `talent_roundtrip_test.ts`    |
-| Companions    | `content/companions.yaml`                                 | `generate-companions.mjs`   | `src/generated/companions.ts`                       | `companion_roundtrip_test.ts` |
-| Leveling      | `content/leveling.yaml`                                   | `generate-leveling.mjs`     | `src/generated/leveling.ts`                         | —                             |
-| Bot tuning    | `content/bot.yaml`                                        | `generate-bot-tuning.mjs`   | `src/generated/botTuning.ts`                        | —                             |
-| Sounds        | `content/sounds/`                                         | `generate-sounds.mjs`       | `pwa/src/generated/sounds{,-ui}.ts`                 | `sound_catalog_test.ts`       |
-| Music         | `content/music/`                                          | `generate-music.mjs`        | `pwa/src/generated/music/`                          | `music_roundtrip_test.ts`     |
-| Title menu    | `content/mainmenu.yaml`                                   | `generate-menu.mjs`         | `pwa/src/generated/menu.ts`                         | `menu_tree_test.ts`           |
-| HUD           | `content/hud/`                                            | `generate-hud.mjs`          | `pwa/src/generated/hud.ts`                          | `hud_catalog_test.ts`         |
-| In-game menus | `content/menus/`                                          | `generate-ingame-menus.mjs` | `pwa/src/generated/ingame-menus.ts`                 | `ingame_menu_catalog_test.ts` |
+| Catalog       | Source                                                    | Generator                   | Output                                                 | Snapshot guard                |
+| ------------- | --------------------------------------------------------- | --------------------------- | ------------------------------------------------------ | ----------------------------- |
+| Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`      | `engine/generated/scripts.ts`                          | `script_parity_test.ts`       |
+| Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`        | `engine/generated/items.ts`                            | `item_roundtrip_test.ts`      |
+| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `engine/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
+| Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`      | `engine/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
+| Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`     | `engine/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
+| Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`       | `pwa/src/game/assets/`                                 | —                             |
+| Levels        | `content/levels/`, `ladder.yaml`                          | `generate-levels.mjs`       | `engine/generated/levels.ts`                           | `yaml_roundtrip_test.ts`      |
+| Maps          | `content/maps/`                                           | `generate-maps.mjs`         | `engine/generated/map-blueprints.ts`                   | `generated_maps_test.ts`      |
+| Quests        | `content/quests/`, `quest-givers.yaml`, `conversations/`  | `generate-quests.mjs`       | `engine/generated/quests.ts`                           | —                             |
+| Talents       | `content/talents.yaml`                                    | `generate-talents.mjs`      | `engine/generated/talents.ts`                          | `talent_roundtrip_test.ts`    |
+| Companions    | `content/companions.yaml`                                 | `generate-companions.mjs`   | `engine/generated/companions.ts`                       | `companion_roundtrip_test.ts` |
+| Leveling      | `content/leveling.yaml`                                   | `generate-leveling.mjs`     | `engine/generated/leveling.ts`                         | —                             |
+| Bot tuning    | `content/bot.yaml`                                        | `generate-bot-tuning.mjs`   | `engine/generated/botTuning.ts`                        | —                             |
+| Sounds        | `content/sounds/`                                         | `generate-sounds.mjs`       | `pwa/src/generated/sounds{,-ui}.ts`                    | `sound_catalog_test.ts`       |
+| Music         | `content/music/`                                          | `generate-music.mjs`        | `pwa/src/generated/music/`                             | `music_roundtrip_test.ts`     |
+| Title menu    | `content/mainmenu.yaml`                                   | `generate-menu.mjs`         | `pwa/src/generated/menu.ts`                            | `menu_tree_test.ts`           |
+| HUD           | `content/hud/`                                            | `generate-hud.mjs`          | `pwa/src/generated/hud.ts`                             | `hud_catalog_test.ts`         |
+| In-game menus | `content/menus/`                                          | `generate-ingame-menus.mjs` | `pwa/src/generated/ingame-menus.ts`                    | `ingame_menu_catalog_test.ts` |
 
 Accept an intentional change with the matching `node scripts/update-*-snapshot.mjs`
 — never by editing a fixture. **The sound, music and menu catalogs emit into the
@@ -678,7 +679,7 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 - **Keep generic game code separate.** Code
   that is not specific to THIS game (HUD widgets, input handling, game-loop
   utilities, sprite/audio helpers) goes in the dedicated generic areas —
-  `src/lib/` for engine-side code, `pwa/src/lib/` for UI code —
+  `engine/lib/` for engine-side code, `pwa/src/lib/` for UI code —
   never tangled into game-specific modules. The game remains self-contained;
   iterate and playtest reusable code here.
 - **Always import the generic pools through their aliases** — `@game/lib/*`
@@ -740,7 +741,7 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 | When you change…                                                       | Update…                                                                   |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | game identity (title, domain, …)                                       | `game.config.json` only — the single source of truth; then `make icons`   |
-| engine public API (`src/index.ts`)                                     | `docs/architecture.md`, `README.md` Usage                                 |
+| engine public API (`engine/index.ts`)                                  | `docs/architecture.md`, `README.md` Usage                                 |
 | the title menu (a screen, a row, an order, a page name)                | `content/mainmenu.yaml` only — the compiled tree is the one source        |
 | the HUD (an element, where it sits, what it says or sounds like)       | `content/hud/` only; a new BINDING/ACTION/WIDGET owes the schema a row    |
 | an IN-GAME WINDOW (the pause menu, a modal, a row on either)           | `content/menus/` only; a new WIDGET or SCREEN owes the schema a row       |
@@ -764,7 +765,7 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 
 The website must be regenerated whenever source-derived content changes
 (OSS_SPEC §11.2): `pwa/scripts/extract-source-data.mjs` runs on every build and
-fails if `src/version.ts` and `package.json` disagree.
+fails if `engine/version.ts` and `package.json` disagree.
 
 ## Story & dialogue — a three-tier chain
 

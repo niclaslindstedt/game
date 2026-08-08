@@ -202,7 +202,7 @@ function modLevelEntries(dir) {
  * catalog lives in (see rule 3 in this file's header).
  */
 async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
-  const core = await import(engine("src/index.ts"));
+  const core = await import(engine("engine/index.ts"));
   const {
     registerDefs,
     LEVELS,
@@ -294,8 +294,8 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
   // module load: the authoring tools iterate those rather than the record (the
   // relic audits walk `UNIQUE_IDS`), so a mod merged into the record alone would
   // be invisible to exactly the checks a mod most needs run over it.
-  const { UNIQUE_IDS } = await import(engine("src/game/defs/uniques.ts"));
-  const { SET_IDS } = await import(engine("src/game/defs/sets.ts"));
+  const { UNIQUE_IDS } = await import(engine("engine/game/defs/uniques.ts"));
+  const { SET_IDS } = await import(engine("engine/game/defs/sets.ts"));
   for (const [list, catalog] of [
     [UNIQUE_IDS, UNIQUE_DEFS],
     [SET_IDS, SET_DEFS],

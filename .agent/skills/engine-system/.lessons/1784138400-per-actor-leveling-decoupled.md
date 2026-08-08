@@ -1,7 +1,7 @@
 ---
 title: Per-actor leveling decoupled from the hero rides the loadout + a cycle-free stat module
 date: 2026-07-15
-scope: src/game/
+scope: engine/game/
 concepts: [leveling, companions, module-cycles]
 ---
 

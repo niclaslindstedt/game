@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// GOLD — the coin economy's second faucet (src/game/items/gold.ts).
+// GOLD — the coin economy's second faucet (engine/game/items/gold.ts).
 //
 // Five rules are pinned here, and every one of them is invisible until it is
 // wrong:

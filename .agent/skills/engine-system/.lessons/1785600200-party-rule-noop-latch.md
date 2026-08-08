@@ -1,7 +1,7 @@
 ---
 title: A per-player rule ships as a latch flag + a sweep, and must be an exact no-op at one hero
 date: 2026-08-01
-scope: src/game/
+scope: engine/game/
 concepts: [party, multiplayer, latch, no-op]
 ---
 

@@ -1,0 +1,12 @@
+# engine/lib — generic engine code
+
+Engine-side code that is **not specific to this game** (game-loop utilities,
+input primitives, math/collision helpers, sprite/audio plumbing) lives here,
+cleanly separated from game-specific modules.
+
+The separation exists so this code can be **reused by later games** — a
+sequel keeps this pool and rewrites the game-specific modules around it.
+Keep modules in this directory free of imports from game-specific code
+(`engine/` outside `lib/`); the dependency arrow points the other way.
+
+See the "Local reusable code" section in [AGENTS.md](../../AGENTS.md).

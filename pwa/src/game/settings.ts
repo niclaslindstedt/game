@@ -30,7 +30,7 @@ import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./bot-view-specs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
 // The renderer's projection leaf — imported directly rather than through
 // `render.ts`, which is the whole renderer: settings is on the app's STARTUP
-// path, and `tilt.ts` is an import-free leaf (the same trick `src/game/flags.ts`
+// path, and `tilt.ts` is an import-free leaf (the same trick `engine/game/flags.ts`
 // plays for the engine's own runtime toggles). See the critical-path budget in
 // AGENTS.md.
 import {
@@ -271,7 +271,7 @@ export type Cutscenes = "on" | "off";
 /**
  * MINIGAMES: a gameplay preference (SETTINGS → GAMEPLAY) for the game's playable
  * interludes — today the DRIVE between the garage and GOODCO, in both
- * directions (src/game/drive/).
+ * directions (engine/game/drive/).
  *
  * `on` (the default) plays them; `off` makes the trip the straight cut it was
  * before, with the destination built the moment the car reaches the road.

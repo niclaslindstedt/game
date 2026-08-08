@@ -1,7 +1,7 @@
 ---
 title: On the road, CAUGHT implies CRUSHED — so any rule that erases a body has to be read at the SLOWEST collision
 date: 2026-08-08
-scope: src/game/drive/, pwa/src/game/drive-screen/
+scope: engine/game/drive/, pwa/src/game/drive-screen/
 concepts: [drive, gore-density, thresholds, remains, measurement]
 ---
 

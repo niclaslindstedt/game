@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BEST TARGET, not merely the nearest one (src/game/step/weapon.ts
+// THE BEST TARGET, not merely the nearest one (engine/game/step/weapon.ts
 // `nearestEnemy`, `TARGET_PRIORITY`): with nobody pointing — touch, a gamepad,
 // FOLLOW CURSOR steering, a bot — the auto-weapon weights each reachable foe's
 // distance by its ROLE, so a set piece outranks the chaff standing in front of

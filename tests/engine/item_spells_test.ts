@@ -17,14 +17,14 @@ import {
 import type { Equipment, GameState } from "@game/core";
 // Engine internals: the kill funnel (proc queueing), the granted-spell
 // derivation, and the mint/rarity rules under test.
-import { hitEnemy, queueStruckProcs } from "../../src/game/loot.ts";
+import { hitEnemy, queueStruckProcs } from "../../engine/game/loot.ts";
 import {
   spellIntervalScale,
   stormSpellBlock,
   syncItemSpells,
-} from "../../src/game/spells.ts";
-import { uniqueDropWeight } from "../../src/game/items/index.ts";
-import type { UniqueDef } from "../../src/game/defs/uniques.ts";
+} from "../../engine/game/spells.ts";
+import { uniqueDropWeight } from "../../engine/game/items/index.ts";
+import type { UniqueDef } from "../../engine/game/defs/uniques.ts";
 
 import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
 

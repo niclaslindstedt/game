@@ -7,8 +7,8 @@
 //      uniques, story items, weapons+gear) for cross-ref checks,
 //   2. loads + schema-validates every YAML enemy (a bad field/id fails the
 //      build),
-//   3. writes src/generated/enemies.ts — GENERATED_ENEMIES, the flat catalog
-//      src/game/defs/enemies/index.ts reads.
+//   3. writes engine/generated/enemies.ts — GENERATED_ENEMIES, the flat catalog
+//      engine/game/defs/enemies/index.ts reads.
 // The output is gitignored and regenerated on every build (like levels.ts), so
 // the YAML is the single source of truth.
 //
@@ -25,7 +25,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Engine modules under src/lib use the @game/lib alias at runtime — map it so
+// Engine modules under engine/lib use the @game/lib alias at runtime — map it so
 // the def catalogs import cleanly under plain node.
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -37,16 +37,16 @@ import { loadStoryItems } from "./story-data/load-yaml.mjs";
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 const { UNIQUE_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/uniques.ts")).href
+  pathToFileURL(engine("engine/game/defs/uniques.ts")).href
 );
 const { WEAPON_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+  pathToFileURL(engine("engine/game/defs/equipment.ts")).href
 );
 const { GEAR_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/gear.ts")).href
+  pathToFileURL(engine("engine/game/defs/gear.ts")).href
 );
 const { deathRites: loadDeathRites } = await import(
-  pathToFileURL(engine("src/game/death-rites/catalog.ts")).href
+  pathToFileURL(engine("engine/game/death-rites/catalog.ts")).href
 );
 const RITE_DEFS = loadDeathRites();
 
@@ -110,9 +110,9 @@ export const GENERATED_ENEMIES: Record<string, EnemyDef> = ${JSON.stringify(
 )} as unknown as Record<string, EnemyDef>;
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/enemies.ts`, out);
 console.log(
-  `wrote src/generated/enemies.ts — ${Object.keys(enemies).length} enemies`,
+  `wrote engine/generated/enemies.ts — ${Object.keys(enemies).length} enemies`,
 );

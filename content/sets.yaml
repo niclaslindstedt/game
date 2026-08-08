@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # SET items — the D2 GREEN tier, and the source of truth for every kit in the
-# game. Compiled to src/generated/sets.ts by `make levels`
-# (scripts/generate-sets.mjs); the engine reads it through src/game/defs/sets.ts.
+# game. Compiled to engine/generated/sets.ts by `make levels`
+# (scripts/generate-sets.mjs); the engine reads it through engine/game/defs/sets.ts.
 #
 # A SET is a boss's hand-authored ARMOR kit — pieces authored in
 # `content/items/set/` with `rarity: set` — themed to ONE weapon class so the

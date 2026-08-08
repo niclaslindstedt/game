@@ -1,7 +1,7 @@
 ---
 title: A CAR is not a blow — road gore is SIM, and its density has to be measured at the worst case
 date: 2026-08-07
-scope: src/game/drive/
+scope: engine/game/drive/
 concepts: [drive, gore-density, measurement]
 ---
 
@@ -12,7 +12,7 @@ and trying to model a car collision as a bigger burst produces a picture with no
 afterwards. What a car actually does is a SEQUENCE — it goes through a body,
 carries what it caught, lays it down somewhere else, and then drives over what it
 laid down — and each of those is a fact about WHERE A THING IS. So the pieces
-belong in the sim (`src/game/drive/remains.ts`) and only their MATERIAL belongs
+belong in the sim (`engine/game/drive/remains.ts`) and only their MATERIAL belongs
 to the app, which is the same fence `DriveStrike` already drew.
 
 Three things that were wrong first and are worth not repeating:

@@ -26,13 +26,13 @@ const root = path.join(here, "..");
 // The engine uses the @game/lib alias at runtime — map it before importing.
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { createGame } = await import(path.join(root, "src/index.ts"));
-const { hitEnemy } = await import(path.join(root, "src/game/loot.ts"));
+const { createGame } = await import(path.join(root, "engine/index.ts"));
+const { hitEnemy } = await import(path.join(root, "engine/game/loot.ts"));
 const { ENEMY_DEFS } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 const { UNIQUE_DEFS } = await import(
-  path.join(root, "src/game/defs/uniques.ts")
+  path.join(root, "engine/game/defs/uniques.ts")
 );
 const { applyMods, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")

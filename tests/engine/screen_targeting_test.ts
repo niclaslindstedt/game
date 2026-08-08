@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// NOTHING OFF THE SCREEN IS A TARGET (src/game/sight.ts `visibleTo`, read by
+// NOTHING OFF THE SCREEN IS A TARGET (engine/game/sight.ts `visibleTo`, read by
 // step/weapon.ts `nearestEnemy`, by `nearestCrate`, by the conjured powers and
 // by the companions' engage bubble).
 //
@@ -20,9 +20,9 @@ import { COMPANIONS, recruitCompanion, step, visibleTo } from "@game/core";
 import type { GameInput, GameState, Player } from "@game/core";
 // Engine-internal: the shared target picker every automatic pick runs, one of
 // the effects that used to pick without a screen, and the bot's stand-off read.
-import { nearestEnemy } from "../../src/game/step/weapon.ts";
-import { applyStorm } from "../../src/game/ability-effects.ts";
-import { firingReach } from "../../src/game/bot/perception.ts";
+import { nearestEnemy } from "../../engine/game/step/weapon.ts";
+import { applyStorm } from "../../engine/game/ability-effects.ts";
+import { firingReach } from "../../engine/game/bot/perception.ts";
 
 import {
   clearStage,

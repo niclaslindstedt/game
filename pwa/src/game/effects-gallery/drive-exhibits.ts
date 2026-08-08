@@ -244,7 +244,7 @@ function plantBlockade(drive: DriveState, ahead: number, rows: number): void {
 
 /**
  * A PIECE OF KERB, `ahead` px up the road — one of the two things the street
- * stands on its own pavements (`src/game/drive/street.ts`).
+ * stands on its own pavements (`engine/game/drive/street.ts`).
  *
  * Minted by hand rather than through the spawner because the spawner lays
  * furniture on a fixed PITCH along the course: what stands in front of the

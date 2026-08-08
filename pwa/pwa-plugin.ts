@@ -8,7 +8,7 @@ import type { IndexHtmlTransformResult, Plugin, ResolvedConfig } from "vite";
 import {
   GENERATED_CAMPAIGN_ORDER,
   GENERATED_LEVEL_SUMMARIES,
-} from "../src/generated/level-index.ts";
+} from "../engine/generated/level-index.ts";
 import { cacheIdForBase } from "./src/app/pwa.ts";
 import {
   IDENTITY,

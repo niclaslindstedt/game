@@ -9,7 +9,7 @@ import {
   setDebugEnabled,
   status,
   warn,
-} from "../src/output.ts";
+} from "../engine/output.ts";
 
 describe("output module", () => {
   beforeEach(() => {

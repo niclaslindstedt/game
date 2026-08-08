@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Sand storms (src/game/hazards.ts, stepSandstorms): small dust squalls that
+// Sand storms (engine/game/hazards.ts, stepSandstorms): small dust squalls that
 // drift across the field, shove minions aside unharmed, and CATCH the grounded
 // hero once — a difficulty-scaled bite of his max hp PLUS a knockout, where he
 // lies prone and helpless for SANDSTORMS.knockoutMs while the storm passes over

@@ -101,10 +101,10 @@ function missingGlyphs(text) {
   return [...new Set([...text.toUpperCase()])].filter((ch) => !(ch in GLYPHS));
 }
 
-/** The five make qualities, worst to best (src/game/types.ts `Quality`). */
+/** The five make qualities, worst to best (engine/game/types.ts `Quality`). */
 export const QUALITY_IDS = ["broken", "crude", "normal", "superior", "perfect"];
 
-/** The full tier ladder, worst to best (src/game/types.ts `Tier`). */
+/** The full tier ladder, worst to best (engine/game/types.ts `Tier`). */
 export const TIER_IDS = [
   "trash",
   "regular",
@@ -304,7 +304,7 @@ export function validateItem(doc, refs) {
         err(`missing required field "durability"`);
     }
     oneOf(doc.ammo, AMMO_TYPES, "ammo kind");
-    // MELEE ONLY, and omitted means SHARP (src/game/items/edge.ts). Refused on
+    // MELEE ONLY, and omitted means SHARP (engine/game/items/edge.ts). Refused on
     // a ranged or magic weapon rather than ignored: a bullet cannot cleave
     // whatever the file says, and a silently-ignored field is an author who
     // believes they authored something.
@@ -325,7 +325,7 @@ export function validateItem(doc, refs) {
       if (doc.class !== "melee")
         err(`rigid is melee-only (class "${doc.class}" has no swung reach)`);
     }
-    // BURN (`WeaponDef.burn`, src/game/items/burn.ts): the weapon is FIRE, so
+    // BURN (`WeaponDef.burn`, engine/game/items/burn.ts): the weapon is FIRE, so
     // every body it drops is burned up into a charred skeleton instead of being
     // thrown as a corpse — the screen-nuke's own picture, pointed at a new
     // author. Melee only, because a burn happens where the weapon IS; a shot
@@ -336,7 +336,7 @@ export function validateItem(doc, refs) {
       if (doc.class !== "melee")
         err(`burn is melee-only (class "${doc.class}" does not reach a body)`);
     }
-    // EXECUTE (`WeaponDef.execute`, src/game/items/execute.ts): the blow is
+    // EXECUTE (`WeaponDef.execute`, engine/game/items/execute.ts): the blow is
     // priced in the VICTIM's own healthbars instead of in the weapon's damage,
     // so it kills whatever it reaches short of a boss. Melee only, for the same
     // reason `edge` is — a thing that travels is caught by armor, and the rule
@@ -576,7 +576,7 @@ export function validateRarity(doc) {
       if (t?.[f] !== undefined && typeof t[f] !== "number")
         err(`${id}: ${f} must be a number`);
     }
-    // The engine types pin the knob key sets (src/generated/items.ts): every
+    // The engine types pin the knob key sets (engine/generated/items.ts): every
     // tier except regular carries the unlock gate, and exactly the ROLLABLE
     // tiers (magic/rare/unique/legendary/artifact — never trash/regular/set,
     // which the rarity roll can't land) carry rollChance + rollSlope.

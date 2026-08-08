@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { registerDefs, WORLD_DROP } from "@game/core";
 import type { GameState } from "@game/core";
 // Engine-internal kill funnel — the door every drop walks through.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import { FIX_LEVEL } from "./fixtures.ts";
 import { makeEnemy, startGame } from "./helpers.ts";

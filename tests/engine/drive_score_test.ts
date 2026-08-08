@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHAT A LEG IS WORTH — the drive's arcade score (src/game/drive/score.ts).
+// WHAT A LEG IS WORTH — the drive's arcade score (engine/game/drive/score.ts).
 //
 // The SHAPE is the feature, not the figures: every assertion below is about a
 // relationship the tuning must keep (faster is worth more, a bent wagon is worth
@@ -21,7 +21,7 @@ import {
   DRIVE_OUTCOME,
   type DriveParams,
   type DriveState,
-} from "../../src/game/drive/index.ts";
+} from "../../engine/game/drive/index.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,

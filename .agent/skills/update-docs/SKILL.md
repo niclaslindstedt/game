@@ -39,7 +39,7 @@ The `docs/` directory contains conceptual documentation for game. Unlike the REA
 
 | Changed files / scope | Doc(s) to update |
 |---|---|
-| Engine public API (`src/index.ts`) | `docs/architecture.md`, `README.md` Usage |
+| Engine public API (`engine/index.ts`) | `docs/architecture.md`, `README.md` Usage |
 | Config knobs: env vars, URL params (`?debug`, `?seed`, `?scenario`, `?bot`, …), dev-menu flags | `docs/configuration.md` |
 | Game content: levels, enemies, items, powers (`content/**`) | **Usually nothing.** The YAML and the generated `/library/` are the record. `docs/game-content.md` carries only the RULES a catalog can't state (a carry-over, an economy, a gate) — update it when one of those changes |
 | Story / dialogue / plot — any spoken line, caption, lore page, or plot beat | **Not this skill.** Use `update-story` (`.agent/skills/update-story/`), which owns the `story.md` → `manuscript.md` → data chain — **only with user confirmation** (see CLAUDE.md "Story & dialogue"; never silently rewrite it) |

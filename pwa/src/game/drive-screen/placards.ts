@@ -41,7 +41,7 @@ import type { Camera } from "../render/view.ts";
 /**
  * THE LINES, in `DrivePedestrian.bark`'s own order. The engine picks an index
  * into this list without ever being told what is in it (`GLUED_BARKS`,
- * src/game/drive/blockade.ts) — keep the two lengths in step, or the last voice
+ * engine/game/drive/blockade.ts) — keep the two lengths in step, or the last voice
  * on the road never speaks.
  */
 export const GLUED_BARKS: readonly string[] = [
@@ -54,7 +54,7 @@ export const GLUED_BARKS: readonly string[] = [
 
 /**
  * WHAT THE PEOPLE ON THE ROAD ARE THINKING — forty of them, one per person, each
- * played at most once a trip (`CROWD_THOUGHTS`, src/game/drive/crowd.ts, deals
+ * played at most once a trip (`CROWD_THOUGHTS`, engine/game/drive/crowd.ts, deals
  * the deck; keep the two lengths in step or the last thoughts never come up).
  *
  * NOT LINES. THOUGHTS. Nobody out here is addressing the car — THE GLUED do

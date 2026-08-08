@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE AUTOPILOT AT HOME (src/game/bot/hub.ts): on a HUB level the bot works the
+// THE AUTOPILOT AT HOME (engine/game/bot/hub.ts): on a HUB level the bot works the
 // room — the people with a mark over their head, the counter, then the car out
 // — where before it stood still, because a hub has no horde, no cache, no fog
 // and no boss for the ordinary macro ladder to answer with.
@@ -36,14 +36,14 @@ import {
   hubGoal,
   hubTapCommand,
   trackHubShop,
-} from "../../src/game/bot/hub.ts";
-import { errandGiver, giverTapCommand } from "../../src/game/bot/errands.ts";
-import { doorwayVia, routeSteer } from "../../src/game/bot/nav.ts";
-import { macroTarget } from "../../src/game/bot/macro.ts";
-import { botAct } from "../../src/game/bot/index.ts";
-import { botTuningFor } from "../../src/game/bot/state.ts";
-import { applyRunCommand } from "../../src/game/commands.ts";
-import { step } from "../../src/game/step/index.ts";
+} from "../../engine/game/bot/hub.ts";
+import { errandGiver, giverTapCommand } from "../../engine/game/bot/errands.ts";
+import { doorwayVia, routeSteer } from "../../engine/game/bot/nav.ts";
+import { macroTarget } from "../../engine/game/bot/macro.ts";
+import { botAct } from "../../engine/game/bot/index.ts";
+import { botTuningFor } from "../../engine/game/bot/state.ts";
+import { applyRunCommand } from "../../engine/game/commands.ts";
+import { step } from "../../engine/game/step/index.ts";
 import { clearStage, startGame } from "./helpers.ts";
 
 /** Where the fixture hub's car is parked (fixtures.ts `FIX_HUB_LEVEL`). */

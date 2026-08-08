@@ -1,8 +1,8 @@
 # The TALENT catalog — the three passive trees the hero grows alongside the
 # cast-spell system, and the single source of truth for their balance. Compiled
-# to `src/generated/talents.ts` by `scripts/generate-talents.mjs` (folded into
+# to `engine/generated/talents.ts` by `scripts/generate-talents.mjs` (folded into
 # `make levels` / `make assets`); the engine reads it through
-# `src/game/defs/talents/index.ts`, which owns the TYPES and documents what
+# `engine/game/defs/talents/index.ts`, which owns the TYPES and documents what
 # every field and every proc block means. Nothing here needs a rebuild of engine
 # code to retune — a slope, a proc chance, or a whole new talent is an edit to
 # this file, and a MOD authors its own the same way (`mod/FORMAT.md`).
@@ -11,7 +11,7 @@
 # INTELLIGENCE earns one talent point in THAT stat's tree, spent through the
 # level-up picker on a new talent or a rank-up of an owned one. Talents are
 # ALWAYS ON — no mana, no cooldown, no tapping. The shared rank ceiling
-# (`TALENTS.maxRank`) is engine economy and stays in `src/game/config/talents.ts`
+# (`TALENTS.maxRank`) is engine economy and stays in `engine/game/config/talents.ts`
 # — a talent may not author a `maxRank` above it.
 #
 # A TALENT IS A COMPOSITION, NOT A KIND. `kind:` is a purely presentational

@@ -161,7 +161,7 @@ export function loadConfig(path: string | undefined): DedicatedConfig {
 /**
  * Turn a config into the parameters a session is built from.
  *
- * Everything a RUN is — see `src/game/session-setup.ts` — and nothing a
+ * Everything a RUN is — see `engine/game/session-setup.ts` — and nothing a
  * CHARACTER is: no loadout, no cleared levels, no campaign chain, no purse. A
  * dedicated server's run belongs to nobody, so it starts from the authored
  * fresh state and each arriving player brings their own hero to it.

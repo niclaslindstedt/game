@@ -14,7 +14,7 @@
 // nothing over it. ESC backs out. Reached from the hidden DEVELOPER menu, or
 // straight in through its URL.
 //
-// The staging is the engine's own scenario system (`src/game/scenario.ts`) and
+// The staging is the engine's own scenario system (`engine/game/scenario.ts`) and
 // the drawing is the game's own FX pipeline — this screen only frames them, so
 // nothing here can drift from what ships.
 

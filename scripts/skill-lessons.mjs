@@ -19,7 +19,7 @@
 //
 // Filters (combine freely; --list applies to them too):
 //
-//   --scope=src/game/bot            lessons relevant to a path (plus every global lesson)
+//   --scope=engine/game/bot            lessons relevant to a path (plus every global lesson)
 //   --scope=a,b --no-global         …without the global ones, for a consolidation sweep
 //   --concepts=nav-grid,fog         lessons carrying ANY of these concepts
 //   --files=nav-grid,1753093100     lessons whose filename contains ANY of these
@@ -66,8 +66,8 @@ function splitList(value) {
 
 /**
  * Does a lesson's scope entry and a queried path talk about the same place?
- * Prefix in EITHER direction, so a lesson scoped `src/game/bot/` answers a
- * query for `src/game/bot/index.ts` and a query for `src/` alike.
+ * Prefix in EITHER direction, so a lesson scoped `engine/game/bot/` answers a
+ * query for `engine/game/bot/index.ts` and a query for `engine/` alike.
  */
 function pathsOverlap(a, b) {
   const norm = (p) => p.replace(/^\.\//, "").replace(/\/+$/, "");

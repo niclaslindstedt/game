@@ -1,7 +1,7 @@
 ---
 title: The unstuck stall detector must be speed-aware, and a wall is traced by asking where it visibly ends
 date: 2026-07-21
-scope: src/game/bot/nav.ts
+scope: engine/game/bot/nav.ts
 concepts: [stall-detection, walls, unstick]
 ---
 

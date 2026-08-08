@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Navigation senses (src/game/bot/index.ts + obstacles.ts): the WALL-END sense —
+// Navigation senses (engine/game/bot/index.ts + obstacles.ts): the WALL-END sense —
 // "can I see where this obstacle ends?" — that lets a blocked walker trace a
 // wall toward its visible end instead of oscillating against it, and the
 // GUIDANCE-ARROW macro objective — the bot heeds the same "go this way"
@@ -17,9 +17,9 @@ import {
   type Bot,
   type GameState,
 } from "@game/core";
-import { navTarget } from "../../src/game/bot/nav.ts";
-import { mapCols, mapRows } from "../../src/game/map.ts";
-import { visibleObstacleEnd } from "../../src/game/obstacles.ts";
+import { navTarget } from "../../engine/game/bot/nav.ts";
+import { mapCols, mapRows } from "../../engine/game/map.ts";
+import { visibleObstacleEnd } from "../../engine/game/obstacles.ts";
 import { clearStage, DT, idle, startGame } from "./helpers.ts";
 
 import { distance as dist } from "@game/lib/vec.ts";

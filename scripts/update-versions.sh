@@ -13,7 +13,7 @@ npm version --no-git-tag-version --allow-same-version \
 
 # The engine's embedded version constant (kept in its own module precisely so
 # this rewrite stays a one-liner; tests/version_test.ts guards the parity).
-sed -i.bak -E "s/engineVersion = \"[^\"]*\"/engineVersion = \"${ver}\"/" src/version.ts
-rm src/version.ts.bak
+sed -i.bak -E "s/engineVersion = \"[^\"]*\"/engineVersion = \"${ver}\"/" engine/version.ts
+rm engine/version.ts.bak
 
 echo "updated versions to ${ver}"

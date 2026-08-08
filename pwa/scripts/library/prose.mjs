@@ -252,7 +252,7 @@ export function mechanicsProse(mechanics) {
 
 /**
  * One BOSS ABILITY CATALOG entry, described the same way (see
- * src/game/defs/enemies/abilities.ts). Split out from `mechanicsProse` because
+ * engine/game/defs/enemies/abilities.ts). Split out from `mechanicsProse` because
  * the catalog is a LIST rather than four named fields — a new ability adds a
  * branch here and nothing else, which is the same bargain the engine makes.
  *
@@ -537,7 +537,7 @@ export function traitNotes(enemy) {
         ? `Bolts at ${percent(t.flees.belowHpFrac)} health rather than dying, tearing a way out a few strides off and running for it.`
         : "Beaten to nothing it escapes rather than dying, tearing a way out a few strides off and running for it.",
     ]);
-  // HOW IT ENDS — the scripted send-off (src/game/death-rites/). Bosses only:
+  // HOW IT ENDS — the scripted send-off (engine/game/death-rites/). Bosses only:
   // everything else is on the ordinary gore ladder, which the WHEN STRUCK note
   // above already covers.
   if (t.death) {

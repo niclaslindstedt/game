@@ -252,7 +252,7 @@ export function fogDistanceAt(field: FogField, wx: number, wy: number): number {
 const FOG_BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
 /**
- * The main-view FOG OF WAR, Warcraft-2 style (see src/game/map.ts). Everything
+ * The main-view FOG OF WAR, Warcraft-2 style (see engine/game/map.ts). Everything
  * the hero has uncovered reads fully CLEAR; the never-seen map is solid black;
  * the boundary between them is a graded ordered-dither TRANSITION band, dense
  * black stipple against the dark and thinning to nothing as it meets the clear.

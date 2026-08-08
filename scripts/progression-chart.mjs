@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The progression graph builder for scripts/progression-sim.mjs: turns an
-// analytic ProgressionReport (src/sim/analytic.ts) into a single self-contained
+// analytic ProgressionReport (engine/sim/analytic.ts) into a single self-contained
 // HTML page — a HUD-style telemetry dashboard of how the hero's level, health,
 // damage, crit, and armor climb over the whole game, banded by difficulty.
 //

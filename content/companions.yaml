@@ -11,7 +11,7 @@
 # The catalog KEY is the id (the loader stamps it in, so nothing repeats itself),
 # and every spoken line here lives in docs/manuscript.md like all spoken words.
 #
-# Compiled to `src/generated/companions.ts` by `scripts/generate-companions.mjs`
+# Compiled to `engine/generated/companions.ts` by `scripts/generate-companions.mjs`
 # (part of `make levels` / `make assets`). A MOD ships this same file at its own
 # root and its companions arrive through `registerDefs` — see mod/FORMAT.md.
 

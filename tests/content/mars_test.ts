@@ -165,7 +165,7 @@ describe("THE FOUNDER flees", () => {
       seen.push(...state.events);
     }
     // Off the board is no longer the same moment as gone: at the threshold his
-    // FLIGHT RITE opens (src/game/boss-death.ts) — he tears the rift open, runs
+    // FLIGHT RITE opens (engine/game/boss-death.ts) — he tears the rift open, runs
     // for it, and is spun through — and `bossFled`, the landmark and his
     // parting words all land at the END of that beat.
     seen.push(...settleBossRite(state));

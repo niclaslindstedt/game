@@ -6,7 +6,7 @@
 // the build; soft issues only warn. Mirrors `level-schema.mjs`.
 //
 // The compass-region grammar is NOT re-implemented here: the generator hands in
-// the engine's own `parseRegion` (`src/game/mapgen/regions.ts`) through `refs`,
+// the engine's own `parseRegion` (`engine/game/mapgen/regions.ts`) through `refs`,
 // so a name this validator accepts is exactly a name the runtime can resolve.
 //
 // A blueprint is far easier to get subtly wrong than a hand-authored level,

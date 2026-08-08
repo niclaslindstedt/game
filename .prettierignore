@@ -6,7 +6,7 @@ package-lock.json
 pwa/dist/
 pwa/src/generated/
 pwa/src/game/assets/
-src/generated/
+engine/generated/
 native/ios/
 native/android/
 # Desktop shell build artifacts: the copied website, the compiled main process,

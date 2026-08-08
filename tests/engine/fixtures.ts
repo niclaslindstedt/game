@@ -4,7 +4,7 @@
 // defs (`test_level`, `test_minion`, …) registered via the engine's
 // `registerDefs` hook so the engine-rule tests exercise the simulation
 // WITHOUT depending on this game's shipped catalogs. Deleting every entry
-// from `src/game/defs/*` (a sequel stripping content) leaves these suites
+// from `engine/game/defs/*` (a sequel stripping content) leaves these suites
 // green, because they run on these fixtures instead.
 //
 // The numbers deliberately MIRROR the shipped `moon`/`ghost`/`blaster`/…
@@ -1735,10 +1735,10 @@ export const FIX_HUB_LEVEL: LevelDef = (() => {
         pos: { x: 900, y: 400 },
       },
       // The parked machines: `car` and `rocket` are ENGINE landmark kinds —
-      // createGame mints a Vehicle for each (src/game/vehicles.ts).
+      // createGame mints a Vehicle for each (engine/game/vehicles.ts).
       { kind: "car", anchor: "base", pos: { x: 700, y: 500 } },
       { kind: "rocket", anchor: "base", pos: { x: 1100, y: 300 } },
-      // THE CACHE's spot (src/game/cache.ts) — `cache` is an ENGINE landmark
+      // THE CACHE's spot (engine/game/cache.ts) — `cache` is an ENGINE landmark
       // kind like the two above: the carve reserves the ground and the RUN
       // decides whether the chest stands in it. A hub is the only venue that
       // has one, exactly as the shipped garage is.
@@ -1806,7 +1806,7 @@ export const FIX_BEAT_LEVEL: LevelDef = {
 };
 
 // A level standing under a SKY, with two lamps on it — the synthetic twin of
-// the garage's night (`src/game/daylight.ts`). Everything else in the catalog
+// the garage's night (`engine/game/daylight.ts`). Everything else in the catalog
 // deliberately has no `sky` at all, which is what proves the default: a venue
 // that never opted in is never dimmed, whatever `daylight` a run carries.
 export const FIX_SKY_LEVEL: LevelDef = {
@@ -1827,7 +1827,7 @@ export const FIX_SKY_LEVEL: LevelDef = {
 
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
-// its kit (see src/game/arrival.ts). Geometry is the reference level's.
+// its kit (see engine/game/arrival.ts). Geometry is the reference level's.
 export const FIX_LEVEL_2: LevelDef = {
   ...FIX_LEVEL,
   id: "test_level_2",
@@ -1908,7 +1908,7 @@ export const FIX_STAMPEDE_LEVEL: LevelDef = hazardLevel("test_stampede_level", {
   stampedes: { everyMs: [800, 800] },
 });
 
-// A STAFF LOT with an entrance in it (`LevelDef.arrivals`, src/game/arrivals.ts).
+// A STAFF LOT with an entrance in it (`LevelDef.arrivals`, engine/game/arrivals.ts).
 //
 // It is a FIXTURE for the same reason the locked-door level is: the shipped
 // venue carves its lot and its doorway fresh every run, and the ENGINE rule —
@@ -2151,7 +2151,7 @@ export const FIX_RECRUIT_LEVEL: LevelDef = {
   ],
 };
 
-// A level exercising the DESIGN ZONE systems (src/game/zones.ts): a safe
+// A level exercising the DESIGN ZONE systems (engine/game/zones.ts): a safe
 // circle near the spawn (no spawns + repel), a quiet rectangular dead area
 // mid-field holding a chest, a tempo curve, and two merchant spawn points.
 // Geometry is otherwise the reference level's.

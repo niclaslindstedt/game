@@ -108,12 +108,17 @@ function withoutComments(source: string): string {
 /** The alias maps the app's build reads. Keep in step with
  * `pwa/vite.config.ts` and the four `tsconfig`s. */
 function aliasPath(spec: string): string {
-  if (spec === "@game/core") return path.join(repoRoot, "src", "index.ts");
-  if (spec === "@game/menu") return path.join(repoRoot, "src", "menu.ts");
+  if (spec === "@game/core") return path.join(repoRoot, "engine", "index.ts");
+  if (spec === "@game/menu") return path.join(repoRoot, "engine", "menu.ts");
   if (spec === "@game/client")
     return path.join(repoRoot, "server", "client.ts");
   if (spec.startsWith("@game/lib/")) {
-    return path.join(repoRoot, "src", "lib", spec.slice("@game/lib/".length));
+    return path.join(
+      repoRoot,
+      "engine",
+      "lib",
+      spec.slice("@game/lib/".length),
+    );
   }
   if (spec.startsWith("@game/wire/")) {
     return path.join(
@@ -183,7 +188,7 @@ describe("the app's startup path", () => {
     // The same rule one step up, and the one that actually bites: `@game/core`
     // is the simulation entire. The startup path reaches levels through
     // `defs/levels/summary.ts` and the engine's flags through `@game/menu`.
-    expect(startup.has(path.join(repoRoot, "src", "index.ts"))).toBe(false);
+    expect(startup.has(path.join(repoRoot, "engine", "index.ts"))).toBe(false);
   });
 });
 
@@ -192,7 +197,7 @@ describe("the cutover", () => {
 
   it("is walked at all", () => {
     expect(run.size).toBeGreaterThan(50);
-    expect(run.has(path.join(repoRoot, "src", "index.ts"))).toBe(true);
+    expect(run.has(path.join(repoRoot, "engine", "index.ts"))).toBe(true);
   });
 
   it("is looking for a file that exists", () => {

@@ -1,7 +1,7 @@
 ---
 title: Durability "max" is an instance question
 date: 2026-07-10
-scope: src/game/items/
+scope: engine/game/items/
 concepts: [durability, instances]
 ---
 

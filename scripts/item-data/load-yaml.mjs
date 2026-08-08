@@ -6,7 +6,7 @@
 // files `content/item_quality.yaml` (the make-quality axis) and
 // `content/item_rarity.yaml` (the tier ladder + rarity economy). Produces the
 // flat catalogs the generator validates and compiles into
-// `src/generated/items.ts`.
+// `engine/generated/items.ts`.
 //
 // Layout:
 //   items/<rarity>/<id>.yaml   one item: file stem == id, dir == its rarity;

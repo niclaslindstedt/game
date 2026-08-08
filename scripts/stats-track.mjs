@@ -25,25 +25,27 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { LEVELING, LOOT, STATS } = await import(
-  path.join(root, "src/game/config/index.ts")
+  path.join(root, "engine/game/config/index.ts")
 );
 const { xpToLevelUp, xpLevelCap, xpCapMultiplier, mobLevelXp } = await import(
-  path.join(root, "src/game/leveling.ts")
+  path.join(root, "engine/game/leveling.ts")
 );
 const { XP_TUNING } = await import(
-  path.join(root, "src/generated/leveling.ts")
+  path.join(root, "engine/generated/leveling.ts")
 );
 const { mobLevelFor, mobHpScaleFor, mobContactScaleFor } = await import(
-  path.join(root, "src/game/menace.ts")
+  path.join(root, "engine/game/menace.ts")
 );
-const { mobArmorReduction } = await import(path.join(root, "src/game/loot.ts"));
+const { mobArmorReduction } = await import(
+  path.join(root, "engine/game/loot.ts")
+);
 const { DIFFICULTY_ORDER, difficultyDef, meetsMinDifficulty, scaledMobCount } =
-  await import(path.join(root, "src/game/defs/difficulties.ts"));
+  await import(path.join(root, "engine/game/defs/difficulties.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { enemyDef } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 
 const args = process.argv.slice(2);

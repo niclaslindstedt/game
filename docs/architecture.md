@@ -13,7 +13,7 @@ pwa/  (the app: Vite + Preact PWA shell, rendering, deploy concerns)
    │  imports via @game/core  — the whole engine, for the RUN
    │  imports via @game/menu  — the catalogs only, for the STARTUP path
    ▼
-src/      (the engine: framework-free TypeScript game logic)
+engine/      (the engine: framework-free TypeScript game logic)
 ```
 
 The engine has **two entry points**, and which one a module imports decides
@@ -35,7 +35,7 @@ browser: the authoritative session server multiplayer runs the simulation in.
 It ships inside the desktop app and is forked as its own process. It imports
 the engine and nothing else — see [`multiplayer.md`](multiplayer.md).
 
-### `src/` — the engine
+### `engine/` — the simulation and its catalogs
 
 Pure TypeScript with no UI framework and no build-tool coupling. The simulation is
 deterministic by construction: `createGame(seed, levelId?, difficulty?)`
@@ -46,7 +46,7 @@ plain Node and bugs reproducible.
 
 Content is data, simulation is code: the game's levels, monsters, equipment and
 cutscenes are authored as YAML under `content/`, compiled into the **catalogs**
-the engine reads through `src/game/defs/` (see
+the engine reads through `engine/game/defs/` (see
 [`content-pipeline.md`](content-pipeline.md)), and referenced only ever by id.
 Shipping level 12 or the hundredth weapon means authoring a file, not touching
 the simulation.
@@ -55,9 +55,9 @@ swap the active catalogs for a custom set — the engine test suites use it to
 run against synthetic fixtures with no shipped content (see
 `tests/engine/fixtures.ts`).
 
-- **`src/game/mapgen/`** — the map generator, and the ONLY source of a map. Every
+- **`engine/game/mapgen/`** — the map generator, and the ONLY source of a map. Every
   mission ships a **v2 BLUEPRINT** (`content/maps/<id>.yaml`, compiled to
-  `src/generated/map-blueprints.ts` by `scripts/generate-maps.mjs`, part of
+  `engine/generated/map-blueprints.ts` by `scripts/generate-maps.mjs`, part of
   `make levels`), which is a RECIPE rather than a layout — a purpose-typed object
   palette, an AREA palette saying what kinds of place the map is made of, the
   horde's breeds and the depths they hold, the cast, its extents, and the compass
@@ -82,12 +82,12 @@ run against synthetic fixtures with no shipped content (see
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
   generator onto the startup path would put the whole level catalog in the
   critical-path budget. The generator itself is the `mapgen-improvement` skill.
-- **`src/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
+- **`engine/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), one module per system re-exported by an
   `index.ts` barrel, nothing hardcoded in logic.
-- **`src/game/defs/levels/`** — the level registry. Levels are authored as
+- **`engine/game/defs/levels/`** — the level registry. Levels are authored as
   **YAML** (`content/levels/<id>.yaml`, one file per level) and
-  compiled into `src/generated/levels.ts` by
+  compiled into `engine/generated/levels.ts` by
   `scripts/generate-levels.mjs` (`make levels`, folded into
   `make assets`) — the map/atlas equivalent for levels: a schema validates
   every referenced enemy/weapon/gear/thought/story id and fails the build on a
@@ -138,16 +138,16 @@ run against synthetic fixtures with no shipped content (see
   decor, and the loot table (the level's thematic base pools — tier
   availability is the global monster-level gate, not per-level data; a
   `worldUniques` table may carry a `worldDropMult` sweetener on a farm
-  venue). **Design-zone systems** (`src/game/zones.ts`) shape a map's feel:
+  venue). **Design-zone systems** (`engine/game/zones.ts`) shape a map's feel:
   `safeZones` (no spawns + the horde repelled out — a breather pocket),
   `quietZones` (dead areas: no ambient horde, but authored chests + a pinned
   unique still live there), a `tempo` curve (keyframes that scale wave pressure
   over the run — build and release instead of a flat ramp), `chests` (placed
   containers with a richer haul than a crate), and `merchantSpawns` (authored
   trader spots).
-- **`src/game/defs/enemies/`** — the monster catalog. Enemies are authored as
+- **`engine/game/defs/enemies/`** — the monster catalog. Enemies are authored as
   **YAML** (`content/enemies/<biome>/<id>.yaml`, one self-describing file
-  per mob, stem == id) and compiled into `src/generated/enemies.ts` by
+  per mob, stem == id) and compiled into `engine/generated/enemies.ts` by
   `scripts/generate-enemies.mjs` (`make levels`, before the level
   generator so levels can cross-ref the enemy ids) — a schema validates every
   referenced companion/unique/story/item id and fails the build on a typo or a
@@ -169,16 +169,16 @@ run against synthetic fixtures with no shipped content (see
   SHOOTER (`EnemyDef.ranged`): it fires hostile projectiles at the player
   (they ride the ordinary projectile pass flagged `hostile` — walls eat
   them, a jump clears them, armor turns its share; movement/firing in
-  `src/game/ranged.ts`), and with `takesCover` it hides behind the level's
+  `engine/game/ranged.ts`), and with `takesCover` it hides behind the level's
   solid obstacles between shots. A unique may be GUARDED
   (`EnemyDef.shieldedBy`): it cannot be hurt while any enemy with a listed
   def id lives — blows bounce with an `enemyShielded` event — so a set-piece
   boss is wired to its controllers. This game's
   actual roster (and the story it tells) is in
   [`game-content.md`](./game-content.md).
-- **`src/game/defs/companions.ts`** — the companion TYPES and registry: who a
+- **`engine/game/defs/companions.ts`** — the companion TYPES and registry: who a
   spared unique becomes. The roster itself is authored in
-  `content/companions.yaml` and compiled to `src/generated/companions.ts` by
+  `content/companions.yaml` and compiled to `engine/generated/companions.ts` by
   `scripts/generate-companions.mjs`, so a MOD ships its own recruits by putting
   that same file at its root. Each def carries the sprite family (the enemy twin's), a
   base hp that grows with the companion's OWN level, a signature starting
@@ -189,14 +189,14 @@ run against synthetic fixtures with no shipped content (see
   wider nova, a swelling luck aura), the `joinWords` scene played the moment the
   SPARE verdict lands, and the `killQuotes` banter floated over the companion
   when its blow downs a mob.
-- **`src/game/companion-stats.ts`** — pure companion stat/level/power math
+- **`engine/game/companion-stats.ts`** — pure companion stat/level/power math
   (config + def only, no engine state): the max-hp ramp, the level XP curve
   (`companionXpToLevelUp`, authored in kills like the hero's), the power RANK a
   level has reached, and the per-rank bonuses (extra pellets/chain/pierce, a
   wider/harder nova, a bigger magic-find aura). Shared by the per-tick pass, the
   kill rail that credits a companion's XP (`loot.ts`), the party's magic-find
   aura (`items.ts`), and the loadout carry — none of which it imports back.
-- **`src/game/defs/story.ts`** — the story-item registry: plot pieces
+- **`engine/game/defs/story.ts`** — the story-item registry: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
   play their `lore` pages as a dialogue; an `unlocks` entry makes the item
@@ -204,7 +204,7 @@ run against synthetic fixtures with no shipped content (see
   `content/story-items.yaml`; this module owns the type and the registry, as
   `defs/thoughts.ts` does for the hero's inner monologues
   (`content/thoughts.yaml`).
-- **`src/game/defs/quests.ts` + `src/game/quests/`** — the QUEST system: the
+- **`engine/game/defs/quests.ts` + `engine/game/quests/`** — the QUEST system: the
   errands the field's non-combatants ask of the hero, and the people who ask
   them. `defs/quests.ts` owns the two types and the two registries (a giver is a
   PERSON, and one person hands out a whole chain, so the catalogs are separate);
@@ -224,7 +224,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   three conditions with no moment to be booked at — a place stood in, a flag
   set, a level reached — are polled over the RUNNING errands only). See
   the QUESTS section of `CLAUDE.md` for the rules that are load-bearing.
-- **`src/game/quests/restock.ts`** — TOPPING THE HORDE UP FOR AN ERRAND. A
+- **`engine/game/quests/restock.ts`** — TOPPING THE HORDE UP FOR AN ERRAND. A
   carved map drops `waves` entirely, so its monsters are finite: an errand taken
   on ground the hero has already swept has nothing left to count, and the
   failure is silent. Accepting one therefore reads what the field can still
@@ -234,7 +234,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   shortfall top-up rather than a stocking pass: a map still good for the job is
   left alone, because a mob mix is a difficulty knob. See `docs/game-content.md`
   → What an errand costs.
-- **`src/game/quests/campaign.ts` + `campaign-save.ts`** — the CAMPAIGN chain:
+- **`engine/game/quests/campaign.ts` + `campaign-save.ts`** — the CAMPAIGN chain:
   errands marked `campaign: true` belong to the HERO rather than to the run, so
   their log and their flags are banked on the character per difficulty and
   seeded back at run setup. The shape and the merge live in the second file, a
@@ -242,13 +242,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   and the roster is on the 200 KB startup path — which is why `@game/menu`
   re-exports it. The merge keeps the FURTHER reading of each errand, so progress
   can never walk backwards.
-- **`src/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
+- **`engine/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
   `inert`, asked by every damage pass, AoE gather, target search and foe tally:
   true for an apparition (mist) and for an un-provoked NEUTRAL mob (a bystander).
   `provokeEnemy` latches `Enemy.hostile` and the same body becomes an ordinary
   monster, which costs the combat code nothing because every site already asks
   the one predicate.
-- **`src/game/conversation.ts` + `defs/conversations.ts`** — the talks the hero
+- **`engine/game/conversation.ts` + `defs/conversations.ts`** — the talks the hero
   STEERS: a tree of what a speaker says and what the hero may say back, opened
   by tapping a neutral mob and frozen in its own `talk` phase. A branch may set
   a run FLAG, provoke the speaker, hand over a quest piece, or move to another
@@ -258,12 +258,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   be a second, unbounded way for a talk to change the world. The FLAGS
   (`GameState.questFlags`) are the one thing a branch leaves behind for the rest
   of the game to read.
-- **`src/game/script/` + `src/lib/lua/`** — THE RULES THE ENGINE HANDS OUT.
+- **`engine/game/script/` + `engine/lib/lua/`** — THE RULES THE ENGINE HANDS OUT.
   Twelve formulas (the XP curve, what a kill pays, the horde's hp and level, the
   drop chance, the rarity roll, weapon damage, mob armor) are authored in
   `content/scripts/*.lua` and called through a sandboxed Lua VM, so a total
   conversion changes how the game WORKS rather than only what is in it. The
-  split is four modules: `src/lib/lua/` is the VM (generic — lexer, parser, tree
+  split is four modules: `engine/lib/lua/` is the VM (generic — lexer, parser, tree
   walker, a stdlib whose absent half IS the security model); `script/catalog.ts`
   is an IMPORT-FREE LEAF holding what a mod registered, for the same reason
   `flags.ts` and `mapgen/blueprints.ts` are leaves — `registerDefs` is reachable
@@ -275,7 +275,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   itself once) and memoizes the calls that read nothing but their arguments.
   `script/bindings.ts` is the ONLY place the rest of the engine touches any of
   it. → `docs/scripting.md`
-- **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
+- **`engine/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its
   `prelude` field — one id, or a LIST chained back-to-back (the moon opens
@@ -307,7 +307,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   the loot-grab countdown, and the countdown then lands in the `outro`
   phase (the same black-screen paged monologue, turned by
   `advanceOutro`/`skipOutro`) before the `victory` splash.
-- **`src/game/boss-death.ts` + `src/game/death-rites/`** — the BOSS DEATH RITE,
+- **`engine/game/boss-death.ts` + `engine/game/death-rites/`** — the BOSS DEATH RITE,
   the death scene's mirror image: there the horde gathers over the fallen hero,
   here the hero stands over the fallen boss. Felling a boss drops the run into
   the `bossDeath` phase (`stepBossDeath`, run ahead of the `playing` gate like
@@ -355,7 +355,7 @@ escort.ts` walks the people an escort errand puts on the field, and
     `setDeathScenesEnabled` in the engine's import-free `flags.ts` leaf. Not a
     gore switch: it decides whether the game STOPS to show you, never what it
     shows.
-- **`src/game/death-scene.ts`** — the DEATH SCENE that mirrors the victory
+- **`engine/game/death-scene.ts`** — the DEATH SCENE that mirrors the victory
   flow on the losing side. When the hero's hp hits 0 the run drops into the
   `dying` phase instead of straight to `defeat`: a dramatic tableau
   (`stepDeathScene`, run ahead of the `playing` gate) where the horde stops
@@ -369,7 +369,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   corpse + rolling clouds it draws), the timeout emits `defeat` (the modal +
   the run banking). The engine owns only the mob choreography and the timer, so
   the whole beat stays deterministic and headless-testable; the calibration sim
-  skips it (`src/sim/simulate.ts`). App-side, the fall also clears the fight's
+  skips it (`engine/sim/simulate.ts`). App-side, the fall also clears the fight's
   COMBAT NOISE off the tableau: `pwa/src/game/render/death.ts`
   `combatNoiseFade` eases the floating damage/crit/XP layer, the shots in
   flight, and the horde's health bars to nothing over
@@ -383,14 +383,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   the body across the scene and holds it there behind the modal, applied by the
   render loop as a canvas scale about the hero's own screen point so every draw
   pass below still works in unzoomed view units.
-- **`src/game/defs/equipment.ts`** — the equipment machinery. The item
+- **`engine/game/defs/equipment.ts`** — the equipment machinery. The item
   catalogs themselves are authored in YAML — one file per item under
   `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/
   `legendary`/`artifact` named items, each carrying its sprite refs and a few
   sentences of `description` lore), with the make-quality axis in
   `content/item_quality.yaml` and the tier/rarity knobs in
   `content/item_rarity.yaml` — compiled by `scripts/generate-items.mjs` into
-  the gitignored `src/generated/items.ts` (first in the generate chain) and
+  the gitignored `engine/generated/items.ts` (first in the generate chain) and
   wrapped here with types and lookups. The module defines weapons
   (melee/ranged/magic classes,
   each with a Diablo-style `levelReq` that gates both the drop — no monster
@@ -449,10 +449,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   value — config `QUALITY` (`ranges`, midpoint `mults`); craftsmanship and
   magic are exclusive D2-style, so magic-or-better finds, trinkets, and bags
   stay flat normal make with no range roll).
-- **`src/game/defs/abilities.ts`** — the ability pickups' TYPES and accessors.
+- **`engine/game/defs/abilities.ts`** — the ability pickups' TYPES and accessors.
   The catalog itself is CONTENT: `content/powerups.yaml` (one file, a
   `powerups:` map of id → power, carrying every duration, damage figure and
-  radius) is compiled into `src/generated/powerups.ts` by
+  radius) is compiled into `engine/generated/powerups.ts` by
   `scripts/generate-powerups.mjs` (`make levels`, before the level generator so
   levels can cross-ref their `abilityPool` ids) and re-exposed here as
   `ABILITY_DEFS`, so a rebalance never touches engine code. A schema
@@ -505,22 +505,22 @@ escort.ts` walks the people an escort errand puts on the field, and
   fresh instance from its own slot, so two storm cells strike twice as often;
   a non-stackable one (the magnet) refuses to re-enable while a copy is
   running, keeping the pickup banked.
-- **`src/game/defs/talents/index.ts`** — the passive TALENT trees' TYPES, tree/
+- **`engine/game/defs/talents/index.ts`** — the passive TALENT trees' TYPES, tree/
   stat wiring and registry. The catalog itself is CONTENT: `content/talents.yaml`
   (one file, a `talents:` map of id → talent) is compiled into
-  `src/generated/talents.ts` by `scripts/generate-talents.mjs` (`make levels`)
+  `engine/generated/talents.ts` by `scripts/generate-talents.mjs` (`make levels`)
   and re-exposed here as `TALENT_DEFS`. A talent is WHAT IT CARRIES — `kind` is
   a picker label nothing branches on, while an `effect` bag of per-rank slopes,
   a `conjure` feeding an always-on granted spell, and any of eleven structured
   PROC BLOCKS (parry, volley, frost nova, …) are the behaviour. Each proc's
   chances, radii and cooldowns live in its block on the def, and the hook that
   fires it asks the catalog _which trained talent carries this block_
-  (`procTalent`, `src/game/talent-effects.ts`) rather than looking a talent up
+  (`procTalent`, `engine/game/talent-effects.ts`) rather than looking a talent up
   by id — which is what lets a mod own a proc with its own numbers. Exactly one
-  talent may carry each block, enforced at build time. `src/game/config/talents.ts`
+  talent may carry each block, enforced at build time. `engine/game/config/talents.ts`
   keeps only the shared rank ceiling, because it is the one number true of every
-  talent; the point economy and spending live in `src/game/talents.ts`.
-- **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
+  talent; the point economy and spending live in `engine/game/talents.ts`.
+- **`engine/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's
   opening kit (`startingWeapon` — the wall weapon, mirrored by a
@@ -545,14 +545,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   plain horde's chase speed drops once an elite or boss is ENGAGED
   (`mobPursuitNearElite`, 10%/50%, so the player can break past the swarm and
   run to the set piece). MEDIUM is the exact 1.0 baseline.
-- **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
+- **`engine/game/abilities.ts`** — ability activation (`grantAbility`, which
   links the running copy to the dock slot it was spent from), freeing a slot
   when a power lapses or is discarded (`removeHeldSlot`, `discardHeldAbility`),
   the dock's one admission gate (`canBankAbility` — room under the cap, and a
   `uniqueHeld` power at most once), and the helpers the renderer shares
   (`orbPositions`, `stasisFactorAt`); the per-tick behavior runs inside
   `step/` so all damage flows through one path.
-- **`src/game/spells.ts`** — the GRANTED forever powers items carry (the
+- **`engine/game/spells.ts`** — the GRANTED forever powers items carry (the
   `spell`/`proc`/`sureStrike` affix kinds, config `SPELL`): deriving the
   worn loadout's granted spells (`syncItemSpells`, ranks from multiple
   sources adding), the live rank+INT-scaled numbers (`orbitSpellParams`,
@@ -563,7 +563,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   blows in `hitEnemy` and on enemy blows landing ON him — the D2
   "when struck" trigger, `queueStruckProcs` — and resolve after the
   combat passes).
-- **`src/game/item-budget.ts`** — the bonus-budget pricing model (what a
+- **`engine/game/item-budget.ts`** — the bonus-budget pricing model (what a
   unique's fixed bonuses are WORTH in ilvl points, derived from the live
   combat constants). One source of truth: `scripts/weapon-ilvl.mjs` imports
   it for authoring checks, and `pickUniqueForDrop` reads it at runtime to
@@ -571,12 +571,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   determine rarity", `UNIQUE.rarityBudgetRef`/`rarityBudgetExp`): the
   roster spans a vast authored power range and the strongest are
   astronomically rare.
-- **`src/game/types/`** — state shapes plus the `GameEvent` union: events
+- **`engine/game/types/`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.
-- **`src/game/create.ts`** — seeded run setup from a level def: difficulty
+- **`engine/game/create.ts`** — seeded run setup from a level def: difficulty
   bands scale with distance from the player spawn toward the objective.
-- **`src/game/step/`** — the per-tick pipeline: `index.ts` is the
+- **`engine/game/step/`** — the per-tick pipeline: `index.ts` is the
   orchestrator, with each pass in its own module (`player.ts`, `weapon.ts`,
   `powers.ts`, `projectiles.ts`, `enemies.ts`, `spawner.ts`, `packs.ts`,
   `items.ts`). In documented order:
@@ -646,13 +646,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   equipment that beats what is worn — and that the hero can actually WIELD, both
   the level and the attribute gate (`canEquip`) — is equipped on the spot; a
   find he is too low-level or too weak for banks until he grows into it.
-- **`src/game/loot.ts`** — kill resolution: `hitEnemy` applies player
+- **`engine/game/loot.ts`** — kill resolution: `hitEnemy` applies player
   damage (crit rolls flash the victim), pays out XP, and rolls drops —
   the level's loot table for minions (with the pity rule and the
   all-clear trophy), the def's guaranteed drops for bosses and elites.
   It also feeds the menace meter on each kill and power-scales an
   elite/boss to the player on its first blow.
-- **`src/game/items/toss.ts`** — THE D2 TOSS: every drop in the game goes
+- **`engine/game/items/toss.ts`** — THE D2 TOSS: every drop in the game goes
   through the one funnel (`dropItem`), which throws it clear of the body it
   came out of instead of materialising it under the corpse. `item.pos` is the
   LANDING spot from the moment the item is minted — the renderer arcs it in
@@ -666,7 +666,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   landing sound is chosen by; a magic-or-better find rings a `lootShine` over
   the top, so rarity layers onto material instead of needing one sound per
   combination.
-- **`src/game/leveling.ts`** — the automatic base-attribute growth (the
+- **`engine/game/leveling.ts`** — the automatic base-attribute growth (the
   WoW-style ding gains, config `LEVELING.autoGainsPerLevel`): each level
   grants `round(rate × level)` points of the listed stats on its own,
   underneath the chosen point. Everything is DERIVED from `player.level`
@@ -695,7 +695,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   the cap (applied in `grantXp`), so re-running an outgrown map farms loot and
   only crawls XP at a glacial pace, with no hard wall short of the global
   `maxLevel`.
-- **`src/game/menace.ts`** — the escalation system: the player's rolling
+- **`engine/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
   fixed decay, also in `tickMenace`, run from `step/`) — but never below
@@ -734,7 +734,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   level: neither his gear rack nor his weapon damage toughens the horde any
   more, so out-gearing the campaign makes the fights easier (as it should)
   and the menace EVOLUTION ratchet — not an hp match — answers a steamrolling
-  build. (`heroGearLevel`/`heroDamageLevel` survive only as `src/sim` analytic
+  build. (`heroGearLevel`/`heroDamageLevel` survive only as `engine/sim` analytic
   readouts.) The character level gives every minion a non-decaying toughness
   floor at spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) plus a
   per-mob random level BAND (`MENACE.mobLevelBand`, −3…+2 stacked on the
@@ -754,7 +754,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   unrewarding. The minion hp floor multiplies by `autoPowerScale`
   (leveling.ts) — the free per-level stat gains cancel out against the crowd,
   so only chosen points, gear, and skill pull ahead.
-- **`src/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
+- **`engine/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
   multipliers over the shipped config (XP gain, hero/mob damage, mob hp,
   stamina drain, horde size, drop rate, gear share/quality, unique drops,
   menace gain),
@@ -763,7 +763,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   clamped on the way in (`setBalanceTuning`); the app persists the values
   with the settings and applies them on load, and the hidden DEVELOPER →
   BALANCE menu cycles them at runtime.
-- **`src/game/hazards.ts`** — environmental hazards, both pure level data:
+- **`engine/game/hazards.ts`** — environmental hazards, both pure level data:
   **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
   player/enemies toward their core — minions are devoured there
   (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed), and
@@ -798,7 +798,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
   dialogue-only figures the combat/hazard paths all skip — they rush in to
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
-- **`src/game/story.ts`** — the story systems: dialogue lifecycle
+- **`engine/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `muteDialogue` for the overlay's
   MUTE button — it latches `dialogueMuted`, silencing every in-world scene
@@ -826,7 +826,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   back on the page — and the character — it was holding. The crawl itself is
   held while any screen covers it (`useTypewriter`'s `paused`), so no line is
   printed to a stage nobody can see.
-- **`src/game/arrivals.ts`** — THE STAFF LOT, and the way into GOODCO. A level
+- **`engine/game/arrivals.ts`** — THE STAFF LOT, and the way into GOODCO. A level
   with `LevelDef.arrivals` on it rolls a car onto its arrival district
   (`MapArea.arrivals`) every so often; the car parks and becomes furniture,
   somebody gets out and walks the footpath to the ENTRANCE, and BADGES IN. That
@@ -843,7 +843,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   it. The autopilot has its own rung for it (`bot/entrance.ts`), because a bot
   that did not know the door was coming pressed the wall the objective was
   behind for the rest of the run.
-- **`src/game/drive/`** — THE DRIVE: the playable leg between the garage and
+- **`engine/game/drive/`** — THE DRIVE: the playable leg between the garage and
   GOODCO, and the same road home. **Not a level and not a `GamePhase`** — a
   drive is its own small world (one car, four lanes, a minute of road) with its
   own seeded rng, its own clock and no `GameState` anywhere near it, because a
@@ -1047,7 +1047,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   on every rung.
   HOW THE ROAD OPENS is three moves that read as one. The bumper touches the
   garage's `driveOut` tarmac, the run's picture DIMS over a car that is simply
-  coasting (`DEPARTURE`, `src/game/vehicles.ts` — half a second, no synthetic
+  coasting (`DEPARTURE`, `engine/game/vehicles.ts` — half a second, no synthetic
   driver, no aim; a car driving itself away was a cutscene about the exact
   activity the player was a half-second from doing), and the drive mounts into
   that same black behind a TITLE CARD — "ROAD TO GOODCO",
@@ -1076,7 +1076,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   block of `content/bot.yaml`, beside the run autopilot's. The demo drives the
   same road with the finish brought forward (`DriveParams.coursePx`), because a
   minute is a long time in an attract loop.
-- **`src/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
+- **`engine/game/hero-name.ts`** — THE HERO'S OWN NAME, as authored text asks for
   it. The player names their character, and `{HERO}` is where a line means that
   name: over his own pages in every box that speaks, and inside the handful of
   lines whose speaker actually knows him. An import-free leaf, because the
@@ -1085,7 +1085,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   no tick, so it is neither a `RunParams` field nor anything on the wire, and
   each viewer resolves it against the hero THEY are playing (which is the only
   answer that works in a party). `docs/game-content.md` has the authoring rule.
-- **`src/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
+- **`engine/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
   verdict (config `COMPANIONS`): a spareable unique (`EnemyDef.spareable`)
   beaten to 0 hp kneels and pauses the run in the `choice` phase (the
   interception lives in `hitEnemy`); `resolveChoice` lands the call — KILL
@@ -1131,7 +1131,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   `openCompanionPanel` / `closeCompanionPanel`; the party rides the loadout
   (`Loadout.companions`, with each companion's earned level and XP) between
   levels.
-- **`src/game/map.ts`** — the level map and its fog of war: run-scoped
+- **`engine/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
   per config `MAP.cellSize` world px), stamped as a `MAP.revealRadius` circle
   around the hero every step (`revealAround`, called from `step()`; the spawn is
@@ -1154,10 +1154,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   cover one unit of ground (`OBSTACLES.loneSightSpan`) does not stop the sweep
   — it takes two obstacles in line, or one wider piece — so a field of
   scattered rocks is not a fan of dark wedges with an unshootable mob hiding in
-  each (`lineOfSight`, `src/game/obstacles.ts`, which is deliberately NOT the
+  each (`lineOfSight`, `engine/game/obstacles.ts`, which is deliberately NOT the
   physical `blockedByObstacle` a body and a bullet ask). **And what is not drawn is
-  not shot at**: `clearOfFog` (the sibling **`src/game/fog.ts`**, which owns the
-  sweep too — both are kept out of map.ts because `src/menu.ts` re-exports
+  not shot at**: `clearOfFog` (the sibling **`engine/game/fog.ts`**, which owns the
+  sweep too — both are kept out of map.ts because `engine/menu.ts` re-exports
   map.ts's grid arithmetic and so puts that whole module inside the 170 KB
   critical-path budget, and the sweep would drag the collision module in with
   it) is the engine's own deterministic reading of that
@@ -1168,7 +1168,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   fogs: nothing out past the boundary is undiscovered, and fogging it would
   leave a mob pinned against the level edge untargetable for the rest of the
   run.
-- **`src/game/sight.ts`** — **CAN THIS PLAYER SEE THAT SPOT**, which is the
+- **`engine/game/sight.ts`** — **CAN THIS PLAYER SEE THAT SPOT**, which is the
   question every automatic target pick actually asks, and it has TWO halves:
   `clearOfFog` above, and the EDGE OF THE SCREEN. The fog alone stopped being an
   answer within a minute of play — it never rolls back, so "explored" soon says
@@ -1187,7 +1187,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   (engine tests, `simulate --view none`) is not blind: the screen half abstains
   and the fog half still applies. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
-  wall — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`, the SIGHT
+  wall — reusing the engine's `lineOfSight` (`engine/game/obstacles.ts`, the SIGHT
   query: tall obstacles occlude, but not a lone narrow one); a mob only peeking
   out from an edge still draws. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
@@ -1195,7 +1195,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
   `map` pause phase (frozen sim, level-up priority on close) for the HUD's
   MAP button / the M key.
-- **`src/game/items/gold.ts`** — GOLD, the coin economy's other faucet (config
+- **`engine/game/items/gold.ts`** — GOLD, the coin economy's other faucet (config
   `GOLD`): what a body was carrying, shed on the floor when it falls. One funnel
   (`dropGold`, called from `killEnemy`), and three rules. `carriesGold` decides
   WHO pays from what the roster already says — something that walks on `legs`
@@ -1207,7 +1207,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   `GOLD.dropMult` reshuffles no equipment drop — which is what lets the knob be
   calibrated against the OTHER faucet (loot sales) rather than against itself.
   `goldSprite` picks the pile's rung; the app glitters it (`render/gold.ts`).
-- **`src/game/merchant.ts`** — the WANDERING MERCHANT and his coin economy
+- **`engine/game/merchant.ts`** — the WANDERING MERCHANT and his coin economy
   (config `MERCHANT` / `ECONOMY`): one trader per level (`state.merchant`,
   minted at creation on his own seeded rng stream — parked as a plain
   `rngState` number so a saved run freezes him losslessly — and never
@@ -1252,7 +1252,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   visit — so a death-and-restart reaches the counter to repair — and he gives
   a per-level + per-difficulty "welcome back" line on approach
   (`LevelDef.merchant.returnGreeting` + `MERCHANT_RETURN_SENDOFF`).
-- **`src/game/items/`** — equipment instances and the player-driven
+- **`engine/game/items/`** — equipment instances and the player-driven
   mutations the UI calls into, split by concern into submodules behind an
   `index.ts` barrel (the import surface the rest of the engine reads):
   `rolling.ts` (the drop pipeline), `quality.ts` (make quality + naming),
@@ -1324,7 +1324,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   everything routing through them) resolves the item exactly as it dropped,
   even when its original base is gone. `baseDefId` sees back through the
   re-homing to the item's original base id.
-- **`src/game/bot/index.ts`** — the autopilot: pure strategies (`idle`, `rush`,
+- **`engine/game/bot/index.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
   the app's `?bot=` autoplay mode, and later an AI-driven second player. The
@@ -1333,27 +1333,27 @@ escort.ts` walks the people an escort errand puts on the field, and
   the nearest enemy after a fightless lull (the anti-loiter hunt), and takes
   an externally-pinned GPS nudge via `setBotWaypoint(bot, target)` — a world
   coordinate the bot routes to and tends toward until it arrives. Every decided
-  steer passes the TURN RATE LIMIT (`limitTurnRate` in `src/game/bot/nav.ts`):
+  steer passes the TURN RATE LIMIT (`limitTurnRate` in `engine/game/bot/nav.ts`):
   choosing a direction starts a clock, and until it runs out the hero may
   correct, turn, or stop freely but may not turn AROUND — he stands still for the
   wait instead of strobing back and forth between two disagreeing reads (the
   reflex dodges preempt it). A goal no A\* route reaches gets one question asked
   before the sweep gives up on it: **is there a SHUT DOOR in the way that would
-  open if he walked up to it** (`doorwayVia` in `src/game/bot/nav.ts`)? The nav
+  open if he walked up to it** (`doorwayVia` in `engine/game/bot/nav.ts`)? The nav
   grid is built from the obstacle field, so a closed `approach` door — the
   garage's roll-up, every office door on GOODCO's floor — reads as a solid wall
   and the plan came back empty; the bot now walks to the leaf instead, which is
   what a player does, and the door's own obstacle chain vanishes on arrival.
   Its
-  positioning is data-tuned: `src/game/bot/tuning.ts` holds the `BotTuning`
+  positioning is data-tuned: `engine/game/bot/tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
   hand-authored `content/bot.yaml` (a global `default` layer + per-level
-  overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
+  overrides, compiled to `engine/generated/botTuning.ts` by `make levels`, mirroring
   `ladder.yaml`). See the `bot-improvement` skill.
-- **`src/game/bot/economy.ts`** — the autopilot's ECONOMY: the mutating half of
+- **`engine/game/bot/economy.ts`** — the autopilot's ECONOMY: the mutating half of
   playing a run, which the pure `botAct` can't do (it only produces
   `GameInput`). The HARNESSES that drive a botted run — the campaign simulator
-  (`src/sim/simulate.ts`) and the app's autoplay driver
+  (`engine/sim/simulate.ts`) and the app's autoplay driver
   (`pwa/src/game/game-screen/bot-driver.ts`) — call it every tick, after
   `step()`: `botAutoEquip` wears the best banked piece in every armor/jewellery/off-hand
   slot (the bot gears itself up regardless of the human's on-pickup AUTO-EQUIP
@@ -1364,17 +1364,17 @@ escort.ts` walks the people an escort errand puts on the field, and
   a unique is never thrown away to make room for a magic — `inventoryNeedsSort`
   orders the bag like the powerup dock, and `tradeAtMerchant` runs the counter
   errand (sell → buy → mend → powerups). The WEAPON slot belongs to the POCKET
-  ARSENAL (`src/game/bot/weapon-swap.ts`, `stepBotWeaponSwap`), so the bot's
+  ARSENAL (`engine/game/bot/weapon-swap.ts`, `stepBotWeaponSwap`), so the bot's
   sweep deliberately leaves the hand alone rather than flapping against it.
 
-  **EVERY ONE OF THOSE IS A DECISION PLUS A VERB** (`src/game/bot/intent.ts`):
+  **EVERY ONE OF THOSE IS A DECISION PLUS A VERB** (`engine/game/bot/intent.ts`):
   the opinion is the autopilot's and stays under `bot/`, the action is the
   hero's and travels as a run command, so an AUTO PILOT ride whose run is
   simulating in a session server sends its housekeeping instead of writing to a
   replica the next snapshot erases. See docs/multiplayer.md → "The autopilot is
   an intent".
 
-- **`src/game/bot/hub.ts`** — THE AUTOPILOT AT HOME. A HUB level
+- **`engine/game/bot/hub.ts`** — THE AUTOPILOT AT HOME. A HUB level
   (`objective.type === "hub"` — the garage, or a mod's own town) is the one
   venue whose whole content is PEOPLE AND DOORS: no knot is ever placed, nothing
   is loot, the floor starts `revealed` and the objective never clears, so every
@@ -1398,7 +1398,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   trade can satisfy is written off after `HUB_SHOP_GIVEUP_MS`, so an unattended
   ride cannot burn its meter in its own driveway.
 
-- **`src/game/bot/errands.ts`** — THE AUTOPILOT'S QUEST PLAY: it takes work,
+- **`engine/game/bot/errands.ts`** — THE AUTOPILOT'S QUEST PLAY: it takes work,
   does it, and hands it in. The rule used to be that TAKING an errand was the
   player's decision, so a giver was never a goal and the bot only ever finished
   what a human had already signed up for — which left the autopilot walking past
@@ -1438,7 +1438,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   anything is inside the threat ring, or the clock ran out on a march that was
   simply being fought through.
 
-- **`src/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
+- **`engine/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
   the hand, moment by moment. The hero hauls a kit — a boss ROUND, a crowd
   SPRAY, and the spare his own spec would swing (`botPocketKeepIndices`, which
   the cull and the sell-run both spare) — and the fight in front of him picks
@@ -1456,7 +1456,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   its keep needs a clear gain (`SWAP_GAIN_MARGIN`) whenever it GIVES UP REACH,
   because the bot's standoff is derived from the held weapon's range — reaching
   farther is free, reaching less far has to pay for the ground it costs.
-- **`src/game/cache.ts`** — THE CACHE: the chest against the garage's north
+- **`engine/game/cache.ts`** — THE CACHE: the chest against the garage's north
   wall, and the one place a piece of gear is KEPT rather than carried.
   `CACHE.maxSlots` cells on the hero (`Player.cache`, private on the wire like
   the bag, riding the `Loadout` so it lands on the character); the FIXTURE is a
@@ -1476,7 +1476,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   way, a full destination simply refused). Distinct from the vault below, which
   is a HOLDING PEN the next ride empties: the cache is the player's and nothing
   ever clears it. → `docs/game-content.md` → THE CACHE
-- **`src/game/items/vault.ts`** — THE LOST & FOUND: what the cull shed, held
+- **`engine/game/items/vault.ts`** — THE LOST & FOUND: what the cull shed, held
   for the player to buy back. An unattended ride flies with a bag it cannot
   empty, so on a long flight it must eventually shed something the player would
   have wanted; anything MAGIC or better goes here (config `VAULT.minTier`)
@@ -1498,7 +1498,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   engine's `reclaimVaultItem` — the running purse pays, the piece lands in the
   run's own bag), so the offer can still be taken from the screen that is about
   to expire it. Only TRASH & FLY engages.
-- **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
+- **`engine/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
   the player engages the engine bot on their own hero from the pause menu and
   pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×
   the speed rung; the offered rungs are `AUTOPILOT.speeds`, 1×–16×, which also
@@ -1530,35 +1530,35 @@ escort.ts` walks the people an escort errand puts on the field, and
   opener/resume reopens the level-up chooser (`promptPendingPoints`,
   `dismissIntro`, `resumeGame`) so the player places them under their own
   control.
-- **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
+- **`engine/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
   bug repros, performance probes, and visual checks. Fed by the app's
   `?scenario=` URL param and the engine test suites — a developer tool, not
   a gameplay system (see the `test-scenario` skill and
   `docs/configuration.md`).
-- **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
+- **`engine/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
   `cutscene.ts` — the deterministic beat-machine cutscene player),
   imported via the `@game/lib/*` alias — the pool a later game keeps as-is
   while the game-specific modules around it are rewritten.
-- **`src/sim/simulate.ts`** — the headless campaign simulator (see the
+- **`engine/sim/simulate.ts`** — the headless campaign simulator (see the
   `simulate-run` skill): `simulateLevel`/`simulateCampaign` drive the real
   engine — createGame, step, the autopilot, auto-equip, loadout carry —
   through whole levels and whole campaigns at full speed and return typed
   balance reports (hero/mob hp and damage, drops, weapon swaps, deaths, XP
   withheld by the per-map caps). Deliberately NOT exported from
-  `src/index.ts` — the CLI (`scripts/simulate-run.mjs`, via
+  `engine/index.ts` — the CLI (`scripts/simulate-run.mjs`, via
   `scripts/game-alias-loader.mjs` for the `@game/lib` alias) and the tests
   import it directly, so the public engine API stays what the renderer
   needs.
-- **`src/index.ts`** — the public surface the app imports via `@game/core`.
-- **`src/menu.ts`** — the MENU-side surface, imported via `@game/menu`. See
+- **`engine/index.ts`** — the public surface the app imports via `@game/core`.
+- **`engine/menu.ts`** — the MENU-side surface, imported via `@game/menu`. See
   below.
 
 #### Two engine entry points
 
-`src/index.ts` (`@game/core`) is the engine's whole public API, simulation
-included. `src/menu.ts` (`@game/menu`) is a narrow slice of it: the catalogs
+`engine/index.ts` (`@game/core`) is the engine's whole public API, simulation
+included. `engine/menu.ts` (`@game/menu`) is a narrow slice of it: the catalogs
 (levels, difficulties, equipment), the saved-hero math, and the engine flags
 the settings screen applies — and nothing that simulates.
 
@@ -1582,7 +1582,7 @@ roster, or the settings tree needs it AND it does not drag the simulation in
 behind it. Two patterns keep that possible:
 
 - **Leaf modules for flags.** The engine's runtime toggles live in
-  `src/game/flags.ts` — a module with no imports at all — because the settings
+  `engine/game/flags.ts` — a module with no imports at all — because the settings
   screen applies them at startup, and keeping each setter inside the system it
   gates meant importing that system to flip a boolean.
 - **Split catalogs.** The compiled content is emitted in menu-facing and
@@ -1601,7 +1601,7 @@ that; swapping the renderer for Preact did, and the 30 KB of slack came off the
 budget with it. A sudden jump means something on the startup path reached back
 through `@game/core`.
 
-`src/output.ts` remains the central output module (OSS_SPEC §19.4) through
+`engine/output.ts` remains the central output module (OSS_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
 (`status`/`warn`/`info`/`header`/`error`/`debug`), an always-on in-memory
 log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
@@ -1847,7 +1847,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   harness); `check-seo` fails the build on a named file that is missing.
 
 The app keeps its PWA update lifecycle and other game-agnostic plumbing in the
-dedicated `src/lib/` and `pwa/src/lib/` areas. This keeps the game self-contained
+dedicated `engine/lib/` and `pwa/src/lib/` areas. This keeps the game self-contained
 while preserving clear reuse boundaries — see `AGENTS.md` for the policy.
 
 ### `native/` — the native shell (optional third layer)
@@ -2389,7 +2389,7 @@ Three properties are load-bearing, and each is cheap to keep and expensive to
 retrofit:
 
 - **It is generated, never authored.** `pwa/scripts/library/` reads the
-  compiled catalogs (`src/generated/*`) for authored facts and CALLS THE ENGINE
+  compiled catalogs (`engine/generated/*`) for authored facts and CALLS THE ENGINE
   for derived ones — `hardMobHpScale`, `mobContactScaleFor`, `enemyKillXp` —
   through the same `scripts/game-alias-loader.mjs` seam the calculators use. No
   gameplay number is ever typed into the generator, so the library has no
@@ -2404,7 +2404,7 @@ retrofit:
   `AchievementDef` compiles and ships and is simply absent.
 
   When a page wants to explain a number that is currently a literal buried in
-  `src/game/config/`, that number was probably content all along, and the fix is
+  `engine/game/config/`, that number was probably content all along, and the fix is
   to lift it into an authored `content/*.yaml` with a schema and a snapshot
   guard — the migration the items, enemies, levels, powerups, ladder, leveling
   curve and bot tuning have each already been through. The library is a good

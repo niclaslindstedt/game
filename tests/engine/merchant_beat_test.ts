@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE TRADER WHO WORKS A PITCH (src/game/merchant.ts, `LevelDef.merchant.beat`)
+// THE TRADER WHO WORKS A PITCH (engine/game/merchant.ts, `LevelDef.merchant.beat`)
 // — the hub's street dealer, and the three rules that are his alone:
 //
 //   1. HE WALKS, and he walks his STRIP: open for business from the first tick

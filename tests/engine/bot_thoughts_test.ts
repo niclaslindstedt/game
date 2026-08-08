@@ -7,8 +7,8 @@ import { describe, expect, it } from "vitest";
 import {
   createThoughtMemory,
   resolveThought,
-} from "../../src/game/bot/thoughts.ts";
-import type { ThoughtMemory } from "../../src/game/bot/thoughts.ts";
+} from "../../engine/game/bot/thoughts.ts";
+import type { ThoughtMemory } from "../../engine/game/bot/thoughts.ts";
 
 const DT = 16;
 

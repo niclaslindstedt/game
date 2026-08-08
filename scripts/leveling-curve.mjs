@@ -4,7 +4,7 @@
 // answers "how fast does the hero level, and how does it taper" from the REAL
 // engine config — so a tweak to LEVELING can be judged before it ships.
 //
-// The curve is authored in KILLS PER LEVEL (see src/game/leveling.ts): each
+// The curve is authored in KILLS PER LEVEL (see engine/game/leveling.ts): each
 // level's XP cost is `killsPerLevel(L) × a reference mob's XP at L`, and kill
 // XP is hp-proportional, so the kills a level actually takes is
 //
@@ -50,24 +50,24 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { LEVELING, LOOT, STATS } = await import(
-  path.join(root, "src/game/config/index.ts")
+  path.join(root, "engine/game/config/index.ts")
 );
 const { xpToLevelUp, xpLevelCap, xpCapMultiplier, mobLevelXp } = await import(
-  path.join(root, "src/game/leveling.ts")
+  path.join(root, "engine/game/leveling.ts")
 );
 const { XP_TUNING } = await import(
-  path.join(root, "src/generated/leveling.ts")
+  path.join(root, "engine/generated/leveling.ts")
 );
 const { mobLevelFor, mobLevelMidpoint } = await import(
-  path.join(root, "src/game/menace.ts")
+  path.join(root, "engine/game/menace.ts")
 );
 const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef, scaledMobCount } =
-  await import(path.join(root, "src/game/defs/difficulties.ts"));
+  await import(path.join(root, "engine/game/defs/difficulties.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { enemyDef } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 
 const args = process.argv.slice(2);
@@ -172,7 +172,7 @@ if (!DIFFICULTY_ORDER.includes(difficulty)) {
   process.exit(1);
 }
 
-// --targets drives the REAL ENGINE (src/sim/analytic.ts `simulateProgression`,
+// --targets drives the REAL ENGINE (engine/sim/analytic.ts `simulateProgression`,
 // which kills each map's actual roster through the real `killEnemy` → `grantXp`)
 // — NO duplicated XP math, so a tuning change (mob bands, caps, xpBonus, the con
 // system) shows up here automatically. Each rung is measured on its OWN, entered
@@ -180,13 +180,13 @@ if (!DIFFICULTY_ORDER.includes(difficulty)) {
 // clear (or `--clear N%`), reported against the intended finish ladder.
 if (targetsMode) {
   const { simulateProgression } = await import(
-    path.join(root, "src/sim/analytic.ts")
+    path.join(root, "engine/sim/analytic.ts")
   );
   const { synthesizeArrival } = await import(
-    path.join(root, "src/sim/arrival.ts")
+    path.join(root, "engine/sim/arrival.ts")
   );
   const { mobLevelMidpoint: midpoint } = await import(
-    path.join(root, "src/game/menace.ts")
+    path.join(root, "engine/game/menace.ts")
   );
   const TARGETS = { easy: 31, medium: 33, hard: 37, nightmare: 55, jesus: 69 };
   // The tier a mid-campaign rung is ENTERED from (its gear pool + entry level).

@@ -7,14 +7,14 @@
 // with a table in the engine is a drift waiting to happen. The KERB went first —
 // the lamp posts and the parked cars were derived here, and the sim knew nothing
 // about any of it, so the wagon drove through a parked van at 120 mph. Furniture
-// the player can hit is WORLD (`src/game/drive/street.ts`), and this file draws
+// the player can hit is WORLD (`engine/game/drive/street.ts`), and this file draws
 // what the sim is holding.
 //
 // THE TOWN WENT SECOND, and it is worth saying why, because unlike the kerb it
 // was never a lie: a building on the far verge really is behind the pavement,
 // really cannot be reached, and really does not have to be simulated. What it
 // could not stay was EIGHT PICTURES ON A FIXED PITCH. The town is now a catalog
-// with a layout (`src/game/drive/town.ts`, `town-plan.ts`) and an assembly
+// with a layout (`engine/game/drive/town.ts`, `town-plan.ts`) and an assembly
 // (`town-art.ts`) — buildings of their own widths and heights, dressed per site
 // and worn by how far along the road to GOODCO they stand.
 //
@@ -51,7 +51,7 @@ import {
  * or a woman pushing a pram is the moment the bit stops being comfortable.
  *
  * The order is `DrivePedestrian.variant`'s, and its length must match the
- * engine's `CROWD_VARIANTS` (src/game/drive/crowd.ts).
+ * engine's `CROWD_VARIANTS` (engine/game/drive/crowd.ts).
  */
 export const CROWD_SPRITES: readonly (readonly [string, string])[] = [
   ["walker_old_man_0", "walker_old_man_1"],
@@ -95,7 +95,7 @@ export const CROWD_FRAME_MS = 220;
  *
  * The order is `DrivePedestrian.variant`'s for a body of `kind: "glued"`, and
  * its length must match the engine's `GLUED_VARIANTS`
- * (src/game/drive/blockade.ts).
+ * (engine/game/drive/blockade.ts).
  */
 export const GLUED_SPRITES: readonly string[] = [
   "glued_cross_legged",
@@ -218,7 +218,7 @@ export function trafficSprite(variant: number, rung: number): string {
 }
 
 /** THE KERB'S own furniture is no longer here — it is the engine's, because it
- * is collidable (`DRIVE.street`, src/game/drive/street.ts). The renderer reads
+ * is collidable (`DRIVE.street`, engine/game/drive/street.ts). The renderer reads
  * `DriveState.props` for it and names the one sprite a lamp post wears; the
  * parked cars wear `TRAFFIC_SPRITES` above, since they are the town's cars
  * parked rather than a second set of art. */
@@ -232,7 +232,7 @@ export const LAMP_SPRITE = "lamp_post";
  * reach (`roadEdges`) — so a mast drawn there and simulated nowhere is exactly
  * the lie this road already learned not to tell: the player hits it once,
  * learns the street is paint, and stops reading the kerb at all. The engine
- * already stands a collidable post at every kerb slot (`src/game/drive/
+ * already stands a collidable post at every kerb slot (`engine/game/drive/
  * street.ts`), on both sides, offset half a pitch. So every third one of those
  * is simply DRAWN as a mast instead of as a yard light, and it collides,
  * shears off its base and cartwheels down the road exactly as it always did.

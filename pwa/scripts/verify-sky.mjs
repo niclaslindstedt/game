@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Correctness check for the main-menu solar system (see src/game/title-sky.ts).
+// Correctness check for the main-menu solar system (see engine/game/title-sky.ts).
 // It asserts the ONE law the whole effect has to obey — a body is lit from the
 // sun's side — at two levels, because each catches what the other cannot:
 //

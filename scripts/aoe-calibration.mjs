@@ -3,7 +3,7 @@
 // AoE TARGET CALIBRATION CLI — measures how many targets a melee cone actually
 // reaches, as a function of its angle, by arming the REAL autopilot with probe
 // weapons of varying `sweepDeg` and recording the uncapped in-cone count on
-// every swing (see src/sim/aoe-calibration.ts). It answers the question the
+// every swing (see engine/sim/aoe-calibration.ts). It answers the question the
 // damage-budget model guesses at (config `WEAPON.assumedTargets`, cone 4 /
 // full 5): "given X degrees of cone, how many foes does one swing hit?"
 //
@@ -27,7 +27,7 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { calibrateAoe, calibrateRangedAoe, calibrateMeleeReach } = await import(
-  path.join(root, "src/sim/aoe-calibration.ts")
+  path.join(root, "engine/sim/aoe-calibration.ts")
 );
 
 // ---- flag parsing --------------------------------------------------------------

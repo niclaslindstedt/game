@@ -53,7 +53,7 @@ _in_ the game is [`docs/game-content.md`](docs/game-content.md); the plot is
 - **Every instrument takes `--mod`.** The map renderers, the headless campaign
   simulator, the weapon-budget calculators and the browser playtest harness all
   measure a mod the same way they measure the shipped game.
-- **The engine is framework-free.** `src/` is plain TypeScript with no DOM or
+- **The engine is framework-free.** `engine/` is plain TypeScript with no DOM or
   UI-framework assumptions, so it runs in the browser, in Node and in the test
   suite.
 - **One repo, four shells.** The same built site is wrapped for the web, the App
@@ -130,7 +130,7 @@ here are drift-tested against a fresh build.
 | ---------------- | --------------------------------------------------------------------------------------------------- |
 | `content/`       | **Every authored catalog** — YAML, plus the Lua rules in `content/scripts/`                         |
 | `mod/`           | The mod SDK: the CLI, the compiler, `FORMAT.md`, the worked example, `catalog.json`                 |
-| `src/`           | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
+| `engine/`        | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
 | `pwa/`           | The deployable app — a Vite + Preact PWA shell that mounts the engine                               |
 | `scripts/`       | The instruments: renderers, simulators, calculators, catalog generators                             |
 | `tests/`         | Vitest suites (`*_test.ts`) — `tests/engine/` on fixtures, `tests/content/` on the shipped catalogs |
@@ -141,7 +141,7 @@ here are drift-tested against a fresh build.
 | `docs/`          | Reference documentation                                                                             |
 | `.agent/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills`                                |
 
-Generated catalogs (`src/generated/`, `pwa/src/generated/`) are gitignored and
+Generated catalogs (`engine/generated/`, `pwa/src/generated/`) are gitignored and
 rebuilt by `make levels` / `make assets`. Never edit or commit one.
 
 **What a YAML file may say is decided by its schema** —

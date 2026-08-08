@@ -1,12 +1,12 @@
 ---
 title: The BOSS ENCOUNTERS table keys off engagement (first blow), not spawn — elites/bosses are placed at map load
 date: 2026-07-13
-scope: src/sim/
+scope: engine/sim/
 concepts: [boss, reporting, engagement]
 ---
 
 `simulate-run.mjs`'s boss table (and `LevelReport.bosses` in
-`src/sim/simulate.ts`) records where the hero MEETS each elite/boss. The trap:
+`engine/sim/simulate.ts`) records where the hero MEETS each elite/boss. The trap:
 most elites/bosses are PLACED at level creation, so they already sit in
 `state.enemies` on the very first tick — a spawn-based "met" reads every boss
 as `met 0.0 min, heroL 1`, which is useless for pacing.

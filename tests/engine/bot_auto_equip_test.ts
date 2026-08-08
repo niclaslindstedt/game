@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot's own AUTO-EQUIP sweep (src/game/bot/economy.ts botAutoEquip):
+// The autopilot's own AUTO-EQUIP sweep (engine/game/bot/economy.ts botAutoEquip):
 // the bot wears the upgrades it picks up whatever the human's ON-PICKUP
 // auto-equip setting says (it ships OFF, so a bot that relied on it banked
 // every find and fought under-geared with a bag full of armor), while leaving

@@ -1,7 +1,7 @@
 ---
 title: A ranged weapon's opening ammo must key off the DIFFICULTY'S starting weapon, not the sidearm
 date: 2026-07-31
-scope: src/game/items/ammo.ts
+scope: engine/game/items/ammo.ts
 concepts: [ammo, durability, starting-weapons]
 ---
 
@@ -14,7 +14,7 @@ CELLS and he could not fire a shot all run — every test still passed except
 levelled. `startingAmmo(heldWeapon)` now stocks BOTH kinds. Anything else that
 reasons about "the weapon a run opens with" has the same trap: read
 `DifficultyDef.startingWeapon`, and remember each of the five rungs names a
-different one (`src/game/defs/difficulties.ts`).
+different one (`engine/game/defs/difficulties.ts`).
 
 Second gotcha in the same area: `weaponAmmoType` walks whole BAGS
 (`ammoKindFor`), and a bag is mostly armor — it must guard with `isWeaponDef`

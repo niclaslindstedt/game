@@ -682,7 +682,7 @@ screens:
   # cursor already on the thing to play. DIFFICULTY sits under them because it
   # is an adjustment to the next go rather than a destination — it decides what
   # the road WEIGHS, which is the only thing a rung changes about a minigame
-  # (src/game/drive/index.ts), and the board it feeds is one board for every
+  # (engine/game/drive/index.ts), and the board it feeds is one board for every
   # rung and tags each row with the one it was set on.
   #
   # AND IT OFFERS ONLY WHAT HAS BEEN FINISHED: a rung is on this row once the

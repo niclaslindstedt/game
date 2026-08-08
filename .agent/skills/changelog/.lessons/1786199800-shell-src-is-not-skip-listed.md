@@ -5,7 +5,7 @@ scope: electron/src, tauri/shell/src, tauri/src-tauri/src, scripts/release/check
 concepts: [skip-list, no-changelog, shells, false-red]
 ---
 
-The SKILL.md names `src/` and `pwa/src/` as the deliberate holes in the
+The SKILL.md names `engine/` and `pwa/src/` as the deliberate holes in the
 skip-list. The same trap applies to the desktop shells and is easier to walk
 into, because the skip-list entry beside them reads as if the whole tree were
 covered: what is skipped is **`native|electron|tauri/scripts/`,

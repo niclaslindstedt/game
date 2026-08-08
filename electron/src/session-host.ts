@@ -4,7 +4,7 @@
 // One process per SESSION, not per app. The dedicated server runs several,
 // and one process per session is what makes that free; it is also what keeps
 // the engine's 36 process-global mutable bindings — the `BALANCE` tuning
-// object, the six flags in `src/game/flags.ts`, every `activeXDefs` catalog
+// object, the six flags in `engine/game/flags.ts`, every `activeXDefs` catalog
 // `registerDefs` swaps when a mod loads — from being shared between two runs
 // that disagree about them.
 //

@@ -40,10 +40,10 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { simulateCampaign } = await import(
-  path.join(root, "src/sim/simulate.ts")
+  path.join(root, "engine/sim/simulate.ts")
 );
 const { DIFFICULTY_ORDER } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 // THE SHIPPED LADDER, imported rather than mirrored: a probe that carried its
 // own copy of the thresholds would go on reporting the old rate after a tune.

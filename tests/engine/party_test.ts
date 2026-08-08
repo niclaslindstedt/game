@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE PARTY — the shared reads `src/game/party.ts` answers, each pinned by a
+// THE PARTY — the shared reads `engine/game/party.ts` answers, each pinned by a
 // test that would pass trivially in single player and fails the moment the
 // answer reverts to "seat 0".
 //

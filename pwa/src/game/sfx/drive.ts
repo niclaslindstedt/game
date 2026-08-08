@@ -28,7 +28,7 @@
 // AND THE CRANK IS THE ENGINE'S, NOT THIS FILE'S. The gearbox used to live here
 // — five speed thresholds picked so the note would sawtooth nicely — which
 // meant the sound had a gearbox and the CAR did not. It is real physics now
-// (`src/game/drive/drivetrain.ts`): ratios, a torque curve, an automatic that
+// (`engine/game/drive/drivetrain.ts`): ratios, a torque curve, an automatic that
 // changes up a good thousand revs short of the redline, and the wagon's
 // acceleration solved through all three. So this module has one job left, which
 // is to VOICE what the engine is already doing. The tachometer on the
@@ -50,7 +50,7 @@ import type { Synth } from "@ui/lib/synth.ts";
  *
  * IT IS A SIX BECAUSE THE BROCHURE SAYS SO. The wagon's engine makes four
  * hundred newton-metres and gives up before five thousand
- * (`src/game/drive/drivetrain.ts`), which is a big lazy oil-burner and not the
+ * (`engine/game/drive/drivetrain.ts`), which is a big lazy oil-burner and not the
  * four-cylinder this used to divide by — and the arithmetic is not cosmetic:
  * the same note over half the rev range would have dropped the whole engine an
  * octave the day the gearing became realistic, straight into the part of the

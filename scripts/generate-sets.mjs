@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The SET pipeline. Compiles `content/sets.yaml` — the hand-authored kits a
-// boss's green armor pieces belong to — into `src/generated/sets.ts`
-// (GENERATED_SETS), which `src/game/defs/sets.ts` re-exposes as SET_DEFS. It:
+// boss's green armor pieces belong to — into `engine/generated/sets.ts`
+// (GENERATED_SETS), which `engine/game/defs/sets.ts` re-exposes as SET_DEFS. It:
 //   1. reads the live UNIQUE catalog, because every check that matters is about
 //      the kit holding together: a member that is not `rarity: set`, two head
 //      pieces in one kit, a piece claimed by two sets, a piece whose own `setId`
@@ -23,7 +23,7 @@ import { register } from "node:module";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Engine modules under src/lib use the @game/lib alias at runtime — map it so
+// Engine modules under engine/lib use the @game/lib alias at runtime — map it so
 // the unique catalog imports cleanly under plain node.
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -35,7 +35,7 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // Imported DIRECTLY (never @game/core) so nothing pulls the file we are about
 // to write — the same bootstrap rule every other generator follows.
 const { UNIQUE_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/uniques.ts")).href
+  pathToFileURL(engine("engine/game/defs/uniques.ts")).href
 );
 
 const { sets, entries } = loadSets(engine("content"));
@@ -91,7 +91,9 @@ export const GENERATED_SETS: Record<string, SetDef> = ${JSON.stringify(
 )} as unknown as Record<string, SetDef>;
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/sets.ts`, out);
-console.log(`wrote src/generated/sets.ts — ${Object.keys(sets).length} sets`);
+console.log(
+  `wrote engine/generated/sets.ts — ${Object.keys(sets).length} sets`,
+);

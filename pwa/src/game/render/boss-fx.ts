@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE BOSS ABILITY CATALOG's world-anchored FX (see
-// src/game/defs/enemies/abilities.ts): the sweeping beam and the burning floor
+// engine/game/defs/enemies/abilities.ts): the sweeping beam and the burning floor
 // it leaves behind.
 //
 // Everything here is drawn out of SPRITES rather than out of the 2D context's

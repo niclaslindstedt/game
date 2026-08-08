@@ -242,7 +242,7 @@ describe("the screen nuke", () => {
     // out. Same radius, opposite fates — only the sheltered one rides it out.
     //
     // Two boulders rather than one, because the blast is stopped by SIGHT and
-    // a lone narrow obstacle no longer stops that (src/game/obstacles.ts,
+    // a lone narrow obstacle no longer stops that (engine/game/obstacles.ts,
     // "What blocks SIGHT"): cover you can hide behind is cover with some
     // width to it.
     const px = state.players[0].pos.x;

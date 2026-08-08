@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The COIN STORE — the game's one real-money surface: coin packs that fund
-// the AUTO PILOT (src/game/autopilot.ts drains the purse per simulated
+// the AUTO PILOT (engine/game/autopilot.ts drains the purse per simulated
 // second; more coins = longer unattended flying). Native app builds only —
 // purchases run through the platform store via the WebView bridge
 // (../app/store-bridge.ts); in a browser/PWA the store simply doesn't exist.

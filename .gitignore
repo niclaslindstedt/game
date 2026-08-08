@@ -20,7 +20,7 @@ pwa/dist/
 pwa/src/generated/
 # Generated engine level catalog — source of truth is
 # scripts/levels/*.yaml; regenerated via `npm run levels` (§11.2).
-src/generated/
+engine/generated/
 # Generated pixel-asset atlases (sprite + font) — source of truth is
 # scripts/sprites/; regenerated on every build via `npm run assets` (§11.2).
 pwa/src/game/assets/
@@ -31,7 +31,7 @@ pwa/assets-preview/
 docs/_build/
 
 # The engine's Node ship target: the staged sources and the compiled server
-# (scripts/build-server.mjs). Build output like src/generated/ — regenerated on
+# (scripts/build-server.mjs). Build output like engine/generated/ — regenerated on
 # every desktop build, never committed.
 electron/server-src/
 electron/server-dist/
@@ -115,8 +115,8 @@ native/*.p8
 
 # The Lua VM compiled for the SHIPPED mod compiler (scripts/build-lua.mjs) — the
 # desktop shell's main process has no TypeScript, so the validator reads this
-# instead of src/lib/lua/. It sits beside server-dist/ rather than under mod/,
-# which is licence-split territory. Build output like src/generated/;
+# instead of engine/lib/lua/. It sits beside server-dist/ rather than under mod/,
+# which is licence-split territory. Build output like engine/generated/;
 # regenerated, never committed.
 electron/modtools-lua/
 electron/tsconfig.modtools-lua.json

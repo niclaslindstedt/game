@@ -5,7 +5,7 @@ description: "Use when creating or tuning a transient VISUAL EFFECT — an explo
 
 # Authoring & tuning visual effects
 
-Transient FX are **presentation only** — the engine (`src/`) knows nothing of
+Transient FX are **presentation only** — the engine (`engine/`) knows nothing of
 them. It emits an EVENT; the app turns that event into a short-lived drawn
 effect. Keep every effect out of the simulation: an effect must never change
 what happens, only how it looks.
@@ -30,7 +30,7 @@ it at both ends of the session.
 ## The flow: event → effect → draw
 
 1. **The engine emits an event.** Add/extend a variant in
-   `src/game/types/events.ts` and push it from the step where it happens
+   `engine/game/types/events.ts` and push it from the step where it happens
    (`state.events.push({ type: "…", pos, … })`). Carry only DATA the app needs
    (position, a size, a style tag). To mark a subset of an existing event (e.g.
    "this kill was a nuke kill"), thread a boolean **through the call chain onto

@@ -116,7 +116,7 @@ export const PRIVATE_PLAYER_FIELDS: readonly string[] = [
   "vault",
   // THE CACHE's contents. The CHEST is public — it stands in the garage and
   // anybody can walk to it — but what a hero keeps in it is theirs, exactly as
-  // their bag is (src/game/cache.ts).
+  // their bag is (engine/game/cache.ts).
   "cache",
   "stats",
   "spentStats",

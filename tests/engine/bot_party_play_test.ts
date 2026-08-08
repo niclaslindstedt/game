@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// HOW A BOT PLAYS AS A MEMBER OF A PARTY (src/game/bot/party-play.ts): the
+// HOW A BOT PLAYS AS A MEMBER OF A PARTY (engine/game/bot/party-play.ts): the
 // personal SPACING envelope, the SPLIT-THE-PACKS target preference, COVERING a
 // downed or bleeding teammate, and the CONVOY that tightens the leash on a
 // long march. Each rule is asserted BOTH ways on purpose: the party case
@@ -23,9 +23,9 @@ import {
   applyPartySpacing,
   handledByTeammate,
   partyLeash,
-} from "../../src/game/bot/party-play.ts";
-import { macroTarget } from "../../src/game/bot/macro.ts";
-import { bestAimTarget } from "../../src/game/bot/arsenal.ts";
+} from "../../engine/game/bot/party-play.ts";
+import { macroTarget } from "../../engine/game/bot/macro.ts";
+import { bestAimTarget } from "../../engine/game/bot/arsenal.ts";
 import {
   clearStage,
   equipRangedSidearm,

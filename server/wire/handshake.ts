@@ -203,7 +203,7 @@ export function sanitizeName(raw: unknown, slot: number): string {
  * Not a cryptographic hash and not pretending to be one: what it is for is
  * making a cookie unguessable without the secret to somebody who is throwing
  * packets at a port, and making a password proof opaque to a packet capture.
- * `Math.imul` is what keeps it bit-exact — the same choice `src/lib/rng.ts`
+ * `Math.imul` is what keeps it bit-exact — the same choice `engine/lib/rng.ts`
  * makes, and for the same reason: a float multiply loses the low bits and two
  * machines stop agreeing.
  */

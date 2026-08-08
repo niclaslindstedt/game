@@ -41,7 +41,7 @@ Two mechanical traps that cost time here:
   ms. `ms / DT` is the tick count; `seconds / DT` silently drives ~0 ticks and
   the assertion fails somewhere far from the bug.
 - A `content/bot.yaml` edit does NOTHING until `npm run levels` regenerates
-  `src/generated/botTuning.ts`. Vitest regenerates on its own pretest hook, so
+  `engine/generated/botTuning.ts`. Vitest regenerates on its own pretest hook, so
   a test can pass while a hand-run `simulate-run.mjs` still uses the old knob —
   and an isolation experiment ("set the knob to 0 and re-measure") silently
   measures the same build twice.

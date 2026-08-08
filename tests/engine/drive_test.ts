@@ -45,10 +45,10 @@ import {
   type DriveParams,
   type DriveState,
   type DriveTraffic,
-} from "../../src/game/drive/index.ts";
-import { CAR } from "../../src/game/vehicles.ts";
-import { DIFFICULTY_ORDER } from "../../src/game/defs/difficulties.ts";
-import type { Difficulty } from "../../src/game/types/index.ts";
+} from "../../engine/game/drive/index.ts";
+import { CAR } from "../../engine/game/vehicles.ts";
+import { DIFFICULTY_ORDER } from "../../engine/game/defs/difficulties.ts";
+import type { Difficulty } from "../../engine/game/types/index.ts";
 
 const PARAMS: DriveParams = {
   seed: 1234,

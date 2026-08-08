@@ -54,7 +54,7 @@ export const CARVED_FIELDS = [
 const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit", "hub"]);
 
 /**
- * The SKIES a venue may stand under (the engine's `SkyKind`, `src/game/
+ * The SKIES a venue may stand under (the engine's `SkyKind`, `engine/game/
  * daylight.ts`) — a level naming one has its light follow the clock.
  *
  * Spelled out here rather than harvested from the engine like the enemy and
@@ -69,7 +69,7 @@ const PLACE_THOUGHT_WHERE = new Set(["arrival", "pastDoor"]);
 
 /**
  * The one door id with no key behind it — the engine's `ENTRANCE_DOOR`
- * (src/game/arrivals.ts), hung by the carve across every opening off an
+ * (engine/game/arrivals.ts), hung by the carve across every opening off an
  * `arrivals` district. Spelled out here for the same reason the skies are: this
  * file is tooling the compile runs BEFORE the engine catalogs exist.
  */
@@ -485,7 +485,7 @@ export function validateLevel(def, refs, description = "", options = {}) {
     if (d.opens === "approach") continue;
     // …and so does THE ENTRANCE, for the opposite reason: it is a keyed door
     // that DELIBERATELY has no key, because the only thing that opens it is a
-    // member of staff badging in (`arrivals`, src/game/arrivals.ts). A story
+    // member of staff badging in (`arrivals`, engine/game/arrivals.ts). A story
     // item for it would hand the hero a way past the whole beat.
     if (d.id === ENTRANCE_DOOR) continue;
     if (!refs.doorKeys.has(d.id))

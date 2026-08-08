@@ -22,7 +22,7 @@ The registry is the single source of truth for which sync skills exist in this r
 | Skill | Fixes | Spec sections | Run order |
 |---|---|---|---|
 | `sync-oss-spec`   | Repo contents vs. the latest `OSS_SPEC.md` fetched from GitHub (standalone — no external validator binary) | all structural §§ + §21.5 | 1 — run first so every downstream skill reads the freshest spec |
-| `update-story`    | Story tiers vs. each other: `docs/manuscript.md` and `src/game/defs/**` story data vs. `docs/story.md` (the gist, ground truth) | §11.1                     | 2 — reconcile the story chain before `update-docs` reads the manuscript |
+| `update-story`    | Story tiers vs. each other: `docs/manuscript.md` and `engine/game/defs/**` story data vs. `docs/story.md` (the gist, ground truth) | §11.1                     | 2 — reconcile the story chain before `update-docs` reads the manuscript |
 | `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 3 |
 | `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 4 |
 | `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.5                     | 5 |

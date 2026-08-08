@@ -108,7 +108,7 @@ jobs:
       # Compute the next version from the highest released tag (not from
       # package.json, which could lag), then rewrite every shipped
       # version string — root + workspace package.json, the lockfile,
-      # and src/version.ts — via the script that owns them.
+      # and engine/version.ts — via the script that owns them.
       - name: Bump version
         id: bump
         run: |
@@ -166,7 +166,7 @@ jobs:
         run: |
           git config user.name  'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add package.json package-lock.json pwa/package.json src/version.ts CHANGELOG.md .changes/unreleased
+          git add package.json package-lock.json pwa/package.json engine/version.ts CHANGELOG.md .changes/unreleased
           git commit -m "chore(release): v${VERSION}"
           git tag -a "$TAG" -m "Release ${TAG}"
           git push origin HEAD:main

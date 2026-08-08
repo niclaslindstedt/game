@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Test-scenario support (src/game/scenario.ts): `applyScenario` mutates a
+// Test-scenario support (engine/game/scenario.ts): `applyScenario` mutates a
 // fresh run into an exact situation — hero position, vitals, build, gear,
 // the field's population — so bug repros and performance probes start from
 // a described state instead of being played into. Fed by the app's

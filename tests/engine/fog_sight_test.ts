@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE FOG STOPS AT THE WALLS (src/game/fog.ts `revealAround`). The sweep that
+// THE FOG STOPS AT THE WALLS (engine/game/fog.ts `revealAround`). The sweep that
 // lifts the fog is a disc of everything the hero can SEE, not a disc: ground
 // behind a wall stays dark until he stands somewhere it is in view, so rounding
 // a corner is a discovery and a doorway shows a cone of the room rather than
@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import { clearOfFog, isExplored, MAP } from "@game/core";
 import type { GameState, Obstacle, Vec2 } from "@game/core";
 // Engine-internal: the sweep itself, run here without a whole step.
-import { revealAround } from "../../src/game/fog.ts";
+import { revealAround } from "../../engine/game/fog.ts";
 
 import { startGame } from "./helpers.ts";
 
@@ -113,7 +113,7 @@ describe("the fog of war stops at a wall", () => {
   });
 });
 
-// ONLY ARCHITECTURE CASTS A SHADOW (src/game/obstacles.ts, "What blocks
+// ONLY ARCHITECTURE CASTS A SHADOW (engine/game/obstacles.ts, "What blocks
 // SIGHT"). A wall is a CHAIN, and it is the chain that stops the sweep: one
 // piece of it standing alone on open ground is looked past. Otherwise every
 // scattered rock on a dressed field threw a dark wedge across the rest of the

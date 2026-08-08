@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE LOST & FOUND (src/game/items/vault.ts) and the bag discipline that fills
-// it (src/game/bot/economy.ts `cullWorstLoot`): a paid AUTO PILOT ride sheds
+// THE LOST & FOUND (engine/game/items/vault.ts) and the bag discipline that fills
+// it (engine/game/bot/economy.ts `cullWorstLoot`): a paid AUTO PILOT ride sheds
 // the LEAST PRECIOUS piece to keep a cell open — never a unique to make room
 // for a magic — and banks anything magic-or-better for the player to buy back
 // on the per-tier coin ladder. What is never bought back is trashed when the

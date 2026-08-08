@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // TIME OF DAY — the curve the app maps its wall clock onto, and the one rule
-// that decides whether a run reads it at all (`src/game/daylight.ts`).
+// that decides whether a run reads it at all (`engine/game/daylight.ts`).
 //
 // It runs against FIXTURE levels, and the pair is the point: `test_sky_level`
 // stands under a sky and `test_level` does not, so every assertion about the

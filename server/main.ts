@@ -19,7 +19,7 @@
 // on its own. A 60 Hz simulation must not
 // compete with the main process's IPC, window, Workshop-compile and Steam
 // duties. The engine holds 36 process-global mutable bindings — the `BALANCE`
-// tuning object, the six flags in `src/game/flags.ts`, and every `activeXDefs`
+// tuning object, the six flags in `engine/game/flags.ts`, and every `activeXDefs`
 // catalog `registerDefs` swaps when a mod loads — none of it per-`GameState`,
 // so a process boundary is what stops one session's `/players 8`, another's mod
 // list and a third's GENERATED MAPS setting from stomping each other. And it

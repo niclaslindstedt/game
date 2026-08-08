@@ -12,7 +12,7 @@
 // demands Node ≥ 24, so `node` running the sources directly looked like the
 // smallest possible change — and it does work: stripping is on by default from
 // Node 22.18, which is how `scripts/simulate-run.mjs` already imports
-// `src/sim/simulate.ts`. Two things killed it anyway:
+// `engine/sim/simulate.ts`. Two things killed it anyway:
 //
 //   * **It does not resolve the path ALIASES.** `@game/lib/vec.ts` needs
 //     `scripts/game-alias-loader.mjs` registered, and registering a loader
@@ -35,7 +35,7 @@
 // gone before `tsc` sees the file. Staging a copy and rewriting the specifiers
 // there costs one directory and keeps the engine written in the repo's own
 // house style — which matters, because the alternative was to relativize
-// `@game/lib` across `src/`, and the alias is what marks the generic pool as
+// `@game/lib` across `engine/`, and the alias is what marks the generic pool as
 // generic: a relative path says nothing about which side of that line a
 // module sits on.
 //
@@ -70,18 +70,18 @@ const outDir = path.join(root, "electron", "server-dist");
  * pwa/tsconfig.json, vitest.config.ts, pwa/vite.config.ts) — a build that sees
  * a different module graph than the game does is worse than one that fails.
  */
-const ALIAS_DIRS = [["@game/lib/", "src/lib"]];
+const ALIAS_DIRS = [["@game/lib/", "engine/lib"]];
 const ALIAS_FILES = [
-  ["@game/core", "src/index.ts"],
-  ["@game/menu", "src/menu.ts"],
+  ["@game/core", "engine/index.ts"],
+  ["@game/menu", "engine/menu.ts"],
 ];
 
 /** The trees that travel, by their path from the repo root. */
-const SOURCES = ["src", "server"];
+const SOURCES = ["engine", "server"];
 
 /** Where the compiled content catalogs land. Gitignored; `npm run levels`
  * regenerates them (§11.2). */
-const generatedDir = path.join(root, "src", "generated");
+const generatedDir = path.join(root, "engine", "generated");
 
 /** Every `from "…"` / `import("…")` specifier in a source file. Shared with
  * `relativizeAliases`, so the preflight and the rewrite can never disagree
@@ -125,7 +125,7 @@ function main() {
  * REFUSE A BUILD WHOSE CONTENT CATALOGS HAVE NOT BEEN COMPILED YET, and name
  * the command that compiles them.
  *
- * `src/generated/` is build output like every other generated artifact (§11.2)
+ * `engine/generated/` is build output like every other generated artifact (§11.2)
  * — gitignored, rebuilt by `npm run levels`, which the root's own `pre*` hooks
  * run ahead of every test, typecheck and lint. This script had no such hook and
  * no way to grow one that helps everybody, because `electron/` is not a
@@ -137,7 +137,7 @@ function main() {
  * which say nothing about the one command that fixes all of them.
  *
  * The check is DERIVED rather than a list: every relative specifier that
- * resolves into `src/generated/` is an import the compile is about to need, so
+ * resolves into `engine/generated/` is an import the compile is about to need, so
  * a catalog added tomorrow is covered without this file learning its name.
  */
 function requireGeneratedCatalogs() {
@@ -301,7 +301,7 @@ function emitManifest() {
  * Any JSON the engine imports at runtime, which `tsc` does not emit.
  *
  * There is none today — every catalog is compiled TypeScript under
- * `src/generated/` — and this exists so the day one appears is not the day the
+ * `engine/generated/` — and this exists so the day one appears is not the day the
  * packaged app fails to start with a resolve error a developer's checkout
  * cannot reproduce. Documentation and build manifests are deliberately left
  * behind: the ship target carries what the process RUNS and nothing else.

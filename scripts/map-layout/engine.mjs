@@ -14,10 +14,10 @@ export const engine = (p) =>
   fileURLToPath(new URL(`../../${p}`, import.meta.url));
 
 export const { ENEMY_DEFS } = await import(
-  engine("src/game/defs/enemies/index.ts")
+  engine("engine/game/defs/enemies/index.ts")
 );
 export const { mobLevelXp, xpToLevelUp } = await import(
-  engine("src/game/leveling.ts")
+  engine("engine/game/leveling.ts")
 );
 
 export const roleOf = (id) => ENEMY_DEFS[id]?.role ?? "minion";

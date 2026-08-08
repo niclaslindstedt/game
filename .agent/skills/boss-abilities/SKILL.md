@@ -26,9 +26,9 @@ it at both ends of the session.
 
 | Piece | File |
 | --- | --- |
-| The authored catalog | `src/game/defs/enemies/abilities.ts` |
-| One module per ability | `src/game/mechanics/<id>.ts` |
-| The registry | `src/game/mechanics/catalog.ts` (registered by id) |
+| The authored catalog | `engine/game/defs/enemies/abilities.ts` |
+| One module per ability | `engine/game/mechanics/<id>.ts` |
+| The registry | `engine/game/mechanics/catalog.ts` (registered by id) |
 | The orchestrator | `stepEnemyMechanics` — owns the TELL and the RESOLVE for every entry |
 | Which boss has which | `content/enemies/<biome>/<id>.yaml` (`mechanics:`, `phases:`) |
 | The FX | `pwa/src/game/render/boss-fx.ts` + `event-fx.ts` |
@@ -101,7 +101,7 @@ more than its contact damage with nothing on screen at all — and are answered 
 `call_horde`, `coin_cannon`, `ember_trail`, `flag_plant`, `laser_eyes`,
 `lockdown`, `orbit_guard`, `quake_line`, `rally_cry`, `recompile`,
 `seeker_volley`, `shock_pulse`, `siphon_tether`, `snare_field`, `ward_shield`
-(`src/game/defs/enemies/abilities.ts`; read it before adding, the shape you want
+(`engine/game/defs/enemies/abilities.ts`; read it before adding, the shape you want
 may already exist). The six below are the ones worth reading as examples,
 because four of them exist to prove the seam holds:
 an ability may reach the world through its own PROJECTILES (`coin_cannon` — a
@@ -154,10 +154,10 @@ that covers the whole visible floor is not a hazard, it is a wall.
 
 ## Adding one
 
-1. **Author the entry** in `src/game/defs/enemies/abilities.ts` — a variant in
+1. **Author the entry** in `engine/game/defs/enemies/abilities.ts` — a variant in
    the authored union with its `windupMs`, its cooldown, its reach, its
    `minDifficulty` and `windupFloorMs` if it is a top-rung move, and its `bark`.
-2. **Write the module** in `src/game/mechanics/<id>.ts` beside its siblings and
+2. **Write the module** in `engine/game/mechanics/<id>.ts` beside its siblings and
    register it by id in `catalog.ts`. It implements CAST only — the
    orchestrator already owns the tell and the cooldown.
 3. **Prefer pointing an existing system at a new author** over building a

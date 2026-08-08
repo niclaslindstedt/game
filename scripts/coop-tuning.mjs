@@ -55,18 +55,20 @@ const { applyMods, takeModFlags } = await import(
 const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
 await applyMods(mods);
 
-const { simulateLevel } = await import(path.join(root, "src/sim/simulate.ts"));
+const { simulateLevel } = await import(
+  path.join(root, "engine/sim/simulate.ts")
+);
 const { playerScaling } = await import(
   path.join(root, "server/wire/players.ts")
 );
 const { synthesizeArrival } = await import(
-  path.join(root, "src/sim/arrival.ts")
+  path.join(root, "engine/sim/arrival.ts")
 );
 const { DIFFICULTY_ORDER } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 const { levelDef } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 
 // ---- Flags -----------------------------------------------------------------------

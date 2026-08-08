@@ -1,7 +1,7 @@
 ---
 title: A knob added to DifficultyDef that CLAMPS the sim breaks every test that stages a value by hand — clamps are set by the pedal, not read from it
 date: 2026-08-08
-scope: src/game/defs/difficulties.ts, src/game/drive/, tests/engine/
+scope: engine/game/defs/difficulties.ts, engine/game/drive/, tests/engine/
 concepts: [difficulty-ladder, engine-system, staged-tests, clamps, test-fragility]
 ---
 

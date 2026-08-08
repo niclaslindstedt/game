@@ -64,7 +64,7 @@ npm run preview --workspace pwa
 | ---------------- | ---------------------------------------------------------------------------- |
 | `content/`       | Every authored catalog, as YAML — the format a mod is written in too         |
 | `mod/`           | The mod SDK — CLI, compiler, format reference, worked example                |
-| `src/`           | The engine — framework-free game logic (imported by the app as `@game/core`) |
+| `engine/`        | The engine — framework-free game logic (imported by the app as `@game/core`) |
 | `pwa/`           | The deployable app — Vite + Preact PWA shell                                 |
 | `scripts/`       | The instruments — renderers, simulators, calculators, catalog generators     |
 | `tests/`         | Engine tests                                                                 |

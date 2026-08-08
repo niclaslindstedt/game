@@ -59,12 +59,12 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult, isWeaponDef } =
-  await import(path.join(root, "src/game/defs/equipment.ts"));
+  await import(path.join(root, "engine/game/defs/equipment.ts"));
 const { UNIQUE_DEFS } = await import(
-  path.join(root, "src/game/defs/uniques.ts")
+  path.join(root, "engine/game/defs/uniques.ts")
 );
 const { DIFFICULTY_DEFS } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 const { applyMods, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")

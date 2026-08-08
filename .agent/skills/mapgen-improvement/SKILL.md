@@ -24,14 +24,14 @@ it at both ends of the session.
 
 | Question | File |
 | --- | --- |
-| What is a blueprint made of? | `src/game/mapgen/types.ts` |
-| Where may a thing be? (compass grammar) | `src/game/mapgen/regions.ts` |
-| What kind of place is this cell, and what wall falls out of it? | `src/game/mapgen/areas.ts` |
-| Where are the cells and the borders? | `src/game/mapgen/rooms.ts` |
-| What gets scattered/aligned/tiled onto them? | `src/game/mapgen/place.ts` |
-| Who decides — boss, hero, depth, knots, lifts? | `src/game/mapgen/generate.ts` |
-| How does a run reach any of it? | `src/game/mapgen/index.ts` → `resolveLevelDef` |
-| Which missions have a blueprint at all? | `src/game/mapgen/blueprints.ts` — an import-free LEAF, so `registerDefs({ blueprints })` can swap a MOD's recipes in without the def registry pulling `generate.ts` |
+| What is a blueprint made of? | `engine/game/mapgen/types.ts` |
+| Where may a thing be? (compass grammar) | `engine/game/mapgen/regions.ts` |
+| What kind of place is this cell, and what wall falls out of it? | `engine/game/mapgen/areas.ts` |
+| Where are the cells and the borders? | `engine/game/mapgen/rooms.ts` |
+| What gets scattered/aligned/tiled onto them? | `engine/game/mapgen/place.ts` |
+| Who decides — boss, hero, depth, knots, lifts? | `engine/game/mapgen/generate.ts` |
+| How does a run reach any of it? | `engine/game/mapgen/index.ts` → `resolveLevelDef` |
+| Which missions have a blueprint at all? | `engine/game/mapgen/blueprints.ts` — an import-free LEAF, so `registerDefs({ blueprints })` can swap a MOD's recipes in without the def registry pulling `generate.ts` |
 | Is the authored file legal? | `scripts/asset-tools/map-schema.mjs` |
 | How do ramps become numbers? | `scripts/map-data/load-yaml.mjs` + `scripts/level-data/ladder.mjs` (both take a DIRECTORY — a mod's `maps/` goes through the same two) |
 
@@ -269,7 +269,7 @@ player read the answer off the minimap a district or two early. An **annex**
 a sealed room in a band of its own past the carved rectangle, with no border to any
 cell, so nothing adjoins it and the minimap has nothing at all to show where it is
 until the hero has stood in it. The only way in is an **elevator** pad
-(`LevelDef.elevators`, `src/game/elevator.ts`) standing in the carved cell the
+(`LevelDef.elevators`, `engine/game/elevator.ts`) standing in the carved cell the
 boss's compass regions picked — so the last thing to FIND is the way to the boss,
 and it could be in any of thirty rooms. Two details carry it: the annex joins the
 grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
@@ -369,7 +369,7 @@ npm run build                                         # the LIBRARY coverage gat
 ## Shipping
 
 - Blueprints (`content/maps/*.yaml`) and sprites (`content/sprites/**`) are
-  committed; `src/generated/map-blueprints.ts` and `pwa/src/game/assets/` are
+  committed; `engine/generated/map-blueprints.ts` and `pwa/src/game/assets/` are
   gitignored build output — never commit them.
 - Render every mission you touched at more than one size and seed and put the
   images in front of the user before shipping. A generator change that looked

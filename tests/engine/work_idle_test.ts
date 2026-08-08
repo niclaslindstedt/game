@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The DORMANT "AT WORK" stroll (`EnemyDef.ai.idle === "work"`, config
-// ENEMY_AI.work, src/game/working.ts): a dormant mob potters around its home
+// ENEMY_AI.work, engine/game/working.ts): a dormant mob potters around its home
 // — walk a short leg, stand a beat, walk again — instead of standing frozen,
 // while waking (aggro + line of sight, wounds) and the woken chase stay
 // exactly as before. Runs on the synthetic `test_worker` fixture.

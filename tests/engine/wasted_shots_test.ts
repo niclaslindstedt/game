@@ -38,7 +38,7 @@ import {
 import type { Enemy, Equipment, GameState, Obstacle } from "@game/core";
 // Engine-internal: the PHYSICAL query a projectile itself runs, which the
 // public surface has no reason to carry.
-import { blockedByObstacle } from "../../src/game/obstacles.ts";
+import { blockedByObstacle } from "../../engine/game/obstacles.ts";
 
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 

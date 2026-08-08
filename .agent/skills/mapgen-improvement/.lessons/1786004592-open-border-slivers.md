@@ -1,7 +1,7 @@
 ---
 title: A sliver of OPEN border is a wall, and counting it as a route lies to the vault picker
 date: 2026-08-06
-scope: src/game/mapgen/
+scope: engine/game/mapgen/
 concepts: [borders, routes, vaults]
 ---
 

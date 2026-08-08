@@ -556,7 +556,7 @@ export function drawDrive(
   }
   // THE KERB, drawn from the SIM rather than derived here — the furniture is
   // world now, so what is painted is exactly what the bumper can reach
-  // (src/game/drive/street.ts). A standing piece is a plain blit; a FELLED post
+  // (engine/game/drive/street.ts). A standing piece is a plain blit; a FELLED post
   // is the one thing on this road drawn turned over, because a street light
   // that has left its base is the only object here whose orientation carries
   // information.

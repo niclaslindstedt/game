@@ -51,9 +51,11 @@ import { applyModsWithSprites, takeModFlags } from "./mod-support.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { createGame } = await import(pathToFileURL(engine("src/index.ts")).href);
+const { createGame } = await import(
+  pathToFileURL(engine("engine/index.ts")).href
+);
 const { ENEMY_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/enemies/index.ts")).href
+  pathToFileURL(engine("engine/game/defs/enemies/index.ts")).href
 );
 // WHICH ground sprite goes in a cell is the RENDERER's own rule, imported
 // rather than restated — a second copy of it here would drift silently the
@@ -64,7 +66,7 @@ const { groundTileName } = await import(
   pathToFileURL(engine("pwa/src/game/render/ground-tiles.ts")).href
 );
 const { resolvePackCount } = await import(
-  pathToFileURL(engine("src/game/defs/difficulties.ts")).href
+  pathToFileURL(engine("engine/game/defs/difficulties.ts")).href
 );
 
 const previewDir = engine("pwa/assets-preview");
@@ -440,7 +442,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // construction.
   {
     const { resolveLevelDef, hasMapBlueprint } = await import(
-      pathToFileURL(engine("src/game/mapgen/index.ts")).href
+      pathToFileURL(engine("engine/game/mapgen/index.ts")).href
     );
     for (const entry of targets) {
       if (!hasMapBlueprint(entry.def.id)) {

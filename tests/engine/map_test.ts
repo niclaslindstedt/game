@@ -16,8 +16,8 @@ import {
   resumeGame,
   rollEquipment,
 } from "@game/core";
-import { hitEnemy } from "../../src/game/loot.ts";
-import { exploredRay } from "../../src/game/map.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
+import { exploredRay } from "../../engine/game/map.ts";
 import {
   clearStage,
   idle,

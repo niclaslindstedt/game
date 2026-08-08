@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE TRADE WINDOW (docs/multiplayer.md — Trade) — the screen over the engine's
-// table. Everything binding lives in `src/game/trade.ts`; this component only
+// table. Everything binding lives in `engine/game/trade.ts`; this component only
 // SHOWS the table and sends the five verbs, so nothing here can mint an item:
 // my side draws my real bag, their side draws the COPY the wire carries
 // (`TradeSide.item` — presentation, never authority), and the swap itself

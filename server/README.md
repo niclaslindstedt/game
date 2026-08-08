@@ -32,7 +32,7 @@ nothing about the simulation also cannot fall out of step with it.
 
 The engine is TypeScript with `.ts` import specifiers and two path aliases; a
 Node process cannot run that directly. `npm run server:build` compiles
-`server/` and `src/` into `electron/server-dist/` with `tsc` and rewrites the
+`server/` and `engine/` into `electron/server-dist/` with `tsc` and rewrites the
 aliases in the emitted JavaScript — see
 [`scripts/build-server.mjs`](../scripts/build-server.mjs). `electron-builder`
 copies the result to `resources/server/`, and `electron/src/resources.ts`

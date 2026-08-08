@@ -15,7 +15,7 @@ import {
   cratesInCone,
   damageCrate,
   nearestCrate,
-} from "../../src/game/crates.ts";
+} from "../../engine/game/crates.ts";
 import {
   clearStage,
   equipRangedSidearm,

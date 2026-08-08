@@ -5,7 +5,7 @@ issue with the output of the failing command.
 
 ## Building
 
-### `extract-source-data: src/version.ts (…) disagrees with package.json (…)`
+### `extract-source-data: engine/version.ts (…) disagrees with package.json (…)`
 
 The embedded engine version and the manifest drifted. Never edit versions by
 hand — `scripts/update-versions.sh vX.Y.Z` rewrites all of them atomically.
@@ -141,4 +141,4 @@ dedicated server on every start.
 
 Load the app with `?debug` appended to the URL to get debug-level console
 output. All log levels are always captured in an in-memory buffer
-(`recentLogs()` in `src/output.ts`) regardless of the flag.
+(`recentLogs()` in `engine/output.ts`) regardless of the flag.

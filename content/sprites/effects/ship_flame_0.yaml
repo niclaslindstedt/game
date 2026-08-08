@@ -4,7 +4,7 @@ family: effects
 size: [10, 8]
 description: >
   The garage ship's engine flame, frame one — lit only while the SHIP
-  vehicle's `thrust` is above zero (src/game/vehicles.ts). The flying
+  vehicle's `thrust` is above zero (engine/game/vehicles.ts). The flying
   minigame's throttle is what turns it on; parked in the garage it never
   shows.
 subject:

@@ -18,7 +18,7 @@
 # with its own names.
 #
 # A READOUT, NEVER A CONTROL: the player has a pedal and a wheel, and the box
-# changes up on its own at the redline (`src/game/drive/drivetrain.ts`).
+# changes up on its own at the redline (`engine/game/drive/drivetrain.ts`).
 region: drive_dash
 order: 1
 kind: icon

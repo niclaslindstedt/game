@@ -1,7 +1,7 @@
 ---
 title: Classify generated variants through gradeBase
 date: 2026-07-10
-scope: src/game/defs/
+scope: engine/game/defs/
 concepts: [variants, grade-base, classification]
 ---
 

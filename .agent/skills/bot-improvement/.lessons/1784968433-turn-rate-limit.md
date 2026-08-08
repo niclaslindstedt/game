@@ -1,12 +1,12 @@
 ---
 title: A turn-rate limiter must only hold back NEAR-180° reversals, and never commit to one tick's sampled heading
 date: 2026-07-25
-scope: src/game/bot/nav.ts
+scope: engine/game/bot/nav.ts
 concepts: [turn-rate, heading, commitment]
 ---
 
 Killing the autopilot's left/right/up/down jitter (`limitTurnRate` in
-`src/game/bot/nav.ts`: choosing a direction starts a `turnCooldownMs` clock and
+`engine/game/bot/nav.ts`: choosing a direction starts a `turnCooldownMs` clock and
 an about-face has to wait it out, standing still meanwhile) has two traps, both
 measured on `goodco_hq` easy, seeds 1–5:
 

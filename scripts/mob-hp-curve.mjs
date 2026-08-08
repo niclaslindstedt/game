@@ -12,7 +12,7 @@
 //     is authored against, so the curve is smooth, not a random spawn sample),
 //   - the mob's physical armor reduction,
 //   - the hero's real per-hit / DPS output at that level, with the gear the
-//     analytic progression sim (src/sim/analytic.ts) actually equipped,
+//     analytic progression sim (engine/sim/analytic.ts) actually equipped,
 //   - HITS REQUIRED to fell one reference minion (mobHp ÷ the hero's landed
 //     blow after mob armor) — the headline number, "4.7 hits to kill".
 //
@@ -43,12 +43,12 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 const load = (rel) => import(pathToFileURL(path.join(root, rel)).href);
 
-const { simulateProgression } = await load("src/sim/analytic.ts");
-const { DIFFICULTY_ORDER } = await load("src/game/defs/difficulties.ts");
-const { mobHpScaleFor, mobLevelFor } = await load("src/game/menace.ts");
-const { mobArmorReduction } = await load("src/game/loot.ts");
-const { LEVELING } = await load("src/game/config/index.ts");
-const { STAT_BUILDS } = await load("src/game/builds.ts");
+const { simulateProgression } = await load("engine/sim/analytic.ts");
+const { DIFFICULTY_ORDER } = await load("engine/game/defs/difficulties.ts");
+const { mobHpScaleFor, mobLevelFor } = await load("engine/game/menace.ts");
+const { mobArmorReduction } = await load("engine/game/loot.ts");
+const { LEVELING } = await load("engine/game/config/index.ts");
+const { STAT_BUILDS } = await load("engine/game/builds.ts");
 
 // ---- Flags ---------------------------------------------------------------------
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The QUEST pipeline. Compiles the two hand-authored catalogs that carry the
 // field's errands — `content/quests/<id>.yaml` and `content/quest-givers.yaml`
-// — into `src/generated/quests.ts`, which `src/game/defs/quests.ts` re-exposes
+// — into `engine/generated/quests.ts`, which `engine/game/defs/quests.ts` re-exposes
 // as QUEST_DEFS and QUEST_GIVER_DEFS. It:
 //   1. harvests the ids every quest may name — levels, enemies, sprites,
 //      uniques, powerups, difficulties — straight from the content tree,
@@ -243,7 +243,7 @@ if (errors.length > 0) {
 }
 
 // ---- Emit ------------------------------------------------------------------
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 
 const json = (value) => JSON.stringify(value, null, 2);
@@ -273,7 +273,7 @@ export const GENERATED_CONVERSATIONS: Record<string, ConversationDef> = ${json(
 );
 
 console.log(
-  `wrote src/generated/quests.ts — ${Object.keys(quests).length} quests from ` +
+  `wrote engine/generated/quests.ts — ${Object.keys(quests).length} quests from ` +
     `${Object.keys(questGivers).length} givers, ` +
     `${Object.keys(conversations).length} conversations`,
 );

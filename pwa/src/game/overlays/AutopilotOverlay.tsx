@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // AUTO PILOT HUD — shown while the engine autopilot flies the hero (see
-// src/game/autopilot.ts and the GameScreen wiring). Three pieces:
+// engine/game/autopilot.ts and the GameScreen wiring). Three pieces:
 //
 // - The PANEL: a small rounded control tucked into the top-right HUD column,
 //   directly BELOW the minimap/kill strip (not pinned to the top edge, where

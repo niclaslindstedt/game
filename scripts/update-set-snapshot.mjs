@@ -19,7 +19,7 @@ import { writeSnapshot } from "./snapshot-json.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
+const { SET_DEFS } = await import(engine("engine/game/defs/sets.ts"));
 
 await writeSnapshot(
   engine("tests/content/fixtures/sets-snapshot.json"),

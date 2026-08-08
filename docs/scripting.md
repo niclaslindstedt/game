@@ -53,12 +53,12 @@ the game is running.
 One global, `game`, and everything under it is read-only. A write is an error
 naming the field, not a silent no-op.
 
-|                |                                                                                                                                                                                                                                                                                                                                                            |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `game.config`  | Every tuning table the engine reads, lower-cased at the top level: `game.config.loot`, `game.config.menace`, `game.config.leveling`, `game.config.stats`, `game.config.mob_armor`, `game.config.xp_cap`, … The leaf keys keep their TypeScript spelling (`dropChance`, `mobHpGrowthKnee`), so a name you find in `src/game/config/` is the name you write. |
-| `game.balance` | The DEVELOPER → BALANCE knobs, read live. `game.balance.dropRate`, `.gearQuality`, `.mobArmor`, `.xpGain`, …                                                                                                                                                                                                                                               |
-| `game.run`     | The run this call is about — see below. `nil` outside a run.                                                                                                                                                                                                                                                                                               |
-| `game.log(…)`  | A line into the engine's log buffer, rate-limited to 64 per run so a hook that logs on every kill floods nothing.                                                                                                                                                                                                                                          |
+|                |                                                                                                                                                                                                                                                                                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `game.config`  | Every tuning table the engine reads, lower-cased at the top level: `game.config.loot`, `game.config.menace`, `game.config.leveling`, `game.config.stats`, `game.config.mob_armor`, `game.config.xp_cap`, … The leaf keys keep their TypeScript spelling (`dropChance`, `mobHpGrowthKnee`), so a name you find in `engine/game/config/` is the name you write. |
+| `game.balance` | The DEVELOPER → BALANCE knobs, read live. `game.balance.dropRate`, `.gearQuality`, `.mobArmor`, `.xpGain`, …                                                                                                                                                                                                                                                  |
+| `game.run`     | The run this call is about — see below. `nil` outside a run.                                                                                                                                                                                                                                                                                                  |
+| `game.log(…)`  | A line into the engine's log buffer, rate-limited to 64 per run so a hook that logs on every kill floods nothing.                                                                                                                                                                                                                                             |
 
 `game.run` is the read-only view of the live game, built lazily and only if you
 ask for it:
@@ -93,7 +93,7 @@ end
 
 ## The hooks
 
-Each entry says which file owns it. `src/game/script/hooks.ts` is the one list,
+Each entry says which file owns it. `engine/game/script/hooks.ts` is the one list,
 and `mod/catalog.json` carries a copy for the mod compiler.
 
 ### `progression.lua`
@@ -199,26 +199,26 @@ file.
 content/scripts/*.lua                  ← authored, and the source of truth
         │  scripts/generate-scripts.mjs — compiles each with the real VM
         ▼
-src/generated/scripts.ts               ← the sources, gitignored, rebuilt
+engine/generated/scripts.ts               ← the sources, gitignored, rebuilt
         │
         ▼
-src/game/script/host.ts                ← resolves a hook, calls it, contains it
+engine/game/script/host.ts                ← resolves a hook, calls it, contains it
         │  a mod's scripts/<id>.lua registers ON TOP via registerDefs
         ▼
-src/game/script/bindings.ts            ← the typed call sites the engine uses
+engine/game/script/bindings.ts            ← the typed call sites the engine uses
 ```
 
 Four modules, and the split between them is load-bearing:
 
-- **`src/lib/lua/`** is the VM — generic engine code, no game concepts in it.
+- **`engine/lib/lua/`** is the VM — generic engine code, no game concepts in it.
   Lexer, parser, tree-walking interpreter, sandbox stdlib.
-- **`src/game/script/catalog.ts`** is an IMPORT-FREE LEAF holding what a mod
+- **`engine/game/script/catalog.ts`** is an IMPORT-FREE LEAF holding what a mod
   registered, for the same reason `flags.ts` and `mapgen/blueprints.ts` are
   leaves: `registerDefs` is reachable from the startup path, and the 200 KB
   critical-path budget has no room for a Lua VM. What a mod registers is SOURCE
   TEXT; the compile happens on the first hook call, inside a run.
-- **`src/game/script/env.ts`** builds the read-only views.
-- **`src/game/script/host.ts`** resolves, calls, contains failures, and
+- **`engine/game/script/env.ts`** builds the read-only views.
+- **`engine/game/script/host.ts`** resolves, calls, contains failures, and
   memoizes.
 
 The memo is worth knowing about if you are adding a hook. A hook is a pure
@@ -232,9 +232,9 @@ economy.
 
 Four edits, and the drift test enforces the set:
 
-1. an entry in `src/game/script/hooks.ts`,
+1. an entry in `engine/game/script/hooks.ts`,
 2. the shipped implementation in `content/scripts/<script>.lua`,
-3. the typed call site in `src/game/script/bindings.ts`, with its fallback,
+3. the typed call site in `engine/game/script/bindings.ts`, with its fallback,
 4. `make mod-catalog`, so a mod may name it.
 
 Then a parity case in `tests/content/script_parity_test.ts`. Pick a rule that is

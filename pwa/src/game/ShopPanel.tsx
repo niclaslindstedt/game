@@ -652,7 +652,7 @@ export function ShopPanel({
         </div>
 
         {/* ERRANDS — the rows a running quest put on this counter (see
-            src/game/quests/merchant.ts). Its own section rather than mixed
+            engine/game/quests/merchant.ts). Its own section rather than mixed
             into FOR SALE, because these are not the trader's goods: they exist
             only while somebody is doing the errand that produced them, and
             burying a chain's one purchasable piece among the medkits is how a

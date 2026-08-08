@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // LEVEL-CURVE GENERATOR: compiles `content/leveling.yaml` — the hand-authored
 // XP-per-level table (the single source of truth for the hero level curve) —
-// into `src/generated/leveling.ts` (gitignored, regenerated on build), which
-// the engine's `xpToLevelUp` (src/game/leveling.ts) reads. Validates that the
+// into `engine/generated/leveling.ts` (gitignored, regenerated on build), which
+// the engine's `xpToLevelUp` (engine/game/leveling.ts) reads. Validates that the
 // table covers exactly levels 1..maxLevel−1 with positive finite values, so a
 // gap or typo fails the build instead of silently walling a level.
 //
@@ -20,7 +20,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const { LEVELING } = await import(
-  pathToFileURL(join(root, "src/game/config/leveling.ts")).href
+  pathToFileURL(join(root, "engine/game/config/leveling.ts")).href
 );
 
 const src = readFileSync(join(root, "content/leveling.yaml"), "utf8");
@@ -125,9 +125,9 @@ export const XP_TUNING = {
 } as const;
 `;
 
-const outPath = join(root, "src/generated/leveling.ts");
+const outPath = join(root, "engine/generated/leveling.ts");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, out);
 console.log(
-  `wrote src/generated/leveling.ts — ${values.length} levels (L1 ${values[0]} xp … L${last} ${values[last - 1]} xp)`,
+  `wrote engine/generated/leveling.ts — ${values.length} levels (L1 ${values[0]} xp … L${last} ${values[last - 1]} xp)`,
 );

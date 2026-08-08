@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The POWERUP pipeline. Compiles `content/powerups.yaml` — the hand-authored
 // catalog of every time-limited power a pickup can grant, and the single place
-// their balance is tuned — into `src/generated/powerups.ts`
-// (GENERATED_POWERUPS), which `src/game/defs/abilities.ts` re-exposes as
+// their balance is tuned — into `engine/generated/powerups.ts`
+// (GENERATED_POWERUPS), which `engine/game/defs/abilities.ts` re-exposes as
 // ABILITY_DEFS. It:
 //   1. harvests the sprite stems from the content/sprites tree, so an icon or
 //      projectile sprite that isn't in the atlas fails the build,
@@ -84,9 +84,9 @@ export const GENERATED_POWERUPS: Record<string, AbilityDef> = ${JSON.stringify(
 )} as unknown as Record<string, AbilityDef>;
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/powerups.ts`, out);
 console.log(
-  `wrote src/generated/powerups.ts — ${Object.keys(powerups).length} powerups`,
+  `wrote engine/generated/powerups.ts — ${Object.keys(powerups).length} powerups`,
 );

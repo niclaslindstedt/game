@@ -16,7 +16,7 @@ import {
 } from "@game/core";
 import type { Enemy, GameEvent, GameInput, GameState, Vec2 } from "@game/core";
 // Engine-internal: the seed reveal a fresh run stamps around the spawn.
-import { revealAround } from "../src/game/fog.ts";
+import { revealAround } from "../engine/game/fog.ts";
 
 export const SEED = 42;
 export const DT = 16;
@@ -237,7 +237,7 @@ export function run(
  *
  * Felling a boss no longer resolves on the tick of the blow: the run drops into
  * the `bossDeath` phase and the scripted send-off plays (see
- * `src/game/boss-death.ts`), and only when it ends do `bossDefeated` /
+ * `engine/game/boss-death.ts`), and only when it ends do `bossDefeated` /
  * `bossFled`, the landmark corpse and the last words arrive. So any test that
  * kills a boss and then asserts on the aftermath has to get through the scene
  * first — this is that step, and it collects the events the rite emits on the

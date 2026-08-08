@@ -109,9 +109,9 @@ fi
      [ -f "$f" ] || echo "MISSING: $f"
    done
 
-   # §19.4 — central output module (only if the repo has src/ or lib/)
+   # §19.4 — central output module (only if the repo has engine/ or lib/)
    if [ -d src ] || [ -d lib ]; then
-     ls src/output.* lib/output.* src/output/ lib/output/ internal/output/ 2>/dev/null \
+     ls engine/output.* lib/output.* engine/output/ lib/output/ internal/output/ 2>/dev/null \
        | head -1 | grep -q . || echo "MISSING: central output module (§19.4)"
    fi
 
@@ -161,7 +161,7 @@ fi
 | §11.2 website drift | Regenerate website sources, hand off to `update-website` |
 | §13.5 `prompts/<name>/` has no versioned file | Add `prompts/<name>/1_0_0.md` with the required YAML front matter (`name`, `description`, `version: 1.0.0`) and `## System` / `## User` sections |
 | §15 missing issue / PR templates | Create the templates under `.github/ISSUE_TEMPLATE/` or `.github/PULL_REQUEST_TEMPLATE.md` |
-| §19.4 missing central output module | Add `src/output.<ext>` (or `lib/output.<ext>`) with semantic helpers (`status`, `info`, `warn`, `error`, `header`) and route existing prints through it |
+| §19.4 missing central output module | Add `engine/output.<ext>` (or `lib/output.<ext>`) with semantic helpers (`status`, `info`, `warn`, `error`, `header`) and route existing prints through it |
 | §20.2 test file stem does not end with `_test(s)` / `Test(s)` | Rename the file so the stem matches the regex `_?[Tt]ests?$` |
 | §20.5 source file exceeds 1000 lines | **Preferred:** split the file by concern into sibling modules / helpers. **Common easy case:** if the file also has a §20 inline-test violation, extracting the test block to `tests/<stem>_test.<ext>` usually resolves both at once. **Escape hatch:** add `oss-spec:allow-large-file: <reason>` in a comment within the first 20 lines — the reason must be non-empty and genuinely justify the size (generated code, cohesive state machine, third-party snapshot, inherent rule-catalogue density). |
 | §21.2 `.claude/skills` is not a symlink | Replace it with `ln -s ../.agent/skills .claude/skills` |

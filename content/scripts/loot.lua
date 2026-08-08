@@ -12,7 +12,7 @@
 -- no way to "roll again" from in here. To change the number of draws, change
 -- the item catalog (`content/item_rarity.yaml`) instead.
 --
--- Reads `game.config.loot` (src/game/config/loot.ts, whose numbers come from
+-- Reads `game.config.loot` (engine/game/config/loot.ts, whose numbers come from
 -- `content/item_rarity.yaml`), `game.config.stats` and `game.balance`.
 
 local LOOT = game.config.loot

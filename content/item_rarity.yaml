@@ -1,6 +1,6 @@
 # ITEM RARITY — the tier ladder (the Diablo ladder) and every knob of the
 # rarity economy, per tier. This file is the source of truth — compiled into
-# `src/generated/items.ts` by `scripts/generate-items.mjs` (`make levels` /
+# `engine/generated/items.ts` by `scripts/generate-items.mjs` (`make levels` /
 # `make assets`); the engine reads it through the `TIERS`/`TIER_ROLL_ORDER`
 # exports (defs/equipment.ts) and the config `LOOT` rarity knobs.
 #

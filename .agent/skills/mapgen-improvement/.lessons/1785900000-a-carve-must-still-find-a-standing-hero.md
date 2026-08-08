@@ -1,7 +1,7 @@
 ---
 title: A carve must still find a hero who never moves
 date: 2026-07-31
-scope: src/game/mapgen/
+scope: engine/game/mapgen/
 concepts: [carve, verification, balance-test]
 ---
 

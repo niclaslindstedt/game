@@ -59,7 +59,7 @@ grow into a player manual or marketing page.
 
 | Changed files / scope | README section(s) to update |
 |---|---|
-| Engine public API (`src/index.ts`) | **Usage** |
+| Engine public API (`engine/index.ts`) | **Usage** |
 | Make targets / npm scripts (`Makefile`, `package.json` scripts) | **Usage** (and `CONTRIBUTING.md`, `AGENTS.md` per the AGENTS.md sync table) |
 | Deploy slots / pages workflow (`.github/workflows/pages.yml`, `pwa/pwa-plugin.ts` `DEPLOY_SLOTS`) | **Play** table (the `/`, `/preview/`, `/branch/` links) |
 | Config knobs: env vars, URL params | **Configuration** |

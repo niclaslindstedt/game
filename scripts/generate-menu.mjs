@@ -4,7 +4,7 @@
 // tree, its row order, labels, icons and help lines — into the catalog the
 // title screen builds its rows from.
 //
-// It emits into `pwa/src/generated/` rather than `src/generated/`, for the same
+// It emits into `pwa/src/generated/` rather than `engine/generated/`, for the same
 // reason the sound bank does: a menu is an APP concern. The engine has no idea
 // the game has a title screen, and parking the tree in its tree would hand
 // every consumer of `@game/core` a pile of chrome it never reads.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE GARAGE DOOR and the car that drives through it (src/game/vehicles.ts,
+// THE GARAGE DOOR and the car that drives through it (engine/game/vehicles.ts,
 // story.ts stepDoors/openDoor): an APPROACH door opens for anybody near — on
 // foot or at the wheel — with no key; opening drops its obstacle chain, tells
 // the nav grid (`obstaclesVersion`), and fires `garageDoorOpened`; and on a

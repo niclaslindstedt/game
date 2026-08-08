@@ -3,7 +3,7 @@
 // the garage handed across, and then the road.
 //
 // IT IS THE SEAM MADE LEGIBLE. Leaving the hub is a half-second dim now (see
-// DEPARTURE, src/game/vehicles.ts): the bumper touches the tarmac, the picture
+// DEPARTURE, engine/game/vehicles.ts): the bumper touches the tarmac, the picture
 // goes dark, and the frame after that is a wholly different game — a side-on
 // road at 120 mph with its own dashboard, its own controls and its own way of
 // ending. Cut to it cold and the first thing a player does is spend a second

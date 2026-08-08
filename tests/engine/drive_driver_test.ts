@@ -25,8 +25,8 @@ import {
   DRIVE_OUTCOME,
   type DriveParams,
   type DriveState,
-} from "../../src/game/drive/index.ts";
-import { laneRunsWithHero } from "../../src/game/drive/traffic.ts";
+} from "../../engine/game/drive/index.ts";
+import { laneRunsWithHero } from "../../engine/game/drive/traffic.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,

@@ -1,13 +1,13 @@
 ---
 title: Dormant "life" behaviors ride moveEnemy's asleep branches + per-mob parked rng
 date: 2026-07-20
-scope: src/game/working.ts
+scope: engine/game/working.ts
 concepts: [enemy-behavior, dormant, rng]
 ---
 
 Making a map feel STAFFED (workers pottering, WoW-style patrols, alarm
 sentries) is a DORMANT-branch concern, not a new AI system. The pattern that
-landed (`src/game/working.ts`, GOODCO HQ):
+landed (`engine/game/working.ts`, GOODCO HQ):
 
 - **Hook only the asleep paths of `moveEnemy`** — the minion "else" tail and
   the elite `!awake` early-return. Waking (aggro radius + LOS, wounds), the

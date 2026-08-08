@@ -26,23 +26,23 @@ node scripts/skill-lessons.mjs weapon-system --concepts=ammo,uniques
 | Piece | File |
 | --- | --- |
 | **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
-| **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `src/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named) |
+| **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `engine/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named) |
 | Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses) | `content/item_rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT` |
 | MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item_quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
-| Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `src/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
-| Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `src/game/defs/grades.ts` |
-| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`) | `src/game/config/loot.ts` (`LOOT`) |
-| Chain/cooldown/damage globals | `src/game/config/combat.ts` (`WEAPON`) |
-| Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
-| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
-| Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `src/game/defs/uniques.ts` |
+| Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `engine/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
+| Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `engine/game/defs/grades.ts` |
+| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`) | `engine/game/config/loot.ts` (`LOOT`) |
+| Chain/cooldown/damage globals | `engine/game/config/combat.ts` (`WEAPON`) |
+| Which bases drop on a level (thematic pools) | `engine/game/defs/levels/<level>.ts` `loot.weaponPool` |
+| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `engine/game/defs/enemies/<roster>.ts` |
+| Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `engine/game/defs/uniques.ts` |
 | The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
-| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items/rolling.ts`, `src/game/loot.ts`, `src/game/config/loot.ts` |
+| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `engine/game/items/rolling.ts`, `engine/game/loot.ts`, `engine/game/config/loot.ts` |
 | World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
-| The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items/rolling.ts` (`rollEquipment`), `src/game/items/requirements.ts` (`meetsLevelReq`) |
-| Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
-| Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
-| Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step/` (`weapon.ts`, `projectiles.ts`) |
+| The roll pipeline (tier → ilvl → affixes), equip gates | `engine/game/items/rolling.ts` (`rollEquipment`), `engine/game/items/requirements.ts` (`meetsLevelReq`) |
+| Kill → drop funnel (pity rule, tierDrops payout) | `engine/game/loot.ts` |
+| Monster level stamping | `engine/game/create.ts` (`spawnEnemy`), `engine/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
+| Firing + projectile behaviors (spread/pierce/homing/chain) | `engine/game/step/` (`weapon.ts`, `projectiles.ts`) |
 | Icons (12×12) | one YAML per icon in `content/sprites/icons/` |
 | Projectile sprites (8×8) | one YAML per sprite in `content/sprites/effects/` |
 | Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `pwa/scripts/weapon-swing.mjs` |
@@ -327,7 +327,7 @@ crit-AoE stays un-themed (it carries no weapon attribution).
 UNIQUES are the top of the loot ladder above rolled rares: hand-authored named
 drops (`content/items/{set,unique,legendary,artifact}/<id>.yaml`, `kind:
 unique` — the directory is the minted tier; types + merge validation in
-`src/game/defs/uniques.ts`) with a FIXED bonus block on a REAL catalog
+`engine/game/defs/uniques.ts`) with a FIXED bonus block on a REAL catalog
 base — no rolled affixes. Each drop still rolls a small ±band on the base
 damage/armor (`UNIQUE.baseRollBand`, ±10%) so copies differ and a better roll
 is worth chasing; the bonuses stay identical. They mint via `mintUnique`

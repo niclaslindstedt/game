@@ -170,7 +170,7 @@ Understand what changed so you can write an accurate commit message and PR title
 
 **The changelog and version bump come from `.changes/unreleased/` fragments, not from commit messages or PR titles.** Every PR owes exactly one of two things: a fragment when the branch changes something a player would notice, or the `no-changelog` label when it doesn't. CI's `changeset` job fails a PR that gives neither.
 
-**Load the `changelog` skill and follow it** — it owns the fragment format, the type→semver mapping, when the label is the honest answer, and the traps (`src/` and `pwa/src/` are not skip-listed, so even a comment-only change there needs the label). Do not write a fragment from memory: the rules are restated in enough places already, and the one that drifted is the one-sentence body.
+**Load the `changelog` skill and follow it** — it owns the fragment format, the type→semver mapping, when the label is the honest answer, and the traps (`engine/` and `pwa/src/` are not skip-listed, so even a comment-only change there needs the label). Do not write a fragment from memory: the rules are restated in enough places already, and the one that drifted is the one-sentence body.
 
 ## Step 5: Stage & Commit
 

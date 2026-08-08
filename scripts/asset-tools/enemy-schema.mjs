@@ -6,7 +6,7 @@
 // is the set of live def ids the generator harvests from the engine catalogs
 // PLUS the enemy set itself, so a typo in an enemy YAML surfaces at
 // `npm run levels`, not at runtime. The `EnemyDef` contract this checks against
-// is src/game/defs/enemies/types.ts.
+// is engine/game/defs/enemies/types.ts.
 
 /** Scalar fields every enemy must declare (a missing one is a hard error). */
 export const REQUIRED_FIELDS = [
@@ -28,7 +28,7 @@ const ROLES = new Set(["minion", "elite", "boss"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
 /**
  * The BOSS ABILITY CATALOG, mirrored from `BossAbility` in
- * src/game/defs/enemies/abilities.ts: ability id → the fields it requires
+ * engine/game/defs/enemies/abilities.ts: ability id → the fields it requires
  * BEYOND the universal `windupMs` / `cooldownMs`. Keep the two in step — a new
  * ability adds its row here, and the build then refuses a boss that authors it
  * half-written.
@@ -131,7 +131,7 @@ const OPTIONAL_ABILITY_FIELDS = {
 
 /**
  * The four colours every `look` kit owes (`AbilityLook`, mirrored from
- * src/game/defs/abilities.ts). An ability's kit is what makes two mobs casting
+ * engine/game/defs/abilities.ts). An ability's kit is what makes two mobs casting
  * the SAME primitive read as nothing alike, so a half-written one is a
  * signature that silently falls back to the neutral default — visible only to
  * somebody who already knew what it was supposed to look like.

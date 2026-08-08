@@ -27,7 +27,7 @@ import {
   createGame,
   levelDef,
 } from "@game/core";
-import { UNIQUE_IDS } from "../../src/game/defs/uniques.ts";
+import { UNIQUE_IDS } from "../../engine/game/defs/uniques.ts";
 
 import { applyMods, takeModFlags } from "../../scripts/mod-support.mjs";
 
