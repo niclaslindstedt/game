@@ -2311,7 +2311,9 @@ html.app-locked body {
    The starfield backdrop stays put on the screen behind it. */
 .title-content {
   position: relative;
-  z-index: 1;
+  /* Over the sky, its glare and the sub-screen wash — the title band map above
+     `.title-sky` has the whole ladder. */
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2356,6 +2358,54 @@ html.app-locked body {
 .title-content > * {
   flex-shrink: 0;
   max-width: 100%;
+}
+
+/* ---- THE TITLE SCREEN'S LAYER BANDS ---------------------------------------
+   `.title-screen` is `position: fixed`, so it is a stacking context and every
+   band below is resolved inside it. Low to high:
+
+     0     THE SKY (`.title-sky`) — the starfield, the twinkles, the asteroid
+           belt, all eight planets and the sun. A stacking context OF ITS OWN,
+           which is the whole point of the wrapper: the driver sorts the bodies
+           against each other with a wide inline z-band (SUN_Z ± Z_SPREAD in
+           title-sky.ts — 150..850, wide because z-index is an integer and two
+           solid worlds a hair apart in depth must never round onto the same
+           index), and inside a stacking context those hundreds are private.
+           Flattened, the entire solar system is one band down here.
+     1     the glare (`.title-sun-glare`) — the warm wash the sun bleeds over
+           the finished sky. Screen-blended, so it must stay OUT of the sky's
+           group: `mix-blend-mode` only reaches the backdrop of its own
+           stacking context, and half of what it is lighting up is the title
+           screen's background gradient.
+     2     the store's raining-coin backdrop (`.store-backdrop`)
+     3     the corner stamp (`.title-footer`)
+     4     the sub-screen wash (`.title-plate`) — dims the sky, and only the sky
+     5     the menu column (`.title-content`)
+     40    the one-line prompt (`.pixel-prompt`)
+     70    the full-screen browsers the menu raises — the SCREENSHOT gallery,
+           the trophy shelf, the LOST & FOUND, the arsenal, the effects gallery
+           (`.arsenal-overlay`, `.achievements-overlay`, `.effects-gallery`).
+           They are shared with the run, where the game shell's own band map
+           applies instead; 70 is what they wear out here.
+     980   the supernova (`.sun-boom`) and 990 its white-out
+           (`.sun-boom-whiteout`) — the one thing that paints over the menu.
+
+   THE REGRESSION THIS BANDING FIXES: the sky's inline band was not wrapped, so
+   its 150..850 competed directly with these, and everything from the sub-screen
+   wash up to the SCREENSHOT gallery was painted over by whichever planet
+   happened to be crossing. `tests/overlay_layers_test.ts` pins the order.
+   Keep a new title-screen surface inside a band rather than out-bidding one. */
+.title-sky {
+  position: absolute;
+  inset: 0;
+  /* Positioned AND banded — the two together are what make this a stacking
+     context, and the stacking context is the only reason this element exists.
+     Never drop either. */
+  z-index: 0;
+  /* Every layer in here is decoration. The sun's hidden gesture hit-tests its
+     rect from a window listener rather than taking presses (see `.title-sun`),
+     so nothing under this roof needs to be a target. */
+  pointer-events: none;
 }
 
 /* A tiled pixel starfield, layered from three drifting gradient sheets. */
@@ -2724,21 +2774,6 @@ html.app-locked body {
   --sky-rim: rgba(180, 214, 240, 0.55);
 }
 
-/* Stacking: the planets and sun straddle a z-band the driver sets inline
-   (SUN_Z ± depth, so the far half of each orbit tucks behind the sun); lift the
-   menu, the warm glare wash and the sun blast above that band so the UI stays
-   readable and the detonation still spills over the sky. The band is WIDE
-   (SUN_Z is 500, spread ±350 — see title-sky.ts) because z-index is an integer
-   and the bodies are solid: a narrow band rounds two overlapping worlds onto
-   the same index and the farther one can end up drawn in front. */
-.orbits .title-content {
-  z-index: 950;
-}
-
-.orbits .title-sun-glare {
-  z-index: 900;
-}
-
 /* The Easter-egg sun. Position and opacity are set each frame by the driver;
    the styles here are just its look — a glowing core,
    rotating rays (::before), a lens streak (::after) and a bloom in the
@@ -2828,10 +2863,15 @@ html.app-locked body {
 
 /* A warm wash over the whole backdrop that swells as the sun crests and is
    centred on the sun (--glare-x/--glare-y, set by the driver) — the "glare"
-   bleeding across the sky. Screen-blended and behind the menu. */
+   bleeding across the sky. Screen-blended and behind the menu, which is why it
+   sits just OVER the sky rather than inside it: a blend only reaches the
+   backdrop of its own stacking context, and half of what this one lights up is
+   the title screen's background gradient. See the title band map above
+   `.title-sky`. */
 .title-sun-glare {
   position: absolute;
   inset: 0;
+  z-index: 1;
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
@@ -3181,8 +3221,9 @@ html.app-locked body {
    title-sky.ts — keep these two in step), so this is a static spot and the
    driver writes no live position for it: a per-frame custom property on the
    shared parent would invalidate the style of every node in the title screen
-   each frame. Above the raised menu (see .orbits .title-content) so the blast
-   spills over the whole screen rather than behind it. */
+   each frame. Above the menu column (title band map above `.title-sky`) so the
+   blast spills over the whole screen rather than behind it — it is the one
+   surface on this screen that is meant to paint over the UI. */
 .sun-boom {
   position: absolute;
   left: 50%;
@@ -3426,11 +3467,17 @@ html.app-locked body {
 /* The screen-space white-out: for one beat the light swallows the whole title
    screen, menu and all, instead of blooming behind it. Added to the screen
    rather than laid over it, so the fade-out reads as light dying away and never
-   as a grey veil across the menu. */
+   as a grey veil across the menu.
+
+   IT HAS TO CLEAR THE MENU COLUMN, or "menu and all" is exactly what it does
+   not do — it spent a while stranded at 19, under a menu that had been lifted
+   to clear the sky, and the white-out simply bloomed behind the rows it was
+   supposed to swallow. It rides just over the blast; both are `screen`, which
+   is commutative, so which of the two is on top changes no pixel. */
 .sun-boom-whiteout {
   position: absolute;
   inset: 0;
-  z-index: 19;
+  z-index: 990;
   pointer-events: none;
   background: #fff;
   /* Invisible at rest — see the note on `.sun-boom span`. */
@@ -3745,13 +3792,14 @@ html.app-locked body {
 /* A soft dark wash over the sky on sub-screens only. The starfield backdrop
    drives planets and the sun through the middle of the viewport, which is
    exactly where a settings column's text sits — a row label on the sun was
-   unreadable. Sits above the whole sky band (bodies z 1..9, the glare z 12)
-   and below the menu column (z 15), and never takes a pointer event, so the
-   sun's own hit-tested tap gesture is untouched. */
+   unreadable. Sits above the whole sky (the bodies, the sun and its glare all
+   flatten into bands 0 and 1 — see the title band map above `.title-sky`) and
+   below the menu column, and never takes a pointer event, so the sun's own
+   hit-tested tap gesture is untouched. */
 .title-plate {
   position: absolute;
   inset: 0;
-  z-index: 13;
+  z-index: 4;
   pointer-events: none;
   background: radial-gradient(
     ellipse 62% 78% at 50% 50%,
@@ -4856,7 +4904,9 @@ html.app-locked body {
   bottom: max(0.6rem, env(safe-area-inset-bottom));
   display: flex;
   justify-content: flex-end;
-  z-index: 1;
+  /* Over the sky (a planet crossing the corner used to paint over the version
+     stamp), under the sub-screen wash. Title band map above `.title-sky`. */
+  z-index: 3;
 }
 
 /* The version stamp as a LINK — the `/preview/` and `/branch/` slots only,
@@ -11533,8 +11583,10 @@ canvas.tier-artifact {
    unlock toast) has the game shell's layer bands to answer to: it must cover
    the screen-space FX layers (90..96) and the pause menu it may have been
    opened from, so it joins the MODAL band and wins on DOM order (GameScreen
-   mounts it after the pause overlay). Out in the title menu nothing else
-   claims a band, so the 70 above stands. */
+   mounts it after the pause overlay). Out in the title menu the 70 above
+   stands: the only thing that ever out-bid it there was the solar system, and
+   that is now flattened into one band of its own (see the title band map above
+   `.title-sky`). */
 .game-screen .achievements-overlay {
   z-index: 100;
 }
@@ -12463,12 +12515,13 @@ canvas.tier-artifact {
   opacity: 0.4;
 }
 
-/* The backdrop layer: over the dimmed sky, under the menu column
-   (.title-content is z-index 1), never eating pointer events. */
+/* The backdrop layer: over the dimmed sky, under the sub-screen wash and the
+   menu column (title band map above `.title-sky`), never eating pointer
+   events. */
 .store-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 2;
   overflow: hidden;
   pointer-events: none;
 }

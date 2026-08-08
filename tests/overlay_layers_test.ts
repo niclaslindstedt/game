@@ -62,6 +62,34 @@ const ABOVE_MODALS = [
 /** Chrome anchored to the running game — a modal covers it. */
 const RUN_CHROME = [".area-caption", ".pickup-card", ".pickup-feed"];
 
+/** The declaration block of the top-level rule for exactly `selector`. */
+function ruleBody(selector: string): string {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const rule = new RegExp(`(^|\\n)${escaped}\\s*\\{([^}]*)\\}`).exec(CSS);
+  expect(rule, `no rule for ${selector}`).not.toBeNull();
+  return rule?.[2] ?? "";
+}
+
+/** The full-screen browsers the TITLE menu raises over itself. */
+const TITLE_BROWSERS = [
+  ".arsenal-overlay",
+  ".achievements-overlay",
+  ".effects-gallery",
+];
+
+/** Everything the title screen paints over its own sky. */
+const OVER_THE_SKY = [
+  ".title-sun-glare",
+  ".store-backdrop",
+  ".title-footer",
+  ".title-plate",
+  ".title-content",
+  ".pixel-prompt",
+  ...TITLE_BROWSERS,
+  ".sun-boom",
+  ".sun-boom-whiteout",
+];
+
 describe("game shell layer bands", () => {
   it("puts every modal above every screen-space FX layer", () => {
     const fxTop = Math.max(...FX_LAYERS.map(bandOf));
@@ -176,5 +204,70 @@ describe("game shell layer bands", () => {
     expect(bandOf(".demo-exit-overlay")).toBeGreaterThan(
       bandOf(".demo-exit-catch"),
     );
+  });
+});
+
+describe("title screen layer bands", () => {
+  // THE REGRESSION THESE PIN: the title backdrop's solar system sorts its
+  // bodies with a WIDE inline z-band (SUN_Z ± Z_SPREAD in title-sky.ts, i.e.
+  // 150..850 — wide on purpose, because z-index is an integer and two solid
+  // worlds a hair apart in depth must not round onto the same index). Those
+  // numbers used to be written into the title screen's own stacking context,
+  // where they beat every band the menu had: the SCREENSHOT gallery, the
+  // trophy shelf, the LOST & FOUND and the arsenal all sit at 70, so a planet
+  // crossing the middle of the screen drew straight over the picture being
+  // viewed. `.title-sky` makes the band private.
+
+  it("keeps the sky a stacking context, so its band stays private", () => {
+    const sky = ruleBody(".title-sky");
+    // Positioned AND banded — either one alone is not a stacking context, and
+    // without one the whole 150..850 leaks back out onto the menu.
+    expect(sky, ".title-sky must be positioned").toMatch(
+      /position:\s*(absolute|relative|fixed)/,
+    );
+    expect(bandOf(".title-sky")).toBe(0);
+  });
+
+  it("paints every title surface over the sky", () => {
+    const sky = bandOf(".title-sky");
+    for (const selector of OVER_THE_SKY) {
+      expect(
+        bandOf(selector),
+        `${selector} must clear the sky`,
+      ).toBeGreaterThan(sky);
+    }
+  });
+
+  it("stacks the menu column over the sub-screen wash it reads against", () => {
+    // The wash exists so a settings row's label never sits on the sun. It has
+    // to dim the sky and nothing else: over the glare and the store's coins,
+    // under the column whose text it is there to make readable.
+    expect(bandOf(".title-plate")).toBeGreaterThan(bandOf(".title-sun-glare"));
+    expect(bandOf(".title-plate")).toBeGreaterThan(bandOf(".store-backdrop"));
+    expect(bandOf(".title-content")).toBeGreaterThan(bandOf(".title-plate"));
+  });
+
+  it("raises every full-screen browser over the menu it was opened from", () => {
+    for (const selector of TITLE_BROWSERS) {
+      expect(
+        bandOf(selector),
+        `${selector} must cover the menu column`,
+      ).toBeGreaterThan(bandOf(".title-content"));
+    }
+    expect(bandOf(".pixel-prompt")).toBeGreaterThan(bandOf(".title-content"));
+  });
+
+  it("lets the supernova swallow the menu, white-out and all", () => {
+    // The blast is the ONE title surface meant to paint over the UI — and the
+    // white-out is the half that kept being forgotten: left in a low band while
+    // the menu was lifted to clear the sky, it bloomed BEHIND the rows it is
+    // supposed to swallow.
+    const browserTop = Math.max(...TITLE_BROWSERS.map(bandOf));
+    for (const selector of [".sun-boom", ".sun-boom-whiteout"]) {
+      expect(
+        bandOf(selector),
+        `${selector} must clear the whole title screen`,
+      ).toBeGreaterThan(browserTop);
+    }
   });
 });

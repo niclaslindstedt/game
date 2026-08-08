@@ -257,8 +257,7 @@ const DEPTH_FADE = 0.32;
 
 /**
  * The sun's own z-index in the sky band; planets straddle it by depth so the
- * far ones tuck behind and the near ones ride in front. Must stay below the
- * menu content (see .title-content z-index in styles.css).
+ * far ones tuck behind and the near ones ride in front.
  *
  * THE BAND IS DELIBERATELY COARSE-FREE. z-index is an integer, so the depth
  * band has to be wide enough that two bodies overlapping on screen never round
@@ -266,6 +265,15 @@ const DEPTH_FADE = 0.32;
  * separated nothing, ties fell back to DOM order, and a farther world could
  * draw over a nearer one. Nothing noticed while the discs were translucent;
  * everything notices now that they are solid.
+ *
+ * AND IT IS PRIVATE, which is what lets it be this wide. Every element these
+ * numbers land on lives inside `.title-sky`, a stacking context — so the whole
+ * band flattens to ONE band (0) as far as the rest of the title screen is
+ * concerned. Widen it freely; just never write one of these numbers onto
+ * anything outside that wrapper, or it starts bidding against the menu. (It
+ * used to: unwrapped, 850 beat the SCREENSHOT gallery's 70 and a planet drew
+ * straight over the picture being viewed. See the title band map in
+ * styles.css.)
  */
 const SUN_Z = 500;
 

@@ -1371,6 +1371,21 @@ one another. Two things may still take alpha off, and both are occlusions
 rather than shading: a body passing behind the sun, and the last of a superior
 world's exit — spent only after the exposure has already taken it to black.
 
+**THE DEPTH SORT IS A PRIVATE MATTER, AND THE WRAPPER IS WHAT MAKES IT ONE.**
+Which body is in front is decided by writing each one's depth into its
+`z-index` (`SUN_Z ± Z_SPREAD`, 150..850). That band has to be WIDE — z-index is
+an integer, and two solid worlds a hair apart in depth must never round onto the
+same index, or the tie falls back to DOM order and the farther one can draw in
+front. Wide is also the danger: those are the same numbers the app's own
+surfaces are banded with, and unwrapped they out-bid every one of them — the
+SCREENSHOT gallery, the trophy shelf, the LOST & FOUND and the arsenal all sit
+at 70, so a planet crossing the middle of the screen painted straight over the
+picture being viewed. So the whole sky lives inside `.title-sky`, a stacking
+context, and flattens to a single band as far as the rest of the title screen is
+concerned. Widen the band freely; never write one of its numbers onto anything
+outside that wrapper. The title screen's full ladder is the band map above
+`.title-sky` in `styles.css`, pinned by `tests/overlay_layers_test.ts`.
+
 **THREE THINGS ARE NOT TO SCALE, AND EACH IS DOCUMENTED WHERE IT IS DONE.**
 Distance (an honest system is empty: Neptune's orbit would be thirteen screens
 out); the size SPREAD (29:1 between Jupiter and Mercury — compressed by a power
