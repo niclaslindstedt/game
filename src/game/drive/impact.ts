@@ -104,6 +104,24 @@ export type Impact = {
   /** Which panel of the HERO's car wore it — `panelAt(along)`, carried so
    * nobody downstream has to re-derive it and disagree. */
   panel: CarPanelId;
+  /**
+   * WHICH WAY THE OTHER THING WAS GOING, along the hero's own heading (world
+   * px/s): negative is coming AT him, positive is going his way.
+   *
+   * CARRIED BECAUSE IT CANNOT BE READ AFTERWARDS. It is the one fact about a
+   * collision that the collision itself destroys — the answer is on the struck
+   * body's velocity, and the very next thing that happens to a struck body is
+   * being SHUNTED, which for a head-on reverses it outright. Anything asking
+   * "were the two of us closing?" downstream of `shunt` gets the post-impact
+   * answer and, on the hardest collision this road can produce, exactly the
+   * wrong one (`eject.ts`'s `headOn`, which read `other.speed` and quietly never
+   * fired).
+   *
+   * The same reasoning that already carries `squareness` and `panel`: the
+   * solver has the number in its hand, so nobody downstream should be
+   * re-deriving it from state that has since moved.
+   */
+  approach: number;
 };
 
 /**
@@ -252,6 +270,9 @@ export function solveImpact(
     along: along * carDir,
     squareness: alongNose,
     panel: panelAt(along * carDir),
+    // Read onto the hero's own heading, so the sign means the same thing on the
+    // leg out and the leg home.
+    approach: bodyVel.x * carDir,
   };
 }
 

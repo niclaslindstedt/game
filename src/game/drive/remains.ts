@@ -59,12 +59,33 @@ const HALF_BODY = 24;
  * out loud.
  */
 export function remainForce(joules: number): number {
-  return joules / (DRIVE.impact.wearJoules * DRIVE.gore.splitJoules);
+  // CLAMPED, for the reason `wreckForce` is and against a worse case: this
+  // prices a collision in a BODY's currency, and a CAR collision priced in one
+  // lands at ten to fifty rather than at one to six. See `DRIVE.gore.maxForce`.
+  return Math.min(
+    DRIVE.gore.maxForce,
+    joules / (DRIVE.impact.wearJoules * DRIVE.gore.splitJoules),
+  );
 }
 
 /** Whether a collision this hard takes a body in two. */
 export function splitsBody(joules: number): boolean {
   return remainForce(joules) >= 1;
+}
+
+/**
+ * …and whether it tears LUMPS off one, which is a HARDER blow again
+ * (`DRIVE.gore.chunkForce`, above the split rather than on it).
+ *
+ * Three rungs, and the middle one is the point of having two lines: under the
+ * split a person is knocked down and bleeds and that is the whole event; between
+ * the two they are taken in two, with the cut faces open and nothing else;
+ * past this they are opened up and what was inside is all over the road. A
+ * wagon rolling into somebody at walking pace used to throw a length of gut,
+ * which is the one thing out here that read as a bug rather than a collision.
+ */
+export function gibsBody(joules: number): boolean {
+  return remainForce(joules) >= DRIVE.gore.chunkForce;
 }
 
 /** A stable 0→1 off a piece's own seed and a salt — the road's gore has no dice
@@ -135,6 +156,15 @@ export type BurstOptions = {
   /** The body was already off the ground: nothing is caught under the car,
    * because the car is underneath it. */
   airborne?: boolean;
+  /**
+   * …and how much of the lift the pieces keep, AFTER the boost.
+   *
+   * Its own knob rather than a smaller boost, because the two pull apart: a
+   * head-on wants everything thrown FURTHER along the road and LESS high, which
+   * is what a flat, fast, over-in-an-instant burst is made of
+   * (`DRIVE.eject.headOn.liftScale`). One number cannot say both.
+   */
+  liftScale?: number;
 };
 
 export function burstBody(
@@ -148,7 +178,13 @@ export function burstBody(
   const { gore } = DRIVE;
   const boost = options.boost ?? 1;
   const airborne = options.airborne ?? false;
+  const liftScale = options.liftScale ?? 1;
   const force = remainForce(hit.joules);
+  /** Every upward kick in this function goes through here: boosted, scaled, and
+   * then capped, so nothing on this road is ever thrown out of the frame and
+   * back a whole second later (`DRIVE.gore.maxLiftPx`). */
+  const lift = (px: number): number =>
+    Math.min(gore.maxLiftPx, px * boost * liftScale);
   const seed = Math.abs(Math.round(ped.pos.x * 7 + ped.pos.y * 13)) + ped.id;
   const dir = drive.params.direction;
   const carVx = dir * drive.car.speed;
@@ -171,8 +207,9 @@ export function burstBody(
       x: carVx * (airborne ? gore.overRoofCarry * boost : gore.overRoofCarry),
       y: (hit.launch.y * 0.55 + (hash(seed, 11) - 0.5) * 40) * boost,
     };
-    upper.vz =
-      (gore.overRoofLiftPx.base + gore.overRoofLiftPx.perForce * force) * boost;
+    upper.vz = lift(
+      gore.overRoofLiftPx.base + gore.overRoofLiftPx.perForce * force,
+    );
     upper.z = airborne ? ped.z : 4;
     upper.spin = (hash(seed, 13) < 0.5 ? -1 : 1) * (3 + force);
     pieces.push(upper);
@@ -211,10 +248,17 @@ export function burstBody(
   // that has no job but to be in the road afterwards — they scatter, they
   // bounce, they can be run over, and they are what turns one collision into a
   // stretch of tarmac rather than a spot on it.
-  if (gib) {
+  //
+  // …AND ONLY PAST THE GIB LINE. The ladder reads "at the split line, and per
+  // unit of force beyond it" and used to be measured from a standstill, which
+  // paid out `base` at any force at all — so a wagon rolling into somebody at
+  // walking pace put a length of gut on the tarmac. Below the line a person is
+  // knocked down and bleeds, which is what a car that was barely moving does.
+  if (gib && force >= gore.chunkForce) {
+    const over = force - gore.chunkForce;
     const count = Math.min(
       gore.chunks.max,
-      Math.round(gore.chunks.base + gore.chunks.perForce * Math.max(0, force)),
+      Math.round(gore.chunks.base + gore.chunks.perForce * over),
     );
     for (let i = 0; i < count; i++) {
       const chunk = mint(drive, ped, "chunk", cut, seed + i * 31);
@@ -233,10 +277,10 @@ export function burstBody(
           boost,
         y: Math.sin(spread) * reach,
       };
-      chunk.vz =
+      chunk.vz = lift(
         (gore.chunkLiftPx.base + gore.chunkLiftPx.perForce * force) *
-        (0.35 + 0.65 * hash(seed, 67 + i)) *
-        boost;
+          (0.35 + 0.65 * hash(seed, 67 + i)),
+      );
       chunk.z = airborne ? ped.z : 3;
       chunk.spin = (hash(seed, 71 + i) < 0.5 ? -1 : 1) * (4 + force * 2);
       pieces.push(chunk);

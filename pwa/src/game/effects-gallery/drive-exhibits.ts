@@ -191,7 +191,7 @@ function plantBody(
  * demonstration is twenty and takes the car three or four seconds to get
  * through, which is a whole minigame rather than an exhibit. Three rows is
  * enough to show the two things worth looking at — a wall that has no line
- * through it, and what a wagon at 120 does to the front row of one.
+ * through it, and what a wagon at 174 does to the front row of one.
  */
 function plantBlockade(drive: DriveState, ahead: number, rows: number): void {
   const dir = drive.params.direction;
@@ -334,9 +334,16 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 1600,
       shows: "pedestrianHit",
       bank: BODY_SOUNDS,
+      input: throttle(0.6),
       road: (drive) => {
         silence(drive);
-        const speed = openAt(drive);
+        // NOT FLAT OUT, and it stopped being able to be. The LIGHT body shelf
+        // sits under the line where a bumper goes through somebody, and at 174
+        // even a blow taken mostly across the nose is past it — so the exhibit
+        // advertising the cheap thud was demonstrating the wet tear. A hundred
+        // is where a glance is still a glance; the heavy one is the exhibit
+        // below, met square.
+        const speed = openAt(drive, 0.6);
         // OFF THE CAR'S OWN LINE, so the contact normal runs mostly ACROSS the
         // nose and the car barely notices it — the cheap blow a driver who
         // learns to clip rather than centre gets to keep his speed with.
@@ -349,7 +356,7 @@ export function driveExhibits(): DriveExhibit[] {
       icon: "blood_burst_2",
       label: "TAKEN IN TWO",
       blurb:
-        "MET DEAD ON AT 120 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
+        "MET DEAD ON AT 174 - ONE HALF OVER THE ROOF, THE OTHER UNDERNEATH",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -457,6 +464,7 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 1800,
       shows: "trafficHit",
       bank: SCRAPE_SOUNDS,
+      input: throttle(0.48),
       road: (drive) => {
         silence(drive);
         // A CAR THAT HAS BEEN OUT HERE A WHILE, because that is the car this
@@ -465,7 +473,13 @@ export function driveExhibits(): DriveExhibit[] {
         // BEND on the same tick, putting a second sound and a second burst over
         // the one under inspection.
         worn(drive, 0.2, 3);
-        const speed = openAt(drive);
+        // AT HALF THE DIAL, WHICH IS WHERE THE SCRAPE SHELF LIVES. It opened at
+        // the top of the dial and stayed correct until the wagon was re-engined:
+        // the shelves are priced in JOULES and did not move, but flat out is
+        // 174 mph now, and a full-length grind at 174 is a CRUNCH — so the
+        // exhibit advertising the scrape was demonstrating the shelf above it.
+        // Eighty-odd is where trading paint is still trading paint.
+        const speed = openAt(drive, 0.48);
         // HALF INTO THE NEXT LANE. A car passed cleanly a lane apart never
         // touches (the two footprints are 26 px apart and reach 18), so trading
         // paint means exactly what it says: drifting far enough over to catch a
@@ -500,15 +514,19 @@ export function driveExhibits(): DriveExhibit[] {
       showMs: 2200,
       shows: "trafficHit",
       bank: CRUNCH_SOUNDS,
-      input: throttle(0.8),
+      input: throttle(0.52),
       road: (drive) => {
         silence(drive);
-        // AT EIGHTY PERCENT, WHICH IS WHERE THE CRUNCH SHELF LIVES. It opened at
-        // the top of the dial, and the road grew a shelf ABOVE the crunch
-        // (`SMASH_SOUNDS`) that a full-speed rear-ender comfortably reaches —
-        // so the exhibit advertising the crunch was quietly demonstrating the
-        // one above it. The big one has its own exhibit now, below.
-        const speed = openAt(drive, 0.8);
+        // AT NINETY MILES AN HOUR, WHICH IS WHERE THE CRUNCH SHELF LIVES — and
+        // which is what the blurb has always said out loud. It opened flat out,
+        // and the road grew a shelf ABOVE the crunch (`SMASH_SOUNDS`) that a
+        // full-speed rear-ender comfortably reaches, so the exhibit advertising
+        // the crunch was quietly demonstrating the one above it; the big one has
+        // its own exhibit now, below. The SHARE moved again when the wagon was
+        // re-engined — ninety was eight tenths of a 120 mph dial and is barely
+        // half of a 174 one — while the speed the shelf sits at did not move at
+        // all, because the shelves are priced in joules.
+        const speed = openAt(drive, 0.52);
         // THE WHOLE CASCADE, ON PURPOSE — and the one exhibit here that does not
         // isolate its event. A rear-ender at this speed is over the crunch line,
         // over a panel rung and over the first fix rung all at once: the crunch,
@@ -529,7 +547,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-smash",
       icon: "traffic_sedan_dent3",
       label: "THE BIG ONE",
-      blurb: "A STOPPED CAR MET AT 120 - IT FOLDS, IT SPINS, IT EMPTIES",
+      blurb: "A STOPPED CAR MET AT 174 - IT FOLDS, IT SPINS, IT EMPTIES",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -566,7 +584,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-rollover",
       icon: "traffic_suv",
       label: "PUT ON ITS ROOF",
-      blurb: "A TALL ONE CAUGHT ACROSS THE FLANK AT 120 - IT LEAVES THE ROAD",
+      blurb: "A TALL ONE CAUGHT ACROSS THE FLANK AT 174 - IT LEAVES THE ROAD",
       group: "DRIVE",
       keywords: [
         "drive",
@@ -631,6 +649,58 @@ export function driveExhibits(): DriveExhibit[] {
           drive.car.pos.y,
           0,
           FLEET.findIndex((def) => def.id === "traffic_minivan"),
+        );
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-head-on",
+      icon: "traffic_sedan_gore",
+      label: "MET NOSE TO NOSE",
+      blurb: "AN ONCOMING CAR TAKEN HEAD ON - THE DRIVER LEAVES THROUGH IT",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "head-on",
+        "oncoming",
+        "gore",
+        "blood",
+        "eject",
+        "windscreen",
+      ],
+      // Long enough to watch the landing: the torso leaves flat and fast and is
+      // most of a screen up the road before it comes down.
+      showMs: 3000,
+      shows: "windscreenOut",
+      road: (drive) => {
+        silence(drive);
+        // THE ONE COLLISION ON THIS ROAD WITH A GUARANTEED PICTURE, and the
+        // reason it needs an exhibit at all: it is not a rung of any ladder.
+        // Everything else out here is priced on the blow, so what it looks like
+        // depends on how hard it was; a head-on in the OPPOSING LANE always
+        // posts the driver's upper half out through the screen with his insides
+        // after it and leaves the car wearing the rest of him (`eject.ts`,
+        // `headOn`). That is what makes it something a player can decide to do.
+        //
+        // STAGED AT A MODEST SPEED for exactly that reason. Well under half the
+        // dial, and well under the force at which an ejected body would come
+        // apart on the ordinary ladder — the two of them CLOSED, and that is the
+        // whole of the rule.
+        const speed = openAt(drive, 0.4);
+        const pace = DRIVE.trafficSpeedPx.min;
+        // Planted against the CLOSING speed rather than the hero's own, or an
+        // oncoming car arrives at the bumper in half the beat everything else on
+        // this shelf is timed to.
+        plantCar(
+          drive,
+          leadPx(speed + pace) + 40,
+          drive.car.pos.y,
+          pace,
+          6,
+          true,
         );
       },
     },
@@ -847,7 +917,7 @@ export function driveExhibits(): DriveExhibit[] {
       kind: "drive",
       id: "drive-ride",
       icon: "car_wheel_0",
-      label: "THE RIDE AT 120",
+      label: "THE RIDE AT 174",
       blurb:
         "NO COLLISION AT ALL - JUST WHAT A WAGON THIS OLD DOES AT THE TOP END",
       group: "DRIVE",
@@ -891,7 +961,7 @@ export function driveExhibits(): DriveExhibit[] {
       id: "drive-thoughts",
       icon: "walker_old_woman_0",
       label: "THE THINGS THEY CARRY",
-      blurb: "WHAT THE PEOPLE ON THIS ROAD ARE THINKING - AT 120, IN PASSING",
+      blurb: "WHAT THE PEOPLE ON THIS ROAD ARE THINKING - AT 174, IN PASSING",
       group: "DRIVE",
       keywords: [
         "drive",

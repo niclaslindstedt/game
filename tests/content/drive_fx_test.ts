@@ -123,12 +123,25 @@ describe("the road's sound banks", () => {
         vehicleDef(0).massKg * mass.vehicleMult,
       )?.joules ?? 0;
 
-    // A CAREFUL DRIVER, at forty percent of the top end.
-    expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(0.4)));
-    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.4)).id);
-    // …and one holding the throttle down.
+    // A CAREFUL DRIVER — and what that IS in shares of the dial moved when the
+    // wagon was re-engined. Forty percent used to be forty-eight miles an hour
+    // and is now seventy, which is past the line where a bumper goes through
+    // somebody (`DRIVE.gore.splitJoules`, the same line the heavy bank sits on
+    // by design) — so the careful driver was reaching the crunch, correctly, and
+    // the test was calling seventy careful. A quarter of this dial is about
+    // forty-five, which is what the claim always meant.
+    const CAREFUL = 0.26;
+    expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(CAREFUL)));
+    expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(CAREFUL)).id);
+    // …and one PRESSING ON, which moved for the same reason: eighty percent of
+    // this dial is a hundred and forty, and a van rear-ended at a hundred and
+    // forty is off the crunch shelf and onto the smash. A shade over half is the
+    // ninety-six the claim was measured at.
+    const PRESSING_ON = 0.55;
     expect(HARD_BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(1)));
-    expect(CRUNCH_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(0.8)).id);
+    expect(CRUNCH_SOUNDS).toContain(
+      trafficHitSound(10, 4, vanAt(PRESSING_ON)).id,
+    );
 
     // …AND THE TOP SHELF, which is the one that had to exist: there was NO
     // shelf above the crunch, so a clip that cost some paint and a square
@@ -152,7 +165,7 @@ describe("the road's sound banks", () => {
     // …and it asks for the sub to be laid under it, which is the half of
     // "bigger" that turning a synthesized crunch up cannot buy.
     expect(big.sub).toBe(true);
-    expect(trafficHitSound(10, 4, vanAt(0.4)).sub).toBe(false);
+    expect(trafficHitSound(10, 4, vanAt(CAREFUL)).sub).toBe(false);
   });
 
   it("picks the same take for the same spot, and different ones across the road", () => {
@@ -365,8 +378,11 @@ describe("the road's shake", () => {
     // thing on this road.
     const struck = createDriveFx();
     const traded = createDriveFx();
-    // A person met DEAD SQUARE AT THE TOP OF THE DIAL on MEDIUM.
-    driveBodyHit(struck, 0, 0, DRIVE.impact.wearJoules * 0.036, 0);
+    // A person met DEAD SQUARE AT THE TOP OF THE DIAL on MEDIUM — 6.8% of the
+    // car, which is `BODY_FULL_SHARE`'s own figure and moved with the top speed
+    // when the wagon was re-engined (it was 3.6% against a 120 mph dial, and
+    // absorbed energy goes as the SQUARE of the closing speed).
+    driveBodyHit(struck, 0, 0, DRIVE.impact.wearJoules * 0.068, 0);
     // …and paint traded with a car at the same speed, which is a great deal
     // more energy.
     driveTrafficHit(traded, 0, 0, DRIVE.impact.wearJoules * 0.36, 0);

@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -110,6 +110,16 @@ drive-bench:
 # `make town ARGS="--at 0.5"` is one stretch, in detail.
 town:
 	node scripts/town-viewer.mjs $(ARGS)
+
+# LOOK AT AN EFFECT — the effects gallery, captured as a filmstrip PNG. THE
+# review surface for anything visual: every explosion, cleave, gib, aura and
+# road collision is staged as a real fullscreen situation and replayed, so a
+# change to any of them is judged from a picture rather than from the diff.
+# `make gallery ARGS="--only cleave,gib --strip 6"` is two exhibits, six frames
+# each; add `--speed 0.125` for the slow motion a burst needs to be readable.
+# It starts and stops its own dev server unless you pass `--url`.
+gallery:
+	node pwa/scripts/effects-gallery.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

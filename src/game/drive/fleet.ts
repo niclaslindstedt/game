@@ -488,6 +488,19 @@ export const TRAFFIC_VARIANTS = FLEET.length;
  * and every def's `rider` indexes it. */
 export const RIDER_VARIANTS = 6;
 
+/**
+ * …AND HOW MANY DRIVERS — the people behind windscreens, whom the app draws out
+ * of `DRIVER_SPRITES`.
+ *
+ * A SEPARATE POOL FROM THE RIDERS, and the five of them are the whole reason it
+ * exists. A head-on posts the driver's upper half out through the glass and the
+ * gore system cuts THAT ART to do it, so the number here is, quite literally,
+ * how many different torsos the road can throw. It was two — the two riders that
+ * did not look absurd in a saloon — which meant the biggest sight on this road
+ * repeated itself every other time it happened.
+ */
+export const DRIVER_VARIANTS = 5;
+
 /** The def a variant index names. Clamped, because a saved drive or a mod may
  * hand over an index this build no longer has. */
 export function vehicleDef(variant: number): DriveVehicleDef {

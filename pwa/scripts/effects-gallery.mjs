@@ -40,6 +40,24 @@ const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : fallback;
 };
+/**
+ * WHERE THE GAME IS SERVED — and, when nobody says, this script serves it
+ * ITSELF.
+ *
+ * IT USED TO REQUIRE A DEV SERVER SOMEBODY ELSE HAD STARTED, which is the
+ * single reason this tool went unused: the gallery is the review surface for
+ * every visual change in the game, and reaching it meant knowing to run
+ * `npx vite` in another shell on a port this script happened to default to.
+ * A tool that needs a two-step incantation is a tool nobody reaches for at the
+ * moment they need it.
+ *
+ * `--url` still points it at a server that is already up (faster, when you are
+ * iterating and re-capturing); with no `--url` it starts one, waits for it, and
+ * kills it on the way out. It must be the DEV server rather than `vite preview`
+ * — the catalog is read by importing `/src/…` out of the running page, which is
+ * a thing only the dev server can serve.
+ */
+const ownUrl = !args.includes("--url");
 const url = opt("url", "http://localhost:5199");
 // Keep the gallery's own chrome in frame (a UI review of the gallery itself,
 // rather than a sheet of the effects it shows).
@@ -84,6 +102,29 @@ const outDir = resolve(
 );
 mkdirSync(outDir, { recursive: true });
 
+/** Start the dev server, wait for it, and hand back how to stop it. */
+async function serveOurselves() {
+  const { spawn } = await import("node:child_process");
+  const port = new URL(url).port || "5199";
+  const child = spawn("npx", ["vite", "--port", port, "--strictPort"], {
+    cwd: new URL("..", import.meta.url).pathname,
+    stdio: "ignore",
+  });
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    try {
+      if ((await fetch(`${url}/`)).ok) return () => child.kill();
+    } catch {
+      /* not up yet */
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  child.kill();
+  throw new Error(`the dev server never came up on ${url}`);
+}
+
+const stopServer = ownUrl ? await serveOurselves() : () => {};
+
 const browser = await chromium.launch({
   executablePath:
     process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium",
@@ -119,11 +160,29 @@ if (pitch || yaw) {
   );
 }
 
+/** Which exhibit the page is currently showing, so a navigation that would
+ * land where we already are is skipped — see the note on the catalog read. */
+let showing = null;
+
 /** Open the gallery on `id` (empty = the head of the catalog) and settle it. */
 const open = async (id) => {
+  if (showing === id) return;
+  showing = id;
   const q = speed === 1 ? "" : `&speed=${speed}`;
-  await page.goto(`${url}/?effects=${encodeURIComponent(id)}${q}`);
-  await page.locator("canvas.game-canvas").waitFor({ timeout: 20000 });
+  // `domcontentloaded` rather than the default `load`: the very next line waits
+  // for the CANVAS, which is a far better proxy for "the gallery is running"
+  // than every last module having settled. (Measured, it is not faster — the
+  // cost is the app booting, not the navigation event — but it is the honest
+  // signal to wait on.)
+  await page.goto(`${url}/?effects=${encodeURIComponent(id)}${q}`, {
+    waitUntil: "domcontentloaded",
+  });
+  // NINETY SECONDS, and it is the FIRST load that needs them. A cold dev server
+  // optimizes the whole dependency graph on its first page request, which on
+  // this app comfortably outruns a twenty-second wait — so the tool failed on
+  // exactly the run where nobody had a server already warm, which is every run
+  // that starts with `make gallery`.
+  await page.locator("canvas.game-canvas").waitFor({ timeout: 90_000 });
   // The staged diorama fires once on its own after a short opening beat; let
   // that pass so the shot below is the replay, not the opening volley.
   await page.waitForTimeout(1400);
@@ -131,7 +190,17 @@ const open = async (id) => {
 
 // The catalog, read out of the running app so the sheet can never fall behind
 // the code: the gallery's own search-with-no-terms is the whole list.
-await open("");
+//
+// OPENED ON THE FIRST EXHIBIT WE ACTUALLY WANT, not on the head of the catalog.
+// Booting this app in dev costs the better part of fifteen seconds — a few
+// hundred unbundled modules, the sprite atlas, the audio graph — and it is paid
+// per NAVIGATION. Landing on the catalog's first entry purely to read a list of
+// ids and then navigating away spends one of those boots on nothing. Measured:
+// it is a third of the wall clock of a single-exhibit capture, which is the
+// shape every iteration loop actually uses.
+await open(only[0] ?? "");
+// …and the head of the catalog IS the first exhibit when nothing was filtered.
+if (!only.length) showing = null;
 const exhibits = await page.evaluate(async () => {
   const mod = await import("/src/game/effects-gallery/effects-catalog.ts");
   return mod.effectsCatalog().map((e) => ({
@@ -241,6 +310,7 @@ await sheetPage.screenshot({ path: `${outDir}/sheet.png`, fullPage: true });
 await sheetPage.close();
 
 await browser.close();
+stopServer();
 console.log(
   `\nwrote ${shots.length} exhibits × ${frameCount} frames` +
     `${speed === 1 ? "" : ` at ${speed}× speed`}` +

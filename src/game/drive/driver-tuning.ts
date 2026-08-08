@@ -81,13 +81,28 @@ export type DriveBotTuning = {
   /** The lateral error (world px) that asks for full wheel. Small = snappy and
    * prone to overshoot; large = a lazy drift across the lane. */
   steerGainPx: number;
-  /** The speed he settles at on a CLEAR road, as a fraction of the car's
-   * current top (which is itself cut by wear). 1 — flat out — because
-   * `threatSlowFrac` below is what buys the time to thread a crowd, and it does
-   * it where the crowd is: a blanket cruise under the top end pays for the
-   * whole leg to insure the busy fifth of it. (Measured: dropping this to 0.9
-   * costs six seconds a leg on every rung and saves nothing — same bodies, same
-   * ending wear, same arrival rate.) */
+  /**
+   * The speed he settles at on a CLEAR road, as a fraction of the car's current
+   * top (which is itself cut by wear).
+   *
+   * IT WAS 1 — FLAT OUT — AND THAT WAS RIGHT WHILE THE DIAL STOPPED AT 120. The
+   * argument then was that `threatSlowFrac` buys the time to thread a crowd
+   * where the crowd is, so a blanket cruise under the top end pays for the whole
+   * leg to insure the busy fifth of it; measured, dropping it to 0.9 cost six
+   * seconds a leg on every rung and saved nothing.
+   *
+   * THE RE-ENGINED CAR MOVED THE ARGUMENT RATHER THAN THE REASONING. Damage
+   * goes as the SQUARE of the closing speed, so a leg driven flat out at 174
+   * carries a bit over twice the energy of one driven flat out at 120 — and the
+   * bench went from arriving on every rung to breaking the car on most of them,
+   * without a single damage number moving. The far end of the dial is now a
+   * RISK a player may take on an empty straight, and a competent driver with a
+   * town to get through does not take it: he settles at about 120, which is
+   * where this wagon used to live and is still quick enough to hurt.
+   *
+   * Left in the driver rather than in `content/bot.yaml` because it is a fact
+   * about the CAR — anybody re-gearing it again has to come past this line.
+   */
   cruiseFrac: number;
   /** How hard a dirty line ahead backs the throttle off — the fraction of the
    * cruise speed a fully-blocked line gives up. Slowing is how a driver buys
@@ -95,7 +110,12 @@ export type DriveBotTuning = {
   threatSlowFrac: number;
   /** …and the floor he will never go below (fraction of the absolute top),
    * whatever the road looks like. A crawling car is a car the crowd simply
-   * walks into: on this road, slow is not safe. */
+   * walks into: on this road, slow is not safe.
+   *
+   * MOVED WITH THE DIAL AND NOT WITH THE DRIVER. It was 0.34 of a 120 mph top —
+   * about forty miles an hour — and a fraction of a 174 mph one is a different
+   * speed entirely, so the number came down to keep the floor where it was. The
+   * driver's caution did not change; the thing it was measured against did. */
   floorFrac: number;
   /** The wear fraction past which he stops trying to win the leg and starts
    * trying to FINISH it. */
@@ -124,9 +144,9 @@ export const DRIVE_BOT_DEFAULTS: DriveBotTuning = {
   lineCommitMs: 260,
   lineSwitchMargin: 0.25,
   steerGainPx: 10,
-  cruiseFrac: 1,
+  cruiseFrac: 0.69,
   threatSlowFrac: 0.5,
-  floorFrac: 0.34,
+  floorFrac: 0.23,
   wearEaseFrom: 0.5,
   wearEaseFloor: 0.55,
 };

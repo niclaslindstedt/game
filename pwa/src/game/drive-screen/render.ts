@@ -790,13 +790,25 @@ export function drawDrive(
       const line = CROWD_THOUGHTS[ped.bark % CROWD_THOUGHTS.length];
       if (line) bubbles.push({ line, voice: "thought", ped });
     }
+    // WHOSE ART, ASKED ONCE. Only the WALKERS have a stride; everybody else on
+    // this list is drawn seated and still, so their "cycle" is the same frame
+    // twice and the gait animates nothing.
+    //
+    // IT USED TO SPECIAL-CASE THE GLUED AND NOTHING ELSE, which was fine while
+    // they were the only seated people who could end up in this list — and
+    // quietly wrong from the moment a rider could be knocked off a moped, since
+    // a thrown rider IS a pedestrian (`kind: "rider"`) and fell through to the
+    // crowd table. With the gore switched off, a biker knocked into the gutter
+    // got up as a completely different person in a completely different coat.
+    // `bodySprite` has always known the answer; this is the call site that was
+    // not asking it.
     const frames =
-      ped.kind === "glued"
-        ? ([
-            bodySprite("glued", ped.variant),
-            bodySprite("glued", ped.variant),
-          ] as const)
-        : CROWD_SPRITES[ped.variant % CROWD_SPRITES.length];
+      ped.kind === "walker"
+        ? CROWD_SPRITES[ped.variant % CROWD_SPRITES.length]
+        : ([
+            bodySprite(ped.kind, ped.variant),
+            bodySprite(ped.kind, ped.variant),
+          ] as const);
     if (!frames) continue;
     if (ped.mode === "tumbling") {
       // KNOCKED ASIDE, NOT KILLED — the gore-off outcome. Laid over on its side

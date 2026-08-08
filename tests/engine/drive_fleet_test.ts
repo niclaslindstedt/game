@@ -102,14 +102,30 @@ function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
 }
 
 /** …and ram it again, for the ladder tests that need more than one blow. */
-function ramAgain(state: DriveState, one: DriveTraffic): void {
+function ramAgain(state: DriveState, one: DriveTraffic, share = 0.95): void {
   one.hitCooldownMs = 0;
   one.pos.x = state.car.pos.x + 26;
   one.pos.y = state.car.pos.y;
   one.speed = 0;
-  state.car.speed = DRIVE.topSpeedPx * 0.95;
+  state.car.speed = DRIVE.topSpeedPx * share;
   floorIt(state, 64);
 }
+
+/**
+ * THE SPEED A LADDER TEST IS STAGED AT, as a share of the dial.
+ *
+ * A LADDER NEEDS RUNGS UNDER IT, and every rung on this road is bought with the
+ * SQUARE of the closing speed — so a stage that reads "nearly flat out" is a
+ * stage where the top rung is reached on the first blow and there is no ladder
+ * left to watch. That is not a claim about the model, it is a fact about where
+ * on the dial these tests have to stand: the wagon does 174 mph now, and a car
+ * met at 165 of them is not damaged, it is deleted.
+ *
+ * So the ladder tests stage at half the dial — about eighty-seven miles an hour,
+ * which is a fast road rather than a runway, and which takes seven blows to walk
+ * a hatchback from clean to written off.
+ */
+const LADDER_SHARE = 0.5;
 
 describe("the fleet's weights", () => {
   it("spreads mass over more than an order of magnitude", () => {
@@ -180,10 +196,10 @@ describe("destroying the other traffic", () => {
   it("climbs a car's damage rungs and finally writes it off", () => {
     const state = drive();
     floorIt(state, 4000);
-    const car = plant(state, indexOf("traffic_hatch"));
+    const car = plant(state, indexOf("traffic_hatch"), LADDER_SHARE);
     const rungs: number[] = [];
     for (let i = 0; i < 8 && !car.wrecked; i++) {
-      ramAgain(state, car);
+      ramAgain(state, car, LADDER_SHARE);
       rungs.push(car.rung);
     }
     // It visibly deforms on the way — the rung is the picture the renderer
@@ -241,7 +257,7 @@ describe("people leaving vehicles", () => {
     // rung of a ladder whose rungs are mass and nothing else.
     const state = drive();
     floorIt(state, 5000);
-    const moped = plant(state, indexOf("traffic_motorcycle"), 0.35);
+    const moped = plant(state, indexOf("traffic_motorcycle"), 0.24);
     floorIt(state, 100);
     expect(moped.rider).toBe(false);
     expect(moped.downed).toBe(true);
@@ -413,6 +429,107 @@ describe("people leaving vehicles", () => {
     expect(beside.occupants).toBe(vehicleDef(beside.variant).occupants);
   });
 
+  it("always empties an ONCOMING car met nose to nose, and opens the driver up", () => {
+    // THE ONE COLLISION ON THIS ROAD WITH A GUARANTEED PICTURE. Everything else
+    // out here is a ladder — hit it harder and more happens — and that is right
+    // for the road in general and wrong for the thing a player deliberately
+    // aims at, because a ladder makes the biggest act available come out
+    // differently every time he commits to it.
+    //
+    // MET AT A MODEST SPEED ON PURPOSE, which is the whole assertion. Well under
+    // half the dial, and well under the force at which an ejected body would
+    // come apart on the ordinary ladder (`eject.gibForce`) — the driver's upper
+    // half still leaves through the screen with his insides after it, because
+    // the two of them CLOSED.
+    const state = drive();
+    floorIt(state, 5000);
+    const seats = vehicleDef(indexOf("traffic_sedan")).occupants;
+    const coming = createTraffic(
+      state.nextId++,
+      indexOf("traffic_sedan"),
+      { x: state.car.pos.x + 60, y: state.car.pos.y },
+      // Signed in world +x, and the hero is heading +x: this one is coming AT
+      // him, which is the half of the rule that says "in the opposing lane".
+      -300,
+    );
+    state.traffic.push(coming);
+    state.car.speed = DRIVE.topSpeedPx * 0.3;
+    floorIt(state, 300);
+
+    expect(saidBy(state)).toContain("windscreenOut");
+    expect(coming.occupants).toBeLessThan(seats);
+    // HIS UPPER HALF, and what was inside him — never a whole body lobbed over
+    // the roof, which is what the force ladder alone would have given at this
+    // speed.
+    expect(state.remains.some((piece) => piece.part === "upper")).toBe(true);
+    expect(state.remains.some((piece) => piece.part === "chunk")).toBe(true);
+    // …and the car wears the rest of him down its own glass.
+    expect(coming.gore).toBe(1);
+    expect(coming.glassOut).toBe(true);
+    // AND IT IS OVER QUICKLY. A head-on throws things flat and fast rather than
+    // lobbing them, so nothing leaves with the lift an ordinary eject would.
+    const lift = Math.max(...state.remains.map((piece) => piece.vz));
+    expect(lift).toBeLessThan(DRIVE.gore.maxLiftPx);
+  });
+
+  it("counts a head-on that does NOT write the car off — the shunt runs first", () => {
+    // THE ONE THE ORIGINAL TEST WALKED STRAIGHT PAST, and the reason it did is
+    // worth keeping: it staged a blow hard enough to WRITE THE CAR OFF, and a
+    // write-off ejects from inside `hurtTraffic` — which runs BEFORE `breakCar`
+    // gets to `shunt`. So the head-on test read a still-oncoming car and passed.
+    //
+    // Every softer head-on took the other path: shunt first, eject second. And a
+    // head-on punt REVERSES an oncoming car, so by the time the rule looked at
+    // `other.speed` the car was travelling the hero's own way and the whole
+    // thing quietly never fired — no halves, no glass gore, no spray, on the one
+    // collision the rule exists for.
+    //
+    // Staged deliberately UNDER the write-off line, which is the case that was
+    // broken and the case a player actually meets.
+    const state = drive();
+    floorIt(state, 5000);
+    const coming = createTraffic(
+      state.nextId++,
+      indexOf("traffic_suv"),
+      { x: state.car.pos.x + 90, y: state.car.pos.y },
+      -DRIVE.trafficSpeedPx.min,
+    );
+    state.traffic.push(coming);
+    state.car.speed = DRIVE.topSpeedPx * 0.4;
+    floorIt(state, 400);
+
+    // It survived as a vehicle — this is not the write-off path…
+    expect(coming.wrecked).toBe(false);
+    // …and it still emptied itself over the road.
+    expect(saidBy(state)).toContain("windscreenGore");
+    expect(coming.gore).toBe(1);
+    expect(state.remains.some((piece) => piece.part === "upper")).toBe(true);
+    expect(state.remains.some((piece) => piece.part === "chunk")).toBe(true);
+    // …and nobody was thrown out in one piece.
+    expect(state.pedestrians.filter((p) => p.kind === "driver")).toHaveLength(
+      0,
+    );
+  });
+
+  it("does NOT count rear-ending somebody as a head-on", () => {
+    // The other half of the rule, and the one that keeps it legible: a car
+    // travelling the hero's own way is met at the DIFFERENCE of two speeds, so
+    // there is no closing pair and nothing guaranteed about the outcome. It is
+    // an ordinary shunt, answered on the ordinary ladder.
+    const state = drive();
+    floorIt(state, 5000);
+    const ahead = createTraffic(
+      state.nextId++,
+      indexOf("traffic_sedan"),
+      { x: state.car.pos.x + 60, y: state.car.pos.y },
+      300,
+    );
+    state.traffic.push(ahead);
+    state.car.speed = DRIVE.topSpeedPx * 0.3;
+    floorIt(state, 300);
+    expect(ahead.gore).toBe(0);
+  });
+
   it("never empties the bus, because nobody is on it", () => {
     const state = drive();
     floorIt(state, 5000);
@@ -492,20 +609,27 @@ describe("breaking a car, physically", () => {
     );
   });
 
-  it("puts an ordinary car over at the top end, and never the bus", () => {
+  it("puts an ordinary car over long before it puts a low one over", () => {
     // THE ROLLOVER IS TWO FACTS AND NOTHING ELSE: the lateral Δv the momentum
     // sum handed the vehicle, and how high that vehicle carries its weight
-    // (`topHeavy`). So the same full-flank clip at the top of the dial is
-    // solved for each of them through the real collision — a hatchback goes
-    // over, a low sports car of near enough the same mass slides, and a bus
-    // never sees a Δv within sight of the line because a bus is twelve tonnes.
+    // (`topHeavy`). A hatchback goes over, a low sports car of near enough the
+    // same mass slides, and a bus never sees a Δv within sight of the line
+    // because a bus is twelve tonnes.
+    //
+    // ASKED AS "AT WHAT SPEED", NOT "AT THE TOP END", and that is the whole
+    // difference between a test about the model and a test about the dial. Any
+    // clip is a rollover if it is hard enough — at 174 mph a full-flank hit puts
+    // a go-kart over — so pinning a verdict to one speed pins it to whatever
+    // number `topSpeedPx` happens to hold, and re-engining the wagon quietly
+    // turned a claim about SHAPE into a claim about paint. The threshold is the
+    // honest measure: where the same clip STARTS tipping each vehicle.
     const mass = impactMasses("medium");
-    const clipAt = (id: string) => {
+    const clipAt = (id: string, speedPx: number) => {
       const def = vehicleDef(indexOf(id));
       const hit = solveImpact(
         { x: 0, y: 0 },
         1,
-        DRIVE.topSpeedPx,
+        speedPx,
         // Abeam, and deep enough into its flank that the contact normal runs
         // straight across the road — which is what a sideswipe is.
         { x: 24 + def.halfLengthPx - 2, y: 12 },
@@ -517,11 +641,31 @@ describe("breaking a car, physically", () => {
       )!;
       return tipsOver(createTraffic(1, indexOf(id), { x: 0, y: 0 }, 0), hit);
     };
-    expect(clipAt("traffic_hatch")).toBe(true);
-    expect(clipAt("traffic_van")).toBe(true);
-    expect(clipAt("traffic_sports")).toBe(false);
-    expect(clipAt("traffic_bus")).toBe(false);
-    expect(clipAt("traffic_box_truck")).toBe(false);
+    /** The slowest full-flank clip that puts this one over, or Infinity. */
+    const tipsFrom = (id: string) => {
+      for (let px = 10; px <= DRIVE.topSpeedPx; px += 5) {
+        if (clipAt(id, px)) return px;
+      }
+      return Infinity;
+    };
+    const hatch = tipsFrom("traffic_hatch");
+    const van = tipsFrom("traffic_van");
+    const sports = tipsFrom("traffic_sports");
+    // The ordinary cars go over at ordinary road speeds — inside the part of
+    // the dial a drive is actually spent in, rather than needing the runway.
+    expect(hatch).toBeLessThan(DRIVE.topSpeedPx * 0.55);
+    expect(van).toBeLessThan(DRIVE.topSpeedPx * 0.55);
+    // …and the low one needs a great deal more of the same blow, because it
+    // carries its weight where a car ought to.
+    expect(sports).toBeGreaterThan(hatch * 1.5);
+    // The heavy things are effectively immune: twelve tonnes never goes over at
+    // any speed this road has, and the box truck only in the last tenth of the
+    // dial — which is a speed you reach on an empty straight and not one you are
+    // trading paint at.
+    expect(tipsFrom("traffic_bus")).toBe(Infinity);
+    expect(tipsFrom("traffic_box_truck")).toBeGreaterThan(
+      DRIVE.topSpeedPx * 0.9,
+    );
   });
 
   it("charges a sideswipe for the paint it takes off", () => {
@@ -625,15 +769,24 @@ describe("the delivery trade on the pavement", () => {
   });
 
   it("still lets them cut in over the kerb", () => {
-    const state = drive();
+    // SAMPLED OVER SEVERAL ROADS RATHER THAN ONE LONG ONE, because the cut-in
+    // cycles on the RIDER's own travel (`pavementRiders.weaveHz`) while what
+    // bounds the sample is how long each rider stays in the hero's window — and
+    // a faster wagon passes each of them sooner, so one leg now shows fewer of
+    // them reaching across the kerb than it used to. The claim is a possibility
+    // ("they still come over it"), so the honest sample is more roads.
     const band = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
     let cutIn = false;
-    for (let i = 0; i < 90; i++) {
-      floorIt(state, 1000);
-      for (const other of state.traffic) {
-        if (!vehicleDef(other.variant).pavement || other.downed) continue;
-        if (Math.abs(other.pos.y) < band) cutIn = true;
+    for (const seed of [4242, 77, 1009, 30011]) {
+      const state = drive({ seed });
+      for (let i = 0; i < 60 && !cutIn; i++) {
+        floorIt(state, 1000);
+        for (const other of state.traffic) {
+          if (!vehicleDef(other.variant).pavement || other.downed) continue;
+          if (Math.abs(other.pos.y) < band) cutIn = true;
+        }
       }
+      if (cutIn) break;
     }
     expect(cutIn).toBe(true);
   });
@@ -705,14 +858,21 @@ describe("the kerb, and the way things get clear", () => {
       spin: 0,
       hitCooldownMs: 0,
     });
-    const wasTraffic = state.traffic.length;
+    // BY IDENTITY, NEVER BY COUNT. The road spawns and forgets vehicles on its
+    // own the whole time this is running, so `traffic.length` before and after
+    // is a moving baseline that happens to sit still at some speeds and does not
+    // at others — it stopped working the moment the wagon covered more ground in
+    // the same 300 ms.
+    const wasTraffic = new Set(state.traffic.map((one) => one.id));
     state.car.speed = DRIVE.topSpeedPx * 0.95;
     floorIt(state, 300);
 
     // It has left the kerb's furniture and joined the road's vehicles.
     expect(state.props.some((prop) => prop.kind === "parked_car")).toBe(false);
-    expect(state.traffic.length).toBeGreaterThan(wasTraffic);
-    const car = state.traffic.at(-1)!;
+    const car = state.traffic.find(
+      (one) => !wasTraffic.has(one.id) && one.driverless,
+    )!;
+    expect(car).toBeDefined();
     // …and it took a REAL collision: it folded, and it is moving.
     expect(car.crushNose + car.crushTail).toBeGreaterThan(0);
     expect(Math.abs(car.speed) + Math.abs(car.slew)).toBeGreaterThan(0);

@@ -205,6 +205,9 @@ export function collide(drive: DriveState): void {
     });
     // …and its lamps at that end go with the paint.
     breakTrafficLamps(other, car.pos.x);
+    // WAS IT ALREADY DEAD BEFORE THIS BLOW? Read HERE, because `hurtTraffic` is
+    // about to answer it differently — see `breakCar`'s `wasWrecked`.
+    const wasWrecked = other.wrecked;
     hurtTraffic(drive, other, hit);
 
     const force = wreckForce(other, hit.joules);
@@ -252,7 +255,7 @@ export function collide(drive: DriveState): void {
     } else {
       // ANYTHING WITH A ROOF — and the SAME function the kerb's parked cars go
       // through, which is the point of it being a function at all.
-      breakCar(drive, other, hit, force);
+      breakCar(drive, other, hit, force, wasWrecked);
     }
     // The hero's own car takes the exchange properly, which is what makes
     // trading paint the expensive mistake it should be.
@@ -458,6 +461,22 @@ function breakCar(
   other: DriveTraffic,
   hit: Impact,
   force: number,
+  /**
+   * WHETHER IT WAS ALREADY A WRECK BEFORE THIS BLOW — which is NOT the same
+   * question as `other.wrecked`, because `hurtTraffic` has already run by the
+   * time this is called and may have answered it a moment ago.
+   *
+   * The difference is the whole point. A car that has been standing dead in a
+   * lane since some earlier hit is not shunted again — it is scenery, and it has
+   * already gone where it was going. A car that THIS blow has just written off
+   * is emphatically shoved: it was hit hard enough to be destroyed, so it is
+   * also hit hard enough to be moved, and reading the flag after the fact meant
+   * the single hardest collision on the road produced no shove at all. That went
+   * unnoticed while a write-off took several blows to arrive at; at the top of
+   * this dial it arrives in ONE, so a car met flat out simply stopped dead where
+   * it stood.
+   */
+  wasWrecked = false,
 ): void {
   const { car } = drive;
   // ── WHAT THE STRUCTURE DID ──────────────────────────────────────────────
@@ -485,7 +504,7 @@ function breakCar(
   // the lane and spun about the point it was struck at, all off the momentum
   // sum's own answer over its own mass.
   if (!other.downed) {
-    if (!other.wrecked) shunt(other, hit, car.pos.y);
+    if (!wasWrecked) shunt(other, hit, car.pos.y);
     // …UNLESS THE SHOVE BEAT ITS OWN WHEELS, in which case it is not being
     // shunted anywhere. It is going over.
     if (tipsOver(other, hit)) {

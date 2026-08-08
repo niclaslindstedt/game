@@ -20,10 +20,12 @@
 //
 // IT IS THE SAME RULE THE COLLISIONS ALREADY OBEY (see `DRIVE_UNITS`): real
 // physics in real units, with the feel bought by moving the brochure numbers
-// rather than by fudging the solve. A wagon that reached 60 in three seconds
-// and then had nothing left is not a car anybody has driven; one that takes
-// nine seconds to get there, spends the next twenty crawling up to a hundred,
-// and never quite sees the top of the dial is exactly the car the joke needs.
+// rather than by fudging the solve. That is what lets the car be RE-ENGINED
+// rather than rebalanced — the wagon does 280 km/h now because somebody put a
+// four-hundred-horsepower petrol engine and a close-ratio five-speed in it, and
+// every consequence of that (five seconds to sixty, ten to a hundred, and the
+// better part of a minute and a whole straight to see the last of it) falls out
+// of the same solve rather than being typed in beside it.
 //
 // EVERYTHING HERE IS PURE AND A FUNCTION OF ROAD SPEED ALONE — no state, no
 // clutch, no shift timer. That is what lets the sound, the HUD and the physics
@@ -35,13 +37,20 @@
 //
 // AND THE SHIFT POINT IS NOT THE REDLINE. It used to be, and that one shortcut
 // was the whole of why the dashboard read like nothing anybody has ever driven:
-// the crank was held to 5800 in every gear, each shift dropped it no further
-// than the high threes, and a wagon pottering along at forty was sitting in the
-// top third of its own tachometer with the red paint in sight. A real engine
-// idles at eight hundred, is asked for about three thousand and is let go there;
-// the redline is a limit it never meets. So `shiftUpRpm` and `redlineRpm` are
-// two different numbers now, and the needle lives in the bottom half of the dial
-// where it belongs.
+// the crank was held against the stop in every gear and a wagon pottering along
+// at forty was sitting in the red paint. A real driver with the pedal flat
+// changes up JUST PAST THE POWER PEAK — one more rev buys less at the tyre than
+// the next ratio does — and the redline is the limit behind that, a thing you
+// are told about rather than shown. So `shiftUpRpm` and `redlineRpm` are two
+// different numbers, seven hundred apart, and the needle never reaches the
+// second.
+//
+// WHERE THE NEEDLE DOES END UP IS HIGH, and that is the design rather than an
+// accident of the ratios. Fifth is geared so the car runs out of road speed
+// against the air (`DRIVE.topSpeedPx`) at about six thousand one of a seven
+// thousand dial — seven eighths of the way round the face, plainly working,
+// with the paint in sight and out of reach. A top gear that topped out at half
+// revs would say the car had another gear it was not being given.
 
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 
@@ -56,12 +65,19 @@ const AIR_DENSITY = 1.225;
  * THE BROCHURE. Every number the road's acceleration is solved from, and the
  * only place any of them is written down.
  *
- * The car is a tired, heavy, tall thing with a big lazy oil-burner in the nose:
- * a lot of torque very low down, no interest whatever in revving, and a gearbox
- * geared to loaf. That is why it is slow away from the lights, why it is out of
- * breath long before the far end of the speedometer, and why the tachometer
- * spends the whole trip between one and three thousand — which is where a
- * tachometer in a working car actually spends its life.
+ * THE WAGON HAS BEEN RE-ENGINED, and every number below moved together when it
+ * was. It used to be a tired oil-burner geared to loaf: all its torque under
+ * three thousand, a long overdrive fifth, and out of breath a long way short of
+ * the far end of its own speedometer. What is in it now is a big petrol thing
+ * that wants revving — four hundred-odd horsepower peaking near six — behind a
+ * CLOSE-RATIO five-speed, and the whole of the difference is that the dial's
+ * last number is now reachable. It will do 280 km/h. It will take most of a
+ * straight to do it, and it will be sitting high in fifth when it gets there.
+ *
+ * WHAT DID NOT MOVE IS THE BOTTOM OF IT. First gear's overall ratio is the one
+ * the old car had to a decimal place (2.78 × 3.42 against 3.59 × 2.65), so the
+ * wagon still leans back and gathers itself off the line like something heavy
+ * rather than leaping. It is the top four fifths of the range that is new.
  */
 export const DRIVETRAIN = {
   /** The crank's floor. It is running whether or not the wheels agree, so the
@@ -71,42 +87,51 @@ export const DRIVETRAIN = {
    * WHERE THE BOX CHANGES UP — and it is NOT the redline, which is the whole of
    * what makes a tachometer read like one.
    *
-   * The box used to shift at the stop: every gear was held to 5800, every shift
-   * dropped the needle into the high threes or the mid fours, and the crank
-   * spent an entire trip in the top half of the dial with the red permanently a
-   * few hundred revs away. That is not what any car does. A real one idles at
-   * eight hundred, pulls to about three thousand, changes up, and lands back
-   * around two — the needle lives in the BOTTOM half of its own face and the
-   * red paint is a thing you are told about rather than shown.
+   * The box used to shift at the stop: every gear was held to 5800 whatever the
+   * engine was doing, and the crank spent an entire trip pinned against paint.
+   * That is not what any car does. A driver with the pedal flat changes up JUST
+   * PAST THE POWER PEAK — one more rev buys less at the tyre than the next gear
+   * does — and the redline is the limit behind that, a thing you are told about
+   * rather than shown.
    *
-   * So the shift point is its own number and the redline is only the limit
-   * behind it. THE SHIFT POINTS ARE STILL NOT AUTHORED: the box changes up
-   * wherever the revs would pass THIS, so the gear spacing below is still the
-   * only thing that decides where the shifts land — they just land where a
-   * driver would put them. 3300 is a heavy automatic with the pedal flat, which
-   * is the only way this wagon is ever driven; a lift-and-cruise box would
-   * change up nearer 2500 and this one never gets the chance.
+   * This engine's power peaks around fifty-five to fifty-eight hundred, so 6300
+   * is where a driver holding it flat would take it, and the paint at seven
+   * thousand is never reached on an undamaged car.
+   *
+   * THE SHIFT POINTS ARE STILL NOT AUTHORED: the box changes up wherever the
+   * revs would pass THIS, so the gear spacing below is the only thing that
+   * decides where the shifts land — they just land where a driver would put
+   * them.
    */
-  shiftUpRpm: 3300,
+  shiftUpRpm: 6300,
   /**
    * …and where the engine stops being asked at all. A limit rather than a
-   * target: the box hands over a thousand revs early, so on an undamaged wagon
-   * nothing ever takes the needle past about two thirds of the dial and the
-   * paint at the end of it is never reached. That is deliberate and it is what
-   * a working car looks like.
+   * target: the box hands over seven hundred revs early and top gear runs out of
+   * ROAD SPEED (`DRIVE.topSpeedPx`) nine hundred short of it, so on an undamaged
+   * wagon the paint at the end of the dial is never reached.
+   *
+   * WHAT IS REACHED IS THE TOP OF THE USEFUL RANGE, and that is the change. Flat
+   * out in fifth the needle sits at about six thousand one — seven eighths of
+   * the way round its own face, high and working — where the old lump ran out of
+   * everything at two thirds of that.
    */
-  redlineRpm: 4600,
+  redlineRpm: 7000,
   /**
-   * THE GEARS, first to fifth. A five-speed automatic of the sort that was
-   * bolted behind every big estate of this vintage: a deep first, a direct
-   * fourth, and a long overdrive fifth that flatters the fuel figure and leaves
-   * nothing at all in reserve. The spread closes as it climbs, which is what
-   * makes each upshift drop the crank a little less than the one before.
+   * THE GEARS, first to fifth. A CLOSE-RATIO five-speed, which is what a top
+   * gear tall enough for 280 km/h forces: fifth has to pull 2.96 overall at the
+   * back axle, and hanging that off a first gear deep enough to move a
+   * seventeen-hundred-kilo estate leaves a spread of about three to work five
+   * ratios into.
+   *
+   * The spread still closes as it climbs, which is what makes each upshift drop
+   * the crank a little less than the one before — out of first the needle falls
+   * to about four and a half thousand, out of fourth to just under five.
    */
-  gears: [3.59, 2.19, 1.41, 1.0, 0.83] as const,
-  /** What the diff multiplies all of them by. Tall, because the engine below
-   * has no interest in revving and the whole car is geared to loaf. */
-  finalDrive: 2.65,
+  gears: [2.78, 1.96, 1.43, 1.1, 0.864] as const,
+  /** What the diff multiplies all of them by. Short, because the engine above
+   * now has every interest in revving and the box has to reach 280 with only
+   * five ratios in it. */
+  finalDrive: 3.42,
   /** The rolling radius of a tyre (m) — a 235/65 R17, which is what is on it,
    * two of them past the wear markers. */
   tyreRadiusM: 0.36,
@@ -116,34 +141,36 @@ export const DRIVETRAIN = {
    * THE TORQUE CURVE, as a peak and the shape of the hill around it.
    *
    * `torque = peak * (1 - falloff * ((rpm - peakRpm) / spreadRpm)^2)`, which is
-   * a broad parabola: about 55% of peak at idle, all of it at two and a half
-   * thousand, and most of it gone by the time the needle reaches paint nobody
-   * ever sees. A BIG LAZY LUMP, in other words — four hundred newton-metres and
-   * about 175 horsepower out of a tired turbodiesel, which is the only kind of
-   * engine that makes the gearing above honest: you cannot shift at three
-   * thousand unless the engine has already done its best work by then.
+   * a broad parabola: about 38% of peak at idle, all of it at forty-two hundred,
+   * and still four fifths of it at the shift point. Five hundred and eighty
+   * newton-metres, peaking a little over three hundred kilowatts — four hundred
+   * horsepower — somewhere near fifty-six hundred, which is what puts the shift
+   * point where it is: a driver changes up just past the power peak because one
+   * more rev buys less at the tyre than the next ratio does.
    *
-   * IT IS THE SAME CAR IT ALWAYS WAS. The old brochure said 240 Nm at 4200 and
-   * ran the crank half as fast again through gears half as tall; every figure
-   * here is that curve with the rev axis squeezed and the torque axis stretched
-   * by the same factor, so the FORCE AT THE TYRE at any given road speed is
-   * within a few per cent of what it has always been. Nought to sixty is still
-   * the better part of nine seconds and the top of the dial still costs a whole
-   * straight — only the number under the needle changed.
+   * IT IS NOT THE ENGINE THE CAR LEFT THE FACTORY WITH. The old brochure said
+   * 400 Nm at 2600 with the falloff arranged so it had nothing left by four
+   * thousand — a lump that could not have reached the far end of this dial at
+   * any gearing. This one is peakier, revs half as far again, and makes about
+   * two and a third times the power at the top; the last fifty miles an hour of
+   * the speedometer is entirely that difference.
    */
-  peakTorqueNm: 400,
-  peakTorqueRpm: 2600,
-  torqueSpreadRpm: 2000,
+  peakTorqueNm: 580,
+  peakTorqueRpm: 4200,
+  torqueSpreadRpm: 3200,
   torqueFalloff: 0.55,
   /**
    * THE AIR IT HAS TO PUSH — drag coefficient times frontal area (m²).
    *
-   * A brick with a roof rack: 0.40 by 2.5 m². This is the number that makes the
-   * top of the range expensive rather than free — drag goes as the square of
-   * speed and the POWER to overcome it as the cube, so the last twenty miles an
-   * hour cost more than the first eighty.
+   * Still a tall square thing, if a slightly better-resolved one than it was:
+   * 0.34 by 2.4 m², a wagon that has lost its roof rack and been dropped on its
+   * springs. This is the number that makes the top of the range expensive rather
+   * than free — drag goes as the square of speed and the POWER to overcome it as
+   * the CUBE, so the last twenty miles an hour cost more than the first hundred,
+   * and 174 is where four hundred horsepower and this much frontal area finally
+   * agree with each other.
    */
-  dragAreaM2: 1.0,
+  dragAreaM2: 0.82,
   /** The tyres' own toll — a fraction of the weight on them, near enough
    * constant with speed. */
   rollingResistance: 0.015,
@@ -208,7 +235,7 @@ export function gearFor(speedPx: number): number {
  * doing — and never past the redline either, because a limiter is a thing every
  * engine built in the last forty years has. On the shipped wagon the stop is
  * unreachable: there IS no gear above fifth, but fifth runs out of road speed
- * (`DRIVE.topSpeedPx`) a good thousand revs before the paint. A mod that gears
+ * (`DRIVE.topSpeedPx`) nine hundred revs before the paint. A mod that gears
  * its vehicle short enough to hit it gets a limiter rather than a tachometer
  * reading past its own last number.
  */

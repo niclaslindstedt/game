@@ -209,6 +209,23 @@ export type PedestrianKind =
    */
   | "rider"
   /**
+   * …AND SOMEBODY WHO WAS BEHIND A WINDSCREEN — the person a head-on posts out
+   * through the glass.
+   *
+   * ITS OWN KIND RATHER THAN MORE RIDERS, for exactly the reason `rider` is its
+   * own kind: what this answers is "whose art is this". They used to BE riders,
+   * drawn out of the two-wheeler table on the argument that somebody who has
+   * just left a driving seat looks like somebody sitting — which is true of the
+   * posture and false of everything else, and it meant every torso that ever
+   * came out of a windscreen was one of two pictures in a crash helmet.
+   *
+   * `variant` indexes the app's `DRIVER_SPRITES`: five people with no helmets,
+   * seatbelts on, and five different heads — which is what the player actually
+   * sees, because the cut lands high (`DRIVE.gore.cutBand`) and the top half is
+   * mostly head.
+   */
+  | "driver"
+  /**
    * ONE OF THE GLUED — a demonstrator sitting in the carriageway with their
    * hands in the resin, holding the road for the climate.
    *
@@ -640,6 +657,19 @@ export type DriveEvent =
   | { type: "occupantThrown"; pos: Vec2; joules: number }
   /** …and the screen they came through. */
   | { type: "windscreenOut"; pos: Vec2; joules: number }
+  /**
+   * …AND THE BLOOD THAT LEAVES WITH THEM — a head-on, and only a head-on.
+   *
+   * ITS OWN EVENT RATHER THAN A FLAG ON THE ONE ABOVE, for two reasons that
+   * both matter. It is GATED: it is raised inside the same test that paints the
+   * car's own glass, so a run with the dismemberment switches off still posts
+   * the driver through the screen and simply does not spray — the house rule
+   * that a gate is answered where the thing is DECIDED, never at the draw. And
+   * it is SPECIFIC: an occupant leaving a car that was merely folded is a
+   * different sight from one leaving a car that was met nose to nose at the sum
+   * of two speeds, and only the second one empties itself over the road.
+   */
+  | { type: "windscreenGore"; pos: Vec2; joules: number }
   /** A street light has left its base and is on its way down the road. */
   | { type: "lampFelled"; pos: Vec2; joules: number }
   /** A panel climbed a damage rung. */

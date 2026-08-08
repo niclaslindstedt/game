@@ -19,8 +19,6 @@ animations:
     { frames: [walker_hoodie_0, walker_hoodie_1], delayMs: 260 }
   walker_young_woman_walk:
     { frames: [walker_young_woman_0, walker_young_woman_1], delayMs: 260 }
-  walker_boy_walk: { frames: [walker_boy_0, walker_boy_1], delayMs: 260 }
-  walker_girl_walk: { frames: [walker_girl_0, walker_girl_1], delayMs: 260 }
   walker_suit_walk: { frames: [walker_suit_0, walker_suit_1], delayMs: 260 }
   walker_hi_vis_walk:
     { frames: [walker_hi_vis_0, walker_hi_vis_1], delayMs: 260 }

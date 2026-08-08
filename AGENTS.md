@@ -47,6 +47,7 @@ make lua-vm        # compile src/lib/lua/ for the SHIPPED mod compiler
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
+make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG
 make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
@@ -118,10 +119,16 @@ most —
 - **THE PUSH AND THE PR ARE ONE STEP.** A pushed branch with no PR is
   invisible: nothing runs the PR-only checks, nobody is asked to look, and the
   work sits done and unmergeable.
-- **RUN EVERY CHECK CI RUNS, SPLIT BY COST.** The seconds-long ones (`make fmt`
-  then `make fmt-check`, `make lint`, the changeset call) run BEFORE the commit
-  is written; the minutes-long ones (`make test`, `make build`) run ALONGSIDE
-  the push, not before it.
+- **RUN EVERY CHECK CI RUNS, SPLIT BY COST.** `make fmt` then `make fmt-check`
+  and the changeset call are seconds and run BEFORE the commit is written;
+  `make lint`, `make test` and `make build` are MINUTES — every one of them
+  opens by rebuilding the whole content tree — and run alongside the push.
+- **AND NONE OF THEM BELONGS IN THE EDIT LOOP.** A whole-repo check costs the
+  same whether one file changed or four hundred did, so running one after every
+  small edit is the easiest way to turn a ten-minute session into an hour. While
+  iterating, check only what you touched (`npx eslint`, `npx tsc --noEmit`, one
+  vitest file) — the `commit` skill has the table. The full set is the GATE on
+  the commit, not a step on the way to it.
 
 ## Merges and rebases — the `conflict` skill owns them
 

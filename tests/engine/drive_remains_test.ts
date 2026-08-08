@@ -23,6 +23,7 @@ import {
   DRIVE,
   GLUED_VARIANTS,
   blockadeAt,
+  gibsBody,
   remainForce,
   splitsBody,
   type DriveParams,
@@ -108,6 +109,55 @@ describe("the split", () => {
     expect(splitsBody(line * 1.01)).toBe(true);
     expect(splitsBody(line * 0.99)).toBe(false);
     expect(remainForce(line)).toBeCloseTo(1, 6);
+  });
+
+  it("tears nothing off a body the car was barely moving when it met", () => {
+    // THE COMPLAINT THIS ANSWERS. The chunk ladder reads "at the split line, and
+    // per unit of force beyond it" and was measured from a STANDSTILL, so its
+    // base was paid out at any force at all — a wagon rolling into somebody at a
+    // walking pace put a length of gut on the tarmac, which is the one thing out
+    // here that reads as a bug rather than as a collision.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx * 0.15;
+    plant(drive, 40);
+    run(drive, 900, COAST);
+    // A body in the road and nothing else: no halves, and above all no lumps.
+    expect(drive.remains.some((piece) => piece.part === "whole")).toBe(true);
+    expect(drive.remains.some((piece) => piece.part === "chunk")).toBe(false);
+  });
+
+  it("opens a body up only well PAST the blow that goes through it", () => {
+    // THREE RUNGS RATHER THAN TWO, and the middle one is the point: a bumper
+    // going THROUGH somebody and a bumper taking them APART are different
+    // amounts of violence, so there is a band of the speedometer that severs a
+    // body and throws none of its insides about (`DRIVE.gore.chunkForce`, above
+    // the split rather than on it).
+    expect(DRIVE.gore.chunkForce).toBeGreaterThan(1);
+    const line = DRIVE.impact.wearJoules * DRIVE.gore.splitJoules;
+    const between = line * ((1 + DRIVE.gore.chunkForce) / 2);
+    expect(splitsBody(between)).toBe(true);
+    expect(gibsBody(between)).toBe(false);
+    expect(gibsBody(line * DRIVE.gore.chunkForce * 1.01)).toBe(true);
+  });
+
+  it("never throws a piece of anybody out of the frame", () => {
+    // EVERY BURST IS OVER QUICKLY OR IT IS NOT A BURST. The ladders here are
+    // read against a force that a CAR collision can push ten to fifty times past
+    // where a body's own worst case sits, and unclamped that left an occupant's
+    // torso leaving a windscreen at nine thousand pixels a second — six seconds
+    // off the top of the frame, which is not a collision, it is an absence.
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx;
+    plant(drive, 120);
+    run(drive, 400);
+    expect(drive.remains.length).toBeGreaterThan(0);
+    for (const piece of drive.remains) {
+      expect(Math.abs(piece.vz)).toBeLessThanOrEqual(DRIVE.gore.maxLiftPx);
+    }
+    // …and the force every one of those ladders was read against is bounded too.
+    expect(remainForce(Number.MAX_SAFE_INTEGER)).toBe(DRIVE.gore.maxForce);
   });
 
   it("sends the upper half OVER — up, and slower along the road than the car", () => {

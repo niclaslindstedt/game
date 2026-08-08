@@ -52,7 +52,21 @@ type DriveFxKind =
    * the AIR rather than off the tarmac, and the only one that was LIT a moment
    * before it existed.
    */
-  | "glass";
+  | "glass"
+  /**
+   * WHAT COMES OUT OF A WINDSCREEN WITH THE PERSON — the one BLOOD effect this
+   * road throws into the air rather than laying on the tarmac.
+   *
+   * Everything else the drive does with blood is a MARK: a splash where a body
+   * landed, a smear where one was dragged, a paste where the wheels found it,
+   * all of it in `drive-gore.ts` and all of it flat on the road. That is right
+   * for a body under a bumper, which is a thing that happens ON the ground. A
+   * head-on is not: it happens at windscreen height, at the sum of two speeds,
+   * and it goes UP and OUT through a hole in the glass. A mark on the tarmac
+   * cannot say that, and the gore burst beside it throws PIECES rather than
+   * liquid — so this is the spray, and it is the only one.
+   */
+  | "blood";
 
 /** One live effect on the road. */
 type DriveFx = {
@@ -138,12 +152,19 @@ function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
  * STEEL is the collision that takes an eighth of the wagon — trading paint at
  * speed, and everything above it is off the top of the scale anyway. A BODY is
  * priced on the crowd's own worst case instead: a person met DEAD SQUARE AT THE
- * TOP OF THE DIAL on MEDIUM, which is about 3.6% of the car. So the ladder a
+ * TOP OF THE DIAL on MEDIUM, which is about 6.8% of the car. So the ladder a
  * player actually sees runs the whole way from a clip at walking pace to the
  * worst thing that can happen to somebody, rather than sitting flat at nothing.
+ *
+ * THE BODY FIGURE MOVES WITH THE TOP SPEED and it is not optional. It was 3.6%
+ * against a 120 mph dial, and absorbed energy goes as the SQUARE of the closing
+ * speed — so on a 174 mph one the same number saturates barely past halfway up
+ * the speedometer, and the top half of the range shakes the frame by exactly as
+ * much as the middle of it. That is the scale silently going flat at precisely
+ * the speeds the whole change was made for.
  */
 const SMASH_FULL_SHARE = 0.12;
-const BODY_FULL_SHARE = 0.036;
+const BODY_FULL_SHARE = 0.068;
 
 /** How hard the frame is shaken by a hit of this force (world px). Well under
  * a lane's width at its worst: the road must stay readable while it is being
@@ -308,6 +329,29 @@ export function driveLampGlass(
   push(state, "glass", x, y, nowMs, 1100, 0.85, false, 0, lift);
 }
 
+/**
+ * A HEAD-ON EMPTYING ITSELF THROUGH ITS OWN WINDSCREEN.
+ *
+ * FULL FORCE WHATEVER THE JOULES SAY, which is the same call the split sound
+ * and the machine-snap burst already make and for the same reason: the engine
+ * has decided this is a head-on (`windscreenGore`, raised only inside the rule),
+ * and a head-on has no gentle version. Sizing it off the collision's energy
+ * would make the sight the player is deliberately aiming at come out thin at
+ * exactly the speeds the rule exists to guarantee it at.
+ *
+ * LONGER-LIVED THAN THE GLASS BESIDE IT, because liquid does not stop when the
+ * shards do: the drops are still coming down while the wagon is going past.
+ */
+export function driveWindscreenGore(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  lift: number,
+  nowMs: number,
+): void {
+  push(state, "blood", x, y, nowMs, 1500, 1, false, 0, lift);
+}
+
 /** Everything the road throws away when the leg restarts. */
 export function clearDriveFx(state: DriveFxState): void {
   state.fx.length = 0;
@@ -453,6 +497,7 @@ export function drawDriveFx(
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);
     else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
     else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy);
+    else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
     else drawSmoke(ctx, fx, t, sx, sy);
   }
   // THE BLOOM GOES LAST AND GOES ADDITIVE: a heavy hit whites the frame out
@@ -568,6 +613,77 @@ function drawGlass(
       214 + warm * 20,
     )}, ${(glint * 0.85).toFixed(3)})`;
     ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+  }
+  ctx.restore();
+}
+
+/**
+ * THE SPRAY OUT OF A WINDSCREEN — a lot of it, thrown forward and down.
+ *
+ * THREE THINGS AT ONCE, and it needs all three to read as liquid rather than as
+ * red confetti. A CLOUD of atomized colour under everything, which is what makes
+ * the moment land before a single drop has travelled anywhere; the DROPS
+ * themselves, thrown down the road on the closing speed and falling under
+ * gravity; and the FAT ONES, drawn two px rather than one, because a spray of
+ * uniform specks reads as dust and real blood comes out in gouts as well as in
+ * mist.
+ *
+ * PLAIN ALPHA, NEVER `lighter` — the same rule the run's own blood cloud obeys.
+ * Additive is the obvious choice for anything thrown into the air and it is
+ * wrong here: it makes dark red over dark tarmac draw very nearly nothing, when
+ * what is wanted is a wash the road is seen THROUGH.
+ *
+ * IT GOES FORWARD, not outward. A radial burst is what an explosion does; what
+ * comes out of a windscreen at the sum of two speeds is going one way, and the
+ * cone is narrow for the same reason the gore's own scatter is damped
+ * (`DRIVE.gore.chunkAcross`).
+ */
+function drawBlood(
+  ctx: CanvasRenderingContext2D,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const lift = fx.lift ?? 0;
+  ctx.save();
+  // THE CLOUD, first and underneath: three soft blooms that open fast and thin
+  // out, so the hole in the glass is red before anything has reached the road.
+  const bloom = Math.max(0, 1 - t * 1.9);
+  if (bloom > 0) {
+    for (let i = 0; i < 3; i++) {
+      const spread = 3 + scatter(fx.seed, i, 31) * 5;
+      const cx = sx + (2 + i * 4) * t * 3;
+      const cy = sy - lift + (scatter(fx.seed, i, 32) - 0.5) * 6 + lift * t * t;
+      const r = spread * (0.6 + t * 2.2);
+      ctx.fillStyle = `rgba(122, 16, 20, ${(bloom * 0.42).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(Math.round(cx), Math.round(cy), r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // …then the drops. A LOT of them: this is the one moment on the road where
+  // the picture is allowed to be too much, because it is the one the player
+  // aimed at.
+  const count = 46;
+  for (let i = 0; i < count; i++) {
+    const along = 0.25 + scatter(fx.seed, i, 21) * 1.4;
+    const across = (scatter(fx.seed, i, 22) - 0.5) * 0.7;
+    const reach = 26 + scatter(fx.seed, i, 23) * 44;
+    const kick = 6 + scatter(fx.seed, i, 24) * 16;
+    const px = sx + along * reach * t;
+    // Out of the hole, then down: a short upward kick and the whole drop from
+    // the screen to the tarmac under it.
+    const py =
+      sy - lift + across * reach * t * 0.35 - kick * t + (lift + 26) * t * t;
+    const fade = Math.max(0, 1 - t * 1.15);
+    const fat = scatter(fx.seed, i, 25) > 0.72;
+    const dark = scatter(fx.seed, i, 26) > 0.5;
+    ctx.fillStyle = dark
+      ? `rgba(122, 16, 20, ${(fade * 0.95).toFixed(3)})`
+      : `rgba(196, 34, 34, ${(fade * 0.9).toFixed(3)})`;
+    const w = fat ? 2 : 1;
+    ctx.fillRect(Math.round(px), Math.round(py), w, w);
   }
   ctx.restore();
 }

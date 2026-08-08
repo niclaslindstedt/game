@@ -40,7 +40,7 @@
 // below is hashed off the victim's own id and position.
 
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
-import { vehicleDef } from "./fleet.ts";
+import { DRIVER_VARIANTS, vehicleDef } from "./fleet.ts";
 import type { Impact } from "./impact.ts";
 import { burstBody, remainForce, splitsBody } from "./remains.ts";
 import type {
@@ -102,6 +102,36 @@ function ejects(other: DriveTraffic, hit: Impact, force: number): boolean {
 }
 
 /**
+ * …AND WHETHER THIS WAS A HEAD-ON — nose to nose, against something coming the
+ * other way, which is the one collision on this road with a guaranteed picture.
+ *
+ * TWO FACTS AND BOTH ARE REQUIRED (`DRIVE.eject.headOn`). The blow is SQUARE,
+ * well above the ordinary eject's bar — this is a nose meeting a nose rather
+ * than a wing catching one — and the other vehicle is TRAVELLING AT YOU, which
+ * is the half that makes it a head-on rather than a rear-ending. A parked car
+ * answers the first and never the second, and that is correct: furniture met
+ * square is a shunt, however hard it was met.
+ *
+ * The direction test is the whole of "in the opposing lane" and it is a fact
+ * about the VEHICLE rather than about the lane it is sitting in — a car that has
+ * been spun round and is rolling backwards up the carriageway is oncoming too,
+ * and the geometry does not care which paint it is between.
+ */
+function headOn(drive: DriveState, other: DriveTraffic, hit: Impact): boolean {
+  const { headOn: rule } = DRIVE.eject;
+  if (hit.squareness < rule.squareness) return false;
+  if (hit.joules < DRIVE.traffic.wreckJoules * rule.joules) return false;
+  // OFF THE IMPACT, NEVER OFF THE CAR. `Impact.approach` is what the other
+  // vehicle was doing along the hero's heading AT THE MOMENT OF CONTACT, and it
+  // has to come from there because `other.speed` no longer holds the answer by
+  // the time anybody can ask: `shunt` runs first and a head-on punt REVERSES an
+  // oncoming car outright. Read off the car, this test saw a vehicle travelling
+  // the hero's own way and returned false on precisely the collision it exists
+  // to catch — the whole rule silently never fired.
+  return hit.approach < -rule.closingPx;
+}
+
+/**
  * Mint a thrown body and put it in the road — the one shape both a rider and a
  * passenger leave a vehicle in.
  *
@@ -113,9 +143,24 @@ function throwBody(
   drive: DriveState,
   other: DriveTraffic,
   hit: Impact,
+  /**
+   * WHOSE ART LEAVES THE VEHICLE — a `rider` off a two-wheeler, or a `driver`
+   * out through a windscreen. It is the ONE thing that differs between the two
+   * populations by the time they are in the air, and it travels rather than
+   * being guessed at the far end: everything downstream (the tumble, the tally,
+   * the wheels, the cut) is identical.
+   */
+  kind: "rider" | "driver",
   variant: number,
   force: number,
   atX: number,
+  /**
+   * MET NOSE TO NOSE. Two things change and they are the two the sight is made
+   * of: whoever was in the seat comes apart WHATEVER the force ladder says, and
+   * everything that leaves does so flat and fast rather than being lobbed
+   * (`DRIVE.eject.headOn`).
+   */
+  square = false,
 ): DriveRemain[] {
   const { eject } = DRIVE;
   const dir = drive.params.direction;
@@ -128,21 +173,22 @@ function throwBody(
   // of its flight and be run over on landing — a much duller picture than the
   // one that clears the roof and goes up the road.
   const carVx = dir * drive.car.speed;
-  const lift = Math.min(
-    eject.maxLiftPx,
-    eject.liftPx.base + eject.liftPx.perForce * over,
-  );
+  const lift =
+    Math.min(
+      eject.maxLiftPx,
+      eject.liftPx.base + eject.liftPx.perForce * over,
+    ) * (square ? eject.headOn.liftScale : 1);
   const ped: DrivePedestrian = {
     id: drive.nextId++,
     pos: { x: atX, y: other.pos.y },
     vel: {
-      x: carVx * eject.carry,
+      x: carVx * eject.carry * (square ? eject.headOn.carryScale : 1),
       // Out of the side the blow came from, so a body leaves a car the way the
       // car was pushed rather than in a direction nobody can account for.
       y: hit.launch.y * 0.5 + (hash(seed, 7) - 0.5) * 40,
     },
     mode: "tumbling",
-    kind: "rider",
+    kind,
     variant,
     bark: -1,
     phase: hash(seed, 11) * Math.PI * 2,
@@ -163,15 +209,21 @@ function throwBody(
   // …AND PAST A LINE THEY DO NOT LAND IN ONE PIECE. The ladder the road now
   // has is: knocked off, thrown a long way, and — past `gibForce` — thrown a
   // long way in several directions at once.
+  //
+  // A HEAD-ON SKIPS THE LADDER AND TAKES THE TOP RUNG EVERY TIME, which is the
+  // whole of the rule: the biggest thing a player can deliberately do out here
+  // has to look the same each time he does it, or it is not something he can
+  // decide to do. What comes out of the screen is the driver's upper half and
+  // whatever was inside him, on every single one.
   const { gib, split } = drive.params;
-  if ((gib || split) && force >= eject.gibForce) {
+  if ((gib || split) && (square || force >= eject.gibForce)) {
     drive.strikes.push({
       id: ped.id,
       pos: { x: ped.pos.x, y: ped.pos.y },
       vel: { x: ped.vel.x, y: ped.vel.y },
       vz: ped.vz,
       joules: hit.joules,
-      kind: "rider",
+      kind,
       variant,
       panel: hit.panel,
       split: split && splitsBody(hit.joules),
@@ -179,6 +231,7 @@ function throwBody(
     const pieces = burstBody(drive, ped, hit, split, gib, {
       boost: DRIVE.eject.gibBoost,
       airborne: true,
+      liftScale: square ? eject.headOn.liftScale : 1,
     });
     return pieces;
   }
@@ -205,7 +258,7 @@ export function ejectRider(
   const force = wreckForce(other, hit.joules);
   if (force < DRIVE.eject.joules * DRIVE.eject.riderScale) return [];
   other.rider = false;
-  return throwBody(drive, other, hit, def.rider, force, other.pos.x);
+  return throwBody(drive, other, hit, "rider", def.rider, force, other.pos.x);
 }
 
 /**
@@ -229,6 +282,13 @@ export function ejectRider(
  * `occupantKilled` and puts blood on the glass — which is the only way the road
  * can show a death nobody saw happen.
  *
+ * AND ONE COLLISION IS NOT ON THE LADDER AT ALL. Meet a car NOSE TO NOSE in the
+ * opposing lane and the whole sequence is guaranteed rather than rolled: the
+ * driver's upper half comes out through the screen, what was inside him comes
+ * out with it, and the car wears the rest down its own glass. That is the most
+ * deliberate act available on this road and it has to look the same every time,
+ * or it is not something a player can decide to do. See `headOn`.
+ *
  * `forced` is passed by the write-off (`hurtTraffic`): a car whose structure has
  * given up entirely is not keeping anybody, whatever the last blow's angle was.
  */
@@ -241,7 +301,10 @@ export function ejectOccupants(
 ): DriveRemain[] {
   if (other.occupants <= 0) return [];
   const force = wreckForce(other, hit.joules);
-  const out = forced || ejects(other, hit, force);
+  // MET NOSE TO NOSE. It is settled before the ordinary bar is even asked,
+  // because "always" is the whole content of the rule — see `headOn`.
+  const square = headOn(drive, other, hit);
+  const out = forced || square || ejects(other, hit, force);
   if (!out) {
     // NOT OPEN, BUT FATAL. Nobody comes through the glass — the blow was down
     // the flank, or the car folded rather than opened — and everybody in it is
@@ -263,6 +326,24 @@ export function ejectOccupants(
   // The screen is the front of the car, so its glass goes with the front of the
   // car's damage — the same agreement the hero's own glass keeps with his hood.
   other.rung = Math.max(other.rung, 1);
+  // …AND A HEAD-ON PAINTS THE INSIDE OF IT ON THE WAY PAST. Somebody left this
+  // car through its own screen at the sum of two speeds, and the car keeps the
+  // record of it: `DriveTraffic.gore` is the wash down the glass and the
+  // bodywork under it, the same mark a death in the seat leaves, arrived at from
+  // the opposite direction. Gated at the DECISION with everything else — with
+  // the run's dismemberment switches off the driver still goes through the
+  // windscreen, the car simply does not wear him.
+  if (square && (drive.params.gib || drive.params.split)) {
+    other.gore = 1;
+    other.glassOut = true;
+    // …AND IT DOES NOT ALL STAY ON THE CAR. The glass going out is one event and
+    // what comes THROUGH it is another: the app answers this one with the spray.
+    drive.events.push({
+      type: "windscreenGore",
+      pos: { x: exitX, y: other.pos.y },
+      joules: hit.joules,
+    });
+  }
 
   const pieces: DriveRemain[] = [];
   // At most two go out. A third body through the same hole in the same instant
@@ -279,9 +360,11 @@ export function ejectOccupants(
         drive,
         other,
         hit,
+        "driver",
         occupantVariant(other, i),
         force,
         exitX + spread * 0.2,
+        square,
       ),
     );
   }
@@ -327,18 +410,22 @@ function killInside(drive: DriveState, other: DriveTraffic, hit: Impact): void {
 }
 
 /**
- * WHICH BODY A CAR'S OCCUPANT WEARS. They are drawn out of the RIDER table
- * (they are the only art on this road of a person in a seated posture, which is
- * what somebody who has just left a driving seat looks like) and picked off the
- * car's own id, so the same car always empties the same people.
+ * WHICH BODY A CAR'S OCCUPANT WEARS — one of the five DRIVERS, picked off the
+ * car's own id so the same car always empties the same people.
+ *
+ * IT USED TO BE THE RIDER TABLE, on the argument that a rider is the only art
+ * on this road of a person in a seated posture and that is what somebody who
+ * has just left a driving seat looks like. True of the POSTURE and false of
+ * everything else: it put crash helmets and hot-box jackets in the front of
+ * saloons, and — because only two of the six read as ordinary people in coats —
+ * it meant the biggest sight on this road threw one of TWO torsos. Five drivers
+ * with five different heads is the whole of the fix, and the cut lands high
+ * enough (`DRIVE.gore.cutBand`) that the head is most of what flies.
  */
 function occupantVariant(other: DriveTraffic, seat: number): number {
-  // Skip the two delivery riders: nobody is driving a saloon in a hot-box
-  // jacket, and the commuter and the biker read as ordinary people in coats.
-  const pool = [1, 0];
-  return pool[
-    Math.floor(hash(other.id, 31 + seat) * pool.length) % pool.length
-  ]!;
+  return (
+    Math.floor(hash(other.id, 31 + seat) * DRIVER_VARIANTS) % DRIVER_VARIANTS
+  );
 }
 
 /**

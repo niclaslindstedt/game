@@ -19,7 +19,7 @@
 // any camera yaw the projection happens to be wearing.
 //
 // ONE MODULE, BOTH WHEELS: the garage's pottering car (game-screen/
-// player-input.ts) and the minigame's 120 mph one (drive-screen/) read their
+// player-input.ts) and the minigame's 174 mph one (drive-screen/) read their
 // keys through this, so the car handles the same in both — which is the rule
 // the physics already follows (`applyCarControl`).
 //

@@ -478,7 +478,7 @@ a distribution.
 | `node scripts/gore-rate.mjs` | Plays campaigns and replays every kill through the shipped ladder. Read the SPREAD across the rungs, not the average — a flat rate at every difficulty is the one way this can be wrong while still looking reasonable |
 | The `playtest` / `simulate-run` skills | The soak and trail rates, which are only honest over a real run's kill count and positions |
 | EFFECTS GALLERY (`?effects=<id>`, or DEVELOPER → GALLERIES → EFFECTS) | One effect per screen, staged as a real fullscreen situation and replayed on a loop; `S` steps it down to ⅛× SLOW MOTION, which is the only way to judge a burst that is over in a fifth of a second |
-| `node pwa/scripts/effects-gallery.mjs --strip N` | A filmstrip of a whole exhibit composited into one contact sheet — what a review actually reads |
+| `make gallery ARGS=\"--only <id> --strip N\"` | A filmstrip of a whole exhibit composited into one contact sheet — what a review actually reads. It starts and stops its own dev server; add `--speed 0.125` for the slow motion a burst needs. (It used to be a raw `node pwa/scripts/effects-gallery.mjs` that silently required a server somebody else had started, which is most of why it went unused.) |
 
 The exhibits that belong to this skill: `cleave` (CLEAVED IN TWO), `gib` (BURST
 INTO PIECES), `gore-ecto` / `gore-sparks` / `gore-cosmic` (each family's cut and

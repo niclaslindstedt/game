@@ -143,23 +143,28 @@ describe("the wagon's drivetrain", () => {
   // the torque curve are meant to be tuned freely and a pinned figure would
   // make every tuning pass a test edit.
 
-  it("takes the better part of ten seconds to reach sixty", () => {
+  it("takes about five seconds to reach sixty", () => {
     // THE ONE NUMBER WITH A FLOOR UNDER IT. The road used to accelerate at
     // 2.3 g — nought to sixty in about a second and a quarter — which is not a
     // car, and it made the whole minigame a question of whether you were
-    // holding the throttle rather than of how you were driving. Eight seconds
-    // is the slowest a wagon like this could plausibly be quick, and it is the
-    // floor rather than the target.
+    // holding the throttle rather than of how you were driving.
+    //
+    // THE WINDOW MOVED WITH THE ENGINE. It was eight to fourteen seconds while
+    // the wagon had a tired oil-burner in it; the re-engined car is a four
+    // hundred horsepower thing that tops out at 280 km/h, and one of those
+    // reaches sixty in about five. Three is the floor a wheeled vehicle cannot
+    // plausibly beat without slicks; eight is the ceiling the new brochure
+    // cannot be honest above.
     const sixty = secondsTo(60);
-    expect(sixty).toBeGreaterThan(8);
-    expect(sixty).toBeLessThan(14);
+    expect(sixty).toBeGreaterThan(3);
+    expect(sixty).toBeLessThan(8);
   });
 
   it("takes longer for every twenty after that", () => {
     // Drag goes as the square of speed and the power to beat it as the cube, so
     // each bite is dearer than the last. This is what makes the top of the dial
     // something a driver spends a whole straight earning.
-    const marks = [40, 60, 80, 100].map(secondsTo);
+    const marks = [60, 90, 120, 150].map(secondsTo);
     const steps = marks.slice(1).map((t, i) => t - (marks[i] ?? 0));
     for (let i = 1; i < steps.length; i++) {
       expect(steps[i]).toBeGreaterThan(steps[i - 1] ?? 0);
@@ -185,22 +190,22 @@ describe("the wagon's drivetrain", () => {
     // THE ONE THE WHOLE RE-GEARING EXISTS FOR, and it is four claims about the
     // NUMBER UNDER THE NEEDLE rather than about how the wagon goes.
     //
-    // The box used to change up at the redline: every gear was held to 5800,
-    // every shift dropped the crank no further than the high threes, and a
-    // wagon pottering along at forty sat in the top third of its own dial with
-    // the red in sight. A real car idles at eight hundred, is asked for about
-    // three thousand, and lands back around two — and the red paint at the end
-    // of the face is a thing it is told about rather than shown.
+    // The box used to change up at the redline: every gear was held against the
+    // stop and a wagon pottering along at forty sat in the paint. A real driver
+    // with the pedal flat changes up JUST PAST THE POWER PEAK — one more rev
+    // buys less at the tyre than the next ratio does — and the red at the end of
+    // the face is a thing the car is told about rather than shown.
 
     // It idles where an engine idles, and standing still is not a gear.
     expect(engineRpm(0)).toBe(DRIVETRAIN.idleRpm);
     expect(DRIVETRAIN.idleRpm).toBeGreaterThanOrEqual(600);
     expect(DRIVETRAIN.idleRpm).toBeLessThanOrEqual(1000);
 
-    // It is let go somewhere a driver would let go of it — not at the stop.
-    expect(DRIVETRAIN.shiftUpRpm).toBeGreaterThan(2500);
-    expect(DRIVETRAIN.shiftUpRpm).toBeLessThan(4200);
-    expect(DRIVETRAIN.shiftUpRpm).toBeLessThan(DRIVETRAIN.redlineRpm * 0.85);
+    // It is let go somewhere a driver would let go of it — high, and still not
+    // at the stop. The window is the whole useful top of a petrol engine's
+    // range rather than a pinned figure, so the brochure can be retuned.
+    expect(DRIVETRAIN.shiftUpRpm).toBeGreaterThan(DRIVETRAIN.redlineRpm * 0.75);
+    expect(DRIVETRAIN.shiftUpRpm).toBeLessThan(DRIVETRAIN.redlineRpm * 0.95);
 
     // Every upshift lands back down the band rather than near the top of it:
     // between a third and four fifths of the way up, which is the difference
@@ -222,10 +227,19 @@ describe("the wagon's drivetrain", () => {
 
     // And nothing the wagon can do on its own puts the needle in the paint.
     // Flat out in top, with no sixth gear to escape into, is the worst case the
-    // road has — and it is a comfortable distance short.
+    // road has — and it stays short of the red the dial prints (`zone: 0.94` on
+    // `content/hud/elements/drive_speedo.yaml`).
     for (let px = 0; px <= DRIVE.topSpeedPx; px += 1) {
-      expect(engineRpm(px)).toBeLessThan(DRIVETRAIN.redlineRpm * 0.8);
+      expect(engineRpm(px)).toBeLessThan(DRIVETRAIN.redlineRpm * 0.94);
     }
+
+    // …BUT IT DOES END UP HIGH, which is the other half of the same claim and
+    // the one a slack top gear would quietly break. Flat out in fifth the crank
+    // has to be plainly working — past four fifths of the face — or the car is
+    // saying it has another ratio it is not being given.
+    const top = engineRpm(DRIVE.topSpeedPx);
+    expect(gearFor(DRIVE.topSpeedPx)).toBe(GEAR_COUNT - 1);
+    expect(top).toBeGreaterThan(DRIVETRAIN.redlineRpm * 0.82);
   });
 
   it("drops the revs on every upshift, and never below the one before", () => {
