@@ -571,6 +571,17 @@ export function drawLightCones(
    * its tail lights, which is exactly what makes a rear-ended one read. */
   noseOut = false,
   tailOut = false,
+  /**
+   * HOW FAR THE BODY HAS TURNED (radians) — so the beams turn with it.
+   *
+   * They used to be drawn square to the road whatever the car was doing, which
+   * was invisible while nothing on this road could turn. A clip now spins a car
+   * out and a hard one puts it on its roof (`drive/crush.ts`), and a spun car
+   * whose lights carried on pointing down the carriageway read as the beams
+   * having come off it. Same angle and the same pivot the body uses
+   * (`drive-screen/wreck-draw.ts`), so the two cannot disagree.
+   */
+  yaw = 0,
 ): void {
   const flicker = 0.88 + 0.12 * (Math.floor(timeMs / 90) % 2);
   const face = faceLeft ? -1 : 1;
@@ -580,6 +591,16 @@ export function drawLightCones(
     // pins row h-2 to `at.y`, so the lamp line is ~11 px above it — each
     // end riding its own axle's drop, so a nose-down wreck's beam dips.
     const lampY = at.y - camera.y - 11;
+    // TURNED ABOUT THE BODY'S OWN SEAT, which is the pivot `drawTrafficBody`
+    // turns the sprite about — the bottom-centre of the car rather than the
+    // lamp line, or the beams would swing around a point a foot above the
+    // bonnet and part company with the car at any real angle.
+    if (yaw !== 0) {
+      ctx.save();
+      ctx.translate(sx, at.y - camera.y);
+      ctx.rotate(yaw);
+      ctx.translate(-sx, -(at.y - camera.y));
+    }
     // The HEADLIGHT cone: out of the nose, widening as it goes.
     const noseX = sx + 23 * face;
     const noseDip = Math.round(frontDrop);
@@ -614,6 +635,7 @@ export function drawLightCones(
     ctx.lineTo(tailX, lampY + tailDip + 4);
     ctx.closePath();
     ctx.fill();
+    if (yaw !== 0) ctx.restore();
   });
 }
 

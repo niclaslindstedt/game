@@ -842,12 +842,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   and parked cars of `street.ts`, derived from a hash of their own slot (no rng
   draw, the same street both ways) and materialized into `DriveState.props` as
   the road unrolls. Everybody on it, shunted traffic included, is held to those
-  edges. A parked car does not break and costs far more than the van you were
-  tailgating, because the collision is solved on the SWEEP and a stopped car is
-  met at the hero's whole speed; a lamp post shears off its base, cartwheels
-  down the road and takes a slice of the car with it — and the auto-driver
-  reads the furniture like everything else, or it settles in the gutter and
-  grinds itself to a halt on the emptiest-looking line on the road.
+  edges. A parked car costs far more than the van you were tailgating, because
+  the collision is solved on the SWEEP and a stopped car is met at the hero's
+  whole speed — and it STOPS BEING FURNITURE the moment it is touched
+  (`unparkCar`), joining the traffic as a `driverless` vehicle so it folds,
+  spins and rolls exactly as the road's own cars do. It had to: a `DriveProp`
+  has no velocity, no crush, no yaw and nothing to roll, so while a parked car
+  was one the only answer the collision had was to shift it sideways. A lamp
+  post shears off its base, cartwheels down the road and takes a slice of the
+  car with it — keeping the picture it was STANDING in (looked up from the foot
+  it left behind, never from the flying half's own moving position) and wearing
+  its derived lights-out grid, so it reads as one column breaking rather than as
+  a substitution. And the auto-driver reads the furniture like everything else,
+  or it settles in the gutter and grinds itself to a halt on the emptiest-looking
+  line on the road.
   WHAT IS ON THE ROAD is a CATALOG rather than a variant index — `fleet.ts`,
   twenty-two vehicles each carrying its own mass, collision extent, speed band,
   spawn weight and passenger list. It has to be, because the whole minigame is a
@@ -883,6 +891,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   share of the TANGENTIAL energy for anything with bodywork
   (`impact.scrapeFriction`), because two cars grinding down each other's flanks
   at 120 booking exactly zero joules was the model's one silent hole.
+  EVERY ONE OF THOSE IS A SPEED RATHER THAN A PLACEMENT, which is the other half
+  of making a collision read: getting the struck car clear used to be an
+  instantaneous twenty-two-px hop sideways, so a car rear-ended dead square —
+  where the answer is entirely along the road — still snapped most of a lane
+  across it, and a car going over jumped half a lane as the roll began. The
+  overlap that was papering over is `shuntImmuneMs`'s job and always was, so the
+  separation is a floor on the lateral SPEED (`separationPx`) and the vehicle
+  drives itself clear over the following tenth of a second.
   WHO LEAVES A VEHICLE, AND HOW, is `eject.ts`, and it is two populations rather
   than one. A RIDER sits in the open on something lighter than they are: nothing
   holds them on, so any real contact takes them off it, and the only question is

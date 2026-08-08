@@ -37,6 +37,7 @@ import {
 } from "../asset-tools/cast.mjs";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { wreckedFrames } from "../asset-tools/wreck.mjs";
+import { darkFrames, LAMP_SPRITES } from "../asset-tools/lamp.mjs";
 import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
@@ -287,6 +288,24 @@ export function deriveWrecks(fleet) {
 }
 
 deriveWrecks(FLEET);
+
+// ---- Street lighting with its lens out --------------------------------------
+// A felled post has to read as DARK, and the renderer used to get there by
+// swapping in a different lamp's picture — which changed the silhouette of
+// every mast on the far row the instant it was hit. The dark look is derived
+// from the burning one instead (asset-tools/lamp.mjs), so a broken column is
+// the same column.
+
+for (const name of LAMP_SPRITES) {
+  const grid = SPRITES[name];
+  if (!grid) throw new Error(`street light "${name}": no sprite`);
+  const family = FAMILIES.find((f) => f.name === SPRITE_FAMILY[name]);
+  if (!family) continue;
+  const palette = { ...family.palette, ...SPRITE_PALETTES[name] };
+  for (const [dark, rows] of Object.entries(darkFrames(name, grid))) {
+    register(family, dark, rows, palette);
+  }
+}
 
 // ---- The town ---------------------------------------------------------------
 // Every building on the road to GOODCO, and every loose piece it is dressed

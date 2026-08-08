@@ -844,6 +844,22 @@ last saw it), turns it by whatever spun it, lifts it by whatever put it in the
 air — and the fold is applied in the SPRITE's own frame, before the facing
 flip, or every oncoming car in the game crumples at the wrong end.
 
+**A lamp keeps its own picture when it breaks.** A felled post used to pick its
+sprite from `mastAt(prop.pos)` — and a felled post's `pos` is the FLYING HALF's,
+which is moving by the next tick, so a tall mast became the near row's picture
+on the frame it was hit and then the little garden yard light a tick later. It
+did not read as breaking; it read as being substituted, twice. The lookup asks
+where the post STOOD instead (`prop.stub`, the foot it left behind), and it goes
+dark by wearing its own derived lights-out grid (`<name>_out`,
+`asset-tools/lamp.mjs`) rather than borrowing another lamp's — so the silhouette
+the eye was tracking is the silhouette that breaks, into a stump still bolted to
+the pavement and a column cartwheeling up the road.
+
+**And a car's beams turn with its body.** `drawLightCones` takes the vehicle's
+yaw and rotates about the same pivot `drawTrafficBody` uses; before that a car
+spun out by a clip pointed one way and lit another, which reads as the lights
+having come off it.
+
 **Blood on the windows is an OVERLAY, not a fifth rung** (`<sprite>_gore`,
 derived beside the ladder). Whether anybody died inside a car is independent of
 how battered it is — a saloon can be folded up and empty, or barely marked with

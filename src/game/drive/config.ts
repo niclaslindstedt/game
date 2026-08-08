@@ -600,13 +600,36 @@ export const DRIVE = {
   /** How fast a shunted car bleeds its slew off (1/s) — a couple of seconds of
    * fishtailing and it is straight again. */
   shuntDampPerSec: 1.4,
-  /** How far a shunted car is moved clear ON THE SPOT (world px). Two car
-   * bodies that touch keep touching for dozens of ticks, and every one of them
-   * is another collision — so a shunt separates them itself rather than waiting
-   * for the slew to do it. See `shunt`. */
-  separationPx: 22,
-  /** …and how long it cannot be hit again for (ms), which closes the rest of
-   * the same hole. One contact is one impact. */
+  /**
+   * THE LEAST LATERAL SPEED A SHOVE LEAVES A VEHICLE WITH (world px/s) — how it
+   * gets clear of the wagon that hit it.
+   *
+   * IT USED TO BE A TELEPORT, and that was the single most damaging thing about
+   * how a collision read. Two car bodies that touch keep touching for dozens of
+   * ticks, and every one of them used to be another collision — so the shunt
+   * moved the struck car clear ON THE SPOT, twenty-two px sideways, which is
+   * most of a lane. Instantly. On the frame of the hit.
+   *
+   * That jump is what "the car teleports" was: rear-end somebody dead square,
+   * where the physics says the answer is entirely ALONG the road, and the model
+   * would still snap them most of a lane sideways for no reason the picture
+   * could account for — and a car going over would jump half a lane in the
+   * instant the roll began, which is why the flip read as something happening
+   * NEAR the car rather than TO it.
+   *
+   * The hole it was plugging is closed twice over now: `shuntImmuneMs` is
+   * stamped on every contact at the top of the collision pass, so an overlap
+   * cannot fire twice however long it lasts. So the separation is a SPEED, and
+   * the car drives itself clear over the following tenth of a second the way
+   * anything else on this road moves — which is both correct and, unlike a
+   * teleport, something the eye can follow.
+   *
+   * A FLOOR rather than a fixed push: a blow with real lateral impulse in it
+   * already exceeds this and keeps its own answer.
+   */
+  separationPx: 90,
+  /** …and how long it cannot be hit again for (ms). One contact is one impact,
+   * and this is now the ONLY thing that guarantees it. */
   shuntImmuneMs: 450,
 
   // ── DESTROYING THE OTHER TRAFFIC ──────────────────────────────────────────

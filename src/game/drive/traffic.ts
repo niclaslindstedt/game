@@ -160,6 +160,7 @@ export function createTraffic(
     wrecked: false,
     rider: def.rider !== null,
     occupants: def.occupants,
+    driverless: false,
     downed: false,
     z: 0,
     vz: 0,
@@ -526,7 +527,16 @@ export function shunt(
   // shunted car sliding back INTO the hero is the one outcome nobody reads as
   // a shove.
   const side = other.pos.y >= awayFrom ? 1 : -1;
-  const push = Math.abs(hit.dv.y) * DRIVE.shuntPx * 0.01;
+  // …AND IT LEAVES WITH AT LEAST ENOUGH TO GET CLEAR. The floor is what used to
+  // be an instantaneous twenty-two-px hop sideways (`separationPx`); it is a
+  // SPEED now, so a car shoved dead square drives itself out of the wagon's way
+  // over the following tenth of a second instead of arriving there on the frame
+  // of the blow. Two bodies overlapping in the meantime is somebody else's
+  // problem and always was — `shuntImmuneMs`, stamped on every contact.
+  const push = Math.max(
+    DRIVE.separationPx,
+    Math.abs(hit.dv.y) * DRIVE.shuntPx * 0.01,
+  );
   other.slew = Math.max(
     -DRIVE.shuntMaxPx,
     Math.min(DRIVE.shuntMaxPx, side * push),
@@ -544,8 +554,47 @@ export function shunt(
   const arm = Math.min(1, Math.abs(hit.along) / Math.max(1, def.halfLengthPx));
   const yaw = Math.abs(hit.dv.y) * DRIVE_UNITS.mPerPx * crush.yawPerMs * arm;
   other.spin += side * Math.min(crush.maxYawSpin, yaw);
-  other.pos.y += side * DRIVE.separationPx;
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
+}
+
+/**
+ * IT IS NOT PARKED ANY MORE — turn a struck kerbside car into one of the
+ * traffic, and hand back the vehicle the collision should actually be solved
+ * against.
+ *
+ * THE WHOLE OF WHY HITTING A PARKED CAR DID NOTHING. A parked car is a
+ * `DriveProp`, which is the right shape for a thing that stands still: a
+ * position, a sprite and a collision circle. It has no speed, no crush depth,
+ * no yaw, no roll and no wreck state — so the collision could not fold it,
+ * punt it, spin it or put it on its roof, and the only answer left was to move
+ * it sideways by a fixed number of pixels and carry on. Which is exactly what
+ * the player saw: it shifted, and nothing happened.
+ *
+ * The kerb's own comment already said the true thing — a parked car is one of
+ * the FLEET with the handbrake on — so the fix is to believe it. The moment one
+ * is hit it stops being furniture and becomes a `DriveTraffic` like any other,
+ * and every rule written for the road applies to it with nothing added.
+ *
+ * IT KEEPS THREE FACTS ABOUT HAVING BEEN PARKED, and they are all `driverless`:
+ * its lights stay off, it never gets on a cruising speed, and there is nobody
+ * in it to come through the screen. The HANDBRAKE is not one of them — that is
+ * priced into the mass of the FIRST blow (`impactMasses.parkedExtra`) and has no
+ * business surviving into the second, because by then the thing is rolling.
+ */
+export function unparkCar(
+  drive: DriveState,
+  prop: { id: number; variant: number; pos: { x: number; y: number } },
+): DriveTraffic {
+  const one = createTraffic(drive.nextId++, prop.variant, prop.pos, 0);
+  one.driverless = true;
+  // Nobody parks a car and sits in it, and nobody parks one and stays on it.
+  one.occupants = 0;
+  one.rider = false;
+  // A car at the kerb is pointed the way the traffic on its side runs, which is
+  // how it was drawn as furniture — so it does not flip round on being touched.
+  one.faceLeft = drive.params.direction === -1;
+  drive.traffic.push(one);
+  return one;
 }
 
 /**
@@ -573,5 +622,8 @@ export function knockDown(
   // move every body after it (the same rule the gore obeys).
   other.spin = side * Math.abs(other.speed) * DRIVE.traffic.downSpinPerSpeed;
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
-  other.pos.y += side * DRIVE.separationPx * 0.5;
+  // …and it slides clear under its own steam rather than being placed clear —
+  // see `separationPx`. A machine going down in front of the bumper is the one
+  // case where the eye is definitely watching.
+  other.slew += side * DRIVE.separationPx * 0.5;
 }

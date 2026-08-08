@@ -72,7 +72,6 @@ import {
   LAMP_STUB_PX,
   mastAt,
   roadBands,
-  ROAD_LAMP_NEAR_SPRITE,
   ROAD_LAMP_HEAD_PX,
   ROAD_LAMP_POOL_PX,
   RIDER_SEATS,
@@ -578,23 +577,40 @@ export function drawDrive(
     }
     // A FELLED post has BROKEN, and the picture has to say so in three ways.
     //
-    // It is DARK. Whatever it was lighting a moment ago, the lens is on the
-    // road now — so both rows wear the head with no lens in it, and the beam
-    // and the pool above are already gone (they are gated on `felled`).
+    // It is THE SAME POST. This is the one that was wrong, and it was wrong
+    // twice over. The picture was looked up from `mastAt(prop.pos)` — and a
+    // felled post's `pos` is the FLYING HALF's, which is already moving by the
+    // next tick. So a tall mast on the far row became, on the frame it was hit,
+    // the near row's picture (a different head, seen from the other side), and
+    // then a tick later — once the column had travelled the one pixel `mastAt`
+    // tolerates — the little garden yard light, which is a third of the height.
+    // The post did not read as breaking; it read as being SUBSTITUTED, twice.
+    //
+    // Both halves of that are the same fix: ask where the post STOOD, which is
+    // the foot it left behind (`prop.stub`, stamped by `fellLamp` for exactly
+    // this reason and nothing else), and never the thing that is moving.
+    //
+    // It is DARK — the lens is on the road, and the beam and the pool above are
+    // already gone (they are gated on `felled`). It wears its own lights-out
+    // grid for that (`<name>_out`, derived beside it by `asset-tools/lamp.mjs`)
+    // rather than borrowing another lamp's picture, so the silhouette the eye
+    // was tracking is the silhouette that breaks. A lamp with no lens in its
+    // art has nothing to put out and falls back to itself.
     //
     // It is in TWO PIECES. A slip-base column shears at its foot, so the stump
-    // stays bolted to the pavement where it always was (`prop.stub`, minted by
-    // `fellLamp`) and the rest of the column goes down the road WITHOUT it —
-    // the flying half is drawn with its own bottom rows cropped away, so the
-    // two together are one broken post rather than a whole one plus a spare.
+    // stays bolted to the pavement where it always was and the rest of the
+    // column goes down the road WITHOUT it — the flying half is drawn with its
+    // own bottom rows cropped away, so the two together are one broken post
+    // rather than a whole one plus a spare.
     //
     // And it TURNS ABOUT ITS BREAK, which is where it broke: a post pivoting
     // around its own middle reads as a spinning stick rather than as something
     // that was bolted to the pavement a moment ago.
-    const sprite = spriteByName(
-      sprites,
-      mastAt(prop.pos) ? ROAD_LAMP_NEAR_SPRITE : LAMP_SPRITE,
-    );
+    const stood = prop.stub ?? prop.pos;
+    const standing = mastAt(stood)?.sprite ?? LAMP_SPRITE;
+    const sprite =
+      spriteByName(sprites, `${standing}_out`) ??
+      spriteByName(sprites, standing);
     if (!sprite) continue;
     const stump = prop.stub;
     if (stump) {
@@ -661,8 +677,10 @@ export function drawDrive(
     const name = trafficSprite(other.variant, other.rung);
     // ITS LIGHTS GO OUT WHEN IT DOES. A wreck coasting to a halt and a moped
     // lying on its side are both still drawn, and a beam thrown down the road
-    // out of either one would undo the whole read.
-    if (!other.downed && !other.wrecked) {
+    // out of either one would undo the whole read — and a car somebody LEFT at
+    // the kerb never had them on in the first place (`driverless`, the flag a
+    // parked car keeps after it stops being furniture and joins this list).
+    if (!other.downed && !other.wrecked && !other.driverless) {
       drawn.push({
         y: other.pos.y - 0.001,
         draw: () =>
@@ -676,6 +694,11 @@ export function drawDrive(
             other.faceLeft,
             other.noseOut,
             other.tailOut,
+            // …AND THE BEAMS TURN WITH THE BODY. They used to be drawn square
+            // to the road whatever the car was doing, so a car spun out by a
+            // clip pointed one way and lit another — the lights visibly came
+            // off it. Same angle, same pivot as the sprite (`wreck-draw.ts`).
+            other.angle,
           ),
       });
     }

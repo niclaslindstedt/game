@@ -343,6 +343,24 @@ export type DriveTraffic = {
    * is lighter, riderless, and usually on its side.
    */
   rider: boolean;
+  /**
+   * NOBODY IS AT THE WHEEL — this vehicle was PARKED until somebody hit it.
+   *
+   * A parked car used to be furniture (`DriveProp`) for its whole life, and
+   * being furniture is why hitting one did nothing: props have no velocity, no
+   * crush, no spin and no roll, so the collision could only shove it sideways
+   * by a fixed number of pixels and leave. The moment one is struck it stops
+   * being furniture and becomes one of these (`unparkCar`), which is the
+   * honest reading of what the kerb already said out loud — a parked car is one
+   * of the FLEET with the handbrake on — and it inherits the entire breaking
+   * model for free rather than growing a second copy of it.
+   *
+   * What the flag itself carries is the two things that are still true of it
+   * afterwards: its LIGHTS are off, because nobody is sitting in it, and it
+   * never gets back on a cruising speed, because nobody is driving it. Both
+   * would otherwise be wrong the instant it joined the traffic list.
+   */
+  driverless: boolean;
   /** How many people are still INSIDE — decremented as they leave through the
    * screen. Starts at the def's `occupants`. */
   occupants: number;
