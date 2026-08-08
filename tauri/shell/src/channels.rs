@@ -37,7 +37,7 @@ pub const PLATFORM_GLOBAL: &str = "__GIS_PLATFORM__";
 /// The page must go on believing it is the desktop store build, because it IS —
 /// same store, same product, same absent coin store. This global exists for a
 /// bug report and a screenshot to be attributable to a binary while two of them
-/// exist, and `docs/tauri-migration.md` is the rule that keeps it out of any
+/// exist, and `tauri/README.md` is the rule that keeps it out of any
 /// gameplay decision.
 pub const SHELL_ID_GLOBAL: &str = "__GIS_SHELL__";
 

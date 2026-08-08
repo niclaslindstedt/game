@@ -9,20 +9,17 @@
 //! same one the phone shell answers (minus haptics, which a desktop has no
 //! motor for) plus the two only a desktop can honour.
 //!
-//! **Every protocol has been listed here since phase 1, including the ones this
-//! build cannot answer**, and that is the point: an unimplemented protocol is
-//! [`Route::Unimplemented`] carrying the phase that fills it in, so a
-//! mid-migration build explains itself in its own log instead of going quiet.
-//! The alternative — dropping unknown messages — is the failure mode where the
-//! page waits out a timeout and the shell has nothing to say about it.
+//! **EVERY PROTOCOL THE PAGE CAN SPEAK IS LISTED HERE, including any this
+//! build does not answer.** That is the point of the list rather than an
+//! accident of it: a protocol with no route is [`Route::Unanswered`], which the
+//! shell says out loud in its own log, and the alternative — dropping unknown
+//! messages — is the failure mode where the page waits out a timeout and the
+//! shell has nothing to say about it.
 //!
-//! Phase 2 moved four of them (cloud, achievements, scores, shots) off that
-//! list and onto routes of their own; phase 3 moved the last two (mods, net),
-//! so [`Route::Unimplemented`] now describes nothing this shell ships. It stays
-//! anyway, and so does [`IMPLEMENTED_THROUGH_PHASE`]: a SEVENTH protocol will
-//! arrive one day on the web side before it arrives here, and the alternative —
-//! dropping unknown messages — is the failure mode where the page waits out a
-//! timeout and the shell has nothing to say about it.
+//! Today every protocol is answered, so `Unanswered` describes nothing this
+//! shell ships. It stays anyway: a SEVENTH protocol will arrive on the web side
+//! before it arrives here, and a build that went quiet about one would present
+//! to a player as a hang.
 
 use serde_json::Value;
 
@@ -31,28 +28,25 @@ use serde_json::Value;
 pub enum Route {
     /// QUIT — the main menu's QUIT row (`pwa/src/app/quit-bridge.ts`). No reply
     /// and no bridge module: the only successful outcome is the page ceasing to
-    /// exist. Answered from phase 1, because it needs no platform behind it.
+    /// exist. It needs no platform behind it at all.
     Quit,
-    /// CLOUD SAVE — [`crate::cloud_save`]. Phase 2.
+    /// CLOUD SAVE — [`crate::cloud_save`].
     Cloud,
-    /// ACHIEVEMENTS — [`crate::achievements`]. Phase 2.
+    /// ACHIEVEMENTS — [`crate::achievements`].
     Achievements,
     /// LEADERBOARDS — [`crate::leaderboards`], wired up with no provider behind
-    /// it. Phase 2.
+    /// it.
     Scores,
-    /// SCREENSHOTS — [`crate::screenshots`]. Phase 2.
+    /// SCREENSHOTS — [`crate::screenshots`].
     Shots,
-    /// MODS — [`crate::mods`]. Phase 3.
+    /// MODS — [`crate::mods`].
     Mods,
-    /// MULTIPLAYER — [`crate::net`]. Phase 3.
+    /// MULTIPLAYER — [`crate::net`].
     Net,
-    /// A protocol this shell knows but has not grown yet, and the migration
-    /// phase that grows it.
-    Unimplemented {
+    /// A protocol this shell knows about but has not grown a route for.
+    Unanswered {
         /// The protocol's own name, as [`crate::channels::event_global`] spells it.
         protocol: &'static str,
-        /// Which phase of `docs/tauri-migration.md` fills this in.
-        phase: u8,
     },
     /// A protocol this build carries but this LAUNCH may not honour — the page
     /// already hides the front door (the capability list reaches it in the
@@ -69,33 +63,24 @@ pub enum Route {
     Ignored,
 }
 
-/// The protocols, their flags, and the phase each one arrives in.
+/// The protocols, their flags, and the capability each one needs.
 ///
-/// Ordered as `main.ts` routes them, which is also the order they were built.
-const PROTOCOLS: &[(&str, &str, u8, Option<&str>)] = &[
-    // flag,                 protocol,        phase, capability it needs
-    ("__gisCloud", "cloud", 2, None),
-    ("__gisAchievements", "achievements", 2, None),
-    ("__gisScores", "scores", 2, None),
-    ("__gisShots", "shots", 2, None),
-    ("__gisMods", "mods", 3, Some("mods")),
-    ("__gisNet", "net", 3, Some("multiplayer")),
+/// Ordered as `main.ts` routes them.
+pub const PROTOCOLS: &[(&str, &str, Option<&str>)] = &[
+    // flag,                 protocol,        capability it needs
+    ("__gisCloud", "cloud", None),
+    ("__gisAchievements", "achievements", None),
+    ("__gisScores", "scores", None),
+    ("__gisShots", "shots", None),
+    ("__gisMods", "mods", Some("mods")),
+    ("__gisNet", "net", Some("multiplayer")),
 ];
-
-/// What this build can answer today.
-///
-/// The constant is what the routing test asserts against, in BOTH directions: a
-/// protocol whose phase has landed must have a route of its own, and one whose
-/// phase has not must still name that phase. So a phase that lands without
-/// updating the router — or a router updated without the phase — is a failing
-/// test rather than a quiet drop.
-pub const IMPLEMENTED_THROUGH_PHASE: u8 = 3;
 
 /// The route a protocol this build ANSWERS gets, by the protocol's own name.
 ///
 /// Separate from the table above so the table stays one line per protocol, and
-/// so that a protocol whose phase has arrived but which nobody wired up is a
-/// `None` the test can catch rather than a silent `Unimplemented`.
+/// so that a protocol somebody listed but never wired up is a `None` the
+/// routing test can catch rather than a silent [`Route::Unanswered`].
 fn answered(protocol: &str) -> Option<Route> {
     match protocol {
         "cloud" => Some(Route::Cloud),
@@ -122,7 +107,7 @@ pub fn route(raw: &str, allows: &dyn Fn(&str) -> bool) -> Route {
     if flagged("__gisQuit") {
         return Route::Quit;
     }
-    for (flag, protocol, phase, capability) in PROTOCOLS {
+    for (flag, protocol, capability) in PROTOCOLS {
         if !flagged(flag) {
             continue;
         }
@@ -134,15 +119,10 @@ pub fn route(raw: &str, allows: &dyn Fn(&str) -> bool) -> Route {
                 };
             }
         }
-        if *phase <= IMPLEMENTED_THROUGH_PHASE {
-            if let Some(route) = answered(protocol) {
-                return route;
-            }
+        if let Some(route) = answered(protocol) {
+            return route;
         }
-        return Route::Unimplemented {
-            protocol,
-            phase: *phase,
-        };
+        return Route::Unanswered { protocol };
     }
     Route::Ignored
 }
@@ -162,9 +142,9 @@ pub fn parse_message(raw: &str) -> Option<Value> {
 
 /// WHICH ACTION the page asked for, as the protocol spells it.
 ///
-/// Shared by all four bridges rather than repeated in each: every one of them is
-/// an `action` string and a `requestId`, on every shell, and a fifth protocol
-/// arriving in phase 3 will want the same two.
+/// Shared by every bridge rather than repeated in each: all of them are an
+/// `action` string and a `requestId`, on every shell, and the next one to
+/// arrive will want the same two.
 pub fn action(message: &Value) -> String {
     message
         .get("action")
@@ -193,9 +173,9 @@ pub fn request_id(message: &Value) -> u64 {
 /// protocol is the thing this whole module exists to prevent.
 pub fn explain(route: &Route) -> Option<String> {
     match route {
-        Route::Unimplemented { protocol, phase } => Some(format!(
-            "bridge: {protocol} is not answered by the Tauri shell yet \
-             (phase {phase} — see docs/tauri-migration.md)"
+        Route::Unanswered { protocol } => Some(format!(
+            "bridge: {protocol} is a protocol this shell knows about but does \
+             not answer — see tauri/README.md"
         )),
         Route::Refused {
             protocol,

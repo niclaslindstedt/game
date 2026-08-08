@@ -55,17 +55,18 @@ fn the_folder_is_the_declared_name_rather_than_the_bundle_identifier() {
 fn the_tauri_shell_keeps_its_own_folder_while_both_shells_exist() {
     // Two desktop shells are installable at once during the migration, and two
     // running games sharing one window-state.json and one launch.log is a fight
-    // neither can win. Phase 4's takeover is what changes this word.
+    // neither can win. The day only one desktop wrapper is left is what
+    // changes this word.
     assert_ne!(
         APP_DIR_NAME, "adastrail",
-        "sharing the Electron shell's folder is a phase-4 decision, not a default"
+        "sharing the other desktop build's folder is a decision, not a default"
     );
 }
 
 #[test]
 fn a_legacy_folder_is_adopted_rather_than_orphaned() {
     // LEGACY_DIR_NAMES is empty today — this shell has shipped under one name —
-    // so the test drives the planner the way phase 4's rename will, through the
+    // so the test drives the planner the way that rename will, through the
     // same seam rather than through a second code path written later.
     let root = Path::new("/appdata");
     let Some(legacy) = LEGACY_DIR_NAMES.first() else {

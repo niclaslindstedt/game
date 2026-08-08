@@ -25,7 +25,7 @@
 //! are in-memory writes flushed by `store_stats`), so the pump is what keeps the
 //! queue drained rather than something the features wait for.
 //!
-//! **PHASE 3 CHANGED THAT, AND THE PUMP IS NOW TWO GEARS.** Steam P2P is POLLED
+//! **MULTIPLAYER CHANGED THAT, AND THE PUMP IS NOW TWO GEARS.** Steam P2P is POLLED
 //! and matchmaking is delivered as call-results THROUGH `run_callbacks`, so a
 //! flat 200 ms would have made the interval the network's latency floor: a lobby
 //! round trip costing a fifth of a second and packet delivery capped at 5 Hz — a

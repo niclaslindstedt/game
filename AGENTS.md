@@ -49,6 +49,9 @@ make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-dr
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
 make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG
 make bump          # print the release bump derived from .changes/unreleased/
+npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
+npm run shell:bench    # weigh the packaged desktop builds; read this machine's cold starts
+npm run webview:sweep  # the web-platform features the game needs, engine by engine
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
 
@@ -92,8 +95,8 @@ the embedded site and is the ONLY correct target for a store build, and the
 `native/app.config.js` re-syncs instead of shipping a stale native project.
 
 **`tauri/` IS A THIRD SUCH TREE AND IS NOT THE RELEASE PACKAGE** — a second
-desktop shell around the same site, feature-complete beside `electron/` while
-the two are compared, and it may or may not take over. It is **Rust**, so
+desktop shell around the same site, complete beside `electron/`, and which of
+the two ships turns on measurements rather than taste. It is **Rust**, so
 `make test` and `make lint` do not reach it at all: it is checked by
 `make tauri-test` (its decision layer, and DELIBERATELY only that crate — no GUI
 libraries and no Steam SDK needed) and `make tauri-lint` (clippy at zero
@@ -103,8 +106,13 @@ It packages itself with `make desktop-tauri-steam` / `make desktop-tauri-dist`,
 reading the SAME five `GIS_ENABLE_*` switches the Electron targets do — one
 vocabulary, two shells — and `release.yml` attaches its downloads to every
 release, suffixed `-tauri` so the two shells' artifacts cannot collide.
-→ **`docs/tauri-migration.md`** for the four phases (1, 2 and 3 are shipped; 4
-is the playtest and the decision), `tauri/README.md` for the tree.
+It also has TWO windowless modes nothing else has: `--dedicated` (the session
+server in a terminal) and `--roster-check` (what the platform cloud is holding,
+by hero name), the second of which is how "a roster crosses between the two
+desktop builds" is verified in one command per build instead of an evening.
+→ **`tauri/README.md`** for the tree, **`docs/desktop-shells.md`** for how the
+two are held against each other, **`docs/desktop-parity.md`** for the pairing
+the build checks (`npm run parity:check`).
 Nothing in `src/` or `pwa/` may learn it exists: the page is told
 `__GIS_PLATFORM__ = "steam"` because it is the same product on the same store —
 and **not one line of `pwa/` changed to give this shell cloud save,
@@ -233,15 +241,16 @@ above it, and `docs/architecture.md` has the module-by-module map:
   is keyed by origin, and an opaque origin would orphan the player's whole
   roster). Its own dependency tree, its own `tsc`, its own vitest.
   → `electron/README.md`
-- **`tauri/` — the second desktop wrapper, mid-migration.** The same site again,
-  in a native webview instead of a bundled Chromium. **Rust, in two crates, and
-  the split is the design**: `shell/` is every DECISION and depends on no GUI
-  and no Steam SDK (so its whole suite runs anywhere), `src-tauri/` is every
+- **`tauri/` — the second desktop wrapper.** The same site again, in the
+  platform's own webview instead of a bundled Chromium. **Rust, in two crates,
+  and the split is the design**: `shell/` is every DECISION and depends on no
+  GUI and no Steam SDK (so its whole suite runs anywhere), `src-tauri/` is every
   EFFECT. Each module in `shell/` is the named peer of a file in
   `electron/src/` — including all four platform seams, whose bridge and
-  provider are decisions and whose only Steam-touching file is the third.
-  It ships nothing and is not the desktop build.
-  → `docs/tauri-migration.md`, `tauri/README.md`
+  provider are decisions and whose only Steam-touching file is the third —
+  and `npm run parity:check` refuses a build where that pairing has drifted.
+  It is not the shipping desktop build.
+  → `tauri/README.md`, `docs/desktop-shells.md`
 - **`server/` — the session server.** The engine compiled for **Node**, so a
   multiplayer session simulates in a process of its own rather than in the
   renderer; the same file IS the standalone dedicated server. It imports
@@ -656,10 +665,13 @@ looking at what the module exported. A new field
 is added THERE, with its rule and its error message, before any generator reads
 it; `CONTRIBUTING.md` indexes the set against the file each validates.
 
-Four artifacts are **committed and drift-tested against a fresh build**, so they
-are regenerated in the same commit as the content change that moves them:
+Five artifacts are **committed and drift-tested against a fresh build**, so they
+are regenerated in the same commit as the change that moves them:
 `mod/catalog.json` (`make mod-catalog`), `native/store/game-center-{achievements,leaderboards}.json`,
-`electron/store/steam-achievements.json`.
+`electron/store/steam-achievements.json`, and `docs/desktop-parity.md`
+(`npm run parity`) — which is derived from the two desktop trees rather than
+from a catalog, and whose drift test lives in the ROOT suite because a change
+under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 
 ## Local reusable code
 
@@ -731,7 +743,8 @@ are regenerated in the same commit as the content change that moves them:
 | story or dialogue text (any line)                                      | `docs/manuscript.md`, with `docs/story.md` above it — load `update-story` |
 | a name (a mob, an item, a company)                                     | `docs/naming.md` if the RULE changes; otherwise just obey it              |
 | the co-op architecture                                                 | `docs/multiplayer.md`                                                     |
-| the Tauri shell, or which phase of its migration is done               | `docs/tauri-migration.md`, `tauri/README.md`                              |
+| the Tauri shell's own tree                                             | `tauri/README.md`; then `npm run parity` if a module paired or unpaired   |
+| which desktop build ships, or the numbers that decide it               | `docs/desktop-shells.md`                                                  |
 | the mod format or SDK                                                  | `docs/modding.md`, `mod/FORMAT.md`, and `make mod-catalog` if ids moved   |
 | a scripting hook, or what a script may read                            | `docs/scripting.md`, `mod/FORMAT.md`, then `make mod-catalog`             |
 | Make targets / npm scripts                                             | `README.md` Usage, `CONTRIBUTING.md`, this file                           |
@@ -819,7 +832,8 @@ skill is the source of truth — load that, not a search of the tree.
 | Every catalog's compile pipeline, the generator order, the parity rules                                               | `docs/content-pipeline.md`                                                          |
 | Naming anything                                                                                                       | `docs/naming.md`                                                                    |
 | Co-op: the party, seats, XP share, loot mode, the wire, transports, admission, trade, reconnect, the dedicated server | `docs/multiplayer.md`                                                               |
-| The Tauri shell: the four phases, what is done, the open design questions                                             | `docs/tauri-migration.md`, then `tauri/README.md`                                   |
+| The Tauri shell: the two crates, the launch modes, the overlay, packaging                                             | `tauri/README.md`, then `tauri/RELEASING.md`                                        |
+| Which desktop build ships: what is measured, by what, and the three outcomes                                          | `docs/desktop-shells.md`, `docs/desktop-parity.md`                                  |
 | Mods: the format, `registerDefs`, load order, the catalog, the Workshop, `--mod`                                      | the `mod-authoring` skill, then `mod/AGENTS.md`, `mod/FORMAT.md`, `docs/modding.md` |
 | Scripting: the hooks, the sandbox, what a script may read, adding one                                                 | `docs/scripting.md`                                                                 |
 | Settings, URL params, env vars, the DEVELOPER menu's inventory                                                        | `docs/configuration.md`                                                             |

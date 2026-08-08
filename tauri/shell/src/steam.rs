@@ -147,8 +147,8 @@ pub fn current_webview() -> Webview {
 
 /// WHETHER VALVE'S OVERLAY CAN DRAW OVER THIS WINDOW.
 ///
-/// **This is the phase-2 finding the migration doc asked for, and the answer is
-/// "not by anything this shell can do".** It is written down here, at the seam,
+/// **The answer is "not by anything this shell can do".** It is written down
+/// here, at the seam,
 /// because this is the file somebody opens when they ask why Shift+Tab does
 /// nothing over the Tauri build.
 ///
@@ -233,7 +233,7 @@ pub fn overlay_explanation(webview: Webview, started_by_steam: bool) -> String {
         "steam: no overlay on the Tauri shell — {launched}, and the game is drawn by {where_}, \
          where Valve's overlay cannot be injected ({prospect}). Shift+Tab and Steam's own \
          screenshot key are unavailable; the game files its own pictures instead. \
-         See docs/tauri-migration.md."
+         See tauri/README.md."
     )
 }
 

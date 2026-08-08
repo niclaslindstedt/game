@@ -14,8 +14,8 @@
 //! bindings expose is `is_p2p_packet_available()` / `read_p2p_packet()`, with
 //! no callback to register — so something has to ask, on a clock.
 //!
-//! **AND THE CLOCK IS THE PHASE-2 LEFTOVER THIS MODULE CLOSES.** Phase 2's
-//! callback pump ran at 200 ms and argued, correctly for phase 2, that nothing
+//! **AND THE CLOCK IS WHAT THIS MODULE FORCED A DECISION ON.** The callback
+//! pump used to run at 200 ms, and argued, correctly at the time, that nothing
 //! it called blocked on a callback. Networking does: matchmaking arrives as
 //! call-results delivered THROUGH `run_callbacks`, so inheriting that number
 //! would cap packet delivery at 5 Hz and cost a lobby round trip a fifth of a

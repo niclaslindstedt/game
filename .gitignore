@@ -51,6 +51,11 @@ tauri/node_modules/
 tauri/release/
 tauri/resources/
 
+# What the measuring tools wrote on THIS machine — cold starts, install sizes,
+# the webview sweep. Every number in there is a fact about one computer, so it
+# is quoted into docs/desktop-shells.md by a human rather than committed.
+measurements/
+
 # Node
 node_modules/
 dist/

@@ -83,9 +83,12 @@ import {
 } from "./config";
 import { capabilityList, resolveCapabilities } from "./capabilities";
 import { SHELL_CHANNEL } from "./channels";
+import { cloudProvider } from "./cloud-provider";
 import { dedicatedArgs, serverArgs } from "./dedicated-mode";
+import * as metrics from "./metrics";
 import { readInvite, type Invite } from "./net-invite";
 import { logPath, logToFile, output } from "./output";
+import { rosterMode, runRosterMode } from "./roster";
 import { steamClient, steamOverlayWanted } from "./steam";
 import { webrootExists, webrootHandler } from "./webroot";
 import {
@@ -97,6 +100,12 @@ import {
 } from "./window-state";
 import { serverEntryPath } from "./resources";
 import { adoptUserData, APP_DIR_NAME } from "./user-data";
+
+// Before anything else at all, so the zero the cold-start marks are measured
+// from is the process's own beginning rather than the first moment somebody
+// remembered to ask. See ./metrics.ts for what the five marks do and do not
+// contain.
+metrics.start();
 
 // FIRST, before any path is read: say what this app is called, so `userData`
 // is `adastrail` — the executable's own name — rather than the npm package's.
@@ -124,6 +133,19 @@ for (const refusal of refusals) output.warn(refusal);
  * here because everything below branches on it — a server has a console and no
  * business raising dialogs. */
 const dedicated = dedicatedArgs(process.argv);
+
+/** `--roster-check` / `--roster-restore` read (or write) the platform cloud and
+ * print. Resolved beside `--dedicated` because it branches the same way: a
+ * launch that only reads a cloud must not register a scheme, take the single-
+ * instance lock, or write a window rect over the geometry the player's real
+ * launches remember. See ./roster.ts. */
+const roster = dedicated ? null : rosterMode(process.argv);
+
+/** The modes with no window in them. Everything window-shaped below is gated on
+ * this rather than on `dedicated` alone — a second windowless mode that only
+ * remembered half the guards is how a diagnostic command ends up fighting the
+ * running game for the single-instance lock. */
+const headless = Boolean(dedicated) || roster !== null;
 
 /**
  * Set once the process is on its way out, so the startup steps after the one
@@ -154,7 +176,7 @@ function fatal(summary: string, err?: unknown): void {
   // produce more of them (the renderer dies, then its load fails, then a
   // pending promise rejects), and stacking modal boxes on a player who already
   // knows the game is not starting is worse than the silence this replaces.
-  if (!dedicated && !quitting) {
+  if (!headless && !quitting) {
     const log = logPath();
     try {
       dialog.showErrorBox(
@@ -264,6 +286,29 @@ if (dedicated) {
   }
 }
 
+// THE ROSTER CHECK's own startup. It needs the Steam client and nothing else —
+// no readiness, no scheme, no window — so it runs here rather than waiting for
+// `whenReady`, and quits when it has printed its answer.
+if (roster) {
+  // Electron is still an app bundle on macOS even when it creates no window.
+  // Mark this process as a background utility before readiness, or a one-line
+  // diagnostic puts a bouncing icon in the Dock.
+  if (process.platform === "darwin") {
+    app.setActivationPolicy("prohibited");
+    app.dock?.hide();
+  }
+  void runRosterMode(roster, cloudProvider())
+    .catch((err: unknown) => {
+      output.error(`roster check failed — ${describe(err)}`);
+      return 1;
+    })
+    .then((code) => {
+      process.exitCode = code;
+      quitting = true;
+      app.quit();
+    });
+}
+
 /** One parsed message off the shell channel. The `__gis*` flag says which
  * bridge it belongs to; that bridge's own request type describes the rest of
  * the fields (and validates them), so they aren't re-declared here. Mirrors
@@ -283,7 +328,7 @@ type BridgeMessage = {
 // Before ready — see the header for why each of these cannot wait.
 // ---------------------------------------------------------------------------
 
-if (!dedicated && STEAM_ENABLED) {
+if (!headless && STEAM_ENABLED) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const steamworks = require("steamworks.js") as {
@@ -320,7 +365,7 @@ if (!dedicated && STEAM_ENABLED) {
   }
 }
 
-if (!dedicated)
+if (!headless)
   protocol.registerSchemesAsPrivileged([
     {
       scheme: APP_SCHEME,
@@ -336,7 +381,7 @@ if (!dedicated)
 
 // A second copy of the game would fight the first over the same save files and
 // the same Steam session. Hand the argument to the running instance instead.
-if (!dedicated && !app.requestSingleInstanceLock()) {
+if (!headless && !app.requestSingleInstanceLock()) {
   // A WARNING rather than a note: this is the one exit that looks exactly like
   // the game refusing to start, and a player whose previous copy is wedged (or
   // still shutting down) deserves to be told which of the two happened.
@@ -565,12 +610,16 @@ function createWindow(): BrowserWindow {
     },
   });
 
+  metrics.mark("window-created");
   installPermissionHandlers(window);
 
   if (state.maximized) window.maximize();
   if (state.fullscreen) window.setFullScreen(true);
 
-  window.once("ready-to-show", () => window.show());
+  window.once("ready-to-show", () => {
+    window.show();
+    metrics.mark("window-shown");
+  });
 
   // The page owns the window title by default, and it sets one — so the
   // suffix has to be re-applied to whatever the page just asked for rather
@@ -586,7 +635,16 @@ function createWindow(): BrowserWindow {
   // The parked invite goes over as soon as the page can receive it — on every
   // load, so a reload mid-session does not strand a player who was invited a
   // second ago. `deliverInvite` consumes it, so the second load is a no-op.
-  window.webContents.on("did-finish-load", () => deliverInvite(window));
+  window.webContents.on("did-finish-load", () => {
+    deliverInvite(window);
+    // THE LAST COLD-START MARK, and the only one the shell cannot take for
+    // itself: everything before it happens in this process, and this one is the
+    // webview reporting that it finished with the document. `finish` is a
+    // once-per-process write, because this fires again for every in-site
+    // navigation the player makes.
+    metrics.mark("page-loaded");
+    metrics.finish(userData, app.getVersion());
+  });
 
   // Persist geometry on the way out. Read the NORMAL bounds rather than the
   // current ones: a maximized window reports the screen rect, and restoring
@@ -746,7 +804,7 @@ function acknowledgeUnlock(): boolean {
 }
 
 void app.whenReady().then(() => {
-  if (dedicated || quitting) return;
+  if (headless || quitting) return;
   try {
     startUp();
   } catch (err) {
@@ -781,6 +839,17 @@ function startUp(): void {
   // logged before the first bridge request rather than in the middle of one.
   steamClient();
 
+  // Everything the shell can decide is decided, the platform seams have been
+  // asked for (which is where the Steam handshake above is paid for), and the
+  // launch log is open.
+  metrics.mark("shell-resolved");
+  if (REMOTE_GAME_URL) {
+    // A launch pointed at a remote slot is measuring somebody's network, not
+    // this build's startup — said in the row rather than left for a reader to
+    // infer from a number that looks wrong.
+    metrics.note("GIS_GAME_URL was set — this launch loaded a remote site");
+  }
+
   ipcMain.on(SHELL_CHANNEL, (event, message: unknown) => {
     if (typeof message !== "string") return;
     // Route by the window the message came FROM, so an event can never be
@@ -805,7 +874,7 @@ function startUp(): void {
 // A dead renderer IS the game dying — the renderer is the whole game. Reported
 // rather than left as a window that went blank (or never appeared).
 app.on("render-process-gone", (_event, _contents, details) => {
-  if (dedicated || quitting) return;
+  if (headless || quitting) return;
   // `clean-exit` is what a renderer torn down on the way out reports, which is
   // every normal quit — treating that as a crash would put an error box in
   // front of a player who just closed the game.
@@ -821,7 +890,7 @@ app.on("render-process-gone", (_event, _contents, details) => {
 // is a warning rather than a fatal — but it is the line that explains a black
 // window, and it belongs in the log either way.
 app.on("child-process-gone", (_event, details) => {
-  if (dedicated) return;
+  if (headless) return;
   if (details.reason === "clean-exit") return;
   output.warn(
     `child process gone: ${details.type} (${details.reason})` +
@@ -830,7 +899,7 @@ app.on("child-process-gone", (_event, details) => {
 });
 
 app.on("window-all-closed", () => {
-  if (dedicated) return;
+  if (headless) return;
   // The platform convention, which players expect from an installed app:
   // macOS keeps the process alive until Cmd+Q, everywhere else closing the
   // window is quitting the game.
@@ -838,7 +907,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
-  if (dedicated) return;
+  if (headless) return;
   cloud?.stop();
   cloud = null;
   // A session server outliving the window it was forked for is an orphan

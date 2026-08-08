@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! THE SNAPSHOT CHANNEL — the decision phase 3 exists to make, and the page's
+//! THE SNAPSHOT CHANNEL — the one real design problem in this tree, and the page's
 //! half of it.
 //!
 //! A session publishes twenty times a second. Electron mints a `MessagePort`
 //! pair and hands the page one end, so those frames never touch the main
 //! process; Tauri's IPC has no port transfer, so the property that mattered —
 //! **the shell is not in the path** — has to be bought some other way. Three
-//! candidates were on the table (`docs/tauri-migration.md`), and this is the
+//! candidates were on the table (`docs/desktop-shells.md`), and this is the
 //! one that keeps the property without changing anything else:
 //!
 //! | Candidate | What it costs |
@@ -19,7 +19,7 @@
 //! `MessagePort` and gets one: this script mints the pair IN THE PAGE and
 //! bridges the shell's end to the socket. Not one line of `pwa/` changed for
 //! this shell to have multiplayer, which is the same test cloud save,
-//! achievements and screenshots passed in phase 2.
+//! achievements and screenshots travel.
 //!
 //! **WHAT THE SOCKET COSTS IS ANSWERED RATHER THAN WAVED AT.** It binds
 //! 127.0.0.1 on an ephemeral port the session process itself chose, it answers

@@ -3,10 +3,10 @@
 //! and of `native/src/injected.ts`.
 //!
 //! It is one initialization script, evaluated before the game's own scripts on
-//! every load, and it exposes exactly six things — five since phase 1, plus the
-//! snapshot channel's page-side half ([`adastrail_shell::snapshot`]), which is
-//! how a session's twenty frames a second reach the page without the shell in
-//! the path:
+//! every load, and it exposes exactly six things — four constants, the page →
+//! shell pipe, and the snapshot channel's page-side half
+//! ([`adastrail_shell::snapshot`]), which is how a session's twenty frames a
+//! second reach the page without the shell in the path:
 //!
 //! | Global                | What it says                                              |
 //! | --------------------- | --------------------------------------------------------- |

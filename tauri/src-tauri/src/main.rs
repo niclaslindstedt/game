@@ -8,12 +8,11 @@
 //! that file is: a window showing the bundled game, plus the routing that
 //! connects the page's bridge protocols to whatever is behind them.
 //!
-//! This is **phase 3** of `docs/tauri-migration.md`, so all six protocols are
-//! answered for real — cloud save, achievements, leaderboards, screenshots,
-//! mods and multiplayer. `adastrail_shell::bridge` keeps its
-//! `Unimplemented` route anyway, because a seventh protocol will arrive on the
-//! web side before it arrives here and a shell that went quiet about one would
-//! present as a hang the page waits out.
+//! All six of the page's protocols are answered here — cloud save,
+//! achievements, leaderboards, screenshots, mods and multiplayer.
+//! `adastrail_shell::bridge` keeps its `Unanswered` route anyway, because a
+//! seventh will arrive on the web side before it arrives here, and a shell that
+//! went quiet about one would present to a player as a hang.
 //!
 //! The ORDER of the startup work matters, and five things happen before the
 //! window exists:
@@ -44,11 +43,13 @@ mod dedicated;
 mod firewall;
 mod lobby;
 mod media;
+mod metrics;
 mod mods;
 mod net;
 mod p2p;
 mod page;
 mod protocol;
+mod roster;
 mod session;
 mod shots;
 mod stamp;
@@ -65,7 +66,7 @@ use adastrail_shell::bridge::{emit_script, explain, parse_message, route, Route}
 use adastrail_shell::capabilities::Capabilities;
 use adastrail_shell::channels::event_global;
 use adastrail_shell::cloud_provider::CloudProvider;
-use adastrail_shell::config::{remote_game_url, APP_SCHEME, DEVELOPER_NOTICE, MIGRATION_NOTICE};
+use adastrail_shell::config::{remote_game_url, APP_SCHEME, DEVELOPER_NOTICE, SHELL_NOTICE};
 use adastrail_shell::leaderboards_provider::{leaderboards_provider, LeaderboardsProvider};
 use adastrail_shell::net_invite::read_invite;
 use adastrail_shell::output;
@@ -171,7 +172,7 @@ fn shell_post(app: AppHandle, shell: State<'_, Shell>, message: String) {
                 shell.shot_library.as_deref(),
             )
         }),
-        // The two phase-3 bridges do REAL WORK rather than forwarding JSON, so
+        // These two bridges do REAL WORK rather than forwarding JSON, so
         // they are objects with a life of their own rather than pure functions
         // — and each is `None` on a build whose capability list left it out,
         // which the router has already refused above.
@@ -185,7 +186,7 @@ fn shell_post(app: AppHandle, shell: State<'_, Shell>, message: String) {
                 bridge.handle(&message_object(&message));
             }
         }
-        Route::Unimplemented { .. } | Route::Refused { .. } | Route::Ignored => {}
+        Route::Unanswered { .. } | Route::Refused { .. } | Route::Ignored => {}
     }
 }
 
@@ -215,7 +216,7 @@ fn answer(app: &AppHandle, protocol: &str, raw: &str, reply: impl FnOnce(&Value)
 /// from outside, exactly as Electron's `executeJavaScript` and the phone's
 /// `injectJavaScript` do. It is why the web side needed no change to run here.
 ///
-/// By PROTOCOL name rather than by global, so the two phase-3 bridges — which
+/// By PROTOCOL name rather than by global, so the two stateful bridges — which
 /// live in modules of their own and answer on threads of their own — have no
 /// business knowing what a callback is called.
 pub fn emit_event(app: &AppHandle, protocol: &str, payload: &Value) {
@@ -260,8 +261,7 @@ fn fatal(app: &AppHandle, summary: &str) {
     app.exit(1);
 }
 
-/// Say what a developer build is, what a phase-2 build is, and what the overlay
-/// is not, once per launch.
+/// Say what a developer build is and what the overlay is not, once per launch.
 ///
 /// All of them are LOG LINES rather than dialogs, and that is still the
 /// difference from the Electron shell even now that this tree packages itself:
@@ -275,7 +275,7 @@ fn announce(shell: &Shell) {
     if shell.developer_build {
         output::warn(&DEVELOPER_NOTICE.replace('\n', " "));
     }
-    output::warn(&MIGRATION_NOTICE.replace('\n', " "));
+    output::info(&SHELL_NOTICE.replace('\n', " "));
     // The overlay's absence is a per-launch fact worth stating, because it is
     // what somebody comparing the two desktop builds will notice first.
     output::info(&overlay_explanation(
@@ -421,12 +421,75 @@ fn dedicated_mode(argv: &[String]) -> Option<i32> {
     Some(dedicated::run(&after, &capabilities, &resources))
 }
 
+/// PUT A PANIC IN THE LAUNCH LOG.
+///
+/// A packaged game on Windows has no console: the default hook writes the one
+/// line carrying the actual cause to a stream nobody is holding, so a shell
+/// that panicked is, from the player's side, a program that did nothing. The
+/// hook routes the same text through [`output`], which appends it to the launch
+/// log — and the launch log is the whole of a bug report.
+///
+/// It does NOT swallow the default: the backtrace still goes where it always
+/// went, for whoever has a terminal open.
+fn install_panic_hook() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let payload = info
+            .payload()
+            .downcast_ref::<&str>()
+            .map(|message| (*message).to_string())
+            .or_else(|| info.payload().downcast_ref::<String>().cloned())
+            .unwrap_or_else(|| "no message".to_string());
+        output::error(&adastrail_shell::display::panic_report(
+            &payload,
+            info.location().map(std::string::ToString::to_string),
+        ));
+        previous(info);
+    }));
+}
+
 fn main() {
+    // Before anything else at all, so the zero the cold-start marks are
+    // measured from is the process's own beginning rather than the first moment
+    // somebody remembered to ask.
+    metrics::start();
+    install_panic_hook();
     let argv: Vec<String> = std::env::args().skip(1).collect();
 
     // FIRST OF ALL: `--dedicated` never builds a window — see `dedicated_mode`.
     if let Some(code) = dedicated_mode(&argv) {
         std::process::exit(code);
+    }
+
+    // …and neither does the roster check, for the same reason: it reads the
+    // platform cloud and prints, so it must not register a scheme or write a
+    // window rect over the geometry the player's real launches remember. It IS
+    // asked from a terminal by somebody who wants the answer, so the shell's
+    // informational channel is turned on for it — a release build that
+    // swallowed the Steam handshake's own lines would be a diagnostic command
+    // that appears to do nothing.
+    if let Some(mode) = adastrail_shell::roster::roster_mode(&argv) {
+        std::env::set_var("GIS_VERBOSE", "1");
+        std::process::exit(roster::run(&mode));
+    }
+
+    // A WINDOW SYSTEM THAT IS NOT THERE is the one fatal path with nowhere to
+    // put a dialog — the thing that failed IS the window system. Asked before
+    // Tauri's builder, because the handle is opened deep inside the event-loop
+    // library, which unwraps it: without this, the answer to "why did the game
+    // not start" is fourteen frames of somebody else's backtrace.
+    //
+    // AND AFTER THE TWO WINDOWLESS MODES ABOVE, which is the half that is easy
+    // to get backwards: a dedicated server and a roster check are the launches
+    // that legitimately have no display, and refusing them here would break
+    // exactly the two things a headless box is for.
+    if let Some(refusal) =
+        adastrail_shell::display::refuse_windowless(std::env::consts::OS, &|name| {
+            std::env::var(name).ok()
+        })
+    {
+        output::error(&format!("The game could not start — {refusal}"));
+        std::process::exit(1);
     }
 
     // BEFORE THE EVENT LOOP, and before anything else touches Steam: if the
@@ -492,6 +555,17 @@ fn main() {
                 protocol::webroot_dir(&handle),
                 pictures,
             );
+            // Everything the shell can decide is decided, the platform seams
+            // have been asked for (which is where a Steam handshake is paid
+            // for), and the launch log is open.
+            metrics::mark("shell-resolved");
+            if remote_game_url().is_some() {
+                // A launch pointed at a remote slot is measuring somebody's
+                // network, not this build's startup — said in the row rather
+                // than left for a reader to infer from a number that looks
+                // wrong.
+                metrics::note("GIS_GAME_URL was set — this launch loaded a remote site");
+            }
             announce(&shell);
 
             if remote_game_url().is_none() && !webroot_exists(&shell.webroot) {

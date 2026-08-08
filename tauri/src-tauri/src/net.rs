@@ -139,7 +139,7 @@ impl NetBridge {
             "connect" => spawn(move || bridge.connect(&request)),
             "firewall" | "allow-firewall" => spawn(move || bridge.firewall(&request)),
             // An action this shell does not know is answered with nothing, and
-            // the page's own timeout resolves it — exactly as the four phase-2
+            // the page's own timeout resolves it — exactly as the four stateless
             // bridges' `match` arms fall through.
             _ => {}
         }

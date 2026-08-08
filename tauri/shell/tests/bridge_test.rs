@@ -1,36 +1,25 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! ROUTING — which protocol a page message belongs to, and what a shell that
-//! cannot yet answer it says about that.
+//! does not answer one says about that.
 //!
-//! The second half is what makes this file worth having during the migration:
-//! a mid-migration build meets protocols it has no platform behind, and the
-//! failure mode to avoid is the one where it drops them silently and the page
-//! waits out a timeout with nothing in the log to explain it.
+//! The second half is what makes this file worth having: the page and the shell
+//! are versioned separately, so a build WILL meet a protocol it has no route
+//! for, and the failure mode to avoid is the one where it drops the message
+//! silently and the page waits out a timeout with nothing in the log to explain
+//! it.
 //!
-//! The table below is walked in BOTH directions, which is what keeps the router
-//! and the migration honest with each other: a protocol whose phase has landed
-//! must have a route of its own, and one whose phase has not must still name
-//! that phase.
+//! The protocol table is walked in BOTH directions, which is what keeps the
+//! router honest: every protocol the page can post either routes to a bridge of
+//! its own or is named in the log, and nothing may sit between the two.
 
 use adastrail_shell::bridge::{
-    action, emit_script, explain, parse_message, request_id, route, Route,
-    IMPLEMENTED_THROUGH_PHASE,
+    action, emit_script, explain, parse_message, request_id, route, Route, PROTOCOLS,
 };
 use adastrail_shell::channels::event_global;
 use serde_json::json;
 
-/// Every protocol the page can post, its flag, and the phase that grows it.
-const PROTOCOLS: &[(&str, &str, u8)] = &[
-    ("__gisCloud", "cloud", 2),
-    ("__gisAchievements", "achievements", 2),
-    ("__gisScores", "scores", 2),
-    ("__gisShots", "shots", 2),
-    ("__gisMods", "mods", 3),
-    ("__gisNet", "net", 3),
-];
-
-/// A launch that may honour everything, so a refusal in a test is about the
-/// PHASE rather than about a capability.
+/// A launch that may honour everything, so a refusal in a test is never about a
+/// capability.
 fn anything(_capability: &str) -> bool {
     true
 }
@@ -41,7 +30,7 @@ fn nothing(_capability: &str) -> bool {
 }
 
 #[test]
-fn quit_is_answered_from_phase_one() {
+fn quit_needs_no_platform_behind_it() {
     // The one protocol with no platform behind it — and the only successful
     // outcome is the page ceasing to exist.
     assert_eq!(route(r#"{"__gisQuit":true}"#, &anything), Route::Quit);
@@ -50,9 +39,8 @@ fn quit_is_answered_from_phase_one() {
 
 #[test]
 fn a_protocol_this_build_has_grown_routes_to_its_own_bridge() {
-    // Phase 2's four and phase 3's two. A route that fell back to
-    // `Unimplemented` here would be a shell that logs a phase it has already
-    // shipped and answers nothing.
+    // All six. A route that fell back to `Unanswered` here would be a shell
+    // that apologises in its log for a protocol it in fact answers.
     for (flag, expected) in [
         ("__gisCloud", Route::Cloud),
         ("__gisAchievements", Route::Achievements),
@@ -72,39 +60,40 @@ fn a_protocol_this_build_has_grown_routes_to_its_own_bridge() {
 }
 
 #[test]
-fn every_protocol_is_either_answered_or_names_the_phase_that_grows_it() {
-    // The migration's own invariant, checked from both ends: nothing may sit
-    // between "this build answers it" and "this build says which phase will".
-    for (flag, protocol, phase) in PROTOCOLS {
+fn every_listed_protocol_routes_somewhere_nameable() {
+    // The invariant, checked from both ends: nothing may sit between "this
+    // build answers it" and "this build says in the log that it does not".
+    for (flag, protocol, _) in PROTOCOLS {
         let raw = json!({ *flag: true, "id": 7 }).to_string();
         let routed = route(&raw, &anything);
-        if *phase <= IMPLEMENTED_THROUGH_PHASE {
+        assert_ne!(routed, Route::Ignored, "{flag} was dropped silently");
+        if let Route::Unanswered { protocol: named } = routed {
+            assert_eq!(named, *protocol);
+            let line = explain(&routed).expect("a line in the log");
+            assert!(line.contains(protocol), "the log has to name the protocol");
             assert!(
-                !matches!(routed, Route::Unimplemented { .. }),
-                "{protocol} claims a phase this build already shipped — route it \
-                 for real, or move it off Unimplemented"
+                line.contains("tauri/README.md"),
+                "and where the reader goes next"
             );
-            continue;
         }
-        assert_eq!(
-            routed,
-            Route::Unimplemented {
-                protocol,
-                phase: *phase
-            },
-            "{flag} must route somewhere nameable"
-        );
-        let line = explain(&routed).expect("a line in the log");
-        assert!(line.contains(protocol), "the log has to name the protocol");
-        assert!(
-            line.contains("docs/tauri-migration.md"),
-            "and where the reader goes next"
-        );
     }
 }
 
 #[test]
-fn a_gated_protocol_is_refused_before_it_is_unimplemented() {
+fn the_unanswered_route_still_explains_itself() {
+    // Nothing this shell ships takes this route today, which is exactly why it
+    // is worth a test: the next protocol the web side grows will be the first
+    // message to reach it, on a build nobody is watching.
+    let routed = Route::Unanswered {
+        protocol: "telemetry",
+    };
+    let line = explain(&routed).expect("a line in the log");
+    assert!(line.contains("telemetry"), "{line}");
+    assert!(line.contains("tauri/README.md"), "{line}");
+}
+
+#[test]
+fn a_gated_protocol_is_refused_before_it_is_unanswered() {
     // The page already hides both front doors, so this is the second half of
     // the same fact rather than a message anybody expects to send — but a
     // build that CAN'T is a different answer from one that WON'T, and the log

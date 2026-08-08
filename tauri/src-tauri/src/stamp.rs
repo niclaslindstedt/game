@@ -15,7 +15,7 @@
 //! **A rebuild is required for a stamp change to take**, and Cargo does not
 //! know that on its own — `option_env!` is not a tracked input. `build.rs`
 //! would have to emit `cargo:rerun-if-env-changed` for each one; until the
-//! packaging phase needs it (phase 2), the packaging targets build clean
+//! packaging needs it, the packaging targets build clean
 //! anyway.
 
 use adastrail_shell::capabilities::{read_build_capabilities, BuildCapabilities, BuildStamp};

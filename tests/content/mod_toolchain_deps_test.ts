@@ -185,7 +185,7 @@ describe("the mod toolchain's dependencies", () => {
   });
 
   it("is carried into the packaged app by BOTH desktop packagers", () => {
-    // `tauri/` packages the same compiler (docs/tauri-migration.md), so the
+    // `tauri/` packages the same compiler (docs/desktop-shells.md), so the
     // same three gaps exist there — and the way they stay closed is that both
     // shells read one list rather than keeping one each.
     for (const packager of [

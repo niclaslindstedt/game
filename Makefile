@@ -263,9 +263,8 @@ desktop-dist:
 # ---------------------------------------------------------------------------
 #
 # A SECOND desktop wrapper around the same built website, beside electron/ and
-# not instead of it — it may take over as the release package once mature, and
-# that call is made after playtesting. `docs/tauri-migration.md` is the plan and
-# `tauri/README.md` is the tree.
+# not instead of it. `tauri/README.md` is the tree; `docs/desktop-shells.md` is
+# how the two are held against each other and what decides which one ships.
 #
 # It is Rust, so it has its own toolchain and its own linter, and none of it is
 # on the root suite's path: `make test` and `make lint` stop at this tree's edge
@@ -313,8 +312,8 @@ tauri-fmt:
 # A store build must also set GIS_STEAM_APP_ID — the packaging script refuses to
 # ship a build still pointed at Valve's Spacewar test app unless it is told to.
 #
-# NOTE: this tree ships NOTHING yet. `electron/` is still the release package
-# and the decision is phase 4's — see docs/tauri-migration.md.
+# NOTE: `electron/` is still the release package — see docs/desktop-shells.md
+# for what the choice between the two turns on.
 
 .PHONY: desktop-tauri-steam desktop-tauri-dist
 
