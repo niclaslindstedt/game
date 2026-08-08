@@ -43,7 +43,7 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * The run's per-player screens — `PlayerScreen` in `src/game/types/core.ts`.
+ * The run's per-player screens — `PlayerScreen` in `engine/game/types/core.ts`.
  *
  * A menu names the one it answers. The list is the ENGINE's and a mod may not
  * add to it: a screen nothing raises is a window nobody would ever see.

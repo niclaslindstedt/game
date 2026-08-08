@@ -91,7 +91,7 @@ neighbours of the same trap:
 - **Library slugs are hyphenated** (`the-flagbearer`), so an id rename that
   writes `the_flagbearer` into a URL passes every type check and fails at
   runtime.
-- **Scope content sweeps AWAY from `src/`, `server/` and `electron/`.** `host`
+- **Scope content sweeps AWAY from `engine/`, `server/` and `electron/`.** `host`
   is the multiplayer vocabulary as well as a park robot, and `content/mainmenu.yaml`
   carries the multiplayer HOST rows despite living under `content/`.
 - **Anything auditing a rename must exclude itself**, or the bulk pass rewrites

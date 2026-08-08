@@ -214,7 +214,7 @@ objects:
   # The car sits in the bay at the hero's landing; the rocket holds the goal
   # cell out on the lawn; the seam lands beside the trader's counter — fixed
   # forever by the pinned carve. The car and the rocket are VEHICLES
-  # (src/game/vehicles.ts): the landmark is the travel door's tap anchor and
+  # (engine/game/vehicles.ts): the landmark is the travel door's tap anchor and
   # the assembly renderer draws the machine in its place, so the sprite here
   # only satisfies the atlas check.
   - id: car
@@ -227,7 +227,7 @@ objects:
     at: goal
   # ── THE CACHE ────────────────────────────────────────────────────────────
   # THE ANTIQUE CHEST against the bay's NORTH WALL — the game's one stash
-  # (src/game/cache.ts), and the only landmark here that is not a door.
+  # (engine/game/cache.ts), and the only landmark here that is not a door.
   #
   # It is authored whether or not the hero has earned it: the map's job is to
   # know WHERE the furniture goes, and whether it is standing there is the

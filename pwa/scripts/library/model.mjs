@@ -108,7 +108,7 @@ const AI_FIELDS = {
 const MECHANIC_KINDS = ["charge", "slam", "enrage", "summon", "abilities"];
 /**
  * The BOSS ABILITY CATALOG ids `abilityProse` knows how to describe (see
- * src/game/defs/enemies/abilities.ts). The catalog's whole promise is that a
+ * engine/game/defs/enemies/abilities.ts). The catalog's whole promise is that a
  * new ability is data plus one module — so this list is what stops that
  * promise from quietly costing the library a page section: author an ability
  * nobody wrote prose for and the build says so, rather than the bestiary
@@ -706,7 +706,7 @@ export function libraryRoutes() {
       path: "errands",
       sources: ["content/quests", "content/quest-givers.yaml"],
     },
-    { path: "story", sources: ["docs/story.md", "src/game/defs"] },
+    { path: "story", sources: ["docs/story.md", "engine/game/defs"] },
     // THE ONE SECTION COMPILED OUT OF CODE RATHER THAN OUT OF `content/`. The
     // badge catalog is an APP module (the engine never learns achievements
     // exist), so a page here is dated by the commit that last touched that

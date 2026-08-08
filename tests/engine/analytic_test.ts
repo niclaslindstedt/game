@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The analytic progression simulator (src/sim/analytic.ts): a paper
+// The analytic progression simulator (engine/sim/analytic.ts): a paper
 // playthrough that uses the real kill funnel for every mob a level fields,
 // snapshotting the hero's full stat block every N kills. These are
 // engine-rule smoke tests on the fixture catalog; the balance-probing runs
@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { simulateProgression } from "../../src/sim/analytic.ts";
+import { simulateProgression } from "../../engine/sim/analytic.ts";
 import { buildStatWeights } from "@game/core";
 // Installs the fixture catalogs before any simulation builds a game.
 import "./helpers.ts";

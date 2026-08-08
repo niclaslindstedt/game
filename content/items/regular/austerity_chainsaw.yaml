@@ -34,7 +34,7 @@ sweepDeg: 180
 # keeps a weapon that kills anything it touches honest — it can only ever touch
 # what is against him.
 rigid: true
-# TWENTY TEETH, ONE PER BODY (src/game/items/execute.ts): durability is a body
+# TWENTY TEETH, ONE PER BODY (engine/game/items/execute.ts): durability is a body
 # count here rather than a swing count, so this is exactly how many things it
 # takes apart before it is scrap in the hand. A make-quality roll moves it a
 # little either way, as it does on every plain drop.

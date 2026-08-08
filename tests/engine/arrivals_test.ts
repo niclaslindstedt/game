@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE STAFF LOT (`LevelDef.arrivals`, src/game/arrivals.ts) — the engine rule
+// THE STAFF LOT (`LevelDef.arrivals`, engine/game/arrivals.ts) — the engine rule
 // behind GOODCO's front door, on a synthetic lot so it survives the shipped
 // content being deleted.
 //
@@ -28,7 +28,7 @@ import {
 } from "@game/core";
 // Engine-internal: the parked position of a seeded stream, which is the one
 // way to ask "did anything draw off this".
-import { rngState } from "../../src/lib/rng.ts";
+import { rngState } from "../../engine/lib/rng.ts";
 
 import { installFixtures } from "./fixtures.ts";
 import { DT, idle, steerTo } from "../helpers.ts";

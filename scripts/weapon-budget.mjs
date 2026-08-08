@@ -7,7 +7,7 @@
 //
 //   effective dps = per-target dps × assumed targets × crit lift
 //   assumed targets: MELEE reads its CALIBRATED cleave (WEAPON.meleeAoe ~1.2–1.9
-//     foes by arc — src/sim/aoe-calibration.ts, not the old cone-4 guess); a
+//     foes by arc — engine/sim/aoe-calibration.ts, not the old cone-4 guess); a
 //     RANGED volley its pellets, pierce its line, chain its leaps. Melee weapons
 //     read above the single-target budget line by their cleave (see the note by
 //     `budgetFor`) — expected, and consistent within the melee class
@@ -39,16 +39,16 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
 const { weaponBaseDps } = await import(
-  path.join(root, "src/game/items/weapon-math.ts")
+  path.join(root, "engine/game/items/weapon-math.ts")
 );
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { DIFFICULTY_DEFS } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 const { applyMods, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")

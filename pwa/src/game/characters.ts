@@ -129,7 +129,7 @@ export type Character = {
   keepsakes?: string[];
   /**
    * HOW DEEP THIS HERO'S CACHE IS — the garage chest Ruth pays for THE SCALE
-   * (src/game/cache.ts), which grows one row per difficulty she is paid on.
+   * (engine/game/cache.ts), which grows one row per difficulty she is paid on.
    *
    * A HIGH-WATER MARK, and that is the whole reason it is a number on the
    * character rather than a keepsake string: the chest earned on NIGHTMARE is
@@ -167,7 +167,7 @@ export type Character = {
   riftRoads?: string[];
   /**
    * THE CAMPAIGN CHAIN'S LOG, per difficulty — the errands marked
-   * `campaign: true` (see src/game/quests/campaign.ts) plus the run flags their
+   * `campaign: true` (see engine/game/quests/campaign.ts) plus the run flags their
    * conversations set. Keyed by rung for the same reason clears and story beats
    * are: a fresh difficulty is a fresh campaign, and a chain finished on hard
    * must not arrive pre-solved on the rung above it.

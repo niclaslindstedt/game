@@ -1,11 +1,11 @@
 ---
 name: bot-improvement
-description: "Use when improving the AUTOPILOT (src/game/bot/index.ts) — how the bot reads a fight and moves. Drives the iterate loop: reproduce the bad behaviour (headless sim or a real-render playtest), read the bot's own thought trail, form a hypothesis, edit the decision code and/or the bot.yaml knobs, then re-measure. The target is HUMAN capability — the bot should make the decisions a skilled human makes (approach a pack but hold at weapon reach, kill from a distance, retreat before it's swarmed), never something a human never would (dive an armed pack, hug melee range with a gun, stand in a telegraph). No artificial handicaps — just competent, deterministic play."
+description: "Use when improving the AUTOPILOT (engine/game/bot/index.ts) — how the bot reads a fight and moves. Drives the iterate loop: reproduce the bad behaviour (headless sim or a real-render playtest), read the bot's own thought trail, form a hypothesis, edit the decision code and/or the bot.yaml knobs, then re-measure. The target is HUMAN capability — the bot should make the decisions a skilled human makes (approach a pack but hold at weapon reach, kill from a distance, retreat before it's swarmed), never something a human never would (dive an armed pack, hug melee range with a gun, stand in a telegraph). No artificial handicaps — just competent, deterministic play."
 ---
 
 # Bot improvement
 
-The autopilot in `src/game/bot/index.ts` is one source of truth: the headless engine
+The autopilot in `engine/game/bot/index.ts` is one source of truth: the headless engine
 tests (`tests/engine/bot_test.ts`), the campaign simulator
 (`scripts/simulate-run.mjs`), and the real-app `?bot=` autoplay all drive the
 SAME `botAct(bot, state) → GameInput`. Improving the bot means improving that
@@ -48,7 +48,7 @@ that way:
 
 ## Thoughts are load-bearing — keep them in sync with the code
 
-Every decision branch calls `think(bot, "LABEL")` (`src/game/bot/state.ts`). That label is the
+Every decision branch calls `think(bot, "LABEL")` (`engine/game/bot/state.ts`). That label is the
 hero's thought bubble in **BOT VIEW** (DEVELOPER → PLAYGROUND) and under the FPS meter
 (`GameScreen.tsx` draws `bot.lastThought`) — and it is the ONLY window into *why*
 the bot did what it did. When you debug a bad run, the thought trail ("ARM UP" →
@@ -71,9 +71,9 @@ So treat the labels as part of the logic, not decoration:
 ## The knobs: `bot.yaml`
 
 The positioning tunables live in `content/bot.yaml` — the hand-authored
-source of truth, compiled to `src/generated/botTuning.ts` by
+source of truth, compiled to `engine/generated/botTuning.ts` by
 `scripts/generate-bot-tuning.mjs` (folded into `npm run levels` /
-`make assets`), and resolved per level in `src/game/bot/` via `botTuningFor(state.level.id)`.
+`make assets`), and resolved per level in `engine/game/bot/` via `botTuningFor(state.level.id)`.
 Mirrors `ladder.yaml`: a global `default:` layer plus per-level `levels:`
 overrides.
 
@@ -85,7 +85,7 @@ levels:                  # bend one map only (partial — the rest fall through)
     armApproachStandoff: 150
 ```
 
-- The engine schema + neutral defaults are `src/game/bot/tuning.ts`
+- The engine schema + neutral defaults are `engine/game/bot/tuning.ts`
   (`BotTuning`, `BOT_TUNING_DEFAULTS`). Defaults reproduce the shipped constants,
   so an un-overridden level plays identically.
 - **Add a knob**: add the field to `BotTuning` + `BOT_TUNING_DEFAULTS`, read it in
@@ -98,7 +98,7 @@ levels:                  # bend one map only (partial — the rest fall through)
 
 ## The OTHER autopilot: the drive's auto-driver
 
-`src/game/drive/driver.ts` is the second thing in this repo that plays the game
+`engine/game/drive/driver.ts` is the second thing in this repo that plays the game
 without a human, and it is held to the same bar this skill sets — the decisions a
 decent human makes, no artificial handicaps, no draw from the world's rng. It is
 a **different problem** (one car, four lanes, a crowd that walks at you), so it
@@ -108,7 +108,7 @@ or postures applies to it.
 - **What it drives**: the title-screen demo, a `?bot=` playtest that takes the
   car out, `?drive&bot=1` in the workbench, and `make drive-bench`.
 - **Its knobs**: the `drive:` block of the SAME `content/bot.yaml`, layered over
-  `DRIVE_BOT_DEFAULTS` (`src/game/drive/driver-tuning.ts`). Adding one is the
+  `DRIVE_BOT_DEFAULTS` (`engine/game/drive/driver-tuning.ts`). Adding one is the
   same three edits — the type, the defaults, the read — then `npm run levels`.
 - **Measure it with `make drive-bench`**, never by eye: a road that reads fine
   over thirty seconds breaks the car four legs in ten over a whole minute.
@@ -146,7 +146,7 @@ not pure positioning).
 ## The bot steers a HERO, not `players[0]`
 
 **THE BOT TAKES THE HERO IT STEERS — `botAct(bot, state, hero)`.** Nothing under
-`src/game/bot/` reads `state.players[0]` any more, and a new one is a
+`engine/game/bot/` reads `state.players[0]` any more, and a new one is a
 regression: the app passes `localHero(state)`, the simulator passes the seat
 each of its bots was given, and a single-player caller passes seat 0, which is
 the identity case that let 164 sites move at once. `tests/engine/bot_party_test.ts`
@@ -164,7 +164,7 @@ items is how they get ticked from a diff.
 faster, and only dividing by both the head count and the clock shows which
 effect won. `scripts/coop-tuning.mjs` is the tuning pass built on it.
 
-**The leash is the only party behaviour the bot has** (`src/game/bot/party-play.ts`).
+**The leash is the only party behaviour the bot has** (`engine/game/bot/party-play.ts`).
 Spacing, splitting the packs, respecting `Item.owner`, covering a hero who is
 down and group travel are the plan's §7.4 and wait until somebody can watch a
 bot party play. Four rules on the leash, and each is the reason it works:
@@ -200,7 +200,7 @@ deficiency (§7.4), not an XP-split one. Do not reach for
    playtest in headless Chromium (below).
 2. **Read the thought trail.** Turn on BOT VIEW (DEVELOPER → PLAYGROUND) or `?debug`, or
    probe `window.__game` — watch which labels fire when the hero misbehaves.
-3. **Hypothesize, then edit** `src/game/bot/` (logic) and/or `bot.yaml` (a knob). Prefer
+3. **Hypothesize, then edit** `engine/game/bot/` (logic) and/or `bot.yaml` (a knob). Prefer
    moving a magic number into `bot.yaml` over hard-coding it, so it's tunable next
    time.
 4. **Re-measure and COMPARE.** `simulate-run --json before.json` once, then
@@ -216,15 +216,15 @@ deficiency (§7.4), not an XP-split one. Do not reach for
 
 | Piece | Role |
 | --- | --- |
-| `src/game/bot/index.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
-| `src/game/bot/tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
+| `engine/game/bot/index.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
+| `engine/game/bot/tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
 | `content/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `pwa/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
-| `src/game/drive/driver.ts` + `driver-tuning.ts` | The DRIVE's auto-driver and its knobs (the `drive:` block of `bot.yaml`) |
+| `engine/game/drive/driver.ts` + `driver-tuning.ts` | The DRIVE's auto-driver and its knobs (the `drive:` block of `bot.yaml`) |
 | `make drive-bench` | Measures the drive: N seeds a rung, arrival rate / trip / bodies / ending wear |
 | `?drive&bot=1` | The road on its own with the auto-driver at the wheel — look at it without playing it |
 | BOT VIEW (DEVELOPER → PLAYGROUND) | Draws `bot.lastThought` over the hero — the live decision trace |
@@ -248,7 +248,7 @@ if `chromium.launch()` complains about a version mismatch, launch with that
 - A user-visible behaviour change gets a `.changes/unreleased/` fragment.
 - Load the **`skill-reflection`** skill before committing: record what this pass
   learned (with a `scope` — this skill's lessons split hard between
-  `src/game/bot/` and `content/bot.yaml`), prune the stale, merge the
+  `engine/game/bot/` and `content/bot.yaml`), prune the stale, merge the
   duplicated, and promote the always-true into the sections above. This skill's
   lesson set is one of the biggest in the repo, so read it narrowed:
   `node scripts/skill-lessons.mjs bot-improvement --list`.

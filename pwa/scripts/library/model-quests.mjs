@@ -8,7 +8,7 @@
 // ./prose-quests.mjs; the markup is ./render-quests.mjs.
 //
 // WHY THE GIVER GETS A PAGE OF HIS OWN AND IS NOT A FIELD ON THE ERRAND. The
-// catalogs are separate for the reason `src/game/defs/quests.ts` gives — one
+// catalogs are separate for the reason `engine/game/defs/quests.ts` gives — one
 // person hands out a whole chain — and the section inherits that shape rather
 // than flattening it: a reader who met PRIYA NAIR is looking for the person and
 // everything she wants, and a reader who searched THE NIGHT LOG is looking for
@@ -354,7 +354,7 @@ function objectiveModel(objective, def) {
  * THE REWARD, WITH THE SHARE PRICED OUT PER RUNG.
  *
  * `xpShare: 0.35` is a third of the bar the hero is standing on, which is the
- * whole design (see the note atop `src/game/defs/quests.ts`) and also exactly
+ * whole design (see the note atop `engine/game/defs/quests.ts`) and also exactly
  * why it cannot be printed as authored: nobody reads a level bar in decimals.
  * So the page states what the errand pays a hero the ladder INTENDED to be
  * standing here — the venue's own `intendedLevel` for the rung — by asking the
@@ -397,7 +397,7 @@ function rewardModel(reward, venue) {
     // the arsenal for a way to re-pick a build will find no item to find:
     // this row is the only place the answer exists.
     cleanSlates: reward.cleanSlates ?? 0,
-    // THE CACHE — the garage chest (src/game/cache.ts). One errand in the game
+    // THE CACHE — the garage chest (engine/game/cache.ts). One errand in the game
     // pays it, and a reader hunting the arsenal for a way to keep a piece they
     // cannot carry will find no ITEM to find: this row is the only place the
     // answer exists.

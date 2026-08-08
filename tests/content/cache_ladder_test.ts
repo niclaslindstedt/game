@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE CACHE's LADDER — the chest Ruth pays for THE SCALE on each difficulty
-// (`DifficultyDef.cache`, see src/game/cache.ts).
+// (`DifficultyDef.cache`, see engine/game/cache.ts).
 //
 // The ladder is authored across five separate difficulty defs and read by four
 // surfaces (the engine's grant, the world renderer, the panel's header, the

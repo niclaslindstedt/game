@@ -1,7 +1,7 @@
 ---
 title: Straight-up jumps were mid-air branch churn — commit a hop to a plan and steer it to the landing
 date: 2026-07-21
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [jumps, commitment, branch-churn]
 ---
 

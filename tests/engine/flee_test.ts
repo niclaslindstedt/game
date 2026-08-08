@@ -52,7 +52,7 @@ function stageCoward(state: GameState): void {
  * out, collecting every event seen.
  *
  * The two are no longer the same moment: at 0 hp the body is spliced out and
- * the FLIGHT RITE opens (`src/game/boss-death.ts`) — he tears the rift open,
+ * the FLIGHT RITE opens (`engine/game/boss-death.ts`) — he tears the rift open,
  * bolts for it, and is spun out of existence — and `bossFled`, the landmark and
  * the parting words all land at the END of that beat. Stopping at the empty
  * enemy list would sample the run mid-scene, before any of it.

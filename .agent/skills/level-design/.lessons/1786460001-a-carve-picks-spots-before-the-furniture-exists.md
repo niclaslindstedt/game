@@ -1,7 +1,7 @@
 ---
 title: A carve picks its pinned spots BEFORE any furniture exists, so a scripted body can be minted inside a gantry rank — and a wedged rusher never gets anywhere
 date: 2026-08-08
-scope: src/game/mapgen/, src/game/create.ts
+scope: engine/game/mapgen/, engine/game/create.ts
 concepts: [opening-strike, pinned-spawns, obstacles, ranks, wedge]
 ---
 

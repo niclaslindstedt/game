@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import { MAGIC_CRIT, effectiveStat, step } from "@game/core";
 // Engine-internal kill funnel — where the blob is queued.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import { idle, makeEnemy, startGame, stopWaves } from "./helpers.ts";
 

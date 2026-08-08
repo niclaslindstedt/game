@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The embedded Lua VM (`src/lib/lua/`) — a LIB test, so it stays at the tests/
+// The embedded Lua VM (`engine/lib/lua/`) — a LIB test, so it stays at the tests/
 // root beside chiptune/synth/rng and references no game content.
 //
 // Three things are being pinned here, and only the first is "does Lua work":
@@ -344,7 +344,7 @@ describe("the VM stays shippable", () => {
   // copy) and the repo's own `node`-imported copy both work. Neither is
   // enforced by the type-checker, and breaking either fails at PACKAGING time
   // or, worse, on a player's machine.
-  const dir = fileURLToPath(new URL("../src/lib/lua", import.meta.url));
+  const dir = fileURLToPath(new URL("../engine/lib/lua", import.meta.url));
   const sources = readdirSync(dir)
     .filter((f) => f.endsWith(".ts"))
     .map((f) => [f, readFileSync(`${dir}/${f}`, "utf8")] as const);

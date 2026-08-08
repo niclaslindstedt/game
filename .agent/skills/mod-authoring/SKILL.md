@@ -226,6 +226,6 @@ Everything above still applies, plus what a published mod owes its subscribers:
   a permanent Workshop item. Never publish unprompted.
 - **`kind: conversion`.** See above.
 - **Changing a published mod's `id`.**
-- **Anything that would require editing this repo's `content/` or `src/`.**
+- **Anything that would require editing this repo's `content/` or `engine/`.**
   Report it as a finding; it is a different piece of work with a different
   review path.

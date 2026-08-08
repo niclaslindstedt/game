@@ -5,7 +5,7 @@
 // signature weapon does not exist, or whose power grows a kit it hasn't got
 // surfaces at `npm run levels` rather than as an invisible ally swinging nothing.
 //
-// The contract checked here is `CompanionDef` in `src/game/defs/companions.ts` —
+// The contract checked here is `CompanionDef` in `engine/game/defs/companions.ts` —
 // keep the two in step when a field is added.
 
 /**

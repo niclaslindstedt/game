@@ -5,7 +5,7 @@
 //
 // EVERY FAILURE THIS FILE CATCHES IS SILENT, which is the whole reason it is
 // here. A building is ASSEMBLED at runtime from a plan
-// (`src/game/drive/town-plan.ts`) rather than blitted from one sprite, so:
+// (`engine/game/drive/town-plan.ts`) rather than blitted from one sprite, so:
 //
 //   A MISNAMED PART simply does not draw. `spriteByName` returns undefined, the
 //   compositor skips the layer, and what ships is a house with no front door

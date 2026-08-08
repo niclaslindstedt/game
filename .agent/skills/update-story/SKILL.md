@@ -13,7 +13,7 @@ docs/story.md      (TIER 1 — the gist: the whole plot in prose)   ← the grou
       │  extrapolated into
 docs/manuscript.md (TIER 2 — the script: every line, verbatim)
       │  extrapolated into
-src/game/defs/**   (TIER 3 — the game: roster, items, cutscenes)
+engine/game/defs/**   (TIER 3 — the game: roster, items, cutscenes)
 ```
 
 When two tiers disagree, **the higher tier wins**: `story.md` beats the
@@ -96,7 +96,7 @@ initial commit.
      start at TIER 1 — write the change into `story.md` first, then walk the
      propagation checklist downward.
    - **A drift/reconcile sweep** (the data or manuscript moved under the story
-     without a matching top-tier edit — e.g. a `src/game/defs/**` diff touched
+     without a matching top-tier edit — e.g. a `engine/game/defs/**` diff touched
      dialogue): read all three tiers, find where they disagree, and fix the
      LOWER tier to match the higher one. If the data genuinely holds a story
      beat the manuscript and story lack, that is a change that needed
@@ -111,13 +111,13 @@ lower tier without reconciling the ones above.
 |---|---|---|---|
 | 1 | Gist | `docs/story.md` | The prose beat itself — the level's two paragraphs, the intro/cutscene paragraph, the elite/boss mention. Keep the shape: one paragraph per intro & per cutscene, two per level, every elite and boss named. |
 | 2 | Script | `docs/manuscript.md` | The verbatim lines the beat becomes: cutscene captions/`say`, level `intro`/`outro` monologues, each elite/boss `dialogue` (two-way, hero replies are **ME:**) and `lastWords`, apparition scenes, companion `joinWords`/`killQuotes`, `lore` pages, merchant greetings. Its own "Where the data lives" table is the authoritative map from a line to its data file. |
-| 3a | Game — cutscenes & monologues | `content/cutscenes/<id>.yaml`; `src/game/defs/levels/*.ts` (`intro`, `outro`, `merchant.greeting`, `firstKillThoughts`/`firstSightThoughts` pins) | Prelude + travel scenes, per-level opening/closing monologues, merchant lines, thought pins. |
-| 3b | Game — roster | `src/game/defs/enemies/<level>.ts` + `enemies/index.ts` | Elite/boss `dialogue` + `lastWords`; if a mob is **added, removed, or replaced**, its `EnemyDef` (hp/damage/role/mechanics), its registration, and any `shieldedBy`/`flees`/`spareable`/`apparition` wiring. Load the `enemy-design` skill for the numbers. |
+| 3a | Game — cutscenes & monologues | `content/cutscenes/<id>.yaml`; `engine/game/defs/levels/*.ts` (`intro`, `outro`, `merchant.greeting`, `firstKillThoughts`/`firstSightThoughts` pins) | Prelude + travel scenes, per-level opening/closing monologues, merchant lines, thought pins. |
+| 3b | Game — roster | `engine/game/defs/enemies/<level>.ts` + `enemies/index.ts` | Elite/boss `dialogue` + `lastWords`; if a mob is **added, removed, or replaced**, its `EnemyDef` (hp/damage/role/mechanics), its registration, and any `shieldedBy`/`flees`/`spareable`/`apparition` wiring. Load the `enemy-design` skill for the numbers. |
 | 3c | Game — items | `content/items/<rarity>/*.yaml` (named uniques + their `lore`/`description`), `content/story-items.yaml`, `EnemyDef.uniquesByDifficulty`, `LevelDef.loot.worldUniques` | Story items (keycards, dossiers, recovered hardware) and their `lore`; a boss's dropped uniques and world-drop relics. **A boss swap re-homes that boss's unique set** — the drops must follow the new owner. Load `weapon-system` for the item economy. |
 | 3d | Game — thoughts | `content/thoughts.yaml` | The hero's pinned beats (kill/sighting/scripted-strike pins from a `LevelDef`; a **travel door's `unready:`** — what he says at a door with no open road, which REPLAYS rather than firing once; and a **`placeThoughts` entry** — a beat pinned to BEING somewhere rather than to a mob, `where: arrival` or `where: pastDoor`, which is what a venue with no horde has to use). A beat may be an **exchange**: `voice: { speaker, portrait }` names who answers him and a `{ them: [...] }` page is theirs — the mirror of `{ hero: [...] }` in an arrival scene. Reach for this, NOT `EnemyDef.dialogue`, when a line has to land inside a scripted beat. |
-| 3e | Game — companions | `content/companions.yaml` (spare verdict in `src/game/companions.ts`) | Joining words + kill quotes for any rift unique that can be spared. |
-| 3e2 | Game — the SCENE's shape | `src/game/defs/levels/types.ts` + `src/game/story.ts` + `scripts/asset-tools/level-schema.mjs` | Only when the beat's SHAPE changes, not just its words — a scripted strike gaining rounds, an ambush changing order. A retone of a scripted scene usually lands here first (see the lessons). Put the reasoning in the def's doc comment; the YAML is data a mod also authors. |
-| 3e3 | Game — the hero's own name | `content/**` (`{HERO}` in a line), `src/game/hero-name.ts` | Only when a line should SAY the player's character name. The token is `{HERO}`; `docs/game-content.md` → "The hero's name" carries the rule and `tests/content/hero_name_test.ts` asserts the exact list of lines that spend it, so adding one is a test edit as well as a content edit. Every surface that draws authored text resolves it — a NEW text overlay must call `withHeroName`/`withHeroNameLines` or it will print `?HERO?`. |
+| 3e | Game — companions | `content/companions.yaml` (spare verdict in `engine/game/companions.ts`) | Joining words + kill quotes for any rift unique that can be spared. |
+| 3e2 | Game — the SCENE's shape | `engine/game/defs/levels/types.ts` + `engine/game/story.ts` + `scripts/asset-tools/level-schema.mjs` | Only when the beat's SHAPE changes, not just its words — a scripted strike gaining rounds, an ambush changing order. A retone of a scripted scene usually lands here first (see the lessons). Put the reasoning in the def's doc comment; the YAML is data a mod also authors. |
+| 3e3 | Game — the hero's own name | `content/**` (`{HERO}` in a line), `engine/game/hero-name.ts` | Only when a line should SAY the player's character name. The token is `{HERO}`; `docs/game-content.md` → "The hero's name" carries the rule and `tests/content/hero_name_test.ts` asserts the exact list of lines that spend it, so adding one is a test edit as well as a content edit. Every surface that draws authored text resolves it — a NEW text overlay must call `withHeroName`/`withHeroNameLines` or it will print `?HERO?`. |
 | 3f | App overlays | `pwa/src/game/overlays/DialogueOverlay.tsx`, `CutsceneOverlay.tsx`, `pwa/src/game/copy.ts` | Only if the beat needs new rendering (a new scene kind) or loose UI copy; story text itself stays in the engine defs. |
 
 ### When a mob or boss is replaced

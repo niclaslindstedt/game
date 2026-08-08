@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// NOTHING IN THE FOG IS A TARGET (src/game/map.ts `clearOfFog`, read by
+// NOTHING IN THE FOG IS A TARGET (engine/game/map.ts `clearOfFog`, read by
 // step/weapon.ts `nearestEnemy` and by `nearestCrate`). The main view does not
 // draw a mob standing on ground the hero has not uncovered — nor one inside the
 // frontier band the fog stipples over — so the autonomous weapon must not fire
@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import { clearOfFog, isExplored, MAP, step } from "@game/core";
 import type { GameState } from "@game/core";
 // Engine-internal: the crate pick the auto-attack falls back to.
-import { nearestCrate } from "../../src/game/crates.ts";
+import { nearestCrate } from "../../engine/game/crates.ts";
 
 import {
   clearStage,

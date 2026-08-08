@@ -335,7 +335,7 @@ function checkBundleBudgets() {
   // module graph away sat `createGame`, the step pipeline, the autopilot, the
   // loot roller, the spawners and the enemy catalog. Splitting the engine off
   // the menu shell — the fix that note called overdue — landed as `@game/menu`
-  // (src/menu.ts): the startup path now reaches the CATALOGS and nothing that
+  // (engine/menu.ts): the startup path now reaches the CATALOGS and nothing that
   // simulates, and the budget came back DOWN past every earlier raise.
   //
   // What stays eager is the level and equipment catalogs the menus genuinely

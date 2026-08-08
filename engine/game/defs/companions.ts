@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The companion catalog: who a spared unique BECOMES when it joins the party
+// (see EnemyDef.spareable and companions.ts). One def per recruitable figure —
+// its look, its own starting weapon, an optional party-wide aura, and the
+// kill-quote banter it floats while fighting. Content is data, referenced by
+// id, exactly like the enemy and equipment catalogs: a new companion is a new
+// entry + the sprites its enemy twin already ships — no engine changes.
+//
+// This module owns the TYPES and the registry; the ROSTER is authored in
+// `content/companions.yaml` and compiled to `engine/generated/companions.ts` by
+// `scripts/generate-companions.mjs`. A MOD ships its own `companions.yaml` and
+// its recruits arrive through `registerDefs` (pwa/src/game/mods.ts) — which is
+// what lets a conversion's spared elite join the party, the story beat a
+// re-skinned roster could not otherwise have.
+
+import { GENERATED_COMPANIONS } from "../../generated/companions.ts";
+
+/**
+ * A companion's SIGNATURE POWER and how it scales with level (see
+ * `companion-stats.ts`). The power gains one RANK every `everyLevels` levels;
+ * each rank adds the set effects on top of the base weapon / nova / aura, so a
+ * companion visibly turns into a specialist the longer it fights. A def sets
+ * only the fields that fit its kit — a shotgunner grows `pelletsPerRank`, a
+ * coil `chainPerRank`, a frost caster the `nova*PerRank` pair, a lucky charm
+ * `magicFindPerRank`. Fields left unset simply don't grow.
+ */
+export type CompanionPower = {
+  /** Short all-caps name shown in the companion panel (e.g. "CHAIN LIGHTNING"). */
+  name: string;
+  /** One-line description of what the power does / how it grows. */
+  blurb: string;
+  /** Levels between rank-ups: rank = floor((level - 1) / everyLevels). */
+  everyLevels: number;
+  /** Extra shotgun pellets added to the weapon's volley per rank. */
+  pelletsPerRank?: number;
+  /** Extra chain-lightning arcs added to the weapon's shots per rank (works
+   * even on a weapon with no base chain — it grants the arc outright). */
+  chainPerRank?: number;
+  /** Extra pierce added to the weapon's shots per rank. */
+  piercePerRank?: number;
+  /** World px added to the FROST NOVA's blast radius per rank. */
+  novaRadiusPerRank?: number;
+  /** Flat damage added to the FROST NOVA's per-foe bite per rank. */
+  novaDamagePerRank?: number;
+  /** Party MAGIC FIND aura added per rank (on top of `aura.magicFind`). */
+  magicFindPerRank?: number;
+};
+
+export type CompanionDef = {
+  id: string;
+  /** Display name (portraits, the equip screen, the join toast). */
+  name: string;
+  /** Sprite family the renderer draws (frames `<sprite>_0`, `<sprite>_1`) —
+   * usually the same family as the enemy twin it was spared from. */
+  sprite: string;
+  /** Base max hp at hero level 1 (grows via COMPANIONS.hpPerLevel). */
+  hp: number;
+  /**
+   * Walk speed in world px/s. Authored on the HERO's scale rather than the
+   * horde's (a companion's job is to keep station beside him, not to chase like
+   * a mob), so these move with `PLAYER.speed` — they carry the same ×1.5 the
+   * world's tempo took. Only the closing step reads this: the leash catch-up
+   * already tracks `playerSpeed()` directly, so a stat-built sprinter never
+   * outruns his party.
+   */
+  speed: number;
+  /** Collision radius in world px. */
+  radius: number;
+  /** The weapon this companion joins with (a WEAPON_DEFS id), minted
+   * unbreakable — its signature piece, the one it fought the hero with. */
+  weapon: string;
+  /**
+   * A party-wide AURA the companion radiates while up (silent while downed):
+   * `magicFind` multiplies every loot-tier roll's chance by `1 + value` —
+   * LUCKY's +50% is `0.5`. More aura kinds land here as companions do.
+   */
+  aura?: { magicFind?: number };
+  /**
+   * A FROST NOVA the companion pulses on a cadence while it has a foe in
+   * reach: a chilling shockwave that damages AND slows every enemy caught in
+   * the ring (see `companionNova`). Pulses only while up — silent while
+   * downed — and holds its charge until a foe is actually in the blast, so it
+   * never fires into empty space. A signature power that makes a plain melee
+   * companion a crowd-control anchor; absent on companions without one.
+   */
+  nova?: {
+    /** Ms between pulses once a foe is in reach. */
+    everyMs: number;
+    /** Blast radius (world px). */
+    radius: number;
+    /** Base damage a pulse deals each caught foe at hero level 1 — grown with
+     * the party like the companion's weapon (`companionNovaDamage`). */
+    damage: number;
+    /** Ms a caught enemy stays chilled (movement slowed). */
+    chillMs: number;
+    /** Movement multiplier while chilled (0..1 — 0.5 = half speed). */
+    chillFactor: number;
+  };
+  /**
+   * The companion's SIGNATURE POWER — how it gets stronger as it levels
+   * (`companion-stats.ts`). Every `everyLevels` levels the power gains a RANK,
+   * and each rank steps up whichever of the effects below the def sets: a
+   * shotgun adds pellets, a coil adds lightning arcs, a nova widens and bites
+   * harder, a lucky charm's aura grows. Absent on a companion whose only growth
+   * is the plain hp/damage ramp. Purely additive on top of the base weapon /
+   * nova / aura — a companion with no `power` still trains, it just never gains
+   * a new trick. Author blurbs read in the companion panel.
+   */
+  power?: CompanionPower;
+  /**
+   * The joining scene: what the spared figure says the moment the SPARE
+   * verdict lands — a short thanks, a life owed, a promise to follow and
+   * protect — played through the ordinary dialogue box (a `companionJoin`
+   * source) before the fight resumes. One entry per page, one string per
+   * line; lines live in docs/manuscript.md like all spoken words.
+   */
+  joinWords?: string[][];
+  /**
+   * Banter floated above the companion when its blow kills a mob (config
+   * COMPANIONS.quoteChance / quoteCooldownMs) — hovering text, never a
+   * dialogue scene. Lines live in docs/manuscript.md like all spoken words.
+   */
+  killQuotes: string[];
+};
+
+/** The shipped roster, compiled from `content/companions.yaml`. */
+export const COMPANION_DEFS: Record<string, CompanionDef> =
+  GENERATED_COMPANIONS;
+
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See engine/index.ts.
+let activeCompanionDefs: Record<string, CompanionDef> = COMPANION_DEFS;
+
+/** Test/authoring hook: replace the active companion catalog. */
+export function setCompanionDefs(defs: Record<string, CompanionDef>): void {
+  activeCompanionDefs = defs;
+}
+
+/** Look up a companion's def; throws on a broken id so bugs surface loudly. */
+export function companionDef(defId: string): CompanionDef {
+  const def = activeCompanionDefs[defId];
+  if (!def) throw new Error(`unknown companion def "${defId}"`);
+  return def;
+}
+
+/** Is this id in the active companion catalog? The lenient probe the loadout
+ * loader uses so a save carrying a since-deleted companion loads without it
+ * rather than crashing. */
+export function isCompanionDef(defId: string): boolean {
+  return defId in activeCompanionDefs;
+}

@@ -49,7 +49,10 @@ import {
   talentCrippling,
   talentDef,
 } from "@game/core";
-import { mobContactScaleFor, hardMobHpScale } from "../../src/game/menace.ts";
+import {
+  mobContactScaleFor,
+  hardMobHpScale,
+} from "../../engine/game/menace.ts";
 
 import { escapeHtml } from "../../pwa/scripts/library/escape.mjs";
 import {

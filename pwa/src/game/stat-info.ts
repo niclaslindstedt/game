@@ -7,7 +7,7 @@
 // draw buttons: the level-up chooser, the LEVEL TOKEN respec, and the character
 // sheet's per-attribute explainer (char-stats.ts, a pure model with no JSX in
 // it). Keep the blurbs/info honest against the engine's STATS rules
-// (src/game/config.ts) + src/game/items/; every stat now touches more than
+// (engine/game/config.ts) + engine/game/items/; every stat now touches more than
 // damage. (Move speed is no longer a stat — DEXTERITY is the mobility
 // attribute, so there's no SPEED row here.)
 

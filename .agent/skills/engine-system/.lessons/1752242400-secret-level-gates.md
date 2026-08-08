@@ -1,7 +1,7 @@
 ---
 title: Secret levels ride a registry split + latent travel gates
 date: 2026-07-11
-scope: src/game/
+scope: engine/game/
 concepts: [levels, registry, travel-gates, unlocks]
 ---
 

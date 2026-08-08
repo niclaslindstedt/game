@@ -14,7 +14,7 @@
 //
 // **WHERE IT LANDS IS THE PHYSICS' ANSWER, NOT A GUESS.** The engine already
 // works out which panel a collision sat on — it is how the DAMAGE is booked
-// (`panelAt(hit.along)`, src/game/drive/impact.ts) — and now carries it out on
+// (`panelAt(hit.along)`, engine/game/drive/impact.ts) — and now carries it out on
 // `DriveStrike.panel`. So the blood and the dents accumulate on the same panels
 // for the same reason, and a car that has been hitting things square arrives
 // with a destroyed, drenched bumper and clean straight doors, while one that has

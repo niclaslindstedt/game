@@ -32,7 +32,7 @@
 //   broke  nobody did. Which is the more frightening of the two, and what the
 //          very worst stretch of this road is made of.
 
-import { TOWN_ART_SIZE } from "../../src/game/drive/town-parts.ts";
+import { TOWN_ART_SIZE } from "../../engine/game/drive/town-parts.ts";
 
 // ── THE SHARED PALETTE ───────────────────────────────────────────────────────
 //

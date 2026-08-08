@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE TWO SHAPES A RUN IS DESCRIBED BY, held to being the same shape.
 //
-// `RunParams` (`src/game/session-setup.ts`) is what the engine builds a run
+// `RunParams` (`engine/game/session-setup.ts`) is what the engine builds a run
 // from. `SessionParams` (`server/wire/protocol.ts`) is what crosses the wire.
 // They are deliberately written twice — the wire leaf imports NOTHING, because
 // the page reads it from screens on the app's startup path where the 200 KB
@@ -42,7 +42,7 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const WIRE_ONLY: string[] = [];
 
 const runParams = fieldsOf(
-  path.join(repoRoot, "src", "game", "session-setup.ts"),
+  path.join(repoRoot, "engine", "game", "session-setup.ts"),
   "RunParams",
 );
 const sessionParams = fieldsOf(

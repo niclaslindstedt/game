@@ -36,11 +36,11 @@ import {
   xpCapMultiplier,
   xpToLevelUp,
 } from "@game/core";
-import { HOOKS, SCRIPT_IDS } from "../../src/game/script/hooks.ts";
-import { GENERATED_SCRIPTS } from "../../src/generated/scripts.ts";
-import { hookIsScripted, numberHook } from "../../src/game/script/host.ts";
+import { HOOKS, SCRIPT_IDS } from "../../engine/game/script/hooks.ts";
+import { GENERATED_SCRIPTS } from "../../engine/generated/scripts.ts";
+import { hookIsScripted, numberHook } from "../../engine/game/script/host.ts";
 import { toLuaTable, type LuaValue } from "@game/lib/lua/index.ts";
-import { BALANCE } from "../../src/game/tuning.ts";
+import { BALANCE } from "../../engine/game/tuning.ts";
 import type { Difficulty } from "@game/core";
 
 /** Bit-for-bit, not `toBeCloseTo`: the two paths do the same arithmetic in the

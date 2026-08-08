@@ -2,8 +2,8 @@
 // THE ENGINE SEAM. Everything the library knows about the game passes through
 // this module, and it reaches the game exactly two ways:
 //
-//   1. AUTHORED facts are read from the COMPILED catalogs (`src/generated/*`,
-//      surfaced through `src/game/defs/**`) — the schema-validated, cross-
+//   1. AUTHORED facts are read from the COMPILED catalogs (`engine/generated/*`,
+//      surfaced through `engine/game/defs/**`) — the schema-validated, cross-
 //      referenced, ladder-stamped form the game itself runs on, never the raw
 //      YAML.
 //   2. DERIVED facts — an enemy's hp on nightmare after the level ladder and
@@ -27,7 +27,7 @@ export const REPO = resolve(__dirname, "../../..");
 
 register(pathToFileURL(join(REPO, "scripts/game-alias-loader.mjs")).href);
 
-const engine = (path) => import(pathToFileURL(join(REPO, "src", path)).href);
+const engine = (path) => import(pathToFileURL(join(REPO, "engine", path)).href);
 
 const [
   enemies,
@@ -114,7 +114,7 @@ const affixText = await import(
 /**
  * THE LIBRARY HAS NO PLAYER TO ASK. A handful of authored lines name the hero
  * — the people who actually know him say it out loud — and write `{HERO}`
- * where the name goes (`src/game/hero-name.ts`). These pages are read by
+ * where the name goes (`engine/game/hero-name.ts`). These pages are read by
  * somebody who may not own the game yet, let alone have a character, so they
  * resolve the token to the engine's own stand-in and print a sentence rather
  * than a template. Applied once, on the finished page (`writePage`), so no

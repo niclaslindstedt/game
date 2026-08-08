@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import { WEAPON_DEFS } from "@game/core";
 import { describe, expect, it } from "vitest";
 
-import { ITEM_SLOTS } from "../../src/game/items/slots.ts";
+import { ITEM_SLOTS } from "../../engine/game/items/slots.ts";
 import { slotGlyph } from "../../pwa/src/game/item-glyph.ts";
 
 describe("item kind glyphs", () => {

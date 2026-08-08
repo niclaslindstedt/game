@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // ELEVATOR PADS — the plate the hero steps onto to be carried somewhere the map
-// does not connect to (see `LevelDef.elevators` / `src/game/elevator.ts`).
+// does not connect to (see `LevelDef.elevators` / `engine/game/elevator.ts`).
 //
 // The pad has one job the sprite alone cannot do: SAY THAT IT IS A CONTROL. A
 // generated map is covered in ground furniture, and a plate lying flat among it

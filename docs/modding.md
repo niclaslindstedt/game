@@ -47,7 +47,7 @@ XP curve, loot rain and damage formula.
 
 It is also, unavoidably, a stranger's code, so it never leaves the box:
 
-- **The VM is ours** (`src/lib/lua/`), and its standard library is a SUBSET
+- **The VM is ours** (`engine/lib/lua/`), and its standard library is a SUBSET
   chosen as the security model. No `io`, no `os`, no `require`, no `load`, no
   `debug`, no `_G`, no `coroutine` — there is nothing to reach the filesystem
   with, and no way to bring in a chunk the compiler did not see.
@@ -88,7 +88,7 @@ inside a release.
 
 ### 3. The catalogs go in through the seam that already existed
 
-`registerDefs` (`src/game/defs/registry.ts`) replaces the ACTIVE content
+`registerDefs` (`engine/game/defs/registry.ts`) replaces the ACTIVE content
 registry every `levelDef` / `enemyDef` accessor reads. It was built so the
 engine test suites could run against synthetic fixtures; a mod is the same move
 with different data, which is why applying one needed no engine change at all.
@@ -437,7 +437,7 @@ using the mod's own rows for its own venue.
 Two details are the whole design here, and both come from rules that already
 existed:
 
-- **The registry is a LEAF.** `src/game/mapgen/blueprints.ts` holds the active
+- **The registry is a LEAF.** `engine/game/mapgen/blueprints.ts` holds the active
   catalog and nothing else, so `registerDefs({ blueprints })` swaps a mod's
   recipes in without the def registry importing `generate.ts` — the carve, the
   dressing passes and the whole area rule engine. Same move `flags.ts` makes for
@@ -491,7 +491,7 @@ boss worth farming past the first drop, and a mod could already ship
 `rarity: set` pieces — they just belonged to nothing. The lift is the same one
 the story and the companions had: a loader that takes a DIRECTORY
 (`scripts/set-data/`), the schema both the shipped build and a mod validate
-through (`asset-tools/set-schema.mjs`), a generator into `src/generated/sets.ts`,
+through (`asset-tools/set-schema.mjs`), a generator into `engine/generated/sets.ts`,
 and a snapshot frozen from the hand-written TypeScript the moment before, so the
 move is provably lossless.
 
@@ -628,7 +628,7 @@ The passive TALENT trees were the last catalog a mod could not touch — the one
 place where a total conversion could re-skin every monster, venue, relic, scene
 and recruit and still hand the player _this_ game's eight melee talents. The
 trees are content now (`content/talents.yaml`, compiled by
-`scripts/generate-talents.mjs` into `src/generated/talents.ts`), `registerDefs`
+`scripts/generate-talents.mjs` into `engine/generated/talents.ts`), `registerDefs`
 takes a `talents` catalog beside `abilities`, and a mod ships one by putting that
 file at its own root. A mod's talents MERGE into the shipped trees like its
 monsters do, so an addon adds one good passive and a conversion replaces one by
@@ -637,7 +637,7 @@ shipping its id.
 The lift is not just a file move, because a talent's numbers used to live in two
 places at once: the def carried its per-rank slopes, and every structured PROC
 (a parry, a volley, a frost nova) kept its chances, radii and cooldowns in
-`src/game/config/talents.ts` under a key the accessor reached for by SHIPPED
+`engine/game/config/talents.ts` under a key the accessor reached for by SHIPPED
 TALENT ID — `talentParry` read `TALENTS.parry` after checking the rank of the
 talent literally called `parry`. A YAML catalog on top of that would have let a
 mod author a talent and no numbers to put in it.
@@ -647,7 +647,7 @@ _which trained talent carries this block_ (`procTalent` in `talent-effects.ts`)
 rather than what rank `frost_nova` is. That is the same rule
 [`AbilityDef`](../AGENTS.md) already followed — `kind` is a label, the BLOCKS are
 the behaviour — and it is what makes a mod's talent able to fire a shipped proc
-with its own numbers. `src/game/config/talents.ts` is down to the one thing that
+with its own numbers. `engine/game/config/talents.ts` is down to the one thing that
 is true of every talent: the shared rank ceiling.
 
 Three things are worth knowing about the format:
@@ -720,7 +720,7 @@ unsubscribed from everything.
 uniques, sprites, sounds, music tracks, the shipped venues, the compass regions a
 map blueprint points its boss with, and the engine's event names (what a sound's
 `on:` may answer). It exists because the compiler runs in the
-shipped app's main process, which has no TypeScript and no `src/generated/` to
+shipped app's main process, which has no TypeScript and no `engine/generated/` to
 import the real catalogs from, so the id sets are snapshotted into JSON that
 travels inside the build.
 
@@ -843,7 +843,7 @@ The rest of what is load-bearing in `menus-mods.ts`:
   and the shipped catalogs — one import away from the level catalog, the loot
   roller and the whole step pipeline. So the mod system's TYPES and the
   "which mod is on" state live in an import-free leaf (the same move
-  `src/game/flags.ts` makes for the engine's runtime toggles), and the apply
+  `engine/game/flags.ts` makes for the engine's runtime toggles), and the apply
   itself is a **dynamic** import inside the row's own handler. The 200 KB
   gzipped critical-path budget is what notices; it is at 161.3 KB.
 

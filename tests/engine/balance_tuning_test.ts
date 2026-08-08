@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The developer BALANCE TUNING multipliers (src/game/tuning.ts): runtime
+// The developer BALANCE TUNING multipliers (engine/game/tuning.ts): runtime
 // knobs over the shipped config, applied at each rule's one read site. The
 // engine default is neutral (all 1); every test that turns a knob restores
 // the defaults so ordering can't leak. Runs on synthetic fixtures.

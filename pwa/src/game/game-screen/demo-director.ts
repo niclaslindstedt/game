@@ -99,7 +99,7 @@ const DEMO_SWITCH_CLICK_MS = 120;
 //
 // This damps the STEERING half of the strobe. The other half is already damped
 // in the engine: mid-fight a hero is turned onto what he STRIKES and holds it
-// for the weapon's cooldown (see `turnHero`, src/game/step/player.ts), so his
+// for the weapon's cooldown (see `turnHero`, engine/game/step/player.ts), so his
 // facing changes at most once a blow however the bot circles the pack.
 const DEMO_FACE_COMMIT_MS = 450;
 const DEMO_FACE_HOLD_MS = 1200;

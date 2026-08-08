@@ -386,8 +386,8 @@ reads.
 
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without
-editing `src/game/config/` and rebuilding. The engine side is
-`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults — except the world's
+editing `engine/game/config/` and rebuilding. The engine side is
+`engine/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults — except the world's
 shipped PACE, which the HERO SPEED / MOB SPEED pair carries at 0.8 so TEMPO stays
 a free lever at 1 — values clamped to
 `[0, 100]`); each knob is applied at the ONE read site that owns its rule

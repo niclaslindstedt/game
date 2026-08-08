@@ -21,15 +21,15 @@ it at both ends of the session.
 
 | Piece | File |
 | --- | --- |
-| The def | `content/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
-| Field reference | `src/game/defs/enemies/types.ts` — the `EnemyDef` contract the YAML fills, every field documented at the type |
+| The def | `content/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `engine/generated/enemies.ts` by `scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
+| Field reference | `engine/game/defs/enemies/types.ts` — the `EnemyDef` contract the YAML fills, every field documented at the type |
 | Pipeline | loader `scripts/enemy-data/load-yaml.mjs`, schema `scripts/asset-tools/enemy-schema.mjs`, generator `generate-enemies.mjs`; regenerate with `make levels` (or `make assets`) |
 | Sprites | one YAML per frame in `content/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
-| Mechanics engine | `src/game/mechanics/` — one module per set-piece move, registered in `catalog.ts`; the four originals (`charge`, `slam`, `enrage`, `summon`) stay named fields. `phases` are hp-gated mechanic swaps. **Adding a move: the `boss-abilities` skill** |
-| Companions (spareable elites) | `content/companions.yaml` (compiled to `COMPANION_DEFS`); resolution in `src/game/companions.ts` |
+| Mechanics engine | `engine/game/mechanics/` — one module per set-piece move, registered in `catalog.ts`; the four originals (`charge`, `slam`, `enrage`, `summon`) stay named fields. `phases` are hp-gated mechanic swaps. **Adding a move: the `boss-abilities` skill** |
+| Companions (spareable elites) | `content/companions.yaml` (compiled to `COMPANION_DEFS`); resolution in `engine/game/companions.ts` |
 | Inner monologues | `content/thoughts.yaml` + a `firstKillThoughts`/`firstSightThoughts` pin on the level |
-| Scaling | `src/game/create.ts` (`spawnEnemy` stamps hp/mlvl/contact), `src/game/menace.ts` (`mobLevelFor`, `maybePowerScale` re-stamp on elite/boss engagement) |
+| Scaling | `engine/game/create.ts` (`spawnEnemy` stamps hp/mlvl/contact), `engine/game/menace.ts` (`mobLevelFor`, `maybePowerScale` re-stamp on elite/boss engagement) |
 | Content tests | `tests/content/`: `wounds_test.ts`, `last_words_test.ts`, `last_stand_test.ts`, `aggro_test.ts`, `catalog_test.ts`, `companions_test.ts`, `enemy_roundtrip_test.ts` (pins the compiled catalog to `fixtures/enemies-snapshot.json` — accept an intentional change with `node scripts/update-enemy-snapshot.mjs`), the per-level suites |
 
 ## The def, by concern
@@ -125,7 +125,7 @@ the cut face drawn in the gap a cleaved body opens. That one is
 deliberately the DARKEST gore in the game: a bright band between two halves
 reads as a light source rather than as an inside.
 
-**NEUTRAL MOBS — `EnemyDef.disposition`, and `src/game/disposition.ts` is the ONE
+**NEUTRAL MOBS — `EnemyDef.disposition`, and `engine/game/disposition.ts` is the ONE
 predicate.** A bystander is not fighting anybody: `inert` excuses it from every
 damage pass, every AoE gather, every target search and the level's foe tally —
 the same predicate an apparition rides, because a quest mob the player can
@@ -143,8 +143,8 @@ The gore families themselves, and what each one's body is made of, are the
 
 A boss does not merely stop moving. `death:` in the enemy YAML names a **death
 rite** — the scripted send-off played over it before its last words. The catalog
-(`src/game/death-rites/catalog.ts`) mirrors `mechanics/catalog.ts` field for
-field, is stepped from `src/game/boss-death.ts`, drawn by
+(`engine/game/death-rites/catalog.ts`) mirrors `mechanics/catalog.ts` field for
+field, is stepped from `engine/game/boss-death.ts`, drawn by
 `pwa/src/game/render/boss-rite.ts`, and covered by
 `tests/engine/boss_death_test.ts`. Four rules:
 
@@ -169,7 +169,7 @@ field, is stepped from `src/game/boss-death.ts`, drawn by
 
 1. **Write the def** as a YAML file at `content/enemies/<biome>/<id>.yaml`
    (file stem == the enemy `id`; the biome directory is organizational only).
-   Run `make levels` to compile + validate it into `src/generated/enemies.ts`.
+   Run `make levels` to compile + validate it into `engine/generated/enemies.ts`.
    Reference it from the level's `spawns`/`waves` (`level-design` skill) —
    `catalog_test.ts` fails on any dangling id, and
    `enemy_roundtrip_test.ts` catches an unintended change to a shipped mob.

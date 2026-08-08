@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE CACHE — the garage chest (src/game/cache.ts). The rules under test are
+// THE CACHE — the garage chest (engine/game/cache.ts). The rules under test are
 // the four the module is built on: it stands only where a map reserved a spot,
 // only for a hero who has earned it, its contents ride the loadout, and neither
 // direction of a move can ever lose a piece.

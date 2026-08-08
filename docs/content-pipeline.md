@@ -5,7 +5,7 @@ maps, enemies, items, powerups, talents, companions, quests, sounds, music, the
 story, the title menu, the bot's knobs, and now a dozen of the RULES themselves
 — is authored under `content/`,
 validated against the live engine catalogs at build time, and emitted into a
-**gitignored, regenerated-on-build** module under `src/generated/` (engine
+**gitignored, regenerated-on-build** module under `engine/generated/` (engine
 concerns) or `pwa/src/generated/` (app concerns). Never edit or commit a
 generated file.
 
@@ -150,8 +150,8 @@ never by editing the fixture.
   is the source of truth; `make levels` (folded into `make assets`, and into the
   rebuild every root check opens with) validates it against the live engine
   catalogs and generates
-  `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
-  edit or commit it), which `src/game/defs/levels/index.ts` reads. The
+  `engine/generated/levels.ts` (the gitignored, regenerated-on-build output — never
+  edit or commit it), which `engine/game/defs/levels/index.ts` reads. The
   per-difficulty × per-map LEVEL LADDER — each map's `[start, end]` mob band +
   intended hero level per rung, PLUS the named DIFFICULTY RAMPS, the hp curves,
   and the three STAMINA ladders — lives in `content/ladder.yaml` (a
@@ -186,18 +186,18 @@ never by editing the fixture.
   `content/leveling.yaml` authors the XP each level costs (rows annotated with
   their kills-per-level equivalents); `make levels` runs
   `generate-leveling.mjs` first in the chain to validate it (levels 1..98, no
-  gaps) and emit `src/generated/leveling.ts`, which the engine's `xpToLevelUp`
+  gaps) and emit `engine/generated/leveling.ts`, which the engine's `xpToLevelUp`
   reads. The per-difficulty tier slowdown and the endgame steepening stay
   config knobs applied on top (they power the DEVELOPER → BALANCE sliders).
 - **Enemies are compiled from YAML**, the same way. `content/enemies/<biome>/<id>.yaml`
   is the source of truth — one self-describing file per mob, file stem == the
-  enemy `id`, carrying the whole `EnemyDef` (`src/game/defs/enemies/types.ts`).
+  enemy `id`, carrying the whole `EnemyDef` (`engine/game/defs/enemies/types.ts`).
   `make levels` runs `generate-enemies.mjs` (loader
   `scripts/enemy-data/load-yaml.mjs`, schema
   `scripts/asset-tools/enemy-schema.mjs`) to validate every def against
   the live cross-ref catalogs (companions, uniques, story items, weapons/gear)
-  and emit `src/generated/enemies.ts` (gitignored, regenerated on build — never
-  edit or commit it), which `src/game/defs/enemies/index.ts` re-exposes as
+  and emit `engine/generated/enemies.ts` (gitignored, regenerated on build — never
+  edit or commit it), which `engine/game/defs/enemies/index.ts` re-exposes as
   `ENEMY_DEFS`. It **must run before assets/levels** — both
   `generate-assets.mjs` (the sprite pipeline derives wound frames from every
   enemy's `role`/`gore`) and `generate-levels.mjs` (cross-ref the enemy ids)
@@ -229,9 +229,9 @@ never by editing the fixture.
   `scripts/asset-tools/powerup-schema.mjs`) to validate each power — required
   fields, a known `kind`, EXACTLY the param block that kind requires and no
   other kind's, non-negative numbers, and every `icon`/`sprite` cross-checked
-  against the sprite tree — and emit `src/generated/powerups.ts` (gitignored,
+  against the sprite tree — and emit `engine/generated/powerups.ts` (gitignored,
   regenerated on build — never edit or commit it), which
-  `src/game/defs/abilities.ts` re-exposes as `ABILITY_DEFS`. That module keeps
+  `engine/game/defs/abilities.ts` re-exposes as `ABILITY_DEFS`. That module keeps
   the TYPES (`AbilityDef`, and what each block means); the schema mirrors them,
   so keep the two in step when a kind gains a field. It **must run before
   levels** (the level pipeline cross-refs every `loot.abilityPool` id). The
@@ -247,7 +247,7 @@ never by editing the fixture.
   key stamped in as the def's `id`) is the source of truth for all three trees;
   `make levels` runs `generate-talents.mjs` (schema
   `scripts/asset-tools/talent-schema.mjs`, loader `scripts/talent-data/`) to emit
-  `src/generated/talents.ts`, which `src/game/defs/talents/index.ts` re-exposes
+  `engine/generated/talents.ts`, which `engine/game/defs/talents/index.ts` re-exposes
   as `TALENT_DEFS`. It is a LEAF pipeline — its only engine import is the
   import-free `config/talents.ts` for the shared rank cap — and nothing
   cross-references a talent id, so it has no downstream dependents in the chain.
@@ -290,7 +290,7 @@ never by editing the fixture.
   `make levels` runs `generate-items.mjs` (loader `scripts/item-data/load-yaml.mjs`,
   schema `scripts/asset-tools/item-schema.mjs`) **first in the chain** — it
   imports nothing from the engine, and every later generator reads the
-  equipment catalogs — to emit `src/generated/items.ts` (gitignored, regenerated
+  equipment catalogs — to emit `engine/generated/items.ts` (gitignored, regenerated
   on build — never edit or commit it), which `defs/equipment.ts`/`gear.ts`/
   `grades.ts`/`uniques.ts` and the config `QUALITY`/`LOOT` rarity knobs read.
   The engine's built-in `fists` — the EMPTY HAND a hero holds when he holds
@@ -301,7 +301,7 @@ never by editing the fixture.
   change with `node scripts/update-item-snapshot.mjs`. See the `weapon-system`
   skill.
 - **Sounds and MUSIC are compiled from YAML too — and they emit into
-  `pwa/src/generated/`, not `src/generated/`.** A sound is an APP concern: the
+  `pwa/src/generated/`, not `engine/generated/`.** A sound is an APP concern: the
   engine emits events and has no idea they make a noise, so parking 273 voices
   and five scores in the engine's tree would hand every consumer of
   `@game/core` data it never reads. `content/sounds/<id>.yaml` is one sound (a
@@ -401,7 +401,7 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   elite BECOMES when it joins the party) is the source of truth; `make levels`
   runs `generate-companions.mjs` (schema
   `scripts/asset-tools/companion-schema.mjs`, loader `scripts/companion-data/`)
-  to emit `src/generated/companions.ts`, which `src/game/defs/companions.ts`
+  to emit `engine/generated/companions.ts`, which `engine/game/defs/companions.ts`
   re-exposes as COMPANION_DEFS. It runs AFTER the item pipeline (a companion's
   signature `weapon` is cross-checked against the live weapon catalog) but is
   deliberately NOT a prerequisite of the enemy pipeline: `generate-enemies.mjs`
@@ -437,7 +437,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
     wall by SOME name and two spellings for one thing is a thing that drifts.
     Five near-identical files would have been five files to keep in step.
   - **A prop's sprite is `sprite:`, not `kind:`.** `CutsceneProp.kind` is a
-    renderer key in the generic player (`src/lib/cutscene.ts`, which knows
+    renderer key in the generic player (`engine/lib/cutscene.ts`, which knows
     nothing about sprites); in this renderer a prop kind IS a sprite name, and
     one file cannot readably spell `kind` for both a prop's art and a beat's
     discriminant. The loader does that one rename and nothing else.
@@ -447,14 +447,14 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
 - The **autopilot's positioning knobs** compile the same way. `content/bot.yaml`
   (a global `default:` layer + per-level `levels:` overrides, mirroring
   `ladder.yaml`) is the hand-authored source of truth; `make levels` runs
-  `generate-bot-tuning.mjs` to emit `src/generated/botTuning.ts`, which
-  `src/game/bot/index.ts` resolves per level via `botTuningFor(state.level.id)`
-  (`src/game/bot/tuning.ts` holds the `BotTuning` schema + neutral defaults). See
+  `generate-bot-tuning.mjs` to emit `engine/generated/botTuning.ts`, which
+  `engine/game/bot/index.ts` resolves per level via `botTuningFor(state.level.id)`
+  (`engine/game/bot/tuning.ts` holds the `BotTuning` schema + neutral defaults). See
   the `bot-improvement` skill. The generated file is gitignored/regenerated; the
   YAML is committed. The same file carries a third block, `drive:` — the DRIVE
-  minigame's AUTO-DRIVER (`src/game/drive/driver.ts`), which is a different
+  minigame's AUTO-DRIVER (`engine/game/drive/driver.ts`), which is a different
   autopilot on a different problem (one car, four lanes, a crowd) and so is a
-  flat layer over `DRIVE_BOT_DEFAULTS` (`src/game/drive/driver-tuning.ts`, its
+  flat layer over `DRIVE_BOT_DEFAULTS` (`engine/game/drive/driver-tuning.ts`, its
   own import-free leaf for the same bootstrap reason `bot/tuning.ts` is one)
   rather than anything keyed by level. It emits `DRIVE_BOT_OVERRIDES` beside
   `BOT_TUNING_OVERRIDES` in the same generated file, and an unknown knob under
@@ -486,7 +486,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   `cacheIdForBase`, and the slot paths in `.github/workflows/pages.yml` must
   agree — a mismatch makes slots clobber each other's precache or serve the
   wrong shell.
-- `src/version.ts`, root `package.json`, and `pwa/package.json` versions
+- `engine/version.ts`, root `package.json`, and `pwa/package.json` versions
   must match; `tests/version_test.ts` and the extract script both enforce it.
 - Icons are generated from `pwa/public/icon.svg` only (`make icons`) —
   never edit the PNGs. The OG card is generated the same way (`generate-og.mjs`,
@@ -506,7 +506,7 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only
   (`make assets`) — never edit the files under
   `pwa/src/game/assets/`. Those files are **gitignored and regenerated
-  on every build** (like `src/generated/`, §11.2): `npm run assets` runs
+  on every build** (like `engine/generated/`, §11.2): `npm run assets` runs
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `pwa/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.

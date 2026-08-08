@@ -3,9 +3,9 @@
 # in locked rooms: keycards, dossiers, recovered hardware. Picking one up banks
 # it in `state.storyItems` and plays its `lore` pages as a dialogue.
 #
-# Compiled to `src/generated/story-items.ts` by `scripts/generate-story.mjs`
+# Compiled to `engine/generated/story-items.ts` by `scripts/generate-story.mjs`
 # (folded into `make levels` / `make assets`); the engine reads it through
-# `src/game/defs/story.ts`, which owns the TYPES. Adding a plot thread is an
+# `engine/game/defs/story.ts`, which owns the TYPES. Adding a plot thread is an
 # entry here plus an icon sprite — no engine changes.
 #
 #   name         display name (dialogue header, pickup toast)

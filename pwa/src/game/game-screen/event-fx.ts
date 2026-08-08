@@ -1388,7 +1388,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     );
   }
 
-  // THE ELITE TIER (src/game/defs/enemies/abilities.ts). ONE handler for all
+  // THE ELITE TIER (engine/game/defs/enemies/abilities.ts). ONE handler for all
   // ten primitives, because they arrive as ONE event discriminated by `kind` —
   // the world-anchored picture is `render/elite-fx.ts`'s, and this only decides
   // how long each burst lives and which of them is worth a shake or a word.
@@ -1486,7 +1486,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
 
   // ── THE DEATH RITE ───────────────────────────────────────────────────────
-  // The scripted send-off over a felled boss (src/game/boss-death.ts). The
+  // The scripted send-off over a felled boss (engine/game/boss-death.ts). The
   // engine owns the choreography — the boss on its knees, the horde held off,
   // the hero's leap, the timing — and the three events below are the picture:
   // the beat opening, the blow landing, and the wreck settling.

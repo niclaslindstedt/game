@@ -1,12 +1,12 @@
 ---
 title: A weapon-pick change is a POSITIONING change — the standoff is derived from the held weapon's range
 date: 2026-07-26
-scope: src/game/bot/weapon-swap.ts
+scope: engine/game/bot/weapon-swap.ts
 concepts: [weapon-swap, standoff, positioning]
 ---
 
 Making the pocket arsenal context-aware (single-target round at a boss, spread
-across a mass — `src/game/bot/weapon-swap.ts`) looked like a pure damage-model
+across a mass — `engine/game/bot/weapon-swap.ts`) looked like a pure damage-model
 change. It is not: `survive()` derives `engageDist` from the **held** weapon's
 range, so every swap moves where the hero STANDS. Trading a 240-reach gun for a
 160-reach spread walks him 80px deeper into the pack for the rest of the fight.

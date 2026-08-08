@@ -1,18 +1,18 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # BOT TUNING — the autopilot's positioning knobs (see the `bot-improvement`
 # skill). This is the HAND-AUTHORED source of truth; `npm run levels` compiles
-# it to `src/generated/botTuning.ts`, which `src/game/bot/index.ts` resolves per level
+# it to `engine/generated/botTuning.ts`, which `engine/game/bot/index.ts` resolves per level
 # via `resolveBotTuning()`. Mirrors how `ladder.yaml` overrides ladder values.
 #
 #   default:  the global baseline layered over the engine's neutral defaults
-#             (src/game/bot/tuning.ts BOT_TUNING_DEFAULTS). Omit a knob to keep
+#             (engine/game/bot/tuning.ts BOT_TUNING_DEFAULTS). Omit a knob to keep
 #             the engine default.
 #   levels:   per-level PARTIAL overrides keyed by level id — only the knobs a
 #             map needs bent. Everything else falls through to `default`.
 #   drive:    the DRIVE minigame's auto-driver, which is a different autopilot
 #             on a different problem (one car, four lanes, a crowd) and so has
 #             its own flat block rather than a level override. Layered over
-#             src/game/drive/driver-tuning.ts DRIVE_BOT_DEFAULTS.
+#             engine/game/drive/driver-tuning.ts DRIVE_BOT_DEFAULTS.
 #
 # Every key must exist on the engine `BotTuning` (or, under `drive:`,
 # `DriveBotTuning`) type and every level id must be a real level, or the build
@@ -274,11 +274,11 @@ default:
   # a healthy hero skips the caution and a banked nuke waives it.
   escapeLaneMin: 4
 
-# THE DRIVE'S AUTO-DRIVER (src/game/drive/driver.ts) — who takes the wheel when
+# THE DRIVE'S AUTO-DRIVER (engine/game/drive/driver.ts) — who takes the wheel when
 # nobody's thumb is on the screen: the attract loop, a `?bot=` playtest, a shot
 # recipe, and `make drive-bench`, which is how any of these numbers are actually
 # judged. Left empty = the engine's shipped driver verbatim; every knob's own
-# note is on `DriveBotTuning` (src/game/drive/driver-tuning.ts).
+# note is on `DriveBotTuning` (engine/game/drive/driver-tuning.ts).
 #
 # THE ONE THING TO KNOW BEFORE MOVING ONE: this road cannot be threaded clean —
 # that is the design (`DRIVE.pedestriansPerKPx`), so a tune that drops the body

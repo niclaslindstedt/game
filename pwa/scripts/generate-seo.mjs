@@ -128,7 +128,7 @@ const SITEMAP_URLS = [
     // strings live in game.config.json, which feeds the title and description
     // this very page is indexed on.
     loc: `${SITE_URL}/`,
-    lastmod: lastModified(["src", "pwa/src", "content", "game.config.json"]),
+    lastmod: lastModified(["engine", "pwa/src", "content", "game.config.json"]),
     changefreq: "weekly",
     priority: "1.0",
     // The two install-prompt screenshots are REAL frames of the running game

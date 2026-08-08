@@ -106,7 +106,7 @@ the skip-list in `check-changeset.mjs`: `tests/`, `.github/`, `.agent/`,
 `*.md`**, the dotfile configs, `eslint.config.js`, `vitest.config.ts`,
 `pwa/vite.config.ts`, any `tsconfig*.json`, and `package-lock.json`.
 
-**THE TRAP: `src/` and `pwa/src/` are deliberately NOT skip-listed.** The
+**THE TRAP: `engine/` and `pwa/src/` are deliberately NOT skip-listed.** The
 check reads paths, not diffs, so a comment-only or rename-only PR under
 either still demands a fragment. That is the common false red. The answer is
 the label — never a fragment invented for a change no player can see. (This

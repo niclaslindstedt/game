@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The STORY pipeline. Compiles the three hand-authored catalogs that carry the
 // plot — `content/cutscenes/<id>.yaml`, `content/thoughts.yaml` and
-// `content/story-items.yaml` — into `src/generated/cutscenes.ts`,
-// `src/generated/thoughts.ts` and `src/generated/story-items.ts`, which
-// `src/game/defs/cutscenes.ts`, `defs/thoughts.ts` and `defs/story.ts`
+// `content/story-items.yaml` — into `engine/generated/cutscenes.ts`,
+// `engine/generated/thoughts.ts` and `engine/generated/story-items.ts`, which
+// `engine/game/defs/cutscenes.ts`, `defs/thoughts.ts` and `defs/story.ts`
 // re-expose as CUTSCENE_DEFS, THOUGHT_DEFS/CAP_THOUGHT_IDS and
 // STORY_ITEM_DEFS. It:
 //   1. harvests the sprite stems from the content/sprites tree, so a prop,
@@ -118,7 +118,7 @@ const banner = (
 
 const json = (value) => JSON.stringify(value, null, 2);
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 
 writeFileSync(
@@ -158,7 +158,7 @@ export const GENERATED_STORY_ITEMS: Record<string, StoryItemDef> = ${json(
 );
 
 console.log(
-  `wrote src/generated/{cutscenes,thoughts,story-items}.ts — ` +
+  `wrote engine/generated/{cutscenes,thoughts,story-items}.ts — ` +
     `${Object.keys(cutscenes).length} scenes (${sceneEntries.length} authored), ` +
     `${Object.keys(thoughts).length} thoughts, ` +
     `${Object.keys(storyItems).length} story items`,

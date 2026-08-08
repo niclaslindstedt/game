@@ -37,7 +37,7 @@ const root = path.join(here, "..");
 
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { runLevel } = await import(path.join(root, "src/sim/simulate.ts"));
+const { runLevel } = await import(path.join(root, "engine/sim/simulate.ts"));
 
 // ---- The suite ---------------------------------------------------------------
 // Three rungs of the same campaign: an early map with a low-level hero, a

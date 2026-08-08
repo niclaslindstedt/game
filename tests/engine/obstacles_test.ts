@@ -363,7 +363,7 @@ describe("lineOfSight (the render cull query)", () => {
   });
 });
 
-// A LONE OBSTACLE IS SEEN PAST (src/game/obstacles.ts, "What blocks SIGHT").
+// A LONE OBSTACLE IS SEEN PAST (engine/game/obstacles.ts, "What blocks SIGHT").
 // The physical queries never changed — a lone crate still stops a body and
 // still eats a shot — but one solitary narrow piece of stone no longer hides
 // what is behind it. It takes TWO obstacles in line, or one piece wider than a

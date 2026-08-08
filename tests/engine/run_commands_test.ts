@@ -3,7 +3,7 @@
 // real engine function, and that a stranger's arguments are refused before
 // anything is dispatched.
 //
-// The list exists TWICE on purpose (see `src/game/commands.ts`): the engine
+// The list exists TWICE on purpose (see `engine/game/commands.ts`): the engine
 // owns what each verb does, and `server/wire/protocol.ts` keeps a literal copy
 // of the NAMES because the page reads that leaf from screens on the app's
 // startup path, where the 200 KB critical-path budget forbids reaching

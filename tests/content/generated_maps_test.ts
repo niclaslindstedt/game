@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE MAP GENERATOR (see src/game/mapgen/): the guard on every map the game
+// THE MAP GENERATOR (see engine/game/mapgen/): the guard on every map the game
 // ships. There is no other kind — a mission authors no geometry at all, so what
 // this suite checks is not an alternative mode, it is the campaign.
 //
@@ -57,11 +57,11 @@ import {
 // with the build rather than reimplemented here.
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
 
-import { GEAR_DEFS, WEAPON_DEFS } from "../../src/game/defs/equipment.ts";
-import { ABILITY_DEFS } from "../../src/game/defs/abilities.ts";
-import { STORY_ITEM_DEFS } from "../../src/game/defs/story.ts";
-import { THOUGHT_DEFS } from "../../src/game/defs/thoughts.ts";
-import { UNIQUE_DEFS, WORLD_UNIQUES } from "../../src/game/defs/uniques.ts";
+import { GEAR_DEFS, WEAPON_DEFS } from "../../engine/game/defs/equipment.ts";
+import { ABILITY_DEFS } from "../../engine/game/defs/abilities.ts";
+import { STORY_ITEM_DEFS } from "../../engine/game/defs/story.ts";
+import { THOUGHT_DEFS } from "../../engine/game/defs/thoughts.ts";
+import { UNIQUE_DEFS, WORLD_UNIQUES } from "../../engine/game/defs/uniques.ts";
 
 // Enough seeds that a one-in-twenty layout quirk shows up, few enough that the
 // suite stays under a few seconds.
@@ -298,7 +298,7 @@ describe("generated levels", () => {
           // …and so has THE ENTRANCE, which is the other exception and the
           // deliberate one: a keyed door that no story item unlocks, because
           // the only thing that ever opens it is a member of staff badging in
-          // (`LevelDef.arrivals` — src/game/arrivals.ts). A key for it would
+          // (`LevelDef.arrivals` — engine/game/arrivals.ts). A key for it would
           // make the whole beat a lock the hero could pick.
           if (door.id === ENTRANCE_DOOR) continue;
           expect(keys.has(door.id), `${id}/${seed} door`).toBe(true);

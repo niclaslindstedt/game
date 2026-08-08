@@ -103,7 +103,7 @@ drive-bench:
 
 # LOOK AT THE TOWN on the road to GOODCO — the real planner, at five stops along
 # the leg, composed the way the game composes it and written as a sheet PNG. The
-# buildings are ASSEMBLED at runtime (src/game/drive/town-plan.ts), so there is
+# buildings are ASSEMBLED at runtime (engine/game/drive/town-plan.ts), so there is
 # no file anywhere whose contents are what the player sees; this is the only way
 # to judge the street rather than a wall.
 # `make town ARGS="--shells"` is every archetype in every colourway instead.

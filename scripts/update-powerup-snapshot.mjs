@@ -20,7 +20,7 @@ import { writeSnapshot } from "./snapshot-json.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
+const { ABILITY_DEFS } = await import(engine("engine/game/defs/abilities.ts"));
 
 await writeSnapshot(
   engine("tests/content/fixtures/powerups-snapshot.json"),

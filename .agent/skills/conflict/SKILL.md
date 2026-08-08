@@ -156,7 +156,7 @@ mode to avoid is picking a side because one side is yours.
 3. **When the two genuinely contradict**, the higher tier wins where the repo
    has one (`AGENTS.md` → "Story & dialogue — a three-tier chain"), and
    otherwise `main` wins — it is already merged and already reviewed.
-4. **Never resolve a generated file by hand.** `src/generated/`,
+4. **Never resolve a generated file by hand.** `engine/generated/`,
    `pwa/src/generated/`, the sprite atlas: take either side and then regenerate
    (`make levels`, `make assets`, `make mod-catalog`). A hand-merged generated
    file passes its own drift test and is wrong.

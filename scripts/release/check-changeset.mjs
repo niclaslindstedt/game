@@ -49,7 +49,7 @@ const SKIP_PATTERNS = [
   /^pwa\/scripts\//,
   // The store shells (native/, electron/, tauri/) are self-contained projects
   // with their own tooling, tests and config. Their BUILD machinery is no more
-  // player-facing than the root's is — but note `src/` is deliberately NOT
+  // player-facing than the root's is — but note `engine/` is deliberately NOT
   // here: a change to what a shell DOES is a change to the shipped app.
   /^(native|electron|tauri)\/scripts\//,
   /^(native|electron|tauri)\/tests\//,

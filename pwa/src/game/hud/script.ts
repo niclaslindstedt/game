@@ -2,7 +2,7 @@
 // THE HUD'S SCRIPT HOST — resolving `{ script: "file.fn" }` to a Lua function,
 // calling it, and deciding what happens when a stranger's script is wrong.
 //
-// It is the engine's own host (src/game/script/host.ts) in miniature, and it
+// It is the engine's own host (engine/game/script/host.ts) in miniature, and it
 // keeps the two rules that make that one safe:
 //
 //   FAIL OPEN, ONCE.  A file that will not compile, a function that throws, a

@@ -9,7 +9,7 @@
 // a check scattered over the passes that happen to draw something red.
 //
 // THE ENGINE STATES AN INTENT; THIS DECIDES WHAT ACTUALLY HAPPENS. The rite
-// itself (`src/game/boss-death.ts`) is not mature content and is never gated —
+// itself (`engine/game/boss-death.ts`) is not mature content and is never gated —
 // the hero still leaps, the boss still dies, the beats run the same length —
 // and it says on `bossRiteStruck` what it MEANS to leave behind. Only the
 // wreckage is graphic, so only the wreckage is gated, and a refusal comes back

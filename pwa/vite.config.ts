@@ -158,7 +158,7 @@ export default defineConfig({
     gamePwa({ base, version, appVersion }),
   ],
   resolve: {
-    // The engine lives at the repository root (`../src`); the app imports it
+    // The engine lives at the repository root (`../engine`); the app imports it
     // through these aliases so engine code never reaches into app modules.
     // @game/lib and @ui/lib are the generic pools earmarked for extraction
     // reusable code local while giving callers a stable import prefix.
@@ -181,9 +181,9 @@ export default defineConfig({
       { find: "react-dom/client", replacement: "preact/compat/client" },
       { find: "react-dom", replacement: "preact/compat" },
       { find: "react", replacement: "preact/compat" },
-      { find: "@game/core", replacement: here("../src/index.ts") },
-      { find: "@game/menu", replacement: here("../src/menu.ts") },
-      { find: "@game/lib", replacement: here("../src/lib") },
+      { find: "@game/core", replacement: here("../engine/index.ts") },
+      { find: "@game/menu", replacement: here("../engine/menu.ts") },
+      { find: "@game/lib", replacement: here("../engine/lib") },
       { find: "@game/wire", replacement: here("../server/wire") },
       { find: "@game/client", replacement: here("../server/client.ts") },
       { find: "@ui/lib", replacement: here("./src/lib") },

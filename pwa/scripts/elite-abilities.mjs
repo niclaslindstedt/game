@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE ELITE TIER's preview tool (see src/game/defs/enemies/abilities.ts and the
+// THE ELITE TIER's preview tool (see engine/game/defs/enemies/abilities.ts and the
 // `visual-effects` skill) — the generate → LOOK → judge → iterate loop for the
 // ten primitives every named elite now fights with.
 //
@@ -56,7 +56,7 @@ const repo = resolve(here, "../..");
 // so the sheet covers whatever is authored RIGHT NOW, a mod's elites included
 // once they are merged in, and never a list somebody kept by hand here.
 const { GENERATED_ENEMIES } = await import(
-  pathToFileURL(resolve(repo, "src/generated/enemies.ts")).href
+  pathToFileURL(resolve(repo, "engine/generated/enemies.ts")).href
 );
 
 const args = process.argv.slice(2);

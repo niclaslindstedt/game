@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { WEAPON, rollWeaponHit, weaponDamageFor } from "@game/core";
 import { rngState } from "@game/lib/rng.ts";
 // Engine-internal kill funnel — asserting the crit-power passthrough at the door.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import { equipRangedSidearm, makeEnemy, startGame } from "./helpers.ts";
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // PUTTING A BUILDING TOGETHER — the compositor that turns a planned piece of
-// town (`src/game/drive/town-plan.ts`) into one picture and keeps it.
+// town (`engine/game/drive/town-plan.ts`) into one picture and keeps it.
 //
 // A HOUSE IS AN ASSEMBLY, NOT A PICTURE, which is exactly what the hero's own
 // car already is (`render/vehicles.ts` stacks six panels and two wheels). The

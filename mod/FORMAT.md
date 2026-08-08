@@ -265,7 +265,7 @@ than lay one through a wall.
 **A VENUE MAY STAND UNDER A SKY, AND THEN IT KNOWS WHAT TIME IT IS.** Put
 `sky: earth` on the MISSION and the venue's light follows the player's own
 clock: bright at noon, dark at ten in the evening, with two long ramps between
-(the app reads the hour, the engine never does — `src/game/daylight.ts`). It is
+(the app reads the hour, the engine never does — `engine/game/daylight.ts`). It is
 opt-in for a reason — an airless moon and a sealed corridor look the same at
 midnight — and a level that never names a sky is exactly as bright as it always
 was.

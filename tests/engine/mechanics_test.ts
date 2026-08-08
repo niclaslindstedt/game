@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Set-piece mechanics (src/game/mechanics.ts): the telegraphed charge and
+// Set-piece mechanics (engine/game/mechanics.ts): the telegraphed charge and
 // slam, the enrage turn, add summons, boss phases — and the difficulty-gated
 // smarter-mob rules (minion flanking, shooter target-leading). All on
 // synthetic fixtures; no shipped content ids.

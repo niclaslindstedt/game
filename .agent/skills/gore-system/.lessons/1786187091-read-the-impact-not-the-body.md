@@ -1,7 +1,7 @@
 ---
 title: A rule downstream of a collision must read the IMPACT, never the struck body — the blow has already moved it
 date: 2026-08-08
-scope: src/game/drive/
+scope: engine/game/drive/
 concepts: [drive, collision, impact, ordering, eject, head-on]
 ---
 

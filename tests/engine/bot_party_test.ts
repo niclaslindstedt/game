@@ -6,7 +6,7 @@
 // and the rest all fly ONE hero, so they prove the parameterization changed
 // nothing — the property that made it safe to land — and prove nothing at all
 // about the capability it was for. These are the tests that fail the day
-// somebody quietly reintroduces a `state.players[0]` under `src/game/bot/`.
+// somebody quietly reintroduces a `state.players[0]` under `engine/game/bot/`.
 //
 // Three claims, and each is a different way the old code was stuck:
 //

@@ -20,7 +20,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { LEVELS, LEVEL_ORDER, SECRET_LEVEL_ORDER } = await import(
-  engine("src/game/defs/levels/index.ts")
+  engine("engine/game/defs/levels/index.ts")
 );
 
 await writeSnapshot(

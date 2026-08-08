@@ -28,13 +28,13 @@ const engine = (p) => path.join(root, p);
 // music script reads its own output: what is pinned is the compile, and reading
 // it through the engine would add a registry the snapshot has no business in.
 const { GENERATED_CUTSCENES } = await import(
-  engine("src/generated/cutscenes.ts")
+  engine("engine/generated/cutscenes.ts")
 );
 const { GENERATED_CAP_THOUGHTS, GENERATED_THOUGHTS } = await import(
-  engine("src/generated/thoughts.ts")
+  engine("engine/generated/thoughts.ts")
 );
 const { GENERATED_STORY_ITEMS } = await import(
-  engine("src/generated/story-items.ts")
+  engine("engine/generated/story-items.ts")
 );
 
 await writeSnapshot(

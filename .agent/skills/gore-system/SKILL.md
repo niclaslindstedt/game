@@ -38,7 +38,7 @@ skill's job — load it at both ends of the session.
 | The four families | `pwa/src/game/game-screen/gore.ts` + `pwa/src/game/render/recolor.ts` |
 | What a BURNED body leaves | `charredRemains` + `GoreFamily.remains` in the same `gore.ts`, drawn by the `incinerate` pass in `pwa/src/game/render/effects.ts` |
 | The one gate | `pwa/src/game/game-screen/gore-gate.ts` (`goreAmount`, `nsfwAllowed`) |
-| Sharpness on the weapon | `src/game/items/edge.ts` (`WeaponDef.edge`), rides out on `enemyKilled.edged` |
+| Sharpness on the weapon | `engine/game/items/edge.ts` (`WeaponDef.edge`), rides out on `enemyKilled.edged` |
 | The art | `content/sprites/effects/blood_*`, `gib_*`, `charred_*`, `cleave_wound`, `gore_inside` |
 | Measuring | `scripts/gore-rate.mjs`; the EFFECTS GALLERY exhibits (below) |
 
@@ -276,7 +276,7 @@ Five more rules:
 1. **SHARPNESS IS CONTENT, NOT AN APP-SIDE LIST.** `WeaponDef.edge`
    (`edge: blunt` on the mauls, batons and knuckles; omitted means sharp,
    because most things that swing are blades) is resolved by the engine leaf
-   `src/game/items/edge.ts` and rides out on `enemyKilled.edged`. The
+   `engine/game/items/edge.ts` and rides out on `enemyKilled.edged`. The
    alternative — the app guessing from weapon NAMES — drifts the moment anyone
    authors a new one and could never include a MOD's. Nothing in the simulation
    reads it; damage, reach and cadence are identical either way.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# Part of the CAR assembly (engine/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
 # damage mix with `node scripts/car-viewer.mjs`.
 name: car_hood_0

@@ -25,7 +25,7 @@ import {
   arcadeDriveParams,
   driveParamsFor,
 } from "../pwa/src/game/drive-screen/begin.ts";
-import { setMinigamesEnabled } from "../src/menu.ts";
+import { setMinigamesEnabled } from "../engine/menu.ts";
 
 /** A hero who has beaten the campaign on these rungs, and nothing else. */
 function hero(beaten: Difficulty[], over: Partial<Character> = {}): Character {

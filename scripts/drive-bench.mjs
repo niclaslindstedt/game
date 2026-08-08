@@ -10,7 +10,7 @@
 // it cannot say whether the ladder's rungs are far enough apart, whether a leg
 // is winnable on JESUS, or whether a tune to the crowd moved the trip time or
 // only moved the body count. This plays the real road with the shipped
-// auto-driver (`src/game/drive/driver.ts`) over N seeds a rung and reports the
+// auto-driver (`engine/game/drive/driver.ts`) over N seeds a rung and reports the
 // four numbers that answer those:
 //
 //   ARRIVED   what share of legs got there at all (the rest broke down)
@@ -66,9 +66,9 @@ const {
   DRIVE,
   DRIVE_BOT_DEFAULTS,
   DRIVE_OUTCOME,
-} = await import(path.join(root, "src/game/drive/index.ts"));
+} = await import(path.join(root, "engine/game/drive/index.ts"));
 const { DIFFICULTY_ORDER } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
 
 const args = process.argv.slice(2);

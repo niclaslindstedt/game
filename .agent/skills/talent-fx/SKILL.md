@@ -35,7 +35,7 @@ picker tints by and nothing branches on it. Three shapes, freely combined:
 ## The four authoring surfaces
 
 1. **The catalog** — `content/talents.yaml` (the 24 defs, 8 per tree), compiled
-   by `make levels` to `src/generated/talents.ts` and typed in
+   by `make levels` to `engine/generated/talents.ts` and typed in
    `defs/talents/index.ts` (`TalentDef` / `TalentEffect` / the proc blocks / the
    registry). **It is CONTENT: never edit the generated file, and never put a
    talent number in engine code** — a mod authors its own `talents.yaml` through
@@ -45,8 +45,8 @@ picker tints by and nothing branches on it. Three shapes, freely combined:
    Retuning or adding a talent is a YAML edit, **not** an engine change; accept
    the new baseline with `node scripts/update-talent-snapshot.mjs`. The runtime
    (`talentRank`, `spendTalentPoint`, stat-scaling, the respec floor) is
-   `src/game/talents.ts`; the effect read-sites are `src/game/talent-effects.ts`.
-2. **The shared knob** — `src/game/config/talents.ts` (`TALENTS`) holds ONLY the
+   `engine/game/talents.ts`; the effect read-sites are `engine/game/talent-effects.ts`.
+2. **The shared knob** — `engine/game/config/talents.ts` (`TALENTS`) holds ONLY the
    rank ceiling, because it is the one number true of every talent (the picker
    draws that many pips and the point milestones are priced against a full
    tree). Per-talent proc CAPS and cooldown FLOORS live on the def, in its block.
@@ -56,7 +56,7 @@ picker tints by and nothing branches on it. Three shapes, freely combined:
 3. **The FX** — the always-on flourish the talent is felt through:
    - **Conjurations** draw as running ability visuals in
      `pwa/src/game/render/actors.ts`, sized by the engine helpers in
-     `src/game/spells.ts` (`orbitSpellParams`, `stormSpellParams`,
+     `engine/game/spells.ts` (`orbitSpellParams`, `stormSpellParams`,
      `seekerSpellParams`, `singularitySpellParams`, `immolationSpellParams`) —
      these are where the PER-RANK upgrade lives (more orbs, wider aura, faster
      storm).
@@ -124,7 +124,7 @@ When you touch a talent's numbers, measure — don't guess. The headless sim
 reports the talent build: `node scripts/simulate-run.mjs --full` prints a
 `talents:` line (points spent/earned and every trained talent's end rank), and
 each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
-(`src/game/bot/index.ts`), so a long run exercises the whole loop. Guardrails:
+(`engine/game/bot/index.ts`), so a long run exercises the whole loop. Guardrails:
 
 - Every damage-dealing talent must ride `abilityPowerScale` (like the abilities
   and granted spells) so a rank keeps meaning the same fraction of a
@@ -143,12 +143,12 @@ each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
 | Change | File |
 | --- | --- |
 | A talent's rank numbers / effect / proc block | `content/talents.yaml` (compiled by `make levels`) |
-| Shared types, the proc blocks, the registry | `src/game/defs/talents/index.ts` |
+| Shared types, the proc blocks, the registry | `engine/game/defs/talents/index.ts` |
 | A NEW proc kind | a block type + its `TALENT_BLOCKS` entry (`defs/talents/index.ts`) + one reader in `talent-effects.ts` + its `PROC_BLOCKS` entry in `scripts/asset-tools/talent-schema.mjs` |
-| The shared rank cap (and nothing else) | `src/game/config/talents.ts` |
-| Runtime: rank, spend, stat-scaling, respec floor | `src/game/talents.ts` |
-| Effect read-sites (crit/dodge/dmg-cut/procs) | `src/game/talent-effects.ts` |
-| A conjuration's per-rank params (orbs, aura, storm) | `src/game/spells.ts` (`*SpellParams`) + config `SPELL` |
+| The shared rank cap (and nothing else) | `engine/game/config/talents.ts` |
+| Runtime: rank, spend, stat-scaling, respec floor | `engine/game/talents.ts` |
+| Effect read-sites (crit/dodge/dmg-cut/procs) | `engine/game/talent-effects.ts` |
+| A conjuration's per-rank params (orbs, aura, storm) | `engine/game/spells.ts` (`*SpellParams`) + config `SPELL` |
 | A conjuration's always-on visual | `pwa/src/game/render/actors.ts` |
 | A proc/struck burst (event → effect) | `pwa/src/game/game-screen/event-fx.ts`, `render/effects.ts` |
 | A melee/ranged proc's slash/muzzle styling | `pwa/src/game/weapon-fx.ts` |

@@ -5,13 +5,13 @@
 # fires. Unlike an elite's arrival scene there is no speaker on the board: the
 # box shows the hero's face and his private read on what he just saw.
 #
-# Compiled to `src/generated/thoughts.ts` by `scripts/generate-story.mjs`
+# Compiled to `engine/generated/thoughts.ts` by `scripts/generate-story.mjs`
 # (folded into `make levels` / `make assets`); the engine reads it through
-# `src/game/defs/thoughts.ts`, which owns the TYPES. Adding a beat is an entry
+# `engine/game/defs/thoughts.ts`, which owns the TYPES. Adding a beat is an entry
 # here plus a reference to its id from a level — no engine changes.
 #
 #   speaker      name shown in the dialogue header — always "{HERO}", the name
-#                the player gave this character (see src/game/hero-name.ts);
+#                the player gave this character (see engine/game/hero-name.ts);
 #                the same token may go INSIDE a line somebody says to him, and
 #                docs/game-content.md says who is allowed to
 #   portrait     portrait sprite family; the overlay draws frame `<portrait>_0`
@@ -55,7 +55,7 @@ thoughts:
     portrait: hero
     pages:
       - - WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
-  # ── THE DRIVE TO GOODCO (src/game/drive/) ─────────────────────────────────
+  # ── THE DRIVE TO GOODCO (engine/game/drive/) ─────────────────────────────────
   # The earthbound leg, played rather than cut. These are NOT pinned by a level:
   # the drive is not a level, so the app plays them off the road's own beats
   # (`DriveEvent`) rather than through `placeThoughts`.
@@ -166,7 +166,7 @@ thoughts:
     portrait: hero
     pages:
       - - STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
-  # THE WAY IN (the level's `arrivals` — src/game/arrivals.ts). He lands on the
+  # THE WAY IN (the level's `arrivals` — engine/game/arrivals.ts). He lands on the
   # staff lot with the building in front of him and the fog over every inch of
   # its wall, and the first thing that happens is a car pulling in and somebody
   # getting out of it. This is his read on that, fired the moment they step out

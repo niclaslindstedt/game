@@ -12,7 +12,7 @@ not be an `intro` — that is the doorstep cutscene, which plays before the leve
 is walkable and is the establishing shot rather than the errand. The answer is
 `LevelDef.placeThoughts`: `where: arrival` (the first live tick on this level) or
 `where: pastDoor` (a hero on his own FEET has crossed one of the level's approach
-doors — the roll-up kind), fired by `stepPlaceThoughts` in `src/game/story.ts`
+doors — the roll-up kind), fired by `stepPlaceThoughts` in `engine/game/story.ts`
 and read once through `state.thoughtsSeen` like every other pinned beat.
 
 The library half is the lesson already filed as "a new way to FIRE a thought

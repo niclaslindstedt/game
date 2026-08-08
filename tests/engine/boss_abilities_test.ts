@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BOSS ABILITY CATALOG (src/game/mechanics/, authored shapes in
+// THE BOSS ABILITY CATALOG (engine/game/mechanics/, authored shapes in
 // defs/enemies/abilities.ts): the three-beat contract every ability obeys, the
 // per-rung difficulty gate, and the two abilities the catalog ships with — the
 // sweeping beam that sets the floor alight, and the planted flag that gives a

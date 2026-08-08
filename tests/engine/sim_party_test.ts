@@ -11,7 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { simulateLevel } from "../../src/sim/simulate.ts";
+import { simulateLevel } from "../../engine/sim/simulate.ts";
 
 /** A short run — long enough to seat a party and step it, short enough that the
  * suite stays seconds rather than minutes. */

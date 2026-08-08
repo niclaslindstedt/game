@@ -16,11 +16,11 @@ import {
   hookIsScripted,
   numberHook,
   resetScriptHost,
-} from "../../src/game/script/host.ts";
-import { HOOKS } from "../../src/game/script/hooks.ts";
-import { GENERATED_SCRIPTS } from "../../src/generated/scripts.ts";
+} from "../../engine/game/script/host.ts";
+import { HOOKS } from "../../engine/game/script/hooks.ts";
+import { GENERATED_SCRIPTS } from "../../engine/generated/scripts.ts";
 import { validateScript } from "../../scripts/asset-tools/script-schema.mjs";
-import * as output from "../../src/output.ts";
+import * as output from "../../engine/output.ts";
 
 /** Register a mod's rules — the same call `applyMods` makes. */
 function installScripts(sources: Record<string, string>): void {

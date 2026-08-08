@@ -3,7 +3,7 @@
 // THE CAR VIEWER — assemble the hero's hatchback from its part sprites in
 // any combination of damage states, and write a comparison sheet PNG.
 //
-// The car is a MACHINE, not a picture (src/game/vehicles.ts): six body
+// The car is a MACHINE, not a picture (engine/game/vehicles.ts): six body
 // panels (`car_<panel>_<rung>`, rung 0..3: factory straight → bumped →
 // hammered → broken) stacked on one shared canvas over two wheels
 // (`car_wheel_*`: sound spin frames, a flat tire, a bent rim). This script

@@ -351,7 +351,7 @@ export function createControls(deps: {
       case "riftSeam":
         // TEAR A SEAM HOME. Sent as a run command because the run may be
         // simulating elsewhere, and the engine holds every refusal (no tool,
-        // one already standing, already home — src/game/rift-tool.ts), so an
+        // one already standing, already home — engine/game/rift-tool.ts), so an
         // idle press is free exactly like the dock's are.
         if (fieldLive(state) && !weaponMenuOpenRef.current) {
           if (runCommandOk(state, "tearSeam")) playUiSound(synth, "confirm");

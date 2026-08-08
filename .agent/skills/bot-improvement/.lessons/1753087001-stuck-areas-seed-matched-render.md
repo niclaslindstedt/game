@@ -1,7 +1,7 @@
 ---
 title: Debug navigation with STUCK AREAS + a seed-matched map-layout render — the wedges usually sit on scatter rocks
 date: 2026-07-21
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [navigation, debugging, stuck-areas]
 ---
 

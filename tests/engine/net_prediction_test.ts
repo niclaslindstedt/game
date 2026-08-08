@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // CLIENT-SIDE PREDICTION AND RECONCILIATION, plus remote-hero interpolation
-// (`server/client-predict.ts`, `src/game/predict.ts`, docs/multiplayer.md).
+// (`server/client-predict.ts`, `engine/game/predict.ts`, docs/multiplayer.md).
 //
 // Four claims, each the feature's own contract:
 //

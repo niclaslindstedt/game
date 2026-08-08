@@ -6,7 +6,7 @@ description: "Use when a bug repro, an fps probe, or a visual judgement needs th
 # Test Scenarios
 
 Playing your way into a situation is slow and unrepeatable. The engine's
-scenario support (`src/game/scenario.ts`) **declares** the situation instead:
+scenario support (`engine/game/scenario.ts`) **declares** the situation instead:
 a JSON `ScenarioSpec` applied over a freshly created run — position, vitals,
 build, gear, and the field's exact population. Use it whenever you are:
 
@@ -109,7 +109,7 @@ node pwa/scripts/playtest.mjs --strategy idle --seed 42 --level mars \
   --scenario '{"place":"merchant","freeze":true,"clearEnemies":true,"stopWaves":true}'
 ```
 
-Shipped def ids live in `src/game/defs/` (enemies, equipment, abilities);
+Shipped def ids live in `engine/game/defs/` (enemies, equipment, abilities);
 engine tests use the fixture ids (`test_minion`, `test_vest`, …) instead.
 
 ## Rules of thumb
@@ -133,7 +133,7 @@ engine tests use the fixture ids (`test_minion`, `test_vest`, …) instead.
 ## Skill self-improvement
 
 When a staging need doesn't fit the spec (a new field, a new default), grow
-`src/game/scenario.ts` + its test, then document the field in the spec table
+`engine/game/scenario.ts` + its test, then document the field in the spec table
 above and in `docs/configuration.md` (that's operating data — edit it in
 place). Recurring stagings and staging gotchas are lesson fragments: load the
 **`skill-reflection`** skill at both ends of the session — it owns recording

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The split guard for `@game/menu` (src/menu.ts) — the engine's menu-side entry
+// The split guard for `@game/menu` (engine/menu.ts) — the engine's menu-side entry
 // point, which exists so the app's startup path can read the catalogs without
 // reaching the simulation behind them (see the file header there, and the
 // critical-path budget in pwa/scripts/check-seo.mjs).

@@ -40,7 +40,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, GEAR_DEFS, weaponAssumedTargets, baseCritMult } =
-  await import(path.join(root, "src/game/defs/equipment.ts"));
+  await import(path.join(root, "engine/game/defs/equipment.ts"));
 
 // ---- Budget knobs — MUST match scripts/weapon-budget.mjs -------------------
 
@@ -209,14 +209,14 @@ if (mode === "weapon") {
   lines.push("  },");
 
   console.log(
-    "\n── Forged weapon def (paste into src/game/defs/equipment.ts):\n",
+    "\n── Forged weapon def (paste into engine/game/defs/equipment.ts):\n",
   );
   console.log(lines.join("\n"));
   console.log(`
 ── Wiring checklist:
   1. Add "${id}" to a level's loot.weaponPool (cumulative pools: later maps
      inherit it automatically) — its grade variants unfold on their own.
-  2. Name its EXCEPTIONAL/ELITE variants in src/game/defs/grades.ts.
+  2. Name its EXCEPTIONAL/ELITE variants in engine/game/defs/grades.ts.
   3. Icon (12×12): a new content/sprites/icons/<name>.yaml${
     candidate.projectile
       ? ` and the
@@ -295,7 +295,7 @@ if (peers.length < 2 && slot === "shield") {
 
 const durability = NO_ARMOR_SLOTS.has(slot) ? undefined : 60;
 
-console.log("\n── Forged gear def (paste into src/game/defs/gear.ts):\n");
+console.log("\n── Forged gear def (paste into engine/game/defs/gear.ts):\n");
 console.log(`  ${id}: {
     id: "${id}",
     name: "${name}",
@@ -316,6 +316,6 @@ console.log(`  ${id}: {
 console.log(`
 ── Wiring checklist:
   1. Add "${id}" to a level's loot.gearPool (later maps inherit it).
-  2. Grade-variant names in src/game/defs/grades.ts if the slot has them.
+  2. Grade-variant names in engine/game/defs/grades.ts if the slot has them.
   3. Icon (12×12): a new content/sprites/icons/<name>.yaml; \`make assets\`.
   4. node scripts/item-forge.mjs check   # the full battery must stay green.`);

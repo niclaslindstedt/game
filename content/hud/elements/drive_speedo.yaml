@@ -13,7 +13,7 @@
 #
 # THE TACHOMETER'S FACE RUNS TO THE REDLINE AND THE NEEDLE NEVER GETS THERE, and
 # that is the point rather than an oversight. The box changes up at sixty-three
-# hundred of a seven thousand redline (`src/game/drive/drivetrain.ts`) and fifth
+# hundred of a seven thousand redline (`engine/game/drive/drivetrain.ts`) and fifth
 # runs out of road speed at about six thousand one, so the crank works in the top
 # third of the dial when the car is being driven properly and still never
 # touches the paint. The red at the end is PAINT (`zone:`), printed on the

@@ -15,7 +15,7 @@
 //
 // It also polices the shape of the ship target, which is the other half of what
 // went wrong the first time the mod toolchain was packaged: the compiled tree
-// carries `src/` and `server/` and nothing else, so anything the server reaches
+// carries `engine/` and `server/` and nothing else, so anything the server reaches
 // OUTSIDE those two trees is a file that will not be there.
 
 import { readFileSync } from "node:fs";
@@ -29,7 +29,7 @@ const ENTRY = path.join(repoRoot, "server", "main.ts");
 
 /** The trees `scripts/build-server.mjs` compiles into the ship target. Keep in
  * step with its `SOURCES`. */
-const SHIPPED_TREES = ["src", "server"];
+const SHIPPED_TREES = ["engine", "server"];
 
 /** What `server/package.json` says the server needs at runtime. */
 const declared = Object.keys(
@@ -91,10 +91,15 @@ function walkServer(entry: string): {
 /** The four alias maps the builds read, in the one form this test needs. Keep
  * in step with `scripts/build-server.mjs`'s own table. */
 function aliasPath(spec: string): string {
-  if (spec === "@game/core") return path.join(repoRoot, "src", "index.ts");
-  if (spec === "@game/menu") return path.join(repoRoot, "src", "menu.ts");
+  if (spec === "@game/core") return path.join(repoRoot, "engine", "index.ts");
+  if (spec === "@game/menu") return path.join(repoRoot, "engine", "menu.ts");
   if (spec.startsWith("@game/lib/")) {
-    return path.join(repoRoot, "src", "lib", spec.slice("@game/lib/".length));
+    return path.join(
+      repoRoot,
+      "engine",
+      "lib",
+      spec.slice("@game/lib/".length),
+    );
   }
   if (spec.startsWith("@game/wire/")) {
     return path.join(

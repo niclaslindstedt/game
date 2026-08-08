@@ -149,7 +149,7 @@ export function runEngineNote(
  * the road — the promise before the crowd and the wagon giving up under him;
  * the arrival's verdict is read off the whole journey (`driveVerdict`) and
  * spoken at the far end, standing beside the car, as the last page of the
- * destination's opening monologue. See `src/game/items/flow.ts` `introPages`.
+ * destination's opening monologue. See `engine/game/items/flow.ts` `introPages`.
  */
 export function drainDrive(
   drive: DriveState,

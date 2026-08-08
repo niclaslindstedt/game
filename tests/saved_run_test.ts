@@ -236,7 +236,7 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
   it("knows every field of a fresh GameState", () => {
     expect(Object.keys(state).sort()).toEqual([
       // THE STAFF LOT: the cars that have rolled in, the clock for the next
-      // one, and the lot's own geometry (src/game/arrivals.ts). All three
+      // one, and the lot's own geometry (engine/game/arrivals.ts). All three
       // default cleanly on a thaw — a run parked before the beat shipped has an
       // entrance that was already open — so none of them cost a version bump.
       "arrivalPlan",
@@ -250,7 +250,7 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "bossCorpse",
       "bossDeath",
       // v28: THE CACHE — where the garage chest stands on this map, and how
-      // deep a one this hero has earned (src/game/cache.ts).
+      // deep a one this hero has earned (engine/game/cache.ts).
       "cachePos",
       "cacheSlots",
       "campAnchor",

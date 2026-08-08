@@ -1,7 +1,7 @@
 ---
 title: Coverage/level gates on macro exploration must have a stall safety or a bogged run never reaches the boss
 date: 2026-07-18
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [exploration, stall-safety, objectives]
 ---
 

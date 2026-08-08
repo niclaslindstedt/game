@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // UNIQUE item authoring checker (see the `weapon-system` skill, "Unique items").
-// Uniques are hand-authored named drops (`src/game/defs/uniques.ts`): a FIXED
+// Uniques are hand-authored named drops (`engine/game/defs/uniques.ts`): a FIXED
 // bonus block on a REAL catalog base. The one mistake that bites hardest while
 // authoring is naming a base that doesn't exist — the generated grade variants
 // (`grades.ts`) live in the runtime records but NOT in source, so a grep lies —
@@ -42,24 +42,24 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, GEAR_DEFS, isWeaponDef } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
 const { UNIQUE_DEFS, UNIQUE_IDS } = await import(
-  path.join(root, "src/game/defs/uniques.ts")
+  path.join(root, "engine/game/defs/uniques.ts")
 );
 const { ENEMY_DEFS } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 const { LEVELS } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { WORLD_DROP } = await import(
-  path.join(root, "src/game/config/index.ts")
+  path.join(root, "engine/game/config/index.ts")
 );
 const { DIFFICULTY_ORDER } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
+  path.join(root, "engine/game/defs/difficulties.ts")
 );
-const { UNIQUE } = await import(path.join(root, "src/game/config/index.ts"));
+const { UNIQUE } = await import(path.join(root, "engine/game/config/index.ts"));
 // The ilvl model is OWNED by weapon-ilvl.mjs (ilvl = levelReq + bonusBudget, each
 // bonus priced off the LIVE combat constants). We reference it here rather than
 // re-deriving ilvl, so the two scripts can never disagree on what a unique's ilvl

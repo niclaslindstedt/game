@@ -514,7 +514,7 @@ export function createRunProgress(deps: {
     // dead man's hand — so the seam at home learns the road from it.
     if (event.type === "gateEntered") {
       // A SEAM THIS HERO TORE IS THIS HERO'S TRIP, and the two crossings are
-      // genuinely different animals (src/game/rift-tool.ts):
+      // genuinely different animals (engine/game/rift-tool.ts):
       //
       //   PARTY  the session holds both levels and moves this SEAT alone
       //          (`travelSolo`), so the field keeps running with everybody

@@ -41,7 +41,7 @@ it at both ends of the session.
    exact scenario in `tests/engine/` (synthetic fixtures via `registerDefs`;
    `applyScenario` stages complex situations — see the `test-scenario`
    skill), step until the bad state appears, assert
-   the correct behavior, watch it fail, then fix `src/game/*`. The test
+   the correct behavior, watch it fail, then fix `engine/game/*`. The test
    stays forever; the bug can't return silently. Add diagnostic
    `debug(...)` calls to the engine (never `console.*` — lint forbids it)
    while narrowing down; they're free, buffered, and only print in debug

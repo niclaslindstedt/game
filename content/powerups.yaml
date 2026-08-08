@@ -1,8 +1,8 @@
 # The POWERUP catalog — every time-limited power a pickup can grant, and the
 # single source of truth for their balance. Compiled to
-# `src/generated/powerups.ts` by `scripts/generate-powerups.mjs` (folded into
+# `engine/generated/powerups.ts` by `scripts/generate-powerups.mjs` (folded into
 # `make levels` / `make assets`); the engine reads it through
-# `src/game/defs/abilities.ts`, which owns the TYPES and documents what every
+# `engine/game/defs/abilities.ts`, which owns the TYPES and documents what every
 # param block means. Nothing here needs a rebuild of engine code to retune — a
 # damage figure, a duration, or a whole new power is an edit to this file.
 #

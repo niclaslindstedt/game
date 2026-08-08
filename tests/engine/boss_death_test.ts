@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BOSS DEATH RITE (src/game/boss-death.ts): felling a boss no longer
+// THE BOSS DEATH RITE (engine/game/boss-death.ts): felling a boss no longer
 // resolves on the tick of the blow. The run drops into the `bossDeath` phase
 // and a scripted send-off plays — the boss on its knees, the horde held off,
 // the hero closing and finishing it — and only at the END of that beat do

@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# Part of the CAR assembly (engine/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
 # damage mix with `node scripts/car-viewer.mjs`.
 name: car_wheel_0
 family: goodco
 size: [11, 11]
 description: >
-  One alloy wheel of the hero's hatchback, spokes square - the intact spin frame A (the roll angle picks the frame; src/game/vehicles.ts).
+  One alloy wheel of the hero's hatchback, spokes square - the intact spin frame A (the roll angle picks the frame; engine/game/vehicles.ts).
 subject:
   kind: "vehicle part"
   build: "a five-spoke alloy wheel on a black tire"

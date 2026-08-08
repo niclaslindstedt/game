@@ -8,7 +8,7 @@
 //
 //   import { register } from "node:module";
 //   register("./game-alias-loader.mjs", import.meta.url);
-//   const { simulateCampaign } = await import("../src/sim/simulate.ts");
+//   const { simulateCampaign } = await import("../engine/sim/simulate.ts");
 //
 // Keep the table below in step with the four alias maps the builds read —
 // tsconfig.json, pwa/tsconfig.json, vitest.config.ts, pwa/vite.config.ts — so a
@@ -23,12 +23,12 @@ const root = path.join(here, "..");
 /** Alias prefix → directory, and bare alias → file. Longest match wins, which
  * is why `@game/lib/` is listed ahead of the bare `@game/…` entries. */
 const DIRS = [
-  ["@game/lib/", path.join(root, "src", "lib")],
+  ["@game/lib/", path.join(root, "engine", "lib")],
   ["@ui/lib/", path.join(root, "pwa", "src", "lib")],
 ];
 const FILES = {
-  "@game/core": path.join(root, "src", "index.ts"),
-  "@game/menu": path.join(root, "src", "menu.ts"),
+  "@game/core": path.join(root, "engine", "index.ts"),
+  "@game/menu": path.join(root, "engine", "menu.ts"),
   "@game/client": path.join(root, "server", "client.ts"),
 };
 

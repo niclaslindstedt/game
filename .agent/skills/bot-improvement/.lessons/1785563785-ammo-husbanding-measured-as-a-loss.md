@@ -1,7 +1,7 @@
 ---
 title: Three "obviously human" ammunition behaviours for the bot all measured as losses — including refusing to draw a dry gun
 date: 2026-08-01
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [ammo, husbanding, measurement]
 ---
 
@@ -54,7 +54,7 @@ full-pockets stall that function exists to prevent. Measured neutral-to-positive
 **Two process traps, each of which cost a whole measurement round.**
 
 - **Never run the test suite while a stash-based A/B sweep is going.** Swapping
-  `src/game/bot` under a running vitest produced three failures I could not
+  `engine/game/bot` under a running vitest produced three failures I could not
   attribute and one garbage sim reading. Use `git worktree add <dir> origin/main`
   for the baseline — the live tree is never touched. (Watch CPU contention even
   then: `net_session_test` and `sim_party_test` both failed under a 4-way

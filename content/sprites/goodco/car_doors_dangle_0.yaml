@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# Part of the CAR assembly (src/game/vehicles.ts): all car_* parts share one
+# Part of the CAR assembly (engine/game/vehicles.ts): all car_* parts share one
 # 48x26 canvas, so the renderer stacks them at a single anchor. Preview any
 # damage mix with `node scripts/car-viewer.mjs`.
 name: car_doors_dangle_0
 family: goodco
 size: [48, 26]
 description: >
-  The hero's hatchback: the rear door DANGLING off its hinge, swing frame A. A dangling part is an oscillator (src/game/vehicles.ts stepVehicles) — bumps kick it, the swing decays, and the phase picks the frame.
+  The hero's hatchback: the rear door DANGLING off its hinge, swing frame A. A dangling part is an oscillator (engine/game/vehicles.ts stepVehicles) — bumps kick it, the swing decays, and the phase picks the frame.
 subject:
   kind: "vehicle part"
   build: "the door bay open to the cabin, the door swung rearward"

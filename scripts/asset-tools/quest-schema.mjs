@@ -6,7 +6,7 @@
 // on an errand nobody offers, surfaces at `npm run levels` rather than as a
 // giver standing silently on a map with nothing to say.
 //
-// The contracts checked here live in `src/game/defs/quests.ts` (`QuestDef`,
+// The contracts checked here live in `engine/game/defs/quests.ts` (`QuestDef`,
 // `QuestGiverDef`) — keep the two in step when a field is added. What the
 // AUTHORED form changes on top of those types is documented in
 // `scripts/quest-data/load-yaml.mjs` (one thing: a singular objective needs no
@@ -79,7 +79,7 @@ const CHOICE_WARN_CHARS = 34;
  * One in eight, and the smallness is what makes a fetch quest a hunt at all —
  * this game's hero clears a hundred and seventy bodies in three minutes, so a
  * piece falling off every second or third of them is a counter rather than an
- * errand. Kept in step with `QUESTS.dropChance` in `src/game/config/quests.ts`,
+ * errand. Kept in step with `QUESTS.dropChance` in `engine/game/config/quests.ts`,
  * which is the rate a piece that names none actually rolls at.
  */
 const FARM_DROP_CEILING = 0.125;
@@ -709,7 +709,7 @@ function checkReward(reward, refs, err, warn, levelId) {
       err(`reward names powerup "${id}", which does not exist`);
     }
   }
-  // THE CACHE — the garage chest (src/game/cache.ts). It is a FIXTURE on a map
+  // THE CACHE — the garage chest (engine/game/cache.ts). It is a FIXTURE on a map
   // rather than an item, so an errand can only pay it where a map has somewhere
   // to put one: paid anywhere else the handover is a silent no-op that still
   // tells the player they were given something.
@@ -827,7 +827,7 @@ export function validateQuestCatalog(quests, questGivers) {
 // ------------------------------------------------------------- conversations
 
 /**
- * Validate one CONVERSATION tree (see src/game/defs/conversations.ts).
+ * Validate one CONVERSATION tree (see engine/game/defs/conversations.ts).
  *
  * The cross-references here are the same point they are for an errand, one
  * step nastier: a `goto` naming a node that does not exist is a branch that

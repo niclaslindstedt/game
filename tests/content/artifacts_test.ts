@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The shipped ARTIFACT roster (`src/game/defs/artifacts.ts`) — the level-99
+// The shipped ARTIFACT roster (`engine/game/defs/artifacts.ts`) — the level-99
 // endgame relics. Locks the roster's intent: every artifact mints at the
 // `"artifact"` tier, carries an endgame-grade ilvl, sits on a real high-req
 // base (so a cap-gated drop can actually be worn), spreads across every slot,
@@ -19,7 +19,7 @@ import {
 } from "@game/core";
 import { describe, expect, it } from "vitest";
 
-import { bonusBudget } from "../../src/game/item-budget.ts";
+import { bonusBudget } from "../../engine/game/item-budget.ts";
 
 const artifacts: UniqueDef[] = UNIQUE_IDS.map((id) => UNIQUE_DEFS[id]!).filter(
   (u) => u.tier === "artifact",

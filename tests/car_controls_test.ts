@@ -17,8 +17,8 @@ import {
   DEFAULT_KEYBINDINGS,
   withBinding,
 } from "../pwa/src/game/keybindings.ts";
-import { carControl } from "../src/game/vehicles.ts";
-import type { CarVehicle, GameInput } from "../src/index.ts";
+import { carControl } from "../engine/game/vehicles.ts";
+import type { CarVehicle, GameInput } from "../engine/index.ts";
 
 const binds = DEFAULT_KEYBINDINGS;
 

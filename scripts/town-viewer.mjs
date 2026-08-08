@@ -5,7 +5,7 @@
 //
 // It is the LOOK half of the loop the town is built in, and it exists for the
 // same reason `car-viewer.mjs` does: the buildings are ASSEMBLED rather than
-// drawn (`src/game/drive/town-plan.ts`), so there is no file anywhere whose
+// drawn (`engine/game/drive/town-plan.ts`), so there is no file anywhere whose
 // contents are what the player sees. A shell in the previews tells you the wall
 // generator works; it tells you nothing about whether the street does — whether
 // the row has a rhythm, whether the skyline has a shape, whether the hero's end
@@ -32,12 +32,12 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { planTown, townDistrict } = await import(
-  path.join(root, "src/game/drive/town-plan.ts")
+  path.join(root, "engine/game/drive/town-plan.ts")
 );
 const { TOWN, TOWN_COLOURWAYS, townHeight, townWidth } = await import(
-  path.join(root, "src/game/drive/town.ts")
+  path.join(root, "engine/game/drive/town.ts")
 );
-const { DRIVE } = await import(path.join(root, "src/game/drive/config.ts"));
+const { DRIVE } = await import(path.join(root, "engine/game/drive/config.ts"));
 const { SPRITES, SPRITE_PALETTES } = await import("./sprite-data/index.mjs");
 const { gridToSurface } = await import("./asset-tools/grid.mjs");
 const { blit, createSurface, fill, upscale } =

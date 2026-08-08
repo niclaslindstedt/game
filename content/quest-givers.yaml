@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # THE PEOPLE WHO ASK FOR HELP — one entry per person standing on a map with an
-# errand. Compiled to src/generated/quests.ts by scripts/generate-quests.mjs
+# errand. Compiled to engine/generated/quests.ts by scripts/generate-quests.mjs
 # alongside content/quests/<id>.yaml (the errands themselves).
 #
 # WHY THESE PEOPLE EXIST, AND WHY THEY ARE NOT ELITES. Every other figure on

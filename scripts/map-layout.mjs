@@ -28,7 +28,7 @@
 //   node scripts/map-layout.mjs <id> --deaths "1240,380:raider;2010,660"
 //   node scripts/map-layout.mjs <id> --highlight-file report.json
 //
-// Every map is CARVED from its blueprint per run (see src/game/mapgen), so a
+// Every map is CARVED from its blueprint per run (see engine/game/mapgen), so a
 // render is of ONE run's map: --seed picks which. It is the LOOK half of the
 // blueprint authoring loop — the picture
 // that shows whether a chamber grid reads as a place worth searching.
@@ -162,7 +162,7 @@ const opts = parseArgs(argv);
 // what the generator produces.
 {
   const { resolveLevelDef, hasMapBlueprint } = await import(
-    engineFile("src/game/mapgen/index.ts")
+    engineFile("engine/game/mapgen/index.ts")
   );
   const seed = opts.seed ?? 1;
   const missing = [];

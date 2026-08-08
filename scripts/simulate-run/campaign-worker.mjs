@@ -28,7 +28,7 @@ const { applyMods } = await import(path.join(root, "scripts/mod-support.mjs"));
 await applyMods(workerData.mods, { quiet: true });
 
 const { simulateCampaign } = await import(
-  path.join(root, "src/sim/simulate.ts")
+  path.join(root, "engine/sim/simulate.ts")
 );
 
 const port = parentPort;

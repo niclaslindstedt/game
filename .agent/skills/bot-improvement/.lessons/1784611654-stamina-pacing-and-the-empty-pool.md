@@ -1,7 +1,7 @@
 ---
 title: Stamina pacing — the pool lives at exactly 0, a dry pool at full throttle never regens, and the hidden hop sources
 date: 2026-07-21
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [stamina, pacing, regen]
 ---
 

@@ -28,7 +28,7 @@ import {
   splitsBody,
   type DriveParams,
   type DriveState,
-} from "../../src/game/drive/index.ts";
+} from "../../engine/game/drive/index.ts";
 
 const PARAMS: DriveParams = {
   seed: 909,

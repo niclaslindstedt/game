@@ -17,7 +17,7 @@ file one there means inventing a portrait sprite that is never drawn, purely to
 satisfy a validator.
 
 The shipped precedent is already in the tree — a boss's set-piece barks live in
-`src/game/defs/enemies/abilities.ts`, in code, and the manuscript transcribes
+`engine/game/defs/enemies/abilities.ts`, in code, and the manuscript transcribes
 them anyway. So the rule is about the SHAPE of the line, not the file it sleeps
 in: if it has a speaker and a portrait it is a thought def; if it floats over a
 head it is a bark and it lives with the presentation that draws it. Either way

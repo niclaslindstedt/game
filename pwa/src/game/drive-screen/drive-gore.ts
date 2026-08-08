@@ -2,7 +2,7 @@
 // WHAT A PERSON UNDER A CAR LOOKS LIKE — the road's own gore, and the mess it
 // leaves on the tarmac afterwards.
 //
-// THE ENGINE HAS ALREADY DECIDED EVERYTHING THAT MATTERS. `src/game/drive/
+// THE ENGINE HAS ALREADY DECIDED EVERYTHING THAT MATTERS. `engine/game/drive/
 // remains.ts` owns the pieces: how many there are, where each one is, whether it
 // is caught under the car or skidding or settled, and whether the wheels have
 // been over it. This file answers the only question left, which is what any of

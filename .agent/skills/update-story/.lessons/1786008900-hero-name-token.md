@@ -1,12 +1,12 @@
 ---
 title: A line that says the hero's NAME is a token, and every text overlay has to resolve it
 date: 2026-08-06
-scope: src/game/hero-name.ts
+scope: engine/game/hero-name.ts
 concepts: [hero-name, tokens, overlays]
 ---
 
 The hero is called whatever the player named him, and a line that says it
-writes `{HERO}` (`src/game/hero-name.ts`). Three things about that are easy to
+writes `{HERO}` (`engine/game/hero-name.ts`). Three things about that are easy to
 get wrong on a story pass:
 
 **The token is resolved at the DRAW, not in the data.** A name changes no tick,

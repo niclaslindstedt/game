@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE ELITE TIER's world-anchored FX (see src/game/defs/enemies/abilities.ts):
+// THE ELITE TIER's world-anchored FX (see engine/game/defs/enemies/abilities.ts):
 // the ring of motes, the shell, the tether, the pulse, the blink, the shout and
 // the lane of fissures.
 //

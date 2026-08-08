@@ -1,7 +1,7 @@
 ---
 title: Generated grade variants are real bases but invisible to grep
 date: 2026-07-10
-scope: src/game/defs/
+scope: engine/game/defs/
 concepts: [variants, grep, generated-ids]
 ---
 

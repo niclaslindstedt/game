@@ -1,7 +1,7 @@
 ---
 title: Any change to per-drop rng draws shifts every seeded content test
 date: 2026-07-10
-scope: src/game/
+scope: engine/game/
 concepts: [rng-streams, determinism, seeded-tests]
 ---
 

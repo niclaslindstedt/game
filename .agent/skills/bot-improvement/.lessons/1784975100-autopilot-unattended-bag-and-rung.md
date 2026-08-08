@@ -1,7 +1,7 @@
 ---
 title: An unattended ride needs an exit for loot AND for a beaten campaign
 date: 2026-07-25
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [unattended, loot, campaign-exit]
 ---
 
@@ -14,7 +14,7 @@ Two rules that only bite once the AUTO PILOT runs for hours unattended:
   the flight — so the best find of the night is the one left on the floor. The
   fix is to shed the least precious keeper (ranked by TIER first, sell value
   only within a tier) and bank it in the LOST & FOUND
-  (`src/game/items/vault.ts`) rather than destroy it.
+  (`engine/game/items/vault.ts`) rather than destroy it.
 - **A beaten campaign is a dead end.** `autopilotNextLevel` farmed the beaten
   rung forever, so an overnight ride ground mobs it had long outclassed.
   `autopilotStepUp` raises the difficulty instead — but the unlock graph is

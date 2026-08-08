@@ -44,7 +44,7 @@ item on a body, carried up to the chain (`LevelDef.doors`, `opens: "key"`). One
 door in the campaign is the other kind: it has no key anywhere in the game, and
 the only thing that ever opens it is **somebody else using it**.
 
-That is `LevelDef.arrivals` (`src/game/arrivals.ts`), and GOODCO's front door is
+That is `LevelDef.arrivals` (`engine/game/arrivals.ts`), and GOODCO's front door is
 the case it exists for. The hero lands on the **staff lot** — an arrival district
 (`MapArea.arrivals`) carrying no ambient horde at all — with the building's wall
 in front of him and the fog over every inch of it. Every so often a car rolls in
@@ -101,7 +101,7 @@ Clearing a level banks a **loadout snapshot** — level, stats, worn equipment,
 bag, pocketed powerups and the ammunition pouch — onto the character
 (`extractLoadout` → `pwa/src/game/characters.ts`). Starting the next hands it to
 `createGame(...)`, which dresses the run in it (`applyLoadout`,
-`src/game/arrival.ts`): ids re-minted, bag re-sized to the carried STRENGTH,
+`engine/game/arrival.ts`): ids re-minted, bag re-sized to the carried STRENGTH,
 hero arriving rested. Losing a run never erases it — a retry restarts the level
 with the same carry-over.
 
@@ -144,7 +144,7 @@ Eight columns wide at every rung and every breakpoint, which is D2's own stash
 width — so a rung is visibly one row more than the one below, and the top of the
 ladder is 8 × 6, which is D2's stash exactly.
 
-Five rules define it, and `src/game/cache.ts` is the one place they live:
+Five rules define it, and `engine/game/cache.ts` is the one place they live:
 
 - **It is EARNED, once, forever, and only GROWS.** Ruth pays it for THE SCALE,
   the last of her three errands (`reward.cache`) — the only errand in the game
@@ -216,8 +216,8 @@ branch.
 A gun does not get blunt. **Ranged** weapons carry no `durability` at all and
 eat **ammunition** instead; melee and magic made the opposite trade and eat
 nothing. It is one trade, not two independent fields, and the item schema
-refuses either half being wrong. Rules in `src/game/items/ammo.ts`, knobs in
-`src/game/config/ammo.ts`.
+refuses either half being wrong. Rules in `engine/game/items/ammo.ts`, knobs in
+`engine/game/config/ammo.ts`.
 
 - **Three kinds, split by what the thing IS** — bullets, arrows, cells. Every
   firearm shares one round, because a game that asks a player to track four
@@ -271,7 +271,7 @@ each power does is `content/powerups.yaml`; the rules around them are:
 
 ## Coins — the two faucets and the two drains
 
-The **merchant** (`src/game/merchant.ts`, config `MERCHANT`/`ECONOMY`) is one
+The **merchant** (`engine/game/merchant.ts`, config `MERCHANT`/`ECONOMY`) is one
 trader in a per-venue costume (`LevelDef.merchant`). He roams until the hero
 first walks up; the **meeting** roots him for the rest of the run, pins him on
 the map, and **rolls his stall once** — every entry has a finite quantity and
@@ -310,7 +310,7 @@ medkit.
 
 ## The horde answering an overpowered hero
 
-**Menace** (`src/game/menace.ts`) reads how lopsided the hero is — not how fast
+**Menace** (`engine/game/menace.ts`) reads how lopsided the hero is — not how fast
 he swings — so a fresh hero cannot trip it and a genuinely dominant build can.
 Difficulty decides only how touchy it is. When it lights, the horde lures more
 foes, evolves what it sends, and scales elites and bosses so they cannot be
@@ -362,7 +362,7 @@ ONE-OFF — an elite, a guardian, a bystander, a rampage-only hellborn — where
 certainty is correct and usually necessary: there is one of that mob, so the
 roll decides whether the beat happens at all rather than how long the hunt is.
 
-**And the horde is topped up to pay for it** (`src/game/quests/restock.ts`). A
+**And the horde is topped up to pay for it** (`engine/game/quests/restock.ts`). A
 carved map drops `waves` entirely, so every monster the hero will ever fight is
 queued in a spawn point that drains exactly once — which is what lets a level be
 cleared, and what would make an errand accepted on already-swept ground sit at
@@ -382,7 +382,7 @@ lands the withheld blow through the ordinary kill rails (loot, last words, the
 lot). **SPARE** recruits the figure: it hands over its STORY items — the plot
 must flow — but keeps its equipment as its own kit, and joins the hero. Only one
 walks with him at a time, so the verdict is a trade rather than a collection.
-Roster in `content/companions.yaml`, engine in `src/game/companions.ts`.
+Roster in `content/companions.yaml`, engine in `engine/game/companions.ts`.
 
 A companion fights autonomously and is dressable from the bag. Its kills stay
 out of the menace meter for the same reason a powerup's do. A downed companion
@@ -410,7 +410,7 @@ The hero is called whatever the player named him, and the game says it. The name
 is not engine state: it changes no roll, no seed and no tick, so it is neither a
 `RunParams` field nor anything that travels the wire. It is a **token in the
 authored text**, `{HERO}`, resolved by whichever surface draws the line
-(`src/game/hero-name.ts`) against the name of the hero that _viewer_ is playing —
+(`engine/game/hero-name.ts`) against the name of the hero that _viewer_ is playing —
 which is also the only answer that makes sense in a party, where the box on each
 screen belongs to a different person.
 

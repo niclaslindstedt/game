@@ -1,7 +1,7 @@
 ---
 title: The nav grid's any-overlap blocking seals door-width gaps, and chest errands need the whole rush/lock/retry treatment
 date: 2026-07-21
-scope: src/game/bot/nav.ts
+scope: engine/game/bot/nav.ts
 concepts: [nav-grid, doorways, errands]
 ---
 

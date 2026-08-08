@@ -191,7 +191,7 @@ export function drawLandmarks(
     if (riftPortalLook(landmark.sprite)) continue;
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     // THE CACHE is the one landmark whose PRESENCE is a fact about the hero
-    // rather than about the map (src/game/cache.ts): the garage always reserves
+    // rather than about the map (engine/game/cache.ts): the garage always reserves
     // the spot, and the chest only stands in it once Ruth has handed it over.
     // Unlike a sealed door's seam this is engine state, not roster knowledge,
     // so it is asked here rather than through `isLandmarkHidden`.

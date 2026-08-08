@@ -25,7 +25,7 @@
 // beside it would be the drift this instrument exists to catch: what the bot
 // proves playable has to be what the renderer actually reads.
 //
-// **AND IT IS THE SAME BOT.** `botIntent` (`src/game/bot/intent.ts`) answers a
+// **AND IT IS THE SAME BOT.** `botIntent` (`engine/game/bot/intent.ts`) answers a
 // whole tick — the steer plus the verbs — from one snapshot, touching nothing.
 // That is what makes this file small: it owns a socket, a clock and a seat, and
 // no game knowledge at all.

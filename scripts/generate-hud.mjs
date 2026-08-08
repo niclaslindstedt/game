@@ -4,7 +4,7 @@
 // event sounds and the Lua judgements behind them — into
 // `pwa/src/generated/hud.ts`, which `pwa/src/game/hud/` renders.
 //
-// It emits into `pwa/src/generated/` rather than `src/generated/`, for the same
+// It emits into `pwa/src/generated/` rather than `engine/generated/`, for the same
 // reason the sound bank and the title menu do: a HUD is an APP concern. The
 // engine has no idea the game has a screen, and parking the layout in its tree
 // would hand every consumer of `@game/core` a pile of chrome it never reads.

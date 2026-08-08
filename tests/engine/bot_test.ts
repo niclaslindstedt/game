@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot (src/game/bot/index.ts): bot strategies produce ordinary GameInput
+// The autopilot (engine/game/bot/index.ts): bot strategies produce ordinary GameInput
 // from the live state, so a bot can play the game headlessly — closing on
 // monsters, kiting at weapon range, scooping pickups, pushing for the boss —
 // while keeping the run exactly as deterministic as a human's.
@@ -40,9 +40,9 @@ import {
 
 import { distance as dist } from "@game/lib/vec.ts";
 
-import { navigatesWalls } from "../../src/game/bot/nav.ts";
-import { nearestWantedItem } from "../../src/game/bot/supplies.ts";
-import { revealAround } from "../../src/game/fog.ts";
+import { navigatesWalls } from "../../engine/game/bot/nav.ts";
+import { nearestWantedItem } from "../../engine/game/bot/supplies.ts";
+import { revealAround } from "../../engine/game/fog.ts";
 
 /** Step the sim with the bot at the controls, spending its level-ups. */
 function drive(

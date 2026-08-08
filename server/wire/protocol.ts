@@ -62,7 +62,7 @@ export const PROTOCOL_VERSION = 32;
  * would have carried as corrections to a run that was right to begin with. They
  * are parameters now, and the rule that keeps them so is stated where they are
  * applied: **anything the app does to a run before its first tick belongs
- * here** (`src/game/session-setup.ts`).
+ * here** (`engine/game/session-setup.ts`).
  *
  * This leaf may not import the engine, so it names `RunParams` structurally
  * rather than by type. Keep the two in step; the determinism suite is what
@@ -114,7 +114,7 @@ export type SessionParams = {
   /** KEEPSAKES the hero arrived carrying — story items banked on the character
    * for good (chiefly the RIFT CREATOR). Holding the rig is what lets a hero
    * tear a seam home mid-run, so a joining client's own copy of the run has to
-   * agree about it (see `src/game/rift-tool.ts`). */
+   * agree about it (see `engine/game/rift-tool.ts`). */
   keepsakes?: string[];
   /** How much of the opening to skip: `none`, `story` (already watched on this
    * difficulty), or `all` (a developer warp-in). Structural, so this leaf needs

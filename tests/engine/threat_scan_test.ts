@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot's per-tick THREAT SCAN (src/game/bot/perception.ts): the one
+// The autopilot's per-tick THREAT SCAN (engine/game/bot/perception.ts): the one
 // sorted nearest-first sweep of the horde every "who's near me" read serves a
 // prefix of.
 //
@@ -17,7 +17,7 @@ import {
   nearestEnemy,
   threatCountWithin,
   threatsWithin,
-} from "../../src/game/bot/perception.ts";
+} from "../../engine/game/bot/perception.ts";
 import { makeEnemy, startGame } from "./helpers.ts";
 
 /** Park `count` monsters in a line marching away from the hero, nearest first. */

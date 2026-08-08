@@ -3,7 +3,7 @@
 // The sound pipeline. Compiles `content/sounds/*.yaml` into the catalog the
 // app's sfx bus plays from, the same way levels, enemies and items compile.
 //
-// It emits into `pwa/src/generated/` rather than `src/generated/` because a
+// It emits into `pwa/src/generated/` rather than `engine/generated/` because a
 // sound is an APP concern, not an engine one: the engine emits events and has
 // no idea they make noise, and putting the bank in the engine's tree would
 // hand every consumer of `@game/core` 274 voices of data it never reads.
@@ -28,7 +28,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const events = new Set(
   [
     ...readFileSync(
-      path.join(root, "src", "game", "types", "events.ts"),
+      path.join(root, "engine", "game", "types", "events.ts"),
       "utf8",
     ).matchAll(/type:\s*"([a-zA-Z]+)"/g),
   ].map((m) => m[1]),

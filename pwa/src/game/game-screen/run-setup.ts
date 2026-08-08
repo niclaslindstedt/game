@@ -297,7 +297,7 @@ export function createRunSession(deps: {
    *
    * It is one object rather than a series of calls because the same parameters
    * have to be able to build the same run in the session server and in an
-   * arriving client's renderer (`createRunFromParams`, `src/game/session-setup.ts`).
+   * arriving client's renderer (`createRunFromParams`, `engine/game/session-setup.ts`).
    * **A field added here and not to `RunParams` is a desync**, and it will
    * present as a replication bug rather than as the missing line it is.
    */
@@ -351,7 +351,7 @@ export function createRunSession(deps: {
     // THE KEEPSAKES HE ARRIVED CARRYING — the RIFT CREATOR among them, which is
     // what lets him tear a seam home mid-run. Banked on the CHARACTER across
     // every run, so the roster is the only thing that knows and the run has to
-    // be told (src/game/rift-tool.ts).
+    // be told (engine/game/rift-tool.ts).
     keepsakes: characterRef.current.keepsakes ?? [],
     openingSkip: wantsScenario
       ? "none"

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The TALENT pipeline. Compiles `content/talents.yaml` — the hand-authored
 // catalog of the three passive trees the hero grows, and the single place their
-// balance is tuned — into `src/generated/talents.ts` (GENERATED_TALENTS), which
-// `src/game/defs/talents/index.ts` re-exposes as TALENT_DEFS. It:
+// balance is tuned — into `engine/generated/talents.ts` (GENERATED_TALENTS), which
+// `engine/game/defs/talents/index.ts` re-exposes as TALENT_DEFS. It:
 //   1. harvests the sprite stems from the content/sprites tree, so a picker
 //      glyph that isn't in the atlas fails the build rather than drawing an
 //      unnamed blank card in the one screen the player picks from,
@@ -38,7 +38,7 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // The shared rank ceiling. Imported from the config LEAF directly (never
 // @game/core) — it imports nothing, so this stays a leaf-only pipeline.
 const { TALENTS } = await import(
-  pathToFileURL(engine("src/game/config/talents.ts")).href
+  pathToFileURL(engine("engine/game/config/talents.ts")).href
 );
 
 // ---- Sprite stems (content/sprites/<family>/<name>.yaml, stem == sprite id;
@@ -93,9 +93,9 @@ export const GENERATED_TALENTS: Record<string, TalentDef> = ${JSON.stringify(
 )} as unknown as Record<string, TalentDef>;
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/talents.ts`, out);
 console.log(
-  `wrote src/generated/talents.ts — ${Object.keys(talents).length} talents`,
+  `wrote engine/generated/talents.ts — ${Object.keys(talents).length} talents`,
 );

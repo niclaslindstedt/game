@@ -39,7 +39,7 @@ On a big skill (`bot-improvement` has 30+), do not read all of it. **Narrow by
 what the task actually touches:**
 
 ```sh
-node scripts/skill-lessons.mjs bot-improvement --scope=src/game/bot
+node scripts/skill-lessons.mjs bot-improvement --scope=engine/game/bot
 node scripts/skill-lessons.mjs weapon-system --concepts=ammo,durability
 node scripts/skill-lessons.mjs --scope=content/hud            # across every skill
 node scripts/skill-lessons.mjs art-improvement --files=1785624300
@@ -52,7 +52,7 @@ Three things about the filters, all load-bearing:
   default: only scope a lesson when it genuinely stops being true outside that
   path.
 - **`--scope` matches as a path prefix in EITHER direction.** A lesson scoped
-  `src/game/bot/` answers `--scope=src/game/bot/index.ts` and `--scope=src/`
+  `engine/game/bot/` answers `--scope=engine/game/bot/index.ts` and `--scope=engine/`
   alike, so you never have to guess the exact granularity somebody used.
 - **`--concepts` is OR within the flag, AND against the other flags.** Read the
   vocabulary with `node scripts/skill-lessons.mjs --vocab` when you don't know
@@ -73,7 +73,7 @@ not after the first surprise.
 ---
 title: One-line gist of the lesson (what the next session must know)
 date: YYYY-MM-DD
-scope: src/game/bot/, content/bot.yaml
+scope: engine/game/bot/, content/bot.yaml
 concepts: [nav-grid, pathfinding, stall-detection]
 ---
 
@@ -99,7 +99,7 @@ failure it prevents.
 
 **Scoping honestly is what makes the filter worth having.** Scope to the
 NARROWEST path where the lesson stays true — the module, the catalog directory,
-the one file. A lesson scoped `src/` is a lesson that should have had no scope
+the one file. A lesson scoped `engine/` is a lesson that should have had no scope
 at all. And a scope pointing at a path that no longer exists is the single best
 staleness signal there is: `--check` reports every one.
 

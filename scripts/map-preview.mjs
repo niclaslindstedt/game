@@ -41,7 +41,9 @@ import { applyMods, takeModFlags } from "./mod-support.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
+const { ENEMY_DEFS } = await import(
+  engine("engine/game/defs/enemies/index.ts")
+);
 
 const previewDir = engine("pwa/assets-preview");
 mkdirSync(previewDir, { recursive: true });
@@ -549,7 +551,7 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 // ---- actual + heatmap overlays --------------------------------------------
 async function drawActual(c, seed, difficulty) {
-  const { createGame } = await import(engine("src/index.ts"));
+  const { createGame } = await import(engine("engine/index.ts"));
   const state = createGame(seed, c.def.id, difficulty);
   const { surf } = c;
   // Obstacles at their TRUE blocking footprint, so the navigable layout (the
@@ -653,13 +655,13 @@ async function renderLevel(entry, opts) {
 
 async function runTrace(id, opts) {
   const { seed, difficulty, startLevel, gearTier } = opts;
-  const { simulateLevel } = await import(engine("src/sim/simulate.ts"));
+  const { simulateLevel } = await import(engine("engine/sim/simulate.ts"));
   // --start-level mints a REALISTIC arrival hero (leveled + rolled gear) so the
   // heatmap shows how the level plays for a hero who reaches it in a campaign —
   // not a fresh level-1 rookie who death-spirals against the map's real mobs.
   let loadout = null;
   if (startLevel) {
-    const { synthesizeArrival } = await import(engine("src/sim/arrival.ts"));
+    const { synthesizeArrival } = await import(engine("engine/sim/arrival.ts"));
     loadout = synthesizeArrival({
       difficulty,
       level: startLevel,

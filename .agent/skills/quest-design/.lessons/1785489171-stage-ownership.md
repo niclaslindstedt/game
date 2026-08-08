@@ -1,11 +1,11 @@
 ---
 title: A pass that raises a scene must step LAST, or a later pass silently steals the stage
 date: 2026-07-31
-scope: src/game/step/
+scope: engine/game/step/
 concepts: [step-order, scenes, staging]
 ---
 
-Every scene-raising pass in `src/game/step/index.ts` takes the stage the same
+Every scene-raising pass in `engine/game/step/index.ts` takes the stage the same
 way — by writing `state.phase`. Whichever runs LAST wins, and the loser leaves
 its own payload stranded on the state with nothing rendering it.
 

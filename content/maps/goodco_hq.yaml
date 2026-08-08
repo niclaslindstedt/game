@@ -60,7 +60,7 @@ areas:
   # the map the mission wants quiet. What is out here instead is
   # `arrivals: true`: two parking guards who are not looking for anybody, and a
   # car every so often with somebody in it who knows where the door is. See
-  # `LevelDef.arrivals` and src/game/arrivals.ts — that walk is how the way in
+  # `LevelDef.arrivals` and engine/game/arrivals.ts — that walk is how the way in
   # is found, because the ENTRANCE this flag hangs across the lot's openings is
   # a keyed door nothing in the game unlocks.
   - id: lot
@@ -281,7 +281,7 @@ objects:
   # IT IS A KEYED DOOR AND THERE IS NO KEY. Nothing in the game unlocks the id
   # `entrance` — no story item names it, so the hero can stand in front of it
   # all night. What opens it is a member of staff arriving for a shift and
-  # tapping a card against it (`arrivals` on the mission, src/game/arrivals.ts),
+  # tapping a card against it (`arrivals` on the mission, engine/game/arrivals.ts),
   # and following one through is how the campaign's first venue is entered. The
   # doorway that stood here before opened for the hero on approach, which meant
   # the whole of "get inside GOODCO" was walking at a wall until it moved.

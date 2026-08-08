@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE ELITE TIER (src/game/mechanics/, authored shapes in
+// THE ELITE TIER (engine/game/mechanics/, authored shapes in
 // defs/enemies/abilities.ts): the ten personal moves built out of the hero's
 // own vocabulary. Its sibling suite `boss_abilities_test.ts` pins the
 // three-beat contract itself, which every entry in BOTH tiers rides — so this

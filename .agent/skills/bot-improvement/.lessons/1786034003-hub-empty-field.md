@@ -1,7 +1,7 @@
 ---
 title: The empty-field IDLE branch is a level's whole behaviour on a HUB — and `?level=<hub>` cannot show you the trip out
 date: 2026-08-06
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [idle-branch, hubs, testing]
 ---
 

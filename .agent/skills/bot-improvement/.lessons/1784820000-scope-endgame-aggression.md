@@ -1,7 +1,7 @@
 ---
 title: Scope endgame aggression to hopeless-parity rungs — and give A* the hazards the steering field knows about
 date: 2026-07-23
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [aggression, hazards, pathfinding]
 ---
 

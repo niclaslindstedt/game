@@ -147,7 +147,7 @@ export type FrameType = (typeof FRAME)[keyof typeof FRAME];
  * hero in play has one up (solo: exactly the old freeze).
  *
  * **THIS IS A COPY, AND THE COPY IS DELIBERATE.** What each verb DOES lives in
- * the engine (`src/game/commands.ts`), which this leaf may not import: the
+ * the engine (`engine/game/commands.ts`), which this leaf may not import: the
  * wire's modules are readable from the page, where the 200 KB critical-path
  * budget forbids reaching `@game/core`. So the names are snapshotted here for
  * the allow-list and `tests/engine/run_commands_test.ts` fails the build when
@@ -251,7 +251,7 @@ export const COMMANDS = [
   "tapTravelDoor",
   "travelTo",
   // THE RIFT TOOL's own verb — tear a seam home from where you stand. Any seat
-  // may send it for their OWN body (src/game/rift-tool.ts); the crossing it
+  // may send it for their OWN body (engine/game/rift-tool.ts); the crossing it
   // leads to is `travelSolo` below, which the session performs per seat.
   "tearSeam",
   "travelSolo",

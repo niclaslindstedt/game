@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { engineVersion } from "../src/version.ts";
+import { engineVersion } from "../engine/version.ts";
 
 describe("engine version", () => {
   it("matches package.json (kept in sync by scripts/update-versions.sh)", () => {

@@ -317,7 +317,7 @@ export function isDriveExhibit(exhibit: Exhibit): exhibit is DriveExhibit {
 
 /**
  * The stage every exhibit starts from — the display-case half of the engine's
- * own scenario system (`src/game/scenario.ts`), which is what makes an exhibit
+ * own scenario system (`engine/game/scenario.ts`), which is what makes an exhibit
  * a few lines of data instead of a bespoke harness:
  *
  * - `skipOpening` drops straight into play (no prelude, no monologue);

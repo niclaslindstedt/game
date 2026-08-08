@@ -19,7 +19,7 @@ import { createGame, dismissIntro, HELLGATES, MENACE, step } from "@game/core";
 import type { GameEvent, GameState } from "@game/core";
 import { createRng } from "@game/lib/rng.ts";
 
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import { DT, idle, makeEnemy, run } from "./helpers.ts";
 

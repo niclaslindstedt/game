@@ -10,7 +10,7 @@
 > **The chain runs downward.** `story.md` (this file, the gist) is extrapolated
 > into [`manuscript.md`](./manuscript.md) (the verbatim script — every spoken
 > line, caption, and lore page), which is in turn extrapolated into the game
-> (the data under `src/game/defs/`, the roster, the items). When you change the
+> (the data under `engine/game/defs/`, the roster, the items). When you change the
 > story, change it _here first_, then push the change down the chain with the
 > `update-story` skill (`.agent/skills/update-story/`). When this file and the
 > manuscript disagree, **this file wins**; when the manuscript and the data
@@ -778,11 +778,11 @@ as amounts is beaten, in the end, by a man getting his own entry back.
 
 ## Where the story lives (the chain)
 
-| Tier                     | File                                                                                                 | What it holds                                                                                                                  |
-| ------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1 — the gist (this file) | `docs/story.md`                                                                                      | The whole plot in prose, in narrative order. The ground truth.                                                                 |
-| 2 — the script           | `docs/manuscript.md`                                                                                 | Every spoken line, caption, monologue, and lore page, verbatim. Extrapolated from the gist.                                    |
-| 3 — the game             | `src/game/defs/**` (levels, enemies, story items, thoughts, companions, cutscenes) + `pwa/` overlays | The playable implementation. Extrapolated from the script. See the manuscript's "Where the data lives" table for the file map. |
+| Tier                     | File                                                                                                    | What it holds                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1 — the gist (this file) | `docs/story.md`                                                                                         | The whole plot in prose, in narrative order. The ground truth.                                                                 |
+| 2 — the script           | `docs/manuscript.md`                                                                                    | Every spoken line, caption, monologue, and lore page, verbatim. Extrapolated from the gist.                                    |
+| 3 — the game             | `engine/game/defs/**` (levels, enemies, story items, thoughts, companions, cutscenes) + `pwa/` overlays | The playable implementation. Extrapolated from the script. See the manuscript's "Where the data lives" table for the file map. |
 
 Push changes down the chain — never up — with the `update-story` skill
 (`.agent/skills/update-story/`).

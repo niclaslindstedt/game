@@ -18,7 +18,7 @@ import {
   type WeaponDef,
 } from "@game/core";
 // Engine-internal kill funnel — asserting the crit math right at the door.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy } from "../../engine/game/loot.ts";
 
 import {
   equipRangedSidearm,

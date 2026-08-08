@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BOT'S QUEST PLAY (src/game/bot/errands.ts): it walks to the person with
+// THE BOT'S QUEST PLAY (engine/game/bot/errands.ts): it walks to the person with
 // a mark over their head and TAKES the work, then a running errand's
 // outstanding objective becomes a macro goal — its token fetched, its breed
 // hunted, its spot visited, its ward walked — and its tokens become the
@@ -25,14 +25,14 @@ import {
   questObjectiveTarget,
   questTokenWanted,
   trackErrandAbandon,
-} from "../../src/game/bot/errands.ts";
-import { macroSteer, macroTarget } from "../../src/game/bot/macro.ts";
-import { roughPos } from "../../src/game/bot/content.ts";
+} from "../../engine/game/bot/errands.ts";
+import { macroSteer, macroTarget } from "../../engine/game/bot/macro.ts";
+import { roughPos } from "../../engine/game/bot/content.ts";
 import {
   nearestWantedItem,
   wantedItemNearby,
-} from "../../src/game/bot/supplies.ts";
-import { questSpot } from "../../src/game/quests/placement.ts";
+} from "../../engine/game/bot/supplies.ts";
+import { questSpot } from "../../engine/game/quests/placement.ts";
 import { clearStage, makeEnemy, startGame } from "./helpers.ts";
 
 const GIVER_AT = { x: 500, y: 1320 };

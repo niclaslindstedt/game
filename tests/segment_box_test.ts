@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The segment-vs-box test (src/lib/vec.ts) that every obstacle line-of-sight
+// The segment-vs-box test (engine/lib/vec.ts) that every obstacle line-of-sight
 // query runs on. It was unrolled onto scalars for speed — the loop it replaced
 // built five arrays per call, and the simulator runs it millions of times per
 // campaign — so these pin the unrolled form to a straightforward REFERENCE

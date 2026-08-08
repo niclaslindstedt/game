@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The stat-distribution BUILD catalog (src/game/builds.ts): the single source
+// The stat-distribution BUILD catalog (engine/game/builds.ts): the single source
 // of truth the balance tooling compares builds against. These pin the four
 // builds' shape (melee/ranged/magic focus a weapon lane; balanced spreads
 // across every stat), the weight-ratio derivation, and that the autopilot

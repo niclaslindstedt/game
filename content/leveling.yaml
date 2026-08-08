@@ -2,7 +2,7 @@
 # THE LEVEL CURVE — the XP needed to cross OUT of each hero level (L → L+1),
 # hand-authored per level up to the cap (`LEVELING.maxLevel`, 99). Compiled by
 # `make levels` (`scripts/generate-leveling.mjs`) into
-# `src/generated/leveling.ts`, which the engine's `xpToLevelUp` reads — this
+# `engine/generated/leveling.ts`, which the engine's `xpToLevelUp` reads — this
 # file IS the curve; there is no formula behind it anymore.
 #
 # UNITS — raw XP, but reason in KILLS: a rank-and-file minion of level L pays

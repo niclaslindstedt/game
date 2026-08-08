@@ -22,9 +22,9 @@
       "react-dom/client": ["../node_modules/preact/compat/client.d.ts"],
       "react-dom": ["../node_modules/preact/compat"],
       "react": ["../node_modules/preact/compat"],
-      "@game/core": ["../src/index.ts"],
-      "@game/menu": ["../src/menu.ts"],
-      "@game/lib/*": ["../src/lib/*"],
+      "@game/core": ["../engine/index.ts"],
+      "@game/menu": ["../engine/menu.ts"],
+      "@game/lib/*": ["../engine/lib/*"],
       "@game/wire/*": ["../server/wire/*"],
       "@game/client": ["../server/client.ts"],
       "@ui/lib/*": ["./src/lib/*"]
@@ -35,6 +35,6 @@
     "pwa-plugin.ts",
     "vite.config.ts",
     "pwa-assets.config.ts",
-    "../src"
+    "../engine"
   ]
 }

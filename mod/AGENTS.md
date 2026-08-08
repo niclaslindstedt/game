@@ -362,7 +362,7 @@ so it is stated once and stays consistent:
   loot economy, the XP curve, the title menu, the built atlas);
 - **the decisions to bring back to the user** — publishing, `kind: conversion`,
   changing a published mod's `id`, anything that would need this repo's
-  `content/` or `src/` edited.
+  `content/` or `engine/` edited.
 
 ### Writing a mod's STORY
 

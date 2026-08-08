@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The CAMPAIGN POWERS — the two powerups each map introduces past GOODCO HQ's
-// classics (content/powerups.yaml, ticked by src/game/step/powerups.ts and read
+// classics (content/powerups.yaml, ticked by engine/game/step/powerups.ts and read
 // at the damage/weapon sites). One describe per KIND, each asserting the rule
 // the kind exists for rather than a shipped balance figure: the fixtures
 // (`test_trail`, `test_barrier`, …) carry round synthetic numbers so a

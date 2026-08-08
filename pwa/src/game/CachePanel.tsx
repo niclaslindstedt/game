@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE CACHE — the garage chest's own window (src/game/cache.ts).
+// THE CACHE — the garage chest's own window (engine/game/cache.ts).
 //
 // TWO GRIDS AND ONE GESTURE, which is the whole design. The chest is on top,
 // the bag underneath, and TAPPING A CELL MOVES IT TO THE OTHER GRID: tap

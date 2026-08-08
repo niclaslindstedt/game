@@ -6,10 +6,10 @@
 //   1. harvests the live def-id catalogs from the engine (enemies, weapons,
 //      gear, abilities, thoughts, story items, uniques) for cross-ref checks,
 //   2. loads + schema-validates every YAML level (a bad id fails the build),
-//   3. writes src/generated/levels.ts (GENERATED_LEVELS — the full defs, read
-//      by src/game/defs/levels/index.ts) and src/generated/level-index.ts (the
+//   3. writes engine/generated/levels.ts (GENERATED_LEVELS — the full defs, read
+//      by engine/game/defs/levels/index.ts) and engine/generated/level-index.ts (the
 //      menu-facing summaries, the campaign / secret order arrays and the
-//      stamina ladders, read by src/game/defs/levels/summary.ts).
+//      stamina ladders, read by engine/game/defs/levels/summary.ts).
 // The output is gitignored and regenerated on every build (like the sprite
 // atlas), so the YAML is the single source of truth.
 
@@ -17,7 +17,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-// Engine modules under src/lib use the @game/lib alias at runtime — map it so
+// Engine modules under engine/lib use the @game/lib alias at runtime — map it so
 // the def catalogs import cleanly under plain node.
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -35,19 +35,19 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 // Import the def catalogs DIRECTLY (never @game/core — that pulls the levels
 // registry, which imports the file we are about to write: a bootstrap cycle).
 const { ENEMY_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/enemies/index.ts")).href
+  pathToFileURL(engine("engine/game/defs/enemies/index.ts")).href
 );
 const { WEAPON_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/equipment.ts")).href
+  pathToFileURL(engine("engine/game/defs/equipment.ts")).href
 );
 const { GEAR_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/gear.ts")).href
+  pathToFileURL(engine("engine/game/defs/gear.ts")).href
 );
 const { ABILITY_DEFS } = await import(
-  pathToFileURL(engine("src/game/defs/abilities.ts")).href
+  pathToFileURL(engine("engine/game/defs/abilities.ts")).href
 );
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
-  pathToFileURL(engine("src/game/defs/uniques.ts")).href
+  pathToFileURL(engine("engine/game/defs/uniques.ts")).href
 );
 
 const { storyItems: STORY_ITEMS } = loadStoryItems();
@@ -180,12 +180,12 @@ export const GENERATED_STAMINA_REFILL: Record<string, number> = ${JSON.stringify
 export const GENERATED_STAMINA_EMPTY_LOCK: Record<string, number> = ${JSON.stringify(staminaEmptyLock, null, 2)};
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/levels.ts`, out);
 writeFileSync(`${destDir}/level-index.ts`, indexOut);
 console.log(
-  `wrote src/generated/levels.ts — ${defs.length} levels ` +
+  `wrote engine/generated/levels.ts — ${defs.length} levels ` +
     `(${campaignOrder.length} campaign, ${secretOrder.length} secret); ` +
-    `src/generated/level-index.ts — ${defs.length} summaries`,
+    `engine/generated/level-index.ts — ${defs.length} summaries`,
 );

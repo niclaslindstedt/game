@@ -34,7 +34,7 @@ import {
   type DriveState,
 } from "@game/core";
 
-import { CAR } from "../../src/game/vehicles.ts";
+import { CAR } from "../../engine/game/vehicles.ts";
 
 import { GENERATED_SOUNDS } from "../../pwa/src/generated/sounds.ts";
 import {

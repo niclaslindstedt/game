@@ -6,7 +6,7 @@ description: >
   One segment of the GOODCO FRONT ENTRANCE — a full-height glazed automatic
   door in a chrome frame under a red status light, tiled by the chain across
   the opening in the building's outer wall. It stands shut for the hero: it
-  only moves for a badge (see src/game/arrivals.ts).
+  only moves for a badge (see engine/game/arrivals.ts).
 subject:
   kind: solid door obstacle prop
   build: a full-height glazed lobby door seen head on, chrome frame all round

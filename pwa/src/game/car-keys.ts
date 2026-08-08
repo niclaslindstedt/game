@@ -10,7 +10,7 @@
 // this module exists. A thumb on a pad says a DIRECTION — "go that way" — and
 // the engine reads such a push along the car's own nose, so dragging the way
 // the car is pointing is the accelerator on either leg of the road
-// (`carControl`, src/game/vehicles.ts). A KEY is not a direction: D is the
+// (`carControl`, engine/game/vehicles.ts). A KEY is not a direction: D is the
 // right-hand pedal, and a pedal that became the brake because the car turned
 // round is a pedal nobody can drive with. So the four keys are resolved HERE,
 // in the car's own frame, and then handed to the engine as a target it reads

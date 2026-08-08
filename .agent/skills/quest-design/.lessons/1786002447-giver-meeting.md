@@ -9,7 +9,7 @@ concepts: [quest-giver, intro, conversations]
 quests" is a giver-level facility, not a quest-level one:
 `QuestGiverDef.intro: { conversation, until }` in `content/quest-givers.yaml`.
 The first tap opens that tree instead of the slate (gated in
-`talkToQuestGiver`, `src/game/quests/index.ts`); once `until` is set by one of
+`talkToQuestGiver`, `engine/game/quests/index.ts`); once `until` is set by one of
 the tree's branches the slate opens exactly as before. Flags travel with the
 hero for a campaign giver, so the meeting is had once per DIFFICULTY, not once
 per run.

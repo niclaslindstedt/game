@@ -17,7 +17,7 @@ export default [
       "pwa/src/generated/**",
       "pwa/src/game/assets/**",
       // Generated engine level catalog (source: content/levels/*.yaml).
-      "src/generated/**",
+      "engine/generated/**",
       // The native app (native/) is a self-contained Expo/React Native project
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.
@@ -65,13 +65,13 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      // §19.4 — user-facing output routes through src/output.ts; raw console
+      // §19.4 — user-facing output routes through engine/output.ts; raw console
       // calls are forbidden outside the central output module.
       "no-console": "error",
     },
   },
   {
-    files: ["src/output.ts"],
+    files: ["engine/output.ts"],
     rules: { "no-console": "off" },
   },
   {

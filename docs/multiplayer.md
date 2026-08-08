@@ -40,12 +40,12 @@ stat)`. A pass that reaches for seat 0 to find a bag is a pass that has not
   been parameterized yet.
 - **GEOMETRY reads** — where is the threat, the target, the anchor — are asking
   about the party, and each needs a party-aware answer: nearest, any, all, or
-  centroid. Those live in `src/game/party.ts`, and picking the wrong one is a
+  centroid. Those live in `engine/game/party.ts`, and picking the wrong one is a
   design bug rather than a typo — `anyHeroWithin` wakes a pack (one half the
   party walked past is a pack that never fights) where `nearestHero` is what a
   mob chases.
 
-**A SURVIVING `state.players[0]` IN `src/game/` NOW CARRIES ITS OWN REASON.**
+**A SURVIVING `state.players[0]` IN `engine/game/` NOW CARRIES ITS OWN REASON.**
 The sweep that closed the last of them classified every site into three kinds,
 and only the third is allowed to remain unannotated-free:
 
@@ -70,7 +70,7 @@ site rather than an answer — which is the only state in which that rule can be
 enforced by reading the diff.
 
 **Whom a mob chases is the nearest VISIBLE hero, with HYSTERESIS**
-(`src/game/aggro.ts`), and each word is load-bearing. Nearest, or a party parks
+(`engine/game/aggro.ts`), and each word is load-bearing. Nearest, or a party parks
 one hero across the map and farms with the other seven. Visible, because the
 horde already refuses to chase a hero it cannot see, and a party-aware answer
 that ignored sight would have mobs grinding into walls toward the nearest hero
@@ -100,7 +100,7 @@ gust or the herd, not about the party, so a wall of them cannot flatten a group
 in one pass.
 
 **And the WEATHER is aimed at a HERO, not at the middle of the party** —
-`hazardFocus` (`src/game/hazards.ts`) is the ONE answer for all of it: the meteor
+`hazardFocus` (`engine/game/hazards.ts`) is the ONE answer for all of it: the meteor
 rain, the sand storms, the stampede's lane, the hay. It is the wave ring's rule
 one level down, and the same trap caught every hazard in the game at once,
 because each was written against `partyCentroid` with a TRUE comment beside it
@@ -117,7 +117,7 @@ measurement, replay and test in the repo.
 
 **The run ends when the party falls, not when a hero does** (`partyWiped`). One
 player going down is a setback the rest fight through — and what that setback
-IS lives in `src/game/downed.ts`, Diablo 2's shape whole:
+IS lives in `engine/game/downed.ts`, Diablo 2's shape whole:
 
 - **The FALL.** A hero at 0 hp while the party still stands goes DOWN
   (`downHero`, the step pipeline's sweep): their own DEATH TOLL is billed at
@@ -324,7 +324,7 @@ budget forbids reaching `@game/core`.
 **One process per session, and the host is just another client.** A 60 Hz
 simulation must not compete with the main process's IPC, window, Workshop and
 Steam duties; and the engine holds 36 process-global mutable bindings (the
-`BALANCE` tuning object, the flags in `src/game/flags.ts`, every `activeXDefs`
+`BALANCE` tuning object, the flags in `engine/game/flags.ts`, every `activeXDefs`
 catalog `registerDefs` swaps for a mod) which are not per-`GameState`, so a
 process boundary is what stops two sessions stomping each other. The host's
 renderer sends input and applies snapshots exactly as a joiner will, which is
@@ -350,7 +350,7 @@ why nothing in this feature has an "and also, when you are the host…" clause.
   the one the app built, and the first delta — the one whose emptiness this
   whole tier rests on — would have carried every difference as a "correction" to
   a run that was right to begin with. They are parameters now, applied by ONE
-  function (`createRunFromParams`, `src/game/session-setup.ts`) that the app,
+  function (`createRunFromParams`, `engine/game/session-setup.ts`) that the app,
   the session and an arriving client all call, and **the rule that keeps it true
   is: anything the app does to a run before its first tick is a session
   parameter, not app code.** A `?scenario=` is the one deliberate exception — a
@@ -452,7 +452,7 @@ Two things, and both are narrow on purpose:
   STRUCTURE is a verb whose payload a stranger gets to shape, so what crosses is
   a number, a string or a boolean — an index, a slot name, a stat, a quest id, a
   speed rung — and each verb's arity and argument types are declared beside it in
-  the ENGINE (`RUN_COMMAND_ARGS` in `src/game/commands.ts`) and checked before
+  the ENGINE (`RUN_COMMAND_ARGS` in `engine/game/commands.ts`) and checked before
   anything is dispatched. A string that names one of the engine's own unions is
   checked against that union's runtime list rather than against `typeof
 "string"`: a host must not be crashable by a stranger sending `"luckk"`.
@@ -983,7 +983,7 @@ it rather than duplicating it.
 Five rules ride on the public `Player.bot` flag, each enforced where the thing
 is decided:
 
-- **A bot takes no XP** (`splitXp`, `src/game/xp-share.ts`): no cut, no head in
+- **A bot takes no XP** (`splitXp`, `engine/game/xp-share.ts`): no cut, no head in
   the party bonus, no level in the weighting — and the nobody-in-range fallback
   pays the nearest PERSON, never a bot standing closer. A botless run walks the
   exact branches it always did.
@@ -1014,7 +1014,7 @@ Three rules a run does differently once there is more than one hero in it. All
 three are exact no-ops at one hero, which is what makes them safe and is also
 the trap: a single-player test proves nothing about any of them.
 
-**XP is proximity-gated and level-weighted** (`src/game/xp-share.ts`,
+**XP is proximity-gated and level-weighted** (`engine/game/xp-share.ts`,
 Diablo 2's shape). Only heroes near the kill share it, and the pot splits in
 proportion to level. Both halves are load-bearing and both are counter-intuitive
 in the same direction:
@@ -1058,7 +1058,7 @@ An allocated drop is visible to everybody and deliberately NOT in
 `PRIVATE_PLAYER_FIELDS` — hiding it would make a party walk over piles they
 cannot see on the way to their own.
 
-**THE CACHE splits the same way, in the other direction** (`src/game/cache.ts`).
+**THE CACHE splits the same way, in the other direction** (`engine/game/cache.ts`).
 The CHEST is public — one piece of furniture standing in the hub, which anybody
 may walk up to and which everybody sees arrive — while what a hero keeps in it
 is `Player.cache`, withheld from every other seat exactly as their bag is. One
@@ -1159,7 +1159,7 @@ and join times are a fact about a session, and there is no session
 `@game/core` is consumed by Vite (for the browser) and by
 `scripts/game-alias-loader.mjs` (for tooling); neither produces something that
 ships inside the app. `npm run server:build` (`scripts/build-server.mjs`)
-compiles `server/` and `src/` into `electron/server-dist/`, which
+compiles `server/` and `engine/` into `electron/server-dist/`, which
 `electron-builder` copies to `resources/server/` and `electron/src/resources.ts`
 resolves between on `app.isPackaged` — the same two-layout arrangement the mod
 toolchain already uses.
@@ -1173,7 +1173,7 @@ Two details are load-bearing:
   the copy — which keeps the engine written in the repo's own house style.
 - **Type stripping was spiked and refused.** It works (Node has it on by
   default from 22.18, which is how `scripts/simulate-run.mjs` already imports
-  `src/sim/simulate.ts`), but it does not resolve the aliases, and
+  `engine/sim/simulate.ts`), but it does not resolve the aliases, and
   `utilityProcess` runs Electron's bundled Node — a runtime whose version moves
   with Electron. A ship target resting on an experimental flag in a runtime
   somebody else upgrades breaks in a released build for a reason nobody changed.
@@ -1404,7 +1404,7 @@ for a session that has ended.
 
 ## Trade — one item across a table
 
-`src/game/trade.ts`, and the whole design is one sentence: **the swap is a
+`engine/game/trade.ts`, and the whole design is one sentence: **the swap is a
 single transaction, on the authority, or it does not happen.** `settleTrade`
 does every check before it moves anything, so there is no reachable state in
 which an item has left one bag and not arrived in the other. Four rules keep
@@ -1683,7 +1683,7 @@ mob, not the XP split. **Re-measured after the party behaviours landed**
 13.9/min at party 4 against 7.1 solo), and neither lever moves. The diagnosis
 held: the deficit was the bot's, never the economy's.
 
-**THE PARTY BOT PLAYS LIKE A PARTY MEMBER** (`src/game/bot/party-play.ts`,
+**THE PARTY BOT PLAYS LIKE A PARTY MEMBER** (`engine/game/bot/party-play.ts`,
 `errands.ts`): the leash, a personal spacing envelope, pack-splitting (a foe a
 nearer teammate is handling is deferred when an alternative exists), covering a
 downed or bleeding teammate, a convoy latch that tightens the leash on a long
@@ -1714,7 +1714,7 @@ shape `FRAME.input` carries, so the bot's STEERING has always been an intent and
 needed nothing designed. The gap was five HOUSEKEEPING calls that reached in and
 MUTATED, and on a client a direct write is erased by the next snapshot: the
 bot's draw, its shed or its tidy silently does not happen. So the bot's whole
-output is now an intent (`src/game/bot/intent.ts`), and every one of the five is
+output is now an intent (`engine/game/bot/intent.ts`), and every one of the five is
 a DECISION plus a VERB — the decision is the autopilot's opinion and stays under
 `bot/`, the action is the hero's and lives with the thing it acts on:
 
@@ -1852,7 +1852,7 @@ gets to see the answer: without it, the hero moves at the 20 Hz publish rate
 plus a round trip, which is the one latency a player feels in their hands.
 
 **The local hero is predicted, and only the local hero.** After every input
-frame, the client runs `predictHeroMovement` (`src/game/predict.ts`) — the
+frame, the client runs `predictHeroMovement` (`engine/game/predict.ts`) — the
 engine's OWN `stepPlayer`, so speed, steering, facing, jump/gravity, obstacle
 resolution, the bounds clamp and the stamina ledger are all the real rules —
 with the shared-state side effects neutralized: `state.events` swapped for a

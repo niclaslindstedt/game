@@ -35,7 +35,7 @@ import {
   type Player,
 } from "@game/core";
 
-import { damageCrate } from "../../src/game/crates.ts";
+import { damageCrate } from "../../engine/game/crates.ts";
 import { DT, idle, makeEnemy, startGame, stopWaves } from "./helpers.ts";
 
 /** A run with `n` heroes seated, the field cleared and the waves stopped. */

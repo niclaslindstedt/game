@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # Drawn SIDE ON, on the same 48x26 canvas the hub's car assembly uses (`car_*`
-# — see src/game/vehicles.ts), with wheels stamped from the same 11x11 pattern
+# — see engine/game/vehicles.ts), with wheels stamped from the same 11x11 pattern
 # `car_wheel_0` uses. A car in the GOODCO lot and the car in the garage are the
 # same kind of object at the same scale, and both stand on wheels you can see.
 name: parked_car

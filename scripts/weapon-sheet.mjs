@@ -30,9 +30,9 @@ const {
   weaponAssumedTargets,
   baseCritMult,
   weaponDamageVariance,
-} = await import(path.join(root, "src/game/defs/equipment.ts"));
+} = await import(path.join(root, "engine/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 
 // `--mod <dir>` puts a MOD's arsenal on the sheet too, drawn with its own icon

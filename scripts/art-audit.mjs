@@ -65,20 +65,20 @@ const beforeDir = path.join(auditDir, "before");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const { LEVELS, LEVEL_ORDER } = await import(
-  path.join(root, "src/game/defs/levels/index.ts")
+  path.join(root, "engine/game/defs/levels/index.ts")
 );
 const { ENEMY_DEFS } = await import(
-  path.join(root, "src/game/defs/enemies/index.ts")
+  path.join(root, "engine/game/defs/enemies/index.ts")
 );
 const { WEAPON_DEFS } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
-const { GEAR_DEFS } = await import(path.join(root, "src/game/defs/gear.ts"));
+const { GEAR_DEFS } = await import(path.join(root, "engine/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(
-  path.join(root, "src/game/defs/abilities.ts")
+  path.join(root, "engine/game/defs/abilities.ts")
 );
 const { STORY_ITEM_DEFS } = await import(
-  path.join(root, "src/game/defs/story.ts")
+  path.join(root, "engine/game/defs/story.ts")
 );
 const { applyModsWithSprites, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")

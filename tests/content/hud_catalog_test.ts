@@ -33,7 +33,7 @@ import {
   validateHudEvents,
   validateHudRegions,
 } from "../../scripts/asset-tools/hud-schema.mjs";
-import { DRIVE, DRIVETRAIN, engineRpm } from "../../src/game/drive/index.ts";
+import { DRIVE, DRIVETRAIN, engineRpm } from "../../engine/game/drive/index.ts";
 import { loadHud } from "../../scripts/hud-data/load-yaml.mjs";
 import { moduleExports } from "../../scripts/asset-tools/script-schema.mjs";
 

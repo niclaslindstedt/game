@@ -50,7 +50,7 @@ edge: blunt
 motion: shake
 # IT IS FIRE: everything it drops is burned up where it stood and leaves a
 # smoking charred skeleton rather than a corpse — the screen-nuke's own picture,
-# pointed at a new author (src/game/items/burn.ts). Presentation only; the
+# pointed at a new author (engine/game/items/burn.ts). Presentation only; the
 # damage, the reach, the cadence, the xp and the drop roll are the ordinary
 # ones, which is what lets a gimmick have an identity without having an excuse.
 burn: true

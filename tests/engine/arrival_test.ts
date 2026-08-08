@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Loadout carry-over (src/game/arrival.ts): in the campaign the hero's real
+// Loadout carry-over (engine/game/arrival.ts): in the campaign the hero's real
 // progress persists — victory banks an `extractLoadout` snapshot and
 // `createGame(seed, level, difficulty, loadout)` dresses the next run in it.
 // For dev jumps with nothing banked, `deriveArrivalLoadout` builds a

@@ -68,7 +68,7 @@ function walk(
 
 describe("the in-game menus' vocabulary", () => {
   it("names a screen the engine can actually raise", () => {
-    // `PlayerScreen` (src/game/types/core.ts) is the list, and it is the
+    // `PlayerScreen` (engine/game/types/core.ts) is the list, and it is the
     // ENGINE's — a window naming a screen nothing parks a hero behind is a file
     // nobody will ever see the inside of. Asserted against the shipped catalog
     // rather than against the type, because a type cannot be read at runtime:

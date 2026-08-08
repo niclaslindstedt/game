@@ -35,7 +35,7 @@ it at both ends of the session.
 
 - **Author** a mission as `content/levels/<id>.yaml` (the file stem MUST
   equal the level `id`). It carries every `MissionDef` field (documented at the
-  type, `src/game/defs/levels/types.ts` — `LevelDef` minus the geometry) plus
+  type, `engine/game/defs/levels/types.ts` — `LevelDef` minus the geometry) plus
   three authoring keys:
   - `description:` free-text design intent (documentation + the map renderer).
   - `campaign: true` → joins the ordered campaign (`LEVEL_ORDER`), or
@@ -43,7 +43,7 @@ it at both ends of the session.
 - **Compile:** `make levels` (or `npm run levels`; also runs inside
   `make assets`) parses the tree, VALIDATES it against the live engine catalogs
   (unknown enemy/weapon/gear/thought/story id, bad band, off-map zone, a locked
-  door with no key all FAIL the build), and writes `src/generated/levels.ts`
+  door with no key all FAIL the build), and writes `engine/generated/levels.ts`
   (gitignored, regenerated on build — like the atlas). `index.ts` reads it.
 - **Round-trip guard:** `tests/content/yaml_roundtrip_test.ts` pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`. When you INTENTIONALLY

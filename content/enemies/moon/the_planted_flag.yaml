@@ -1,5 +1,5 @@
 # THE FLAGBEARER's flag, driven back into the regolith as a STRUCTURE — the thing
-# his `flag_plant` ability puts on the field (see src/game/mechanics/flag-plant.ts).
+# his `flag_plant` ability puts on the field (see engine/game/mechanics/flag-plant.ts).
 #
 # It is an enemy only because that is the cheapest true thing it could be: it
 # stands still, it never bites, and it is worth no experience — but it has a

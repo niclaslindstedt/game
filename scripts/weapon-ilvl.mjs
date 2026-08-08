@@ -6,7 +6,7 @@
 // duplicating it.
 //
 // A unique/legendary weapon (or any unique gear piece) carries a FIXED bonus
-// block on a REAL catalog base (`src/game/defs/uniques.ts`). Its `ilvl` is a
+// block on a REAL catalog base (`engine/game/defs/uniques.ts`). Its `ilvl` is a
 // hand-authored number that scales the item's POWER/feel and its drop odds
 // (`UNIQUE.dropChance × mlvl/ilvl`) — NOT its equip gate (that's the base's
 // `levelReq`). Authored by hand, those ilvls drift. This script gives ilvl a
@@ -73,22 +73,22 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, GEAR_DEFS, isWeaponDef } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
+  path.join(root, "engine/game/defs/equipment.ts")
 );
 const { UNIQUE_DEFS, UNIQUE_IDS } = await import(
-  path.join(root, "src/game/defs/uniques.ts")
+  path.join(root, "engine/game/defs/uniques.ts")
 );
 const { applyMods, takeModFlags } = await import(
   path.join(root, "scripts/mod-support.mjs")
 );
 // The LIVE combat/item constants — the numbers combat itself reads. Pricing the
 // bonuses off these (not copies) is what makes this script warn on balance drift.
-// THE PRICING MODEL lives in the ENGINE (src/game/item-budget.ts) — the same
+// THE PRICING MODEL lives in the ENGINE (engine/game/item-budget.ts) — the same
 // table the runtime reads to derive a legendary's drop rarity from its power,
 // so authoring checks and live odds can never drift apart. This script only
 // adds the authoring-side layers (the deviation cap, bag-capacity pricing).
 const { PER_ILVL, bonusIlvlPoints } = await import(
-  path.join(root, "src/game/item-budget.ts")
+  path.join(root, "engine/game/item-budget.ts")
 );
 
 // A BAG's real power is capacity, not an affix: value each cell it grants ABOVE

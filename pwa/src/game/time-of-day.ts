@@ -4,7 +4,7 @@
 //
 // The engine cannot: `step()` is deterministic for (seed, input, dt) and a
 // simulation that read a clock would fork a party across two time zones (see
-// `src/game/daylight.ts`, which owns the curve and the reasoning). So the app
+// `engine/game/daylight.ts`, which owns the curve and the reasoning). So the app
 // reads the hour ONCE, before the run's first tick, and hands the answer over as
 // a session parameter like every other thing it knows and the engine does not.
 //

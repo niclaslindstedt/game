@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // BASE GRADES — this game's Normal → EXCEPTIONAL → ELITE ladder (see
-// src/game/defs/grades.ts): every pool base ships two generated upgraded
+// engine/game/defs/grades.ts): every pool base ships two generated upgraded
 // versions (same look, higher numbers, remapped level requirements running
 // to 100), and the loot roll folds them into each level's pool so drops
 // keep introducing new bases all campaign. A content suite — it pins the

@@ -8,8 +8,8 @@
 //      cross-ref catalog an item points AT that is not the item tree itself),
 //   2. loads + schema-validates every YAML item and both knob files (a bad
 //      field/id fails the build),
-//   3. writes src/generated/items.ts (the weapon/gear catalogs, the grade
-//      identities and the quality/rarity knobs) and src/generated/uniques.ts
+//   3. writes engine/generated/items.ts (the weapon/gear catalogs, the grade
+//      identities and the quality/rarity knobs) and engine/generated/uniques.ts
 //      (the named chase roster, kept apart — see the note by its emit), the
 //      grade-name catalogs, and the cooked ITEM_QUALITY / ITEM_RARITY knob
 //      blocks that defs/equipment.ts, defs/grades.ts, defs/uniques.ts, and
@@ -283,13 +283,13 @@ export const GENERATED_UNIQUES: UniqueDef[] = ${json(
 )} as unknown as UniqueDef[];
 `;
 
-const destDir = engine("src/generated");
+const destDir = engine("engine/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/items.ts`, out);
 writeFileSync(`${destDir}/uniques.ts`, uniquesOut);
 writeFileSync(`${destDir}/item-lore.ts`, loreOut);
 console.log(
-  `wrote src/generated/items.ts — ${weapons.length} weapons, ` +
-    `${gear.length} gear; src/generated/uniques.ts — ` +
-    `${uniques.length} uniques; src/generated/item-lore.ts`,
+  `wrote engine/generated/items.ts — ${weapons.length} weapons, ` +
+    `${gear.length} gear; engine/generated/uniques.ts — ` +
+    `${uniques.length} uniques; engine/generated/item-lore.ts`,
 );

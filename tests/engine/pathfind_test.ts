@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// A* over the autopilot's nav grid (src/game/pathfind.ts). The load-bearing
+// A* over the autopilot's nav grid (engine/game/pathfind.ts). The load-bearing
 // invariant these fuzz tests pin: the O(1) connected-component reachability gate
 // added to `findPath` must be EXACTLY equivalent to running A* — `findPath`
 // returns a route iff a brute-force flood under the same step rules (8-connected,
@@ -19,10 +19,10 @@ import {
   navGridFromWalkable,
   routeReachable,
   type NavGrid,
-} from "../../src/game/pathfind.ts";
-import { PLAYER } from "../../src/game/config/index.ts";
-import { blockedByObstacle } from "../../src/game/obstacles.ts";
-import type { GameState } from "../../src/game/types/index.ts";
+} from "../../engine/game/pathfind.ts";
+import { PLAYER } from "../../engine/game/config/index.ts";
+import { blockedByObstacle } from "../../engine/game/obstacles.ts";
+import type { GameState } from "../../engine/game/types/index.ts";
 import { startGame } from "./helpers.ts";
 
 /** A tiny deterministic LCG so the fuzz corpus is stable across runs. */

@@ -1,7 +1,7 @@
 ---
 title: A carved map is only half-installed until every runtime read goes through it
 date: 2026-07-28
-scope: src/game/
+scope: engine/game/
 concepts: [carve, run-level-def, runtime-reads]
 ---
 

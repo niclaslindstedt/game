@@ -1,7 +1,7 @@
 ---
 title: A melee hero's danger/hold distances must track the blade's REACH, not the ranged graspStandoff — and the deadband must be reach-relative
 date: 2026-07-20
-scope: src/game/bot/
+scope: engine/game/bot/
 concepts: [standoff, melee, reach, deadband]
 ---
 

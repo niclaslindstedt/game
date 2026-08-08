@@ -18,10 +18,10 @@
 // and gear INTO those registries, and this pipeline derives frames for the
 // sprites in this repo's own tree — a mod's are derived separately, after its
 // grids are in (see `deriveWounds` / `deriveWorn` below).
-import { GENERATED_ENEMIES } from "../../src/generated/enemies.ts";
-import { GENERATED_GEAR } from "../../src/generated/items.ts";
-import { FLEET } from "../../src/game/drive/fleet.ts";
-import { TOWN } from "../../src/game/drive/town.ts";
+import { GENERATED_ENEMIES } from "../../engine/generated/enemies.ts";
+import { GENERATED_GEAR } from "../../engine/generated/items.ts";
+import { FLEET } from "../../engine/game/drive/fleet.ts";
+import { TOWN } from "../../engine/game/drive/town.ts";
 import { FACADE_COLOURWAYS, facadeShell } from "../asset-tools/facade.mjs";
 import {
   FACADE_PARTS_PALETTE,
@@ -264,7 +264,7 @@ deriveCastPoses(GENERATED_ENEMIES);
 // ships ONE picture and earns its ladder, and means a retuned base sprite can
 // never be left with three stale wrecks standing behind it.
 //
-// The roster is the ENGINE's own (`src/game/drive/fleet.ts`), read the same way
+// The roster is the ENGINE's own (`engine/game/drive/fleet.ts`), read the same way
 // the enemy roster is read from the compiled catalog — so the art the atlas
 // holds and the vehicles the road can actually spawn are the same list by
 // construction rather than by anybody remembering.
@@ -314,7 +314,7 @@ for (const name of LAMP_SPRITES) {
 // hand-drawing them means a street that can only grow at the speed somebody can
 // pixel a wall.
 //
-// The roster is the ENGINE's own (`src/game/drive/town.ts`), read exactly the
+// The roster is the ENGINE's own (`engine/game/drive/town.ts`), read exactly the
 // way the fleet is — so the art the atlas holds and the buildings the road can
 // actually stand are the same list by construction.
 

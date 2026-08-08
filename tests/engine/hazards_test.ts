@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Environmental hazards (src/game/hazards.ts): gravity wells drag the
+// Environmental hazards (engine/game/hazards.ts): gravity wells drag the
 // grounded player/enemies and devour minions in the core (no kill, no XP, no
 // loot — the hole pays nobody) and the grounded hero too (instant death),
 // while pulling loose loot in from a wider reach onto the rim; asteroids spawn

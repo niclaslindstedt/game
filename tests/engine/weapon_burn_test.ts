@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE BURNER (src/game/items/burn.ts) — a melee weapon made of FIRE, whose kills
+// THE BURNER (engine/game/items/burn.ts) — a melee weapon made of FIRE, whose kills
 // are burned up where they stood instead of leaving a body. It borrows the
 // screen-nuke's own picture rather than growing a second one: the flag travels
 // on the `enemyKilled` event as `incinerated`, the exact bit a bomb's kills

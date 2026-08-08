@@ -20,7 +20,7 @@
 // across four dozen components, which is a large diff that then has to be
 // maintained by everyone who adds a screen — and the thing being threaded is
 // singular anyway: the app plays ONE run at a time (`GameScreen` is one mount),
-// exactly as the engine's own runtime toggles in `src/game/flags.ts` are
+// exactly as the engine's own runtime toggles in `engine/game/flags.ts` are
 // process-global for the same reason. The run driver installs a sink when it
 // starts and clears it when it stops, so a stale sink cannot outlive the run
 // that set it.

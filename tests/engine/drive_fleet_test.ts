@@ -28,7 +28,7 @@ import {
   type DriveParams,
   type DriveState,
   type DriveTraffic,
-} from "../../src/game/drive/index.ts";
+} from "../../engine/game/drive/index.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,

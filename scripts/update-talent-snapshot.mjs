@@ -20,7 +20,9 @@ import { writeSnapshot } from "./snapshot-json.mjs";
 register("./game-alias-loader.mjs", import.meta.url);
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
-const { TALENT_DEFS } = await import(engine("src/game/defs/talents/index.ts"));
+const { TALENT_DEFS } = await import(
+  engine("engine/game/defs/talents/index.ts")
+);
 
 await writeSnapshot(
   engine("tests/content/fixtures/talents-snapshot.json"),

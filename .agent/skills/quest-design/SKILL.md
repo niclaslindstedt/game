@@ -34,12 +34,12 @@ moves a plot beat, `playtest` / `test-scenario` to see it running.
 | The errand | `content/quests/<id>.yaml` — one per file, **stem == id** |
 | The person | `content/quest-givers.yaml` — a `questGivers:` map of id → person |
 | A conversation tree | `content/conversations/<id>.yaml` — stem == id |
-| Field reference | `src/game/defs/quests.ts` (`QuestDef`, `QuestGiverDef`, `QuestObjective`, `QuestReward`, `QuestMerchantDeal`) and `src/game/defs/conversations.ts` — every field documented at the type |
-| Pipeline | loader `scripts/quest-data/load-yaml.mjs`, schema `scripts/asset-tools/quest-schema.mjs`, generator `scripts/generate-quests.mjs` → gitignored `src/generated/quests.ts`. Regenerate with `make levels` (or `make assets`) |
-| Engine | `src/game/quests/` — `index.ts` (orchestrator: givers, marks, the pick list, tallies), `escort.ts`, `rewards.ts`, `campaign.ts` + `campaign-save.ts` (the hero-carried log), `merchant.ts` (the stall hook), `placement.ts` (authored spots on a carved map) |
-| Neutral mobs | `src/game/disposition.ts` (`inert`, `provokeEnemy`), `EnemyDef.disposition` / `conversation` / `ai.idle` |
-| Conversations | `src/game/conversation.ts` (the runtime), `src/game/defs/conversations.ts` (the contract) |
-| Tuning | `src/game/config/quests.ts` (`QUESTS.*` — talk/tap radii, escort numbers, drop pity; there is deliberately no ward radius) |
+| Field reference | `engine/game/defs/quests.ts` (`QuestDef`, `QuestGiverDef`, `QuestObjective`, `QuestReward`, `QuestMerchantDeal`) and `engine/game/defs/conversations.ts` — every field documented at the type |
+| Pipeline | loader `scripts/quest-data/load-yaml.mjs`, schema `scripts/asset-tools/quest-schema.mjs`, generator `scripts/generate-quests.mjs` → gitignored `engine/generated/quests.ts`. Regenerate with `make levels` (or `make assets`) |
+| Engine | `engine/game/quests/` — `index.ts` (orchestrator: givers, marks, the pick list, tallies), `escort.ts`, `rewards.ts`, `campaign.ts` + `campaign-save.ts` (the hero-carried log), `merchant.ts` (the stall hook), `placement.ts` (authored spots on a carved map) |
+| Neutral mobs | `engine/game/disposition.ts` (`inert`, `provokeEnemy`), `EnemyDef.disposition` / `conversation` / `ai.idle` |
+| Conversations | `engine/game/conversation.ts` (the runtime), `engine/game/defs/conversations.ts` (the contract) |
+| Tuning | `engine/game/config/quests.ts` (`QUESTS.*` — talk/tap radii, escort numbers, drop pity; there is deliberately no ward radius) |
 | App surfaces | `overlays/QuestOverlay.tsx` (offer + pick list), `QuestLogOverlay.tsx`, `TalkOverlay.tsx` (conversations), `game-screen/QuestTracker.tsx`, `QuestFlash.tsx`, `render/quests.ts` (givers, head marks, escorts), `quest-text.ts` |
 | Sounds | `content/sounds/quest_*.yaml` + `escort_*.yaml` — event-triggered, so a new quest needs none |
 | Library pages | `pwa/scripts/library/model-quests.mjs` (`QUEST_FIELDS`, `QUEST_GIVER_FIELDS`), `prose-quests.mjs`, `render-quests.mjs` |
@@ -189,7 +189,7 @@ reason:
   a measured MEDIUM run of GOODCO HQ kills 176 monsters in three minutes, so a
   ten-kill errand was finished before its offer box had been read twice. What
   makes 40 safe on the scarce breeds is that an errand TOPS THE HORDE UP as it
-  is taken (`src/game/quests/restock.ts`) when the field can no longer pay for
+  is taken (`engine/game/quests/restock.ts`) when the field can no longer pay for
   it — a carved map's monsters are finite, so an errand accepted on ground the
   hero already swept would otherwise sit at 0/40 forever. That suite also
   checks the breed is one the named map actually spawns, which the schema

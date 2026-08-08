@@ -3,8 +3,8 @@
 //
 // A paid ride flies unattended with a bag it cannot empty, so its bag
 // discipline sheds the least precious piece to make room for the next find
-// (src/game/bot/economy.ts `cullWorstLoot`). Everything magic-or-better it
-// sheds is banked in the hero's vault (src/game/items/vault.ts) instead of
+// (engine/game/bot/economy.ts `cullWorstLoot`). Everything magic-or-better it
+// sheds is banked in the hero's vault (engine/game/items/vault.ts) instead of
 // destroyed, and this screen sells it back for coins on the per-tier ladder
 // (config `VAULT.reclaimCost`) — 10 million for a magic find up to 2 billion
 // for an artifact.

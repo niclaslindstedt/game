@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Employee stampedes (src/game/hazards.ts, stepStampedes): a wall of runners
+// Employee stampedes (engine/game/hazards.ts, stepStampedes): a wall of runners
 // that charges right-to-left across the field at great speed, BOWLS minions in
 // its band OVER (flung aside AND knocked out for a few seconds — no damage, no
 // kill, no XP, no loot, so it can't be farmed and doesn't thin the horde),
