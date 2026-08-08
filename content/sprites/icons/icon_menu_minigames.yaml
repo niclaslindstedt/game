@@ -1,0 +1,33 @@
+name: icon_menu_minigames
+family: icons
+size: [12, 12]
+description: >
+  An arcade joystick — a red ball on a short shaft standing on a steel base:
+  the MINIGAMES menu row's marker, the shelf of cabinets the campaign unlocked.
+subject:
+  kind: UI icon
+  features: a round ball-top joystick, its shaft rising from a wide rectangular
+    base plate, outlined all round
+  accent: a red ball lit pale at the top left over a brushed steel base
+  flavor: the cabinet in the corner, and the score you left on it
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  W: "#ffd3c2" # pale highlight on the ball
+  Q: "#ff5a4a" # ball body
+  q: "#a8352b" # ball shade
+  v: "#60687e" # steel shade
+grid: |
+  ....OOO.....
+  ...OWQQO....
+  ...OQQQO....
+  ...OQqqO....
+  ....OqO.....
+  ....OvO.....
+  ....OvO.....
+  ....OvO.....
+  .OOOOOOOOO..
+  .OTTTTTTTO..
+  .OVVVVVVvO..
+  .OOOOOOOOO..

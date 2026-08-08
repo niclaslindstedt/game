@@ -85,6 +85,10 @@ export function buildPlaygroundMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setScreen("difficulty");
         ctx.setCursor(0);
       }),
+      // The arcade shelf with its lock off. A door among the switches, which is
+      // where the two above it already sit: the page is "a run", and a lap of a
+      // minigame is the shortest run this menu can start.
+      minigames: navRow(ctx, "playground", "minigames"),
       "auto-level-stats": onOffRow(
         ctx,
         "playground",

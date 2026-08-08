@@ -46,6 +46,9 @@ const config = JSON.parse(
   readFileSync(new URL("../../game.config.json", import.meta.url), "utf8"),
 );
 const SETTINGS_KEY = `${config.storagePrefix}:settings`;
+/** The roster's key — the sweep patches heroes in it (a banked vault loadout, a
+ * beaten campaign) to reach rows that are otherwise earned. */
+const ROSTER_KEY = `${config.storagePrefix}:characters`;
 
 // Mobile-first: the landscape phone is the reference viewport (AGENTS.md);
 // the others are the layouts every surface must also survive. The `se` pair
@@ -161,6 +164,44 @@ for (const vp of VIEWPORTS) {
     await click("main-extras");
     await shot("extras");
     await page.keyboard.press("Escape");
+  });
+
+  // MINIGAMES — the arcade shelf. It is what BEATING the game buys, and no
+  // sweep is going to beat it, so the hero the roster step just created is
+  // handed a finished campaign and the title reloaded onto a build that has the
+  // row. PUT BACK afterwards: a beaten hero opens the mission picker instead of
+  // walking out of the garage, which is not the campaign flow the later steps
+  // photograph.
+  //
+  // The cabinet itself is a minute of driving, so this photographs the SHELF and
+  // stops there; the road's own surfaces have their own harness (`?drive`).
+  const beatCampaign = (won) =>
+    page.evaluate(
+      ([key, beaten]) => {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) return false;
+        const roster = JSON.parse(raw);
+        const hero = roster[roster.length - 1];
+        if (!hero) return false;
+        hero.beaten = beaten ? ["medium"] : [];
+        window.localStorage.setItem(key, JSON.stringify(roster));
+        return true;
+      },
+      [ROSTER_KEY, won],
+    );
+  await tryStep("minigames", async () => {
+    if (!(await beatCampaign(true))) {
+      throw new Error("no roster hero to beat a campaign with");
+    }
+    try {
+      await page.goto(`${url}/?debug`);
+      await click("main-minigames");
+      await page.getByRole("button", { name: "minigames-drive" }).waitFor();
+      await shot("minigames");
+    } finally {
+      await beatCampaign(false);
+      await page.goto(`${url}/?debug`);
+    }
   });
 
   await tryStep("scores", async () => {
@@ -774,7 +815,7 @@ for (const vp of VIEWPORTS) {
       };
       window.localStorage.setItem(key, JSON.stringify(roster));
       return true;
-    }, `${config.storagePrefix}:characters`);
+    }, ROSTER_KEY);
     if (!planted) throw new Error("no roster hero to bank a vault loadout on");
     await game.goto(`${url}/?debug`);
     // LOST & FOUND is a row on the EXTRAS shelf, not on the title root — so it

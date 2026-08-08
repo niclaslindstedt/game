@@ -29,11 +29,18 @@ export function DrivePause({
   onResume,
   onSkip,
   onMenu,
+  cost = "THE TRIP ENDS HERE - HE KEEPS WHAT HE CARRIES",
 }: {
   font: PixelFont;
   onResume: () => void;
-  /** Give up on the road and arrive anyway. */
-  onSkip: () => void;
+  /**
+   * Give up on the road and arrive anyway.
+   *
+   * Absent where there is nothing on the far side to arrive AT — an arcade lap
+   * off the shelf, where "hand the crossing on" and "leave" are the same press.
+   * The row is then not drawn rather than drawn as a second way out.
+   */
+  onSkip?: () => void;
   /**
    * Leave the road AND the run: bank the hero as he sits and drop to the title.
    *
@@ -42,6 +49,9 @@ export function DrivePause({
    * than drawn dead.
    */
   onMenu?: () => void;
+  /** What leaving actually costs, in one line — the confirm's own subtitle.
+   * Defaults to a campaign leg's, which is the trip and nothing else. */
+  cost?: string;
 }): ReactElement {
   // THE CONFIRM IS A FACE OF THIS CARD, not a second overlay stacked over it:
   // the question is one line long and its two answers are the same two buttons
@@ -69,16 +79,13 @@ export function DrivePause({
               scale={5}
               color="#e0b955"
             />
-            {/* What it actually costs, in one line: the trip, and only the
-                trip. He is banked as he sits (GameScreen's own note), so
-                nothing in the bag or the purse is at stake — and saying so is
-                what makes this a decision rather than a warning. */}
-            <PixelText
-              font={font}
-              text="THE TRIP ENDS HERE - HE KEEPS WHAT HE CARRIES"
-              scale={2}
-              color="#9aa3ad"
-            />
+            {/* What it actually costs, in one line: for a campaign leg, the
+                trip and only the trip — he is banked as he sits (GameScreen's
+                own note), so nothing in the bag or the purse is at stake. An
+                arcade lap says its own, because nothing about a hero is true
+                there. Either way, saying so is what makes this a decision
+                rather than a warning. */}
+            <PixelText font={font} text={cost} scale={2} color="#9aa3ad" />
             <div className="pause-actions">
               <button
                 type="button"
@@ -131,19 +138,21 @@ export function DrivePause({
                   color="#0b0d10"
                 />
               </button>
-              <button
-                type="button"
-                className="pixel-button secondary"
-                aria-label="skip-minigame"
-                onClick={onSkip}
-              >
-                <PixelText
-                  font={font}
-                  text="» SKIP THE DRIVE"
-                  scale={3}
-                  color="#9aa3ad"
-                />
-              </button>
+              {onSkip && (
+                <button
+                  type="button"
+                  className="pixel-button secondary"
+                  aria-label="skip-minigame"
+                  onClick={onSkip}
+                >
+                  <PixelText
+                    font={font}
+                    text="» SKIP THE DRIVE"
+                    scale={3}
+                    color="#9aa3ad"
+                  />
+                </button>
+              )}
               {onMenu && (
                 <button
                   type="button"
