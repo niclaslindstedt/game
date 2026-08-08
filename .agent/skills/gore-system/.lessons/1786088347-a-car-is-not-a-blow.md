@@ -22,10 +22,12 @@ Three things that were wrong first and are worth not repeating:
   overtakes it while it is airborne; the eye supplies the rest. Nudge that
   fraction over 1 and the half lands in front of the car and is run over again —
   a fine picture and the wrong one, with no test failing.
-- **Anything caught under the car has to ride PAST the rear bumper to exist.**
-  The body is 48 px, so a drag point anywhere inside ±24 is drawn underneath the
-  wagon: the feature was a sound and a trail with no visible cause until the
-  attach point moved out to −26.
+- **The drag point is pinned between two walls and there is very little room
+  between them.** The body is 48 px, so a piece attached anywhere inside about
+  ±20 is drawn entirely underneath the wagon and the drag is a sound and a trail
+  with no visible cause (it shipped at −15). Past ±24 it is outside the footprint
+  `crushRemains` tests, so the wheels never find it when the drag lets go (−26
+  did exactly that). `dragAlongPx` is −22: visible, and still under the axle.
 - **Measure blood density on the WORST case, never on one body.** A single hit
   tuned to look right left the twenty-body blockade as one flat red slab with no
   marks in it — a colour rather than a mess. The density has to come from marks

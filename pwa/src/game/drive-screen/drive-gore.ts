@@ -655,10 +655,16 @@ function drawRemainAt(
   }
 
   // A HALF, OR A WHOLE BODY — the victim's own art, cut where the steel caught
-  // them. Once the wheels have been over it there is no shape left to draw at
-  // all: it is a mark on the road, and the paste was laid down for it the
-  // instant it was crushed (see `crushRemain`).
-  if (piece.crushed) return;
+  // them.
+  //
+  // A CRUSHED HALF IS STILL A HALF, and the one case that draws nothing at all
+  // is a WHOLE body the wheels have been over: `gib_road_paste_1` IS a whole
+  // person pressed into the road, so drawing the body on top of its own mark is
+  // the same person twice. That only happens with the SPLIT switched off now —
+  // with it on the wheels take a whole body in two rather than erasing it
+  // (`severUnderWheel`), because a road that answered every collision under the
+  // split line by deleting the body left nothing behind but pools of blood.
+  if (piece.crushed && piece.part === "whole") return;
   const name = bodySprite(piece.kind, piece.variant);
   const body = spriteByName(sprites, name);
   if (!body) return;

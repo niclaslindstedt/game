@@ -19,9 +19,12 @@
 //                           with somebody underneath it.
 //   IT LAYS IT BACK DOWN  — the piece works free, skids out from under the back
 //                           of the car, turns over, and comes to rest.
-//   AND THEN DRIVES OVER  — because the road is long and pieces land on it. The
+//   AND THEN DRIVES OVER  — because the road is long and bodies land on it. The
 //   WHAT IT LAID DOWN       wheels find them, and that is its own moment with
-//                           its own noise.
+//                           its own noise — and its own way of taking a body in
+//                           two, which needs no speed whatsoever: a bumper going
+//                           through somebody is a question about the BLOW, and a
+//                           wheel rolling over somebody already down is not.
 //
 // Not one of those four is a moment a renderer could invent, because every one
 // of them is a fact about WHERE A THING IS — and the blood the app paints has to
@@ -41,6 +44,7 @@ import { CAR } from "../vehicles.ts";
 import { DRIVE } from "./config.ts";
 import type { Impact } from "./impact.ts";
 import type {
+  PedestrianKind,
   DrivePedestrian,
   DriveRemain,
   DriveState,
@@ -99,10 +103,15 @@ function hash(seed: number, salt: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+/** Whatever a piece is being cut out of: the person who was hit, or a piece of
+ * them the wheels have since found. Both answer the only three questions a mint
+ * asks — whose art, which of it, and where. */
+type Source = { kind: PedestrianKind; variant: number; pos: Vec2 };
+
 /** One piece, minted with everything but its physics. */
 function mint(
   drive: DriveState,
-  ped: DrivePedestrian,
+  ped: Source,
   part: RemainPart,
   cut: number,
   seed: number,
@@ -229,9 +238,9 @@ export function burstBody(
       pieces.push(catchOnCar(drive, lower, force));
     }
   } else {
-    // NOT FAST ENOUGH TO GO THROUGH: knocked flat, and caught whole. This is the
-    // ordinary hit and it is most of the road — the wagon does not butcher
-    // everybody, it mostly just runs them down.
+    // NOT FAST ENOUGH TO GO THROUGH: knocked flat, whole. This is the ordinary
+    // hit and it is most of the road — the wagon does not butcher everybody, it
+    // mostly just runs them down.
     const whole = mint(drive, ped, "whole", cut, seed ^ 0x7f);
     whole.vel = { x: carVx * 0.5 * boost, y: hit.launch.y * 0.4 * boost };
     whole.spin = (hash(seed, 17) < 0.5 ? -1 : 1) * 1.4;
@@ -239,8 +248,22 @@ export function burstBody(
       whole.z = ped.z;
       whole.vz = ped.vz;
       pieces.push(whole);
-    } else {
+    } else if (force >= 1) {
+      // …AND ONLY A BLOW THAT WAS GOING THROUGH THEM ANYWAY CATCHES ONE. The
+      // drag is the second beat of the sequence in this file's header — the
+      // bumper went in, so the wagon carries what it caught — and it is
+      // meaningless under the line where the bumper goes in at all. This branch
+      // is only reached above it with the SPLIT switched off.
       pieces.push(catchOnCar(drive, whole, force));
+    } else {
+      // KNOCKED DOWN, AND LEFT IN THE ROAD. The rung `DRIVE.gore.chunkForce`'s
+      // own ladder promises — a body on the tarmac and blood under it — and the
+      // one the road did not deliver: `dragAlongPx` parks a caught piece two px
+      // INSIDE the footprint the wheels test, deliberately, so anything caught
+      // is run over the instant it works free. Catching a body the car had
+      // barely touched therefore pasted it within a quarter of a second, and
+      // driving slowly through a crowd left nothing on the road but pools.
+      pieces.push(whole);
     }
   }
 
@@ -413,13 +436,15 @@ export function crushRemains(drive: DriveState): void {
     return Math.abs(pos.y - car.pos.y) <= CAR.footprint.radius + reach;
   };
 
+  // The halves a wheel cut, appended AFTER the walk — pushing onto the list
+  // being iterated is how a piece minted by a crush gets crushed by the same
+  // wheel on the same tick.
+  const cut: DriveRemain[] = [];
   for (const piece of drive.remains) {
     if (piece.crushed || piece.dragMs > 0 || piece.z > 2) continue;
     if (!underCar(piece.pos, gore.crushReachPx)) continue;
     piece.crushed = true;
-    // Kicked along the road and pressed flat — a crushed piece has stopped
-    // being a shape and started being a mark, which is the app's cue to draw it
-    // as one.
+    // Kicked along the road and pressed flat.
     piece.vel.x = dir * speed * gore.crushShove;
     piece.vel.y *= 0.4;
     piece.vz = 0;
@@ -430,7 +455,26 @@ export function crushRemains(drive: DriveState): void {
       pos: { x: piece.pos.x, y: piece.pos.y },
       joules,
     });
+    // …AND A WHOLE BODY COMES APART UNDER THE WHEEL THAT FOUND IT. Not the
+    // bumper's split — that one is a question about the BLOW, and a bumper at
+    // walking pace goes through nobody. This is the other way a person is taken
+    // in two out here, and it needs no speed at all: a tonne and a half of
+    // estate rolling over somebody lying in the road leaves two pieces of them,
+    // whatever it was doing when it met them.
+    //
+    // It is what the road used to do INSTEAD of drawing anything: a crushed
+    // whole body was erased in favour of its own paste, so every collision under
+    // the split line ended as a pool of blood with nobody in it.
+    if (piece.part === "whole" && drive.params.split) {
+      cut.push(severUnderWheel(drive, piece, speed));
+      drive.events.push({
+        type: "bodySplit",
+        pos: { x: piece.pos.x, y: piece.pos.y },
+        joules,
+      });
+    }
   }
+  if (cut.length > 0) drive.remains.push(...cut);
 
   // THE GORE-OFF ROAD GETS THIS TOO, and that is not an oversight. A body
   // knocked down with the gore switched off is still a body lying in the road,
@@ -466,6 +510,43 @@ export function crushRemains(drive: DriveState): void {
       joules,
     });
   }
+}
+
+/**
+ * TAKE A BODY IN TWO AT THE WHEEL THAT WENT OVER IT, and hand back the half
+ * that was not already there.
+ *
+ * The struck piece BECOMES the lower half rather than being replaced by two new
+ * ones, so it keeps its id — and with it everything the app has been carrying
+ * against that id (how much blood it still has to give the road, where it was
+ * last tick). A piece deleted and re-minted at the same spot starts a fresh
+ * trail and reads as one thing having been swapped for another.
+ *
+ * BOTH HALVES LEAVE FLAGGED `crushed`, which is what makes this terminal: the
+ * wheels have been over them, so they are not cut again and no lumps are ever
+ * torn off them. A body under a wheel comes apart once.
+ */
+function severUnderWheel(
+  drive: DriveState,
+  piece: DriveRemain,
+  speed: number,
+): DriveRemain {
+  const { gore } = DRIVE;
+  const dir = drive.params.direction;
+  piece.part = "lower";
+  const upper = mint(drive, piece, "upper", piece.cut, piece.seed ^ 0x51);
+  upper.crushed = true;
+  upper.angle = piece.angle;
+  upper.spin = piece.spin;
+  // THE HALVES PART, or the cut is a fact the picture never states: two bodies
+  // drawn at one spot are one body. The top half is the one the tyre climbs
+  // over, so it goes up the road and the legs are left where they were.
+  const across = (hash(piece.seed, 29) - 0.5) * 2 * gore.wheelCutPartPx;
+  upper.pos.x = piece.pos.x + dir * gore.wheelCutPartPx;
+  upper.pos.y = piece.pos.y + across;
+  upper.vel = { x: dir * speed * gore.crushShove * 1.4, y: across };
+  piece.vel.y -= across * 0.5;
+  return upper;
 }
 
 /** Forget what is well behind the car — the same mercy the crowd gets, and the

@@ -945,7 +945,13 @@ escort.ts` walks the people an escort errand puts on the field, and
   half thrown over the roof with less along-road speed than the car, so the
   wagon passes underneath it; a lower half caught and dragged; the lumps torn
   off on the way past; and the STEEL ones — a piece of machine, or half of one
-  — which travel on the same physics and differ only in what they are made of), and `blockade.ts` supplies most of their customers — THE
+  — which travel on the same physics and differ only in what they are made of).
+  Two quite separate things take a body in two out there and only the first is a
+  question about the BLOW: the BUMPER goes through somebody past
+  `DRIVE.gore.splitJoules` (about sixty), and the WHEELS cut whatever they find
+  lying in the road at any speed they are turning at (`severUnderWheel`) — which
+  is what a slower collision leaves behind, and the reason a knocked-down body is
+  not caught under the car at all. `blockade.ts` supplies most of their customers — THE
   GLUED, twenty demonstrators sitting across every lane at one point in the
   course, the one thing on this road that does not move and cannot be driven
   around. The crowd itself carries the leg's other words: forty THOUGHTS

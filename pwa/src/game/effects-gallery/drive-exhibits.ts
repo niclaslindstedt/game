@@ -383,6 +383,42 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-body-slow",
+      icon: "gib_road_paste_1",
+      label: "RUN DOWN",
+      blurb:
+        "TWENTY MILES AN HOUR - KNOCKED FLAT, AND CUT IN TWO BY THE WHEELS",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "body",
+        "pedestrian",
+        "slow",
+        "crush",
+        "gore",
+        "blood",
+      ],
+      // THE OTHER END OF THE ROAD'S GORE, and the end that had nothing to look
+      // at: under the split line the bumper goes through nobody, so what happens
+      // to the body is entirely the WHEELS' doing — and the wheels used to erase
+      // it in favour of its own paste, which is how a slow drive through a crowd
+      // came to leave pools of blood with nobody in them. Long enough to show
+      // all three beats: the thud, the body landing in the road, and the wheel
+      // that arrives a moment later and takes it in two where it lies.
+      showMs: 2600,
+      shows: "bodySplit",
+      bank: SPLIT_SOUNDS,
+      input: throttle(0.12),
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive, 0.12);
+        plantBody(drive, leadPx(speed) + 14, 0, 5);
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-drag",
       icon: "gib_road_smear_2",
       label: "CARRIED",
