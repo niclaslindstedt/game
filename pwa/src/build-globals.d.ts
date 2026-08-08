@@ -13,6 +13,13 @@ declare const __APP_VERSION__: string;
  * the hash is not embedded there at all (see `__DEV_TOOLS__`). */
 declare const __BUILD_COMMIT__: string;
 
+/** Where the title footer's version LINKS — the built commit on the forge —
+ * on the two slots whose readers are the people who pushed it: `/preview/`
+ * and `/branch/`. EMPTY on the released site, in a store build, and in local
+ * dev, and an empty string is the whole gate: the footer renders as the plain
+ * text it always was (pwa/pwa-plugin.ts's `commitUrlForBase`). */
+declare const __BUILD_COMMIT_URL__: string;
+
 /** Does this build carry the DEVELOPER tooling — the hidden sixteen-tap sun
  * reveal, the DEVELOPER menu tree behind it, and the commit hash above? True in
  * every build a human might develop or test with (the website, the installed

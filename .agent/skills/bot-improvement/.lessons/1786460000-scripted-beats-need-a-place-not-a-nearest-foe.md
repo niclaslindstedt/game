@@ -2,7 +2,7 @@
 title: A scripted beat's bot branch must aim at the beat's PLACE, not at the nearest foe — and "standing still on purpose" must be exempted from the anti-wedge sweep
 date: 2026-08-08
 scope: src/game/bot/
-concepts: [openingStrike, disarmed, preempt, unstuck, arrivals, entrance]
+concepts: [opening-strike, disarmed, preempt, unstuck, arrivals, entrance]
 ---
 
 The `disarmed` preempt in `bot/index.ts` (the "ARM UP" branch) read the NEAREST

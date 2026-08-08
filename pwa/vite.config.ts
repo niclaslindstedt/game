@@ -8,7 +8,7 @@ import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
-import { gamePwa, prelaunchCss } from "./pwa-plugin.ts";
+import { commitUrlForBase, gamePwa, prelaunchCss } from "./pwa-plugin.ts";
 
 // The GitHub Pages base path is injected by the `pages.yml` workflow via
 // VITE_BASE so the same source builds for `/` (release), `/preview/` (main),
@@ -17,10 +17,35 @@ import { gamePwa, prelaunchCss } from "./pwa-plugin.ts";
 // quality gates.
 const base = process.env.VITE_BASE ?? "/";
 
+// THE COMMIT THIS BUILD IS OF — full sha, or empty when there is no telling.
+//
+// The WORKING TREE is asked first and `GITHUB_SHA` is only the fallback, which
+// is the opposite of the obvious order and is the load-bearing part: every
+// deploy slot builds from ITS OWN ref (pages.yml checks the release tag, the
+// pushed sha, or the dispatched branch straight into the runner), while
+// `GITHUB_SHA` is fixed to the commit that TRIGGERED the workflow. So a
+// `/branch/` build read from the environment reports the `main` commit that
+// happened to kick the run off, and the root slot reports main rather than the
+// tag it serves. `git rev-parse` in the checkout answers what was actually
+// compiled, in CI and locally alike; the environment is what is left when
+// there is no git dir (a source tarball).
+const commitSha = (() => {
+  try {
+    return execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    return process.env.GITHUB_SHA ?? "";
+  }
+})();
+
 // Unique reference for the incoming build. Prefer the deploying commit (the
 // workflow exposes GITHUB_SHA); fall back to a build timestamp locally.
 // Embedding it in the generated sw.js also guarantees the worker's bytes
 // change every deploy, so browsers reliably discover updates.
+//
+// Deliberately still the ENVIRONMENT's sha rather than `commitSha` above: this
+// one's job is to be DIFFERENT every deploy, and a local rebuild of a dirty
+// tree sits on the same commit as the last one — a timestamp is the honest
+// answer there, where the footer's hash wants the commit.
 const buildRef = process.env.GITHUB_SHA
   ? process.env.GITHUB_SHA.slice(0, 7)
   : new Date().toISOString();
@@ -36,21 +61,21 @@ const buildRef = process.env.GITHUB_SHA
 // EAS profile passes that (native/scripts/bundle-web.mjs).
 const devTools = process.env.VITE_DEV_TOOLS !== "off";
 
-// The deploying commit, shown next to the version in the title footer. A
-// production store build prints the bare version instead, so the hash is not
-// embedded in the bundle at all.
-const commit = !devTools
-  ? ""
-  : (process.env.GITHUB_SHA?.slice(0, 7) ??
-    (() => {
-      try {
-        return execSync("git rev-parse --short HEAD", {
-          encoding: "utf8",
-        }).trim();
-      } catch {
-        return "unknown";
-      }
-    })());
+// The built commit, shown next to the version in the title footer — short, the
+// way a person reads one. A production store build prints the bare version
+// instead, so the hash is not embedded in the bundle at all.
+const commit = !devTools ? "" : commitSha.slice(0, 7) || "unknown";
+
+// Where that hash TAKES you, on the two slots where a hash is something to
+// follow rather than something to read out: `/preview/` and `/branch/` are
+// looked at by whoever pushed the commit, so the footer there is a link into
+// the source at the exact revision the build was cut from. EMPTY everywhere
+// else — the released site, a store build, local dev — and an empty string is
+// what makes the footer render as plain text (see `commitUrlForBase`).
+//
+// The FULL sha, not the seven characters printed: both resolve on the forge,
+// but only one of them is still unambiguous after the repo has grown.
+const commitUrl = !devTools ? "" : commitUrlForBase(base, commitSha);
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -79,6 +104,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_COMMIT__: JSON.stringify(commit),
+    __BUILD_COMMIT_URL__: JSON.stringify(commitUrl),
     __DEV_TOOLS__: JSON.stringify(devTools),
     // The support address printed by the contact page and the privacy policy.
     // Supplied by the `SUPPORT_EMAIL` repo variable through the Pages workflow
