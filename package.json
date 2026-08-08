@@ -9,6 +9,9 @@
   "workspaces": [
     "pwa"
   ],
+  "overrides": {
+    "sharp": "^0.35.3"
+  },
   "scripts": {
     "build": "npm run assets:site --workspace pwa && npm run typecheck:only && npm run build:site --workspace pwa",
     "test": "npm run assets:check --workspace pwa && vitest run",
