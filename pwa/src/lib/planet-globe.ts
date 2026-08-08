@@ -430,6 +430,13 @@ export class PlanetGlobe {
    * padded box, rings included), lit from `light`, with the surface rotated by
    * `spin` turns and the cloud deck — if it has one — by `cloudSpin` turns.
    * `dpr` bounds the buffer resolution to the device pixel ratio.
+   *
+   * `exposure` scales every lit term — the surface, the limb haze and the
+   * rings — and is how a caller says "this world is far away, so it is DIM".
+   * It deliberately does not touch alpha: a planet is an opaque body, and
+   * dimming one by fading it lets the starfield show straight through a solid
+   * world. Darkening is the honest version of the same cue and the one that
+   * still reads as a planet.
    */
   render(
     cssSize: number,
@@ -437,6 +444,7 @@ export class PlanetGlobe {
     spin: number,
     dpr: number,
     cloudSpin = spin,
+    exposure = 1,
   ): void {
     // Quantise the buffer resolution to a coarse step: bodies rescale every
     // frame as they ride their orbits, and reallocating the geometry caches on
@@ -494,7 +502,8 @@ export class PlanetGlobe {
       // should be.
       const lam = (nxs[i] as number) * lx + (nys[i] as number) * ly + nz * lz;
       const day = smoothstep(-soft, soft, lam);
-      const shade = (ambient + (1 - ambient) * day) * (0.6 + 0.4 * nz);
+      const shade =
+        (ambient + (1 - ambient) * day) * (0.6 + 0.4 * nz) * exposure;
 
       // Rotate the surface under us and fetch the skin texel.
       let u = (u0s[i] as number) + spinFrac;
@@ -528,7 +537,8 @@ export class PlanetGlobe {
       // airless world, which is the point.
       const f = 1 - nz;
       const dayRim = smoothstep(-0.3, 0.08, lam);
-      const rimAmt = rim * f * f * f * Math.max(dayRim, backlit * 0.9);
+      const rimAmt =
+        rim * f * f * f * Math.max(dayRim, backlit * 0.9) * exposure;
 
       out[o] = cr * shade + rimR * rimAmt;
       out[o + 1] = cg * shade + rimG * rimAmt;
@@ -536,7 +546,7 @@ export class PlanetGlobe {
       out[o + 3] = 255 * (edge[i] as number);
     }
 
-    if (this.rings) this.paintRings(out, n, light);
+    if (this.rings) this.paintRings(out, n, light, exposure);
     this.ctx.putImageData(img, 0, 0);
   }
 
@@ -553,6 +563,7 @@ export class PlanetGlobe {
     out: Uint8ClampedArray,
     n: number,
     light: GlobeLight,
+    exposure: number,
   ): void {
     const rings = this.rings;
     if (!rings) return;
@@ -579,7 +590,7 @@ export class PlanetGlobe {
         shade = smoothstep(0.92, 1.12, perp) * 0.86 + 0.14;
       }
       const a = ring.alpha * lit;
-      const c = 236 * ring.tint * shade;
+      const c = 236 * ring.tint * shade * exposure;
       const o = i * 4;
       const base = (out[o + 3] as number) / 255;
       // Straight-alpha over whatever is already there (the planet, or nothing).

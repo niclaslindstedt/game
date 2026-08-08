@@ -2724,16 +2724,19 @@ html.app-locked body {
   --sky-rim: rgba(180, 214, 240, 0.55);
 }
 
-/* Stacking: the planets and sun straddle a small z-band the driver sets inline
+/* Stacking: the planets and sun straddle a z-band the driver sets inline
    (SUN_Z ± depth, so the far half of each orbit tucks behind the sun); lift the
    menu, the warm glare wash and the sun blast above that band so the UI stays
-   readable and the detonation still spills over the sky. */
+   readable and the detonation still spills over the sky. The band is WIDE
+   (SUN_Z is 500, spread ±350 — see title-sky.ts) because z-index is an integer
+   and the bodies are solid: a narrow band rounds two overlapping worlds onto
+   the same index and the farther one can end up drawn in front. */
 .orbits .title-content {
-  z-index: 15;
+  z-index: 950;
 }
 
 .orbits .title-sun-glare {
-  z-index: 12;
+  z-index: 900;
 }
 
 /* The Easter-egg sun. Position and opacity are set each frame by the driver;
@@ -3187,7 +3190,7 @@ html.app-locked body {
   width: 0;
   height: 0;
   pointer-events: none;
-  z-index: 18;
+  z-index: 980;
   /* The whole blast is LIGHT: screened onto the sky rather than painted over
      it, so the flash and the rings brighten what is behind them instead of
      veiling it in grey. Blended as one group (the layer, not each child) — a

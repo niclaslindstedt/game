@@ -134,13 +134,63 @@ const DEG = Math.PI / 180;
 
 /**
  * How far the camera sits above the ecliptic. Small, because the viewpoint is
- * out at Mars's orbit and very nearly IN the plane — which is also what lets
- * the outer planets, whose orbits are far wider than the frame, come back into
- * it near conjunction instead of riding off the top of the screen. It is handed
- * to every globe as well, because the axial tilts have to lean against the same
- * plane the orbits are projected onto.
+ * very nearly IN the plane — which is also what lets the outer planets, whose
+ * orbits are far wider than the frame, come back into it near conjunction
+ * instead of riding off the top of the screen. It is handed to every globe as
+ * well, because the axial tilts have to lean against the same plane the orbits
+ * are projected onto.
+ *
+ * It is a BUDGET as much as an angle: a body at superior conjunction sits
+ * r·sin(pitch) above the sun on screen, and the sun's seat leaves only 0.32 of
+ * the short side above it, so the pitch and the outermost SCREEN_R below have
+ * to be chosen together or Neptune's conjunction — now the only half of its
+ * orbit we ever see, see CAM_R — happens off the top of the frame.
  */
-const ECLIPTIC_PITCH = 17 * DEG;
+const ECLIPTIC_PITCH = 14 * DEG;
+
+/**
+ * WHERE THE CAMERA STANDS, as an orbital radius in the same short-side units as
+ * SCREEN_R: parked in the gap between Mars and Jupiter. That one number sorts
+ * the system into two kinds of world and is the reason the giants behave:
+ *
+ *   • INSIDE it — Mercury, Venus, Earth, Mars and the Moon — are inferior
+ *     worlds from here. They show every phase, swing round in front of the sun,
+ *     and transit it. That is the inner system, and it is the picture.
+ *   • OUTSIDE it — Jupiter, Saturn, Uranus, Neptune — are superior worlds and
+ *     can NEVER come round the front, because the half of the orbit that would
+ *     do it is behind the viewer. Each one rises into the frame from the side,
+ *     runs in toward the star, crosses BEHIND it at conjunction, comes out the
+ *     far side and then slips away over our shoulder.
+ *
+ * That is the correct sight of them, and it is also what stopped them looking
+ * broken. Passing in front, a giant is at NEW phase and at its largest — the
+ * near leg of the loop parked a screen-filling black Saturn over the middle of
+ * the menu for a third of the cycle, crossing whatever else was down there.
+ * Behind the sun it is at its smallest and FULLY LIT, which is the one moment a
+ * distant world is worth looking at.
+ */
+const CAM_R = 0.7;
+
+/**
+ * How far into its hidden half a superior world takes to go — as a fraction of
+ * the way from the sun's own plane (0) to the point directly behind the viewer
+ * (1). It leaves in TWO stages over that band, and the order is the whole
+ * trick:
+ *
+ *   1. it goes DARK, on the shader's exposure, the same knob distance already
+ *      uses — which is what a world turning its night side to us does anyway;
+ *   2. only then, from GONE_AT onward, does its alpha come off.
+ *
+ * So the one fade in this file is spent on a disc that is already black. Fade
+ * it while it is still lit and it ghosts — the starfield and whatever it is
+ * passing show through a solid planet, which is the artefact the rest of this
+ * file exists to avoid. Dim it all the way to nothing instead and it ends as a
+ * black hole sliding over the stars. Doing both, in that order, is invisible.
+ */
+const PAST_FADE = 0.55;
+
+/** Where in that band the alpha starts to come off — see PAST_FADE. */
+const GONE_AT = 0.55;
 
 /** A slight roll of the whole plane, so the system sits at an angle across the
  * frame rather than lying on a ruled horizontal line. */
@@ -193,14 +243,34 @@ function spinMs(days: number): number {
  * has Saturn filling half a phone screen on the near leg of its loop. */
 const DEPTH = 0.3;
 
-/** How far depth dims a body — the atmospheric fade that helps a shrinking
- * planet melt into the sun's glare at the back of its loop. */
+/**
+ * How far depth DIMS a body at the back of its loop — and dims is the whole
+ * word. It is handed to the globe shader as an exposure, so a distant world
+ * goes dark; it is NOT element opacity, because a planet is an opaque body and
+ * a fade lets the starfield, the glare and whatever is behind it show straight
+ * through a solid world. (That is the artefact this replaced: every body on the
+ * title screen was see-through, worst on the near leg of a loop where a
+ * phase-driven fade took Saturn down to a quarter alpha and it read as a ghost
+ * laid over Jupiter rather than a planet in front of one.)
+ */
 const DEPTH_FADE = 0.32;
 
-/** The sun's own z-index in the sky band; planets straddle it by depth so the
+/**
+ * The sun's own z-index in the sky band; planets straddle it by depth so the
  * far ones tuck behind and the near ones ride in front. Must stay below the
- * menu content (see .title-content z-index in styles.css). */
-const SUN_Z = 5;
+ * menu content (see .title-content z-index in styles.css).
+ *
+ * THE BAND IS DELIBERATELY COARSE-FREE. z-index is an integer, so the depth
+ * band has to be wide enough that two bodies overlapping on screen never round
+ * to the SAME index — with the old 1..11 band a tenth of a screen of depth
+ * separated nothing, ties fell back to DOM order, and a farther world could
+ * draw over a nearer one. Nothing noticed while the discs were translucent;
+ * everything notices now that they are solid.
+ */
+const SUN_Z = 500;
+
+/** Half-width of the planets' z band around the sun. */
+const Z_SPREAD = 350;
 
 /**
  * One world. The orbital elements are the standard J2000 set; `r` is the only
@@ -284,12 +354,20 @@ const EARTH_DISC = 0.085;
  *
  * So the ratios are compressed by a power law — every size is
  * (diameter / Earth's) ^ SIZE_POWER — which preserves the ORDER exactly and
- * squeezes the spread from 29:1 down to about 3:1. Jupiter reads 2.2 Earths
+ * squeezes the spread from 29:1 down to about 2.3:1. Jupiter reads 1.7 Earths
  * rather than 11.2 — still unmistakably the largest thing but the sun, with
  * Saturn just under it, both ice giants clearly above Earth, Venus its near
  * twin, then Mars, then Mercury, then the Moon.
+ *
+ * THE EXPONENT IS ALSO WHAT KEEPS THE ORBITS APART, which is why it is lower
+ * than it first looks like it wants to be. A giant's disc is a fraction of the
+ * screen and so is the gap to the next orbit out; push the discs up and the
+ * outer four stop reading as four distances from the sun and start reading as
+ * one crowded ring — Jupiter and Saturn ran with barely a tenth of a disc
+ * between their orbits and crossed each other most of the cycle. Any change
+ * here is a change to SCREEN_R below as well; the two are one decision.
  */
-const SIZE_POWER = 0.32;
+const SIZE_POWER = 0.22;
 
 function discSize(kind: keyof typeof DIAMETER_KM): number {
   return (
@@ -303,20 +381,36 @@ function discSize(kind: keyof typeof DIAMETER_KM): number {
  * it they are squeezed hard — Jupiter's true 5.2 AU would be 2.4 screens out —
  * so the giants sit just past the frame and sweep through it near conjunction.
  */
-// The outer four are bunched close together and close behind Mars, and that is
-// a FRAMING constraint rather than a taste: a body at superior conjunction sits
-// r·sin(pitch) above the sun on screen, so an orbit much wider than this puts
-// Neptune off the top of a landscape phone at the exact moment it would
-// otherwise be visible — the one moment it is meant to be seen.
+// EVERY GAP CLEARS THE TWO DISCS THAT HAVE TO FIT IN IT, and that is the rule
+// the outer four are laid out by rather than by feel. Two worlds a screen-tenth
+// apart in orbit but a screen-sixth wide are not on two orbits: they are one
+// smear that crosses itself every few seconds, which is exactly what Jupiter
+// and Saturn (0.86 and 0.98, discs 0.18 wide) used to be. So each gap below is
+// at least the sum of its two neighbours' RADII with room to spare — check any
+// change here against `discSize` above, because the two tables are one
+// decision.
+//
+// The outer four still sit close behind Mars, and that part IS a framing
+// constraint: a body at superior conjunction sits r·sin(pitch) above the sun on
+// screen, so every step outward costs headroom at the top of a landscape phone
+// — and conjunction is now the ONLY time a giant crosses the middle of the
+// frame at all (CAM_R above), so the headroom has to be there. Spacing them
+// properly is paid for by the smaller discs above, not by pushing Neptune out
+// of the frame.
+//
+// THE ROW MARS SITS ON IS THE OTHER LOAD-BEARING ONE: it is the last radius
+// inside CAM_R, which is what makes Mars the outermost world that can still
+// come round in front of the sun. Moving Mars past 0.7, or the camera inside
+// it, silently changes which half of the system transits.
 const SCREEN_R = {
   mercury: 0.2,
   venus: 0.31,
   earth: 0.46,
   mars: 0.64,
-  jupiter: 0.86,
-  saturn: 0.98,
-  uranus: 1.06,
-  neptune: 1.14,
+  jupiter: 0.77,
+  saturn: 0.92,
+  uranus: 1.05,
+  neptune: 1.18,
 } as const;
 
 function planetTable(els: SkyElements): Planet[] {
@@ -562,7 +656,9 @@ function project(p: World): { x: number; y: number; depth: number } {
 /** Map a body's depth to a z-index straddling the sun, so the back half of
  * every orbit tucks behind the sun and the front half rides over it. */
 function depthZ(depth: number): number {
-  return Math.round(clamp(SUN_Z + depth * 3.5, 1, 11));
+  return Math.round(
+    clamp(SUN_Z + depth * 250, SUN_Z - Z_SPREAD, SUN_Z + Z_SPREAD),
+  );
 }
 
 /**
@@ -690,11 +786,19 @@ export function startTitleSky(els: SkyElements): () => void {
       const pad = o.globe?.padding ?? 1;
       const d = Math.max(6, o.base * u * scale * pad);
 
+      // Has this world started round the front? Only a SUPERIOR one can be
+      // hidden for it — inside CAM_R the whole loop is in view, which is why
+      // Mars still swings round and transits and Jupiter never does. `past` is
+      // how far into the hidden half it has gone: 0 as it draws level with the
+      // sun, 1 at the point directly behind the viewer.
+      const past = orbitR > CAM_R ? Math.max(0, -far) : 0;
+      const leaving = clamp01(past / PAST_FADE);
+
       // Off-frame worlds cost nothing: the giants spend most of their orbits
       // outside the viewport and there is no reason to shade a sphere nobody
       // can see. (The margin keeps a body's halo from popping at the edge.)
       const m = d;
-      if (cx < -m || cy < -m || cx > vw + m || cy > vh + m) {
+      if (leaving >= 1 || cx < -m || cy < -m || cx > vw + m || cy > vh + m) {
         o.el.style.display = "none";
         return { cx, cy, scale, far };
       }
@@ -711,6 +815,12 @@ export function startTitleSky(els: SkyElements): () => void {
         z: -s.depth / len,
       };
 
+      // Depth is EXPOSURE, not alpha: the shader takes it and paints a darker
+      // world, so the back of a loop dims into the sky without the sky showing
+      // through it — and a superior world on its way round the front goes out
+      // the same way, dark before it is gone.
+      const dim =
+        (1 - DEPTH_FADE * Math.max(0, far)) * Math.pow(1 - leaving, 1.6);
       if (o.globe && !labels) {
         o.globe.canvas.style.display = "";
         const spinTurns = t / (o.spin || EARTH_SPIN_MS);
@@ -720,6 +830,7 @@ export function startTitleSky(els: SkyElements): () => void {
           spinTurns,
           dpr,
           o.cloudMs ? t / o.cloudMs : spinTurns,
+          dim,
         );
       } else if (o.globe) {
         o.globe.canvas.style.display = "none";
@@ -730,18 +841,20 @@ export function startTitleSky(els: SkyElements): () => void {
       // lit face is toward us, gone at new.
       if (o.halo) {
         const [hr, hg, hb, blur, alpha] = o.halo;
-        o.el.style.boxShadow = `0 0 ${blur}px rgba(${hr}, ${hg}, ${hb}, ${(alpha * (0.12 + 0.88 * lit)).toFixed(3)})`;
+        const a = alpha * (0.12 + 0.88 * lit) * (1 - leaving);
+        o.el.style.boxShadow = `0 0 ${blur}px rgba(${hr}, ${hg}, ${hb}, ${a.toFixed(3)})`;
       } else {
         o.el.style.boxShadow = "none";
       }
       o.el.style.zIndex = String(depthZ(s.depth));
-      // Fade with depth — and, much more strongly, with PHASE. A world at the
-      // near point of its loop lies between us and the sun, so we are looking
-      // at its unlit side: a new moon, which is to say very nearly nothing at
-      // all. Letting it stay opaque paints a big black hole over the sky
-      // (Saturn is the worst offender), where the truth is a dim disc with a
-      // thread of lit atmosphere round its edge. The floor keeps that thread.
-      let op = (1 - DEPTH_FADE * Math.max(0, far)) * (0.18 + 0.82 * lit);
+      // A PLANET IS OPAQUE, and there is exactly one thing that may make one
+      // see-through: passing BEHIND the sun, where the star's own light swamps
+      // it. That is an occlusion, not a phase — and phase is the shader's job
+      // anyway. It already paints a world at the near point of its loop as the
+      // near-black crescent it really is, with the thread of lit atmosphere
+      // round the limb that makes the shape read; fading the element on top of
+      // that only let the starfield through the lit face as well.
+      let op = 1 - clamp01((leaving - GONE_AT) / (1 - GONE_AT));
       if (far > 0) {
         const near = Math.hypot(cx - sunCx, cy - sunCy) / (sunD * 0.75 + d);
         if (near < 1) op *= 0.15 + 0.85 * near;
@@ -949,7 +1062,7 @@ function driveAsteroids(
     el.style.opacity = String(0.92 * fade);
     // Near rocks pass in front of the planets, far ones behind — same band as
     // the planets so the belt threads through the solar system.
-    el.style.zIndex = String(Math.round(sunZ - 4 + s * 8));
+    el.style.zIndex = String(Math.round(sunZ - 300 + s * 600));
   }
 }
 

@@ -1345,8 +1345,31 @@ ecliptic — the system condensed out of a single spinning disc and never left i
 outlier, Neptune's 1.8° the rule). Orbits are solved from the J2000 elements
 through Kepler's equation, so they are real ellipses with the sun at a FOCUS and
 each world running fastest at perihelion. The camera sits nearly IN the plane
-(`DEFAULT_CAM_PITCH`, 17°), which is why the planets string out along a line
+(`ECLIPTIC_PITCH`, 14°), which is why the planets string out along a line
 through the sun and show phases like the Moon does.
+
+**AND IT STANDS BETWEEN MARS AND JUPITER** (`CAM_R`), which sorts the system
+into two kinds of world. Inside that radius — Mercury, Venus, Earth, Mars and
+the Moon — are inferior worlds: they show every phase, come round in front of
+the sun and transit it, and that inner system is the picture. Outside it, the
+four giants are superior worlds and can never come round the front, because the
+half of the orbit that would do it is behind the viewer. Each rises into the
+frame from one side, runs in toward the star, crosses BEHIND it at conjunction,
+and leaves by the other side. That is both the correct sight of them and the
+better one: passing in front, a giant is at NEW phase and at its largest, and
+the near leg of the loop used to park a screen-filling black Saturn over the
+middle of the menu.
+
+**A PLANET IS OPAQUE.** The globe shader lights the sphere per pixel, so the
+night side is already dark and a backlit limb already keeps the thread of air a
+crescent needs; anything that wants a body DIMMER — distance, or a superior
+world on its way out of sight — says so through the shader's `exposure`, never
+through the element's alpha. Fading a lit disc lets the starfield, the glare and
+whatever it is passing show straight through a solid world, which is what made
+the giants read as ghosts laid over each other rather than planets in front of
+one another. Two things may still take alpha off, and both are occlusions
+rather than shading: a body passing behind the sun, and the last of a superior
+world's exit — spent only after the exposure has already taken it to black.
 
 **THREE THINGS ARE NOT TO SCALE, AND EACH IS DOCUMENTED WHERE IT IS DONE.**
 Distance (an honest system is empty: Neptune's orbit would be thirteen screens
@@ -1356,6 +1379,11 @@ other); and the fact that spins and orbits run on two different clocks, because
 a faithful day at this year-length would be 0.175 s. Everything inside each of
 those is exact: every orbit is right against every other orbit, every spin
 against every other spin, every diameter against every other diameter.
+
+The compression exponent and the orbit table are ONE decision, not two: every
+gap between two screen orbits has to clear the two discs that ride in it, or the
+outer four stop reading as four distances from the sun and become a single
+crowded ring that crosses itself. Change either and check the other.
 
 **A WORLD WITH WEATHER GETS TWO LAYERS.** The surface is one texture and the
 CLOUD DECK is another, turning at its own rate over the ground below — Earth's
