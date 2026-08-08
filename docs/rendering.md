@@ -1331,3 +1331,55 @@ every time.
   driven car does — so the press that gets the hero back OUT of it
   (`exitCar`) hit-tests the car's own position, which is the machine the player
   can actually see under his thumb.
+
+## The title sky — a solar system, on the real numbers
+
+The main menu's backdrop is an orrery, and almost all of it is measured rather
+than invented. `pwa/src/game/title-sky.ts` drives it; `@ui/lib/planet-globe.ts`
+shades each world; `@ui/lib/planet-maps.ts` holds the geography and
+`@ui/lib/planet-skins.ts` bakes it into textures.
+
+**ONE PLANE, BECAUSE THE SOLAR SYSTEM HAS ONE.** All eight planets ride the
+ecliptic — the system condensed out of a single spinning disc and never left it
+— each keeping its own true inclination to that plane (Mercury's 7.0° is the
+outlier, Neptune's 1.8° the rule). Orbits are solved from the J2000 elements
+through Kepler's equation, so they are real ellipses with the sun at a FOCUS and
+each world running fastest at perihelion. The camera sits nearly IN the plane
+(`DEFAULT_CAM_PITCH`, 17°), which is why the planets string out along a line
+through the sun and show phases like the Moon does.
+
+**THREE THINGS ARE NOT TO SCALE, AND EACH IS DOCUMENTED WHERE IT IS DONE.**
+Distance (an honest system is empty: Neptune's orbit would be thirteen screens
+out); the size SPREAD (29:1 between Jupiter and Mercury — compressed by a power
+law that keeps the ORDER exact, so the worlds still read correctly against each
+other); and the fact that spins and orbits run on two different clocks, because
+a faithful day at this year-length would be 0.175 s. Everything inside each of
+those is exact: every orbit is right against every other orbit, every spin
+against every other spin, every diameter against every other diameter.
+
+**A WORLD WITH WEATHER GETS TWO LAYERS.** The surface is one texture and the
+CLOUD DECK is another, turning at its own rate over the ground below — Earth's
+a little faster than the surface (the jet streams), Venus's sixty times faster
+(super-rotation: its deck laps the planet in four days against a 243-day day,
+and since the deck is opaque it is the only motion Venus has). Baking cloud into
+the surface texture is the failure mode this exists to prevent, and
+`tests/planet_globe_test.ts` is what keeps it honest.
+
+**AN AIRLESS WORLD GETS NO ATMOSPHERE, ANYWHERE.** Mercury and the Moon have a
+knife-edge terminator, a hard limb, no rim glow and no CSS halo. A world WITH
+air keeps its limb alight even when backlit, because sunlight forward-scatters
+straight through it — that thread of blue round a dark Earth is the most
+recognisable thing in orbital photography, and it falls out of the same term.
+
+**THE LAW, AND HOW IT IS CHECKED.** A body is lit from the sun's side, at every
+orbital position and in any viewport orientation. `pwa/scripts/verify-sky.mjs`
+asserts it twice: the driver's own light vector must project to the sun's screen
+direction for every body (which a shader that ignored the light would still
+pass), and the rendered Moon's sunward half must measure brighter than its
+anti-sunward half (which only a shader that used it can pass). The frames for
+the second pass are chosen by measurement, never hard-coded — pinned sample
+points rot silently the moment the orbits change.
+
+Look at the maps themselves with `node pwa/scripts/planet-maps.mjs`, which
+writes an equirectangular sheet and a four-rotation globe strip per world into
+`pwa/assets-preview/planets/`. Inspect the live sky with `?skytest`.
