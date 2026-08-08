@@ -9,7 +9,7 @@ playable app.
 Two layers with a one-way dependency:
 
 ```
-pwa/  (the app: Vite + React PWA shell, rendering, deploy concerns)
+pwa/  (the app: Vite + Preact PWA shell, rendering, deploy concerns)
    │  imports via @game/core  — the whole engine, for the RUN
    │  imports via @game/menu  — the catalogs only, for the STARTUP path
    ▼
@@ -33,7 +33,7 @@ the engine and nothing else — see [`multiplayer.md`](multiplayer.md).
 
 ### `src/` — the engine
 
-Pure TypeScript with no React and no build-tool coupling. The simulation is
+Pure TypeScript with no UI framework and no build-tool coupling. The simulation is
 deterministic by construction: `createGame(seed, levelId?, difficulty?)`
 builds the level from a seeded RNG, and `step(state, input, dtMs)` advances
 it with a fixed timestep — the same seed, difficulty, and input sequence
@@ -1536,11 +1536,13 @@ behind it. Two patterns keep that possible:
   The menus read the first of each pair through `defs/levels/summary.ts`.
 
 `pwa/scripts/check-seo.mjs` polices the result as a critical-path budget of
-200 KB of gzipped JavaScript. Web.dev's performance-budget figure — the one
-behind a ~5 s time-to-interactive on a slow 3G phone — is 170 KB; the extra
-30 KB is a deliberate allowance for react-dom (~113 KB of the path) until the
-planned React→Preact swap returns it, at which point the budget drops back to 170. A sudden jump means something on the startup path reached back through
-`@game/core`.
+170 KB of gzipped JavaScript — web.dev's performance-budget figure, the one
+behind a ~5 s time-to-interactive on a slow 3G phone, with no allowance added
+on top. It stood at 200 for as long as the app rendered with React, because
+react-dom was ~50 KB gzipped of the path and no app-side surgery could return
+that; swapping the renderer for Preact did, and the 30 KB of slack came off the
+budget with it. A sudden jump means something on the startup path reached back
+through `@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
@@ -1550,7 +1552,7 @@ log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 
 ### `pwa/` — the app
 
-A Vite + React 19 shell that mounts the engine and owns everything
+A Vite + Preact shell that mounts the engine and owns everything
 deploy-shaped:
 
 - **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game,
@@ -2325,7 +2327,7 @@ navigations, or the cached app shell would shadow every page in it.
 `tests/content/library_test.ts` holds the whole thing to the engine.
 
 **The title menu's LIBRARY row is the only way in.** The prerendered boot shell
-carries a link too, but React replaces that shell the moment it mounts — so
+carries a link too, but the app replaces that shell the moment it mounts — so
 before the row existed a human never saw the link, and neither did a crawler
 that runs JavaScript, which left every reference page orphaned from the site's
 own front door and reachable only through the sitemap. The row leaves the app

@@ -161,8 +161,8 @@ export function ChatOverlay({
               aria-label="chat-say"
               value={text}
               maxLength={120}
-              spellCheck={false}
-              onChange={(e) => setText(e.target.value)}
+              spellcheck={false}
+              onChange={(e) => setText(e.currentTarget.value)}
               onKeyDown={(e) => {
                 e.stopPropagation();
                 if (e.key === "Enter") send();

@@ -218,12 +218,12 @@ when a new one is needed: the engine's runtime toggles live in the import-free
 leaf `src/game/flags.ts`, and compiled content is emitted in menu-facing and
 run-facing halves (`generated/level-index.ts` beside `generated/levels.ts`),
 read through `defs/levels/summary.ts`. `pwa/scripts/check-seo.mjs` polices the
-result as a **200 KB gzipped critical-path budget** — web.dev's figure for a
-~5 s time-to-interactive on a slow 3G phone is 200 KB, and the extra 30 KB is
-a deliberate allowance for react-dom (~113 KB of the path) until the planned
-React→Preact swap returns it, at which point the number goes back to 170.
-When it trips, find what reached back through `@game/core` (or make that
-screen lazy); do NOT raise the number.
+result as a **170 KB gzipped critical-path budget** — web.dev's figure for a
+~5 s time-to-interactive on a slow 3G phone, with no allowance added on top.
+It stood at 200 while the app rendered with React, because react-dom was ~50 KB
+gzipped of the path; swapping the renderer for Preact returned that and the
+slack came off with it. When it trips, find what reached back through
+`@game/core` (or make that screen lazy); do NOT raise the number.
 
 **Mobile-first, landscape.** The reference device is a phone held horizontally:
 a ~844×390 CSS viewport, ≈422×260 world units. Design every element — HUD,
@@ -239,10 +239,10 @@ above it, and `docs/architecture.md` has the module-by-module map:
 
 - **`src/` — the engine.** Framework-free TypeScript: the simulation plus the
   content catalogs under `src/game/defs/` (content is data, referenced by id).
-  It must stay importable from any renderer — no React, no DOM assumptions
-  beyond what a browser provides. `src/output.ts` is the central output module
-  (OSS_SPEC §19.4); raw `console.*` elsewhere fails lint.
-- **`pwa/` — the app.** A Vite + React 19 PWA shell that mounts the engine,
+  It must stay importable from any renderer — no UI framework, no DOM
+  assumptions beyond what a browser provides. `src/output.ts` is the central
+  output module (OSS_SPEC §19.4); raw `console.*` elsewhere fails lint.
+- **`pwa/` — the app.** A Vite + Preact PWA shell that mounts the engine,
   renders it, and owns everything deploy-shaped (the service worker build,
   manifest, icons, SEO surfaces, the update toast). **The app depends on the
   engine; the engine never imports from the app.**
@@ -548,7 +548,7 @@ edit or commit anything under `src/generated/` or `pwa/src/generated/`.
 | Engine/gameplay logic specific to this game                         | `src/…` (framework-free TypeScript); exported from `src/index.ts` — add to `src/menu.ts` ONLY if the startup path needs it and it drags no simulation along |
 | Generic engine code (usable by any game)                            | `src/lib/…` — imported as `@game/lib/*`                                                                                                                     |
 | App shell, rendering, PWA, game-specific UI                         | `pwa/src/…`                                                                                                                                                 |
-| Generic React/UI game components                                    | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                   |
+| Generic UI game components (Preact)                                 | `pwa/src/lib/…` — imported as `@ui/lib/*`                                                                                                                   |
 | Native-only concern (haptics, audio session, IAP, cloud save)       | `native/src/…` — never leak it into `src/` or `pwa/`                                                                                                        |
 | Desktop/Steam-only concern (window, Steam Cloud, overlay, firewall) | `electron/src/…` — same rule                                                                                                                                |
 | The MOD SDK (format, compiler, examples, modder docs)               | `mod/…`                                                                                                                                                     |
@@ -665,19 +665,36 @@ are regenerated in the same commit as the content change that moves them:
 - **Keep generic game code separate.** Code
   that is not specific to THIS game (HUD widgets, input handling, game-loop
   utilities, sprite/audio helpers) goes in the dedicated generic areas —
-  `src/lib/` for engine-side code, `pwa/src/lib/` for React/UI code —
+  `src/lib/` for engine-side code, `pwa/src/lib/` for UI code —
   never tangled into game-specific modules. The game remains self-contained;
   iterate and playtest reusable code here.
 - **Always import the generic pools through their aliases** — `@game/lib/*`
-  (engine) and `@ui/lib/*` (React/UI), never by relative path. The alias maps live in `tsconfig.json`,
+  (engine) and `@ui/lib/*` (UI), never by relative path. The alias maps live in `tsconfig.json`,
   `pwa/tsconfig.json`, `vitest.config.ts`, and `pwa/vite.config.ts`
   — keep all four in lockstep (they also carry `@game/core`, `@game/menu`,
-  `@game/wire/*` and `@game/client`). Two more copies exist and both bite:
+  `@game/wire/*`, `@game/client` and the three `react` entries below). Two more
+  copies exist and both bite:
   `scripts/game-alias-loader.mjs` is what lets a plain `node` script import
   aliased modules at runtime, and `tests/content/net_reachability_test.ts`
   resolves them to walk the import graph — a new alias missing from either is a
   script that cannot start or a budget guard that silently stops following an
   edge.
+- **THE APP RENDERS WITH PREACT, AND STILL SPELLS IT `react`.** `react`,
+  `react-dom` and `react-dom/client` are aliased to `preact/compat` (and
+  `preact/compat/client`, which is where `createRoot` lives) in all four maps
+  above, so a component goes on importing `useState` `from "react"` and the
+  ~400 existing import sites did not move when the renderer did. React itself
+  is NOT installed, and `tests/preact_renderer_test.ts` keeps both halves
+  honest — the four maps agreeing, and react staying out of the tree, where its
+  react-dom would silently eat ~50 KB of the 170 KB critical-path budget.
+  Three places where Preact's types are not React's, all settled the same way —
+  by spelling it Preact's way, which is also the correct way:
+  `RefObject<T>` ALREADY includes the null (`useRef<HTMLDivElement>(null)`,
+  never `useRef<HTMLDivElement | null>(null)`); an event type is generic in the
+  element (`PointerEvent<HTMLElement>`, and `e.currentTarget` — not `e.target`
+  — is the half that is typed); and `useSyncExternalStore` takes TWO arguments,
+  the dropped third being a `getServerSnapshot` this app could never call
+  because it never hydrates.
 - **Every dependency comes from the public npm registry.** `npm ci` needs no
   token, no `.npmrc` and no private registry — keep it that way: a private
   dependency breaks not just a fresh clone but the pages workflow, which

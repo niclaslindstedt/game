@@ -592,7 +592,7 @@ export function Minimap({
   font: PixelFont;
   /** The taller HUD font for the strip readouts (see assets.hudFont). */
   hudFont: PixelFont;
-  canvasRef: RefObject<HTMLCanvasElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement>;
   timerText: string;
   kills: number;
   menaceStage: number;

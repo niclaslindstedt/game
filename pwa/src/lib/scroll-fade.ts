@@ -28,7 +28,7 @@ const FADE_EASE_PX = 28;
  * @param deps  values that, when changed, warrant a fresh measurement
  */
 export function useScrollFade(
-  ref: RefObject<HTMLElement | null>,
+  ref: RefObject<HTMLElement>,
   deps: readonly unknown[] = [],
 ): void {
   useEffect(() => {

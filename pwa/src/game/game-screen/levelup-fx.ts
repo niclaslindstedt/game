@@ -39,7 +39,7 @@ const MIN_SPARKLES = 5;
  * the nuke's fire/smoke) gives the sparkles natural variety.
  */
 export function createLevelUpFx(
-  levelUpFxRef: RefObject<HTMLDivElement | null>,
+  levelUpFxRef: RefObject<HTMLDivElement>,
 ): LevelUpFx {
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const fire = (clientX: number, clientY: number, intensity = 1) => {

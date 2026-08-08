@@ -37,10 +37,10 @@ import type { HudActionArg, HudSurface } from "./types.ts";
  * the ones it has; an element asking for one this screen lacks simply is not
  * wired to anything. */
 export type HudRefs = {
-  minimapCanvas?: RefObject<HTMLCanvasElement | null>;
-  xpHeat?: RefObject<HTMLDivElement | null>;
-  staminaFill?: RefObject<HTMLDivElement | null>;
-  powerupDock?: RefObject<HTMLDivElement | null>;
+  minimapCanvas?: RefObject<HTMLCanvasElement>;
+  xpHeat?: RefObject<HTMLDivElement>;
+  staminaFill?: RefObject<HTMLDivElement>;
+  powerupDock?: RefObject<HTMLDivElement>;
 };
 
 /**

@@ -34,7 +34,7 @@ export function PixelSlider({ pos, onChange }: Props) {
   // slides off the (thin) track. Stop propagation so the enclosing menu button
   // treats the gesture as a slide, not a navigate/confirm click.
   const onPointerDown = useCallback(
-    (event: ReactPointerEvent) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       event.stopPropagation();
       event.preventDefault();
@@ -45,7 +45,7 @@ export function PixelSlider({ pos, onChange }: Props) {
   );
 
   const onPointerMove = useCallback(
-    (event: ReactPointerEvent) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
       event.stopPropagation();
       onChange(posFromEvent(event.clientX));

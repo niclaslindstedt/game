@@ -288,7 +288,7 @@ const DOC_PAGES = [
 
 // The prerendered body for a document page. Crawlers (and a no-JS reader) get
 // the gist without running the app, which is also what keeps check-seo's
-// "substantive body" rule satisfied; React swaps in the full page.
+// "substantive body" rule satisfied; the app swaps in the full page.
 //
 // IT ENDS IN LINKS, and that is not decoration either. These two pages are
 // reached from the library's footer and from the sitemap, and until now they
@@ -617,7 +617,7 @@ self.addEventListener("fetch", (event) => {
  *
  * Its own plugin rather than a branch inside `gamePwa`: that one is
  * `apply: "build"`, and the shell is visible in dev too — for the moment before
- * React mounts, and for as long as you look at it with JS off. A boot screen
+ * the app mounts, and for as long as you look at it with JS off. A boot screen
  * that is styled in production and bare in dev is a difference nobody wants to
  * discover from a screenshot.
  */

@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A FLOATING CARD IS PUT AWAY BY A PRESS THAT MISSES IT — and "misses it" has
-// to be answered from the DOM, not from the React tree. Every item card in the
-// game is PORTALED to <body>, but React still routes a portal's events through
-// the component that rendered it, so a panel-level "did this press miss my
-// cells?" handler sees the presses the player aims at the CARD and reads them
-// as a miss: pressing a card to read it was what dismissed it. The quest box
+// to be answered from the DOM, not from the component tree. Every item card in
+// the game is PORTALED to <body>, and the renderer this shipped under (React)
+// still routed a portal's events through the component that rendered it, so a
+// panel-level "did this press miss my cells?" handler saw the presses the
+// player aimed at the CARD and read them as a miss: pressing a card to read it
+// was what dismissed it. Reading the DOM instead is what fixed it, and is why
+// none of this moved when the renderer became Preact — which does not do that
+// routing — the answer was never coming from the tree. The quest box
 // had the opposite half of the same bug — it dismissed on hover-leave only, so
 // on a touch screen (which has no hover, and which synthesises an enter/leave
 // pair around its own press) the card could be raised and never lowered.

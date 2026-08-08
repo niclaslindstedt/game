@@ -104,13 +104,17 @@ export function PixelPrompt({
             value={value}
             maxLength={spec.maxLength}
             autoFocus
-            spellCheck={false}
+            spellcheck={false}
             inputMode={spec.digits ? "numeric" : "text"}
+            // `currentTarget`, not `target`: the element the handler is
+            // attached to is the one being typed into, and it is the half the
+            // event type actually knows is an <input>. `target` is a bare
+            // EventTarget that happened to be typed for us before.
             onChange={(e) =>
               setValue(
                 spec.digits
-                  ? e.target.value.replace(/[^0-9]/g, "")
-                  : e.target.value,
+                  ? e.currentTarget.value.replace(/[^0-9]/g, "")
+                  : e.currentTarget.value,
               )
             }
             onKeyDown={(e) => {

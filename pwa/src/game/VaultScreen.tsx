@@ -565,7 +565,7 @@ export function RunVaultScreen({
 }) {
   // The run is mutated IN PLACE, so nothing about `state` changes identity to
   // re-render on: bump a counter of our own and read the live vault fresh.
-  const [, bump] = useReducer((n: number) => n + 1, 0);
+  const [, bump] = useReducer<number, void>((n) => n + 1, 0);
   const items = vaultContents(localHero(state).vault);
   return (
     <VaultBrowser

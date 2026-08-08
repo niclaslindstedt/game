@@ -119,10 +119,10 @@ export function useSunCharge({
 }: {
   /** The sun element the presses are measured against, and the one the race
    * writes its two live ramps onto. */
-  sunRef: RefObject<HTMLElement | null>;
+  sunRef: RefObject<HTMLElement>;
   /** The sky-wide warm wash, which takes the same two ramps so the race is felt
    * across the whole backdrop rather than only on the disc. */
-  glareRef: RefObject<HTMLElement | null>;
+  glareRef: RefObject<HTMLElement>;
   /** Listen at all? False once the developer menu is unlocked (the secret is
    * spent) and while the blast is playing. A build without the developer
    * tooling never listens whatever this says (see `__DEV_TOOLS__` below). */

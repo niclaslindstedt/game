@@ -31,14 +31,14 @@ export function ScreenChrome({
   fpsRef,
   showFps,
 }: {
-  dpadRef: RefObject<HTMLDivElement | null>;
-  botDpadRef: RefObject<HTMLDivElement | null>;
-  tapFxRef: RefObject<HTMLDivElement | null>;
-  nukeFxRef: RefObject<HTMLDivElement | null>;
-  eliteFxRef: RefObject<HTMLDivElement | null>;
-  levelUpFxRef: RefObject<HTMLDivElement | null>;
-  powerupAuraRef: RefObject<HTMLDivElement | null>;
-  fpsRef: RefObject<HTMLDivElement | null>;
+  dpadRef: RefObject<HTMLDivElement>;
+  botDpadRef: RefObject<HTMLDivElement>;
+  tapFxRef: RefObject<HTMLDivElement>;
+  nukeFxRef: RefObject<HTMLDivElement>;
+  eliteFxRef: RefObject<HTMLDivElement>;
+  levelUpFxRef: RefObject<HTMLDivElement>;
+  powerupAuraRef: RefObject<HTMLDivElement>;
+  fpsRef: RefObject<HTMLDivElement>;
   showFps: boolean;
 }) {
   return (

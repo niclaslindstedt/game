@@ -72,7 +72,7 @@ export function SwipeDock({
    * loop writes each running slot's cooldown sweep/countdown here, exactly as
    * it does into the fixed dock (it null-checks, so a closed bar costs it
    * nothing). */
-  dockRef: RefObject<HTMLDivElement | null>;
+  dockRef: RefObject<HTMLDivElement>;
   /** Spend exactly this powerup slot on the next sim tick. */
   onSpend: (index: number) => void;
   /** Queue one use of this consumable for the next sim tick. */
@@ -81,7 +81,7 @@ export function SwipeDock({
   const [bar, setBar] = useState<OpenBar | null>(null);
   const trackRef = useRef<SwipeTrack | null>(null);
   const closeTimerRef = useRef<number | null>(null);
-  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   const playing = hud !== null;
 
@@ -137,13 +137,14 @@ export function SwipeDock({
   // only an inward pull commits. The strip captures the pointer so the swipe
   // keeps tracking once the finger leaves the narrow strip — which it does
   // almost immediately, that being the gesture.
-  const startSwipe = (edge: SwipeEdge) => (e: ReactPointerEvent) => {
-    if (e.pointerType !== "touch") return;
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    trackRef.current = { edge, id: e.pointerId, x: e.clientX, y: e.clientY };
-  };
-  const moveSwipe = (e: ReactPointerEvent) => {
+  const startSwipe =
+    (edge: SwipeEdge) => (e: ReactPointerEvent<HTMLElement>) => {
+      if (e.pointerType !== "touch") return;
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      trackRef.current = { edge, id: e.pointerId, x: e.clientX, y: e.clientY };
+    };
+  const moveSwipe = (e: ReactPointerEvent<HTMLElement>) => {
     const t = trackRef.current;
     if (!t || t.id !== e.pointerId) return;
     const pulled = inwardTravel(t.edge, t, { x: e.clientX, y: e.clientY });
@@ -161,7 +162,7 @@ export function SwipeDock({
       closing: false,
     });
   };
-  const endSwipe = (e: ReactPointerEvent) => {
+  const endSwipe = (e: ReactPointerEvent<HTMLElement>) => {
     const t = trackRef.current;
     if (t && t.id === e.pointerId) trackRef.current = null;
   };

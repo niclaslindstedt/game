@@ -32,9 +32,7 @@ const PUFFS = 10;
  * ground zero as the camera pans. Cosmetic-only, so a plain Math.random spread
  * (like event-fx's gore seeds) gives the fire and smoke natural variety.
  */
-export function createNukeFx(
-  nukeFxRef: RefObject<HTMLDivElement | null>,
-): NukeFx {
+export function createNukeFx(nukeFxRef: RefObject<HTMLDivElement>): NukeFx {
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const fire = (clientX: number, clientY: number) => {
     const layer = nukeFxRef.current;

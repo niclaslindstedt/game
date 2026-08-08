@@ -118,8 +118,8 @@ export function LoadGame({
     ],
     [onBack],
   );
-  const backMenuRef = useRef<HTMLElement | null>(null);
-  const backRowRef = useRef<HTMLButtonElement | null>(null);
+  const backMenuRef = useRef<HTMLElement>(null);
+  const backRowRef = useRef<HTMLButtonElement>(null);
 
   if (!assets) return <LoadingScreen />;
   const font = assets.font;

@@ -124,14 +124,14 @@ function GallerySearch({
         aria-label="gallery-search"
         value={value}
         maxLength={MAX_QUERY}
-        spellCheck={false}
+        spellcheck={false}
         autoComplete="off"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         // Verbatim, never re-cased: rewriting a controlled input's value on
         // every keystroke breaks iOS autocomplete (see hero-name.ts). The
         // display upper-cases the glyphs and `searchExhibits` folds case.
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(e.currentTarget.value)}
         placeholder="SEARCH"
       />
     </div>
@@ -419,14 +419,14 @@ export function EffectsGallery({
   // The field's gesture (touch): a horizontal flick turns the page, like a photo
   // roll; anything shorter is a tap that replays the show.
   const dragRef = useRef<{ x: number; y: number; id: number } | null>(null);
-  const onPointerDown = (event: ReactPointerEvent) => {
+  const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     dragRef.current = {
       x: event.clientX,
       y: event.clientY,
       id: event.pointerId,
     };
   };
-  const onPointerUp = (event: ReactPointerEvent) => {
+  const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
     const drag = dragRef.current;
     dragRef.current = null;
     if (!drag || drag.id !== event.pointerId) return;

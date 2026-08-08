@@ -19,7 +19,7 @@
 //      twice — so a gib always lands on its own spatter.
 //
 // Tested through the leaves for the same reason the nuke suite is: the fx pass
-// reaches the sprite atlas and React components, and this project is typechecked
+// reaches the sprite atlas and UI components, and this project is typechecked
 // on CI before the atlas has even been generated.
 
 import { beforeEach, describe, expect, it } from "vitest";

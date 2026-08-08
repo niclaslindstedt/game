@@ -107,8 +107,8 @@ export function runExhibit(deps: {
   ctx: CanvasRenderingContext2D;
   assets: GameAssets;
   /** The full-screen CSS burst layers (the nuke's and the ding's). */
-  nukeFxRef: RefObject<HTMLDivElement | null>;
-  levelUpFxRef: RefObject<HTMLDivElement | null>;
+  nukeFxRef: RefObject<HTMLDivElement>;
+  levelUpFxRef: RefObject<HTMLDivElement>;
   /** Slow motion for judging an effect (see `EXHIBIT_SPEEDS`). Default 1. */
   speed?: number;
   /**

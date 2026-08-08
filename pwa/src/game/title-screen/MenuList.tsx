@@ -120,12 +120,12 @@ export function MenuList({
   /** A tall list (levels, BALANCE) that measured as genuinely overflowing:
    * cap the column and let it scroll (see useMenuOverflow). */
   scrollable: boolean;
-  menuRef: RefObject<HTMLElement | null>;
+  menuRef: RefObject<HTMLElement>;
   /** The row the selection cursor is on, so cursor moves can keep it in view
    * (the scrolling itself lives in a TitleScreen effect keyed on the cursor —
    * a mount-time scrollIntoView would fight the scroll-to-top on screen
    * entry). */
-  selectedRowRef: RefObject<HTMLElement | null>;
+  selectedRowRef: RefObject<HTMLElement>;
   /** What the nav announces itself as. Defaults to the title menu's own name;
    * a screen that borrows the column for a single row (the roster's BACK)
    * names itself so a page never has two navs called "main menu". */

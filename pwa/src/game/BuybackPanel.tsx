@@ -84,7 +84,7 @@ export function BuybackPanel({
   // The run is mutated IN PLACE, so nothing about `state` changes identity to
   // re-render on: bump a counter of our own and read the live shelf fresh, the
   // way the run's LOST & FOUND does.
-  const [, bump] = useReducer((n: number) => n + 1, 0);
+  const [, bump] = useReducer<number, void>((n) => n + 1, 0);
   const [cursor, setCursor] = useState(0);
   const [openItem, setOpenItem] = useState<number | null>(null);
   // The piece whose action is UNFOLDED beneath it. A mouse HOVER only moves the

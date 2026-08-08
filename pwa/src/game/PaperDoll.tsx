@@ -139,9 +139,9 @@ export function PaperDoll({
   onSlotDown: (
     item: Equipment,
     slot: EquipSlot,
-  ) => (e: ReactPointerEvent) => void;
-  onSlotEnter: (item: Equipment) => (e: ReactPointerEvent) => void;
-  onSlotLeave: (e: ReactPointerEvent) => void;
+  ) => (e: ReactPointerEvent<HTMLElement>) => void;
+  onSlotEnter: (item: Equipment) => (e: ReactPointerEvent<HTMLElement>) => void;
+  onSlotLeave: (e: ReactPointerEvent<HTMLElement>) => void;
 }) {
   const equipment = localHero(state).equipment;
 

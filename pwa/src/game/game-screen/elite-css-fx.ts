@@ -54,9 +54,7 @@ const FLASH_MS = 420;
  * effect that lost its colours the moment its caster did is the bug that field
  * exists to prevent.
  */
-export function createEliteFx(
-  layerRef: RefObject<HTMLDivElement | null>,
-): EliteFx {
+export function createEliteFx(layerRef: RefObject<HTMLDivElement>): EliteFx {
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const flash = (look?: AbilityLook) => {
     const layer = layerRef.current;

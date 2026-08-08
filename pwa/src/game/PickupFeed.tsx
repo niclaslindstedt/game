@@ -60,7 +60,7 @@ type FeedWord = { text: string; neutral: boolean };
  * resolved max-width (px) and the root font-size keeps the budget correct across
  * the portrait/landscape caps and the large-screen root-font doubling.
  */
-function useWrapBudget(ref: RefObject<HTMLElement | null>): number {
+function useWrapBudget(ref: RefObject<HTMLElement>): number {
   const [budget, setBudget] = useState(Number.POSITIVE_INFINITY);
   useLayoutEffect(() => {
     const el = ref.current;

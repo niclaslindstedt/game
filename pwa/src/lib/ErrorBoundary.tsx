@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// A minimal React error boundary. Its main customer is lazy-loaded chunks: a
+// A minimal error boundary. Its main customer is lazy-loaded chunks: a
 // dynamic import that fails (deploy changed the hashed filenames under a
 // stale page, flaky network, stale native webroot) rejects during render, and
-// without a boundary React unmounts the whole tree — the player sees a silent
-// black screen with no way out. The boundary catches it and renders the given
-// fallback instead, which should offer a reload.
-// Generic React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*),
+// without a boundary the renderer unmounts the whole tree — the player sees a
+// silent black screen with no way out. The boundary catches it and renders the
+// given fallback instead, which should offer a reload.
+// Generic UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*),
 // the pool a later game keeps as-is.
 
 import { Component, type ReactNode } from "react";
@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<
 > {
   override state = { failed: false };
 
-  static getDerivedStateFromError(): { failed: boolean } {
+  static override getDerivedStateFromError(): { failed: boolean } {
     return { failed: true };
   }
 
