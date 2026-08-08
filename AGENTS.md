@@ -708,6 +708,14 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
   — is the half that is typed); and `useSyncExternalStore` takes TWO arguments,
   the dropped third being a `getServerSnapshot` this app could never call
   because it never hydrates.
+  **AND ONE PROP IS NOT A TYPING DIFFERENCE BUT A MISSING IMPLEMENTATION:
+  `autoFocus`.** React focused the element itself; Preact writes the `autofocus`
+  ATTRIBUTE, and the HTML spec drops every autofocus candidate the moment
+  anything else already holds focus — which a clicked menu row (a `<button>`)
+  always does. The field then takes no keystroke at all and the presses go to the
+  screen's own `window` listener instead. Use `useAutoFocus`
+  (`@ui/lib/auto-focus.ts`), which asks imperatively;
+  `tests/preact_renderer_test.ts` keeps the prop out of the tree.
 - **Every dependency comes from the public npm registry.** `npm ci` needs no
   token, no `.npmrc` and no private registry — keep it that way: a private
   dependency breaks not just a fresh clone but the pages workflow, which

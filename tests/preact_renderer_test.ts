@@ -18,6 +18,13 @@
 //     dies on an import of a package that is not installed, and the failure
 //     names the module rather than the alias.
 //
+// A THIRD KIND OF DRIFT IS A PROP REACT IMPLEMENTED AND PREACT DOES NOT.
+// `autoFocus` is the one that bites: React focused the element itself, Preact
+// writes the `autofocus` ATTRIBUTE, and the browser drops an autofocus
+// candidate whenever anything else already holds focus — so a field opened by a
+// CLICK never takes the keyboard, silently. `useAutoFocus` (@ui/lib) is the
+// replacement, and the prop is asserted absent below.
+//
 // The second half is the one that quietly undoes the whole exercise: nothing
 // stops a dependency — or a careless `npm install` — from putting react back
 // in the tree. Two renderers would then both be reachable, the compat alias
@@ -25,7 +32,7 @@
 // react-dom sitting in the critical path that `check-seo.mjs` measures. So the
 // dependency tree is asserted to be free of it.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -142,5 +149,37 @@ describe("react itself", () => {
     expect(Object.keys(declared)).not.toContain("react");
     expect(Object.keys(declared)).not.toContain("react-dom");
     expect(pkg.dependencies?.preact).toBeTypeOf("string");
+  });
+});
+
+/** Source with comments removed, so prose ABOUT a prop is not read as a use of
+ * one — every mention of `autoFocus` in the app is now an explanation of why it
+ * is not used. Strings are left alone: a `//` inside one only ever truncates
+ * the rest of its line, which cannot manufacture a match. */
+function code(file: string): string {
+  return read(file)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+}
+
+/** Every component file in the app, relative to the repo root. */
+function componentFiles(): string[] {
+  return readdirSync(at("pwa/src"), { recursive: true, encoding: "utf8" })
+    .filter((p) => p.endsWith(".tsx"))
+    .map((p) => `pwa/src/${p.split("\\").join("/")}`);
+}
+
+describe("the autoFocus prop", () => {
+  it("is used nowhere — @ui/lib/auto-focus.ts is how a field takes focus", () => {
+    const offenders = componentFiles().filter((file) =>
+      /\bautoFocus\b/.test(code(file)),
+    );
+    expect(
+      offenders,
+      "`autoFocus` is a React prop Preact does not implement: it writes the " +
+        "attribute, and the browser IGNORES it whenever something else " +
+        "already holds focus — which a clicked menu row always does. The " +
+        "field then takes no keystroke at all. Use `useAutoFocus` instead.",
+    ).toEqual([]);
   });
 });
