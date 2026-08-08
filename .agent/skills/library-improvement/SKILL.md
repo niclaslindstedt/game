@@ -25,6 +25,11 @@ was not the styling:
 - It was **complete**. Every monster, every base, every rune. Gaps are what send
   a reader to somebody else's site.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs library-improvement --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Never judge from source
 
 The failures this skill exists to catch are visual and only appear in pixels: a
@@ -206,10 +211,14 @@ from its markup, judge the screenshot.
 | A number that is wrong       | the engine or the content YAML it comes from, never the generator |
 | A missing page               | the generator's catalog walk, plus the coverage test      |
 
-## Record what you learn
+## Skill self-improvement
 
-Gotchas and heuristics found while running this skill go in
-`.agent/skills/library-improvement/.lessons/<unix-timestamp>-<slug>.md`, one
-file per lesson — never appended to this file. See `.agent/skills/LESSONS.md`.
-Read them back with `node scripts/skill-lessons.mjs library-improvement` before
-starting.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the quality bar and the loop above.
+
+```sh
+node scripts/skill-lessons.mjs library-improvement --list
+```

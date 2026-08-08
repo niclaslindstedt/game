@@ -1,6 +1,8 @@
 ---
 title: A backdrop sprite is bound to the SCALE it was drawn for — a cutscene tile is not a world tile
 date: 2026-08-07
+scope: content/sprites/scenes/
+concepts: [backdrops, scale, cutscenes]
 ---
 
 `content/sprites/scenes/stars_a`/`stars_b` are 16×12 starfield tiles authored

@@ -15,7 +15,10 @@ on the other several thousand.
 blueprint is, why the walls are derived, why the ending is not on the map). This
 skill is the *working method*.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs mapgen-improvement`.
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs mapgen-improvement --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
 
 ## The three questions, and which file answers them
 
@@ -376,7 +379,15 @@ npm run build                                         # the LIBRARY coverage gat
 
 ## Skill self-improvement
 
-Record a new heuristic (a tell in a render, a lever that reliably fixes a look
-problem, a schema trap) as a lesson fragment under `.lessons/` (see
-[`../LESSONS.md`](../LESSONS.md)); read past ones with
-`node scripts/skill-lessons.mjs mapgen-improvement` before starting.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the steps above.
+
+```sh
+node scripts/skill-lessons.mjs mapgen-improvement --list
+```
+
+Worth recording here: a tell in a render, a lever that reliably fixes a look
+problem, a schema trap.

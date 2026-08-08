@@ -22,6 +22,11 @@ skill** instead: `weapon-fx.ts` (slash/muzzle styles → `weapon-system` skill),
 the passive-talent always-on FX (conjurations in `render/actors.ts`, proc bursts
 in `event-fx.ts` → `talent-fx` skill).
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs visual-effects --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## The flow: event → effect → draw
 
 1. **The engine emits an event.** Add/extend a variant in

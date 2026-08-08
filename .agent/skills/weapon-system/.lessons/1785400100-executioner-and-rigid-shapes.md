@@ -1,6 +1,8 @@
 ---
 title: A weapon whose damage is irrelevant still owes the budget a number
 date: 2026-07-30
+scope: content/items/
+concepts: [damage-budget, uniques, edge-cases]
 ---
 
 Authoring the THE AUSTERITY CHAINSAW (an EXECUTIONER: the blow is priced in the

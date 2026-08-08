@@ -1,12 +1,16 @@
 ---
 title: Judge an effect at 1/4 speed on a filmstrip sheet, not at full speed on two frames
 date: 2026-07-26
+scope: pwa/scripts/effects-gallery.mjs
+concepts: [judging, filmstrip, verification]
 ---
 
 The gallery's SPEED chip (`S`, or `?effects=<id>&speed=0.25`) scales SIM time,
 so an effect, its timeline, and the loop's replay rhythm stretch together.
 Shoot it with `node scripts/effects-gallery.mjs --only <id> --strip 6 --speed
-0.25`: `--strip` spreads its frames across the exhibit's own `showMs` (scaled
+0.25` — run **from `pwa/`**, where that script lives
+(`pwa/scripts/effects-gallery.mjs`); it is not a root-level script. `--strip`
+spreads its frames across the exhibit's own `showMs` (scaled
 by the speed), and the run writes a composited `sheet.png` — one row per
 exhibit, frames left to right — which is the thing to actually READ.
 

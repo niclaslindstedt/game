@@ -1,6 +1,8 @@
 ---
 title: Testing a guaranteed drop on a SPAREABLE unique needs resolveChoice(state, false)
 date: 2026-07-12
+scope: tests/content/
+concepts: [spareable, drops, testing]
 ---
 
 A spareable unique (RASPUTIN et al.) does NOT die when stepped to 0 hp — the

@@ -1,6 +1,8 @@
 ---
 title: Match --start-level to the difficulty's ladder floor when simulating a bot change; a fresh L1 hero on nightmare/jesus is a fake death-spiral
 date: 2026-07-18
+scope: scripts/simulate-run.mjs
+concepts: [ab-testing, difficulty, start-level]
 ---
 
 Nightmare and JESUS are NEVER played from level 1: the campaign ladder

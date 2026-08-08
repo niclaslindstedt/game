@@ -1,6 +1,8 @@
 ---
 title: A nav grid that answers "can a body STAND here" is not a nav grid — verify the LINKS, and never A/B a heading change on one map
 date: 2026-07-28
+scope: src/game/bot/nav.ts
+concepts: [nav-grid, links, ab-testing]
 ---
 
 `buildNavGrid`'s doorway refinement re-opens a blocked cell wherever a

@@ -1,6 +1,8 @@
 ---
 title: The bot must not inherit PLAYER settings — and the two harnesses must run the same actions
 date: 2026-07-25
+scope: src/sim/simulate.ts
+concepts: [harness-parity, settings, testing]
 ---
 
 A bug where the AUTO PILOT hauled a bag full of unworn upgrades traced to two

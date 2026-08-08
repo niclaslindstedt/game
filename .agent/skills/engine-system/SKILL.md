@@ -10,6 +10,11 @@ Gameplay lives in the **engine** (`src/`, framework-free TypeScript); the
 direction: the engine never knows a renderer or a speaker exists. This is
 what makes every game rule unit-testable in plain Node.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs engine-system --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Where the pieces go
 
 | Piece | File |
@@ -134,13 +139,12 @@ the repo and fails on a player's machine with a resolve error, which is what
 
 ## Skill self-improvement
 
-When a new system forces a pattern not covered here (status effects, timed
-spawners, projectile-vs-projectile collision…), record where it landed and
-why as a lesson fragment under `.lessons/` (see
-[`../LESSONS.md`](../LESSONS.md)) — never by appending to this file, which
-conflicts across parallel sessions. Read past ones with
-`node scripts/skill-lessons.mjs engine-system` before starting. During a
-consolidation pass, promote the proven lessons:
+Load the **`skill-reflection`** skill at both ends of the session — it owns
+recording what a pass learned (with a `scope` and `concepts`), fixing anything
+here the pass proved WRONG, pruning the stale, merging the duplicated, and
+promoting the always-true. When a new system forces a pattern not covered here
+(status effects, timed spawners, projectile-vs-projectile collision…), record
+where it landed and why. Promotion here has TWO destinations:
 
 - **Workflow patterns** (a new kind of system, a new invariant, a testing
   technique) into this `SKILL.md`, phrased generically so any game

@@ -97,4 +97,4 @@ After every run, update this file:
 3. **Record drift signals.** If a change should have triggered a skill but did not appear in any skill's mapping table, extend that skill's mapping table — not this one.
 4. **Commit the skill edits** together with the drift sweep.
 
-The registry, run order, and mapping tables are operating data — edit them in place as above. Narrative gotchas that aren't registry rows go to lesson fragments under `.lessons/` instead (see [`../LESSONS.md`](../LESSONS.md)); read them back with `node scripts/skill-lessons.mjs maintenance`.
+The registry, run order, and mapping tables are operating data — edit them in place as above. Narrative gotchas that aren't registry rows go to lesson fragments — load the **`skill-reflection`** skill, which owns recording, scoping, pruning, merging and promoting them (`node scripts/skill-lessons.mjs maintenance --list`) instead.

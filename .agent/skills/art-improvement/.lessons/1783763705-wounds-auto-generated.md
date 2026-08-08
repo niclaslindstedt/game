@@ -1,6 +1,8 @@
 ---
 title: Wounds are auto-generated — draw the base to survive them
 date: 2026-07-11
+scope: content/sprites/
+concepts: [wounds, derived-sprites]
 ---
 
 `variants <name>` shows the `_hurt`/`_wrecked`/`_dying` stages; the

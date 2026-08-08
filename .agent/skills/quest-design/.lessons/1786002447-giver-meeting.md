@@ -1,6 +1,8 @@
 ---
 title: A giver may owe a MEETING before their slate opens — `QuestGiverDef.intro`
 date: 2026-08-06
+scope: content/quest-givers.yaml
+concepts: [quest-giver, intro, conversations]
 ---
 
 "Talking to X the first time should play a dialogue, then they hand out

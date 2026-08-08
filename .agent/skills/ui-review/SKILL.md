@@ -13,6 +13,11 @@ surface, judge it, fix it, look again**. Never evaluate UI from code alone;
 the failures (clipping, overlap, bleed-through, tiny text) only show up in
 pixels.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs ui-review --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Tooling
 
 | Piece | Role |
@@ -183,11 +188,17 @@ sweep will ever look at.
 
 ## Skill self-improvement
 
-When a sweep settles a new quality rule ("essential text ≥ scale 2",
-"legendary glow is reserved"), record it as a lesson fragment under
-`.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by appending to
-this file, which conflicts across parallel sessions. Read past ones with
-`node scripts/skill-lessons.mjs ui-review` before sweeping, and promote
-settled rules into **The quality bar** above during a consolidation pass.
-When a new surface or trigger lands, add the row to the forcing table and
-the step to the harness (that's operating data — edit it in place).
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into **The quality bar** above.
+
+```sh
+node scripts/skill-lessons.mjs ui-review --list
+```
+
+A settled quality rule ("essential text ≥ scale 2", "legendary glow is
+reserved") is exactly what belongs there. When a new surface or trigger lands,
+add the row to the forcing table and the step to the harness — that's operating
+data, edit it in place.

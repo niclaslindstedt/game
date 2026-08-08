@@ -1,6 +1,8 @@
 ---
 title: An annex costs a whole band of level; size the room off the map or it looks like a bug
 date: 2026-07-28
+scope: content/maps/
+concepts: [blueprint, annex, sizing]
 ---
 
 An `annex` adds a band to the level rect that is the room's height plus its

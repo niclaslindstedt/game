@@ -1,6 +1,8 @@
 ---
 title: Keep image-to-YAML conversion repository-native without committing concept binaries
 date: 2026-07-21
+scope: scripts/
+concepts: [concepts-pipeline, tooling, binaries]
 ---
 
 For a generated-concept redraw, create the exact acceptance prompt with

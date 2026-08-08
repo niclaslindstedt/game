@@ -1,6 +1,8 @@
 ---
 title: The DEVELOPER warp moved under PLAYGROUND — check the menu path when every shot times out
 date: 2026-08-05
+scope: content/mainmenu.yaml
+concepts: [developer-menu, warp, navigation]
 ---
 
 `stageRun` walks the real title menus, so a reshuffle of `content/mainmenu.yaml`

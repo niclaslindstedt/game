@@ -1,6 +1,8 @@
 ---
 title: Run `palette <family|sprite>` before you sketch — and mind the two colour formats
 date: 2026-07-11
+scope: scripts/art-audit.mjs
+concepts: [palette, colour-formats, workflow]
 ---
 
 `node scripts/art-audit.mjs palette <family|sprite>` prints the exact

@@ -1,6 +1,8 @@
 ---
 title: Measure every family member's WIDTH before and after a size change — hierarchy fixes cascade
 date: 2026-07-30
+scope: content/sprites/
+concepts: [hierarchy, width, families]
 ---
 
 The "scale/hierarchy lies" rubric line is checkable with one number: the widest

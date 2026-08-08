@@ -1,6 +1,8 @@
 ---
 title: Check `plane:` before judging a building — a floor-plane sprite is a PLAN, not a facade
 date: 2026-07-30
+scope: content/sprites/
+concepts: [floor-plane, judging, buildings]
 ---
 
 Boot Hill's houses, `storefront`, `lair_house` and `wagon` all carry

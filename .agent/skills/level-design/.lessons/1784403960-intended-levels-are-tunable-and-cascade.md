@@ -1,6 +1,8 @@
 ---
 title: intendedLevel and the ladder bands are BALANCE knobs, not ground truth — and a change to one map cascades down the whole campaign
 date: 2026-07-18
+scope: content/ladder.yaml
+concepts: [intended-level, ladder, cascade]
 ---
 
 `content/ladder.yaml` (the per-difficulty × per-map `hero:` / `mob:`

@@ -1,6 +1,8 @@
 ---
 title: A HUD resolve CALLS the scripts it walks past — filter by surface BEFORE resolving, never after
 date: 2026-08-07
+scope: pwa/src/game/hud/
+concepts: [hud, lua-scripts, performance, surface-filter]
 ---
 
 `resolveLayout` (`pwa/src/game/hud/resolve.ts`) does not just build a tree, it

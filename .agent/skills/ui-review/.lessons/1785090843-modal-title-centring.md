@@ -1,6 +1,8 @@
 ---
 title: A modal's title left-pins unless the box opts out of the blanket canvas rule
 date: 2026-07-26
+scope: pwa/src/styles.css
+concepts: [modals, titles, alignment]
 ---
 
 `styles.css` carries `.game-overlay canvas { align-self: flex-start }`. It exists

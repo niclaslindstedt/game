@@ -1,6 +1,8 @@
 ---
 title: A page reached from inside an app has to carry its own way back
 date: 2026-07-27
+scope: pwa/scripts/library/
+concepts: [navigation, chrome, embedding]
 ---
 
 The library's "no JavaScript" rule is the constraint the whole exercise rests

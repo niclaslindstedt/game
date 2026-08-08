@@ -1,6 +1,8 @@
 ---
 title: Read the BOSS table's bossHp column against hero dps — JESUS set pieces once fell through to the minion hp curve; and black-hole deaths are a bot gap, not a balance knob
 date: 2026-07-23
+scope: content/ladder.yaml
+concepts: [boss, difficulty, hp-curve, jesus]
 ---
 
 Two findings from the nightmare/JESUS beatability pass:

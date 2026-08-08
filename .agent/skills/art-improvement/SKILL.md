@@ -60,10 +60,12 @@ internal anatomy, not just silhouette.
 
 ## Phase 1 — Survey: build the long list
 
-Before anything else, read the lessons from past passes — `node
-scripts/skill-lessons.mjs art-improvement` — so known stumbles (fresh-art
-churn, the wound-visibility lint, sheet blind spots) are avoided up front.
-They live as fragments in [`.lessons/`](./.lessons/) next to this file.
+Before anything else, read this skill's lessons — `node
+scripts/skill-lessons.mjs art-improvement --list`, then the ones the pass
+touches (`--scope=content/sprites/…`, `--concepts=…`) — so known stumbles
+(fresh-art churn, the wound-visibility lint, sheet blind spots) are avoided up
+front. Reading them here and reflecting on them before the commit is the
+**`skill-reflection`** skill's job; load it at both ends of the session.
 
 1. Run `make assets` first so grids, atlas, and warnings are current; note
    any contrast/orphan warnings — they are pre-scored offenders.
@@ -430,18 +432,8 @@ cause *here*, in the same PR as the art, before you finish:
   subcommand, or a new field in an existing legend) and add it to the helper
   table. Keep the script's usage text, header comment, and that table in sync.
 - **A step read wrong, ambiguous, or incomplete?** Rewrite it in place.
-- **Learned a gotcha that would have saved time up front?** Record it as a
-  lesson fragment — `.lessons/$(date +%s)-short-slug.md` with `title:`/`date:`
-  front matter and the lesson in the body (format in
-  [`../LESSONS.md`](../LESSONS.md)) — so the next session reads it at the top
-  of Phase 1 and skips the stumble. Never append lessons to this file:
-  parallel passes editing one SKILL.md is what causes merge conflicts; one
-  fragment per lesson never collides.
-
-Keep the log tight — when `node scripts/skill-lessons.mjs art-improvement`
-nudges (more than 15 fragments), or a lesson has gone obsolete (a manual step turned
-into a command, an instruction got fixed), run the consolidation pass from
-`../LESSONS.md` as its own commit: merge near-duplicate fragments, delete the
-stale ones, and promote the load-bearing ones into the rubric, the steps, or
-`art-audit.mjs` above. Consolidation is the only time lesson content moves
-into this file.
+- **Learned a gotcha that would have saved time up front?** That is a lesson
+  fragment, and the **`skill-reflection`** skill owns it — load it before the
+  commit. It also decides the rest: what has gone stale, what two fragments now
+  say once, and what has become true in 100% of passes and belongs in the
+  rubric, the steps, or `art-audit.mjs` above rather than in `.lessons/`.

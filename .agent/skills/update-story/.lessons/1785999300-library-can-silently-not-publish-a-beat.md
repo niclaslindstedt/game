@@ -1,6 +1,8 @@
 ---
 title: Check the beat you rewrote actually REACHES a library page — coverage maps lie by omission
 date: 2026-07-31
+scope: pwa/scripts/library/
+concepts: [coverage, publishing, silent-failure]
 ---
 
 `assertFieldsCovered` fails the build on an authored FIELD no page renders, but

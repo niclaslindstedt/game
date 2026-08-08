@@ -15,6 +15,11 @@ filtered noise percussion, attack envelopes on soft sounds, and a shared
 echo bus for the big moments — richer than a bare NES blip, still
 unmistakably chip.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs sound-effects --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Files
 
 | File | Role |
@@ -204,21 +209,20 @@ policy withholds it the first touch or key ANYWHERE unlocks instead.
 
 ## Skill self-improvement
 
-Record parameter recipes that worked ("UI confirm = square 660+990 stepped
-60 ms apart, detune 5, echo 0.15") as lesson fragments —
-`.lessons/$(date +%s)-short-slug.md` with `title:`/`date:` front matter
-(format in [`../LESSONS.md`](../LESSONS.md)) — so the palette of proven
-sounds grows over time without parallel sessions conflicting on this file.
-Read the palette back before designing a sound:
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the sound vocabulary above.
 
 ```sh
-node scripts/skill-lessons.mjs sound-effects
+node scripts/skill-lessons.mjs sound-effects --list
 ```
+
+The lessons here are a **palette of parameter recipes that worked** ("UI confirm
+= square 660+990 stepped 60 ms apart, detune 5, echo 0.15") — read it back
+before designing a sound, and add to it after.
 
 - **Arrangement shapes** — this game's proven title/level track structures
   live in [`GAME_NOTES.md`](./GAME_NOTES.md); record new score-specific
   arrangements there, and keep reusable synth/mixing recipes in `.lessons/`.
-
-When the printer nudges (more than 15 fragments), run the consolidation pass from
-`../LESSONS.md`: merge near-duplicate recipes, delete stale ones, and
-promote what every session relies on into the sound vocabulary above.

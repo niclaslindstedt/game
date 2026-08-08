@@ -1,6 +1,8 @@
 ---
 title: Screen-stated intent judged by world-frame arcs breaks under the projection
 date: 2026-08-01
+scope: pwa/src/game/render/
+concepts: [projection, screen-space, input]
 ---
 
 Symptom class: a control that states its intent on the SCREEN (the touch

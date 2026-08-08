@@ -10,6 +10,11 @@ how gear stays relevant, and how the climb tapers toward the level cap. Tune it
 here — **only in `src/game/config/leveling.ts` `LEVELING`** — and verify with the
 calculator and a bot run before it ships.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs leveling-balance --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## The model — the curve is authored DATA (`content/leveling.yaml`)
 
 The curve is a hand-authored TABLE, not a formula: `content/leveling.yaml`

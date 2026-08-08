@@ -9,6 +9,11 @@ Engine tests prove rules; playtesting proves the game **works and feels
 right at 60fps in the real renderer**. Every gameplay/rendering/input
 change ends with a playtest before it ships.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs playtest --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## Tooling
 
 | Piece | Role |
@@ -87,9 +92,16 @@ AI-controlled second player).
 
 ## Skill self-improvement
 
-When a tuning session settles on a new feel-rule of thumb ("contact damage
-above X makes rush unwinnable"), record it as a lesson fragment under
-`.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by appending to
-this file, which conflicts across parallel sessions. Read past ones with
-`node scripts/skill-lessons.mjs playtest` before evaluating. During a
-consolidation pass, promote settled rules into the evaluation list above.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the evaluation list above.
+
+```sh
+node scripts/skill-lessons.mjs playtest --list
+```
+
+A settled feel-rule of thumb ("contact damage above X makes rush unwinnable")
+is exactly the kind of thing worth recording — read the past ones before you
+evaluate, not after.

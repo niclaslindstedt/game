@@ -1,6 +1,8 @@
 ---
 title: A ground tile lies on a swatch — judge it with `field`, and check the biome isn't a recolour
 date: 2026-07-30
+scope: content/sprites/
+concepts: [ground-tiles, biomes, judging, tiling]
 ---
 
 Two things a Mars pass turned up that the survey sheet cannot show, both now in

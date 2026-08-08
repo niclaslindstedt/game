@@ -1,6 +1,8 @@
 ---
 title: A full-width pixel-button parks its label on the left
 date: 2026-07-26
+scope: pwa/src/styles.css
+concepts: [buttons, labels, alignment]
 ---
 
 `.pixel-button canvas { display: block }` means the button's `text-align: center`

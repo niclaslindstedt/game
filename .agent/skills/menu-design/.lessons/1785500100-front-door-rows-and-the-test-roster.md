@@ -1,6 +1,8 @@
 ---
 title: A front-door row gated on state needs its own test — ctxFor's roster is empty
 date: 2026-07-31
+scope: tests/content/menu_tree_test.ts
+concepts: [mainmenu, gating, testing]
 ---
 
 `tests/content/menu_tree_test.ts`'s `ctxFor` wires every context field to

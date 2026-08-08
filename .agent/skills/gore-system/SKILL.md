@@ -16,9 +16,11 @@ Load `visual-effects` for how a transient effect reaches the screen at all,
 `pixel-assets` for authoring a new gib sprite, and `enemy-design` for the
 `gore` / `anatomy` / `locomotion` fields on the def.
 
-**Before starting, read past lessons:** `node scripts/skill-lessons.mjs gore-system`
-(and `node scripts/skill-lessons.mjs visual-effects`, which carries three
-fragments about the blood floor and about measuring soak rates).
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs gore-system --list`,
+and `node scripts/skill-lessons.mjs visual-effects --concepts=blood-floor` for the
+neighbouring fragments about the blood floor and measuring soak rates. Reading
+them here and reflecting on them before the commit is the **`skill-reflection`**
+skill's job — load it at both ends of the session.
 
 ## Where everything lives
 
@@ -526,5 +528,12 @@ take would misreport a system whose whole point is that it does not.
 
 ## Skill self-improvement
 
-Record what you learn as a fragment under `.lessons/` — see
-`.agent/skills/LESSONS.md`. Never append to this file.
+Load the **`skill-reflection`** skill before this session commits. It owns the
+whole lesson lifecycle for this skill: recording what the pass learned (with a
+`scope` and `concepts` so the next task can find it), fixing anything in this
+file the pass proved WRONG, deleting what went stale, merging what now says the
+same thing twice, and promoting anything true in 100% of runs into the rules and checklist above.
+
+```sh
+node scripts/skill-lessons.mjs gore-system --list
+```

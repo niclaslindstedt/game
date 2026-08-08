@@ -22,6 +22,11 @@ story change at the top and carry it down so the lower tiers match — the
 manuscript is an extrapolated version of the story, and the game is an
 extrapolated version of the manuscript.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs update-story --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## When this skill applies — broader than "the plot changed"
 
 Load it whenever **any line the game speaks or shows as prose** is written,
@@ -241,9 +246,6 @@ anything, and before retoning a character whose voice is doing the identifying.
 1. **Grow the propagation table** with any new story→data relationship you
    discover (a new def file that carries a spoken line, a new scene kind) —
    operating data, edit it in place.
-2. **Record gotchas** as lesson fragments under `.lessons/` (see
-   [`../LESSONS.md`](../LESSONS.md); read back with
-   `node scripts/skill-lessons.mjs update-story`) — never append them to this
-   file, so parallel sessions don't collide.
+2. **Record gotchas** as lesson fragments — load the **`skill-reflection`** skill, which owns recording, scoping, pruning, merging and promoting them (`node scripts/skill-lessons.mjs update-story --list`).
 3. **Commit the skill edit** alongside the story change so the knowledge
    compounds.

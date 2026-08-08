@@ -1,6 +1,8 @@
 ---
 title: An unattended ride needs an exit for loot AND for a beaten campaign
 date: 2026-07-25
+scope: src/game/bot/
+concepts: [unattended, loot, campaign-exit]
 ---
 
 Two rules that only bite once the AUTO PILOT runs for hours unattended:

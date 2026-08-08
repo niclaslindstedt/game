@@ -1,6 +1,8 @@
 ---
 title: "\"Every catalog entry has a page\" is a rule about coverage, not about routes"
 date: 2026-07-30
+scope: pwa/scripts/library/
+concepts: [coverage, routes, sections]
 ---
 
 The quality bar says the library is COMPLETE — every catalog entry reachable,

@@ -1,6 +1,8 @@
 ---
 title: The library's table helper is for figures — a column of sentences has to be a list
 date: 2026-07-30
+scope: pwa/scripts/library/
+concepts: [tables, typography, readability]
 ---
 
 `table()` in `html.mjs` is the obvious container for any row-shaped data, and

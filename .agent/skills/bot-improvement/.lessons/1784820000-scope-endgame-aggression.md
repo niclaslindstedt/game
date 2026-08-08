@@ -1,6 +1,8 @@
 ---
 title: Scope endgame aggression to hopeless-parity rungs — and give A* the hazards the steering field knows about
 date: 2026-07-23
+scope: src/game/bot/
+concepts: [aggression, hazards, pathfinding]
 ---
 
 Two lessons from making the bot finish JESUS boss fights (#580):

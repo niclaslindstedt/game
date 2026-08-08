@@ -1,6 +1,8 @@
 ---
 title: A pinned "thought" can be an EXCHANGE — `voice:` + `them:` pages
 date: 2026-07-31
+scope: content/thoughts.yaml
+concepts: [thoughts, exchange, schema]
 ---
 
 When a request is "the other character should say something back", do NOT

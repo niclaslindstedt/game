@@ -1,6 +1,8 @@
 ---
 title: Recalibrating after a damage-rule change — pin the BEFORE side in a worktree, and read the everyday loadout
 date: 2026-07-28
+scope: scripts/simulate-run.mjs
+concepts: [ab-testing, worktree, loadout]
 ---
 
 Removing the looted-weapon damper / ilvl damage growth and rebuilding the

@@ -1,6 +1,8 @@
 ---
 title: The app ships auto-equip OFF — in-app probes must wear banked uniques by hand
 date: 2026-07-12
+scope: pwa/src/game/settings.ts
+concepts: [auto-equip, probes, defaults]
 ---
 
 The engine's `autoEquipOnPickup` defaults ON, but the shipped app's

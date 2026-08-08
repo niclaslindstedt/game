@@ -1,6 +1,8 @@
 ---
 title: Author a page as a PARAGRAPH — hand-broken lines are a convention that was deleted
 date: 2026-07-31
+scope: content/conversations/
+concepts: [dialogue, formatting, pages]
 ---
 
 The dialogue box flows an authored line into whatever column the device really

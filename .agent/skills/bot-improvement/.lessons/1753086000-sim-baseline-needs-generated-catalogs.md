@@ -1,6 +1,8 @@
 ---
 title: Capture the sim A/B baseline AFTER `npm run levels`, and stash-pop for a true before/after
 date: 2026-07-21
+scope: scripts/simulate-run.mjs
+concepts: [ab-testing, generated-catalogs, baselines]
 ---
 
 Two workflow traps from A/B-measuring a bot change with `scripts/simulate-run.mjs`:

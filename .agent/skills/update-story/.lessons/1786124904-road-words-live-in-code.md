@@ -1,6 +1,8 @@
 ---
 title: A line with no box, no name and no portrait is authored in CODE — and still owes the manuscript
 date: 2026-08-07
+scope: pwa/src/game/drive-screen/
+concepts: [drive, placards, manuscript]
 ---
 
 The drive minigame's words (`GLUED_BARKS`, and now `CROWD_THOUGHTS` — forty

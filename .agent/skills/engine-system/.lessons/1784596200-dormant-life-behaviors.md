@@ -1,6 +1,8 @@
 ---
 title: Dormant "life" behaviors ride moveEnemy's asleep branches + per-mob parked rng
 date: 2026-07-20
+scope: src/game/working.ts
+concepts: [enemy-behavior, dormant, rng]
 ---
 
 Making a map feel STAFFED (workers pottering, WoW-style patrols, alarm

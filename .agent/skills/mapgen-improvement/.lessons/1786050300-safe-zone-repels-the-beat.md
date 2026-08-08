@@ -1,6 +1,8 @@
 ---
 title: A SAFE zone on the landing is a wall; scripted openings die inside it
 date: 2026-07-28
+scope: content/maps/
+concepts: [safe-zone, scripted-beats, landing]
 ---
 
 `safeZones` and `quietZones` both suppress ambient spawns, so they read as

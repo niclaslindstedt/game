@@ -1,6 +1,8 @@
 ---
 title: A PILE of small things reads as a blob until you draw the seams between them
 date: 2026-08-01
+scope: content/sprites/
+concepts: [shading, seams, mass]
 ---
 
 Drawing a heap made of many identical small objects — coins, skulls, crates,

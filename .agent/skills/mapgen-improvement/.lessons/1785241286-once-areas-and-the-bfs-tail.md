@@ -1,6 +1,8 @@
 ---
 title: A `once` area must be withdrawn from the seed pool AND from the unreached-cell fallback
 date: 2026-07-28
+scope: src/game/mapgen/
+concepts: [areas, seeding, bfs]
 ---
 
 `assignAreas` withdraws a `once` area from the live palette the first time it

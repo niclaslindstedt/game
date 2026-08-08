@@ -1,6 +1,8 @@
 ---
 title: A recording repeats exactly; the sound it replaced did not
 date: 2026-08-07
+scope: mod/
+concepts: [recordings, repetition, mods]
 ---
 
 `synth.noise()` regenerates its white-noise buffer on EVERY call, so a shipped

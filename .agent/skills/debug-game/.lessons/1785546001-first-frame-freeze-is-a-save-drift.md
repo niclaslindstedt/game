@@ -1,6 +1,8 @@
 ---
 title: A frozen map with no UI after an update is a save-format drift
 date: 2026-08-01
+scope: pwa/src/game/game-screen/
+concepts: [save-format, migration, freeze]
 ---
 
 Symptom class: after applying a PWA update, CONTINUE resumes into a still

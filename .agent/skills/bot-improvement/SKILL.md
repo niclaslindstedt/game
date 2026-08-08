@@ -12,6 +12,11 @@ SAME `botAct(bot, state) → GameInput`. Improving the bot means improving that
 function so a botted run plays like a **skilled human** — the yardstick for
 every change.
 
+**Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs bot-improvement --list`,
+then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
+reflecting on them before the commit is the **`skill-reflection`** skill's job — load
+it at both ends of the session.
+
 ## The target: human capability, no handicaps
 
 Tune toward the decisions a good human makes, not toward superhuman reflexes and
@@ -241,5 +246,9 @@ if `chromium.launch()` complains about a version mismatch, launch with that
 
 - `make lint && make test` green (bot tests included).
 - A user-visible behaviour change gets a `.changes/unreleased/` fragment.
-- Record any gotcha as a lesson fragment (`.agent/skills/bot-improvement/.lessons/`,
-  see `.agent/skills/LESSONS.md`) — never append to this file from a parallel run.
+- Load the **`skill-reflection`** skill before committing: record what this pass
+  learned (with a `scope` — this skill's lessons split hard between
+  `src/game/bot/` and `content/bot.yaml`), prune the stale, merge the
+  duplicated, and promote the always-true into the sections above. This skill's
+  lesson set is one of the biggest in the repo, so read it narrowed:
+  `node scripts/skill-lessons.mjs bot-improvement --list`.

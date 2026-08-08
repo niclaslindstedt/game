@@ -1,6 +1,8 @@
 ---
 title: Ground art drawn for a side-view stage reads as STAIRS the moment it flares, and it must be painted with the floor rather than sorted into the standing queue
 date: 2026-08-06
+scope: content/sprites/scenes/
+concepts: [cutscenes, ground-art, sorting]
 ---
 
 Adding the driveway and the road to the launch cutscene

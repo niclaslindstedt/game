@@ -1,6 +1,8 @@
 ---
 title: A CAR is not a blow — road gore is SIM, and its density has to be measured at the worst case
 date: 2026-08-07
+scope: src/game/drive/
+concepts: [drive, gore-density, measurement]
 ---
 
 The run's gore is built on a blow: one instant, pieces in the air, everything

@@ -11,12 +11,14 @@ skill is the map of that system and the workflow for changing it safely.
 Everything is data-first: a new weapon is a def + an icon + (for ranged) a
 projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 
-**Before starting, read the lessons from past passes** — they live as
-fragments in [`.lessons/`](./.lessons/) next to this file (format in
-[`../LESSONS.md`](../LESSONS.md)):
+**Before starting, read this skill's lessons** — start with the index, then
+read the ones this task touches. Reading them here and reflecting on them
+before the commit is the **`skill-reflection`** skill's job; load it at both
+ends of the session.
 
 ```sh
-node scripts/skill-lessons.mjs weapon-system
+node scripts/skill-lessons.mjs weapon-system --list
+node scripts/skill-lessons.mjs weapon-system --concepts=ammo,uniques
 ```
 
 ## Where everything lives
@@ -605,13 +607,11 @@ off-hand soak zone) is `docs/rendering.md`; the gore that lands on it is the
 
 ## Skill self-improvement
 
-When a weapon-system change teaches something new (a tuning heuristic, a
-failure mode, a new behavior pattern), record it as a NEW lesson fragment —
-`.lessons/$(date +%s)-short-slug.md` with `title:`/`date:` front matter and
-the lesson in the body (format and lifecycle in
-[`../LESSONS.md`](../LESSONS.md)). Never append lessons to this file:
-parallel sessions editing one SKILL.md is what causes merge conflicts; one
-fragment per lesson never collides.
+Load the **`skill-reflection`** skill before this session commits — it owns
+recording what a weapon-system pass taught (a tuning heuristic, a failure mode,
+a new behavior pattern), fixing anything here it proved WRONG, pruning the
+stale, merging the duplicated, and promoting the always-true into the sections
+above.
 
 Extend the checker when the lesson is checkable, so the next run catches it
 mechanically instead of by eye: `scripts/weapon-stats.mjs` for weapon/loot
@@ -619,7 +619,6 @@ rules, `scripts/unique-check.mjs` for unique authoring (its tuning knobs —
 `EQUIP_GAP`, `GAP_SLACK`, seed-base exclusions — are named constants at the
 top; adjust them there, not inline).
 
-When `skill-lessons.mjs` nudges (more than 15 fragments), run the consolidation pass
-from `../LESSONS.md` as its own commit: merge near-duplicate fragments,
-delete stale ones, and promote the load-bearing ones into the sections above
-— consolidation is the only time lesson content moves into this file.
+```sh
+node scripts/skill-lessons.mjs weapon-system --list
+```

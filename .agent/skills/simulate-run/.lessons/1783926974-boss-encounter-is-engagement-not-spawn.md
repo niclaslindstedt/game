@@ -1,6 +1,8 @@
 ---
 title: The BOSS ENCOUNTERS table keys off engagement (first blow), not spawn — elites/bosses are placed at map load
 date: 2026-07-13
+scope: src/sim/
+concepts: [boss, reporting, engagement]
 ---
 
 `simulate-run.mjs`'s boss table (and `LevelReport.bosses` in

@@ -1,6 +1,8 @@
 ---
 title: "Told apart only by livery" is a promise the palette has to keep
 date: 2026-07-30
+scope: content/sprites/
+concepts: [livery, palette, families]
 ---
 
 Identity collision has a second form the rubric's wording can hide: a family

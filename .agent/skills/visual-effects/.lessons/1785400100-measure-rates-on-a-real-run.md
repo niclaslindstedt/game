@@ -1,6 +1,8 @@
 ---
 title: A build-up effect is a CURVE — measure it on a real run, never in a diorama
 date: 2026-07-30
+scope: pwa/src/game/render/
+concepts: [measurement, blood-floor, real-run]
 ---
 
 An effect that accumulates over a whole map (the hero's blood soak, a rampage

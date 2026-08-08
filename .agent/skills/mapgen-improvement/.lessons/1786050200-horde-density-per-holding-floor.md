@@ -1,6 +1,8 @@
 ---
 title: Price the horde per million px² of HOLDING floor, not per cell
 date: 2026-07-28
+scope: content/maps/
+concepts: [horde-density, spawn-budget, area]
 ---
 
 "One knot per chamber" reads like a placement rule and behaves like a fixed count:

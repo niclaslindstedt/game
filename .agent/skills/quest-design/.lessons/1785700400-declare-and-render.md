@@ -1,6 +1,8 @@
 ---
 title: Declaring a library field is not rendering it — the coverage guard passes either way
 date: 2026-07-31
+scope: pwa/scripts/library/
+concepts: [library, coverage-guard, rendering]
 ---
 
 `QUEST_FIELDS` fails the build on an authored field no page knows about, which

@@ -1,6 +1,8 @@
 ---
 title: Stage test kills as wounded mobs, not sledgehammer one-shots
 date: 2026-07-11
+scope: tests/engine/
+concepts: [testing, overkill, staging]
 ---
 
 Many suites kill staged mobs with `hitEnemy(state, enemy, 1_000_000)` or park
