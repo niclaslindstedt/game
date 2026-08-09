@@ -9,7 +9,7 @@ appearing on screen, and why it is built the way it is.
 filesystem to read a mod from. Ordinary players may use mods only with the
 Windows, macOS, or Linux game acquired through Steam. Before that unpublished
 edition is available, a mod creator may run an official downloaded desktop
-binary with `--modifications` solely to create and test their own mod; it is not
+binary with `--mods` solely to create and test their own mod; it is not
 a player entitlement and does not license multiplayer.
 
 ## The shape

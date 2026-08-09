@@ -11,7 +11,7 @@ written in**, checked by the same validator, so anything you can read in
 > **Desktop only.** Mods load in the Windows, macOS, and Linux builds. Ordinary
 > players may use them only with a game licence acquired through Steam; the
 > Steam edition has not been published yet. A mod creator may launch an
-> official downloaded desktop binary with `--modifications` solely to build and
+> official downloaded desktop binary with `--mods` solely to build and
 > test their own mod. Regular players may not use that exception, and it never
 > permits multiplayer. The browser and mobile builds do not load mods.
 
@@ -191,7 +191,7 @@ played, not republished. Both folders sort after your subscriptions, so the mod
 you just added wins its clashes while you iterate.
 
 If you do not hold the released Steam edition, launch the official downloaded
-desktop binary with `--modifications` to enable this local authoring path. That
+desktop binary with `--mods` to enable this local authoring path. That
 parameter is licensed only while creating, validating, and testing a mod you
 author. It is not a general mod-player switch and does not enable licensed
 multiplayer use.
@@ -321,7 +321,7 @@ reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
 
 The SDK licence does not itself license playing mods or multiplayer. Ordinary
 player use requires a game licence acquired through Steam; the limited
-`--modifications` exception above exists only for creators testing their own
+`--mods` exception above exists only for creators testing their own
 work before that edition is published.
 
 ## Reference

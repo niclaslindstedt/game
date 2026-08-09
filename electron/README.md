@@ -20,7 +20,7 @@ On top of the web game it adds the things a browser can't give a desktop player:
 
 - **Licensed mods and multiplayer.** Steam Workshop supplies mods and Steam's
   relay carries co-op for players who acquired the game through Steam. The
-  edition is not published yet. Mod creators may use `--modifications` with an
+  edition is not published yet. Mod creators may use `--mods` with an
   official downloaded binary solely to build and test their own local mods;
   regular players may not use that exception, and it never licenses
   multiplayer.
@@ -135,7 +135,7 @@ game plays device-locally, exactly as it does in a browser. That is the normal
 way to work on the shell. `GIS_STEAM=off` skips the attempt entirely. It does
 not grant player use of mods or multiplayer; those require an acquired Steam
 licence. A mod creator using an official downloaded binary may pass
-`--modifications` only for the local authoring/test exception described above.
+`--mods` only for the local authoring/test exception described above.
 
 ### Environment
 

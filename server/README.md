@@ -146,6 +146,6 @@ Four things about it are worth knowing before running one:
 Multiplayer is licensed only to players who have acquired the game through
 Steam. The shipped binary therefore refuses non-Steam transports; the source
 tree's test escape exists for automated development checks and does not grant a
-player licence. The mod creator's `--modifications` exception is single-player
+player licence. The mod creator's `--mods` exception is single-player
 only and never authorizes hosting or joining a session. See the repository
 [`LICENSE`](../LICENSE) and `server/licence.ts`.

@@ -18,7 +18,7 @@ is the development environment it runs in, and
 
 > **Mods are desktop-only.** Ordinary players need a copy acquired through
 > Steam to use mods or multiplayer. Until that edition is published, a mod
-> creator may run an official downloaded desktop binary with `--modifications`
+> creator may run an official downloaded desktop binary with `--mods`
 > solely to author and test their own mod. That exception is not licensed for
 > ordinary play, other people's mods, or multiplayer. The browser PWA and
 > mobile builds do not load mods.
@@ -321,10 +321,10 @@ The repository is licensed under
 [PolyForm Noncommercial 1.0.0 with Ada's Trail feature terms](LICENSE). Those
 additional terms reserve player use of **mods and multiplayer** for people who
 have acquired the game through Steam. Downloading a binary, cloning or building
-the source, or using `--modifications` does not create that player license.
+the source, or using `--mods` does not create that player license.
 
 The narrow exception is for a mod creator: they may run an official downloaded
-Windows, macOS, or Linux binary with `--modifications` solely to author,
+Windows, macOS, or Linux binary with `--mods` solely to author,
 validate, and test their own mod. It does not cover ordinary play, other
 people's mods, or multiplayer. The Steam edition is not published yet.
 
