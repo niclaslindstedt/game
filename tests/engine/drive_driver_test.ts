@@ -28,6 +28,19 @@ import {
 } from "../../engine/game/drive/index.ts";
 import { laneRunsWithHero } from "../../engine/game/drive/traffic.ts";
 
+/**
+ * How long a test that drives REAL ROAD is allowed to take.
+ *
+ * The cases here step whole legs at 16 ms a tick, which is minutes of road
+ * simulated in a few seconds — and a few seconds is vitest's default. Run alone
+ * they land comfortably inside it; run as one of ~390 files sharing the machine
+ * they did not, and a suite that goes red on how busy the box is teaches
+ * everyone to re-run rather than to read. The number is the work's, not the
+ * load's. Same decision as `ROAD_TIMEOUT_MS` in `drive_test.ts` and
+ * `SIM_TIMEOUT_MS` in `sim_party_test.ts`.
+ */
+const ROAD_TIMEOUT_MS = 60_000;
+
 const PARAMS: DriveParams = {
   seed: 4242,
   direction: 1,
@@ -53,44 +66,44 @@ function autoDrive(
 }
 
 describe("the auto-driver", () => {
-  it("gets the car to GOODCO on every rung", () => {
-    // The bar the attract loop and every shot recipe actually stand on: a
-    // driver that broke down on the hard rungs would leave the demo watching a
-    // wreck restart the same road for the rest of its life.
-    //
-    // OVER A HANDFUL OF SEEDS, BECAUSE THE CLAIM IS A RATE. The road hands out
-    // roughly one wreck in thirty on the top rungs by design (`DRIVE.coursePx`'s
-    // bench table: 38/40 on NIGHTMARE), so ONE leg pinned this to whichever side
-    // of that its seed happened to fall on — and it fell the wrong way the first
-    // time the town's layout was reshuffled by a change that made the road no
-    // harder at all. Three seeds a rung, and the top rung is allowed the one
-    // wreck the shipped road allows it; the leg that wrecks still has to have
-    // been most of the way there, which is what separates "a bad run" from "the
-    // driver cannot do this rung".
-    const seeds = [4242, 4343, 4444];
-    for (const difficulty of ["easy", "medium", "jesus"] as const) {
-      const legs = seeds.map(
-        (seed) => autoDrive({ ...PARAMS, difficulty, seed }).drive,
-      );
-      const home = legs.filter((d) => d.outcome === DRIVE_OUTCOME.arrived);
-      expect(home.length, difficulty).toBeGreaterThanOrEqual(2);
-      for (const drive of home) {
-        expect(drive.distance).toBeGreaterThanOrEqual(
-          courseLength(drive.params),
+  it(
+    "gets the car to GOODCO on every rung",
+    () => {
+      // The bar the attract loop and every shot recipe actually stand on: a
+      // driver that broke down on the hard rungs would leave the demo watching a
+      // wreck restart the same road for the rest of its life.
+      //
+      // OVER A HANDFUL OF SEEDS, BECAUSE THE CLAIM IS A RATE. The road hands out
+      // roughly one wreck in thirty on the top rungs by design (`DRIVE.coursePx`'s
+      // bench table: 38/40 on NIGHTMARE), so ONE leg pinned this to whichever side
+      // of that its seed happened to fall on — and it fell the wrong way the first
+      // time the town's layout was reshuffled by a change that made the road no
+      // harder at all. Three seeds a rung, and the top rung is allowed the one
+      // wreck the shipped road allows it; the leg that wrecks still has to have
+      // been most of the way there, which is what separates "a bad run" from "the
+      // driver cannot do this rung".
+      const seeds = [4242, 4343, 4444];
+      for (const difficulty of ["easy", "medium", "jesus"] as const) {
+        const legs = seeds.map(
+          (seed) => autoDrive({ ...PARAMS, difficulty, seed }).drive,
         );
+        const home = legs.filter((d) => d.outcome === DRIVE_OUTCOME.arrived);
+        expect(home.length, difficulty).toBeGreaterThanOrEqual(2);
+        for (const drive of home) {
+          expect(drive.distance).toBeGreaterThanOrEqual(
+            courseLength(drive.params),
+          );
+        }
+        for (const drive of legs) {
+          expect(drive.distance / courseLength(drive.params)).toBeGreaterThan(
+            0.5,
+          );
+        }
       }
-      for (const drive of legs) {
-        expect(drive.distance / courseLength(drive.params)).toBeGreaterThan(
-          0.5,
-        );
-      }
-    }
-    // NINE WHOLE LEGS AT 16 ms A TICK, which is minutes of road simulated in a
-    // few seconds — and a few seconds is the default budget. Run alone it lands
-    // comfortably inside it; run as one of ~390 files sharing the machine it
-    // did not, and a suite that goes red on how busy the box is teaches everyone
-    // to re-run rather than to read. The number is the work's, not the load's.
-  }, 60_000);
+      // NINE WHOLE LEGS AT 16 ms A TICK — see ROAD_TIMEOUT_MS.
+    },
+    ROAD_TIMEOUT_MS,
+  );
 
   it("holds the throttle — it does not coast to a stop", () => {
     // The bug this whole driver exists to fix: a road with nobody at the wheel
@@ -328,17 +341,21 @@ describe("the driver's knobs", () => {
     expect(bent.tune.lookaheadSec).toBe(DRIVE_BOT_DEFAULTS.lookaheadSec);
   });
 
-  it("drives slower with a slower cruise", () => {
-    const quick = autoDrive(PARAMS);
-    const drive = createDrive(PARAMS);
-    const slow = createDriveDriver({ cruiseFrac: 0.5, floorFrac: 0.2 });
-    let ticks = 0;
-    while (drive.outcome === DRIVE_OUTCOME.driving && drive.ms < 400000) {
-      stepDrive(drive, 16, driveDriverInput(slow, drive));
-      ticks++;
-    }
-    expect(ticks).toBeGreaterThan(quick.ticks);
-  });
+  it(
+    "drives slower with a slower cruise",
+    () => {
+      const quick = autoDrive(PARAMS);
+      const drive = createDrive(PARAMS);
+      const slow = createDriveDriver({ cruiseFrac: 0.5, floorFrac: 0.2 });
+      let ticks = 0;
+      while (drive.outcome === DRIVE_OUTCOME.driving && drive.ms < 400000) {
+        stepDrive(drive, 16, driveDriverInput(slow, drive));
+        ticks++;
+      }
+      expect(ticks).toBeGreaterThan(quick.ticks);
+    },
+    ROAD_TIMEOUT_MS,
+  );
 });
 
 describe("a shortened leg", () => {

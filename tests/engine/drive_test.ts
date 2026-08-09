@@ -62,6 +62,26 @@ const PARAMS: DriveParams = {
   difficulty: "medium",
 };
 
+/**
+ * How long a test that drives REAL ROAD is allowed to take. The same decision
+ * `SIM_TIMEOUT_MS` makes in `sim_party_test.ts`, for the same reason, and the
+ * cases below are the road's version of it.
+ *
+ * A handful of these step whole legs at 16 ms a tick — one of them eight legs
+ * twice over (`laneOccupancy`) — so they cost real seconds of honest work
+ * against vitest's five-second default, which was never chosen for them. That
+ * default is a WALL CLOCK: run alone they fit inside it, run as one of ~390
+ * files sharing the box they do not, and the suite goes red on how busy the
+ * machine is rather than on anything about the road. A budget that can be
+ * decided by the load is not a budget.
+ *
+ * Generous on purpose, and it costs nothing to be: every loop here is bounded
+ * by its own tick cap, so the timeout was never what would stop a runaway. What
+ * it still catches is a genuinely wedged step — just after a wait long enough
+ * that a busy CI box cannot be the reason.
+ */
+const ROAD_TIMEOUT_MS = 60_000;
+
 /** Drive flat out for `ms`, in the engine's own fixed step. */
 function floorIt(drive: DriveState, ms: number, wheel = 0): void {
   // PAST THE OPENING FIRST. A fresh leg spends its first three and a half
@@ -797,6 +817,8 @@ describe("the street", () => {
   // hundredths of the floor and it crossed on the wind; eight lands every lane
   // clear of it. The claim is about the SPAWNER, so the sample has to be big
   // enough that it is not about one driver's afternoon.
+  //
+  // EIGHT WHOLE LEGS IS ALSO WHY BOTH ITS CALLERS TAKE `ROAD_TIMEOUT_MS`.
   const LANE_SEEDS = [1234, 5, 77, 909, 31, 404, 8181, 60];
   const laneOccupancy = (difficulty: Difficulty): number[] => {
     const seen = new Array<number>(DRIVE.laneCount).fill(0);
@@ -835,30 +857,38 @@ describe("the street", () => {
     return seen.map((n) => n / Math.max(1, ticks));
   };
 
-  it("keeps a vehicle in every lane on every screen", () => {
-    // THE PROMISE THE TRAFFIC IS TUNED TO MAKE. Not "some traffic exists" —
-    // every lane, all the time, because a lane the player never has to read is
-    // a lane the wheel is not being used for, and four of them made the road a
-    // corridor with the occasional car in it.
-    for (const lane of laneOccupancy("medium")) {
-      // Loose at the bottom on purpose: the lane the wagon is actually IN
-      // reads lighter than the rest however carefully it is driven, because
-      // what it meets there it shoves out of the way.
-      expect(lane).toBeGreaterThan(0.5);
-      // …and the other wall: past about one and a half a lane there is no gap
-      // left to move into, and a road with nowhere to put the wagon has taken
-      // the steering decision away rather than sharpened it.
-      expect(lane).toBeLessThan(1.7);
-    }
-  });
+  it(
+    "keeps a vehicle in every lane on every screen",
+    () => {
+      // THE PROMISE THE TRAFFIC IS TUNED TO MAKE. Not "some traffic exists" —
+      // every lane, all the time, because a lane the player never has to read is
+      // a lane the wheel is not being used for, and four of them made the road a
+      // corridor with the occasional car in it.
+      for (const lane of laneOccupancy("medium")) {
+        // Loose at the bottom on purpose: the lane the wagon is actually IN
+        // reads lighter than the rest however carefully it is driven, because
+        // what it meets there it shoves out of the way.
+        expect(lane).toBeGreaterThan(0.5);
+        // …and the other wall: past about one and a half a lane there is no gap
+        // left to move into, and a road with nowhere to put the wagon has taken
+        // the steering decision away rather than sharpened it.
+        expect(lane).toBeLessThan(1.7);
+      }
+    },
+    ROAD_TIMEOUT_MS,
+  );
 
-  it("thins the traffic on the gentle rungs and thickens it up the ladder", () => {
-    const total = (difficulty: Difficulty) =>
-      laneOccupancy(difficulty).reduce((a, b) => a + b, 0);
-    expect(total("easy")).toBeLessThan(
-      total(DIFFICULTY_ORDER.at(-1) as Difficulty),
-    );
-  });
+  it(
+    "thins the traffic on the gentle rungs and thickens it up the ladder",
+    () => {
+      const total = (difficulty: Difficulty) =>
+        laneOccupancy(difficulty).reduce((a, b) => a + b, 0);
+      expect(total("easy")).toBeLessThan(
+        total(DIFFICULTY_ORDER.at(-1) as Difficulty),
+      );
+    },
+    ROAD_TIMEOUT_MS,
+  );
 });
 
 describe("a drive", () => {
@@ -1120,25 +1150,31 @@ describe("the gore switch", () => {
 });
 
 describe("the traffic", () => {
-  it("puts other cars on the road and shoves them aside rather than wrecking", () => {
-    const drive = createDrive(PARAMS);
-    let sawTraffic = 0;
-    // Sampled WHILE the drive is live — a finished one has despawned the road
-    // behind it and spawns nothing new, so there is nothing left to look at.
-    for (
-      let t = 0;
-      t < 60000 && drive.outcome === DRIVE_OUTCOME.driving;
-      t += 16
-    ) {
-      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
-      sawTraffic = Math.max(sawTraffic, drive.traffic.length);
-      for (const other of drive.traffic) {
-        expect(Number.isFinite(other.pos.y)).toBe(true);
-        expect(Math.abs(other.slew)).toBeLessThanOrEqual(DRIVE.shuntMaxPx + 1);
+  it(
+    "puts other cars on the road and shoves them aside rather than wrecking",
+    () => {
+      const drive = createDrive(PARAMS);
+      let sawTraffic = 0;
+      // Sampled WHILE the drive is live — a finished one has despawned the road
+      // behind it and spawns nothing new, so there is nothing left to look at.
+      for (
+        let t = 0;
+        t < 60000 && drive.outcome === DRIVE_OUTCOME.driving;
+        t += 16
+      ) {
+        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+        sawTraffic = Math.max(sawTraffic, drive.traffic.length);
+        for (const other of drive.traffic) {
+          expect(Number.isFinite(other.pos.y)).toBe(true);
+          expect(Math.abs(other.slew)).toBeLessThanOrEqual(
+            DRIVE.shuntMaxPx + 1,
+          );
+        }
       }
-    }
-    expect(sawTraffic).toBeGreaterThan(0);
-  });
+      expect(sawTraffic).toBeGreaterThan(0);
+    },
+    ROAD_TIMEOUT_MS,
+  );
 
   it("books ONE impact per contact rather than one per tick", () => {
     // The bug this exists to catch: two overlapping car bodies stay overlapping
