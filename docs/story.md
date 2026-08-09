@@ -337,10 +337,14 @@ over ten years of weekends stands on the lawn. He gathers "engine, fuel, duct
 tape, and the part they said I couldn't have," boards, and lights the engine —
 first flight, no test runs. The blast throws a wall of fire and smoke the length
 of the lot, blacks the side of his own garage and leaves its roof burning; then
-house and ground fall away and only the moon and the stars remain. The house he
-comes home to is a burnt one from then on — and every launch after this one is
-made from beside it, off the same dead patch of lawn, with the roof catching
-again. He never mentions it.
+house and ground fall away and only the moon and the stars remain.
+
+That is the first of three fires, and nothing in between them is ever repaired.
+Every trip is flown off the same dead patch of lawn a dozen feet from the same
+house: the lift-off for the moon blackens it, the landing that brings him home
+blackens what is already black, and the lift-off for Mars guts it — roof in,
+door gone, both dark windows blown through, the living-room lamp still burning
+at the far end. He never mentions it, and neither does anybody else.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 
@@ -403,12 +407,23 @@ word: take the old freight line, red all the way, and bring her home — and tel
 the company men the moon remembers. The hero boards and climbs away, the ghost
 watching him out of sight with fifty years of practice.
 
+## Travel — THE HOMECOMING (cutscene)
+
+**His own lawn, three days later**, and the launch played backwards: the ship
+comes down out of the top of the night onto the pad it left from, juddering on
+its own exhaust, and sets the house alight for the second time on the way in.
+The engine dies, the hero climbs out in the suit he wore on the regolith, and
+walks toward a frontage that is worse than the one he left. He notices the
+smell of something burning, works out whose it is, and goes inside for a
+sandwich and a map anyway. The roof can wait; it has waited before.
+
 ## Travel — THE LAUNCH, AGAIN (cutscene)
 
 **Home, a second time.** Mars opens on the garage exactly as the moon did, and
-nothing has been repaired: the frontage is still black down the garage end, the
-roof still open, the lawn still dead where the ship stands. He lights it, the
-roof catches again, and he goes.
+nothing has been repaired: two fires on, the frontage is black the whole width,
+most of the garage roof is gone and the door is buckled in its frame. He lights
+it, the roof catches for the third time, and he goes — and whatever he comes
+back to after that is a shell with a lamp on in it.
 
 ## Travel — THE VOYAGE, LEG TWO (cutscene)
 

@@ -23,12 +23,18 @@ name: THE MOON
 prelude:
   - launch
   - voyage_moon
-# THE SEND-OFF, played when the flag is won rather than when Mars opens. THE
-# FLAGBEARER — beaten and satisfied — sees the hero off this landing site, and
-# it belongs to the moon: the hero flies to Mars from his OWN LAWN, so opening
-# Mars with a man in a spacesuit saying goodbye on regolith showed the player a
-# departure he had not made.
-farewell: moon_depart
+# THE SEND-OFF, played when the flag is won rather than when Mars opens, and it
+# is TWO SCENES because the trip has two ends. THE FLAGBEARER — beaten and
+# satisfied — sees the hero off this landing site, and that belongs to the moon:
+# the hero flies to Mars from his OWN LAWN, so opening Mars with a man in a
+# spacesuit saying goodbye on regolith showed the player a departure he had not
+# made. Then `earth_return` lands him, which is the other half of the same
+# problem: `exitTo: garage` puts him back home between voyages, and without a
+# scene of the ship coming down he simply MATERIALIZED there — and the second
+# fire the landing sets on his own house would have happened off-screen.
+farewell:
+  - moon_depart
+  - earth_return
 music: regolith_ride
 intro:
   - - ADA'S TRACKER WENT QUIET SOMEWHERE NEAR THE OLD APOLLO FLAG. THAT'S WHERE I'M HEADED.

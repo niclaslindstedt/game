@@ -1,0 +1,105 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE HOMECOMING — the moon's send-off, part two, and the LAUNCH PLAYED
+# BACKWARDS. The same lot, the same night, the same pad: the ship drops onto it
+# instead of leaving it, the engine cuts instead of lighting, and the hero walks
+# OUT of the hull and toward the house instead of the other way about.
+#
+# IT IS WHERE THE SECOND FIRE HAPPENS. A landing is a launch with the same end
+# pointed the same way, so the house standing a dozen px off the pad takes the
+# blast all over again — and because the ship comes home to the lot it left,
+# the run's own memory of that is a LADDER rather than a flag: whole
+# (`garage_house`), then burnt (here), then burnt twice over the Mars launch,
+# then gutted. Nothing gets better; the ladder only ever climbs.
+#
+# THE SHIP OPENS OFF ITS MARK (`lift:` on the actor). It is authored ON the pad
+# it is coming down to — which is what keeps the plume, the pad blast, the soot
+# and the sort order all measured against the ground rather than against the sky
+# it happens to start in — and simply begins 120 px above it, out of the top of
+# the frame. The descent is a LADDER of `jump` beats rather than one long fall:
+# each is ballistic and each starts slower than the last ended, so a homemade
+# rocket judders its way down on its own exhaust and settles, instead of
+# accelerating into its own lawn like a dropped brick.
+id: earth_return
+stage:
+  width: 224
+  height: 126
+  backdrop: garageNight
+  # The launch's lot, unchanged — same night sky, same floor line, same scorched
+  # patch derived from where the ship is parked.
+  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  props:
+    # THE HOUSE, ONE FIRE ON. This scene is the only place the first burn is
+    # ever LOOKED at from the outside: the moon's launch left it like this and
+    # the Mars launch finds it worse still, so between the two there has to be a
+    # scene that shows it. Past Mars there is no way back to a roof — a replay
+    # of this landing finds the gutted frontage the third launch left.
+    - {
+        sprite: garage_house_burnt,
+        at: { x: 46, y: 98 },
+        label: house_burnt,
+        until: "cleared:mars",
+      }
+    - {
+        sprite: garage_house_burnt3,
+        at: { x: 46, y: 98 },
+        label: house_gutted,
+        needs: "cleared:mars",
+      }
+    # The lot's own ground, exactly as the launch lays it (`ground: true` paints
+    # it WITH the floor, under everything standing).
+    - { sprite: garage_drive, at: { x: 57, y: 114 }, ground: true }
+    - { sprite: road_lane, at: { x: 28, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 84, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
+    - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
+actors:
+  # THE SHIP, COMING DOWN ON ITS OWN EXHAUST — posed to `ship_fire` from the
+  # first frame (this is the retro burn, not an ignition), and standing 120 px
+  # off the pad it is authored on, which puts the hull just above the frame and
+  # its plume already in it. The engine cuts on touchdown.
+  - { id: ship, sprite: ship_fire, at: { x: 94, y: 100 }, lift: 120 }
+  # …and the man inside it, in the suit he wore on the regolith. He steps out
+  # after the engine dies, which is why he opens off-stage.
+  - {
+      id: hero,
+      name: "{HERO}",
+      sprite: hero_suit,
+      at: { x: 88, y: 102 },
+      hidden: true,
+    }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: shake, actor: ship, amp: 1 }
+  - { kind: fade, to: 0, ms: 900 }
+  - kind: caption
+    text:
+      - THE LONG WAY BACK. THREE DAYS TO THINK ABOUT WHAT THE DEAD MAN TOLD ME.
+  # The descent. Five beats, each shorter and slower than the one before it —
+  # the retro burn biting, letting go, and biting again.
+  - { kind: jump, actor: ship, lift: 78, ms: 900 }
+  - { kind: jump, actor: ship, lift: 46, ms: 800 }
+  - { kind: jump, actor: ship, lift: 24, ms: 700 }
+  - { kind: jump, actor: ship, lift: 9, ms: 600 }
+  - { kind: jump, actor: ship, lift: 0, ms: 500 }
+  # Down. The engine dies and the rattle with it — but what it did to the house
+  # on the way in does NOT go out with it (`stagedRocket`, CutsceneOverlay).
+  - { kind: pose, actor: ship, sprite: ship }
+  - { kind: shake, actor: ship, amp: 0 }
+  - { kind: wait, ms: 900 }
+  - { kind: enter, actor: hero }
+  - { kind: move, actor: hero, to: { x: 74, y: 102 }, speed: 40 }
+  - kind: say
+    actor: hero
+    text:
+      - HOME. SAME LAWN. SAME SKY. SAME SMELL OF SOMETHING BURNING.
+  - { kind: move, actor: hero, to: { x: 52, y: 102 }, speed: 36 }
+  - kind: say
+    actor: hero
+    text:
+      - ...THAT ONE'S ME, ISN'T IT.
+  - { kind: move, actor: hero, to: { x: 36, y: 102 }, speed: 36 }
+  - { kind: exit, actor: hero }
+  - kind: caption
+    text:
+      - I WENT IN FOR A SANDWICH AND A MAP. THE ROOF COULD WAIT. IT HAD WAITED BEFORE.
+  - { kind: fade, to: 1, ms: 1100 }

@@ -6,7 +6,8 @@
 // falling behind the game it exists to show — add a signature weapon or a talent
 // and the coverage checks below fail until its exhibit appears.
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import {
   ABILITY_DEFS,
@@ -21,15 +22,17 @@ import { describe, expect, it } from "vitest";
 
 import { effectsCatalog } from "../../pwa/src/game/effects-gallery/effects-catalog.ts";
 import {
-  isDriveExhibit,
+  isCutsceneExhibit,
+  isRunExhibit,
   type Exhibit,
 } from "../../pwa/src/game/effects-gallery/exhibit-kit.ts";
 
 const EFFECTS = effectsCatalog();
 /** The RUN-hosted exhibits — everything the coverage checks below are about.
  * The DRIVE shelf stages a road rather than a `ScenarioSpec` and is covered by
- * its own suite (drive_exhibits_test.ts). */
-const STAGED = EFFECTS.filter((e) => !isDriveExhibit(e));
+ * its own suite (drive_exhibits_test.ts); the SCENES shelf stages a cutscene
+ * and is covered by the scene checks at the foot of this file. */
+const STAGED = EFFECTS.filter(isRunExhibit);
 
 // `effectsCatalog` composes its shelves by filtering the hand-authored list per
 // group, so an exhibit whose group is missing from that composition is authored,
@@ -52,6 +55,8 @@ const SHELVES = [
   // end of the catalog like every other shelf, so the same "is it actually
   // reachable" check covers it.
   "DRIVE",
+  // THE SCENES — hosted by a `CutsceneState`, same reasoning again.
+  "SCENES",
 ];
 
 // The generated sprite-atlas manifest is the shipping sprite inventory.
@@ -72,7 +77,8 @@ const sprites = new Set(
 function stagedIds(exhibit: Exhibit) {
   // A DRIVE exhibit has no `ScenarioSpec` at all — it stages a road rather than
   // a run, and what it plants is checked by driving it (drive_exhibits_test.ts).
-  const stage = isDriveExhibit(exhibit) ? {} : (exhibit.stage ?? {});
+  // Nor does a SCENE, which stages a cutscene.
+  const stage = isRunExhibit(exhibit) ? (exhibit.stage ?? {}) : {};
   return {
     weapons: [stage.weapon].filter(
       (id): id is string => typeof id === "string",
@@ -149,7 +155,7 @@ describe("effects gallery / catalog hygiene", () => {
           `${exhibit.id}: unknown enemy "${id}"`,
         ).toBeDefined();
       }
-      if (!isDriveExhibit(exhibit) && exhibit.levelId) {
+      if (isRunExhibit(exhibit) && exhibit.levelId) {
         expect(
           LEVELS[exhibit.levelId],
           `${exhibit.id}: unknown level`,
@@ -203,6 +209,47 @@ describe("effects gallery / coverage", () => {
         STAGED.some((e) => e.stage?.runAbilities?.includes(def.id)),
         `no exhibit runs the ${def.id} powerup`,
       ).toBe(true);
+    }
+  });
+});
+
+describe("effects gallery / the SCENES shelf", () => {
+  const SCENES = EFFECTS.filter(isCutsceneExhibit);
+
+  /** The AUTHORED scenes — the `content/cutscenes/` tree itself rather than the
+   * compiled catalog, because the compile expands each scene's `variants:` into
+   * whole extra scenes (`prelude_easy`, …) and a per-difficulty weapon swap is
+   * not a picture worth its own shelf row. */
+  const authored = readdirSync(
+    fileURLToPath(new URL("../../content/cutscenes", import.meta.url)),
+  )
+    .filter((file) => file.endsWith(".yaml"))
+    .map((file) => file.replace(/\.yaml$/, ""));
+
+  it("has a row for every scene the campaign ships", () => {
+    const shown = new Set(SCENES.map((e) => e.sceneId));
+    for (const id of authored) {
+      expect(
+        shown.has(id),
+        `no gallery exhibit plays "${id}" — add one to ` +
+          `pwa/src/game/effects-gallery/scene-exhibits.ts`,
+      ).toBe(true);
+    }
+  });
+
+  it("plays only scenes that exist", () => {
+    for (const exhibit of SCENES) {
+      expect(authored, exhibit.id).toContain(exhibit.sceneId);
+    }
+  });
+
+  it("gives every scene room to finish", () => {
+    // A scene is the longest thing in this catalog by a wide margin — held
+    // pages, walks, a fade at each end — and `showMs` is what `--strip` spreads
+    // a filmstrip across. Sized like an explosion, every sheet of the shelf
+    // would be six frames of the same opening caption.
+    for (const exhibit of SCENES) {
+      expect(exhibit.showMs ?? 0, exhibit.id).toBeGreaterThanOrEqual(5_000);
     }
   });
 });

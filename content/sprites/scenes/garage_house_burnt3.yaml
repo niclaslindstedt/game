@@ -1,0 +1,42 @@
+name: garage_house_burnt3
+family: scenes
+size: [48, 19]
+description: >
+  The hero's house after the THIRD launch off the same lawn — the roof fallen in
+  over the garage end, the whole frontage burnt black, both dark windows blown
+  out. The lit window is the only colour left in it.
+subject:
+  kind: scene backdrop / building
+  build: a single-storey house under what is left of a peaked roof, joined to a gutted garage bay — the same frontage, three launches on
+  features: the roof caved in from the garage end so the ridge line stands over an open hole, the flat garage roof gone to two charred stubs, the door burnt out of its frame, and the small window blown through; the siding black at the garage end and dark grey at the far one
+  accent: the amber lit window, the one thing in the building that is not soot
+  flavor: still standing, still lived in, and nobody in the game ever mentions it
+palette:
+  C: "#332c25" # the roof's last charred boards
+  N: "#0e1016" # the dark inside, open to the night
+  O: "#1a1c2c" # outline
+  S: "#33302c" # near-black siding, garage end
+  T: "#211f1c" # soot, run together into one black face
+  c: "#1b1613" # burnt eaves
+  s: "#514c45" # dark grey siding, the far end
+  y: "#ffb02e" # amber lit window
+grid: |
+  ................................................
+  ......OOOOOOOOOOOOOO............................
+  .....OccccccccccccccO...........................
+  ....OccCCCCCCNNNNNNccO..........................
+  ...OccCCCCCNNNNNNNNNccO.........................
+  ..OccCCCCCNNNNNNNNNNNccO........................
+  .OccCCCCCNNNNNNNNNNNNNccOOOOOOOOOOOOOOOOOOOOOO..
+  OOOOOOOOOOOOOOOOOOOOOOOOOcOOOOOOcOOOOOOOOOOccOO.
+  O.sssssssssssssssssssss.OOOOOOOOOOOOOOOOOOOOOOO.
+  O.sssssssssssssssssTTTT.O.TSSSSSSSSSSSSSSSTTS.O.
+  O.ssOOOOOOsssssssssTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.ssOyyyyOsssssssssTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.ssOyyyyOsssOOOOOOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.ssOyyyyOsssONNNNOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.ssOOOOOOsssONNNNOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.sssssssssssONNONOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.sssssssssssONNNNOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  O.sssssssssssONNNNOTTTT.O.TSONNNNNNNNNNNNOTTS.O.
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

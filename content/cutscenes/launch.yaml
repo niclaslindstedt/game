@@ -38,13 +38,22 @@ stage:
     # (`render/rocket-exhaust.ts` — soot is a function of distance, so the
     # garage is the only thing near enough to get any).
     #
-    # …AND THE JOKE HAS A SECOND HALF, which is that it STICKS. This scene plays
-    # again every time the hero lifts off his own lawn, and the house he lights
-    # it beside is whole exactly once. `until:` / `needs:` are the run's own
-    # memory: once the moon is behind him, the whole frontage is swapped for the
-    # burnt one, the blast blackens what is already black, and the roof catches
-    # again on a roof that has caught before. Nothing gets worse — it just never
-    # gets better, and nobody in the game ever mentions it.
+    # …AND THE JOKE HAS A SECOND HALF, which is that it STICKS — and a THIRD,
+    # which is that it keeps going. The house he lights it beside is whole
+    # exactly once, and every burn after that lands on what the last one left:
+    #
+    #   whole            → the first lift-off, for the moon
+    #   burnt            → the landing that brings him home (`earth_return`)
+    #   burnt twice over → HERE, the second lift-off, for Mars
+    #   gutted           → whatever the third fire left, on any replay after it
+    #
+    # `until:` / `needs:` are the run's own memory, and the ladder is read off
+    # the levels behind him rather than off a counter: `cleared:moon` means the
+    # homecoming has already happened, so this launch opens on a two-fire house;
+    # `cleared:mars` means the third fire is behind him too. The blast then
+    # blackens what is already black and the roof catches again on a roof that
+    # has caught before. Nothing gets better — it just never stops getting
+    # worse, and nobody in the game ever mentions it.
     - {
         sprite: garage_house,
         at: { x: 46, y: 98 },
@@ -52,10 +61,17 @@ stage:
         until: "cleared:moon",
       }
     - {
-        sprite: garage_house_burnt,
+        sprite: garage_house_burnt2,
         at: { x: 46, y: 98 },
         label: house_burnt,
         needs: "cleared:moon",
+        until: "cleared:mars",
+      }
+    - {
+        sprite: garage_house_burnt3,
+        at: { x: 46, y: 98 },
+        label: house_gutted,
+        needs: "cleared:mars",
       }
     # ── THE LOT'S OWN GROUND (`content/maps/garage.yaml`) ──────────────────
     # The hub is walkable and the player has already stood on all of this, so

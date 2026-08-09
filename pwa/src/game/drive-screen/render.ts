@@ -85,6 +85,8 @@ import {
   lightBody,
   RIDER_SEATS,
   RIDER_SPRITES,
+  ROAD_INK,
+  CENTRE_DASH,
   trafficSprite,
 } from "./scenery.ts";
 import { drawTownProp, ensureTownArt } from "./town-art.ts";
@@ -100,16 +102,16 @@ const VERGE_FAR = "#232a20";
  * touch warmer and lighter than the tarmac so the eye reads a different surface
  * at a glance rather than a wider road. */
 const PAVEMENT = "#4a4741";
-const KERB = "#605c53";
 /** …and GOODCO's own ground, which is neither: a poured concrete apron running
  * from its fence back to the halls. Cooler and flatter than the town's paving,
  * because that is what a car park is and because the change of surface is half
  * of what tells the player the town is behind him. */
 const APRON = "#3b414a";
-/** The tarmac, and the paint on it. */
-const ROAD = "#31333c";
-const ROAD_EDGE = "#3c3f4a";
-const PAINT = "#c9c4a8";
+/** The tarmac, its rim, the kerb off it and the paint on it — read from the
+ * ONE road table (`scenery.ts`), because the garage cutscenes lay this same
+ * stretch of road across the front of the lot as authored ground art, and two
+ * sets of greys for one road is a drift with nothing watching it. */
+const { road: ROAD, edge: ROAD_EDGE, kerb: KERB, paint: PAINT } = ROAD_INK;
 
 /** The kerb's own step up off the tarmac (world px). The pavement's DEPTH is
  * not a drawing decision at all — it is `DRIVE.pavementPx`, because people
@@ -567,8 +569,10 @@ export function drawDrive(
       }
       // …and broken either side of it, which out here is both sides of the leg:
       // the approach in front of the town, and nothing behind GOODCO's gate.
-      if (inTownFrom > left) dashes(y, left, inTownFrom, 12, 14);
-      if (inTownTo < right) dashes(y, inTownTo, right, 12, 14);
+      if (inTownFrom > left)
+        dashes(y, left, inTownFrom, CENTRE_DASH.on, CENTRE_DASH.off);
+      if (inTownTo < right)
+        dashes(y, inTownTo, right, CENTRE_DASH.on, CENTRE_DASH.off);
       continue;
     }
     dashes(y, inTownFrom, inTownTo, 22, 20);

@@ -195,6 +195,22 @@ const CATCH_RANGE = 1.2;
 const REACH_ALONG = 0.6;
 
 /**
+ * A BURN THAT IS OVER — the age to hand {@link sootLevel} and
+ * {@link propFireLevel} for an engine that has SHUT DOWN having been lit.
+ *
+ * Every curve in this file is a ramp that saturates and then holds, so once
+ * the engine stops there is nothing left for it to decide: the blackening it
+ * did is done, and it neither un-happens nor gets any worse. The alternative —
+ * reading a dead engine's own clock — snaps the soot and the burning roof off
+ * the house in the single frame the ship cuts its motor, which is what the
+ * homecoming's touchdown does (`content/cutscenes/earth_return.yaml`).
+ *
+ * Derived from the ramps rather than typed, so re-timing one cannot leave this
+ * short of it.
+ */
+export const BLAST_SPENT_MS = Math.max(SOOT_MS, CATCH_MS + SPREAD_MS);
+
+/**
  * WHETHER SOMETHING `gap` PX CLEAR OF THE PAD HAS CAUGHT FIRE, 0..1.
  *
  * The soot above is what the blast does to every surface it can reach; this is

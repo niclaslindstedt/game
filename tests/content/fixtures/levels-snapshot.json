@@ -252,7 +252,7 @@
       "index": 2,
       "name": "THE MOON",
       "prelude": ["launch", "voyage_moon"],
-      "farewell": "moon_depart",
+      "farewell": ["moon_depart", "earth_return"],
       "music": "regolith_ride",
       "intro": [
         [

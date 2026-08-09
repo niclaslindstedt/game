@@ -37,6 +37,43 @@ import {
 import type { LightBody } from "../render/vehicles.ts";
 
 /**
+ * WHAT THE ROAD IS PAINTED IN — the four inks the carriageway is made of, and
+ * the ONE place the county's tarmac is a colour.
+ *
+ * IT IS HERE RATHER THAN IN `render.ts` BECAUSE THE ROAD IS DRAWN TWICE. The
+ * minigame paints it as flat fills through the world projection; the garage
+ * cutscenes lay it across the front of the lot as authored ground art
+ * (`content/sprites/scenes/road_lane.yaml`) — and it is THE SAME ROAD, the one
+ * the wagon leaves the drive by thirty seconds later. Two sets of greys for one
+ * stretch of tarmac is a drift nobody notices until the two are on screen
+ * within a minute of each other, which is exactly what the homecoming and the
+ * road to GOODCO are. `tests/content/road_ink_test.ts` holds the tile to this
+ * table; a sprite cannot import a constant, so the test is the seam.
+ */
+export const ROAD_INK = {
+  /** The tarmac itself. */
+  road: "#31333c",
+  /** …and its darker rim, the gutter the paint stops short of. */
+  edge: "#3c3f4a",
+  /** The kerb that steps up off it onto the footway. */
+  kerb: "#605c53",
+  /** Traffic white, as this game's night actually renders it. */
+  paint: "#c9c4a8",
+} as const;
+
+/**
+ * THE CENTRE LINE'S BROKEN RHYTHM out of town, in world px — `on` painted,
+ * `off` blank. A two-lane road's centre marks are stubbier and closer together
+ * than a lane divider's, and at this size that difference is the whole of what
+ * tells the two apart.
+ *
+ * The cutscene tile paints the same rhythm at the same size, rounded to a
+ * cycle its own width is a whole multiple of, so a row of tiles comes out as
+ * one evenly broken line rather than as a line with a stutter every 56 px.
+ */
+export const CENTRE_DASH = { on: 12, off: 14 } as const;
+
+/**
  * THE CROWD's bodies — the twenty people the welfare did not reach.
  *
  * WHY TWENTY AND WHY THESE. A road the player is meant to feel bad about

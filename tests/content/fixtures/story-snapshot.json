@@ -7,6 +7,226 @@
     "cap_pathetic_5"
   ],
   "cutscenes": {
+    "earth_return": {
+      "actors": [
+        {
+          "at": {
+            "x": 94,
+            "y": 100
+          },
+          "id": "ship",
+          "lift": 120,
+          "sprite": "ship_fire"
+        },
+        {
+          "at": {
+            "x": 88,
+            "y": 102
+          },
+          "hidden": true,
+          "id": "hero",
+          "name": "{HERO}",
+          "sprite": "hero_suit"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "actor": "ship",
+          "amp": 1,
+          "kind": "shake"
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "THE LONG WAY BACK. THREE DAYS TO THINK ABOUT WHAT THE DEAD MAN TOLD ME."
+          ]
+        },
+        {
+          "actor": "ship",
+          "kind": "jump",
+          "lift": 78,
+          "ms": 900
+        },
+        {
+          "actor": "ship",
+          "kind": "jump",
+          "lift": 46,
+          "ms": 800
+        },
+        {
+          "actor": "ship",
+          "kind": "jump",
+          "lift": 24,
+          "ms": 700
+        },
+        {
+          "actor": "ship",
+          "kind": "jump",
+          "lift": 9,
+          "ms": 600
+        },
+        {
+          "actor": "ship",
+          "kind": "jump",
+          "lift": 0,
+          "ms": 500
+        },
+        {
+          "actor": "ship",
+          "kind": "pose",
+          "sprite": "ship"
+        },
+        {
+          "actor": "ship",
+          "amp": 0,
+          "kind": "shake"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "actor": "hero",
+          "kind": "enter"
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 74,
+            "y": 102
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "HOME. SAME LAWN. SAME SKY. SAME SMELL OF SOMETHING BURNING."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 36,
+          "to": {
+            "x": 52,
+            "y": 102
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["...THAT ONE'S ME, ISN'T IT."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 36,
+          "to": {
+            "x": 36,
+            "y": 102
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "I WENT IN FOR A SANDWICH AND A MAP. THE ROOF COULD WAIT. IT HAD WAITED BEFORE."
+          ]
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "earth_return",
+      "stage": {
+        "backdrop": "garageNight",
+        "height": 126,
+        "palette": {
+          "floor": "#20281c",
+          "floorY": 88,
+          "trim": "#0a0c14",
+          "wall": "#0e1020"
+        },
+        "props": [
+          {
+            "id": "house_burnt",
+            "kind": "garage_house_burnt",
+            "pos": {
+              "x": 46,
+              "y": 98
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "house_gutted",
+            "kind": "garage_house_burnt3",
+            "needs": "cleared:mars",
+            "pos": {
+              "x": 46,
+              "y": 98
+            }
+          },
+          {
+            "ground": true,
+            "kind": "garage_drive",
+            "pos": {
+              "x": 57,
+              "y": 114
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 28,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 84,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 140,
+              "y": 126
+            }
+          },
+          {
+            "ground": true,
+            "kind": "road_lane",
+            "pos": {
+              "x": 196,
+              "y": 126
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
     "launch": {
       "actors": [
         {
@@ -144,8 +364,18 @@
           },
           {
             "id": "house_burnt",
-            "kind": "garage_house_burnt",
+            "kind": "garage_house_burnt2",
             "needs": "cleared:moon",
+            "pos": {
+              "x": 46,
+              "y": 98
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "house_gutted",
+            "kind": "garage_house_burnt3",
+            "needs": "cleared:mars",
             "pos": {
               "x": 46,
               "y": 98

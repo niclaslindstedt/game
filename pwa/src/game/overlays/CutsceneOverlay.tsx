@@ -40,6 +40,7 @@ import {
   riftPortalLook,
 } from "../render/rift-portal.ts";
 import {
+  BLAST_SPENT_MS,
   drawPropFire,
   drawRocketExhaust,
   propFireLevel,
@@ -103,15 +104,33 @@ const SKY_BACKDROPS: ReadonlySet<string> = new Set(["garageNight"]);
  * IT IS FOUND WHETHER OR NOT IT IS BURNING, because the mark it has already
  * left is on the ground before the beat that lights it — the lawn under a ship
  * that has flown before is dead from the first frame of the scene.
+ *
+ * …AND THE MARK OUTLIVES THE BURN, which is the other half of the same idea and
+ * the half a scene that only ever LIGHTS a rocket never had to answer. The
+ * blast's clock is the engine's own `poseMs` while it is lit; once it is out,
+ * what it blackened stays blackened (`BLAST_SPENT_MS`). Reading a dead engine's
+ * clock instead would take the soot and the burning roof off the house in the
+ * one frame the ship cuts its motor — which is exactly what the homecoming's
+ * touchdown does (`content/cutscenes/earth_return.yaml`).
+ *
+ * WHETHER IT WAS EVER LIT is read off `poseMs` against the scene's own elapsed
+ * time, and that is exact rather than a guess: `stepCutscene` adds the same
+ * `dtMs` to both, and only a pose that actually CHANGES the sprite resets the
+ * one — so `poseMs < timeMs` is precisely "this actor has been re-posed". A
+ * rocket has two sprites and one of them is the fire, so a re-posed rocket
+ * standing here cold has burned.
  */
 function stagedRocket(
   cutscene: CutsceneState,
-): { x: number; ageMs: number; look: RocketExhaust; lit: boolean } | undefined {
+): { x: number; ageMs: number; look: RocketExhaust } | undefined {
   for (const actor of cutscene.actors) {
     const look = actor.hidden ? undefined : rocketPadLook(actor.sprite);
     if (!look) continue;
-    const lit = rocketExhaustLook(actor.sprite) !== undefined;
-    return { x: actor.pos.x, ageMs: lit ? actor.poseMs : 0, look, lit };
+    if (rocketExhaustLook(actor.sprite)) {
+      return { x: actor.pos.x, ageMs: actor.poseMs, look };
+    }
+    const spent = actor.poseMs < cutscene.timeMs;
+    return { x: actor.pos.x, ageMs: spent ? BLAST_SPENT_MS : 0, look };
   }
   return undefined;
 }
@@ -262,8 +281,10 @@ function drawStage(
       actor.lift > 0 ? "jump" : actor.moving ? Math.floor(timeMs / 220) % 2 : 0;
     // A LIT ROCKET measures itself against the mark it was authored on — the
     // pad — which rides the camera at full depth like the ground it is part of.
+    // Read off the actor's OWN sprite, never the framed name above: a rocket
+    // that is off the ground is asked for a jump frame no rocket table knows.
     const pad = def.actors.find((a) => a.id === actor.id)?.at.y;
-    const lit = rocketExhaustLook(actor.sprite) ? pad : undefined;
+    const exhaust = rocketExhaustLook(actor.sprite);
     queue.push({
       sprite: `${actor.sprite}_${frame}`,
       x: actor.pos.x,
@@ -273,9 +294,15 @@ function drawStage(
       jitter: actor.shake,
       lift: actor.lift,
       alt: `${actor.sprite}_0`,
-      ...(lit === undefined
+      ...(exhaust === undefined || pad === undefined
         ? {}
-        : { rocket: { ageMs: actor.poseMs, padY: lit + shift.y } }),
+        : {
+            rocket: {
+              ageMs: actor.poseMs,
+              padY: pad + shift.y,
+              look: exhaust,
+            },
+          }),
       ...(actor.holding
         ? {
             hold: {
@@ -328,8 +355,16 @@ type Placed = {
    * when the camera climbs. It is a STAGE y, turned into the drawing's own
    * space at paint time, because only the paint knows how tall the hull's art
    * is and therefore where its feet are.
+   *
+   * THE EXHAUST TRAVELS WITH IT rather than being looked up again at paint
+   * time, and that is not tidiness. `sprite` here is the FRAMED name the
+   * painter asks the atlas for, and a rocket off the ground is asked for its
+   * jump frame (`ship_fire_jump`, which falls back to frame 0) — a name no
+   * table of rockets answers to. Looking the engine up from it therefore
+   * silently drew NOTHING for exactly the scene that needs it most: the
+   * homecoming, whose ship is airborne for its whole descent.
    */
-  rocket?: { ageMs: number; padY: number };
+  rocket?: { ageMs: number; padY: number; look: RocketExhaust };
   /**
    * WHAT THE BLAST IS DOING TO THIS PIECE OF SCENERY: how far its middle stands
    * from the lit rocket (signed — the sign is which face is taking it), how
@@ -402,11 +437,10 @@ function paintOne(
     // pad is handed over in the drawing's OWN space — its stage y less this
     // art's top-left, un-jittered, so the shake rattles the ship rather than
     // the ground it is standing on.
-    const rocket = item.rocket && rocketExhaustLook(item.sprite);
-    if (rocket && item.rocket) {
+    if (item.rocket) {
       drawRocketExhaust(
         ctx,
-        rocket,
+        item.rocket.look,
         item.rocket.ageMs,
         item.rocket.padY - (item.y - sprite.height - item.lift),
       );

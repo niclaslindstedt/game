@@ -13,7 +13,7 @@
 // Usage:
 //   npx vite --port 5199 &            # dev server (from pwa/)
 //   node scripts/cutscene-preview.mjs [--id prelude] \
-//     [--url http://localhost:5199] [--timeout 90]
+//     [--url http://localhost:5199] [--timeout 90] [--tags cleared:moon]
 //
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when previewing: `npm install --no-save playwright`.
@@ -32,9 +32,23 @@ const opt = (name, fallback) => {
 const url = opt("url", "http://localhost:5199");
 const id = opt("id", "prelude");
 const timeoutMs = Number(opt("timeout", "90")) * 1000;
-
+// THE RUN TAGS THIS PLAYING CARRIES (`--tags cleared:moon,cleared:mars`), handed
+// to the workbench's own `&tags=`. A scene's conditional dressing
+// (`CutsceneProp.needs` / `until`) is a picture of a LATER run, and without this
+// the harness could only ever shoot opening night — which for the garage is the
+// one state where the house is still whole. Shots land in their own folder per
+// tag set, so the rungs of a ladder can be laid side by side.
+const tags = (opt("tags", "") ?? "")
+  .split(",")
+  .map((t) => t.trim())
+  .filter(Boolean);
 const shotDir = fileURLToPath(
-  new URL(`../assets-preview/cutscenes/${id}`, import.meta.url),
+  new URL(
+    `../assets-preview/cutscenes/${id}${
+      tags.length ? `+${tags.join("+").replace(/[^a-z0-9+_-]/gi, "_")}` : ""
+    }`,
+    import.meta.url,
+  ),
 );
 mkdirSync(shotDir, { recursive: true });
 
@@ -46,7 +60,10 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 
-await page.goto(`${url}/?debug&cutscene=${id}`);
+await page.goto(
+  `${url}/?debug&cutscene=${id}` +
+    (tags.length ? `&tags=${encodeURIComponent(tags.join(","))}` : ""),
+);
 await page.waitForFunction(() => window.__cutscene !== undefined);
 
 const snapshot = () =>
