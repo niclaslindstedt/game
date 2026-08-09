@@ -10,17 +10,32 @@ stage:
   width: 224
   height: 126
   backdrop: garageNight
-  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  # THE LAWN IS CHARRED EARTH, not grass, and it is the SAME charred earth the
+  # hub map lays down (`content/sprites/earth/grass_charred_0.yaml`, worn by
+  # the `lawn` area of `content/maps/garage.yaml`). A man has been lighting a
+  # homemade engine on this ground; the establishing shot and the level the
+  # player walks back into have to agree about what it looks like.
+  palette: { wall: "#0e1020", floor: "#2a2622", trim: "#0a0c14", floorY: 88 }
   props:
-    # The sky barely rides the ascent pan (low parallax) while the house and lawn
-    # fall away at full depth — the moon that hung in the living-room window is
-    # now the plan.
-    - { sprite: sky_moon, at: { x: 196, y: 34 }, parallax: 0.05 }
-    - { sprite: stars_a, at: { x: 32, y: 26 }, parallax: 0.15 }
-    - { sprite: stars_b, at: { x: 120, y: 20 }, parallax: 0.15 }
-    - { sprite: stars_b, at: { x: 168, y: 44 }, parallax: 0.15 }
-    - { sprite: stars_a, at: { x: 82, y: 46 }, parallax: 0.15 }
-    # Home, garage door up — the ship rolled out onto the back lawn.
+    # THE SKY IS NOT DRESSED HERE. `backdrop: garageNight` is one of the
+    # renderer's SKY backdrops, so the night over this lot is the same night the
+    # drive is played against — the wash, the moon, the starfield, the three
+    # cloud bands and the open country along the skyline, all of it from
+    # `pwa/src/game/render/night-sky.ts`. The hero lifts off the road the car
+    # later drives; it should be the same evening, and a moon prop with four
+    # star tiles pinned behind it agreed with nothing.
+    #
+    # It hangs STILL — no twinkle, nothing tracking the camera — and only the
+    # clouds drift, slowly. The ascent pan takes the LAND away (the fields and
+    # the glow ride the ground line down with the lawn) and leaves the sky
+    # exactly where it was.
+    #
+    # Home, garage door up — and the ship parked HARD BESIDE IT, a dozen px off
+    # the roll-up door, exactly as far as a man rolls a thing he built in there
+    # and no further. That closeness is the joke the blast pays off: the side of
+    # the house facing the pad goes black while the engine burns
+    # (`render/rocket-exhaust.ts` — soot is a function of distance, so the
+    # garage is the only thing near enough to get any).
     - { sprite: garage_house, at: { x: 46, y: 98 } }
     # ── THE LOT'S OWN GROUND (`content/maps/garage.yaml`) ──────────────────
     # The hub is walkable and the player has already stood on all of this, so
@@ -41,22 +56,22 @@ stage:
     - { sprite: road_lane, at: { x: 140, y: 126 }, ground: true }
     - { sprite: road_lane, at: { x: 196, y: 126 }, ground: true }
 actors:
-  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 74, y: 102 } }
+  - { id: hero, name: "{HERO}", sprite: hero_tee, at: { x: 32, y: 102 } }
   # The garage ship — the Mars level's parked `starship`, ten years younger.
   # Poses to `ship_fire` when the engine lights.
-  - { id: ship, sprite: ship, at: { x: 172, y: 100 } }
+  - { id: ship, sprite: ship, at: { x: 94, y: 100 } }
 beats:
   - { kind: fade, to: 1, ms: 0 }
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
       - TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
-  - { kind: move, actor: hero, to: { x: 150, y: 102 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 70, y: 102 }, speed: 40 }
   - kind: say
     actor: hero
     text:
       - ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE.
-  - { kind: move, actor: hero, to: { x: 166, y: 102 }, speed: 40 }
+  - { kind: move, actor: hero, to: { x: 84, y: 102 }, speed: 40 }
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }
@@ -65,10 +80,10 @@ beats:
   - { kind: shake, actor: ship, amp: 1 }
   - { kind: wait, ms: 1200 }
   # …liftoff: the ship climbs into the sky…
-  - { kind: move, actor: ship, to: { x: 172, y: 46 }, speed: 42 }
-  # …and the camera follows it up: house, lawn and floor line fall away at full
-  # depth, the stars barely move, and the frame is left hanging in open space
-  # with the rocket still burning and trembling.
+  - { kind: move, actor: ship, to: { x: 94, y: 46 }, speed: 42 }
+  # …and the camera follows it up: house, lawn, drive and road fall away at full
+  # depth, taking the skyline's own country with them, and the frame is left
+  # hanging in the same still night with the rocket burning and trembling.
   - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
   - kind: caption
     text:

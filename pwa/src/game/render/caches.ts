@@ -583,6 +583,110 @@ export function tintedSprite(
   return canvas;
 }
 
+/**
+ * `sprite`'s own silhouette filled with a ONE-SIDED BLACK WASH — the soot a
+ * blast leaves on the face of whatever was standing beside it (the launch
+ * cutscene's garage, `render/rocket-exhaust.ts`).
+ *
+ * MASKED BY THE ART ITSELF (`source-atop`), never a rectangle laid over the
+ * top: a wash the shape of the sprite's bounding box would smear the lawn
+ * showing through under the eaves, and half of what makes this read is that the
+ * soot stops exactly where the wall does.
+ *
+ * `level` is quantized to eight rungs, so a whole blackening costs eight
+ * canvases rather than one a frame — the same trade `tintedSprite` makes above,
+ * and the reason the wash grades across the sprite rather than being applied
+ * per-pixel-column at draw time.
+ */
+const sootCache = new Map<string, HTMLCanvasElement | null>();
+/** How much of the wash the FAR side keeps. A wall blackened on one face and
+ * showroom-clean on the other reads as a paint job rather than as a blast. */
+const SOOT_WRAP = 0.22;
+export function sootedSprite(
+  sprite: ImageBitmap,
+  name: string,
+  level: number,
+  /** Which way the fire was: +1 to the right of this thing, -1 to the left. */
+  side: number,
+): HTMLCanvasElement | null {
+  const step = Math.round(Math.max(0, Math.min(1, level)) * 8);
+  if (step <= 0) return null;
+  const key = `${name}/${side < 0 ? "l" : "r"}/${step}`;
+  const cached = sootCache.get(key);
+  if (cached !== undefined) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = sprite.width;
+  canvas.height = sprite.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    sootCache.set(key, null);
+    return null;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, 0, 0);
+  ctx.globalCompositeOperation = "source-atop";
+  const strong = step / 8;
+  const grad = ctx.createLinearGradient(0, 0, sprite.width, 0);
+  const near = `rgba(14, 12, 12, ${strong.toFixed(3)})`;
+  const far = `rgba(14, 12, 12, ${(strong * SOOT_WRAP).toFixed(3)})`;
+  grad.addColorStop(0, side < 0 ? near : far);
+  grad.addColorStop(1, side < 0 ? far : near);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, sprite.width, sprite.height);
+  sootCache.set(key, canvas);
+  return canvas;
+}
+
+/**
+ * THE TOP EDGE OF A SPRITE, COLUMN BY COLUMN — the row its first opaque pixel
+ * sits on, or `-1` for a column the art never touches.
+ *
+ * It exists so that something standing ON a piece of scenery can be put where
+ * the scenery actually IS rather than where a rectangle says it is: the launch
+ * cutscene sets the garage roof alight (`render/rocket-exhaust.ts`), and flames
+ * laid along the sprite's bounding box would burn in mid-air over the peak of
+ * the house and half a wall short of the flat roof beside it.
+ *
+ * Read ONCE per sprite and kept, because it is a `getImageData` — the same
+ * trade `recolorSprite` makes, including the same refusal to throw on a tainted
+ * canvas (there is nothing to fall back to, so a null crown simply means
+ * whatever wanted it draws nothing).
+ */
+const crownCache = new Map<string, Int16Array | null>();
+export function spriteCrown(
+  sprite: ImageBitmap,
+  name: string,
+): Int16Array | null {
+  const cached = crownCache.get(name);
+  if (cached !== undefined) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = sprite.width;
+  canvas.height = sprite.height;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) {
+    crownCache.set(name, null);
+    return null;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, 0, 0);
+  let image;
+  try {
+    image = ctx.getImageData(0, 0, sprite.width, sprite.height);
+  } catch {
+    crownCache.set(name, null);
+    return null;
+  }
+  const crown = new Int16Array(sprite.width).fill(-1);
+  const { data } = image;
+  for (let y = 0; y < sprite.height; y++) {
+    for (let x = 0; x < sprite.width; x++) {
+      if (crown[x] !== -1) continue;
+      if ((data[(y * sprite.width + x) * 4 + 3] ?? 0) > 8) crown[x] = y;
+    }
+  }
+  return (crownCache.set(name, crown), crown);
+}
+
 /** Drop every cache when the Sprites instance changes (hot reload). */
 export function ensureCaches(sprites: Sprites): void {
   if (cachesFor === sprites) return;
@@ -594,6 +698,8 @@ export function ensureCaches(sprites: Sprites): void {
   decorFramesCache.clear();
   groundColorCache.clear();
   tintCache.clear();
+  sootCache.clear();
+  crownCache.clear();
   spinCache.clear();
   // The baked halves and fragments a body comes apart into are keyed on the
   // sprite's NAME, so a fresh atlas has to drop them or a cleave would draw the

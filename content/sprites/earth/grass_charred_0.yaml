@@ -1,0 +1,34 @@
+name: grass_charred_0
+family: earth
+size: [16, 16]
+description: >
+  The Earth grass tile after fire has been through it — the same ground, burnt
+  down to black earth and ash.
+subject:
+  kind: ground tile
+  build: a seamless field of near-black burnt earth that tiles without an obvious seam
+  features: darker burnt-through blotches and pale grey ash flecks scattered evenly, with a little scorched bare dirt showing through
+  accent: pale ash grey on charred near-black
+  flavor: the lawn a homemade rocket took off from
+palette:
+  A: "#4e4842" # pale ash fleck
+  C: "#2a2622" # charred earth base
+  E: "#3b332a" # scorched bare dirt
+  c: "#1c1917" # burnt through to black
+grid: |
+  CCCCCCCCCCCCCCCC
+  CCAACCCCCCCcCCCC
+  CCACCCCccCCcCCCC
+  CCCCCCCccCCCCCCC
+  CcCCCCCcCCCAACCC
+  CcCCCCCCCCCACCCC
+  CCCCAACCCCCCCCCC
+  CCCCACCCCcCCCCEC
+  CCCCCCCCCcCCCCCC
+  CACCCCCCCCCCCCCC
+  CACCCcCCCCCCAACC
+  CCCCCcCCCCCCACCC
+  CCCCCCCCCCcCCCCC
+  CCcCCCCCCCcCCCCC
+  CCcCCCEECCCCCCCC
+  CCCCCCCCCCCCCCCC

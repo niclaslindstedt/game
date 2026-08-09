@@ -44,12 +44,22 @@ animations:
   walker_wheelchair_walk:
     { frames: [walker_wheelchair_0, walker_wheelchair_1], delayMs: 260 }
 # The ground tiles, and THE SKY — a cloud is never drawn standing on the grass
-# (it is painted into the backdrop above the horizon, `drive-screen/sky.ts`), so
+# (it is painted into the backdrop above the horizon, `render/night-sky.ts`), so
 # holding it to a contrast floor against a grass tile measures nothing.
 contrastExempt:
-  [grass_0, grass_1, night_cloud_bank, night_cloud_puff, night_cloud_wisp]
+  [
+    grass_0,
+    grass_1,
+    grass_charred_0,
+    grass_charred_1,
+    night_cloud_bank,
+    night_cloud_puff,
+    night_cloud_wisp,
+  ]
 # Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
 # check skips them (see scripts/generate-assets.mjs).
 speckleExempt:
   - grass_0
   - grass_1
+  - grass_charred_0
+  - grass_charred_1

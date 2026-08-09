@@ -11,7 +11,7 @@
       "actors": [
         {
           "at": {
-            "x": 74,
+            "x": 32,
             "y": 102
           },
           "id": "hero",
@@ -20,7 +20,7 @@
         },
         {
           "at": {
-            "x": 172,
+            "x": 94,
             "y": 100
           },
           "id": "ship",
@@ -49,7 +49,7 @@
           "kind": "move",
           "speed": 40,
           "to": {
-            "x": 150,
+            "x": 70,
             "y": 102
           }
         },
@@ -65,7 +65,7 @@
           "kind": "move",
           "speed": 40,
           "to": {
-            "x": 166,
+            "x": 84,
             "y": 102
           }
         },
@@ -100,7 +100,7 @@
           "kind": "move",
           "speed": 42,
           "to": {
-            "x": 172,
+            "x": 94,
             "y": 46
           }
         },
@@ -127,52 +127,12 @@
         "backdrop": "garageNight",
         "height": 126,
         "palette": {
-          "floor": "#20281c",
+          "floor": "#2a2622",
           "floorY": 88,
           "trim": "#0a0c14",
           "wall": "#0e1020"
         },
         "props": [
-          {
-            "kind": "sky_moon",
-            "parallax": 0.05,
-            "pos": {
-              "x": 196,
-              "y": 34
-            }
-          },
-          {
-            "kind": "stars_a",
-            "parallax": 0.15,
-            "pos": {
-              "x": 32,
-              "y": 26
-            }
-          },
-          {
-            "kind": "stars_b",
-            "parallax": 0.15,
-            "pos": {
-              "x": 120,
-              "y": 20
-            }
-          },
-          {
-            "kind": "stars_b",
-            "parallax": 0.15,
-            "pos": {
-              "x": 168,
-              "y": 44
-            }
-          },
-          {
-            "kind": "stars_a",
-            "parallax": 0.15,
-            "pos": {
-              "x": 82,
-              "y": 46
-            }
-          },
           {
             "kind": "garage_house",
             "pos": {

@@ -190,6 +190,18 @@ export type CutsceneActor = {
   moving: boolean;
   /** Tremble amplitude in world px (a `shake` beat sets it; 0 = still). */
   shake: number;
+  /**
+   * How long this actor has held its current `sprite` (ms), reset by every
+   * `pose`. It is the clock a POSE-DRIVEN effect runs on: a renderer that
+   * draws something around an actor because of what it is wearing — the launch
+   * ship's engine lighting, and the fire and smoke that boil off the pad from
+   * the moment it does — has to know how long ago it started, and asking the
+   * WALL clock would make the effect play differently on a replay.
+   *
+   * It is on the actor rather than the scene because two actors can be posed
+   * at different moments and each is answering for itself.
+   */
+  poseMs: number;
   /** World px above the mark, off the ground (a `jump` beat drives it). The
    * renderer lifts the drawing by it and sorts by `pos` regardless. */
   lift: number;
@@ -245,6 +257,7 @@ export function createCutscene(def: CutsceneDef): CutsceneState {
       hidden: a.hidden ?? false,
       moving: false,
       shake: 0,
+      poseMs: 0,
       lift: 0,
       holding: null,
     })),
@@ -285,9 +298,15 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
       a.moving = false;
       break;
     }
-    case "pose":
-      actor(state, beat.actor).sprite = beat.sprite;
+    case "pose": {
+      const a = actor(state, beat.actor);
+      // A pose RESTARTS the clock only when it is actually a change: re-posing
+      // an actor to the sprite it already wears must not re-light an engine
+      // that has been burning for a second.
+      if (a.sprite !== beat.sprite) a.poseMs = 0;
+      a.sprite = beat.sprite;
       break;
+    }
     case "face":
       actor(state, beat.actor).faceLeft = beat.faceLeft;
       break;
@@ -375,6 +394,7 @@ export function stepCutscene(
     return;
   }
   state.timeMs += dtMs;
+  for (const a of state.actors) a.poseMs += dtMs;
   // The stage drift runs UNDER the beat timeline — the parallax field keeps
   // streaming while a held line idles the beats.
   if (def.stage.drift) {

@@ -90,6 +90,16 @@ reviews your effect without replaying the game, and
 `tests/content/effects_gallery_test.ts` fails the build when a timed powerup
 has no exhibit.
 
+**The one effect family the gallery cannot hold is a CUTSCENE's.** Every exhibit
+stages a `GameState`, and a scene has none — no carve, no horde, no hero doll.
+An effect that hangs off a cutscene actor (the launch's rocket engine,
+`render/rocket-exhaust.ts`) is reviewed on the SCENE workbench instead, which is
+the same loop with a different front door: `?cutscene=<id>&debug` for a live
+look, `node pwa/scripts/cutscene-preview.mjs --id <id>` for the beat-by-beat
+contact sheet. Drive it to the beat you care about by polling
+`window.__cutscene.beat` and tapping through the text beats, exactly as that
+harness does.
+
 **Play it SLOWLY.** The gallery runs its diorama at `1X / 1/2X / 1/4X / 1/8X`
 — the SPEED chip in the bar, the `S` key, or `?effects=<id>&speed=0.25` — and
 the slowdown scales SIM time, so the effect, its timeline, and the loop's own

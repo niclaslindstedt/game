@@ -41,6 +41,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { drawNightSky } from "../render/night-sky.ts";
 import { drawWorldSprite } from "../render/plane.ts";
 import { drawSpriteFacing, seatX, seatY } from "../render/shared.ts";
 import {
@@ -86,7 +87,6 @@ import {
   RIDER_SPRITES,
   trafficSprite,
 } from "./scenery.ts";
-import { drawDriveSky } from "./sky.ts";
 import { drawTownProp, ensureTownArt } from "./town-art.ts";
 
 /** The ground either side of the tarmac. */
@@ -227,8 +227,8 @@ const ROOF_PX = 20;
  * of houses this side would hide the lane the crowd is walking into). On a
  * phone held upright that was more than half the picture: a road across the top
  * and an empty field under it. Pinning the near kerb near the bottom edge sends
- * the spare room UP instead, where the sky is (`sky.ts`), and a taller screen
- * now buys more night rather than more grass.
+ * the spare room UP instead, where the sky is (`render/night-sky.ts`), and a
+ * taller screen now buys more night rather than more grass.
  *
  * AND IN PROJECTED PX, because the view is TALLER in world units than the
  * canvas is in pixels — that is what the pitch does (`render/tilt.ts`). The old
@@ -378,16 +378,22 @@ export function drawDrive(
   // on it cannot disagree.
   //
   // …EXCEPT THE SKY, which is drawn BEFORE the projection is on and is the one
-  // pass in this file that stays in canvas px (`sky.ts` — a moon run through a
-  // transform that foreshortens distance would be squashed toward the horizon
-  // as though it were lying in a field). It is painted first because it is
-  // behind everything: the town's roofline, the gaps between the frontages and
-  // the strip of verge behind them are all drawn over it.
+  // pass in this file that stays in canvas px (`render/night-sky.ts` — a moon
+  // run through a transform that foreshortens distance would be squashed toward
+  // the horizon as though it were lying in a field). It is painted first
+  // because it is behind everything: the town's roofline, the gaps between the
+  // frontages and the strip of verge behind them are all drawn over it.
+  //
+  // IT IS ALSO THE LAUNCH CUTSCENE'S SKY, which is why the file sits in the
+  // shared render pool: the same night, the same moon, the same weather, held
+  // still over the garage the road starts from.
   const horizon = projectY(0, skylineY() - camera.y);
   // The same taller-than-wide test the camera makes above, and the sky spends
   // it on exactly one thing: bringing the moon down clear of the phone's own
-  // status bar (`sky.ts`).
-  drawDriveSky(ctx, sprites, camera.x, viewW, horizon, timeMs, viewH > viewW);
+  // status bar (`render/night-sky.ts`).
+  drawNightSky(ctx, sprites, camera.x, viewW, horizon, timeMs, {
+    portrait: viewH > viewW,
+  });
   ctx.save();
   applyWorldProjection(ctx);
   const left = camera.x - 64;
