@@ -1491,6 +1491,20 @@ Neptune on a phone puts the inner four inside the sun's own disc. `ORBIT_AU`
 holds the true axes and `AU_UNITS` is the one chosen number that turns them into
 pixels — a framing decision, not a physical one.
 
+**AND HOW BIG THE WHOLE PICTURE IS DRAWN IS ONE NUMBER OVER BOTH OF THEM**
+(`SKY_SCALE`), because the disc scale and the distance scale are the only two
+chosen lengths in the sky and every other number is a measured ratio between
+things. Move them together and it is the same sky, nearer the eye; move the
+discs alone and the system silts up — worlds grown into orbits that did not grow
+with them, which at scale 1 left the whole of Mercury's orbit inside the sun's
+own painted glare and a planet that blinked out at the star's edges. THREE
+NUMBERS ARE TIED TO IT and are re-chosen whenever it moves: `ECLIPTIC_PITCH`
+(a superior world's conjunction sits `r·sin(pitch)` above the sun, against the
+0.32 of the short side that `SUN_Y` leaves above it — so doubling the picture
+without lowering the pitch retires Jupiter rather than cropping it), `EPOCH_MS`
+(the opening date is chosen for what is IN FRAME, and the frame just changed),
+and `GLOBE_MIN_PX`'s verdict on which bodies are still points of light.
+
 **TIME NEEDS THREE CLOCKS AND EACH IS EXACT INSIDE ITSELF.** A year is 64 s, a
 satellite's day is 6 s, an axial day is 22 s. They cannot be one clock: at the
 planets' rate Io's orbit would last a third of a second and every world's day

@@ -38,8 +38,9 @@
 //     orbit is 77 times Mercury's, so a single kilometres-per-pixel scale that
 //     fits Neptune on a phone puts Mercury, Venus and Earth inside the sun's
 //     own disc — and one that separates those four puts Jupiter three screens
-//     out. The radii in SCREEN_R are therefore chosen rather than derived, and
-//     they are the only invented lengths in the file.
+//     out. So the true axes (ORBIT_AU) are turned into pixels by two chosen
+//     numbers and only two — AU_UNITS, the framing, and SKY_SCALE, how big the
+//     picture is drawn — and those are the only invented lengths in the sky.
 //
 // TIME NEEDS THREE CLOCKS, for the same reason, and each is exact inside
 // itself: the planets' orbits (a year is 64 s), the satellites' orbits (a day
@@ -190,14 +191,22 @@ const CYCLE_MS = 240_000;
  * seconds; on the true periods it means no Saturn for a quarter of an hour and
  * no Uranus for the better part of an afternoon.
  *
- * So the sky opens on a different date — one where all four are past
+ * So the sky opens on a different date — one where the giants are past
  * conjunction and in view. Choosing WHEN to look at a real sky is not the same
  * kind of liberty as changing how it moves: every position is still the one the
  * elements give, and a viewer who waits long enough sees each giant slide out
  * of sight exactly as it should. It is the same choice a planetarium makes
  * every time it picks a date.
+ *
+ * IT IS TIED TO SKY_SCALE, so it is re-chosen whenever the picture is resized.
+ * "In view" is a claim about the FRAME, and a Jupiter that comfortably crossed
+ * it at one scale rides past the corner at twice that — which is what happened
+ * here: the date that opened on all four giants at the old scale opened on none
+ * of them at this one. This one shows Jupiter for roughly half of the first
+ * four minutes and Saturn for a third, at the reference landscape phone and at
+ * a desktop alike.
  */
-const EPOCH_MS = 668_000;
+const EPOCH_MS = 1_060_000;
 
 const DEG = Math.PI / 180;
 
@@ -209,13 +218,22 @@ const DEG = Math.PI / 180;
  * well, because the axial tilts have to lean against the same plane the orbits
  * are projected onto.
  *
- * It is a BUDGET as much as an angle: a body at superior conjunction sits
- * r·sin(pitch) above the sun on screen, and the sun's seat leaves only 0.32 of
- * the short side above it, so the pitch and the outermost SCREEN_R below have
- * to be chosen together or Neptune's conjunction — now the only half of its
- * orbit we ever see, see CAM_R — happens off the top of the frame.
+ * It is a BUDGET as much as an angle, and the budget is the reason for the
+ * number: a body at superior conjunction sits r·sin(pitch) above the sun on
+ * screen, the sun's seat leaves 0.32 of the short side above it (SUN_Y), and in
+ * LANDSCAPE the short side IS the height — so that 0.32 is the whole allowance
+ * at every landscape viewport there is. Conjunction is also the ONLY half of a
+ * superior world's orbit we ever see (CAM_AU), so a pitch that spends more than
+ * the allowance does not merely crop a giant, it retires it.
+ *
+ * Which makes the pitch and SKY_SCALE one decision, not two. Jupiter rides
+ * 5.2·AU_UNITS out, so at SKY_SCALE = 2 its conjunction wants 1.977·sin(pitch)
+ * of the allowance: 0.48 of the short side at the old 14°, half again more than
+ * there is. Nine degrees brings it to 0.31 and puts Jupiter back over the sun
+ * with Saturn's rings sweeping the top of the frame behind it. Double the scale
+ * again and this number has to come down again with it.
  */
-const ECLIPTIC_PITCH = 14 * DEG;
+const ECLIPTIC_PITCH = 9 * DEG;
 
 /**
  * WHERE THE CAMERA STANDS, in AU: parked in the gap between Mars and Jupiter,
@@ -265,6 +283,12 @@ const PAST_FADE = 0.55;
 
 /** Where in that band the alpha starts to come off — see PAST_FADE. */
 const GONE_AT = 0.55;
+
+/** How much of a body the star's glare may swallow when it passes dead behind
+ * it, and over how much depth that reaches full strength. See the swamp block
+ * in `paint`. */
+const SWAMP = 0.85;
+const SWAMP_DEPTH = 0.35;
 
 /** A slight roll of the whole plane, so the system sits at an angle across the
  * frame rather than lying on a ruled horizontal line. */
@@ -666,10 +690,19 @@ export function startTitleSky(els: SkyElements): () => void {
       // see-through: passing BEHIND the sun, where the star's own light swamps
       // it. That is an occlusion, not a phase — and phase is the shader's job
       // anyway.
+      //
+      // BOTH HALVES OF IT RAMP, and the depth half is the one that bites. A
+      // body crosses far = 0 at MAXIMUM ELONGATION — the widest, most watchable
+      // point of its orbit, and the exact frame the eye is on — so a fade
+      // switched on the sign of `far` makes it visibly jump as it rounds the
+      // side of the star. It comes on over SWAMP_DEPTH of depth instead, which
+      // is zero at the crossing and so cannot be seen happening.
       let op = 1 - clamp01((leaving - GONE_AT) / (1 - GONE_AT));
       if (far > 0) {
-        const near = Math.hypot(cx - sunCx, cy - sunCy) / (sunD * 0.75 + d);
-        if (near < 1) op *= 0.15 + 0.85 * near;
+        const near = clamp01(
+          Math.hypot(cx - sunCx, cy - sunCy) / (sunD * 0.75 + d),
+        );
+        op *= 1 - SWAMP * (1 - near) * clamp01(far / SWAMP_DEPTH);
       }
       o.el.style.opacity = String(op);
       if (labels) {
