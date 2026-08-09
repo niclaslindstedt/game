@@ -396,6 +396,62 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: light has no field "${key}"`);
   };
 
+  /**
+   * A STAGE LADDER — the rungs a district's floor or a prop's sprite climbs as
+   * the campaign goes by (`MapStage`, engine/game/mapgen/areas.ts).
+   *
+   * `payload` names which fields THIS carrier may restage: an AREA restages its
+   * ground, an OBJECT its sprite. The split is enforced rather than merged
+   * because a `sprite:` on an area and a `ground:` on a prop are both things a
+   * carve would silently ignore, which is the failure this whole file exists to
+   * turn into a build error.
+   */
+  const checkStages = (stages, where, payload) => {
+    if (!Array.isArray(stages) || stages.length === 0) {
+      err(`${where}: stages must be a non-empty list of rungs`);
+      return;
+    }
+    const allowed = new Set(["needs", "until", ...payload]);
+    stages.forEach((s, i) => {
+      const at = `${where} stages[${i}]`;
+      if (typeof s !== "object" || s === null) {
+        err(`${at}: must be a rung map`);
+        return;
+      }
+      for (const key of Object.keys(s))
+        if (!allowed.has(key))
+          err(
+            `${at}: field "${key}" means nothing here — a rung may carry ` +
+              `${payload.join("/")} plus needs/until`,
+          );
+      // A rung with no condition is not a rung: it holds on every run, so it
+      // would simply be the field it restages, authored twice.
+      if (s.needs === undefined && s.until === undefined)
+        err(
+          `${at}: needs a "needs" or an "until" — a rung with no condition ` +
+            `always holds, which is just the unstaged value`,
+        );
+      for (const key of ["needs", "until"])
+        if (s[key] !== undefined && typeof s[key] !== "string")
+          err(`${at}: ${key} must be a tag string`);
+      if (!payload.some((key) => s[key] !== undefined))
+        err(`${at}: restages nothing — give it ${payload.join(" or ")}`);
+      if (s.sprite !== undefined) sprite(s.sprite, at);
+      if (s.ground !== undefined) {
+        sprite(s.ground.common, `${at} ground.common`);
+        sprite(s.ground.rare, `${at} ground.rare`);
+        if (!Number.isInteger(s.ground.rareEvery) || s.ground.rareEvery < 1)
+          err(`${at}: ground.rareEvery must be an integer >= 1`);
+      }
+      if (s.patch !== undefined) {
+        sprite(s.patch.a, `${at} patch.a`);
+        sprite(s.patch.b, `${at} patch.b`);
+        if (!Number.isInteger(s.patch.every) || s.patch.every < 1)
+          err(`${at}: patch.every must be an integer >= 1`);
+      }
+    });
+  };
+
   // ---- size ----------------------------------------------------------------
   if (bp.size !== undefined) {
     const spec = bp.size;
@@ -697,6 +753,7 @@ export function validateMap(bp, refs, description = "") {
         "label",
         "ground",
         "patch",
+        "stages",
         "ragged",
         "wall",
         "shellOf",
@@ -755,6 +812,18 @@ export function validateMap(bp, refs, description = "") {
         sprite(a.patch.b, `${where} patch.b`);
         if (!Number.isInteger(a.patch.every) || a.patch.every < 1)
           err(`${where}: patch.every must be an integer >= 1`);
+      }
+      // THE LADDER THE DISTRICT'S FLOOR CLIMBS as the campaign goes by. The
+      // unstaged `ground` above is rung zero, so a ladder with nothing under it
+      // is a district whose floor appears out of nowhere partway through the
+      // game and is the mission's own tiles before that.
+      if (a.stages !== undefined) {
+        if (a.ground === undefined)
+          err(
+            `${where}: a stage ladder needs a "ground" pair under it — the ` +
+              `unstaged floor is rung zero`,
+          );
+        checkStages(a.stages, where, ["ground", "patch"]);
       }
     }
     // A palette of nothing but open ground yields a map with no walls anywhere:
@@ -828,11 +897,33 @@ export function validateMap(bp, refs, description = "") {
         "type",
         "kind",
         "sprite",
+        "stages",
         ...(ALLOWED_FIELDS[o.type] ?? []),
       ]);
       for (const key of Object.keys(o)) {
         if (!allowed.has(key))
           err(`${where}: field "${key}" means nothing to a "${o.type}" object`);
+      }
+      // THE LADDER THIS PIECE CLIMBS as the campaign goes by — a sprite swap and
+      // nothing else, so the trees on the hub's lawn stand in the same places
+      // green, charred and dead. Refused on the two purposes that draw no sprite
+      // of their own: a chest is drawn from the engine's own art and a lamp's
+      // art is its `fixture`, so a rung on either restages nothing.
+      if (o.stages !== undefined) {
+        if (o.type === "chest" || o.type === "light")
+          err(
+            `${where}: a "${o.type}" draws no sprite of its own, so a stage ` +
+              `ladder on it restages nothing`,
+          );
+        else if (Array.isArray(o.sprites) || Array.isArray(o.rockSizes))
+          // Both name a POOL of art rather than one sprite, and a rung swaps
+          // exactly one name — so a ladder here would silently restage a piece
+          // the carve never blits.
+          err(
+            `${where}: a stage ladder swaps a single "sprite", not a pool ` +
+              `(sprites / rockSizes)`,
+          );
+        else checkStages(o.stages, where, ["sprite"]);
       }
       // `loot` is what makes a prop breakable (see buildObstacles), so it belongs
       // only on the two scattered purposes that can carry break hp.

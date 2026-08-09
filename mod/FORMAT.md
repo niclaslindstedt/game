@@ -254,6 +254,61 @@ Three rules to author by:
   name the game accepts, and a typo is a compile error rather than a boss quietly
   relocated.
 
+**A VENUE MAY CHANGE AS THE CAMPAIGN GOES BY — `stages:`.** Most places are the
+same place whenever the hero walks in. A HOME is not, and neither is anywhere the
+story does something to. Give an AREA or an OBJECT a ladder of rungs, each gated
+on what the run remembers, and the carve dresses itself for how far through your
+campaign this hero is:
+
+```yaml
+areas:
+  - id: pad
+    enclosure: none
+    weight: 1
+    horde: 0
+    ground: { common: grass_0, rare: grass_1, rareEvery: 9 } # rung zero
+    stages:
+      - needs: "cleared:mymod_moon" # …charred once that is behind him
+        ground: { common: grass_charred_0, rare: grass_charred_1, rareEvery: 9 }
+      - needs: "cleared:mymod_mars" # …and past charring once that is too
+        ground: { common: grass_ashen_0, rare: grass_ashen_1, rareEvery: 9 }
+objects:
+  - id: pad_tree
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: -52, y: -32 }
+    stages:
+      - needs: "cleared:mymod_moon"
+        sprite: lawn_tree_charred
+      - needs: "cleared:mymod_mars"
+        sprite: lawn_tree_ashen
+```
+
+`needs:` / `until:` are **exactly the pair a cutscene prop carries**, matched
+against exactly the same tags — `cleared:<levelId>`, one per level this hero has
+put behind him — so a scene played over a venue and the venue itself can be told
+to agree, which is the whole reason the vocabulary is shared. The shipped hub
+does this: the lawn the launch is watched on
+(`content/cutscenes/launch.yaml`) is the lawn the player walks
+(`content/maps/garage.yaml`), and both climb one ladder.
+
+Three rules, and the third is the one that bites:
+
+- **The unstaged field is rung zero.** Author the ordinary value on the area or
+  object as normal; a ladder only says what happens LATER. (A `stages:` with no
+  `ground:` under it is a compile error for that reason.)
+- **The ladder is ordered and the LAST held rung wins,** so write it worst-last
+  and it reads as one. A rung with no `needs`/`until` is refused — it would hold
+  on every run, which is just the unstaged value written twice.
+- **A rung may REDRESS and never RESHAPE** — `ground`/`patch` on an area,
+  `sprite` on an object, and nothing else. Not a density, not a radius, not an
+  enclosure. The carve has to be the SAME carve on every rung, or your trees
+  stand somewhere else after the fire (which reads as a different place rather
+  than as a damaged one), and in multiplayer two clients would build two worlds
+  instead of dressing one.
+
 **A KEYCARD LOCKS A ROOM.** Mark an area `lock: true` (a `hard` enclosure that
 may hold neither the boss nor the landing) and list the STORY ITEM ids that open
 one under `locks:`. The carve seals the deepest such district it can afford to,

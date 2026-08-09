@@ -140,6 +140,16 @@ export type DebugMode = "on" | "off";
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
 
+/** SKY CAMERA: a developer feature flag for the TITLE SKY's orrery. `off` (the
+ * default) leaves the main menu's solar system framed as it ships. `on` hands
+ * the viewer the camera — wheel or pinch to zoom, drag to pan — so the sky can
+ * be flown through and checked: the distances in it are true to each other, and
+ * the only way to see both Mercury's orbit and Neptune's is to be able to pull
+ * back. It is opt-in because the gestures it takes (wheel, pinch, drag) belong
+ * to the page underneath, and a player who came here to press NEW GAME should
+ * not have to fight a telescope. Read by `title-sky.ts`. */
+export type SkyCamera = "on" | "off";
+
 /** FORCE STORE: a developer feature flag for the COIN STORE. `off` (the
  * default) leaves the store to the native shell (see store.ts
  * `coinStoreAvailable`); `on` surfaces the STORE menu in ANY build — browser
@@ -373,6 +383,7 @@ export type GameSettings = {
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;
+  skyCamera: SkyCamera;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
   /** THE MOD LOAD ORDER — every mod this device has seen, in the order they
@@ -687,6 +698,8 @@ function defaults(): GameSettings {
     // hero's held weapon and its swing animation are now always on (shipped
     // as the default look), so they are no longer settings.
     autoLevelStats: "off",
+    // The title sky stays a backdrop until a developer takes its camera.
+    skyCamera: "off",
     // The coin store surfaces only in the native shell unless a developer
     // forces it (free purchases — see store.ts).
     storeForce: "off",
@@ -1018,6 +1031,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     developerUnlocked: base.developerUnlocked,
     debug: base.debug,
     autoLevelStats: base.autoLevelStats,
+    skyCamera: base.skyCamera,
     storeForce: base.storeForce,
     gameSpeed: base.gameSpeed,
     botViewSpec: base.botViewSpec,
@@ -1203,6 +1217,10 @@ function load(): GameSettings {
         stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
           ? stored.autoLevelStats
           : base.autoLevelStats,
+      skyCamera:
+        stored.skyCamera === "on" || stored.skyCamera === "off"
+          ? stored.skyCamera
+          : base.skyCamera,
       storeForce:
         stored.storeForce === "on" || stored.storeForce === "off"
           ? stored.storeForce

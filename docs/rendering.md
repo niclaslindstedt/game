@@ -1465,33 +1465,62 @@ concerned. Widen the band freely; never write one of its numbers onto anything
 outside that wrapper. The title screen's full ladder is the band map above
 `.title-sky` in `styles.css`, pinned by `tests/overlay_layers_test.ts`.
 
-**THREE THINGS ARE NOT TO SCALE, AND EACH IS DOCUMENTED WHERE IT IS DONE.**
-Distance (an honest system is empty: Neptune's orbit would be thirteen screens
-out); the size SPREAD (29:1 between Jupiter and Mercury — compressed by a power
-law that keeps the ORDER exact, so the worlds still read correctly against each
-other); and the fact that spins and orbits run on two different clocks, because
-a faithful day at this year-length would be 0.175 s. Everything inside each of
-those is exact: every orbit is right against every other orbit, every spin
-against every other spin, every diameter against every other diameter.
+**ONE THING IS NOT TO SCALE, AND IT IS DISTANCE.** Everything else in the sky
+is now measured. Every disc is its true diameter over Earth's times one scale
+(`EARTH_DISC`), so Jupiter is 11.2 Earths across because it is; every year is
+its true one on one clock (`ORBIT_YEARS`), so Mercury takes 0.241 of Earth's and
+Neptune 164.8; every axial spin is its true one on another (`spinMs`); and the
+twenty satellites are true against their planets in size, in period and in
+plane. Distance is the survivor, and it survives because of one ratio: Neptune's
+orbit is 77 times Mercury's, so a single kilometres-per-pixel scale that fits
+Neptune on a phone puts the inner four inside the sun's own disc. `ORBIT_AU`
+holds the true axes and `AU_UNITS` is the one chosen number that turns them into
+pixels — a framing decision, not a physical one.
 
-**EXCEPT THE MOON, WHICH IS SIZED TRUE** (`MOON_DISC`) — a flat 3475/12756 of
-the Earth it circles, a bit over a quarter, with no exponent on it. The power
-law is a compression of comparisons the eye can never make directly, and the
-Earth–Moon pair is the one comparison in this sky that is ALWAYS made directly:
-the two are drawn a finger apart, all cycle, every cycle. Through the exponent
-the Moon came out 0.75 of its planet and the pair read as a double world. The
-price is paid against the bodies it is never seen beside — a true Moon is about
-a third of Mercury's disc rather than 0.9 of it — and that is the right way
-round. The same ratio is written into the Moon's resting size in `styles.css`,
-which is the frame a reduced-motion player never leaves; the two are one
-decision. And its depth-scale is now taken from its own position like every
-other body's, not multiplied by the Earth's on top of it — squaring the pair's
-scale shrank the Moon to 0.7 of its true relative size at the back of the loop.
+**TIME NEEDS THREE CLOCKS AND EACH IS EXACT INSIDE ITSELF.** A year is 64 s, a
+satellite's day is 6 s, an axial day is 22 s. They cannot be one clock: at the
+planets' rate Io's orbit would last a third of a second and every world's day
+would strobe. Only the ratios BETWEEN the three are invented — no two bodies
+inside one of them are wrong against each other, which is the property that
+makes the Galilean 1:2:4 resonance visible on screen.
 
-The compression exponent and the orbit table are ONE decision, not two: every
-gap between two screen orbits has to clear the two discs that ride in it, or the
-outer four stop reading as four distances from the sun and become a single
-crowded ring that crosses itself. Change either and check the other.
+**AND THE PRICE OF TRUE PERIODS IS THAT THE GIANTS BARELY MOVE.** Jupiter takes
+12.6 minutes to go round, Saturn 31, Uranus an hour and a half, Neptune very
+nearly three hours. That is why the sky opens on a chosen date (`EPOCH_MS`)
+rather than on J2000: at J2000 three of the four sit on the near half of their
+orbits, which from a camera parked at 3 AU means behind the viewer and therefore
+undrawn — and on the true periods "wait for Saturn" is a quarter of an hour.
+Picking when to look at a real sky is what a planetarium does; every position is
+still the one the elements give.
+
+**A BODY TOO SMALL TO BE A DISC IS A POINT OF LIGHT, NOT A SMALL DISC.** Sized
+true, most of this sky is under a pixel: every satellite on a phone, and every
+planet once the camera pulls back far enough to hold Neptune. Under
+`GLOBE_MIN_PX` a body is drawn as a fixed-size spark instead (`POINT_PX`) with
+no canvas and no texture — so twenty satellites cost nothing on a phone. A point
+makes NO CLAIM about size, which is the whole reason it is allowed to be a
+constant; what separates two of them is BRIGHTNESS, on a compressed magnitude
+scale whose order is exactly right (`pointBrightness`). That is how the real sky
+separates them too.
+
+**A SATELLITE ORBITS ITS PLANET'S EQUATOR, NOT THE ECLIPTIC.** That one fact is
+why Jupiter's four string out in a line while Uranus's five wheel round it like
+a dartboard — Uranus is lying on its side and its moons went over with it. The
+basis comes from `planet-poles.ts`, the same table the shader leans each texture
+on, which is also why a tidally-locked moon's spin axis is its parent's: the
+lock is what put it there. Our own Moon is the exception and a real one: it is
+far enough out that the SUN rules its plane rather than Earth's bulge, so it
+rides the ecliptic at 5.14° — which is why eclipses are rare rather than
+monthly.
+
+**THE CAMERA IS THE VIEWER'S, BEHIND A DEVELOPER SWITCH.** `skyCamera` hands
+over wheel, pinch and drag so the sky can be flown — zoom out and Neptune's
+orbit comes inside the frame, zoom in and Earth's continents are legible again.
+It is opt-in because those gestures belong to the menu underneath. `__skyZoom(z)`
+is the test hook that drives it without the setting, and `verify-sky.mjs` uses
+it for both passes: pass 1 sweeps a zoomed-out frame so the outer system is
+actually covered, and pass 2 zooms IN because at rest the Moon is a spark and a
+spark has no terminator to photograph.
 
 **A WORLD WITH WEATHER GETS TWO LAYERS.** The surface is one texture and the
 CLOUD DECK is another, turning at its own rate over the ground below — Earth's

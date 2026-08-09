@@ -75,6 +75,60 @@ export function spaceOf(area: MapArea): MapSpace {
   return area.space ?? "outside";
 }
 
+/**
+ * ONE RUNG OF A LADDER THE VENUE CLIMBS AS THE CAMPAIGN GOES BY — a district's
+ * floor or a scattered prop's sprite, swapped for what the run's own memory
+ * says the place should look like by now.
+ *
+ * A blueprint describes a venue in the abstract, and almost every venue in the
+ * game is the same place whenever the hero walks into it. THE HUB IS NOT: it is
+ * his home, he keeps setting fire to the lawn behind it, and a home that looks
+ * identical on the way out to Mars as it did before he had ever left the ground
+ * is a home nothing has happened to.
+ *
+ * `needs` / `until` are the SAME PAIR a cutscene prop carries
+ * (`@game/lib/cutscene`, `CutsceneProp.needs`) matched against the SAME TAGS
+ * (`cleared:<levelId>`, minted in `create.ts`), and that is the whole design:
+ * the launch's house and the lawn it stands on are one picture the player sees
+ * two ways, so they must not be two vocabularies. A scene names a condition; it
+ * never works one out.
+ *
+ * **THE LADDER IS ORDERED AND THE LAST MATCH WINS.** So the ordinary authoring
+ * is a plain list of `needs:` rungs, worst last, with the un-staged fields on
+ * the area or object itself standing as rung zero. `until:` is there for the
+ * rung that has to STOP applying, exactly as it is on a prop.
+ *
+ * **AND A RUNG MAY ONLY REDRESS, NEVER RESHAPE.** Ground, patch and sprite —
+ * nothing that moves a wall, changes a density or takes an rng draw, because
+ * the carve is one map that has to be the same map on every rung: a lawn whose
+ * trees stood somewhere else after the moon would read as a different lot, not
+ * as a burnt one, and in a session the host and a joiner deriving different
+ * tags would be carving different worlds rather than dressing one.
+ */
+export type MapStage = {
+  /** This rung applies only when the run carries this tag. */
+  needs?: string;
+  /** …and its mirror: only while the run does NOT carry it. */
+  until?: string;
+  /** `area`: the floor this rung lays instead. */
+  ground?: { common: string; rare: string; rareEvery: number };
+  /** `area`: and its patch pair. */
+  patch?: { a: string; b: string; every: number };
+  /** `object`: the sprite this rung draws instead. */
+  sprite?: string;
+};
+
+/** Whether a stage's condition holds for a run carrying `tags` — the same two
+ * questions `propOnStage` asks of a cutscene prop, and deliberately no others. */
+export function stageApplies(
+  stage: MapStage,
+  tags: readonly string[],
+): boolean {
+  if (stage.needs !== undefined && !tags.includes(stage.needs)) return false;
+  if (stage.until !== undefined && tags.includes(stage.until)) return false;
+  return true;
+}
+
 /** One entry of a blueprint's area palette. */
 export type MapArea = {
   /** Palette key, referenced by an object's `areas` list. */
@@ -308,6 +362,16 @@ export type MapArea = {
    */
   ground?: { common: string; rare: string; rareEvery: number };
   patch?: { a: string; b: string; every: number };
+  /**
+   * HOW FAR THROUGH THE CAMPAIGN THIS DISTRICT'S FLOOR HAS GOT — the ladder of
+   * grounds it wears as the run's own memory grows (see {@link MapStage}).
+   *
+   * The lawn behind the garage is what it is for: green the first time the hero
+   * walks out to his ship, charred once he has lit it, burnt past charring by
+   * the time Mars is behind him. Omitted — which is every other district in the
+   * game — the floor above is the floor forever.
+   */
+  stages?: MapStage[];
   /**
    * Is this district's floor laid as a RAGGED patch or as a clean rectangle?
    * Defaults to ragged for open ground and rectangular for anything enclosed.

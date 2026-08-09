@@ -6,6 +6,14 @@
 //
 // THE SKINS — turning the geography (planet-maps.ts) into pixels.
 //
+// THE PLANETS ARE HERE; THE SATELLITES ARE IN `moon-skins.ts`, and the split is
+// by AUTHORING EFFORT rather than by kind. A planet is a page of its own — its
+// biomes, its albedo features, its weather — and there are nine of them. There
+// are twenty satellites, most of them the same sentence with different numbers
+// (cratered ice, this bright, this grey), so they are written as a RECIPE TABLE
+// with one baker over it. Both halves share `skin-kit.ts` and land in the same
+// cache below, which is the seam that lets `surfaceSkin` stay the one door.
+//
 // Every world is baked ONCE into an equirectangular texture the globe shader
 // (planet-globe.ts) then samples per pixel as the body turns. A skin is flat,
 // unlit albedo: no shading, no terminator, no highlight — the shader owns all
@@ -52,9 +60,31 @@ import {
   type Band,
   type Blob,
 } from "./planet-maps.ts";
+import {
+  clamp01,
+  craterField,
+  fbm3,
+  mix,
+  rowLat,
+  smoothstep,
+  spherePoint,
+  type CloudSkin,
+  type Rgb,
+  type Skin,
+} from "./skin-kit.ts";
+import {
+  SATELLITE_KINDS,
+  SATELLITE_SKIN_SIZE,
+  bakeSatellite,
+  bakeSatelliteCloud,
+  type SatelliteKind,
+} from "./moon-skins.ts";
 
-/** Every world the title sky can draw. */
-export type GlobeKind =
+export type { CloudSkin, Skin } from "./skin-kit.ts";
+export type { SatelliteKind } from "./moon-skins.ts";
+
+/** The nine worlds with a hand-authored page each (this file). */
+export type PlanetKind =
   | "mercury"
   | "venus"
   | "earth"
@@ -65,128 +95,9 @@ export type GlobeKind =
   | "uranus"
   | "neptune";
 
-/** An equirectangular surface texture: `w×h` RGB triples, row-major. */
-export type Skin = { w: number; h: number; rgb: Uint8ClampedArray };
-
-/** A cloud deck: `w×h` RGBA, where alpha is how much of the ground it hides. */
-export type CloudSkin = { w: number; h: number; rgba: Uint8ClampedArray };
-
-type Rgb = [number, number, number];
-
-// ---------------------------------------------------------------------------
-// The noise kit: seamless on the sphere, because it is sampled in 3D.
-// ---------------------------------------------------------------------------
-
-function hash3(x: number, y: number, z: number): number {
-  let h = (x | 0) * 374761393 + (y | 0) * 668265263 + (z | 0) * 1274126177;
-  h = (h ^ (h >>> 13)) * 1274126177;
-  h = h ^ (h >>> 16);
-  return (h >>> 0) / 4294967295;
-}
-
-function fade(t: number): number {
-  return t * t * t * (t * (t * 6 - 15) + 10);
-}
-
-function vnoise3(x: number, y: number, z: number): number {
-  const xi = Math.floor(x);
-  const yi = Math.floor(y);
-  const zi = Math.floor(z);
-  const xf = fade(x - xi);
-  const yf = fade(y - yi);
-  const zf = fade(z - zi);
-  const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-  return lerp(
-    lerp(
-      lerp(hash3(xi, yi, zi), hash3(xi + 1, yi, zi), xf),
-      lerp(hash3(xi, yi + 1, zi), hash3(xi + 1, yi + 1, zi), xf),
-      yf,
-    ),
-    lerp(
-      lerp(hash3(xi, yi, zi + 1), hash3(xi + 1, yi, zi + 1), xf),
-      lerp(hash3(xi, yi + 1, zi + 1), hash3(xi + 1, yi + 1, zi + 1), xf),
-      yf,
-    ),
-    zf,
-  );
-}
-
-/** Fractal Brownian motion — layered noise, in 3D so it never seams. */
-function fbm3(
-  x: number,
-  y: number,
-  z: number,
-  octaves: number,
-  seed: number,
-): number {
-  let sum = 0;
-  let amp = 0.5;
-  let freq = 1;
-  for (let o = 0; o < octaves; o++) {
-    sum += amp * vnoise3(x * freq + seed, y * freq - seed, z * freq + seed * 2);
-    freq *= 2;
-    amp *= 0.5;
-  }
-  return sum;
-}
-
-function mix(a: Rgb, b: Rgb, t: number): Rgb {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t,
-  ];
-}
-
-function clamp01(x: number): number {
-  return x < 0 ? 0 : x > 1 ? 1 : x;
-}
-
-function smoothstep(e0: number, e1: number, x: number): number {
-  const t = clamp01((x - e0) / (e1 - e0));
-  return t * t * (3 - 2 * t);
-}
-
-/** A deterministic little generator, so a scattered crater field is the same
- * on every device and every reload. Never `Math.random` — the sky is shared
- * geometry, and a body that re-craters itself between two screenshots is
- * un-reviewable. */
-function lcg(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
-
-/** The unit sphere point of an equirectangular texel, for the noise fields. */
-function spherePoint(i: number, j: number, w: number, h: number): Rgb {
-  const lat = (0.5 - (j + 0.5) / h) * Math.PI;
-  const lon = ((i + 0.5) / w) * Math.PI * 2;
-  const cl = Math.cos(lat);
-  return [cl * Math.cos(lon), Math.sin(lat), cl * Math.sin(lon)];
-}
-
-/** Latitude (deg) of an equirectangular row. */
-function rowLat(j: number, h: number): number {
-  return 90 - ((j + 0.5) * 180) / h;
-}
-
-/** Scatter `count` craters over a sphere with radii falling off as a power law
- * (many small, few large) — the real size distribution of an old surface. */
-function craterField(seed: number, count: number, maxR: number): Blob[] {
-  const rnd = lcg(seed);
-  const out: Blob[] = [];
-  for (let i = 0; i < count; i++) {
-    // Uniform on the sphere: latitude from asin, not from a flat lat draw, or
-    // the poles end up carpeted.
-    const lat = (Math.asin(rnd() * 2 - 1) * 180) / Math.PI;
-    const lon = rnd() * 360 - 180;
-    const r = maxR * (0.12 + 0.88 * Math.pow(rnd(), 2.6));
-    out.push({ lon, lat, r, amount: 0.35 + 0.5 * rnd(), hard: 0.5 });
-  }
-  return out;
-}
+/** Every world the title sky can draw: the nine above, plus the twenty
+ * satellites of `moon-skins.ts`. */
+export type GlobeKind = PlanetKind | SatelliteKind;
 
 /** Sum a world's latitude bands at one row: >0 toward the belt colour, <0
  * toward the zone colour. Gaussian-ish falloff so neighbours blend. */
@@ -680,8 +591,11 @@ function bakeGiant(kind: GlobeKind, w: number, h: number): Skin {
 // ---------------------------------------------------------------------------
 
 /** Texture resolution per world. Earth earns the extra rows — it is the only
- * one whose coastlines a player can name. */
-const SKIN_SIZE: Record<GlobeKind, [number, number]> = {
+ * one whose coastlines a player can name. The satellites' sizes are set in
+ * `moon-skins.ts` and are far smaller, because a satellite is drawn at a
+ * handful of pixels and a 256-wide sheet for it would be 250 of them nobody
+ * ever sees. */
+const PLANET_SKIN_SIZE: Record<PlanetKind, [number, number]> = {
   earth: [384, 192],
   mars: [288, 144],
   moon: [288, 144],
@@ -696,38 +610,52 @@ const SKIN_SIZE: Record<GlobeKind, [number, number]> = {
 const surfaces = new Map<GlobeKind, Skin>();
 const decks = new Map<GlobeKind, CloudSkin | null>();
 
+function isSatellite(kind: GlobeKind): kind is SatelliteKind {
+  return kind in SATELLITE_SKIN_SIZE;
+}
+
 /** The world's unlit surface albedo. Baked once per kind per session. */
 export function surfaceSkin(kind: GlobeKind): Skin {
   const hit = surfaces.get(kind);
   if (hit) return hit;
-  const [w, h] = SKIN_SIZE[kind];
   let skin: Skin;
-  if (kind === "earth") skin = bakeEarth(w, h);
-  else if (kind === "mars") skin = bakeMars(w, h);
-  else if (kind === "moon") skin = bakeMoon(w, h);
-  else if (kind === "mercury") skin = bakeMercury(w, h);
-  else if (kind === "venus") skin = bakeVenus(w, h);
-  else skin = bakeGiant(kind, w, h);
+  if (isSatellite(kind)) {
+    const [w, h] = SATELLITE_SKIN_SIZE[kind];
+    skin = bakeSatellite(kind, w, h);
+  } else {
+    const [w, h] = PLANET_SKIN_SIZE[kind];
+    if (kind === "earth") skin = bakeEarth(w, h);
+    else if (kind === "mars") skin = bakeMars(w, h);
+    else if (kind === "moon") skin = bakeMoon(w, h);
+    else if (kind === "mercury") skin = bakeMercury(w, h);
+    else if (kind === "venus") skin = bakeVenus(w, h);
+    else skin = bakeGiant(kind, w, h);
+  }
   surfaces.set(kind, skin);
   return skin;
 }
 
 /** The world's cloud deck, or undefined if it has no weather of its own. The
  * giants are left out on purpose: their bands ARE the cloud deck, and a second
- * layer over them would only mud the first. */
+ * layer over them would only mud the first. Among the satellites exactly one
+ * has a deck, and it is opaque — see `bakeSatelliteCloud`. */
 export function cloudSkin(kind: GlobeKind): CloudSkin | undefined {
   const hit = decks.get(kind);
   if (hit !== undefined) return hit ?? undefined;
   let deck: CloudSkin | null = null;
   if (kind === "earth") deck = bakeEarthClouds(256, 128);
   else if (kind === "venus") deck = bakeVenusClouds(256, 128);
+  else if (isSatellite(kind)) deck = bakeSatelliteCloud(kind) ?? null;
   decks.set(kind, deck);
   return deck ?? undefined;
 }
 
-/** Every world this module can bake, read off the size table so it cannot fall
+/** Every world this module can bake, read off the size tables so it cannot fall
  * behind the type. */
-export const GLOBE_KINDS = Object.keys(SKIN_SIZE) as GlobeKind[];
+export const GLOBE_KINDS = [
+  ...(Object.keys(PLANET_SKIN_SIZE) as PlanetKind[]),
+  ...SATELLITE_KINDS,
+] as GlobeKind[];
 
 /**
  * Bake every world into the cache ahead of the first consumer, ONE PER TURN of

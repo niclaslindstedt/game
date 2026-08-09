@@ -184,6 +184,42 @@
             }
           },
           {
+            "id": "tree_near_charred",
+            "kind": "garage_tree_charred",
+            "pos": {
+              "x": 132,
+              "y": 100
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "tree_near_ashen",
+            "kind": "garage_tree_ashen",
+            "needs": "cleared:mars",
+            "pos": {
+              "x": 132,
+              "y": 100
+            }
+          },
+          {
+            "id": "tree_far_charred",
+            "kind": "garage_tree_charred",
+            "pos": {
+              "x": 178,
+              "y": 96
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "tree_far_ashen",
+            "kind": "garage_tree_ashen",
+            "needs": "cleared:mars",
+            "pos": {
+              "x": 178,
+              "y": 96
+            }
+          },
+          {
             "ground": true,
             "kind": "garage_drive",
             "pos": {
@@ -379,6 +415,62 @@
             "pos": {
               "x": 46,
               "y": 98
+            }
+          },
+          {
+            "id": "tree_near",
+            "kind": "garage_tree",
+            "pos": {
+              "x": 132,
+              "y": 100
+            },
+            "until": "cleared:moon"
+          },
+          {
+            "id": "tree_near_charred",
+            "kind": "garage_tree_charred",
+            "needs": "cleared:moon",
+            "pos": {
+              "x": 132,
+              "y": 100
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "tree_near_ashen",
+            "kind": "garage_tree_ashen",
+            "needs": "cleared:mars",
+            "pos": {
+              "x": 132,
+              "y": 100
+            }
+          },
+          {
+            "id": "tree_far",
+            "kind": "garage_tree",
+            "pos": {
+              "x": 178,
+              "y": 96
+            },
+            "until": "cleared:moon"
+          },
+          {
+            "id": "tree_far_charred",
+            "kind": "garage_tree_charred",
+            "needs": "cleared:moon",
+            "pos": {
+              "x": 178,
+              "y": 96
+            },
+            "until": "cleared:mars"
+          },
+          {
+            "id": "tree_far_ashen",
+            "kind": "garage_tree_ashen",
+            "needs": "cleared:mars",
+            "pos": {
+              "x": 178,
+              "y": 96
             }
           },
           {

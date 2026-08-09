@@ -586,8 +586,8 @@ describe("the difficulty ladder on the road", () => {
      * about the road too.
      *
      * OPENED AT THE TOWN, because these are eight seconds of ROAD: a leg that
-     * spent the first three and a half of them sliding into frame and the rest
-     * capped at a cruise on an empty outskirt has nothing to be broken by, and
+     * spent the first two of them sliding into frame and the rest held at the
+     * road's own pace on an empty outskirt has nothing to be broken by, and
      * every rung would read a flat zero.
      */
     const rung = (difficulty: Difficulty) => {

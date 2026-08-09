@@ -748,8 +748,10 @@ chrome (logo, menu, footer) so the sun-lit, rotating globes of all eight planets
 (0..1 pins the master orbital loop) and `window.__skyState` /
 `window.__skyLabels` (`pwa/src/game/title-sky.ts`). `__skyState.bodies` carries
 each body's screen centre, scale, depth and the 3D light vector it was shaded
-with; the correctness harness `pwa/scripts/verify-sky.mjs` reads the same hooks,
-and `node pwa/scripts/planet-maps.mjs` renders the surface maps themselves.
+with; `window.__skyZoom(z)` drives the camera (the wheel/pinch/drag version is
+the DEVELOPER → VISUALS → SKY CAMERA switch); the correctness harness
+`pwa/scripts/verify-sky.mjs` reads the same hooks, and
+`node pwa/scripts/planet-maps.mjs` renders the surface maps themselves.
 
 **`?splash` / `?nosplash`** — Force the opening STUDIO CARD on, or off
 (`pwa/src/game/SplashScreen.tsx`). A plain launch — which is every shell, and

@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: garage_tree
+family: scenes
+size: [20, 30]
+description: >
+  A garden tree on the lawn behind the garage, side-on: a rounded leafy crown
+  over a short trunk, taller than the house's roofline and drawn against the
+  night.
+subject:
+  kind: scene prop / tree
+  build: a rounded leafy crown on a short trunk that flares where it meets the ground
+  features: the crown lit down its left side and falling to deep shade on the right, its rim broken into leaf masses rather than ruled round
+  accent: moonlit leaf on the left against near-black foliage on the right
+  flavor: it was on the lot before the ship was, and nothing has been lit beside it yet
+palette:
+  B: "#7c5433" # trunk
+  E: "#4a3120" # trunk shadow
+  F: "#3c6b33" # mid canopy
+  L: "#5d8a44" # moonlit leaf
+  O: "#1a1c2c" # outline
+  d: "#1f3a1d" # deep shade
+  f: "#2c5027" # canopy shade
+grid: |
+  ....................
+  ......OOOOOO........
+  ....OOLLLLLLLOO.....
+  ...OLLLLLLLLLFFO....
+  ..OLLLLLLLLLFFFFO...
+  .OOLLLLLLLLFFFFFFO..
+  .OLLLLLLLLFFFFFFFO..
+  OOLLLLLLLFFFFFFFffO.
+  OLLLLLLLFFFFFFFfffO.
+  OLLLLLLFFFFFFFfffffO
+  OLLLLLFFFFFFFffffffO
+  OLLLLFFFFFFFfffffddO
+  OOLLFFFFFFFffffffddO
+  .OLFFFFFFFffffffdddO
+  .OFFFFFFFFffffdddddO
+  .OOFFFFFFffffddddddO
+  ..OFFFFFffffdddddddO
+  ..OOFFFfffddddddddO.
+  ...OOFffffddddddOO..
+  ....OOfffdddddOO....
+  ......OOdddddOO.....
+  ........OBEOO.......
+  ........OBEO........
+  ........OBEO........
+  ........OBEO........
+  ........OBEO........
+  .......OBBEO........
+  .......OBBEEO.......
+  ......OBBBEEEO......
+  ......OOOOOOOO......

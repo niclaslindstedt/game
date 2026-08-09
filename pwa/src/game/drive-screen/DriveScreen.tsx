@@ -49,6 +49,7 @@ import {
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
 import { viewScaleFor } from "../render/view.ts";
+import { ageBark, openBark, type Speech } from "./bark.ts";
 import { createWearTrail, driveDials, sameDials } from "./dials.ts";
 import { driveBindings, type DriveDials } from "../hud/bindings.ts";
 // The run's own dpad-hint geometry, borrowed rather than restated: the road
@@ -96,41 +97,6 @@ const MAX_CATCHUP_MS = 100;
  * and a pad that saturates in the first few px is a car that only ever steers
  * fully left or fully right. */
 const PAD_REACH_PX = 48;
-
-/**
- * One of the hero's thoughts, mid-delivery — which one, its pages, how far
- * through them he has got, and the drive-clock ms this page gives way at.
- *
- * IT IS A BARK, NOT A SCENE, and that is the whole design of the road's voice.
- * The first cut froze the world for it — the same freeze the run's own dialogue
- * is — and it was wrong for a reason that only shows up at speed: the hero's
- * line about minding how you go is funny BECAUSE he says it while driving, and
- * a box that stops the car to deliver it turns a man talking to himself at the
- * wheel into a cutscene about talking to himself. So it prints over the moving
- * road, holds long enough to read, and gets out of the way on its own. Nothing
- * on this screen ever waits for the player to dismiss a line.
- */
-type Speech = {
-  id: string;
-  pages: string[][];
-  page: number;
-  /** Drive-clock ms this page is retired at — the drive's clock rather than
-   * the wall's, so a paused road holds the line where it was. */
-  untilMs: number;
-};
-
-/**
- * How long a page of it sits there: a fixed beat, plus reading time.
- *
- * The crawl prints at about 30 ms a character (`useTypewriter`), so the second
- * term covers the printing AND leaves the finished line up for roughly as long
- * again — which at the speeds this is read at is the difference between a line
- * the player noticed and one they saw go past.
- */
-function barkMs(page: readonly string[]): number {
-  const chars = page.join(" ").length;
-  return Math.min(9000, Math.max(3600, 1800 + chars * 62));
-}
 
 export function DriveScreen({
   params,
@@ -370,12 +336,7 @@ export function DriveScreen({
       const pages = def.pages.map((page) => [
         ...withHeroNameLines(Array.isArray(page) ? page : page.them, heroName),
       ]);
-      const next = {
-        id,
-        pages,
-        page: 0,
-        untilMs: nowMs + barkMs(pages[0] ?? []),
-      };
+      const next = openBark(id, pages, nowMs);
       speechRef.current = next;
       setSpeech(next);
     },
@@ -394,17 +355,13 @@ export function DriveScreen({
   const ageSpeech = useCallback(
     (nowMs: number) => {
       const live = speechRef.current;
-      if (!live || nowMs < live.untilMs) return;
-      if (live.page + 1 >= live.pages.length) {
+      if (!live) return;
+      const next = ageBark(live, nowMs);
+      if (next === live) return;
+      if (!next) {
         clearSpeech();
         return;
       }
-      const page = live.page + 1;
-      const next = {
-        ...live,
-        page,
-        untilMs: nowMs + barkMs(live.pages[page] ?? []),
-      };
       speechRef.current = next;
       setSpeech(next);
     },

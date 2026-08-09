@@ -18,10 +18,13 @@ a bug, and it was two: the line was too long AND the box was advertising an
 action it could not offer.
 
 THE CLOCK. A barked line has only as long as the beat it plays over. The drive's
-opening is five seconds of held road, so a second page that reads for four of
-them lands over the crowd instead of over the empty road it was written for —
-which for `drive_out_welfare` changes what the line MEANS.
+opening is a fixed stretch of held road, so a page that reads past the end of it
+lands over the crowd instead of over the empty road it was written for — which
+for `drive_out_welfare` changes what the line MEANS.
 
 So when a line plays over a moving picture, check both, and say the constraint
 out loud in the manuscript's stage note: the next pass that "improves" the line
-will otherwise lengthen it straight back.
+will otherwise lengthen it straight back. Do not restate the beat's LENGTH in
+seconds in a lesson, a comment or a stage note without the number's owner beside
+it (`DRIVE.opening`) — the seconds are a tuning knob and every copy of them goes
+stale the first time somebody turns it.

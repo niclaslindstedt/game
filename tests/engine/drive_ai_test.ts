@@ -43,7 +43,7 @@ const PARAMS: DriveParams = {
 function drive(patch: Partial<DriveParams> = {}): DriveState {
   const built = createDrive({ ...PARAMS, ...patch });
   // Opened at the town, for the reason every drive suite does it: the approach
-  // is eight seconds of held road with no lane traffic on it at all, and none of
+  // is ten seconds of held road with no lane traffic on it at all, and none of
   // these tests is about the approach.
   skipDriveOpening(built);
   return built;

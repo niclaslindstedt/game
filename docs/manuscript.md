@@ -491,11 +491,14 @@ the welfare. He is a man with nothing being smug at people with less, and the
 next thing that happens is the town._
 
 _AND BOTH ARE SHORT, WHICH IS A CONSTRAINT RATHER THAN A STYLE. The outskirts
-are about eight seconds of held road and the wheel is not even his for the first
-seven of them, so the first page is well clear of the houses and the second
-starts a beat before them and finishes over the opening stretch of the town.
-Long enough to overrun the box and he says the whole of it to a crowd, which is
-the one audience that would turn it from smugness into a confession._
+are about ten seconds of held road and the wheel is not even his for the first
+nine of them, and the road is that long BECAUSE these two pages are on it: two
+seconds for the wagon to slide into frame, then both pages read out end to end,
+and then the second the hand-over owns. So the first page is done inside five
+and the second is off the screen before the instruments arrive — he says the
+whole of it to an empty road, which is the only audience that keeps it smugness
+instead of a confession. Long enough to overrun the box and he is saying the
+sourest line in the game to a crowd._
 
 1. I NEED TO HURRY TO GOODCO AND GET THE PART.
 2. THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
