@@ -110,11 +110,16 @@ function stockLines(entry: MerchantStock): string[] {
 }
 
 /**
- * The card body for a stall entry that is NOT equipment: the kicker naming what
- * kind of thing it is, the name in its own accent, what it does, and — because
- * the stall no longer restocks — how many are left. `qty` is the whole reason
- * the line exists: a shelf that runs out is a decision, and a decision needs
- * its number on screen.
+ * The card body for a stall entry that is NOT equipment: the name in its own
+ * accent, the kicker naming what kind of thing it is, what it does, and —
+ * because the stall no longer restocks — how many are left. `qty` is the whole
+ * reason the line exists: a shelf that runs out is a decision, and a decision
+ * needs its number on screen.
+ *
+ * THE NAME LEADS AND THE KICKER SITS UNDER IT, which is the order an equipment
+ * card already reads in (name, then ITEM LEVEL, then what it does) — the kicker
+ * led here for a while and made every consumable card open with the same grey
+ * word instead of with the thing the player tapped.
  */
 function StockCardBody({
   font,
@@ -131,7 +136,6 @@ function StockCardBody({
           three-pixel-tall glyph, which on a phone held at arm's length is not
           small text, it is texture. Nothing here is decoration — the kicker is
           what tells you whether the BUY button hands you a power or a bandage. */}
-      <PixelText font={font} text={kicker} scale={2} color="#9aa3ad" />
       <PixelText
         font={font}
         text={stockName(entry)}
@@ -139,16 +143,23 @@ function StockCardBody({
         color={tint}
         maxWidth={ITEM_CARD_TEXT_REM}
       />
-      {stockLines(entry).map((line) => (
-        <PixelText
-          key={line}
-          font={font}
-          text={line}
-          scale={2}
-          color="#9aa3ad"
-          maxWidth={ITEM_CARD_TEXT_REM}
-        />
-      ))}
+      <PixelText font={font} text={kicker} scale={2} color="#9aa3ad" />
+      {/* WHAT IT DOES, set apart from the facts around it by a couple of pixels
+          more air than the card's own line gap. It is the one block on the card
+          that is a SENTENCE rather than a label or a number, and at the shared
+          gap it read as two more grey rows in a stack of grey rows. */}
+      <div className="shop-card-desc">
+        {stockLines(entry).map((line) => (
+          <PixelText
+            key={line}
+            font={font}
+            text={line}
+            scale={2}
+            color="#9aa3ad"
+            maxWidth={ITEM_CARD_TEXT_REM}
+          />
+        ))}
+      </div>
       <PixelText
         font={font}
         text={entry.qty > 0 ? `${entry.qty} LEFT` : "SOLD OUT"}

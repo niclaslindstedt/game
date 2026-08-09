@@ -8094,10 +8094,14 @@ canvas.tier-artifact {
    so it reads as somebody talking rather than as a heading. Centred under his
    name and allowed to wrap on the phone, where a sentence is wider than the
    panel. */
+/* The line is EVENLY SPACED between the header above it and FOR SALE below:
+   it used to be pulled up 0.15rem and pushed down the same, which sat it
+   against the trader's name and made the heading read as a three-line block
+   with a gap under it rather than as a name with a remark beneath. */
 .shop-panel > .shop-line {
   align-self: center;
   max-width: 100%;
-  margin: -0.15rem 0 0.15rem;
+  margin: 0.15rem 0;
 }
 
 .shop-section {
@@ -8107,16 +8111,30 @@ canvas.tier-artifact {
 }
 
 /* A section heading with a trailing mode hint on the same line (the armed
-   IDENTIFY mode's TAP A FIND TO IDENTIFY beside YOUR BAG). */
+   IDENTIFY mode's TAP A FIND TO IDENTIFY, the sell pick's TAP TO PICK, beside
+   YOUR BAG). The hint is half the heading's size, so it CENTRES on it rather
+   than sharing a baseline — a small line hung off the bottom of a big one reads
+   as a footnote that fell over.
+   `align-items` alone cannot do it: PixelText renders a <canvas>, and the
+   blanket `.game-overlay canvas` parking (align-self: flex-start, further down
+   this file) outranks a container's alignment on every child. The extra class
+   here is what outruns it — the same override the map's header rows carry. */
 .shop-section-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
 }
 
-/* The armed IDENTIFY button holds the pressed-gold look while the mode is on,
-   so the toggle reads as a state rather than a press that did nothing. */
-.shop-identify-armed {
+.shop-panel .shop-section-heading canvas {
+  align-self: center;
+}
+
+/* An armed footer TOOL — the appraisal, the sell pick — holds the pressed-gold
+   look while its mode is on, so the toggle reads as a state rather than as a
+   press that did nothing. One class for both: they are the same idea (this
+   button now owns the bag's presses) and a counter where the two modes announced
+   themselves differently would read as two unrelated features. */
+.shop-tool-armed {
   border-color: #ffd75e;
   box-shadow: 0 0 6px rgba(255, 215, 94, 0.35);
 }
@@ -8143,6 +8161,26 @@ canvas.tier-artifact {
     animation: none;
     box-shadow: 0 0 6px rgba(255, 215, 94, 0.6);
   }
+}
+
+/* A piece TICKED for the bulk sale, in the same green the errand rows say SELL
+   in. Deliberately NOT the selection cyan a tapped cell wears: while the pick is
+   up, "this one is going" and "this one is being read" are two different states
+   that can both be true of the same cell, so they cannot share a colour. */
+.shop-bag-cell.sell-target {
+  outline: 2px solid #7fd08a;
+  outline-offset: 1px;
+  box-shadow: 0 0 7px rgba(127, 208, 138, 0.45);
+}
+
+/* What a ticked piece fetches, chipped into the cell's TOP-LEFT — the opposite
+   corner from the stack-depth / appraisal-fee chip, because a stack of tickets
+   can be ticked for the sale and both numbers have to stay readable. */
+.shop-sell-chip {
+  left: 1px;
+  top: 0;
+  right: auto;
+  bottom: auto;
 }
 
 /* The stall: a row of goods, each an icon cell over its coin price. */
@@ -8209,10 +8247,20 @@ canvas.tier-artifact {
 
 /* Keep the bag from swallowing the panel on tall bags. The scroll box clips at
    its own edge, so pad it enough that a selected cell's outline (2px at a 1px
-   offset) on the top or side rows isn't shaved off. */
+   offset) on the top or side rows isn't shaved off — and then TAKE THAT PADDING
+   BACK OUT of the layout with a matching negative margin. Without the margin the
+   padding is real space: the bag sat 3px lower under YOUR BAG than the stall
+   does under FOR SALE, and 3px to the right of it, so the counter's two grids
+   visibly disagreed about where the panel's left edge is. The 3px overhang lands
+   inside the panel's own 1.1rem side padding, so nothing is pushed out of the
+   window and no scrollbar is earned. `width: auto` is what lets the box grow by
+   the margins — `.inv-grid`'s `width: 100%` would otherwise pin it and shift the
+   whole grid left instead. */
 .shop-bag-grid {
   max-height: 9.5rem;
   padding: 3px;
+  margin: -3px;
+  width: auto;
 }
 
 /* THE FLOATING DEAL CARD (ShopDealCard.tsx): the item-card skin, portaled to
@@ -8261,10 +8309,21 @@ canvas.tier-artifact {
   margin-top: 0.35rem;
 }
 
-/* A stacked row's card carries TWO buttons (BUY and BUY ALL): one row at the
-   card's foot, kept to the right edge the single button already sits at, and
-   allowed to wrap when BUY ALL's count and price make the pair wider than the
-   card. The buttons keep their own `margin-top`, so the row needs none. */
+/* WHAT A CONSUMABLE OR A POWERUP DOES — the card's one block of sentences,
+   given a couple of pixels more air than the card's own 0.35rem line gap so it
+   separates from the labels and numbers stacked around it. The inner gap stays
+   the card's, so two sentences still read as one paragraph. */
+.shop-card-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.15rem 0;
+}
+
+/* The card's BUY row: how many, then the button that pays for them — kept to
+   the right edge the single button already sat at, and allowed to wrap when a
+   long price makes the pair wider than the card. The button keeps its own
+   `margin-top`, so the row needs none. */
 .shop-deal-actions {
   display: flex;
   flex-direction: row;
@@ -8272,6 +8331,34 @@ canvas.tier-artifact {
   align-items: center;
   justify-content: flex-end;
   gap: 0.4rem;
+}
+
+/* THE QUANTITY FIELD — the `.pixel-input` skin (a transparent <input> over the
+   game's own glyphs) shrunk to sit beside a button rather than to be a prompt of
+   its own: no 2.6rem minimum, thinner rails, and just wide enough for the three
+   digits any stall pile could ever need. It shares the deal button's own height
+   so the pair reads as one control. */
+.shop-qty-field {
+  min-height: 0;
+  width: 3rem;
+  padding: 0.22rem 0.35rem;
+  border-width: 2px;
+  border-radius: 3px;
+  justify-content: center;
+  /* STRETCH, so the field is exactly as tall as the button it stands in front
+     of: the two are one control and a short box beside a tall one reads as a
+     label that happens to be boxed. */
+  align-self: stretch;
+  margin-top: 0.35rem;
+}
+
+/* The real input over it: centred on the glyphs it is driving, and sized so an
+   iOS tap never zooms the page (anything under 16px does). */
+.shop-qty-input {
+  padding: 0.22rem 0.35rem;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-align: center;
 }
 
 /* The portal wrapper is a BOX-LESS pass-through: `display: contents` keeps it in

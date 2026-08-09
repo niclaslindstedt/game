@@ -664,9 +664,9 @@ for (const vp of VIEWPORTS) {
     // row (a powerup or consumable card) and from a bag cell (an item card).
     await game.locator(".shop-stall-item").first().click();
     await gshot("shop-deal-stock");
-    // A STACKED row's card is the widest the card's foot ever gets: BUY and
-    // BUY ALL side by side, the second carrying a count AND a price. The cell
-    // wearing a depth chip is the one to tap.
+    // A STACKED row's card is the widest the card's foot ever gets: the
+    // quantity field beside the BUY button it reprices. The cell wearing a
+    // depth chip is the one to tap.
     const stacked = game
       .locator(".shop-stall-item:has(.shop-stall-count)")
       .first();
