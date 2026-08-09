@@ -32,6 +32,23 @@ import {
 
 import { DT } from "../helpers.ts";
 
+/** How far a point sits off a line segment — the honest way to ask whether a
+ * prop is standing in somebody's walk. */
+function distToSeg(
+  p: { x: number; y: number },
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  const t =
+    lenSq === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lenSq));
+  return Math.hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t));
+}
+
 /** Enough seeds that a rolled floor plan cannot hide a hole in the rule, few
  * enough that the suite stays a suite rather than a soak. */
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 11, 17, 23, 31, 42];
@@ -132,6 +149,86 @@ describe("GOODCO HQ's staff lot", () => {
       expect(onLot, `seed ${seed}: the rusher is on the tarmac`).toBe(false);
     }
   });
+
+  it("stands the gatehouse beside the gate, clear of the walk", () => {
+    // WITHOUT IT THE WAY IN IS A SLAB OF WALL that occasionally slides aside,
+    // and the player has no way to know the door is CONTROLLED rather than
+    // stuck. Two ways it goes missing and both are silent: the doorway is a hole
+    // in a WALL, so a kiosk placed flush beside it is a kiosk inside somebody's
+    // masonry and is simply dropped; and the footpath runs down the apron's own
+    // line, so a kiosk on the bay side is one every arriving staffer walks
+    // through — an arrival does not collide with anything, so nothing would even
+    // stop it.
+    for (const seed of SEEDS) {
+      const state = hq(seed);
+      const plan = state.arrivalPlan;
+      expect(plan, `seed ${seed}: no plan`).not.toBeNull();
+      if (!plan) continue;
+      const booth = state.obstacles.filter((o) => o.sprite === "gate_booth");
+      expect(booth.length, `seed ${seed}: no gatehouse`).toBe(1);
+      const at = booth[0]!.pos;
+      // Beside the gate — near enough to read as its box, far enough not to
+      // stand in the doorway.
+      const gap = Math.hypot(at.x - plan.door.x, at.y - plan.door.y);
+      expect(gap, `seed ${seed}`).toBeGreaterThan(20);
+      expect(gap, `seed ${seed}`).toBeLessThan(160);
+      // …and CLEAR OF THE FOOTPATH, which is the half of this that fails
+      // silently: an arrival walks its route with no collision at all, so a
+      // kiosk standing on that line is not a body that gets stuck, it is a body
+      // that walks through a building.
+      const path = [
+        [
+          { x: plan.entryX, y: plan.walkY },
+          { x: plan.apron.x, y: plan.walkY },
+        ],
+        [{ x: plan.apron.x, y: plan.walkY }, plan.apron],
+        [plan.apron, plan.door],
+      ] as const;
+      const clearance = Math.min(...path.map(([a, b]) => distToSeg(at, a, b)));
+      expect(
+        clearance,
+        `seed ${seed}: the kiosk is in the walk`,
+      ).toBeGreaterThan(booth[0]!.radius + 8);
+    }
+  });
+
+  it("keeps the read on the floor from firing out on the tarmac", () => {
+    // "EVERY DESK'S MANNED. EVERY LAB LIT." is a line about the inside of a
+    // building, and a sighting is plain distance — so the crowd standing a step
+    // past the doorway is within the beat's own radius of a man on the car park
+    // the instant a badge opens the gate. `inside` on the trigger is what holds
+    // it, and this is the assertion that says so about the shipped map.
+    //
+    // It also covers the FIRST BLOW, which waits on this same read
+    // (`openingStrike.after`): a scientist that broke cover early would be
+    // sprinting out onto the lot to beat a holstered man in front of two
+    // parking guards.
+    for (const seed of SEEDS) {
+      const state = hq(seed);
+      const plan = state.arrivalPlan;
+      expect(plan, `seed ${seed}: no plan`).not.toBeNull();
+      if (!plan) continue;
+      const bot = createBot("balanced");
+      // Which side of the doorway the hero is on, measured down the plan's own
+      // normal — positive is the building.
+      const nx = plan.inside.x - plan.door.x;
+      const ny = plan.inside.y - plan.door.y;
+      let readAt = -1;
+      for (let t = 0; t < 90_000 / DT; t++) {
+        step(state, [botAct(bot, state, state.players[0]!)], DT);
+        if (state.thoughtsSeen.includes("goodco_staff")) {
+          const hero = state.players[0]!;
+          readAt =
+            (hero.pos.x - plan.door.x) * nx + (hero.pos.y - plan.door.y) * ny;
+          break;
+        }
+      }
+      expect(readAt, `seed ${seed}: never read the floor`).not.toBe(-1);
+      expect(readAt, `seed ${seed}: read it from the car park`).toBeGreaterThan(
+        0,
+      );
+    }
+  }, 60_000);
 
   it("lets the autopilot follow somebody in and get armed", () => {
     // THE ONE TEST THAT PROVES THE LEVEL IS STILL PLAYABLE. Everything above is

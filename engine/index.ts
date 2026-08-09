@@ -641,6 +641,8 @@ export {
   questEscortDef,
   questGiverDef,
   questItemDef,
+  questPageIsHero,
+  questPageLines,
   questsForLevel,
   type QuestDef,
   type QuestEscortDef,
@@ -648,6 +650,7 @@ export {
   type QuestItemDef,
   type QuestMerchantDeal,
   type QuestObjective,
+  type QuestPage,
   type QuestReward,
 } from "./game/defs/quests.ts";
 

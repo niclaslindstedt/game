@@ -21,6 +21,7 @@ import {
   difficultyDef,
   questDef,
   resolveCacheLine,
+  questPageLines,
 } from "@game/core";
 
 import { GLYPHS } from "../../scripts/asset-tools/font.mjs";
@@ -114,7 +115,9 @@ describe("the cache ladder — how it reaches the player", () => {
     // carrying `{CACHE}`, every difficulty would silently share one sentence.
     const pages = questDef("ruth_scale").complete;
     expect(
-      pages.some((page) => page.some((line) => line.includes(CACHE_TOKEN))),
+      pages.some((page) =>
+        questPageLines(page).some((line) => line.includes(CACHE_TOKEN)),
+      ),
     ).toBe(true);
   });
 

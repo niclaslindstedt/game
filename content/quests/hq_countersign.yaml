@@ -9,13 +9,15 @@ lore: >
   may not decommission them; the hero is not it. The errand is a
   countersignature performed with a weapon, after which the file may close.
 offer:
-  - - MY LAST ORDER IS FLOOR SAFETY. TWENTY CURRENT-MODEL UNITS ARE OPERATING OUTSIDE TOLERANCE.
-  - - I MAY NOT DECOMMISSION THEM. YOU ARE NOT ME.
+  - - "MY LAST ORDER IS FLOOR SAFETY. TWENTY UNITS ARE OUTSIDE TOLERANCE. I MAY NOT DECOMMISSION THEM. YOU ARE NOT ME."
+  - hero:
+      - "NO. I'M NOT."
 incomplete:
-  - TOLERANCE STILL EXCEEDED. TWENTY WAS THE FIGURE.
+  - "TOLERANCE STILL EXCEEDED. TWENTY WAS THE FIGURE."
 complete:
-  - - ORDER SATISFIED. FLOOR SAFE. THE FILE MAY CLOSE.
-  - - I WAS ISSUED A TOOLKIT IN 2019. IT IS YOURS.
+  - - "ORDER SATISFIED. FLOOR SAFE. I WAS ISSUED A TOOLKIT IN 2019. IT IS YOURS."
+  - hero:
+      - "YOU KEPT DOING THE JOB. THAT COUNTS."
 objectives:
   - kind: kill
     enemy: successor

@@ -46,6 +46,27 @@ export const ARRIVALS = {
   /** Ms spent at the reader with the card out, before the doors move. */
   badgeMs: 700,
   /**
+   * HOW LONG THE GATE STANDS OPEN once a badge has opened it (ms) — and the
+   * single number the whole way into GOODCO is priced by.
+   *
+   * The gate is somebody else's and it opens because somebody else's card said
+   * so, so what it gives the hero is a MOMENT rather than a door: it takes the
+   * staffer who opened it and shuts behind them. A gate that stayed open would
+   * turn "follow one in" into "wait at a wall until it moves", which is the
+   * thing the whole beat exists instead of.
+   *
+   * Read against the walk it has to be taken on. The hero moves a shade quicker
+   * than an arriving staffer (`walkSpeed`), so a player who starts walking when
+   * the card comes out is a stride behind them at the threshold and goes
+   * through on the same opening; one who starts when the gate MOVES has to jog
+   * and just makes it. Anybody standing about watching misses it — and gets the
+   * next car, because the beat never stops happening.
+   *
+   * It never shuts on a body in the doorway (`stepClosingDoor`), so this is the
+   * clear-threshold hold rather than a guillotine.
+   */
+  gateHoldMs: 1600,
+  /**
    * How far the apron stands off the doorway (px) — where the walk stops and
    * the card comes out. Wide enough that the swipe is visibly a thing that
    * happens BEFORE the doors move rather than under them.

@@ -5,17 +5,20 @@
 # (`QuestGiverDef.intro`, retired by `ruth_met`) so that the first thing she is
 # to the player is a person rather than a dispenser.
 #
-# SHE ASKS FOR NOTHING HERE, AND THAT IS THE POINT. An earlier draft spent nine
-# nodes setting up the errands she would hand over later, and the meeting read
-# as a menu with a preamble. Two beats — she is in, and he should go — is the
-# whole of what she drove out to say; every errand introduces itself in its own
+# SHE ASKS FOR NOTHING HERE, AND THAT IS THE POINT. What she drove out to say is
+# that she is in and that he should go; every errand introduces itself in its own
 # offer, where the player is actually standing when it matters.
+#
+# ONE THING SAID, ONE THING ANSWERED — the same shape every quest conversation in
+# the game keeps (`QuestPage`). The single choice is the hero's REPLY rather than
+# a decision: he is not being asked to pick how he feels about Ada's mother
+# standing in his garage at midnight, and a menu of ways to say "I'm going"
+# would be a menu whose rows all do the same thing.
 start: greet
 nodes:
   greet:
     say:
-      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
-      - GO AND FIND HER. I'LL BE HERE.
+      - I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. GO AND FIND HER.
     choices:
       - text: I'M GOING AFTER HER.
         sets: [ruth_met]

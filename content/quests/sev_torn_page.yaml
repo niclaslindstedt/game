@@ -11,20 +11,15 @@ lore: >
   nothing that falls into the rift ever quite leaves it. It is a walk to a
   corner of a place with no corners, for a piece of paper with a man on it.
 offer:
-  - - IT WASN'T LOST. IT WAS TORN OUT.
-    - THERE'S A DIFFERENCE AND I CAN FEEL IT.
-  - - IT'S STILL IN HERE. EVERYTHING IS.
-    - GO OUT PAST WHERE THE LIGHT STOPS AGREEING.
+  - - "IT WASN'T LOST, IT WAS TORN OUT — AND IT'S STILL IN HERE. GO OUT PAST WHERE THE LIGHT STOPS AGREEING."
+  - hero:
+      - "PAST THE LIGHT. RIGHT."
 incomplete:
-  - PAST THE LIGHT. I'D SAY WHICH WAY IF I COULD.
+  - "PAST THE LIGHT. I'D SAY WHICH WAY IF I COULD."
 complete:
-  - - THAT'S — HOLD IT UP.
-  - - ELIAS.
-    - ELIAS WREN.
-  - - I WAS A BINDER. I BOUND BOOKS.
-    - THAT'S WHY THEY CAME FOR ME, ISN'T IT.
-  - - YOU DON'T TEAR A PAGE OUT OF A MAN FOR NOTHING.
-    - SOMEBODY WANTED THE BOOK MADE.
+  - - "ELIAS. ELIAS WREN. I WAS A BINDER — THAT'S WHY THEY CAME FOR ME. SOMEBODY WANTED THE BOOK MADE."
+  - hero:
+      - "SOMEBODY ALWAYS DOES."
 objectives:
   - kind: visit
     level: the_rift

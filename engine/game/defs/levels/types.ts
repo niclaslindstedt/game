@@ -1460,6 +1460,24 @@ export type ThoughtTrigger = {
    * Ignored by `firstKillThoughts`.
    */
   radius?: number;
+  /**
+   * `firstSightThoughts` only: HOLD THIS BEAT UNTIL THE HERO IS PAST THE GATE —
+   * inside the building, on the far side of the level's arrival entrance
+   * (`LevelDef.arrivals`, `anyHeroPastEntrance`).
+   *
+   * IT IS NOT A SMALLER RADIUS, and the difference is the whole reason it
+   * exists. A sighting is measured as plain distance, and the crowd the beat is
+   * about stands a step INSIDE the doorway — so the moment a badge opens the
+   * gate, a hero standing out on the tarmac is well within any radius wide
+   * enough for the beat to fire at all, and reads out "every desk's manned,
+   * every lab lit" while looking at parked cars. Narrowing the radius instead
+   * only moves the problem: the beat has to fire on the crowd being THERE, and
+   * the crowd is there before he is.
+   *
+   * Vacuously true on a level with no arrival lot, so it is a no-op rather than
+   * a beat that never plays.
+   */
+  inside?: boolean;
 };
 
 /**
@@ -1551,6 +1569,34 @@ export type ArrivalsSpec = {
    * the arrivals stop: a car park that keeps filling forever is a queue.
    */
   maxCars?: number;
+  /**
+   * THE GATEHOUSE — the lit box beside the doorway with somebody sitting in it,
+   * stood up once at level creation on whichever side of the entrance the carve
+   * left room for.
+   *
+   * IT IS WHAT MAKES THE ENTRANCE READ AS A GATE. Without it the way in is a
+   * slab of wall that occasionally slides aside: the player has no way to know
+   * the door is CONTROLLED rather than merely stuck, so the badge beat lands as
+   * a quirk of the level instead of as the rule the whole mission turns on. A
+   * kiosk with a guard behind the glass says "somebody decides who comes
+   * through here" in one frame, from across the tarmac, with no line of
+   * dialogue spent on it.
+   *
+   * IT IS ONE PIECE, AND THE GUARD IS PAINTED INTO IT. The man behind the glass
+   * is part of the sprite rather than a body on the field, which is not a
+   * shortcut but the point: a real neutral standing there would wander, could
+   * be shoved, could be killed, and would have to have something to say. This
+   * one sits, all night, and never notices anybody — which is exactly the
+   * relationship the hero has with this building now.
+   *
+   * Omitted = a bare doorway, as on any venue that wants one.
+   */
+  gatehouse?: {
+    /** Sprite the kiosk is drawn with — a solid obstacle, like any furniture. */
+    sprite: string;
+    /** Collision radius (world px); a sensible kiosk-sized default otherwise. */
+    radius?: number;
+  };
   /** THOUGHT_DEFS id fired once, when the first of them steps out of a car. */
   thought?: string;
   /**

@@ -45,8 +45,7 @@ questGivers:
       conversation: ruth_arrival
       until: ruth_met
     greeting:
-      - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-      - THERE'S SOMETHING I'D ASK OF YOU.
+      - SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. THERE'S SOMETHING I'D ASK OF YOU.
     farewell:
       - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
@@ -242,8 +241,7 @@ questGivers:
       week it stopped needing him. He is not confused about any of this. He is
       simply not willing to be the man who left it half done.
     greeting:
-      - I'M NOT MEANT TO BE HERE EITHER. I'M ON THE LAST BOX.
-      - I HAVE BEEN ON THE LAST BOX A WHILE NOW. SPARE ME A MINUTE?
+      - I'M NOT MEANT TO BE HERE EITHER. I'VE BEEN ON THE LAST BOX A WHILE NOW.
     farewell:
       - IT'S CLOSED. ALL OF IT. GO AND GET HER.
 
@@ -276,8 +274,7 @@ questGivers:
       countersignature from the party the transfers went to, and that party has
       not answered a request in eleven years.
     greeting:
-      - THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
-      - THOSE CANNOT BOTH BE TRUE. WILL YOU HELP ME RESOLVE IT?
+      - THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG. THOSE CANNOT BOTH BE TRUE.
 
   rift_nameless:
     level: the_rift
@@ -291,8 +288,7 @@ questGivers:
       long it has been trying to work out what is missing from a description he
       cannot read. He is very calm about it, which is the worst part.
     greeting:
-      - YOU'LL WANT MY NAME. EVERYONE DOES. I DON'T HAVE IT.
-      - I HAD ONE. IT WAS TAKEN OUT OF SOMETHING. HELP ME FIND WHAT?
+      - YOU'LL WANT MY NAME. EVERYONE DOES. IT WAS TAKEN OUT OF SOMETHING.
 
   east_preacher:
     level: boot_hill
@@ -306,5 +302,4 @@ questGivers:
       it twice a day for eleven years. He cannot read. Nobody has ever needed
       him to, and nobody has ever opened it to check what he is holding.
     greeting:
-      - SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO.
-      - I THINK IT DOES. THAT'S RATHER WHAT I WANTED TO ASK YOU ABOUT.
+      - SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO. I THINK IT DOES.

@@ -108,10 +108,15 @@ export const CACHE_TOKEN = "{CACHE}";
  * Resolve `{CACHE}` in one authored page against the rung being played.
  *
  * Returns the SAME array when there is nothing to replace, which is every page
- * of every other errand in the game. A rung with no chest resolves the token to
- * nothing and the page is DROPPED by the caller rather than left blank — an
- * empty box the player has to tap through is worse than a beat that is not
- * there.
+ * of every other errand in the game.
+ *
+ * ON A RUNG WITH NO CHEST THE LINE GOES, NOT THE PAGE. A quest conversation is
+ * ONE page from the giver and ONE from the hero (`QuestPage`), so the chest's
+ * sentence shares a page with the rest of what she says — and dropping the whole
+ * page over it would take her thanks away on every rung that pays no chest.
+ * What is left with nothing to say at all still returns null, and the caller
+ * drops it: an empty box the player has to tap through is worse than a beat that
+ * is not there.
  */
 export function resolveCacheLine(
   page: readonly string[],
@@ -119,7 +124,10 @@ export function resolveCacheLine(
 ): readonly string[] | null {
   if (!page.some((line) => line.includes(CACHE_TOKEN))) return page;
   const line = difficultyDef(difficulty).cache?.line;
-  if (!line) return null;
+  if (!line) {
+    const rest = page.filter((text) => !text.includes(CACHE_TOKEN));
+    return rest.length > 0 ? rest : null;
+  }
   return page.map((text) => text.split(CACHE_TOKEN).join(line));
 }
 

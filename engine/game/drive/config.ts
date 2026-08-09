@@ -2033,60 +2033,65 @@ export const DRIVE = {
    * THE FINISH IS NOT THE ARRIVAL and the split is the whole of this block. The
    * clock stops and the town stops at the same world x, because that is what the
    * player is being scored on. Then the wheel comes off him and the leg plays
-   * itself out: the car rolls in past GOODCO's fence with the data halls and the
-   * ship standing behind them, pulls up on the staff lot, and HE GETS OUT — the
-   * only time on this road the man is ever out of the car, and the reason it is
-   * here is the level on the other side of the fade. GOODCO's front door has no
-   * key (`engine/game/arrivals.ts`), so the last thing the minigame does is put
-   * its own question in his mouth, standing on the tarmac looking at it.
+   * itself out: the car rolls in past the site's own frontage — GOODCO's fence
+   * with the data halls and the launch stack behind it, or his own lawn with the
+   * ship beside the garage — he says the one thing he has to say about it, and
+   * the picture goes out from under him.
    *
-   * EVERY MARK BELOW IS ON THE CLOCK, not on a distance, and that is the
-   * opposite of every other beat on this road. The car is coasting to a stop out
-   * here, so a mark in world px is a mark a gentle enough arrival never reaches
-   * — and a leg that ended at 30 mph would sit in front of GOODCO in silence
-   * while the board waited on a line it was never going to get.
+   * THE LEG ENDS ON A FADE, WITH THE WAGON STILL ROLLING. Nothing out here parks
+   * the car, kills the engine or puts the man on the tarmac: the level on the
+   * other side of the black opens with the wagon already in a bay and him
+   * standing beside it (`content/maps/goodco_hq.yaml`, the `car` landmark), so a
+   * minigame that also played the parking would be showing the same arrival
+   * twice — once with no gameplay attached, and once as the level's opening
+   * frame. The DRIVE's job is the road; the ARRIVAL is the level's.
+   *
+   * BOTH MARKS BELOW ARE ON THE CLOCK, not on a distance, and that is the
+   * opposite of every other beat on this road. The car is coasting out here, so
+   * a mark in world px is a mark a gentle enough arrival never reaches — and a
+   * leg that ended at 30 mph would sit in front of the fence in silence while
+   * the board waited on a line it was never going to get.
    */
   arrival: {
     /**
      * How hard the wagon sheds speed once the finish is behind it (px/s²) — a
-     * man lifting off and rolling into a car park, not a man braking.
-     *
-     * Chosen against `outMs` rather than for its own sake: whatever he crosses
-     * the line at, the car has to be STOPPED by the time the door opens, and
-     * from the top of the dial this brings it up in about three and a half
-     * seconds and eleven hundred px, which is the length of the approach the
-     * campus is dressed along.
+     * man lifting off and letting it run down the approach, not a man braking.
      */
     coastPx: 260,
     /**
      * …and the most it will ever ask of the brakes, as a multiple of that
      * coast.
      *
-     * The run-in AIMS at the site's own parking spot (`SiteLayout.parkPx`), so
-     * a wagon that crossed the line at a hundred and seventy has to shed all of
-     * it inside eight hundred px — which is a genuinely hard stop and reads as
-     * one, correctly: he has arrived somewhere. This is the ceiling on it, and
-     * a leg that would need more simply overruns its mark by a little rather
-     * than stopping as if it hit something.
+     * The run-in AIMS at the site's own parking spot (`SiteLayout.parkPx`) —
+     * not so the wagon parks on it, which it never does, but so the picture
+     * SETTLES on the frontage the beat is about. He crosses the line at
+     * anything from a crawl to a hundred and seventy, and a flat coast puts the
+     * fade anywhere across eight hundred px of site: half the time the last
+     * frame of the leg is a stretch of fence rather than three data halls with
+     * a launch stack over them. This is the ceiling on how hard it may pull to
+     * fix that, and a leg that would need more simply overruns by a little
+     * rather than stopping as if it hit something.
      */
     brakeMax: 8,
+    /**
+     * …AND THE CRAWL IT NEVER DROPS BELOW while the run-in is playing (px/s).
+     *
+     * THE LEG MUST NOT END ON A PARKED CAR. Everything above is aiming the
+     * picture, and aiming it well enough that a fast arrival would genuinely
+     * come to rest on the mark — which is the one frame this beat cannot have,
+     * because the level on the far side of the black opens on a parked car and
+     * playing the parking here shows the same arrival twice. So the brake works
+     * down to a walking pace and then simply stops working: he is still rolling
+     * when the picture goes.
+     */
+    rollFloorPx: 34,
     /** When he sees it (ms past the finish) — early, while the car is still
      * rolling and the halls are still growing in the windscreen. */
-    sightMs: 1300,
-    /**
-     * When the door opens (ms past the finish). The car is PINNED to a stop
-     * here rather than trusted to have coasted to one — a wagon still doing
-     * walking pace with a man standing beside it is the one frame that would
-     * undo the whole beat.
-     */
-    outMs: 3400,
-    /** …and when he asks the question the next level is the answer to. Long
-     * enough after the door for him to be standing still when he says it. */
-    askMs: 4800,
+    sightMs: 1200,
     /** …and when the picture goes out under him (ms past the finish). Late
-     * enough to read the line, early enough that the black is the last thing the
-     * road does rather than a wait. */
-    blackoutMs: 7100,
+     * enough to read that line at the crawl's own pace, early enough that the
+     * black lands while the fence is still going by. */
+    blackoutMs: 3100,
     /**
      * HOW FAR THE CAMERA RISES ON THE RUN-IN (world px), and over how long.
      *
@@ -2102,23 +2107,18 @@ export const DRIVE = {
      * GOODCO over a palisade and a car park.
      *
      * So the run-in LIFTS. The wheel is already off the player here and the car
-     * is rolling to a stop on its own, which is exactly when a camera is allowed
-     * to move on its own too — and it settles before he says the first of the
-     * two lines, so the picture is finished by the time it is remarked on.
-     * Eased rather than cut, and given back to nothing on a restart, because the
-     * only thing this must never look like is the road jumping.
+     * is rolling in on its own, which is exactly when a camera is allowed to
+     * move on its own too — and it settles before he says his one line, so the
+     * picture is finished by the time it is remarked on. Eased rather than cut,
+     * and given back to nothing on a restart, because the only thing this must
+     * never look like is the road jumping.
      */
     cameraLiftPx: 74,
     cameraLiftMs: 1100,
-    /** How far he steps away from the door before he stops (world px), and how
-     * long that takes (ms). Presentation, but it lives here with the beats it is
-     * timed against rather than in the renderer. */
-    walkPx: 13,
-    walkMs: 900,
   },
   /** How long the whole run-in holds before the drive hands back (ms) — the
    * beats above plus the fade the app paints over the tail of them. */
-  arrivalHoldMs: 8500,
+  arrivalHoldMs: 4400,
 
   /**
    * WHAT HE MAKES OF THE TRIP — the lines the arrival is read against

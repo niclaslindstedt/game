@@ -457,7 +457,7 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   stepSpawners(state, hostInput.view);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
-  stepDoors(state);
+  stepDoors(state, dtMs);
   // A house the hero has walked up to opens and its occupant comes out to greet
   // him (lairs.ts) — a proximity pass, like the packs above it.
   stepLairs(state);

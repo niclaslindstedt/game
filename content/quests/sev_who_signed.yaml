@@ -12,15 +12,15 @@ lore: >
   give a company man a straight answer, so how the hero opens the conversation
   decides whether there is one.
 offer:
-  - - THERE WAS A SURVEYOR. HE WALKED THE GRID FOR THEM.
-  - - HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
-  - - HE WON'T TALK TO A COMPANY MAN. MIND HOW YOU OPEN.
+  - - "THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. HE WON'T TALK TO A COMPANY MAN."
+  - hero:
+      - "THEN I WON'T BE ONE."
 incomplete:
-  - HE'S OUT THERE SOMEWHERE. HE DOESN'T STAND STILL.
+  - "HE'S OUT THERE SOMEWHERE. HE DOESN'T STAND STILL."
 complete:
-  - - HE TOLD YOU? HE NEVER —
-  - - RIGHT. SO IT WAS SIGNED BY A DEPARTMENT THAT ISN'T A DEPARTMENT.
-  - - IT'S A LEDGER. AN ACTUAL LEDGER, AND IT WENT TO MARS WITH EVERYTHING ELSE.
+  - - "SO IT WAS SIGNED BY A DEPARTMENT THAT ISN'T ONE. IT'S A LEDGER, AND IT WENT TO MARS WITH EVERYTHING ELSE."
+  - hero:
+      - "THEN MARS IS ON THE WAY."
 objectives:
   - kind: flag
     flag: sev_surveyor_talked

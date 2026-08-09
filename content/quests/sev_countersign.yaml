@@ -12,17 +12,15 @@ lore: >
   entitled to ask — and it will come off its treads at anybody who tells it the
   rule does not matter, which is a second and equally valid way to get one.
 offer:
-  - - LAST THING. IT NEEDS A COUNTERSIGNATURE.
-  - - THE ARCHIVE UNIT SIGNS. IT'S THE ONLY THING LEFT THAT CAN.
-  - - IT'LL ASK YOU THINGS. ANSWER THEM.
-    - OR DON'T — THE STAMP'S INSIDE IT EITHER WAY.
+  - - "LAST THING — IT NEEDS A COUNTERSIGNATURE, AND THE ARCHIVE UNIT IS THE ONLY THING LEFT THAT CAN GIVE ONE."
+  - hero:
+      - "I'LL GO AND ASK IT."
 incomplete:
-  - IT'S DOWN THE EAST AISLE. IT DOESN'T MOVE MUCH.
+  - "IT'S DOWN THE EAST AISLE. IT DOESN'T MOVE MUCH."
 complete:
-  - - COUNTERSIGNED. THAT'S — THAT'S THE BOX CLOSED. FOUR YEARS.
-  - - I THOUGHT I'D FEEL BETTER.
-    - THE ASSET'S NAMED ON ALL OF THEM AND NOBODY EVER ASKED WHO KEEPS THE LIST.
-  - - SOMEBODY KEEPS THE LIST. FIND OUT WHERE IT'S BOUND.
+  - - "COUNTERSIGNED. FOUR YEARS, AND I THOUGHT I'D FEEL BETTER. SOMEBODY KEEPS THE LIST."
+  - hero:
+      - "THEN I'LL FIND OUT WHERE IT'S BOUND."
 objectives:
   - kind: collect
     item: countersigned_form

@@ -1,8 +1,10 @@
 description: |-
-  LEVEL 1 - GOODCO HQ. Ada's trail points off-planet and our hero builds
-  spaceships for a living - but his garage ship's engine needs the one part
-  GOODCO keeps in its cleanroom, and the night shift is not letting it leave the
-  building. The venue is the assembly floor: fuselage jigs, belts, workstations
+  LEVEL 1 - GOODCO HQ. The beacon in Ada's jacket is answering from the campus
+  the hero used to build engines at, so he drives out there to walk her home -
+  and arrives an hour too late. She has already been flown off the planet, and
+  the only thing this building can still give him is the one part his own garage
+  ship has always been short of. The venue is the assembly floor: fuselage jigs,
+  belts, workstations
   and the bays they feed, with PAYLOAD-1 - the prototype the whole line is built
   to make - booting up wherever the floor plan ends.
   THE ONBOARDING FEEL: a gentle start that eases the player into steering and the
@@ -23,16 +25,28 @@ intro:
   # PICKS UP WHERE THE PRELUDE FADED OUT — it does not recap it. The scene the
   # player just watched ends on "SHE NEVER CAME BACK", so opening the monologue
   # by restating that (and the chips and the soda and the two hours) told them
-  # nothing they had not been shown thirty seconds earlier. The tracker is the
-  # new fact, and it pays off the prelude's own quiet detail: the jacket he
+  # nothing they had not been shown thirty seconds earlier. The jacket answering
+  # is the new fact, and it pays off the prelude's own quiet detail: the one he
   # "fixed the zipper on".
-  - - THE TRACKER I SEWED INTO HER JACKET JUST PINGED - FROM SPACE. SOMEONE IS TAKING HER OFF THE PLANET.
-  - - TO FOLLOW HER I NEED A SHIP. I'VE BEEN BUILDING ONE IN THE GARAGE FOR YEARS. IT'S ALMOST DONE.
-  - - ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. GOODCO KEEPS IT IN THEIR CLEANROOM VAULT.
-  - - I KNOW, BECAUSE I WORKED THERE. I BUILT THEIR ENGINES - TILL AN AI LEARNED MY JOB AND THEY FIRED ME.
-  - - THE WHOLE BLOCK LOST ITS JOBS THE SAME WAY. NOW WE ALL LIVE ON WELFARE AND MOVIE NIGHTS.
-  - - THEY NEVER CHANGED THE LOCKS. EVERY DOOR STILL KNOWS MY HAND.
-  - - SO TONIGHT I TAKE THE PART, FINISH THE SHIP, AND GO GET ADA BACK.
+  #
+  # AND IT NEVER MENTIONS THE PART, which is the whole design of this level. A
+  # monologue that lays out on a black screen that the beacon points at space,
+  # that following it needs a ship, that the ship is one part short and that the
+  # part happens to be in the very building his girlfriend vanished into is four
+  # coincidences stacked up before the player has pressed anything — and a plot
+  # the hero has already solved is not a plot.
+  #
+  # So he comes here for HER, full stop, and everything else is discovered in
+  # the order a person would discover it: she is not here (the CHIEF OF
+  # SECURITY, PAYLOAD-1), she went up an hour ago, and — from DR. NOVA, bragging
+  # unprompted to a man who never asked — the thing in the cleanroom vault is
+  # the part he has needed for ten years. He leaves with it because by then it
+  # is the only way to follow anybody.
+  - - THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
+  - - GOODCO. I BUILT THEIR ENGINES FOR TEN YEARS, TILL AN AI LEARNED MY JOB AND THEY WALKED ME OUT.
+  - - THE WHOLE BLOCK WENT THE SAME WAY. NOW IT'S WELFARE AND MOVIE NIGHTS.
+  - - I KNOW THAT BUILDING. I KNOW THE PEOPLE IN IT. I DON'T WANT TROUBLE WITH ANY OF THEM.
+  - - SO I GO IN, AND I WALK OUT WITH HER.
 gravity: 800
 biome: goodco
 tiles:
@@ -80,6 +94,16 @@ arrivals:
     - arriving_scientist
     - arriving_engineer
     - arriving_intern
+  # THE GATEHOUSE — the lit kiosk flush against the gate with a guard sitting
+  # behind the glass, which is what turns a slab of wall that occasionally
+  # slides aside into a CONTROLLED entrance. It says, in one frame and from
+  # across the tarmac, that somebody decides who comes through here — so the
+  # badge beat reads as the building's rule rather than as a quirk of the level.
+  # He is painted into the sprite rather than standing on the field: he sits all
+  # night and never notices anybody, which is exactly the hero's relationship
+  # with this place now.
+  gatehouse:
+    sprite: gate_booth
   guards:
     enemy: parking_guard
     count: 2
@@ -129,6 +153,18 @@ firstSightThoughts:
   - enemy: intern
     thought: goodco_staff
     radius: 200
+    # …BUT NOT UNTIL HE IS THROUGH THE GATE. The line is about the floor — every
+    # desk manned, every lab lit — and the crowd it is about stands a step
+    # inside the doorway, which is well within 200px of a man on the tarmac the
+    # moment a badge opens the gate. Distance alone therefore reads the level's
+    # first line out to somebody looking at a car park; `inside` holds it until
+    # he is actually on the far side of the entrance.
+    #
+    # AND IT HOLDS THE FIRST BLOW WITH IT, for free: the opening strike waits on
+    # this thought (`openingStrike.after`), so gating the read is what keeps the
+    # scripted scientist from sprinting out onto the lot to swing at a holstered
+    # man in front of two parking guards.
+    inside: true
   - enemy: successor
     thought: goodco_successor
   # HELLBORN (config HELLGATES): the first time a rampage-opened hellgate lets

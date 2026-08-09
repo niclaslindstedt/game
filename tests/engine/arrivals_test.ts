@@ -59,6 +59,16 @@ function shut(state: GameState): boolean {
   return state.doors.some((d) => d.id === "entrance" && !d.open);
 }
 
+/** How many pieces of the doorway's own chain are standing in it. Asked by
+ * position rather than by sprite name: the fixture hangs an unadorned door, so
+ * a check written against a sprite id would be vacuously true and would say
+ * nothing about whether the opening is actually blocked. */
+function slats(state: GameState): number {
+  return state.obstacles.filter(
+    (o) => Math.abs(o.pos.x - DOOR.x) < 20 && Math.abs(o.pos.y - DOOR.y) < 80,
+  ).length;
+}
+
 describe("the staff lot", () => {
   it("plans the lane, the rank and the doorway off the carve", () => {
     const plan = lot().arrivalPlan;
@@ -131,9 +141,7 @@ describe("the staff lot", () => {
     // doors read as having opened by themselves.
     expect(swipe).toBeLessThanOrEqual(opened);
     // …and the chain really is gone, so the doorway can be walked through.
-    expect(state.obstacles.some((o) => o.sprite === "door_entrance")).toBe(
-      false,
-    );
+    expect(slats(state)).toBe(0);
   });
 
   it("never opens for the hero, however long he stands at it", () => {
@@ -151,11 +159,47 @@ describe("the staff lot", () => {
   it("takes the body off the field once it is through", () => {
     const state = lot();
     idleFor(state, 40_000);
-    expect(shut(state)).toBe(false);
     // Everybody who arrived has gone to work; only the lot's own guards are
     // left standing on it.
     expect(state.arrivals.some((a) => a.staff !== null)).toBe(false);
     expect(state.enemies.filter((e) => e.arrival === true).length).toBe(0);
+  });
+
+  it("shuts the gate again behind whoever badged in", () => {
+    // A BADGE BUYS A MOMENT, NOT A DOOR (`ARRIVALS.gateHoldMs`). The gate is
+    // somebody else's, it opened because somebody else's card said so, and the
+    // whole of what it gives the hero is the second and a half it stands open
+    // behind them — which is what makes "follow one in" a thing to be timed
+    // rather than a wall that eventually moves.
+    const state = lot();
+    let everOpened = false;
+    for (let t = 0; t < 40_000 / DT; t++) {
+      step(state, [idle], DT);
+      if (!shut(state)) everOpened = true;
+      else if (everOpened) break;
+    }
+    expect(everOpened).toBe(true);
+    expect(shut(state)).toBe(true);
+    // …and the slats are really back, so the doorway is a doorway again rather
+    // than an opening that merely draws as one.
+    expect(slats(state)).toBeGreaterThan(0);
+  });
+
+  it("keeps opening it, long after the rank has filled up", () => {
+    // THE BEAT MAY NEVER STOP HAPPENING. With a gate that shuts again, a player
+    // can watch every car on the rank arrive, badge in and go inside and still
+    // be standing on the tarmac — so a lot whose bays are all taken has to go on
+    // producing chances, or the level's only way in ceases to exist.
+    const state = lot();
+    idleFor(state, 60_000);
+    const before = state.stats.timeMs;
+    let opened = 0;
+    for (let t = 0; t < 60_000 / DT; t++) {
+      step(state, [idle], DT);
+      if (state.events.some((e) => e.type === "doorOpened")) opened++;
+    }
+    expect(state.stats.timeMs).toBeGreaterThan(before);
+    expect(opened).toBeGreaterThan(0);
   });
 
   it("spends nothing off the run's own rng", () => {

@@ -387,8 +387,6 @@ export function createDrive(params: DriveParams): DriveState {
     cityDone: false,
     townEndDone: false,
     sightDone: false,
-    heroOutDone: false,
-    askedDone: false,
     blackoutDone: false,
     nextId: 1,
   };
@@ -559,12 +557,24 @@ export function stepDrive(
       );
     }
     // …AND AN ARRIVING ONE ROLLS IN RATHER THAN CARRYING ON AT A HUNDRED AND
-    // TWENTY. The finish is not a wall: he lifts off and the car coasts down
-    // GOODCO's approach, which is what makes the last stretch read as pulling
+    // TWENTY. The finish is not a wall: he lifts off and the car runs down the
+    // site's own approach, which is what makes the last stretch read as pulling
     // into somewhere rather than as the road being switched off.
+    //
+    // AND IT NEVER ARRIVES AT A STANDSTILL (`rollFloorPx`). The brake below aims
+    // at the site's mark so the FRAME settles on the frontage, and aims well
+    // enough that a fast arrival would genuinely come to rest on it — which is
+    // the one frame this beat cannot have, because the level on the far side of
+    // the fade opens on a parked car and playing the parking here shows the same
+    // arrival twice. So it works the speed down to a walking pace and then stops
+    // working, and the picture goes out with the wagon still moving.
     if (drive.outcome === DRIVE_OUTCOME.arrived) {
-      if (car.speed !== 0) {
-        car.speed = Math.max(0, Math.abs(car.speed) - parkDecelPx(drive) * dt);
+      const { rollFloorPx } = DRIVE.arrival;
+      if (Math.abs(car.speed) > rollFloorPx) {
+        car.speed = Math.max(
+          rollFloorPx,
+          Math.abs(car.speed) - parkDecelPx(drive) * dt,
+        );
       }
       arrivalBeats(drive);
     }
@@ -788,16 +798,21 @@ function openingBeats(drive: DriveState, dtMs: number): void {
  * `DRIVE.arrival.coastPx` IS THE FLOOR RATHER THAN THE WHOLE ANSWER, and that
  * is the point of this function. The car crosses the finish at whatever the
  * player left it at — a crawl, or a hundred and seventy — and a fixed
- * deceleration turns that into a parking spot spread across eight hundred px of
- * site. Which puts the thing the hero then gets out and TALKS about off the side
- * of the screen about half the time: HOME AT LAST said beside a stretch of
- * fence, THERE'S GOODCO with the halls already behind him. So a fast arrival
- * brakes harder and comes to rest on the site's own mark (`SiteLayout.parkPx`).
+ * deceleration spreads where it ends up across eight hundred px of site. Which
+ * puts the thing the hero TALKS about off the side of the screen about half the
+ * time: HOME AT LAST said beside a stretch of fence, THERE'S GOODCO with the
+ * halls already behind him. So a fast arrival brakes harder, aiming the picture
+ * at the site's own mark (`SiteLayout.parkPx`).
  *
- * A SLOW ONE STILL STOPS SHORT, on purpose and unavoidably: there is no
+ * IT AIMS THE FRAME; IT DOES NOT PARK THE CAR. The caller floors the speed at a
+ * crawl (`DRIVE.arrival.rollFloorPx`), so the wagon is still moving when the
+ * fade takes it — the parking belongs to the level on the far side of the black,
+ * which opens on it.
+ *
+ * A SLOW ARRIVAL STILL COMES UP SHORT, on purpose and unavoidably: there is no
  * accelerating on a run-in, and a man who crawled over the line has earned a
- * longer walk. Which is why the frontage either side of the mark still has to be
- * worth looking at.
+ * longer approach. Which is why the frontage either side of the mark still has
+ * to be worth looking at.
  */
 function parkDecelPx(drive: DriveState): number {
   const { coastPx, brakeMax } = DRIVE.arrival;
@@ -833,19 +848,10 @@ function arrivalBeats(drive: DriveState): void {
     drive.sightDone = true;
     drive.events.push({ type: "sight" });
   }
-  if (!drive.heroOutDone && drive.outcomeMs >= arrival.outMs) {
-    drive.heroOutDone = true;
-    // PINNED rather than trusted to have coasted in. Whatever he crossed the
-    // line at, the wagon is parked the instant the door opens — a car still
-    // rolling with a man standing beside it is the one frame that would undo
-    // the beat.
-    drive.car.speed = 0;
-    drive.events.push({ type: "heroOut" });
-  }
-  if (!drive.askedDone && drive.outcomeMs >= arrival.askMs) {
-    drive.askedDone = true;
-    drive.events.push({ type: "atTheDoor" });
-  }
+  // …AND THEN THE FADE, WITH THE CAR STILL UNDER HIM. Nothing here stops the
+  // wagon, opens its door or stands a man on the road: the arriving level opens
+  // on a car already parked in a bay, so the road's last frame is a car still
+  // rolling and the black is what hands the beat over.
   if (!drive.blackoutDone && drive.outcomeMs >= arrival.blackoutMs) {
     drive.blackoutDone = true;
     drive.events.push({ type: "blackout" });

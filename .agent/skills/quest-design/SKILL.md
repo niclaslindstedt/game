@@ -55,12 +55,34 @@ moves a plot beat, `playtest` / `test-scenario` to see it running.
 sits in that person's pick list. `order` is low-first; without it the list falls
 back to alphabetical, which is never the order a person would say things in.
 
-**The words.** `offer` (pages, each a list of lines) → `incomplete` (the nag,
-one page) → `complete` (pages). An authored line is a **paragraph**: the box
+**The words: ONE THING SAID, ONE THING ANSWERED.** `offer` and `complete` are
+each at most TWO pages — the giver's ask, then the hero's one-line reply, written
+`- hero: [...]` (the same `DialoguePage` vocabulary an elite's arrival scene
+speaks). `incomplete` is one page, the nag. **The schema refuses anything
+longer**, and refuses a giver page after the hero's or a hero page first, so this
+is a build error rather than a matter of taste: the box under those pages is the
+quest modal, which already carries the objectives, the reward and ACCEPT /
+DECLINE — the only decision on offer — and every page past the reply is the
+player being held at a desk by somebody they walked up to to find out what the
+job was.
+
+The hero's line is a **reply, never a choice**. Do not write a menu of ways to
+say yes; every row of one does the same thing. He answers short, dry and already
+moving. A person the hero genuinely has to be talked ROUND is not an errand page
+at all — that is a `conversation:` (below), which is a different object with
+branches, flags and a way to lose, and choosing between the two deliberately is
+the point of the split.
+
+An authored line is a **paragraph**: the box
 flows it into whatever column the device really has, so you are not counting
 characters to a fixed width — you are deciding how much of a thought lands on
 one screenful (~120 chars) and where the one held beat goes (max 2 lines per
 page, and the whole shipped campaign spends five of them).
+
+**A giver's `greeting` is ONE line**, and `farewell` too. It heads their slate
+on every single walk-up, so it is the most re-read text that person owns; what
+they have to SAY belongs in the errand's own ask, where the player is standing
+when it matters.
 
 **`lore` is required, on both the errand and the person.** Described, not
 spoken, in the dry register of an item's `description` — the library prints it,

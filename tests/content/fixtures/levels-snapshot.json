@@ -9,22 +9,18 @@
       "music": "hq_lockdown",
       "intro": [
         [
-          "THE TRACKER I SEWED INTO HER JACKET JUST PINGED - FROM SPACE. SOMEONE IS TAKING HER OFF THE PLANET."
+          "THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE."
         ],
         [
-          "TO FOLLOW HER I NEED A SHIP. I'VE BEEN BUILDING ONE IN THE GARAGE FOR YEARS. IT'S ALMOST DONE."
+          "GOODCO. I BUILT THEIR ENGINES FOR TEN YEARS, TILL AN AI LEARNED MY JOB AND THEY WALKED ME OUT."
         ],
         [
-          "ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. GOODCO KEEPS IT IN THEIR CLEANROOM VAULT."
+          "THE WHOLE BLOCK WENT THE SAME WAY. NOW IT'S WELFARE AND MOVIE NIGHTS."
         ],
         [
-          "I KNOW, BECAUSE I WORKED THERE. I BUILT THEIR ENGINES - TILL AN AI LEARNED MY JOB AND THEY FIRED ME."
+          "I KNOW THAT BUILDING. I KNOW THE PEOPLE IN IT. I DON'T WANT TROUBLE WITH ANY OF THEM."
         ],
-        [
-          "THE WHOLE BLOCK LOST ITS JOBS THE SAME WAY. NOW WE ALL LIVE ON WELFARE AND MOVIE NIGHTS."
-        ],
-        ["THEY NEVER CHANGED THE LOCKS. EVERY DOOR STILL KNOWS MY HAND."],
-        ["SO TONIGHT I TAKE THE PART, FINISH THE SHIP, AND GO GET ADA BACK."]
+        ["SO I GO IN, AND I WALK OUT WITH HER."]
       ],
       "gravity": 800,
       "biome": "goodco",
@@ -43,6 +39,9 @@
       },
       "arrivals": {
         "staff": ["arriving_scientist", "arriving_engineer", "arriving_intern"],
+        "gatehouse": {
+          "sprite": "gate_booth"
+        },
         "guards": {
           "enemy": "parking_guard",
           "count": 2
@@ -113,7 +112,8 @@
         {
           "enemy": "intern",
           "thought": "goodco_staff",
-          "radius": 200
+          "radius": 200,
+          "inside": true
         },
         {
           "enemy": "successor",

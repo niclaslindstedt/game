@@ -1,0 +1,68 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE GATEHOUSE beside GOODCO's staff entrance (`ArrivalsSpec.gatehouse`).
+#
+# THE GUARD IS PAINTED IN, and that is the design rather than a saving. A real
+# neutral standing here would wander off his mark, be shoved about by the horde,
+# be killable, and would need something to say the first time the hero walked up
+# to him. This one sits behind the glass all night and never notices anybody,
+# which is the whole point: the man outside used to have a badge for this gate,
+# and now he is somebody the box does not look up for.
+#
+# Drawn HEAD ON, like the door it stands beside: a lit kiosk with a service
+# window, a counter, the night man's head and shoulders behind the glass, and
+# the card reader on its own post on the near side — which is the thing the
+# arriving staff actually tap (engine/game/arrivals.ts).
+name: gate_booth
+family: goodco
+space: outside
+size: [26, 26]
+description: >
+  A lit security kiosk at the staff gate — a white-fascia canopy with two red
+  status lamps, a broad glazed window with a uniformed guard sitting behind it,
+  a chrome counter under the glass, and a card reader on a post at its side.
+subject:
+  kind: solid obstacle prop
+  build: a small glazed guard kiosk seen head on, canopy over a wide service window, a reader post at its side
+  features: a seated guard in a navy uniform and cap behind pale-blue glass, a chrome counter, two red lamps in the fascia, an amber card reader
+  accent: pale-blue glazing and white brand fascia over brushed metal
+  flavor: the box somebody sits in all night deciding who comes through the gate
+palette:
+  O: "#1a1c2c" # outline and frame
+  W: "#f4f4f4" # white brand fascia
+  V: "#9095a5" # brushed-metal panel
+  T: "#c0c5cf" # chrome counter
+  b: "#3f4553" # panel shadow, counter underside
+  c: "#6f9cb8" # tinted glass edge
+  x: "#a8d8e6" # pale-blue glazing
+  r: "#d83a3a" # red status lamp
+  y: "#ffb02e" # amber card reader
+  J: "#2d3b84" # the night man's navy uniform
+  j: "#4054bc" # his cap
+  p: "#deaa86" # skin
+grid: |
+  ..OOOOOOOOOOOOOOOOOO......
+  ..OWWWWWWWWWWWWWWWWO......
+  ..OWrrWWWWWWWWWWrrWO......
+  ..OWWWWWWWWWWWWWWWWO......
+  ..OOOOOOOOOOOOOOOOOO......
+  ..OVVVVVVVVVVVVVVVVO......
+  ..OVOccccccccccccOVO......
+  ..OVOxxxxxxxxxxxxOVO......
+  ..OVOxxxxjjjjxxxxOVO......
+  ..OVOxxxOjjjjOxxxOVO......
+  ..OVOxxxOppppOxxxOVO......
+  ..OVOxxxOppppOxxxOVO......
+  ..OVOxxxOOppOOxxxOVO..OO..
+  ..OVOxxOJJJJJJOxxOVO..OO..
+  ..OVOxxOJJJJJJOxxOVO.OOyO.
+  ..OVOxxOJJJJJJOxxOVO.OOyO.
+  ..OVOccccccccccccOVO.OOOO.
+  ..OVTTTTTTTTTTTTTTVO..OO..
+  ..OVbbbbbbbbbbbbbbVO..OO..
+  ..OVVVVVVVVVVVVVVVVO..OO..
+  ..OVbbbbbbbbbbbbbbVO..OO..
+  ..OVVVVVVVVVVVVVVVVO..OO..
+  ..OVbbbbbbbbbbbbbbVO..OO..
+  ..OOOOOOOOOOOOOOOOOO..OO..
+  ..bbbbbbbbbbbbbbbbbb..OO..
+  ..........................

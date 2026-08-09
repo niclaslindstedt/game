@@ -383,6 +383,28 @@ export type DoorState = {
   /** It ROLLS UP rather than sliding aside — the garage door, which is the one
    * that fires `garageDoorOpened` and its chain-drive sound. */
   rollUp?: boolean;
+  /**
+   * A DOOR THAT SHUTS AGAIN — ms of open left before it does.
+   *
+   * Every other door in the game opens once and stays open, which is right for a
+   * building the hero is walking through: a door that closed behind a fight
+   * would hide the one piece of evidence the fight started somewhere. A GATE is
+   * the opposite kind of object. It is somebody else's, it opens because
+   * somebody else's badge said so, and the whole of what it gives the hero is
+   * the second and a half it stands open behind them (`ARRIVALS.gateHoldMs`,
+   * engine/game/arrivals.ts) — so a gate that stayed open would turn the way
+   * into GOODCO from a moment to be taken into a wall that eventually moves.
+   *
+   * Absent on every ordinary door, which is what "open once and stay open"
+   * means.
+   */
+  closeMs?: number;
+  /**
+   * The door's own obstacle chain, held aside while it stands open so it can be
+   * put back. Present only on a door that shuts (see `closeMs`); every other
+   * door's chain is dropped on the floor for good the moment it opens.
+   */
+  shut?: Obstacle[];
 };
 
 /**

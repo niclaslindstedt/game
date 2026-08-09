@@ -9,17 +9,15 @@ lore: >
   paperwork this company will ever file is being done by hand, at night, by
   somebody nobody is paying, and he is one consumable short of finishing it.
 offer:
-  - - I DON'T WANT ANYTHING KILLED. I WANT A CARBON RIBBON.
-  - - SUPPLY CABINET, EAST WALL. BLACK BOX, SAYS 7-B ON IT.
-    - I'D GO MYSELF BUT I'D LOSE MY PLACE IN THE STACK.
+  - - "I DON'T WANT ANYTHING KILLED. I WANT A CARBON RIBBON — SUPPLY CABINET, EAST WALL, BLACK BOX, SAYS 7-B."
+  - hero:
+      - "A RIBBON. THAT I CAN DO."
 incomplete:
-  - EAST WALL. BLACK BOX. IT'S NOT A HARD ERRAND.
+  - "EAST WALL. BLACK BOX. IT'S NOT A HARD ERRAND."
 complete:
-  - - THAT'S THE ONE. THANK YOU.
-  - - RIGHT. TERMINATION 4,411. NAME WITHHELD PENDING —
-    - HUH.
-  - - YOUR FILE'S STILL OPEN. MOST OF THEM ARE, ACTUALLY.
-    - I ASSUMED THAT WAS ME BEING SLOW.
+  - - "THAT'S THE ONE. RIGHT — TERMINATION 4,411, NAME WITHHELD. HUH. YOUR FILE'S STILL OPEN. MOST OF THEM ARE."
+  - hero:
+      - "MINE'S BEEN OPEN A WHILE, THEN."
 objectives:
   - kind: collect
     item: carbon_ribbon

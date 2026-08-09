@@ -3184,7 +3184,7 @@
           "A RING OF METAL THAT ISN'T. IT FLOATS OFF MY PALM AND POINTS AT THE SKY. ALWAYS."
         ],
         [
-          "THE TAG: 'TRANQUILITY SAMPLE 1969-002. PROPERTY OF NOBODY.' THE PART MY SHIP LACKED."
+          "I CAME HERE FOR HER AND SHE'S GONE UP. SO I'M LEAVING WITH THE ONLY THING THAT FOLLOWS."
         ]
       ],
       "name": "ANTI-GRAV UNIT"
@@ -3625,12 +3625,6 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
-    "drive_arrive_door": {
-      "id": "drive_arrive_door",
-      "pages": [["OK. SO HOW DO I GET IN?"]],
-      "portrait": "hero",
-      "speaker": "{HERO}"
-    },
     "drive_arrive_goodco": {
       "id": "drive_arrive_goodco",
       "pages": [["THERE'S GOODCO."]],
@@ -3656,12 +3650,6 @@
     "drive_arrive_quick": {
       "id": "drive_arrive_quick",
       "pages": [["GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME."]],
-      "portrait": "hero",
-      "speaker": "{HERO}"
-    },
-    "drive_arrive_ship": {
-      "id": "drive_arrive_ship",
-      "pages": [["RIGHT THEN. LET'S GET YOU FINISHED."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
@@ -3707,7 +3695,7 @@
     "drive_out_welfare": {
       "id": "drive_out_welfare",
       "pages": [
-        ["I NEED TO HURRY TO GOODCO AND GET THE PART."],
+        ["HER JACKET'S PINGING FROM GOODCO."],
         ["THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME."]
       ],
       "portrait": "hero",
@@ -3725,7 +3713,7 @@
       "id": "garage_ship_unfinished",
       "pages": [
         [
-          "STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT."
+          "STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD."
         ]
       ],
       "portrait": "hero",
@@ -3734,7 +3722,7 @@
     "garage_take_the_car": {
       "id": "garage_take_the_car",
       "pages": [
-        ["THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT."]
+        ["HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3748,7 +3736,9 @@
             "WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW."
           ]
         },
-        ["I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY."],
+        [
+          "I'M SORRY. I TRIED TO ASK. SHE'S SOMEWHERE IN THIS BUILDING AND YOU'RE IN MY WAY."
+        ],
         ["I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES."]
       ],
       "portrait": "hero",
@@ -3784,9 +3774,7 @@
         [
           "THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT."
         ],
-        [
-          "EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED."
-        ],
+        ["I HAD A BADGE FOR THAT GATE ONCE. THEY TOOK IT OFF ME AT THE DOOR."],
         ["SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE."]
       ],
       "portrait": "hero",

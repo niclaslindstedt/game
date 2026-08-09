@@ -93,13 +93,61 @@ const isVec = (v) =>
   isNum(v.x) &&
   isNum(v.y);
 
-/** A page of lines: a non-empty list of non-empty strings. */
+/** The lines of a page, whoever is saying them (`{ hero: [...] }` or a list). */
+const pageLines = (page) => (Array.isArray(page) ? page : page?.hero);
+/** Is this page the HERO's answer? */
+const isHeroPage = (page) =>
+  page !== null &&
+  typeof page === "object" &&
+  !Array.isArray(page) &&
+  Array.isArray(page.hero);
+
+/**
+ * A QUEST CONVERSATION: ONE THING SAID, THEN ONE THING ANSWERED — and the shape
+ * is a build error rather than a convention, because nothing else would hold it.
+ *
+ * The rule, in full: the giver's page comes first, the hero's `{ hero: [...] }`
+ * answer may follow it, and there is nothing after that. No second ask, no
+ * third page, no giver having the last word over the top of the hero's reply,
+ * and — see `content/conversations/` for what a tree is FOR — no branch. The
+ * decision the player is here to make is ACCEPT or DECLINE, and the modal under
+ * these pages already carries it along with the objectives and the reward; every
+ * page beyond the second is the player being held at a desk by somebody they
+ * walked up to in order to find out what the job was.
+ *
+ * A giver who genuinely needs to be talked around is not a quest page at all —
+ * that is a CONVERSATION (`QuestDef.conversation`), which is a different object
+ * with different rules, and choosing one deliberately is the point of the split.
+ */
 function checkPages(pages, what, err, warn) {
   if (!Array.isArray(pages) || pages.length === 0) {
     err(`${what} must be a non-empty list of pages`);
     return;
   }
-  pages.forEach((page, i) => checkLines(page, `${what}[${i}]`, err, warn));
+  if (pages.length > 2) {
+    err(
+      `${what} has ${pages.length} pages — a giver says ONE thing and the ` +
+        `hero answers with ONE line; anything longer is a conversation ` +
+        `(QuestDef.conversation), not an ask`,
+    );
+  }
+  if (isHeroPage(pages[0])) {
+    err(`${what}[0] is the hero's — the person with the errand speaks first`);
+  }
+  if (pages.length > 1 && !isHeroPage(pages[1])) {
+    err(
+      `${what}[1] must be the hero's answer ({ hero: [...] }) — a giver who ` +
+        `carries on talking after his own ask is a giver nobody replies to`,
+    );
+  }
+  pages.forEach((page, i) => {
+    const lines = pageLines(page);
+    if (lines === undefined) {
+      err(`${what}[${i}] must be a list of lines or { hero: [...] }`);
+      return;
+    }
+    checkLines(lines, `${what}[${i}]`, err, warn);
+  });
 }
 
 /**
@@ -225,10 +273,28 @@ export function validateQuestGiver(id, def, refs) {
   if (!isVec(def.at)) err("at must be `{ x, y }` (world px)");
   else checkOnMap(def.at, def.level, "at", refs, err, warn);
   checkLore(def.lore, "every giver owes a paragraph", err, warn);
-  if (def.greeting !== undefined)
+  // A HELLO IS ONE LINE. It heads the slate every single time the hero walks
+  // up, so it is the most re-read text this person owns — and a greeting that
+  // runs to three lines is a person clearing their throat before the menu on
+  // every visit. What they have to SAY belongs in the errand's own ask, where
+  // the player is standing when it matters.
+  if (def.greeting !== undefined) {
     checkLines(def.greeting, "greeting", err, warn);
-  if (def.farewell !== undefined)
+    if (Array.isArray(def.greeting) && def.greeting.length > 1) {
+      err(
+        `greeting is ${def.greeting.length} lines — a giver says ONE thing; ` +
+          `the rest belongs in the errand's own ask`,
+      );
+    }
+  }
+  if (def.farewell !== undefined) {
     checkLines(def.farewell, "farewell", err, warn);
+    if (Array.isArray(def.farewell) && def.farewell.length > 1) {
+      err(
+        `farewell is ${def.farewell.length} lines — one line, like the hello`,
+      );
+    }
+  }
   if (def.intro !== undefined) checkGiverIntro(def.intro, refs, err);
 
   return { errors, warnings };

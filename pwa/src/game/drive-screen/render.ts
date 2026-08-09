@@ -1146,37 +1146,13 @@ export function drawDrive(
     put(name, wheel.pos.x, wheel.pos.y, wheel.z);
   }
 
-  // ── AND THE MAN HIMSELF, ONCE ─────────────────────────────────────────────
-  // THE ONE TIME ON THIS ROAD HE IS OUT OF THE CAR. The wagon has pulled up on
-  // GOODCO's approach, the engine is off, and he steps out and stands looking at
-  // the place — which is the whole reason the run-in is a beat rather than a
-  // cut: the level on the other side of the fade opens with him on the staff lot
-  // trying to get through a door that has no key, and a minigame that put him
-  // there without ever showing him arrive would be handing that scene an
-  // entrance nobody watched.
-  //
-  // DRAWN OFF THE ARRIVAL CLOCK rather than out of the sim, because he is not a
-  // body on this road: there is no hero in a `DriveState` at all, and adding one
-  // for four seconds of walking would put a person into a world whose every pass
-  // is written around there being exactly one.
-  if (drive.outcome === DRIVE_OUTCOME.arrived) {
-    const { arrival } = DRIVE;
-    const out = drive.outcomeMs - arrival.outMs;
-    if (out >= 0) {
-      const dir = drive.params.direction;
-      // Out of the door and a stride clear of it, then standing. The step is
-      // toward the CAMERA rather than up the road: he has to end up in front of
-      // his own car or the car is drawn over him.
-      const t = Math.min(1, out / arrival.walkMs);
-      const x = drive.car.pos.x - dir * 2 + dir * 6 * t;
-      const y = drive.car.pos.y + arrival.walkPx * t;
-      // He walks while he is walking and stands still when he stops — the same
-      // two-frame convention every body in this game uses, run off the RENDER
-      // clock because a gait is the renderer's business (`docs/rendering.md`).
-      const frame = t < 1 ? Math.floor(timeMs / CROWD_FRAME_MS) % 2 : 0;
-      put(`hero_${frame}`, x, y, 0, dir === -1);
-    }
-  }
+  // ── AND NOBODY IS EVER DRAWN OUT OF THE CAR ───────────────────────────────
+  // There is no hero body anywhere on this road, including at the end of it: the
+  // run-in fades out with the wagon still rolling, and the arrival is played
+  // properly by the level on the far side of the black — which opens with the
+  // car already in a bay and the man standing beside it. Drawing him here as
+  // well would be the same arrival twice, the first time with nothing to do in
+  // it.
 
   drawn.sort((a, b) => a.y - b.y);
   for (const item of drawn) item.draw();
