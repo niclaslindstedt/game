@@ -411,6 +411,27 @@ export type GameState = {
    */
   cutsceneQueue: string[];
   /**
+   * WHAT THIS RUN KNOWS THAT ITS SCENES DO NOT — the tags a prelude's
+   * conditional dressing is matched against (`CutsceneProp.needs` / `until`).
+   *
+   * It lives on the STATE rather than being applied once at creation because a
+   * prelude is a CHAIN: the second scene is built when the first plays out
+   * (`advanceCutsceneChain`), long after the run's parameters were read, and a
+   * chain whose first scene knew the house had burned and whose second did not
+   * would be worse than neither knowing.
+   */
+  cutsceneTags: readonly string[];
+  /**
+   * WHERE THE RUNNING CUTSCENE CHAIN LETS GO — the phase the last scene hands
+   * the stage to. A PRELUDE lands on the hero's opening monologue; a level's
+   * FAREWELL (`LevelDef.farewell`) lands on the epilogue and the splash.
+   *
+   * It is on the state rather than worked out from the phase because by the
+   * time the chain drains, "which end of the run was this" is no longer
+   * visible: both are the `cutscene` phase with an empty queue.
+   */
+  cutsceneThen: "intro" | "victory";
+  /**
    * Which page of the level's opening monologue is on screen while
    * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
    * past the last page drops into the `title` card; unused in other phases.

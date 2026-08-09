@@ -10,7 +10,7 @@ import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS, GATES, MERCHANT } from "./config/index.ts";
 import { companionDef } from "./defs/companions.ts";
-import { cutsceneDef } from "./defs/cutscenes.ts";
+import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
@@ -58,11 +58,43 @@ export {
 export function advanceCutsceneChain(state: GameState): void {
   const next = state.cutsceneQueue.shift();
   if (next) {
-    state.cutscene = createCutscene(cutsceneDef(next));
-  } else {
-    state.cutscene = null;
-    state.phase = state.dialogueMuted ? "title" : "intro";
+    state.cutscene = createCutscene(cutsceneDef(next), state.cutsceneTags);
+    return;
   }
+  state.cutscene = null;
+  // WHICH END OF THE RUN THIS WAS. A prelude hands the stage to the hero's
+  // opening monologue; a level's FAREWELL (`LevelDef.farewell`) has the run
+  // already won behind it and hands over to the epilogue pages, or straight to
+  // the splash when the level ships none. A DIALOGUE-muted run has neither.
+  if (state.cutsceneThen === "victory") {
+    const outro = runLevelDef(state).outro;
+    state.phase =
+      !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
+    return;
+  }
+  state.phase = state.dialogueMuted ? "title" : "intro";
+}
+
+/**
+ * The objective has fallen and the level has a SEND-OFF to play: raise it and
+ * hold the run in the `cutscene` phase until the chain drains.
+ *
+ * Returns whether it took the stage, so the caller keeps the plain
+ * epilogue-or-splash path for every level that ships none.
+ */
+export function beginFarewell(state: GameState): boolean {
+  if (state.dialogueMuted) return false;
+  const farewell = runLevelDef(state).farewell;
+  const scenes = (
+    typeof farewell === "string" ? [farewell] : (farewell ?? [])
+  ).map((id) => cutsceneVariant(id, state.difficulty));
+  const first = scenes[0];
+  if (first === undefined) return false;
+  state.cutscene = createCutscene(cutsceneDef(first), state.cutsceneTags);
+  state.cutsceneQueue = scenes.slice(1);
+  state.cutsceneThen = "victory";
+  state.phase = "cutscene";
+  return true;
 }
 
 /**

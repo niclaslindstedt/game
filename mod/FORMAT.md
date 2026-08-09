@@ -1923,7 +1923,11 @@ worked pair.
 The file stem must equal the scene's `id`. A scene is a **stage** (a colour wash
 and a set of props), a **cast** of actors, and a **timeline** of beats played
 strictly in order. A level plays one by naming it: `prelude: my_scene` in the
-level file, or a LIST of ids to chain several back to back.
+level file, or a LIST of ids to chain several back to back — and `farewell:`
+is the same thing at the OTHER end of the run, played when the objective falls,
+before the epilogue pages and the splash. A departure belongs to the place being
+left: the shipped moon closes on its ghost seeing the hero off, rather than
+opening the level he flies to next from his own lawn.
 
 ```yaml
 id: mymod_arrival
@@ -2036,6 +2040,35 @@ beats:
   - { kind: prop, prop: shut_door, hidden: true }
   - { kind: prop, prop: open_door, hidden: false }
 ```
+
+**`needs:` and `until:` decide it BEFORE the scene starts**, off tags the run
+carries — which is the half a `prop` beat cannot do, because a beat knows only
+what has happened since the fade came up. The shipped game hands a scene one tag
+per level the hero has already cleared, spelled `cleared:<levelId>`, so a scene
+the player sees more than once can show what the last visit did to it. The
+launch is the case it exists for: the house standing beside the pad is whole the
+first time the hero lights his rocket next to it and a burnt-out shell every
+time after.
+
+```yaml
+props:
+  # …whole until the moon is behind him, wrecked from then on.
+  - {
+      label: house,
+      sprite: my_house,
+      at: { x: 46, y: 98 },
+      until: "cleared:moon",
+    }
+  - {
+      label: house_burnt,
+      sprite: my_house_burnt,
+      at: { x: 46, y: 98 },
+      needs: "cleared:moon",
+    }
+```
+
+Both need a `label:` (hiding works by id), a tag is an opaque string, and asking
+for the same tag in both fields is refused — it could never be on stage.
 
 **A `sound` beat only NAMES a sound** — your mod's own (`sounds/<id>.yaml`) or
 one the game ships. It is instant, so it sits directly over the beat it belongs

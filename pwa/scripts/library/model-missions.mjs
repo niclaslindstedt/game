@@ -26,6 +26,10 @@ import {
 import { powerPath } from "./model-powers.mjs";
 import { giverPath, questPath } from "./model-quests.mjs";
 
+/** A level's cutscene chain (`prelude` / `farewell`) as a plain list. */
+const sceneChain = (chain) =>
+  chain == null ? [] : Array.isArray(chain) ? [...chain] : [chain];
+
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops. The level YAML is
  * the biggest authored shape in the repo, so this is also the map of what a
@@ -43,6 +47,7 @@ export const LEVEL_FIELDS = {
   intro: "the hero's arrival monologue, behind the reveal",
   outro: "the departure monologue, behind the reveal",
   prelude: "the cutscene note, behind the reveal",
+  farewell: "the cutscene note, behind the reveal — the scenes on the way OUT",
   objective: "the OBJECTIVE row and the opening line",
   width: "the SIZE row, and the scale the map render is drawn at",
   height: "the SIZE row, and the scale the map render is drawn at",
@@ -440,11 +445,10 @@ function missionModel(level, order) {
     story: {
       intro: level.intro ?? [],
       outro: level.outro ?? [],
-      prelude: level.prelude
-        ? Array.isArray(level.prelude)
-          ? level.prelude
-          : [level.prelude]
-        : [],
+      prelude: sceneChain(level.prelude),
+      // …and the scenes on the way OUT, which the moon has and which read
+      // beside the arrival rather than in place of it.
+      farewell: sceneChain(level.farewell),
       thoughts: [
         ...(level.firstSightThoughts ?? []).map((trigger) => ({
           ...trigger,

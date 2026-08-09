@@ -414,6 +414,24 @@ export type LevelDef = {
    * splash comes up directly, as on every earlier level.
    */
   outro?: readonly (readonly string[])[];
+  /**
+   * THE LEVEL'S SEND-OFF — a cutscene, or a chain of them, played when the
+   * objective falls, before the epilogue pages and the splash. The prelude's
+   * mirror at the other end of the run (`prelude`), and it exists because a
+   * departure belongs to the place being LEFT rather than to the place next.
+   *
+   * The moon is why. Its landing site is where THE FLAGBEARER, beaten and
+   * satisfied, sees the hero off — and that scene used to open MARS, which is
+   * a level the hero flies to from his own lawn. So a player who came home,
+   * walked his garage and boarded the ship there was shown himself standing on
+   * the moon, saying goodbye to a ghost, in a spacesuit. Hung here instead it
+   * plays where it happens: the fight ends, the ghost says his piece, and the
+   * chapter closes.
+   *
+   * Skipped wholesale by a DIALOGUE-muted run, exactly as the prelude and the
+   * epilogue are.
+   */
+  farewell?: string | readonly string[];
   width: number;
   height: number;
   /** Downward acceleration in world px/s². Lower floats jumps higher. */

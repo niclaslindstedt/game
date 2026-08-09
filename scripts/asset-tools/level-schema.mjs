@@ -373,13 +373,17 @@ export function validateLevel(def, refs, description = "", options = {}) {
   // invisible to every test that does not actually start that level. `refs` may
   // omit the catalog (an older caller), in which case the check is skipped
   // rather than failing every level.
-  const prelude = def.prelude;
-  const scenes =
-    prelude === undefined ? [] : Array.isArray(prelude) ? prelude : [prelude];
-  for (const id of scenes) {
-    if (typeof id !== "string") err(`prelude must name cutscenes by id`);
-    else if (refs.cutscenes && !refs.cutscenes.has(id))
-      err(`unknown cutscene "${id}" in prelude`);
+  // `farewell` is the same chain at the other end of the run — the level's
+  // send-off, played when the objective falls — and is checked identically.
+  for (const field of ["prelude", "farewell"]) {
+    const chain = def[field];
+    const scenes =
+      chain === undefined ? [] : Array.isArray(chain) ? chain : [chain];
+    for (const id of scenes) {
+      if (typeof id !== "string") err(`${field} must name cutscenes by id`);
+      else if (refs.cutscenes && !refs.cutscenes.has(id))
+        err(`unknown cutscene "${id}" in ${field}`);
+    }
   }
 
   // ---- loot references -------------------------------------------------------

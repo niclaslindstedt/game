@@ -61,14 +61,43 @@ export type RocketExhaust = {
  * shot was asked for and is also about right for the thing: a garage rocket
  * lifting a man off a lawn is not throttling.
  */
-const LOOKS: Readonly<Record<string, RocketExhaust>> = {
-  ship_fire: { bellX: 12, bellY: 27, reach: 64, flare: 9 },
+const SHIP: RocketExhaust = { bellX: 12, bellY: 27, reach: 64, flare: 9 };
+
+/**
+ * …AND BOTH OF ITS STATES ARE IN HERE, cold and lit, because two different
+ * questions are asked of this table. What is BURNING decides the plume, the
+ * pad blast, the soot and the roof (all of which want the lit one only); where
+ * a rocket is STANDING decides the burnt patch of lawn under it, which was
+ * scorched by the last launch and is there before this one lights.
+ */
+const LOOKS: Readonly<Record<string, { look: RocketExhaust; lit: boolean }>> = {
+  ship: { look: SHIP, lit: false },
+  ship_fire: { look: SHIP, lit: true },
 };
 
-/** The exhaust a sprite carries, if it is a lit rocket at all. */
+/** The exhaust a sprite carries, if it is a rocket with its engine LIT. */
 export function rocketExhaustLook(sprite: string): RocketExhaust | undefined {
-  return LOOKS[sprite.replace(/_\d+$/, "")];
+  const entry = LOOKS[sprite.replace(/_\d+$/, "")];
+  return entry?.lit ? entry.look : undefined;
 }
+
+/** …and the same, for a rocket whether it is burning or merely parked. */
+export function rocketPadLook(sprite: string): RocketExhaust | undefined {
+  return LOOKS[sprite.replace(/_\d+$/, "")]?.look;
+}
+
+/**
+ * HOW BURNT THE GROUND A ROCKET IS PARKED ON ALREADY IS, and how far that
+ * reaches — the mark left by every launch before this one.
+ *
+ * It is much TIGHTER than the blast that made it (`reach * SCAR_SPAN` against
+ * the blast's own `reach * 2`), and deliberately: a lawn is not all lawn. The
+ * ground the ship has been standing on is dead, and the far end of the lot past
+ * the house is grass that has never had anything lit on it. Washing the whole
+ * floor was the first cut and it read as a different place.
+ */
+export const SCAR_LEVEL = 0.62;
+export const SCAR_SPAN = 0.7;
 
 /** White-hot at the throat, out through the body to the ragged cooling fringe.
  * Four stops rather than a ramp: the bands are what make it read as pixel fire

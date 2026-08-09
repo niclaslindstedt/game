@@ -54,11 +54,24 @@ function CutsceneStage({ id }: { id: string }) {
   const [doneTake, setDoneTake] = useState(-1);
   const done = doneTake === take;
   const def = cutsceneDef(id);
+  // THE RUN'S OWN TAGS, typed in (`&tags=cleared:moon`) — the workbench has no
+  // run behind it, so the conditional dressing a scene carries
+  // (`CutsceneProp.needs` / `until`) would otherwise only ever be reviewable in
+  // its opening-night state. The launch's house is the case: whole on the first
+  // playing, a burnt-out shell on every one after, and both need looking at.
+  const tags = useMemo(
+    () =>
+      (new URLSearchParams(window.location.search).get("tags") ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    [],
+  );
   // A fresh scene per take; the loop below mutates it in place.
   const scene = useMemo<CutsceneState>(
-    () => createCutscene(def),
+    () => createCutscene(def, tags),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- take restarts the scene
-    [def, take],
+    [def, take, tags],
   );
 
   useEffect(() => {

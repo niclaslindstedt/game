@@ -25,12 +25,25 @@ import {
  * "Input image exceeds pixel limit" while every other entry point, which draws
  * fewer previews, went on passing. */
 export async function writePng(surface, path) {
-  await sharp(Buffer.from(surface.data), {
-    limitInputPixels: false,
-    raw: { width: surface.width, height: surface.height, channels: 4 },
-  })
-    .png()
-    .toFile(path);
+  try {
+    await sharp(Buffer.from(surface.data), {
+      limitInputPixels: false,
+      raw: { width: surface.width, height: surface.height, channels: 4 },
+    })
+      .png()
+      .toFile(path);
+  } catch (err) {
+    // A FAILURE IS RE-THROWN WITH THE FILE AND THE SIZE ON IT, because the
+    // encoder's own message is not: a run writes two thousand of these from a
+    // worker pool, so a bare "…exceeds pixel limit" with a stack through
+    // `Promise.all` names neither which preview blew up nor how big it had got.
+    // That is the message the cap above was found through the hard way.
+    const why = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `${path}: ${surface.width}×${surface.height} px failed to encode — ${why}`,
+      { cause: err },
+    );
+  }
 }
 
 /**

@@ -252,6 +252,7 @@
       "index": 2,
       "name": "THE MOON",
       "prelude": ["launch", "voyage_moon"],
+      "farewell": "moon_depart",
       "music": "regolith_ride",
       "intro": [
         [
@@ -468,7 +469,7 @@
       "id": "mars",
       "index": 3,
       "name": "MARS",
-      "prelude": ["moon_depart", "voyage_mars"],
+      "prelude": ["launch", "voyage_mars"],
       "music": "red_dust",
       "intro": [
         [

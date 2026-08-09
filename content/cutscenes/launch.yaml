@@ -10,12 +10,13 @@ stage:
   width: 224
   height: 126
   backdrop: garageNight
-  # THE LAWN IS CHARRED EARTH, not grass, and it is the SAME charred earth the
-  # hub map lays down (`content/sprites/earth/grass_charred_0.yaml`, worn by
-  # the `lawn` area of `content/maps/garage.yaml`). A man has been lighting a
-  # homemade engine on this ground; the establishing shot and the level the
-  # player walks back into have to agree about what it looks like.
-  palette: { wall: "#0e1020", floor: "#2a2622", trim: "#0a0c14", floorY: 88 }
+  # THE LAWN IS STILL A LAWN. It is scorched where the ship has been standing
+  # and green everywhere else — the far end of the lot, past the house, never
+  # had a rocket lit on it. The burnt patch is not painted here: it is derived
+  # from where the ship is parked, exactly as the soot on the house is
+  # (`render/rocket-exhaust.ts`), so the two can never disagree about how far
+  # the damage reaches.
+  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
   props:
     # THE SKY IS NOT DRESSED HERE. `backdrop: garageNight` is one of the
     # renderer's SKY backdrops, so the night over this lot is the same night the
@@ -36,7 +37,26 @@ stage:
     # the house facing the pad goes black while the engine burns
     # (`render/rocket-exhaust.ts` — soot is a function of distance, so the
     # garage is the only thing near enough to get any).
-    - { sprite: garage_house, at: { x: 46, y: 98 } }
+    #
+    # …AND THE JOKE HAS A SECOND HALF, which is that it STICKS. This scene plays
+    # again every time the hero lifts off his own lawn, and the house he lights
+    # it beside is whole exactly once. `until:` / `needs:` are the run's own
+    # memory: once the moon is behind him, the whole frontage is swapped for the
+    # burnt one, the blast blackens what is already black, and the roof catches
+    # again on a roof that has caught before. Nothing gets worse — it just never
+    # gets better, and nobody in the game ever mentions it.
+    - {
+        sprite: garage_house,
+        at: { x: 46, y: 98 },
+        label: house,
+        until: "cleared:moon",
+      }
+    - {
+        sprite: garage_house_burnt,
+        at: { x: 46, y: 98 },
+        label: house_burnt,
+        needs: "cleared:moon",
+      }
     # ── THE LOT'S OWN GROUND (`content/maps/garage.yaml`) ──────────────────
     # The hub is walkable and the player has already stood on all of this, so
     # the establishing shot owes it the same three surfaces: the swept PAVED

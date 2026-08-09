@@ -424,8 +424,12 @@ function chapterModel(level, sections) {
     blurb: firstSentence(gist),
     // The scenes that play on the way in, paired with the prose that describes
     // them — the level's own `prelude` chain, in the order it plays.
-    scenes: preludeIds(level).map((id, i) =>
+    scenes: chainOf(level.prelude).map((id, i) =>
       sceneModel(id, sections.cutscenes[i]),
+    ),
+    // …and the scenes on the way OUT, written after the chapter they close.
+    farewellScenes: chainOf(level.farewell).map((id, i) =>
+      sceneModel(id, sections.farewell?.[i]),
     ),
     intro: level.intro ?? [],
     outro: level.outro ?? [],
@@ -441,12 +445,9 @@ function chapterModel(level, sections) {
   };
 }
 
-const preludeIds = (level) =>
-  level.prelude == null
-    ? []
-    : Array.isArray(level.prelude)
-      ? [...level.prelude]
-      : [level.prelude];
+/** A level's cutscene chain (`prelude` or `farewell`) as a plain list. */
+const chainOf = (chain) =>
+  chain == null ? [] : Array.isArray(chain) ? [...chain] : [chain];
 
 /**
  * The hellborn chapter. They are not part of the campaign's crime and they
@@ -613,6 +614,8 @@ export function storyModel() {
   const perLevel = new Map();
   let pendingScenes = [];
   let last = null;
+  /** How many send-off scenes the chapter just closed is still owed. */
+  let farewellOwed = 0;
 
   for (const section of sections) {
     switch (section.kind) {
@@ -622,7 +625,16 @@ export function storyModel() {
         premise = section.body;
         break;
       case "cutscene":
-        pendingScenes.push(section);
+        // A SCENE STRAIGHT AFTER A CHAPTER IS THAT LEVEL'S SEND-OFF, not the
+        // next one's opening: the moon's ghost has the last word on the moon
+        // (`LevelDef.farewell`). Claimed by COUNT and in order, so the document
+        // reads exactly as the game plays — a chapter, its goodbyes, then the
+        // scenes on the way to the next place.
+        if (last && perLevel.get(last).farewell.length < farewellOwed) {
+          perLevel.get(last).farewell.push(section);
+        } else {
+          pendingScenes.push(section);
+        }
         break;
       case "hellborn":
         hellborn = section;
@@ -652,7 +664,7 @@ export function storyModel() {
             `library: ${STORY_DOC} has two chapters for ${level.name}.`,
           );
         }
-        const scenes = preludeIds(level);
+        const scenes = chainOf(level.prelude);
         if (scenes.length !== pendingScenes.length) {
           throw new Error(
             `library: ${STORY_DOC} describes ${pendingScenes.length} scene(s) on the way into ${level.name} ` +
@@ -660,19 +672,36 @@ export function storyModel() {
               `(${scenes.join(", ") || "none"}). The story and the game disagree about how he gets there.`,
           );
         }
+        if (last && perLevel.get(last).farewell.length < farewellOwed) {
+          const owed = perLevel.get(last);
+          throw new Error(
+            `library: ${STORY_DOC} gives ${owed.heading} ${owed.farewell.length} send-off ` +
+              `scene(s), but the level plays ${farewellOwed}. A level's farewell is ` +
+              `written straight after its own chapter.`,
+          );
+        }
         perLevel.set(level.id, {
           heading: section.heading,
           gist: section.body,
           cutscenes: pendingScenes,
+          farewell: [],
           epilogue: null,
         });
         pendingScenes = [];
         last = level.id;
+        farewellOwed = chainOf(level.farewell).length;
         break;
       }
     }
   }
 
+  if (last && perLevel.get(last).farewell.length < farewellOwed) {
+    const owed = perLevel.get(last);
+    throw new Error(
+      `library: ${STORY_DOC} gives ${owed.heading} ${owed.farewell.length} send-off ` +
+        `scene(s), but the level plays ${farewellOwed}.`,
+    );
+  }
   if (pendingScenes.length > 0) {
     throw new Error(
       `library: ${STORY_DOC} ends with ${pendingScenes.length} scene(s) that lead nowhere ` +

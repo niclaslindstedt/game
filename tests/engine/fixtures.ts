@@ -2145,6 +2145,18 @@ export const FIX_CHAIN_LEVEL: LevelDef = {
   prelude: ["test_prelude", "test_prelude_2"],
 };
 
+// A level with a SEND-OFF (`LevelDef.farewell`): a scene played when the
+// objective falls, before the epilogue pages and the splash. The shipped
+// game's moon closes on one — the ghost seeing the hero off the landing site.
+// Carries an `outro` too, so the test can prove the chain hands over to the
+// epilogue rather than skipping it.
+export const FIX_FAREWELL_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_farewell_level",
+  farewell: "test_prelude",
+  outro: [["THE EPILOGUE."]],
+};
+
 // A level with a placed SPAREABLE unique — used to prove its enemy twin is
 // held off the board while its companion rides the party (create.ts).
 export const FIX_RECRUIT_LEVEL: LevelDef = {
@@ -2396,6 +2408,7 @@ export function installFixtures(force = false): void {
       test_beat_level: FIX_BEAT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
+      test_farewell_level: FIX_FAREWELL_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,
       test_pack_level: FIX_PACK_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
