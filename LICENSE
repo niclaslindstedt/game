@@ -97,7 +97,7 @@ Game. **Multiplayer** means playing the Game with, against, or as a spectator of
 another human player over any transport.
 
 A **Mod Creator** is a person actively creating, validating, or testing Mod
-Content they author for the Game. `--modifications` is the command-line
+Content they author for the Game. `--mods` is the command-line
 parameter that declares use of the mod-authoring exception below.
 
 ### Player license for Mod Support and Multiplayer
@@ -118,14 +118,14 @@ Support or Multiplayer.
 ### Limited mod-authoring exception
 
 A Mod Creator may run an official Windows, macOS, or Linux binary downloaded
-from the licensor with the `--modifications` parameter, without an Acquired
+from the licensor with the `--mods` parameter, without an Acquired
 Steam License, **solely to create, validate, and test Mod Content they author**.
 This exception includes only the single-player use reasonably necessary to
 inspect that work.
 
 This exception does not license ordinary or recreational play, playing Mod
 Content authored by somebody else, distributing the Game, or using
-Multiplayer. Regular players may not use `--modifications` as a substitute for
+Multiplayer. Regular players may not use `--mods` as a substitute for
 an Acquired Steam License.
 
 Source compilation, automated tests, and non-play development activity remain

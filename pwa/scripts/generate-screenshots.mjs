@@ -16,11 +16,12 @@
 // `check-seo` asserts every manifest screenshot resolves in dist/, which is
 // what stops that happening quietly.
 //
-// Playwright is deliberately NOT a dependency of this repo (same as the
-// playtest harness it borrows its menu walk from). Install it ephemerally:
+// Playwright is a devDependency of this repo (same as the playtest harness it
+// borrows its menu walk from), so `npm install` brings it. Only its browser
+// binaries are a separate download:
 //
 //   npm run build --workspace pwa
-//   npm install --no-save playwright
+//   npx playwright install chromium
 //   make screenshots
 //
 // Re-run after an art pass, a HUD change, or anything else that changes what
@@ -72,8 +73,7 @@ try {
   ({ chromium } = await import("playwright"));
 } catch {
   process.stderr.write(
-    "generate-screenshots: playwright is not installed.\n" +
-      "  npm install --no-save playwright\n",
+    "generate-screenshots: playwright is not installed.\n" + "  npm install\n",
   );
   process.exit(1);
 }

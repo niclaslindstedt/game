@@ -8,7 +8,7 @@
 // ("N kills") on the right. Tapping the map body opens the full-screen
 // `MapOverlay` (the expand). The map itself is the same chunky fog-of-war
 // render as the overlay, refreshed every frame from the render loop via
-// `drawMinimap`, in one of two views (SETTINGS → DISPLAY → MINIMAP): the
+// `drawMinimap`, in one of two views (SETTINGS → INTERFACE → MINIMAP): the
 // whole level contain-fit into the frame (letterboxed in fog — the default),
 // or a close-up window hovering over the hero, drawn from a higher-resolution
 // terrain layer so the ground sprites read clearly at that zoom.

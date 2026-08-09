@@ -232,7 +232,7 @@ The sync is done when **all** of these hold:
 
 When a session learns something here — a resolution pattern, a git command that
 behaved unexpectedly, a file that must never be hand-merged — record it as a
-lesson fragment under `.agent/skills/conflict/.lessons/` per
-[`.agent/skills/LESSONS.md`](../LESSONS.md), and let the `skill-reflection`
-skill decide at the end of the session whether it belongs in this file instead.
+lesson fragment under `.agent/skills/conflict/.lessons/` in the format
+[`skill-reflection`](../skill-reflection/SKILL.md) owns, and let that skill
+decide at the end of the session whether it belongs in this file instead.
 Never append lessons to this `SKILL.md` directly.

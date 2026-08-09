@@ -19,10 +19,15 @@
 //     never above, and not so far below the base under-armors the ilvl;
 //   - within a GEAR slot, base armor climbs with ilvl, so a higher-ilvl unique
 //     never feels weaker than a lower one (weapons are class-dependent, so they
-//     get an eyeball ladder, not a hard check);
-//   - the boss drop tables (`EnemyDef.uniquesByDifficulty`) place every shipped
-//     unique exactly once, each rung carries a full set, and the set pieces
-//     form a slot Latin square (each difficulty = one of every gear slot).
+//     get an eyeball ladder, not a hard check; keepers and set pieces sit out —
+//     see the ladder itself for why);
+//   - every shipped unique has exactly ONE home, and a home is a PLACE — one boss
+//     (`EnemyDef.uniquesByDifficulty`), one level's world table
+//     (`LevelDef.loot.worldUniques`) or one stall (`merchant.stockUniques`) —
+//     never a single (place × rung) cell: a boss deliberately re-lists its own
+//     relics rung by rung, which is the set farm;
+//   - every difficulty rung pays out every set slot across the five bosses, so a
+//     kit can be filled from named drops at any rung.
 //
 // Runs on plain `node` via type stripping — the defs import only types/values,
 // no DOM.
@@ -78,8 +83,8 @@ await applyMods(mods);
 
 const strict = argv.includes("--strict");
 
-// Set pieces sit in the weapon+armor Latin square; bags/charms ride along as
-// the rung's trinket (PROTOTYPE's bag, TRUST ME BRO's trinket).
+// The slots a boss set is made of (a weapon + the four armor pieces); bags/charms
+// ride along as the rung's trinket (PROTOTYPE's bag, TRUST ME BRO's trinket).
 const SET_SLOTS = ["weapon", "head", "chest", "legs", "feet"];
 const TRINKET_SLOTS = ["bag", "trinket", "amulet", "ring"];
 
@@ -311,14 +316,30 @@ for (const id of UNIQUE_IDS) {
 
 // 2) Armor monotonicity per gear slot: sort by ilvl, base armor must not step
 //    down (fixed-armor uniques get strictly worse otherwise).
+//
+//    The ladder only means anything between pieces the ilvl model prices
+//    COMPARABLY, so two kinds sit out — and both for the same reason, that their
+//    computed ilvl deliberately omits where their power actually is:
+//      - KEEPERS: the ilvl is inflated by a SCALING stat rather than armor, so a
+//        keeper legitimately carries less armor than a lower-ilvl piece.
+//      - SET PIECES (`tier: "set"`): a green is worn for the KIT. Its share of the
+//        power lives in the set's bonus tiers (`content/sets.yaml`), which
+//        weapon-ilvl.mjs does not price at all — it reads a unique's own `bonuses`
+//        and nothing else — and its base is picked for the kit's theme, so a
+//        DEX/INT set is lighter than a melee set at the same ilvl BY DESIGN. Each
+//        set contributes exactly one piece per slot, so there is no in-set ladder
+//        to hold either; what keeps a green honest is `tests/content/sets_test.ts`.
+//    Neighbours at the SAME ilvl are also skipped: the model already calls them
+//    equal power, so an armor difference there is a bonus/armor MIX, not a step
+//    down. Only a STRICTLY higher-ilvl piece owes a not-lower armor.
 const bySlot = {};
 for (const id of UNIQUE_IDS) (bySlot[UNIQUE_DEFS[id].slot] ??= []).push(id);
 for (const slot of ["head", "chest", "legs", "feet"]) {
   const rows = (bySlot[slot] ?? [])
-    // Keepers are exempt: their computed ilvl is inflated by a SCALING stat, not
-    // armor, so a keeper legitimately carries less armor than a lower-ilvl piece
-    // (comparing them on armor is meaningless — that's the point of a keeper).
-    .filter((id) => !UNIQUE_DEFS[id].keeper)
+    .filter(
+      (id) =>
+        !UNIQUE_DEFS[id].keeper && (UNIQUE_DEFS[id].tier ?? "unique") !== "set",
+    )
     .map((id) => ({
       id,
       ilvl: ilvlOf(UNIQUE_DEFS[id]).computed, // the derived ilvl, not the authored one
@@ -326,7 +347,7 @@ for (const slot of ["head", "chest", "legs", "feet"]) {
     }))
     .sort((a, b) => a.ilvl - b.ilvl);
   for (let i = 1; i < rows.length; i++)
-    if (rows[i].armor < rows[i - 1].armor)
+    if (rows[i].ilvl > rows[i - 1].ilvl && rows[i].armor < rows[i - 1].armor)
       warn(
         `${slot}: ${rows[i].id} (ilvl ${rows[i].ilvl}, ${rows[i].armor} armor) is weaker than ` +
           `lower-ilvl ${rows[i - 1].id} (ilvl ${rows[i - 1].ilvl}, ${rows[i - 1].armor} armor) ` +
@@ -385,14 +406,28 @@ for (const def of Object.values(LEVELS)) {
   }
 }
 
-// Every unique has exactly ONE primary home (a boss table, its world-drop
-// level, or a merchant stall). A WORLD unique may ALSO be re-listed by other
-// levels as extra WORLD homes — the FARM-VENUE rule: the bunker deliberately
-// re-lists earlier relics at sweetened odds so it reads as the endgame farm
-// (see its worldUniques comment). Boss and stall homes never repeat.
+// Every unique has exactly ONE primary home, and a HOME IS A PLACE — one boss,
+// or one merchant stall — NEVER a single (place × rung) cell. A boss deliberately
+// lists the same relic on several of its rungs: the campaign rungs pay a low-ilvl
+// TASTE of its set and the endgame rungs open the WHOLE set, which is the set farm
+// (`tests/content/sets_test.ts` proves each set is fully farmable from its boss),
+// and the drop chance already discriminates by rung on its own — `maybeDropBossUnique`
+// rolls `UNIQUE.dropChance × mlvl/ilvl`, so an early rung is a long shot and the
+// home rung is the ~5%. Counting cells instead of places would make that farm read
+// as five duplicate homes.
+//
+// A WORLD unique may ALSO be re-listed by other levels as extra WORLD homes — the
+// FARM-VENUE rule: the bunker deliberately re-lists earlier relics at sweetened
+// odds so it reads as the endgame farm (see its worldUniques comment). What still
+// never repeats is the PLACE: two different bosses may not own the same relic.
+const primaryPlaces = {};
+for (const p of placements)
+  (primaryPlaces[p.id] ??= new Set()).add(`boss:${p.boss}`);
+for (const p of stallPlacements)
+  (primaryPlaces[p.id] ??= new Set()).add(`stall:${p.level}`);
 const primaryCount = {};
-for (const p of [...placements, ...stallPlacements])
-  primaryCount[p.id] = (primaryCount[p.id] ?? 0) + 1;
+for (const [id, set] of Object.entries(primaryPlaces))
+  primaryCount[id] = set.size;
 const worldCount = {};
 for (const p of worldPlacements) worldCount[p.id] = (worldCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
@@ -415,7 +450,8 @@ for (const id of UNIQUE_IDS) {
     );
   else if (primary > 1)
     err(
-      `${id}: wired to ${primary} boss/stall homes — those never repeat (farm venues are world tables only).`,
+      `${id}: owned by ${primary} different boss/stall PLACES (${[...primaryPlaces[id]].join(", ")}) ` +
+        `— a relic belongs to ONE boss or stall, however many of that place's rungs list it.`,
     );
   else if (primary === 1 && world > 0)
     err(
@@ -423,20 +459,29 @@ for (const id of UNIQUE_IDS) {
     );
 }
 
-// Latin square: each difficulty column must be a permutation of the 5 set slots.
-const grid = {}; // boss -> diff -> slot (set pieces only)
+// Per-rung SLOT COVERAGE: every difficulty rung must, across all five bosses,
+// pay out every set slot (a weapon + head/chest/legs/feet) — so a player farming
+// bosses at ANY rung can fill every slot from a named drop.
+//
+// This replaced a Latin-square check (one set slot per boss per rung, each rung a
+// permutation of the five). That shape is gone: a boss now OWNS a set and opens
+// more of it as the rungs climb — several set slots per cell on the campaign
+// rungs and the whole kit on nightmare/jesus — so "one slot per cell" no longer
+// describes anything. The coverage below is the half of it that survived, and it
+// still catches the real failure: a slot no boss pays out on some rung. That each
+// boss's OWN set is completable from it is `tests/content/sets_test.ts`'s check.
+const rungSlots = {}; // diff -> Set(set slots paid out anywhere that rung)
 for (const p of placements) {
   if (!SET_SLOTS.includes(p.slot)) continue;
-  (grid[p.boss] ??= {})[p.diff] ??= p.slot;
+  (rungSlots[p.diff] ??= new Set()).add(p.slot);
 }
 for (const diff of DIFFICULTY_ORDER) {
-  const slots = Object.values(grid)
-    .map((row) => row[diff])
-    .filter(Boolean);
-  const missing = SET_SLOTS.filter((s) => !slots.includes(s));
-  if (slots.length && missing.length)
+  const slots = rungSlots[diff];
+  if (!slots?.size) continue;
+  const missing = SET_SLOTS.filter((s) => !slots.has(s));
+  if (missing.length)
     warn(
-      `rung "${diff}": set is missing slot(s) ${missing.join(", ")} — not a full boss set.`,
+      `rung "${diff}": no boss pays out slot(s) ${missing.join(", ")} — the rung cannot fill a full kit.`,
     );
 }
 

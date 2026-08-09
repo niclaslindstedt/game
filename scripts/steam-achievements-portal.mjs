@@ -8,9 +8,9 @@
 //   node scripts/steam-achievements-portal.mjs --out sheet.tsv --format tsv
 //   node scripts/steam-achievements-portal.mjs --verify         # …then check it
 //
-// THE ENTRY CANNOT BE AUTOMATED AND THE CHECK CAN. Game Center's 86 rows go up
+// THE ENTRY CANNOT BE AUTOMATED AND THE CHECK CAN. Game Center's rows go up
 // through App Store Connect's own API (scripts/game-center-push.mjs); Steam's
-// same 86 do not, because the Steamworks Web API unlocks and queries stats at
+// same list does not, because the Steamworks Web API unlocks and queries stats at
 // RUNTIME and has no documented endpoint for creating a definition — that lives
 // in App Admin → Achievements, as a web form, once per row. So this tool splits
 // the job at the line Valve draws:
@@ -30,13 +30,15 @@
 // The failure it exists for is silent and permanent: an achievement id the
 // partner site doesn't have is dropped on the floor with no error anywhere, so
 // the badge simply never appears for anybody (electron/RELEASING.md → What
-// fails quietly). One typo in 86 transcriptions costs a badge nobody can ever
-// earn, and nothing in the game, the build or the upload notices.
+// fails quietly). One typo anywhere in the transcription costs a badge nobody
+// can ever earn, and nothing in the game, the build or the upload notices.
 //
 // Built for the SECOND run as much as this one: Steam caps a new app at 100
-// achievements, so the shipped list is a curated 86 of 226. When the app clears
-// Valve's Profile Features threshold that cap lifts, `STEAM_FULL_CATALOG` flips
-// false → true, and another 140 rows want the same treatment.
+// achievements, so the shipped list is a curated subset of the catalog (the
+// manifest's own `count` and `limit` say where it stands — run the worksheet).
+// When the app clears Valve's Profile Features threshold that cap lifts,
+// `STEAM_FULL_CATALOG` flips false → true, and every remaining row wants the
+// same treatment.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -112,8 +114,9 @@ export function parseArgs(argv) {
 
 // ---------------------------------------------------------------------------
 // What the portal should hold: the committed manifest, and only if it is still
-// the catalog's. A worksheet cut from a stale manifest is 86 rows of yesterday's
-// catalog typed in by hand, which is worse than refusing to print one.
+// the catalog's. A worksheet cut from a stale manifest is a whole afternoon of
+// yesterday's catalog typed in by hand, which is worse than refusing to print
+// one.
 // ---------------------------------------------------------------------------
 
 function readManifest() {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The DEVELOPER → BALANCE menu's knob catalog: the ~10 runtime multipliers a
+// The DEVELOPER → BALANCE menu's knob catalog: the 22 runtime multipliers a
 // developer can turn to probe the game's balance (leveling pace, mob
 // strength, loot percentages, …). Each row is a SLIDER whose 0..1 position
 // maps — piecewise-exponentially — to a multiplier in [0, 100] where 1 is the
@@ -18,8 +18,8 @@ export type BalanceKnob = {
   blurb: string;
 };
 
-/** The menu's knobs, in display order. Deliberately around ten — the single
- * most useful lever of each system, not a config editor. */
+/** The menu's knobs, in display order — the most useful lever over each rule,
+ * never one per config field, and never a config editor. */
 export const BALANCE_KNOBS: BalanceKnob[] = [
   {
     key: "xpGain",

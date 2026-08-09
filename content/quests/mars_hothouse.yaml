@@ -11,6 +11,12 @@ lore: >
 requires:
   - mars_greenhouse
   - mars_pest_control
+# THE THING IN THE FRAME IS THE JESUS CROP. PHOBOS SHEPHERD is a hellborn on
+# MARS twice over: the hellgates it comes out of are `minDifficulty: nightmare`
+# from the carve, and its own member line in `content/maps/mars.yaml` adds
+# `minDifficulty: jesus`. So the hothouse is only ever nested in on the last
+# rung, and the errand is offered there and nowhere else.
+minDifficulty: jesus
 offer:
   - - SOMETHING BIG IS NESTING IN THE OLD HOTHOUSE FRAME. IT'S BEEN EATING THE HEAT.
   - - I CAN'T GROW ANYTHING WHILE IT'S IN THERE, AND I AM NOT GOING IN.

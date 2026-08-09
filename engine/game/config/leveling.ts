@@ -264,7 +264,7 @@ export const XP_SHARE = {
    * How near the kill (world px) a hero has to be to share in it.
    *
    * Measured against the reference viewport — a phone held horizontally sees
-   * roughly 422×195 world units, so a hero within this radius is at most about
+   * roughly 422×260 world units, so a hero within this radius is at most about
    * one and a half screens away: near enough to plausibly have been in the same
    * fight, far enough that a ranged build holding the back of a hall is not cut
    * out of the kills it is making. Tightening it toward one screen makes a party

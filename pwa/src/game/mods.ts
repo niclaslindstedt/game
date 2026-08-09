@@ -3,17 +3,24 @@
 //
 // A mod reaches this module as a `ModBundle`: plain JSON, already compiled and
 // already validated by `mod/tools/build.mjs` in the shell's main process. The
-// page never sees a mod's YAML, never reads a file, and never runs a line of
-// anything a mod shipped. That is the security story in one sentence, and it is
-// why the format has no scripting hook: subscribing to a mod must not mean
-// running a stranger's code.
+// page never sees a mod's YAML, never reads a file, and never hands a line a
+// mod shipped to the browser's own runtime. A mod DOES bring rules — its
+// `scripts/*.lua` travel in the bundle and can rewrite the XP curve, the drop
+// ladder or the damage formula — and that is the security story in one
+// sentence: the engine's OWN Lua VM (`engine/lib/lua/`) compiles and walks
+// them, in a stdlib with no `io`, `os`, `require`, `load`, `debug` or
+// `coroutine`, no clock and no `math.random`, under a per-call instruction
+// budget, over read-only views of the run — and applied to a RUN rather than
+// to the install. A stranger's FORMULA, never a stranger's program.
+// → docs/scripting.md
 //
 // Applying one is two moves, and the engine already had the seam for both:
 //
-//  1. **The catalogs** go in through `registerDefs` — the same hook the engine
-//     test suites use to run against synthetic fixtures. It replaces the ACTIVE
-//     registry that every `levelDef` / `enemyDef` accessor reads, so a mod's
-//     monster is looked up by exactly the code that looks up a shipped one.
+//  1. **The catalogs** (and the rules) go in through `registerDefs` — the same
+//     hook the engine test suites use to run against synthetic fixtures. It
+//     replaces the ACTIVE registry that every `levelDef` / `enemyDef` accessor
+//     reads, so a mod's monster is looked up by exactly the code that looks up
+//     a shipped one, and a mod's `loot.lua` is called where the shipped one was.
 //  2. **The sprites** are merged into the loaded sprite record, which is a
 //     plain `Record<name, ImageBitmap>` the renderer reads through
 //     `spriteByName`. A mod's frames become ImageBitmaps like the atlas's own

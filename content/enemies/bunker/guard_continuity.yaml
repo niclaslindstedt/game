@@ -1,11 +1,11 @@
-id: guard_kremlin
-name: KREMLIN SHADOW
+id: guard_continuity
+name: CONTINUITY SHADOW
 lore: >-
   THE STRONGMAN's detail, seconded from the continuity-of-power programme
   to guard a bathrobed backup of a head of state. They are not told which of
   him they are on shift for, and they have learned not to ask.
 role: minion
-sprite: guard_kremlin
+sprite: guard_continuity
 hp: 380
 levelBonus: 2
 speed: 20

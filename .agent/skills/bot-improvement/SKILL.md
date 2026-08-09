@@ -8,7 +8,7 @@ description: "Use when improving the AUTOPILOT (engine/game/bot/index.ts) — ho
 The autopilot in `engine/game/bot/index.ts` is one source of truth: the headless engine
 tests (`tests/engine/bot_test.ts`), the campaign simulator
 (`scripts/simulate-run.mjs`), and the real-app `?bot=` autoplay all drive the
-SAME `botAct(bot, state) → GameInput`. Improving the bot means improving that
+SAME `botAct(bot, state, hero) → GameInput`. Improving the bot means improving that
 function so a botted run plays like a **skilled human** — the yardstick for
 every change.
 
@@ -151,10 +151,7 @@ regression: the app passes `localHero(state)`, the simulator passes the seat
 each of its bots was given, and a single-player caller passes seat 0, which is
 the identity case that let 164 sites move at once. `tests/engine/bot_party_test.ts`
 is the guard — every OTHER bot suite flies one hero and would pass with the
-refactor reverted. It also separates out the FOUR that no diff can close (a packaged
-Electron launch, eight machines through a real NAT, a real router, the per-OS
-firewall prompts) — those need a human with hardware, and writing them as work
-items is how they get ticked from a diff.
+refactor reverted.
 
 
 ## Flying a PARTY, and the one thing the bot knows about one
@@ -216,10 +213,10 @@ deficiency (§7.4), not an XP-split one. Do not reach for
 
 | Piece | Role |
 | --- | --- |
-| `engine/game/bot/index.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
+| `engine/game/bot/index.ts` | The autopilot's entry — `botAct` and `botAllocate`. Decisions live across the tree beside it: `fight.ts` (`survive`, `pushBoss`), `dodges.ts` (`dodgeTelegraph`), `state.ts` (`think`), plus `nav.ts`, `macro.ts`, `intent.ts`, `arsenal.ts`, `entrance.ts`, `errands.ts`, `hub.ts`, `party-play.ts`, `perception.ts`, `supplies.ts`, `weapon-swap.ts`, `economy.ts`, `thoughts.ts`, `content.ts` |
 | `engine/game/bot/tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
 | `content/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
-| `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
+| `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`pwa/src/game/game-screen/bot-driver.ts`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `pwa/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |

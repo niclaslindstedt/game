@@ -30,7 +30,8 @@
 //     game ships, launches, and simply has no Steam (the handshake degrades
 //     rather than crashing), so nobody notices until players report missing saves
 //   • the embedded website was built for the STORE, not with the developer menu
-//     still in it — invisible until someone taps the sun seven times
+//     still in it — invisible until someone taps the sun sixteen times and wins
+//     the click race that arms
 //
 // Credentials are never read from a file here. steamcmd manages its own login
 // session (`steamcmd +login <user>` once, interactively, answers Steam Guard

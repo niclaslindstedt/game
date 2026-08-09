@@ -31,7 +31,10 @@ export const UI_SCALE_BREAKPOINT_PX = 700;
  * The view rect is the viewport divided by the zoom, so a fixed zoom hands a
  * bigger monitor a bigger slice of the world — and seeing further is a real
  * advantage in a game about being surrounded, not a cosmetic difference. The
- * phone baseline shows ~422×195 world units (≈82k units²). At the 2× tier a
+ * phone baseline shows ~422×195 CANVAS px (≈82k px²) — which the tilt turns
+ * into ~422×260 WORLD units of ground, since the pitch divides the depth axis
+ * (render/tilt.ts `worldViewRect`). Every figure below is in the same canvas
+ * unit, so the comparison is like for like either way. At the 2× tier a
  * 1440×900 laptop sees ≈81k — the same fight. A 2560×1440 monitor at that same
  * tier sees ≈230k, nearly THREE TIMES the moon, which is a different game.
  *

@@ -5,7 +5,7 @@
 // Split out of `./protocol.ts`, and the split is a chunk-placement fact rather
 // than a taxonomy: the title menu's screens read the handshake half of the
 // wire (PROTOCOL_VERSION, REFUSAL_TEXT, `refuseHandshake`) to word a refusal,
-// which puts THAT module on the app's startup path, where the 200 KB
+// which puts THAT module on the app's startup path, where the 170 KB
 // critical-path budget is measured — and tree-shaking is global, so every
 // export a lazy chunk used stayed in the eager chunk with it. Everything here
 // is read only by the session server and the run's lazily loaded net client,
@@ -148,7 +148,7 @@ export type FrameType = (typeof FRAME)[keyof typeof FRAME];
  *
  * **THIS IS A COPY, AND THE COPY IS DELIBERATE.** What each verb DOES lives in
  * the engine (`engine/game/commands.ts`), which this leaf may not import: the
- * wire's modules are readable from the page, where the 200 KB critical-path
+ * wire's modules are readable from the page, where the 170 KB critical-path
  * budget forbids reaching `@game/core`. So the names are snapshotted here for
  * the allow-list and `tests/engine/run_commands_test.ts` fails the build when
  * the two lists disagree — the same shape `mod/catalog.json` and the Game

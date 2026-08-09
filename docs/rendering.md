@@ -35,14 +35,11 @@ pieces — which is an art project, not a render setting. The WALLS are out of t
 backlog (`plane: wall` extrudes them off their own footprint, below) and so are
 the belts (`directional:`); what is left is the front-facing BUILDINGS.
 
-**THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT**, and
-the exception proves the rule: a body drawn standing up covers a strip of FLOOR
-running along whichever world bearing comes out horizontal, and every body in the
-game is round enough not to care — except the CAR, whose blockers have to lie
-under a 48-px side profile that nothing rotates. So the app pushes the yaw into
-the engine's own import-free leaf (`setCameraYaw` → `billboardBearing`,
-engine/game/flags.ts) beside `setWorldProjection`, and nothing else crosses. See
-**SO THE GROUND IT BLOCKS…** under the vehicles below.
+**THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT** — the
+CAR's blockers have to lie under a 48-px side profile that nothing rotates, so
+the app pushes the yaw into the engine's own import-free leaf (`setCameraYaw` →
+`billboardBearing`, engine/game/flags.ts) beside `setWorldProjection`, and
+nothing else crosses. See **SO THE GROUND IT BLOCKS…** under the vehicles below.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -97,8 +94,9 @@ the piece comes out taller than the floor grid it is set into, and under a yaw a
 straight run of them staircases diagonally across a floor whose own seams run the
 other way. So `content/sprites/<family>/<id>.yaml` carries
 `plane: upright | floor | wall` (**upright is the default**, so a sprite that says
-nothing keeps the look it has), the build emits the floor-plane names to
-`assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
+nothing keeps the look it has), the build emits every non-upright piece to
+`assets/sprite-planes.json` (the floor names, the wall names with their rises,
+and the directional ones), and `render/plane.ts` is the ONE place that acts on
 it — read by the obstacles, the decor, the landmarks, the lair doors and the
 elevator pads, never by an actor. A floor-plane sprite is **baked through the
 projection once** (`flatSprite`) for exactly the reason the ground layer is:
@@ -233,34 +231,29 @@ fractional, continuously-varying number of screen pixels once the floor is
 foreshortened and turned. That misregistration is the crawl: the frontier band
 slides against the ground and the stipple re-phases as the hero walks.
 
-Three consequences to keep in mind. The ground layer is **baked already
-projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
-a nearest-neighbour resample picks which rows to drop from the destination
-offset, so transforming per frame re-picks them every time the camera moves a
-pixel and the floor visibly boils. **The hero is always at the middle of the
-screen** — `computeCamera` no longer clamps the view to the level, because a
-projected view is bigger than the canvas in world units and the old clamp bit on
-nearly every map, sliding him off toward a corner; the letterbox showing past a
-map edge is the cheaper price. And every screen↔world crossing OUTSIDE the
-renderer goes through the viewport's `toWorld`/`toCss` pair (GameScreen), which
-are functions rather than two scale factors because the projection is a matrix:
-where the player is pointing, which foe the cursor aims at, whether a tap hit the
-merchant, and where a floating DOM label pins itself all follow from that pair.
+Two consequences to keep in mind. **The hero is always at the middle of the
+screen** — `computeCamera` (render/view.ts) does not clamp the view to the level,
+because a projected view is bigger than the canvas in world units and the old
+clamp bit on nearly every map, sliding him off toward a corner; the letterbox
+showing past a map edge is the cheaper price. And every screen↔world crossing
+OUTSIDE the renderer goes through the viewport's `toWorld`/`toCss` pair
+(GameScreen, over `canvasToWorld`/`worldToCanvas`), which are functions rather
+than two scale factors because the projection is a matrix: where the player is
+pointing, which foe the cursor aims at, whether a tap hit the merchant, and where
+a floating DOM label pins itself all follow from that pair.
 
 **A BODY'S PIXEL GRID IS ITS OWN, NOT THE CAMERA'S — quantize the two ends
-SEPARATELY.** `beginBillboard` used to place a body at
-`round(project(world - camera))`, rounding the camera-relative offset in ONE
-go, so every body's rounding phase depended on where the camera was. The
-camera's world point is EXACT — `computeCamera` deliberately does not round it,
-because a camera quantized in WORLD units projects to fractional SCREEN steps
-and the hero rocks above and below centre — so `world - camera` sweeps
-continuously and each body crosses its own rounding boundary at its own moment:
-two static props 16.4 units apart measured 12 px apart on one frame and 13 on
-the next, and the whole field rippled as the hero walked. It shouts in y, where
-the pitch makes a world unit of travel 0.75 of a screen pixel, and under a yaw
-there is no quiet axis left at all. Floor tiles were exempt because the baked ground
-layer is a single rigid blit — which is what made the rest of the picture look
-like it was warping against a floor that wasn't.
+SEPARATELY.** The camera's world point is EXACT (`computeCamera` deliberately
+does not round it: a camera quantized in WORLD units projects to fractional
+SCREEN steps and the hero rocks above and below centre), so `world - camera`
+sweeps continuously. Round THAT in one go — `round(project(world - camera))`,
+which is what `beginBillboard` used to do — and every body's rounding phase
+depends on where the camera is: two static props 16.4 units apart measure 12 px
+apart on one frame and 13 on the next, and the whole field ripples as the hero
+walks, loudest in y where the pitch makes a world unit of travel 0.75 of a screen
+pixel, and with no quiet axis left at all under a yaw. Floor tiles were exempt
+because the baked ground layer is a single rigid blit — which is what made the
+rest of the picture look like it was warping against a floor that wasn't.
 
 So the camera is quantized ONCE PER FRAME (`cameraAnchorX`/`cameraAnchorY`) and
 each body ONCE PER BODY (`bodyAnchorX`/`bodyAnchorY`). A body's own term then
@@ -269,8 +262,8 @@ by the same whole number of pixels. `render/effects.ts` had the identical flaw
 in its billboarded anchor (corpses, blood, gore, floating damage numbers) and
 takes the same fix; `drawGround` steps by the same camera anchor with
 `bakeOrigin` made integral so the floor cannot drift against the cast, and
-`fogGridAnchor` was already this formula and now calls it rather than repeating
-it. `tests/world_tilt_test.ts` sweeps 36 projections (pitch 1 → 0.25 × yaw
+`fogGridAnchor` is that formula rather than a repeat of it.
+`tests/world_tilt_test.ts` sweeps 36 projections (pitch 1 → 0.25 × yaw
 0° → 45°) asserting the screen distance between static bodies does not change
 as the camera pans — against the old math 35 of the 36 fail, every setting
 except the true no-op at pitch 1, yaw 0.
@@ -293,8 +286,8 @@ shivered on. **The axis a piece wobbles on is the axis its ODD dimension is on**
 — odd width east/west, odd height north/south, odd × odd everywhere — which is
 also why turning the yaw up makes it general: under a yaw both screen axes are
 mixtures of both world ones, so any direction of travel moves both seats and
-every odd-dimensioned sprite in the atlas shivers at once. Of the 1834 frames in
-the shipped atlas, 222 have an odd dimension.
+every odd-dimensioned sprite in the atlas shivers at once. About one frame in six
+of the shipped atlas has an odd dimension.
 
 So half a sprite, half a health bar, a hover, a lift, a jump's height off the
 floor: each is rounded to a whole pixel of its OWN and then added to a seat.
@@ -368,9 +361,10 @@ the last pixels onto ground the hero already owns.
 **AND THE FOG IS ONLY HALF OF "CANNOT SEE".** The other half is the edge of the
 frame, and it is the half that actually bites, because the fog never rolls back:
 a minute into a level the hero has explored far more ground than a phone held
-sideways shows him (~422×195 world units, so ~211 to the side edge and ~97 to
-the top). A power reaching 220–340 px — the storm, the volley, the singularity,
-the sentry grid, the well's hunt — therefore spent itself on monsters that were
+sideways shows him (~422×260 world units — the 422×195-px canvas divided by the
+pitch — so ~211 to the side edge and ~130 to the top). A power reaching 220–340
+px — the storm, the volley, the singularity, the sentry grid, the well's hunt —
+therefore spent itself on monsters that were
 never on screen, and the fight the player was watching was not the fight the
 game was fighting. So the CAMERA RECT is a simulation input
 (`GameInput.view` → `Player.view`, per seat) and `visibleTo(state, hero, pos)`
@@ -392,43 +386,40 @@ ON at the amounts that module calls the shipped look. They are DEVELOPER setting
 reason they can be is that none of them costs a frame: all three are CSS, so
 there is no per-frame budget for a player to win back by turning one off.
 
-**THERE IS NO CANVAS POST-EFFECT AT ALL, AND BLOOM IS WHY.** A bloom pass lived
-here and was taken out, which is the argument worth keeping rather than the code.
-It was the one knob that HAD to be on the canvas — the light it blooms is the
-game's own baked glow art (`glowSprite`, `beamSprite`, the loot shafts, the muzzle
-flashes) living on that same ~422×195 pixel grid, and a bloom computed at device
-resolution is smoother than the light casting it, which reads as a photo filter
-over pixel art rather than as pixel art glowing. But on pixel art at this size the
+**THE CANVAS IS ~422×195 CANVAS PX AND NEAREST-UPSCALED, AND THAT — NOT TASTE —
+DECIDES THE MECHANISM.** The canvas is sized in WORLD units
+(`viewScaleFor`, render/view.ts) and CSS blows it up 2–3× with
+`image-rendering: pixelated`. So there are two places to put an effect and they
+are not interchangeable. **ON THE CANVAS** is chunky, at world resolution, in the
+same pixel grid as the art — right when the thing an effect acts on IS the art,
+and a full-frame pass every frame on a phone. **IN CSS** is smooth, at device
+resolution, and per-frame FREE — where the GRADE, the VIGNETTE and the HAZE
+belong, because all three are broad low-frequency washes that on the canvas would
+cost a full-frame composite every frame to come out in 2–3 px staircase bands.
+The CSS half is three custom properties from `fxStyleVars` written on the GAME
+SCREEN ROOT (not on the overlay — the grade is a `filter` on the canvas, which is
+the overlay's SIBLING and would never inherit them), and the overlay (`.game-fx`)
+sits at `z-index: 0` directly after the canvas so every positioned HUD element
+after it paints on top: the corners of the SCREEN going dark is atmosphere, the
+corners of the HEALTH BAR going dark is a bug.
+
+**SO THERE IS NO CANVAS POST-EFFECT AT ALL, AND BLOOM IS WHY.** A bloom pass
+lived here and was taken out, which is the argument worth keeping rather than the
+code. It was the one knob that HAD to be on the canvas — the light it blooms is
+the game's own baked glow art (`glowSprite`, `beamSprite`, the loot shafts, the
+muzzle flashes) living on that same pixel grid — and on pixel art at this size the
 trade loses whatever the threshold and the gain are tuned to: every luminance
 point a halo adds is a point of the artist's own shading it paints over, so the
 loot shafts and the level-up pillar gained a little atmosphere and the floor, the
 rocks and the bodies lost some of their drawing. It shipped at 0 for exactly that
 reason, and a knob whose honest default is off is a knob the game is better off
-without. **Do not bring it back — light the art instead.**
-
-**THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
-MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
-up 2–3× with `image-rendering: pixelated`. So there are two places to put an
-effect and they are not interchangeable. **ON THE CANVAS** is chunky, at world
-resolution, in the same pixel grid as the art — right when the thing an effect
-acts on IS the art, and a full-frame pass every frame on a phone. **IN CSS** is
-smooth, at device resolution, and per-frame FREE — where the GRADE, the VIGNETTE
-and the HAZE belong, because all three are broad low-frequency washes that on the
-canvas would cost a full-frame composite every frame to come out in 2–3 px
-staircase bands. The CSS half is three custom properties from `fxStyleVars`
-written on the GAME SCREEN ROOT (not on the overlay — the grade is a `filter` on
-the canvas, which is the overlay's SIBLING and would never inherit them), and the
-overlay sits at `z-index: 0` directly after the canvas so every positioned HUD
-element after it paints on top: the corners of the SCREEN going dark is
-atmosphere, the corners of the HEALTH BAR going dark is a bug.
-
-**THERE IS NO SHADER PASS, and that is a conclusion rather than a gap.** A WebGL
-stage would have to own the whole present path — the world would move to an
-offscreen target and the visible canvas would become the GL one, touching every
-screen↔world crossing, the DOM overlay pinning, the screenshot tooling and the
-gallery — and for three broad washes it buys nothing: all three are strictly
-better in CSS. What a shader WOULD buy is CRT curvature, chromatic aberration and
-a real 3D LUT. That is the day to write it.
+without. **Do not bring it back — light the art instead.** The same argument
+refuses a SHADER PASS: a WebGL stage would have to own the whole present path
+(the world moves to an offscreen target and the visible canvas becomes the GL
+one, touching every screen↔world crossing, the DOM overlay pinning, the
+screenshot tooling and the gallery) and for three broad washes it buys nothing.
+What a shader WOULD buy is CRT curvature, chromatic aberration and a real 3D LUT.
+That is the day to write it.
 
 **DEPTH OF FIELD IS THE ONE REQUEST TO REFUSE.** There is no depth to focus on —
 the whole field is ONE ground plane and the hero is always at the middle of it —
@@ -453,7 +444,7 @@ the floor is a texture covering the whole screen, so averaging its rotation
 softens every speckle and grain rivet along with the seams. So it follows the
 **ANTI-ALIASING** switch (`cameraAntialias`, DEVELOPER → VISUALS), off by
 default and inert at yaw 0 where there is no staircase to smooth
-(`projectionSmoothing`). Three things make the smoothed bake affordable:
+(`projectionSmoothing`). Two things make the smoothed bake affordable:
 
 - **It is CHUNKED.** One intermediate over a whole projected level would be tens
   of megabytes and would walk into the browser's canvas cap on a big map, so
@@ -468,8 +459,6 @@ default and inert at yaw 0 where there is no staircase to smooth
   2.7× of it and 3× about 4.4×, and the two are indistinguishable at the canvas's
   ~422 px width — the staircase is made of whole destination pixels, so the first
   subdivision does nearly all the work.
-- **It is keyed.** `projectionKey()` carries the smoothing, so flipping the
-  switch re-bakes instead of blitting the old floor.
 
 The real fix for a turned floor is still iso-drawn tile art; this is the one that
 ships as a switch.
@@ -591,38 +580,33 @@ arches in the body's own screen space (`drawLightCones`, `render/vehicles.ts`),
 which is why the DRIVING MINIGAME and the garage light the same car identically:
 they are the same code, and the minigame is the reference.
 
-The night pass used to draw a SECOND pair on top — a wedge walked out of the
-nose as nine overlapping glow pools and punched through the night sheet, so a
-car laid its own light along the pavement. It was the wrong picture twice over.
-It disagreed with the assembly's cone about what colour the lamps burn (the car
-threw warm tungsten, the night pass threw cold daylight, out of the same two
-bulbs) and about their SIZE — half a screen of reach, 26° each side — so a wagon
-idling in its own bay lit the lot like a searchlight, and the same car on the
-minigame's road looked like a different vehicle. It is gone;
-`render/night.ts` draws no headlight at all.
+`render/night.ts` draws no headlight at all, and must not: a second pair on top
+disagreed with the assembly's cone about what colour the lamps burn (warm
+tungsten against cold daylight, out of the same two bulbs) and about their reach,
+so a wagon idling in its own bay lit the lot like a searchlight while the same
+car on the minigame's road looked like a different vehicle.
 
 **AND THE LAMPS ARE BOLTED ON — never aimed down `CarVehicle.heading`.** These
 are sealed beams in a shell, not steering-linked cornering lamps: they turn when
 the CAR turns and not one degree otherwise, and the car's picture never turns.
 The body is one side-profile assembly cut nose-right that nothing mirrors or
-rotates, while the heading it used to be steered on swung the better part of
-180° — so anything walked down the heading swept a 172° arc across a car that
-had not visibly moved a pixel, and read as a pair of lamps swivelling on their
-own. (The swing itself is gone now — see below — but the rule stands on the
-ART, not on the physics: the day something writes a heading again, the lamps
-must still not care.)
-That is what killed the night pass's wedge. The cones are laid out in SCREEN px
-along the drawn body off the body's own anchor, exactly as the wheel arches are
-(see the billboard rule below). `tests/vehicle_assembly_test.ts` holds the line.
+rotates, so anything walked down a heading sweeps an arc across a car that has
+not visibly moved a pixel and reads as a pair of lamps swivelling on their own.
+(Nothing writes a heading any more — see _the car's nose never moves_ below — but
+the rule stands on the ART rather than on the physics.) The cones are laid out in
+SCREEN px along the drawn body off the body's own anchor, exactly as the wheel
+arches are (see the billboard rule below). `tests/vehicle_assembly_test.ts` holds
+the line.
 
 **KEEP THE POOLS SMALL, and judge it at the phone viewport.** The garage is
 512×280 world units and the landscape view sees ~422×260 of it, so two lamps
 whose tails touch light the whole lot back to daylight — which is precisely how
 the first pass of this came out, and it read as "someone turned the brightness
-down" rather than as night. The shipped composition is four small pools (the
-flood over the roll-up door, the bay's tube over the car, the vending machine at
-its counter, the ship's work lamp) with real dark between them, plus a small one
-every hero in play carries — the concession that makes a dark venue playable
+down" rather than as night. The shipped composition is the bay lit as a ROOM
+(`lit: 0.82`) and four small pools outside it — the pair of barn lights flanking
+the roll-up door, the yard light on the back lawn, and the county's cold street
+light over the road — with real dark between them, plus a small one every hero in
+play carries (`render/night.ts`): the concession that makes a dark venue playable
 without either brightening the night or inventing a flashlight item.
 
 ## The road, and the night over it
@@ -798,10 +782,11 @@ stops along the leg and writes a sheet, which is the only way to look at a
 street that exists in no file.
 
 **The street lighting is the one thing on this road that lights the road**, and
-it is not a second row of furniture: every third of the kerb posts the ENGINE
-already stands (`engine/game/drive/street.ts`) is simply DRAWN as a tall mast
-instead of as a yard light, throwing a cone down over its own carriageway and
-laying a warm pool on the tarmac. Nothing about the simulation changes — the
+it is not a second row of furniture: every second of the kerb posts the ENGINE
+already stands (`DRIVE.street.mastEvery`, `engine/game/drive/street.ts`) is
+simply DRAWN as a tall mast instead of as a yard light, throwing a cone down over
+its own carriageway and laying a warm pool on the tarmac. Nothing about the
+simulation changes — the
 column is the same column, at the same radius, and it still shears off its base
 and cartwheels down the road. That is the point: street lights belong at the
 KERB, the kerb is inside the band the wagon can reach, and a mast drawn there
@@ -924,7 +909,7 @@ viewport (the playtest harness defaults to it), not at a desktop size.
 
 Large screens render the whole presentation at **2× the phone baseline** so
 the phone-tuned HUD, text, and sprites stay legible instead of shrinking:
-`viewScaleFor` (render.ts) doubles the world zoom, and a `min-width/height:
+`viewScaleFor` (render/view.ts) doubles the world zoom, and a `min-width/height:
 700px` media query doubles the root font-size (styles.css) so the rem-sized
 DOM UI — PixelText canvases included — scales in lockstep. Keep the two
 breakpoints in sync (`UI_SCALE_BREAKPOINT_PX`). A desktop still never sees
@@ -935,7 +920,7 @@ zoomed out.
 reason, not a legibility one.** The view rect is the viewport divided by the
 zoom, so a fixed zoom hands a bigger monitor a bigger slice of the world — and
 in a game about being surrounded, seeing further is an advantage rather than a
-preference. Measured against the phone's ~422×195 world units: a 1440p monitor
+preference. Measured against the phone's ~422×260 world units: a 1440p monitor
 at the 2× tier saw **2.8×** the phone's map, and 4K saw 6.3×. The 3× tier pulls
 those to 1.24× and 2.8×. Keep every tier an INTEGER — `VIEW_SCALE × uiScale` is
 the sprite upscale factor and a fractional one resamples the pixel art — and
@@ -1105,9 +1090,10 @@ straight up or down keeps the last side instead of mirror-flickering.
 
 ## The hero doll, his kit and his weapon
 
-**AND ALL THREE SHOW ON THE HERO.** A build choice the player cannot see on his
-own character is one he has to open a screen to remember making. The two
-off-hand kinds ride the SAME generated-overlay machinery the worn armor does
+**THE WEAPON, THE WORN ARMOR AND THE OFF HAND ALL SHOW ON THE HERO.** A build
+choice the player cannot see on his own character is one he has to open a screen
+to remember making. The two off-hand kinds ride the SAME generated-overlay
+machinery the worn armor does
 (`asset-tools/worn.mjs` → `worn_<defId>`, coloured from the piece's own icon), so
 a new shield or bag costs no art beyond its 12×12 icon: a shield draws raised
 and broad, a bag slung low and small, one glance apart. The overlay is the one
@@ -1126,10 +1112,10 @@ The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
 look (no toggle). Both are pure render concerns:
 
-- **The held weapon draws on the field hero sprite.** `render.ts` passes
-  `{ weapon: true }` to `playerDollLayers` (`paper-doll.ts`) so the weapon layer
-  rides the paper-doll alongside the worn armor. The HUD avatar and inventory
-  portrait draw the weapon too, so every surface agrees.
+- **The held weapon draws on the field hero sprite.** `render/player.ts` passes
+  `{ weapon: true }` to `playerDollLayers` (`paper-doll-live.ts`) so the weapon
+  layer rides the paper-doll alongside the worn armor. The HUD avatar and
+  inventory portrait draw the weapon too, so every surface agrees.
 - **The held weapon animates on each attack** — a blade whips through its slash
   arc, a gun recoils with the muzzle rising, a wand thrusts up on the cast —
   pivoting the weapon layer about the **shoulder** (`paper-doll.ts`
@@ -1145,9 +1131,9 @@ look (no toggle). Both are pure render concerns:
   companion swings). The cone widens with INTELLIGENCE (`weaponSweepHalfAngle`,
   capped at a half circle — `STATS.aoeMaxHalfAngle`), so a max-INT slash swings
   a full 180° arc; the swing is handed the weapon's cone via `PlayerAction.arc`.
-  GameScreen captures the hero's own `swing`/`shot` events into a `PlayerAction`
-  (matched to his position so a companion's blow is ignored), and `render.ts`
-  `drawPlayer` poses the weapon layer via `weaponPose`.
+  `game-screen/event-fx.ts` captures the hero's own `swing`/`shot` events into a
+  `PlayerAction` (matched to his position so a companion's blow is ignored), and
+  `render/player.ts` `drawPlayer` poses the weapon layer via `weaponPose`.
 - **AND THE BODY GOES WITH IT — `WeaponPose.lean`.** Nobody swings a sword with
   their arm alone, and a weapon that whips through an arc off a figure standing
   perfectly still reads as a sprite being rotated NEXT TO a hero rather than as a
@@ -1187,10 +1173,10 @@ look (no toggle). Both are pure render concerns:
   Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_ELEMENTS` →
   `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
-  (`render.ts`, gated to the hero's own shots via the projectile's
+  (`render/projectiles.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
   shot. The hero faces WHAT HE IS FIGHTING (see _Which way the hero is turned_
-  below), so the flash leaves the barrel by construction; it is still pinned to
+  above), so the flash leaves the barrel by construction; it is still pinned to
   the facing side (the muzzle effect's `faceLeft`) for the one case the two can
   disagree — a near-vertical shot, which the facing deadzone deliberately lets
   keep the last side. The PIXELS are the
@@ -1235,12 +1221,12 @@ exactly one place:
 - **THE LANDING IS WHAT MAKES THE NOISE, and what a thing sounds like is what
   it is MADE OF.** `stepItems` emits `itemLanded` carrying the item's MATERIAL
   (`itemVoice`: blade / gun / wand / plate / mail / leather / cloth / trinket /
-  flask / scrap / spark / relic) — mail jingles, cloth flumps, plate clangs,
-  glass clinks — and the app kicks a puff of dust in the FLOOR's own colour
-  (`groundColorAt`, exactly as a jump does). A magic-or-better find rings a
-  SECOND event over the top (`lootShine`, carrying the tier), which is the whole
-  reason rarity and material don't multiply: layering two events is 12 + 6
-  sounds where one combined event would have been 72. The old `itemDropped`
+  flask / scrap / spark / relic / coin) — mail jingles, cloth flumps, plate
+  clangs, glass clinks — and the app kicks a puff of dust in the FLOOR's own
+  colour (`groundColorAt`, exactly as a jump does). A magic-or-better find rings
+  a SECOND event over the top (`lootShine`, carrying the tier), which is the
+  whole reason rarity and material don't multiply: layering two events is 13 + 6
+  sounds where one combined event would have been 78. The old `itemDropped`
   event went with it — it fired once per SPILL rather than once per item, at
   the moment of minting rather than the moment of arrival, and after the sound
   moved to the landing nothing consumed it at all.

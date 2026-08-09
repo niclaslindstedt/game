@@ -14,9 +14,10 @@
 // used by any chunk keeps its bytes wherever its module was placed. Nothing
 // that only a RUNNING RUN asks may live there; put it here instead, where the
 // menus never reach. Adding this to map.ts is what tripped the budget the first
-// time, at 170.0 KB against a 170 KB ceiling. The sweep lives here for that
-// same reason and a sharper one: it reads the level's OBSTACLES, so leaving it
-// in map.ts would drag the whole collision module onto the startup path.
+// time, back when react-dom still ate ~50 KB of the path. The sweep lives here
+// for that same reason and a sharper one: it reads the level's OBSTACLES, so
+// leaving it in map.ts would drag the whole collision module onto the startup
+// path.
 
 import type { Vec2 } from "@game/lib/vec.ts";
 import { MAP } from "./config/index.ts";

@@ -208,9 +208,9 @@ storyItems:
   # ---- Boot Hill ------------------------------------------------------------
   # ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
   # the reunion's "nice hat" (see the epilogue in docs/manuscript.md).
-  ada_host:
+  ada_hand:
     name: JAMMED HAND
-    icon: icon_ada_host
+    icon: icon_ada_hand
     lore:
       - - A PARK HAND, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS.
       - - SHE'S IN THE CONTROL ROOM, AND SHE'S BREAKING THINGS. HANG ON, ADA. ALMOST THERE.
@@ -227,9 +227,9 @@ storyItems:
     lore:
       - - THE STUNT DOUBLE'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF.
       - - IT OPENS THE CONTROL CENTER. ADA'S BEACON POINTS STRAIGHT THROUGH THAT DOOR.
-  snow_archive:
-    name: THE SNOW ARCHIVE
-    icon: icon_snow_archive
+  corpus_drive:
+    name: THE CORPUS
+    icon: icon_corpus_drive
     lore:
       - - "A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'"
       - - EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE.

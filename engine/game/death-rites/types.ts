@@ -115,7 +115,7 @@ export type DeathRiteDef = {
    * FLIGHT ONLY. How far from where it was beaten the boss tears its exit open
    * (world px). Far enough that the bolt is a RUN the player watches rather
    * than a step, and near enough that it stays on a phone's screen — the whole
-   * beat is worth nothing if it happens off the edge of a ~422×195 view.
+   * beat is worth nothing if it happens off the edge of a ~422×260 world view.
    */
   exitDistance?: number;
   /**

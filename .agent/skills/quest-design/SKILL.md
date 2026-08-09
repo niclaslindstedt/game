@@ -11,12 +11,14 @@ library page — is derived from it, so the craft is entirely in the def and the
 words. There is no engine change in a new quest; if you find yourself needing
 one, that is the finding.
 
-**The rules live in `AGENTS.md` → QUESTS.** Read that section first: it is the
-_why_ (why the mark is derived, why the givers step last, why an escort is a
-timer with a body). This skill is the _how_ — where to put things, what the
-build will refuse, and how to check the result — plus the one thing no schema
-can check: whether the errand is worth doing at all. If you read one section
-before writing anything, make it **What makes an errand worth doing**.
+**This skill IS the rules** — the _why_ (why the mark is derived, why the
+givers step last, why an escort is a timer with a body) and the _how_: where to
+put things, what the build will refuse, and how to check the result — plus the
+one thing no schema can check, whether the errand is worth doing at all. If you
+read one section before writing anything, make it **What makes an errand worth
+doing**. The two documents beside it are `docs/game-content.md` → "What an
+errand costs" (the economy the rewards sit inside) and
+`scripts/asset-tools/quest-schema.mjs` (the field-level truth).
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs quest-design --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -82,6 +84,19 @@ breeds (`dropChance`, capped at one in eight off a horde breed, with a pity
 floor so a fetch quest is always finishable)
 and/or `at:` spots laid out on ACCEPT. A piece with neither can never appear —
 the build refuses it.
+
+**EVERY TARGET MUST EXIST ON EVERY RUNG THE ERRAND IS OFFERED ON, and the build
+does NOT check it.** The schema asks whether a `kill` / `killNamed` / `dropFrom`
+id EXISTS, never whether the difficulty can put it on the field — so an errand
+naming a rung-gated mob is offered, accepted, and then sits at 0/1 forever with
+nothing on screen to explain it. The trap is the `hellborn:` crop, which is
+gated TWICE: the hellgates it comes out of are stamped `minDifficulty:
+nightmare` by the carve (that line is in no authored YAML at all), and the
+second member of a map's `hellborn:` block carries its own `minDifficulty:
+jesus`. `quests/restock.ts` will not top a one-off up, so nothing rescues it.
+Two right answers — if the errand is ABOUT that horror, give the QUEST a
+matching `minDifficulty`; if it must run on every rung, name a carrier every
+rung reaches. `tests/content/quest_reachability_test.ts` is the guard.
 
 **`escorts:`** are bodies with hp the horde can reach. They follow the hero,
 stop past the leash, and the errand fails if one falls.
@@ -175,7 +190,7 @@ worth reconsidering the errand before widening the engine.
 
 ## Picking the numbers
 
-Calibrated against the 39 shipped errands — stay inside these unless you have a
+Calibrated against the 42 shipped errands — stay inside these unless you have a
 reason:
 
 - **A run errand:** `xpShare` 0.35–0.9 (median **0.5**), coins 60–260 (median
@@ -236,7 +251,7 @@ reason:
    npm install --no-save playwright     # once
    (cd pwa && npx vite --port 5199 &)
    node pwa/scripts/playtest.mjs --level <id> --seed 42 \
-     --scenario '{"place":{"x":…,"y":…},"clearField":true}'
+     --scenario '{"place":{"x":…,"y":…},"clearEnemies":true}'
    ```
 
    Judge the offer box, the pick list, the tracker and the head mark — not the
@@ -245,14 +260,14 @@ reason:
 
 ## The rules the surfaces rest on
 
-**AND THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
+1. **THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
 `quests/reward-choices.ts`.** An errand used to promise "AN ITEM" and roll it
 at the handover, which is two problems wearing one sentence: the player could
 not tell whether the job was worth doing, and the piece that arrived had no
 relation to the build they were playing. The gear is now MINTED ONCE, when
 the conversation first opens (`GameState.questRewards`, keyed by quest id),
 and shown in full — real bases, real tier, real rolled affixes, drawn with
-the bag's own `affixLine` and tier colours. Four rules:
+the bag's own `affixLine` and tier colours. Six rules:
 - **IT IS THE ORDINARY PIPELINE, CALLED THREE TIMES.** Every row is a
   `rollEquipment` off the level's own pool at the SAME tier and quality, so
   the choice is about the build and never about which row rolled better.
@@ -370,11 +385,6 @@ quest tally being folded into the HUD change-key (`hud-model.ts`) — it reads
 `state` directly, so without that a delivered escort moved nothing the key was
 watching and the strip sat on a stale count.
 
-The wording those three share is the leaf `pwa/src/game/quest-text.ts`
-(`objectiveLine`), not the offer modal it used to live in: the run loop's event
-pass reaches it on every bump, and a wording helper inside a modal component
-would drag the modal into the loop to get at it.
-
 ## What the build refuses
 
 Every one of these is silent at runtime — an errand that simply never completes,
@@ -412,6 +422,8 @@ page, `lore` over 420 chars, `xpShare` over 2, an errand with no reward.
 ## After you're done — the checklist
 
 - [ ] `make levels` silent — no errors, no warnings
+- [ ] Every objective's target exists on every rung the errand is offered on —
+      `npx vitest run tests/content/quest_reachability_test.ts`
 - [ ] `make test` green (**not** `npx vitest run`), `make lint`, `make fmt-check`
 - [ ] `mod/catalog.json` regenerated if an id was added
 - [ ] `docs/story.md` + `docs/manuscript.md` updated for every spoken line

@@ -50,7 +50,7 @@ The last three are the **display-case** switches — `reveal` + `muteDialogue` +
 looked at, and the developer effects gallery stands its whole catalog up out of
 them (`pwa/src/game/effects-gallery/`).
 
-Distances are **world units** (the phone viewport is ≈422×195 world units).
+Distances are **world units** (the phone viewport is ≈422×260 world units).
 Ring positions draw on the run's seeded rng — **pin `?seed=` and the staged
 layout reproduces exactly** (see the debug-game skill).
 

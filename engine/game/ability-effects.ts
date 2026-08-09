@@ -12,9 +12,10 @@
 // differs between them:
 //
 //   • the PARAMS. A powerup's are the flat authored numbers on its own block; a
-//     granted spell's are a rank curve (`<kind>SpellParams`) that INTELLIGENCE
-//     quickens. Both hand this module the SAME block shape, which is the whole
-//     trick — a rank curve is just another way of arriving at an `OrbitBlock`.
+//     granted spell's are a rank curve (`<kind>SpellBlock`, and stasis's own
+//     `stasisSpellParams`) that INTELLIGENCE quickens. Both hand this module
+//     the SAME block shape, which is the whole trick — a rank curve is just
+//     another way of arriving at an `OrbitBlock`.
 //   • the SCRATCH. The sweep angle and the ms to the next bite. Both carriers
 //     already kept exactly these two fields (`ActiveAbility`, `ItemSpell`), so
 //     neither had to grow state to move here.

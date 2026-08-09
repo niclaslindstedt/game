@@ -352,9 +352,12 @@ actually looked at**:
 
 ## Conventions
 
-- Sprite sizes: characters/enemies 16×16 (elites 24×24, bosses 48×48),
-  projectiles/pickups 8×8–12×12, tiles 16×16. The renderer draws at
-  integer scale with image smoothing off.
+- Sprite sizes are a CONVENTION, not a rule — nothing validates them beyond
+  "the grid matches its own `size:`". The house shape: characters/enemies
+  16×16 (elites 24×24, bosses 48×48), projectiles/pickups 8×8–12×12, tiles
+  16×16 — and the shipped roster departs from it wherever presence demands
+  (20×20 and 24×24 minions, 24×24 bosses). Match the family sheet, not the
+  table. The renderer draws at integer scale with image smoothing off.
 - Grid chars: `.` = transparent; every other char must exist in the
   family's merged palette (core + local).
 - Animation frames are separate grids named `<sprite>_0`, `<sprite>_1`, …

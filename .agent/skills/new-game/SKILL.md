@@ -9,10 +9,11 @@ This repo is a **reusable game engine plus one game's content**. A sequel is
 a clone with the content stripped and new content authored on the same
 engine. This skill is the ordered playbook. The rule of thumb throughout:
 
-> **The engine (`engine/`, minus `engine/game/defs/`) and everything under
-> `engine/lib/` and `pwa/src/lib/` are machinery — keep them. The content
-> catalogs (`engine/game/defs/`), the generated assets, the scores, the story
-> docs/tests, and the brand identity are the game — replace them.**
+> **All of `engine/` is machinery — keep it, `engine/game/defs/` included:
+> those modules are TYPES and ACCESSORS that read the compiled catalogs, not
+> the catalogs themselves. The authored content (`content/`), the generated
+> assets, the scores, the story docs/tests, and the brand identity are the
+> game — replace them.**
 
 Work top to bottom; each step ends at a checkpoint you can verify.
 
@@ -40,21 +41,26 @@ should hardcode the old name.
 
 Delete or empty each of these — they are 100% this-game data:
 
-- [ ] **`engine/game/defs/*` + `content/items/*`** — the content catalogs: the
-      `levels/` and `enemies/` directories (one module per level / roster),
-      the item YAML tree (`content/items/<rarity>/*.yaml` — weapons, gear,
-      uniques; the `content/item_quality.yaml` / `content/item_rarity.yaml`
-      knob files usually carry over as-is), `abilities.ts`, `companions.ts`,
-      `difficulties.ts`, `story.ts`, `cutscenes.ts`, `thoughts.ts`. Keep the
-      **types and accessors** (`levels/types.ts`, `enemies/types.ts`, the
-      `index.ts` registries, `registry.ts`, `equipment.ts`/`gear.ts`/
-      `uniques.ts`/`grades.ts` machinery incl. the built-in `blaster`;
-      `LevelDef`, `levelDef`, `TileSpec`, `EnemyRole`, …); replace the
-      **entries**. The engine references content only by id, so it compiles
-      against an empty-but-typed catalog.
-- [ ] **`content/sprites/*`** — the sprite families. Keep
-      `core.mjs` conventions and `index.mjs` wiring; replace the family
-      modules. Then `make assets`.
+- [ ] **`content/*`** — every authored catalog, and this is where ALL of the
+      first game's data now lives: `levels/` + `maps/` (a venue is two files),
+      `enemies/<biome>/`, `items/<rarity>/`, `sets.yaml`, `powerups.yaml`,
+      `talents.yaml`, `companions.yaml`, `quests/` + `quest-givers.yaml` +
+      `conversations/`, `cutscenes/`, `thoughts.yaml`, `story-items.yaml`,
+      `ladder.yaml`, `leveling.yaml`, `bot.yaml`, `hud/`, `menus/`,
+      `mainmenu.yaml`. The `content/item_quality.yaml` / `content/item_rarity.yaml`
+      knob files and `content/scripts/*.lua` usually carry over as-is.
+      **Keep every module under `engine/game/defs/`** — they are types,
+      registries and accessors that READ the compiled catalogs
+      (`levels/types.ts`, `enemies/types.ts`, the `index.ts` registries,
+      `registry.ts`, `equipment.ts`/`gear.ts`/`uniques.ts`/`grades.ts` incl.
+      the built-in `blaster`; `LevelDef`, `levelDef`, `TileSpec`, `EnemyRole`,
+      …). The engine references content only by id, so it compiles against an
+      empty-but-typed catalog. Then `make levels`.
+- [ ] **`content/sprites/*`** — the sprite families (`hero/`, `goodco/`,
+      `moon/`, `effects/`, `icons/`, `ui/`, … one directory each, plus a
+      `_family.yaml` per family and the shared `_core.yaml` palette/anchor
+      file at the top). Keep `_core.yaml`'s conventions; replace the families.
+      Then `make assets`.
 - [ ] **`content/sounds/*.yaml` and `content/music/*.yaml`** (every sound and
       every score; keep `pwa/src/game/sfx/` and `music/index.ts`, the dispatch
       and the player) — rewrite with the `sound-effects` skill. `title` is a

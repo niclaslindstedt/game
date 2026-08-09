@@ -14,7 +14,7 @@
 //
 //   1. AN ID THE PARTNER SITE DOESN'T HAVE IS DROPPED ON THE FLOOR, silently,
 //      forever. The API Name is the id the game reports verbatim, so one typo
-//      in 86 rows costs a badge nobody can ever earn — and nothing anywhere
+//      anywhere in the set costs a badge nobody can ever earn — and nothing
 //      says so. That is what `compareSchema` exists for, and why a missing id
 //      is looked up against the ids the portal DOES have (`nearestMiss`): a
 //      typo and an unentered row are the same symptom and completely different
@@ -55,8 +55,8 @@ export const ART_VARIANTS = { icon: "achieved", iconGray: "locked" };
 
 /**
  * What the partner site accepts as an API Name. Valve's own achievement ids in
- * the wild are alphanumerics and underscores; anything else risks a refusal at
- * row 40 of 86, which is the worst possible time to find out.
+ * the wild are alphanumerics and underscores; anything else risks a refusal
+ * halfway down the worksheet, which is the worst possible time to find out.
  */
 const API_NAME_SHAPE = /^[A-Za-z0-9_]+$/;
 
@@ -120,8 +120,8 @@ const tsvCell = (value) => value.replaceAll(/[\t\r\n]/g, " ");
  *
  *   `form`  — one block per row, field-labelled exactly as the partner-site
  *             form labels them. The default, because the entry is a web FORM:
- *             you fill six fields and hit save, 86 times, and a block read top
- *             to bottom is the shape of that job. A wide table would be scrolled
+ *             you fill six fields and hit save, once per row, and a block read
+ *             top to bottom is the shape of that job. A wide table would scroll
  *             sideways once per row.
  *   `tsv`   — one line per row, header first, for a spreadsheet (or a bulk
  *             import path, should Valve ever document one).
@@ -154,7 +154,7 @@ export function renderWorksheet(
       out.push(`  ${column.label.padEnd(width)}  ${formValue(row, column)}`);
     }
     // Only worth saying per row when SOME art exists: "none of it is cut yet"
-    // is one fact about the run, and repeating it 86 times buries the rows it
+    // is one fact about the run, and repeating it per row buries the rows it
     // is actually about.
     if (flagArt && row.artMissing.length > 0) {
       out.push(
@@ -174,7 +174,7 @@ export function renderWorksheet(
 /**
  * Everything wrong with the manifest ITSELF, checked before a worksheet is
  * printed or a request goes out. Each of these would otherwise surface as a
- * partner-site refusal partway through 86 hand-entered rows.
+ * partner-site refusal partway through a session of hand-entered rows.
  */
 export function manifestProblems(manifest) {
   const problems = [];

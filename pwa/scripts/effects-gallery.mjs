@@ -22,8 +22,8 @@
 // exhibit ids (see pwa/src/game/effects-gallery/).
 //
 // Writes numbered frames + a sheet.html contact sheet under
-// pwa/assets-preview/effects/. Playwright is installed ephemerally:
-//   npm install --no-save playwright
+// pwa/assets-preview/effects/. Playwright comes with `npm install`; only its
+// browser binaries are separate: `npx playwright install chromium`.
 //
 // `document` below only appears inside a page.evaluate callback (browser scope).
 /* global document */

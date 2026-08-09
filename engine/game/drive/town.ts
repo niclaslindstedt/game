@@ -396,9 +396,10 @@ export const TOWN: readonly TownBuildingDef[] = [
     slots: 1,
     storeys: 0,
     bays: 1,
-    // A GATE, not a shutter. One plot is 16 px and a roller door is 15 of
-    // them — there is no room left for the reveal the shell sinks around an
-    // opening, so the lintel would be drawn off the side of the sprite.
+    // A GATE, not a shutter. A one-slot front is 16 px of wall (a 20-px plot
+    // less its alley) and a roller door is 15 of them — there is no room left
+    // for the reveal the shell sinks around an opening, so the lintel would be
+    // drawn off the side of the sprite.
     ground: "d",
     wall: "brick",
     roof: "open",

@@ -6,7 +6,7 @@
 // **NOTHING HERE REACHES `pwa/src/game/net/`.** These are TITLE MENU screens,
 // i.e. the app's startup path, and that directory imports `@game/core` — one
 // static edge from here would drag the whole simulation into every player's
-// first download and blow the 200 KB critical-path budget.
+// first download and blow the 170 KB critical-path budget.
 // `pwa/src/app/net-bridge.ts` is import-free by construction and is the only
 // thing this file talks to; the client that speaks the wire is loaded by the
 // RUN, behind its own lazy chunk. `tests/content/net_reachability_test.ts` is

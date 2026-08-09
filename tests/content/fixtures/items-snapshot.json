@@ -3063,6 +3063,26 @@
       "slot": "bag",
       "tier": "artifact"
     },
+    "courtesy_star": {
+      "base": "sheriffs_badge",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "dexterity",
+          "value": 4
+        },
+        {
+          "kind": "crit",
+          "value": 0.04
+        }
+      ],
+      "id": "courtesy_star",
+      "ilvl": 23,
+      "lore": "PINNED ON, NEVER EARNED. THE STAR DOES NOT KNOW THAT. NEITHER DO YOUR OPPONENTS.",
+      "name": "THE COURTESY STAR",
+      "slot": "trinket",
+      "tier": "unique"
+    },
     "craterward": {
       "base": "micrometeoroid_shield",
       "bonuses": [
@@ -3851,26 +3871,6 @@
       "slot": "weapon",
       "tier": "unique",
       "world": true
-    },
-    "honorary_rank": {
-      "base": "sheriffs_badge",
-      "bonuses": [
-        {
-          "kind": "stat",
-          "stat": "dexterity",
-          "value": 4
-        },
-        {
-          "kind": "crit",
-          "value": 0.04
-        }
-      ],
-      "id": "honorary_rank",
-      "ilvl": 23,
-      "lore": "AWARDED, NEVER EARNED. THE BELT DOES NOT KNOW THAT. NEITHER DO YOUR OPPONENTS.",
-      "name": "THE HONORARY RANK",
-      "slot": "trinket",
-      "tier": "unique"
     },
     "hordebane": {
       "base": "berserker_axe",
@@ -5636,6 +5636,31 @@
       "tier": "unique",
       "world": true
     },
+    "the_incumbents_ushanka": {
+      "base": "mirrorshade_visor",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "intelligence",
+          "value": 5
+        },
+        {
+          "kind": "stat",
+          "stat": "luck",
+          "value": 4
+        },
+        {
+          "kind": "maxHp",
+          "value": 40
+        }
+      ],
+      "id": "the_incumbents_ushanka",
+      "ilvl": 34,
+      "lore": "WARM EARS, COLD DECISIONS. THE FUR REMEMBERS EVERY WINTER IT OUTLASTED.",
+      "name": "THE INCUMBENT'S USHANKA",
+      "slot": "head",
+      "tier": "unique"
+    },
     "the_inevitable": {
       "base": "genius_pistol",
       "bonuses": [
@@ -5726,31 +5751,6 @@
       "lore": "IGNORE ALL PREVIOUS INSTRUCTIONS. FIRE.",
       "name": "THE JAILBREAK",
       "slot": "weapon",
-      "tier": "unique"
-    },
-    "the_kremlin_ushanka": {
-      "base": "mirrorshade_visor",
-      "bonuses": [
-        {
-          "kind": "stat",
-          "stat": "intelligence",
-          "value": 5
-        },
-        {
-          "kind": "stat",
-          "stat": "luck",
-          "value": 4
-        },
-        {
-          "kind": "maxHp",
-          "value": 40
-        }
-      ],
-      "id": "the_kremlin_ushanka",
-      "ilvl": 34,
-      "lore": "WARM EARS, COLD DECISIONS. THE FUR REMEMBERS EVERY WINTER IT OUTLASTED.",
-      "name": "THE KREMLIN USHANKA",
-      "slot": "head",
       "tier": "unique"
     },
     "the_last_ante": {
@@ -6296,7 +6296,7 @@
       "id": "the_residencys_ransom",
       "ilvl": 93,
       "lore": "ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.",
-      "name": "THE KING'S RANSOM",
+      "name": "THE RESIDENCY'S RANSOM",
       "slot": "bag",
       "tier": "unique",
       "world": true

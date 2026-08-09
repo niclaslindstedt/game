@@ -178,7 +178,7 @@ that covers the whole visible floor is not a hazard, it is a wall.
 6. **Draw it in authored art**, never in `ctx.arc`/`ctx.lineTo` (below).
 7. **Bump `state.obstaclesVersion`** if it adds or removes an obstacle (below).
 8. **Judge it in the EFFECTS GALLERY's BOSSES shelf**, at the PHONE viewport.
-   Reach and arc are sized against ~422×195 world units, never guessed — a
+   Reach and arc are sized against ~422×260 world units, never guessed — a
    sweep that covers the whole visible floor is not a hazard, it is a wall.
 
 ## Checklist

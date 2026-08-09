@@ -2,18 +2,18 @@ name: the_leak_0
 family: boot_hill
 size: [24, 24]
 description: >
-  THE LEAK, the whistleblower in exile — a wary young man in a grey hoodie
+  THE LEAK, the man on the park's cameras — a wary man in a grey hoodie
   clutching a glowing turquoise dead man's switch; a ranged elite who fights
   from cover.
 subject:
   kind: elite — ranged
   name: THE LEAK
-  build: a lean young man
+  build: a lean, round-shouldered man
   attire: a dark grey hoodie over dark trousers
   features: short dark hair over a pale, wary face
   accent: a small glowing turquoise device — his dead man's switch — in one hand
   pose: standing watchful, the device held at his side
-  flavor: the whistleblower in exile, watching everything, fighting from cover
+  flavor: the man who watches everything and was ignored, fighting from cover
 palette:
   K: "#0c0b12" # shoe / dark shadow
   N: "#3a3644" # dark hoodie panel

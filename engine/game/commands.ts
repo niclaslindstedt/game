@@ -22,11 +22,13 @@
 // "string"`: a host must not be crashable by a stranger passing "luckk".
 //
 // **WHY THE TABLE IS HERE AND NOT IN `server/wire/`.** The wire's vocabulary
-// (`server/wire/protocol.ts`) imports NOTHING — the page reads it from screens
-// on the app's startup path, where the 200 KB critical-path budget forbids
-// anything that drags `@game/core` behind it. A table that calls engine
-// functions plainly cannot live there. So the wire keeps a literal copy of the
-// NAMES for its allow-list, this module owns what each one DOES, and
+// imports NOTHING of the engine — `server/wire/protocol.ts` is read from
+// screens on the app's startup path, where the 170 KB critical-path budget
+// forbids anything that drags `@game/core` behind it, and the allow-list next
+// door in `server/wire/frames.ts` (which imports nothing at all) obeys the same
+// rule. A table that calls engine functions plainly cannot live there. So the
+// wire keeps a literal copy of the NAMES for its allow-list, this module owns
+// what each one DOES, and
 // `tests/engine/run_commands_test.ts` fails the build when the two disagree —
 // the same snapshot-and-drift-test shape `mod/catalog.json` and the Game Center
 // manifests already use.
@@ -195,7 +197,7 @@ type ArgKind =
  *
  * Adding a row means adding a `case` below (the compiler insists — the switch
  * is exhaustive over this union) and adding the name to `COMMANDS` in
- * `server/wire/protocol.ts`, which the drift test enforces. It also means
+ * `server/wire/frames.ts`, which the drift test enforces. It also means
  * bumping `PROTOCOL_VERSION`, because a build that has never heard of a verb
  * and a build that refuses one look identical from the far end of a wire.
  */

@@ -56,8 +56,9 @@ picker tints by and nothing branches on it. Three shapes, freely combined:
 3. **The FX** — the always-on flourish the talent is felt through:
    - **Conjurations** draw as running ability visuals in
      `pwa/src/game/render/actors.ts`, sized by the engine helpers in
-     `engine/game/spells.ts` (`orbitSpellParams`, `stormSpellParams`,
-     `seekerSpellParams`, `singularitySpellParams`, `immolationSpellParams`) —
+     `engine/game/spells.ts` (`orbitSpellBlock`, `stormSpellBlock`,
+     `seekerSpellBlock`, `singularitySpellBlock`, `immolationSpellBlock`;
+     `stasisSpellParams` is the one that kept the old suffix) —
      these are where the PER-RANK upgrade lives (more orbs, wider aura, faster
      storm).
    - **Proc / struck bursts** are engine events mapped to app effects in
@@ -148,7 +149,7 @@ each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
 | The shared rank cap (and nothing else) | `engine/game/config/talents.ts` |
 | Runtime: rank, spend, stat-scaling, respec floor | `engine/game/talents.ts` |
 | Effect read-sites (crit/dodge/dmg-cut/procs) | `engine/game/talent-effects.ts` |
-| A conjuration's per-rank params (orbs, aura, storm) | `engine/game/spells.ts` (`*SpellParams`) + config `SPELL` |
+| A conjuration's per-rank params (orbs, aura, storm) | `engine/game/spells.ts` (`*SpellBlock`) + config `SPELL` |
 | A conjuration's always-on visual | `pwa/src/game/render/actors.ts` |
 | A proc/struck burst (event → effect) | `pwa/src/game/game-screen/event-fx.ts`, `render/effects.ts` |
 | A melee/ranged proc's slash/muzzle styling | `pwa/src/game/weapon-fx.ts` |

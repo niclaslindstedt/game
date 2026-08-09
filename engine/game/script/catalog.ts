@@ -5,7 +5,7 @@
 // `registerDefs({ scripts })` has to be reachable from `defs/registry.ts`, and
 // `defs/registry.ts` is reachable from the startup path. If the registry
 // touched `host.ts` instead, the Lua VM — lexer, parser, interpreter, stdlib —
-// would land inside the 200 KB critical-path budget for the sake of a setter.
+// would land inside the 170 KB critical-path budget for the sake of a setter.
 // So what a mod registers is SOURCE TEXT, and the compile happens in `host.ts`
 // the first time a hook is actually called, which is inside a run.
 //

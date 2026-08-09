@@ -11,7 +11,7 @@ written in**, checked by the same validator, so anything you can read in
 > **Desktop only.** Mods load in the Windows, macOS, and Linux builds. Ordinary
 > players may use them only with a game licence acquired through Steam; the
 > Steam edition has not been published yet. A mod creator may launch an
-> official downloaded desktop binary with `--modifications` solely to build and
+> official downloaded desktop binary with `--mods` solely to build and
 > test their own mod. Regular players may not use that exception, and it never
 > permits multiplayer. The browser and mobile builds do not load mods.
 
@@ -42,9 +42,12 @@ see below.
 **[`AGENTS.md`](AGENTS.md)**, the step-by-step from `new` to publish with the
 command for every step. Both are just as usable as a human checklist.
 
-What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
-one monster, one weapon, one relic, six sprites, two animations, one sound, one
-score, and a comment on every field explaining why it is there.
+What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue and
+the map it is carved from, two monsters (one of them spareable, with the
+companion she becomes), a weapon and the relic cut from it, a power, two
+talents, six sprites, two animations, a scene, a thought, a story item, a sound,
+a score, a HUD element, a modal and a row on the pause menu — and a comment on
+every field explaining why it is there.
 
 ## What is in a mod
 
@@ -73,6 +76,8 @@ my-mod/
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out
+  quests/<id>.yaml             one errand each — what somebody asks of the hero
+  quest-givers.yaml            the people who hand them out
   scripts/<id>.lua             a RULE the engine hands out — the XP curve, the
                                drop chance, weapon damage
   hud/hud.yaml                 THE HUD's frame: the boxes elements sit in
@@ -186,7 +191,7 @@ played, not republished. Both folders sort after your subscriptions, so the mod
 you just added wins its clashes while you iterate.
 
 If you do not hold the released Steam edition, launch the official downloaded
-desktop binary with `--modifications` to enable this local authoring path. That
+desktop binary with `--mods` to enable this local authoring path. That
 parameter is licensed only while creating, validating, and testing a mod you
 author. It is not a general mod-player switch and does not enable licensed
 multiplayer use.
@@ -291,8 +296,12 @@ Two things to know:
 Three, and they are all in service of the same thing: subscribing to a stranger's
 mod must be safe and must not be able to wreck your game.
 
-1. **Nothing executes.** A mod is data — defs and pixels. There is no scripting
-   hook, and there will not be one.
+1. **Almost nothing executes, and what does runs in a box.** A mod is data —
+   defs, pixels, waveforms — plus `scripts/*.lua`, the twelve formulas the
+   engine hands out. Those run in the game's own metered Lua VM with no `io`,
+   no `os`, no `require`, no clock and no randomness; a script that throws,
+   runs away or will not compile falls back to the shipped rule and the run
+   keeps playing. See [`../docs/scripting.md`](../docs/scripting.md).
 2. **A mod is compiled and validated before the game sees it**, in the desktop
    shell, once, at load. The game itself never parses a mod's YAML.
 3. **A mod applies to a RUN, not to your install.** Start a modded run and the
@@ -312,7 +321,7 @@ reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
 
 The SDK licence does not itself license playing mods or multiplayer. Ordinary
 player use requires a game licence acquired through Steam; the limited
-`--modifications` exception above exists only for creators testing their own
+`--mods` exception above exists only for creators testing their own
 work before that edition is published.
 
 ## Reference

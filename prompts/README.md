@@ -2,9 +2,12 @@
 
 Versioned LLM prompts. See [`OSS_GAME_SPEC.md` §13.2](../OSS_GAME_SPEC.md#132-llm-prompts-prompts).
 
-If this project sends prompts to a language model — directly via an SDK
-or indirectly via a wrapper — every prompt must live here as a versioned
-file rather than as an inline string in source code.
+**This directory is empty on purpose: the game ships no LLM-driven
+behaviour today**, so there is nothing here to version. The rules below
+are what applies the moment that changes — if this project sends prompts
+to a language model, directly via an SDK or indirectly via a wrapper,
+every prompt must live here as a versioned file rather than as an inline
+string in source code.
 
 ## Layout
 
@@ -60,6 +63,3 @@ Filenames use [semver](https://semver.org/):
 a new version. Keep every prior version on disk so behavior changes can
 be diffed and bisected. Loaders pick the highest version unless
 explicitly pinned.
-
-If this project performs no LLM calls, leave this directory empty
-(this README is enough to satisfy the §13.2 check).

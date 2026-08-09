@@ -1,4 +1,4 @@
-name: icon_snow_archive
+name: icon_corpus_drive
 family: icons
 size: [12, 12]
 description: >
@@ -7,7 +7,7 @@ subject:
   kind: item icon
   features: a boxy external drive with a white label panel and a blue stripe
   accent: dark case, blue label stripe
-  flavor: the leaked training-set archive
+  flavor: the published proof, turned into the machine's training corpus
 palette:
   N: "#303444" # dark drive case
   O: "#1a1c2c" # dark outline

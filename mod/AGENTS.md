@@ -79,6 +79,10 @@ shipped file is a worked example of its kind.
 | A cutscene                                                   | `cutscenes/<id>.yaml`                                                                    | [`../content/cutscenes/`](../content/cutscenes)                                  |
 | The hero's inner monologues                                  | `thoughts.yaml`                                                                          | [`../content/thoughts.yaml`](../content/thoughts.yaml)                           |
 | A story item and its lore                                    | `story-items.yaml`                                                                       | [`../content/story-items.yaml`](../content/story-items.yaml)                     |
+| An ERRAND, and the person who hands it out                   | `quests/<id>.yaml`, `quest-givers.yaml`                                                  | [`FORMAT.md`](FORMAT.md#quest-giversyaml--questsidyaml--the-errands)             |
+| A RULE the engine hands out (the XP curve, the drop chance)  | `scripts/<id>.lua`                                                                       | [`FORMAT.md`](FORMAT.md#scriptsidlua--a-rule)                                    |
+| THE HUD — a bar, a readout, its sounds, its judgements       | `hud/hud.yaml`, `hud/elements/<id>.yaml`, `hud/events.yaml`, `hud/scripts/<id>.lua`      | [`FORMAT.md`](FORMAT.md#hud--the-hud-which-you-may-replace-outright)             |
+| A WINDOW the run puts up, a modal, a row on somebody's       | `menus/<id>.yaml`, `menus/modals/`, `menus/elements/`, `menus/scripts/`                  | [`FORMAT.md`](FORMAT.md#menus--the-runs-own-windows-which-you-may-replace-too)   |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -106,8 +110,8 @@ node mod/tools/cli.mjs sounds killed          # sounds, with what fires each
 
 Your level's loot pools, your monster's drops and your relic's `base` all name
 ids. `ids` is faster and more reliable than reading `catalog.json`, which is
-1,400 entries long. **An id you did not verify is the single most common reason
-a mod fails to compile.**
+four thousand entries long. **An id you did not verify is the single most common
+reason a mod fails to compile.**
 
 `sounds` is the same question for AUDIO, and the answer a recording needs: it
 prints every sound the game ships with the event that fires it and a line on
@@ -210,13 +214,13 @@ tell you the fight is a corridor, and a wall you mistyped is invisible in text.
 | `scripts/level-render.mjs <id> --mod <dir>` | the map drawn with the REAL sprites at true scale — add `--dormant` to stand the whole horde in it            |
 | `scripts/map-layout.mjs <id> --mod <dir>`   | the design blueprint: walls, zones, and CON CIRCLES (mob level vs the hero level your `ladder.yaml` promises) |
 | `scripts/map-preview.mjs <id> --mod <dir>`  | the annotated design diagram; `--actual` scatters a real `createGame`, `--heatmap` overlays a played run      |
-| `… --seed N --size large`                   | another run's carve of the same map — every render is of ONE carve, so change the seed to see the spread      |
+| `… --seed N` (any of the three)             | another run's carve of the same map — every render is of ONE carve, so change the seed to see the spread      |
 
 **2. PLAY it.** The autopilot plays your level in the real renderer, in headless
 Chromium, and hands back the run's stats and screenshots:
 
 ```sh
-npm install --no-save playwright        # once — deliberately not a repo dep
+npx playwright install chromium           # once — the browser binaries only
 (cd pwa && npx vite --port 5199 &)      # the dev server, once
 node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
 ```
@@ -277,10 +281,11 @@ Honest list, so nothing is spent hunting a flag that is not there:
   nothing mod-specific to read.
 - **`aoe-calibration.mjs`, `simulate-bench.mjs`** — they measure the engine
   itself, which a mod cannot change.
-- **the library generator, `effects-gallery.mjs`, `weapon-swing.mjs`,
-  `talent-preview.mjs`, `ui-shots.mjs`, `store-shots.mjs`** — app-side surfaces
-  that read the shipped catalogs and the built atlas. `playtest.mjs` is the
-  browser-side instrument that does take the flag.
+- **the library generator and the other `pwa/scripts/` surfaces**
+  (`effects-gallery.mjs`, `weapon-swing.mjs`, `talent-preview.mjs`,
+  `ui-shots.mjs`, `store-shots.mjs`) — app-side, and they read the shipped
+  catalogs and the built atlas. `pwa/scripts/playtest.mjs` is the browser-side
+  instrument that DOES take the flag.
 - **`make assets` / `make levels`** — those compile THIS repo's `content/` tree.
   Your mod is compiled by `cli.mjs check`; never add your files to `content/`.
 
@@ -357,9 +362,10 @@ so it is stated once and stays consistent:
   differently inside a mod folder (run its commands with `--mod <dir>`, write
   its files into the MOD folder — never this repo's `content/`);
 - **which skills are the GAME's** and are a wrong turn inside `mod/`;
-- **the scope** — every catalog a mod may ship, and what the format refuses
-  (code of any kind, a new talent proc or ability effect, `grades:` ladders, the
-  loot economy, the XP curve, the title menu, the built atlas);
+- **the scope** — every catalog a mod may ship, and what the format refuses (a
+  new talent proc or ability effect, `grades:` ladders, the loot economy, the XP
+  curve, the title menu, conversation trees, the built atlas — and any code
+  outside the twelve `scripts/*.lua` hooks);
 - **the decisions to bring back to the user** — publishing, `kind: conversion`,
   changing a published mod's `id`, anything that would need this repo's
   `content/` or `engine/` edited.

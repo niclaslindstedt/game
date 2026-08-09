@@ -44,7 +44,7 @@ import {
 // `@game/menu` rather than `@game/core`, and deliberately: the GALLERY reads
 // this module for the roll's cap and the file name, and the gallery is reached
 // from the TITLE MENU — so an import of the whole engine here would put the
-// simulation one hop off the startup path (AGENTS.md, the 200 KB budget).
+// simulation one hop off the startup path (AGENTS.md, the 170 KB budget).
 import { warn } from "@game/menu";
 
 import { IDENTITY, storageKey } from "../identity.ts";

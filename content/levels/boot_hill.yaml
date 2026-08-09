@@ -63,8 +63,8 @@ merchant:
     - WELL, LOOK WHO'S BACK. SAME STOOL, PARTNER?
   stockUniques:
     - strongmans_tracksuit
-    - the_kremlin_ushanka
-    - honorary_rank
+    - the_incumbents_ushanka
+    - courtesy_star
 objective:
   type: killBoss
 # The campaign's last clear walks back out of the West to the garage -
@@ -84,7 +84,7 @@ placedItems:
   - kind: story
     defId: park_brochure
   - kind: story
-    defId: ada_host
+    defId: ada_hand
   - kind: repair
   - kind: medkit
   - kind: medkit
@@ -107,7 +107,7 @@ firstSightThoughts:
     radius: 260
 firstKillThoughts:
   - enemy: cowbot
-    thought: boot_hill_hosts
+    thought: boot_hill_hands
     after: boot_hill_arrival
 loot:
   weaponPool:

@@ -90,8 +90,9 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   finished run, `createGame(seed, level, difficulty, loadout)` dresses the
   next one in it (`applyLoadout`: ids re-minted, bag re-sized to carried
   STRENGTH, hero rested). The APP owns persistence
-  (pwa progress.ts banks JSON per cleared level × difficulty on the
-  victory event and resolves `startingLoadout` on run start). Dev jumps with
+  (`pwa/src/game/characters.ts` — `bankLoadout`/`recordVictory` bank the
+  loadout onto the CHARACTER; `character-progress.ts` keys the per-level ×
+  difficulty clears). Dev jumps with
   nothing banked fall back to `deriveArrivalLoadout` — the hero's level
   derived from the earlier levels' rosters (spawn + wave XP ×
   `ARRIVAL.clearShare` through the real curve, difficulty-gated lines
@@ -143,7 +144,8 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   player is under the gate), so a rarely-taken path costs no determinism
   churn on the common one. App-side meta-progression (LEVEL TOKENS: clear a level, spend
   the token to unlock it on a higher rung) lives entirely in the pwa's
-  progress store — the engine never learns tokens exist.
+  progress stores (`character-progress.ts` + `characters.ts`) — the engine
+  never learns tokens exist.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
   plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`
@@ -201,8 +203,8 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `WeaponDef.projectile` handled in stepWeapon/stepProjectiles — a pierce
   shot tracks `hitIds` so it never bills a body twice. Dedicated skill:
   `weapon-system` (stat checker + arsenal sheet). App-side permanence
-  (keepsake stash, hardcore death) lives entirely in pwa progress.ts —
-  the engine never learns hardcore exists.
+  (keepsake stash, hardcore death) lives entirely in
+  `pwa/src/game/characters.ts` — the engine never learns hardcore exists.
 - **Companions & the SPARE-or-KILL verdict (2026-07, the rift's legends):** an
   ALLY who fights is its own state slice (`state.companions`, companions.ts)
   stepped right after `stepEnemies` — never an Enemy, so combat/loot stay
@@ -306,12 +308,13 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   stays app-side (the tokens/hardcore precedent): the whole system lives in
   `pwa/src/game/achievement-totals.ts` (pure lifetime counters + the
   event reducer), `achievement-defs.ts` (the badge catalog), and
-  `achievements.ts` (the custom persisted unlock store —
-  `applyUnlocks`/`clearUnseen` from
-  all implemented locally). The engine's ONLY change
+  `achievements.ts` (the custom persisted unlock store — `getAchievements`,
+  `unseenAchievements`, `recordAchievementEvents`, `recordRunStarted`,
+  `recordWornEquipment`, `acknowledgeAchievements`, all implemented
+  locally). The engine's ONLY change
   was identity plumbing: `Equipment.uniqueId` stamped by `mintUnique` and
   carried on `itemCollected`, so the app books WHICH unique dropped by id,
-  never by display name. GameScreen feeds the store right after
+  never by display name. `game-screen/tick-reactions.ts` feeds the store right after
   `playEventSounds` (per-tick events) plus a `recordRunStarted` hook in the
   run-mount effect (`!resumed` only — a menu resume is the same run).
   **The catalog derives its per-content badge groups from the live
@@ -330,11 +333,14 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   the global key handler yields, mirroring the `levelup` cede). Suite:
   `tests/achievements_test.ts` — it resolves enemy ids BY ROLE from the live
   catalog and asserts every badge icon exists in the shipped atlas, so a
-  content rewrite or an icon typo fails loudly. React gotcha (StrictMode):
-  a setState UPDATER must stay pure — advancing the toast queue inside
-  `setAchievementToast((cur) => cur ?? queue.shift() ?? null)` double-shifts
-  under StrictMode's double-invoke and eats the toast; shift queues in
-  effects (keyed by a bumped tick), never in updaters. Second ingestion
+  content rewrite or an icon typo fails loudly. **A setState UPDATER must
+  stay pure** — advancing the toast queue inside
+  `setAchievementToast((cur) => cur ?? queue.shift() ?? null)` mutates on a
+  path that may be re-run and eats the toast; shift queues in effects (keyed
+  by a bumped tick), never in updaters. Nothing machine-checks this: the app
+  renders with Preact and `pwa/src/main.tsx` deliberately mounts with NO
+  `<StrictMode>` (preact/compat exports it as a plain Fragment and Preact has
+  no development double-invocation), so the rule stands on review alone. Second ingestion
   channel (2026-07, wardrobe feats): state that changes WITHOUT an event
   (worn gear — manual equips emit nothing) is snapshot-reported from the sim
   loop every frame to a store hook (`recordWornEquipment`) that keeps a

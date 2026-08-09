@@ -52,7 +52,7 @@ come back here only for the title screen.
 | Reading the tree | `pwa/src/game/title-screen/menu-tree.ts` — `screenDef`, `rowDef`, `rowHelp`, `rowAria`, `parentOf`, `screenHeading`, `SETTINGS_TREE`. The ONE way to ask the tree anything |
 | Row shape + shared factories | `pwa/src/game/title-screen/menu-model.ts` — `MenuEntry`, `MenuScreen` (the hand-written screen union), `MenuContext`, `assembleRows`, `actionRow`, `navRow`, `backRow`, `onOffRow`, `sliderRow`, `volumeRow` |
 | Screen → builder dispatch | `pwa/src/game/title-screen/menus.ts` (`buildMenu`, `headingFor`) |
-| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the settings index + GAMEPLAY, CONTROLS/KEY BINDINGS, INTERFACE, GORE, AUDIO), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
+| The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the settings index + GAMEPLAY, CONTROLS/KEY BINDINGS, INTERFACE, GORE, AUDIO), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-minigames.ts` (the arcade shelf), `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
 | Async state a builder must be HANDED | `use-mods.ts`, `use-sessions.ts`, `use-coin-store.ts`, `use-cloud-save.ts`, `use-character-transfer.ts` |
 | Rendering | `title-screen/MenuList.tsx` (rows, cursor, controls), `MenuHeading.tsx` (title + trail + rule), `TitleScreen.tsx` (orchestration, keyboard, cursor, overflow) |
 | Layout hooks | `title-screen/use-title-layout.ts` — `useHelpWrapRem`, `useMenuOverflow` |
@@ -287,7 +287,7 @@ gives up, the star cools, and the gesture rearms at the tap count. Four rules:
    STRAIGHT ONTO the sun and the glare by the hook's own rAF loop and are NOT
    tweened by CSS: the JS already owns the curve, and a transition over a
    per-frame write would lag the disc a quarter-second behind the thumb — which
-   on a 250 ms beat is the whole game. Routing them through React state would
+   on a 250 ms beat is the whole game. Routing them through component state would
    re-render ten flame spans and eight embers sixty times a second to move one
    number. (`--sun-charge`, which IS tweened, is the opposite case: it steps
    once per tap.)
@@ -384,8 +384,9 @@ shoots it in slow motion, and every run composites into a single `sheet.png` —
 a row per exhibit, frames left to right — which is what a review actually
 reads.
 
-The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
-mob strength, loot percentages, …) so the game's balance can be probed without
+The **BALANCE** subpage holds the 22 runtime balance multipliers of
+`BalanceTuning` (leveling pace, mob strength, loot percentages, …) so the
+game's balance can be probed without
 editing `engine/game/config/` and rebuilding. The engine side is
 `engine/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults — except the world's
 shipped PACE, which the HERO SPEED / MOB SPEED pair carries at 0.8 so TEMPO stays
@@ -401,11 +402,14 @@ never a percentage. The track is exponential: its four quarters cover 0→1, 1�
 knob catalog (labels, blurbs) live in `pwa/src/game/balance-knobs.ts`; the
 drag track is the shared `@ui/lib/PixelSlider.tsx`. The values persist in the
 settings (`balance` in `settings.ts`, applied on load like the other engine
-flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around
-ten knobs — one lever per system, not a config editor.
+flags) and a RESET ALL row restores the shipped 1× tuning. Keep it **one lever
+per system** — a knob per config field would make it a config editor.
 
-**Settings controls share three reusable pixel widgets** (generic React/UI, in
-`pwa/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
+**Settings controls share five reusable pixel widgets** — `PixelSlider`,
+`PixelToggle`, `PixelCheckbox`, `PixelText`, `PixelShinyText` (generic
+Preact/UI, in `pwa/src/lib/`, imported via `@ui/lib/*` so a later game keeps
+them as-is). Reach for one of those before writing a control; a new one belongs
+in that pool, never in a menu builder.
 
 The DEVELOPER page's own inventory (what each row does) is
 `docs/configuration.md`; the BALANCE knobs as a MEASURING instrument are the

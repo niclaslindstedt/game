@@ -6,7 +6,9 @@
 // It emits into `pwa/src/generated/` rather than `engine/generated/` because a
 // sound is an APP concern, not an engine one: the engine emits events and has
 // no idea they make noise, and putting the bank in the engine's tree would
-// hand every consumer of `@game/core` 274 voices of data it never reads.
+// hand every consumer of `@game/core` the whole voice bank as data it never
+// reads (this script prints its own tally — voices across sounds — when it
+// runs).
 //
 // Output is gitignored and regenerated on every build, like every other
 // compiled catalog — `content/sounds/` is the source of truth.

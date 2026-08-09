@@ -54,7 +54,7 @@ const root = path.join(here, "..");
 // The engine uses the @game/lib alias at runtime — map it before importing.
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { simulateCampaign } = await import(
+const { simulateCampaign, SIM_VIEW_DEFAULT } = await import(
   path.join(root, "engine/sim/simulate.ts")
 );
 const { synthesizeArrival } = await import(
@@ -127,6 +127,10 @@ const {
   startLoadoutFor,
 } = parseFlags(argv, {
   cpuCount: availableParallelism(),
+  // The camera default is the ENGINE's constant, never a second literal here:
+  // it is a WORLD-unit rect and the canvas-px number it is easily confused with
+  // is a quarter shorter (see SIM_VIEW_DEFAULT).
+  SIM_VIEW_DEFAULT,
   synthesizeArrival,
   DIFFICULTY_ORDER,
   LEVEL_ORDER,

@@ -82,7 +82,8 @@ export function validateIds(config, platform) {
  * signal that a build was made with the developer menu, the hidden sun-tap
  * reveal and the arsenal/effects galleries still in it. That is fine for a
  * local run and wrong for a store upload, and it is otherwise invisible: the
- * app looks identical until someone taps the sun seven times.
+ * app looks identical until someone taps the sun sixteen times and wins the
+ * click race that arms.
  */
 export const DEV_TOOL_CHUNKS = ["ArsenalScreen", "EffectsGallery"];
 

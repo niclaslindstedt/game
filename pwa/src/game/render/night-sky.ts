@@ -131,12 +131,12 @@ const BANDS: readonly Band[] = [
  * which reads as a stage flat rather than as a street on the edge of a place.
  *
  * `lift` is in CANVAS px and deliberately NOT a share of the sky, because the
- * measurement that matters is against the town's ROOFLINE, and that is a fixed
- * 19 px above the horizon whatever the screen is (the houses are 30-px
- * billboards standing 11 px of projected ground behind the kerb). A layer
- * lifted less than that is only ever seen through the alleys between
- * frontages — which is the right answer for the nearest one and the wrong
- * answer for all of them.
+ * measurement that matters is against the town's ROOFLINE, and that is set by
+ * the town's own art rather than by the screen (the houses are 18–53 px
+ * billboards standing 13 px of projected ground behind the kerb —
+ * `TOWN_SETBACK_PX`). A layer lifted less than the row it stands behind is
+ * only ever seen through the alleys between frontages — which is the right
+ * answer for the nearest one and the wrong answer for all of them.
  */
 type Field = {
   /** How far its crest rides above the horizon, on average (canvas px). */

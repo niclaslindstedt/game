@@ -9,6 +9,7 @@
 export function parseFlags(args, deps) {
   const {
     cpuCount,
+    SIM_VIEW_DEFAULT,
     synthesizeArrival,
     DIFFICULTY_ORDER,
     LEVEL_ORDER,
@@ -20,6 +21,8 @@ export function parseFlags(args, deps) {
     STAT_BUILDS,
     metaLane,
   } = deps;
+
+  const viewDefault = `${SIM_VIEW_DEFAULT.width}x${SIM_VIEW_DEFAULT.height}`;
 
   const opt = (name, fallback) => {
     const i = args.indexOf(`--${name}`);
@@ -38,12 +41,14 @@ export function parseFlags(args, deps) {
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
         "[--mod <dir>] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
-        "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
+        `camera (--view WxH, default ${viewDefault} — the horizontal-phone baseline in WORLD units):\n` +
         "                 every run watches through a real camera rect (player-centred,\n" +
         "                 clamped to the level) stamped into the input each tick, so the\n" +
         "                 view-aware rules — enemy targeting, spawner summon-in, the bot's\n" +
-        "                 wall-end sense — run exactly as on a device screen. Override with\n" +
-        "                 e.g. --view 195x422 (portrait phone) or --view off (no camera,\n" +
+        "                 wall-end sense — run exactly as on a device screen. WORLD units,\n" +
+        "                 not canvas px: the reference phone's 422x195 canvas shows 422x260\n" +
+        "                 of GROUND, because the pitch divides the depth axis. Override with\n" +
+        "                 e.g. --view 260x422 (portrait phone) or --view off (no camera,\n" +
         "                 the legacy blind-headless read).\n\n" +
         "stuck cancellation (--stuck-limit N, default 20; 0 = off): every no-progress\n" +
         "                 moment (a wedge on geometry, or loitering in one small patch without\n" +
@@ -255,12 +260,15 @@ export function parseFlags(args, deps) {
   const mortal = flag("mortal");
   const maxDeaths = Math.max(0, Number(opt("max-deaths", mortal ? "10" : "0")));
   // THE CAMERA. Every run watches through a real view rect by default — the
-  // horizontal-phone baseline (422×195 world px, the reference device) — so the
-  // view-aware rules (enemy targeting, spawner summon-in, the bot's wall-end
-  // sense) run exactly as on a device screen. `--view WxH` overrides the size
-  // (e.g. 195x422 for a portrait phone); `--view off` removes the camera
+  // horizontal-phone baseline (the reference device), taken from the ENGINE's
+  // `SIM_VIEW_DEFAULT` rather than restated here — so the view-aware rules
+  // (enemy targeting, spawner summon-in, the bot's wall-end sense) run exactly
+  // as on a device screen. It is WORLD units: the device's 422×195 CANVAS shows
+  // 422×260 world units of ground once the pitch divides the depth axis, and
+  // the engine's every view read is world-space. `--view WxH` overrides the
+  // size (e.g. 260x422 for a portrait phone); `--view off` removes the camera
   // entirely (the legacy blind-headless read).
-  const viewSpec = opt("view", "422x195");
+  const viewSpec = opt("view", viewDefault);
   const view = (() => {
     if (["off", "none", "0"].includes(String(viewSpec).toLowerCase())) {
       return null;

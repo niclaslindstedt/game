@@ -185,7 +185,7 @@ describe("bot wall sense on the uncovered map (fog of war)", () => {
   // (340, 1320), a vertical wall at x≈600 from y=1000 down INTO the level's
   // bottom edge (height 1600), the goal east across it. The wall's only end
   // (north, y=1000) is ~320px away — far past the headless screen baseline's
-  // ~97px vertical half-view.
+  // ~130px vertical half-view.
   function stage(): GameState {
     const state = startGame(42, "test_path_level");
     clearStage(state);

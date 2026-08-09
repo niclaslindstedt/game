@@ -84,7 +84,7 @@ export const SPELL = {
     burstRadius: 26,
     burstRadiusPerRank: 4,
     /** Orb flight speed (px/s). Orbs per spawn grow with rank in
-     * `seekerSpellParams` (`ceil(rank/2)`: 1 at R1–2, 2 at R3–4, 3 at R5). */
+     * `seekerSpellBlock` (`ceil(rank/2)`: 1 at R1–2, 2 at R3–4, 3 at R5). */
     speed: 150,
     /** Homing turn rate (rad/s). */
     homing: 4,

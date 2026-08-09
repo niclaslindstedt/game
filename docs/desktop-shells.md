@@ -76,8 +76,11 @@ Two differences remain, and both are narrower than the row used to be:
   simply a piece of work nobody has done.
 - **The screenshot row stands.** Steam's key photographs the swap chain it
   hooked, and the decoy's frames are empty by construction, so the game goes on
-  filing its own copy. That is why `screenshots-provider` exists on the webview
-  build and not on the Chromium one.
+  filing its own copy. Both shells carry a `screenshots-provider` seam; only the
+  webview build has something to put behind it, because the `steamworks` crate
+  binds `AddScreenshotToLibrary` and `steamworks.js` binds no `ISteamScreenshots`
+  at all. Electron's seam returns null and the picture goes to the player's own
+  folder — where Valve's overlay has already filed a copy of its own.
 
 The chord itself is forwarded rather than caught: Shift+Tab belongs to the
 webview's process, so the shell listens for it in the page and asks Steam to
@@ -160,14 +163,14 @@ numbers so that the numbers decide rather than the enthusiasm.
 
 ### What would have to be true
 
-| Must hold                                                       | Measured by                                   |
-| --------------------------------------------------------------- | --------------------------------------------- |
-| No REQUIRED web-platform feature missing on any shipped webview | `npm run webview:sweep`, plus a real build    |
-| A roster crosses in both directions, verified                   | `--roster-check --against`, on both builds    |
-| A four-player session holds the frame budget                    | played, on real machines                      |
-| Every platform seam answers on all three desktops               | `docs/desktop-parity.md`'s last section       |
-| Install size at most half the Chromium build's                  | `npm run shell:bench --size`                  |
-| Cold start no worse than the Chromium build's                   | `npm run shell:bench --startup`, median of ≥5 |
+| Must hold                                                       | Measured by                                      |
+| --------------------------------------------------------------- | ------------------------------------------------ |
+| No REQUIRED web-platform feature missing on any shipped webview | `npm run webview:sweep`, plus a real build       |
+| A roster crosses in both directions, verified                   | `--roster-check --against`, on both builds       |
+| A four-player session holds the frame budget                    | played, on real machines                         |
+| Every platform seam answers on all three desktops               | `docs/desktop-parity.md`'s last section          |
+| Install size at most half the Chromium build's                  | `npm run shell:bench -- --size`                  |
+| Cold start no worse than the Chromium build's                   | `npm run shell:bench -- --startup`, median of ≥5 |
 
 The install-size bar is half rather than a tenth on purpose: the platform-webview
 build carries a Node runtime for the session server and the mod compiler (~50 MB),

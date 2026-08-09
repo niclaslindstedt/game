@@ -44,7 +44,7 @@ description: "Use when game may have drifted from OSS_GAME_SPEC.md. Walks the sp
 
    # §7.1 — AGENTS.md symlinks
    for link in CLAUDE.md .cursorrules .windsurfrules GEMINI.md \
-               .github/copilot-instructions.md; do
+               .aider.conf.md .github/copilot-instructions.md; do
      [ -L "$link" ] || echo "NOT-A-SYMLINK: $link (must point to AGENTS.md)"
    done
 

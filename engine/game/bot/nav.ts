@@ -269,11 +269,14 @@ const NAV_DEFLECTIONS = [
 ];
 
 /** The visible world HALF-EXTENTS assumed when no camera rect has been
- * reported (`state.view` absent — headless tests, the sim): the
- * phone-landscape baseline (~844×390 CSS at the app's VIEW_SCALE of 2 →
- * world half-view ≈ 211×97, the same reference the spawn distances are tuned
- * against). */
-const FALLBACK_VIEW_HALF = { x: 211, y: 97 };
+ * reported (`state.view` absent — headless tests, a blind sim run): the
+ * phone-landscape baseline, IN WORLD UNITS. ~844×390 CSS at the app's
+ * VIEW_SCALE of 2 is a 422×195 CANVAS, and the pitched ground plane
+ * (`DEFAULT_PITCH` = 0.75) turns that into ~422×260 world units of floor — so
+ * the half-view is 211×130, not 211×97. The half-height was the canvas's for a
+ * while, which had a headless bot's wall sense reading a quarter short down
+ * the depth axis. */
+const FALLBACK_VIEW_HALF = { x: 211, y: 130 };
 
 /** How far the hero can SEE along each bearing — everything the player watching
  * this run KNOWS in that direction: the distance to the SCREEN edge (the live

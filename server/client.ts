@@ -35,7 +35,7 @@
 // It is reached through the `@game/client` alias, which resolves to this file
 // in all four config maps (root tsconfig, pwa tsconfig, vitest, vite).
 //
-// **THE 200 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
+// **THE 170 KB CRITICAL-PATH BUDGET IS A LIVE HAZARD HERE.** This module imports
 // `@game/core`, so nothing on the app's startup path may import it: the HOST and
 // JOIN screens are title-menu screens and must reach `@game/menu` and the
 // import-free `@game/wire/*` leaves alone. `pwa/scripts/check-seo.mjs` is what

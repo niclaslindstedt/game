@@ -29,7 +29,7 @@
 //     FAILS loudly instead of rendering "?".
 //
 // Usage:
-//   npm install --no-save playwright && npx playwright install chromium
+//   npx playwright install chromium   # playwright itself comes with `npm install`
 //   cd pwa && npx vite --port 5199 &
 //   node pwa/scripts/store-shots.mjs [--url http://localhost:5199]
 //     [--only iphone|ipad|steam] [--shot nuke,boss] [--layout framed|bleed]

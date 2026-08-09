@@ -244,13 +244,17 @@ everything that matters in the middle third.
 
 ## `library-logo` — 1280 × 720, transparent PNG
 
-The wordmark alone, laid over the hero image. **Do not generate this one.**
+The wordmark alone, laid over the hero image. **Do not generate this one — a
+script draws it:**
 
-Compose it from the game's own pixel font — mint `#7ef0c8`, the same hard drop
-shadow the title screen uses (`0 5px 0 rgba(0,0,0,0.55)`), on full transparency.
-Capture it from the title screen or redraw it from the font atlas. Every other
-capsule can tolerate a model's interpretation; the wordmark cannot, and this one
-is nothing but wordmark.
+```sh
+node scripts/generate-steam-library-logo.mjs   # → capsules/library-logo.png
+```
+
+It renders `ADA'S TRAIL` from the same glyph source the title screen uses, in
+mint `#7ef0c8` over the same hard drop shadow (`0 5px 0 rgba(0,0,0,0.55)`),
+centred on full transparency. Every other capsule can tolerate a model's
+interpretation; the wordmark cannot, and this one is nothing but wordmark.
 
 Optional: set the bleeding red moon beside or above the lettering as a mark.
 
@@ -272,8 +276,18 @@ unobtrusive — the store page's content sits on top of it.
 
 1. **Check the raster exactly.** `make store-preflight` fails on a capsule that
    is one pixel off. Crop or re-render rather than letting an upscaler guess.
-2. **Composite the wordmark**, in the game's own pixel font, into the space each
-   prompt reserved.
+2. **Composite the wordmark** into the space each prompt reserved — a script
+   does it, from the game's own pixel font, so the lettering cannot drift:
+
+   ```sh
+   node scripts/composite-steam-wordmarks.mjs
+   ```
+
+   It writes over `header`, `small`, `main`, `vertical`, `library` and
+   `library-header` **in place**, so run it exactly once against fresh art-only
+   rasters; the per-capsule scale and position are the `specs` table at the top
+   of the script, and a re-composed capsule is where you change them.
+
 3. **Look at each one small.** The `small` capsule at thumbnail size and the
    `library` capsule in a grid of other games are the two real tests.
 4. **Declare the AI use.** Valve's content survey has a section for

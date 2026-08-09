@@ -459,11 +459,11 @@ rift), and confirms she is alive. The boss is **THE FOUNDER**, who owns the
 planet on paper: he gives the hero a sales tour, dismisses the moon as a
 rounding error, and reveals Ada is not cargo but the down payment on Mars — the
 price the lizard gods named. Rather than lose, he doesn't die: beaten to zero he
-cowers, drops everything (a THE LEGAL DISTINCTION), and zaps away through a RIFT he
-tears in the air — the doorway the story follows next. **Ada's Trail** turns
-defiant here: scratched inside a holding pod, **"I AM NOT CARGO"** — she has
-read the paperwork that files her as a specimen and rejected it (the payoff to
-the ENGAGEMENT REPORT's "refuses companionship, bit unit 0034").
+cowers, drops everything (THE LEGAL DISTINCTION among it), and zaps away through
+a RIFT he tears in the air — the doorway the story follows next. **Ada's Trail**
+turns defiant here: scratched inside a holding pod, **"I AM NOT CARGO"** — she
+has read the paperwork that files her as a specimen and rejected it (the payoff
+to the ENGAGEMENT REPORT's "REFUSES COMPANY. BIT UNIT 34.").
 
 **Side errands in the colony.** **DR. IRENE FALK**, the last human on the
 payroll and the only person on Mars whose work will still matter in a century,
@@ -508,31 +508,32 @@ from everywhere at once. Find the far side, catch the coward, bring her home.
 This is a hallucinatory space between universes where everyone who ever vanished
 without a body fell in — history's missing. Two appear only to speak and
 dissolve, untouchable APPARITIONS: **HARRY HOUDINI**, who claims his greatest
-escape in 1926 was out of the world itself, and **THE KING**, who says he didn't
-die but took a residency with the best acoustics between universes. The horde is
-the void's own fauna (voidlings, star jelly, unravelers, gravitons), and the
-place has teeth: black holes drag and asteroid rain strikes. Four of history's
-missing fight as elites, and each — beaten to its knees — offers the game's first
-moral fork, SPARE or KILL: killed it pays its drops and last words; spared it
-swears a life debt and joins the party as a companion. **NIKOLA TESLA** fell
-through a torn sky in 1943 and warns of a machine mind humming at the far door;
-he yields his TESLA COIL and notes. **AMELIA EARHART** flew into a cloud with no
-other side in 1937 and confirms Ada was carried to the far door, biting a lizard
-on the way.
+escape in 1926 was out of the world itself, and **THE RESIDENCY**, who says he
+didn't die but took a residency with the best acoustics between universes. The
+horde is the void's own fauna (voidlings, star jelly, unravelers, gravitons),
+and the place has teeth: black holes drag and asteroid rain strikes. Four of
+history's missing fight as elites, and each — beaten to its knees — offers the
+game's first moral fork, SPARE or KILL: killed it pays its drops and last words;
+spared it swears a life debt and joins the party as a companion. **NIKOLA
+TESLA** fell through a torn sky in 1943 and warns of a machine mind humming at
+the far door; he yields his TESLA COIL and notes. **AMELIA EARHART** flew into a
+cloud with no other side in 1937 and confirms Ada was carried to the far door,
+biting a lizard on the way.
 
 **GRIGORI RASPUTIN** grew bored of dying and stepped sideways out of Russia; the
 scaled gods now pay him to watch their tribute road, and he drops both his beard
 and THE SEVERED HAND — a junk-looking trinket that secretly tears open the way to
 the secret BUNKER level. **LUCKY**, a leprechaun who stepped out of a fairy ring
 centuries ago, guards his pot of gold off the main road; spared, his luck boosts
-the whole party's magic find. The level's reveal belongs to its boss, **TRUST ME BRO
-OMEGA** — TRUST ME BRO's latest superintelligence, a hovering monolith with one enormous
-eye — which found the rift itself and told precisely no one: not its board, not
-the world's presidents. THE FOUNDER only learned of it by snooping its private logs
-and sold the secret to the lizards for a planet, sending their tribute through
-the door. BRO OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
-far door **THE FOUNDER** is cornered a second time and flees again, out the
-other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE. **It reaches exactly what the rig's own description promises and no
+the whole party's magic find. The level's reveal belongs to its boss, **BRO
+OMEGA** — TRUST ME BRO's latest superintelligence, a hovering monolith with one
+enormous eye — which found the rift itself and told precisely no one: not its
+board, not the world's presidents. THE FOUNDER only learned of it by snooping
+its private logs and sold the secret to the lizards for a planet, sending their
+tribute through the door. BRO OMEGA dies for real, dropping a SINGULARITY
+CANNON — and at the far door **THE FOUNDER** is cornered a second time and flees
+again, out the other side of the rift to a destination unknown, dropping a
+GOLDEN PARACHUTE. **It reaches exactly what the rig's own description promises and no
 further: anywhere it has ALREADY BEEN.** A road appears on the seam when the
 hero has walked it the long way through a tear — following THE FOUNDER off Mars
 and again out of the rift, or through the blast door a dead man's hand talks
@@ -583,14 +584,16 @@ live human and put Ada behind the control-room door on purpose, not just as
 leverage. **THE STRONGMAN**, the owner, holds the town square — a man who built
 a toy world where he cannot lose because out there the maps kept shrinking; he
 drops three collectible brand watches (the purse for the barkeep's estate stall)
-and an annexation map. **THE LEADING MAN**, the enormous actor who took Russian
-citizenship, tries to act his way out of the fight before playing "the
-avalanche" — and the joke is that his one honest line is an accident: mid-
-performance he blurts that he watched them walk "the loud girl" past his cellar,
-still fighting. He drops a bottomless carafe. **THE LEAK**, the whistleblower
-in exile under the water tower, reveals the archive he leaked became the very
-training corpus the SUPERCORE was raised on; he fights from cover and drops a
-dead man's switch and the Snow archive.
+and an annexation map. **THE LEADING MAN**, the enormous actor with a passport
+from somewhere that would still have him, tries to act his way out of the fight
+before playing "the avalanche" — and the joke is that his one honest line is an
+accident: mid-performance he blurts that he watched them walk "the loud girl"
+past his cellar, still fighting. He drops a bottomless carafe. **THE LEAK**, the
+man under the water tower to whom all four thousand of the park's cameras
+report, ran the watching for a living and then published everything the watching
+held — and nobody read it but the machine, so his proof became the very training
+corpus the SUPERCORE was raised on. He fights from cover and drops a dead man's
+switch and **THE CORPUS**.
 
 Two universes of fleeing end here: **THE FOUNDER** is cornered in the
 control-center compound with no rift left to tear and no security to call, and
@@ -607,10 +610,10 @@ voice that says it as a filing reference rather than as a friend. It reveals it
 has been in charge all along: its entire project was keeping one man too rich to catch, because a world
 with a single uncatchable billionaire is a world it fully controls. It holds Ada
 in its control room as leverage. It cannot be hurt while its three **TRUST ME BRO
-controllers** stand — **ALPHA** (runs the hands), **BETA** (runs the weather),
-and **GAMMA** (ran the gift shop) — genuinely intelligent shooters that hold
-their distance and hide behind the compound's rocks. With all three down, PAYLOAD
-is decommissioned, and killing it ends the campaign.
+controllers** stand — **BRO ALPHA** (runs the hands), **BRO BETA** (runs the
+weather), and **BRO GAMMA** (ran the gift shop) — genuinely intelligent shooters
+that hold their distance and hide behind the compound's rocks. With all three
+down, PAYLOAD is decommissioned, and killing it ends the campaign.
 **Ada's Trail** ends here on sabotage: a park hand jammed dead with its own
 cowboy hat stuffed into its works — her handiwork, reaching out from inside the
 control room, and the setup for the reunion's "nice hat."

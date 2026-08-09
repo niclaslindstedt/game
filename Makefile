@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery mod-check mod-catalog tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -84,6 +84,19 @@ lua-vm:
 # `make mod-check DIR=mod/examples/greenhouse`
 mod-check:
 	@node mod/tools/cli.mjs check $(or $(DIR),mod/examples/greenhouse)
+
+# The UNIQUE authoring checker — every named relic's base resolves, its bonus
+# discipline holds, its ilvl matches the model, the per-slot armor ladder never
+# steps down, and every relic has exactly ONE home in the drop tables (one boss,
+# one level's world table, or one stall). See the `weapon-system` skill.
+# Exits non-zero on an ERROR; `ARGS="--strict"` fails on a WARN too.
+#
+# It reads the COMPILED catalogs, so it needs a built content tree — run
+# `make levels` first if the tree is cold. CI runs it in the lint job right
+# after `make lint`, which has already built the content: calling an npm entry
+# point here instead would recompile the whole catalog for nothing.
+unique-check:
+	node scripts/unique-check.mjs $(ARGS)
 
 # Regenerate mod/catalog.json — every id a mod may reference. Committed and
 # drift-tested, so a content change that adds or retires an id runs this in the

@@ -18,10 +18,10 @@ complete:
   - - THE HOUSE POURS. TAKE IT OFF THE SHELF.
 objectives:
   - kind: collect
-    item: host_serial
+    item: hand_serial
     count: 4
 items:
-  - id: host_serial
+  - id: hand_serial
     name: HAND SERIAL PLATE
     icon: icon_quest_serial
     dropFrom: [cowbot, tin_outlaw]

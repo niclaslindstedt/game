@@ -5,7 +5,8 @@
 A worked example mod, and the folder `node mod/tools/cli.mjs new` copies. It is
 deliberately the smallest addon that is still a real mod: one venue with a floor
 plan of its own, two monsters, a weapon and the relic version of it, a power, two
-talents, a scene, a score and the art for all of it.
+talents, a scene, a score, a piece of HUD, a window of its own — and the art for
+all of it.
 
 **It is also this README's job to be an example.** Every mod ships one — the
 validator refuses a folder without it — because the manifest's `description` is
@@ -32,6 +33,12 @@ conversion needs more than a sentence. Write yours for that person.
 - **[`animations.yaml`](animations.yaml)** — how the art moves past what the
   renderer does for free: the gardener's face while she talks (a moment the game
   has no convention for at all), and a slower sway for the creeper.
+- **A SEED TALLY on the HUD** ([`hud/`](hud)) — one text element on the run's own
+  left rail, reading a binding through a Lua judgement, hidden until it has
+  something to say.
+- **A WINDOW OF ITS OWN** ([`menus/`](menus)) — a modal the vault raises when it
+  wakes up, and a row added to the game's pause menu that raises it again. Both
+  halves are here: the `.yaml` that says WHAT, and the `.lua` that says WHEN.
 
 Its sprites are character grids, because a grid diffs pixel by pixel and reads
 in a pull request — which is what an example is for. **Yours can be PNGs**: drop

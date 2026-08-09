@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The hidden DEVELOPER tree (unlocked by the two-movement sun gesture — seven
-// quick taps to arm the star, then the click race).
+// The hidden DEVELOPER tree (unlocked by the two-movement sun gesture — sixteen
+// quick taps to arm the star, the first ten of them silent, then the click
+// race; see use-sun-charge.ts).
 //
-// The index is five doors and one instrument switch; each door's page holds ONE
+// The index is five doors and a BACK row; each door's page holds ONE
 // KIND of row (see the tree's own comment for why):
 //
 //   PLAYGROUND  the next run — the two warps, plus the terms it is carved on

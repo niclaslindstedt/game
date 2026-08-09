@@ -114,10 +114,17 @@ export function loadQuestGivers(baseDir = SHIPPED_ROOT) {
  * nothing else.
  *
  * Layout matches the errands: `conversations/<id>.yaml`, the file stem IS the
- * id. Shaped like `loadQuests`, and just as optional — a mod need not ship any.
+ * id. Shaped like `loadQuests`, and optional in the same way — an absent folder
+ * is an empty catalog rather than an error.
  *
- * @param dir  the folder of `<id>.yaml` trees (the game's
- *             `content/conversations`, or a mod's `conversations/`).
+ * **THE SHIPPED CAMPAIGN IS THE ONLY CALLER.** `scripts/generate-quests.mjs`
+ * hands it `content/conversations` and nothing else does: the mod compiler
+ * reads no conversations at all, and `mod/tools/layout.mjs` classifies a mod's
+ * `conversations/` as a STRAY so an author is told rather than ignored. The
+ * parameter stays because the loader has no business knowing which tree it is
+ * pointed at — not because a second tree exists today.
+ *
+ * @param dir  the folder of `<id>.yaml` trees — `content/conversations`.
  */
 export function loadConversations(dir = `${SHIPPED_ROOT}/conversations`) {
   const conversations = {};

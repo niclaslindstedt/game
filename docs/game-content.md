@@ -31,8 +31,12 @@ run may import `mapgen/` — the menus reach levels through
 `defs/levels/summary.ts`, because the generator would drag the whole catalog onto
 the startup path.
 
-The campaign is a hub (`objective.type: hub` — never clears, no horde, no victory)
-plus the venues, ordered by `ladder.yaml` and each level's `index`. Travel is
+The campaign is a hub (`objective.type: hub` — never clears, no horde, no
+victory) plus the venues. A mission joins the ordered campaign with
+`campaign: true` and takes its place from its own `index`; `secret: true` is the
+off-campaign venue, which is what the hub itself is (`LEVEL_ORDER` /
+`SECRET_LEVEL_ORDER` in `defs/levels/summary.ts`). What `ladder.yaml` owns is
+the per-map, per-rung mob band, not the order. Travel is
 authored on the hub as `travelDoors`, and **a road the player has not earned is
 never named** — a door with no open destination either says so in the hero's own
 voice (`unready`) or is not drawn at all.
@@ -236,8 +240,10 @@ one:
   to land a blow, and therefore never unable to earn the kill that drops him
   the replacement.
 - **~30 effective dps**, deliberately off the damage-budget line and under
-  every real weapon in the game (the opening pool bases run 3-4× it). It is the
-  last resort — just not a death sentence.
+  every real weapon in the game (the leanest opening pool base reads ~40, and
+  the ladder climbs from there — `node scripts/weapon-budget.mjs` prints the
+  figure for the exempt weapons too). It is the last resort — just not a death
+  sentence.
 
 The slot is still TYPED never-empty, and that is a statement about the type
 rather than about the player: the hundred-odd reads of `equipment.weapon`
@@ -293,10 +299,11 @@ each power does is `content/powerups.yaml`; the rules around them are:
 - **Authored at level 1, scaled at runtime** (`abilityPowerScale`, the level ramp
   × INT), so a power keeps clipping the same fraction of a level-appropriate
   healthbar all campaign.
-- **A powerup is a moment, not a resource.** The drop ladder's `abilityShare` is
-  its leanest slice, and WHICH power a drop pays is separately weighted by each
-  def's `rarity` — so the run-savers are rarer within that slice instead of
-  sharing it evenly. The merchant reads the same weights to stock and to price.
+- **A powerup is a moment, not a resource.** The drop ladder gives
+  `abilityShare` one of its leanest slices, and WHICH power a drop pays is
+  separately weighted by each def's `rarity` — so the run-savers are rarer
+  within that slice instead of sharing it evenly. The merchant reads the same
+  weights to stock and to price.
 - **A powerup's kills stay out of the menace meter** — a bomb clearing the
   screen is not the hero out-fighting the horde.
 - The NUKE is in no pool: it arrives as a mercy drop for a hero being overrun
@@ -329,8 +336,9 @@ so the once-only `greeting:` stays the meeting's and this is the trading one.
 
 Coins enter a run by **selling loot** and by **gold off the floor**, and leave
 it at the stall and on the AUTO PILOT meter (`GOLD` and
-`AUTOPILOT.coinsPerSecond` are two ends of one lever). Sell value is item level
-× tier (an order of magnitude per rung) × material.
+`AUTOPILOT.coinsPerSecond` are two ends of one lever). Sell value
+(`items/worth.ts`) is item level × tier (an order of magnitude per rung) ×
+material × make quality, and a stack crosses the counter whole.
 
 Gold has one rule worth knowing because nothing authors it: **only humanoids
 carry a purse** — read off the `locomotion` and `anatomy` the roster already
@@ -419,8 +427,8 @@ Roster in `content/companions.yaml`, engine in `engine/game/companions.ts`.
 
 A companion fights autonomously and is dressable from the bag. Its kills stay
 out of the menace meter for the same reason a powerup's do. A downed companion
-is put back on its feet only by SMELLING SALTS, which every stall stocks — the
-merchant no longer revives for free.
+is put back on its feet only by SMELLING SALTS, which every stall stocks —
+there is no free revive across the counter.
 
 ## Story items, achievements, and the trail
 

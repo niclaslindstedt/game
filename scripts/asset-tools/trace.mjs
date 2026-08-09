@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Trace a decoded reference image into a sprite object — the body of
 // `sprite-author analyze`, factored out so the round-trip it promises can be
-// asserted without spawning the CLI 1,400 times (tests/sprite_png_roundtrip_test.ts).
+// asserted once per sprite in the catalog without spawning the CLI that many
+// times (tests/sprite_png_roundtrip_test.ts).
 //
 // Two steps, both deterministic: resample the image down to the target cell
 // grid (image.mjs takes each cell's DOMINANT color, not an average), then

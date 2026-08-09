@@ -75,11 +75,12 @@ const previewDir = here("../pwa/assets-preview");
 mkdirSync(assetsDir, { recursive: true });
 if (wantSpritePreviews) mkdirSync(previewDir, { recursive: true });
 
-// PNG encoding is the pipeline's whole cost — ~1800 sprite previews plus the
-// sheets — and every file is independent of every other. sharp hands the encode
-// to libuv's threadpool, so awaiting them one at a time left the machine idle;
-// a bounded queue keeps every core busy without holding 1800 upscaled surfaces
-// in memory at once (each is built by its thunk only when its slot opens).
+// PNG encoding is the pipeline's whole cost — a preview per sprite in the
+// catalog, thousands of them, plus the sheets — and every file is independent
+// of every other. sharp hands the encode to libuv's threadpool, so awaiting
+// them one at a time left the machine idle; a bounded queue keeps every core
+// busy without holding every upscaled surface in memory at once (each is built
+// by its thunk only when its slot opens).
 // Capped at 8 rather than the core count: the encode is I/O-bound past a
 // handful of workers, and the review sheets are single surfaces hundreds of
 // megabytes wide — a queue as wide as a 32-core machine would hold all of them

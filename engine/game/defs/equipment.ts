@@ -455,9 +455,11 @@ const ENGINE_WEAPONS: Record<string, WeaponDef> = {
     // The few points are the fare for the RANGE: the sidearm answered from 260
     // px and the empty hand answers from 20, so an identical dps would have
     // been a straight nerf to the one state the mercy ladder exists to watch.
-    // It stays FAR under any real weapon — under the BRASS KNUCKLES (45) most
-    // pointedly, because a fist has to beat a weapon strapped over a fist by
-    // losing — so it is still the last resort, just not a death sentence.
+    // It stays under every real weapon — under the leanest budgeted level-1
+    // pieces (the SECURITY BATON at 39, the BOX CUTTER at 41), and under the
+    // BRASS KNUCKLES (45) most pointedly, because a fist has to beat a weapon
+    // strapped over a fist by losing — so it is still the last resort, just not
+    // a death sentence.
     damage: 14,
     cooldownMs: 600,
     // ARM'S LENGTH, and under the brass knuckles' 24 — knuckles are a weapon

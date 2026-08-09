@@ -1,4 +1,4 @@
-# Security policy for game
+# Security policy for Ada's Trail
 
 ## Supported versions
 
@@ -24,6 +24,8 @@ reporter and credit them in the release notes (unless they request otherwise).
 
 ## Scope
 
-In scope: any vulnerability in the published release of game.
+In scope: any vulnerability in a published release — the deployed site at
+<https://game.niclaslindstedt.se/>, the mobile and desktop builds, and the
+session server.
 Out of scope: vulnerabilities in third-party dependencies (please report those
 upstream).

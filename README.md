@@ -18,7 +18,7 @@ is the development environment it runs in, and
 
 > **Mods are desktop-only.** Ordinary players need a copy acquired through
 > Steam to use mods or multiplayer. Until that edition is published, a mod
-> creator may run an official downloaded desktop binary with `--modifications`
+> creator may run an official downloaded desktop binary with `--mods`
 > solely to author and test their own mod. That exception is not licensed for
 > ordinary play, other people's mods, or multiplayer. The browser PWA and
 > mobile builds do not load mods.
@@ -56,16 +56,18 @@ _in_ the game is [`docs/game-content.md`](docs/game-content.md); the plot is
 - **The engine is framework-free.** `engine/` is plain TypeScript with no DOM or
   UI-framework assumptions, so it runs in the browser, in Node and in the test
   suite.
-- **One repo, four shells.** The same built site is wrapped for the web, the App
-  Store, Steam, and a headless dedicated server for co-op.
+- **One repo, five shells.** The same built site is wrapped for the web, the App
+  Store, and Steam — twice, in `electron/` and in `tauri/` — and the engine
+  itself compiles for Node as the headless dedicated server for co-op.
 
 ## Prerequisites
 
 - **Node.js ≥ 24** — pinned in [`.nvmrc`](.nvmrc); `nvm use` picks it up.
 - **GNU make** — the canonical developer entry points.
-- Optional: `shellcheck` / `actionlint` for the shell-lint targets, and
-  Playwright for the screenshot and playtest harnesses (installed ephemerally:
-  `npm install --no-save playwright` — deliberately not a repo dependency).
+- Optional: `shellcheck` / `actionlint` for the shell-lint targets. Playwright —
+  which the screenshot, gallery and playtest harnesses drive — is a root
+  devDependency, so `npm install` brings it; its browser binaries are a separate
+  download (`npx playwright install chromium`).
 
 ## Install
 
@@ -98,13 +100,15 @@ make test                                # the full test suite
 | `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                      |
 | `make fmt` / `make fmt-check`         | Prettier format / verify                                                                    |
 | `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed) |
-| `make assets`                         | Regenerate the pixel assets (sprite atlas, tiles, UI font) + previews, then `make levels`   |
+| `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview           |
+| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it) |
 | `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                      |
 | `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                |
 | `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                 |
 | `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                |
 | `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                      |
 | `make town`                           | Render the DRIVE's town at five stops along the road to GOODCO                              |
+| `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                       |
 | `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                     |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                          |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`              |
@@ -112,6 +116,7 @@ make test                                # the full test suite
 | `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                              |
 | `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
 | `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
+| `make desktop-steam`                  | Package the RELEASE desktop build as a Steam depot (`desktop-dist` for a plain download)    |
 | `make tauri` / `make tauri-test`      | The second desktop shell — see `tauri/README.md` and `docs/desktop-shells.md`               |
 | `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)   |
 | `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                 |
@@ -198,7 +203,7 @@ The playtest harness drives the actual app in headless Chromium with the
 autoplay bot, so you see your mod as a player does — sprites, sounds, HUD:
 
 ```sh
-npm install --no-save playwright              # once — deliberately not a repo dep
+npx playwright install chromium               # once — the browser, not the package
 (cd pwa && npx vite --port 5199 &)            # the dev server, once
 node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
 ```
@@ -225,28 +230,25 @@ macOS has no beside-the-app folder by design: an installed app sits in
 after any subscriptions so the one you just added wins its clashes.
 
 **Mods load in a desktop build only** — the browser and mobile builds have no
-Workshop and no filesystem to read a mod from. Ordinary players may use mods
-only with a game license acquired through Steam. Before that edition is
-published, a mod creator may launch an official downloaded desktop binary with
-`--modifications` solely to create, validate, and test their own mod; the
-parameter does not authorize ordinary play, other people's mods, or
-multiplayer.
+Workshop and no filesystem to read a mod from. Who may play one, and the narrow
+authoring exception before the Steam edition ships, is [License](#license)
+below.
 
 ## Configuration
 
 Build-time knobs and the developer surfaces the instruments above rely on:
 
-| Knob                         | Effect                                                                                                                              |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` locally                                                       |
-| `VITE_CHARACTER_SIGNING_KEY` | HMAC key signing exported character archives so hand-edited saves fail to re-import                                                 |
-| `?debug`                     | Debug-level output, the in-run FPS meter, and the live state as `window.__game` (plus the `window.__mods` hook the harness uses)    |
-| `?level=<id>`                | Start on a specific catalog level instead of the story default                                                                      |
-| `?seed=<n>`                  | Pin the run's layout seed so a retry reproduces the same carve                                                                      |
-| `?scenario=<json>`           | Stage a fresh run into an exact situation — hero position, vitals, gear, spawned mobs                                               |
-| `?cutscene=<id>`             | The cutscene workbench: loop one scene for authoring iteration                                                                      |
-| Hidden DEVELOPER menu        | Tap the title screen's sun seven times — unlocks level select, the arsenal and effects galleries, and a debug toggle under SETTINGS |
-| `GIS_ENABLE_MODS` et al.     | Desktop packaging capabilities — see the `desktop-steam` / `desktop-dist` targets in the [`Makefile`](Makefile)                     |
+| Knob                         | Effect                                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` locally                                                                                       |
+| `VITE_CHARACTER_SIGNING_KEY` | HMAC key signing exported character archives so hand-edited saves fail to re-import                                                                                 |
+| `?debug`                     | Debug-level output, the in-run FPS meter, and the live state as `window.__game` (plus the `window.__mods` hook the harness uses)                                    |
+| `?level=<id>`                | Start on a specific catalog level instead of the story default                                                                                                      |
+| `?seed=<n>`                  | Pin the run's layout seed so a retry reproduces the same carve                                                                                                      |
+| `?scenario=<json>`           | Stage a fresh run into an exact situation — hero position, vitals, gear, spawned mobs                                                                               |
+| `?cutscene=<id>`             | The cutscene workbench: loop one scene for authoring iteration                                                                                                      |
+| Hidden DEVELOPER menu        | The title sun's two-movement gesture (sixteen taps to arm, then the click race) puts a row at the foot of SETTINGS: PLAYGROUND, CHEATS, BALANCE, VISUALS, GALLERIES |
+| `GIS_ENABLE_MODS` et al.     | Desktop packaging capabilities — see the `desktop-steam` / `desktop-dist` targets in the [`Makefile`](Makefile)                                                     |
 
 Full reference: [`docs/configuration.md`](docs/configuration.md).
 
@@ -320,10 +322,10 @@ The repository is licensed under
 [PolyForm Noncommercial 1.0.0 with Ada's Trail feature terms](LICENSE). Those
 additional terms reserve player use of **mods and multiplayer** for people who
 have acquired the game through Steam. Downloading a binary, cloning or building
-the source, or using `--modifications` does not create that player license.
+the source, or using `--mods` does not create that player license.
 
 The narrow exception is for a mod creator: they may run an official downloaded
-Windows, macOS, or Linux binary with `--modifications` solely to author,
+Windows, macOS, or Linux binary with `--mods` solely to author,
 validate, and test their own mod. It does not cover ordinary play, other
 people's mods, or multiplayer. The Steam edition is not published yet.
 

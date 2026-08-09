@@ -24,8 +24,8 @@
 //   window.__scenario(spec)   — stage a ring of targets, a weapon, and high stats
 // (all documented in docs/configuration.md).
 //
-// Playwright is intentionally NOT a repo dependency; install it ephemerally:
-//   npm install --no-save playwright
+// Playwright comes with `npm install`; only its browser binaries are separate:
+//   npx playwright install chromium
 // Usage (from pwa/, dev server on :5199 with assets built):
 //   npm run assets && npx vite --port 5199 &
 //

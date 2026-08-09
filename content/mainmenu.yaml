@@ -357,7 +357,7 @@ screens:
           off: THE TRIP IS A STRAIGHT CUT - NO DRIVING
       # Sits under CUTSCENES because it is the same kind of answer — whether the
       # game stops to show you something. Deliberately NOT beside the blood
-      # knobs on VIDEO: those decide what a death LOOKS like, this decides
+      # knobs on GORE: those decide what a death LOOKS like, this decides
       # whether there is a scene at all.
       - id: death-scenes
         label: DEATH SCENES
@@ -490,8 +490,8 @@ screens:
     parent: settings
     tone: player
     form: settings
-    # Eight switches and a reset — longer than VIDEO itself, so it caps and
-    # scrolls under a header and help line that stay put.
+    # Eight switches and a reset — longer than any other settings page, so it
+    # caps and scrolls under a header and help line that stay put.
     scroll: true
     rows:
       - id: blood

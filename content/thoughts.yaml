@@ -411,7 +411,7 @@ thoughts:
   # Downing the first COWBOT: they're TRUST ME BRO hands — the same brain that took
   # his job back home, wearing spurs. The two-part beat orders itself with
   # `after` (see the town, then down a hand).
-  boot_hill_hosts:
+  boot_hill_hands:
     speaker: "{HERO}"
     portrait: hero
     pages:

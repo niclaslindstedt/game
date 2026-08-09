@@ -19,9 +19,9 @@ it at both ends of the session.
 | Piece | Role |
 | --- | --- |
 | `engine/game/bot/index.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/engine/bot_test.ts`) and the browser harness both drive THIS code |
-| `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`GameScreen.tsx`): it dismisses the intro, steers, jumps, and spends level-ups itself |
+| `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`pwa/src/game/game-screen/bot-driver.ts`): it dismisses the intro, steers, jumps, and spends level-ups itself |
 | `pwa/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
-| `?debug` URL param | Exposes the live `GameState` as `window.__game` (set in `GameScreen.tsx`) — the harness's (and your) window into the simulation |
+| `?debug` URL param | Exposes the live `GameState` as `window.__game` (stamped in `pwa/src/game/game-screen/run-setup.ts`) — the harness's (and your) window into the simulation |
 | `pwa/assets-preview/playtest/` | Screenshots land here (gitignored) |
 
 ## Running
@@ -50,6 +50,11 @@ Strategies:
 - `survivor` — plays the whole level like a survivors run: farms the horde,
   detours for pickups, pushes for the boss once leveled. The default probe
   for "wander the level and see everything" checks (art passes, tiles).
+- `aggro` / `flee` / `balanced` — the three POSTURES, the same horde-survival
+  read at three aggression levels. `balanced` is exactly `survivor` (kept as an
+  alias); `aggro` closes and holds tight, tolerating more bodies before it
+  punches out; `flee` holds far and disengages early. The full list is
+  `BOT_STRATEGIES` in `engine/game/bot/state.ts` — eight names.
 
 The bot prints stats JSON (`outcome`, `hp`, `kills`, `timeMs`, damage in
 and out). **Look at the screenshots with the Read tool** (`title.png`,

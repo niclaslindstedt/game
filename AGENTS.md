@@ -54,6 +54,7 @@ make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews (runs make levels)
 make levels        # recompile every content catalog from content/*.yaml
 make lua-vm        # compile engine/lib/lua/ for the SHIPPED mod compiler
+make unique-check  # audit every named relic — bases, ilvl, armor ladder, drop homes (CI gate)
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
@@ -229,7 +230,7 @@ through integer scale tiers. **How the picture is made at all — the world
 projection, the post effects, the canvas and its tiers, how bodies carry
 themselves, how loot advertises itself — is `docs/rendering.md`.**
 
-**Five layers, one dependency direction** — each may import only from the ones
+**Six layers, one dependency direction** — each may import only from the ones
 above it, and `docs/architecture.md` has the module-by-module map:
 
 - **`engine/` — the simulation and its catalogs.** Framework-free TypeScript:
@@ -304,7 +305,7 @@ nothing reads the catalog for its own level. → `mapgen-improvement`, `level-de
 
 **NOTHING OUTSIDE A RUN MAY IMPORT `mapgen/`.** The menus reach levels through
 `defs/levels/summary.ts`; pulling the generator onto the startup path puts the
-whole level catalog and the carve inside the 200 KB budget.
+whole level catalog and the carve inside the 170 KB budget.
 
 **A READ OF "THE HERO" IS ONE OF TWO KINDS, AND KNOWING WHICH IS THE JOB.** A
 PRIVATE read — the bag, the purse, the build, the talents, the worn kit — is
@@ -426,7 +427,7 @@ is a desync that presents as a replication bug.
 
 **A NEW VERB THE APP MAY RUN AGAINST A RUN EXISTS TWICE, ON PURPOSE.**
 `engine/game/commands.ts` (arg shapes + the `case`) **and** `COMMANDS` in
-`server/wire/protocol.ts` (the literal copy the allow-list reads, because that
+`server/wire/frames.ts` (the literal copy the allow-list reads, because that
 leaf is read from the startup path where the budget forbids `@game/core`); the
 drift test enforces the pair, then bump `PROTOCOL_VERSION`. Arguments are
 SCALARS only. Call it from the app through `pwa/src/game/run-commands.ts`, never
@@ -598,7 +599,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                                 | `enemy-design`                          |
 | An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                                | `quest-design`                          |
 | A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                        | `update-story`                          |
-| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                                  | `pixel-assets`, `art-improvement`       |
+| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor \| wall`)                                                          | `pixel-assets`, `art-improvement`       |
 | A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                     | `sound-effects`                         |
 | The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                  | `menu-design`                           |
 | AN IN-GAME WINDOW — the pause menu, the bag's frame, a modal  | `content/menus/<id>.yaml`, `modals/<id>.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`; its code-backed insides in `pwa/src/game/menus/` | `menu-design`, `ui-review`              |
@@ -643,7 +644,8 @@ order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.m
 | ------------- | --------------------------------------------------------- | --------------------------- | ------------------------------------------------------ | ----------------------------- |
 | Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`      | `engine/generated/scripts.ts`                          | `script_parity_test.ts`       |
 | Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`        | `engine/generated/items.ts`                            | `item_roundtrip_test.ts`      |
-| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `engine/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
+| Sets          | `content/sets.yaml`                                       | `generate-sets.mjs`         | `engine/generated/sets.ts`                             | `set_roundtrip_test.ts`       |
+| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `engine/generated/{cutscenes,thoughts,story-items}.ts` | `story_roundtrip_test.ts`     |
 | Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`      | `engine/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
 | Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`     | `engine/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
 | Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`       | `pwa/src/game/assets/`                                 | —                             |
@@ -674,7 +676,7 @@ schema is the odd one out in kind rather than in authority: it has no field list
 because it validates by COMPILING the file with the engine's own Lua VM and
 looking at what the module exported. A new field
 is added THERE, with its rule and its error message, before any generator reads
-it; `CONTRIBUTING.md` indexes the set against the file each validates.
+it; `mod/FORMAT.md` indexes the set against the file each validates.
 
 Five artifacts are **committed and drift-tested against a fresh build**, so they
 are regenerated in the same commit as the change that moves them:
@@ -832,9 +834,10 @@ or not at all: **the NAME** (id, display name, file stem, sprite stem); **the
 VOICE** (dialogue, last words, barks, lore — a catchphrase or a verifiable
 biographical fact is identification on its own); **the ART** (the grid AND its
 `subject` slots — a silhouette identifies without a face, and a brand's COLOUR
-SEQUENCE is protectable with no name attached); **the DESCRIPTION** (which ships
-in the library AND drives the next regeneration, so a cleaned grid with a dirty
-`subject` grows its likeness straight back).
+SEQUENCE is protectable with no name attached); **the DESCRIPTION**, which is
+two surfaces — a def's own `lore`/`description` SHIPS, in the library, and a
+sprite's `subject` DRIVES THE NEXT REGENERATION, so a cleaned grid with a dirty
+`subject` grows its likeness straight back.
 
 **NAME THE ROLE, NOT THE PERSON** — THE FOUNDER, THE MODERATOR, THE FULFILLER.
 The archetype is the funnier half anyway, and it does not date.
@@ -919,8 +922,9 @@ carries the workflow, the quality bar and the traps for its subject.
 | `debug-game`          | Investigating a gameplay/render/input/audio bug                       |
 | `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball         |
 | `menu-design`         | The title menu, a settings row, the developer menu, an in-game window |
-| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports     |
+| `ui-review`           | A fit-and-finish pass over the UI at the ten reference viewports      |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set                |
+| `store-art`           | Storefront KEY ART — capsules, feature graphics, icons, promo images  |
 | `update-story`        | Writing, rewriting or retoning ANY line the game speaks               |
 | `library-improvement` | Building or improving the generated `/library/` site                  |
 

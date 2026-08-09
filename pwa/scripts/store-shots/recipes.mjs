@@ -350,8 +350,10 @@ const inOrder =
  * middle, far — each its own ring entry, so the density is even from the
  * hero's shoulders out to the screen edge.
  *
- * Distances are world units; the phone viewport is ≈422×195 of them, so a
- * ring past ~160 is off-screen and wasted.
+ * Distances are world units; the phone viewport is ≈422×260 of them (the
+ * 422×195 CANVAS with its depth axis divided by the pitch — render/tilt.ts
+ * `worldViewRect`), so ~211 to the side edge and ~130 to the top: a ring past
+ * ~200 is off-screen and wasted.
  *
  * @param enemy  enemy def id
  * @param count  total mobs to place
