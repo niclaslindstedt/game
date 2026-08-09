@@ -1715,9 +1715,42 @@ export function generateLevel(
   // floor, and the boss needs room to be fought in.
   // …and the PREFABS' own furniture, which is not a rank at all — it is one
   // prop per authored offset, riding the same deterministic placement.
+  // …and the ANCHORED FURNITURE, which is neither: a piece an object authored
+  // `at` an anchor instead of a density, stamped exactly there on every seed
+  // (see `MapObject.at`). Same one-prop line, same reason as the prefabs'.
+  //
+  // Deterministic and rng-free, like the landmarks and the lamps above it, so
+  // that adding a bench to a map cannot shift a single roll after it.
+  const anchored: NonNullable<LevelDef["propLines"]> = [];
+  for (const o of bp.objects) {
+    if (o.at === undefined) continue;
+    if (o.type !== "obstacle" && o.type !== "decor") continue;
+    const base = anchorPos(o.at);
+    const pos = vec(
+      Math.min(width, Math.max(0, base.x + (o.offset?.x ?? 0))),
+      Math.min(height, Math.max(0, base.y + (o.offset?.y ?? 0))),
+    );
+    const line: NonNullable<LevelDef["propLines"]>[number] = {
+      sprite: o.sprite ?? o.kind ?? o.id,
+      from: pos,
+      // A COPY, never the same vector twice — two fields of one def sharing a
+      // mutable point is a trap waiting for the first thing that writes to it.
+      to: vec(pos.x, pos.y),
+      spacing: 1,
+    };
+    // Decor is walked over; anything else is furniture and stands in the way.
+    if (o.type !== "decor") {
+      line.collide = true;
+      if (o.half) line.half = vec(o.half.x, o.half.y);
+      else line.radius = o.radius ?? 8;
+      if (o.jumpable) line.jumpable = true;
+    }
+    anchored.push(line);
+  }
   const rows = [
     ...buildRows(bp, grid, endpoints, rng),
     ...buildPrefabProps(bp, grid),
+    ...anchored,
   ];
   if (rows.length > 0) def.propLines = rows;
   const placedItems = buildPlacedItems(base, grid, depth, offMap, rng);

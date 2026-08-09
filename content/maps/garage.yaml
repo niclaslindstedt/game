@@ -334,10 +334,26 @@ objects:
       flicker: 0.18
 
   # ── THE WORKBENCH WORLD (furniture, never loot) ──────────────────────────
-  # Furniture stands AGAINST THE WALLS (`edge`), the way a real garage keeps
-  # its floor open for the car; the densities are sized to the snug bay
-  # (density is per-million px², and the bay is ~22k), so each line lands
-  # about its count.
+  # PLACED, NOT SCATTERED — this is the STATIC map, and the furniture is the
+  # last thing on it that was still being rolled. Each piece stands `at: spawn`
+  # plus a nudge, which puts the whole bench world along the BAY'S NORTH WALL,
+  # in a line with the chest, on every visit forever.
+  #
+  # It was `density` + `edge: true` and that was wrong twice over. Wrong in
+  # PRINCIPLE, because a home is the one place in the game whose furniture the
+  # player is supposed to learn — a bench that moves between errands is not a
+  # bench, it is set dressing. And wrong in PRACTICE, because the scatter's
+  # honest answer in a bay this snug (224×140, most of it inside the landmark
+  # clearance around the car, the chest and the seam) was NOTHING AT ALL: every
+  # seed placed zero of them, so the room authored a workbench world and shipped
+  # bare cement.
+  #
+  # The offsets are off the hero's own landing rather than absolute, for the
+  # reason the chest's are (see `cache` above): the bay's north wall runs along
+  # the top of his chamber, so "a lift off where he lands" survives the floor
+  # plan moving in a way an authored x/y never would. −40 is the chest's own
+  # lift, which is what puts the four pieces on one line.
+  #
   # NO TOOLBOXES IN HERE, of either kind: the rolling `tool_chest` against the
   # wall and the `parts_bin` heaped on the floor are both gone. They were the
   # only props on the lot that read as CONTAINERS — a box with its lid off and
@@ -348,15 +364,22 @@ objects:
   - id: workbench
     type: obstacle
     radius: 8
-    density: 50
-    areas: [bay]
-    edge: true
-  - id: part_rack
+    at: spawn
+    offset: { x: -60, y: -40 }
+  # Two racks, east of the chest — separate entries because an object id is the
+  # palette's key and each anchored piece is one entry; they share the sprite.
+  - id: part_rack_mid
     type: obstacle
+    sprite: part_rack
     radius: 6
-    density: 50
-    areas: [bay]
-    edge: true
+    at: spawn
+    offset: { x: 50, y: -40 }
+  - id: part_rack_east
+    type: obstacle
+    sprite: part_rack
+    radius: 6
+    at: spawn
+    offset: { x: 80, y: -40 }
   # …and the floor wears the years: oil where the car stands, stains, loose
   # cable, papers and scorch — a lot of garbage, none of it loot.
   - id: oil_patch

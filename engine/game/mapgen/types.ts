@@ -235,7 +235,25 @@ export type MapObject = {
    * DISTRICT is named by the district instead (`MapArea.doors`), because that
    * is a fact about the rooms, not about the door.
    *
-   * `light`: which carved feature the lamp is pinned to. */
+   * `light`: which carved feature the lamp is pinned to.
+   *
+   * `obstacle` / `decor`: THE PIECE IS FURNITURE RATHER THAN SCATTER — it
+   * stands at this anchor (plus `offset`), once, on every seed, and it takes
+   * `density` off the table: a thing is placed by rule or rolled, never both.
+   *
+   * It exists because a scatter cannot say WHERE. `edge: true` gets a piece
+   * somewhere against some wall of some cell of the right district, which is
+   * the right answer for a factory's hardware and the wrong one for a bench a
+   * man works at every evening — that bench is at the top of HIS garage, and it
+   * is there when he comes home. (In a bay as snug as the garage's, hemmed in
+   * by landmark clearance, the scatter's honest answer to `edge` is often
+   * NOTHING AT ALL, which is a room that authored furniture and shipped an
+   * empty floor.)
+   *
+   * It is emitted as a one-prop `propLine`, which is the engine's only
+   * deterministic placement — see `buildPrefabProps`, which stamps a prefab's
+   * own contents the same way for the same reason.
+   */
   at?: MapAnchor;
   /**
    * `light`: how far (world px) the lamp stands from the anchor it is pinned
@@ -243,6 +261,11 @@ export type MapObject = {
    * lamp reaches the far side of a doorway or the middle of the bay it lights,
    * and it stays true on every seed the way a fixed coordinate never could.
    * Omitted = right on the anchor.
+   *
+   * `obstacle` / `decor`: the same nudge off the same anchors, and the same
+   * reason — a bench against the north wall is "a lift off the hero's own
+   * landing", which survives the floor plan moving in a way an authored x/y
+   * never does.
    */
   offset?: { x: number; y: number };
   /**

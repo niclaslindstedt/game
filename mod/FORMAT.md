@@ -213,6 +213,28 @@ Three rules to author by:
 - **A count is a DENSITY.** Densities are per 1,000,000 world px², so the
   dressing follows the floor a district's cells actually rolled rather than
   piling up in a small one and leaving a big one bare.
+- **…UNLESS THE PIECE IS FURNITURE, which is `at` instead.** An `obstacle` or a
+  `decor` may give a carved anchor (`spawn`, `goal`, `home`, `counter`, `stall`)
+  and an `offset` in place of a density, and it then stands exactly there, once,
+  on every seed — colliding if it is an obstacle. Use it for the pieces a player
+  is meant to LEARN rather than notice: the bench in a home, the counter in a
+  shop. Two things it will not do — carry a density as well (a piece is placed
+  by rule or rolled, never both), or take an `areas`/`edge` list, since the
+  anchor has already said where it stands.
+
+  ```yaml
+  - id: workbench
+    type: obstacle
+    radius: 8
+    at: spawn # anchored to the hero's own landing…
+    offset: { x: -60, y: -40 } # …and a nudge, which puts it on the north wall
+  ```
+
+  The offset is against an ANCHOR rather than an absolute x/y on purpose: a
+  carve has no authored coordinates, so "a lift off where the hero lands" stays
+  true on every seed and a written coordinate does not. Reach for a `prefab`
+  instead when the furniture wants its own ROOM around it.
+
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.
