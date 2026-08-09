@@ -54,7 +54,7 @@ node scripts/simulate-run.mjs --difficulty medium,nightmare,jesus  # the critica
 node scripts/simulate-run.mjs --difficulty easy --level goodco_hq --full
 node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
-node scripts/simulate-run.mjs --level oasis --difficulty hard --start-level 20 --mortal  # survival read: deaths restart the level, abort at 10
+node scripts/simulate-run.mjs --level boot_hill --difficulty hard --start-level 20 --mortal  # survival read: deaths restart the level, abort at 10
 node scripts/simulate-run.mjs --class all                # MATRIX every build (melee/ranged/magic/balanced) head to head, in parallel
 node scripts/simulate-run.mjs --class all --jobs 1       # …one spec at a time (identical reports, just slower)
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
@@ -151,10 +151,12 @@ start→end` per rung and the final sweep level against a `--compare` baseline.
 
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 
-`--balance` applies the SAME ten runtime multipliers the DEVELOPER → BALANCE
-subpage exposes (`BalanceTuning` in `engine/game/tuning.ts`: `xpGain`,
-`mobHp`, `mobDamage`, `hordeSize`, `dropRate`,
-`equipmentShare`, `gearQuality`, `uniqueDrops`, `menaceGain`) — as `key=×`
+`--balance` applies the SAME runtime multipliers the DEVELOPER → BALANCE
+subpage exposes — all 22 of `BalanceTuning` (`engine/game/tuning.ts`): `xpGain`,
+`levelingSlowdown`, `endgameSteepen`, `deathXpLoss`, `restXp`, `mobArmor`,
+`talentPower`, `knockback`, `mobHp`, `mobDamage`, `staminaDrain`, `hordeSize`,
+`dropRate`, `equipmentShare`, `repairDrops`, `gearQuality`, `uniqueDrops`,
+`menaceGain`, `menaceClearance`, `tempo`, `playerSpeed`, `mobSpeed` — as `key=×`
 pairs, where `1` is the shipped tuning and `0` turns a system off. The sim
 calls `setBalanceTuning` for the run and restores the prior tuning after, so
 you can measure a candidate balance with **no rebuild and no config edit**:
@@ -248,8 +250,9 @@ pacing/loot reads come from the immortal instrument.
 
 ### The maps — carved, one size, no knob
 
-Every mission's map is CARVED from its blueprint per run (see `AGENTS.md`
-§ GENERATED MAPS), at the ONE size that blueprint prices — there is no map knob
+Every mission's map is CARVED from its blueprint per run (the
+`mapgen-improvement` skill is the design statement), at the ONE size that
+blueprint prices — there is no map knob
 to sweep. The carve is the run's own (same seed → same map), so two sweeps on
 the same seeds are a like-for-like read:
 

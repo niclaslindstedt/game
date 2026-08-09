@@ -921,7 +921,7 @@ carries the workflow, the quality bar and the traps for its subject.
 | `debug-game`          | Investigating a gameplay/render/input/audio bug                       |
 | `test-scenario`       | Staging an EXACT in-game situation to repro, probe or eyeball         |
 | `menu-design`         | The title menu, a settings row, the developer menu, an in-game window |
-| `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports     |
+| `ui-review`           | A fit-and-finish pass over the UI at the ten reference viewports      |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set                |
 | `store-art`           | Storefront KEY ART — capsules, feature graphics, icons, promo images  |
 | `update-story`        | Writing, rewriting or retoning ANY line the game speaks               |
