@@ -46,6 +46,7 @@ import {
   driveWindscreenGore,
   type DriveFxState,
 } from "./drive-fx.ts";
+import { playHudEvent } from "../hud/sounds.ts";
 import { lampHeadLift } from "./scenery.ts";
 import {
   bodyHitSound,
@@ -404,9 +405,31 @@ export function drainDrive(
       driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
       playDriveSound(synth, BREAKDOWN_SOUND);
     }
+    // ── THE CLOCK ─────────────────────────────────────────────────────────
+    // The two moments the STOPWATCH has, and the only sounds this road makes
+    // that are not something happening to the car. They go through the HUD's
+    // own catalog (`content/hud/events.yaml`) rather than the drive's sound
+    // bank, because they are the CABINET talking: the town arriving in front of
+    // the wagon is the leg starting to be scored, and the finish line is it
+    // stopping. Everything else in `playDriveSound` above is steel, glass or a
+    // person.
+    if (event.type === "cityGate") playHudEvent("drive.clockStart");
+    if (event.type === "arrived") playHudEvent("drive.clockStop");
     if (!say) continue;
     if (event.type === "monologue") say("drive_out_welfare", drive.ms);
     if (event.type === "breakdown") say("drive_broke_down", drive.ms);
+    // ── THE RUN-IN'S TWO LINES ────────────────────────────────────────────
+    // The place, and then the door. The first is said through the windscreen
+    // with the halls still growing in it; the second is said standing on the
+    // tarmac beside a car with its engine off, and it is a QUESTION — the one
+    // the level on the other side of the fade is the whole answer to.
+    //
+    // They are the only lines on this road that are not about the car, the
+    // clock or the road surface, and they are allowed to be for the same reason
+    // the opening's are: there is nobody in the picture. He is not failing to
+    // notice anybody here; there is genuinely nobody left to notice.
+    if (event.type === "goodco") say("drive_arrive_goodco", drive.ms);
+    if (event.type === "atTheDoor") say("drive_arrive_door", drive.ms);
   }
 }
 

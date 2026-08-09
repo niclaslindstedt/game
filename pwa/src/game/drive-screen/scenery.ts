@@ -31,7 +31,10 @@ import {
   roadBandEdges,
   DRIVE,
   FLEET,
+  type DriveVehicleDef,
 } from "@game/core";
+
+import type { LightBody } from "../render/vehicles.ts";
 
 /**
  * THE CROWD's bodies — the twenty people the welfare did not reach.
@@ -333,4 +336,43 @@ export function roadBands(): { top: number; bottom: number; lanes: number[] } {
     lanes.push(top + i * DRIVE.laneWidth);
   }
   return { top, bottom, lanes };
+}
+
+/**
+ * WHERE A MACHINE'S LAMPS ARE — how far its body reaches from its own centre,
+ * and how high off the road the lights burn.
+ *
+ * IT CANNOT BE READ OFF THE ART, which is the thing that makes this a table
+ * rather than a derivation. Every vehicle on this road is authored on the SAME
+ * 48x26 canvas — a bicycle drawn small in the middle of one, a bus filling one —
+ * so the sprite's dimensions are identical for a pushbike and a lorry and say
+ * nothing at all about either. The lamps went on the wagon's own numbers for as
+ * long as the wagon was the only thing that had any, which put a delivery
+ * moped's headlight cone a body and a half out in front of the bike and its tail
+ * glow the same distance behind: two loose smears of light with a moped riding
+ * between them.
+ *
+ * IT LIVES BESIDE `RIDER_SEATS` because it is the same kind of fact and the same
+ * kind of table: where on THIS machine's art does a thing sit. Only the machines
+ * that are not car-shaped need an entry; everything with a roof is the default,
+ * which is the hero's own wagon.
+ */
+export const VEHICLE_LAMPS: Readonly<Record<string, LightBody>> = {
+  // The open machines, in the fleet's own order. `halfPx` is the drawn body's
+  // reach from its centre — a shade more than the collision extent, because a
+  // lamp is bolted to the very end of the thing — and `liftPx` is the height the
+  // lamp burns at, which on all of these is about the top of the wheel.
+  traffic_motorcycle: { halfPx: 12, liftPx: 7 },
+  traffic_scooter: { halfPx: 10, liftPx: 7 },
+  traffic_ebike: { halfPx: 11, liftPx: 7 },
+  traffic_bicycle: { halfPx: 10, liftPx: 6 },
+  traffic_delivery_moped: { halfPx: 11, liftPx: 7 },
+  // …and the skateboard has none at all, so it never asks (`DriveVehicleDef.lights`).
+};
+
+/** What this vehicle's lamps are bolted to. Anything not in the table above is
+ * a body with a roof on it, which is the hero's own wagon to within a pixel —
+ * and that is exactly what `drawLightCones` draws when handed nothing. */
+export function lightBody(def: DriveVehicleDef): LightBody | undefined {
+  return VEHICLE_LAMPS[def.id];
 }

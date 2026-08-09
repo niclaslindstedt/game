@@ -61,28 +61,35 @@ thoughts:
   # (`DriveEvent`) rather than through `placeThoughts`.
   #
   # THE SHAPE OF THE SET IS THE JOKE, and it only works if nothing is added
-  # between the ends of it. He worries about the people BEFORE he meets any,
-  # and afterwards he reports on the ROAD SURFACE, the CAR, the CLOCK, the
+  # between the ends of it. He says what he thinks of the people BEFORE he meets
+  # any, and afterwards he reports on the ROAD SURFACE, the CAR, the CLOCK, the
   # OTHER DRIVERS and the COUNCIL'S LIGHTING — the four things a man notices on
   # a commute, and not one of them a person. A line acknowledging a body would
   # turn the bit from a joke into a confession, so there isn't one, and there
   # must never be one.
   #
-  # TWO PLACES, AND THE SPLIT MATTERS. The first two are BARKED over a car that
-  # keeps moving — nothing on that screen stops for him to talk. The
-  # `drive_arrive_*` set is not said on the road at all: the drive picks one
+  # TWO PLACES, AND THE SPLIT MATTERS. The road's own lines are BARKED over a car
+  # that keeps moving — nothing on that screen stops for him to talk. The
+  # `drive_arrive_*` VERDICT is not said on the road at all: the drive picks one
   # (`driveVerdict`) and hands it to the arriving run, which speaks it as the
   # LAST page of that venue's opening monologue, standing beside the car.
   #
-  # THE ROAD AHEAD, said on an empty stretch well short of the crowd — the only
-  # place that promise costs him nothing. Read once ever, not once per trip: a
-  # man promising to be careful for the fourth time is a much worse joke.
+  # WHAT HE IS DOING OUT HERE, said on the OUTSKIRTS — before the town, before
+  # the crowd, on a road with nothing on either side of it. Two pages and they do
+  # two different jobs. The first is the errand, which is the only time in the
+  # whole leg the player is told why any of this is happening. The second is his
+  # opinion of the people he is about to drive through, and it is the sourest
+  # thing he says in the game: they beg, they are pushy about it, and — he is
+  # quite clear on this — they did not get what he got. He is on the welfare. He
+  # is a man with nothing being smug at people with less, three thousand pixels
+  # before he starts killing them at a hundred and twenty, and he will never
+  # mention either half again.
   drive_out_welfare:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
-      - - THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
+      - - I NEED TO HURRY TO GOODCO AND GET THE PART.
+      - - THE PEOPLE IN TOWN CAN BE QUITE AGGRESSIVE IN THEIR BEGGING. MANY OF THEM ARE NOT ON WELFARE LIKE ME.
   # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
   # road — never the thing that actually broke it.
   drive_broke_down:
@@ -90,6 +97,35 @@ thoughts:
     portrait: hero
     pages:
       - - COME ON. NOT HERE. NOT TONIGHT.
+  # ── THE RUN-IN ────────────────────────────────────────────────────────────
+  # Past the finish line the clock stops, the town stops, and the wheel comes off
+  # the player: the car rolls the last stretch on its own, past GOODCO's fence
+  # with the data halls and the ship on its gantry standing behind them. Two
+  # lines, barked exactly like the road's, and they are the only ones on this
+  # whole leg that are not about the car, the clock or the road surface.
+  #
+  # THEY ARE ALLOWED TO BE, and the reason is the reason the opening's are: there
+  # is nobody in the picture. He is not failing to notice anybody here — there is
+  # genuinely nobody left to notice, which is its own remark about the place.
+  #
+  # THE SIGHT OF IT. Flat, and deliberately: a man arriving at work.
+  drive_arrive_goodco:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THERE'S GOODCO.
+  # …AND THE QUESTION, said standing on the tarmac beside a car with its engine
+  # ticking. It is the last thing the minigame does and it is a SET-UP: GOODCO's
+  # front door has no key and nothing in the game unlocks it
+  # (`engine/game/arrivals.ts`), so the level on the other side of the fade is
+  # the entire answer to this sentence. He has driven a hundred and twenty miles
+  # an hour through a town to arrive at a locked door, and it has not once
+  # occurred to him to wonder about that until now.
+  drive_arrive_door:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - OK. SO HOW DO I GET IN?
   # ── THE ARRIVAL VERDICT ───────────────────────────────────────────────────
   # Seven readings of one trip, in `driveVerdict`'s own priority order: the car
   # first, then the two kinds of somebody else's property, then the clock, and

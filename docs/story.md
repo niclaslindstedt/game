@@ -99,23 +99,53 @@ under the roll-up on foot anyway, leaving the car where it stands, he catches
 himself at it — Ada is not down the street; get in the car.
 
 **The drive to GOODCO.** The earthbound leg is not a cut — it is played, both
-ways, and it is the blackest joke in the game. The road out of the block runs
-four lanes through what is left of the neighbourhood: shuttered trades, boarded
-windows, and a lit one every third house where somebody's welfare still lands.
-It does not stay that way for the whole hour. **The street gets better the
-further from his own front door he drives** — the boards come off, the fences go
-back up, the fly-tipping stops, and by the last mile it is clipped hedges,
-glass frontages and a car park with a barrier on it, because that is what is
-next to GOODCO. Nobody remarks on it and nothing marks where it changed; the
+ways, and it is the blackest joke in the game. **It has three stretches and the
+shape is the story.**
+
+**It opens outside the town.** An empty road at night with one pavement on the
+near side and nothing at all on the far one: no houses, nobody on the tarmac,
+just a cyclist and somebody's dinner on the back of a moped going the other way.
+The picture is already moving before the car is in it — the wagon comes into
+frame from behind and settles into the lane, which is the one moment in the whole
+game where the player watches the hero's own car arrive rather than driving it.
+Then he says the only two things he will say about any of this before it starts:
+that he has to hurry, because the part is at GOODCO; and that the people in town
+beg, and are pushy about it, and are — he is clear on this — mostly not on the
+welfare like him. He is a man with nothing being smug at people with less, on an
+empty road, several thousand pixels before he starts killing them at a hundred
+and twenty. He will never mention either half again.
+
+**Then the town arrives**, all at once and in front of him: the houses come over
+the horizon, the far pavement appears, the traffic fills the lanes, the crowd is
+on the tarmac — and a stopwatch starts in the corner of the screen, because from
+here to the finish line is the part he is being scored on. The road out of the
+block runs four lanes through what is left of the neighbourhood: shuttered
+trades, boarded windows, and a lit one every third house where somebody's welfare
+still lands. It does not stay that way for the whole hour. **The street gets
+better the further from his own front door he drives** — the boards come off, the
+fences go back up, the fly-tipping stops, and by the last mile it is clipped
+hedges, glass frontages and a car park with a barrier on it, because that is what
+is next to GOODCO. Nobody remarks on it and nothing marks where it changed; the
 hero has driven this road every working day of his life. That the block he lives
 on is the worst thing on it is simply the shape of the commute.
 The ones the welfare did not reach are out on the tarmac, because a road is
 where the cars are and a car is where the money is, and they walk straight at
-him with their hands out. There are far too many of them to miss. Before he meets the
-first one he has the decent thought — these are his neighbours, they got
-nothing, mind how you go — and he says it to himself at the wheel, without
-slowing down, which is the only place a promise like that costs nothing. Then he
+him with their hands out. There are far too many of them to miss. Then he
 drives through them at a hundred and twenty and never mentions it again.
+
+**And then the town stops.** The clock stops with it, the wheel comes off him,
+and the car rolls the last stretch on its own past GOODCO's fence: a palisade,
+a shut gate with a red lamp over it, a staff lot under sodium floodlights, and
+three windowless sheds with the plant humming on their roofs. Standing behind all
+of it, on a gantry, is a finished rocket. The hero has spent every evening of his
+life building one out of scrap in a garage, and the company he is driving an hour
+to beg a single part off has one on a pad in the back garden. Nothing says so.
+He looks at the whole site and says that there's GOODCO.
+
+The wagon pulls up, the engine goes off, and — for the only time on this road —
+**he gets out.** He stands on the tarmac beside his own car looking at the place,
+and asks the question the next level is the entire answer to: how is he supposed
+to get in? Then the picture goes out, and the cabinet asks him for three letters.
 
 **What they are thinking.** Every so often one of the people on that road has a
 thought over their head, and it is never about him. It is the rent, the soup,

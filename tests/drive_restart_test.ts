@@ -13,6 +13,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  cityStartPx,
   createDrive,
   DRIVE,
   DRIVE_OUTCOME,
@@ -68,9 +69,14 @@ describe("the drive's terminal beats", () => {
     run(drive, h);
 
     expect(h.clearSpeech).toHaveBeenCalledTimes(1);
-    // …and the leg really did start again underneath it.
+    // …and the leg really did start again underneath it — AT THE TOWN'S GATE,
+    // which is where the scoring starts. The approach in front of it (the wagon
+    // sliding into frame, the empty outskirts, the two lines over them) is an
+    // opening the player has already watched, and replaying it after every
+    // breakdown is a punishment on top of a punishment.
     expect(drive.outcome).toBe(DRIVE_OUTCOME.driving);
-    expect(drive.distance).toBe(0);
+    expect(drive.distance).toBe(cityStartPx(PARAMS));
+    expect(drive.clockMs).toBe(0);
     expect(h.onArrived).not.toHaveBeenCalled();
   });
 

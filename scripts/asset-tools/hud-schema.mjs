@@ -139,6 +139,29 @@ export const HUD_BINDINGS = {
   "drive.redlineRpm": "number",
   "drive.reversing": "flag",
   "drive.bodies": "number",
+  // THE STOPWATCH — the arcade clock in the corner, and the number the
+  // high-score board ranks.
+  //
+  // IT IS THE TOWN'S TIME AND NOT THE LEG'S, which is the one thing an author
+  // has to know about it: the road opens on an outskirt the player cannot hurry
+  // and ends on a run-in he does not drive, and neither is on the clock. It
+  // starts when the town arrives and stops at the finish line.
+  //
+  // THREE BINDINGS FOR ONE FACT, because they are three different jobs. `clock`
+  // is the FORMATTED figure (`m:ss.t`) and is what a readout prints — a clock is
+  // a format rather than a judgement, so it is done in the app and not in Lua.
+  // `clockMs` is the raw number, for a judgement that genuinely is one (is this
+  // a good time, is it about to be a record). `clockRunning` is not "is the time
+  // non-zero": the figure holds through the whole arrival, and a dashboard wants
+  // to be able to say the leg is over without inferring it from a number that
+  // has stopped moving.
+  "drive.clock": "text",
+  "drive.clockMs": "number",
+  "drive.clockRunning": "flag",
+  // …and whether there is a clock on screen at all: the leg has reached the
+  // town. It stays true for the rest of the leg, so the figure holds through the
+  // arrival rather than vanishing on the finish line.
+  "drive.clockStarted": "flag",
   "drive.speedFrac": "frac",
   "drive.wear": "frac",
   // …and what it was before the last second's hits. The damage dial draws its
@@ -348,6 +371,14 @@ export const HUD_EVENTS = new Set([
   "voice.unmute",
   "hud.press",
   "hud.back",
+  // THE ROAD'S CLOCK, starting and stopping. The two moments the drive's
+  // stopwatch has, and the only sounds in this file that are not a press: the
+  // town arriving in front of the car is when the leg starts being scored, and
+  // the finish line is when it stops. Both are the CABINET rather than the car
+  // — which is why they are HUD moments at all instead of road sounds beside
+  // the engine note.
+  "drive.clockStart",
+  "drive.clockStop",
 ]);
 
 /**

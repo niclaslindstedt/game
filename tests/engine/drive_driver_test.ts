@@ -293,15 +293,23 @@ describe("the driver's knobs", () => {
 
 describe("a shortened leg", () => {
   it("ends where the params say and lays its crowd out to match", () => {
-    const short = autoDrive({ ...PARAMS, coursePx: DRIVE.attractCoursePx });
+    const short = autoDrive({
+      ...PARAMS,
+      coursePx: DRIVE.attractCoursePx,
+      cityPx: DRIVE.attractCityPx,
+    });
     expect(short.drive.outcome).toBe(DRIVE_OUTCOME.arrived);
     expect(short.drive.distance).toBeGreaterThanOrEqual(DRIVE.attractCoursePx);
     // Comfortably shorter than the road a player drives…
     const full = autoDrive(PARAMS);
     expect(short.ticks).toBeLessThan(full.ticks / 2);
-    // …but still past the opening empty stretch, so the demo shows the road
-    // rather than the run-up to it.
-    expect(DRIVE.attractCoursePx).toBeGreaterThan(DRIVE.crowdStartPx);
+    // …but still past its own town gate with room to spare, so the demo shows
+    // the ROAD rather than the run-up to it. The demo brings that gate forward
+    // as well (`attractCityPx`): a title screen has fifteen seconds to show
+    // somebody what this minigame is, and fourteen of them spent on an empty
+    // outskirt while a man talks to himself is the whole budget spent on the
+    // part that is not the game.
+    expect(DRIVE.attractCoursePx).toBeGreaterThan(DRIVE.attractCityPx * 3);
     expect(short.drive.bodies).toBeGreaterThan(0);
   });
 

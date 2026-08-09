@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 import {
   createDrive,
   haltTraffic,
+  skipDriveOpening,
   stepDrive,
   DRIVE,
   GLUED_VARIANTS,
@@ -45,6 +46,10 @@ const COAST = { pedal: 0, wheel: 0 };
 /** Silence the road's own spawner, so the only body in the test is the one the
  * test planted. The blockade's own latch is set for the same reason. */
 function silence(drive: DriveState): void {
+  // …AND PAST THE OPENING. A fresh leg spends its first three and a half
+  // seconds sliding the wagon into frame with the pedals disconnected and the
+  // collision pass not running at all, which is not a road to stage a blow on.
+  skipDriveOpening(drive);
   drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
   haltTraffic(drive);
   drive.blockadeDone = true;

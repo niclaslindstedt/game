@@ -19,6 +19,8 @@
 
 import { weaponDef, type GameState } from "@game/core";
 
+import { lapClock } from "@ui/lib/format-number.ts";
+
 import { WEAPON_CLASS_COLORS } from "../tiers.ts";
 import type { Hud } from "../game-screen/hud-model.ts";
 
@@ -178,6 +180,16 @@ export type DriveDials = {
   redlineRpm: number;
   reversing: boolean;
   bodies: number;
+  /** THE STOPWATCH — ms of TOWN, which is the stretch the leg is scored over
+   * (`DriveState.clockMs`). Quantised to tenths by the publisher, because that
+   * is the last digit anybody reads off a moving car. */
+  clockMs: number;
+  /** …and whether it is still running. Distinct from the time being non-zero:
+   * the clock holds its final figure through the whole arrival. */
+  clockRunning: boolean;
+  /** …and whether the leg has reached the town at all, which is what decides
+   * whether there is a clock on screen. */
+  clockStarted: boolean;
   /** 0..1 — how worn the wagon is. */
   wear: number;
   /** …and how worn it was before the last second's hits — the anchor the
@@ -222,6 +234,16 @@ export function driveBindings(drive: DriveDials): HudValues {
     ),
     "drive.reversing": drive.reversing,
     "drive.bodies": drive.bodies,
+    // THE STOPWATCH, both ways round. The TEXT is what a dial prints and is
+    // formatted here rather than in Lua — a clock is a format, not a judgement,
+    // and a script that had to do the tenths would be four lines of arithmetic
+    // in every conversion that wanted a timer. The MS is beside it so a judgement
+    // that IS one (is this a good time, is it about to be a record) has a number
+    // to work with.
+    "drive.clock": lapClock(drive.clockMs),
+    "drive.clockMs": Math.round(drive.clockMs),
+    "drive.clockRunning": drive.clockRunning,
+    "drive.clockStarted": drive.clockStarted,
     "drive.wear": Math.max(0, Math.min(1, drive.wear)),
     "drive.wearSettled": Math.max(
       0,

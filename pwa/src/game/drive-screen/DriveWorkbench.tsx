@@ -31,6 +31,7 @@ import {
   createTraffic,
   DRIVE,
   rungTopSpeedPx,
+  skipDriveOpening,
   type DriveState,
 } from "@game/core";
 
@@ -62,6 +63,13 @@ const GOODCO = "goodco_hq";
  * moving, and holding a key down while judging a picture is how a tuning pass
  * becomes a wrestling match.
  *
+ * `&city=600` BRINGS THE TOWN FORWARD, on the knob the attract loop uses
+ * (`DriveParams.cityPx`) — the outskirts otherwise, exactly as a player drives
+ * them. The opening is fourteen seconds of empty road with two lines over it,
+ * which is the right length once a trip and the wrong length forty times an
+ * afternoon; this is how a pass about the TOWN skips it without pretending the
+ * road is shorter than it is.
+ *
  * `&course=1200` SHORTENS THE LEG, on the same knob the attract loop uses
  * (`DriveParams.coursePx`) — the whole road otherwise, exactly as a player
  * drives it. It exists for the END of the road: the arrival beat and the
@@ -78,6 +86,7 @@ export function driveFromParams(params: URLSearchParams): {
   difficulty: Difficulty;
   bot: boolean;
   coursePx?: number;
+  cityPx?: number;
 } {
   const home = (params.get("drive") ?? "").toLowerCase() === "home";
   const wanted = (params.get("difficulty") ?? "").toLowerCase();
@@ -89,8 +98,14 @@ export function driveFromParams(params: URLSearchParams): {
   // is optional and an absent one means the whole road, so a zero or a typo
   // must fall through to that rather than lay a leg with no road in it.
   const course = Number(params.get("course"));
+  // …and the same rule for the town's gate, which may legitimately be ZERO (a
+  // leg that opens in the town) — so it is tested for finiteness alone.
+  const city = Number(params.get("city"));
   return {
     ...(Number.isFinite(course) && course > 0 ? { coursePx: course } : {}),
+    ...(params.get("city") !== null && Number.isFinite(city) && city >= 0
+      ? { cityPx: city }
+      : {}),
     seed: Number(params.get("seed")) || 1234,
     direction: home ? -1 : 1,
     to: home ? GARAGE : GOODCO,
@@ -122,6 +137,11 @@ function stagerFor(
   if (what !== "body" && what !== "traffic" && what !== "both")
     return undefined;
   return (drive) => {
+    // PAST THE OPENING FIRST. The leg's first three and a half seconds are the
+    // wagon sliding into frame with the pedals disconnected and the collision
+    // pass not running at all, so a body planted in front of a fresh drive is a
+    // body nothing arrives at.
+    skipDriveOpening(drive);
     const lane = drive.car.pos.y;
     const ahead = (px: number) => drive.car.pos.x + direction * px;
     // Flat out from the off, so the staged hit lands at the speed worth looking

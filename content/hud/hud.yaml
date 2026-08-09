@@ -138,3 +138,19 @@ regions:
     parent: drive
     order: 0
     class: drive-dash
+
+  # THE CLOCK, top right — the CABINET's corner rather than the car's.
+  #
+  # Its own region beside the dashboard rather than a dial on it, because it is
+  # not an instrument the wagon has: a stopwatch is the machine keeping score
+  # over the top of the picture, which is where an arcade game has always put
+  # one and is the opposite end of the screen from where a driver looks. It is
+  # gated on the leg having reached the town at all (`drive.clockStarted`, on
+  # the element itself), so the opening plays with nothing over it.
+  #
+  # Tap-transparent like everything else on this surface: the whole picture is
+  # the steering pad, and a readout must never eat the thumb.
+  drive_clock:
+    parent: drive
+    order: 1
+    class: drive-clock-slot

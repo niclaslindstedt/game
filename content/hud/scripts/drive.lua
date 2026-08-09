@@ -28,6 +28,10 @@
 --                thing on this dial worth a warning
 --   reversing    the wagon is going backwards
 --   bodies       how many people the trip has cost so far
+--   clock        the stopwatch, already formatted (`m:ss.t`)
+--   clockMs      …and the same as a raw number, for a judgement about it
+--   clockRunning the clock is still counting: the car is in the town
+--   clockStarted the town has been reached at all — whether there is a clock
 --   wear         0..1 of the wagon's ruin
 --   wearPercent  …the same as a whole number, for a readout
 --   failing      past the point where the next real hit ends the trip
@@ -60,6 +64,7 @@ local COOL = "#7ef0c8"
 local WARN = "#ffb14a"
 local ALARM = "#e8635a"
 local FRESH = "#ff9d4a"
+local GOLD = "#ffd75e"
 
 --- WHERE THE TACHOMETER WARMS UP — the last stretch before the box changes up,
 -- as a fraction of the SHIFT POINT rather than of the redline.
@@ -145,6 +150,38 @@ function M.gear_sprite(state)
     return "gear_gate_n"
   end
   return "gear_gate_" .. state.drive.gearLabel
+end
+
+--- THE STOPWATCH'S WORD, over the figure.
+--
+-- It is what CHANGES when the leg ends. Everything else on this screen goes on
+-- saying the same thing all the way down the road; the clock stops, and the one
+-- word above it is how a player mid-crowd finds out that the part they were
+-- being scored on is behind them and the rest is the road showing off.
+function M.clock_label(state)
+  if state.drive.clockRunning then
+    return "TIME"
+  end
+  return "FINISH"
+end
+
+--- …and the colour of the figure — the one genuine JUDGEMENT on this readout.
+--
+-- A clock is a format rather than an opinion, so the digits themselves are the
+-- app's (`drive.clock`). What is an opinion is whether this is a GOOD time, and
+-- the shipped answer is deliberately the smallest one that means anything: it
+-- runs calm while it runs, and lands gold the moment it stops, because a leg
+-- that reached the finish line at all is the thing worth congratulating on a
+-- road laid down to stop you.
+--
+-- A conversion with a par to beat has everything it needs here: `clockMs` is the
+-- raw figure, and a rally stage that turns amber approaching its own target time
+-- is four lines in this function and not one line of code anywhere.
+function M.clock_color(state)
+  if not state.drive.clockRunning then
+    return GOLD
+  end
+  return CALM
 end
 
 --- THE DAMAGEOMETER'S WORD. It says what it is measuring right up until that

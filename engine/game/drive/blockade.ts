@@ -31,7 +31,7 @@
 // going to drive four times, and a demonstration that reshuffled between
 // attempts would make it a lottery instead of a thing to learn.
 
-import { courseLength, DRIVE } from "./config.ts";
+import { cityLength, cityStartPx, DRIVE } from "./config.ts";
 import { roadEdges } from "./crowd.ts";
 import type { DriveState } from "./types.ts";
 
@@ -57,9 +57,17 @@ function hash(n: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
-/** How far into the course the blockade sits (world px along the leg). */
+/**
+ * How far into the course the blockade sits (world px along the leg).
+ *
+ * MEASURED THROUGH THE TOWN rather than through the whole course, because a
+ * demonstration sits in a STREET: `atFrac` of the raw course would slide with
+ * the opening's length and, on the attract loop's short road, would put twenty
+ * people sitting in the carriageway out on an empty dual carriageway with
+ * nothing either side of it.
+ */
 export function blockadeAt(params: DriveState["params"]): number {
-  return courseLength(params) * DRIVE.blockade.atFrac;
+  return cityStartPx(params) + cityLength(params) * DRIVE.blockade.atFrac;
 }
 
 /**

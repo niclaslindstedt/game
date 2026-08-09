@@ -223,21 +223,32 @@ export const DRIVE = {
    * Whether it should is a DESIGN call about how punishing this interlude
    * ought to be, and the knob for it is `DRIVE.impact.wearJoules` with the
    * ladder's masses beside it — deliberately left open rather than guessed at.
+   *
+   * …AND IT GREW BY THE OUTSKIRTS. The number was 24 000 while the leg opened
+   * on the town; the opening stretch is `opening.cityPx` of empty road now, so
+   * the course carries it on top rather than taking it out of the town — the
+   * stretch the player is actually scored on (`cityLength`) is within a few
+   * hundred px of what it always was, and every figure in the table above still
+   * describes it.
    */
-  coursePx: 24000,
+  coursePx: 26000,
   /**
    * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
    * forward, for a demo that is showing somebody the whole game rather than
    * playing one trip of it.
    *
    * About fifteen seconds, which is a long beat in an attract loop and a short
-   * one in a minute. It is past `crowdStartPx` with real room to spare, so the
-   * demo still shows what the road is FOR — the monologue, the first crossing,
-   * a body or six — rather than the empty opening stretch and a fade.
+   * one in a minute. It rides with `attractCityPx` below: the demo takes the
+   * car's arrival and then goes straight into the town, so what a title screen
+   * shows is what the road is FOR — the crowd, a crossing, a body or six —
+   * rather than a man on an empty road talking about his evening.
    * `DriveParams.coursePx` is how it gets there; nothing a player drives uses
    * it.
    */
   attractCoursePx: 6200,
+  /** …and where the demo's town starts. Long enough for the wagon to slide into
+   * frame (`opening.entryPx` / `closePx`) and not one pixel longer. */
+  attractCityPx: 1200,
   /** How far ahead of the car the world is populated, and how far behind it is
    * forgotten (world px). Both a comfortable screen and a half. */
   spawnAheadPx: 700,
@@ -1481,18 +1492,185 @@ export const DRIVE = {
 
   // ── THE BEATS ─────────────────────────────────────────────────────────────
   /**
-   * How far into the course the hero thinks about the people he is about to
-   * start hitting (world px). Deliberately BEFORE the first pedestrian: the
-   * monologue is a promise to himself to avoid them, and it only works as a
-   * joke if the player hears it while the road is still empty and then finds
-   * out what the road is actually like.
+   * THE OUTSKIRTS — the road before the town, and the whole of the opening.
+   *
+   * THE LEG NO LONGER STARTS IN THE TOWN, and that is the point of this block.
+   * It used to open with the wagon already in frame on a street of houses, on a
+   * deliberately empty stretch of it, which asked the picture to say two things
+   * at once: "this is a road you are on" and "the town has not started yet". It
+   * said neither. So the leg opens OUTSIDE the town — no houses at all, one
+   * pavement, the far verge empty — and the town ARRIVES, once, in front of the
+   * player, which is the one moment on this road that can carry the clock
+   * starting.
+   *
+   * FIVE BEATS, IN ORDER, AND EACH IS A DISTANCE RATHER THAN A TIMER: the road
+   * scrolls under nothing at all, the car slides into frame from behind, he says
+   * where he is going, he says what he thinks of the people he is going through,
+   * and the town comes over the horizon.
    */
-  monologuePx: 1500,
-  /** Where the crowd starts. A clear opening stretch to learn the wheel on. */
-  crowdStartPx: 2600,
-  /** How long the arrival beat holds at the end of the course before the drive
-   * hands back (ms). */
-  arrivalHoldMs: 1400,
+  opening: {
+    /**
+     * HOW FAR BEHIND ITS PLACE IN THE FRAME THE CAR STARTS (world px).
+     *
+     * The camera is carried this far AHEAD of where it belongs and gives the
+     * lead back as the leg runs, so the first thing on screen is a road with
+     * nothing on it and the wagon comes into the picture from the left of its
+     * own accord. Comfortably more than the ~115 world px between the frame's
+     * edge and the car's usual seat (`CAMERA_LEAD_FRAC`), so there is a real
+     * beat of empty tarmac before the nose appears.
+     */
+    entryPx: 300,
+    /** …and how fast the camera gives that lead back (px/s). The car closes on
+     * its mark over about three and a half seconds — the pace of a car being
+     * caught up with rather than of one arriving. */
+    closePx: 90,
+    /** What the wagon is doing while it is still arriving (px/s). Held rather
+     * than driven: the player's hands are not on it yet. */
+    entrySpeedPx: 300,
+    /**
+     * THE THROTTLE'S CEILING UNTIL THE TOWN (px/s ≈ 78 mph).
+     *
+     * The wheel is the player's from the moment the car is in place — an
+     * opening nobody may touch is a cutscene, and this minigame's whole
+     * argument is that it is not one — but the PEDAL is capped out here. He is
+     * not in a hurry until he is in the town, the clock does not run until then
+     * either, and a player who floors the outskirts would otherwise arrive at
+     * the gate at the top of the dial with the road's opening lines still
+     * unsaid.
+     */
+    cruisePx: 407,
+    /** Where he says what the trip is FOR (world px) — as soon as the car has
+     * settled into frame, which is the first moment there is anybody in the
+     * picture to be thinking it. */
+    sayAtPx: 1150,
+    /**
+     * WHERE THE TOWN STARTS (world px) — the gate.
+     *
+     * Everything the minigame is begins here at once: the houses, the far
+     * pavement, the crowd, the lane traffic, and the CLOCK. It is far enough
+     * out that both of his opening lines have had their say over an empty road,
+     * which is the only place either of them is cheap to say.
+     */
+    cityPx: 6400,
+    /**
+     * HOW MANY PEOPLE ARE OUT HERE ON WHEELS — riders per 1000 px of outskirt,
+     * and the only traffic before the town.
+     *
+     * Thin, on purpose. This stretch has to read as EMPTY — that is the whole
+     * job of it — and a footway serving riders at the town's own rate would be
+     * the town without its houses. What it must not read as is a level that has
+     * not finished loading, which is what a completely bare road does: one
+     * cyclist or one delivery every few seconds is the difference between a road
+     * out of town and a road with nothing on it.
+     */
+    ridersPerKPx: 0.9,
+    /** …and where the first of them may stand (world px). Held back past the
+     * car's own arrival: somebody else in the opening frame before the wagon is
+     * in it makes the shot read as theirs. */
+    ridersFromPx: 900,
+    /**
+     * HOW MANY LANES THE ROAD OUT OF TOWN HAS.
+     *
+     * TWO — the middle two of the town's four, so the carriageway is centred on
+     * the same line and simply narrower. Four lanes with nothing on either side
+     * of them is not a road out of town, it is the town with the buildings
+     * forgotten; two is a country road, and it is what makes the widening at the
+     * other end of the approach read as arriving somewhere.
+     *
+     * It is also the safety margin for the cyclists. The footway stays where the
+     * town puts it (`crowdEdges`), so a narrow carriageway leaves a whole lane of
+     * verge between the tarmac and the pavement: the delivery riders out there
+     * are genuinely beyond the wagon's reach rather than nominally so, which is
+     * the difference between scenery and a hazard the player is not being told
+     * about.
+     */
+    laneCount: 2,
+    /**
+     * WHERE THE DASHBOARD COMES UP (world px BEFORE the gate).
+     *
+     * The instruments are not on screen for the opening at all. Out there the
+     * pedal is capped, nothing is scored and there is nothing to read — a
+     * speedometer, a gearbox gate and a damage dial hung over an empty road are
+     * three readouts saying that nothing is happening, and they spend the one
+     * thing the opening has, which is that it looks like a road at night with a
+     * car on it. They slide in from the left as the town comes up, which is the
+     * same beat the road widening is.
+     *
+     * MEASURED BACK FROM THE GATE so the CLOCK lands a beat after them: at the
+     * approach's own cruise this is a shade under two seconds, which is the
+     * dashboard's slide (`--drive-dash-slide`) plus about a second of it sitting
+     * there before the stopwatch starts beside it. Three things arriving on the
+     * same frame is one thing arriving; spread over two seconds it reads as the
+     * car getting ready for the town.
+     */
+    dashAtPx: 700,
+    /**
+     * …and over how much road it opens out to four (world px), finishing exactly
+     * at the gate.
+     *
+     * Long enough to be a TAPER rather than a step — a carriageway that doubled
+     * in width in one frame would read as a rendering fault — and short enough
+     * that the widening and the first house are plainly the same event.
+     */
+    widenPx: 800,
+  },
+  /**
+   * …AND THE RUN-IN AT THE OTHER END — everything past the finish line.
+   *
+   * THE FINISH IS NOT THE ARRIVAL and the split is the whole of this block. The
+   * clock stops and the town stops at the same world x, because that is what the
+   * player is being scored on. Then the wheel comes off him and the leg plays
+   * itself out: the car rolls in past GOODCO's fence with the data halls and the
+   * ship standing behind them, pulls up on the staff lot, and HE GETS OUT — the
+   * only time on this road the man is ever out of the car, and the reason it is
+   * here is the level on the other side of the fade. GOODCO's front door has no
+   * key (`engine/game/arrivals.ts`), so the last thing the minigame does is put
+   * its own question in his mouth, standing on the tarmac looking at it.
+   *
+   * EVERY MARK BELOW IS ON THE CLOCK, not on a distance, and that is the
+   * opposite of every other beat on this road. The car is coasting to a stop out
+   * here, so a mark in world px is a mark a gentle enough arrival never reaches
+   * — and a leg that ended at 30 mph would sit in front of GOODCO in silence
+   * while the board waited on a line it was never going to get.
+   */
+  arrival: {
+    /**
+     * How hard the wagon sheds speed once the finish is behind it (px/s²) — a
+     * man lifting off and rolling into a car park, not a man braking.
+     *
+     * Chosen against `outMs` rather than for its own sake: whatever he crosses
+     * the line at, the car has to be STOPPED by the time the door opens, and
+     * from the top of the dial this brings it up in about three and a half
+     * seconds and eleven hundred px, which is the length of the approach the
+     * campus is dressed along.
+     */
+    coastPx: 260,
+    /** When he sees it (ms past the finish) — early, while the car is still
+     * rolling and the halls are still growing in the windscreen. */
+    sightMs: 1300,
+    /**
+     * When the door opens (ms past the finish). The car is PINNED to a stop
+     * here rather than trusted to have coasted to one — a wagon still doing
+     * walking pace with a man standing beside it is the one frame that would
+     * undo the whole beat.
+     */
+    outMs: 3400,
+    /** …and when he asks the question the next level is the answer to. Long
+     * enough after the door for him to be standing still when he says it. */
+    askMs: 4800,
+    /** …and when the picture goes out under him (ms past the finish). Late
+     * enough to read the line, early enough that the black is the last thing the
+     * road does rather than a wait. */
+    blackoutMs: 7100,
+    /** How far he steps away from the door before he stops (world px), and how
+     * long that takes (ms). Presentation, but it lives here with the beats it is
+     * timed against rather than in the renderer. */
+    walkPx: 13,
+    walkMs: 900,
+  },
+  /** How long the whole run-in holds before the drive hands back (ms) — the
+   * beats above plus the fade the app paints over the tail of them. */
+  arrivalHoldMs: 8500,
 
   /**
    * WHAT HE MAKES OF THE TRIP — the lines the arrival is read against
@@ -1614,6 +1792,59 @@ export const DRIVE = {
  * shortened leg cannot end up with a crowd laid out for a longer one. */
 export function courseLength(params: { coursePx?: number }): number {
   return params.coursePx ?? DRIVE.coursePx;
+}
+
+/**
+ * WHERE THE TOWN STARTS — the gate, in course px from the start of the leg.
+ *
+ * The ONE accessor, for the same reason `courseLength` is: the houses, the far
+ * pavement, the crowd, the traffic, the blockade and the CLOCK are all hung off
+ * this number, and a road whose scenery began somewhere its clock did not would
+ * be scored over a stretch the player cannot see the edges of.
+ *
+ * It is a parameter (`DriveParams.cityPx`) because the ATTRACT LOOP needs a
+ * different answer: a title-screen demo has fifteen seconds to show somebody
+ * what this minigame is, and fourteen of them spent on an empty road while a man
+ * talks to himself is the whole budget spent on the part that is not the game.
+ */
+export function cityStartPx(params: { cityPx?: number }): number {
+  return params.cityPx ?? DRIVE.opening.cityPx;
+}
+
+/** …and how much road the town actually occupies — the stretch the clock runs
+ * over, and what a leg's par is measured against. Never negative: a short enough
+ * demo course can put the finish inside the outskirts. */
+export function cityLength(params: {
+  coursePx?: number;
+  cityPx?: number;
+}): number {
+  return Math.max(0, courseLength(params) - cityStartPx(params));
+}
+
+/**
+ * …AND WHERE IT STANDS IN WORLD X — the two coordinates every pass that DRAWS or
+ * PLACES something has to ask, rather than the distances above.
+ *
+ * The distinction is the leg's direction. `distance` is how far the car has
+ * travelled and is always positive; world x runs the way the leg does, so the
+ * trip home lays the same town out along negative x. Everything that belongs to
+ * the ROAD rather than to the trip — the houses, the pavement, the kerb's
+ * furniture, GOODCO's fence — is placed in world x for exactly that reason: the
+ * same building has to be the same building on the way back.
+ *
+ * It rests on the one thing `createDrive` guarantees and nothing else: a drive
+ * starts its car at x = 0.
+ */
+export function citySpanX(params: {
+  direction: 1 | -1;
+  coursePx?: number;
+  cityPx?: number;
+}): { fromX: number; toX: number } {
+  const gate = params.direction * cityStartPx(params);
+  const finish = params.direction * courseLength(params);
+  return params.direction === 1
+    ? { fromX: gate, toX: finish }
+    : { fromX: finish, toX: gate };
 }
 
 /** How the drive ended — read by the app to decide what happens next. */

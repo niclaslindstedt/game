@@ -24,6 +24,11 @@ import { FLEET } from "../../engine/game/drive/fleet.ts";
 import { TOWN } from "../../engine/game/drive/town.ts";
 import { FACADE_COLOURWAYS, facadeShell } from "../asset-tools/facade.mjs";
 import {
+  CAMPUS_PALETTE,
+  campusPieces,
+  campusPiecesCheck,
+} from "../asset-tools/campus.mjs";
+import {
   FACADE_PARTS_PALETTE,
   FACADE_SPECKLE_EXEMPT,
   facadeParts,
@@ -348,6 +353,37 @@ export function deriveTown(town) {
 }
 
 deriveTown(TOWN);
+
+// ---- GOODCO, from outside its fence ----------------------------------------
+// The site at the end of the drive (asset-tools/campus.mjs): the palisade, the
+// gate, the totem sign, the floodlight masts, the three data halls, the service
+// gantry and the ship standing in it.
+//
+// GENERATED FOR THE SAME REASON THE TOWN IS, and rather more so: every piece
+// here is regular at a gauge (a paling every three px, a rib every four, a
+// lattice, a body of revolution) and they are BIG — the stack alone is 34x168,
+// which is five thousand pixels nobody should be placing by eye.
+//
+// It lands in the `earth` family beside the town and the traffic, because that
+// is where this planet's art lives; the GOODCO family is the INSIDE of the
+// building, which is a different level and a different set of problems.
+//
+// CONTRAST-EXEMPT, like the facades: these are held against a grass tile by the
+// art linter, and a poured-concrete apron seen at night has no business scoring
+// against a verge it is never drawn on.
+function deriveCampus() {
+  const family = FAMILIES.find((f) => f.name === "earth");
+  if (!family) return;
+  const pieces = campusPieces();
+  const errors = campusPiecesCheck(pieces);
+  if (errors.length) throw new Error(errors.join("\n"));
+  for (const [name, grid] of Object.entries(pieces)) {
+    register(family, name, grid, CAMPUS_PALETTE);
+    family.contrastExempt.push(name);
+  }
+}
+
+deriveCampus();
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —

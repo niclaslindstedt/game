@@ -427,10 +427,18 @@ in the bay (`DifficultyDef.cache`):
 
 _The earthbound leg, played rather than cut: four lanes out through the block
 that lost its jobs, and the people the welfare did not reach standing in them.
-The joke is the SHAPE of these lines, not any one of them — he has the decent
-thought on an empty road BEFORE he meets anybody, and afterwards he reports on
-the road surface. Nothing in between, ever. He must never acknowledge a single
-body, or the bit stops being funny and starts being a confession._
+The joke is the SHAPE of these lines, not any one of them — he says what he
+thinks of these people on an empty road BEFORE he meets any of them, and
+afterwards he reports on the road surface. Nothing in between, ever. He must
+never acknowledge a single body, or the bit stops being funny and starts being a
+confession._
+
+_THE LEG HAS THREE STRETCHES AND THE LINES ARE HUNG OFF THEM. It opens on an
+OUTSKIRT with nothing on either side of it, where he says why he is going and
+what he thinks of who is in the way; then the TOWN arrives and the clock starts
+and he says nothing at all for a minute and a half; then the town stops and the
+car rolls in past GOODCO's fence, where he says the two lines at the bottom of
+this section. The verdict is later still and is not on the road at all._
 
 _AND NOT ALL OF THE LEG'S WORDS ARE HIS. Two other things on this road have
 something to say and neither is answered: THE GLUED shout at him from the
@@ -445,15 +453,22 @@ muttering at the wheel is not. The VERDICT is not on the road at all: he says it
 standing beside the car at the far end, as the last page of that venue's opening
 monologue, which is where a man's opinion of a journey actually happens._
 
-### Hero's thought — the road ahead, before the first of them
+### Hero's thought — what he is doing out here, before the first of them
 
-_Fired on a deliberately empty stretch, well short of the crowd, which is the
-only place that promise is cheap to make. Once per campaign, not once per trip:
-a man promising to be careful for the fourth time is a different and much worse
-joke._
+_Barked on the OUTSKIRTS: after the wagon has slid into frame, and a long way
+short of the first house. The road out there has one pavement, no town behind it
+and nobody standing on the tarmac, which is the only place either of these lines
+is cheap for him to say._
 
-1. THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT.
-2. THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE.
+_TWO PAGES DOING TWO DIFFERENT JOBS. The first is the errand, and it is the one
+time in the whole leg the player is told why any of this is happening. The second
+is his opinion of the people he is about to drive through, and it is the sourest
+thing he says in the game — they beg, they are pushy about it, and they did not
+get what he got. He is on the welfare. He is a man with nothing being smug at
+people with less, and the next thing that happens is the town._
+
+1. I NEED TO HURRY TO GOODCO AND GET THE PART.
+2. THE PEOPLE IN TOWN CAN BE QUITE AGGRESSIVE IN THEIR BEGGING. MANY OF THEM ARE NOT ON WELFARE LIKE ME.
 
 ### THE CROWD — what they are thinking as he goes past
 

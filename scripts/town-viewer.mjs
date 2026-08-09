@@ -68,8 +68,16 @@ const surfaceFor = (name) => {
 /** One stretch of street, composed the way the renderer composes it: buildings
  * back to front, then the frontage in front of them. */
 function strip(t, widthPx) {
-  const road = { direction: 1, coursePx: DRIVE.coursePx };
-  const x0 = Math.round(t * DRIVE.coursePx);
+  // THROUGH THE TOWN rather than through the leg. The road opens on an outskirt
+  // with no houses on it at all (`DRIVE.opening.cityPx`), so `t` is a position
+  // in the STREET — 0 at the first house, 1 at GOODCO's gate — which is what
+  // every stop below means and what `townDistrict` itself measures.
+  const road = {
+    direction: 1,
+    coursePx: DRIVE.coursePx,
+    cityPx: DRIVE.opening.cityPx,
+  };
+  const x0 = Math.round(road.cityPx + t * (road.coursePx - road.cityPx));
   const props = planTown(x0, x0 + widthPx, road);
   if (!props.length) return createSurface(widthPx, 8);
   // THE NEAREST THING IN THE PICTURE STANDS ON THE GROUND LINE, and everything
@@ -154,5 +162,5 @@ await writePng(upscale(sheet, scale), outPath);
 console.log(
   shellsOnly
     ? `wrote ${TOWN.length} archetypes x ${TOWN_COLOURWAYS.length} colourways → ${outPath}`
-    : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => townDistrict(t * DRIVE.coursePx, { direction: 1, coursePx: DRIVE.coursePx }).toFixed(2)).join(", ")}) → ${outPath}`,
+    : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => townDistrict(DRIVE.opening.cityPx + t * (DRIVE.coursePx - DRIVE.opening.cityPx), { direction: 1, coursePx: DRIVE.coursePx, cityPx: DRIVE.opening.cityPx }).toFixed(2)).join(", ")}) → ${outPath}`,
 );

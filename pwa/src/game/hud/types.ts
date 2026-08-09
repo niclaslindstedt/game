@@ -196,7 +196,11 @@ export type HudEvent =
   | "trade.decline"
   | "companion.heal"
   | "companion.open"
-  | "powerup.discard";
+  | "powerup.discard"
+  /** THE ROAD'S CLOCK, starting and stopping — the drive's two moments, and the
+   * only pair here nobody pressed. */
+  | "drive.clockStart"
+  | "drive.clockStop";
 
 /** A HUD script as it travels: the Lua source, parsed at load. */
 export type HudScriptSource = { id: string; source: string };

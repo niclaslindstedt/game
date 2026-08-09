@@ -16,6 +16,7 @@
 // bar is.)
 
 import {
+  driveInCity,
   driveMph,
   engineRpm,
   gearFor,
@@ -143,6 +144,22 @@ export function driveDials(
     redlineRpm: DRIVETRAIN.redlineRpm,
     reversing: drive.car.speed < 0,
     bodies: drive.bodies,
+    // THE STOPWATCH. Published in TENTHS rather than raw, which is the same
+    // rule every continuous dial on this dashboard follows and matters most
+    // here: a clock republished on the millisecond would re-resolve the whole
+    // HUD sixty times a second for a digit nobody can read, and the figure the
+    // player is watching only ever changes ten times a second anyway.
+    clockMs: Math.floor(drive.clockMs / 100) * 100,
+    // …and whether it is RUNNING, which is a different fact from the time being
+    // non-zero: the clock reads its final figure for the whole run-in, and a
+    // dashboard wants to be able to say so (stop flashing it, dim it, print
+    // FINISH under it) without inferring it from a number that has stopped
+    // moving.
+    clockRunning: driveInCity(drive),
+    // …and whether it exists on screen AT ALL, which is a third fact again: the
+    // clock arrives with the town and then stays, holding its final figure
+    // through the run-in. The opening has nothing over it.
+    clockStarted: drive.cityDone,
     wear,
     wearSettled: settledWear(drive, wear, trail),
     failing: wearPercent > FAILING_WEAR_PERCENT,
@@ -202,6 +219,9 @@ export function sameDials(a: DriveDials, b: DriveDials): boolean {
     a.rpm === b.rpm &&
     a.reversing === b.reversing &&
     a.bodies === b.bodies &&
+    a.clockMs === b.clockMs &&
+    a.clockRunning === b.clockRunning &&
+    a.clockStarted === b.clockStarted &&
     a.wear === b.wear &&
     a.wearSettled === b.wearSettled &&
     a.failing === b.failing &&

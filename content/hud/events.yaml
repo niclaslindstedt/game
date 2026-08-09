@@ -56,3 +56,13 @@ sounds:
   # colours have already changed by the time they look back at it.
   voice.mute: ui_back
   voice.unmute: ui_confirm
+
+  # THE ROAD'S STOPWATCH, starting and stopping — the drive minigame's two
+  # moments, and the only pair here that no button owns and no player caused.
+  #
+  # The town arrives in front of the car and the leg starts being scored; the
+  # finish line goes under it and the clock stops with the houses. Both are the
+  # CABINET talking rather than the wagon, which is why they sound like the
+  # menu's own confirmations instead of like anything on the tarmac.
+  drive.clockStart: ui_confirm
+  drive.clockStop: ui_equip

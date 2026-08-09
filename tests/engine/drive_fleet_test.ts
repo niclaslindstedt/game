@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 import {
   createDrive,
   createTraffic,
+  skipDriveOpening,
   crushDepthPx,
   DRIVE,
   haltTraffic,
@@ -40,7 +41,13 @@ const PARAMS: DriveParams = {
 };
 
 function drive(patch: Partial<DriveParams> = {}): DriveState {
-  return createDrive({ ...PARAMS, ...patch });
+  const built = createDrive({ ...PARAMS, ...patch });
+  // OPENED AT THE TOWN. Every test in this file stages a collision on a road it
+  // has cleared itself, and a fresh leg opens on three and a half seconds of
+  // scripted arrival with the pedals disconnected followed by an outskirt with
+  // no traffic on it at all — neither of which this suite is about.
+  skipDriveOpening(built);
+  return built;
 }
 
 /**
@@ -110,8 +117,8 @@ function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
   // A ROAD HOLDING NOTHING BUT WHAT THE TEST PLANTED, AND A LOG THAT STARTS
   // HERE.
   //
-  // The seconds of road each of these tests drives first (to clear
-  // `crowdStartPx`) are REAL road — live traffic in four lanes, a crowd walking
+  // The seconds of road each of these tests drives first (to clear the
+  // OUTSKIRTS and reach the town) are REAL road — live traffic in four lanes, a crowd walking
   // into it and the council's lamp posts down both kerbs. So a blow staged 26
   // px ahead of the bumper used to land in whatever neighbourhood the seed
   // happened to deal: the hero arrived at it already crushed, or clouted a van

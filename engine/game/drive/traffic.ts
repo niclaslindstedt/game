@@ -34,7 +34,7 @@ import { randomRange } from "@game/lib/rng.ts";
 import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
-import { courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
+import { cityStartPx, courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
 import type { Impact } from "./impact.ts";
 import { crowdEdges, laneCenter, roadBandEdges, roadEdges } from "./crowd.ts";
 import { rollVehicle, vehicleDef } from "./fleet.ts";
@@ -227,7 +227,7 @@ function spawnLane(state: DriveState, lane: number): void {
       state.nextTrafficAt[lane] = retire();
       break;
     }
-    const variant = rollVehicle(rng, false);
+    const variant = rollVehicle(rng, "road");
     const def = vehicleDef(variant);
     const pace =
       randomRange(rng, DRIVE.trafficSpeedPx.min, DRIVE.trafficSpeedPx.max) *
@@ -236,7 +236,12 @@ function spawnLane(state: DriveState, lane: number): void {
     // depends on how fast it is going — so the roll happens even for a mark in
     // the opening stretch that puts nothing on the road.
     state.nextTrafficAt[lane] = at + lanePitch(state, withHero ? pace : -pace);
-    if (at < DRIVE.crowdStartPx * 0.5) continue;
+    // THE LANES ARE THE TOWN'S. Out on the outskirts there is nothing on the
+    // carriageway at all — a four-lane road with a bus on it and no houses
+    // either side is not out of town, it is the town with the buildings
+    // forgotten — and the one stream that DOES run out there is the footway's
+    // below.
+    if (at < cityStartPx(state.params)) continue;
     // Signed in world +x, like the hero's own velocity: his way or against it.
     const speed = (withHero ? dir : -dir) * pace;
     state.traffic.push(
@@ -253,30 +258,49 @@ function spawnLane(state: DriveState, lane: number): void {
   }
 }
 
-/** …and the delivery trade, which is not in a lane at all: its own stream, its
+/**
+ * …and the delivery trade, which is not in a lane at all: its own stream, its
  * own pool and its own rate, so the footway neither takes a lane's vehicle away
- * nor gets busier every time the lanes do. */
+ * nor gets busier every time the lanes do.
+ *
+ * IT IS ALSO THE ONLY THING RUNNING ON THE OUTSKIRTS, which is the one place
+ * this spawner does two different jobs. Before the gate there is one pavement
+ * and no town behind it, so the stream runs at the near kerb only and draws from
+ * the opening's own short roster — a cyclist, an e-bike, somebody's dinner on
+ * the back of a moped (`OUTSKIRT_IDS`). That is what makes the empty road read
+ * as a road rather than as a level that has not loaded: there is somebody on it,
+ * and they are the two kinds of person who are out on a dual carriageway's
+ * footway at that hour.
+ */
 function spawnPavement(state: DriveState): void {
   const { rng } = state;
   const dir = state.params.direction;
   const reach = state.distance + DRIVE.spawnAheadPx * 1.6;
   const finish = courseLength(state.params);
-  const pitch = 1000 / pavementPerKPx(state);
+  const gate = cityStartPx(state.params);
   while (state.nextPavementAt < reach) {
     const at = state.nextPavementAt;
     if (at > finish) {
       state.nextPavementAt = retire();
       break;
     }
-    state.nextPavementAt = at + pitch;
-    if (at < DRIVE.crowdStartPx * 0.5) continue;
+    const outskirts = at < gate;
+    state.nextPavementAt =
+      at +
+      1000 / (outskirts ? DRIVE.opening.ridersPerKPx : pavementPerKPx(state));
     // WHICH FOOTWAY, and the side settles the direction: the delivery trade
     // travels with the flow like everything else, so a rider on the near
     // pavement runs the hero's way on the leg out and against it on the leg
-    // home — exactly the near/far split the lanes use.
-    const nearSide = rng() < 0.5;
+    // home — exactly the near/far split the lanes use. Out of town there is only
+    // the one pavement, and it is the near one.
+    // The draw happens either way, even where the answer is already settled —
+    // the same rule the lane's pitch follows above: a stream spent differently
+    // on the outskirts would move every rider in the town the moment the opening
+    // was retuned.
+    const side = rng() < 0.5;
+    const nearSide = outskirts || side;
     const withHero = nearSide === (dir === 1);
-    const variant = rollVehicle(rng, true);
+    const variant = rollVehicle(rng, outskirts ? "outskirts" : "pavement");
     const def = vehicleDef(variant);
     const pace =
       randomRange(rng, DRIVE.trafficSpeedPx.min, DRIVE.trafficSpeedPx.max) *
@@ -307,17 +331,30 @@ export function haltTraffic(state: DriveState, at = retire()): void {
   state.nextPavementAt = at;
 }
 
-/** Where a fresh leg's marks start — the opening stretch is deliberately clear
- * (`crowdStartPx`), and the lanes are STAGGERED across one gap so the first
- * vehicles do not arrive four abreast like the start of a race. */
-export function resetTrafficMarks(): { lanes: number[]; pavement: number } {
-  const open = DRIVE.crowdStartPx * 0.5;
+/**
+ * Where a fresh leg's marks start.
+ *
+ * THE LANES OPEN AT THE TOWN'S GATE, half a gap short of it so the first
+ * vehicles are already in the picture as the houses arrive rather than fading up
+ * behind them — and STAGGERED across that gap, so they do not arrive four
+ * abreast like the start of a race.
+ *
+ * THE FOOTWAY OPENS AT THE START OF THE LEG, because the outskirts have riders
+ * on them and nothing else at all (`spawnPavement`). The very first mark is held
+ * back past the car's own arrival: a moped in the frame before the wagon is in
+ * it makes the opening shot read as somebody else's.
+ */
+export function resetTrafficMarks(params: {
+  coursePx?: number;
+  cityPx?: number;
+}): { lanes: number[]; pavement: number } {
+  const open = Math.max(0, cityStartPx(params) - DRIVE.laneTraffic.gapPx / 2);
   return {
     lanes: Array.from(
       { length: DRIVE.laneCount },
       (_, lane) => open + (lane * DRIVE.laneTraffic.gapPx) / DRIVE.laneCount,
     ),
-    pavement: open,
+    pavement: DRIVE.opening.ridersFromPx,
   };
 }
 

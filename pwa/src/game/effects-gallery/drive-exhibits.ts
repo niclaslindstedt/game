@@ -38,6 +38,7 @@ import {
   isMastSlot,
   GLUED_VARIANTS,
   haltTraffic,
+  skipDriveOpening,
   laneCenter,
   roadBandEdges,
   roadEdges,
@@ -107,6 +108,14 @@ function leadPx(speedPx: number): number {
  * useless review.
  */
 function silence(drive: DriveState): void {
+  // …AND THE OPENING WITH THEM, which is the other thing on this road that is
+  // not the exhibit. A fresh leg spends its first three and a half seconds
+  // sliding the wagon into frame with the pedals disconnected and the collision
+  // pass not running at all, and the outskirts after that hold the throttle at
+  // a cruise — so a show staged on a fresh drive is a show whose collision
+  // happens after everybody has stopped looking, if it happens at all.
+  // `skipDriveOpening` is the engine's own answer and is what a restart does.
+  skipDriveOpening(drive);
   const past = courseLength(drive.params) + 1;
   drive.nextPedestrianAt = past;
   haltTraffic(drive, past);

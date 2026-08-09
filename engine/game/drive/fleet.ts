@@ -134,6 +134,20 @@ export type DriveVehicleDef = {
    */
   pavement: boolean;
   /**
+   * HAS IT GOT LAMPS ON IT.
+   *
+   * Almost everything does, which is why it is worth writing down for the one
+   * or two that do not: a SKATEBOARD has no lights, no battery and nowhere to
+   * put either, and until this existed it threw a saloon's headlight beam down
+   * the pavement in front of it. The renderer reads it and draws nothing
+   * (`drawLightCones`).
+   *
+   * A FACT ABOUT THE VEHICLE rather than about its class, because the class is
+   * about how a hit is ANSWERED and this is about what is bolted to the thing —
+   * a bicycle and a skateboard are the same class and disagree about it.
+   */
+  lights: boolean;
+  /**
    * HOW EASILY IT GOES OVER — 1 is an ordinary saloon, above 1 tips sooner,
    * below 1 slides instead.
    *
@@ -179,6 +193,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 1,
   },
   {
@@ -192,6 +207,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 1,
   },
   {
@@ -205,6 +221,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 1.05,
   },
   {
@@ -218,6 +235,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 0.8,
   },
   {
@@ -231,6 +249,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 0.65,
   },
   {
@@ -248,6 +267,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 0.75,
   },
   {
@@ -261,6 +281,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 1.45,
   },
   {
@@ -274,6 +295,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 1.35,
   },
   {
@@ -287,6 +309,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 3,
     pavement: false,
+    lights: true,
     topHeavy: 1.4,
   },
   {
@@ -300,6 +323,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 1,
   },
   {
@@ -313,6 +337,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 0.95,
   },
   {
@@ -326,6 +351,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 0.7,
   },
 
@@ -341,6 +367,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 1.5,
   },
   {
@@ -354,6 +381,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 2,
     pavement: false,
+    lights: true,
     topHeavy: 1.6,
   },
   {
@@ -367,6 +395,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: null,
     occupants: 1,
     pavement: false,
+    lights: true,
     topHeavy: 1.7,
   },
   {
@@ -381,6 +410,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     // Empty, and the sprite's own description says so. The route was cut.
     occupants: 0,
     pavement: false,
+    lights: true,
     topHeavy: 1.75,
   },
 
@@ -396,6 +426,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 0,
     occupants: 0,
     pavement: false,
+    lights: true,
     topHeavy: 0,
   },
   {
@@ -409,6 +440,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 1,
     occupants: 0,
     pavement: false,
+    lights: true,
     topHeavy: 0,
   },
   {
@@ -422,6 +454,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 2,
     occupants: 0,
     pavement: true,
+    lights: true,
     topHeavy: 0,
   },
   {
@@ -442,6 +475,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 4,
     occupants: 0,
     pavement: false,
+    lights: true,
     topHeavy: 0,
   },
   {
@@ -459,6 +493,11 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 5,
     occupants: 0,
     pavement: true,
+    // NO LAMPS. A board is three kilos of maple: there is nothing on it to
+    // light the road with and nowhere to put it, and this is the entry the
+    // field exists for — before it, a skateboard threw a saloon's headlight
+    // beam down the pavement in front of it.
+    lights: false,
     topHeavy: 0,
   },
   {
@@ -476,6 +515,7 @@ export const FLEET: readonly DriveVehicleDef[] = [
     rider: 3,
     occupants: 0,
     pavement: true,
+    lights: true,
     topHeavy: 0,
   },
 ] as const;
@@ -508,18 +548,60 @@ export function vehicleDef(variant: number): DriveVehicleDef {
   return FLEET[i]!;
 }
 
+/**
+ * WHICH POOL A MARK DRAWS FROM — the three streams this road runs.
+ *
+ * `road` and `pavement` are the town's two, split by `DriveVehicleDef.pavement`.
+ * `outskirts` is the THIRD and is not a filter on the other two: it is the
+ * roster of everything that is out on the road before the town starts, and it is
+ * a hand-picked short list rather than a rule, for the same reason the crowd
+ * stops at the gate — out here there is nothing to deliver to and nowhere to
+ * commute from. What IS still out here is somebody riding home and somebody
+ * carrying somebody's dinner the long way round, which is the whole of
+ * `OUTSKIRT_IDS`.
+ */
+export type DriveTrafficPool = "road" | "pavement" | "outskirts";
+
+/**
+ * WHO IS OUT ON THE OUTSKIRTS — cyclists and the food deliveries, and nothing
+ * else at all.
+ *
+ * Named by id rather than picked out by a flag on the def, deliberately: this is
+ * a CASTING decision about one stretch of one road, and a `outskirts: true`
+ * field on the fleet would be a third boolean that every future vehicle has to
+ * answer and that means nothing anywhere else. A name that is no longer in the
+ * fleet is simply dropped (see the pool below), so retiring a vehicle cannot
+ * break the opening.
+ */
+const OUTSKIRT_IDS: readonly string[] = [
+  "traffic_bicycle",
+  "traffic_ebike",
+  "traffic_delivery_moped",
+];
+
 /** Every variant index whose def rides on the pavement, and every one that does
- * not — the two pools the spawner draws from. */
+ * not — the two pools the town's spawner draws from. */
 const ROAD_POOL = FLEET.map((_, i) => i).filter((i) => !FLEET[i]!.pavement);
 const PAVEMENT_POOL = FLEET.map((_, i) => i).filter((i) => FLEET[i]!.pavement);
+/** …and the opening's own, in the fleet's order so the stream is spent the same
+ * way whatever order the list above happens to be written in. */
+const OUTSKIRT_POOL = FLEET.map((_, i) => i).filter((i) =>
+  OUTSKIRT_IDS.includes(FLEET[i]!.id),
+);
 
 function weightOf(pool: readonly number[]): number {
   let total = 0;
   for (const i of pool) total += FLEET[i]!.weight;
   return total;
 }
-const ROAD_WEIGHT = weightOf(ROAD_POOL);
-const PAVEMENT_WEIGHT = weightOf(PAVEMENT_POOL);
+const POOLS: Record<
+  DriveTrafficPool,
+  { pool: readonly number[]; weight: number }
+> = {
+  road: { pool: ROAD_POOL, weight: weightOf(ROAD_POOL) },
+  pavement: { pool: PAVEMENT_POOL, weight: weightOf(PAVEMENT_POOL) },
+  outskirts: { pool: OUTSKIRT_POOL, weight: weightOf(OUTSKIRT_POOL) },
+};
 
 /**
  * Roll one vehicle out of a pool — ONE draw of the road's stream, whatever the
@@ -530,10 +612,9 @@ const PAVEMENT_WEIGHT = weightOf(PAVEMENT_POOL);
  * body, car and post laid down after it the moment a new model landed. A seeded
  * road has to survive the fleet growing.
  */
-export function rollVehicle(rng: Rng, pavement: boolean): number {
-  const pool = pavement ? PAVEMENT_POOL : ROAD_POOL;
-  const total = pavement ? PAVEMENT_WEIGHT : ROAD_WEIGHT;
-  let roll = rng() * total;
+export function rollVehicle(rng: Rng, from: DriveTrafficPool): number {
+  const { pool, weight } = POOLS[from];
+  let roll = rng() * weight;
   for (const i of pool) {
     roll -= FLEET[i]!.weight;
     if (roll <= 0) return i;
@@ -541,5 +622,6 @@ export function rollVehicle(rng: Rng, pavement: boolean): number {
   return pool[pool.length - 1] ?? 0;
 }
 
-/** What share of the traffic rides the pavement rather than the road. */
-export const PAVEMENT_SHARE = PAVEMENT_WEIGHT / (PAVEMENT_WEIGHT + ROAD_WEIGHT);
+/** What share of the town's traffic rides the pavement rather than the road. */
+export const PAVEMENT_SHARE =
+  POOLS.pavement.weight / (POOLS.pavement.weight + POOLS.road.weight);
