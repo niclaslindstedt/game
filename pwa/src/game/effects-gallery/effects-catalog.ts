@@ -37,6 +37,7 @@ import {
 } from "./exhibit-kit.ts";
 import { riftPortalLook } from "../render/rift-portal.ts";
 import { driveExhibits } from "./drive-exhibits.ts";
+import { sceneExhibits } from "./scene-exhibits.ts";
 import { talentExhibits } from "./talent-exhibits.ts";
 import { uiExhibits } from "./ui-exhibits.ts";
 import { weaponExhibits } from "./weapon-exhibits.ts";
@@ -2245,6 +2246,11 @@ export function effectsCatalog(): Exhibit[] {
     // sheet — is chrome, and the chrome is the whole reason the gallery is worth
     // having. Only the HOST differs, and the gallery picks that off `kind`.
     ...driveExhibits(),
+    // THE SCENES, hosted by a `CutsceneState` — the third host, composed on the
+    // end like every other shelf so the search, the shelf jump, `H`, the
+    // `?effects=` deep link and the contact sheet cover it for nothing
+    // (`cutscene-exhibit.ts`).
+    ...sceneExhibits(),
   ];
 }
 

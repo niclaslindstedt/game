@@ -3,33 +3,39 @@ name: road_lane
 family: scenes
 size: [56, 12]
 description: >
-  One tile of the public road that runs past the hero's lot, seen across the
-  front of the launch scene: dark night tarmac with a kerb lip along its far
-  edge and one worn dash of the painted centre line, laid so a row of these
-  tiles paints an unbroken road with an evenly broken line down it.
+  One tile of the public road that runs past the hero's lot, laid across the
+  front of the garage scenes — and it is THE SAME ROAD the drive minigame is
+  played on, in the drive's own four inks: flat night tarmac, the darker rim
+  each side of it, the broken centre line of a two-lane county road, and the
+  kerb stepping up to the footway. A row of these paints an unbroken road with
+  an evenly broken line down it.
 subject:
   kind: "cutscene ground art (road)"
-  build: "a band of laid tarmac running the width of the frame, kerb lip along the far edge"
-  features: "one short white centre-line dash per tile, loose aggregate speckle, the near edge worn a shade darker"
-  accent: "dulled traffic white on cold grey tarmac"
-  flavor: "the county's tarmac at the end of the drive — the same road the car leaves the garage by"
+  build: "a band of flat laid tarmac running the width of the frame, a darker rim along each edge and a kerb along the near one"
+  features: "two short centre-line marks per tile on the drive's own broken rhythm, the near lane laid deeper than the far one because it is nearer the eye, and no aggregate speckle at all — the minigame's tarmac is a flat fill"
+  accent: "the dulled traffic white of the centre line"
+  flavor: "the county's tarmac at the end of the drive — the same road the wagon leaves the garage by"
+# THE DRIVE'S OWN ROAD TABLE, hex for hex (`ROAD_INK`,
+# `pwa/src/game/drive-screen/scenery.ts`). A sprite cannot import a constant, so
+# `tests/content/road_ink_test.ts` is what holds the two together: the launch,
+# the homecoming and the first thirty seconds of the minigame all show this
+# stretch of road, and two sets of greys for one road is a drift nobody notices
+# until they are on screen within a minute of each other.
 palette:
-  A: "#3a3c42" # laid tarmac, night
-  a: "#34363c" # worn tarmac
-  V: "#43454c" # pale aggregate
-  s: "#2c2e34" # dark grit / kerb lip
-  W: "#9a9a92" # traffic white under moonlight
-  w: "#7c7c75" # paint worn thin
+  A: "#31333c" # tarmac (ROAD_INK.road)
+  V: "#3c3f4a" # the tarmac's darker rim (ROAD_INK.edge)
+  k: "#605c53" # the kerb up to the footway (ROAD_INK.kerb)
+  W: "#c9c4a8" # traffic white (ROAD_INK.paint)
 grid: |
-  ssssssssssssssssssssssssssssssssssssssssssssssssssssssss
-  AAAaAAsaAAAAAaAAAAAAAAAAAAAAAAAsAAAsaAAAAAAAAAAAAAAAAAAA
-  AAAAAVAAAaaAsAAAAAAAAAAAAAaVAAAaAAAAAAAAsAVAAAVAAAAAAAAA
-  AAAVAAAAAsAaAAAAAAAAAAAAAAAAsAAAAAVAAAAAAaAVAAAAAAAAAAAA
-  AAAAAAAAAAAAAAVAAVAAAWWWwWWWWWWWWWWAAAAAAAAAAAAAAAAAAaAA
-  AAAAAAAsAAAAaAAAAAAAAWWWWWWWWWwwWWWAAAAAsAAAVAAAAAAAAAAA
-  AAAaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsa
-  AAAAAAAAAAAAAAAAAAVAAAAAAAAaAAAAVAAAAAAAAAAAAAAAAAAAAAAa
-  AAVAAAAsVAAaAAAAAAAAAAAAAAAAAAAAAaAAAAAAVAAAAAAAVAAAAAAA
-  AAAAAAAAAAaAAAAAVAAAAAAAAAAAAAAAAAAaAAAAAAAAAAAAAAAAAAAA
-  AAAAAsAAAaAAAAAAAAAVAAAAAAAAAAAAAAAAAaAAAAAAAAAAAAAAAAAA
-  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  WWWWWWWWWWWWAAAAAAAAAAAAAAAAWWWWWWWWWWWWAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

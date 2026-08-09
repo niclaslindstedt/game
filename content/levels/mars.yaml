@@ -16,11 +16,13 @@ id: mars
 index: 3
 name: MARS
 # MARS IS FLOWN TO FROM HOME. The moon has no onward door: the hero clears it,
-# comes back to his own lot and takes the rocket again — so the trip opens on
-# the LAUNCH, the same garage scene the moon's trip opened on, with the house
-# he burned the first time already standing burnt beside the pad
-# (`cleared:moon`, `content/cutscenes/launch.yaml`). The moon's own goodbye
-# plays where it happens now, on the moon (`farewell:` in `moon.yaml`).
+# comes back to his own lot (`earth_return`, the moon's second farewell scene)
+# and takes the rocket again — so the trip opens on the LAUNCH, the same garage
+# scene the moon's trip opened on, with the house standing beside the pad TWO
+# fires worse than it was: one for the lift-off, one for the landing that
+# brought him home (`cleared:moon`, `content/cutscenes/launch.yaml`). This is
+# the third, and it is the one that guts it. The moon's own goodbye plays where
+# it happens now, on the moon (`farewell:` in `moon.yaml`).
 prelude:
   - launch
   - voyage_mars

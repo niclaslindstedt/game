@@ -27,7 +27,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-import type { GameState } from "@game/core";
+import type { CutsceneState, GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -46,16 +46,20 @@ import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/ui.ts";
 import { driveBindings, type DriveDials } from "../hud/bindings.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
+import { runCutsceneExhibit } from "./cutscene-exhibit.ts";
 import { runDriveExhibit } from "./drive-exhibit.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
 import {
   EXHIBIT_SPEEDS,
+  isCutsceneExhibit,
   isDriveExhibit,
+  isRunExhibit,
   pinEliteCaster,
   speedLabel,
   type Exhibit,
   type ExhibitRun,
 } from "./exhibit-kit.ts";
+import { CutsceneOverlay } from "../overlays/CutsceneOverlay.tsx";
 import { runExhibit } from "./run-exhibit.ts";
 import { gallerySession } from "./ui-exhibits.ts";
 import { ScoreboardTable } from "../hud/widgets/Scoreboard.tsx";
@@ -180,6 +184,13 @@ export function EffectsGallery({
   // `RunExhibit.chrome`). Null for every other shelf, and cleared with the
   // exhibit for the same reason the dials are.
   const [shown, setShown] = useState<GameState | null>(null);
+  // THE SCENES SHELF's live cutscene — handed up by its host so the gallery can
+  // mount the game's OWN `CutsceneOverlay` against it (the scene draws itself
+  // into a canvas of its own and floats a DOM dialogue box over it, so unlike
+  // every other shelf it cannot be painted into the field below). Null for
+  // every other exhibit, and cleared with the exhibit for the same reason the
+  // dials and the staged board are.
+  const [scene, setScene] = useState<CutsceneState | null>(null);
   const [query, setQuery] = useState("");
   // H: strip the gallery's own chrome, leaving the effect alone in the frame —
   // what the contact-sheet script presses before it shoots.
@@ -330,16 +341,24 @@ export function EffectsGallery({
           speed,
           onDials: setDials,
         })
-      : runExhibit({
-          exhibit,
-          canvas,
-          ctx,
-          assets,
-          nukeFxRef,
-          levelUpFxRef,
-          speed,
-          onState: setShown,
-        });
+      : isCutsceneExhibit(exhibit)
+        ? runCutsceneExhibit({
+            exhibit,
+            canvas,
+            ctx,
+            speed,
+            onScene: setScene,
+          })
+        : runExhibit({
+            exhibit,
+            canvas,
+            ctx,
+            assets,
+            nukeFxRef,
+            levelUpFxRef,
+            speed,
+            onState: setShown,
+          });
     runRef.current = run;
     return () => {
       runRef.current = null;
@@ -351,8 +370,11 @@ export function EffectsGallery({
       setDials(null);
       // …and the UI shelf's staged run goes with it, on the same reasoning: a
       // board left reading the run the previous exhibit was ticking is a table
-      // that has wandered in from another screen.
+      // that has wandered in from another screen. The scene goes for the
+      // loudest version of that reason: a stopped cutscene left mounted is a
+      // full-screen letterbox over the next exhibit.
       setShown(null);
+      setScene(null);
     };
     // `speed` is deliberately NOT a dependency: changing it pushes into the
     // live run (below) instead of tearing the diorama down and re-staging it,
@@ -482,14 +504,41 @@ export function EffectsGallery({
         />
       )}
 
+      {/* THE SCENES SHELF — the game's OWN cutscene overlay, over the live
+          scene its host is ticking (`cutscene-exhibit.ts`). It is mounted
+          rather than painted because a scene draws itself into a letterboxed
+          canvas of its own and floats a DOM dialogue box on top of it, which is
+          exactly what a reviewer needs to see: the stage, the box, the speaker
+          name and the letter crawl are all part of what a scene LOOKS like.
+
+          IT TAKES NO POINTER. The gallery's own field gestures — swipe to
+          browse, tap to replay — belong to the canvas underneath, and a
+          full-screen overlay that swallowed them would make the shelf the one
+          place in the catalog you cannot browse. The scene's own SKIP button
+          goes with them (see the CSS): it is a control for a player who is
+          being made to wait, and nobody is waiting here — the host turns the
+          held pages itself. */}
+      {scene && assets && (
+        <div className="gallery-scene" aria-hidden="true">
+          <CutsceneOverlay
+            cutscene={scene}
+            assets={assets}
+            font={font}
+            onTap={() => {}}
+            onSkip={() => {}}
+          />
+        </div>
+      )}
+
       {/* THE UI SHELF's chrome — a real piece of the game's interface over the
           diorama, for the exhibits whose subject is not something drawn on the
           field (`RunExhibit.chrome`). The scoreboard is the case that needs it:
           it only draws inside a live session of two or more, so this is the one
           way to look at it without a listen server and a second machine. Real
           component, real staged run, invented roster — see `ui-exhibits.ts`. */}
-      {exhibit?.kind !== "drive" &&
-        exhibit?.chrome === "scoreboard" &&
+      {exhibit &&
+        isRunExhibit(exhibit) &&
+        exhibit.chrome === "scoreboard" &&
         shown && (
           <div className="hud-scores">
             <ScoreboardTable

@@ -316,8 +316,19 @@ export function validateCutscene(doc, refs) {
         err(`${where}.${flag} must be a boolean`);
       }
     }
+    // An actor that OPENS off its mark (a ship still coming down). Height, not
+    // depth — `at` stays the ground it is measured against.
+    if (actor.lift !== undefined && (!isNum(actor.lift) || actor.lift < 0)) {
+      err(
+        `${where}.lift must be a non-negative number (world px off the mark)`,
+      );
+    }
     for (const key of Object.keys(actor)) {
-      if (!["id", "name", "sprite", "at", "faceLeft", "hidden"].includes(key)) {
+      if (
+        !["id", "name", "sprite", "at", "faceLeft", "hidden", "lift"].includes(
+          key,
+        )
+      ) {
         err(`unknown field "${where}.${key}"`);
       }
     }

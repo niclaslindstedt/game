@@ -1968,6 +1968,14 @@ default) moves with the ground, `0` is pinned to the sky. `wrap: true` makes a
 prop re-enter from the far edge instead of scrolling away for ever — star fields
 under a long `drift`.
 
+**An actor's `lift:` opens it off its mark** — world px above `at`, the starting
+value of the height a `jump` beat drives. It is how a scene OPENS in mid-air,
+which `jump` alone cannot do (a jump interpolates from where the actor already
+is, so a thing COMING DOWN would have to fly up first, in frame). Author `at` as
+the ground it is descending TO: everything measured against the floor — the sort
+order, and a rocket's own plume and pad blast — goes on reading that mark while
+the body is still high above it.
+
 **`ground: true` is art that LIES on the floor** — paving, a road, a painted
 marking — rather than standing on it. Ground props are painted with the floor,
 under everything in the standing queue, because a slab is anchored at its NEAR

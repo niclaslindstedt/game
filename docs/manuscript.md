@@ -1099,10 +1099,14 @@ away until only the moon and the stars remain. Nobody comes out to put it out.)_
 
 _(Fade to black.)_
 
-_This scene plays again every time the hero lifts off his own lawn. On every
-launch after the first the house is already the burnt one — garage end black,
-roof gone through — and the blast blackens what is already black and puts the
-roof alight again. Nothing gets worse. Nobody comes out._
+_This scene plays again every time the hero lifts off his own lawn, and the
+house it is played beside is a LADDER of three fires that nothing ever repairs:
+whole for this first lift-off; burnt for the landing that brings him home (THE
+HOMECOMING, below); burnt twice over for the Mars lift-off, garage roof mostly
+gone and the door buckled in its frame; and a gutted shell with the living-room
+lamp still on for anything after that. The blast blackens what is already black
+and puts the roof alight again every time. Nothing gets better. Nobody comes
+out._
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 
@@ -1456,12 +1460,41 @@ away until only Earth and the stars remain.)_
 
 _(Fade to black.)_
 
+## Travel — THE HOMECOMING (cutscene)
+
+_The moon's send-off, part two (`earth_return`, the second scene of the moon
+level's `farewell`) — and THE LAUNCH played backwards. The same lot, the same
+night, the same pad: the ship comes down out of the top of the frame instead of
+climbing out of it, the engine cuts instead of lighting, and the hero walks out
+of the hull toward the house instead of away from it. He is still in the suit he
+wore on the regolith. The house is the burnt one this time, and the descent sets
+it alight all over again — the second of its three fires._
+
+> **CAPTION:** THE LONG WAY BACK. THREE DAYS TO THINK ABOUT WHAT THE DEAD MAN TOLD ME.
+
+_(The ship judders down on its own exhaust, throwing fire and smoke the length
+of the lot and blacking the garage side of the house a second time. It settles
+on the dead patch of lawn; the engine dies; the roof goes on burning behind it.
+The hero climbs out and starts across the lawn.)_
+
+**ME:** HOME. SAME LAWN. SAME SKY. SAME SMELL OF SOMETHING BURNING.
+
+**ME:** ...THAT ONE'S ME, ISN'T IT.
+
+_(He walks on past the burning frontage and in through his own door.)_
+
+> **CAPTION:** I WENT IN FOR A SANDWICH AND A MAP. THE ROOF COULD WAIT. IT HAD WAITED BEFORE.
+
+_(Fade to black.)_
+
 ## Travel — THE LAUNCH, AGAIN (cutscene)
 
 _Mars opens the way the moon did: the garage at night, the same scene played a
-second time (`launch`). Everything is as he left it — the burnt frontage, the
-dead patch of lawn — and the engine puts the roof alight again on its way up.
-No new lines; the captions are the ones above._
+second time (`launch`). Nothing has been repaired and now there are two fires on
+it — the frontage black the whole width, most of the garage roof eaten away, the
+door buckled in its frame — and the engine puts what is left of the roof alight
+for the third time on its way up. No new lines; the captions are the ones
+above._
 
 ## Travel — THE VOYAGE, LEG TWO (cutscene)
 

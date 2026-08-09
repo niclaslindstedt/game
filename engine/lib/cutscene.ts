@@ -111,6 +111,21 @@ export type CutsceneActorDef = {
   faceLeft?: boolean;
   /** Start off-stage; an `enter` beat brings the actor on. */
   hidden?: boolean;
+  /**
+   * START THIS FAR OFF ITS MARK — the opening value of the runtime `lift` a
+   * `jump` beat drives, in world px above `at`.
+   *
+   * It is what makes a scene able to OPEN in mid-air, which the `jump` beat
+   * alone cannot do: a jump interpolates from wherever the actor already is,
+   * so a scene of something COMING DOWN would have to fly it up first, in
+   * frame, before it could fall. The moon's homecoming is the case — the ship
+   * drops in from above the top of the frame — and it wants the mark it is
+   * descending TO authored, not the sky it happens to start in: `at` is the
+   * pad, so everything measured against the ground (the sort order, and a
+   * rocket's own plume and pad blast) goes on reading the landing spot while
+   * the hull is still two hundred px above it.
+   */
+  lift?: number;
 };
 
 /**
@@ -299,7 +314,7 @@ export function createCutscene(
       moving: false,
       shake: 0,
       poseMs: 0,
-      lift: 0,
+      lift: a.lift ?? 0,
       holding: null,
     })),
     beat: 0,

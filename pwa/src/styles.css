@@ -13522,6 +13522,32 @@ canvas.tier-artifact {
   cursor: inherit;
 }
 
+/* THE SCENES SHELF's stage — the game's own cutscene overlay mounted over the
+   gallery's (blank) field. Two things are taken off it, and both are about what
+   an exhibit IS: a picture in a display case, not a scene somebody is sitting
+   through.
+
+   IT TAKES NO POINTER, so the gallery's own field gestures — swipe to browse,
+   tap to replay — go on reaching the canvas underneath. A full-screen overlay
+   that swallowed them would make this the one shelf you cannot browse.
+
+   AND ITS SKIP BUTTON GOES, because it is a control for a player being made to
+   wait: here the host turns the held pages itself and the button could not be
+   pressed anyway (see above), so leaving it in frame would put a dead control
+   in every contact sheet. The BOX stays — the frame, the speaker's name and the
+   letter crawl are all part of what a scene looks like, which is the thing this
+   shelf exists to show. */
+.gallery-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.gallery-scene .cutscene-skip {
+  display: none;
+}
+
 /* The top row: BACK, the search box, and where you are in the catalog. Floats
    over the field with no bar of its own — only its controls take the pointer,
    so everywhere else the press belongs to the field's swipe/tap. */

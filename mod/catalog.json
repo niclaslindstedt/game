@@ -757,6 +757,7 @@
     "wardenclyffe_notes"
   ],
   "cutscenes": [
+    "earth_return",
     "launch",
     "moon_depart",
     "prelude",
@@ -1608,6 +1609,8 @@
     "garage_drive",
     "garage_house",
     "garage_house_burnt",
+    "garage_house_burnt2",
+    "garage_house_burnt3",
     "garden_soil_0",
     "garden_soil_1",
     "gas_rack",

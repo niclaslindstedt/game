@@ -138,7 +138,7 @@ function sceneDef(doc, id) {
       })),
     },
     actors: (doc.actors ?? []).map((actor) =>
-      pick(actor, ["id", "sprite", "name", "at", "faceLeft", "hidden"]),
+      pick(actor, ["id", "sprite", "name", "at", "faceLeft", "hidden", "lift"]),
     ),
     beats: (doc.beats ?? []).map((beat) => pick(beat, BEAT_KEYS)),
   };

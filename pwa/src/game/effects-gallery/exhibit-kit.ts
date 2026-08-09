@@ -46,9 +46,15 @@ export type ExhibitGroup =
   // set pieces would flatter every one of them.
   | "ELITES"
   | "WORLD"
-  // THE ROAD — the drive minigame's own collisions, and the ONE shelf whose
-  // exhibits are not hosted by a run (see `DriveExhibit`).
+  // THE ROAD — the drive minigame's own collisions, hosted by a `DriveState`
+  // rather than a run (see `DriveExhibit`).
   | "DRIVE"
+  // THE SCENES — every cutscene the campaign plays, on its own third host (see
+  // `CutsceneExhibit`). It is here for the same reason the road is: a scene is
+  // as visual as anything in this catalog and it was the ONLY visual thing in
+  // the game with no way to look at it side by side with the rest. The
+  // workbench (`?cutscene=<id>`) plays exactly one, by typing its id.
+  | "SCENES"
   | "UI";
 
 /**
@@ -308,11 +314,62 @@ export type DriveExhibit = ExhibitCard & {
   dash?: boolean;
 };
 
-export type Exhibit = RunExhibit | DriveExhibit;
+/**
+ * AN EXHIBIT HOSTED BY A CUTSCENE — the SCENES shelf, and the one kind of
+ * exhibit that is drawn by a COMPONENT rather than into the gallery's canvas.
+ *
+ * A scene is not a run and not a road: a `CutsceneState` on its own clock, over
+ * a fixed 224×126 letterbox stage, with a DOM dialogue box floating on it. So
+ * it gets a host of its own (`cutscene-exhibit.ts`), which builds the shipped
+ * scene with `createCutscene`, ticks it with `stepCutscene`, and hands it up for
+ * the gallery to mount the SAME `CutsceneOverlay` a real prelude is drawn with.
+ *
+ * There is no `fire` here, for the road's own reason: a scene is not an event
+ * pushed into something, it is a timeline that plays. What an exhibit chooses
+ * is WHICH scene, and WHAT THE RUN CARRYING IT HAS ALREADY DONE.
+ */
+export type CutsceneExhibit = ExhibitCard & {
+  kind: "scene";
+  /** Which scene, by its id in the compiled catalog
+   * (`content/cutscenes/<id>.yaml`). */
+  sceneId: string;
+  /**
+   * THE RUN TAGS THIS PLAYING CARRIES — what a `CutsceneProp.needs` / `until`
+   * is matched against (`cleared:moon`), and the reason a shelf entry is not
+   * simply a scene id.
+   *
+   * A scene the player sees more than once is a DIFFERENT PICTURE each time,
+   * and the difference is the whole of what some of them are about: the garage
+   * launch is played beside a house that is whole, then burnt twice over, then
+   * gutted. One exhibit per scene would show opening night and quietly claim
+   * that was the scene.
+   */
+  tags?: readonly string[];
+  /** How long a held TEXT beat is left up before the host turns it (ms) — the
+   * tap the display case has no player to make. Default `READ_MS`. */
+  readMs?: number;
+};
+
+export type Exhibit = RunExhibit | DriveExhibit | CutsceneExhibit;
 
 /** Which host stands this exhibit up. */
 export function isDriveExhibit(exhibit: Exhibit): exhibit is DriveExhibit {
   return exhibit.kind === "drive";
+}
+
+/** …and the third one. */
+export function isCutsceneExhibit(
+  exhibit: Exhibit,
+): exhibit is CutsceneExhibit {
+  return exhibit.kind === "scene";
+}
+
+/** Whether this exhibit is hosted by a RUN — the shelves whose staging is a
+ * `ScenarioSpec` over `STAGE_BASE`, which is every one but the road and the
+ * scenes. Written once here so the coverage suites and the gallery agree on
+ * what "staged" means. */
+export function isRunExhibit(exhibit: Exhibit): exhibit is RunExhibit {
+  return !isDriveExhibit(exhibit) && !isCutsceneExhibit(exhibit);
 }
 
 /**
