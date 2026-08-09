@@ -556,14 +556,31 @@ export function stepTraffic(state: DriveState, dt: number): void {
       other.pos.y += other.slew * dt;
       other.angle += other.spin * dt;
       if (other.z <= 0) {
+        // ON THE TARMAC AND BEING SCRUBBED BY IT — the viscous bite and then
+        // the friction that actually finishes it.
+        //
+        // THE FRICTION IS APPLIED TO THE TRAVEL RATHER THAN TO EACH AXIS, which
+        // matters because a thing that has gone over is almost never running
+        // straight: it left the lane sideways as well as forwards, and taking a
+        // fixed number off each of `speed` and `slew` separately would scrub a
+        // diagonal slide by half as much again as a straight one and bend its
+        // path toward whichever axis ran out first. One deceleration, along the
+        // direction it is going, is the honest sum and it is also the simple
+        // one. See `downFrictionPx` for why a drag alone could never stop it.
         const drag = Math.max(0, 1 - cfg.downDragPerSec * dt);
         other.speed *= drag;
         other.slew *= drag;
         other.spin *= drag;
-        if (Math.abs(other.speed) + Math.abs(other.slew) < cfg.downRestPx) {
+        const travel = Math.hypot(other.speed, other.slew);
+        const scrub = cfg.downFrictionPx * dt;
+        if (travel <= scrub + cfg.downRestPx) {
           other.speed = 0;
           other.slew = 0;
           other.spin = 0;
+        } else {
+          const keep = (travel - scrub) / travel;
+          other.speed *= keep;
+          other.slew *= keep;
         }
       }
       // A DROPPED MACHINE ENDS UP WHEREVER IT SLIDES, pavement included — that
@@ -576,7 +593,13 @@ export function stepTraffic(state: DriveState, dt: number): void {
       const rest = def.class === "open" ? walk : edges;
       other.pos.y = clamp(other.pos.y, rest.top, rest.bottom);
       if (other.pos.y === rest.top || other.pos.y === rest.bottom) {
-        other.slew *= 0.5;
+        // …AND WHAT IT MEETS THERE IS A KERB. It used to keep half its lateral
+        // speed on every tick it spent against the edge, which is a thing
+        // leaning on a wall rather than a thing that has hit one — and while it
+        // leant, the along-road half of the slide carried on unchecked, so a
+        // rolled car ground its way down the gutter for a screen and a half. A
+        // slide that reaches the edge of the road has arrived.
+        other.slew = 0;
       }
       continue;
     }
@@ -612,7 +635,12 @@ export function stepTraffic(state: DriveState, dt: number): void {
       other.pos.x += other.speed * dt;
       const drag = Math.max(0, 1 - cfg.wreckDragPerSec * dt);
       other.speed *= drag;
-      if (Math.abs(other.speed) < cfg.wreckRestPx) other.speed = 0;
+      // …and the tyres under it, which are what actually ends the roll rather
+      // than merely thinning it out for ever (`wreckFrictionPx`).
+      const scrub = cfg.wreckFrictionPx * dt;
+      const rolling = Math.abs(other.speed);
+      if (rolling <= scrub + cfg.wreckRestPx) other.speed = 0;
+      else other.speed -= Math.sign(other.speed) * scrub;
       continue;
     }
 
@@ -842,10 +870,15 @@ export function knockDown(
   other.slew = side * Math.abs(lateralPx) * 0.6;
   other.vz = liftZ * 0.5;
   other.z = Math.max(other.z, 1);
+  // The spin is read off the speed it HAD, and then that speed is paid for
+  // going down — the same trade a rolling car makes (`tipVehicle`), and read in
+  // this order so a machine dropped hard still cartwheels hard.
+  const wasPx = Math.abs(other.speed);
+  other.speed *= DRIVE.traffic.downSpeedKeep;
   // How hard it cartwheels is how fast it was going — derived, never drawn for:
   // the road's stream lays the crowd down, and a cosmetic draw spent here would
   // move every body after it (the same rule the gore obeys).
-  other.spin = side * Math.abs(other.speed) * DRIVE.traffic.downSpinPerSpeed;
+  other.spin = side * wasPx * DRIVE.traffic.downSpinPerSpeed;
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
   // …and it slides clear under its own steam rather than being placed clear —
   // see `separationPx`. A machine going down in front of the bumper is the one

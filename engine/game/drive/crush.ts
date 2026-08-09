@@ -142,6 +142,13 @@ export function tipVehicle(
   const side = other.pos.y >= awayFrom ? 1 : -1;
   other.downed = true;
   other.rolls++;
+  // GOING OVER COSTS IT MOST OF ITS ROAD SPEED, and it used to cost nothing at
+  // all — the whole of `tipVehicle` was an attitude change, so a car went onto
+  // its roof still doing whatever it had been doing and slid off down the
+  // carriageway looking like it was being driven there. The energy that buys
+  // the rotation and the lift below has to come out of somewhere, and forward
+  // motion is the only place it can come from. See `DRIVE.traffic.downSpeedKeep`.
+  other.speed *= DRIVE.traffic.downSpeedKeep;
   // HELD TO THE SAME LATERAL SPEED A SHUNT IS, and for a reason that is about
   // legibility rather than physics: the sum's raw answer for a full-flank clip
   // at the top end is over 300 px/s, which carries the vehicle across two lanes

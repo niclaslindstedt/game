@@ -48,6 +48,22 @@ type DriveFxKind =
    */
   | "tyresmoke"
   /**
+   * WHAT A CRASHED CAR SITS IN — the pale billow a vehicle raises when it goes
+   * over and grinds itself down the tarmac.
+   *
+   * IT IS A THIRD SMOKE RATHER THAN A LOUDER SECOND ONE, and the difference is
+   * the shape. The dead engine's `smoke` is a COLUMN: it goes up, out of one
+   * point, and says a bonnet is cooking. A locked tyre's `tyresmoke` is a
+   * STREAK: it is left behind by something still travelling and falls away
+   * down the road. Neither is what the request asked for, which is a cloud that
+   * SURROUNDS the thing — a mass that rolls outward from under a car on its
+   * roof and hangs there with the wreck inside it. So it expands from a RADIUS
+   * (`DriveFx.spread`, the vehicle's own extent) rather than from a point, it
+   * barely climbs, and it lives long enough to still be there when the player
+   * goes past.
+   */
+  | "dust"
+  /**
    * A STREET LIGHT'S LENS GOING — the one burst on this road thrown from up in
    * the AIR rather than off the tarmac, and the only one that was LIT a moment
    * before it existed.
@@ -114,12 +130,46 @@ type DriveFx = {
    * the car rather than as a light being taken off its post.
    */
   lift?: number;
+  /**
+   * HOW WIDE A BODY THIS EFFECT COMES OFF (world px of radius).
+   *
+   * Only the `dust` wants one, and it is the whole of why that cloud reads as
+   * surrounding a wreck rather than as a puff beside it: everything else here
+   * is thrown from a POINT (a contact, a tyre, a bonnet) and can size itself
+   * off the collision's energy alone, while a cloud raised by a car grinding
+   * along on its roof is as big as the car. A bus disappears into its own, a
+   * bicycle raises a wisp, and nobody had to author either — it is the fleet's
+   * own `halfLengthPx`.
+   */
+  spread?: number;
+};
+
+/**
+ * WHAT ONE CRASHED VEHICLE IS STILL OWED — the bookkeeping behind the cloud.
+ *
+ * IT LIVES ON THE FX STATE RATHER THAN IN A SIXTH OBJECT THREADED THROUGH THE
+ * LOOP, and that is a decision rather than a shortcut. A wreck's smoke produces
+ * nothing but effects — no marks on the tarmac, no draw pass of its own, which
+ * is exactly what makes the skids a separate module — so the only thing it
+ * needs to survive between ticks is a cadence, and it must be thrown away at
+ * precisely the moment every other effect is (`clearDriveFx`, a restart). Kept
+ * anywhere else, a restart would leave the new leg's first wreck inheriting the
+ * old leg's clock and going quiet.
+ */
+export type WreckSmoke = {
+  /** Drive-clock ms the next puff is due at. */
+  dueMs: number;
+  /** …and when this vehicle first went down, so the cloud can settle. */
+  sinceMs: number;
 };
 
 /** The road's live effects, its shake and its flash — one object the screen
  * keeps on a ref. */
 export type DriveFxState = {
   fx: DriveFx[];
+  /** Every vehicle currently smoking, keyed on its traffic id (`stepWreckSmoke`
+   * in `wreck-smoke.ts` owns it — see `WreckSmoke` for why it is parked here). */
+  wrecks: Map<number, WreckSmoke>;
   /** Camera shake, in world px of amplitude, decaying every step. */
   shake: number;
   /** The white bloom over a heavy hit, 0→1, decaying every step. */
@@ -178,6 +228,7 @@ const FLASH_DECAY = 9;
 export function createDriveFx(): DriveFxState {
   return {
     fx: [],
+    wrecks: new Map(),
     shake: 0,
     flash: 0,
     calm:
@@ -310,6 +361,77 @@ export function driveTyreSmoke(
 }
 
 /**
+ * A CRASHED CAR'S OWN CLOUD — one billow, centred on the wreck and as wide as
+ * the wreck is.
+ *
+ * It is raised on a cadence rather than once (`stepWreckSmoke`), which is what
+ * makes it both things it needs to be: laid every few frames while the thing is
+ * still grinding down the road, the emissions trail behind it as a wall of dust,
+ * and laid at the same spot once it has stopped, they pile into a pall standing
+ * over it. One effect, two readings, and neither of them needed a second kind.
+ *
+ * IT SHAKES NOTHING AND FLASHES NOTHING. The collision that made the wreck has
+ * already shoved the frame as hard as this road ever shoves it (`driveSmash`);
+ * a cloud that kicked as well would be charging the player twice for one event
+ * and would keep charging him for the four seconds the dust hangs there.
+ */
+export function driveWreckDust(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+  force: number,
+  /** How wide the thing under it is (world px) — the fleet's own half-length. */
+  spread: number,
+): void {
+  // THE ONE EFFECT ON THIS ROAD THAT IS BOUNDED, because it is the one that is
+  // ISSUED RATHER THAN THROWN. Everything else here comes off a collision, and
+  // there are only ever so many collisions in a frame; a cloud is raised on a
+  // cadence for as long as a wreck exists, so a hero who has just ploughed a
+  // lane of traffic has five of them each laying a billow every few frames and
+  // every billow standing for the better part of two seconds. The cap is well
+  // over what one wreck can hold up (its whole slide plus its whole settle) and
+  // well under what five can, which is exactly where a safety valve belongs.
+  let live = 0;
+  for (const one of state.fx) if (one.kind === "dust") live++;
+  if (live >= DUST_MAX) {
+    const oldest = state.fx.findIndex((one) => one.kind === "dust");
+    if (oldest >= 0) state.fx.splice(oldest, 1);
+  }
+  push(state, "dust", x, y, nowMs, DUST_LIFE_MS, force, false, 0, 0, spread);
+}
+
+/**
+ * …AND THE DEAD ENGINE UNDER IT, once the wreck has come to rest: the same slow
+ * dark column the hero's own breakdown raises, standing where the car stopped.
+ *
+ * IT DOES NOT FOLLOW, and that is the fix rather than an omission. A wrecked car
+ * used to be handed `driveBreakdown`, whose column is pinned to the hero's wagon
+ * (`DriveFx.follow` — right for the hero's own engine dying, and the only thing
+ * `drawDriveFx` is ever given a position for). So every car the player finished
+ * lit a plume on HIS OWN BONNET and left the actual wreck sitting in the road
+ * perfectly clean. A stopped wreck needs no following at all: it is not going
+ * anywhere, which is the whole point of it.
+ */
+export function driveWreckSmoke(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+  lifeMs: number,
+): void {
+  push(state, "smoke", x, y, nowMs, lifeMs, 1);
+}
+
+/** How long one billow hangs about (ms). Long — a dust cloud outlasts every
+ * other effect on this road by a factor of three, because settling is what dust
+ * DOES and a cloud that vanished in half a second would read as a puff. */
+const DUST_LIFE_MS = 1900;
+/** …and the most that may be standing at once, over every wreck on the road —
+ * see `driveWreckDust`. */
+const DUST_MAX = 30;
+
+/**
  * A STREET LIGHT HAS BEEN TAKEN OFF ITS POST: its lens, in pieces, out of the
  * air where the lamp head was.
  *
@@ -355,6 +477,7 @@ export function driveWindscreenGore(
 /** Everything the road throws away when the leg restarts. */
 export function clearDriveFx(state: DriveFxState): void {
   state.fx.length = 0;
+  state.wrecks.clear();
   state.shake = 0;
   state.flash = 0;
 }
@@ -370,6 +493,7 @@ function push(
   follow = false,
   drift = 0,
   lift = 0,
+  spread = 0,
 ): void {
   state.fx.push({
     kind,
@@ -381,6 +505,7 @@ function push(
     follow,
     drift,
     lift,
+    spread,
     // The seed is the spawn POSITION rather than a draw — a `Math.random` here
     // would be fine (it is spawn-time, not per-frame), but deriving it means an
     // identical road replays with an identical picture, which is what makes a
@@ -496,6 +621,7 @@ export function drawDriveFx(
     else if (fx.kind === "grit") drawGrit(ctx, fx, t, sx, sy);
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);
     else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
+    else if (fx.kind === "dust") drawDust(ctx, fx, t, sx, sy);
     else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy);
     else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
     else drawSmoke(ctx, fx, t, sx, sy);
@@ -760,6 +886,76 @@ function drawTyreSmoke(
       0,
       Math.PI * 2,
     );
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/**
+ * A WRECK'S OWN CLOUD — the dust and smoke a crashed car sits inside.
+ *
+ * IT ROLLS OUT FROM A RADIUS, WHICH IS THE WHOLE TRICK. Every other cloud on
+ * this road is issued from a point and therefore has a middle: it is a puff
+ * BESIDE the thing that made it. A wreck's cloud has to have the wreck IN it, so
+ * the puffs start distributed right around the vehicle's own extent (`spread`)
+ * and expand outward from there. At the smallest force that is a wisp off a
+ * bicycle; at the largest the bus is not visible through it.
+ *
+ * FLATTENED ACROSS THE ROAD (the 0.45 on the vertical reach), like everything
+ * else this file scatters: the world is drawn raked, so a circular spread in
+ * world space is an ellipse on the screen, and a cloud that ignored that would
+ * stand up like a wall rather than lie on the tarmac.
+ *
+ * IT BARELY CLIMBS. A settling cloud is mostly going sideways and down —
+ * `drawSmoke` below is the thing that goes up, and it is a different sight for a
+ * different reason (a bonnet on fire, not a road being scrubbed). The small lift
+ * here is only enough to stop the mass reading as a decal painted on the tarmac.
+ */
+function drawDust(
+  ctx: CanvasRenderingContext2D,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const spread = fx.spread || 18;
+  // MANY SMALL ONES RATHER THAN A FEW BIG ONES. A dozen wide discs growing
+  // together is the "grey balloons" the tyre smoke warns about — the eye reads
+  // the individual circles and the mass never forms. The mass has to come out
+  // of OVERLAP, which means more puffs, each smaller and each fainter than the
+  // cloud is meant to look.
+  const puffs = Math.round(10 + fx.force * 16);
+  ctx.save();
+  for (let i = 0; i < puffs; i++) {
+    // EVERY PUFF HAS ITS OWN AGE, the same stagger the tyre smoke uses and for
+    // the same reason: aged in lockstep, a dozen hard-edged discs growing and
+    // fading together read as a ring of grey balloons rather than as a mass.
+    const phase = Math.min(1, t + scatter(fx.seed, i, 20) * 0.5);
+    const ease = phase * (2 - phase);
+    const angle = scatter(fx.seed, i, 21) * Math.PI * 2;
+    // Born spread around the body and pushed outward — never from the centre,
+    // or the first frames are a dot on the roof of the car.
+    const from = spread * (0.25 + scatter(fx.seed, i, 22) * 0.55);
+    const reach = from + spread * (0.4 + scatter(fx.seed, i, 23) * 0.8) * ease;
+    const px = sx + Math.cos(angle) * reach;
+    // …AND IT SITS ON THE BODY RATHER THAN ON THE WHEELS. Every effect on this
+    // road is anchored at the GROUND, which is right for a spark off a bumper
+    // and wrong for a cloud that is meant to have a car inside it: a wreck lying
+    // on its side is drawn a good fifteen px above the point the physics holds
+    // it at, so a cloud centred there wraps its wheels and leaves the body clear
+    // above the smoke. Raised by a share of its own spread, so the bus's cloud
+    // climbs as far up the bus as the bicycle's does up the bicycle.
+    const py =
+      sy + Math.sin(angle) * reach * 0.45 - 2 - spread * 0.22 - ease * 7;
+    const r = 1.5 + ease * (1.8 + fx.force * 3 + spread * 0.06);
+    // ROAD DUST IS PALE AND SMOKE IS NOT, and one cloud is both — so the tone
+    // varies per puff rather than per cloud, which is what stops it reading as
+    // a single flat colour with a hole punched in it.
+    const tone = 132 + Math.round(scatter(fx.seed, i, 24) * 68);
+    const alpha = (1 - phase) * 0.15 * (0.45 + fx.force * 0.55);
+    ctx.fillStyle = `rgba(${tone}, ${tone - 4}, ${tone - 11}, ${alpha.toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(Math.round(px), Math.round(py), r, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
