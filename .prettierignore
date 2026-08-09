@@ -7,6 +7,11 @@ pwa/dist/
 pwa/src/generated/
 pwa/src/game/assets/
 engine/generated/
+# ...and the path that output was written to before the root source tree was
+# renamed src/ -> engine/ (#1046). A pre-rename working copy still holds one (a
+# checkout cannot delete an ignored directory), and without this line the
+# leftover fails `make fmt-check` on unrelated work. See .gitignore.
+/src/generated/
 native/ios/
 native/android/
 # Desktop shell build artifacts: the copied website, the compiled main process,

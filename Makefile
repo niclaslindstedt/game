@@ -20,8 +20,16 @@ fmt-check:
 release:
 	npm run build
 
+# Both compiled catalogs go, not just the app's: `engine/generated/` is the same
+# kind of thing (gitignored, rebuilt by `npm run levels` on the next build) and
+# leaving it behind meant a "clean" tree still carried the engine's whole
+# compiled content tree. `src/generated/` is that directory's RETIRED path —
+# the root source tree was renamed src/ -> engine/ (#1046), and a checkout
+# cannot delete an ignored directory, so a working copy that had built before
+# that commit still holds a stale copy. This is the command that removes it.
 clean:
-	rm -rf node_modules pwa/node_modules pwa/dist pwa/src/generated site
+	rm -rf node_modules pwa/node_modules pwa/dist pwa/src/generated engine/generated src/generated site
+	@rmdir src 2>/dev/null || true
 
 install:
 	npm install

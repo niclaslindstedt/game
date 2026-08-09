@@ -6,20 +6,25 @@
 // the hero's BAG below, where every piece is worth what he'll pay for it.
 //
 // Tapping anything raises a FLOATING CARD beside the cell (ShopDealCard) with
-// the trade's own BUY/SELL button in it — and, on a STACKED stall row, a second
-// BUY ALL that clears the pile in one tap for what it will really cost; tapping
-// past the cells puts it away. That card replaced a fixed detail bar at the foot
-// of the panel, which had to reserve room for the tallest item it might ever
-// show and so spent a third of a phone screen on a TAP AN ITEM TO TRADE hint.
-// SELL JUNK clears every outgrown piece in one tap, using the same scrap rule as
-// the inventory's sweep. All mutations go through the engine's shop API
-// (sellItem/buyStock) and `onChange` re-renders.
+// the trade's own BUY/SELL control in it — on a stacked stall row, a quantity
+// field in front of the BUY button, which reprices as it is typed into
+// (ShopTools / shop-quantity.ts); tapping past the cells puts it away. That card
+// replaced a fixed detail bar at the foot of the panel, which had to reserve
+// room for the tallest item it might ever show and so spent a third of a phone
+// screen on a TAP AN ITEM TO TRADE hint.
+//
+// SELL JUNK is a MODE, not a sweep: the first press ticks every outgrown piece
+// (the inventory's own scrap rule) and hands the bag over to picking, the second
+// press takes the sale. While it is armed a bag cell is a TICK BOX — so reading
+// one moves to the gestures that are not presses: HOVER on a mouse, PRESS AND
+// HOLD on a finger, both of which raise the piece's card with no button on it.
+// All mutations go through the engine's shop API (sellItem/buyStock) and
+// `onChange` re-renders.
 
 import { localHero } from "./local-seat.ts";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
-  abilityDef,
   canAffordStallRow,
   canBuyStock,
   questStallRows,
@@ -28,7 +33,6 @@ import {
   identifyCost,
   isScrappableLoot,
   isUnidentified,
-  medkitTierIndex,
   merchantLine,
   merchantName,
   repairAllCost,
@@ -41,6 +45,7 @@ import {
 } from "@game/core";
 
 import { formatCoins } from "@ui/lib/format-number.ts";
+import { watchLongPress, type LongPressWatch } from "@ui/lib/long-press.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
@@ -48,14 +53,19 @@ import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { BuybackPanel } from "./BuybackPanel.tsx";
-import {
-  medkitIconFor,
-  REPAIR_KIT_ICON,
-  STAMINA_POTION_ICON,
-} from "./consumables.ts";
 import { IdentifyReveal } from "./IdentifyReveal.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
+import { stockIconName } from "./shop-stock-icon.ts";
+import {
+  BuybackButton,
+  BuyQuantityRow,
+  CoinPrice,
+  DealLabel,
+  IdentifyButton,
+  RepairButton,
+  SellSweepButton,
+} from "./ShopTools.tsx";
 import { SpritePortrait, useSpeakingBust } from "./SpritePortrait.tsx";
 import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
@@ -64,260 +74,14 @@ import { runCommand, runCommandOk } from "./run-commands.ts";
 
 /** What the player has tapped, plus the cell rect the card anchors to. Held
  * together because they change together: a selection with a stale anchor would
- * float the card over whatever moved into that spot. */
-type Selection = (
-  { kind: "stock"; id: number } | { kind: "bag"; index: number }
-) & { anchor: DOMRect };
-
-/** The sprite a stall entry shows on the counter — a powerup's own icon, a
- * consumable's dock glyph (medkits per quality), a weapon's item icon. */
-function stockIconName(entry: MerchantStock): string {
-  switch (entry.kind) {
-    case "ability":
-      return abilityDef(entry.defId).icon;
-    case "consumable":
-      return entry.item === "medkit"
-        ? medkitIconFor(medkitTierIndex(entry.tier))
-        : entry.item === "repair"
-          ? REPAIR_KIT_ICON
-          : STAMINA_POTION_ICON;
-    case "weapon":
-      return equipmentIcon(entry.equipment.defId);
-  }
-}
-
-function CoinPrice({
-  font,
-  sprites,
-  amount,
-  color = "#ffd75e",
-  scale = 2,
-}: {
-  font: PixelFont;
-  sprites: Sprites;
-  amount: number;
-  color?: string;
-  /** Glyph scale — the shop's readable body size (2) by default, so a price is
-   * never the smallest thing on the counter. */
-  scale?: number;
-}) {
-  const coin = spriteDataUrl(sprites, "icon_coin");
-  return (
-    <span className="shop-price">
-      {coin && <img src={coin} alt="" className="pixel-img shop-coin" />}
-      <PixelText
-        font={font}
-        text={formatCoins(amount)}
-        scale={scale}
-        color={color}
-      />
-    </span>
-  );
-}
-
-/**
- * The BUY/SELL action's face: the coin and the amount, with an optional verb
- * ahead of it. BUY spells the verb out ("BUY 🪙 12"); SELL leaves it off — the
- * button lives beside the item's own stats, so the coins-out reads as a sale
- * without the word.
- */
-function DealLabel({
-  font,
-  sprites,
-  verb,
-  amount,
-}: {
-  font: PixelFont;
-  sprites: Sprites;
-  verb?: string;
-  amount: number;
-}) {
-  const coin = spriteDataUrl(sprites, "icon_coin");
-  return (
-    <span className="shop-deal-label">
-      {verb && <PixelText font={font} text={verb} scale={2} color="#0b0d10" />}
-      {coin && <img src={coin} alt="" className="pixel-img shop-deal-coin" />}
-      <PixelText
-        font={font}
-        text={formatCoins(amount)}
-        scale={2}
-        color="#0b0d10"
-      />
-    </span>
-  );
-}
-
-/**
- * The counter's one bulk-sell tool: every OUTGROWN piece across the counter in
- * a single gesture (the inventory's own scrap rule), wearing a coin, the label,
- * and — when there's anything to sell — the coins it would fetch. Disabled (and
- * total hidden) when nothing qualifies, so it can never fire on an empty bag.
+ * float the card over whatever moved into that spot.
  *
- * It is the counter's ONLY bulk sale: a SELL ALL sat beside it and sold the
- * keepers too, and it is gone. A whole bag still crosses the counter one deal
- * card at a time.
- */
-function SellJunkButton({
-  font,
-  sprites,
-  total,
-  count,
-  onSell,
-}: {
-  font: PixelFont;
-  sprites: Sprites;
-  total: number;
-  count: number;
-  onSell: () => void;
-}) {
-  const enabled = count > 0;
-  const coin = spriteDataUrl(sprites, "icon_coin");
-  return (
-    <button
-      type="button"
-      className="pixel-button secondary shop-bulk-btn"
-      aria-label="sell-junk"
-      disabled={!enabled}
-      onClick={enabled ? onSell : undefined}
-    >
-      {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
-      <PixelText
-        font={font}
-        text="SELL JUNK"
-        scale={2}
-        color={enabled ? "#e6e8eb" : "#5a6470"}
-      />
-      {enabled && (
-        <PixelText
-          font={font}
-          text={formatCoins(total)}
-          scale={2}
-          color="#ffd75e"
-        />
-      )}
-    </button>
-  );
-}
-
-/** Mend the hero's whole kit for coins — an icon-only button beside the sell
- * tools: just the wrench, no label. Enabled (and tappable) only when something
- * needs mending AND the purse can cover it; otherwise it dims like a spent
- * action. A tap mends the whole kit at once. */
-function RepairButton({
-  sprites,
-  cost,
-  coins,
-  onRepair,
-}: {
-  sprites: Sprites;
-  cost: number;
-  coins: number;
-  onRepair: () => void;
-}) {
-  const enabled = cost > 0 && coins >= cost;
-  const wrench = spriteDataUrl(sprites, "icon_wrench");
-  return (
-    <button
-      type="button"
-      className="pixel-button secondary shop-repair-btn"
-      aria-label="repair-all"
-      disabled={!enabled}
-      onClick={enabled ? onRepair : undefined}
-    >
-      {wrench && (
-        <img src={wrench} alt="" className="pixel-img shop-repair-icon" />
-      )}
-    </button>
-  );
-}
-
-/**
- * Arm the counter's APPRAISAL — the merchant's identify service as a MODE:
- * press this, then press the unidentified find to identify (the D2 Cain flow,
- * one press per piece). Pressing it again disarms. It wears the lookup
- * ticket's own barcode glyph (the two are the same service at two venues) and
- * carries the count of veiled finds in the bag; dead while the bag holds none.
- */
-function IdentifyButton({
-  font,
-  sprites,
-  count,
-  armed,
-  onToggle,
-}: {
-  font: PixelFont;
-  sprites: Sprites;
-  count: number;
-  armed: boolean;
-  onToggle: () => void;
-}) {
-  const enabled = count > 0;
-  const glyph = spriteDataUrl(sprites, "icon_lookup_ticket");
-  return (
-    <button
-      type="button"
-      className={`pixel-button secondary shop-bulk-btn${
-        armed ? " shop-identify-armed" : ""
-      }`}
-      aria-label="identify-mode"
-      disabled={!enabled}
-      onClick={enabled ? onToggle : undefined}
-    >
-      {glyph && <img src={glyph} alt="" className="pixel-img shop-bulk-coin" />}
-      <PixelText
-        font={font}
-        text="IDENTIFY"
-        scale={2}
-        color={enabled ? (armed ? "#ffd75e" : "#e6e8eb") : "#5a6470"}
-      />
-      {enabled && (
-        <PixelText font={font} text={String(count)} scale={2} color="#ffd75e" />
-      )}
-    </button>
-  );
-}
-
-/**
- * Open the BUY-BACK shelf — the undo beside the sell tools it undoes. It wears
- * the satchel the LOST & FOUND's rows wear (the two screens are the same idea
- * at two prices) and carries the count of what is on the shelf, so a player who
- * has just swept SELL JUNK can see at a glance that the seven pieces are still
- * recoverable. Dead until something has actually been sold here.
- */
-function BuybackButton({
-  font,
-  sprites,
-  count,
-  onOpen,
-}: {
-  font: PixelFont;
-  sprites: Sprites;
-  count: number;
-  onOpen: () => void;
-}) {
-  const enabled = count > 0;
-  const bag = spriteDataUrl(sprites, "icon_bag");
-  return (
-    <button
-      type="button"
-      className="pixel-button secondary shop-bulk-btn"
-      aria-label="buy-back"
-      disabled={!enabled}
-      onClick={enabled ? onOpen : undefined}
-    >
-      {bag && <img src={bag} alt="" className="pixel-img shop-bulk-coin" />}
-      <PixelText
-        font={font}
-        text="BUY BACK"
-        scale={2}
-        color={enabled ? "#e6e8eb" : "#5a6470"}
-      />
-      {enabled && (
-        <PixelText font={font} text={String(count)} scale={2} color="#ffd75e" />
-      )}
-    </button>
-  );
-}
+ * A bag selection raised by a HOVER or a HOLD while the sell mode is picking is
+ * a `peek`: the same card with no button on it, because in that mode the press
+ * that would have sold the piece is the press that ticks it. */
+type Selection = (
+  { kind: "stock"; id: number } | { kind: "bag"; index: number; peek?: true }
+) & { anchor: DOMRect };
 
 export function ShopPanel({
   state,
@@ -345,6 +109,11 @@ export function ShopPanel({
   // its deal card. Stays armed across a run of identifies — press, tap, tap —
   // and disarms itself when nothing veiled is left.
   const [identifyMode, setIdentifyMode] = useState(false);
+  // THE SELL PICK: the bag indices ticked for the bulk sale, or null while the
+  // mode is not up at all. A Set rather than a flag on each item because the
+  // pick is the SHOP's, not the run's — closing the counter forgets it, and
+  // nothing in the engine ever hears that a piece was considered.
+  const [sellPick, setSellPick] = useState<Set<number> | null>(null);
   const merchant = state.merchant;
   const player = localHero(state);
   const line = merchantLine(state.level.id);
@@ -405,12 +174,6 @@ export function ShopPanel({
     () => setSelected(null),
   );
 
-  // ESCAPE (and the pad's B, which arrives as one) unwinds one layer at a time
-  // — the CARD first, then an armed IDENTIFY mode, and the shop only once
-  // nothing is raised — the same unwind the arsenal's card modal does. Caught
-  // in the capture phase so it beats the run's own shop-closing handler
-  // underneath. Bound only while something is raised, so an idle counter is
-  // dismissed by Escape exactly as before.
   // How many veiled finds the bag still holds — the IDENTIFY button's badge
   // and gate. The ARMED read is derived rather than reset by an effect: the
   // mode collapses the moment the last veiled piece is read (or sold), with
@@ -419,21 +182,29 @@ export function ShopPanel({
     (item): item is Equipment => item !== null && isUnidentified(item),
   ).length;
   const identifyArmed = identifyMode && unidentifiedCount > 0;
+  const sellArmed = sellPick !== null;
 
+  // ESCAPE (and the pad's B, which arrives as one) unwinds one layer at a time
+  // — the CARD first, then a picking SELL mode, then an armed IDENTIFY mode,
+  // and the shop only once nothing is raised — the same unwind the arsenal's
+  // card modal does. Caught in the capture phase so it beats the run's own
+  // shop-closing handler underneath. Bound only while something is raised, so
+  // an idle counter is dismissed by Escape exactly as before.
   const hasCard = selected !== null;
   useEffect(() => {
-    if (!hasCard && !identifyArmed) return;
+    if (!hasCard && !identifyArmed && !sellArmed) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
       playUiSound(synth, "back");
       if (hasCard) setSelected(null);
+      else if (sellArmed) setSellPick(null);
       else setIdentifyMode(false);
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [hasCard, identifyArmed]);
+  }, [hasCard, identifyArmed, sellArmed]);
 
   // The stat card compares the selection against what the hero already wears in
   // that slot (the same green/red deltas the inventory shows) — so a purchase
@@ -444,27 +215,31 @@ export function ShopPanel({
     return worn && worn.id !== item.id ? worn : null;
   };
 
-  // The one-tap cleanup: every outgrown piece (the inventory SCRAP rule)
-  // sold across the counter in a single gesture, for its full valuation.
+  // What the SELL sweep would take: while the mode is picking, exactly what is
+  // ticked; before it is armed, the outgrown pieces the first press will tick
+  // (the inventory SCRAP rule), which is what the button's price tag promises.
   const junk = player.inventory
     .map((item, index) => ({ item, index }))
     .filter(
       (e): e is { item: Equipment; index: number } =>
         e.item !== null && isScrappableLoot(state, player, e.item),
     );
-  const junkTotal = junk.reduce((sum, e) => sum + sellValue(e.item), 0);
+  const sellIndices = sellPick
+    ? [...sellPick].sort((a, b) => a - b)
+    : junk.map((e) => e.index);
+  const sellTotal = sellIndices.reduce((sum, index) => {
+    const item = player.inventory[index];
+    return item ? sum + sellValue(item) : sum;
+  }, 0);
+  const bagHoldsAnything = player.inventory.some((item) => item !== null);
 
-  // BUY ALL: how many units of the selected STACKED row a single tap would
-  // actually take — the pile's depth, the purse and the carry room at once
-  // (stockBuyableCount), so the button's price tag is what the loop below will
-  // really spend rather than an optimistic multiplication.
-  const bulkBuy = selectedStock
+  // How many units of the selected STACKED row this counter would really part
+  // with — the pile's depth, the purse and the carry room at once
+  // (stockBuyableCount). It is the quantity field's ceiling, so the field can
+  // never be typed into a purchase the counter would then refuse.
+  const maxBuy = selectedStock
     ? stockBuyableCount(state, player, selectedStock)
     : 0;
-  // What that button SHOWS: the units it would take, or — when it can't take
-  // two and is therefore dead — the whole pile it is dimmed against, which is
-  // the number that explains the dimming.
-  const bulkShown = bulkBuy > 1 ? bulkBuy : (selectedStock?.qty ?? 0);
 
   // REPAIR ALL: the coins to mend the worn weapon, worn armor, and every
   // breakable bag piece back to full (0 when the whole kit is already whole).
@@ -504,35 +279,84 @@ export function ShopPanel({
     onChange();
   };
 
-  const doBuy = (entry: MerchantStock) => {
-    if (runCommandOk(state, "buyStock", entry.id)) {
-      playUiSound(synth, "equip");
-      // Nothing on the stall restocks, so a purchase that empties the entry
-      // leaves a dead row selected — drop the card rather than offering a
-      // SOLD OUT button. A pile with units left keeps its card up so the next
-      // medkit is one tap away.
-      if (entry.qty <= 0) setSelected(null);
-      onChange();
-    } else {
-      playUiSound(synth, "back");
-    }
-  };
-
-  // BUY ALL: clear the stacked row in one tap. Still ONE `buyStock` per unit —
-  // the verb every other route buys through, re-checking the purse and the
-  // room each time — so this can never take a unit the single BUY would have
+  // BUY `count` units in one press. Still ONE `buyStock` per unit — the verb
+  // every other route buys through, re-checking the purse and the room each
+  // time — so a typed quantity can never take a unit the single BUY would have
   // refused, and a session's command channel sees the same verb it always did.
-  // `bulkBuy` bounds the loop, and the refusal breaks it anyway.
-  const doBuyAll = (entry: MerchantStock, count: number) => {
+  // The field's own clamp bounds the loop, and the refusal breaks it anyway.
+  const doBuy = (entry: MerchantStock, count: number) => {
     let bought = 0;
     while (bought < count && runCommandOk(state, "buyStock", entry.id)) {
       bought += 1;
     }
     playUiSound(synth, bought > 0 ? "equip" : "back");
     if (bought === 0) return;
+    // Nothing on the stall restocks, so a purchase that empties the entry
+    // leaves a dead row selected — drop the card rather than offering a SOLD
+    // OUT button. A pile with units left keeps its card up so the next medkit
+    // is one press away.
     if (entry.qty <= 0) setSelected(null);
     onChange();
   };
+
+  // ---- THE SELL PICK -------------------------------------------------------
+
+  /** Arm the picking mode with every outgrown piece already ticked. */
+  const armSell = () => {
+    playUiSound(synth, "confirm");
+    // A mode owns the bag's presses, so two of them can never be up at once,
+    // and a floating card under either would read as the thing the next press
+    // acts on.
+    setIdentifyMode(false);
+    setSelected(null);
+    setSellPick(new Set(junk.map((e) => e.index)));
+  };
+
+  /** The second press: take the sale, or — with nothing ticked — back out. */
+  const takeSale = () => {
+    const indices = sellIndices;
+    setSellPick(null);
+    setSelected(null);
+    if (indices.length === 0) {
+      playUiSound(synth, "back");
+      return;
+    }
+    // `sellItem` empties the slot in place (it never compacts the bag), so the
+    // indices stay meaningful across the loop.
+    for (const index of indices) runCommand(state, "sellItem", index);
+    playUiSound(synth, "confirm");
+    onChange();
+  };
+
+  /** Tick or untick one bag cell while the mode is picking. */
+  const togglePick = (index: number) => {
+    if (!sellPick) return;
+    const next = new Set(sellPick);
+    if (next.has(index)) next.delete(index);
+    else next.add(index);
+    playUiSound(synth, next.has(index) ? "confirm" : "back");
+    setSellPick(next);
+    // A pick is not a read: whatever card the hold or the hover raised goes.
+    setSelected(null);
+  };
+
+  // PRESS AND HOLD to read a piece while the mode is picking — the press
+  // itself is spoken for by the tick, so the card moves to the gesture that is
+  // not a press. One watch for the whole bag: there is only ever one pointer on
+  // it, and the click handler asks `fired` to know whether the release it is
+  // about to read was a hold rather than a tap.
+  const hold = useRef<LongPressWatch | null>(null);
+  useEffect(() => () => hold.current?.cancel(), []);
+
+  /** Raise the buttonless card for a bag cell — a read, never a trade. */
+  const peekBag = (index: number, anchor: DOMRect) =>
+    setSelected({ kind: "bag", index, peek: true, anchor });
+
+  /** Lower a card that a hover raised, leaving a tapped one alone. */
+  const dropPeek = () =>
+    setSelected((current) =>
+      current?.kind === "bag" && current.peek ? null : current,
+    );
 
   return (
     <div className="game-overlay" role="presentation">
@@ -578,7 +402,7 @@ export function ShopPanel({
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
               const soldOut = entry.qty <= 0;
-              const affordable = canBuyStock(state, localHero(state), entry);
+              const affordable = canBuyStock(state, player, entry);
               const tint =
                 entry.kind === "weapon"
                   ? TIER_COLORS[entry.equipment.tier]
@@ -702,9 +526,10 @@ export function ShopPanel({
           </div>
         )}
 
-        {/* The hero's bag: tap a piece to see what he pays for it — or, with
-            the IDENTIFY mode armed, tap a veiled find to have it appraised on
-            the spot (each target wears its fee as a gold corner chip). */}
+        {/* The hero's bag: tap a piece to see what he pays for it — or, with a
+            mode armed, tap to have a veiled find appraised on the spot, or to
+            tick it for the sale (each target wears its fee or its price as a
+            corner chip). */}
         <div className="shop-section">
           <div className="shop-section-heading">
             <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
@@ -716,76 +541,163 @@ export function ShopPanel({
                 color="#ffd75e"
               />
             )}
+            {sellArmed && !identifyArmed && (
+              <PixelText
+                font={font}
+                text="TAP TO PICK - HOLD TO READ"
+                scale={2}
+                color="#7fd08a"
+              />
+            )}
           </div>
           <div className="inv-grid shop-bag-grid">
-            {player.inventory.map((item, index) => (
-              <button
-                key={index}
-                type="button"
-                className={`inv-cell shop-bag-cell${
-                  selected?.kind === "bag" && selected.index === index
-                    ? " selected"
-                    : ""
-                }${
-                  identifyArmed && item && isUnidentified(item)
-                    ? " identify-target"
-                    : ""
-                }${item ? tierGlowClass(item.tier) : ""}`}
-                aria-label={`bag-${index}`}
-                data-card={item ? "" : undefined}
-                style={
-                  item ? { borderColor: TIER_COLORS[item.tier] } : undefined
-                }
-                disabled={!item}
-                onClick={
-                  item
-                    ? identifyArmed && isUnidentified(item)
-                      ? () => doIdentify(index)
-                      : (e) => select({ kind: "bag", index }, e.currentTarget)
-                    : undefined
-                }
-              >
-                {item &&
-                  (() => {
-                    const src = spriteDataUrl(
-                      sprites,
-                      equipmentIcon(item.defId),
-                    );
-                    return src ? (
-                      <img
-                        src={src}
-                        alt=""
-                        className="pixel-img inv-item-icon"
+            {player.inventory.map((item, index) => {
+              const picked = sellArmed && sellPick.has(index);
+              // While the sale is picking, the press TICKS: reading a piece
+              // moves to hover (mouse) and press-and-hold (finger).
+              const pickable = sellArmed && item !== null;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  className={`inv-cell shop-bag-cell${
+                    selected?.kind === "bag" && selected.index === index
+                      ? " selected"
+                      : ""
+                  }${picked ? " sell-target" : ""}${
+                    identifyArmed && item && isUnidentified(item)
+                      ? " identify-target"
+                      : ""
+                  }${item ? tierGlowClass(item.tier) : ""}`}
+                  aria-label={`bag-${index}`}
+                  aria-pressed={pickable ? picked : undefined}
+                  data-card={item ? "" : undefined}
+                  style={
+                    item ? { borderColor: TIER_COLORS[item.tier] } : undefined
+                  }
+                  disabled={!item}
+                  onClick={
+                    !item
+                      ? undefined
+                      : pickable
+                        ? () => {
+                            // A hold has already done this press's job; the
+                            // release that follows it is not a tick.
+                            if (hold.current?.fired) {
+                              hold.current = null;
+                              return;
+                            }
+                            togglePick(index);
+                          }
+                        : identifyArmed && isUnidentified(item)
+                          ? () => doIdentify(index)
+                          : (e) =>
+                              select({ kind: "bag", index }, e.currentTarget)
+                  }
+                  onPointerDown={
+                    pickable
+                      ? (e) => {
+                          const anchor =
+                            e.currentTarget.getBoundingClientRect();
+                          hold.current?.cancel();
+                          hold.current = watchLongPress(
+                            { x: e.clientX, y: e.clientY },
+                            () => peekBag(index, anchor),
+                          );
+                        }
+                      : undefined
+                  }
+                  onPointerMove={
+                    pickable
+                      ? (e) => hold.current?.moved(e.clientX, e.clientY)
+                      : undefined
+                  }
+                  onPointerUp={
+                    pickable ? () => hold.current?.cancel() : undefined
+                  }
+                  onPointerCancel={
+                    pickable
+                      ? () => {
+                          hold.current?.cancel();
+                          hold.current = null;
+                        }
+                      : undefined
+                  }
+                  onPointerEnter={
+                    pickable
+                      ? (e) => {
+                          if (e.pointerType !== "mouse") return;
+                          peekBag(
+                            index,
+                            e.currentTarget.getBoundingClientRect(),
+                          );
+                        }
+                      : undefined
+                  }
+                  onPointerLeave={
+                    pickable
+                      ? (e) => {
+                          hold.current?.cancel();
+                          if (e.pointerType === "mouse") dropPeek();
+                        }
+                      : undefined
+                  }
+                >
+                  {item &&
+                    (() => {
+                      const src = spriteDataUrl(
+                        sprites,
+                        equipmentIcon(item.defId),
+                      );
+                      return src ? (
+                        <img
+                          src={src}
+                          alt=""
+                          className="pixel-img inv-item-icon"
+                        />
+                      ) : null;
+                    })()}
+                  {/* A bag STACK's depth (lookup tickets) — the same corner chip
+                      the stall piles wear. */}
+                  {item && (item.qty ?? 1) > 1 && (
+                    <span className="consumable-count inv-stack-count">
+                      <PixelText
+                        font={font}
+                        text={String(item.qty)}
+                        scale={2}
+                        color="#f4f4f4"
                       />
-                    ) : null;
-                  })()}
-                {/* A bag STACK's depth (lookup tickets) — the same corner chip
-                    the stall piles wear. */}
-                {item && (item.qty ?? 1) > 1 && (
-                  <span className="consumable-count inv-stack-count">
-                    <PixelText
-                      font={font}
-                      text={String(item.qty)}
-                      scale={2}
-                      color="#f4f4f4"
-                    />
-                  </span>
-                )}
-                {/* With the appraisal armed, each veiled find wears its FEE in
-                    the same corner chip, in coin gold — what the next tap will
-                    actually cost, before it is spent. */}
-                {identifyArmed && item && isUnidentified(item) && (
-                  <span className="consumable-count inv-stack-count">
-                    <PixelText
-                      font={font}
-                      text={formatCoins(identifyCost(item))}
-                      scale={2}
-                      color="#ffd75e"
-                    />
-                  </span>
-                )}
-              </button>
-            ))}
+                    </span>
+                  )}
+                  {/* With the appraisal armed, each veiled find wears its FEE in
+                      the same corner chip, in coin gold — what the next tap will
+                      actually cost, before it is spent. */}
+                  {identifyArmed && item && isUnidentified(item) && (
+                    <span className="consumable-count inv-stack-count">
+                      <PixelText
+                        font={font}
+                        text={formatCoins(identifyCost(item))}
+                        scale={2}
+                        color="#ffd75e"
+                      />
+                    </span>
+                  )}
+                  {/* A TICKED piece wears what it fetches, in the OPPOSITE
+                      corner from the stack chip — the two say different things
+                      about the same cell and one must not sit on the other. */}
+                  {picked && item && (
+                    <span className="consumable-count shop-sell-chip">
+                      <PixelText
+                        font={font}
+                        text={formatCoins(sellValue(item))}
+                        scale={2}
+                        color="#7fd08a"
+                      />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -793,19 +705,15 @@ export function ShopPanel({
             dismiss on the right. */}
         <div className="shop-footer">
           <div className="shop-footer-sell">
-            {/* SELL JUNK: only the outgrown pieces, one coin. */}
-            <SellJunkButton
+            {/* SELL JUNK: arm the pick, then take the sale. */}
+            <SellSweepButton
               font={font}
               sprites={sprites}
-              total={junkTotal}
-              count={junk.length}
-              onSell={() => {
-                for (const { index } of junk)
-                  runCommand(state, "sellItem", index);
-                playUiSound(synth, "confirm");
-                setSelected(null);
-                onChange();
-              }}
+              armed={sellArmed}
+              total={sellTotal}
+              count={sellIndices.length}
+              canArm={bagHoldsAnything}
+              onPress={sellArmed ? takeSale : armSell}
             />
             {/* BUY BACK: the undo, parked with the sales it undoes. Only the
                 shelf's own count is read here (never `buybackContents`, which
@@ -819,6 +727,7 @@ export function ShopPanel({
                 // Never leave a deal card floating under the shelf: it is
                 // anchored to a cell the overlay now covers.
                 setSelected(null);
+                setSellPick(null);
                 setBuybackOpen(true);
               }}
             />
@@ -831,8 +740,10 @@ export function ShopPanel({
               onToggle={() => {
                 playUiSound(synth, identifyArmed ? "back" : "confirm");
                 // The mode owns the bag's taps — a floating deal card under
-                // it would read as the thing the next tap acts on.
+                // it, or a half-made sell pick, would read as the thing the
+                // next tap acts on.
                 setSelected(null);
+                setSellPick(null);
                 setIdentifyMode(!identifyArmed);
               }}
             />
@@ -855,7 +766,7 @@ export function ShopPanel({
         </div>
       </div>
 
-      {/* THE DEAL CARD: what the tapped thing is, and the one button that
+      {/* THE DEAL CARD: what the tapped thing is, and the one control that
           trades it — floated beside the cell (never over it), portaled above
           the panel. Nothing is reserved for it while nothing is selected,
           which is the whole point of moving it out of the layout. */}
@@ -873,44 +784,18 @@ export function ShopPanel({
               : null
           }
           action={
-            <div className="shop-deal-actions">
-              <button
-                type="button"
-                className="pixel-button shop-deal-btn"
-                aria-label="buy-selected"
-                disabled={!canBuyStock(state, localHero(state), selectedStock)}
-                onClick={() => doBuy(selectedStock)}
-              >
-                <DealLabel
-                  font={font}
-                  sprites={sprites}
-                  verb="BUY"
-                  amount={selectedStock.price}
-                />
-              </button>
-              {/* BUY ALL — offered only on a STACKED row (a pile of medkits,
-                  salts, lookup tickets), because on a one-off weapon it would
-                  be the BUY button twice. It prices what it will actually take:
-                  when the purse or the carry room stops short of the pile, the
-                  button dims and shows the pile's own cost, so a dead button
-                  still says WHY it is dead. */}
-              {selectedStock.qty > 1 && (
-                <button
-                  type="button"
-                  className="pixel-button shop-deal-btn"
-                  aria-label="buy-all-selected"
-                  disabled={bulkBuy < 2}
-                  onClick={() => doBuyAll(selectedStock, bulkBuy)}
-                >
-                  <DealLabel
-                    font={font}
-                    sprites={sprites}
-                    verb={`BUY ALL ${bulkShown}`}
-                    amount={bulkShown * selectedStock.price}
-                  />
-                </button>
-              )}
-            </div>
+            <BuyQuantityRow
+              // A fresh row is a fresh quantity: the field is remounted rather
+              // than reset, so nothing carries "5" from the medkits over to
+              // the salts.
+              key={selectedStock.id}
+              font={font}
+              sprites={sprites}
+              price={selectedStock.price}
+              max={maxBuy}
+              canBuy={canBuyStock(state, player, selectedStock)}
+              onBuy={(count) => doBuy(selectedStock, count)}
+            />
           }
         />
       )}
@@ -924,18 +809,22 @@ export function ShopPanel({
           anchor={selected.anchor}
           compareTo={compareFor(selectedBag)}
           action={
-            <button
-              type="button"
-              className="pixel-button shop-deal-btn"
-              aria-label="sell-selected"
-              onClick={() => doSell(selected.index)}
-            >
-              <DealLabel
-                font={font}
-                sprites={sprites}
-                amount={sellValue(selectedBag)}
-              />
-            </button>
+            // A PEEK has no button: the card was raised to answer "what is
+            // this", and the sale it belongs to is the one being picked below.
+            selected.peek ? null : (
+              <button
+                type="button"
+                className="pixel-button shop-deal-btn"
+                aria-label="sell-selected"
+                onClick={() => doSell(selected.index)}
+              >
+                <DealLabel
+                  font={font}
+                  sprites={sprites}
+                  amount={sellValue(selectedBag)}
+                />
+              </button>
+            )
           }
         />
       )}
