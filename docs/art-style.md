@@ -43,8 +43,12 @@ The families are the authority on their own color world:
 | `mars`                          | Rust-red oxide and dust, riveted weathered metal, thin cold light.                                  |
 | `rift`                          | Void blacks shot through with unnatural violet and teal glow, nothing quite solid.                  |
 | `boot_hill`                     | Knockoff robot western: dusty sun-bleached tans, weathered wood and tin, a synthetic sheen.         |
+| `bunker`                        | Cold grey concrete and riveted steel, hazard-stripe accents, hard artificial light.                 |
+| `prelude`                       | The sterile lab it all begins in: clinical whites and cyans, glass and panels, flat fluorescence.   |
+| `quests`                        | The non-combatants: ordinary working silhouettes, each read by ONE prop they refuse to put down.    |
 | `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging.            |
 | `effects` / `icons` / `markers` | Function over material: pure light for VFX, one clean pictogram for items, bold UI signage for nav. |
+| `ui`                            | HUD chrome, not world objects: beveled steel, bolt accents, a dark translucent 9-patch fill.        |
 
 The live set is whatever `ls content/sprites/` shows; each `_family.yaml`
 carries the canonical `style:` line. When this document and a family anchor
@@ -54,8 +58,10 @@ anchor is what the prompt generator reads.
 ## The one constraint that drives every rule: tiny, on a phone, in motion
 
 This is a **mobile-first, landscape** game. The reference device is a phone held
-horizontally — a ~844×390 CSS viewport, about **422×195 world units** at the
-app's `VIEW_SCALE` of 2. A character sprite is **16×16**. So on the screen the
+horizontally — a ~844×390 CSS viewport, about **422×195 world PIXELS of canvas**
+at the app's `VIEW_SCALE` of 2 (the pitch stretches that into rather more world
+units of _ground_ — → [`docs/rendering.md`](rendering.md); what matters here is
+the pixel count). A character sprite is **16×16**. So on the screen the
 player actually holds, the hero is a _thumbnail_, usually moving, often mobbed
 by a dozen enemies and their projectiles.
 
@@ -84,6 +90,17 @@ generated or hand-drawn:
 
 `STYLE_PREAMBLE` is the machine-readable form of this section; keep the two in
 step. Everything after this point is _how_ to hit that bar.
+
+**"Front-facing" has one declared exception, and it is a field: `plane:`.** Most
+art is `upright` (the default) — drawn as if standing, looking at the camera.
+Art that BELONGS to the ground is drawn in PLAN instead and takes the world
+projection whole, exactly as the ground tiles under it do: `plane: floor` for
+something genuinely flat (a stain, a hatch, a crate seen from above), and
+`plane: wall` for plan art that has HEIGHT (a wall panel, a parapet, a barrier),
+which the renderer extrudes `rise` px of screen height with a cap on top. The
+medium and the read never change — only which way the subject faces while you
+draw it. → `scripts/asset-tools/sprite-schema.mjs`,
+`pwa/src/game/render/plane.ts`
 
 ## Design best practices
 
@@ -115,13 +132,16 @@ step. Everything after this point is _how_ to hit that bar.
    feels lit by one source.
 
 6. **No orphan pixels.** Every lit pixel belongs to a deliberate cluster. A lone
-   floating pixel reads as noise — or dirt on the screen — at 1×.
+   floating pixel reads as noise — or dirt on the screen — at 1×. Art whose
+   SUBJECT IS SCATTER (a speckled ground tile, the blood spray) opts out by
+   name in its family's `speckleExempt`, never by widening the check.
 
 7. **Contrast against the _family ground_, not just a checker.** A sprite that
    pops on a checkerboard can vanish on its own tiles. The generator warns below
-   an edge-contrast floor; borderline cases still need eyes on the
-   `family_<family>.png` contact sheet, which composites the sprite over its own
-   ground.
+   an edge-contrast floor (`contrastExempt` in the family manifest is the opt-out
+   for art that is not an object — a shadow, a HUD frame, a map marker);
+   borderline cases still need eyes on the `family_<family>.png` contact sheet,
+   which composites the sprite over its own ground.
 
 8. **Frames share a spine; animate only what moves.** For a walk cycle, keep the
    torso and head **identical** across frames and move only the legs — a
@@ -161,13 +181,16 @@ palette scope, and its animations. Families are how the game stays coherent
 across wildly different settings — every sprite shares the medium and the read;
 only the color world changes.
 
+A family's `palette:` is a convenience, not a requirement: `quests` deliberately
+declares none, because its people are a different trade in a different venue each
+and what they share is the silhouette and the one prop, not a color set.
+
 Families also make new content **cheap**, and the existing ones show the paths:
 
-- **Recolor a sibling biome.** `mars` builds its rocks and craters as
-  `swapPalette` calls over the `moon` grids — a red desert cost zero terrain
-  redraws.
-- **One chassis, many accents.** The `boot_hill` TRUST ME BRO controllers are one drawn
-  body with palette-swapped accent colors for the variants.
+- **One chassis, many accents.** The `boot_hill` TRUST ME BRO controllers
+  (`bro_alpha`/`bro_beta`/`bro_gamma`) are one drawn body copied across the
+  variants with a single palette CHARACTER swapped for the accent — same grid
+  shape, a different light.
 - **One body, many costumes.** The `merchant` and `hero` costumes share a single
   16×16 body plan and foot anchor, so a costume swap is new grids only — no
   renderer or anchor work.

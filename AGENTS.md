@@ -598,7 +598,7 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | A companion (who a spared elite joins you as)                 | `content/companions.yaml`                                                                                                                 | `enemy-design`                          |
 | An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                                | `quest-design`                          |
 | A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                        | `update-story`                          |
-| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor`)                                                                  | `pixel-assets`, `art-improvement`       |
+| A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor \| wall`)                                                          | `pixel-assets`, `art-improvement`       |
 | A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                     | `sound-effects`                         |
 | The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                  | `menu-design`                           |
 | AN IN-GAME WINDOW — the pause menu, the bag's frame, a modal  | `content/menus/<id>.yaml`, `modals/<id>.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`; its code-backed insides in `pwa/src/game/menus/` | `menu-design`, `ui-review`              |
@@ -833,9 +833,10 @@ or not at all: **the NAME** (id, display name, file stem, sprite stem); **the
 VOICE** (dialogue, last words, barks, lore — a catchphrase or a verifiable
 biographical fact is identification on its own); **the ART** (the grid AND its
 `subject` slots — a silhouette identifies without a face, and a brand's COLOUR
-SEQUENCE is protectable with no name attached); **the DESCRIPTION** (which ships
-in the library AND drives the next regeneration, so a cleaned grid with a dirty
-`subject` grows its likeness straight back).
+SEQUENCE is protectable with no name attached); **the DESCRIPTION**, which is
+two surfaces — a def's own `lore`/`description` SHIPS, in the library, and a
+sprite's `subject` DRIVES THE NEXT REGENERATION, so a cleaned grid with a dirty
+`subject` grows its likeness straight back.
 
 **NAME THE ROLE, NOT THE PERSON** — THE FOUNDER, THE MODERATOR, THE FULFILLER.
 The archetype is the funnier half anyway, and it does not date.

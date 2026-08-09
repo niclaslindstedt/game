@@ -30,9 +30,11 @@ or not at all:
    the search baron wears a barcode rather than four coloured bars. And never
    trace a photograph: that puts a copyright question over the image on top of
    the likeness question over the person.
-4. **THE DESCRIPTION** — `description`, every `subject.*` slot and the palette
-   comments all ship in the generated library AND drive the next regeneration,
-   so a cleaned grid with a dirty `subject` grows its likeness straight back.
+4. **THE DESCRIPTION** — a mob's or item's `description`/`lore` ships verbatim
+   in the generated library, and a sprite's `description`, every `subject.*`
+   slot and the palette comments are what the prompt generator feeds an image
+   model (`scripts/asset-tools/prompt.mjs`). So a cleaned grid with a dirty
+   `subject` grows its likeness straight back on the next regeneration.
 
 **NAME THE ROLE, NOT THE PERSON.** THE FOUNDER, THE MODERATOR, THE FULFILLER,
 THE SAFETY OFFICER, THE VENDOR, THE STRONGMAN, THE ROOT. The archetype is the
@@ -44,8 +46,9 @@ is safe.
 
 What is SAFE, and generously so — most of this catalog already lives here:
 
-- **Myth, folklore and antiquity.** The whole artifact tier (MJÖLNIR,
-  EXCALIBUR, DRAUPNIR, GÁNDIVA, SAMPO) is public domain and always will be.
+- **Myth, folklore and antiquity.** Every name in the artifact tier (DRAUPNIR,
+  GÁNDIVA, SAMPO, GRAM, BRISINGAMEN…) and the myth names in the tiers below it
+  (MJÖLNIR, EXCALIBUR) are public domain and always will be.
 - **Real technical, historical and trade vocabulary.** A Tesla coil, a boot
   hill, a minute repeater, a perpetual calendar, a barcode, root access. These
   are words, not brands.
@@ -91,12 +94,9 @@ neighbours of the same trap:
 - **Library slugs are hyphenated** (`the-flagbearer`), so an id rename that
   writes `the_flagbearer` into a URL passes every type check and fails at
   runtime.
-- **Scope content sweeps AWAY from `engine/`, `server/` and `electron/`.** `host`
-  is the multiplayer vocabulary as well as a park robot, and `content/mainmenu.yaml`
-  carries the multiplayer HOST rows despite living under `content/`.
+- **Scope content sweeps AWAY from the code layers** — `engine/`, `server/`,
+  `electron/` and `tauri/`. `host` is the multiplayer vocabulary as well as a
+  park robot, and `content/mainmenu.yaml` carries the multiplayer HOST rows
+  despite living under `content/`.
 - **Anything auditing a rename must exclude itself**, or the bulk pass rewrites
   the list of names it was checking against and then reports clean.
-
-**This governs the SHIPPED campaign.** A mod's names are its author's business
-and answer to nobody — but `mod/examples/` is shipped content and follows the
-rule like everything else.
