@@ -133,6 +133,48 @@
   color: #7ef0c8;
 }
 
+/* WHEN THE BOOT WAS A LIE. The status line above says BOOTING… whether or not
+   anything is; `app/boot-watchdog.ts` rewrites it into this when the bundle
+   never arrived, and the colour change is the point — teal is the game's "all
+   good", and a player who has been staring at it for twenty seconds has earned
+   a screen that admits the difference. Sized like the rest of the console but
+   NOT letter-spaced into a terminal whisper: this one is a sentence to read,
+   with buttons to press. */
+.prelaunch-stalled {
+  color: #f0a07e;
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: 0.95rem;
+}
+
+.prelaunch-stalled-line {
+  margin: 0;
+}
+
+.prelaunch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin: 1rem 0 0;
+}
+
+.prelaunch-action {
+  font: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e6e8eb;
+  background: #172030;
+  border: 1px solid #7ef0c8;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1.1rem;
+  /* A boot-failure button is the one control on the page, and a thumb on a
+     phone is the hand pressing it — keep it at the 44px touch target. */
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
 /* A blinking block cursor, so the boot line reads as a live terminal. */
 .prelaunch-caret {
   display: inline-block;

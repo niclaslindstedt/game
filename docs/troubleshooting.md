@@ -77,6 +77,26 @@ its navigation denylist should make it ignore them. If a stale worker from
 before the denylist is still controlling the origin, unregister it
 (DevTools → Application → Service Workers → Unregister) and reload.
 
+### After an update, the app opens on the boot screen and stays there
+
+The "BOOTING…" console with the game's description under it is the prerendered
+shell — the SEO document and the no-JS fallback — so seeing it means the bundle
+never ran, not that anything is loading.
+
+It should now recover on its own: `pwa/src/app/boot-watchdog.ts` notices the
+stall, skips the waiting service worker and reloads (the automatic version of
+force-quitting the app), and if the boot after that stalls too it replaces the
+line with TRY AGAIN and REINSTALL. If you are looking at that panel, REINSTALL
+throws this slot's offline copy away and refetches; the roster lives in
+`localStorage` and is not touched.
+
+If it happens repeatedly on a build, the cause is upstream of the watchdog:
+check that the shell being served and the assets it asks for come from the same
+build. Each build owns `<cacheId>-precache-<build>` (DevTools → Application →
+Cache Storage) precisely so those can't diverge — two of a slot's caches
+lingering after an activation, or an entry missing from the current one, is the
+thing to report.
+
 ### Installed PWA white-screens on launch
 
 Usually two slots fighting over one cache. Verify

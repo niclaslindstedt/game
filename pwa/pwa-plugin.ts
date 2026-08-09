@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { createHash } from "node:crypto";
 import { statSync, readdirSync, readFileSync } from "node:fs";
 import { join, posix, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +10,7 @@ import {
   GENERATED_CAMPAIGN_ORDER,
   GENERATED_LEVEL_SUMMARIES,
 } from "../engine/generated/level-index.ts";
+import { BOOT_FLAG, watchBoot } from "./src/app/boot-watchdog.ts";
 import { cacheIdForBase } from "./src/app/pwa.ts";
 import {
   IDENTITY,
@@ -29,7 +31,7 @@ import {
 //                                     parks in `waiting`, never auto-skips)
 //   - `${base}version.json`           `{ version }` shown in the update toast
 //   - `${base}precache-manifest.json` `{ totalBytes, assets }` driving the fill
-//   - a Cache Storage entry named `<cacheId>-precache`
+//   - a Cache Storage entry named `<cacheId>-precache-<build>`
 //
 // THREE SLOTS, ONE ORIGIN. The game deploys to `/` (release), `/preview/`
 // (main), and `/branch/` (a parked branch) on one origin (the identity
@@ -570,33 +572,139 @@ export function deniesNavigation(pathname: string, deny: string[]): boolean {
   return deny.some((p) => path.startsWith(p));
 }
 
+/**
+ * Is `name` one of THIS slot's precaches from some OTHER build — i.e. is it
+ * ours to delete once `current` has taken over?
+ *
+ * The prefix is `<cacheId>-precache`, and the two things this has to get right
+ * pull against each other. It must sweep up a cache from before this scheme
+ * existed (named exactly `<cacheId>-precache`, no build suffix) as well as
+ * every earlier build's. And it must NEVER match a sibling deploy slot, whose
+ * cache ids are this one with a slug in the middle — `game-preview-precache-…`
+ * against `game-precache-…`. Requiring the separator ("-" or end of string)
+ * immediately after the prefix is what keeps the release slot's activation from
+ * deleting the preview slot's offline copy: the segment after `game-` is
+ * `precache` in one and `preview` in the other, so neither is a prefix of the
+ * other and the check is exact rather than merely likely.
+ */
+export function isStalePrecache(
+  name: string,
+  prefix: string,
+  current: string,
+): boolean {
+  if (name === current) return false;
+  return name === prefix || name.startsWith(`${prefix}-`);
+}
+
+/**
+ * The inline boot watchdog, ready to paste into the shell's `<body>`.
+ *
+ * `watchBoot.toString()` for the same reason the worker inlines
+ * `deniesNavigation`: the rule has one definition, written and tested as
+ * ordinary typed source, and the copy that ships is generated from it rather
+ * than hand-kept in step. It is called immediately — the module script above it
+ * is deferred, so this classic script runs first and is already watching before
+ * the bundle has had a chance to fail.
+ */
+export function bootWatchdogScript(base: string, cacheId: string): string {
+  const options = {
+    flag: BOOT_FLAG,
+    // Generous on purpose: the critical path is budgeted for ~5 s on a slow 3G
+    // phone, and the fast failures (a 404, a refused fetch) are caught by the
+    // error listener within a round trip rather than by this. What is left for
+    // the timeout to catch is a fetch that HANGS, where crying wolf at a
+    // connection that was merely slow is the worse mistake.
+    timeoutMs: 20000,
+    swapMs: 5000,
+    healKey: `${cacheId}-boot-heal`,
+    base,
+    cachePrefix: `${cacheId}-precache`,
+  };
+  // Called as an IIFE rather than by name: the config bundler is free to rename
+  // a top-level binding it had to deconflict, and a call written against the
+  // name we imported would then reference nothing. The function's own source is
+  // the only thing `toString()` promises.
+  return `(${watchBoot.toString()})(window,${JSON.stringify(options)});`;
+}
+
+/**
+ * The suffix that makes this build's precache its own — a short digest of the
+ * build label and the exact asset set (paths AND sizes) the worker will hold.
+ *
+ * Two builds that would serve byte-identical caches deliberately get the same
+ * id: re-running a build over an unchanged tree must not orphan the offline
+ * copy a player already has. Everything that WOULD change what is served moves
+ * it — a rehashed chunk changes a path, an edited public icon changes a size,
+ * and a rebuild of the same tree at a new commit changes `version`, which is
+ * also the value that already guarantees the worker's own bytes differ between
+ * deploys.
+ */
+export function buildIdFor(
+  version: string,
+  assets: Record<string, number>,
+): string {
+  return createHash("sha256")
+    .update(version)
+    .update(" ")
+    .update(JSON.stringify(assets))
+    .digest("hex")
+    .slice(0, 12);
+}
+
 function buildServiceWorker(
   cacheId: string,
   base: string,
   version: string,
+  buildId: string,
   precache: string[],
+  optional: string[],
   denylist: string[],
 ): string {
-  const cacheName = `${cacheId}-precache`;
+  const cachePrefix = `${cacheId}-precache`;
   return `// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // GENERATED — do not edit. Emitted by pwa/pwa-plugin.ts. A minimal
 // "prompt to update" precaching worker: it installs the build's assets, parks
 // in \`waiting\` (never auto-skipWaiting — a silent swap would destroy a run
 // in progress), and applies on a SKIP_WAITING message from the update toast.
 // Build: ${version}
-const CACHE = ${JSON.stringify(cacheName)};
+//
+// THE PRECACHE IS NAMED PER BUILD, and that is the load-bearing part.
+//
+// It used to be one cache per SLOT, which meant the worker currently serving
+// the game and the worker quietly installing the next build were writing to and
+// reading from the same box — and \`\${base}index.html\` is the same key in both,
+// so the incoming build's shell REPLACED the running one's at install time.
+// From that moment the old worker answered navigations with the new shell,
+// which asks for the new build's hashed bundle: paths that are not in the old
+// worker's precache and so are not served from it. Online that is an invisible
+// extra round trip. Offline, or on a connection that drops, it is the app
+// opening to its own no-JS SEO document with "BOOTING…" blinking under it
+// forever — the game unreachable until the player force-quits, which works
+// only because closing the last client is what finally lets the new worker
+// activate.
+//
+// A build writes to its OWN cache, so no worker can be made incoherent by one
+// that has not taken over yet, and \`activate\` sweeps the older ones only once
+// this build is the one in control.
+const BUILD = ${JSON.stringify(buildId)};
+const CACHE_PREFIX = ${JSON.stringify(cachePrefix)};
+const CACHE = CACHE_PREFIX + "-" + BUILD;
 const BASE = ${JSON.stringify(base)};
 const INDEX = ${JSON.stringify(`${base}index.html`)};
 const PRECACHE = ${JSON.stringify(precache)};
 const PRECACHE_PATHS = new Set(
   PRECACHE.map((u) => new URL(u, self.location.href).pathname),
 );
+// Entries whose absence is survivable — the public icons, which the running
+// game never requests. Everything else is build output: see \`install\`.
+const OPTIONAL = new Set(${JSON.stringify(optional)});
 // Paths nested under this worker's scope whose navigations are NOT ours: the
 // sibling deploy slots (e.g. \`/preview/\` for the \`/\` release worker) and the
 // library's static documents, which must never be answered with the app shell.
 const DENY = ${JSON.stringify(denylist)};
-// Inlined from pwa-plugin.ts so the rule has exactly one definition.
+// Inlined from pwa-plugin.ts so each rule has exactly one definition.
 const deniesNavigation = ${deniesNavigation.toString()};
+const isStalePrecache = ${isStalePrecache.toString()};
 
 self.addEventListener("install", (event) => {
   // Populate the precache one entry at a time so the window-side progress
@@ -608,8 +716,15 @@ self.addEventListener("install", (event) => {
       for (const url of PRECACHE) {
         try {
           await cache.add(new Request(url, { cache: "reload" }));
-        } catch {
-          // A single asset failing to cache must not abort the whole install.
+        } catch (error) {
+          // AN INCOMPLETE PRECACHE MUST NOT ACTIVATE. A missing icon is a
+          // missing icon, but a missing shell or chunk is an app that opens to
+          // its boot screen and stops — the exact dead end the per-build cache
+          // above exists to prevent, arrived at from the other side. Failing
+          // the install leaves the running build serving from its own intact
+          // cache and lets the browser retry on the next update check, which
+          // is what a deploy still propagating across a CDN needs.
+          if (!OPTIONAL.has(url)) throw error;
         }
       }
     })(),
@@ -619,14 +734,13 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const cache = await caches.open(CACHE);
-      // Drop precache entries from older builds that are no longer wanted.
-      for (const req of await cache.keys()) {
-        if (!PRECACHE_PATHS.has(new URL(req.url).pathname)) {
-          await cache.delete(req);
-        }
-      }
+      // Claim FIRST, prune second: the clients being taken over are reloaded by
+      // the update hook's \`controlling\` handler, and until that lands they are
+      // still reading from whichever cache their build wrote.
       await self.clients.claim();
+      for (const name of await caches.keys()) {
+        if (isStalePrecache(name, CACHE_PREFIX, CACHE)) await caches.delete(name);
+      }
     })(),
   );
 });
@@ -790,6 +904,20 @@ export function gamePwa({
       return {
         html: fillIdentityTokens(html, appVersion),
         tags: [
+          // THE BOOT SCREEN'S WATCHDOG (src/app/boot-watchdog.ts), inlined as a
+          // classic script because what it exists to survive is the module
+          // graph failing to load — see that file's header. A store build gets
+          // none: `stripBootShell` takes the console it would speak through,
+          // and a shell serves the bundle off the device rather than a network.
+          ...(shellBuild
+            ? []
+            : [
+                {
+                  tag: "script",
+                  children: bootWatchdogScript(base, cacheId),
+                  injectTo: "body" as const,
+                },
+              ]),
           {
             tag: "meta",
             attrs: { name: "robots", content: robotsContentForBase(base) },
@@ -860,6 +988,11 @@ export function gamePwa({
     // assets and emit the worker + the two manifests the update hook reads.
     generateBundle(_options, bundle) {
       const assets: Record<string, number> = {};
+      // Precache entries a failed fetch may not abort the install over — see
+      // the worker's `install`. Only the public icons qualify: the game itself
+      // never requests them, so a worker that activates without one is a worker
+      // that has everything the game runs on.
+      const optional: string[] = [];
 
       const add = (urlPath: string, bytes: number) => {
         assets[urlPath] = bytes;
@@ -913,6 +1046,7 @@ export function gamePwa({
           const rel = relative(publicDir, file).split(sep).join(posix.sep);
           if (PUBLIC_SKIP.has(rel) || rel.endsWith(".map")) continue;
           add(`${base}${rel}`, statSync(file).size);
+          optional.push(`${base}${rel}`);
         }
       }
 
@@ -931,7 +1065,15 @@ export function gamePwa({
       this.emitFile({
         type: "asset",
         fileName: "sw.js",
-        source: buildServiceWorker(cacheId, base, version, precache, denylist),
+        source: buildServiceWorker(
+          cacheId,
+          base,
+          version,
+          buildIdFor(version, assets),
+          precache,
+          optional,
+          denylist,
+        ),
       });
       this.emitFile({
         type: "asset",
