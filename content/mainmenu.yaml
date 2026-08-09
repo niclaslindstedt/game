@@ -1219,6 +1219,14 @@ screens:
         help:
           on: WALL PANELS STAND UP OFF THE FLOOR ON THEIR FOOTPRINT
           off: WALL PANELS LIE FLAT WITH THE FLOOR, AS PLAIN TILES
+      # The one row on this page that is not about a RUN: the main menu's own
+      # backdrop is a working orrery on true distances, and this hands its
+      # camera over so it can be flown through and checked.
+      - id: sky-camera
+        label: SKY CAMERA
+        help:
+          on: SCROLL OR PINCH THE MAIN MENU TO FLY THE SOLAR SYSTEM
+          off: THE MAIN MENU SKY IS A BACKDROP AND TAKES NO GESTURES
       # THE THREE WASHES LAID OVER THE FINISHED PICTURE (render/postfx.ts), so
       # they come last: everything above decides what is drawn, these three
       # decide what the drawn frame is then seen through. All three are CSS on

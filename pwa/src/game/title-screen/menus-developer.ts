@@ -279,6 +279,7 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
       // folded together with the yaw the way ANTI-ALIASING is — the knob means
       // "I do not want the faces", so sweeping the camera round to compare the
       // two looks must not switch the answer out from under it.
+      "sky-camera": onOffRow(ctx, "visuals", "sky-camera", "skyCamera"),
       "standing-walls": onOffRow(
         ctx,
         "visuals",

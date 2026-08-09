@@ -2888,6 +2888,38 @@ html.app-locked body {
   box-shadow: none;
 }
 
+/* THE OTHER TWENTY MOONS. The driver creates one of these per row of
+   title-moons.ts inside `.title-satellites`, sizes it, and either hangs a globe
+   canvas on it or paints it as a point of light — so the only thing the sheet
+   has to say is that a satellite starts out invisible and takes no presses.
+
+   NO RESTING LOOK, and that is deliberate: every other body has a flat gradient
+   for the frames before the shader lands and for the reduced-motion sky that
+   never starts a driver at all. A satellite drawn at its true size is one to
+   three pixels, so a resting gradient for it would be a grey dot parked at a
+   made-up distance from a planet — worse than nothing. Under
+   prefers-reduced-motion the driver never runs, these are never created, and
+   the sky rests on the nine bodies it has always had. */
+.title-satellites {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.title-satellite {
+  pointer-events: none;
+  /* NO `display: none` HERE, however much it looks like the right way to keep
+     these hidden until the driver places them. The driver hides an off-frame
+     body with an inline `display: none` and shows it again with an inline
+     `display: ""` — which does not mean "shown", it means "delete the inline
+     value and use the sheet's". A rule here would therefore win every time and
+     every satellite would stay invisible for ever. They start with no size and
+     no background instead, which is invisible in the only frame it matters. */
+  /* Airless, every one of them but Titan — so no halo, and the globe draws no
+     limb haze either (moon-skins.ts, SATELLITE_AIR). */
+  box-shadow: none;
+}
+
 /* The four giants. They ride orbits wider than the frame, so most of the time
    they are off it entirely and the driver hides them; these are their resting
    spots for before it starts (and under prefers-reduced-motion), parked out
