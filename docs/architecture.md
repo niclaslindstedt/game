@@ -948,7 +948,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   extents. Vehicles only — a person is a tall thin thing met by the whole flank
   at any height, and a lamp post is a column from the pavement to well above the
   roof.
-  THE APPROACH IS A COUNTDOWN. The eight seconds before the town are held: the
+  THE APPROACH IS A COUNTDOWN. The ten seconds before the town are held: the
   speed is the road's own, the pedal reaches nothing, GET READY is on the screen,
   and one second out the WHEEL is handed back and the dashboard slides in from
   the left (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal
@@ -957,7 +957,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   DISTANCE at a held speed (`opening.cityPx` at `entrySpeedPx`), which is why the
   approach is retimed by moving one number — and `coursePx` moves with it, so the
   LEG changes length and the minigame does not: the town, which is the stretch
-  the clock runs over and the board ranks, is what it has always been.
+  the clock runs over and the board ranks, is what it has always been. WHAT SETS
+  THE NUMBER is the hero's two lines: he starts as the wagon settles into frame
+  (`opening.sayAtPx`) and has to be finished by the hand-over, so the approach is
+  the sum of the slide-in, both pages of speech and the hand-over's own second.
+  The pages are sized in the app off their own crawl (`drive-screen/bark.ts`) and
+  `tests/drive_bark_test.ts` holds the two halves against each other.
   WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
   answers rather than one. The shunt used to BE the answer — a struck car slid
   sideways out of its lane and that was the event, which is why a head-on and a

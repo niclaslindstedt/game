@@ -181,7 +181,16 @@ export const DRIVE = {
    * file moves the road: on the wagon's real drivetrain (`drivetrain.ts`), once
    * every LANE carried traffic (`laneTraffic`), when the gearbox was re-geared
    * to read like a tachometer in a real car, and last on the eight-second
-   * approach (`opening.cityPx`) these figures now carry.
+   * approach (`opening.cityPx`) these figures were taken over.
+   *
+   * THE TRIP COLUMN IS THE WHOLE LEG, APPROACH INCLUDED (`drive.ms`, not the
+   * scored `clockMs`), so it is the one column the approach's length reaches —
+   * and it reaches it by EXACTLY the change, for every seed and every rung,
+   * because that stretch is held at `entrySpeedPx` and nothing that happens on
+   * the road can hurry it or slow it. The approach is TEN seconds now and the
+   * figures below are the eight-second ones with that arithmetic done: add two
+   * to any trip taken before it. Nothing else in the tables moves — `cityLength`
+   * is untouched, so the crowd, the traffic and the wear are the same road.
    *
    * READ THE COLUMNS THE WAY THE HARNESS FILLS THEM, because two of them are not
    * over the same set of legs: BODIES and SHUNTS are means over EVERY seed, and
@@ -191,20 +200,20 @@ export const DRIVE = {
    * MEDIUM, never dodging once, 30 seeds a row:
    *
    *   throttle   trip     bodies   ending wear   arrived
-   *   1.00       65 s      57       98%           2/30
-   *   0.80       71 s      72       89%           7/30
-   *   0.55       82 s      87       72%          30/30
+   *   1.00       67 s      57       98%           2/30
+   *   0.80       73 s      72       89%           7/30
+   *   0.55       84 s      87       72%          30/30
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears;
    * 40 seeds a rung:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        90 s    81         7%          40/40
-   *   medium      90 s    82        18%          40/40
-   *   hard        89 s    80        29%          40/40
-   *   nightmare   90 s    85        46%          38/40
-   *   jesus       93 s    93        61%          40/40
+   *   easy        92 s    81         7%          40/40
+   *   medium      92 s    82        18%          40/40
+   *   hard        91 s    80        29%          40/40
+   *   nightmare   92 s    85        46%          38/40
+   *   jesus       95 s    93        61%          40/40
    *
    * TWO THINGS TO READ OUT OF THAT. The first is the joke the course length
    * exists to land: the leg cannot be threaded at any pace, because the crowd
@@ -239,7 +248,7 @@ export const DRIVE = {
    * to the approach that did not land here would quietly re-scope the one
    * stretch every number above was measured on.
    */
-  coursePx: 22000,
+  coursePx: 22600,
   /**
    * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
    * forward, for a demo that is showing somebody the whole game rather than
@@ -1836,10 +1845,13 @@ export const DRIVE = {
      * fourteen-second approach and impossible on a five-second one: the whole
      * opening is `cityPx` of road at a held 300 px/s, so an arrival that ate two
      * thirds of it would leave the car settled for about a second before the
-     * town, and the hero's two lines nowhere to go. The approach is eight
-     * seconds now and the arrival is the same two, which is the ratio this was
-     * cut to hit — it is the pace of a car being caught up with, and it should
-     * not slow down because the road behind it got longer.
+     * town, and the hero's two lines nowhere to go. The approach is ten seconds
+     * now and the arrival is still the same two, which is the ratio this was cut
+     * to hit — it is the pace of a car being caught up with, and it should not
+     * slow down because the road behind it got longer. It is also the first two
+     * seconds of the speech's budget: he starts talking the moment it finishes
+     * (`sayAtPx`), so every millisecond spent arriving is one the two pages do
+     * not have.
      */
     closePx: 150,
     /** What the wagon is doing while it is still arriving (px/s). Held rather
@@ -1880,10 +1892,22 @@ export const DRIVE = {
      * wanted it. Nothing shipped sets it.
      */
     handsOff: true,
-    /** Where he says what the trip is FOR (world px) — as soon as the car has
+    /**
+     * Where he says what the trip is FOR (world px) — as soon as the car has
      * settled into frame, which is the first moment there is anybody in the
      * picture to be thinking it. (`entryPx / closePx` at `entrySpeedPx`, plus a
-     * beat.) */
+     * beat.)
+     *
+     * IT IS ALSO THE START OF A BUDGET, and the budget is the reason the
+     * approach is as long as it is. Both pages of `drive_out_welfare` have to be
+     * read out between this mark and `dashAtPx` — the moment the instruments
+     * slide in and the wheel comes back — because a line still being read while
+     * the dashboard arrives is a line the player chose the dashboard over. The
+     * app sizes each page against its own crawl (`bark.ts`), and
+     * `tests/drive_bark_test.ts` holds the sum of the two against the road this
+     * file lays out, so shortening the approach or lengthening a line fails
+     * there rather than in front of a player.
+     */
     sayAtPx: 640,
     /**
      * WHERE THE TOWN STARTS (world px) — the gate.
@@ -1891,18 +1915,24 @@ export const DRIVE = {
      * Everything the minigame is begins here at once: the houses, the far
      * pavement, the crowd, the lane traffic, and the CLOCK.
      *
-     * EIGHT SECONDS, AND THE NUMBER IS THE POINT. The approach is held at
+     * TEN SECONDS, AND THE NUMBER IS THE POINT. The approach is held at
      * `entrySpeedPx` from the first frame to the last — the pedal is not the
      * player's out here at all (see `handsOff`) — so this distance IS a duration:
-     * 2400 px at 300 px/s. It was 6400, which at the old capped cruise was the
+     * 3000 px at 300 px/s. It was 6400, which at the old capped cruise was the
      * better part of FIFTEEN seconds of a minute-long minigame spent watching a
      * car drive down an empty road, and the single most common thing to want to
      * skip in the whole game. Cut to five it stopped being the thing anybody
-     * wanted to skip and started being too tight for what is actually on it: the
-     * wagon needs two seconds to slide into frame, the wheel comes back one
-     * second before the gate, and the two lines in between had a second and a
-     * half of road to fit six seconds of speech into. Eight gives the beats room
-     * without giving the empty road back its fifteen.
+     * wanted to skip and started being too tight for what is actually on it, and
+     * eight was still a page short.
+     *
+     * IT IS ADDED UP FROM WHAT IS ON IT rather than picked: two seconds for the
+     * wagon to slide into frame (`entryPx / closePx`), then both pages of
+     * `drive_out_welfare` read out end to end (about seven — each page is its own
+     * crawl plus a beat to read it back, `bark.ts`), and then the second the
+     * hand-over owns (`dashAtPx`), which the speech must be off the screen for.
+     * Ten is that sum with a little air in it, and it is the shortest the road
+     * can be without the second line — the sourest thing he says in the game —
+     * being read over the instruments arriving.
      *
      * IT LENGTHENS THE LEG AND NOT THE MINIGAME. `coursePx` carries this on top
      * rather than taking it out of the far end, so the TOWN — the stretch the
@@ -1910,7 +1940,7 @@ export const DRIVE = {
      * on this file was taken against — is the same length it has always been.
      * Move one and move the other.
      */
-    cityPx: 2400,
+    cityPx: 3000,
     /**
      * HOW MANY PEOPLE ARE OUT HERE ON WHEELS — riders per 1000 px of outskirt,
      * and the only traffic before the town.
@@ -1967,6 +1997,10 @@ export const DRIVE = {
      * ONE NUMBER RATHER THAN TWO, on purpose: a dashboard that arrived on a
      * different frame from the wheel would be the game telling the player two
      * different things about when the minigame starts.
+     *
+     * IT IS ALSO THE SPEECH'S DEADLINE. The hero has to be finished talking by
+     * here — see `sayAtPx` — because this is the frame the screen stops being a
+     * road with a man on it and starts being an instrument panel.
      */
     dashAtPx: 300,
     /**
