@@ -24,6 +24,8 @@ What actually happened.
 
 ## Environment
 
-- Version:
-- OS:
+- Version (printed in the title screen's footer):
+- Where you played: browser / installed PWA / iOS / Android / desktop
+- Browser + OS:
+- Seed and level, if you have them (`?seed=` / `?level=` in the URL):
 - Other relevant context:

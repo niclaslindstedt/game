@@ -44,11 +44,16 @@ team documents for the 6 → 7 transition; collapse it back to a single
 ## 4. The development loop
 
 ```sh
-make test        # engine test suite (Vitest, tests/*_test.ts)
+make test        # the root suite (Vitest, tests/**/*_test.ts)
 make lint        # ESLint + TypeScript, zero warnings
 make fmt         # Prettier, in place
 make build       # typecheck everything + production bundle in pwa/dist
 ```
+
+All three open by rebuilding the generated content and the sprite atlas, which
+is why a bare `npx vitest run` is not the same check: several committed
+artifacts are drift-tested against a fresh build, and a stale artifact compared
+against an equally stale build agrees with itself.
 
 To try the production build — including the service worker and offline
 behaviour — locally:
@@ -60,16 +65,24 @@ npm run preview --workspace pwa
 
 ## 5. Where things live
 
-| Path             | What it is                                                                   |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `content/`       | Every authored catalog, as YAML — the format a mod is written in too         |
-| `mod/`           | The mod SDK — CLI, compiler, format reference, worked example                |
-| `engine/`        | The engine — framework-free game logic (imported by the app as `@game/core`) |
-| `pwa/`           | The deployable app — Vite + Preact PWA shell                                 |
-| `scripts/`       | The instruments — renderers, simulators, calculators, catalog generators     |
-| `tests/`         | Engine tests                                                                 |
-| `docs/`          | These reference pages                                                        |
-| `.agent/skills/` | Playbooks for each kind of work (also reachable as `.claude/skills`)         |
+| Path             | What it is                                                                     |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `content/`       | Every authored catalog, as YAML — the format a mod is written in too           |
+| `mod/`           | The mod SDK — CLI, compiler, format reference, worked example                  |
+| `engine/`        | The engine — framework-free game logic (imported by the app as `@game/core`)   |
+| `pwa/`           | The deployable app — Vite + Preact PWA shell                                   |
+| `server/`        | The session server — the engine compiled for Node, and the dedicated server    |
+| `native/`        | The App Store / Play Store shell (Expo). Its own dependency tree               |
+| `electron/`      | The Steam shell. Its own dependency tree, its own `tsc`, its own vitest        |
+| `tauri/`         | The second desktop shell, in Rust. Checked by `make tauri-test` / `-lint`      |
+| `scripts/`       | The instruments — renderers, simulators, calculators, catalog generators       |
+| `tests/`         | The root suite — `tests/engine/` on fixtures, `tests/content/` on the catalogs |
+| `docs/`          | These reference pages                                                          |
+| `.agent/skills/` | Playbooks for each kind of work (also reachable as `.claude/skills`)           |
+
+The three shell trees sit OUTSIDE the npm workspace, so `make test`, `make lint`
+and `make build` stop at their edge; the root `package.json` forwards to them
+with `npm --prefix` (`npm run native:*`, `npm run electron:*`, `npm run tauri:*`).
 
 ## 6. If you are here to make a mod
 

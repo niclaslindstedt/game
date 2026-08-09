@@ -20,7 +20,7 @@ document and a schema disagree, the schema is right.**
 
 | Your file                                         | Schema (`../scripts/asset-tools/…`)                                       |
 | ------------------------------------------------- | ------------------------------------------------------------------------- |
-| `mod.yaml`, `ladder.yaml`, `levels/<id>.yaml`     | [`level-schema.mjs`](../scripts/asset-tools/level-schema.mjs)             |
+| `levels/<id>.yaml`                                | [`level-schema.mjs`](../scripts/asset-tools/level-schema.mjs)             |
 | `maps/<id>.yaml`                                  | [`map-schema.mjs`](../scripts/asset-tools/map-schema.mjs)                 |
 | `enemies/<biome>/<id>.yaml`                       | [`enemy-schema.mjs`](../scripts/asset-tools/enemy-schema.mjs)             |
 | `items/<rarity>/<id>.yaml`                        | [`item-schema.mjs`](../scripts/asset-tools/item-schema.mjs)               |
@@ -38,6 +38,10 @@ document and a schema disagree, the schema is right.**
 | `music/<id>.yaml`                                 | [`music-schema.mjs`](../scripts/asset-tools/music-schema.mjs)             |
 | `difficulties.yaml`                               | [`difficulty-schema.mjs`](../scripts/asset-tools/difficulty-schema.mjs)   |
 | `scripts/<id>.lua`                                | [`script-schema.mjs`](../scripts/asset-tools/script-schema.mjs)           |
+
+Two files have no schema module of their own and are checked by the compiler
+itself: `mod.yaml` (in [`tools/build.mjs`](tools/build.mjs)) and `ladder.yaml`
+(by the level loader, `../scripts/level-data/`).
 
 The files with no schema are the ones with no fields — a recording
 (`sounds/<id>.<ext>`, `music/<id>.<ext>`) and a drawn sprite
@@ -126,8 +130,8 @@ Three rules:
 - **Write it in the game's own alphabet.** The title is drawn in the pixel font,
   which falls back to `?` for a glyph it has no cell for — so an accent would
   render as `H?LLSTR?M` at triple size across your own front page. The compiler
-  refuses it and names the character (`cli.mjs ids --kind glyphs` is the full
-  set).
+  refuses it and names the character (`glyphs` in
+  [`catalog.json`](catalog.json) is the full set).
 - **It renames the SCREEN, not the install.** Your saves, the game's storage,
   the browser tab and the store listing are untouched — a mod that moved those
   would orphan the player's roster.
@@ -185,28 +189,35 @@ The file stem, the `id` and the `level` are all the same word: **a blueprint
 carves the mission it is named after.** An addon may only name one of its own
 levels — re-carving a shipped venue is a `kind: conversion`'s business.
 
-**A blueprint is a RECIPE, not a layout.** It carries only what the carve needs:
+**A blueprint is a RECIPE, not a layout.** It carries only what the carve needs.
+Required: `id`, `level`, `size`, `areas`, `layout`, `objects`, `horde`.
 
-| Field                   | What it says                                                                                                   |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `areas`                 | what KINDS of place the map is made of — the rule engine, and where the walls come from                        |
-| `size`                  | the world rectangle the map is carved into — a width, a height and a chamber count                             |
-| `layout`                | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of     |
-| `objects`               | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `light`, …) |
-| `horde`                 | how thick the mobs stand, which breeds, and the depth window each one appears in                               |
-| `elites` / `guardians`  | the set pieces the carve places for you                                                                        |
-| `bystanders`            | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                   |
-| `arrivals` (on an area) | the STAFF LOT: people turn up here in cars, and the way in is the door one of them badges open (see below)     |
-| `boss`                  | who, and the candidate **compass regions** one is rolled from per run                                          |
+| Field                   | What it says                                                                                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas`                 | what KINDS of place the map is made of — the rule engine, and where the walls come from                                                                   |
+| `size`                  | the world rectangle the map is carved into — a width, a height and a chamber count                                                                        |
+| `layout`                | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of                                                |
+| `objects`               | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, `building`, `row`, `critter`, `lair`, `door`, `light`) |
+| `horde`                 | how thick the mobs stand, which breeds, and the depth window each one appears in                                                                          |
+| `elites` / `guardians`  | the set pieces the carve places for you                                                                                                                   |
+| `hellborn`              | the rampage-only crop a `horde.hellgates` count pours out                                                                                                 |
+| `rareSpawns`            | the breeds that turn up seldom, wherever the horde does                                                                                                   |
+| `bystanders`            | the NEUTRAL cast an errand sends the hero to talk to, dropped into cells the horde stands in                                                              |
+| `arrivals` (on an area) | the STAFF LOT: people turn up here in cars, and the way in is the door one of them badges open (see below)                                                |
+| `prefabs`               | a STATIC room — a named area, and props placed at authored offsets inside it, the same on every seed                                                      |
+| `annex`                 | the boss's own wing and the ELEVATOR that is the only way into it                                                                                         |
+| `locks`                 | the STORY ITEM ids that open a keyed district (see below)                                                                                                 |
+| `boss`                  | who, and the candidate **compass regions** one is rolled from per run                                                                                     |
 
 Everything else about the mission — its name, its story, its intro, its loot
 pools, its music, its merchant — is **inherited from the level it names**, so a
 venue is still described in exactly one place.
 
 A set piece and a knot name a **ramp** (`meek`, `bold`, `fierce`, `savage`,
-`brutal`, `monstrous`, `endgame`, `apex`) rather than per-difficulty numbers —
-the ramp is expanded against your ladder rows at compile time. So a map reads as
-intent, and every difficulty number comes from one file.
+`brutal`, `merciless`, `monstrous`, `endgame`, `apex`) rather than
+per-difficulty numbers — the ramp is expanded against your ladder rows at
+compile time. So a map reads as intent, and every difficulty number comes from
+one file.
 
 Three rules to author by:
 
@@ -370,7 +381,8 @@ The file stem is the id; the `<biome>` directory is organizational only (the
 compiled catalog is flat, and a duplicate id across your tree is an error).
 
 Required: `id`, `name`, `lore`, `role` (`minion` / `elite` / `boss`), `sprite`,
-`hp`, `speed`, `radius`, `contactDamage`, `critChance`, `contactCooldownMs`.
+`hp`, `speed`, `radius`, `contactDamage`, `critChance`, `contactCooldownMs`, and
+an `ai:` block carrying at least an `aggroRadius`.
 
 `lore` is a short paragraph saying what the thing IS — the same register as an
 item's `description`, and required of the rank and file as much as of a named
@@ -379,16 +391,18 @@ as the inhabitants of somewhere. Nothing in the simulation reads it; the
 bestiary prints it under the monster's portrait.
 
 `sprite` names a **family**, not a file: the renderer draws `<sprite>_0` and
-`<sprite>_1`. Both frames must exist — in your `sprites/` or in the base game —
-and the compiler refuses the mod if they do not, because a missing sprite draws
-as **nothing at all** rather than as an error.
+`<sprite>_1`. `<sprite>_0` must exist — in your `sprites/` or in the base game —
+and the compiler refuses the mod if it does not, because a missing sprite draws
+as **nothing at all** rather than as an error. Draw `_1` too: without it the body
+stands there without a walk.
 
 `gore` is what sprays when it is struck — `blood` (the default), `ecto` for a
-ghost, `sparks` for a machine — and `anatomy` says what shape it is under the
-skin, for the one moment a blunt blow BURSTS it: `humanoid` (the default) loses
-a head among the meat, a `beast` throws the same viscera and bone with no face
-in it. Only a body that bleeds is ever asked, so a `sparks` monster authoring an
-`anatomy` is refused rather than ignored — it can never come apart.
+ghost, `sparks` for a machine, `cosmic` for a thing the rift is made of — and
+`anatomy` says what shape it is under the skin, for the one moment a blunt blow
+BURSTS it: `humanoid` (the default) loses a head among the meat, a `beast`
+throws the same viscera and bone with no face in it. Only a body that bleeds is
+ever asked, so a `sparks` monster authoring an `anatomy` is refused rather than
+ignored — it can never come apart.
 
 `wealth` is how rich the thing was in life — a multiplier on the GOLD its
 corpse sheds. Omitted is an ordinary pocket, and whether there is a purse at all
@@ -422,7 +436,7 @@ mechanics:
 
 The **ability catalog** is the one to reach for now. It is a LIST, and every
 entry names a primitive from `enemyAbilities` in
-[`catalog.json`](catalog.json) — ten of them are BOSS TIER (they reshape the
+[`catalog.json`](catalog.json) — eight of them are BOSS TIER (they reshape the
 arena: a beam that sets the floor alight, shutters that grow around the hero,
 pods out of the sky) and ten are ELITE TIER (they reshape the next four
 seconds: a ring of motes, a slow underfoot, a drain that holds while you stand
@@ -623,8 +637,11 @@ difficulties:
     tagline: NOTHING SURVIVES IT
 ```
 
-Both fields are optional per rung, and a rung you leave out keeps what it
-shipped with. The five rung ids are `easy`, `medium`, `hard`, `nightmare`,
+Both fields are optional per rung (though an entry that sets NEITHER changes
+nothing and is refused as the typo it is), and a rung you leave out keeps what it
+shipped with. A `name` runs to 24 characters and a `tagline` to 44 — the ladder
+measures and shrinks to fit, and past those an entry is unreadable rather than
+overflowing. The five rung ids are `easy`, `medium`, `hard`, `nightmare`,
 `jesus` — you may rename them, but you cannot add one.
 
 **The VOICE is yours; the NUMBERS are the game's.** A rung's mob multipliers, xp
@@ -708,7 +725,7 @@ regions:
 ```yaml
 region: gear
 order: 1
-kind: button # panel | bar | gauge | icon | text | button | widget
+kind: button # panel | bar | gauge | icon | text | button | canvas | widget
 class: hud-bag-slot
 aria: open-bag # a button needs one — the tests and a screen reader find it by name
 classes: # extra classes, each worn while its condition holds
@@ -1020,6 +1037,11 @@ grid: |
 - `plane:` says which plane the art is drawn on — `upright` (the default) for
   anything with a side to it, `floor` for flat art drawn in PLAN, `wall` for
   plan art that has a HEIGHT. See below.
+- `space:` says where the art belongs — `inside` or `outside`. Most sprites
+  declare NEITHER, which is the honest answer for a crate or a bloodstain; it is
+  for art that would read as a mistake on the other side of a wall (a cactus, a
+  server rack), and it is what lets the map compiler refuse a palette entry that
+  would scatter one into the wrong half of a venue.
 
 ### `plane:` — does it stand up, lie down, or stand on its own footprint?
 
@@ -1090,9 +1112,9 @@ manifest entry, no YAML beside it, nothing else to write. **An art pack is a
 complete mod**: a folder of PNGs named after the bodies they redraw, with no
 level, no monster and not one line of YAML in it.
 
-- **PNG only, 8 bits per channel, not interlaced.** Every editor exports that by
-  default; the compiler names the fix if yours did not. Indexed colour,
-  greyscale and full RGBA all work, with or without transparency.
+- **PNG only, no more than 8 bits per channel, not interlaced.** Every editor
+  exports that by default; the compiler names the fix if yours did not. Indexed
+  colour, greyscale and full RGBA all work, with or without transparency.
 - **A sprite's pixels are WORLD UNITS.** The hero is 16 of them tall. A 64×64
   body is four heroes tall on the field — which is a legitimate thing to draw
   for a boss and almost never what somebody means at 128. The compiler warns
@@ -1195,18 +1217,29 @@ game's own tree: `regular` and `trash` for plain bases the loot system rolls
 tiers and affixes onto, `set` / `unique` / `legendary` / `artifact` for named
 relics with fixed bonuses.
 
-`kind` says which family it is:
+Every item owes `id`, `kind`, `rarity` and `name`; every plain base owes a
+`description` and an `icon` on top. `kind` says which family it is:
 
-- `weapon` / `gear` — a plain base. Needs `class` (`melee` / `ranged` /
-  `magic`), `levelReq`, `damage` or `armor`, `durability`, an `icon`, and the
-  numbers its class implies (a `cooldownMs` and `range`, a `projectile:` block
-  for anything that fires). A MELEE weapon may also declare `edge: blunt` — no
+- `weapon` — a plain base. Needs `class` (`melee` / `ranged` / `magic`),
+  `damage`, `cooldownMs`, `range` and `levelReq`, plus a `projectile:` block for
+  anything that is not melee. A MELEE weapon may also declare `edge:` — no
   number changes, but a blow that overwhelms a body BURSTS it into gibs instead
-  of cutting it in two. Omitted means `sharp`, because most things that swing
-  are blades; the field is refused on a ranged or magic weapon, which always
-  lands blunt whatever the file says.
+  of cutting it in two. `sharp` is the default, because most things that swing
+  are blades; `blunt` is the mauls and the batons, and `shred` is the chainsaws
+  (which burst a body exactly as `blunt` does, and are their own word so the
+  catalog is not lying about what they are). The field is refused on a ranged or
+  magic weapon, which always lands blunt whatever the file says.
+- `gear` — the other plain base. Needs a `slot` and a `bonuses:` mapping (which
+  may be empty, `{}`), plus whatever its slot implies — see the second arm
+  below.
 - `unique` — a named relic. Needs `base` (which may name one of the game's
   bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
+
+**A RANGED WEAPON EATS AMMUNITION AND HAS NO `durability`; MELEE AND MAGIC ARE
+THE EXACT OPPOSITE.** It is one trade, not two independent fields — a gun never
+breaks, it runs dry — so a `class: ranged` weapon authors `ammo:` (`bullets`,
+`arrows` or `cells`) and no `durability:`, and everything else authors
+`durability:` and no `ammo:`. The compiler refuses either half being wrong.
 
 ### The SECOND ARM: `shield`, `bag`, and `twoHanded`
 
@@ -1379,7 +1412,7 @@ folder of recordings and not one line of YAML — is a complete, valid mod.
 
 ### Which names may I use?
 
-Every sound the game ships, and there are 191 of them:
+Every sound the game ships, and there are 206 of them:
 
 ```sh
 node mod/tools/cli.mjs sounds            # all of them
@@ -1499,14 +1532,14 @@ above is available on a `call: sample` voice, plus `delayMs`.
 
 ### Where a sound sits, and how long it lasts
 
-Three fields on the sound itself, all optional and all as available to a
+Four fields on the sound itself, all optional and all as available to a
 synthesized sound as to a recorded one:
 
 ```yaml
 spatial: true # pan and trim by WHERE it happened, against the player's camera
 loop: true # a sustained source — weather, a room tone, an engine layer
-stopOn: sandstormEnded # the event that ends it (a loop without one runs to
-fadeMs: 250 #             the end of the run); fade for its start and stop
+stopOn: abilityEnded # the event that ends it (a loop without one runs to
+fadeMs: 250 #          the end of the run); fade for its start and stop
 ```
 
 `spatial` is opt-in because most sounds are not the world's: a menu click, a
@@ -1664,7 +1697,11 @@ powerups:
 ```
 
 Required: `name`, `lore`, `kind`, `durationMs`, `icon`, and the effect block
-your `kind` names.
+your `kind` names. Optional beside them: `stackable`, `uniqueHeld` (the dock
+holds at most one — a second pickup stays on the floor and the trader will not
+sell one, which is what keeps a screen-wipe a moment), `rarity` (its selection
+weight in a level's pool AND the stall's price of it; 100 is ordinary, so 30 is
+"this one is a moment, not a resource"), `sfx` and `look`.
 
 `lore` is a short paragraph, in the same register as an enemy's — and it is
 required for the same reason. Nothing in the GAME ever explains a power: it
@@ -2149,6 +2186,13 @@ thoughts:
         - BELONG IN ONE SENTENCE.
 ```
 
+**SOMEBODY MAY ANSWER HIM BACK.** Declare a `voice: { speaker, portrait }` and
+any page written `{ them: [line, …] }` is theirs, in their own box under their
+own name. Both halves are checked together: a `them:` page with no `voice:` comes
+out in the hero's box under his name, a `voice:` no page uses is a second speaker
+the player never meets, and a beat whose pages are ALL `them:` is somebody else's
+scene rather than his thought — each is a compile error.
+
 ### `{HERO}` — the player's own name
 
 The player names their character on the NEW GAME screen, and **`{HERO}` is that
@@ -2220,6 +2264,7 @@ storyItems:
         - OLD. THE TIMER KEPT GOING.
     unlocks: vault # optional: a door id in YOUR level this is the key for
     suitsHero: false # optional: dresses the hero in the EVA suit for the run
+    keepsake: false # optional: banked on the CHARACTER, so a travel door can gate on it
 ```
 
 Get one into a player's hands either by laying it on the floor of a level:
@@ -2264,8 +2309,8 @@ questGivers:
     farewell: # optional, once everything of theirs is done
       - MIND THE TRAYS ON YOUR WAY OUT.
     intro: # optional: a MEETING owed before any errand is offered
-      conversation: mymod_keeper_meeting # one of your `conversations/`
-      until: mymod_keeper_met # a flag some branch of it sets
+      conversation: some_meeting # a conversation the BASE GAME ships
+      until: some_flag # a flag some branch of it sets
 ```
 
 **`intro:` is how somebody gets introduced before they start asking.** The first
@@ -2273,11 +2318,12 @@ tap opens that conversation tree instead of the errand slate; the slate opens
 from the tap after `until` is set, and the tree is never seen again. It is worth
 reaching for when the reason a person is standing on your map is the reason
 their errands make sense — a slate that opens cold makes a giver read as a
-dispenser. Two things the build refuses, because both are silent at runtime: an
-`until` no branch of any conversation sets (the meeting could never end, so the
-errands could never be offered), and a `conversation` that does not exist.
-Walking away mid-talk is free — author a `reentry:` on the flag your first
-branch sets and they pick up where they stopped.
+dispenser.
+
+**A MOD CANNOT SHIP CONVERSATIONS.** There is no `conversations/` tree in the
+mod layout and the compiler reads none — a folder of them is refused as a stray.
+So `intro:` and a quest's `conversation:` can only name a tree the base game
+already ships, which for most mods means leaving both out.
 
 Each errand is its own file under `quests/`, the stem being its id:
 
@@ -2308,11 +2354,26 @@ reward:
   loot: { count: 1, tierBonus: 1 } # rolled through the ordinary drop pipeline
   uniques: [mymod_relic] # optional: handed over whole
   abilities: [mymod_power] # optional: docked as a powerup
+  cleanSlates: 1 # optional: a respec (more than one warns — a build is a decision)
+  cache: true # optional: the garage chest, only on a map that stands one
 requires: [mymod_earlier_quest] # optional chain gate — same giver, same level
 minDifficulty: hard # optional
+campaign: true # optional: the log rides the CHARACTER, not the run
 ```
 
-The four objective kinds:
+`campaign: true` is what lets a chain cross maps. An ordinary errand is a run's
+business — its log dies with the level — so its `requires` and its objectives
+must all sit on the one venue; a campaign errand is banked per difficulty on the
+hero and may reach across the whole ladder. A chain must be all one or all the
+other, which the build checks. Use it sparingly.
+
+An errand may also carry a `merchant:` deal — a `buys:` (`item`, `coins`, and
+the flags that sale `sets:`) and a list of `sells:` (`item`, `price`, optional
+`requires:` flags and a `pitch:` line) — every item of which the quest's own
+`items:` must define. That is what a `sell` objective and a `flag` objective
+have to work with.
+
+The eight objective kinds:
 
 ```yaml
 - kind: kill # N of a breed; any kill counts, yours or a companion's
@@ -2326,7 +2387,25 @@ The four objective kinds:
 - kind: escort # walk somebody to a spot
   escort: the_botanist
   to: { x: 1900, y: 640 }
+- kind: visit # go and look at somewhere on one of your maps
+  level: mymod_venue
+  at: { x: 1900, y: 640 }
+  name: THE NORTH BEDS # the tracker prints this instead of a coordinate
+  radius: 90 # optional
+- kind: flag # wait on a run flag something else sets
+  flag: mymod_deal_struck
+  name: STRIKE THE DEAL # required, for the same reason
+- kind: sell # hand a token over the trader's counter
+  item: spare_fuse
+- kind: reachLevel # be this deep before it counts
+  level: 12 # at least 2, and never past the game's cap
 ```
+
+A `visit`'s and a `flag`'s `name:` are not decoration: the tracker prints them
+in place of an id or a coordinate, so the build refuses an objective without
+one. And a `flag` objective only ever finishes if something SETS that flag — for
+a mod that means the errand's own `merchant.buys.sets:`, because a mod cannot
+ship the conversations that are the other source.
 
 A `collect` objective names a token the quest itself defines, so two mods can
 both ship a "spare fuse" without colliding:
@@ -2367,9 +2446,10 @@ description rather than a line of dialogue.
 Three rules the compiler enforces, because each one fails SILENTLY at runtime:
 a giver must be given at least one quest (a person you can walk up to and get
 nothing from is the most confusing thing a quest system can ship), a chain may
-not loop or cross maps (the log is a RUN's, so a prerequisite from another map
-can never have been turned in), and every id — the level, the giver, the breeds,
-the sprites, the relics, the powers — has to resolve.
+not loop, and a RUN chain may not cross maps (its log dies with the level, so a
+prerequisite from another map can never have been turned in — `campaign: true`
+is the way out), and every id — the level, the giver, the breeds, the sprites,
+the relics, the powers — has to resolve.
 
 **Your errands are yours**, exactly as your story is: nobody reviews the lines,
 and nothing has to agree with the campaign.
@@ -2473,10 +2553,13 @@ asks the other question, and this is the whole list of what it allows:
 | `mod.yaml`                                                       | the manifest                                                                                                                                                                                                      |
 | `levels/`, `maps/`, `sounds/`, `music/`, `cutscenes/`, `quests/` | `<id>.yaml`, one level deep                                                                                                                                                                                       |
 | `enemies/`, `items/`, `sprites/`                                 | `<biome or rarity or family>/<id>.yaml`, two levels deep                                                                                                                                                          |
+| `sprites/` also                                                  | `<family>/<id>.png` — the same sprite drawn somewhere else                                                                                                                                                        |
 | `sounds/` and `music/` also                                      | `<id>.wav` / `.mp3` / `.ogg` / `.opus` / `.flac` — a RECORDING replacing the sound or track of that name (plus `<id>.1.wav`, `<id>.2.wav` … for a sound's takes); the two trees that hold media beside their YAML |
-| `scripts/`                                                       | `<id>.lua`, one level deep — the only tree that is not YAML                                                                                                                                                       |
-| the root catalogs                                                | `ladder.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml`                                                     |
-| alongside them                                                   | `README.md`, `LICENSE.md`, `preview.png`, and `.workshop-id` (yours — never packaged)                                                                                                                             |
+| `scripts/`                                                       | `<id>.lua`, one level deep — the only top-level tree that is not YAML                                                                                                                                             |
+| `hud/`                                                           | `hud.yaml`, `events.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`                                                                                                                                               |
+| `menus/`                                                         | `<id>.yaml`, `modals/<id>.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`                                                                                                                                         |
+| the root catalogs                                                | `ladder.yaml`, `animations.yaml`, `powerups.yaml`, `talents.yaml`, `companions.yaml`, `sets.yaml`, `difficulties.yaml`, `thoughts.yaml`, `story-items.yaml`, `quest-givers.yaml`                                  |
+| alongside them                                                   | `README.md`, `LICENSE.md` (or `LICENSE`), `preview.png`, plus two of yours that a package never carries: `.workshop-id` and `mod.json` (what `cli.mjs build` writes)                                              |
 
 Everything else is refused by name, and each refusal says which of the two it
 is: **junk** (a `.DS_Store`, an editor backup, a layered `.psd`, a

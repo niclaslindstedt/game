@@ -9,8 +9,10 @@ There is no scripting language to learn and no SDK to install. The files you
 write are the same files the game's own content is written in, checked by the
 same validator, so anything under [`content/`](content) is a worked example.
 
-> **Mods load in the Steam desktop build only.** The browser and mobile builds
-> have no Workshop to subscribe to and no filesystem to read a mod from.
+> **Mods load in a desktop build only.** The browser and mobile builds have no
+> Workshop to subscribe to and no filesystem to read a mod from. Ordinary
+> players need a game licence acquired through Steam to use them; a plain
+> download loads mods only when launched with `--mods`.
 
 ## Use a coding agent — this repo is built for it
 
@@ -55,7 +57,7 @@ npm install
 
 ```sh
 node mod/tools/cli.mjs new my-mod --title "MY MOD"   # 1. scaffold — it already compiles
-node mod/tools/cli.mjs ids boots --kind items        # 2. look up every id before you use it
+node mod/tools/cli.mjs ids boots --kind gear         # 2. look up every id before you use it
 node mod/tools/cli.mjs check my-mod                  # 3. validate — fast, writes nothing
 node scripts/simulate-run.mjs --mod ../my-mod …      # 4. measure it (see the README)
 node mod/tools/cli.mjs where                         # 5. where to drop it to play it
@@ -84,7 +86,8 @@ build runs that exact compiler when it loads a mod.
   the compiler refuses it.
 - **Never guess an id.** Loot pools, drops and a relic's `base` all name ids, and
   an unverified id is the single most common reason a mod fails to compile.
-  `cli.mjs ids` searches the 1,400-entry catalog the compiler checks against.
+  `cli.mjs ids` searches `mod/catalog.json` — the same few thousand ids the
+  compiler checks against.
 
 ### Judge it with the instruments, not by eye
 

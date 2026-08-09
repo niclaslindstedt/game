@@ -150,24 +150,27 @@ IS lives in `engine/game/downed.ts`, Diablo 2's shape whole:
   engine (which still never learns hardcore exists). `SessionParams.hardcore`
   marks a hardcore character's session, the `join` frame carries the joiner's
   flag, and `admit` refuses a mismatch either way round
-  (`hardcore-mismatch`), after the challenge so a spoofed address learns
-  nothing. The probe reply names the session's mode so the JOIN screen can
-  pre-empt the refusal without a round trip.
+  (`hardcore-mismatch`) — after the challenge AND the password, so a peer that
+  has proved nothing is told nothing. The probe reply names the session's mode
+  so the JOIN screen can pre-empt the refusal without a round trip; both sides
+  default softcore, so every pre-flag client still admits.
 
-Its per-player `dying` screen came free, because the screens ARE per-player:
+The per-player DOWNED overlay came free, because the screens ARE per-player
+(`Player.downed` is the gate the app reads):
 
 **THE SCREENS ARE PER-PLAYER.** `state.phase` keeps only what is
 genuinely global — the scenes, the spare-or-kill `choice`, victory and defeat —
 and what one player is LOOKING AT is `Player.screen` ("paused", "levelup",
-"respec", "inventory", "map", "questLog", "shop", "quest", "talk",
-"companion"). A hero with a screen up contributes no steering but still stands
+"respec", "inventory", "map", "questLog", "shop", "cache", "quest", "talk",
+"companion", "trade"). A hero with a screen up contributes no steering but
+still stands
 on the field, still auto-fires at what comes close, and can still be killed —
 D2's rule, and what makes opening your bag mid-fight a decision. The world
 halts only when EVERY hero in play has a screen up (`partyBlocked`), which is
 what keeps a solo game's bag exactly the freeze it always was. Three
 consequences worth knowing:
 
-- **A LEVEL-UP BANKS instead of pausing — IN A PARTY** (decision 4). The ding
+- **A LEVEL-UP BANKS instead of pausing — IN A PARTY.** The ding
   celebrates on the field and the points bank on `Player.pendingStatPoints`
   (with the talent queue on `Player.pendingTalentPoints`, moved off the run)
   either way; what differs is who raises the chooser. SOLO it raises itself as
@@ -306,7 +309,7 @@ maps plus `scripts/game-alias-loader.mjs`.
 
 The JOINER's half of the wire is `server/net/connect.ts`, and it lives beside
 the hub rather than in the shell or in the page for the two reasons the seam
-itself moved here: a page cannot open a UDP socket at all, and phase 5's dedicated
+itself moved here: a page cannot open a UDP socket at all, and the dedicated
 server has no shell to put one in. The session process therefore has **two
 roles** — `start` makes it a HOST (it simulates, and the renderer is its first
 client), `connect` makes it a JOINER (nothing simulates, a socket is opened
@@ -316,8 +319,14 @@ joining cost one small module rather than a second client.
 
 `server/wire/` is the vocabulary both ends speak, and it imports nothing at
 all — not even the engine. Both halves read it, and the page reads it from
-screens that may sit on the app's startup path, where the 200 KB critical-path
-budget forbids reaching `@game/core`.
+screens that may sit on the app's startup path, where the 170 KB critical-path
+budget forbids reaching `@game/core`. The split INSIDE that folder is the same
+budget one level down: `protocol.ts` is what the title menu genuinely reads
+(the handshake shapes, `PROTOCOL_VERSION`, the refusal texts) and `frames.ts`
+is the RUNTIME vocabulary behind the run's lazy chunk (the frame tags, the
+transport constants, the `COMMANDS` allow-list). **No value re-export may
+connect the two, in either direction** — tree-shaking is global, so an export
+the lazy chunk used would keep its bytes on the startup path.
 
 ## The three rules worth knowing
 
@@ -360,11 +369,11 @@ why nothing in this feature has an "and also, when you are the host…" clause.
 - **DYNAMIC — snapshotted every third tick** (20 Hz), as a delta against the
   last snapshot the client ACKNOWLEDGED. A lost frame therefore costs one frame
   of smoothness and can never desync, which is what makes an unreliable
-  transport safe in phase 2.
+  transport safe.
 - **PRIVATE — to its owner alone.** The bag, the purse, the stats, the talents.
   This is simultaneously a bandwidth win, a privacy win and **the anti-cheat
   boundary**: a client that never receives another player's bag cannot
-  manipulate it, which is what will make phase 5's trade window honest. It is a
+  manipulate it, which is what makes the trade window honest. It is a
   WITHHOLDING, not an omission — the fields are deleted before the snapshot is
   coded, and a spectator's client deletes the ones its own `createGame`
   invented.
@@ -419,9 +428,10 @@ into their game that does not involve a new build.
 
 ## Two channels, deliberately
 
-The four existing bridges (cloud save, achievements, leaderboards, mods) move a
-handful of JSON round trips per session. This one would move a snapshot twenty
-times a second, so it does not use that channel for it:
+The other shell bridges (cloud save, achievements, leaderboards, mods,
+screenshots, the store) move a handful of JSON round trips per session. This one
+would move a snapshot twenty times a second, so it does not use that channel for
+it:
 
 - **CONTROL** — host, stop, status. JSON, over the shared `gis:post` channel,
   tagged `__gisNet` like every other protocol.
@@ -436,62 +446,59 @@ Two things, and both are narrow on purpose:
 - **INPUT frames** — the existing `GameInput` shape, plus a sequence number.
   The client sends input, never positions: a client that sends positions is a
   client that can teleport.
-- **COMMANDS from a closed list** (`COMMANDS` in `server/wire/protocol.ts`) —
+- **COMMANDS from a closed list** (`COMMANDS` in `server/wire/frames.ts`) —
   the app does not merely READ the run, it _acts_ on it: it turns a page of the
   opening monologue, equips the sword in bag cell 4, buys the merchant's third
   row, places a stat point, takes an errand. Once the state lives in another
   process every one of those calls has to travel. They travel as names from a
   fixed union, dispatched through an explicit `switch`. A channel that resolved
   a function name dynamically would hand a client `grantXp` and `mintUnique`
-  the day phase 2 opens a UDP port.
+  the day a UDP port opens. The list covers the scene advances, the screens, the
+  run's own flow, the bag, the counter, the build, the party, the errands, the
+  conversations, the vault, the crossings and the AUTO PILOT ride — 101 verbs
+  today, and `RUN_COMMAND_NAMES` is the count. **Every addition bumps
+  `PROTOCOL_VERSION`**, because a build that has never heard of a verb and a
+  build that refuses one look identical from the far end of a wire.
 
-  **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** phase 1's nine
-  verbs took none; phase 1.5's sixty-nine mostly do (the list has grown since —
-  `RUN_COMMAND_NAMES` is the count, and every addition bumps
-  `PROTOCOL_VERSION`). A verb whose payload is a
+  **THE ARGUMENTS ARE PART OF THAT MODEL AND ARE SCALARS ONLY.** A verb whose
+  payload is a
   STRUCTURE is a verb whose payload a stranger gets to shape, so what crosses is
   a number, a string or a boolean — an index, a slot name, a stat, a quest id, a
   speed rung — and each verb's arity and argument types are declared beside it in
   the ENGINE (`RUN_COMMAND_ARGS` in `engine/game/commands.ts`) and checked before
-  anything is dispatched. A string that names one of the engine's own unions is
+  anything is dispatched. A string that names one of the engine's own unions
+  (`stat`, `equipSlot`, `companionSlot`) is
   checked against that union's runtime list rather than against `typeof
 "string"`: a host must not be crashable by a stranger sending `"luckk"`.
 
   **THE LIST EXISTS TWICE, AND THAT IS DELIBERATE.** The engine owns what each
-  verb DOES; `server/wire/protocol.ts` keeps a literal copy of the NAMES for its
-  allow-list, because that leaf is read by the page from screens on the app's
-  startup path where the 200 KB budget forbids reaching `@game/core`.
+  verb DOES; `server/wire/frames.ts` keeps a literal copy of the NAMES for its
+  allow-list, because that leaf may not import `@game/core` at all.
   `tests/engine/run_commands_test.ts` fails the build when the two disagree —
   the same snapshot-and-drift-test shape `mod/catalog.json` uses.
 
   **THE APP HAS ONE DOOR ONTO THE LIST**, `pwa/src/game/run-commands.ts`, and
-  every one of the ~110 call sites goes through it. It applies through the SAME
+  every call site in the app goes through it. It applies through the SAME
   dispatch the server does, so a verb cannot behave one way in single-player and
   another in a session; when a run driver installs a sink it applies locally AND
   sends, so the call sites that read what a verb returned still get an answer and
-  the server's next snapshot corrects it. That is NOT the input prediction phase 3
-  owns — there is no rollback and no replay, only a UI verb applied twice.
+  the server's next snapshot corrects it. That is NOT input prediction —
+  there is no rollback and no replay, only a UI verb applied twice.
 
-- **CHAT**, added by phase 2 — one line of text, parsed by the server
-  (`server/wire/chat.ts`) into one of six names from a **second** closed list,
+- **CHAT** — one line of text, parsed by the server
+  (`server/wire/chat.ts`) into one of six names from a **second** closed list
+  (`/players`, `/who`, `/kick`, `/invite`, `/help`, `/me`),
   for exactly the same reason: a chat box that handed the session an arbitrary
   verb would undo the command channel's allow-list beside it. It is the ONE
   thing a spectator may do, and the room refuses a spectator's `/players`,
   `/kick` and `/invite` **by name** rather than ignoring them — a command that
   silently does nothing is indistinguishable from one that is broken.
 
-phase 1 shipped the nine scene-advance verbs. **phase 1.5 added the other sixty** —
-the screens, the run's own flow, the bag, the counter, the build, the party, the
-errands, the conversations, the vault and the AUTO PILOT ride — not phase 3, where
-they were first scheduled, which was a circular dependency: the run loop cannot move
-into the server until every verb it calls can travel. The two halves are
-separate jobs on the same names. **phase 1.5 makes them TRAVEL**, with today's
-blocking semantics exactly preserved — opening the inventory still freezes the
-run, because that is what it does now and the cutover may not change how the
-game feels; **phase 3 makes them NON-BLOCKING** per player, which is the design
-exercise.
+A verb TRAVELS with today's blocking semantics preserved, and the per-player
+screens above are what made them non-blocking afterwards; the two are separate
+jobs on the same names.
 
-One thing moved out of the app to make that possible, and it is worth knowing
+One thing moved out of the app to make the verbs travel, and it is worth knowing
 because it looks like an unrelated change: **the AUTO PILOT flight's build
 baseline now lives on the run** (`state.autopilot.build`, stamped by
 `startAutopilot` and seeded from `SessionParams.autopilotBuild`) rather than in
@@ -517,7 +524,7 @@ Electron" — a transport in the shell is a transport the standalone server does
 not have. So:
 
 - **UDP lives in the session process** (`server/net/udp.ts`). Its packets never
-  touch the main process's event loop, and phase 5's dedicated server inherits the
+  touch the main process's event loop, and the dedicated server inherits the
   whole path with no shell at all.
 - **Steam lives in the shell** (`electron/src/net-steam-p2p.ts`), because
   `steamworks.init()` is a single global handshake `steam.ts` owns and the
@@ -560,8 +567,9 @@ looked at.
    the join, so there is no half-open table for a flood to exhaust. It proves
    the joiner can RECEIVE at the address it claims; it does not authenticate a
    person, and the password proof beside it is a speed bump the doc says is one.
-3. **A `join`,** refused in a deliberate order — protocol, build, mods,
-   challenge, password, seats. Cheapest and most fundamental first, so garbage
+3. **A `join`,** refused in a deliberate order (`admit`, `server/wire/handshake.ts`)
+   — protocol, build, mods, challenge, password, hardcore, seats.
+   Cheapest and most fundamental first, so garbage
    costs the host almost nothing AND the message names the thing the player can
    actually fix. The challenge is checked before the password, because answering
    "wrong password" to a spoofed address is a small oracle offered for nothing.
@@ -938,19 +946,8 @@ file and one entry in `PROVIDERS`.
   and an Electron upgrade moves both, so that test would go red on a dependency
   bump rather than on a regression.
 
-### What is tested
-
-| Suite                                 | What it holds                                                                    |
-| ------------------------------------- | -------------------------------------------------------------------------------- |
-| `tests/engine/wire_voice_test.ts`     | The payload round trip, and every refusal a decoder on an open port must make    |
-| `tests/engine/net_voice_test.ts`      | The four relay rules, through a real session: the stamp, the echo, the spectator |
-| `tests/voice_room_test.ts`            | The HUD model — the mute's two seat rules, and that a LEVEL never notifies       |
-| `electron/tests/capabilities_test.ts` | The capability, and that `--voice` without `--multiplayer` is refused by name    |
-
-What no diff can close: two machines, two microphones, and a person at each —
-mouth-to-ear delay on a real connection, whether the jitter buffer's 60 ms is the
-right number under real loss, and whether echo cancellation holds up with the
-game's own audio coming out of the same speakers.
+Voice's four suites are in the table under _What is tested_ below, and what no
+diff can close is under _What is NOT here yet_.
 
 ## `/players N`
 
@@ -964,9 +961,9 @@ XP for its level. Scaling `mobHp` alone makes `/players 8` strictly punishing
 rather than the risk/reward trade it is meant to be, so the two move together,
 always.
 
-The MEASURED tuning pass is still owed: it needs the multi-player headless
-campaign that does not exist yet (see the last section). What has landed beside
-it is the meter it had to be reconciled with — below.
+The scaling is a PAIR with no third member (`PlayerScaling`); every other knob
+belonged to the measured co-op pass, which has since been run — see _What has
+landed_ below, where the answer was that neither lever moves.
 
 ## Bot seats — a party without four friends online
 
@@ -1168,7 +1165,7 @@ Two details are load-bearing:
 
 - **The sources are STAGED before they are compiled.** TypeScript refuses to
   emit a file whose import is both aliased and carries a `.ts` extension
-  (TS2877), and the engine's 112 `@game/lib/*.ts` imports are exactly that. The
+  (TS2877), and every `@game/lib/*.ts` import in the engine is exactly that. The
   build copies the trees, rewrites the aliases to relative paths, and compiles
   the copy — which keeps the engine written in the repo's own house style.
 - **Type stripping was spiked and refused.** It works (Node has it on by
@@ -1208,9 +1205,14 @@ compiler.
 | `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's  |
 | `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes     |
 | `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter     |
+| `tests/engine/net_fuzz_test.ts`          | Every decoder against arbitrary JSON — chiefly the DELTA APPLIER               |
+| `tests/engine/net_prediction_test.ts`    | The ack echo, the rebase, the loss reconcile, and the interpolation bounds     |
+| `tests/engine/net_bot_client_test.ts`    | A bot playing off a client's view alone — is what a client HAS enough          |
+| `tests/engine/bot_intent_test.ts`        | The autopilot's decision→verb mapping, written out by hand                     |
 | `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it  |
 | `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop             |
 | `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam    |
+| `electron/tests/capabilities_test.ts`    | The voice capability, and `--voice` without `--multiplayer` refused by name    |
 
 ## The three doors, and where each half of the HOST screen lives
 
@@ -1259,7 +1261,6 @@ A session used to hold exactly one `GameState`, and every crossing moved the
 whole party. That is the right call for the campaign — friends walk into the
 next level together — and it was a hard ceiling on one feature: **a real town
 portal**, where one player nips home to sell while their friends keep fighting.
-Issue #952 scoped what it would take; this is what landed.
 
 `server/worlds.ts` (the pure half — raising a carve, populating it, lifting a
 seat's carry-over out), `server/crossing.ts` (the crossing itself, both roads
@@ -1283,9 +1284,9 @@ need no flag to tell apart: if no world is on X, one is carved; if one is, the
 seat WALKS ONTO IT. The road home and the road back are the same request, and
 the second one lands on the field as it was left — the same dead, the same loot
 on the floor — rather than on a fresh roll of it. It is also what keeps the
-client's crossing detection sound: `NetClient.applyWhole` reads a world change
-off a CHANGED LEVEL ID, which is only ever true when the id is the world's
-identity.
+client's crossing detection sound: the client's whole-snapshot path
+(`server/client.ts`) reads a world change off a CHANGED LEVEL ID, which is only
+ever true when the id is the world's identity.
 
 **THE VERB IS `travelSolo`**, beside `travelTo`. Same two arguments, same words
 for the opening skip; what differs is who moves. There is no seat-0 rule on it —
@@ -1328,9 +1329,9 @@ hold. They are sent the world entire instead — every mob where it now stands,
 every item that dropped while they were away, every teammate's position, the fog
 as the party opened it — and it stays whole until they acknowledge one
 (`fullUntilAck`), because on an unreliable transport there is no ordering to
-lean on. It is the existing re-baselining path with a new trigger, which is what
-question 3 of the issue suspected. Two supporting fixes went in with it: a full
-snapshot now revives the byte-array fields (`explored`) into real typed arrays
+lean on. It is the existing re-baselining path with a new trigger. Two rules ride
+with it: a full
+snapshot revives the byte-array fields (`explored`) into real typed arrays
 rather than leaving the index-keyed object a `JSON.stringify` produces, and
 everybody ALREADY standing in the destination is owed a full snapshot too — the
 same rule a mid-run join has always followed.
@@ -1352,7 +1353,7 @@ kept for somebody who is coming back, so `nextFreeSeat` skips it. Without it the
 lowest-free-seat rule reads the vacated body as an abandoned one and seats the
 next arrival on top of a hero standing in the garage with a bag full of loot.
 
-**AND THE ANSWERS TO THE REST OF THE ISSUE'S QUESTIONS.** A JOINER joins the
+**AND THE REST OF THE ROUTING RULES.** A JOINER joins the
 PRIMARY world — their friends, never whichever level somebody happens to be
 shopping on; every other world is padded out to the new width so the chair
 exists there too. A RECONNECT comes back to the world it dropped out of, so
@@ -1407,7 +1408,7 @@ for a session that has ended.
 `engine/game/trade.ts`, and the whole design is one sentence: **the swap is a
 single transaction, on the authority, or it does not happen.** `settleTrade`
 does every check before it moves anything, so there is no reachable state in
-which an item has left one bag and not arrived in the other. Four rules keep
+which an item has left one bag and not arrived in the other. Five rules keep
 that sentence true:
 
 1. **An offer names a CELL and an ID, and the cell is re-read at settlement.** A
@@ -1482,9 +1483,11 @@ The utility-process server and the standalone one are the same code.
 `server/host.ts` owns the session, the admission desk, the sockets, the router
 mapping and — the part that must not be copied — the fixed-timestep loop, whose
 second copy would drift from the first silently and only under load.
-`server/main.ts` picks its entry from whether anybody forked it: with a
-`parentPort` it is the game's session server, without one it hands over to
-`server/dedicated.ts`. One binary, so there is no second one to forget.
+`server/main.ts` picks between THREE entries and nobody passes it a mode: a
+`parentPort` means Electron forked it and it is the game's session server;
+`--shell` means a plain child spawned by the Tauri shell (`shell-host.ts`);
+neither means a person at a terminal, and it hands over to `server/dedicated.ts`.
+One binary, so there is no second one to forget.
 
 ```sh
 npm run server:start -- --port 27015 --level moon --difficulty medium
@@ -1493,15 +1496,24 @@ npm run server:start -- server.config.json
 ```
 
 The Electron executable's `--dedicated` mode enters that same server entry
-without initializing Steam or opening a window. `--bots` accepts 1–8. Counts
+without initializing Steam or opening a window. The flags are
+`--config`/a bare path, `--level`, `--difficulty`, `--seed`, `--port`,
+`--players`, `--password`, `--bots`, `--licensed`, `--no-portmap` and
+`--verbose`, each with a config-file twin on `DedicatedConfig`; flags win over
+the file. **`--licensed` is the operator declaring they hold the multiplayer
+licence**, and without it the server starts, binds, prints its address and
+refuses every join by name — the honest behaviour for a copy nobody claimed.
+
+`--bots` accepts 1–8. Counts
 below 8 fill the party only after the first human has joined, preserving seat 0
 for them; bot seats yield to later human arrivals. Eight bots start immediately
-for an autonomous soak or demo. `--verbose` prints detailed status once a
-second (`--debug` is reserved by Electron itself).
+for an autonomous soak or demo.
 
 The terminal always reports lifecycle edges: game start, player joins, deaths
-and quits, level completion, and campaign completion. `--verbose` adds periodic
-telemetry; it is not required for those events.
+and quits, level completion, and campaign completion. Beside them it prints a
+status line every thirty seconds (`statusEverySec`; 0 turns it off), and
+`--verbose` prints a detailed one every second instead (it is `--verbose` rather
+than `--debug` because Electron reserves the latter).
 
 Ctrl-C begins a one-minute graceful shutdown announced to chat, with another
 warning at 15 seconds and a 10-to-1 countdown. A second Ctrl-C exits
@@ -1567,13 +1579,14 @@ and its economy, the abandoned hero and the per-player death/corpse/respawn (see
 mods, a joiner's own banked character, prediction, and the party bot. THE GARAGE
 is the home base the mode was owed: a static hub level whose `hub` objective never
 clears, a trader who works the road outside it (THE DEALER — see
-`LevelDef.merchant.beat`), standing travel doors
+`LevelDef.merchantBeat`), standing travel doors
 (`LevelDef.travelDoors`) as the level select — the car boards and drives out,
 the rocket and the sealed rift seam open the destination picker — and the
-campaign now opens there.
+campaign now opens there. RUTH, Ada's mother, stands in the bay with a second
+campaign-long chain.
 
 **A SESSION MAY HOLD MORE THAN ONE LEVEL AT ONCE** — see _Two levels in one
-session_ below. The SOLO town portal still works the way it always did: the
+session_ above. The SOLO town portal still works the way it always did: the
 RIFT CREATOR parks the field a hero steps out of, so the garage's seam can put
 them back on the same carve with the same dead and the same loot on the floor
 (`saveRiftRun`, pwa/src/game/saved-run.ts), and a parked field there is one
@@ -1614,8 +1627,8 @@ Two ways out of a run still re-mount app-side, and both are deliberate rather
 than forgotten: the victory splash's **RESTART** and the **AUTO PILOT**'s
 automatic next-lap routing. Neither is a CROSSING — they replay the level the
 party is already on, which `travelTo` refuses by name (`dest ===
-state.level.id`), and which a client would not even notice as a swap, since
-`NetClient.applyWhole` reads a crossing off a CHANGED level id. Giving a
+state.level.id`), and which a client would not even notice as a swap, since the
+client reads a crossing off a CHANGED level id. Giving a
 session a re-roll verb is its own piece of work; until then RESTART is hidden
 from a joiner and ends the host's session exactly as leaving does.
 
@@ -1632,7 +1645,7 @@ has — victory, travel, softcore defeat, plus the mid-run leave — writes to
 the joiner's own roster on their own device. The throwaway
 `spectatorCharacter` now covers only true watchers (a client the session
 could not seat), so a watcher can never bank the host's bag. Achievements
-and the lifetime ledger count for a seated joiner (decision 12); the boards
+and the lifetime ledger count for a seated joiner; the boards
 stay honest through the PartyStamp.
 
 **MODS RECONCILE AT THE DOOR, and the fix under it was bigger than the
@@ -1645,32 +1658,17 @@ applied in the host's order on the way (and `restoreBaseDefs` puts the
 shipped game back when the run ends); a joiner missing one keeps the refusal,
 whose press opens the game's Steam Workshop hub.
 
-The mode's final three groups of work — the ones that were still open once the
-party itself worked — landed as follows:
-
-- **THE WHOLE PARTY** — **LANDED**: in-session party travel, banking a
-  joiner's character + the party HUD and field visibility, the trade window
-  screen, mod reconciliation, and the workbench stash. The garage's quest
-  giver shipped as its own story commit after manuscript confirmation: RUTH,
-  Ada's mother, stands in the bay with a second campaign-long chain.
-- **THE HONEST WIRE** — **LANDED**: prediction and reconciliation (see
-  _Prediction and interpolation_ above), the attacker thread (a kill's crits,
-  procs, drop pricing and XP value read the hero who landed the blow, and the
-  spare-or-kill choice and boss-death rite are the killer's to resolve), the
-  snapshot-size measurement and the partial-entity/per-index delta packing it
-  demanded (27.6 KB → 8.15 KB per publish on a 135-mob field), the DEBUG net
-  graph, and the licence lock (the dedicated server's config escape is dead
-  code in the shipped binary — `server/licence.ts`, folded shut by
-  `scripts/build-server.mjs`).
-- **THE PROOF** — code half **LANDED**: bots fill a local game's empty seats
-  as real clients, the party bot holds spacing, splits packs, covers the
-  downed and walks errands, and the co-op tuning was re-measured with those
-  behaviours in. What remains is exactly the set of acceptances no diff can
-  close, listed under **What is NOT here yet**.
+Three more pieces of the wire are worth naming because nothing else documents
+them: **the attacker thread** (a kill's crits, procs, drop pricing and XP value
+read the hero who landed the blow, and the spare-or-kill choice and boss-death
+rite are the killer's to resolve); the **partial-entity/per-index delta packing**
+a snapshot-size measurement demanded (27.6 KB → 8.15 KB per publish on a 135-mob
+field), with the DEBUG net graph beside it; and the **licence lock** — the
+dedicated server's config escape is dead code in the shipped binary
+(`server/licence.ts`, folded shut by `scripts/build-server.mjs`).
 
 **THE CO-OP ECONOMY'S MEASURED PASS HAS BEEN RUN, AND THE ANSWER IS THAT
-NEITHER LEVER MOVES.** Both prerequisites landed first: `botAct(bot, state, hero)` (164 sites,
-byte-identical on two full seeded campaigns) and **`--party N`**, the simulator
+NEITHER LEVER MOVES.** The instrument is **`--party N`**, the simulator
 flying one bot per seat with a `PartyReport` whose **PER-CAPITA rate is the read
 to trust** — never the per-kill share, because a party also clears faster and
 only dividing by both the head count and the clock shows which effect won.
@@ -1697,24 +1695,20 @@ boundary all run; it walks to the NEAREST teammate rather than the centroid,
 which is a spot on the floor where nobody is standing; and it is null in single
 player, which is what keeps every existing measurement byte-identical.
 
-**WHAT THE PARTY MIGRATION DELIBERATELY LEFT IS NOW PAID IN FULL.** The
-per-player screens above (non-blocking level-up included), a joiner playing
-their own character and banking it, and the latency half — the local
-hero is predicted and everybody else interpolated (see _Prediction and
-interpolation_). One deliberate asymmetry stays: a joiner's run commands
-travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`)
-— the server is authoritative over a verb's result, so an optimistic apply
-would draw an outcome the next snapshot may not agree with; prediction covers
-movement, never verbs.
+**ONE DELIBERATE ASYMMETRY STAYS**: a JOINER's run commands
+travel but are NOT applied locally (`setCommandSink(…, { optimistic: false })`
+in `pwa/src/game/net/driver.ts`) — the server is authoritative over a verb's
+result, so an optimistic apply would draw an outcome the next snapshot may not
+agree with; prediction covers movement, never verbs.
 
 ## The autopilot is an intent
 
 `botAct` never touched the run — it RETURNS a `GameInput`, which is the very
 shape `FRAME.input` carries, so the bot's STEERING has always been an intent and
-needed nothing designed. The gap was five HOUSEKEEPING calls that reached in and
+needed nothing designed. The gap was the HOUSEKEEPING calls that reached in and
 MUTATED, and on a client a direct write is erased by the next snapshot: the
 bot's draw, its shed or its tidy silently does not happen. So the bot's whole
-output is now an intent (`engine/game/bot/intent.ts`), and every one of the five is
+output is now an intent (`engine/game/bot/intent.ts`), and every one of them is
 a DECISION plus a VERB — the decision is the autopilot's opinion and stays under
 `bot/`, the action is the hero's and lives with the thing it acts on:
 
@@ -1934,9 +1928,11 @@ ordinary work, small, and deliberately left rather than forgotten.
   whether the jitter buffer's 60 ms is the right number under real loss, and
   whether the platform's echo cancellation holds up with the game's own audio
   coming out of the same speakers the microphone is next to. The permission
-  prompt on each OS — and the macOS entitlement/`NSMicrophoneUsageDescription`
-  pair, whose absence is a CRASH rather than a refusal — needs a packaged build
-  on each platform.
+  prompt on each OS needs a packaged build to see. Both halves of the macOS
+  pair — `com.apple.security.device.audio-input` in
+  `electron/build/entitlements.mac.plist` and `NSMicrophoneUsageDescription` in
+  `electron/electron-builder.config.cjs` — are declared; their ABSENCE is a
+  crash rather than a refusal, which is why they are named here.
 - **Nothing moderates voice, and nothing can mute it Steam-side.** The
   per-player mute is the game's own, local and unsent; honouring a Steam MUTE or
   BLOCK needs the `friends` namespace `steamworks.js` does not bind — the same
@@ -1950,7 +1946,8 @@ are the edges it does not cover, each verified against the code rather than
 assumed:
 
 - **The Workshop door opens the HUB, not the mod.** A row refused for a
-  missing mod opens the game's Workshop hub (`net.openWorkshop()`), because
+  missing mod opens the game's Workshop hub (`openWorkshop()`,
+  `pwa/src/app/mods-bridge.ts`), because
   the wire carries COMPILED mod ids and the Workshop addresses content by
   PUBLISHED FILE id, and nothing maps one to the other. The player still has
   to find the mod by name once they are there.

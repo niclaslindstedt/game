@@ -1,13 +1,13 @@
 # Store listing assets
 
 Everything App Store Connect and the Play Console need, generated from sources
-committed in this repo. Two commands produce the whole submission package:
+committed in this repo. Four commands produce the whole submission package:
 
 ```sh
 make store-metadata          # listing.yaml  → store.config.json  (text metadata)
 make store-shots             # the real game → screenshots/       (captioned PNGs)
 make store-achievement-art   # the sprite atlas → achievements/   (badge images)
-make store-game-center       # the two manifests → App Store Connect (91 entries)
+make store-game-center       # the two manifests → App Store Connect (92 entries)
 ```
 
 | Path                            | What it is                                                                     | Committed? |
@@ -163,9 +163,9 @@ Steam's half of the same generator is described in
 
 ## The Game Center entries
 
-`make store-game-center` creates and updates all 91 rows — the 86 achievements
+`make store-game-center` creates and updates all 92 rows — the 87 achievements
 and 5 leaderboards of the two committed manifests — through App Store Connect's
-own API, instead of typing them into 91 web forms.
+own API, instead of typing them into 92 web forms.
 
 ```sh
 make store-game-center                      # the work list; writes NOTHING
@@ -192,7 +192,7 @@ Four properties make re-running it the normal way to apply a catalog change:
 2. **It refuses a stale manifest.** Both generators' `--check` runs first: a
    manifest that has drifted from the catalog would write yesterday's catalog
    into the portal and report success.
-3. **It checks the two silent failures before the first request.** The count
+3. **It checks the three silent failures before the first request.** The count
    under Apple's 100, the points landing on exactly 1,000/1,000 (Apple refuses
    the row that overruns the budget, so an over-budget manifest would
    half-write), and every board's score formatter agreeing with the scale the

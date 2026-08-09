@@ -21,34 +21,15 @@ viewer for a website — see [`README.md`](README.md).
   development libraries — Tauri's own
   [prerequisites](https://tauri.app/start/prerequisites/) page is the current
   list. `README.md` has the Debian/Ubuntu set.
-- **Steam Direct** — **$100 per app**, recoupable once the app earns $1,000.
-  Includes identity verification and tax forms; start it first.
-- **Steamworks SDK** — free, from
-  [partner.steamgames.com](https://partner.steamgames.com/downloads/list).
-  `steamcmd` lives in `tools/ContentBuilder/builder*/`. Put it on your `PATH`.
 - **A machine per platform.** There is no cross-compiling bundler here: the
   depot is built on the platform it is for, and a macOS build needs a Mac
   because signing does.
-
-Log steamcmd in once, interactively, so it can answer Steam Guard and cache the
-session:
-
-```sh
-steamcmd +login <your-steam-username>     # answer the prompt, then `quit`
-export STEAM_USER=<your-steam-username>   # what `npm run steam:upload` uses
-```
-
-Do this before anything scripted. A first non-interactive run always fails on
-Steam Guard, and it fails several minutes into a build.
-
-### The one that blocks everything else
-
-**The 30-day store-page wait.** Valve requires an app's store page to be public
-for **30 days** before it may release. Nothing about the code shortens it, and
-it runs in parallel with everything else here — so put the store page up as
-early as you are willing to, and treat the rest as work to finish inside that
-window. Alongside it: **bank and tax details** in the partner site, without
-which the app cannot be sold at all.
+- **Everything the STORE side needs** — Steam Direct, the Steamworks SDK and its
+  `steamcmd`, the interactive `steamcmd +login` that caches a Steam Guard
+  session, `STEAM_USER`, the bank and tax details, and the **30-day store-page
+  wait** that gates the whole thing. None of it is per-shell: it is one app on
+  one store, so it lives once, in
+  [`electron/RELEASING.md`](../electron/RELEASING.md) §0.
 
 ### The ids
 
@@ -165,7 +146,7 @@ Collected in one place, because every entry produces a game that starts:
 - **No Steam redistributable.** The handshake degrades rather than crashing, so
   cloud saves and achievements are simply dead. Caught by §2.
 - **A developer build in the depot.** Looks identical until somebody taps the
-  sun seven times. Caught by §2.
+  sun sixteen times and wins the click race behind it. Caught by §2.
 - **An unstamped build.** Multiplayer, mods and voice all absent, with the game
   playing perfectly otherwise. Refused by the packager in §1.
 - **An ad-hoc macOS signature shipped as a release.** Runs everywhere the

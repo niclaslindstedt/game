@@ -229,7 +229,7 @@ through integer scale tiers. **How the picture is made at all — the world
 projection, the post effects, the canvas and its tiers, how bodies carry
 themselves, how loot advertises itself — is `docs/rendering.md`.**
 
-**Five layers, one dependency direction** — each may import only from the ones
+**Six layers, one dependency direction** — each may import only from the ones
 above it, and `docs/architecture.md` has the module-by-module map:
 
 - **`engine/` — the simulation and its catalogs.** Framework-free TypeScript:
@@ -426,7 +426,7 @@ is a desync that presents as a replication bug.
 
 **A NEW VERB THE APP MAY RUN AGAINST A RUN EXISTS TWICE, ON PURPOSE.**
 `engine/game/commands.ts` (arg shapes + the `case`) **and** `COMMANDS` in
-`server/wire/protocol.ts` (the literal copy the allow-list reads, because that
+`server/wire/frames.ts` (the literal copy the allow-list reads, because that
 leaf is read from the startup path where the budget forbids `@game/core`); the
 drift test enforces the pair, then bump `PROTOCOL_VERSION`. Arguments are
 SCALARS only. Call it from the app through `pwa/src/game/run-commands.ts`, never
@@ -675,7 +675,7 @@ schema is the odd one out in kind rather than in authority: it has no field list
 because it validates by COMPILING the file with the engine's own Lua VM and
 looking at what the module exported. A new field
 is added THERE, with its rule and its error message, before any generator reads
-it; `CONTRIBUTING.md` indexes the set against the file each validates.
+it; `mod/FORMAT.md` indexes the set against the file each validates.
 
 Five artifacts are **committed and drift-tested against a fresh build**, so they
 are regenerated in the same commit as the change that moves them:

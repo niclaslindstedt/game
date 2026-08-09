@@ -320,7 +320,7 @@ site — the game code needs no app-specific build.
 ## Develop
 
 ```sh
-cd app
+cd native
 npm install
 npm run bundle     # build + pack the website (needed for the local-server path)
 npm run ios        # build the native app and run it on an iOS simulator

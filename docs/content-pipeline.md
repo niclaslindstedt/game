@@ -38,11 +38,10 @@ run it and inspects what the module exported. → `docs/scripting.md`
 ## The order, and why it is that order
 
 `make levels` runs the generators in a fixed chain. That chain lives in
-**`scripts/generate-content.mjs`** — one ordered step list, each entry carrying
-the one-line reason it sits where it does, spawned in sequence. It used to be
-written out twice, as two sixteen-deep `&&` chains in `pwa/package.json`
-differing by a single entry; two copies of a dependency order is a copy that
-drifts, and neither could say WHY a step sat where it did.
+**`scripts/generate-content.mjs`** — ONE ordered step list, each entry carrying
+the one-line reason it sits where it does, spawned in sequence. One copy, on
+purpose: two copies of a dependency order is a copy that drifts, and a `&&`
+chain in a package script cannot say WHY a step sits where it does.
 
 The order is a DEPENDENCY order, not a preference — each generator validates its
 authored ids against the catalogs the earlier ones emitted:
@@ -68,8 +67,10 @@ generate-bot-tuning    per-level overrides, so it needs the level ids
 generate-menu          leaf: its inputs are sprite stems and the font's glyphs
 generate-sounds        \ into pwa/src/generated/ — a sound is an APP concern
 generate-music         /   and the engine has no idea the game makes noise
-generate-hud           last: it cross-refs the sprite stems and the sound ids,
+generate-hud           late: it cross-refs the sprite stems and the sound ids,
                        and nothing downstream reads the HUD
+generate-ingame-menus  last, beside the HUD: the same two trees, and nothing
+                       reads it either
 ```
 
 `make assets` runs the SAME chain with one extra step spliced in:
@@ -94,7 +95,7 @@ goes through a bounded queue rather than being awaited one at a time.
 Almost everything `generate-assets.mjs` spends its time on is a PREVIEW, and
 previews are gitignored review surfaces rather than anything the game loads. Of
 its ~30 s, the atlas, the source rects, the plane manifest and the three fonts —
-everything the game itself ships — account for about two. The rest is the ~1800
+everything the game itself ships — account for about two. The rest is the ~2300
 per-sprite 8x PNGs, seventeen family contact sheets, the full cross-family
 sheet, the film strips and animated WebPs, the font specimens and the palette
 swatches.
@@ -167,12 +168,14 @@ never by editing the fixture.
   higher the rung the more that costs. A level's spawn points and
   pinned elites/bosses name a neutral, ordered **ramp** (`meek`→`monstrous` wave
   tiers off the band start, `endgame`/`apex` off the band end) and a single base
-  `hp`; `loadLevels()` expands each ramp into the four [easy, medium, hard,
-  nightmare] `mobLevels` / `level` + `hp` tuples (scaling hp by the map's
-  `hpCurves` entry) and stamps `mobLevels` + `intendedLevel` onto every def — so
-  the con viz and the engine read one ladder and every difficulty number is tuned
-  from that one file. (A mission names no ramp of its own any more — its cast is
-  the blueprint's, so `map-data/load-yaml.mjs` is what expands them now.) The
+  `hp`; the BLUEPRINT loader (`map-data/load-yaml.mjs`) expands each ramp into
+  the four [easy, medium, hard, nightmare] `mobLevels` / `level` + `hp` tuples
+  (scaling hp by the map's `hpCurves` entry), and `loadLevels()` stamps
+  `mobLevels` + `intendedLevel` onto every def — so the con viz and the engine
+  read one ladder and every difficulty number is tuned
+  from that one file. (A mission names no ramp of its own any more: the cast is
+  the blueprint's, which is why the expansion moved next door. JESUS is not a
+  ladder rung — it derives from the four.) The
   round-trip guard (`tests/content/yaml_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional
   level change with `node scripts/update-level-snapshot.mjs`. Read one run's
@@ -185,8 +188,9 @@ never by editing the fixture.
 - **The hero level curve is compiled from YAML**, the same way.
   `content/leveling.yaml` authors the XP each level costs (rows annotated with
   their kills-per-level equivalents); `make levels` runs
-  `generate-leveling.mjs` first in the chain to validate it (levels 1..98, no
-  gaps) and emit `engine/generated/leveling.ts`, which the engine's `xpToLevelUp`
+  `generate-leveling.mjs` near the head of the chain to validate it (levels
+  1..`LEVELING.maxLevel`−1, no gaps — 1..98 today) and emit
+  `engine/generated/leveling.ts`, which the engine's `xpToLevelUp`
   reads. The per-difficulty tier slowdown and the endgame steepening stay
   config knobs applied on top (they power the DEVELOPER → BALANCE sliders).
 - **Enemies are compiled from YAML**, the same way. `content/enemies/<biome>/<id>.yaml`
@@ -211,9 +215,10 @@ never by editing the fixture.
   it most.** A named elite explains itself in its `dialogue`; a minion never
   gets to, which is precisely why a horde nobody wrote a line about reads as a
   texture rather than as the inhabitants of somewhere. So the field is REQUIRED
-  of all 106 (the build refuses a def without it, and warns past 420
-  characters), it is written in the same dry register as an item's
-  `description`, and it is the one field on the def authored for a READER —
+  of every one of them (the build refuses a def without it, refuses one under
+  80 characters, and warns past 420), it is written in the same dry register as
+  an item's `description`, and it is the one field on the def authored for a
+  READER —
   nothing in the simulation touches it, and the library's bestiary prints it
   under the portrait, in the open rather than behind the spoiler reveal. It is
   bound by the story chain like any other story text: it may only ELABORATE
@@ -288,10 +293,11 @@ never by editing the fixture.
   (the BROKEN→PERFECT make-quality axis) and `content/item_rarity.yaml` (the
   tier ladder, unlock gates, roll chances, MF saturation, elite/boss bonuses).
   `make levels` runs `generate-items.mjs` (loader `scripts/item-data/load-yaml.mjs`,
-  schema `scripts/asset-tools/item-schema.mjs`) **first in the chain** — it
-  imports nothing from the engine, and every later generator reads the
-  equipment catalogs — to emit `engine/generated/items.ts` (gitignored, regenerated
-  on build — never edit or commit it), which `defs/equipment.ts`/`gear.ts`/
+  schema `scripts/asset-tools/item-schema.mjs`) **ahead of every catalog that
+  reads gear** — it imports nothing from the engine, and every later generator
+  reads the equipment catalogs — to emit `engine/generated/items.ts` plus
+  `uniques.ts` and `item-lore.ts` (gitignored, regenerated on build — never edit
+  or commit them), which `defs/equipment.ts`/`gear.ts`/
   `grades.ts`/`uniques.ts` and the config `QUALITY`/`LOOT` rarity knobs read.
   The engine's built-in `fists` — the EMPTY HAND a hero holds when he holds
   nothing else — stays authored in `equipment.ts` (engine machinery, not
@@ -300,10 +306,23 @@ never by editing the fixture.
   `tests/content/fixtures/items-snapshot.json`; accept an intentional item
   change with `node scripts/update-item-snapshot.mjs`. See the `weapon-system`
   skill.
+- **THE SETS are their own catalog, and it runs straight after the items.**
+  `content/sets.yaml` (a `sets:` map of id → kit, the catalog key stamped in as
+  the def's `id`) is the source of truth for the green kits a boss's armor
+  pieces belong to; `make levels` runs `generate-sets.mjs` (schema
+  `scripts/asset-tools/set-schema.mjs`, loader `scripts/set-data/`) to emit
+  `engine/generated/sets.ts`, which `engine/game/defs/sets.ts` re-exposes as
+  `SET_DEFS`. It reads the live UNIQUE catalog the item pipeline just wrote,
+  because every check that matters is about the kit holding together: a member
+  that is not `rarity: set`, two head pieces in one kit, a piece claimed by two
+  sets, a piece whose own `setId` points somewhere else. The round-trip guard
+  (`tests/content/set_roundtrip_test.ts`) pins the compiled kits to
+  `tests/content/fixtures/sets-snapshot.json`; accept an intentional change with
+  `node scripts/update-set-snapshot.mjs`.
 - **Sounds and MUSIC are compiled from YAML too — and they emit into
   `pwa/src/generated/`, not `engine/generated/`.** A sound is an APP concern: the
-  engine emits events and has no idea they make a noise, so parking 273 voices
-  and five scores in the engine's tree would hand every consumer of
+  engine emits events and has no idea they make a noise, so parking 206 sounds
+  and six scores in the engine's tree would hand every consumer of
   `@game/core` data it never reads. `content/sounds/<id>.yaml` is one sound (a
   list of synth VOICES, played by name or by an `on:` event shape) and
   `content/music/<id>.yaml` is one tracker-style score (instruments, patterns
@@ -312,7 +331,7 @@ never by editing the fixture.
   `music-schema.mjs`, loaders `scripts/sound-data/` and `scripts/music-data/`).
   The sound bank emits SPLIT — `sounds.ts` for the run, `sounds-ui.ts` for the
   interface — because a menu click must not drag every kill and explosion into
-  the 200 KB critical path; the music emits **one module per track** plus an
+  the 170 KB critical path; the music emits **one module per track** plus an
   index of dynamic imports, for the same reason, so a score is fetched when its
   venue starts and never before. The round-trip guard
   (`tests/content/music_roundtrip_test.ts`) pins the compiled scores to
@@ -354,8 +373,9 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   `scripts/asset-tools/hud-schema.mjs`, loader `scripts/hud-data/`) to emit
   `pwa/src/generated/hud.ts` — into the APP's tree, like the sound bank and the
   menu, because the engine has no idea the game has a screen.
-  It runs LAST: it cross-references sprite stems (an element's icon and its
-  9-slice plate) and sound ids (a press's click), and nothing reads it.
+  It runs LATE (only the in-game menus come after it): it cross-references
+  sprite stems (an element's icon and its 9-slice plate) and sound ids (a
+  press's click), and nothing reads it.
   The SCRIPTS are compiled the way the engine's rules are — the output is the
   source text, the CHECK is a real compile with the game's own VM, so a function
   a YAML file asks for and the file does not export fails the build with a
@@ -423,9 +443,14 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   the `capRotation`) and `content/story-items.yaml` (the plot pieces and their
   `lore`) are the sources of truth; `make levels` runs `generate-story.mjs`
   (schema `scripts/asset-tools/story-schema.mjs`, loader `scripts/story-data/`)
-  BEFORE the enemy and level pipelines, which cross-ref the ids it writes. Until
+  BEFORE the enemy and level pipelines, which cross-ref the ids it writes,
+  emitting `engine/generated/{cutscenes,thoughts,story-items}.ts`. Until
   the lift, a mod could ship a venue and a horde but no scenes, no monologues and
-  no lore — a re-skin rather than a different game. Three things are worth
+  no lore — a re-skin rather than a different game. The round-trip guard
+  (`tests/content/story_roundtrip_test.ts`) pins all three to
+  `tests/content/fixtures/story-snapshot.json`; accept an intentional change
+  with `node scripts/update-story-snapshot.mjs` — AFTER the manuscript has been
+  updated with it, per the story chain in `AGENTS.md`. Three things are worth
   knowing before touching it:
   - **`variants:` is how one scene is five.** The prelude is the same living room
     on every difficulty except the weapon on the wall, so it is authored ONCE
@@ -462,9 +487,9 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
 - The **pixel font glyph set** is hand-defined in
   `scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
   transparent, 3×5 variable-width cells); `make assets` packs it into the font
-  atlas + metrics that `PixelText`/`pixel-font.ts` render at runtime. Lookups
-  uppercase the character, so anything `PixelText` draws must have a glyph key
-  there or it falls back to `?`. **Before rendering a new character** (a symbol
+  atlas + metrics that `PixelText`/`pwa/src/lib/pixel-font.ts` render at
+  runtime. Lookups uppercase the character, so anything `PixelText` draws must
+  have a glyph key there or it falls back to `?`. **Before rendering a new character** (a symbol
   like `×`, an accented letter, punctuation), add its glyph to `GLYPHS` (and to
   the specimen line in `generate-assets.mjs`) and rerun `make assets` — don't
   work around a missing glyph with a substitute. Verify the new glyph in the

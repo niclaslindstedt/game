@@ -2,6 +2,13 @@
 
 # Ada's Trail — the desktop app
 
+**This is the SECOND desktop wrapper, and it is not the one that ships today** —
+[`electron/`](../electron/README.md) is. It is not a prototype either: it plays
+the whole game, carries every platform seam, packages itself and attaches its
+downloads to every release. Which of the two a player gets turns on
+measurements, and [`docs/desktop-shells.md`](../docs/desktop-shells.md) owns
+that decision.
+
 A desktop wrapper around the game for **Windows, macOS and Linux**. It is a thin
 [Tauri](https://tauri.app) shell whose entire content is the built website, so
 the app **looks and plays exactly like the site** — and because the site is
@@ -154,8 +161,9 @@ Three things follow, and each is a thing to know rather than a thing to fix:
 - **Steam's screenshot key still does not work**, and cannot: it photographs the
   swap chain Steam hooked, which is the decoy's, whose frames are empty by
   design. So **the game goes on filing its own Steam screenshots** through
-  `AddScreenshotToLibrary`, which is why `screenshots-provider` exists on this
-  shell and not on Electron's.
+  `add_screenshot_to_library`, which is why this shell's `screenshots_provider`
+  answers with a Steam library at all — Electron's peer seam exists too and
+  returns null, because `steamworks.js` binds no `ISteamScreenshots`.
 - **macOS and Linux have no decoy yet.** The overlay is injected into native
   games on both, so the same trick is portable in principle — but a Metal or a
   Vulkan sheet is a different piece of work, and until somebody writes it the
@@ -195,10 +203,14 @@ make tauri                # the same thing
 
 Arguments reach the game: `npm run tauri -- --multiplayer`.
 
-Steam is talked to on every launch unless told not to. `GIS_STEAM=off` is how
-most local work on this tree happens; without it, a machine with no Steam client
-running simply reports the handshake as unavailable and the game plays
-device-locally, which is the same thing it does in a browser.
+The binary talks to Steam on every launch unless told not to — but
+`scripts/run-tauri.mjs` fills in `GIS_STEAM=off` when the caller left it unset,
+exactly as the Electron launcher does, because a checkout being run by a
+developer is the case with no Steam session to talk to. `GIS_STEAM=on npm run
+tauri` is how the Steam path is exercised locally; a value already in the
+environment wins. Either way, a machine with no Steam client running simply
+reports the handshake as unavailable and the game plays device-locally, which is
+the same thing it does in a browser.
 
 Valve's redistributable needs no setup for that: `steamworks` vendors it,
 `src-tauri/build.rs` copies it into the profile directory Cargo is writing to,
@@ -279,7 +291,7 @@ and shown, and the page finishing its load. `npm run shell:bench` reads it back.
 | `GIS_GAME_URL`      | Load a remote URL instead of the bundled site (e.g. the `/preview/` slot)                                         |
 | `GIS_WEBROOT`       | Serve the site from somewhere else without rebuilding                                                             |
 | `GIS_VERBOSE=1`     | Keep the informational log in a release build                                                                     |
-| `GIS_STEAM=off`     | Don't talk to Steam at all — how most local work on this tree happens                                             |
+| `GIS_STEAM=off`     | Don't talk to Steam at all — what `npm run tauri` fills in when you don't                                         |
 | `GIS_STEAM_APP_ID`  | Which Steam app. Defaults to Valve's Spacewar (480), which is a test app                                          |
 | `GIS_STEAM_OVERLAY` | `1`/`0` forces "was this started by Steam", which decides the overlay's decoy surface and is what the log reports |
 
@@ -315,11 +327,8 @@ uploading a directory and its own client owns installing it. On Windows and
 Linux that is the executable, `webroot/` and Valve's redistributable; on macOS
 it is the whole `.app`, which keeps its resources inside itself.
 
-**macOS is never signed with nothing.** Apple Silicon refuses to execute
-unsigned arm64 code at all, and reports that to the player as "the app is
-damaged" — the same wording as a corrupted download. The default is an ad-hoc
-signature, which satisfies the kernel; set `APPLE_SIGNING_IDENTITY` to a
-Developer ID for a release, where notarization goes on top.
-
-The whole release procedure, including the checks that guard a depot upload, is
-[`RELEASING.md`](RELEASING.md).
+**macOS is never signed with nothing** — Apple Silicon refuses to execute
+unsigned arm64 code at all, so the default is an ad-hoc signature and
+`APPLE_SIGNING_IDENTITY` is what a release sets instead.
+→ [`RELEASING.md`](RELEASING.md) §1, which also has the whole release procedure
+and the checks that guard a depot upload.

@@ -46,6 +46,18 @@ Three lines in it answer most of these:
 If the log ends with no error at all, launch once with `GIS_VERBOSE=1` set and
 read it again.
 
+### `there is no display to open a window on`
+
+Linux only, and it is exactly what it says: neither `DISPLAY` nor
+`WAYLAND_DISPLAY` is set, which is the shape of a session over SSH, a
+container, or a machine whose desktop is not running. Start the game from a
+desktop session, or forward a display to this one. The check is deliberately
+narrow — it never probes the socket or reads `XDG_SESSION_TYPE`, because a
+shell that refuses to start on a machine that could have run it (a remote
+display, a nested compositor, `gamescope` on a handheld) is a worse bug than
+the stack trace it replaces (`tauri/shell/src/display.rs`). The two windowless
+modes, `--dedicated` and `--roster-check`, are unaffected.
+
 ## Mods
 
 A compile error is not a troubleshooting question: `node mod/tools/cli.mjs check
@@ -138,6 +150,14 @@ One prompt, once, on an explicit press — never at launch. What it reports is
 what the RE-CHECK said, not whether the command exited zero, and the exact
 command is always copyable beside the button so it can be run by hand or handed
 to whoever administers the machine.
+
+**On Linux the honest answer is usually "there is nothing to do"** — most gaming
+distributions and the Steam Deck ship no host firewall at all. The row says so
+in its own words rather than inventing a problem by looking for one: `NO HOST
+FIREWALL FOUND`, `UFW IS INACTIVE`, or `FIREWALLD IS NOT RUNNING` (installed but
+stopped — a state that reads as "running" to anyone matching the wrong
+substring, and did). Only a firewall that is actually up and does not already
+carry the bound UDP port offers a rule.
 
 ### And the honest limit
 

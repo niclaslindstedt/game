@@ -23,14 +23,17 @@ what the player downloads before the menu appears. See
 Two further layers wrap that same built site for the storefronts — `native/`
 (Expo, App Store / Play Store) and `electron/` (Steam, Windows/macOS/Linux).
 Neither is an npm workspace member, neither is imported by the engine or the
-app, and both answer the same four bridge protocols over their own transport;
-see their sections below. A third, `tauri/`, is a SECOND desktop shell beside
+app, and both answer the same bridge protocols over their own transport — one
+file each under `pwa/src/app/`: the coin store, cloud save, achievements,
+leaderboards and screenshots on either shell, plus mods, multiplayer and QUIT,
+which only a desktop shell can honour. See their sections below.
+A third, `tauri/`, is a SECOND desktop shell beside
 `electron/` — same site, same protocols, the platform's own webview instead of a
 bundled Chromium. It is complete and ships its own downloads, but `electron/` is
 still the release package; [`desktop-shells.md`](desktop-shells.md) is how the
 two are held against each other and the section below is this one's shape.
 
-A fifth tree, `server/`, is the engine compiled for **Node** rather than for a
+A sixth tree, `server/`, is the engine compiled for **Node** rather than for a
 browser: the authoritative session server multiplayer runs the simulation in.
 It ships inside the desktop app and is forked as its own process. It imports
 the engine and nothing else — see [`multiplayer.md`](multiplayer.md).
@@ -104,7 +107,8 @@ run against synthetic fixtures with no shipped content (see
   axis never shifts. A
   level carries geometry, per-level gravity (low gravity makes jumps soar),
   biome (a `tiles` sprite spec the renderer paints from), an optional `music`
-  track id (a key into the app's `LEVEL_TRACKS` registry — the engine stays
+  track id, resolved against the app's own track registry by
+  `playLevelMusic` (`pwa/src/game/music/index.ts`) — the engine stays
   audio-free), the hero's opening monologue (`intro`, one array of lines per
   page — a black-screen dialogue the hero speaks over before the level-name
   card drops the run in),
@@ -136,9 +140,9 @@ run against synthetic fixtures with no shipped content (see
   the return leg the victory splash offers),
   hand-`placedItems` (locked-room loot, plot pieces on pedestals),
   decor, and the loot table (the level's thematic base pools — tier
-  availability is the global monster-level gate, not per-level data; a
-  `worldUniques` table may carry a `worldDropMult` sweetener on a farm
-  venue). **Design-zone systems** (`engine/game/zones.ts`) shape a map's feel:
+  availability is the global monster-level gate, not per-level data; a farm
+  venue may carry a `namedDropMult` sweetener over both the `worldUniques`
+  table and the global legendary/artifact roll). **Design-zone systems** (`engine/game/zones.ts`) shape a map's feel:
   `safeZones` (no spawns + the horde repelled out — a breather pocket),
   `quietZones` (dead areas: no ambient horde, but authored chests + a pinned
   unique still live there), a `tempo` curve (keyframes that scale wave pressure
@@ -239,7 +243,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   their log and their flags are banked on the character per difficulty and
   seeded back at run setup. The shape and the merge live in the second file, a
   LEAF whose only import is a type, because the app's roster stores this record
-  and the roster is on the 200 KB startup path — which is why `@game/menu`
+  and the roster is on the 170 KB startup path — which is why `@game/menu`
   re-exports it. The merge keeps the FURTHER reading of each errand, so progress
   can never walk backwards.
 - **`engine/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
@@ -267,7 +271,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   walker, a stdlib whose absent half IS the security model); `script/catalog.ts`
   is an IMPORT-FREE LEAF holding what a mod registered, for the same reason
   `flags.ts` and `mapgen/blueprints.ts` are leaves — `registerDefs` is reachable
-  from the startup path and the 200 KB budget has no room for an interpreter, so
+  from the startup path and the 170 KB budget has no room for an interpreter, so
   what a mod registers is SOURCE TEXT and the compile happens on the first hook
   call, inside a run; `script/env.ts` builds the frozen `game.config` /
   `game.balance` / `game.run` views; `script/host.ts` resolves a hook, contains
@@ -424,13 +428,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   fire — falling back to the built-in SIDEARM when the bag holds nothing loaded
   (`swapOffDryWeapon`). Ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
-  quality ladder (trash/regular/magic/rare/unique/legendary — each tier
+  quality ladder (`Tier`: trash/regular/magic/rare/set/unique/legendary/
+  artifact — each tier
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
   regular, never rolls, and exists only for scripted zero-stat joke drops
   minted by a boss's forced-tier `loot.items`), and the affix
   pools magic+ items roll: magnitudes come from ilvl-gated BRACKETS
-  (PoE-style generations unlocking at ilvl 1/10/22/36/52, the top one held
-  near 60% of the stat soft cap), keyed to the drop's ITEM LEVEL — the
+  (PoE-style generations unlocking at ilvl 1/10/22/36/52/70/88, tracking where
+  each difficulty rung's levelling lands, with the top pair carrying rolled
+  gear through the ilvl 52–99 endgame), keyed to the drop's ITEM LEVEL — the
   killer's monster level minus a small weighted deficit; magic+ names are
   composed Diablo-style from those affixes. Item level buys a drop its AFFIX
   BUDGET and nothing else on the weapon side — a weapon's catalog `damage` is
@@ -563,8 +569,9 @@ escort.ts` walks the people an escort errand puts on the field, and
 - **`engine/game/spells.ts`** — the GRANTED forever powers items carry (the
   `spell`/`proc`/`sureStrike` affix kinds, config `SPELL`): deriving the
   worn loadout's granted spells (`syncItemSpells`, ranks from multiple
-  sources adding), the live rank+INT-scaled numbers (`orbitSpellParams`,
-  `stormSpellParams`, `stasisSpellParams`, INT shortening intervals via
+  sources adding), the live rank+INT-scaled numbers (`orbitSpellBlock`,
+  `stormSpellBlock`, `stasisSpellParams`, and the seeker/singularity/
+  immolation blocks beside them, INT shortening intervals via
   `spellIntervalScale`), proc lookups (`equippedProcs`), and the renderer's
   orb positions (`itemSpellOrbPositions`). Stepping lives in `step/`
   (`stepItemSpells`/`stepProcs` — procs queue on the hero's own weapon
@@ -818,8 +825,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   epilogue — and `setCutscenesEnabled(false)` drops the prelude cutscenes at
   level build so a run opens straight on the intro (or, with dialogue muted
   too, straight on the title card). `dialogueContent` for the
-  renderer — its `heroPages` flags mark the pages the HERO speaks in a
-  two-way arrival scene, authored as `{ hero: [...] }` entries in
+  renderer — one `DialogueVoice` per page, whose `hero` flag marks the pages
+  the HERO speaks in a two-way arrival scene, authored as `{ hero: [...] }`
+  entries in
   `EnemyDef.dialogue`), story-item collection, and `stepDoors` (a carried key
   removes its door's obstacle chain). Dialogue freezes the run in the
   `dialogue` phase exactly like the level-up chooser. An elite/boss
@@ -875,9 +883,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   the collision is solved on the SWEEP and a stopped car is met at the hero's
   whole speed — and it STOPS BEING FURNITURE the moment it is touched
   (`unparkCar`), joining the traffic as a `driverless` vehicle so it folds,
-  spins and rolls exactly as the road's own cars do. It had to: a `DriveProp`
-  has no velocity, no crush, no yaw and nothing to roll, so while a parked car
-  was one the only answer the collision had was to shift it sideways. A lamp
+  spins and rolls exactly as the road's own cars do — a `DriveProp` has no
+  velocity, no crush, no yaw and nothing to roll, so a struck one could only
+  ever be shifted sideways. A lamp
   post shears off its base, cartwheels down the road and takes a slice of the
   car with it — keeping the picture it was STANDING in (looked up from the foot
   it left behind, never from the flying half's own moving position) and wearing
@@ -889,7 +897,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   twenty-two vehicles each carrying its own mass, collision extent, speed band,
   spawn weight and passenger list. It has to be, because the whole minigame is a
   momentum sum and mass is its only real input: a twelve-tonne bus that answered
-  a bumper the way a thirty-kilo bicycle does was the physics being told a lie.
+  a bumper the way a thirty-kilo bicycle does is the physics being told a lie.
   Everything else falls out of that one table. A vehicle keeps its OWN damage
   (`DriveTraffic.wear`) on the same absorbed-energy currency the hero's car
   does, scaled by its own mass — so the same blow writes off a moped, folds a
@@ -903,12 +911,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   rides the PAVEMENT and weaves across the kerb, which is the one change that
   alters the shape of the minigame rather than its furniture — the gutter used
   to be the safe line.
-  SOMEBODY IS DRIVING EVERY ONE OF THEM (`ai.ts`), and until they were, a
-  four-lane road was four conveyor belts: a vehicle was born on a lane centre
-  with a speed and held both until something hit it, so nothing wobbled, nothing
-  pulled out, nothing went round the hatchback somebody left half in the gutter,
-  and — the one that actually costs the player — a lane that was clear stayed
-  clear, which reduced the whole minigame to finding the empty belt once. Five
+  SOMEBODY IS DRIVING EVERY ONE OF THEM (`ai.ts`), or a four-lane road is four
+  conveyor belts — a vehicle born on a lane centre with a speed and holding both
+  until something hits it, which leaves a clear lane clear and reduces the whole
+  minigame to finding the empty belt once. Five
   behaviours, and each is something the car in front of you really does: it
   WOBBLES, it FOLLOWS (imperfectly, on purpose — past its own reaction the gap is
   simply gone), it PULLS OUT for somebody slower, it GOES ROUND anything stopped
@@ -924,8 +930,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   decision is read off the state and every wobble derived from the vehicle's own
   phase, so a seeded road is still a seeded road.
   AND THEY HIT EACH OTHER (`between.ts`), which is the road's second collision
-  pass and the only one the hero is not a party to. The moment the traffic had
-  drivers it had drivers who get it wrong, and without this every one of those
+  pass and the only one the hero is not a party to. Traffic with drivers is
+  traffic with drivers who get it wrong, and without this every one of those
   resolves by two vehicles sliding through each other — which reads as the road
   being a painting, and takes the best thing about a busy carriageway away from
   the player, which is that it can go wrong WITHOUT HIM. It is the same momentum
@@ -959,9 +965,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   LEG changes length and the minigame does not: the town, which is the stretch
   the clock runs over and the board ranks, is what it has always been.
   WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
-  answers rather than one. The shunt used to BE the answer — a struck car slid
-  sideways out of its lane and that was the event, which is why a head-on and a
-  nudge read as the same thing at two speeds. Now: it FOLDS (a crumple zone eats
+  answers rather than one — a lone sideways shunt makes a head-on and a nudge
+  read as the same thing at two speeds. It FOLDS (a crumple zone eats
   energy over a distance, so the depth an end loses is the absorbed energy over
   the force that structure holds with, which goes with its mass — and the fold
   is kept per END, so a rear-ended car is short at the back and straight at the
@@ -976,11 +981,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`impact.scrapeFriction`), because two cars grinding down each other's flanks
   at 120 booking exactly zero joules was the model's one silent hole.
   EVERY ONE OF THOSE IS A SPEED RATHER THAN A PLACEMENT, which is the other half
-  of making a collision read: getting the struck car clear used to be an
-  instantaneous twenty-two-px hop sideways, so a car rear-ended dead square —
-  where the answer is entirely along the road — still snapped most of a lane
-  across it, and a car going over jumped half a lane as the roll began. The
-  overlap that was papering over is `shuntImmuneMs`'s job and always was, so the
+  of making a collision read: an instantaneous hop sideways snaps most of a lane
+  across a car rear-ended dead square, where the answer is entirely along the
+  road. Keeping the pair apart is `shuntImmuneMs`'s job, so the
   separation is a floor on the lateral SPEED (`separationPx`) and the vehicle
   drives itself clear over the following tenth of a second.
   WHO LEAVES A VEHICLE, AND HOW, is `eject.ts`, and it is two populations rather
@@ -1058,19 +1061,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   at wherever the thing currently is (a wall of dust while it grinds, a pall
   piling up around it once it has stopped, a dead engine's wisp after that)
   rather than fired once at the spot the roll began, which is a cloud the wreck
-  slides out from under. It is also where a STRANGER's wrecked engine smokes:
-  that is not the hero's following column and used to be drawn as one, which put
-  every car the player finished on fire over the player's own bonnet. The whole frame is drawn INSIDE
+  slides out from under. It is also where a STRANGER's wrecked engine smokes —
+  a column of its own rather than the hero's following one, or every car the
+  player finishes burns over the player's own bonnet. The whole frame is drawn INSIDE
   `applyWorldProjection`, because that is the space `drawWorldSprite`
-  billboards into. THERE IS NO BULLET TIME, and there used to be: the world
-  dropped to a quarter speed and the camera leaned in the instant a hit stopped
-  being avoidable (an engine predictor arming an app-side dilation). Both halves
-  were cut, because they answered the wrong question — a slow-motion beat is for
-  a moment the player might still act on, and that one fired precisely when they
-  could not. What it did in practice was interrupt the DRIVING several times a
-  leg on a road laid down thick enough that a hit is always a second or two
-  away. The tension here is the wheel and the speed, and slowing the world to
-  admire a collision spends it. What he MAKES of the trip is not said on the road at all: `driveVerdict`
+  billboards into. **THERE IS NO BULLET TIME** and there must not be: a
+  slow-motion beat is for a moment the player might still act on, and on a road
+  laid this thick an unavoidable hit is always a second or two away — dilating
+  for one interrupts the DRIVING several times a leg, and the tension here is
+  the wheel and the speed. What he MAKES of the trip is not said on the road at all: `driveVerdict`
   reads the whole journey and hands the arriving run one line
   (`RunParams.arrivalThought`), spoken as the last page of the destination's
   opening monologue.
@@ -1219,7 +1218,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   around the hero every step (`revealAround`, called from `step()`; the spawn is
   pre-revealed at creation) and queried with `isExplored` — the fog lifts along
   his path (Warcraft-style, no re-fogging), feeding both the minimap and the
-  MAIN-VIEW fog of war (`render.ts` `drawFog`): everything uncovered reads
+  MAIN-VIEW fog of war (`render/fog.ts` `drawFog`): everything uncovered reads
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
   hides any mob standing in it or the dark beyond. **THE SWEEP IS A SIGHT
@@ -1269,8 +1268,7 @@ escort.ts` walks the people an escort errand puts on the field, and
   (engine tests, `simulate --view none`) is not blind: the screen half abstains
   and the fog half still applies. A sibling render-side cull
   drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
-  wall — reusing the engine's `lineOfSight` (`engine/game/obstacles.ts`, the SIGHT
-  query: tall obstacles occlude, but not a lone narrow one); a mob only peeking
+  wall — reusing the same `lineOfSight`; a mob only peeking
   out from an edge still draws. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
   unique/legendary pickups (the pickup switch in step/), and elite/boss
@@ -1341,8 +1339,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   `derived.ts` (effective stats + pools), `durability.ts` (armor, wear,
   repair), `weapon-math.ts` (damage/reach/cadence/scoring), `combat-stats.ts`
   (crit/dodge/miss/speed), `requirements.ts` (equip gates), `auto-equip.ts`,
-  `inventory.ts`, `consumables.ts`, `mercy.ts`,
-  `class-stats.ts`, `stat-points.ts`, `flow.ts` (phase toggles), and the two
+  `inventory.ts`, `consumables.ts`, `ammo.ts` (the pouch), `worth.ts`
+  (`sellValue`), `mercy.ts`,
+  `class-stats.ts`, `stat-points.ts`, `flow.ts` (phase toggles), and the three
   catalog leaves the hit paths read but do not own — `edge.ts` (does this blow
   cut, crush or shred?), `execute.ts` (does it damage a body, or take it?) and
   `burn.ts` (is this weapon FIRE — is there a body left at all?).
@@ -1406,8 +1405,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   everything routing through them) resolves the item exactly as it dropped,
   even when its original base is gone. `baseDefId` sees back through the
   re-homing to the item's original base id.
-- **`engine/game/bot/index.ts`** — the autopilot: pure strategies (`idle`, `rush`,
-  `kite`, `boss`, `survivor`) that turn the live state into ordinary
+- **`engine/game/bot/index.ts`** — the autopilot: pure strategies
+  (`BOT_STRATEGIES` — `idle`, `rush`, `kite`, `boss`, `survivor`, plus the three
+  POSTURES `aggro`/`balanced`/`flee`, which are the horde-survival read at three
+  aggression levels and are what a `simulate` matrix sweeps) that turn the live
+  state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
   the app's `?bot=` autoplay mode, and later an AI-driven second player. The
   macro plan treats the map's ELITES and boss as objectives (rough-cell
@@ -1620,7 +1622,8 @@ escort.ts` walks the people an escort errand puts on the field, and
   a gameplay system (see the `test-scenario` skill and
   `docs/configuration.md`).
 - **`engine/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
-  `cutscene.ts` — the deterministic beat-machine cutscene player),
+  `cutscene.ts` — the deterministic beat-machine cutscene player — and `lua/`,
+  the sandboxed VM the scripting seam runs on),
   imported via the `@game/lib/*` alias — the pool a later game keeps as-is
   while the game-specific modules around it are rewritten.
 - **`engine/sim/simulate.ts`** — the headless campaign simulator (see the
@@ -1694,8 +1697,10 @@ log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 A Vite + Preact shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game,
-  plus the cutscene workbench route (`?cutscene=<id>`).
+- **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game, plus the
+  three developer workbench routes, each lazily imported so its chunk folds away
+  in a `__DEV_TOOLS__ = false` build — the cutscene loop (`?cutscene=<id>`), the
+  effects gallery (`?effects`) and the road (`?drive`).
 - **`pwa/src/game/SplashScreen.tsx`** — the STUDIO CARD the app opens on
   (`splash.ts` holds its timing rules and the warm-up it fronts). It is the
   only screen in the app that covers another LIVE one: the title menu mounts
@@ -1706,7 +1711,8 @@ deploy-shaped:
   load is done however long that takes, then clears on any input after a
   second and by itself at three. Every press is swallowed while it is up,
   because the menu behind it is listening. Suppressed for `?debug` / `?bot=` /
-  `?skytest` so no harness pays for it — see `docs/configuration.md`.
+  `?skytest` / `?nosplash` so no harness pays for it — see
+  `docs/configuration.md`.
   **In a STORE SHELL it is the first thing painted**: a shell build strips the
   prerendered boot shell out of `index.html` (`VITE_SHELL_BUILD`, applied by
   `stripBootShell` in `pwa-plugin.ts`), because that markup is SEO and nothing
@@ -1717,7 +1723,7 @@ deploy-shaped:
 - **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
-  EXTRAS → the badges/boards/field guide, SETTINGS → six pages of
+  EXTRAS → the badges/boards/field guide, SETTINGS → seven pages of
   preferences, HOW TO PLAY → a self-playing demo run; its per-screen menu
   builders, sky backdrop, high-score board, page header, and row renderer
   live in `title-screen/`; every sub-screen opens with a `MenuHeading` — a
@@ -1739,20 +1745,24 @@ deploy-shaped:
   `game-screen/menu-panels.tsx`; MODALS stacked over them live in
   `menus/modals.ts`, raised by a press or by an authored `when:`),
   `GameScreen.tsx` (canvas
-  mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
-  bars and the banked-item USE button, end-of-run splash),
-  `IntroOverlay.tsx` (the level's story text box + chosen difficulty),
-  `CutsceneOverlay.tsx` (draws a running scene — backdrop, props, cast,
+  mount, fixed-timestep loop, control-scheme input mapping, end-of-run splash;
+  **the HUD it hangs over that canvas is CONTENT too** — every bar, slot,
+  readout, rail and dock is authored under `content/hud/` and drawn by
+  `pwa/src/game/hud/`, with only the irreducible insides (the minimap, the
+  party frames, the gesture docks) code-backed as `kind: widget` in
+  `hud/widgets/`),
+  `overlays/IntroOverlay.tsx` (the level's story text box + chosen difficulty),
+  `overlays/CutsceneOverlay.tsx` (draws a running scene — backdrop, props, cast,
   fade — while the engine sits in the `cutscene` phase; dialogue floats in
   a box over the stage bottom and waits for TAP, SKIP ends the scene) and
   `CutscenePreview.tsx` (the
   `?cutscene=<id>` workbench that loops one scene outside any run),
-  `LevelUpOverlay.tsx` (the stat chooser shown while the hero's `levelup`
+  `overlays/LevelUpOverlay.tsx` (the stat chooser shown while the hero's `levelup`
   screen is up; folds into a 3×2 grid on landscape phones. Its reveal lockout
   is skipped when the PLAYER opened it from the HUD's points pip — a modal
   somebody deliberately raised has no stray steering input to protect them
   from; only the ding's own reveal is frozen),
-  `RespecOverlay.tsx` (the respec — a Diablo-style attribute
+  `overlays/RespecOverlay.tsx` (the respec — a Diablo-style attribute
   screen shown in the `respec` phase, with a −/+ stepper per stat and a
   CONFIRM gate; shares the stat catalog with the level-up chooser via
   `stat-choices.tsx`),
@@ -1765,7 +1775,7 @@ deploy-shaped:
   `card-copy-gesture.ts` → `item-card-image.tsx` → `@ui/lib/dom-raster.ts`,
   re-rendering the card off screen rather than photographing the one on it —
   the bag's card is a hover tooltip a mouse dismisses by leaving the cell that
-  raised it, so there the hold rides the CELL), `MapOverlay.tsx` (the
+  raised it, so there the hold rides the CELL), `overlays/MapOverlay.tsx` (the
   fog-of-war level map shown in the `map` phase — one chunky pixel of
   terrain per explored fog cell, dark where the hero hasn't been, with a
   legend of event pins: story finds, elite/boss kills, the merchant, and the
@@ -1843,7 +1853,8 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   reached from the title menu's ACHIEVEMENTS screen — and mid-run from the
   rebindable ACHIEVEMENTS key (Y, World of Warcraft's own) or a tap on the
   unlock banner, which raises the same shelf over the run and PAUSES it
-  (`game-screen/use-achievements-shelf.ts`) — and
+  (`game-screen/use-run-shelf.ts`, the freeze/thaw discipline the screenshot
+  gallery shares) — and
   `AchievementToast.tsx` the in-run unlock celebration;
   `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —
@@ -1866,7 +1877,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   hand-edited).
 
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
-  `@ui/lib/*` alias:
+  `@ui/lib/*` alias (which, like `@game/lib/*`, `@game/core`, `@game/menu` and
+  the three `react` entries that point at `preact/compat`, is declared in FOUR
+  maps that must move together — `tsconfig.json`, `pwa/tsconfig.json`,
+  `vitest.config.ts`, `pwa/vite.config.ts` — plus
+  `scripts/game-alias-loader.mjs` and `tests/content/net_reachability_test.ts`;
+  see `AGENTS.md` → Local reusable code):
   `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
   simulate/render half separately and always schedules the next frame, so a
   single thrown error can't silently unschedule the loop and freeze the run;
@@ -1903,8 +1919,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   see the `pixel-assets` skill), loaded by `sprite-data/load-yaml.mjs` and
   rendered into one sprite atlas (PNG + JSON source rects) plus previews
   (per-family contact sheets, film strips, palette sheet, font specimen).
-  The atlas and previews are both gitignored and regenerated on every build
-  (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), so the pixel grids
+  The atlas and previews are both gitignored and regenerated on every build —
+  one of `assets` / `assets:site` / `assets:check` (the three `--previews`
+  depths of `scripts/generate-content.mjs`) runs ahead of every `vite`, `tsc`
+  and `vitest`, and they differ ONLY in how much of the preview set is drawn —
+  so the pixel grids
   are the only committed source of truth (§11.2). Wound styles derive from the
   enemy catalog's `gore` field and role; contrast lints flag sprites that
   dissolve into their family's ground and wound overlays that don't read.
@@ -1961,7 +1980,7 @@ The app keeps its PWA update lifecycle and other game-agnostic plumbing in the
 dedicated `engine/lib/` and `pwa/src/lib/` areas. This keeps the game self-contained
 while preserving clear reuse boundaries — see `AGENTS.md` for the policy.
 
-### `native/` — the native shell (optional third layer)
+### `native/` — the native shell (the third tree)
 
 The App Store / Play Store build lives in `native/`, an
 [Expo](https://expo.dev)/React Native project that is **not** part of the npm
@@ -2139,7 +2158,7 @@ seams a browser can't provide on iOS:
   this exact file (`navigator.share` with a `files` payload, an `image/png`
   clipboard write, a download) and offers only the buttons that will work, while
   the shells answer the same question over `pwa/src/app/screenshot-bridge.ts` —
-  the sixth protocol on the one shell channel. The native half
+  one more protocol on the one shell channel. The native half
   (`native/src/screenshots.ts`) stages the PNG in the app's CACHE directory and
   raises the system sheet with `expo-sharing`; it deliberately does not touch the
   camera roll, because that needs the photo-library permission and the sheet's
@@ -2206,17 +2225,7 @@ plus wherever Android puts its own parental controls. Four rules:
    and the title menu rebuilds on them through the same `bumpSettings` tick its
    own settings use.
 
-Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
-`game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
-the highest
-`v*` tag (or `main` whenever no release can be rebuilt), `/preview/` serves every
-`main` push, `/branch/` serves a manually parked branch persisted in
-the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
-slots into a single Pages artifact; each slot gets its own service worker and
-a disjoint precache cache id (`pwa/src/app/pwa.ts`), under which each BUILD gets
-a cache of its own.
-
-### `electron/` — the desktop shell (the fourth layer)
+### `electron/` — the desktop shell (the fourth tree)
 
 The **Steam** build for Windows, macOS and Linux lives in `electron/`. It is the
 desktop twin of `native/` and shares its whole shape: a thin shell wrapping the
@@ -2281,7 +2290,7 @@ the Steam Deck runs the real binary rather than the Windows one under Proton.
 relevant push, and packages the depot directories dispatch-only. See
 `electron/README.md`.
 
-### `tauri/` — the second desktop shell
+### `tauri/` — the second desktop shell (the fifth tree)
 
 A **second** wrapper around the same built site, beside `electron/` rather than
 instead of it, so the two can be run back to back and judged against each other.
@@ -2367,7 +2376,7 @@ for a different reason than they do there — the Rust binding can publish a sco
 but there is no board on this platform anybody could open. `tauri/README.md` has
 the argument; `desktop-shells.md` has the table.
 
-### `server/` — the session server (the fifth layer)
+### `server/` — the session server (the sixth tree)
 
 The engine, compiled for Node and shipped inside the desktop app, so a
 multiplayer session can simulate in a process of its own rather than in the
@@ -2375,15 +2384,15 @@ renderer. `electron/src/session-host.ts` forks it as a `utilityProcess`,
 `electron/src/net.ts` is its bridge, and the snapshots travel to the page on a
 `MessagePort` that bypasses the main process entirely.
 
-It is a fifth arm of the same bridge → provider → platform shape the other four
-platform features use, with one thing deliberately NOT copied from them: the
+It is one more arm of the same bridge → provider → platform shape every other
+platform feature uses, with one thing deliberately NOT copied from them: the
 volume. Those move a handful of JSON round trips per session; this one moves a
 snapshot twenty times a second, so `__gisNet` carries only control traffic and
 the game frames get their own channel.
 
 Like `mod/`, it is at the repo's top level rather than inside `electron/`,
-because it is engine code rather than shell code — and, from phase 5, the same
-file is the standalone dedicated server. `scripts/build-server.mjs` is its ship
+because it is engine code rather than shell code — and the same file is the
+standalone dedicated server. `scripts/build-server.mjs` is its ship
 target and `server/package.json` declares its runtime dependencies, checked
 against the real import graph by `tests/content/server_deps_test.ts`. See
 [`multiplayer.md`](multiplayer.md) and `server/README.md`.
@@ -2462,15 +2471,15 @@ compiled from. Nine sections, ~560 pages, plus the landing page that leads them:
   `questXpReward` — and what turning it in opens), and a page per QUEST GIVER
   (their authored paragraph, their whole chain, and the fact that nothing can
   hurt them and nothing is kept off them). The nesting is the feature's own shape rather than a filing
-  choice: an errand is offered on one map, a chain may not cross one, and two
-  people stand on every venue. The spoken half — the ask, the nag, the handover
+  choice: an errand is offered on one map, a chain may not cross one, and a
+  couple of people stand on every venue. The spoken half — the ask, the nag, the handover
   and an escort's two lines — sits behind a cover like any other dialogue, and
   the errand's own `lore` sits in the open above it. What no page here publishes
   is a COORDINATE: where a person stands and where an escort is being walked to
   are world pixels, and the venue's map render is the answer to "where";
 - the **achievements** — an index and a page per CATEGORY of badge, which is the
   one section whose unit is a group rather than an entry: a badge is four facts
-  and a sprite, and 244 pages of four facts is thin content next to the arsenal
+  and a sprite, and 249 pages of four facts is thin content next to the arsenal
   page that already describes the relic a trophy is for. A category page lists
   its badges the way the shelf lists them — the sprite, the name, the condition
   in the game's own words, and what it pays — except where a whole family is ONE
@@ -2499,16 +2508,18 @@ and — when it kneels rather than dies — to the ally it becomes, an item link
 venues whose pools carry it and a mission's pool links back to each power it
 hands out, a conjuration talent links to the pickup that puts the same thing on
 the field, an errand links to the breed it sends you at and the person who asked
-while a mission page names both of its givers, a badge links to the relic,
+while a mission page names its givers, a badge links to the relic,
 mission or ally it is for, an ally links back to the elite it was and to the
 weapon it fights with, a mission links to all of them,
 and a chapter links to the rest —
-every game name in its prose is a link to that thing's page. That graph is what lets a crawler reach four hundred pages
+every game name in its prose is a link to that thing's page. That graph is what
+lets a crawler reach the whole set
 from one entry point, and what makes the library worth reading rather than a
 pile of tables.
 
 It exists because the deployed site is a canvas: a few hundred indexable words
-on one page, while the repository holds a 370-file content catalog and tens of
+on one page, while the repository holds a content catalog of well over two
+thousand authored files and tens of
 thousands of words of prose that no crawler has ever seen.
 
 Three properties are load-bearing, and each is cheap to keep and expensive to
@@ -2521,9 +2532,11 @@ retrofit:
   gameplay number is ever typed into the generator, so the library has no
   separate copy of anything to drift from. Pages are never hand-edited: a page
   changes by changing a generator. Every model FAILS THE BUILD when a def
-  carries an authored field no page renders (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
-  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `STORY_ITEM_FIELDS`,
-  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`, `ACHIEVEMENT_FIELDS`), so a new
+  carries an authored field no page renders — one `*_FIELDS` allow-list per
+  model (`ENEMY_FIELDS`, `WEAPON_FIELDS`, `GEAR_FIELDS`, `UNIQUE_FIELDS`,
+  `LEVEL_FIELDS`, `TALENT_FIELDS`, `POWER_FIELDS`, `QUEST_FIELDS`,
+  `QUEST_GIVER_FIELDS`, `COMPANION_FIELDS`, `STORY_ITEM_FIELDS`,
+  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`, `ACHIEVEMENT_FIELDS`) — so a new
   authored field can't quietly vanish from hundreds of pages at once. The badge
   catalog is the one behind that contract written in TypeScript rather than
   YAML, which makes the failure quieter rather than rarer — a field added to
@@ -2687,11 +2700,11 @@ no URL is baked into any picture.
 
 The browser pass itself runs a LANE PER CORE (`card-shot.mjs`), and **a lane is
 a whole browser** — with a pair of pages on it, the element stage and the
-1200×630 frame stage, because a card job shoots both. The unit is the browser
-rather than the page because that is where the ceiling was: one browser with
-four pages took the set from 4m52 to 3m46 and stopped, since every screenshot is
-still marshalled over CDP by the single browser process, which sat pinned near a
-full core (eight pages moved nothing). Four browsers spread that too — 2m36.
+1200×630 frame stage, because a card job shoots both. The unit is the BROWSER
+rather than the page because that is where the ceiling is: every screenshot is
+marshalled over CDP by the single browser process, so adding pages to one
+browser stops paying (4m52 → 3m46, and eight moved nothing) where adding
+browsers keeps paying (2m36).
 
 Encoding is picked per surface. A search shot is WebP — Google Images handles it
 and it is a tenth of the PNG. A social card stays PNG, because some unfurlers
@@ -2708,8 +2721,8 @@ switch, Game Center, and a roster and coin bank that follow the player between
 devices; the desktop build brings Steam Cloud and Steam achievements, and is
 bought once with no coin store in it. The two are driven by `appStoreUrl` and
 `steamUrl` in `game.config.json`, each rendering NOTHING while its field is
-empty: four hundred pages carrying a dead or guessed link is worse than four
-hundred carrying none, so filling those fields is the whole of turning them
+empty: hundreds of pages carrying a dead or guessed link is worse than the same
+hundreds carrying none, so filling those fields is the whole of turning them
 on. The library deliberately does not advertise the free web build — the App
 Store listing's own homepage link points back here, and a reference page talking
 a buyer out of the purchase would close that loop the wrong way round.
@@ -2790,15 +2803,14 @@ Nothing is archived — each run checks the tag out, runs `npm ci` against the
 lockfile as it was at release time, and builds. `pages.yml` therefore checks
 the resolved tag before committing to it and falls back to `main` at `/` when
 it cannot be rebuilt, with a `::warning::` naming the tag; the next release
-puts the root slot back on a tag. The one case that exists today is a tag cut
-before the repo dropped its GitHub Packages dependency: its `.npmrc` sends
-`@niclaslindstedt/*` to a registry that needs a token CI no longer carries, and
-npm fails on the unset `${GITHUB_PAT}` before it even reaches the network. The
-general rule this leaves behind: **the build must stay installable from public
+puts the root slot back on a tag. It has already happened once, to tags cut
+while the repo still pulled a scoped package from a private registry CI no
+longer carries a token for — npm fails on the unset variable before it reaches
+the network. So: **the build must stay installable from public
 registries alone**, or a release becomes unservable the moment the credential
 goes away.
 
-**One build flavour differs, and only one: the store upload.** The website
+**One build flavour differs, and only one: the STORE UPLOAD.** The website
 carries the DEVELOPER tooling — the hidden sun reveal (sixteen taps to arm, the
 first ten of them answered by nothing at all, then the click race —
 `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (the
@@ -2806,9 +2818,12 @@ PLAYGROUND warps, the CHEATS, the BALANCE and VISUALS knobs, the GALLERIES and
 the `?effects` deep link, DEBUG MODE), and the build's commit hash beside the
 version in the title footer (a LINK to that commit on the two secondary slots —
 see above) — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
-dev, the installed PWA, and the native `preview`/`testflight` apps. The single
-exception is the binary uploaded to the App Store / Play Store, built from the
-`production` EAS profile: `native/scripts/bundle-web.mjs` builds the embedded
+dev, the installed PWA, and every non-`production` shell build. The exception is
+the binary a storefront receives, and each shell reaches it the same way: the
+App Store / Play Store upload comes from the `production` EAS profile, and the
+Steam depot from `electron/`'s `release:*` targets or `make desktop-tauri-steam`,
+both of which run their own `bundle-web.mjs --profile production`. Each of the
+three `bundle-web.mjs` scripts builds the embedded
 site with `VITE_DEV_TOOLS=off`, which `pwa/vite.config.ts` turns into the
 build-time literal `__DEV_TOOLS__ = false`. Because it is a literal, every gate
 on it folds away and Rollup drops the tooling's modules and lazy chunks — the
@@ -2838,16 +2853,16 @@ level, or ability is a catalog entry, no code. New _archetypes_ (a mechanic
 the engine has no shape for yet) require touching a closed union and each
 site that switches on it. The unions and their handler sites:
 
-| Union (types.ts / defs)           | Members                                                                                                                                                             | Handler sites to extend                                                                                                                                                                                                                                                                                                                                       |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                                                                                                                       | `step/` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars                                                                                                                                                                                                                                               |
-| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet` \| `trail` \| `barrier` \| `rain` \| `phase` \| `well` \| `surge` \| `pulse` \| `volley` \| `turret` \| `ward` | capability-object dispatch in `abilities.ts` + `step/powers.ts` (the classics) / `step/powerups.ts` (the campaign powers); the passive kinds are read where they bite (`absorbPlayerDamage`, `weaponDamageFor`/`weaponCooldownFor`); visuals in `render/powerups.ts` + `render/powerup-bursts.ts` + `game-screen/powerup-aura.ts`; the schema's `KIND_BLOCKS` |
-| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story`                                                                                                 | the pickup switch in `step/`; the item-sprite switch in `render.ts`                                                                                                                                                                                                                                                                                           |
-| `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                                                                                                                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`)                                                                                                                                                                                                                                          |
-| `Quality` (types.ts)              | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`                                                                                                          | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items.ts` `rollQuality`                                                                                                                                                                                                                                                    |
+| Union (types.ts / defs)           | Members                                                                                                                                                                                                                          | Handler sites to extend                                                                                                                                                                                                                                                                                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                                                                                                                                                                                    | `step/` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render/enemies.ts` hp bars                                                                                                                                                                                                                                       |
+| `AbilityKind` (defs/abilities.ts) | the `ABILITY_BLOCKS` list — `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet` \| `trail` \| `barrier` \| `rain` \| `phase` \| `well` \| `surge` \| `pulse` \| `volley` \| `turret` \| `ward` \| `singularity` \| `immolation` | capability-object dispatch in `abilities.ts` + `step/powers.ts` (the classics) / `step/powerups.ts` (the campaign powers); the passive kinds are read where they bite (`absorbPlayerDamage`, `weaponDamageFor`/`weaponCooldownFor`); visuals in `render/powerups.ts` + `render/powerup-bursts.ts` + `game-screen/powerup-aura.ts`; the schema's `KIND_BLOCKS` |
+| `Item["kind"]` (types/world.ts)   | `medkit` \| `xp` \| `repair` \| `drink` \| `ammo` \| `gold` \| `equipment` \| `ability` \| `story` \| `quest`                                                                                                                    | the pickup switch in `step/items.ts`; the item-sprite switch in `render/items.ts`                                                                                                                                                                                                                                                                             |
+| `Affix["kind"]` (types/core.ts)   | `damagePct` \| `maxHp` \| `maxHpPct` \| `crit` \| `armor` \| `armorPen` \| `knockback` \| `stat` \| `statPct` \| `spell` \| `proc` \| `sureStrike`                                                                               | the affix readers under `items/` (`effectiveStat`/`computeMaxHp` in `derived.ts`, `playerCritChance`/`absorbPlayerDamage` in `combat-stats.ts`, `weaponDamage`/`weaponScore` in `weapon-math.ts`), and `spells.ts` for the granted-spell/proc kinds                                                                                                           |
+| `Quality` (types/core.ts)         | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`                                                                                                                                                                       | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items/quality.ts` `rollQuality`                                                                                                                                                                                                                                            |
 
 **Checklist to add an archetype:** union entry → def field(s) it needs → the
-`step/` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`
+`step/` (or `items/`/`abilities.ts`) handler branch → a `GameEvent`
 variant if the app must react → a headless test in `tests/` → the render +
 SFX mapping in `pwa/`. The `noFallthroughCasesInSwitch` /
 `verbatimModuleSyntax` compiler settings make a missed switch arm a type

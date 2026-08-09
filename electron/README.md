@@ -11,6 +11,11 @@ way: the whole website is copied inside it (`webroot/`, a gitignored build
 artifact) and served from a private scheme on launch, so the game runs entirely
 on-device and offline and updates only when a new build ships to Steam.
 
+**This is the shipping desktop build.** [`tauri/`](../tauri/README.md) is a
+second, complete wrapper around the same site in the platform's own webview;
+which one a player gets turns on measurements, and
+[`docs/desktop-shells.md`](../docs/desktop-shells.md) owns that decision.
+
 On top of the web game it adds the things a browser can't give a desktop player:
 
 - **Licensed mods and multiplayer.** Steam Workshop supplies mods and Steam's
@@ -50,6 +55,14 @@ On top of the web game it adds the things a browser can't give a desktop player:
   `steam`.
 - **Haptics.** No motor, so `canVibrate()` reports false and the VIBRATION row
   is hidden rather than offered as a dead switch.
+- **A picture filed into Steam's own screenshot library.** The seam is there
+  (`src/screenshots-provider.ts`) and returns null: `steamworks.js` binds no
+  `ISteamScreenshots`, and it does not have to — the overlay this shell injects
+  hooks the presented frame, so Steam's own screenshot key already files a copy
+  with the game uninvolved. The game keeps its own copy on disk and in the
+  in-game gallery either way. The Tauri shell reaches the opposite conclusion
+  from the same principle, because its decoy swap chain photographs nothing —
+  see [`docs/desktop-shells.md`](../docs/desktop-shells.md).
 - **Leaderboards.** Not an oversight — see
   [`src/leaderboards-provider.ts`](src/leaderboards-provider.ts), which explains
   it at the seam. Short version: `steamworks.js` binds no leaderboard API, and
@@ -59,18 +72,18 @@ On top of the web game it adds the things a browser can't give a desktop player:
 
 ## Layout
 
-| Path                                            | What it is                                                                |
-| ----------------------------------------------- | ------------------------------------------------------------------------- |
-| `src/main.ts`                                   | The main process: window, protocol, IPC routing. Peer of `native/App.tsx` |
-| `src/preload.ts`                                | The page's whole view of the shell. Peer of `native/src/injected.ts`      |
-| `src/webroot.ts`                                | Serves the bundled site. Peer of `native/src/local-server.ts`             |
-| `src/window-state.ts`                           | Remembered geometry (pure — takes displays as an argument)                |
-| `src/steam.ts`                                  | The ONE owner of the Steam handshake. Peer of `native/src/game-center.ts` |
-| `src/{cloud-save,achievements,leaderboards}.ts` | The three bridges — no platform in them at all                            |
-| `src/*-provider.ts`                             | The three platform seams                                                  |
-| `src/{cloud,achievements}-steam.ts`             | The Steam implementations                                                 |
-| `scripts/bundle-web.mjs`                        | Builds the site and copies it to `webroot/`                               |
-| `modtools-lua/` (generated)                     | The Lua VM compiled for the packaged mod compiler — `npm run modtools`    |
+| Path                                                        | What it is                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `src/main.ts`                                               | The main process: window, protocol, IPC routing. Peer of `native/App.tsx` |
+| `src/preload.ts`                                            | The page's whole view of the shell. Peer of `native/src/injected.ts`      |
+| `src/webroot.ts`                                            | Serves the bundled site. Peer of `native/src/local-server.ts`             |
+| `src/window-state.ts`                                       | Remembered geometry (pure — takes displays as an argument)                |
+| `src/steam.ts`                                              | The ONE owner of the Steam handshake. Peer of `native/src/game-center.ts` |
+| `src/{cloud-save,achievements,leaderboards,screenshots}.ts` | The four bridges — no platform in them at all                             |
+| `src/*-provider.ts`                                         | The four platform seams. Only two have a Steam provider behind them       |
+| `src/{cloud,achievements}-steam.ts`                         | The Steam implementations                                                 |
+| `scripts/bundle-web.mjs`                                    | Builds the site and copies it to `webroot/`                               |
+| `modtools-lua/` (generated)                                 | The Lua VM compiled for the packaged mod compiler — `npm run modtools`    |
 
 ## Developing
 
@@ -165,7 +178,10 @@ being shipped by accident.
 ## Building for Steam
 
 ```sh
-npm run release:win     # release/win-unpacked/    — for the STORE
+make desktop-steam PLATFORM=win   # the DEPOT build — release/win-unpacked/
+make desktop-dist  PLATFORM=win   # …the same shell, packaged as a download
+
+npm run release:win     # release/win-unpacked/    — the packaging step alone
 npm run release:mac     # release/mac/             (x64; Rosetta on Apple Silicon)
 npm run release:linux   # release/linux-unpacked/
 
@@ -176,6 +192,16 @@ npm run dist:win        # …the same, but keeping the DEVELOPER tooling in
 menu, the arsenal and the effects gallery in the embedded site. The upload
 script refuses a build with them in it, so the mistake is caught rather than
 shipped — but building the right one first saves a round trip.
+
+**A store build goes through the Makefile, though, not through `release:*`
+directly.** The five `GIS_ENABLE_*` capability switches are read by
+`electron-builder.config.cjs` at PACKAGE time and stamped into the packaged
+manifest, and an unstamped package carries NONE of them — a depot build made
+with a bare `npm run release:win` ships with no multiplayer, no mods and no
+voice, and plays perfectly otherwise. `make desktop-steam` sets all five;
+`make desktop-dist` clears them and packages archives instead. Both forward to
+the same `release:*` script, so `PLATFORM=win|mac|linux` picks one and the
+default builds for this machine.
 
 Then upload:
 

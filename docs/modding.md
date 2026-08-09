@@ -15,12 +15,12 @@ a player entitlement and does not license multiplayer.
 ## The shape
 
 ```
-Workshop item (YAML, as authored)
-        │  Steam downloads it into its own folder
-        ▼
-electron/src/workshop.ts     ← the only module that knows Steam exists
-        │  a folder path
-        ▼
+a Workshop subscription      a folder in a mods dir       a .zip in one
+  workshop.ts — the only  │  mods.ts walks both      │  mod-archive.ts
+  module that knows       │  folders on disk         │  unpacks it into
+  Steam exists            │                          │  its own cache
+        └────────────────┴────────┬─────────────────┘
+                                  ▼  a folder path
 mod/tools/build.mjs          ← the compiler: validates, rasterizes, emits JSON
         │  one ModBundle, all data
         ▼
@@ -45,30 +45,15 @@ re-skin of this one — until it existed, a conversion could replace every
 monster, venue, relic, scene and recruit and still hand the player _this_ game's
 XP curve, loot rain and damage formula.
 
-It is also, unavoidably, a stranger's code, so it never leaves the box:
-
-- **The VM is ours** (`engine/lib/lua/`), and its standard library is a SUBSET
-  chosen as the security model. No `io`, no `os`, no `require`, no `load`, no
-  `debug`, no `_G`, no `coroutine` — there is nothing to reach the filesystem
-  with, and no way to bring in a chunk the compiler did not see.
-- **A script sees only what the host hands it**: `game.config`, `game.balance`
-  and `game.run`, all deeply FROZEN. A write is an error naming the field, and
-  the freeze is on the tables themselves rather than behind a metatable, so
-  `setmetatable` does not lift it.
-- **Every call is METERED.** A hook that loops forever dies on its instruction
-  budget, and its own `pcall` cannot swallow the kill signal.
-- **It is deterministic.** No clock, no `math.random`, insertion-ordered
-  iteration, a stable sort — a seeded run and a multiplayer session both depend
-  on two machines getting the same numbers.
-- **It cannot break the run.** A script that will not compile, a hook that
-  throws, one that runs away, one that returns `nil` — each falls back to the
-  file it was overriding, reports itself once with a file and a line, and the
-  run keeps playing.
-- **The compiler RUNS it**, with the same interpreter the game uses, so a syntax
-  error or a typo'd hook name fails on the author's machine. That last one
-  matters more than it sounds: a mis-spelled hook is otherwise silent forever,
-  since the shipped rule quietly stands in and the author's file appears to do
-  nothing.
+It is also, unavoidably, a stranger's code, so it never leaves the box: the VM
+is ours (`engine/lib/lua/`) and its standard library is a SUBSET chosen as the
+security model; a script sees only the deeply frozen views the host hands it;
+every call is metered; there is no clock and no `math.random`; and every failure
+falls back to the file it was overriding, reported once with a file and a line.
+The compiler RUNS every script with the same interpreter the game uses, so a
+syntax error or a typo'd hook name fails on the author's machine rather than
+being silent forever behind the shipped rule that quietly stands in.
+→ [`docs/scripting.md`](scripting.md), which owns all of it.
 
 The engine still owns everything a script must not be able to move — chiefly the
 RNG. A loot hook decides what a draw is measured against; the draws themselves,
@@ -85,6 +70,15 @@ constant. `node mod/tools/cli.mjs check` runs the identical code
 the game runs at load, so "it works in my mod" and "it works in the game" mean
 the same thing. A second, friendlier mod schema would drift from the real one
 inside a release.
+
+**THE BUNDLE CARRIES A FORMAT VERSION, and both halves are one build.**
+`BUNDLE_FORMAT` (`mod/tools/build.mjs`) is stamped onto every bundle and
+`SUPPORTED_BUNDLE_FORMAT` (`pwa/src/game/mods.ts`) is what the page will load;
+a mismatch refuses the mod with a reason rather than half-reading it, and
+`tests/content/mod_build_test.ts` pins the pair — a number one behind the
+compiler's refuses every mod there is, which it did once. Bumping it costs a mod
+author nothing, because the shell COMPILES every mod from its folder at load: the
+bundle is a wire between two halves of one build, never anything on disk.
 
 ### 3. The catalogs go in through the seam that already existed
 
@@ -120,7 +114,7 @@ be the orchestral hit they recorded. So a recording — `.wav`, `.mp3`, `.ogg`,
 may hand the game. (The container list is set by where recordings can actually
 arrive: only through the Steam shell, so the decoder is always Chromium.)
 
-**The file name is the routing, and there is no second mechanism.** A recording
+**The file name is the routing.** A recording
 named `enemy_killed.wav` replaces the sound `enemy_killed` — the event table the
 shipped catalog already carries keeps pointing exactly where it pointed. That is
 what makes a SOUND PACK a complete mod with no YAML in it at all, and it is why
@@ -218,7 +212,8 @@ non-interlaced PNG reader on `node:zlib`: the toolchain runs outside the app's
 asar and installs no packages of its own, which rules out `sharp`, and a decoder
 short enough to read end to end is a decoder whose refusals can be explained to
 an author by line. `tests/content/mod_png_test.ts` pins it byte-for-byte against
-`sharp` across every filter, depth and colour type.
+`sharp` across every row filter and colour type, and pins the two refusals
+(interlaced, 16 bits per channel) to messages that say how to re-export.
 
 **Replacing a sprite is the second id clash an ADDON is allowed**, for the same
 reason a recording is the first: naming the sprite it stands in for is the ONLY
@@ -486,14 +481,12 @@ and the compiler names the offending character.
 
 ### The kits are content too
 
-`content/sets.yaml` is the last catalog to have been code. A SET is what makes a
-boss worth farming past the first drop, and a mod could already ship
-`rarity: set` pieces — they just belonged to nothing. The lift is the same one
-the story and the companions had: a loader that takes a DIRECTORY
+A SET is what makes a boss worth farming past the first drop, and a mod could
+always ship `rarity: set` pieces — they just belonged to nothing. The lift is the
+one the story and the companions had: a loader that takes a DIRECTORY
 (`scripts/set-data/`), the schema both the shipped build and a mod validate
-through (`asset-tools/set-schema.mjs`), a generator into `engine/generated/sets.ts`,
-and a snapshot frozen from the hand-written TypeScript the moment before, so the
-move is provably lossless.
+through (`asset-tools/set-schema.mjs`), and a generator into
+`engine/generated/sets.ts`.
 
 Two decisions worth keeping:
 
@@ -534,15 +527,12 @@ no extra plumbing.
 
 ### A mod's weapon flares its own element
 
-`UniqueDef.fx` is the last of the four "a mod's content can only look like
+`UniqueDef.fx` closes the last of the four "a mod's content can only look like
 whichever shipped thing it resembles" gaps. The signature slash and muzzle flash
 were a table in `weapon-fx.ts` keyed by shipped unique id, so a mod's legendary
-had no way in at all; the mapping now lives on the weapon (`fx:` in its own
-YAML) and the app keeps only the kits and the drawing. Exactly the move
-`AbilityDef.look` made for the powers, and the shipped roster was migrated onto
-it wholesale — verified by resolving all 43 styled weapons both ways and
-comparing (the diff found two dead rows on the way: a slash style each for
-`skybreaker` and `stormlash`, a gun and a wand, which could never have played).
+had no way in at all; the mapping lives on the weapon (`fx:` in its own YAML) and
+the app keeps only the kits and the drawing — exactly the move `AbilityDef.look`
+made for the powers.
 
 Three decisions:
 
@@ -551,10 +541,9 @@ Three decisions:
   content chain — before the catalog `weapon-fx.ts` reaches through
   `@game/core`. A leaf breaks that cycle; the names beside the drawing re-make
   it.
-- **The vocabulary is SYMMETRIC.** Every element has a slash kit and a shot kit,
-  so `element: blood` means something on a rifle as well as on a blade. The four
-  melee kits and one shot kit that were missing were derived from their
-  counterparts' palettes rather than left out.
+- **The vocabulary is SYMMETRIC.** Every one of the eleven elements has a slash
+  kit and a shot kit, so `element: blood` means something on a rifle as well as
+  on a blade.
 - **The resolved style is MEMOIZED**, keyed by unique id and rebuilt when the
   def's identity changes — which is exactly when a mod is applied or backed out,
   so it needs no invalidation hook. `shotStyleFor` is asked per projectile per
@@ -589,6 +578,24 @@ Three things are worth knowing about the format:
   speaks stops at the mod folder's edge (see AGENTS.md, and the note at the top of
   the manuscript). A mod's scenes are never transcribed there and never corrected
   to match it. The distinction is origin, not format.
+
+### The errands travel it too — but not the talks
+
+A mod ships the same pair the campaign does: `quests/<id>.yaml` and
+`quest-givers.yaml`, through `loadQuests` / `loadQuestGivers` and
+`validateQuest` / `validateQuestGiver`. An errand cross-references six ways (a
+level, a giver, monster breeds, sprites, uniques, powerups) and every one of them
+is SILENT at runtime — a `kill` objective for a breed that never spawns looks
+exactly like bad luck — so all six resolve at compile time against BASE ∪ MOD.
+The whole-catalog rules (a giver with no work, a chain that loops) judge the
+MOD's own pair alone: a shipped giver is none of a mod's business.
+
+**`conversations/` is the one story file a mod may not bring.** The catalog is on
+`DefOverrides`, but nothing in the compiler loads it and `layout.mjs` names a
+`conversations.yaml` in a mod folder as a file the game never reads. A mod's
+errand may still point its `conversation:` at a SHIPPED tree; that id is the one
+cross-reference the mod compiler cannot check, because the mod's ref set has no
+conversations in it to check against.
 
 ### The party is the story's other half
 
@@ -634,21 +641,14 @@ file at its own root. A mod's talents MERGE into the shipped trees like its
 monsters do, so an addon adds one good passive and a conversion replaces one by
 shipping its id.
 
-The lift is not just a file move, because a talent's numbers used to live in two
-places at once: the def carried its per-rank slopes, and every structured PROC
-(a parry, a volley, a frost nova) kept its chances, radii and cooldowns in
-`engine/game/config/talents.ts` under a key the accessor reached for by SHIPPED
-TALENT ID — `talentParry` read `TALENTS.parry` after checking the rank of the
-talent literally called `parry`. A YAML catalog on top of that would have let a
-mod author a talent and no numbers to put in it.
-
-So the procs moved onto the def as **blocks**, and the hook now asks the catalog
-_which trained talent carries this block_ (`procTalent` in `talent-effects.ts`)
-rather than what rank `frost_nova` is. That is the same rule
-[`AbilityDef`](../AGENTS.md) already followed — `kind` is a label, the BLOCKS are
-the behaviour — and it is what makes a mod's talent able to fire a shipped proc
-with its own numbers. `engine/game/config/talents.ts` is down to the one thing that
-is true of every talent: the shared rank ceiling.
+The lift is not just a file move. A structured PROC (a parry, a volley, a frost
+nova) is a **block on the def**, and the hook asks the catalog _which trained
+talent carries this block_ (`procTalent` in `talent-effects.ts`) rather than what
+rank `frost_nova` is — the same rule [`AbilityDef`](../AGENTS.md) already
+followed, where `kind` is a label and the BLOCKS are the behaviour. Without it a
+mod could author a talent and have nowhere to put its numbers, because the
+accessor reached for them by SHIPPED TALENT ID. `engine/game/config/talents.ts`
+is down to the one thing true of every talent: the shared rank ceiling.
 
 Three things are worth knowing about the format:
 
@@ -716,20 +716,27 @@ unsubscribed from everything.
 
 ## The reference catalog
 
-`mod/catalog.json` is every id a mod may name — enemies, weapons, gear, powers,
-uniques, sprites, sounds, music tracks, the shipped venues, the compass regions a
-map blueprint points its boss with, and the engine's event names (what a sound's
-`on:` may answer). It exists because the compiler runs in the
+`mod/catalog.json` is every id a mod may name — enemies and their roles, set-piece
+abilities, weapons, gear, uniques, powers, talents and who carries each proc,
+companions, kits, sprites, sounds (with what fires each), music, cutscenes,
+thoughts, story items, errands and their givers, the shipped venues, the
+difficulty rungs, the weapon-signature elements, the compass regions a map
+blueprint points its boss with, the engine's event and cue names (what a sound's
+`on:` may answer), the HUD's and the windows' whole vocabulary, the script hooks,
+and the pixel font's glyph set. It exists because the compiler runs in the
 shipped app's main process, which has no TypeScript and no `engine/generated/` to
 import the real catalogs from, so the id sets are snapshotted into JSON that
-travels inside the build.
+travels inside the build. `cli.mjs ids` and `cli.mjs sounds` search it, which is
+the way to read four thousand entries.
 
 It is **committed and drift-tested** (`tests/content/mod_catalog_test.ts`), the
 same pattern the Game Center and Steam achievement manifests use: a content
 change that adds or retires an id regenerates it in the same commit
 (`make mod-catalog`), and the diff is the exact list of what moved. Deliberately
-absent from it: any number. A mod may NAME the game's content; it may not read
-the game's tuning out of a file that would then have to stay compatible for ever.
+absent from it: numbers, stats, balance — the one exception being
+`talentMaxRank`, the shared rank ceiling a mod's own trees are judged against. A
+mod may NAME the game's content; it may not read the game's tuning out of a file
+that would then have to stay compatible for ever.
 
 ## The measuring instruments — `--mod`, and the one seam behind it
 
@@ -844,8 +851,8 @@ The rest of what is load-bearing in `menus-mods.ts`:
   roller and the whole step pipeline. So the mod system's TYPES and the
   "which mod is on" state live in an import-free leaf (the same move
   `engine/game/flags.ts` makes for the engine's runtime toggles), and the apply
-  itself is a **dynamic** import inside the row's own handler. The 200 KB
-  gzipped critical-path budget is what notices; it is at 161.3 KB.
+  itself is a **dynamic** import inside the row's own handler. The 170 KB
+  gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what notices.
 
 ## The shell handler, and what ships with it
 
@@ -854,7 +861,10 @@ what the player is subscribed to, walks the two mods folders on disk, runs the
 compiler over each one, and answers the bridge. It is the peer of
 `cloud-save.ts` with one difference that shapes the file — it does real work,
 because **compiling is the security boundary**. A mod's YAML is read, parsed
-and validated here so that only checked JSON crosses to the renderer.
+and validated here so that only checked JSON crosses to the renderer. The Tauri
+shell answers the same bridge from the named peers `tauri/shell/src/mods.rs`,
+`mod_archive.rs` and `workshop.rs`, which is a pairing `npm run parity:check`
+refuses a build without (→ [`docs/desktop-parity.md`](desktop-parity.md)).
 
 **Three sources, one list**, and each answers a different question:
 
@@ -907,9 +917,12 @@ silently skipped, a file called `something.zip` in the mods folder was put
 there to be played, so "it is not a mod" is an answer the player needs.
 
 **Shipping the compiler is its own problem.** It lives outside `electron/` — in
-`mod/tools/`, importing the game's own loaders out of `scripts/` — because
-there must be exactly one compiler. So `electron-builder.config.cjs` carries it
-in through `extraResources`, and three details there are load-bearing:
+`mod/tools/`, importing the game's own loaders out of `scripts/` — because there
+must be exactly one compiler. **`scripts/modtools-manifest.cjs` is the one copy
+list**, read by `electron-builder.config.cjs` (as `extraResources`) and by
+`tauri/scripts/package.mjs` alike, because a loader carried into one desktop
+build and not the other is a mod that compiles on one and not the other with
+nothing anywhere reporting it. Five details are load-bearing:
 
 - The packaged tree **mirrors the repo's layout** under `resources/modtools/`.
   Every module in there finds its neighbours by relative path
@@ -919,12 +932,20 @@ in through `extraResources`, and three details there are load-bearing:
 - It is **outside the asar**, because it is loaded by dynamic `import()`, which
   resolves real files on disk rather than asar entries.
 - **`yaml` rides along** into `modtools/node_modules/`, for the same reason: a
-  package inside the asar is not resolvable from a module outside it.
+  package inside the asar is not resolvable from a module outside it. Which
+  packages those are is declared in `mod/package.json` — a MANIFEST, never a tree
+  to `npm install` into.
+- **So does the Lua VM** (`make lua-vm`, staged as `modtools/lua-vm`), because
+  the script validator IS the engine's own interpreter and this process has no
+  TypeScript to compile it from.
 - **Every `scripts/` directory the compiler imports has to be listed.** One that
   is not is a mod that compiles in the repo and fails on a player's machine with
-  a resolve error — `scripts/powerup-data` was exactly that until the story lift
-  added a test that walks the toolchain's own import graph against the packager's
-  copy list (`tests/content/mod_toolchain_deps_test.ts`).
+  a resolve error, so `tests/content/mod_toolchain_deps_test.ts` walks the
+  toolchain's own import graph against the manifest. `scripts/menu-data` is the
+  one deliberate half-entry: only `load-ingame-yaml.mjs` travels, because the
+  folder beside it holds the TITLE menu's loader — the one catalog a mod may not
+  ship, and a toolchain carrying a loader it must never call is a toolchain
+  inviting somebody to call it.
 
 The one value that crosses from the page INWARD in this whole feature is the
 `folder` a PUBLISH names, so it is the one that is checked — resolved and
@@ -945,3 +966,13 @@ dynamic import.
   `content/item_rarity.yaml`) are deliberately the game's rather than a mod's — a
   mod that moved the tier ladder would be rebalancing the campaign instead of
   adding to it.
+- **A NEW ABILITY EFFECT.** A power is a COMPOSITION of the effect blocks the
+  engine already draws and fires; a block it has none of is engine code.
+- **The three files `layout.mjs` names as read by nothing**: `mainmenu.yaml`
+  (that tree decides which screens EXIST, so a mod that shipped one could hand
+  itself the hidden developer tree on a store build), `conversations.yaml`, and
+  `leveling.yaml` — the hero's XP curve, which prices the whole level-up flow.
+  The rules a script MAY move are the twelve hooks and no others.
+- **The built sprite atlas.** A mod's sprites merge into the loaded sprite record
+  at apply time; `make assets` compiles THIS repo's `content/` tree and is not
+  part of a mod's loop.

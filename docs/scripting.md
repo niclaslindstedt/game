@@ -214,7 +214,7 @@ Four modules, and the split between them is load-bearing:
   Lexer, parser, tree-walking interpreter, sandbox stdlib.
 - **`engine/game/script/catalog.ts`** is an IMPORT-FREE LEAF holding what a mod
   registered, for the same reason `flags.ts` and `mapgen/blueprints.ts` are
-  leaves: `registerDefs` is reachable from the startup path, and the 200 KB
+  leaves: `registerDefs` is reachable from the startup path, and the 170 KB
   critical-path budget has no room for a Lua VM. What a mod registers is SOURCE
   TEXT; the compile happens on the first hook call, inside a run.
 - **`engine/game/script/env.ts`** builds the read-only views.

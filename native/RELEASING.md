@@ -176,10 +176,10 @@ leave it on.**
 
    | Manifest                              | Goes under                 | Rows |
    | ------------------------------------- | -------------------------- | ---- |
-   | `store/game-center-achievements.json` | Game Center → Achievements | 86   |
+   | `store/game-center-achievements.json` | Game Center → Achievements | 87   |
    | `store/game-center-leaderboards.json` | Game Center → Leaderboards | 5    |
 
-   That is 91 forms by hand, so **don't**. Both manifests are generated from the
+   That is 92 forms by hand, so **don't**. Both manifests are generated from the
    live catalogs and drift-tested, which makes the data already exact — one
    command pushes it through App Store Connect's own API:
 

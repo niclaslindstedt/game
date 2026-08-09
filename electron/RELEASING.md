@@ -109,7 +109,7 @@ see [What fails quietly](#what-fails-quietly).
    **Do not transcribe it from the JSON.** Valve documents no API for creating
    an achievement _definition_ — the Web API unlocks and queries stats at
    runtime, the schema is authored here, by hand, one web form per row — so the
-   entry stays manual and 86 rows read out of a text editor while a browser
+   entry stays manual and 87 rows read out of a text editor while a browser
    waits is exactly where a typo comes from. Two commands split the job at the
    line Valve draws:
 
@@ -143,13 +143,13 @@ see [What fails quietly](#what-fails-quietly).
    has not been released, which arrives as a bodyless 403.
 
    > Steam caps a **new** app at **100 achievements** until it reaches the
-   > Profile Features threshold, which is why the shipped list is a curated 86
-   > rather than all 226. Once the cap lifts, flip `STEAM_FULL_CATALOG` in
+   > Profile Features threshold, which is why the shipped list is a curated 87
+   > rather than all 249. Once the cap lifts, flip `STEAM_FULL_CATALOG` in
    > `pwa/src/game/platform-achievements.ts`, regenerate, and create the new
    > rows. That switch goes false → true and **never back**: an achievement id
    > is permanent once any player has unlocked it. Both commands below take
    > that second, larger run as it comes — the worksheet grows and the verify
-   > reports the 140 new ids as missing until they are in.
+   > reports the remaining ids as missing until they are in.
 
    Every row also takes **two 64×64 icons** — achieved and locked, which the
    overlay draws side by side. Both are generated, not drawn:
@@ -219,7 +219,7 @@ with a Steam raster beside them:
 ```sh
 npm install --no-save playwright && npx playwright install chromium
 cd pwa && npx vite --port 5199 &
-node pwa/scripts/store-shots.mjs --only steam    # → electron/store/screenshots/
+node pwa/scripts/store-shots.mjs --only steam    # → electron/store/screenshots/steam-1080/
 ```
 
 It shoots at a real 1920×1080 rather than upscaling a phone frame, with a mouse
@@ -239,16 +239,30 @@ hero's own sprite description, plus the compositions each aspect ratio wants.
 
 Whichever route: **the lettering is never generated.** An image model cannot
 spell reliably, so every capsule is made with the logo area left empty and the
-real wordmark — the game's own pixel font — composited in afterwards. That also
-keeps the store lettering identical to the game's.
+real wordmark — the game's own pixel font — composited in afterwards, by
+`scripts/composite-steam-wordmarks.mjs` (six capsules, in place) and
+`scripts/generate-steam-library-logo.mjs` (`library-logo`, which is nothing but
+wordmark). That also keeps the store lettering identical to the game's.
 
 ## 4. Build
 
 ```sh
-npm run release:win      # → release/win-unpacked/
-npm run release:mac      # → release/mac/   (x64; Rosetta on Apple Silicon)
-npm run release:linux    # → release/linux-unpacked/
+make desktop-steam PLATFORM=win     # → release/win-unpacked/, stamped for the DEPOT
+make desktop-steam PLATFORM=mac     # → release/mac/   (x64; Rosetta on Apple Silicon)
+make desktop-steam PLATFORM=linux   # → release/linux-unpacked/
 ```
+
+**Build through the Makefile, not `npm run release:*` directly.** Those scripts
+are the packaging step; what the Makefile adds is the five `GIS_ENABLE_*`
+capability switches, read by `electron-builder.config.cjs` at package time and
+stamped into the packaged manifest. An **unstamped** package carries none of
+them (`NO_CAPABILITIES` in `src/capabilities.ts`), so a depot build made with a
+bare `npm run release:win` has no multiplayer, no mods and no voice — and plays
+perfectly otherwise, which is the fifth entry in
+[What fails quietly](#what-fails-quietly). `make desktop-steam` turns all five
+on; `make desktop-dist` clears them and produces archives for a plain download.
+Override one at a time with the Makefile's `ENABLE_*` variables, e.g.
+`make desktop-dist ENABLE_MODS=1`.
 
 **Use `release:*`, not `dist:*`.** They differ in exactly one way and it is
 invisible: `release:*` bundles the website with `VITE_DEV_TOOLS=off`, which
@@ -346,22 +360,28 @@ With the store page live for its 30 days and a build set live on `default`:
 
 ## What fails quietly
 
-Four things in this pipeline break without any error at all, which is why
-`steam:upload` checks each of them:
+Five things in this pipeline break without any error at all. `steam:upload`
+checks the first three; the last two it cannot see:
 
 - **A missing `steam_api64.dll` / `libsteam_api.dylib` / `libsteam_api.so`.**
   `steam.ts` degrades to "no client" rather than crashing — by design, so a
   developer without Steam can still run the game — so the app ships, launches,
   plays perfectly, and simply has no cloud saves or achievements for anyone.
 - **A build made with `dist:*`.** Identical to look at until a player taps the
-  sun seven times and finds the developer menu.
+  sun sixteen times and wins the click race behind it, finding the developer
+  menu.
 - **App id 480.** Valve's shared Spacewar test app. Everything works; the data
   goes into a sandbox every developer on Steam shares.
 - **An achievement id that isn't in the partner site.** The report is dropped
-  on the floor, silently, forever. This is the only one of the four that
-  `steam:upload` cannot see — it is a fact about the partner site, not about
-  the build — so it has its own check:
+  on the floor, silently, forever. `steam:upload` cannot see this one — it is a
+  fact about the partner site, not about the build — so it has its own check:
   `make store-steam-achievements ARGS="--verify"` (§1.4).
+- **An unstamped package.** Built with `npm run release:*` on its own rather
+  than through `make desktop-steam`, so no `GIS_ENABLE_*` switch reached the
+  packager and the manifest carries no capabilities at all. Multiplayer, mods
+  and voice are simply absent; everything else plays. Nothing in the upload
+  path looks at the stamp — building through the Makefile is the whole
+  defence (§4).
 
 ## What you do NOT have to build
 
