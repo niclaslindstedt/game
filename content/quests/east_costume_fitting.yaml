@@ -10,6 +10,11 @@ lore: >
   holds, which she notes before she notes anything else.
 requires:
   - east_wardrobe
+# THE THING WEARING HER COAT IS A HELLBORN — THE LONG NOON walks out of BOOT
+# HILL's rampage-opened hellgates, which the carve tags `minDifficulty:
+# nightmare` (mapgen/generate.ts). On the three rungs below, the flats are
+# empty of it and DOLLY was asking for a kill no run could make.
+minDifficulty: nightmare
 offer:
   - - THERE'S ONE OUT ON THE FLATS WEARING A COAT I CUT MYSELF. IT DIDN'T ASK.
   - - I WANT THE COAT BACK AND I DON'T MUCH CARE ABOUT THE REST OF IT.

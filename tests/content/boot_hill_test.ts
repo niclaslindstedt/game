@@ -82,10 +82,10 @@ describe("BOOT HILL level def", () => {
       "boot_hill_arrival",
     );
     const kill = BOOT_HILL.firstKillThoughts?.[0];
-    expect(kill?.thought).toBe("boot_hill_hosts");
+    expect(kill?.thought).toBe("boot_hill_hands");
     expect(kill?.after).toBe("boot_hill_arrival");
     expect(THOUGHT_DEFS.boot_hill_arrival).toBeDefined();
-    expect(THOUGHT_DEFS.boot_hill_hosts).toBeDefined();
+    expect(THOUGHT_DEFS.boot_hill_hands).toBeDefined();
   });
 
   it("ships the campaign epilogue: outro pages on the level def", () => {
@@ -128,17 +128,17 @@ describe("the park's resident staff", () => {
     expect(def.hp).toBeGreaterThan(enemyDef("the_strongman").hp);
   });
 
-  it("THE LEAK is the game's first ranged elite and drops the archive", () => {
+  it("THE LEAK is the game's first ranged elite and drops the corpus", () => {
     const def = enemyDef("the_leak");
     expect(def.role).toBe("elite");
-    // The leaker fights from cover, like the BROs his archive trained.
+    // The leaker fights from cover, like the BROs his corpus trained.
     expect(def.ranged?.takesCover).toBe(true);
     expect(def.dialogue?.length ?? 0).toBeGreaterThan(0);
     expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
     // The plot payload: the SUPERCORE's training set, plus his insurance.
-    expect(def.loot?.storyItems).toContain("snow_archive");
+    expect(def.loot?.storyItems).toContain("corpus_drive");
     expect(def.loot?.items).toContain("leaks_dead_mans_switch");
-    expect(STORY_ITEM_DEFS.snow_archive).toBeDefined();
+    expect(STORY_ITEM_DEFS.corpus_drive).toBeDefined();
   });
 });
 
@@ -218,9 +218,9 @@ describe("the barkeep's THE STRONGMAN stall", () => {
   it("lists the estate as rolled stall uniques, all real", () => {
     const ids = BOOT_HILL.merchant?.stockUniques ?? [];
     expect(ids.sort()).toEqual([
-      "honorary_rank",
+      "courtesy_star",
       "strongmans_tracksuit",
-      "the_kremlin_ushanka",
+      "the_incumbents_ushanka",
     ]);
     for (const id of ids) expect(UNIQUE_DEFS[id]).toBeDefined();
   });

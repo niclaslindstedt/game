@@ -23,33 +23,33 @@ node scripts/skill-lessons.mjs weapon-system --concepts=ammo,uniques
 
 ## Where everything lives
 
-| Piece | File |
-| --- | --- |
-| **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
-| **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `engine/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named) |
-| Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses) | `content/item_rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT` |
-| MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item_quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
-| Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `engine/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
-| Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `engine/game/defs/grades.ts` |
-| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`) | `engine/game/config/loot.ts` (`LOOT`) |
-| Chain/cooldown/damage globals | `engine/game/config/combat.ts` (`WEAPON`) |
-| Which bases drop on a level (thematic pools) | `content/levels/<id>.yaml` — `loot.weaponPool` |
-| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `content/enemies/<biome>/<id>.yaml` |
-| Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `engine/game/defs/uniques.ts` |
-| The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
-| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `engine/game/items/rolling.ts`, `engine/game/loot.ts`, `engine/game/config/loot.ts` |
-| World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
-| The roll pipeline (tier → ilvl → affixes), equip gates | `engine/game/items/rolling.ts` (`rollEquipment`), `engine/game/items/requirements.ts` (`meetsLevelReq`) |
-| Kill → drop funnel (pity rule, tierDrops payout) | `engine/game/loot.ts` |
-| Monster level stamping | `engine/game/create.ts` (`spawnEnemy`), `engine/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
-| Firing + projectile behaviors (spread/pierce/homing/chain) | `engine/game/step/` (`weapon.ts`, `projectiles.ts`) |
-| Icons (12×12) | one YAML per icon in `content/sprites/icons/` |
-| Projectile sprites (8×8) | one YAML per sprite in `content/sprites/effects/` |
-| Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `pwa/src/game/render/player.ts` (`weaponPose`, `drawPlayer`, `BLADE_REST_ANGLE`); preview with `pwa/scripts/weapon-swing.mjs` |
-| Tier colors, item tooltip (ilvl, level req) | `pwa/src/game/tiers.ts`, `InventoryPanel.tsx` |
-| Keepsakes / hardcore rules (app-side permanence) | `pwa/src/game/characters.ts`, `settings.ts` |
-| NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report) | `scripts/weapon-scatter.mjs` (see below) |
-| Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
+| Piece                                                                                                                                                                                                                                                                | File                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **THE ITEM FORGE — the one door new items come through**                                                                                                                                                                                                             | `scripts/item-forge.mjs` (see below)                                                                                                                                                  |
+| **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `engine/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named)                                                                   |
+| Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses)                                                                                                                                      | `content/item_rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT`                                                                                  |
+| MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds                                                                                                                                                                                          | `content/item_quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`)                                                                                   |
+| Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups                                                                                                                                                                                                     | `engine/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`)                                                                            |
+| Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block)                                                                                                                                                    | `engine/game/defs/grades.ts`                                                                                                                                                          |
+| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`)                                                                                                                                                           | `engine/game/config/loot.ts` (`LOOT`)                                                                                                                                                 |
+| Chain/cooldown/damage globals                                                                                                                                                                                                                                        | `engine/game/config/combat.ts` (`WEAPON`)                                                                                                                                             |
+| Which bases drop on a level (thematic pools)                                                                                                                                                                                                                         | `content/levels/<id>.yaml` — `loot.weaponPool`                                                                                                                                        |
+| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus`                                                                                                                                     | `content/enemies/<biome>/<id>.yaml`                                                                                                                                                   |
+| Named UNIQUE defs (fixed bonuses on a real base)                                                                                                                                                                                                                     | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `engine/game/defs/uniques.ts`          |
+| The ilvl MODEL (what a unique's `ilvl` means; over/under-power check)                                                                                                                                                                                                | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants                                                                        |
+| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config                                                                                                                                                                                        | `engine/game/items/rolling.ts`, `engine/game/loot.ts`, `engine/game/config/loot.ts`                                                                                                   |
+| World-drop uniques: level wiring, role-scaled roll, gate                                                                                                                                                                                                             | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level`                                       |
+| The roll pipeline (tier → ilvl → affixes), equip gates                                                                                                                                                                                                               | `engine/game/items/rolling.ts` (`rollEquipment`), `engine/game/items/requirements.ts` (`meetsLevelReq`)                                                                               |
+| Kill → drop funnel (pity rule, tierDrops payout)                                                                                                                                                                                                                     | `engine/game/loot.ts`                                                                                                                                                                 |
+| Monster level stamping                                                                                                                                                                                                                                               | `engine/game/create.ts` (`spawnEnemy`), `engine/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`)                                                                        |
+| Firing + projectile behaviors (spread/pierce/homing/chain)                                                                                                                                                                                                           | `engine/game/step/` (`weapon.ts`, `projectiles.ts`)                                                                                                                                   |
+| Icons (12×12)                                                                                                                                                                                                                                                        | one YAML per icon in `content/sprites/icons/`                                                                                                                                         |
+| Projectile sprites (8×8)                                                                                                                                                                                                                                             | one YAML per sprite in `content/sprites/effects/`                                                                                                                                     |
+| Field-hero held weapon art + its swing/recoil/cast animation                                                                                                                                                                                                         | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `pwa/src/game/render/player.ts` (`weaponPose`, `drawPlayer`, `BLADE_REST_ANGLE`); preview with `pwa/scripts/weapon-swing.mjs` |
+| Tier colors, item tooltip (ilvl, level req)                                                                                                                                                                                                                          | `pwa/src/game/tiers.ts`, `InventoryPanel.tsx`                                                                                                                                         |
+| Keepsakes / hardcore rules (app-side permanence)                                                                                                                                                                                                                     | `pwa/src/game/characters.ts`, `settings.ts`                                                                                                                                           |
+| NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report)                                                                                                                                                                                              | `scripts/weapon-scatter.mjs` (see below)                                                                                                                                              |
+| Engine rule tests                                                                                                                                                                                                                                                    | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts`                                                                                                        |
 
 ## THE ITEM FORGE — never freehand item numbers
 
@@ -199,7 +199,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
      spread counts its pellet `count`, a pierce/chain its calibrated distinct-foe
      reach (`WEAPON.rangedAoe`, ~0.5/pierce, ~0.7/chain — see `rangedShotTargets`).
      How many a melee swing ACTUALLY lands in play is `min(geometry,
-     maxMeleeTargets)` (INT's cap, floor 2 + 1/INT) — which for a real melee
+maxMeleeTargets)` (INT's cap, floor 2 + 1/INT) — which for a real melee
      build sits ABOVE the geometry, so reach, not the cap, is the limiter. An AoE
      weapon is deliberately weaker per hit and grows into the crowd it reaches.
    - **Crit lift** (`baseCritMult`): class-based crit damage — a flat ×2 for
@@ -226,6 +226,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
    (`meleeRealizedTargets(weaponSweepHalfAngle, weaponRangeFor)` capped by
    `maxMeleeTargets`) rather than the levelReq estimate the budget uses. The
    budget scripts and item card use the raw `weaponAssumedTargets`.
+
 3. **Sprites** (the `pixel-assets` skill has the full loop): one YAML per
    icon in `content/sprites/icons/`, the projectile in
    `content/sprites/effects/`, `make assets`, then LOOK at
@@ -352,12 +353,20 @@ home-rung drop ≈ 5% (cap 10%)**. Two tables place them, and the checker owns
 both rules:
 
 - A BOSS table is `uniquesByDifficulty` on the enemy YAML
-  (`content/enemies/<biome>/<id>.yaml`) — five bosses carry one. Each rung is
-  meant to carry a full set (a weapon + head/chest/legs/feet), the set pieces
-  across the five rungs forming a **slot Latin square**, and a unique is meant
-  to have exactly ONE boss home: the checker ERRORS on an id wired to two.
+  (`content/enemies/<biome>/<id>.yaml`) — five bosses carry one, and **each boss
+  OWNS a set** (`content/sets.yaml`). Its campaign rungs (easy/medium/hard) pay a
+  low-ilvl TASTE of that set; its endgame rungs (nightmare/jesus) open the WHOLE
+  kit plus the signature weapon, so a grind can complete a set from one boss.
+  **A relic is therefore listed on SEVERAL of its boss's rungs, and that is the
+  farm — not a duplicate.** What the checker ERRORS on is a relic owned by two
+  different PLACES (two bosses, or a boss and a stall). Across the five bosses,
+  every rung must still pay out every set slot (a weapon + head/chest/legs/feet)
+  — that per-rung coverage is what survived of the old Latin square, which the
+  set farm retired.
 - A WORLD table is `loot.worldUniques` on the level YAML — the farm venues are
   world tables only, never boss homes.
+- A STALL table is `merchant.stockUniques` on the level YAML (Boot Hill's estate)
+  — the third home kind; a stall stocks on every rung.
 
 Each boss unique is rolled at `UNIQUE.dropChance × mlvl/ilvl` (capped) on the
 kill (`maybeDropBossUnique` in `loot.ts`): ~5% at the item's home difficulty,
@@ -409,7 +418,16 @@ never guaranteed.
   Trinkets (charm/bag) gate at req ~1 by design and are exempt from the cap.
 - **Armor climbs with ilvl within a slot.** Uniques don't grow armor with ilvl
   (only the ±band), so a higher-ilvl piece MUST sit on a higher-armor base or
-  it's strictly worse than a lower one. The checker holds this per gear slot.
+  it's strictly worse than a lower one. The checker holds this per gear slot —
+  but only over the pieces the ilvl model prices COMPARABLY, so two kinds sit
+  out, both because their computed ilvl deliberately omits where their power
+  is: a **keeper** (inflated by a scaling stat, not armor) and a **set piece**
+  (`tier: "set"` — its share of the power is in `content/sets.yaml`'s bonus
+  tiers, which `weapon-ilvl.mjs` does not price at all, and its base is picked
+  for the kit's theme, so a DEX/INT set is lighter than a melee set at the same
+  ilvl by design). Pieces at the SAME computed ilvl are not compared either:
+  the model calls them equal power, so an armor difference there is a
+  bonus/armor MIX. Only a STRICTLY higher-ilvl piece owes a not-lower armor.
   (Weapon power is class-dependent — an AoE weapon deals less per hit BY DESIGN
   — so weapons get an eyeball ladder, not a hard check; sanity them against the
   damage-budget model.)
@@ -431,12 +449,17 @@ never guaranteed.
    candidates at the target req. Pick the on-theme one among them (weapon
    fantasy often beats a rung of req). The knobs (`EQUIP_GAP`, `GAP_SLACK`, the
    seed-base exclusions) are named constants at the top of the script.
-3. Wire the drop: add the id to the boss's `uniquesByDifficulty[rung]`.
-4. `node scripts/unique-check.mjs [--strict]` — the full report: the boss drop
-   grid, base integrity + slot agreement, bonus discipline (≤1 scaling ≤3%),
-   the equip-gap rule, per-slot armor monotonicity, and Latin-square coverage
-   (every unique placed once, each rung a full set). ERRORS fail; `--strict`
-   fails on WARNs too.
+3. Wire the drop: add the id to the boss's `uniquesByDifficulty[rung]` — to
+   every rung of that boss it should be farmable on, which for a set piece is
+   its boss's endgame rungs at least. One boss, never two.
+4. `make unique-check` (`node scripts/unique-check.mjs [--strict]`) — the full
+   report: the boss drop grid, base integrity + slot agreement, bonus
+   discipline (≤1 scaling ≤3%), the equip-gap rule, per-slot armor
+   monotonicity, one PLACE per relic, and per-rung slot coverage. ERRORS fail;
+   `--strict` fails on WARNs too. **It reads the compiled catalogs, so run
+   `make levels` first after a YAML edit** or it audits the previous tree.
+   CI runs it as a step of the `lint` job (`.github/workflows/ci.yml`), right
+   after `make lint` has built the content.
 5. Tests: `tests/content/uniques_test.ts` (registry integrity, `mintUnique`,
    the boss drop tables) — and `npx vitest run`, since the drop-table suite
    asserts every shipped unique is placed exactly once.
@@ -489,12 +512,12 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
    the ilvl (a world charm's ilvl only scales a cosmetic ±band, since world odds
    are flat role rates, not ilvl-scaled like boss uniques).
 2. Wire it on the LEVEL: `loot.worldUniques: { <rung>: ["id", …] }`.
-3. `node scripts/unique-check.mjs` — the coverage check now spans boss ∪ world
-   placements ("one primary home each" — a WORLD unique may additionally be
-   re-listed by FARM-VENUE levels' world tables, the bunker rule; boss/stall
-   homes never repeat), and prints a **World-drop
-   grid** (level × difficulty) with the live role chances + gate. The Latin
-   square stays boss-only.
+3. `make unique-check` — the coverage check spans boss ∪ world ∪ stall
+   placements ("one primary PLACE each": a WORLD unique may additionally be
+   re-listed by FARM-VENUE levels' world tables, the bunker rule; a boss or
+   stall PLACE never repeats, though a boss re-lists its own relics rung by
+   rung). It also prints a **World-drop grid** (level × difficulty) with the
+   live role chances + gate. The per-rung slot coverage stays boss-only.
 4. Tests: `tests/engine/world_drops_test.ts` asserts the role scaling and the
    gate on SYNTHETIC fixtures — `registerDefs` now takes a `uniques` override,
    so an engine test can register a fixture unique + a fixture level's
@@ -601,9 +624,10 @@ off-hand soak zone) is `docs/rendering.md`; the gore that lands on it is the
       deliberate) — including the drop-window coverage table.
 - [ ] `node scripts/weapon-ilvl.mjs --check` clean, if you touched uniques or the
       combat/item constants (every unique's `ilvl` == computed, none over-budget).
-- [ ] `node scripts/unique-check.mjs` clean, if you touched uniques (base
-      integrity, ilvl drift + over-budget via weapon-ilvl.mjs, armor monotonicity,
-      Latin-square coverage).
+- [ ] `make unique-check` clean, if you touched uniques (base integrity, ilvl
+      drift + over-budget via weapon-ilvl.mjs, armor monotonicity, one PLACE per
+      relic, per-rung slot coverage). **This one is a CI gate** — it is a step of
+      the `lint` job — so a violation left here fails the build.
 - [ ] `node scripts/weapon-sheet.mjs` and LOOK at the sheet.
 - [ ] `make assets` committed together with the sprite YAML change
       (atlas.png + atlas.json are the build inputs).

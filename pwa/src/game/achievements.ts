@@ -30,6 +30,7 @@ import {
   applyRunStart,
   applyWornEquipment,
   emptyTotals,
+  migrateRenamedBadges,
   migrateSoloTotals,
   type LifetimeTotals,
   type RunContext,
@@ -63,7 +64,7 @@ function load(): AchievementsSave {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
     const stored = JSON.parse(raw) as Partial<AchievementsSave>;
-    return {
+    return migrateRenamedBadges({
       unlocked:
         stored.unlocked && typeof stored.unlocked === "object"
           ? stored.unlocked
@@ -82,7 +83,7 @@ function load(): AchievementsSave {
         stored.meta && typeof stored.meta === "object"
           ? stored.meta
           : base.meta,
-    };
+    });
   } catch {
     return base; // private mode / corrupt JSON — track in memory only
   }

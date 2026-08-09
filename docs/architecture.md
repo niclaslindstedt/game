@@ -1254,8 +1254,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   `clearOfFog` above, and the EDGE OF THE SCREEN. The fog alone stopped being an
   answer within a minute of play — it never rolls back, so "explored" soon says
   yes to most of the map, and a power reaching 300 world px happily marked a
-  monster two screens away on a phone whose landscape viewport is ~422×195 world
-  units. `visibleTo(state, hero, pos)` runs both, and everything that aims on a
+  monster two screens away on a phone whose landscape viewport is ~422×260 world
+  units (the 422×195-px canvas, its depth axis divided by the pitch — see
+  `docs/rendering.md`). `visibleTo(state, hero, pos)` runs both, and everything that aims on a
   hero's behalf goes through it: the auto-attack and its crate fallback, the
   conjured powers and granted spells that pick their own mark (storm, volley,
   singularity, the well's hunt), the sentry grid, a weapon proc's fresh pick, the

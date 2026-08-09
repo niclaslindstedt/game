@@ -295,17 +295,36 @@ export type SimulateLevelOptions = {
    * (render.ts `computeCamera`). It feeds every view-aware rule: enemy
    * targeting (only on-screen monsters are shot), spawner summon-in
    * placement, and the autopilot's wall-end sense (`state.view` — the bot
-   * sees exactly what a player watching this screen would). Defaults to
-   * {@link SIM_VIEW_DEFAULT}, the HORIZONTAL-PHONE baseline. Pass null to
-   * run with no camera at all (the legacy blind-headless read).
+   * sees exactly what a player watching this screen would). WORLD units, never
+   * canvas px — see {@link SIM_VIEW_DEFAULT}, the HORIZONTAL-PHONE baseline it
+   * defaults to, for why the two differ down the depth axis. Pass null to run
+   * with no camera at all (the legacy blind-headless read).
    */
   view?: { width: number; height: number } | null;
 };
 
-/** The horizontal-phone baseline camera (world px): ~844×390 CSS at the
- * app's 2× view scale — the reference device (§ mobile-first, landscape)
- * every simulated run watches through unless overridden. */
-export const SIM_VIEW_DEFAULT = { width: 422, height: 195 };
+/**
+ * The horizontal-phone baseline camera every simulated run watches through
+ * unless overridden — the reference device (§ mobile-first, landscape),
+ * **in WORLD UNITS**.
+ *
+ * THE TWO UNITS ARE NOT THE SAME NUMBER, AND CONFUSING THEM COSTS A QUARTER OF
+ * THE CAMERA. The reference device is a ~844×390 CSS viewport, which at the
+ * app's `VIEW_SCALE` of 2 is a **422×195 CANVAS** — but the ground plane is
+ * PITCHED (`DEFAULT_PITCH` = 0.75, pwa/src/game/render/tilt.ts), so a step down
+ * the screen is a longer step across the floor: the canvas's 195 px of height
+ * show 195 / 0.75 = **260 WORLD units** of ground. The app never stamps the
+ * canvas size into the input — it stamps `worldViewRect(canvas.w, canvas.h)`,
+ * i.e. this rect (GameScreen.tsx), and every rule that reads a view rect
+ * (`sight.ts` `visibleTo`, the spawners' summon geometry, the bot's wall-end
+ * sense) works in world units against world positions.
+ *
+ * So the world height, not the canvas height, is the honest baseline. This
+ * constant said 422×195 for a while, which had every simulated run watching
+ * through a camera 25% shorter than any real player's and read every
+ * view-gated rule low.
+ */
+export const SIM_VIEW_DEFAULT = { width: 422, height: 260 };
 
 export type SimulateCampaignOptions = {
   /** Rungs to sweep, in order (default: the whole ladder, easy → JESUS). */

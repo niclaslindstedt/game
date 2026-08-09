@@ -101,6 +101,7 @@ make test                                # the full test suite
 | `make fmt` / `make fmt-check`         | Prettier format / verify                                                                    |
 | `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed) |
 | `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview           |
+| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it) |
 | `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                      |
 | `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                |
 | `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                 |

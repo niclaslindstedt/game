@@ -269,7 +269,7 @@ elites:
     ramp: savage
     hp: 2000
     escort:
-      - enemy: guard_kremlin
+      - enemy: guard_continuity
         count: 3
         ramp: savage
         hp: 380

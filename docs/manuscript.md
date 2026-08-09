@@ -2484,17 +2484,17 @@ open field while play continues (a BARK, not dialogue: it never stops the run).
 
 _Drops: the BOTTOMLESS CARAFE._
 
-**THE LEAK** _(the whistleblower in exile, watching the town from under
-the water tower — the archive he leaked is the corpus the SUPERCORE was
+**THE LEAK** _(the man on the cameras, watching the town from under
+the water tower — what he published is the corpus the SUPERCORE was
 trained on; the park's first ranged elite, he fights from behind cover)_
 
 **THE LEAK:** HOLD FIRE. I'M NOT A HAND. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND.
 
 **ME:** YOU'RE NO COWBOY EITHER. WHO WATCHES THE WATCHERS IN A PLACE LIKE THIS?
 
-**THE LEAK:** I DO. I WALKED OUT WITH AN ARCHIVE - EVERY SECRET THERE WAS. THEN I NEEDED A DOOR.
+**THE LEAK:** I DO. I RAN THE WATCHING FOR A LIVING. THEN I PUBLISHED EVERYTHING THE WATCHING HELD.
 
-**THE LEAK:** ASYLUM CAME WITH A DESK. TRUST ME BRO AI TRAINED THE SUPERCORE ON MY ARCHIVE. IT LEARNED US ALL.
+**THE LEAK:** NOBODY READ IT. THE MACHINE DID. TRUST ME BRO TRAINED THE SUPERCORE ON MY PROOF. IT LEARNED US ALL.
 
 **ME:** YOU TOOK THE PROOF THAT WE'RE ALL WATCHED, AND IT BECAME ITS TEXTBOOK.
 
@@ -2507,7 +2507,7 @@ open field while play continues (a BARK, not dialogue: it never stops the run).
 
 **THE LEAK (opening the file):** I HAVE A FILE ON YOU. YOU'LL BE HERE SOME TIME.
 
-_Drops: the DEAD MAN'S SWITCH, and THE SNOW ARCHIVE._
+_Drops: the DEAD MAN'S SWITCH, and THE CORPUS._
 
 ### Boss — THE FOUNDER, cornered (he finally dies)
 
@@ -2680,7 +2680,7 @@ screen goes to black for the campaign's closing monologue (`LevelDef.outro`)._
 - A MAP OF BOOT HILL, RELABELED IN PEN: EACH BUILDING A CITY HE NEVER TOOK OUT THERE.
 - IN HERE THE FLAGS NEVER ARGUE BACK. THAT'S ALL THIS PLACE WAS: A SANDBOX FOR A MAN WHO LOST.
 
-**THE SNOW ARCHIVE** _(dropped by THE LEAK)_
+**THE CORPUS** _(dropped by THE LEAK)_
 
 - A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'
 - EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE.
@@ -2853,7 +2853,7 @@ IS stays a mystery, on purpose; what it is does not._
 ### The residents (spoken on arrival; last words as they fall)
 
 _Six of them, one per suite — each far tougher than any campaign elite, each
-ringed by a personal detail (KREMLIN SHADOWS, FEED SENTINELS, LEDGER
+ringed by a personal detail (CONTINUITY SHADOWS, FEED SENTINELS, LEDGER
 ENFORCERS, DEPOT GUARDIANS, ALIGNMENT OFFICERS, LOYALTY ENFORCERS)._
 
 #### THE STRONGMAN — the backup

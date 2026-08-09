@@ -10,6 +10,14 @@ lore: >
   up, which is how he puts it.
 requires:
   - rift_provisions
+# WHAT CIRCLES THE MESS IS THE JESUS CROP. THE SCALED ANCESTOR is gated twice —
+# the rift's hellgates are `minDifficulty: nightmare` from the carve, and his
+# own member line in `content/maps/the_rift.yaml` adds `minDifficulty: jesus` —
+# so on the four rungs below, the cook was pointing at a door with nothing
+# behind it. RUTH's THE SCALE wants a piece off the same breed and answers it
+# the other way, because SHE runs her errand on every rung: it takes a carrier
+# the tribute road supplies as well (see `content/quests/ruth_scale.yaml`).
+minDifficulty: jesus
 offer:
   - - SOMETHING SCALED KEEPS CIRCLING THE MESS. OLD. COLD-BLOODED. IT WATCHES.
   - - I'LL NOT SERVE WITH THAT AT THE DOOR. YOU'RE ARMED AND I AM NOT.

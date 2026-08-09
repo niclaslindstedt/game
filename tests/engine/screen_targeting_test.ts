@@ -34,10 +34,18 @@ import {
   startGame,
 } from "./helpers.ts";
 
-/** The phone world viewport (~422×195, the landscape reference device) centred
- * on `pos` — the rect the app stamps into `GameInput.view` every tick. */
+/** The phone world viewport (~422×260, the landscape reference device) centred
+ * on `pos` — the rect the app stamps into `GameInput.view` every tick.
+ *
+ * WORLD UNITS, not canvas px, and the two differ down the DEPTH axis: the
+ * reference device is a 844×390 CSS viewport, which is a 422×195 CANVAS at the
+ * app's `VIEW_SCALE` of 2 — and the ground plane is pitched, so that canvas
+ * shows 195 / `DEFAULT_PITCH` = 260 world units of floor
+ * (`render/tilt.ts` `worldViewRect`). Everything the engine does with a view
+ * rect is world-space, so 195 here would model a camera a quarter shorter than
+ * any real player's. */
 function viewAround(pos: { x: number; y: number }) {
-  return { x: pos.x - 211, y: pos.y - 97, width: 422, height: 195 };
+  return { x: pos.x - 211, y: pos.y - 130, width: 422, height: 260 };
 }
 
 /** A quiet, FULLY EXPLORED field: the fog is deliberately off, so anything
@@ -54,7 +62,7 @@ function watching(state: GameState): GameInput {
 }
 
 /** A spot `dist` px due NORTH of the hero — the short axis of a landscape
- * screen (97 px to the edge), and well inside the blaster's 260 reach. */
+ * screen (130 world px to the edge), and well inside the blaster's 260 reach. */
 function north(state: GameState, dist: number): { x: number; y: number } {
   const { x, y } = state.players[0].pos;
   return { x, y: y - dist };
@@ -63,9 +71,9 @@ function north(state: GameState, dist: number): { x: number; y: number } {
 describe("the edge of the screen hides a mob from the auto-attack", () => {
   it("holds fire on a mob in reach, in the light, and off the top of the frame", () => {
     const state = litStage(equipRangedSidearm(startGame()));
-    // 150px north: inside the blaster's 260 reach, on ground the hero has
-    // walked — and 53px past the top edge of a landscape phone.
-    const spot = north(state, 150);
+    // 180px north: inside the blaster's 260 reach, on ground the hero has
+    // walked — and 50px past the top edge of a landscape phone.
+    const spot = north(state, 180);
     state.enemies.push(makeEnemy({ pos: spot }));
 
     step(state, watching(state), DT);
@@ -76,7 +84,7 @@ describe("the edge of the screen hides a mob from the auto-attack", () => {
 
   it("shoots that same mob once it is on screen", () => {
     const state = litStage(equipRangedSidearm(startGame()));
-    const enemy = makeEnemy({ pos: north(state, 150) });
+    const enemy = makeEnemy({ pos: north(state, 180) });
     state.enemies.push(enemy);
     step(state, watching(state), DT);
     expect(state.projectiles).toHaveLength(0);
@@ -93,7 +101,7 @@ describe("the edge of the screen hides a mob from the auto-attack", () => {
     const state = litStage(startGame());
     const hero = state.players[0];
     hero.view = viewAround(hero.pos);
-    const spot = north(state, 150);
+    const spot = north(state, 180);
     // The fog has no objection at all — this is the screen's refusal alone.
     expect(visibleTo(state, hero, spot)).toBe(false);
     hero.view = undefined;
@@ -105,7 +113,7 @@ describe("the edge of the screen hides a mob from the auto-attack", () => {
     // — must not have the screen half refuse everything, or the hero could
     // never attack at all.
     const state = litStage(equipRangedSidearm(startGame()));
-    state.enemies.push(makeEnemy({ pos: north(state, 150) }));
+    state.enemies.push(makeEnemy({ pos: north(state, 180) }));
 
     step(state, idle, DT);
 
@@ -135,7 +143,7 @@ describe("the hero carries the screen the game aims through", () => {
     step(state, { ...idle, view }, DT);
 
     state.players[0].screen = "inventory";
-    state.enemies.push(makeEnemy({ pos: north(state, 150) }));
+    state.enemies.push(makeEnemy({ pos: north(state, 180) }));
     step(state, { ...idle, view }, DT);
 
     expect(state.players[0].view).toEqual(view);
@@ -181,7 +189,9 @@ describe("the conjured powers aim through the same screen", () => {
 describe("the companions engage only what the hero can see", () => {
   /** A companion formed on the hero, and a fat mob `dist` px north of him —
    * inside the party's 230px engage bubble either way. Returns what the mob had
-   * left after a second and a half of standing there. */
+   * left after four seconds of standing there. (Long enough that the companion
+   * can WALK the gap: the off-frame case has to sit past the screen's 130px
+   * vertical half-view, which is further than it can cross in a second.) */
   function bubbleBrawl(dist: number, camera: boolean): number {
     const state = litStage(startGame());
     const hero = state.players[0];
@@ -192,20 +202,20 @@ describe("the companions engage only what the hero can see", () => {
       maxHp: 500,
     });
     state.enemies.push(victim);
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 240; i++) {
       step(state, camera ? watching(state) : idle, DT);
     }
     return victim.hp;
   }
 
   it("leaves a mob inside the bubble but off the frame alone", () => {
-    // 110px north is inside the bubble (COMPANIONS.engageRadius is 230) and
-    // 13px past the top edge of a landscape phone. With no camera reported the
+    // 160px north is inside the bubble (COMPANIONS.engageRadius is 230) and
+    // 30px past the top edge of a landscape phone. With no camera reported the
     // party tears into it; with one, it is something the player cannot see and
     // the party holds off beside a hero holding his own fire.
-    expect(COMPANIONS.engageRadius).toBeGreaterThan(110);
-    expect(bubbleBrawl(110, false)).toBeLessThan(500);
-    expect(bubbleBrawl(110, true)).toBe(500);
+    expect(COMPANIONS.engageRadius).toBeGreaterThan(160);
+    expect(bubbleBrawl(160, false)).toBeLessThan(500);
+    expect(bubbleBrawl(160, true)).toBe(500);
   });
 
   it("still fights the same mob when it is on the frame", () => {
@@ -224,7 +234,7 @@ describe("the autopilot's stand-off knows where the frame ends", () => {
 
     // With one, the hero may only fire as far north as the frame goes.
     hero.view = viewAround(hero.pos);
-    expect(firingReach(state, hero, target)).toBeCloseTo(97, 0);
+    expect(firingReach(state, hero, target)).toBeCloseTo(130, 0);
   });
 });
 
@@ -234,7 +244,7 @@ describe("`nearestEnemy` takes the eyes it picks through", () => {
     const hero = state.players[0];
     hero.view = viewAround(hero.pos);
     const near = makeEnemy({ id: 1, pos: north(state, 60) });
-    const far = makeEnemy({ id: 2, pos: north(state, 150) });
+    const far = makeEnemy({ id: 2, pos: north(state, 180) });
     state.enemies.push(far, near);
 
     expect(nearestEnemy(state, hero.pos, 400, hero)?.id).toBe(1);

@@ -144,9 +144,18 @@ export const SPAWNERS = {
   /** Sprint multiplier on a summoned mob's speed while it runs in from
    * off-screen, before it reaches the approach circle. */
   runInSpeedMult: 1.8,
-  /** Approach-circle radius (world px) used HEADLESS — bots and the sim carry no
-   * camera, so the live "shorter viewport dimension" is unavailable; this
-   * approximates the phone baseline (~195 world units tall). */
+  /** Approach-circle radius (world px) used HEADLESS — engine suites and a
+   * `--view off` sim run carry no camera, so the live "shorter viewport
+   * dimension" is unavailable and this stands in for it. (The sim's normal run
+   * is NOT headless: it stamps a real rect, `SIM_VIEW_DEFAULT`.)
+   *
+   * NOTE THE UNITS: the phone baseline's shorter axis is ~260 WORLD units, not
+   * the 195 CANVAS px it is drawn in — the pitch divides the depth axis
+   * (render/tilt.ts `worldViewRect`). This 200 was set against the canvas
+   * figure and is deliberately left alone: it is a no-camera fallback that
+   * every idle-lethality baseline (tests/content/balance_test.ts) is measured
+   * under, so moving it is a balance change to be made and re-measured on
+   * purpose, not a units correction. */
   approachRadiusFallback: 200,
   /** Extra world px beyond the camera's half-diagonal a summoned mob is placed,
    * so it starts fully off-screen regardless of the arrival bearing. */

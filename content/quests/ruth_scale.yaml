@@ -37,11 +37,30 @@ items:
   - id: pried_scale
     name: A LIZARD GOD'S SCALE
     icon: icon_pried_scale
-    dropFrom: [scaled_ancestor]
-    # CERTAIN, because the carrier is a rampage-only hellborn gated to JESUS —
-    # meeting one at all is the errand. A farm rate on a mob the hero may see
-    # once in a campaign is not a hunt, it is a lottery on a beat the story
-    # needs to happen.
+    # THREE CARRIERS, BECAUSE THE FIRST ONE IS NOT ON THE FIELD BELOW JESUS.
+    # THE SCALED ANCESTOR is the scale off the god himself, and he is a
+    # rampage-only hellborn: the rift's hellgates are `minDifficulty:
+    # nightmare` and his own entry in `content/maps/the_rift.yaml` adds
+    # `minDifficulty: jesus`, so on EASY/MEDIUM/HARD/NIGHTMARE he cannot
+    # appear at all — and an errand tops the HORDE up, never a one-off
+    # (`quests/restock.ts`), so nothing rescues it. Ruth runs this errand on
+    # every rung (five per-rung caches hang off it, and it pays the game's
+    # only chest), so the piece needs a carrier every rung reaches. The gods'
+    # own tribute road supplies two, and neither needs a word of new fiction:
+    #   RASPUTIN is PAID by the scaled gods to watch that road, and a scale is
+    #   what they pay in. A pinned elite on the thoroughfare, so the errand can
+    #   finish mid-void rather than only at the far door.
+    #   BRO OMEGA sold them the rift and the tribute walked through his door.
+    #   It is `role: boss` standing with THE FOUNDER, and `killBoss` clears
+    #   only once no boss is left alive — so a cleared rift has killed it, on
+    #   every rung and every seed. That is the floor under the errand:
+    #   Rasputin is spareable and THE FOUNDER flees rather than dying, so this
+    #   is the one carrier no run can route around.
+    dropFrom: [scaled_ancestor, grigori_rasputin, bro_omega]
+    # CERTAIN, because every carrier is a ONE-OFF rather than a horde breed —
+    # the 1-in-8 ceiling binds only what a map's knots are made of. Meeting one
+    # at all is the errand; a farm rate on a mob the hero sees once in a
+    # campaign is not a hunt, it is a lottery on a beat the story needs.
     dropChance: 1
 reward:
   xpShare: 1

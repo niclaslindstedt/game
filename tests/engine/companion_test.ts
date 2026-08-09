@@ -471,9 +471,11 @@ describe("companions in the field", () => {
   // and a companion outrun to the camera's edge latches into FOLLOW mode —
   // dropping the fight to move with him until he stops.
   describe("keeping up with a moving hero", () => {
-    /** The phone world viewport (~422×195) centred on `pos`. */
+    /** The phone world viewport (~422×260 WORLD units — the 422×195 canvas of
+     * the reference device with its depth axis divided by the pitch, see
+     * `render/tilt.ts` `worldViewRect`) centred on `pos`. */
     function viewAround(pos: { x: number; y: number }) {
-      return { x: pos.x - 211, y: pos.y - 97, width: 422, height: 195 };
+      return { x: pos.x - 211, y: pos.y - 130, width: 422, height: 260 };
     }
     /** Steer the hero hard to the right, with the camera riding along. */
     function marchRight(state: GameState): GameInput {

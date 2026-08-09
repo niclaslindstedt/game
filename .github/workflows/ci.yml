@@ -74,6 +74,14 @@ jobs:
       - run: npm ci
       - name: make lint
         run: make lint
+      # The named-relic invariants: every unique's base resolves, its ilvl
+      # matches the model, the per-slot armor ladder holds, and every relic has
+      # exactly ONE home in the drop tables. Deliberately a step of THIS job
+      # rather than one of its own: the checker reads the compiled catalogs, and
+      # `make lint` has just built them — a separate job would recompile the
+      # whole content tree to run a script that takes a second.
+      - name: make unique-check
+        run: make unique-check
 
   # No content build: every generated tree is in .prettierignore, so formatting
   # has nothing to say about them and this job only needs the checkout.

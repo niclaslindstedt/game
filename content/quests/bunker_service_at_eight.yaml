@@ -10,6 +10,13 @@ lore: >
   that either, and the chef cooks it regardless.
 requires:
   - bunker_pantry
+# THE THING IN THE CORRIDOR IS A HELLBORN, so the errand is only offered on the
+# rungs it exists on. PERMAFROST SAINT comes out of THE BUNKER's rampage-opened
+# hellgates, and the carve tags every one of them `minDifficulty: nightmare`
+# (mapgen/generate.ts) — below that ANATOLE was asking for a kill no run could
+# make, and the tracker sat on a named mob that was never going to be on the
+# field. Nothing else in the game spawns one.
+minDifficulty: nightmare
 offer:
   - - SOMETHING COLD WALKS THE SERVICE CORRIDOR AND THE STAFF WILL NOT PASS IT.
   - - I CANNOT PLATE FIVE COURSES FROM A KITCHEN NOBODY WILL WALK OUT OF.

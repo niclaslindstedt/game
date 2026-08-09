@@ -35,12 +35,16 @@ wall" fix:
   short clear sweep proves nothing), and "visible" must mean the REAL
   screen — sight per bearing is the distance to the camera rect's edge
   (`state.view`, stamped by step() from `GameInput.view`; headless falls
-  back to the phone-landscape baseline ~211×97 half-extents), scaled by the
+  back to the phone-landscape baseline ~211×130 half-extents — WORLD
+  units, the 422×195 canvas with its depth axis divided by the pitch),
+  scaled by the
   `wallSightFrac` knob.
 
 - **The sim now watches through a camera by default.** `simulate-run` stamps
-  a player-centred, level-clamped 422×195 rect (the landscape-phone
-  baseline) into `input.view` every tick (`--view WxH` overrides, `--view
+  a player-centred, level-clamped 422×260 rect (the landscape-phone
+  baseline in WORLD units — the 422×195 CANVAS divided by the pitch down its
+  depth axis; it read 422×195 for a while, a camera 25% short) into
+  `input.view` every tick (`--view WxH` overrides, `--view
   off` restores the blind-headless read). This turns ON the view-aware rules
   the old sim silently skipped — enemy targeting only shoots on-screen
   monsters, spawner summon-in places off-camera, the wall sense sees the

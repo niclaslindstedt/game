@@ -589,9 +589,11 @@ from somewhere that would still have him, tries to act his way out of the fight
 before playing "the avalanche" — and the joke is that his one honest line is an
 accident: mid-performance he blurts that he watched them walk "the loud girl"
 past his cellar, still fighting. He drops a bottomless carafe. **THE LEAK**, the
-whistleblower in exile under the water tower, reveals the archive he leaked
-became the very training corpus the SUPERCORE was raised on; he fights from
-cover and drops a dead man's switch and the Snow archive.
+man under the water tower to whom all four thousand of the park's cameras
+report, ran the watching for a living and then published everything the watching
+held — and nobody read it but the machine, so his proof became the very training
+corpus the SUPERCORE was raised on. He fights from cover and drops a dead man's
+switch and **THE CORPUS**.
 
 Two universes of fleeing end here: **THE FOUNDER** is cornered in the
 control-center compound with no rift left to tear and no security to call, and

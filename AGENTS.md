@@ -54,6 +54,7 @@ make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews (runs make levels)
 make levels        # recompile every content catalog from content/*.yaml
 make lua-vm        # compile engine/lib/lua/ for the SHIPPED mod compiler
+make unique-check  # audit every named relic — bases, ilvl, armor ladder, drop homes (CI gate)
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO

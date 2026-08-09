@@ -1,19 +1,19 @@
-name: guard_kremlin_1
+name: guard_continuity_1
 family: bunker
 size: [20, 20]
 description: >
-  KREMLIN SHADOW — Vladimir The Strongman's personal detail: a heavyset black-suited wall
+  CONTINUITY SHADOW — THE STRONGMAN's personal detail: a heavyset black-suited wall
   behind a red visor, with the same red on his armband and
   his tie. One of six identical wardens, told apart only by livery.
 subject:
   kind: elite bodyguard
-  name: KREMLIN SHADOW
+  name: CONTINUITY SHADOW
   build: heavyset, a size larger than the rank-and-file so his mass reads as menace
   attire: matte-black suit worn open over a white shirt
   features: a red visor across the eyes and a red armband at the bicep
   accent: red tie
   pose: arms held out from the bulk, planted immovably, hands showing
-  flavor: Vladimir The Strongman's personal detail — and, though nobody in the suite knows it yet, the machine's warden
+  flavor: THE STRONGMAN's personal detail — and, though nobody in the suite knows it yet, the machine's warden
 palette:
   C: "#d23c42" # red livery
   K: "#0c0b12" # near-black suit and hair

@@ -178,6 +178,50 @@ export function migrateSoloTotals(
   return totals;
 }
 
+/**
+ * A RENAMED UNIQUE KEEPS ITS BADGE. Every unique mints a badge id of
+ * `unique_<id>` (`achievement-defs.ts`), so retiring a shipped unique's id
+ * retires the id a player already earned under — the badge silently reverts to
+ * unearned and the arsenal counter drops by one. These two were renamed to keep
+ * the game clear of a living person's likeness (`docs/naming.md`); the find
+ * they record still happened, so the unlock is carried across on load.
+ *
+ * Keep an entry forever once added: a save is only migrated on the loads that
+ * follow the rename, and a player who does not open the game until two renames
+ * later still holds the oldest id.
+ */
+export const RENAMED_BADGES: Readonly<Record<string, string>> = {
+  unique_honorary_rank: "unique_courtesy_star",
+  unique_the_kremlin_ushanka: "unique_the_incumbents_ushanka",
+};
+
+/** Rewrite retired badge ids to the ones they were renamed to. */
+export function migrateRenamedBadges<
+  T extends {
+    unlocked: Record<string, number>;
+    unseen: string[];
+    meta: Record<string, unknown>;
+  },
+>(save: T): T {
+  for (const [old, next] of Object.entries(RENAMED_BADGES)) {
+    const earned = save.unlocked[old];
+    if (earned === undefined) continue;
+    // The earlier find wins: a player who somehow holds both keeps the first
+    // date, which is what the badge's "earned on" line is for.
+    save.unlocked[next] = Math.min(
+      earned,
+      save.unlocked[next] ?? Number.POSITIVE_INFINITY,
+    );
+    delete save.unlocked[old];
+    if (save.meta[old]) {
+      save.meta[next] ??= save.meta[old];
+      delete save.meta[old];
+    }
+  }
+  save.unseen = [...new Set(save.unseen.map((id) => RENAMED_BADGES[id] ?? id))];
+  return save;
+}
+
 /** Every wearable slot, the full-outfit roster (`EquipSlot` order). */
 export const EQUIP_SLOTS = [
   "weapon",

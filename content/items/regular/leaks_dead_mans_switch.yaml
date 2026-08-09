@@ -2,9 +2,9 @@ id: leaks_dead_mans_switch
 kind: gear
 rarity: regular
 name: DEAD MAN'S SWITCH
-description: THE LEAK's dead man's switch, still armed. The archive it
-  threatens to publish already leaked — it raised the SUPERCORE — but the
-  machine can't be sure what else is on it.
+description: THE LEAK's dead man's switch, still armed. What it threatens to
+  publish is already published — it raised the SUPERCORE — but the machine
+  can't be sure what else is on it.
 slot: trinket
 bonuses:
   maxHp: 35

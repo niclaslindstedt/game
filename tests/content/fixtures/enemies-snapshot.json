@@ -1432,6 +1432,28 @@
     "speed": 20,
     "sprite": "guard_alignment"
   },
+  "guard_continuity": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_continuity",
+    "levelBonus": 2,
+    "lore": "THE STRONGMAN's detail, seconded from the continuity-of-power programme to guard a bathrobed backup of a head of state. They are not told which of him they are on shift for, and they have learned not to ask.",
+    "name": "CONTINUITY SHADOW",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_continuity"
+  },
   "guard_depot": {
     "ai": {
       "aggroRadius": 230,
@@ -1475,28 +1497,6 @@
     "role": "minion",
     "speed": 20,
     "sprite": "guard_feed"
-  },
-  "guard_kremlin": {
-    "ai": {
-      "aggroRadius": 230,
-      "leashRadius": 340
-    },
-    "contactCooldownMs": 750,
-    "contactDamage": 30,
-    "critChance": 0.14,
-    "dropProfile": {
-      "dropBonus": 0.5,
-      "tierBonus": 0.4
-    },
-    "hp": 380,
-    "id": "guard_kremlin",
-    "levelBonus": 2,
-    "lore": "THE STRONGMAN's detail, seconded from the continuity-of-power programme to guard a bathrobed backup of a head of state. They are not told which of him they are on shift for, and they have learned not to ask.",
-    "name": "KREMLIN SHADOW",
-    "radius": 11,
-    "role": "minion",
-    "speed": 20,
-    "sprite": "guard_kremlin"
   },
   "guard_ledger": {
     "ai": {
@@ -4229,10 +4229,10 @@
         ]
       },
       [
-        "I DO. I WALKED OUT WITH AN ARCHIVE - EVERY SECRET THERE WAS. THEN I NEEDED A DOOR."
+        "I DO. I RAN THE WATCHING FOR A LIVING. THEN I PUBLISHED EVERYTHING THE WATCHING HELD."
       ],
       [
-        "ASYLUM CAME WITH A DESK. TRUST ME BRO AI TRAINED THE SUPERCORE ON MY ARCHIVE. IT LEARNED US ALL."
+        "NOBODY READ IT. THE MACHINE DID. TRUST ME BRO TRAINED THE SUPERCORE ON MY PROOF. IT LEARNED US ALL."
       ],
       {
         "hero": [
@@ -4253,7 +4253,7 @@
       "items": ["leaks_dead_mans_switch"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": ["snow_archive"],
+      "storyItems": ["corpus_drive"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -4262,7 +4262,7 @@
       "weapons": 0,
       "xpScrolls": 1
     },
-    "lore": "He walked out with an archive of every secret and then needed somewhere that would not send him back; the asylum came with a desk. The archive became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about it.",
+    "lore": "He ran the park's watching for a living - all four thousand cameras - and then published everything the watching held. Nobody deleted a thing and nobody read it either, except the machine: his proof became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about that.",
     "mechanics": {
       "abilities": [
         {

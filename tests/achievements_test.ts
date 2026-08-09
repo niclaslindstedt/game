@@ -37,7 +37,9 @@ import {
   emptyTotals,
   EQUIP_SLOTS,
   maxLevelRuns,
+  migrateRenamedBadges,
   migrateSoloTotals,
+  RENAMED_BADGES,
   SPEED_CLEAR_MS,
 } from "../pwa/src/game/achievement-totals.ts";
 import { pendingReports } from "../pwa/src/game/achievement-sync.ts";
@@ -357,6 +359,65 @@ describe("lifetime totals reducer", () => {
     applyRunStart(totals, "b");
     expect(totals.totalRuns).toBe(3);
     expect(maxLevelRuns(totals)).toBe(2);
+  });
+});
+
+describe("renamed badges keep their unlock", () => {
+  // A unique's badge id is `unique_<id>`, so renaming a shipped unique retires
+  // the id the player earned under. RENAMED_BADGES carries them across; if it
+  // stops working the badge silently reverts to unearned, which is the kind of
+  // loss nobody reports as a bug.
+  it("every entry names a badge that exists now and one that does not", () => {
+    for (const [old, next] of Object.entries(RENAMED_BADGES)) {
+      expect(
+        ACHIEVEMENTS_BY_ID.get(next),
+        `${next} (target of ${old})`,
+      ).toBeTruthy();
+      expect(
+        ACHIEVEMENTS_BY_ID.get(old),
+        `${old} should be retired`,
+      ).toBeUndefined();
+    }
+  });
+
+  it("moves the unlock, its date and its unseen entry to the new id", () => {
+    const save: {
+      unlocked: Record<string, number>;
+      unseen: string[];
+      meta: Record<string, { character: string }>;
+    } = {
+      unlocked: { unique_honorary_rank: 111, other: 222 },
+      unseen: ["unique_honorary_rank", "other"],
+      meta: { unique_honorary_rank: { character: "RUTH" } },
+    };
+    migrateRenamedBadges(save);
+    expect(save.unlocked.unique_courtesy_star).toBe(111);
+    expect(save.unlocked.unique_honorary_rank).toBeUndefined();
+    expect(save.unlocked.other).toBe(222);
+    expect(save.unseen).toEqual(["unique_courtesy_star", "other"]);
+    expect(save.meta.unique_courtesy_star).toEqual({ character: "RUTH" });
+    expect(save.meta.unique_honorary_rank).toBeUndefined();
+  });
+
+  it("keeps the earlier date when a save somehow holds both ids", () => {
+    const save = {
+      unlocked: { unique_honorary_rank: 500, unique_courtesy_star: 900 },
+      unseen: ["unique_honorary_rank", "unique_courtesy_star"],
+      meta: {},
+    };
+    migrateRenamedBadges(save);
+    expect(save.unlocked.unique_courtesy_star).toBe(500);
+    expect(save.unseen).toEqual(["unique_courtesy_star"]);
+  });
+
+  it("leaves a save with no retired ids alone", () => {
+    const save = { unlocked: { other: 1 }, unseen: ["other"], meta: {} };
+    migrateRenamedBadges(save);
+    expect(save).toEqual({
+      unlocked: { other: 1 },
+      unseen: ["other"],
+      meta: {},
+    });
   });
 });
 

@@ -1251,8 +1251,8 @@
         "returnGreeting": ["WELL, LOOK WHO'S BACK. SAME STOOL, PARTNER?"],
         "stockUniques": [
           "strongmans_tracksuit",
-          "the_kremlin_ushanka",
-          "honorary_rank"
+          "the_incumbents_ushanka",
+          "courtesy_star"
         ]
       },
       "objective": {
@@ -1269,7 +1269,7 @@
         },
         {
           "kind": "story",
-          "defId": "ada_host"
+          "defId": "ada_hand"
         },
         {
           "kind": "repair"
@@ -1308,7 +1308,7 @@
       "firstKillThoughts": [
         {
           "enemy": "cowbot",
-          "thought": "boot_hill_hosts",
+          "thought": "boot_hill_hands",
           "after": "boot_hill_arrival"
         }
       ],

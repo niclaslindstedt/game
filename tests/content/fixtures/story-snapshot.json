@@ -3006,9 +3006,9 @@
     }
   },
   "storyItems": {
-    "ada_host": {
-      "icon": "icon_ada_host",
-      "id": "ada_host",
+    "ada_hand": {
+      "icon": "icon_ada_hand",
+      "id": "ada_hand",
       "lore": [
         [
           "A PARK HAND, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS."
@@ -3183,6 +3183,19 @@
       ],
       "name": "CORE LOG"
     },
+    "corpus_drive": {
+      "icon": "icon_corpus_drive",
+      "id": "corpus_drive",
+      "lore": [
+        [
+          "A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'"
+        ],
+        [
+          "EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE."
+        ]
+      ],
+      "name": "THE CORPUS"
+    },
     "engagement_report": {
       "icon": "icon_report",
       "id": "engagement_report",
@@ -3340,19 +3353,6 @@
       ],
       "name": "RIFT CREATOR"
     },
-    "snow_archive": {
-      "icon": "icon_snow_archive",
-      "id": "snow_archive",
-      "lore": [
-        [
-          "A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'"
-        ],
-        [
-          "EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE."
-        ]
-      ],
-      "name": "THE SNOW ARCHIVE"
-    },
     "space_suit": {
       "icon": "icon_suit",
       "id": "space_suit",
@@ -3420,8 +3420,8 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
-    "boot_hill_hosts": {
-      "id": "boot_hill_hosts",
+    "boot_hill_hands": {
+      "id": "boot_hill_hands",
       "pages": [
         ["IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'"],
         [

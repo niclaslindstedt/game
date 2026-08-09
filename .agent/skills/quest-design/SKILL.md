@@ -85,6 +85,19 @@ floor so a fetch quest is always finishable)
 and/or `at:` spots laid out on ACCEPT. A piece with neither can never appear —
 the build refuses it.
 
+**EVERY TARGET MUST EXIST ON EVERY RUNG THE ERRAND IS OFFERED ON, and the build
+does NOT check it.** The schema asks whether a `kill` / `killNamed` / `dropFrom`
+id EXISTS, never whether the difficulty can put it on the field — so an errand
+naming a rung-gated mob is offered, accepted, and then sits at 0/1 forever with
+nothing on screen to explain it. The trap is the `hellborn:` crop, which is
+gated TWICE: the hellgates it comes out of are stamped `minDifficulty:
+nightmare` by the carve (that line is in no authored YAML at all), and the
+second member of a map's `hellborn:` block carries its own `minDifficulty:
+jesus`. `quests/restock.ts` will not top a one-off up, so nothing rescues it.
+Two right answers — if the errand is ABOUT that horror, give the QUEST a
+matching `minDifficulty`; if it must run on every rung, name a carrier every
+rung reaches. `tests/content/quest_reachability_test.ts` is the guard.
+
 **`escorts:`** are bodies with hp the horde can reach. They follow the hero,
 stop past the leash, and the errand fails if one falls.
 
@@ -409,6 +422,8 @@ page, `lore` over 420 chars, `xpShare` over 2, an errand with no reward.
 ## After you're done — the checklist
 
 - [ ] `make levels` silent — no errors, no warnings
+- [ ] Every objective's target exists on every rung the errand is offered on —
+      `npx vitest run tests/content/quest_reachability_test.ts`
 - [ ] `make test` green (**not** `npx vitest run`), `make lint`, `make fmt-check`
 - [ ] `mod/catalog.json` regenerated if an id was added
 - [ ] `docs/story.md` + `docs/manuscript.md` updated for every spoken line

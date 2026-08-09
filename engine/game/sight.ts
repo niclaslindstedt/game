@@ -11,8 +11,9 @@
 // The fog alone is not the answer, because the fog NEVER ROLLS BACK. Ten
 // seconds into a level a hero has uncovered more floor than a phone held
 // sideways can show (`MAP.revealRadius` is 160 world px, half a landscape
-// screen is ~211 across and ~97 down), and from then on "explored" says yes to
-// most of the map. So a power with a 300 px reach — the volley, the storm, the
+// screen is ~211 across and ~130 down — the 422×195 canvas with its depth axis
+// divided by the pitch, see render/tilt.ts `worldViewRect`), and from then on
+// "explored" says yes to most of the map. So a power with a 300 px reach — the volley, the storm, the
 // singularity, the sentry grid, the well's hunt — happily marked a monster two
 // screens north that the player had no picture of: shots left the hero toward
 // nothing, damage numbers rose off the top of the frame, and a fight the player
