@@ -2401,7 +2401,7 @@ against the real import graph by `tests/content/server_deps_test.ts`. See
 
 A fourth thing ships inside every slot: **the library**, a set of static
 reference documents at `/library/` compiled from the same content the game is
-compiled from. Nine sections, ~560 pages, plus the landing page that leads them:
+compiled from. Nine sections, ~570 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its authored `lore` paragraph (what the thing IS — in the open,
