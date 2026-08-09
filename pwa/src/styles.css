@@ -85,6 +85,11 @@
      in the same units — a whole 4×3 rem so the sprite lands on an integer
      upscale at every tier. */
   --drive-dash-w: calc(2 * var(--drive-dial-size) + 4rem + 1.5rem);
+  /* How long the dashboard takes to arrive, named because the ENGINE's timing
+     is measured against it: `DRIVE.opening.dashAtPx` is the road the wagon
+     covers between the instruments appearing and the stopwatch starting, and
+     that gap is this slide plus about a second of the dash simply being there. */
+  --drive-dash-slide: 400ms;
 }
 
 /* The FF6-style window skin (`--panel-*` + `.pixel-panel`) is imported above
@@ -634,6 +639,36 @@ html.app-locked body {
      and every glyph, so the whole dashboard stays readable over a pale road, a
      lit shopfront or a set of oncoming headlights. */
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+  /* …AND IT ARRIVES. The dashboard is not on screen for the opening at all
+     (`drive.dashLive` gates the whole region), so this plays exactly once, off
+     the mount, as the town comes over the horizon — the instruments slide in
+     from the edge they are parked against and settle before the clock starts.
+
+     THE ANIMATION IS THE MOUNT'S, which is the whole reason there is no second
+     flag anywhere saying "sliding": a region that appears is a region that
+     animates in, and the one that decides WHEN is the engine
+     (`driveDashUp`) — the same fact both of the app's hosts read. */
+  animation: drive-dash-in var(--drive-dash-slide) steps(8, end) both;
+}
+
+@keyframes drive-dash-in {
+  from {
+    /* Off the left edge and clear of it — the dash is anchored 0.75rem in, so
+       its own width alone would leave the far dial still showing. */
+    transform: translateX(calc(-100% - 1rem));
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* A player who has turned motion down gets the same arrival without the travel:
+   the instruments are still absent for the opening and still appear with the
+   town, which is the beat — the sliding is only how it is dressed. */
+@media (prefers-reduced-motion: reduce) {
+  .drive-dash {
+    animation: none;
+  }
 }
 
 /* ── THE STOPWATCH ──────────────────────────────────────────────────────────

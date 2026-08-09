@@ -42,6 +42,7 @@ import {
 } from "../asset-tools/cast.mjs";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { wreckedFrames } from "../asset-tools/wreck.mjs";
+import { rollFrames } from "../asset-tools/spin.mjs";
 import { darkFrames, LAMP_SPRITES } from "../asset-tools/lamp.mjs";
 import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
@@ -287,6 +288,15 @@ export function deriveWrecks(fleet) {
     // or it renders in nothing at all.
     const palette = { ...family.palette, ...SPRITE_PALETTES[def.id] };
     for (const [name, rows] of Object.entries(wreckedFrames(def.id, grid))) {
+      register(family, name, rows, palette);
+    }
+    // …AND ITS TURNING WHEELS. Two full-canvas overlays holding nothing but the
+    // discs, struck with spokes half a step apart (`asset-tools/spin.mjs`), so
+    // the road's traffic rolls on its wheels the way the hero's own car already
+    // did. Derived from the SAME base grid as the wreck rungs and laid over
+    // whichever rung is showing, which is why a bus that has been folded in half
+    // still turns the wheel it still has.
+    for (const [name, rows] of Object.entries(rollFrames(def.id, grid))) {
       register(family, name, rows, palette);
     }
   }

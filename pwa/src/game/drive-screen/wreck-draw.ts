@@ -53,6 +53,45 @@ import { trafficSprite } from "./scenery.ts";
  */
 const MAX_FOLD = 0.66;
 
+/**
+ * HOW FAST THE TWO ROLL FRAMES MAY ALTERNATE (Hz) — the run's own ceiling
+ * (`render/vehicles.ts`), and it matters more out here than it does anywhere
+ * else. A wheel of four px radius at sixty miles an hour turns at seventy
+ * radians a second, which is a dozen bucket changes per FRAME; sampled at 60 Hz
+ * that is not a fast wheel, it is a coin toss, and the traffic reads as
+ * vibrating rather than driving.
+ */
+const WHEEL_SPIN_HZ = 14;
+
+/**
+ * …and the radius the rate is measured against (sprite px). One number for the
+ * whole fleet on purpose: the discs run from two and a half px on a scooter to
+ * four on a bus, and what this feeds is the STROBE threshold rather than the
+ * roll itself — a wheel that alternated at a bus's rate and a scooter's would
+ * be two different-looking blurs for no reason a player could ever name.
+ */
+const WHEEL_RADIUS_PX = 4;
+
+/**
+ * WHICH ROLL FRAME A VEHICLE'S WHEELS ARE ON.
+ *
+ * OFF ITS OWN POSITION, not off a clock and not off a field. A wheel's angle IS
+ * the distance it has rolled divided by its radius, and the road already knows
+ * exactly how far every vehicle has gone — so a stopped car holds one frame, a
+ * wreck coasting in slows visibly, and two vehicles side by side at the same
+ * speed turn together, all without a byte of state to keep or replicate.
+ *
+ * The ARC each frame covers grows with the speed until the alternation settles
+ * at `WHEEL_SPIN_HZ`, which is the hero car's own trick and the reason his
+ * wheels do not strobe at 174 (`drawCarAssembly`).
+ */
+function rollFrame(other: DriveTraffic): number {
+  const spinRate = Math.abs(other.speed) / WHEEL_RADIUS_PX;
+  const spinArc = Math.max(Math.PI / 5, spinRate / WHEEL_SPIN_HZ);
+  const angle = Math.abs(other.pos.x) / WHEEL_RADIUS_PX;
+  return Math.floor(angle / spinArc) % 2;
+}
+
 /** Draw one vehicle's body — folded, turned, lifted and bloodied as the sim
  * says. `lift` is its height off the road in screen px. */
 export function drawTrafficBody(
@@ -68,6 +107,18 @@ export function drawTrafficBody(
     other.gore > 0
       ? spriteByName(sprites, `${vehicleDef(other.variant).id}_gore`)
       : undefined;
+  // ITS WHEELS, TURNING. A derived overlay holding the discs and nothing else
+  // (`asset-tools/spin.mjs`), laid over whichever damage rung is showing — so a
+  // car folded in half still turns the wheel it still has, and the fold, the
+  // yaw and the facing flip below carry the wheels with the body because they
+  // are the same transform.
+  //
+  // A wreck's wheels stop because `rollFrame` reads its POSITION: a vehicle that
+  // is not moving is not turning, with nothing to switch off.
+  const roll = spriteByName(
+    sprites,
+    `${vehicleDef(other.variant).id}_roll_${rollFrame(other)}`,
+  );
   const fold = crushShare(other);
   billboard(ctx, other.pos.x, other.pos.y, camera.x, camera.y, () => {
     ctx.save();
@@ -83,6 +134,7 @@ export function drawTrafficBody(
     const ox = -Math.round(sprite.width / 2);
     const oy = -Math.round(sprite.height - 2);
     drawFolded(ctx, sprite, ox, oy, fold.nose, fold.tail);
+    if (roll) drawFolded(ctx, roll, ox, oy, fold.nose, fold.tail);
     if (gore) {
       ctx.globalAlpha = Math.min(1, other.gore);
       drawFolded(ctx, gore, ox, oy, fold.nose, fold.tail);

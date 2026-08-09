@@ -54,12 +54,12 @@ const RIDER_SPRITES = [
   "rider_skater",
 ];
 const RIDER_SEATS = {
-  traffic_motorcycle: { dx: 4, dy: 3 },
-  traffic_scooter: { dx: 2, dy: 4 },
-  traffic_ebike: { dx: 6, dy: 5 },
-  traffic_delivery_moped: { dx: 5, dy: 4 },
-  traffic_bicycle: { dx: 3, dy: 5 },
-  traffic_skateboard: { dx: 1, dy: 1 },
+  traffic_motorcycle: { dx: -1, dy: 7 },
+  traffic_scooter: { dx: -1, dy: 7 },
+  traffic_ebike: { dx: 1, dy: 7 },
+  traffic_delivery_moped: { dx: 1, dy: 7 },
+  traffic_bicycle: { dx: 0, dy: 5 },
+  traffic_skateboard: { dx: 0, dy: 4 },
 };
 
 const args = process.argv.slice(2);

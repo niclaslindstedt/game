@@ -134,10 +134,18 @@ regions:
   # never eat the thumb), and centred rather than pushed into the corners: the
   # steering thumb lands where it lands, and the far bottom corners are the two
   # places it is most likely to be.
+  # AND IT IS NOT THERE FOR THE OPENING. The leg starts on an empty road out of
+  # town with the pedal capped and nothing being scored, and three instruments
+  # reporting that nothing is happening spend the one thing that stretch has.
+  # The whole region is gated on `drive.dashLive` — so it MOUNTS a short way
+  # before the town (`DRIVE.opening.dashAtPx`) and slides in from the left off
+  # its own mount, which is why the animation lives on `.drive-dash` and there
+  # is no second flag here saying "sliding".
   drive_dash:
     parent: drive
     order: 0
     class: drive-dash
+    visible: drive.dashLive
 
   # THE CLOCK, top right — the CABINET's corner rather than the car's.
   #
