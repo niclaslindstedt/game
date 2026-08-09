@@ -75,8 +75,8 @@ holder with the `--mods` command-line parameter, without an Acquired
 Steam License, solely to create, validate, and test Mod Content they author.
 The exception permits only the single-player use reasonably necessary to
 inspect that work. It does not permit ordinary play, playing somebody else's
-mods, or multiplayer. Regular players may not use `--mods` as a way
-around the Steam licence requirement.
+mods, distributing the Game, or multiplayer. Regular players may not use
+`--mods` as a way around the Steam licence requirement.
 
 ## 6. What is not licensed
 
