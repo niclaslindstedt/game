@@ -76,7 +76,14 @@ ragged half-width column with the right half of the window empty.
 So a page is authored as ONE line, here and in `content/`. A page written as
 TWO is spending an **explicit line break**, and the break has to earn it — a
 punchline held back, a second hand on the same note, a pause the punctuation
-cannot carry. The whole shipped campaign spends five:
+cannot carry. The whole shipped campaign spends 58, and all but five of them sit
+in prose that is already a two-hander: 25 across the SEVERANCE chain's errands,
+22 in the four steered conversations, 5 in a quest giver's greeting header, 1 in
+RUTH's receipt. Those are transcribed below as a second row inside the same
+blockquote (the SEVERANCE section is where most of them are) rather than with
+the `/` this table uses, which is the table's own shorthand and nothing the game
+prints. The five a caption, a monologue or a piece of found lore spends — the
+only five `content/` marks with an `# EXPLICIT BREAK` comment:
 
 | Where                        | The break                                             |
 | ---------------------------- | ----------------------------------------------------- |
@@ -343,7 +350,7 @@ anywhere._
 **On being spoken to afterwards** (and the header of her errand list):
 
 - SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-- WHILE YOU'RE STANDING THERE - THERE'S SOMETHING I'D ASK OF YOU.
+- THERE'S SOMETHING I'D ASK OF YOU.
 
 #### THE RECEIPT
 
@@ -558,9 +565,11 @@ come down._
 
 _The one set piece on this leg, and the only lines in the minigame that are not
 the hero's. Twenty people are sitting across all four lanes with their hands in
-the resin; four of them have something to say, and they say it in bubbles over
-their own heads on the moving road rather than in a box — a BARK, like a boss's,
-so its rows are hard rows and nothing on the screen stops for them._
+the resin; four of them have something to say — `voices: 4`, every fifth body in
+the formation, each picking one of the five lines below — and they say it in
+bubbles over their own heads on the moving road rather than in a box — a BARK,
+like a boss's, so its rows are hard rows and nothing on the screen stops for
+them._
 
 _THEY ARE RIGHT AND THEY ARE ABOUT TO BE DRIVEN THROUGH, and the lines have to
 carry both halves. Nothing here is a strawman: no chanting, no slogans that
@@ -1880,7 +1889,7 @@ universes. No ground, soft gravity, black holes, asteroid rain — and
 history's missing wandering the noise: everyone who ever vanished without a
 body fell in here. Four of them fight (TESLA, EARHART, RASPUTIN — and LUCKY,
 folklore's missing); two only speak, then dissolve — the game's first
-APPARITIONS (HOUDINI, THE KING). Each fighter, beaten to its knees, offers
+APPARITIONS (HOUDINI, THE RESIDENCY). Each fighter, beaten to its knees, offers
 the game's first moral fork: the SPARE-or-KILL verdict. Killed, it pays its
 drops and gasps its last words; SPARED, it swears a life debt (its joining
 words below) and follows the hero as a COMPANION — fighting at his side,
@@ -1939,15 +1948,15 @@ words because it cannot die.
 
 **HARRY HOUDINI:** THE TRICK TO ANY ESCAPE IS SIMPLE: BE SOMEWHERE ELSE. OBSERVE.
 
-#### THE KING — the residency between universes
+#### THE RESIDENCY — the residency between universes
 
-**THE KING:** WELL NOW. AIN'T SEEN A LIVING SOUL IN HERE SINCE THAT CARD DEALER FROM THE STRIP.
+**THE RESIDENCY:** WELL NOW. AIN'T SEEN A LIVING SOUL IN HERE SINCE THAT CARD DEALER FROM THE STRIP.
 
 **ME:** A LOUNGE SINGER. IN A HOLE BETWEEN UNIVERSES. THEY TOLD ME YOU HUNG IT UP YEARS BACK.
 
-**THE KING:** I NEVER HUNG UP A THING. I TOOK A RESIDENCY. BEST ACOUSTICS BETWEEN UNIVERSES.
+**THE RESIDENCY:** I NEVER HUNG UP A THING. I TOOK A RESIDENCY. BEST ACOUSTICS BETWEEN UNIVERSES.
 
-**THE KING:** MIND THE BLACK HOLES, FRIEND. KEEP THEM GOOD SHOES OFF THE EVENT HORIZON. BE SEEING YOU.
+**THE RESIDENCY:** MIND THE BLACK HOLES, FRIEND. KEEP THEM GOOD SHOES OFF THE EVENT HORIZON. BE SEEING YOU.
 
 ### Elites (spoken on arrival; last words as they fall — or joining words if spared)
 
@@ -2764,8 +2773,8 @@ IS stays a mystery, on purpose; what it is does not._
 ### The residents (spoken on arrival; last words as they fall)
 
 _Six of them, one per suite — each far tougher than any campaign elite, each
-ringed by a personal detail (KREMLIN SHADOWS, META SENTINELS, ORACLE
-ENFORCERS, PRIME GUARDIANS, ALIGNMENT OFFICERS, LOYALTY ENFORCERS)._
+ringed by a personal detail (KREMLIN SHADOWS, FEED SENTINELS, LEDGER
+ENFORCERS, DEPOT GUARDIANS, ALIGNMENT OFFICERS, LOYALTY ENFORCERS)._
 
 #### THE STRONGMAN — the backup
 
@@ -3477,7 +3486,7 @@ at the top of this file).
 | Cutscenes — prelude + travel scenes (captions, `say` beats)           | `content/cutscenes/<id>.yaml` (compiled to `engine/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                              |
 | Per-level opening monologues (`intro`) + epilogues (`outro`)          | `content/levels/<id>.yaml` (compiled to `engine/generated/levels.ts` by `make levels`)                                                                                                                   |
 | Elite/boss `dialogue` + `lastWords`                                   | `content/enemies/<biome>/<id>.yaml` (compiled to `engine/generated/enemies.ts` by `make levels`)                                                                                                         |
-| Hero's inner thoughts (`firstKillThoughts`)                           | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef`)                                                                                                           |
+| Hero's inner thoughts (`firstKillThoughts` / `firstSightThoughts`)    | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef` — the pair being the same beat hung on a KILL or on a SIGHTING)                                            |
 | The scripted opening strike's blows (`openingStrike`)                 | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                |
 | Hero's HELLBORN first-sighting reads (`hellborn_*`)                   | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                   |
 | What he says at a door with no open road                              | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `engine/game/story.ts`)                                                       |
@@ -3489,12 +3498,12 @@ at the top of this file).
 | What the CROWD on that road are thinking                              | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car) |
 | Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `engine/game/companions.ts`)                                                                                                      |
 | Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `engine/generated/story-items.ts` by `make levels`)                                                                                                              |
-| The wandering merchant's greetings                                    | `engine/game/defs/levels/*.ts` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                |
+| The wandering merchant's greetings                                    | `content/levels/<id>.yaml` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                    |
 | A trader's counter line (said every visit, shop panel)                | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                   |
 | Quest givers' greetings + farewells                                   | `content/quest-givers.yaml` (compiled to `engine/generated/quests.ts` by `make levels`; played by `engine/game/quests/`)                                                                                 |
 | Every errand's ask, nag and handover                                  | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                                                              |
 | A talk the player STEERS (speaker lines + the hero's rows)            | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                 |
-| The merchant's "welcome back" (return visits)                         | `engine/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                              |
+| The merchant's "welcome back" (return visits)                         | `content/levels/<id>.yaml` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                  |
 | Bestiary lore (`EnemyDef.lore` — described, not spoken)               | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                       |
 | Loose UI copy (how-to-play, not story)                                | `pwa/src/game/copy.ts`                                                                                                                                                                                   |
 | Brand strings (title, tagline — not story)                            | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                               |
