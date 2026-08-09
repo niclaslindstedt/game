@@ -23,7 +23,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createDrive,
   createDriveDriver,
+  driveDashUp,
   driveDriverInput,
+  driveHandsOff,
   driveScore,
   driveVerdict,
   stepDrive,
@@ -34,6 +36,8 @@ import {
   type DriveParams,
   type DriveState,
 } from "@game/core";
+
+import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
@@ -329,6 +333,21 @@ export function DriveScreen({
   const [hud, setHud] = useState<DriveDials>(() =>
     driveDials(createDrive(params), false),
   );
+  /**
+   * THE APPROACH'S COUNTDOWN, as the screen needs it — two booleans, published
+   * by the frame loop only when one of them moves.
+   *
+   * `held` is the whole opening: the car is being carried at the road's own pace
+   * and nothing the player does reaches it, which is what GET READY is on screen
+   * to say. `dash` is the last second of it: the wheel has been handed back and
+   * the instruments slide in from the left. The pedal arrives when `held` goes
+   * false, with the clock.
+   *
+   * SEEDED HELD because that is what a fresh road is, and the first frame will
+   * confirm it — seeding it the other way would flash the dashboard on for one
+   * frame at the top of every leg.
+   */
+  const [opening, setOpening] = useState({ held: true, dash: false });
   /** The damage dial's fresh-slice anchor. Held across ticks (and across a
    * restart, which lays a clean car and snaps it back to nothing on its own). */
   const wearTrailRef = useRef(createWearTrail());
@@ -832,6 +851,19 @@ export function DriveScreen({
         const next = driveDials(drive, pausedRef.current, wearTrailRef.current);
         return sameDials(prev, next) ? prev : next;
       });
+      // THE COUNTDOWN, republished only when it MOVES. Two booleans and three
+      // states between them: held (GET READY, no dashboard, no controls), the
+      // wheel handed back a second out (the dashboard slides in), and the flag.
+      // Read off the engine rather than off the distance, because where the
+      // opening ends is the ROAD's decision and this screen is not the only
+      // thing that asks (`driveHandsOff` / `driveSteerOnly`).
+      setOpening((prev) => {
+        const held = driveHandsOff(drive);
+        const up = driveDashUp(drive);
+        return prev.held === held && prev.dash === up
+          ? prev
+          : { held, dash: up };
+      });
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
@@ -886,7 +918,37 @@ export function DriveScreen({
           the player reads in this game is the pixel font, and a browser
           monospace here made the minigame look like a different program —
           exactly what an interlude must not do. */}
-      <HudRoot ctx={hudContext} />
+      <div
+        className={
+          opening.dash ? "drive-hud-shelf drive-hud-in" : "drive-hud-shelf"
+        }
+      >
+        <HudRoot ctx={hudContext} />
+      </div>
+
+      {/* GET READY — the approach's countdown, said out loud.
+
+          The car is being carried at the road's own pace and the pedal reaches
+          nothing (`driveHandsOff`); a second before the flag the wheel comes
+          back and the dashboard slides in beside this, and then the town
+          arrives and this goes. A player handed straight from a menu into a
+          side-on car at seventy with a crowd coming needs the same three words
+          every arcade racer has ever opened with — and, more than the words, a
+          beat in which nothing can go wrong yet.
+
+          Inert, aria-hidden and out of the way of the thumb: the last second of
+          it is genuinely steerable, and a caption that ate the pad would be a
+          countdown the player could not use. */}
+      {opening.held && (
+        <div className="drive-ready" aria-hidden="true">
+          <PixelText
+            font={assets.font}
+            text="GET READY"
+            scale={3}
+            color="#ffd75e"
+          />
+        </div>
+      )}
 
       {/* THE PAD — one thumb, anywhere on the picture. Dragging from where the
           thumb went down is the push; letting go means carry on, which is the
@@ -972,6 +1034,12 @@ export function DriveScreen({
             portrait={heroPortrait}
             pageKey={`${speech.id}:${speech.page}`}
             revealRef={revealRef}
+            // NOBODY CAN PRESS THIS ONE. It is inert by design (see above), so
+            // it must not draw the "there is more" arrow at a player who has
+            // nothing to press it with — and it turns its own screens instead,
+            // or the tail of a page that folded on a narrow phone would simply
+            // never be shown.
+            inert
           />
         </div>
       )}

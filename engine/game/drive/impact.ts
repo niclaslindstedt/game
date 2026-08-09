@@ -51,6 +51,17 @@ const HALF_BODY = 24;
  * footprint radius the run's own blockers use, so the car is exactly as wide
  * here as it is when it is parked furniture. */
 const BODY_RADIUS = CAR.footprint.radius;
+/**
+ * HOW NEARLY IN LINE TWO BODIES HAVE TO BE for a nose already inside the other
+ * one's length to count as a REAR-ENDING rather than as a clip — as a share of
+ * the contact reach.
+ *
+ * Small on purpose. Outside it nothing changes at all: a corner caught on the
+ * way past is a sideswipe, costs the normal sum nothing and is paid for in
+ * friction (`scrape`), which is the ordering the whole minigame teaches. Inside
+ * it the two are in the same lane and one of them is in the back of the other.
+ */
+const REAR_END_BAND = 0.3;
 
 /** One solved collision — everything both parties need to answer for it. */
 export type Impact = {
@@ -166,6 +177,23 @@ export function solveImpact(
    * pass 0 and everything with bodywork passes 1.
    */
   scrape = 0,
+  /**
+   * HOW MUCH OF THE TWO BODIES IS ACTUALLY ON THE ROAD, 0 → 1 — the perspective
+   * band, applied to the SUM of the two extents.
+   *
+   * 1 (the default) is everything that is honestly ground-to-roof: a person
+   * standing on the tarmac, a lamp post, anything the whole flank of a car meets
+   * at any height. Below 1 is two things that are both mostly AIR above their
+   * sills, which is every vehicle-on-vehicle contact on this road — see
+   * `DRIVE.impact.bodyBandFrac` for why the picture and the model disagree about
+   * that, and which of them is lying.
+   *
+   * It scales the CONTACT TEST and nothing else. Everything downstream — the
+   * normal, the sweep, the impulse, the energy — is solved from the geometry
+   * that survives it, so a narrower band changes WHETHER two cars met and never
+   * what the meeting was worth.
+   */
+  band = 1,
 ): Impact | null {
   // THE CONTACT POINT: the nearest spot on the car's own axis segment. The
   // segment is the 48-px body laid along the road, so a thing off the END of it
@@ -188,13 +216,66 @@ export function solveImpact(
   );
   let nx = nearestX - contact.x;
   let ny = bodyPos.y - contact.y;
+  const reach = (BODY_RADIUS + bodyRadius) * band;
   const dist = Math.hypot(nx, ny);
-  if (dist > BODY_RADIUS + bodyRadius) return null;
+  if (dist > reach) return null;
   if (dist < 1e-6) {
     // Dead centre — the body is UNDER the car. Push it out along the nose,
     // which is where it was going anyway.
     nx = carDir;
     ny = 0;
+  } else if (
+    nx === 0 &&
+    // ONLY SOMETHING WITH A LENGTH. `nx === 0` means the two SEGMENTS overlap,
+    // and a thing with no extent along the road has no segment to overlap: for a
+    // person or a lamp post it means nothing more than "level with the car", and
+    // that is the abeam case the whole glancing-blow model is built on. Reading
+    // it as a rear-end would make every pedestrian who walks into the flank
+    // within a few px of the axis cost a square hit's worth of speed — which is
+    // most of a crowd, and it visibly halved the pace the auto-driver could hold.
+    bodyHalfLength > 0 &&
+    alongRaw * carDir > 0 &&
+    Math.abs(ny) < reach * REAR_END_BAND
+  ) {
+    // BURIED IN THE BACK OF IT — the one case the geometry above cannot answer
+    // on its own, and the reason is TUNNELLING.
+    //
+    // `nx` is the gap between the two EXTENTS along the road, and zero means
+    // they OVERLAP: this body is somewhere inside the car's own length. Read off
+    // the residual that is a pure sideswipe — the whole remaining separation is
+    // lateral, so the contact normal runs straight across the road, the
+    // squareness is zero and the collision costs no speed, no damage and no punt
+    // at all. Which is the correct answer for a body ABEAM and precisely the
+    // wrong one for a car the wagon has just driven into the back of.
+    //
+    // AND IT IS NOT A CORNER CASE. The wagon closes on slow traffic at 700-odd
+    // px/s and a tick is 16 ms, so it covers about twelve px between frames
+    // against a contact reach of ten: a pair that was clear last frame is
+    // DEEPLY OVERLAPPED this one, every time, and the frame that first sees them
+    // touching never sees them touching at the edge. The traffic colliding with
+    // ITSELF (`between.ts`) shunts cars into the same state directly in front of
+    // him. A rear-end that costs nothing is the one collision on this road the
+    // player would not believe.
+    //
+    // So the normal is reconstructed at the moment of FIRST TOUCH rather than
+    // read off the overlap: for two things closing along the road, that is the
+    // point on the contact circle at this lateral offset, which is the `swept`
+    // leg below. Dead behind is dead square, and the answer falls away as the
+    // offset grows — no rule about which end of the car, because the sweep has
+    // already settled that the two were closing.
+    //
+    // IT IS A NARROW BAND AND IT HAS TO BE (`REAR_END_BAND`), because the case
+    // next door is a CORNER CLIP and must stay free (a graze costs the normal
+    // sum nothing and is paid for in friction). The (1 − t) taper is what makes
+    // the two MEET rather than step: at the band's edge this answer is the
+    // lateral one, so a hair of lane offset can never turn a free graze into a
+    // fifth of the wagon.
+    const band0 = reach * REAR_END_BAND;
+    const swept = Math.sqrt(Math.max(0, reach * reach - ny * ny));
+    nx = carDir * swept * (1 - Math.abs(ny) / band0);
+    const len = Math.hypot(nx, ny);
+    nx /= len;
+    ny /= len;
   } else {
     nx /= dist;
     ny /= dist;

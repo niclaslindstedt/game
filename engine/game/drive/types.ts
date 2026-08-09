@@ -341,6 +341,47 @@ export type DriveTraffic = {
   cruise: number;
   /** Lateral speed (world px/s) — zero until something shunts it. */
   slew: number;
+  /**
+   * WHICH LANE ITS DRIVER IS AIMING FOR — the one piece of INTENT on this
+   * shape, and what makes the traffic drivers rather than rails.
+   *
+   * A vehicle used to be born on a lane centre and hold that y for its whole
+   * life, so the road was four conveyor belts: nothing wobbled, nothing pulled
+   * out, nothing went round the hatchback somebody left half in the gutter, and
+   * a player who found a clear lane could hold it because the lane could not
+   * change its mind. This is the field that lets it. The driver picks a lane,
+   * steers toward it (`ai.ts`), and picks a different one when the car in front
+   * is slower than it wants to go.
+   *
+   * The POSITION is still the truth — everything that collides, draws or
+   * despawns reads `pos.y` — so a car mid-change is genuinely between two lanes
+   * and genuinely in the way of both. Meaningless for a pavement rider, who is
+   * not in a lane at all and weaves off `phase` instead.
+   */
+  lane: number;
+  /**
+   * …AND HOW LONG UNTIL IT MAY CHANGE ITS MIND AGAIN (ms). Hysteresis, for the
+   * same reason the auto-driver has some: a driver re-deciding its lane sixty
+   * times a second sits on the white line trading between two of them.
+   */
+  laneHoldMs: number;
+  /**
+   * HOW HARD THIS DRIVER IS TRYING — 1 is somebody going home from work.
+   *
+   * It is the ONE number the chase rides on, and it is deliberately a dial
+   * rather than a `police: true`: a car being chased and the cars chasing it are
+   * not a special kind of vehicle, they are ordinary vehicles whose driver is
+   * willing to change lanes on a shorter gap, steer harder to do it, and follow
+   * the car in front far closer than anybody sane would. Which is also why they
+   * are the ones that crash into each other.
+   */
+  urgency: number;
+  /**
+   * ITS BLUE LIGHTS ARE ON. Police only, and only while it is actually chasing
+   * somebody — the renderer draws the beacons and nothing in the sim reads it,
+   * because a siren does not change a collision.
+   */
+  siren: boolean;
   /** Which of the traffic sprites it wears — an index into the FLEET
    * (`drive/fleet.ts`), which is also what says what it weighs. */
   variant: number;
@@ -450,6 +491,20 @@ export type DriveTraffic = {
    * separation below does most of the work; this closes the rest.
    */
   hitCooldownMs: number;
+  /**
+   * …AND THE SAME CLOCK FOR A BLOW FROM ANOTHER VEHICLE — a SECOND one, and the
+   * separation is load-bearing rather than tidy.
+   *
+   * Two cars that have just piled into each other stay overlapped for dozens of
+   * ticks, exactly as the hero and a car he shunted do, so the between-traffic
+   * pass needs its own "one contact is one impact" latch (`between.ts`). Spent
+   * on `hitCooldownMs` it would be an answer to a different question: that field
+   * is what the HERO's collision pass skips on, so a pile-up in the lane ahead
+   * would be un-hittable for half a second after it happened — the player would
+   * drive clean through the crash he was braking for. What has already been hit
+   * by somebody else is still very much there.
+   */
+  crashCooldownMs: number;
   /**
    * HOW FAR EACH END HAS FOLDED IN, in world px of crush depth — the vehicle's
    * own structural deformation, kept per END because that is where a collision

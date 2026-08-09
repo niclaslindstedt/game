@@ -181,6 +181,11 @@ export function collide(drive: DriveState): void {
       // absorbed by both of them. Without it a sideswipe at the top end was
       // free (`DRIVE.impact.scrapeFriction`).
       1,
+      // …AND ONLY THE BOTTOM OF EITHER BODY IS ON THE ROAD. Two vehicles are
+      // both mostly air above the sills as far as the lanes are concerned —
+      // see `DRIVE.impact.bodyBandFrac`, which the crowd and the lamp posts
+      // deliberately do not get.
+      DRIVE.impact.bodyBandFrac,
     );
     if (!hit) continue;
     const loss = spend(drive, hit.speedLoss);
@@ -301,6 +306,10 @@ export function collide(drive: DriveState): void {
       // rather than a surface that scrapes, and it is met square nearly every
       // time anyway.
       parked ? 1 : 0,
+      // …and it is a CAR, so only the bottom of it is on the road. A LAMP POST
+      // is a column from the pavement to well above the roof line and takes the
+      // whole body of the wagon — which is the difference the band is for.
+      parked ? DRIVE.impact.bodyBandFrac : 1,
     );
     if (!hit) continue;
     const loss = spend(drive, hit.speedLoss);
@@ -539,11 +548,20 @@ function rungFor(total: number, rungs: readonly number[]): number {
  * vehicle's is scaled by its own mass (`wreckForce`), so the identical blow
  * writes off a moped, folds a hatchback and barely marks a bus, and nobody had
  * to author a durability per model to get that.
+ *
+ * EXPORTED FOR THE OTHER COLLISION PASS. Two vehicles that hit each other
+ * (`between.ts`) answer for it exactly the way one hit by the wagon does — same
+ * ladder, same rungs, same write-off, same people leaving through the same
+ * glass — and the only way to guarantee that is for there to be one of this
+ * function rather than two. `fromX` is WHO HIT IT, which is the hero for every
+ * caller in this file and the other vehicle for the caller next door: it is what
+ * decides which end somebody comes out of.
  */
-function hurtTraffic(
+export function hurtTraffic(
   drive: DriveState,
   other: DriveTraffic,
   hit: Impact,
+  fromX = drive.car.pos.x,
 ): void {
   if (other.wrecked) return;
   other.wear = Math.min(2, other.wear + wreckForce(other, hit.joules));
@@ -580,9 +598,7 @@ function hurtTraffic(
   // if the blow will let them, and dead in the seat if it will not. FORCED,
   // because a structure that has given up entirely is not holding anybody in
   // on a technicality about the angle of the last hit.
-  drive.remains.push(
-    ...ejectOccupants(drive, other, hit, drive.car.pos.x, true),
-  );
+  drive.remains.push(...ejectOccupants(drive, other, hit, fromX, true));
 }
 
 /** Throw a wheel — the run's own `detachWheel` needs a `GameState` for the

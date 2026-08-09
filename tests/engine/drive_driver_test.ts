@@ -70,16 +70,34 @@ describe("the auto-driver", () => {
     const drive = createDrive(PARAMS);
     const driver = createDriveDriver();
     const opening = drive.car.speed;
-    for (let t = 0; t < 6000; t += 16) {
+    // OVER A WINDOW, NOT AT AN INSTANT, and past the opening by a real margin.
+    //
+    // The approach is a five-second COUNTDOWN (`DRIVE.opening.handsOff`) — the
+    // car is held at the road's own pace and the pedal reaches nothing — so a
+    // reading taken a beat after the flag is a reading of the first crowd. And
+    // once he IS in the town, threading is a saw: he lifts for a knot of people,
+    // takes the gap, and buries it again, so ANY single frame in there is a coin
+    // toss about which half of that he was caught on. What "it holds the
+    // throttle" actually claims is about the shape of the whole window: it gets
+    // past the pace it was handed the car at, and it spends the leg well clear
+    // of a coast to a stop.
+    let best = 0;
+    let total = 0;
+    let frames = 0;
+    for (let t = 0; t < 20000; t += 16) {
       stepDrive(drive, 16, driveDriverInput(driver, drive));
+      if (t < 6000) continue;
+      best = Math.max(best, drive.car.speed);
+      total += drive.car.speed;
+      frames++;
     }
-    // Faster than it was handed the wheel at, and above the floor the driver
-    // itself promises never to go under — which is the claim, said in the
+    // Faster than it was handed the wheel at, and averaging above the floor the
+    // driver itself promises never to go under — which is the claim, said in the
     // driver's own terms rather than as a number that has to be re-tuned every
     // time the crowd is. (A thicker crowd genuinely slows it: `threatSlowFrac`
     // buys the time to thread, and that is the driver working, not failing.)
-    expect(drive.car.speed).toBeGreaterThan(opening);
-    expect(drive.car.speed).toBeGreaterThan(
+    expect(best).toBeGreaterThan(opening);
+    expect(total / frames).toBeGreaterThan(
       DRIVE.topSpeedPx * DRIVE_BOT_DEFAULTS.floorFrac,
     );
   });

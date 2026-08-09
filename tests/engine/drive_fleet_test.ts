@@ -16,6 +16,7 @@ import {
   skipDriveOpening,
   crushDepthPx,
   DRIVE,
+  DRIVE_OUTCOME,
   haltTraffic,
   FLEET,
   impactMasses,
@@ -113,7 +114,22 @@ function hold(state: DriveState, ms: number): void {
  * because the footway is somewhere the hero's car cannot go: it weaves out to
  * meet him rather than the other way round.
  */
-function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
+function plant(
+  state: DriveState,
+  variant: number,
+  share = 0.95,
+  /**
+   * HOW MANY PEOPLE ARE IN IT — staged rather than left to the roll.
+   *
+   * How many a given car carries is a per-vehicle roll off its own id
+   * (`rollOccupants`), biased hard toward one because nearly everybody on this
+   * road is alone in the car. That is right for the road and useless to a suite
+   * asking what a FULL one does, so the cases that are about the load say so.
+   * Set here rather than after the call, because the tick below is a real
+   * collision and has already emptied it by the time `plant` returns.
+   */
+  seats?: number,
+): DriveTraffic {
   // A ROAD HOLDING NOTHING BUT WHAT THE TEST PLANTED, AND A LOG THAT STARTS
   // HERE.
   //
@@ -145,6 +161,7 @@ function plant(state: DriveState, variant: number, share = 0.95): DriveTraffic {
     { x: state.car.pos.x + 30, y: state.car.pos.y },
     0,
   );
+  if (seats !== undefined) one.occupants = seats;
   state.traffic.push(one);
   state.car.speed = DRIVE.topSpeedPx * share;
   hold(state, 16);
@@ -460,9 +477,17 @@ describe("people leaving vehicles", () => {
   it("empties a car through the screen ONLY when the blow is square", () => {
     const square = drive();
     floorIt(square, 5000);
-    const seats = vehicleDef(indexOf("traffic_sedan")).occupants;
-    expect(seats).toBeGreaterThan(0);
-    const head = plant(square, indexOf("traffic_sedan"));
+    // THIS car's own count, not its model's. How many people are in a given car
+    // is rolled per vehicle off its own id now (`rollOccupants`) — a range on
+    // the def and a bias toward one — so a suite that read the DEF would be
+    // asking how many an estate can hold rather than how many this one had.
+    // STAGED, NOT ROLLED. How many people are in a given car is a per-vehicle
+    // roll off its own id now (`rollOccupants`), biased hard toward one — and
+    // `plant` runs a tick of road before it hands the vehicle back, which on a
+    // square hit is a tick that has already emptied it. Both of those make
+    // "read the count and watch it fall" a race; setting it is neither.
+    const seats = 2;
+    const head = plant(square, indexOf("traffic_sedan"), 0.95, seats);
     hold(square, 100);
     expect(head.occupants).toBeLessThan(seats);
     expect(saidBy(square)).toContain("windscreenOut");
@@ -479,8 +504,10 @@ describe("people leaving vehicles", () => {
       clipped.car.speed * 0.98,
     );
     clipped.traffic.push(beside);
+    const aboard = beside.occupants;
+    expect(aboard).toBeGreaterThan(0);
     floorIt(clipped, 100);
-    expect(beside.occupants).toBe(vehicleDef(beside.variant).occupants);
+    expect(beside.occupants).toBe(aboard);
   });
 
   it("always empties an ONCOMING car met nose to nose, and opens the driver up", () => {
@@ -497,7 +524,6 @@ describe("people leaving vehicles", () => {
     // the two of them CLOSED.
     const state = drive();
     floorIt(state, 5000);
-    const seats = vehicleDef(indexOf("traffic_sedan")).occupants;
     const coming = createTraffic(
       state.nextId++,
       indexOf("traffic_sedan"),
@@ -507,6 +533,8 @@ describe("people leaving vehicles", () => {
       -300,
     );
     state.traffic.push(coming);
+    const seats = 2;
+    coming.occupants = seats;
     state.car.speed = DRIVE.topSpeedPx * 0.3;
     floorIt(state, 300);
 
@@ -584,13 +612,38 @@ describe("people leaving vehicles", () => {
     expect(ahead.gore).toBe(0);
   });
 
-  it("never empties the bus, because nobody is on it", () => {
+  it("empties a bus by the roomful, because a bus is a roomful", () => {
+    // THE BIGGEST MESS THIS MINIGAME CAN MAKE, and it is a fact about the SHAPE
+    // of the thing rather than about its seat count: a long band of square
+    // windows with a load of people behind it posts SEVERAL of them out at once
+    // (`DriveVehicleDef.exits`), where a saloon's one windscreen posts two. The
+    // rest of the seats are not spared — they die where they sit, on the same
+    // tally.
     const state = drive();
     floorIt(state, 5000);
-    const bus = plant(state, indexOf("traffic_bus"));
+    // A BUS IS NEVER ONE PERSON, which is the whole of what makes hitting one
+    // different from hitting anything else out here — its own range starts well
+    // above every car's (`FLEET`). Staged rather than rolled for the reason the
+    // saloon above is: `plant` runs a tick of road first, and on a square hit
+    // that tick has already emptied it.
+    expect(vehicleDef(indexOf("traffic_bus")).occupants.min).toBeGreaterThan(2);
+    const aboard = 8;
+    const bus = plant(state, indexOf("traffic_bus"), 0.95, aboard);
+    const exits = vehicleDef(bus.variant).exits;
     hold(state, 100);
-    expect(bus.occupants).toBe(0);
-    expect(saidBy(state)).not.toContain("windscreenOut");
+    // A ROOMFUL GOES THROUGH THE GLASS — as many as the body can post at once,
+    // which is what makes this the biggest sight on the road.
+    expect(aboard - bus.occupants).toBe(exits);
+    expect(saidBy(state)).toContain("windscreenOut");
+    expect(state.bodies).toBeGreaterThanOrEqual(exits);
+    // …and more of them than any car on this road can manage.
+    expect(exits).toBeGreaterThan(vehicleDef(indexOf("traffic_sedan")).exits);
+    // THE ONES LEFT IN IT ARE STILL IN IT, and that is the model rather than an
+    // oversight: whether the seats the screen could not reach die where they sit
+    // is a question about the FORCE (`eject.killForce`), and twelve and a half
+    // tonnes of bus divides a blow down to almost nothing (`wreckForce`). A car
+    // that hits a bus hurts itself far more than it hurts the bus.
+    expect(bus.occupants).toBe(aboard - exits);
   });
 
   it("kills the ones the geometry will not let out, and bloodies the glass", () => {
@@ -600,11 +653,15 @@ describe("people leaving vehicles", () => {
     // three people sitting neatly inside it.
     const state = drive();
     floorIt(state, 5000);
-    const seats = vehicleDef(indexOf("traffic_minivan")).occupants;
-    // Three rows: more people than the screen can post out in one instant, so
-    // the ones the front pair leaves behind are the whole point of the case.
-    expect(seats).toBeGreaterThan(2);
-    const van = plant(state, indexOf("traffic_minivan"));
+    // THREE ROWS, STAGED RATHER THAN HOPED FOR. More people than the screen can
+    // post out in one instant is the whole point of the case, and how many are
+    // actually in a given car is a per-vehicle roll now (`rollOccupants`) biased
+    // hard toward ONE — because nearly everybody on this road is alone in the
+    // car. A minivan CAN hold six; asking the seed for one that does would make
+    // this a test about the bias.
+    const seats = 3;
+    const van = plant(state, indexOf("traffic_minivan"), 0.95, seats);
+    expect(seats).toBeGreaterThan(vehicleDef(van.variant).exits);
     hold(state, 200);
     // Nobody is left in it: the front pair went through the screen and the row
     // behind them — who were never in front of it — died where they sat.
@@ -805,21 +862,31 @@ describe("breaking a car, physically", () => {
 
 describe("the delivery trade on the pavement", () => {
   it("puts riders outside the road band, where nothing else goes", () => {
-    const state = drive();
-    // Far enough to have laid down a good stretch of road.
-    floorIt(state, 8000);
+    // SAMPLED OVER SEVERAL ROADS, for the reason its sibling below is: the
+    // footway carries its own thin stream (`DRIVE.pavementPerKPx`), so ONE leg
+    // deals only a handful of riders and which three of the pool they are is a
+    // coin flip. A single seed passing this is luck, and a single seed failing
+    // it says nothing about the footway at all.
     const band = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
     const seen = new Set<string>();
-    for (const other of state.traffic) seen.add(vehicleDef(other.variant).id);
-    // …over a whole leg, run in chunks so the sample is the road rather than
-    // one screenful.
     const offRoad: number[] = [];
-    for (let i = 0; i < 60; i++) {
-      floorIt(state, 1000);
-      for (const other of state.traffic) {
-        const def = vehicleDef(other.variant);
-        seen.add(def.id);
-        if (def.pavement && !other.downed) offRoad.push(Math.abs(other.pos.y));
+    for (const seed of [4242, 91, 7]) {
+      const state = drive({ seed });
+      // Far enough to have laid down a good stretch of road.
+      floorIt(state, 8000);
+      for (const other of state.traffic) seen.add(vehicleDef(other.variant).id);
+      // …over a whole leg, run in chunks so the sample is the road rather than
+      // one screenful — and STOPPING AT THE END OF IT, because the road is
+      // halted the instant a leg finishes (`haltTraffic`) and chunks sampled
+      // past that are a draining road reported as a populated one.
+      for (let i = 0; i < 60 && state.outcome === DRIVE_OUTCOME.driving; i++) {
+        floorIt(state, 1000);
+        for (const other of state.traffic) {
+          const def = vehicleDef(other.variant);
+          seen.add(def.id);
+          if (def.pavement && !other.downed)
+            offRoad.push(Math.abs(other.pos.y));
+        }
       }
     }
     expect(offRoad.length).toBeGreaterThan(0);

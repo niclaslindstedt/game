@@ -39,7 +39,7 @@ import { spriteByName, type Sprites } from "../assets.ts";
 import { seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
-import { trafficSprite } from "./scenery.ts";
+import { roofBar, trafficSprite, type RoofBar } from "./scenery.ts";
 
 /**
  * How far a fold may push the two halves into each other, as a share of the
@@ -60,6 +60,9 @@ export function drawTrafficBody(
   other: DriveTraffic,
   sprites: Sprites,
   camera: Camera,
+  /** The wall clock, for the one thing on a car that is not a pose: a light bar
+   * flashing. Omitted (a still, an exhibit) draws it lit rather than dark. */
+  timeMs = 0,
 ): void {
   const name = trafficSprite(other.variant, other.rung);
   const sprite = spriteByName(sprites, name);
@@ -88,9 +91,75 @@ export function drawTrafficBody(
       drawFolded(ctx, gore, ox, oy, fold.nose, fold.tail);
       ctx.globalAlpha = 1;
     }
+    // THE BLUE LIGHTS, on the bar the art actually has (`ROOF_BARS`) rather
+    // than on the top of the sprite's own box — every vehicle here is drawn on
+    // the same 48x26 canvas, so the box is five px clear of a saloon's roof and
+    // the flash read as two lamps floating along above the car.
+    const bar = other.siren ? roofBar(vehicleDef(other.variant)) : undefined;
+    if (bar) drawBeacons(ctx, bar, timeMs);
     ctx.restore();
   });
 }
+
+/**
+ * THE BLUE LIGHTS — the only thing drawn on a vehicle that is not a POSE.
+ *
+ * Everything else in this file is the sim's answer rendered (the fold, the yaw,
+ * the flight, the glass on the inside of the windows); a light bar is a fact
+ * about the vehicle's JOB and it flashes on the wall clock rather than on
+ * anything the collision knows. `DriveTraffic.siren` is read here and by nothing
+ * in the engine, for exactly that reason: a siren does not change a collision.
+ *
+ * TWO LAMPS ALTERNATING, drawn ADDITIVELY over the roof line and haloed, which
+ * is what makes them read as light rather than as two coloured pixels — at this
+ * scale a police car is 40 px of art and the bar is three of them, so the glow
+ * is most of what the eye actually catches at the edge of the frame.
+ *
+ * IN THE SPRITE'S OWN FRAME, before the facing flip is undone — so the pair sit
+ * on the roof whichever way the car is pointed, and turn with it when something
+ * spins it. The same discipline the fold above keeps, and for the same reason.
+ */
+function drawBeacons(
+  ctx: CanvasRenderingContext2D,
+  bar: RoofBar,
+  timeMs: number,
+): void {
+  // A hard alternation rather than a fade: a real bar strobes, and a pair of
+  // lamps cross-fading reads as one purple lamp.
+  const left = Math.floor(timeMs / BEACON_MS) % 2 === 0;
+  const roofY = -bar.liftPx;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // EACH LAMP OVER THE ONE THE ART ALREADY PAINTS: the sprite's bar is red at
+  // the back and blue at the front, so the flash is the same way round and the
+  // glow sits on the colour it belongs to instead of beside it.
+  for (const [dx, color, lit] of [
+    [bar.atPx - bar.halfPx, "#ff4a4a", left],
+    [bar.atPx + bar.halfPx, "#4aa8ff", !left],
+  ] as const) {
+    ctx.globalAlpha = lit ? 1 : 0.16;
+    ctx.fillStyle = color;
+    // The lamp itself, sat ON the roof line rather than over it — a car's light
+    // bar is bolted to the roof, and a lamp floating a pixel clear of it reads
+    // as a bubble following the car about.
+    ctx.fillRect(dx - 1, roofY - 1, 2, 2);
+    // …and the halo it throws, which is the half that carries at this scale.
+    // Small and faint: at the shipped zoom a car is 90 screen px, so a glow
+    // wider than the lamp's own bar stops being light coming off a vehicle and
+    // becomes a thing in the air beside one.
+    if (lit) {
+      ctx.globalAlpha = 0.28;
+      ctx.beginPath();
+      ctx.arc(dx, roofY, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+/** How long each lamp holds before the other takes over (ms). Fast enough to
+ * read as a strobe, slow enough not to flicker at 60 fps. */
+const BEACON_MS = 110;
 
 /**
  * Blit a sprite in two halves, each squeezed toward the middle by its own end's

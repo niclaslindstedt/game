@@ -463,12 +463,19 @@ is cheap for him to say._
 _TWO PAGES DOING TWO DIFFERENT JOBS. The first is the errand, and it is the one
 time in the whole leg the player is told why any of this is happening. The second
 is his opinion of the people he is about to drive through, and it is the sourest
-thing he says in the game — they beg, they are pushy about it, and they did not
-get what he got. He is on the welfare. He is a man with nothing being smug at
-people with less, and the next thing that happens is the town._
+thing he says in the game — they beg, and they did not get what he got. He is on
+the welfare. He is a man with nothing being smug at people with less, and the
+next thing that happens is the town._
+
+_AND BOTH ARE SHORT, WHICH IS A CONSTRAINT RATHER THAN A STYLE. The outskirts
+are about five seconds of held road and the wheel is not even his for the first
+four of them, so the first page is the whole of what he gets to say before the
+houses arrive and the second lands over the opening stretch of the town. Long
+enough to overrun the box and he says it to a crowd, which is the one audience
+that would turn it from smugness into a confession._
 
 1. I NEED TO HURRY TO GOODCO AND GET THE PART.
-2. THE PEOPLE IN TOWN CAN BE QUITE AGGRESSIVE IN THEIR BEGGING. MANY OF THEM ARE NOT ON WELFARE LIKE ME.
+2. THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
 
 ### THE CROWD — what they are thinking as he goes past
 

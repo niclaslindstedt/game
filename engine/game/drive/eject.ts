@@ -346,15 +346,23 @@ export function ejectOccupants(
   }
 
   const pieces: DriveRemain[] = [];
-  // At most two go out. A third body through the same hole in the same instant
-  // reads as a clown car rather than as a collision, and the seats behind the
-  // front pair are not in front of the screen anyway.
-  const going = Math.min(2, other.occupants);
+  // HOW MANY CAN ACTUALLY COME OUT — the vehicle's own answer (`def.exits`),
+  // because it is a question about the SHAPE of the thing rather than about how
+  // many seats it has.
+  //
+  // A saloon posts two: it has one windscreen with a driver and a passenger in
+  // front of it, and a third body through the same hole on the same frame reads
+  // as a clown car rather than as a collision. A BUS is the case this exists
+  // for — a long band of square windows with a roomful of people behind it — and
+  // it is why hitting one squarely is the biggest mess this minigame can make,
+  // which is the right thing for twelve tonnes of it to be. Whoever is left over
+  // is not spared; they die where they sit, just below.
+  const going = Math.min(vehicleDef(other.variant).exits, other.occupants);
   for (let i = 0; i < going; i++) {
     other.occupants--;
-    // The passenger goes out a beat wider than the driver, so two bodies leaving
-    // one car are two bodies rather than one drawn twice.
-    const spread = i === 0 ? 0 : (hash(other.id + i, 23) - 0.5) * 26;
+    // Each one goes out a beat wider than the last, so a load leaving one body
+    // is a load rather than one body drawn several times.
+    const spread = i === 0 ? 0 : (hash(other.id + i, 23) - 0.5) * 26 * (1 + i);
     pieces.push(
       ...throwBody(
         drive,

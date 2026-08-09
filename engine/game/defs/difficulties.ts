@@ -589,6 +589,32 @@ export type DifficultyDef = {
      */
     trafficDensity: number;
     /**
+     * HOW MUCH ROAD MUST STAY OPEN BESIDE A VEHICLE (world px) — the rung's
+     * promise that there is a way past.
+     *
+     * THE ONE THING THAT CAN MAKE THIS MINIGAME UNFAIR is a screen with both of
+     * the lanes running the hero's way shut at the same point on the road. He
+     * cannot brake his way out of it (the crowd LEADS the car, so slowing down
+     * is its own punishment) and he cannot go round it, so the only thing left
+     * is to pick which car to hit — which is not a decision, it is a coin
+     * landing on its edge. Density alone cannot rule it out: a thinner road
+     * makes it rarer, never impossible, because the two lanes are laid down
+     * independently and traffic that started a screen apart converges.
+     *
+     * So the gentle rungs state it directly. It is read twice — the spawner
+     * declines to lay a vehicle down abreast of one already in the sibling lane
+     * (`spawnLane`), and a driver who finds itself drawing level with one lifts
+     * off and tucks in behind (`ai.ts`, `DRIVE.drivers.courtesyFrac`). Between
+     * them the pair of lanes running each way is nearly always open SOMEWHERE,
+     * and getting through it is a question of reactions rather than of luck.
+     *
+     * ZERO IS OFF, and everything from MEDIUM up wants it off: MEDIUM is the
+     * 1.0 baseline the road's own measurements were taken against, and two
+     * abreast with a gap closing is exactly the problem a player is there to
+     * solve. EASY is the only rung that makes the promise.
+     */
+    laneGuardPx: number;
+    /**
      * HOW FAST THE WAGON IS ALLOWED TO GO on this rung, in the unit the dial
      * says out loud — 120 on EASY, climbing to the car's own 174
      * (`DRIVE.topSpeedMph`) at the top.
@@ -737,6 +763,12 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       // The oncoming half is now HALF AS THICK as it was and the near half —
       // the one you can simply go round — carries the difference.
       trafficDensity: 0.85,
+      // …AND A WAY THROUGH, ALWAYS. The kindest rung promises that the two
+      // lanes running one way are not both shut at the same point on the road:
+      // a car's length and a half of clear tarmac beside every vehicle, held
+      // by the spawner and by the drivers themselves. Taking the gap can still
+      // want quick hands — it is simply always THERE.
+      laneGuardPx: 240,
       // …and the kindest rung is the SLOWEST one. See the field's note: every
       // hazard on this road is priced in closing speed, so 120 halves the
       // energy of every collision and buys back half again as long to read the
@@ -824,6 +856,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 1,
       trafficMassMult: 1,
       trafficDensity: 1,
+      // NONE FROM HERE UP, and MEDIUM is where it stops: this rung is the
+      // 1.0 baseline the road's own table was measured against
+      // (`DRIVE.coursePx`), and a rung that quietly declined to lay down the
+      // car that would have shut the second lane would be a different road
+      // wearing the baseline's name. Two abreast with the gap closing is the
+      // problem the player is here to solve from here on.
+      laneGuardPx: 0,
       topSpeedMph: 135,
     },
   },
@@ -897,6 +936,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 1.6,
       trafficMassMult: 2,
       trafficDensity: 1.15,
+      // Nothing is kept open from here up: two abreast with the gap closing is
+      // the problem the player is here to solve.
+      laneGuardPx: 0,
       topSpeedMph: 148,
     },
   },
@@ -975,6 +1017,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 2.3,
       trafficMassMult: 3.4,
       trafficDensity: 1.3,
+      laneGuardPx: 0,
       topSpeedMph: 161,
     },
   },
@@ -1054,6 +1097,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       pedestrianMassMult: 3,
       trafficMassMult: 5,
       trafficDensity: 1.5,
+      laneGuardPx: 0,
       // The whole dial, which nothing below this rung is trusted with.
       topSpeedMph: 174,
     },
