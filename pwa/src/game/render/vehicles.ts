@@ -84,9 +84,25 @@ const BOARD_RADIUS = 34;
  * screenshot of the garage, never from the number.
  */
 const BOARD_ALPHA = 0.5;
-/** The breath — the same slow swell the veil uses, for the same reason. */
-const BOARD_BREATH_MS = 1500;
-const BOARD_BREATH_DEPTH = 0.35;
+/**
+ * THE BREATH — and the whole of what this halo has to say, which is why it is
+ * deeper than the XP veil's swell rather than a copy of it.
+ *
+ * The veil breathes UNDER A FIGHT, where a wide shallow waver is all it may
+ * spend; this one sits on a still garage floor with nothing else moving on it,
+ * and at the veil's depth a pool that never travels far from its own peak stops
+ * reading as a cue at all — it reads as a lamp somebody left on over the car.
+ * What makes a light say TOUCH THIS is the TRAVEL between its ends, so the dip
+ * goes most of the way down and takes long enough to be watched.
+ *
+ * IT ONLY EVER GOES DOWN. `BOARD_ALPHA` is the ceiling and the swell touches it
+ * once per cycle; deepening the breath spends its time further BELOW that
+ * figure, so the brightest frame of the pulse is exactly the brightness this
+ * halo had before. Raising the peak is a different edit, and the wrong one —
+ * see `BOARD_ALPHA`, which is at the top of what the bay's pale cement can take.
+ */
+const BOARD_BREATH_MS = 2000;
+const BOARD_BREATH_DEPTH = 0.72;
 /** How far past `boardRadius` the glow starts coming up, so it fades IN as the
  * hero walks over rather than switching on under his feet. */
 const BOARD_FADE_PX = 40;

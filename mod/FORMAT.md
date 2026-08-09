@@ -304,8 +304,19 @@ walls, which is what makes that possible):
   radius: 8
   lamps:
     sprite: wall_lamp
+    inset: 8 # how far off the door's own line the pair stands
+    lift: 16 # …and how high up the wall the FITTINGS are bolted
     light: { radius: 58, color: "255, 206, 138", intensity: 0.92 }
 ```
+
+`inset` and `lift` are not two names for the same thing. `inset` MOVES the pair
+— each fitting steps away from its own end of the chain, and both are pushed
+further off the wall — so the only picture it can buy is a wider pair standing
+deeper in the road. `lift` raises the FIXTURES and nothing else: a wall is drawn
+as an extruded face and a lamp is painted from its foot upward, so a fitting
+that lands on the doorway's own last block crowds the opening, and the fix is to
+hang it higher rather than further away. The pools stay where they were — the
+lamp is up on the brickwork and its light is still on the ground.
 
 **AND A ROOFED DISTRICT MAY SIMPLY BE LIT.** `lit: 0.82` on a `hard` area is
 "the lights are on in here": the carve emits that chamber's own rect, so the

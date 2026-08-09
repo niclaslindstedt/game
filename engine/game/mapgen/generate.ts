@@ -1603,7 +1603,15 @@ export function generateLevel(
             Math.round(end.x + out.x + (gap.axis === "v" ? 0 : step)),
             Math.round(end.y + out.y + (gap.axis === "v" ? step : 0)),
           );
-          lights.push({ pos, sprite: lamps.sprite, ...lamps.light });
+          // HOW HIGH IT IS BOLTED travels with the light rather than moving
+          // `pos`: the fitting rides up the wall and the pool it throws stays
+          // at the foot of it (see `MapObject.lamps.lift`).
+          lights.push({
+            pos,
+            sprite: lamps.sprite,
+            ...(lamps.lift ? { lift: lamps.lift } : {}),
+            ...lamps.light,
+          });
         });
       }
     }

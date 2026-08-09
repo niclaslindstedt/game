@@ -574,6 +574,16 @@ mid-driveway. `LevelLight.sprite` plus a `drawLamps` pass immediately AFTER
 pass runs in daylight too: a lamp is hardware, and a wall that grows a light
 fitting at dusk is a bug — only the pool under it belongs to the night.
 
+**AND HOW HIGH IT IS BOLTED IS THE FIXTURE'S BUSINESS ALONE** (`LevelLight.lift`,
+authored as `lift:` on a door's `lamps`). A wall is drawn as an EXTRUDED FACE and
+a fitting is painted from its foot upward, so a lamp placed at the last block of
+a doorway sits across the opening rather than beside it. `lift` takes its world
+px off the y before the projection — the way every other height in this renderer
+is drawn — so the fitting rides up the brickwork and foreshortens with it. The
+POOL does not move: `pos` is where the light lands, and the alternative (moving
+`pos` to raise the lamp) drags the pool along and, on a door's own pair, walks
+the lower fitting into the opening the pair exists to flank.
+
 **A CAR HAS ONE PAIR OF LAMPS, AND THE ASSEMBLY OWNS THEM.** The lit
 `car_lights` layer and the two cones it throws — a warm tungsten wedge off the
 nose, a short red wash behind the tail — are drawn with the panels and the

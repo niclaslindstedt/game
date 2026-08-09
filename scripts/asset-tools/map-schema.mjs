@@ -986,10 +986,14 @@ export function validateMap(bp, refs, description = "") {
         else sprite(o.lamps.sprite, where2);
         if (o.lamps.inset !== undefined && !isPosNum(o.lamps.inset))
           err(`${where2}: inset must be positive`);
+        // How high up the wall the pair is bolted — the FIXTURE only, which is
+        // the one thing `inset` (which spreads them along the wall) cannot say.
+        if (o.lamps.lift !== undefined && !isPosNum(o.lamps.lift))
+          err(`${where2}: lift must be positive`);
         if (o.lamps.light === undefined) err(`${where2}: needs a light block`);
         else checkLight(o.lamps.light, where2);
         for (const key of Object.keys(o.lamps))
-          if (!["sprite", "inset", "light"].includes(key))
+          if (!["sprite", "inset", "lift", "light"].includes(key))
             err(`${where2}: has no field "${key}"`);
       }
       if (o.type === "light") {

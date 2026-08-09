@@ -200,7 +200,16 @@ export function drawLamps(
     if (!inView(light.pos.x, light.pos.y, 32)) continue;
     const sprite = spriteByName(sprites, light.sprite);
     if (!sprite) continue;
-    drawWorldSprite(ctx, light.sprite, sprite, light.pos, camera, "base");
+    // HOW HIGH IT IS BOLTED (`LevelLight.lift`) — spent on the FIXTURE and on
+    // nothing else. A height is drawn here the way every other height in this
+    // renderer is, by taking it off the world y before the projection, so a
+    // lamp a course up the wall foreshortens with the wall it is on. The pool
+    // below is cut from `light.pos` and does not move: the fitting is up on the
+    // brickwork and its light is still on the ground.
+    const at = light.lift
+      ? { x: light.pos.x, y: light.pos.y - light.lift }
+      : light.pos;
+    drawWorldSprite(ctx, light.sprite, sprite, at, camera, "base");
   }
 }
 

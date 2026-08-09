@@ -286,6 +286,21 @@ export type MapObject = {
      * default 8) — clear of the chain so the fitting reads as bolted beside
      * the opening rather than into it. */
     inset?: number;
+    /**
+     * HOW HIGH UP THE WALL THE PAIR IS BOLTED (world px, default 0) —
+     * `LevelLight.lift`, and the one thing `inset` cannot say.
+     *
+     * `inset` is a MOVE: it steps the two fittings apart along the chain and
+     * pushes both further off the wall, so the only picture it can buy is a
+     * wider pair standing deeper in the road. A barn light that wants to clear
+     * the opening does not want to be further from it — it wants to be higher
+     * than it, which is where barn lights are.
+     *
+     * The pool stays on the ground where the fitting stands; only the FIXTURE
+     * rises. That split is the whole of it: the lamp is up on the wall and the
+     * light it throws is still on the pavement below.
+     */
+    lift?: number;
     /** The pool each one throws. */
     light: MapLightSpec;
   };
