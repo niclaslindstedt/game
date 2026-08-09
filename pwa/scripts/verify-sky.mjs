@@ -235,15 +235,25 @@ for (const vp of VIEWPORTS) {
     // Isolate the Moon: on their real orbits the bodies can ride over each
     // other, the glare or the menu text, and an element screenshot composites
     // whatever overlaps its box — which would corrupt the measurement. Hide
-    // every sibling for the shot, and force the alpha back to 1 so the one
+    // everything else for the shot, and force the alpha back to 1 so the one
     // thing that still takes it off — a body passing behind the sun, where the
     // glare swamps it — cannot be read as a lighting failure.
+    //
+    // IT HIDES DESCENDANTS AND RE-SHOWS THE MOON, rather than hiding the
+    // screen's own children: the Moon is not one of them. Every body lives
+    // inside `.title-sky` (the wrapper that makes the depth band private —
+    // title-sky.ts, SUN_Z), so a rule reading `.title-screen > *:not(.title-
+    // moon)` hides that wrapper and takes the Moon down with it, inherited.
+    // Playwright then waits out its whole timeout on an invisible element and
+    // the run dies before it reports anything. `visibility` is the right tool
+    // BECAUSE it inherits and a child can override it — which is exactly what
+    // the second rule does.
     await page.evaluate(() => {
       const s = document.createElement("style");
       s.id = "sky-solo-moon";
       s.textContent =
-        ".title-screen > *:not(.title-moon){visibility:hidden !important;}" +
-        ".title-moon{opacity:1 !important;}";
+        ".title-screen *{visibility:hidden !important;}" +
+        ".title-moon,.title-moon *{visibility:visible !important;opacity:1 !important;}";
       document.head.appendChild(s);
     });
     const moonEl = await page.$(".title-moon");
