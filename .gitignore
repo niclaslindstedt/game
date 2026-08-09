@@ -21,6 +21,16 @@ pwa/src/generated/
 # Generated engine level catalog — source of truth is
 # scripts/levels/*.yaml; regenerated via `npm run levels` (§11.2).
 engine/generated/
+# THE SAME OUTPUT, AT THE PATH IT WAS WRITTEN TO BEFORE THE ROOT SOURCE TREE WAS
+# RENAMED src/ -> engine/ (#1046). A checkout cannot delete an IGNORED directory,
+# so every working copy that had built before that commit still holds one — and
+# because the rename moved the ignore rule along with everything else, the stale
+# copy reappeared as UNTRACKED files. That is not cosmetic: it is one `git add
+# -A` away from putting ~700 KB of dead generated engine code on main, and it
+# fails `prettier --check .` (so `make fmt-check` and `make lint`) on changes
+# that have nothing to do with it. `make clean` deletes it; retire this entry
+# once no working copy predates #1046.
+/src/generated/
 # Generated pixel-asset atlases (sprite + font) — source of truth is
 # scripts/sprites/; regenerated on every build via `npm run assets` (§11.2).
 pwa/src/game/assets/

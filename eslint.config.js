@@ -18,6 +18,12 @@ export default [
       "pwa/src/game/assets/**",
       // Generated engine level catalog (source: content/levels/*.yaml).
       "engine/generated/**",
+      // The same output at its RETIRED path: the root source tree was renamed
+      // src/ -> engine/ (#1046), and a checkout cannot delete an ignored
+      // directory, so a working copy that had built before that commit still
+      // holds a stale copy. `eslint .` would otherwise walk it and fail on
+      // unrelated work. `make clean` removes it; see .gitignore.
+      "src/generated/**",
       // The native app (native/) is a self-contained Expo/React Native project
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.
