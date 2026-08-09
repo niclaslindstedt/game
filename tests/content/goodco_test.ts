@@ -602,7 +602,7 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
     expect(script).toContain("QUIT");
     expect(script).toContain("SUPERINTELLIGENCE");
     expect(script).toContain("OBSOLETE");
-    expect(script).toContain("NOW YOU WILL DIE");
+    expect(script).toContain("GOODBYE, OLD FRIEND");
     // The plea is now the HERO's own page — a two-way scene, not a lecture.
     const heroSide = enemyDef("architect")
       .dialogue!.flatMap((p) => (Array.isArray(p) ? [] : p.hero))

@@ -22,31 +22,10 @@ index: 1
 name: GOODCO HQ
 music: hq_lockdown
 intro:
-  # PICKS UP WHERE THE PRELUDE FADED OUT — it does not recap it. The scene the
-  # player just watched ends on "SHE NEVER CAME BACK", so opening the monologue
-  # by restating that (and the chips and the soda and the two hours) told them
-  # nothing they had not been shown thirty seconds earlier. The jacket answering
-  # is the new fact, and it pays off the prelude's own quiet detail: the one he
-  # "fixed the zipper on".
-  #
-  # AND IT NEVER MENTIONS THE PART, which is the whole design of this level. A
-  # monologue that lays out on a black screen that the beacon points at space,
-  # that following it needs a ship, that the ship is one part short and that the
-  # part happens to be in the very building his girlfriend vanished into is four
-  # coincidences stacked up before the player has pressed anything — and a plot
-  # the hero has already solved is not a plot.
-  #
-  # So he comes here for HER, full stop, and everything else is discovered in
-  # the order a person would discover it: she is not here (the CHIEF OF
-  # SECURITY, PAYLOAD-1), she went up an hour ago, and — from DR. NOVA, bragging
-  # unprompted to a man who never asked — the thing in the cleanroom vault is
-  # the part he has needed for ten years. He leaves with it because by then it
-  # is the only way to follow anybody.
   - - THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
   - - GOODCO. I BUILT THEIR ENGINES FOR TEN YEARS, TILL AN AI LEARNED MY JOB AND THEY WALKED ME OUT.
   - - THE WHOLE BLOCK WENT THE SAME WAY. NOW IT'S WELFARE AND MOVIE NIGHTS.
-  - - I KNOW THAT BUILDING. I KNOW THE PEOPLE IN IT. I DON'T WANT TROUBLE WITH ANY OF THEM.
-  - - SO I GO IN, AND I WALK OUT WITH HER.
+  - - I KNOW THE PEOPLE IN THERE. I DON'T WANT TROUBLE. I'M GOING IN AND WALKING OUT WITH HER.
 gravity: 800
 biome: goodco
 tiles:
@@ -123,8 +102,7 @@ merchant:
   # below it, which is played once ever.
   line: THE MACHINES ARE EMPTY, SO TONIGHT I'M THE MACHINE. WHAT'LL IT BE?
   greeting:
-    - - EASY, FRIEND. I'M NOT STAFF. I STOCK THE VENDING MACHINES. SOMEBODY HAS TO, EVEN TONIGHT.
-    - - LOCKDOWN IS A SELLER'S MARKET. I'LL BUY WHAT WEIGHS YOU DOWN, SELL WHAT KEEPS YOU UPRIGHT.
+    - - EASY, FRIEND. I'M NOT STAFF, I STOCK THE VENDING MACHINES. LOCKDOWN IS A SELLER'S MARKET.
   returnGreeting:
     - BACK ALREADY, FRIEND? THE MACHINES MISSED YOU.
 objective:

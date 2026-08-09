@@ -205,7 +205,9 @@ anything, and before retoning a character whose voice is doing the identifying.
 - [ ] Add a changeset fragment under `.changes/unreleased/` if user-visible
 - [ ] Run the story test battery and the full suite:
 
-      npx vitest run tests/content/story_test.ts tests/content/thoughts_test.ts tests/content/last_words_test.ts
+      npx vitest run tests/content/story_test.ts tests/content/thoughts_test.ts \
+        tests/content/last_words_test.ts tests/content/hero_name_test.ts \
+        tests/content/library_test.ts
       make test
       make lint
 

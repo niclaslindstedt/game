@@ -36,11 +36,7 @@ beats:
   - kind: say
     actor: the_flagbearer
     text:
-      - TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME.
-  - kind: say
-    actor: the_flagbearer
-    text:
-      - AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS.
+      - TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. AND TELL THEM THE MOON REMEMBERS.
   - kind: say
     actor: hero
     text:

@@ -8,10 +8,9 @@ requires:
 lore: >
   The colony's book will not close without a countersignature from the party
   every transfer went to, and that party signs in a way no colony machine can
-  produce. One can be bought — but the trader will not sell to a man who has
-  never seen the seal it copies, and the only seal on Mars is worn by an
-  assessor that has been perfectly polite to everybody and does not take it
-  off. It comes off one way. The errand says so; the hero still has to do it.
+  produce. One can be bought — but not by a man who has never seen the seal it
+  copies, and the only seal on Mars is worn by an assessor that does not take
+  it off. It comes off one way. The errand says so; the hero still has to.
 offer:
   - - "THE TRADER HAS A BOUND SIGNATURE BUT WON'T SELL BLIND. THE ASSESSOR WEARS THE ONLY SEAL, AND IT DOESN'T COME OFF."
   - hero:

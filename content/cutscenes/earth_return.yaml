@@ -102,7 +102,7 @@ beats:
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
-      - THE LONG WAY BACK. THREE DAYS TO THINK ABOUT WHAT THE DEAD MAN TOLD ME.
+      - THE LONG WAY BACK. THREE DAYS, AND THE TANKS ARE DRY.
   # The descent. Five beats, each shorter and slower than the one before it —
   # the retro burn biting, letting go, and biting again.
   - { kind: jump, actor: ship, lift: 78, ms: 900 }
