@@ -127,14 +127,25 @@
         "backdrop": "garageNight",
         "height": 126,
         "palette": {
-          "floor": "#2a2622",
+          "floor": "#20281c",
           "floorY": 88,
           "trim": "#0a0c14",
           "wall": "#0e1020"
         },
         "props": [
           {
+            "id": "house",
             "kind": "garage_house",
+            "pos": {
+              "x": 46,
+              "y": 98
+            },
+            "until": "cleared:moon"
+          },
+          {
+            "id": "house_burnt",
+            "kind": "garage_house_burnt",
+            "needs": "cleared:moon",
             "pos": {
               "x": 46,
               "y": 98

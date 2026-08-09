@@ -1092,6 +1092,11 @@ away until only the moon and the stars remain. Nobody comes out to put it out.)_
 
 _(Fade to black.)_
 
+_This scene plays again every time the hero lifts off his own lawn. On every
+launch after the first the house is already the burnt one — garage end black,
+roof gone through — and the blast blackens what is already black and puts the
+roof alight again. Nothing gets worse. Nobody comes out._
+
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 
 _Between GOODCO HQ and the moon, part two (`voyage_moon`). Deep space: Earth

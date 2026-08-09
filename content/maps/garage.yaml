@@ -57,16 +57,30 @@ areas:
     spawn: false
     label: THE DRIVEWAY
     ground: { common: pavement_0, rare: pavement_1, rareEvery: 4 }
-  # THE LAWN IS BURNT, AND IT STAYS BURNT. A man built a rocket in the bay and
-  # lit it on the grass behind it (`content/cutscenes/launch.yaml` — the blast
-  # throws a wall of fire and smoke the length of the lot and blacks the side of
-  # his own house), so the ground north of the building is charred earth rather
-  # than the Earth family's default green. The hub is the one map the player
-  # comes BACK to, and coming back to a mown lawn would quietly say the launch
-  # never happened.
   - id: lawn
     enclosure: none
     weight: 2
+    horde: 0
+    boss: false
+    spawn: false
+    label: THE LAWN
+    ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
+  # THE BURNT PATCH THE SHIP STANDS ON — the lawn where it is not lawn any more.
+  #
+  # A man built a rocket in the bay and lights it on the grass behind it
+  # (`content/cutscenes/launch.yaml`), so the ground under it is charred earth.
+  # It is its OWN district rather than the whole lawn's floor because the lawn
+  # is mostly fine: the far end of the lot, past the house, has never had
+  # anything lit on it, and blacking all of it read as a different place. The
+  # cutscene draws exactly the same patch, derived from where the ship is
+  # parked — the two have to agree, because the player walks the one and
+  # watches the other.
+  #
+  # Open ground with the lawn on every side (`enclosure: none`), so nothing is
+  # walled off; it wears the same LABEL, because it is not somewhere else.
+  - id: pad
+    enclosure: none
+    weight: 1
     horde: 0
     boss: false
     spawn: false
@@ -134,8 +148,18 @@ areas:
 # garage door hangs across it); lawn and drive meet as open ground.
 plan:
   rooms:
+    # THE LAWN, in three pieces around the burnt PAD the ship stands on: the
+    # west end (the stretch behind the house, still grass), the strip north of
+    # the pad, and the east end running down to the road. A plan is rectangles,
+    # so a patch with lawn on three sides is spelled as the lawn around it.
     - area: lawn
-      rect: { x: 0, y: 0, width: 400, height: 140 }
+      rect: { x: 0, y: 0, width: 176, height: 140 }
+    - area: lawn
+      rect: { x: 176, y: 0, width: 128, height: 44 }
+    - area: pad
+      rect: { x: 176, y: 44, width: 128, height: 96 }
+    - area: lawn
+      rect: { x: 304, y: 0, width: 96, height: 140 }
     - area: bay
       rect: { x: 0, y: 140, width: 224, height: 140 }
     - area: drive
@@ -155,11 +179,11 @@ plan:
       rect: { x: 480, y: 0, width: 32, height: 280 }
   doors:
     - between: [bay, drive]
-  # The rocket stands on the grass. No `stall:` — the trader is not standing
+  # The rocket stands on its own burnt patch. No `stall:` — the trader is not standing
   # anywhere: a flagged BEAT outranks an authored stall (mapgen/generate.ts),
   # so his pitch, his safe pocket and the street light hung on him all follow
   # him onto the road.
-  goal: lawn
+  goal: pad
 
 # One look, every visit. A LOT smaller than the rest of the game's venues,
 # because it is a garage, not a level. The lot itself is still 400 wide; the

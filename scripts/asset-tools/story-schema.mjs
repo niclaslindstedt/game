@@ -242,6 +242,31 @@ export function validateCutscene(doc, refs) {
         );
       }
     }
+    // THE CONDITIONAL DRESSING — a prop that is only on stage on some playings
+    // of the scene (`CutsceneProp.needs` / `until`). A tag is an opaque string
+    // the HOST answers; the shipped game hands its scenes one per level the
+    // hero has cleared (`cleared:<levelId>`, see engine/game/create.ts), so a
+    // scene the player revisits can show what the last visit did to it.
+    for (const key of ["needs", "until"]) {
+      if (prop[key] === undefined) continue;
+      if (typeof prop[key] !== "string" || prop[key] === "") {
+        err(
+          `${where}.${key} must be a non-empty tag string — the run carries ` +
+            `tags, and a prop names the one it answers to`,
+        );
+      } else if (prop.label === undefined) {
+        err(
+          `${where}.${key} needs a \`label:\` — a conditional prop is hidden ` +
+            `by id, so one without a label can never be taken off`,
+        );
+      }
+    }
+    if (prop.needs !== undefined && prop.needs === prop.until) {
+      err(
+        `${where} asks for the tag "${prop.needs}" and refuses it in the same ` +
+          `breath — it would never be on stage`,
+      );
+    }
     for (const key of Object.keys(prop)) {
       if (
         ![
@@ -252,6 +277,8 @@ export function validateCutscene(doc, refs) {
           "wrap",
           "ground",
           "hidden",
+          "needs",
+          "until",
         ].includes(key)
       ) {
         err(`unknown field "${where}.${key}"`);

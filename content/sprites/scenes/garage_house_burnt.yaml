@@ -1,0 +1,44 @@
+name: garage_house_burnt
+family: scenes
+size: [48, 19]
+description: >
+  The hero's house after the launch — the same building as garage_house, dusty
+  on the living end and blackened on the garage end, with the flat roof burnt
+  through. The window is still lit.
+subject:
+  kind: scene backdrop / building
+  build: a single-storey house under a peaked roof on the left, joined to an open garage bay on the right — the same frontage as before it burned
+  features: a scorched roof with two holes eaten through the flat garage end; siding merely dusty at the house end and heavily sooted at the garage end, with dark streaks running up the wall; the garage door panel scorched dark
+  accent: the amber lit window still burning at the clean end
+  flavor: the house survived the first launch, the garage nearly did not
+palette:
+  C: "#4a3f37" # charred roof
+  N: "#303444" # dark garage interior
+  O: "#1a1c2c" # outline
+  S: "#5a544e" # sooted wall siding, garage end
+  T: "#3d3833" # soot streak up the wall
+  c: "#2b2320" # burnt roof shadow / eaves
+  d: "#2e3038" # scorched garage-door panel
+  k: "#342c26" # dark house window
+  s: "#9a958e" # dusty wall siding, house end
+  y: "#ffb02e" # amber lit window
+grid: |
+  ................................................
+  ......OOOOOOOOOOOOOO............................
+  .....OccccccccccccccO...........................
+  ....OccCCCCCCCCCCCCccO..........................
+  ...OccCCCCCCCCCCCCCCccO.........................
+  ..OccCCCCCCCCCCCCCCCCccO........................
+  .OccCCCCCCCCCCCCCCCCCCccOOOOOOOOOOOOOOOOOOOOOO..
+  OOOOOOOOOOOOOOOOOOOOOOOOOcccccOOccccccOOcccccOO.
+  O.sssssssssssssssssssss.OOOOOOOOOOOOOOOOOOOOOOO.
+  O.sssssssssssssssssssss.O.TSSSSSSSSSSSSSSSSTS.O.
+  O.ssOOOOOOsssssssssssss.O.TSOddddddddddddOSTS.O.
+  O.ssOyyyyOsssssssssssss.O.TSOddddddddddddOSTS.O.
+  O.ssOyyyyOsssOOOOOOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.ssOyyyyOsssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.ssOOOOOOsssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.sssssssssssOkkOkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.sssssssssssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  O.sssssssssssOkkkkOssss.O.SSONNNNNNNNNNNNOSSS.O.
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

@@ -46,6 +46,24 @@ export type CutsceneProp = {
    * shows the second. Needs a `label`, or nothing can ever show it.
    */
   hidden?: boolean;
+  /**
+   * ON STAGE ONLY WHEN THE RUN CARRIES THIS TAG — and {@link until} is the
+   * same switch the other way up.
+   *
+   * The pair exists because the prop SWAP above can only be thrown by a BEAT,
+   * and a beat knows nothing about what happened before the scene started. A
+   * scene the player sees more than once wants both: the launch's house is
+   * clean the first time the hero lights his rocket beside it and a burnt-out
+   * shell every time after, and that is one difference between two runs of one
+   * scene rather than a second scene.
+   *
+   * The tags themselves are the HOST's business ({@link createCutscene}'s
+   * second argument) — a scene names a condition, it does not work one out.
+   * Both need an `id`, since hiding is what they do.
+   */
+  needs?: string;
+  /** …and its mirror: on stage only while the run does NOT carry this tag. */
+  until?: string;
 };
 
 /**
@@ -245,8 +263,31 @@ export type CutsceneState = {
   done: boolean;
 };
 
-/** Build the live state for a scene, actors at their opening marks. */
-export function createCutscene(def: CutsceneDef): CutsceneState {
+/**
+ * Whether a prop is dressed onto the stage at all, given the run's own tags.
+ *
+ * Three ways to be off it and they compose: authored `hidden` (a `prop` beat
+ * brings it on), a `needs` the run does not carry, and an `until` it does.
+ */
+function propOnStage(prop: CutsceneProp, tags: readonly string[]): boolean {
+  if (prop.hidden) return false;
+  if (prop.needs !== undefined && !tags.includes(prop.needs)) return false;
+  if (prop.until !== undefined && tags.includes(prop.until)) return false;
+  return true;
+}
+
+/**
+ * Build the live state for a scene, actors at their opening marks.
+ *
+ * `tags` are what the HOST knows about this particular playing that the scene
+ * cannot — see {@link CutsceneProp.needs}. Omitted, every conditional prop
+ * behaves as though nothing has happened yet, which is the right answer for a
+ * scene played out of a run (the workbench, a test).
+ */
+export function createCutscene(
+  def: CutsceneDef,
+  tags: readonly string[] = [],
+): CutsceneState {
   return {
     defId: def.id,
     actors: def.actors.map((a) => ({
@@ -268,7 +309,7 @@ export function createCutscene(def: CutsceneDef): CutsceneState {
     fadeFrom: 0,
     liftFrom: 0,
     hiddenProps: def.stage.props
-      .filter((p) => p.hidden && p.id)
+      .filter((p) => p.id !== undefined && !propOnStage(p, tags))
       .map((p) => p.id as string),
     sounds: [],
     shift: { x: 0, y: 0 },

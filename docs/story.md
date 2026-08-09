@@ -81,9 +81,9 @@ opens at home — the prelude's living room is one wall away — and every
 earthside chapter breathes here before the next. The garage is the most his
 place in the world: ten years of weekends, the bench, the white hatchback
 parked on the deck, and the ship that is still one part short. His summary on
-the doorstep says everything the room needs to: home — the lawn is dead ground
-where a man has been lighting an engine, the bench is a mess, and the ship is
-one part from perfect. Nothing hunts him
+the doorstep says everything the room needs to: home — the lawn is grass
+except for the dead black patch the ship stands on, the bench is a mess, and the
+ship is one part from perfect. Nothing hunts him
 here. Trade at home is THE DEALER: not the trader who follows the hero
 across the campaign but a man off the neighborhood, hood up, walking the
 road at the far edge of the lot all evening — buying what weighs the hero
@@ -334,8 +334,10 @@ over ten years of weekends stands on the lawn. He gathers "engine, fuel, duct
 tape, and the part they said I couldn't have," boards, and lights the engine —
 first flight, no test runs. The blast throws a wall of fire and smoke the length
 of the lot, blacks the side of his own garage and leaves its roof burning; then
-house and ground fall away and only the moon and the stars remain. The lawn he
-comes home to is charred earth from then on, and he never mentions it.
+house and ground fall away and only the moon and the stars remain. The house he
+comes home to is a burnt one from then on — and every launch after this one is
+made from beside it, off the same dead patch of lawn, with the roof catching
+again. He never mentions it.
 
 ## Travel — THE VOYAGE, LEG ONE (cutscene)
 

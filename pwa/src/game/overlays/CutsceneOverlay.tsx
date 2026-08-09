@@ -44,6 +44,9 @@ import {
   drawRocketExhaust,
   propFireLevel,
   rocketExhaustLook,
+  rocketPadLook,
+  SCAR_LEVEL,
+  SCAR_SPAN,
   sootLevel,
   type RocketExhaust,
 } from "../render/rocket-exhaust.ts";
@@ -90,21 +93,47 @@ const CUTSCENE_TEXT_REM = 33;
 const SKY_BACKDROPS: ReadonlySet<string> = new Set(["garageNight"]);
 
 /**
- * The lit rocket on this stage, if one is burning — where it is standing and
- * how long it has been at it.
+ * The rocket on this stage — where it is standing, and how long its engine has
+ * been lit (0 while it is parked cold).
  *
- * ONE PER SCENE, deliberately: everything the blast does to its surroundings is
- * a question of distance from a single point, and a scene with two rockets on
- * it would be answering a question nobody has asked yet.
+ * ONE PER SCENE, deliberately: everything a rocket does to its surroundings is
+ * a question of distance from a single point, and a scene with two of them
+ * would be answering a question nobody has asked yet.
+ *
+ * IT IS FOUND WHETHER OR NOT IT IS BURNING, because the mark it has already
+ * left is on the ground before the beat that lights it — the lawn under a ship
+ * that has flown before is dead from the first frame of the scene.
  */
-function firingRocket(
+function stagedRocket(
   cutscene: CutsceneState,
-): { x: number; ageMs: number; look: RocketExhaust } | undefined {
+): { x: number; ageMs: number; look: RocketExhaust; lit: boolean } | undefined {
   for (const actor of cutscene.actors) {
-    const look = actor.hidden ? undefined : rocketExhaustLook(actor.sprite);
-    if (look) return { x: actor.pos.x, ageMs: actor.poseMs, look };
+    const look = actor.hidden ? undefined : rocketPadLook(actor.sprite);
+    if (!look) continue;
+    const lit = rocketExhaustLook(actor.sprite) !== undefined;
+    return { x: actor.pos.x, ageMs: lit ? actor.poseMs : 0, look, lit };
   }
   return undefined;
+}
+
+/** One horizontal wash of char across the ground, centred on the pad. */
+function scorchGround(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  span: number,
+  level: number,
+  top: number,
+  width: number,
+  height: number,
+): void {
+  if (level <= 0 || top >= height) return;
+  const wash = ctx.createLinearGradient(x - span, 0, x + span, 0);
+  const edge = (level * 0.15).toFixed(3);
+  wash.addColorStop(0, `rgba(12, 11, 10, ${edge})`);
+  wash.addColorStop(0.5, `rgba(12, 11, 10, ${level.toFixed(3)})`);
+  wash.addColorStop(1, `rgba(12, 11, 10, ${edge})`);
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, top, width, height - top);
 }
 
 function drawStage(
@@ -152,7 +181,7 @@ function drawStage(
   // WHAT IS BURNING ON THIS STAGE, if anything: the lit rocket's mark and how
   // long it has been lit. Found once, before anything is placed, because the
   // ground and every prop standing on it have to be asked how close they are.
-  const blast = firingRocket(cutscene);
+  const blast = stagedRocket(cutscene);
 
   if (floorY < height) {
     ctx.fillStyle = paint.floor;
@@ -163,33 +192,32 @@ function drawStage(
     for (let y = floorY + 14; y < height; y += 14) {
       if (y >= 0) ctx.fillRect(0, y, width, 1);
     }
-    // …AND THE GROUND TAKES IT TOO. The props each blacken on their own face;
-    // the floor is not a prop, so the same wash is laid across it here, hard
-    // under the pad and thinning away — a lawn that stayed its own colour with
-    // a scorched house standing on it would read as two different evenings.
+    // …AND THE GROUND IS BURNT IN TWO PASSES, because two different things
+    // burnt it. The SCAR is the tight dead patch a ship that has flown before
+    // has already left under itself — there before the engine lights, and small
+    // enough that the lawn past the house is still a lawn. Over it goes the
+    // blast's own wash, wider and darker, as this launch adds its share.
     if (blast) {
-      const level = sootLevel(blast.look, blast.ageMs, 0);
-      if (level > 0) {
-        const top = Math.max(0, floorY);
-        const reach = blast.look.reach * 2;
-        const scorch = ctx.createLinearGradient(
-          blast.x - reach,
-          0,
-          blast.x + reach,
-          0,
-        );
-        scorch.addColorStop(
-          0,
-          `rgba(12, 11, 10, ${(level * 0.35).toFixed(3)})`,
-        );
-        scorch.addColorStop(0.5, `rgba(12, 11, 10, ${level.toFixed(3)})`);
-        scorch.addColorStop(
-          1,
-          `rgba(12, 11, 10, ${(level * 0.35).toFixed(3)})`,
-        );
-        ctx.fillStyle = scorch;
-        ctx.fillRect(0, top, width, height - top);
-      }
+      const top = Math.max(0, floorY);
+      const span = blast.look.reach;
+      scorchGround(
+        ctx,
+        blast.x,
+        span * SCAR_SPAN,
+        SCAR_LEVEL,
+        top,
+        width,
+        height,
+      );
+      scorchGround(
+        ctx,
+        blast.x,
+        span * 2,
+        sootLevel(blast.look, blast.ageMs, 0),
+        top,
+        width,
+        height,
+      );
     }
   }
 

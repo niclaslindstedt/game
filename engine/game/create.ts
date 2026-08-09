@@ -640,12 +640,26 @@ export function createGame(
   // tapping SKIP), so DIALOGUE off means no story text anywhere.
   const dialogueMuted = !isDialogueEnabled();
 
+  // WHAT THE RUN KNOWS THAT ITS SCENES DO NOT — one tag per level this hero has
+  // already put behind him, which a prop's `needs` / `until` is matched against
+  // (`@game/lib/cutscene`). The launch is the case it exists for: the house
+  // beside the pad is whole the first time the hero lights his rocket next to
+  // it and a burnt-out shell every time after.
+  //
+  // DERIVED RATHER THAN NAMED, and that is the whole of the design: nothing
+  // here knows which level matters to which scene, so a mod's own scene can say
+  // `needs: cleared:<its own level>` and be answered by the same three lines.
+  const cutsceneTags = clearedLevels.map((id) => `cleared:${id}`);
+
   const state: GameState = {
     phase: preludes.length > 0 ? "cutscene" : dialogueMuted ? "title" : "intro",
     respecPending: respec,
     cutscene:
-      preludes.length > 0 ? createCutscene(cutsceneDef(preludes[0]!)) : null,
+      preludes.length > 0
+        ? createCutscene(cutsceneDef(preludes[0]!), cutsceneTags)
+        : null,
     cutsceneQueue: preludes.slice(1),
+    cutsceneTags,
     introPage: 0,
     outroPage: 0,
     quakeMs: 0,

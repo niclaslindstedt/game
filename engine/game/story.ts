@@ -58,7 +58,7 @@ export {
 export function advanceCutsceneChain(state: GameState): void {
   const next = state.cutsceneQueue.shift();
   if (next) {
-    state.cutscene = createCutscene(cutsceneDef(next));
+    state.cutscene = createCutscene(cutsceneDef(next), state.cutsceneTags);
   } else {
     state.cutscene = null;
     state.phase = state.dialogueMuted ? "title" : "intro";
