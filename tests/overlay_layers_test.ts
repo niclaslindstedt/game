@@ -152,6 +152,31 @@ describe("game shell layer bands", () => {
     expect(bandOf(".drive-screen")).toBeGreaterThan(shellTop);
   });
 
+  it("holds the road's dashboard over the steering pad and under its dpad", () => {
+    // THE REGRESSION THIS PINS: the steering pad is a full-screen, invisible
+    // sibling drawn AFTER the authored dashboard, so at `z-index: auto` it
+    // hit-tests first — and the one element on this surface that asks for a
+    // thumb (the stopwatch, which is the road's PAUSE) had its tap eaten by the
+    // wheel. The shelf itself stays tap-transparent, so the pad keeps every
+    // pixel of the picture except that one element.
+    const shelf = bandOf(".drive-hud-shelf");
+    expect(shelf).toBeGreaterThan(0);
+    // …AND NO HIGHER THAN IT NEEDS TO BE. The virtual dpad draws where the
+    // thumb actually went down and must stay on top of the dials it lands
+    // among, and everything the road raises over its own picture — GET READY,
+    // the fade out, the pause card the stopwatch opens — is above both.
+    expect(
+      bandOf(".touch-dpad"),
+      "the dpad must clear the dash",
+    ).toBeGreaterThan(shelf);
+    for (const selector of [".drive-ready", ".drive-blackout"]) {
+      expect(
+        bandOf(selector),
+        `${selector} must clear the dash`,
+      ).toBeGreaterThan(shelf);
+    }
+  });
+
   it("prints the screenshot receipt over the drive that raised it", () => {
     // THE REGRESSION THIS PINS: the road answers the SCREENSHOT bind itself
     // (the run's control layer is not listening under an interlude), and then

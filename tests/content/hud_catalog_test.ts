@@ -338,6 +338,25 @@ describe("the shipped HUD", () => {
     expect(shutter?.press?.sound).toBe("none");
   });
 
+  it("keeps a way into the road's pause card on a device with no keyboard", () => {
+    // THE GAP THIS PINS is the screenshot one above in the minigame's shape:
+    // the drive's PAUSE — and with it SKIP THE DRIVE and MAIN MENU, the only
+    // two ways out of a leg somebody is not enjoying — was reachable through
+    // ESCAPE and through nothing else, so on a phone the road could only be
+    // finished. The stopwatch is the missing half, and it is the fight's own
+    // gesture: the survival timer over the minimap pauses the run on a tap.
+    const clock = HUD_ELEMENTS.find((el) => el.id === "drive_clock");
+    expect(clock, "the road ships no stopwatch").toBeDefined();
+    expect(clock?.press?.action).toBe("pauseGame");
+    // A BUTTON AND NOT A PANEL CARRYING A PRESS, which is the half that would
+    // fail silently: the HUD renderer draws a press on a `button` and on a
+    // `widget`, and a panel's press is the in-game menus' backdrop `dismiss:`
+    // and nothing else — so this element authored as a panel compiles, draws
+    // exactly the same clock, and answers no tap at all.
+    expect(clock?.kind).toBe("button");
+    expect(clock?.aria, "a screen reader has no name for it").toBeDefined();
+  });
+
   it("leaves a list's template alone until it has a row", () => {
     // THE BUG THIS PINS, and it is the drive surface's again in another shape:
     // a resolve CALLS every judgement it walks past, and a voice card's are

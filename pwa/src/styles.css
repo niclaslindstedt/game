@@ -709,6 +709,20 @@ html.app-locked body {
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
 }
 
+/* THE ONE THING ON THIS ROAD THAT TAKES A THUMB. Everything else on the
+   windscreen is tap-transparent — the whole picture is the steering pad — but
+   the clock is the road's PAUSE (`elements/drive_clock.yaml`), the same gesture
+   the fight's survival timer carries, and without it a player with no keyboard
+   had no way at all into the card that holds SKIP and MAIN MENU.
+
+   THE CORNER IS WHY IT CAN AFFORD TO. It is already the one the steering thumb
+   is least often over (see the slot above), it only exists inside the town, and
+   what it costs a mis-tap is a card with RESUME on it and a road that has not
+   moved — which is the cheapest wrong press in the game.
+
+   It is a `<button>` now, so the browser's own chrome comes off: a button that
+   drew a border and a background in the corner of the windscreen would be the
+   one piece of this game that looked like a web page. */
 .drive-clock {
   display: flex;
   flex-direction: column;
@@ -716,6 +730,19 @@ html.app-locked body {
      same edge and the block does not appear to move when the minutes roll. */
   align-items: flex-end;
   gap: 0.25rem;
+  pointer-events: auto;
+  /* A thumb is blunter than the figure is tall, so the target is padded out to
+     something a hand can find without looking — and pulled back by the same
+     amount, so the clock still reads as hung exactly where it always was. */
+  padding: 0.5rem;
+  margin: -0.5rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  /* No blue flash, and no double-tap-to-zoom delay on the one control this
+     screen has that is not the wheel. */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* The figure is monospaced BY HAND — the pixel font is proportional, and a
@@ -6808,6 +6835,18 @@ html.app-locked body {
   visibility: hidden;
   opacity: 0;
   transform: translateX(-2.5rem);
+  /* OVER THE PAD, WHICH IS THE ONLY REASON THIS NUMBER EXISTS. The steering
+     pad is a full-screen, invisible sibling drawn AFTER this one, so in plain
+     DOM order it hit-tests first — and the stopwatch's tap (the road's PAUSE,
+     `elements/drive_clock.yaml`) landed on the wheel instead of on the clock.
+     The shelf itself is still tap-transparent, so the pad keeps every pixel of
+     the picture except the one element that asks for a thumb.
+
+     1 AND NOT MORE: this must stay UNDER the virtual dpad (`.touch-dpad`, 4),
+     which draws where that thumb actually went down, and under everything in
+     the drive's own stack above it — GET READY (12), the fade out (40) and the
+     pause card itself (100). */
+  z-index: 1;
 }
 
 .drive-hud-shelf.drive-hud-in {

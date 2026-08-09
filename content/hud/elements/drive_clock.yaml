@@ -23,11 +23,30 @@
 # clock is a format rather than a judgement. What IS a judgement is how it is
 # COLOURED — whether this is a good time — and that is `drive.clock_color`, off
 # the raw `drive.clockMs` beside it, so a conversion can hang its own par on it.
+#
+# AND IT IS THE ROAD'S PAUSE BUTTON, which is the one press this surface has to
+# offer and had nowhere to put. The fight already works this way — the survival
+# timer at the top of the minimap raises the pause menu on a tap — so a player
+# who has learnt the game reaches for the clock, and on the road the clock was
+# the one readout that answered nothing. A keyboard has ESCAPE; a phone had no
+# way at all into the card that holds SKIP and MAIN MENU, which are the two ways
+# out of a leg somebody is not enjoying.
+#
+# It is a `button` rather than a panel carrying a press because that is what the
+# renderer draws a press on (a panel's press is the in-game menus' backdrop
+# `dismiss:` and nothing else) — and it is what a screen reader and the test
+# suite find by name.
 region: drive_clock
 order: 0
-kind: panel
+kind: button
 class: drive-clock
+aria: drive-pause
 visible: drive.clockStarted
+press:
+  # The same verb the fight's timer carries. The road supplies it (DriveScreen's
+  # `actions`), so an authored dashboard of a mod's own can put PAUSE anywhere
+  # it likes without knowing which screen it will end up on.
+  action: pauseGame
 children:
   # THE WORD, small and quiet over the figure. It is what changes when the leg
   # ends: the clock stops saying what it is counting and starts saying that it
