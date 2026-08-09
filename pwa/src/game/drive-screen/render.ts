@@ -22,10 +22,17 @@
 // reads as flat.
 
 import {
+  campusLot,
+  campusSpanX,
+  cityStartPx,
+  citySpanX,
   crossingsBetween,
   crowdEdges,
   DRIVE,
+  DRIVE_OUTCOME,
+  planCampus,
   planTown,
+  roadBandHalfAt,
   townRoad,
   vehicleDef,
   type DriveRemain,
@@ -74,6 +81,7 @@ import {
   roadBands,
   ROAD_LAMP_HEAD_PX,
   ROAD_LAMP_POOL_PX,
+  lightBody,
   RIDER_SEATS,
   RIDER_SPRITES,
   trafficSprite,
@@ -93,6 +101,11 @@ const VERGE_FAR = "#232a20";
  * at a glance rather than a wider road. */
 const PAVEMENT = "#4a4741";
 const KERB = "#605c53";
+/** …and GOODCO's own ground, which is neither: a poured concrete apron running
+ * from its fence back to the halls. Cooler and flatter than the town's paving,
+ * because that is what a car park is and because the change of surface is half
+ * of what tells the player the town is behind him. */
+const APRON = "#3b414a";
 /** The tarmac, and the paint on it. */
 const ROAD = "#31333c";
 const ROAD_EDGE = "#3c3f4a";
@@ -249,7 +262,16 @@ export function driveCamera(
   // the factor the canvas zooms by (`viewScaleFor` is `VIEW_SCALE × uiScale`).
   const band = Math.min(viewH * 0.6, bandCss / VIEW_SCALE);
   return {
-    x: drive.car.pos.x + dir * viewW * CAMERA_LEAD_FRAC - viewW / 2,
+    // …PLUS WHATEVER OF THE OPENING IS LEFT. A leg starts with the camera
+    // carried this much further down the road than it belongs
+    // (`DriveState.entryPx`), so the first frame is empty tarmac and the wagon
+    // comes into the picture from behind as the lead is given back. It is the
+    // ONE thing on this road that moves the frame rather than the world, and it
+    // is zero for every frame after the car has arrived.
+    x:
+      drive.car.pos.x +
+      dir * (viewW * CAMERA_LEAD_FRAC + drive.entryPx) -
+      viewW / 2,
     y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH - band),
   };
 }
@@ -257,6 +279,57 @@ export function driveCamera(
 /** The world y at which the ground gives out and the sky takes over. */
 function skylineY(): number {
   return crowdEdges().top - SKYLINE_SETBACK;
+}
+
+/**
+ * THE TARMAC, WHICH IS NOT A RECTANGLE — the carriageway between two world x,
+ * filled at whatever width the road actually is there.
+ *
+ * THE ROAD OUT OF TOWN IS TWO LANES and the town's is four (`roadBandHalfAt`),
+ * so somewhere on the approach it OPENS OUT — and a band drawn at one width or
+ * the other is wrong on one side of that. It is a polygon rather than a stack of
+ * per-pixel slices for the obvious reason: the shape is piecewise LINEAR, so
+ * four points describe it exactly and a hundred and twenty `fillRect`s a frame
+ * would describe it worse.
+ *
+ * `inset` widens it on both sides — which is how the darker rim outside the
+ * outer lane markings is drawn from the same shape rather than from a second
+ * one that could disagree with it by a pixel.
+ *
+ * IT IS SAMPLED AT THE ENDS AND AT THE TAPER'S OWN CORNERS. Every other x on the
+ * road is one of the two flats, and a straight edge between two points on a
+ * straight edge is the same straight edge — so the only samples that carry
+ * information are the frame's two edges and the two places the width starts and
+ * stops changing.
+ */
+function carriageway(
+  ctx: CanvasRenderingContext2D,
+  drive: DriveState,
+  camera: Camera,
+  left: number,
+  right: number,
+  inset: number,
+  fill: string,
+): void {
+  const dir = drive.params.direction;
+  const half = (x: number) => roadBandHalfAt(dir * x, drive.params) + inset;
+  // The taper's two corners, in world x — the leg's own direction settles which
+  // of them is the smaller coordinate, so they are sorted rather than assumed.
+  const gate = dir * cityStartPx(drive.params);
+  const opens = dir * (cityStartPx(drive.params) - DRIVE.opening.widenPx);
+  const marks = [left, right, gate, opens]
+    .filter((x) => x >= left && x <= right)
+    .sort((a, b) => a - b);
+  if (marks.length < 2) return;
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  for (const x of marks) ctx.lineTo(x - camera.x, -half(x) - camera.y);
+  for (let i = marks.length - 1; i >= 0; i--) {
+    const x = marks[i]!;
+    ctx.lineTo(x - camera.x, half(x) - camera.y);
+  }
+  ctx.closePath();
+  ctx.fill();
 }
 
 /**
@@ -323,6 +396,43 @@ export function drawDrive(
     ctx.fillStyle = fill;
     ctx.fillRect(left - camera.x, top - camera.y, right - left, bottom - top);
   };
+  /**
+   * …and the same thing for a band that does NOT run the whole length of the
+   * road: the far pavement, the far kerb and GOODCO's apron each exist only over
+   * their own stretch of world x.
+   *
+   * THE FAR SIDE OF THIS ROAD IS NOT ALWAYS THERE, which is the change every
+   * clipped band below is serving. The leg opens OUT OF TOWN — one pavement, the
+   * near one, and nothing but verge on the other side of the carriageway — and
+   * it ends on a company's own concrete. Painting the far paving from end to end
+   * put a kerb and a footway along the top of a road with no houses on it, which
+   * reads as the town having failed to load rather than as somewhere before it.
+   */
+  const bandX = (
+    fromX: number,
+    toX: number,
+    top: number,
+    bottom: number,
+    fill: string,
+  ) => {
+    const x0 = Math.max(left, fromX);
+    const x1 = Math.min(right, toX);
+    if (x1 <= x0) return;
+    ctx.fillStyle = fill;
+    ctx.fillRect(x0 - camera.x, top - camera.y, x1 - x0, bottom - top);
+  };
+  const road = townRoad(drive.params);
+  const city = citySpanX(drive.params);
+  const campus = campusSpanX(road);
+  // THE BUILT-UP STRETCH — the town and GOODCO's site together, which is
+  // everywhere the road has a far pavement and a far kerb. The two overlap (the
+  // fence opens before the finish line), so this is a union rather than a pair
+  // of adjacent bands, and it is taken in world x rather than along the leg
+  // because the trip HOME lays the identical road out along negative x.
+  const built = {
+    fromX: Math.min(city.fromX, campus.fromX),
+    toX: Math.max(city.toX, campus.toX),
+  };
   // THE GROUND STOPS AT THE SKYLINE. It used to run 400 px past the road on
   // both sides, which on any screen meant "everywhere" — so the sky colour
   // underneath it was never once visible and the night was a field of grass.
@@ -337,16 +447,43 @@ export function drawDrive(
   // both sides of the street and left every lamp post looking marooned in the
   // middle of its pavement. A kerb is at the road's edge; so is this one.
   const walk = crowdEdges();
-  band(walk.top, bands.top, PAVEMENT);
+  // GOODCO'S APRON, first of the far-side surfaces because everything else out
+  // there is drawn over it: the company's concrete runs from its own fence back
+  // to the skyline, which is what turns the last stretch of far verge into a
+  // site rather than a field with buildings in it.
+  bandX(campus.fromX, campus.toX, skylineY(), walk.top, APRON);
+  // THE FAR PAVEMENT IS THE BUILT-UP ROAD'S, and stops where the buildings do.
+  bandX(built.fromX, built.toX, walk.top, bands.top, PAVEMENT);
+  // The near one is the whole road's: it is the pavement the delivery riders are
+  // on out of town, the crowd's on the way through it, and GOODCO's own footway
+  // at the end.
   band(bands.bottom, walk.bottom, PAVEMENT);
   // OUTWARD FROM THE PAINT, and each band strictly outside the last: the
   // tarmac, its darker rim, then the KERB stepping up onto the pavement. Laid
   // in any other order they overlap and one of them is simply not there — see
   // `ROAD_LIP`, which is the mistake this ordering exists to hold shut.
-  band(bands.top - ROAD_LIP, bands.bottom + ROAD_LIP, ROAD_EDGE);
-  band(bands.top - ROAD_LIP - KERB_DEPTH, bands.top - ROAD_LIP, KERB);
+  //
+  // …AND THE TARMAC ITSELF IS NOT A BAND, because it is not the same width all
+  // the way down the road. The approach is the middle TWO lanes and it opens out
+  // to four over the last stretch before the first house (`roadBandHalfAt`), so
+  // the carriageway and its rim are drawn as a TAPERED shape: a constant strip
+  // out on the approach, a trapezoid where it widens, and a constant strip
+  // through the town and out the other side.
+  carriageway(ctx, drive, camera, left, right, ROAD_LIP, ROAD_EDGE);
+  bandX(
+    built.fromX,
+    built.toX,
+    bands.top - ROAD_LIP - KERB_DEPTH,
+    bands.top - ROAD_LIP,
+    KERB,
+  );
+  // THE NEAR KERB IS THE PAVEMENT'S, not the road's, and that is why it runs the
+  // whole length while the far one stops with the buildings: out of town the
+  // footway is still a footway with a kerb on it — there is simply a lane's
+  // worth of verge between that kerb and the tarmac, which is the gap the
+  // cyclists are safe in.
   band(bands.bottom + ROAD_LIP, bands.bottom + ROAD_LIP + KERB_DEPTH, KERB);
-  band(bands.top, bands.bottom, ROAD);
+  carriageway(ctx, drive, camera, left, right, 0, ROAD);
 
   // THE CROSSINGS — the same paint the crowd is gathered onto
   // (`crossingsBetween`, and `DRIVE.crossingCrowdShare` in the sim), so what
@@ -355,7 +492,14 @@ export function drawDrive(
   // THE STRIPES RUN THE WAY THE CARS DO, stacked across the road: a zebra is a
   // ladder the pedestrian steps over and the driver drives along, and drawn the
   // other way round it reads as a cattle grid.
-  for (const cx of crossingsBetween(left, right)) {
+  // …AND ONLY WHERE THERE IS SOMETHING TO CROSS TO. A zebra needs a pavement at
+  // both ends of it, and out of town there is one — a crossing painted across
+  // four empty lanes between two verges is the single loudest way to say the
+  // wrong thing about where the player is.
+  for (const cx of crossingsBetween(
+    Math.max(left, city.fromX),
+    Math.min(right, city.toX),
+  )) {
     const bars = 6;
     const step = (bands.bottom - bands.top) / bars;
     for (let i = 0; i < bars; i++) {
@@ -371,19 +515,57 @@ export function drawDrive(
 
   // The lane paint. The centre line is solid (it divides the two directions of
   // travel and is the one line that means something); the rest are dashes.
+  //
+  // …AND THE DASHES ONLY EXIST WHERE THERE ARE FOUR LANES. The approach is the
+  // middle two, so its lane markings are the centre line and nothing else — a
+  // dash painted out there would be a lane division running down the middle of
+  // the grass, which is the loudest possible way to say the road did not finish
+  // drawing. The CENTRE line runs the whole length, because a two-lane road has
+  // one and it is in exactly the same place.
+  //
+  // …AND THE CENTRE LINE IS ONLY SOLID IN THE TOWN. A solid centre is a
+  // four-lane dual carriageway's — it says "do not cross" between two pairs of
+  // lanes — and out on the approach there are only the two, where every road in
+  // the world paints a broken white line down the middle. It is a SHORTER dash
+  // than the lane markings beside it, which is also what a real one is: a centre
+  // line's marks are stubbier and closer together than a lane divider's, and at
+  // this size that difference is the whole of what tells the two apart.
+  const dashes = (
+    y: number,
+    from: number,
+    to: number,
+    on: number,
+    off: number,
+  ) => {
+    const start = Math.floor(from / (on + off)) * (on + off);
+    for (let x = start; x < to; x += on + off) {
+      const run = Math.min(on, to - x);
+      if (x < from || run <= 0) continue;
+      ctx.fillRect(x - camera.x, y - camera.y, run, 1);
+    }
+  };
+  const inTownFrom = Math.max(left, built.fromX);
+  const inTownTo = Math.min(right, built.toX);
   for (const [i, y] of bands.lanes.entries()) {
     const middle = i === Math.floor((DRIVE.laneCount - 1) / 2);
     ctx.fillStyle = PAINT;
     if (middle) {
-      ctx.fillRect(left - camera.x, y - camera.y - 1, right - left, 2);
+      // Solid through the built-up road…
+      if (inTownTo > inTownFrom) {
+        ctx.fillRect(
+          inTownFrom - camera.x,
+          y - camera.y - 1,
+          inTownTo - inTownFrom,
+          2,
+        );
+      }
+      // …and broken either side of it, which out here is both sides of the leg:
+      // the approach in front of the town, and nothing behind GOODCO's gate.
+      if (inTownFrom > left) dashes(y, left, inTownFrom, 12, 14);
+      if (inTownTo < right) dashes(y, inTownTo, right, 12, 14);
       continue;
     }
-    const dash = 22;
-    const gap = 20;
-    const start = Math.floor(left / (dash + gap)) * (dash + gap);
-    for (let x = start; x < right; x += dash + gap) {
-      ctx.fillRect(x - camera.x, y - camera.y, dash, 1);
-    }
+    dashes(y, inTownFrom, inTownTo, 22, 20);
   }
 
   // ── WHAT THE ROAD REMEMBERS ───────────────────────────────────────────────
@@ -548,11 +730,28 @@ export function drawDrive(
   // stands nearer the camera than the house it fences, and both stand behind
   // every body on the pavement.
   ensureTownArt(sprites);
-  for (const prop of planTown(left, right, townRoad(drive.params))) {
+  for (const prop of planTown(left, right, road)) {
     drawn.push({
       y: prop.y,
       draw: () => drawTownProp(ctx, sprites, prop, camera),
     });
+  }
+  // …AND WHAT IS AT THE END OF IT. GOODCO's fence, its staff lot, its halls and
+  // the ship standing behind them (`engine/game/drive/campus.ts`) — a second
+  // planner, because a company's own site is a fixed arrangement rather than a
+  // district of a procedural street, and the SAME pass, because a planned piece
+  // of scenery is a stack of sprites on a base either way.
+  for (const prop of planCampus(left, right, road)) {
+    drawn.push({
+      y: prop.y,
+      draw: () => drawTownProp(ctx, sprites, prop, camera),
+    });
+  }
+  // …and the staff's own cars behind the fence. Placed by the same planner and
+  // drawn by the ORDINARY blit rather than the compositor, because a car's grid
+  // is authored art whose size the engine does not know — see `campusLot`.
+  for (const car of campusLot(left, right, road)) {
+    put(car.sprite, car.x, car.y);
   }
   // THE KERB, drawn from the SIM rather than derived here — the furniture is
   // world now, so what is painted is exactly what the bumper can reach
@@ -701,7 +900,11 @@ export function drawDrive(
     // out of either one would undo the whole read — and a car somebody LEFT at
     // the kerb never had them on in the first place (`driverless`, the flag a
     // parked car keeps after it stops being furniture and joins this list).
-    if (!other.downed && !other.wrecked && !other.driverless) {
+    //
+    // …AND SOME OF THEM NEVER HAD ANY. A skateboard has no lamps on it, so it
+    // throws none (`DriveVehicleDef.lights`) — which is a fact about the vehicle
+    // and lives on its def, beside how much it weighs.
+    if (def.lights && !other.downed && !other.wrecked && !other.driverless) {
       drawn.push({
         y: other.pos.y - 0.001,
         draw: () =>
@@ -720,6 +923,14 @@ export function drawDrive(
             // clip pointed one way and lit another — the lights visibly came
             // off it. Same angle, same pivot as the sprite (`wreck-draw.ts`).
             other.angle,
+            // …AND THEY ARE BOLTED TO THIS BODY rather than to the hero's. Every
+            // offset in that pass used to be measured off the wagon's own 48-px
+            // side profile, which on a twenty-px delivery moped put the beam a
+            // body and a half out in front of the bike and the tail glow the
+            // same distance behind it — two loose smears of light with a moped
+            // riding between them. `lightBody` is what this machine actually is
+            // (`scenery.ts`).
+            lightBody(def),
           ),
       });
     }
@@ -876,6 +1087,38 @@ export function drawDrive(
   for (const wheel of drive.wheelDebris) {
     const name = wheel.wheelState === 1 ? "car_wheel_flat" : "car_wheel_0";
     put(name, wheel.pos.x, wheel.pos.y, wheel.z);
+  }
+
+  // ── AND THE MAN HIMSELF, ONCE ─────────────────────────────────────────────
+  // THE ONE TIME ON THIS ROAD HE IS OUT OF THE CAR. The wagon has pulled up on
+  // GOODCO's approach, the engine is off, and he steps out and stands looking at
+  // the place — which is the whole reason the run-in is a beat rather than a
+  // cut: the level on the other side of the fade opens with him on the staff lot
+  // trying to get through a door that has no key, and a minigame that put him
+  // there without ever showing him arrive would be handing that scene an
+  // entrance nobody watched.
+  //
+  // DRAWN OFF THE ARRIVAL CLOCK rather than out of the sim, because he is not a
+  // body on this road: there is no hero in a `DriveState` at all, and adding one
+  // for four seconds of walking would put a person into a world whose every pass
+  // is written around there being exactly one.
+  if (drive.outcome === DRIVE_OUTCOME.arrived) {
+    const { arrival } = DRIVE;
+    const out = drive.outcomeMs - arrival.outMs;
+    if (out >= 0) {
+      const dir = drive.params.direction;
+      // Out of the door and a stride clear of it, then standing. The step is
+      // toward the CAMERA rather than up the road: he has to end up in front of
+      // his own car or the car is drawn over him.
+      const t = Math.min(1, out / arrival.walkMs);
+      const x = drive.car.pos.x - dir * 2 + dir * 6 * t;
+      const y = drive.car.pos.y + arrival.walkPx * t;
+      // He walks while he is walking and stands still when he stops — the same
+      // two-frame convention every body in this game uses, run off the RENDER
+      // clock because a gait is the renderer's business (`docs/rendering.md`).
+      const frame = t < 1 ? Math.floor(timeMs / CROWD_FRAME_MS) % 2 : 0;
+      put(`hero_${frame}`, x, y, 0, dir === -1);
+    }
   }
 
   drawn.sort((a, b) => a.y - b.y);

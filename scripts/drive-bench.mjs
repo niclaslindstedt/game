@@ -56,6 +56,7 @@ const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
 const {
+  cityStartPx,
   courseLength,
   createDrive,
   createDriveDriver,
@@ -161,10 +162,10 @@ function driveOne(difficulty, seed) {
       ? driveDriverInput(driver, drive)
       : { pedal: straight, wheel: 0 };
     stepDrive(drive, STEP_MS, input);
-    // Only once the road is peopled — the opening stretch is deliberately empty
-    // and averaging it in would report a road a third quieter than the one the
-    // player spends the trip on.
-    if (lanes && drive.distance > DRIVE.crowdStartPx) {
+    // Only once the road is peopled — the OUTSKIRTS are deliberately empty (no
+    // town, no crowd, no lane traffic at all) and averaging them in would report
+    // a road a third quieter than the one the player spends the trip on.
+    if (lanes && drive.distance > cityStartPx(drive.params)) {
       laneOccupancy(drive, seen);
       ticks += 1;
     }

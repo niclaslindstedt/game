@@ -12,10 +12,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cityLength,
+  courseLength,
   createDrive,
   drivePar,
   driveScore,
   driveTripMs,
+  skipDriveOpening,
   stepDrive,
   DRIVE,
   DRIVE_OUTCOME,
@@ -37,7 +40,13 @@ const PARAMS: DriveParams = {
  * whole course to reach one of them. */
 function staged(over: Partial<DriveState> = {}): DriveState {
   const drive = createDrive(PARAMS);
+  // THE STOPWATCH, not the road's own lifetime. The card is scored on
+  // `clockMs` — the time between the town's gate and the finish line — because
+  // the leg also carries an opening the player cannot hurry and a run-in he does
+  // not drive, and neither belongs on a board. `ms` is set alongside it so a
+  // staged drive still looks like one that has been running.
   drive.ms = 60_000;
+  drive.clockMs = 60_000;
   drive.topSpeed = DRIVE.topSpeedPx;
   drive.car.wear = 0;
   return Object.assign(drive, over);
@@ -56,21 +65,21 @@ describe("the drive's arcade score", () => {
 
   it("rounds to the cabinet's step, so no score ends in a stray digit", () => {
     for (const ms of [51_311, 58_777, 60_004, 71_999]) {
-      const card = driveScore(staged({ ms }));
+      const card = driveScore(staged({ clockMs: ms }));
       expect(card.score % DRIVE.score.round).toBe(0);
     }
   });
 
   it("pays more for a quicker trip, and nothing at all for a slow one", () => {
-    const quick = driveScore(staged({ ms: 50_000 }));
-    const slower = driveScore(staged({ ms: 65_000 }));
+    const quick = driveScore(staged({ clockMs: 50_000 }));
+    const slower = driveScore(staged({ clockMs: 65_000 }));
     expect(quick.time).toBeGreaterThan(slower.time);
     expect(quick.score).toBeGreaterThan(slower.score);
 
     // Past par the bonus is ZERO rather than negative — par is a prize a good
     // driver wins, never a fine a slow one pays.
     const par = drivePar(PARAMS);
-    const dawdled = driveScore(staged({ ms: par + 30_000 }));
+    const dawdled = driveScore(staged({ clockMs: par + 30_000 }));
     expect(dawdled.time).toBe(0);
     expect(dawdled.score).toBeGreaterThan(0);
   });
@@ -128,17 +137,34 @@ describe("the drive's arcade score", () => {
   });
 
   it("scores a shortened leg against its own length, not the whole road", () => {
-    const attract = { ...PARAMS, coursePx: DRIVE.attractCoursePx };
+    const attract = {
+      ...PARAMS,
+      coursePx: DRIVE.attractCoursePx,
+      cityPx: DRIVE.attractCityPx,
+    };
     expect(drivePar(attract)).toBeLessThan(drivePar(PARAMS));
+  });
+
+  it("measures par over the TOWN rather than the whole leg", () => {
+    // The outskirts are an approach the player is not allowed to hurry and the
+    // run-in is a beat he does not drive, so a par that counted either would be
+    // a par every leg beats for nothing.
+    expect(drivePar(PARAMS)).toBe(
+      (cityLength(PARAMS) / DRIVE.score.parSpeedPx) * 1000,
+    );
+    expect(drivePar(PARAMS)).toBeLessThan(
+      (courseLength(PARAMS) / DRIVE.score.parSpeedPx) * 1000,
+    );
   });
 });
 
 describe("the trip's clock", () => {
   it("stops at the finish line rather than running through the arrival beat", () => {
     const drive = createDrive(PARAMS);
-    // Stand the road at its finish, then let the arrival beat play out.
+    // Stand the road at its finish, then let the run-in play out.
     drive.outcome = DRIVE_OUTCOME.arrived;
     drive.ms = 60_000;
+    drive.clockMs = 60_000;
     for (let t = 0; t < DRIVE.arrivalHoldMs; t += 16) {
       stepDrive(drive, 16, { pedal: 0, wheel: 0 });
     }
@@ -147,10 +173,25 @@ describe("the trip's clock", () => {
     expect(driveScore(drive).ms).toBe(60_000);
   });
 
-  it("is the whole clock while the road is still being driven", () => {
+  it("does not start until the town does", () => {
+    // THE OPENING IS NOT ON THE CLOCK. The wagon slides into frame and crosses
+    // several thousand pixels of outskirt before the first house, and none of it
+    // is time the player is being scored on — so a leg still short of the gate
+    // reads a flat zero however long it has existed.
     const drive = createDrive(PARAMS);
+    for (let t = 0; t < 4000; t += 16)
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    expect(drive.ms).toBeGreaterThan(0);
+    expect(drive.cityDone).toBe(false);
+    expect(driveTripMs(drive)).toBe(0);
+  });
+
+  it("runs from the gate, and only from the gate", () => {
+    const drive = createDrive(PARAMS);
+    skipDriveOpening(drive);
+    expect(driveTripMs(drive)).toBe(0);
     for (let t = 0; t < 1000; t += 16)
       stepDrive(drive, 16, { pedal: 1, wheel: 0 });
-    expect(driveTripMs(drive)).toBe(drive.ms);
+    expect(driveTripMs(drive)).toBe(1008);
   });
 });

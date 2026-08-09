@@ -118,3 +118,26 @@ function trimMantissa(n: number): string {
 function stripZeros(s: string): string {
   return s.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 }
+
+/**
+ * A LAP TIME — `m:ss.t`, the way a stopwatch reads.
+ *
+ * Here rather than beside either of its callers because it now has two and they
+ * are on opposite sides of the app: the drive's stopwatch publishes it sixty
+ * times a second as a HUD binding, and the high-score board prints the finished
+ * figure. A second copy of "how many tenths" is exactly how a results card ends
+ * up disagreeing with the clock the player was watching.
+ *
+ * TENTHS AND NOT HUNDREDTHS, and minutes that are not padded. This is a road
+ * trip rather than a qualifying lap: the leg runs to something over a minute,
+ * the last digit is there so the number is visibly MOVING while the car is, and
+ * a leading zero on the minutes would make a 62-second drive look like a lap
+ * record.
+ */
+export function lapClock(ms: number): string {
+  const total = Math.max(0, ms) / 1000;
+  const minutes = Math.floor(total / 60);
+  const seconds = Math.floor(total % 60);
+  const tenths = Math.floor((total * 10) % 10);
+  return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
+}

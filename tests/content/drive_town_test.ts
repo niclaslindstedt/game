@@ -55,8 +55,29 @@ const ATLAS: Record<string, unknown> = JSON.parse(
   ),
 );
 
-const OUT: TownRoad = { direction: 1, coursePx: DRIVE.coursePx };
-const HOME: TownRoad = { direction: -1, coursePx: DRIVE.coursePx };
+const OUT: TownRoad = {
+  direction: 1,
+  coursePx: DRIVE.coursePx,
+  cityPx: DRIVE.opening.cityPx,
+};
+const HOME: TownRoad = {
+  direction: -1,
+  coursePx: DRIVE.coursePx,
+  cityPx: DRIVE.opening.cityPx,
+};
+
+/**
+ * THE WORLD X THIS FAR INTO THE TOWN, on either leg.
+ *
+ * Every test below has to ask about a stretch that actually HAS houses on it,
+ * and where that is depends on the leg: the road opens on an outskirt with
+ * nothing on either side of it (`DRIVE.opening.cityPx`), and the trip home lays
+ * the identical town out along negative x. Sampling raw coordinates asked about
+ * the approach, which is empty by design and reads as a tiler that dropped every
+ * plot.
+ */
+const intoTown = (road: TownRoad, offset: number): number =>
+  road.direction * (road.cityPx + offset);
 
 /** Every sprite the plan could ever name, enumerated from the catalog rather
  * than from a run — a part that only turns up on one seed is exactly the part
@@ -160,7 +181,11 @@ describe("the street it lays out", () => {
   it("tiles without a gap and without an overlap", () => {
     resetTownPlan();
     for (const road of [OUT, HOME]) {
-      for (const from of [0, 5000, 12000, 23000, -9000]) {
+      for (const offset of [0, 5000, 12000, 17000]) {
+        // …laid FROM the sample, whichever way the leg runs: a homeward `from`
+        // is the more negative end of the window it is asking about.
+        const at = intoTown(road, offset);
+        const from = road.direction === 1 ? at : at - 1200;
         const row = planTown(from, from + 1200, road)
           .filter((prop) => !prop.key.startsWith("f:"))
           .sort((a, b) => a.x - b.x);
@@ -200,15 +225,22 @@ describe("the street it lays out", () => {
     // the same pub. Outbound x and homeward x are mirror images of each other
     // around the course, so the same DISTRICT has to produce the same street.
     resetTownPlan();
-    const out = planTown(0, 1200, OUT).map((p) => p.key);
+    const gate = intoTown(OUT, 0);
+    const out = planTown(gate, gate + 1200, OUT).map((p) => p.key);
     resetTownPlan();
-    const home = planTown(0, 1200, HOME).map((p) => p.key);
-    // Not the same keys — the district at x=0 is 0 outbound and 1 homeward, so
-    // these are the two ENDS of the road, and they had better not match.
+    const home = planTown(gate, gate + 1200, HOME).map((p) => p.key);
+    // Not the same keys — the first house of the outbound leg stands where the
+    // homeward leg's LAST one does, so these are the two ENDS of the road and
+    // they had better not match.
+    expect(out.length).toBeGreaterThan(0);
     expect(home).not.toEqual(out);
+    // The district is measured through the TOWN rather than through the leg: 0
+    // at the first house, 1 at GOODCO's gate, and the outskirts in front of both
+    // are clamped to whichever end they sit at.
+    expect(townDistrict(intoTown(OUT, 0), OUT)).toBe(0);
+    expect(townDistrict(intoTown(HOME, 0), HOME)).toBe(0);
     expect(townDistrict(0, OUT)).toBe(0);
-    expect(townDistrict(0, HOME)).toBe(1);
-    expect(townDistrict(-DRIVE.coursePx, HOME)).toBe(0);
+    expect(townDistrict(-DRIVE.coursePx, HOME)).toBe(1);
   });
 
   it("gets nicer the nearer GOODCO it gets", () => {
@@ -216,7 +248,8 @@ describe("the street it lays out", () => {
     // is not on the prop, so it is read off what wear DOES: a boarded or
     // smashed hole, and the junk in the front garden.
     resetTownPlan();
-    const spoiled = (from: number) => {
+    const spoiled = (offset: number) => {
+      const from = intoTown(OUT, offset);
       const props = planTown(from, from + 6000, OUT);
       const layers = props.flatMap((p) => p.layers.map((l) => l.sprite));
       const bad = layers.filter(
@@ -226,8 +259,8 @@ describe("the street it lays out", () => {
       return bad / Math.max(1, layers.length);
     };
     const home = spoiled(0);
-    const middle = spoiled(9000);
-    const goodco = spoiled(18000);
+    const middle = spoiled(7000);
+    const goodco = spoiled(13_000);
     expect(home).toBeGreaterThan(middle);
     expect(middle).toBeGreaterThan(goodco);
     // …and the two ends have to be genuinely different places rather than two
@@ -241,7 +274,8 @@ describe("the street it lays out", () => {
     // with nothing lit on it is a ruin, which is a different — and much less
     // uncomfortable — joke than the one this road is telling.
     resetTownPlan();
-    const props = planTown(0, 6000, OUT);
+    const gate = intoTown(OUT, 0);
+    const props = planTown(gate, gate + 6000, OUT);
     const lit = props.filter((p) =>
       p.layers.some((l) => l.sprite.endsWith("_lit")),
     );

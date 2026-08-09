@@ -41,6 +41,29 @@
 //
 // The COURSE and the CROWD are the same on every rung.
 //
+// ── AND IT IS THREE STRETCHES, NOT ONE ──────────────────────────────────────
+// A leg used to be one uniform road with an empty patch at the start of it. It
+// is three now, and every rule below that reads a distance is really asking
+// which of them the car is on:
+//
+//   THE OUTSKIRTS   0 → `cityStartPx`. Out of town: no houses, no far pavement,
+//                   nobody on the tarmac, and the only traffic is the delivery
+//                   trade and the cyclists on the one pavement there is. The
+//                   camera opens carried ahead of the car (`DriveState.entryPx`)
+//                   so the leg begins on an empty road and the wagon slides into
+//                   it from behind; the wheel is the player's the moment it
+//                   lands, the pedal is capped (`opening.cruisePx`) until the
+//                   town, and he says the two things he has to say.
+//   THE TOWN        `cityStartPx` → `courseLength`. The minigame. Everything
+//                   arrives at once — the houses, the far pavement, the crowd,
+//                   the lane traffic — and the CLOCK starts, which is the
+//                   number the high-score board ranks (`DriveState.clockMs`).
+//   THE RUN-IN      past the finish. The clock stops with the town; the wheel
+//                   comes off the player and the car rolls the last stretch on
+//                   its own, past GOODCO's fence with the data halls and the
+//                   ship standing behind them. He says the one thing he has to
+//                   say about it and the picture goes out.
+//
 // ── HOW IT SITS IN THE GAME ─────────────────────────────────────────────────
 // It is NOT a `GamePhase` and NOT a level. The car reaching the garage's road
 // out fires `carDeparted` exactly as it always did; the app catches it and, if
@@ -67,11 +90,11 @@ import {
   integrateCarBody,
 } from "../vehicles.ts";
 import type { CarPanelId } from "../types/index.ts";
-import { courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
+import { cityStartPx, courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
 import { coastDecelPx, rungTopSpeedPx, throttleAccelPx } from "./drivetrain.ts";
 import {
   laneCenter,
-  roadEdges,
+  roadEdgesAt,
   resetCrowdMarks,
   resetThoughtDeck,
   spawnCrowd,
@@ -84,6 +107,7 @@ import { collide } from "./collide.ts";
 import { crushRemains, forgetRemains, stepRemains } from "./remains.ts";
 import { firstPropSlot, spawnProps, stepProps } from "./street.ts";
 import {
+  haltTraffic,
   laneRunsWithHero,
   resetTrafficMarks,
   spawnTraffic,
@@ -92,7 +116,15 @@ import {
 import { driveTripMs } from "./score.ts";
 import type { DriveInput, DriveParams, DriveState } from "./types.ts";
 
-export { courseLength, DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
+export {
+  cityLength,
+  citySpanX,
+  cityStartPx,
+  courseLength,
+  DRIVE,
+  DRIVE_OUTCOME,
+  DRIVE_UNITS,
+} from "./config.ts";
 // THE WAGON'S BROCHURE — the gearbox and the engine curve the road's pull is
 // solved from, and the readings the DASHBOARD and the ENGINE NOTE are both
 // taken off (`pwa/src/game/hud`, `pwa/src/game/sfx/drive.ts`). One model, read
@@ -120,7 +152,9 @@ export {
   laneAt,
   laneCenter,
   roadBandEdges,
+  roadBandHalfAt,
   roadEdges,
+  roadEdgesAt,
 } from "./crowd.ts";
 export {
   createTraffic,
@@ -183,12 +217,26 @@ export type {
   TownWindow,
 } from "./town.ts";
 export {
+  inTown,
   planTown,
   resetTownPlan,
   townDistrict,
   townRoad,
 } from "./town-plan.ts";
 export type { TownLayer, TownProp, TownRoad } from "./town-plan.ts";
+// …AND WHAT IS AT THE END OF IT. GOODCO's own site is a fixed dressing rather
+// than a district of the town (`campus.ts` says why), and it comes out of its
+// planner in the same shape, so the renderer draws it with the pass it already
+// had.
+export {
+  CAMPUS,
+  CAMPUS_ART_SIZE,
+  campusLot,
+  campusRunInPx,
+  campusSpanX,
+  planCampus,
+} from "./campus.ts";
+export type { CampusCar } from "./campus.ts";
 export { wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
@@ -255,11 +303,14 @@ export function createDrive(params: DriveParams): DriveState {
     { x: 0, y: laneCenter(openingLane(params.direction)) },
     heading,
   );
-  // It rolls onto the road already going — the player is taking over a car
-  // that is already leaving, not starting one from a standstill.
-  car.speed = DRIVE.topSpeedPx * 0.28;
+  // IT IS ALREADY GOING, AND IT IS NOT YET IN THE PICTURE. The leg opens on a
+  // stretch of empty road with the camera carried ahead of the car
+  // (`entryPx`); what the wagon is doing under that is a steady cruise, so it
+  // comes into frame from behind at a pace that reads as being caught up with
+  // rather than as arriving.
+  car.speed = DRIVE.opening.entrySpeedPx;
   car.driver = 0;
-  const trafficMarks = resetTrafficMarks();
+  const trafficMarks = resetTrafficMarks(params);
   return {
     params,
     rng,
@@ -288,18 +339,98 @@ export function createDrive(params: DriveParams): DriveState {
       bumper: 0,
       glass: 0,
     },
-    nextPedestrianAt: resetCrowdMarks(rng),
+    nextPedestrianAt: resetCrowdMarks(rng, params),
     nextTrafficAt: trafficMarks.lanes,
     nextPavementAt: trafficMarks.pavement,
     // A fresh deck of things to be thinking, in this seed's own order — and the
     // first of them due with the first person the road puts out.
     thoughtDeck: resetThoughtDeck(params.seed),
-    nextThoughtAt: DRIVE.crowdStartPx,
+    nextThoughtAt: cityStartPx(params),
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
     blockadeDone: false,
+    entryPx: DRIVE.opening.entryPx,
+    clockMs: 0,
+    cityDone: false,
+    goodcoDone: false,
+    heroOutDone: false,
+    askedDone: false,
+    blackoutDone: false,
     nextId: 1,
   };
+}
+
+/**
+ * IS THE CAR STILL ARRIVING? — the one test the whole opening hangs off.
+ *
+ * While it holds, the camera is carried ahead of the wagon, the pedals and the
+ * wheel are not connected to anything, and the road is a picture of itself. The
+ * instant it stops holding, the player has the car.
+ */
+export function driveArriving(drive: DriveState): boolean {
+  return drive.entryPx > 0;
+}
+
+/** Is the car in the town — the stretch the clock runs over and the minigame
+ * actually happens on? False on the outskirts and false once the finish is
+ * behind him. */
+export function driveInCity(drive: DriveState): boolean {
+  return drive.cityDone && drive.outcome === DRIVE_OUTCOME.driving;
+}
+
+/**
+ * IS THE DASHBOARD UP — has the car come close enough to the town for the
+ * instruments to be worth reading?
+ *
+ * The opening plays with no HUD over it at all: the pedal is capped, nothing is
+ * scored, and three dials reporting that nothing is happening spend the one
+ * thing that stretch of road has. They arrive a short way before the gate
+ * (`DRIVE.opening.dashAtPx`), so the dashboard is settled by the time the clock
+ * starts rather than landing on the same frame as it.
+ *
+ * ANSWERED HERE rather than by the app, because it is a fact about the ROAD —
+ * where on the leg the minigame begins to be a minigame — and the app has two
+ * hosts that would otherwise each decide it.
+ */
+export function driveDashUp(drive: DriveState): boolean {
+  return (
+    drive.cityDone ||
+    drive.distance >= cityStartPx(drive.params) - DRIVE.opening.dashAtPx
+  );
+}
+
+/**
+ * PUT THE CAR AT THE GATE — the whole opening, already over.
+ *
+ * WHAT A RESTART DOES, and the first reason it exists. A breakdown puts the
+ * player back at the top of the SAME road, which is the right call for the road
+ * and the wrong one for the approach to it: the car sliding into frame and the
+ * two lines over it are an OPENING, and an opening replayed after every failure
+ * is fourteen seconds of penalty on top of the penalty. So a restart begins
+ * where the scoring does.
+ *
+ * AND THE SECOND IS EVERY HEADLESS CALLER. A test, a bench, a soak and the
+ * effects gallery all want the ROAD — the crowd, the traffic, the collisions —
+ * and none of them wants the three and a half seconds of scripted arrival in
+ * front of it, during which the pedals are not connected to anything and the
+ * spawners have laid nothing down. Exported rather than reproduced at each of
+ * those call sites, because "how do you get past the opening" is exactly the
+ * kind of thing four suites would answer four slightly different ways.
+ *
+ * It moves the car rather than the marks, because `distance` is derived from the
+ * car's own travel — so putting the wagon a gate's worth down the road is
+ * enough, and every spawner, every latch and the clock all agree about where it
+ * is without being told twice.
+ */
+export function skipDriveOpening(drive: DriveState): void {
+  const dir = drive.params.direction;
+  drive.car.pos.x = drive.car.home.x + dir * cityStartPx(drive.params);
+  drive.distance = cityStartPx(drive.params);
+  drive.car.speed = DRIVE.opening.cruisePx;
+  drive.entryPx = 0;
+  drive.monologueDone = true;
+  drive.cityDone = true;
+  drive.nextPropSlot = firstPropSlot(drive.car.pos.x, dir);
 }
 
 /**
@@ -310,11 +441,14 @@ export function createDrive(params: DriveParams): DriveState {
  *
  * The monologue does NOT play again: he has already had that thought, and
  * hearing a man promise to be careful for the fourth time is a different and
- * much worse joke.
+ * much worse joke. Nor does the rest of the opening — the wagon's slide into
+ * frame and the empty outskirts under it are an approach the player has already
+ * watched, so a restart opens AT THE GATE (`openAtGate`) with the clock at zero
+ * and the town in front of him.
  */
 export function restartDrive(previous: DriveState): DriveState {
   const next = createDrive(previous.params);
-  next.monologueDone = previous.monologueDone;
+  skipDriveOpening(next);
   return next;
 }
 
@@ -355,6 +489,19 @@ export function stepDrive(
         Math.abs(car.speed) - DRIVE.breakdownCoastPx * dt,
       );
     }
+    // …AND AN ARRIVING ONE ROLLS IN RATHER THAN CARRYING ON AT A HUNDRED AND
+    // TWENTY. The finish is not a wall: he lifts off and the car coasts down
+    // GOODCO's approach, which is what makes the last stretch read as pulling
+    // into somewhere rather than as the road being switched off.
+    if (drive.outcome === DRIVE_OUTCOME.arrived) {
+      if (car.speed !== 0) {
+        car.speed = Math.max(
+          0,
+          Math.abs(car.speed) - DRIVE.arrival.coastPx * dt,
+        );
+      }
+      arrivalBeats(drive);
+    }
     advanceCar(drive, dt);
     stepCrowd(drive, dt);
     stepRemains(drive, dt);
@@ -376,6 +523,25 @@ export function stepDrive(
   // …and the number at the top of it is the LADDER's before it is the wear's:
   // the gentle rungs stop the wagon well short of its own top end, because
   // every hazard on this road is priced in closing speed (`rungTopSpeedPx`).
+  // ── THE WAGON ARRIVING ────────────────────────────────────────────────────
+  // While the camera is still carried ahead of the car, nothing the player does
+  // reaches it: the pedals are held at a cruise and the wheel is not connected.
+  // Every control is IGNORED rather than merely unread, exactly as an
+  // auto-driven road ignores a stray keypress — a thumb resting on the pad
+  // during the opening must not steer a car that is being shown to somebody.
+  if (drive.entryPx > 0) {
+    drive.entryPx = Math.max(0, drive.entryPx - DRIVE.opening.closePx * dt);
+    car.speed = DRIVE.opening.entrySpeedPx;
+    car.handbrake = false;
+    advanceCar(drive, dt);
+    spawnTraffic(drive);
+    spawnProps(drive);
+    stepTraffic(drive, dt);
+    stepProps(drive, dt);
+    integrateCarBody(car, dt);
+    return;
+  }
+
   const rungTop = rungTopSpeedPx(drive.params.difficulty);
   const top = rungTop * (1 - car.wear * DRIVE.wearTopSpeedLoss);
   // …plus the one thing the road does NOT share with the bay: the pull. Out
@@ -387,7 +553,13 @@ export function stepDrive(
   // wind. `top` is still the ceiling, and on the gentle rungs it is now the
   // thing that actually stops you: the physics runs out of pull at about 174,
   // so anything below that is a genuine cap rather than a formality.
-  applyCarPedals(car, input, dt, top, rungTop * 0.1, {
+  // …AND ON THE OUTSKIRTS IT IS THE OPENING'S, which is lower than either. He
+  // is not in a hurry until he is in the town, nothing out here is worth
+  // hurrying past, and the clock does not start for another few thousand pixels
+  // — so a player who buries the pedal on the approach gains exactly nothing and
+  // arrives at the gate at the speed the leg is designed to open at.
+  const ceiling = drive.cityDone ? top : Math.min(top, DRIVE.opening.cruisePx);
+  applyCarPedals(car, input, dt, ceiling, rungTop * 0.1, {
     accelPx: throttleAccelPx(car.speed),
     coastPx: coastDecelPx(car.speed),
   });
@@ -417,7 +589,13 @@ export function stepDrive(
     DRIVE.laneRefSpeedPx,
     dir,
   );
-  const edges = roadEdges();
+  // THE ROAD IS NOT THE SAME WIDTH ALL THE WAY DOWN IT. Out on the approach the
+  // carriageway is the middle two lanes and the wagon is held inside them
+  // (`roadEdgesAt`); it opens out to four over the last stretch before the first
+  // house, and the clamp opens with it. Asked of the CAR's own position rather
+  // than of `distance`, because the two part company the moment the wagon is
+  // reversed or shunted backwards.
+  const edges = roadEdgesAt(dir * car.pos.x, drive.params);
   car.pos.y = clamp(car.pos.y, edges.top, edges.bottom);
 
   advanceCar(drive, dt);
@@ -441,14 +619,67 @@ export function stepDrive(
   stepDebris(drive, dt);
 
   // ── THE BEATS ─────────────────────────────────────────────────────────────
-  if (!drive.monologueDone && drive.distance >= DRIVE.monologuePx) {
+  // THE CLOCK IS THE TOWN'S, and it is advanced here rather than derived from
+  // `ms` for the reason a lap timer is its own instrument: the road's own clock
+  // has been running since the first frame of an opening nobody drove, and it
+  // goes on running through an arrival nobody drives either.
+  if (drive.cityDone) drive.clockMs += dtMs;
+
+  if (!drive.monologueDone && drive.distance >= DRIVE.opening.sayAtPx) {
     drive.monologueDone = true;
     drive.events.push({ type: "monologue" });
+  }
+  // THE TOWN, ARRIVING — the one beat on this road that changes what the road
+  // IS. Everything that makes the minigame a minigame starts at this mark, and
+  // so does the number the board ranks.
+  if (!drive.cityDone && drive.distance >= cityStartPx(drive.params)) {
+    drive.cityDone = true;
+    drive.events.push({ type: "cityGate" });
   }
   if (drive.distance >= courseLength(drive.params)) {
     drive.outcome = DRIVE_OUTCOME.arrived;
     drive.outcomeMs = 0;
+    // THE STREET STOPS BEING LAID at the same instant the clock stops. Without
+    // it the spawners go on serving a town that is no longer being drawn, and
+    // the run-in — which is supposed to be GOODCO's approach with nothing on it
+    // — comes with a moped weaving up the pavement.
+    haltTraffic(drive);
     drive.events.push({ type: "arrived" });
+  }
+}
+
+/**
+ * THE RUN-IN'S OWN BEATS — the sight of the place, the door opening, the
+ * question, and the picture going out.
+ *
+ * ON THE CLOCK RATHER THAN ON A DISTANCE, which is the opposite of every other
+ * beat on this road and is right for exactly one reason: the car is coasting to
+ * a stop out here, so a mark measured in world px is a mark a slow enough
+ * arrival never reaches. A leg that ended at 30 mph would sit in front of
+ * GOODCO in silence while the board waited on a line it was never going to get.
+ */
+function arrivalBeats(drive: DriveState): void {
+  const { arrival } = DRIVE;
+  if (!drive.goodcoDone && drive.outcomeMs >= arrival.sightMs) {
+    drive.goodcoDone = true;
+    drive.events.push({ type: "goodco" });
+  }
+  if (!drive.heroOutDone && drive.outcomeMs >= arrival.outMs) {
+    drive.heroOutDone = true;
+    // PINNED rather than trusted to have coasted in. Whatever he crossed the
+    // line at, the wagon is parked the instant the door opens — a car still
+    // rolling with a man standing beside it is the one frame that would undo
+    // the beat.
+    drive.car.speed = 0;
+    drive.events.push({ type: "heroOut" });
+  }
+  if (!drive.askedDone && drive.outcomeMs >= arrival.askMs) {
+    drive.askedDone = true;
+    drive.events.push({ type: "atTheDoor" });
+  }
+  if (!drive.blackoutDone && drive.outcomeMs >= arrival.blackoutMs) {
+    drive.blackoutDone = true;
+    drive.events.push({ type: "blackout" });
   }
 }
 

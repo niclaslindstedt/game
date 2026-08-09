@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE STOPWATCH — the arcade clock in the top right of the windscreen, and the
+# only thing on this road that tells the player they are being SCORED.
+#
+# WHY IT IS UP THERE AND NOT ON THE DASHBOARD. Everything on `drive_dash` is an
+# instrument the CAR has: a speedometer, a gearbox gate, a damage readout. A lap
+# clock is not — no thirty-year-old estate has one — it is the CABINET talking
+# over the picture, exactly as the high-score board at the end of the leg is. So
+# it wears the machine's own voice rather than the dashboard's: no plate, no
+# frame, no dial, just a figure hung in the corner of the screen where an arcade
+# game has always hung one.
+#
+# IT ONLY EXISTS INSIDE THE TOWN. The leg opens on an outskirt the player cannot
+# hurry through (the pedal is capped and nothing is scored) and ends on a run-in
+# he does not drive at all, so a clock running over either would be timing
+# something nobody is playing. It arrives with the houses, and it STOPS on the
+# finish line and stays on screen holding its final figure while the car rolls
+# in — which is the whole reason `drive.clockRunning` is a separate fact from the
+# time being non-zero.
+#
+# THE FIGURE IS FORMATTED BY THE APP (`drive.clock`, `m:ss.t`) and not in Lua: a
+# clock is a format rather than a judgement. What IS a judgement is how it is
+# COLOURED — whether this is a good time — and that is `drive.clock_color`, off
+# the raw `drive.clockMs` beside it, so a conversion can hang its own par on it.
+region: drive_clock
+order: 0
+kind: panel
+class: drive-clock
+visible: drive.clockStarted
+children:
+  # THE WORD, small and quiet over the figure. It is what changes when the leg
+  # ends: the clock stops saying what it is counting and starts saying that it
+  # has stopped, which is the one cue that tells a player mid-crowd that the
+  # run they are scored on is over and the rest is the road showing off.
+  - id: clock_caption
+    kind: text
+    class: drive-clock-caption
+    text:
+      script: drive.clock_label
+    scale: 2
+    color: "#7c8592"
+
+  # …and the figure itself.
+  - id: clock_time
+    kind: text
+    class: drive-clock-time
+    bind: drive.clock
+    scale: 5
+    color:
+      script: drive.clock_color

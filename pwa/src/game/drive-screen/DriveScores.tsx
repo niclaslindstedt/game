@@ -27,7 +27,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCompact, lapClock } from "@ui/lib/format-number.ts";
 import type { DriveScorecard } from "@game/core";
 
 import { synth } from "../audio.ts";
@@ -57,14 +57,16 @@ const DIM = "#7c8592";
 const GOLD = "#ffd75e";
 const MINT = "#7ef0c8";
 
-/** mm:ss.t — a trip time, read the way a lap time is. */
-export function driveClock(ms: number): string {
-  const total = Math.max(0, ms) / 1000;
-  const minutes = Math.floor(total / 60);
-  const seconds = Math.floor(total % 60);
-  const tenths = Math.floor((total * 10) % 10);
-  return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
-}
+/**
+ * m:ss.t — a trip time, read the way a lap time is.
+ *
+ * IT IS THE STOPWATCH'S OWN FORMATTER (`lapClock`, @ui/lib), re-exported here
+ * rather than restated: the number on this card is the number that was ticking
+ * in the corner of the screen a second ago, and a board that rounded it
+ * differently from the clock the player was watching is a board they will not
+ * believe.
+ */
+export const driveClock = lapClock;
 
 /**
  * WHAT THE SCREEN IS SHOWING — settled once, when the road hands over, and then

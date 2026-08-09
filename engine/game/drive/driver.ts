@@ -39,7 +39,7 @@ import { clamp } from "@game/lib/vec.ts";
 import { DRIVE_BOT_OVERRIDES } from "../../generated/botTuning.ts";
 import { CAR } from "../vehicles.ts";
 import { DRIVE, DRIVE_OUTCOME } from "./config.ts";
-import { laneAt, roadEdges } from "./crowd.ts";
+import { laneAt, roadEdgesAt } from "./crowd.ts";
 import { rungTopSpeedPx } from "./drivetrain.ts";
 import { propRadius } from "./street.ts";
 import { laneRunsWithHero } from "./traffic.ts";
@@ -134,7 +134,11 @@ export function driveDriverInput(
   const horizonSec = aheadPx / Math.max(1, speed);
 
   // ── PICK THE LINE ─────────────────────────────────────────────────────────
-  const edges = roadEdges();
+  // ON THE ROAD THAT IS ACTUALLY THERE. The carriageway is the middle two lanes
+  // out on the approach and four through the town (`roadEdgesAt`), so a driver
+  // probing the town's full width out there would commit to a line in the grass
+  // and then spend the whole approach pressed against a clamp it could not see.
+  const edges = roadEdgesAt(drive.params.direction * car.pos.x, drive.params);
   let bestY = car.pos.y;
   let bestCost = Infinity;
   for (let y = edges.top; y <= edges.bottom; y += tune.probePitchPx) {

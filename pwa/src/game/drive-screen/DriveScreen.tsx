@@ -296,6 +296,22 @@ export function DriveScreen({
   const [board, setBoard] = useState<DriveBoardResult | null>(null);
   const boardRef = useRef<DriveBoardResult | null>(null);
   /**
+   * THE PICTURE GOING OUT — the last thing the road does.
+   *
+   * The run-in ends with the car parked on GOODCO's approach and the hero
+   * standing beside it having asked how he is supposed to get in; then the
+   * screen goes black, and the board comes up over the black rather than over a
+   * frozen car park. It is the same half-second dim the garage handed the road
+   * at the other end (`DEPARTURE`), which is what makes the whole leg read as
+   * one journey with a fade at each end instead of a minigame that stops.
+   *
+   * A FLAG RATHER THAN A CLOCK, because the timing is the engine's
+   * (`DRIVE.arrival.blackoutMs`, raised as an event) and the FADE is the app's:
+   * CSS owns the curve, and the only thing React has to know is whether it has
+   * started.
+   */
+  const [blackout, setBlackout] = useState(false);
+  /**
    * THE DIALS — what the dashboard reads, republished only when one of them
    * actually moves.
    *
@@ -693,6 +709,13 @@ export function DriveScreen({
           say,
         );
         ageSpeech(drive.ms);
+        // THE PICTURE GOING OUT. Read off the tick's own events rather than off
+        // a clock kept out here, so the fade starts on exactly the beat the
+        // engine says it does — and read AFTER the drain, which is where the
+        // rest of this tick's events have already been spoken and heard.
+        if (drive.events.some((event) => event.type === "blackout")) {
+          setBlackout(true);
+        }
         // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
         // fixed step — so a slow frame never skips a grain or fast-forwards a
         // spark, the pause card's freeze stops both dead exactly as it stops
@@ -969,6 +992,11 @@ export function DriveScreen({
           }
         />
       )}
+      {/* THE PICTURE GOING OUT, under the board and over everything else. The
+          car is parked on GOODCO's approach with the man standing beside it,
+          he has asked the question the next level answers, and the leg fades
+          the way it opened. Inert — there is nothing to press on a fade. */}
+      {blackout && <div className="drive-blackout" aria-hidden="true" />}
       {/* THE CABINET'S BOARD, over a stopped road. Last in the tree so it sits
           over the dashboard and the bark alike — it is the only thing on this
           screen worth reading once the course is behind him. */}

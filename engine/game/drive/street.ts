@@ -37,10 +37,38 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import { DRIVE } from "./config.ts";
+import { cityStartPx, courseLength, DRIVE } from "./config.ts";
 import { roadBandEdges } from "./crowd.ts";
 import type { DriveProp, DrivePropKind, DriveState } from "./types.ts";
 import { TRAFFIC_VARIANTS } from "./traffic.ts";
+
+/**
+ * WHICH STRETCH OF ROAD A SLOT IS ON, which is the whole of what this file has
+ * to know about the leg's shape.
+ *
+ * A KERB IS WHAT IS BEHIND IT. In the town there are two pavements, so there are
+ * two rows of lighting facing each other and somebody's car parked between them.
+ * On the OUTSKIRTS there is one pavement and no town at all behind the far verge
+ * — a lamp standard out there would be a street light in a field, and a parked
+ * hatchback would be a car left at the kerb of a road with no houses on it.
+ * Past the finish it is GOODCO's approach: lit on both sides, because a company
+ * lights its own gate, and nobody parks on the approach to a car park.
+ */
+type Stretch = "outskirts" | "town" | "campus";
+
+/**
+ * …asked of a WORLD x, and answered through the leg's own direction.
+ *
+ * `dir * x` is how far along the leg a world coordinate sits, because a drive
+ * starts its car at x = 0 and drives its own way — so the trip home lays the
+ * same three stretches out along negative x and this one line covers both legs.
+ */
+function stretchAt(x: number, params: DriveState["params"]): Stretch {
+  const travel = params.direction * x;
+  if (travel < cityStartPx(params)) return "outskirts";
+  if (travel > courseLength(params)) return "campus";
+  return "town";
+}
 
 /** A stable 0→1 off a slot index — the same trick the crowd's crossings use
  * (`markHash`), and here for the same reason: a street laid down without
@@ -85,11 +113,33 @@ type StreetPiece = {
  * tuned with — thinning THOSE out would be a difficulty change wearing a
  * lighting change's clothes.
  */
-function piecesAt(slot: number): StreetPiece[] {
+function piecesAt(slot: number, stretch: Stretch): StreetPiece[] {
   const { pitchPx } = DRIVE.street;
   const y = kerbY();
   const x = slot * pitchPx;
   const mast = isMastSlot(slot);
+  // OUT OF TOWN THERE IS ONE PAVEMENT AND NOTHING PARKED ON IT. The far verge
+  // has no paving, no houses and nothing to walk to, so the row of lighting that
+  // would face across the carriageway is simply not there — and neither is
+  // anybody's hatchback, because a car left at the kerb belongs to a house.
+  // What is left is the near row, which is the pavement the delivery riders are
+  // on, and it is what stops the opening reading as an unlit test track.
+  if (stretch === "outskirts") {
+    return mast
+      ? [{ kind: "lamp_post", pos: { x, y: y.near }, variant: 0 }]
+      : [];
+  }
+  // …AND ON GOODCO'S APPROACH, LIT FROM BOTH SIDES AND PARKED ON BY NOBODY. A
+  // company lights its own gate; nobody leaves a car on the road up to a car
+  // park.
+  if (stretch === "campus") {
+    return mast
+      ? [
+          { kind: "lamp_post", pos: { x, y: y.far }, variant: 0 },
+          { kind: "lamp_post", pos: { x, y: y.near }, variant: 0 },
+        ]
+      : [];
+  }
   // A MAST SLOT IS NEVER A PARKING SPACE. The two rows have to pair up on it,
   // and somebody's car in the near one leaves a mast lighting the road on its
   // own from the far kerb.
@@ -152,7 +202,7 @@ export function spawnProps(state: DriveState): void {
   while ((reachX - state.nextPropSlot * pitch) * dir >= 0) {
     const slot = state.nextPropSlot;
     state.nextPropSlot += dir;
-    for (const piece of piecesAt(slot)) {
+    for (const piece of piecesAt(slot, stretchAt(slot * pitch, state.params))) {
       state.props.push({
         id: state.nextId++,
         kind: piece.kind,

@@ -702,10 +702,36 @@ export type DriveEvent =
   | { type: "partShed"; pos: Vec2 }
   /** The engine has died — the car is rolling to a halt. */
   | { type: "breakdown"; pos: Vec2 }
-  /** The hero's inner monologue about the people he is about to meet. */
+  /** The hero's inner monologue about the trip and the people he is about to
+   * meet — said on the outskirts, before there is anybody to say it about. */
   | { type: "monologue" }
-  /** The far end of the course. */
-  | { type: "arrived" };
+  /**
+   * THE TOWN, arriving. The houses, the far pavement, the crowd and the traffic
+   * all start at this world x, and so does the CLOCK — which is the whole reason
+   * it is an event: the one beat on this road worth a noise and a flash is the
+   * one where the leg stops being an approach and starts being a score.
+   */
+  | { type: "cityGate" }
+  /** The far end of the course: the clock stops, the town stops, and the wheel
+   * comes off the player. */
+  | { type: "arrived" }
+  /** …and what is standing at the end of it, out of the dark: GOODCO's halls,
+   * and the ship behind them. */
+  | { type: "goodco" }
+  /**
+   * THE CAR IS PARKED AND THE DOOR IS OPEN — the one time on this whole road
+   * that the man is out of the wagon.
+   *
+   * Its own beat rather than a flag on the arrival because it is the beat the
+   * NEXT level is built on: GOODCO's front door has no key, and a minigame that
+   * put him back on the staff lot without ever showing him get out of the car
+   * would be handing that scene an entrance nobody watched.
+   */
+  | { type: "heroOut" }
+  /** …and what he says standing in front of it, which is a question. */
+  | { type: "atTheDoor" }
+  /** The picture going out under him — the last thing the road does. */
+  | { type: "blackout" };
 
 /** What a drive is built from — everything the app settles before the wheel is
  * handed over. */
@@ -749,6 +775,18 @@ export type DriveParams = {
    * crowd down against the same finish the arrival check reads.
    */
   coursePx?: number;
+  /**
+   * …AND WHERE THE TOWN STARTS ON IT (world px). Omitted for every drive a
+   * player takes — the outskirts are `DRIVE.opening.cityPx` long and always are.
+   *
+   * It exists for the same surface the field above does. The ATTRACT LOOP has
+   * fifteen seconds to show somebody what this minigame is, and the opening is
+   * fourteen of them: the car sliding into frame is worth keeping (it is the
+   * best-looking thing on the road), the two lines it is there to cover are not
+   * — nobody reads a monologue on a title screen. So the demo takes the arrival
+   * and goes straight into the town.
+   */
+  cityPx?: number;
   /**
    * WHETHER BODIES COME APART. Decided by the app's gore gate at creation and
    * carried as a plain boolean, because the engine has no business reading a
@@ -871,6 +909,44 @@ export type DriveState = {
   /** …and once THE GLUED have been laid down. A blockade that could be laid
    * twice is a wall the player drives into and then into again. */
   blockadeDone: boolean;
+
+  // ── THE OPENING, THE CLOCK AND THE RUN-IN ─────────────────────────────────
+  /**
+   * HOW FAR THE CAMERA IS STILL CARRIED AHEAD OF WHERE IT BELONGS (world px) —
+   * the wagon's own arrival, and the only thing on this road that moves the
+   * frame rather than the world.
+   *
+   * It opens at `DRIVE.opening.entryPx` and is given back at
+   * `DRIVE.opening.closePx`, so the leg starts on a road with nothing on it and
+   * the car slides in from behind under its own power. Zero for the whole rest
+   * of the leg, which is what makes this the ONE test for "has the car arrived
+   * yet" — the throttle cap, the player's hands and the first of his lines all
+   * hang off it reaching nothing.
+   */
+  entryPx: number;
+  /**
+   * THE STOPWATCH — ms of TOWN, and the number the high-score board ranks.
+   *
+   * It runs from the gate (`cityStartPx`) to the finish and not one tick either
+   * side of it: the outskirts are an opening the player cannot hurry and the
+   * run-in is a beat he does not drive, so neither belongs on a board. Its own
+   * field rather than a subtraction off `ms` for the reason a lap timer is its
+   * own instrument — the road's clock keeps running through the arrival, and
+   * "how long the leg has existed" is not a time anybody drove.
+   */
+  clockMs: number;
+  /** Latched once the town has come over the horizon: the houses, the crowd, the
+   * traffic and the clock all start here, once, and the arrival stops it. */
+  cityDone: boolean;
+  /** …and once he has seen GOODCO on the run-in. */
+  goodcoDone: boolean;
+  /** …once the car is parked and he is out of it. */
+  heroOutDone: boolean;
+  /** …once he has asked the question the next level answers. */
+  askedDone: boolean;
+  /** …and once the picture has gone out under him. */
+  blackoutDone: boolean;
+
   /** The id counter for everything the road mints. */
   nextId: number;
 };

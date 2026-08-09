@@ -636,6 +636,64 @@ html.app-locked body {
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
 }
 
+/* ── THE STOPWATCH ──────────────────────────────────────────────────────────
+   The arcade clock in the top right of the windscreen, and the only thing on
+   this road that is the CABINET talking rather than the car.
+
+   IT WEARS NO PLATE AND NO FRAME, on purpose. Everything on `.drive-dash` is an
+   instrument the wagon has, and a thirty-year-old estate does not have a lap
+   timer: this is the machine keeping score over the top of the picture, so it
+   is a bare figure hung in the corner the way an arcade game has always hung
+   one. The drop shadow is doing the same job the dashboard's is — a hard pixel
+   edge so the number survives a lit shopfront and a set of oncoming headlights
+   going past underneath it.
+
+   TOP RIGHT AND NOT TOP LEFT, and it is the same reasoning that put the dials
+   bottom-left: the steering thumb lands where it lands, and this corner is the
+   one a right-handed player's hand is least often over. It clears the phone's
+   own status furniture on the same inset the rest of the app respects. */
+.drive-clock-slot {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  pointer-events: none;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+}
+
+.drive-clock {
+  display: flex;
+  flex-direction: column;
+  /* The word sits over the RIGHT end of the figure, so the two hang off the
+     same edge and the block does not appear to move when the minutes roll. */
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+/* The figure is monospaced BY HAND — the pixel font is proportional, and a
+   clock whose digits are different widths visibly jitters every tenth of a
+   second. `tabular-nums` does nothing to a canvas-drawn glyph run, so what
+   holds it still is a minimum width: wide enough for `0:00.0`, so the block
+   only grows when the leg passes ten minutes, which it cannot. */
+.drive-clock-time {
+  min-width: 7.5rem;
+  text-align: right;
+}
+
+.drive-clock-caption {
+  opacity: 0.85;
+}
+
+/* PORTRAIT HAS NOTHING ELSE UP HERE — the speech window stacks ABOVE the dials
+   along the bottom rather than moving to the top (`.drive-bark`), so the corner
+   is the clock's on both orientations. What changes is only the reserved width:
+   a tall screen is narrow, and a figure held to a landscape minimum would be a
+   third of it. */
+@media (orientation: portrait) {
+  .drive-clock-time {
+    min-width: 5.5rem;
+  }
+}
+
 /* A ROUND DIAL: the arcs are absolutely placed over each other and the face
    sits in the middle of them, so a speedometer with a rev counter inside it is
    two `kind: gauge` nodes and a stack of words rather than a widget. Sized in
@@ -6558,6 +6616,46 @@ html.app-locked body {
   .drive-dash {
     left: 50%;
     transform: translateX(-50%);
+  }
+}
+
+/* THE ROAD GOING OUT — the fade the leg ends on, over a car parked on GOODCO's
+   approach with the man standing beside it.
+
+   IT IS THE DEPARTURE'S DIM AT THE OTHER END OF THE JOURNEY. Leaving the garage
+   is a half-second wash to black and this is the same wash arriving, which is
+   what makes the whole minigame read as one trip with a fade at each end rather
+   than as a screen that stops. The board is drawn OVER it (later in the tree),
+   so the cabinet's own moment happens against black instead of against a frozen
+   car park.
+
+   The curve is longer than the departure's on purpose: that one is a door
+   closing behind you and wants to be brisk, and this one is the end of the leg
+   and is the last thing the road does. Inert — there is nothing to press on a
+   fade — and honest about reduced motion, where the wash is simply the black
+   arriving without the ramp. */
+.drive-blackout {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 40;
+  animation: drive-blackout-in 1200ms ease-in forwards;
+}
+
+@keyframes drive-blackout-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive-blackout {
+    animation: none;
+    opacity: 1;
   }
 }
 

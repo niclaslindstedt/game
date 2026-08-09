@@ -57,14 +57,18 @@ import {
 import type { TownBuildingDef, TownSlot } from "./town.ts";
 import type { DriveDirection } from "./types.ts";
 
-/** Which road this is, and how long — everything the district gradient needs.
- * Read off `DriveParams`, never off a `DriveState`, so the preview tools and
- * the tests can ask about a road nobody is driving. */
+/** Which road this is, how long, and where the town on it starts — everything
+ * the district gradient needs. Read off `DriveParams`, never off a `DriveState`,
+ * so the preview tools and the tests can ask about a road nobody is driving. */
 export type TownRoad = {
   direction: DriveDirection;
   /** The finish, in world px from the start. `DRIVE.coursePx` for every leg a
    * player drives; the attract loop's is shorter. */
   coursePx: number;
+  /** …and where the houses start, which is not the start of the leg: the road
+   * opens on an OUTSKIRT with nothing on either side of it
+   * (`DRIVE.opening.cityPx`). */
+  cityPx: number;
 };
 
 /** One sprite laid on a composed piece of town — sprite-local px from the
@@ -105,21 +109,39 @@ export type TownProp = {
  * belongs to the ROAD rather than to the trip: the same house has to be the same
  * house on the way back, or a player who noticed a burnt-out pub on the way out
  * would drive home past a business park standing where it was.
+ *
+ * AND IT IS MEASURED THROUGH THE TOWN, not through the leg. The road opens on an
+ * outskirt with nothing at all on either side of it, so 0 is the FIRST HOUSE
+ * rather than the first pixel — otherwise the whole gradient would slide every
+ * time the opening was retuned, and the hero's own block, which is supposed to
+ * be the worst thing on the road, would already be a third of the way to being
+ * respectable by the time the first building appeared.
  */
 export function townDistrict(x: number, road: TownRoad): number {
-  const course = Math.max(1, road.coursePx);
-  const t = road.direction === 1 ? x / course : 1 + x / course;
+  const span = Math.max(1, road.coursePx - road.cityPx);
+  const t = (road.direction * x - road.cityPx) / span;
   return Math.max(0, Math.min(1, t));
+}
+
+/** Whether a spot is IN the town at all — the outskirts and GOODCO's own
+ * approach are road with no houses on them, and this is the one test that says
+ * so. Measured along the leg (`direction * x`), so both legs answer it the same
+ * way. */
+export function inTown(x: number, road: TownRoad): boolean {
+  const travel = road.direction * x;
+  return travel >= road.cityPx && travel <= road.coursePx;
 }
 
 /** The road a set of drive parameters describes. */
 export function townRoad(params: {
   direction: DriveDirection;
   coursePx?: number;
+  cityPx?: number;
 }): TownRoad {
   return {
     direction: params.direction,
     coursePx: params.coursePx ?? DRIVE.coursePx,
+    cityPx: params.cityPx ?? DRIVE.opening.cityPx,
   };
 }
 
@@ -491,9 +513,20 @@ function planBlock(block: number, road: TownRoad): TownProp[] {
     const def = pickBuilding(t, BLOCK_PLOTS - plot, index, previous);
     if (!def) break;
     previous = def;
+    // THE ROW STOPS AT BOTH ENDS OF THE TOWN. A block that straddles the gate or
+    // the finish is planned whole and its outside plots are dropped, which is
+    // what makes the town ARRIVE as a row of frontages coming over the horizon
+    // rather than fading up. The plot is still WALKED (and its archetype still
+    // drawn, above) so the tiling either side of the seam is the tiling the town
+    // would have had — a skipped plot must not shift the one after it.
+    const centreX = x0 + (def.slots * TOWN_PLOT_PX - TOWN_ALLEY_PX) / 2;
+    if (!inTown(centreX, road)) {
+      plot += def.slots;
+      continue;
+    }
     const w = townWidth(def);
     const h = townHeight(def);
-    const centre = x0 + (def.slots * TOWN_PLOT_PX - TOWN_ALLEY_PX) / 2;
+    const centre = centreX;
     const dress = dressBuilding(def, index, t);
     props.push({
       key: dress.key,
@@ -530,7 +563,7 @@ export function planTown(
   const last = Math.floor(toX / BLOCK_PX) + 1;
   const out: TownProp[] = [];
   for (let block = first; block <= last; block++) {
-    const key = `${road.direction}:${road.coursePx}:${block}`;
+    const key = `${road.direction}:${road.coursePx}:${road.cityPx}:${block}`;
     let plan = blockCache.get(key);
     if (!plan) {
       if (blockCache.size >= BLOCK_CACHE_CAP) blockCache.clear();

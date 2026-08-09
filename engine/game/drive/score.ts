@@ -26,7 +26,7 @@
 // where `driveVerdict` sits, which is the nearest thing in the codebase to it —
 // a whole-trip judgement, read once, in TypeScript, tunable from `DRIVE.score`.
 
-import { courseLength, DRIVE } from "./config.ts";
+import { cityLength, DRIVE } from "./config.ts";
 import type { DriveState } from "./types.ts";
 
 /**
@@ -73,24 +73,41 @@ export type DriveScorecard = {
   posts: number;
 };
 
-/** Par for a leg of this length (ms) — derived from the course rather than
- * fixed, so the attract loop's short road is scored against its own length. */
-export function drivePar(params: { coursePx?: number }): number {
-  return (courseLength(params) / DRIVE.score.parSpeedPx) * 1000;
+/**
+ * Par for a leg of this length (ms) — derived from the road rather than fixed,
+ * so the attract loop's short course is scored against its own length.
+ *
+ * IT IS THE TOWN'S LENGTH AND NOT THE COURSE'S, because the town is what the
+ * clock runs over (`cityLength`, and `DriveState.clockMs` beside it). Measured
+ * against the whole course, par would include an approach the player is not
+ * allowed to hurry and a run-in he does not drive, and every leg would come in
+ * comfortably under it for nothing.
+ */
+export function drivePar(params: {
+  coursePx?: number;
+  cityPx?: number;
+}): number {
+  return (cityLength(params) / DRIVE.score.parSpeedPx) * 1000;
 }
 
 /**
- * HOW LONG THE TRIP ACTUALLY TOOK (ms) — the clock stopped at the finish line.
+ * HOW LONG THE TRIP ACTUALLY TOOK (ms) — the stopwatch in the corner of the
+ * screen, from the town's gate to the finish line.
  *
- * NOT `drive.ms`, which is the road's whole lifetime: a finished drive keeps
- * ticking through its terminal beat (the arrival hold, the wreck's roll) because
- * there is still a picture to show, so `ms` on a drive that arrived is the trip
- * PLUS however long the screen has been sitting on the result. Subtracting the
- * terminal clock gives the number a driver would read off a stopwatch, and it is
- * the right answer mid-drive too, where `outcomeMs` is still zero.
+ * IT IS THE ROAD'S OWN FIELD NOW (`DriveState.clockMs`) rather than a
+ * subtraction off `ms`, and the difference is the whole of what the leg became.
+ * `ms` is the ROAD's lifetime: it has been running since the first frame of an
+ * opening the player cannot hurry — an empty stretch of outskirts with the car
+ * sliding into it — and it goes on running through a run-in nobody drives. What
+ * a driver would read off a stopwatch is the TOWN, which is exactly the stretch
+ * the minigame is, and is the number the board ranks.
+ *
+ * The accessor stays because every caller wants "the trip time" without caring
+ * where it is kept, and because a leg that has not reached the gate yet is
+ * honestly zero rather than nearly-zero.
  */
 export function driveTripMs(drive: DriveState): number {
-  return Math.max(0, drive.ms - drive.outcomeMs);
+  return Math.max(0, drive.clockMs);
 }
 
 /**

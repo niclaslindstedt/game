@@ -3332,6 +3332,18 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "drive_arrive_door": {
+      "id": "drive_arrive_door",
+      "pages": [["OK. SO HOW DO I GET IN?"]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_goodco": {
+      "id": "drive_arrive_goodco",
+      "pages": [["THERE'S GOODCO."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "drive_arrive_posts": {
       "id": "drive_arrive_posts",
       "pages": [
@@ -3381,10 +3393,10 @@
     "drive_out_welfare": {
       "id": "drive_out_welfare",
       "pages": [
+        ["I NEED TO HURRY TO GOODCO AND GET THE PART."],
         [
-          "THE WHOLE BLOCK LOST ITS JOBS. THE ONES WHO DIDN'T GET THE WELFARE ARE OUT WALKING IT."
-        ],
-        ["THEY'LL COME RIGHT UP TO THE WINDOW. MIND HOW YOU GO THROUGH HERE."]
+          "THE PEOPLE IN TOWN CAN BE QUITE AGGRESSIVE IN THEIR BEGGING. MANY OF THEM ARE NOT ON WELFARE LIKE ME."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"

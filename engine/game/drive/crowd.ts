@@ -32,8 +32,8 @@
 
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 
-import { courseLength, DRIVE } from "./config.ts";
-import type { DrivePedestrian, DriveState } from "./types.ts";
+import { cityStartPx, courseLength, DRIVE } from "./config.ts";
+import type { DriveParams, DrivePedestrian, DriveState } from "./types.ts";
 
 /**
  * How many distinct bodies the crowd is drawn from. The app's sprite table is
@@ -94,6 +94,51 @@ export function roadBandEdges(): { top: number; bottom: number } {
 export function roadEdges(): { top: number; bottom: number } {
   const band = roadBandEdges();
   return { top: band.top - DRIVE.vergePx, bottom: band.bottom + DRIVE.vergePx };
+}
+
+/**
+ * HOW WIDE THE CARRIAGEWAY IS AT ONE POINT ON THE LEG (half-width, world px) —
+ * the one thing about this road that is not the same all the way down it.
+ *
+ * THE ROAD OUT OF TOWN IS TWO LANES. The four-lane carriageway is the TOWN's:
+ * out on the approach it is an ordinary country road — the middle two lanes and
+ * nothing else — and it OPENS OUT to four over the last stretch before the first
+ * house, which is what a road actually does on the way into somewhere and is the
+ * cheapest possible way to say "you are arriving" without a sign.
+ *
+ * IT IS ALSO WHAT KEEPS THE CYCLISTS ALIVE. The footway sits where it sits, at
+ * the full road's own kerb line (`crowdEdges`) — so a narrow carriageway leaves a
+ * lane's worth of verge between the tarmac and the pavement, and the delivery
+ * riders out there are genuinely out of reach rather than nominally so. Widen the
+ * road and the gap closes; that is the same beat as the crowd arriving.
+ *
+ * `travel` is how far along the leg the point is (`dir * x`, which is what
+ * `DriveState.distance` measures), so both legs answer it identically.
+ */
+export function roadBandHalfAt(
+  travel: number,
+  params: { coursePx?: number; cityPx?: number },
+): number {
+  const full = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
+  const narrow = (DRIVE.opening.laneCount * DRIVE.laneWidth) / 2;
+  const gate = cityStartPx(params);
+  if (travel >= gate) return full;
+  const opened =
+    (travel - (gate - DRIVE.opening.widenPx)) / DRIVE.opening.widenPx;
+  if (opened <= 0) return narrow;
+  return narrow + (full - narrow) * opened;
+}
+
+/** …and the same in the units the CAR is clamped to: the tarmac at this point
+ * plus the gutter it may stray into. The one accessor a moving body should use —
+ * `roadEdges` is the TOWN's road, and out on the approach it is a lane wider than
+ * the tarmac actually is. */
+export function roadEdgesAt(
+  travel: number,
+  params: { coursePx?: number; cityPx?: number },
+): { top: number; bottom: number } {
+  const half = roadBandHalfAt(travel, params);
+  return { top: -half - DRIVE.vergePx, bottom: half + DRIVE.vergePx };
 }
 
 /**
@@ -218,10 +263,13 @@ export function spawnCrowd(state: DriveState): void {
   while (state.nextPedestrianAt < reach) {
     const at = state.nextPedestrianAt;
     state.nextPedestrianAt += 1000 / DRIVE.pedestriansPerKPx;
-    // The opening stretch is empty on purpose: the player gets the wheel, and
-    // the hero gets his think about the people ahead, before anybody is in the
-    // way. See `DRIVE.crowdStartPx`.
-    if (at < DRIVE.crowdStartPx) continue;
+    // NOBODY IS ON THE ROAD UNTIL THE TOWN IS. The outskirts are out of town —
+    // no houses, no far pavement, and nobody standing in four lanes of a road
+    // that has nothing on either side of it — so the crowd starts at the gate
+    // and not a pixel before it (`cityStartPx`). That is also what makes the
+    // hero's promise cheap: he makes it on an empty road, which is the only
+    // place it costs him anything to make.
+    if (at < cityStartPx(state.params)) continue;
     if (at > courseLength(state.params)) break;
     // ON A CROSSING, OR STREWN. Half the crowd is gathered onto the next
     // painted crossing ahead, spread across its width — which is what gives
@@ -360,9 +408,10 @@ function stepTumble(ped: DrivePedestrian, dt: number): void {
   }
 }
 
-/** Mint the crowd's spawn marks for a fresh drive. */
-export function resetCrowdMarks(rng: Rng): number {
+/** Mint the crowd's spawn marks for a fresh drive — the town's gate, which is
+ * where the people are. */
+export function resetCrowdMarks(rng: Rng, params: DriveParams): number {
   // A touch of jitter on the very first mark so two drives on neighbouring
   // seeds do not open with a body in identically the same spot.
-  return DRIVE.crowdStartPx + rng() * (1000 / DRIVE.pedestriansPerKPx);
+  return cityStartPx(params) + rng() * (1000 / DRIVE.pedestriansPerKPx);
 }

@@ -591,7 +591,39 @@ export function drawCarAssembly(
  * car in this game throws the same light, which is the rule the garage and the
  * minigame already share (docs/rendering.md); a second cone written for the
  * traffic would be a second thing to keep in step with it.
+ *
+ * …AND THE LAMPS ARE BOLTED TO THE BODY THAT HAS THEM, which is the half this
+ * got wrong for as long as the only body was the hero's. Every offset below used
+ * to be a literal measured off the wagon's own 48x26 side profile — the nose at
+ * 23 px, the tail at 22, the lamp line 11 px up — and the drive's road is not
+ * made of 48x26 cars. On a delivery moped, which is twenty px long and fourteen
+ * tall, that put the headlight cone a body-and-a-half out in front of the bike
+ * and the tail glow the same distance behind it: two loose smears of light with
+ * a moped riding between them, which is exactly what a player sees and cannot
+ * name. So the geometry is DERIVED from the drawn body (`LightBody`) and the
+ * literals survive only as the default, which is still the wagon, to the pixel.
  */
+
+/**
+ * THE BODY A SET OF LAMPS IS BOLTED TO — how far it reaches from its own centre,
+ * and how high off the road its lamps burn. Two numbers, in sprite px, and they
+ * are all the cones need.
+ *
+ * NOT THE SPRITE'S OWN SIZE, which is what this tried first and is worth
+ * recording as a dead end: every vehicle on the drive's road is authored on the
+ * SAME 48x26 canvas, with a bicycle drawn small in the middle of it and a bus
+ * filling it. So the image says nothing about the machine, and cones derived
+ * from it come out identical for a bus and a pushbike — which is the bug this
+ * whole type exists to fix, moved one step along.
+ */
+export type LightBody = { halfPx: number; liftPx: number };
+
+/** …and the one every caller had baked in until it was written down: the hero's
+ * own wagon, 48 px long with its lamps on row 12 or so of a 26-high body. Every
+ * ratio below is calibrated so this body comes out at exactly the numbers the
+ * cones were hand-placed at. */
+const CAR_LIGHT_BODY: LightBody = { halfPx: 24, liftPx: 11 };
+
 export function drawLightCones(
   ctx: CanvasRenderingContext2D,
   at: { x: number; y: number },
@@ -616,15 +648,35 @@ export function drawLightCones(
    * (`drive-screen/wreck-draw.ts`), so the two cannot disagree.
    */
   yaw = 0,
+  /** …and WHAT is throwing them. Omitted is the hero's wagon, which is what
+   * every caller meant back when it was the only body on screen. */
+  body: LightBody = CAR_LIGHT_BODY,
 ): void {
   const flicker = 0.88 + 0.12 * (Math.floor(timeMs / 90) % 2);
   const face = faceLeft ? -1 : 1;
+  // THE BODY'S OWN MEASUREMENTS. Each of these is the wagon's hand-placed number
+  // written as the ratio it always was, so a 48x26 body is unchanged to the
+  // pixel and a 20x14 moped is lit like a moped.
+  const nosePx = body.halfPx - 1;
+  const tailPx = body.halfPx - 2;
+  // The base anchor pins the sprite's row h-2 to `at.y`, so a lamp burning
+  // `liftPx` off the road is that many px above the seat.
+  const liftPx = body.liftPx;
+  // How far the light REACHES. It scales with the body rather than being fixed,
+  // and that is not only tidiness: a scooter's headlamp genuinely throws a
+  // shorter, narrower beam than a saloon's, and a fixed 42-px cone on a 20-px
+  // machine reads as the bike towing a searchlight.
+  const reachPx = Math.round(body.halfPx * 1.75);
+  const tailReachPx = Math.round(body.halfPx * 0.625);
+  const spread = body.liftPx / CAR_LIGHT_BODY.liftPx;
+  const up = Math.round(10 * spread);
+  const down = Math.round(14 * spread);
+  const root = Math.max(1, Math.round(2 * spread));
+  const foot = Math.max(2, Math.round(4 * spread));
   billboard(ctx, at.x, at.y, camera.x, camera.y, () => {
     const sx = at.x - camera.x;
-    // The lamps sit around row 12.5 of the 26-high canvas; the base anchor
-    // pins row h-2 to `at.y`, so the lamp line is ~11 px above it — each
-    // end riding its own axle's drop, so a nose-down wreck's beam dips.
-    const lampY = at.y - camera.y - 11;
+    // …each end riding its own axle's drop, so a nose-down wreck's beam dips.
+    const lampY = at.y - camera.y - liftPx;
     // TURNED ABOUT THE BODY'S OWN SEAT, which is the pivot `drawTrafficBody`
     // turns the sprite about — the bottom-centre of the car rather than the
     // lamp line, or the beams would swing around a point a foot above the
@@ -636,37 +688,53 @@ export function drawLightCones(
       ctx.translate(-sx, -(at.y - camera.y));
     }
     // The HEADLIGHT cone: out of the nose, widening as it goes.
-    const noseX = sx + 23 * face;
+    const noseX = sx + nosePx * face;
     const noseDip = Math.round(frontDrop);
     const tailDip = Math.round(rearDrop);
     if (!noseOut) {
-      const beam = ctx.createLinearGradient(noseX, 0, noseX + 42 * face, 0);
+      const beam = ctx.createLinearGradient(
+        noseX,
+        0,
+        noseX + reachPx * face,
+        0,
+      );
       beam.addColorStop(0, `rgba(255, 242, 180, ${0.38 * flicker})`);
       beam.addColorStop(0.6, `rgba(255, 232, 150, ${0.16 * flicker})`);
       beam.addColorStop(1, "rgba(255, 232, 150, 0)");
       ctx.fillStyle = beam;
       ctx.beginPath();
-      ctx.moveTo(noseX, lampY + noseDip - 2);
+      ctx.moveTo(noseX, lampY + noseDip - root);
       // A pitched nose rakes the beam into the ground ahead of the car.
-      ctx.lineTo(noseX + 42 * face, lampY - 10 + noseDip * 3);
-      ctx.lineTo(noseX + 42 * face, lampY + 14 + noseDip * 3);
-      ctx.lineTo(noseX, lampY + noseDip + 4);
+      ctx.lineTo(noseX + reachPx * face, lampY - up + noseDip * 3);
+      ctx.lineTo(noseX + reachPx * face, lampY + down + noseDip * 3);
+      ctx.lineTo(noseX, lampY + noseDip + foot);
       ctx.closePath();
       ctx.fill();
     }
     if (tailOut) return;
     // The TAIL glow: a short red fan behind the car, dimmer and stubbier —
     // brake lamps, not a second pair of headlights.
-    const tailX = sx - 22 * face;
-    const glow = ctx.createLinearGradient(tailX, 0, tailX - 15 * face, 0);
+    const tailX = sx - tailPx * face;
+    const glow = ctx.createLinearGradient(
+      tailX,
+      0,
+      tailX - tailReachPx * face,
+      0,
+    );
     glow.addColorStop(0, `rgba(255, 74, 58, ${0.32 * flicker})`);
     glow.addColorStop(1, "rgba(255, 74, 58, 0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
-    ctx.moveTo(tailX, lampY + tailDip - 2);
-    ctx.lineTo(tailX - 15 * face, lampY + tailDip - 6);
-    ctx.lineTo(tailX - 15 * face, lampY + tailDip + 9);
-    ctx.lineTo(tailX, lampY + tailDip + 4);
+    ctx.moveTo(tailX, lampY + tailDip - root);
+    ctx.lineTo(
+      tailX - tailReachPx * face,
+      lampY + tailDip - Math.round(6 * spread),
+    );
+    ctx.lineTo(
+      tailX - tailReachPx * face,
+      lampY + tailDip + Math.round(9 * spread),
+    );
+    ctx.lineTo(tailX, lampY + tailDip + foot);
     ctx.closePath();
     ctx.fill();
     if (yaw !== 0) ctx.restore();

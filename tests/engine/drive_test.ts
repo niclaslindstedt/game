@@ -12,6 +12,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   breakTrafficLamps,
+  cityStartPx,
+  skipDriveOpening,
   createDrive,
   createDriveDriver,
   createTraffic,
@@ -62,6 +64,12 @@ const PARAMS: DriveParams = {
 
 /** Drive flat out for `ms`, in the engine's own fixed step. */
 function floorIt(drive: DriveState, ms: number, wheel = 0): void {
+  // PAST THE OPENING FIRST. A fresh leg spends its first three and a half
+  // seconds sliding the wagon into frame with the pedals disconnected, and its
+  // next ten on an outskirt with the throttle capped and nothing laid down —
+  // neither of which is what any test in this file is about. `skipDriveOpening`
+  // is the engine's own answer (it is what a restart after a breakdown does).
+  if (drive.distance === 0) skipDriveOpening(drive);
   for (let t = 0; t < ms; t += 16) {
     stepDrive(drive, 16, { pedal: 1, wheel });
   }
@@ -132,6 +140,13 @@ function secondsTo(mph: number): number {
 /** Nothing on the road but the car — the crowd and the traffic pushed past the
  * end of the course, so an acceleration run is not measuring collisions. */
 function silence(drive: DriveState): void {
+  // …AND PAST THE OPENING, because the opening is the other thing on this road
+  // that is not "the car and what it is about to hit": the wagon spends its
+  // first three and a half seconds sliding into frame with the pedals
+  // disconnected, and the outskirts after that hold the throttle at a cruise. A
+  // staged collision or an acceleration run measured through either of those is
+  // measuring the script.
+  skipDriveOpening(drive);
   drive.nextPedestrianAt = DRIVE.coursePx * 2;
   haltTraffic(drive, DRIVE.coursePx * 2);
 }
@@ -547,33 +562,53 @@ describe("the difficulty ladder on the road", () => {
   });
 
   it("arrives slower and more broken over the same road on a harder rung", () => {
-    // The SAME seed, so the same crowd stands in the same places; the only
-    // difference is what they weigh.
-    const gentle = createDrive({ ...PARAMS, difficulty: "easy" });
-    const brutal = createDrive({
-      ...PARAMS,
-      difficulty: DIFFICULTY_ORDER.at(-1) as Difficulty,
-    });
-    // A FIXED STRETCH OF CLOCK rather than a fixed distance, because the two
-    // ways a harder rung punishes a driver are "you got less far" and "you did
-    // not get there at all" — and timing a fixed distance cannot see the
-    // second one (a wreck simply stops the loop early, which reads as FASTER).
-    //
-    // EIGHT SECONDS, AND THE LENGTH IS LOAD-BEARING. It was twenty, which is
-    // long enough that a wagon driven straight into everything is somewhere
-    // between half dead and finished ON EVERY RUNG — and a saturated dial
-    // cannot say which road was worse, so the assertion was really reading
-    // which car happened to break first. Measured across six seeds it agreed
-    // with the ladder on four of them and did not on two, which is a coin flip
-    // wearing a green tick. At eight seconds nothing has saturated (EASY sits
-    // around 0.1 and the top rung around 0.3) and the ladder is unanimous on
-    // every seed tried, which is what this test was always claiming.
-    for (let t = 0; t < 8000; t += 16) {
-      for (const drive of [gentle, brutal]) {
-        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    /**
+     * ONE RUNG, DRIVEN FLAT OUT THROUGH THE TOWN — what it costs and how far it
+     * got, summed over a handful of seeds.
+     *
+     * A FIXED STRETCH OF CLOCK rather than a fixed distance, because the two
+     * ways a harder rung punishes a driver are "you got less far" and "you did
+     * not get there at all" — and timing a fixed distance cannot see the second
+     * one (a wreck simply stops the loop early, which reads as FASTER).
+     *
+     * EIGHT SECONDS, AND THE LENGTH IS LOAD-BEARING. It was twenty, which is
+     * long enough that a wagon driven straight into everything is somewhere
+     * between half dead and finished ON EVERY RUNG — and a saturated dial cannot
+     * say which road was worse, so the assertion was really reading which car
+     * broke first.
+     *
+     * AND SEVERAL SEEDS, WHICH IS THE HALF THAT WAS MISSING. Eight seconds is
+     * about a dozen collisions, and a dozen is few enough that one seed can deal
+     * a gentle rung a bus and a hard one an empty lane — which is exactly what
+     * happened the day the road stopped opening in the town and every leg
+     * started measuring a different stretch of it. A rung is a claim about the
+     * ROAD rather than about one seed's worth of it, so the test is now a claim
+     * about the road too.
+     *
+     * OPENED AT THE TOWN, because these are eight seconds of ROAD: a leg that
+     * spent the first three and a half of them sliding into frame and the rest
+     * capped at a cruise on an empty outskirt has nothing to be broken by, and
+     * every rung would read a flat zero.
+     */
+    const rung = (difficulty: Difficulty) => {
+      let wear = 0;
+      let distance = 0;
+      for (const seed of [7, 1301, 20_461, 55_555, 918_273]) {
+        const drive = createDrive({ ...PARAMS, seed, difficulty });
+        skipDriveOpening(drive);
+        for (let t = 0; t < 8000; t += 16) {
+          stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+        }
+        wear += drive.car.wear;
+        distance += drive.distance;
       }
-    }
-    expect(brutal.car.wear).toBeGreaterThan(gentle.car.wear);
+      return { wear, distance };
+    };
+    // The SAME seeds on both, so the same crowd stands in the same places; the
+    // only difference is what they weigh.
+    const gentle = rung("easy");
+    const brutal = rung(DIFFICULTY_ORDER.at(-1) as Difficulty);
+    expect(brutal.wear).toBeGreaterThan(gentle.wear);
     expect(brutal.distance).toBeLessThan(gentle.distance);
   });
 });
@@ -768,9 +803,10 @@ describe("the street", () => {
       const driver = createDriveDriver();
       for (let t = 0; t < 50000; t += 16) {
         stepDrive(drive, 16, driveDriverInput(driver, drive));
-        // Only once the road is peopled — the opening stretch is deliberately
-        // clear and averaging it in reports a quieter road than the one played.
-        if (drive.distance <= DRIVE.crowdStartPx) continue;
+        // Only once the road is peopled — the OUTSKIRTS carry no lane traffic
+        // at all, and averaging them in reports a quieter road than the one
+        // played.
+        if (drive.distance <= cityStartPx(PARAMS)) continue;
         ticks++;
         for (const car of drive.traffic) {
           if (vehicleDef(car.variant).pavement) continue;
@@ -830,7 +866,11 @@ describe("a drive", () => {
 
   it("thinks about the people ahead before it meets any", () => {
     const drive = createDrive(PARAMS);
-    expect(DRIVE.monologuePx).toBeLessThan(DRIVE.crowdStartPx);
+    // He says it on the OUTSKIRTS: after the car has slid into frame, and well
+    // before the town — which is the only place either half of that line is
+    // cheap for him to say.
+    expect(DRIVE.opening.sayAtPx).toBeGreaterThan(DRIVE.opening.entryPx);
+    expect(DRIVE.opening.sayAtPx).toBeLessThan(cityStartPx(PARAMS));
     let sawMonologue = false;
     for (let t = 0; t < 20000 && !sawMonologue; t += 16) {
       stepDrive(drive, 16, { pedal: 1, wheel: 0 });
@@ -903,15 +943,23 @@ describe("a drive", () => {
     expect(b.car.wear).toBeCloseTo(a.car.wear, 9);
   });
 
-  it("gives the same road back after a breakdown", () => {
+  it("gives the same road back after a breakdown, opening at the town", () => {
     const first = createDrive(PARAMS);
     floorIt(first, 5000);
     const again = restartDrive(first);
     expect(again.params.seed).toBe(first.params.seed);
-    expect(again.distance).toBe(0);
     expect(again.car.wear).toBe(0);
-    // …but he does not deliver the speech twice.
-    expect(again.monologueDone).toBe(first.monologueDone);
+    // THE APPROACH IS NOT REPLAYED. A restart starts where the SCORING does —
+    // at the town's gate, with the clock at zero and the wagon already in frame
+    // — because the outskirts and the car sliding into them are an opening the
+    // player has already watched, and fourteen seconds of it after every
+    // failure is a punishment on top of a punishment.
+    expect(again.distance).toBe(cityStartPx(PARAMS));
+    expect(again.entryPx).toBe(0);
+    expect(again.clockMs).toBe(0);
+    expect(again.cityDone).toBe(true);
+    // …and he does not deliver the speech twice.
+    expect(again.monologueDone).toBe(true);
   });
 });
 
@@ -976,6 +1024,7 @@ describe("the car breaking up", () => {
 describe("the gore switch", () => {
   it("takes a struck body off the road and hands the app a burst", () => {
     const drive = createDrive({ ...PARAMS, gib: true });
+    skipDriveOpening(drive);
     let strikes = 0;
     for (let t = 0; t < 40000; t += 16) {
       stepDrive(drive, 16, { pedal: 1, wheel: 0 });
@@ -989,6 +1038,7 @@ describe("the gore switch", () => {
     // BOTH, because there are two of them now and either one is enough for a
     // body to come apart: `gib` tears lumps off, `split` takes them in two.
     const drive = createDrive({ ...PARAMS, gib: false, split: false });
+    skipDriveOpening(drive);
     let strikes = 0;
     let tumbled = 0;
     for (let t = 0; t < 40000; t += 16) {
@@ -1239,9 +1289,13 @@ describe("how the hero read the trip", () => {
     const drive = createDrive(PARAMS);
     Object.assign(drive, over);
     // Between the two clock verdicts unless a case says otherwise, so a test
-    // about the CAR is never quietly answered by the stopwatch.
-    if (over.ms === undefined) {
-      drive.ms = (DRIVE.verdict.quickMs + DRIVE.verdict.slowMs) / 2;
+    // about the CAR is never quietly answered by the stopwatch. IT IS THE
+    // STOPWATCH and not the road's own lifetime: the clock the verdict reads is
+    // the TOWN's (`DriveState.clockMs`), which starts at the gate and stops at
+    // the finish, where `ms` has been running since the first frame of an
+    // opening nobody drove.
+    if (over.clockMs === undefined) {
+      drive.clockMs = (DRIVE.verdict.quickMs + DRIVE.verdict.slowMs) / 2;
     }
     return drive;
   }
@@ -1273,10 +1327,10 @@ describe("how the hero read the trip", () => {
     expect(driveVerdict(arrived({ ...many, shunts: DRIVE.verdict.cars }))).toBe(
       "drive_arrive_cars",
     );
-    expect(driveVerdict(arrived({ ...many, ms: 1000 }))).toBe(
+    expect(driveVerdict(arrived({ ...many, clockMs: 1000 }))).toBe(
       "drive_arrive_quick",
     );
-    expect(driveVerdict(arrived({ ...many, ms: 600000 }))).toBe(
+    expect(driveVerdict(arrived({ ...many, clockMs: 600000 }))).toBe(
       "drive_arrive_slow",
     );
   });
