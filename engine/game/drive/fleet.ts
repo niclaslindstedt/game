@@ -117,10 +117,45 @@ export type DriveVehicleDef = {
    * HOW MANY PEOPLE ARE INSIDE — the ones who go through the windscreen when
    * the blow is square and hard enough, and stay put every other time.
    *
-   * Zero is a real answer and worth using: the bus is empty (which is the joke
-   * its own description already makes), and a parked car has nobody in it.
+   * A RANGE, NOT A NUMBER, and the difference is the whole of how much gore a
+   * crash makes. It was one figure per model, which meant every estate on the
+   * road carried exactly two people and every minivan exactly three — so the
+   * moment the wagon met one, two bodies came out through the same screen and
+   * the tarmac took two bodies' worth of pieces, every single time. That is a
+   * lot more of a mess than a car on a commute at seven in the evening contains,
+   * and it was the same mess on every one of them.
+   *
+   * What the road actually looks like is: nearly everybody is alone in the car.
+   * So the roll is BIASED HARD toward `min` (`rollOccupants`) and the top of the
+   * range is a thing that happens now and then — a full estate exists, it is
+   * genuinely worse when you hit it, and it is rare enough to register as a
+   * particular car rather than as the model. Nothing scales the gore separately:
+   * how many people leave, and therefore how much comes off them, IS how many
+   * were in there.
+   *
+   * Zero is a real answer and worth using: a parked car has nobody in it, and
+   * nothing in the `open` class has anybody INSIDE at all — the person on a
+   * moped is a `rider`, and rides an entirely different rule.
    */
-  occupants: number;
+  occupants: { min: number; max: number };
+  /**
+   * HOW MANY OF THEM CAN COME OUT AT ONCE — how many bodies this body can post
+   * through its own glass in one instant.
+   *
+   * IT IS NOT A SEAT COUNT AND IT IS NOT DERIVED FROM ONE. It is a fact about
+   * the SHAPE of the thing: a saloon has one windscreen and a driver and a
+   * passenger in front of it, so two is the honest answer and a third body
+   * coming out of the same hole on the same frame reads as a clown car rather
+   * than as a collision. A BUS is the case that made this a field — a long band
+   * of square windows down a deep flank with a load of people behind it, which
+   * is why a bus met square makes more of a mess than any car on this road and
+   * always should have.
+   *
+   * Whoever is left over does not walk away: the ones the geometry will not let
+   * out die where they sit (`killInside`), which is the same body count and a
+   * different picture.
+   */
+  exits: number;
   /**
    * IT RIDES ON THE PAVEMENT. The delivery trade only, and it is the one
    * behaviour on this road that puts a vehicle where the PEOPLE are.
@@ -191,7 +226,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.9, max: 1.1 },
     weight: 10,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 3 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1,
@@ -205,7 +241,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.85, max: 1.05 },
     weight: 10,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 3 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1,
@@ -219,7 +256,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.85, max: 1.05 },
     weight: 7,
     rider: null,
-    occupants: 2,
+    occupants: { min: 1, max: 4 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1.05,
@@ -233,7 +271,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1, max: 1.2 },
     weight: 5,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 2 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 0.8,
@@ -247,7 +286,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1.2, max: 1.5 },
     weight: 3,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 2 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 0.65,
@@ -265,7 +305,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1, max: 1.25 },
     weight: 2,
     rider: null,
-    occupants: 2,
+    occupants: { min: 1, max: 2 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 0.75,
@@ -279,7 +320,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.85, max: 1.05 },
     weight: 8,
     rider: null,
-    occupants: 2,
+    occupants: { min: 1, max: 5 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1.45,
@@ -293,7 +335,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.8, max: 1 },
     weight: 6,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 2 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1.35,
@@ -307,7 +350,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.8, max: 1 },
     weight: 6,
     rider: null,
-    occupants: 3,
+    occupants: { min: 1, max: 6 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1.4,
@@ -321,7 +365,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.95, max: 1.2 },
     weight: 6,
     rider: null,
-    occupants: 2,
+    occupants: { min: 1, max: 3 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1,
@@ -335,7 +380,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1.05, max: 1.3 },
     weight: 2,
     rider: null,
-    occupants: 2,
+    occupants: { min: 1, max: 2 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 0.95,
@@ -349,7 +395,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.9, max: 1.15 },
     weight: 7,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 3 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 0.7,
@@ -365,7 +412,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.75, max: 0.95 },
     weight: 6,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 2 },
+    exits: 1,
     pavement: false,
     lights: true,
     topHeavy: 1.5,
@@ -379,7 +427,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1.1, max: 1.35 },
     weight: 1,
     rider: null,
-    occupants: 2,
+    occupants: { min: 2, max: 3 },
+    exits: 2,
     pavement: false,
     lights: true,
     topHeavy: 1.6,
@@ -393,7 +442,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.65, max: 0.85 },
     weight: 3,
     rider: null,
-    occupants: 1,
+    occupants: { min: 1, max: 1 },
+    exits: 1,
     pavement: false,
     lights: true,
     topHeavy: 1.7,
@@ -407,8 +457,19 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.6, max: 0.8 },
     weight: 3,
     rider: null,
-    // Empty, and the sprite's own description says so. The route was cut.
-    occupants: 0,
+    // A BUS IS A ROOMFUL OF PEOPLE, and that is the whole of why it is the worst
+    // thing on this road to meet. Everything else out here is one commuter and
+    // occasionally a passenger; this is a load of them behind a long band of
+    // square windows, so a bus met square is the biggest mess the minigame can
+    // make — several bodies out through the glass at once and the rest of the
+    // seats dead where they sat. It is also twelve tonnes, so a driver who
+    // manages it has almost certainly ended his own trip doing it.
+    //
+    // IT USED TO BE EMPTY, on a joke about the route having been cut. The joke
+    // cost more than it was worth: it made the single most dramatic collision
+    // available the ONLY one on the road with nobody in it.
+    occupants: { min: 5, max: 16 },
+    exits: 6,
     pavement: false,
     lights: true,
     topHeavy: 1.75,
@@ -424,7 +485,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 1.3, max: 1.7 },
     weight: 5,
     rider: 0,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: false,
     lights: true,
     topHeavy: 0,
@@ -438,7 +500,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.8, max: 1 },
     weight: 4,
     rider: 1,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: false,
     lights: true,
     topHeavy: 0,
@@ -452,7 +515,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.45, max: 0.65 },
     weight: 7,
     rider: 2,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: true,
     lights: true,
     topHeavy: 0,
@@ -473,7 +537,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.35, max: 0.5 },
     weight: 6,
     rider: 4,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: false,
     lights: true,
     topHeavy: 0,
@@ -491,7 +556,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     pace: { min: 0.25, max: 0.4 },
     weight: 4,
     rider: 5,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: true,
     // NO LAMPS. A board is three kilos of maple: there is nothing on it to
     // light the road with and nowhere to put it, and this is the entry the
@@ -513,7 +579,8 @@ export const FLEET: readonly DriveVehicleDef[] = [
     // because being outnumbered by mopeds IS what a town evening looks like.
     weight: 14,
     rider: 3,
-    occupants: 0,
+    occupants: { min: 0, max: 0 },
+    exits: 0,
     pavement: true,
     lights: true,
     topHeavy: 0,
@@ -540,6 +607,63 @@ export const RIDER_VARIANTS = 6;
  * repeated itself every other time it happened.
  */
 export const DRIVER_VARIANTS = 5;
+
+/**
+ * HOW MANY PEOPLE ARE IN THIS PARTICULAR CAR — one vehicle's own answer to its
+ * def's range, and the number every bit of the gore a crash makes comes out of.
+ *
+ * DERIVED, NEVER DRAWN. It rides the vehicle's own id through the same hash the
+ * gore scatter and the loot toss use, for the reason written at the top of
+ * `ai.ts` and in half a dozen other places on this road: the seeded stream lays
+ * down every body, variant and phase in a fixed order, so a draw spent here
+ * would move every person the hero meets afterwards — and adding a seat to one
+ * model would re-lay the entire leg.
+ *
+ * BIASED HARD TOWARD ONE, because that is what a road at seven in the evening
+ * looks like: nearly everybody is alone in the car. Cubing the hash puts about
+ * two thirds of a 1-to-4 estate's answers on ONE and leaves the full one at
+ * roughly one car in fifteen — often enough that a player meets one and notices,
+ * rare enough that it reads as that car rather than as what estates are.
+ *
+ * AND IT IS THE ONLY GORE KNOB A COLLISION HAS. Nothing scales the mess
+ * separately: how many people leave through the screen and how much comes off
+ * them IS how many were in there (`ejectOccupants`), so a car that had one
+ * person in it makes one person's worth and the road stops looking like every
+ * saloon on it was a minibus.
+ */
+export function rollOccupants(def: DriveVehicleDef, id: number): number {
+  const { min, max } = def.occupants;
+  if (max <= min) return min;
+  const h = hash(id, 61);
+  return min + Math.floor(h * h * h * (max - min + 1));
+}
+
+/**
+ * A stable 0..1 off two integers — the same integer hash the rest of this road
+ * derives its cosmetic answers from, restated here rather than imported so the
+ * fleet stays a leaf that pulls in nothing.
+ */
+function hash(a: number, b: number): number {
+  let h = Math.imul(a * 374761393 + b * 668265263, 1274126177);
+  h ^= h >>> 15;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/**
+ * THE VARIANT INDEX A NAME STANDS FOR — the way back out of the table, for the
+ * one or two things on this road that want a PARTICULAR vehicle rather than a
+ * roll of the fleet.
+ *
+ * There is exactly one such caller today (a chase needs police cars, and a
+ * police chase made of hatchbacks is not one), and it is worth a function rather
+ * than a hard-coded index for the obvious reason: the fleet's order IS
+ * `DriveTraffic.variant`, so a literal 10 written at a call site is a bug the day
+ * somebody inserts an estate above it.
+ */
+export function variantOf(id: string): number {
+  const i = FLEET.findIndex((def) => def.id === id);
+  return i < 0 ? 0 : i;
+}
 
 /** The def a variant index names. Clamped, because a saved drive or a mod may
  * hand over an index this build no longer has. */

@@ -3354,9 +3354,7 @@
       "id": "drive_out_welfare",
       "pages": [
         ["I NEED TO HURRY TO GOODCO AND GET THE PART."],
-        [
-          "THE PEOPLE IN TOWN CAN BE QUITE AGGRESSIVE IN THEIR BEGGING. MANY OF THEM ARE NOT ON WELFARE LIKE ME."
-        ]
+        ["THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"

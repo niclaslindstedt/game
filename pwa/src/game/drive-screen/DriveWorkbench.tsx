@@ -63,12 +63,12 @@ const GOODCO = "goodco_hq";
  * moving, and holding a key down while judging a picture is how a tuning pass
  * becomes a wrestling match.
  *
- * `&city=600` BRINGS THE TOWN FORWARD, on the knob the attract loop uses
+ * `&city=0` OPENS IN THE TOWN, on the knob the attract loop uses
  * (`DriveParams.cityPx`) — the outskirts otherwise, exactly as a player drives
- * them. The opening is fourteen seconds of empty road with two lines over it,
- * which is the right length once a trip and the wrong length forty times an
- * afternoon; this is how a pass about the TOWN skips it without pretending the
- * road is shorter than it is.
+ * them. The opening is five seconds of held road with GET READY over it, which
+ * is the right length once a trip and the wrong length forty times an afternoon;
+ * this is how a pass about the TOWN skips it without pretending the road is
+ * shorter than it is.
  *
  * `&course=1200` SHORTENS THE LEG, on the same knob the attract loop uses
  * (`DriveParams.coursePx`) — the whole road otherwise, exactly as a player

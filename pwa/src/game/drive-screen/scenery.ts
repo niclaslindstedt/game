@@ -375,6 +375,42 @@ export const VEHICLE_LAMPS: Readonly<Record<string, LightBody>> = {
   // …and the skateboard has none at all, so it never asks (`DriveVehicleDef.lights`).
 };
 
+/**
+ * WHERE A VEHICLE'S LIGHT BAR IS PAINTED — the two lamps' own places in its art.
+ *
+ * THE SAME KIND OF FACT AS THE TABLE ABOVE and it lives beside it for the same
+ * reason: every vehicle on this road is authored on the SAME 48x26 canvas, so
+ * the sprite's own box says nothing about where the roof of the thing drawn
+ * inside it is, nor where along that roof anything sits. Read off the box, the
+ * flash landed five px clear of the roof and a body's length from the bar — two
+ * lights floating along beside a car rather than bolted to one.
+ *
+ * MEASURED OFF THE GRID, which is why the numbers are halves: in
+ * `content/sprites/earth/traffic_police.yaml` the bar is rows 3-5 and columns
+ * 19-24 of a 48x26 canvas drawn about its bottom centre, so its middle is 2.5 px
+ * behind the body's centre and 20 px off the road, with the two lamps a pixel
+ * and a half either side of that.
+ */
+export type RoofBar = {
+  /** Where the bar's middle sits along the body, in the sprite's own frame:
+   * negative is toward the boot. */
+  atPx: number;
+  /** …how far each lamp is from that middle… */
+  halfPx: number;
+  /** …and how high the whole thing is off the road. */
+  liftPx: number;
+};
+
+export const ROOF_BARS: Readonly<Record<string, RoofBar>> = {
+  traffic_police: { atPx: -2.5, halfPx: 1.5, liftPx: 20 },
+};
+
+/** Where this vehicle's light bar is, or undefined if it has not got one — which
+ * is everything on this road but the patrol car. */
+export function roofBar(def: DriveVehicleDef): RoofBar | undefined {
+  return ROOF_BARS[def.id];
+}
+
 /** What this vehicle's lamps are bolted to. Anything not in the table above is
  * a body with a roof on it, which is the hero's own wagon to within a pixel —
  * and that is exactly what `drawLightCones` draws when handed nothing. */

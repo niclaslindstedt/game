@@ -104,6 +104,10 @@ import { spawnBlockade } from "./blockade.ts";
 // WHAT THE CAR TOUCHED — the whole collision pass, which is its own file
 // (`collide.ts`). This module is the TICK; that one is the CONTACT.
 import { collide } from "./collide.ts";
+// …AND WHAT THE TRAFFIC TOUCHED WITHOUT HIM. The road's second collision pass,
+// which is the only one the hero is not a party to — a pile-up he did not cause
+// and now has to get through (`between.ts`).
+import { collideTraffic } from "./between.ts";
 import { crushRemains, forgetRemains, stepRemains } from "./remains.ts";
 import { firstPropSlot, spawnProps, stepProps } from "./street.ts";
 import {
@@ -400,6 +404,37 @@ export function driveDashUp(drive: DriveState): boolean {
 }
 
 /**
+ * IS THE CAR STILL BEING HELD — the approach's countdown, and the ONE test
+ * everything about the opening hangs off.
+ *
+ * True from the first frame to the gate: the speed is the opening's own
+ * (`entrySpeedPx`), the pedal reaches nothing, and the picture is a car being
+ * shown to somebody rather than driven by them. False for the whole of the rest
+ * of the leg, including a wreck and an arrival — both of those are the outcome's
+ * business, and neither is an opening.
+ *
+ * ANSWERED HERE rather than by the app, for the reason `driveDashUp` is: it is a
+ * fact about the ROAD, and the app has two hosts that would otherwise each
+ * decide it.
+ */
+export function driveHandsOff(drive: DriveState): boolean {
+  return DRIVE.opening.handsOff && !drive.cityDone;
+}
+
+/**
+ * …AND IS THE WHEEL HIS YET — the last second of that hold.
+ *
+ * The dashboard's mark and the wheel's are the SAME mark (`dashAtPx`), because
+ * they are one beat: the instruments slide in, the car becomes steerable, GET
+ * READY is on the screen, and a second later the flag drops. A player who spends
+ * that second moving into the lane he wants has done the only thing the opening
+ * asks of him, and done it before anything can hit him for getting it wrong.
+ */
+export function driveSteerOnly(drive: DriveState): boolean {
+  return driveHandsOff(drive) && driveDashUp(drive);
+}
+
+/**
  * PUT THE CAR AT THE GATE — the whole opening, already over.
  *
  * WHAT A RESTART DOES, and the first reason it exists. A breakdown puts the
@@ -529,16 +564,45 @@ export function stepDrive(
   // Every control is IGNORED rather than merely unread, exactly as an
   // auto-driven road ignores a stray keypress — a thumb resting on the pad
   // during the opening must not steer a car that is being shown to somebody.
-  if (drive.entryPx > 0) {
+  //
+  // …AND IT IS NOT ONLY THE CAMERA'S LEAD ANY MORE. The whole approach is a
+  // COUNTDOWN (`DRIVE.opening.handsOff`): the speed is held from the first frame
+  // to the gate, and the only thing handed back early is the WHEEL, a second out
+  // (`driveSteerOnly`), so the last beat of the opening is spent picking the lane
+  // to meet the town in. The pedal arrives with the clock and not a frame before
+  // it, which is what makes the gate a starting flag rather than a line the
+  // player crosses without noticing.
+  if (drive.entryPx > 0 || driveHandsOff(drive)) {
     drive.entryPx = Math.max(0, drive.entryPx - DRIVE.opening.closePx * dt);
     car.speed = DRIVE.opening.entrySpeedPx;
     car.handbrake = false;
+    // THE WHEEL, IF IT IS HIS YET — and nothing else, ever. `applyCarWheel` is
+    // the same rack the town is steered on, handed the same authority, so the
+    // second before the flag is genuinely the car being driven rather than a
+    // preview of it.
+    if (driveSteerOnly(drive)) {
+      applyCarWheel(
+        car,
+        input.wheel,
+        dt,
+        DRIVE.lateralPx,
+        DRIVE.laneRefSpeedPx,
+        dir,
+      );
+      const opening = roadEdgesAt(dir * car.pos.x, drive.params);
+      car.pos.y = clamp(car.pos.y, opening.top, opening.bottom);
+    }
     advanceCar(drive, dt);
     spawnTraffic(drive);
     spawnProps(drive);
     stepTraffic(drive, dt);
     stepProps(drive, dt);
     integrateCarBody(car, dt);
+    // THE OPENING'S OWN BEATS still land out here — his two lines and the town
+    // arriving — because the approach is no longer a stretch the tick returns
+    // early from before reaching them. Without this the gate is never latched on
+    // a held road and the minigame simply never starts.
+    openingBeats(drive, dtMs);
     return;
   }
 
@@ -608,6 +672,11 @@ export function stepDrive(
   stepRemains(drive, dt);
   stepTraffic(drive, dt);
   stepProps(drive, dt);
+  // THE TRAFFIC AGAINST ITSELF FIRST, then the hero against whatever that left.
+  // The order is the honest one: a car that has just been shunted into the lane
+  // beside it is in that lane THIS tick, and the wagon arriving at it a frame
+  // late is the whole reason a pile-up is worth having.
+  collideTraffic(drive);
   collide(drive);
   // WHAT THE WHEELS FIND, AFTER what the bumper met — the order is the car's
   // own: the nose reaches a thing before the axles do, so a body knocked down
@@ -619,6 +688,30 @@ export function stepDrive(
   stepDebris(drive, dt);
 
   // ── THE BEATS ─────────────────────────────────────────────────────────────
+  openingBeats(drive, dtMs);
+  if (drive.distance >= courseLength(drive.params)) {
+    drive.outcome = DRIVE_OUTCOME.arrived;
+    drive.outcomeMs = 0;
+    // THE STREET STOPS BEING LAID at the same instant the clock stops. Without
+    // it the spawners go on serving a town that is no longer being drawn, and
+    // the run-in — which is supposed to be GOODCO's approach with nothing on it
+    // — comes with a moped weaving up the pavement.
+    haltTraffic(drive);
+    drive.events.push({ type: "arrived" });
+  }
+}
+
+/**
+ * THE CLOCK AND THE TWO BEATS ON THE WAY TO THE TOWN — his line, and the gate.
+ *
+ * ITS OWN FUNCTION BECAUSE IT IS RAISED FROM TWO PLACES, and only one of them
+ * is the ordinary tick. The approach is HELD now (`handsOff`): the pedal is not
+ * connected, so that stretch takes an early return out of `stepDrive` — and
+ * every beat on it, up to and including the gate that ENDS the hold, lives here.
+ * Left at the bottom of the tick they were unreachable from the one path that
+ * needs them, and the minigame would never start.
+ */
+function openingBeats(drive: DriveState, dtMs: number): void {
   // THE CLOCK IS THE TOWN'S, and it is advanced here rather than derived from
   // `ms` for the reason a lap timer is its own instrument: the road's own clock
   // has been running since the first frame of an opening nobody drove, and it
@@ -630,21 +723,11 @@ export function stepDrive(
     drive.events.push({ type: "monologue" });
   }
   // THE TOWN, ARRIVING — the one beat on this road that changes what the road
-  // IS. Everything that makes the minigame a minigame starts at this mark, and
-  // so does the number the board ranks.
+  // IS. Everything that makes the minigame a minigame starts at this mark: the
+  // houses, the crowd, the traffic, the clock, and the player's own right foot.
   if (!drive.cityDone && drive.distance >= cityStartPx(drive.params)) {
     drive.cityDone = true;
     drive.events.push({ type: "cityGate" });
-  }
-  if (drive.distance >= courseLength(drive.params)) {
-    drive.outcome = DRIVE_OUTCOME.arrived;
-    drive.outcomeMs = 0;
-    // THE STREET STOPS BEING LAID at the same instant the clock stops. Without
-    // it the spawners go on serving a town that is no longer being drawn, and
-    // the run-in — which is supposed to be GOODCO's approach with nothing on it
-    // — comes with a moped weaving up the pavement.
-    haltTraffic(drive);
-    drive.events.push({ type: "arrived" });
   }
 }
 

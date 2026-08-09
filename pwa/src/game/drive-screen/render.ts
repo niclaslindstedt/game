@@ -953,7 +953,7 @@ export function drawDrive(
     // comes out of it as the plain blit it always was.
     drawn.push({
       y: other.pos.y,
-      draw: () => drawTrafficBody(ctx, other, sprites, camera),
+      draw: () => drawTrafficBody(ctx, other, sprites, camera, timeMs),
     });
     // …AND THE PERSON ON IT, drawn on top at the machine's own saddle. Seated
     // separately rather than baked in, because the whole point of a rider is

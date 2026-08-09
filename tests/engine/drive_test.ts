@@ -788,7 +788,16 @@ describe("the street", () => {
    * a different lane. Four legs average the trajectory out and leave the
    * spawner, which is what is under test.
    */
-  const LANE_SEEDS = [1234, 5, 77, 909];
+  //
+  // EIGHT OF THEM, AND THE COUNT IS LOAD-BEARING. A lane's occupancy is an
+  // average over what the seed happened to deal AND over where the auto-driver
+  // happened to spend the leg — and the lane the wagon is actually in reads
+  // lighter than the rest however carefully it is driven, because what it meets
+  // there it shoves out of the way. Four seeds put that lane within a few
+  // hundredths of the floor and it crossed on the wind; eight lands every lane
+  // clear of it. The claim is about the SPAWNER, so the sample has to be big
+  // enough that it is not about one driver's afternoon.
+  const LANE_SEEDS = [1234, 5, 77, 909, 31, 404, 8181, 60];
   const laneOccupancy = (difficulty: Difficulty): number[] => {
     const seen = new Array<number>(DRIVE.laneCount).fill(0);
     let ticks = 0;
@@ -802,6 +811,11 @@ describe("the street", () => {
       // them identically.
       const driver = createDriveDriver();
       for (let t = 0; t < 50000; t += 16) {
+        // …AND ONLY WHILE THERE IS A LEG. The road is HALTED the instant a leg
+        // ends (`haltTraffic`), so ticks counted past the finish are a draining
+        // road averaged in as a populated one — which on a short course is most
+        // of the sample.
+        if (drive.outcome !== DRIVE_OUTCOME.driving) break;
         stepDrive(drive, 16, driveDriverInput(driver, drive));
         // Only once the road is peopled — the OUTSKIRTS carry no lane traffic
         // at all, and averaging them in reports a quieter road than the one

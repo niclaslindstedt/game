@@ -231,7 +231,7 @@ export const DRIVE = {
    * hundred px of what it always was, and every figure in the table above still
    * describes it.
    */
-  coursePx: 26000,
+  coursePx: 21100,
   /**
    * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
    * forward, for a demo that is showing somebody the whole game rather than
@@ -633,6 +633,170 @@ export const DRIVE = {
    * multiplies it. The near lanes dawdle (the hero overtakes them), the far
    * lanes come the other way. */
   trafficSpeedPx: { min: 150, max: 300 },
+
+  /**
+   * SOMEBODY IS DRIVING EVERY ONE OF THEM — the other traffic's own driver
+   * (`drive/ai.ts`), and the block that turns four conveyor belts into a road.
+   *
+   * WHAT WAS WRONG WITH THE OLD ROAD, stated plainly: a vehicle was born on a
+   * lane centre with a speed and held both until something hit it. Nothing
+   * wobbled, nothing pulled out, nothing went round the hatchback somebody left
+   * half in the gutter, and — the one that actually costs the player — nothing
+   * ever changed its mind. A lane that was clear stayed clear, so the minigame's
+   * whole decision reduced to finding the empty belt once and holding it.
+   *
+   * Five behaviours, and each of them is a thing a real driver in front of you
+   * does that you have to read:
+   *
+   *   IT WOBBLES        Nobody holds a line to the pixel. Derived from the
+   *                     vehicle's own `phase` and where it is, so it costs the
+   *                     seeded stream nothing — the same rule the footway weave
+   *                     and the gore scatter obey.
+   *   IT CHANGES LANES  Because the car in front is slower than it wants to go,
+   *                     which is the only honest reason anybody does.
+   *   IT OVERTAKES      The same behaviour seen from the other side: a fast car
+   *                     comes past the hero, not merely at him.
+   *   IT GOES ROUND     A parked car, a wreck standing dead in a lane, anything
+   *                     stopped — it eases into the neighbouring lane's edge and
+   *                     back out, which is what everybody does and what makes
+   *                     the kerb read as being ON this road rather than beside
+   *                     it.
+   *   IT FOLLOWS        It lifts off for the car in front rather than driving
+   *                     through it. IMPERFECTLY, on purpose: past its own
+   *                     reaction the gap is simply gone, and what happens then
+   *                     is the pile-up the player then has to get through.
+   */
+  drivers: {
+    /** How far a driver drifts either side of its lane's centre (world px) and
+     * how fast — the small motion that stops a lane reading as a rail. */
+    wobblePx: 1.6,
+    wobbleHz: 0.55,
+    /**
+     * HOW FAST IT CROSSES THE ROAD (world px/s) at ordinary urgency — its lane
+     * change, and the number that decides whether a change is a thing the
+     * player can react to.
+     *
+     * Well under the hero's own `lateralPx`: a driver going home changes lane
+     * over about a second, which is long enough to be READ. Multiplied by
+     * `DriveTraffic.urgency`, so somebody being chased crosses in a third of it.
+     */
+    steerPx: 34,
+    /** …and how far out it starts easing off, so a lane change SETTLES instead
+     * of arriving with a snap (world px). */
+    settlePx: 4,
+    /**
+     * HOW FAR AHEAD A DRIVER LOOKS (world px), and how far BEHIND it checks
+     * before pulling out.
+     *
+     * The behind figure is the whole of why the traffic does not simply swap
+     * lanes into each other: a driver that only looked forward would pull out
+     * in front of the car that was overtaking IT. It is generous, because on
+     * this road the thing coming up behind is frequently doing forty mph more
+     * than you are.
+     */
+    lookAheadPx: 190,
+    lookBehindPx: 130,
+    /**
+     * HOW MUCH SLOWER THE CAR IN FRONT HAS TO BE before it is worth pulling out
+     * for (world px/s). Below this nobody bothers, which is what keeps the road
+     * from being a permanent game of musical lanes.
+     */
+    overtakeGainPx: 22,
+    /** …and how long a driver holds a lane before it may reconsider (ms), and
+     * how long it holds one it has just changed into. The second is longer: the
+     * one thing worse than a driver that never pulls out is one that pulls out
+     * and immediately back in. */
+    decideMs: 900,
+    settledMs: 2200,
+    /**
+     * GOING ROUND SOMETHING STOPPED — how far out it starts (world px), and how
+     * far into the neighbouring lane it is willing to put itself.
+     *
+     * NOT A LANE CHANGE, and the difference is the point: a driver going round a
+     * parked car does not move over, it moves ACROSS a bit and comes back, which
+     * is both what people do and — for the player — a car that is suddenly a
+     * third of a lane wider than it was.
+     */
+    dodgeFromPx: 150,
+    dodgePx: 13,
+    /**
+     * FOLLOWING THE CAR IN FRONT — the gap it wants, in SECONDS of its own
+     * travel, and the hardest it will lift off to keep it.
+     *
+     * Seconds rather than pixels because that is how following distance
+     * actually works and how it scales: the same driver at twice the speed
+     * leaves twice the road. `brakeFrac` is how much of its cruise it will give
+     * up — well short of a stop, because a driver that could always avoid the
+     * car in front is a road that never has a crash on it.
+     */
+    followSec: 0.55,
+    brakeFrac: 0.55,
+    /**
+     * WHO IS ACTUALLY DRIVING — the mix of tempers, as a share of the traffic
+     * and a band on its own def's pace.
+     *
+     * MOST PEOPLE DO ROUGHLY THE LIMIT and the interesting part is who does not.
+     * A road where everybody moves at one speed has no overtaking in it, no
+     * closing speeds worth reading and nothing for a lane change to be FOR — so
+     * the tail matters more than the middle. Weights, not probabilities, rolled
+     * with ONE draw at the spawn mark (the same discipline the fleet roll
+     * follows) so adding a temper cannot move a body laid down after it.
+     */
+    tempers: [
+      /** Dawdling — somebody in no hurry, and the reason anybody overtakes. */
+      { weight: 14, pace: { min: 0.62, max: 0.82 } },
+      /** With the flow. Most of the road, and it has to be. */
+      { weight: 62, pace: { min: 0.94, max: 1.06 } },
+      /** In a hurry — late for something, and coming past you. */
+      { weight: 20, pace: { min: 1.15, max: 1.35 } },
+      /** …and the one in twenty-five who should not have a licence. */
+      { weight: 4, pace: { min: 1.55, max: 1.85 } },
+    ],
+    /**
+     * SOMEBODY IS BEING CHASED — how often, and by how many.
+     *
+     * A chase is not a new kind of traffic: it is a runner with its urgency
+     * wound right up and one or two police cars behind it with the same, laid
+     * down at one spawn mark instead of one vehicle. Everything that makes it
+     * read — the weaving, the overtaking, the pile-up it leaves behind — is the
+     * ordinary driver above being asked to try much harder.
+     *
+     * `chance` is per lane mark, so a rung that lays down less traffic gets
+     * proportionally fewer chases without a second knob.
+     */
+    chase: {
+      chance: 0.035,
+      /** How many cars are after it. */
+      cars: { min: 1, max: 2 },
+      /** How far back the first one is, and the gap between them (world px). */
+      gapPx: { min: 70, max: 120 },
+      /** What the whole procession is doing, as a multiple of the road's own
+       * top pace — everybody in a chase is going far faster than the traffic
+       * they are threading, which is the entire sight. */
+      paceMult: 1.75,
+      /** …and how much harder they are trying than everybody else. */
+      urgency: 3,
+    },
+    /**
+     * HOW HARD A DRIVER TRIES TO KEEP THE OTHER LANE OPEN — how much road it
+     * wants free BESIDE it, in world px, before it will sit abreast of
+     * somebody.
+     *
+     * THIS IS THE EASY RUNG'S OWN LEVER and the reason it is here rather than in
+     * the AI: on the gentle rungs the pair of lanes running one way must not
+     * BOTH be shut at the same point on the road, or a player with a thumb on a
+     * phone has nowhere to put the car and the minigame stops being a decision.
+     * A driver that finds itself drawing level with the car in the next lane
+     * simply lifts off and tucks in behind it — which is both the courteous
+     * thing and, from the driving seat, a gap that keeps opening up just as it
+     * is needed.
+     *
+     * Zero on the hard rungs, where two abreast is exactly the problem the
+     * player is there to solve. The number itself is `DifficultyDef.drive`'s
+     * (`laneGuardPx`); this is only how hard the lift-off is when it applies.
+     */
+    courtesyFrac: 0.72,
+  },
   /**
    * THE DELIVERY TRADE, WHICH DOES NOT USE THE ROAD.
    *
@@ -829,6 +993,56 @@ export const DRIVE = {
     debrisLiftPx: { base: 150, perForce: 130 },
     /** …and how much of a bounce it keeps when it lands. */
     debrisBounce: 0.34,
+  },
+
+  /**
+   * WHEN TWO OF THEM HIT EACH OTHER — the road's second collision pass
+   * (`between.ts`), which has nothing to do with the hero at all.
+   *
+   * WHY IT HAS TO EXIST. The moment the traffic had drivers it had drivers who
+   * get it wrong: somebody pulls out on somebody, a chase comes through at
+   * seventy over, a wreck stands dead in a live lane and the car behind it is
+   * looking at the car beside it. Without this pass all of that resolves by the
+   * two of them sliding through each other, which reads as the road being a
+   * painting — and it takes the best thing about a busy carriageway away from
+   * the player, which is that it can go wrong WITHOUT HIM. A pile-up he did not
+   * cause and has to get through is the most interesting obstacle this minigame
+   * has.
+   *
+   * It is the same momentum sum `impact.ts` runs, between two masses that both
+   * matter, and it hands its answers to the SAME breaking model the hero's blows
+   * go through — so a car written off by another car folds, sheds, empties and
+   * stands there exactly as one written off by the wagon does.
+   */
+  between: {
+    /**
+     * RESTITUTION between two vehicles. Higher than a bumper against a person
+     * (people are not springs; car bodies are, a little), low enough that a
+     * shunt between two of them is plainly an inelastic mess rather than a
+     * break in snooker.
+     */
+    restitution: 0.2,
+    /**
+     * THE SLOWEST CLOSING SPEED WORTH BOOKING AS A COLLISION (world px/s).
+     *
+     * Two cars in adjacent lanes drifting a pixel a second into each other is
+     * not a crash and must not sound like one — and without a floor the pass
+     * would fire on every pair that ever touches at walking pace, which on a
+     * road this busy is constantly.
+     */
+    minClosePx: 40,
+    /** How long the pair are immune to each other afterwards (ms) — one contact
+     * is one impact, on its OWN clock so the hero can still hit either of them
+     * (`DriveTraffic.crashCooldownMs`). */
+    immuneMs: 400,
+    /** The least each of them leaves with across the road (world px/s), so a
+     * pair that met dead square separates instead of grinding down the lane
+     * together — the between-traffic twin of `separationPx`. */
+    partPx: 46,
+    /** How much of the exchange goes into spinning them, per unit of lateral
+     * Δv, and the most one blow may put on. */
+    yawPerMs: 0.5,
+    maxYawSpin: 3.2,
   },
 
   // ── BREAKING A VEHICLE, PHYSICALLY ────────────────────────────────────────
@@ -1195,6 +1409,37 @@ export const DRIVE = {
      */
     scrapeFriction: 0.12,
     /**
+     * HOW MUCH OF A VEHICLE CAN ACTUALLY MEET ANOTHER VEHICLE — the share of the
+     * drawn body, measured across the road, that the collision uses.
+     *
+     * THE PICTURE IS A SIDE ELEVATION AND THE ROAD IS SEEN FROM ABOVE IT, which
+     * is a contradiction the eye happily lives with and the collision model
+     * cannot. A car's sprite is drawn standing UP the screen — tyres at its own
+     * y, roof line most of a lane above it — while the axis that sprite is
+     * standing up is the same axis the lanes are laid across. So a car in the
+     * next lane VISIBLY overlaps the one below it by most of its own roof, and
+     * two cars whose bodywork could not possibly touch look as though they are
+     * scraping down each other's flank.
+     *
+     * The honest reading is that only the bottom of a body is on the ground at
+     * all: from the tyres up to about the waistline is the part that occupies
+     * ROAD, and everything above that is occupying AIR over the lane behind.
+     * That is what this fraction is — applied to the SUM of the two extents, so
+     * it is one statement about both parties rather than a shrink applied twice.
+     *
+     * IT IS VEHICLE-ON-VEHICLE ONLY. A PERSON is a tall thin thing standing on
+     * the tarmac and is met by the whole flank of a car at any height at all; a
+     * LAMP POST is a column from the pavement to well above the roof. Both pass
+     * 1 and get exactly the collision they always got — the band is about two
+     * bodies that are both mostly air above the sills, and nothing else on this
+     * road is.
+     *
+     * It also, deliberately, makes threading traffic possible at a lane's edge:
+     * two cars a lane apart have real daylight between them now, and a driver
+     * who commits to half a gap gets through it.
+     */
+    bodyBandFrac: 0.6,
+    /**
      * How much of the car's own speed a struck body carries away along the
      * road, on top of the impulse it takes square in the chest. A person hit at
      * 120 does not drop where they stood — they go up the road with the car,
@@ -1520,38 +1765,81 @@ export const DRIVE = {
      * beat of empty tarmac before the nose appears.
      */
     entryPx: 300,
-    /** …and how fast the camera gives that lead back (px/s). The car closes on
-     * its mark over about three and a half seconds — the pace of a car being
-     * caught up with rather than of one arriving. */
-    closePx: 90,
+    /**
+     * …and how fast the camera gives that lead back (px/s). The car closes on
+     * its mark over two seconds — the pace of a car being caught up with rather
+     * than of one arriving.
+     *
+     * IT WAS 90, WHICH IS THREE AND A HALF SECONDS, and that was fine on a
+     * fourteen-second approach and impossible on a five-second one: the whole
+     * opening is `cityPx` of road at a held 300 px/s now, so an arrival that ate
+     * two thirds of it would leave the car settled for about a second before the
+     * town, and the hero's two lines nowhere to go.
+     */
+    closePx: 150,
     /** What the wagon is doing while it is still arriving (px/s). Held rather
      * than driven: the player's hands are not on it yet. */
     entrySpeedPx: 300,
     /**
-     * THE THROTTLE'S CEILING UNTIL THE TOWN (px/s ≈ 78 mph).
+     * THE THROTTLE'S CEILING UNTIL THE TOWN (px/s ≈ 78 mph) — the fallback the
+     * pedal is clamped to on any stretch of approach the player IS driving.
      *
-     * The wheel is the player's from the moment the car is in place — an
-     * opening nobody may touch is a cutscene, and this minigame's whole
-     * argument is that it is not one — but the PEDAL is capped out here. He is
-     * not in a hurry until he is in the town, the clock does not run until then
-     * either, and a player who floors the outskirts would otherwise arrive at
-     * the gate at the top of the dial with the road's opening lines still
-     * unsaid.
+     * Nothing on the shipped leg reaches it any more: the whole approach is held
+     * at `entrySpeedPx` now (`handsOff`), so the pedal is not connected out there
+     * at all. It stays because the clamp is the honest thing to leave in place —
+     * an attract loop or a demo course with a longer opening than its hand-over
+     * would otherwise be floorable — and because the reasoning has not changed:
+     * he is not in a hurry until he is in the town, and the clock does not run
+     * until then either.
      */
     cruisePx: 407,
+    /**
+     * THE APPROACH IS NOT DRIVEN — how much of it the player's hands are off.
+     *
+     * IT IS A COUNTDOWN, AND THAT IS WHAT IT IS FOR. The road hands a player
+     * from a menu into a side-on car at seventy miles an hour with a crowd
+     * coming, and the honest way to start that is the way every arcade racer
+     * ever has: hold the car, say GET READY, and let go on a beat the player can
+     * see arriving. Before this the approach was steerable but capped, which
+     * managed to be both — a stretch that looked like it was being played and
+     * was not being scored, on which the one thing a player could do was drive
+     * into the kerb.
+     *
+     * So the whole of it is held: the speed is `entrySpeedPx` from the first
+     * frame to the gate, and the WHEEL comes back a second early (`dashAtPx`)
+     * with the dashboard. The pedal is the last thing handed over, at the gate,
+     * with the clock.
+     *
+     * FALSE PUTS THE OLD APPROACH BACK — steerable, pedal capped at `cruisePx` —
+     * which is what a demo course with a long opening would want if one ever
+     * wanted it. Nothing shipped sets it.
+     */
+    handsOff: true,
     /** Where he says what the trip is FOR (world px) — as soon as the car has
      * settled into frame, which is the first moment there is anybody in the
-     * picture to be thinking it. */
-    sayAtPx: 1150,
+     * picture to be thinking it. (`entryPx / closePx` at `entrySpeedPx`, plus a
+     * beat.) */
+    sayAtPx: 640,
     /**
      * WHERE THE TOWN STARTS (world px) — the gate.
      *
      * Everything the minigame is begins here at once: the houses, the far
-     * pavement, the crowd, the lane traffic, and the CLOCK. It is far enough
-     * out that both of his opening lines have had their say over an empty road,
-     * which is the only place either of them is cheap to say.
+     * pavement, the crowd, the lane traffic, and the CLOCK.
+     *
+     * FIVE SECONDS, AND THE NUMBER IS THE POINT. The approach is held at
+     * `entrySpeedPx` from the first frame to the last — the pedal is not the
+     * player's out here at all (see `handsOff`) — so this distance IS a duration:
+     * 1500 px at 300 px/s. It was 6400, which at the old capped cruise was the
+     * better part of FIFTEEN seconds of a minute-long minigame spent watching a
+     * car drive down an empty road, and the single most common thing to want to
+     * skip in the whole game.
+     *
+     * IT SHORTENS THE LEG AND NOT THE MINIGAME. `coursePx` came down by exactly
+     * what this did, so the TOWN — the stretch the clock runs over, the one the
+     * board ranks and the one every measured table on this file was taken
+     * against — is the same length it has always been.
      */
-    cityPx: 6400,
+    cityPx: 1500,
     /**
      * HOW MANY PEOPLE ARE OUT HERE ON WHEELS — riders per 1000 px of outskirt,
      * and the only traffic before the town.
@@ -1563,11 +1851,11 @@ export const DRIVE = {
      * cyclist or one delivery every few seconds is the difference between a road
      * out of town and a road with nothing on it.
      */
-    ridersPerKPx: 0.9,
+    ridersPerKPx: 2.5,
     /** …and where the first of them may stand (world px). Held back past the
      * car's own arrival: somebody else in the opening frame before the wagon is
      * in it makes the shot read as theirs. */
-    ridersFromPx: 900,
+    ridersFromPx: 520,
     /**
      * HOW MANY LANES THE ROAD OUT OF TOWN HAS.
      *
@@ -1586,24 +1874,30 @@ export const DRIVE = {
      */
     laneCount: 2,
     /**
-     * WHERE THE DASHBOARD COMES UP (world px BEFORE the gate).
+     * WHERE THE CAR IS HANDED OVER, AND THE DASHBOARD WITH IT (world px BEFORE
+     * the gate) — ONE MARK for both, because they are one beat.
      *
-     * The instruments are not on screen for the opening at all. Out there the
-     * pedal is capped, nothing is scored and there is nothing to read — a
-     * speedometer, a gearbox gate and a damage dial hung over an empty road are
-     * three readouts saying that nothing is happening, and they spend the one
-     * thing the opening has, which is that it looks like a road at night with a
-     * car on it. They slide in from the left as the town comes up, which is the
-     * same beat the road widening is.
+     * A SECOND, EXACTLY (300 px at the held `entrySpeedPx`), and everything
+     * about the opening hangs off it:
      *
-     * MEASURED BACK FROM THE GATE so the CLOCK lands a beat after them: at the
-     * approach's own cruise this is a shade under two seconds, which is the
-     * dashboard's slide (`--drive-dash-slide`) plus about a second of it sitting
-     * there before the stopwatch starts beside it. Three things arriving on the
-     * same frame is one thing arriving; spread over two seconds it reads as the
-     * car getting ready for the town.
+     *   THE INSTRUMENTS ARRIVE. They are not on screen for the approach at all —
+     *   out there nothing is scored and there is nothing to read, and three
+     *   readouts saying that nothing is happening spend the one thing that
+     *   stretch has, which is that it looks like a road at night with a car on
+     *   it. They slide in from the left, which is the same beat the road
+     *   widening is.
+     *   THE WHEEL BECOMES HIS. Not the pedal — the speed is still held (see
+     *   `handsOff`) — so the second before the flag is spent settling into the
+     *   lane he wants to meet the town in, which is a genuine decision and the
+     *   only one available.
+     *   AND "GET READY" IS ON SCREEN until the gate, so the beat is stated
+     *   rather than merely implied.
+     *
+     * ONE NUMBER RATHER THAN TWO, on purpose: a dashboard that arrived on a
+     * different frame from the wheel would be the game telling the player two
+     * different things about when the minigame starts.
      */
-    dashAtPx: 700,
+    dashAtPx: 300,
     /**
      * …and over how much road it opens out to four (world px), finishing exactly
      * at the gate.
@@ -1612,7 +1906,7 @@ export const DRIVE = {
      * in width in one frame would read as a rendering fault — and short enough
      * that the widening and the first house are plainly the same event.
      */
-    widenPx: 800,
+    widenPx: 520,
   },
   /**
    * …AND THE RUN-IN AT THE OTHER END — everything past the finish line.

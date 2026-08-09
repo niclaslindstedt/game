@@ -6694,6 +6694,99 @@ html.app-locked body {
   }
 }
 
+/* ---- THE DASHBOARD ARRIVING (drive-screen/DriveScreen.tsx) ---------------
+
+   THE INSTRUMENTS ARE NOT ON SCREEN FOR THE APPROACH. Out there the car is being
+   carried at the road's own pace, the pedal is not connected to anything and
+   nothing is scored — and a speedometer, a gearbox gate and a damage dial hung
+   over an empty road are three readouts saying that nothing is happening. They
+   spend the one thing that stretch of road has, which is that it looks like a
+   road at night with a car on it.
+
+   SO THEY SLIDE IN FROM THE LEFT, a second before the flag
+   (`DRIVE.opening.dashAtPx`), on the same beat the wheel is handed back and the
+   carriageway widens to four. Three arrivals over one second read as the car
+   getting ready for the town; the same three on one frame read as a HUD popping
+   in.
+
+   IT WRAPS THE WHOLE AUTHORED SURFACE rather than the dashboard's own region,
+   which is the only place a wrapper can go: the region wears the class content
+   gave it (`content/hud/hud.yaml`), and a conversion that renamed it would take
+   the animation with it. The one thing riding along is the stopwatch in the
+   opposite corner, and it does not mind — it is gated on the town having been
+   reached at all (`drive.clockStarted`), so it appears after this has finished
+   moving and never slides at all.
+
+   `visibility` as well as opacity, because a dashboard that is merely
+   transparent is still a thing a screen reader reads out and still a thing the
+   compositor paints. */
+.drive-hud-shelf {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(-2.5rem);
+}
+
+.drive-hud-shelf.drive-hud-in {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 420ms ease-out,
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive-hud-shelf.drive-hud-in {
+    transition: none;
+  }
+}
+
+/* ---- GET READY (drive-screen/DriveScreen.tsx) ----------------------------
+
+   THE COUNTDOWN, SAID OUT LOUD, over the middle of the picture for the five
+   seconds of approach and gone the instant the town arrives.
+
+   The road hands a player out of a menu and into a side-on car at seventy with a
+   crowd coming, and the honest way to open that is the way every arcade racer
+   ever has: hold the car, say so, and let go on a beat that can be seen
+   arriving. What the words are actually buying is the beat — a moment in which
+   nothing can go wrong yet — and the last second of it is genuinely steerable,
+   which is why this must never eat the thumb.
+
+   IT BREATHES rather than sitting still, because a caption that does not move
+   over a moving road reads as part of the furniture. */
+.drive-ready {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 12;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.85));
+  animation: drive-ready-pulse 900ms ease-in-out infinite alternate;
+}
+
+@keyframes drive-ready-pulse {
+  from {
+    opacity: 0.72;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive-ready {
+    animation: none;
+  }
+}
+
 /* ---- THE DRIVE'S HIGH-SCORE BOARD (drive-screen/DriveScores.tsx) ---------
 
    THE CABINET AT THE END OF THE ROAD: what the leg was worth, counted up in a

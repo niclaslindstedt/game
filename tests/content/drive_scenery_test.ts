@@ -106,7 +106,16 @@ describe("the drive's sprite tables", () => {
     // only empties through a screen.
     for (const def of FLEET) {
       expect(def.rider !== null).toBe(def.class === "open");
-      if (def.class === "open") expect(def.occupants).toBe(0);
+      if (def.class === "open") {
+        // Nobody INSIDE, and nowhere for them to come out of — how many a
+        // vehicle holds is a range now, and an `open` machine's is empty at
+        // both ends.
+        expect(def.occupants).toEqual({ min: 0, max: 0 });
+        expect(def.exits).toBe(0);
+      } else {
+        // …and anything with a roof can post at least somebody through it.
+        expect(def.exits).toBeGreaterThan(0);
+      }
     }
   });
 

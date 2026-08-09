@@ -36,8 +36,15 @@ import { clamp } from "@game/lib/vec.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { cityStartPx, courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
 import type { Impact } from "./impact.ts";
-import { crowdEdges, laneCenter, roadBandEdges, roadEdges } from "./crowd.ts";
-import { rollVehicle, vehicleDef } from "./fleet.ts";
+import {
+  crowdEdges,
+  laneAt,
+  laneCenter,
+  roadBandEdges,
+  roadEdges,
+} from "./crowd.ts";
+import { rollOccupants, rollVehicle, variantOf, vehicleDef } from "./fleet.ts";
+import { indexTraffic, siblingLane, steerTraffic } from "./ai.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
 export { TRAFFIC_VARIANTS } from "./fleet.ts";
@@ -154,12 +161,24 @@ export function createTraffic(
     speed,
     cruise: speed,
     slew: 0,
+    // WHERE IT THINKS IT IS, read off where it actually is. Derived rather than
+    // passed, so every caller that ever minted a vehicle — the spawner, the
+    // exhibits, a dozen suites — gets a driver whose intent matches its position
+    // without any of them being revisited. A pavement rider gets an answer it
+    // never reads.
+    lane: laneAt(pos.y),
+    laneHoldMs: DRIVE.drivers.settledMs,
+    // Somebody going home from work. The chase winds this up and nothing else
+    // ever touches it.
+    urgency: 1,
+    siren: false,
     variant,
     // Every vehicle is drawn nose-first down its own direction of travel.
     faceLeft: speed < 0,
     noseOut: false,
     tailOut: false,
     hitCooldownMs: 0,
+    crashCooldownMs: 0,
     wear: 0,
     rung: 0,
     crushNose: 0,
@@ -169,7 +188,10 @@ export function createTraffic(
     rolls: 0,
     wrecked: false,
     rider: def.rider !== null,
-    occupants: def.occupants,
+    // HOW MANY PEOPLE ARE IN THIS ONE — its own answer to its model's range,
+    // derived off its id so it costs the seeded stream nothing (`rollOccupants`).
+    // It is the whole of how much gore this car is worth when it is met.
+    occupants: rollOccupants(def, id),
     driverless: false,
     downed: false,
     z: 0,
@@ -207,11 +229,60 @@ function retire(): number {
   return Number.POSITIVE_INFINITY;
 }
 
+/**
+ * WHO IS DRIVING THIS ONE — one draw of the road's stream against the temper
+ * mix, answered as a multiplier on the vehicle's own pace.
+ *
+ * MOST PEOPLE DO ROUGHLY THE LIMIT and the interesting part is who does not: a
+ * road where everybody moves at one speed has no overtaking on it, no closing
+ * speeds worth reading, and nothing for a lane change to be FOR. One draw, like
+ * the fleet roll it sits beside, so adding a temper to the table cannot move a
+ * body laid down after it.
+ */
+function rollTemper(rng: () => number): number {
+  const { tempers } = DRIVE.drivers;
+  let total = 0;
+  for (const temper of tempers) total += temper.weight;
+  let roll = rng() * total;
+  for (const temper of tempers) {
+    roll -= temper.weight;
+    if (roll <= 0) return randomRange(rng, temper.pace.min, temper.pace.max);
+  }
+  const last = tempers[tempers.length - 1]!;
+  return randomRange(rng, last.pace.min, last.pace.max);
+}
+
+/**
+ * IS THERE ALREADY SOMEBODY ABREAST OF THIS MARK in the lane next door — the
+ * spawner's half of the rung's promise that there is a way through.
+ *
+ * See `DifficultyDef.drive.laneGuardPx`. Measured along the COURSE rather than
+ * in world x so both legs answer it identically, and asked of the sibling lane
+ * only: the two carriageways are separate problems and a car coming the other
+ * way is not something the player can be pinned against.
+ */
+function pairedLaneBusy(
+  state: DriveState,
+  lane: number,
+  at: number,
+  guardPx: number,
+): boolean {
+  const dir = state.params.direction;
+  const home = state.car.home.x;
+  const sibling = siblingLane(lane);
+  for (const other of state.traffic) {
+    if (laneAt(other.pos.y) !== sibling) continue;
+    if (Math.abs((other.pos.x - home) * dir - at) <= guardPx) return true;
+  }
+  return false;
+}
+
 /** Lay down one lane's share of the traffic. */
 function spawnLane(state: DriveState, lane: number): void {
   const { rng } = state;
   const dir = state.params.direction;
   const withHero = laneRunsWithHero(lane, dir);
+  const guardPx = difficultyDef(state.params.difficulty).drive.laneGuardPx;
   // HOW FAR OUT A LANE IS POPULATED, and the two sides want different answers.
   // Oncoming cars close at the SUM of both speeds, so the far lanes have to be
   // laid from further out or a head-on would appear out of nothing. The hero's
@@ -229,9 +300,32 @@ function spawnLane(state: DriveState, lane: number): void {
     }
     const variant = rollVehicle(rng, "road");
     const def = vehicleDef(variant);
+    // WHO IS DRIVING IT, on top of what it is. The def's own band is what the
+    // MACHINE can do (a bus dawdles, a sports car does not); the temper is the
+    // person at the wheel, and it is the half that makes a lane worth
+    // overtaking in. Rolled before the pitch, because the gap a vehicle leaves
+    // behind it depends on how fast it is actually going.
     const pace =
       randomRange(rng, DRIVE.trafficSpeedPx.min, DRIVE.trafficSpeedPx.max) *
-      randomRange(rng, def.pace.min, def.pace.max);
+      randomRange(rng, def.pace.min, def.pace.max) *
+      rollTemper(rng);
+    // …AND WHETHER THIS MARK IS A CHASE. Rolled here, unconditionally, for the
+    // same reason every other draw on this road is: a stream spent differently
+    // depending on where the mark landed would re-lay the whole leg the moment
+    // the opening was retuned.
+    const chase = rng() < DRIVE.drivers.chase.chance;
+    const chaseCars = Math.round(
+      randomRange(
+        rng,
+        DRIVE.drivers.chase.cars.min,
+        DRIVE.drivers.chase.cars.max,
+      ),
+    );
+    const chaseGap = randomRange(
+      rng,
+      DRIVE.drivers.chase.gapPx.min,
+      DRIVE.drivers.chase.gapPx.max,
+    );
     // The pitch is the ROLLED vehicle's, because the gap it leaves behind it
     // depends on how fast it is going — so the roll happens even for a mark in
     // the opening stretch that puts nothing on the road.
@@ -242,8 +336,18 @@ function spawnLane(state: DriveState, lane: number): void {
     // forgotten — and the one stream that DOES run out there is the footway's
     // below.
     if (at < cityStartPx(state.params)) continue;
+    // …AND THE RUNG MAY BE KEEPING THIS STRETCH OPEN. A vehicle declined here
+    // is not deferred — the mark has already moved on and the road simply
+    // carries one fewer car — which is exactly the shape the promise wants: the
+    // gentle rungs lose the vehicle that would have shut the second lane and
+    // keep every other one (`DifficultyDef.drive.laneGuardPx`).
+    if (guardPx > 0 && pairedLaneBusy(state, lane, at, guardPx)) continue;
     // Signed in world +x, like the hero's own velocity: his way or against it.
     const speed = (withHero ? dir : -dir) * pace;
+    if (chase) {
+      spawnChase(state, lane, at, withHero, chaseCars, chaseGap);
+      continue;
+    }
     state.traffic.push(
       createTraffic(
         state.nextId++,
@@ -256,6 +360,64 @@ function spawnLane(state: DriveState, lane: number): void {
       ),
     );
   }
+}
+
+/**
+ * SOMEBODY IS BEING CHASED — a runner and the cars after it, laid down at one
+ * mark instead of one vehicle.
+ *
+ * IT IS NOT A NEW KIND OF TRAFFIC, and that is the whole of why it was cheap. A
+ * chase is three ordinary vehicles whose drivers have their `urgency` wound
+ * right up: they change lanes on a gap nobody sane would take, steer three times
+ * as hard to do it, and follow the car in front far closer than the traffic they
+ * are threading. Every sight it produces — the weaving, the overtaking, the
+ * pile-up it leaves in the lane behind it — is the ordinary driver in `ai.ts`
+ * being asked to try much harder, and not one line of it is written twice.
+ *
+ * The BLUE LIGHTS are the only thing the chase adds that nothing else has, and
+ * they are presentation: `siren` is read by the renderer and by nothing in the
+ * sim, because a light bar does not change a collision.
+ *
+ * NOT ONE DRAW OF ITS OWN. Everything rolled for it was rolled at the mark
+ * (`spawnLane`), whether or not the mark turned out to be a chase — the same
+ * discipline the pitch and the temper follow, and the reason retuning how often
+ * a chase happens cannot re-lay the rest of the road.
+ */
+function spawnChase(
+  state: DriveState,
+  lane: number,
+  at: number,
+  withHero: boolean,
+  cars: number,
+  gapPx: number,
+): void {
+  const dir = state.params.direction;
+  const { chase } = DRIVE.drivers;
+  const along = withHero ? dir : -dir;
+  // FLAT OUT, and the same pace for the whole procession: a chase that had its
+  // cars at their own tempers would spread out into three unrelated fast cars
+  // over about four seconds, which is a different and much duller picture.
+  const pace = DRIVE.trafficSpeedPx.max * chase.paceMult;
+  const y = laneCenter(lane);
+  const born = (index: number, variant: number): DriveTraffic => {
+    const one = createTraffic(
+      state.nextId++,
+      variant,
+      // Behind the runner, measured along its own direction of travel so the
+      // procession is in the right order on both legs.
+      { x: state.car.home.x + dir * at - along * gapPx * index, y },
+      along * pace,
+      (at * 0.017 + index) % (Math.PI * 2),
+    );
+    one.urgency = chase.urgency;
+    state.traffic.push(one);
+    return one;
+  };
+  // WHO RUNS. A coupe: quick enough to be worth chasing and ordinary enough
+  // that the player reads the blue lights rather than the car.
+  born(0, variantOf("traffic_coupe"));
+  const police = variantOf("traffic_police");
+  for (let i = 1; i <= Math.max(1, cars); i++) born(i, police).siren = true;
 }
 
 /**
@@ -358,17 +520,22 @@ export function resetTrafficMarks(params: {
   };
 }
 
-/** One tick of the other traffic: roll on, work off any slew, weave if this is
- * somebody on the footway, lie down if it has been knocked over, and forget
- * what is well behind. */
+/** One tick of the other traffic: roll on, DRIVE if somebody is at the wheel,
+ * work off any slew, weave if this is somebody on the footway, lie down if it
+ * has been knocked over, and forget what is well behind. */
 export function stepTraffic(state: DriveState, dt: number): void {
   const dir = state.params.direction;
   const edges = roadEdges();
   const band = roadBandEdges();
   const walk = crowdEdges();
   const { pavementRiders, traffic: cfg } = DRIVE;
+  // WHO IS IN WHICH LANE, built once for the whole walk (`ai.ts`). Every driver
+  // below asks it what is in front of it and what is beside it, and the
+  // alternative is each of forty vehicles walking the whole road.
+  const index = indexTraffic(state);
   for (const other of state.traffic) {
     if (other.hitCooldownMs > 0) other.hitCooldownMs -= dt * 1000;
+    if (other.crashCooldownMs > 0) other.crashCooldownMs -= dt * 1000;
     const def = vehicleDef(other.variant);
 
     if (other.downed) {
@@ -450,13 +617,24 @@ export function stepTraffic(state: DriveState, dt: number): void {
     }
 
     other.pos.x += other.speed * dt;
-    // …AND THE DRIVER GETS BACK ON THE PACE. A shove up the road is a real
-    // change of speed and it has to be, or a collision is weightless; a shove
-    // that never wore off would leave every car the hero has ever touched
-    // running down the carriageway at his speed. Somebody is still driving it,
-    // so it eases back to what it was doing (`DriveTraffic.cruise`). Nobody is
-    // driving a WRECK, which is why that case has already `continue`d.
-    if (other.speed !== other.cruise) {
+    // …AND SOMEBODY IS DRIVING IT. The lane it wants, the wobble, going round
+    // whatever is stopped in front of it, lifting off for the car ahead — the
+    // whole driver, which is its own file (`ai.ts`).
+    //
+    // WHO DOES NOT GET ONE, and each for a different reason: the delivery trade
+    // is not in a lane at all and weaves to its own rule below, and a car
+    // somebody PARKED and walked away from has nobody in it, which is exactly
+    // what `driverless` means. Both fall through to the plain recovery, which is
+    // also the right answer for them — a shoved moped gets back on its line and
+    // a shoved parked car rolls to a stop (its `cruise` is zero).
+    if (!def.pavement && !other.driverless) {
+      steerTraffic(state, index, other, dt);
+    } else if (other.speed !== other.cruise) {
+      // …AND THE ONE GETS BACK ON THE PACE. A shove up the road is a real change
+      // of speed and it has to be, or a collision is weightless; a shove that
+      // never wore off would leave every car the hero has ever touched running
+      // down the carriageway at his speed. Nobody is driving a WRECK, which is
+      // why that case has already `continue`d.
       const ease = Math.min(1, cfg.recoverPerSec * dt);
       other.speed += (other.cruise - other.speed) * ease;
       if (Math.abs(other.cruise - other.speed) < 1) other.speed = other.cruise;

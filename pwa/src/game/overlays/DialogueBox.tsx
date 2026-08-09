@@ -67,6 +67,10 @@ export const DIALOGUE_TEXT_SCALE = 2;
  */
 const MAX_VISIBLE_LINES = 3;
 
+/** How long an INERT box holds a screen before turning to the next (ms) — a
+ * beat to read three rows, on a box nobody can tap to hurry along. */
+const INERT_SCREEN_MS = 1400;
+
 /**
  * Loose safety cap for a single row's `PixelText`, in rem. Rows are already
  * wrapped to the column here, so this only catches a degenerate case (column
@@ -86,6 +90,7 @@ export function DialogueBox({
   revealRef,
   onBlip,
   paused,
+  inert,
   className,
 }: {
   font: PixelFont;
@@ -118,6 +123,23 @@ export function DialogueBox({
    * covered stage, blips included. It picks up on the character it stopped at.
    */
   paused?: boolean;
+  /**
+   * NOBODY CAN PRESS THIS ONE — a BARK, floated over a screen that keeps
+   * playing and that owns the thumb (the road's own `.drive-bark`).
+   *
+   * The box's tap does two jobs: it finishes the crawl, and it scrolls to the
+   * next screen when a page has folded into more rows than fit. An inert box has
+   * neither — it is `pointer-events: none` and the caller's own timer turns its
+   * pages — so it must not draw the "there is more" arrow, which is an
+   * instruction to press something that cannot be pressed and was exactly what a
+   * player reported: a marker saying there was more, no way to reach it, and
+   * nothing behind it.
+   *
+   * It TURNS ITS OWN SCREENS instead, on the same reading budget the crawl runs
+   * at. That is the other half: suppressing the arrow alone would only hide the
+   * fact that the tail of a long page is never shown at all.
+   */
+  inert?: boolean;
   className?: string;
 }) {
   // The rendered text column's width, in unscaled font pixels — the unit
@@ -174,6 +196,20 @@ export function DialogueBox({
   useEffect(() => {
     revealRef.current = { done, skip: advance };
   }, [revealRef, done, advance]);
+
+  // AN INERT BOX TURNS ITS OWN SCREENS. Nothing on the screen it floats over
+  // will ever tap it, so a page that folded into more rows than fit would print
+  // its first three and stop there for good. It gives the screen a beat to be
+  // read and moves on — the caller's own page timer is still what retires the
+  // whole speech, so the worst case is a tail cut short rather than never shown.
+  useEffect(() => {
+    if (!inert || !crawlDone || !hasMoreScreens || paused) return;
+    const id = window.setTimeout(
+      () => setScreen((s) => s + 1),
+      INERT_SCREEN_MS,
+    );
+    return () => window.clearTimeout(id);
+  }, [inert, crawlDone, hasMoreScreens, paused, activeScreen]);
 
   // A box that has gone leaves the ref saying "nothing to reveal", so the
   // caller's next tap belongs to the caller rather than to a speech that is no
@@ -239,7 +275,7 @@ export function DialogueBox({
             />
           ))}
         </div>
-        {crawlDone && hasMoreScreens && (
+        {crawlDone && hasMoreScreens && !inert && (
           <div className="dialogue-more" aria-hidden="true" />
         )}
       </div>

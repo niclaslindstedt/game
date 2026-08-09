@@ -292,18 +292,30 @@ function plantCar(
   pace: number,
   variant: number,
   towardHero = false,
+  /**
+   * HOW MANY PEOPLE ARE IN IT — staged, for the one exhibit that is ABOUT the
+   * load rather than about the blow.
+   *
+   * How many a given car carries is a per-vehicle roll off its own id
+   * (`rollOccupants`), biased hard toward one because nearly everybody on this
+   * road is alone in the car. That is right for the road and no use at all to a
+   * shelf that has to show the same thing every time it is opened: an exhibit
+   * demonstrating what happens to the row the windscreen cannot reach needs a
+   * car with a row behind the front pair, on every single run.
+   */
+  seats?: number,
 ): void {
   const dir = drive.params.direction;
   // Minted by the engine's own factory, so a car staged for the gallery is
   // built exactly the way a car on the road is — riders, occupants and all.
-  drive.traffic.push(
-    createTraffic(
-      drive.nextId++,
-      variant % TRAFFIC_VARIANTS,
-      { x: drive.car.pos.x + dir * ahead, y },
-      (towardHero ? -dir : dir) * pace,
-    ),
+  const one = createTraffic(
+    drive.nextId++,
+    variant % TRAFFIC_VARIANTS,
+    { x: drive.car.pos.x + dir * ahead, y },
+    (towardHero ? -dir : dir) * pace,
   );
+  if (seats !== undefined) one.occupants = seats;
+  drive.traffic.push(one);
 }
 
 /**
@@ -544,14 +556,17 @@ export function driveExhibits(): DriveExhibit[] {
         // exhibit advertising the scrape was demonstrating the shelf above it.
         // Eighty-odd is where trading paint is still trading paint.
         const speed = openAt(drive, 0.48);
-        // HALF INTO THE NEXT LANE. A car passed cleanly a lane apart never
-        // touches (the two footprints are 26 px apart and reach 18), so trading
-        // paint means exactly what it says: drifting far enough over to catch a
+        // MOST OF THE WAY INTO THE NEXT LANE. A car passed cleanly a lane
+        // apart never touches — the two are 26 px apart and two vehicles reach
+        // only `DRIVE.impact.bodyBandFrac` of their own extents at each other,
+        // because a car's picture stands UP the same axis the lanes are laid
+        // across and only the bottom of it is on the road. So trading paint
+        // means exactly what it says: drifting far enough over to catch a
         // corner, at a closing speed low enough that it stays a scrape.
         plantCar(
           drive,
           leadPx(speed) + 28,
-          drive.car.pos.y - 14,
+          drive.car.pos.y - 9,
           DRIVE.trafficSpeedPx.min,
           6,
         );
@@ -673,10 +688,14 @@ export function driveExhibits(): DriveExhibit[] {
         // low sports car of nearly the same weight sliding — which is the
         // whole reason the field exists and the thing this exhibit is for.
         const speed = openAt(drive);
+        // …CAUGHT ON THE CORNER, which is where a lateral Δv comes from. Inside
+        // the pair's own contact reach (`DRIVE.impact.bodyBandFrac`): a body
+        // that is mostly air above the sills is not met by another one a whole
+        // lane away, however much their pictures overlap.
         plantCar(
           drive,
           leadPx(speed) + 30,
-          drive.car.pos.y - 13,
+          drive.car.pos.y - 9,
           0,
           FLEET.findIndex((def) => def.id === "traffic_suv"),
         );
@@ -704,11 +723,15 @@ export function driveExhibits(): DriveExhibit[] {
       shows: "occupantKilled",
       road: (drive) => {
         silence(drive);
-        // A THREE-ROW MINIVAN, because the case only exists when there are more
-        // people in a car than one windscreen can post out. Two go through the
-        // glass and the row behind them — who were never in front of it — die
-        // where they sit, which the road can only show one way: on the windows
-        // (`DriveTraffic.gore`, the derived `<sprite>_gore` overlay).
+        // A THREE-ROW MINIVAN, AND THE THREE ROWS ARE STAGED. The case only
+        // exists when there are more people in a car than the body can post out
+        // at once: two go through the glass and the row behind them — who were
+        // never in front of it — die where they sit, which the road can only
+        // show one way (`DriveTraffic.gore`, the derived `<sprite>_gore`
+        // overlay). A minivan CAN hold six and mostly holds one, because how
+        // many are in a given car is a per-vehicle roll biased toward somebody
+        // driving home alone; an exhibit that left it to the roll would be
+        // showing an empty back seat five times in nine.
         const speed = openAt(drive);
         plantCar(
           drive,
@@ -716,6 +739,8 @@ export function driveExhibits(): DriveExhibit[] {
           drive.car.pos.y,
           0,
           FLEET.findIndex((def) => def.id === "traffic_minivan"),
+          false,
+          3,
         );
       },
     },

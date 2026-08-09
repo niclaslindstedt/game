@@ -109,10 +109,13 @@ just a cyclist and somebody's dinner on the back of a moped going the other way.
 The picture is already moving before the car is in it — the wagon comes into
 frame from behind and settles into the lane, which is the one moment in the whole
 game where the player watches the hero's own car arrive rather than driving it.
-Then he says the only two things he will say about any of this before it starts:
-that he has to hurry, because the part is at GOODCO; and that the people in town
-beg, and are pushy about it, and are — he is clear on this — mostly not on the
-welfare like him. He is a man with nothing being smug at people with less, on an
+The car is not his yet: the road holds it at its own pace with GET READY over the
+middle of the screen, gives him the wheel a second before the town and the pedal
+only at the gate itself, which is what turns the approach into a starting flag
+instead of a stretch of road nobody was driving. And over the top of it he says
+the only two things he will say about any of this: that he has to hurry, because
+the part is at GOODCO; and that the people in town beg, and are — he is clear on
+this — not on the welfare like him. He is a man with nothing being smug at people with less, on an
 empty road, several thousand pixels before he starts killing them at a hundred
 and twenty. He will never mention either half again.
 

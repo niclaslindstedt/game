@@ -1,0 +1,399 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SOMEBODY IS DRIVING EVERY ONE OF THEM — the other traffic's own drivers.
+//
+// WHAT THIS FILE REPLACED. A vehicle used to be born on a lane centre with a
+// speed and hold both until something hit it, which makes a four-lane road four
+// conveyor belts: nothing wobbles, nothing pulls out, nothing goes round the
+// hatchback somebody left half in the gutter, and — the one that actually costs
+// the player — nothing ever changes its mind. A lane that was clear stayed
+// clear, so the whole decision in the minigame reduced to finding the empty belt
+// once and holding it for the rest of the leg.
+//
+// FIVE BEHAVIOURS, and every one of them is something the car in front of you
+// really does:
+//
+//   IT WOBBLES        Nobody holds a line to the pixel.
+//   IT FOLLOWS        It lifts off for the car in front. IMPERFECTLY, on
+//                     purpose — past its own reaction the gap is simply gone,
+//                     and what happens then is `between.ts`.
+//   IT PULLS OUT      Because the car in front is slower than it wants to go,
+//                     which is the only honest reason anybody ever does.
+//   IT GOES ROUND     A parked car, a wreck standing dead in a lane, anything
+//                     stopped — a lean into the neighbouring lane and back out
+//                     rather than a lane change, which is what people do.
+//   IT LIFTS OFF      …for the car drawing level with it in the next lane, on
+//                     the rungs that promise a way through (`laneGuardPx`).
+//
+// ── IT NEVER TOUCHES THE DICE ───────────────────────────────────────────────
+// Not one `drive.rng()` draw, ever — the same rule the auto-driver and the gore
+// scatter obey. The road's stream lays down every body, every variant and every
+// temper in a fixed order, so a draw spent on a lane change would move every
+// person the hero meets after it, and a seeded road would stop being one. The
+// wobble rides the vehicle's own `phase`; every decision below is read off the
+// state.
+//
+// ── AND IT IS NOT A SECOND SPAWNER ──────────────────────────────────────────
+// A driver may change where its own vehicle is and how fast it is going. It may
+// not mint one, retire one, or touch anybody else's — which is what keeps this
+// file cheap to reason about beside a collision pass that does exactly the
+// opposite.
+
+import { clamp } from "@game/lib/vec.ts";
+
+import { difficultyDef } from "../defs/difficulties.ts";
+import { DRIVE } from "./config.ts";
+import { laneAt, laneCenter, roadEdges } from "./crowd.ts";
+import { vehicleDef } from "./fleet.ts";
+import { laneRunsWithHero } from "./traffic.ts";
+import type { DriveState, DriveTraffic } from "./types.ts";
+
+/**
+ * WHO IS IN WHICH LANE THIS TICK — built once and read by every driver, because
+ * the alternative is every vehicle walking the whole road.
+ *
+ * A lane's list is sorted along the road (ascending world x), which is what lets
+ * "the vehicle in front of me" be a short walk from an insertion point rather
+ * than a scan of everything on the carriageway. Rebuilt each tick: the drivers
+ * move the very positions it buckets on, so anything longer-lived would be a
+ * cache to invalidate, and this is one sort of a list that is nearly sorted
+ * already.
+ */
+export type TrafficIndex = {
+  /** Everything in each lane, ascending x. Pavement riders are not in it — they
+   * are not in a lane. */
+  lanes: DriveTraffic[][];
+};
+
+/** Bucket the road by lane. */
+export function indexTraffic(state: DriveState): TrafficIndex {
+  const lanes: DriveTraffic[][] = Array.from(
+    { length: DRIVE.laneCount },
+    () => [],
+  );
+  for (const other of state.traffic) {
+    if (vehicleDef(other.variant).pavement) continue;
+    lanes[laneAt(other.pos.y)]!.push(other);
+  }
+  for (const lane of lanes) lane.sort((a, b) => a.pos.x - b.pos.x);
+  return { lanes };
+}
+
+/**
+ * WHICH LANE IS THE ONE NEXT DOOR, on this driver's own side of the road.
+ *
+ * Right-hand traffic in two pairs: {0,1} run one way and {2,3} the other
+ * (`laneRunsWithHero`), so the lane a driver may legitimately move into is its
+ * partner in its own pair and never the one across the centre line. A driver
+ * that could reach for the oncoming carriageway would be a hazard the player
+ * cannot read, because nothing on this road ever indicates.
+ */
+export function siblingLane(lane: number): number {
+  return lane % 2 === 0 ? lane + 1 : lane - 1;
+}
+
+/** Which way this vehicle is travelling in world +x, as a sign. */
+function heading(other: DriveTraffic): 1 | -1 {
+  return other.speed < 0 || (other.speed === 0 && other.faceLeft) ? -1 : 1;
+}
+
+/**
+ * THE VEHICLE IN FRONT — the nearest one ahead of `other` in `lane`, within
+ * `reachPx`, measured along the way `other` is actually pointing.
+ *
+ * "Ahead" is the driver's own heading rather than the road's: the two
+ * carriageways run opposite ways and both are full of drivers with the same
+ * question. A stopped wreck answers it too, and must — the whole reason a
+ * driver looks is to find the thing it is about to arrive at.
+ */
+function ahead(
+  index: TrafficIndex,
+  other: DriveTraffic,
+  lane: number,
+  reachPx: number,
+): DriveTraffic | null {
+  const list = index.lanes[lane];
+  if (!list) return null;
+  const dir = heading(other);
+  let best: DriveTraffic | null = null;
+  let bestGap = reachPx;
+  for (const it of list) {
+    if (it === other) continue;
+    const gap = (it.pos.x - other.pos.x) * dir;
+    if (gap <= 0 || gap >= bestGap) continue;
+    best = it;
+    bestGap = gap;
+  }
+  return best;
+}
+
+/**
+ * IS THERE ROOM IN THAT LANE — the check before pulling out, and the one that
+ * has to look BOTH ways.
+ *
+ * A driver that only looked forward would pull out in front of the car that was
+ * overtaking IT, which on a road where a chase comes through at seventy over the
+ * traffic is most of the time. The window is asymmetric for the same reason a
+ * mirror check is: what is behind you is closing far faster than what is ahead.
+ */
+function laneClear(
+  index: TrafficIndex,
+  other: DriveTraffic,
+  lane: number,
+  aheadPx: number,
+  behindPx: number,
+): boolean {
+  const list = index.lanes[lane];
+  if (!list) return false;
+  const dir = heading(other);
+  for (const it of list) {
+    if (it === other) continue;
+    const gap = (it.pos.x - other.pos.x) * dir;
+    if (gap < -behindPx || gap > aheadPx) continue;
+    return false;
+  }
+  return true;
+}
+
+/**
+ * HOW MUCH ROAD THIS RUNG PROMISES BESIDE A VEHICLE — 0 on the rungs that
+ * promise none. See `DifficultyDef.drive.laneGuardPx`.
+ */
+export function laneGuardPx(state: DriveState): number {
+  return difficultyDef(state.params.difficulty).drive.laneGuardPx;
+}
+
+/**
+ * IS SOMEBODY DRAWING LEVEL WITH ME in the next lane — the question the gentle
+ * rungs answer by lifting off.
+ *
+ * "Level" is a stretch of road rather than an instant, because two cars whose
+ * noses are exactly abreast is a state that lasts a frame and the thing the
+ * player needs is a GAP: if the pair of lanes running one way are shut within a
+ * guard's length of each other, there is nowhere to put the wagon.
+ */
+function abreast(
+  index: TrafficIndex,
+  other: DriveTraffic,
+  lane: number,
+  guardPx: number,
+): DriveTraffic | null {
+  const list = index.lanes[lane];
+  if (!list) return null;
+  for (const it of list) {
+    if (it === other) continue;
+    if (Math.abs(it.pos.x - other.pos.x) <= guardPx) return it;
+  }
+  return null;
+}
+
+/**
+ * SOMETHING STOPPED, JUST OFF MY LINE — how far this driver leans to get round
+ * it, in world px away from the kerb it is on (signed in world y).
+ *
+ * TWO POPULATIONS AND ONE ANSWER. A car somebody left at the kerb is a
+ * `DriveProp` and a car that died in a live lane is a `DriveTraffic`, and from
+ * the driving seat they are the identical problem: a stationary obstacle
+ * overlapping the lane, which you go AROUND. So both are read here and the lean
+ * is the same lean — which is also why the kerb finally reads as being on this
+ * road rather than beside it.
+ *
+ * It is deliberately NOT a lane change. A driver going round a parked car moves
+ * across a bit and comes back, so from the player's seat the car in that lane is
+ * momentarily a third of a lane wider than it was — a thing to read rather than
+ * a thing to be told about.
+ */
+function dodge(
+  state: DriveState,
+  index: TrafficIndex,
+  other: DriveTraffic,
+  def: { radiusPx: number },
+): number {
+  const { dodgeFromPx, dodgePx } = DRIVE.drivers;
+  const dir = heading(other);
+  const edges = roadEdges();
+  // Which way there IS to lean: away from the nearer kerb, so a car in the
+  // gutter lane pulls IN toward the middle of the road, which is the only
+  // direction that helps.
+  const away = other.pos.y > 0 ? -1 : 1;
+  let worst = 0;
+  const consider = (x: number, y: number, radius: number): void => {
+    const gap = (x - other.pos.x) * dir;
+    if (gap <= 0 || gap > dodgeFromPx) return;
+    const off = y - other.pos.y;
+    // Only what is on the wrong side to begin with: leaning toward a thing is
+    // how a dodge becomes a collision.
+    if (off * away > 0) return;
+    const need = def.radiusPx + radius + 2;
+    const clear = Math.abs(off);
+    if (clear >= need) return;
+    // Nearer means a harder lean, and the whole lean is in hand by the time it
+    // is level with the thing.
+    const want = Math.min(dodgePx, (need - clear) * 1.4);
+    if (want > worst) worst = want;
+  };
+  for (const prop of state.props) {
+    if (prop.kind !== "parked_car" || prop.felled) continue;
+    consider(prop.pos.x, prop.pos.y, vehicleDef(prop.variant).radiusPx);
+  }
+  const list = index.lanes[laneAt(other.pos.y)];
+  if (list) {
+    for (const it of list) {
+      if (it === other) continue;
+      // A vehicle still under way is a following problem, not a dodging one —
+      // it will not be there when you arrive. Only what has STOPPED is an
+      // obstacle in the sense this function means.
+      if (!it.wrecked && !it.downed && Math.abs(it.speed) > 30) continue;
+      consider(it.pos.x, it.pos.y, vehicleDef(it.variant).radiusPx);
+    }
+  }
+  const lean = away * worst;
+  // …and never off the tarmac. A car that dodged into the verge would have
+  // solved a collision by leaving the road.
+  const target = clamp(other.pos.y + lean, edges.top, edges.bottom);
+  return target - other.pos.y;
+}
+
+/**
+ * ONE TICK OF ONE DRIVER — where it wants to be across the road, how fast it
+ * wants to be going, and the steering and the throttle that get it there.
+ *
+ * Called for everything with somebody at the wheel: not the pavement trade
+ * (which weaves to its own rule), not a wreck, not a machine lying on its side,
+ * and not a car somebody parked and walked away from.
+ */
+export function steerTraffic(
+  state: DriveState,
+  index: TrafficIndex,
+  other: DriveTraffic,
+  dt: number,
+): void {
+  const cfg = DRIVE.drivers;
+  const def = vehicleDef(other.variant);
+  const dir = heading(other);
+  const guard = laneGuardPx(state);
+  const urgency = Math.max(1, other.urgency);
+  // HOW MUCH OF THE WHEEL THIS DRIVER ACTUALLY HAS. A car crossing the road at a
+  // standstill is a car being carried, not driven — the hero's own steering
+  // scales the same way and for the same reason (`applyCarWheel`,
+  // `DRIVE.laneRefSpeedPx`). It matters more here than it does there, because
+  // this road is full of vehicles that have STOPPED: a wreck nobody has cleared,
+  // a car shunted to a halt, one the spawner planted with the handbrake on. None
+  // of them should be quietly wandering toward a lane centre or wobbling on the
+  // spot, and without this every one of them does.
+  const authority = Math.min(1, Math.abs(other.speed) / DRIVE.laneRefSpeedPx);
+
+  // ── WHICH LANE ────────────────────────────────────────────────────────────
+  // Where it ended up is where it starts from: a car that has been shunted two
+  // lanes across does not fight its way back through the traffic to the lane it
+  // was born in, it takes the one it is in. Held to its OWN carriageway, so a
+  // shove across the centre line has it coming back rather than driving into the
+  // oncoming stream.
+  const at = laneAt(other.pos.y);
+  const mine = laneRunsWithHero(other.lane, state.params.direction);
+  if (
+    laneRunsWithHero(at, state.params.direction) === mine &&
+    at !== other.lane
+  )
+    other.lane = at;
+
+  other.laneHoldMs -= dt * 1000;
+  const sibling = siblingLane(other.lane);
+  const inFront = ahead(index, other, other.lane, cfg.lookAheadPx * urgency);
+  if (other.laneHoldMs <= 0) {
+    other.laneHoldMs = cfg.decideMs;
+    // PULL OUT FOR SOMEBODY SLOWER, and only for somebody slower. A driver that
+    // changed lanes for any other reason would be noise; this one is a decision
+    // the player can watch being made and, once he has seen it twice, predict.
+    const blocked =
+      inFront !== null &&
+      Math.abs(other.cruise) - Math.abs(inFront.speed) > cfg.overtakeGainPx;
+    if (blocked) {
+      const room =
+        cfg.lookAheadPx * urgency * 0.8 + Math.abs(other.speed) * 0.35;
+      const back = cfg.lookBehindPx + Math.abs(other.speed) * 0.2;
+      // …AND NOT INTO A LANE THIS RUNG IS KEEPING OPEN. On the gentle rungs the
+      // second lane is the player's way through, so a driver that pulled into it
+      // to get past somebody would be shutting the very gap the rung promised.
+      const wouldPair = guard > 0 && abreast(index, other, sibling, guard);
+      if (!wouldPair && laneClear(index, other, sibling, room, back)) {
+        other.lane = sibling;
+        other.laneHoldMs = cfg.settledMs;
+      }
+    }
+  }
+
+  // ── WHERE ACROSS THE ROAD ─────────────────────────────────────────────────
+  // The lane's centre, plus the lean round anything stopped, plus the wobble
+  // nobody drives without. The wobble is derived from the vehicle's own phase
+  // and where it is — never a draw (see the file's own note).
+  const wobble =
+    Math.sin(other.phase + other.pos.x * 0.01 * cfg.wobbleHz) *
+    cfg.wobblePx *
+    authority;
+  const edges = roadEdges();
+  const aim = clamp(
+    laneCenter(other.lane) + dodge(state, index, other, def) + wobble,
+    edges.top + def.radiusPx * 0.5,
+    edges.bottom - def.radiusPx * 0.5,
+  );
+
+  // …AND THE STEERING THAT GETS IT THERE. Rate-limited and eased over the last
+  // few px, so a lane change is a manoeuvre with a beginning and an end rather
+  // than a jump — which is the difference between a hazard the player reads and
+  // one that simply appears beside him.
+  const off = aim - other.pos.y;
+  const rate = cfg.steerPx * urgency * authority;
+  const ease =
+    Math.abs(off) < cfg.settlePx ? off / cfg.settlePx : Math.sign(off);
+  const step = ease * rate * dt;
+  other.pos.y += Math.abs(step) > Math.abs(off) ? off : step;
+
+  // ── AND HOW FAST ──────────────────────────────────────────────────────────
+  // The pace this driver chose, cut by whatever is in the way of it. The cut is
+  // a FRACTION of its own cruise rather than a target speed, so a bus and a
+  // sports car both lift off by the same amount of their own pace and neither
+  // ends up doing a number nobody chose.
+  let hold = 1;
+
+  // THE CAR IN FRONT. The gap it wants is SECONDS of its own travel — which is
+  // how following distance really works and how it scales — and the lift-off is
+  // deliberately not enough to always save it: a road whose drivers could never
+  // run out of road is a road that never has a crash on it, and the pile-up
+  // somebody else caused is the most interesting obstacle this minigame has.
+  if (inFront) {
+    const gap = (inFront.pos.x - other.pos.x) * dir;
+    const closing = (other.speed - inFront.speed) * dir;
+    const wants = Math.max(
+      def.halfLengthPx * 2,
+      (Math.abs(other.speed) * cfg.followSec) / urgency,
+    );
+    if (closing > 0 && gap < wants) {
+      hold -= cfg.brakeFrac * (1 - gap / Math.max(1, wants));
+    }
+  }
+
+  // …AND THE CAR BESIDE IT, on the rungs that promise the player a way past. A
+  // driver drawing level with the next lane's lifts off and tucks in behind,
+  // which is the courteous thing to do and — from the driving seat — a gap that
+  // keeps opening up just as it is needed.
+  if (guard > 0) {
+    const beside = abreast(index, other, sibling, guard);
+    // Whoever is BEHIND gives way, so the pair separates instead of both of them
+    // lifting off and staying exactly as abreast as they were. Ties are broken
+    // by id, because two cars dead level is a real state and somebody has to go
+    // first.
+    if (beside) {
+      const mineFirst = (other.pos.x - beside.pos.x) * dir;
+      const yields = mineFirst < 0 || (mineFirst === 0 && other.id > beside.id);
+      if (yields) hold = Math.min(hold, DRIVE.drivers.courtesyFrac);
+    }
+  }
+
+  // Ease onto it rather than snapping — the same recovery a shunted car gets
+  // back on its pace with (`DRIVE.traffic.recoverPerSec`), because it is the
+  // same driver doing the same thing with the same right foot.
+  const target = other.cruise * Math.max(0.25, hold);
+  const blend = Math.min(1, DRIVE.traffic.recoverPerSec * urgency * dt);
+  other.speed += (target - other.speed) * blend;
+  if (Math.abs(target - other.speed) < 1) other.speed = target;
+}

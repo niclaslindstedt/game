@@ -895,6 +895,60 @@ escort.ts` walks the people an escort errand puts on the field, and
   rides the PAVEMENT and weaves across the kerb, which is the one change that
   alters the shape of the minigame rather than its furniture — the gutter used
   to be the safe line.
+  SOMEBODY IS DRIVING EVERY ONE OF THEM (`ai.ts`), and until they were, a
+  four-lane road was four conveyor belts: a vehicle was born on a lane centre
+  with a speed and held both until something hit it, so nothing wobbled, nothing
+  pulled out, nothing went round the hatchback somebody left half in the gutter,
+  and — the one that actually costs the player — a lane that was clear stayed
+  clear, which reduced the whole minigame to finding the empty belt once. Five
+  behaviours, and each is something the car in front of you really does: it
+  WOBBLES, it FOLLOWS (imperfectly, on purpose — past its own reaction the gap is
+  simply gone), it PULLS OUT for somebody slower, it GOES ROUND anything stopped
+  in its lane (a parked car, a wreck) with a lean into the neighbouring lane
+  rather than a lane change, and on the gentle rungs it LIFTS OFF for the car
+  drawing level with it. Who is at the wheel is a TEMPER rolled per vehicle —
+  most people do roughly the limit, some dawdle, some are late, and about one in
+  twenty-five should not have a licence — because a road where everybody moves at
+  one speed has nothing for a lane change to be FOR. And now and then somebody is
+  being CHASED: a runner and one or two police cars with their blue lights on,
+  which is not a new kind of traffic at all but three ordinary vehicles with
+  their `urgency` wound right up. It never touches the road's dice — every
+  decision is read off the state and every wobble derived from the vehicle's own
+  phase, so a seeded road is still a seeded road.
+  AND THEY HIT EACH OTHER (`between.ts`), which is the road's second collision
+  pass and the only one the hero is not a party to. The moment the traffic had
+  drivers it had drivers who get it wrong, and without this every one of those
+  resolves by two vehicles sliding through each other — which reads as the road
+  being a painting, and takes the best thing about a busy carriageway away from
+  the player, which is that it can go wrong WITHOUT HIM. It is the same momentum
+  sum between two masses that both matter, and it hands its answer to the SAME
+  breaking model the hero's blows go through, so a car written off by a lorry
+  folds, sheds, empties and stands dead in its lane exactly as one written off by
+  the wagon does. Two rules carry it: the pair are immune to EACH OTHER for a
+  moment and to nobody else (`crashCooldownMs`, a second clock — spent on the
+  hero's own latch it would mean driving clean through the crash you were braking
+  for), and nothing is ever RETIRED here, because a pile-up left in the road is
+  the entire point.
+  HOW MUCH OF A VEHICLE CAN MEET ANOTHER VEHICLE is `impact.bodyBandFrac`, and it
+  is the one place the picture and the model have to be told apart. A car's
+  sprite is drawn standing UP the screen — tyres at its own y, roof line most of
+  a lane above it — while the axis that sprite stands up is the same axis the
+  lanes are laid across, so two cars whose bodywork could not possibly touch look
+  as though they are scraping down each other's flank. Only the bottom of a body
+  is on the ground at all: from the tyres up to about the waistline is the part
+  that occupies ROAD, and the contact test uses that share of the pair's own
+  extents. Vehicles only — a person is a tall thin thing met by the whole flank
+  at any height, and a lamp post is a column from the pavement to well above the
+  roof.
+  THE APPROACH IS A COUNTDOWN. The five seconds before the town are held: the
+  speed is the road's own, the pedal reaches nothing, GET READY is on the screen,
+  and one second out the WHEEL is handed back and the dashboard slides in from
+  the left (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal
+  arrives with the clock and not a frame before it, so the gate is a starting
+  flag rather than a line the player crosses without noticing. It shortened the
+  LEG and not the minigame — `coursePx` came down by exactly what the opening
+  did, so the town, which is the stretch the clock runs over and the board ranks,
+  is the length it has always been.
   WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
   answers rather than one. The shunt used to BE the answer — a struck car slid
   sideways out of its lane and that was the event, which is why a head-on and a
@@ -927,7 +981,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   out, so it takes a SQUARE blow rather than merely a hard one — which is the
   single condition that makes the sight legible instead of random, and a player
   learns inside three collisions that hitting a car head-on empties it and that
-  clipping the same car does not. But squareness decides HOW somebody leaves,
+  clipping the same car does not. HOW MANY there are to leave is a RANGE on the
+  def rolled per vehicle (`rollOccupants`), biased hard toward one, because
+  nearly everybody on this road is alone in the car — a full estate exists, is
+  genuinely worse to hit, and is rare enough to read as that car rather than as
+  what estates are. A BUS is the exception at both ends: it is never one person,
+  and its long band of square windows posts several of them out at once
+  (`DriveVehicleDef.exits`) where a saloon's one windscreen posts two, which is
+  what makes twelve and a half tonnes of it the biggest mess the minigame can
+  make. But squareness decides HOW somebody leaves,
   never WHETHER they survived: past `eject.killForce` the ones the geometry will
   not post through the screen die where they sit, which the road shows the only
   way it can — blood on the windows (`DriveTraffic.gore`, the derived
