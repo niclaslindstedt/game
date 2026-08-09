@@ -1,4 +1,4 @@
-# Build artifacts — regenerated, never committed (OSS_SPEC §11.2).
+# Build artifacts — regenerated, never committed (OSS_GAME_SPEC §11.2).
 
 # The built website, copied in by scripts/bundle-web.mjs. It is the pwa/ build
 # output; committing it would duplicate the whole site in the history.

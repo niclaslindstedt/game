@@ -35,7 +35,7 @@ actionlint:
 docs:
 	@echo "see docs/"
 
-# The website IS the game (OSS_SPEC §11.4) — these build/serve the deployed app.
+# The website IS the game (OSS_GAME_SPEC §11.4) — these build/serve the deployed app.
 website:
 	npm install && npm run build --workspace pwa
 

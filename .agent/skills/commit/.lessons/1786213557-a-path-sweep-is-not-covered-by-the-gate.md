@@ -13,7 +13,7 @@ pwa's own.
 
 `make lint`, `make test` (6823 tests) and `make build` were all green over a
 sweep that had silently rewritten three things none of them read: the vendored
-`OSS_SPEC.md` (whose `src/output.rs` and `src/test/` are generic
+`OSS_GAME_SPEC.md` (whose `src/output.rs` and `src/test/` are generic
 cross-language examples, and which the spec forbids editing), a
 `.agent/skills/` lesson title about the SHELLS' `src/`, and prose comments in
 `electron/` and `tauri/`. The `@ui/lib` alias in `pwa/tsconfig.json` and

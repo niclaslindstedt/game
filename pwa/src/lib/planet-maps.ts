@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// oss-spec:allow-large-file: a coordinate catalogue — the solar system's real
+// game-spec:allow-large-file: a coordinate catalogue — the solar system's real
 // surface geography (coastlines, albedo features, maria, cloud belts) written
 // out as lat/lon outlines. It is dense DATA with one small rasteriser at the
 // top; splitting it would only scatter the same table across files.

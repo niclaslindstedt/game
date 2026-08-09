@@ -172,7 +172,7 @@ add `content/levels/<id>.yaml` means `levels/<id>.yaml` in the mod.
 **Skills that are the GAME's, not a mod's** — loading one inside a mod folder is
 a wrong turn: `engine-system`, `bot-improvement`, `leveling-balance`,
 `talent-fx`, `library-improvement`, `ui-review`, `store-shots`, `new-game`,
-`sync-oss-spec`, every `update-*` / `maintenance` skill, and `commit` (a mod is
+`sync-game-spec`, every `update-*` / `maintenance` skill, and `commit` (a mod is
 published to the Workshop, not merged here).
 
 A mod's STORY is the one place the shipped campaign's rules stop: do not file a

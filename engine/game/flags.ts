@@ -9,7 +9,7 @@
 // — the dialogue toggle dragged in the enemy catalog, the cutscene and thought
 // defs and the menace curve; the auto-equip toggle dragged in the whole pickup
 // and ranking model — parking a few hundred KB of simulation in the app's
-// startup chunk (which the SEO check's critical-path budget polices, §11.3.9).
+// startup chunk (which the SEO check's critical-path budget polices, §11.3.8).
 // The systems re-export their own readers, so nothing else moved.
 //
 // The one engine toggle NOT here is `setBalanceTuning`, because its home

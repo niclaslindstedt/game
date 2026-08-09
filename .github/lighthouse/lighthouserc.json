@@ -10,7 +10,7 @@
       }
     },
     "assert": {
-      "//": "\u00a711.4.7: assert categories:pwa at minScore 0.9 as soon as lhci's bundled Lighthouse restores the 'pwa' category (removed in Lighthouse 12). Until then installability is guarded by check-seo and the PWA shape checks in oss-spec validate.",
+      "//": "\u00a711.4.7: assert categories:pwa at minScore 0.9 as soon as lhci's bundled Lighthouse restores the 'pwa' category (removed in Lighthouse 12). Until then installability is guarded by check-seo and the PWA shape checks in the sync-game-spec skill.",
       "//seo": "categories:seo is the one hard gate here. Its audits are STRUCTURAL — a title, a meta description, a canonical, crawlable links, a valid robots.txt — so the score is deterministic and a drop means something really broke. The other categories stay warnings on purpose: performance and total-blocking-time vary run to run on a shared CI runner, and failing a build on that noise trains people to ignore the whole report.",
       "assertions": {
         "categories:performance": ["warn", { "minScore": 0.85 }],

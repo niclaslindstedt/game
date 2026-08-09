@@ -1,6 +1,6 @@
 # `prompts/`
 
-Versioned LLM prompts. See [`OSS_SPEC.md` §13.5](../OSS_SPEC.md#135-llm-prompts-prompts).
+Versioned LLM prompts. See [`OSS_GAME_SPEC.md` §13.2](../OSS_GAME_SPEC.md#132-llm-prompts-prompts).
 
 If this project sends prompts to a language model — directly via an SDK
 or indirectly via a wrapper — every prompt must live here as a versioned
@@ -62,4 +62,4 @@ be diffed and bisected. Loaders pick the highest version unless
 explicitly pinned.
 
 If this project performs no LLM calls, leave this directory empty
-(this README is enough to satisfy `oss-spec validate`).
+(this README is enough to satisfy the §13.2 check).

@@ -2,7 +2,7 @@
 
 ## The shape of the project
 
-This is a **webapp-kind** project per OSS_SPEC §11.4: the deployed website
+This is a **webapp-kind** project per OSS_GAME_SPEC §11.4: the deployed website
 _is_ the game. There is no marketing site — every build artifact is the
 playable app.
 
@@ -1601,7 +1601,7 @@ that; swapping the renderer for Preact did, and the 30 KB of slack came off the
 budget with it. A sudden jump means something on the startup path reached back
 through `@game/core`.
 
-`engine/output.ts` remains the central output module (OSS_SPEC §19.4) through
+`engine/output.ts` remains the central output module (OSS_GAME_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
 (`status`/`warn`/`info`/`header`/`error`/`debug`), an always-on in-memory
 log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
@@ -1842,7 +1842,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   the plugin (Node side) and the app (browser side).
 - **`pwa/scripts/`** — source-data extraction (§11.2), SEO generation
   (sitemap/robots/llms/404, §11.3), and the structural SEO checker
-  (§11.3.10).
+  (§11.3.9).
 - **`pwa/scripts/generate-screenshots.mjs`** — the manifest's install-prompt
   screenshots (§11.4.1), captured as REAL frames of the running game: it serves
   the build, hands a run to the engine autopilot, and shoots a live fight at the
