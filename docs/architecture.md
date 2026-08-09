@@ -954,6 +954,20 @@ escort.ts` walks the people an escort errand puts on the field, and
   extents. Vehicles only — a person is a tall thin thing met by the whole flank
   at any height, and a lamp post is a column from the pavement to well above the
   roof.
+  THE LEG IS OUTSKIRT-TOWN-OUTSKIRT-SITE, AND THE SHAPE IS A MIRROR, because the
+  road is driven BOTH WAYS and a road that only reads right one way round is half
+  a road. The town is bracketed by `cityStartPx` of empty road at each end
+  (`cityEndPx` is the far one), so the stretch one leg OPENS over — the wagon
+  sliding into frame, the two lines said to nobody, the town arriving in front of
+  the player — is the stretch the other leg FINISHES on. The clock stops at the
+  far gate rather than at the finish (`cityEnd`), because the run-out is road the
+  player still drives and nobody races. Past the finish is the RUN-IN, and what
+  stands there is the destination's own SITE (`engine/game/drive/sites.ts`): a
+  layout table anchored at the finish, placed and drawn by one planner, so
+  GOODCO's palisade-and-launch-stack and the hero's own picket-fence-and-bungalow
+  are two rows of data rather than two code paths. A third destination is one
+  more layout beside `campus.ts` and `homestead.ts` and one more line in
+  `DRIVE_SITES`.
   THE APPROACH IS A COUNTDOWN. The ten seconds before the town are held: the
   speed is the road's own, the pedal reaches nothing, GET READY is on the screen,
   and one second out the WHEEL is handed back and the dashboard slides in from
@@ -1131,12 +1145,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   work rather than a padlock on a cabinet. The developer tree carries the same
   shelf with its lock off — DEVELOPER → PLAYGROUND → MINIGAMES, every cabinet
   on every rung.
+  A CABINET MAY ALSO OFFER VARIANTS — a second knob beside the rung, and the
+  shelf's DIRECTION row. They are the CABINET's own vocabulary rather than a
+  shared ladder (a difficulty means the same thing on every machine and a
+  variant does not), so the shelf keeps ONE pick and every cabinet resolves it
+  against its own list with a fallback to its own default (`pickVariant`) — a
+  machine that has never heard of the stored id plays its first variant rather
+  than refusing to start. The ROAD's two are its two ends, and each variant's id
+  is the LEVEL the leg is bound for, which is exactly what `DriveParams.to`
+  carries: the shelf never learns that a road has a direction at all.
   HOW THE ROAD OPENS is three moves that read as one. The bumper touches the
   garage's `driveOut` tarmac, the run's picture DIMS over a car that is simply
   coasting (`DEPARTURE`, `engine/game/vehicles.ts` — half a second, no synthetic
   driver, no aim; a car driving itself away was a cutscene about the exact
   activity the player was a half-second from doing), and the drive mounts into
-  that same black behind a TITLE CARD — "ROAD TO GOODCO",
+  that same black behind a TITLE CARD — "ROAD TO GOODCO" or "ROAD TO HOME",
   `drive-screen/DriveIntro.tsx`, which HOLDS the road while it is up (the fixed
   step breaks on it, exactly as it does on the pause card and the board) so the
   leg's first crowd is not walked into during a title. A tap or any key takes

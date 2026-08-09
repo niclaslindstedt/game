@@ -67,6 +67,7 @@ import {
 } from "./drive-sounds.ts";
 import { soakCarFromStrike } from "./car-soak.ts";
 import { stepSkids, type SkidState } from "./skid.ts";
+import { driveVoice } from "./voice.ts";
 import { stepWreckSmoke } from "./wreck-smoke.ts";
 import {
   bodySprite,
@@ -429,22 +430,33 @@ export function drainDrive(
     // stopping. Everything else in `playDriveSound` above is steel, glass or a
     // person.
     if (event.type === "cityGate") playHudEvent("drive.clockStart");
-    if (event.type === "arrived") playHudEvent("drive.clockStop");
+    // THE STOPWATCH STOPS WITH THE TOWN, not with the leg. There is an outskirt
+    // of road left after the last house — the stretch the leg driven the other
+    // way opens over (`cityEndPx`) — and none of it is raced, so the noise that
+    // says "that is your time" belongs at the far gate rather than at the finish
+    // line an outskirt further on.
+    if (event.type === "cityEnd") playHudEvent("drive.clockStop");
     if (!say) continue;
-    if (event.type === "monologue") say("drive_out_welfare", drive.ms);
+    // WHICH LEG THIS IS decides all three of his lines (`voice.ts`): the road
+    // out is an errand and an opinion about the people on it, the road home is a
+    // man with the part on the passenger seat who has stopped thinking about
+    // them entirely.
+    const voice = driveVoice(drive.params);
+    if (event.type === "monologue") say(voice.monologue, drive.ms);
     if (event.type === "breakdown") say("drive_broke_down", drive.ms);
     // ── THE RUN-IN'S TWO LINES ────────────────────────────────────────────
     // The place, and then the door. The first is said through the windscreen
-    // with the halls still growing in it; the second is said standing on the
-    // tarmac beside a car with its engine off, and it is a QUESTION — the one
-    // the level on the other side of the fade is the whole answer to.
+    // with the place still growing in it; the second is said standing on the
+    // tarmac beside a car with its engine off, and it is what the level on the
+    // other side of the fade answers — a question at GOODCO's locked door, and
+    // ten years of weekends at his own.
     //
     // They are the only lines on this road that are not about the car, the
     // clock or the road surface, and they are allowed to be for the same reason
     // the opening's are: there is nobody in the picture. He is not failing to
     // notice anybody here; there is genuinely nobody left to notice.
-    if (event.type === "goodco") say("drive_arrive_goodco", drive.ms);
-    if (event.type === "atTheDoor") say("drive_arrive_door", drive.ms);
+    if (event.type === "sight") say(voice.sight, drive.ms);
+    if (event.type === "atTheDoor") say(voice.door, drive.ms);
   }
 }
 

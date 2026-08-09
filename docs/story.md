@@ -151,6 +151,27 @@ The wagon pulls up, the engine goes off, and — for the only time on this road 
 and asks the question the next level is the entire answer to: how is he supposed
 to get in? Then the picture goes out, and the cabinet asks him for three letters.
 
+**And then he drives it home, and it is the same road and a different man.** The
+leg back is the leg out reversed — the same houses in the same order with the
+respectable end first, the same crowd on the same tarmac — and what has changed
+is the one thing in the car. The part is on the passenger seat. He says so on the
+way out of the industrial estate, on the same empty road he made his promise on,
+and then he says the only other thing on his mind: ten years, and she only ever
+needed the one part. **He does not mention the people at all.** Going out he had
+an opinion about them, and it was the sourest thing he says in the game; coming
+back, with the thing he wanted lying beside him, they have stopped existing —
+and then he drives through them again at a hundred and twenty. The absence is the
+joke, and it is a worse one than the line it replaces.
+
+**What he arrives at is his own front gate**, and it is GOODCO's answered in
+every particular. A timber fence a man could step over instead of a palisade; two
+lamps on two piers instead of floodlights on masts; a lawn with trees on it
+instead of a poured apron and thirty staff cars; a bungalow with one lit window
+and the garage door still up from ten years ago instead of three windowless
+sheds. And standing on the grass beside that open door, a rocket — his, built out
+of scrap, about half the height of the one behind GOODCO's fence. Nothing says
+so. He gets out on his own drive, looks at it, and tells it to get ready.
+
 **What they are thinking.** Every so often one of the people on that road has a
 thought over their head, and it is never about him. It is the rent, the soup,
 the boy who asked for meat again, a sister who has stopped picking up, a

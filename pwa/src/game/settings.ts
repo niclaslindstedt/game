@@ -438,6 +438,22 @@ export type GameSettings = {
    * lap, and a rung that reset to MEDIUM after every go is a knob nobody can
    * use. */
   minigameDifficulty: Difficulty;
+  /**
+   * …AND WHICH WAY it is played, for a cabinet that has a choice about it — the
+   * ARCADE SHELF's DIRECTION row (`MinigameVariant`). For the road that is which
+   * end of it the leg is driven to: out to GOODCO, or the same road home.
+   *
+   * ONE PICK FOR THE WHOLE SHELF, exactly as the rung above is, and each cabinet
+   * resolves it against its own list with a fallback to its own default
+   * (`pickVariant`) — because a variant is a cabinet's own vocabulary rather
+   * than a shared ladder, and a machine that has never heard of this one must
+   * still start.
+   *
+   * Persisted for the reason the rung is: the shelf mounts its own screen, so
+   * the title's component state does not survive a lap, and a direction that
+   * reset after every go is a knob nobody can use.
+   */
+  minigameVariant: string;
   /** Gameplay preference: the scripted death cinematics — the boss finisher and
    * the hero's death tableau (see DeathScenes). */
   deathScenes: DeathScenes;
@@ -739,6 +755,10 @@ function defaults(): GameSettings {
     // The arcade shelf opens on the middle rung — the one the road was tuned
     // against, and the one a player who has never picked has been driving.
     minigameDifficulty: "medium",
+    // …and pointed OUT. The road to GOODCO is the leg the campaign drives
+    // first and the one the cabinet is named after in every screenshot ever
+    // taken of it; the way home is the thing you find by pressing the row.
+    minigameVariant: "goodco_hq",
     // The finisher and the death tableau both play out of the box — they are
     // the shipped experience. A player replaying a map they have cleared five
     // times turns them off to keep the pace up.
@@ -1265,6 +1285,16 @@ function load(): GameSettings {
       )
         ? (stored.minigameDifficulty as Difficulty)
         : base.minigameDifficulty,
+      // Any non-empty string is accepted: the vocabulary belongs to the CABINET
+      // rather than to the settings blob, so validating it here would mean this
+      // module carrying a list of every minigame's variants and going stale the
+      // day one is added. A stored id no cabinet offers falls back where it is
+      // read instead (`pickVariant`), which is the same string the shelf would
+      // have played anyway.
+      minigameVariant:
+        typeof stored.minigameVariant === "string" && stored.minigameVariant
+          ? stored.minigameVariant
+          : base.minigameVariant,
       deathScenes:
         stored.deathScenes === "on" || stored.deathScenes === "off"
           ? stored.deathScenes

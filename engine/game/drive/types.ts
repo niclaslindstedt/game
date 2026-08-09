@@ -767,12 +767,24 @@ export type DriveEvent =
    * one where the leg stops being an approach and starts being a score.
    */
   | { type: "cityGate" }
-  /** The far end of the course: the clock stops, the town stops, and the wheel
-   * comes off the player. */
+  /**
+   * …AND LEAVING IT AGAIN. The mirror of the gate above: the last house is
+   * behind him, the crowd and the lane traffic stop being laid, the road closes
+   * back down to two lanes and the CLOCK STOPS — which is where the score is
+   * settled, because the stretch past here is a run-out nobody is racing.
+   *
+   * It is its own beat rather than part of `arrived` because the two are no
+   * longer the same place: the town ends at `cityEndPx` and the FINISH is an
+   * outskirt further on (`courseLength`), so that the leg driven the other way
+   * has an opening of empty road to say its two lines over.
+   */
+  | { type: "cityEnd" }
+  /** The far end of the course: the wheel comes off the player and the run-in
+   * to the destination's own site begins. */
   | { type: "arrived" }
-  /** …and what is standing at the end of it, out of the dark: GOODCO's halls,
-   * and the ship behind them. */
-  | { type: "goodco" }
+  /** …and what is standing at the end of it, out of the dark: GOODCO's halls
+   * with the ship behind them, or his own house with his own ship beside it. */
+  | { type: "sight" }
   /**
    * THE CAR IS PARKED AND THE DOOR IS OPEN — the one time on this whole road
    * that the man is out of the wagon.
@@ -982,19 +994,22 @@ export type DriveState = {
   /**
    * THE STOPWATCH — ms of TOWN, and the number the high-score board ranks.
    *
-   * It runs from the gate (`cityStartPx`) to the finish and not one tick either
-   * side of it: the outskirts are an opening the player cannot hurry and the
-   * run-in is a beat he does not drive, so neither belongs on a board. Its own
-   * field rather than a subtraction off `ms` for the reason a lap timer is its
-   * own instrument — the road's clock keeps running through the arrival, and
-   * "how long the leg has existed" is not a time anybody drove.
+   * It runs from one gate to the other (`cityStartPx` → `cityEndPx`) and not one
+   * tick either side of them: the outskirts at both ends are road the player
+   * cannot hurry, and the run-in is a beat he does not drive, so none of it
+   * belongs on a board. Its own field rather than a subtraction off `ms` for the
+   * reason a lap timer is its own instrument — the road's clock keeps running
+   * through the run-out and the arrival, and "how long the leg has existed" is
+   * not a time anybody drove.
    */
   clockMs: number;
   /** Latched once the town has come over the horizon: the houses, the crowd, the
-   * traffic and the clock all start here, once, and the arrival stops it. */
+   * traffic and the clock all start here, once, and the far gate stops them. */
   cityDone: boolean;
-  /** …and once he has seen GOODCO on the run-in. */
-  goodcoDone: boolean;
+  /** …once the last house is behind him and the clock has stopped. */
+  townEndDone: boolean;
+  /** …and once he has seen the place he was driving to, on the run-in. */
+  sightDone: boolean;
   /** …once the car is parked and he is out of it. */
   heroOutDone: boolean;
   /** …once he has asked the question the next level answers. */

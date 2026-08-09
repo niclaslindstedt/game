@@ -247,8 +247,17 @@ export const DRIVE = {
    * finish line, `cityLength` is the difference between the two, and a change
    * to the approach that did not land here would quietly re-scope the one
    * stretch every number above was measured on.
+   *
+   * …AND THEN BY THE OUTSKIRTS AT THE OTHER END, for the same reason and by the
+   * same arithmetic. The road is SYMMETRIC now: `opening.cityPx` of empty road
+   * before the first house AND `opening.cityPx` of it after the last one, so the
+   * leg is outskirt-town-outskirt whichever way it is driven and the trip home
+   * has an opening of its own to slide into frame over. The town between them
+   * (`cityLength`) is untouched at 19 600 — every figure in the table above
+   * still describes exactly that stretch — and the finish line moved out by the
+   * far outskirt's length. Move `opening.cityPx` and move this by TWICE it.
    */
-  coursePx: 22600,
+  coursePx: 25600,
   /**
    * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
    * forward, for a demo that is showing somebody the whole game rather than
@@ -261,8 +270,13 @@ export const DRIVE = {
    * rather than a man on an empty road talking about his evening.
    * `DriveParams.coursePx` is how it gets there; nothing a player drives uses
    * it.
+   *
+   * It carries the far outskirt on top exactly as the full course does, so the
+   * demo's TOWN is the same five thousand px it always was rather than three
+   * and a half — a title screen that traded a fifth of the crowd for a stretch
+   * of empty tarmac would be showing the wrong half of the minigame.
    */
-  attractCoursePx: 6200,
+  attractCoursePx: 7400,
   /** …and where the demo's town starts. Long enough for the wagon to slide into
    * frame (`opening.entryPx` / `closePx`) and not one pixel longer. */
   attractCityPx: 1200,
@@ -2044,6 +2058,18 @@ export const DRIVE = {
      * campus is dressed along.
      */
     coastPx: 260,
+    /**
+     * …and the most it will ever ask of the brakes, as a multiple of that
+     * coast.
+     *
+     * The run-in AIMS at the site's own parking spot (`SiteLayout.parkPx`), so
+     * a wagon that crossed the line at a hundred and seventy has to shed all of
+     * it inside eight hundred px — which is a genuinely hard stop and reads as
+     * one, correctly: he has arrived somewhere. This is the ceiling on it, and
+     * a leg that would need more simply overruns its mark by a little rather
+     * than stopping as if it hit something.
+     */
+    brakeMax: 8,
     /** When he sees it (ms past the finish) — early, while the car is still
      * rolling and the halls are still growing in the windscreen. */
     sightMs: 1300,
@@ -2061,6 +2087,29 @@ export const DRIVE = {
      * enough to read the line, early enough that the black is the last thing the
      * road does rather than a wait. */
     blackoutMs: 7100,
+    /**
+     * HOW FAR THE CAMERA RISES ON THE RUN-IN (world px), and over how long.
+     *
+     * THE ROAD IS FRAMED FOR THE ROAD, and that is right for fifty-nine seconds
+     * out of sixty: the ground band is fixed, the near kerb is pinned near the
+     * bottom edge, and the spare room goes to the sky — so on the reference
+     * phone there are about twenty-five world px of picture above the far
+     * pavement. Which is fine for a street whose ground floors are the part you
+     * drive past, and useless for the one beat on this road that is ABOUT what
+     * is standing behind the fence: three data halls with a launch stack over
+     * them, or a bungalow with a home-made rocket beside the garage door. Every
+     * bit of that lived off the top of the frame, and the hero said THERE'S
+     * GOODCO over a palisade and a car park.
+     *
+     * So the run-in LIFTS. The wheel is already off the player here and the car
+     * is rolling to a stop on its own, which is exactly when a camera is allowed
+     * to move on its own too — and it settles before he says the first of the
+     * two lines, so the picture is finished by the time it is remarked on.
+     * Eased rather than cut, and given back to nothing on a restart, because the
+     * only thing this must never look like is the road jumping.
+     */
+    cameraLiftPx: 74,
+    cameraLiftMs: 1100,
     /** How far he steps away from the door before he stops (world px), and how
      * long that takes (ms). Presentation, but it lives here with the beats it is
      * timed against rather than in the renderer. */
@@ -2210,14 +2259,41 @@ export function cityStartPx(params: { cityPx?: number }): number {
   return params.cityPx ?? DRIVE.opening.cityPx;
 }
 
+/**
+ * …AND WHERE IT STOPS — the far gate, in course px from the start of the leg.
+ *
+ * THE OUTSKIRTS ARE AT BOTH ENDS, and that is the whole of why this exists. A
+ * leg used to be outskirt-town-finish, which reads perfectly driving OUT and
+ * not at all driving HOME: reversed, the car slid into frame with the last row
+ * of houses already in the windscreen, and the opening — the empty road, the
+ * two lines said over it, the town arriving in front of the player — had
+ * nowhere to happen. So the road is symmetric. The town is bracketed by
+ * `cityStartPx` of empty road at each end, whichever way it is driven, and the
+ * stretch each leg opens over is the stretch the other leg finishes on.
+ *
+ * The far outskirt is the near one's own length rather than a number of its
+ * own, because the two ARE the same stretch of road seen from the two ends: a
+ * pair that could disagree would be a leg whose opening fits one way round.
+ *
+ * Clamped at the gate, so a demo course too short to hold a town collapses to
+ * an empty one rather than to a town that runs backwards.
+ */
+export function cityEndPx(params: {
+  coursePx?: number;
+  cityPx?: number;
+}): number {
+  const gate = cityStartPx(params);
+  return Math.max(gate, courseLength(params) - gate);
+}
+
 /** …and how much road the town actually occupies — the stretch the clock runs
  * over, and what a leg's par is measured against. Never negative: a short enough
- * demo course can put the finish inside the outskirts. */
+ * demo course can put both gates in the same place. */
 export function cityLength(params: {
   coursePx?: number;
   cityPx?: number;
 }): number {
-  return Math.max(0, courseLength(params) - cityStartPx(params));
+  return Math.max(0, cityEndPx(params) - cityStartPx(params));
 }
 
 /**
@@ -2239,11 +2315,11 @@ export function citySpanX(params: {
   coursePx?: number;
   cityPx?: number;
 }): { fromX: number; toX: number } {
-  const gate = params.direction * cityStartPx(params);
-  const finish = params.direction * courseLength(params);
+  const near = params.direction * cityStartPx(params);
+  const far = params.direction * cityEndPx(params);
   return params.direction === 1
-    ? { fromX: gate, toX: finish }
-    : { fromX: finish, toX: gate };
+    ? { fromX: near, toX: far }
+    : { fromX: far, toX: near };
 }
 
 /** How the drive ended — read by the app to decide what happens next. */

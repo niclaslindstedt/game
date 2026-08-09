@@ -58,6 +58,7 @@ make unique-check  # audit every named relic — bases, ilvl, armor ladder, drop
 make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-driver
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
+make town ARGS="--site home"   # …and at what a leg ARRIVES at, either end
 make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG
 make bump          # print the release bump derived from .changes/unreleased/
 npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
@@ -296,6 +297,21 @@ Each slot gets its own service worker and a disjoint precache cache id. See
 
 Each of these is a rule an ordinary change trips over, stated once here with the
 file that owns it. The reasoning behind each lives where the pointer goes.
+
+**A MINIGAME MEETS THE GAME IN FOUR PLACES AND MUST NEVER MEET IT IN A FIFTH.**
+The DRIVE is the whole simulation of a minigame and it touches the rest of the
+tree through exactly this seam: the CATALOG (`pwa/src/game/minigames.ts` — a
+startup-path leaf: names, and the VARIANTS a cabinet offers), the MOUNT
+(`MinigameScreen.tsx`, the one module allowed to know which id is which screen),
+the PARAMS (`drive-screen/begin.ts` — every question about whether a run gets one
+at all, answered once), and the two calls a run makes (`beginDrive` /
+`beginDriveHome` in `GameScreen.tsx`). Everything else lives under
+`engine/game/drive/` and `pwa/src/game/drive-screen/`. A SECOND minigame is a
+row in the catalog, a case in the mount, and its own two folders — and if it
+needs anything else, that is the thing to fix rather than the thing to add.
+Inside the road, what is CONTENT-shaped is data: the two ends of it are layout
+tables read by one planner (`engine/game/drive/sites.ts`), and which lines a leg
+speaks is a table too (`drive-screen/voice.ts`).
 
 **A RUN READS ITS OWN MAP — `runLevelDef(state)`, never `levelDef(state.level.id)`.**
 Every mission's geometry is CARVED per run from a blueprint, so the catalog holds

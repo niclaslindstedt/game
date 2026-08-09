@@ -18,7 +18,16 @@
 //   node scripts/town-viewer.mjs                     # five stops along the leg
 //   node scripts/town-viewer.mjs --at 0.5            # one stretch, in detail
 //   node scripts/town-viewer.mjs --shells            # every archetype, clean
+//   node scripts/town-viewer.mjs --site goodco       # what the leg pulls into
+//   node scripts/town-viewer.mjs --site home         # …and the way back
+//   node scripts/town-viewer.mjs --site home --from 700 --to 1400   # a screenful
 //   node scripts/town-viewer.mjs --out some.png
+//
+// THE SITE MODE IS THE SAME LOOK FOR THE OTHER HALF OF THE ROAD. What a leg
+// ARRIVES at is assembled the same way the street is (`sites.ts`) and is just as
+// invisible in the per-sprite previews: a house in isolation tells you the
+// generator works, and only the run-in tells you whether the plot reads as
+// somewhere a man lives.
 //
 // Output defaults to pwa/assets-preview/town.png.
 
@@ -33,6 +42,9 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 const { planTown, townDistrict } = await import(
   path.join(root, "engine/game/drive/town-plan.ts")
+);
+const { driveSite, planSite, siteSpanX, siteVehicles } = await import(
+  path.join(root, "engine/game/drive/sites.ts")
 );
 const { TOWN, TOWN_COLOURWAYS, townHeight, townWidth } = await import(
   path.join(root, "engine/game/drive/town.ts")
@@ -53,6 +65,7 @@ const outPath = opt("out", path.join(root, "pwa/assets-preview/town.png"));
 const scale = Number(opt("scale", "3"));
 const shellsOnly = args.includes("--shells");
 const only = opt("at", null);
+const siteName = opt("site", null);
 
 /** The night the road is driven on, so a wall reads the way it will in play
  * rather than the way it does on a white sheet. */
@@ -98,6 +111,79 @@ function strip(t, widthPx) {
   for (const prop of [...props].sort((a, b) => a.y - b.y)) {
     const px = Math.round(prop.x - prop.w / 2 - x0);
     const py = base - Math.round(nearest - prop.y) - prop.h;
+    for (const layer of prop.layers) {
+      const art = surfaceFor(layer.sprite);
+      if (!art) {
+        console.error(`town-viewer: no sprite "${layer.sprite}"`);
+        continue;
+      }
+      blit(out, art, px + layer.x, py + layer.y);
+    }
+  }
+  return out;
+}
+
+/**
+ * THE RUN-IN — what the leg pulls into, composed exactly as the game composes
+ * it.
+ *
+ * The whole site end to end in one strip, from its boundary to the far end of
+ * it, so the arrangement can be judged as a sequence: the gate arriving, the
+ * frontage going by, and the thing on the skyline standing over the lot.
+ */
+function site(id) {
+  const to = id === "home" ? "garage" : "goodco_hq";
+  const layout = driveSite(to);
+  const road = {
+    direction: 1,
+    coursePx: DRIVE.coursePx,
+    cityPx: DRIVE.opening.cityPx,
+  };
+  const full = siteSpanX(road, layout);
+  const finishX = road.direction * road.coursePx;
+  // A WINDOW ON THE PLOT, because a run-in is two thousand px long and a
+  // screenful is four hundred: judged whole it is a strip nobody can see, and
+  // judged a screen at a time it is what the player gets.
+  const span = {
+    fromX:
+      opt("from", null) === null ? full.fromX : finishX + Number(opt("from")),
+    toX: opt("to", null) === null ? full.toX : finishX + Number(opt("to")),
+  };
+  const widthPx = Math.round(span.toX - span.fromX);
+  const props = planSite(span.fromX, span.toX, road, layout);
+  const cars = siteVehicles(span.fromX, span.toX, road, layout);
+  const placed = [
+    ...props.map((p) => ({ y: p.y, prop: p })),
+    ...cars.map((c) => ({ y: c.y, car: c })),
+  ];
+  if (!placed.length) return createSurface(widthPx, 8);
+  const nearest = Math.max(...placed.map((p) => p.y));
+  // HOW FAR A PIECE IS LIFTED off the ground line is how far BEHIND the nearest
+  // thing in the picture it stands — the whole of the drive's projection at yaw
+  // 0, and enough to judge a plot by.
+  const lift = (y) => nearest - y;
+  // The ground line sits under the TALLEST lifted piece rather than under the
+  // tallest sprite: the ship stands twenty px further back than the house, so a
+  // canvas sized off the art alone crops the nose off it.
+  const base = Math.max(...props.map((p) => lift(p.y) + p.h), 48);
+  const height = base + 10;
+  const out = createSurface(widthPx, height);
+  fill(out, NIGHT);
+  for (const item of placed.sort((a, b) => a.y - b.y)) {
+    if (item.car) {
+      const art = surfaceFor(item.car.sprite);
+      if (!art) continue;
+      blit(
+        out,
+        art,
+        Math.round(item.car.x - art.width / 2 - span.fromX),
+        base - Math.round(lift(item.car.y)) - art.height,
+      );
+      continue;
+    }
+    const prop = item.prop;
+    const px = Math.round(prop.x - prop.w / 2 - span.fromX);
+    const py = base - Math.round(lift(prop.y)) - prop.h;
     for (const layer of prop.layers) {
       const art = surfaceFor(layer.sprite);
       if (!art) {
@@ -157,10 +243,17 @@ function stack(surfaces, gap = 6) {
 
 mkdirSync(path.dirname(outPath), { recursive: true });
 const STOPS = only ? [Number(only)] : [0, 0.25, 0.5, 0.75, 1];
-const sheet = shellsOnly ? shells() : stack(STOPS.map((t) => strip(t, 640)));
+const sheet = siteName
+  ? site(siteName)
+  : shellsOnly
+    ? shells()
+    : stack(STOPS.map((t) => strip(t, 640)));
 await writePng(upscale(sheet, scale), outPath);
-console.log(
-  shellsOnly
-    ? `wrote ${TOWN.length} archetypes x ${TOWN_COLOURWAYS.length} colourways → ${outPath}`
-    : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => townDistrict(DRIVE.opening.cityPx + t * (DRIVE.coursePx - DRIVE.opening.cityPx), { direction: 1, coursePx: DRIVE.coursePx, cityPx: DRIVE.opening.cityPx }).toFixed(2)).join(", ")}) → ${outPath}`,
-);
+if (siteName) {
+  console.log(`wrote the ${siteName} run-in → ${outPath}`);
+} else
+  console.log(
+    shellsOnly
+      ? `wrote ${TOWN.length} archetypes x ${TOWN_COLOURWAYS.length} colourways → ${outPath}`
+      : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => townDistrict(DRIVE.opening.cityPx + t * (DRIVE.coursePx - DRIVE.opening.cityPx), { direction: 1, coursePx: DRIVE.coursePx, cityPx: DRIVE.opening.cityPx }).toFixed(2)).join(", ")}) → ${outPath}`,
+  );

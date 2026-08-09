@@ -30,7 +30,7 @@
 // announcing it.
 
 import { crowdEdges } from "./crowd.ts";
-import { DRIVE } from "./config.ts";
+import { cityEndPx, DRIVE } from "./config.ts";
 import {
   TOWN_ALLEY_PX,
   TOWN_ART_SIZE,
@@ -116,20 +116,38 @@ export type TownProp = {
  * time the opening was retuned, and the hero's own block, which is supposed to
  * be the worst thing on the road, would already be a third of the way to being
  * respectable by the time the first building appeared.
+ *
+ * …AND IT IS THE ROAD'S OWN GRADIENT, NOT THE LEG'S, which is what makes the
+ * trip HOME the same town in reverse rather than a second town with the poverty
+ * at the wrong end. Both legs measure `travel` from their own start, so on the
+ * way back the far gate is the shabby end — the direction is folded in HERE, in
+ * the one function everything about the town is derived through, so a block that
+ * is bare brick and boarded windows going out is bare brick and boarded windows
+ * coming home.
  */
 export function townDistrict(x: number, road: TownRoad): number {
-  const span = Math.max(1, road.coursePx - road.cityPx);
-  const t = (road.direction * x - road.cityPx) / span;
+  const near = road.cityPx;
+  const far = townEndPx(road);
+  const span = Math.max(1, far - near);
+  const travel = road.direction * x;
+  const t =
+    road.direction === 1 ? (travel - near) / span : (far - travel) / span;
   return Math.max(0, Math.min(1, t));
 }
 
-/** Whether a spot is IN the town at all — the outskirts and GOODCO's own
- * approach are road with no houses on them, and this is the one test that says
- * so. Measured along the leg (`direction * x`), so both legs answer it the same
- * way. */
+/** Whether a spot is IN the town at all — the outskirts at both ends and the
+ * destination's own approach are road with no houses on them, and this is the
+ * one test that says so. Measured along the leg (`direction * x`), so both legs
+ * answer it the same way. */
 export function inTown(x: number, road: TownRoad): boolean {
   const travel = road.direction * x;
-  return travel >= road.cityPx && travel <= road.coursePx;
+  return travel >= road.cityPx && travel <= townEndPx(road);
+}
+
+/** Where the houses stop, along the leg — the far gate (`cityEndPx`), asked of
+ * a road rather than of a `DriveParams` so the preview tools can ask it too. */
+function townEndPx(road: TownRoad): number {
+  return cityEndPx({ coursePx: road.coursePx, cityPx: road.cityPx });
 }
 
 /** The road a set of drive parameters describes. */

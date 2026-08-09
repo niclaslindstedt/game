@@ -29,6 +29,11 @@ import {
   campusPiecesCheck,
 } from "../asset-tools/campus.mjs";
 import {
+  HOME_PALETTE,
+  homesteadPieces,
+  homesteadPiecesCheck,
+} from "../asset-tools/homestead.mjs";
+import {
   FACADE_PARTS_PALETTE,
   FACADE_SPECKLE_EXEMPT,
   facadeParts,
@@ -394,6 +399,32 @@ function deriveCampus() {
 }
 
 deriveCampus();
+
+// ---- HOME, from the road ----------------------------------------------------
+// The site at the OTHER end of the same drive (asset-tools/homestead.mjs): the
+// picket fence, the open gate, the house with its garage door up, the lean-to,
+// the two trees on the lawn and the ship standing beside the door.
+//
+// GENERATED FOR THE SAME REASONS THE CAMPUS IS — a pale every two px, a slat
+// every three, a roof course every four, and a body of revolution — and it lands
+// in the same `earth` family, because that is where this planet's art lives.
+//
+// CONTRAST-EXEMPT for the same reason too: these are held against a grass tile
+// by the art linter, and a slate roof seen at night has no business scoring
+// against a verge it is never drawn on.
+function deriveHomestead() {
+  const family = FAMILIES.find((f) => f.name === "earth");
+  if (!family) return;
+  const pieces = homesteadPieces();
+  const errors = homesteadPiecesCheck(pieces);
+  if (errors.length) throw new Error(errors.join("\n"));
+  for (const [name, grid] of Object.entries(pieces)) {
+    register(family, name, grid, HOME_PALETTE);
+    family.contrastExempt.push(name);
+  }
+}
+
+deriveHomestead();
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —

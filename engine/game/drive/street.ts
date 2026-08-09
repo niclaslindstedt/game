@@ -37,7 +37,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import { cityStartPx, courseLength, DRIVE } from "./config.ts";
+import { cityEndPx, cityStartPx, courseLength, DRIVE } from "./config.ts";
 import { roadBandEdges } from "./crowd.ts";
 import type { DriveProp, DrivePropKind, DriveState } from "./types.ts";
 import { TRAFFIC_VARIANTS } from "./traffic.ts";
@@ -51,10 +51,15 @@ import { TRAFFIC_VARIANTS } from "./traffic.ts";
  * On the OUTSKIRTS there is one pavement and no town at all behind the far verge
  * — a lamp standard out there would be a street light in a field, and a parked
  * hatchback would be a car left at the kerb of a road with no houses on it.
- * Past the finish it is GOODCO's approach: lit on both sides, because a company
- * lights its own gate, and nobody parks on the approach to a car park.
+ * Past the finish it is the DESTINATION'S OWN APPROACH: lit on both sides,
+ * because a place lights its own gate, and nobody parks on somebody else's
+ * drive.
+ *
+ * THE OUTSKIRTS ARE AT BOTH ENDS (`cityEndPx`), so a leg is
+ * outskirt-town-outskirt-site whichever way it is driven, and every kerb on it
+ * answers the same three questions the same way.
  */
-type Stretch = "outskirts" | "town" | "campus";
+type Stretch = "outskirts" | "town" | "site";
 
 /**
  * …asked of a WORLD x, and answered through the leg's own direction.
@@ -65,8 +70,10 @@ type Stretch = "outskirts" | "town" | "campus";
  */
 function stretchAt(x: number, params: DriveState["params"]): Stretch {
   const travel = params.direction * x;
-  if (travel < cityStartPx(params)) return "outskirts";
-  if (travel > courseLength(params)) return "campus";
+  if (travel > courseLength(params)) return "site";
+  if (travel < cityStartPx(params) || travel > cityEndPx(params)) {
+    return "outskirts";
+  }
   return "town";
 }
 
@@ -129,10 +136,10 @@ function piecesAt(slot: number, stretch: Stretch): StreetPiece[] {
       ? [{ kind: "lamp_post", pos: { x, y: y.near }, variant: 0 }]
       : [];
   }
-  // …AND ON GOODCO'S APPROACH, LIT FROM BOTH SIDES AND PARKED ON BY NOBODY. A
-  // company lights its own gate; nobody leaves a car on the road up to a car
-  // park.
-  if (stretch === "campus") {
+  // …AND ON THE DESTINATION'S APPROACH, LIT FROM BOTH SIDES AND PARKED ON BY
+  // NOBODY. A place lights its own gate; nobody leaves a car on the road up to
+  // somebody's car park or somebody's drive.
+  if (stretch === "site") {
     return mast
       ? [
           { kind: "lamp_post", pos: { x, y: y.far }, variant: 0 },

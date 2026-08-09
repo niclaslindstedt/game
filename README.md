@@ -91,38 +91,38 @@ make test                                # the full test suite
 
 ## Usage
 
-| Command                               | Purpose                                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `make website-dev`                    | Vite dev server for the game app                                                            |
-| `make website`                        | Production build of the game app                                                            |
-| `make build`                          | Typecheck the engine + app and build the deployable bundle                                  |
-| `make test`                           | The Vitest suite (`tests/**/*_test.ts`); `ARGS="--shard=1/3"` forwards to vitest            |
-| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                      |
-| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                    |
-| `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed) |
-| `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview           |
-| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it) |
-| `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                      |
-| `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                |
-| `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                 |
-| `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                |
-| `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                      |
-| `make town`                           | Render the DRIVE's town at five stops along the road to GOODCO                              |
-| `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                       |
-| `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                     |
-| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                          |
-| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`              |
-| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                      |
-| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                              |
-| `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                     |
-| `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`            |
-| `make desktop-steam`                  | Package the RELEASE desktop build as a Steam depot (`desktop-dist` for a plain download)    |
-| `make tauri` / `make tauri-test`      | The second desktop shell — see `tauri/README.md` and `docs/desktop-shells.md`               |
-| `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)   |
-| `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                 |
-| `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                  |
-| `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                            |
-| `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                    |
+| Command                               | Purpose                                                                                            |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `make website-dev`                    | Vite dev server for the game app                                                                   |
+| `make website`                        | Production build of the game app                                                                   |
+| `make build`                          | Typecheck the engine + app and build the deployable bundle                                         |
+| `make test`                           | The Vitest suite (`tests/**/*_test.ts`); `ARGS="--shard=1/3"` forwards to vitest                   |
+| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                             |
+| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                           |
+| `make levels`                         | Recompile every content catalog from `content/*.yaml` (fast path when only content changed)        |
+| `make assets`                         | Every catalog AND the pixel assets (sprite atlas, tiles, UI font) + every preview                  |
+| `make unique-check`                   | Audit every named relic — bases, bonuses, ilvl, armor ladder, drop-table homes (CI runs it)        |
+| `make mod-check DIR=<dir>`            | Validate a mod (defaults to `mod/examples/greenhouse`)                                             |
+| `make mod-catalog`                    | Regenerate `mod/catalog.json` — every id a mod may reference                                       |
+| `make map LEVEL=<id>` / `map-layout`  | Render a level's annotated map / its clean layout blueprint                                        |
+| `make sim-bench`                      | Benchmark the headless simulator (best-of-N, digest-checked)                                       |
+| `make drive-bench`                    | Measure the DRIVE minigame — N seeds a rung, played by the auto-driver                             |
+| `make town`                           | Render the DRIVE's town at five stops along the road — and `ARGS="--site home"` what it arrives at |
+| `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                              |
+| `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                            |
+| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                 |
+| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                     |
+| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                             |
+| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages (part of `make build`)                                     |
+| `npm run server:start`                | Run the standalone session server for co-op (see `docs/multiplayer.md`)                            |
+| `npm run electron:*` / `native:*`     | The Steam and App Store shells — see `electron/README.md` and `native/README.md`                   |
+| `make desktop-steam`                  | Package the RELEASE desktop build as a Steam depot (`desktop-dist` for a plain download)           |
+| `make tauri` / `make tauri-test`      | The second desktop shell — see `tauri/README.md` and `docs/desktop-shells.md`                      |
+| `make desktop-tauri-steam`            | Package that shell as a Steam depot directory (`desktop-tauri-dist` for a plain download)          |
+| `npm run parity` / `parity:check`     | Rewrite `docs/desktop-parity.md` from the two desktop trees / fail on drift                        |
+| `npm run shell:bench`                 | Weigh the packaged desktop builds, and read this machine's own cold starts                         |
+| `npm run webview:sweep`               | Check the web-platform features the game needs, engine by engine                                   |
+| `make sync`                           | Catch this branch up with `main`: park at a backup branch, fetch, rebase                           |
 
 **Verify with `make test`, never with a bare `npx vitest run`.** The `make`
 targets open by rebuilding the generated content and the sprite atlas; a bare

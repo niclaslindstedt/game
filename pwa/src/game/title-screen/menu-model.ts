@@ -300,7 +300,15 @@ export type MenuContext = {
    * simulation, and the app owns those (the same rule `onStart` follows for a
    * run) — and the RUNG travels with the press rather than being read again on
    * the far side, so what is played is what the shelf offered. */
-  onMinigame: (id: MinigameId, difficulty: Difficulty) => void;
+  onMinigame: (
+    id: MinigameId,
+    difficulty: Difficulty,
+    /** WHICH WAY the cabinet is played — the `MinigameVariant.id` the shelf is
+     * set to, already resolved against this cabinet's own list. A scalar for
+     * the reason the rung is one: the screen behind a cabinet is built whole
+     * from what it is handed. */
+    variant: string,
+  ) => void;
   // The campaign picker's carried state (difficulty → levels → botspeed).
   difficulty: Difficulty;
   setDifficulty: (difficulty: Difficulty) => void;

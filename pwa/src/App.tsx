@@ -165,6 +165,9 @@ export function App() {
   const [minigame, setMinigame] = useState<{
     id: MinigameId;
     difficulty: Difficulty;
+    /** WHICH WAY the cabinet is played — the shelf's DIRECTION row, already
+     * resolved against this cabinet's own list (`pickVariant`). */
+    variant: string;
   } | null>(null);
   // …and whether the title should mount on that shelf when it next shows,
   // which is what makes a second go one press rather than three.
@@ -460,6 +463,7 @@ export function App() {
           <MinigameScreen
             id={minigame.id}
             difficulty={minigame.difficulty}
+            variant={minigame.variant}
             heroName={character?.name}
             onExit={() => setMinigame(null)}
           />
@@ -708,9 +712,9 @@ export function App() {
         // MINIGAMES → a cabinet. It touches no run and no hero, so nothing is
         // parked or cleared on the way in; the shelf is remembered so the title
         // comes back up on it when the lap is over.
-        onMinigame={(id, difficulty) => {
+        onMinigame={(id, difficulty, variant) => {
           setStartOnMinigames(true);
-          setMinigame({ id, difficulty });
+          setMinigame({ id, difficulty, variant });
         }}
         startOnMinigames={startOnMinigames}
         // JOIN GAME / JOIN BY ADDRESS: watch somebody else's session. It never

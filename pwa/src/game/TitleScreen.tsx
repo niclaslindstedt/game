@@ -177,7 +177,12 @@ export function TitleScreen({
    * the shelf offered. The menu never mounts a minigame itself — a minigame is a
    * simulation, and the app owns those (the same handoff `onStart` makes for a
    * run). */
-  onMinigame: (id: MinigameId, difficulty: Difficulty) => void;
+  onMinigame: (
+    id: MinigameId,
+    difficulty: Difficulty,
+    /** The shelf's DIRECTION row, resolved against the cabinet's own list. */
+    variant: string,
+  ) => void;
   /** Mount straight on the arcade shelf — set coming back off a cabinet, so
    * another go is one press on the row the cursor is already on. */
   startOnMinigames?: boolean;

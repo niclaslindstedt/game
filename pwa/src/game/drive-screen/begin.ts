@@ -99,8 +99,8 @@ export function driveParamsFor(
 }
 
 /**
- * THE SAME ROAD, OFF THE ARCADE SHELF — the trip out, played on its own for the
- * score (the main menu's MINIGAMES screen → `MinigameScreen`).
+ * THE SAME ROAD, OFF THE ARCADE SHELF — played on its own for the score (the
+ * main menu's MINIGAMES screen → `MinigameScreen`).
  *
  * NONE OF THE FOUR GATES ABOVE APPLIES HERE, and that is the whole difference
  * between the two doors. There is no crossing waiting on this road, no party to
@@ -109,16 +109,24 @@ export function driveParamsFor(
  * and pressed. What still holds is the one thing that is about the CONTENT
  * rather than the context: the gore gate, asked once and carried for the whole
  * road exactly as it is for a campaign leg.
+ *
+ * `to` is the shelf's DIRECTION row (`MinigameVariant.id`), which is the level
+ * the leg is bound for — so the cabinet never has to know a road HAS a
+ * direction. An id the road does not have an end for falls back to the trip
+ * out, which is what the shelf plays when nothing has been chosen.
  */
 export function arcadeDriveParams(
   seed: number,
   difficulty: Difficulty,
+  to: string = GOODCO,
 ): DriveParams {
+  const bound = to === GARAGE ? GARAGE : GOODCO;
   return {
     seed,
-    // The leg OUT, which is the one the shelf names: the road to GOODCO.
-    direction: 1,
-    to: GOODCO,
+    // Which way the same road runs, derived rather than carried: the shelf
+    // chose a DESTINATION, and there is exactly one way to reach each of them.
+    direction: bound === GARAGE ? -1 : 1,
+    to: bound,
     difficulty,
     gib: goreAmount("blood") !== null && dismemberAllowed("gib"),
     split: goreAmount("blood") !== null && dismemberAllowed("cleave"),

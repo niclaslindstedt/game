@@ -701,6 +701,12 @@ screens:
     tone: player
     form: menu
     rows:
+      # WHICH WAY the cabinet is played, for one that has a choice about it —
+      # the road is driven out to GOODCO and back again, and it is the same
+      # minigame either way. Above DIFFICULTY because it changes WHAT is
+      # played and the rung only changes what it weighs.
+      - id: direction
+        label: DIRECTION
       - id: difficulty
         label: DIFFICULTY
 
@@ -1126,6 +1132,8 @@ screens:
     form: menu
     dev: true
     rows:
+      - id: direction
+        label: DIRECTION
       - id: difficulty
         label: DIFFICULTY
 

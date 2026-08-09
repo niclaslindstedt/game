@@ -22,16 +22,17 @@
 // reads as flat.
 
 import {
-  campusLot,
-  campusSpanX,
   cityStartPx,
   citySpanX,
   crossingsBetween,
   crowdEdges,
+  driveSite,
   DRIVE,
   DRIVE_OUTCOME,
-  planCampus,
+  planSite,
   planTown,
+  siteSpanX,
+  siteVehicles,
   roadBandHalfAt,
   townRoad,
   vehicleDef,
@@ -107,6 +108,16 @@ const PAVEMENT = "#4a4741";
  * because that is what a car park is and because the change of surface is half
  * of what tells the player the town is behind him. */
 const APRON = "#3b414a";
+/** …and the OTHER end of the same road, which is neither again: the mown grass
+ * of the hero's own front lawn, running from his fence back to the pad. Warmer
+ * and plainly greener than the wild verge outside it — a kept lawn against
+ * scrub is the cheapest way to say somebody lives here, and it is the whole
+ * visual answer to GOODCO's concrete. */
+const LAWN = "#2f4028";
+/** What a SITE's ground is, by the name the engine gives it (`SiteGround`).
+ * The engine has no palette; this is the one place the two ends of the road
+ * become colours. */
+const SITE_GROUND: Record<string, string> = { apron: APRON, lawn: LAWN };
 /** The tarmac, its rim, the kerb off it and the paint on it — read from the
  * ONE road table (`scenery.ts`), because the garage cutscenes lay this same
  * stretch of road across the front of the lot as authored ground art, and two
@@ -275,8 +286,32 @@ export function driveCamera(
       drive.car.pos.x +
       dir * (viewW * CAMERA_LEAD_FRAC + drive.entryPx) -
       viewW / 2,
-    y: crowdEdges().bottom + NEAR_MARGIN - unprojectY(0, viewH - band),
+    // …AND THE RUN-IN'S OWN LIFT, which is the one thing besides the opening's
+    // lead that moves the frame rather than the world. See
+    // `DRIVE.arrival.cameraLiftPx`: the road is framed for the road, and the
+    // arrival is the one beat that is about what is standing behind the fence.
+    y:
+      crowdEdges().bottom +
+      NEAR_MARGIN -
+      unprojectY(0, viewH - band) -
+      arrivalLift(drive),
   };
+}
+
+/**
+ * How far the camera has risen into the arrival (world px) — zero for the whole
+ * of a drive, easing to `DRIVE.arrival.cameraLiftPx` over the first second of
+ * the run-in.
+ *
+ * SMOOTHSTEPPED rather than linear, because the only thing this beat must never
+ * look like is the road jumping: a linear ramp starts and stops with a corner in
+ * it, and at this size a corner in a camera move reads as a dropped frame.
+ */
+function arrivalLift(drive: DriveState): number {
+  if (drive.outcome !== DRIVE_OUTCOME.arrived) return 0;
+  const { cameraLiftPx, cameraLiftMs } = DRIVE.arrival;
+  const t = Math.max(0, Math.min(1, drive.outcomeMs / cameraLiftMs));
+  return cameraLiftPx * t * t * (3 - 2 * t);
 }
 
 /** The world y at which the ground gives out and the sky takes over. */
@@ -432,15 +467,16 @@ export function drawDrive(
   };
   const road = townRoad(drive.params);
   const city = citySpanX(drive.params);
-  const campus = campusSpanX(road);
+  const site = driveSite(drive.params.to);
+  const grounds = siteSpanX(road, site);
   // THE BUILT-UP STRETCH — the town and GOODCO's site together, which is
   // everywhere the road has a far pavement and a far kerb. The two overlap (the
   // fence opens before the finish line), so this is a union rather than a pair
   // of adjacent bands, and it is taken in world x rather than along the leg
   // because the trip HOME lays the identical road out along negative x.
   const built = {
-    fromX: Math.min(city.fromX, campus.fromX),
-    toX: Math.max(city.toX, campus.toX),
+    fromX: Math.min(city.fromX, grounds.fromX),
+    toX: Math.max(city.toX, grounds.toX),
   };
   // THE GROUND STOPS AT THE SKYLINE. It used to run 400 px past the road on
   // both sides, which on any screen meant "everywhere" — so the sky colour
@@ -456,11 +492,18 @@ export function drawDrive(
   // both sides of the street and left every lamp post looking marooned in the
   // middle of its pavement. A kerb is at the road's edge; so is this one.
   const walk = crowdEdges();
-  // GOODCO'S APRON, first of the far-side surfaces because everything else out
-  // there is drawn over it: the company's concrete runs from its own fence back
-  // to the skyline, which is what turns the last stretch of far verge into a
-  // site rather than a field with buildings in it.
-  bandX(campus.fromX, campus.toX, skylineY(), walk.top, APRON);
+  // THE SITE'S OWN GROUND, first of the far-side surfaces because everything
+  // else out there is drawn over it: GOODCO's concrete, or the hero's own mown
+  // lawn, running from its boundary back to the skyline — which is what turns
+  // the last stretch of far verge into a place rather than a field with
+  // buildings in it.
+  bandX(
+    grounds.fromX,
+    grounds.toX,
+    skylineY(),
+    walk.top,
+    SITE_GROUND[site.ground] ?? APRON,
+  );
   // THE FAR PAVEMENT IS THE BUILT-UP ROAD'S, and stops where the buildings do.
   bandX(built.fromX, built.toX, walk.top, bands.top, PAVEMENT);
   // The near one is the whole road's: it is the pavement the delivery riders are
@@ -747,21 +790,24 @@ export function drawDrive(
       draw: () => drawTownProp(ctx, sprites, prop, camera),
     });
   }
-  // …AND WHAT IS AT THE END OF IT. GOODCO's fence, its staff lot, its halls and
-  // the ship standing behind them (`engine/game/drive/campus.ts`) — a second
-  // planner, because a company's own site is a fixed arrangement rather than a
-  // district of a procedural street, and the SAME pass, because a planned piece
-  // of scenery is a stack of sprites on a base either way.
-  for (const prop of planCampus(left, right, road)) {
+  // …AND WHAT IS AT THE END OF IT. Whichever way this leg runs: GOODCO's fence,
+  // its staff lot, its halls and the ship behind them, or the hero's own gate,
+  // his house and the ship he built in its garage (`engine/game/drive/sites.ts`)
+  // — a second planner, because a fixed arrangement is not a district of a
+  // procedural street, and the SAME pass, because a planned piece of scenery is
+  // a stack of sprites on a base either way.
+  for (const prop of planSite(left, right, road, site)) {
     drawn.push({
       y: prop.y,
       draw: () => drawTownProp(ctx, sprites, prop, camera),
     });
   }
-  // …and the staff's own cars behind the fence. Placed by the same planner and
-  // drawn by the ORDINARY blit rather than the compositor, because a car's grid
-  // is authored art whose size the engine does not know — see `campusLot`.
-  for (const car of campusLot(left, right, road)) {
+  // …and any vehicles standing on it — GOODCO's staff lot; nothing at all at the
+  // other end, where the only car this house has is the one just driven home.
+  // Placed by the same planner and drawn by the ORDINARY blit rather than the
+  // compositor, because a car's grid is authored art whose size the engine does
+  // not know — see `SiteLayout.vehicles`.
+  for (const car of siteVehicles(left, right, road, site)) {
     put(car.sprite, car.x, car.y);
   }
   // THE KERB, drawn from the SIM rather than derived here — the furniture is

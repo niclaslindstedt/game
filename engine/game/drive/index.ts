@@ -41,10 +41,12 @@
 //
 // The COURSE and the CROWD are the same on every rung.
 //
-// ── AND IT IS THREE STRETCHES, NOT ONE ──────────────────────────────────────
-// A leg used to be one uniform road with an empty patch at the start of it. It
-// is three now, and every rule below that reads a distance is really asking
-// which of them the car is on:
+// ── AND IT IS FOUR STRETCHES, NOT ONE, AND THEY ARE SYMMETRIC ───────────────
+// A leg used to be one uniform road with an empty patch at the start of it, and
+// then three: an outskirt, a town, and a run-in. It is FOUR now and the shape is
+// a mirror, because the road is driven BOTH WAYS and a road that only reads
+// right one way round is half a road. Every rule below that reads a distance is
+// really asking which stretch the car is on:
 //
 //   THE OUTSKIRTS   0 → `cityStartPx`. Out of town: no houses, no far pavement,
 //                   nobody on the tarmac, and the only traffic is the delivery
@@ -53,16 +55,26 @@
 //                   so the leg begins on an empty road and the wagon slides into
 //                   it from behind; the wheel is the player's the moment it
 //                   lands, the pedal is capped (`opening.cruisePx`) until the
-//                   town, and he says the two things he has to say.
-//   THE TOWN        `cityStartPx` → `courseLength`. The minigame. Everything
+//                   town, and he says what he has to say.
+//   THE TOWN        `cityStartPx` → `cityEndPx`. The minigame. Everything
 //                   arrives at once — the houses, the far pavement, the crowd,
 //                   the lane traffic — and the CLOCK starts, which is the
 //                   number the high-score board ranks (`DriveState.clockMs`).
-//   THE RUN-IN      past the finish. The clock stops with the town; the wheel
-//                   comes off the player and the car rolls the last stretch on
-//                   its own, past GOODCO's fence with the data halls and the
-//                   ship standing behind them. He says the one thing he has to
-//                   say about it and the picture goes out.
+//   THE RUN-OUT     `cityEndPx` → `courseLength`. The outskirts again, and the
+//                   SAME LENGTH as the first stretch on purpose: the town ends,
+//                   the clock stops, the road closes back to two lanes, and what
+//                   is left is a country road the player still drives but is no
+//                   longer scored on. It exists so that THE LEG DRIVEN THE OTHER
+//                   WAY HAS AN OPENING — the wagon sliding into frame, the two
+//                   lines said over an empty road, the town arriving in front of
+//                   the player — because the stretch one leg opens over is the
+//                   stretch the other leg finishes on.
+//   THE RUN-IN      past the finish. The wheel comes off the player and the car
+//                   rolls in on its own, past whatever is at this end of the
+//                   road (`sites.ts`): GOODCO's fence with the data halls and
+//                   the ship behind them, or his own gate with his own house and
+//                   his own ship on the lawn. He says the one thing he has to say
+//                   about it, gets out, and the picture goes out.
 //
 // ── HOW IT SITS IN THE GAME ─────────────────────────────────────────────────
 // It is NOT a `GamePhase` and NOT a level. The car reaching the garage's road
@@ -90,7 +102,13 @@ import {
   integrateCarBody,
 } from "../vehicles.ts";
 import type { CarPanelId } from "../types/index.ts";
-import { cityStartPx, courseLength, DRIVE, DRIVE_OUTCOME } from "./config.ts";
+import {
+  cityEndPx,
+  cityStartPx,
+  courseLength,
+  DRIVE,
+  DRIVE_OUTCOME,
+} from "./config.ts";
 import { coastDecelPx, rungTopSpeedPx, throttleAccelPx } from "./drivetrain.ts";
 import {
   laneCenter,
@@ -118,9 +136,11 @@ import {
   stepTraffic,
 } from "./traffic.ts";
 import { driveTripMs } from "./score.ts";
+import { driveSite } from "./sites.ts";
 import type { DriveInput, DriveParams, DriveState } from "./types.ts";
 
 export {
+  cityEndPx,
   cityLength,
   citySpanX,
   cityStartPx,
@@ -228,19 +248,28 @@ export {
   townRoad,
 } from "./town-plan.ts";
 export type { TownLayer, TownProp, TownRoad } from "./town-plan.ts";
-// …AND WHAT IS AT THE END OF IT. GOODCO's own site is a fixed dressing rather
-// than a district of the town (`campus.ts` says why), and it comes out of its
-// planner in the same shape, so the renderer draws it with the pass it already
-// had.
+// …AND WHAT IS AT THE END OF IT. A destination's own site is a fixed dressing
+// rather than a district of the town (`sites.ts` says why), and it comes out of
+// its planner in the town's own shape, so the renderer draws it with the pass it
+// already had. Two of them: GOODCO at the end of the road out, and the hero's
+// own lot at the end of the road back.
 export {
-  CAMPUS,
-  CAMPUS_ART_SIZE,
-  campusLot,
-  campusRunInPx,
-  campusSpanX,
-  planCampus,
-} from "./campus.ts";
-export type { CampusCar } from "./campus.ts";
+  driveSite,
+  DRIVE_SITES,
+  planSite,
+  siteRunInPx,
+  siteSpanX,
+  siteVehicles,
+} from "./sites.ts";
+export type {
+  DriveSiteId,
+  SiteGround,
+  SiteLayout,
+  SitePiece,
+  SiteVehicle,
+} from "./sites.ts";
+export { CAMPUS, CAMPUS_ART_SIZE } from "./campus.ts";
+export { HOMESTEAD, HOME_ART_SIZE } from "./homestead.ts";
 export { wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
@@ -356,7 +385,8 @@ export function createDrive(params: DriveParams): DriveState {
     entryPx: DRIVE.opening.entryPx,
     clockMs: 0,
     cityDone: false,
-    goodcoDone: false,
+    townEndDone: false,
+    sightDone: false,
     heroOutDone: false,
     askedDone: false,
     blackoutDone: false,
@@ -376,10 +406,14 @@ export function driveArriving(drive: DriveState): boolean {
 }
 
 /** Is the car in the town — the stretch the clock runs over and the minigame
- * actually happens on? False on the outskirts and false once the finish is
+ * actually happens on? False on either outskirt and false once the finish is
  * behind him. */
 export function driveInCity(drive: DriveState): boolean {
-  return drive.cityDone && drive.outcome === DRIVE_OUTCOME.driving;
+  return (
+    drive.cityDone &&
+    !drive.townEndDone &&
+    drive.outcome === DRIVE_OUTCOME.driving
+  );
 }
 
 /**
@@ -530,10 +564,7 @@ export function stepDrive(
     // into somewhere rather than as the road being switched off.
     if (drive.outcome === DRIVE_OUTCOME.arrived) {
       if (car.speed !== 0) {
-        car.speed = Math.max(
-          0,
-          Math.abs(car.speed) - DRIVE.arrival.coastPx * dt,
-        );
+        car.speed = Math.max(0, Math.abs(car.speed) - parkDecelPx(drive) * dt);
       }
       arrivalBeats(drive);
     }
@@ -692,10 +723,10 @@ export function stepDrive(
   if (drive.distance >= courseLength(drive.params)) {
     drive.outcome = DRIVE_OUTCOME.arrived;
     drive.outcomeMs = 0;
-    // THE STREET STOPS BEING LAID at the same instant the clock stops. Without
-    // it the spawners go on serving a town that is no longer being drawn, and
-    // the run-in — which is supposed to be GOODCO's approach with nothing on it
-    // — comes with a moped weaving up the pavement.
+    // The street stopped being laid at the FAR GATE, an outskirt back
+    // (`openingBeats`) — belt and braces here, because a demo course short
+    // enough to put both gates in the same place can reach the finish on the
+    // same tick it reaches the town's end.
     haltTraffic(drive);
     drive.events.push({ type: "arrived" });
   }
@@ -715,8 +746,8 @@ function openingBeats(drive: DriveState, dtMs: number): void {
   // THE CLOCK IS THE TOWN'S, and it is advanced here rather than derived from
   // `ms` for the reason a lap timer is its own instrument: the road's own clock
   // has been running since the first frame of an opening nobody drove, and it
-  // goes on running through an arrival nobody drives either.
-  if (drive.cityDone) drive.clockMs += dtMs;
+  // goes on running through a run-out and an arrival nobody drives either.
+  if (drive.cityDone && !drive.townEndDone) drive.clockMs += dtMs;
 
   if (!drive.monologueDone && drive.distance >= DRIVE.opening.sayAtPx) {
     drive.monologueDone = true;
@@ -729,6 +760,61 @@ function openingBeats(drive: DriveState, dtMs: number): void {
     drive.cityDone = true;
     drive.events.push({ type: "cityGate" });
   }
+  // …AND THE TOWN LEAVING AGAIN, which is the beat the SCORE is settled on. The
+  // last house is behind him, the spawners stop serving a street that is no
+  // longer being drawn, and the clock stops — a stretch of outskirt still to
+  // drive, but none of it raced.
+  //
+  // THE STREET STOPS BEING LAID HERE rather than at the finish. Without it the
+  // spawners go on putting a moped and a bus on a road with nothing on either
+  // side of it, and the run-out — which is the opening the leg driven the other
+  // way slides into frame over — comes with the town's traffic on it.
+  if (
+    drive.cityDone &&
+    !drive.townEndDone &&
+    drive.distance >= cityEndPx(drive.params)
+  ) {
+    drive.townEndDone = true;
+    haltTraffic(drive);
+    drive.events.push({ type: "cityEnd" });
+  }
+}
+
+/**
+ * HOW HARD THE WAGON IS SHEDDING SPEED ON THE RUN-IN (px/s²) — a man lifting
+ * off and rolling into somewhere, and, when he has to, a man who can also see
+ * the end of his own drive coming.
+ *
+ * `DRIVE.arrival.coastPx` IS THE FLOOR RATHER THAN THE WHOLE ANSWER, and that
+ * is the point of this function. The car crosses the finish at whatever the
+ * player left it at — a crawl, or a hundred and seventy — and a fixed
+ * deceleration turns that into a parking spot spread across eight hundred px of
+ * site. Which puts the thing the hero then gets out and TALKS about off the side
+ * of the screen about half the time: HOME AT LAST said beside a stretch of
+ * fence, THERE'S GOODCO with the halls already behind him. So a fast arrival
+ * brakes harder and comes to rest on the site's own mark (`SiteLayout.parkPx`).
+ *
+ * A SLOW ONE STILL STOPS SHORT, on purpose and unavoidably: there is no
+ * accelerating on a run-in, and a man who crawled over the line has earned a
+ * longer walk. Which is why the frontage either side of the mark still has to be
+ * worth looking at.
+ */
+function parkDecelPx(drive: DriveState): number {
+  const { coastPx, brakeMax } = DRIVE.arrival;
+  const past = drive.distance - courseLength(drive.params);
+  const remaining = driveSite(drive.params.to).parkPx - past;
+  // At or past the mark there is nothing left to aim at: shed what is left.
+  if (remaining <= 1) return coastPx;
+  const speed = Math.abs(drive.car.speed);
+  // What it would take to stop exactly on the mark from here.
+  const need = (speed * speed) / (2 * remaining);
+  // STILL A LONG WAY OFF — so he is not braking yet, he is rolling. This is the
+  // half that fixes a SLOW arrival: a plain coast brought a car that crawled
+  // over the line to a stop a couple of hundred px in, which is nowhere near
+  // the frontage the run-in is about. A man rolling up his own drive keeps
+  // rolling until he needs the brake.
+  if (need < coastPx) return 0;
+  return Math.min(need, coastPx * brakeMax);
 }
 
 /**
@@ -743,9 +829,9 @@ function openingBeats(drive: DriveState, dtMs: number): void {
  */
 function arrivalBeats(drive: DriveState): void {
   const { arrival } = DRIVE;
-  if (!drive.goodcoDone && drive.outcomeMs >= arrival.sightMs) {
-    drive.goodcoDone = true;
-    drive.events.push({ type: "goodco" });
+  if (!drive.sightDone && drive.outcomeMs >= arrival.sightMs) {
+    drive.sightDone = true;
+    drive.events.push({ type: "sight" });
   }
   if (!drive.heroOutDone && drive.outcomeMs >= arrival.outMs) {
     drive.heroOutDone = true;
