@@ -2,6 +2,21 @@
 // THE NIGHT ABOVE THE ROAD — the backdrop the drive minigame is played against,
 // and the only part of the picture that is NOT in world space.
 //
+// IT IS ALSO THE NIGHT ABOVE THE LAUNCH. The garage cutscene stands on the same
+// ground on the same evening, so it is painted by this file rather than by a
+// second sky made of props (`overlays/CutsceneOverlay.tsx`) — which is why the
+// module sits in the shared render pool and not under `drive-screen/`. A scene
+// gets it STILL: no travel to parallax against, the twinkle switched off, and
+// only the cloud bands' own drift left moving.
+//
+// …AND THE PARALLAX LADDER WORKS UPWARDS TOO (`SkyOptions.cameraY`). When the
+// launch's camera follows the ship up, every layer here comes down the frame by
+// its own `parallax` — the hedgerows nearly two thirds as fast as the lawn, the
+// far ridge under a third, the cloud bank a fifth, the wisp a twentieth, the
+// stars and the moon at almost nothing. One depth per layer, spent on both
+// axes, which is what makes a rocket look like it is leaving rather than the
+// picture look like it is sliding.
+//
 // WHY IT IS DRAWN FLAT. Everything else on this road stands on the ground
 // plane and takes the projection (`render.ts` — one `save`/`projection`/
 // `restore` around the lot). The sky is not on the ground plane: it is at
@@ -241,35 +256,40 @@ function hash(n: number): number {
 }
 
 /**
- * THE TWO VERTICAL WASHES, built once per SKY HEIGHT rather than once per
- * frame. Both depend on nothing else, and the height only changes when the
- * window does — where `createLinearGradient` per frame is a fresh object per
- * frame for the whole length of a drive.
+ * THE TWO VERTICAL WASHES, built once per HEIGHT rather than once per frame.
+ * Both depend on nothing else, and the height only changes when the window
+ * does — where `createLinearGradient` per frame is a fresh object per frame for
+ * the whole length of a drive.
+ *
+ * The night is as deep as the sky was COMPOSED (`hangH`, which an ascent leaves
+ * behind) and so is keyed on that; the glow comes off the ground, which moves
+ * every frame of one — so it is built ONCE at the origin and drawn under a
+ * translate, the same trick the moon's halo uses below. Keying it on the ground
+ * line instead would be a fresh gradient per frame for the whole climb.
  */
-let washCache: {
-  skyH: number;
-  wash: CanvasGradient;
-  glow: CanvasGradient;
-} | null = null;
+let washCache: { h: number; wash: CanvasGradient } | null = null;
+let glowCache: CanvasGradient | null = null;
 
-function washes(
-  ctx: CanvasRenderingContext2D,
-  skyH: number,
-): { wash: CanvasGradient; glow: CanvasGradient } {
-  if (washCache?.skyH === skyH) return washCache;
-  const wash = ctx.createLinearGradient(0, 0, 0, skyH);
-  wash.addColorStop(0, NIGHT_HIGH);
-  wash.addColorStop(1, NIGHT_LOW);
-  const glow = ctx.createLinearGradient(
-    0,
-    Math.max(0, skyH - HAZE_PX),
-    0,
-    skyH,
-  );
-  glow.addColorStop(0, "rgba(0,0,0,0)");
-  glow.addColorStop(1, HAZE);
-  washCache = { skyH, wash, glow };
-  return washCache;
+/** The night itself, deep at the top and lifted at the bottom. Painted DOWN TO
+ * `hangH`; a sky clipped lower than that keeps the last stop, which is what
+ * leaves an ascent's newly bared strip continuous with the night above it. */
+function wash(ctx: CanvasRenderingContext2D, hangH: number): CanvasGradient {
+  if (washCache?.h === hangH) return washCache.wash;
+  const grad = ctx.createLinearGradient(0, 0, 0, hangH);
+  grad.addColorStop(0, NIGHT_HIGH);
+  grad.addColorStop(1, NIGHT_LOW);
+  washCache = { h: hangH, wash: grad };
+  return grad;
+}
+
+/** …and the light the ground throws back up into it, hung off the origin. */
+function glow(ctx: CanvasRenderingContext2D): CanvasGradient {
+  if (glowCache) return glowCache;
+  const grad = ctx.createLinearGradient(0, 0, 0, HAZE_PX);
+  grad.addColorStop(0, "rgba(0,0,0,0)");
+  grad.addColorStop(1, HAZE);
+  glowCache = grad;
+  return grad;
 }
 
 /** …and the moon's halo, built once per moon. It MOVES, so it is cached
@@ -286,6 +306,40 @@ function moonHalo(ctx: CanvasRenderingContext2D, size: number): CanvasGradient {
   return halo;
 }
 
+/** What a caller may say about the night besides where its horizon is. */
+export type SkyOptions = {
+  /** Whether the frame is taller than it is wide — the ONE thing in this file
+   * the shape of the screen changes, and it changes it for the moon alone
+   * (`MOON_PORTRAIT_DROP`). */
+  readonly portrait?: boolean;
+  /**
+   * Whether the brightest stars breathe. The road wants them alive; a CUTSCENE
+   * wants the sky it is played against to hold perfectly still behind the
+   * acting, with nothing moving in it but the weather.
+   */
+  readonly twinkle?: boolean;
+  /**
+   * HOW FAR THE CAMERA HAS CLIMBED since the night was composed (canvas px,
+   * positive sending the world down the frame). The road never leaves the
+   * ground and pays nothing for it; the launch cutscene climbs 180 px of it
+   * behind the ship, and it is what makes that shot a shot.
+   *
+   * EVERY LAYER ANSWERS IT BY ITS OWN DEPTH, on the SAME `parallax` each
+   * already carries for travel ACROSS — because it is one fact said about a
+   * second axis: how far off the thing hangs. So the lot goes first and
+   * fastest (at full depth, and the caller's own business), then the near
+   * hedgerows at two thirds of the climb, the middle fields at under a half,
+   * the far ridge at under a third, the low cloud bank at a fifth, the high
+   * wisp at a twentieth — and the stars and the moon at very nearly nothing,
+   * which is exactly what makes them the things being climbed toward.
+   *
+   * `horizonY` is where the GROUND is and has therefore already taken the
+   * whole climb; the height the sky itself was hung at is what is left when
+   * this is taken back off it.
+   */
+  readonly cameraY?: number;
+};
+
 /**
  * Paint the night above `horizonY`.
  *
@@ -293,20 +347,23 @@ function moonHalo(ctx: CanvasRenderingContext2D, size: number): CanvasGradient {
  * a distance travelled, never as a place, which is what lets the whole file
  * ignore the projection.
  */
-export function drawDriveSky(
+export function drawNightSky(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
   cameraX: number,
   viewW: number,
   horizonY: number,
   timeMs: number,
-  /** Whether the frame is taller than it is wide — the ONE thing in this file
-   * the shape of the screen changes, and it changes it for the moon alone
-   * (`MOON_PORTRAIT_DROP`). */
-  portrait = false,
+  opts: SkyOptions = {},
 ): void {
   const skyH = Math.max(0, horizonY);
   if (skyH <= 0) return;
+  // THE CLIMB, and the height the night was hung at before it. Everything below
+  // is placed against `hangH` and then pushed back down by its own share of
+  // `rise` — which for the road is nought and nothing here can tell.
+  const rise = opts.cameraY ?? 0;
+  const hangH = Math.max(1, skyH - rise);
+  const portrait = opts.portrait ?? false;
   ctx.save();
   // The sky is CLIPPED to its own band rather than trusted to stay in it: a
   // cloud placed near the bottom of the lowest band would otherwise hang a few
@@ -315,27 +372,45 @@ export function drawDriveSky(
   ctx.rect(0, 0, viewW, skyH);
   ctx.clip();
 
-  ctx.fillStyle = washes(ctx, skyH).wash;
+  ctx.fillStyle = wash(ctx, hangH);
   ctx.fillRect(0, 0, viewW, skyH);
 
-  drawStars(ctx, cameraX, viewW, skyH, timeMs);
-  drawMoon(ctx, sprites, cameraX, viewW, skyH, portrait);
+  drawStars(
+    ctx,
+    cameraX,
+    viewW,
+    skyH,
+    hangH,
+    rise,
+    opts.twinkle ?? true,
+    timeMs,
+  );
+  drawMoon(ctx, sprites, cameraX, viewW, hangH, rise, portrait);
   for (const band of BANDS) {
-    drawBand(ctx, sprites, band, cameraX, viewW, skyH, timeMs);
+    drawBand(ctx, sprites, band, cameraX, viewW, hangH, rise, timeMs);
   }
   // THE COUNTRY BETWEEN, standing on the bottom edge of the sky: the ground the
   // town has its back to. Painted after the weather (it is under it) and before
   // the glow (which is in front of it), and each layer is nearer than every
   // cloud, so this is where the parallax ladder steps up toward the road.
+  //
+  // A layer is FILLED TO THE GROUND LINE rather than to its own crest's depth,
+  // so a climb that spreads the three of them apart bares no seam between them:
+  // whatever the near ridge has dropped past, the ridge behind it is still
+  // painting.
   for (const field of FIELDS) {
-    drawField(ctx, field, cameraX, viewW, skyH);
+    drawField(ctx, field, cameraX, viewW, hangH, rise, skyH);
   }
 
   // THE TOWN'S OWN GLOW, last, over everything in the sky — a sodium wash off
   // the streetlights that sits in front of a low cloud rather than behind it,
-  // because that is where the light actually is.
-  ctx.fillStyle = washes(ctx, skyH).glow;
-  ctx.fillRect(0, Math.max(0, skyH - HAZE_PX), viewW, Math.min(HAZE_PX, skyH));
+  // because that is where the light actually is. It comes off the GROUND, so it
+  // is the one thing up here that takes the whole climb.
+  ctx.save();
+  ctx.translate(0, Math.max(0, skyH - HAZE_PX));
+  ctx.fillStyle = glow(ctx);
+  ctx.fillRect(0, 0, viewW, Math.min(HAZE_PX, skyH));
+  ctx.restore();
   ctx.restore();
 }
 
@@ -352,15 +427,28 @@ function drawStars(
   cameraX: number,
   viewW: number,
   skyH: number,
+  hangH: number,
+  rise: number,
+  twinkle: boolean,
   timeMs: number,
 ): void {
   const shift = -cameraX * STAR_PARALLAX;
-  const rows = Math.max(1, Math.floor(skyH / STAR_CELL));
+  // The stars' share of a climb, which is the smallest of anything drawn here
+  // bar the moon: over the launch's whole ascent they come down four px.
+  const drop = rise * STAR_PARALLAX;
+  // FILLED TO THE CLIP, FADED AGAINST THE COMPOSED HEIGHT. The two differ only
+  // while a scene's ground is falling away, and there the strip it bares wants
+  // stars (bare wash reads as a seam) at the thinnest the fade ever gets —
+  // which is what the clamp below hands it.
+  const fadeRows = Math.max(1, Math.floor(hangH / STAR_CELL));
+  const rowFrom = Math.floor(-drop / STAR_CELL);
+  const rowTo = Math.floor((skyH - drop) / STAR_CELL);
   const from = Math.floor(-shift / STAR_CELL) - 1;
   const to = Math.ceil((-shift + viewW) / STAR_CELL) + 1;
-  for (let row = 0; row < rows; row++) {
+  for (let row = rowFrom; row < rowTo; row++) {
     // How far down the sky this row sits, 0 at the top: the fade to the glow.
-    const depth = rows <= 1 ? 0 : row / (rows - 1);
+    const depth =
+      fadeRows <= 1 ? 0 : Math.max(0, Math.min(1, row / (fadeRows - 1)));
     for (let col = from; col <= to; col++) {
       const seed = col * 2654435761 + row * 40503;
       const roll = hash(seed);
@@ -371,7 +459,7 @@ function drawStars(
       // breathing at once is a fairy light, not a night; the periods are spread
       // by the star's own hash so no two are ever in step.
       ctx.globalAlpha =
-        tier < STAR_COLORS.length - 1
+        !twinkle || tier < STAR_COLORS.length - 1
           ? 1
           : 0.55 + 0.45 * Math.sin(timeMs / 900 + roll * 60);
       ctx.fillStyle = color;
@@ -379,7 +467,7 @@ function drawStars(
       const jy = hash(seed ^ 0x7feb352d) * STAR_CELL;
       ctx.fillRect(
         Math.round(col * STAR_CELL + jx + shift),
-        Math.round(row * STAR_CELL + jy),
+        Math.round(row * STAR_CELL + jy + drop),
         1,
         1,
       );
@@ -397,22 +485,30 @@ function drawMoon(
   sprites: Sprites,
   cameraX: number,
   viewW: number,
-  skyH: number,
+  /** The height the sky was composed for — never the ground line, or a scene
+   * whose lot falls away would walk its moon down the frame after it. */
+  hangH: number,
+  rise: number,
   portrait: boolean,
 ): void {
   const moon = spriteByName(sprites, MOON_SPRITE);
   if (!moon) return;
   const x = Math.round(viewW * MOON_HOME_X - cameraX * MOON_PARALLAX);
-  const home = skyH * MOON_HOME_Y + (portrait ? MOON_PORTRAIT_DROP : 0);
+  const home = hangH * MOON_HOME_Y + (portrait ? MOON_PORTRAIT_DROP : 0);
   // KEPT WHOLE. A phone on its side leaves a strip of sky barely deeper than
   // the moon itself, and the fraction alone put its top row off the frame —
   // which reads as a bug, not as a moon behind the roofline. Held inside its
   // own band, it simply sits lower over the town on a short sky. It is also
   // what stops the portrait drop above from ever pushing the moon into the
   // clouds on a sky too shallow to spend it.
-  const room = Math.max(0, (skyH - moon.height) / 2);
+  const room = Math.max(0, (hangH - moon.height) / 2);
+  // The clamp is applied to the PERCH and the climb added after it: a moon held
+  // inside the sky it was hung in, then given the ~1 px a whole ascent buys the
+  // furthest thing in the picture.
   const y = Math.round(
-    skyH / 2 + Math.max(-room, Math.min(room, home - skyH / 2)),
+    hangH / 2 +
+      Math.max(-room, Math.min(room, home - hangH / 2)) +
+      rise * MOON_PARALLAX,
   );
   ctx.save();
   ctx.translate(x, y);
@@ -438,14 +534,16 @@ function drawBand(
   band: Band,
   cameraX: number,
   viewW: number,
-  skyH: number,
+  /** The composed height, like the moon's: weather hangs where it was hung. */
+  hangH: number,
+  rise: number,
   timeMs: number,
 ): void {
   const shift = -cameraX * band.parallax - (timeMs / 1000) * band.drift;
   const from = Math.floor((-shift - band.spacing) / band.spacing);
   const to = Math.ceil((-shift + viewW + band.spacing) / band.spacing);
   const [fromFrac, toFrac] = band.height;
-  const slice = skyH * (toFrac - fromFrac);
+  const slice = hangH * (toFrac - fromFrac);
   const rows = Math.max(1, Math.round(slice / band.rowPitch));
   const salt = Math.round(band.spacing);
   for (let row = 0; row < rows; row++) {
@@ -464,7 +562,12 @@ function drawBand(
       ctx.drawImage(
         cloud,
         Math.round(cell * band.spacing + jx + shift),
-        Math.round(skyH * fromFrac + (row + 0.5) * (slice / rows) + jy),
+        Math.round(
+          hangH * fromFrac +
+            (row + 0.5) * (slice / rows) +
+            jy +
+            rise * band.parallax,
+        ),
       );
     }
   }
@@ -489,9 +592,18 @@ function drawField(
   field: Field,
   cameraX: number,
   viewW: number,
-  skyH: number,
+  /** The height the sky was composed for — this layer's own skyline. */
+  hangH: number,
+  rise: number,
+  /** …and where its fill has to reach: the GROUND line, which took the whole
+   * climb. The three ridges come apart under one (each at its own depth) and
+   * this is what keeps the gaps that opens filled with the land behind. */
+  groundY: number,
 ): void {
   const shift = -cameraX * field.parallax;
+  // This ridge's own skyline once the camera has climbed: nearer country comes
+  // down the frame faster, which is the whole of the effect.
+  const base = hangH + rise * field.parallax;
   const salt = Math.round(field.lift * 1000);
   /** The rolling land at a point, in canvas px above the horizon. */
   const land = (at: number): number => {
@@ -532,8 +644,9 @@ function drawField(
   const crest: number[] = [];
   for (let x = -2; x <= viewW + 2; x += SAMPLE) {
     const at = x - shift;
-    crest.push(Math.round(skyH - land(at) - hedge(at)));
+    crest.push(Math.round(base - land(at) - hedge(at)));
   }
+  const foot = Math.max(base, groundY) + 2;
 
   // ONE SHAPE, FILLED TWICE — the second a pixel lower, so the sliver of rim
   // colour left showing along the top IS the moonlight on the crest. Cheaper
@@ -541,9 +654,9 @@ function drawField(
   // half-lit on both sides of a pixel grid this coarse.
   const trace = (drop: number) => {
     ctx.beginPath();
-    ctx.moveTo(-2, skyH + 2);
+    ctx.moveTo(-2, foot);
     for (const [i, y] of crest.entries()) ctx.lineTo(-2 + i * SAMPLE, y + drop);
-    ctx.lineTo(-2 + (crest.length - 1) * SAMPLE, skyH + 2);
+    ctx.lineTo(-2 + (crest.length - 1) * SAMPLE, foot);
     ctx.closePath();
     ctx.fill();
   };

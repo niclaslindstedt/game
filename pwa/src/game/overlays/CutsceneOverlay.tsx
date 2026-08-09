@@ -32,11 +32,21 @@ import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteByName, spriteCursor, type GameAssets } from "../assets.ts";
+import { sootedSprite, spriteCrown } from "../render/caches.ts";
+import { drawNightSky } from "../render/night-sky.ts";
 import {
   drawRiftPortal,
   riftPortalBob,
   riftPortalLook,
 } from "../render/rift-portal.ts";
+import {
+  drawPropFire,
+  drawRocketExhaust,
+  propFireLevel,
+  rocketExhaustLook,
+  sootLevel,
+  type RocketExhaust,
+} from "../render/rocket-exhaust.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard advance can
  * share the tap's two-step semantics (finish the crawl, then turn the beat). */
@@ -59,6 +69,43 @@ const TEXT_SCALE = 2;
  * yet measured). Keep in step with `.cutscene-line` in styles.css.
  */
 const CUTSCENE_TEXT_REM = 33;
+
+/**
+ * THE BACKDROPS THAT ARE A REAL SKY RATHER THAN A FLAT WALL — keyed by the
+ * scene's own `stage.backdrop`, which is exactly what that field is for (the
+ * renderer's name for the setting) and which is why this is a set of ids rather
+ * than a per-scene branch.
+ *
+ * A scene in here is played against the night the DRIVE is played against
+ * (`render/night-sky.ts`): the same wash, the same moon, the same starfield,
+ * the same three cloud bands and the same open country along the horizon. The
+ * launch is the reason — the hero lifts off his own lawn, on the road the car
+ * later drives, and the sky over it was a moon prop and four star tiles that
+ * agreed with nothing.
+ *
+ * IT IS HUNG STILL. There is no travel to parallax against and no reason for a
+ * cutscene sky to fidget behind the acting, so the twinkle is off and the only
+ * thing moving up there is the clouds' own slow drift.
+ */
+const SKY_BACKDROPS: ReadonlySet<string> = new Set(["garageNight"]);
+
+/**
+ * The lit rocket on this stage, if one is burning — where it is standing and
+ * how long it has been at it.
+ *
+ * ONE PER SCENE, deliberately: everything the blast does to its surroundings is
+ * a question of distance from a single point, and a scene with two rockets on
+ * it would be answering a question nobody has asked yet.
+ */
+function firingRocket(
+  cutscene: CutsceneState,
+): { x: number; ageMs: number; look: RocketExhaust } | undefined {
+  for (const actor of cutscene.actors) {
+    const look = actor.hidden ? undefined : rocketExhaustLook(actor.sprite);
+    if (look) return { x: actor.pos.x, ageMs: actor.poseMs, look };
+  }
+  return undefined;
+}
 
 function drawStage(
   ctx: CanvasRenderingContext2D,
@@ -89,6 +136,24 @@ function drawStage(
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = paint.wall;
   ctx.fillRect(0, 0, width, height);
+  if (SKY_BACKDROPS.has(def.stage.backdrop)) {
+    // THE CAMERA SHIFT IS HANDED TO THE SKY WHOLE, both axes, and the sky
+    // spends it the way the props do: by depth. A `pan` beat that climbs — the
+    // launch's, following the ship up — sends the lot down the frame at full
+    // depth, the hedgerows behind it at two thirds, the ridge behind THEM at a
+    // third, the clouds at a fifth and the stars at a fiftieth. That ladder is
+    // the shot; a backdrop that moved as one piece would read as a painted
+    // flat being winched.
+    drawNightSky(ctx, assets.sprites, -shift.x, width, floorY, timeMs, {
+      twinkle: false,
+      cameraY: shift.y,
+    });
+  }
+  // WHAT IS BURNING ON THIS STAGE, if anything: the lit rocket's mark and how
+  // long it has been lit. Found once, before anything is placed, because the
+  // ground and every prop standing on it have to be asked how close they are.
+  const blast = firingRocket(cutscene);
+
   if (floorY < height) {
     ctx.fillStyle = paint.floor;
     ctx.fillRect(0, Math.max(0, floorY), width, height - Math.max(0, floorY));
@@ -98,18 +163,57 @@ function drawStage(
     for (let y = floorY + 14; y < height; y += 14) {
       if (y >= 0) ctx.fillRect(0, y, width, 1);
     }
+    // …AND THE GROUND TAKES IT TOO. The props each blacken on their own face;
+    // the floor is not a prop, so the same wash is laid across it here, hard
+    // under the pad and thinning away — a lawn that stayed its own colour with
+    // a scorched house standing on it would read as two different evenings.
+    if (blast) {
+      const level = sootLevel(blast.look, blast.ageMs, 0);
+      if (level > 0) {
+        const top = Math.max(0, floorY);
+        const reach = blast.look.reach * 2;
+        const scorch = ctx.createLinearGradient(
+          blast.x - reach,
+          0,
+          blast.x + reach,
+          0,
+        );
+        scorch.addColorStop(
+          0,
+          `rgba(12, 11, 10, ${(level * 0.35).toFixed(3)})`,
+        );
+        scorch.addColorStop(0.5, `rgba(12, 11, 10, ${level.toFixed(3)})`);
+        scorch.addColorStop(
+          1,
+          `rgba(12, 11, 10, ${(level * 0.35).toFixed(3)})`,
+        );
+        ctx.fillStyle = scorch;
+        ctx.fillRect(0, top, width, height - top);
+      }
+    }
   }
 
   const place = (prop: CutsceneProp): Placed => {
     const depth = prop.parallax ?? 1;
+    const x = prop.pos.x + shift.x * depth;
     return {
       sprite: prop.kind,
-      x: prop.pos.x + shift.x * depth,
+      x,
       y: prop.pos.y + shift.y * depth,
       flip: false,
       wrap: prop.wrap ?? false,
       jitter: 0,
       lift: 0,
+      ...(blast
+        ? {
+            soot: {
+              dx: blast.x - x,
+              ageMs: blast.ageMs,
+              look: blast.look,
+              standing: !prop.ground,
+            },
+          }
+        : {}),
     };
   };
   const props = def.stage.props
@@ -128,6 +232,10 @@ function drawStage(
     // `<sprite>_0/_1`; idle holds frame 0.
     const frame =
       actor.lift > 0 ? "jump" : actor.moving ? Math.floor(timeMs / 220) % 2 : 0;
+    // A LIT ROCKET measures itself against the mark it was authored on — the
+    // pad — which rides the camera at full depth like the ground it is part of.
+    const pad = def.actors.find((a) => a.id === actor.id)?.at.y;
+    const lit = rocketExhaustLook(actor.sprite) ? pad : undefined;
     queue.push({
       sprite: `${actor.sprite}_${frame}`,
       x: actor.pos.x,
@@ -137,6 +245,9 @@ function drawStage(
       jitter: actor.shake,
       lift: actor.lift,
       alt: `${actor.sprite}_0`,
+      ...(lit === undefined
+        ? {}
+        : { rocket: { ageMs: actor.poseMs, padY: lit + shift.y } }),
       ...(actor.holding
         ? {
             hold: {
@@ -178,6 +289,40 @@ type Placed = {
   /** Last-resort art: the actor's frame 0, for a family that authors no
    * frame for the pose being asked for (only the hero has a jump). */
   alt?: string;
+  /**
+   * A LIT ROCKET's engine (`render/rocket-exhaust.ts`), with the two facts the
+   * effect cannot work out for itself: how long ago the `pose` beat lit it, and
+   * how far its bells have got above the mark it was standing on.
+   *
+   * The pad is the actor's AUTHORED mark carried down the camera shift, not the
+   * stage's floor line — the ship stands on the lawn, well in front of it — so
+   * the blast stays where the ship left it and then falls away with the ground
+   * when the camera climbs. It is a STAGE y, turned into the drawing's own
+   * space at paint time, because only the paint knows how tall the hull's art
+   * is and therefore where its feet are.
+   */
+  rocket?: { ageMs: number; padY: number };
+  /**
+   * WHAT THE BLAST IS DOING TO THIS PIECE OF SCENERY: how far its middle stands
+   * from the lit rocket (signed — the sign is which face is taking it), how
+   * long that rocket has been burning, and the reach to scale both against.
+   *
+   * The hero lights a homemade engine a dozen px from his own garage, and the
+   * garage goes black down the side that was watching. It is carried on every
+   * prop rather than on a chosen one because the rule is DISTANCE: whatever is
+   * standing near the pad gets it and everything else comes out clean. The
+   * SUM is worked out at paint time, because the distance that matters is to
+   * the near WALL and only the paint knows how wide the art is.
+   */
+  soot?: {
+    dx: number;
+    ageMs: number;
+    look: RocketExhaust;
+    /** Whether it STANDS. Art lying on the ground blackens like everything
+     * else, but it never catches: flames walking the top edge of a road tile
+     * are a line of fires burning along the tarmac. */
+    standing: boolean;
+  };
 };
 
 /** One drawing off a stage queue: its art, whatever it carries, its wrap. */
@@ -225,7 +370,42 @@ function paintOne(
   // the preview harness replays it frame for frame.
   const portal = riftPortalLook(item.sprite);
   const draw = () => {
+    // THE ENGINE UNDER THE HULL, so the hull is in front of its own fire. The
+    // pad is handed over in the drawing's OWN space — its stage y less this
+    // art's top-left, un-jittered, so the shake rattles the ship rather than
+    // the ground it is standing on.
+    const rocket = item.rocket && rocketExhaustLook(item.sprite);
+    if (rocket && item.rocket) {
+      drawRocketExhaust(
+        ctx,
+        rocket,
+        item.rocket.ageMs,
+        item.rocket.padY - (item.y - sprite.height - item.lift),
+      );
+    }
     ctx.drawImage(sprite, 0, 0);
+    // …AND WHAT THE BLAST HAS DONE TO IT SINCE, over the art and masked by it.
+    // The gap is to the NEAR WALL: a frontage is measured from the face that
+    // took the fire, not from the middle of the building.
+    if (item.soot) {
+      const { dx, ageMs, look } = item.soot;
+      const gap = Math.abs(dx) - sprite.width / 2;
+      const side = dx < 0 ? -1 : 1;
+      const soot = sootedSprite(
+        sprite,
+        item.sprite,
+        sootLevel(look, ageMs, gap),
+        side,
+      );
+      if (soot) ctx.drawImage(soot, 0, 0);
+      // …AND WHETHER IT HAS SINCE CAUGHT. Only the thing the rocket was parked
+      // against ever does, and the flames walk the art's own top edge.
+      const alight = item.soot.standing ? propFireLevel(look, ageMs, gap) : 0;
+      if (alight > 0) {
+        const crown = spriteCrown(sprite, item.sprite);
+        if (crown) drawPropFire(ctx, crown, alight, side, cutscene.timeMs);
+      }
+    }
     if (held && item.hold) ctx.drawImage(held, item.hold.dx, item.hold.dy);
     if (portal) {
       drawRiftPortal(

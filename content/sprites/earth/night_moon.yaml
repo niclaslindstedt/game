@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # THE MOON over the road out to GOODCO — the one fixed thing in the drive's
 # whole picture, and the furthest: it barely moves while the town tears past
-# (`drive-screen/sky.ts`).
+# (`render/night-sky.ts`) — and the same moon over the garage the launch
+# cutscene lifts off from, which is drawn by that same file.
 #
 # NOT `sky_moon`. That one is a CUTSCENE prop — a small grey globe hanging in a
 # spaceship window, drawn to be looked at against black with an outline round

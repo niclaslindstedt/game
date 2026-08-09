@@ -662,7 +662,7 @@ wheel answers the first pixel of drag, and only the arrows wait for a push worth
 calling a direction. Hidden for a mouse and for an auto-driven road, the same two
 exemptions the run makes.
 
-**The sky is the one pass that is NOT in world space** (`drive-screen/sky.ts`).
+**The sky is the one pass that is NOT in world space** (`render/night-sky.ts`).
 It sits at infinity, so running it through a transform that foreshortens
 distance would squash the moon toward the horizon as though it were lying in a
 field. It is painted first, in plain canvas px, and the projected world — the
@@ -722,6 +722,27 @@ the horizon whatever the screen is, with the buildings standing 13 px of
 projected ground behind the kerb. A ridge lifted less than that is only ever
 seen through the alleys between frontages, which is the right answer for the
 nearest one and the wrong answer for all of them.
+
+**And the same night hangs over the LAUNCH.** The module sits in the shared
+render pool rather than under `drive-screen/` because a second surface plays
+against it: the garage cutscene, which stands on the same lot on the same
+evening (`CutsceneOverlay`'s `SKY_BACKDROPS`, keyed on the scene's own
+`stage.backdrop`). A scene gets the night STILL — nothing to parallax against,
+the twinkle switched off, only the clouds' own drift left moving — and the
+whole of it in one call, because a moon prop and four star tiles pinned behind a
+different sky agreed with nothing.
+
+**A camera that CLIMBS is answered on the same ladder** (`SkyOptions.cameraY`).
+The launch's pan follows the ship up, and every layer comes down the frame by
+its own `parallax` — the lot at full depth, the hedgerows at two thirds, the
+middle fields at under a half, the far ridge under a third, the low cloud bank a
+fifth, the stars and the moon at very nearly nothing. One depth per layer, spent
+on both axes, which is the difference between a rocket leaving and a painted
+flat being winched. Two details make it hold: `horizonY` is where the GROUND is
+(the clip, the ridges, the town glow) while the height the night was hung at is
+what is left when the climb is taken back off it, so the weather does not slide
+down with the lawn; and each ridge is filled to the ground line rather than to
+its own crest's depth, so the three coming apart bares no seam between them.
 
 ### The town — a building is an ASSEMBLY, not a picture
 
@@ -1295,6 +1316,62 @@ never fold in step. The smoke's gradient is BAKED once and blitted, for the same
 reason the loot aura's light is. Judge it in the EFFECTS GALLERY's WORLD shelf:
 `rift-portal` stands all four side by side on the rift's own ground, which is the
 only floor dark enough to judge black smoke against.
+
+### A ROCKET LIGHTING — the launch's engine, and what it does to the lawn
+
+The garage cutscene's ship is an ACTOR and its engine is a `pose` beat, so the
+whole effect hangs off one fact: the sprite it is wearing
+(`render/rocket-exhaust.ts`, claimed by `rocketExhaustLook`). The clock is the
+actor's own `poseMs` — a field on the cutscene player, because a wall clock
+would make the preview harness replay the scene differently every time — and a
+scene that never poses a rocket pays nothing. It is three pieces, and they are
+three because they answer to different things:
+
+- **THE PLUME.** A column of pixel fire out of the bells, twice the hull long at
+  full burn, walked one scanline at a time and filled in four bands (fringe,
+  body, hot, white core) rather than drawn as a gradient, which at this size is
+  a smudge. Standing shock diamonds are a function of DEPTH with only a slow
+  breath on the clock, so the flame moves through them instead of them moving
+  with it. Its LENGTH is the room under the bells, which is the whole reason it
+  reads: a full-length plume drawn on the pad runs down through the tarmac, so
+  the ship sitting on its mark has a stub and everything it cannot spend
+  downward goes sideways instead.
+- **THE PAD BLAST.** What that column does when it hits concrete. It runs OUT
+  along the ground before it climbs — a launch cloud ends up some three times
+  wider than it is tall, and a mushroom is what you get from a bomb — as two
+  looping streams of soft discs, fire (additive; it is light) inside smoke
+  (plain alpha; it is matter). The smoke's disc is a PLATEAU with a soft rim
+  rather than the `glowSprite` ramp: averaged over its own area a glow is faint,
+  and the first cut of this cloud was invisible for exactly that reason. Each
+  billow carries a smaller lighter disc up and inboard of it — a cloud is read
+  off where its light catches, and a flat grey blob has nowhere for that to be.
+  It is anchored to the PAD rather than to the ship, so it stays where the ship
+  left it and the camera climbing away is what takes it off the screen.
+- **THE SOOT.** The hero lights a homemade engine a dozen px from his own
+  garage, and the garage goes black down the side that was watching
+  (`sootLevel` → `sootedSprite` in `caches.ts`). The only inputs are TIME and
+  DISTANCE — no list of which props are flammable — and the distance is to the
+  near WALL rather than to the middle of the building, or a wide frontage reads
+  as further off the harder it faces the pad. The wash is masked by the art's
+  own alpha (`source-atop` on a baked offscreen, quantized to eight rungs), so
+  the soot stops exactly where the wall does instead of smearing the lawn
+  showing under the eaves. The GROUND takes the same wash — laid across the
+  stage's floor band as one gradient centred on the pad, because the floor is a
+  fill rather than a prop and a lawn that kept its own colour under a scorched
+  house would read as two different evenings.
+- **THE ROOF CATCHING.** A second, later curve on the same distance
+  (`propFireLevel`): everything on the lot goes black, and the one building the
+  rocket was parked against goes UP. Flames walk the sprite's OWN top edge
+  (`spriteCrown`) rather than its bounding box — this house is a peak joined to
+  a flat garage, so a row laid across the top of the art burns in mid-air over
+  one half and a wall short of the other — starting at the end that took the
+  blast and spreading along it, capped well short of the far end so it stays the
+  GARAGE catching rather than the house burning down. Art lying flat never
+  catches at all, or the road tiles light up in a row.
+
+Judge it from the cutscene workbench rather than the effects gallery — the
+gallery stages a `GameState` and this needs a scene: `?cutscene=launch&debug`,
+or `node pwa/scripts/cutscene-preview.mjs --id launch` for the contact sheet.
 
 ## What advertises itself as tappable
 

@@ -1,0 +1,35 @@
+name: grass_charred_1
+family: earth
+size: [16, 16]
+description: >
+  A charred grass tile like grass_charred_0, with a stub of burnt grass still
+  standing near the lower-left.
+subject:
+  kind: ground tile
+  build: a seamless field of near-black burnt earth, speckled all over for texture
+  features: burnt-through blotches and pale ash flecks, plus a short clump of scorched straw-brown grass stubs near the lower-left that the fire did not finish
+  accent: scorched straw-brown stubble on charred near-black
+  flavor: what is left standing on the lawn after the launch
+palette:
+  A: "#4e4842" # pale ash fleck
+  C: "#2a2622" # charred earth base
+  E: "#3b332a" # scorched bare dirt
+  S: "#544632" # scorched grass stub
+  c: "#1c1917" # burnt through to black
+grid: |
+  CCCCCCCCCCCCCCCC
+  CCCCCCCCCCCAACCC
+  CCcCCCCCCCCACCCC
+  CCcCCCCCCCCCCCCC
+  CCCCCCACCCCCCcCC
+  CCCCCCACCCCCCcCC
+  CCCCCCCCCCCCCCCC
+  CECCCCCCCcCCCCCC
+  CCCCCCCCCcCCCCCC
+  CCCCCcCCCCCCACCC
+  CCCCCcCCCCCCACCC
+  CSSCCCCCCCCCCCCC
+  CScCCCCCCCCCCCCC
+  CCCCCCCCcCCCCCCC
+  CCCCCCCCCCCCCcCC
+  CCCCCCCCCCCCCCCC

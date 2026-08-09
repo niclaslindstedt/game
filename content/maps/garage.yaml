@@ -57,6 +57,13 @@ areas:
     spawn: false
     label: THE DRIVEWAY
     ground: { common: pavement_0, rare: pavement_1, rareEvery: 4 }
+  # THE LAWN IS BURNT, AND IT STAYS BURNT. A man built a rocket in the bay and
+  # lit it on the grass behind it (`content/cutscenes/launch.yaml` — the blast
+  # throws a wall of fire and smoke the length of the lot and blacks the side of
+  # his own house), so the ground north of the building is charred earth rather
+  # than the Earth family's default green. The hub is the one map the player
+  # comes BACK to, and coming back to a mown lawn would quietly say the launch
+  # never happened.
   - id: lawn
     enclosure: none
     weight: 2
@@ -64,7 +71,7 @@ areas:
     boss: false
     spawn: false
     label: THE LAWN
-    ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
+    ground: { common: grass_charred_0, rare: grass_charred_1, rareEvery: 9 }
   # ── THE ROAD ────────────────────────────────────────────────────────────────
   # The two lanes down the far east edge, and the painted line between them.
   # They are separate areas ONLY because a district's floor is one ground pair:
