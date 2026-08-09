@@ -190,6 +190,10 @@ export type DriveDials = {
   /** …and whether the leg has reached the town at all, which is what decides
    * whether there is a clock on screen. */
   clockStarted: boolean;
+  /** …and whether the DASHBOARD is up. A third moment again, and the earliest:
+   * the instruments arrive a short way BEFORE the town so they are settled by
+   * the time the clock starts (`driveDashUp`). */
+  dashLive: boolean;
   /** 0..1 — how worn the wagon is. */
   wear: number;
   /** …and how worn it was before the last second's hits — the anchor the
@@ -244,6 +248,7 @@ export function driveBindings(drive: DriveDials): HudValues {
     "drive.clockMs": Math.round(drive.clockMs),
     "drive.clockRunning": drive.clockRunning,
     "drive.clockStarted": drive.clockStarted,
+    "drive.dashLive": drive.dashLive,
     "drive.wear": Math.max(0, Math.min(1, drive.wear)),
     "drive.wearSettled": Math.max(
       0,

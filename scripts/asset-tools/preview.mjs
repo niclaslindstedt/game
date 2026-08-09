@@ -15,9 +15,18 @@ import {
   upscale,
 } from "./surface.mjs";
 
-/** Encode a surface to a PNG file. */
+/** Encode a surface to a PNG file.
+ *
+ * `limitInputPixels: false` because the "input" is a raw RGBA buffer this
+ * process built a line ago — sharp's default cap exists to stop a decoder being
+ * handed a hostile file, and there is no decode here at all. The cap was
+ * costing a real thing: the review sheets grew past it as the sprite roster did,
+ * so `make assets` (the FULL previews, the art loop's own command) died on
+ * "Input image exceeds pixel limit" while every other entry point, which draws
+ * fewer previews, went on passing. */
 export async function writePng(surface, path) {
   await sharp(Buffer.from(surface.data), {
+    limitInputPixels: false,
     raw: { width: surface.width, height: surface.height, channels: 4 },
   })
     .png()

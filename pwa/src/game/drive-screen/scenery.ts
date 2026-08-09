@@ -192,19 +192,24 @@ export const DRIVER_SPRITES: readonly string[] = [
  */
 export const RIDER_SEATS: Readonly<Record<string, { dx: number; dy: number }>> =
   {
-    traffic_motorcycle: { dx: 4, dy: 3 },
-    traffic_scooter: { dx: 2, dy: 4 },
+    // `dy: 7` on everything with a saddle is not a coincidence and not a
+    // shortcut: a saddle is about 0.8 m off the road, this road runs at nine px
+    // to the metre, and the machines are drawn to that scale — so seven px is
+    // where every saddle on it is. A machine that needed its own number would
+    // be a machine drawn at its own scale.
+    traffic_motorcycle: { dx: -1, dy: 7 },
+    traffic_scooter: { dx: -1, dy: 7 },
     // The two delivery machines carry a box where a pillion would be, so their
     // riders sit further FORWARD than anybody else's — seated over the saddle
     // they are simply behind the crate and invisible, which is the one way to
     // draw a rider that is worse than not drawing one.
-    traffic_ebike: { dx: 6, dy: 5 },
-    traffic_delivery_moped: { dx: 5, dy: 4 },
-    traffic_bicycle: { dx: 3, dy: 5 },
+    traffic_ebike: { dx: 1, dy: 7 },
+    traffic_delivery_moped: { dx: 1, dy: 7 },
+    traffic_bicycle: { dx: 0, dy: 5 },
     // A skater STANDS ON the deck rather than sitting in it, so the seat is
     // barely off the road — and the board is the one machine here whose rider
     // is most of the silhouette.
-    traffic_skateboard: { dx: 1, dy: 1 },
+    traffic_skateboard: { dx: 0, dy: 4 },
   };
 
 /** The damage rungs a vehicle's art climbs as it is battered, derived at build
@@ -362,11 +367,11 @@ export const VEHICLE_LAMPS: Readonly<Record<string, LightBody>> = {
   // reach from its centre — a shade more than the collision extent, because a
   // lamp is bolted to the very end of the thing — and `liftPx` is the height the
   // lamp burns at, which on all of these is about the top of the wheel.
-  traffic_motorcycle: { halfPx: 12, liftPx: 7 },
-  traffic_scooter: { halfPx: 10, liftPx: 7 },
-  traffic_ebike: { halfPx: 11, liftPx: 7 },
-  traffic_bicycle: { halfPx: 10, liftPx: 6 },
-  traffic_delivery_moped: { halfPx: 11, liftPx: 7 },
+  traffic_motorcycle: { halfPx: 11, liftPx: 10 },
+  traffic_scooter: { halfPx: 10, liftPx: 6 },
+  traffic_ebike: { halfPx: 10, liftPx: 11 },
+  traffic_bicycle: { halfPx: 8, liftPx: 9 },
+  traffic_delivery_moped: { halfPx: 10, liftPx: 6 },
   // …and the skateboard has none at all, so it never asks (`DriveVehicleDef.lights`).
 };
 

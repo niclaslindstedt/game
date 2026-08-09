@@ -16,6 +16,7 @@
 // bar is.)
 
 import {
+  driveDashUp,
   driveInCity,
   driveMph,
   engineRpm,
@@ -160,6 +161,10 @@ export function driveDials(
     // clock arrives with the town and then stays, holding its final figure
     // through the run-in. The opening has nothing over it.
     clockStarted: drive.cityDone,
+    // …and whether the DASHBOARD is up, which arrives before either of them:
+    // the instruments settle a short way out of town so they are not landing on
+    // the same frame the clock starts on.
+    dashLive: driveDashUp(drive),
     wear,
     wearSettled: settledWear(drive, wear, trail),
     failing: wearPercent > FAILING_WEAR_PERCENT,
@@ -222,6 +227,7 @@ export function sameDials(a: DriveDials, b: DriveDials): boolean {
     a.clockMs === b.clockMs &&
     a.clockRunning === b.clockRunning &&
     a.clockStarted === b.clockStarted &&
+    a.dashLive === b.dashLive &&
     a.wear === b.wear &&
     a.wearSettled === b.wearSettled &&
     a.failing === b.failing &&

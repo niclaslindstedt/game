@@ -162,6 +162,11 @@ export const HUD_BINDINGS = {
   // town. It stays true for the rest of the leg, so the figure holds through the
   // arrival rather than vanishing on the finish line.
   "drive.clockStarted": "flag",
+  // …and whether the DASHBOARD is up at all, which happens FIRST: the opening
+  // plays over an empty road with the pedal capped and nothing scored, so the
+  // instruments arrive a short way out of town and are settled by the time the
+  // clock starts. It gates the whole `drive_dash` region rather than a dial.
+  "drive.dashLive": "flag",
   "drive.speedFrac": "frac",
   "drive.wear": "frac",
   // …and what it was before the last second's hits. The damage dial draws its
