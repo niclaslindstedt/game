@@ -4905,6 +4905,22 @@ html.app-locked body {
   background: rgba(60, 26, 32, 0.55);
 }
 
+/* WHY THE NAME WILL NOT DO — under the field it is about, in the red the
+   field's own frame goes (`.pixel-input.invalid`). Rendered only while there is
+   something to say, so an ordinary name leaves no gap behind it. */
+.character-field-error {
+  display: block;
+  line-height: 0;
+}
+
+/* CREATE, WHILE THE NAME WILL NOT DO. It wears the `:disabled` dimming without
+   BEING disabled: the press still lands, so the refusal can be heard as well as
+   read (see the button). */
+.pixel-button.refused {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .character-actions {
   display: flex;
   gap: 0.75rem;

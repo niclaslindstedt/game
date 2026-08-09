@@ -59,6 +59,7 @@ import { canonicalJson } from "@ui/lib/canonical-json.ts";
 import { storageKey } from "../identity.ts";
 
 import { clearKey, openingKey, thoughtSeenKey } from "./character-progress.ts";
+import { DEFAULT_HERO_NAME } from "./hero-name.ts";
 
 // The pure progression queries live next door (character-progress.ts) — this
 // file owns the roster and its storage. They are re-exported here so a caller
@@ -358,6 +359,38 @@ export function loadCharacters(): Character[] {
   }
 }
 
+/**
+ * IS THERE ALREADY SOMEBODY BY THIS NAME? — the question NEW GAME asks before
+ * it will mint a hero.
+ *
+ * A ROSTER IS A LIST OF PEOPLE AND A NAME IS HOW THE PLAYER TELLS THEM APART.
+ * Nothing in the save format needs names to be unique (a hero is its `id`
+ * everywhere it matters), so two heroes called MARIS were legal — and the cost
+ * lands entirely on the human: the LOAD GAME roster shows two identical rows,
+ * the high-score board shows two identical entries, and RETIRE asks you to
+ * confirm the deletion of a name that names both of them. Refusing the
+ * collision at the one door that mints heroes is cheaper than teaching every
+ * screen downstream to disambiguate.
+ *
+ * FOLDED FOR CASE AND EDGE WHITESPACE, because that is the comparison a player
+ * makes looking at the list: the field holds what the platform typed and the
+ * mint uppercases it (`hero-name.ts`), but an imported hero or one seeded by the
+ * DEVELOPER menu may carry any casing at all.
+ *
+ * A hero's OWN name is not a collision — pass `exceptId` for a rename.
+ */
+export function characterNameTaken(
+  name: string,
+  exceptId?: string,
+  roster: Character[] = loadCharacters(),
+): boolean {
+  const wanted = name.trim().toUpperCase();
+  if (!wanted) return false;
+  return roster.some(
+    (c) => c.id !== exceptId && c.name.trim().toUpperCase() === wanted,
+  );
+}
+
 /** A character's content with its change stamp neutralized — what "did this
  * hero actually change?" compares. Canonical, so a hero rebuilt from storage
  * compares equal to the same hero held in memory. */
@@ -489,7 +522,7 @@ export function getActiveCharacter(): Character | null {
 export function createCharacter(name: string, hardcore: boolean): Character {
   const character: Character = {
     id: newId(),
-    name: name.trim() || "HERO",
+    name: name.trim() || DEFAULT_HERO_NAME,
     hardcore,
     createdAt: Date.now(),
     dead: false,
