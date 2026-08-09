@@ -27,6 +27,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  cityEndPx,
   DRIVE,
   planTown,
   resetTownPlan,
@@ -220,27 +221,29 @@ describe("the street it lays out", () => {
     );
   });
 
-  it("stands the same buildings on the leg home", () => {
-    // A player who noticed a burnt-out pub on the way out must drive home past
-    // the same pub. Outbound x and homeward x are mirror images of each other
-    // around the course, so the same DISTRICT has to produce the same street.
+  it("keeps the poor end of the town at the hero's end on both legs", () => {
+    // THE GRADIENT BELONGS TO THE ROAD, NOT TO THE TRIP, and this is the test
+    // that says so. Both legs measure their own distance from their own start,
+    // so a district taken straight off `travel` would put the boarded windows
+    // wherever the car happened to set off from — and the leg home would drive
+    // out of GOODCO through a slum and arrive at the hero's own block in the
+    // nice part of town, which is the story backwards.
     resetTownPlan();
     const gate = intoTown(OUT, 0);
     const out = planTown(gate, gate + 1200, OUT).map((p) => p.key);
-    resetTownPlan();
-    const home = planTown(gate, gate + 1200, HOME).map((p) => p.key);
-    // Not the same keys — the first house of the outbound leg stands where the
-    // homeward leg's LAST one does, so these are the two ENDS of the road and
-    // they had better not match.
     expect(out.length).toBeGreaterThan(0);
-    expect(home).not.toEqual(out);
-    // The district is measured through the TOWN rather than through the leg: 0
-    // at the first house, 1 at GOODCO's gate, and the outskirts in front of both
-    // are clamped to whichever end they sit at.
+    // The out leg's own gate is the hero's end: district 0, the worst of it.
     expect(townDistrict(intoTown(OUT, 0), OUT)).toBe(0);
-    expect(townDistrict(intoTown(HOME, 0), HOME)).toBe(0);
+    // …and on the leg home the hero's end is the FAR one, so it is the far gate
+    // that answers 0 and the leg's own start that answers 1.
+    expect(townDistrict(intoTown(HOME, 0), HOME)).toBe(1);
+    expect(townDistrict(-cityEndPx(HOME), HOME)).toBe(0);
+    // The outskirts in front of each are clamped to whichever end they sit at —
+    // there are two of them now, one at each end of the town.
     expect(townDistrict(0, OUT)).toBe(0);
-    expect(townDistrict(-DRIVE.coursePx, HOME)).toBe(1);
+    expect(townDistrict(0, HOME)).toBe(1);
+    expect(townDistrict(-DRIVE.coursePx, HOME)).toBe(0);
+    expect(townDistrict(DRIVE.coursePx, OUT)).toBe(1);
   });
 
   it("gets nicer the nearer GOODCO it gets", () => {

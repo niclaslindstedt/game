@@ -12,7 +12,17 @@ import { describe, expect, it } from "vitest";
 
 import {
   breakTrafficLamps,
+  cityEndPx,
+  cityLength,
   cityStartPx,
+  courseLength,
+  driveSite,
+  planSite,
+  roadBandHalfAt,
+  siteRunInPx,
+  siteSpanX,
+  siteVehicles,
+  townRoad,
   skipDriveOpening,
   createDrive,
   createDriveDriver,
@@ -1365,5 +1375,180 @@ describe("the road itself", () => {
     floorIt(drive, 8000, 1);
     const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2 + DRIVE.vergePx;
     expect(Math.abs(drive.car.pos.y)).toBeLessThanOrEqual(half + 0.01);
+  });
+});
+
+describe("the road driven the other way", () => {
+  /** The same road, bound for the garage rather than for GOODCO. */
+  const HOME: DriveParams = { ...PARAMS, direction: -1, to: "garage" };
+
+  it("brackets the town with an outskirt at each end", () => {
+    // THE SHAPE IS WHAT MAKES THE LEG REVERSIBLE. The stretch one leg opens over
+    // — the wagon sliding into frame, the two lines said to nobody, the town
+    // arriving in front of the player — is the stretch the OTHER leg finishes
+    // on, so there has to be one at each end and they have to be the same
+    // length. A road with an opening at only one end reads right driven out and
+    // starts in the middle of a street driven home.
+    expect(cityStartPx(PARAMS)).toBe(DRIVE.opening.cityPx);
+    expect(courseLength(PARAMS) - cityEndPx(PARAMS)).toBe(cityStartPx(PARAMS));
+    // …and the town between them is untouched by the change: every measured
+    // figure on `DRIVE.coursePx` was taken over exactly this stretch.
+    expect(cityLength(PARAMS)).toBe(
+      courseLength(PARAMS) - 2 * cityStartPx(PARAMS),
+    );
+    // Both legs answer identically — the distances are along the LEG, and a
+    // drive always starts its car at zero and drives its own way.
+    expect(cityEndPx(HOME)).toBe(cityEndPx(PARAMS));
+  });
+
+  it("opens the carriageway out and closes it back down again", () => {
+    const narrow = (DRIVE.opening.laneCount * DRIVE.laneWidth) / 2;
+    const full = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
+    const gate = cityStartPx(PARAMS);
+    const far = cityEndPx(PARAMS);
+    // Two lanes on both outskirts, four through the town, and a taper at each
+    // end rather than a step.
+    expect(roadBandHalfAt(0, PARAMS)).toBeCloseTo(narrow, 6);
+    expect(roadBandHalfAt(gate, PARAMS)).toBeCloseTo(full, 6);
+    expect(roadBandHalfAt((gate + far) / 2, PARAMS)).toBeCloseTo(full, 6);
+    expect(roadBandHalfAt(far, PARAMS)).toBeCloseTo(full, 6);
+    expect(roadBandHalfAt(courseLength(PARAMS), PARAMS)).toBeCloseTo(narrow, 6);
+    const mid = roadBandHalfAt(far + DRIVE.opening.widenPx / 2, PARAMS);
+    expect(mid).toBeGreaterThan(narrow);
+    expect(mid).toBeLessThan(full);
+  });
+
+  it("stops the clock at the far gate rather than at the finish", () => {
+    // THE SCORE IS THE TOWN'S. There is an outskirt's worth of road left after
+    // the last house and the player still drives it — but nothing is laid down
+    // on it and nobody is racing it, so a stopwatch still running out there
+    // would rank a leg on how fast somebody crossed an empty field.
+    const drive = createDrive(PARAMS);
+    skipDriveOpening(drive);
+    drive.car.pos.x = drive.car.home.x + cityEndPx(PARAMS) - 40;
+    drive.distance = cityEndPx(PARAMS) - 40;
+    const before = drive.clockMs;
+    for (let t = 0; t < 3000; t += 16)
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    expect(drive.townEndDone).toBe(true);
+    expect(drive.outcome).toBe(DRIVE_OUTCOME.driving);
+    const stopped = drive.clockMs;
+    expect(stopped).toBeGreaterThan(before);
+    for (let t = 0; t < 1000; t += 16)
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    expect(drive.clockMs).toBe(stopped);
+  });
+
+  it("lays the same road out along negative x and finishes at the garage", () => {
+    const drive = createDrive(HOME);
+    skipDriveOpening(drive);
+    // The car runs the other way in world x, and `distance` is still positive.
+    expect(drive.car.pos.x).toBeLessThan(0);
+    expect(drive.distance).toBe(cityStartPx(HOME));
+    // PUT IT ON THE RUN-OUT rather than driving the whole leg: what is under
+    // test is the leg's SHAPE, and a flat-out straight line down the middle of
+    // this road is the documented way to wreck the wagon three quarters of the
+    // way along it (`DRIVE.coursePx`).
+    haltTraffic(drive);
+    drive.pedestrians.length = 0;
+    drive.car.pos.x = drive.car.home.x - courseLength(HOME) + 60;
+    drive.distance = courseLength(HOME) - 60;
+    drive.townEndDone = true;
+    for (let t = 0; t < 2000; t += 16) {
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+    }
+    expect(drive.outcome).toBe(DRIVE_OUTCOME.arrived);
+    expect(drive.distance).toBeGreaterThanOrEqual(courseLength(HOME));
+    expect(drive.car.pos.x).toBeLessThan(-courseLength(HOME) + 1);
+    // …and the run-in's own beats land, in order, on the clock rather than on a
+    // distance — a coasting car may never reach a mark measured in world px.
+    for (let t = 0; t < DRIVE.arrival.askMs + 200; t += 16) {
+      stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+    }
+    expect(drive.sightDone).toBe(true);
+    expect(drive.heroOutDone).toBe(true);
+    expect(drive.askedDone).toBe(true);
+  });
+
+  it("pulls up on the site's own mark whatever it crossed the line at", () => {
+    // THE RUN-IN IS THE ONE BEAT ON THIS ROAD THAT IS ABOUT WHAT IS BESIDE IT,
+    // and a plain coast decided where that was by momentum alone: a wagon that
+    // crossed at a crawl stopped a couple of hundred px in and one that crossed
+    // flat out ran on for eleven hundred, so the frontage the hero then gets out
+    // and talks about was off the side of the screen about half the time.
+    for (const params of [PARAMS, HOME]) {
+      const mark = driveSite(params.to).parkPx;
+      for (const crossing of [350, 700, 1310]) {
+        const drive = createDrive(params);
+        skipDriveOpening(drive);
+        haltTraffic(drive);
+        drive.pedestrians.length = 0;
+        const dir = params.direction;
+        drive.car.pos.x = drive.car.home.x + dir * (courseLength(params) - 100);
+        drive.distance = courseLength(params) - 100;
+        drive.townEndDone = true;
+        drive.car.speed = crossing;
+        for (let t = 0; t < 12_000 && !drive.heroOutDone; t += 16) {
+          stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+        }
+        const past = drive.distance - courseLength(params);
+        expect(
+          Math.abs(past - mark),
+          `${params.to} @ ${crossing}`,
+        ).toBeLessThan(8);
+      }
+    }
+  });
+
+  it("dresses the far end with the site the leg is bound for", () => {
+    // The two ends of one road, and they are two different PICTURES: a palisade
+    // with three windowless halls and a launch stack behind it, and a picket
+    // fence with a bungalow and a home-made rocket on the lawn. Same beat, same
+    // planner, same output shape.
+    expect(driveSite("goodco_hq").id).toBe("goodco");
+    expect(driveSite("garage").id).toBe("home");
+    expect(driveSite("goodco_hq").ground).toBe("apron");
+    expect(driveSite("garage").ground).toBe("lawn");
+    // A destination the road has no site for still gets one rather than a hole.
+    expect(driveSite("nowhere_at_all").id).toBe("goodco");
+    for (const to of ["goodco_hq", "garage"]) {
+      const site = driveSite(to);
+      // Every piece the layout names has a size in the site's OWN table — the
+      // planner places against it, so a name with no entry is a piece that is
+      // silently never drawn.
+      for (const piece of [...site.pieces, ...site.vehicles]) {
+        expect(typeof piece.at).toBe("number");
+      }
+      for (const piece of site.pieces) {
+        expect(site.art[piece.sprite]).toBeDefined();
+      }
+      // …and the boundary opens BEFORE the finish line, so the town's last
+      // building and the site's edge meet rather than leaving a gap of nothing.
+      expect(site.fromPx).toBeLessThan(0);
+      expect(siteRunInPx(site)).toBeGreaterThan(0);
+    }
+  });
+
+  it("plans a site into the world x the leg actually uses", () => {
+    const road = townRoad(HOME);
+    const site = driveSite(HOME.to);
+    const span = siteSpanX(road, site);
+    // The home leg runs along negative x, so its site does too.
+    expect(span.toX).toBeLessThan(0);
+    const props = planSite(span.fromX, span.toX, road, site);
+    expect(props.length).toBeGreaterThan(0);
+    for (const prop of props) {
+      expect(prop.x).toBeGreaterThanOrEqual(span.fromX - prop.w);
+      expect(prop.x).toBeLessThanOrEqual(span.toX + prop.w);
+    }
+    // The hero's own lot parks nobody else's car on itself.
+    expect(siteVehicles(span.fromX, span.toX, road, site)).toHaveLength(0);
+    // …and GOODCO's fills its staff lot.
+    const outRoad = townRoad(PARAMS);
+    const outSite = driveSite(PARAMS.to);
+    const outSpan = siteSpanX(outRoad, outSite);
+    expect(
+      siteVehicles(outSpan.fromX, outSpan.toX, outRoad, outSite).length,
+    ).toBeGreaterThan(0);
   });
 });

@@ -3637,6 +3637,12 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "drive_arrive_home": {
+      "id": "drive_arrive_home",
+      "pages": [["HOME AT LAST. AND THERE SHE IS."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "drive_arrive_posts": {
       "id": "drive_arrive_posts",
       "pages": [
@@ -3650,6 +3656,12 @@
     "drive_arrive_quick": {
       "id": "drive_arrive_quick",
       "pages": [["GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_arrive_ship": {
+      "id": "drive_arrive_ship",
+      "pages": [["RIGHT THEN. LET'S GET YOU FINISHED."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
@@ -3680,6 +3692,15 @@
     "drive_broke_down": {
       "id": "drive_broke_down",
       "pages": [["COME ON. NOT HERE. NOT TONIGHT."]],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
+    "drive_home_errand": {
+      "id": "drive_home_errand",
+      "pages": [
+        ["THE PART'S ON THE SEAT. STRAIGHT HOME."],
+        ["TEN YEARS. SHE ONLY EVER NEEDED THE ONE THING."]
+      ],
       "portrait": "hero",
       "speaker": "{HERO}"
     },

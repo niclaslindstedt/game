@@ -99,6 +99,30 @@ thoughts:
     pages:
       - - I NEED TO HURRY TO GOODCO AND GET THE PART.
       - - THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
+  # …AND THE SAME ROAD GOING THE OTHER WAY, said on the outskirt between
+  # GOODCO's gate and the first house — which is the stretch the leg out
+  # finishes on, driven backwards.
+  #
+  # HE DOES NOT MENTION THE PEOPLE, AND THAT IS THE WHOLE POINT OF THESE TWO
+  # PAGES. The trip out spends its second page being smug at them; the trip
+  # back, with the thing he wanted lying on the passenger seat, does not think
+  # of them at all — and then drives through them again at a hundred and twenty.
+  # A man who repeated his opinion of them on the way home would be a man who
+  # had them on his mind. The absence is a worse joke than the line, and it is
+  # the only version of the leg back that is not the leg out with the words
+  # changed.
+  #
+  # The two pages mirror the outbound pair: the ERRAND, now finished, and then
+  # the only other thing in his head. Neither of them is the town. The second
+  # is also the launch scene's own caption said a night early — she only ever
+  # needed one more part — which is what makes the fade at the end of this leg
+  # land on a set-up rather than on a full stop.
+  drive_home_errand:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THE PART'S ON THE SEAT. STRAIGHT HOME.
+      - - TEN YEARS. SHE ONLY EVER NEEDED THE ONE THING.
   # THE CAR GIVING UP ON THE ROAD. He blames the wagon, the way he blames the
   # road — never the thing that actually broke it.
   drive_broke_down:
@@ -135,6 +159,34 @@ thoughts:
     portrait: hero
     pages:
       - - OK. SO HOW DO I GET IN?
+  # ── THE RUN-IN HOME ───────────────────────────────────────────────────────
+  # The same two beats at the other end of the same road, and GOODCO's site
+  # answered in every particular: a timber fence instead of a palisade, two
+  # lamps on two piers instead of floodlights on masts, a lawn with trees on it
+  # instead of a poured apron and thirty staff cars, and a bungalow with one lit
+  # window and the garage door still up. Standing on the grass beside that open
+  # door is his own rocket, built out of scrap, about half the height of the one
+  # behind GOODCO's fence. Nothing says so.
+  #
+  # AND HE IS ALLOWED ONE WARM LINE HERE — the only one in the whole minigame.
+  # Out there he is flat because it is work; this is his own front gate with the
+  # part in the car. Everything either side of it is still the man who files a
+  # crowd under road surface, and that this is the beat he softens for is the
+  # point.
+  drive_arrive_home:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - HOME AT LAST. AND THERE SHE IS.
+  # …AND WHAT HE SAYS TO IT, standing on his own drive beside a car with its
+  # engine ticking. The mirror of the question at GOODCO's door and a SET-UP in
+  # exactly the same way: THE LAUNCH is on the other side of this fade, and this
+  # is the sentence it answers.
+  drive_arrive_ship:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - RIGHT THEN. LET'S GET YOU FINISHED.
   # ── THE ARRIVAL VERDICT ───────────────────────────────────────────────────
   # Seven readings of one trip, in `driveVerdict`'s own priority order: the car
   # first, then the two kinds of somebody else's property, then the clock, and

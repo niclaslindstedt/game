@@ -37,6 +37,7 @@ import { playUiSound } from "./sfx/ui.ts";
 export function MinigameScreen({
   id,
   difficulty,
+  variant,
   heroName,
   onExit,
 }: {
@@ -44,6 +45,11 @@ export function MinigameScreen({
   /** The rung the shelf is set to — what the road WEIGHS, and the only thing a
    * difficulty changes about a minigame. */
   difficulty: Difficulty;
+  /** …and WHICH WAY, from the shelf's DIRECTION row (`MinigameVariant.id`),
+   * already resolved against this cabinet's own list. For the road it is the
+   * level the leg is bound for, which is exactly what a `DriveParams` carries —
+   * so this component hands it straight on rather than interpreting it. */
+  variant: string;
   /** The active hero's name, for the road's speech box. Absent when no hero is
    * picked: the shelf is the player's rather than a hero's, so a cabinet is
    * playable with an empty roster and the box simply goes unheaded. */
@@ -60,7 +66,7 @@ export function MinigameScreen({
   // the player. The seed is the clock, as a campaign leg's is — so each go is a
   // different stretch of road and none of them is ever replayed by accident.
   const [params] = useState(() =>
-    arcadeDriveParams(Date.now() >>> 0, difficulty),
+    arcadeDriveParams(Date.now() >>> 0, difficulty, variant),
   );
 
   useEffect(() => {

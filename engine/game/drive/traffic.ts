@@ -34,7 +34,13 @@ import { randomRange } from "@game/lib/rng.ts";
 import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
-import { cityStartPx, courseLength, DRIVE, DRIVE_UNITS } from "./config.ts";
+import {
+  cityEndPx,
+  cityStartPx,
+  courseLength,
+  DRIVE,
+  DRIVE_UNITS,
+} from "./config.ts";
 import type { Impact } from "./impact.ts";
 import {
   crowdEdges,
@@ -291,7 +297,11 @@ function spawnLane(state: DriveState, lane: number): void {
   // fifteen seconds to enter the picture — and the lane he is actually driving
   // in would read as empty for the whole opening of the leg.
   const reach = state.distance + DRIVE.spawnAheadPx * (withHero ? 1 : 1.6);
-  const finish = courseLength(state.params);
+  // THE LANE STREAM RETIRES AT THE TOWN'S FAR GATE rather than at the finish
+  // line. Past it the road is outskirt again — two lanes, no houses — and a bus
+  // laid down out there would be the town's traffic on a country road, which is
+  // exactly the thing the gate at the other end exists to prevent.
+  const finish = cityEndPx(state.params);
   while (state.nextTrafficAt[lane]! < reach) {
     const at = state.nextTrafficAt[lane]!;
     if (at > finish) {
@@ -440,13 +450,18 @@ function spawnPavement(state: DriveState): void {
   const reach = state.distance + DRIVE.spawnAheadPx * 1.6;
   const finish = courseLength(state.params);
   const gate = cityStartPx(state.params);
+  const far = cityEndPx(state.params);
   while (state.nextPavementAt < reach) {
     const at = state.nextPavementAt;
     if (at > finish) {
       state.nextPavementAt = retire();
       break;
     }
-    const outskirts = at < gate;
+    // OUT OF TOWN AT EITHER END. The outskirts bracket the town (`cityEndPx`),
+    // so the footway's thin delivery stream is what runs on the approach AND on
+    // the run-out — which is what lets the trip home open on the same picture
+    // the trip out closes on.
+    const outskirts = at < gate || at > far;
     state.nextPavementAt =
       at +
       1000 / (outskirts ? DRIVE.opening.ridersPerKPx : pavementPerKPx(state));

@@ -32,7 +32,7 @@
 
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 
-import { cityStartPx, courseLength, DRIVE } from "./config.ts";
+import { cityEndPx, cityStartPx, DRIVE } from "./config.ts";
 import type { DriveParams, DrivePedestrian, DriveState } from "./types.ts";
 
 /**
@@ -112,6 +112,12 @@ export function roadEdges(): { top: number; bottom: number } {
  * riders out there are genuinely out of reach rather than nominally so. Widen the
  * road and the gap closes; that is the same beat as the crowd arriving.
  *
+ * AND IT HAPPENS TWICE, because the outskirts do (`cityEndPx`): the road opens
+ * out on the way into the town and closes back down to two lanes on the way out
+ * of it. Symmetric on purpose — the stretch one leg widens over is the stretch
+ * the other leg narrows over, and a taper that existed at only one end would be
+ * a road that arrives somewhere driving out and simply stops driving home.
+ *
  * `travel` is how far along the leg the point is (`dir * x`, which is what
  * `DriveState.distance` measures), so both legs answer it identically.
  */
@@ -121,10 +127,15 @@ export function roadBandHalfAt(
 ): number {
   const full = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
   const narrow = (DRIVE.opening.laneCount * DRIVE.laneWidth) / 2;
-  const gate = cityStartPx(params);
-  if (travel >= gate) return full;
-  const opened =
-    (travel - (gate - DRIVE.opening.widenPx)) / DRIVE.opening.widenPx;
+  const { widenPx } = DRIVE.opening;
+  const near = cityStartPx(params);
+  const far = cityEndPx(params);
+  // How far INTO the town this point is, measured off whichever gate is nearer
+  // — negative out on either outskirt, and past the taper's width once the
+  // carriageway is fully open.
+  const inside = travel < near ? travel - near : far - travel;
+  if (inside >= 0) return full;
+  const opened = 1 + inside / widenPx;
   if (opened <= 0) return narrow;
   return narrow + (full - narrow) * opened;
 }
@@ -270,7 +281,7 @@ export function spawnCrowd(state: DriveState): void {
     // hero's promise cheap: he makes it on an empty road, which is the only
     // place it costs him anything to make.
     if (at < cityStartPx(state.params)) continue;
-    if (at > courseLength(state.params)) break;
+    if (at > cityEndPx(state.params)) break;
     // ON A CROSSING, OR STREWN. Half the crowd is gathered onto the next
     // painted crossing ahead, spread across its width — which is what gives
     // the trip a rhythm to read instead of an even smear of people. The

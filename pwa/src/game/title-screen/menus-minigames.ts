@@ -25,6 +25,8 @@ import {
   arcadeRungs,
   minigameDef,
   pickRung,
+  pickVariant,
+  shelfVariants,
   MINIGAME_ORDER,
 } from "../minigames.ts";
 import { getSettings, updateSettings } from "../settings.ts";
@@ -62,9 +64,16 @@ function shelf(
   // install, a rung set on the developer shelf) can never launch a lap nobody
   // earned — it falls back to the easiest rung this shelf has.
   const rung = pickRung(rungs, getSettings().minigameDifficulty);
+  // …AND WHICH WAY. One pick for the whole shelf, exactly as the rung is, with
+  // each cabinet resolving it against its own list on the way in
+  // (`pickVariant`) — so the DIRECTION row below is the ROAD's two ends today
+  // and whatever a second machine offers the day one arrives.
+  const variants = shelfVariants();
+  const picked = getSettings().minigameVariant;
   return [
     ...MINIGAME_ORDER.map((id) => {
       const def = minigameDef(id);
+      const variant = pickVariant(def, picked);
       return {
         label: def.name,
         aria: rowAria(screen, id),
@@ -73,16 +82,45 @@ function shelf(
           // Unreachable from the player's shelf — the whole screen is behind a
           // beaten campaign — but a cabinet with no rung to play must buzz
           // rather than launch a lap on a rung nobody chose.
-          if (!rung) {
+          if (!rung || !variant) {
             playUiSound(synth, "back");
             return;
           }
           playUiSound(synth, "start");
-          ctx.onMinigame(id, rung);
+          ctx.onMinigame(id, rung, variant.id);
         },
       } satisfies MenuEntry;
     }),
     ...assembleRows(screen, {
+      direction: {
+        ...actionRow(
+          screen,
+          "direction",
+          () => {
+            // NOTHING ON THE SHELF HAS A CHOICE is a grey row, not a hidden
+            // one — the same call the rung's row makes, and for the same
+            // reason: the grey is the thing it says.
+            if (variants.length < 2) {
+              playUiSound(synth, "back");
+              return;
+            }
+            playUiSound(synth, "confirm");
+            const at = variants.findIndex((v) => v.id === picked);
+            const next = variants[(at + 1) % variants.length]!;
+            updateSettings({ minigameVariant: next.id });
+            ctx.bumpSettings();
+          },
+          { locked: variants.length < 2 },
+        ),
+        // The DESTINATION as the row's value — and no `color:` with it, for the
+        // reason the rung's row has none: a row's colour here is the colour it
+        // LIGHTS UP in, and the highlight's amber belongs to the selection
+        // rather than to what the selection is set to.
+        value:
+          variants.find((v) => v.id === picked)?.name ??
+          variants[0]?.name ??
+          "-",
+      },
       difficulty: {
         ...actionRow(
           screen,
