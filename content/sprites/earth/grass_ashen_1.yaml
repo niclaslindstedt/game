@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: grass_ashen_1
+family: earth
+size: [16, 16]
+description: >
+  An ashen tile like grass_ashen_0, with a lump of slag near the lower-left
+  where the last standing clump of burnt grass used to be.
+subject:
+  kind: ground tile
+  build: a seamless field of dead grey ash, speckled all over for texture
+  features: pale ash drifts and thin black fissures, plus a small hard lump of grey-brown slag near the lower-left where something burnable used to stand
+  accent: a lump of fused slag on dead ash grey
+  flavor: the stub of scorched grass that survived the first launch did not survive the third
+palette:
+  N: "#4a443b" # spent ash — the ground burnt past charring
+  V: "#5a5147" # fused crust
+  a: "#6e675c" # pale ash drift
+  s: "#7d6c50" # slag lump, fired hard
+  x: "#141210" # fissure, cracked open to nothing
+grid: |
+  NNNNNNNNNNNNNNNN
+  NNNNNNNNNNNaaNNN
+  NNxNNNNNNNNaNNNN
+  NNxNNNNNNNNNNNNN
+  NNNNNNaNNNNNNxNN
+  NNNNNNaNNNNNNxNN
+  NNNNNNNNNNNNNNNN
+  NVNNNNNNNxNNNNNN
+  NNNNNNNNNxNNNNNN
+  NNNNNxNNNNNNaNNN
+  NNNNNxNNNNNNaNNN
+  NssNNNNNNNNNNNNN
+  NsxNNNNNNNNNNNNN
+  NNNNNNNNxNNNNNNN
+  NNNNNNNNNNNNNxNN
+  NNNNNNNNNNNNNNNN

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: grass_ashen_0
+family: earth
+size: [16, 16]
+description: >
+  The lawn a rocket has been lit on three times — the char itself burnt out to
+  pale grey ash over ground fused hard and cracked open to black.
+subject:
+  kind: ground tile
+  build: a seamless field of dead grey ash that tiles without an obvious seam
+  features: drifts of pale ash lying over a fused grey crust, split by thin black fissures where the heat cracked the ground open
+  accent: pale ash grey over black fissures
+  flavor: past charring — the ground the third launch left, with nothing on it to burn
+palette:
+  N: "#4a443b" # spent ash — the ground burnt past charring
+  V: "#5a5147" # fused crust
+  a: "#6e675c" # pale ash drift
+  x: "#141210" # fissure, cracked open to nothing
+grid: |
+  NNNNNNNNNNNNNNNN
+  NNaaNNNNNNNxNNNN
+  NNaNNNNxxNNxNNNN
+  NNNNNNNxxNNNNNNN
+  NxNNNNNxNNNaaNNN
+  NxNNNNNNNNNaNNNN
+  NNNNaaNNNNNNNNNN
+  NNNNaNNNNxNNNNVN
+  NNNNNNNNNxNNNNNN
+  NaNNNNNNNNNNNNNN
+  NaNNNxNNNNNNaaNN
+  NNNNNxNNNNNNaNNN
+  NNNNNNNNNNxNNNNN
+  NNxNNNNNNNxNNNNN
+  NNxNNNVVNNNNNNNN
+  NNNNNNNNNNNNNNNN

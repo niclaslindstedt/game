@@ -30,6 +30,7 @@ import {
   advanceDialogue,
   buildNavGrid,
   createGame,
+  cutsceneDef,
   DIFFICULTY_ORDER,
   ENEMY_DEFS,
   ENTRANCE_DOOR,
@@ -483,6 +484,112 @@ describe("the carve", () => {
         `${id} carves its priced width`,
       ).toBe(bp.size.width);
     }
+  });
+});
+
+// ---- THE LOT THAT BURNS -----------------------------------------------------
+// The hub is the one venue in the game that CHANGES over a campaign: the hero
+// keeps lighting a rocket on the lawn behind his own garage, so the patch it
+// stands on and the trees round it climb a ladder read off what he has cleared
+// (`content/maps/garage.yaml` → the `pad` district's `stages`; the rule itself
+// is `tests/engine/map_stages_test.ts`).
+//
+// It is checked HERE, against the shipped catalog, because the thing that can
+// silently break is not the mechanism — it is the AGREEMENT between this
+// ladder and the launch scene's (`content/cutscenes/launch.yaml`), which reads
+// the same tags and must show the player the same lawn he walks on.
+describe("the hub's lawn", () => {
+  const tagsFor = (cleared: string[]) => cleared.map((id) => `cleared:${id}`);
+  const groundsOf = (tags: string[]) =>
+    new Set(
+      (resolveLevelDef("garage", 1, tags).tiles.zones ?? []).map(
+        (z) => z.ground.common,
+      ),
+    );
+  const treesOf = (tags: string[]) =>
+    (resolveLevelDef("garage", 1, tags).propLines ?? [])
+      .filter((l) => l.sprite.startsWith("lawn_tree"))
+      .map((l) => l.sprite);
+
+  it("is GRASS before he has ever lit anything on it", () => {
+    // The first walk out to the ship is the one time the lot is undamaged, and
+    // it has to be: the burning is a thing that HAPPENS in this story, not a
+    // fact about where the hero lives.
+    const grounds = groundsOf([]);
+    expect(grounds.has("grass_0")).toBe(true);
+    expect(grounds.has("grass_charred_0")).toBe(false);
+    expect(grounds.has("grass_ashen_0")).toBe(false);
+    expect(new Set(treesOf([]))).toEqual(new Set(["lawn_tree"]));
+  });
+
+  it("is charred once the moon is behind him, and ashen once Mars is", () => {
+    expect(groundsOf(tagsFor(["moon"])).has("grass_charred_0")).toBe(true);
+    expect(groundsOf(tagsFor(["moon"])).has("grass_ashen_0")).toBe(false);
+    expect(groundsOf(tagsFor(["moon", "mars"])).has("grass_ashen_0")).toBe(
+      true,
+    );
+    expect(treesOf(tagsFor(["moon"]))).toContain("lawn_tree_charred");
+    expect(treesOf(tagsFor(["moon", "mars"]))).toContain("lawn_tree_ashen");
+  });
+
+  it("keeps the trees BEYOND the patch green on every rung", () => {
+    // The half that proves the other half: a lot where everything goes black at
+    // once has a setting, not a history. Three of the seven stand far enough
+    // out that no launch has ever reached them, and after Mars they are the
+    // only green left on the lot.
+    expect(treesOf([]).filter((s) => s === "lawn_tree").length).toBe(7);
+    for (const tags of [tagsFor(["moon"]), tagsFor(["moon", "mars"])])
+      expect(
+        treesOf(tags).filter((s) => s === "lawn_tree").length,
+        `green trees with ${JSON.stringify(tags)}`,
+      ).toBe(3);
+  });
+
+  it("stands every tree in the SAME PLACE on all three rungs", () => {
+    // The whole reason a rung may only restage a sprite. A lot whose trees had
+    // moved by the time they were charred would read as a different lot rather
+    // than as a burnt one — and in a session, two clients that disagreed about
+    // the tags would be carving two different worlds instead of dressing one.
+    const marks = (tags: string[]) =>
+      (resolveLevelDef("garage", 1, tags).propLines ?? [])
+        .filter((l) => l.sprite.startsWith("lawn_tree"))
+        .map((l) => `${l.from.x},${l.from.y}`);
+    expect(marks(tagsFor(["moon"]))).toEqual(marks([]));
+    expect(marks(tagsFor(["moon", "mars"]))).toEqual(marks([]));
+  });
+
+  it("shows the same three rungs in the scenes played over it", () => {
+    // The launch and the homecoming stand their own trees on this lawn, off the
+    // same `cleared:` tags. If the scene's ladder and the map's ever disagree,
+    // the player watches one lot and walks another — so every sprite either
+    // names has to be one the other could show him.
+    const props = ["launch", "earth_return"].flatMap((id) =>
+      cutsceneDef(id).stage.props.filter((p) =>
+        p.kind.startsWith("garage_tree"),
+      ),
+    );
+    expect(props.length).toBeGreaterThan(0);
+    // Every scene tree is conditional — an unconditional one would be on stage
+    // for every playing and could not be a rung.
+    for (const p of props)
+      expect(
+        p.needs !== undefined || p.until !== undefined,
+        `${p.kind} is not gated on anything`,
+      ).toBe(true);
+    const scene = new Set(props.map((p) => p.kind));
+    expect(scene).toEqual(
+      new Set(["garage_tree", "garage_tree_charred", "garage_tree_ashen"]),
+    );
+    // …and the map's own ladder names the peer of each, so the two agree rung
+    // for rung rather than by coincidence.
+    const map = new Set([
+      ...treesOf([]),
+      ...treesOf(tagsFor(["moon"])),
+      ...treesOf(tagsFor(["moon", "mars"])),
+    ]);
+    expect(map).toEqual(
+      new Set(["lawn_tree", "lawn_tree_charred", "lawn_tree_ashen"]),
+    );
   });
 });
 

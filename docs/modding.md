@@ -448,6 +448,18 @@ existed:
   venue it has already re-skinned. The compiler says exactly that, with the fix
   in the message.
 
+- **A VENUE MAY CHANGE AS THE CAMPAIGN GOES BY**, and the vocabulary is one a
+  mod already knows: an area or an object carries `stages:`, a ladder of rungs
+  gated on `needs:` / `until:` — the exact pair a cutscene prop carries, matched
+  against the exact same `cleared:<levelId>` tags. That sharing is the point: a
+  scene played over a place and the place itself can be told to agree, which is
+  how the shipped hub's lawn is green in the launch cutscene and green underfoot
+  until the hero has lit a rocket on it. A rung may swap a district's
+  `ground`/`patch` or a prop's `sprite` and NOTHING else, so the carve comes out
+  identical on every rung — the trees stand in the same places burnt as they did
+  green, and two clients in a session cannot dress one world into two.
+  `mod/FORMAT.md` has the field reference.
+
 The one thing that could not travel is the compass-region PARSER. The compiler
 runs in the shipped app's main process, which has no TypeScript and cannot call
 `mapgen/regions.ts` — and a second grammar in the SDK would drift within a

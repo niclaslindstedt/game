@@ -52,6 +52,8 @@ contrastExempt:
     grass_1,
     grass_charred_0,
     grass_charred_1,
+    grass_ashen_0,
+    grass_ashen_1,
     night_cloud_bank,
     night_cloud_puff,
     night_cloud_wisp,
@@ -63,3 +65,5 @@ speckleExempt:
   - grass_1
   - grass_charred_0
   - grass_charred_1
+  - grass_ashen_0
+  - grass_ashen_1

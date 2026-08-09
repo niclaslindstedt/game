@@ -25,12 +25,12 @@
 // difficulty figure and the engine never reads it.
 
 import type { Difficulty } from "../types/index.ts";
-import type { MapArea, MapSpace } from "./areas.ts";
+import type { MapArea, MapSpace, MapStage } from "./areas.ts";
 import type {
   DifficultyHp,
   DifficultyMobLevels,
 } from "../defs/levels/types.ts";
-export type { Enclosure, MapArea, MapSpace } from "./areas.ts";
+export type { Enclosure, MapArea, MapSpace, MapStage } from "./areas.ts";
 
 /**
  * What a blueprint object is FOR. The type is what lets the generator place a
@@ -120,6 +120,13 @@ export type MapObject = {
   kind?: string;
   /** Sprite the renderer blits; defaults to `kind`. */
   sprite?: string;
+  /**
+   * THE LADDER THIS PIECE CLIMBS AS THE CAMPAIGN GOES BY — see {@link MapStage}.
+   * A rung may swap the `sprite` and nothing else, which is why the trees on
+   * the hub's lawn stand in the SAME PLACES green, charred and dead: the piece
+   * is the piece, the campaign only decides what it looks like by now.
+   */
+  stages?: MapStage[];
   /**
    * `wall`: a SPRITE POOL the chain draws each stone from. A ridge built out of
    * one repeated sprite reads as a manufactured lattice, which is the opposite of
