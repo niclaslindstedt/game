@@ -1312,14 +1312,15 @@ The field carries a handful of things a press ACTS on rather than walks to, and
 nothing about a top-down pixel scene says which. The rules are the same three
 every time.
 
-- **A GLOW IS THE ONLY CUE, AND IT IS ON EXACTLY WHEN THE PRESS WORKS.** The
-  parked car in the hub wears a faint amber halo while the local hero stands
-  inside `CAR.boardRadius` — the reach `enterCar` revalidates the tap against —
-  and it fades in over the last few paces rather than switching on under his
-  feet (`pwa/src/game/render/vehicles.ts`). It is drawn UNDER the assembly, so
-  the machine stands in its own light instead of behind a wash, and it goes out
-  the moment somebody is at the wheel: a running car has its lights on and its
-  body shivering, and a second "you may touch this" over the top would be noise.
+- **A MARK IS THE CUE, AND IT IS UP EXACTLY WHEN THE PRESS WORKS.** The parked
+  car in the hub wears a bobbing gold arrow (`board_arrow`) while the local hero
+  stands inside `CAR.boardRadius` — the reach `enterCar` revalidates the tap
+  against — and it fades in over the last few paces rather than switching on
+  over his head (`pwa/src/game/render/vehicles.ts`). It is drawn OVER the
+  assembly, because a pointer under the thing it points at is a pointer that
+  thing can hide, and it comes off the moment somebody is at the wheel: a
+  running car has its lights on and its body shivering, and a mark still aimed
+  at it would be telling the player to board a car he is sitting in.
   The car needs this and the rocket does not, which is the whole test for
   whether a fixture wants one — a rocket on a lawn is self-evidently a thing you
   press, and a thirty-year-old hatchback in a garage full of furniture is
@@ -1328,14 +1329,19 @@ every time.
   other way: the night shift's cars on GOODCO's staff lot
   (`GameState.arrivals` — engine/game/arrivals.ts) are drawn by the same
   `drawCarAssembly`, on the same springs, out of the same panels, but three
-  amber halos on a car park would be the lot advertising three machines the hero
+  arrows over a car park would be the lot pointing at three machines the hero
   cannot take. Their engines are read off the ARRIVAL's own phase rather than
   off a seat in the party, so the lamps and the idle shiver die as each one
   parks and it becomes what it now is — furniture with an owner.
-- **IT OBEYS THE XP VEIL'S THREE RULES** (`render/xp-veil.ts`, where the
-  reasoning lives): closed-form off the render clock, so there is no state and
-  nothing to desync; ONE baked `glowSprite` scaled and alpha'd at draw time,
-  never a gradient per frame; and faint enough to live at the edge of attention.
+- **AND IT IS A MARK RATHER THAN A LIGHT, WHICH IS A RULE AND NOT A TASTE.**
+  This cue was a faint amber halo under the machine for a while, and the trouble
+  with it was structural: the hub is lit by real lamps, so one more warm pool on
+  the floor reads as a fitting somebody left on. A pool says SOMETHING IS LIT
+  HERE; the only sentence worth saying is THIS ONE, and a pool cannot point. The
+  errand givers already had the answer — a bobbing `!` over the head
+  (`render/quests.ts`) — and this is that idiom aimed at a machine, on the same
+  terms: a glyph out of the atlas rather than a gradient, one whole-pixel bob,
+  and the bob taken off the SIM clock so it holds still behind a modal.
 - **THE TAP IS AIMED AT THE THING, NOT AT ITS ANCHOR.** A travel door is tapped
   through its LANDMARK, which is correct only because a landmark never moves. A
   driven car does — so the press that gets the hero back OUT of it
