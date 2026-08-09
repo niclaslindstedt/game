@@ -1,79 +1,31 @@
-# THE SITE SURVEYOR — the conversation you can lose by opening it wrong.
+# THE SITE SURVEYOR — the man who signed the first survey, in one exchange.
 #
-# He walked the grid for the company and the company lied to him about what was
-# under it, so the ONE thing that shuts him up for good is being taken for
-# company. The branch is offered plainly and reads as the efficient move, which
-# is the point: it is the first time in this chain that saying the sensible
-# thing is the wrong thing.
+# HE TALKS BECAUSE SOMEBODY FINALLY CAME. He has walked this grid fourteen
+# thousand times with nobody on it, and his whole grievance is that the company
+# put his name on a survey that said nothing was down there. The hero is the
+# first person to stand in front of him since; he does not need to be handled,
+# he needs to be listened to, and that is the entire conversation.
+#
+# NOTHING HERE CAN BE LOST, and that is the point of the cut. This talk used to
+# open with a branch that took him for company and shut him up for good — which
+# read as a fair trap and was in fact a dead end on a CAMPAIGN chain: the errand
+# it feeds (`sev_who_signed`) wants a flag only this tree sets, so a player who
+# picked the efficient-sounding row could not finish the chain on that run and
+# was never told why. A conversation the player can lose is only honest when
+# losing it costs a fight; losing it silently costs the game.
 start: greet
 reentry:
   - requires: [sev_surveyor_talked]
     node: after
-  - requires: [sev_surveyor_burned]
-    node: burned
 nodes:
   greet:
     say:
-      - "..."
-      - YOU'RE NOT ON MY GRID. NOBODY'S ON MY GRID. THAT'S RATHER THE POINT OF IT.
+      - FOURTEEN THOUSAND PASSES AND YOU'RE THE FIRST. THE OTHER TWO CRATES
+        WERE SIGNED FOR BY RECORDS AND CONTINUITY.
     choices:
-      - text: COMPANY. SITE T AUDIT.
-        sets: [sev_surveyor_burned]
-        goto: burned
-      - text: I'M LOOKING FOR SOMEONE THEY TOOK.
-        goto: person
-      - text: WHAT ARE YOU SURVEYING?
-        goto: grid
-  grid:
-    say:
-      - THE WHOLE OF IT. THEY PAID ME BY THE SQUARE.
-      - FINISHED IN SIXTY-NINE. I'M ON PASS FOURTEEN THOUSAND. THE DUST MOVES.
-    choices:
-      - text: WHY DO YOU KEEP WALKING IT?
-        goto: keeps
-      - text: I'M LOOKING FOR SOMEONE THEY TOOK.
-        goto: person
-  keeps:
-    say:
-      - I SIGNED THE FIRST SURVEY, AND IT SAID NOTHING WAS DOWN THERE.
-      - THEY PUT MY NAME ON THAT. I'D LIKE IT BACK.
-    choices:
-      - text: SOMEONE SIGNED FOR THE CRATES.
-        goto: person
-      - text: I KNOW THE FEELING.
-        goto: person
-  person:
-    say:
-      - TAKEN. RIGHT. THEN YOU'LL WANT THE OTHER SIGNATURE, NOT MINE. ELEVEN CRATES WENT UP. NINE WERE DECLARED.
-    choices:
-      - text: WHO SIGNED FOR THE OTHER TWO?
-        goto: signed
-      - text: WHAT WAS IN THE TWO?
-        goto: warm
-  warm:
-    say:
-      - I DIDN'T LOOK. I LISTENED. THAT WAS ENOUGH. ASK ME THE OTHER QUESTION.
-    choices:
-      - text: WHO SIGNED FOR THEM?
-        goto: signed
-  signed:
-    say:
-      - NOT A MAN. I CHECKED.
-      - THE SIGNATURE BLOCK SAID RECORDS AND CONTINUITY.
-    choices:
-      - text: THERE'S NO SUCH DEPARTMENT.
-        goto: book
-  book:
-    say:
-      - THERE ISN'T. THERE'S A BOOK WITH THAT NAME ON THE SPINE.
-      - IT WENT TO MARS WITH EVERYTHING ELSE.
-    choices:
-      - text: THAT'S WHAT I NEEDED. THANK YOU.
+      - text: THAT ISN'T A DEPARTMENT. THAT'S A BOOK.
         sets: [sev_surveyor_talked]
-        goto: after
   after:
     say:
-      - TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS ARITHMETIC.
-  burned:
-    say:
-      - COMPANY. "..." I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING FOR THE COMPANY.
+      - TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS
+        ARITHMETIC.

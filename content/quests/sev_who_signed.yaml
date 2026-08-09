@@ -7,14 +7,14 @@ requires:
   - sev_short_column
 lore: >
   One man saw the crates go up and had to walk the grid they were dug out of.
-  He is still walking it. He does not haunt a place, which is what makes him
-  hard to find and what makes finding him worth something — and he will not
-  give a company man a straight answer, so how the hero opens the conversation
-  decides whether there is one.
+  He is still walking it, and he does not haunt a place — which is what makes
+  him hard to find and what makes finding him worth something. Nobody has been
+  on his grid in fifty years. Standing in front of him is the whole errand; he
+  has been waiting to tell somebody.
 offer:
-  - - "THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. HE WON'T TALK TO A COMPANY MAN."
+  - - "THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT."
   - hero:
-      - "THEN I WON'T BE ONE."
+      - "THEN I'LL WALK IT TOO."
 incomplete:
   - "HE'S OUT THERE SOMEWHERE. HE DOESN'T STAND STILL."
 complete:

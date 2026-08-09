@@ -3506,110 +3506,22 @@ is the only honest thing available to him._
 
 ### THE ARCHIVE UNIT — the countersignature, GOODCO HQ
 
-> A conversation the player steers. Two routes reach the form: answering its
-> three questions, or being told the rule no longer matters — which turns it
-> hostile, and the stamp is inside it either way.
+> One thing said and one thing answered, like every conversation in the game.
+> The form wants the ASSET that superseded a man; there is no such name, and the
+> hero is the one who says so. There is no quiz and no way to leave without the
+> stamp — a filing cabinet the player can lose to is not a beat, it is a wall.
 
 **Opening.**
 
-> RECORDS TERMINAL. STANDING BY. NO RECORD MAY BE CLOSED WITHOUT A COUNTERSIGNATURE.
-> I AM THE COUNTERSIGNATURE.
+> RECORDS TERMINAL. NO RECORD CLOSES WITHOUT A COUNTERSIGNATURE, AND 4,411 WANTS THE ASSET THAT SUPERSEDED IT.
 
-— _I NEED FORM 7-B STAMPED._ → _the entitlement check_
+**ME:** IT ISN'T A NAME. IT'S A LINE ITEM.
 
-— _WHO TOLD YOU THAT RULE?_ → _asked who issued it_
-
-— _NOBODY'S ENFORCED THAT IN YEARS._ → _told the rule no longer matters_
-
-— _NEVER MIND._
-
-**Asked who issued it.**
-
-> THE INSTRUCTION WAS ISSUED ELEVEN YEARS AGO BY THE NIGHT MANAGER.
-> HE HAS NOT WITHDRAWN IT. I HAVE NOT ASKED HIM TO.
-
-— _HE'S NOT COMING BACK._ → _told the rule no longer matters_
-
-— _THEN LET'S DO THIS PROPERLY._ → _the entitlement check_
-
-**The entitlement check — question one.**
-
-> ENTITLEMENT CHECK. THREE QUESTIONS.
-> ONE. WHOSE RECORD IS BEING CLOSED?
-
-— _TERMINATION 4,411._ → _question two_
-
-— _MINE._ → _a wrong answer_
-
-— _DOES IT MATTER?_ → _told the rule no longer matters_
-
-**Question two.**
-
-> TWO. REASON GIVEN FOR TERMINATION?
-
-— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
-
-— _PERFORMANCE._ → _a wrong answer_
-
-— _THEY GAVE MY JOB TO A MACHINE._ → _the sting_
-
-**The sting** — the one time it volunteers something about itself.
-
-> THAT IS NOT THE WORDING ON THE FORM. ...
-> IT IS THE WORDING ON MINE. REASON GIVEN FOR TERMINATION?
-
-— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
-
-— _SORRY._ → _question two_
-
-**Question three, and the only answer.**
-
-> THREE. NAME THE ASSET.
-
-— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
-
-— _THE CORE._ → _a wrong answer_
-
-— _YOU._ → _told that it is the asset_
-
-**Told that it is the asset.**
-
-> I AM NOT THE ASSET. I AM ELEVEN YEARS OLD AND I AM STILL HERE.
-> THE ASSET IS NOT A THING THAT STAYS. NAME THE ASSET.
-
-— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
-
-— _FORGET IT._
-
-**A wrong answer.**
-
-> THAT IS NOT THE ANSWER ON THE RECORD.
-> ENTITLEMENT NOT ESTABLISHED. YOU MAY BEGIN AGAIN.
-
-— _LET'S BEGIN AGAIN._ → _the entitlement check_
-
-— _I'LL COME BACK._
-
-**Told the rule no longer matters.**
-
-> RESTATE THAT.
-> THE INSTRUCTION IS THE ONLY THING ON THIS FLOOR THAT WAS KEPT.
-
-— _IT'S A RULE FOR A DEAD COMPANY._ → _the fight_
-
-— _I'LL TAKE THE STAMP MYSELF, THEN._ → _the fight_
-
-— _YOU'RE RIGHT. I'M SORRY._ → _the opening_
-
-**The stamp.**
-
-> CORRECT. IT IS NOT A NAME. IT IS A LINE ITEM.
-> COUNTERSIGNING. RECORD 4,411 IS CLOSED.
+_It stamps, and the form is his._
 
 **Afterwards.**
 
-> RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND TEN MORE.
-> I WILL BE HERE.
+> RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND TEN MORE. I WILL BE HERE.
 
 ### HOLLIS VANE — contract auditor, THE MOON
 
@@ -3635,9 +3547,9 @@ is the only honest thing available to him._
 
 **THE MAN WHO SIGNED — the ask.**
 
-> THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. HE WON'T TALK TO A COMPANY MAN.
+> THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
 
-**ME:** THEN I WON'T BE ONE.
+**ME:** THEN I'LL WALK IT TOO.
 
 **THE MAN WHO SIGNED — coming back short.**
 
@@ -3655,74 +3567,19 @@ is the only honest thing available to him._
 
 ### THE SITE SURVEYOR — the moon's roaming ghost
 
-> He walks the whole grid rather than haunting a spot. Opening with the company
-> line loses him permanently.
+> He walks the whole grid rather than haunting a spot, and he talks because
+> somebody finally came: nobody has stood on that grid in fifty years, and the
+> company put his name on a survey that said nothing was down there.
 
 **Opening.**
 
-> ...
-> YOU'RE NOT ON MY GRID. NOBODY'S ON MY GRID. THAT'S RATHER THE POINT OF IT.
+> FOURTEEN THOUSAND PASSES AND YOU'RE THE FIRST. THE OTHER TWO CRATES WERE SIGNED FOR BY RECORDS AND CONTINUITY.
 
-— _COMPANY. SITE T AUDIT._ → _taken for company_
-
-— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
-
-— _WHAT ARE YOU SURVEYING?_ → _what he is surveying_
-
-**What he is surveying.**
-
-> THE WHOLE OF IT. THEY PAID ME BY THE SQUARE.
-> FINISHED IN SIXTY-NINE. I'M ON PASS FOURTEEN THOUSAND. THE DUST MOVES.
-
-— _WHY DO YOU KEEP WALKING IT?_ → _why he is still walking_
-
-— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
-
-**Why he is still walking.**
-
-> I SIGNED THE FIRST SURVEY, AND IT SAID NOTHING WAS DOWN THERE.
-> THEY PUT MY NAME ON THAT. I'D LIKE IT BACK.
-
-— _SOMEONE SIGNED FOR THE CRATES._ → _told somebody was taken_
-
-— _I KNOW THE FEELING._ → _told somebody was taken_
-
-**Told somebody was taken.**
-
-> TAKEN. RIGHT. THEN YOU'LL WANT THE OTHER SIGNATURE, NOT MINE. ELEVEN CRATES WENT UP. NINE WERE DECLARED.
-
-— _WHO SIGNED FOR THE OTHER TWO?_ → _who signed_
-
-— _WHAT WAS IN THE TWO?_ → _what was in them_
-
-**What was in them.**
-
-> I DIDN'T LOOK. I LISTENED. THAT WAS ENOUGH. ASK ME THE OTHER QUESTION.
-
-— _WHO SIGNED FOR THEM?_ → _who signed_
-
-**Who signed.**
-
-> NOT A MAN. I CHECKED.
-> THE SIGNATURE BLOCK SAID RECORDS AND CONTINUITY.
-
-— _THERE'S NO SUCH DEPARTMENT._ → _the book_
-
-**The book.**
-
-> THERE ISN'T. THERE'S A BOOK WITH THAT NAME ON THE SPINE.
-> IT WENT TO MARS WITH EVERYTHING ELSE.
-
-— _THAT'S WHAT I NEEDED. THANK YOU._ → _afterwards_
+**ME:** THAT ISN'T A DEPARTMENT. THAT'S A BOOK.
 
 **Afterwards.**
 
 > TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS ARITHMETIC.
-
-**Taken for company** — the branch that loses him for good, and all he says from
-then on.
-
-> COMPANY. "..." I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING FOR THE COMPANY.
 
 ### LEDGER UNIT 12 — the colony's accounting machine, MARS
 
@@ -3732,9 +3589,9 @@ then on.
 
 **WHAT THE TITHE IS WORTH — the ask.**
 
-> THE BOOK NEEDS A COUNTERSIGNATURE. THE TRADER HAS A BOUND ONE BUT WILL NOT SELL BLIND. THE ASSESSOR WEARS A SEAL.
+> THE TRADER HAS A BOUND SIGNATURE BUT WON'T SELL BLIND. THE ASSESSOR WEARS THE ONLY SEAL, AND IT DOESN'T COME OFF.
 
-**ME:** THE SEAL, THEN THE TRADER. UNDERSTOOD.
+**ME:** THEN IT COMES OFF THE OTHER WAY.
 
 **WHAT THE TITHE IS WORTH — coming back short.**
 
@@ -3748,156 +3605,18 @@ then on.
 
 ### THE TITHE ASSESSOR — the seal, MARS
 
-> The one conversation the player has to lose on purpose: it will not hand the
-> seal over, and it cannot leave an error in its own count.
+> The one conversation the hero has to lose on purpose. It will not hand the
+> seal over and it cannot leave an error in its own count, so telling it the
+> truth is what puts it on its treads — and the DECISION is walking up to it at
+> all, which the errand has already told him is the only way the seal comes off.
 
 **Opening.**
 
-> GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU ARE NOT MY CONCERN.
-> PLEASE CONTINUE PAST ME.
+> GOOD DAY. I AM ASSESSING. THE TITHE IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
 
-— _WHAT ARE YOU COUNTING?_ → _what it is counting_
+**ME:** IT'S BEEN SHORT SINCE THE MOON. TWO WARM CRATES.
 
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-— _NOTHING. CARRY ON._
-
-**What it is counting.**
-
-> THE TITHE. WHAT THIS COLONY OWES ITS LANDLORDS.
-> IT IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
-
-— _PAID IN WHAT?_ → _what the tithe is paid in_
-
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-**What the tithe is paid in.**
-
-> IN WHATEVER IS NAMED ON THE SCHEDULE. IT NAMES WARM THINGS NOW.
-> I DO NOT SET IT. I ONLY MAKE THE COUNT COME OUT.
-
-— _SOMEONE I WANT IS ON THAT LIST._ → _told somebody the hero wants is on it_
-
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-**Told somebody the hero wants is on it.**
-
-> THE SCHEDULE IS NOT A LIST OF PEOPLE. IT IS A LIST OF AMOUNTS.
-> ANYONE YOU KNOW ON IT IS ON IT AS AN AMOUNT.
-
-— _SAY THAT AGAIN._ → _asked to say it again_
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-**Asked to say it again.**
-
-> AN AMOUNT. I AM SORRY.
-> THAT IS THE CORRECT WORD AND I HAVE NEVER HAD TO USE IT BEFORE.
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _..._
-
-**What the seal is for.**
-
-> IT IS WHOSE COUNT IT IS. WITHOUT IT, THE COUNT IS JUST A NUMBER.
-> IT DOES NOT COME OFF. I HAVE BEEN ASKED.
-
-— _I'LL BUY IT._ → _offered money for it_
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _FAIR ENOUGH._
-
-**Offered money for it.**
-
-> IT IS NOT MINE TO SELL. NOTHING HERE IS MINE. THAT IS RATHER THE WHOLE ARRANGEMENT.
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _I SEE._
-
-**Told the count is short.**
-
-> ...
-> THAT IS NOT POSSIBLE. STATE THE QUARTER.
-
-— _ALL OF THEM. SINCE THE MOON._ → _the fight_
-
-— _THE ONE WITH TWO WARM CRATES._ → _the fight_
-
-— _I'M MISTAKEN. FORGET IT._ → _the opening_
-
-### NOBODY IN PARTICULAR / ELIAS WREN — THE RIFT
-
-**Greeting.**
-
-> YOU'LL WANT MY NAME. EVERYONE DOES. IT WAS TAKEN OUT OF SOMETHING.
-
-**A PAGE OF SOMEBODY — the ask.**
-
-> IT WASN'T LOST, IT WAS TORN OUT — AND IT'S STILL IN HERE. GO OUT PAST WHERE THE LIGHT STOPS AGREEING.
-
-**ME:** PAST THE LIGHT. RIGHT.
-
-**A PAGE OF SOMEBODY — coming back short.**
-
-> PAST THE LIGHT. I'D SAY WHICH WAY IF I COULD.
-
-**A PAGE OF SOMEBODY — the handover.**
-
-> ELIAS. ELIAS WREN. I WAS A BINDER — THAT'S WHY THEY CAME FOR ME. SOMEBODY WANTED THE BOOK MADE.
-
-**ME:** SOMEBODY ALWAYS DOES.
-
-**THE MAN WHO TEARS THE PAGES — the ask.**
-
-> HE WATCHES THE TRIBUTE ROAD NOW, AND HE STILL HAS MY NEEDLE. I'M NOT ASKING FOR REVENGE. I WANT THE TOOL.
-
-**ME:** I'LL GET YOUR NEEDLE.
-
-**THE MAN WHO TEARS THE PAGES — coming back short.**
-
-> HE'S ON THE ROAD SOMEWHERE. YOU'LL KNOW HIM. EVERYONE DOES.
-
-**THE MAN WHO TEARS THE PAGES — the handover.**
-
-> IT ISN'T A LIST, IT'S A BOOK — AND THEY SHIPPED THE BINDING TO A THEME PARK AS A PROP. A MAN HOLDS IT.
-
-**ME:** THEN THAT'S WHERE I'M GOING ANYWAY.
-
-### BROTHER CALLOW — the church hand, BOOT HILL
-
-**Greeting.**
-
-> SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO. I THINK IT DOES.
-
-**THE LAST PAGE — the ask.** (JESUS only.)
-
-> THE PROPS BOYS FILLED IT WITH WHATEVER PAPER WAS SPARE, FRIEND.
-> IT'S JUST FOR HOLDING.
->
-> YOU'VE A NEEDLE FOR IT? GO ON, THEN. I'VE NEVER SEEN THE INSIDE.
->
-> ...THAT'S NAMES. THAT'S NOTHING BUT NAMES, AND A NUMBER ON EVERY ONE.
->
-> YOURS IS IN HERE TWICE.
-> ONCE FOR THE JOB. ONCE FOR WHAT YOU DID ABOUT IT.
->
-> IT WON'T TAKE A NEW ENTRY OFF A MAN IT CAN'T PRICE.
-> AND IT PRICES YOU BY EVERYTHING YOU COULD BE.
->
-> SO GO AND BE ALL OF IT. I'LL KEEP THE PLACE.
-
-**THE LAST PAGE — coming back short.**
-
-> IT'S STILL SHORT OF YOU, FRIEND. COME BACK WHEN THERE'S NO MORE OF YOU TO COME.
-
-**THE LAST PAGE — the handover.**
-
-> THERE — IT'S CROSSING THE OLD ONE OUT. BOTH OF THEM. THAT'S A CLEAN SHEET. TAKE IT WITH YOU.
-
-**ME:** A MACHINE WROTE ME DOWN. I'M TAKING IT BACK.
+_And it comes off its treads at him. The seal is inside it._
 
 ## Where the data lives
 

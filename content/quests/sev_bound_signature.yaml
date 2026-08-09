@@ -10,11 +10,12 @@ lore: >
   every transfer went to, and that party signs in a way no colony machine can
   produce. One can be bought — but the trader will not sell to a man who has
   never seen the seal it copies, and the only seal on Mars is worn by an
-  assessor who takes it off for nobody who has not first proved it wrong.
+  assessor that has been perfectly polite to everybody and does not take it
+  off. It comes off one way. The errand says so; the hero still has to do it.
 offer:
-  - - "THE BOOK NEEDS A COUNTERSIGNATURE. THE TRADER HAS A BOUND ONE BUT WILL NOT SELL BLIND. THE ASSESSOR WEARS A SEAL."
+  - - "THE TRADER HAS A BOUND SIGNATURE BUT WON'T SELL BLIND. THE ASSESSOR WEARS THE ONLY SEAL, AND IT DOESN'T COME OFF."
   - hero:
-      - "THE SEAL, THEN THE TRADER. UNDERSTOOD."
+      - "THEN IT COMES OFF THE OTHER WAY."
 incomplete:
   - "THE SEAL. THEN THE TRADER. THEN THE SIGNATURE."
 complete:

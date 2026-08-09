@@ -1,87 +1,26 @@
-# THE TITHE ASSESSOR — the conversation you have to LOSE on purpose.
+# THE TITHE ASSESSOR — the conversation you have to LOSE on purpose, in one
+# exchange.
 #
-# It wears the seal and it will not take it off, so there is no branch that
-# talks it out of one; what there is instead is an auditor that cannot leave an
-# error in its own arithmetic. Tell it the count is short and it has to settle
-# the count, which is a fight. The hero has to decide to start one with
-# something that has been polite to him throughout, which is the only reason
-# the beat lands at all.
+# IT WEARS THE SEAL AND IT WILL NOT TAKE IT OFF, so there was never a branch
+# that talked it out of one: what there is instead is an auditor that cannot
+# leave an error in its own arithmetic. Tell it the count has been short since
+# the moon and it has to settle the count, which is a fight. The hero has to
+# decide to start one with something that has been perfectly polite to him, and
+# that is the only reason the beat lands at all.
+#
+# THAT DECISION IS THE TAP, NOT A MENU ROW. The talk waits for a deliberate tap
+# on a bystander (`talkPrompt`) and the errand that sends the hero here says in
+# as many words that the seal only comes off one way — so opening this
+# conversation IS the choice, and everything after it is the hero saying the one
+# thing he came to say. A tree that offered him three ways to phrase it, and one
+# way to back out, was three rows the player had to read to find the row the
+# quest had already told them to pick.
 start: greet
-reentry:
-  - requires: [sev_assessor_knows]
-    node: knows
 nodes:
   greet:
     say:
-      - GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU ARE NOT MY CONCERN.
-      - PLEASE CONTINUE PAST ME.
+      - GOOD DAY. I AM ASSESSING. THE TITHE IS PAID QUARTERLY AND HAS NEVER
+        BEEN SHORT. I AM PROUD OF THAT.
     choices:
-      - text: WHAT ARE YOU COUNTING?
-        goto: counting
-      - text: WHAT'S THE SEAL FOR?
-        goto: seal
-      - text: NOTHING. CARRY ON.
-  counting:
-    say:
-      - THE TITHE. WHAT THIS COLONY OWES ITS LANDLORDS.
-      - IT IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
-    choices:
-      - text: PAID IN WHAT?
-        goto: warm
-      - text: WHAT'S THE SEAL FOR?
-        goto: seal
-  warm:
-    say:
-      - IN WHATEVER IS NAMED ON THE SCHEDULE. IT NAMES WARM THINGS NOW.
-      - I DO NOT SET IT. I ONLY MAKE THE COUNT COME OUT.
-    choices:
-      - text: SOMEONE I WANT IS ON THAT LIST.
-        sets: [sev_assessor_knows]
-        goto: knows
-      - text: WHAT'S THE SEAL FOR?
-        goto: seal
-  seal:
-    say:
-      - IT IS WHOSE COUNT IT IS. WITHOUT IT, THE COUNT IS JUST A NUMBER.
-      - IT DOES NOT COME OFF. I HAVE BEEN ASKED.
-    choices:
-      - text: I'LL BUY IT.
-        goto: refuse
-      - text: YOUR LAST COUNT WAS SHORT.
-        goto: short
-      - text: FAIR ENOUGH.
-  refuse:
-    say:
-      - IT IS NOT MINE TO SELL. NOTHING HERE IS MINE. THAT IS RATHER THE WHOLE ARRANGEMENT.
-    choices:
-      - text: YOUR LAST COUNT WAS SHORT.
-        goto: short
-      - text: I SEE.
-  short:
-    say:
-      - "..."
-      - THAT IS NOT POSSIBLE. STATE THE QUARTER.
-    choices:
-      - text: ALL OF THEM. SINCE THE MOON.
+      - text: IT'S BEEN SHORT SINCE THE MOON. TWO WARM CRATES.
         provoke: true
-      - text: THE ONE WITH TWO WARM CRATES.
-        provoke: true
-      - text: I'M MISTAKEN. FORGET IT.
-        goto: greet
-  knows:
-    say:
-      - THE SCHEDULE IS NOT A LIST OF PEOPLE. IT IS A LIST OF AMOUNTS.
-      - ANYONE YOU KNOW ON IT IS ON IT AS AN AMOUNT.
-    choices:
-      - text: SAY THAT AGAIN.
-        goto: sorry
-      - text: YOUR LAST COUNT WAS SHORT.
-        goto: short
-  sorry:
-    say:
-      - AN AMOUNT. I AM SORRY.
-      - THAT IS THE CORRECT WORD AND I HAVE NEVER HAD TO USE IT BEFORE.
-    choices:
-      - text: YOUR LAST COUNT WAS SHORT.
-        goto: short
-      - text: "..."

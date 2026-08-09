@@ -838,11 +838,10 @@ about the person: REDUNDANT — SUPERSEDED BY ASSET. It is on Walter's own file
 too, and the asset is named on every one. To close the box he needs a
 countersignature, and the only thing on the floor still authorised to give one
 is the **ARCHIVE UNIT**, a records terminal on treads standing by an instruction
-issued eleven years ago that nobody ever withdrew. It will stamp the form for
-anybody who can answer three questions about the record — the last of which has
-no answer, because the asset is not a name, it is a line item. It will also come
-off its treads at anybody who tells it the rule no longer matters, and the stamp
-is inside it either way.
+issued eleven years ago that nobody ever withdrew. All it wants is the one thing
+on the form nobody can supply: the name of the asset that superseded a man.
+There is no such name — it is a line item — and the hero saying so out loud is
+what closes the box.
 
 **THE MOON — HOLLIS VANE, contract auditor.** A ghost sent up to reconcile what
 GOODCO was shipping off Site T against what GOODCO said it was shipping, who got
@@ -851,9 +850,10 @@ warm. His manifest is still out at the survey marker, off every line worth
 walking: eleven crates out, nine declared. Who signed for the other two is a
 question only **THE SITE SURVEYOR** can answer — a ghost who does not haunt
 anywhere in particular but walks the whole grid, so he has to be found rather
-than visited, and who will not give a company man a straight answer. Told the
-truth, he says the signature block named RECORDS AND CONTINUITY, which is not a
-department. It is a book, and it went to Mars with everything else.
+than visited. Nobody has stood on that grid in fifty years, and the company put
+his name on a survey that said nothing was down there, so finding him is the
+whole of it: he says the signature block named RECORDS AND CONTINUITY, which is
+not a department. It is a book, and it went to Mars with everything else.
 
 **MARS — LEDGER UNIT 12.** The colony's accounting machine, still reconciling a
 book in which every net-worth column reads the same number, unable to close it

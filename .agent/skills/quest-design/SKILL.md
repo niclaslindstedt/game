@@ -1,6 +1,6 @@
 ---
 name: quest-design
-description: "Use when adding, updating or reworking a QUEST — an errand a non-combatant asks of the hero — or the person who hands it out, the conversation tree behind it, or a campaign-long chain. Covers what makes an errand worth doing rather than a chore (which verb each objective kind actually buys, combining two into a beat, giving a conversation a branch that can lose, pacing a chain), then the two catalogs and their pipeline, the eight objective kinds, what a reward may pay and how to price it, campaign vs run errands, conversations and neutral mobs, the trader hook, the story-chain obligation, and the build refusals and tests that bite when a piece is missing."
+description: "Use when adding, updating or reworking a QUEST — an errand a non-combatant asks of the hero — or the person who hands it out, the conversation tree behind it, or a campaign-long chain. Covers what makes an errand worth doing rather than a chore (which verb each objective kind actually buys, combining two into a beat, when a bystander needs a tree at all and what a losing branch may cost, pacing a chain), then the two catalogs and their pipeline, the eight objective kinds, what a reward may pay and how to price it, campaign vs run errands, conversations and neutral mobs, the trader hook, the story-chain obligation, and the build refusals and tests that bite when a piece is missing."
 ---
 
 # Designing a Quest
@@ -68,10 +68,10 @@ job was.
 
 The hero's line is a **reply, never a choice**. Do not write a menu of ways to
 say yes; every row of one does the same thing. He answers short, dry and already
-moving. A person the hero genuinely has to be talked ROUND is not an errand page
-at all — that is a `conversation:` (below), which is a different object with
-branches, flags and a way to lose, and choosing between the two deliberately is
-the point of the split.
+moving. A person the hero genuinely has to be talked ROUND — or one whose talk
+has to set a FLAG, or turn hostile — is not an errand page at all: that is a
+`conversation:` (below), a different object with its own runtime. Choosing
+between the two deliberately is the point of the split.
 
 An authored line is a **paragraph**: the box
 flows it into whatever column the device really has, so you are not counting
@@ -171,21 +171,27 @@ trader becomes somebody with an opinion about what you are carrying. When you
 add a `merchant:` block, check that the `requires:` flag makes the order
 un-short-circuitable; if the player can buy first, you have written a shop.
 
-**A conversation earns its place when a branch can LOSE.** A tree whose rows
-all lead to the same node is a monologue with extra taps. Give at least one
-branch a cost:
+**MOST PEOPLE DO NOT NEED A TREE AT ALL.** The shipped campaign's bystander
+talks are ONE THING SAID AND ONE THING ANSWERED, exactly like a giver's ask: the
+speaker states their piece, the hero says the single true thing there is to say
+back, and the flag is set. That is not a lesser version of a conversation — it
+is what nearly every one of these scenes actually is, and a tree that dresses it
+up in three rows makes the player read all three to find the one the errand
+already told them to pick.
 
-- **A door that closes.** The moon surveyor will not talk to a company man, and
-  "COMPANY. SITE T AUDIT." is offered plainly as the efficient-sounding opening.
-  Take it and he is done with you for the run.
-- **A fight you asked for.** `provoke: true` turns the speaker hostile, and it
-  cannot be taken back.
-- **A branch you have to lose ON PURPOSE.** The tithe assessor will never hand
-  over its seal — there is no clever line that gets it. What it cannot do is
-  leave an error in its own count, so telling it the count is short starts a
-  fight the player chose. That is a better beat than a persuasion check, because
-  the player has to decide to start something with somebody who has been polite
-  to them.
+**AND WHAT A BRANCH COSTS MUST BE A FIGHT, NEVER A DEAD END.** `provoke: true`
+is the only losing move worth writing: it turns the speaker hostile, it cannot
+be taken back, and the player can SEE what it cost. The tithe assessor is the
+whole of the case — it will never hand over its seal, and what it cannot do is
+leave an error in its own count, so telling it the truth starts a fight the
+player chose against somebody who has been perfectly polite.
+
+**A branch that silently closes a road is a bug wearing dialogue.** The moon
+surveyor used to have one: an efficient-sounding "COMPANY. SITE T AUDIT." that
+shut him up for the run — and the CAMPAIGN errand he feeds wants a flag only his
+tree sets, so the row dead-ended a chain for the rest of that run and never told
+the player why. Reachability is not a design question. If a flag an objective
+needs can be made unreachable by a row, that row must not exist.
 
 Two supporting rules: a gated row is LEFT OUT, never greyed (a greyed row is a
 spoiler in the shape of a locked door), and `reentry` on flags is what stops a
