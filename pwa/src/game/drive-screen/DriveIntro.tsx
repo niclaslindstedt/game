@@ -21,6 +21,14 @@
 // AND IT ANSWERS THE FIRST TOUCH. A tap or any key takes it away on the spot,
 // because the second trip of a session is one the player has already read.
 //
+// IT NAMES THE PLACE AND SAYS NOTHING ELSE. There used to be a line of
+// instructions under the destination — how the wagon is steered — and a card
+// that is up for under two seconds cannot carry a title AND a manual: the eye
+// gets one of them, and the one it should get is the one that says what is
+// happening. The steering teaches itself in the first corner (this is a car,
+// and the drag is the only gesture there is), while a subtitle turns the beat
+// from an establishing shot into a tutorial slide.
+//
 // A COMPONENT RATHER THAN HUD CONTENT, on the rule `DriveScores` and
 // `DrivePause` beside it are filed under: `content/hud/` owns the DASHBOARD —
 // live dials republished off a running road — and this is a screen raised over
@@ -97,15 +105,6 @@ export function DriveIntro({
           text={destinationOf(to)}
           scale={8}
           color="#ffd75e"
-        />
-        {/* The one thing a player might not know and needs before the first
-            corner: which way this wagon is driven. Below the title and in the
-            quiet grey, so it is available rather than announced. */}
-        <PixelText
-          font={font}
-          text="DRAG THE WAY THE CAR IS POINTING"
-          scale={2}
-          color="#7c8592"
         />
       </div>
     </div>

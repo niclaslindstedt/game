@@ -720,32 +720,45 @@ export function drawLightCones(
       ctx.closePath();
       ctx.fill();
     }
-    if (tailOut) return;
     // The TAIL glow: a short red fan behind the car, dimmer and stubbier —
     // brake lamps, not a second pair of headlights.
-    const tailX = sx - tailPx * face;
-    const glow = ctx.createLinearGradient(
-      tailX,
-      0,
-      tailX - tailReachPx * face,
-      0,
-    );
-    glow.addColorStop(0, `rgba(255, 74, 58, ${0.32 * flicker})`);
-    glow.addColorStop(1, "rgba(255, 74, 58, 0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.moveTo(tailX, lampY + tailDip - root);
-    ctx.lineTo(
-      tailX - tailReachPx * face,
-      lampY + tailDip - Math.round(6 * spread),
-    );
-    ctx.lineTo(
-      tailX - tailReachPx * face,
-      lampY + tailDip + Math.round(9 * spread),
-    );
-    ctx.lineTo(tailX, lampY + tailDip + foot);
-    ctx.closePath();
-    ctx.fill();
+    //
+    // SKIPPED WITH AN `if`, NEVER WITH AN EARLY `return`, and that is a scar
+    // rather than a style note. A car whose tail lamps the road has taken out
+    // is very often a car something SPUN (a rear-ending does both at once), so
+    // `tailOut` and a non-zero `yaw` arrive together — and a `return` here left
+    // the yaw's `ctx.save()` on the stack with nothing to pop it. `endBillboard`
+    // then popped THAT instead of its own, so the billboard's inverse projection
+    // never came off and every body drawn after this one wore an extra one: the
+    // hero's wagon, drawn last because it is nearest, came out a third taller
+    // than it is (and two spun wrecks in one frame made it half again). The
+    // symptom was "the car stretches sometimes", three lanes away from its
+    // cause.
+    if (!tailOut) {
+      const tailX = sx - tailPx * face;
+      const glow = ctx.createLinearGradient(
+        tailX,
+        0,
+        tailX - tailReachPx * face,
+        0,
+      );
+      glow.addColorStop(0, `rgba(255, 74, 58, ${0.32 * flicker})`);
+      glow.addColorStop(1, "rgba(255, 74, 58, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.moveTo(tailX, lampY + tailDip - root);
+      ctx.lineTo(
+        tailX - tailReachPx * face,
+        lampY + tailDip - Math.round(6 * spread),
+      );
+      ctx.lineTo(
+        tailX - tailReachPx * face,
+        lampY + tailDip + Math.round(9 * spread),
+      );
+      ctx.lineTo(tailX, lampY + tailDip + foot);
+      ctx.closePath();
+      ctx.fill();
+    }
     if (yaw !== 0) ctx.restore();
   });
 }

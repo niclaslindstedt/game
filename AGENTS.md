@@ -727,6 +727,12 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
   screen's own `window` listener instead. Use `useAutoFocus`
   (`@ui/lib/auto-focus.ts`), which asks imperatively;
   `tests/preact_renderer_test.ts` keeps the prop out of the tree.
+  **AND FOCUS IS NOT A KEYBOARD.** A phone raises one only for a `focus()` made
+  WHILE A GESTURE IS BEING HANDLED, and a field mounted by a menu press asks from
+  an effect a turn of the loop later — so it comes up focused with nothing to
+  type on, and tapping it does nothing because it already has focus. The PRESS
+  arms it (`armSoftKeyboard`, same file, called synchronously from the `onClick`
+  or it silently does nothing) and `useAutoFocus` hands it over on mount.
 - **Every dependency comes from the public npm registry.** `npm ci` needs no
   token, no `.npmrc` and no private registry — keep it that way: a private
   dependency breaks not just a fresh clone but the pages workflow, which

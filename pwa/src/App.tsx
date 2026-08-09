@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { warn, type Difficulty, type GameState } from "@game/menu";
 
+import { armSoftKeyboard } from "@ui/lib/auto-focus.ts";
 import { ErrorBoundary } from "@ui/lib/ErrorBoundary.tsx";
 import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
 import { usePwaUpdate } from "@ui/lib/pwa-update.ts";
@@ -671,6 +672,16 @@ export function App() {
           // PLAY → NEW GAME: open straight on the create form, then drop into
           // the difficulty ladder for the freshly-minted hero. CANCEL here
           // returns to the title (not the roster) — the form came from PLAY.
+          //
+          // THE KEYBOARD IS RAISED BY THIS PRESS, not by the field the press
+          // opens. A phone gives a software keyboard only to a `focus()` made
+          // while a gesture is being handled, and the name field asks for focus
+          // from an effect a turn of the loop later — so it came up focused with
+          // no keyboard under it, and tapping the field did nothing because it
+          // already held focus. `armSoftKeyboard` is called here, inside the
+          // press, and `useAutoFocus` hands the keyboard over the moment the
+          // real field mounts (@ui/lib/auto-focus.ts).
+          armSoftKeyboard();
           setStartOnDifficulty(false);
           setStartOnMinigames(false);
           setPickCreating(true);
@@ -681,9 +692,13 @@ export function App() {
           // then drop into the difficulty ladder for the chosen one. An empty
           // roster has nothing to load, so it opens straight on the create form
           // (whose CANCEL then backs out to the title).
+          const creating = loadCharacters().length === 0;
+          // …and when that is where it lands, the same hand-over as NEW GAME
+          // above: the keyboard belongs to the press, not to the field.
+          if (creating) armSoftKeyboard();
           setStartOnDifficulty(false);
           setStartOnMinigames(false);
-          setPickCreating(loadCharacters().length === 0);
+          setPickCreating(creating);
           setPicking("play");
         }}
         onHowToPlay={() => {

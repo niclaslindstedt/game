@@ -14,6 +14,17 @@
 /** How many characters a hero name may hold. */
 export const MAX_HERO_NAME = 14;
 
+/**
+ * WHO THE FIELD MINTS WHEN NOBODY TYPES A NAME — the grey placeholder the empty
+ * field shows, and the name `createCharacter` actually files them under.
+ *
+ * It is here, in one place, because those are the SAME name and were three
+ * separate string literals: the create form's placeholder, the real `<input>`'s
+ * own, and the mint's `|| "HERO"`. A rename that moved two of the three would
+ * have shown the player one name and saved another.
+ */
+export const DEFAULT_HERO_NAME = "HERO";
+
 /** The typed text as the pixel field draws it (the font is uppercase-only). */
 export function heroNameDisplay(raw: string): string {
   return raw.toUpperCase();

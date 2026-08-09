@@ -30,7 +30,10 @@ import {
 import type { GameState, LevelDef } from "@game/core";
 
 import type { Sprites } from "../pwa/src/game/assets.ts";
-import { drawVehicles } from "../pwa/src/game/render/vehicles.ts";
+import {
+  drawLightCones,
+  drawVehicles,
+} from "../pwa/src/game/render/vehicles.ts";
 import {
   DEFAULT_PITCH,
   DEFAULT_YAW,
@@ -98,6 +101,11 @@ function drawProbe(names: Map<object, string>) {
   });
   return {
     blits,
+    /** The live transform, so a pass can be asserted to have left it alone. */
+    matrix: () => [...m],
+    /** How many unmatched `save`s the pass is holding — a leak, if it is not 0
+     * once the pass has returned. */
+    depth: () => stack.length,
     ctx: {
       save() {
         stack.push([...m]);
@@ -114,6 +122,18 @@ function drawProbe(names: Map<object, string>) {
           m[3]!,
           m[4]! + m[0]! * x + m[2]! * y,
           m[5]! + m[1]! * x + m[3]! * y,
+        ];
+      },
+      rotate(angle: number) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        m = [
+          m[0]! * cos + m[2]! * sin,
+          m[1]! * cos + m[3]! * sin,
+          m[0]! * -sin + m[2]! * cos,
+          m[1]! * -sin + m[3]! * cos,
+          m[4]!,
+          m[5]!,
         ];
       },
       transform(
@@ -366,6 +386,77 @@ describe("the car assembly", () => {
         });
       });
     }
+  });
+
+  // ── AND THE LAMPS GIVE THE CONTEXT BACK ───────────────────────────────────
+  // "THE CAR STRETCHES SOMETIMES." A car whose tail lamps the road has knocked
+  // out is very often a car the same blow SPUN, so `drawLightCones` was reached
+  // with `tailOut` and a non-zero `yaw` together — and the early `return` that
+  // skipped the tail glow skipped the `ctx.restore()` that was to undo the yaw's
+  // `save()` as well. `endBillboard` then popped THAT save instead of its own,
+  // and the billboard's inverse projection stayed on the context: every body
+  // drawn after the wreck wore one extra, so the hero's wagon (drawn last,
+  // because it is nearest) came out 1/pitch taller than it is — a third again at
+  // the shipped camera, and half again with two spun wrecks in one frame.
+  //
+  // It is asserted on the CONTEXT rather than on a screenshot because that is
+  // the only place it is visible as a fact: on screen it is a car that looks
+  // wrong three lanes away from the wreck that did it.
+  describe("the light cones", () => {
+    /** Every combination of the two flags that killed a lamp, at a yaw. */
+    const LAMPS = [
+      { noseOut: false, tailOut: false, name: "both lamps burning" },
+      { noseOut: true, tailOut: false, name: "the nose knocked out" },
+      { noseOut: false, tailOut: true, name: "the tail knocked out" },
+      { noseOut: true, tailOut: true, name: "both ends knocked out" },
+    ];
+
+    for (const lamps of LAMPS) {
+      it(`leave the transform as they found it — ${lamps.name}`, () => {
+        applyCamera(PROJECTIONS[1]!);
+        const probe = drawProbe(new Map());
+        const before = probe.matrix();
+        // Spun off its axis: the yaw is the half that takes a `save()`.
+        drawLightCones(
+          probe.ctx,
+          { x: 317, y: 244 },
+          { x: 0, y: 0 },
+          0,
+          0,
+          0,
+          false,
+          lamps.noseOut,
+          lamps.tailOut,
+          HARD_OVER,
+        );
+        expect(probe.depth()).toBe(0);
+        expect(probe.matrix()).toEqual(before);
+      });
+    }
+
+    it("do not stretch the car drawn after them", () => {
+      const state = parkedCar({ x: 317, y: 244 });
+      applyCamera(PROJECTIONS[1]!);
+      const { sprites, names } = carSprites();
+      const clean = drawProbe(names);
+      drawVehicles(clean.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+      // The same pass, with a spun wreck's dead tail lamps drawn first.
+      const after = drawProbe(names);
+      drawLightCones(
+        after.ctx,
+        { x: 111, y: 120 },
+        { x: 0, y: 0 },
+        0,
+        0,
+        0,
+        false,
+        false,
+        true,
+        HARD_OVER,
+      );
+      drawVehicles(after.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+      expect(after.blits).toEqual(clean.blits);
+    });
   });
 
   it("keeps the wheels put as the camera turns", () => {
