@@ -165,15 +165,16 @@ export type CameraAntialias = "on" | "off";
  * rather than a fix. See `standingWalls` (render/tilt.ts). */
 export type StandingWalls = "on" | "off";
 
-/** MUTE: a SOUND toggle that silences all audio without touching the mix.
- * `on` forces both output volumes to 0 while the MUSIC and SOUND FX sliders
+/** MUTE: an AUDIO toggle (SETTINGS → AUDIO) that silences all audio without
+ * touching the mix. `on` forces both output volumes to 0 while the MUSIC and
+ * SOUND FX sliders
  * keep their stored levels, so unmuting restores the exact levels the player
  * dialed in. `off` (the default) plays at the slider levels. A presentation
  * gate applied in settings.ts (the stored `musicVolume`/`sfxVolume` are left
  * untouched; only the value handed to `setAudioVolumes` is zeroed). */
 export type MuteMode = "on" | "off";
 
-/** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
+/** XP ON KILL: a display preference (SETTINGS → INTERFACE) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
 export type XpFloat = "on" | "off";
@@ -213,13 +214,13 @@ export type XpFloat = "on" | "off";
  */
 export type GoreSwitch = "on" | "off";
 
-/** HEALTH BARS: a display preference (SETTINGS → DISPLAY) for a small hp bar
+/** HEALTH BARS: a display preference (SETTINGS → INTERFACE) for a small hp bar
  * drawn over every wounded mob's head (see render.ts). `on` (the default)
  * shows a tiny few-pixel bar over regular minions too; `off` keeps the field
  * clean — bosses and elites still show their bars once hurt either way. */
 export type HealthBars = "on" | "off";
 
-/** ITEM CARDS: a display preference (SETTINGS → DISPLAY) for the framed loot
+/** ITEM CARDS: a display preference (SETTINGS → INTERFACE) for the framed loot
  * pickup card (PickupModal). It names the LOWEST rarity that still pops a card
  * on pickup — `regular` (NORMAL, the default) cards every find, and each step
  * up the ladder (`magic`, `rare`, `set`, `unique`, `legendary`, `artifact`)
@@ -228,7 +229,7 @@ export type HealthBars = "on" | "off";
  * filter (see event-fx.ts), so it needs no engine setter. */
 export type PickupCardsTier = PickupCardTier;
 
-/** QUICK DRAW: a control preference (SETTINGS → CONTROLS) for how the in-HUD
+/** QUICK DRAW: a control preference (SETTINGS → GAMEPLAY) for how the in-HUD
  * weapon switcher (and the 1-4 hotkeys that mirror it) ORDERS the weapons it
  * offers — see `weaponAlternatives` in game-screen/hud-model.ts.
  * `bag` (the default) lists them exactly as the BACKPACK does, so a weapon
@@ -241,7 +242,7 @@ export type PickupCardsTier = PickupCardTier;
  * pick read app-side, so it needs no engine setter. */
 export type WeaponSwitchOrder = "bag" | "dps";
 
-/** MINIMAP: a display preference (SETTINGS → DISPLAY) for the HUD minimap's
+/** MINIMAP: a display preference (SETTINGS → INTERFACE) for the HUD minimap's
  * view (see Minimap.tsx). `full` (the default) contain-fits the whole
  * fog-of-war level into the frame; `follow` hovers a close-up over the hero —
  * a tracking window drawn from a higher-resolution terrain layer so the
@@ -249,7 +250,7 @@ export type WeaponSwitchOrder = "bag" | "dps";
  * preference read by the render loop, so it needs no engine setter. */
 export type MinimapMode = "full" | "follow";
 
-/** DIALOGUE: a display preference (SETTINGS → DISPLAY) for the hero's spoken
+/** DIALOGUE: a gameplay preference (SETTINGS → GAMEPLAY) for the hero's spoken
  * story — the level's opening monologue and post-victory epilogue, elite/boss
  * arrivals and last words, the hero's inner monologues, story-item lore,
  * companion joins, and the merchant's greeting. `on` (the default) plays them;
@@ -260,7 +261,7 @@ export type MinimapMode = "full" | "follow";
  * simulation rule. */
 export type DialogueScenes = "on" | "off";
 
-/** CUTSCENES: a display preference (SETTINGS → DISPLAY) for the prelude
+/** CUTSCENES: a gameplay preference (SETTINGS → GAMEPLAY) for the prelude
  * cutscenes that open a level (the launch, the flight — see cutscenes.ts).
  * `on` (the default) plays them; `off` skips the whole prelude so the run opens
  * straight on the hero's intro monologue (or, with DIALOGUE off too, straight

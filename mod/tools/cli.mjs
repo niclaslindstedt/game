@@ -30,7 +30,8 @@
 // `ids` and `where` exist for the same reason as the rest: they are the two
 // questions every mod author (and every agent working in this directory) has
 // to answer before they can get anywhere, and neither should require reading a
-// 1,400-entry JSON file or guessing at an OS convention. See mod/AGENTS.md.
+// JSON file of several thousand ids by eye, or guessing at an OS convention.
+// See mod/AGENTS.md.
 
 import {
   cpSync,
@@ -518,8 +519,9 @@ function kinds() {
 /**
  * Search the reference catalog.
  *
- * The alternative is reading `catalog.json`, which is 1,400 sprite names long
- * and answers "is `moon_boots` a real id" only by eye. This is the same
+ * The alternative is reading `catalog.json`, whose sprite list ALONE runs to
+ * thousands of names, and answering "is `moon_boots` a real id" by eye
+ * (`mod ids --kind sprite` prints the current count). This is the same
  * question with a useful answer, and it is the single most-used command when
  * something (or someone) is writing a mod against ids they cannot see.
  */
@@ -566,9 +568,10 @@ function searchIds() {
  *
  * `ids --kind sound` already prints the names, and for a sound that is not
  * enough: naming a file `enemy_killed.wav` is a commitment about WHEN it will
- * be heard, and 135 bare ids do not say when. This prints the id, the event
- * that fires it (blank for the ones played by name — the interface, the road,
- * a weapon's own `sfx:`), and the sentence the shipped effect was designed to.
+ * be heard, and a column of bare ids does not say when. This prints the id, the
+ * event that fires it (blank for the ones played by name — the interface, the
+ * road, a weapon's own `sfx:`), and the sentence the shipped effect was
+ * designed to.
  *
  * It is the whole interface of the feature: name your file after one of these,
  * drop it in `sounds/`, and it is heard everywhere that sound was.

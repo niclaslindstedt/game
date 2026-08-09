@@ -13,9 +13,12 @@
 // BALANCE_TUNING_DEFAULTS), where the number IS the balance decision rather
 // than a probe over one.
 //
-// Deliberately ~10 knobs, not one per config field: each is the single most
-// useful lever of its system (leveling pace, mob strength, loot rain, …) —
-// a balance probe, not a config editor.
+// TWENTY-TWO knobs, and never one per config field: each is the most useful
+// lever over a whole RULE (leveling pace, mob strength, loot rain, …) — a
+// balance probe, not a config editor. The set grows with the systems it probes
+// (leveling alone now takes five), so the bar is that test rather than a head
+// count: a new knob has to be the lever somebody reaching for that system would
+// actually turn.
 
 import { clamp } from "@game/lib/vec.ts";
 

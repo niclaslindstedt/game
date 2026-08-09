@@ -30,14 +30,14 @@
 // **WHY THE SOURCES ARE STAGED FIRST, which is the one surprising step.**
 // TypeScript refuses outright to EMIT a file whose import is both aliased and
 // carries a `.ts` extension (TS2877): it rewrites the extension only on
-// relative specifiers, and it never rewrites an alias at all. The engine's 112
-// `@game/lib/*.ts` imports are exactly that combination, so the alias has to be
-// gone before `tsc` sees the file. Staging a copy and rewriting the specifiers
-// there costs one directory and keeps the engine written in the repo's own
-// house style — which matters, because the alternative was to relativize
-// `@game/lib` across `engine/`, and the alias is what marks the generic pool as
-// generic: a relative path says nothing about which side of that line a
-// module sits on.
+// relative specifiers, and it never rewrites an alias at all. Every one of the
+// engine's `@game/lib/*.ts` imports is exactly that combination, so the alias
+// has to be gone before `tsc` sees it. Staging a copy and rewriting the
+// specifiers there costs one directory and keeps the engine written in the
+// repo's own house style — which matters, because the alternative was to
+// relativize `@game/lib` across `engine/`, and the alias is what marks the
+// generic pool as generic: a relative path says nothing about which side of
+// that line a module sits on.
 //
 // The alternative to all of it is a bundler, and it was refused for a reason
 // that already has a test in this repo: `typescript` is a declared devDependency

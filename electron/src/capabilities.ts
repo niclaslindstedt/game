@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHAT THIS COPY OF THE APP MAY DO.
 //
-// Four of the shell's capabilities are decided when the binary is PACKAGED
+// Five of the shell's capabilities are decided when the binary is PACKAGED
 // rather than when it runs, because they are not the same product everywhere:
 // a depot build is sold with them, a plain download is not. The set is stamped
 // into the packaged `package.json` by `electron-builder.config.cjs` (which
@@ -15,10 +15,10 @@
 // for a player" mean the same thing, and none of this is a path that only ever
 // gets exercised on a release runner.
 //
-// Three of the four can be turned on for a single launch by command line —
-// `--multiplayer`, `--mods` and `--voice` — and the fourth deliberately cannot:
-// a port mapping is a change this program makes to somebody's ROUTER, so it is
-// a property of the build and of nothing else.
+// Four of the five can be turned on for a single launch by command line —
+// `--multiplayer`, `--mods`, `--voice` and `--licensed` — and `portMap`
+// deliberately cannot: a port mapping is a change this program makes to
+// somebody's ROUTER, so it is a property of the build and of nothing else.
 //
 // Kept free of Electron imports so the argument handling is testable without
 // launching the shell runtime — the same reason `dedicated-mode.ts` is.
@@ -49,7 +49,7 @@ export type BuildCapabilities = {
    *    a different answer from a depot build.
    *
    * So the depot build carries it (`make desktop-steam`) and a plain download
-   * does not (`make desktop-dist`), exactly as with the other three.
+   * does not (`make desktop-dist`), exactly as with the others.
    */
   voice: boolean;
   /**

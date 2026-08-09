@@ -324,9 +324,11 @@ number: a blade that just barely went through takes a head or a pair of legs, an
 only a monstrous blow takes a man through the middle.
 
 **EVERYTHING ELSE ABOUT A CUT IS DERIVED FROM WHERE THE LINE LANDED**, which is
-what makes an unbounded catalog maintainable. `ANATOMY_BANDS` says what a person
-is made of top to bottom (skull, neck, chest, belly, hips, legs) and WHAT IS
-INSIDE EACH, and a cut spills the bands it PASSED THROUGH — so a cut at the neck
+what makes an unbounded catalog maintainable. A family's `bands`
+(`GoreFamily.bands` in `game-screen/gore.ts`) says what a body of that kind is
+made of top to bottom — for a person: skull, neck, chest, belly, hips, legs —
+and WHAT IS INSIDE EACH, and a cut spills the bands it PASSED THROUGH
+(`bandsCrossed` in `gore-burst.ts`) — so a cut at the neck
 drops a skull and a brain, one across the belly drops the gut and the liver, and
 one straight down the middle drops nearly everything, for free, because a
 vertical line crosses every band on its way. Nobody wrote the bisection down.
@@ -500,8 +502,8 @@ take would misreport a system whose whole point is that it does not.
 
 | Adding | Costs |
 | --- | --- |
-| A gore PIECE a burst throws | `content/sprites/effects/gib_<part>.yaml` (it must be something that was INSIDE) + its entry in `SIGNATURE` / `FILLER` in `gore-burst.ts`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one |
-| An ORGAN a cut can spill | the sprite + the `ANATOMY_BANDS` band it lives in. Every cut through that band spills it from then on — nobody writes the combinations down |
+| A gore PIECE a burst throws | `content/sprites/effects/gib_<part>.yaml` (it must be something that was INSIDE) + its entry in that family's `signature` / `filler` list in `game-screen/gore.ts`, plus its name in `bouncy` if it is dense and in `humanOnly` if only a person has one |
+| An ORGAN a cut can spill | the sprite + the family `bands` entry it lives in (`game-screen/gore.ts`). Every cut through that band spills it from then on — nobody writes the combinations down |
 | A gore FAMILY | one row in `gore.ts` (bands, signature ladder, filler, ramp, cloud colour, what bounces, whether it `stains`, what it BURNS DOWN TO) + its art. Never an edit to the spray, the burst, the cleave, the floor and the effect pass |
 | A burned body's REMAINS | `content/sprites/effects/charred_<what>.yaml` + its name in that family's `remains` pool in `gore.ts`. The pool is picked from on the KILL'S OWN SEED, so a second entry is what stops a nuked screenful leaving one decal forty times |
 | A KIND of dismemberment | a switch in `KIND_SWITCH` + the settings row; the fallback for a refusal is always the ORDINARY corpse, never the other kind |

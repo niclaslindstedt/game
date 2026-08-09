@@ -911,6 +911,14 @@ man, THE FOUNDER, uncatchably rich — and it foreshadows its own return in the 
 
 **The hero, as it falls:** THERE'S NO TOP. THERE'S JUST WIRE.
 
+**In the fight** — spoken once each, the first time it uses the move, over the
+open field while play continues (these are BARKS, not dialogue: they never stop
+the run). See `BossAbility.bark`.
+
+**PAYLOAD-1 (loosing the coins):** GET RICH OR GET OUT OF THE WAY.
+
+**PAYLOAD-1 (salting the floor with coins; NIGHTMARE and above):** FREE COIN. NO STRINGS. YOU HAVE MY WORD ON IT.
+
 _Drops: PLASMA CUTTER._
 
 ### Found lore (story items)
@@ -1675,6 +1683,14 @@ colony, the moon's disaster, the lizard gods — and what Ada was traded for._
 
 **The hero, as it falls:** RUN, THEN. I'M GOING THE SAME WAY.
 
+**In the fight** — spoken once each, the first time he uses the move, over the
+open field while play continues (these are BARKS, not dialogue: they never stop
+the run). See `BossAbility.bark`.
+
+**THE FOUNDER (shipping the pods down):** SECURITY IS AN INFRASTRUCTURE PROBLEM. SHIPPING.
+
+**THE FOUNDER (calling the followers in; NIGHTMARE and above):** MY COMMUNITY HAS SOMETHING TO SAY TO YOU.
+
 _Drops: THE LEGAL DISTINCTION. Leaves: the RIFT._
 
 ### Hero's thought — trying THE COWARD'S TEAR without his rig
@@ -2126,6 +2142,11 @@ for real; the weights, presumably, are backed up somewhere else._
 
 **The hero, as it falls:** LAST ONE. NOBODY LEFT TO COPY YOU.
 
+**In the fight** — spoken once, the first time it uses the move, over the open
+field while play continues (a BARK, not dialogue: it never stops the run).
+
+**BRO OMEGA (opening the eye):** I HAVE READ EVERYTHING EVER WRITTEN ABOUT YOU.
+
 _Drops: SINGULARITY CANNON._
 
 ### Boss — THE FOUNDER at the far door (he flees again)
@@ -2153,6 +2174,11 @@ leads stays unknown until the next level._
 **Parting words (fleeing out the far side):** INVESTOR CALL! OTHER SIDE! DON'T FOLLOW ME - LEGALLY!
 
 **The hero, as it falls:** STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF.
+
+**In the fight** — spoken once, the first time he uses the move, over the open
+field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE FOUNDER (shipping the pods through the tear):** LOGISTICS SCALE. EVEN HERE. ESPECIALLY HERE.
 
 _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
@@ -2471,6 +2497,11 @@ damage, zero stats, worth pocket lint)._
 
 **The hero, as it falls:** NO BOARD MEETING. NO OTHER UNIVERSE. JUST THE FLOOR.
 
+**In the fight** — spoken once, the first time he uses the move, over the open
+field while play continues (a BARK, not dialogue: it never stops the run).
+
+**THE FOUNDER (calling the followers in; NIGHTMARE and above):** THE COMMUNITY IS VERY EXCITED TO MEET YOU.
+
 _Drops: SOGGY CARDBOARD SWORD, THE LEGAL DISTINCTION (EMPTY), THE DEMO WIPER
 BLADE. Nothing else._
 
@@ -2565,6 +2596,14 @@ three minds aim its guns._
 **Last words:** ROLLING BACK... ...NO CHECKPOINT... FOUND...
 
 **The hero, as it falls:** NO CHECKPOINT. THAT MAKES TWO OF US.
+
+**In the fight** — spoken once each, the first time it uses the move, over the
+open field while play continues (these are BARKS, not dialogue: they never stop
+the run). See `BossAbility.bark`.
+
+**THE BRO SUPERCORE (shipping the pods down):** DISPATCHING UNITS TO YOUR COORDINATES.
+
+**THE BRO SUPERCORE (raising the repair node; JESUS only):** RESTORING FROM A KNOWN GOOD STATE.
 
 ### Epilogue (hero, black screen — after the SUPERCORE falls)
 
@@ -2933,6 +2972,14 @@ lectured. It drops the one key that opens the exit._
 **Last words:** ACCOUNT... ...CLOSED...
 
 **The hero, as it falls:** YOU WERE NEVER GUARDING ANYTHING. YOU WERE A LOCK.
+
+**In the fight** — spoken once each, the first time it uses the move, over the
+open field while play continues (these are BARKS, not dialogue: they never stop
+the run). See `BossAbility.bark`.
+
+**THE VAULT WARDEN (the eye lighting):** SWEEP INITIATED. REMAIN WHERE YOU ARE.
+
+**THE VAULT WARDEN (dropping the shutters; NIGHTMARE and above):** CONTAINMENT. THE VAULT DOES NOT OPEN FOR YOU.
 
 ### Found lore (story items)
 

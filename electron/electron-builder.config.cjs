@@ -58,7 +58,7 @@ const BUNDLE_ID = "se.niclaslindstedt.adastrail";
 /**
  * WHAT THE PACKAGE IS STAMPED WITH.
  *
- * Four capabilities belong to the build rather than to the machine that runs
+ * Five capabilities belong to the build rather than to the machine that runs
  * it, and they are read from the build environment (`ENABLE_MULTIPLAYER=1`
  * and friends, via the Makefile) and written into the packaged manifest, where
  * `electron/src/capabilities.ts` reads them back. Absent means OFF, here and

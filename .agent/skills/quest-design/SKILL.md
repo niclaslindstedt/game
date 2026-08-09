@@ -11,12 +11,14 @@ library page — is derived from it, so the craft is entirely in the def and the
 words. There is no engine change in a new quest; if you find yourself needing
 one, that is the finding.
 
-**The rules live in `AGENTS.md` → QUESTS.** Read that section first: it is the
-_why_ (why the mark is derived, why the givers step last, why an escort is a
-timer with a body). This skill is the _how_ — where to put things, what the
-build will refuse, and how to check the result — plus the one thing no schema
-can check: whether the errand is worth doing at all. If you read one section
-before writing anything, make it **What makes an errand worth doing**.
+**This skill IS the rules** — the _why_ (why the mark is derived, why the
+givers step last, why an escort is a timer with a body) and the _how_: where to
+put things, what the build will refuse, and how to check the result — plus the
+one thing no schema can check, whether the errand is worth doing at all. If you
+read one section before writing anything, make it **What makes an errand worth
+doing**. The two documents beside it are `docs/game-content.md` → "What an
+errand costs" (the economy the rewards sit inside) and
+`scripts/asset-tools/quest-schema.mjs` (the field-level truth).
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs quest-design --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -175,7 +177,7 @@ worth reconsidering the errand before widening the engine.
 
 ## Picking the numbers
 
-Calibrated against the 39 shipped errands — stay inside these unless you have a
+Calibrated against the 42 shipped errands — stay inside these unless you have a
 reason:
 
 - **A run errand:** `xpShare` 0.35–0.9 (median **0.5**), coins 60–260 (median
@@ -236,7 +238,7 @@ reason:
    npm install --no-save playwright     # once
    (cd pwa && npx vite --port 5199 &)
    node pwa/scripts/playtest.mjs --level <id> --seed 42 \
-     --scenario '{"place":{"x":…,"y":…},"clearField":true}'
+     --scenario '{"place":{"x":…,"y":…},"clearEnemies":true}'
    ```
 
    Judge the offer box, the pick list, the tracker and the head mark — not the
@@ -245,14 +247,14 @@ reason:
 
 ## The rules the surfaces rest on
 
-**AND THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
+1. **THE GEAR IS DECIDED BEFORE THE PLAYER SAYS YES —
 `quests/reward-choices.ts`.** An errand used to promise "AN ITEM" and roll it
 at the handover, which is two problems wearing one sentence: the player could
 not tell whether the job was worth doing, and the piece that arrived had no
 relation to the build they were playing. The gear is now MINTED ONCE, when
 the conversation first opens (`GameState.questRewards`, keyed by quest id),
 and shown in full — real bases, real tier, real rolled affixes, drawn with
-the bag's own `affixLine` and tier colours. Four rules:
+the bag's own `affixLine` and tier colours. Six rules:
 - **IT IS THE ORDINARY PIPELINE, CALLED THREE TIMES.** Every row is a
   `rollEquipment` off the level's own pool at the SAME tier and quality, so
   the choice is about the build and never about which row rolled better.
@@ -369,11 +371,6 @@ would drag the modal into the loop to get at it. The tracker is kept live by the
 quest tally being folded into the HUD change-key (`hud-model.ts`) — it reads
 `state` directly, so without that a delivered escort moved nothing the key was
 watching and the strip sat on a stale count.
-
-The wording those three share is the leaf `pwa/src/game/quest-text.ts`
-(`objectiveLine`), not the offer modal it used to live in: the run loop's event
-pass reaches it on every bump, and a wording helper inside a modal component
-would drag the modal into the loop to get at it.
 
 ## What the build refuses
 

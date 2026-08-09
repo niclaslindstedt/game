@@ -45,7 +45,7 @@ node scripts/skill-lessons.mjs weapon-system --concepts=ammo,uniques
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `engine/game/step/` (`weapon.ts`, `projectiles.ts`) |
 | Icons (12×12) | one YAML per icon in `content/sprites/icons/` |
 | Projectile sprites (8×8) | one YAML per sprite in `content/sprites/effects/` |
-| Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `pwa/scripts/weapon-swing.mjs` |
+| Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `pwa/src/game/render/player.ts` (`weaponPose`, `drawPlayer`, `BLADE_REST_ANGLE`); preview with `pwa/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `pwa/src/game/tiers.ts`, `InventoryPanel.tsx` |
 | Keepsakes / hardcore rules (app-side permanence) | `pwa/src/game/characters.ts`, `settings.ts` |
 | NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report) | `scripts/weapon-scatter.mjs` (see below) |
@@ -226,8 +226,9 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
    (`meleeRealizedTargets(weaponSweepHalfAngle, weaponRangeFor)` capped by
    `maxMeleeTargets`) rather than the levelReq estimate the budget uses. The
    budget scripts and item card use the raw `weaponAssumedTargets`.
-3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
-   `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
+3. **Sprites** (the `pixel-assets` skill has the full loop): one YAML per
+   icon in `content/sprites/icons/`, the projectile in
+   `content/sprites/effects/`, `make assets`, then LOOK at
    `pwa/assets-preview/<name>@8x.png` — and at the arsenal in one
    piece: `node scripts/weapon-sheet.mjs` →
    `assets-preview/weapon-sheet.png` (icon + shot + stat caption per
@@ -245,7 +246,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 
 When the work is the LOOK of a weapon — its held sprite on the field hero, or
 how it swings/recoils/casts (the swing animation, pivoted about the
-shoulder in `render.ts` `weaponPose`) and how its slash/muzzle EFFECT reads —
+shoulder in `render/player.ts` `weaponPose`) and how its slash/muzzle EFFECT reads —
 drive `pwa/scripts/weapon-swing.mjs` instead of eyeballing the live game
 (the swing is over in ~200 ms). It stages the field hero holding a weapon and
 screenshots a numbered strip of the animation, frame by frame:
@@ -283,10 +284,11 @@ end edge, so a wider cone swings the blade wider. The cone is INT-widened
 (`weaponSweepHalfAngle`, capped at a half circle — `STATS.aoeMaxHalfAngle`);
 `--arc <deg>` overrides the cone so you can see the swing at any width up to the
 `180` cap without a stat build. The `calibration_probe` weapon (a debug weapon
-that never drops — `equipment.ts` / `icons.mjs`) marks the blade TIP and BASE in
-hot red so you can read exactly where the blade lies and line the cone up to it.
-Tune `WEAPON_SHOULDER` (pivot, `paper-doll.ts`) and `BLADE_REST_ANGLE` /
-`weaponPose` (`render.ts`), then re-shoot until the blade tracks the cone.
+that never drops — `equipment.ts` / `content/sprites/icons/icon_calibration_probe.yaml`)
+marks the blade TIP and BASE in hot red so you can read exactly where the blade
+lies and line the cone up to it. Tune `WEAPON_SHOULDER` (pivot,
+`paper-doll.ts`) and `BLADE_REST_ANGLE` / `weaponPose`
+(`pwa/src/game/render/player.ts`), then re-shoot until the blade tracks the cone.
 
 **Give a UNIQUE its own signature** — `fx:` in the weapon's OWN YAML
 (`content/items/<rarity>/<id>.yaml`), beside its numbers. Name an ELEMENT and,
@@ -343,14 +345,23 @@ resolves in the shipped atlas, so a base whose icon sprite is missing fails
 there too. Never RENAME a shipped unique id: the achievement ledger (and
 player unlocks) key on it.
 
-**The catalog shape (this game).** 35 uniques as a slot Latin square: five
-bosses × five difficulties, each difficulty the home of one full
-weapon+armor set (a weapon + head/chest/legs/feet, one per boss), plus a BAG
-from PROTOTYPE and a CHARM from TRUST ME BRO on each rung. Which boss drops which at
-which rung is wired on the enemy def (`EnemyDef.uniquesByDifficulty`), gated
-to the rung — an easy unique only drops on easy. Each is rolled at
-`UNIQUE.dropChance × mlvl/ilvl` (capped) on the kill (`maybeDropBossUnique` in
-`loot.ts`): ~5% at the item's home difficulty, never guaranteed.
+**The catalog shape (this game).** Run `node scripts/unique-check.mjs` — its
+header line is the live count, and nothing else in this repo is. At the time of
+writing it reads **149 uniques · 113 boss + 113 world placements · boss
+home-rung drop ≈ 5% (cap 10%)**. Two tables place them, and the checker owns
+both rules:
+
+- A BOSS table is `uniquesByDifficulty` on the enemy YAML
+  (`content/enemies/<biome>/<id>.yaml`) — five bosses carry one. Each rung is
+  meant to carry a full set (a weapon + head/chest/legs/feet), the set pieces
+  across the five rungs forming a **slot Latin square**, and a unique is meant
+  to have exactly ONE boss home: the checker ERRORS on an id wired to two.
+- A WORLD table is `loot.worldUniques` on the level YAML — the farm venues are
+  world tables only, never boss homes.
+
+Each boss unique is rolled at `UNIQUE.dropChance × mlvl/ilvl` (capped) on the
+kill (`maybeDropBossUnique` in `loot.ts`): ~5% at the item's home difficulty,
+never guaranteed.
 
 **The design rules** (all enforced by `scripts/unique-check.mjs`):
 
