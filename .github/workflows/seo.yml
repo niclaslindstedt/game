@@ -1,6 +1,6 @@
 name: seo
 
-# §11.3.10 — structural SEO assertions. Runs `check-seo.mjs` against the
+# §11.3.9 — structural SEO assertions. Runs `check-seo.mjs` against the
 # built app so the discoverability failure modes the spec calls out (empty
 # SPA shell, missing canonical, JSON-LD drift from og:image, sitemap gaps,
 # llms.txt missing, critical-path JS budget breach) cannot ship silently.

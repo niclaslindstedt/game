@@ -11,7 +11,7 @@
 // one the desktop shell and the manifest already use, widened to 8-bit RGBA at
 // the sizes Tauri's bundler wants. Nothing here is a design decision — the art
 // is `pwa/public/`, and a change to the icon happens there and lands here on
-// the next build (OSS_SPEC §11.2: this output is generated and gitignored).
+// the next build (OSS_GAME_SPEC §11.2: this output is generated and gitignored).
 //
 // Usage:
 //   node scripts/icons.mjs            # write tauri/src-tauri/icons/

@@ -1,6 +1,6 @@
 name: lighthouse
 
-# §11.3.10 — scheduled measured Lighthouse audit against the built app, with
+# §11.3.9 — scheduled measured Lighthouse audit against the built app, with
 # thresholds enforced via `.github/lighthouse/lighthouserc.json`. The measured
 # signals are advisory because shared-runner variance makes them unsuitable as
 # PR gates; deterministic SEO and bundle-budget failures remain in `seo.yml`.

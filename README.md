@@ -297,7 +297,7 @@ How a mod is compiled, loaded and resolved — the design behind all of the abov
 - [Multiplayer](docs/multiplayer.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
 - [The desktop builds](docs/desktop-shells.md) — the two wrappers, what is measured, and what decides which one ships
 - [`AGENTS.md`](AGENTS.md) — the conventions this repo is maintained under
-- [`OSS_SPEC.md`](OSS_SPEC.md) — the layout and governance spec it conforms to
+- [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md) — the game-project spec it conforms to: the open source baseline, plus the structure a game keeps through a change of engine or language
 
 Deployment is three GitHub Pages slots on one origin: `/` serves the highest
 `v*` tag, `/preview/` every `main` push, and `/branch/` a branch parked via the

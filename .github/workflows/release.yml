@@ -58,7 +58,7 @@ on:
         default: false
 
 # Default to no permissions; every job declares its own least-privilege
-# `permissions:` block (see OSS_SPEC §10.3).
+# `permissions:` block (see OSS_GAME_SPEC §10.3).
 permissions: {}
 
 jobs:

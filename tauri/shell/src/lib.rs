@@ -51,7 +51,7 @@
 //! including the failure paths a real Steam client cannot be asked to produce on
 //! demand.
 //!
-//! Tests for all of it live in `tests/` as their own files (OSS_SPEC §20.1) —
+//! Tests for all of it live in `tests/` as their own files (OSS_GAME_SPEC §20.1) —
 //! which is the second reason this is a library crate rather than a module of
 //! the binary: a Rust integration test can only reach a crate's public API.
 //!

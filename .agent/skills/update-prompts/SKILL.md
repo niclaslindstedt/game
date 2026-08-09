@@ -5,9 +5,9 @@ description: "Use when LLM prompts under prompts/ may be stale. Discovers change
 
 # Updating the LLM prompts
 
-**Governing spec sections:** §13.5 (LLM prompts — versioned `prompts/<name>/<major>_<minor>_<patch>.md` files with required YAML front matter), §21.5 (this skill is mandated because `prompts/` is a drift-prone artifact whenever a project ships LLM-driven behaviour).
+**Governing spec sections:** §13.2 (LLM prompts — versioned `prompts/<name>/<major>_<minor>_<patch>.md` files with required YAML front matter), §21.5 (this skill is mandated because `prompts/` is a drift-prone artifact whenever a project ships LLM-driven behaviour).
 
-Every LLM-driven step in game is defined by a versioned prompt under `prompts/<name>/<major>_<minor>_<patch>.md` with a required YAML front matter block (`name`, `description`, `version`) — see §13.5 of `OSS_SPEC.md`. Prompt files are **immutable once committed**: every change lands as a new file at a new semver (patch for wording, minor for additive changes, major for breaking rewrites). Prompts drift whenever the code that renders them, the sources of truth they embed, or the section numbering they reference changes.
+Every LLM-driven step in game is defined by a versioned prompt under `prompts/<name>/<major>_<minor>_<patch>.md` with a required YAML front matter block (`name`, `description`, `version`) — see §13.2 of `OSS_GAME_SPEC.md`. Prompt files are **immutable once committed**: every change lands as a new file at a new semver (patch for wording, minor for additive changes, major for breaking rewrites). Prompts drift whenever the code that renders them, the sources of truth they embed, or the section numbering they reference changes.
 
 ## Tracking mechanism
 
@@ -56,7 +56,7 @@ Extend this table every time you discover a new drift path.
 - [ ] Read the baseline from `.last-updated`
 - [ ] Run `git diff --name-only` against watched paths; bail out if nothing relevant changed
 - [ ] For each affected prompt, add a new versioned file — `<major>_<minor>_<patch+1>.md` for wording fixes, `<major>_<minor+1>_0.md` for additive changes, `<major+1>_0_0.md` for breaking rewrites (committed prompt files are immutable)
-- [ ] Keep the previous version in place when adding a new one (§13.5 retention)
+- [ ] Keep the previous version in place when adding a new one (§13.2 retention)
 - [ ] Update any code caller that pins a specific prompt version
 - [ ] Run `make fmt`, `make lint`, `make test`
 - [ ] Write the new baseline:

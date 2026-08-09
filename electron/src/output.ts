@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The desktop shell's central output module — the peer of engine/output.ts for a
-// tree that runs in Node rather than a browser (OSS_SPEC §19.4: diagnostics go
+// tree that runs in Node rather than a browser (OSS_GAME_SPEC §19.4: diagnostics go
 // through one module so they can be silenced, redirected or timestamped in one
 // place, and never scattered as raw `console` calls).
 //

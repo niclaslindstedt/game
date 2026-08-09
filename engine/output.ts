@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Central output module (OSS_SPEC §19.4). All diagnostic output from the
+// Central output module (OSS_GAME_SPEC §19.4). All diagnostic output from the
 // engine and the app routes through the semantic helpers below so formatting
 // and routing can change in one place. Raw `console.*` calls are forbidden
 // outside this module (enforced by the `no-console` ESLint rule).

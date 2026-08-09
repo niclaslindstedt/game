@@ -7,7 +7,7 @@ description: "Use when README.md may be stale. Discovers commits since the last 
 
 **Governing spec sections:** §3 (`README.md` — required sections and content), §21.5 (this skill is mandated because `README.md` is a drift-prone artifact).
 
-`README.md` is the primary user-facing documentation for game. Per §3 of `OSS_SPEC.md` it must cover the project description, installation, a quick-start, usage, contribution pointer, license, and a link to `OSS_SPEC.md`. It goes stale whenever a CLI flag, subcommand, default, or supported surface changes without a matching edit.
+`README.md` is the primary user-facing documentation for game. Per §3 of `OSS_GAME_SPEC.md` it must cover the project description, installation, a quick-start, usage, contribution pointer, license, and a link to `OSS_GAME_SPEC.md`. It goes stale whenever a CLI flag, subcommand, default, or supported surface changes without a matching edit.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs update-readme --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and

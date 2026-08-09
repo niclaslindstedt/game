@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! The Tauri shell's central output module — the peer of
 //! `electron/src/output.ts`, and of `engine/output.ts` for a tree that runs as a
-//! native binary rather than in a browser (OSS_SPEC §19.4: diagnostics go
+//! native binary rather than in a browser (OSS_GAME_SPEC §19.4: diagnostics go
 //! through one module so they can be silenced, redirected or timestamped in one
 //! place, and never scattered as raw `println!` calls).
 //!

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// oss-spec:allow-large-file: nine worlds' paint recipes, one `bake*` function
+// game-spec:allow-large-file: nine worlds' paint recipes, one `bake*` function
 // each, sharing one noise kit and one cache. Each is a self-contained colour
 // pass over the same grid; splitting them by file would separate a world's
 // palette from the only code that reads it.

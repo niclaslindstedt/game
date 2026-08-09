@@ -33,9 +33,9 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
    ```sh
    git log --oneline "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     engine/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg OSS_GAME_SPEC.md
    git diff --name-only "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     engine/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
+     engine/version.ts package.json pwa/public/icon.svg OSS_GAME_SPEC.md
    ```
 
 3. If anything changed, rebuild and check the derived surfaces.
@@ -55,7 +55,7 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
 - [ ] Read baseline and diff sources of truth
 - [ ] `make build` (runs `assets` → `extract` → `vite build` → `generate-seo`) — extraction failures are the drift signal
-- [ ] `cd pwa && npm run check:seo` — the §11.3.10 structural SEO check over `dist/`
+- [ ] `cd pwa && npm run check:seo` — the §11.3.9 structural SEO check over `dist/`
 - [ ] If identity/OG fields or `icon.svg` changed: `make icons` and commit the regenerated art
 - [ ] Smoke-test the built shell (title, description, manifest name, version label)
 - [ ] Run `make test` (includes `tests/version_test.ts`, the version-parity guard)

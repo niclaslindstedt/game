@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Update every version string the project ships to match the given tag
-# (OSS_SPEC §10.3): the root package.json, every workspace package.json, the
+# (OSS_GAME_SPEC §10.3): the root package.json, every workspace package.json, the
 # lockfile, and the engine's embedded version constant.
 set -euo pipefail
 

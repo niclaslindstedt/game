@@ -1,7 +1,7 @@
 name: pages
 
 # Deploys the game (the `pwa/` Vite app, built against the engine source)
-# to GitHub Pages across three slots (OSS_SPEC §11.5):
+# to GitHub Pages across three slots (OSS_GAME_SPEC §11.5):
 #
 #   /          the latest release (highest `v*` tag), or `main` when there is
 #              no release this workflow can rebuild — before the first one, or

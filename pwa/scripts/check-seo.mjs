@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// §11.3.10 — structural SEO check. Walks every HTML file under `dist/`
+// §11.3.9 — structural SEO check. Walks every HTML file under `dist/`
 // after the build and asserts the signals Search Console, social-card
 // unfurlers, and AI crawlers actually read. Failures emit GitHub
 // Actions `::error::` annotations so the line surfaces inline on the
@@ -324,7 +324,7 @@ function checkLlmsTxt() {
 }
 
 function checkBundleBudgets() {
-  // §11.3.9 — critical-path JS budget. Anything the entry HTML preloads
+  // §11.3.8 — critical-path JS budget. Anything the entry HTML preloads
   // counts as critical; lazy chunks reached through a runtime import()
   // do not. The render-heavy game code lives in the lazy GameScreen chunk, so
   // the critical path is the title/menu shell.

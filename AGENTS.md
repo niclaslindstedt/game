@@ -5,17 +5,27 @@ repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`,
 `.aider.conf.md`, and `.github/copilot-instructions.md` are symlinks to this
 file.
 
-## OSS Spec conformance
+## Game spec conformance
 
-This repository adheres to [`OSS_SPEC.md`](OSS_SPEC.md), a prescriptive
-specification for open source project layout, documentation, automation, and
-governance. A copy of the spec lives at the repository root so contributors and
-AI agents can consult it without leaving the repo; its version is recorded in
-the YAML front matter at the top of the file.
+This repository adheres to [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md), a prescriptive
+specification for building a GAME as an open source project: the OSS baseline
+(layout, documentation, automation, release, governance — §1–§22) plus the game
+chapters (§23–§37) that mandate the shape this repo is built on — a headless
+simulation core, content authored as data, deterministic runs, the scripting
+and mod seams, interface as content, generated assets, the story tiers,
+measured balance, the platform shells, and the player-facing quality gates.
 
-Run `oss-spec validate .` to verify conformance. When in doubt about a layout,
-naming, or workflow decision, consult the relevant section of `OSS_SPEC.md` —
-it is the source of truth for the conventions this repo follows.
+**The spec at the repository root IS the spec.** There is no upstream copy to
+fetch and nothing overwrites it: it is amended deliberately, in a reviewed PR,
+and §21.5 requires the same PR to propagate the new mandate into the tree. Its
+version is recorded in the YAML front matter at the top of the file.
+
+Every mandate in it names a ROLE, never a technology — which is what makes the
+structure survive a change of renderer, UI framework or language. Load the
+`sync-game-spec` skill to walk the mandates against the tree and fix drift. When
+in doubt about a layout, naming, or workflow decision, consult the relevant
+section of `OSS_GAME_SPEC.md` — it is the source of truth for the conventions
+this repo follows.
 
 ## Leave the tree cleaner than you found it
 
@@ -181,7 +191,7 @@ breaks.
 
 ## Architecture summary
 
-This is a **webapp-kind project (OSS_SPEC §11.4/§11.5): the deployed website
+This is a **webapp-kind project (OSS_GAME_SPEC §11.4/§11.5): the deployed website
 IS the game** — an offline top-down survival scroller shooter, steered by
 holding pointer/touch, where the character acts autonomously according to
 picked-up weapons and items. `docs/architecture.md` is the full map; this is
@@ -227,7 +237,7 @@ above it, and `docs/architecture.md` has the module-by-module map:
   `engine/game/defs/` (content is data, referenced by id).
   It must stay importable from any renderer — no UI framework, no DOM
   assumptions beyond what a browser provides. `engine/output.ts` is the central
-  output module (OSS_SPEC §19.4); raw `console.*` elsewhere fails lint.
+  output module (OSS_GAME_SPEC §19.4); raw `console.*` elsewhere fails lint.
 - **`pwa/` — the app.** A Vite + Preact PWA shell that mounts the engine,
   renders it, and owns everything deploy-shaped (the service worker build,
   manifest, icons, SEO surfaces, the update toast). **The app depends on the
@@ -725,16 +735,16 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 ## Test conventions
 
 - **All tests live in separate files** — never inline in source files (no `#[cfg(test)]` blocks, no `if __name__ == "__main__"` test harnesses). This keeps source files free of test scaffolding and lets agents, hooks, and linters treat source and test code differently.
-- Test files are named with a `_test` or `_tests` suffix (e.g. `output_test.ts`). The stem must match the pattern `_?[Tt]ests?$` per §20 of `OSS_SPEC.md`.
+- Test files are named with a `_test` or `_tests` suffix (e.g. `output_test.ts`). The stem must match the pattern `_?[Tt]ests?$` per §20 of `OSS_GAME_SPEC.md`.
 - Tests live in `tests/` and run with **Vitest** (`make test`, or `npx vitest run tests/engine/game_test.ts` for a single file). The include pattern (`tests/**/*_test.ts`) lives in `vitest.config.ts` — keep it in lockstep with the naming rule.
 - **`tests/engine/` vs `tests/content/`.** Engine-rule suites live in `tests/engine/` and run against **synthetic fixtures** (`tests/engine/fixtures.ts`, plain ids like `test_level`/`test_minion`) installed via the engine's `registerDefs` hook — so they survive content deletion. This-game content suites (levels, story, bosses, sprite atlas) live in `tests/content/` and use the shipped catalogs via the root `tests/helpers.ts`; a sequel deletes and rewrites them. Lib tests (`chiptune`, `synth`, `output`, …) stay at the `tests/` root. Rule of thumb: if a test asserts an engine rule, it belongs in `tests/engine/` and must not reference a shipped content id (only `fists`, the engine's built-in EMPTY HAND id, is shared).
 - No test-specific setup is needed today; engine tests run in a plain Node environment.
-- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test -p adastrail-shell` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries and no Steam SDK; the root suite does not reach them. The app crate has no test target of its own — that is what the split buys, and a test that would need one is a decision sitting in the wrong crate.
+- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_GAME_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test -p adastrail-shell` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries and no Steam SDK; the root suite does not reach them. The app crate has no test target of its own — that is what the split buys, and a test that would need one is a decision sitting in the wrong crate.
 
 ## Source file size
 
-- Non-test source files must stay under **1000 physical lines** (§20.5 of `OSS_SPEC.md`). When a file grows past the limit, prefer splitting by concern (extracting submodules, helpers, or sibling files) over relaxing the cap.
-- A file may opt out by placing `oss-spec:allow-large-file: <reason>` in any comment within its first 20 lines. The reason must be non-empty and motivate why the file genuinely cannot be split (generated code, cohesive state machine, third-party snapshot, inherently dense rule catalogue).
+- Non-test source files must stay under **1000 physical lines** (§20.5 of `OSS_GAME_SPEC.md`). When a file grows past the limit, prefer splitting by concern (extracting submodules, helpers, or sibling files) over relaxing the cap.
+- A file may opt out by placing `game-spec:allow-large-file: <reason>` in any comment within its first 20 lines. The reason must be non-empty and motivate why the file genuinely cannot be split (generated code, cohesive state machine, third-party snapshot, inherently dense rule catalogue).
 
 ## Documentation sync points
 
@@ -764,7 +774,7 @@ under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 | version anywhere                                                       | never by hand — `scripts/update-versions.sh` owns it                      |
 
 The website must be regenerated whenever source-derived content changes
-(OSS_SPEC §11.2): `pwa/scripts/extract-source-data.mjs` runs on every build and
+(OSS_GAME_SPEC §11.2): `pwa/scripts/extract-source-data.mjs` runs on every build and
 fails if `engine/version.ts` and `package.json` disagree.
 
 ## Story & dialogue — a three-tier chain
@@ -910,7 +920,7 @@ carries the workflow, the quality bar and the traps for its subject.
 
 ## Maintenance skills
 
-Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agent/skills/<name>/` and are also accessible via the `.claude/skills` symlink.
+Per §21 of `OSS_GAME_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agent/skills/<name>/` and are also accessible via the `.claude/skills` symlink.
 
 | Skill              | When to run                                                                                                                       |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -919,7 +929,7 @@ Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone 
 | `update-readme`    | After any change that alters user-visible behavior, commands, or install instructions.                                            |
 | `update-website`   | After changes that affect the deployed app's SEO surfaces or source-derived content under `pwa/`.                                 |
 | `update-prompts`   | After any change to an LLM prompt's source of truth (embedded docs, rendering-context keys, JSON-schema enums, validation rules). |
-| `sync-oss-spec`    | When the repo may have drifted from `OSS_SPEC.md` — walks the spec's mandates and fixes violations.                               |
+| `sync-game-spec`   | When the repo may have drifted from `OSS_GAME_SPEC.md` — walks the spec's mandates and fixes violations.                          |
 | `changelog`        | On every PR — to write its changeset fragment, or to settle that `no-changelog` is the right call instead.                        |
 | `commit`           | To commit, push, and open/update a PR with a conventional-commit title — and the owner of the commit/PR conventions.              |
 | `conflict`         | On a merge conflict, an un-mergeable PR, or any "rebase / sync / catch up with main" — the backup branch, the fetch, the resolve. |
