@@ -384,6 +384,27 @@ function discSize(kind: keyof typeof DIAMETER_KM): number {
 }
 
 /**
+ * THE MOON IS THE ONE BODY SIZED TRUE, and it is the only one that can be.
+ *
+ * SIZE_POWER exists because no frame holds a 29:1 spread — but it compresses
+ * the Moon along with everything else, and the Moon is the single body on this
+ * screen that is never drawn ANYWHERE BUT BESIDE ITS OWN YARDSTICK. Through the
+ * power law it came out 0.75 of the Earth it circles: a companion world, a
+ * double planet, which is not what is up there. The real Moon is 3475 km across
+ * to Earth's 12756 — a bit over a QUARTER — and those two discs sitting a
+ * finger apart is the one size comparison in this sky that anybody can check
+ * without a reference.
+ *
+ * So the Moon is measured straight off the diameters, with no exponent on it
+ * and no floor but `paint`'s. The cost is paid against the bodies it is never
+ * seen beside: a true Moon reads about a third of Mercury's disc rather than
+ * the 0.9 the power law gave it. That is the right way round — Mercury and the
+ * Moon never share a corner of the frame, and the Earth and the Moon never
+ * leave one.
+ */
+const MOON_DISC = EARTH_DISC * (DIAMETER_KM.moon / DIAMETER_KM.earth);
+
+/**
  * THE DISTANCE COMPRESSION, stated once. Out to Mars the screen radii are close to
  * proportional (Mars's true 1.52 AU lands at 1.39× Earth's screen orbit); past
  * it they are squeezed hard — Jupiter's true 5.2 AU would be 2.4 screens out —
@@ -579,7 +600,8 @@ function moonBody(el: HTMLElement): Planet {
     node: 125.08,
     peri: 83.23,
     l0: 218.32,
-    base: discSize("moon"),
+    /** A true quarter of the Earth beside it — see MOON_DISC. */
+    base: MOON_DISC,
     /** Tidally locked: one rotation per orbit, so it keeps one face to the
      * Earth. Set from the orbital period below. */
     rotDays: 0,
@@ -781,14 +803,13 @@ export function startTitleSky(els: SkyElements): () => void {
       o: Planet,
       world: World,
       orbitR: number,
-      extraScale = 1,
     ): { cx: number; cy: number; scale: number; far: number } => {
       const s = project(world);
       const cx = sunCx + s.x * u;
       const cy = sunCy + s.y * u;
       // Normalised depth: +1 is straight behind the sun, −1 nearest the camera.
       const far = clamp(-s.depth / Math.max(orbitR, 1e-6), -1, 1);
-      const scale = (1 - DEPTH * far) * extraScale;
+      const scale = 1 - DEPTH * far;
       // The whole box, rings included: a ringed world's canvas is wider than
       // its disc, and `base` is the DISC.
       const pad = o.globe?.padding ?? 1;
@@ -913,8 +934,17 @@ export function startTitleSky(els: SkyElements): () => void {
     }
 
     // The Moon rides its own inclined orbit around the Earth's live position,
-    // scaled by however big the Earth currently reads — so it can slip in
-    // front of and behind its planet as well as swing round the sun with it.
+    // so it can slip in front of and behind its planet as well as swing round
+    // the sun with it.
+    //
+    // ITS DEPTH IS MEASURED THE SAME WAY EVERY OTHER BODY'S IS — against the
+    // orbit it is riding round the sun, which is the EARTH's. That is what
+    // holds the quarter-Earth disc at a quarter all the way round: the Moon
+    // takes the same depth-scale its planet does, plus the sliver of its own
+    // for the half-orbit it spends nearer the camera than the Earth. (It used
+    // to take Earth's scale as a MULTIPLIER on top of its own, so at the back
+    // of the loop the pair squared it and the Moon shrank to 0.7 of the
+    // relative size it holds anywhere else.)
     const mo = orbitAt(
       t,
       moonOrbit.ms as number,
@@ -930,12 +960,7 @@ export function startTitleSky(els: SkyElements): () => void {
       y: earthWorld.y + mo.y,
       z: earthWorld.z + mo.z,
     };
-    const moonPlaced = paint(
-      moonOrbit,
-      moonWorld,
-      SCREEN_R.earth,
-      earthPlaced.scale,
-    );
+    const moonPlaced = paint(moonOrbit, moonWorld, SCREEN_R.earth);
 
     driveAsteroids(asteroids, t, vw, vh, u, SUN_Z);
 

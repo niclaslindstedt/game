@@ -1488,6 +1488,20 @@ a faithful day at this year-length would be 0.175 s. Everything inside each of
 those is exact: every orbit is right against every other orbit, every spin
 against every other spin, every diameter against every other diameter.
 
+**EXCEPT THE MOON, WHICH IS SIZED TRUE** (`MOON_DISC`) — a flat 3475/12756 of
+the Earth it circles, a bit over a quarter, with no exponent on it. The power
+law is a compression of comparisons the eye can never make directly, and the
+Earth–Moon pair is the one comparison in this sky that is ALWAYS made directly:
+the two are drawn a finger apart, all cycle, every cycle. Through the exponent
+the Moon came out 0.75 of its planet and the pair read as a double world. The
+price is paid against the bodies it is never seen beside — a true Moon is about
+a third of Mercury's disc rather than 0.9 of it — and that is the right way
+round. The same ratio is written into the Moon's resting size in `styles.css`,
+which is the frame a reduced-motion player never leaves; the two are one
+decision. And its depth-scale is now taken from its own position like every
+other body's, not multiplied by the Earth's on top of it — squaring the pair's
+scale shrank the Moon to 0.7 of its true relative size at the back of the loop.
+
 The compression exponent and the orbit table are ONE decision, not two: every
 gap between two screen orbits has to clear the two discs that ride in it, or the
 outer four stop reading as four distances from the sun and become a single

@@ -2871,13 +2871,19 @@ html.app-locked body {
 /* The Moon shrinks to join the planets. The driver drives its left/top in px
    each frame; these defaults are its resting spot near Earth for before the
    driver starts / under prefers-reduced-motion, and clearing `right` keeps the
-   JS-set `left` unambiguous. */
+   JS-set `left` unambiguous.
+
+   ITS SIZE IS A TRUE QUARTER OF EARTH'S ROW ABOVE — every number here is that
+   row's times 3475/12756, the real ratio of the two diameters, because the
+   resting frame is the one a reduced-motion player never leaves and the pair is
+   drawn side by side. Keep it in step with MOON_DISC in title-sky.ts, which
+   does the same arithmetic for the driven frames. */
 .orbits .title-moon {
   top: 34%;
   right: auto;
   left: 46%;
-  width: clamp(16px, 3.4vmin, 30px);
-  height: clamp(16px, 3.4vmin, 30px);
+  width: clamp(12px, 2.6vmin, 24px);
+  height: clamp(12px, 2.6vmin, 24px);
   /* Airless, like Mercury — see there. */
   box-shadow: none;
 }
