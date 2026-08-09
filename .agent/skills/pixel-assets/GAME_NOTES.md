@@ -12,10 +12,11 @@ and the design best practices). It is the _why_ behind this file's _what_.
 ## Families
 
 Discover the live set with `ls content/sprites/` (each directory is a
-family). As of 2026-07 this game ships: `hero`, `moon`, `goodco`, `prelude`,
-`earth`, `effects`, `icons`, `markers`, `mars`, `rift`, `boot_hill`,
-`bunker`, `merchant`, `scenes`. A new roster or biome is a new `<family>/`
-directory with a `_family.yaml`.
+family). This game ships sixteen: `boot_hill`, `bunker`, `earth`, `effects`,
+`goodco`, `hero`, `icons`, `markers`, `mars`, `merchant`, `moon`, `prelude`,
+`quests`, `rift`, `scenes`, `ui`. A new roster or biome is a new `<family>/`
+directory with a `_family.yaml`; the shared palette/anchor conventions live in
+`content/sprites/_core.yaml`.
 
 The `merchant` family shows the one-subject-many-costumes path: all four
 looks (hooded default, vendor, moon, mars) share the hero's 16×16 body plan

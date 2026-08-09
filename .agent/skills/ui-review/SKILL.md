@@ -1,6 +1,6 @@
 ---
 name: ui-review
-description: "Use for a fit-and-finish pass over the game's UI — screens, modals, popups, toasts. Drives the screenshot-audit loop: capture every surface at the nine reference viewports (phones down to the SE floor, iPads and iPad mini in both orientations, desktop), evaluate against the quality bar, unify anything that drifted off the shared window skin, fix what clips or overflows, and verify with re-captures."
+description: "Use for a fit-and-finish pass over the game's UI — screens, modals, popups, toasts. Drives the screenshot-audit loop: capture every surface at the ten reference viewports (phones down to the SE floor, iPads and iPad mini in both orientations, desktop at both the 2× and 3× tiers), evaluate against the quality bar, unify anything that drifted off the shared window skin, fix what clips or overflows, and verify with re-captures."
 ---
 
 # UI Review — audit and consolidate every screen
@@ -22,7 +22,7 @@ it at both ends of the session.
 
 | Piece | Role |
 | --- | --- |
-| `pwa/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all nine viewports into `pwa/assets-preview/ui-review/<viewport>/` (gitignored) |
+| `pwa/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all ten viewports into `pwa/assets-preview/ui-review/<viewport>/` (gitignored) |
 | `?debug` + `window.__game` | Forces the rare in-game phases (levelup, respec, shop, dialogue, choice, victory, defeat) without waiting for organic triggers |
 | `?bot=kite` | Plays for real so the organic surfaces (pickup cards, feed, achievement toasts, a loot-filled bag) exist to capture |
 | `?cutscene=<id>` | Deterministic cutscene capture via the standalone workbench |
@@ -33,12 +33,12 @@ it at both ends of the session.
 ```sh
 npm install --no-save playwright          # once per session — not a repo dep
 cd pwa && npx vite --port 5199 &      # dev server
-node pwa/scripts/ui-shots.mjs         # all nine viewports (~25 min)
+node pwa/scripts/ui-shots.mjs         # all ten viewports (~25 min)
 node pwa/scripts/ui-shots.mjs --only land             # just the reference
 node pwa/scripts/ui-shots.mjs --only padl,padp,minil,minip  # tablets
 ```
 
-The nine viewports and what each is for:
+The ten viewports and what each is for:
 
 - **`land` 844×390** — the mobile-first reference (AGENTS.md). Every
   fits/reads judgement is made here FIRST; a surface that fails here is
@@ -63,6 +63,10 @@ The nine viewports and what each is for:
 - **`desk` 1440×900** — the 2× root-font breakpoint at desktop size:
   confirms the rem-scaled UI grows in lockstep and nothing depends on
   physical pixels.
+- **`desk3x` 2560×1440** — the 3× tier (`UI_SCALE_3X_BREAKPOINT_PX`). A 1440p
+  monitor is the smallest viewport that takes it, so it is where the tripled
+  root font-size first has to fit — the 3× regime's own version of the
+  iPad-mini case.
 
 The tablet viewports are the harsh cases of the 2× regime: they pass the
 `≥700px on both axes` gate like a desktop, but after doubling they have
@@ -74,7 +78,8 @@ silently miss the iPad even when its effective space matches a phone's.
 The settings step walks the whole SETTINGS tree — GAMEPLAY, CONTROLS, INTERFACE,
 GORE, AUDIO, DATA, and the developer surfaces (the DEVELOPER page itself, its
 BALANCE multiplier and VISUALS subpages, the arsenal browser, and the warp
-picker's difficulty + level lists). The BALANCE page is the tallest menu in the game (12 rows), so
+picker's difficulty + level lists). The BALANCE page is the tallest menu in the
+game — one row per `BalanceTuning` knob (22 today) plus RESET ALL and BACK — so
 it is the first place a menu-height regression shows: check the
 measure-then-cap scroll treatment it shares with the level ladder
 (`tallMenu`/`.title-menu.scrollable` in `TitleScreen.tsx`) still engages at

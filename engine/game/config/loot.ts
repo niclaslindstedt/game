@@ -135,11 +135,12 @@ export const LOOT = {
    * …the share that is a time-limited ability pickup.
    *
    * A POWERUP IS A MOMENT, NOT A RESOURCE, and the dock only banks three — so
-   * this slice is the leanest in the ladder on purpose. At the old 0.06 a
-   * campaign map paid enough powers that the dock stood permanently full and
-   * the player stopped reading them as finds: a screen-clearing storm arrived
-   * about as often as a pair of trousers. Halved to 0.035, which lands the rain
-   * at roughly one power per two-hundred kills before the rung's own
+   * this slice is among the leanest in the ladder on purpose, undercut only by
+   * the XP scroll's 0.03 (`scrollDropShare`, content/leveling.yaml). At the
+   * old 0.06 a campaign map paid enough powers that the dock stood permanently
+   * full and the player stopped reading them as finds: a screen-clearing storm
+   * arrived about as often as a pair of trousers. Halved to 0.035, which lands
+   * the rain at roughly one power per two-hundred kills before the rung's own
    * `powerupDropMult` thins it further.
    *
    * WHICH power a drop pays is a separate, weighted question —

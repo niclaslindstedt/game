@@ -1,19 +1,22 @@
 ---
 name: mapgen-improvement
-description: "Use when improving the MAP GENERATOR — the GENERATED MAPS feature that carves a mission fresh from its v2 blueprint (`content/maps/<id>.yaml`) every run. Covers the carve → dress → verify architecture, the blueprint anatomy and how to add a new object purpose or area rule, the render → LOOK → judge → iterate loop (the renders are 9600px, so crop them), the invariants that are load-bearing and easy to undo by accident, and the verification traps that make a green check mean nothing."
+description: "Use when improving the MAP GENERATOR — the GENERATED MAPS feature that carves a mission fresh from its v2 blueprint (`content/maps/<id>.yaml`) every run. Covers the carve → dress → verify architecture, the blueprint anatomy and how to add a new object purpose or area rule, the render → LOOK → judge → iterate loop (the renders are thousands of pixels on a side, so crop them), the invariants that are load-bearing and easy to undo by accident, and the verification traps that make a green check mean nothing."
 ---
 
 # Improving the Map Generator
 
 `map-improvement` improves ONE hand-authored map. This skill improves the thing
-that carves **every** map, fresh, per run — so a change here lands on six
-missions × every seed at once. That leverage cuts both ways: a
+that carves **every** map, fresh, per run — so a change here lands on every
+blueprint in `content/maps/` (seven today) × every seed at once. That leverage
+cuts both ways: a
 regression you cannot see on the seed you happened to render is still shipping
 on the other several thousand.
 
-**Read `AGENTS.md` § GENERATED MAPS first** — it is the design statement (what a
-blueprint is, why the walls are derived, why the ending is not on the map). This
-skill is the *working method*.
+**This skill IS the design statement** — what a blueprint is, why the walls are
+derived, why the ending is not on the map — as well as the *working method*.
+`AGENTS.md` carries only the two rules a session trips over before loading it:
+a run reads its own map through `runLevelDef(state)`, and nothing outside a run
+may import `mapgen/`.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs mapgen-improvement --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -49,20 +52,22 @@ spreadsheet, so **the render is the unit of judgement, not the JSON.**
 2. **Render, with the real sprites and the real horde standing in it:**
 
    ```sh
-   node scripts/level-render.mjs <id> --size large --seed 3 --dormant
+   node scripts/level-render.mjs <id> --seed 3 --dormant
    ```
 
    `--dormant` draws the mobs each spawn point still has queued — without it you
    are looking at an empty map and calling it a level. The schematic view is
    `node scripts/map-layout.mjs <id> --seed 3` (con colours, zones, labels).
-3. **LOOK at it — which means CROP it.** The output is up to 10400×8000, and a
+3. **LOOK at it — which means CROP it.** The render is the whole map at true
+   world scale, upscaled by `--zoom` (default 2) — several thousand pixels on a
+   side — and a
    whole-map thumbnail hides every defect this skill exists to catch (tiling in a
    ground tile, a rank that seals a room, a stub of wall). Always take a 1:1 crop
    of two or three places as well as the overview:
 
    ```sh
    node -e "
-   const sharp=require('sharp'); const f='pwa/assets-preview/level_<id>_generated.png';
+   const sharp=require('sharp'); const f='pwa/assets-preview/level_<id>.png';
    (async()=>{
      await sharp(f).resize(1800).toFile('/tmp/overview.png');            // the shape
      await sharp(f).extract({left:3000,top:2100,width:2600,height:1400}) // 1:1, judge here
@@ -371,11 +376,12 @@ npm run build                                         # the LIBRARY coverage gat
 - Blueprints (`content/maps/*.yaml`) and sprites (`content/sprites/**`) are
   committed; `engine/generated/map-blueprints.ts` and `pwa/src/game/assets/` are
   gitignored build output — never commit them.
-- Render every mission you touched at more than one size and seed and put the
-  images in front of the user before shipping. A generator change that looked
-  fine on `--size large --seed 3` has been wrong on medium more than once.
-- Update `AGENTS.md` § GENERATED MAPS when you add a rule a future session would
-  otherwise have to re-derive, and add a changeset fragment.
+- Render every mission you touched at more than one seed and put the images in
+  front of the user before shipping. A generator change that looked fine on
+  `--seed 3` has been wrong on the next carve more than once.
+- Record a rule a future session would otherwise have to re-derive in THIS
+  skill (via `skill-reflection`), not in `AGENTS.md`, and add a changeset
+  fragment.
 
 ## Skill self-improvement
 

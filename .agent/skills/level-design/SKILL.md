@@ -176,26 +176,33 @@ goes solid red — ease them.
 The numbers below are **hero character levels** (start → finish per difficulty),
 NOT abstract mob tiers. The campaign is meant to level the hero along this ladder:
 
+The ladder itself is `content/ladder.yaml` (its header states the shape); the
+finish targets the checker drives to are `TARGETS` in
+`scripts/leveling-curve.mjs`.
+
 | Rung | Hero start → finish | Notes |
 | --- | --- | --- |
-| Easy | **1 → 32** | clear any of easy/medium/hard to unlock nightmare |
-| Medium | **1 → 34** | |
-| Hard | **1 → 36** | |
-| Nightmare | **40 → 56** | entered after a grind (36→40); mobs open at ~40, not 1 |
-| Jesus | 58 → 70 | player-relative; do NOT author mob levels for it |
+| Easy | **1 → ~30** | clear any of easy/medium/hard to unlock nightmare |
+| Medium | **1 → ~33** | |
+| Hard | **1 → ~37** | |
+| Nightmare | **42 → ~55** | entered after a grind; mobs open at 42, not 1 |
+| Jesus | ~58 → ~69 | player-relative; DELIBERATELY absent from `ladder.yaml` |
 
-**Mob levels track the hero.** Slice each rung's start→finish across the five
-campaign maps and author every map's `mobLevels` to the hero's intended level
-band ON that map (goodco ≈ easy 1–7 / nightmare 40–43; boot_hill ≈ easy 26–32 /
-nightmare 53–56). Mobs near the hero's level make the WoW-style con system
+**Mob levels track the hero.** Slice each rung's start→finish across the
+campaign maps and author every map's `mob:` band in `content/ladder.yaml` to
+the hero's intended level ON that map (goodco_hq is easy `[1, 7]` / nightmare
+`[42, 45]`; boot_hill easy `[26, 32]` / nightmare `[51, 55]`). A level YAML may
+NOT carry its own `mobLevels`/`intendedLevel` — the loader errors.
+
+Mobs near the hero's level make the WoW-style con system
 (`levelDiffXpMult`, config `LEVELING.xpAbove/BelowPlayerPerLevel`) self-regulate:
 fighting up pays a bonus, fighting down decays to a grey-mob pittance, so the
 hero's level converges to the map's mob band and replaying an outgrown map barely
 levels him (anti-farm). Ramp the per-spawner `ramp:` tier up within a map (a
 `meek` opener → a hotter boss bay); the map's `mob: [start, end]` band sets the
 default a rampless spawn rolls. **Nightmare
-mobs on level 1 are ~40, not ~12** — nightmare is a separate high band, not a
-multiplier on the early game.
+mobs on the first map are 42, not ~12** — nightmare is a separate high band, not
+a multiplier on the early game.
 
 ### Re-tune XP after EVERY map redesign (required)
 
@@ -208,13 +215,14 @@ node scripts/leveling-curve.mjs --targets   # full clears per difficulty vs the 
 ```
 
 It prints each rung's per-map landing and the finish vs target (OK / LOW / HIGH).
-Drive every rung to **OK** (±1 of easy 32 / medium 34 / hard 36 / nightmare 56)
-by turning these levers, cheapest first:
+Drive every rung to **OK** against the script's own `TARGETS` (easy 31 /
+medium 33 / hard 37 / nightmare 55 / jesus 69) by turning these levers,
+cheapest first:
 
 - **Mob bands** (the ladder's `mob: [start, end]` cell) — the primary lever. Nudge
   a map's band up/down so the hero converges onto the intended level there (the
   con system does the rest); the named ramps shift with it automatically.
-- **Per-map XP caps** (`XP_CAP.capByDifficulty` in config.ts) — the `first`→`last`
+- **Per-map XP caps** (`XP_CAP.capByDifficulty` in `engine/game/config/leveling.ts`) — the `first`→`last`
   band interpolated across the campaign; set each rung a touch ABOVE its finish so
   the soft-cap fade doesn't clamp the hero UNDER target.
 - **Mob totals** — aim ~800–1200 killable mobs per map (a full-clear battle); the
@@ -238,8 +246,8 @@ nightmare lands in-band, `"jesus"` still reads player-relative.
 
 The engine plumbing lives in `menace.ts` (`resolveMobScaling`, `rollMobLevel`,
 `hardMobHpScale`, `mobLevelMidpoint`), stamped at every spawn site
-(`create.ts`, `spawners.ts`, the wave/pack spawners in `step/`); the schema
-enforcing the tuples is `level-schema.mjs`.
+(`create.ts`, `step/spawner.ts`, the wave/pack spawners in `step/`); the schema
+that refuses a level authoring its own bands is `level-schema.mjs`.
 
 ## The cross-cutting wiring — where new maps actually break
 
@@ -247,7 +255,7 @@ enforcing the tuples is `level-schema.mjs`.
   `node scripts/leveling-curve.mjs --by-level` and read the hero's level at the
   start/end of the new map's clears: that sizes `loot.intendedLevelByDifficulty` and
   any `worldUniques` `minPlayerLevel` gate. Adding a campaign level also shifts
-  the `XP_CAP.capByDifficulty` interpolation (`config.ts`) — verify first visits
+  the `XP_CAP.capByDifficulty` interpolation (`engine/game/config/leveling.ts`) — verify first visits
   still forfeit ~no XP (`xpLost` in the `simulate-run` summary).
 - **The weapon checker has per-map tables.** `scripts/weapon-stats.mjs` needs a
   `LEVEL_MLVL_BANDS` entry and `--coverage` needs its `CAMPAIGN_LANDINGS` column.
@@ -272,7 +280,7 @@ is flat — inside a run, nothing reads the catalog for its own level.
 the whole level catalog and the carve in the app's critical-path budget.
 
 LOOK at a map rather than reading its JSON: `node scripts/level-render.mjs <id>
---size large --seed 3 --dormant` draws one run's carve with the real sprites and
+--seed 3 --dormant` draws one run's carve with the real sprites and
 the real horde standing in it, and `scripts/map-layout.mjs <id> --seed 3` gives
 the schematic with con colours. Both render a CARVE, because there is nothing
 else to render — change the seed to see another run's map.
@@ -286,7 +294,7 @@ else to render — change the seed to see another run's map.
 2. **Roster** — the `enemy-design` skill.
 3. **Write the BLUEPRINT** (`content/maps/<id>.yaml`): the areas the venue is
    made of, the object palette, the horde's density and breeds, the cast, its
-   `size`. Keep the mobile viewport in mind (≈422×195 world units visible).
+   `size`. Keep the mobile viewport in mind (≈422×260 world units visible).
    **Render a carve and LOOK at it** — see `mapgen-improvement`.
 4. **Loot pools** — cumulative, plus the map's own new bases; `earlyDrops`.
 5. **Pacing wiring** — the caps/checker tables above.
@@ -313,8 +321,8 @@ else to render — change the seed to see another run's map.
       `CAMPAIGN_LANDINGS` entries added.
 - [ ] `node scripts/unique-check.mjs` clean if the map hands world uniques.
 - [ ] `make assets` + family sheet looked at; music track registered.
-- [ ] A carve rendered at every size and read (`--seed`, `--size`), plus
-      `--heatmap` for coverage.
+- [ ] A carve rendered at several seeds and read (`--seed`), plus `--heatmap`
+      for coverage.
 - [ ] `docs/manuscript.md` transcribes new lines (user-confirmed). The venue
       itself needs no doc entry — the YAML and the generated library ARE the
       record; touch `docs/game-content.md` only if the venue introduces a RULE

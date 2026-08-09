@@ -205,9 +205,9 @@ const BARK_BAND_CSS = 132;
 /** Where the ground stops and the sky starts, measured back from the far
  * pavement (world px). The town's frontages stand 13 px back from that same
  * edge (`TOWN_SETBACK_PX`, engine/game/drive/town-parts.ts), so this leaves a
- * strip of verge visible BEHIND the
- * houses and through the alleys between them — without it the roofline would be
- * the horizon, and the gaps in the row would show sky at street level. */
+ * strip of verge visible BEHIND the houses and through the alleys between
+ * them — without it the roofline would be the horizon, and the gaps in the row
+ * would show sky at street level. */
 const SKYLINE_SETBACK = 26;
 
 /** How high off the road something has to be to be OVER the car rather than

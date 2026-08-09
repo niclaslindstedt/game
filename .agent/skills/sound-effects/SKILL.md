@@ -159,6 +159,11 @@ bass ~0.055, pads ~0.009, hats ~0.011).
 
 ## What a landing sounds like is what it is MADE OF
 
+A drop is THROWN clear of the body it came out of (`engine/game/items/toss.ts`),
+and three rules decide what the player hears:
+
+- **THE SCATTER SPENDS NO `state.rng()` DRAW.** It is hash-derived off the
+  item's own id, because the drop ladder's rng draws are load-bearing
   (seeded runs, the simulator's A/B, every `rollEquipment` stream), so a
   presentational hop that consumed one would shift every roll after it.
 - **THE LANDING IS WHAT MAKES THE NOISE, and what a thing sounds like is what
@@ -173,10 +178,13 @@ bass ~0.055, pads ~0.009, hats ~0.011).
   event went with it — it fired once per SPILL rather than once per item, at
   the moment of minting rather than the moment of arrival, and after the sound
   moved to the landing nothing consumed it at all.
-- **THE STANDING AURA is the app's, and it is a LADDER**
-  (`pwa/src/game/render/loot-aura.ts`). Each layer switches on at its own rank
-  and every one is lit in the tier's own colour (`TIER_RGB` — the colour the
-
+- **THE STANDING AURA is the app's, and it is SILENT.**
+  `pwa/src/game/render/loot-aura.ts` climbs a ladder gated on `TIER_RANK` —
+  halo, ground pool, smoke, light shaft, orbiting motes, ground pulse — every
+  layer lit in `TIER_RGB`, the same colour the item's name is written in. It is
+  closed-form off the render clock and the item's id, raises no event, and
+  therefore has no sound of its own: the ONE noise a find makes is its landing.
+  → `docs/rendering.md`
 
 ## Iteration cycle
 

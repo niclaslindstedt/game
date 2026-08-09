@@ -157,7 +157,9 @@ For every final:
 2. Crop to the target aspect ratio; do not distort it.
 3. Use nearest-neighbor only when it preserves the established pixel grid;
    otherwise use a high-quality downsample and inspect edges.
-4. Validate exact pixel dimensions with `scripts/validate_png_dimensions.py`.
+4. Validate exact pixel dimensions with this skill's own
+   `.agent/skills/store-art/scripts/validate_png_dimensions.py` (NOT the repo's
+   top-level `scripts/`).
 5. Inspect the final raster, not only the master.
 6. Write a sibling `<asset-name>.md` description using the inventory below.
 7. Run the repository's store preflight when one exists.

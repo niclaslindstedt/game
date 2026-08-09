@@ -19,14 +19,14 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
 ## Tracking mechanism
 
-`.agent/skills/update-pwa/.last-updated` contains the git commit hash from the last successful run. Empty means "never run" — fall back to the initial commit.
+`.agent/skills/update-website/.last-updated` contains the git commit hash from the last successful run. Empty means "never run" — fall back to the initial commit.
 
 ## Discovery process
 
 1. Read the baseline:
 
    ```sh
-   BASELINE=$(cat .agent/skills/update-pwa/.last-updated)
+   BASELINE=$(cat .agent/skills/update-website/.last-updated)
    ```
 
 2. Diff the sources of truth against the baseline:
@@ -61,7 +61,7 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 - [ ] Run `make test` (includes `tests/version_test.ts`, the version-parity guard)
 - [ ] Write the new baseline:
 
-      git rev-parse HEAD > .agent/skills/update-pwa/.last-updated
+      git rev-parse HEAD > .agent/skills/update-website/.last-updated
 
 ## Verification
 

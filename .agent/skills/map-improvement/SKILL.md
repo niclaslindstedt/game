@@ -11,8 +11,8 @@ how a venue *plays and feels*. A venue is two data files: the MISSION
 BLUEPRINT its map is carved from per run (`content/maps/<id>.yaml`), both
 compiled by `make levels`. **There is no hand-drawn layout to edit**, so a
 geometry fix lands in the blueprint's areas, object palette and horde — and a
-render shows ONE run's carve, so judge across seeds and sizes rather than off a
-single picture. Two renderers make it legible:
+render shows ONE run's carve, so judge across seeds rather than off a single
+picture. Two renderers make it legible:
 
 - **`map-layout.mjs` — the VISUAL OVERVIEW.** A clean, high-res, top-down
   picture of one carve: a labelled coordinate grid for orientation
@@ -24,8 +24,8 @@ single picture. Two renderers make it legible:
   grey→green→yellow→orange→red), so an over/under-tuned difficulty ramp reads at
   a glance. It shows only what benefits from being SEEN; the numbers stay in the
   YAML. **Do BOTH before touching anything, every session:** read the level's
-  two YAMLs AND `make map-layout LEVEL=<id>` (add `--seed N` / `--size large`
-  for other carves) and study the images — the pictures give you the
+  two YAMLs AND `make map-layout LEVEL=<id>` (add `ARGS="--seed N"` for other
+  carves, `--width` for a bigger map area) and study the images — the pictures give you the
   spatial/difficulty read, the YAMLs give you the exact values.
 - **`map-preview.mjs` — the ANALYSIS view.** The design view (trigger rings,
   authored mob-density smear, derived path, tempo strip) plus `--actual` (the
@@ -77,7 +77,7 @@ polishing a broken frame.
 **Read both YAMLs and render the overview before anything else:** open
 `content/levels/<id>.yaml` (the mission) and `content/maps/<id>.yaml` (the
 blueprint its map is carved from) for the exact values, AND `make map-layout
-LEVEL=<id>` — plus a couple more seeds and a `--size large` — and study the
+LEVEL=<id>` — plus a couple more seeds — and study the
 images for the geometry, where every knot/encounter sits, and the con read (the
 spawn circles' size + colour). Check the con across difficulties
 (`--difficulty hard`, etc.). Judging a generator off ONE carve is how a session

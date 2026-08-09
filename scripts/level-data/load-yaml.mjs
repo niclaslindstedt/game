@@ -80,7 +80,7 @@ const CARVED_FIELDS = {
   safeZones: "the carve (the trader's pitch is the one safe pocket)",
   quietZones: "the carve (the landing and the caches are quiet)",
   tempo: "the carve (a cell's knots are priced by the depth it sits at)",
-  fauna: "`fauna` in the blueprint",
+  fauna: "`objects` of type `critter` in the blueprint",
   lairs: "`objects` of type `lair`, named by an elite's `lair`",
   elevators: "`annex` in the blueprint",
 };

@@ -40,6 +40,11 @@ and the story comes out as an exchange rather than a speech. His reply pages
 are authored as `{ hero: [...] }` entries in the data (`EnemyDef.dialogue`)
 and transcribed here as **ME:** paragraphs.
 
+A talk the player **STEERS** (`content/conversations/<id>.yaml`) is transcribed
+node by node instead: the speaker's own rows in a blockquote under a bold label
+for the beat, then every row the hero may answer with beneath it as **—** _…_,
+each with an arrow to the beat it leads to. A row with no arrow ends the talk.
+
 ## The hero's name — `{HERO}`
 
 **The hero is called whatever the player named him**, and the game says it: the
@@ -405,15 +410,26 @@ anywhere._
 _The thing arrives as she speaks: it comes into being against the bay's north
 wall and stands there for good (THE CACHE, `engine/game/cache.ts`). WHAT she
 brings depends on the difficulty — a lidded box on the gentlest rung, the
-gilded INHERITANCE on the hardest — which is why she names none of them here
-and says only "something". The last page below is what makes the ladder a
-promise rather than a surprise._
+gilded INHERITANCE on the hardest — so the third page is not a line but the
+token `{CACHE}`, substituted per rung from `DifficultyDef.cache.line`. She
+names the thing and where it came from every time; the errand is one file and
+the ladder is five, and the rung owns that sentence. The fourth page is what
+makes the ladder a promise rather than a surprise._
 
 1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
 2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-3. THERE'S SOMETHING AGAINST THAT WALL NOW. IT WAS MY MOTHER'S, AND HERS BEFORE THAT. PUT IN IT WHAT YOU CAN'T CARRY.
+3. {CACHE}
 4. I'LL KEEP GOING THROUGH HER HOUSE. THERE'S BIGGER BACK THERE.
 5. GO AND MEET HER HALFWAY.
+
+**Page 3, in rung order** — the provenance ramps with the furniture: a flea
+market, her mother's, a crossing, a dowry, a king.
+
+- **EASY:** THERE'S A BOX AGAINST THAT WALL NOW. FLEA MARKET, TWO DOLLARS. PUT IN IT WHAT YOU CAN'T CARRY.
+- **MEDIUM:** THERE'S A CHEST AGAINST THAT WALL NOW. MY MOTHER'S. SHE KEPT HER LETTERS IN IT AND NOTHING ELSE, EVER.
+- **HARD:** THAT TRUNK BY THE WALL CAME OVER WITH MY GRANDFATHER. EVERYTHING HE OWNED WENT IN IT, AND IT WASN'T FULL.
+- **NIGHTMARE:** THAT ONE CAME WITH A BRIDE, BEFORE THERE WAS A COUNTRY TO BRING IT TO. NOBODY HERE HAS EVER MANAGED TO GET RID OF IT.
+- **JESUS:** HIS GRANDFATHER SAID HE HAD THAT ONE OFF A KING. I NEVER BELIEVED A WORD OF IT. THEN I LOOKED AT THE LOCK.
 
 **What she brings, per rung** — never spoken, only read off the thing standing
 in the bay (`DifficultyDef.cache`):
@@ -444,8 +460,8 @@ _THE LEG HAS THREE STRETCHES AND THE LINES ARE HUNG OFF THEM. It opens on an
 OUTSKIRT with nothing on either side of it, where he says why he is going and
 what he thinks of who is in the way; then the TOWN arrives and the clock starts
 and he says nothing at all for a minute and a half; then the town stops and the
-car rolls in past GOODCO's fence, where he says the two lines at the bottom of
-this section. The verdict is later still and is not on the road at all._
+car rolls in past GOODCO's fence, where he says the two lines under THE RUN-IN
+below. The verdict is later still and is not on the road at all._
 
 _AND NOT ALL OF THE LEG'S WORDS ARE HIS. Two other things on this road have
 something to say and neither is answered: THE GLUED shout at him from the
@@ -601,6 +617,31 @@ than it can carry and died under him. He blames the car, the way he blames the
 road._
 
 1. COME ON. NOT HERE. NOT TONIGHT.
+
+### THE RUN-IN — the two lines past GOODCO's fence
+
+_Past the finish line the clock stops, the town stops, and the wheel comes off
+the player: the car rolls the last stretch on its own, past GOODCO's fence with
+the data halls and the ship on its gantry standing behind them. Two lines,
+barked exactly like the road's, and the only ones on this whole leg that are not
+about the car, the clock or the road surface._
+
+_THEY ARE ALLOWED TO BE, and the reason is the reason the opening's are: there
+is nobody in the picture. He is not failing to notice anybody here — there is
+genuinely nobody left to notice, which is its own remark about the place. The
+sight of it is flat, and deliberately: a man arriving at work._
+
+1. THERE'S GOODCO.
+
+_…AND THE QUESTION, said standing on the tarmac beside a car with its engine
+ticking. It is the last thing the minigame does and it is a SET-UP: GOODCO's
+front door has no key and nothing in the game unlocks it
+(`engine/game/arrivals.ts`), so the level on the other side of the fade is the
+entire answer to this sentence. He has driven a hundred and twenty miles an hour
+through a town to arrive at a locked door, and it has not once occurred to him
+to wonder about that until now._
+
+1. OK. SO HOW DO I GET IN?
 
 ### The arrival verdict — seven readings of one trip
 
@@ -3263,6 +3304,10 @@ is the only honest thing available to him._
 > SUPPLY CABINET, EAST WALL. BLACK BOX, SAYS 7-B ON IT.
 > I'D GO MYSELF BUT I'D LOSE MY PLACE IN THE STACK.
 
+**FORM 7-B — coming back short.**
+
+> EAST WALL. BLACK BOX. IT'S NOT A HARD ERRAND.
+
 **FORM 7-B — the handover.**
 
 > THAT'S THE ONE. THANK YOU.
@@ -3273,6 +3318,17 @@ is the only honest thing available to him._
 > YOUR FILE'S STILL OPEN. MOST OF THEM ARE, ACTUALLY.
 > I ASSUMED THAT WAS ME BEING SLOW.
 
+**THE LAST BOX — the ask.**
+
+> FOUR FILES WALKED OUT WITH THE PEOPLE THEY WERE ABOUT.
+>
+> THEY'RE STILL ON THE FLOOR. SO ARE THE PEOPLE, AFTER A FASHION.
+> BRING ME THE FILES.
+
+**THE LAST BOX — coming back short.**
+
+> FOUR. I'LL WAIT.
+
 **THE LAST BOX — the handover.**
 
 > GOOD. NOW WATCH THIS.
@@ -3281,6 +3337,19 @@ is the only honest thing available to him._
 > SAME LINE. ALL FOUR.
 >
 > IT'S ON MINE TOO. AND THE ASSET IS NAMED ON EVERY ONE.
+
+**THE COUNTERSIGNATURE — the ask.**
+
+> LAST THING. IT NEEDS A COUNTERSIGNATURE.
+>
+> THE ARCHIVE UNIT SIGNS. IT'S THE ONLY THING LEFT THAT CAN.
+>
+> IT'LL ASK YOU THINGS. ANSWER THEM.
+> OR DON'T — THE STAMP'S INSIDE IT EITHER WAY.
+
+**THE COUNTERSIGNATURE — coming back short.**
+
+> IT'S DOWN THE EAST AISLE. IT DOESN'T MOVE MUCH.
 
 **THE COUNTERSIGNATURE — the handover.**
 
@@ -3303,34 +3372,121 @@ is the only honest thing available to him._
 
 **Opening.**
 
-> RECORDS TERMINAL. STANDING BY. NO RECORD MAY BE CLOSED WITHOUT A
-> COUNTERSIGNATURE.
+> RECORDS TERMINAL. STANDING BY. NO RECORD MAY BE CLOSED WITHOUT A COUNTERSIGNATURE.
 > I AM THE COUNTERSIGNATURE.
 
-**The third question, and the only answer.**
+— _I NEED FORM 7-B STAMPED._ → _the entitlement check_
+
+— _WHO TOLD YOU THAT RULE?_ → _asked who issued it_
+
+— _NOBODY'S ENFORCED THAT IN YEARS._ → _told the rule no longer matters_
+
+— _NEVER MIND._
+
+**Asked who issued it.**
+
+> THE INSTRUCTION WAS ISSUED ELEVEN YEARS AGO BY THE NIGHT MANAGER.
+> HE HAS NOT WITHDRAWN IT. I HAVE NOT ASKED HIM TO.
+
+— _HE'S NOT COMING BACK._ → _told the rule no longer matters_
+
+— _THEN LET'S DO THIS PROPERLY._ → _the entitlement check_
+
+**The entitlement check — question one.**
+
+> ENTITLEMENT CHECK. THREE QUESTIONS.
+> ONE. WHOSE RECORD IS BEING CLOSED?
+
+— _TERMINATION 4,411._ → _question two_
+
+— _MINE._ → _a wrong answer_
+
+— _DOES IT MATTER?_ → _told the rule no longer matters_
+
+**Question two.**
+
+> TWO. REASON GIVEN FOR TERMINATION?
+
+— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
+
+— _PERFORMANCE._ → _a wrong answer_
+
+— _THEY GAVE MY JOB TO A MACHINE._ → _the sting_
+
+**The sting** — the one time it volunteers something about itself.
+
+> THAT IS NOT THE WORDING ON THE FORM. ...
+> IT IS THE WORDING ON MINE. REASON GIVEN FOR TERMINATION?
+
+— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
+
+— _SORRY._ → _question two_
+
+**Question three, and the only answer.**
 
 > THREE. NAME THE ASSET.
 
-— _I CAN'T. IT ISN'T A NAME._
+— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
+
+— _THE CORE._ → _a wrong answer_
+
+— _YOU._ → _told that it is the asset_
+
+**Told that it is the asset.**
+
+> I AM NOT THE ASSET. I AM ELEVEN YEARS OLD AND I AM STILL HERE.
+> THE ASSET IS NOT A THING THAT STAYS. NAME THE ASSET.
+
+— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
+
+— _FORGET IT._
+
+**A wrong answer.**
+
+> THAT IS NOT THE ANSWER ON THE RECORD.
+> ENTITLEMENT NOT ESTABLISHED. YOU MAY BEGIN AGAIN.
+
+— _LET'S BEGIN AGAIN._ → _the entitlement check_
+
+— _I'LL COME BACK._
+
+**Told the rule no longer matters.**
+
+> RESTATE THAT.
+> THE INSTRUCTION IS THE ONLY THING ON THIS FLOOR THAT WAS KEPT.
+
+— _IT'S A RULE FOR A DEAD COMPANY._ → _the fight_
+
+— _I'LL TAKE THE STAMP MYSELF, THEN._ → _the fight_
+
+— _YOU'RE RIGHT. I'M SORRY._ → _the opening_
+
+**The stamp.**
 
 > CORRECT. IT IS NOT A NAME. IT IS A LINE ITEM.
 > COUNTERSIGNING. RECORD 4,411 IS CLOSED.
 
-**Told it is not the asset.**
+**Afterwards.**
 
-> I AM NOT THE ASSET. I AM ELEVEN YEARS OLD AND I AM STILL HERE.
-> THE ASSET IS NOT A THING THAT STAYS.
-
-**Provoked.**
-
-> RESTATE THAT.
-> THE INSTRUCTION IS THE ONLY THING ON THIS FLOOR THAT WAS KEPT.
+> RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND TEN MORE.
+> I WILL BE HERE.
 
 ### HOLLIS VANE — contract auditor, THE MOON
 
 **Greeting.**
 
 > THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE. YOU LOOK LIKE SOMEONE WHO COULD SETTLE IT. MAY I ASK?
+
+**THE COLUMN THAT WON'T CLOSE — the ask.**
+
+> MY MANIFEST IS STILL OUT THERE. SITE T MARKER.
+>
+> NOTHING GUARDS IT. THAT'S WHY NOBODY'S FOUND IT — NO REASON TO GO.
+> GO ANYWAY.
+
+**THE COLUMN THAT WON'T CLOSE — coming back short.**
+
+> THE MARKER. FAR SIDE, OFF EVERY LINE WORTH WALKING.
 
 **THE COLUMN THAT WON'T CLOSE — the handover.**
 
@@ -3341,6 +3497,18 @@ is the only honest thing available to him._
 > THE TWO THEY DIDN'T DECLARE WERE THE TWO THAT WERE WARM.
 >
 > SOMEBODY SIGNED FOR THEM. I NEVER FOUND OUT WHO.
+
+**THE MAN WHO SIGNED — the ask.**
+
+> THERE WAS A SURVEYOR. HE WALKED THE GRID FOR THEM.
+>
+> HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
+>
+> HE WON'T TALK TO A COMPANY MAN. MIND HOW YOU OPEN.
+
+**THE MAN WHO SIGNED — coming back short.**
+
+> HE'S OUT THERE SOMEWHERE. HE DOESN'T STAND STILL.
 
 **THE MAN WHO SIGNED — the handover.**
 
@@ -3364,26 +3532,66 @@ is the only honest thing available to him._
 > ...
 > YOU'RE NOT ON MY GRID. NOBODY'S ON MY GRID. THAT'S RATHER THE POINT OF IT.
 
+— _COMPANY. SITE T AUDIT._ → _taken for company_
+
+— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
+
+— _WHAT ARE YOU SURVEYING?_ → _what he is surveying_
+
+**What he is surveying.**
+
+> THE WHOLE OF IT. THEY PAID ME BY THE SQUARE.
+> FINISHED IN SIXTY-NINE. I'M ON PASS FOURTEEN THOUSAND. THE DUST MOVES.
+
+— _WHY DO YOU KEEP WALKING IT?_ → _why he is still walking_
+
+— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
+
 **Why he is still walking.**
 
 > I SIGNED THE FIRST SURVEY, AND IT SAID NOTHING WAS DOWN THERE.
 > THEY PUT MY NAME ON THAT. I'D LIKE IT BACK.
+
+— _SOMEONE SIGNED FOR THE CRATES._ → _told somebody was taken_
+
+— _I KNOW THE FEELING._ → _told somebody was taken_
+
+**Told somebody was taken.**
+
+> TAKEN. RIGHT. THEN YOU'LL WANT THE OTHER SIGNATURE, NOT MINE. ELEVEN CRATES WENT UP. NINE WERE DECLARED.
+
+— _WHO SIGNED FOR THE OTHER TWO?_ → _who signed_
+
+— _WHAT WAS IN THE TWO?_ → _what was in them_
+
+**What was in them.**
+
+> I DIDN'T LOOK. I LISTENED. THAT WAS ENOUGH. ASK ME THE OTHER QUESTION.
+
+— _WHO SIGNED FOR THEM?_ → _who signed_
 
 **Who signed.**
 
 > NOT A MAN. I CHECKED.
 > THE SIGNATURE BLOCK SAID RECORDS AND CONTINUITY.
 
-— _THERE'S NO SUCH DEPARTMENT._
+— _THERE'S NO SUCH DEPARTMENT._ → _the book_
+
+**The book.**
 
 > THERE ISN'T. THERE'S A BOOK WITH THAT NAME ON THE SPINE.
 > IT WENT TO MARS WITH EVERYTHING ELSE.
 
-**Taken for company.**
+— _THAT'S WHAT I NEEDED. THANK YOU._ → _afterwards_
 
-> COMPANY. ...
-> I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING
-> FOR THE COMPANY.
+**Afterwards.**
+
+> TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS ARITHMETIC.
+
+**Taken for company** — the branch that loses him for good, and all he says from
+then on.
+
+> COMPANY. "..." I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING FOR THE COMPANY.
 
 ### LEDGER UNIT 12 — the colony's accounting machine, MARS
 
@@ -3391,6 +3599,20 @@ is the only honest thing available to him._
 
 > THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
 > THOSE CANNOT BOTH BE TRUE. WILL YOU HELP ME RESOLVE IT?
+
+**WHAT THE TITHE IS WORTH — the ask.**
+
+> THE BOOK REQUIRES A COUNTERSIGNATURE. I CANNOT PRODUCE ONE.
+>
+> A BOUND SIGNATURE EXISTS. THE TRADER HAS ONE.
+> HE WILL NOT SELL IT BLIND.
+>
+> SHOW HIM A SEAL. THE ASSESSOR WEARS ONE.
+> IT WILL NOT SIMPLY HAND IT OVER.
+
+**WHAT THE TITHE IS WORTH — coming back short.**
+
+> THE SEAL. THEN THE TRADER. THEN THE SIGNATURE.
 
 **WHAT THE TITHE IS WORTH — the handover.**
 
@@ -3411,29 +3633,80 @@ is the only honest thing available to him._
 
 **Opening.**
 
-> GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU
-> ARE NOT MY CONCERN.
+> GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU ARE NOT MY CONCERN.
 > PLEASE CONTINUE PAST ME.
+
+— _WHAT ARE YOU COUNTING?_ → _what it is counting_
+
+— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
+
+— _NOTHING. CARRY ON._
+
+**What it is counting.**
+
+> THE TITHE. WHAT THIS COLONY OWES ITS LANDLORDS.
+> IT IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
+
+— _PAID IN WHAT?_ → _what the tithe is paid in_
+
+— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
 
 **What the tithe is paid in.**
 
 > IN WHATEVER IS NAMED ON THE SCHEDULE. IT NAMES WARM THINGS NOW.
 > I DO NOT SET IT. I ONLY MAKE THE COUNT COME OUT.
 
+— _SOMEONE I WANT IS ON THAT LIST._ → _told somebody the hero wants is on it_
+
+— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
+
 **Told somebody the hero wants is on it.**
 
 > THE SCHEDULE IS NOT A LIST OF PEOPLE. IT IS A LIST OF AMOUNTS.
 > ANYONE YOU KNOW ON IT IS ON IT AS AN AMOUNT.
 
-— _SAY THAT AGAIN._
+— _SAY THAT AGAIN._ → _asked to say it again_
+
+— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
+
+**Asked to say it again.**
 
 > AN AMOUNT. I AM SORRY.
 > THAT IS THE CORRECT WORD AND I HAVE NEVER HAD TO USE IT BEFORE.
+
+— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
+
+— _..._
+
+**What the seal is for.**
+
+> IT IS WHOSE COUNT IT IS. WITHOUT IT, THE COUNT IS JUST A NUMBER.
+> IT DOES NOT COME OFF. I HAVE BEEN ASKED.
+
+— _I'LL BUY IT._ → _offered money for it_
+
+— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
+
+— _FAIR ENOUGH._
+
+**Offered money for it.**
+
+> IT IS NOT MINE TO SELL. NOTHING HERE IS MINE. THAT IS RATHER THE WHOLE ARRANGEMENT.
+
+— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
+
+— _I SEE._
 
 **Told the count is short.**
 
 > ...
 > THAT IS NOT POSSIBLE. STATE THE QUARTER.
+
+— _ALL OF THEM. SINCE THE MOON._ → _the fight_
+
+— _THE ONE WITH TWO WARM CRATES._ → _the fight_
+
+— _I'M MISTAKEN. FORGET IT._ → _the opening_
 
 ### NOBODY IN PARTICULAR / ELIAS WREN — THE RIFT
 
@@ -3449,6 +3722,10 @@ is the only honest thing available to him._
 >
 > IT'S STILL IN HERE. EVERYTHING IS.
 > GO OUT PAST WHERE THE LIGHT STOPS AGREEING.
+
+**A PAGE OF SOMEBODY — coming back short.**
+
+> PAST THE LIGHT. I'D SAY WHICH WAY IF I COULD.
 
 **A PAGE OF SOMEBODY — the handover.**
 
@@ -3473,14 +3750,17 @@ is the only honest thing available to him._
 > I'M NOT ASKING YOU TO AVENGE ME. I'M ASKING FOR THE TOOL BACK.
 > IT'S THE ONLY THING THAT OPENS WHAT HE MADE.
 
+**THE MAN WHO TEARS THE PAGES — coming back short.**
+
+> HE'S ON THE ROAD SOMEWHERE. YOU'LL KNOW HIM. EVERYONE DOES.
+
 **THE MAN WHO TEARS THE PAGES — the handover.**
 
 > YOU BROUGHT IT BACK.
 >
 > THEN LISTEN, BECAUSE THIS IS THE PART NOBODY GETS TOLD.
 >
-> IT ISN'T A LIST. IT'S A BOOK, IT'S BOUND, AND THE BINDING WAS SHIPPED
-> OUT AS SURPLUS STOCK.
+> IT ISN'T A LIST. IT'S A BOOK, IT'S BOUND, AND THE BINDING WAS SHIPPED OUT AS SURPLUS STOCK.
 >
 > THEY SENT THE MOST DANGEROUS OBJECT IN TWO UNIVERSES TO A THEME PARK.
 > AS A PROP.
@@ -3512,14 +3792,18 @@ is the only honest thing available to him._
 >
 > SO GO AND BE ALL OF IT. I'LL KEEP THE PLACE.
 
+**THE LAST PAGE — coming back short.**
+
+> IT'S STILL SHORT OF YOU, FRIEND.
+> COME BACK WHEN THERE'S NO MORE OF YOU TO COME.
+
 **THE LAST PAGE — the handover.**
 
 > THERE. IT'S WRITING. IT'S CROSSING THE OLD ONE OUT. BOTH OF THEM.
 >
 > THAT'S A CLEAN SHEET, THAT IS. A WHOLE MAN, UNWRITTEN.
 >
-> TAKE IT WITH YOU. A THING LIKE THIS SHOULDN'T BE LEFT IN A CHURCH
-> THAT ISN'T ONE.
+> TAKE IT WITH YOU. A THING LIKE THIS SHOULDN'T BE LEFT IN A CHURCH THAT ISN'T ONE.
 
 ## Where the data lives
 
@@ -3528,32 +3812,32 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                                | Canonical data file                                                                                                                                                                                      |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cutscenes — prelude + travel scenes (captions, `say` beats)           | `content/cutscenes/<id>.yaml` (compiled to `engine/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                              |
-| Per-level opening monologues (`intro`) + epilogues (`outro`)          | `content/levels/<id>.yaml` (compiled to `engine/generated/levels.ts` by `make levels`)                                                                                                                   |
-| Elite/boss `dialogue` + `lastWords`                                   | `content/enemies/<biome>/<id>.yaml` (compiled to `engine/generated/enemies.ts` by `make levels`)                                                                                                         |
-| Hero's inner thoughts (`firstKillThoughts` / `firstSightThoughts`)    | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef` — the pair being the same beat hung on a KILL or on a SIGHTING)                                            |
-| The scripted opening strike's blows (`openingStrike`)                 | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                |
-| Hero's HELLBORN first-sighting reads (`hellborn_*`)                   | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                   |
-| What he says at a door with no open road                              | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `engine/game/story.ts`)                                                       |
-| What he thinks about being SOMEWHERE (`placeThoughts`)                | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `engine/game/story.ts`)                              |
-| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                   | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `engine/game/story.ts`)                                                                                                         |
-| What the DRIVE leaves him saying (`drive_arrive_*`)                   | `content/thoughts.yaml` (picked by `driveVerdict` in `engine/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`)        |
-| What he mutters ON the road (`drive_out_welfare`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze)                                                                                             |
-| What THE GLUED say from the blockade                                  | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)               |
-| What the CROWD on that road are thinking                              | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car) |
-| Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `engine/game/companions.ts`)                                                                                                      |
-| Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `engine/generated/story-items.ts` by `make levels`)                                                                                                              |
-| The wandering merchant's greetings                                    | `content/levels/<id>.yaml` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                    |
-| A trader's counter line (said every visit, shop panel)                | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                   |
-| Quest givers' greetings + farewells                                   | `content/quest-givers.yaml` (compiled to `engine/generated/quests.ts` by `make levels`; played by `engine/game/quests/`)                                                                                 |
-| Every errand's ask, nag and handover                                  | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                                                                              |
-| A talk the player STEERS (speaker lines + the hero's rows)            | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                 |
-| The merchant's "welcome back" (return visits)                         | `content/levels/<id>.yaml` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                  |
-| Bestiary lore (`EnemyDef.lore` — described, not spoken)               | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                       |
-| Loose UI copy (how-to-play, not story)                                | `pwa/src/game/copy.ts`                                                                                                                                                                                   |
-| Brand strings (title, tagline — not story)                            | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                               |
+| Story/dialogue element                                                | Canonical data file                                                                                                                                                                                                                            |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)           | `content/cutscenes/<id>.yaml` (compiled to `engine/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                                                                    |
+| Per-level opening monologues (`intro`) + epilogues (`outro`)          | `content/levels/<id>.yaml` (compiled to `engine/generated/levels.ts` by `make levels`)                                                                                                                                                         |
+| Elite/boss `dialogue` + `lastWords`                                   | `content/enemies/<biome>/<id>.yaml` (compiled to `engine/generated/enemies.ts` by `make levels`)                                                                                                                                               |
+| Hero's inner thoughts (`firstKillThoughts` / `firstSightThoughts`)    | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef` — the pair being the same beat hung on a KILL or on a SIGHTING)                                                                                  |
+| The scripted opening strike's blows (`openingStrike`)                 | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                                                      |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)                   | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                                                         |
+| What he says at a door with no open road                              | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `engine/game/story.ts`)                                                                                             |
+| What he thinks about being SOMEWHERE (`placeThoughts`)                | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `engine/game/story.ts`)                                                                    |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                   | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `engine/game/story.ts`)                                                                                                                                               |
+| What the DRIVE leaves him saying (the seven verdicts)                 | `content/thoughts.yaml` (`drive_arrive_clean` … `drive_arrive_bumpy`; picked by `driveVerdict` in `engine/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`) |
+| What he mutters ON the road (`drive_out_welfare`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze; the run-in's `drive_arrive_goodco` / `drive_arrive_door` are the same, fired from `loop.ts` on the `goodco` / `atTheDoor` events) |
+| What THE GLUED say from the blockade                                  | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)                                                     |
+| What the CROWD on that road are thinking                              | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car)                                       |
+| Companion joining words + kill quotes                                 | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `engine/game/companions.ts`)                                                                                                                                            |
+| Found lore on story items (`lore`)                                    | `content/story-items.yaml` (compiled to `engine/generated/story-items.ts` by `make levels`)                                                                                                                                                    |
+| The wandering merchant's greetings                                    | `content/levels/<id>.yaml` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                                                          |
+| A trader's counter line (said every visit, shop panel)                | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                                                         |
+| Quest givers' greetings + farewells                                   | `content/quest-givers.yaml` (compiled to `engine/generated/quests.ts` by `make levels`; played by `engine/game/quests/`)                                                                                                                       |
+| Every errand's ask, nag and handover                                  | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`; a `{CACHE}` page is substituted per rung from `DifficultyDef.cache.line` by `resolveCacheLine`)                    |
+| A talk the player STEERS (speaker lines + the hero's rows)            | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                                                       |
+| The merchant's "welcome back" (return visits)                         | `content/levels/<id>.yaml` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                                                        |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)               | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                                                             |
+| Loose UI copy (how-to-play, not story)                                | `pwa/src/game/copy.ts`                                                                                                                                                                                                                         |
+| Brand strings (title, tagline — not story)                            | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                                                                     |
 
 **A quest giver's `lore` is DESCRIBED, not spoken** — it is the paragraph the
 offer box and the quest log print under their name, in the same register as an

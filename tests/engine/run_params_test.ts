@@ -4,7 +4,7 @@
 // `RunParams` (`engine/game/session-setup.ts`) is what the engine builds a run
 // from. `SessionParams` (`server/wire/protocol.ts`) is what crosses the wire.
 // They are deliberately written twice — the wire leaf imports NOTHING, because
-// the page reads it from screens on the app's startup path where the 200 KB
+// the page reads it from screens on the app's startup path where the 170 KB
 // critical-path budget forbids reaching `@game/core` — and a `SessionParams` is
 // meant to be assignable to a `RunParams` with no conversion at all.
 //

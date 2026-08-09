@@ -6,7 +6,7 @@
 // This module is deliberately a LEAF: types, constants and narrow guards, no
 // engine import at all. Both ends of the wire read it — the server inside its
 // utility process and the page inside the renderer — and the page reaches it
-// from a screen that sits on the app's STARTUP path, where the 200 KB
+// from a screen that sits on the app's STARTUP path, where the 170 KB
 // critical-path budget forbids anything that drags `@game/core` behind it.
 // A `type` import of `GameInput` would be free, but a value import would not,
 // and the distinction is too easy to lose; so nothing here knows the engine

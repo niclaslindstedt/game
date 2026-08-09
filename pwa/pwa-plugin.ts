@@ -798,7 +798,7 @@ self.addEventListener("fetch", (event) => {
  * of a crawler and a no-JS reader without running the app — and it was then
  * made to wait on `/assets/index-*.css`, 180 KB of app stylesheet (36 KB over
  * the wire) of which it uses about two. On the reference device — a phone on a
- * slow connection, the same one the 200 KB critical-path budget is written for
+ * slow connection, the same one the 170 KB critical-path budget is written for
  * — that is a second network round trip spent before anything is legible, on
  * the one screen whose entire job is to be legible early.
  *

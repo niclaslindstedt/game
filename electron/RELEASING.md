@@ -217,7 +217,7 @@ The screenshots have a generator — the same one that shoots Apple's rasters,
 with a Steam raster beside them:
 
 ```sh
-npm install --no-save playwright && npx playwright install chromium
+npx playwright install chromium   # playwright itself comes with `npm install`
 cd pwa && npx vite --port 5199 &
 node pwa/scripts/store-shots.mjs --only steam    # → electron/store/screenshots/steam-1080/
 ```

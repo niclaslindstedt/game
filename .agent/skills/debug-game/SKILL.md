@@ -21,7 +21,7 @@ it at both ends of the session.
 | Instrument | How |
 | --- | --- |
 | Deterministic repro | `createGame(FIXED_SEED)` + fixed-dt `step()` loops in a scratch Vitest file |
-| Live state inspection | Load the app with `?debug` → `window.__game` is the live `GameState` (see `GameScreen.tsx`); poke it in DevTools or via the playtest bot |
+| Live state inspection | Load the app with `?debug` → `window.__game` is the live `GameState` (stamped in `pwa/src/game/game-screen/run-setup.ts`); poke it in DevTools or via the playtest bot |
 | Engine log buffer | `recentLogs()` from `@game/core` — ring buffer of all levels, always on. `debug(...)` messages print to console only in debug mode (`?debug` or `setDebugEnabled(true)`) |
 | Autoplay + screenshots | The `playtest` skill's bot: strategies + `pageerror` logging + screenshots of the exact frame |
 | Sim-vs-render split | Rendering reads state, never writes it. If values are wrong in `window.__game`, the bug is engine-side; if state is right but pixels are wrong, it's `render.ts`/assets |

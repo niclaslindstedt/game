@@ -220,7 +220,7 @@ tell you the fight is a corridor, and a wall you mistyped is invisible in text.
 Chromium, and hands back the run's stats and screenshots:
 
 ```sh
-npm install --no-save playwright        # once — deliberately not a repo dep
+npx playwright install chromium           # once — the browser binaries only
 (cd pwa && npx vite --port 5199 &)      # the dev server, once
 node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
 ```
