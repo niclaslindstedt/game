@@ -53,10 +53,20 @@ const MAX_LIGHT_DEG = 1;
  * a terminator pointing the wrong way scores ≤ 0. */
 const MIN_CONTRAST = 0.15;
 
-/** Pass 2 only asserts where there is a terminator to read: a near-full or
- * near-new disc has no boundary and the measure is just noise. */
+/**
+ * Pass 2 only asserts where there is a terminator to read: a near-full or
+ * near-new disc has no boundary and the measure is just noise.
+ *
+ * THE WINDOW IS NOT SYMMETRIC ABOUT A HALF, because the measure is not. The
+ * contrast is a RATIO between the two halves' mean luminance, so a crescent —
+ * one half lit, one half black — scores near 1, while a gibbous disc has both
+ * halves lit and scores near the noise floor however perfectly it is lit. At
+ * lit ≈ 0.67 a correct render measures 0.13–0.19, straddling MIN_CONTRAST, so a
+ * window that admitted it made the whole check turn on which frames the sweep
+ * happened to land on rather than on anything about the shader.
+ */
 const CLEAR_MIN = 0.25;
-const CLEAR_MAX = 0.75;
+const CLEAR_MAX = 0.62;
 /** How many legible frames to insist on finding and checking. */
 const WANT_FRAMES = 6;
 
@@ -72,14 +82,22 @@ const PINS = Array.from({ length: 40 }, (_, i) => Number((i / 40).toFixed(3)));
  * screens out, so a check that only ever looked at the resting frame stopped
  * covering a quarter of the solar system without ever saying so.
  *
- * Pass 2 zooms IN, because it photographs the Moon — and at rest the Moon is
- * two pixels across and drawn as a point of light with no globe behind it (see
+ * Pass 2 zooms IN, because it photographs the Moon — and at rest the Moon is a
+ * few pixels across and drawn as a point of light with no globe behind it (see
  * `GLOBE_MIN_PX` in title-moons.ts). There is no terminator on a spark. Pushing
  * in until it is a disc is what puts the shader back under the lens, which is
  * the only thing this pass was ever for.
+ *
+ * MOON_ZOOM MOVES WITH `SKY_SCALE` (title-planets.ts) AND IN THE OPPOSITE
+ * DIRECTION: it is worth `SKY_SCALE × MOON_ZOOM` of the old picture, so leaving
+ * it alone when the sky was drawn twice as large pushed the Moon and its planet
+ * clean off the frame — and pass 2 only photographs a Moon WHOLLY inside the
+ * viewport, so what that looks like from here is "0 legible frames", not "too
+ * far in". The product is the thing to hold constant: 8 short-side units of
+ * Earth's orbit is where the Moon is a readable disc still beside its planet.
  */
 const SWEEP_ZOOMS = [1, 0.12];
-const MOON_ZOOM = 4;
+const MOON_ZOOM = 2;
 
 /**
  * …and pass 2 runs in LANDSCAPE only, which is a coverage decision rather than

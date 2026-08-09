@@ -10,6 +10,38 @@ import type { GlobeKind, PlanetGlobe } from "@ui/lib/planet-globe.ts";
 import { SAT_MS_PER_DAY } from "./title-moons.ts";
 import type { SkyElements } from "./title-sky.ts";
 
+/**
+ * HOW BIG THE WHOLE PICTURE IS DRAWN — one number over both of the sky's two
+ * chosen lengths, the disc scale (EARTH_DISC) and the distance scale
+ * (AU_UNITS).
+ *
+ * IT IS ONE NUMBER AND NOT TWO ON PURPOSE. Everything else in this file is a
+ * measured ratio, so scaling the two chosen lengths TOGETHER leaves every one
+ * of those ratios untouched: the same sky, further from the eye. Scale the
+ * discs alone and the system silts up — the worlds grow into orbits that did
+ * not — which is the failure this constant exists to make impossible to write
+ * by accident.
+ *
+ * WHY IT IS NOT 1. At the reference viewport (a 844×390 landscape phone) the
+ * unscaled sky drew Earth under nine pixels across and put the whole of
+ * Mercury's orbit — 29 px at its widest — INSIDE the sun's own painted glare,
+ * whose rays reach 34 px. Mercury therefore had nowhere to be seen: it spent
+ * every orbit either behind the star or inside its halo, which is exactly what
+ * it looked like, a planet that blinks out at the sun's edges and never comes
+ * back. Doubling the picture lifts Mercury's orbit clear of the glare (46–69 px
+ * against the same 34 px) and takes every inner world from a smudge to a disc
+ * with a readable terminator.
+ *
+ * WHAT IT COSTS: the giants ride out. Their orbits are true (ORBIT_AU), so
+ * doubling the picture doubles their distance from the star as well, and
+ * Jupiter — the only one of the four that was regularly in frame — now crosses
+ * the viewport for a smaller share of its twelve-minute year. That trade is
+ * worth making because the inner system is the part with anything to look at,
+ * the giants were already a rare sight by design (see CAM_AU in title-sky.ts),
+ * and the camera exists precisely so that anyone who wants them can pull back.
+ */
+export const SKY_SCALE = 2;
+
 /** Earth's revolution time on screen — the anchor for the whole system. */
 export const EARTH_PERIOD_MS = 64_000;
 
@@ -21,7 +53,7 @@ export const EARTH_PERIOD_MS = 64_000;
  *
  * IT USED TO BE DERIVED FROM THE DRAWN RADII by Kepler's third law, and that
  * was the wrong answer to the right question. The radii are compressed (see
- * SCREEN_R), so T² ∝ a³ over THOSE lengths gives the periods a solar system
+ * AU_UNITS), so T² ∝ a³ over THOSE lengths gives the periods a solar system
  * shaped like this picture would have — internally tidy, and wrong by a factor
  * of forty at Neptune, which lapped the sun four times an hour instead of
  * standing nearly still.
@@ -207,13 +239,18 @@ export const DIAMETER_KM = {
  * slightly larger planet, and nothing on screen tells the viewer the difference
  * is the renderer's rather than the sky's.
  *
- * SO EARTH IS SMALL NOW, and that is what it costs: under nine pixels on a
- * landscape phone at rest, with continents that are a suggestion rather than a
- * map. Zoom in (SKY_CAMERA) and they come back. Jupiter sets the ceiling — 11.2
- * of whatever Earth gets — and Saturn's RINGS set it lower still, reaching 2.27
+ * SO EARTH IS SMALL, and that is what it costs: seventeen pixels on a landscape
+ * phone at rest, with continents that are a suggestion rather than a map. Zoom
+ * in (SKY_CAMERA) and they come back. Jupiter sets the ceiling — 11.2 of
+ * whatever Earth gets — and Saturn's RINGS set it lower still, reaching 2.27
  * planet radii and making Saturn the widest thing in the sky bar the sun.
+ *
+ * The 0.022 is the RATIO — how much of the frame an Earth is worth against the
+ * distances beside it. SKY_SCALE is how big the whole picture is drawn. Raise
+ * the scale, never this: a disc scale lifted on its own grows worlds into
+ * orbits that did not grow with them.
  */
-export const EARTH_DISC = 0.022;
+export const EARTH_DISC = 0.022 * SKY_SCALE;
 
 export function discSize(kind: keyof typeof DIAMETER_KM): number {
   return EARTH_DISC * (DIAMETER_KM[kind] / DIAMETER_KM.earth);
@@ -247,12 +284,17 @@ export const ORBIT_AU = {
  * How wide one AU is drawn, as a fraction of the short side, at rest.
  *
  * This is the ONE framing decision left in the file, and it is a framing
- * decision rather than a physical one: at rest the picture is the inner system
- * with Jupiter at the edge of it, because that is the part of the solar system
- * with anything to look at. Everything past Jupiter is out there at its true
- * distance, waiting for somebody to pull the camera back.
+ * decision rather than a physical one: at rest the picture is the inner four
+ * and their moons, comfortably clear of the star, because that is the part of
+ * the solar system with anything to look at. Everything from Jupiter out is
+ * there at its true distance, crossing the frame rarely and briefly, waiting
+ * for somebody to pull the camera back.
+ *
+ * As with EARTH_DISC, the 0.19 is the FRAMING and SKY_SCALE is how big the
+ * picture is drawn. The two are multiplied here so that one number moves both
+ * of the sky's chosen lengths at once and their proportion never drifts.
  */
-export const AU_UNITS = 0.19;
+export const AU_UNITS = 0.19 * SKY_SCALE;
 
 export function planetTable(els: SkyElements): Planet[] {
   return [
