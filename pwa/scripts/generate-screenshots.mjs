@@ -73,8 +73,7 @@ try {
   ({ chromium } = await import("playwright"));
 } catch {
   process.stderr.write(
-    "generate-screenshots: playwright is not installed.\n" +
-      "  npm install\n",
+    "generate-screenshots: playwright is not installed.\n" + "  npm install\n",
   );
   process.exit(1);
 }
