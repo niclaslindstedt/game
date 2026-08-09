@@ -304,7 +304,7 @@ nothing reads the catalog for its own level. → `mapgen-improvement`, `level-de
 
 **NOTHING OUTSIDE A RUN MAY IMPORT `mapgen/`.** The menus reach levels through
 `defs/levels/summary.ts`; pulling the generator onto the startup path puts the
-whole level catalog and the carve inside the 200 KB budget.
+whole level catalog and the carve inside the 170 KB budget.
 
 **A READ OF "THE HERO" IS ONE OF TWO KINDS, AND KNOWING WHICH IS THE JOB.** A
 PRIVATE read — the bag, the purse, the build, the talents, the worn kit — is
@@ -643,7 +643,8 @@ order and the reasoning, plus the per-catalog rules, is `docs/content-pipeline.m
 | ------------- | --------------------------------------------------------- | --------------------------- | ------------------------------------------------------ | ----------------------------- |
 | Rules         | `content/scripts/*.lua`                                   | `generate-scripts.mjs`      | `engine/generated/scripts.ts`                          | `script_parity_test.ts`       |
 | Items         | `content/items/`, `item_*.yaml`                           | `generate-items.mjs`        | `engine/generated/items.ts`                            | `item_roundtrip_test.ts`      |
-| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `engine/generated/{cutscenes,thoughts,story-items}.ts` | —                             |
+| Sets          | `content/sets.yaml`                                       | `generate-sets.mjs`         | `engine/generated/sets.ts`                             | `set_roundtrip_test.ts`       |
+| Story         | `content/cutscenes/`, `thoughts.yaml`, `story-items.yaml` | `generate-story.mjs`        | `engine/generated/{cutscenes,thoughts,story-items}.ts` | `story_roundtrip_test.ts`     |
 | Enemies       | `content/enemies/<biome>/`                                | `generate-enemies.mjs`      | `engine/generated/enemies.ts`                          | `enemy_roundtrip_test.ts`     |
 | Powerups      | `content/powerups.yaml`                                   | `generate-powerups.mjs`     | `engine/generated/powerups.ts`                         | `powerup_roundtrip_test.ts`   |
 | Sprites/atlas | `content/sprites/`                                        | `generate-assets.mjs`       | `pwa/src/game/assets/`                                 | —                             |
@@ -921,6 +922,7 @@ carries the workflow, the quality bar and the traps for its subject.
 | `menu-design`         | The title menu, a settings row, the developer menu, an in-game window |
 | `ui-review`           | A fit-and-finish pass over the UI at the nine reference viewports     |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set                |
+| `store-art`           | Storefront KEY ART — capsules, feature graphics, icons, promo images  |
 | `update-story`        | Writing, rewriting or retoning ANY line the game speaks               |
 | `library-improvement` | Building or improving the generated `/library/` site                  |
 
