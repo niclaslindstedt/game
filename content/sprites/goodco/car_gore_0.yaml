@@ -6,12 +6,31 @@
 # to his own silhouette. One set of three rungs therefore covers all seven
 # panels at every damage rung, with nothing authored per panel.
 #
-# TWO CONSTRAINTS SHAPE THE ART, and both were learned by looking at a car.
+# THREE CONSTRAINTS SHAPE THE ART, and all three were learned by looking at a car.
 #
-# IT COVERS EVERY COLUMN. A panel is a narrow slice of these 48 columns — the
-# bumper is about six of them — so a film built as scattered blots leaves whole
-# panels with nothing to mask, and the first cut drew a clean nose on a wagon
-# whose bumper was measurably drenched.
+# IT COVERS EVERY COLUMN, AND EVERY PANEL EQUALLY. A panel is a narrow slice of
+# these 48 columns AND a band of the 26 rows — the bumper is x42-46 by y10-19,
+# the roof is two rows — so a film built as scattered blots leaves whole panels
+# with nothing to mask, and the first cut drew a clean nose on a wagon whose
+# bumper was measurably drenched. The second cut fixed the columns and left the
+# ROWS graded (dense at the top, thinning down), which is the same bug on the
+# other axis: it is not "wettest at the top of the car", it is the low panels
+# being drier than the high ones at every rung, for ever. The density is EVEN;
+# only the COLOUR is graded — wet at the top, clotted at the bottom where it has
+# run and dried.
+#
+# THE RUNGS ARE A REAL LADDER — about 20%, 58% and 100% of the canvas — and the
+# spacing is load-bearing rather than aesthetic. `carCoat` solves each rung's
+# alpha from what that rung actually covers, so two rungs of near-equal coverage
+# (this was 49 / 96 / 100) leave the ladder with nowhere to go: the sparse end
+# is already a wash, and a panel crossing a threshold changes art without
+# changing how bloody it looks. Move a rung's coverage and CAR_FILM_COVER in
+# car-soak.ts moves with it — `tests/content/car_gore_test.ts` fails if it does not.
+#
+# AND IT IS ONE PLAN CUT AT THREE DEPTHS: every mark on rung 0 is on rung 1 and
+# rung 2, in the same place, the way an enemy's wound stages are a prefix of one
+# plan. A panel climbing a rung ADDS blood; it never rearranges what it already
+# had, which would read as the mess sliding around the car.
 #
 # AND THE TOP RUNG LEAVES NO BARE PIXEL AT ALL. A car covered in blood may be
 # light red and dark red and every value between; it may not still have white
@@ -22,16 +41,18 @@ name: car_gore_0
 family: goodco
 size: [48, 26]
 description: >
-  Rung 0 of the blood a car picks up running people down — spatter across the
-  shell with runs where it has started to travel down the paintwork.
+  Rung 0 of the blood a car picks up running people down — sparse spatter
+  with runs where it has started to travel down the paintwork.
 subject:
   kind: vehicle overlay
   build: >-
-    a blood film over a 48x26 area: wet red, midtone and clotted pixels mixed
-    across it, WETTEST at the top and most clotted at the bottom where it has
-    run and dried, solid wet blots through it, and short vertical runs trailing
-    down; it must read as a FILM over paintwork rather than as a shape, since it
-    is masked to whichever panel it is laid on
+    a blood film over a 48x26 area, covering about a FIFTH of it: single specks
+    and small clustered blots scattered EVENLY over the whole area with no part
+    of it left bare, short vertical runs trailing down from the bigger blots,
+    and the colour graded by height — wet red at the top, clotted dark at the
+    bottom where it has run and dried. It must read as a FILM over paintwork
+    rather than as a shape, since it is masked to whichever panel it is laid
+    on, and every part of the area must carry marks
   flavor: >-
     the first few bodies: spatter and a run or two, the paint still plainly white between them
 palette:
@@ -39,29 +60,29 @@ palette:
   d: "#a82c2c" # blood midtone
   i: "#772020" # clotted blood
 grid: |
-  ..id...dr..rddr.rd.rid..d.d..ii.i.dd...r.rr.rir.
-  dd..r.d..didrrrddrirrr..ddrdrrd.rdd..r.dr...i.ii
-  ii.i.i...ii.dddr.drr.ddrdrrrdd.d.r.dr..d.rr.dd..
-  .id.rdrri..i.dd..iird.iidrrddd.d..r.iirdrdrir..r
-  .dddii..rd..r....r.idrrd..dd.dddd...i..dridd.idd
-  ...i.idr..diidd.id..drrrdidd.drirrrd..idiiidd.dr
-  dridr...rd..rdi.i.dr.rddd.ddr.ridi.rddddid.dir.d
-  ...i.....ir.i..dd..ddi...drrrddd.i.drrrdi.d...r.
-  ..didi.d.r...ddddd..d.iiiiddddi..id.rddi.....i..
-  d...i.d..r..drrdrddd.r..dd..r..ddd....di......id
-  .irddd..dii.iddddd..r..dddd....ri.....d.....ii..
-  .ddrdd.d.id..rdd.d...ii.ri......dd...dd.ddii.ir.
-  ddrrrdd...i..d.ii.dddr.d.dd.d.rd..i.d.di.d.i.i.d
-  .ddrdd.........i...d...dd..d..i.d..ir.ddd...r...
-  ...d..i..riddid..dd...rd....di.....i.ii.d......i
-  ii...i.dri.iir.d...rii.dd...i.i..r.d.di.......i.
-  ddd.irdd..d.d.....ddd..d...ddiid.dd...i..r.d....
-  rrrd...i.i.........i.ddd.......dd...di.........d
-  dddi.d.i....i..di.di.r.ii.d.......d.di.ii..dd.i.
-  .i...i........id..d.idii..ddr.ririid.id.......i.
-  d..ddr..ii.d....d....d..ii.r.i....r.....i...d..d
-  dddrrrdr....id...ri..di.......d..d......r.di.d..
-  ...dddrr.r.i.d..i..r.d.iid....d......i...dr.r...
-  .di..d.......i.......did......i....i....di.i....
-  ....ir.i......i.i..i.dd.i....i......d.di........
-  i.d...d.d.i..i....id.di...i.....i....iii...id...
+  .rd..r..........r...........r.....d......dddr...
+  .rd.....r..........drd............dr.......dd...
+  ...r....rdd........rdr....r.......rd............
+  ..d.r...........rr.....rd..dd..........r......d.
+  ....rdrd......d...............r....dd.d.......r.
+  ..............dr........d.....d....rd.d...d...rr
+  ......dr....r.rr......dd......d................r
+  rd.....d......dd......r.......d.d.....d..dd.....
+  d.............rrd....dd......d.r.........d......
+  ......dd.dr.....d...dd......r..d.........d......
+  di......dr........d......d..........d.....did...
+  ..d.....i........di.....ddi....d......d....d....
+  .......d........d........di......i....iid.....ii
+  ...........ddi...........i...d...i.....di.....id
+  ..........ddid......di.d....ii.........d........
+  ...d.......ddd.....di........i..id...d..........
+  ...id....i........i....i.........dd..d.......d..
+  ...di....d.......i........dd.....i...d..i....d..
+  .....ii...i......i....dd...i...........ii....i..
+  i....d.....di.........i....d....d.......i....d..
+  .....d.....d......id......ii...ii............d..
+  ..........i..i.....i....ii.....ii...ii....i.i...
+  ..i......i..............i......i...........ii...
+  ..i....iiii.......i.....i.ii..........iii.......
+  ...i...ii.........ii...ii..i..........iii.......
+  ...................i...............i....i.......

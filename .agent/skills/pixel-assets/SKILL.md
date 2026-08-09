@@ -333,7 +333,11 @@ actually looked at**:
 - [ ] **Outline consistency.** Game sprites here use a dark (not pure black)
       outline on the exterior; interior detail lines are a shade lighter.
 - [ ] **No orphan pixels.** Every lit pixel is part of a deliberate cluster;
-      single floating pixels read as noise at 1x.
+      single floating pixels read as noise at 1x. An overlay FILM (spatter,
+      soot, frost) is the one exception — scattered single pixels are the
+      subject — and it is judged MASKED to what it will be laid on, never whole:
+      the figure that matters is its coverage inside the smallest window the
+      mask can cut, not over the sheet.
 - [ ] **Light from the top-left**, consistently across all sprites.
 - [ ] **Frames align.** For animated sprites, flip between frame previews:
       the anchor (feet, center of mass) must not drift between frames.

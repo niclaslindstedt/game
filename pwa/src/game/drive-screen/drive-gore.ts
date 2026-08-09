@@ -47,7 +47,12 @@ import { slicedPiece, splitSprite } from "../render/sprite-split.ts";
 import { fract, seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
-import { cleanCar, soakCarFromDrag, type CarSoak } from "./car-soak.ts";
+import {
+  cleanCar,
+  smearCarSoak,
+  soakCarFromDrag,
+  type CarSoak,
+} from "./car-soak.ts";
 import {
   CROWD_SPRITES,
   DRIVER_SPRITES,
@@ -400,6 +405,14 @@ export function stepDriveGore(state: DriveGoreState, drive: DriveState): void {
   if (drive.remains.some((piece) => piece.dragMs > 0)) {
     soakCarFromDrag(state.car, STEP_MS);
   }
+
+  // …and then the AIRSTREAM, over everything the two above have just put on the
+  // car: what landed on the nose is dragged back over the bonnet, the glass and
+  // the flank for as long as the wagon is moving. A rate, on the fixed step,
+  // for the third time on this road and for the same reason — blood travelling
+  // over paintwork is a thing that goes on happening, and at 120 mph it is the
+  // difference between a bloodied car and a bloodied bumper on a clean one.
+  smearCarSoak(state.car, drive.car.speed, STEP_MS);
 }
 
 /** The drive's fixed step (ms) — the rate `stepDriveGore` is called at, which

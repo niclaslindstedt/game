@@ -28,6 +28,18 @@
 // hard the body was thrown UP (`DriveStrike.vz`), which is why the roof of a
 // car driven carefully stays clean for a whole leg and the roof of one driven
 // flat out through a blockade does not.
+//
+// **AND THEN THE AIR MOVES IT** (`smearCarSoak`), which is the piece without
+// which none of the above draws a car. A strike is an EVENT on one panel, so a
+// model built only out of strikes is a step function: nearly every body on this
+// road is met on the bumper, the bumper saturates inside half a dozen of them,
+// and the wagon reads as a drenched nose bolted to a showroom-fresh body — one
+// hard seam down the middle, which is precisely the thing that stops it looking
+// like blood. Blood on a car doing 120 does not stay where it landed: it
+// streams back over the bonnet, up the glass, down the flank. So each panel is
+// pulled toward a fraction of the one UPWIND of it, at a rate that goes with
+// road speed. The strike says where it came from; the airstream says where it
+// ends up, and the two together are a gradient rather than a mask.
 
 import type { CarPanelId } from "@game/core";
 
@@ -60,12 +72,19 @@ export function cleanCar(): CarSoak {
  * row starts with the panel that made contact, which always wears the most.
  */
 const SPRAY: Record<CarPanelId, readonly (readonly [CarPanelId, number])[]> = {
-  // EVERY CHAIN REACHES EVERY PANEL IT PHYSICALLY COULD, and the first cut did
-  // not — which left exactly one part of the car clean, and one clean white
+  // EVERY CHAIN REACHES EVERY PANEL THE SPRAY ITSELF COULD, and the first cut
+  // did not — which left exactly one part of the car clean, and one clean white
   // panel on an otherwise drenched wagon is the only part anybody looks at.
-  // Nearly every body on this road is met on the BUMPER (measured: 49 of 55
-  // contacts over a leg), so the bumper's row is the only one most cars ever
-  // walk, and it has to reach the lot.
+  // Nearly every body on this road is met on the BUMPER (measured: 533 of 643
+  // contacts over eight legs), so the bumper's row is the only one most cars
+  // ever walk, and it has to reach the lot.
+  //
+  // IT STILL DOES NOT REACH THE DOORS OR THE TAIL, and that is deliberate:
+  // spray does not fly BACKWARDS off a nose. What puts blood back there is the
+  // airstream carrying it (`smearCarSoak`), which is a different mechanism with
+  // a different shape — it takes time, it needs road speed, and it can only
+  // ever hand a panel less than the one ahead of it has. Adding a made-up rear
+  // share here instead would wet the tail of a car that has been idling.
   //
   // THE SHARES ARE WRITTEN DOWN RATHER THAN DERIVED FROM A POSITION, which is
   // what this replaced. A single falloff raised to the step index means
@@ -117,9 +136,19 @@ const SPRAY: Record<CarPanelId, readonly (readonly [CarPanelId, number])[]> = {
  * the first crossing. A player driving properly should reach GOODCO with a
  * bloodied nose and readable paint everywhere else; ploughing a blockade at 120
  * is what earns a car you cannot see out of.
+ *
+ * AND IT IS THE PANEL THAT MADE CONTACT THIS PRICES, so it is what decides
+ * whether the car ever gets to look like a gradient. It was twice this, and at
+ * twice this the bumper went from factory to its ceiling in six bodies —
+ * measured, twenty seconds into a leg the nose was at 0.86 and the doors at
+ * zero. Nothing downstream can rescue that: an airstream can only smear what is
+ * there, and a nose that saturates before the second crossing pins the top of
+ * the gradient flat for the rest of the trip. Halved, the nose climbs over
+ * about fifteen bodies, which is the whole of the first crossing — long enough
+ * that the smear has laid the rest of the car in behind it.
  */
-const PER_BODY = 0.1;
-const PER_FORCE = 0.09;
+const PER_BODY = 0.05;
+const PER_FORCE = 0.045;
 
 /**
  * HOW FAR UP THE CAR A BODY HAS TO BE THROWN before the panels past the one it
@@ -185,6 +214,97 @@ export function soakCarFromStrike(
   }
 }
 
+/**
+ * WHAT THE AIR DOES WITH IT — the panels downwind of each one, in the order the
+ * stream actually goes over a car: up the nose and over the bonnet to the glass
+ * and the roof, and back along the flank from the front wing to the doors and
+ * the tail. Both branches end at the backside, which is where everything on a
+ * car ends up.
+ *
+ * This is a picture of the SHELL, not of the sprite sheet, and it is the one
+ * thing here that has to be re-read if a panel is ever added: the film's
+ * continuity across a seam comes from these pairs being the pairs that actually
+ * touch (`car_<panel>_0.yaml`: bumper x42-46, hood x30-45, front_side x30-41,
+ * glass x3-33, roof x4-29, doors x14-29, backside x0-17 on the shared 48px
+ * canvas — nose to the right).
+ */
+const DOWNWIND: Record<CarPanelId, readonly CarPanelId[]> = {
+  bumper: ["hood", "front_side"],
+  hood: ["glass"],
+  glass: ["roof"],
+  roof: ["backside"],
+  front_side: ["doors"],
+  doors: ["backside"],
+  backside: [],
+};
+
+/** …walked NOSE FIRST, so one tick carries the film the whole length of the car
+ * rather than one panel per tick. A pass that walked it the other way would
+ * take seven ticks to reach the tail and would look like the blood creeping
+ * forward from the boot. */
+const WIND_ORDER: readonly CarPanelId[] = [
+  "bumper",
+  "hood",
+  "front_side",
+  "glass",
+  "roof",
+  "doors",
+];
+
+/**
+ * HOW MUCH OF THE PANEL AHEAD A PANEL ENDS UP WEARING.
+ *
+ * The whole gradient is this number raised to the number of seams between a
+ * panel and the nose: at 0.62 a drenched bumper (0.92) leaves the bonnet at
+ * 0.57, the glass at 0.35, the roof at 0.22 — and, down the flank, the wing at
+ * 0.57, the doors at 0.35, the tail at 0.22. That is a car that is filthy at
+ * the front and grubby at the back, which is what a car that has driven through
+ * a crowd looks like. Push it toward 1 and the whole shell goes one flat red;
+ * push it down and the seam this exists to remove comes back.
+ */
+const SMEAR_CARRY = 0.62;
+
+/** …and how fast it gets there, in soak per second of the gap still to close,
+ * at full road speed. A couple of seconds to settle: fast enough that the tail
+ * is never conspicuously fresh, slow enough that the blood is visibly
+ * TRAVELLING rather than teleporting onto the boot lid the moment the bumper
+ * takes a hit. */
+const SMEAR_PER_SEC = 0.6;
+
+/** The road speed (px/s) at which the stream is at full strength — a little
+ * under half the wagon's top end, because a car at 40 mph is already moving
+ * quite fast enough to blow what is on the bonnet backwards. Below it the smear
+ * scales down, and a stationary car does not smear at all: blood sitting still
+ * on a parked wagon has nowhere to go. */
+const SMEAR_SPEED_FULL = 400;
+
+/**
+ * One tick of the airstream: pull every panel toward its share of the one ahead
+ * of it.
+ *
+ * IT ONLY EVER RAISES. The blood streaming back off the bonnet does not leave
+ * the bonnet — it is dragged over the paint behind it — so this is a floor
+ * being lifted rather than a quantity being moved, and a panel already wetter
+ * than its upwind neighbour (the tail of a car that has been reversing over
+ * people, the underside after a long drag) keeps every drop of it.
+ */
+export function smearCarSoak(
+  soak: CarSoak,
+  speedPx: number,
+  dtMs: number,
+): void {
+  const wind = clamp01(Math.abs(speedPx) / SMEAR_SPEED_FULL);
+  if (wind <= 0) return;
+  const rate = clamp01((SMEAR_PER_SEC * wind * dtMs) / 1000);
+  for (const panel of WIND_ORDER) {
+    const target = Math.min(SOAK_MAX, soak[panel] * SMEAR_CARRY);
+    for (const onto of DOWNWIND[panel]) {
+      if (soak[onto] >= target) continue;
+      soak[onto] += (target - soak[onto]) * rate;
+    }
+  }
+}
+
 /** …and one tick of whatever is being dragged along underneath. */
 export function soakCarFromDrag(soak: CarSoak, dtMs: number): void {
   const amount = (DRAG_PER_SEC * dtMs) / 1000;
@@ -201,17 +321,95 @@ export function soakCarFromDrag(soak: CarSoak, dtMs: number): void {
  * costumes. A panel under the first rung contributes nothing at all, so a clean
  * car composites nothing and costs exactly what it always did.
  *
- * THE RUNGS SIT LOW ON PURPOSE. Only the FIRST rung's art leaves real paintwork
- * showing between the spatter, and only it is meant to — a car a few bodies in
- * should plainly still be a white hatchback with blood on it. Everything above
- * covers, so the thresholds are set where a panel that has been hit a handful
- * of times has already climbed off the sparse rung: a wagon that reads as
- * covered in blood with white pixels punched through it reads as a rendering
- * fault rather than as a car nobody has washed.
+ * **AND THE ALPHA IS SOLVED FROM THE ART RATHER THAN RAMPED BLIND, WHICH IS THE
+ * DIFFERENCE BETWEEN THIS LADDER AND THE HERO'S.** His coat ramps the alpha
+ * inside a rung and resets it at the top of one, which works because his rungs
+ * roughly TRIPLE in coverage (5% → 14% → 23% on the head): the art more than
+ * pays back the alpha reset, so he only ever darkens. The car's film could not
+ * do that — its top rung is required to cover the canvas WHOLE (see
+ * `car_gore_2.yaml`), so its rungs were 49% → 96% → 100% and resetting the
+ * alpha against that made a panel get LIGHTER as it got bloodier: crossing 0.5
+ * took one from an effective 0.86 to 0.35, and a wagon whose bonnet had just
+ * climbed a rung read as CLEANER than its own windscreen. Two neighbours either
+ * side of a threshold invert, which is a seam no airstream can smear out
+ * because it is not in the soak at all.
+ *
+ * So there is ONE quantity — how much of the panel is under blood — and
+ * everything else is solved from it. The soak ramps it (`filmWetness`); a rung
+ * is the sparsest art that can DRAW that much; its alpha is the wetness divided
+ * by what it covers. Which makes the ladder's rungs `CAR_COAT_AT` a DERIVED
+ * fact rather than an authored one: a panel leaves rung 0 at the exact soak
+ * where the wetness it wants outgrows what rung 0's art can paint at full
+ * strength. Re-draw the art denser and the thresholds move on their own —
+ * there is no second number to forget.
  */
-export const CAR_COAT_AT = [0.05, 0.22, 0.5];
-const CAR_ALPHA_MIN = 0.35;
-const CAR_ALPHA_MAX = 0.9;
+
+/** What each rung's film actually covers, as a fraction of its canvas —
+ * measured off `content/sprites/goodco/car_gore_<rung>.yaml` and pinned there
+ * by `tests/content/car_gore_test.ts`, since it is what the whole ladder is
+ * solved from. THE SPACING IS LOAD-BEARING: two rungs of near-equal coverage
+ * leave the ladder nowhere to go between them. */
+const CAR_FILM_COVER = [0.21, 0.58, 1];
+
+/** The soak at which a panel is dirty at all — under it nothing is composited
+ * and a clean car costs exactly what it always did. */
+const CAR_FILM_FLOOR = 0.04;
+
+/** How much of a panel is under blood at that floor, and at the ceiling. The
+ * top is held under 1 for the reason `SOAK_MAX` is: a panel with no paint
+ * showing anywhere stops reading as a bloodied car and starts reading as a red
+ * one. */
+const CAR_WET_MIN = 0.06;
+const CAR_WET_MAX = 0.92;
+
+/**
+ * HOW MUCH OF THE WETNESS ARRIVES AS AN ALL-OVER WASH rather than as spatter.
+ *
+ * TWO LAYERS, BECAUSE BLOOD ON A CAR IS TWO THINGS — the marks, and the film of
+ * it that is simply ON everything. The spatter alone is what a mask can draw
+ * and it is not what a car looks like: the sparse rungs leave 40–80% of the
+ * panel at FACTORY WHITE, and a hole in the film over the flank's own highlight
+ * is the brightest thing on the wagon. Measured off a driven leg, that read as
+ * a clean white patch on the door of a car whose bonnet was solid red — the
+ * same complaint the airstream was built for, one scale down. So a share of the
+ * wetness is laid as the TOP rung's art at low alpha, which covers every pixel,
+ * and the rest as the spatter over it. Nothing is ever untouched; the marks
+ * still read as marks.
+ *
+ * Small — this is a tint, not a coat of paint. Past about a third it stops
+ * being blood on white paint and starts being a pink car.
+ */
+const CAR_WASH_SHARE = 0.3;
+
+/** How much of a panel is under blood at a given soak — the one ramp the whole
+ * ladder is solved from. */
+function filmWetness(amount: number): number {
+  const into = clamp01(
+    (amount - CAR_FILM_FLOOR) / Math.max(1e-6, SOAK_MAX - CAR_FILM_FLOOR),
+  );
+  return CAR_WET_MIN + (CAR_WET_MAX - CAR_WET_MIN) * into;
+}
+
+/** …and its inverse: the soak at which the ramp reaches a given wetness. */
+function soakForWetness(wet: number): number {
+  const into = (wet - CAR_WET_MIN) / (CAR_WET_MAX - CAR_WET_MIN);
+  return CAR_FILM_FLOOR + (SOAK_MAX - CAR_FILM_FLOOR) * into;
+}
+
+/**
+ * THE LADDER'S RUNGS — the soak each rung of art starts at, DERIVED: a panel
+ * leaves a rung at the moment the SPATTER it wants is more than that rung's art
+ * can paint even at full alpha.
+ *
+ * Exported because it is the ladder, and read here for the one question that is
+ * not about drawing: whether a car is dirty at all.
+ */
+export const CAR_COAT_AT: readonly number[] = [
+  CAR_FILM_FLOOR,
+  ...CAR_FILM_COVER.slice(0, -1).map((cover) =>
+    soakForWetness(cover / (1 - CAR_WASH_SHARE)),
+  ),
+];
 
 export function carCoat(
   soak: CarSoak,
@@ -221,22 +419,42 @@ export function carCoat(
     CarPanelId,
     number,
   ][]) {
-    if (amount < CAR_COAT_AT[0]!) continue;
-    let rung = 0;
-    while (rung + 1 < CAR_COAT_AT.length && amount >= CAR_COAT_AT[rung + 1]!) {
-      rung++;
-    }
-    const from = CAR_COAT_AT[rung]!;
-    const to = CAR_COAT_AT[rung + 1] ?? 1;
-    const into = clamp01((amount - from) / Math.max(1e-6, to - from));
-    out[panel] = [
-      {
-        sprite: `car_gore_${rung}`,
-        alpha: CAR_ALPHA_MIN + (CAR_ALPHA_MAX - CAR_ALPHA_MIN) * into,
-      },
-    ];
+    const film = carFilm(amount);
+    if (film.length > 0) out[panel] = film;
   }
   return out;
+}
+
+/**
+ * ONE SURFACE'S FILM at one soak — the wash, the rung of spatter over it, and
+ * the alphas that make the whole ladder one continuous darkening.
+ *
+ * Shared by the panels and the wheels, because "which rung, how hard" is the
+ * same question about the same three sprites however small the thing wearing
+ * them is.
+ */
+function carFilm(amount: number): readonly CoatLayer[] {
+  if (amount < CAR_FILM_FLOOR) return [];
+  const wet = filmWetness(amount);
+  const spatter = wet * (1 - CAR_WASH_SHARE);
+  // The SPARSEST art that can draw the spatter — which is what makes its alpha
+  // land at or under 1 without a clamp doing the work.
+  let rung = 0;
+  while (rung + 1 < CAR_FILM_COVER.length && spatter > CAR_FILM_COVER[rung]!) {
+    rung++;
+  }
+  return [
+    // The wash first, under the marks: the top rung's art (the only one that
+    // covers every pixel) laid faintly.
+    {
+      sprite: `car_gore_${CAR_FILM_COVER.length - 1}`,
+      alpha: wet * CAR_WASH_SHARE,
+    },
+    {
+      sprite: `car_gore_${rung}`,
+      alpha: Math.min(1, spatter / CAR_FILM_COVER[rung]!),
+    },
+  ];
 }
 
 /**
@@ -249,22 +467,19 @@ export function carCoat(
  * factory-clean is the feature contradicting itself in one frame.
  */
 export function wheelCoat(tyre: number): readonly CoatLayer[] {
-  if (tyre < CAR_COAT_AT[0]!) return [];
-  let rung = 0;
-  while (rung + 1 < CAR_COAT_AT.length && tyre >= CAR_COAT_AT[rung + 1]!)
-    rung++;
-  return [
-    {
-      sprite: `car_gore_${rung}`,
-      // WELL under the panels' own alpha. A wheel is small, dark, moving, and
-      // made almost entirely of the detail that says it is a wheel — the rim,
-      // the spokes, the arch of the tyre. At the panels' strength the film ate
-      // all of it and left two red discs turning, which reads as a bug rather
-      // than as gore. It has to stay a TYRE that is caked in something.
-      alpha: (CAR_ALPHA_MIN + (CAR_ALPHA_MAX - CAR_ALPHA_MIN) * tyre) * 0.55,
-    },
-  ];
+  return carFilm(tyre).map((layer) => ({
+    ...layer,
+    // WELL under the panels' own alpha. A wheel is small, dark, moving, and
+    // made almost entirely of the detail that says it is a wheel — the rim,
+    // the spokes, the arch of the tyre. At the panels' strength the film ate
+    // all of it and left two red discs turning, which reads as a bug rather
+    // than as gore. It has to stay a TYRE that is caked in something.
+    alpha: layer.alpha * WHEEL_FILM,
+  }));
 }
+
+/** How much of the panels' film a tyre wears — see `wheelCoat`. */
+const WHEEL_FILM = 0.55;
 
 /** Whether anything at all is dirty — so the whole composite can be skipped on
  * a car nobody has hit anything with. */

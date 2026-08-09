@@ -738,6 +738,47 @@ what is left when the climb is taken back off it, so the weather does not slide
 down with the lawn; and each ridge is filled to the ground line rather than to
 its own crest's depth, so the three coming apart bares no seam between them.
 
+### The wagon wears it — a strike puts it there, the AIR spreads it
+
+The blood on the car is the hero's own coat one scale up
+(`drive-screen/car-soak.ts`): seven numbers, one per body panel, and one set of
+three authored films (`car_gore_0..2`) masked to whichever panel is being drawn
+and `multiply`-then-gloss composited by the same `soaked()` the doll uses. What
+makes it a picture rather than a bookkeeping exercise is that it is TWO
+mechanisms, and the second one is easy to leave out:
+
+- **A STRIKE is an event on one panel.** The engine already says which
+  (`DriveStrike.panel`, the same number the DAMAGE is booked against), and the
+  spray climbs from there — up the bonnet, into the glass, over the roof if the
+  body was thrown hard enough (`DriveStrike.vz`).
+- **THE AIRSTREAM is what reaches everything else.** Nearly every body on this
+  road is met on the bumper — measured, 533 of 643 contacts over eight legs — so
+  a model made of strikes alone wets the nose, saturates it inside a handful of
+  bodies and leaves the doors and the tail at FACTORY WHITE: one hard seam down
+  the middle of the car, which is the single loudest thing on the screen. Blood
+  on a car doing 120 does not stay where it landed, so every panel is pulled
+  toward a fraction of the one upwind of it, at a rate that goes with road speed
+  and never above what the panel ahead has. The result is a gradient — filthy at
+  the nose, grubby at the tail — instead of a mask.
+
+**AND THE LADDER IS SOLVED FROM THE ART.** There is one quantity, how much of
+the panel is under blood; the soak ramps it, the rung is the sparsest film that
+can draw that much, and its alpha is the wetness divided by what that film
+actually covers. Doing it the hero's way instead — ramp the alpha inside a rung,
+reset it at the top — only works because his rungs triple in coverage; the car's
+top rung has to cover the canvas WHOLE, so a reset made a panel read LIGHTER the
+moment it got bloodier, and two neighbours either side of a threshold inverted.
+The film is also laid in TWO layers, a faint all-over wash under the spatter,
+because a hole in a sparse film over the flank's own white highlight is the
+brightest thing on the wagon. `tests/content/car_gore_test.ts` holds the pair —
+the art's measured coverage and the code's figure for it — together.
+
+Look at it with `node scripts/car-viewer.mjs --gore`, which PLAYS a leg with the
+shipped auto-driver and draws the car at six moments along it; `--film` draws
+the ladder itself. A staged profile can be made to look like anything, and the
+seam above was invisible in every staged sheet and unmissable at second twenty
+of a real leg.
+
 ### The town — a building is an ASSEMBLY, not a picture
 
 Everything on the far verge is composed at draw time from a plan the engine

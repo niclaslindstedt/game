@@ -30,6 +30,7 @@ skill's job — load it at both ends of the session.
 | The spray | `pwa/src/game/render/blood.ts` (cloud, splash, droplets, haze, `AIR`) |
 | The floor | `pwa/src/game/render/blood-ground.ts` + `blood-rungs.ts` (the rung rule, testable) |
 | The hero's coat | `pwa/src/game/game-screen/hero-soak.ts` (the five zones) + `pwa/src/game/render/hero-coat.ts` (the compositor) |
+| The CAR's coat, on the road | `pwa/src/game/drive-screen/car-soak.ts` (seven panels, the airstream, the film ladder); look at it with `node scripts/car-viewer.mjs --gore` / `--film` |
 | The bootprints | `pwa/src/game/render/blood-tracks.ts` |
 | Which death a blow earns | `pwa/src/game/game-screen/overkill.ts`, applied in `kill-presentation.ts` |
 | What a body becomes | `pwa/src/game/game-screen/gore-burst.ts` (anatomy bands, pools, `cleaveCut`) |
