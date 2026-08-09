@@ -31,6 +31,12 @@ import {
 import { siblingLane } from "../../engine/game/drive/ai.ts";
 import { variantOf } from "../../engine/game/drive/fleet.ts";
 
+/** How long a test that drives REAL ROAD is allowed to take — the same decision
+ * and the same reasoning as `ROAD_TIMEOUT_MS` in `drive_test.ts`: a case that
+ * steps whole legs costs real seconds, and vitest's five-second default is a
+ * wall clock that a busy box decides. */
+const ROAD_TIMEOUT_MS = 60_000;
+
 const PARAMS: DriveParams = {
   seed: 4242,
   direction: 1,
@@ -162,39 +168,43 @@ describe("the other drivers", () => {
     expect(draws).toBe(0);
   });
 
-  it("sends somebody past with the police after them", () => {
-    // A CHASE IS NOT A NEW KIND OF TRAFFIC — it is a runner and one or two
-    // patrol cars whose drivers are trying much harder, which is why the whole
-    // thing cost one function. What is pinned is that it HAPPENS, that the ones
-    // behind are police, and that their lights are on.
-    const police = variantOf("traffic_police");
-    let seen = 0;
-    let lit = 0;
-    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
-      const state = drive({ seed });
-      const met = new Set<number>();
-      for (let t = 0; t < 60000; t += 16) {
-        if (state.outcome !== DRIVE_OUTCOME.driving) break;
-        stepDrive(state, 16, { pedal: 0.4, wheel: 0 });
-        for (const one of state.traffic) {
-          if (one.variant !== police || met.has(one.id)) continue;
-          met.add(one.id);
-          seen++;
-          if (one.siren) {
-            lit++;
-            // A chase is flat out and trying: both are the same `urgency` the
-            // ordinary driver reads, wound up.
-            expect(one.urgency).toBeGreaterThan(1);
-            expect(Math.abs(one.cruise)).toBeGreaterThan(
-              DRIVE.trafficSpeedPx.max,
-            );
+  it(
+    "sends somebody past with the police after them",
+    () => {
+      // A CHASE IS NOT A NEW KIND OF TRAFFIC — it is a runner and one or two
+      // patrol cars whose drivers are trying much harder, which is why the whole
+      // thing cost one function. What is pinned is that it HAPPENS, that the ones
+      // behind are police, and that their lights are on.
+      const police = variantOf("traffic_police");
+      let seen = 0;
+      let lit = 0;
+      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+        const state = drive({ seed });
+        const met = new Set<number>();
+        for (let t = 0; t < 60000; t += 16) {
+          if (state.outcome !== DRIVE_OUTCOME.driving) break;
+          stepDrive(state, 16, { pedal: 0.4, wheel: 0 });
+          for (const one of state.traffic) {
+            if (one.variant !== police || met.has(one.id)) continue;
+            met.add(one.id);
+            seen++;
+            if (one.siren) {
+              lit++;
+              // A chase is flat out and trying: both are the same `urgency` the
+              // ordinary driver reads, wound up.
+              expect(one.urgency).toBeGreaterThan(1);
+              expect(Math.abs(one.cruise)).toBeGreaterThan(
+                DRIVE.trafficSpeedPx.max,
+              );
+            }
           }
         }
       }
-    }
-    expect(seen).toBeGreaterThan(0);
-    expect(lit).toBeGreaterThan(0);
-  });
+      expect(seen).toBeGreaterThan(0);
+      expect(lit).toBeGreaterThan(0);
+    },
+    ROAD_TIMEOUT_MS,
+  );
 });
 
 describe("the traffic against itself", () => {
@@ -253,45 +263,49 @@ describe("the traffic against itself", () => {
 });
 
 describe("the promise of a way through", () => {
-  it("seldom shuts both of the hero's lanes at once on EASY, and does on the hard rungs", () => {
-    // THE ONE THING THAT CAN MAKE THIS MINIGAME UNFAIR is a screen with both
-    // lanes running the hero's way shut at the same point on the road: he cannot
-    // brake his way out of it and he cannot go round it, so the only thing left
-    // is to pick which car to hit, which is a coin landing on its edge rather
-    // than a decision. EASY states that it will not happen; the hard rungs
-    // deliberately make no such promise.
-    const shutFrac = (difficulty: "easy" | "hard"): number => {
-      let both = 0;
-      let ticks = 0;
-      for (const seed of [1234, 5, 77, 909]) {
-        const state = drive({ seed, difficulty });
-        for (let t = 0; t < 40000; t += 16) {
-          if (state.outcome !== DRIVE_OUTCOME.driving) break;
-          stepDrive(state, 16, { pedal: 0.5, wheel: 0 });
-          if (state.distance <= cityStartPx(state.params)) continue;
-          ticks++;
-          // The two lanes running his way, over the screenful he is about to
-          // arrive at.
-          const mine = laneAt(state.car.pos.y);
-          const pair = [mine, siblingLane(mine)];
-          const shut = pair.map((lane) =>
-            state.traffic.some((one) => {
-              const ahead =
-                (one.pos.x - state.car.pos.x) * state.params.direction;
-              return laneAt(one.pos.y) === lane && ahead > 0 && ahead < 260;
-            }),
-          );
-          if (shut[0] && shut[1]) both++;
+  it(
+    "seldom shuts both of the hero's lanes at once on EASY, and does on the hard rungs",
+    () => {
+      // THE ONE THING THAT CAN MAKE THIS MINIGAME UNFAIR is a screen with both
+      // lanes running the hero's way shut at the same point on the road: he cannot
+      // brake his way out of it and he cannot go round it, so the only thing left
+      // is to pick which car to hit, which is a coin landing on its edge rather
+      // than a decision. EASY states that it will not happen; the hard rungs
+      // deliberately make no such promise.
+      const shutFrac = (difficulty: "easy" | "hard"): number => {
+        let both = 0;
+        let ticks = 0;
+        for (const seed of [1234, 5, 77, 909]) {
+          const state = drive({ seed, difficulty });
+          for (let t = 0; t < 40000; t += 16) {
+            if (state.outcome !== DRIVE_OUTCOME.driving) break;
+            stepDrive(state, 16, { pedal: 0.5, wheel: 0 });
+            if (state.distance <= cityStartPx(state.params)) continue;
+            ticks++;
+            // The two lanes running his way, over the screenful he is about to
+            // arrive at.
+            const mine = laneAt(state.car.pos.y);
+            const pair = [mine, siblingLane(mine)];
+            const shut = pair.map((lane) =>
+              state.traffic.some((one) => {
+                const ahead =
+                  (one.pos.x - state.car.pos.x) * state.params.direction;
+                return laneAt(one.pos.y) === lane && ahead > 0 && ahead < 260;
+              }),
+            );
+            if (shut[0] && shut[1]) both++;
+          }
         }
-      }
-      return both / Math.max(1, ticks);
-    };
-    const easy = shutFrac("easy");
-    // Rarely — a percent or two of the leg, and only where a lane change has
-    // just put two of them level for a moment.
-    expect(easy).toBeLessThan(0.05);
-    // …and the rung that promises nothing shuts both far more often, which is
-    // the difference being a difficulty rather than a bug fix.
-    expect(shutFrac("hard")).toBeGreaterThan(easy * 3);
-  });
+        return both / Math.max(1, ticks);
+      };
+      const easy = shutFrac("easy");
+      // Rarely — a percent or two of the leg, and only where a lane change has
+      // just put two of them level for a moment.
+      expect(easy).toBeLessThan(0.05);
+      // …and the rung that promises nothing shuts both far more often, which is
+      // the difference being a difficulty rather than a bug fix.
+      expect(shutFrac("hard")).toBeGreaterThan(easy * 3);
+    },
+    ROAD_TIMEOUT_MS,
+  );
 });
