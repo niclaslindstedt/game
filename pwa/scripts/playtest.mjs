@@ -38,8 +38,8 @@
 // instrument the browser build could not otherwise give them, since a browser
 // has no Workshop and no filesystem. See mod/AGENTS.md.
 //
-// Playwright is intentionally NOT a dependency of this repo; install it
-// ephemerally when playtesting: `npm install --no-save playwright`.
+// Playwright comes with `npm install`; only its browser binaries are separate:
+// `npx playwright install chromium`.
 //
 // `window` below only appears inside page.evaluate callbacks, which execute
 // in the browser page, not in Node.

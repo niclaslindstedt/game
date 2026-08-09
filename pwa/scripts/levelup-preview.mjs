@@ -20,8 +20,8 @@
 // full detonation at the cap (the default).
 //
 // Writes numbered frames + a strip.html contact sheet under
-// pwa/assets-preview/levelup/. Playwright is installed ephemerally:
-//   npm install --no-save playwright
+// pwa/assets-preview/levelup/. Playwright comes with `npm install`; only its
+// browser binaries are separate: `npx playwright install chromium`.
 //
 // `window` below only appears inside page.evaluate callbacks (browser scope).
 /* global window */

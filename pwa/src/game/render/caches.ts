@@ -1031,8 +1031,9 @@ export function glowSize(radius: number): number {
   return Math.min(GLOW_MAX_PX, Math.max(2, Math.ceil(radius * 2)));
 }
 
-/** The widest a baked glow may get, in px. Comfortably past the ~422×195 world
- * view, so nothing that fits on screen is ever clipped by it. */
+/** The widest a baked glow may get, in canvas px. Comfortably past the
+ * ~422×195 canvas a phone draws, so nothing that fits on screen is ever
+ * clipped by it. */
 const GLOW_MAX_PX = 256;
 
 /** A soft radial glow fading `rgb` from full alpha at the center to clear at

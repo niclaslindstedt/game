@@ -21,8 +21,13 @@
 //
 // Stand the session up first, in another terminal:
 //
-//   node server/main.ts --level moon --difficulty easy --port 27015 \
-//     --allow-unlicensed-transport
+//   node server/main.ts --level moon --difficulty easy --port 27015 --licensed
+//
+// A dedicated server refuses every join until something opens its door
+// (`server/dedicated.ts` — the licence gate). `--licensed` is the operator's
+// declaration and the only one of the two that is a FLAG; the repo's own escape
+// is `"allowUnlicensedTransport": true` in a config file, which works from
+// sources and is folded dead in a packaged binary (`server/licence.ts`).
 //
 // **WHAT THE READOUT MEANS.** `played` is ticks in which a bot actually decided
 // and sent — a fleet whose played counts stop climbing has stopped playing,
@@ -47,7 +52,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 const { createBotClient } = await import("../server/bot-client.ts");
 const { createUdpTransport } = await import("../server/net/udp.ts");
 const { parseAddress } = await import("../server/wire/address.ts");
-const { engineVersion } = await import("@game/core");
+const { engineVersion, heroInPlay } = await import("@game/core");
 const { TICK_MS } = await import("../server/wire/frames.ts");
 
 const USAGE = `
@@ -219,10 +224,22 @@ function playing() {
   // when the points are placed, so the two numbers that say whether anybody
   // present still CAN place them are the difference between "somebody is
   // choosing" and "this run is over and nobody has noticed".
-  const owed = state.players
-    .filter((hero) => hero && hero.hp > 0 && !hero.departed)
-    .reduce((sum, hero) => sum + (hero.pendingStatPoints ?? 0), 0);
-  const queue = state.pendingTalentPoints?.length ?? 0;
+  //
+  // BOTH ARE BANKED ON THE HERO and both are PRIVATE (`pendingStatPoints` and
+  // `pendingTalentPoints` in `PRIVATE_PLAYER_FIELDS`, server/wire/split.ts), so
+  // a client reads them off the seat it steers and nowhere else — every OTHER
+  // hero in the snapshot has had them withheld and would score a silent zero.
+  // The fleet between them covers every seat it is playing, which is what makes
+  // this the party's number rather than one bot's.
+  const present = heroes.filter(heroInPlay);
+  const owed = present.reduce(
+    (sum, hero) => sum + (hero.pendingStatPoints ?? 0),
+    0,
+  );
+  const queue = present.reduce(
+    (sum, hero) => sum + (hero.pendingTalentPoints?.length ?? 0),
+    0,
+  );
   const held = phase === "playing" ? "" : ` [owed ${owed} talents ${queue}]`;
   return `${phase} L${level} kills ${kills} hurt ${hurt} down ${down}${held}`;
 }

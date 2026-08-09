@@ -8,7 +8,8 @@
 // per viewport into pwa/assets-preview/ui-review/<viewport>/.
 //
 // Usage:
-//   npm install --no-save playwright   # once per session (not a repo dep)
+//   npx playwright install chromium    # once per machine (playwright itself
+//                                      # comes with `npm install`)
 //   cd pwa && npx vite --port 5199 &
 //   node pwa/scripts/ui-shots.mjs [--url http://localhost:5199] \
 //     [--only land|port|sel|sep|padl|padp|minil|minip|desk[,...]] \

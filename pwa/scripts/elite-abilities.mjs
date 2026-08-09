@@ -39,8 +39,8 @@
 // frame, for a review of the gallery rather than of the effects).
 //
 // Writes numbered frames + a sheet.html contact sheet under
-// pwa/assets-preview/elite-abilities/. Playwright is installed ephemerally:
-//   npm install --no-save playwright
+// pwa/assets-preview/elite-abilities/. Playwright comes with `npm install`;
+// only its browser binaries are separate: `npx playwright install chromium`.
 //
 
 import { mkdirSync, writeFileSync } from "node:fs";

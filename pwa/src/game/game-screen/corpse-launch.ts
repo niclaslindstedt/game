@@ -20,7 +20,7 @@ import { getSettings } from "../settings.ts";
 //   1 bar (a clean one-shot)  → `LAUNCH_MIN_PX`. Always a real knock, never a
 //                               lean: one-shotting something must LOOK like it.
 //   3 bars                    → `LAUNCH_EDGE_PX`, i.e. off the rim. A phone's
-//                               world viewport is ~422×195 units (half-width
+//                               world viewport is ~422×260 units (half-width
 //                               ~211) and the camera chases the advancing hero,
 //                               so clearing the screen means clearing the
 //                               half-width AND the camera's drift.

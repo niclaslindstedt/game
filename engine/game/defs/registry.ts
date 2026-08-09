@@ -28,7 +28,7 @@ import { setMapBlueprints } from "../mapgen/blueprints.ts";
 import type { MapBlueprint } from "../mapgen/types.ts";
 // The import-free SCRIPT leaf, never `script/host.ts` — that one reaches the
 // Lua VM (lexer, parser, interpreter, stdlib), and this module is reachable
-// from the startup path where the 200 KB budget lives. What a mod registers is
+// from the startup path where the 170 KB budget lives. What a mod registers is
 // SOURCE TEXT; the compile happens on the first hook call, inside a run.
 import { setScriptSources } from "../script/catalog.ts";
 import type { ScriptSource } from "../script/catalog.ts";

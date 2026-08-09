@@ -20,8 +20,8 @@
 // Both hooks are documented in docs/configuration.md. The field hero always
 // shows and swings his held weapon now, so nothing needs forcing on.
 //
-// Playwright is intentionally NOT a dependency of this repo; install it
-// ephemerally when previewing: `npm install --no-save playwright`.
+// Playwright comes with `npm install`; only its browser binaries are separate:
+// `npx playwright install chromium`.
 //
 // A weapon id is a base WEAPON_DEFS id OR a UNIQUE_DEFS weapon id — a unique
 // shows its signature (slash + gore, or muzzle + projectile trail) from

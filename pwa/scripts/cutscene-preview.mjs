@@ -15,8 +15,8 @@
 //   node scripts/cutscene-preview.mjs [--id prelude] \
 //     [--url http://localhost:5199] [--timeout 90] [--tags cleared:moon]
 //
-// Playwright is intentionally NOT a dependency of this repo; install it
-// ephemerally when previewing: `npm install --no-save playwright`.
+// Playwright comes with `npm install`; only its browser binaries are separate:
+// `npx playwright install chromium`.
 /* global window */
 
 import { mkdirSync } from "node:fs";

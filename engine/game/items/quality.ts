@@ -8,7 +8,7 @@
 // an import of `defs/uniques.ts` here puts all 149 named chase items in the
 // title screen's first download. That is why the card's flavor line lives in
 // its own leaf next door (`items/quote.ts`) rather than beside the name it is
-// printed under — see the note there, and the 200 KB budget in CLAUDE.md.
+// printed under — see the note there, and the 170 KB budget in CLAUDE.md.
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";

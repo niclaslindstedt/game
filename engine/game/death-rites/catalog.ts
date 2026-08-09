@@ -137,7 +137,7 @@ const RITES: readonly DeathRiteDef[] = [
     actMs: 500,
     aftermathMs: 500,
     // Far enough that the bolt is a RUN the player watches him make, near
-    // enough that the whole thing stays on a phone's ~422×195 view.
+    // enough that the whole thing stays on a phone's ~422×260 world view.
     exitDistance: 96,
     spin: 4,
   },

@@ -20,8 +20,8 @@ it at both ends of the session.
 | Piece | File |
 | --- | --- |
 | GLOBAL tuning (player, XP curve, stat effects, loot rules) | `engine/game/config/` — cross-level knobs only, one module per system |
-| A new level (geometry, gravity, intro, spawns, objective, loot table) | `engine/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
-| A new monster (stats, AI radii, role, guaranteed drops) | `engine/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
+| A new level (intro, spawns, objective, loot table) + the blueprint its map is CARVED from | `content/levels/<id>.yaml` + `content/maps/<id>.yaml`, compiled by `make levels` (see the `level-design` skill); the `LevelDef` TYPE and the summary seam stay in `engine/game/defs/levels/` |
+| A new monster (stats, AI radii, role, guaranteed drops) | `content/enemies/<biome>/<id>.yaml`, compiled by `make levels` — plus sprites named after it (see the `enemy-design` skill); the `EnemyDef` type and `canonicalEnemyDef` stay in `engine/game/defs/enemies/` |
 | A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `engine/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
 | State shapes & events | `engine/game/types/` (one module per concern — entities reference defs by id, keep it that way) |
 | Level/entity setup | `engine/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
@@ -32,7 +32,7 @@ it at both ends of the session.
 | Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |
 | Drawing | `pwa/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
 | Sound | `pwa/src/game/sfx/` (+ the `sound-effects` skill) |
-| HUD/overlay | `pwa/src/game/GameScreen.tsx` |
+| HUD/overlay | **CONTENT, never a component** — `content/hud/elements/<id>.yaml` (a bar, a slot, a readout), rendered by `pwa/src/game/hud/`. A new BINDING/ACTION/WIDGET is a row in `scripts/asset-tools/hud-schema.mjs` answered in the app. An in-run WINDOW is `content/menus/`. → `menu-design` |
 
 ## Workflow
 
@@ -57,8 +57,9 @@ it at both ends of the session.
    `npx vitest run tests/engine/<file>` to iterate.
 5. **Export** what the app needs from `engine/index.ts`.
 6. **Present.** Sprites via the `pixel-assets` skill; draw order and
-   animation in `render.ts`; event → sound mapping via the `sound-effects`
-   skill; HUD numbers in `GameScreen.tsx`.
+   animation in `pwa/src/game/render/`; event → sound mapping via the
+   `sound-effects` skill; HUD numbers by authoring
+   `content/hud/elements/<id>.yaml` — never by adding a component.
 7. **Playtest** with the `playtest` skill — numbers that look right in a
    test can still feel terrible at 60fps.
 

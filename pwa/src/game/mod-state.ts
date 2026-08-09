@@ -9,7 +9,7 @@
 // the loot roller, the enemy defs and the whole step pipeline. Tree-shaking does
 // not save you: it is global, so an export used by ANY chunk keeps its bytes
 // wherever its module was placed, and the module was on the startup path. The
-// 200 KB gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what
+// 170 KB gzipped critical-path budget (`pwa/scripts/check-seo.mjs`) is what
 // notices.
 //
 // So this is the same move `engine/game/flags.ts` makes for the engine's runtime

@@ -587,9 +587,9 @@ Drive it like this:
      rung keeps pace with.
 2. **Fix the DEF, not the sim.** The sites (see the `weapon-system` skill's
    "Where everything lives" table): a base's `levelReq` (`equipment.ts`), the
-   level's `loot.weaponPool` (`defs/levels/<level>.ts`), the `LOOT` tier/ilvl
-   gates (`config.ts`), and boss `tierDrops`/`uniquesByDifficulty`
-   (`defs/enemies/`). Use `item-forge.mjs` for any new item's numbers and
+   level's `loot.weaponPool` (`content/levels/<id>.yaml`), the `LOOT` tier/ilvl
+   gates (`engine/game/config/loot.ts`), and boss `tierDrops`/`uniquesByDifficulty`
+   (`content/enemies/<biome>/<id>.yaml`). Use `item-forge.mjs` for any new item's numbers and
    `drop-rate.mjs` for the rare/unique economy.
 3. **Re-measure and diff.** Re-run against the baseline and confirm the loot
    columns moved the right way without breaking pace or the boss table:

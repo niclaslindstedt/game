@@ -6,9 +6,12 @@ description: "Use when creating a NEW mod for this game or updating an existing 
 # Authoring a mod
 
 A mod is a **folder of YAML in the game's own content format**, compiled by the
-same schema modules the shipped build runs. There is no scripting hook and there
-will not be one — a mod is data, which is what makes subscribing to a stranger's
-mod safe.
+same schema modules the shipped build runs. One tree in it is not YAML:
+`scripts/<id>.lua` may replace any of the twelve FORMULAS the engine hands out
+(the XP curve, what a kill pays, the horde's hp, the drop and rarity rolls,
+weapon damage, mob armor). They run in a sandbox with no `io`, no `os`, no
+clock, no randomness and a step budget, and they may not roll dice — which is
+what makes subscribing to a stranger's mod safe.
 
 **Load this skill when the work lands in a MOD FOLDER.** A change to the shipped
 game — the engine, this repo's `content/`, the loot economy — is not this skill;
@@ -115,17 +118,18 @@ is what `mod/tools/build.mjs` loads, so anything absent cannot ship in a mod.
 | The HUD — a bar, a slot, a readout, or a whole dashboard            | `hud/hud.yaml`, `hud/elements/<id>.yaml`, `hud/events.yaml`, `hud/scripts/<id>.lua` |
 | THE RUN'S OWN WINDOWS — the pause menu, the bag's frame, a row on either | `menus/<id>.yaml`, `menus/elements/<id>.yaml`             |
 | A MODAL of your own, raised by a button or from Lua                 | `menus/modals/<id>.yaml` + `menus/scripts/<id>.lua` (`when:`) |
+| A RULE — any of the twelve formulas the engine hands out            | `scripts/<id>.lua` — `progression`, `menace`, `loot`, `combat`; copy the shipped one from `content/scripts/` |
 | What it is, for the person installing it                            | `README.md`                                                 |
 
 ### What it does NOT support — stop rather than work around
 
 | Not authorable                                                     | Why, and what to do instead                                                                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Any code — a script, a hook, a new mechanic                        | The format has no scripting hook by design. A new mechanic is engine work in this repo.                 |
+| A THIRTEENTH hook, or a new mechanic                               | The twelve hooks in `engine/game/script/hooks.ts` are the whole seam; adding one is engine work in this repo (four edits, `docs/scripting.md`). |
 | A new KIND of talent proc or ability effect                        | A mod retunes or recombines the blocks the engine already fires; a new hook is engine code.             |
 | `grades:` ladders (exceptional/elite variants)                     | Minted at engine load from a compiled catalog — the compiler refuses the block. Author them as items.   |
 | The loot economy — `item_quality.yaml`, `item_rarity.yaml`         | Moving the tier ladder rebalances the campaign rather than adding to it.                                |
-| The hero's XP curve (`leveling.yaml`), the autopilot's knobs       | The game's, and nothing in a mod can reach them.                                                        |
+| The leveling TABLE (`leveling.yaml`), the autopilot's knobs (`bot.yaml`) | Neither catalog is loaded from a mod folder. The XP CURVE itself is reachable, though — it is `xp_to_level_up` in `scripts/progression.lua`. |
 | The title menu (`mainmenu.yaml`)                                   | Chrome, not content — refused as a security rule. A conversion renames the game through `brand:` only. The IN-RUN windows (`menus/`) are yours, though: they draw screens the engine already raises. |
 | A new SCREEN for a window to answer                                | `PlayerScreen` is the engine's. A window with no screen behind it is a MODAL — author one of those.      |
 | The sprite ATLAS                                                   | A mod's sprites merge at load; they never enter the built atlas, which is why `make assets` is not part of a mod's loop. |
@@ -168,6 +172,7 @@ add `content/levels/<id>.yaml` means `levels/<id>.yaml` in the mod.
 | "Is this balanced"               | `simulate-run`       | Run it with `--mod`; the verdict's bands are the game's, and yours should meet them                        |
 | Seeing it run, tuning feel       | `playtest`, `test-scenario` | `pwa/scripts/playtest.mjs --mod`; `--scenario` rides along with it                                  |
 | A bug in a modded run            | `debug-game`         | Deterministic seeds, `?debug`, `window.__game` — all unchanged                                             |
+| A RULE (`scripts/<id>.lua`)      | — read `docs/scripting.md` | No skill owns the seam. Copy the shipped file from `content/scripts/`, override only the hooks you mean to change, and measure with `simulate-run --mod` |
 
 **Skills that are the GAME's, not a mod's** — loading one inside a mod folder is
 a wrong turn: `engine-system`, `bot-improvement`, `leveling-balance`,

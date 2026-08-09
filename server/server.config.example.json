@@ -1,8 +1,22 @@
 {
+  "//": "Every field is optional and every command-line flag has a twin here — see DedicatedConfig in server/dedicated.ts for what each one means. Flags win over the file, and the shortest useful config is an empty object.",
   "level": "moon",
   "difficulty": "medium",
+  "//seed": "OMIT to roll a fresh seed, which is printed. A literal replays the same run on every restart, which is what a bug report wants and a public server does not.",
+  "seed": 1,
   "port": 27015,
   "maxPlayers": 8,
+  "//bots": "Seats filled with AUTOPILOT heroes, 1-8; omit for none. Below 8 they join after the first human and yield their seats to later arrivals; 8 starts an autonomous run immediately. A value outside 1-8 is refused at startup.",
+  "bots": 1,
   "password": "",
-  "statusEverySec": 30
+  "//mods": "Mod ids in load order. A joiner whose list differs is refused by name. Config-only — there is no --mods flag on this server.",
+  "mods": [],
+  "//licensed": "THE OPERATOR'S LICENCE DECLARATION (--licensed). Without it the server starts, binds, prints its address and refuses every join. It is a declaration, not a check; a store build carries the same word in its packaging.",
+  "licensed": false,
+  "//allowUnlicensedTransport": "The repo's OWN escape, for its suites and the headless soak fleet — config-only, no flag. In a packaged binary it does nothing at all: the ship target folds UNLICENSED_TRANSPORT_UNLOCKED (server/licence.ts) to false.",
+  "allowUnlicensedTransport": false,
+  "//noPortMap": "Never ask the router to forward the bound port (--no-portmap). Leave false on a home connection; set it true on a box whose ports are already forwarded.",
+  "noPortMap": false,
+  "statusEverySec": 30,
+  "verbose": false
 }

@@ -273,7 +273,7 @@ html.app-locked body {
   display: block;
   image-rendering: pixelated;
   /* THE COLOUR GRADE (SETTINGS → VISUALS). Applied here rather than on the
-     canvas's pixels because the canvas is ~422x195 world units nearest-upscaled
+     canvas's pixels because the canvas is ~422x195 px nearest-upscaled
      2-3x: a grade composited into those pixels would be one more full-frame draw
      every frame AND would come out in 2-3px staircase steps, where CSS grades
      the UPSCALED picture at device resolution, smoothly, on the GPU, for nothing

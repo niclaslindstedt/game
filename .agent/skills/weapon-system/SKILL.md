@@ -33,8 +33,8 @@ node scripts/skill-lessons.mjs weapon-system --concepts=ammo,uniques
 | Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `engine/game/defs/grades.ts` |
 | Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`) | `engine/game/config/loot.ts` (`LOOT`) |
 | Chain/cooldown/damage globals | `engine/game/config/combat.ts` (`WEAPON`) |
-| Which bases drop on a level (thematic pools) | `engine/game/defs/levels/<level>.ts` `loot.weaponPool` |
-| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `engine/game/defs/enemies/<roster>.ts` |
+| Which bases drop on a level (thematic pools) | `content/levels/<id>.yaml` — `loot.weaponPool` |
+| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `content/enemies/<biome>/<id>.yaml` |
 | Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `engine/game/defs/uniques.ts` |
 | The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
 | Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `engine/game/items/rolling.ts`, `engine/game/loot.ts`, `engine/game/config/loot.ts` |

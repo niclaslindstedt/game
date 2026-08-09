@@ -62,8 +62,8 @@ domain:
 - **Weapons & loot** (`weapon-system`) — the drop pool, tiers, and any new
   weapon/unique the map should hand out.
 - **Leveling & difficulty** (`leveling-balance`) — the XP curve, kills-per-level
-  pacing, the per-map `mobLevels` bands and XP caps that keep the hero on the
-  ladder.
+  pacing, the per-map bands in `content/ladder.yaml` and the XP caps that keep
+  the hero on the ladder.
 
 Hold the result to **best-practice game design**: a legible read, a deliberate
 tempo (build → release), fair-but-rising difficulty, teachable mechanics,
@@ -135,18 +135,23 @@ the user confirms the existing description is right, say so and keep it.
      `--actual` scatter leave an open field?
 3. **Improve** the YAML — retune walls/packs/tempo, add or move a safe/quiet
    zone, place a chest + a pinned unique in a dead pocket, adjust merchant spawns,
-   reshape the path, **or retune the per-difficulty `mobLevels`** (see below).
+   reshape the path, **or retune the map's row in `content/ladder.yaml`** (see
+   below).
    Change one lever at a time so the next render attributes the effect.
 
-   **Difficulty tuning is `mobLevels`, not global config.** Below JESUS every
-   mob's level is HARD-CODED in the level spec (level-default tuple + per-spawner
-   override; pinned elites/bosses hard-code `level` + base `hp`) — see the
-   `level-design` skill's "Mob levels are HARD-CODED per difficulty" section for
-   the shape and the full lever list. The ladder is **hero character levels**,
-   start→finish: Easy 1→32, Medium 1→34, Hard 1→36, Nightmare 40→56 (opens HIGH —
-   a grind gate, mobs ~40 even on map 1), Jesus 58→70 (player-relative, never
-   authored). Author each map's `mobLevels` to the hero's intended level band ON
-   that map so the con system self-regulates the hero onto the ladder.
+   **Difficulty tuning is `content/ladder.yaml`, and a level may NOT author its
+   own.** A top-level `mobLevels`/`intendedLevel` on a level YAML is a build
+   error ("owned by ladder.yaml" — `scripts/level-data/load-yaml.mjs`); the
+   loader stamps both onto the `LevelDef` from the ladder's one cell per
+   [difficulty × map]. A spawn point or a pinned set-piece names a RAMP
+   (`meek`…`monstrous`, `endgame`/`apex`) and the loader expands it against
+   THIS map's band — see the `level-design` skill's "Mob levels come from the
+   LADDER" section for the shape and the full lever list. The ladder is **hero
+   character levels**, start→finish: easy 1 → ~30, medium 1 → ~33, hard
+   1 → ~37, nightmare 42 → ~55 (opens HIGH — a grind gate, mobs 42+ even on
+   map 1); JESUS is deliberately absent, staying player-relative. Retune a map
+   by moving its ladder CELL, so the con system self-regulates the hero onto
+   the ladder.
 4. **Re-render, re-evaluate, loop** until it matches the intent.
 5. **Present before/after.** Show the user the before and after design maps (and
    heatmaps if pacing changed) side by side, and get sign-off before shipping.
@@ -185,7 +190,7 @@ into a specific spot on the picture with a named killer. Drive it as a loop:
    escape route, on a pack that out-levels the ramp, inside an elite's arena,
    on a hazard lane?
 4. **Fix the design, not the symptom**, with the usual levers: the spawner's
-   count/`mobLevels` band, the elite/boss hp + damage (`enemy-design`),
+   count / the map's ladder band, the elite/boss hp + damage (`enemy-design`),
    the geometry (widen the choke, add an escape route or a safe pocket),
    hazard placement — then re-run the mortal sim and confirm the cluster
    dissolves (and the run stops aborting).
@@ -205,14 +210,15 @@ A shipped level is content — treat the change like `level-design` says:
 - **RE-TUNE XP after the redesign (required if you touched the roster).** Changing
   counts, spawner mix, or mob bands changes how much XP a clear pays, so the hero
   drifts off the intended ladder. Run the programmatic full-clear check and drive
-  every rung to OK (±1 of easy 32 / medium 34 / hard 36 / nightmare 56):
+  every rung to OK (the targets live in `scripts/leveling-curve.mjs` — easy 31 /
+  medium 33 / hard 37 / nightmare 55 / jesus 69):
 
   ```sh
   node scripts/leveling-curve.mjs --targets
   ```
 
-  Levers, cheapest first: the map's `mobLevels` band, then `XP_CAP.capByDifficulty`
-  (config.ts), then mob totals (~800–1200 killable per map), then the global con
+  Levers, cheapest first: the map's `mob` band in `content/ladder.yaml`, then
+  `XP_CAP.capByDifficulty` (`engine/game/config/leveling.ts`), then mob totals (~800–1200 killable per map), then the global con
   slopes / kills-per-level curve (touch last). See the `level-design` skill's
   "Re-tune XP after EVERY map redesign" section for the full procedure.
 - Re-run the rest of the pacing wiring if you touched population/loot
