@@ -1838,8 +1838,30 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   and `precache-manifest.json` at build time. The worker precaches the app shell, parks new
   builds in `waiting`, and only takes over when the player accepts the
   update toast — a mid-run silent refresh would destroy the run.
+  **ITS PRECACHE IS NAMED PER BUILD** (`<cacheId>-precache-<build>`), and that
+  is load-bearing rather than tidy: with one cache per slot, the worker
+  installing the next build wrote `index.html` into the very box the worker
+  serving the game was reading it from, so a finished download made the running
+  worker start answering navigations with the INCOMING shell — which asks for a
+  bundle that worker does not have. Offline, that is the game opening to its own
+  no-JS document with "BOOTING…" under it until the player force-quits. A build
+  now writes only to its own cache, and `activate` sweeps the older ones (and a
+  sibling slot's, never — see `isStalePrecache`) once it is the one in control.
+  An install that cannot cache a BUILD asset fails rather than activating with a
+  hole in it; only the public icons are survivable.
 - **`pwa/src/app/pwa.ts`** — the per-slot precache cache id shared by
   the plugin (Node side) and the app (browser side).
+- **`pwa/src/app/boot-watchdog.ts`** — THE BOOT SCREEN'S HONESTY. The
+  prerendered `.prelaunch` console ends in a blinking "BOOTING…" wired to
+  nothing, so a bundle that never arrives leaves the player reading a
+  description of the game instead of playing it. This watches for that (a
+  resource `error`, or a 20 s timeout for a fetch that hangs), performs ONE
+  automatic recovery per tab — skip the waiting worker and reload, which is
+  what force-quitting the app achieves the slow way — and, if the next boot
+  stalls too, replaces the line with what actually happened plus TRY AGAIN and
+  REINSTALL. It ships INLINE in the shell (`bootWatchdogScript` pastes
+  `watchBoot.toString()`), because a watchdog inside the bundle cannot report
+  the bundle not arriving; `markAppMounted()` in `main.tsx` calls it off.
 - **`pwa/scripts/`** — source-data extraction (§11.2), SEO generation
   (sitemap/robots/llms/404, §11.3), and the structural SEO checker
   (§11.3.9).
@@ -2109,7 +2131,8 @@ the highest
 `main` push, `/branch/` serves a manually parked branch persisted in
 the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
-a disjoint precache cache id (`pwa/src/app/pwa.ts`).
+a disjoint precache cache id (`pwa/src/app/pwa.ts`), under which each BUILD gets
+a cache of its own.
 
 ### `electron/` — the desktop shell (the fourth layer)
 
@@ -2629,6 +2652,12 @@ worker scoped to its base, and a disjoint precache id (`game`,
 `game-preview`, `game-branch`) so the builds never poison each other. The
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
+
+The precache id is a PREFIX, not a cache name: each build's worker owns
+`<cacheId>-precache-<build>` and sweeps the slot's older ones on activation.
+The separator is what keeps the sweep honest — `game-preview-precache-…` is not
+inside `game-precache-…`, so releasing to `/` never deletes `/preview/`'s
+offline copy.
 
 **THE TWO SECONDARY SLOTS KNOW WHO IS LOOKING AT THEM.** Nobody arrives at
 `/preview/` or `/branch/` by searching — they are looked at by the person who

@@ -2,8 +2,10 @@
 // Shared PWA wiring. The framework owns the update *state machine*
 // (`usePwaUpdate`) and the prompt UI; this app owns the service-worker
 // *build* (pwa/pwa-plugin.ts). The one value both sides must agree on is
-// the precache cache id — the SW build names its cache `<cacheId>-precache`
-// and the hook reads fill progress from a cache matching that prefix. This
+// the precache cache id, and it is a PREFIX rather than a cache name: the SW
+// build names each build's cache `<cacheId>-precache-<build>` (so an
+// installing worker can never write into the box the running one is serving
+// from — see `pwa-plugin.ts`), and the window side matches on the prefix. This
 // helper is imported by BOTH `App.tsx` (browser) and `pwa-plugin.ts` (the
 // SW-emitting build plugin); keep it free of browser- or Node-only imports.
 //

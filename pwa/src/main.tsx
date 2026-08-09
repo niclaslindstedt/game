@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import "./styles.css";
 import { App } from "./App.tsx";
+import { markAppMounted } from "./app/boot-watchdog.ts";
 
 // Both document pages are lazily loaded, and must STAY lazy: they are walls of
 // prose that nobody reaching the game ever loads, and bundling them into the
@@ -61,3 +62,11 @@ createRoot(root).render(
     <App />
   ),
 );
+
+// CALL OFF THE BOOT WATCHDOG (app/boot-watchdog.ts) — the inline script in the
+// shell is, until this line runs, counting down to declaring the boot dead and
+// reloading the page out from under it. AFTER `render`, not before: what the
+// watchdog is asked to prove is that something replaced the prerendered
+// console, and a flag raised by a module that then threw on its way to
+// mounting would prove the opposite of what it claims.
+markAppMounted();
