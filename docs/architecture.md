@@ -948,15 +948,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   extents. Vehicles only — a person is a tall thin thing met by the whole flank
   at any height, and a lamp post is a column from the pavement to well above the
   roof.
-  THE APPROACH IS A COUNTDOWN. The five seconds before the town are held: the
+  THE APPROACH IS A COUNTDOWN. The eight seconds before the town are held: the
   speed is the road's own, the pedal reaches nothing, GET READY is on the screen,
   and one second out the WHEEL is handed back and the dashboard slides in from
   the left (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal
   arrives with the clock and not a frame before it, so the gate is a starting
-  flag rather than a line the player crosses without noticing. It shortened the
-  LEG and not the minigame — `coursePx` came down by exactly what the opening
-  did, so the town, which is the stretch the clock runs over and the board ranks,
-  is the length it has always been.
+  flag rather than a line the player crosses without noticing. Its length is a
+  DISTANCE at a held speed (`opening.cityPx` at `entrySpeedPx`), which is why the
+  approach is retimed by moving one number — and `coursePx` moves with it, so the
+  LEG changes length and the minigame does not: the town, which is the stretch
+  the clock runs over and the board ranks, is what it has always been.
   WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
   answers rather than one. The shunt used to BE the answer — a struck car slid
   sideways out of its lane and that was the event, which is why a head-on and a

@@ -72,7 +72,7 @@ describe("the auto-driver", () => {
     const opening = drive.car.speed;
     // OVER A WINDOW, NOT AT AN INSTANT, and past the opening by a real margin.
     //
-    // The approach is a five-second COUNTDOWN (`DRIVE.opening.handsOff`) — the
+    // The approach is an eight-second COUNTDOWN (`DRIVE.opening.handsOff`) — the
     // car is held at the road's own pace and the pedal reaches nothing — so a
     // reading taken a beat after the flag is a reading of the first crowd. And
     // once he IS in the town, threading is a saw: he lifts for a knot of people,
