@@ -20,13 +20,13 @@ palette:
   d: "#ffd55a" # gold body
   e: "#ffeb96" # pale gold, the lit left edge
 grid: |
-  ..OOOOOOOOO..
-  ..OeedddddO..
-  ..OeddddddO..
-  ..OeddddddO..
-  ..OeddddddO..
-  ..OeddddddO..
-  OOOeddddddOOO
+  ...OOOOOOO...
+  ...OeedddO...
+  ...OeddddO...
+  ...OeddddO...
+  ...OeddddO...
+  ...OeddddO...
+  OOOOeddddOOOO
   OeeeddddddddO
   .OeedddddddO.
   ..OeedddddO..
