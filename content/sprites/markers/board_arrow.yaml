@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE ONLY MARKER IN THIS FAMILY THAT IS NOT ON THE MINIMAP — it hangs in the
+# WORLD, over the parked car, which is why it carries no `map_` prefix. It is
+# here rather than beside the quest marks because the family's style is what it
+# needs (one bold flat shape, unambiguous, drawn as signage), and because it
+# says nothing about an errand: it is a finger pointing at a machine.
+name: board_arrow
+family: markers
+size: [13, 14]
+description: >
+  The "get in this" pointer that hangs over the parked car — a fat gold arrow
+  aimed straight down at the roof.
+subject:
+  kind: world marker
+  build: a heavy arrow pointing straight down, a long thick stem over a head only a little wider than it, tapering to a point
+  accent: gold, lit pale down its left edge, on a hard dark outline
+  flavor: the one thing on the lot you are meant to touch, and nothing about it says errand
+palette:
+  O: "#1a1c2c" # dark outline
+  d: "#ffd55a" # gold body
+  e: "#ffeb96" # pale gold, the lit left edge
+grid: |
+  ...OOOOOOO...
+  ...OeedddO...
+  ...OeddddO...
+  ...OeddddO...
+  ...OeddddO...
+  ...OeddddO...
+  OOOOeddddOOOO
+  OeeeddddddddO
+  .OeedddddddO.
+  ..OeedddddO..
+  ...OeddddO...
+  ....OeddO....
+  .....OdO.....
+  ......O......

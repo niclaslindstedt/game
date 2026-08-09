@@ -376,6 +376,12 @@ actually looked at**:
   and `vitest`), so the grids are the sole committed source of truth and the
   binary atlas never enters a diff or merge conflict. The pack is
   deterministic: regenerating from the same grids yields the same atlas.
+- **A sprite ADDED or RETIRED also runs `make mod-catalog` in the same
+  commit.** `mod/catalog.json` is the id list a mod validates against, it is
+  COMMITTED, and `tests/content/mod_catalog_test.ts` diffs it against a fresh
+  build — so a new `<name>.yaml` with no catalog regen is a red suite one
+  commit later, whatever else the pass got right. Retuning an existing grid
+  needs nothing: the catalog carries ids, not pixels.
 
 ## Skill self-improvement
 

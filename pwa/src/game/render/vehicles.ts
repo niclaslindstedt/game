@@ -32,7 +32,6 @@ import {
 
 import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
-import { glowSprite } from "./caches.ts";
 import { soaked } from "./hero-coat.ts";
 import type { CoatLayer } from "./soak-ladder.ts";
 import { drawWorldSprite } from "./plane.ts";
@@ -51,10 +50,10 @@ const WHEEL_SPIN_HZ = 14;
 /** The landmark kinds the assemblies replace — drawLandmarks skips these. */
 export const VEHICLE_LANDMARK_KINDS = new Set(["car", "rocket"]);
 
-// ── THE BOARDABLE GLOW ──────────────────────────────────────────────────────
-// "YOU CAN GET IN THIS" — the amber the parked car wears while the local hero
-// is close enough to climb into it (`CAR.boardRadius`, the reach the engine
-// revalidates the tap against, so the light is on exactly when the press
+// ── THE BOARDABLE ARROW ─────────────────────────────────────────────────────
+// "YOU CAN GET IN THIS" — a gold arrow bobbing over the parked car while the
+// local hero is close enough to climb into it (`CAR.boardRadius`, the reach the
+// engine revalidates the tap against, so the mark is up exactly when the press
 // works).
 //
 // It exists because the car is the ONLY tappable thing in the game that isn't
@@ -63,82 +62,79 @@ export const VEHICLE_LANDMARK_KINDS = new Set(["car", "rocket"]);
 // furniture is furniture until somebody tells you it isn't — and a new player's
 // whole first errand is on the far side of noticing.
 //
-// It follows the XP veil's rules exactly (render/xp-veil.ts, which is where the
-// reasoning lives): CLOSED-FORM off the render clock, one BAKED `glowSprite`
-// scaled at draw time rather than a gradient per frame, and faint enough to sit
-// at the edge of attention — this one has an easier job than the veil, because
-// it is up for the few seconds a player stands beside a car in a room with
-// nothing hunting him, rather than over a fight.
-const BOARD_RGB = "255, 186, 40";
-/** How far the halo reaches off the body (world px) — the car is 48 long, so
- * this wraps the whole machine rather than pooling under its middle. */
-const BOARD_RADIUS = 34;
-/**
- * Peak alpha of the halo.
- *
- * TUNED ON THE BAY'S OWN FLOOR, which is the only place this ever appears and
- * is the worst case for it: poured cement is a LIGHT mid-grey, and an additive
- * warm glow over light grey has almost nothing left to add. The XP veil's 0.3
- * was invisible here — not subtle, invisible — because that figure was tuned
- * against GOODCO's dark blue-grey deck. Judge any change to it from a
- * screenshot of the garage, never from the number.
- */
-const BOARD_ALPHA = 0.5;
-/** The breath — the same slow swell the veil uses, for the same reason. */
-const BOARD_BREATH_MS = 1500;
-const BOARD_BREATH_DEPTH = 0.35;
-/** How far past `boardRadius` the glow starts coming up, so it fades IN as the
- * hero walks over rather than switching on under his feet. */
+// IT IS A MARK, NOT A LIGHT, and that is a correction rather than a taste.
+// There used to be an amber halo under the machine, and the trouble with it was
+// structural: the game already lights this lot with real lamps, so one more
+// warm pool on the floor reads as a fitting somebody left on — it says
+// SOMETHING IS LIT HERE, when the only sentence worth saying is THIS ONE, and a
+// pool has no way to point. The rest of the game already knew that; the errand
+// givers wear a bobbing `!` (render/quests.ts) for exactly this job, and this
+// is the same idiom aimed at a machine.
+/** The mark itself — a broad gold arrow aimed down at the roof. */
+const BOARD_ARROW = "board_arrow";
+/** How far past `boardRadius` the arrow starts coming up, so it fades IN as the
+ * hero walks over rather than switching on over his head. */
 const BOARD_FADE_PX = 40;
+/** Clear air between the arrow's point and the car's roof (px), before the
+ * bob — the shell's part canvas is 26 high off the wheels' own base row. */
+const BOARD_ARROW_GAP = 24;
+/** The bob: whole pixels either way, and the period it takes to travel them.
+ * The same idiom the quest marks and the merchant's coin use, a little slower
+ * and a little further, because this one hangs over a car rather than a head
+ * and has the room. */
+const BOARD_BOB_PX = 2;
+const BOARD_BOB_MS = 900;
 
 /**
- * How lit the boardable glow is for `car` this frame, 0 (dark) to 1.
+ * How present the boardable arrow is for `car` this frame, 0 (gone) to 1.
  *
- * Zero for a car somebody is already driving: the lights are on, the body is
- * shivering and the thing is manifestly interactive — a second "you may touch
- * this" cue over the top would be noise. (Tapping a car you are IN still gets
- * you out; that gesture is discovered by having just used it.)
+ * ZERO FOR A CAR SOMEBODY IS ALREADY DRIVING — the arrow comes off the moment
+ * the hero gets in. The lights are on, the body is shivering and the thing is
+ * manifestly interactive by then; a mark still pointing at it would be telling
+ * the player to board a car he is sitting in. (Tapping a car you are IN still
+ * gets you out; that gesture is discovered by having just used it.)
  */
-function boardableGlow(
+function boardablePrompt(
   state: GameState,
   car: Extract<Vehicle, { kind: "car" }>,
-  timeMs: number,
 ): number {
   if (car.driver !== null) return 0;
   const hero = localHero(state);
   const d = Math.hypot(hero.pos.x - car.pos.x, hero.pos.y - car.pos.y);
   const near = 1 - (d - CAR.boardRadius) / BOARD_FADE_PX;
   if (near <= 0) return 0;
-  const breath =
-    1 -
-    BOARD_BREATH_DEPTH *
-      (0.5 - 0.5 * Math.cos((timeMs / BOARD_BREATH_MS) * Math.PI * 2));
-  return Math.min(1, near) * breath;
+  return Math.min(1, near);
 }
 
-/** The halo itself, billboarded and additive — laid down UNDER the assembly so
- * the car stands in its own light instead of behind a wash. */
-function drawBoardableGlow(
+/**
+ * The arrow itself — billboarded over the roof, drawn OVER the assembly.
+ *
+ * The bob rides the SIM clock rather than the render clock, which is the rule
+ * every other floating mark here obeys (render/quests.ts): a page frozen behind
+ * a modal whose decorations are still moving reads as not actually paused.
+ */
+function drawBoardableArrow(
   ctx: CanvasRenderingContext2D,
   car: Extract<Vehicle, { kind: "car" }>,
+  sprites: Sprites,
   camera: Camera,
+  simMs: number,
   strength: number,
 ): void {
-  const halo = glowSprite(BOARD_RGB, BOARD_RADIUS);
-  if (!halo) return;
+  const glyph = spriteByName(sprites, BOARD_ARROW);
+  if (!glyph) return;
   billboard(ctx, car.pos.x, car.pos.y, camera.x, camera.y, () => {
-    const x = Math.round(car.pos.x - camera.x);
-    const y = Math.round(car.pos.y - camera.y);
-    // Wider than tall: a car is a long low thing, and a circular glow around
-    // one reads as a spotlight it happens to be parked in.
-    const w = BOARD_RADIUS * 2.6;
-    const h = BOARD_RADIUS * 1.6;
+    const bob = Math.round(
+      Math.sin((simMs / BOARD_BOB_MS) * Math.PI * 2) * BOARD_BOB_PX,
+    );
     ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    ctx.globalAlpha = BOARD_ALPHA * strength;
-    ctx.drawImage(halo, x - w / 2, y - h / 2 - 8, w, h);
+    ctx.globalAlpha = strength;
+    ctx.drawImage(
+      glyph,
+      seatX(car.pos.x, camera.x) - Math.round(glyph.width / 2),
+      seatY(car.pos.y, camera.y) - BOARD_ARROW_GAP - glyph.height + bob,
+    );
     ctx.restore();
-    ctx.globalAlpha = 1;
   });
 }
 
@@ -153,9 +149,20 @@ export function drawVehicles(
   for (const vehicle of state.vehicles) {
     if (!inView(vehicle.pos.x, vehicle.pos.y, 64)) continue;
     if (vehicle.kind === "car") {
-      const glow = boardableGlow(state, vehicle, timeMs);
-      if (glow > 0) drawBoardableGlow(ctx, vehicle, camera, glow);
       drawCarAssembly(ctx, vehicle, sprites, camera, timeMs);
+      // …and the mark OVER it. A pointer drawn under the thing it points at is
+      // a pointer the thing can hide.
+      const prompt = boardablePrompt(state, vehicle);
+      if (prompt > 0) {
+        drawBoardableArrow(
+          ctx,
+          vehicle,
+          sprites,
+          camera,
+          state.stats.timeMs,
+          prompt,
+        );
+      }
     } else {
       drawShip(ctx, vehicle, sprites, camera, timeMs);
     }
@@ -166,9 +173,11 @@ export function drawVehicles(
   // in the rank for the rest of the run.
   //
   // Two things they never get, and both are the same fact said twice — a
-  // visitor's car is somebody else's. NO BOARDABLE HALO: the amber "you can get
-  // in this" glow belongs to the wagon the hero drove here, and lighting up
-  // three more would be the lot advertising three cars he cannot take. And the
+  // visitor's car is somebody else's. NO BOARDABLE ARROW: the gold "you can get
+  // in this" mark belongs to the wagon the hero drove here, and three more
+  // bobbing over the rank would be the lot pointing at three cars he cannot
+  // take — which is worse than the halo would have been, because an arrow makes
+  // a promise a pool of light only implies. And the
   // ENGINE is read off the arrival's own phase rather than off a seat in the
   // party, so the lamps and the idle shiver die when it parks.
   for (const arrival of state.arrivals) {

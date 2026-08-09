@@ -195,20 +195,37 @@ objects:
     # step onto the DRIVE side, so they flank the roll-up and their pools fall
     # on the pavement in front of it — which is what the driveway is lit by
     # once the sun is down, and what a man walking out to his car at midnight
-    # actually sees. Sodium-warm and steady: outdoor fittings that have been on
-    # that wall for ten years and still work, which is more than can be said
-    # for the lawn.
+    # actually sees. Sodium-warm, and WAVERING — gently, because these are the
+    # fittings on this lot that still work: ten years on the same wall and the
+    # same tired mains, so they breathe rather than stutter. The county's
+    # street light is the one that is actually failing (0.18, below) and it
+    # stays the worst of the four; two barn lights dipping hard together over
+    # the one strip of pavement anybody has to walk across would be a strobe
+    # rather than a night. Nothing keeps them in step — every lamp's waver is
+    # phased off its OWN position (render/night.ts) — so the pair shimmers
+    # against itself the way real outdoor pairs do.
     #
     # KEEP THE RADIUS SMALL. The whole lot is 512×280 and the phone sees most
     # of it at once, so two pools whose tails touch light the place back to
     # daylight — which is exactly how the first pass of this came out, and it
     # read as the brightness turned down rather than as night.
+    #
+    # AND BOLTED A COURSE HIGHER UP THE WALL — `lift`, one tile of it. The pair
+    # is placed at the chain's own ends, which is right on the floor plan and
+    # wrong in the picture: a wall is drawn as an EXTRUDED FACE and a fitting
+    # is painted from its foot upward, so the lamp above the opening sat on the
+    # doorway's very last block with the roll-up door crossing it. Raising the
+    # FITTINGS (never their pools, and never `pos` — that would walk the lower
+    # lamp into the opening) puts both up on plain brickwork, which is also
+    # where a barn light is actually screwed.
     lamps:
       sprite: wall_lamp
+      lift: 16
       light:
         radius: 58
         color: "255, 206, 138"
         intensity: 0.92
+        flicker: 0.12
 
   # ── THE DOORS (see the mission's travelDoors) ────────────────────────────
   # The car sits in the bay at the hero's landing; the rocket holds the goal
@@ -271,9 +288,20 @@ objects:
   # mid-air. So the lawn's light gets a POST (`fixture`), and the machine's is
   # pinned to the machine itself, which the game already draws.
   #
+  # AND EVERY LIGHT UNDER THE SKY OUT HERE WAVERS — these two and the barn pair
+  # on the door, on a ladder from the county's failing street light (0.18) down
+  # to the barn lights that merely breathe (0.12). A steady bulb is the thing
+  # that gives a night lot away as a picture: it is the one light source with
+  # no weather, no age and no bad connection anywhere in it. The bay is NOT on
+  # this ladder and must not join it — a lit ROOM has no flicker to author, and
+  # a garage whose strip light stuttered would read as a fault rather than as a
+  # place somebody works.
+  #
   # THE YARD LIGHT on the back lawn — the post that was put up to light the
   # driveway years before there was a rocket standing on the grass. Dim on
-  # purpose: enough to find the ladder by and not a lumen more.
+  # purpose: enough to find the ladder by and not a lumen more, and the OLDEST
+  # fitting on the lot, so it wavers nearly as badly as the county's — the one
+  # thing out here nobody has climbed a ladder to since the rocket went up.
   - id: lawn_light
     type: light
     at: goal
@@ -283,6 +311,7 @@ objects:
       radius: 52
       color: "255, 222, 170"
       intensity: 0.55
+      flicker: 0.16
   # THE STREET LIGHT over the road — the county's, not the household's, which
   # is why it is the coldest light on a lot lit otherwise in sodium. Pinned to
   # `counter` (the trader's own spot, which on this map is the near lane), so
@@ -305,28 +334,52 @@ objects:
       flicker: 0.18
 
   # ── THE WORKBENCH WORLD (furniture, never loot) ──────────────────────────
-  # Furniture stands AGAINST THE WALLS (`edge`), the way a real garage keeps
-  # its floor open for the car; the densities are sized to the snug bay
-  # (density is per-million px², and the bay is ~22k), so each line lands
-  # about its count.
+  # PLACED, NOT SCATTERED — this is the STATIC map, and the furniture is the
+  # last thing on it that was still being rolled. Each piece stands `at: spawn`
+  # plus a nudge, which puts the whole bench world along the BAY'S NORTH WALL,
+  # in a line with the chest, on every visit forever.
+  #
+  # It was `density` + `edge: true` and that was wrong twice over. Wrong in
+  # PRINCIPLE, because a home is the one place in the game whose furniture the
+  # player is supposed to learn — a bench that moves between errands is not a
+  # bench, it is set dressing. And wrong in PRACTICE, because the scatter's
+  # honest answer in a bay this snug (224×140, most of it inside the landmark
+  # clearance around the car, the chest and the seam) was NOTHING AT ALL: every
+  # seed placed zero of them, so the room authored a workbench world and shipped
+  # bare cement.
+  #
+  # The offsets are off the hero's own landing rather than absolute, for the
+  # reason the chest's are (see `cache` above): the bay's north wall runs along
+  # the top of his chamber, so "a lift off where he lands" survives the floor
+  # plan moving in a way an authored x/y never would. −40 is the chest's own
+  # lift, which is what puts the four pieces on one line.
+  #
+  # NO TOOLBOXES IN HERE, of either kind: the rolling `tool_chest` against the
+  # wall and the `parts_bin` heaped on the floor are both gone. They were the
+  # only props on the lot that read as CONTAINERS — a box with its lid off and
+  # coloured hardware sticking out of it looks exactly like something to walk
+  # over and pick up, and there is nothing to pick up in a man's own garage
+  # (see the blueprint's own note at the top: nothing here is loot). A bench
+  # and a rack of parts say "somebody works here" without making that promise.
   - id: workbench
     type: obstacle
     radius: 8
-    density: 50
-    areas: [bay]
-    edge: true
-  - id: tool_chest
+    at: spawn
+    offset: { x: -60, y: -40 }
+  # Two racks, east of the chest — separate entries because an object id is the
+  # palette's key and each anchored piece is one entry; they share the sprite.
+  - id: part_rack_mid
     type: obstacle
+    sprite: part_rack
     radius: 6
-    density: 95
-    areas: [bay]
-    edge: true
-  - id: part_rack
+    at: spawn
+    offset: { x: 50, y: -40 }
+  - id: part_rack_east
     type: obstacle
+    sprite: part_rack
     radius: 6
-    density: 50
-    areas: [bay]
-    edge: true
+    at: spawn
+    offset: { x: 80, y: -40 }
   # …and the floor wears the years: oil where the car stands, stains, loose
   # cable, papers and scorch — a lot of garbage, none of it loot.
   - id: oil_patch
@@ -346,10 +399,6 @@ objects:
     density: 130
     areas: [bay]
   - id: weld_scorch
-    type: decor
-    density: 90
-    areas: [bay]
-  - id: parts_bin
     type: decor
     density: 90
     areas: [bay]

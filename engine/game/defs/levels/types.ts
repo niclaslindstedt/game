@@ -354,6 +354,19 @@ export type LevelLight = {
    * trader's back-lit machine).
    */
   sprite?: string;
+  /**
+   * HOW HIGH THE FIXTURE IS BOLTED above the ground it stands on (world px,
+   * default 0) — a MOUNTING HEIGHT, and it moves the `sprite` alone.
+   *
+   * The pool is where the light lands and `pos` is where it lands, so nothing
+   * about the night changes; the fitting is simply drawn that far up the wall
+   * it is screwed to. It exists because the alternative — moving `pos` — moves
+   * the pool with it and, on a door's own pair, walks a lamp into the opening.
+   *
+   * Only a fitting on a WALL has any use for it. A post on a lawn stands on the
+   * ground and is drawn from its foot, which is what 0 means.
+   */
+  lift?: number;
   /** How far the pool reaches (world px) — the radius its light fades to
    * nothing at. */
   radius: number;

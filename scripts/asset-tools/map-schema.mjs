@@ -68,11 +68,15 @@ const ALLOWED_FIELDS = {
     "areas",
     "space",
     "edge",
+    // …or placed by rule instead of by density: FURNITURE, standing at a
+    // carved anchor plus a nudge, once, on every seed (see `MapObject.at`).
+    "at",
+    "offset",
   ],
   cover: ["radius", "density", "jumpable", "areas", "space", "edge"],
   crate: ["radius", "density", "jumpable", "loot", "areas", "space", "edge"],
   chest: [],
-  decor: ["density", "areas", "space"],
+  decor: ["density", "areas", "space", "at", "offset"],
   landmark: ["at", "anchor", "offset"],
   building: ["density", "w", "h", "jumpable", "areas", "space"],
   row: [
@@ -837,15 +841,27 @@ export function validateMap(bp, refs, description = "") {
       // A scattered purpose is priced by density — except when it is not
       // scattered at all: a prop that exists only to stand at an authored offset
       // inside a PREFAB has no count to give, and demanding one would sprinkle
-      // mop buckets across the whole floor to satisfy the schema.
+      // mop buckets across the whole floor to satisfy the schema. A piece
+      // ANCHORED `at` a carved feature is the same case said the other way: it
+      // is furniture, placed once by rule.
       if (
         NEEDS_DENSITY.has(o.type) &&
         !isPosNum(o.density) &&
-        !prefabProps.has(o.id)
+        !prefabProps.has(o.id) &&
+        o.at === undefined
       )
         err(
-          `${where}: a "${o.type}" needs a positive density (or a prefab that ` +
-            `stands it somewhere)`,
+          `${where}: a "${o.type}" needs a positive density (or an anchor, or ` +
+            `a prefab that stands it somewhere)`,
+        );
+      // …and never BOTH. A piece is placed by rule or rolled; an entry carrying
+      // an anchor and a density would stand at the anchor AND scatter copies of
+      // itself across the district, which is nobody's intent and reads as a
+      // duplicated prop.
+      if (o.at !== undefined && isPosNum(o.density))
+        err(
+          `${where}: has both an anchor and a density — a piece is placed by ` +
+            `rule or scattered, never both`,
         );
       if (isPosNum(o.density) && o.density > 200)
         warnings.push(
@@ -956,6 +972,28 @@ export function validateMap(bp, refs, description = "") {
             `${tag}: ${where} has no openSprite — the doorway will be empty once opened`,
           );
       }
+      // ANCHORED FURNITURE — a piece placed by rule instead of by density,
+      // standing at a carved feature plus a nudge (see `MapObject.at`). Same
+      // vocabulary a landmark and a lamp take, and checked the same way; the
+      // "not also a density" half is with the density rule above.
+      if ((o.type === "obstacle" || o.type === "decor") && o.at !== undefined) {
+        if (!ANCHORS.has(o.at))
+          err(`${where}: "at" must be one of ${[...ANCHORS].join(", ")}`);
+        if (
+          o.offset !== undefined &&
+          (!isNum(o.offset.x) || !isNum(o.offset.y))
+        )
+          err(`${where}: offset needs numeric x/y`);
+        // An anchored piece stands where it is put, so a district list on one
+        // is a restriction nothing consults.
+        if (o.areas !== undefined)
+          err(
+            `${where}: an anchored piece cannot also name "areas" — the anchor ` +
+              `already says where it stands`,
+          );
+        if (o.edge !== undefined)
+          err(`${where}: "edge" is a scatter rule and means nothing anchored`);
+      }
       if (o.type === "landmark") {
         if (!ANCHORS.has(o.at))
           err(
@@ -986,10 +1024,14 @@ export function validateMap(bp, refs, description = "") {
         else sprite(o.lamps.sprite, where2);
         if (o.lamps.inset !== undefined && !isPosNum(o.lamps.inset))
           err(`${where2}: inset must be positive`);
+        // How high up the wall the pair is bolted — the FIXTURE only, which is
+        // the one thing `inset` (which spreads them along the wall) cannot say.
+        if (o.lamps.lift !== undefined && !isPosNum(o.lamps.lift))
+          err(`${where2}: lift must be positive`);
         if (o.lamps.light === undefined) err(`${where2}: needs a light block`);
         else checkLight(o.lamps.light, where2);
         for (const key of Object.keys(o.lamps))
-          if (!["sprite", "inset", "light"].includes(key))
+          if (!["sprite", "inset", "lift", "light"].includes(key))
             err(`${where2}: has no field "${key}"`);
       }
       if (o.type === "light") {
@@ -1037,7 +1079,12 @@ export function validateMap(bp, refs, description = "") {
       // districts it may be scattered over. If the second could reach a district
       // the first refuses, this map is one seed away from a cactus in a
       // cleanroom — and nothing downstream would ever say so.
-      if (DISTRICTABLE.has(o.type)) {
+      //
+      // AN ANCHORED PIECE IS EXEMPT, for the same reason a landmark is: it is
+      // not scattered over districts at all, so "which districts could this
+      // reach" has no answer to be wrong. Where it stands is a coordinate the
+      // author wrote and can look at.
+      if (DISTRICTABLE.has(o.type) && o.at === undefined) {
         const wants = refs.spriteSpace?.get(o.sprite ?? o.kind ?? o.id);
         // The districts this entry can actually reach: the ones it names, cut
         // by its own `space` if it has one, or every district when it names

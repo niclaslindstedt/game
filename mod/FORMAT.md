@@ -213,6 +213,28 @@ Three rules to author by:
 - **A count is a DENSITY.** Densities are per 1,000,000 world px², so the
   dressing follows the floor a district's cells actually rolled rather than
   piling up in a small one and leaving a big one bare.
+- **…UNLESS THE PIECE IS FURNITURE, which is `at` instead.** An `obstacle` or a
+  `decor` may give a carved anchor (`spawn`, `goal`, `home`, `counter`, `stall`)
+  and an `offset` in place of a density, and it then stands exactly there, once,
+  on every seed — colliding if it is an obstacle. Use it for the pieces a player
+  is meant to LEARN rather than notice: the bench in a home, the counter in a
+  shop. Two things it will not do — carry a density as well (a piece is placed
+  by rule or rolled, never both), or take an `areas`/`edge` list, since the
+  anchor has already said where it stands.
+
+  ```yaml
+  - id: workbench
+    type: obstacle
+    radius: 8
+    at: spawn # anchored to the hero's own landing…
+    offset: { x: -60, y: -40 } # …and a nudge, which puts it on the north wall
+  ```
+
+  The offset is against an ANCHOR rather than an absolute x/y on purpose: a
+  carve has no authored coordinates, so "a lift off where the hero lands" stays
+  true on every seed and a written coordinate does not. Reach for a `prefab`
+  instead when the furniture wants its own ROOM around it.
+
 - **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
   `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
   barrier between two cells falls out of the PAIR — you never draw a wall.
@@ -304,8 +326,19 @@ walls, which is what makes that possible):
   radius: 8
   lamps:
     sprite: wall_lamp
+    inset: 8 # how far off the door's own line the pair stands
+    lift: 16 # …and how high up the wall the FITTINGS are bolted
     light: { radius: 58, color: "255, 206, 138", intensity: 0.92 }
 ```
+
+`inset` and `lift` are not two names for the same thing. `inset` MOVES the pair
+— each fitting steps away from its own end of the chain, and both are pushed
+further off the wall — so the only picture it can buy is a wider pair standing
+deeper in the road. `lift` raises the FIXTURES and nothing else: a wall is drawn
+as an extruded face and a lamp is painted from its foot upward, so a fitting
+that lands on the doorway's own last block crowds the opening, and the fix is to
+hang it higher rather than further away. The pools stay where they were — the
+lamp is up on the brickwork and its light is still on the ground.
 
 **AND A ROOFED DISTRICT MAY SIMPLY BE LIT.** `lit: 0.82` on a `hard` area is
 "the lights are on in here": the carve emits that chamber's own rect, so the
