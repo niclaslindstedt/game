@@ -23,6 +23,22 @@ if [ -z "${GITHUB_PAT:-}" ] && [ -n "${GITHUB_TOKEN:-}" ]; then
   echo "export GITHUB_PAT=\"$GITHUB_TOKEN\"" >> "$CLAUDE_ENV_FILE"
 fi
 
+# `src/generated/` is the RETIRED path of the compiled content tree — the root
+# source tree was renamed src/ -> engine/ (#1046). Nothing writes there any
+# more, but a remote container's working copy is CACHED and reused rather than
+# re-cloned, so one that last built before that commit still holds the stale
+# directory: git cannot delete an ignored directory across the checkout that
+# moves it forward. It then reappears in every resumed session. `make clean`
+# removes it; prune it here so a cached container heals itself. Retire this
+# alongside the .gitignore/.prettierignore/eslint entries that suppress it,
+# once no cached working copy predates #1046.
+# Anchored absolutely on purpose: SIX directories in this repo are named
+# `src/` (pwa, native, electron, tauri/shell, tauri/src-tauri) and only the
+# ROOT one is the retired engine tree. A bare `src/generated` would be a
+# `rm -rf` whose meaning depends on the working directory.
+rm -rf "$CLAUDE_PROJECT_DIR/src/generated"
+rmdir "$CLAUDE_PROJECT_DIR/src" 2>/dev/null || true
+
 # Root install covers the website workspace too. `npm install` (not ci) so
 # the cached container state keeps repeat runs fast and idempotent.
 npm install --no-audit --no-fund
