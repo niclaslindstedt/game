@@ -65,16 +65,31 @@ areas:
     spawn: false
     label: THE LAWN
     ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
-  # THE BURNT PATCH THE SHIP STANDS ON — the lawn where it is not lawn any more.
+  # THE PATCH THE SHIP STANDS ON — the lawn where it stops being lawn.
   #
   # A man built a rocket in the bay and lights it on the grass behind it
-  # (`content/cutscenes/launch.yaml`), so the ground under it is charred earth.
-  # It is its OWN district rather than the whole lawn's floor because the lawn
-  # is mostly fine: the far end of the lot, past the house, has never had
-  # anything lit on it, and blacking all of it read as a different place. The
-  # cutscene draws exactly the same patch, derived from where the ship is
-  # parked — the two have to agree, because the player walks the one and
+  # (`content/cutscenes/launch.yaml`), so the ground under it is whatever the
+  # last fire left. It is its OWN district rather than the whole lawn's floor
+  # because the lawn is mostly fine: the far end of the lot, past the house, has
+  # never had anything lit on it, and blacking all of it read as a different
+  # place. The cutscene draws exactly the same patch, derived from where the
+  # ship is parked — the two have to agree, because the player walks the one and
   # watches the other.
+  #
+  # …AND IT IS GRASS TO BEGIN WITH. This is the ONE district in the game that
+  # changes over a campaign (`MapStage`, engine/game/mapgen/stages.ts), and the
+  # reason is that the burning is a THING THAT HAPPENS rather than a fact about
+  # the lot: the first time the hero walks out here his ship has never flown, so
+  # the ground under it is the same lawn as the ground around it. Charred
+  # afterwards, and past charring once Mars is behind him.
+  #
+  # THE LADDER IS THE HOUSE'S LADDER, read off the same `cleared:` tags the
+  # launch's props are (`content/cutscenes/launch.yaml`) — three fires, and
+  # nothing between them ever puts any of it back:
+  #
+  #   green    he has not lit it yet
+  #   charred  the moon is behind him — the launch AND the landing home
+  #   ashen    Mars is too, and there was nothing left to burn by then
   #
   # Open ground with the lawn on every side (`enclosure: none`), so nothing is
   # walled off; it wears the same LABEL, because it is not somewhere else.
@@ -85,7 +100,12 @@ areas:
     boss: false
     spawn: false
     label: THE LAWN
-    ground: { common: grass_charred_0, rare: grass_charred_1, rareEvery: 9 }
+    ground: { common: grass_0, rare: grass_1, rareEvery: 9 }
+    stages:
+      - needs: "cleared:moon"
+        ground: { common: grass_charred_0, rare: grass_charred_1, rareEvery: 9 }
+      - needs: "cleared:mars"
+        ground: { common: grass_ashen_0, rare: grass_ashen_1, rareEvery: 9 }
   # ── THE ROAD ────────────────────────────────────────────────────────────────
   # The two lanes down the far east edge, and the painted line between them.
   # They are separate areas ONLY because a district's floor is one ground pair:
@@ -434,6 +454,94 @@ objects:
     density: 90
     areas: [bay]
 
+  # ── THE TREES ────────────────────────────────────────────────────────────
+  # THE ONES ON THE PAD ARE THE POINT. A patch of ground going black is a
+  # texture swap and reads as one — it is the trees standing in it that make the
+  # damage a thing that HAPPENED to somewhere, because a tree is the same object
+  # in all three states and the player has already walked past it green.
+  #
+  # So they climb the pad's own ladder, and a rung may swap the SPRITE and
+  # nothing else (`MapStage`): the carve is identical on every rung, which is
+  # what stands them in exactly the same places all campaign. A tree that had
+  # moved by the time it was charred would read as a different lot rather than
+  # as a burnt one.
+  #
+  # SOLID, like the colony's (`content/maps/mars.yaml`) — you cannot walk
+  # through a tree — and no `loot`: nothing on this lot is loot.
+  #
+  # PLACED, NOT SCATTERED, for the reason the workbench world below is (see its
+  # note): this is the STATIC map and the player is meant to learn it. The four
+  # stand at the pad's own corners, off the `goal` the ship holds, so they RING
+  # the launch rather than crowding it — and being anchored they are stamped
+  # rng-free, so adding them shifted no roll on the lot.
+  - id: pad_tree_nw
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: -52, y: -32 }
+    stages:
+      - needs: "cleared:moon"
+        sprite: lawn_tree_charred
+      - needs: "cleared:mars"
+        sprite: lawn_tree_ashen
+  - id: pad_tree_ne
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: 50, y: -36 }
+    stages:
+      - needs: "cleared:moon"
+        sprite: lawn_tree_charred
+      - needs: "cleared:mars"
+        sprite: lawn_tree_ashen
+  - id: pad_tree_sw
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: -54, y: 30 }
+    stages:
+      - needs: "cleared:moon"
+        sprite: lawn_tree_charred
+      - needs: "cleared:mars"
+        sprite: lawn_tree_ashen
+  - id: pad_tree_se
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: 48, y: 32 }
+    stages:
+      - needs: "cleared:moon"
+        sprite: lawn_tree_charred
+      - needs: "cleared:mars"
+        sprite: lawn_tree_ashen
+  # …AND THE THREE BEYOND THE PATCH NEVER BURN, which is the half that proves
+  # the other half. A lot where everything green goes black at once is a lot
+  # with a SETTING; a lot where the fire stopped at the edge of the patch it was
+  # lit on is a lot where somebody DID something. Same sprite, no ladder — the
+  # far ends of the lawn have never had anything lit on them, and after Mars
+  # they are the only green left out here.
+  - id: lawn_tree_west
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: -140, y: -20 }
+  - id: lawn_tree_east
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: 110, y: 10 }
+  - id: lawn_tree_north
+    type: obstacle
+    sprite: lawn_tree
+    radius: 7
+    at: goal
+    offset: { x: -8, y: -70 }
   # ── THE LAWN ─────────────────────────────────────────────────────────────
   - id: fuel_drum
     type: obstacle

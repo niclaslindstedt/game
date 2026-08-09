@@ -45,6 +45,35 @@ stage:
         label: house_gutted,
         needs: "cleared:mars",
       }
+    # THE TREES, ONE FIRE ON — the launch's pair (see its note), at the same
+    # marks and on the same ladder, one rung further down it. This landing is
+    # the only scene that ever LOOKS at what the first launch did to them, and
+    # it finds them the way the walkable hub will: charred, with the ship coming
+    # down on its own exhaust to do it again.
+    - {
+        sprite: garage_tree_charred,
+        at: { x: 132, y: 100 },
+        label: tree_near_charred,
+        until: "cleared:mars",
+      }
+    - {
+        sprite: garage_tree_ashen,
+        at: { x: 132, y: 100 },
+        label: tree_near_ashen,
+        needs: "cleared:mars",
+      }
+    - {
+        sprite: garage_tree_charred,
+        at: { x: 178, y: 96 },
+        label: tree_far_charred,
+        until: "cleared:mars",
+      }
+    - {
+        sprite: garage_tree_ashen,
+        at: { x: 178, y: 96 },
+        label: tree_far_ashen,
+        needs: "cleared:mars",
+      }
     # The lot's own ground, exactly as the launch lays it (`ground: true` paints
     # it WITH the floor, under everything standing).
     - { sprite: garage_drive, at: { x: 57, y: 114 }, ground: true }

@@ -127,9 +127,21 @@ export function createGame(
   // carve gave it a spot, which is the hub and nowhere else.
   cacheSlots = 0,
 ): GameState {
+  // WHAT THE RUN KNOWS THAT ITS SCENES AND ITS MAP DO NOT — one tag per level
+  // this hero has already put behind him. Minted here, at the very top, because
+  // the CARVE reads it too (see below); the long note on what it is for is down
+  // beside the cutscene it was first built for.
+  const cutsceneTags = clearedLevels.map((id) => `cleared:${id}`);
   // This run's map: a chamber grid carved from the mission's blueprint on the
   // run's own seed (see `mapgen/`). Everything below reads a plain `LevelDef`.
-  const def = resolveLevelDef(levelId, seed);
+  //
+  // …AND DRESSED FOR HOW FAR THROUGH THE CAMPAIGN THIS HERO IS. The blueprint's
+  // staged rungs (`MapStage`) are resolved against the same tags the scenes read,
+  // so home is the one venue in the game that CHANGES: the lawn behind the
+  // garage is green until he lights his rocket on it and burnt past charring by
+  // the time Mars is behind him. The rungs redress and never reshape, so this is
+  // the same carve either way.
+  const def = resolveLevelDef(levelId, seed, cutsceneTags);
   const diff = difficultyDef(difficulty);
   // Every monster spawns at the horde's RELATIVE level (player level + the
   // difficulty's offset). Placed spawns mint their HP at the authored level-1
@@ -640,16 +652,18 @@ export function createGame(
   // tapping SKIP), so DIALOGUE off means no story text anywhere.
   const dialogueMuted = !isDialogueEnabled();
 
-  // WHAT THE RUN KNOWS THAT ITS SCENES DO NOT — one tag per level this hero has
-  // already put behind him, which a prop's `needs` / `until` is matched against
-  // (`@game/lib/cutscene`). The launch is the case it exists for: the house
-  // beside the pad is whole the first time the hero lights his rocket next to
-  // it and a burnt-out shell every time after.
+  // (`cutsceneTags` is minted at the top of this function, because the carve
+  // reads it too.) WHAT THE RUN KNOWS THAT ITS SCENES DO NOT — one tag per level
+  // this hero has already put behind him, which a prop's `needs` / `until` is
+  // matched against (`@game/lib/cutscene`). The launch is the case it exists
+  // for: the house beside the pad is whole the first time the hero lights his
+  // rocket next to it and a burnt-out shell every time after — and the LAWN
+  // under it climbs the same ladder, both in the scene and on the walkable hub
+  // (`MapStage`, `mapgen/stages.ts`), off this one list.
   //
   // DERIVED RATHER THAN NAMED, and that is the whole of the design: nothing
   // here knows which level matters to which scene, so a mod's own scene can say
   // `needs: cleared:<its own level>` and be answered by the same three lines.
-  const cutsceneTags = clearedLevels.map((id) => `cleared:${id}`);
 
   const state: GameState = {
     phase: preludes.length > 0 ? "cutscene" : dialogueMuted ? "title" : "intro",

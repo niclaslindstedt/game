@@ -18,6 +18,7 @@ import { handAuthoredLevel, levelDef } from "../defs/levels/index.ts";
 import type { LevelDef } from "../defs/levels/types.ts";
 import { mapBlueprint } from "./blueprints.ts";
 import { generateLevel } from "./generate.ts";
+import { resolveStages } from "./stages.ts";
 
 // The registry itself lives in the import-free leaf `blueprints.ts`, so the def
 // registry can swap a mod's blueprints in without dragging the generator along.
@@ -28,6 +29,7 @@ export {
   setMapBlueprints,
 } from "./blueprints.ts";
 export { generateLevel } from "./generate.ts";
+export { resolveStages } from "./stages.ts";
 export {
   carveChambers,
   doorDistances,
@@ -59,13 +61,24 @@ export type {
  *
  * @param levelId the mission
  * @param seed    the run seed `createGame` was handed
+ * @param tags    what this run REMEMBERS — `cleared:<levelId>` per level the
+ *                hero has already put behind him, the same list a cutscene's
+ *                props are matched against. It picks the blueprint's staged
+ *                dressing (`resolveStages`) and NOTHING else: the carve is the
+ *                same carve on every rung, so the hub's lawn burns without its
+ *                trees moving. Omitted = nothing has happened yet, which is the
+ *                right reading outside a run.
  */
-export function resolveLevelDef(levelId: string, seed: number): LevelDef {
+export function resolveLevelDef(
+  levelId: string,
+  seed: number,
+  tags: readonly string[] = [],
+): LevelDef {
   const base = levelDef(levelId);
   const blueprint = mapBlueprint(levelId);
   if (!blueprint) return handAuthoredLevel(base);
   // A pinned blueprint (`carveSeed`) carves on its constant rather than the
   // run's seed — the STATIC hub. The run itself still lives on `seed`.
   const carveSeed = blueprint.carveSeed ?? seed;
-  return generateLevel(blueprint, base, carveSeed);
+  return generateLevel(resolveStages(blueprint, tags), base, carveSeed);
 }

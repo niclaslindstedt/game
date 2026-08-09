@@ -95,6 +95,39 @@ with it. What the dark LOOKS like is the renderer's (`docs/rendering.md`), and
 none of it touches a rule: sight, reach, aggro and spawns are exactly what they
 are at noon.
 
+## …and home is the one place the campaign leaves a mark on
+
+Every other venue is the same venue whenever the hero walks into it, and it has
+to be: a mission is a place the story visits. **The hub is a place the story
+HAPPENS TO** — he keeps building rockets in the bay and lighting them on the
+grass behind it — so the lawn out there climbs a ladder as the campaign goes by,
+and nothing on it ever gets better:
+
+| The run has cleared | The patch the ship stands on              | The four trees round it |
+| ------------------- | ----------------------------------------- | ----------------------- |
+| nothing yet         | grass, like the rest of the lawn          | in leaf                 |
+| the moon            | charred — the launch AND the landing home | scorched, burnt through |
+| Mars as well        | ash, cracked open — burnt past charring   | bare skeletons          |
+
+Three rules make it a mark rather than a setting, and they are the ones a second
+venue doing this would have to obey too:
+
+- **THE LADDER IS THE SAME LADDER THE SCENES CLIMB.** The launch and the
+  homecoming (`content/cutscenes/launch.yaml`, `earth_return.yaml`) stand their
+  own house and their own trees on this lawn, off the SAME `cleared:<levelId>`
+  tags the map reads (`MapStage` — `engine/game/mapgen/stages.ts`, authored as
+  `stages:` in `content/maps/garage.yaml`). The player watches one lot and walks
+  the other; a scene and a map with separate ladders would drift on the first
+  edit to either.
+- **A RUNG REDRESSES AND NEVER RESHAPES.** It may swap a district's ground and a
+  prop's sprite, and nothing else — so the carve is identical on every rung and
+  the trees stand in exactly the same places all campaign. That is what makes it
+  read as the same trees after a fire rather than as a different lot.
+- **THE FIRE STOPS AT THE EDGE OF THE PATCH IT WAS LIT ON.** Three more trees
+  stand further out and never burn at all; after Mars they are the only green
+  left on the lot. A lot where everything went black at once would just look
+  like somewhere grim.
+
 ## What carries between levels
 
 Clearing a level banks a **loadout snapshot** — level, stats, worn equipment,
