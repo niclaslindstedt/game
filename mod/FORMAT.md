@@ -2380,6 +2380,14 @@ mod layout and the compiler reads none — a folder of them is refused as a stra
 So `intro:` and a quest's `conversation:` can only name a tree the base game
 already ships, which for most mods means leaving both out.
 
+**AN ERRAND IS ONE THING SAID AND ONE THING ANSWERED.** `offer` and `complete`
+each take at most TWO pages: the giver's, and then the hero's one-line reply
+written `- hero: [...]`. The build refuses a third page, a giver page after the
+hero's, and a hero page first — the box under those pages is the quest modal,
+which already carries the objectives, the reward and the only decision on offer,
+so everything past the reply is the player being held at a desk. A `greeting` is
+one line for the same reason: it heads the giver's slate on every single visit.
+
 Each errand is its own file under `quests/`, the stem being its id:
 
 ```yaml
@@ -2391,14 +2399,16 @@ name: THIN THEM OUT
 lore: > # required: what the errand IS, described rather than spoken
   Something has been through the north beds twice this week, and the keeper
   has stopped calling it weather.
-offer: # the ask — a list of PAGES, each a list of lines
-  - - THE CRAWLERS ARE THROUGH
-    - THE NORTH BEDS AGAIN.
-  - - EIGHT AND THEY'LL LEARN.
-incomplete: # optional: the nag when you come back short
+offer: # the ask: ONE page from the giver, then ONE from the hero
+  - - THE CRAWLERS ARE THROUGH THE NORTH BEDS AGAIN. EIGHT AND THEY'LL LEARN.
+  - hero: # optional, and the ONLY thing allowed after the ask
+      - EIGHT. I'LL SEE TO IT.
+incomplete: # optional: the nag when you come back short — ONE line
   - STILL EIGHT. I'VE COUNTED.
-complete: # the handover
-  - - THAT'S THE BEDS SAFE.
+complete: # the handover — the same two-beat shape
+  - - THAT'S THE BEDS SAFE. TAKE SOMETHING OFF THE RACK.
+  - hero:
+      - KEEP THEM OFF YOUR ROWS.
 objectives:
   - kind: kill # kill N of a breed
     enemy: mymod_crawler

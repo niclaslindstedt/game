@@ -294,6 +294,39 @@ export type QuestGiverDef = {
   };
 };
 
+/**
+ * ONE PAGE OF A QUEST CONVERSATION — the giver's own words, or `{ hero: … }`
+ * for the ONE line the hero says back. Deliberately the same vocabulary an
+ * elite's arrival scene speaks (`DialoguePage`), so a page is a VOICE
+ * everywhere in the game rather than in two different ways.
+ *
+ * WHAT A QUEST CONVERSATION IS ALLOWED TO BE, and it is very little: the giver
+ * says ONE thing and the hero answers with ONE line. There is no branch, no
+ * menu of replies, and no second ask — the box that follows is the QUEST MODAL,
+ * which already carries the objectives, the reward and the two buttons that are
+ * the only decision on offer. A person with an errand is not a scene: the
+ * player walked up to them to find out what the job is, and everything past
+ * "here is the job, and yes" is the player being held at a desk.
+ *
+ * The hero's line is a REPLY, never a choice. He answers the way he would
+ * answer — dry, short, already moving — and the player is not asked to pick it,
+ * because a menu of ways to say yes is a menu whose rows all do the same thing.
+ */
+export type QuestPage =
+  readonly string[] | { readonly hero: readonly string[] };
+
+/** The lines of one page, whoever is saying them. */
+export function questPageLines(page: QuestPage): readonly string[] {
+  return Array.isArray(page)
+    ? page
+    : (page as { hero: readonly string[] }).hero;
+}
+
+/** Is this page the HERO's answer rather than the giver's ask? */
+export function questPageIsHero(page: QuestPage): boolean {
+  return !Array.isArray(page);
+}
+
 /** ONE ERRAND. */
 export type QuestDef = {
   id: string;
@@ -318,12 +351,15 @@ export type QuestDef = {
    * mod's errands answer to nobody; see mod/FORMAT.md.
    */
   lore: string;
-  /** The ask, in the giver's voice — one string per line, one entry per page. */
-  offer: readonly (readonly string[])[];
-  /** Nagged when the hero comes back with the work unfinished. */
+  /**
+   * THE ASK: ONE PAGE FROM THE GIVER, THEN ONE FROM THE HERO. Not a scene, not
+   * a negotiation, and never a menu of things to say — see {@link QuestPage}.
+   */
+  offer: readonly QuestPage[];
+  /** Nagged when the hero comes back with the work unfinished. ONE page. */
   incomplete?: readonly string[];
-  /** Said over the handover. */
-  complete: readonly (readonly string[])[];
+  /** Said over the handover — the same shape as the ask. */
+  complete: readonly QuestPage[];
   /** What has to happen; every entry must be met. */
   objectives: readonly QuestObjective[];
   /** The pieces a `collect` objective asks for. */

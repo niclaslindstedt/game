@@ -28,10 +28,14 @@ comes back. He is a spaceship builder who once assembled engines at the GENUINEL
 GOOD COMPANY — GOODCO to everyone who ever worked there —
 until an AI learned his job and walked him out the door — the same way the
 whole block lost its work, so now everyone lives on welfare and movie nights.
-The tracking beacon he sewed into Ada's jacket pings from off-planet. He has
-been building a ship in his garage for years; it needs one engine part he could
-never get, and GOODCO keeps it in their vault. So he takes the weapon off his
-living-room wall, raids his old employer for the part, and follows the beacon —
+The tracking beacon he sewed into Ada's jacket answers from one place: the
+campus he used to work at, an hour down the road. So he takes the weapon off his
+living-room wall and drives out there to bring her home. **He is late.** By the
+time he is through the door she has already been put on a pad and flown off the
+planet, and the only thing the building can still give him is the one engine
+part his garage ship has always been short of — which is the only reason a man
+on welfare can follow anybody off a planet at all. So he takes it, finishes the
+ship, and goes after her —
 to the moon, to Mars, through a rift between universes, and into a knockoff
 western — chasing the coward who sold her and the machine that gives the orders,
 all the way to the AI that took his job in the first place. Ada is never on
@@ -94,10 +98,10 @@ road the car leaves by, so the drive below starts the way it goes on. It
 costs nothing but the evening — there is always another one on that
 pavement the next time the hero comes home — and, exactly as on the road
 out, nobody remarks on it. And the first time he is standing in his own bay with the
-run live, he says the one thing the place is for out loud to nobody: the part
-is at GOODCO, and the car on the deck is what gets him there. If he wanders out
-under the roll-up on foot anyway, leaving the car where it stands, he catches
-himself at it — Ada is not down the street; get in the car.
+run live, he says the one thing the place is for out loud to nobody: the jacket
+is answering from GOODCO, and the car on the deck is what gets him there. If he
+wanders out under the roll-up on foot anyway, leaving the car where it stands,
+he catches himself at it — Ada is not down the street; get in the car.
 
 **The drive to GOODCO.** The earthbound leg is not a cut — it is played, both
 ways, and it is the blackest joke in the game. **It has three stretches and the
@@ -113,8 +117,9 @@ The car is not his yet: the road holds it at its own pace with GET READY over th
 middle of the screen, gives him the wheel a second before the town and the pedal
 only at the gate itself, which is what turns the approach into a starting flag
 instead of a stretch of road nobody was driving. And over the top of it he says
-the only two things he will say about any of this: that he has to hurry, because
-the part is at GOODCO; and that the people in town beg, and are — he is clear on
+the only two things he will say about any of this: that the jacket is answering
+from GOODCO and he has an hour of road to cover; and that the people in town
+beg, and are — he is clear on
 this — not on the welfare like him. He is a man with nothing being smug at people with less, on an
 empty road, several thousand pixels before he starts killing them at a hundred
 and twenty. He will never mention either half again.
@@ -142,14 +147,16 @@ and the car rolls the last stretch on its own past GOODCO's fence: a palisade,
 a shut gate with a red lamp over it, a staff lot under sodium floodlights, and
 three windowless sheds with the plant humming on their roofs. Standing behind all
 of it, on a gantry, is a finished rocket. The hero has spent every evening of his
-life building one out of scrap in a garage, and the company he is driving an hour
-to beg a single part off has one on a pad in the back garden. Nothing says so.
-He looks at the whole site and says that there's GOODCO.
+life building one out of scrap in a garage, and the company holding the thing
+that is answering from Ada's jacket has one on a pad in the back garden. Nothing
+says so. He looks at the whole site and says that there's GOODCO.
 
-The wagon pulls up, the engine goes off, and — for the only time on this road —
-**he gets out.** He stands on the tarmac beside his own car looking at the place,
-and asks the question the next level is the entire answer to: how is he supposed
-to get in? Then the picture goes out, and the cabinet asks him for three letters.
+**And that is the whole of it: the road does not stop, it FADES.** He is still
+rolling in past the fence when the picture goes out from under him — no
+handbrake, no engine cutting, no man standing on the tarmac explaining what he
+is about to do. The wagon is parked in the next scene because parking a car is
+not a thing anybody needs to watch, and the arrival's real first beat belongs to
+the level rather than to the cabinet. Then the black, and three letters.
 
 **And then he drives it home, and it is the same road and a different man.** The
 leg back is the leg out reversed — the same houses in the same order with the
@@ -170,7 +177,9 @@ instead of a poured apron and thirty staff cars; a bungalow with one lit window
 and the garage door still up from ten years ago instead of three windowless
 sheds. And standing on the grass beside that open door, a rocket — his, built out
 of scrap, about half the height of the one behind GOODCO's fence. Nothing says
-so. He gets out on his own drive, looks at it, and tells it to get ready.
+so. And nothing pulls up either: the road home ends on the same fade the road out
+does, with the wagon still rolling past his own fence, because the garage opens
+on a car already parked with him standing beside it.
 
 **What they are thinking.** Every so often one of the people on that road has a
 thought over their head, and it is never about him. It is the rent, the soup,
@@ -215,15 +224,15 @@ under road surface afterwards — is the whole point, and it is left entirely to
 the player to notice.
 
 **The doors.** Three ways out, earned in order. THE CAR — the white hatchback
-— does the earthbound leg: he drives it to GOODCO HQ the night he takes the
-part, and it comes home the worse for every trip. THE ROCKET stands on the
+— does the earthbound leg: he drives it to GOODCO HQ the night the trail points
+there, and it comes home the worse for every trip. THE ROCKET stands on the
 back lawn once the part is in — THE LAUNCH and every voyage after it leave
 from here, and it flies only where Ada's trail has already led (the moon
 first, then Mars once the moon has let go; he stops home between them,
 because there is no food on the moon). Tried before the part is home it goes
 nowhere at all, and he says why rather than showing a list of places he has
-not earned: still one part short, no sense climbing in until he has been and
-got it. Nothing here ever names a road ahead of the trail: Mars is not
+not earned: still one part short, and she is not up there anyway — she is an
+hour down the road. Nothing here ever names a road ahead of the trail: Mars is not
 mentioned until the moon lets go. THE CAR and THE ROCKET keep the roads they
 have always kept, and the RIFT SEAM takes everything past them: it opens on the
 garage wall only once it leads somewhere — THE FOUNDER's RIFT CREATOR home off
@@ -232,6 +241,15 @@ reaches back into the rift, out to the West and down to the vault. Until then
 there is nothing on that wall at all, because a hole in the world that goes
 nowhere is not a promise, it is a question. The campaign's chapters are unchanged; the garage is the
 breath between them, and — when friends join his game — the place they land.
+
+**How everybody with an errand talks.** Every side errand in the game, on every
+venue, is spoken in exactly two beats: the person says ONE thing, and the hero
+answers with ONE line. Then the quest slate opens, and it carries the job, the
+reward and the only decision on offer. Nobody with an errand gets a scene, a
+branch, or a menu of ways for the player to say yes — a person the hero has to be
+talked ROUND is a conversation, which is a different thing with a different name
+and is not what a giver hands out. The people below are described here at the
+length their errands deserve; what they actually SAY is two sentences each.
 
 **Side errands at home — RUTH, Ada's mother.** She has a key to the garage and
 always has, and once the voyages start she is simply there between them,
@@ -273,27 +291,37 @@ it back — a thing given is given.
 
 ## Level 1 — GOODCO HQ
 
-**Intro.** The tracker in Ada's jacket has pinged from space: someone is taking
-her off the planet. To follow her the hero needs his garage ship finished, and
-it still lacks the one engine part GOODCO keeps in the cleanroom vault. He knows
-the building — he built their engines here until the AI replaced him — and they
-never changed the locks. Tonight he takes the part, finishes the ship, and goes
-to get Ada back.
+**Intro.** The jacket is answering from one place, and it is a place he knows:
+the campus he built engines at for ten years, until an AI learned his job and
+they walked him out. She is in there, or she was an hour ago. He does not have a
+plan past that and does not pretend to have one: he knows the building and he
+knows the people in it, he would rather not have trouble with any of them, and
+he is going in to walk her out. **Nothing in the opening mentions the part**, and
+that is the point of the level: he came here for a person, and what he finds is
+that he has arrived too late for one and just in time for the other.
 
-**He arrives driving, and he arrives outside.** The trip in is the drive; it ends
-with him standing on GOODCO's STAFF LOT beside his own car, and the building is a
-wall in front of him with no door he can see. He is not noticed out there: the
-tarmac has two parking guards on it who are watching the bays rather than the
-gaps between them, and nothing else. What he watches instead is the NIGHT SHIFT
-CLOCKING ON — a car every so often, somebody getting out of it and walking to a
-door in that wall and tapping a card against it. Every lock inside the building
-still knows his hand, exactly as he said in the car; the reader on the OUTSIDE is
-the one thing they replaced after they walked him out. So he does not find a way
-in. He follows somebody who already has one, and goes through the doors behind
-them.
+**He arrives driving, and he arrives outside.** The trip in is the drive; it
+fades out with him still rolling in past the fence, and the level opens with the
+wagon already parked on GOODCO's STAFF LOT and him standing beside it. The
+building is a wall in front of him, and the only way through it is the GATE: a
+lit security kiosk on the tarmac with a guard sitting behind the glass, a card
+reader on the post beside it, and a shut leaf under a red lamp. The guard is not
+looking for anybody — nobody has told the night shift that anything is wrong —
+and neither are the two parking attendants watching the bays. What the hero
+watches instead is the NIGHT SHIFT CLOCKING ON: a car every so often, somebody
+getting out of it, walking up to the kiosk and tapping a card. The gate opens for
+about a second and a half, takes them, and shuts again. He had a badge for that
+gate once and they took it off him on the way out, and that is the whole of what
+he claims about this place — a man walked out years ago does not actually know
+what still opens for him, and the game never has him pretend otherwise. So he
+does not find a way in. He waits for somebody who already has one, goes through
+on their second and a half, and the gate closes behind him.
 
-He walks in with the wall piece still holstered, because this is where he used
-to work. A lab scientist breaks from the crowd and hits him — and he does not
+**Everything that happens next happens INSIDE.** He is through the gate before he
+has an opinion about the place, and the first thing he says about it is said
+standing in the room past it: past midnight, every desk manned, every lab lit,
+and they never ran nights like this. Only then does the floor notice him. A lab
+scientist breaks from the crowd and hits him — and he does not
 hit back. He knows the man; they ate at the same table for six years. He says
 so, tells the floor to stand down, says he has never raised a hand to anyone in
 his life. The scientist knows him too — says his name to his face, the way you
@@ -301,7 +329,8 @@ say the name of somebody you ate lunch beside — and it changes nothing: they
 have their orders, nobody walks out of here with GOODCO's secrets, and he would
 like to keep his job. They all would — as the hero, of all people, knows. He is hit a
 second time, and a third, and only then does he answer one, apologising as he
-does it.
+does it. The whole beat is the building's, not the car park's: the man who came
+to slip in unnoticed does not get assaulted in the open in front of the guards.
 
 The floor is running a night shift it never ran — and it's an assembly line:
 half-built ships stand in their jigs, welding-arm robots work the racks, and the
@@ -319,12 +348,16 @@ the CORE KEYCARD to the AI's locked room. **THE CHIEF OF SECURITY** saw Ada put
 on Pad 2 and confesses the flight papers listed her not as a passenger but as a
 specimen; he drops the EVA SPACE SUIT the hero needs to leave the planet.
 
-**DR. NOVA** reveals the engine part the hero came for was never built — GOODCO
-dug it out of the Sea of Tranquility in 1969, and it isn't from Earth. **THE
+**DR. NOVA** is the one who puts the part back on the table — and does it by
+bragging, to a man who had not asked: the thing in the cleanroom vault was never
+built at all, GOODCO dug it out of the Sea of Tranquility in 1969, and it isn't
+from Earth. **THE
 JANITOR**, who has mopped this lab for thirty years, adds the darkest thread:
 a badge pinged in last Tuesday under a crew number retired in '69, its holder
 buried for decades — and hints that whoever came back from the moon in '69
-wasn't the man they sent up. In the vault the hero recovers the ANTI-GRAV UNIT (his ship's missing part)
+wasn't the man they sent up. In the vault the hero takes the ANTI-GRAV UNIT —
+the part his own ship has always been short of, and now the only way to follow
+anybody off the planet —
 and, in the AI CORE room, a log revealing the machine signed the launches, drew
 the SUCCESSOR line, and filed Ada under "cargo" — and that its whole purpose is
 to keep one man, THE FOUNDER, the richest alive: take everyone's jobs, zero
@@ -805,11 +838,10 @@ about the person: REDUNDANT — SUPERSEDED BY ASSET. It is on Walter's own file
 too, and the asset is named on every one. To close the box he needs a
 countersignature, and the only thing on the floor still authorised to give one
 is the **ARCHIVE UNIT**, a records terminal on treads standing by an instruction
-issued eleven years ago that nobody ever withdrew. It will stamp the form for
-anybody who can answer three questions about the record — the last of which has
-no answer, because the asset is not a name, it is a line item. It will also come
-off its treads at anybody who tells it the rule no longer matters, and the stamp
-is inside it either way.
+issued eleven years ago that nobody ever withdrew. All it wants is the one thing
+on the form nobody can supply: the name of the asset that superseded a man.
+There is no such name — it is a line item — and the hero saying so out loud is
+what closes the box.
 
 **THE MOON — HOLLIS VANE, contract auditor.** A ghost sent up to reconcile what
 GOODCO was shipping off Site T against what GOODCO said it was shipping, who got
@@ -818,9 +850,10 @@ warm. His manifest is still out at the survey marker, off every line worth
 walking: eleven crates out, nine declared. Who signed for the other two is a
 question only **THE SITE SURVEYOR** can answer — a ghost who does not haunt
 anywhere in particular but walks the whole grid, so he has to be found rather
-than visited, and who will not give a company man a straight answer. Told the
-truth, he says the signature block named RECORDS AND CONTINUITY, which is not a
-department. It is a book, and it went to Mars with everything else.
+than visited. Nobody has stood on that grid in fifty years, and the company put
+his name on a survey that said nothing was down there, so finding him is the
+whole of it: he says the signature block named RECORDS AND CONTINUITY, which is
+not a department. It is a book, and it went to Mars with everything else.
 
 **MARS — LEDGER UNIT 12.** The colony's accounting machine, still reconciling a
 book in which every net-worth column reads the same number, unable to close it

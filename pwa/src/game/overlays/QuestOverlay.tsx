@@ -31,8 +31,11 @@ import {
   objectiveNeed,
   questDef,
   questGiverDef,
+  questPageIsHero,
+  questPageLines,
   questRewardChoices,
   questXpReward,
+  playerAppearance,
   withHeroNameLines,
   type Equipment,
   type GameState,
@@ -48,6 +51,9 @@ import { useTypewriter } from "@ui/lib/typewriter.ts";
 import { useDismissOnOutsidePress } from "@ui/lib/use-outside-press.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { heroSoak } from "../game-screen/hero-soak.ts";
+import { dollDataUrl } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 import { ItemIcon } from "../ItemCard.tsx";
 import { ItemTooltip } from "../ItemTooltip.tsx";
 import { tierGlowClass } from "../tiers.ts";
@@ -227,10 +233,17 @@ export function QuestOverlay({
   // so a memo keyed on `offer` alone would hand the crawl the first page for
   // ever. Every read of a mutated engine field has to be in the deps by value.
   const page = offer?.page ?? 0;
+  // WHOSE PAGE THIS IS. An errand is one thing said and one thing answered
+  // (`QuestPage`), so the box has two speakers rather than one — and the answer
+  // is delivered by the hero's own dressed paper doll, exactly as his lines are
+  // everywhere else in the game. Anything that reads "the speaker" below asks
+  // this first.
+  const current = offer && !listing ? pages[page] : undefined;
+  const heroSpeaks = current !== undefined && questPageIsHero(current);
   const speech = useMemo(
     () =>
-      offer && !listing ? withHeroNameLines(pages[page] ?? [], heroName) : [],
-    [offer, listing, pages, page, heroName],
+      current ? withHeroNameLines([...questPageLines(current)], heroName) : [],
+    [current, heroName],
   );
   // An authored line is a PARAGRAPH: flow it into the speech column's own
   // measured width (the box is narrower than the dialogue box's — a portrait
@@ -402,11 +415,25 @@ export function QuestOverlay({
   // early returns below, because it is a hook: `giver` is undefined on the
   // render where the offer has just closed, and a hook cannot be skipped for
   // it.
-  const portrait = useSpeakingBust(
+  const giverBust = useSpeakingBust(
     assets.sprites,
     giver?.sprite ?? "",
-    giver !== undefined,
+    giver !== undefined && !heroSpeaks,
   );
+  // …and the hero's own face for his answer: the dressed doll the HUD, the bag
+  // and every dialogue box already portray him with, resolved live off the
+  // loadout so he is never wearing gear he has not found.
+  const portrait = heroSpeaks
+    ? (dollDataUrl(
+        assets.sprites,
+        playerDollLayers(state, "0"),
+        heroSoak(state),
+        { bust: true },
+      ) ??
+      spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
+      null)
+    : giverBust;
+  const speakerName = heroSpeaks ? (heroName ?? "ME") : (giver?.name ?? "");
   const rewardPick = quest
     ? Math.min(
         Math.max(
@@ -569,9 +596,11 @@ export function QuestOverlay({
             <div className="quest-speaker">
               <PixelText
                 font={font}
-                text={giver.name}
+                text={speakerName}
                 scale={TEXT_SCALE}
-                color="#c9a95c"
+                // His own answer is headed in his own colour, so the two voices
+                // in the box are told apart before either is read.
+                color={heroSpeaks ? "#f6e3b0" : "#c9a95c"}
                 maxWidth={columnCapRem(colFontPx, TEXT_SCALE, QUEST_TEXT_REM)}
               />
             </div>

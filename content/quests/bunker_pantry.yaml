@@ -9,13 +9,15 @@ lore: >
   makes the number five weeks better, which is five more weeks of a
   five-course service that nobody comes to.
 offer:
-  - - I HAVE COUNTED THE PANTRY DOWN TO THE WEEK AND I HAVE TOLD NOBODY THE NUMBER.
-  - - THE SECURITY MEN CARRY TINS. FIVE, AND THE NUMBER GETS BETTER.
+  - - "I HAVE COUNTED THE PANTRY DOWN TO THE WEEK. THE SECURITY MEN CARRY TINS — FIVE, AND THE NUMBER GETS BETTER."
+  - hero:
+      - "FIVE TINS. I'M ON IT."
 incomplete:
-  - FIVE TINS. THEY ALL CARRY THEM. CHECK THE BELTS.
+  - "FIVE TINS. THEY ALL CARRY THEM. CHECK THE BELTS."
 complete:
-  - - FIVE WEEKS. THAT IS FIVE WEEKS OF SERVICE AT EIGHT.
-  - - THE CELLAR IS MINE ALONE. TAKE SOMETHING FROM IT.
+  - - "FIVE WEEKS. THAT IS FIVE WEEKS OF SERVICE AT EIGHT. TAKE SOMETHING FROM THE CELLAR."
+  - hero:
+      - "COOK WHILE YOU CAN."
 objectives:
   - kind: collect
     item: ration_tin

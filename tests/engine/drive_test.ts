@@ -1498,20 +1498,28 @@ describe("the road driven the other way", () => {
     expect(drive.car.pos.x).toBeLessThan(-courseLength(HOME) + 1);
     // …and the run-in's own beats land, in order, on the clock rather than on a
     // distance — a coasting car may never reach a mark measured in world px.
-    for (let t = 0; t < DRIVE.arrival.askMs + 200; t += 16) {
+    for (let t = 0; t < DRIVE.arrival.blackoutMs + 200; t += 16) {
       stepDrive(drive, 16, { pedal: 0, wheel: 0 });
     }
     expect(drive.sightDone).toBe(true);
-    expect(drive.heroOutDone).toBe(true);
-    expect(drive.askedDone).toBe(true);
+    expect(drive.blackoutDone).toBe(true);
+    // …and it is still rolling when the picture goes: the parking belongs to the
+    // level on the far side of the fade, which opens on it.
+    expect(Math.abs(drive.car.speed)).toBeGreaterThan(0);
   });
 
-  it("pulls up on the site's own mark whatever it crossed the line at", () => {
+  it("aims the last frame at the site's own mark, still rolling", () => {
     // THE RUN-IN IS THE ONE BEAT ON THIS ROAD THAT IS ABOUT WHAT IS BESIDE IT,
     // and a plain coast decided where that was by momentum alone: a wagon that
-    // crossed at a crawl stopped a couple of hundred px in and one that crossed
-    // flat out ran on for eleven hundred, so the frontage the hero then gets out
-    // and talks about was off the side of the screen about half the time.
+    // crossed at a crawl came up a couple of hundred px in and one that crossed
+    // flat out ran on for eleven hundred, so the frontage the hero remarks on
+    // was off the side of the screen about half the time. The brake AIMS the
+    // picture at the site's own mark instead.
+    //
+    // AIMS IT — it does not park on it. The speed is floored at a crawl
+    // (`DRIVE.arrival.rollFloorPx`), so the last frame of the leg is always a
+    // car still moving: the parking belongs to the level on the far side of the
+    // fade, which opens on a wagon already in a bay.
     for (const params of [PARAMS, HOME]) {
       const mark = driveSite(params.to).parkPx;
       for (const crossing of [350, 700, 1310]) {
@@ -1524,14 +1532,15 @@ describe("the road driven the other way", () => {
         drive.distance = courseLength(params) - 100;
         drive.townEndDone = true;
         drive.car.speed = crossing;
-        for (let t = 0; t < 12_000 && !drive.heroOutDone; t += 16) {
+        for (let t = 0; t < DRIVE.arrival.blackoutMs; t += 16) {
           stepDrive(drive, 16, { pedal: 0, wheel: 0 });
         }
         const past = drive.distance - courseLength(params);
-        expect(
-          Math.abs(past - mark),
-          `${params.to} @ ${crossing}`,
-        ).toBeLessThan(8);
+        const where = `${params.to} @ ${crossing}`;
+        // Within a screenful of the mark on every crossing speed — which is the
+        // whole claim: the frontage is IN the picture when the black lands.
+        expect(Math.abs(past - mark), where).toBeLessThan(260);
+        expect(Math.abs(drive.car.speed), where).toBeGreaterThan(0);
       }
     }
   });

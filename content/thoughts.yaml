@@ -37,17 +37,24 @@ thoughts:
   # car is FOR. It names the errand and the vehicle and nothing else: the rocket
   # and the seam are two chapters away and must not be mentioned. Portrait is
   # "hero" (unsuited — he is at home). Read once, ever.
+  #
+  # AND THE ERRAND IS A PERSON, NOT A PART. He is not driving an hour to fetch
+  # a component that a coincidence happens to have put in the same building as
+  # his girlfriend; the jacket he fixed the zipper on is answering from GOODCO's
+  # campus, and that is the whole of the reason he gets in the car. What is in
+  # the vault is something he finds out about after he is inside and she is
+  # already gone.
   garage_take_the_car:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT.
+      - - HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT.
   # …AND THE SAME ERRAND, SAID LESS KINDLY. The hub's on-foot beat
   # (`placeThoughts`, `where: pastDoor`): he has walked out under the roll-up
   # door on his own two feet and left the car standing in the bay. It is the
   # only nudge in the game a player earns by ignoring one — so it is short, it
   # is dry, and it says the stake out loud rather than the mechanic. He is not
-  # going to GOODCO for a part, he is going for ADA; the part is how. Read
+  # going to GOODCO for a part, he is going for ADA. Read
   # once, ever, and never while he is at the wheel (the car crosses this same
   # threshold on its way out).
   garage_on_foot:
@@ -97,7 +104,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - I NEED TO HURRY TO GOODCO AND GET THE PART.
+      - - HER JACKET'S PINGING FROM GOODCO.
       - - THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
   # …AND THE SAME ROAD GOING THE OTHER WAY, said on the outskirt between
   # GOODCO's gate and the first house — which is the stretch the leg out
@@ -133,11 +140,11 @@ thoughts:
   # ── THE RUN-IN ────────────────────────────────────────────────────────────
   # Past the finish line the clock stops, the town stops, and the wheel comes off
   # the player: the car rolls the last stretch on its own, past GOODCO's fence
-  # with the data halls and the ship on its gantry standing behind them. Two
-  # lines, barked exactly like the road's, and they are the only ones on this
-  # whole leg that are not about the car, the clock or the road surface.
+  # with the data halls and the ship on its gantry standing behind them. ONE
+  # line, barked exactly like the road's, and the only one on this
+  # whole leg that is not about the car, the clock or the road surface.
   #
-  # THEY ARE ALLOWED TO BE, and the reason is the reason the opening's are: there
+  # IT IS ALLOWED TO BE, and the reason is the reason the opening's are: there
   # is nobody in the picture. He is not failing to notice anybody here — there is
   # genuinely nobody left to notice, which is its own remark about the place.
   #
@@ -147,26 +154,14 @@ thoughts:
     portrait: hero
     pages:
       - - THERE'S GOODCO.
-  # …AND THE QUESTION, said standing on the tarmac beside a car with its engine
-  # ticking. It is the last thing the minigame does and it is a SET-UP: GOODCO's
-  # front door has no key and nothing in the game unlocks it
-  # (`engine/game/arrivals.ts`), so the level on the other side of the fade is
-  # the entire answer to this sentence. He has driven a hundred and twenty miles
-  # an hour through a town to arrive at a locked door, and it has not once
-  # occurred to him to wonder about that until now.
-  drive_arrive_door:
-    speaker: "{HERO}"
-    portrait: hero
-    pages:
-      - - OK. SO HOW DO I GET IN?
   # ── THE RUN-IN HOME ───────────────────────────────────────────────────────
-  # The same two beats at the other end of the same road, and GOODCO's site
-  # answered in every particular: a timber fence instead of a palisade, two
-  # lamps on two piers instead of floodlights on masts, a lawn with trees on it
-  # instead of a poured apron and thirty staff cars, and a bungalow with one lit
-  # window and the garage door still up. Standing on the grass beside that open
-  # door is his own rocket, built out of scrap, about half the height of the one
-  # behind GOODCO's fence. Nothing says so.
+  # The same beat at the other end of the same road, and GOODCO's site answered
+  # in every particular: a timber fence instead of a palisade, two lamps on two
+  # piers instead of floodlights on masts, a lawn with trees on it instead of a
+  # poured apron and thirty staff cars, and a bungalow with one lit window and
+  # the garage door still up. Standing on the grass beside that open door is his
+  # own rocket, built out of scrap, about half the height of the one behind
+  # GOODCO's fence. Nothing says so.
   #
   # AND HE IS ALLOWED ONE WARM LINE HERE — the only one in the whole minigame.
   # Out there he is flat because it is work; this is his own front gate with the
@@ -178,15 +173,14 @@ thoughts:
     portrait: hero
     pages:
       - - HOME AT LAST. AND THERE SHE IS.
-  # …AND WHAT HE SAYS TO IT, standing on his own drive beside a car with its
-  # engine ticking. The mirror of the question at GOODCO's door and a SET-UP in
-  # exactly the same way: THE LAUNCH is on the other side of this fade, and this
-  # is the sentence it answers.
-  drive_arrive_ship:
-    speaker: "{HERO}"
-    portrait: hero
-    pages:
-      - - RIGHT THEN. LET'S GET YOU FINISHED.
+  # …AND THAT IS THE LAST THING EITHER ROAD SAYS. A leg ends on a FADE with the
+  # wagon still rolling: the minigame never parks the car, never switches the
+  # engine off and never stands the man on the tarmac to be looked at, because
+  # the level on the other side of the black opens with the car already in a bay
+  # and him beside it. Nor does he ask how to get in — GOODCO's answer is a GATE
+  # with a lit guard box beside it, in plain sight from the level's first frame,
+  # and a line asking about a door the player is looking at reads as the game
+  # explaining its own map.
   # ── THE ARRIVAL VERDICT ───────────────────────────────────────────────────
   # Seven readings of one trip, in `driveVerdict`'s own priority order: the car
   # first, then the two kinds of somebody else's property, then the clock, and
@@ -252,8 +246,9 @@ thoughts:
   # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
   # before GOODCO HQ has fallen plays this instead of the travel picker (the
   # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do
-  # and one it must not: say the ship is still unfinished, point at the errand
-  # that finishes it — and NOT name the moon or Mars, which is the whole reason
+  # and one it must not: say the ship is still unfinished, and say that the
+  # trail is not pointing UP yet — she is an hour down the road, which is where
+  # he is going and why the ship can wait — and NOT name the moon or Mars, which is the whole reason
   # the picker is withheld. He has not earned those roads and does not yet know
   # they are where the trail goes. Portrait is "hero" (unsuited — he is at
   # home), and unlike every other pinned beat it REPLAYS: it answers a tap, so
@@ -262,7 +257,7 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+      - - STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD.
   # THE WAY IN (the level's `arrivals` — engine/game/arrivals.ts). He lands on the
   # staff lot with the building in front of him and the fog over every inch of
   # its wall, and the first thing that happens is a car pulling in and somebody
@@ -270,18 +265,17 @@ thoughts:
   # — the beat has to say what to DO, because the door they are walking to is
   # keyed and nothing he carries opens it.
   #
-  # IT ALSO SETTLES THE ONE THING THE MONOLOGUE PROMISED. The doorstep intro
-  # says "THEY NEVER CHANGED THE LOCKS — EVERY DOOR STILL KNOWS MY HAND", which
-  # is true of the doors INSIDE and would be a plot hole standing on the tarmac
-  # if he could not get to them. The perimeter reader is the one thing they did
-  # replace, which is both the honest answer and a small, mean joke about what a
-  # company spends its money on after it fires everybody.
+  # AND IT ONLY CLAIMS WHAT HE ACTUALLY KNOWS. He was walked out of this place
+  # years ago, so what still opens for him is not a thing he can vouch for — and
+  # a man asserting it anyway is a man bragging about the company that fired
+  # him. The one fact he owns is the badge he had for that gate and the moment
+  # they took it off him, so that is the whole of what he says out here.
   goodco_follow_in:
     speaker: "{HERO}"
     portrait: hero
     pages:
       - - THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
-      - - EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED.
+      - - I HAD A BADGE FOR THAT GATE ONCE. THEY TOOK IT OFF ME AT THE DOOR.
       - - SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE.
   # Sighting the first INTERN at GOODCO HQ: it's past midnight and the
   # building is packed like a product launch. He worked here — nights were
@@ -360,7 +354,7 @@ thoughts:
       - - THIRD TIME. HE ISN'T LISTENING. NOBODY ON THIS FLOOR IS LISTENING.
       - them:
           - WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW.
-      - - I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY.
+      - - I'M SORRY. I TRIED TO ASK. SHE'S SOMEWHERE IN THIS BUILDING AND YOU'RE IN MY WAY.
       - - I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
   # Sighting the first SUCCESSOR at GOODCO HQ: he was on the team that built
   # the first one, before the AI redrew the line (the CORE LOG's "IT DREW

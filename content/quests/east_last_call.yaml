@@ -9,13 +9,15 @@ lore: >
   ones were reflashed — all four the same night, by the same hand, which is
   what the errand was really asking and what it is careful not to say.
 offer:
-  - - I KNOW EVERY HAND IN THIS TOWN BY SERIAL. SOME OF THEM AREN'T THEM ANYMORE.
-  - - BRING ME FOUR PLATES AND I'LL TELL YOU WHICH ONES GOT DRIVEN.
+  - - "I KNOW EVERY HAND IN TOWN BY SERIAL, AND SOME OF THEM AREN'T THEM ANYMORE. BRING ME FOUR PLATES."
+  - hero:
+      - "FOUR PLATES. UNDER THE JAW, I TAKE IT."
 incomplete:
-  - FOUR PLATES, STRANGER. THE NUMBER'S UNDER THE JAW.
+  - "FOUR PLATES, STRANGER. THE NUMBER'S UNDER THE JAW."
 complete:
-  - - ALL FOUR REFLASHED. SAME NIGHT. SAME HAND.
-  - - THE HOUSE POURS. TAKE IT OFF THE SHELF.
+  - - "ALL FOUR REFLASHED. SAME NIGHT, SAME HAND. THE HOUSE POURS — TAKE IT OFF THE SHELF."
+  - hero:
+      - "SAME HAND THAT DRIVES THIS WHOLE TOWN."
 objectives:
   - kind: collect
     item: hand_serial

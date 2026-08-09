@@ -444,19 +444,18 @@ export function drainDrive(
     const voice = driveVoice(drive.params);
     if (event.type === "monologue") say(voice.monologue, drive.ms);
     if (event.type === "breakdown") say("drive_broke_down", drive.ms);
-    // ── THE RUN-IN'S TWO LINES ────────────────────────────────────────────
-    // The place, and then the door. The first is said through the windscreen
-    // with the place still growing in it; the second is said standing on the
-    // tarmac beside a car with its engine off, and it is what the level on the
-    // other side of the fade answers — a question at GOODCO's locked door, and
-    // ten years of weekends at his own.
+    // ── THE RUN-IN'S ONE LINE ─────────────────────────────────────────────
+    // The place, said through the windscreen with it still growing in the glass
+    // — and then the fade. He does not get out and he does not ask how to get
+    // in: the level on the far side of the black opens on a car already in a bay
+    // and, at GOODCO, on a gate with a guard sitting in it, so a question about
+    // a door the player is looking at would be the game explaining its own map.
     //
-    // They are the only lines on this road that are not about the car, the
-    // clock or the road surface, and they are allowed to be for the same reason
-    // the opening's are: there is nobody in the picture. He is not failing to
-    // notice anybody here; there is genuinely nobody left to notice.
+    // It is the only line on this road that is not about the car, the clock or
+    // the road surface, and it is allowed to be for the same reason the
+    // opening's is: there is nobody in the picture. He is not failing to notice
+    // anybody here; there is genuinely nobody left to notice.
     if (event.type === "sight") say(voice.sight, drive.ms);
-    if (event.type === "atTheDoor") say(voice.door, drive.ms);
   }
 }
 

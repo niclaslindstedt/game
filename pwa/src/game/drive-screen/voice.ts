@@ -16,23 +16,28 @@
 // one more layout there, and the drain (`loop.ts`) never learns there was a
 // second one.
 //
-// THE ENGINE NAMES NONE OF THESE. It raises `monologue`, `sight` and
-// `atTheDoor` — three beats on a road — and the words are content
-// (`content/thoughts.yaml`), which is the same fence every other line in this
-// game is drawn along.
+// THE ENGINE NAMES NEITHER OF THESE. It raises `monologue` and `sight` — the
+// two beats a road has — and the words are content (`content/thoughts.yaml`),
+// which is the same fence every other line in this game is drawn along.
 
 import type { DriveParams } from "@game/core";
 
-/** The three thoughts one leg has room for. */
+/**
+ * The two thoughts one leg has room for.
+ *
+ * THERE IS NO THIRD, and there used to be: a line said standing on the tarmac
+ * beside a car with its engine ticking. A leg ends on a FADE with the wagon
+ * still rolling now — the level on the far side of the black opens on a parked
+ * car with the man beside it, so playing the parking here showed the same
+ * arrival twice.
+ */
 export type DriveVoice = {
   /** On the outskirts, before there is anybody to say it about — the one time
    * the player is told why any of this is happening. */
   monologue: string;
-  /** Through the windscreen on the run-in, with the place growing in it. */
+  /** Through the windscreen on the run-in, with the place growing in it, and the
+   * last thing the leg says before the picture goes. */
   sight: string;
-  /** …and standing on the tarmac beside a car with its engine ticking, which is
-   * the last thing the minigame does. */
-  door: string;
 };
 
 /** Keyed by the level the leg is bound for (`DriveParams.to`). */
@@ -40,12 +45,10 @@ const VOICES: Record<string, DriveVoice> = {
   goodco_hq: {
     monologue: "drive_out_welfare",
     sight: "drive_arrive_goodco",
-    door: "drive_arrive_door",
   },
   garage: {
     monologue: "drive_home_errand",
     sight: "drive_arrive_home",
-    door: "drive_arrive_ship",
   },
 };
 

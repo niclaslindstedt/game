@@ -16,13 +16,15 @@ requires:
 # empty of it and DOLLY was asking for a kill no run could make.
 minDifficulty: nightmare
 offer:
-  - - THERE'S ONE OUT ON THE FLATS WEARING A COAT I CUT MYSELF. IT DIDN'T ASK.
-  - - I WANT THE COAT BACK AND I DON'T MUCH CARE ABOUT THE REST OF IT.
+  - - "THERE'S ONE OUT ON THE FLATS WEARING A COAT I CUT MYSELF. I WANT THE COAT. THE REST OF IT I DON'T CARE ABOUT."
+  - hero:
+      - "I'LL BRING THE COAT."
 incomplete:
-  - IT'S STILL WEARING MY WORK. OUT ON THE FLATS.
+  - "IT'S STILL WEARING MY WORK. OUT ON THE FLATS."
 complete:
-  - - MY STITCHING. STILL GOOD AFTER ALL THAT.
-  - - I'VE ONE PIECE I NEVER PUT ON ANYONE. TAKE IT.
+  - - "MY STITCHING, STILL GOOD AFTER ALL THAT. TAKE THE PIECE I NEVER PUT ON ANYONE."
+  - hero:
+      - "IT'S GOOD WORK. THANK YOU."
 objectives:
   - kind: killNamed
     enemy: the_long_noon

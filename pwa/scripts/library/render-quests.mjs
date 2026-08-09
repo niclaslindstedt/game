@@ -309,14 +309,21 @@ ${paragraphs(chainProse(quest))}`;
 
 /** The conversation, behind the page's cover. */
 function talkSection(quest) {
+  // AN ERRAND HAS TWO VOICES IN IT, so the page has to print both: the giver
+  // asks and the hero answers with one line (`QuestPage`). A `{ hero: [...] }`
+  // page printed under the giver's name would put the reply in the wrong mouth,
+  // which on a page whose whole job is transcribing what is said is the only way
+  // this could be wrong.
   const pages = (entries, who) =>
     entries
-      .map(
-        (lines) => `      <blockquote class="speech">
-        <span class="who">${escapeHtml(who)}</span>
+      .map((entry) => {
+        const hero = !Array.isArray(entry);
+        const lines = hero ? entry.hero : entry;
+        return `      <blockquote class="speech${hero ? " reply" : ""}">
+        <span class="who">${escapeHtml(hero ? "The hero" : who)}</span>
         <p>${lines.map(escapeHtml).join("<br />")}</p>
-      </blockquote>`,
-      )
+      </blockquote>`;
+      })
       .join("\n");
 
   const escortLines = quest.objectives

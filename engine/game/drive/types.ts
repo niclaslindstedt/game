@@ -786,18 +786,12 @@ export type DriveEvent =
    * with the ship behind them, or his own house with his own ship beside it. */
   | { type: "sight" }
   /**
-   * THE CAR IS PARKED AND THE DOOR IS OPEN — the one time on this whole road
-   * that the man is out of the wagon.
-   *
-   * Its own beat rather than a flag on the arrival because it is the beat the
-   * NEXT level is built on: GOODCO's front door has no key, and a minigame that
-   * put him back on the staff lot without ever showing him get out of the car
-   * would be handing that scene an entrance nobody watched.
+   * The picture going out under him — the last thing the road does, and it lands
+   * with the wagon still rolling. The leg has no parking beat and no getting-out
+   * beat: the level on the far side of the black opens on a car already in a bay
+   * with the man beside it, so the road hands over on a fade rather than playing
+   * an arrival the level is about to play properly.
    */
-  | { type: "heroOut" }
-  /** …and what he says standing in front of it, which is a question. */
-  | { type: "atTheDoor" }
-  /** The picture going out under him — the last thing the road does. */
   | { type: "blackout" };
 
 /** What a drive is built from — everything the app settles before the wheel is
@@ -1010,10 +1004,6 @@ export type DriveState = {
   townEndDone: boolean;
   /** …and once he has seen the place he was driving to, on the run-in. */
   sightDone: boolean;
-  /** …once the car is parked and he is out of it. */
-  heroOutDone: boolean;
-  /** …once he has asked the question the next level answers. */
-  askedDone: boolean;
   /** …and once the picture has gone out under him. */
   blackoutDone: boolean;
 

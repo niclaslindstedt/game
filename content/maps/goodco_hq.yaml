@@ -2,10 +2,14 @@
 description: |-
   GENERATED GOODCO HQ — the campus as a floorplan that is different every shift.
   THE READ: THE HERO ARRIVES OUTSIDE, AND HE ARRIVES DRIVING. The trip in is the
-  DRIVE minigame, so the level opens on the end of it: his own car standing in
-  the STAFF LOT with him beside it, door shut — tarmac, bay lines, the night
-  shift's cars still in them, one lamp burning — and the building is the wall in
-  front of him with a door in it. Everything past that
+  DRIVE minigame, which FADES OUT with the wagon still rolling in past the
+  fence — so the level opens on the other side of that cut with the car already
+  parked in the STAFF LOT and him standing beside it, door shut: tarmac, bay
+  lines, the night shift's cars still in them, one lamp burning. The building is
+  the wall in front of him and the way through it is the GATE — a lit guard box
+  on the tarmac with somebody sitting behind the glass, and a shut leaf beside
+  it that only a badge moves, and only for a second and a half. Everything past
+  that
   door is INSIDE (`space: inside`), and inside is not four halls, it is rooms:
   the OFFICE WING is cut into cubicle-sized rooms, the CLEANROOMS into labs, the
   PRODUCTION FLOOR into halls, and every doorway between them carries a real
@@ -28,8 +32,9 @@ description: |-
   deep in the bays). Being indoors is what makes this the one blueprint where the
   DISTRICTS OWN THEIR FLOOR: a lab really does have a different floor from a bay,
   the override rectangle really is the room, and the ground changing underfoot is
-  the map telling you where you are. The scripted first swing still lands beside
-  the hero, out on the tarmac.
+  the map telling you where you are. The scripted first swing lands in the first
+  room PAST the gate — never on the tarmac, where a holstered man being beaten
+  in front of two parking attendants would undo the whole point of sneaking in.
 id: goodco_hq
 level: goodco_hq
 

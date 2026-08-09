@@ -765,6 +765,14 @@ export type GameEvent =
   | { type: "storyItemCollected"; defId: string }
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
+  /**
+   * …AND SLID SHUT AGAIN — a GATE, which is the one kind of door in the game
+   * that does (`DoorState.closeMs`). Its own event rather than a flag on the
+   * opening because it is the beat the player is being asked to read: the
+   * moment the way into GOODCO closes is the moment they find out the way in was
+   * a moment.
+   */
+  | { type: "doorClosed"; pos: Vec2 }
   /** THE GARAGE DOOR rolled up — an approach door opened for a hero (or the
    * driven car) pulling up to it. The app draws the roll-up and rattles the
    * chain drive; the obstacles are already gone when this fires. */

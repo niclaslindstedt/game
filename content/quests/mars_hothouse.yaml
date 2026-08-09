@@ -18,13 +18,15 @@ requires:
 # rung, and the errand is offered there and nowhere else.
 minDifficulty: jesus
 offer:
-  - - SOMETHING BIG IS NESTING IN THE OLD HOTHOUSE FRAME. IT'S BEEN EATING THE HEAT.
-  - - I CAN'T GROW ANYTHING WHILE IT'S IN THERE, AND I AM NOT GOING IN.
+  - - "SOMETHING BIG IS NESTING IN THE OLD HOTHOUSE FRAME AND EATING THE HEAT. I AM NOT GOING IN THERE."
+  - hero:
+      - "THEN I WILL."
 incomplete:
-  - IT'S STILL IN THERE. I CAN SEE THE GLASS FOGGING.
+  - "IT'S STILL IN THERE. I CAN SEE THE GLASS FOGGING."
 complete:
-  - - THE FRAME'S COLD AGAIN. I CAN START THE WINTER TRAY.
-  - - THIS WAS IN THE NEST. IT ISN'T MINE. IT ISN'T ANYBODY'S NOW.
+  - - "THE FRAME'S COLD AGAIN. THIS WAS IN THE NEST — IT ISN'T MINE, AND IT ISN'T ANYBODY'S NOW."
+  - hero:
+      - "IT IS NOW."
 objectives:
   - kind: killNamed
     enemy: phobos_shepherd

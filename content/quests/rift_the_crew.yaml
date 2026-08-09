@@ -19,13 +19,15 @@ requires:
 # the tribute road supplies as well (see `content/quests/ruth_scale.yaml`).
 minDifficulty: jesus
 offer:
-  - - SOMETHING SCALED KEEPS CIRCLING THE MESS. OLD. COLD-BLOODED. IT WATCHES.
-  - - I'LL NOT SERVE WITH THAT AT THE DOOR. YOU'RE ARMED AND I AM NOT.
+  - - "SOMETHING SCALED KEEPS CIRCLING THE MESS. I'LL NOT SERVE WITH THAT AT THE DOOR, AND YOU'RE ARMED."
+  - hero:
+      - "I'LL PUT IT OFF ITS ROUND."
 incomplete:
-  - IT'S STILL CIRCLING. I CAN HEAR IT ON THE DECK.
+  - "IT'S STILL CIRCLING. I CAN HEAR IT ON THE DECK."
 complete:
-  - - THE DOOR'S CLEAR. NOW THEY'VE NO EXCUSE.
-  - - THE GALLEY KEEPS ODD THINGS. THIS ONE'S ODD.
+  - - "THE DOOR'S CLEAR. NOW THEY'VE NO EXCUSE. THE GALLEY KEEPS ODD THINGS — THIS ONE'S ODD."
+  - hero:
+      - "SO'S EVERYTHING IN HERE."
 objectives:
   - kind: killNamed
     enemy: scaled_ancestor

@@ -9,13 +9,15 @@ lore: >
   without — he carries two because once he did not — and he is going out
   there looking for people rather than for salvage.
 offer:
-  - - THE GARRISON UNITS ARE CARRYING OUR BOTTLES. OURS. OFF OUR OWN WRECK.
-  - - FOUR AND I CAN WALK THE FAR GRID. THERE'S PEOPLE OUT THERE.
+  - - "THE GARRISON UNITS ARE CARRYING OUR BOTTLES, OFF OUR OWN WRECK. FOUR AND I CAN WALK THE FAR GRID."
+  - hero:
+      - "FOUR BOTTLES. GO AND WALK IT."
 incomplete:
-  - FOUR BOTTLES. I'M NOT GOING OUT ON THREE.
+  - "FOUR BOTTLES. I'M NOT GOING OUT ON THREE."
 complete:
-  - - FOUR. THAT'S THE FAR GRID. THAT'S SOMEBODY'S CHANCE.
-  - - HERE. I'VE BEEN CARRYING IT SINCE THE WRECK.
+  - - "FOUR. THAT'S THE FAR GRID. THAT'S SOMEBODY'S CHANCE. HERE — I'VE CARRIED IT SINCE THE WRECK."
+  - hero:
+      - "GO AND FIND THEM."
 objectives:
   - kind: collect
     item: air_bottle

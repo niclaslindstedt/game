@@ -78,9 +78,7 @@ describe("the drive's opening thought", () => {
       "drive_home_errand",
       "drive_broke_down",
       "drive_arrive_goodco",
-      "drive_arrive_door",
       "drive_arrive_home",
-      "drive_arrive_ship",
     ]) {
       for (const page of pagesOf(id)) {
         expect(barkMs(page), id).toBeGreaterThan(crawlMs(page));
@@ -101,17 +99,17 @@ describe("the drive's opening thought", () => {
 });
 
 describe("which leg's voice a road is driven to", () => {
-  it("gives each destination its own three lines, and none of them shared", () => {
+  it("gives each destination its own two lines, and neither of them shared", () => {
     // THE TWO LEGS MUST NOT SOUND LIKE ONE TRIP. Going out he has an errand and
     // an opinion about the people he is about to drive through; coming back he
     // has the part on the passenger seat and has stopped thinking about them
-    // entirely. If any of the three ids were shared, the leg home would repeat
-    // the sourest line in the game — which is the one thing the absence is for.
+    // entirely. If either id were shared, the leg home would repeat the sourest
+    // line in the game — which is the one thing the absence is for.
     const out = driveVoice({ to: "goodco_hq" });
     const home = driveVoice({ to: "garage" });
-    expect(new Set(Object.values(out)).size).toBe(3);
-    expect(new Set(Object.values(home)).size).toBe(3);
-    for (const key of ["monologue", "sight", "door"] as const) {
+    expect(new Set(Object.values(out)).size).toBe(2);
+    expect(new Set(Object.values(home)).size).toBe(2);
+    for (const key of ["monologue", "sight"] as const) {
       expect(home[key]).not.toBe(out[key]);
       // …and every one of them is a thought the catalog actually has: the drain
       // says an id and the box prints whatever comes back, so a typo here is a

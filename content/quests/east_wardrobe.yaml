@@ -9,13 +9,15 @@ lore: >
   mistress has costed the damage by the season and considers that fair — and
   the lines are hers again.
 offer:
-  - - THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN. THAT'S EIGHT SEASONS OF WORK OUT THERE.
-  - - TWENTY OF THEM. I'VE COSTED IT BY THE SEASON. THAT'S FAIR.
+  - - "THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN — EIGHT SEASONS OF WORK. TWENTY OF THEM. I'VE COSTED IT."
+  - hero:
+      - "TWENTY. THAT'S FAIR."
 incomplete:
-  - THEY'RE STILL IN MY LINES. LOOK AT THE STATE OF IT.
+  - "THEY'RE STILL IN MY LINES. LOOK AT THE STATE OF IT."
 complete:
-  - - TWENTY. MY LINES ARE MINE.
-  - - I MADE THIS FOR A HAND WHO NEVER GOT A SCENE. IT'LL FIT YOU.
+  - - "TWENTY. MY LINES ARE MINE. I MADE THIS FOR A HAND WHO NEVER GOT A SCENE — IT'LL FIT YOU."
+  - hero:
+      - "THEN I'LL WEAR IT FOR HIM."
 objectives:
   - kind: kill
     enemy: longhorn

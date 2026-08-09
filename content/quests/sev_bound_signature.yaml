@@ -10,22 +10,18 @@ lore: >
   every transfer went to, and that party signs in a way no colony machine can
   produce. One can be bought — but the trader will not sell to a man who has
   never seen the seal it copies, and the only seal on Mars is worn by an
-  assessor who takes it off for nobody who has not first proved it wrong.
+  assessor that has been perfectly polite to everybody and does not take it
+  off. It comes off one way. The errand says so; the hero still has to do it.
 offer:
-  - - THE BOOK REQUIRES A COUNTERSIGNATURE. I CANNOT PRODUCE ONE.
-  - - A BOUND SIGNATURE EXISTS. THE TRADER HAS ONE.
-    - HE WILL NOT SELL IT BLIND.
-  - - SHOW HIM A SEAL. THE ASSESSOR WEARS ONE.
-    - IT WILL NOT SIMPLY HAND IT OVER.
+  - - "THE TRADER HAS A BOUND SIGNATURE BUT WON'T SELL BLIND. THE ASSESSOR WEARS THE ONLY SEAL, AND IT DOESN'T COME OFF."
+  - hero:
+      - "THEN IT COMES OFF THE OTHER WAY."
 incomplete:
-  - THE SEAL. THEN THE TRADER. THEN THE SIGNATURE.
+  - "THE SEAL. THEN THE TRADER. THEN THE SIGNATURE."
 complete:
-  - - COUNTERSIGNATURE ACCEPTED. CLOSING THE BOOK.
-  - - EVERY COLUMN READS ZERO. IT WAS NOT AN INPUT ERROR.
-  - - THE TRANSFERS WENT TO A RECORD. NOT AN ACCOUNT.
-    - A RECORD OF PERSONS.
-  - - I AM NOT PERMITTED TO SAY WHERE THAT RECORD IS BOUND.
-    - I AM PERMITTED TO SAY IT IS BOUND.
+  - - "COUNTERSIGNATURE ACCEPTED. EVERY COLUMN READS ZERO. THE TRANSFERS WENT TO A RECORD OF PERSONS."
+  - hero:
+      - "PEOPLE FILED AS AMOUNTS. I'VE SEEN THE FORM."
 objectives:
   - kind: sell
     item: assessor_seal

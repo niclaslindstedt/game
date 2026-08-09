@@ -570,6 +570,12 @@ export function stepSightThoughts(
   for (const trigger of triggers) {
     if (state.thoughtsSeen.includes(trigger.thought)) continue;
     if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) continue;
+    // …AND SOME BEATS ARE ABOUT THE INSIDE OF A BUILDING (`inside`), which a
+    // radius cannot say on its own: a sighting is pure distance, so a crowd
+    // standing a step past a doorway is "seen" by a hero on the car park the
+    // instant the gate opens — and "every desk's manned, every lab lit" gets
+    // read out to a man looking at parked cars.
+    if (trigger.inside && !anyHeroPastEntrance(state)) continue;
     const radius = trigger.radius ?? DIALOGUE.sightRadius;
     // ANY hero laying eyes on it fires the beat — the trigger rule for
     // everything the world does when somebody walks up to it. A sighting only
@@ -617,6 +623,33 @@ export function stepPlaceThoughts(
     startPlayerThought(state, trigger.thought);
     return;
   }
+}
+
+/**
+ * IS ANYBODY PAST THE GATE — has a hero actually got INSIDE the building?
+ *
+ * The staff lot's own geometry already answers it. The arrival plan
+ * (`engine/game/arrivals.ts`) holds the doorway and the two points either side
+ * of it — `apron` out on the tarmac, `inside` a step into the building — so
+ * "inside" is simply the side of the doorway's line that `inside` is on. No
+ * zone, no room id, no carve lookup, which is what makes it work on a floor
+ * plan that did not exist until this run was carved.
+ *
+ * TRUE on every level that has no arrival lot, and deliberately: a beat that
+ * waits to be indoors on a map with no indoors is a beat that never plays. The
+ * gate it names is the one the mission put there; a venue without one has
+ * nothing for the hero to be on the far side of.
+ */
+export function anyHeroPastEntrance(state: GameState): boolean {
+  const plan = state.arrivalPlan;
+  if (!plan) return true;
+  const nx = plan.inside.x - plan.door.x;
+  const ny = plan.inside.y - plan.door.y;
+  return state.players.some(
+    (hero) =>
+      heroInPlay(hero) &&
+      (hero.pos.x - plan.door.x) * nx + (hero.pos.y - plan.door.y) * ny > 0,
+  );
 }
 
 /**
@@ -926,9 +959,12 @@ function enemyHoldsKeyFor(enemy: Enemy, doorId: string): boolean {
  * which, since the only thing mobs walk toward is the hero, means the hero is
  * already standing there.
  */
-export function stepDoors(state: GameState): void {
+export function stepDoors(state: GameState, dtMs = 0): void {
   for (const door of state.doors) {
-    if (door.open) continue;
+    if (door.open) {
+      stepClosingDoor(state, door, dtMs);
+      continue;
+    }
     const keyed = !door.approach;
     if (
       (!keyed || holdsKeyFor(state, door.id)) &&
@@ -962,10 +998,19 @@ export function stepDoors(state: GameState): void {
 export function openDoor(
   state: GameState,
   door: GameState["doors"][number],
+  holdMs?: number,
 ): void {
   if (door.open) return;
   door.open = true;
   const gone = new Set(door.obstacleIds);
+  // A GATE KEEPS ITS OWN CHAIN. `holdMs` says this door shuts again, so the
+  // slats are set aside rather than dropped: putting them back is the whole of
+  // closing it, and rebuilding them from the door's ends would have to
+  // re-derive a spacing the carve already solved.
+  if (holdMs !== undefined) {
+    door.shut = state.obstacles.filter((o) => gone.has(o.id));
+    door.closeMs = holdMs;
+  }
   state.obstacles = state.obstacles.filter((o) => !gone.has(o.id));
   state.obstaclesVersion++;
   // THE LEAVES STAY. A doorway whose door simply disappears is a hole in a
@@ -973,7 +1018,12 @@ export function openDoor(
   // which is exactly what an interior looked like before this. The open frames
   // are flat scenery at the two ENDS of the chain (where the leaves went), so
   // they are drawn but never stood in the way of again.
-  if (door.openSprite && door.from && door.to) {
+  //
+  // A GATE GETS NONE, and for the reason the rest of them do: it is going to be
+  // shut again in a second and a half, and decor is laid down for good — so a
+  // gate that dressed its jambs would leave a pair of open leaves standing
+  // beside a closed gate, and a fresh pair every time somebody badges in.
+  if (door.openSprite && door.from && door.to && holdMs === undefined) {
     for (const pos of [door.from, door.to])
       state.decor.push({
         kind: door.openSprite,
@@ -985,4 +1035,49 @@ export function openDoor(
     type: door.rollUp ? "garageDoorOpened" : "doorOpened",
     pos: { ...door.center },
   });
+}
+
+/**
+ * ONE TICK OF A DOOR THAT IS STANDING OPEN — and all but one kind of door has
+ * nothing to do here, because opening is the last thing they ever do.
+ *
+ * A GATE is the exception (`DoorState.closeMs`, set by the badge in
+ * arrivals.ts): it runs its hold down and then puts its own slats back, which
+ * is what makes the way into GOODCO a moment the hero has to take rather than a
+ * wall that eventually moves.
+ *
+ * IT WILL NOT SHUT ON ANYBODY. The clock is held — not spent — while a body is
+ * standing in the opening, hero or otherwise: the staffer whose badge opened it
+ * is walking through it, and a gate that closed on the man it just admitted
+ * would be a gate that teleports him. Held rather than cancelled, so the moment
+ * the threshold is clear it shuts on the next tick.
+ */
+function stepClosingDoor(
+  state: GameState,
+  door: GameState["doors"][number],
+  dtMs: number,
+): void {
+  if (door.closeMs === undefined || !door.shut) return;
+  // The doorway's own span, plus a body's worth of margin: anything inside that
+  // circle is standing IN the hole rather than near it.
+  const reach =
+    (door.from && door.to ? distance(door.from, door.to) / 2 : 0) +
+    DOORS.openRadius;
+  const inTheWay =
+    anyHeroWithin(state, door.center, reach) ||
+    state.enemies.some(
+      (e) => e.hp > 0 && distance(e.pos, door.center) <= reach,
+    );
+  if (inTheWay) return;
+  door.closeMs -= dtMs;
+  if (door.closeMs > 0) return;
+  door.open = false;
+  delete door.closeMs;
+  state.obstacles = state.obstacles.concat(door.shut);
+  delete door.shut;
+  // A wall that reappears without the bump is a wall the autopilot walks
+  // straight through, exactly as one that vanishes without it is one it keeps
+  // routing around.
+  state.obstaclesVersion++;
+  state.events.push({ type: "doorClosed", pos: { ...door.center } });
 }

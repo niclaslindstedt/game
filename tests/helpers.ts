@@ -137,6 +137,23 @@ export function clearStage(state: GameState): void {
 }
 
 /**
+ * PUT THE HERO INSIDE THE BUILDING on a venue that opens on a staff lot.
+ *
+ * GOODCO's floor beats — the read on the night shift, the scripted first blow —
+ * are held until somebody is past the GATE (`ThoughtTrigger.inside`), because a
+ * sighting is plain distance and the crowd stands a step past the doorway. A
+ * test that stages one of those beats therefore has to be indoors first, and the
+ * arrival plan already carries the one point that means "in": `plan.inside`.
+ *
+ * A no-op on every level with no lot, so it is safe to call unconditionally.
+ */
+export function walkInside(state: GameState): void {
+  const plan = state.arrivalPlan;
+  if (!plan) return;
+  for (const hero of state.players) hero.pos = { ...plan.inside };
+}
+
+/**
  * Uncover the whole level's fog — every cell of `state.explored`.
  *
  * The hero's weapon (and his companions', and the conjured powers) will not

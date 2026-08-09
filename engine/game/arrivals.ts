@@ -301,8 +301,88 @@ export function openArrivals(state: GameState, seed: number): void {
   if (!plan) return;
   const spec = runLevelDef(state).arrivals as ArrivalsSpec;
   state.arrivalTimerMs = spec.firstMs ?? 4000;
+  placeGatehouse(state, plan, spec);
   placeGuards(state, plan, spec);
   clearTheLobby(state, plan);
+}
+
+/** How wide the kiosk is taken to be when the level names no radius (px). */
+const BOOTH_RADIUS = 11;
+
+/**
+ * STAND THE GATEHOUSE BESIDE THE DOORWAY (`ArrivalsSpec.gatehouse`).
+ *
+ * TWO OFFSETS, AND EACH IS ANSWERING A DIFFERENT WAY OF GETTING THIS WRONG.
+ *
+ * OUT ONTO THE TARMAC, by the apron's own standoff: the doorway is a hole in a
+ * WALL, and the wall runs on down the building's face either side of it — so a
+ * kiosk placed flush beside the opening is a kiosk placed INSIDE somebody's
+ * masonry, which is exactly where it lands and exactly why nothing appeared. A
+ * step out is the difference between a box beside the gate and a box in a wall.
+ *
+ * AND ALONG THE WALL, AWAY FROM THE CARS. The footpath runs down the apron's own
+ * line from the rank to the reader, so a kiosk on the bay side of the doorway is
+ * a kiosk every arriving staffer walks through — and an arrival does not collide
+ * with anything (see the header), so it would not even be stopped by it. The
+ * side away from the lane's entry is the empty half of the same line.
+ *
+ * The near side is tried first and the far side after it, because the carve
+ * decides which end of that wall is a corner; a seed with room on neither simply
+ * has no kiosk. The badge beat is unaffected either way, which is what keeps
+ * this presentation rather than a dependency.
+ */
+function placeGatehouse(
+  state: GameState,
+  plan: ArrivalPlan,
+  spec: ArrivalsSpec,
+): void {
+  const booth = spec.gatehouse;
+  if (!booth) return;
+  const radius = booth.radius ?? BOOTH_RADIUS;
+  // The way THROUGH the doorway (the apron's bearing off it), and the face of
+  // the wall it is cut into — which is that bearing's perpendicular.
+  const nx = plan.apron.x - plan.door.x;
+  const ny = plan.apron.y - plan.door.y;
+  const len = Math.hypot(nx, ny) || 1;
+  const wx = -ny / len;
+  const wy = nx / len;
+  // Which way down that face the cars are: the same reading `placeGuards` takes,
+  // projected onto the wall rather than onto x, so a doorway in an east or west
+  // wall answers it as well as one in a north or south wall.
+  const toCars =
+    (plan.entryX - plan.apron.x) * wx + (plan.laneY - plan.apron.y) * wy;
+  const away = toCars > 0 ? -1 : 1;
+  // PAST THE OPENING, not part-way across it. A carved doorway is as wide as the
+  // district that owns it — the lot's runs to the full hangar width — so an
+  // offset measured off the door's CENTRE puts the kiosk standing in front of
+  // the gate it is supposed to be beside. Measured off the leaf instead, it
+  // clears the hole whatever the carve made of it.
+  const leaf = state.doors.find(
+    (d) =>
+      d.from !== undefined &&
+      d.to !== undefined &&
+      distance(d.center, plan.door) < 1,
+  );
+  const half =
+    leaf && leaf.from && leaf.to ? distance(leaf.from, leaf.to) / 2 : 0;
+  const along = half + ARRIVALS.apronGap + radius;
+  for (const side of [away, -away]) {
+    const at = vec(
+      plan.door.x + wx * side * along + (nx / len) * ARRIVALS.apronGap,
+      plan.door.y + wy * side * along + (ny / len) * ARRIVALS.apronGap,
+    );
+    if (insideObstacle(state, at, radius)) continue;
+    state.obstacles.push({
+      id: state.nextId++,
+      kind: booth.sprite,
+      sprite: booth.sprite,
+      pos: at,
+      radius,
+      jumpable: false,
+    });
+    state.obstaclesVersion++;
+    return;
+  }
 }
 
 /**
@@ -419,17 +499,66 @@ export function stepArrivals(state: GameState, dtMs: number): void {
     stepArrival(state, arrival, plan, spec, dt, dtMs);
   // THE NEXT CAR. Held while the rank is full — a car park that keeps filling
   // forever is a queue — and pulled forward when the beat has stalled with the
-  // door still shut, because the entrance is the only way on with the mission.
+  // gate still shut, because the gate is the only way on with the mission.
   const cars = Math.max(1, spec.maxCars ?? 3);
   state.arrivalTimerMs -= dtMs;
-  if (state.arrivals.length >= Math.min(cars, plan.bays.length)) return;
-  if (entranceShut(state, spec) && !someoneIsWalking(state)) {
+  const stalled = entranceShut(state, spec) && !someoneIsWalking(state);
+  if (state.arrivals.length >= Math.min(cars, plan.bays.length)) {
+    // …AND THE RANK BEING FULL IS NOT THE END OF THE BEAT.
+    //
+    // A gate that shuts again (`ARRIVALS.gateHoldMs`) means a player can watch
+    // every car on the rank arrive, badge in and go inside, and still be
+    // standing on the tarmac — three chances at a second and a half each, taken
+    // or missed. With the bays full there is nowhere to send a fourth car, so
+    // without this the way into the level would simply cease to exist, which is
+    // the one thing this module may not do.
+    //
+    // So the LAST RESORT is another body out of a car that is already parked:
+    // the arrival nearest the doors is put back to its parking beat and lets
+    // somebody else out. A car with two people in it at half past midnight is
+    // not a thing anybody will look at twice, and it makes "the gate opens
+    // again eventually" a fact rather than a hope.
+    if (stalled) restartArrival(state, plan, dtMs);
+    return;
+  }
+  if (stalled) {
     state.arrivalTimerMs = Math.min(state.arrivalTimerMs, ARRIVALS.retryMs);
   }
   if (state.arrivalTimerMs > 0) return;
   sendCar(state, plan);
   const [lo, hi] = spec.everyMs;
   state.arrivalTimerMs = lo + draw(plan) * (hi - lo);
+}
+
+/**
+ * SOMEBODY ELSE GETS OUT of a car already on the rank — the net that keeps the
+ * beat alive on a full lot (see the caller). Runs the same retry clock the
+ * pull-forward uses, so a stalled lot waits exactly as long either way.
+ */
+function restartArrival(
+  state: GameState,
+  plan: ArrivalPlan,
+  dtMs: number,
+): void {
+  state.arrivalTimerMs = Math.min(state.arrivalTimerMs, ARRIVALS.retryMs);
+  if (state.arrivalTimerMs > 0) return;
+  // Nearest the doors: it is the shortest walk and the one the player is
+  // already looking at.
+  let best: Arrival | null = null;
+  let bestGap = Infinity;
+  for (const arrival of state.arrivals) {
+    if (arrival.phase !== "entering" || arrival.staff !== null) continue;
+    const gap = distance(arrival.car.pos, plan.apron);
+    if (gap < bestGap) {
+      bestGap = gap;
+      best = arrival;
+    }
+  }
+  if (!best) return;
+  best.phase = "parking";
+  best.beatMs = ARRIVALS.parkMs;
+  state.arrivalTimerMs = ARRIVALS.retryMs;
+  void dtMs;
 }
 
 /** Is the way in still shut? (Any leaf of it — they share an id, so the first
@@ -707,7 +836,11 @@ function badgeIn(
   const id = spec.door ?? ENTRANCE_DOOR;
   state.events.push({ type: "badgeSwiped", pos: { ...plan.apron } });
   for (const door of state.doors) {
-    if (door.id === id) openDoor(state, door);
+    // …AND IT SHUTS AGAIN. A badge buys a moment, not a door (see
+    // `ARRIVALS.gateHoldMs`): the gate takes the staffer who opened it, and
+    // anybody behind them has that long to be through it. Opening it for good
+    // is what turned this from a beat into a wall that eventually moves.
+    if (door.id === id) openDoor(state, door, ARRIVALS.gateHoldMs);
   }
   arrival.phase = "entering";
   arrival.route = [{ ...plan.door }, { ...plan.inside }];

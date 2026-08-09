@@ -45,9 +45,12 @@ import {
   hasQuest,
   questDef,
   questGiverDef,
+  questPageIsHero,
+  questPageLines,
   questsForLevel,
   type QuestDef,
   type QuestObjective,
+  type QuestPage,
 } from "../defs/quests.ts";
 import { dropItem } from "../items/index.ts";
 import { addMapMarker } from "../map.ts";
@@ -444,10 +447,10 @@ export function conversationPages(
   state: GameState,
   questId: string,
   kind: "list" | "offer" | "incomplete" | "complete",
-): readonly (readonly string[])[] {
+): readonly QuestPage[] {
   if (kind === "list") return [];
   const def = questDef(questId);
-  const pages =
+  const pages: readonly QuestPage[] =
     kind === "offer"
       ? def.offer
       : kind === "complete"
@@ -455,9 +458,16 @@ export function conversationPages(
         : def.incomplete
           ? [def.incomplete]
           : [["..."]];
-  return pages
-    .map((page) => resolveCacheLine(page, state.difficulty))
-    .filter((page): page is readonly string[] => page !== null);
+  const out: QuestPage[] = [];
+  for (const page of pages) {
+    // The token can sit in either voice's page — Ruth names the chest and the
+    // hero says what he will put in it — so the resolve is done on the LINES and
+    // the voice is put back afterwards.
+    const resolved = resolveCacheLine(questPageLines(page), state.difficulty);
+    if (resolved === null) continue;
+    out.push(questPageIsHero(page) ? { hero: resolved } : resolved);
+  }
+  return out;
 }
 
 /** Close the conversation without taking or handing in anything. */

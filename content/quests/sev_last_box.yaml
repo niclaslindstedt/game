@@ -12,16 +12,15 @@ lore: >
   everybody else, because all four give the same reason for letting a person go
   and it is not a reason about the person.
 offer:
-  - - FOUR FILES WALKED OUT WITH THE PEOPLE THEY WERE ABOUT.
-  - - THEY'RE STILL ON THE FLOOR. SO ARE THE PEOPLE, AFTER A FASHION.
-    - BRING ME THE FILES.
+  - - "FOUR FILES WALKED OUT WITH THE PEOPLE THEY WERE ABOUT. THEY'RE STILL ON THE FLOOR. SO ARE THE PEOPLE."
+  - hero:
+      - "FOUR FILES. I'LL BRING THEM."
 incomplete:
-  - FOUR. I'LL WAIT.
+  - "FOUR. I'LL WAIT."
 complete:
-  - - GOOD. NOW WATCH THIS.
-  - - REASON FOR TERMINATION. REDUNDANT — SUPERSEDED BY ASSET.
-    - SAME LINE. ALL FOUR.
-  - - IT'S ON MINE TOO. AND THE ASSET IS NAMED ON EVERY ONE.
+  - - "REDUNDANT — SUPERSEDED BY ASSET. SAME LINE, ALL FOUR. IT'S ON MINE, AND THE ASSET IS NAMED ON EVERY ONE."
+  - hero:
+      - "IT'S ON MINE AS WELL."
 objectives:
   - kind: collect
     item: severance_file

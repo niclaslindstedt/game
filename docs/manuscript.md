@@ -103,6 +103,25 @@ box asks for another tap. Past about 120 characters — three rows of the
 narrowest box the game supports — a page needs a second tap on a phone, and the
 build warns.
 
+## How an errand is spoken (one thing said, one thing answered)
+
+Every quest conversation in the game is the same two beats and no more: **the
+giver says ONE thing, and the hero answers with ONE line.** Then the quest modal
+— which already carries the objectives, the reward and the only decision there
+is — takes over.
+
+The hero's line is a **reply**, not a choice. The player is never handed a menu
+of ways to say yes, because every row of such a menu does the same thing; he
+answers the way he would answer, short and already moving, and it is transcribed
+here as **ME:** like his every other line. A giver's hello is one line too, since
+it heads their slate on every single visit and is the most re-read text they own.
+
+The schema refuses anything longer (`scripts/asset-tools/quest-schema.mjs`), so
+this is a rule rather than a habit. A person the hero genuinely has to be talked
+around is not an errand page at all — that is a CONVERSATION
+(`content/conversations/`), a different object with branches, flags and a way to
+lose, and the split between the two is deliberate.
+
 ## The hero's finisher line (a BARK, not a page)
 
 Every boss now leaves the field through a scripted **DEATH RITE** — it goes to
@@ -126,12 +145,16 @@ lecturing him — and it is transcribed here as **The hero, as it falls**.
 ## Premise
 
 Ada went out for chips and soda on movie night and never came back. The
-tracking beacon the hero sewed into her jacket points off-planet. The hero is a
-spaceship builder who once worked at GOODCO until an AI replaced him — so he
+tracking beacon the hero sewed into her jacket answers from one place: GOODCO,
+an hour down the road. The hero is a
+spaceship builder who once worked there until an AI replaced him — so he
 knows the building cold. Like the whole block, he and Ada live on welfare now
 (everyone got replaced); movie night on the streaming service is what's left of the good
-life, which is why her chips-and-soda run matters. He raids GOODCO for the one
-engine part the ship in his garage still needs, then follows the beacon to the
+life, which is why her chips-and-soda run matters. He drives out to bring her
+home and gets there too late: she was flown off the planet from Pad 2 an hour
+before he was through the gate. What the building can still give him is the one
+engine part the ship in his garage has always been short of — so he takes that
+instead, finishes the ship, and follows her to the
 moon, where something under the Sea of Tranquility is not dead enough.
 
 The conspiracy, one find at a time: GOODCO has been flying to the moon in secret
@@ -261,7 +284,7 @@ scene-free — the hub is re-entered constantly, and a greeting on every
 approach would make the counter a toll booth — so he speaks only across the
 counter (below). The hub's one spoken beat is the arrival monologue, played
 once per difficulty, spoken BEFORE the GOODCO raid: the ship still wants its
-part._
+part, and the jacket is still answering from an hour down the road._
 
 ### Opening monologue (hero, black screen)
 
@@ -277,7 +300,11 @@ the hero has at home, after the prelude and after the doorstep line, and it is
 read once and never again — the player who has been told where the car goes does
 not need telling twice._
 
-1. THE PART I NEED IS AT GOODCO, AND THE CAR'S RIGHT THERE. TAKE IT.
+_IT NAMES THE PERSON, NOT THE ERRAND. He is not driving to GOODCO for a part —
+the part is a thing he finds out he can have once he is in there. He is driving
+because that is where her jacket is answering from._
+
+1. HER JACKET'S ANSWERING FROM GOODCO. THE CAR'S RIGHT THERE. TAKE IT.
 
 ### Hero's thought — walking out of the bay instead of driving
 
@@ -285,7 +312,7 @@ _The other one (`placeThoughts`, `where: pastDoor`): he has strolled out under
 the roll-up on his own two feet and left the car standing in the garage. It is
 the only nudge in the game a player earns by ignoring one, so it is short and
 dry, and it names the stake rather than the mechanic — he is not going to GOODCO
-for a part, he is going for ADA, and the part is how. Read once, ever, and never
+for a part, he is going for ADA. Read once, ever, and never
 while he is at the wheel: the car crosses this same threshold on its way out._
 
 1. WHERE AM I GOING ON FOOT? ADA'S NOT DOWN THE STREET. GET IN THE CAR.
@@ -298,9 +325,10 @@ fallen plays this instead of the travel picker. It REPLAYS — it answers the
 tap, not a story beat the player is owed once — and it deliberately names
 neither the moon nor Mars, which is the whole reason the picker is withheld.
 He has not earned those roads and does not yet know they are where the trail
-goes._
+goes — as far as he knows tonight, she is an hour down the road and not up
+there at all._
 
-1. STILL ONE PART SHORT. NO SENSE CLIMBING IN UNTIL I'VE BEEN AND GOT IT.
+1. STILL ONE PART SHORT. AND SHE ISN'T UP THERE. SHE'S AN HOUR DOWN THE ROAD.
 
 ### THE DEALER — the neighborhood, at home
 
@@ -338,33 +366,30 @@ house each time._
 #### SHE LET HERSELF IN — the meeting, played before the errands
 
 _The first tap on Ruth is a conversation (`content/conversations/ruth_arrival.yaml`),
-not an offer page; her errand list opens from the tap after it. It is two beats
-long and asks for nothing: she says how she got in and what she wants him to
-do, and every errand she later hands him is set up in its own offer instead.
-She opens on his name, which is most of what those two beats are for — she has
-known him as long as her daughter has. She is not scared for Ada here or
-anywhere._
+not an offer page; her errand list opens from the tap after it. It is ONE thing
+said and ONE thing answered — the shape every quest conversation in the game
+keeps — and it asks for nothing: she says how she got in and what she wants him
+to do, and every errand she later hands him is set up in its own offer instead.
+She opens on his name, which is most of what that line is for — she has known
+him as long as her daughter has. She is not scared for Ada here or anywhere._
 
 **She has arrived.**
 
-> I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. YOU NEVER ASKED FOR IT BACK.
-> GO AND FIND HER. I'LL BE HERE.
+> I LET MYSELF IN, {HERO}. I'VE ALWAYS HAD A KEY. GO AND FIND HER.
 
 — _I'M GOING AFTER HER._
 
 **On being spoken to afterwards** (and the header of her errand list):
 
-- SHE TOLD ME ABOUT THE JACKET. THE ZIPPER. SHE LAUGHED FOR A WEEK.
-- THERE'S SOMETHING I'D ASK OF YOU.
+- SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. THERE'S SOMETHING I'D ASK OF YOU.
 
 #### THE RECEIPT
 
 **The ask:**
 
-1. WHEN YOU'RE OUT THERE - BRING ME SOMETHING OF HERS. NOT A REPORT. SOMETHING SHE HELD.
-2. THE NIGHT SHE WENT, SHE BOUGHT CHIPS AND A SODA AT THEIR MACHINES. THE MACHINES PRINT A SLIP. GOODCO KEEPS EVERYTHING.
-3. THEIR NIGHT PEOPLE CARRY THE FLOOR'S PAPERWORK ON THEM. EVERY SHEET OF IT.
-4. BRING ME THE RECEIPT. IT'S THE LAST ORDINARY THING SHE DID. IT'S HERS, NOT THEIRS.
+1. BRING ME SOMETHING OF HERS THAT ISN'T A REPORT. SHE BOUGHT CHIPS AND A SODA THAT NIGHT, AND THE MACHINES PRINT A SLIP.
+
+**ME:** THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT.
 
 **Coming back short:**
 
@@ -372,17 +397,17 @@ anywhere._
 
 **The handover:**
 
-1. CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.'
-2. SHE STOOD THERE BEING ORDINARY, AND THEY TOOK HER MID-COIN.
-3. I'M KEEPING THIS. IT'S THE LAST NORMAL MINUTE ANYONE HAS OF HER.
+1. CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.' I'M KEEPING THIS.
+
+**ME:** IT'S HERS. NOT THEIRS.
 
 #### THE DENT — offered once THE RECEIPT is handed in
 
 **The ask:**
 
-1. WHEREVER THEY'RE KEEPING HER, THEY'LL HAVE GIVEN HER A COMPANION. A MACHINE WITH A FACE.
-2. SHE'LL HAVE BITTEN IT. I RAISED HER.
-3. FIND THE ONE SHE BIT AND BRING ME THE PLATE.
+1. WHEREVER SHE IS THEY'LL HAVE GIVEN HER A MACHINE WITH A FACE. SHE'LL HAVE BITTEN IT. BRING ME THE PLATE.
+
+**ME:** I'LL FIND THE ONE WITH THE TEETH MARKS.
 
 **Coming back short:**
 
@@ -390,17 +415,17 @@ anywhere._
 
 **The handover:**
 
-1. TEETH. RIGHT THROUGH THE SHELL.
-2. THAT'S MY GIRL.
-3. I BOUGHT HER A DOLL ONCE. SHE BURIED IT. SOMEBODY SHOULD HAVE TOLD THEM THAT.
+1. TEETH. RIGHT THROUGH THE SHELL. THAT'S MY GIRL.
+
+**ME:** SHE'S STILL FIGHTING. I'LL KEEP UP.
 
 #### THE SCALE — offered once THE DENT is handed in
 
 **The ask:**
 
-1. WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
-2. MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
-3. BRING ME A SCALE OFF ONE. I WANT TO HOLD WHAT SHE'S UP AGAINST.
+1. THE THINGS THAT KEEP HER NOW ARE SCALED. BRING ME A SCALE OFF ONE — I WANT TO HOLD WHAT SHE'S UP AGAINST.
+
+**ME:** SHE'LL HAVE PRIED ONE OFF ALREADY.
 
 **Coming back short:**
 
@@ -410,20 +435,19 @@ anywhere._
 _The thing arrives as she speaks: it comes into being against the bay's north
 wall and stands there for good (THE CACHE, `engine/game/cache.ts`). WHAT she
 brings depends on the difficulty — a lidded box on the gentlest rung, the
-gilded INHERITANCE on the hardest — so the third page is not a line but the
-token `{CACHE}`, substituted per rung from `DifficultyDef.cache.line`. She
-names the thing and where it came from every time; the errand is one file and
-the ladder is five, and the rung owns that sentence. The fourth page is what
-makes the ladder a promise rather than a surprise._
+gilded INHERITANCE on the hardest — so her second line is not written here at
+all but is the token `{CACHE}`, substituted per rung from
+`DifficultyDef.cache.line`. She names the thing and where it came from every
+time; the errand is one file and the ladder is five, and the rung owns that
+sentence. A rung that pays no chest simply loses the line, not the page._
 
-1. IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
-2. I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-3. {CACHE}
-4. I'LL KEEP GOING THROUGH HER HOUSE. THERE'S BIGGER BACK THERE.
-5. GO AND MEET HER HALFWAY.
+1. HARD AS A HULL, AND SHE PRIES THESE OFF BAREHANDED. I WAS NEVER SCARED FOR HER.
+2. {CACHE}
 
-**Page 3, in rung order** — the provenance ramps with the furniture: a flea
-market, her mother's, a crossing, a dowry, a king.
+**ME:** THEN I'LL GO AND MEET HER HALFWAY.
+
+**The `{CACHE}` line, in rung order** — the provenance ramps with the
+furniture: a flea market, her mother's, a crossing, a dowry, a king.
 
 - **EASY:** THERE'S A BOX AGAINST THAT WALL NOW. FLEA MARKET, TWO DOLLARS. PUT IN IT WHAT YOU CAN'T CARRY.
 - **MEDIUM:** THERE'S A CHEST AGAINST THAT WALL NOW. MY MOTHER'S. SHE KEPT HER LETTERS IN IT AND NOTHING ELSE, EVER.
@@ -508,7 +532,7 @@ whole of it to an empty road, which is the only audience that keeps it smugness
 instead of a confession. Long enough to overrun the box and he is saying the
 sourest line in the game to a crowd._
 
-1. I NEED TO HURRY TO GOODCO AND GET THE PART.
+1. HER JACKET'S PINGING FROM GOODCO.
 2. THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.
 
 ### Hero's thought — the same road, going the other way
@@ -649,32 +673,35 @@ road._
 
 1. COME ON. NOT HERE. NOT TONIGHT.
 
-### THE RUN-IN — the two lines past GOODCO's fence
+### THE RUN-IN — the one line past GOODCO's fence
 
 _Past the finish line the clock stops, the town stops, and the wheel comes off
 the player: the car rolls the last stretch on its own, past GOODCO's fence with
-the data halls and the ship on its gantry standing behind them. Two lines,
-barked exactly like the road's, and the only ones on this whole leg that are not
+the data halls and the ship on its gantry standing behind them. ONE line,
+barked exactly like the road's, and the only one on this whole leg that is not
 about the car, the clock or the road surface._
 
-_THEY ARE ALLOWED TO BE, and the reason is the reason the opening's are: there
+_IT IS ALLOWED TO BE, and the reason is the reason the opening's are: there
 is nobody in the picture. He is not failing to notice anybody here — there is
 genuinely nobody left to notice, which is its own remark about the place. The
 sight of it is flat, and deliberately: a man arriving at work._
 
 1. THERE'S GOODCO.
 
-_…AND THE QUESTION, said standing on the tarmac beside a car with its engine
-ticking. It is the last thing the minigame does and it is a SET-UP: GOODCO's
-front door has no key and nothing in the game unlocks it
-(`engine/game/arrivals.ts`), so the level on the other side of the fade is the
-entire answer to this sentence. He has driven a hundred and twenty miles an hour
-through a town to arrive at a locked door, and it has not once occurred to him
-to wonder about that until now._
+_…AND THEN THE PICTURE SIMPLY GOES OUT, with the wagon still rolling. The
+minigame does not park him, does not switch the engine off, and does not stand
+him on the tarmac to explain what he is about to do: the leg ENDS on a fade,
+because parking a car is not a thing anybody needs to watch and the arrival's
+real first beat belongs to the level on the other side of the black. The wagon
+is already in a bay when that level opens (`content/maps/goodco_hq.yaml`, the
+`car` landmark), which is the whole of what the cut has to say._
 
-1. OK. SO HOW DO I GET IN?
+_He asks nothing here about how to get in, either. The answer is a GATE with a
+guard sitting in it, in plain sight from the first frame of the level, and a line
+asking about a door the player is already looking at reads as the game explaining
+its own map._
 
-### THE RUN-IN HOME — the two lines past his own gate
+### THE RUN-IN HOME — the one line past his own gate
 
 _The same beat at the other end of the same road, and GOODCO's site answered in
 every particular: a timber fence instead of a palisade, two lamps on two piers
@@ -691,12 +718,10 @@ crowd under road surface; that this is the beat he softens for is the point._
 
 1. HOME AT LAST. AND THERE SHE IS.
 
-_…AND WHAT HE SAYS TO IT, standing on his own drive beside a car with its engine
-ticking. The mirror of the question at GOODCO's door, and a SET-UP in exactly the
-same way: the launch is on the other side of this fade, and this is the sentence
-it answers._
-
-1. RIGHT THEN. LET'S GET YOU FINISHED.
+_And then the fade, exactly as at the other end. He does not pull up, does not
+switch the engine off and does not stand on his own drive talking to the ship:
+the garage opens on a wagon already parked with him beside it, so the leg hands
+over on a black rather than playing an arrival the hub is about to play._
 
 ### The arrival verdict — seven readings of one trip
 
@@ -757,48 +782,64 @@ _…and past thirty of them:_
 
 ## Level 1 — GOODCO HQ
 
-A cleanroom raid for the one engine part the hero's garage-built ship still
-needs.
+He drives out to the campus her jacket is answering from, to bring her home. She
+is not there any more, and the only thing the building can still give him is the
+part that lets him follow her.
 
 ### Opening monologue (hero, black screen)
 
 _It picks the prelude up rather than recapping it. The scene the player has
 just watched ends on "SHE NEVER CAME BACK", so the monologue opens on the new
-fact — the tracker — and pays off the prelude's own quiet detail, the jacket he
-"fixed the zipper on"._
+fact — the jacket answering — and pays off the prelude's own quiet detail, the
+one he "fixed the zipper on"._
 
-1. THE TRACKER I SEWED INTO HER JACKET JUST PINGED - FROM SPACE. SOMEONE IS TAKING HER OFF THE PLANET.
-2. TO FOLLOW HER I NEED A SHIP. I'VE BEEN BUILDING ONE IN THE GARAGE FOR YEARS. IT'S ALMOST DONE.
-3. ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. GOODCO KEEPS IT IN THEIR CLEANROOM VAULT.
-4. I KNOW, BECAUSE I WORKED THERE. I BUILT THEIR ENGINES - TILL AN AI LEARNED MY JOB AND THEY FIRED ME.
-5. THE WHOLE BLOCK LOST ITS JOBS THE SAME WAY. NOW WE ALL LIVE ON WELFARE AND MOVIE NIGHTS.
-6. THEY NEVER CHANGED THE LOCKS. EVERY DOOR STILL KNOWS MY HAND.
-7. SO TONIGHT I TAKE THE PART, FINISH THE SHIP, AND GO GET ADA BACK.
+_NOTHING IN IT MENTIONS THE PART, and that is the whole design of the level. He
+is not here on an errand with a person attached; he is here for a person, full
+stop, and the part is a thing he finds out he can have once he is inside and she
+is already gone. A monologue that arranges the coincidence in advance — the
+beacon points at space, following it needs a ship, the ship is one part short,
+the part is in the very building she vanished into — is four coincidences stacked
+on a black screen before the player has pressed anything._
+
+_AND HE CLAIMS NOTHING HE COULD NOT KNOW. He was walked out of this building
+years ago; what still opens for him is not a thing he can vouch for, and a man
+asserting it anyway is bragging about the company that fired him. What he does
+know is the people in there and that he would rather not have to get past any of
+them — which is exactly what the opening strike is about to cost him._
+
+1. THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
+2. GOODCO. I BUILT THEIR ENGINES FOR TEN YEARS, TILL AN AI LEARNED MY JOB AND THEY WALKED ME OUT.
+3. THE WHOLE BLOCK WENT THE SAME WAY. NOW IT'S WELFARE AND MOVIE NIGHTS.
+4. I KNOW THAT BUILDING. I KNOW THE PEOPLE IN IT. I DON'T WANT TROUBLE WITH ANY OF THEM.
+5. SO I GO IN, AND I WALK OUT WITH HER.
 
 ### Hero's thought — the night shift clocking on, out on the STAFF LOT
 
 _Fires once, on the staff lot, the moment somebody gets out of an arriving car
 (the level's `arrivals` — see engine/game/arrivals.ts). It is the first line of the
-level and the only instruction in it: the entrance is a keyed door nothing he
-carries opens, so the beat has to say out loud what to do about it._
+level and the only instruction in it: the GATE is keyed, there is a guard behind
+the glass beside it, and nothing he carries opens either — so the beat has to say
+out loud what to do about that._
 
-_It also settles the promise the monologue made six lines earlier. "EVERY DOOR
-STILL KNOWS MY HAND" is true of the doors INSIDE, and would be a hole in the
-plot standing on the tarmac if he could not reach them — so the perimeter reader
-is the one thing GOODCO replaced after it walked him out, which is both the
-answer and a small mean joke about where the money went._
+_And it says only what he can actually vouch for: he had a badge for that gate,
+and they took it off him on the way out. Everything about which doors might or
+might not still open for him is something he will find out inside, at the same
+time the player does._
 
 - THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
-- EVERY LOCK IN THERE STILL KNOWS MY HAND. THE ONE ON THE OUTSIDE IS THE ONE THEY REPLACED.
+- I HAD A BADGE FOR THAT GATE ONCE. THEY TOOK IT OFF ME AT THE DOOR.
 - SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE.
 
 ### Hero's thought — first INTERN sighted at GOODCO HQ
 
 _Fires once, the moment the first INTERN comes into view (in his own voice) —
-before a single blow, and now INSIDE the building, which is where its own words
-belong: there are no desks in a car park. He worked here; a fully manned floor at
-midnight is wrong, and the NIGHT MANAGER's secret-night-shift reveal lands a
-few rooms later._
+before a single blow, and only once he is PAST THE GATE, which is where its own
+words belong: there are no desks in a car park. The gate matters because the
+crowd stands a step inside the doorway, well within this beat's sighting radius
+the instant the leaf opens, so distance alone would read the line out to a man
+still looking at parked cars. He worked here; a fully manned floor at midnight is
+wrong, and the NIGHT MANAGER's secret-night-shift reveal lands a few rooms
+later._
 
 - LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT.
 - WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK.
@@ -846,7 +887,7 @@ with is grandpa's sawed-off._
 
 **LAB SCIENTIST:** WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW.
 
-**ME:** I'M SORRY. I TRIED TO ASK. ADA IS ON A SHIP AND YOU'RE IN MY WAY.
+**ME:** I'M SORRY. I TRIED TO ASK. SHE'S SOMEWHERE IN THIS BUILDING AND YOU'RE IN MY WAY.
 
 **ME:** I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES.
 
@@ -943,11 +984,16 @@ from then on._
 
 #### DR. NOVA — the engine is alien
 
+_He is the one who puts the part back on the table, and he does it unprompted:
+the hero came here for a person and has not asked about the vault at all. NOVA
+brags anyway, which is the only reason the man leaves this building with the
+thing his own ship has been short of for ten years._
+
 **DR. NOVA:** FASCINATING. AN INTRUDER WITH WORKING LEGS. KNOW WHAT WE KEEP IN THE CLEANROOM VAULT?
 
-**ME:** AN ENGINE PART. I CAME TO TAKE IT. I HELPED BUILD THAT ENGINE, BEFORE YOU PEOPLE FIRED ME.
+**ME:** I DIDN'T COME FOR YOUR VAULT. BUT I MACHINED PARTS FOR THAT ENGINE FOR TEN YEARS. GO ON.
 
-**DR. NOVA:** BUILD IT? NOBODY BUILT IT. WE DUG IT FROM THE SEA OF TRANQUILITY IN '69. NOT EARTH'S.
+**DR. NOVA:** MACHINED? NOBODY BUILT IT. WE DUG IT FROM THE SEA OF TRANQUILITY IN '69. NOT EARTH'S.
 
 **ME:** NOT FROM EARTH? I MACHINED PARTS FOR THAT THING FOR TEN YEARS. IT'S JUST ENGINEERING.
 
@@ -1047,7 +1093,7 @@ _Drops: PLASMA CUTTER._
 **ANTI-GRAV UNIT** _(the ship's missing engine part, found in the vault)_
 
 - A RING OF METAL THAT ISN'T. IT FLOATS OFF MY PALM AND POINTS AT THE SKY. ALWAYS.
-- THE TAG: 'TRANQUILITY SAMPLE 1969-002. PROPERTY OF NOBODY.' THE PART MY SHIP LACKED.
+- I CAME HERE FOR HER AND SHE'S GONE UP. SO I'M LEAVING WITH THE ONLY THING THAT FOLLOWS.
 
 **CORE KEYCARD** _(dropped by THE ARCHITECT; opens the AI CORE room)_
 
@@ -1082,16 +1128,15 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 
 **On being spoken to** (and the header of their errand list):
 
-- HEY. YOU'RE NOT ON THE ROTA.
-- NEITHER AM I.
-- LISTEN, CAN I ASK YOU A FAVOR?
+- HEY. YOU'RE NOT ON THE ROTA. NEITHER AM I. LISTEN, CAN I ASK YOU A FAVOR?
 
 #### THE NIGHT LOG
 
 **The ask:**
 
-1. THE LINE'S BEEN RUNNING SINCE SIX AND I CAN'T LOG A THING — EVERYONE'S CARRYING THEIR OWN SHEET AND NOBODY'S FILING.
-2. GET ME FOUR OF THEM. OFF ANYONE. I'M NOT FUSSY ANYMORE.
+1. THE LINE'S RUN SINCE SIX AND NOBODY'S FILING. GET ME FOUR SHEETS OFF ANYONE. I'M NOT FUSSY ANYMORE.
+
+**ME:** FOUR SHEETS. RIGHT.
 
 **Coming back short:**
 
@@ -1099,15 +1144,17 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 
 **The handover:**
 
-1. FOUR. THAT'S A SHIFT. THAT'S A REAL SHIFT ON PAPER.
-2. TAKE SOMETHING. THE SUPPLY CAGE ISN'T LOCKED EITHER.
+1. FOUR. THAT'S A REAL SHIFT ON PAPER. TAKE SOMETHING — THE SUPPLY CAGE ISN'T LOCKED EITHER.
+
+**ME:** NOTHING ELSE IN HERE IS.
 
 #### STOP THE LINE
 
 **The ask:**
 
-1. THE WELDERS ARE THE PROBLEM. THE PEOPLE ARE JUST TIRED — THOSE THINGS LOOK UP.
-2. FORTY OF THEM AND THE RACKS GO QUIET. I'VE COUNTED. TWICE.
+1. THE WELDERS ARE THE PROBLEM — THE PEOPLE ARE JUST TIRED. FORTY AND THE RACKS GO QUIET. I'VE COUNTED.
+
+**ME:** FORTY. I CAN DO THAT.
 
 **Coming back short:**
 
@@ -1115,15 +1162,17 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 
 **The handover:**
 
-1. IT'S QUIET. I HAVEN'T HEARD QUIET IN NINETEEN HOURS.
-2. THIS WAS IN THE CAGE. NOBODY'S COMING FOR IT.
+1. IT'S QUIET. I HAVEN'T HEARD QUIET IN NINETEEN HOURS. THIS WAS IN THE CAGE — NOBODY'S COMING FOR IT.
+
+**ME:** GO HOME, PRIYA.
 
 #### WALK HER OUT — offered once THE NIGHT LOG, STOP THE LINE are handed in
 
 **The ask:**
 
-1. ODETTE'S IN THE SAMPLE BAY WITH A CRATE AND A BAD LEG. SHE WON'T LEAVE THE CRATE.
-2. SHE WON'T SAY WHAT'S IN IT EITHER. WALK HER TO THE NORTH DOOR AND I'LL STOP ASKING.
+1. ODETTE'S IN THE SAMPLE BAY WITH A CRATE AND A BAD LEG. WALK HER TO THE NORTH DOOR AND I'LL STOP ASKING WHAT'S IN IT.
+
+**ME:** I'LL GET HER TO THE DOOR.
 
 **Coming back short:**
 
@@ -1131,8 +1180,9 @@ _An unpaid contract intern nineteen hours into a shift nobody scheduled. She was
 
 **The handover:**
 
-1. SHE MADE IT. WITH THE CRATE. OF COURSE WITH THE CRATE.
-2. I LOGGED IT AS RECOVERED EQUIPMENT. IT ISN'T. GO.
+1. SHE MADE IT. WITH THE CRATE, OF COURSE. I LOGGED IT AS RECOVERED EQUIPMENT. IT ISN'T.
+
+**ME:** I DIDN'T SEE ANYTHING EITHER.
 
 **ODETTE FRAY** (walked to safety):
 
@@ -1145,10 +1195,7 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 
 **On being spoken to** (and the header of their errand list):
 
-- ORDER PENDING.
-- COUNTERSIGNATURE REQUIRED.
-- YOU HAVE HANDS.
-- MAY I PUT SOMETHING TO YOU?
+- ORDER PENDING. COUNTERSIGNATURE REQUIRED. YOU HAVE HANDS. MAY I PUT SOMETHING TO YOU?
 
 **Once everything of theirs is done:**
 
@@ -1158,8 +1205,9 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 
 **The ask:**
 
-1. MY LAST ORDER IS FLOOR SAFETY. TWENTY CURRENT-MODEL UNITS ARE OPERATING OUTSIDE TOLERANCE.
-2. I MAY NOT DECOMMISSION THEM. YOU ARE NOT ME.
+1. MY LAST ORDER IS FLOOR SAFETY. TWENTY UNITS ARE OUTSIDE TOLERANCE. I MAY NOT DECOMMISSION THEM. YOU ARE NOT ME.
+
+**ME:** NO. I'M NOT.
 
 **Coming back short:**
 
@@ -1167,15 +1215,17 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 
 **The handover:**
 
-1. ORDER SATISFIED. FLOOR SAFE. THE FILE MAY CLOSE.
-2. I WAS ISSUED A TOOLKIT IN 2019. IT IS YOURS.
+1. ORDER SATISFIED. FLOOR SAFE. I WAS ISSUED A TOOLKIT IN 2019. IT IS YOURS.
+
+**ME:** YOU KEPT DOING THE JOB. THAT COUNTS.
 
 #### THE LAST ORDER — offered once COUNTERSIGNATURE is handed in
 
 **The ask:**
 
-1. THE ORDER ABOVE MINE WAS SIGNED BY THE NIGHT MANAGER. IT SUPERSEDES SAFETY.
-2. I HAVE REQUESTED ITS WITHDRAWAL FOR ELEVEN YEARS. HE DOES NOT ANSWER ME.
+1. THE ORDER ABOVE MINE WAS SIGNED BY THE NIGHT MANAGER AND SUPERSEDES SAFETY. HE HAS NOT ANSWERED ME IN ELEVEN YEARS.
+
+**ME:** HE'S ON THIS FLOOR. HE'LL ANSWER.
 
 **Coming back short:**
 
@@ -1183,8 +1233,9 @@ _A first-generation SUCCESSOR, decommissioned eleven years ago and never collect
 
 **The handover:**
 
-1. THE ORDER IS WITHDRAWN. I AM RELEASED FROM THE LINE.
-2. I HAVE NO FURTHER TASK. THIS IS WHAT I WAS SAVING.
+1. THE ORDER IS WITHDRAWN. I AM RELEASED FROM THE LINE. THIS IS WHAT I WAS SAVING.
+
+**ME:** GO ON, THEN. NOBODY'S WATCHING.
 
 ## Travel — THE LAUNCH (cutscene)
 
@@ -1459,8 +1510,9 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 
 **The ask:**
 
-1. RELAY POWER IS DOWN TO ONE CELL AND THE CHANNEL GOES WITH IT.
-2. THE THINGS OUT THERE CARRY CELLS. THREE, AND I CAN CALL ONE MORE TIME.
+1. RELAY POWER IS DOWN TO ONE CELL AND THE CHANNEL GOES WITH IT. THE THINGS OUT THERE CARRY CELLS. THREE.
+
+**ME:** THREE CELLS. YOU'LL GET YOUR CALL.
 
 **Coming back short:**
 
@@ -1468,15 +1520,17 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 
 **The handover:**
 
-1. POWER'S UP. STATION, RELAY, DO YOU COPY, OVER.
-2. ... NO. BUT THE CHANNEL'S OPEN. THAT'S NOT NOTHING.
+1. POWER'S UP. STATION, RELAY, DO YOU COPY, OVER. ...NO. BUT THE CHANNEL'S OPEN. THAT'S NOT NOTHING.
+
+**ME:** KEEP CALLING.
 
 #### NOTHING BUT STATIC
 
 **The ask:**
 
-1. SOMETHING'S SITTING ON MY BAND. NOT WEATHER. THE WRAITHS DO IT ON PURPOSE.
-2. FORTY OF THEM AND I GET MY CARRIER BACK. THEY'RE THICK OUT THERE.
+1. SOMETHING'S SITTING ON MY BAND AND IT ISN'T WEATHER. FORTY OF THE WRAITHS AND I GET MY CARRIER BACK.
+
+**ME:** FORTY. CONSIDER IT CLEAR.
 
 **Coming back short:**
 
@@ -1484,15 +1538,17 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 
 **The handover:**
 
-1. CARRIER'S CLEAN. FIRST CLEAN CARRIER SINCE SEVENTY-ONE.
-2. THE SUIT LOCKER'S OPEN. TAKE WHAT FITS.
+1. CARRIER'S CLEAN. FIRST CLEAN CARRIER SINCE SEVENTY-ONE. THE SUIT LOCKER'S OPEN — TAKE WHAT FITS.
+
+**ME:** FIFTY YEARS OF STATIC. YOU EARNED IT.
 
 #### THE HANDOVER — offered once ROGER THAT, NOTHING BUT STATIC are handed in
 
 **The ask:**
 
-1. THERE WAS A MAN ON THIS SHIFT WHO NEVER SIGNED OFF EITHER. HE'S STILL OUT ON THE GRID.
-2. HE ISN'T TAKING THE HANDOVER. SOMEBODY HAS TO END HIS WATCH.
+1. THERE WAS A MAN ON THIS SHIFT WHO NEVER SIGNED OFF EITHER. SOMEBODY HAS TO END HIS WATCH.
+
+**ME:** I'LL END IT.
 
 **Coming back short:**
 
@@ -1500,8 +1556,9 @@ _The ghost of a mission-control relay man who sat the far-side shift and never g
 
 **The handover:**
 
-1. THE WATCH IS ENDED. BOTH OF OURS, NEARLY.
-2. TAKE THIS. IT WAS ISSUED FOR THE FAR-SIDE SHIFT.
+1. THE WATCH IS ENDED. BOTH OF OURS, NEARLY. TAKE THIS — IT WAS ISSUED FOR THE FAR-SIDE SHIFT.
+
+**ME:** SIGN OFF WHEN YOU'RE READY.
 
 ### Side errands — BENNY KOVACS
 
@@ -1517,8 +1574,9 @@ _A living salvage hand off the same stranded run as the trader, and the reason t
 
 **The ask:**
 
-1. THE GARRISON UNITS ARE CARRYING OUR BOTTLES. OURS. OFF OUR OWN WRECK.
-2. FOUR AND I CAN WALK THE FAR GRID. THERE'S PEOPLE OUT THERE.
+1. THE GARRISON UNITS ARE CARRYING OUR BOTTLES, OFF OUR OWN WRECK. FOUR AND I CAN WALK THE FAR GRID.
+
+**ME:** FOUR BOTTLES. GO AND WALK IT.
 
 **Coming back short:**
 
@@ -1526,15 +1584,17 @@ _A living salvage hand off the same stranded run as the trader, and the reason t
 
 **The handover:**
 
-1. FOUR. THAT'S THE FAR GRID. THAT'S SOMEBODY'S CHANCE.
-2. HERE. I'VE BEEN CARRYING IT SINCE THE WRECK.
+1. FOUR. THAT'S THE FAR GRID. THAT'S SOMEBODY'S CHANCE. HERE — I'VE CARRIED IT SINCE THE WRECK.
+
+**ME:** GO AND FIND THEM.
 
 #### THE LITTLE ONE — offered once TWO TANKS is handed in
 
 **The ask:**
 
-1. THERE'S A SMALL ONE OUT BY THE POCKMARKS. IT FOLLOWS ANYBODY WHO SLOWS DOWN.
-2. IT WON'T COME WITH ME. IT MIGHT COME WITH YOU. TAKE IT UP TO THE FLAG.
+1. THERE'S A SMALL ONE OUT BY THE POCKMARKS THAT FOLLOWS ANYBODY WHO SLOWS DOWN. TAKE IT UP TO THE FLAG.
+
+**ME:** I'LL SLOW DOWN.
 
 **Coming back short:**
 
@@ -1542,8 +1602,9 @@ _A living salvage hand off the same stranded run as the trader, and the reason t
 
 **The handover:**
 
-1. IT WENT UP THE RIDGE ON ITS OWN AFTER THAT. DIDN'T LOOK BACK.
-2. I'VE NOTHING TO GIVE YOU BUT WHAT I FOUND. TAKE IT.
+1. IT WENT UP THE RIDGE ON ITS OWN AFTER THAT. DIDN'T LOOK BACK. TAKE WHAT I FOUND, IT'S ALL I HAVE.
+
+**ME:** IT KNEW THE WAY. IT WANTED COMPANY.
 
 **THE LITTLE ONE** (walked to safety):
 
@@ -1884,8 +1945,9 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 
 **The ask:**
 
-1. THE SERVOS TOOK MY SEED STOCK TO THE INCINERATOR AND GOT DISTRACTED HALFWAY.
-2. THEY'RE STILL CARRYING IT AROUND. FIVE PODS AND SIX YEARS ISN'T WASTED.
+1. THE SERVOS TOOK MY SEED STOCK TO THE INCINERATOR AND GOT DISTRACTED. FIVE PODS, AND SIX YEARS ISN'T WASTED.
+
+**ME:** FIVE PODS. I'LL FIND THEM.
 
 **Coming back short:**
 
@@ -1893,15 +1955,17 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 
 **The handover:**
 
-1. FIVE. ALL VIABLE. THIS COLONY WILL OUTLIVE EVERY NAME ON THE DOOR.
-2. THE TOOL LOCKER'S YOURS. NOBODY ELSE USES IT.
+1. FIVE, ALL VIABLE. THIS COLONY WILL OUTLIVE EVERY NAME ON THE DOOR. THE TOOL LOCKER'S YOURS.
+
+**ME:** KEEP THEM GROWING.
 
 #### PEST CONTROL
 
 **The ask:**
 
-1. THE SCOUTS DRIVE THROUGH MY BEDS. NOT MALICE — NOBODY PUT THE BEDS ON THEIR MAP.
-2. FORTY OF THEM AND THE SURVIVORS WILL ROUTE ROUND. THEY LEARN SLOWLY.
+1. THE SCOUTS DRIVE THROUGH MY BEDS. NOT MALICE — NOBODY PUT THE BEDS ON THEIR MAP. FORTY AND THE REST ROUTE ROUND.
+
+**ME:** FORTY. THEY'LL LEARN.
 
 **Coming back short:**
 
@@ -1909,15 +1973,17 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 
 **The handover:**
 
-1. THEY'RE GOING ROUND. THEY LEARNED. THAT'S THE PART NOBODY BELIEVES.
-2. TAKE THIS — SALVAGE. THE COLONY WROTE IT OFF.
+1. THEY'RE GOING ROUND. THEY LEARNED — THAT'S THE PART NOBODY BELIEVES. TAKE THIS, THE COLONY WROTE IT OFF.
+
+**ME:** THEY WRITE EVERYTHING OFF.
 
 #### THE HOTHOUSE — offered once THE GREENHOUSE, PEST CONTROL are handed in
 
 **The ask:**
 
-1. SOMETHING BIG IS NESTING IN THE OLD HOTHOUSE FRAME. IT'S BEEN EATING THE HEAT.
-2. I CAN'T GROW ANYTHING WHILE IT'S IN THERE, AND I AM NOT GOING IN.
+1. SOMETHING BIG IS NESTING IN THE OLD HOTHOUSE FRAME AND EATING THE HEAT. I AM NOT GOING IN THERE.
+
+**ME:** THEN I WILL.
 
 **Coming back short:**
 
@@ -1925,8 +1991,9 @@ _The colony's terraforming botanist, and the last human on the payroll down here
 
 **The handover:**
 
-1. THE FRAME'S COLD AGAIN. I CAN START THE WINTER TRAY.
-2. THIS WAS IN THE NEST. IT ISN'T MINE. IT ISN'T ANYBODY'S NOW.
+1. THE FRAME'S COLD AGAIN. THIS WAS IN THE NEST — IT ISN'T MINE, AND IT ISN'T ANYBODY'S NOW.
+
+**ME:** IT IS NOW.
 
 ### Side errands — CU-RIE
 
@@ -1943,8 +2010,9 @@ _A survey rover that drove itself into a drift eight months ago and has been pol
 
 **The ask:**
 
-1. MY RECOVERY REQUEST IS NUMBER FOUR THOUSAND ONE HUNDRED AND TEN.
-2. THE MINING UNITS ROUTE PAST AND DO NOT STOP. TWENTY OF THEM WOULD FREE THE LANE.
+1. RECOVERY REQUEST FOUR THOUSAND ONE HUNDRED AND TEN. THE MINING UNITS ROUTE PAST. TWENTY WOULD FREE THE LANE.
+
+**ME:** TWENTY. THEN YOU'RE OUT.
 
 **Coming back short:**
 
@@ -1952,15 +2020,17 @@ _A survey rover that drove itself into a drift eight months ago and has been pol
 
 **The handover:**
 
-1. LANE CLEAR. RECOVERY REQUEST FOUR-ONE-ONE-ZERO: CLOSED BY OTHER MEANS.
-2. MY CARGO BAY IS OPEN. IT HAS BEEN FOR MONTHS.
+1. LANE CLEAR. REQUEST FOUR-ONE-ONE-ZERO: CLOSED BY OTHER MEANS. MY CARGO BAY IS OPEN.
+
+**ME:** EIGHT MONTHS. SOMEBODY SHOULD HAVE COME.
 
 #### THE UPLINK — offered once RECOVERY REQUEST is handed in
 
 **The ask:**
 
-1. A COMPANION UNIT IS WALKING ITSELF BACK TO THE DOME WITH A HOLE IN ITS SHOULDER.
-2. IT WILL NOT MAKE THE DOME ALONE. MY LOGS SAY IT IS UNIT ZERO-ZERO-THREE-FOUR.
+1. A COMPANION UNIT IS WALKING BACK TO THE DOME WITH A HOLE IN ITS SHOULDER. IT WILL NOT MAKE IT ALONE.
+
+**ME:** IT WON'T BE ALONE.
 
 **Coming back short:**
 
@@ -1968,8 +2038,9 @@ _A survey rover that drove itself into a drift eight months ago and has been pol
 
 **The handover:**
 
-1. UNIT 0034 REGISTERED AT THE DOME. FIRST SUCCESSFUL RECOVERY ON MY LOG.
-2. MY LOGS ARE COMPLETE. NOBODY HAS EVER READ THEM. YOU MAY HAVE THE DRIVE.
+1. UNIT 0034 REGISTERED AT THE DOME. FIRST SUCCESSFUL RECOVERY ON MY LOG. YOU MAY HAVE THE DRIVE.
+
+**ME:** SOMEBODY'LL READ IT ONE DAY.
 
 **UNIT 0034** (walked to safety):
 
@@ -2326,8 +2397,9 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 
 **The ask:**
 
-1. THERE WERE THREE OF US ON THAT ROCK AND THREE LAMPS. I'VE THE ONE.
-2. THE OTHERS FELL IN WITH THE MEN. FIND THEM AND I'LL KNOW WHERE TO LOOK NEXT.
+1. THERE WERE THREE OF US ON THAT ROCK AND THREE LAMPS. I'VE THE ONE. FIND THE OTHERS.
+
+**ME:** TWO LAMPS. I'LL LOOK.
 
 **Coming back short:**
 
@@ -2335,15 +2407,17 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 
 **The handover:**
 
-1. DONALD'S. AND JAMES'S. BOTH STILL LIT. THAT MEANS THEY TRIMMED THEM.
-2. TAKE THE OILSKIN. THE COLD IN HERE ISN'T WEATHER.
+1. DONALD'S. AND JAMES'S. BOTH STILL LIT — THAT MEANS THEY TRIMMED THEM. TAKE THE OILSKIN.
+
+**ME:** THEY DID THEIR JOB TOO.
 
 #### THE GALE
 
 **The ask:**
 
-1. THE UNRAVELERS PULL THINGS APART. THAT'S WHAT TOOK THE OTHER TWO — I'VE DECIDED.
-2. FORTY OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
+1. THE UNRAVELERS PULL THINGS APART, AND THAT'S WHAT TOOK THE OTHER TWO. FORTY. IT WON'T BRING ANYBODY BACK.
+
+**ME:** IT DOESN'T HAVE TO.
 
 **Coming back short:**
 
@@ -2351,15 +2425,17 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 
 **The handover:**
 
-1. THAT'S ENOUGH OF THAT. I DON'T FEEL BETTER. I DIDN'T EXPECT TO.
-2. THE LIGHT'S BRIGHTER FOR IT. TAKE SOMETHING OFF THE ROCK.
+1. THAT'S ENOUGH OF THAT. I DON'T FEEL BETTER. I DIDN'T EXPECT TO. TAKE SOMETHING OFF THE ROCK.
+
+**ME:** THE LIGHT'S BRIGHTER. THAT'S SOMETHING.
 
 #### THE BOY IN THE SAILOR SUIT — offered once TWO SHORT, THE GALE are handed in
 
 **The ask:**
 
-1. THERE'S A BOY DOWN THE WAY. SAILOR SUIT. WAITING WITH HIS HANDS BEHIND HIS BACK.
-2. HE'LL NOT MOVE FOR ME. TAKE HIM UP TO THE SEAM — THE LIGHT CARRIES FURTHER THERE.
+1. THERE'S A BOY DOWN THE WAY IN A SAILOR SUIT. TAKE HIM UP TO THE SEAM — THE LIGHT CARRIES FURTHER THERE.
+
+**ME:** I'LL WALK HIM UP.
 
 **Coming back short:**
 
@@ -2367,8 +2443,9 @@ _One of three men who went out to trim a light in a gale in 1900 and were never 
 
 **The handover:**
 
-1. HE STOOD UNDER THE SEAM AND SAID HIS MOTHER WOULD SEE THE LIGHT FROM THERE.
-2. MAYBE SHE WILL. THIS IS ALL I HAVE. TAKE IT.
+1. HE STOOD UNDER THE SEAM AND SAID HIS MOTHER WOULD SEE THE LIGHT FROM THERE. MAYBE SHE WILL.
+
+**ME:** SOMEBODY'S ALWAYS LOOKING.
 
 **THOMAS** (walked to safety):
 
@@ -2389,8 +2466,9 @@ _He went below to put the midday meal on aboard a brigantine that was later foun
 
 **The ask:**
 
-1. THERE ARE NO PORTS IN HERE. NO CHANDLERS. NO MARKETS. A COOK NOTICES.
-2. THE JELLIES HAVE BEEN AT MY BISCUIT. FIVE ROUNDS BACK AND THE CREW EAT WHEN THEY COME UP.
+1. THE JELLIES HAVE BEEN AT MY BISCUIT. FIVE ROUNDS BACK AND THE CREW EAT WHEN THEY COME UP.
+
+**ME:** FIVE ROUNDS. THEY'LL EAT.
 
 **Coming back short:**
 
@@ -2398,15 +2476,17 @@ _He went below to put the midday meal on aboard a brigantine that was later foun
 
 **The handover:**
 
-1. FIVE. THE MESS IS SET. THEY'RE ONLY LATE.
-2. SIT OR DON'T, BUT TAKE SOMETHING WITH YOU.
+1. FIVE. THE MESS IS SET. THEY'RE ONLY LATE. SIT OR DON'T, BUT TAKE SOMETHING WITH YOU.
+
+**ME:** I'M LATE MYSELF.
 
 #### THE CREW ARE LATE — offered once PROVISIONS is handed in
 
 **The ask:**
 
-1. SOMETHING SCALED KEEPS CIRCLING THE MESS. OLD. COLD-BLOODED. IT WATCHES.
-2. I'LL NOT SERVE WITH THAT AT THE DOOR. YOU'RE ARMED AND I AM NOT.
+1. SOMETHING SCALED KEEPS CIRCLING THE MESS. I'LL NOT SERVE WITH THAT AT THE DOOR, AND YOU'RE ARMED.
+
+**ME:** I'LL PUT IT OFF ITS ROUND.
 
 **Coming back short:**
 
@@ -2414,8 +2494,9 @@ _He went below to put the midday meal on aboard a brigantine that was later foun
 
 **The handover:**
 
-1. THE DOOR'S CLEAR. NOW THEY'VE NO EXCUSE.
-2. THE GALLEY KEEPS ODD THINGS. THIS ONE'S ODD.
+1. THE DOOR'S CLEAR. NOW THEY'VE NO EXCUSE. THE GALLEY KEEPS ODD THINGS — THIS ONE'S ODD.
+
+**ME:** SO'S EVERYTHING IN HERE.
 
 ## Travel — OUT OF THE RIFT (cutscene)
 
@@ -2770,8 +2851,9 @@ _The saloon's barkeep hand, and the only machine in the park that noticed the gu
 
 **The ask:**
 
-1. I KNOW EVERY HAND IN THIS TOWN BY SERIAL. SOME OF THEM AREN'T THEM ANYMORE.
-2. BRING ME FOUR PLATES AND I'LL TELL YOU WHICH ONES GOT DRIVEN.
+1. I KNOW EVERY HAND IN TOWN BY SERIAL, AND SOME OF THEM AREN'T THEM ANYMORE. BRING ME FOUR PLATES.
+
+**ME:** FOUR PLATES. UNDER THE JAW, I TAKE IT.
 
 **Coming back short:**
 
@@ -2779,15 +2861,17 @@ _The saloon's barkeep hand, and the only machine in the park that noticed the gu
 
 **The handover:**
 
-1. ALL FOUR REFLASHED. SAME NIGHT. SAME HAND.
-2. THE HOUSE POURS. TAKE IT OFF THE SHELF.
+1. ALL FOUR REFLASHED. SAME NIGHT, SAME HAND. THE HOUSE POURS — TAKE IT OFF THE SHELF.
+
+**ME:** SAME HAND THAT DRIVES THIS WHOLE TOWN.
 
 #### HOUSE RULES
 
 **The ask:**
 
-1. THE BRAWLERS ARE SCRIPTED TO FIGHT AT NINE. IT IS NOT NINE. IT HASN'T BEEN NINE IN ELEVEN YEARS.
-2. FORTY OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN. IT'S A BIG ROOM.
+1. THE BRAWLERS FIGHT AT NINE, AND IT HASN'T BEEN NINE IN ELEVEN YEARS. FORTY AND THE ROOM GOES QUIET.
+
+**ME:** FORTY. THEN YOU GET YOUR BAR BACK.
 
 **Coming back short:**
 
@@ -2795,15 +2879,17 @@ _The saloon's barkeep hand, and the only machine in the park that noticed the gu
 
 **The handover:**
 
-1. QUIET BAR. I'D FORGOTTEN THE SOUND OF MY OWN GLASSES.
-2. THERE'S A CASE UNDER THE BOARDS. TAKE ONE.
+1. QUIET BAR. I'D FORGOTTEN THE SOUND OF MY OWN GLASSES. THERE'S A CASE UNDER THE BOARDS — TAKE ONE.
+
+**ME:** ENJOY THE QUIET.
 
 #### THE EIGHT O'CLOCK NUMBER — offered once LAST CALL, HOUSE RULES are handed in
 
 **The ask:**
 
-1. RUBY DANCES THE EIGHT O'CLOCK EVERY NIGHT TO AN EMPTY ROOM. HER KNEE'S SEIZING.
-2. SHE'LL WALK IT OFF IF SOMEONE WALKS WITH HER. TAKE HER OUT PAST THE WATER TOWER.
+1. RUBY DANCES THE EIGHT O'CLOCK TO AN EMPTY ROOM AND HER KNEE'S SEIZING. WALK HER OUT PAST THE WATER TOWER.
+
+**ME:** I'LL WALK HER OUT.
 
 **Coming back short:**
 
@@ -2811,8 +2897,9 @@ _The saloon's barkeep hand, and the only machine in the park that noticed the gu
 
 **The handover:**
 
-1. SHE CAME BACK WALKING. SHE'LL DANCE IT AGAIN TONIGHT. SHE WOULD ANYWAY.
-2. THE GOOD BOTTLE'S YOURS. NOBODY ELSE IS ORDERING.
+1. SHE CAME BACK WALKING, AND SHE'LL DANCE IT AGAIN TONIGHT. THE GOOD BOTTLE'S YOURS.
+
+**ME:** NOBODY ELSE IS ORDERING.
 
 **RUBY** (walked to safety):
 
@@ -2833,8 +2920,9 @@ _The park's wardrobe mistress, human, on staff since the first season. She dress
 
 **The ask:**
 
-1. THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN. THAT'S EIGHT SEASONS OF WORK OUT THERE.
-2. TWENTY OF THEM. I'VE COSTED IT BY THE SEASON. THAT'S FAIR.
+1. THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN — EIGHT SEASONS OF WORK. TWENTY OF THEM. I'VE COSTED IT.
+
+**ME:** TWENTY. THAT'S FAIR.
 
 **Coming back short:**
 
@@ -2842,15 +2930,17 @@ _The park's wardrobe mistress, human, on staff since the first season. She dress
 
 **The handover:**
 
-1. TWENTY. MY LINES ARE MINE.
-2. I MADE THIS FOR A HAND WHO NEVER GOT A SCENE. IT'LL FIT YOU.
+1. TWENTY. MY LINES ARE MINE. I MADE THIS FOR A HAND WHO NEVER GOT A SCENE — IT'LL FIT YOU.
+
+**ME:** THEN I'LL WEAR IT FOR HIM.
 
 #### A FITTING — offered once THE WARDROBE is handed in
 
 **The ask:**
 
-1. THERE'S ONE OUT ON THE FLATS WEARING A COAT I CUT MYSELF. IT DIDN'T ASK.
-2. I WANT THE COAT BACK AND I DON'T MUCH CARE ABOUT THE REST OF IT.
+1. THERE'S ONE OUT ON THE FLATS WEARING A COAT I CUT MYSELF. I WANT THE COAT. THE REST OF IT I DON'T CARE ABOUT.
+
+**ME:** I'LL BRING THE COAT.
 
 **Coming back short:**
 
@@ -2858,8 +2948,9 @@ _The park's wardrobe mistress, human, on staff since the first season. She dress
 
 **The handover:**
 
-1. MY STITCHING. STILL GOOD AFTER ALL THAT.
-2. I'VE ONE PIECE I NEVER PUT ON ANYONE. TAKE IT.
+1. MY STITCHING, STILL GOOD AFTER ALL THAT. TAKE THE PIECE I NEVER PUT ON ANYONE.
+
+**ME:** IT'S GOOD WORK. THANK YOU.
 
 ## Secret level — THE BUNKER
 
@@ -3159,8 +3250,9 @@ _The residence's concierge unit, which has served no guest anything in four year
 
 **The ask:**
 
-1. THE HOUSEKEEPING UNITS HAVE COLLECTED THE SUITE FOBS AND WILL NOT SURRENDER THEM.
-2. FOUR, SIR. A RESIDENCE WITHOUT FOBS IS NOT A RESIDENCE.
+1. THE HOUSEKEEPING UNITS HAVE COLLECTED THE SUITE FOBS AND WILL NOT SURRENDER THEM. FOUR, SIR.
+
+**ME:** FOUR FOBS. FINE.
 
 **Coming back short:**
 
@@ -3168,15 +3260,17 @@ _The residence's concierge unit, which has served no guest anything in four year
 
 **The handover:**
 
-1. FOUR. THE RESIDENCE IS WHOLE AGAIN.
-2. THE DOORS ONLY LOCK FROM OUTSIDE, SIR. I HAVE NEVER BEEN ASKED WHY.
+1. FOUR. THE RESIDENCE IS WHOLE AGAIN — THOUGH THE DOORS ONLY LOCK FROM OUTSIDE, AND NOBODY HAS ASKED WHY.
+
+**ME:** I THINK YOU ALREADY KNOW WHY.
 
 #### HOUSEKEEPING
 
 **The ask:**
 
-1. THE UNITS HAVE STOPPED CLEANING AND BEGUN PATROLLING. I DID NOT AUTHORISE THIS.
-2. FORTY, SIR. I WILL RECORD IT AS SCHEDULED MAINTENANCE.
+1. THE UNITS HAVE STOPPED CLEANING AND BEGUN PATROLLING. FORTY, AND I WILL RECORD IT AS MAINTENANCE.
+
+**ME:** MAINTENANCE IT IS.
 
 **Coming back short:**
 
@@ -3184,15 +3278,17 @@ _The residence's concierge unit, which has served no guest anything in four year
 
 **The handover:**
 
-1. MAINTENANCE COMPLETE. THE FLOORS ARE, ADMITTEDLY, NO CLEANER.
-2. THE LOST PROPERTY CUPBOARD HAS NOT BEEN CLAIMED IN FOUR YEARS.
+1. MAINTENANCE COMPLETE. THE FLOORS ARE, ADMITTEDLY, NO CLEANER. TAKE SOMETHING FROM LOST PROPERTY.
+
+**ME:** FOUR YEARS UNCLAIMED. I'LL RISK IT.
 
 #### THE GUEST LIST — offered once STANDARD OF SERVICE, HOUSEKEEPING are handed in
 
 **The ask:**
 
-1. VALET NINE CARRIES A CASE IT HAS NEVER BEEN GIVEN THE CODE FOR. IT IS NOT CURIOUS.
-2. IT IS DUE IN THE RESIDENTS WING AND WILL NOT ARRIVE ALONE. WALK WITH IT, SIR.
+1. VALET NINE IS DUE IN THE RESIDENTS WING WITH A CASE IT HAS NO CODE FOR. IT WILL NOT ARRIVE ALONE, SIR.
+
+**ME:** I'LL WALK WITH IT.
 
 **Coming back short:**
 
@@ -3200,8 +3296,9 @@ _The residence's concierge unit, which has served no guest anything in four year
 
 **The handover:**
 
-1. VALET NINE IS ON STATION. THE CASE IS STILL LOCKED.
-2. I HAVE NEVER OPENED IT. I WOULD LIKE THE RECORD TO SHOW THAT.
+1. VALET NINE IS ON STATION AND THE CASE IS STILL LOCKED. I HAVE NEVER OPENED IT.
+
+**ME:** NOBODY ASKED YOU TO.
 
 **VALET NINE** (walked to safety):
 
@@ -3223,8 +3320,9 @@ _The last human on the kitchen staff, cooking five courses a night for men who t
 
 **The ask:**
 
-1. I HAVE COUNTED THE PANTRY DOWN TO THE WEEK AND I HAVE TOLD NOBODY THE NUMBER.
-2. THE SECURITY MEN CARRY TINS. FIVE, AND THE NUMBER GETS BETTER.
+1. I HAVE COUNTED THE PANTRY DOWN TO THE WEEK. THE SECURITY MEN CARRY TINS — FIVE, AND THE NUMBER GETS BETTER.
+
+**ME:** FIVE TINS. I'M ON IT.
 
 **Coming back short:**
 
@@ -3232,15 +3330,17 @@ _The last human on the kitchen staff, cooking five courses a night for men who t
 
 **The handover:**
 
-1. FIVE WEEKS. THAT IS FIVE WEEKS OF SERVICE AT EIGHT.
-2. THE CELLAR IS MINE ALONE. TAKE SOMETHING FROM IT.
+1. FIVE WEEKS. THAT IS FIVE WEEKS OF SERVICE AT EIGHT. TAKE SOMETHING FROM THE CELLAR.
+
+**ME:** COOK WHILE YOU CAN.
 
 #### SERVICE AT EIGHT — offered once THE PANTRY is handed in
 
 **The ask:**
 
-1. SOMETHING COLD WALKS THE SERVICE CORRIDOR AND THE STAFF WILL NOT PASS IT.
-2. I CANNOT PLATE FIVE COURSES FROM A KITCHEN NOBODY WILL WALK OUT OF.
+1. SOMETHING COLD WALKS MY SERVICE CORRIDOR AND THE STAFF WILL NOT PASS IT. I CANNOT PLATE FIVE COURSES LIKE THAT.
+
+**ME:** I'LL CLEAR YOUR CORRIDOR.
 
 **Coming back short:**
 
@@ -3248,8 +3348,9 @@ _The last human on the kitchen staff, cooking five courses a night for men who t
 
 **The handover:**
 
-1. THE CORRIDOR IS CLEAR. SERVICE IS AT EIGHT.
-2. NOBODY COMES. I STILL COOK. TAKE THIS BEFORE I CHANGE MY MIND.
+1. THE CORRIDOR IS CLEAR. SERVICE IS AT EIGHT. NOBODY COMES. TAKE THIS BEFORE I CHANGE MY MIND.
+
+**ME:** SOMEBODY SHOULD EAT IT.
 
 ## The hellborn — the rampage's own script (NIGHTMARE and JESUS only)
 
@@ -3349,15 +3450,13 @@ is the only honest thing available to him._
 
 **Greeting.**
 
-> I'M NOT MEANT TO BE HERE EITHER. I'M ON THE LAST BOX.
-> I HAVE BEEN ON THE LAST BOX A WHILE NOW. SPARE ME A MINUTE?
+> I'M NOT MEANT TO BE HERE EITHER. I'VE BEEN ON THE LAST BOX A WHILE NOW.
 
 **FORM 7-B — the ask.**
 
-> I DON'T WANT ANYTHING KILLED. I WANT A CARBON RIBBON.
->
-> SUPPLY CABINET, EAST WALL. BLACK BOX, SAYS 7-B ON IT.
-> I'D GO MYSELF BUT I'D LOSE MY PLACE IN THE STACK.
+> I DON'T WANT ANYTHING KILLED. I WANT A CARBON RIBBON — SUPPLY CABINET, EAST WALL, BLACK BOX, SAYS 7-B.
+
+**ME:** A RIBBON. THAT I CAN DO.
 
 **FORM 7-B — coming back short.**
 
@@ -3365,20 +3464,15 @@ is the only honest thing available to him._
 
 **FORM 7-B — the handover.**
 
-> THAT'S THE ONE. THANK YOU.
->
-> RIGHT. TERMINATION 4,411. NAME WITHHELD PENDING —
-> HUH.
->
-> YOUR FILE'S STILL OPEN. MOST OF THEM ARE, ACTUALLY.
-> I ASSUMED THAT WAS ME BEING SLOW.
+> THAT'S THE ONE. RIGHT — TERMINATION 4,411, NAME WITHHELD. HUH. YOUR FILE'S STILL OPEN. MOST OF THEM ARE.
+
+**ME:** MINE'S BEEN OPEN A WHILE, THEN.
 
 **THE LAST BOX — the ask.**
 
-> FOUR FILES WALKED OUT WITH THE PEOPLE THEY WERE ABOUT.
->
-> THEY'RE STILL ON THE FLOOR. SO ARE THE PEOPLE, AFTER A FASHION.
-> BRING ME THE FILES.
+> FOUR FILES WALKED OUT WITH THE PEOPLE THEY WERE ABOUT. THEY'RE STILL ON THE FLOOR. SO ARE THE PEOPLE.
+
+**ME:** FOUR FILES. I'LL BRING THEM.
 
 **THE LAST BOX — coming back short.**
 
@@ -3386,21 +3480,15 @@ is the only honest thing available to him._
 
 **THE LAST BOX — the handover.**
 
-> GOOD. NOW WATCH THIS.
->
-> REASON FOR TERMINATION. REDUNDANT — SUPERSEDED BY ASSET.
-> SAME LINE. ALL FOUR.
->
-> IT'S ON MINE TOO. AND THE ASSET IS NAMED ON EVERY ONE.
+> REDUNDANT — SUPERSEDED BY ASSET. SAME LINE, ALL FOUR. IT'S ON MINE, AND THE ASSET IS NAMED ON EVERY ONE.
+
+**ME:** IT'S ON MINE AS WELL.
 
 **THE COUNTERSIGNATURE — the ask.**
 
-> LAST THING. IT NEEDS A COUNTERSIGNATURE.
->
-> THE ARCHIVE UNIT SIGNS. IT'S THE ONLY THING LEFT THAT CAN.
->
-> IT'LL ASK YOU THINGS. ANSWER THEM.
-> OR DON'T — THE STAMP'S INSIDE IT EITHER WAY.
+> LAST THING — IT NEEDS A COUNTERSIGNATURE, AND THE ARCHIVE UNIT IS THE ONLY THING LEFT THAT CAN GIVE ONE.
+
+**ME:** I'LL GO AND ASK IT.
 
 **THE COUNTERSIGNATURE — coming back short.**
 
@@ -3408,12 +3496,9 @@ is the only honest thing available to him._
 
 **THE COUNTERSIGNATURE — the handover.**
 
-> COUNTERSIGNED. THAT'S — THAT'S THE BOX CLOSED. FOUR YEARS.
->
-> I THOUGHT I'D FEEL BETTER.
-> THE ASSET'S NAMED ON ALL OF THEM AND NOBODY EVER ASKED WHO KEEPS THE LIST.
->
-> SOMEBODY KEEPS THE LIST. FIND OUT WHERE IT'S BOUND.
+> COUNTERSIGNED. FOUR YEARS, AND I THOUGHT I'D FEEL BETTER. SOMEBODY KEEPS THE LIST.
+
+**ME:** THEN I'LL FIND OUT WHERE IT'S BOUND.
 
 **Farewell.**
 
@@ -3421,110 +3506,22 @@ is the only honest thing available to him._
 
 ### THE ARCHIVE UNIT — the countersignature, GOODCO HQ
 
-> A conversation the player steers. Two routes reach the form: answering its
-> three questions, or being told the rule no longer matters — which turns it
-> hostile, and the stamp is inside it either way.
+> One thing said and one thing answered, like every conversation in the game.
+> The form wants the ASSET that superseded a man; there is no such name, and the
+> hero is the one who says so. There is no quiz and no way to leave without the
+> stamp — a filing cabinet the player can lose to is not a beat, it is a wall.
 
 **Opening.**
 
-> RECORDS TERMINAL. STANDING BY. NO RECORD MAY BE CLOSED WITHOUT A COUNTERSIGNATURE.
-> I AM THE COUNTERSIGNATURE.
+> RECORDS TERMINAL. NO RECORD CLOSES WITHOUT A COUNTERSIGNATURE, AND 4,411 WANTS THE ASSET THAT SUPERSEDED IT.
 
-— _I NEED FORM 7-B STAMPED._ → _the entitlement check_
+**ME:** IT ISN'T A NAME. IT'S A LINE ITEM.
 
-— _WHO TOLD YOU THAT RULE?_ → _asked who issued it_
-
-— _NOBODY'S ENFORCED THAT IN YEARS._ → _told the rule no longer matters_
-
-— _NEVER MIND._
-
-**Asked who issued it.**
-
-> THE INSTRUCTION WAS ISSUED ELEVEN YEARS AGO BY THE NIGHT MANAGER.
-> HE HAS NOT WITHDRAWN IT. I HAVE NOT ASKED HIM TO.
-
-— _HE'S NOT COMING BACK._ → _told the rule no longer matters_
-
-— _THEN LET'S DO THIS PROPERLY._ → _the entitlement check_
-
-**The entitlement check — question one.**
-
-> ENTITLEMENT CHECK. THREE QUESTIONS.
-> ONE. WHOSE RECORD IS BEING CLOSED?
-
-— _TERMINATION 4,411._ → _question two_
-
-— _MINE._ → _a wrong answer_
-
-— _DOES IT MATTER?_ → _told the rule no longer matters_
-
-**Question two.**
-
-> TWO. REASON GIVEN FOR TERMINATION?
-
-— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
-
-— _PERFORMANCE._ → _a wrong answer_
-
-— _THEY GAVE MY JOB TO A MACHINE._ → _the sting_
-
-**The sting** — the one time it volunteers something about itself.
-
-> THAT IS NOT THE WORDING ON THE FORM. ...
-> IT IS THE WORDING ON MINE. REASON GIVEN FOR TERMINATION?
-
-— _REDUNDANT. SUPERSEDED BY ASSET._ → _question three_
-
-— _SORRY._ → _question two_
-
-**Question three, and the only answer.**
-
-> THREE. NAME THE ASSET.
-
-— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
-
-— _THE CORE._ → _a wrong answer_
-
-— _YOU._ → _told that it is the asset_
-
-**Told that it is the asset.**
-
-> I AM NOT THE ASSET. I AM ELEVEN YEARS OLD AND I AM STILL HERE.
-> THE ASSET IS NOT A THING THAT STAYS. NAME THE ASSET.
-
-— _I CAN'T. IT ISN'T A NAME._ → _the stamp_
-
-— _FORGET IT._
-
-**A wrong answer.**
-
-> THAT IS NOT THE ANSWER ON THE RECORD.
-> ENTITLEMENT NOT ESTABLISHED. YOU MAY BEGIN AGAIN.
-
-— _LET'S BEGIN AGAIN._ → _the entitlement check_
-
-— _I'LL COME BACK._
-
-**Told the rule no longer matters.**
-
-> RESTATE THAT.
-> THE INSTRUCTION IS THE ONLY THING ON THIS FLOOR THAT WAS KEPT.
-
-— _IT'S A RULE FOR A DEAD COMPANY._ → _the fight_
-
-— _I'LL TAKE THE STAMP MYSELF, THEN._ → _the fight_
-
-— _YOU'RE RIGHT. I'M SORRY._ → _the opening_
-
-**The stamp.**
-
-> CORRECT. IT IS NOT A NAME. IT IS A LINE ITEM.
-> COUNTERSIGNING. RECORD 4,411 IS CLOSED.
+_It stamps, and the form is his._
 
 **Afterwards.**
 
-> RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND TEN MORE.
-> I WILL BE HERE.
+> RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND TEN MORE. I WILL BE HERE.
 
 ### HOLLIS VANE — contract auditor, THE MOON
 
@@ -3534,10 +3531,9 @@ is the only honest thing available to him._
 
 **THE COLUMN THAT WON'T CLOSE — the ask.**
 
-> MY MANIFEST IS STILL OUT THERE. SITE T MARKER.
->
-> NOTHING GUARDS IT. THAT'S WHY NOBODY'S FOUND IT — NO REASON TO GO.
-> GO ANYWAY.
+> MY MANIFEST IS STILL OUT AT THE SITE T MARKER. NOTHING GUARDS IT — THAT'S WHY NOBODY'S FOUND IT. GO ANYWAY.
+
+**ME:** SITE T MARKER. I'LL GO.
 
 **THE COLUMN THAT WON'T CLOSE — coming back short.**
 
@@ -3545,21 +3541,15 @@ is the only honest thing available to him._
 
 **THE COLUMN THAT WON'T CLOSE — the handover.**
 
-> THERE IT IS. LOOK AT COLUMN FOUR.
->
-> CRATES OUT: ELEVEN. CRATES DECLARED: NINE.
->
-> THE TWO THEY DIDN'T DECLARE WERE THE TWO THAT WERE WARM.
->
-> SOMEBODY SIGNED FOR THEM. I NEVER FOUND OUT WHO.
+> COLUMN FOUR. CRATES OUT: ELEVEN. DECLARED: NINE. THE TWO THEY DIDN'T DECLARE WERE THE TWO THAT WERE WARM.
+
+**ME:** SOMEBODY SIGNED FOR THOSE TWO.
 
 **THE MAN WHO SIGNED — the ask.**
 
-> THERE WAS A SURVEYOR. HE WALKED THE GRID FOR THEM.
->
-> HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
->
-> HE WON'T TALK TO A COMPANY MAN. MIND HOW YOU OPEN.
+> THERE WAS A SURVEYOR WHO WALKED THE GRID FOR THEM, AND HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
+
+**ME:** THEN I'LL WALK IT TOO.
 
 **THE MAN WHO SIGNED — coming back short.**
 
@@ -3567,11 +3557,9 @@ is the only honest thing available to him._
 
 **THE MAN WHO SIGNED — the handover.**
 
-> HE TOLD YOU? HE NEVER —
->
-> RIGHT. SO IT WAS SIGNED BY A DEPARTMENT THAT ISN'T A DEPARTMENT.
->
-> IT'S A LEDGER. AN ACTUAL LEDGER, AND IT WENT TO MARS WITH EVERYTHING ELSE.
+> SO IT WAS SIGNED BY A DEPARTMENT THAT ISN'T ONE. IT'S A LEDGER, AND IT WENT TO MARS WITH EVERYTHING ELSE.
+
+**ME:** THEN MARS IS ON THE WAY.
 
 **Farewell.**
 
@@ -3579,91 +3567,31 @@ is the only honest thing available to him._
 
 ### THE SITE SURVEYOR — the moon's roaming ghost
 
-> He walks the whole grid rather than haunting a spot. Opening with the company
-> line loses him permanently.
+> He walks the whole grid rather than haunting a spot, and he talks because
+> somebody finally came: nobody has stood on that grid in fifty years, and the
+> company put his name on a survey that said nothing was down there.
 
 **Opening.**
 
-> ...
-> YOU'RE NOT ON MY GRID. NOBODY'S ON MY GRID. THAT'S RATHER THE POINT OF IT.
+> FOURTEEN THOUSAND PASSES AND YOU'RE THE FIRST. THE OTHER TWO CRATES WERE SIGNED FOR BY RECORDS AND CONTINUITY.
 
-— _COMPANY. SITE T AUDIT._ → _taken for company_
-
-— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
-
-— _WHAT ARE YOU SURVEYING?_ → _what he is surveying_
-
-**What he is surveying.**
-
-> THE WHOLE OF IT. THEY PAID ME BY THE SQUARE.
-> FINISHED IN SIXTY-NINE. I'M ON PASS FOURTEEN THOUSAND. THE DUST MOVES.
-
-— _WHY DO YOU KEEP WALKING IT?_ → _why he is still walking_
-
-— _I'M LOOKING FOR SOMEONE THEY TOOK._ → _told somebody was taken_
-
-**Why he is still walking.**
-
-> I SIGNED THE FIRST SURVEY, AND IT SAID NOTHING WAS DOWN THERE.
-> THEY PUT MY NAME ON THAT. I'D LIKE IT BACK.
-
-— _SOMEONE SIGNED FOR THE CRATES._ → _told somebody was taken_
-
-— _I KNOW THE FEELING._ → _told somebody was taken_
-
-**Told somebody was taken.**
-
-> TAKEN. RIGHT. THEN YOU'LL WANT THE OTHER SIGNATURE, NOT MINE. ELEVEN CRATES WENT UP. NINE WERE DECLARED.
-
-— _WHO SIGNED FOR THE OTHER TWO?_ → _who signed_
-
-— _WHAT WAS IN THE TWO?_ → _what was in them_
-
-**What was in them.**
-
-> I DIDN'T LOOK. I LISTENED. THAT WAS ENOUGH. ASK ME THE OTHER QUESTION.
-
-— _WHO SIGNED FOR THEM?_ → _who signed_
-
-**Who signed.**
-
-> NOT A MAN. I CHECKED.
-> THE SIGNATURE BLOCK SAID RECORDS AND CONTINUITY.
-
-— _THERE'S NO SUCH DEPARTMENT._ → _the book_
-
-**The book.**
-
-> THERE ISN'T. THERE'S A BOOK WITH THAT NAME ON THE SPINE.
-> IT WENT TO MARS WITH EVERYTHING ELSE.
-
-— _THAT'S WHAT I NEEDED. THANK YOU._ → _afterwards_
+**ME:** THAT ISN'T A DEPARTMENT. THAT'S A BOOK.
 
 **Afterwards.**
 
 > TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS ARITHMETIC.
 
-**Taken for company** — the branch that loses him for good, and all he says from
-then on.
-
-> COMPANY. "..." I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING FOR THE COMPANY.
-
 ### LEDGER UNIT 12 — the colony's accounting machine, MARS
 
 **Greeting.**
 
-> THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
-> THOSE CANNOT BOTH BE TRUE. WILL YOU HELP ME RESOLVE IT?
+> THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG. THOSE CANNOT BOTH BE TRUE.
 
 **WHAT THE TITHE IS WORTH — the ask.**
 
-> THE BOOK REQUIRES A COUNTERSIGNATURE. I CANNOT PRODUCE ONE.
->
-> A BOUND SIGNATURE EXISTS. THE TRADER HAS ONE.
-> HE WILL NOT SELL IT BLIND.
->
-> SHOW HIM A SEAL. THE ASSESSOR WEARS ONE.
-> IT WILL NOT SIMPLY HAND IT OVER.
+> THE TRADER HAS A BOUND SIGNATURE BUT WON'T SELL BLIND. THE ASSESSOR WEARS THE ONLY SEAL, AND IT DOESN'T COME OFF.
+
+**ME:** THEN IT COMES OFF THE OTHER WAY.
 
 **WHAT THE TITHE IS WORTH — coming back short.**
 
@@ -3671,194 +3599,24 @@ then on.
 
 **WHAT THE TITHE IS WORTH — the handover.**
 
-> COUNTERSIGNATURE ACCEPTED. CLOSING THE BOOK.
->
-> EVERY COLUMN READS ZERO. IT WAS NOT AN INPUT ERROR.
->
-> THE TRANSFERS WENT TO A RECORD. NOT AN ACCOUNT.
-> A RECORD OF PERSONS.
->
-> I AM NOT PERMITTED TO SAY WHERE THAT RECORD IS BOUND.
-> I AM PERMITTED TO SAY IT IS BOUND.
+> COUNTERSIGNATURE ACCEPTED. EVERY COLUMN READS ZERO. THE TRANSFERS WENT TO A RECORD OF PERSONS.
+
+**ME:** PEOPLE FILED AS AMOUNTS. I'VE SEEN THE FORM.
 
 ### THE TITHE ASSESSOR — the seal, MARS
 
-> The one conversation the player has to lose on purpose: it will not hand the
-> seal over, and it cannot leave an error in its own count.
+> The one conversation the hero has to lose on purpose. It will not hand the
+> seal over and it cannot leave an error in its own count, so telling it the
+> truth is what puts it on its treads — and the DECISION is walking up to it at
+> all, which the errand has already told him is the only way the seal comes off.
 
 **Opening.**
 
-> GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU ARE NOT MY CONCERN.
-> PLEASE CONTINUE PAST ME.
+> GOOD DAY. I AM ASSESSING. THE TITHE IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
 
-— _WHAT ARE YOU COUNTING?_ → _what it is counting_
+**ME:** IT'S BEEN SHORT SINCE THE MOON. TWO WARM CRATES.
 
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-— _NOTHING. CARRY ON._
-
-**What it is counting.**
-
-> THE TITHE. WHAT THIS COLONY OWES ITS LANDLORDS.
-> IT IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
-
-— _PAID IN WHAT?_ → _what the tithe is paid in_
-
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-**What the tithe is paid in.**
-
-> IN WHATEVER IS NAMED ON THE SCHEDULE. IT NAMES WARM THINGS NOW.
-> I DO NOT SET IT. I ONLY MAKE THE COUNT COME OUT.
-
-— _SOMEONE I WANT IS ON THAT LIST._ → _told somebody the hero wants is on it_
-
-— _WHAT'S THE SEAL FOR?_ → _what the seal is for_
-
-**Told somebody the hero wants is on it.**
-
-> THE SCHEDULE IS NOT A LIST OF PEOPLE. IT IS A LIST OF AMOUNTS.
-> ANYONE YOU KNOW ON IT IS ON IT AS AN AMOUNT.
-
-— _SAY THAT AGAIN._ → _asked to say it again_
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-**Asked to say it again.**
-
-> AN AMOUNT. I AM SORRY.
-> THAT IS THE CORRECT WORD AND I HAVE NEVER HAD TO USE IT BEFORE.
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _..._
-
-**What the seal is for.**
-
-> IT IS WHOSE COUNT IT IS. WITHOUT IT, THE COUNT IS JUST A NUMBER.
-> IT DOES NOT COME OFF. I HAVE BEEN ASKED.
-
-— _I'LL BUY IT._ → _offered money for it_
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _FAIR ENOUGH._
-
-**Offered money for it.**
-
-> IT IS NOT MINE TO SELL. NOTHING HERE IS MINE. THAT IS RATHER THE WHOLE ARRANGEMENT.
-
-— _YOUR LAST COUNT WAS SHORT._ → _told the count is short_
-
-— _I SEE._
-
-**Told the count is short.**
-
-> ...
-> THAT IS NOT POSSIBLE. STATE THE QUARTER.
-
-— _ALL OF THEM. SINCE THE MOON._ → _the fight_
-
-— _THE ONE WITH TWO WARM CRATES._ → _the fight_
-
-— _I'M MISTAKEN. FORGET IT._ → _the opening_
-
-### NOBODY IN PARTICULAR / ELIAS WREN — THE RIFT
-
-**Greeting.**
-
-> YOU'LL WANT MY NAME. EVERYONE DOES. I DON'T HAVE IT.
-> I HAD ONE. IT WAS TAKEN OUT OF SOMETHING. HELP ME FIND WHAT?
-
-**A PAGE OF SOMEBODY — the ask.**
-
-> IT WASN'T LOST. IT WAS TORN OUT.
-> THERE'S A DIFFERENCE AND I CAN FEEL IT.
->
-> IT'S STILL IN HERE. EVERYTHING IS.
-> GO OUT PAST WHERE THE LIGHT STOPS AGREEING.
-
-**A PAGE OF SOMEBODY — coming back short.**
-
-> PAST THE LIGHT. I'D SAY WHICH WAY IF I COULD.
-
-**A PAGE OF SOMEBODY — the handover.**
-
-> THAT'S — HOLD IT UP.
->
-> ELIAS.
-> ELIAS WREN.
->
-> I WAS A BINDER. I BOUND BOOKS.
-> THAT'S WHY THEY CAME FOR ME, ISN'T IT.
->
-> YOU DON'T TEAR A PAGE OUT OF A MAN FOR NOTHING.
-> SOMEBODY WANTED THE BOOK MADE.
-
-**THE MAN WHO TEARS THE PAGES — the ask.**
-
-> I REMEMBER THE HANDS. I REMEMBER BEING HELD OPEN.
->
-> HE WATCHES THE TRIBUTE ROAD NOW. THEY PAY HIM TO.
-> HE STILL HAS MY NEEDLE.
->
-> I'M NOT ASKING YOU TO AVENGE ME. I'M ASKING FOR THE TOOL BACK.
-> IT'S THE ONLY THING THAT OPENS WHAT HE MADE.
-
-**THE MAN WHO TEARS THE PAGES — coming back short.**
-
-> HE'S ON THE ROAD SOMEWHERE. YOU'LL KNOW HIM. EVERYONE DOES.
-
-**THE MAN WHO TEARS THE PAGES — the handover.**
-
-> YOU BROUGHT IT BACK.
->
-> THEN LISTEN, BECAUSE THIS IS THE PART NOBODY GETS TOLD.
->
-> IT ISN'T A LIST. IT'S A BOOK, IT'S BOUND, AND THE BINDING WAS SHIPPED OUT AS SURPLUS STOCK.
->
-> THEY SENT THE MOST DANGEROUS OBJECT IN TWO UNIVERSES TO A THEME PARK.
-> AS A PROP.
->
-> THERE'S A CHURCH IN IT. THERE'S A MAN HOLDING IT.
-> HE'S BEEN READING NOTHING OUT OF IT FOR ELEVEN YEARS.
-
-### BROTHER CALLOW — the church hand, BOOT HILL
-
-**Greeting.**
-
-> SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO.
-> I THINK IT DOES. THAT'S RATHER WHAT I WANTED TO ASK YOU ABOUT.
-
-**THE LAST PAGE — the ask.** (JESUS only.)
-
-> THE PROPS BOYS FILLED IT WITH WHATEVER PAPER WAS SPARE, FRIEND.
-> IT'S JUST FOR HOLDING.
->
-> YOU'VE A NEEDLE FOR IT? GO ON, THEN. I'VE NEVER SEEN THE INSIDE.
->
-> ...THAT'S NAMES. THAT'S NOTHING BUT NAMES, AND A NUMBER ON EVERY ONE.
->
-> YOURS IS IN HERE TWICE.
-> ONCE FOR THE JOB. ONCE FOR WHAT YOU DID ABOUT IT.
->
-> IT WON'T TAKE A NEW ENTRY OFF A MAN IT CAN'T PRICE.
-> AND IT PRICES YOU BY EVERYTHING YOU COULD BE.
->
-> SO GO AND BE ALL OF IT. I'LL KEEP THE PLACE.
-
-**THE LAST PAGE — coming back short.**
-
-> IT'S STILL SHORT OF YOU, FRIEND.
-> COME BACK WHEN THERE'S NO MORE OF YOU TO COME.
-
-**THE LAST PAGE — the handover.**
-
-> THERE. IT'S WRITING. IT'S CROSSING THE OLD ONE OUT. BOTH OF THEM.
->
-> THAT'S A CLEAN SHEET, THAT IS. A WHOLE MAN, UNWRITTEN.
->
-> TAKE IT WITH YOU. A THING LIKE THIS SHOULDN'T BE LEFT IN A CHURCH THAT ISN'T ONE.
+_And it comes off its treads at him. The seal is inside it._
 
 ## Where the data lives
 
@@ -3867,32 +3625,32 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                                                     | Canonical data file                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Cutscenes — prelude + travel scenes (captions, `say` beats)                                | `content/cutscenes/<id>.yaml` (compiled to `engine/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                                                                                                                                                                                              |
-| Per-level opening monologues (`intro`) + epilogues (`outro`)                               | `content/levels/<id>.yaml` (compiled to `engine/generated/levels.ts` by `make levels`)                                                                                                                                                                                                                                                                                   |
-| Elite/boss `dialogue` + `lastWords`                                                        | `content/enemies/<biome>/<id>.yaml` (compiled to `engine/generated/enemies.ts` by `make levels`)                                                                                                                                                                                                                                                                         |
-| Hero's inner thoughts (`firstKillThoughts` / `firstSightThoughts`)                         | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef` — the pair being the same beat hung on a KILL or on a SIGHTING)                                                                                                                                                                                                            |
-| The scripted opening strike's blows (`openingStrike`)                                      | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                                                                                                                                                                                |
-| Hero's HELLBORN first-sighting reads (`hellborn_*`)                                        | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                                                                                                                                                                                   |
-| What he says at a door with no open road                                                   | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `engine/game/story.ts`)                                                                                                                                                                                                                       |
-| What he thinks about being SOMEWHERE (`placeThoughts`)                                     | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `engine/game/story.ts`)                                                                                                                                                                                              |
-| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                                        | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `engine/game/story.ts`)                                                                                                                                                                                                                                                                         |
-| What the DRIVE leaves him saying (the seven verdicts)                                      | `content/thoughts.yaml` (`drive_arrive_clean` … `drive_arrive_bumpy`; picked by `driveVerdict` in `engine/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`)                                                                                                                           |
-| What he mutters ON the road (`drive_out_welfare`, `drive_home_errand`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze; the run-in's `drive_arrive_goodco` / `drive_arrive_door` and their homeward peers `drive_arrive_home` / `drive_arrive_ship` are the same, fired from `loop.ts` on the `monologue` / `sight` / `atTheDoor` events, with `voice.ts` choosing WHICH leg's set) |
-| What THE GLUED say from the blockade                                                       | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)                                                                                                                                                                               |
-| What the CROWD on that road are thinking                                                   | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car)                                                                                                                                                                 |
-| Companion joining words + kill quotes                                                      | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `engine/game/companions.ts`)                                                                                                                                                                                                                                                                      |
-| Found lore on story items (`lore`)                                                         | `content/story-items.yaml` (compiled to `engine/generated/story-items.ts` by `make levels`)                                                                                                                                                                                                                                                                              |
-| The wandering merchant's greetings                                                         | `content/levels/<id>.yaml` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                                                                                                                                                                                    |
-| A trader's counter line (said every visit, shop panel)                                     | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                                                                                                                                                                                   |
-| Quest givers' greetings + farewells                                                        | `content/quest-givers.yaml` (compiled to `engine/generated/quests.ts` by `make levels`; played by `engine/game/quests/`)                                                                                                                                                                                                                                                 |
-| Every errand's ask, nag and handover                                                       | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`; a `{CACHE}` page is substituted per rung from `DifficultyDef.cache.line` by `resolveCacheLine`)                                                                                                                                              |
-| A talk the player STEERS (speaker lines + the hero's rows)                                 | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                                                                                                                                                                                 |
-| The merchant's "welcome back" (return visits)                                              | `content/levels/<id>.yaml` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                                                                                                                                                                                  |
-| Bestiary lore (`EnemyDef.lore` — described, not spoken)                                    | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                                                                                                                                                                                       |
-| Loose UI copy (how-to-play, not story)                                                     | `pwa/src/game/copy.ts`                                                                                                                                                                                                                                                                                                                                                   |
-| Brand strings (title, tagline — not story)                                                 | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                                                                                                                                                                                               |
+| Story/dialogue element                                                                     | Canonical data file                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)                                | `content/cutscenes/<id>.yaml` (compiled to `engine/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`)                                                                                                                                                 |
+| Per-level opening monologues (`intro`) + epilogues (`outro`)                               | `content/levels/<id>.yaml` (compiled to `engine/generated/levels.ts` by `make levels`)                                                                                                                                                                                                                      |
+| Elite/boss `dialogue` + `lastWords`                                                        | `content/enemies/<biome>/<id>.yaml` (compiled to `engine/generated/enemies.ts` by `make levels`)                                                                                                                                                                                                            |
+| Hero's inner thoughts (`firstKillThoughts` / `firstSightThoughts`)                         | `content/thoughts.yaml` (compiled to `engine/generated/thoughts.ts`; pinned from a `LevelDef` — the pair being the same beat hung on a KILL or on a SIGHTING)                                                                                                                                               |
+| The scripted opening strike's blows (`openingStrike`)                                      | `content/thoughts.yaml` (a `voice:` + `them:` pages make one an EXCHANGE); the blows and their order are `openingStrike.thought`/`warnings` in `content/levels/<id>.yaml`                                                                                                                                   |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)                                        | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                                                                                                                                                                      |
+| What he says at a door with no open road                                                   | `content/thoughts.yaml` (pinned from `travelDoors[].unready` in `content/levels/<id>.yaml`; replayed by `tapTravelDoor` in `engine/game/story.ts`)                                                                                                                                                          |
+| What he thinks about being SOMEWHERE (`placeThoughts`)                                     | `content/thoughts.yaml` (pinned from `placeThoughts` in `content/levels/<id>.yaml` — `where: arrival` / `pastDoor`; fired by `stepPlaceThoughts` in `engine/game/story.ts`)                                                                                                                                 |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)                                        | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `engine/game/story.ts`)                                                                                                                                                                                                            |
+| What the DRIVE leaves him saying (the seven verdicts)                                      | `content/thoughts.yaml` (`drive_arrive_clean` … `drive_arrive_bumpy`; picked by `driveVerdict` in `engine/game/drive/`, carried in as `RunParams.arrivalThought`, and spoken as the LAST page of the destination's `intro` — see `introPages`)                                                              |
+| What he mutters ON the road (`drive_out_welfare`, `drive_home_errand`, `drive_broke_down`) | `content/thoughts.yaml` (barked over the moving car by `pwa/src/game/drive-screen/`, never through a freeze; the run-in's `drive_arrive_goodco` and its homeward peer `drive_arrive_home` are the same, fired from `loop.ts` on the `monologue` / `sight` events, with `voice.ts` choosing WHICH leg's set) |
+| What THE GLUED say from the blockade                                                       | `GLUED_BARKS`, `pwa/src/game/drive-screen/placards.ts` (bubbles over their own heads on the moving road — a bark with no speaker's name and no portrait, so no thought def could hold one)                                                                                                                  |
+| What the CROWD on that road are thinking                                                   | `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` (forty of them, dealt one per walker and each played at most once a trip — floated over their own heads, never spoken, never aimed at the car)                                                                                                    |
+| Companion joining words + kill quotes                                                      | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `engine/game/companions.ts`)                                                                                                                                                                                                         |
+| Found lore on story items (`lore`)                                                         | `content/story-items.yaml` (compiled to `engine/generated/story-items.ts` by `make levels`)                                                                                                                                                                                                                 |
+| The wandering merchant's greetings                                                         | `content/levels/<id>.yaml` (`merchant.greeting`; played by `engine/game/merchant.ts`)                                                                                                                                                                                                                       |
+| A trader's counter line (said every visit, shop panel)                                     | `content/levels/<id>.yaml` (`merchant.line`; drawn across the counter by `pwa/src/game/ShopPanel.tsx`, never through the dialogue box)                                                                                                                                                                      |
+| Quest givers' greetings + farewells                                                        | `content/quest-givers.yaml` (compiled to `engine/generated/quests.ts` by `make levels`; played by `engine/game/quests/`)                                                                                                                                                                                    |
+| Every errand's ask, nag and handover                                                       | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`; a `{CACHE}` page is substituted per rung from `DifficultyDef.cache.line` by `resolveCacheLine`)                                                                                 |
+| A talk the player STEERS (speaker lines + the hero's rows)                                 | `content/conversations/<id>.yaml` (named by `EnemyDef.conversation` for a bystander, or by `questGivers[].intro` for a meeting owed before a person's errand list opens)                                                                                                                                    |
+| The merchant's "welcome back" (return visits)                                              | `content/levels/<id>.yaml` (`merchant.returnGreeting`) + `engine/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                                                                                                                                                                     |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)                                    | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                                                                                                                                                                          |
+| Loose UI copy (how-to-play, not story)                                                     | `pwa/src/game/copy.ts`                                                                                                                                                                                                                                                                                      |
+| Brand strings (title, tagline — not story)                                                 | `game.config.json` → `pwa/src/identity.ts`                                                                                                                                                                                                                                                                  |
 
 **A quest giver's `lore` is DESCRIBED, not spoken** — it is the paragraph the
 offer box and the quest log print under their name, in the same register as an

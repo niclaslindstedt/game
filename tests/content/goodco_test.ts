@@ -136,8 +136,14 @@ describe("GOODCO HQ level def", () => {
     // a door stands IN the wall by definition, and holding one to the scatter's
     // clearance would be asking it not to touch the doorway it fills.
     const doorParts = new Set(state.doors.flatMap((d) => d.obstacleIds));
+    // …AND SO IS THE GATEHOUSE, for exactly the same reason. The kiosk is stood
+    // up against the entrance on purpose (`ArrivalsSpec.gatehouse`) — it is the
+    // box somebody sits in to decide who comes through that gate — so holding it
+    // to the SCATTER's clearance would be asking a guard box not to be beside
+    // the thing it guards.
+    const kiosk = runLevelDef(state).arrivals?.gatehouse?.sprite;
     const scattered = state.obstacles.filter(
-      (o) => o.kind !== "wall" && !doorParts.has(o.id),
+      (o) => o.kind !== "wall" && o.kind !== kiosk && !doorParts.has(o.id),
     );
     expect(scattered.length).toBeGreaterThan(0);
     // BUCKETED, not every-against-every: a carved floor carries a couple of

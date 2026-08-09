@@ -48,6 +48,7 @@ import {
   recruitCompanion,
   talentCrippling,
   talentDef,
+  questPageLines,
 } from "@game/core";
 import {
   mobContactScaleFor,
@@ -1478,8 +1479,8 @@ describe("library pages", () => {
     // not out of the document: the whole point of publishing them is that they
     // are indexed.
     const def = QUEST_DEFS.hq_night_log!;
-    expect(fetchQuest).toContain(def.offer[0]![0]!);
-    expect(fetchQuest).toContain(def.complete[0]![0]!);
+    expect(fetchQuest).toContain(questPageLines(def.offer[0]!)[0]!);
+    expect(fetchQuest).toContain(questPageLines(def.complete[0]!)[0]!);
     expect(fetchQuest).toContain(def.incomplete![0]!);
     expect(fetchQuest).toContain('class="reveal-body"');
     expect(fetchQuest).not.toContain("display:none");
@@ -1496,7 +1497,7 @@ describe("library pages", () => {
       /<meta name="description" content="([^"]+)"/,
     )?.[1];
     expect(description).toBeTruthy();
-    expect(description).not.toContain(def.offer[0]![0]!);
+    expect(description).not.toContain(questPageLines(def.offer[0]!)[0]!);
   });
 
   it("prints what an errand and its giver ARE, in the open", () => {

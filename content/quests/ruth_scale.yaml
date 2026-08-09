@@ -13,22 +13,16 @@ lore: >
   it is the gods who should worry. What she gives back is the family's own
   furniture, a piece deeper into her mother's house each difficulty.
 offer:
-  - - WHERE SHE'S GONE NOW, THE THINGS THAT KEEP HER ARE SCALED. GODS, YOU SAID.
-  - - MY GIRL WILL BE PRYING AT THEM. SHE PRIES. SHE ALWAYS HAS.
-  - - BRING ME A SCALE OFF ONE. I WANT TO HOLD WHAT SHE'S UP AGAINST.
+  - - "THE THINGS THAT KEEP HER NOW ARE SCALED. BRING ME A SCALE OFF ONE — I WANT TO HOLD WHAT SHE'S UP AGAINST."
+  - hero:
+      - "SHE'LL HAVE PRIED ONE OFF ALREADY."
 incomplete:
-  - A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT.
+  - "A SCALE. OFF SOMETHING THAT CALLS ITSELF A GOD. I'LL WAIT."
 complete:
-  - - IT'S HARD AS A HULL. AND SHE PRIES THESE OFF BAREHANDED.
-  - - I WAS NEVER SCARED FOR HER. NOW I'M NEARLY SORRY FOR THEM.
-  # {CACHE} — the RUNG's own line about what she brought and where it came from
-  # (`DifficultyDef.cache.line`, engine/game/cache.ts). Ruth hands the chest over
-  # on every difficulty and it is a grander thing each time, so the provenance
-  # ramps with it: a flea-market box, her mother's, a crossing, a dowry, a king.
-  # The errand is one file and the ladder is five; the rung owns the sentence.
-  - - "{CACHE}"
-  - - I'LL KEEP GOING THROUGH HER HOUSE. THERE'S BIGGER BACK THERE.
-  - - GO AND MEET HER HALFWAY.
+  - - "HARD AS A HULL, AND SHE PRIES THESE OFF BAREHANDED. I WAS NEVER SCARED FOR HER."
+    - "{CACHE}"
+  - hero:
+      - "THEN I'LL GO AND MEET HER HALFWAY."
 objectives:
   - kind: collect
     item: pried_scale

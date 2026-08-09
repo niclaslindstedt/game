@@ -23,6 +23,7 @@ import {
   giversForLevel,
   questsForLevel,
   type QuestDef,
+  questPageLines,
 } from "@game/core";
 
 const QUESTS = Object.values(QUEST_DEFS);
@@ -299,9 +300,11 @@ describe("a quest's story", () => {
       }
     };
     for (const quest of QUESTS) {
-      quest.offer.forEach((page, i) => check(page, `${quest.id} offer[${i}]`));
+      quest.offer.forEach((page, i) =>
+        check(questPageLines(page), `${quest.id} offer[${i}]`),
+      );
       quest.complete.forEach((page, i) =>
-        check(page, `${quest.id} complete[${i}]`),
+        check(questPageLines(page), `${quest.id} complete[${i}]`),
       );
       if (quest.incomplete) check(quest.incomplete, `${quest.id} incomplete`);
     }

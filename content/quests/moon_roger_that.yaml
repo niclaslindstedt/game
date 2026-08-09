@@ -10,13 +10,15 @@ lore: >
   time either, and the operator counts an open channel as a result on its
   own.
 offer:
-  - - RELAY POWER IS DOWN TO ONE CELL AND THE CHANNEL GOES WITH IT.
-  - - THE THINGS OUT THERE CARRY CELLS. THREE, AND I CAN CALL ONE MORE TIME.
+  - - "RELAY POWER IS DOWN TO ONE CELL AND THE CHANNEL GOES WITH IT. THE THINGS OUT THERE CARRY CELLS. THREE."
+  - hero:
+      - "THREE CELLS. YOU'LL GET YOUR CALL."
 incomplete:
-  - STILL ON ONE CELL. THREE WAS THE NUMBER.
+  - "STILL ON ONE CELL. THREE WAS THE NUMBER."
 complete:
-  - - POWER'S UP. STATION, RELAY, DO YOU COPY, OVER.
-  - - ... NO. BUT THE CHANNEL'S OPEN. THAT'S NOT NOTHING.
+  - - "POWER'S UP. STATION, RELAY, DO YOU COPY, OVER. ...NO. BUT THE CHANNEL'S OPEN. THAT'S NOT NOTHING."
+  - hero:
+      - "KEEP CALLING."
 objectives:
   - kind: collect
     item: relay_cell

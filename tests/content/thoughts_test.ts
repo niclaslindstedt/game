@@ -29,6 +29,7 @@ import {
   makeEnemy,
   openSpotNear,
   startGame,
+  walkInside,
 } from "../helpers.ts";
 
 /** Park a one-hit-from-death mob of `defId` at arm's length: inside the
@@ -119,6 +120,10 @@ describe("first-kill thoughts", () => {
   it("opens the hero's read on the night shift when the first HQ INTERN comes into view", () => {
     const state = startGame(undefined, "goodco_hq");
     clearStage(state);
+    // INSIDE FIRST. The beat is about the floor — every desk manned, every lab
+    // lit — so it is held until the hero is past the gate, and staging it on the
+    // car park would be staging it where it is deliberately silent.
+    walkInside(state);
     // A live intern parked beyond the (wide, drop-in) sight radius: no reaction
     // yet. The beat uses a full-view radius so it fires the instant the packed
     // opening ring is on screen, so "beyond" here is well past that — and the
@@ -151,6 +156,7 @@ describe("first-kill thoughts", () => {
   it("fires the sight beat once — later interns in view stay silent", () => {
     const state = startGame(undefined, "goodco_hq");
     clearStage(state);
+    walkInside(state);
     const staffer = makeEnemy(
       { pos: { x: state.players[0].pos.x + 60, y: state.players[0].pos.y } },
       "intern",
