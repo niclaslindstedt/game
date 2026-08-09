@@ -468,11 +468,11 @@ the welfare. He is a man with nothing being smug at people with less, and the
 next thing that happens is the town._
 
 _AND BOTH ARE SHORT, WHICH IS A CONSTRAINT RATHER THAN A STYLE. The outskirts
-are about five seconds of held road and the wheel is not even his for the first
-four of them, so the first page is the whole of what he gets to say before the
-houses arrive and the second lands over the opening stretch of the town. Long
-enough to overrun the box and he says it to a crowd, which is the one audience
-that would turn it from smugness into a confession._
+are about eight seconds of held road and the wheel is not even his for the first
+seven of them, so the first page is well clear of the houses and the second
+starts a beat before them and finishes over the opening stretch of the town.
+Long enough to overrun the box and he says the whole of it to a crowd, which is
+the one audience that would turn it from smugness into a confession._
 
 1. I NEED TO HURRY TO GOODCO AND GET THE PART.
 2. THEY BEG HARD IN TOWN. NOT ONE OF THEM IS ON THE WELFARE LIKE ME.

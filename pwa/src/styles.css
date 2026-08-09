@@ -639,6 +639,15 @@ html.app-locked body {
      and every glyph, so the whole dashboard stays readable over a pale road, a
      lit shopfront or a set of oncoming headlights. */
   filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.85));
+  /* WHERE IT IS PARKED BEFORE IT ARRIVES — far enough left that not one pixel
+     of the far dial is still in frame on the first step of the slide.
+
+     A VARIABLE RATHER THAN A LITERAL IN THE KEYFRAME, because how far "off the
+     left edge" is depends on where the shelf comes to REST, and portrait rests
+     it somewhere else (see the orientation block at the bottom of this file).
+     Its own width plus a hair is exactly right from a shelf anchored 0.75rem
+     in; from one centred on the frame it leaves half the dashboard showing. */
+  --drive-dash-hide: calc(-100% - 1rem);
   /* …AND IT ARRIVES. The dashboard is not on screen for the opening at all
      (`drive.dashLive` gates the whole region), so this plays exactly once, off
      the mount, as the town comes over the horizon — the instruments slide in
@@ -651,11 +660,16 @@ html.app-locked body {
   animation: drive-dash-in var(--drive-dash-slide) steps(8, end) both;
 }
 
+/* THE SLIDE OWNS `transform` OUTRIGHT, and nothing else on this element may
+   touch it. An animation's filled value beats a normal declaration in the
+   cascade, so a layout rule that centred the shelf with `translateX(-50%)` was
+   simply erased the instant the 400 ms finished — which is the portrait bug
+   this pairing exists to make impossible: the dials landed with their LEFT edge
+   on the middle of the screen and the damage dial off the side of the phone.
+   Any resting offset is a `margin`, and the travel is `--drive-dash-hide`. */
 @keyframes drive-dash-in {
   from {
-    /* Off the left edge and clear of it — the dash is anchored 0.75rem in, so
-       its own width alone would leave the far dial still showing. */
-    transform: translateX(calc(-100% - 1rem));
+    transform: translateX(var(--drive-dash-hide));
   }
   to {
     transform: none;
@@ -6669,10 +6683,23 @@ html.app-locked body {
      right-hand side any more — and a shelf still pinned left under a centred
      window reads as two pieces of chrome that were never meant for each other.
      Centred, the window, the gate between the dials and the car itself all
-     share one axis. */
+     share one axis.
+
+     CENTRED ON A MARGIN AND NOT ON A TRANSFORM, which is the half that was
+     broken: the mount's slide-in animates `transform` and fills its `to` state
+     forever after, and a filled animation value outranks a normal declaration —
+     so a `translateX(-50%)` here was wiped the frame the slide finished and the
+     shelf came to rest with its left edge on the middle of the screen, running
+     the damage dial off the side of the phone. The width is a variable, so
+     half of it is a margin, and `transform` is left to the animation alone. */
   .drive-dash {
     left: 50%;
-    transform: translateX(-50%);
+    margin-left: calc(var(--drive-dash-w) / -2);
+    /* …and the shelf is parked HALF A SCREEN FURTHER OUT to match. From the
+       middle of the frame, its own width no longer clears the left edge — half
+       the dashboard would be in shot on the slide's first step — so the travel
+       carries the distance to the edge as well. */
+    --drive-dash-hide: calc(-100% - 50vw - 1rem);
   }
 }
 

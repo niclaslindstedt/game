@@ -177,51 +177,56 @@ export const DRIVE = {
    * the minigame in one number: it is a DISTANCE, not a timer, so driving fast
    * genuinely ends it sooner and driving scared genuinely drags.
    *
-   * MEASURED with `make drive-bench`, and RE-TAKEN three times: on the wagon's
-   * real drivetrain (`drivetrain.ts`), once every LANE carried traffic
-   * (`laneTraffic`), and again when the gearbox was re-geared to read like a
-   * tachometer in a real car — a shift at three thousand three instead of at a
-   * 5800 redline, through taller ratios and a torquier engine. That last one
-   * was DESIGNED to move nothing: the rev axis was squeezed and the torque axis
-   * stretched by the same factor, so the force at the tyre at any road speed is
-   * what it always was, and every figure below came back within a second or two
-   * of where it stood. First the PESSIMAL case — a dead straight line on
+   * MEASURED with `make drive-bench`, and RE-TAKEN whenever anything under this
+   * file moves the road: on the wagon's real drivetrain (`drivetrain.ts`), once
+   * every LANE carried traffic (`laneTraffic`), when the gearbox was re-geared
+   * to read like a tachometer in a real car, and last on the eight-second
+   * approach (`opening.cityPx`) these figures now carry.
+   *
+   * READ THE COLUMNS THE WAY THE HARNESS FILLS THEM, because two of them are not
+   * over the same set of legs: BODIES and SHUNTS are means over EVERY seed, and
+   * TRIP and ENDING WEAR are means over the ones that ARRIVED — a rung that
+   * mostly breaks down reports the trip of the handful that did not, off a
+   * sample that small. First the PESSIMAL case — a dead straight line on
    * MEDIUM, never dodging once, 30 seeds a row:
    *
-   *   throttle   trip      bodies   ending wear   arrived
-   *   1.00       93 s      92       64%           30/30
-   *   0.80       98 s      95       53%           30/30
-   *   0.55      106 s     103       39%           30/30
+   *   throttle   trip     bodies   ending wear   arrived
+   *   1.00       65 s      57       98%           2/30
+   *   0.80       71 s      72       89%           7/30
+   *   0.55       82 s      87       72%          30/30
    *
    * And then the same road driven by something that STEERS — the shipped
    * auto-driver (`drive/driver.ts`), which is the bar a decent human clears;
    * 40 seeds a rung:
    *
    *   rung        trip    bodies   ending wear   arrived
-   *   easy        81 s    72        13%          40/40
-   *   medium      91 s    80        32%          40/40
-   *   hard        97 s    85        40%          40/40
-   *   nightmare  103 s    87        47%          40/40
-   *   jesus      109 s    91        51%          40/40
+   *   easy        90 s    81         7%          40/40
+   *   medium      90 s    82        18%          40/40
+   *   hard        89 s    80        29%          40/40
+   *   nightmare   90 s    85        46%          38/40
+   *   jesus       93 s    93        61%          40/40
    *
    * TWO THINGS TO READ OUT OF THAT. The first is the joke the course length
    * exists to land: the leg cannot be threaded at any pace, because the crowd
-   * is laid down thick enough that even a good driver arrives with seventy-odd
+   * is laid down thick enough that even a good driver arrives with eighty-odd
    * people on the count — which is why the arrival lines are read off the CAR
    * and the CLOCK rather than off the tally (`DRIVE.verdict`).
    *
-   * The second is the tension between the two tables, which had gone and is
-   * partly back. It vanished when the car got its real drivetrain: a collision
-   * at the eighty a wagon can actually reach in traffic costs well under half
-   * of one at 120 (absorbed energy goes as the SQUARE of the closing speed), so
-   * a straight line at full throttle stopped being punished at all — it arrived
-   * every time on half a car. Filling the lanes bought some of it back without
-   * touching a single damage number: there is simply more out there to hit, so
-   * the reckless line now ends the trip on two thirds of a car against the
-   * steering one's third, and on the top two rungs it no longer always arrives
-   * (27/30 on both NIGHTMARE and JESUS). MEDIUM still gets home every time.
-   * Whether it should is a DESIGN call about how punishing this interlude
-   * ought to be, and the knob for it is `DRIVE.impact.wearJoules` with the
+   * The second is the tension between the two tables, and it is fully back. It
+   * had vanished when the car got its real drivetrain: a collision at the eighty
+   * a wagon can actually reach in traffic costs well under half of one at 120
+   * (absorbed energy goes as the SQUARE of the closing speed), so a straight
+   * line at full throttle stopped being punished at all and arrived every time
+   * on half a car. Filling the lanes bought it back without touching a single
+   * damage number — there is simply more out there to hit — and the reckless
+   * line now does not get home: flat out it wrecks the wagon about three
+   * quarters of the way down the road, and even at four fifths of the pedal it
+   * arrives less than a quarter of the time. Backing off to just over half is
+   * what makes it survivable, and it costs the whole of the time it saved. The
+   * steering line, meanwhile, arrives on every rung but NIGHTMARE and gets home
+   * on two thirds of a car on the worst of them. Whether the straight line ought
+   * to be quite that unsurvivable is a DESIGN call about how punishing this
+   * interlude is, and the knob for it is `DRIVE.impact.wearJoules` with the
    * ladder's masses beside it — deliberately left open rather than guessed at.
    *
    * …AND IT GREW BY THE OUTSKIRTS. The number was 24 000 while the leg opened
@@ -229,9 +234,12 @@ export const DRIVE = {
    * the course carries it on top rather than taking it out of the town — the
    * stretch the player is actually scored on (`cityLength`) is within a few
    * hundred px of what it always was, and every figure in the table above still
-   * describes it.
+   * describes it. It moves with `opening.cityPx` and only with it: this is the
+   * finish line, `cityLength` is the difference between the two, and a change
+   * to the approach that did not land here would quietly re-scope the one
+   * stretch every number above was measured on.
    */
-  coursePx: 21100,
+  coursePx: 22000,
   /**
    * THE ATTRACT LOOP'S LEG (world px) — the same road with the finish brought
    * forward, for a demo that is showing somebody the whole game rather than
@@ -1826,9 +1834,12 @@ export const DRIVE = {
      *
      * IT WAS 90, WHICH IS THREE AND A HALF SECONDS, and that was fine on a
      * fourteen-second approach and impossible on a five-second one: the whole
-     * opening is `cityPx` of road at a held 300 px/s now, so an arrival that ate
-     * two thirds of it would leave the car settled for about a second before the
-     * town, and the hero's two lines nowhere to go.
+     * opening is `cityPx` of road at a held 300 px/s, so an arrival that ate two
+     * thirds of it would leave the car settled for about a second before the
+     * town, and the hero's two lines nowhere to go. The approach is eight
+     * seconds now and the arrival is the same two, which is the ratio this was
+     * cut to hit — it is the pace of a car being caught up with, and it should
+     * not slow down because the road behind it got longer.
      */
     closePx: 150,
     /** What the wagon is doing while it is still arriving (px/s). Held rather
@@ -1880,20 +1891,26 @@ export const DRIVE = {
      * Everything the minigame is begins here at once: the houses, the far
      * pavement, the crowd, the lane traffic, and the CLOCK.
      *
-     * FIVE SECONDS, AND THE NUMBER IS THE POINT. The approach is held at
+     * EIGHT SECONDS, AND THE NUMBER IS THE POINT. The approach is held at
      * `entrySpeedPx` from the first frame to the last — the pedal is not the
      * player's out here at all (see `handsOff`) — so this distance IS a duration:
-     * 1500 px at 300 px/s. It was 6400, which at the old capped cruise was the
+     * 2400 px at 300 px/s. It was 6400, which at the old capped cruise was the
      * better part of FIFTEEN seconds of a minute-long minigame spent watching a
      * car drive down an empty road, and the single most common thing to want to
-     * skip in the whole game.
+     * skip in the whole game. Cut to five it stopped being the thing anybody
+     * wanted to skip and started being too tight for what is actually on it: the
+     * wagon needs two seconds to slide into frame, the wheel comes back one
+     * second before the gate, and the two lines in between had a second and a
+     * half of road to fit six seconds of speech into. Eight gives the beats room
+     * without giving the empty road back its fifteen.
      *
-     * IT SHORTENS THE LEG AND NOT THE MINIGAME. `coursePx` came down by exactly
-     * what this did, so the TOWN — the stretch the clock runs over, the one the
-     * board ranks and the one every measured table on this file was taken
-     * against — is the same length it has always been.
+     * IT LENGTHENS THE LEG AND NOT THE MINIGAME. `coursePx` carries this on top
+     * rather than taking it out of the far end, so the TOWN — the stretch the
+     * clock runs over, the one the board ranks and the one every measured table
+     * on this file was taken against — is the same length it has always been.
+     * Move one and move the other.
      */
-    cityPx: 1500,
+    cityPx: 2400,
     /**
      * HOW MANY PEOPLE ARE OUT HERE ON WHEELS — riders per 1000 px of outskirt,
      * and the only traffic before the town.

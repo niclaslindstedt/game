@@ -43,7 +43,7 @@ const PARAMS: DriveParams = {
 function drive(patch: Partial<DriveParams> = {}): DriveState {
   const built = createDrive({ ...PARAMS, ...patch });
   // Opened at the town, for the reason every drive suite does it: the approach
-  // is five seconds of held road with no lane traffic on it at all, and none of
+  // is eight seconds of held road with no lane traffic on it at all, and none of
   // these tests is about the approach.
   skipDriveOpening(built);
   return built;
@@ -91,8 +91,17 @@ describe("the other drivers", () => {
     // A road where everybody moves at one pace has no overtaking on it, no
     // closing speeds worth reading, and nothing for a lane change to be FOR.
     // The claim is about the SPREAD, not about any rung of the temper table.
+    //
+    // TWELVE SEEDS AND NOT THREE, because a TENTH and a NINETIETH percentile
+    // asked of thirty samples is three vehicles at each end — a distribution
+    // claim resting on which six cars happened to be in frame. It read 2.4 on
+    // the three seeds it was written against and 1.95 on the three it got when
+    // an unrelated change to the road's length re-seeded the town, with the
+    // underlying spread unmoved (2.6 against 2.5 over twelve). A hundred-odd
+    // samples is enough for the percentiles to be about the temper table rather
+    // than about the draw.
     const paces: number[] = [];
-    for (const seed of [1, 2, 3]) {
+    for (let seed = 1; seed <= 12; seed++) {
       const state = drive({ seed });
       roll(state, 20000);
       for (const one of state.traffic) {
@@ -100,7 +109,7 @@ describe("the other drivers", () => {
         if (Math.abs(one.cruise) > 1) paces.push(Math.abs(one.cruise));
       }
     }
-    expect(paces.length).toBeGreaterThan(20);
+    expect(paces.length).toBeGreaterThan(100);
     paces.sort((a, b) => a - b);
     const low = paces[Math.floor(paces.length * 0.1)]!;
     const high = paces[Math.floor(paces.length * 0.9)]!;
