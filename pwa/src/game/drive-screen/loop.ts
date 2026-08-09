@@ -67,6 +67,7 @@ import {
 } from "./drive-sounds.ts";
 import { soakCarFromStrike } from "./car-soak.ts";
 import { stepSkids, type SkidState } from "./skid.ts";
+import { stepWreckSmoke } from "./wreck-smoke.ts";
 import {
   bodySprite,
   crushRemain,
@@ -218,6 +219,12 @@ export function drainDrive(
   // beside the blood for the same reason — on the drive's own fixed step, so a
   // stop lays one line however fast the frames are arriving.
   stepSkids(skids, drive, fx);
+  // …and what the WRECKS are still doing. Walked here beside the two above and
+  // for the third time the same reason: a cloud raised by a car grinding down
+  // the tarmac is laid by ground covered and time spent, so it belongs on the
+  // fixed step rather than on the frame — and, unlike everything in the event
+  // loop below, a wreck is a thing that goes ON happening. See `wreck-smoke.ts`.
+  stepWreckSmoke(fx, drive);
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
@@ -310,8 +317,16 @@ export function drainDrive(
     }
     // …AND ONE GIVING UP ENTIRELY. The breakdown noise, for the same reason:
     // the player knows it as the sound of an engine dying, and this is one.
+    //
+    // THE SMOKE IS NOT RAISED HERE and used to be, which put it on the WRONG
+    // CAR: `driveBreakdown`'s column is pinned to the hero's own wagon
+    // (`DriveFx.follow` — the one thing `drawDriveFx` is handed a live position
+    // for, and correct for the hero's own engine dying), so every car the
+    // player finished lit a plume over HIS bonnet and left the actual wreck
+    // sitting in the road perfectly clean. A stranger's dead engine is
+    // `stepWreckSmoke`'s, which issues it where the wreck is and goes on
+    // issuing it for as long as the thing is there to smoke.
     if (event.type === "trafficWrecked") {
-      driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
       driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       // THREE AT ONCE, because a car being finished is three things happening:
       // the structure going (the big bank), the mass of it (the sub), and the

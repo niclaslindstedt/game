@@ -1035,12 +1035,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   through the effect layer. Its presentation lives beside it — `drive-screen/drive-fx.ts` (sparks, grit,
   shards, the wreck's smoke, the burning rubber, and a camera that moves only when
   something is actually struck; every effect is anchored to the ROAD and left
-  behind except the dead engine's smoke, which rides the car it came out of) and
+  behind except the HERO's own dead engine, whose column rides the car it came
+  out of) and
   `sfx/drive.ts` (the geared engine note, made of grains on a quickening
   cadence) — with what a tick OWES those two lifted into
   `drive-screen/loop.ts` (`drainDrive`, `drawBursts`, `runEngineNote`), because
   the effects gallery's DRIVE shelf is a second host that has to drain a road
-  exactly as the screen does. The whole frame is drawn INSIDE
+  exactly as the screen does. **A CRASHED CAR'S OWN CLOUD is the one pass in
+  here that WALKS the road rather than answering an event** —
+  `drive-screen/wreck-smoke.ts`, drained beside the skids and on the same fixed
+  step. A vehicle that has gone over is not an instant: it slides, it stops, and
+  then it sits there for the rest of the leg, so its smoke is ISSUED on a cadence
+  at wherever the thing currently is (a wall of dust while it grinds, a pall
+  piling up around it once it has stopped, a dead engine's wisp after that)
+  rather than fired once at the spot the roll began, which is a cloud the wreck
+  slides out from under. It is also where a STRANGER's wrecked engine smokes:
+  that is not the hero's following column and used to be drawn as one, which put
+  every car the player finished on fire over the player's own bonnet. The whole frame is drawn INSIDE
   `applyWorldProjection`, because that is the space `drawWorldSprite`
   billboards into. THERE IS NO BULLET TIME, and there used to be: the world
   dropped to a quarter speed and the camera leaned in the instant a hit stopped

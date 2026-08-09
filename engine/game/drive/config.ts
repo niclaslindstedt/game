@@ -917,6 +917,21 @@ export const DRIVE = {
     wreckDragPerSec: 1.1,
     wreckRestPx: 12,
     /**
+     * …AND THE ROLLING RESISTANCE UNDER THAT (px/s²) — small, and the reason it
+     * exists at all is the same one `downFrictionPx` does.
+     *
+     * A wreck is supposed to coast, and that is deliberately not being taken
+     * away: a car whose engine has died is still on its wheels, still
+     * freewheeling, and the long roll to a stop in a live lane is the whole
+     * payoff of finishing one. What a viscous drag cannot do is FINISH the
+     * roll — it takes a share of the speed each second and the last stretch is
+     * a written-off car ambling down the carriageway at a crawl. Tyres and a
+     * dead drivetrain are a constant deceleration, so the coast is now a real
+     * coast that genuinely ends. A tenth of what a body sliding on its roof
+     * gets, because this one still has wheels turning under it.
+     */
+    wreckFrictionPx: 45,
+    /**
      * A TWO-WHEELER GOES DOWN rather than being shunted, past this much wear in
      * one blow. Low: a car meeting a bicycle at any speed at all ends with the
      * bicycle on its side, and a moped that merely slid sideways and carried on
@@ -931,6 +946,45 @@ export const DRIVE = {
     downGravityPx: 640,
     downBounce: 0.24,
     downSpinPerSpeed: 0.009,
+    /**
+     * WHAT GOING OVER COSTS A VEHICLE, as the share of its road speed it keeps.
+     *
+     * THE FIRST HALF OF WHY A ROLLED CAR USED TO CARRY ON DOWN THE ROAD. Tipping
+     * was booked as a change of ATTITUDE and nothing else: `tipVehicle` set the
+     * slew, the spin and the lift and never touched `speed`, so a saloon doing
+     * 300 px/s went onto its roof still doing 300 px/s and slid the better part
+     * of a screen looking like it was still driving.
+     *
+     * A trip is not free. What puts a car over is its outside wheels digging in
+     * and stopping while the mass above them keeps going, and the energy that
+     * buys the rotation and the lift comes out of the only place it can — the
+     * forward motion. So a vehicle that goes over arrives on its roof having
+     * already lost about half of what it had.
+     */
+    downSpeedKeep: 0.55,
+    /**
+     * …AND THE SECOND HALF: HOW HARD TARMAC SCRUBS SOMETHING SLIDING ON IT
+     * (px/s² of deceleration, along whatever direction it is actually
+     * travelling).
+     *
+     * A SLIDE IS COULOMB FRICTION, NOT A VISCOUS DRAG, and that distinction is
+     * the whole bug. `downDragPerSec` takes a fixed SHARE of the speed away
+     * every second, which is the right shape for something moving through air
+     * and exactly the wrong shape for something being ground along a road: it
+     * approaches zero and never arrives, so the last stretch of every slide is a
+     * two-tonne estate creeping down the carriageway on its roof at walking pace
+     * for two full seconds. Sliding friction is a CONSTANT deceleration — it
+     * does not care how fast you are going — and a constant deceleration reaches
+     * a dead stop in finite time and finite distance, which is what a wreck in
+     * the road is.
+     *
+     * Both terms are kept because they are both real: the viscous one is the
+     * initial bite while the thing is still tumbling and shedding, and this is
+     * the one that finishes the job. Together with `downSpeedKeep` a saloon
+     * rolled at 300 px/s comes to rest inside about 85 px and under a second,
+     * against the 200-odd px and better part of three seconds it used to take.
+     */
+    downFrictionPx: 160,
     /**
      * PAST THIS MUCH FORCE THE MACHINE COMES APART IN THE MIDDLE, in the same
      * wrecks as everything else here.
