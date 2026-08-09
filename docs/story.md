@@ -393,10 +393,19 @@ units, and a small, very faint ghost walked up to the flag.
 
 ## Travel — THE MOON LETS GO (cutscene)
 
-**The landing site after the fight.** THE FLAGBEARER, beaten and satisfied, keeps his
+**The landing site after the fight**, and the moon's own closing beat rather
+than Mars's opening one — the hero flies to Mars from his own lawn, so the
+goodbye plays where it happens. THE FLAGBEARER, beaten and satisfied, keeps his
 word: take the old freight line, red all the way, and bring her home — and tell
 the company men the moon remembers. The hero boards and climbs away, the ghost
 watching him out of sight with fifty years of practice.
+
+## Travel — THE LAUNCH, AGAIN (cutscene)
+
+**Home, a second time.** Mars opens on the garage exactly as the moon did, and
+nothing has been repaired: the frontage is still black down the garage end, the
+roof still open, the lawn still dead where the ship stands. He lights it, the
+roof catches again, and he goes.
 
 ## Travel — THE VOYAGE, LEG TWO (cutscene)
 

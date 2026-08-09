@@ -281,7 +281,15 @@ escort.ts` walks the people an escort errand puts on the field, and
   `prelude` field — one id, or a LIST chained back-to-back (the moon opens
   on the garage launch, then the space transit); the run then opens in the
   `cutscene` phase (the sim frozen underneath), advanced by `step()` on the
-  same clock. Motion beats run on that clock — walks, fades, camera `pan`s
+  same clock. `farewell` is the same chain at the other END of a run, played
+  when the objective falls and handing over to the epilogue pages and the
+  splash, because a DEPARTURE belongs to the place being left: the moon's ghost
+  sees the hero off the landing site rather than opening the level he flies to
+  from his own lawn. Which end a chain was is `GameState.cutsceneThen`, since by
+  the time one drains both look identical. A scene's dressing can also depend
+  on what this run has already done — `CutsceneProp.needs` / `until` against the
+  run's `cutsceneTags` (one per level cleared), which is how the launch stands
+  beside a whole house the first time and a burnt one every time after. Motion beats run on that clock — walks, fades, camera `pan`s
   (the launch's ascent: the world falls away under the climbing ship), actor
   `shake`s (the rattling rocket) and `jump`s (the prelude's leap for the wall
   weapon: a rise and a fall, with the `prop` that takes the piece off the wall

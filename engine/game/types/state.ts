@@ -422,6 +422,16 @@ export type GameState = {
    */
   cutsceneTags: readonly string[];
   /**
+   * WHERE THE RUNNING CUTSCENE CHAIN LETS GO — the phase the last scene hands
+   * the stage to. A PRELUDE lands on the hero's opening monologue; a level's
+   * FAREWELL (`LevelDef.farewell`) lands on the epilogue and the splash.
+   *
+   * It is on the state rather than worked out from the phase because by the
+   * time the chain drains, "which end of the run was this" is no longer
+   * visible: both are the `cutscene` phase with an empty queue.
+   */
+  cutsceneThen: "intro" | "victory";
+  /**
    * Which page of the level's opening monologue is on screen while
    * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
    * past the last page drops into the `title` card; unused in other phases.

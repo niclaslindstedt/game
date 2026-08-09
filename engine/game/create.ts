@@ -660,6 +660,7 @@ export function createGame(
         : null,
     cutsceneQueue: preludes.slice(1),
     cutsceneTags,
+    cutsceneThen: "intro",
     introPage: 0,
     outroPage: 0,
     quakeMs: 0,

@@ -1923,7 +1923,11 @@ worked pair.
 The file stem must equal the scene's `id`. A scene is a **stage** (a colour wash
 and a set of props), a **cast** of actors, and a **timeline** of beats played
 strictly in order. A level plays one by naming it: `prelude: my_scene` in the
-level file, or a LIST of ids to chain several back to back.
+level file, or a LIST of ids to chain several back to back — and `farewell:`
+is the same thing at the OTHER end of the run, played when the objective falls,
+before the epilogue pages and the splash. A departure belongs to the place being
+left: the shipped moon closes on its ghost seeing the hero off, rather than
+opening the level he flies to next from his own lawn.
 
 ```yaml
 id: mymod_arrival

@@ -21,3 +21,12 @@ the origin, so anything an effect needs in STAGE coordinates (where the pad is,
 how far off a prop stands) must be handed over and converted at paint time —
 only the paint knows how tall the art is, and therefore where the actor's feet
 are.
+
+A SECOND CLOCK question came out of the same work and is worth carrying: a
+CUTSCENE CHAIN has to record which END of the run it was
+(`GameState.cutsceneThen`), because a prelude and a level's `farewell` are
+indistinguishable by the time either drains — both are the `cutscene` phase with
+an empty queue. Every exit from the chain has to honour it, and the one that is
+easy to miss is SKIP: `skipCutscene` sent every chain to the level-name `title`
+card, which for a send-off drops a player who has just BEATEN the level back
+onto the card announcing it.

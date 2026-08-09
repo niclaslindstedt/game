@@ -155,11 +155,23 @@ const EMPTY_FOG = new Uint8Array(0);
 // hence the split. When two branches both bump, the second one to land re-bumps
 // rather than agreeing.)
 //
+// v29: THE SCENE TAGS AND THE CHAIN'S LANDING — `cutsceneTags`, the run's own
+// memory handed to every
+// prelude scene it raises (`CutsceneProp.needs` / `until`, engine/lib/
+// cutscene.ts). It decides which dressing a scene is played with — whether the
+// launch stands beside a whole house or the burnt one — and the chain reads it
+// again for every scene after the first, so a v28 blob would thaw into an
+// `undefined` list and take the swap with it. `cutsceneThen` joined it in the
+// same shape: it says which END of the run a running chain belongs to (a
+// prelude lands on the hero's monologue, a level's `farewell` on the epilogue
+// and the splash), and a blob thawed without it would send a skipped send-off
+// to the level-name title card.
+//
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 28;
+export const SAVE_VERSION = 29;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

@@ -272,6 +272,15 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "critters",
       "cutscene",
       "cutsceneQueue",
+      // WHAT THE RUN KNOWS THAT ITS SCENES DO NOT — the tags a prelude's
+      // conditional dressing is matched against (`CutsceneProp.needs`).
+      // Required and read on every scene the chain raises, so a blob without
+      // it would hand the launch's house swap an undefined list.
+      "cutsceneTags",
+      // …and WHERE a running chain lets go: a prelude lands on the opening
+      // monologue, a level's farewell on the epilogue and the splash. Required
+      // because both look identical once the queue is empty.
+      "cutsceneThen",
       "deathScene",
       "decor",
       // THE DRIVE-OUT scene (the hub's departure). Additive and null on every

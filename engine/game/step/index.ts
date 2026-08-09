@@ -64,6 +64,7 @@ import { stepTradeRequests } from "../trade.ts";
 import { stepSpawners } from "../spawners.ts";
 import {
   advanceCutsceneChain,
+  beginFarewell,
   stepDoors,
   stepGates,
   stepOpeningStrike,
@@ -548,9 +549,17 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       // (advanceOutro turns them; past the last page comes `victory`). A
       // DIALOGUE-muted run skips the epilogue the same way it skips the intro
       // monologue — straight to the victory splash.
-      const outro = runLevelDef(state).outro;
-      state.phase =
-        !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
+      // …BUT A LEVEL WITH A SEND-OFF PLAYS IT FIRST (`LevelDef.farewell`) —
+      // the moon's ghost seeing the hero off his own landing site — and the
+      // chain hands over to the epilogue-or-splash below when it drains
+      // (`advanceCutsceneChain`), so the order is one place either way.
+      if (!beginFarewell(state)) {
+        const outro = runLevelDef(state).outro;
+        state.phase =
+          !state.dialogueMuted && outro && outro.length > 0
+            ? "outro"
+            : "victory";
+      }
     }
   }
 }

@@ -1428,8 +1428,9 @@ _A living salvage hand off the same stranded run as the trader, and the reason t
 
 ## Travel — THE MOON LETS GO (cutscene)
 
-_Between the moon and Mars, part one of the Mars level's prelude chain
-(`moon_depart`). The landing site after the fight: THE FLAGBEARER beaten and
+_The MOON's own send-off, played the moment the flag is won (`moon_depart`, the
+moon level's `farewell`) — not the opening of Mars, which the hero flies to from
+his own lawn. The landing site after the fight: THE FLAGBEARER beaten and
 satisfied, the flag still standing, the hero suited and boarding._
 
 > **CAPTION:** THE GHOST KEPT HIS WORD.
@@ -1447,6 +1448,13 @@ away until only Earth and the stars remain.)_
 > **CAPTION:** HE WATCHED ME OUT OF SIGHT. FIFTY YEARS OF PRACTICE.
 
 _(Fade to black.)_
+
+## Travel — THE LAUNCH, AGAIN (cutscene)
+
+_Mars opens the way the moon did: the garage at night, the same scene played a
+second time (`launch`). Everything is as he left it — the burnt frontage, the
+dead patch of lawn — and the engine puts the roof alight again on its way up.
+No new lines; the captions are the ones above._
 
 ## Travel — THE VOYAGE, LEG TWO (cutscene)
 

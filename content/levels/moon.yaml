@@ -23,6 +23,12 @@ name: THE MOON
 prelude:
   - launch
   - voyage_moon
+# THE SEND-OFF, played when the flag is won rather than when Mars opens. THE
+# FLAGBEARER — beaten and satisfied — sees the hero off this landing site, and
+# it belongs to the moon: the hero flies to Mars from his OWN LAWN, so opening
+# Mars with a man in a spacesuit saying goodbye on regolith showed the player a
+# departure he had not made.
+farewell: moon_depart
 music: regolith_ride
 intro:
   - - ADA'S TRACKER WENT QUIET SOMEWHERE NEAR THE OLD APOLLO FLAG. THAT'S WHERE I'M HEADED.

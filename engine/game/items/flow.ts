@@ -224,11 +224,17 @@ export function tapCutscene(state: GameState): void {
 }
 
 /**
- * The prelude's SKIP button: end the opening outright — the running scene
- * AND every scene still queued behind it. Skipping the prelude also skips
- * the hero's level-intro monologue that would follow — one press bails the
- * whole opening, landing on the level-name `title` card just before the
- * drop.
+ * The SKIP button: end the running scene outright — AND every scene still
+ * queued behind it.
+ *
+ * WHERE IT LANDS DEPENDS ON WHICH END OF THE RUN THE CHAIN WAS
+ * (`GameState.cutsceneThen`). A PRELUDE also skips the hero's level-intro
+ * monologue that would follow — one press bails the whole opening onto the
+ * level-name `title` card just before the drop. A level's FAREWELL has the run
+ * already won behind it, so it lands where it would have landed anyway: the
+ * epilogue pages, or the splash for a level that ships none. Sending a skipped
+ * send-off to the title card would drop a player who has just beaten the level
+ * back onto the card announcing it.
  */
 export function skipCutscene(state: GameState): void {
   if (state.phase !== "cutscene") return;
@@ -237,6 +243,12 @@ export function skipCutscene(state: GameState): void {
   }
   state.cutscene = null;
   state.cutsceneQueue = [];
+  if (state.cutsceneThen === "victory") {
+    const outro = runLevelDef(state).outro;
+    state.phase =
+      !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
+    return;
+  }
   state.phase = "title";
 }
 
