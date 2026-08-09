@@ -848,6 +848,28 @@ export function DriveScreen({
     values: driveBindings(hud),
     refs: {},
     actions: {
+      // RAISING THE CARD, from the stopwatch in the corner — the fight's own
+      // gesture (its survival timer pauses the run on a tap), and the only way
+      // into this card a player without a keyboard had. The verb is the fight's
+      // `pauseGame` rather than a road-shaped fourth one, because it is the
+      // same press: a mod that puts PAUSE on a dashboard of its own writes what
+      // it would write on a HUD.
+      //
+      // HANDS OFF WITH IT, exactly as losing the window is (`park` above): a
+      // wheel or an accelerator still held when the card goes up is a control
+      // the road resumes under, and the thumb that pressed PAUSE is not the
+      // thumb that was steering.
+      //
+      // The two screens that own the picture outright refuse it for the reasons
+      // the keyboard's ESCAPE refuses it — a card over the high-score board
+      // covers the one thing worth reading, and a card over the title card is a
+      // hold on a hold. Both draw over the dashboard already; this is what
+      // keeps that true for a mod's button as well as for ours.
+      pauseGame: () => {
+        if (boardRef.current || introRef.current) return;
+        dropControls();
+        setPause(true);
+      },
       driveResume: () => setPause(false),
       driveSkip: skipDrive,
       // THE WAY OUT OF THE GAME, offered to an authored dashboard exactly as

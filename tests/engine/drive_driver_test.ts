@@ -85,7 +85,12 @@ describe("the auto-driver", () => {
         );
       }
     }
-  });
+    // NINE WHOLE LEGS AT 16 ms A TICK, which is minutes of road simulated in a
+    // few seconds — and a few seconds is the default budget. Run alone it lands
+    // comfortably inside it; run as one of ~390 files sharing the machine it
+    // did not, and a suite that goes red on how busy the box is teaches everyone
+    // to re-run rather than to read. The number is the work's, not the load's.
+  }, 60_000);
 
   it("holds the throttle — it does not coast to a stop", () => {
     // The bug this whole driver exists to fix: a road with nobody at the wheel

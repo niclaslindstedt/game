@@ -237,7 +237,11 @@ are on that pedal**, not a speed to settle at — a small drag toward the nose
 gathers speed gently and a big one hard, and no amount of it ever slows the car
 down; a small drag against the nose feathers the brake and a big one stamps on
 it. Letting go of everything holds the speed rather than stopping — braking is
-something you ask for.
+something you ask for. **Escape pauses the road as well**, and on touch the
+**stopwatch in the top-right corner** is that same press — the fight's own
+gesture, where tapping the timer over the minimap pauses the run. Behind it sit
+the two ways out of a leg you are not enjoying: **SKIP THE DRIVE**, which hands
+the crossing on with whatever the count had reached, and **MAIN MENU**.
 
 **The handbrake is the other hand**: a **second thumb** pressed anywhere on the
 picture while you are steering, or **Space** (the JUMP bind — a man in a car
