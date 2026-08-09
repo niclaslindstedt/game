@@ -41,9 +41,17 @@ import {
   surfaceSkin,
   type CloudSkin,
   type GlobeKind,
+  type PlanetKind,
   type Skin,
 } from "./planet-skins.ts";
+import {
+  SATELLITE_AIR,
+  SATELLITE_KINDS,
+  SATELLITE_PARENT,
+  type SatelliteKind,
+} from "./moon-skins.ts";
 import { SATURN_RINGS } from "./planet-maps.ts";
+import { PLANET_POLES } from "./planet-poles.ts";
 
 export type { GlobeKind } from "./planet-skins.ts";
 
@@ -85,12 +93,11 @@ type GlobeStyle = {
 
 const DEG = Math.PI / 180;
 
-const STYLES: Record<GlobeKind, GlobeStyle> = {
+const PLANET_STYLES: Record<PlanetKind, GlobeStyle> = {
   mercury: {
     // Bolt upright to its own orbit (0.03°) — but that orbit is tipped 7° to
     // the ecliptic, and the ecliptic is the frame this renderer works in.
-    obliquity: 7.01 * DEG,
-    poleLon: 318.4 * DEG,
+    ...PLANET_POLES.mercury,
     // No atmosphere worth the name: a surface-bound exosphere of atoms the
     // solar wind knocks loose. Nothing to scatter light at the limb.
     air: false,
@@ -103,10 +110,9 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
   venus: {
     // Venus is quoted at 177.4° "axial tilt", which sounds dramatic and means
     // something simple: its pole is very nearly upright (1.2° off ecliptic
-    // north) and it turns BACKWARDS underneath it. The upright axis is here;
-    // the backwards part is the sign of its rotation period.
-    obliquity: 1.24 * DEG,
-    poleLon: 30.2 * DEG,
+    // north) and it turns BACKWARDS underneath it. The upright axis is in the
+    // pole table; the backwards part is the sign of its rotation period.
+    ...PLANET_POLES.venus,
     air: true,
     soft: 0.26,
     ambient: 0.06,
@@ -115,11 +121,10 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     padding: 1,
   },
   earth: {
-    obliquity: 23.44 * DEG,
     // The north pole's projection points at ecliptic longitude 90°, which is
     // why the northern hemisphere leans sunward in June — the seasons come out
     // of the geometry rather than being drawn on.
-    poleLon: 90 * DEG,
+    ...PLANET_POLES.earth,
     air: true,
     soft: 0.15,
     ambient: 0.05,
@@ -138,8 +143,7 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     padding: 1,
   },
   mars: {
-    obliquity: 26.71 * DEG,
-    poleLon: 352.9 * DEG,
+    ...PLANET_POLES.mars,
     // Air, but only 0.6% of Earth's — enough for dust storms and a thin blue
     // twilight, nowhere near enough for Earth's bright limb.
     air: true,
@@ -150,8 +154,7 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     padding: 1,
   },
   jupiter: {
-    obliquity: 2.21 * DEG,
-    poleLon: 247.8 * DEG,
+    ...PLANET_POLES.jupiter,
     air: true,
     soft: 0.14,
     ambient: 0.045,
@@ -160,8 +163,7 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     padding: 1,
   },
   saturn: {
-    obliquity: 28.05 * DEG,
-    poleLon: 79.5 * DEG,
+    ...PLANET_POLES.saturn,
     air: true,
     soft: 0.16,
     ambient: 0.05,
@@ -174,8 +176,7 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
   uranus: {
     // 82° from ecliptic north: Uranus does not spin so much as roll along its
     // orbit, and its poles take turns facing the sun for 42 years each.
-    obliquity: 82.28 * DEG,
-    poleLon: 257.6 * DEG,
+    ...PLANET_POLES.uranus,
     air: true,
     soft: 0.2,
     ambient: 0.05,
@@ -184,8 +185,7 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     padding: 1,
   },
   neptune: {
-    obliquity: 28.03 * DEG,
-    poleLon: 319.2 * DEG,
+    ...PLANET_POLES.neptune,
     air: true,
     soft: 0.18,
     ambient: 0.045,
@@ -193,6 +193,50 @@ const STYLES: Record<GlobeKind, GlobeStyle> = {
     rimColor: [180, 214, 240],
     padding: 1,
   },
+};
+
+/**
+ * A SATELLITE SPINS ON ITS PLANET'S AXIS, and that is physics rather than a
+ * shortcut.
+ *
+ * Every one of these twenty is TIDALLY LOCKED: the planet's pull on the bulge
+ * it raises has been braking the moon's spin for four billion years, and the
+ * only rate that survives is the one that keeps the same face turned inward.
+ * Two things follow, and both are load-bearing here. Its day IS its year — so
+ * `title-moons.ts` sets each satellite's spin to its own orbital period, never
+ * to the planets' rotation clock. And its pole ends up parallel to the pole of
+ * the planet it circles, because the orbit itself was dragged into the planet's
+ * equatorial plane long before the spin locked to it.
+ *
+ * So a satellite's axis is COPIED from its parent's row above rather than
+ * restated. Uranus is what makes that visible: its moons roll over with it, and
+ * a table that repeated the numbers would be one edit away from having them
+ * stand upright while their planet lies on its side.
+ */
+function satelliteStyles(): Record<SatelliteKind, GlobeStyle> {
+  const out = {} as Record<SatelliteKind, GlobeStyle>;
+  for (const kind of SATELLITE_KINDS) {
+    const parent = PLANET_STYLES[SATELLITE_PARENT[kind] as PlanetKind];
+    const air = SATELLITE_AIR[kind];
+    out[kind] = {
+      obliquity: parent.obliquity,
+      poleLon: parent.poleLon,
+      air: !!air,
+      // Airless unless the table above says otherwise: a knife-edge terminator
+      // and a hard limb are what make a moon read as a moon.
+      soft: air?.soft ?? 0.02,
+      ambient: 0.025,
+      rim: air?.rim ?? 0,
+      rimColor: air?.rimColor ?? [0, 0, 0],
+      padding: 1,
+    };
+  }
+  return out;
+}
+
+const STYLES: Record<GlobeKind, GlobeStyle> = {
+  ...PLANET_STYLES,
+  ...satelliteStyles(),
 };
 
 /** How far the camera sits above the orbital plane (radians). Shared by every

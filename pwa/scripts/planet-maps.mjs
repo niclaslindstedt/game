@@ -28,23 +28,17 @@ import { fileURLToPath } from "node:url";
 
 register("../../scripts/game-alias-loader.mjs", import.meta.url);
 
-const { surfaceSkin, cloudSkin } = await import("../src/lib/planet-skins.ts");
+const { surfaceSkin, cloudSkin, GLOBE_KINDS } =
+  await import("../src/lib/planet-skins.ts");
 const { SATURN_RINGS } = await import("../src/lib/planet-maps.ts");
 const { writePng } = await import("../../scripts/asset-tools/preview.mjs");
 const { createSurface, fill } =
   await import("../../scripts/asset-tools/surface.mjs");
 
-const KINDS = [
-  "mercury",
-  "venus",
-  "earth",
-  "moon",
-  "mars",
-  "jupiter",
-  "saturn",
-  "uranus",
-  "neptune",
-];
+// EVERY world the bakery knows, read off its own list rather than restated —
+// which is what makes a new body (the twenty satellites, say) show up here the
+// moment it can be baked, instead of the day somebody remembers this file.
+const KINDS = GLOBE_KINDS;
 
 /** Tilt of each spin axis from ECLIPTIC north, in degrees — the same frame and
  * the same numbers the shipped renderer uses (see STYLES in

@@ -63,6 +63,34 @@ const WANT_FRAMES = 6;
 /** Pins swept for both passes — a fine, even walk of the master cycle. */
 const PINS = Array.from({ length: 40 }, (_, i) => Number((i / 40).toFixed(3)));
 
+/**
+ * THE CAMERA HAS TO MOVE FOR EITHER PASS TO MEAN ANYTHING NOW, and the two
+ * passes want it in different places.
+ *
+ * Pass 1 sweeps a ZOOMED-OUT frame as well as the resting one, because the sky
+ * is drawn at true distances: at rest Uranus and Neptune are two and three
+ * screens out, so a check that only ever looked at the resting frame stopped
+ * covering a quarter of the solar system without ever saying so.
+ *
+ * Pass 2 zooms IN, because it photographs the Moon — and at rest the Moon is
+ * two pixels across and drawn as a point of light with no globe behind it (see
+ * `GLOBE_MIN_PX` in title-moons.ts). There is no terminator on a spark. Pushing
+ * in until it is a disc is what puts the shader back under the lens, which is
+ * the only thing this pass was ever for.
+ */
+const SWEEP_ZOOMS = [1, 0.12];
+const MOON_ZOOM = 4;
+
+/**
+ * …and pass 2 runs in LANDSCAPE only, which is a coverage decision rather than
+ * an oversight. Pushed in far enough for the Moon to be a disc, Earth's orbit
+ * is wider than a portrait phone, so the Moon spends every frame clipped by the
+ * edge — and a clipped disc scores a flat zero, which looks exactly like a
+ * lighting bug. Pass 1 checks every body in both orientations; what pass 2 adds
+ * is "the shader USED the vector", and one orientation settles that.
+ */
+const MOON_PASS_VIEW = "landscape";
+
 const VIEWPORTS = [
   { name: "landscape", width: 844, height: 390 },
   { name: "portrait", width: 390, height: 844 },
@@ -166,65 +194,91 @@ for (const vp of VIEWPORTS) {
   // ---- Pass 1: the light vector points at the sun, for every body. --------
   const legible = [];
   for (const p of PINS) {
-    await page.evaluate((x) => {
-      window.__skyFreeze = x;
-    }, p);
-    await settle();
-    const state = await page.evaluate(() => window.__skyState);
-    for (const [label, b] of Object.entries(state.bodies ?? {})) {
-      const dx = state.sun.x - b.x;
-      const dy = state.sun.y - b.y;
-      const dl = Math.hypot(dx, dy);
-      const ll = Math.hypot(b.lx, b.ly);
-      // A body sitting exactly on the sun's screen position has no direction
-      // to check — it is at conjunction, and the light is along the view axis.
-      if (dl < 1 || ll < 1e-3) continue;
-      lightChecks++;
-      const cos = (dx * b.lx + dy * b.ly) / (dl * ll);
-      const deg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
-      if (deg > worstLightDeg) worstLightDeg = deg;
-      if (deg > MAX_LIGHT_DEG) {
-        lightFailures++;
-        console.log(
-          `  light FAIL ${vp.name} p=${p} body=${label}: ${deg.toFixed(2)}° off`,
-        );
+    for (const z of SWEEP_ZOOMS) {
+      await page.evaluate(
+        ({ x, zoom }) => {
+          window.__skyFreeze = x;
+          window.__skyZoom?.(zoom);
+        },
+        { x: p, zoom: z },
+      );
+      await settle();
+      const state = await page.evaluate(() => window.__skyState);
+      for (const [label, b] of Object.entries(state.bodies ?? {})) {
+        const dx = state.sun.x - b.x;
+        const dy = state.sun.y - b.y;
+        const dl = Math.hypot(dx, dy);
+        const ll = Math.hypot(b.lx, b.ly);
+        // A body sitting exactly on the sun's screen position has no direction
+        // to check — it is at conjunction, and the light is along the view axis.
+        if (dl < 1 || ll < 1e-3) continue;
+        lightChecks++;
+        const cos = (dx * b.lx + dy * b.ly) / (dl * ll);
+        const deg = (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
+        if (deg > worstLightDeg) worstLightDeg = deg;
+        if (deg > MAX_LIGHT_DEG) {
+          lightFailures++;
+          console.log(
+            `  light FAIL ${vp.name} p=${p} body=${label}: ${deg.toFixed(2)}° off`,
+          );
+        }
       }
     }
     // Note the frames where the Moon shows a readable terminator, for pass 2.
-    // It must also be WHOLLY inside the viewport: an element screenshot of a
-    // body hanging off the edge returns only the visible strip, and the
-    // analysis assumes a disc centred in its image — a clipped Moon scores a
-    // flat 0 and looks exactly like a lighting bug.
-    const m = state.bodies?.M;
-    if (m) {
-      const box = await page.evaluate(() => {
-        const el = document.querySelector(".title-moon");
-        if (!el) return null;
-        const r = el.getBoundingClientRect();
-        return { x: r.x, y: r.y, w: r.width, h: r.height };
-      });
-      const inFrame =
-        box &&
-        box.w > 8 &&
-        box.x >= 0 &&
-        box.y >= 0 &&
-        box.x + box.w <= vp.width &&
-        box.y + box.h <= vp.height;
-      const lit = (1 + m.lz) / 2;
-      if (inFrame && lit >= CLEAR_MIN && lit <= CLEAR_MAX) {
-        legible.push({ p, lit });
+    // Photographed zoomed IN — see MOON_ZOOM.
+    await page.evaluate(
+      ({ x, zoom }) => {
+        window.__skyFreeze = x;
+        window.__skyZoom?.(zoom);
+      },
+      { x: p, zoom: MOON_ZOOM },
+    );
+    await settle();
+    {
+      const state = await page.evaluate(() => window.__skyState);
+      // It must also be WHOLLY inside the viewport: an element screenshot of a
+      // body hanging off the edge returns only the visible strip, and the
+      // analysis assumes a disc centred in its image — a clipped Moon scores a
+      // flat 0 and looks exactly like a lighting bug.
+      const m = state.bodies?.M;
+      if (m) {
+        const box = await page.evaluate(() => {
+          const el = document.querySelector(".title-moon");
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        });
+        const inFrame =
+          box &&
+          box.w > 8 &&
+          box.x >= 0 &&
+          box.y >= 0 &&
+          box.x + box.w <= vp.width &&
+          box.y + box.h <= vp.height;
+        const lit = (1 + m.lz) / 2;
+        if (inFrame && lit >= CLEAR_MIN && lit <= CLEAR_MAX) {
+          legible.push({ p, lit });
+        }
       }
     }
   }
 
   // ---- Pass 2: the shader actually used it. -------------------------------
+  if (vp.name !== MOON_PASS_VIEW) {
+    await page.close();
+    continue;
+  }
   // Spread the chosen frames across the cycle rather than taking the first few.
   const step = Math.max(1, Math.floor(legible.length / WANT_FRAMES));
   const chosen = legible.filter((_, i) => i % step === 0).slice(0, WANT_FRAMES);
   for (const sample of chosen) {
-    await page.evaluate((x) => {
-      window.__skyFreeze = x;
-    }, sample.p);
+    await page.evaluate(
+      ({ x, zoom }) => {
+        window.__skyFreeze = x;
+        window.__skyZoom?.(zoom);
+      },
+      { x: sample.p, zoom: MOON_ZOOM },
+    );
     await settle();
     const state = await page.evaluate(() => window.__skyState);
     const sunAng = Math.atan2(
@@ -315,4 +369,17 @@ for (const r of rows) {
 console.log(
   `\n${rows.length - renderFailures}/${rows.length} rendered frames lit from the sunward side (min contrast ${MIN_CONTRAST}).`,
 );
-process.exit(lightFailures > 0 || renderFailures > 0 ? 1 : 0);
+// A PASS WITH NOTHING IN IT IS A FAILURE. The frames are chosen by measurement,
+// so an empty table does not mean "all good" — it means the scan found no Moon
+// worth photographing, which is what happens when the geometry moves under the
+// harness (the Moon shrinking below a disc is exactly how this was discovered).
+// Reporting 0/0 as a pass is the one way this script can go quietly useless.
+if (rows.length < WANT_FRAMES) {
+  console.log(
+    `\nFAIL: found only ${rows.length} legible frame(s), wanted ${WANT_FRAMES}.` +
+      ` Pass 2 asserted nothing — check MOON_ZOOM against the Moon's drawn size.`,
+  );
+}
+process.exit(
+  lightFailures > 0 || renderFailures > 0 || rows.length < WANT_FRAMES ? 1 : 0,
+);

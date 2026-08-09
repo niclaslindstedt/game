@@ -529,6 +529,7 @@ type OnOffKey =
   | "swipeBars"
   | "debug"
   | "autoLevelStats"
+  | "skyCamera"
   | "storeForce"
   | "cameraAntialias"
   | "standingWalls"

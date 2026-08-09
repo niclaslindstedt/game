@@ -107,6 +107,10 @@ export function TitleBackdrop({
   // position. Starts once the menu (and its elements) has mounted after the
   // assets load.
   const moonRef = useRef<HTMLDivElement>(null);
+  // The other twenty satellites are a CATALOGUE, not a layout: the driver
+  // creates one element per row of `title-moons.ts` inside this box, so adding
+  // a moon is a line of data rather than a line of JSX.
+  const satellitesRef = useRef<HTMLDivElement>(null);
   const mercuryRef = useRef<HTMLDivElement>(null);
   const venusRef = useRef<HTMLDivElement>(null);
   const earthRef = useRef<HTMLDivElement>(null);
@@ -137,11 +141,14 @@ export function TitleBackdrop({
     const neptune = neptuneRef.current;
     if (!mercury || !venus || !earth || !mars) return;
     if (!jupiter || !saturn || !uranus || !neptune) return;
+    const satellites = satellitesRef.current;
+    if (!satellites) return;
     const asteroids = asteroidRefs.current.filter(
       (a): a is HTMLSpanElement => !!a,
     );
     return startTitleSky({
       moon,
+      satellites,
       mercury,
       venus,
       earth,
@@ -258,6 +265,9 @@ export function TitleBackdrop({
         <div ref={neptuneRef} className="title-planet title-neptune" />
         {/* The moon, riding its orbit around Earth (title-sky.ts). */}
         <div ref={moonRef} className="title-planet title-moon" />
+        {/* …and every other moon in the solar system, filled in by the driver
+            from the catalogue in title-moons.ts. */}
+        <div ref={satellitesRef} className="title-satellites" />
         {/* Easter egg sun: it sits still at the centre of the sky while the
             planets wheel around it. Driven by title-sky.ts; the CSS is just the
             look. It is also the hidden developer gesture's target —
