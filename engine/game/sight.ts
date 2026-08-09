@@ -13,13 +13,14 @@
 // sideways can show (`MAP.revealRadius` is 160 world px, half a landscape
 // screen is ~211 across and ~130 down — the 422×195 canvas with its depth axis
 // divided by the pitch, see render/tilt.ts `worldViewRect`), and from then on
-// "explored" says yes to most of the map. So a power with a 300 px reach — the volley, the storm, the
-// singularity, the sentry grid, the well's hunt — happily marked a monster two
-// screens north that the player had no picture of: shots left the hero toward
-// nothing, damage numbers rose off the top of the frame, and a fight the player
-// could not see decided how the run went. That is the character acting on
-// knowledge the player does not have, which is the same objection the fog rule
-// was written for; it just needed the other half.
+// "explored" says yes to most of the map. So a power with a 300 px reach — the
+// volley, the storm, the singularity, the sentry grid, the well's hunt —
+// happily marked a monster two screens north that the player had no picture
+// of: shots left the hero toward nothing, damage numbers rose off the top of
+// the frame, and a fight the player could not see decided how the run went.
+// That is the character acting on knowledge the player does not have, which is
+// the same objection the fog rule was written for; it just needed the other
+// half.
 //
 // EVERY PICK GOES THROUGH `visibleTo`. Not `clearOfFog` on its own — that is
 // this function's fog half and answers a narrower question. The one exception

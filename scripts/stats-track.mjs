@@ -88,7 +88,7 @@ const mobStats = (heroLevel, diff, def) => {
   };
 };
 
-// A non-combat "apparition" elite (a phasing story ghost — Houdini, The King)
+// A non-combat "apparition" elite (a phasing story ghost — Houdini, The Residency)
 // deals no contact damage and carries a sliver of hp, so it's excluded from the
 // elite/boss scatter rather than dragging the axis down next to a real boss.
 const isApparition = (e) =>
@@ -202,7 +202,7 @@ for (const diff of PATH) {
         xp += killXp * scrollMult * xpCapMultiplier(level, mapCap);
         advance(diff);
         // Record a scatter row for real combat elites/bosses only. Non-combat
-        // "apparition" elites (phasing story ghosts like HOUDINI / THE KING deal
+        // "apparition" elites (phasing story ghosts like HOUDINI / THE RESIDENCY deal
         // zero contact damage and carry a sliver of hp) would just hug the axis
         // and drag it down next to a 10k-hp boss, so they're left out.
         if (isBoss && !isApparition(e)) {
