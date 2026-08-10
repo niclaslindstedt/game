@@ -254,12 +254,70 @@ export const RIDER_SEATS: Readonly<Record<string, { dx: number; dy: number }>> =
  * undamaged sprite, so this is read with `DriveTraffic.rung` directly. */
 const WRECK_SUFFIX = ["", "_dent1", "_dent2", "_dent3"];
 
-/** Which picture a vehicle is wearing right now. */
-export function trafficSprite(variant: number, rung: number): string {
+/**
+ * WHICH END OF A VEHICLE HAS BEEN STOVE IN — what the renderer asks for when it
+ * wants a picture rather than a rung.
+ *
+ * `undefined` is a car that has only been battered: it wears the derived dent
+ * ladder above, which is a texture painted over a body that is still the shape
+ * it was. Either of the other two is a car that has changed SHAPE, and the only
+ * honest way to draw that is a different grid.
+ */
+export type CrashEnd = "front" | "rear" | undefined;
+
+/**
+ * Which picture a vehicle is wearing right now.
+ *
+ * THE CRASH ART OUTRANKS THE DENT LADDER, and it replaces it rather than
+ * stacking on it. The rungs are a progressive scuffing of one silhouette; the
+ * crash grids are the body BENT — shorter at the struck end, roofline broken,
+ * screen gone, wheel torn off — and a car that has folded up is not also
+ * slightly dented, it is folded up. Painting one over the other would put a
+ * scatter of paint damage across a panel that is no longer where the scatter was
+ * dealt.
+ *
+ * It falls back to the rung when the vehicle has no crash art authored yet,
+ * which is the whole of how the fleet gets its two grids one model at a time
+ * without the road ever drawing a missing sprite.
+ */
+export function trafficSprite(
+  variant: number,
+  rung: number,
+  end: CrashEnd = undefined,
+  has: (name: string) => boolean = () => true,
+): string {
   const base = TRAFFIC_SPRITES[variant % TRAFFIC_SPRITES.length] ?? "";
+  if (end) {
+    const crashed = `${base}_${end}`;
+    if (has(crashed)) return crashed;
+  }
   const suffix =
     WRECK_SUFFIX[Math.max(0, Math.min(WRECK_SUFFIX.length - 1, rung))] ?? "";
   return `${base}${suffix}`;
+}
+
+/**
+ * WHICH END'S ART A VEHICLE SHOULD BE WEARING — the sim's own two latches, read
+ * once so nothing downstream has to ask twice.
+ *
+ * A car hit at BOTH ends wears the worse one. There is deliberately no third
+ * grid for it: two authored pictures per vehicle is what the request asked for,
+ * and a body that is folded at both ends reads, at this size, as a body that is
+ * folded — which of the two the eye is looking at is settled by which one is
+ * pointing at the wagon.
+ */
+export function crashEnd(other: {
+  smashNose: boolean;
+  smashTail: boolean;
+  crushNose: number;
+  crushTail: number;
+}): CrashEnd {
+  if (other.smashNose && other.smashTail) {
+    return other.crushNose >= other.crushTail ? "front" : "rear";
+  }
+  if (other.smashNose) return "front";
+  if (other.smashTail) return "rear";
+  return undefined;
 }
 
 /** THE KERB'S own furniture is no longer here — it is the engine's, because it

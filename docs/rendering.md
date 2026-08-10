@@ -906,6 +906,35 @@ de-glazed and folded-in-the-middle art at build time
 earns its wounds. Nothing is authored per rung, so a new vehicle — a mod's
 included — is destructible the moment it exists.
 
+**…but past a point it stops being a picture of the same car**
+(`trafficSprite(variant, rung, end)`). The dent ladder is a texture painted over
+a silhouette that has not moved, and there is a class of collision no amount of
+that can say: an end folded far enough that the body is BENT — shorter at the
+struck end, roofline broken, screen out, wheel torn off. That is authored art,
+two grids per vehicle (`traffic_<id>_front` and `_rear`), and the renderer swaps
+the whole body to one of them the moment the sim latches that end as stove in
+(`DriveTraffic.smashNose` / `smashTail`, set by `smashEnd` in
+`engine/game/drive/wreckage.ts`). It REPLACES the rung rather than stacking on
+it: a car that has folded up is not also slightly dented. A vehicle with no crash
+art authored yet falls back to its rung, which is how the fleet gets its two
+grids one model at a time without the road ever drawing a missing sprite.
+
+**And the overlays follow the picture, not the vehicle.** The turning wheels
+(`<name>_roll_0/1`) and the blood on the glass (`<name>_gore`) are separate
+grids laid over the body, so they are derived from whichever BODY is showing —
+the crash art has moved the surviving wheel and deleted the torn-off one, and
+struck from the clean grid the overlay would spin a disc in mid air where a
+wheel used to be and miss the one still turning. It needs no rule about which
+wheel is gone: `wheelDiscs` reads the tyre char off the grid it is handed, and
+the crash art draws a bare hub there instead.
+
+**A thrown wheel spins away.** Wheels torn off the traffic join the same
+`wheelDebris` list the hero's own do, and the road draws them on the two-frame
+spoke pair picked off the wheel's own roll angle — and turns the whole sprite by
+that angle as well, which is what sells it while the thing is in the air and its
+ground speed is doing nothing to the spokes. A tyre is round, so rotating it
+costs the pixel art nothing.
+
 **…and it wears its collision as a POSE, not a picture**
 (`drive-screen/wreck-draw.ts`). The rungs are a ladder of how battered a
 vehicle is in general; one crash is a change to how it is standing, and no

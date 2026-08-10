@@ -1256,6 +1256,149 @@ export const DRIVE = {
     shedMax: 7,
   },
 
+  // ── WHAT IS LEFT OF THE CAR YOU HIT ───────────────────────────────────────
+  /**
+   * THE FOUR THINGS A REAL COLLISION LEAVES BEHIND, and the numbers behind each.
+   *
+   * The block exists because these four are ONE event told four ways and tuning
+   * them apart is how they stop agreeing: an end is stove in, its wheel leaves,
+   * the wagon is now pushing the thing, and a while later the fuel finds the
+   * sparks. Every one of them is priced off the same absorbed energy the rest of
+   * the model is, and every one of them is divided by the struck vehicle's own
+   * mass somewhere — which is why a bus does none of it and a hatchback does all
+   * four inside two seconds.
+   */
+  wreckage: {
+    /**
+     * HOW FAR AN END HAS TO FOLD BEFORE IT IS STOVE IN, as a share of the crush
+     * cap that end could reach at all (`crush.maxShare`).
+     *
+     * A THIRD, and the fraction is doing real work: it has to be past what a
+     * scrape or a shunt in traffic produces (those fold a few px and leave the
+     * car recognisable) and comfortably under a write-off, because the whole
+     * point of the crash art is that it appears while the car is still driving.
+     * A struck car the player never sees change shape is a struck car he does
+     * not believe he hit.
+     */
+    smashShare: 0.33,
+    /**
+     * HOW OFTEN A WHEEL STAYS ON when its end goes in.
+     *
+     * "The wheels should almost always come off" is the requirement, and this is
+     * the "almost": about one in eight keeps its wheel, which is what stops a
+     * lane of wrecked cars all reading as the same event. DERIVED off the
+     * vehicle's own id rather than drawn, like every other cosmetic answer on
+     * this road.
+     */
+    wheelKeep: 0.12,
+    /** How hard a torn wheel is thrown across the road, and how high (px/s) —
+     * on top of whatever the vehicle itself was doing, which is what makes a
+     * wheel off a moving car leave down the road rather than sideways. */
+    wheelThrowPx: 90,
+    wheelLiftPx: 130,
+    /**
+     * WHETHER THE FUEL FINDS THE SPARKS — the chance a stove-in end catches,
+     * per unit of the blow's own `wreckForce`.
+     *
+     * Low, and it has to be: a fire is the road's biggest single sight after a
+     * rollover and a lane where every wreck is alight is a lane on fire rather
+     * than a collision. At this rate a hard hit lights maybe one car in five and
+     * a nudge lights none, so a burning car is a thing that HAPPENED to this run.
+     */
+    firePerForce: 0.22,
+    /** …and how fast it then takes hold (per second). Two-ish seconds from a
+     * flicker under the wing to the whole engine bay going, which is long enough
+     * for the player to watch it grow in his mirror and short enough that he
+     * sees the end of it. */
+    fireGrowPerSec: 0.45,
+    /**
+     * WHEN THE TANK GOES: how well alight it has to be, and the fuse under it.
+     *
+     * BOTH, never either. The fire has to have taken properly (a car that is
+     * barely smoking does not explode) AND it has to have been burning for a
+     * while — because an explosion on the same tick as the fire is not an
+     * explosion, it is a bigger bang, and the whole value of the beat is the few
+     * seconds where the player can see it coming.
+     */
+    blowAtFire: 0.75,
+    blowAfterMs: 2600,
+    /** …and the chance a well-alight car goes up at all, per second past the
+     * fuse. Under 1: some of them just burn, which is what makes the ones that
+     * do go up worth watching. */
+    blowChancePerSec: 0.55,
+    /** How far the fireball reaches (world px) and what standing in it costs the
+     * hero, as a share of `impact.wearJoules` at the centre. It is the one thing
+     * out here that damages the wagon without the wagon touching anything. */
+    blastReachPx: 46,
+    blastWear: 0.055,
+    /** …and how hard it shoves whatever else is inside it (px/s at the centre) —
+     * the one collision on this road with no bumper in it. */
+    blastShovePx: 210,
+
+    // ── PUSHING THE THING IN FRONT ──────────────────────────────────────────
+    /**
+     * HOW CLOSE THE BUMPERS HAVE TO BE for the wagon to be PUSHING rather than
+     * merely near (world px of overlap on the along-road gap).
+     *
+     * The push is deliberately not a collision — a collision is one impact and
+     * this is a state the two of them are in, which is why it has its own pass
+     * (`push.ts`) and does not go through `solveImpact` at all.
+     */
+    pushGripPx: 6,
+    /** …and how far across the road they may be out of line and still be in
+     * contact. Narrow: shove a car off-centre and it slides out of the way,
+     * which is the whole of how the player gets past one. */
+    pushBandPx: 11,
+    /**
+     * WHAT DRAGGING SOMEBODY ELSE'S CAR COSTS — as a rate (per second) on the
+     * speed the wagon has, scaled by the MASS SHARE of the pair.
+     *
+     * THE SHARE IS THE HONEST SUM and the reason this is not a fixed
+     * deceleration per tonne, which is what it was first. One engine is now
+     * moving two cars, so what the wagon loses is its own output times
+     * `m_other / (m_car + m_other)` — a hatchback takes about two fifths of it,
+     * a van most of it, a bus nearly all of it, and none of those three
+     * sentences exists anywhere: it is the fleet's own `massKg` in a division.
+     *
+     * AND A SHARE CAN NEVER EXCEED THE WHOLE, which is exactly what a per-tonne
+     * deceleration could and did. Against a bus it was several times the
+     * throttle, so the wagon was pinned at a standstill with its foot flat and
+     * the leg simply never finished — the auto-driver spent two thirds of a
+     * JESUS road parked against a bus it could not get out from behind. A drag
+     * that is a share of what you HAVE is bounded by construction.
+     */
+    pushDragPerSec: 1.1,
+    /**
+     * …AND THE SPEED IT MAY NEVER PUSH YOU BELOW (px/s).
+     *
+     * The belt to the braces above, and it is a GAME rule rather than a physical
+     * one: you can always shove the thing in front of you at a walking pace, and
+     * a wagon brought to a dead stop by a wreck it is touching is a leg that
+     * cannot end. It is low enough that being stuck behind a bus is plainly a
+     * disaster and high enough that the road keeps unrolling while you steer out
+     * from behind it — which is the move the whole feature is asking for.
+     */
+    pushFloorPx: 130,
+    /**
+     * HOW FAST A SHOVED WRECK CRABS OUT OF THE WAY (world px/s), as a range its
+     * own hash picks out of.
+     *
+     * THE FIELD THE WHOLE FEATURE TURNS ON. A car pushed by its back bumper does
+     * not go straight: its wheels are pointing wherever the impact left them, so
+     * it walks sideways — and how fast decides whether the player is past it in
+     * a second or wearing it up the road. The bottom of the range is a car that
+     * has to be steered around; the top is one that lets you through on its own.
+     */
+    crabMinPx: 5,
+    crabMaxPx: 34,
+    /** …and how much of that it keeps once the wheel that was steering it has
+     * been torn off. A wreck with no front wheel does not crab, it ploughs. */
+    crabWheelless: 0.35,
+    /** How often a car being ground up the road throws sparks off its underside
+     * (ms) — a cadence rather than an event, because the grinding is a state. */
+    grindEveryMs: 110,
+  },
+
   // ── THROWING PEOPLE OUT OF VEHICLES ───────────────────────────────────────
   /**
    * WHO LEAVES, WHEN, AND HOW FAR THEY GO.

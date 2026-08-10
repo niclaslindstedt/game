@@ -108,10 +108,20 @@ export function driveHitForce(event: DriveEvent): number {
     case "machineDown":
     case "lampFelled":
       return forceOf(event.joules, SMASH_FULL_SHARE);
+    // THE FULL THUMP, and the two new ones belong in it: an END GOING IN is a
+    // write-off, because the body has folded far enough to change shape — the
+    // same structural event the three above it are — and a FUEL TANK is the one
+    // thing out here the hero feels without having touched anything at all.
     case "trafficRolled":
     case "trafficWrecked":
     case "machineSnapped":
+    case "endSmashed":
+    case "trafficExploded":
       return 1;
+    // A wheel leaving is a clunk of steel rather than a collision — the debris
+    // shelf, which is the same weight as clouting a felled lamp post.
+    case "wheelTorn":
+      return DEBRIS_FORCE;
     case "trafficBent":
       return TRAFFIC_BENT_FORCE;
     case "panelBent":

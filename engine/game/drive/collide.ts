@@ -50,6 +50,7 @@ import {
   unparkCar,
 } from "./traffic.ts";
 import { vehicleDef } from "./fleet.ts";
+import { smashEnd } from "./wreckage.ts";
 import {
   ejectOccupants,
   ejectRider,
@@ -493,6 +494,11 @@ function breakCar(
   // energy buys against the vehicle's own stiffness (`crush.ts`) — so the same
   // blow shortens a hatchback by a foot and marks a bus.
   const folded = crushVehicle(other, hit.joules, car.pos.x);
+  // …AND PAST A SHARE OF WHAT THAT END COULD FOLD AT ALL, IT IS STOVE IN. The
+  // latch the picture reads for the rest of the leg: the vehicle swaps to that
+  // END's authored crash art, the wheel under it is thrown, and whatever fuel
+  // the fold has just opened up may find the sparks it threw (`wreckage.ts`).
+  smashEnd(drive, other, hit, car.pos.x);
   // Its glass is not structure and goes long before the body does.
   if (shatterGlass(other, force)) {
     drive.events.push({

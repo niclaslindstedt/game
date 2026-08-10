@@ -129,6 +129,8 @@ import { collide } from "./collide.ts";
 // and now has to get through (`between.ts`).
 import { collideTraffic } from "./between.ts";
 import { crushRemains, forgetRemains, stepRemains } from "./remains.ts";
+import { pushTraffic } from "./push.ts";
+import { stepFires } from "./wreckage.ts";
 import { firstPropSlot, spawnProps, stepProps } from "./street.ts";
 import {
   haltTraffic,
@@ -754,6 +756,14 @@ export function stepDrive(
   // late is the whole reason a pile-up is worth having.
   collideTraffic(drive);
   collide(drive);
+  // …AND THEN WHAT THE BUMPER IS STILL LEANING ON. The push is deliberately the
+  // pass AFTER both collisions rather than part of either: a collision fires
+  // once and this is a state the two of them stay in, so what it shoves is
+  // whatever those two just left in front of the wagon (`push.ts`).
+  pushTraffic(drive, dt);
+  // …and every fire the road is carrying takes one step, which is the only
+  // thing out here that gets worse on its own clock rather than on a blow.
+  stepFires(drive, dt);
   // WHAT THE WHEELS FIND, AFTER what the bumper met — the order is the car's
   // own: the nose reaches a thing before the axles do, so a body knocked down
   // this tick is run over on a later one rather than being met and crushed in

@@ -205,6 +205,14 @@ export function createTraffic(
     angle: 0,
     spin: 0,
     phase,
+    smashNose: false,
+    smashTail: false,
+    wheelsOff: 0,
+    fire: 0,
+    fireMs: 0,
+    blown: false,
+    pushMs: 0,
+    crab: 0,
   };
 }
 

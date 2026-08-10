@@ -52,7 +52,11 @@ import {
   projectY,
   unprojectY,
 } from "../render/tilt.ts";
-import { drawCarAssembly, drawLightCones } from "../render/vehicles.ts";
+import {
+  drawCarAssembly,
+  drawLightCones,
+  wheelSprite,
+} from "../render/vehicles.ts";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -1140,10 +1144,45 @@ export function drawDrive(
       drawCarAssembly(ctx, drive.car, sprites, camera, timeMs, coat, tyres),
   });
 
-  // A thrown wheel, bouncing down the road behind the wreck.
+  // ── A THROWN WHEEL, SPINNING AWAY DOWN THE ROAD ───────────────────────────
+  // TWO THINGS MAKE IT READ AS A WHEEL RATHER THAN AS A DISC BEING SLID ABOUT,
+  // and it had neither: it was blitted at one fixed frame, at one fixed
+  // attitude, for the whole of its flight.
+  //
+  //   THE FRAME  — the same two-picture spoke pair the hero's own thrown wheels
+  //                use (`wheelSprite`, render/vehicles.ts), picked off the
+  //                wheel's OWN roll angle, which the sim advances from its
+  //                ground speed. A flat one deliberately holds one picture,
+  //                because a flat does not roll.
+  //   THE ANGLE  — and the whole sprite turned by that same angle, which is what
+  //                actually sells it while the thing is in the air and its
+  //                ground speed is doing nothing to the spokes. A tyre is round,
+  //                so rotating it costs the pixel art nothing — the same licence
+  //                the felled lamp posts and the yawing traffic already take on
+  //                this road.
   for (const wheel of drive.wheelDebris) {
-    const name = wheel.wheelState === 1 ? "car_wheel_flat" : "car_wheel_0";
-    put(name, wheel.pos.x, wheel.pos.y, wheel.z);
+    const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
+    const name = wheelSprite(wheel.wheelState, frame);
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) continue;
+    drawn.push({
+      y: wheel.pos.y,
+      draw: () =>
+        billboard(ctx, wheel.pos.x, wheel.pos.y, camera.x, camera.y, () => {
+          ctx.save();
+          ctx.translate(
+            seatX(wheel.pos.x, camera.x),
+            seatY(wheel.pos.y, camera.y) - Math.round(wheel.z),
+          );
+          ctx.rotate(wheel.angle);
+          ctx.drawImage(
+            sprite,
+            -Math.round(sprite.width / 2),
+            -Math.round(sprite.height - 2),
+          );
+          ctx.restore();
+        }),
+    });
   }
 
   // ── AND NOBODY IS EVER DRAWN OUT OF THE CAR ───────────────────────────────
