@@ -83,13 +83,24 @@ const CutscenePreview = lazy(() =>
 
 // Shown when the lazy game chunk (or the game itself) dies during render —
 // a failed dynamic import (stale page vs a fresh deploy, flaky network, a
-// stale native webroot) used to unmount the whole tree into a silent black
-// screen. Plain DOM and system font on purpose: the game's assets may be
+// stale native webroot), or a run that cannot take its first step (a run
+// parked by an older build, thawed by a new one — see game-screen/
+// run-health.ts). Either used to unmount the whole tree into a silent black
+// screen, which reads as the game being broken rather than as one run being
+// unreadable. Plain DOM and system font on purpose: the game's assets may be
 // exactly what failed to load.
+//
+// It says what happened and nothing more. What actually went wrong is in the
+// log buffer (`?debug`) for a bug report; a player standing in front of a
+// black screen needs the fact and a button, not a stack trace.
 function RunLoadError() {
   return (
     <div className="run-load-error">
-      <p>The game failed to load.</p>
+      <p>
+        Something went wrong.
+        <br />
+        The game can&rsquo;t load.
+      </p>
       <button type="button" onClick={() => window.location.reload()}>
         RELOAD
       </button>
