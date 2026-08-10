@@ -873,6 +873,9 @@ export function DriveScreen({
         viewW,
         viewH,
         drive.car.pos,
+        // …and the atlas, for the two effects out here made of authored ART
+        // rather than of particles: a burning car and a fuel tank going.
+        assets.sprites,
       );
 
       // ── THE STEERING HINT ─────────────────────────────────────────────────

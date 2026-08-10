@@ -23,6 +23,7 @@
 
 import { DRIVE } from "@game/core";
 
+import { spriteByName, type Sprites } from "../assets.ts";
 import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 
@@ -82,7 +83,34 @@ type DriveFxKind =
    * cannot say that, and the gore burst beside it throws PIECES rather than
    * liquid — so this is the spray, and it is the only one.
    */
-  | "blood";
+  | "blood"
+  /**
+   * A CAR BURNING — and the one effect on this road drawn out of SPRITES rather
+   * than out of canvas primitives.
+   *
+   * EVERYTHING ELSE HERE IS PARTICLES ON PURPOSE. Grit, sparks, shards, dust and
+   * smoke are things there are HUNDREDS of, each one a pixel or a disc, and the
+   * mass IS the picture — authored art for any of them would be one sprite drawn
+   * three hundred times a frame to make a cloud. Fire is the opposite: there is
+   * ONE of it, it is the brightest thing in the frame, it has a SHAPE the eye
+   * knows, and a fire built out of orange dots reads as sparks. So it is the
+   * game's own flame ladder (`content/sprites/effects/flame_*.yaml` — five
+   * stages of two frames), picked by how well alight the car is and laid over it
+   * additively. The same art the flamethrower burns with, which is the point:
+   * this game has one fire.
+   */
+  | "fire"
+  /**
+   * …AND THE FUEL TANK GOING.
+   *
+   * ITS OWN KIND RATHER THAN A BIG `fire`, because it is a different shape as
+   * well as a different size. A fire SITS on a car and grows over seconds; a
+   * blast LEAVES one — a ball that opens in three frames and is gone in under a
+   * second, throwing its smoke SIDEWAYS along the road rather than up, which is
+   * the proportion the launch pad's cloud had to be taught and is just as true
+   * of something going off at knee height between four lanes.
+   */
+  | "blast";
 
 /** One live effect on the road. */
 type DriveFx = {
@@ -170,6 +198,18 @@ export type DriveFxState = {
   /** Every vehicle currently smoking, keyed on its traffic id (`stepWreckSmoke`
    * in `wreck-smoke.ts` owns it — see `WreckSmoke` for why it is parked here). */
   wrecks: Map<number, WreckSmoke>;
+  /**
+   * …and every vehicle currently BURNING or being SHOVED, keyed the same way and
+   * holding the drive-clock ms its next issue is due at (`stepBurning` in
+   * `burning.ts` owns it).
+   *
+   * ITS OWN MAP RATHER THAN A FIELD ON THE ONE ABOVE, because the two answer
+   * different questions on different cadences and a vehicle is very often in
+   * exactly one of them: a car can be alight and perfectly upright (nothing for
+   * the wreck cloud to do), and a car can be on its roof in a cloud of dust
+   * without a flame anywhere near it.
+   */
+  burns: Map<number, number>;
   /** Camera shake, in world px of amplitude, decaying every step. */
   shake: number;
   /** The white bloom over a heavy hit, 0→1, decaying every step. */
@@ -234,6 +274,7 @@ export function createDriveFx(): DriveFxState {
   return {
     fx: [],
     wrecks: new Map(),
+    burns: new Map(),
     shake: 0,
     flash: 0,
     calm:
@@ -479,10 +520,92 @@ export function driveWindscreenGore(
   push(state, "blood", x, y, nowMs, 1500, 1, false, 0, lift);
 }
 
+/**
+ * A CAR ALIGHT — one flame, at the vehicle, sized by how far the burn has got.
+ *
+ * ISSUED ON A CADENCE at the vehicle's own place rather than followed, the same
+ * shape `stepWreckSmoke` uses and for the same reason: `DriveFx.follow` means
+ * THE HERO'S CAR, so a burning car that set it would light a fire on the
+ * player's own bonnet. A fire on a car that is being pushed up the road has to
+ * travel with the car, and the only honest way is to re-issue it where the car
+ * now is.
+ *
+ * `force` is the burn itself (`DriveTraffic.fire`), which is what picks the
+ * stage of the flame ladder — so the player watches a flicker under a wing
+ * become an engine bay going up, rather than a fire switching on.
+ */
+export function driveVehicleFire(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+  force: number,
+  /** How far off the road it burns (world px) — a bonnet, not the tarmac. */
+  lift: number,
+  lifeMs: number,
+): void {
+  push(state, "fire", x, y, nowMs, lifeMs, force, false, 0, lift);
+}
+
+/**
+ * THE TANK GOING — and the one moment on this road allowed to be too much.
+ *
+ * FULL FORCE WHATEVER THE JOULES SAY, which is the same call the windscreen gore
+ * and the machine snap already make: the engine has decided a fuel tank has
+ * exploded, and an explosion has no gentle version. It is FOUR effects at once
+ * because that is what the eye needs to read it as one event — the ball, the
+ * sparks thrown out of it, the shards of what used to be a car, and the pall
+ * that hangs there afterwards — and it takes the frame harder than anything
+ * else out here, which is the ceiling `SMASH_SHAKE_MAX` exists for.
+ */
+export function driveBlast(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+): void {
+  push(state, "blast", x, y, nowMs, BLAST_MS, 1, false, 0, BLAST_LIFT);
+  push(state, "spark", x, y, nowMs, 620, 1, false, 0, BLAST_LIFT);
+  push(state, "shard", x, y, nowMs, 1300, 1, false, 0, BLAST_LIFT);
+  push(state, "glass", x, y, nowMs, 1000, 1, false, 0, BLAST_LIFT);
+  // …and the smoke it leaves, wide and low, which is what is still there when
+  // the player looks in his mirror.
+  push(state, "dust", x, y, nowMs, DUST_LIFE_MS * 1.4, 1, false, 0, 0, 26);
+  kick(state, 2.6, 1.6, SMASH_SHAKE_MAX);
+}
+
+/** How long the fireball itself lasts (ms) — short, because a fireball is: what
+ * outlives it is the smoke and the burn underneath. */
+const BLAST_MS = 620;
+/** …and how far off the road its middle sits (world px). A tank is under the
+ * boot, so the ball opens at about knee height rather than on the tarmac. */
+const BLAST_LIFT = 10;
+
+/**
+ * STEEL BEING GROUND UP THE ROAD — the sparks under a car the wagon is pushing.
+ *
+ * Small and often rather than big and once: this is issued on a cadence for as
+ * long as the shove lasts (`stepVehicleFires`), so what the player sees is a
+ * continuous stream of sparks from under the wreck he is bullying along, which
+ * is the picture's half of "you are dragging this". It shakes NOTHING — the
+ * collision that started the shove already took its shake, and a frame that
+ * juddered for the whole of a push would be charging him for one event twice.
+ */
+export function driveGrindSparks(
+  state: DriveFxState,
+  x: number,
+  y: number,
+  nowMs: number,
+  force: number,
+): void {
+  push(state, "spark", x, y, nowMs, 300, 0.25 + force * 0.4);
+}
+
 /** Everything the road throws away when the leg restarts. */
 export function clearDriveFx(state: DriveFxState): void {
   state.fx.length = 0;
   state.wrecks.clear();
+  state.burns.clear();
   state.shake = 0;
   state.flash = 0;
 }
@@ -611,6 +734,11 @@ export function drawDriveFx(
    * was born. Omitted leaves every effect on the road, which is what all but one
    * of them want. */
   carAt?: { x: number; y: number },
+  /** The atlas, for the two effects out here made of AUTHORED ART rather than of
+   * particles — the burn and the blast. Omitted (a still that has no atlas to
+   * hand) simply draws neither: they are the one pair on this road with nothing
+   * to fall back to, because a fire drawn as a cloud of orange dots is sparks. */
+  sprites?: Sprites,
 ): void {
   for (const fx of state.fx) {
     const t = Math.min(1, Math.max(0, (nowMs - fx.bornMs) / fx.lifeMs));
@@ -629,7 +757,11 @@ export function drawDriveFx(
     else if (fx.kind === "dust") drawDust(ctx, fx, t, sx, sy);
     else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy);
     else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
-    else drawSmoke(ctx, fx, t, sx, sy);
+    else if (fx.kind === "fire") {
+      if (sprites) drawFire(ctx, sprites, fx, t, sx, sy, nowMs);
+    } else if (fx.kind === "blast") {
+      if (sprites) drawBlast(ctx, sprites, fx, t, sx, sy);
+    } else drawSmoke(ctx, fx, t, sx, sy);
   }
   // THE BLOOM GOES LAST AND GOES ADDITIVE: a heavy hit whites the frame out
   // rather than laying a grey sheet over it. `lighter` over a dark road is a
@@ -962,6 +1094,161 @@ function drawDust(
     ctx.beginPath();
     ctx.arc(Math.round(px), Math.round(py), r, 0, Math.PI * 2);
     ctx.fill();
+  }
+  ctx.restore();
+}
+
+/**
+ * THE FLAME LADDER, and which rung a burn of this force is on.
+ *
+ * FIVE STAGES OF TWO FRAMES, authored for the flamethrower's gout
+ * (`content/sprites/effects/flame_*.yaml`) and reused here without a pixel
+ * changed — because a car fire and a gout of burning fuel are the same
+ * MATERIAL, and this game deliberately has one of it. The stage is the burn's
+ * own progress, so the picture grows with the fire rather than switching on.
+ */
+const FLAME_STAGES = 5;
+/** How fast the two frames of a stage alternate (ms). Fast — fire is the one
+ * thing on this road allowed to flicker, and a slow one reads as a flag. */
+const FLAME_FRAME_MS = 90;
+
+/**
+ * A BURNING CAR — the flame ladder, laid over the vehicle additively.
+ *
+ * THREE TONGUES RATHER THAN ONE, spread along the body and each on its own
+ * frame, because a car is four metres long and a single 14-px sprite sitting on
+ * the middle of it reads as a bonfire somebody has parked next to. They are
+ * offset by the effect's own seed so two burning cars never flicker in step,
+ * which is the thing that would give the whole trick away.
+ *
+ * ADDITIVE, because fire is LIGHT: over night tarmac `source-over` would paste
+ * an orange sticker on the road, and what is wanted is the road being seen
+ * through the flame and everything near it lifting.
+ */
+function drawFire(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+  nowMs: number,
+): void {
+  const lift = fx.lift ?? 0;
+  // The stage the burn has reached — capped one short of the top until it is
+  // really going, so "well alight" still has somewhere to climb to.
+  const stage = Math.min(FLAME_STAGES - 1, Math.floor(fx.force * FLAME_STAGES));
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // It fades in and out over its own short life, so consecutive issues on the
+  // cadence overlap into one continuous burn rather than popping.
+  const alpha = Math.min(1, (1 - t) * 1.6) * (0.55 + fx.force * 0.45);
+  for (let i = 0; i < 3; i++) {
+    const step = Math.max(0, stage - (i === 0 ? 0 : 1));
+    const beat = Math.floor((nowMs + i * 37 + fx.seed) / FLAME_FRAME_MS) % 2;
+    const name = `flame_${step}${beat === 0 ? "a" : "b"}`;
+    const sprite = spriteByName(sprites, name);
+    if (!sprite) continue;
+    const along = (scatter(fx.seed, i, 41) - 0.5) * 20;
+    const climb = i * 3 + scatter(fx.seed, i, 42) * 4;
+    ctx.globalAlpha = alpha * (i === 0 ? 1 : 0.7);
+    ctx.drawImage(
+      sprite,
+      Math.round(sx + along - sprite.width / 2),
+      Math.round(sy - lift - climb - sprite.height),
+    );
+  }
+  ctx.restore();
+}
+
+/**
+ * THE FUEL TANK GOING — a ball that opens, and the black that comes off it.
+ *
+ * IT OPENS OUTWARD AND ALONG THE ROAD rather than upward, which is the same
+ * proportion the launch pad's cloud had to be taught: something going off at
+ * knee height between four lanes has nowhere to go but sideways, and a mushroom
+ * reads as a bomb rather than as a car. So the ring of flame is nearly twice as
+ * wide as it is tall.
+ *
+ * THE CORE IS DRAWN LAST AND BRIGHTEST, and it is what makes the first two
+ * frames read: an explosion is a flash with a fireball behind it, and a ring of
+ * flame sprites with nothing in the middle reads as a smoke ring.
+ */
+function drawBlast(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const lift = fx.lift ?? 0;
+  const ease = t * (2 - t);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // THE BALL, as a ring of the biggest flame the ladder has, thrown outward.
+  const petals = 9;
+  for (let i = 0; i < petals; i++) {
+    // Late in its life the ball is breaking up, so the outer tongues drop down
+    // the ladder — which is what turns a fireball into a burning wreck rather
+    // than switching it off.
+    const step = t < 0.45 ? 4 : t < 0.75 ? 3 : 2;
+    const beat = i % 2 === 0 ? "a" : "b";
+    const sprite = spriteByName(sprites, `flame_${step}${beat}`);
+    if (!sprite) continue;
+    const angle = (i / petals) * Math.PI * 2 + fx.seed * 0.01;
+    const reach = 30 * ease * (0.5 + scatter(fx.seed, i, 51) * 0.9);
+    const px = sx + Math.cos(angle) * reach;
+    // FLATTENED ACROSS THE ROAD, like every other scatter in this file: the
+    // world is drawn raked, so a circle in world space is an ellipse on screen.
+    const py = sy - lift + Math.sin(angle) * reach * 0.4 - ease * 6;
+    ctx.globalAlpha = Math.max(0, 1 - t * 1.15);
+    ctx.drawImage(
+      sprite,
+      Math.round(px - sprite.width / 2),
+      Math.round(py - sprite.height / 2),
+    );
+  }
+  // THE FLASH IN THE MIDDLE, which is most of what the first three frames are.
+  const core = Math.max(0, 1 - t * 3.2);
+  if (core > 0) {
+    ctx.globalAlpha = core;
+    ctx.fillStyle = "rgba(255, 244, 214, 0.9)";
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.round(sx),
+      Math.round(sy - lift),
+      10 + ease * 26,
+      6 + ease * 12,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+  // …AND THE BLACK OFF IT, which is NOT additive — smoke is matter, and drawn
+  // with `lighter` it would brighten the road it is supposed to be hiding.
+  const soot = Math.min(1, t * 1.4);
+  if (soot <= 0) return;
+  ctx.save();
+  for (let i = 0; i < 10; i++) {
+    const sprite = spriteByName(sprites, `flame_smoke_${i % 3}`);
+    if (!sprite) continue;
+    const angle = scatter(fx.seed, i, 61) * Math.PI * 2;
+    const reach = 34 * ease * (0.4 + scatter(fx.seed, i, 62) * 1.1);
+    ctx.globalAlpha = Math.max(0, (1 - t) * 0.55);
+    ctx.drawImage(
+      sprite,
+      Math.round(sx + Math.cos(angle) * reach - sprite.width / 2),
+      Math.round(
+        sy -
+          lift +
+          Math.sin(angle) * reach * 0.4 -
+          ease * 14 -
+          sprite.height / 2,
+      ),
+    );
   }
   ctx.restore();
 }

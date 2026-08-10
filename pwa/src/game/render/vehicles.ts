@@ -244,8 +244,16 @@ export function drawVehicles(
   }
 }
 
-/** Which sprite a wheel wears: its state first, then the roll frame. */
-function wheelSprite(wheelState: number, frame: number): string {
+/**
+ * Which sprite a wheel wears: its state first, then the roll frame.
+ *
+ * EXPORTED FOR THE ROAD. The drive throws wheels too — off the hero's own axles
+ * and, now, off every car whose end has been stove in (`shedEndWheel`) — and it
+ * used to draw all of them as one fixed picture, so a wheel spun down the
+ * carriageway without ever turning. One function rather than two is the only way
+ * the two lists stay the same wheel.
+ */
+export function wheelSprite(wheelState: number, frame: number): string {
   if (wheelState === 1) return "car_wheel_flat"; // a flat doesn't spin
   if (wheelState === 2) return `car_wheel_bent_${frame}`;
   return `car_wheel_${frame}`;

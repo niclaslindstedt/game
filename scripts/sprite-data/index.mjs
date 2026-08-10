@@ -304,6 +304,42 @@ export function deriveWrecks(fleet) {
     for (const [name, rows] of Object.entries(rollFrames(def.id, grid))) {
       register(family, name, rows, palette);
     }
+    // ── AND THE SAME AGAIN FOR EACH END'S CRASH ART ─────────────────────────
+    // `<id>_front` and `<id>_rear` are AUTHORED grids (the body warped by the
+    // collision — see content/sprites/earth/traffic_*_front.yaml), and the
+    // renderer swaps the whole body to one of them once that end is stove in.
+    // The two overlays have to be derived from THOSE grids rather than from the
+    // clean one, and the reason is the wheels: they are a separate picture laid
+    // over the body, the fold has MOVED the surviving wheel and the smashed end
+    // has none at all. Struck from the clean grid they would spin a disc in mid
+    // air where the torn-off wheel used to be, and miss the one still turning.
+    //
+    // It needs no special case for "which wheel is gone": `wheelDiscs` reads the
+    // tyre char off the grid it is handed, and the crash art draws a bare hub
+    // there rather than a tyre — so the missing wheel is missing by construction.
+    //
+    // The BLOOD ON THE GLASS is derived per picture for the same reason: the
+    // windows move when the body folds, and a screen that has been blown out is
+    // not a window to have anything on.
+    for (const side of ["front", "rear"]) {
+      const crashed = SPRITES[`${def.id}_${side}`];
+      if (!crashed) continue;
+      const ink = {
+        ...family.palette,
+        ...SPRITE_PALETTES[`${def.id}_${side}`],
+      };
+      for (const [name, rows] of Object.entries(
+        rollFrames(`${def.id}_${side}`, crashed),
+      )) {
+        register(family, name, rows, ink);
+      }
+      register(
+        family,
+        `${def.id}_${side}_gore`,
+        wreckedFrames(`${def.id}_${side}`, crashed)[`${def.id}_${side}_gore`],
+        ink,
+      );
+    }
   }
 }
 

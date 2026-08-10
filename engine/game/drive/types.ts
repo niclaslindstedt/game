@@ -553,6 +553,73 @@ export type DriveTraffic = {
    * comes to rest on its wheels or on its roof.
    */
   rolls: number;
+  /**
+   * WHICH END HAS BEEN STOVE IN — latched, per end, and the reason a struck car
+   * stops being the car it was.
+   *
+   * IT IS NOT `crushNose`/`crushTail` AND IT IS NOT DERIVED FROM THEM AT THE
+   * CALL SITE. Those are LENGTHS, solved every blow, and they drive how far the
+   * renderer squeezes that half of the body. This is a THRESHOLD that has been
+   * crossed and cannot be uncrossed, and three quite different things hang off
+   * it: the app swaps in that end's authored crash art (`traffic_<id>_front` /
+   * `_rear`), the wheel under it is thrown (`shedEndWheel`), and the fuel it is
+   * carrying is now somewhere it should not be (`igniteFrom`).
+   *
+   * NOSE and TAIL are the BODY's ends, not the screen's, exactly as the crush
+   * and the lamps are: which one a blow smashes depends on which way the thing
+   * was pointing (`faceLeft`).
+   */
+  smashNose: boolean;
+  smashTail: boolean;
+  /**
+   * WHICH OF ITS WHEELS ARE GONE — 1 the nose's, 2 the tail's, 3 both.
+   *
+   * A BITMASK RATHER THAN A COUNT, because the renderer has to know WHICH: the
+   * turning-wheel overlay is one picture holding both discs (`<id>_roll_N`), so
+   * a car that has lost the front one still turns the back one and the overlay
+   * has to be suppressed at one end rather than switched off.
+   */
+  wheelsOff: number;
+  /**
+   * HOW WELL ALIGHT IT IS, 0 → 1.
+   *
+   * A RATE, NOT A FLAG. A car does not catch fire and then be on fire: a
+   * ruptured line burns under the wing, the flame climbs, and the whole engine
+   * bay is going a few seconds later — which is exactly the beat the player is
+   * driving away from, and it only reads if the picture GROWS. So the renderer
+   * takes its flame size and its smoke off this, and the fuel tank reads it to
+   * decide when it has had enough (`stepFires`).
+   */
+  fire: number;
+  /** …and how long it has been burning (ms) — the tank's own fuse. */
+  fireMs: number;
+  /**
+   * ITS TANK HAS ALREADY GONE. Latched, because a fuel tank explodes once: what
+   * is left afterwards burns out rather than going up again.
+   */
+  blown: boolean;
+  /**
+   * MS THE WAGON HAS BEEN SHOVING IT ALONG IN FRONT OF IT.
+   *
+   * The one field the PUSH needs to keep between ticks, and it is a clock rather
+   * than a boolean because everything the shove does gets worse the longer it
+   * lasts: the tyres scrub, the sparks come off the underside, and the bent
+   * steering below has time to walk the thing out of the way.
+   */
+  pushMs: number;
+  /**
+   * …AND WHICH WAY ITS BENT STEERING IS DRAGGING IT (world px/s, signed across
+   * the road).
+   *
+   * WHAT MAKES A SHOVE A SITUATION RATHER THAN A DRAG. A car with its front end
+   * folded has its wheels pointing wherever the impact left them, so being
+   * pushed does not send it straight up the road — it crabs, and how fast and
+   * which way is the whole of whether the hero is past it in a second or wearing
+   * it for the next hundred metres. DERIVED off the vehicle's own id rather than
+   * drawn (see `crabOf`), because the road's seeded stream lays the traffic down
+   * and a draw spent here would move every car after it.
+   */
+  crab: number;
 };
 
 /** What a piece of kerbside furniture is. */
@@ -709,6 +776,37 @@ export type DriveEvent =
    * the carriageway upside down.
    */
   | { type: "trafficRolled"; pos: Vec2; joules: number }
+  /**
+   * AN END HAS BEEN STOVE IN — the blow that turns a dented car into a wreck
+   * with a shape.
+   *
+   * ITS OWN BEAT RATHER THAN A LOUDER `trafficBent`, because it is the moment
+   * the picture changes rather than a rung on the way there: the vehicle swaps
+   * to that end's crash art, the wheel under it leaves, and the noise the player
+   * is owed is a structural one — a body folding rather than paint being traded.
+   */
+  | { type: "endSmashed"; pos: Vec2; joules: number }
+  /**
+   * …AND A WHEEL HAS COME OFF ONE. Raised per wheel, at the wheel, because it is
+   * the ONE piece of a collision that leaves and keeps going — it bounces down
+   * the road on its own physics for the rest of the leg, and it is worth its own
+   * sound for the same reason it is worth its own body.
+   */
+  | { type: "wheelTorn"; pos: Vec2; joules: number }
+  /**
+   * SOMETHING HAS CAUGHT. A ruptured line under a folded wing, lit by the same
+   * sparks the fold threw — the start of the burn, not the whole of it: how far
+   * it gets is `DriveTraffic.fire`, and the app reads that rather than this.
+   */
+  | { type: "trafficFire"; pos: Vec2; joules: number }
+  /**
+   * …AND THE TANK WENT. The biggest single thing that happens on this road, and
+   * the only event on it that HURTS THE HERO WITHOUT HIM TOUCHING ANYTHING —
+   * which is why it carries its energy: the app shakes the frame off it and the
+   * blast reaches the wagon through `blastDamage` rather than through a
+   * collision.
+   */
+  | { type: "trafficExploded"; pos: Vec2; joules: number }
   /**
    * A CAR'S GLASS HAS LEFT IT, with nobody through it.
    *

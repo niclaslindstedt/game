@@ -39,7 +39,7 @@ import { spriteByName, type Sprites } from "../assets.ts";
 import { seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
-import { roofBar, trafficSprite, type RoofBar } from "./scenery.ts";
+import { crashEnd, roofBar, trafficSprite, type RoofBar } from "./scenery.ts";
 import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /**
@@ -104,13 +104,24 @@ export function drawTrafficBody(
    * flashing. Omitted (a still, an exhibit) draws it lit rather than dark. */
   timeMs = 0,
 ): void {
-  const name = trafficSprite(other.variant, other.rung);
+  // ── WHICH PICTURE IT IS WEARING, AND WHAT THE OVERLAYS BELONG TO ──────────
+  // THE SKIN is the body grid the overlays were derived FROM: the vehicle's own
+  // art while it is merely battered, and that END's authored crash art once the
+  // collision has genuinely folded one (`crashEnd`). It matters because the
+  // wheels and the blood are separate pictures laid over the body — and the
+  // crash art has BENT the body, so the surviving wheel has moved, the torn-off
+  // one is not there at all, and the windows are somewhere else. Derived from
+  // the clean grid they would spin a disc in mid air where a wheel used to be.
+  //
+  // THE BODY is the skin plus a dent rung, and only while the skin is the clean
+  // one: the crash art IS the damage, so it never wears a rung on top.
+  const has = (id: string) => spriteByName(sprites, id) !== undefined;
+  const skin = trafficSprite(other.variant, 0, crashEnd(other), has);
+  const name = trafficSprite(other.variant, other.rung, crashEnd(other), has);
   const sprite = spriteByName(sprites, name);
   if (!sprite) return;
   const gore =
-    other.gore > 0
-      ? spriteByName(sprites, `${vehicleDef(other.variant).id}_gore`)
-      : undefined;
+    other.gore > 0 ? spriteByName(sprites, `${skin}_gore`) : undefined;
   // ITS WHEELS, TURNING. A derived overlay holding the discs and nothing else
   // (`asset-tools/spin.mjs`), laid over whichever damage rung is showing — so a
   // car folded in half still turns the wheel it still has, and the fold, the
@@ -119,10 +130,7 @@ export function drawTrafficBody(
   //
   // A wreck's wheels stop because `rollFrame` reads its POSITION: a vehicle that
   // is not moving is not turning, with nothing to switch off.
-  const roll = spriteByName(
-    sprites,
-    `${vehicleDef(other.variant).id}_roll_${rollFrame(other)}`,
-  );
+  const roll = spriteByName(sprites, `${skin}_roll_${rollFrame(other)}`);
   const fold = crushShare(other);
   billboard(ctx, other.pos.x, other.pos.y, camera.x, camera.y, () => {
     ctx.save();

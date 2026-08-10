@@ -41,6 +41,7 @@ import {
   driveBreakdown,
   driveLampGlass,
   drivePartHit,
+  driveBlast,
   driveSmash,
   driveTrafficHit,
   driveWindscreenGore,
@@ -69,6 +70,7 @@ import { soakCarFromStrike } from "./car-soak.ts";
 import { stepSkids, type SkidState } from "./skid.ts";
 import { driveVoice } from "./voice.ts";
 import { stepWreckSmoke } from "./wreck-smoke.ts";
+import { stepBurning } from "./burning.ts";
 import {
   bodySprite,
   crushRemain,
@@ -261,6 +263,11 @@ export function drainDrive(
   // fixed step rather than on the frame — and, unlike everything in the event
   // loop below, a wreck is a thing that goes ON happening. See `wreck-smoke.ts`.
   stepWreckSmoke(fx, drive);
+  // …and what is ON FIRE, and what is being SHOVED up the road. Both are states
+  // rather than events — a burn takes hold over seconds and travels with the car
+  // it is on, and a push lasts for as long as the player keeps his foot in — so
+  // both are issued on a cadence at the vehicle's own place (`burning.ts`).
+  stepBurning(fx, drive);
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
@@ -371,6 +378,43 @@ export function drainDrive(
       playDriveSound(synth, SMASH_SOUNDS[0]);
       playDriveSound(synth, SUB_SOUND);
       playDriveSound(synth, BREAKDOWN_SOUND);
+    }
+    // ── AN END GOING IN ───────────────────────────────────────────────────
+    // The blow that stops a car being the car it was: it swaps to that END's
+    // crash art, the wheel under it leaves, and what the player is owed is a
+    // STRUCTURAL noise rather than the paint trade that caused it. The smash
+    // bank plus the sub, which is the pair he has already learnt as "something
+    // folded" — deliberately not a new sound, because it is not a new event, it
+    // is the top of a ladder he has been climbing all leg.
+    if (event.type === "endSmashed") {
+      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      playDriveSound(synth, pickSmash(event.pos.x, event.pos.y));
+      playDriveSound(synth, SUB_SOUND);
+    }
+    // …AND THE WHEEL COMING OFF IT. Its own beat because it is the one piece of
+    // a collision that LEAVES and keeps going — it bounces off down the road on
+    // its own physics for the rest of the leg — and the clunk of steel hitting
+    // tarmac is exactly the noise the debris bank already holds.
+    if (event.type === "wheelTorn") {
+      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      playDriveSound(synth, DEBRIS_SOUND);
+    }
+    // SOMETHING HAS CAUGHT. Quiet on purpose: the fire itself is not the beat —
+    // it is a promise about the next few seconds, and the thing the player is
+    // meant to react to is the picture of it growing in his mirror.
+    if (event.type === "trafficFire") {
+      playDriveSound(synth, SUB_SOUND);
+    }
+    // …AND THE TANK GOING, which is the loudest thing on this road and the only
+    // one that reaches the hero without him touching anything. Everything at
+    // once: the ball, the shelf, the sub under it and the frame thrown as hard
+    // as this road ever throws it (`driveBlast`).
+    if (event.type === "trafficExploded") {
+      driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
+      playDriveSound(synth, SMASH_SOUNDS[0]);
+      playDriveSound(synth, SMASH_SOUNDS[1]);
+      playDriveSound(synth, SUB_SOUND);
+      playDriveSound(synth, ROLLOVER_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
     // machine hitting tarmac on its side actually is.

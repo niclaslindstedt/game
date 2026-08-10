@@ -307,7 +307,16 @@ export function runDriveExhibit(deps: {
         skids,
       );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
-      drawDriveFx(ctx, fx, camera, drive.ms, viewW, viewH, drive.car.pos);
+      drawDriveFx(
+        ctx,
+        fx,
+        camera,
+        drive.ms,
+        viewW,
+        viewH,
+        drive.car.pos,
+        assets.sprites,
+      );
     },
     onError: (err, phase) => {
       error(`drive exhibit ${phase} failed: ${describeError(err)}`);

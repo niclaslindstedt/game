@@ -37,6 +37,7 @@ import { crushVehicle, shatterGlass, tipsOver, tipVehicle } from "./crush.ts";
 import { ejectRider, tearMachine, wreckForce } from "./eject.ts";
 import { FLEET, vehicleDef } from "./fleet.ts";
 import { hurtTraffic } from "./collide.ts";
+import { smashEnd } from "./wreckage.ts";
 import { impactMasses, panelAt, type Impact } from "./impact.ts";
 import { breakTrafficLamps, knockDown, trafficMass } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -226,6 +227,12 @@ function answer(
   }
 
   crushVehicle(one, joules, by.pos.x);
+  // …AND THE SAME END THAT FOLDS IS THE END THAT STOPS BEING A CAR. Two vehicles
+  // that pile into each other answer for it exactly the way one hit by the wagon
+  // does — the crash art, the wheel off that axle, the fuel finding the sparks —
+  // which is the whole reason `smashEnd` takes WHO HIT IT rather than assuming
+  // the hero.
+  smashEnd(drive, one, hit, by.pos.x);
   if (shatterGlass(one, force)) {
     drive.events.push({ type: "glassSmashed", pos: contact, joules });
   }
