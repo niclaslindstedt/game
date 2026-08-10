@@ -17,6 +17,7 @@
 //
 //   node scripts/town-viewer.mjs                     # five stops along the leg
 //   node scripts/town-viewer.mjs --at 0.5            # one stretch, in detail
+//   node scripts/town-viewer.mjs --at 0.5 --width 340  # …a screenful of it
 //   node scripts/town-viewer.mjs --shells            # every archetype, clean
 //   node scripts/town-viewer.mjs --site goodco       # what the leg pulls into
 //   node scripts/town-viewer.mjs --site home         # …and the way back
@@ -40,7 +41,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { planTown, townDistrict } = await import(
+const { planTown } = await import(
   path.join(root, "engine/game/drive/town-plan.ts")
 );
 const { driveSite, planSite, siteSpanX, siteVehicles } = await import(
@@ -49,7 +50,9 @@ const { driveSite, planSite, siteSpanX, siteVehicles } = await import(
 const { TOWN, TOWN_COLOURWAYS, townHeight, townWidth } = await import(
   path.join(root, "engine/game/drive/town.ts")
 );
-const { DRIVE } = await import(path.join(root, "engine/game/drive/config.ts"));
+const { cityEndPx, DRIVE } = await import(
+  path.join(root, "engine/game/drive/config.ts")
+);
 const { SPRITES, SPRITE_PALETTES } = await import("./sprite-data/index.mjs");
 const { gridToSurface } = await import("./asset-tools/grid.mjs");
 const { blit, createSurface, fill, upscale } =
@@ -64,6 +67,10 @@ const opt = (name, fallback) => {
 const outPath = opt("out", path.join(root, "pwa/assets-preview/town.png"));
 const scale = Number(opt("scale", "3"));
 const shellsOnly = args.includes("--shells");
+/** How much road a stretch shows (world px). A screenful on the reference phone
+ * is about 420, and the default is a screenful and a half — narrow it when the
+ * question is about one building rather than about the rhythm of a row. */
+const stripPx = Number(opt("width", "640"));
 const only = opt("at", null);
 const siteName = opt("site", null);
 
@@ -90,7 +97,16 @@ function strip(t, widthPx) {
     coursePx: DRIVE.coursePx,
     cityPx: DRIVE.opening.cityPx,
   };
-  const x0 = Math.round(road.cityPx + t * (road.coursePx - road.cityPx));
+  // …AND IT ENDS AT THE TOWN'S OWN GATE rather than at the finish. The last
+  // stretch of a leg is the destination's run-in and has no houses on it at all
+  // (`cityEndPx`), so measuring the stop against `coursePx` put `--at 1` past
+  // the end of the row and quietly answered the question with an empty verge.
+  const x0 = Math.round(
+    road.cityPx +
+      t *
+        (cityEndPx({ coursePx: road.coursePx, cityPx: road.cityPx }) -
+          road.cityPx),
+  );
   const props = planTown(x0, x0 + widthPx, road);
   if (!props.length) return createSurface(widthPx, 8);
   // THE NEAREST THING IN THE PICTURE STANDS ON THE GROUND LINE, and everything
@@ -98,7 +114,12 @@ function strip(t, widthPx) {
   // the drive's projection at yaw 0, and enough to judge a street by.
   const nearest = Math.max(...props.map((p) => p.y));
   const groundY = 10;
-  const top = Math.min(...props.map((p) => nearest - p.y + groundY - p.h));
+  // …so the canvas has to reach the highest ROOF, and a piece standing further
+  // back is drawn HIGHER: its lift comes OFF its screen top rather than being
+  // added to it. Added, the sheet came out 18 px short — twice the gap between
+  // the frontage line and the building line — and every roof on the road was
+  // sliced off at exactly the height nobody thought to measure.
+  const top = Math.min(...props.map((p) => groundY - (nearest - p.y) - p.h));
   const height = Math.round(groundY - top) + 8;
   const base = height - 8;
   const out = createSurface(widthPx, height);
@@ -247,7 +268,7 @@ const sheet = siteName
   ? site(siteName)
   : shellsOnly
     ? shells()
-    : stack(STOPS.map((t) => strip(t, 640)));
+    : stack(STOPS.map((t) => strip(t, stripPx)));
 await writePng(upscale(sheet, scale), outPath);
 if (siteName) {
   console.log(`wrote the ${siteName} run-in → ${outPath}`);
@@ -255,5 +276,5 @@ if (siteName) {
   console.log(
     shellsOnly
       ? `wrote ${TOWN.length} archetypes x ${TOWN_COLOURWAYS.length} colourways → ${outPath}`
-      : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => townDistrict(DRIVE.opening.cityPx + t * (DRIVE.coursePx - DRIVE.opening.cityPx), { direction: 1, coursePx: DRIVE.coursePx, cityPx: DRIVE.opening.cityPx }).toFixed(2)).join(", ")}) → ${outPath}`,
+      : `wrote ${STOPS.length} stretch(es) of road (district ${STOPS.map((t) => t.toFixed(2)).join(", ")}) → ${outPath}`,
   );

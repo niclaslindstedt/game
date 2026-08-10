@@ -63,6 +63,7 @@ const PARTS_HEX = {
   Y: "#c9b45a", // brass, a shop light, a warning stripe
   N: "#59d8c0", // a sprayed tag
   M: "#d8598a", // …a second colour, because one tag is a stain
+  m: "#8f4066", // …and the same hue with the light off — a neon tube's far side
   E: "#3c6234", // planting — a night green; the daylight one reads as neon here
   e: "#2a4526", // …shaded
   S: "#6f7a82", // galvanised
@@ -388,6 +389,23 @@ const FIXTURES = {
     outline(g, 1, 2, w - 2, h - 3);
     rect(g, 3, 4, w - 6, h - 7, "Y");
   },
+  sign_neon(g, w, h) {
+    // A TUBE, NOT A LIT BOARD, and the difference is that a tube is a LINE with
+    // dark on both sides of it. So it is a box of night glass with one
+    // unbroken loop of colour set into it and a word glowing inside the loop —
+    // a lit rectangle would be a lit window, which is the one thing the
+    // brightest sign on this road must not read as.
+    put(g, Math.floor(w / 2), 0, "t"); // the bracket it hangs off
+    rect(g, 0, 1, w, h - 1, "K");
+    outline(g, 0, 1, w, h - 1);
+    outline(g, 2, 2, w - 4, h - 3, "M");
+    // THE FAR SIDE OF THE TUBE IS DIMMER, which is the whole difference between
+    // a sign that glows and a pink rectangle. Flat, it was the most saturated
+    // thing on the road by a distance and pulled the eye off the buildings.
+    hline(g, 2, h - 2, w - 4, "m");
+    vline(g, w - 3, 2, h - 3, "m");
+    hline(g, 4, 3, w - 8, "N");
+  },
   sign_hoard(g, w, h) {
     // A hoarding: a big flat board over a dead frontage with the paste-ups
     // peeling off it. Half a message and no message at all.
@@ -571,6 +589,23 @@ const FRONTS = {
     }
     hline(g, 0, h - 1, w, "O");
   },
+  front_lot(g, w, h) {
+    // A CAR PARK, which at six rows is an apron and some paint. IT IS THE PAINT
+    // THAT SAYS CAR PARK: a dark band with a bright kerb along its far edge is
+    // a kerb, and the first version of this read as exactly that at speed. So
+    // the tarmac is lifted well clear of the night behind it and the bays are
+    // the loudest thing on the strip.
+    hline(g, 0, 0, w, "S");
+    rect(g, 0, 1, w, h - 2, "s");
+    // THE BAYS ARE MARKS ON THE GROUND, NOT PALINGS. Run full height they meet
+    // the kerb top and bottom and the whole strip reads as a fence at speed —
+    // which is what the first version of this was. Held to the near half they
+    // read as paint, and paint on tarmac is the only thing that says CAR PARK.
+    // Worn white rather than white: a line on a road this far from the money has
+    // been driven over for twenty years, and a bright one is an airport apron.
+    for (let i = 2; i < w; i += 5) vline(g, i, h - 3, 2, "u");
+    hline(g, 0, h - 1, w, "O");
+  },
   front_broken(g, w, h) {
     // WHAT IS LEFT OF ANY OF THE ABOVE. Palings missing, the rest leaning, the
     // rail down — and the gaps are the whole picture, so this is the one piece
@@ -655,6 +690,43 @@ const JUNK = {
       const top = Math.round(roll("skip", i) * 2);
       vline(g, i, 2 - top, top, roll("skip", i + 50) > 0.5 ? "P" : "D");
     }
+  },
+  junk_crates(g, w, h) {
+    // STACKED PRODUCE CRATES — what a grocer puts on the pavement at six in the
+    // morning and takes in at nine at night. Drawn as three boxes rather than
+    // one pile, because a pile of small things reads as a blob until the seams
+    // between them are drawn.
+    // A crate is BOARD with a dark seam under it, never a box drawn in ink: at
+    // three rows an outlined crate is 80% outline, and against a night verge
+    // that is a crate you cannot see.
+    const crate = (x, y, cw, ch) => {
+      rect(g, x, y, cw, ch, "P");
+      hline(g, x, y, cw, "p");
+      vline(g, x, y, ch, "p");
+      hline(g, x, y + ch - 1, cw, "O");
+    };
+    crate(0, h - 3, 5, 3);
+    crate(5, h - 3, w - 5, 3);
+    crate(1, h - 6, 5, 3);
+    // …and what is in the top one, which is the only colour on the whole piece
+    // and the reason it says GROCER rather than BUILDER.
+    hline(g, 2, h - 5, 3, "E");
+  },
+  junk_vend(g, w, h) {
+    // AN ICE MACHINE — the lit box humming beside a motel door at two in the
+    // morning. The header panel is the read: everything else about it is a grey
+    // cabinet, and the one warm strip is what makes it a machine that is still
+    // switched on.
+    rect(g, 0, 0, w, h, "t");
+    outline(g, 0, 0, w, h);
+    hline(g, 1, 1, w - 2, "L");
+    rect(g, 1, 3, w - 2, h - 5, "K");
+    for (let j = 4; j < h - 3; j += 2) hline(g, 2, j, w - 4, "s");
+    // ONE warm reflection down the glass, and no more: a cabinet lit all the
+    // way through is a shopfront, and this is a machine standing beside a door.
+    put(g, 2, h - 4, "l");
+    hline(g, 1, h - 2, w - 2, "T");
+    hline(g, 0, h - 1, w, "O");
   },
   junk_sale(g, w, h) {
     // A board on a post. FOR SALE, TO LET, or the estate agent that put it up

@@ -98,6 +98,7 @@ export const TOWN_ART_SIZE: Readonly<Record<string, [number, number]>> = {
   sign_hanging: [9, 7],
   sign_hoard: [15, 7],
   sign_letters: [15, 4],
+  sign_neon: [13, 7],
   // What has happened to the wall since.
   decal_tag_a: [11, 6],
   decal_tag_b: [9, 5],
@@ -115,6 +116,7 @@ export const TOWN_ART_SIZE: Readonly<Record<string, [number, number]>> = {
   front_chain: [TOWN_PLOT_PX, 9],
   front_planter: [TOWN_PLOT_PX, 6],
   front_broken: [TOWN_PLOT_PX, 7],
+  front_lot: [TOWN_PLOT_PX, 6],
   // …and what is left standing in front of it.
   junk_bin: [5, 7],
   junk_bins: [9, 7],
@@ -124,6 +126,8 @@ export const TOWN_ART_SIZE: Readonly<Record<string, [number, number]>> = {
   junk_sofa: [13, 6],
   junk_skip: [15, 7],
   junk_sale: [7, 10],
+  junk_crates: [11, 6],
+  junk_vend: [7, 10],
 };
 
 /** One interchangeable piece, and where on the road it belongs. */
@@ -185,6 +189,12 @@ export const TOWN_SIGNS: readonly TownPartDef[] = [
   { id: "sign_hanging", district: [0, 0.9], wear: [0, 3], weight: 6 },
   { id: "sign_hoard", district: [0, 0.55], wear: [1, 3], weight: 6 },
   { id: "sign_letters", district: [0.35, 1], wear: [0, 1], weight: 9 },
+  // A LIT TUBE, which is the one sign on this road that is still ON at the poor
+  // end. A liquor store, a diner and a motel all say the same thing after dark
+  // and they say it in neon — and a warm box glowing over a shuttered row is
+  // the same trick the lit window plays: the street is worse for having one
+  // thing left working on it.
+  { id: "sign_neon", district: [0, 0.95], wear: [0, 3], weight: 4 },
 ];
 
 /**
@@ -266,7 +276,26 @@ export const TOWN_FRONTS: Readonly<Record<TownFront, string | null>> = {
   chain: "front_chain",
   planter: "front_planter",
   broken: "front_broken",
+  lot: "front_lot",
 };
+
+/**
+ * …AND WHICH OF THEM A GIVEN-UP STREET TAKES DOWN.
+ *
+ * Past the second rung of wear a picket, a hedge or a rail is the wrong
+ * sentence entirely — what is left at a house nobody keeps is a run of broken
+ * palings. TARMAC IS NOT ON THAT LIST: a car park at the worst end of the road
+ * is a cracked car park, not a fallen fence, and swapping it for one put a row
+ * of broken palings across the front of a supermarket.
+ */
+export const TOWN_FRONTS_BREAK: readonly TownFront[] = [
+  "picket",
+  "wall",
+  "hedge",
+  "rail",
+  "chain",
+  "planter",
+];
 
 /** THE JUNK left in front of it. What a street accumulates when the collections
  * stop, and the fastest read on this whole road that a block has been given
@@ -280,4 +309,10 @@ export const TOWN_JUNK: readonly TownPartDef[] = [
   { id: "junk_sofa", district: [0, 0.5], wear: [2, 3], weight: 6 },
   { id: "junk_skip", district: [0, 0.85], wear: [1, 3], weight: 5 },
   { id: "junk_sale", district: [0.1, 1], wear: [0, 3], weight: 5 },
+  // WHAT A TRADE LEAVES ON THE PAVEMENT. Stacked produce crates outside a
+  // grocer and an ice machine humming beside a motel door are the two pieces of
+  // street furniture that say somebody is still OPEN — which is why they run
+  // the whole road rather than only its tired end.
+  { id: "junk_crates", district: [0, 0.9], wear: [1, 3], weight: 6 },
+  { id: "junk_vend", district: [0.05, 1], wear: [1, 3], weight: 5 },
 ];

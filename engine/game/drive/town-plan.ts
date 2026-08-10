@@ -37,6 +37,7 @@ import {
   TOWN_DECALS,
   TOWN_DOORS,
   TOWN_FRONTS,
+  TOWN_FRONTS_BREAK,
   TOWN_GARAGE_DOORS,
   TOWN_FRONTAGE_SETBACK_PX,
   TOWN_JUNK,
@@ -461,8 +462,12 @@ function dressFrontage(
   // A GIVEN-UP STREET LOSES ITS FENCES. Past the second rung of wear a picket
   // or a hedge is the wrong sentence entirely — what is left at a house nobody
   // is keeping is a run of broken palings, which is its own piece of art rather
-  // than a decal on the old one.
-  const style = fence && wear >= 3 ? "front_broken" : fence;
+  // than a decal on the old one. Only what CAN fall down does: a motel's car
+  // park at the worst end of the road is cracked tarmac, not a broken fence.
+  const style =
+    fence && wear >= 3 && TOWN_FRONTS_BREAK.includes(def.front)
+      ? "front_broken"
+      : fence;
   const size = style ? TOWN_ART_SIZE[style] : undefined;
   const fenceH = size ? size[1] : 0;
   let h = fenceH;
