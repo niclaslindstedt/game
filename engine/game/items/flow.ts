@@ -107,8 +107,8 @@ function arrivalPages(state: GameState): readonly (readonly string[])[] {
 }
 
 /**
- * THE OPENING MONOLOGUE THIS RUN ACTUALLY PLAYS — the level's own, with
- * whatever the hero arrived still thinking about after it.
+ * THE OPENING MONOLOGUE THIS RUN ACTUALLY PLAYS — whatever the hero arrived
+ * still thinking about, and then the level's own.
  *
  * ONE ARRIVAL, ONE MONOLOGUE. The trip in can leave him with something to say,
  * and the right place for a man's opinion of a journey is the moment he gets
@@ -116,22 +116,29 @@ function arrivalPages(state: GameState): readonly (readonly string[])[] {
  * as a session parameter (`RunParams.arrivalThought`) and is spoken in the
  * level's own briefing, in the same box, in the same voice.
  *
- * IT GOES LAST, and that is load-bearing rather than a taste call. A repeat
- * visit SKIPS the level's own opening (`skipStoryOpening` — we die and replay a
- * lot, and nobody wants the same monologue five times), but the trip that just
- * happened has never been read: putting the arrival line at the END means the
- * skip can land on it by paging past what it skipped, with no second piece of
- * state saying which half is spent. It is also the better joke — he has his
- * serious thought about the job ahead, and then his last word is about the
- * suspension.
+ * IT GOES FIRST, and that is the order a man actually speaks in. He has just
+ * got out of the car; the drive is the thing still in his hands, and it is what
+ * he says before he has looked up at the building. Held to the end it read as
+ * an afterthought tacked onto the briefing — the serious business of the job
+ * ahead, and then, four pages later, a remark about the suspension that no
+ * longer belonged to anything. Said first it is the man arriving, and the
+ * briefing is what he settles into afterwards.
+ *
+ * A REPLAY SKIPS THE LEVEL'S OWN OPENING AND KEEPS THIS (`skipStoryOpening` —
+ * we die and retry a lot, and nobody wants the same briefing five times, but
+ * tonight's drive has never been read). With the arrival line in FRONT, that
+ * skip can no longer be a page index into this list, so it is `introSkipped`
+ * on the state and this is where it is answered: the level's half is spent, the
+ * arrival's half is not.
  *
  * Everything that walks the intro reads it through here, so a run with an
  * arrival line has one more page to turn and nothing else has to know.
  */
 export function introPages(state: GameState): readonly (readonly string[])[] {
   const arrival = arrivalPages(state);
+  if (state.introSkipped) return arrival;
   const level = runLevelDef(state).intro;
-  return arrival.length ? [...level, ...arrival] : level;
+  return arrival.length ? [...arrival, ...level] : level;
 }
 
 /**
@@ -276,12 +283,13 @@ export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
   if (state.phase === "intro") {
     // …but a line he arrived WITH is not part of the level's opening and has
-    // never been read: what he made of tonight's drive is about tonight. Page
-    // straight to it and let the monologue play out from there (`introPages`
-    // puts it last precisely so this is one assignment rather than a second
-    // piece of state); a plain arrival has nothing there and lands on the card.
-    state.introPage = runLevelDef(state).intro.length;
-    if (state.introPage >= introPages(state).length) state.phase = "title";
+    // never been read: what he made of tonight's drive is about tonight. It is
+    // spoken FIRST (`introPages`), so the skip cannot be a page index into the
+    // monologue — it is the monologue itself that shrinks to the half nobody
+    // has read. A plain arrival has nothing there and lands on the card.
+    state.introSkipped = true;
+    state.introPage = 0;
+    if (introPages(state).length === 0) state.phase = "title";
   }
   // Arm the WHOLE party. The opening is the level's, so the skip is too: a
   // party that armed seat 0 alone would leave every joiner holstered for the

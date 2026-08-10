@@ -46,6 +46,7 @@ manuscript transcribes. Concretely, all of these are in scope:
 | A merchant greeting, quest offer/handover, conversation node | manuscript-transcribed |
 | A companion `joinWords` / `killQuotes` | manuscript-transcribed |
 | A story item's `lore`, a unique's `description` | manuscript-transcribed (lore) / governed but not transcribed (description, `EnemyDef.lore`) |
+| **Where or when** a line is spoken — a page reordered, a beat moved to another moment | placement is a story fact: the stage note in the manuscript and the prose in `story.md` both state it, and the engine implements it |
 | **Retoning** a character — colder/warmer/funnier/more human | the voice IS the story |
 | Reworking or replacing an elite/boss | the widest change; see the swap sub-checklist |
 | "The manuscript and the data drifted" | a reconcile sweep |

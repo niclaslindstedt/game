@@ -1092,8 +1092,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   for one interrupts the DRIVING several times a leg, and the tension here is
   the wheel and the speed. What he MAKES of the trip is not said on the road at all: `driveVerdict`
   reads the whole journey and hands the arriving run one line
-  (`RunParams.arrivalThought`), spoken as the last page of the destination's
-  opening monologue.
+  (`RunParams.arrivalThought`), spoken as the FIRST page of the destination's
+  opening monologue — the first thing he says once he is out of the car, with
+  the level's own briefing following it.
   WHAT THE CABINET MAKES OF IT is the arrival's own screen: a rally RANKING board
   (`drive-screen/DriveScores.tsx`) — a plaque, a RANK / NAME / TIME rail, five
   rows, the row you just took lit in white, and three letters typed into it from

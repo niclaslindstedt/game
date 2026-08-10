@@ -1942,10 +1942,10 @@ export function GameScreen({
             // driven. Outbound he gets out at GOODCO like anybody parking.
             arriveInCarRef.current = drive.direction === -1;
             // …and what he made of the trip goes with him: the line the drive
-            // earned is spoken as the last page of the destination's opening
-            // monologue (`RunParams.arrivalThought` → `introPages`), which is
-            // where a man's opinion of a journey belongs — standing beside the
-            // car, having finished it.
+            // earned OPENS the destination's monologue
+            // (`RunParams.arrivalThought` → `introPages`), which is where a
+            // man's opinion of a journey belongs — the first thing out of his
+            // mouth, standing beside the car he has just got out of.
             arrivalThoughtRef.current = verdict;
             driveRef.current = null;
             setDrive(null);

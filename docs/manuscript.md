@@ -120,6 +120,8 @@ closing caption names it, per rung, and gets thinner as the rung gets harder.)_
 
 ### Opening monologue (hero, black screen)
 
+_Driven home, the run-in's verdict is spoken FIRST and this follows it._
+
 1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
 
 ### Pinned beats
@@ -303,9 +305,13 @@ hero catches none._
 
 ### The arrival verdict — seven readings of one trip
 
-_Spoken standing beside the car as the LAST page of the destination's opening
-monologue. The priority order is the joke: everything a man notices on a commute
-outranks the crowd, and the crowd only ever reaches him as road surface._
+_Spoken standing beside the car as the FIRST page of the destination's opening
+monologue — before the level's own briefing, which follows it. It is the first
+thing out of his mouth at that end because the drive is the thing still in his
+hands; held to the end it read as an afterthought about the suspension tacked
+onto a serious speech. The priority order is the joke: everything a man notices
+on a commute outranks the crowd, and the crowd only ever reaches him as road
+surface._
 
 1. **Touched nothing at all:** CLEAN RUN. NOT A MARK ON HER.
 2. **The car barely made it:** I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE.
@@ -320,6 +326,11 @@ outranks the crowd, and the crowd only ever reaches him as road surface._
 ## Level 1 — GOODCO HQ
 
 ### Opening monologue (hero, black screen)
+
+_Arrived by road, the drive's verdict above is spoken FIRST and these four
+follow it: the trip is what he has just finished, the building is what he looks
+up at next. A replay skips these four and keeps the verdict, which is about
+tonight and has never been read._
 
 1. THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
 2. GOODCO. TEN YEARS I BUILT THEIR ENGINES. THEN THEY SAT A MACHINE AT MY BENCH AND GAVE ME A BOX FOR MY MUG.
