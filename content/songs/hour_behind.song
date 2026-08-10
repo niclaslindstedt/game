@@ -8,6 +8,19 @@
 # The thing he was racing has already happened, and she is getting further away
 # at the speed of a rocket while he does a hundred and twenty on a town road.
 #
+# ── IT IS A FIFTY-SECOND PIECE ─────────────────────────────────────────────
+#
+# For the reason written out in full at the top of `overdue.song`: a leg of the
+# road lasts forty to sixty seconds, and the seventy-six-bar version of this
+# score spent its whole back half — the breakdown, the build, the turn — on a
+# listener who had already arrived. Thirty-six bars, 49 s, so the fall gets all
+# the way to the bottom before the car stops.
+#
+# The two scores now share a SKELETON and invert everything inside it: the same
+# four-bar hinge twice a loop, which CLIMBS chromatically going out and
+# ACCELERATES the fall coming home. That is the pairing — one road, two
+# directions, one shape, opposite motion.
+#
 # THREE DECISIONS.
 #
 #   THE ANSWER IS MISSING. Every phrase in OVERDUE answers itself — a call and
@@ -15,17 +28,22 @@
 #   bars of engine, road and kit where a tune used to be. Half the A section is
 #   the lead not playing. That is the whole piece.
 #
+#   AND THE HOLE CLOSES AS THE PIECE RUNS. Two bars of it in A, one in B, none
+#   in the TURN — a gradient that was buried inside a ten-section arrangement
+#   and is the audible shape of this one. He stops waiting for the reply.
+#
 #   THE CLOCK IS GONE, AND THAT IS WORSE. The one sound OVERDUE never takes
 #   away is deleted here, and what replaces it is a TRACKER PING — one sonar
 #   blip, twice in four bars, off the grid, sliding flat as it sounds. It is
-#   the loudest thing left in the breakdown, exactly where the clock was in the
-#   other score, and it is answering from somewhere this car cannot drive to.
+#   alone in the first bar of the piece, which is where a short score keeps the
+#   thin moment its middle cannot afford, and it is answering from somewhere
+#   this car cannot drive to.
 #
 #   NOTHING EVER CADENCES. The harmony is the oldest falling figure there is —
 #   Dm–C–B♭–A, down and down — and it never resolves, not at a section end and
-#   not at the loop seam. The build ACCELERATES the fall instead of climbing:
-#   one chord a bar, then two, then four, so the last eight bars are the same
-#   descent happening four times as fast.
+#   not at the loop seam. SLIP is that fall speeding up inside four bars: one
+#   chord a half-bar, then two, then four, so by its last bar the descent is
+#   happening four times as fast and has still not landed.
 #
 # Compile:  node scripts/song-import.mjs content/songs/hour_behind.song --sheet
 
@@ -33,16 +51,19 @@ id     hour_behind
 title  AN HOUR BEHIND
 tempo  176
 about
-  The road home, and it is not the relief version of OVERDUE. He has the part
-  on the passenger seat and she left the planet an hour before he got through
-  the door, so the deadline has not passed — it has become a distance. Every
-  phrase is a call with the reply cut out: two bars of tune, two bars of
-  nothing but engine and tarmac where the answer used to be. The clock that
-  runs through the whole of the outbound score is gone, replaced by a sonar
-  ping that slides flat as it sounds, twice in four bars, off the grid, alone
-  in the breakdown. The harmony falls Dm–C–B♭–A and never once lands, and the
-  build accelerates that fall to four chords a bar rather than climbing out of
-  it. Original melodies; nothing sampled.
+  The road home, and it is not the relief version of OVERDUE — written to the
+  same short length, so the fall reaches the bottom before the car stops. He
+  has the part on the passenger seat and she left the planet an hour before he
+  got through the door, so the deadline has not passed — it has become a
+  distance. Every phrase is a call with the reply cut out: two bars of tune,
+  two bars of nothing but engine and tarmac where the answer used to be, and
+  the hole closes as the piece runs — two bars, then one, then none. The clock
+  that runs through the whole of the outbound score is gone, replaced by a
+  sonar ping that slides flat as it sounds, twice in four bars, off the grid,
+  alone in the opening bar. The harmony falls Dm–C–B♭–A and never once lands,
+  and twice a loop a four-bar hinge accelerates that fall to four chords a bar
+  rather than climbing out of it — the same hinge the outbound score uses to
+  climb. Original melodies; nothing sampled.
 
 # ── THE CAST ────────────────────────────────────────────────────────────────
 # The call. It gets two bars, and then it stops.
@@ -61,7 +82,8 @@ drum kick    triangle vol=.062 gate=1 slide=.25 note=D2
 drum snare   noise vol=.035 gate=.72 hp=1500
 drum hat     noise vol=.0105 gate=.24 hp=6900 pan=.25
 
-# ── INTRO — the gate, the part on the seat, and the ping already going.
+# ── INTRO — the gate, the part on the seat, and the ping already going. This
+#    is the score's whole supply of quiet, the same trade OVERDUE makes.
 #    NO BAR IN HERE IS COMPLETELY EMPTY: an entirely silent bar engraves as a
 #    gap the sheet cannot lay out on its step grid, which is a real fault the
 #    notation-geometry guard catches — so the hat comes in under bar two ─────
@@ -85,17 +107,20 @@ section a
   snare  ....x.......x...
   hat    x.x.x.x.x.x.x.x.
 
-# ── A2 — the same call an octave down, which is not an answer either ───────
-section a2
-  chords Dm | C | Bb | A | Dm | C | Bb | A
-  call   d4*2 f4*2 a4*2 d5*2 a4*4 f4*4 | g4*4 e4*4 c4*8 | .*16 | .*16
-         d4*2 f4*2 a4*2 d5*2 c5*4 a4*4 | g4*4 e4*4 g4*8 | .*16 | .*16
+# ── SLIP — the hinge, and the acceleration and the descent are ONE gesture:
+#    the note values halve every bar (half, half, quarter, eighth) while the
+#    call falls a whole octave across the four, D6 to A4, and it still does not
+#    land. OVERDUE's hinge climbs here; this one drops ───────────────────────
+section slip
+  chords Dm C | Bb A | Dm C Bb A | Dm C Bb A
+  call   d6*8 c6*8 | a#5*8 a5*8
+         d5*4 c5*4 a#4*4 a4*4 | d5*2 c5*2 a#4*2 a4*2 d5*2 c5*2 a#4*2 a4*2
   ping   d7*4 .*12 | .*16 | .*9 a6*4 .*3 | .*16
   engine chug 4
   stab   offbeat 4
-  bass   gallop 2
-  kick   x.....x.x.......|x.....x.x.x.....
-  snare  ....x.......x...|....x.......x.x.
+  bass   drive 2
+  kick   x.......x.......|x.......x.......|x.......x...x...|x.......x...x...
+  snare  ....x.......x...|....x.......x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.
   hat    x.x.x.x.x.x.x.x.
 
 # ── B — it almost answers itself. One bar of hole instead of two ──────────
@@ -111,30 +136,8 @@ section b
   snare  ....x.......x...
   hat    x.x.x.x.x.x.x.x.
 
-# ── HOLE — the breakdown. The ping is the only thing left, as the clock was
-#    the only thing left in the other score. It is not keeping time either ──
-section hole
-  chords Dm | C | Bb | A | Dm | C | Bb | A
-  ping   d7*4 .*12 | .*16 | .*9 a6*4 .*3 | .*16
-  engine chug 4
-  bass   d2*8 d2*8 | c2*8 c2*8 | a#1*8 a#1*8 | a1*8 a1*8
-         d2*8 d2*8 | c2*8 c2*8 | a#1*8 a#1*8 | a1*8 e2*8
-  hat    x.......x.....x.
-
-# ── BUILD — the fall gets FASTER. One chord a bar, then two, then four ────
-section build
-  chords Dm | C | Bb | A | Dm | C | Bb | A
-  call   d5*16 | c5*16 | a#4*16 | a4*16
-         d5*8 c5*8 | a#4*8 a4*8 | d5*4 c5*4 a#4*4 a4*4 | d5*4 c5*4 a#4*4 a4*4
-  engine roll 4
-  bass   d2*4 d2*4 d2*4 d2*4 | c2*4 c2*4 c2*4 c2*4 | a#1*4 a#1*4 a#1*4 a#1*4 | a1*4 a1*4 a1*4 a1*4
-         d2*4 d2*4 c2*4 c2*4 | a#1*4 a#1*4 a1*4 a1*4 | d2*4 c2*4 a#1*4 a1*4 | d2*4 c2*4 a#1*4 a1*4
-  kick   x.......x.......
-  snare  ....x.......x...|....x.......x...|....x.......x.x.|....x.......x.x.
-         ....x...x.x.x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx
-  hat    x.x.x.x.x.x.x.x.
-
-# ── TURN — the widest the call gets, and it is cut off mid-phrase ─────────
+# ── TURN — the widest the call gets, no hole left in it at all, and it is
+#    cut off mid-phrase ─────────────────────────────────────────────────────
 section turn
   chords Dm | C | Bb | A | Dm | C | Bb | A
   call   d6*2 c6*2 a#5*2 a5*2 f5*4 d5*4 | e5*2 g5*2 c6*4 e6*4 g5*4 | f6*4 d6*4 a#5*8 | c#6*4 e6*4 a5*8
@@ -147,4 +150,4 @@ section turn
   snare  ....x.......x...|....x.......x.x.
   hat    x.x.x.x.x.x.x.x.
 
-order  intro a a2 b a hole build b a2 turn
+order  intro a slip b slip turn

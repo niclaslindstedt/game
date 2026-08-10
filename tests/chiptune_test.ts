@@ -372,12 +372,36 @@ describe("the shipped scores", () => {
   const loopSeconds = (t: ChiptuneTrack) =>
     (flattenTrack(t).totalSteps / (t.stepsPerBeat * t.bpm)) * 60;
 
+  /**
+   * THE SCORES WRITTEN TO THE LENGTH OF A MINIGAME, not to the length of a
+   * level — and this is two ROLES rather than one range with an exception
+   * bolted onto it.
+   *
+   * A LEVEL THEME is a bed under something that runs for minutes. Two minutes
+   * of loop is the length at which nobody hears the seam, and a 40-second bed
+   * under a five-minute fight grates.
+   *
+   * THE ROAD'S TWO SCORES ARE PIECES, NOT BEDS. A leg of the drive is over in
+   * forty to sixty seconds — a competent driver covers the course in about
+   * that, and `make drive-bench`'s cautious auto-driver is the slow end at
+   * ~110 s. Held to the level bound, those two scores spent their whole back
+   * half (break, build, turn) on a listener who had already arrived. They are
+   * written short so the ARC lands inside the leg; a slow driver hears the
+   * loop twice, which is what a loop is for.
+   *
+   * The ids are the ones `ROAD_TRACK_OUT` / `ROAD_TRACK_HOME` name in
+   * `pwa/src/game/drive-screen/DriveScreen.tsx`. A minigame added with a score
+   * of its own belongs in here; a LEVEL never does.
+   */
+  const SHORT_FORM = new Set(["overdue", "hour_behind"]);
+
   it.each(SCORES)(
-    "arranges the %s score to loop at around two minutes",
-    (_, theme) => {
+    "arranges the %s score to the loop length its role wants",
+    (id, theme) => {
       const total = loopSeconds(theme);
-      expect(total).toBeGreaterThan(100);
-      expect(total).toBeLessThan(145);
+      const [floor, ceiling] = SHORT_FORM.has(id) ? [40, 65] : [100, 145];
+      expect(total).toBeGreaterThan(floor);
+      expect(total).toBeLessThan(ceiling);
     },
   );
 

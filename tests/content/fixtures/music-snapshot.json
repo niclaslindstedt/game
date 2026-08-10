@@ -10,7 +10,7 @@
   },
   "hour_behind": {
     "bpm": 176,
-    "digest": "5d328a066e99372c8a35d7b5d9a025abc7f583692f7e363ea976cf4ccd956818",
+    "digest": "4df57428af94bbee73113604bf92e556dce479c918713a0156507d62d4b26de0",
     "instruments": [
       "bass",
       "call",
@@ -21,10 +21,10 @@
       "snare",
       "stab"
     ],
-    "loopSeconds": 103.6,
-    "order": ["intro", "a", "a2", "b", "a", "hole", "build", "b", "a2", "turn"],
+    "loopSeconds": 49.1,
+    "order": ["intro", "a", "slip", "b", "slip", "turn"],
     "stepsPerBeat": 4,
-    "totalSteps": 1216
+    "totalSteps": 576
   },
   "hq_lockdown": {
     "bpm": 128,
@@ -65,7 +65,7 @@
   },
   "overdue": {
     "bpm": 162,
-    "digest": "cb464650da6e661aa8ea119a2ada83ca59cc75bf411c691b710ad1fbf291c2bb",
+    "digest": "eca3e5f050aaefb257378555d6287ce83e2843b37858aacd133ac3131aaecd78",
     "instruments": [
       "bass",
       "harm",
@@ -78,21 +78,10 @@
       "stab",
       "tick"
     ],
-    "loopSeconds": 112.6,
-    "order": [
-      "intro",
-      "a",
-      "a2",
-      "b",
-      "a",
-      "break",
-      "build",
-      "b",
-      "a2",
-      "turn"
-    ],
+    "loopSeconds": 53.3,
+    "order": ["intro", "a", "climb", "b", "climb", "turn"],
     "stepsPerBeat": 4,
-    "totalSteps": 1216
+    "totalSteps": 576
   },
   "perpetuity": {
     "bpm": 112,

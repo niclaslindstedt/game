@@ -2,22 +2,24 @@
 # OVERDUE — compiled from a .song by scripts/song-import.mjs.
 #
 # Arrangement (162 bpm, 4/4, one bar = 16 sixteenth-note steps):
-#   intro(4) a(8) a2(8) b(8) a(8) break(8) build(8) b(8) a2(8) turn(8)
-#   = 76 bars ≈ 113 s per loop.
+#   intro(4) a(8) climb(4) b(8) climb(4) turn(8)
+#   = 36 bars ≈ 53 s per loop.
 id: overdue
 name: OVERDUE
 description: >-
-  The road's theme, and it is a panic rather than a chase. A D-minor drive
-  with a Phrygian i–♭II lurch (Dm → E♭) that never settles, a galloping
-  triangle bass under a chugging saw engine an octave above it, and a
-  two-tone sawtooth SIREN wailing a minor second over the top — the same
-  interval an emergency vehicle uses, and here it is a chord tone in both
-  chords, so the distress signal is also the harmony. A dry clock ticks
-  every quarter from the first bar to the last. The breakdown strips it to
-  that clock, a re-struck pedal and the siren alone; the build climbs a
-  bare chromatic bass D–E♭–E–F–F♯–G–G♯–A under a snare roll and hands back
-  to the anthem. Shapes borrowed from the action scores of the era, every
-  melody original.
+  The road's theme, and it is a panic rather than a chase — written short,
+  to the length of a leg, so the whole arc lands before the car does. A
+  D-minor drive with a Phrygian i–♭II lurch (Dm → E♭) that never settles,
+  a galloping triangle bass under a chugging saw engine an octave above
+  it, and a two-tone sawtooth SIREN wailing a minor second over the top —
+  the same interval an emergency vehicle uses, and here it is a chord tone
+  in both chords, so the distress signal is also the harmony. A dry clock
+  ticks every quarter from the first bar to the last, and the first bar is
+  the clock on its own: there is no breakdown in a fifty-second piece, so
+  the intro is where it goes thin. Twice the arrangement changes gear on a
+  four-bar chromatic climb in bare fifths, D up to A, the siren tightening
+  across it — once into the chorus, once into the turn. Shapes borrowed
+  from the action scores of the era, every melody original.
 bpm: 162
 stepsPerBeat: 4
 instruments:
@@ -133,6 +135,15 @@ patterns:
       A#4 =  =  =  D5 =  =  =  F5 =  =  =  D5 =  =  =
       C5 =  =  =  E5 =  =  =  G5 =  =  =  E5 =  C5 =
       A4 =  C#5 =  E5 =  =  =  C#5 =  A4 =  .  .  .  .
+    siren: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
     stab: |
       .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
       .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
@@ -169,60 +180,45 @@ patterns:
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
     tick: |
       x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
-  # A2 — Dm Eb Dm Eb Dm Bb C A
-  a2:
+  # CLIMB — Dm/D#m Em/Fm F#m/Gm G#m/A
+  climb:
     lead: |
-      D5 .  D5 =  F5 .  E5 =  D5 .  F5 =  A5 =  =  =
-      A#5 =  A5 =  G5 =  F5 =  D#5 =  =  =  D5 =  =  =
-      D5 .  D5 =  F5 .  A5 =  D6 =  =  =  A5 =  F5 =
-      G5 =  F5 =  D#5 =  D5 =  C5 =  =  =  A#4 =  =  =
-      D5 =  E5 =  F5 =  G5 =  A5 =  =  =  D5 =  =  =
-      F5 =  D5 =  A#4 =  D5 =  F5 =  A5 =  A#5 =  =  =
-      A5 =  G5 =  E5 =  C5 =  E5 =  G5 =  A5 =  =  =
-      A5 =  G5 =  F5 =  E5 =  C#5 =  =  =  A4 =  =  =
+      D5 =  A5 =  D5 =  A5 =  D#5 =  A#5 =  D#5 =  A#5 =
+      E5 =  B5 =  E5 =  B5 =  F5 =  C6 =  F5 =  C6 =
+      F#5 =  C#6 =  F#5 =  C#6 =  G5 =  D6 =  G5 =  D6 =
+      G#5 =  D#6 =  G#5 =  D#6 =  A5 =  E6 =  A5 =  E6 =
     siren: |
-      A5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
-      A#5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
-      A5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
-      A#5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
+      A5 =  =  =  A#5 =  =  =  A5 =  =  =  A#5 =  =  =
+      A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =
+      A5 A#5 A5 A#5 A5 A#5 A5 A#5 A5 A#5 A5 A#5 A5 A#5 A5 A#5
     stab: |
-      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
-      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
-      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
-      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
-      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
-      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
-      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
-      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  A4 .  .  .  F#4 .  .  .  A#4 .
+      .  .  G4 .  .  .  B4 .  .  .  G#4 .  .  .  C5 .
+      .  .  A4 .  .  .  C#5 .  .  .  A#4 .  .  .  D5 .
+      .  .  B4 .  .  .  D#5 .  .  .  C#5 .  .  .  E5 .
     pulse: |
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      D#4 .  D#4 D#4 .  D#4 D#4 .  D#4 .  D#4 D#4 .  D#4 D#4 .
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      D#4 .  D#4 D#4 .  D#4 D#4 .  D#4 .  D#4 D#4 .  D#4 D#4 .
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
-      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      D4 .  D4 D4 .  D4 D4 .  D#4 .  D#4 D#4 .  D#4 D#4 .
+      E4 .  E4 E4 .  E4 E4 .  F4 .  F4 F4 .  F4 F4 .
+      F#4 .  F#4 F#4 .  F#4 F#4 .  G4 .  G4 G4 .  G4 G4 .
+      G#4 .  G#4 G#4 .  G#4 G#4 .  A4 .  A4 A4 .  A4 A4 .
     bass: |
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
-      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
-      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      D2 .  D2 .  D2 .  D2 .  D#2 .  D#2 .  D#2 .  D#2 .
+      E2 .  E2 .  E2 .  E2 .  F2 .  F2 .  F2 .  F2 .
+      F#2 .  F#2 .  F#2 .  F#2 .  G2 .  G2 .  G2 .  G2 .
+      G#2 .  G#2 .  G#2 .  G#2 .  A2 .  A2 .  A2 .  A2 .
     kick: |
-      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
-      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-    hat: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    hat: |
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
     tick: |
       x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
   # B — Bb C Dm Dm Bb C Gm A
@@ -279,101 +275,6 @@ patterns:
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-    tick: |
-      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
-  # BREAK — Dm Dm Eb Eb Gm Gm A A
-  break:
-    siren: |
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A4 =  =  =  =  =  =  =  A4 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A#4 =  =  =  =  =  =  =  A#4 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D5 =  =  =  =  =  =  =  D5 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
-    stab: |
-      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
-      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
-      D#4 .  G4 .  A#4 .  G4 .  D#4 .  G4 .  A#4 .  G4 .
-      D#4 .  G4 .  A#4 .  G4 .  D#4 .  G4 .  A#4 .  G4 .
-      G3 .  A#3 .  D4 .  A#3 .  G3 .  A#3 .  D4 .  A#3 .
-      G3 .  A#3 .  D4 .  A#3 .  G3 .  A#3 .  D4 .  A#3 .
-      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
-      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
-    bass: |
-      D2 =  =  =  =  =  =  =  D2 =  =  =  =  =  =  =
-      D2 =  =  =  =  =  =  =  D2 =  =  =  =  =  =  =
-      D#2 =  =  =  =  =  =  =  D#2 =  =  =  =  =  =  =
-      D#2 =  =  =  =  =  =  =  D#2 =  =  =  =  =  =  =
-      G2 =  =  =  =  =  =  =  G2 =  =  =  =  =  =  =
-      G2 =  =  =  =  =  =  =  G2 =  =  =  =  =  =  =
-      A2 =  =  =  =  =  =  =  A2 =  =  =  =  =  =  =
-      A2 =  =  =  =  =  =  =  A2 =  =  =  =  =  =  =
-    hat: |
-      x  .  .  .  .  .  .  .  x  .  .  .  .  .  x  .
-    tick: |
-      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
-  # BUILD — Dm D#dim Em F F#dim Gm G#dim A
-  build:
-    lead: |
-      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      D#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      E5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      F5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      F#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      G5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      G#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-    harm: |
-      D4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      D#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      E4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      F4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      F#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      G4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      G#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      A4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-    siren: |
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
-      A#5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
-      A5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
-      A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =
-    pulse: |
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      D#4 .  D#4 D#4 .  D#4 D#4 .  D#4 .  D#4 D#4 .  D#4 D#4 .
-      E4 .  E4 E4 .  E4 E4 .  E4 .  E4 E4 .  E4 E4 .
-      F4 .  F4 F4 .  F4 F4 .  F4 .  F4 F4 .  F4 F4 .
-      F#4 .  F#4 F#4 .  F#4 F#4 .  F#4 .  F#4 F#4 .  F#4 F#4 .
-      G4 .  G4 G4 .  G4 G4 .  G4 .  G4 G4 .  G4 G4 .
-      G#4 .  G#4 G#4 .  G#4 G#4 .  G#4 .  G#4 G#4 .  G#4 G#4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
-    bass: |
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
-      E2 .  E2 E3 .  E2 .  E3 E2 .  E2 E3 .  E2 .  E3
-      F2 .  F2 F3 .  F2 .  F3 F2 .  F2 F3 .  F2 .  F3
-      F#2 .  F#2 F#3 .  F#2 .  F#3 F#2 .  F#2 F#3 .  F#2 .  F#3
-      G2 .  G2 G3 .  G2 .  G3 G2 .  G2 G3 .  G2 .  G3
-      G#2 .  G#2 G#3 .  G#2 .  G#3 G#2 .  G#2 G#3 .  G#2 .  G#3
-      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
-    kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-    snare: |
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
-      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
-      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
-    hat: |
-      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
     tick: |
       x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
   # TURN — Dm Bb C A Dm Bb A A
@@ -448,4 +349,4 @@ patterns:
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
     tick: |
       x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
-order: [intro, a, a2, b, a, break, build, b, a2, turn]
+order: [intro, a, climb, b, climb, turn]
