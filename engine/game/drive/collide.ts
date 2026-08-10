@@ -592,6 +592,15 @@ export function hurtTraffic(
     pos: { x: other.pos.x, y: other.pos.y },
     joules: hit.joules,
   });
+  // …AND A WRITE-OFF ALWAYS HAS AN END STOVE IN, whatever the fold depth says.
+  // The two are different currencies: `wear` is absorbed energy over the whole
+  // vehicle and this ladder reads it, while `crushNose`/`crushTail` are LENGTHS
+  // at one end. A car sideswiped down its whole flank, or clipped a dozen times
+  // on alternate corners, arrives here with neither end near the fold line — so
+  // it used to stand dead in a live lane, plainly finished, wearing straight
+  // ends and both of its wheels. That was the commonest wreck on the road and it
+  // is exactly the picture the crash art exists to replace.
+  smashEnd(drive, other, hit, fromX, true);
   drive.remains.push(
     ...tearMachine(drive, other, hit, wreckForce(other, hit.joules)),
   );

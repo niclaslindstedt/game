@@ -74,11 +74,30 @@ export function smashEnd(
   other: DriveTraffic,
   hit: Impact,
   fromX: number,
+  /**
+   * TAKE IT WHATEVER THE DEPTH SAYS — for the one caller that already knows the
+   * answer, which is a vehicle being WRITTEN OFF.
+   *
+   * WEAR AND CRUSH DEPTH ARE DIFFERENT CURRENCIES, and that is what this exists
+   * for. `wear` is absorbed energy over the whole vehicle and drives the damage
+   * ladder; `crushNose`/`crushTail` are LENGTHS at one end. A car that has been
+   * sideswiped down its whole flank, or clipped a dozen times on alternate
+   * corners, reaches `wrecked` with neither end anywhere near the fold line — so
+   * it stood dead in a live lane, plainly a total loss, wearing straight ends
+   * and both its wheels. That is precisely the picture the crash art was drawn
+   * to replace, and it was the commonest wreck on the road.
+   */
+  forced = false,
 ): void {
   const hitLeft = fromX < other.pos.x;
-  const nose = hitLeft === other.faceLeft;
+  // WHICH END. The blow's own, normally; for a write-off it is whichever end has
+  // actually taken the most, because the last hit is not necessarily the one
+  // that did the damage.
+  const nose = forced
+    ? other.crushNose >= other.crushTail
+    : hitLeft === other.faceLeft;
   const depth = nose ? other.crushNose : other.crushTail;
-  if (!smashedYet(other, depth)) return;
+  if (!forced && !smashedYet(other, depth)) return;
   if (nose ? other.smashNose : other.smashTail) return;
   if (nose) other.smashNose = true;
   else other.smashTail = true;

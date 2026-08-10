@@ -116,8 +116,9 @@ export function drawTrafficBody(
   // THE BODY is the skin plus a dent rung, and only while the skin is the clean
   // one: the crash art IS the damage, so it never wears a rung on top.
   const has = (id: string) => spriteByName(sprites, id) !== undefined;
-  const skin = trafficSprite(other.variant, 0, crashEnd(other), has);
-  const name = trafficSprite(other.variant, other.rung, crashEnd(other), has);
+  const end = crashEnd(other);
+  const skin = trafficSprite(other.variant, 0, end, has);
+  const name = trafficSprite(other.variant, other.rung, end, has);
   const sprite = spriteByName(sprites, name);
   if (!sprite) return;
   const gore =
@@ -131,7 +132,22 @@ export function drawTrafficBody(
   // A wreck's wheels stop because `rollFrame` reads its POSITION: a vehicle that
   // is not moving is not turning, with nothing to switch off.
   const roll = spriteByName(sprites, `${skin}_roll_${rollFrame(other)}`);
-  const fold = crushShare(other);
+  // ── AND AN END IS FOLDED ONCE, NOT TWICE ──────────────────────────────────
+  // The squeeze below is how a vehicle wearing its CLEAN art shows a crush: that
+  // half of the sprite is compressed toward the middle by what the physics says
+  // it lost. The crash art has that fold BAKED IN — it is the whole reason the
+  // grid exists — so applying the squeeze to the end it is already drawn for
+  // folds the same collision into the picture a second time, and at the top of
+  // the crush ladder that is another two thirds off a half that has already been
+  // shortened. The result is not a folded car; it is a small one.
+  //
+  // The OTHER end still folds normally, which is what keeps a car hit at both
+  // ends reading as hit at both ends.
+  const crushed = crushShare(other);
+  const fold = {
+    nose: end === "front" ? 0 : crushed.nose,
+    tail: end === "rear" ? 0 : crushed.tail,
+  };
   billboard(ctx, other.pos.x, other.pos.y, camera.x, camera.y, () => {
     ctx.save();
     ctx.translate(

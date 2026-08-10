@@ -428,6 +428,62 @@ function drawSteeredWheel(
 const TILT_BAND = 8;
 
 /**
+ * …AND THE FINER BANDS A FOLDED ONE TAKES.
+ *
+ * A pitch is a smooth ramp and eight px of source per step is invisible; a FOLD
+ * is a horizontal squeeze, and at eight px a step the seam between two bands
+ * moving different distances is a visible tear down the wing. Four is where it
+ * stops reading as a seam, and the cost only lands on a car that has actually
+ * been bent — an undamaged wagon never takes this path at all.
+ */
+const FOLD_BAND = 4;
+
+/**
+ * HOW FAR AN END HAS FOLDED IN AT EACH PANEL RUNG, as a share of that end's
+ * overhang.
+ *
+ * A TABLE RATHER THAN A RAMP, because the AUTHORED art is not linear either.
+ * The top rung of a panel (`car_bumper_3` and friends) already draws a bent,
+ * shortened nose — look at `node scripts/car-viewer.mjs`, the last two states —
+ * so a fold that grew straight to its maximum there would be folding the same
+ * damage into the picture twice, which is the mistake the traffic's crash art
+ * made until it was caught. The steps are biggest where the art says LEAST: the
+ * middle rungs, which are dents on a silhouette that has not moved, and which
+ * is where a player spends most of a leg.
+ *
+ * The hero's wagon is also ONE picture he looks at for a whole minute, so it
+ * cannot take the traffic's treatment: a car whose nose is gone reads as a
+ * different, smaller car. A fifth is the point at which the bonnet is plainly
+ * SHORTER — the wing sits in where it did not, the headlamp has moved back
+ * toward the arch — while the silhouette is still unmistakably his.
+ */
+const SHELL_FOLD = [0, 0.1, 0.19, 0.23] as const;
+
+/**
+ * HOW BENT THE SHELL IS AT EACH END, from the panels that took it.
+ *
+ * READ OFF THE PANEL LADDER RATHER THAN OFF `wear`, and the difference is the
+ * whole value of it. `wear` is one number for the whole car, so driving it up by
+ * sideswiping a crowd would fold the nose of a car that has never hit anything
+ * with its nose. The panel rungs are already a RECORD OF HOW YOU DROVE
+ * (`panelAt`, engine/game/drive/impact.ts stamps the panel the contact actually
+ * landed on), so a driver who centres everything folds his bonnet and one who
+ * clips down the flanks does not — which is the same promise the panel damage
+ * has always made, finally kept in the silhouette instead of only in the paint.
+ */
+function shellFold(car: Extract<Vehicle, { kind: "car" }>): {
+  nose: number;
+  tail: number;
+} {
+  const at = (id: CarPanelId) =>
+    SHELL_FOLD[Math.max(0, Math.min(3, car.panels[id] ?? 0))] ?? 0;
+  return {
+    nose: Math.max(at("bumper"), at("hood")),
+    tail: at("backside"),
+  };
+}
+
+/**
  * Blit one shell layer with the body's PITCH: each 8px column band lands at
  * its own integer offset, interpolated (and extrapolated past the axles for
  * the overhangs) between the rear and front drops. A real rotation would
@@ -441,23 +497,55 @@ function drawShellLayer(
   camera: Camera,
   rearDrop: number,
   frontDrop: number,
+  /**
+   * HOW FAR EACH OVERHANG HAS FOLDED IN, 0 → 1 of its own length.
+   *
+   * The second thing this function does to the shell, and it is the same KIND
+   * of thing as the pitch: a per-band transform of one picture, applied to every
+   * layer of the assembly at once. That is the whole reason it lives here rather
+   * than in new art — the panels, the underbody, the dangling bumper and the
+   * BLOOD FILM already masked to each panel all warp together, because they are
+   * all blitted through this.
+   *
+   * Omitted is an undamaged car, which takes the plain path it always did.
+   */
+  fold?: { nose: number; tail: number },
 ): void {
   billboard(ctx, pos.x, pos.y, camera.x, camera.y, () => {
     const w = sprite.width;
     const h = sprite.height;
     const left = seatX(pos.x, camera.x) - Math.round(w / 2);
     const top = seatY(pos.y, camera.y) - (h - 2);
-    if (Math.round(rearDrop) === Math.round(frontDrop)) {
+    const bent = fold !== undefined && (fold.nose > 0.01 || fold.tail > 0.01);
+    if (!bent && Math.round(rearDrop) === Math.round(frontDrop)) {
       ctx.drawImage(sprite, left, top + Math.round(rearDrop));
       return;
     }
     const rearX = w / 2 + (CAR.wheelOffsets[0] ?? 0);
     const frontX = w / 2 + (CAR.wheelOffsets[1] ?? 0);
-    for (let sx = 0; sx < w; sx += TILT_BAND) {
-      const band = Math.min(TILT_BAND, w - sx);
-      const t = (sx + band / 2 - rearX) / (frontX - rearX);
+    const step = bent ? FOLD_BAND : TILT_BAND;
+    for (let sx = 0; sx < w; sx += step) {
+      const band = Math.min(step, w - sx);
+      const mid = sx + band / 2;
+      const t = (mid - rearX) / (frontX - rearX);
       const dy = Math.round(rearDrop + (frontDrop - rearDrop) * t);
-      ctx.drawImage(sprite, sx, 0, band, h, left + sx, top + dy, band, h);
+      // ── AND THE FOLD ────────────────────────────────────────────────────
+      // Only OUTBOARD OF AN AXLE, which is what makes this the same rule the
+      // traffic's crash art is drawn to: what crumples is the overhang, and
+      // everything between the wheels keeps its place. It falls out for free
+      // that the roof and the doors never move — they do not reach past either
+      // axle — so a folded bonnet does not drag the cabin forward with it.
+      let dx = 0;
+      let dw = band;
+      if (bent && fold) {
+        const k = mid > frontX ? fold.nose : mid < rearX ? fold.tail : 0;
+        if (k > 0) {
+          const anchor = mid > frontX ? frontX : rearX;
+          dx = Math.round(anchor + (sx - anchor) * (1 - k) - sx);
+          dw = Math.max(1, Math.round(band * (1 - k)));
+        }
+      }
+      ctx.drawImage(sprite, sx, 0, band, h, left + sx + dx, top + dy, dw, h);
     }
   });
 }
@@ -513,12 +601,17 @@ export function drawCarAssembly(
   const shiver = running ? (Math.floor(timeMs / 180) % 2 === 0 ? 0 : -1) : 0;
   const rearDrop = axleDrop(car, 0) + shiver;
   const frontDrop = axleDrop(car, 1) + shiver;
+  // …AND HOW BENT IT IS. Every layer of the assembly is blitted through
+  // `drawShellLayer`, so handing it the fold once warps the whole wagon —
+  // panels, underbody, dangling parts and the blood already masked to each of
+  // them — rather than needing a bashed picture of each.
+  const fold = shellFold(car);
   // Underbody first — the arches open onto dark steel and springs, never
   // onto the floor behind the car — then wheels, then the panel stack. The
   // underbody is shell too, so it pitches with the body.
   const under = spriteByName(sprites, "car_underbody");
   if (under) {
-    drawShellLayer(ctx, under, car.pos, camera, rearDrop, frontDrop);
+    drawShellLayer(ctx, under, car.pos, camera, rearDrop, frontDrop, fold);
   }
   // Two roll frames half a spoke apart; the angle comes from the
   // simulation, so a parked car never flickers.
@@ -598,6 +691,7 @@ export function drawCarAssembly(
         camera,
         rearDrop + pick.dy,
         frontDrop + pick.dy,
+        fold,
       );
     }
   }
@@ -609,7 +703,7 @@ export function drawCarAssembly(
     drawLightCones(ctx, car.pos, camera, timeMs, rearDrop, frontDrop);
     const lights = spriteByName(sprites, "car_lights");
     if (lights) {
-      drawShellLayer(ctx, lights, car.pos, camera, rearDrop, frontDrop);
+      drawShellLayer(ctx, lights, car.pos, camera, rearDrop, frontDrop, fold);
     }
   }
 }
