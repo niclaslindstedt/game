@@ -1649,3 +1649,85 @@ points rot silently the moment the orbits change.
 Look at the maps themselves with `node pwa/scripts/planet-maps.mjs`, which
 writes an equirectangular sheet and a four-rotation globe strip per world into
 `pwa/assets-preview/planets/`. Inspect the live sky with `?skytest`.
+
+## The belt — the same numbers, from inside it
+
+The camera is parked at 3 AU, in the gap between Mars and Jupiter, and that is
+where the asteroid belt is. So the rocks that fly past the menu are BELT
+OBJECTS seen from inside the belt, and almost everything about them is measured
+too: `pwa/src/game/title-belt.ts` is the catalogue and the dice,
+`pwa/src/game/title-asteroids.ts` is the camera and the clock, and
+`@ui/lib/asteroid-rock.ts` paints one.
+
+**SIX SPECTRAL CLASSES AT THEIR REAL SHARES, WEARING THEIR MEASURED ALBEDOS.**
+Roughly half the belt is the carbonaceous C-complex at an albedo of 0.066 —
+charcoal; Bennu measures 0.044 — a third is the stony, reddish S-complex at
+0.23, a tenth the metallic X/M-complex, and the rest is the dark red D- and
+P-types, the basaltic V-types chipped off Vesta, and the rare enstatite E-types
+at 0.55, the brightest surfaces out there. That is a twelvefold spread in
+brightness and a real spread in colour, and it is the whole reason the belt
+reads as a population rather than a texture.
+
+**A ROCK IS A SILHOUETTE AND A TERMINATOR, NOT A TEXTURE — which is why it is
+not a globe.** A planet is a sphere and earns a per-pixel shader, a baked
+equirectangular surface and a canvas of its own. An asteroid is twelve pixels
+across when it appears and a hundred at its closest, there are two of them on
+screen at once, and each is tumbling. So the belt is ONE full-frame canvas and a
+rock is a closed path, one gradient and a scatter of craters. Four things carry
+it, in order of what they are worth at those sizes: the OUTLINE changes as it
+turns (a triaxial body spinning about its short axis swings its projected width
+between two of its axes every half turn, which is exactly where a real asteroid
+LIGHTCURVE comes from); the TERMINATOR is sharp and off-centre, because there is
+no air; the CRATERS are lit from the same side as the body, as a ramp across
+each bowl — dark on the star's side, bright opposite, and a crater field looks
+wrong the instant those two are swapped; and the ALBEDO is the albedo.
+
+**AND A CRATER IS TWO THINGS THAT FADE SEPARATELY.** Its RELIEF is a shadow, so
+it dies both at the terminator and at full phase — which is why the Moon's
+craters are spectacular along the terminator and invisible at full. Its ALBEDO
+— a floor of a different tone, and the bright ejecta a young one threw out — is
+a property of the ground and shows at every phase. At full it is all that
+shows, and that is what a ray system is.
+
+**THE BELT IS IN FRONT OF THE WHOLE SOLAR SYSTEM, ALWAYS.** Every rock is tens
+of kilometres from the camera and every planet is at least an AU, so the belt
+needs no depth sort against the orrery at all — one canvas above the whole
+`SUN_Z ± Z_SPREAD` band says it once, instead of an inline z-index written
+sixty times a second. Inside the canvas the rocks are painted far to near, so
+they occlude each other correctly for free.
+
+**AND THE BELT IS A PURE FUNCTION OF THE CLOCK.** Arrivals are a Poisson
+process, and the obvious way to run one is to keep a cursor and step it — which
+makes the belt depend on how the clock was walked rather than on what it says,
+and quietly breaks `__skyFreeze`. So time is cut into fixed buckets and each
+bucket rolls its own arrivals from its own index: a Poisson count with uniform
+times inside it, which is exactly a Poisson process and needs no memory. Pin the
+clock and the same rocks are in the same places. `window.__beltState` publishes
+what was drawn — class, screen position, drawn pixels, real kilometres, range
+and lit fraction — because a rock inside a canvas has no element to measure.
+
+**THREE THINGS ARE NOT REAL, and each is the same bargain the orrery strikes
+with distance.** DENSITY: neighbouring kilometre-sized rocks really sit about a
+million kilometres apart, which is why every probe sent through the belt needed
+a deliberate course change to get near one, and at that spacing a fly-by close
+enough to show a disc happens about once every ten million years. The spacing
+here is compressed by four orders of magnitude, to a few tens of kilometres.
+THE TOP OF THE SIZE RANGE: a big rock is visible from proportionally further
+away, so the fly-bys you can actually see are dominated by the largest bodies —
+the same selection that made Ceres the first asteroid ever found — and left
+alone, half of what arrived would be a 30 km body crossing the frame over four
+minutes. The drawn population is cut at 4 km, so the belt's real giants never
+come. THE PHASE ANGLE: the camera looks toward the sun, so every rock in the
+frame is genuinely BACKLIT, and the honest range of lit fractions across a 53°
+frame is 0 to 0.17 — a picture of black rocks. The phase is stretched by one
+constant (`PHASE_STRETCH`), keeping the direction and the order real (near the
+star means silhouette, out at the edge means nearly full) and inventing only the
+rate.
+
+Everything else is the measurement: the size–frequency distribution's two
+documented slopes, a Maxwellian about the belt's 5.3 km/s mean encounter
+velocity, rotation periods floored at the 2.2 h rubble-pile spin barrier on the
+sky's own spin clock, elongation that falls off with size, and exponential gaps
+between arrivals. `tests/title_belt_test.ts` measures all of it, including what
+the frame actually sees: one or two rocks in view at any moment and a close pass
+about every eight seconds, at all three reference viewports.
