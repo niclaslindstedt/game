@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE COMPILED SCORES AGAINST THE ONES THEY WERE LIFTED FROM.
 //
-// `content/music/` was derived from the five hand-written TypeScript score
+// `content/music/` was derived from the hand-written TypeScript score
 // files by IMPORTING them and re-emitting their data, not by anyone retyping
-// four thousand note tokens. The fixture fingerprints those five tracks exactly
+// four thousand note tokens. The fixture fingerprints every shipped track exactly
 // as they stood the moment before the lift; this fingerprints the compiled
 // catalog the same way and compares.
 //
@@ -28,11 +28,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { TRACK as HQ_LOCKDOWN } from "../../pwa/src/generated/music/hq_lockdown.ts";
-import { TRACK as RED_DUST } from "../../pwa/src/generated/music/red_dust.ts";
-import { TRACK as REGOLITH_RIDE } from "../../pwa/src/generated/music/regolith_ride.ts";
-import { TRACK as RIFT_DRIFT } from "../../pwa/src/generated/music/rift_drift.ts";
-import { TRACK as TITLE } from "../../pwa/src/generated/music/title.ts";
+import { TRACK_LOADERS } from "../../pwa/src/generated/music/index.ts";
 import {
   flattenTrack,
   type ChiptuneTrack,
@@ -42,13 +38,22 @@ import { trackDigest } from "../../scripts/music-data/digest.mjs";
 
 import snapshot from "./fixtures/music-snapshot.json" with { type: "json" };
 
-const COMPILED: Record<string, ChiptuneTrack> = {
-  title: TITLE,
-  regolith_ride: REGOLITH_RIDE,
-  hq_lockdown: HQ_LOCKDOWN,
-  red_dust: RED_DUST,
-  rift_drift: RIFT_DRIFT,
-};
+/**
+ * Every score this build ships, READ OFF THE GENERATED INDEX rather than listed
+ * by hand. The hand-written list this replaces had already drifted: three of the
+ * eight shipped scores were never added to it, so "ships exactly the tracks the
+ * snapshot has" was passing over a catalog that did not contain them, and the
+ * only thing that noticed was the snapshot updater writing ten entries against
+ * a five-entry map. A drift guard maintained by hand is a drift guard with its
+ * own drift.
+ */
+const COMPILED: Record<string, ChiptuneTrack> = Object.fromEntries(
+  await Promise.all(
+    Object.entries(TRACK_LOADERS).map(
+      async ([id, load]) => [id, await load()] as const,
+    ),
+  ),
+);
 
 const frozen = snapshot as Record<string, Record<string, unknown>>;
 

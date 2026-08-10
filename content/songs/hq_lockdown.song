@@ -1,0 +1,130 @@
+# NIGHT SHIFT — GOODCO HQ.
+#
+# The brief: past midnight, every desk manned, the floor building spaceships in
+# the dark. He is not looking for trouble; he kills everybody he ate lunch with
+# because they are standing in a doorway, and never mentions it. So this is NOT
+# a stealth cue — it is THE BUILDING'S OWN MUSIC, the loop THE GENUINELY GOOD
+# COMPANY would put in its own lobby, still playing.
+#
+# THREE DECISIONS.
+#
+#   IT IS LOBBY MUSIC. Major sevenths, minor sevenths, a polite ii–V, a bright
+#   advert of a B section. Played on cold pulses over a hard kit, at the tempo
+#   of somebody walking to a meeting they are late for.
+#
+#   THE BUILDING IS SINKING. Bars 5–7 of the A section are bars 1–3 A SEMITONE
+#   DOWN — the same shapes, the same tune, the whole floor a step lower than it
+#   was four bars ago — and the dominant hauls it back up just in time to do it
+#   again. The advert (B) does NOT sink: the pitch works, it is the workplace
+#   underneath that does not.
+#
+#   THE PHOTOCOPIER. A dry mechanical clack every THREE sixteenths against a
+#   bar of sixteen, so it lands somewhere new every bar and takes four to come
+#   back round. It is in every single pattern including the breakdown, where it
+#   is the only thing left. Nobody asked it to run all night.
+#
+# Compile:  node scripts/song-import.mjs content/songs/hq_lockdown.song --sheet
+
+id     hq_lockdown
+title  NIGHT SHIFT
+tempo  128
+about
+  GOODCO's own lobby loop, still playing at one in the morning while the night
+  shift is killed in the doorways. Major-seventh corporate warmth on cold
+  pulses over a hard kit — and every four bars the floor SINKS: bars 5–7 are
+  bars 1–3 a semitone down, the same tune played by a building that is a step
+  lower than it was, with the dominant hauling it back up in time to do it
+  again. The B section is the advert and does not sink, because the pitch
+  works fine; it is the workplace under it that does not. Through all of it a
+  photocopier clacks every three sixteenths against a bar of sixteen, landing
+  somewhere new every bar, alone in the breakdown. Original melodies; nothing
+  sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# The voice on the tannoy: a detuned square, polite, slightly too bright.
+voice lead   square vol=.028 gate=.8 detune=7 echo=.22 vib=5/10/220
+# The lobby piano — seventh-chord stabs on the off-beat, thin and out of tune.
+voice keys   square vol=.013 gate=.25 detune=10 pan=.3 echo=.18
+# The strip lights: a lowpassed saw chugging sixteenths. Not a bass, a HUM.
+voice strip  saw vol=.0095 gate=.4 lp=1800 pan=-0.3
+# The floor.
+voice bass   triangle vol=.055 gate=.8
+
+# ── THE KIT ─────────────────────────────────────────────────────────────────
+drum kick    triangle vol=.06 gate=1 slide=.25 note=D2
+drum snare   noise vol=.033 gate=.7 hp=1400
+drum hat     noise vol=.0105 gate=.25 hp=6800 pan=.25
+# THE PHOTOCOPIER — every third sixteenth, four bars to come back round.
+drum copier  noise vol=.017 gate=.06 bp=2600 pan=-0.45
+
+# ── INTRO — a lift, a corridor, and something already running ───────────────
+section intro
+  chords Dm7 | Dm7 | A7 | A7
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+  strip  .*16 | .*16 | chug:4 | chug:4
+  bass   .*16 | .*16 | four:2 | four:2
+  keys   .*16 | .*16 | .*16 | offbeat:4
+  hat    ................|................|..x...x...x...x.|..x...x...x...x.
+
+# ── A — the vamp, and the floor going out from under it halfway through ─────
+section a
+  chords Dm7 | Gm7 | Bbmaj7 | A7 | C#m7 | F#m7 | Amaj7 | A7
+  lead   a4*2 d5*2 f5*4 e5*4 d5*4 | a#4*4 d5*4 f5*8 | d5*4 f5*2 a5*2 g5*8 | e5*4 c#5*4 a4*8
+         g#4*2 c#5*2 e5*4 d#5*4 c#5*4 | a4*4 c#5*4 e5*8 | c#5*4 e5*2 g#5*2 f#5*8 | g5*4 e5*4 a4*8
+  keys   offbeat 4
+  strip  chug 4
+  bass   pump 2
+  kick   x.....x.x.......|x.......x...x...
+  snare  ....x.......x...
+  hat    ..x...x...x...x.
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+
+# ── B — THE ADVERT. It is in a major key, it is sincere, and it works ───────
+section b
+  chords Fmaj7 | Dm7 | Bbmaj7 | C | Fmaj7 | Dm7 | Gm7 | A7
+  lead   f5*4 a5*4 c6*8 | a5*4 f5*4 d5*8 | d5*4 f5*4 a5*8 | g5*8 e5*8
+         f5*4 a5*4 c6*4 d6*4 | c6*8 a5*8 | a#5*4 a5*4 g5*8 | e5*4 c#5*4 a4*8
+  keys   offbeat 4
+  strip  chug 4
+  bass   pump 2
+  kick   x.....x.x.......|x.......x...x...
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+
+# ── BREAK — everybody has gone home except the machine that has not ─────────
+section break
+  chords Dm7 | Dm7 | C#m7 | C#m7 | Dm7 | Dm7 | A7 | A7
+  keys   arp16 4
+  bass   d2*8 .*8 | .*16 | c#2*8 .*8 | .*16
+         d2*8 .*8 | .*16 | a2*8 .*8 | a2*8 e3*8
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+
+# ── BUILD — the stairwell. A chromatic climb nobody can walk off ───────────
+section build
+  chords Dm | D#dim | Em | F | F#dim | Gm | G#dim | A
+  strip  chug 4
+  keys   offbeat 4
+  bass   pump 2
+  lead   d5*16 | d#5*16 | e5*16 | f5*16
+         f#5*16 | g5*16 | g#5*8 a5*8 | a5*4 c#6*4 e6*8
+  kick   x.......x.......
+  snare  ....x.......x...|....x.......x...|....x.......x.x.|....x.......x.x.
+         ....x...x.x.x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx
+  hat    x.x.x.x.x.x.x.x.
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+
+# ── TURN — the vamp again, wider, and it still will not land ───────────────
+section turn
+  chords Dm7 | Gm7 | Bbmaj7 | A7 | C#m7 | F#m7 | Amaj7 | A7
+  lead   d6*4 c6*4 a5*8 | a#5*8 g5*8 | f5*4 a5*4 d6*8 | c#6*4 a5*4 e5*8
+         c#6*4 b5*4 g#5*8 | a5*8 f#5*8 | e5*4 g#5*4 c#6*8 | c#6*4 a5*4 e5*8
+  keys   stab 4
+  strip  chug 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.......x...x...
+  snare  ....x.......x...|....x.......x.x.
+  hat    x.x.x.x.x.x.x.x.
+  copier x..x..x..x..x..x|..x..x..x..x..x.|.x..x..x..x..x..|x..x..x..x..x..x
+
+order  intro a b a break build b turn

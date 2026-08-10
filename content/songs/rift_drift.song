@@ -1,0 +1,129 @@
+# NO NORTH — THE RIFT.
+#
+# The brief is the hero's own first line in there: NO FLOOR. NO SKY. NO NORTH.
+# MY BOOTS GRIP SOMETHING ANYWAY. A hallucinatory space between universes where
+# everyone who ever vanished without a body fell in and is still going about
+# their business — a magician, an inventor, an aviator, a lighthouse keeper two
+# men short since 1900 — and at the far end a monolith with one enormous eye
+# that read everything ever written and told precisely nobody.
+#
+# THREE DECISIONS, and all three are the same sentence said three ways.
+#
+#   NO TONIC. Every chord in the track is AUGMENTED or SUSPENDED and there is
+#   not one major or minor triad in it anywhere. An augmented triad cuts the
+#   octave into three equal pieces, so no note in it is the root and the ear
+#   has nothing to stand on; a suspended chord is a chord that has not decided.
+#   The piece never states a key and never resolves, including at the seam.
+#
+#   SOMETHING IS ALWAYS FALLING. Two voices descend by semitones at DIFFERENT
+#   RATES — one an octave over eight bars, the other over four — so their
+#   restarts never coincide and at every moment of the track at least one line
+#   is halfway down. Nothing catches either of them.
+#
+#   THE BAR LIMPS. Everything that strikes, strikes at 3+3+3+3+4 rather than
+#   4+4+4+4: four short steps and then one that is one too long, every bar, for
+#   two minutes. The count never comes out and the ear keeps starting again.
+#   Only the drifting lead is free of it, which is why it sounds untethered
+#   rather than merely slow.
+#
+# Compile:  node scripts/song-import.mjs content/songs/rift_drift.song --sheet
+
+id     rift_drift
+title  NO NORTH
+tempo  88
+about
+  Weightless and homeless on purpose. There is no major or minor chord
+  anywhere in this score — only augmented triads, which divide the octave into
+  three equal parts so that no note in them is the root, and suspended chords,
+  which are chords that have not decided. Two lines fall by semitones at
+  different rates, one an octave every eight bars and one every four, so their
+  restarts never line up and something is always partway down. And everything
+  that strikes, strikes at 3+3+3+3+4 — four short steps and one that is one too
+  long — so the bar never comes out even; only the drifting sine is free of the
+  count, which is what makes it sound untethered rather than slow. Original
+  melodies; nothing sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# The one voice with no meter and no floor. Long, bent, drowned in echo.
+voice drift  sine vol=.03 gate=.9 attack=200 echo=.6 vib=3.5/26/300
+# THE TWO FALLS. Same patch, opposite sides of the field, different rates.
+voice fallA  square vol=.012 gate=.9 attack=120 detune=10 pan=-0.35 echo=.5
+voice fallB  square vol=.012 gate=.9 attack=120 detune=10 pan=.35 echo=.5
+# Glass — high, sparse, and it answers nothing.
+voice glass  sine vol=.014 gate=.25 pan=.4 echo=.55
+# A heartbeat heard through a wall. It limps with everything else.
+voice deep   triangle vol=.05 gate=.6
+
+# ── THE KIT, WHICH MOSTLY DECLINES ─────────────────────────────────────────
+drum tom     triangle vol=.03 gate=1 slide=.3 note=A1
+drum shake   noise vol=.0085 gate=.18 hp=7600 pan=-0.2
+
+# ── OPEN — a step through, and the falling has already been going on ───────
+section open
+  chords Aaug | Aaug | Csus2 | Csus2
+  fallA  c6*3 c6*3 c6*3 c6*3 c6*4 | b5*3 b5*3 b5*3 b5*3 b5*4
+         a#5*3 a#5*3 a#5*3 a#5*3 a#5*4 | a5*3 a5*3 a5*3 a5*3 a5*4
+  drift  .*16 | .*16 | a5*8 c#6*8 | f6*8 .*8
+  deep   .*16 | .*16 | a2*3 a2*3 a2*3 a2*3 a2*4 | a2*3 a2*3 a2*3 a2*3 a2*4
+  shake  ................|................|..x..x..x..x..x.|..x..x..x..x..x.
+
+# ── A — nothing here is a key ──────────────────────────────────────────────
+section a
+  chords Aaug | Aaug | Csus2 | Csus2 | Caug | Caug | Fsus2 | Fsus2
+  drift  a5*8 c#6*8 | f6*8 c#6*8 | d6*8 g5*8 | c6*8 c6*8
+         g#5*8 e5*8 | c6*8 g#5*8 | g5*8 c6*8 | f5*8 .*8
+  fallA  c6*3 c6*3 c6*3 c6*3 c6*4 | b5*3 b5*3 b5*3 b5*3 b5*4
+         a#5*3 a#5*3 a#5*3 a#5*3 a#5*4 | a5*3 a5*3 a5*3 a5*3 a5*4
+         g#5*3 g#5*3 g#5*3 g#5*3 g#5*4 | g5*3 g5*3 g5*3 g5*3 g5*4
+         f#5*3 f#5*3 f#5*3 f#5*3 f#5*4 | f5*3 f5*3 f5*3 f5*3 f5*4
+  fallB  f#5*3 f#5*3 f5*3 f5*3 f5*4 | e5*3 e5*3 d#5*3 d#5*3 d#5*4
+         d5*3 d5*3 c#5*3 c#5*3 c#5*4 | c5*3 c5*3 b4*3 b4*3 b4*4
+  deep   a2*3 a2*3 a2*3 a2*3 a2*4 | a2*3 a2*3 a2*3 a2*3 a2*4
+         c2*3 c2*3 c2*3 c2*3 c2*4 | c2*3 c2*3 c2*3 c2*3 c2*4
+         c2*3 c2*3 c2*3 c2*3 c2*4 | c2*3 c2*3 c2*3 c2*3 c2*4
+         f2*3 f2*3 f2*3 f2*3 f2*4 | f2*3 f2*3 f2*3 f2*3 f2*4
+  tom    x........x......
+  shake  ..x..x..x..x..x.
+
+# ── B — the same nowhere, wider, with something ringing overhead ───────────
+section b
+  chords Dsus2 | Faug | Gsus4 | Bbaug | Csus2 | Eaug | Fsus2 | Aaug
+  drift  e6*8 a5*8 | a5*8 c#6*8 | d6*8 g5*8 | f#6*8 d6*8
+         g5*8 d6*8 | g#5*8 c6*8 | c6*8 f5*8 | a5*8 c#6*8
+  glass  arp16 6
+  fallA  c6*3 c6*3 c6*3 c6*3 c6*4 | b5*3 b5*3 b5*3 b5*3 b5*4
+         a#5*3 a#5*3 a#5*3 a#5*3 a#5*4 | a5*3 a5*3 a5*3 a5*3 a5*4
+         g#5*3 g#5*3 g#5*3 g#5*3 g#5*4 | g5*3 g5*3 g5*3 g5*3 g5*4
+         f#5*3 f#5*3 f#5*3 f#5*3 f#5*4 | f5*3 f5*3 f5*3 f5*3 f5*4
+  fallB  f#5*3 f#5*3 f5*3 f5*3 f5*4 | e5*3 e5*3 d#5*3 d#5*3 d#5*4
+         d5*3 d5*3 c#5*3 c#5*3 c#5*4 | c5*3 c5*3 b4*3 b4*3 b4*4
+  deep   d2*3 d2*3 d2*3 d2*3 d2*4 | f2*3 f2*3 f2*3 f2*3 f2*4
+         g2*3 g2*3 g2*3 g2*3 g2*4 | a#2*3 a#2*3 a#2*3 a#2*3 a#2*4
+         c2*3 c2*3 c2*3 c2*3 c2*4 | e2*3 e2*3 e2*3 e2*3 e2*4
+         f2*3 f2*3 f2*3 f2*3 f2*4 | a2*3 a2*3 a2*3 a2*3 a2*4
+  tom    x........x......
+  shake  ..x..x..x..x..x.
+
+# ── EYE — the monolith. One chord for four bars, then another. It read
+#    everything ever written about you and it is not going to say so ────────
+section eye
+  chords Eaug | Eaug | Eaug | Eaug | Caug | Caug | Caug | Caug
+  drift  e5*8 g#5*8 | c6*8 g#5*8 | e5*8 c6*8 | g#5*16
+         c6*8 e6*8 | g#5*8 e5*8 | c6*8 g#5*8 | e5*16
+  glass  c7*4 .*12 | .*16 | .*7 g#6*4 .*5 | .*16
+  fallB  f#5*3 f#5*3 f5*3 f5*3 f5*4 | e5*3 e5*3 d#5*3 d#5*3 d#5*4
+         d5*3 d5*3 c#5*3 c#5*3 c#5*4 | c5*3 c5*3 b4*3 b4*3 b4*4
+  deep   e2*3 e2*3 e2*3 e2*3 e2*4 | .*16 | e2*3 e2*3 e2*3 e2*3 e2*4 | .*16
+         c2*3 c2*3 c2*3 c2*3 c2*4 | .*16 | c2*3 c2*3 c2*3 c2*3 c2*4 | .*16
+
+# ── CLOSE — one line still going down, and the seam is not a cadence ───────
+section close
+  chords Fsus2 | Fsus2 | Aaug | Aaug
+  drift  f5*8 c6*8 | g5*8 .*8 | c#6*8 a5*8 | .*16
+  fallA  g#5*3 g#5*3 g#5*3 g#5*3 g#5*4 | g5*3 g5*3 g5*3 g5*3 g5*4
+         f#5*3 f#5*3 f#5*3 f#5*3 f#5*4 | f5*3 f5*3 f5*3 f5*3 f5*4
+  deep   f2*3 f2*3 f2*3 f2*3 f2*4 | f2*3 f2*3 f2*3 f2*3 f2*4
+         a2*3 a2*3 a2*3 a2*3 a2*4 | .*16
+  shake  ..x..x..x..x..x.|..x..x..x..x..x.|..x..x..x..x..x.|................
+
+order  open a b a eye b close

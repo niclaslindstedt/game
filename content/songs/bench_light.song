@@ -1,0 +1,129 @@
+# BENCH LIGHT — THE GARAGE, the hub.
+#
+# SECOND TAKE, and the first one is worth naming because it was the obvious
+# read and it was wrong: a music box picking out a lullaby in C major. Sweet,
+# twee, and about a man who does not exist. THIS man drives through a crowd at
+# a hundred and twenty and files it under road surface; he is not sentimental,
+# he is CONTENT. He has spent ten years of weekends building a spaceship out
+# here and he is good at it.
+#
+# So the garage is not a lullaby. It is a WORKSHOP AT ONE IN THE MORNING with
+# somebody competent in it — the only score in the game with nothing hunting
+# you, and the one the player hears for longer than any other, because this is
+# where the shopping, the errands and the bench are.
+#
+# THREE DECISIONS.
+#
+#   IT IS A GROOVE, AND THE BASS IS THE TUNE'S EQUAL. A syncopated 3+3+2 hook
+#   that runs the whole track and is the thing you would actually hum. A hub
+#   theme that merely sits there is a hub theme the player mutes.
+#
+#   A DORIAN, WHICH IS THE MODE FOR UNBOTHERED. Minor, but with a natural
+#   SIXTH — the F♯ — and the whole piece leans on it: it is the one bright note
+#   in a dark room, it lands held at the end of every phrase, and it is the
+#   last thing left playing in the hush. Nothing about this room is sad.
+#
+#   IT NEVER GETS HOME. Every section ends on D7, the chord one step short of
+#   the A minor it keeps promising, and hands straight back to the vamp. The
+#   piece circles happily for two minutes and never once resolves — which is
+#   the ship on the lawn, and nobody in the game mentions that either.
+#
+# AND NO KIT AT ALL. The only percussion is the bench: a wrench set down, a tin
+# knocked over, on a four-bar grid that never lands on a downbeat. Somebody is
+# working. They are not keeping time.
+#
+# THERE IS NO PAD EITHER, and that was a deliberate cut rather than an omission.
+# One was written and the sheet showed it sitting in the same octave as the
+# keys, two square voices in each other's way — and it was the quietest thing in
+# the piece, so cutting it rather than re-voicing it lost nothing and left four
+# parts that each own a register: hook, comp, tune, bench.
+#
+# Compile:  node scripts/song-import.mjs content/songs/bench_light.song --sheet
+
+id     bench_light
+title  BENCH LIGHT
+tempo  92
+about
+  A workshop at one in the morning with somebody competent in it — the hub, and
+  the only score in the game with nothing hunting you. A syncopated bass hook
+  carries it rather than a melody sitting on top, the mode is A DORIAN so the
+  bright natural sixth is the note everything leans on, and every section ends
+  one chord short of home and hands straight back to the vamp: it circles for
+  two minutes, happily, and never resolves. There is no kit — the only
+  percussion is a wrench set down and a tin knocked over, four bars apart and
+  never on a downbeat. Original melodies; nothing sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# THE HOOK. Written out longhand every bar, because this is the part of the
+# piece a figure could not have written: it is the tune, it just happens to be
+# at the bottom.
+voice bass   triangle vol=.058 gate=.8
+# The bench radio's electric piano — seventh chords on the off-beats, warm and
+# a little out of tune, sitting in the gap between the bass and the lead.
+voice keys   square vol=.016 gate=.5 attack=25 detune=8 pan=-0.2 echo=.3
+# The line over the top. A TRIANGLE, not a sine — woody rather than glassy,
+# which is the whole difference between a workbench and a nursery.
+voice lead   triangle vol=.042 gate=.7 attack=20 echo=.4 vib=4.5/10/280
+
+# ── THE BENCH ───────────────────────────────────────────────────────────────
+drum  wrench noise vol=.014 gate=.1 bp=1900 pan=.35
+drum  tin    noise vol=.011 gate=.08 lp=1000 pan=-0.3
+
+# ── INTRO — the hook, alone, and then the lamp ─────────────────────────────
+section intro
+  chords Am7 | D7 | Am7 | D7
+  bass   a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*2 f#2*2
+         a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*4
+  keys   .*16 | .*16 | offbeat:3 | offbeat:3
+  lead   .*16 | .*16 | .*16 | .*4 f#4*4 a4*4 c5*4
+  wrench ................|..........x.....|................|.....x..........
+  tin    ................|................|.......x........|................
+
+# ── A — the vamp. Bar 8 hands back to bar 1 and never lands on A minor ─────
+section a
+  chords Am7 | D7 | Am7 | D7 | Cmaj7 | Bm7 | Am7 | D7
+  bass   a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*2 f#2*2
+         a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*2 f#2*2
+         c3*3 c3*3 e3*2 g3*4 e3*2 d3*2 | b2*3 b2*3 d3*2 f#3*4 e3*2 d3*2
+         a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*4
+  lead   .*4 a4*4 c5*4 e5*4 | d5*8 c5*4 a4*4 | .*4 c5*2 d5*2 e5*4 g5*4 | f#5*8 e5*8
+         e5*4 g5*4 a5*8 | g5*4 f#5*4 d5*8 | e5*4 c5*4 a4*8 | .*4 f#4*4 a4*4 c5*4
+  keys   offbeat 3
+  wrench ................|..........x.....|................|.....x..........
+  tin    ................|................|.......x........|................
+
+# ── B — the ship. It walks down out of the vamp, gets higher, comes back ───
+section b
+  chords Cmaj7 | G | Fmaj7 | Em7 | Dm7 | Em7 | Fmaj7 | D7
+  bass   c3*3 c3*3 e3*2 g3*4 e3*2 c3*2 | g2*3 g2*3 b2*2 d3*4 b2*2 g2*2
+         f2*3 f2*3 a2*2 c3*4 a2*2 f2*2 | e2*3 e2*3 g2*2 b2*4 a2*2 g2*2
+         d2*3 d2*3 f2*2 a2*4 g2*2 f2*2 | e2*3 e2*3 g2*2 b2*4 d3*2 b2*2
+         f2*3 f2*3 a2*2 c3*4 e3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*4
+  lead   g5*4 e5*4 c5*8 | d5*4 b4*4 g4*8 | a4*4 c5*4 f5*8 | e5*8 d5*8
+         d5*4 f5*4 a5*8 | b5*4 a5*4 g5*8 | a5*8 e5*8 | f#5*4 e5*4 d5*8
+  keys   offbeat 3
+  wrench ................|..........x.....|................|.....x..........
+  tin    ................|................|.......x........|................
+
+# ── HUSH — the radio off. Half the bass, four notes, and the sixth left
+#    ringing on its own at the end of it ───────────────────────────────────
+section hush
+  chords Am7 | Am7 | Fmaj7 | Fmaj7 | Cmaj7 | Cmaj7 | D7 | D7
+  bass   a2*8 e3*8 | a2*8 c3*8 | f2*8 c3*8 | f2*8 a2*8
+         c3*8 g2*8 | c3*8 e3*8 | d2*8 a2*8 | d2*8 f#2*8
+  lead   .*16 | .*16 | .*8 a4*8 | c5*8 .*8
+         .*16 | g5*8 e5*8 | .*8 d5*8 | f#5*8 .*8
+  wrench ................|..........x.....|................|.....x..........
+  tin    ................|................|.......x........|................
+
+# ── CLOSE — the hook one more time, and the seam is not a cadence ─────────
+section close
+  chords Am7 | D7 | Cmaj7 | D7
+  bass   a2*3 a2*3 c3*2 e3*4 d3*2 c3*2 | d2*3 d2*3 f#2*2 a2*4 g2*2 f#2*2
+         c3*8 e3*8 | d2*8 .*8
+  lead   e5*4 c5*4 a4*8 | .*16 | e5*8 g5*8 | f#5*8 .*8
+  keys   offbeat:3 | offbeat:3 | offbeat:3 | .*16
+  wrench ................|..........x.....|................|................
+  tin    ................|................|.......x........|................
+
+order  intro a b a hush b close

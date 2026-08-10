@@ -1,243 +1,340 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# LOCKDOWN — the score for GOODCO HQ and THE BUNKER.
+# NIGHT SHIFT — compiled from a .song by scripts/song-import.mjs.
 #
-# Arrangement (140 bpm, 4/4, one bar = 16 sixteenth-note steps):
-#   intro(4) A(8) B(8) A(8) break(8) build(8) B(8) turn(8) A(8)
-#   = 68 bars ≈ 117 s per loop.
+# Arrangement (128 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   intro(4) a(8) b(8) a(8) break(8) build(8) b(8) turn(8)
+#   = 60 bars ≈ 113 s per loop.
 id: hq_lockdown
-name: LOCKDOWN
+name: NIGHT SHIFT
 description: >-
-  A tense D-minor infiltration groove in the 16-bit stealth-action
-  tradition: a driving triangle octave bass, a mechanical off-beat pulse
-  riff, a hard kick/snare/hat kit, and a wiry square lead that stalks the
-  scale rather than soaring. Where the moon's REGOLITH RIDE is heroic, HQ
-  is nervous — this is a break-in, not a charge. Original melodies;
-  nothing sampled.
-bpm: 140
+  GOODCO's own lobby loop, still playing at one in the morning while the
+  night shift is killed in the doorways. Major-seventh corporate warmth on
+  cold pulses over a hard kit — and every four bars the floor SINKS: bars
+  5–7 are bars 1–3 a semitone down, the same tune played by a building
+  that is a step lower than it was, with the dominant hauling it back up
+  in time to do it again. The B section is the advert and does not sink,
+  because the pitch works fine; it is the workplace under it that does
+  not. Through all of it a photocopier clacks every three sixteenths
+  against a bar of sixteen, landing somewhere new every bar, alone in the
+  breakdown. Original melodies; nothing sampled.
+bpm: 128
 stepsPerBeat: 4
 instruments:
-  # The wiry lead: a tight square that prowls the scale.
   lead:
     wave: square
     volume: 0.028
     gate: 0.8
-    detuneCents: 5
+    detuneCents: 7
+    echo: 0.22
     vibrato:
       rateHz: 5
-      depthCents: 8
-      delayMs: 150
+      depthCents: 10
+      delayMs: 220
+  keys:
+    wave: square
+    volume: 0.013
+    gate: 0.25
+    detuneCents: 10
+    pan: 0.3
     echo: 0.18
-  # Mechanical off-beat riff — the alarm ticking under everything.
-  riff:
+  strip:
     wave: sawtooth
-    volume: 0.014
+    volume: 0.0095
     gate: 0.4
-    pan: -0.25
-    echo: 0.12
-  # Driving triangle octaves, eight to the bar.
+    filter:
+      type: lowpass
+      frequency: 1800
+    pan: -0.3
   bass:
     wave: triangle
     volume: 0.055
-    gate: 0.85
-  # The kit: a diving triangle kick, band-limited snare, tight hat.
+    gate: 0.8
   kick:
     wave: triangle
-    volume: 0.066
+    volume: 0.06
     gate: 1
     slide: 0.25
   snare:
     wave: noise
-    volume: 0.036
-    gate: 0.8
+    volume: 0.033
+    gate: 0.7
     filter:
       type: highpass
-      frequency: 1500
+      frequency: 1400
   hat:
     wave: noise
-    volume: 0.01
-    gate: 0.3
-    pan: 0.2
+    volume: 0.0105
+    gate: 0.25
     filter:
       type: highpass
-      frequency: 7000
+      frequency: 6800
+    pan: 0.25
+  copier:
+    wave: noise
+    volume: 0.017
+    gate: 0.06
+    filter:
+      type: bandpass
+      frequency: 2600
+    pan: -0.45
 patterns:
-  # INTRO — four bars of Dm tension; the lead sneaks in on bar 4.
+  # INTRO — Dm7 Dm7 A7 A7
   intro:
-    riff: |
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-    lead: |
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+    strip: |
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  D4 =  F4 =  A4 =  C5 =
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
     bass: |
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-    kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-    snare: |
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A2 .  .  .  A2 .  .  .  A2 .  .  .  A2 .  .  .
+      A2 .  .  .  A2 .  .  .  A2 .  .  .  A2 .  .  .
+    keys: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
     hat: |
-      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # A — Dm Dm A# C: the main prowl.
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  x  .  .  .  x  .  .  .  x  .  .  .  x  .
+      .  .  x  .  .  .  x  .  .  .  x  .  .  .  x  .
+  # A — Dm7 Gm7 Bbmaj7 A7 C#m7 F#m7 Amaj7 A7
   a:
     lead: |
-      D5 =  =  =  C5 =  A4 =  A#4 =  =  =  A4 =  F4 =
-      A4 =  F4 =  D4 =  F4 =  A4 =  =  =  G4 =  A4 =
-      A#4 =  =  =  A4 =  G4 =  F4 =  =  =  D4 =  F4 =
-      C5 =  =  =  A#4 =  A4 =  A4 =  =  =  E4 =  =  =
-      D5 =  =  =  C5 =  A4 =  A#4 =  C5 =  D5 =  =  =
-      F5 =  E5 =  D5 =  C5 =  A#4 =  =  =  A4 =  =  =
-      G4 =  A4 =  A#4 =  A4 =  G4 =  F4 =  E4 =  =  =
-      D4 =  =  =  A4 =  =  =  A4 =  C#5 =  D5 =  =  =
-    riff: |
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
-      .  .  A4 .  .  .  C5 .  .  .  A4 .  .  .  C5 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A#4 .  .  .  A4 .  .  .  A#4 .  .  .  A4 .
-      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
+      A4 =  D5 =  F5 =  =  =  E5 =  =  =  D5 =  =  =
+      A#4 =  =  =  D5 =  =  =  F5 =  =  =  =  =  =  =
+      D5 =  =  =  F5 =  A5 =  G5 =  =  =  =  =  =  =
+      E5 =  =  =  C#5 =  =  =  A4 =  =  =  =  =  =  =
+      G#4 =  C#5 =  E5 =  =  =  D#5 =  =  =  C#5 =  =  =
+      A4 =  =  =  C#5 =  =  =  E5 =  =  =  =  =  =  =
+      C#5 =  =  =  E5 =  G#5 =  F#5 =  =  =  =  =  =  =
+      G5 =  =  =  E5 =  =  =  A4 =  =  =  =  =  =  =
+    keys: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  E4 .  .  .  G#4 .  .  .  E4 .  .  .  G#4 .
       .  .  A4 .  .  .  C#5 .  .  .  A4 .  .  .  C#5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+    strip: |
+      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
+      G4 .  G4 G4 .  G4 G4 .  G4 .  G4 G4 .  G4 G4 .
+      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      C#4 .  C#4 C#4 .  C#4 C#4 .  C#4 .  C#4 C#4 .  C#4 C#4 .
+      F#4 .  F#4 F#4 .  F#4 F#4 .  F#4 .  F#4 F#4 .  F#4 F#4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
     bass: |
       D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A#1 .  A#2 .  A#1 .  A#2 .  C2 .  C3 .  C2 .  C3 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A#1 .  A#2 .  A#1 .  A#2 .  A1 .  A2 .  A1 .  A2 .
-      G1 .  G2 .  G1 .  G2 .  A#1 .  A#2 .  A#1 .  A#2 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      C#2 .  C#3 .  C#2 .  C#3 .  C#2 .  C#3 .  C#2 .  C#3 .
+      F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
     kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-      D2 .  .  .  .  .  .  .  D2 .  D2 .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
     hat: |
-      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # B — Gm F Dm A: the corridor sweep, riff thins to half-time.
+      .  .  x  .  .  .  x  .  .  .  x  .  .  .  x  .
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+  # B — Fmaj7 Dm7 Bbmaj7 C Fmaj7 Dm7 Gm7 A7
   b:
     lead: |
-      G5 =  =  =  =  =  F5 =  D5 =  =  =  A#4 =  =  =
-      F5 =  =  =  =  =  E5 =  C5 =  =  =  A4 =  =  =
-      D5 =  =  =  =  =  C5 =  A4 =  =  =  F4 =  =  =
-      A4 =  C5 =  E5 =  =  =  A4 =  =  =  =  =  =  =
-      G5 =  =  =  F5 =  D5 =  A#4 =  =  =  C5 =  =  =
-      F5 =  =  =  E5 =  C5 =  A4 =  =  =  E4 =  =  =
-      D5 =  F5 =  A5 =  =  =  G5 =  F5 =  E5 =  D5 =
-      C5 =  A#4 =  A4 =  G4 =  A4 =  =  =  =  =  =  =
-    riff: |
-      .  .  .  .  G4 .  .  .  .  .  .  .  G4 .  .  .
-      .  .  .  .  F4 .  .  .  .  .  .  .  F4 .  .  .
-      .  .  .  .  D4 .  .  .  .  .  .  .  D4 .  .  .
-      .  .  .  .  A4 .  .  .  .  .  .  .  A4 .  .  .
+      F5 =  =  =  A5 =  =  =  C6 =  =  =  =  =  =  =
+      A5 =  =  =  F5 =  =  =  D5 =  =  =  =  =  =  =
+      D5 =  =  =  F5 =  =  =  A5 =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      F5 =  =  =  A5 =  =  =  C6 =  =  =  D6 =  =  =
+      C6 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  A5 =  =  =  G5 =  =  =  =  =  =  =
+      E5 =  =  =  C#5 =  =  =  A4 =  =  =  =  =  =  =
+    keys: |
+      .  .  A4 .  .  .  C5 .  .  .  A4 .  .  .  C5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  A4 .  .  .  C5 .  .  .  A4 .  .  .  C5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+    strip: |
+      F4 .  F4 F4 .  F4 F4 .  F4 .  F4 F4 .  F4 F4 .
+      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
+      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
+      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
+      F4 .  F4 F4 .  F4 F4 .  F4 .  F4 F4 .  F4 F4 .
+      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
+      G4 .  G4 G4 .  G4 G4 .  G4 .  G4 G4 .  G4 G4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
     bass: |
-      G1 .  G2 .  G1 .  G2 .  G1 .  G2 .  G1 .  G2 .
-      F1 .  F2 .  F1 .  F2 .  F1 .  F2 .  F1 .  F2 .
+      F2 .  F3 .  F2 .  F3 .  F2 .  F3 .  F2 .  F3 .
       D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
-      G1 .  G2 .  G1 .  G2 .  F1 .  F2 .  F1 .  F2 .
-      D2 .  D3 .  D2 .  D3 .  A1 .  A2 .  A1 .  A2 .
-      A#1 .  A#2 .  A#1 .  A#2 .  C2 .  C3 .  C2 .  C3 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
+      A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .
+      C2 .  C3 .  C2 .  C3 .  C2 .  C3 .  C2 .  C3 .
+      F2 .  F3 .  F2 .  F3 .  F2 .  F3 .  F2 .  F3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
     kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-      D2 .  .  .  .  .  .  .  D2 .  D2 .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # BREAK — Dm Dm A A: drums drop out, the alarm arps alone.
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+  # BREAK — Dm7 Dm7 C#m7 C#m7 Dm7 Dm7 A7 A7
   break:
-    riff: |
+    keys: |
       D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
       D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
-      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
-      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
+      C#4 .  E4 .  G#4 .  E4 .  C#4 .  E4 .  G#4 .  E4 .
+      C#4 .  E4 .  G#4 .  E4 .  C#4 .  E4 .  G#4 .  E4 .
       D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
       D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
-      A3 .  C#4 .  E4 .  A4 .  C#4 .  E4 .  A4 .  C#4 .
-      A3 .  C#4 .  E4 .  A4 .  C#4 .  E4 .  A4 .  C#4 .
+      A4 .  C#5 .  E5 .  C#5 .  A4 .  C#5 .  E5 .  C#5 .
+      A4 .  C#5 .  E5 .  C#5 .  A4 .  C#5 .  E5 .  C#5 .
     bass: |
-      D2 =  =  .  D3 =  =  .  D2 =  =  .  D3 =  =  .
-      D2 =  =  .  D3 =  =  .  D2 =  =  .  D3 =  =  .
-      A1 =  =  .  A2 =  =  .  A1 =  =  .  A2 =  =  .
-      A1 =  =  .  A2 =  =  .  A1 =  =  .  A2 =  =  .
-      D2 =  =  .  D3 =  =  .  D2 =  =  .  D3 =  =  .
-      D2 =  =  .  D3 =  =  .  D2 =  =  .  D3 =  =  .
-      A1 =  =  .  A2 =  =  .  A1 =  =  .  A2 =  =  .
-      A1 =  =  .  A2 =  =  .  A1 =  =  .  A2 =  =  .
-    hat: |
-      x  .  .  .  x  .  .  .  x  .  .  .  x  .  x  .
-  # BUILD — Dm Dm A A: the climb back, snare roll at the top.
+      D2 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C#2 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D2 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A2 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      A2 =  =  =  =  =  =  =  E3 =  =  =  =  =  =  =
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+  # BUILD — Dm D#dim Em F F#dim Gm G#dim A
   build:
-    lead: |
-      D4 =  =  =  =  =  =  =  F4 =  =  =  =  =  =  =
-      A4 =  =  =  =  =  =  =  F4 =  =  =  =  =  =  =
-      A4 =  =  =  =  =  =  =  C5 =  =  =  =  =  =  =
-      E5 =  =  =  =  =  =  =  C#5 =  =  =  =  =  =  =
-      D5 =  =  =  F5 =  =  =  A5 =  =  =  =  =  =  =
-      A5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
-      A4 =  =  =  C5 =  =  =  E5 =  =  =  A5 =  =  =
-      C#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    strip: |
+      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
+      D#4 .  D#4 D#4 .  D#4 D#4 .  D#4 .  D#4 D#4 .  D#4 D#4 .
+      E4 .  E4 E4 .  E4 E4 .  E4 .  E4 E4 .  E4 E4 .
+      F4 .  F4 F4 .  F4 F4 .  F4 .  F4 F4 .  F4 F4 .
+      F#4 .  F#4 F#4 .  F#4 F#4 .  F#4 .  F#4 F#4 .  F#4 F#4 .
+      G4 .  G4 G4 .  G4 G4 .  G4 .  G4 G4 .  G4 G4 .
+      G#4 .  G#4 G#4 .  G#4 G#4 .  G#4 .  G#4 G#4 .  G#4 G#4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+    keys: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  F#4 .  .  .  A4 .  .  .  F#4 .  .  .  A4 .
+      .  .  G4 .  .  .  B4 .  .  .  G4 .  .  .  B4 .
+      .  .  A4 .  .  .  C5 .  .  .  A4 .  .  .  C5 .
+      .  .  A4 .  .  .  C5 .  .  .  A4 .  .  .  C5 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  B4 .  .  .  D5 .  .  .  B4 .  .  .  D5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
     bass: |
       D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
+      D#2 .  D#3 .  D#2 .  D#3 .  D#2 .  D#3 .  D#2 .  D#3 .
+      E2 .  E3 .  E2 .  E3 .  E2 .  E3 .  E2 .  E3 .
+      F2 .  F3 .  F2 .  F3 .  F2 .  F3 .  F2 .  F3 .
+      F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      G#2 .  G#3 .  G#2 .  G#3 .  G#2 .  G#3 .  G#2 .  G#3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+    lead: |
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      A5 =  =  =  C#6 =  =  =  E6 =  =  =  =  =  =  =
     kick: |
       D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
     snare: |
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
       .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
-      x  .  x  .  x  x  x  x  x  x  x  x  x  x  x  x
+      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # TURN — Dm A# C A: the unison hook, then the fill back to A.
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+  # TURN — Dm7 Gm7 Bbmaj7 A7 C#m7 F#m7 Amaj7 A7
   turn:
     lead: |
-      D5 =  C5 =  A#4 =  A4 =  F4 =  =  =  =  =  =  =
-      A#4 =  A4 =  G4 =  F4 =  D4 =  =  =  =  =  =  =
-      C5 =  A#4 =  A4 =  G4 =  A4 =  =  =  =  =  =  =
-      E4 =  G4 =  A4 =  C5 =  A4 =  =  =  =  =  =  =
-      D5 =  F5 =  A5 =  =  =  G5 =  =  =  F5 =  D5 =
-      A#4 =  D5 =  F5 =  =  =  E5 =  =  =  C5 =  A4 =
-      C5 =  =  =  A#4 =  =  =  A4 =  =  =  C#5 =  =  =
-      D5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
-    riff: |
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
-      .  .  A4 .  .  .  A4 .  .  .  A4 .  .  .  A4 .
+      D6 =  =  =  C6 =  =  =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  G5 =  =  =  =  =  =  =
+      F5 =  =  =  A5 =  =  =  D6 =  =  =  =  =  =  =
+      C#6 =  =  =  A5 =  =  =  E5 =  =  =  =  =  =  =
+      C#6 =  =  =  B5 =  =  =  G#5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  F#5 =  =  =  =  =  =  =
+      E5 =  =  =  G#5 =  =  =  C#6 =  =  =  =  =  =  =
+      C#6 =  =  =  A5 =  =  =  E5 =  =  =  =  =  =  =
+    keys: |
+      .  .  .  .  F4 .  .  .  .  .  .  .  A4 .  .  .
+      .  .  .  .  A#4 .  .  .  .  .  .  .  D5 .  .  .
+      .  .  .  .  D5 .  .  .  .  .  .  .  F5 .  .  .
+      .  .  .  .  C#5 .  .  .  .  .  .  .  E5 .  .  .
+      .  .  .  .  E4 .  .  .  .  .  .  .  G#4 .  .  .
+      .  .  .  .  A4 .  .  .  .  .  .  .  C#5 .  .  .
+      .  .  .  .  C#5 .  .  .  .  .  .  .  E5 .  .  .
+      .  .  .  .  C#5 .  .  .  .  .  .  .  E5 .  .  .
+    strip: |
+      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
+      G4 .  G4 G4 .  G4 G4 .  G4 .  G4 G4 .  G4 G4 .
+      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      C#4 .  C#4 C#4 .  C#4 C#4 .  C#4 .  C#4 C#4 .  C#4 C#4 .
+      F#4 .  F#4 F#4 .  F#4 F#4 .  F#4 .  F#4 F#4 .  F#4 F#4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
     bass: |
-      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
-      A#1 .  A#2 .  A#1 .  A#2 .  D2 .  D3 .  D2 .  D3 .
-      C2 .  C3 .  C2 .  C3 .  A1 .  A2 .  A1 .  A2 .
-      E2 .  E3 .  E2 .  E3 .  A1 .  A2 .  A1 .  A2 .
-      D2 .  D3 .  D2 .  D3 .  G1 .  G2 .  G1 .  G2 .
-      A#1 .  A#2 .  A#1 .  A#2 .  C2 .  C3 .  C2 .  C3 .
-      F1 .  F2 .  F1 .  F2 .  A1 .  A2 .  A1 .  A2 .
-      A1 .  A2 .  A1 .  A2 .  A1 .  A2 .  A1 .  A2 .
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      G2 .  G2 G3 .  G2 .  G3 G2 .  G2 G3 .  G2 .  G3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      C#2 .  C#2 C#3 .  C#2 .  C#3 C#2 .  C#2 C#3 .  C#2 .  C#3
+      F#2 .  F#2 F#3 .  F#2 .  F#3 F#2 .  F#2 F#3 .  F#2 .  F#3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
     kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  x  .  x  x  .  x  x  x  x  x
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-order: [intro, a, b, a, break, build, b, turn, a]
+    copier: |
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  x  .  .  x  .  .  x  .  .  x  .  .  x  .  .
+      x  .  .  x  .  .  x  .  .  x  .  .  x  .  .  x
+order: [intro, a, b, a, break, build, b, turn]

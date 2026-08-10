@@ -1,0 +1,136 @@
+# THE TITHE — MARS.
+#
+# The brief: a secret billionaires' lifeboat under the dust. Domes, servo
+# units, mining rovers and companion fembots that smile, listen and upload
+# every word. The reveal is the rent: THE FOUNDER only LEASES this planet, the
+# landlords are older, scaled and cold-blooded, and their tithe has lately
+# started asking for warm things.
+#
+# THREE DECISIONS.
+#
+#   IT IS A BROCHURE. Bright, confident, synthetic B♭ major. A jingle with a
+#   hook, glass sparkling two octaves up, a presentation clicker on the
+#   off-beats. It is sincere: this is how the colony sells itself, and nothing
+#   in the arrangement is winking. (Where the moon was awe and HQ was a lobby,
+#   Mars is a PITCH — the western squint this track used to wear went to Boot
+#   Hill, which is where a western belongs.)
+#
+#   THE TITHE. A drum below the kick, every SIX sixteenths against a bar of
+#   sixteen, so it walks across the brochure's 4/4 and lands with it once every
+#   three bars and never otherwise. It is older than the calendar the brochure
+#   is printed on and it does not care what beat anybody else is counting.
+#
+#   THE LANDLORDS COME DOWN A SEMITONE AT A TIME. Every section ends on a bare
+#   chromatic fall in the tune — four notes, sliding, under a chord that was
+#   supposed to cadence — and the break section is nothing BUT that: eight
+#   bars, one semitone a bar, G down to C, with the advert switched off.
+#
+# Compile:  node scripts/song-import.mjs content/songs/red_dust.song --sheet
+
+id     red_dust
+title  THE TITHE
+about
+  Mars sells itself: a bright B♭-major brochure with a hook, glass sparkling
+  two octaves above the pitch, a clicker on the off-beats and not one wink in
+  the whole arrangement. Underneath it a drum lands every six sixteenths
+  against a bar of sixteen — the landlords' tithe, walking across the
+  presentation's 4/4 and agreeing with it once every three bars — and every
+  section ends on a bare chromatic fall where the cadence should be. The break
+  is that fall on its own: eight bars, one semitone each, the advert switched
+  off and something cold-blooded counting down. Original melodies; nothing
+  sampled.
+tempo  136
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# The brochure's own voice. Bright, forward, and it means every word.
+voice jingle square vol=.03 gate=.8 detune=6 echo=.25 vib=5.5/12/180
+# The domes: a glassy sine two octaves over the pitch, drenched in echo.
+voice shine  sine vol=.012 gate=.3 pan=.35 echo=.45
+# The clicker — chord tones on the off-beat, mid, thin, slightly out of tune.
+voice stab   square vol=.014 gate=.22 detune=12 pan=-0.3
+voice bass   triangle vol=.055 gate=.75
+# THE LANDLORDS. A lowpassed saw, and it only ever goes down.
+voice cold   sawtooth vol=.018 gate=.9 lp=1400 pan=-0.15 echo=.3
+
+# ── THE KIT ─────────────────────────────────────────────────────────────────
+drum kick    triangle vol=.058 gate=1 slide=.25 note=D2
+drum snare   noise vol=.032 gate=.7 hp=1500
+drum hat     noise vol=.0105 gate=.22 hp=7000 pan=.28
+# THE TITHE — an octave under the kick, every sixth sixteenth. Bars 1 and 4 of
+# the grid agree with the downbeat; bars 2 and 3 do not, and that is the point.
+drum tithe   triangle vol=.07 gate=1 slide=.4 note=A1
+
+# ── INTRO — the tithe is already running when the presentation starts ───────
+section intro
+  chords Bb | Bb | F | F
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+  bass   .*16 | .*16 | four:2 | four:2
+  stab   .*16 | .*16 | .*16 | offbeat:4
+  shine  .*16 | .*16 | arp16:6 | arp16:6
+  hat    ................|................|..x...x...x...x.|..x...x...x...x.
+
+# ── A — the pitch. Bar 8 is where the cadence should be ────────────────────
+section a
+  chords Bb | Dm | Gm | Eb | Bb | F | Eb | F
+  jingle a#4*4 d5*4 f5*8 | a5*4 f5*4 d5*8 | g5*4 a#5*4 d6*8 | c6*4 a#5*4 g5*8
+         f5*4 a#5*4 d6*8 | c6*8 a5*8 | a#5*4 g5*4 d#5*8 | c5*4 b4*4 a#4*4 a4*4
+  shine  arp16 6
+  stab   offbeat 4
+  bass   pump 2
+  kick   x.....x.x.......|x.......x.x.....
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+
+# ── B — THE OFFER. Higher, warmer, and it still ends sliding ───────────────
+section b
+  chords Eb | F | Gm | Gm | Eb | F | Bb | Bb
+  jingle d#5*4 g5*4 a#5*8 | c6*4 a5*4 f5*8 | g5*4 a#5*4 d6*4 f6*4 | d6*8 a#5*8
+         g5*4 a#5*4 d#6*8 | d6*4 c6*4 a5*8 | a#5*8 f5*8 | d5*4 c#5*4 c5*4 b4*4
+  shine  arp16 6
+  stab   offbeat 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.......x.x.....
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+
+# ── BREAK — the advert stops. One semitone a bar, and the tithe keeps time ──
+section tithe_break
+  chords Gm | Gm | Ebm | Ebm | Cm | Cm | Db | Db
+  cold   g4*12 .*4 | f#4*12 .*4 | f4*12 .*4 | e4*12 .*4
+         d#4*12 .*4 | d4*12 .*4 | c#4*12 .*4 | c4*12 .*4
+  bass   g2*8 .*8 | .*16 | d#2*8 .*8 | .*16
+         c2*8 .*8 | .*16 | c#2*8 .*8 | c#2*8 g#2*8
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+
+# ── BUILD — the closing slide, taken upward for once ───────────────────────
+section build
+  chords Gm | A | Bb | C | Dm | Eb | F | F
+  jingle g5*16 | a5*16 | a#5*16 | c6*16
+         d6*8 f6*8 | d#6*8 a#5*8 | c6*4 a5*4 f5*8 | c6*4 f6*4 a6*8
+  stab   offbeat 4
+  shine  arp16 6
+  bass   pump 2
+  kick   x.......x.......
+  snare  ....x.......x...|....x.......x...|....x.......x.x.|....x.......x.x.
+         ....x...x.x.x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx
+  hat    x.x.x.x.x.x.x.x.
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+
+# ── TURN — the pitch at full volume, and the same slide at the end of it ───
+section turn
+  chords Bb | Dm | Gm | Eb | Bb | F | Eb | F
+  jingle f5*2 g5*2 a5*2 a#5*2 d6*8 | f6*4 d6*4 a5*8 | a#5*4 d6*4 g6*4 f6*4 | d#6*8 a#5*8
+         d6*4 f6*4 d6*4 a#5*4 | c6*8 f5*8 | g5*4 a#5*4 d#6*8 | c6*4 b5*4 a#5*4 a5*4
+  cold   .*16 | .*16 | .*16 | .*16
+         .*16 | .*16 | .*16 | c5*4 b4*4 a#4*4 a4*4
+  shine  arp16 6
+  stab   stab 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.......x.x.....
+  snare  ....x.......x...|....x.......x.x.
+  hat    x.x.x.x.x.x.x.x.
+  tithe  x.....x.....x...|..x.....x.....x.|....x.....x.....|x.....x.....x...
+
+order  intro a b a tithe_break build b turn

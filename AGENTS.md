@@ -63,6 +63,7 @@ make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip P
 make sheet ARGS="overdue"      # LOOK at a SCORE — a track engraved as sheet music
 make song FILE=x.song          # write a SCORE the short way, and engrave it
 make audition ARGS="overdue"   # HEAR a score — the page that plays it, for an artifact
+make album                     # HEAR THE WHOLE SOUNDTRACK — every score, one page
 make bump          # print the release bump derived from .changes/unreleased/
 npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
 npm run shell:bench    # weigh the packaged desktop builds; read this machine's cold starts

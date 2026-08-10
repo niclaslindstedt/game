@@ -1,27 +1,84 @@
 {
+  "bench_light": {
+    "bpm": 92,
+    "digest": "fb6103e77a6e2c0a92c687d07ca4dd90aec681c6e13e15f08b696f1b9033c72b",
+    "instruments": ["bass", "keys", "lead", "tin", "wrench"],
+    "loopSeconds": 125.2,
+    "order": ["intro", "a", "b", "a", "hush", "b", "close"],
+    "stepsPerBeat": 4,
+    "totalSteps": 768
+  },
+  "hour_behind": {
+    "bpm": 176,
+    "digest": "5d328a066e99372c8a35d7b5d9a025abc7f583692f7e363ea976cf4ccd956818",
+    "instruments": [
+      "bass",
+      "call",
+      "engine",
+      "hat",
+      "kick",
+      "ping",
+      "snare",
+      "stab"
+    ],
+    "loopSeconds": 103.6,
+    "order": ["intro", "a", "a2", "b", "a", "hole", "build", "b", "a2", "turn"],
+    "stepsPerBeat": 4,
+    "totalSteps": 1216
+  },
   "hq_lockdown": {
-    "bpm": 140,
-    "digest": "2afb08748be2ed008165cdce31862f8058a0106dc6785ca9c3c7ae3cc314822b",
-    "instruments": ["bass", "hat", "kick", "lead", "riff", "snare"],
-    "loopSeconds": 116.6,
-    "order": ["intro", "a", "b", "a", "break", "build", "b", "turn", "a"],
+    "bpm": 128,
+    "digest": "a004334d84e9a3a532b8deb220596ba977fb0ad72424fa236099eacf62d859fa",
+    "instruments": [
+      "bass",
+      "copier",
+      "hat",
+      "keys",
+      "kick",
+      "lead",
+      "snare",
+      "strip"
+    ],
+    "loopSeconds": 112.5,
+    "order": ["intro", "a", "b", "a", "break", "build", "b", "turn"],
     "stepsPerBeat": 4,
-    "totalSteps": 1088
+    "totalSteps": 960
   },
-  "red_dust": {
-    "bpm": 132,
-    "digest": "ae73a95985b2cac0fab265454d36e90717746e86cef22263e1a707628f990add",
-    "instruments": ["bass", "hat", "kick", "lead", "pulse", "snare"],
-    "loopSeconds": 123.6,
-    "order": ["intro", "a", "b", "a", "break", "build", "b", "turn", "a"],
+  "long_noon": {
+    "bpm": 138,
+    "digest": "919e7ece8e16e902a03194e96dfdc9095071ca0eea0d67020e879ab40c831749",
+    "instruments": [
+      "answer",
+      "bass",
+      "kick",
+      "piano",
+      "rim",
+      "shaker",
+      "snare",
+      "tremolo",
+      "trumpet"
+    ],
+    "loopSeconds": 104.3,
+    "order": ["intro", "a", "b", "a", "standoff", "build", "b", "turn"],
     "stepsPerBeat": 4,
-    "totalSteps": 1088
+    "totalSteps": 960
   },
-  "regolith_ride": {
-    "bpm": 150,
-    "digest": "97f7a5b86777cbaed4fae19ca0a6cecc68b3aa10132a79449f5238ecc24fb9bc",
-    "instruments": ["bass", "harm", "hat", "kick", "lead", "snare", "stab"],
-    "loopSeconds": 121.6,
+  "overdue": {
+    "bpm": 162,
+    "digest": "cb464650da6e661aa8ea119a2ada83ca59cc75bf411c691b710ad1fbf291c2bb",
+    "instruments": [
+      "bass",
+      "harm",
+      "hat",
+      "kick",
+      "lead",
+      "pulse",
+      "siren",
+      "snare",
+      "stab",
+      "tick"
+    ],
+    "loopSeconds": 112.6,
     "order": [
       "intro",
       "a",
@@ -37,18 +94,73 @@
     "stepsPerBeat": 4,
     "totalSteps": 1216
   },
-  "rift_drift": {
-    "bpm": 96,
-    "digest": "41e005fc4a1d7c7208c31699a8af609c93ae273feb0151e824c19076e52358ff",
-    "instruments": ["bass", "hat", "kick", "lead", "pad", "shimmer"],
-    "loopSeconds": 110,
-    "order": ["drift", "a", "b", "a", "void", "b", "drift"],
+  "perpetuity": {
+    "bpm": 112,
+    "digest": "89323b7433af28b46cefae42f64bcf0a905f0daae1f0b502e5fd0be3e40590ef",
+    "instruments": [
+      "brag",
+      "brush",
+      "ground",
+      "harp",
+      "lock",
+      "swell",
+      "thud",
+      "vibes"
+    ],
+    "loopSeconds": 128.6,
+    "order": ["intro", "a", "b", "a", "cell", "build", "b", "turn"],
     "stepsPerBeat": 4,
-    "totalSteps": 704
+    "totalSteps": 960
+  },
+  "red_dust": {
+    "bpm": 136,
+    "digest": "6fa2c199548331a494ce32e15d848ef5faa6a796539a02e50663cf33740ebeb1",
+    "instruments": [
+      "bass",
+      "cold",
+      "hat",
+      "jingle",
+      "kick",
+      "shine",
+      "snare",
+      "stab",
+      "tithe"
+    ],
+    "loopSeconds": 105.9,
+    "order": ["intro", "a", "b", "a", "tithe_break", "build", "b", "turn"],
+    "stepsPerBeat": 4,
+    "totalSteps": 960
+  },
+  "regolith_ride": {
+    "bpm": 144,
+    "digest": "679da7e39de998e983ee5fc49241b37e81a35234625141f2c46c9c3d4eeb827b",
+    "instruments": [
+      "bass",
+      "choir",
+      "hat",
+      "kick",
+      "lead",
+      "run",
+      "sing",
+      "snare"
+    ],
+    "loopSeconds": 113.3,
+    "order": ["intro", "a", "b", "a", "void", "build", "b", "a", "turn"],
+    "stepsPerBeat": 4,
+    "totalSteps": 1088
+  },
+  "rift_drift": {
+    "bpm": 88,
+    "digest": "f4977077ac2864c3d41c5e2ed25320d717cd1607d19bbcaeabcf15c78344821d",
+    "instruments": ["deep", "drift", "fallA", "fallB", "glass", "shake", "tom"],
+    "loopSeconds": 130.9,
+    "order": ["open", "a", "b", "a", "eye", "b", "close"],
+    "stepsPerBeat": 4,
+    "totalSteps": 768
   },
   "title": {
     "bpm": 90,
-    "digest": "c99c35a24d76951c628cdc3f00123b8aa0e629a85b8a0fd8e8bc7381299e2277",
+    "digest": "d7f73996b2f1645daf6e14471b80fb3e6aca5b91ae004473f11b7ac476c66f90",
     "instruments": ["arp", "bass", "bell", "flute", "lead", "padHi", "padLo"],
     "loopSeconds": 128,
     "order": ["intro", "verse", "chorus", "verse", "break", "chorus", "outro"],

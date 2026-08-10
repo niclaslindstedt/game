@@ -1,166 +1,233 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# RIFT DRIFT — the score for THE RIFT.
+# NO NORTH — compiled from a .song by scripts/song-import.mjs.
 #
-# Arrangement (96 bpm, 4/4, one bar = 16 sixteenth-note steps):
-#   drift(4) A(8) B(8) A(8) void(4) B(8) drift(4)
-#   = 44 bars ≈ 110 s per loop.
+# Arrangement (88 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   open(4) a(8) b(8) a(8) eye(8) b(8) close(4)
+#   = 48 bars ≈ 131 s per loop.
 id: rift_drift
-name: RIFT DRIFT
+name: NO NORTH
 description: >-
-  Weightless and wrong on purpose: a slow A-lydian drift whose raised
-  fourth (D#) keeps the ground from ever quite arriving. Echo-heavy sine
-  lead floating over long detuned pads, a deep sparse bass like a
-  heartbeat heard through a wall, and a kit that mostly declines to play.
-  Where Mars DRIVES, the rift FALLS — gently, in every direction at once.
-  Original melodies; nothing sampled.
-bpm: 96
+  Weightless and homeless on purpose. There is no major or minor chord
+  anywhere in this score — only augmented triads, which divide the octave
+  into three equal parts so that no note in them is the root, and
+  suspended chords, which are chords that have not decided. Two lines fall
+  by semitones at different rates, one an octave every eight bars and one
+  every four, so their restarts never line up and something is always
+  partway down. And everything that strikes, strikes at 3+3+3+3+4 — four
+  short steps and one that is one too long — so the bar never comes out
+  even; only the drifting sine is free of the count, which is what makes
+  it sound untethered rather than slow. Original melodies; nothing
+  sampled.
+bpm: 88
 stepsPerBeat: 4
 instruments:
-  # The floating voice: a pure sine with a slow, seasick vibrato and a long
-  # tail into the echo bus.
-  lead:
+  drift:
     wave: sine
     volume: 0.03
     gate: 0.9
+    attackMs: 200
+    echo: 0.6
     vibrato:
       rateHz: 3.5
-      depthCents: 18
-      delayMs: 260
-    echo: 0.45
-  # The pad: two detuned triangles holding whole notes under everything.
-  pad:
-    wave: triangle
-    volume: 0.026
-    gate: 0.98
-    detuneCents: 9
-    echo: 0.3
-  # A heartbeat through a wall: deep, soft, sparse.
-  bass:
-    wave: sine
-    volume: 0.06
-    gate: 0.7
-  # Star shimmer: a barely-there square, panned off-center, echoing.
-  shimmer:
+      depthCents: 26
+      delayMs: 300
+  fallA:
     wave: square
-    volume: 0.008
-    gate: 0.25
+    volume: 0.012
+    gate: 0.9
+    attackMs: 120
+    detuneCents: 10
+    pan: -0.35
+    echo: 0.5
+  fallB:
+    wave: square
+    volume: 0.012
+    gate: 0.9
+    attackMs: 120
+    detuneCents: 10
     pan: 0.35
-    echo: 0.4
-  # The kit, such as it is: a soft diving kick and a distant hat.
-  kick:
+    echo: 0.5
+  glass:
+    wave: sine
+    volume: 0.014
+    gate: 0.25
+    pan: 0.4
+    echo: 0.55
+  deep:
     wave: triangle
     volume: 0.05
+    gate: 0.6
+  tom:
+    wave: triangle
+    volume: 0.03
     gate: 1
     slide: 0.3
-  hat:
+  shake:
     wave: noise
-    volume: 0.006
-    gate: 0.25
-    pan: -0.25
+    volume: 0.0085
+    gate: 0.18
     filter:
       type: highpass
-      frequency: 8000
+      frequency: 7600
+    pan: -0.2
 patterns:
-  # DRIFT — four bars of falling in no direction: pads and stars.
-  drift:
-    pad: |
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    shimmer: |
-      .  .  .  .  E5 .  .  .  .  .  .  .  B4 .  .  .
-      .  .  G#5 .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  D#5 .  .  .  .  .  .  .  .  .
-      .  .  .  .  A4 .  .  .  .  .  E5 .  .  .  .  .
-  # A — the drift theme: the lead floats up through the lydian ladder and
-  # never lands; the heartbeat keeps a slow two-count.
+  # OPEN — Aaug Aaug Csus2 Csus2
+  open:
+    fallA: |
+      C6 =  =  C6 =  =  C6 =  =  C6 =  =  C6 =  =  =
+      B5 =  =  B5 =  =  B5 =  =  B5 =  =  B5 =  =  =
+      A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  =
+      A5 =  =  A5 =  =  A5 =  =  A5 =  =  A5 =  =  =
+    drift: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A5 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+      F6 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    deep: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+    shake: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+  # A — Aaug Aaug Csus2 Csus2 Caug Caug Fsus2 Fsus2
   a:
-    lead: |
-      A3 .  .  .  .  .  B3 .  .  .  C#4 .  .  .  .  .
-      E4 .  .  .  .  .  .  .  D#4 .  .  .  .  .  .  .
-      C#4 .  .  .  .  .  B3 .  .  .  A3 .  .  .  .  .
-      B3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A3 .  .  .  .  .  B3 .  .  .  C#4 .  .  .  .  .
-      E4 .  .  .  .  .  .  .  F#4 .  .  .  .  .  .  .
-      D#4 .  .  .  .  .  E4 .  .  .  C#4 .  .  .  .  .
-      A3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad: |
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      F#2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    bass: |
-      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
-      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
-      F#1 .  .  .  .  .  .  .  F#1 .  .  .  .  .  .  .
-      E1 .  .  .  .  .  .  .  E1 .  .  .  .  .  .  .
-      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-      B1 .  .  .  .  .  .  .  B1 .  .  .  .  .  .  .
-      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
-    kick: |
-      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
-    hat: |
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-  # B — deeper in: the raised fourth leads, the shimmer answers, the
-  # heartbeat doubles. The hallucination noticing you back.
+    drift: |
+      A5 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+      F6 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  G5 =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  G#5 =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      F5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    fallA: |
+      C6 =  =  C6 =  =  C6 =  =  C6 =  =  C6 =  =  =
+      B5 =  =  B5 =  =  B5 =  =  B5 =  =  B5 =  =  =
+      A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  =
+      A5 =  =  A5 =  =  A5 =  =  A5 =  =  A5 =  =  =
+      G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  =
+      G5 =  =  G5 =  =  G5 =  =  G5 =  =  G5 =  =  =
+      F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  =
+      F5 =  =  F5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+    fallB: |
+      F#5 =  =  F#5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+      E5 =  =  E5 =  =  D#5 =  =  D#5 =  =  D#5 =  =  =
+      D5 =  =  D5 =  =  C#5 =  =  C#5 =  =  C#5 =  =  =
+      C5 =  =  C5 =  =  B4 =  =  B4 =  =  B4 =  =  =
+    deep: |
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+    tom: |
+      A1 .  .  .  .  .  .  .  .  A1 .  .  .  .  .  .
+    shake: |
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+  # B — Dsus2 Faug Gsus4 Bbaug Csus2 Eaug Fsus2 Aaug
   b:
-    lead: |
-      D#4 .  .  .  .  .  .  .  E4 .  .  .  .  .  .  .
-      F#4 .  .  .  .  .  E4 .  .  .  D#4 .  .  .  .  .
-      C#4 .  .  .  .  .  .  .  B3 .  .  .  .  .  .  .
-      D#4 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E4 .  .  .  .  .  .  .  F#4 .  .  .  .  .  .  .
-      G#4 .  .  .  .  .  F#4 .  .  .  E4 .  .  .  .  .
-      D#4 .  .  .  .  .  C#4 .  .  .  B3 .  .  .  .  .
-      A3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad: |
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G#2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    bass: |
-      B1 .  .  .  B1 .  .  .  B1 .  .  .  B1 .  .  .
-      B1 .  .  .  B1 .  .  .  B1 .  .  .  B1 .  .  .
-      A1 .  .  .  A1 .  .  .  A1 .  .  .  A1 .  .  .
-      G#1 .  .  .  G#1 .  .  .  G#1 .  .  .  G#1 .  .  .
-      A1 .  .  .  A1 .  .  .  A1 .  .  .  A1 .  .  .
-      B1 .  .  .  B1 .  .  .  B1 .  .  .  B1 .  .  .
-      C#2 .  .  .  C#2 .  .  .  C#2 .  .  .  C#2 .  .  .
-      A1 .  .  .  A1 .  .  .  A1 .  .  .  A1 .  .  .
-    shimmer: |
-      .  .  .  .  .  .  B4 .  .  .  .  .  .  .  .  .
-      .  .  D#5 .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  E5 .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  G#4 .  .  .  .  .
-      .  .  .  .  A4 .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  B4 .  .  .  .  .  .  .  .  .
-      .  .  E5 .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  A4 .  .  .  .  .
-    kick: |
-      B1 .  .  .  .  .  .  .  B1 .  .  .  .  .  B1 .
-    hat: |
-      .  .  x  .  .  .  x  .  .  .  x  .  .  .  x  .
-  # VOID — four bars of held breath: everything stops but the pads and one
-  # far star. The black holes get their silence.
-  void:
-    pad: |
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    drift: |
+      E6 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  G5 =  =  =  =  =  =  =
+      F#6 =  =  =  =  =  =  =  D6 =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  D6 =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  F5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+    glass: |
+      D6 .  E6 .  A6 .  E6 .  D6 .  E6 .  A6 .  E6 .
+      F6 .  A6 .  C#7 .  A6 .  F6 .  A6 .  C#7 .  A6 .
+      G6 .  C7 .  D7 .  C7 .  G6 .  C7 .  D7 .  C7 .
+      A#6 .  D7 .  F#7 .  D7 .  A#6 .  D7 .  F#7 .  D7 .
+      C6 .  D6 .  G6 .  D6 .  C6 .  D6 .  G6 .  D6 .
+      E6 .  G#6 .  C7 .  G#6 .  E6 .  G#6 .  C7 .  G#6 .
+      F6 .  G6 .  C7 .  G6 .  F6 .  G6 .  C7 .  G6 .
+      A6 .  C#7 .  F7 .  C#7 .  A6 .  C#7 .  F7 .  C#7 .
+    fallA: |
+      C6 =  =  C6 =  =  C6 =  =  C6 =  =  C6 =  =  =
+      B5 =  =  B5 =  =  B5 =  =  B5 =  =  B5 =  =  =
+      A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  A#5 =  =  =
+      A5 =  =  A5 =  =  A5 =  =  A5 =  =  A5 =  =  =
+      G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  =
+      G5 =  =  G5 =  =  G5 =  =  G5 =  =  G5 =  =  =
+      F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  =
+      F5 =  =  F5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+    fallB: |
+      F#5 =  =  F#5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+      E5 =  =  E5 =  =  D#5 =  =  D#5 =  =  D#5 =  =  =
+      D5 =  =  D5 =  =  C#5 =  =  C#5 =  =  C#5 =  =  =
+      C5 =  =  C5 =  =  B4 =  =  B4 =  =  B4 =  =  =
+    deep: |
+      D2 =  =  D2 =  =  D2 =  =  D2 =  =  D2 =  =  =
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+      G1 =  =  G1 =  =  G1 =  =  G1 =  =  G1 =  =  =
+      A#1 =  =  A#1 =  =  A#1 =  =  A#1 =  =  A#1 =  =  =
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      E1 =  =  E1 =  =  E1 =  =  E1 =  =  E1 =  =  =
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+    tom: |
+      A1 .  .  .  .  .  .  .  .  A1 .  .  .  .  .  .
+    shake: |
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+  # EYE — Eaug Eaug Eaug Eaug Caug Caug Caug Caug
+  eye:
+    drift: |
+      E5 =  =  =  =  =  =  =  G#5 =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  G#5 =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  E6 =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      C6 =  =  =  =  =  =  =  G#5 =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    glass: |
+      C7 =  =  =  .  .  .  .  .  .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    shimmer: |
-      .  .  .  .  .  .  .  .  .  .  E5 .  .  .  .  .
+      .  .  .  .  .  .  .  G#6 =  =  =  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  A4 .  .  .  .  .  .  .  .  .
+    fallB: |
+      F#5 =  =  F#5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+      E5 =  =  E5 =  =  D#5 =  =  D#5 =  =  D#5 =  =  =
+      D5 =  =  D5 =  =  C#5 =  =  C#5 =  =  C#5 =  =  =
+      C5 =  =  C5 =  =  B4 =  =  B4 =  =  B4 =  =  =
+    deep: |
+      E1 =  =  E1 =  =  E1 =  =  E1 =  =  E1 =  =  =
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-order: [drift, a, b, a, void, b, drift]
+      E1 =  =  E1 =  =  E1 =  =  E1 =  =  E1 =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C2 =  =  C2 =  =  C2 =  =  C2 =  =  C2 =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+  # CLOSE — Fsus2 Fsus2 Aaug Aaug
+  close:
+    drift: |
+      F5 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      C#6 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    fallA: |
+      G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  G#5 =  =  =
+      G5 =  =  G5 =  =  G5 =  =  G5 =  =  G5 =  =  =
+      F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  F#5 =  =  =
+      F5 =  =  F5 =  =  F5 =  =  F5 =  =  F5 =  =  =
+    deep: |
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+      F1 =  =  F1 =  =  F1 =  =  F1 =  =  F1 =  =  =
+      A1 =  =  A1 =  =  A1 =  =  A1 =  =  A1 =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    shake: |
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  .  x  .  .  x  .  .  x  .  .  x  .  .  x  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+order: [open, a, b, a, eye, b, close]

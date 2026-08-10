@@ -1,242 +1,223 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# BENCH LIGHT — the score for THE GARAGE, the hub.
+# BENCH LIGHT — compiled from a .song by scripts/song-import.mjs.
 #
-# Arrangement (72 bpm, 4/4, one bar = 16 sixteenth-note steps):
-#   intro(4) A(8) B(8) A'(8) hush(4) B(8)
-#   = 40 bars ≈ 133 s per loop.
+# Arrangement (92 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   intro(4) a(8) b(8) a(8) hush(8) b(8) close(4)
+#   = 48 bars ≈ 125 s per loop.
 id: bench_light
 name: BENCH LIGHT
 description: >-
-  The one lamp over the workbench, past midnight, doors locked: SANCTUARY
-  music. A slow music-box sine picks its way through E minor while two warm
-  detuned triangles hold the room and a soft clock ticks somewhere on the
-  wall — no kit, no drive, nothing hunting you. The B section lifts to the
-  relative major like a held breath let out, and the hush strips back to the
-  heartbeat bass before the theme returns. Where every field score pushes,
-  this one sits down. Original melodies; nothing sampled.
-bpm: 72
+  A workshop at one in the morning with somebody competent in it — the
+  hub, and the only score in the game with nothing hunting you. A
+  syncopated bass hook carries it rather than a melody sitting on top, the
+  mode is A DORIAN so the bright natural sixth is the note everything
+  leans on, and every section ends one chord short of home and hands
+  straight back to the vamp: it circles for two minutes, happily, and
+  never resolves. There is no kit — the only percussion is a wrench set
+  down and a tin knocked over, four bars apart and never on a downbeat.
+  Original melodies; nothing sampled.
+bpm: 92
 stepsPerBeat: 4
 instruments:
-  # The music box: a bare sine, long tail into the echo bus, a late slow
-  # vibrato so held notes breathe instead of beeping.
-  lead:
-    wave: sine
-    volume: 0.028
-    gate: 0.85
-    vibrato:
-      rateHz: 3
-      depthCents: 10
-      delayMs: 420
-    echo: 0.5
-  # The answering bell an octave up — the box's own glossy overtone.
-  bell:
-    wave: triangle
-    volume: 0.012
-    gate: 0.5
-    pan: 0.25
-    echo: 0.45
-  # The room: two detuned triangles holding whole notes, swelling in softly.
-  pad:
-    wave: triangle
-    volume: 0.02
-    gate: 0.98
-    detuneCents: 8
-    attackMs: 380
-    echo: 0.25
-  pad5:
-    wave: triangle
-    volume: 0.013
-    gate: 0.98
-    detuneCents: 6
-    attackMs: 380
-    pan: -0.2
-    echo: 0.25
-  # A heartbeat under the floor: soft, low, twice a bar.
   bass:
-    wave: sine
-    volume: 0.045
+    wave: triangle
+    volume: 0.058
+    gate: 0.8
+  keys:
+    wave: square
+    volume: 0.016
+    gate: 0.5
+    attackMs: 25
+    detuneCents: 8
+    pan: -0.2
+    echo: 0.3
+  lead:
+    wave: triangle
+    volume: 0.042
     gate: 0.7
-  # The clock on the wall — a tiny tick, only in the lifted section.
-  clock:
+    attackMs: 20
+    echo: 0.4
+    vibrato:
+      rateHz: 4.5
+      depthCents: 10
+      delayMs: 280
+  wrench:
     wave: noise
-    volume: 0.005
-    gate: 0.2
-    pan: -0.35
+    volume: 0.014
+    gate: 0.1
     filter:
-      type: highpass
-      frequency: 6200
+      type: bandpass
+      frequency: 1900
+    pan: 0.35
+  tin:
+    wave: noise
+    volume: 0.011
+    gate: 0.08
+    filter:
+      type: lowpass
+      frequency: 1000
+    pan: -0.3
 patterns:
-  # INTRO — the light comes on: the room hums, the bell finds two notes.
+  # INTRO — Am7 D7 Am7 D7
   intro:
-    pad: |
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad5: |
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    bell: |
-      .  .  .  .  .  .  .  .  E5 .  .  .  .  .  .  .
-      .  .  .  .  B4 .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  C5 .  .  .
-      .  .  .  .  B4 .  .  .  .  .  .  .  .  .  .  .
-  # A — the bench theme: the box picks through Em and Am and sets the note
-  # down gently at the end of every phrase.
+    bass: |
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  F#2 =
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  =  =
+    keys: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  C4 .  .  .  E4 .  .  .  C4 .  .  .  E4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+    lead: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  F#4 =  =  =  A4 =  =  =  C5 =  =  =
+    wrench: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  x  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  x  .  .  .  .  .  .  .  .  .  .
+    tin: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  x  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+  # A — Am7 D7 Am7 D7 Cmaj7 Bm7 Am7 D7
   a:
-    lead: |
-      B3 .  .  .  E4 .  .  .  G4 .  .  .  F#4 .  .  .
-      E4 =  =  =  .  .  .  .  B3 .  .  .  .  .  .  .
-      A3 .  .  .  C4 .  .  .  E4 .  .  .  D4 .  .  .
-      C4 =  =  =  .  .  .  .  G3 .  .  .  .  .  .  .
-      B3 .  .  .  E4 .  .  .  G4 .  .  .  A4 .  .  .
-      B4 =  =  =  .  .  .  .  G4 .  .  .  E4 .  .  .
-      F#4 .  .  .  D4 .  .  .  B3 .  .  .  C4 .  .  .
-      E4 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
-    pad: |
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad5: |
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     bass: |
-      E2 .  .  .  .  .  .  .  E2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  A2 .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  E2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  C3 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-  # B — the breath let out: the relative major, the clock ticking, the box
-  # reaching one note higher before it settles.
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  F#2 =
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  F#2 =
+      C3 =  =  C3 =  =  E3 =  G3 =  =  =  E3 =  D3 =
+      B2 =  =  B2 =  =  D3 =  F#3 =  =  =  E3 =  D3 =
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  =  =
+    lead: |
+      .  .  .  .  A4 =  =  =  C5 =  =  =  E5 =  =  =
+      D5 =  =  =  =  =  =  =  C5 =  =  =  A4 =  =  =
+      .  .  .  .  C5 =  D5 =  E5 =  =  =  G5 =  =  =
+      F#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      E5 =  =  =  G5 =  =  =  A5 =  =  =  =  =  =  =
+      G5 =  =  =  F#5 =  =  =  D5 =  =  =  =  =  =  =
+      E5 =  =  =  C5 =  =  =  A4 =  =  =  =  =  =  =
+      .  .  .  .  F#4 =  =  =  A4 =  =  =  C5 =  =  =
+    keys: |
+      .  .  C4 .  .  .  E4 .  .  .  C4 .  .  .  E4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+      .  .  C4 .  .  .  E4 .  .  .  C4 .  .  .  E4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+      .  .  E3 .  .  .  G3 .  .  .  E3 .  .  .  G3 .
+      .  .  D4 .  .  .  F#4 .  .  .  D4 .  .  .  F#4 .
+      .  .  C4 .  .  .  E4 .  .  .  C4 .  .  .  E4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+    wrench: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  x  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  x  .  .  .  .  .  .  .  .  .  .
+    tin: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  x  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+  # B — Cmaj7 G Fmaj7 Em7 Dm7 Em7 Fmaj7 D7
   b:
-    lead: |
-      G4 .  .  .  E4 .  .  .  C4 .  .  .  D4 .  .  .
-      D4 =  =  =  .  .  .  .  B3 .  .  .  .  .  .  .
-      C4 .  .  .  E4 .  .  .  A4 .  .  .  G4 .  .  .
-      G4 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
-      E4 .  .  .  G4 .  .  .  C5 .  .  .  B4 .  .  .
-      A4 =  =  =  .  .  .  .  G4 .  .  .  E4 .  .  .
-      F#4 .  .  .  B3 .  .  .  D4 .  .  .  F#4 .  .  .
-      E4 =  =  =  =  =  =  =  =  =  =  =  .  .  .  .
-    pad: |
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad5: |
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      F#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      F#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     bass: |
-      C3 .  .  .  .  .  .  .  C3 .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  A2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  C3 .  .  .  .  .  .  .
-      G2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  B2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    clock: |
-      x  .  .  .  .  .  .  .  x  .  .  .  .  .  .  .
-  # A' — the bench theme again with the bell answering the held notes: the
-  # same room, a little later at night.
-  a2:
+      C3 =  =  C3 =  =  E3 =  G3 =  =  =  E3 =  C3 =
+      G2 =  =  G2 =  =  B2 =  D3 =  =  =  B2 =  G2 =
+      F2 =  =  F2 =  =  A2 =  C3 =  =  =  A2 =  F2 =
+      E2 =  =  E2 =  =  G2 =  B2 =  =  =  A2 =  G2 =
+      D2 =  =  D2 =  =  F2 =  A2 =  =  =  G2 =  F2 =
+      E2 =  =  E2 =  =  G2 =  B2 =  =  =  D3 =  B2 =
+      F2 =  =  F2 =  =  A2 =  C3 =  =  =  E3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  =  =
     lead: |
-      B3 .  .  .  E4 .  .  .  G4 .  .  .  F#4 .  .  .
-      E4 =  =  =  .  .  .  .  B3 .  .  .  .  .  .  .
-      A3 .  .  .  C4 .  .  .  E4 .  .  .  D4 .  .  .
-      C4 =  =  =  .  .  .  .  G3 .  .  .  .  .  .  .
-      B3 .  .  .  E4 .  .  .  G4 .  .  .  A4 .  .  .
-      B4 =  =  =  .  .  .  .  G4 .  .  .  E4 .  .  .
-      F#4 .  .  .  D4 .  .  .  B3 .  .  .  C4 .  .  .
-      E4 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
-    bell: |
-      .  .  .  .  E5 =  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  B4 .  .  .  .  .  .  .
+      G5 =  =  =  E5 =  =  =  C5 =  =  =  =  =  =  =
+      D5 =  =  =  B4 =  =  =  G4 =  =  =  =  =  =  =
+      A4 =  =  =  C5 =  =  =  F5 =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  D5 =  =  =  =  =  =  =
+      D5 =  =  =  F5 =  =  =  A5 =  =  =  =  =  =  =
+      B5 =  =  =  A5 =  =  =  G5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      F#5 =  =  =  E5 =  =  =  D5 =  =  =  =  =  =  =
+    keys: |
+      .  .  E3 .  .  .  G3 .  .  .  E3 .  .  .  G3 .
+      .  .  B3 .  .  .  D4 .  .  .  B3 .  .  .  D4 .
+      .  .  A3 .  .  .  C4 .  .  .  A3 .  .  .  C4 .
+      .  .  G3 .  .  .  B3 .  .  .  G3 .  .  .  B3 .
+      .  .  F3 .  .  .  A3 .  .  .  F3 .  .  .  A3 .
+      .  .  G3 .  .  .  B3 .  .  .  G3 .  .  .  B3 .
+      .  .  A3 .  .  .  C4 .  .  .  A3 .  .  .  C4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+    wrench: |
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  G4 .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  E5 =  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  G5 .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  x  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  B4 .  .  .  E5 .  .  .  .  .  .  .
-    pad: |
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad5: |
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    bass: |
-      E2 .  .  .  .  .  .  .  E2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  A2 .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  E2 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  C3 .  .  .  .  .  .  .
-      E2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-  # HUSH — the lamp alone: the heartbeat and one bell note, the room waiting.
+      .  .  .  .  .  x  .  .  .  .  .  .  .  .  .  .
+    tin: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  x  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+  # HUSH — Am7 Am7 Fmaj7 Fmaj7 Cmaj7 Cmaj7 D7 D7
   hush:
-    pad: |
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    pad5: |
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      F#3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     bass: |
-      A2 .  .  .  .  .  .  .  A2 .  .  .  .  .  .  .
-      A2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      C3 .  .  .  .  .  .  .  C3 .  .  .  .  .  .  .
-      B2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    bell: |
-      .  .  .  .  .  .  .  .  .  .  .  .  E5 .  .  .
+      A2 =  =  =  =  =  =  =  E3 =  =  =  =  =  =  =
+      A2 =  =  =  =  =  =  =  C3 =  =  =  =  =  =  =
+      F2 =  =  =  =  =  =  =  C3 =  =  =  =  =  =  =
+      F2 =  =  =  =  =  =  =  A2 =  =  =  =  =  =  =
+      C3 =  =  =  =  =  =  =  G2 =  =  =  =  =  =  =
+      C3 =  =  =  =  =  =  =  E3 =  =  =  =  =  =  =
+      D2 =  =  =  =  =  =  =  A2 =  =  =  =  =  =  =
+      D2 =  =  =  =  =  =  =  F#2 =  =  =  =  =  =  =
+    lead: |
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  B4 .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-order:
-  - intro
-  - a
-  - b
-  - a2
-  - hush
-  - b
+      .  .  .  .  .  .  .  .  A4 =  =  =  =  =  =  =
+      C5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  D5 =  =  =  =  =  =  =
+      F#5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    wrench: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  x  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  x  .  .  .  .  .  .  .  .  .  .
+    tin: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  x  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+  # CLOSE — Am7 D7 Cmaj7 D7
+  close:
+    bass: |
+      A2 =  =  A2 =  =  C3 =  E3 =  =  =  D3 =  C3 =
+      D2 =  =  D2 =  =  F#2 =  A2 =  =  =  G2 =  F#2 =
+      C3 =  =  =  =  =  =  =  E3 =  =  =  =  =  =  =
+      D2 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    lead: |
+      E5 =  =  =  C5 =  =  =  A4 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E5 =  =  =  =  =  =  =  G5 =  =  =  =  =  =  =
+      F#5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    keys: |
+      .  .  C4 .  .  .  E4 .  .  .  C4 .  .  .  E4 .
+      .  .  F#3 .  .  .  A3 .  .  .  F#3 .  .  .  A3 .
+      .  .  E3 .  .  .  G3 .  .  .  E3 .  .  .  G3 .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    wrench: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  x  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    tin: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  x  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+order: [intro, a, b, a, hush, b, close]
