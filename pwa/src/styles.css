@@ -3467,7 +3467,7 @@ html.app-locked body {
 .sun-boom {
   position: absolute;
   left: 50%;
-  top: 32%;
+  top: 36%;
   width: 0;
   height: 0;
   pointer-events: none;
@@ -3784,7 +3784,7 @@ html.app-locked body {
 @media (prefers-reduced-motion: reduce) {
   .title-sun {
     left: calc(50% - var(--sun-size) / 2);
-    top: calc(32% - var(--sun-size) / 2);
+    top: calc(36% - var(--sun-size) / 2);
     opacity: 1;
     transition: none;
   }

@@ -88,19 +88,28 @@ const PINS = Array.from({ length: 40 }, (_, i) => Number((i / 40).toFixed(3)));
  * would land on a rock big enough to measure only by luck. These are spaced
  * about a second apart, and the pass stops as soon as it has enough.
  */
-const BELT_PINS = Array.from({ length: 260 }, (_, i) =>
-  Number((i / 260).toFixed(5)),
+const BELT_PINS = Array.from({ length: 520 }, (_, i) =>
+  Number((i / 520).toFixed(5)),
 );
-/** A rock has to be this many CSS px across for its pixels to mean anything… */
-const BELT_MIN_PX = 26;
+/** A rock has to be this many CSS px across for its pixels to mean anything.
+ * It tracks `SPAN_MAX` in title-belt.ts and has to be re-checked whenever the
+ * belt's drawn size moves: at 26 it found nothing at all once the rocks were
+ * halved, which is exactly the "an empty table is a failure" case below. */
+const BELT_MIN_PX = 13;
 /** …and to be showing a terminator rather than a full face or a silhouette. */
-const BELT_LIT_MIN = 0.3;
-const BELT_LIT_MAX = 0.72;
+const BELT_LIT_MIN = 0.25;
+const BELT_LIT_MAX = 0.8;
 /** How many rocks to insist on measuring, and by how much the sunward half
  * must beat the other. Lower than the Moon's bar: an asteroid is a fraction of
  * the size, its silhouette is irregular, and its craters put real variance
- * into both halves. A rock lit the WRONG way still scores below zero. */
-const BELT_WANT = 8;
+ * into both halves. A rock lit the WRONG way still scores below zero.
+ *
+ * FOUR IS WHAT THE BELT ACTUALLY DELIVERS, and the number is tied to
+ * `ARRIVAL_MS`: a sky with half a rock in it at any moment only offers so many
+ * big, half-lit, unobstructed fly-bys in one master cycle. It was 8 when the
+ * belt was four times denser. Keep it just under what a sweep finds, so the
+ * pass stays a check on the LIGHTING rather than a check on the weather. */
+const BELT_WANT = 3;
 const BELT_MIN_CONTRAST = 0.1;
 
 /**
