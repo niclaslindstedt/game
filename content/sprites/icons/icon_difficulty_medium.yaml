@@ -1,0 +1,30 @@
+name: icon_difficulty_medium
+family: icons
+size: [12, 12]
+description: >
+  A heater shield, square across the top and drawn to a point at the bottom —
+  the MEDIUM rung's marker on the difficulty ladder.
+subject:
+  kind: UI icon
+  features: a broad shield with a flat top edge, straight shoulders and sides
+    that sweep in to a single point
+  accent: brushed steel, lit down the left face and shaded along the right
+  flavor: the fight as it was meant to be fought
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#dfe4ee" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OTTTTVVVVO.
+  .OTTTVVVVvO.
+  .OTTTVVVVvO.
+  .OTTVVVVvvO.
+  ..OTTVVVvO..
+  ..OTTVVVvO..
+  ...OTVVvO...
+  ...OTVvO....
+  ....OVO.....
+  .....O......

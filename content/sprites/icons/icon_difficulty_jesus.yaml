@@ -1,0 +1,31 @@
+name: icon_difficulty_jesus
+family: icons
+size: [12, 12]
+description: >
+  A mushroom cloud — a wide boiling cap over a narrow column, standing on a
+  skirt of thrown-up debris — the JESUS CHRIST! rung's marker on the
+  difficulty ladder.
+subject:
+  kind: UI icon
+  features: a broad rolling cap that overhangs on both sides, a thin stem
+    beneath it, and a low flared skirt at the ground
+  accent: hot ash, lit bright across the top of the cap and dark underneath
+  flavor: abandon all hope
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#ffe0b0" # lit ash crown
+  V: "#e08a3c" # ember body
+  v: "#8a5a2a" # scorched shade
+grid: |
+  ....OOOO....
+  ..OOTTTTOO..
+  .OTTTTTTTTO.
+  .OTVVVVVVTO.
+  ..OVVvvVVO..
+  ...OOVVOO...
+  ....OVvO....
+  ....OVvO....
+  ...OVVvvO...
+  ..OVVvvvvO..
+  ..OOOOOOOO..
+  ............

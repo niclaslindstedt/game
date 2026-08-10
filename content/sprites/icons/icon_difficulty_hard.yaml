@@ -1,0 +1,29 @@
+name: icon_difficulty_hard
+family: icons
+size: [12, 12]
+description: >
+  Two blades crossed in an X, points up, guards and pommels at the bottom —
+  the HARD rung's marker on the difficulty ladder.
+subject:
+  kind: UI icon
+  features: two straight blades crossing above their guards, each with a short
+    crossbar and a knobbed pommel
+  accent: brushed steel, lit along the inner edge of each blade
+  flavor: no room for mistakes
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#e2e6ee" # lit steel highlight
+  V: "#9095a5" # steel body
+grid: |
+  ............
+  ..T......T..
+  ..TV....VT..
+  ...TV..VT...
+  ....TVVT....
+  .....VV.....
+  ....VTTV....
+  ...VT..TV...
+  .OOOO..OOOO.
+  ..VV....VV..
+  .OO......OO.
+  ............

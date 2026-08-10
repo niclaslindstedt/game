@@ -1,0 +1,29 @@
+name: icon_difficulty_nightmare
+family: icons
+size: [12, 12]
+description: >
+  A bone skull with a crack forking down its crown — the NIGHTMARE rung's
+  marker on the difficulty ladder.
+subject:
+  kind: UI icon
+  features: a broad skull with deep hollow sockets, a squared jaw of teeth, and
+    a split crack running down from the top of the crown
+  accent: bone white, lit across the brow and shaded down the right cheek
+  flavor: they never stop coming
+palette:
+  O: "#1a1c2c" # dark outline / sockets / crack
+  W: "#f0ece0" # lit bone
+  w: "#b9b3a4" # bone shade
+grid: |
+  ............
+  ...OOOOOO...
+  ..OWWOWWWO..
+  .OWWWOWWWWO.
+  .OWWWWOWWwO.
+  .OWOOWWOOwO.
+  .OWOOWWOOwO.
+  ..OWWOOWWwO.
+  ..OWWWWWWwO.
+  ..OWOWOWOwO.
+  ...OOOOOOO..
+  ............
