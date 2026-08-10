@@ -236,3 +236,20 @@ export function capabilityList(capabilities: Capabilities): string[] {
   if (capabilities.voice) list.push("voice");
   return list;
 }
+
+/**
+ * The argument the window's preload is started with when `unlocked` is true —
+ * i.e. when this launch's COMMAND LINE, rather than its packaging, is what
+ * turned multiplayer, mods or voice on.
+ *
+ * It travels beside the capability list and not inside it, because it is not a
+ * capability: the list answers "may the game offer this", and an entry that
+ * meant "and it was switched on by hand" would be read by `shellCapability`
+ * like every other name — which answers TRUE where nothing publishes a list at
+ * all, i.e. in every browser. This is a fact only a shell can assert, so its
+ * absence must mean no (`pwa/src/app/launch-options.ts`).
+ *
+ * The preload mirrors the literal because a sandboxed preload may not require
+ * local modules; `preload_test.ts` keeps the two copies in step.
+ */
+export const UNLOCKED_ARG = "--gis-unlocked";

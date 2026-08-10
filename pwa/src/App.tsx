@@ -9,6 +9,7 @@ import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
 import { usePwaUpdate } from "@ui/lib/pwa-update.ts";
 
 import { initDevicePolicy } from "./app/device-policy.ts";
+import { unlockedByLaunchOptions } from "./app/launch-options.ts";
 import { isNativeApp } from "./app/native.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
@@ -24,6 +25,7 @@ import {
 import { initCloudSave } from "./game/cloud-save.ts";
 import type { JoinIntent } from "./game/session-intent.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
+import { LaunchNotice } from "./game/LaunchNotice.tsx";
 import { LoadGame } from "./game/LoadGame.tsx";
 import type { MinigameId } from "./game/minigames.ts";
 import { NewGame } from "./game/NewGame.tsx";
@@ -201,6 +203,17 @@ export function App() {
   // than lost with the wiped memory.
   const [parked, setParked] = useState<ParkedRun | null>(() => loadSavedRun());
 
+  // THE LAUNCH NOTICE, and whether it has been answered yet. A desktop build
+  // whose licensed features were switched on by command line owes the player a
+  // word about the terms before it shows them anything (app/launch-options.ts),
+  // and this is where that word goes: the ONE thing this app draws before the
+  // menu. Asked ONCE, from the shell's own stamp, so the answer cannot be
+  // re-raised by a later render — and never remembered across a launch, because
+  // the page load IS the launch.
+  const [noticePending, setNoticePending] = useState(() =>
+    unlockedByLaunchOptions(),
+  );
+
   // THE STUDIO CARD is NOT here: it is the entry chunk (`Boot.tsx`), and this
   // whole module is one of the things it covers. By the time anything below
   // runs, the card is already on screen and holding — see `splash.ts`.
@@ -339,6 +352,17 @@ export function App() {
       window.removeEventListener("focus", onVisible);
     };
   }, []);
+
+  // THE LAUNCH NOTICE COMES FIRST — before the menu, before a deep link, before
+  // the workbenches. It replaces the operating-system message box the desktop
+  // shell used to raise before it created the window, and it inherits that
+  // dialog's whole point: a launch running licensed features it was not shipped
+  // with does nothing at all until somebody says they understand that. So it is
+  // an EARLY RETURN rather than a modal layered over the title — there is
+  // nothing behind it to reach.
+  if (noticePending) {
+    return <LaunchNotice onAccept={() => setNoticePending(false)} />;
+  }
 
   // The cutscene workbench (`?cutscene=<id>`): loop one scene from the
   // catalog with no run around it — the authoring iteration loop.

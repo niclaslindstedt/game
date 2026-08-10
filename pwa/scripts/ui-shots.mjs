@@ -938,6 +938,32 @@ for (const vp of VIEWPORTS) {
   });
   await bot.close();
 
+  // ---- The LAUNCH NOTICE: the licence acknowledgement a desktop build shows
+  // INSTEAD of the title menu when its command line turned multiplayer or mods
+  // on (pwa/src/game/LaunchNotice.tsx). It has no in-game trigger at all — the
+  // shell stamps the fact onto `window` before the page loads — so the harness
+  // stamps the same globals here. Its own page, because the notice gates the
+  // whole app and nothing else could be captured behind it.
+  //
+  // `__GIS_NATIVE__` + `__gisShell` are what make QUIT appear (`canQuitApp`).
+  // GET IT ON STEAM appears only once `game.config.json` carries a `steamUrl`,
+  // so today this captures the two-button shape the game actually ships.
+  const notice = await context.newPage();
+  await tryStep("launch-notice", async () => {
+    await notice.addInitScript(() => {
+      Object.defineProperty(window, "__GIS_UNLOCKED__", { value: true });
+      Object.defineProperty(window, "__GIS_NATIVE__", { value: true });
+      Object.defineProperty(window, "__GIS_PLATFORM__", { value: "steam" });
+      Object.defineProperty(window, "__gisShell", { value: { post() {} } });
+    });
+    await notice.goto(`${url}/?debug`);
+    await notice.locator(".launch-notice-box").waitFor();
+    await notice.waitForTimeout(350);
+    await notice.screenshot({ path: `${dir}/launch-notice.png` });
+    console.error(`[${vp.name}] shot launch-notice`);
+  });
+  await notice.close();
+
   await context.close();
 }
 

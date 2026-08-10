@@ -544,6 +544,17 @@ Electron ones. `GIS_STEAM_APP_ID` must be the real app id for a store build —
 `tauri/scripts/package.mjs` refuses a build still pointed at Valve's Spacewar
 test app (480) unless passed `--allow-placeholder`.
 
+**Four of the five can also be turned on for a SINGLE LAUNCH from the command
+line** — `--multiplayer`, `--mods`, `--voice` and `--licensed` (`ENABLE_UPNP`
+deliberately cannot: a port mapping is a change the program makes to somebody's
+router, so it belongs to the build and to nothing else). A launch that takes any
+of them stops on the game's own licence acknowledgement before the title menu —
+multiplayer and mods are licensed with the store edition, not with a plain
+download — and its way out closes the game rather than starting it with the
+options dropped. Both shells state the fact the same way (`__GIS_UNLOCKED__`)
+and the page draws the same notice; the dedicated server, which has no page,
+prints it to the console instead.
+
 At RUNTIME both shells read the same handful: `GIS_STEAM=off` (don't talk to
 Steam at all — how most local shell work happens), `GIS_STEAM_OVERLAY=1|0`
 (force "was this started by Steam", which decides the overlay's surface),

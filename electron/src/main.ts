@@ -81,7 +81,11 @@ import {
   STEAM_ENABLED,
   STORE_URL,
 } from "./config";
-import { capabilityList, resolveCapabilities } from "./capabilities";
+import {
+  capabilityList,
+  resolveCapabilities,
+  UNLOCKED_ARG,
+} from "./capabilities";
 import { SHELL_CHANNEL } from "./channels";
 import { cloudProvider } from "./cloud-provider";
 import { dedicatedArgs, serverArgs } from "./dedicated-mode";
@@ -205,15 +209,24 @@ process.on("unhandledRejection", (reason) =>
 );
 
 /**
- * THE ACKNOWLEDGEMENT.
+ * THE ACKNOWLEDGEMENT, as this process writes it down.
  *
  * Multiplayer and mods are licensed with the store edition and not with a
  * plain download of the binary, so turning either of them on by command line
  * is a thing somebody has to do knowingly rather than by pasting a line they
- * found. It is shown on every such launch — a preference that remembered the
- * answer would turn an acknowledgement into a checkbox — and it is a MODAL
- * refusal by default: the cancel path quits the game rather than starting it
- * with the options quietly dropped.
+ * found. It is stated on every such launch — a preference that remembered the
+ * answer would turn an acknowledgement into a checkbox — and it is a REFUSAL
+ * rather than a note: nothing is playable until it has been answered, and the
+ * way out closes the game rather than starting it with the options quietly
+ * dropped.
+ *
+ * **WHAT THE PLAYER READS IS NO LONGER THIS STRING.** It used to be an
+ * operating-system message box raised before the window existed; the game now
+ * asks for the acknowledgement itself, in its own window skin, in front of the
+ * title menu — the shell states the FACT (`--gis-unlocked`, handed to the
+ * preload beside the capability list) and `pwa/src/game/LaunchNotice.tsx` says
+ * the words. This is what goes in `launch.log`, and what the DEDICATED server
+ * — which has no page to ask through — prints on the console instead.
  */
 const UNLOCK_NOTICE =
   "Multiplayer and mod support are being enabled by launch options.\n\n" +
@@ -593,9 +606,15 @@ function createWindow(): BrowserWindow {
     webPreferences: {
       preload: `${__dirname}/preload.js`,
       // What this launch may do, handed to the preload on its own command
-      // line so the menus are built right the first time they are drawn.
+      // line so the menus are built right the first time they are drawn — and,
+      // when the COMMAND LINE is what turned any of it on, the one extra fact
+      // the game has to state before it shows the player anything (the
+      // acknowledgement `UNLOCK_NOTICE` describes). Same delivery for the same
+      // reason: an answer that arrived a round trip later would arrive behind
+      // the menu it is supposed to stand in front of.
       additionalArguments: [
         `--gis-caps=${capabilityList(capabilities).join(",")}`,
+        ...(capabilities.unlocked ? [UNLOCKED_ARG] : []),
       ],
       // The renderer is the game — a large web app. It gets no Node, no
       // `require`, and its own isolated world. See preload.ts for why this
@@ -775,32 +794,20 @@ function announceDeveloperBuild(): void {
   });
 }
 
-/** Ask, and mean it: the cancel path quits rather than starting the game with
- * the options silently dropped. Returns whether to carry on. */
-function acknowledgeUnlock(): boolean {
-  if (!capabilities.unlocked) return true;
+/**
+ * Put the unlock on the record, and leave the ASKING to the game.
+ *
+ * This used to raise `dialog.showMessageBoxSync` here, before the window was
+ * created — a system-font panel with the platform's own buttons, in front of a
+ * game that had not drawn a pixel. The refusal it enforced is unchanged; only
+ * who draws it moved. The page is told by `--gis-unlocked` (see
+ * `createWindow`), stops at the notice before the title menu, and quits through
+ * the `__gisQuit` bridge if that is the answer — which is the same bridge the
+ * menu's own QUIT row has always used.
+ */
+function announceUnlock(): void {
+  if (!capabilities.unlocked) return;
   output.warn(UNLOCK_NOTICE.replace(/\n+/g, " "));
-  // The way to play this properly is offered beside the way to carry on, and
-  // it is a button rather than a line of text somebody has to copy out.
-  const buttons = STORE_URL
-    ? ["Quit", "Get it on Steam", "I understand — continue"]
-    : ["Quit", "I understand — continue"];
-  const continueAt = buttons.length - 1;
-  const choice = dialog.showMessageBoxSync({
-    type: "warning",
-    title: "Launch options",
-    message: "Enabled by launch options",
-    detail: UNLOCK_NOTICE,
-    buttons,
-    defaultId: continueAt,
-    cancelId: 0,
-    noLink: true,
-  });
-  if (STORE_URL && choice === 1) {
-    void shell.openExternal(STORE_URL);
-    return false;
-  }
-  return choice === continueAt;
 }
 
 void app.whenReady().then(() => {
@@ -814,11 +821,7 @@ void app.whenReady().then(() => {
 
 function startUp(): void {
   announceDeveloperBuild();
-  if (!acknowledgeUnlock()) {
-    quitting = true;
-    app.quit();
-    return;
-  }
+  announceUnlock();
   if (!REMOTE_GAME_URL) {
     if (!webrootExists()) {
       // Fatal rather than logged: from an installed copy this is a broken
