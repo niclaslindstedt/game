@@ -44,10 +44,10 @@ import {
 import { synth } from "../audio.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/ui.ts";
-import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+import { driveBindings, type DriveDials } from "../drive-screen/dials.ts";
 import { HudRoot } from "../hud/HudRoot.tsx";
 import { runCutsceneExhibit } from "./cutscene-exhibit.ts";
-import { runDriveExhibit } from "./drive-exhibit.ts";
+import { runDriveExhibit } from "../drive-screen/exhibit-run.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
 import {
   EXHIBIT_SPEEDS,

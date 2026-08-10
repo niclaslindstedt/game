@@ -60,25 +60,28 @@ import {
   drawDriveFx,
   shakeCamera,
   stepDriveFx,
-} from "../drive-screen/drive-fx.ts";
-import { clearDriveGore, createDriveGore } from "../drive-screen/drive-gore.ts";
-import { clearSkids, createSkids } from "../drive-screen/skid.ts";
+} from "./drive-fx.ts";
+import { clearDriveGore, createDriveGore } from "./drive-gore.ts";
+import { clearSkids, createSkids } from "./skid.ts";
 import {
   createEngineNote,
   drainDrive,
   drawBursts,
   runEngineNote,
   type Burst,
-} from "../drive-screen/loop.ts";
+} from "./loop.ts";
 import {
   createWearTrail,
   driveDials,
   sameDials,
-} from "../drive-screen/dials.ts";
-import { drawDrive, driveCamera } from "../drive-screen/render.ts";
+  type DriveDials,
+} from "./dials.ts";
+import { drawDrive, driveCamera } from "./render.ts";
 import { viewScaleFor } from "../render/view.ts";
-import type { DriveDials } from "../hud/bindings.ts";
-import type { DriveExhibit, ExhibitRun } from "./exhibit-kit.ts";
+import type {
+  DriveExhibit,
+  ExhibitRun,
+} from "../effects-gallery/exhibit-kit.ts";
 
 /** The drive's own fixed step (ms) — the engine's, so an exhibit ticks at the
  * rate a played road does and shows the same physics. */

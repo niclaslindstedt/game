@@ -4,7 +4,7 @@
 //
 // WHY THEY LIVE HERE RATHER THAN INSIDE `DriveScreen`. There are now TWO hosts
 // that stand a `DriveState` up and watch it: the minigame itself, and the
-// effects gallery's DRIVE shelf (`effects-gallery/drive-exhibit.ts`), which
+// effects gallery's DRIVE shelf (`drive-screen/exhibit-run.ts`), which
 // builds a road, plants something in front of the bumper and loops the
 // collision so a human can judge it. An exhibit that re-implemented the drain
 // would be a diorama of what the road USED to do — the very drift the gallery
@@ -35,7 +35,7 @@ import {
   engineNote,
   playDriveEngine,
   playDriveShift,
-} from "../sfx/drive.ts";
+} from "./engine-note.ts";
 import {
   driveBodyHit,
   driveBreakdown,
@@ -97,7 +97,7 @@ export const BURST_LIFE_MS = 2600;
  * ms), which gear the last one was in, so an upshift can be HEARD rather than
  * merely computed, and what the last one knew — the road speed it was fired at
  * and when — which is how the next one works out where the note is travelling
- * (`glideTo`, sfx/drive.ts).
+ * (`glideTo`, engine-note.ts).
  */
 export type EngineNoteState = {
   dueMs: number;
@@ -131,7 +131,7 @@ export function createEngineNote(): EngineNoteState {
 
 /**
  * ONE GRAIN OF THE ENGINE, if one is due — the running note, made out of
- * overlapping one-shots on a fixed cadence (see `sfx/drive.ts`, which owns why
+ * overlapping one-shots on a fixed cadence (see `engine-note.ts`, which owns why
  * it is fixed).
  *
  * Scheduled on the DRIVE's clock rather than the wall's, so it keeps step with

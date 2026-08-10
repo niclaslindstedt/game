@@ -21,7 +21,7 @@
 //
 // It runs the ENGINE ONLY: `createDrive`, the exhibit's own `road`, `stepDrive`.
 // No canvas, no synth — the staging deliberately touches no browser (see
-// drive-exhibits.ts), which is the whole reason it can be tested at all.
+// drive-screen/exhibits.ts), which is the whole reason it can be tested at all.
 
 import {
   createDrive,
@@ -123,7 +123,7 @@ describe("effects gallery / the DRIVE shelf", () => {
       expect(
         wanted.length,
         `${exhibit.id} staged no ${exhibit.shows} in its ${exhibit.showMs ?? 2000} ms show — ` +
-          `re-tune its plant distance in drive-exhibits.ts (it booked: ` +
+          `re-tune its plant distance in drive-screen/exhibits.ts (it booked: ` +
           `${events.map((e) => e.event.type).join(", ") || "nothing"})`,
       ).toBeGreaterThan(0);
     });

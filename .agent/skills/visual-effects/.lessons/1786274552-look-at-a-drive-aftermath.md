@@ -1,7 +1,7 @@
 ---
 title: A drive exhibit cannot show an AFTERMATH — the hero drives on and the subject is despawned; brake him with `input`
 date: 2026-08-09
-scope: pwa/src/game/effects-gallery/drive-exhibits.ts, pwa/scripts/effects-gallery.mjs
+scope: pwa/src/game/drive-screen/exhibits.ts, pwa/scripts/effects-gallery.mjs
 concepts: [drive, effects-gallery, judging, staging, review-loop]
 ---
 

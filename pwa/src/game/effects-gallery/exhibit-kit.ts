@@ -80,7 +80,7 @@ export function speedLabel(speed: number): string {
 /**
  * A LIVE EXHIBIT — the handle the gallery steers whichever host is standing the
  * show up. Both hosts answer it identically (`run-exhibit.ts` for the
- * run-hosted shelves, `drive-exhibit.ts` for the road), which is what lets the
+ * run-hosted shelves, `drive-screen/exhibit-run.ts` for the road), which is what lets the
  * gallery's chrome, its keys and the contact-sheet script stay ignorant of
  * which kind of exhibit is on screen.
  */
@@ -235,7 +235,7 @@ export type ExhibitChrome = "scoreboard";
  *
  * A drive is not a run and deliberately shares nothing with one: no level, no
  * horde, no `step()`, its own clock (`DriveState.ms`) and its own event type
- * (`DriveEvent`). So it gets its own host (`drive-exhibit.ts`), which builds a
+ * (`DriveEvent`). So it gets its own host (`drive-screen/exhibit-run.ts`), which builds a
  * real road with `createDrive`, plants what the exhibit is ABOUT in front of the
  * bumper, ticks it with `stepDrive` and drains it through the SAME
  * `drainDrive` the minigame's own screen uses — which is what stops the shelf

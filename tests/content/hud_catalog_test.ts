@@ -44,11 +44,11 @@ import {
   HUD_SCRIPTS,
 } from "../../pwa/src/generated/hud.ts";
 import {
-  driveBindings,
   scriptState,
   speakerBindings,
   voiceBindings,
 } from "../../pwa/src/game/hud/bindings.ts";
+import { driveBindings } from "../../pwa/src/game/drive-screen/dials.ts";
 import {
   HUD_ROW_WIDGET_NAMES,
   HUD_WIDGET_NAMES,

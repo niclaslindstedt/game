@@ -3,7 +3,7 @@
 // host.
 //
 // WHY THERE ARE THREE. `run-exhibit.ts` stands a `GameState` up and fires an
-// effect into it; `drive-exhibit.ts` builds a road and drives into something. A
+// effect into it; `drive-screen/exhibit-run.ts` builds a road and drives into something. A
 // cutscene is neither: no run, no level, no horde, no road — a `CutsceneState`
 // on its own clock, stepped by `stepCutscene` and DRAWN BY A COMPONENT rather
 // than into the gallery's canvas (`CutsceneOverlay` owns a canvas of its own,

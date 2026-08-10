@@ -1,7 +1,7 @@
 ---
 title: Voice an engine off the CRANK, and extrapolate the crank too — a prediction run through the gearbox walks into the next gear early
 date: 2026-08-10
-scope: pwa/src/game/sfx/drive.ts
+scope: pwa/src/game/drive-screen/engine-note.ts
 concepts: [drive, engine, pitch, gearbox, grains]
 ---
 

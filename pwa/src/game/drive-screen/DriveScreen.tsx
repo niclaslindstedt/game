@@ -56,8 +56,13 @@ import {
 } from "../music/index.ts";
 import { viewScaleFor } from "../render/view.ts";
 import { ageBark, openBark, type Speech } from "./bark.ts";
-import { createWearTrail, driveDials, sameDials } from "./dials.ts";
-import { driveBindings, type DriveDials } from "../hud/bindings.ts";
+import {
+  createWearTrail,
+  driveBindings,
+  driveDials,
+  sameDials,
+  type DriveDials,
+} from "./dials.ts";
 // The run's own dpad-hint geometry, borrowed rather than restated: the road
 // wears the same control and must not drift off it by a pixel.
 import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "../game-screen/player-input.ts";
