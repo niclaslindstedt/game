@@ -225,9 +225,17 @@ The PR title **must** follow conventional commit format — PRs are squash-merge
 
 The body follows the repo's PR template (`.github/PULL_REQUEST_TEMPLATE.md`): **Summary**, **Linked issue**, **Test plan**, **Checklist**.
 
+**A `no-changelog` PR carries its label ON THE CREATE CALL — `--label`, below.**
+CI's `changeset` job reads the labels out of the event payload
+(`toJSON(github.event.pull_request.labels.*.name)` in `ci.yml`), which for the
+`opened` event is the list AT THAT INSTANT. Labelling a second later does not
+reach back into a run already started, so the PR opens with a red `changeset`
+that no amount of waiting clears.
+
 ```sh
 gh pr create \
   --title "type(scope): summary" \
+  --label no-changelog \
   --body "$(cat <<'EOF'
 ## Summary
 
