@@ -127,6 +127,21 @@ export function clampInitials(raw: string): string {
   return chars.join("").slice(0, INITIALS_LENGTH).padEnd(INITIALS_LENGTH, " ");
 }
 
+/**
+ * …AND THE NAME A PLAYER JUST SIGNED WITH, which is `clampInitials` plus the one
+ * case only the entry screen can produce: NOTHING AT ALL.
+ *
+ * A tap on the name cell wipes the field so the next letter starts a fresh
+ * entry (see `DriveScores`), so signing off without typing one is a keypress
+ * away — and a blank clamps to three spaces, which the board would print as a
+ * row with a hole where a name goes and would hand to the NEXT leg as its
+ * prefill. An unsigned row prints what an unsigned row has always printed.
+ */
+export function signedInitials(raw: string): string {
+  const name = clampInitials(raw);
+  return name.trim() ? name : DEFAULT_INITIALS;
+}
+
 function isEntry(value: unknown): value is DriveScoreEntry {
   if (!value || typeof value !== "object") return false;
   const { name, score, ms, difficulty, at } = value as Record<string, unknown>;
