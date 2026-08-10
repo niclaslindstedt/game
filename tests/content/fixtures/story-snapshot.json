@@ -3739,6 +3739,16 @@
         "speaker": "LAB SCIENTIST"
       }
     },
+    "goodco_back_to_car": {
+      "id": "goodco_back_to_car",
+      "pages": [
+        [
+          "SHE WENT UP AN HOUR AGO AND I'M STANDING IN A FACTORY. THE SHIP'S AT HOME. I NEED TO GET BACK TO MY CAR."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "goodco_first_blow": {
       "id": "goodco_first_blow",
       "pages": [

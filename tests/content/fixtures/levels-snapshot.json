@@ -64,6 +64,16 @@
         "type": "killBoss"
       },
       "exitTo": "garage",
+      "exitByCar": {
+        "thought": "goodco_back_to_car"
+      },
+      "travelDoors": [
+        {
+          "id": "car",
+          "name": "THE CAR",
+          "to": ["garage"]
+        }
+      ],
       "placedItems": [
         {
           "kind": "story",

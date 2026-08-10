@@ -110,6 +110,29 @@ objective:
 # LEVEL CLEAR goes home: the campaign breathes in THE GARAGE between
 # missions (the D2 town loop), and the part comes back to the bench.
 exitTo: garage
+# …AND IT GOES HOME IN THE CAR HE PARKED ON THE LOT, not through a button
+# (`LevelDef.exitByCar`, engine/game/step/index.ts). PAYLOAD-1 falling is the
+# last BEAT of this venue rather than the end of it: the win banks on the same
+# tick it always did, the loot window runs, and then the field simply stays live
+# with the hero told where to go. The part he came for is no use in the building
+# it came out of and the ship it goes into is on his own lawn, so what the story
+# says happens next is that he walks the floor back out through the gate,
+# crosses the tarmac to his own wagon and drives — which is the DRIVE home
+# (`driveParamsFor`), booked by boarding rather than by a splash.
+exitByCar:
+  thought: goodco_back_to_car
+# THE WAGON, AS A DOOR. It is what `exitByCar` reads the destination off, and
+# it is the same entry the garage carries at the other end of the same road —
+# so the trip home is the trip out, driven the other way.
+#
+# UNLIKE THE GARAGE'S, THIS ONE IS SHUT FOR MOST OF THE RUN. `carIsWayOut`
+# (engine/game/vehicles.ts) keeps the "you can get in this" mark down and
+# refuses `enterCar` until the objective clears, so the car he lands beside is
+# scenery for the whole mission and becomes the way out the moment it is over.
+travelDoors:
+  - id: car
+    name: THE CAR
+    to: [garage]
 placedItems:
   - kind: story
     defId: ada_soda

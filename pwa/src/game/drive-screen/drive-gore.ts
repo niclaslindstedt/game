@@ -119,12 +119,27 @@ export type DriveGoreState = {
   /**
    * HOW FILTHY EACH PANEL OF THE CAR IS — the hero's coat, on a wagon
    * (`car-soak.ts`). It rides here rather than on the car itself for the same
-   * reason the marks do: it is what the ROAD did to it, thrown away with the
-   * rest of the mess when the leg restarts, where `CarVehicle.panels` is
-   * damage the garage still has to fix.
+   * reason the marks do: it is what the ROAD did to it, where
+   * `CarVehicle.panels` is damage the garage still has to fix.
    */
   car: CarSoak;
+  /**
+   * HOW FILTHY IT ALREADY WAS WHEN THIS LEG STARTED — the film the wagon
+   * brought with it (`pwa/src/game/car-condition.ts`), and what a RESTART puts
+   * back.
+   *
+   * The distinction is the whole reason it is kept: everything else on this
+   * record is a memory of THIS attempt at the road and is thrown away when the
+   * leg restarts, but the blood the car arrived carrying was not put there by
+   * this attempt — it came off the trip out, or off the last thing he hit
+   * before the wagon died — and washing it off at the top of the retry would
+   * hand him a clean car for breaking down.
+   */
+  opening: CarFilm;
 };
+
+/** The film a leg opens on: the panels, and the tyres' own carry. */
+export type CarFilm = { soak: CarSoak; tyre: number };
 
 /** The three drag rungs, lightest first — picked by how wet the piece still is,
  * so a trail visibly thins out along its own length. */
@@ -235,27 +250,37 @@ const TREAD_ALPHA_WET = 0.38;
  * which is at most the ~400 px the camera can still see behind the car. */
 const BODY_LIFT = 2;
 
-export function createDriveGore(): DriveGoreState {
+/**
+ * `opening` is the film the wagon ARRIVED with — omitted is a clean car, which
+ * is every road with no night behind it (the arcade cabinet, the effects
+ * gallery, the developer workbench).
+ */
+export function createDriveGore(opening?: CarFilm): DriveGoreState {
+  const film: CarFilm = opening
+    ? { soak: { ...opening.soak }, tyre: opening.tyre }
+    : { soak: cleanCar(), tyre: 0 };
   return {
     marks: [],
     wet: new Map(),
     last: new Map(),
     cells: new Map(),
-    tyre: 0,
+    tyre: film.tyre,
     tyreAt: null,
-    car: cleanCar(),
+    car: { ...film.soak },
+    opening: film,
   };
 }
 
-/** Everything the road throws away when the leg restarts. */
+/** Everything the road throws away when the leg restarts — back to the film the
+ * leg OPENED on rather than to a clean car (see `DriveGoreState.opening`). */
 export function clearDriveGore(state: DriveGoreState): void {
   state.marks.length = 0;
   state.wet.clear();
   state.last.clear();
   state.cells.clear();
-  state.tyre = 0;
+  state.tyre = state.opening.tyre;
   state.tyreAt = null;
-  state.car = cleanCar();
+  state.car = { ...state.opening.soak };
 }
 
 /**

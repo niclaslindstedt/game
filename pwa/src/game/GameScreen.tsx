@@ -30,6 +30,8 @@ import {
   debugDetonateNuke,
   debugLevelUpFx,
   error,
+  readCarDamage,
+  type CarDamage,
   type Difficulty,
   type GameInput,
   type GameState,
@@ -360,17 +362,10 @@ export function GameScreen({
     opts: Parameters<NonNullable<typeof progressRef.current>["travelTo"]>[2];
   } | null>(null);
   /**
-   * Whether this run is the only person's — the same question `sessionTravels`
-   * asks about a crossing, parked on a ref so the VICTORY SPLASH can ask it
-   * too. The splash renders outside the effect the session driver lives in, and
-   * the drive home is offered from there.
-   */
-  const soloRef = useRef(true);
-  /**
    * Whether a BOT holds this run's input rather than a person — BOT VIEW /
-   * `?bot=`, the demo's showcase, or the paid AUTO PILOT. Parked here for the
-   * same reason `soloRef` is: the victory splash offers the drive home from
-   * outside the effect that knows.
+   * `?bot=`, the demo's showcase, or the paid AUTO PILOT. Parked on a ref
+   * because the question is asked from `beginDrive`, which runs on a run event
+   * rather than inside the effect that knows.
    *
    * A PREDICATE rather than a flag, because two of the three can change while
    * the run is up (the ride is engaged and disengaged mid-run), and it is the
@@ -383,6 +378,9 @@ export function GameScreen({
   const arriveInCarRef = useRef(false);
   /** The line the drive in earned, spent by the next run's setup. */
   const arrivalThoughtRef = useRef<string | undefined>(undefined);
+  /** …and the state the wagon is in as the road hands it over, spent by the
+   * same build (`RunParams.car`): the car he parks is the car he drove. */
+  const arrivalCarRef = useRef<CarDamage | undefined>(undefined);
   // What landed the fatal blow, ready to print — the line the SOFTCORE YOU DIED
   // splash leads with (death-cause.ts). Captured off the tick the hero fell on,
   // because that tick carries both the blow and the death.
@@ -752,6 +750,7 @@ export function GameScreen({
       characterRef,
       arriveInCarRef,
       arrivalThoughtRef,
+      arrivalCarRef,
       resumeRef,
       checkpointRef,
       botView,
@@ -1003,15 +1002,9 @@ export function GameScreen({
       captureEnabled: session.captureCheckpoint,
       // With the doors open or a party aboard, a crossing is the
       // SESSION's to perform — see run-progress's own note.
-      sessionTravels: () => {
-        const shared =
-          Boolean(driver.session) &&
-          (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1);
-        // The same fact the victory splash's drive home needs, kept current
-        // here because this is the one predicate that already knows it.
-        soloRef.current = !shared;
-        return shared;
-      },
+      sessionTravels: () =>
+        Boolean(driver.session) &&
+        (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1),
       openingPlayed: session.openingPlayed,
       beginDrive: (to) => {
         // Solo is the same question a crossing asks about the session, read the
@@ -1021,7 +1014,10 @@ export function GameScreen({
           Boolean(driver.session) &&
           (driver.hosting === true || (driver.session?.roster.length ?? 0) > 1)
         );
-        soloRef.current = solo;
+        // THE CAR HE IS SITTING IN, as it stands. The road mints its own
+        // assembly, so without this the wagon that just pulled out of the bay
+        // with a hanging bumper would arrive on the tarmac showroom-fresh.
+        const wagon = state.vehicles.find((v) => v.kind === "car");
         const params = driveParamsFor(
           to,
           runLevelId,
@@ -1030,6 +1026,7 @@ export function GameScreen({
           Date.now() >>> 0,
           difficulty,
           demo,
+          wagon ? readCarDamage(wagon) : undefined,
         );
         if (!params) return false;
         pendingTravelRef.current = { to, opts: {} };
@@ -1862,32 +1859,6 @@ export function GameScreen({
         }
       : pauseMenu.panels;
 
-  /**
-   * Put the DRIVE HOME on screen instead of crossing, and say whether it took
-   * the wheel — the mirror of `beginDrive` on the departure event, for the leg
-   * that has no `carDeparted` to hang off.
-   */
-  const beginDriveHome = (
-    from: string,
-    to: string,
-    opts: NonNullable<typeof pendingTravelRef.current>["opts"],
-  ) => {
-    const params = driveParamsFor(
-      to,
-      from,
-      soloRef.current,
-      autoplayedRef.current(),
-      Date.now() >>> 0,
-      difficulty,
-      demo,
-    );
-    if (!params) return false;
-    pendingTravelRef.current = { to, opts };
-    driveRef.current = params;
-    setDrive(params);
-    return true;
-  };
-
   return (
     // The VISUALS custom properties go on the SCREEN ROOT, not on the overlay
     // below: the colour grade is a `filter` on the CANVAS, which is the overlay's
@@ -1963,7 +1934,7 @@ export function GameScreen({
           // switch is what lets `playtest.mjs` and the shot recipes see the
           // road at all.
           auto={demo || botView}
-          onArrived={(to, _bodies, verdict) => {
+          onArrived={(to, _bodies, verdict, car) => {
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the
             // trip took, not what it was.
@@ -1976,6 +1947,13 @@ export function GameScreen({
             // man's opinion of a journey belongs — the first thing out of his
             // mouth, standing beside the car he has just got out of.
             arrivalThoughtRef.current = verdict;
+            // …AND SO DOES THE CAR. The level on the far side mints its own
+            // assembly off its `car` landmark, so what the road did to the
+            // wagon has to travel as a parameter or the machine he parks is a
+            // different machine from the one he drove (`RunParams.car`). The
+            // blood travelled separately and is already carried (`handOffCar`
+            // → `car-condition.ts`), because the engine has no field for it.
+            arrivalCarRef.current = car;
             driveRef.current = null;
             setDrive(null);
             const pending = pendingTravelRef.current;
@@ -2297,41 +2275,30 @@ export function GameScreen({
           // goes through the session (the level swaps under everybody and
           // nobody has to rejoin); a local run takes the app-side road this
           // splash has always taken.
+          //
+          // NO ROAD IS EVER PLAYED FROM HERE, and that is a thing this button
+          // used to do. The one drive in the game runs between the garage and
+          // GOODCO, and BOTH its legs are now booked by a car actually being
+          // driven or boarded (`carDeparted` → `beginDrive`): the trip out
+          // leaves the bay, and the trip home leaves the staff lot, because
+          // GOODCO stopped having this splash at all (`LevelDef.exitByCar`). A
+          // fork here for a leg that can no longer reach it was a branch that
+          // read as an option and was dead code.
           onAdvance={(next) => {
             if (!state) return;
-            // GO HOME IS A DRIVE TOO. The trip out books on the car reaching
-            // the road (`carDeparted`); the trip BACK books on this button,
-            // because leaving GOODCO is not something the hero does at a
-            // wheel — he walks out of the building and gets in. So the road is
-            // offered here as well, and `driveParamsFor` gives the same three
-            // answers it gives the other leg (the setting, the party, and
-            // whether this pair of levels has a road between them at all).
-            //
-            // Nothing is banked before it: the drive is a scene between two
-            // levels, so the crossing it hands back does the banking exactly
-            // as this button always did.
-            if (
-              beginDriveHome(state.level.id, next, {
-                banked: !state.staying,
-                viaRift: runLevelDef(state).riftExit === true,
-              })
-            )
-              return;
-            {
-              progressRef.current?.travelTo(state, next, {
-                // The hero went onto the character when the level was WON.
-                // …unless the player took STAY afterwards, in which case what
-                // he is carrying now is a farmed field's worth more than what
-                // was banked then, and leaving would lose it.
-                banked: !state.staying,
-                // ON THE TWO VENUES WHOSE WAY ONWARD IS A TEAR (`riftExit` —
-                // Mars and the rift), this button IS the portal being used:
-                // both their bosses flee, which ends the level at the instant
-                // the tear opens, so the crossing is the only form the trip
-                // can take. The seam at home learns the road from it.
-                viaRift: runLevelDef(state).riftExit === true,
-              });
-            }
+            progressRef.current?.travelTo(state, next, {
+              // The hero went onto the character when the level was WON.
+              // …unless the player took STAY afterwards, in which case what
+              // he is carrying now is a farmed field's worth more than what
+              // was banked then, and leaving would lose it.
+              banked: !state.staying,
+              // ON THE TWO VENUES WHOSE WAY ONWARD IS A TEAR (`riftExit` —
+              // Mars and the rift), this button IS the portal being used:
+              // both their bosses flee, which ends the level at the instant
+              // the tear opens, so the crossing is the only form the trip
+              // can take. The seam at home learns the road from it.
+              viaRift: runLevelDef(state).riftExit === true,
+            });
           }}
           onRestart={() => {
             setHud(null);

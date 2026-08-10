@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 32;
+export const PROTOCOL_VERSION = 33;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -100,6 +100,19 @@ export type SessionParams = {
   cacheSlots?: number;
   /** Arrive at the wheel — the far side of the drive home (`RunParams`). */
   startInCar?: boolean;
+  /**
+   * WHAT STATE THE WAGON IS IN (`RunParams.car` → `CarDamage`) — the panels'
+   * damage rungs, the two wheels' states, how attached each detachable part
+   * still is, and the overall wear ladder.
+   *
+   * OPAQUE HERE, like `loadout` and `campaignQuests` and for the same reason:
+   * this leaf imports nothing (it is read from the app's startup path, where
+   * the budget forbids `@game/core`), so the wire moves it and the engine reads
+   * it. Nothing is lost by not naming the shape — `applyCarDamage` re-clamps
+   * every field on the way in, so a frame carrying a rung nothing has a sprite
+   * for lands as a straight panel rather than as a hole in the picture.
+   */
+  car?: unknown;
   /** A thought the hero arrived still having, spoken as the first page of the
    * level's opening monologue (`RunParams.arrivalThought`). */
   arrivalThought?: string;

@@ -391,6 +391,13 @@ export function reopenVictoryChoice(state: GameState): boolean {
   if (!state.staying || state.phase !== "playing" || !state.bossCorpse) {
     return false;
   }
+  // …EXCEPT WHERE THERE IS NO MENU TO RE-OPEN. On a venue whose way out is the
+  // car (`LevelDef.exitByCar`) `staying` is not a choice the player made — it
+  // is the objective having cleared with the field left live on purpose
+  // (step/index.ts) — so a tap on the boss corpse would conjure the LEVEL CLEAR
+  // splash that venue exists to not have. He leaves in the car or he does not
+  // leave.
+  if (runLevelDef(state).exitByCar) return false;
   state.phase = "victory";
   return true;
 }

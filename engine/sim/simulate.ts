@@ -68,7 +68,11 @@ import { IDLE_INPUT } from "../game/step/index.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import { STAT_NAMES } from "../game/defs/equipment.ts";
-import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
+import {
+  LEVEL_ORDER,
+  levelDef,
+  runLevelDef,
+} from "../game/defs/levels/index.ts";
 import {
   advanceOutro,
   allocateStat,
@@ -1550,6 +1554,18 @@ function playRun(args: {
   };
 
   simulation: while (now() < maxTimeMs) {
+    // A VENUE WHOSE WAY OUT IS THE CAR NEVER REACHES THE `victory` PHASE
+    // (`LevelDef.exitByCar` — GOODCO). The objective clears, the win banks and
+    // the field is deliberately LEFT LIVE so the player can walk back to the
+    // wagon and drive home; there is no splash, so the phase stays `playing`
+    // forever as far as this loop is concerned and a measured GOODCO run came
+    // back `timeout` with the boss on the floor. `staying` on such a level IS
+    // the clear, latched on the same tick the phase would have flipped, so the
+    // reading is the same reading it always was.
+    if (state.staying && runLevelDef(state).exitByCar) {
+      outcome = "victory";
+      break simulation;
+    }
     // Un-wedge every paused phase the way a player's taps would.
     switch (state.phase) {
       case "cutscene":

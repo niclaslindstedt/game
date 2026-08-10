@@ -74,6 +74,56 @@ The autopilot knows the beat too (`bot/entrance.ts`): locked out, it falls in
 behind whoever is crossing the tarmac instead of pressing the wall the objective
 is behind.
 
+## …and a venue you leave the way you arrived
+
+The lot is also where the hero's **own car** is standing, because he drove here
+(the trip in is the DRIVE minigame). One venue in the campaign therefore has no
+LEVEL CLEAR button at all: `LevelDef.exitByCar`, and GOODCO is the case it exists
+for. The part he came for is no use in the building it came out of and the ship
+it goes into is on his own lawn, so what the story says happens after PAYLOAD-1
+stops moving is that he walks the floor back out through the gate, crosses the
+tarmac to the wagon and drives.
+
+What the field changes is the END of the victory countdown and nothing else. The
+objective clears, the loot window runs, and the `victory` event still fires on
+the same tick — which is what banks the clear, unlocks the next venue and books
+the campaign score. What does not happen is the phase change: the run stays
+`playing` with the win banked (which is exactly `GameState.staying`), the level's
+authored line is raised so the player is told where to go, and the car becomes a
+door. A level authoring it owes itself a `car` travel door, because that is where
+the destination comes from.
+
+**The car is a door only while it IS one**, and that is one predicate every
+surface reads: `carIsWayOut` (`engine/game/vehicles.ts`). A hub's car always
+answers yes — home is a place you leave — and an `exitByCar` venue's answers no
+until the venue is over. The gold "you can get in this" mark over the roof, the
+tap that boards it and `enterCar` itself all ask it, so the mark is up exactly
+when the press works.
+
+**Boarding is the departure, not the start of a lap.** A hub's car is DRIVEN
+out — there is a roll-up to open, a driveway to cross and a road at the end of it
+(`LevelDef.driveOut`) — while a car park has none of that, and "drive around a
+car park until the game agrees you have left" is a puzzle nobody set. So on an
+`exitByCar` venue getting in hands straight over to the same DIM the roll-up
+does, and the driving is the minigame on the far side of it.
+
+**And the wagon is one object across the whole night.** He leaves the garage in
+it, drives a minute of road in it, parks it on the lot, drives it home and leaves
+it in his own bay — four objects, one car — so its condition travels as a
+parameter at every seam: the dents, the shot wheels and the parts working free as
+`CarDamage` (`RunParams.car` / `DriveParams.car`), and the blood a body left on
+the paint in the app's own carrier beside it (`pwa/src/game/car-condition.ts`),
+because the engine has never known a car can get dirty. The car standing in
+GOODCO's staff lot is therefore visibly the car that went through the crowd on
+the way there, and the leg home starts from it rather than from a replacement.
+The ARCADE cabinet is deliberately outside all of this: it plays the same road
+for a score, so every attempt gets a clean car.
+
+The autopilot has a rung for this too (`bot/hub.ts` `exitCar`), placed BELOW the
+loot and the errands: the ride finishes the job, then walks to the wagon and
+leaves. Without it a botted or headlessly simulated campaign clears GOODCO and
+stands on a swept factory floor until the clock runs out.
+
 ## Home knows what time it is
 
 A venue may stand under a **sky** (`sky: earth` on the mission), and then its

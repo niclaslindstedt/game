@@ -40,6 +40,15 @@ import {
   soakCarFromStrike,
   wheelCoat,
 } from "../../pwa/src/game/drive-screen/car-soak.ts";
+import {
+  clearDriveGore,
+  createDriveGore,
+} from "../../pwa/src/game/drive-screen/drive-gore.ts";
+import {
+  carriedCarFilth,
+  carryCarFilth,
+  washCar,
+} from "../../pwa/src/game/car-condition.ts";
 
 /** What one rung of the film actually paints, as a share of its canvas. */
 function coverage(rung: number): number {
@@ -185,5 +194,49 @@ describe("the airstream, not the spray, is what reaches the tail", () => {
     const had = soak.backside;
     smearCarSoak(soak, 900, 16);
     expect(soak.backside).toBe(had);
+  });
+});
+
+describe("the wagon carries its mess between legs", () => {
+  // THE CAR IS ONE OBJECT ACROSS THE NIGHT and the film is the half the engine
+  // has no field for, so it rides in the app's own carrier
+  // (`pwa/src/game/car-condition.ts`) between the road, the car park, the road
+  // home and the bay. The two things that can go wrong are the two asserted:
+  // a leg that opens clean when it should not, and a RESTART that hands the
+  // player a washed car for having broken down.
+  it("opens a leg on the film the car arrived with, and washes on request", () => {
+    washCar();
+    expect(carriedCarFilth().tyre).toBe(0);
+    expect(carIsClean(carriedCarFilth().soak)).toBe(true);
+
+    const soak = cleanCar();
+    soakCarFromStrike(soak, "bumper", 200, 4);
+    carryCarFilth({ soak, tyre: 0.5 });
+
+    const gore = createDriveGore(carriedCarFilth());
+    expect(gore.car.bumper).toBeGreaterThan(0);
+    expect(gore.tyre).toBe(0.5);
+
+    washCar();
+    expect(carIsClean(carriedCarFilth().soak)).toBe(true);
+  });
+
+  it("puts the arrival film back on a breakdown restart, not a clean car", () => {
+    const soak = cleanCar();
+    soakCarFromStrike(soak, "bumper", 200, 4);
+    const arrived = soak.bumper;
+    const gore = createDriveGore({ soak, tyre: 0.4 });
+    // …a stretch of road later, wetter still.
+    soakCarFromStrike(gore.car, "bumper", 200, 8);
+    expect(gore.car.bumper).toBeGreaterThan(arrived);
+    clearDriveGore(gore);
+    expect(gore.car.bumper).toBe(arrived);
+    expect(gore.tyre).toBe(0.4);
+  });
+
+  it("hands a road with no night behind it a clean car", () => {
+    const gore = createDriveGore();
+    expect(carIsClean(gore.car)).toBe(true);
+    expect(gore.tyre).toBe(0);
   });
 });

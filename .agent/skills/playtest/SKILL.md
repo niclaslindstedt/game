@@ -54,6 +54,10 @@ node pwa/scripts/playtest.mjs --strategy kite   # from the repo root
 
 # every mission's map is carved per run, at the one size its blueprint prices
 node pwa/scripts/playtest.mjs --strategy survivor --level goodco_hq
+
+# how LONG the run is given is `--timeout`, in SECONDS (default 120) — there is
+# no `--seconds`, and an unknown flag is silently ignored rather than refused
+node pwa/scripts/playtest.mjs --strategy idle --level goodco_hq --timeout 20
 ```
 
 Strategies:

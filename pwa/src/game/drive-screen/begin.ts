@@ -36,6 +36,7 @@
 import {
   areMinigamesEnabled,
   DRIVE,
+  type CarDamage,
   type Difficulty,
   type DriveDirection,
   type DriveParams,
@@ -75,6 +76,7 @@ export function driveParamsFor(
   seed: number,
   difficulty: Difficulty,
   attract = false,
+  car?: CarDamage,
 ): DriveParams | null {
   if (!areMinigamesEnabled()) return null;
   if (!solo) return null;
@@ -86,6 +88,10 @@ export function driveParamsFor(
     direction,
     to,
     difficulty,
+    // THE WAGON HE IS ACTUALLY IN — lifted off the car that just left the bay
+    // (or the lot), so the leg opens on the machine the last one left behind
+    // rather than on a replacement.
+    ...(car ? { car } : {}),
     ...(attract ? { coursePx: DRIVE.attractCoursePx } : {}),
     // THE GORE GATE, ASKED ONCE AND CARRIED. The family switch (people bleed)
     // has to say yes for either, and then each way a body can come apart
@@ -114,6 +120,11 @@ export function driveParamsFor(
  * the leg is bound for — so the cabinet never has to know a road HAS a
  * direction. An id the road does not have an end for falls back to the trip
  * out, which is what the shelf plays when nothing has been chosen.
+ *
+ * AND THE CAR IS ALWAYS A CLEAN ONE (no `car`, and the cabinet washes the film
+ * off before it starts). A cabinet is a fresh attempt at a fixed course — a
+ * score that depended on which panels the player happened to have flattened on
+ * a campaign leg an hour ago would not be a score.
  */
 export function arcadeDriveParams(
   seed: number,

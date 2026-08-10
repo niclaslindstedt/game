@@ -634,6 +634,40 @@ export type LevelDef = {
    */
   exitTo?: string;
   /**
+   * THE WAY OUT OF THIS VENUE IS THE CAR — so it has no LEVEL CLEAR button at
+   * all, and the objective clearing is a beat rather than an ending.
+   *
+   * GOODCO is the case, and the reason is the story's rather than the
+   * interface's: he drove here, the part he came for is no use in the building
+   * it came out of, and the ship it goes into is on his own lawn. A splash
+   * offering NEXT LEVEL in the middle of that says the game moves him on,
+   * when what the plot says is that he walks the floor back out through the
+   * gate, crosses the lot to the wagon he parked on it and drives home.
+   *
+   * WHAT IT CHANGES IS THE END OF THE COUNTDOWN AND NOTHING ELSE. The objective
+   * still clears, the loot window still runs, and the `victory` event still
+   * fires on the same tick — which is what banks the clear, unlocks the next
+   * venue and books the campaign score. What does NOT happen is the phase
+   * change: the run stays `playing` with the win already banked (which is
+   * exactly `GameState.staying`), `thought` is raised so the player is told
+   * where to go, and the car becomes boardable (`carIsWayOut`, vehicles.ts) —
+   * boarding it books the trip home.
+   *
+   * A LEVEL THAT AUTHORS THIS OWES ITSELF A `car` TRAVEL DOOR, because that is
+   * where the destination comes from; without one the countdown falls through
+   * to the ordinary splash rather than stranding the run.
+   */
+  exitByCar?: {
+    /**
+     * What he says when the objective clears — a thought id
+     * (`content/thoughts.yaml`), and the only line in the game that is an
+     * instruction. Omitted leaves the beat silent, which on a venue with no
+     * splash means a cleared floor and nothing telling the player the run is
+     * still on; author one.
+     */
+    thought?: string;
+  };
+  /**
    * THE WAY ONWARD FROM HERE IS A RIFT PORTAL — so crossing it teaches the
    * garage's seam the road (`Character.riftRoads`, read by a `reached` travel
    * door). Authored on the two venues whose exit is a tear: MARS, where THE

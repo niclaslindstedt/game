@@ -70,6 +70,7 @@ import {
   stepOpeningStrike,
   stepPlaceThoughts,
   stepSightThoughts,
+  startPlayerThought,
 } from "../story.ts";
 import type { GameInput, GameState, Player, ViewRect } from "../types/index.ts";
 import { stepEnemies } from "./enemies.ts";
@@ -544,6 +545,26 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
       // splash behind it) sit on steady ground.
       state.quakeMs = 0;
       state.events.push({ type: "victory" });
+      // …AND ON A VENUE WHOSE WAY OUT IS THE CAR, THAT EVENT IS THE WHOLE OF
+      // THE ENDING (`LevelDef.exitByCar`). Everything the win owes has just
+      // happened — the clear is banked off this event, the next venue unlocks,
+      // the campaign total accrues — and there is deliberately no phase change
+      // behind it: the field stays live with the objective cleared, which is
+      // precisely `staying` (the same latch the victory menu's STAY sets, so
+      // the countdown cannot re-arm and the boss corpse is left standing). What
+      // the player gets instead of a splash is a LINE telling him where to go,
+      // and a car that has just become a door (`carIsWayOut`).
+      //
+      // AHEAD OF THE FAREWELL AND THE EPILOGUE, because both of those are
+      // black-screen scenes that hand over to the splash this venue does not
+      // have — a level cannot sensibly author an outro AND leave by the car.
+      const exit = runLevelDef(state).exitByCar;
+      if (exit) {
+        state.staying = true;
+        state.victoryCountdownMs = null;
+        if (exit.thought) startPlayerThought(state, exit.thought);
+        return;
+      }
       // A level that ships an outro reads its epilogue before the splash:
       // the `outro` phase mirrors the intro's black-screen pages
       // (advanceOutro turns them; past the last page comes `victory`). A

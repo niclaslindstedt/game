@@ -95,6 +95,7 @@ import { createRng } from "@game/lib/rng.ts";
 import { clamp } from "@game/lib/vec.ts";
 
 import {
+  applyCarDamage,
   applyCarPedals,
   applyCarWheel,
   CAR,
@@ -345,6 +346,13 @@ export function createDrive(params: DriveParams): DriveState {
   // (`entryPx`); what the wagon is doing under that is a steady cruise, so it
   // comes into frame from behind at a pace that reads as being caught up with
   // rather than as arriving.
+  // …AND IT IS THE CAR HE HAS BEEN DRIVING ALL NIGHT, not a replacement. The
+  // dents, the shot wheels and the parts hanging off it come in on the
+  // parameters (`DriveParams.car`) and go straight onto the fresh assembly, so
+  // a wagon that limped into GOODCO's car park is the wagon that limps out of
+  // it — and a RESTART after a breakdown rebuilds the same leg from the same
+  // parameters, which means the same car it began with rather than a new one.
+  if (params.car) applyCarDamage(car, params.car);
   car.speed = DRIVE.opening.entrySpeedPx;
   car.driver = 0;
   const trafficMarks = resetTrafficMarks(params);

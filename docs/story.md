@@ -126,15 +126,20 @@ clock, the other drivers or the council's lamp standards. Never the people. It
 is the FIRST thing he says at that end — before he has looked up at the
 building, before a word about the job he came to do — because the drive is
 still in his hands and the forty people he went through are already gone.
-**He drives it home again the same way** with the part on the passenger seat,
-and on the way back he does not have the opinion any more — he has stopped
-thinking about them entirely, which is worse than the line it replaces.
+**The car keeps the evidence and he does not look at it.** Whatever the road did
+to it comes onto the staff lot with him — the panels bent where he hit somebody,
+the paint wearing what landed on it — and it is still on the wagon when he walks
+back out to it, and still on it on his own drive at the end of the night. He
+never mentions that either. **He drives it home again the same way** with the
+part on the passenger seat, and on the way back he does not have the opinion any
+more — he has stopped thinking about them entirely, which is worse than the line
+it replaces.
 
 ## Level 1 — GOODCO HQ
 
-He arrives on the STAFF LOT with a wall in front of him and no key: his badge
-was taken off him years ago. So he waits for the night shift to clock on and
-walks in on somebody else's second and a half. Inside it is past midnight with
+He parks on the STAFF LOT and gets out with a wall in front of him and no key:
+his badge was taken off him years ago. So he waits for the night shift to clock
+on and walks in on somebody else's second and a half. Inside it is past midnight with
 every desk manned, and the floor is building spaceships in the dark. A **LAB
 SCIENTIST** he ate lunch with for six years breaks from the crowd and hits him.
 He does not hit back. He is hit again, and again, and only then does he answer —
@@ -159,6 +164,10 @@ one man, **THE FOUNDER**, the richest alive, so nobody can ever catch him. The
 boss is **PAYLOAD-1**, a grinning robotic Shiba booting up in the last bay — the
 machine's first body — which confirms Ada went up from Pad 2 an hour ago, drops
 a PLASMA CUTTER, and warns that you cannot kill a coin, only its chassis.
+**Nothing congratulates him when it stops moving.** There is no way off this
+floor but the one he came in by: he says he needs to get back to his car, walks
+the whole building back out through the gate, crosses the lot to the wagon, and
+drives — because the part is no use here and the ship it goes into is at home.
 **THE MERCHANT** works this floor as a vending-machine restocker. **Ada's Trail**
 starts by those machines: a crushed can of her soda, still cold. Two people are
 not fighting anybody — **PRIYA NAIR**, an unpaid intern still logging a line that

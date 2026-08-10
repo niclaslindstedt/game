@@ -355,6 +355,12 @@ _First SUCCESSOR sighted._
 - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
 - AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
 
+_PAYLOAD-1 down — the last beat of the level, and the only one that is an
+instruction. Nothing congratulates him and there is no button: the way off this
+floor is the way he came in, so he says where he is going and goes._
+
+- SHE WENT UP AN HOUR AGO AND I'M STANDING IN A FACTORY. THE SHIP'S AT HOME. I NEED TO GET BACK TO MY CAR.
+
 ### The opening strike — three blows, and he only answers the third
 
 _His weapon is holstered until this lands. A LAB SCIENTIST he ate lunch with for

@@ -50,6 +50,7 @@ import { anyZoneContains } from "./zones.ts";
 import {
   CAR_FIX,
   type CarDetachable,
+  type CarPanelId,
   type CarVehicle,
   type GameInput,
   type GameState,
@@ -234,6 +235,16 @@ export const CAR = {
    * (`departRadius` of its center, once open). A road wins over both. */
   departDistance: 150,
   departRadius: 30,
+  /**
+   * HOW FAST A CAR PULLS AWAY when the DEPARTURE is booked by boarding rather
+   * than by driving (`leaveByCar` — an `exitByCar` venue). Half the bay's top
+   * end: enough that the wagon visibly moves off under the dim instead of
+   * sitting there while the picture goes dark, gentle enough that it reads as
+   * pulling out of a bay rather than as being fired out of one. It is also
+   * deliberately UNDER `roadkillSpeed`, so a departure can never run somebody
+   * over on the way past — the drive-out is where that hazard belongs.
+   */
+  pullAwayPx: 40,
   /** How far out a DRIVEN car trips the garage door — like a real opener,
    * well before the walking hero's own trigger (DOORS.openRadius), so the
    * roll-up has finished by the time the bumper reaches the threshold. */
@@ -357,6 +368,85 @@ export function createCar(pos: Vec2, heading: number): CarVehicle {
     dangle: { doors: 0, hood: 0, bumper: 0, roof: 0 },
     dangleVel: { doors: 0, hood: 0, bumper: 0, roof: 0 },
   };
+}
+
+/**
+ * WHAT THE ROAD DID TO THE WAGON, AS A THING THAT TRAVELS — the bent panels,
+ * the ruined wheels, the parts working free, and the overall ladder the three
+ * of them summarize.
+ *
+ * IT EXISTS BECAUSE THE CAR OUTLIVES EVERY OBJECT THAT HOLDS IT. A leg of the
+ * road is a `DriveState`, the lot he parks on is a `GameState`, the leg home is
+ * a second `DriveState` and his own drive is a third `GameState` — four objects
+ * over one night, and one car. So the damage is lifted off whichever of them
+ * has it and handed to the next as a parameter (`DriveParams.car`,
+ * `RunParams.car`), which is the same rule everything else about a run obeys:
+ * anything settled before the first tick is a parameter, never a mutation
+ * afterwards.
+ *
+ * WHAT IS NOT IN HERE IS THE BLOOD. Where a body landed on the paint is a FILM
+ * the app lays over the panel art (`pwa/src/game/drive-screen/car-soak.ts`) and
+ * the engine has never known the car can get dirty; it rides beside this on the
+ * app's own side of the same two seams. The dents are simulation, the mess is
+ * presentation, and they are carried apart for that reason rather than by
+ * accident.
+ *
+ * DELIBERATELY NOT THE WHOLE CAR. The springs, the rack, the roll angle and the
+ * dangle oscillators are all where-it-happens-to-be-this-tick state that settles
+ * on its own, and carrying them across would hand the next leg a body
+ * mid-bounce.
+ */
+export type CarDamage = {
+  panels: Record<CarPanelId, number>;
+  wheelStates: [number, number];
+  fixes: Record<CarDetachable, number>;
+  wear: number;
+};
+
+/** Lift the condition off a car — what {@link applyCarDamage} puts back. */
+export function readCarDamage(car: CarVehicle): CarDamage {
+  return {
+    panels: { ...car.panels },
+    wheelStates: [car.wheelStates[0], car.wheelStates[1]],
+    fixes: { ...car.fixes },
+    wear: car.wear,
+  };
+}
+
+/**
+ * …and put it back on the next car to stand for the same wagon. Everything
+ * unnamed is left exactly as `createCar` minted it, so a partial record (an old
+ * save, a wire frame from a build that knew fewer panels) lands as a
+ * factory-straight car rather than as an undefined damage rung nothing has a
+ * sprite for.
+ */
+export function applyCarDamage(car: CarVehicle, damage: CarDamage): void {
+  for (const panel of CAR.panels) {
+    const rung = damage.panels?.[panel];
+    if (typeof rung === "number") {
+      car.panels[panel] = Math.max(0, Math.min(3, Math.round(rung)));
+    }
+  }
+  for (const axle of [0, 1] as const) {
+    const wheel = damage.wheelStates?.[axle];
+    if (typeof wheel === "number") {
+      car.wheelStates[axle] = Math.max(0, Math.min(3, Math.round(wheel)));
+      // A wheel that is GONE has no spring left to it — the corner sits on the
+      // bump stop, exactly as `detachWheel` leaves it. Without this the next
+      // leg opens with the body level on an axle that is not there.
+      if (car.wheelStates[axle] === 3) {
+        car.suspension[axle] = CAR.maxCompress;
+        car.suspensionVel[axle] = 0;
+      }
+    }
+  }
+  for (const part of CAR.detachables) {
+    const fix = damage.fixes?.[part];
+    if (typeof fix === "number") {
+      car.fixes[part] = Math.max(0, Math.min(CAR_FIX.gone, Math.round(fix)));
+    }
+  }
+  if (typeof damage.wear === "number") car.wear = Math.max(0, damage.wear);
 }
 
 function createShip(pos: Vec2): ShipVehicle {
@@ -564,6 +654,7 @@ export function detachWheel(
  * so the autopilot's nav grid hears about the opened floor.
  */
 export function enterCar(state: GameState, hero: Player): boolean {
+  if (!carIsWayOut(state)) return false;
   for (const vehicle of state.vehicles) {
     if (vehicle.kind !== "car" || vehicle.driver !== null) continue;
     const d = Math.hypot(
@@ -584,9 +675,72 @@ export function enterCar(state: GameState, hero: Player): boolean {
       type: "carStarted",
       pos: { x: vehicle.pos.x, y: vehicle.pos.y },
     });
+    // …AND ON A VENUE WHOSE WAY OUT IS THE CAR, GETTING IN IS LEAVING.
+    leaveByCar(state, vehicle);
     return true;
   }
   return false;
+}
+
+/**
+ * IS THE CAR THE WAY OFF THIS VENUE RIGHT NOW?
+ *
+ * Three surfaces read it and they must never disagree: the "you can get in
+ * this" mark over the roof (pwa/src/game/render/vehicles.ts), the tap that
+ * boards it, and {@link enterCar} itself — which re-checks, because the app's
+ * answer is a hint and the run's is the fact.
+ *
+ * Two answers, and the LEVEL decides which it gets:
+ *
+ *   A HUB'S CAR IS ALWAYS THE WAY OUT. Home is a place you leave; the wagon
+ *   sits in the bay with its door unlocked from the first frame and taking it
+ *   IS the campaign's first move.
+ *   AN `exitByCar` VENUE'S OPENS WHEN THE VENUE IS OVER. GOODCO's lot is where
+ *   he parked, not where he is going: for the whole mission that car is a piece
+ *   of the scenery he happens to own, and it becomes a door the moment
+ *   PAYLOAD-1 stops moving. `staying` is the fact behind that — on this venue
+ *   it is not the player's STAY choice but the objective having cleared with
+ *   the field deliberately left live (`step/index.ts`), which is the same
+ *   sentence: the win is banked and he is still standing on the floor.
+ *
+ * Either way a level with no `car` travel door has no destination to name, and
+ * a car nobody can leave in is furniture.
+ */
+export function carIsWayOut(state: GameState): boolean {
+  const def = runLevelDef(state);
+  const door = (def.travelDoors ?? []).find((d) => d.id === "car");
+  if (!door || door.to.length === 0) return false;
+  return def.exitByCar ? state.staying : true;
+}
+
+/**
+ * THE TRIP HOME, BOOKED BY THE DOOR SHUTTING — the `exitByCar` departure, and a
+ * no-op on every other venue.
+ *
+ * A hub's car is DRIVEN out: there is a roll-up to open, a driveway to cross
+ * and a road at the end of it, and the latch is touching the tarmac
+ * (`driveCar`). A car park has none of that. The lot is where the mission
+ * BEGAN, its edges are the carve's business rather than the mission's, and
+ * "drive around a car park until the game agrees you have left" is a puzzle
+ * nobody set — so on a venue whose way out is the car, the boarding is the
+ * departure and the driving is the minigame on the far side of it.
+ *
+ * What it hands over is exactly what the roll-up hands over: the DIM
+ * (`GameState.departure` — the picture goes dark over the car, and the trip
+ * books when the clock runs out), with a car pulling away under it rather than
+ * standing still, because a departure nothing moves during reads as a freeze.
+ */
+function leaveByCar(state: GameState, car: CarVehicle): void {
+  const def = runLevelDef(state);
+  if (!def.exitByCar || car.departed) return;
+  const to = def.travelDoors?.find((d) => d.id === "car")?.to[0];
+  if (!to) return;
+  car.departed = true;
+  car.speed = CAR.pullAwayPx;
+  state.departure = { ms: 0, to, booked: false };
+  // Nobody watches a handover through their own bag — the same drop the
+  // roll-up's departure makes, and for the same two reasons (see `driveCar`).
+  for (const p of state.players) p.screen = undefined;
 }
 
 /**
