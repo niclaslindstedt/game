@@ -35,15 +35,46 @@ The build is a bare chromatic bass climb (D–E♭–E–F–F♯–G–G♯–A
 under an accelerating snare roll, which is the cheapest way to make eight bars
 feel like an ascent.
 
-## Known faults in the shipped catalogue
+## The catalogue's decisions, one line each (2026-08)
 
-Found by engraving the scores (`make sheet`) the first time that was possible,
-and left standing rather than quietly "fixed" — they are judgements somebody
-should make deliberately:
+The whole soundtrack was rewritten in one pass with the rule above applied
+deliberately: **every track gets two or three decisions and NO TWO TRACKS SHARE
+ONE.** That constraint is the reason the set sounds like nine places rather than
+nine tempos, and it is the first thing to check when adding a tenth.
 
-- **`hq_lockdown` A never breathes.** 48 onsets over 8 bars, largest gap one
-  beat. It reads as a solid hedge and cannot land a hook.
-- **`hq_lockdown`'s `riff` sits inside its `lead`.** G4–C♯5 against D4–F5 —
-  the two masking voices are the two carrying the tune.
-- **`overdue`'s `pulse` and `bass` overlap by ten semitones** in every section.
-  Deliberate thickening, but it is why the low end is busy.
+| Track | The decisions |
+| --- | --- |
+| `title` MOONLIGHT VIGIL | Kept. Pads RE-STRUCK and staggered (they were whole notes = plucks); the tune lifted an octave clear of the arp and pad it was buried in. |
+| `bench_light` BENCH LIGHT | A borrowed minor-iv once a phrase, never put back · the phrase is ONE BAR SHORT (bar 8 is empty) · no kit, only a wooden knock twice in four bars. |
+| `hq_lockdown` NIGHT SHIFT | Lobby muzak played straight · the floor SINKS — bars 5–7 are bars 1–3 a semitone down · a photocopier every 3 sixteenths against a bar of 16. |
+| `overdue` OVERDUE | Unchanged in character: Phrygian i–♭II lurch · a minor-second siren that is a chord tone in both chords · a clock in every pattern. |
+| `hour_behind` AN HOUR BEHIND | The REPLY IS MISSING — two bars of tune, two bars of hole · the clock deleted, a sliding sonar ping in its place · a fall that never cadences and ACCELERATES in the build. |
+| `regolith_ride` QUIET SEA | One drone note, unmoving, re-coloured by everything under it · slow ground, fast surface · a hymn ending a whole tone under the drone. |
+| `red_dust` THE TITHE | A sincere brochure · a tithe drum every 6 sixteenths, agreeing with the bar once every three · a chromatic fall where each cadence should be. |
+| `rift_drift` NO NORTH | NO TONIC (augmented and suspended only) · two falls at different rates so one is always mid-descent · every strike at 3+3+3+3+4. |
+| `long_noon` THE LONG NOON | Unchanged. Dorian sixth, bare fifths, a tremolo that never tires. |
+| `perpetuity` PERPETUITY | A PASSACAGLIA — one four-bar ground bass, never transposed, never absent · gilded muzak on top that has not noticed · a lock on every downbeat. |
+
+Two structural devices worth reusing, both cheap and both audible in one pass:
+**a whole section transposed a semitone** (the building sinking) and **a drum on
+a cycle that does not divide the bar** (the copier at 3, the tithe at 6). Write
+those as a 4-bar grid so they restart cleanly — 64 steps divides every pattern
+length in the catalogue, and a longhand line that does not divide is a build
+error rather than a musical one.
+
+## Known faults, and the two that got fixed
+
+Found by engraving the scores (`make sheet`) the first time that was possible.
+The first two below were fixed by the rewrite; the third was fixed on its own:
+
+- ~~`hq_lockdown` A never breathes~~ — rewritten; the tune now rests every
+  fourth bar and the section has a hook.
+- ~~`hq_lockdown`'s `riff` sits inside its `lead`~~ — that voice is gone; the
+  strip-light hum sits an octave above the bass and out of the tune.
+- ~~`overdue`'s `pulse` and `bass` overlap by ten semitones~~ — the engine is
+  `chug 4` now, an octave over the gallop, and the low end is legible.
+
+Still standing, deliberately: `long_noon`'s tremolo, piano and trumpet share a
+crowded mid band. Every register move that clears one pair collides another,
+and the density is the point ("nothing here is played by anything that gets
+tired"). Leave it unless somebody re-voices all three at once.

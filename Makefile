@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet song unsong audition mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet song unsong audition album mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -179,6 +179,15 @@ unsong:
 # `make audition ARGS="long_noon"`
 audition:
 	node scripts/song-artifact.mjs $(ARGS)
+
+# HEAR THE WHOLE SOUNDTRACK — every score on ONE page, with a picker, so the
+# catalogue can be judged as a SET rather than a track at a time. Whether two
+# levels sound like two PLACES is the question a single track's page cannot
+# answer. `make album` is the whole catalogue in catalogue order; naming ids
+# sets the running order instead:
+# `make album ARGS="title bench_light overdue hq_lockdown"`
+album:
+	node scripts/song-artifact.mjs --album $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

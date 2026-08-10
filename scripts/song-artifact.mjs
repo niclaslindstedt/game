@@ -6,6 +6,9 @@
 //   node scripts/song-artifact.mjs long_noon
 //   → pwa/assets-preview/music_long_noon.html   (publish it as an artifact)
 //
+//   node scripts/song-artifact.mjs --album
+//   → pwa/assets-preview/music_album.html       (EVERY track, one page)
+//
 // WHY A PAGE AND NOT AN MP3. The obvious way to let somebody hear a track is to
 // render it to a file, and the obvious way is the wrong one: rendering means
 // reimplementing the synth offline, which is a SECOND implementation of the
@@ -16,10 +19,24 @@
 // It also weighs a few tens of KB instead of a few MB, and it can do things an
 // audio file cannot: mute a voice, solo it, jump to a section.
 //
-// A WAV BUTTON IS THERE ANYWAY, because sometimes you want the file. It renders
-// in the listener's own browser through an `OfflineAudioContext` driving those
-// same modules, so it is a recording of the real thing rather than a second
-// opinion about it.
+// WHY AN ALBUM MODE. A soundtrack is judged as a SET — whether the moon and
+// Mars sound like two places rather than two tempos is a question no single
+// track's page can answer, because answering it means switching between them
+// inside a few seconds. One page holding every score, with one transport and a
+// picker, is the only way anybody reviews a whole catalogue in one sitting.
+// The sheets are held as strings and mounted one at a time, so a nine-track
+// page carries nine engravings without asking the browser to lay out nine
+// thousand staves.
+//
+// AND A RENDERED TAPE, WHICH IS THE PATH THAT WORKS ON A PHONE. WebAudio is
+// where every mobile audio policy bites — on iOS it defaults to the AMBIENT
+// audio session, which the hardware ring/silent switch mutes outright, so a
+// page can be doing everything right, at full volume, and play nothing at all.
+// The page asks for the playback session (`navigator.audioSession`) before it
+// builds a context, and offers a RENDER button that drives the same shipped
+// modules through an `OfflineAudioContext` and hands the result to an `<audio>`
+// element — ordinary media, governed by the volume rocker and by nothing else.
+// The ↓ WAV button is the same render, downloaded instead of played.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -35,9 +52,23 @@ const esc = (s) =>
 const args = process.argv.slice(2);
 const ids = args.filter((a) => !a.startsWith("--"));
 const noSheet = args.includes("--no-sheet");
+const album = args.includes("--album");
+const outName =
+  args.find((a) => a.startsWith("--out="))?.slice(6) ??
+  (album ? "album" : null);
+const albumTitle =
+  args.find((a) => a.startsWith("--title="))?.slice(8) ?? "THE SOUNDTRACK";
 
 const { entries } = loadMusic();
-const wanted = entries.filter((e) => ids.includes(e.id));
+// An album with no ids is the whole catalogue — which is the usual thing to
+// want, and the one listing nobody should have to retype as it grows. WITH ids
+// the ARGUMENT order is the running order: an album is listened to front to
+// back, so "moon then Mars then the rift" has to be sayable, and sorting the
+// picker alphabetically would quietly refuse it.
+const wanted =
+  ids.length === 0 && album
+    ? entries
+    : ids.map((id) => entries.find((e) => e.id === id)).filter(Boolean);
 if (wanted.length === 0) {
   console.error(
     `name a track. this build has: ${entries.map((e) => e.id).join(", ")}`,
@@ -79,7 +110,8 @@ try {
 const outDir = path.join(root, "pwa", "assets-preview");
 mkdirSync(outDir, { recursive: true });
 
-for (const { id, doc } of wanted) {
+/** One entry of the catalogue, cooked and engraved, ready for the page. */
+async function prepare({ id, doc }) {
   const track = cookTrack(doc);
   const sheet = noSheet
     ? null
@@ -88,17 +120,41 @@ for (const { id, doc } of wanted) {
         subtitle: (doc.description ?? "").trim().split("\n")[0],
         barsPerSystem: 4,
       });
-  const html = page({ id, doc, track, bundle, sheet });
-  const out = path.join(outDir, `music_${id}.html`);
+  return { id, doc, track, sheet: sheet?.svg ?? null };
+}
+
+const prepared = [];
+for (const item of wanted) prepared.push(await prepare(item));
+
+if (album) {
+  write(`music_${outName}.html`, page(prepared, { heading: albumTitle }));
+} else {
+  for (const item of prepared) write(`music_${item.id}.html`, page([item]));
+}
+
+function write(name, html) {
+  const out = path.join(outDir, name);
   writeFileSync(out, html);
   console.log(
     `wrote ${path.relative(root, out)} (${(html.length / 1024).toFixed(0)} KB)`,
   );
 }
 
-function page({ id, doc, track, bundle, sheet }) {
-  const voices = Object.keys(track.instruments);
-  return `<title>${esc(doc.name ?? id)}</title>
+/**
+ * The page. ONE function for both modes: an album is the same deck with more
+ * than one thing in the picker, so a single track is not a special case and
+ * cannot drift away from the album's behaviour.
+ */
+function page(items, { heading } = {}) {
+  const many = items.length > 1;
+  const title = heading ?? items[0].doc.name ?? items[0].id;
+  const data = items.map(({ id, doc, track }) => ({
+    id,
+    name: doc.name ?? id,
+    description: String(doc.description ?? "").trim(),
+    track,
+  }));
+  return `<title>${esc(title)}</title>
 <style>
   :root {
     --paper: #fbfaf6; --ink: #14100a; --dim: #6b5b45; --rule: #d8d2c4;
@@ -121,10 +177,25 @@ function page({ id, doc, track, bundle, sheet }) {
   }
   main { max-width: 62rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
   h1 { font-size: clamp(1.9rem, 6vw, 3rem); margin: 0; letter-spacing: .02em; }
+  h2 { font-size: clamp(1.3rem, 4vw, 1.9rem); margin: 0; letter-spacing: .02em; }
   .sub { color: var(--dim); font-style: italic; margin: .35rem 0 0; }
   .about { color: var(--dim); max-width: 46rem; margin: 1.25rem 0 0; }
+  .tracks {
+    display: flex; flex-wrap: wrap; gap: .45rem; margin: 1.5rem 0 0;
+  }
+  .t {
+    font: inherit; font-size: .9rem; cursor: pointer; text-align: left;
+    color: var(--ink); background: var(--paper); border: 1px solid var(--rule);
+    border-radius: .35rem; padding: .4rem .8rem;
+  }
+  .t:hover { border-color: var(--hot); }
+  .t[aria-current="true"] {
+    background: var(--hot); border-color: var(--hot); color: #fff8ef;
+  }
+  .t small { display: block; font-size: .74rem; opacity: .72;
+    font-family: Helvetica, "DejaVu Sans", sans-serif; }
   .deck {
-    position: sticky; top: 0; z-index: 5; margin: 1.75rem 0 0;
+    position: sticky; top: 0; z-index: 5; margin: 1.5rem 0 0;
     background: var(--panel); border: 1px solid var(--rule); border-radius: .6rem;
     padding: 1rem 1.1rem;
   }
@@ -147,106 +218,243 @@ function page({ id, doc, track, bundle, sheet }) {
     font-family: Helvetica, "DejaVu Sans", sans-serif; }
   .v[aria-pressed="false"] { opacity: .38; text-decoration: line-through; }
   .note { color: var(--dim); font-size: .85rem; margin: .8rem 0 0; }
-  figure { margin: 2.5rem 0 0; }
+  audio { display: block; width: 100%; margin-top: .85rem; }
+  audio[hidden] { display: none; }
+  .now { margin: 2.25rem 0 0; }
+  figure { margin: 1.5rem 0 0; }
   figure svg { width: 100%; height: auto; display: block;
     border: 1px solid var(--rule); border-radius: .4rem; background: #fbfaf6; }
   .scroll { overflow-x: auto; }
 </style>
 <main>
-  <h1>${esc(doc.name ?? id)}</h1>
-  <p class="sub">${esc(id)} · ${track.bpm} bpm · ${Object.keys(track.patterns).length} sections · ${track.order.length} in the loop</p>
-  ${doc.description ? `<p class="about">${esc(String(doc.description).trim())}</p>` : ""}
+  <h1>${esc(title)}</h1>
+  <p class="sub" id="deckline">—</p>
+  ${many ? `<div class="tracks" id="tracks"></div>` : ""}
 
   <div class="deck">
     <div class="row">
       <button id="play" class="go">▶ Play</button>
       <button id="stop">■ Stop</button>
+      ${many ? `<button id="prev">↤ Prev</button><button id="next">Next ↦</button>` : ""}
+      <button id="render">♪ Render to player</button>
       <button id="wav">↓ WAV</button>
       <span class="clock" id="clock">—</span>
     </div>
+    <audio id="tape" controls playsinline preload="none" hidden></audio>
     <div class="voices" id="voices"><b>voices</b></div>
     <p class="note" id="note">Played by the game's own synth, in this page — not a recording.</p>
   </div>
 
-  ${sheet ? `<figure class="scroll">${sheet.svg}</figure>` : ""}
+  <section class="now">
+    ${many ? `<h2 id="trackname"></h2>` : ""}
+    <p class="about" id="about"></p>
+    <figure class="scroll" id="sheet"></figure>
+  </section>
 </main>
 <script>${bundle}</script>
 <script>
-const TRACK = ${JSON.stringify(track)};
-const VOICES = ${JSON.stringify(voices)};
-const off = new Set();
+const TRACKS = ${JSON.stringify(data)};
+const SHEETS = ${JSON.stringify(Object.fromEntries(items.map((i) => [i.id, i.sheet])))};
+const MANY = ${many};
+
+/** Which track the deck is pointed at. Everything below reads this. */
+let cur = 0;
+/** Muted voice names, per track id — a mute survives switching away and back. */
+const muted = new Map(TRACKS.map((t) => [t.id, new Set()]));
 const synth = GameAudio.createSynth();
 let player = null;
 let started = 0;
 let timer = null;
+let playing = false;
 
-/** The track minus whatever is muted — the player reads its voices at play(),
- * so a mute is a fresh track rather than a runtime switch. */
+const track = () => TRACKS[cur].track;
+const el = (id) => document.getElementById(id);
+
+/** The current track minus whatever is muted — the player reads its voices at
+ * play(), so a mute is a fresh track rather than a runtime switch. */
 function live() {
+  const t = track();
+  const off = muted.get(TRACKS[cur].id);
   const patterns = {};
-  for (const [name, pattern] of Object.entries(TRACK.patterns)) {
+  for (const [name, pattern] of Object.entries(t.patterns)) {
     patterns[name] = Object.fromEntries(
       Object.entries(pattern).filter(([v]) => !off.has(v)),
     );
   }
   const instruments = Object.fromEntries(
-    Object.entries(TRACK.instruments).filter(([v]) => !off.has(v)),
+    Object.entries(t.instruments).filter(([v]) => !off.has(v)),
   );
-  return { ...TRACK, instruments, patterns };
+  return { ...t, instruments, patterns };
 }
 
-const loopSeconds = () => {
-  const flat = GameAudio.flattenTrack(TRACK);
-  return (flat.totalSteps * 60) / (TRACK.bpm * TRACK.stepsPerBeat);
+const loopSeconds = (t) => {
+  const flat = GameAudio.flattenTrack(t);
+  return (flat.totalSteps * 60) / (t.bpm * t.stepsPerBeat);
 };
-const LOOP = loopSeconds();
 const mmss = (s) =>
   Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
 
-document.getElementById("play").onclick = () => {
+// ── THE PICKER ──────────────────────────────────────────────────────────────
+if (MANY) {
+  const box = el("tracks");
+  TRACKS.forEach((t, i) => {
+    const b = document.createElement("button");
+    b.className = "t";
+    b.innerHTML =
+      t.name.replace(/[&<>]/g, "") +
+      "<small>" + t.id + " · " + t.track.bpm + " bpm</small>";
+    b.onclick = () => select(i, playing);
+    box.appendChild(b);
+  });
+  el("prev").onclick = () => select((cur - 1 + TRACKS.length) % TRACKS.length, playing);
+  el("next").onclick = () => select((cur + 1) % TRACKS.length, playing);
+}
+
+/** Point the deck at a track: repaint the picker, the blurb, the voice chips
+ * and the sheet, and carry on playing if it already was. */
+function select(i, keepPlaying) {
+  cur = i;
+  const t = TRACKS[i];
+  if (MANY) {
+    [...el("tracks").children].forEach((b, n) =>
+      b.setAttribute("aria-current", String(n === i)),
+    );
+    el("trackname").textContent = t.name;
+  }
+  el("deckline").textContent =
+    t.name + " · " + t.id + " · " + t.track.bpm + " bpm · " +
+    Object.keys(t.track.patterns).length + " sections · " +
+    t.track.order.length + " in the loop · " + mmss(loopSeconds(t.track));
+  el("about").textContent = t.description;
+  el("sheet").innerHTML = SHEETS[t.id] ?? "";
+  paintVoices();
+  // The tape holds a render of whatever WAS selected, so it goes with the
+  // selection rather than lingering as a player labelled with the wrong track.
+  const tapeEl = el("tape");
+  tapeEl.pause();
+  tapeEl.hidden = true;
+  if (tapeEl.src) URL.revokeObjectURL(tapeEl.src);
+  tapeEl.removeAttribute("src");
+  if (keepPlaying) start();
+  else stop();
+}
+
+function paintVoices() {
+  const box = el("voices");
+  box.innerHTML = "<b>voices</b>";
+  const off = muted.get(TRACKS[cur].id);
+  for (const name of Object.keys(track().instruments)) {
+    const b = document.createElement("button");
+    b.className = "v";
+    b.textContent = name;
+    b.setAttribute("aria-pressed", String(!off.has(name)));
+    b.onclick = () => {
+      const on = b.getAttribute("aria-pressed") === "true";
+      b.setAttribute("aria-pressed", String(!on));
+      if (on) off.add(name); else off.delete(name);
+      if (playing) start();
+    };
+    box.appendChild(b);
+  }
+}
+
+// ── THE TRANSPORT ───────────────────────────────────────────────────────────
+/**
+ * ASK FOR THE MEDIA CHANNEL BEFORE THE FIRST NOTE.
+ *
+ * On iOS, WebAudio defaults to the AMBIENT audio session, which the hardware
+ * ring/silent switch mutes outright — so a page can be doing everything right,
+ * the volume can be up, and the phone plays nothing. navigator.audioSession
+ * (Safari 16.4+) is the one thing that moves it to the playback channel, where
+ * the volume rocker governs and the mute switch does not. It has to be set
+ * BEFORE the AudioContext is built, which is why it is here and not in the
+ * click handler's tail. Everything else ignores the property.
+ */
+try {
+  if (navigator.audioSession) navigator.audioSession.type = "playback";
+} catch {}
+
+function start() {
   synth.unlock();
   player?.stop();
   player = GameAudio.createChiptunePlayer(synth);
   player.play(live());
+  playing = true;
   started = performance.now();
+  const loop = loopSeconds(track());
   clearInterval(timer);
   timer = setInterval(() => {
-    const at = ((performance.now() - started) / 1000) % LOOP;
-    document.getElementById("clock").textContent =
-      mmss(at) + " / " + mmss(LOOP);
+    const at = ((performance.now() - started) / 1000) % loop;
+    el("clock").textContent = mmss(at) + " / " + mmss(loop);
   }, 200);
-};
-document.getElementById("stop").onclick = () => {
-  player?.stop();
-  clearInterval(timer);
-  document.getElementById("clock").textContent = "—";
-};
-
-const box = document.getElementById("voices");
-for (const name of VOICES) {
-  const b = document.createElement("button");
-  b.className = "v";
-  b.textContent = name;
-  b.setAttribute("aria-pressed", "true");
-  b.onclick = () => {
-    const on = b.getAttribute("aria-pressed") === "true";
-    b.setAttribute("aria-pressed", String(!on));
-    if (on) off.add(name); else off.delete(name);
-    if (player) document.getElementById("play").click();
-  };
-  box.appendChild(b);
+  // SAY SO WHEN THE SPEAKER IS NOT GOING TO COOPERATE. A live WebAudio graph
+  // that is scheduling happily into a suspended or unavailable context is
+  // silence with no symptom, and the reader's only clue is that nothing
+  // happened — so name it, and point at the button that always works.
+  setTimeout(() => {
+    const state = synth.now?.() === null ? "locked" : "running";
+    el("note").textContent =
+      state === "running"
+        ? "Played by the game's own synth, in this page — not a recording."
+        : "This browser will not open an audio context here. Use ♪ Render to player — it renders the same synth offline and plays it back as a normal audio track.";
+  }, 300);
 }
+function stop() {
+  player?.stop();
+  playing = false;
+  clearInterval(timer);
+  el("clock").textContent = "—";
+}
+el("play").onclick = () => start();
+el("stop").onclick = () => stop();
+
+// ── THE TAPE — the path that works on a phone ───────────────────────────────
+// The live player above is the real thing and is what a voice mute reaches, but
+// it is WebAudio, and WebAudio is where every mobile audio policy bites. An
+// <audio> element fed a rendered blob is the one playback path a phone treats
+// as ordinary media: it obeys the volume rocker, survives the lock screen, and
+// needs no gesture bookkeeping of its own. Same synth either way — the render
+// drives the shipped modules through an OfflineAudioContext.
+const tape = el("tape");
+el("render").onclick = async () => {
+  const note = el("note");
+  stop();
+  note.textContent = "rendering the whole loop with the game's synth…";
+  try {
+    const blob = await renderWav();
+    tape.src = URL.createObjectURL(blob);
+    tape.hidden = false;
+    note.textContent =
+      TRACKS[cur].name + " — rendered here, by the game's own synth. Press play on the bar above.";
+    tape.play().catch(() => {});
+  } catch (err) {
+    note.textContent = "could not render in this browser: " + (err?.message ?? err);
+    console.error(err);
+  }
+};
 
 // ── THE FILE ────────────────────────────────────────────────────────────────
 // Rendered HERE rather than shipped: an OfflineAudioContext, the same synth
 // modules, and every note booked at an absolute time so nothing depends on a
 // scheduler running in real time.
-document.getElementById("wav").onclick = async () => {
-  const note = document.getElementById("note");
+el("wav").onclick = async () => {
+  const note = el("note");
   note.textContent = "rendering…";
   try {
-    const sr = 44100;
-    const ctx = new OfflineAudioContext(2, Math.ceil((LOOP + 2) * sr), sr);
+    download(await renderWav(), TRACKS[cur].id + ".wav");
+    note.textContent = "rendered in this browser, by the game's own synth.";
+  } catch (err) {
+    note.textContent = "could not render here — the live player above is the real thing anyway.";
+    console.error(err);
+  }
+};
+
+/** The current track (minus its mutes), rendered offline to a WAV blob. */
+async function renderWav() {
+  const t = track();
+  const sr = 44100;
+    const loop = loopSeconds(t);
+    const ctx = new OfflineAudioContext(2, Math.ceil((loop + 2) * sr), sr);
     // The synth builds its own context; hand it this one, reporting "running"
     // so it does not sit waiting for a gesture that an offline render has no
     // way to give it.
@@ -258,7 +466,7 @@ document.getElementById("wav").onclick = async () => {
     window.AudioContext = Real;
 
     const flat = GameAudio.flattenTrack(live());
-    const stepS = 60 / TRACK.bpm / TRACK.stepsPerBeat;
+    const stepS = 60 / t.bpm / t.stepsPerBeat;
     for (const { instrument, tokens } of flat.voices) {
       for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
@@ -279,14 +487,8 @@ document.getElementById("wav").onclick = async () => {
         }
       }
     }
-    const buf = await ctx.startRendering();
-    download(wav(buf), ${JSON.stringify(id)} + ".wav");
-    note.textContent = "rendered in this browser, by the game's own synth.";
-  } catch (err) {
-    note.textContent = "could not render here — the live player above is the real thing anyway.";
-    console.error(err);
-  }
-};
+  return wav(await ctx.startRendering());
+}
 
 const NOTES = { C: 0, "C#": 1, D: 2, "D#": 3, E: 4, F: 5, "F#": 6, G: 7, "G#": 8, A: 9, "A#": 10, B: 11 };
 function pitch(name) {
@@ -323,6 +525,8 @@ function download(blob, name) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
+
+select(0, false);
 </script>
 `;
 }

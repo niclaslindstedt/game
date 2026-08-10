@@ -1,0 +1,137 @@
+# PERPETUITY — THE BUNKER.
+#
+# The brief: the continuity-of-wealth vault. Marble, gold taps, canned caviar
+# to the ceiling, and the residents bragging about it in what they have not
+# worked out is a cell. They built the perfect escape from the machine and it
+# simply let them, drained every account on the way in and bolted the door.
+# Their personal bodyguards are its wardens. The hero reads the place as where
+# the rich hid; he is wrong, and turning that over is the level's job.
+#
+# THREE DECISIONS.
+#
+#   IT IS A PASSACAGLIA. A four-bar GROUND BASS — the lament tetrachord,
+#   C–B–B♭–A♭, walking down and starting again — runs unbroken through every
+#   pattern of the track, never transposed, never varied, never absent, not
+#   even in the breakdown. A passacaglia is a form that by construction cannot
+#   leave: whatever happens on top, the bottom is back at C in four bars. The
+#   ground is the room, and nothing above it has noticed.
+#
+#   THE MUZAK IS SINCERE. Major sevenths, a vibraphone, a plush swell, an easy
+#   tempo — the sound of a very good hotel, played at full confidence over a
+#   bassline that is a five-hundred-year-old symbol for grief. Neither half
+#   acknowledges the other. That IS the level.
+#
+#   THE LOCK. One dry metallic clank on the downbeat of every single bar. It is
+#   the quietest thing in the A section and the loudest thing in the breakdown,
+#   and nobody in the room hears it in either.
+#
+# Compile:  node scripts/song-import.mjs content/songs/perpetuity.song --sheet
+
+id     perpetuity
+title  PERPETUITY
+tempo  112
+about
+  A passacaglia in a vault. The lament tetrachord — C–B–B♭–A♭, down and down
+  and back to the top — runs unbroken under every bar of the track, never
+  transposed and never absent, because a passacaglia is a form that cannot
+  leave and the ground bass is the room. Over it sits genuinely warm hotel
+  muzak: a vibraphone, major sevenths, a plush swell, residents bragging in a
+  cell at full confidence. Neither half acknowledges the other. And on the
+  downbeat of every bar, quiet under the A section and alone in the breakdown,
+  a lock. Original melodies; nothing sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# The vibraphone in the lobby. Short, bright, drenched.
+voice vibes  sine vol=.03 gate=.45 attack=8 echo=.5
+# Gold: a thin detuned arpeggio, off to one side.
+voice harp   square vol=.011 gate=.3 detune=8 pan=.3 echo=.35
+# The plush. Swells twice a bar; never reaches above the vibes.
+voice swell  square vol=.0095 gate=.98 attack=380 detune=15 pan=-0.22 echo=.4
+# THE RESIDENTS. A lowpassed saw, and it only ever speaks about itself.
+voice brag   sawtooth vol=.016 gate=.5 lp=2000 pan=.15 echo=.2
+# THE GROUND. Four bars, written once, cycling under everything, for ever.
+voice ground triangle vol=.058 gate=.9
+
+# ── THE KIT ─────────────────────────────────────────────────────────────────
+drum thud    triangle vol=.05 gate=1 slide=.25 note=C2
+drum brush   noise vol=.0105 gate=.3 hp=5200 pan=.25
+# THE LOCK — one clank, downbeat, every bar, all track.
+drum lock    noise vol=.022 gate=.08 bp=1800 pan=-0.4
+
+# ── INTRO — the blast door, and the ground already walking ────────────────
+section intro
+  chords Cm | G7 | Cm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  swell  .*16 | .*16 | d#3*8 d#3*8 | c4*8 c4*8
+  harp   .*16 | .*16 | arp:4 | arp:4
+  lock   x...............
+
+# ── A — the hotel. Under it, the tetrachord ───────────────────────────────
+section a
+  chords Cm | G7 | Cm7 | Abmaj7 | Cm | G7 | Cm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  vibes  g4*4 c5*4 d#5*8 | d5*4 b4*4 g4*8 | a#4*4 c5*4 d#5*4 g5*4 | g5*8 d#5*8
+         c5*4 d#5*4 g5*8 | f5*4 d5*4 b4*8 | c5*4 d#5*4 a#4*8 | g#4*8 .*8
+  harp   arp 4
+  swell  d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+         d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+  thud   x.......x.......
+  brush  ..x...x...x...x.
+  lock   x...............
+
+# ── B — the bragging. Higher, louder, and the ground has not moved ────────
+section b
+  chords Cm7 | G7 | Ebmaj7 | Abmaj7 | Cm7 | G7 | Gm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  vibes  d#5*4 g5*4 a#5*8 | d6*4 b5*4 g5*8 | a#5*4 g5*4 d5*8 | c6*4 g#5*4 d#5*8
+         g5*4 a#5*4 d#6*8 | d6*4 f5*4 b5*8 | a#5*4 d5*4 g5*8 | g#5*8 g5*8
+  brag   c4*4 d#4*4 g4*8 | d4*4 f4*4 b3*8 | a#3*4 d4*4 g4*8 | c4*4 d#4*4 g#3*8
+         c4*4 d#4*4 g4*8 | d4*4 f4*4 b3*8 | a#3*4 d4*4 g4*8 | c4*4 d#4*4 g#3*8
+  harp   arp 4
+  swell  d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+         d#3*8 d#3*8 | d3*8 d3*8 | d3*8 d3*8 | c4*8 c4*8
+  thud   x.......x.......
+  brush  x.x.x.x.x.x.x.x.
+  lock   x...............
+
+# ── CELL — the muzak stops. The ground and the lock, which are the same
+#    fact stated twice ────────────────────────────────────────────────────
+section cell
+  chords Cm | G7 | Cm7 | Abmaj7 | Cm | G7 | Cm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  harp   .*16 | .*16 | .*16 | arp16:5
+         .*16 | .*16 | .*16 | arp16:5
+  vibes  .*16 | .*16 | .*16 | .*16
+         c5*8 .*8 | b4*8 .*8 | a#4*8 .*8 | g#4*8 .*8
+  lock   x...............
+
+# ── BUILD — the denial gets faster. The ground does not ───────────────────
+section build
+  chords Cm | G7 | Cm7 | Abmaj7 | Cm | G7 | Cm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  brag   chug 4
+  vibes  c5*16 | d5*16 | d#5*16 | g5*16
+         g#5*8 g5*8 | f5*8 d#5*8 | d5*4 d#5*4 f5*4 g5*4 | g#5*4 a#5*4 c6*4 d#6*4
+  harp   roll 5
+  swell  d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+  thud   x.......x.......
+  brush  ..x...x...x...x.|..x...x...x...x.|x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.
+         x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx|xxxxxxxxxxxxxxxx
+  lock   x...............
+
+# ── TURN — the hotel at full volume, an octave up, and back to C in four ──
+section turn
+  chords Cm | G7 | Cm7 | Abmaj7 | Cm | G7 | Cm7 | Abmaj7
+  ground c3*8 c3*8 | b2*8 b2*8 | a#2*8 a#2*8 | g#2*8 g#2*8
+  vibes  g5*4 c6*4 d#6*8 | d6*4 b5*4 g5*8 | a#5*4 c6*4 d#6*4 g6*4 | g6*8 d#6*8
+         c6*4 d#6*4 g6*8 | f6*4 d6*4 b5*8 | c6*4 d#6*4 a#5*8 | g#5*12 .*4
+  brag   c4*4 d#4*4 g4*8 | d4*4 f4*4 b3*8 | a#3*4 d4*4 g4*8 | c4*4 d#4*4 g#3*8
+         c4*4 d#4*4 g4*8 | d4*4 f4*4 b3*8 | a#3*4 d4*4 g4*8 | .*16
+  harp   arp 4
+  swell  d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+         d#3*8 d#3*8 | d3*8 d3*8 | d#3*8 d#3*8 | c4*8 c4*8
+  thud   x.......x...x...
+  brush  x.x.x.x.x.x.x.x.
+  lock   x...............
+
+order  intro a b a cell build b turn

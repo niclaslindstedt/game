@@ -1,0 +1,163 @@
+# OVERDUE — THE DRIVE, the way out to GOODCO.
+#
+# The road's outbound score, and the older half of a PAIR: AN HOUR BEHIND
+# (`content/songs/hour_behind.song`) is the same tarmac driven the other way,
+# after she has left the planet. This one is a PANIC rather than a chase — the
+# jacket has been answering from the campus for an hour and he is still in
+# traffic.
+#
+# THREE DECISIONS, unchanged, because they are what this track IS.
+#
+#   A MODE THAT REFUSES TO SETTLE — a Phrygian i–♭II lurch, Dm → E♭, up a
+#   semitone and back, the one move in the piece that never resolves.
+#
+#   ONE INTERVAL AS A SIGNATURE — a two-tone sawtooth SIREN wailing a minor
+#   second, A against A♯, which is a chord tone in BOTH of those chords. The
+#   emergency signal and the harmony are the same thing, so it never sounds
+#   pasted on.
+#
+#   THE CLOCK NEVER STOPS — a dry quarter-note tick in every single pattern
+#   including the breakdown, where it is the loudest thing left. He was late
+#   before he got in the car, and the one sound the arrangement never takes
+#   away is the one counting the time he does not have. (Which is exactly what
+#   the homeward score DELETES, because by then there is nothing to be late
+#   for.)
+#
+# TWO THINGS THE SHEET SHOWED AND THIS PASS FIXED.
+#
+#   THE PULSE WAS A SECOND BASS. The saw engine chugged at D3 while the
+#   triangle bass galloped D2–D3 — the same octave on the same root, all track,
+#   which is why the low end was a smear. It is an octave up now: an ENGINE
+#   sitting over the bass instead of wrestling it.
+#
+#   THE BREAKDOWN'S PEDAL WAS DEAD. Its bass and siren were written as whole
+#   notes, and nothing in this sequencer sustains — a whole note at 162 is a
+#   decay that is inaudible two-thirds of the way through the bar, which the
+#   loudness curve drew as a sawtooth. Both are re-struck on the half note now,
+#   so the breakdown has a floor to stand on.
+#
+# Compile:  node scripts/song-import.mjs content/songs/overdue.song --sheet
+
+id     overdue
+title  OVERDUE
+tempo  162
+about
+  The road's theme, and it is a panic rather than a chase. A D-minor drive
+  with a Phrygian i–♭II lurch (Dm → E♭) that never settles, a galloping
+  triangle bass under a chugging saw engine an octave above it, and a two-tone
+  sawtooth SIREN wailing a minor second over the top — the same interval an
+  emergency vehicle uses, and here it is a chord tone in both chords, so the
+  distress signal is also the harmony. A dry clock ticks every quarter from the
+  first bar to the last. The breakdown strips it to that clock, a re-struck
+  pedal and the siren alone; the build climbs a bare chromatic bass
+  D–E♭–E–F–F♯–G–G♯–A under a snare roll and hands back to the anthem. Shapes
+  borrowed from the action scores of the era, every melody original.
+
+voice siren    sawtooth vol=.021 gate=.95 detune=9 echo=.26 vib=5.5/22/60
+voice lead     square vol=.028 gate=.8 detune=6 echo=.2 vib=6.5/12/100
+voice harm     square vol=.014 gate=.8 pan=.35 echo=.16
+voice stab     square vol=.013 gate=.25 pan=-0.32
+# THE ENGINE — sixteenths on the root, an OCTAVE ABOVE the bass. See the header.
+voice pulse    sawtooth vol=.017 gate=.5 pan=.22 lp=1200
+voice bass     triangle vol=.056 gate=.85
+
+drum  tick     noise vol=.009 gate=.12 pan=-0.45 bp=3200
+drum  kick     triangle vol=.064 gate=1 slide=.25 note=D2
+drum  snare    noise vol=.036 gate=.75 hp=1500
+drum  hat      noise vol=.01 gate=.25 pan=.25 hp=6800
+
+section intro
+  chords Dm | Dm | Dm | Dm
+  siren  .*16 | .*16 | .*16 | a4*8 a#4*8
+  pulse  .*16 | .*16 | chug:4 | chug:4
+  bass   .*16 | gallop:2 | gallop:2 | gallop:2
+  kick   ................|................|x.....x.x.......|x.....x.x.x.....
+  hat    ................|................|x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.
+  tick   x...x...x...x...
+
+section a
+  chords Dm | Eb | Dm | Eb | Dm | Bb | C | A
+  lead   d5*2 .*2 d5*2 .*2 f5*4 e5*4 | d#5*2 .*2 d#5*2 .*2 d5*4 c5*4 | d5*2 .*2 f5*2 .*2 a5*4 g5*2 f5*2 | d#5*4 d5*4 c5*4 a4*4
+         d5*2 .*2 d5*2 .*2 f5*2 e5*2 d5*2 c5*2 | a#4*4 d5*4 f5*4 d5*4 | c5*4 e5*4 g5*4 e5*2 c5*2 | a4*2 c#5*2 e5*4 c#5*2 a4*2 .*4
+  stab   offbeat 4
+  pulse  chug 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.....x.x.x.....
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  tick   x...x...x...x...
+
+section a2
+  chords Dm | Eb | Dm | Eb | Dm | Bb | C | A
+  lead   d5 . d5*2 f5 . e5*2 d5 . f5*2 a5*4 | a#5*2 a5*2 g5*2 f5*2 d#5*4 d5*4 | d5 . d5*2 f5 . a5*2 d6*4 a5*2 f5*2 | g5*2 f5*2 d#5*2 d5*2 c5*4 a#4*4
+         d5*2 e5*2 f5*2 g5*2 a5*4 d5*4 | f5*2 d5*2 a#4*2 d5*2 f5*2 a5*2 a#5*4 | a5*2 g5*2 e5*2 c5*2 e5*2 g5*2 a5*4 | a5*2 g5*2 f5*2 e5*2 c#5*4 a4*4
+  siren  a5*8 a5*8 | a#5*8 a#5*8 | a5*8 a5*8 | a#5*8 a#5*8
+         .*16 | .*16 | .*16 | .*16
+  stab   offbeat 4
+  pulse  chug 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.....x.x.x.....
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  tick   x...x...x...x...
+
+section b
+  chords Bb | C | Dm | Dm | Bb | C | Gm | A
+  lead   d5*4 f5*4 a#5*8 | c5*4 e5*4 g5*8 | a5*6 g5*2 f5*4 d5*4 | e5*4 f5*4 a5*8
+         a#5*4 a5*2 g5*2 f5*4 d5*4 | c5*4 e5*2 g5*2 a#5*4 g5*4 | g5*4 a#5*4 d6*4 a#5*2 g5*2 | a5*8 e5*4 c#5*4
+  harm   d4*4 f4*4 a#4*8 | c4*4 e4*4 g4*8 | a4*6 g4*2 f4*4 d4*4 | e4*4 f4*4 a4*8
+         a#4*4 a4*2 g4*2 f4*4 d4*4 | c4*4 e4*2 g4*2 a#4*4 g4*4 | g4*4 a#4*4 d5*4 a#4*2 g4*2 | a4*8 e4*4 c#4*4
+  stab   offbeat 4
+  pulse  chug 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.....x.x.x.....
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+  tick   x...x...x...x...
+
+# ── BREAK — the clock, a re-struck pedal, and the siren. Nothing else ──────
+section break
+  chords Dm | Dm | Eb | Eb | Gm | Gm | A | A
+  siren  .*16 | a4*8 a4*8 | .*16 | a#4*8 a#4*8
+         .*16 | d5*8 d5*8 | .*16 | c#5*8 e5*8
+  stab   arp:4 | arp:4 | arp:4 | arp:4
+         arp:3 | arp:3 | arp:3 | arp:3
+  bass   d2*8 d2*8 | d2*8 d2*8 | d#2*8 d#2*8 | d#2*8 d#2*8
+         g2*8 g2*8 | g2*8 g2*8 | a2*8 a2*8 | a2*8 a2*8
+  hat    x.......x.....x.
+  tick   x...x...x...x...
+
+section build
+  chords Dm | D#dim | Em | F | F#dim | Gm | G#dim | A
+  lead   d5*16 | d#5*16 | e5*16 | f5*16
+         f#5*16 | g5*16 | g#5*16 | a5*16
+  harm   d4*16 | d#4*16 | e4*16 | f4*16
+         f#4*16 | g4*16 | g#4*16 | a4*16
+  siren  .*16 | .*16 | .*16 | .*16
+         a5*8 a5*8 | a#5*8 a#5*8 | a5*8 a#5*8 | a5*2 a#5*2 a5*2 a#5*2 a5*2 a#5*2 a5*2 a#5*2
+  pulse  chug 4
+  bass   gallop 2
+  kick   x.......x.......
+  snare  ....x.......x...|....x.......x...|....x.......x...|....x.......x.x.
+         ....x.......x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx
+  hat    xxxxxxxxxxxxxxxx
+  tick   x...x...x...x...
+
+section turn
+  chords Dm | Bb | C | A | Dm | Bb | A | A
+  lead   d5*2 e5*2 f5*2 g5*2 a5*8 | a#5*2 a5*2 g5*2 f5*2 d5*8 | c5*2 e5*2 g5*2 a5*2 a#5*4 a5*2 g5*2 | e5*2 c#5*2 a4*4 c#5*2 e5*2 a5*4
+         d5*2 f5*2 a5*4 d6*4 a5*2 f5*2 | a#5*4 a5*2 g5*2 f5*4 d5*4 | e5*4 g5*4 a5*4 c#6*4 | d6*8 .*8
+  harm   d4*2 e4*2 f4*2 g4*2 a4*8 | a#4*2 a4*2 g4*2 f4*2 d4*8 | c4*2 e4*2 g4*2 a4*2 a#4*4 a4*2 g4*2 | e4*2 c#4*2 a3*4 c#4*2 e4*2 a4*4
+         d4*2 f4*2 a4*4 d5*4 a4*2 f4*2 | a#4*4 a4*2 g4*2 f4*4 d4*4 | e4*4 g4*4 a4*4 c#5*4 | d5*8 .*8
+  siren  .*16 | .*16 | .*16 | .*16
+         a5*8 a5*8 | a#5*8 a#5*8 | a5*8 a#5*8 | d6*8 .*8
+  stab   offbeat 4
+  pulse  chug 4
+  bass   gallop 2
+  kick   x.....x.x.......|x.....x.x.x.....
+  snare  ....x.......x...|....x.......x...|....x.......x...|....x.......x...
+         ....x.......x...|....x.......x...|....x.......x.x.|x.x.xx.xxxxx....
+  hat    x.x.x.x.x.x.x.x.
+  tick   x...x...x...x...
+
+order  intro a a2 b a break build b a2 turn

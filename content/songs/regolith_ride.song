@@ -1,0 +1,140 @@
+# QUIET SEA — THE MOON.
+#
+# The brief: Ada's tracker went quiet near the old Apollo flag, and the dead
+# walk the regolith. There is a wreck under the Sea of Tranquility older than
+# the dust; GOODCO heard it SINGING and plugged their machines into it, and the
+# singing is what opened the graves. The boss is the first man on the moon, who
+# never went home and is still standing over his own grave marker.
+#
+# THREE DECISIONS.
+#
+#   THE WRECK SINGS, AND IT ONLY KNOWS ONE NOTE. A pure sine holds G — the
+#   same G — in every pattern of the track, never moving. The HARMONY moves
+#   under it, so that one note is the fifth of the chord, then the major
+#   seventh, then the ninth, then the root, then a tritone, and it has done
+#   nothing at all to earn any of that. It is the whole piece: something old
+#   under the ground, and everybody else's meaning changing around it.
+#
+#   THE GROUND IS SLOW AND THE SURFACE IS FAST. One chord every TWO bars while
+#   the bass gallops and the kit runs sixteenths. That is what a sixth of a
+#   gravity feels like from the inside: sprinting, and getting nowhere.
+#
+#   A HYMN FOR SOMEBODY WHO NEVER WENT HOME. The B section is four-square and
+#   dignified and the only warm thing on this rock, and its last phrase climbs
+#   to an F a whole tone under the drone and leaves it there, grinding.
+#
+# The tritone chord — D♭ major under that same G — is saved for ONE section
+# (`void`, the thing under the dust) rather than sprinkled about, so when it
+# arrives it is an event and not a tic.
+#
+# Compile:  node scripts/song-import.mjs content/songs/regolith_ride.song --sheet
+
+id     regolith_ride
+title  QUIET SEA
+tempo  144
+about
+  The moon, and the graveyard nobody declared. A pure sine holds one G through
+  the entire track while the harmony moves underneath it — fifth, major
+  seventh, ninth, root, and once, in the void section, a tritone — so a note
+  that never changes means something different in every bar. The ground moves
+  one chord every two bars while the bass gallops and the kit runs sixteenths
+  under it: sprinting in a sixth of a gravity, getting nowhere. The B section
+  is a plain, dignified hymn for a man who never went home, and it ends a
+  whole tone under the drone and grinds there. Original melodies; nothing
+  sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# THE WRECK. One note, re-struck as half notes because nothing here sustains,
+# drowned in echo and bent by a slow wide vibrato. It is in every pattern.
+voice sing   sine vol=.03 gate=.95 attack=300 echo=.6 vib=3/22/400
+# The hero's line — kept UNDER the drone, so the singing is always overhead.
+voice lead   square vol=.028 gate=.85 detune=9 echo=.3 vib=5/14/200
+# The chorale: one wide detuned pulse, swelling twice a bar, low.
+voice choir  square vol=.011 gate=.98 attack=250 detune=16 pan=-0.25 echo=.4
+# The surface — broken chords running much faster than the ground moves. Kept
+# LOW and panned hard right, opposite the chorale, so the two quiet mid voices
+# are separated by the stereo field rather than fighting over the same octave.
+voice run    square vol=.012 gate=.3 pan=.32 echo=.2
+voice bass   triangle vol=.055 gate=.75
+
+# ── THE KIT ─────────────────────────────────────────────────────────────────
+# Dry and airless: the snare is filtered high and thin, because there is no
+# room out here for anything to sound big in.
+drum kick    triangle vol=.06 gate=1 slide=.25 note=C2
+drum snare   noise vol=.028 gate=.5 hp=2200
+drum hat     noise vol=.0095 gate=.2 hp=7400 pan=.3
+
+# ── INTRO — the drone, alone, and then the dust ────────────────────────────
+section intro
+  chords Cm | Cm | Cm | G
+  sing   g5*8 g5*8 | g5*8 g5*8 | g5*8 g5*8 | g5*8 g5*8
+  choir  .*16 | .*16 | d#3*8 d#3*8 | d3*8 d3*8
+  bass   .*16 | .*16 | gallop:2 | gallop:2
+  hat    ................|................|x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.
+
+# ── A — one chord every two bars, and everything else at a sprint ──────────
+section a
+  chords Cm | Cm | Abmaj7 | Abmaj7 | Fm | Fm | Gsus4 | G
+  sing   g5*8 g5*8
+  lead   g4*8 c5*8 | d#5*4 d5*4 c5*8 | c5*4 d#5*4 f5*8 | d#5*8 c5*8
+         f5*4 d#5*4 c5*4 a#4*4 | c5*8 g#4*8 | a#4*4 c5*4 d5*8 | d5*12 .*4
+  run    arp 3
+  choir  d#3*8 d#3*8 | d#3*8 d#3*8 | c4*8 c4*8 | c4*8 c4*8
+         g#3*8 g#3*8 | g#3*8 g#3*8 | d3*8 d3*8 | d3*8 d3*8
+  bass   gallop 2
+  kick   x.......x...x...
+  snare  ....x.......x...
+  hat    x.x.x.x.x.x.x.x.
+
+# ── B — THE HYMN. Four-square, warm, and it ends grinding under the drone ──
+section b
+  chords Ebmaj7 | Ebmaj7 | Cm | Cm | Abmaj7 | Abmaj7 | Fm | G
+  sing   g5*8 g5*8
+  lead   d#5*8 d5*8 | c5*8 c5*8 | c5*8 a#4*8 | g4*8 g4*8
+         g#4*8 a#4*8 | c5*8 d#5*8 | f5*8 d#5*8 | d5*8 .*8
+  choir  a#3*8 a#3*8 | a#3*8 a#3*8 | d#3*8 d#3*8 | d#3*8 d#3*8
+         c4*8 c4*8 | c4*8 c4*8 | g#3*8 g#3*8 | d3*8 d3*8
+  run    arp 3
+  bass   drive 2
+  kick   x.......x.......
+  snare  ............x...
+  hat    ..x...x...x...x.
+
+# ── VOID — the thing under the dust. The drone becomes a tritone and stays ─
+section void
+  chords Dbmaj7 | Dbmaj7 | Dbmaj7 | Dbmaj7 | Cm | Cm | Gsus4 | Gsus4
+  sing   g5*8 g5*8
+  choir  c#3*8 c#3*8 | c#3*8 c#3*8 | c#3*8 c#3*8 | c#3*8 c#3*8
+         d#3*8 d#3*8 | d#3*8 d#3*8 | d3*8 d3*8 | d3*8 d3*8
+  bass   c#2*8 .*8 | .*16 | c#2*8 .*8 | .*16
+         c2*8 .*8 | .*16 | g2*8 .*8 | g2*8 d3*8
+  run    .*16 | .*16 | arp16:4 | arp16:4
+         .*16 | .*16 | arp16:4 | arp16:4
+
+# ── BUILD — the climb out of the crater ────────────────────────────────────
+section build
+  chords Cm | Fm | Abmaj7 | Bb | Cm | Fm | Ab | G
+  sing   g5*8 g5*8
+  lead   c5*16 | f5*16 | g#5*16 | a#5*16
+         c6*8 a#5*8 | g#5*8 f5*8 | d#5*8 d5*8 | d5*16
+  run    roll 4
+  bass   pump 2
+  kick   x.......x.......
+  snare  ....x.......x...|....x.......x.x.|....x...x.x.x.x.|xxxxxxxxxxxxxxxx
+  hat    x.x.x.x.x.x.x.x.
+
+# ── TURN — A again, wider, and the drone is the last thing standing ────────
+section turn
+  chords Cm | Cm | Abmaj7 | Abmaj7 | Fm | Fm | Gsus4 | G
+  sing   g5*8 g5*8
+  lead   c6*4 a#5*4 g#5*8 | f5*4 d#5*4 d5*8 | c6*8 g#5*8 | f5*4 d#5*4 c5*8
+         f5*8 g#5*8 | f5*4 d#5*4 c5*8 | a#4*4 d5*4 f5*8 | d5*8 .*8
+  run    arp 3
+  choir  d#3*8 d#3*8 | d#3*8 d#3*8 | c4*8 c4*8 | c4*8 c4*8
+         g#3*8 g#3*8 | g#3*8 g#3*8 | d3*8 d3*8 | d3*8 d3*8
+  bass   gallop 2
+  kick   x.......x...x...
+  snare  ....x.......x...|....x.......x.x.
+  hat    x.x.x.x.x.x.x.x.
+
+order  intro a b a void build b a turn

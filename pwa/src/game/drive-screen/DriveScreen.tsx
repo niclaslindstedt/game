@@ -114,7 +114,8 @@ const MAX_CATCHUP_MS = 100;
 const PAD_REACH_PX = 48;
 
 /**
- * THE ROAD'S OWN SCORE — OVERDUE (`content/music/overdue.yaml`).
+ * THE ROAD'S OWN SCORES — OVERDUE and AN HOUR BEHIND
+ * (`content/music/overdue.yaml`, `content/music/hour_behind.yaml`).
  *
  * Named HERE rather than in the music module, which knows nothing about
  * minigames and must not start to: a score id is content this screen owns, the
@@ -122,15 +123,23 @@ const PAD_REACH_PX = 48;
  * meets the game in four places and the soundtrack is not a fifth one). A
  * second cabinet names its own.
  *
- * ONE TRACK, BOTH DIRECTIONS, and that is the point rather than an economy. The
- * man is late in both of them: late to the campus because the jacket has been
- * answering from it for an hour, and late home with the part because every
- * minute on this road is a minute she is further away. It is the same tarmac at
- * the same speed with the same crowd on it, and a gentler theme for the return
- * leg would be the game telling the player the pressure had come off — which is
- * the one thing that never happens.
+ * TWO TRACKS, ONE PER DIRECTION, AND THE RETURN LEG IS NOT THE GENTLER ONE.
+ * That is the whole reason the split is allowed to exist: a softer theme going
+ * home would be the game telling the player the pressure had come off, which is
+ * the one thing that never happens. It has changed KIND instead. Out, he is
+ * late — the jacket has been answering from the campus for an hour, and OVERDUE
+ * ticks a clock in every bar of itself. Back, there is nothing left to be late
+ * for: she was flown off the planet an hour before he got through the door, so
+ * AN HOUR BEHIND deletes the clock, cuts the reply out of every phrase, and
+ * falls Dm–C–B♭–A without ever landing.
+ *
+ * DERIVED FROM `params.direction`, which the road already carries and which
+ * both doors already set — a campaign leg from `legDirection`, the arcade
+ * cabinet from the shelf's DIRECTION row. So the cabinet gets the pair for
+ * free and neither mount had to learn that a road has a soundtrack.
  */
-const ROAD_TRACK = "overdue";
+const ROAD_TRACK_OUT = "overdue";
+const ROAD_TRACK_HOME = "hour_behind";
 
 export function DriveScreen({
   params,
@@ -433,12 +442,13 @@ export function DriveScreen({
   }, []);
 
   // ── THE SCORE ─────────────────────────────────────────────────────────────
-  // OVERDUE (`ROAD_TRACK` above), claimed for as long as this screen owns the
-  // picture.
+  // OVERDUE going out, AN HOUR BEHIND coming home (`ROAD_TRACK_*` above),
+  // claimed for as long as this screen owns the picture.
   //
   // IT STARTS WITH THE MOUNT, under the title card, because the card's beat and
-  // a half is the score's own intro: the clock alone, then the engine, then the
-  // first wail as "ROAD TO GOODCO" lifts off a car that has not moved yet.
+  // a half is the score's own intro: out, the clock alone, then the engine,
+  // then the first wail as "ROAD TO GOODCO" lifts off a car that has not moved
+  // yet; home, one tracker ping into an empty street.
   //
   // AND IT IS STOPPED ON THE WAY OUT, not left to whatever comes next. A leg
   // ends in one of two places and both want the quiet: the arrival's blackout
@@ -447,10 +457,11 @@ export function DriveScreen({
   // other way off this screen — the pause card's SKIP, its MAIN MENU, the
   // workbench relaying. The crossing on the far side raises the destination's
   // own theme a frame later.
+  const roadTrack = params.direction === -1 ? ROAD_TRACK_HOME : ROAD_TRACK_OUT;
   useEffect(() => {
-    playMusic(ROAD_TRACK);
+    playMusic(roadTrack);
     return () => stopMusic();
-  }, []);
+  }, [roadTrack]);
 
   /** The card has had its beat (or its tap): let the road run. Idempotent — the
    * timer and the touch both call it, and the loser must not restart anything. */

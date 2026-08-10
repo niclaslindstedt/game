@@ -43,7 +43,7 @@ skill, and the two share only the instrument they are played on.
 | `scripts/song-export.mjs` | The way back (`make unsong`) — any shipped track written out as a `.song`, so an existing score can be opened in the short format. |
 | `scripts/asset-tools/song-format.mjs` | The notation's parser and emitter, and where the reasoning for having one is written down. |
 | **`scripts/music-sheet.mjs`** | **THE REVIEW SURFACE** (`make sheet`) — engraves a score as real sheet music with a spectrum analyser under every system. |
-| **`scripts/song-artifact.mjs`** | **THE EAR** (`make audition`) — a self-contained page that plays the track with the game's own synth. What you publish as an artifact so somebody else can hear it. |
+| **`scripts/song-artifact.mjs`** | **THE EAR** (`make audition` for one track, `make album` for ALL of them) — a self-contained page that plays a score with the game's own synth. What you publish as an artifact so somebody else can hear it. |
 | `scripts/asset-tools/notation.mjs` | The engraver: staves, clefs, beams, ties, rests, accidentals, note names. |
 | `scripts/asset-tools/spectrum.mjs` | The analyser: a spectrogram COMPUTED from the patch parameters rather than recorded off the synth. |
 
@@ -162,6 +162,8 @@ make sheet ARGS="<id>"                      # the whole score
 make sheet ARGS="<id> --pattern=b"          # one section, readable
 make sheet ARGS="<id> --pattern=b --bars=2 --scale=3"   # …bigger still
 make audition ARGS="<id>"                   # the page you publish so it can be HEARD
+make album                                  # …and EVERY score on one page, with a picker
+make album ARGS="title bench_light overdue"  # …in that running order
 ```
 
 1. **Write it** — `content/songs/<id>.song`, in the notation above. (An existing
@@ -169,7 +171,11 @@ make audition ARGS="<id>"                   # the page you publish so it can be 
 2. **Compile and engrave in one step** — `make song FILE=content/songs/<id>.song`
    writes `content/music/<id>.yaml` and draws the sheet. A miscounted bar is an
    error with a bar number on it; a typo'd note fails at the SCHEMA, before it
-   can reach a run.
+   can reach a run. **Read the `N bars ≈ Ns` it prints**: the loop bound is
+   100–145 s and the section lengths that feel right put a fast score under the
+   floor and a slow one over the ceiling. Settle it by adding or removing an
+   entry from `order` — the tempo is a decision about the piece, the order is
+   arithmetic.
 3. **LOOK AT THE SHEET, section by section.** A whole track engraves thousands
    of pixels tall and is illegible once it has been scaled down to be read — so
    read one `--pattern` at a time. Judge it against the first rubric below.
@@ -184,6 +190,15 @@ make audition ARGS="<id>"                   # the page you publish so it can be 
    with, and this page is the only way anybody else can judge it at all — a
    review that never made a sound is not a review. Do it on the first round that
    is worth listening to and on the last one, not only at the end.
+
+   **A pass that touched MORE THAN ONE score publishes `make album` instead**,
+   naming the ids in the order they should be listened to. Whether two levels
+   sound like two PLACES rather than two tempos is the question a single track's
+   page cannot answer, because answering it means switching between them inside
+   a few seconds — and it is the question a soundtrack lives or dies on. The
+   album page weighs ~1.3 MB a track with its sheets embedded, so ten tracks is
+   ~13 MB and still inside an artifact's limit; `--no-sheet` drops it to ~120 KB
+   if the sheets are not wanted.
 6. **Fix the worst ONE thing** and go round again. Not the whole list — a score
    changed in six places at once cannot be judged, because you no longer know
    which change did what.

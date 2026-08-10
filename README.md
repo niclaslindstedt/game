@@ -113,6 +113,7 @@ make test                                # the full test suite
 | `make song FILE=<x.song>`             | Compile a `.song` into a track's YAML and engrave it — the short way to write a score              |
 | `make unsong ARGS="<track>"`          | …and the way back: a shipped track written out as a `.song`                                        |
 | `make audition ARGS="<track>"`        | HEAR a score — a page that plays it with the game's own synth                                      |
+| `make album`                          | HEAR THE WHOLE SOUNDTRACK — every score on one page, with a picker                                 |
 | `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                            |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                 |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                     |
