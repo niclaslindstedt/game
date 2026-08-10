@@ -84,13 +84,20 @@ export const FOCAL = 1;
  * starfield behind this belt IS the belt at range, so drawing a rock smaller
  * than this adds a star to a starfield.
  *
+ * IT SETS EVERY ROCK'S DRAWN SIZE, because the whole apparent-size
+ * distribution hangs off it: a fly-by peaks at SEE_AT/√u for a uniform u, so
+ * halving this halves every rock on screen. It was halved once already — the
+ * belt's first tuning drew them twice this big and they took the eye off the
+ * planets, which are what the sky is a picture of.
+ *
  * It also sets every fly-by's LENGTH, which is why it is a bigger decision
  * than it looks. A rock is first seen at range D/SEE_AT and passes at its miss
- * distance, so it is in the picture for about 2·D/(v·SEE_AT) seconds: a
- * quarter-kilometre rock for four seconds, a four-kilometre one for the better
- * part of a minute. Halve this number and every fly-by takes twice as long.
+ * distance, so it is in the picture for about 2·D/(v·SEE_AT) seconds. Halving
+ * it therefore doubles how long each rock lingers, which is the opposite of
+ * what shrinking them is usually for — so `ARRIVAL_MS` has to come down with
+ * it or the sky ends up busier rather than calmer.
  */
-export const SEE_AT = 0.028;
+export const SEE_AT = 0.014;
 
 /**
  * …and the biggest a rock may get before it goes past, as the same fraction.
@@ -98,7 +105,7 @@ export const SEE_AT = 0.028;
  * the population is scale-free, so there is no natural ceiling in the physics
  * and without one a rock eventually fills the menu.
  */
-export const SPAN_MAX = 0.26;
+export const SPAN_MAX = 0.13;
 
 /**
  * HOW LONG BEFORE ITS CLOSEST APPROACH A ROCK IS PICKED UP, in seconds — the
@@ -161,17 +168,17 @@ const V_SIGMA_KMS = 3.32;
  * IT IS CHOSEN AGAINST THE PACE OF THE REST OF THE SKY rather than in the
  * abstract, and the sky is unhurried. On its own clocks an Earth year is 64 s
  * and an Earth day 22 s (`title-planets.ts`); Mercury rounds the sun every
- * 15 s and Earth's terminator crawls once round in 22, while the four giants
- * hold station for minutes at a time. Those are the rhythms a viewer is
- * already watching, and the belt has to be the liveliest thing in the picture
- * without becoming the loudest.
+ * 15 s while the four giants hold station for minutes at a time. The belt is
+ * the only fast thing in the picture, and the picture is of the PLANETS.
  *
- * Just under four seconds puts about six fly-bys in an Earth day and
- * seventeen in an Earth year. Measured against the frame rather than against
- * the arithmetic (`tests/title_belt_test.ts` walks the real projection), that
- * comes out at one or two rocks in view at any moment, a rock big enough to
- * see craters on every eight or nine seconds, and an empty sky about a fifth
- * of the time — which is the part a fixed cadence can never give.
+ * WHICH IS WHY THIS NUMBER GOT FOUR TIMES BIGGER. The first tuning put one or
+ * two rocks in frame at all times and a close pass every eight seconds; that
+ * reads as weather, and weather is the wrong register for a backdrop whose
+ * subject is somebody else. Measured through the real projection
+ * (`tests/title_belt_test.ts` walks it at all three reference viewports) this
+ * puts about HALF a rock in view — so usually one, often none — and a rock
+ * big enough to read about once a minute. A close pass is meant to be an
+ * event; an event every eight seconds is scenery.
  *
  * THE GAPS ARE EXPONENTIAL, not fixed, because arrivals of independent objects
  * are a Poisson process. That is the difference between a belt and a conveyor
@@ -179,7 +186,7 @@ const V_SIGMA_KMS = 3.32;
  * this replaced: sometimes three come at once and then nothing does for half a
  * minute.
  */
-export const ARRIVAL_MS = 3800;
+export const ARRIVAL_MS = 17000;
 
 /** How many fly-bys may be alive at once. Poisson arrivals clump, so this sits
  * well above the mean (three or four, counting the ones the frame never sees);

@@ -326,6 +326,20 @@ const MAX_RES = 192;
  * reuses its geometry caches instead of reallocating every frame. */
 const RES_STEP = 8;
 
+/** The ring profile LUT: radius → opacity, over the span the rings occupy.
+ * 1024 entries is 0.0013 planet radii apiece, which resolves the Encke gap
+ * (0.006 wide) rather than stepping straight over it. */
+const LUT_N = 1024;
+const LUT_FROM = 1;
+const LUT_TO = 2.3;
+
+/** How dark the rings' shadow on the planet gets, against their own opacity.
+ * Not 1: the B ring is opaque to a first approximation but the shadow it casts
+ * is not pitch black — light scatters round it through the gaps and off the
+ * ring particles themselves, and Cassini's photographs show a deep charcoal
+ * band rather than a hole. */
+const RING_SHADOW = 0.82;
+
 export class PlanetGlobe {
   readonly canvas: HTMLCanvasElement;
   /** How much wider the canvas is than the planet's own disc (1 = no rings). */
@@ -339,6 +353,16 @@ export class PlanetGlobe {
   private readonly clouds: CloudSkin | undefined;
   private readonly style: GlobeStyle;
   private readonly rings: typeof SATURN_RINGS | undefined;
+  /** The ring system as a 1D profile of radius → opacity and tint, sampled
+   * finely enough to resolve the Encke gap (0.006 planet radii). Built once.
+   *
+   * IT IS A LUT RATHER THAN A BAND SEARCH because it is read two ways and one
+   * of them is per-frame: the ring pixels integrate it across their own radial
+   * footprint (which is what stops the bands aliasing into hard concentric
+   * outlines at menu size), and every PLANET pixel reads it once to find out
+   * whether a ring is standing between it and the sun. */
+  private readonly lutA: Float32Array | undefined;
+  private readonly lutT: Float32Array | undefined;
 
   private res = 0;
   private image: ImageData | null = null;
@@ -351,9 +375,13 @@ export class PlanetGlobe {
   private v0 = new Float32Array(0);
   private inside = new Uint8Array(0);
   private edge = new Float32Array(0);
+  /** The surface point's height along the spin axis, cached so the ring-shadow
+   * test costs one divide per pixel instead of a dot product. */
+  private pAxis = new Float32Array(0);
   // Ring caches: which band a pixel falls in (−1 = none), the ring point's
   // depth, and its position, for the shadow test.
-  private ringBand = new Int8Array(0);
+  private ringA = new Float32Array(0);
+  private ringT = new Float32Array(0);
   private ringX = new Float32Array(0);
   private ringY = new Float32Array(0);
   private ringZ = new Float32Array(0);
@@ -367,6 +395,22 @@ export class PlanetGlobe {
     this.padding = this.style.padding;
     this.hasAir = this.style.air;
     this.rings = kind === "saturn" ? SATURN_RINGS : undefined;
+    if (this.rings) {
+      const a = new Float32Array(LUT_N);
+      const t = new Float32Array(LUT_N);
+      for (let i = 0; i < LUT_N; i++) {
+        const rad = LUT_FROM + ((i + 0.5) / LUT_N) * (LUT_TO - LUT_FROM);
+        for (const ring of this.rings) {
+          if (rad >= ring.from && rad < ring.to) {
+            a[i] = ring.alpha;
+            t[i] = ring.tint;
+            break;
+          }
+        }
+      }
+      this.lutA = a;
+      this.lutT = t;
+    }
     this.axis = buildAxis(this.style.obliquity, this.style.poleLon, pitch);
     this.canvas = document.createElement("canvas");
     const ctx = this.canvas.getContext("2d", { alpha: true });
@@ -390,10 +434,12 @@ export class PlanetGlobe {
     this.v0 = new Float32Array(n);
     this.inside = new Uint8Array(n);
     this.edge = new Float32Array(n);
+    this.pAxis = new Float32Array(n);
     this.image = this.ctx.createImageData(res, res);
     const rings = this.rings;
     if (rings) {
-      this.ringBand = new Int8Array(n).fill(-1);
+      this.ringA = new Float32Array(n);
+      this.ringT = new Float32Array(n);
       this.ringX = new Float32Array(n);
       this.ringY = new Float32Array(n);
       this.ringZ = new Float32Array(n);
@@ -410,7 +456,7 @@ export class PlanetGlobe {
         const dx = (px + 0.5 - half) / r;
         const dy = (py + 0.5 - half) / r;
         const d2 = dx * dx + dy * dy;
-        if (rings) this.solveRing(i, dx, dy, d2);
+        if (rings) this.solveRing(i, dx, dy, d2, 1 / r);
         if (d2 > 1) {
           this.inside[i] = 0;
           this.edge[i] = 0;
@@ -425,9 +471,9 @@ export class PlanetGlobe {
         this.nz[i] = nz;
         // Latitude from the pole, longitude from the equatorial basis — the
         // surface point projected onto the tilted axis frame.
-        const lat = Math.asin(
-          Math.max(-1, Math.min(1, dx * ax.nx + dy * ax.ny + nz * ax.nz)),
-        );
+        const pa = dx * ax.nx + dy * ax.ny + nz * ax.nz;
+        this.pAxis[i] = pa;
+        const lat = Math.asin(Math.max(-1, Math.min(1, pa)));
         const lon = Math.atan2(
           dx * ax.ex + dy * ax.ey + nz * ax.ez,
           dx * ax.fx + dy * ax.fy + nz * ax.fz,
@@ -444,29 +490,75 @@ export class PlanetGlobe {
    * ray-plane solve gives the ring radius (which band) and the depth (in front
    * of the planet, or behind it). Cached per resolution — none of it moves.
    */
-  private solveRing(i: number, dx: number, dy: number, d2: number): void {
-    const rings = this.rings;
-    if (!rings) return;
+  private solveRing(
+    i: number,
+    dx: number,
+    dy: number,
+    d2: number,
+    step: number,
+  ): void {
+    const lutA = this.lutA;
+    const lutT = this.lutT;
+    if (!lutA || !lutT) return;
     const ax = this.axis;
     if (Math.abs(ax.nz) < 1e-3) return; // exactly edge-on: no ring pixels
     const z = -(ax.nx * dx + ax.ny * dy) / ax.nz;
     const rad = Math.sqrt(d2 + z * z);
-    let band = -1;
-    for (let b = 0; b < rings.length; b++) {
-      const ring = rings[b];
-      if (ring && rad >= ring.from && rad < ring.to) {
-        band = b;
-        break;
-      }
-    }
-    if (band < 0) return;
+    if (rad < LUT_FROM || rad >= LUT_TO) return;
     // Hidden behind the planet's disc? Only the half of the ring in FRONT of
     // the sphere's near surface survives where the two overlap.
     if (d2 < 1 && z < Math.sqrt(1 - d2)) return;
-    this.ringBand[i] = band;
+
+    // HOW MUCH RING RADIUS THIS ONE PIXEL COVERS — and it is not one pixel's
+    // worth. The ring plane is seen at a slant, so a step across the screen is
+    // a much bigger step across the rings the closer to edge-on they are; near
+    // the ansae a single pixel can span half the system. Sampling the profile
+    // once per pixel therefore does not merely alias, it picks a band at
+    // random — which at menu size is exactly what turned the rings into a set
+    // of hard concentric outlines. Measure the footprint by finite difference
+    // and average the profile ACROSS it.
+    const radAt = (x: number, y: number): number => {
+      const zz = -(ax.nx * x + ax.ny * y) / ax.nz;
+      return Math.sqrt(x * x + y * y + zz * zz);
+    };
+    const spread = Math.max(
+      Math.abs(radAt(dx + step, dy) - rad),
+      Math.abs(radAt(dx, dy + step) - rad),
+    );
+    const half = spread / 2;
+    const taps = Math.max(2, Math.min(24, Math.ceil(spread / 0.004)));
+    let sumA = 0;
+    let sumT = 0;
+    for (let s = 0; s < taps; s++) {
+      const q = rad - half + ((s + 0.5) / taps) * spread;
+      if (q < LUT_FROM || q >= LUT_TO) continue;
+      const k = ((q - LUT_FROM) / (LUT_TO - LUT_FROM)) * LUT_N;
+      const idx = Math.min(LUT_N - 1, Math.max(0, k | 0));
+      const a = lutA[idx] as number;
+      sumA += a;
+      // The tint is weighted BY the opacity: averaging the colour of a gap
+      // into the colour of the ring beside it would tint the gap rather than
+      // thin it, and a thinner ring is what a gap is.
+      sumT += (lutT[idx] as number) * a;
+    }
+    if (sumA <= 0) return;
+    this.ringA[i] = sumA / taps;
+    this.ringT[i] = sumT / sumA;
     this.ringX[i] = dx;
     this.ringY[i] = dy;
     this.ringZ[i] = z;
+  }
+
+  /** The rings' opacity at one radius, straight off the LUT — what a PLANET
+   * pixel asks when it wants to know whether it is in a ring's shadow. */
+  private ringOpacity(rad: number): number {
+    const lut = this.lutA;
+    if (!lut || rad < LUT_FROM || rad >= LUT_TO) return 0;
+    const k = ((rad - LUT_FROM) / (LUT_TO - LUT_FROM)) * LUT_N;
+    const i0 = Math.min(LUT_N - 1, Math.max(0, k | 0));
+    const i1 = Math.min(LUT_N - 1, i0 + 1);
+    const f = k - i0;
+    return (lut[i0] as number) * (1 - f) + (lut[i1] as number) * f;
   }
 
   /**
@@ -531,6 +623,25 @@ export class PlanetGlobe {
     // round the dark side. Airless worlds (rim = 0) get none of it, and go
     // completely black instead, which is equally correct.
     const backlit = Math.max(0, -lz);
+
+    // THE RINGS' SHADOW ON THE PLANET — the other half of the ring geometry,
+    // and the half that was missing. `paintRings` already darkens a ring point
+    // that the planet stands in front of; nothing darkened a SURFACE point
+    // that a ring stands in front of, so Saturn wore a clean face under a
+    // system dense enough to eclipse it. In life that shadow is a hard dark
+    // band laid across a whole hemisphere, it moves with the seasons, and it
+    // is one of the two or three things that make a photograph of Saturn
+    // unmistakable.
+    //
+    // It is one ray-plane solve per pixel toward the sun — the same solve
+    // `solveRing` does toward the camera, run the other way. Everything it
+    // needs but the light is cached (`pAxis`), so the per-frame cost is a
+    // divide and a LUT read on the pixels that are lit at all.
+    const ax = this.axis;
+    const lAxis = ax.nx * lx + ax.ny * ly + ax.nz * lz;
+    const shadows = !!this.lutA && Math.abs(lAxis) > 1e-3;
+    const pAxis = this.pAxis;
+
     for (let i = 0; i < n; i++) {
       const o = i * 4;
       if (inside[i] === 0) {
@@ -545,7 +656,24 @@ export class PlanetGlobe {
       // airless world `soft` is nearly zero, so this is the knife edge it
       // should be.
       const lam = (nxs[i] as number) * lx + (nys[i] as number) * ly + nz * lz;
-      const day = smoothstep(-soft, soft, lam);
+      let day = smoothstep(-soft, soft, lam);
+
+      // Does a ring stand between this point and the sun? Walk toward the
+      // light until the ring plane is crossed; a POSITIVE distance means the
+      // crossing is on the sunward side (a negative one is behind the surface
+      // and shadows nothing), and the ring's own opacity there is how much of
+      // the sun it takes away.
+      if (shadows && day > 0) {
+        const t = -(pAxis[i] as number) / lAxis;
+        if (t > 0) {
+          const hx = (nxs[i] as number) + t * lx;
+          const hy = (nys[i] as number) + t * ly;
+          const hz = nz + t * lz;
+          const occ = this.ringOpacity(Math.sqrt(hx * hx + hy * hy + hz * hz));
+          if (occ > 0) day *= 1 - occ * RING_SHADOW;
+        }
+      }
+
       const shade =
         (ambient + (1 - ambient) * day) * (0.6 + 0.4 * nz) * exposure;
 
@@ -616,10 +744,9 @@ export class PlanetGlobe {
     const tilt = Math.abs(ax.nx * light.x + ax.ny * light.y + ax.nz * light.z);
     const lit = 0.18 + 0.82 * Math.pow(tilt, 0.6);
     for (let i = 0; i < n; i++) {
-      const band = this.ringBand[i] as number;
-      if (band < 0) continue;
-      const ring = rings[band];
-      if (!ring) continue;
+      const ringA = this.ringA[i] as number;
+      if (ringA <= 0) continue;
+      const ringT = this.ringT[i] as number;
       const px = this.ringX[i] as number;
       const py = this.ringY[i] as number;
       const pz = this.ringZ[i] as number;
@@ -633,8 +760,8 @@ export class PlanetGlobe {
         );
         shade = smoothstep(0.92, 1.12, perp) * 0.86 + 0.14;
       }
-      const a = ring.alpha * lit;
-      const c = 236 * ring.tint * shade * exposure;
+      const a = ringA * lit;
+      const c = 236 * ringT * shade * exposure;
       const o = i * 4;
       const base = (out[o + 3] as number) / 255;
       // Straight-alpha over whatever is already there (the planet, or nothing).

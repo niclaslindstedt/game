@@ -177,8 +177,15 @@ export type SkyElements = {
 // lets the stylesheet park the sun's detonation overlay (`.sun-boom`) and its
 // reduced-motion resting spot on the same fractions without the driver writing
 // a live position anywhere — keep the two in step.
+//
+// IT IS ALSO THE GIANTS' ENTIRE HEADROOM (see ECLIPTIC_PITCH), which is why it
+// moved down from 0.32: every hundredth here is a hundredth of conjunction
+// height a superior world may spend. It does NOT go further. At 0.42 the star
+// sits directly behind the first menu row and its glare eats the label — the
+// backdrop swallowing the one word the screen exists to offer — so the rest of
+// the headroom is bought from the pitch instead.
 const SUN_X = 0.5;
-const SUN_Y = 0.32;
+const SUN_Y = 0.36;
 
 /** One unhurried master loop. A frozen progress maps 0..1 onto 0..CYCLE_MS of
  * orbital time, so a pinned frame reproduces the same geometry. */
@@ -222,22 +229,36 @@ const DEG = Math.PI / 180;
  * well, because the axial tilts have to lean against the same plane the orbits
  * are projected onto.
  *
- * It is a BUDGET as much as an angle, and the budget is the reason for the
- * number: a body at superior conjunction sits r·sin(pitch) above the sun on
- * screen, the sun's seat leaves 0.32 of the short side above it (SUN_Y), and in
- * LANDSCAPE the short side IS the height — so that 0.32 is the whole allowance
- * at every landscape viewport there is. Conjunction is also the ONLY half of a
- * superior world's orbit we ever see (CAM_AU), so a pitch that spends more than
- * the allowance does not merely crop a giant, it retires it.
+ * It is a BUDGET as much as an angle, and the budget is the whole reason for
+ * the number. A superior world is only ever seen near CONJUNCTION (see CAM_AU),
+ * and at conjunction it sits r·sin(pitch) above the sun on screen. The sun's
+ * seat leaves SUN_Y of the short side above it, and in LANDSCAPE the short side
+ * IS the height — so that fraction is the entire allowance at every landscape
+ * viewport there is. A world whose conjunction wants more than the allowance is
+ * not cropped, it is RETIRED: no moment of its orbit is in frame.
  *
- * Which makes the pitch and SKY_SCALE one decision, not two. Jupiter rides
- * 5.2·AU_UNITS out, so at SKY_SCALE = 2 its conjunction wants 1.977·sin(pitch)
- * of the allowance: 0.48 of the short side at the old 14°, half again more than
- * there is. Nine degrees brings it to 0.31 and puts Jupiter back over the sun
- * with Saturn's rings sweeping the top of the frame behind it. Double the scale
- * again and this number has to come down again with it.
+ * IT USED TO BE 9°, AND THAT QUIETLY RETIRED THREE OF THE FOUR GIANTS. The old
+ * number was chosen against Jupiter alone and it did hold Jupiter — but
+ * `pwa/scripts/sky-visibility.mjs`, which measures the thing rather than
+ * reasoning about it, put Jupiter MOSTLY in frame for 18% of the opening window
+ * and Saturn, Uranus and Neptune for 0% of it. Saturn scored 43% on a looser
+ * "any part of it" test, and what that 43% actually was is worth stating: its
+ * box is 629 px across on a desktop and its top edge sat 575 px ABOVE the
+ * frame, so a player saw a sliver of its outer ring creeping along the top and
+ * never saw Saturn. Two degrees costs 3.6 units of Saturn's conjunction down to
+ * 0.13 and puts the planet, its rings and its shadow on the screen for two
+ * thirds of the window.
+ *
+ * WHAT IT COSTS, plainly: the ecliptic is now very nearly edge-on, so the inner
+ * orbits read as a line through the sun rather than as a tilted disc. That is
+ * what the sky looks like from inside the plane — which is where this camera
+ * is — but it is a real change of picture and not a free one.
+ *
+ * THREE NUMBERS MOVE TOGETHER HERE and none of them may be changed alone: this,
+ * SUN_Y (the allowance itself), and SKY_SCALE (which scales every r). Re-run
+ * `sky-visibility.mjs` after touching any of them.
  */
-const ECLIPTIC_PITCH = 9 * DEG;
+const ECLIPTIC_PITCH = 2 * DEG;
 
 /**
  * WHERE THE CAMERA STANDS, in AU: parked in the gap between Mars and Jupiter,

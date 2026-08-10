@@ -1511,8 +1511,9 @@ ecliptic — the system condensed out of a single spinning disc and never left i
 outlier, Neptune's 1.8° the rule). Orbits are solved from the J2000 elements
 through Kepler's equation, so they are real ellipses with the sun at a FOCUS and
 each world running fastest at perihelion. The camera sits nearly IN the plane
-(`ECLIPTIC_PITCH`, 14°), which is why the planets string out along a line
-through the sun and show phases like the Moon does.
+(`ECLIPTIC_PITCH`, 2°), which is why the planets string out along a line
+through the sun and show phases like the Moon does — and that angle is a
+BUDGET, not a taste. See "the giants' headroom" below.
 
 **AND IT STANDS BETWEEN MARS AND JUPITER** (`CAM_R`), which sorts the system
 into two kinds of world. Inside that radius — Mercury, Venus, Earth, Mars and
@@ -1525,6 +1526,27 @@ and leaves by the other side. That is both the correct sight of them and the
 better one: passing in front, a giant is at NEW phase and at its largest, and
 the near leg of the loop used to park a screen-filling black Saturn over the
 middle of the menu.
+
+**SATURN'S RINGS ARE A DENSITY MODEL, NOT ROCKS — AND THEY CAST BOTH WAYS.**
+The ring particles are ~10¹⁴ ice chunks from centimetres to metres; nobody
+renders those as geometry, so the rings are a 1D profile of radius → opacity
+(`SATURN_RINGS`: D, C, B, Cassini, A, Encke) intersected per pixel by one
+ray-plane solve, cached per resolution. Two rules make it read:
+
+- **A PIXEL COVERS A RANGE OF RING RADIUS, and near the ansae it covers a lot
+  of it.** The plane is seen at a slant, so sampling the profile once per pixel
+  does not merely alias — it picks a band at random, which at menu size turned
+  the whole system into a set of hard concentric outlines. The footprint is
+  measured by finite difference and the profile averaged across it.
+- **THE SHADOW GOES BOTH WAYS.** The planet's shadow sweeping the far arc was
+  always there; the rings' shadow on the PLANET was not, so Saturn wore a clean
+  face under a system dense enough to eclipse it. It is the same ray-plane solve
+  run toward the sun instead of toward the camera, and everything it needs but
+  the light is cached.
+
+Forward-scattering (the tenuous rings glowing when backlit) is deliberately NOT
+implemented: a superior world is only ever seen near conjunction, fully lit, so
+it would be dead code in this sky.
 
 **A PLANET IS OPAQUE.** The globe shader lights the sphere per pixel, so the
 night side is already dark and a backlit limb already keeps the thread of air a
@@ -1551,6 +1573,26 @@ context, and flattens to a single band as far as the rest of the title screen is
 concerned. Widen the band freely; never write one of its numbers onto anything
 outside that wrapper. The title screen's full ladder is the band map above
 `.title-sky` in `styles.css`, pinned by `tests/overlay_layers_test.ts`.
+
+**THE GIANTS' HEADROOM IS THE PITCH, AND IT IS MEASURED RATHER THAN GUESSED.**
+A superior world is only ever seen near conjunction, where it sits
+`r·sin(pitch)` above the sun; the sun's seat leaves `SUN_Y` of the short side
+above it, and in landscape the short side IS the height, so that is the whole
+allowance. A world wanting more than the allowance is not cropped but RETIRED —
+no moment of its orbit is in frame. At the old 9° that had quietly retired three
+of the four giants: `pwa/scripts/sky-visibility.mjs` measured Jupiter mostly in
+frame for 18% of the opening window and Saturn, Uranus and Neptune for 0%.
+Saturn scored 43% on a looser "any part of it" test, and what that was is the
+point — its box is 629 px across on a desktop with its top edge 575 px ABOVE the
+frame, so a player saw a sliver of outer ring along the top and never saw
+Saturn. At 2°, with the sun moved a little down the screen, Saturn is properly
+in frame for two thirds of the window and Jupiter for two fifths. What it costs
+is that the ecliptic is now nearly edge-on and the inner orbits read as a line
+rather than a tilted disc — which is what the sky looks like from inside the
+plane, and still a real change of picture. `ECLIPTIC_PITCH`, `SUN_Y` and
+`SKY_SCALE` are one decision: re-run the script after touching any of them.
+Uranus and Neptune are still never in frame — the geometry now permits Uranus,
+but the opening date (`EPOCH_MS`) does not put it near conjunction.
 
 **ONE THING IS NOT TO SCALE, AND IT IS DISTANCE.** Everything else in the sky
 is now measured. Every disc is its true diameter over Earth's times one scale

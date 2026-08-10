@@ -287,7 +287,7 @@ describe("what the frame actually sees", () => {
   /** The driver's floor: below this a rock is one more speck in a starfield. */
   const MIN_PX = 1.4;
   /** "A rock you can see craters on" — the pass worth waiting for. */
-  const GOOD = 0.05;
+  const GOOD = 0.03;
 
   for (const view of VIEWS) {
     it(`is alive but not busy at ${view.name}`, () => {
@@ -320,16 +320,20 @@ describe("what the frame actually sees", () => {
           if (d > u * GOOD) goodOnes.add(i);
         }
       }
-      // One or two rocks in view at any moment. Below one and the menu is a
-      // still photograph most of the time; above three and the belt starts
-      // competing with the solar system it is meant to be threading through.
+      // ABOUT HALF A ROCK IN VIEW at any moment — so most of the time there is
+      // one, and often there is none. The belt was tuned three times before it
+      // sat here: at 1.7 it read as weather rather than as a belt and pulled
+      // the eye off the planets, which are the thing the sky is actually of.
+      // Below about a third and it stops being a belt at all.
       const concurrent = visible / ticks;
-      expect(concurrent).toBeGreaterThan(1.1);
-      expect(concurrent).toBeLessThan(2.6);
-      // …and a rock big enough to read comes round about every eight seconds.
+      expect(concurrent).toBeGreaterThan(0.3);
+      expect(concurrent).toBeLessThan(0.8);
+      // …and a rock big enough to read comes round about once a minute. That
+      // is a long wait by menu standards and a deliberate one: a close pass is
+      // an event, and an event that happens every eight seconds is scenery.
       const goodEvery = until / 1000 / goodOnes.size;
-      expect(goodEvery).toBeGreaterThan(5);
-      expect(goodEvery).toBeLessThan(13);
+      expect(goodEvery).toBeGreaterThan(20);
+      expect(goodEvery).toBeLessThan(85);
     });
   }
 });
