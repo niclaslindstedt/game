@@ -110,6 +110,9 @@ make test                                # the full test suite
 | `make town`                           | Render the DRIVE's town at five stops along the road — and `ARGS="--site home"` what it arrives at |
 | `make gallery`                        | LOOK at any effect — the effects gallery, captured as a filmstrip PNG                              |
 | `make sheet ARGS="<track>"`           | LOOK at a score — a `content/music/` track engraved as sheet music, one staff per voice            |
+| `make song FILE=<x.song>`             | Compile a `.song` into a track's YAML and engrave it — the short way to write a score              |
+| `make unsong ARGS="<track>"`          | …and the way back: a shipped track written out as a `.song`                                        |
+| `make audition ARGS="<track>"`        | HEAR a score — a page that plays it with the game's own synth                                      |
 | `make icons` / `make screenshots`     | Regenerate the PWA icons + OG card / recapture the manifest screenshots                            |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                 |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                     |

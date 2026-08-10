@@ -38,6 +38,26 @@ declare module "*/scripts/asset-tools/notation.mjs" {
   ): Promise<{ svg: string; width: number; height: number }>;
 }
 
+declare module "*/scripts/asset-tools/song-format.mjs" {
+  /** A parsed `.song` — the same shape a cooked track has, plus the authored
+   * chord plan the emitter writes into the YAML as a comment. */
+  export type SongDoc = {
+    id?: string;
+    name?: string;
+    description?: string;
+    bpm?: number;
+    stepsPerBeat: number;
+    instruments: Record<string, Record<string, unknown>>;
+    patterns: Record<string, Record<string, string[]>>;
+    order: string[];
+    sections: Record<string, unknown>;
+  };
+
+  export const STEPS_PER_BAR: number;
+  export function parseSong(source: string): SongDoc;
+  export function toSong(track: unknown): string;
+}
+
 declare module "*/scripts/music-data/load-yaml.mjs" {
   /** A cooked track — the shape the chiptune player takes, with every pattern
    * voice already split into step tokens. */

@@ -1,0 +1,115 @@
+# THE LONG NOON — BOOT HILL's own theme.
+#
+# The brief: a knockoff wild-west theme park built in Russia and run on licensed
+# robotics, played as a GAUNTLET — the street funnels, the horde presses from
+# ahead, and the answer is to keep walking forward and shooting. So: a spaghetti
+# western that is WRONG. The genre's own gestures — the Dorian sixth, the empty
+# fifth, the tremolo, the lonely trumpet — played by something with no lungs, on
+# a beat that never once rushes or drags, over a marching bass that does not
+# care how far it is to the end of the street.
+#
+# Compile:  node scripts/song-import.mjs content/songs/long_noon.song --sheet
+
+id     long_noon
+title  THE LONG NOON
+tempo  138
+about
+  A knockoff spaghetti western, played by robots. The genre's own gestures —
+  a Dorian sixth over a minor chord, bare fifths, a tremolo guitar, a lonely
+  trumpet answering itself across an empty street — laid over a bass that
+  marches in a straight line and a kit that never rushes. The saloon piano
+  is a detuned square hammering the off-beats and the tremolo is a
+  sixteenth-note ostinato that never stops, because nothing here is played
+  by anything that gets tired. Original melodies; nothing sampled.
+
+# ── THE CAST ────────────────────────────────────────────────────────────────
+# The trumpet: the lonely one, and the only voice on the street with a phrase.
+voice trumpet  square vol=.03 gate=.85 detune=8 vib=5/16/160 echo=.28
+# Its answer, an octave down — the far end of the street replying.
+voice answer   square vol=.015 gate=.85 pan=.35 echo=.2
+# The tremolo guitar: sixteenths that never stop. A saw, thinned by a lowpass,
+# because a bright one at this rate is a wasp.
+voice tremolo  saw vol=.013 gate=.45 pan=-.3 lp=2200
+# The saloon piano — off-beat chord stabs, deliberately out of tune.
+voice piano    square vol=.014 gate=.3 detune=14 pan=.25
+# The marching bass. Triangle, no edge: it is boots, not a guitar.
+voice bass     triangle vol=.055 gate=.8
+
+# ── THE KIT ─────────────────────────────────────────────────────────────────
+drum kick   triangle vol=.062 gate=1 slide=.25 note=D2
+drum snare  noise vol=.034 gate=.75 hp=1400
+drum rim    noise vol=.016 gate=.12 bp=2400 pan=-.4
+drum shaker noise vol=.009 gate=.2 hp=7200 pan=.3
+
+# ── INTRO — an empty street, a bell, and something winding up ───────────────
+section intro
+  chords   Dm | Dm | Dm | A
+  trumpet  .*16 | .*16 | .*16 | a4*4 d5*4 f5*4 a5*4
+  tremolo  .*16 | .*16 | roll:4 | roll:4
+  bass     .*16 | .*16 | pump:2 | pump:2
+  rim      x...............
+  shaker   ................|................|x.x.x.x.x.x.x.x.|x.x.x.x.x.x.x.x.
+
+# ── A — the walk down the street. Dm–C–Dm–C is the whole west in two chords ──
+section a
+  chords   Dm | C | Dm | C | Dm | Bb | A | A
+  trumpet  d5*4 f5*2 e5*2 d5*4 c5*4 | e5*8 c5*4 d5*4 | f5*4 a5*2 g5*2 f5*4 e5*4 | d5*8 .*8
+           g5*4 a5*2 g5*2 f5*4 d5*4 | f5*8 d5*4 c5*4 | e5*4 d5*2 c5*2 a4*4 c5*4 | d5*12 .*4
+  tremolo  roll 4
+  piano    offbeat 4
+  bass     pump 2
+  kick     x.......x.......
+  snare    ....x.......x...
+  shaker   x.x.x.x.x.x.x.x.
+
+# ── B — the sixth. The one interval that makes a minor key sound like a
+#    desert rather than a dungeon, sat on top of the chord for a whole bar ────
+section b
+  chords   Dm | Dm | Gm | Gm | Dm | Bb | A | Dm
+  trumpet  a5*8 b5*8 | a5*4 g5*4 f5*8 | d6*8 c6*8 | a#5*4 a5*4 g5*8
+           a5*8 d6*8 | f5*4 d5*4 a#4*8 | c#5*4 e5*4 a5*8 | d5*16
+  answer   a4*8 b4*8 | a4*4 g4*4 f4*8 | d5*8 c5*8 | a#4*4 a4*4 g4*8
+           a4*8 d5*8 | f4*4 d4*4 a#3*8 | c#4*4 e4*4 a4*8 | d4*16
+  tremolo  roll 4
+  piano    offbeat 4
+  bass     pump 2
+  kick     x.......x.......
+  snare    ....x.......x...
+  shaker   x.x.x.x.x.x.x.x.
+
+# ── STANDOFF — the kit stops. Two men, a bell, and a lot of nothing ─────────
+section standoff
+  chords   Dm | Dm | Bb | Bb | Gm | Gm | A | A
+  trumpet  .*16 | a4*8 d5*8 | .*16 | f5*8 d5*8 | .*16 | a#4*8 g4*8 | .*16 | c#5*8 e5*8
+  tremolo  arp16 4
+  bass     hold 2
+  rim      x.......x.....x.
+
+# ── BUILD — the street closes in. A chromatic climb nobody can outwalk ──────
+section build
+  chords   Dm | D#dim | Em | F | F#dim | Gm | A | A
+  trumpet  d5*16 | d#5*16 | e5*16 | f5*16 | f#5*16 | g5*16 | a5*8 c#6*8 | d6*16
+  answer   d4*16 | d#4*16 | e4*16 | f4*16 | f#4*16 | g4*16 | a4*8 c#5*8 | d5*16
+  tremolo  roll 4
+  bass     pump 2
+  kick     x.......x.......
+  snare    ....x.......x...|....x.......x...|....x.......x...|....x.......x.x.
+           ....x.......x.x.|....x...x.x.x.x.|x.x.x.x.x.x.x.x.|xxxxxxxxxxxxxxxx
+  shaker   xxxxxxxxxxxxxxxx
+
+# ── TURN — the unison, and then the street is empty again ───────────────────
+section turn
+  chords   Dm | Bb | C | A | Dm | Gm | A | Dm
+  trumpet  d5*2 e5*2 f5*2 g5*2 a5*8 | a#5*4 a5*4 g5*4 f5*4 | e5*4 g5*4 c6*8 | a5*4 c#6*4 e6*8
+           d6*8 a5*4 f5*4 | a#5*8 g5*8 | a5*4 e5*4 c#5*8 | d5*12 .*4
+  answer   d4*2 e4*2 f4*2 g4*2 a4*8 | a#4*4 a4*4 g4*4 f4*4 | e4*4 g4*4 c5*8 | a4*4 c#5*4 e5*8
+           d5*8 a4*4 f4*4 | a#4*8 g4*8 | a4*4 e4*4 c#4*8 | d4*12 .*4
+  tremolo  roll 4
+  piano    offbeat 4
+  bass     pump 2
+  kick     x.......x.......
+  snare    ....x.......x...|....x.......x...|....x.......x...|....x.......x...
+           ....x.......x...|....x.......x...|....x.......x.x.|....x.x.xx.xxxxx
+  shaker   x.x.x.x.x.x.x.x.
+
+order  intro a b a standoff build b turn

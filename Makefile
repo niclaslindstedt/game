@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet song unsong audition mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -155,6 +155,30 @@ gallery:
 # score comes out too tall to see.
 sheet:
 	node scripts/music-sheet.mjs $(ARGS)
+
+# WRITE A SCORE THE SHORT WAY — compile a `.song` (content/songs/) into the
+# tracker YAML under content/music/, and engrave it in the same breath. The
+# notation exists because the YAML is the right thing to SHIP and a bad thing to
+# TYPE: rhythm is padding, the chord plan is retyped once per voice, and a kick
+# drum is spelled as a pitch. See the `soundtrack` skill.
+# `make song FILE=content/songs/long_noon.song`
+song:
+	node scripts/song-import.mjs $(or $(FILE),content/songs/long_noon.song) --sheet $(ARGS)
+
+# …and the way back: any shipped track written out as a `.song`, so it can be
+# edited in the short format. Also what makes the pair testable — yaml → song →
+# yaml has to come back identical.
+# `make unsong ARGS="overdue"` / `ARGS="--all"`
+unsong:
+	node scripts/song-export.mjs $(ARGS)
+
+# HEAR A SCORE — a self-contained page that plays a track with the game's own
+# synth (the shipped modules, bundled in) and shows the engraved score under it.
+# PUBLISH IT AS AN ARTIFACT: it is the only way anybody but you can hear a track
+# without checking the repo out.
+# `make audition ARGS="long_noon"`
+audition:
+	node scripts/song-artifact.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

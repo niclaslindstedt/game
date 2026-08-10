@@ -1,0 +1,346 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE LONG NOON — compiled from a .song by scripts/song-import.mjs.
+#
+# Arrangement (138 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   intro(4) a(8) b(8) a(8) standoff(8) build(8) b(8) turn(8)
+#   = 60 bars ≈ 104 s per loop.
+id: long_noon
+name: THE LONG NOON
+description: >-
+  A knockoff spaghetti western, played by robots. The genre's own gestures
+  — a Dorian sixth over a minor chord, bare fifths, a tremolo guitar, a
+  lonely trumpet answering itself across an empty street — laid over a
+  bass that marches in a straight line and a kit that never rushes. The
+  saloon piano is a detuned square hammering the off-beats and the tremolo
+  is a sixteenth-note ostinato that never stops, because nothing here is
+  played by anything that gets tired. Original melodies; nothing sampled.
+bpm: 138
+stepsPerBeat: 4
+instruments:
+  trumpet:
+    wave: square
+    volume: 0.03
+    gate: 0.85
+    detuneCents: 8
+    vibrato:
+      rateHz: 5
+      depthCents: 16
+      delayMs: 160
+    echo: 0.28
+  answer:
+    wave: square
+    volume: 0.015
+    gate: 0.85
+    pan: 0.35
+    echo: 0.2
+  tremolo:
+    wave: sawtooth
+    volume: 0.013
+    gate: 0.45
+    pan: -0.3
+    filter:
+      type: lowpass
+      frequency: 2200
+  piano:
+    wave: square
+    volume: 0.014
+    gate: 0.3
+    detuneCents: 14
+    pan: 0.25
+  bass:
+    wave: triangle
+    volume: 0.055
+    gate: 0.8
+  kick:
+    wave: triangle
+    volume: 0.062
+    gate: 1
+    slide: 0.25
+  snare:
+    wave: noise
+    volume: 0.034
+    gate: 0.75
+    filter:
+      type: highpass
+      frequency: 1400
+  rim:
+    wave: noise
+    volume: 0.016
+    gate: 0.12
+    filter:
+      type: bandpass
+      frequency: 2400
+    pan: -0.4
+  shaker:
+    wave: noise
+    volume: 0.009
+    gate: 0.2
+    filter:
+      type: highpass
+      frequency: 7200
+    pan: 0.3
+patterns:
+  # INTRO — Dm Dm Dm A
+  intro:
+    trumpet: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A4 =  =  =  D5 =  =  =  F5 =  =  =  A5 =  =  =
+    tremolo: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+    bass: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+    rim: |
+      x  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    shaker: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+  # A — Dm C Dm C Dm Bb A A
+  a:
+    trumpet: |
+      D5 =  =  =  F5 =  E5 =  D5 =  =  =  C5 =  =  =
+      E5 =  =  =  =  =  =  =  C5 =  =  =  D5 =  =  =
+      F5 =  =  =  A5 =  G5 =  F5 =  =  =  E5 =  =  =
+      D5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+      G5 =  =  =  A5 =  G5 =  F5 =  =  =  D5 =  =  =
+      F5 =  =  =  =  =  =  =  D5 =  =  =  C5 =  =  =
+      E5 =  =  =  D5 =  C5 =  A4 =  =  =  C5 =  =  =
+      D5 =  =  =  =  =  =  =  =  =  =  =  .  .  .  .
+    tremolo: |
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+    piano: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+    bass: |
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      C2 .  C3 .  C2 .  C3 .  C2 .  C3 .  C2 .  C3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      C2 .  C3 .  C2 .  C3 .  C2 .  C3 .  C2 .  C3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+    kick: |
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+    shaker: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+  # B — Dm Dm Gm Gm Dm Bb A Dm
+  b:
+    trumpet: |
+      A5 =  =  =  =  =  =  =  B5 =  =  =  =  =  =  =
+      A5 =  =  =  G5 =  =  =  F5 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      A#5 =  =  =  A5 =  =  =  G5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  D6 =  =  =  =  =  =  =
+      F5 =  =  =  D5 =  =  =  A#4 =  =  =  =  =  =  =
+      C#5 =  =  =  E5 =  =  =  A5 =  =  =  =  =  =  =
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    answer: |
+      A4 =  =  =  =  =  =  =  B4 =  =  =  =  =  =  =
+      A4 =  =  =  G4 =  =  =  F4 =  =  =  =  =  =  =
+      D5 =  =  =  =  =  =  =  C5 =  =  =  =  =  =  =
+      A#4 =  =  =  A4 =  =  =  G4 =  =  =  =  =  =  =
+      A4 =  =  =  =  =  =  =  D5 =  =  =  =  =  =  =
+      F4 =  =  =  D4 =  =  =  A#3 =  =  =  =  =  =  =
+      C#4 =  =  =  E4 =  =  =  A4 =  =  =  =  =  =  =
+      D4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    tremolo: |
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4
+      G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+    piano: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+    bass: |
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+    kick: |
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+    shaker: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+  # STANDOFF — Dm Dm Bb Bb Gm Gm A A
+  standoff:
+    trumpet: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A4 =  =  =  =  =  =  =  D5 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      F5 =  =  =  =  =  =  =  D5 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A#4 =  =  =  =  =  =  =  G4 =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+    tremolo: |
+      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
+      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
+      A#4 .  D5 .  F5 .  D5 .  A#4 .  D5 .  F5 .  D5 .
+      A#4 .  D5 .  F5 .  D5 .  A#4 .  D5 .  F5 .  D5 .
+      G4 .  A#4 .  D5 .  A#4 .  G4 .  A#4 .  D5 .  A#4 .
+      G4 .  A#4 .  D5 .  A#4 .  G4 .  A#4 .  D5 .  A#4 .
+      A4 .  C#5 .  E5 .  C#5 .  A4 .  C#5 .  E5 .  C#5 .
+      A4 .  C#5 .  E5 .  C#5 .  A4 .  C#5 .  E5 .  C#5 .
+    bass: |
+      D2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    rim: |
+      x  .  .  .  .  .  .  .  x  .  .  .  .  .  x  .
+  # BUILD — Dm D#dim Em F F#dim Gm A A
+  build:
+    trumpet: |
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  C#6 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    answer: |
+      D4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      E4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A4 =  =  =  =  =  =  =  C#5 =  =  =  =  =  =  =
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    tremolo: |
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4 D#4
+      E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4 E4
+      F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4 F4
+      F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4 F#4
+      G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+    bass: |
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      D#2 .  D#3 .  D#2 .  D#3 .  D#2 .  D#3 .  D#2 .  D#3 .
+      E2 .  E3 .  E2 .  E3 .  E2 .  E3 .  E2 .  E3 .
+      F2 .  F3 .  F2 .  F3 .  F2 .  F3 .  F2 .  F3 .
+      F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .  F#2 .  F#3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+    kick: |
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
+    shaker: |
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
+  # TURN — Dm Bb C A Dm Gm A Dm
+  turn:
+    trumpet: |
+      D5 =  E5 =  F5 =  G5 =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  A5 =  =  =  G5 =  =  =  F5 =  =  =
+      E5 =  =  =  G5 =  =  =  C6 =  =  =  =  =  =  =
+      A5 =  =  =  C#6 =  =  =  E6 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  A5 =  =  =  F5 =  =  =
+      A#5 =  =  =  =  =  =  =  G5 =  =  =  =  =  =  =
+      A5 =  =  =  E5 =  =  =  C#5 =  =  =  =  =  =  =
+      D5 =  =  =  =  =  =  =  =  =  =  =  .  .  .  .
+    answer: |
+      D4 =  E4 =  F4 =  G4 =  A4 =  =  =  =  =  =  =
+      A#4 =  =  =  A4 =  =  =  G4 =  =  =  F4 =  =  =
+      E4 =  =  =  G4 =  =  =  C5 =  =  =  =  =  =  =
+      A4 =  =  =  C#5 =  =  =  E5 =  =  =  =  =  =  =
+      D5 =  =  =  =  =  =  =  A4 =  =  =  F4 =  =  =
+      A#4 =  =  =  =  =  =  =  G4 =  =  =  =  =  =  =
+      A4 =  =  =  E4 =  =  =  C#4 =  =  =  =  =  =  =
+      D4 =  =  =  =  =  =  =  =  =  =  =  .  .  .  .
+    tremolo: |
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4
+      C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+      G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4 G4
+      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
+      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
+    piano: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  A#4 .  .  .  D5 .  .  .  A#4 .  .  .  D5 .
+      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+    bass: |
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .  A#2 .  A#3 .
+      C2 .  C3 .  C2 .  C3 .  C2 .  C3 .  C2 .  C3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+      G2 .  G3 .  G2 .  G3 .  G2 .  G3 .  G2 .  G3 .
+      A2 .  A3 .  A2 .  A3 .  A2 .  A3 .  A2 .  A3 .
+      D2 .  D3 .  D2 .  D3 .  D2 .  D3 .  D2 .  D3 .
+    kick: |
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  x  .  x  x  .  x  x  x  x  x
+    shaker: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+order: [intro, a, b, a, standoff, build, b, turn]
