@@ -1273,14 +1273,20 @@ export const DRIVE = {
      * HOW FAR AN END HAS TO FOLD BEFORE IT IS STOVE IN, as a share of the crush
      * cap that end could reach at all (`crush.maxShare`).
      *
-     * A THIRD, and the fraction is doing real work: it has to be past what a
-     * scrape or a shunt in traffic produces (those fold a few px and leave the
-     * car recognisable) and comfortably under a write-off, because the whole
-     * point of the crash art is that it appears while the car is still driving.
-     * A struck car the player never sees change shape is a struck car he does
-     * not believe he hit.
+     * AN EIGHTH, AND IT WAS A THIRD — which measured out at four cars in a whole
+     * MEDIUM leg out of a hundred and forty-one. The fraction has to sit on the
+     * boundary between a GRAZE and a real hit, and that boundary is not where it
+     * looks: measured over a leg, the deepest fold a struck car ever reaches is
+     * 3% of its cap at the lower quartile, 6% at the median and 47% at the upper
+     * quartile. So a third caught only the top three-in-ten of collisions and
+     * the crash art was, in practice, art nobody saw.
+     *
+     * It still has to be past a scrape (those fold a px or two and leave the car
+     * recognisable) and comfortably under a write-off, because the whole point is
+     * that the shape changes while the car is still driving. A struck car the
+     * player never sees change shape is a struck car he does not believe he hit.
      */
-    smashShare: 0.33,
+    smashShare: 0.12,
     /**
      * HOW OFTEN A WHEEL STAYS ON when its end goes in.
      *
