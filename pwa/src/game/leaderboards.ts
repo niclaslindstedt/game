@@ -25,7 +25,7 @@
 // not an anti-cheat. A determined host can still forge a solo record, exactly as
 // they could before multiplayer existed.
 
-import { type Difficulty } from "@game/menu";
+import type { Difficulty } from "@game/menu";
 
 import type { LeaderboardEntry, LeaderboardKey } from "../app/scores-bridge.ts";
 import { scoresBridgeAvailable, submitScores } from "../app/scores-bridge.ts";

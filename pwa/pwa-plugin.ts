@@ -86,6 +86,10 @@ const PUBLIC_SKIP = new Set([
   "screenshot-wide.png",
 ]);
 
+/** Vite's build manifest (`build.manifest` in vite.config.ts) — read by
+ * `scripts/check-seo.mjs` at build time and by nothing at runtime. */
+const BUILD_MANIFEST = ".vite/manifest.json";
+
 /**
  * Is this base one of the DEVELOPMENT slots — `/preview/` (every `main` push)
  * or `/branch/` (a parked branch) — rather than the released site at `/`?
@@ -1028,6 +1032,11 @@ export function gamePwa({
 
       // Hashed build output (JS, CSS, the HTML shell, any emitted assets).
       for (const [fileName, output] of Object.entries(bundle)) {
+        // …except Vite's own build manifest (`build.manifest`), which exists
+        // for `scripts/check-seo.mjs` to weigh the two startup paths with and
+        // is never requested by anything the player runs. Precaching it would
+        // spend a slice of every player's offline budget on a build artifact.
+        if (fileName === BUILD_MANIFEST) continue;
         const bytes =
           output.type === "chunk"
             ? Buffer.byteLength(output.code)

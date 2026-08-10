@@ -26,7 +26,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { openRoads } from "./travel-doors.ts";
 import { type Character } from "../characters.ts";
-import { type Difficulty } from "@game/core";
+import type { Difficulty } from "@game/core";
 
 export function TravelPanel({
   state,

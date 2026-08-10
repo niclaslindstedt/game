@@ -3,7 +3,7 @@
 // player-centered (level-clamped) view rect sits.
 
 import { localHero } from "../local-seat.ts";
-import { type GameState } from "@game/menu";
+import type { GameState } from "@game/menu";
 
 import { unprojectX, unprojectY } from "./tilt.ts";
 

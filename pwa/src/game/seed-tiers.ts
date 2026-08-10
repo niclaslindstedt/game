@@ -8,7 +8,7 @@
 // `title-screen/use-character-transfer.ts`), so a player who never opens the
 // hidden developer menu never downloads it.
 
-import { type Difficulty } from "@game/menu";
+import type { Difficulty } from "@game/menu";
 
 /** A power tier a seed hero is minted at: a target hero LEVEL plus the
  * difficulty whose loot/level band that level sits in (drives the drop's item

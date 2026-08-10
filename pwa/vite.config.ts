@@ -124,6 +124,14 @@ export default defineConfig({
     // size sits above Vite's generic 500 kB warning while the separately
     // enforced gzipped startup path remains within the SEO budget.
     chunkSizeWarningLimit: 700,
+    // WRITTEN FOR `scripts/check-seo.mjs`, which weighs two paths rather than
+    // one: the CARD (what the entry HTML pulls before anything is on screen)
+    // and MENU-READY (that plus the app shell the card fetches behind itself —
+    // see Boot.tsx). The second is the one that still catches a startup module
+    // reaching back through `@game/core`, and it needs to know which chunks
+    // `src/App.tsx` statically drags in, which only the build knows. Reading it
+    // out of the manifest beats guessing from hashed filenames.
+    manifest: true,
   },
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),

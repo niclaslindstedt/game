@@ -1708,14 +1708,33 @@ behind it. Two patterns keep that possible:
   weapon/gear bases) beside `generated/uniques.ts` (the named chase roster).
   The menus read the first of each pair through `defs/levels/summary.ts`.
 
-`pwa/scripts/check-seo.mjs` polices the result as a critical-path budget of
-170 KB of gzipped JavaScript — web.dev's performance-budget figure, the one
-behind a ~5 s time-to-interactive on a slow 3G phone, with no allowance added
-on top. It stood at 200 for as long as the app rendered with React, because
-react-dom was ~50 KB gzipped of the path and no app-side surgery could return
-that; swapping the renderer for Preact did, and the 30 KB of slack came off the
-budget with it. A sudden jump means something on the startup path reached back
-through `@game/core`.
+#### Bundle budgets
+
+`pwa/scripts/check-seo.mjs` polices the result, and since the app started
+entering at the studio card (`Boot.tsx`) rather than at `App.tsx` it weighs TWO
+paths rather than one — because "how long until the player sees something" and
+"how long until the player can press something" stopped being the same number:
+
+| Path                     | Budget    | Today   | What it is                                              |
+| ------------------------ | --------- | ------- | ------------------------------------------------------- |
+| **Card** (critical path) | 40 KB gz  | ~21 KB  | What the entry HTML pulls, before anything is on screen |
+| **Menu-ready**           | 170 KB gz | ~142 KB | That plus everything `src/App.tsx` statically drags in  |
+
+170 is web.dev's performance-budget figure, the one behind a ~5 s
+time-to-interactive on a slow 3G phone, with no allowance added on top. It
+stood at 200 for as long as the app rendered with React, because react-dom was
+~50 KB gzipped of the path and no app-side surgery could return that; swapping
+the renderer for Preact did, and the 30 KB of slack came off the budget with
+it. Menu-ready is that same budget under a new name, and it is still the one
+that catches a startup module reaching back through `@game/core`.
+
+Menu-ready is measured from **Vite's build manifest** (`build.manifest` in
+`pwa/vite.config.ts`) rather than from the HTML, because the HTML by design
+says nothing about a chunk fetched at runtime; the walk follows `imports`
+(static) and never `dynamicImports`, which is exactly what it must not count —
+the game screen, the drive, the gallery, the scores. The manifest is kept out
+of the service worker's precache (`pwa-plugin.ts`): it is a build artifact, and
+nothing the player runs ever asks for it.
 
 `engine/output.ts` remains the central output module (OSS_GAME_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers
@@ -1728,22 +1747,53 @@ log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 A Vite + Preact shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game, plus the
+- **`pwa/src/Boot.tsx`** — **the entry chunk, and all of it.** The card, the
+  pixel font it is drawn in, and a `lazy()` of the app shell: nothing else is
+  allowed in here. The app used to enter at `App.tsx`, which meant the first
+  script a player waited on carried the title menu, its settings/mods/vault
+  screens, the sky, the paper doll, the roster, the parked-run reader, the
+  engine's item and difficulty catalogs and the whole sprite atlas — ~139 KB
+  gzipped before a pixel could be drawn. The card is up for a second or three
+  regardless, so all of it now arrives DURING the card (`warmBoot`) instead of
+  before it, and the card holds until it has: the menu is exactly as finished
+  when the card clears as it was when it was eager. Measured as two budgets —
+  see _Bundle budgets_ below.
+- **`pwa/src/app-shell.ts`** — the one place `App.tsx` is imported from, so the
+  renderer's `lazy()` and `warmBoot`'s prefetch name one specifier and share one
+  chunk and one fetch instead of racing into two.
+- **`pwa/src/App.tsx`** — the app shell: main menu ↔ the game, plus the
   three developer workbench routes, each lazily imported so its chunk folds away
   in a `__DEV_TOOLS__ = false` build — the cutscene loop (`?cutscene=<id>`), the
   effects gallery (`?effects`) and the road (`?drive`).
 - **`pwa/src/game/SplashScreen.tsx`** — the STUDIO CARD the app opens on
   (`splash.ts` holds its timing rules and the warm-up it fronts). It is the
   only screen in the app that covers another LIVE one: the title menu mounts
-  underneath it on the first render and does its whole arrival behind it —
+  underneath it as its chunk lands and does its whole arrival behind it —
   the sprite atlas decode, the planet shader's chunk, and the backdrop's nine
   procedural surface bakes, which the sky would otherwise pay for one frame at
-  a time as a visible stutter on the way into the menu. It holds until the
-  load is done however long that takes, then clears on any input after a
-  second and by itself at three. Every press is swallowed while it is up,
+  a time as a visible stutter on the way into the menu. It clears on any input
+  after a second and by itself at three — and **the two clocks answer to the
+  load differently**: the AUTO-dismiss waits for it (a card that lifted itself
+  onto a half-assembled menu is the thing it was added to prevent), a PRESS
+  does not. A player who taps has said they are done reading, and a card that
+  answers by ignoring them reads as a hung app; what they get instead is the
+  Loading screen, until the shell and the atlas catch up. The minimum second is
+  enforced either way, and it is not about the load at all — it is the guard
+  against the press that LAUNCHED the app arriving as the press that dismisses
+  the card. Every press is swallowed while it is up,
   because the menu behind it is listening. Suppressed for `?debug` / `?bot=` /
   `?skytest` / `?nosplash` so no harness pays for it — see
   `docs/configuration.md`.
+  **`splash.ts` HAS NO STATIC IMPORTS BUT ONE**, and that is the rule rather
+  than the tidying: everything `warmBoot` reaches is by definition something
+  the card exists to load in the background, so a static import there puts it
+  in front of the card instead of behind it. It also exports `splashSettled()`
+  — resolved as the card leaves, immediately when a harness launch raises none
+  — which is what anything the player cannot use before their first gesture
+  waits on. The title THEME is the case it exists for: a score is tens of KB no
+  browser will sound before that gesture, and the press that clears the card IS
+  that gesture, so fetching it any earlier is bandwidth taken from the atlas
+  and the app shell that ARE racing the card.
   **In a STORE SHELL it is the first thing painted**: a shell build strips the
   prerendered boot shell out of `index.html` (`VITE_SHELL_BUILD`, applied by
   `stripBootShell` in `pwa-plugin.ts`), because that markup is SEO and nothing

@@ -3,7 +3,11 @@ import { Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./styles.css";
-import { App } from "./App.tsx";
+// The game path enters at the STUDIO CARD, not at the app: `Boot.tsx` is the
+// whole entry chunk and fetches `App.tsx` behind the card it puts up. The doc
+// pages below never reach it at all, so they no longer carry the app's graph
+// either.
+import { Boot } from "./Boot.tsx";
 import { markAppMounted } from "./app/boot-watchdog.ts";
 
 // Both document pages are lazily loaded, and must STAY lazy: they are walls of
@@ -59,7 +63,7 @@ createRoot(root).render(
       {page === PrivacyPage ? <PrivacyPage /> : <ContactPage />}
     </Suspense>
   ) : (
-    <App />
+    <Boot />
   ),
 );
 

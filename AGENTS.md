@@ -215,13 +215,34 @@ about REACHABILITY. Two patterns keep it workable and both are the right move
 when a new one is needed: the engine's runtime toggles live in the import-free
 leaf `engine/game/flags.ts`, and compiled content is emitted in menu-facing and
 run-facing halves (`generated/level-index.ts` beside `generated/levels.ts`),
-read through `defs/levels/summary.ts`. `pwa/scripts/check-seo.mjs` polices the
-result as a **170 KB gzipped critical-path budget** — web.dev's figure for a
-~5 s time-to-interactive on a slow 3G phone, with no allowance added on top.
-It stood at 200 while the app rendered with React, because react-dom was ~50 KB
-gzipped of the path; swapping the renderer for Preact returned that and the
-slack came off with it. When it trips, find what reached back through
-`@game/core` (or make that screen lazy); do NOT raise the number.
+read through `defs/levels/summary.ts`.
+
+**AND THE APP ENTERS AT THE STUDIO CARD, NOT AT THE APP — so
+`pwa/scripts/check-seo.mjs` weighs TWO paths and you have to know which one you
+tripped.** `pwa/src/Boot.tsx` is the whole entry chunk (the card, its pixel
+font, and the fetch of everything else); `App.tsx` and the title menu behind it
+are a lazy chunk the card pulls while it is held up (`warmBoot` in
+`splash.ts`), and the card refuses to lift until it has landed — so the menu is
+exactly as finished when the card clears as it was when it was eager.
+
+- **CARD — 40 KB gzipped**, what the entry HTML pulls before anything is on
+  screen (~21 today). Everything `splash.ts` reaches, it reaches through an
+  `import()`, and that is the constraint rather than a style: a static import
+  there puts the thing in FRONT of the card instead of behind it. Two already
+  bit — `assets.ts` (the sprite atlas) and `@game/menu` for one `warn`.
+- **MENU-READY — 170 KB gzipped**, the card plus everything `App.tsx`
+  statically drags in (~142 today). This is the old critical-path budget under
+  a new name, measured from Vite's build manifest rather than from the HTML
+  (the HTML by design says nothing about a chunk fetched at runtime), and it is
+  still the one that catches a startup module reaching back through
+  `@game/core`. 170 is web.dev's figure for a ~5 s time-to-interactive on a
+  slow 3G phone, with no allowance added on top; it stood at 200 while the app
+  rendered with React, because react-dom was ~50 KB gzipped of the path.
+
+When either trips, find what reached back through `@game/core` (or make that
+screen lazy); do NOT raise the number. And a thing the player cannot use before
+they have touched the screen — the title THEME above all — belongs behind
+`splashSettled()`, not in either budget.
 
 **Mobile-first, landscape.** The reference device is a phone held horizontally:
 a ~844×390 CSS viewport, ≈422×260 world units. Design every element — HUD,

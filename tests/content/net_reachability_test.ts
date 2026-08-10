@@ -28,8 +28,23 @@ import { describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
-/** The page's real entry — what `pwa/index.html` loads. */
-const STARTUP = path.join(repoRoot, "pwa", "src", "main.tsx");
+/**
+ * THE STARTUP PATH IS TWO ROOTS, because the app enters at the STUDIO CARD.
+ *
+ * `main.tsx` renders `Boot.tsx`, whose entry chunk is the card and little else;
+ * `App.tsx` and the title menu behind it are a lazy chunk the card fetches
+ * while it is held up (`warmBoot`). Both are downloaded before the player can
+ * press anything, so both are the startup path — and walking only the first
+ * would leave every rule below vacuously green, since a `lazy(() => import(…))`
+ * is exactly the edge the walk refuses to follow.
+ *
+ * This is the source-level twin of check-seo's MENU-READY budget, which weighs
+ * the same two roots' static closures in bytes.
+ */
+const STARTUP = [
+  path.join(repoRoot, "pwa", "src", "main.tsx"),
+  path.join(repoRoot, "pwa", "src", "App.tsx"),
+];
 /** The run loop's entry: one mount, one run. */
 const RUN_LOOP = path.join(repoRoot, "pwa", "src", "game", "GameScreen.tsx");
 /**
@@ -56,7 +71,10 @@ const NET_CLIENT = path.join(repoRoot, "server", "client.ts");
  * first download — so a walk that followed one would report the startup path as
  * reaching the entire game and prove nothing at all.
  */
-function reachableFrom(entry: string, opts: { dynamic: boolean }): Set<string> {
+function reachableFrom(
+  entry: string | string[],
+  opts: { dynamic: boolean },
+): Set<string> {
   const seen = new Set<string>();
   const walk = (file: string) => {
     const resolved = resolveModule(file);
@@ -89,7 +107,7 @@ function reachableFrom(entry: string, opts: { dynamic: boolean }): Set<string> {
       }
     }
   };
-  walk(entry);
+  for (const root of Array.isArray(entry) ? entry : [entry]) walk(root);
   return seen;
 }
 
@@ -167,9 +185,17 @@ describe("the app's startup path", () => {
 
   it("is walked at all", () => {
     // The guard on the guard: a walk that resolved nothing would declare every
-    // rule below satisfied while checking none of them.
+    // rule below satisfied while checking none of them. BOTH roots have to be
+    // in it — the card's own tree and the app shell's — or the split that put
+    // the shell behind a lazy import has quietly emptied this whole file.
     expect(startup.size).toBeGreaterThan(20);
+    expect([...startup].some((f) => f.endsWith("/pwa/src/Boot.tsx"))).toBe(
+      true,
+    );
     expect([...startup].some((f) => f.endsWith("/pwa/src/App.tsx"))).toBe(true);
+    expect(
+      [...startup].some((f) => f.endsWith("/pwa/src/game/TitleScreen.tsx")),
+    ).toBe(true);
   });
 
   it("never statically reaches the net client", () => {

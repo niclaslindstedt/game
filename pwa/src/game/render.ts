@@ -12,7 +12,7 @@
 // projectiles, enemies, actors, hazards, guidance, fog, player, effects).
 
 import { localHero } from "./local-seat.ts";
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { type GameAssets } from "./assets.ts";
 import {

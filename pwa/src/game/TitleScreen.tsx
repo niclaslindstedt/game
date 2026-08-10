@@ -43,7 +43,7 @@ import { AchievementsScreen } from "./achievements-shelf.ts";
 import { ScreenshotsScreen } from "./screenshots-gallery.ts";
 import { synth } from "./audio.ts";
 import { playMenuHaptic } from "./haptics.ts";
-import { armTitleMusic } from "./music/index.ts";
+import { splashSettled } from "./splash.ts";
 import { characterPurse, type Character } from "./characters.ts";
 import type { JoinIntent } from "./session-intent.ts";
 import type { MinigameId } from "./minigames.ts";
@@ -301,15 +301,29 @@ export function TitleScreen({
     void loadGameAssets().then((loaded) => {
       if (alive) setAssets(loaded);
     });
-    // The theme belongs to the menu OPENING: it starts here with no gesture at
-    // all where the platform allows sound (the desktop shell, a browser that
+    // The theme belongs to the menu OPENING: it starts with no gesture at all
+    // where the platform allows sound (the desktop shell, a browser that
     // already trusts this origin, and every return from a run — the context is
     // live by then), and otherwise on the player's first touch or key
     // ANYWHERE, rather than on the first menu row they happen to press.
-    const disarmMusic = armTitleMusic();
+    //
+    // BUT NOT WHILE THE STUDIO CARD IS STILL UP, and through an import()
+    // rather than at the top of this file. A score is tens of KB the browser
+    // will not play a note of until the player has touched something — and the
+    // press that clears the card IS that touch — so fetching the sequencer and
+    // the arrangement any earlier only slows down the atlas and the app shell
+    // racing that same card (see `splashSettled`). Every return to the menu
+    // after that resolves instantly, so this is the opening launch only.
+    let disarmMusic: (() => void) | undefined;
+    void splashSettled()
+      .then(() => (alive ? import("./music/index.ts") : null))
+      .then((music) => {
+        if (!alive || !music) return;
+        disarmMusic = music.armTitleMusic();
+      });
     return () => {
       alive = false;
-      disarmMusic();
+      disarmMusic?.();
     };
   }, []);
 

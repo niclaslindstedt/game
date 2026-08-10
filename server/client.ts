@@ -46,7 +46,7 @@ import {
   type GameState,
   type GameInput,
 } from "@game/core";
-import { type CommandArg } from "@game/core";
+import type { CommandArg } from "@game/core";
 
 import { createPredictor } from "./client-predict.ts";
 import { decodeFrame, encodeFrame, encodeFrameBytes } from "./wire/codec.ts";

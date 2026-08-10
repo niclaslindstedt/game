@@ -13,7 +13,6 @@ import type { Character } from "../characters.ts";
 import type { CloudState } from "../cloud-save.ts";
 import type { BindableAction } from "../keybindings.ts";
 import type { MinigameId } from "../minigames.ts";
-import { playTitleMusic } from "../music/index.ts";
 import type { SeedTier } from "../seed-tiers.ts";
 import {
   getSettings,
@@ -385,9 +384,16 @@ export type MenuContext = {
 
 // Audio needs a user gesture; the first interaction with the menu doubles
 // as the unlock, and the title theme starts with it.
+//
+// THE UNLOCK IS SYNCHRONOUS AND THE THEME IS NOT, deliberately: a browser only
+// honours `unlock()` from inside the gesture that caused it, while the theme is
+// merely a request to start playing and can arrive a chunk-fetch later. That
+// buys the sequencer its own chunk instead of a seat in the menu's, and
+// `playTitleMusic` is a no-op when the theme is already going, so a menu full
+// of presses still starts it exactly once.
 export function unlockAudio() {
   synth.unlock();
-  playTitleMusic();
+  void import("../music/index.ts").then((m) => m.playTitleMusic());
 }
 
 /**

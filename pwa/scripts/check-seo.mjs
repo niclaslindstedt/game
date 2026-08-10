@@ -360,42 +360,105 @@ function checkBundleBudgets() {
   // Swapping the renderer for Preact did: `preact/compat` answers the same API
   // in a few KB (see the alias block in pwa/vite.config.ts), the critical path
   // fell from 183 KB to ~133 KB in one move, and the 30 KB of slack came off
-  // the budget with it. What is left between here and 170 is HEADROOM for the
-  // app's own growth — which is what the reclaimed bytes were for.
-  const BUDGET_BYTES = 170 * 1024;
+  // the budget with it.
+  //
+  // ────────────────────────────────────────────────────────────────────────
+  // AND THEN THE STUDIO CARD MADE THE PATH TWO PATHS, so this weighs two.
+  //
+  // The app no longer enters at `App.tsx`: it enters at the CARD (`Boot.tsx`),
+  // which draws in a couple of chunks and fetches the whole app shell behind
+  // itself while it is held up. That makes the number above answer a different
+  // question than it used to — it is now "how long until the player sees
+  // something", which is a fine thing to bound but is NOT what caught an
+  // `@game/core` import creeping onto the startup path. That guard has to
+  // follow the app shell, so:
+  //
+  //   CARD       — what the entry HTML pulls, before anything is on screen.
+  //                Small on purpose and kept small on purpose: past a point,
+  //                a card that has to be downloaded is just a slower menu.
+  //   MENU-READY — the card PLUS everything `src/App.tsx` statically drags in:
+  //                the title menu, its screens, the catalogs they read. This
+  //                is the old critical path under a new name, it keeps the old
+  //                170 KB figure, and it is the one that still trips when a
+  //                startup module reaches back through the simulation.
+  //
+  // Menu-ready is measured from Vite's build manifest (`build.manifest` in
+  // vite.config.ts) rather than from the HTML, because the HTML by design says
+  // nothing about a chunk fetched at runtime. `imports` there is the STATIC
+  // graph — a chunk the shell pulls in unconditionally — while `dynamicImports`
+  // is exactly what this is not counting: the game screen, the drive, the
+  // gallery, the scores, all correctly reached only when something asks.
+  const CARD_BUDGET_BYTES = 40 * 1024;
+  const MENU_BUDGET_BYTES = 170 * 1024;
   const assetsDir = join(DIST, "assets");
   if (!existsSync(assetsDir)) return;
   const indexHtml = join(DIST, "index.html");
   if (!existsSync(indexHtml)) return;
   const html = readFileSync(indexHtml, "utf8");
-  const critical = new Set();
+  const card = new Set();
   for (const m of html.matchAll(
     /<(?:script[^>]*src|link[^>]*href)="(\/assets\/[^"]+\.js)"/g,
   )) {
-    critical.add(m[1]);
+    card.add(m[1].replace(/^\//, ""));
   }
-  let total = 0;
-  let raw = 0;
-  for (const url of critical) {
-    const file = join(DIST, url.replace(/^\//, ""));
-    if (!existsSync(file)) continue;
-    const bytes = readFileSync(file);
-    raw += bytes.length;
-    total += gzipSync(bytes, { level: 9 }).length;
-  }
-  const summary =
-    `critical-path JS is ${(total / 1024).toFixed(1)} KB gzipped ` +
-    `(${(raw / 1024).toFixed(1)} KB raw) across ${critical.size} chunk(s)`;
-  if (total > BUDGET_BYTES) {
+
+  const manifestPath = join(DIST, ".vite", "manifest.json");
+  if (!existsSync(manifestPath)) {
     err(
-      "dist/assets",
-      `${summary} — exceeds the ${(BUDGET_BYTES / 1024).toFixed(0)} KB compressed budget`,
+      "dist/.vite/manifest.json",
+      "missing — `build.manifest` must stay on in vite.config.ts, or the " +
+        "menu-ready budget silently stops being checked",
     );
-  } else {
-    process.stdout.write(
-      `check-seo: ${summary} — within the ${(BUDGET_BYTES / 1024).toFixed(0)} KB compressed budget\n`,
-    );
+    return;
   }
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  // The app shell is reached by a dynamic import from the entry, so it is a
+  // manifest key of its own. Its absence means the split was renamed or
+  // undone — fail loudly rather than quietly measuring only the card.
+  const APP_SHELL = "src/App.tsx";
+  if (!manifest[APP_SHELL]) {
+    err(
+      "dist/.vite/manifest.json",
+      `no \`${APP_SHELL}\` chunk — the app shell is no longer a lazy chunk of ` +
+        "its own, so the menu-ready budget cannot be measured",
+    );
+    return;
+  }
+  // The transitive STATIC closure — `imports` only, never `dynamicImports`.
+  const closureOf = (key, into) => {
+    const record = manifest[key];
+    if (!record || into.has(record.file)) return into;
+    into.add(record.file);
+    for (const next of record.imports ?? []) closureOf(next, into);
+    return into;
+  };
+  const menuReady = closureOf(APP_SHELL, new Set(card));
+
+  const weigh = (files) => {
+    let gz = 0;
+    let raw = 0;
+    for (const file of files) {
+      const path = join(DIST, file);
+      if (!existsSync(path)) continue;
+      const bytes = readFileSync(path);
+      raw += bytes.length;
+      gz += gzipSync(bytes, { level: 9 }).length;
+    }
+    return { gz, raw };
+  };
+
+  const report = (label, files, budget) => {
+    const { gz, raw } = weigh(files);
+    const summary =
+      `${label} JS is ${(gz / 1024).toFixed(1)} KB gzipped ` +
+      `(${(raw / 1024).toFixed(1)} KB raw) across ${files.size} chunk(s)`;
+    const cap = `${(budget / 1024).toFixed(0)} KB compressed budget`;
+    if (gz > budget) err("dist/assets", `${summary} — exceeds the ${cap}`);
+    else process.stdout.write(`check-seo: ${summary} — within the ${cap}\n`);
+  };
+
+  report("critical-path (studio card)", card, CARD_BUDGET_BYTES);
+  report("menu-ready (card + app shell)", menuReady, MENU_BUDGET_BYTES);
 }
 
 /**
