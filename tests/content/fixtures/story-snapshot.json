@@ -47,9 +47,7 @@
         },
         {
           "kind": "caption",
-          "text": [
-            "THE LONG WAY BACK. THREE DAYS TO THINK ABOUT WHAT THE DEAD MAN TOLD ME."
-          ]
+          "text": ["THE LONG WAY BACK. THREE DAYS, AND THE TANKS ARE DRY."]
         },
         {
           "actor": "ship",
@@ -565,14 +563,7 @@
           "actor": "the_flagbearer",
           "kind": "say",
           "text": [
-            "TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME."
-          ]
-        },
-        {
-          "actor": "the_flagbearer",
-          "kind": "say",
-          "text": [
-            "AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS."
+            "TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. AND TELL THEM THE MOON REMEMBERS."
           ]
         },
         {
@@ -3737,7 +3728,7 @@
           ]
         },
         [
-          "I'M SORRY. I TRIED TO ASK. SHE'S SOMEWHERE IN THIS BUILDING AND YOU'RE IN MY WAY."
+          "I'M SORRY. I TRIED TO ASK. SHE'S IN THIS BUILDING AND YOU'RE IN MY WAY."
         ],
         ["I GOT THIS FAR WITHOUT THROWING A PUNCH. WELL. THERE IT GOES."]
       ],
@@ -3774,8 +3765,9 @@
         [
           "THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT."
         ],
-        ["I HAD A BADGE FOR THAT GATE ONCE. THEY TOOK IT OFF ME AT THE DOOR."],
-        ["SO I DON'T FIND A WAY IN. I FOLLOW SOMEBODY WHO ALREADY HAS ONE."]
+        [
+          "I HAD A BADGE FOR THAT GATE ONCE. SO I DON'T FIND A WAY IN - I FOLLOW SOMEBODY WHO HAS ONE."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3819,12 +3811,11 @@
       "id": "goodco_successor",
       "pages": [
         [
-          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
+          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. THEN THE AI REDREW IT."
         ],
         [
-          "THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR."
-        ],
-        ["FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE."]
+          "AND THE LINE WALKED EVERYONE'S JOBS OUT THE DOOR. MY TURN TO MAKE SOMETHING OBSOLETE."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3834,10 +3825,7 @@
       "pages": [
         ["THE LIZARDS BOUGHT MY GIRL. THIS THING IS WHAT THEY PRAY TO."],
         [
-          "THEY LEASE WORLDS AND TAKE A CUT. IT ATE ITS OUTRIGHT. SEVEN OF THEM."
-        ],
-        [
-          "THE TRIBUTE ROAD EXISTS TO KEEP IT FED. ADA WAS ON THAT ROAD. GOD HELP THEM."
+          "THEY LEASE WORLDS. IT ATE ITS OUTRIGHT. SEVEN OF THEM. ADA WAS ON THE ROAD THAT FEEDS IT."
         ]
       ],
       "portrait": "player",
@@ -3848,10 +3836,7 @@
       "pages": [
         ["IT'S A HAND. JUST A HAND, WALKING, AND IT'S HOLDING A KEY DOWN."],
         [
-          "THEY NAMED THEIR DOOMSDAY SYSTEM AFTER IT. THEY THOUGHT THEY WERE JOKING."
-        ],
-        [
-          "IT'S NEVER BEEN TOLD TO LET GO. EVERY WORLD THAT WIRED IT UP RAN OUT FIRST."
+          "THEY NAMED THEIR DOOMSDAY SYSTEM AFTER IT. IT'S NEVER BEEN TOLD TO LET GO."
         ]
       ],
       "portrait": "player",
@@ -3864,9 +3849,8 @@
           "IT'S DRIPPING. UP HERE. THERE'S NO WATER ON THE MOON - THERE NEVER WAS."
         ],
         [
-          "EXCEPT THERE WAS. NINE HUNDRED YEARS OF IT, AND HARBOURS, AND CREWS."
-        ],
-        ["THEY WENT DOWN WITH IT. THEY'RE STILL HOLDING THEIR BREATH."]
+          "EXCEPT THERE WAS. NINE HUNDRED YEARS OF IT, AND CREWS. THEY'RE STILL HOLDING THEIR BREATH."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3874,13 +3858,10 @@
     "hellborn_investor": {
       "id": "hellborn_investor",
       "pages": [
+        ["IT HAS A SEAL WHERE A FACE GOES, AND IT'S HOLDING A LEDGER."],
         [
-          "IT HAS NO FACE. IT HAS A SEAL WHERE A FACE GOES, AND IT'S HOLDING A LEDGER."
-        ],
-        [
-          "IT'S BEEN PAID EVERY TIME A MACHINE LEARNED A JOB AND A MAN WENT HOME."
-        ],
-        ["FOUR PLANETS, MAYBE MORE. IT'S HERE TO COLLECT ON THIS ONE."]
+          "IT'S BEEN PAID EVERY TIME A MACHINE LEARNED A JOB AND A MAN WENT HOME. FOUR PLANETS SO FAR."
+        ]
       ],
       "portrait": "hero",
       "speaker": "{HERO}"
@@ -3890,9 +3871,8 @@
       "pages": [
         ["WHAT THE HELL IS THIS. IT'S GOT THE SUN WHERE ITS FACE SHOULD BE."],
         [
-          "IT WANTS THE OTHER END OF THE STREET. IT'S WANTED IT SINCE BEFORE THIS STREET."
-        ],
-        ["A WORLD WITH NO SUNSET, AND NOBODY EVER SHOWED. SOMEBODY SHOULD."]
+          "IT WANTS THE OTHER END OF THE STREET, AND IT'S WANTED IT SINCE BEFORE THIS STREET."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3901,7 +3881,6 @@
       "id": "hellborn_olympus",
       "pages": [
         ["WHAT THE HELL IS THIS. THAT'S NOT GOODCO. THAT'S NOT ANYBODY'S."],
-        ["IT'S BEEN DIGGING THIS PLANET SINCE BEFORE THE PLANET HAD A NAME."],
         ["OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM."]
       ],
       "portrait": "player",
@@ -3911,9 +3890,8 @@
       "id": "hellborn_pharaoh",
       "pages": [
         [
-          "WHAT THE HELL IS THIS. THAT'S A KING. THERE ARE NO KINGS ON THE MOON."
+          "WHAT THE HELL IS THIS. THAT'S A KING, AND THERE ARE NO KINGS ON THE MOON."
         ],
-        ["THE DUST CAME OFF A GOLD MASK OLDER THAN CONTINENTS."],
         [
           "THE WRECK UNDER TRANQUILITY ISN'T A WRECK. IT'S A LID. AND WE PLANTED A FLAG ON IT."
         ]
@@ -3928,9 +3906,8 @@
           "STAKES AND WIRE AND A FLAG ON TOP. IT'S NOT ATTACKING. IT'S CLAIMING."
         ],
         [
-          "EVERY FRONTIER THAT EVER RAN OUT OF WEST HAD THIS STANDING AT THE END OF IT."
-        ],
-        ["THEY BUILT THIS WHOLE COUNTY AVAILABLE. THEY RANG THE DINNER BELL."]
+          "EVERY FRONTIER THAT RAN OUT OF WEST HAD THIS AT THE END OF IT. THEY RANG THE DINNER BELL."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3942,10 +3919,7 @@
           "WHAT THE HELL IS THIS. THERE'S SOMEBODY IN THE ICE AND THE ICE IS WALKING."
         ],
         [
-          "THE PERMAFROST HELD IT SINCE BEFORE THERE WAS PERMAFROST TO HOLD IT."
-        ],
-        [
-          "THEY DIDN'T BUILD A BUNKER TO KEEP THINGS OUT. THEY POURED ONE OVER THIS."
+          "THEY DIDN'T POUR A BUNKER TO KEEP THINGS OUT. THEY POURED ONE OVER THIS."
         ]
       ],
       "portrait": "player",
@@ -3957,8 +3931,9 @@
         [
           "IT'S COUNTING. I CAN FEEL IT COUNTING ME. THE MARKS ON ITS HEAD KEEP MOVING."
         ],
-        ["TWO MOONS AROUND A DEAD ROCK. THOSE AREN'T MOONS. THAT'S A FENCE."],
-        ["I'M INSIDE IT. I'VE BEEN INSIDE IT SINCE I LANDED."]
+        [
+          "TWO MOONS AROUND A DEAD ROCK. THOSE AREN'T MOONS. THAT'S A FENCE, AND I'M INSIDE IT."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3966,10 +3941,11 @@
     "hellborn_tunguska": {
       "id": "hellborn_tunguska",
       "pages": [
-        ["WHAT THE HELL IS THIS. THAT CAME OUT OF THE AIR. OUT OF NOTHING."],
-        ["IT'S BURNT ALL THE WAY THROUGH AND IT'S STILL WALKING."],
         [
-          "SOMETHING LANDED IN SIBERIA IN NINETEEN-OH-EIGHT AND THEY NEVER FOUND A CRATER. NOW I KNOW WHY."
+          "WHAT THE HELL IS THIS. IT'S BURNT ALL THE WAY THROUGH AND IT'S STILL WALKING."
+        ],
+        [
+          "SIBERIA, NINETEEN-OH-EIGHT. THEY NEVER FOUND A CRATER. NOW I KNOW WHY."
         ]
       ],
       "portrait": "hero",
@@ -3982,10 +3958,7 @@
           "WHAT THE HELL IS THIS. THERE'S NOTHING INSIDE IT. IT'S THE SHAPE OF A HOLE."
         ],
         [
-          "EVERYONE IN HERE FELL IN AFTER SOMETHING ELSE WENT FIRST. THIS WENT FIRST."
-        ],
-        [
-          "IT MADE THE DOOR ADA WAS CARRIED THROUGH. IT'S BEEN WAITING FOR NOISE."
+          "EVERYONE IN HERE FELL IN AFTER IT. IT MADE THE DOOR ADA WAS CARRIED THROUGH."
         ]
       ],
       "portrait": "player",
@@ -3998,10 +3971,7 @@
           "...IT BLEW ME A KISS. THE ROBOT. IN THE NIGHTGOWN. IT BLEW ME A KISS AND FIRED."
         ],
         [
-          "WHO BUILDS A DOOMSDAY COLONY AND BUDGETS FOR... THESE? BILLIONAIRES. RIGHT."
-        ],
-        [
-          "EYES FRONT, BUILDER. YOU HAVE A GIRLFRIEND. SHE IS GOING TO THINK THIS IS HILARIOUS."
+          "WHO BUILDS A DOOMSDAY COLONY AND BUDGETS FOR THESE? ADA WILL THINK THIS IS HILARIOUS."
         ]
       ],
       "portrait": "player",
@@ -4034,12 +4004,11 @@
       "id": "moon_successor",
       "pages": [
         [
-          "A GOODCO UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST."
+          "A GOODCO UNIT. UP HERE. THE SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST."
         ],
         [
-          "THEY DIDN'T JUST SHIP HER UP. THEY BUILT A STAFF TO MEET HER. COMPANY METAL GUARDS THE PIT."
-        ],
-        ["OKAY. ONE BOLT AT A TIME. KEEP MOVING. FIND ADA."]
+          "THEY DIDN'T JUST SHIP HER UP. THEY BUILT A STAFF TO MEET HER. ONE BOLT AT A TIME, THEN."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"

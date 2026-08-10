@@ -22,5 +22,5 @@ nodes:
       - GOOD DAY. I AM ASSESSING. THE TITHE IS PAID QUARTERLY AND HAS NEVER
         BEEN SHORT. I AM PROUD OF THAT.
     choices:
-      - text: IT'S BEEN SHORT SINCE THE MOON. TWO WARM CRATES.
+      - text: SHORT SINCE THE MOON. TWO CRATES.
         provoke: true

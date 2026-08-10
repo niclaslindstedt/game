@@ -23,7 +23,7 @@ nodes:
       - FOURTEEN THOUSAND PASSES AND YOU'RE THE FIRST. THE OTHER TWO CRATES
         WERE SIGNED FOR BY RECORDS AND CONTINUITY.
     choices:
-      - text: THAT ISN'T A DEPARTMENT. THAT'S A BOOK.
+      - text: NOT A DEPARTMENT. THAT'S A BOOK.
         sets: [sev_surveyor_talked]
   after:
     say:
