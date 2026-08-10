@@ -106,12 +106,6 @@ export function spinMs(days: number): number {
   return Math.round((days / EARTH_ROT_DAYS) * EARTH_SPIN_MS);
 }
 
-/** How hard depth swings a body's on-screen size: scale = 1 − DEPTH·far, with
- * far ∈ [−1 (near), +1 (behind the sun)]. Near swells, far shrinks. Kept
- * modest: the giants ride orbits two and three times Earth's, so a big swing
- * has Saturn filling half a phone screen on the near leg of its loop. */
-export const DEPTH = 0.3;
-
 /**
  * How far depth DIMS a body at the back of its loop — and dims is the whole
  * word. It is handed to the globe shader as an exposure, so a distant world

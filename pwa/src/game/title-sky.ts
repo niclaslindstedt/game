@@ -65,7 +65,6 @@ import type { GlobeLight, PlanetGlobe } from "@ui/lib/planet-globe.ts";
 import { createBelt } from "./title-asteroids.ts";
 import {
   AU_UNITS,
-  DEPTH,
   DEPTH_FADE,
   DIAMETER_KM,
   EARTH_SPIN_MS,
@@ -622,8 +621,35 @@ export function startTitleSky(els: SkyElements): () => void {
       const cx = sunCx + s.x * u;
       const cy = sunCy + s.y * u;
       // Normalised depth: +1 is straight behind the sun, −1 nearest the camera.
+      // It is the EXPOSURE and sorting term, not the size one — see below.
       const far = clamp(-s.depth / Math.max(orbitR, 1e-6), -1, 1);
-      const scale = 1 - DEPTH * far;
+
+      // SIZE IS A PERSPECTIVE DIVIDE, because the alternative was obviously
+      // wrong on screen. It used to be `1 − DEPTH·far` — linear in depth, and
+      // capped at a 30% swing — which meant a world at conjunction was drawn
+      // very nearly as large as one at its closest, and Jupiter beyond the sun
+      // came out three times WIDER than the sun it was passing behind.
+      //
+      // The camera is a real place (CAM_AU, 3 AU out along the view axis), so
+      // the honest term is its actual distance to the body: scale = camZ /
+      // |body − camera|, normalised so something at the sun's own distance is
+      // drawn at 1. Jupiter at conjunction is 8.2 AU from here against the
+      // sun's 3, so it comes out at about a third of the size it was — and
+      // Saturn, further still, at a quarter.
+      //
+      // IT IS NOT THE WHOLE TRUTH AND IS NOT MEANT TO BE. Angular size would
+      // also have the sun 27× wider than Jupiter, and the sun cannot be drawn
+      // on the planets' disc scale at all (it would be five screens across —
+      // see EARTH_DISC). What this buys is that distance now reads as distance
+      // and nothing is grotesque; the star is simply given a size of its own.
+      //
+      // The clamp is a safety rail rather than a look: a superior world on the
+      // near half of its loop passes BEHIND the camera, where the divide would
+      // blow up. It is hidden long before that (PAST_FADE), so the rail is
+      // never the thing you see.
+      const camZ = CAM_AU * AU_UNITS * zoom;
+      const dist = Math.hypot(s.x, s.y, camZ - s.depth);
+      const scale = clamp(camZ / Math.max(dist, 1e-6), 0.06, 2.5);
       // The whole box, rings included: a ringed world's canvas is wider than
       // its disc, and `base` is the DISC.
       const pad = o.globe?.padding ?? 1;
