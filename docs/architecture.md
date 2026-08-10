@@ -1094,16 +1094,22 @@ escort.ts` walks the people an escort errand puts on the field, and
   reads the whole journey and hands the arriving run one line
   (`RunParams.arrivalThought`), spoken as the last page of the destination's
   opening monologue.
-  WHAT THE CABINET MAKES OF IT is the road's OTHER end-of-trip reading, and the
-  two are deliberately twins: `driveScore` (`drive/score.ts`) reads the same five
-  numbers and answers with an arcade SCORE, which the arrival raises a Frogger
-  board over (`drive-screen/DriveScores.tsx`) — five rows, the row you just took
-  highlighted, and three letters to sign it with. It PAYS FOR THE COMMUTE and
-  NOTHING FOR A PERSON: arriving, the clock against a par derived from the
-  course, the top end, and the paint still on the car, less somebody else's lamp
-  posts and somebody else's wings — with the body count printed on the card at a
-  value of exactly zero, which is the road's own joke stated as arithmetic
-  (`DRIVE.score`). The board is device-local (`pwa/src/game/drive-scores.ts`,
+  WHAT THE CABINET MAKES OF IT is the arrival's own screen: a rally RANKING board
+  (`drive-screen/DriveScores.tsx`) — a plaque, a RANK / NAME / TIME rail, five
+  rows, the row you just took lit in white, and three letters typed into it from
+  the keyboard. IT RANKS THE CLOCK AND PRINTS NOTHING ELSE: the fastest leg is
+  the best leg, which is a rule a player knows before the screen has finished
+  drawing, and a table with one number on it is a table read in one glance.
+  EVERY LEG HAS A PLACE ON IT: the machine keeps the last thousand
+  (`HISTORY_SIZE`) and shows the head of them (`BOARD_SIZE`), so a run that
+  misses the table prints under a rule with its real number — `768 NIC 2'14"09`
+  — and is signed exactly like a winning one. The
+  arcade SCORE (`driveScore`, `drive/score.ts` — arriving, the clock against a
+  par derived from the course, the top end, and the paint still on the car, less
+  somebody else's lamp posts and somebody else's wings, with the body count worth
+  exactly zero: `DRIVE.score`) is still computed and still banked on the row, and
+  the bench and the balance passes read it; it simply is not the ladder any more.
+  The board is device-local (`pwa/src/game/drive-scores.ts`,
   carried by cloud save beside the campaign board) and is never raised for an
   AUTO-DRIVEN leg: a screen waiting on a keypress would park the attract loop
   forever, and a board full of the demo's initials is not a high-score table. Damage

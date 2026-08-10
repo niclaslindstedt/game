@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE DRIVE'S ARCADE BOARD (pwa/src/game/drive-scores.ts): five rows, ranked
-// best first, signed with three letters.
+// THE DRIVE'S ARCADE LADDER (pwa/src/game/drive-scores.ts): every leg ever
+// driven, ranked on the CLOCK, fastest first, signed with three letters — with
+// the best five of them being the TABLE the screen prints.
 //
 // Runs in plain Node (no `window`), so the store degrades to an in-memory board
 // for the session — which is exactly the path these assertions exercise, and the
@@ -13,11 +14,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   BOARD_SIZE,
+  HISTORY_SIZE,
   INITIALS_LENGTH,
   INITIAL_CHARS,
   clampInitials,
+  driveScoreCount,
   driveScoreKey,
-  driveScoreRank,
+  driveTimeRank,
   hasDriveScores,
   mergeDriveScores,
   recordDriveScore,
@@ -26,12 +29,18 @@ import {
   type DriveScoreEntry,
 } from "../pwa/src/game/drive-scores.ts";
 
-/** A banked leg with sane defaults, overridable per assertion. */
+/**
+ * A banked leg with sane defaults, overridable per assertion.
+ *
+ * THE DEFAULT CLOCK IS A CRAWL, on purpose. Every ladder below is faster than
+ * this, so a `leg()` that forgets to name its own time lands at the bottom of
+ * the board instead of silently taking the top of it.
+ */
 function leg(over: Partial<DriveScoreEntry> = {}): DriveScoreEntry {
   return {
     name: "ACE",
     score: 10_000,
-    ms: 60_000,
+    ms: 99_000_000,
     topSpeedMph: 120,
     bodies: 51,
     difficulty: "medium",
@@ -45,26 +54,27 @@ function leg(over: Partial<DriveScoreEntry> = {}): DriveScoreEntry {
 type Ladder = readonly [number, number, number, number, number];
 
 /**
- * Lay down a known five-row board, and return it.
+ * Lay down a known five-row TABLE (five trip times, fastest first) and return it.
  *
  * THE STORE IS A MODULE SINGLETON with no reset — deliberately, because nothing
- * in the game ever wipes a board and a test-only door into one is a door the
- * shipped code could walk through. So each call climbs a decade above the last:
- * five rows every one of which out-ranks every score any earlier test banked,
- * which displaces whatever was there and leaves the board exactly as asked for.
+ * in the game ever wipes a ladder and a test-only door into one is a door the
+ * shipped code could walk through. Nothing is displaced any more either: the
+ * ladder keeps everything. So each call goes a whole minute QUICKER than the
+ * last, which puts its five rows in front of every time any earlier test banked
+ * and leaves the TABLE exactly as asked for, whatever is piled up behind it.
  */
-let floorScore = 1_000_000;
+let floorMs = 60_000_000;
 function fill(): Ladder {
-  floorScore += 1_000_000;
+  floorMs -= 1_000_000;
   const ladder = [
-    floorScore + 50_000,
-    floorScore + 40_000,
-    floorScore + 30_000,
-    floorScore + 20_000,
-    floorScore + 10_000,
+    floorMs - 50_000,
+    floorMs - 40_000,
+    floorMs - 30_000,
+    floorMs - 20_000,
+    floorMs - 10_000,
   ] as const;
-  for (const [i, score] of ladder.entries()) {
-    recordDriveScore(leg({ name: "PAD", score, at: floorScore + i }));
+  for (const [i, ms] of ladder.entries()) {
+    recordDriveScore(leg({ name: "PAD", ms, at: floorMs + i }));
   }
   return ladder;
 }
@@ -79,13 +89,13 @@ describe("signing the board", () => {
   });
 
   it("replaces anything the pixel font cannot draw with a blank", () => {
-    // An em-dash and a lowercase thorn are both glyphs the wheel does not carry;
-    // left in, they would print as `?` on the board forever.
+    // An em-dash and a lowercase thorn are both glyphs the board does not carry;
+    // left in, they would print as `?` on it forever.
     expect(clampInitials("A—B")).toBe("A B");
     expect(clampInitials("þøx")).toBe("  X");
   });
 
-  it("offers only characters the wheel can spell", () => {
+  it("offers only characters the board can spell", () => {
     for (const char of INITIAL_CHARS) {
       expect(clampInitials(char.repeat(3))).toBe(char.repeat(3));
     }
@@ -99,13 +109,13 @@ describe("the board", () => {
     rows = fill();
   });
 
-  it("ranks best first and keeps exactly five rows", () => {
-    expect(topDriveScores().map((row) => row.score)).toEqual([...rows]);
-    recordDriveScore(leg({ name: "NEW", score: rows[0] + 1 }));
+  it("shows the five quickest trips, best first", () => {
+    expect(topDriveScores().map((row) => row.ms)).toEqual([...rows]);
+    recordDriveScore(leg({ name: "NEW", ms: rows[0] - 1 }));
     const board = topDriveScores();
     expect(board).toHaveLength(BOARD_SIZE);
-    expect(board.map((row) => row.score)).toEqual([
-      rows[0] + 1,
+    expect(board.map((row) => row.ms)).toEqual([
+      rows[0] - 1,
       rows[0],
       rows[1],
       rows[2],
@@ -113,45 +123,81 @@ describe("the board", () => {
     ]);
   });
 
-  it("reports where a score would land before it is banked", () => {
-    expect(driveScoreRank(rows[0] + 1, 60_000)).toBe(0);
-    expect(driveScoreRank(rows[2] + 1, 60_000)).toBe(2);
-    expect(driveScoreRank(rows[4] + 1, 60_000)).toBe(4);
+  it("reports where a time would land before it is banked", () => {
+    expect(driveTimeRank(rows[0] - 1)).toBe(0);
+    expect(driveTimeRank(rows[2] - 1)).toBe(2);
+    expect(driveTimeRank(rows[4] - 1)).toBe(4);
   });
 
-  it("turns away a score that misses the board", () => {
-    expect(driveScoreRank(rows[4] - 1, 60_000)).toBeNull();
-    expect(driveScoreRank(0, 60_000)).toBeNull();
+  it("gives a leg that misses the table its real place instead of nothing", () => {
+    // The whole point of keeping every row: a slow leg is not turned away, it is
+    // told exactly how slow. The ladder behind the table is deeper than five, so
+    // the number is bigger than the table is.
+    const held = driveScoreCount();
+    expect(held).toBeGreaterThan(BOARD_SIZE);
+    expect(driveTimeRank(rows[4] + 1)).toBe(BOARD_SIZE);
+    const last = driveTimeRank(Number.MAX_SAFE_INTEGER);
+    expect(last).toBe(held);
+  });
+
+  it("banks a leg that missed the table, and still shows only five", () => {
+    const before = driveScoreCount();
+    const rank = driveTimeRank(rows[4] + 1);
+    expect(recordDriveScore(leg({ name: "SLO", ms: rows[4] + 1 }))).toBe(rank);
+    expect(driveScoreCount()).toBe(before + 1);
+    expect(topDriveScores()).toHaveLength(BOARD_SIZE);
+    // …and it is nowhere near the table it missed.
+    expect(topDriveScores().map((row) => row.name)).not.toContain("SLO");
+  });
+
+  it("keeps a whole history, not a top five", () => {
+    expect(HISTORY_SIZE).toBeGreaterThan(BOARD_SIZE);
+    expect(driveScoreCount()).toBeLessThanOrEqual(HISTORY_SIZE);
   });
 
   it("banks a row at the place it was promised", () => {
-    const score = rows[2] + 1;
-    const rank = driveScoreRank(score, 60_000);
+    const ms = rows[2] - 1;
+    const rank = driveTimeRank(ms);
     expect(rank).toBe(2);
-    expect(recordDriveScore(leg({ name: "BOB", score }))).toBe(rank);
+    expect(recordDriveScore(leg({ name: "BOB", ms }))).toBe(rank);
     expect(topDriveScores()[rank ?? 0]?.name).toBe("BOB");
   });
 
-  it("breaks a tied score on the quicker trip", () => {
-    const score = rows[2] + 1;
-    recordDriveScore(leg({ name: "SLO", score, ms: 70_000 }));
-    recordDriveScore(leg({ name: "FST", score, ms: 55_000 }));
-    const names = topDriveScores().map((row) => row.name);
-    expect(names.indexOf("FST")).toBeLessThan(names.indexOf("SLO"));
-  });
-
   it("makes a challenger BEAT the board rather than match it", () => {
-    // Dead level with the incumbent third row, on score AND on the clock: the
-    // arcade rule is that the seat stays where it is, so the challenger takes
-    // the row BELOW rather than the one it matched.
-    expect(driveScoreRank(rows[2], 60_000)).toBe(3);
+    // Dead level with the incumbent third row: the arcade rule is that the seat
+    // stays where it is, so the challenger takes the row BELOW the one it
+    // matched.
+    expect(driveTimeRank(rows[2])).toBe(3);
   });
 
-  it("refuses a scoreless leg outright", () => {
-    expect(recordDriveScore(leg({ score: 0 }))).toBeNull();
+  it("keeps the older row in front on a tied clock", () => {
+    const ms = rows[2] - 1;
+    recordDriveScore(leg({ name: "OLD", ms, at: 10 }));
+    recordDriveScore(leg({ name: "NEW", ms, at: 20 }));
+    const names = topDriveScores().map((row) => row.name);
+    expect(names.indexOf("OLD")).toBeLessThan(names.indexOf("NEW"));
   });
 
-  it("knows whether anything has ever been scored", () => {
+  it("does not let the score jump a slower row up the board", () => {
+    // The score is still banked on the row and is deliberately NOT a tie-break:
+    // a fat tally on a slow leg must not out-rank a lean one on a quick leg, or
+    // the column the player can see stops being the column that decides.
+    recordDriveScore(leg({ name: "FAT", ms: rows[1] - 1, score: 1 }));
+    recordDriveScore(leg({ name: "LEA", ms: rows[1] - 2, score: 9_999_999 }));
+    const names = topDriveScores().map((row) => row.name);
+    expect(names.indexOf("LEA")).toBeLessThan(names.indexOf("FAT"));
+  });
+
+  it("refuses a leg whose clock never started", () => {
+    // The stopwatch only runs inside the town, so a road abandoned before the
+    // gate has no time to rank — and would otherwise take #1 as the quickest
+    // leg ever driven.
+    expect(driveTimeRank(0)).toBeNull();
+    expect(recordDriveScore(leg({ ms: 0 }))).toBeNull();
+    expect(topDriveScores().map((row) => row.ms)).toEqual([...rows]);
+  });
+
+  it("knows whether anything has ever been driven for the record", () => {
     expect(hasDriveScores()).toBe(true);
   });
 });
@@ -162,15 +208,15 @@ describe("carrying the board between devices", () => {
     rows = fill();
   });
 
-  it("folds another device's rows in and keeps the best five", () => {
+  it("folds another device's rows in and shows the best five", () => {
     expect(
       mergeDriveScores([
-        leg({ name: "OTH", score: rows[0] + 1, at: 2_000 }),
-        leg({ name: "OTH", score: 5, at: 2_001 }),
+        leg({ name: "OTH", ms: rows[0] - 1, at: 2_000 }),
+        leg({ name: "OTH", ms: rows[4] + 5_000, at: 2_001 }),
       ]),
     ).toBe(true);
-    expect(topDriveScores().map((row) => row.score)).toEqual([
-      rows[0] + 1,
+    expect(topDriveScores().map((row) => row.ms)).toEqual([
+      rows[0] - 1,
       rows[0],
       rows[1],
       rows[2],
@@ -184,10 +230,14 @@ describe("carrying the board between devices", () => {
     expect(mergeDriveScores(remote)).toBe(false);
   });
 
-  it("reports no change when every arriving row misses the board", () => {
-    expect(mergeDriveScores([leg({ name: "LOW", score: 1, at: 3_000 })])).toBe(
-      false,
-    );
+  it("keeps an arriving row that misses the table — it is still a record", () => {
+    const before = driveScoreCount();
+    expect(
+      mergeDriveScores([leg({ name: "LOW", ms: rows[4] + 1, at: 3_000 })]),
+    ).toBe(true);
+    expect(driveScoreCount()).toBe(before + 1);
+    // The TABLE is untouched by it, though.
+    expect(topDriveScores().map((row) => row.ms)).toEqual([...rows]);
   });
 
   it("ignores a payload that is not a board at all", () => {
@@ -196,11 +246,20 @@ describe("carrying the board between devices", () => {
     expect(mergeDriveScores([{ name: "X" }])).toBe(false);
   });
 
+  it("drops an arriving row with no clock on it", () => {
+    // An old board could hold one: the ladder used to be sorted on the score,
+    // and a road that finished before the town gate still earned the arrival
+    // bonus. Merged in as-is it would sit at the top of this board forever.
+    expect(mergeDriveScores([leg({ name: "NIL", ms: 0, at: 4_000 })])).toBe(
+      false,
+    );
+  });
+
   it("orders a merged board from its CONTENT, not its assembly order", () => {
     const incoming = [
-      leg({ name: "AAA", score: 12_345, at: 5 }),
-      leg({ name: "BBB", score: 12_345, at: 6 }),
-      leg({ name: "CCC", score: 999, at: 7 }),
+      leg({ name: "AAA", ms: 12_345, at: 5 }),
+      leg({ name: "BBB", ms: 12_345, at: 6 }),
+      leg({ name: "CCC", ms: 999_999, at: 7 }),
     ];
     const forwards = trimDriveScores([...incoming]).map(driveScoreKey);
     const backwards = trimDriveScores([...incoming].reverse()).map(

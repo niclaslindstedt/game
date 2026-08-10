@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import { formatCoins, formatCompact } from "@ui/lib/format-number";
+import {
+  formatCoins,
+  formatCompact,
+  lapClock,
+  rallyClock,
+} from "@ui/lib/format-number";
 
 describe("formatCompact", () => {
   it("prints small tallies exactly with thousands separators", () => {
@@ -99,5 +104,34 @@ describe("formatCoins", () => {
     expect(formatCoins(9_999_999)).toBe("10M");
     expect(formatCoins(-10_500)).toBe("-10.5K");
     expect(formatCoins(Number.NaN)).toBe("NaN");
+  });
+});
+
+describe("rallyClock", () => {
+  it("prints a trip the way a ranking board does", () => {
+    expect(rallyClock(0)).toBe(`0'00"00`);
+    expect(rallyClock(1_234)).toBe(`0'01"23`);
+    expect(rallyClock(65_430)).toBe(`1'05"43`);
+    expect(rallyClock(205_250)).toBe(`3'25"25`);
+    expect(rallyClock(600_000)).toBe(`10'00"00`);
+  });
+
+  it("treats a negative clock as a standing start", () => {
+    expect(rallyClock(-1)).toBe(`0'00"00`);
+  });
+
+  // THE BOARD MAY NOT DISAGREE WITH THE CLOCK THE PLAYER WAS WATCHING. Both
+  // truncate off the same millisecond, so the board's figure is always the
+  // stopwatch's figure with one more digit on the end — never a hundredth that
+  // rounds the seconds the other way.
+  it("agrees with the stopwatch it is the finished form of", () => {
+    for (let ms = 0; ms < 200_000; ms += 137) {
+      const lap = lapClock(ms); // m:ss.t
+      const rally = rallyClock(ms); // m'ss"hh
+      const [lapMin, lapRest] = lap.split(":");
+      const lapSec = lapRest?.slice(0, 2) ?? "";
+      const lapTenth = lapRest?.slice(3) ?? "";
+      expect(rally.startsWith(`${lapMin}'${lapSec}"${lapTenth}`)).toBe(true);
+    }
   });
 });
