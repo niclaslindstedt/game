@@ -61,8 +61,16 @@ export function setModTracks(tracks: Record<string, ChiptuneTrack>): void {
   modTracks = tracks;
 }
 
-/** Played when a level names no `music` id (or an id we don't ship). */
+/** Played when a caller names no score, or one this build does not have. */
 const DEFAULT_LEVEL_TRACK = "regolith_ride";
+
+/** Do we have a score under this id at all — ours, a mod's, or a mod's
+ * recording? Asked before any id is named, since one nothing answers would
+ * reach `TRACK_LOADERS` as `undefined` and throw where a fallback is the honest
+ * answer. */
+function haveTrack(id: string): boolean {
+  return id in TRACK_LOADERS || id in modTracks || isRecorded(id);
+}
 
 // What is currently looping: a TRACK_LOADERS key ("title" or a level's `music`
 // id), or null when silent. Kept so a repeated request for the same track is a
@@ -172,11 +180,25 @@ export function armTitleMusic(): () => void {
  * different theme switches cleanly.
  */
 export function playLevelMusic(trackId?: string): void {
-  const known =
-    trackId !== undefined &&
-    trackId !== TITLE_TRACK &&
-    (trackId in TRACK_LOADERS || trackId in modTracks || isRecorded(trackId));
-  playTrack(known ? (trackId as string) : DEFAULT_LEVEL_TRACK);
+  playMusic(trackId ?? "");
+}
+
+/**
+ * Loop the score named `trackId` — the general form, for a screen that has a
+ * theme but no `LevelDef` to hang it on. The DRIVE is the one that does: it is
+ * not a level, it has no `music` field to be read off, and the id it wants
+ * belongs in its own tree rather than in this module's (see AGENTS.md — a
+ * minigame meets the game in four places and this is not one of them).
+ *
+ * The two refusals are the same ones a level's theme gets. An id this build has
+ * no score for falls back rather than throwing — a missing score should leave
+ * the player driving to something — and the TITLE theme cannot be asked for by
+ * name, because it belongs to the menu and a screen that took it would be
+ * playing over the thing it interrupted.
+ */
+export function playMusic(trackId: string): void {
+  const known = trackId !== TITLE_TRACK && haveTrack(trackId);
+  playTrack(known ? trackId : DEFAULT_LEVEL_TRACK);
 }
 
 /** Silence the music — end-of-run jingles play over quiet. */

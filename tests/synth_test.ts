@@ -74,14 +74,30 @@ class ZombieAudioContext {
 }
 
 // A fake AudioContext that records the node graph, so tests can assert how
-// voices are routed. Params are plain value/ramp stubs; connect() tracks
-// edges by pushing the source onto the target's `inputs`.
-const fakeParam = (): Record<string, unknown> => ({
-  value: 0,
-  setValueAtTime() {},
-  exponentialRampToValueAtTime() {},
-  linearRampToValueAtTime() {},
-});
+// voices are routed and what envelope each one was given. connect() tracks
+// edges by pushing the source onto the target's `inputs`, and every AudioParam
+// keeps the automation it was handed.
+
+/** An automation point a test can read back: what was asked for, to what
+ * value, at what time on the context clock. */
+type ParamEvent = { kind: "set" | "exp" | "lin"; value: number; at: number };
+
+const fakeParam = (): Record<string, unknown> => {
+  const events: ParamEvent[] = [];
+  return {
+    value: 0,
+    events,
+    setValueAtTime(value: number, at: number) {
+      events.push({ kind: "set", value, at });
+    },
+    exponentialRampToValueAtTime(value: number, at: number) {
+      events.push({ kind: "exp", value, at });
+    },
+    linearRampToValueAtTime(value: number, at: number) {
+      events.push({ kind: "lin", value, at });
+    },
+  };
+};
 
 type FakeNode = {
   kind: string;
@@ -97,6 +113,7 @@ class GraphAudioContext {
   sampleRate = 48000;
   destination = this.node("destination");
   compressors: FakeNode[] = [];
+  gains: FakeNode[] = [];
 
   constructor() {
     GraphAudioContext.last = this;
@@ -124,7 +141,9 @@ class GraphAudioContext {
   }
 
   createGain(): FakeNode {
-    return this.node("gain", { gain: fakeParam() });
+    const gain = this.node("gain", { gain: fakeParam() });
+    this.gains.push(gain);
+    return gain;
   }
   createOscillator(): FakeNode {
     return this.node("oscillator", {
@@ -476,6 +495,71 @@ describe("zombie context recovery", () => {
     const fresh = ZombieAudioContext.last;
     expect(fresh).not.toBe(ctx);
     expect(fresh?.state).toBe("running");
+  });
+});
+
+describe("the tone envelope", () => {
+  /** The automation written onto a voice's own gain — the one gain node that
+   * was told to fall to silence, which is what an envelope is. */
+  const voiceEnvelope = (ctx: GraphAudioContext): ParamEvent[] => {
+    for (const gain of ctx.gains) {
+      const events = (gain.gain as { events: ParamEvent[] }).events;
+      if (events.some((e) => e.kind === "exp" && e.value < 0.001))
+        return events;
+    }
+    throw new Error("no voice envelope was written");
+  };
+
+  it("falls from the first moment when nothing holds it", () => {
+    g.AudioContext = GraphAudioContext;
+    const synth = createSynth();
+    synth.unlock();
+    const t0 = getGraphContext().currentTime;
+    synth.tone({ from: 440, durationMs: 400, volume: 0.05 });
+    const events = voiceEnvelope(getGraphContext());
+    // Peak at the start, and the decay is the whole rest of the note: that is
+    // what makes every chip voice a blip, and why a bed needs the hold below.
+    expect(events).toHaveLength(2);
+    expect(events[0]).toMatchObject({ kind: "set", value: 0.05, at: t0 });
+    expect(events[1]?.kind).toBe("exp");
+    expect(events[1]?.at).toBeCloseTo(t0 + 0.4, 6);
+  });
+
+  it("holds the peak before the decay when asked to", () => {
+    // THE SUSTAIN A BED IS MADE OF. Without the explicit point at the end of
+    // the hold, the decay ramp would start from the top of the attack — a
+    // WebAudio ramp runs from the previous automation event — and the note
+    // would slide through the sustain it was supposed to sit on.
+    g.AudioContext = GraphAudioContext;
+    const synth = createSynth();
+    synth.unlock();
+    const t0 = getGraphContext().currentTime;
+    synth.tone({
+      from: 110,
+      durationMs: 320,
+      volume: 0.04,
+      attackMs: 60,
+      holdMs: 200,
+    });
+    const events = voiceEnvelope(getGraphContext());
+    expect(events.map((e) => e.kind)).toEqual(["set", "exp", "set", "exp"]);
+    expect(events[1]).toMatchObject({ value: 0.04 }); // up at 60 ms…
+    expect(events[1]?.at).toBeCloseTo(t0 + 0.06, 6);
+    expect(events[2]).toMatchObject({ value: 0.04 }); // …still up at 260…
+    expect(events[2]?.at).toBeCloseTo(t0 + 0.26, 6);
+    expect(events[3]?.value).toBeLessThan(0.001); // …and gone by 320.
+    expect(events[3]?.at).toBeCloseTo(t0 + 0.32, 6);
+  });
+
+  it("never eats the decay, however long the hold asks for", () => {
+    g.AudioContext = GraphAudioContext;
+    const synth = createSynth();
+    synth.unlock();
+    const t0 = getGraphContext().currentTime;
+    synth.tone({ from: 110, durationMs: 100, volume: 0.04, holdMs: 9000 });
+    const events = voiceEnvelope(getGraphContext());
+    const decayFrom = events[events.length - 2];
+    expect(decayFrom?.at).toBeLessThan(t0 + 0.1);
   });
 });
 

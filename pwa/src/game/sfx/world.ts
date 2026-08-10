@@ -447,23 +447,36 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       return true;
 
     case "carEngine": {
-      // The running engine: a putter grain fired on the sim's cadence
-      // (`CAR.engineCueMs`), each a touch longer than the cadence so they
-      // overlap into a continuous rumble — the stampede trick. `intensity`
-      // is the throttle: idle sits low and quiet, driving raises both the
-      // pitch and the volume of the chug.
+      // The running engine: a grain fired on the sim's cadence
+      // (`CAR.engineCueMs` — 210 ms). `intensity` is the throttle: idle sits
+      // low and quiet, driving raises both the pitch and the volume of the
+      // chug.
+      //
+      // A GRAIN "A TOUCH LONGER THAN THE CADENCE" IS NOT A CONTINUOUS SOUND,
+      // which is what this used to be and what it sounded like. A tone falls
+      // exponentially across its whole duration — a tenth of its peak a
+      // quarter of the way in — so a 240 ms grain every 210 ms was audibly
+      // over before the next one arrived, and the car putt-putted. The fix is
+      // the sustain (`holdMs`): the grain holds its peak past the next grain's
+      // arrival and crossfades into it over the attack. The road minigame's
+      // engine is the same rule worked out in full (`sfx/drive.ts`).
       const i = clamp01(event.intensity);
       synth.tone({
         type: "triangle",
         from: 55 + 70 * i,
         to: 48 + 62 * i,
-        durationMs: 240,
-        volume: 0.028 + 0.03 * i,
+        durationMs: 320,
+        attackMs: 60,
+        holdMs: 200,
+        volume: 0.018 + 0.02 * i,
         detuneCents: 12,
       });
+      // The air under it runs longer still: uncorrelated noise sums in POWER,
+      // so a broadband bed needs a deeper stack of grains than a pitched one
+      // before it stops fluttering.
       synth.noise({
-        durationMs: 230,
-        volume: 0.012 + 0.022 * i,
+        durationMs: 840,
+        volume: 0.007 + 0.013 * i,
         filter: { type: "lowpass", frequency: 220 + 520 * i },
       });
       return true;

@@ -17,21 +17,29 @@ import {
 } from "@ui/lib/chiptune.ts";
 import type { NoiseOptions, Synth, ToneOptions } from "@ui/lib/synth.ts";
 
+import { TRACK_LOADERS } from "../pwa/src/generated/music/index.ts";
+import { TRACK as BENCH_LIGHT } from "../pwa/src/generated/music/bench_light.ts";
 import { TRACK as HQ_LOCKDOWN } from "../pwa/src/generated/music/hq_lockdown.ts";
+import { TRACK as OVERDUE } from "../pwa/src/generated/music/overdue.ts";
 import { TRACK as RED_DUST } from "../pwa/src/generated/music/red_dust.ts";
 import { TRACK as REGOLITH_RIDE } from "../pwa/src/generated/music/regolith_ride.ts";
 import { TRACK as RIFT_DRIFT } from "../pwa/src/generated/music/rift_drift.ts";
 import { TRACK as TITLE } from "../pwa/src/generated/music/title.ts";
 
-/** Every score this build ships, compiled from content/music/*.yaml. All five,
- * not a sample: a score costs a fraction of a second to play through here, and
- * the one left out is the one with the typo in it. */
+/** Every score this build ships, compiled from content/music/*.yaml. ALL of
+ * them, not a sample: a score costs a fraction of a second to play through
+ * here, and the one left out is the one with the typo in it — which is not
+ * hypothetical, since two scores were added to the tree without being added to
+ * this list and went unplayed for their whole lives. The generated index is
+ * held against this list below so the next one cannot. */
 const SCORES: [string, ChiptuneTrack][] = [
   ["title", TITLE],
   ["regolith_ride", REGOLITH_RIDE],
   ["hq_lockdown", HQ_LOCKDOWN],
   ["red_dust", RED_DUST],
   ["rift_drift", RIFT_DRIFT],
+  ["bench_light", BENCH_LIGHT],
+  ["overdue", OVERDUE],
 ];
 
 /** A fake synth with a hand-cranked clock that records every scheduling. */
@@ -408,5 +416,16 @@ describe("the shipped scores", () => {
         Object.keys(theme.patterns).length,
       );
     }
+  });
+
+  it("covers every score the build actually ships", () => {
+    // The list above is hand-written, because each score is its own module
+    // behind its own dynamic import and a test cannot await one. So the thing
+    // to police is the LIST: a `content/music/*.yaml` added without a row here
+    // is a score nothing above ever plays, and the two that reached the tree
+    // that way both had to be found by reading the folder.
+    expect(new Set(SCORES.map(([id]) => id))).toEqual(
+      new Set(Object.keys(TRACK_LOADERS)),
+    );
   });
 });

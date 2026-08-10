@@ -46,6 +46,23 @@ export type ToneOptions = {
   at?: number;
   /** Volume ramp-up time; 0 (default) is a hard chip-style onset. */
   attackMs?: number;
+  /**
+   * Hold the peak this long before the decay starts — the SUSTAIN a chip voice
+   * normally does without.
+   *
+   * Every tone here is otherwise attack-then-decay: the level falls
+   * exponentially across the WHOLE remaining duration, which is a tenth of the
+   * peak a quarter of the way in and a hundredth by halfway. That is exactly
+   * right for a blip, a hit or a plucked note, and it is why a longer
+   * `durationMs` makes a sound ring on rather than sustain.
+   *
+   * A hold is what a BED needs — a machine, a wind, an engine, anything made of
+   * overlapping grains rather than of events. With the peak held, grains fired
+   * a hold apart tile into a level, continuous sound; without one they sum into
+   * a pulse at the cadence, however fast the cadence is. Clamped so the decay
+   * always has the last moment of the note to happen in.
+   */
+  holdMs?: number;
   /** Layer a second oscillator detuned by ± this many cents — the cheap
    * chorus that makes one pulse wave sound like a section. */
   detuneCents?: number;
@@ -509,6 +526,7 @@ export function createSynth(): Synth {
       delayMs = 0,
       at,
       attackMs = 0,
+      holdMs = 0,
       detuneCents = 0,
       vibrato,
       pan = 0,
@@ -529,12 +547,22 @@ export function createSynth(): Synth {
       const peak = detunes.length > 1 ? volume * 0.6 : volume;
 
       const gain = c.createGain();
+      let level = t0; // when the note is up at `peak` and the decay may begin
       if (attackMs > 0) {
-        const attackEnd = t0 + Math.min(attackMs, durationMs * 0.5) / 1000;
+        level = t0 + Math.min(attackMs, durationMs * 0.5) / 1000;
         gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(peak, attackEnd);
+        gain.gain.exponentialRampToValueAtTime(peak, level);
       } else {
         gain.gain.setValueAtTime(peak, t0);
+      }
+      // THE HOLD, and it needs its own event to exist at all: a ramp starts
+      // from the time of the PREVIOUS automation point, so without this the
+      // decay below would begin at the top of the attack and the note would
+      // fall through the sustain rather than sitting on it. A hair of the
+      // duration is always left for the decay itself.
+      if (holdMs > 0) {
+        const decayFrom = Math.min(level + holdMs / 1000, t1 - 0.005);
+        if (decayFrom > level) gain.gain.setValueAtTime(peak, decayFrom);
       }
       gain.gain.exponentialRampToValueAtTime(0.0001, t1);
 

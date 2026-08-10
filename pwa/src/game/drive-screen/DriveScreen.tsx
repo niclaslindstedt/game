@@ -48,6 +48,12 @@ import {
   IDLE_REVEAL,
   type DialogueReveal,
 } from "../overlays/DialogueBox.tsx";
+import {
+  pauseMusic,
+  playMusic,
+  resumeMusic,
+  stopMusic,
+} from "../music/index.ts";
 import { viewScaleFor } from "../render/view.ts";
 import { ageBark, openBark, type Speech } from "./bark.ts";
 import { createWearTrail, driveDials, sameDials } from "./dials.ts";
@@ -97,6 +103,25 @@ const MAX_CATCHUP_MS = 100;
  * and a pad that saturates in the first few px is a car that only ever steers
  * fully left or fully right. */
 const PAD_REACH_PX = 48;
+
+/**
+ * THE ROAD'S OWN SCORE — OVERDUE (`content/music/overdue.yaml`).
+ *
+ * Named HERE rather than in the music module, which knows nothing about
+ * minigames and must not start to: a score id is content this screen owns, the
+ * way the town's art and the hero's four lines are (AGENTS.md — a minigame
+ * meets the game in four places and the soundtrack is not a fifth one). A
+ * second cabinet names its own.
+ *
+ * ONE TRACK, BOTH DIRECTIONS, and that is the point rather than an economy. The
+ * man is late in both of them: late to the campus because the jacket has been
+ * answering from it for an hour, and late home with the part because every
+ * minute on this road is a minute she is further away. It is the same tarmac at
+ * the same speed with the same crowd on it, and a gentler theme for the return
+ * leg would be the game telling the player the pressure had come off — which is
+ * the one thing that never happens.
+ */
+const ROAD_TRACK = "overdue";
 
 export function DriveScreen({
   params,
@@ -371,6 +396,32 @@ export function DriveScreen({
   const setPause = useCallback((on: boolean) => {
     pausedRef.current = on;
     setPaused(on);
+    // THE SCORE FREEZES WITH THE ROAD, exactly as the run's does behind its own
+    // pause menu: the arrangement is held in place rather than restarted, so
+    // lifting the card drops the player back into the same bar of the same
+    // section they were driving through.
+    if (on) pauseMusic();
+    else resumeMusic();
+  }, []);
+
+  // ── THE SCORE ─────────────────────────────────────────────────────────────
+  // OVERDUE (`ROAD_TRACK` above), claimed for as long as this screen owns the
+  // picture.
+  //
+  // IT STARTS WITH THE MOUNT, under the title card, because the card's beat and
+  // a half is the score's own intro: the clock alone, then the engine, then the
+  // first wail as "ROAD TO GOODCO" lifts off a car that has not moved yet.
+  //
+  // AND IT IS STOPPED ON THE WAY OUT, not left to whatever comes next. A leg
+  // ends in one of two places and both want the quiet: the arrival's blackout
+  // cuts it below (the high-score board counts up over silence, exactly as the
+  // run's end-of-level jingles play over one), and the unmount catches every
+  // other way off this screen — the pause card's SKIP, its MAIN MENU, the
+  // workbench relaying. The crossing on the far side raises the destination's
+  // own theme a frame later.
+  useEffect(() => {
+    playMusic(ROAD_TRACK);
+    return () => stopMusic();
   }, []);
 
   /** The card has had its beat (or its tap): let the road run. Idempotent — the
@@ -691,6 +742,12 @@ export function DriveScreen({
         // rest of this tick's events have already been spoken and heard.
         if (drive.events.some((event) => event.type === "blackout")) {
           setBlackout(true);
+          // …AND THE SCORE GOES OUT WITH THE PICTURE. The leg is over — the car
+          // is parked on the approach and the man is standing beside it — and
+          // what comes up over the black is the high-score board counting his
+          // bonuses one at a time. That wants the quiet, exactly as the run's
+          // own end-of-level jingles do.
+          stopMusic();
         }
         // THE FX AND THE ENGINE AGE ON THE DRIVE'S OWN CLOCK, inside the
         // fixed step — so a slow frame never skips a grain or fast-forwards a

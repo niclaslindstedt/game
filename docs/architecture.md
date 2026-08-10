@@ -1854,7 +1854,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `content/music/*.yaml` into the gitignored `pwa/src/generated/music/`, one
   module per track behind its own `import()` so the browser fetches the one
   it is about to play; `index.ts` owns the single player, and a level's
-  `music` id selects its theme through `playLevelMusic(trackId)`),
+  `music` id selects its theme through `playLevelMusic(trackId)` — a screen
+  with a theme but no `LevelDef` to hang it on names its own score through
+  `playMusic(id)`, which is how the DRIVE gets one without this module
+  learning that minigames exist),
   `audio.ts` (one shared synth split into SFX/music volume views),
   `settings.ts` (persisted control-scheme + volume settings), `characters.ts`
   (persistent named **characters** — the Diablo-style save model: each hero

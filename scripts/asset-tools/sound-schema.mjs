@@ -40,6 +40,7 @@ const TONE_ONLY = new Set([
   "from",
   "to",
   "attackMs",
+  "holdMs",
   "detuneCents",
   "vibrato",
 ]);
