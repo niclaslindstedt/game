@@ -8,14 +8,20 @@
 // ledger (characters.ts) so a die-and-retry loop drops back into the action
 // one splash away instead of replaying text.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  advanceIntro,
+  CAP_THOUGHT_IDS,
   createGame,
+  createRunFromParams,
   dismissIntro,
+  introPages,
   markThoughtsSeen,
+  registerDefs,
   seatHero,
   skipStoryOpening,
+  THOUGHT_DEFS,
 } from "@game/core";
 import { SEED } from "./helpers.ts";
 
@@ -63,6 +69,81 @@ describe("skipStoryOpening", () => {
     skipStoryOpening(state);
     expect(state.phase).toBe("playing");
     expect(state.players[0].disarmed).toBe(false);
+  });
+});
+
+// WHAT HE ARRIVED STILL THINKING (`RunParams.arrivalThought`) — the line the
+// trip in left him with, spoken in the destination's own opening monologue
+// rather than as a popup on the road he was still driving. It goes FIRST: the
+// drive is the thing still in his hands when he gets out of the car, and the
+// level's briefing is what he settles into afterwards.
+describe("the arrival line", () => {
+  const ARRIVAL = ["WHAT A TRIP THAT WAS."];
+  const beats = {
+    test_arrival: {
+      id: "test_arrival",
+      speaker: "ME",
+      portrait: "player",
+      pages: [ARRIVAL],
+    },
+  };
+
+  /** A run built the way the app builds one after a drive. */
+  const arrived = (openingSkip?: "story") =>
+    createRunFromParams({
+      seed: SEED,
+      levelId: "test_level",
+      difficulty: "medium",
+      arrivalThought: "test_arrival",
+      openingSkip,
+    });
+
+  beforeEach(() => registerDefs({ thoughts: beats, capThoughts: [] }));
+  afterEach(() =>
+    registerDefs({ thoughts: THOUGHT_DEFS, capThoughts: CAP_THOUGHT_IDS }),
+  );
+
+  it("opens the monologue, with the level's own briefing behind it", () => {
+    const state = arrived();
+    expect(introPages(state)).toEqual([ARRIVAL, ["TEST INTRO LINE."]]);
+    expect(state.introPage).toBe(0);
+  });
+
+  it("is the whole monologue nothing arrived with is", () => {
+    const plain = createGame(SEED, "test_level");
+    expect(introPages(plain)).toEqual([["TEST INTRO LINE."]]);
+  });
+
+  it("survives the replay skip that eats the level's own opening", () => {
+    // A die-and-retry loop has read the briefing; it has NOT read what he made
+    // of tonight's drive. With the arrival line in front, the skip can't be a
+    // page index — the monologue itself shrinks to the half nobody has read.
+    const state = arrived();
+    skipStoryOpening(state);
+    expect(state.phase).toBe("intro");
+    expect(introPages(state)).toEqual([ARRIVAL]);
+    expect(state.introPage).toBe(0);
+    // …and turning past it lands on the level-name card, as any skip does.
+    advanceIntro(state);
+    expect(state.phase).toBe("title");
+  });
+
+  it("takes the same skip through the session parameters", () => {
+    // `openingSkip: "story"` is how the app and an arriving client ask for it,
+    // and it must land the same run — a field only one of them applied is a
+    // desync.
+    const state = arrived("story");
+    expect(state.phase).toBe("intro");
+    expect(introPages(state)).toEqual([ARRIVAL]);
+  });
+
+  it("leaves a plain arrival's skip on the title card", () => {
+    // Nothing arrived with, nothing left to read: the skip empties the
+    // monologue and the card is all that is between the player and the run.
+    const state = createGame(SEED, "test_level");
+    skipStoryOpening(state);
+    expect(introPages(state)).toEqual([]);
+    expect(state.phase).toBe("title");
   });
 });
 

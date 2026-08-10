@@ -122,7 +122,10 @@ third of them and the hero catches none.
 
 **What he says afterwards is about the car.** Standing beside the wagon at the
 far end he delivers a verdict on the trip, and it is always the suspension, the
-clock, the other drivers or the council's lamp standards. Never the people.
+clock, the other drivers or the council's lamp standards. Never the people. It
+is the FIRST thing he says at that end — before he has looked up at the
+building, before a word about the job he came to do — because the drive is
+still in his hands and the forty people he went through are already gone.
 **He drives it home again the same way** with the part on the passenger seat,
 and on the way back he does not have the opinion any more — he has stopped
 thinking about them entirely, which is worse than the line it replaces.

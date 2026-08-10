@@ -454,6 +454,18 @@ export type GameState = {
    */
   arrivalThought?: string;
   /**
+   * THE LEVEL'S OWN OPENING IS SPENT — a replay bailed it (`skipStoryOpening`),
+   * so `introPages` is the ARRIVAL line alone and nothing else.
+   *
+   * It exists because the arrival line is spoken FIRST. While it went last, the
+   * skip was one assignment — page past the level's own monologue and land on
+   * whatever was behind it — but a half that sits in FRONT cannot be skipped by
+   * an index, and "which half of this monologue has been read" is genuinely a
+   * second fact about the run. Undefined on every run that never skipped, which
+   * is every run a player sees the first time.
+   */
+  introSkipped?: boolean;
+  /**
    * Which page of the level's post-victory EPILOGUE is on screen while
    * `phase === "outro"` (`LevelDef.outro` — the intro's black-screen mirror,
    * entered when the victory countdown runs out on a level that ships one).

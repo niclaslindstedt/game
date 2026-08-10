@@ -72,9 +72,10 @@ export function endDrive(
     // WHAT HE MAKES OF THE TRIP goes with him rather than being said here.
     // `driveVerdict` reads the whole drive — the clock, the car, the other
     // drivers, the council's lighting and the people — and the line it picks is
-    // spoken as the last page of the destination's opening monologue, which is
-    // where a man's opinion of a journey belongs: standing beside the car,
-    // having finished it. (`RunParams.arrivalThought` → `introPages`.)
+    // the FIRST thing he says at the far end, opening the destination's
+    // monologue, which is where a man's opinion of a journey belongs: standing
+    // beside the car, having just finished it.
+    // (`RunParams.arrivalThought` → `introPages`.)
     onArrived(drive);
   }
 }
