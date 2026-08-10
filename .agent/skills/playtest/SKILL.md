@@ -19,10 +19,29 @@ it at both ends of the session.
 | Piece | Role |
 | --- | --- |
 | `engine/game/bot/index.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/engine/bot_test.ts`) and the browser harness both drive THIS code |
-| `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`pwa/src/game/game-screen/bot-driver.ts`): it dismisses the intro, steers, jumps, and spends level-ups itself |
-| `pwa/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
+| `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`pwa/src/game/game-screen/bot-driver.ts`): it dismisses the intro, steers, jumps, and spends level-ups itself. **It does NOT start a run** — see below |
+| `pwa/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, WALKS THE MENUS into a run, screenshots, prints outcome + stats JSON |
 | `?debug` URL param | Exposes the live `GameState` as `window.__game` (stamped in `pwa/src/game/game-screen/run-setup.ts`) — the harness's (and your) window into the simulation |
 | `pwa/assets-preview/playtest/` | Screenshots land here (gitignored) |
+
+### `?bot=` DOES NOT START A RUN, and a canvas is not proof that one started
+
+Navigating to `?debug&bot=balanced&level=boot_hill` lands on the TITLE MENU and
+stays there. The param says who steers a run once there is one; something still
+has to press NEW GAME, name a hero, pick a rung and pick a level. That is the
+menu walk in the middle of `playtest.mjs`, and it is most of what that script
+is — so **drive a run through `playtest.mjs`, or copy its walk. Never hand-roll
+a `page.goto` and assume you are in one.**
+
+The reason this is worth a section rather than a footnote is how it fails:
+**silently, and looking like a result.** The title backdrop is a `<canvas>`, so
+`waitForSelector("canvas")` resolves on the menu; a screenshot looks like a game
+because the menu is pretty; and a benchmark reports plausible, stable, entirely
+meaningless numbers. It cost this repo one confident "35% less CPU per frame"
+that was really the title screen versus the title screen. Wait for something
+only a RUN has — `window.__game` (`?debug`), the HUD, a mob — and if you are
+measuring, print a run statistic (kills, damage) beside the measurement so a
+reading taken on the menu is obviously wrong rather than quietly wrong.
 
 ## Running
 

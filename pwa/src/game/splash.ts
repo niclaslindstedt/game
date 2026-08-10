@@ -78,15 +78,38 @@ export function splashPhase(elapsedMs: number, warm: boolean): SplashPhase {
 }
 
 /**
- * The URL params that mean SOMETHING IS DRIVING THIS APP rather than somebody
- * playing it — the debug flag every authoring script opens with, the autopilot
- * the screenshot and playtest harnesses boot into, and the planetarium view
- * `verify-sky.mjs` measures. A card in front of those is three seconds added to
- * every capture and a first click swallowed, so they never get one.
+ * THE CARD BELONGS TO THE FRONT DOOR AND TO NOTHING ELSE. Every param here says
+ * this launch is not somebody opening the game, so it gets no card — because a
+ * card in front of one is three seconds added to every capture and a first
+ * click swallowed. They come in two kinds, and the second kind is the one that
+ * will be forgotten again:
  *
- * `nosplash` is the explicit form for anyone else who wants the old opening.
+ * 1. **SOMETHING IS DRIVING THE APP** — the debug flag every authoring script
+ *    opens with, the autopilot the screenshot and playtest harnesses boot into,
+ *    the planetarium view `verify-sky.mjs` measures, and `nosplash` for anyone
+ *    else who wants the old opening.
+ * 2. **THIS IS A DEEP LINK PAST THE TITLE MENU** — the developer workbenches
+ *    `App.tsx` routes to before it renders any menu at all: the effects gallery,
+ *    the road, the cutscene loop. There is no front door in front of these, so
+ *    there is nothing for a card to cover.
+ *
+ * The second kind was missed when the card became the app's ENTRY (`Boot.tsx`).
+ * Until then `App.tsx` returned each workbench before the line that rendered
+ * the card, so they were suppressed by construction; the card now sits ABOVE
+ * every route and has to be told. `make gallery` paid for that three seconds AT
+ * A TIME, once per exhibit, and `scripts/elite-abilities.mjs` once per elite.
+ * `tests/splash_test.ts` walks `App.tsx`'s own routing so a workbench added
+ * later cannot quietly re-earn it.
  */
-const HARNESS_PARAMS = ["debug", "bot", "skytest", "nosplash"];
+const HARNESS_PARAMS = [
+  "debug",
+  "bot",
+  "skytest",
+  "nosplash",
+  "effects",
+  "drive",
+  "cutscene",
+];
 
 /**
  * WHEN THE CARD IS OUT OF THE WAY — resolved as it clears, and immediately on a
