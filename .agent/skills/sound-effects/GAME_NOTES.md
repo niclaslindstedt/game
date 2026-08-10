@@ -1,30 +1,12 @@
 # sound-effects — game-specific notes
 
-Track arrangements and tunings for **this** game's soundtrack. The synth
-vocabulary, mixing rules, and reusable recipes live in `SKILL.md`; this file
-records what is specific to these scores (`pwa/src/game/music/*`). A
-sequel resets this file and rewrites its scores.
+Sound-design decisions specific to **this** game's effects. The synth
+vocabulary, mixing rules and reusable recipes live in `SKILL.md`; a sequel
+resets this file.
 
-## Arrangement shapes that worked
-
-- **title (2026-07):** intro / verse / chorus / verse / break / chorus /
-  outro at 90 bpm (48 bars ≈ 128 s).
-- **level (2026-07):** intro / A / A2 / B / A / break / build / B / A2 /
-  turn at 150 bpm (76 bars ≈ 122 s).
-- **the road, `overdue` (2026-08):** the same ten-section shape at 162 bpm
-  (76 bars ≈ 113 s), which is worth knowing: the shape takes a tempo change
-  without re-planning, so a new score is a key, a tempo and new melodies.
-  What makes this one DISTRESS rather than action is three choices, none of
-  them the melody — a Phrygian **i–bII** lurch (Dm → Eb) that never settles,
-  a two-tone SIREN wailing a minor second that is a chord tone in BOTH of
-  those chords (so the emergency signal is also the harmony), and a dry
-  quarter-note CLOCK tick that is in every single pattern including the
-  breakdown, where it is the loudest thing left. The build is a bare
-  chromatic bass climb, D–Eb–E–F–F#–G–G#–A, one bar apiece.
-
-The break-then-build pair is what makes a 2-minute loop feel composed
-instead of repeated; the outro's bar of near-silence makes the loop seam
-read as a phrase, not a glitch.
+**The SCORES are not here.** Music is the `soundtrack` skill, and its
+arrangement shapes and per-track decisions are in
+`.agent/skills/soundtrack/GAME_NOTES.md`.
 
 ## Jingle recipes
 

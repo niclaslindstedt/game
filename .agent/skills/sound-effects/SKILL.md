@@ -1,19 +1,24 @@
 ---
 name: sound-effects
-description: "Use when adding or tuning game audio. All SHIPPED SFX and music are synthesized from authored YAML (WebAudio, zero audio files) — a MOD may also ship a real .wav/.mp3 recording; this skill covers the 16-bit sound design vocabulary, the event → sound mapping, the tracker-style music format, recorded sounds in a mod, and how to audition and iterate."
+description: "Use when adding or tuning a SOUND EFFECT — a hit, a shot, a pickup, a door, a footfall, an engine, a UI click, a jingle. Every shipped sound is synthesized from authored YAML (WebAudio, zero audio files); a MOD may ship a real .wav/.mp3 instead. Covers the 16-bit sound design vocabulary, the event → sound route key, cues the renderer raises, continuous machine beds, recorded sounds in a mod, and how to audition one. NOT for music: a score is a different craft with a different review loop — load `soundtrack` for that."
 ---
 
-# Designing Sound Effects and Music
+# Designing sound effects
 
 The game ships **no audio files**. Every sound is synthesized at runtime from a
-handful of parameters, authored as YAML under `content/sounds/` and
-`content/music/` and compiled like every other catalog — which keeps the PWA
-tiny and offline-capable, makes audio as diffable as the pixel grids, and is
-what lets a Steam Workshop mod ship a sound or a score of its own. The target
-aesthetic is **16-bit console** (SNES era): layered detuned oscillators,
-filtered noise percussion, attack envelopes on soft sounds, and a shared
-echo bus for the big moments — richer than a bare NES blip, still
-unmistakably chip.
+handful of parameters, authored as YAML under `content/sounds/` and compiled
+like every other catalog — which keeps the PWA tiny and offline-capable, makes
+audio as diffable as the pixel grids, and is what lets a Steam Workshop mod ship
+a sound of its own. The target aesthetic is **16-bit console** (SNES era):
+layered detuned oscillators, filtered noise percussion, attack envelopes on soft
+sounds, and a shared echo bus for the big moments — richer than a bare NES blip,
+still unmistakably chip.
+
+**MUSIC IS NOT HERE.** A score is tracker data with an arrangement, and it is
+judged by LOOKING at it — engraved as sheet music with a spectrum analyser under
+it — rather than by ear in isolation. Different format, different review
+surface, different faults: load the **`soundtrack`** skill. The two crafts share
+only `pwa/src/lib/synth.ts`, the instrument underneath both.
 
 **Before starting, read this skill's lessons** — `node scripts/skill-lessons.mjs sound-effects --list`,
 then the ones this task touches (`--scope=…`, `--concepts=…`). Reading them here and
@@ -25,11 +30,8 @@ it at both ends of the session.
 | File | Role |
 | --- | --- |
 | `pwa/src/lib/synth.ts` | The instrument: `tone()` (oscillator + glide + attack/decay + detune pair + vibrato + filter + pan + echo send) and `noise()` (fading white noise + filter + pan + echo). One shared SNES-style echo bus per context. Generic — extraction candidate. |
-| `pwa/src/lib/chiptune.ts` | The music sequencer: a track = named **instruments** (patches) + named **patterns** (voice → note tokens) + an **order** arrangement list, scheduled lookahead-style on the synth. Generic — extraction candidate. |
 | `content/sounds/<id>.yaml` | **The sound design.** One file per sound: a list of synth VOICES, plus an optional `on:` block naming the event shape that plays it. This is where SFX work happens. |
-| `content/music/<id>.yaml` | **The soundtrack.** One file per track — its instruments, its patterns and its order — with `id` the value a `LevelDef.music` names (`title` is the menu's). |
 | `pwa/src/game/sfx/` | The DISPATCH: `index.ts` looks a sound up in the compiled catalog by event shape (or by a weapon's own `sfx`) and plays it. The domain files (`combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts`, `ui.ts`) now hold only what a static entry cannot express — the handful of sounds whose pitch or volume scales with a continuous intensity. |
-| `pwa/src/game/music/index.ts` | The single player: play/stop/pause, which track is current, the per-track dynamic import, and `setModTracks` for a mod's scores. |
 | `pwa/src/game/sfx/samples.ts` | **A MOD'S RECORDINGS** — the one place audio comes out of a file. Holds CLIPS (a file stem with one or more takes); what plays one is an ordinary sound def with a `call: sample` voice, so nothing downstream can tell a recording from an oscillator. Nothing shipped uses it. |
 | `pwa/src/game/sfx/cues.ts` | **CUES** — moments the RENDERER knows and the engine never reported (a footfall). Matched by `on: { cue, surface }` in their own key space, rate-limited in the funnel. |
 | `pwa/src/game/sfx/listener.ts` | Where the player is listening from (the local seat's camera), for `spatial:` sounds. |
@@ -77,9 +79,9 @@ you can read as a list of voices is one the next person can retune.
 content format. Drop `sounds/<id>.{wav,mp3,ogg,opus,flac}` into a mod folder and
 it is played in place of the synthesized sound of that name — a sound designer's
 work IS the waveform, and no list of detuned oscillators is the orchestral hit
-they recorded. A `music/<id>.opus` replaces a whole SCORE the same way (it plays
-through an `<audio>` element, so it streams rather than sitting in memory as
-decoded PCM). THE FILE NAME IS THE ROUTING: no `on:` block, no manifest field.
+they recorded. THE FILE NAME IS THE ROUTING: no `on:` block, no manifest field. (A mod may
+replace a whole SCORE with a `music/<id>.opus` in the same way — that half is the
+`soundtrack` skill's.)
 
 **The trap to warn a modder about, every time:** a recording repeats EXACTLY,
 and the sound it replaced did not — `noise` voices redraw their buffer every
@@ -140,31 +142,6 @@ Mixing rules:
   a sound is a readable list of voices with a sentence saying what it should
   feel like, so the next person to retune it knows what they are aiming at.
 
-## Music format
-
-A track is `content/music/<id>.yaml`, tracker data for `@ui/lib/chiptune.ts`:
-
-- **`instruments`**: named patches (`wave`, `volume`, `gate`, `attackMs`,
-  `detuneCents`, `vibrato`, `pan`, `echo`, `filter`, `slide`). Drums are
-  instruments too: `slide: 0.25` on a triangle = kick; noise + highpass
-  6500 = hat; noise + highpass 1400 = snare.
-- **`patterns`**: named sections (verse/chorus/break…); each maps a voice
-  to bars of 16 sixteenth-note tokens, authored as a block string one bar
-  per line (`=` ties, `.` rests, `x` triggers noise voices). Short voice lines cycle within the
-  pattern (write a 1–2 bar drum loop under an 8-bar lead) — their length
-  must divide the pattern length. Omitted voices are silent.
-- **`order`**: the arrangement — pattern names in play order; the whole
-  list loops. Target **~2 minutes per loop** with real section contrast
-  (intro / verse / chorus / breakdown / build / turnaround), enforced by
-  `tests/chiptune_test.ts` (loop length 100–145 s, ≥4 patterns, order
-  longer than the pattern list).
-
-Composition guidance: lean on the progressions classic game scores run on
-(i–VI–VII drive, i–VI–iv–V laments, a relative-major chorus lift, a thin
-breakdown that builds back up) but write original melodies — nothing
-sampled or transcribed. Keep music volumes well under SFX (lead ~0.03,
-bass ~0.055, pads ~0.009, hats ~0.011).
-
 ## What a landing sounds like is what it is MADE OF
 
 A drop is THROWN clear of the body it came out of (`engine/game/items/toss.ts`),
@@ -194,16 +171,15 @@ and three rules decide what the player hears:
   therefore has no sound of its own: the ONE noise a find makes is its landing.
   → `docs/rendering.md`
 
-## Iteration cycle
+## Iteration cycle — a SOUND
 
-1. Edit the YAML — `content/sounds/<id>.yaml` for a sound (a new one needs an
-   `on:` block, or a weapon's `sfx:` naming it), `content/music/<id>.yaml` for a
-   score. Only an intensity-scaled sound belongs in an `sfx/` domain file.
-2. `npm run levels` to recompile, then `npx vitest run tests/chiptune_test.ts
-   tests/content/music_roundtrip_test.ts` after music edits — a typo'd note or a
-   mis-sized pattern fails at the SCHEMA now, before it can reach a run, and the
-   round-trip guard prints exactly which bars moved. An intentional score change
-   is accepted with `node scripts/update-music-snapshot.mjs`.
+1. Edit `content/sounds/<id>.yaml` — a new one needs an `on:` block, or a
+   weapon's `sfx:` naming it. Only an intensity-scaled sound (one whose pitch or
+   volume rides a continuous parameter) belongs in an `sfx/` domain file.
+2. `npm run levels` to recompile, then `npx vitest run
+   tests/content/sound_catalog_test.ts tests/catalog_routing_test.ts` — a voice
+   the schema refuses, or a route key that no longer matches, fails here rather
+   than going silently quiet in a run.
 3. Audition in a real browser — headless screenshots can't judge audio:
    `make website-dev`, play, trigger the event repeatedly (the `playtest`
    skill's rush strategy triggers combat sounds densely).
@@ -211,6 +187,8 @@ and three rules decide what the player hears:
    constantly in play, over the level theme. If a sound smears the mix,
    shorten it before quieting it.
 5. Loop until each event is identifiable with eyes closed.
+
+### The audio context — shared with the music, and owned here
 
 Audio normally can only start after a user gesture: `synth.unlock()` is called
 on run start and every canvas pointerdown — keep that invariant if you touch
@@ -237,8 +215,6 @@ node scripts/skill-lessons.mjs sound-effects --list
 
 The lessons here are a **palette of parameter recipes that worked** ("UI confirm
 = square 660+990 stepped 60 ms apart, detune 5, echo 0.15") — read it back
-before designing a sound, and add to it after.
-
-- **Arrangement shapes** — this game's proven title/level track structures
-  live in [`GAME_NOTES.md`](./GAME_NOTES.md); record new score-specific
-  arrangements there, and keep reusable synth/mixing recipes in `.lessons/`.
+before designing a sound, and add to it after. Per-sound decisions specific to
+this game go in [`GAME_NOTES.md`](./GAME_NOTES.md); reusable craft goes in
+`.lessons/`.

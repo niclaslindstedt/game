@@ -60,6 +60,7 @@ make drive-bench   # measure the DRIVE — N seeds a rung, played by the auto-dr
 make town          # LOOK at the DRIVE's town, five stops along the road to GOODCO
 make town ARGS="--site home"   # …and at what a leg ARRIVES at, either end
 make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG
+make sheet ARGS="overdue"      # LOOK at a SCORE — a track engraved as sheet music
 make bump          # print the release bump derived from .changes/unreleased/
 npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
 npm run shell:bench    # weigh the packaged desktop builds; read this machine's cold starts
@@ -616,7 +617,8 @@ compiled by `make levels`. The skill named is the one to load before authoring.
 | An errand, its giver, its conversation                        | `content/quests/<id>.yaml`, `content/quest-givers.yaml`, `content/conversations/<id>.yaml`                                                | `quest-design`                          |
 | A cutscene / a thought / a story item                         | `content/cutscenes/<id>.yaml`, `content/thoughts.yaml`, `content/story-items.yaml`                                                        | `update-story`                          |
 | A sprite                                                      | `content/sprites/<family>/<id>.yaml` (carries `plane: upright \| floor \| wall`)                                                          | `pixel-assets`, `art-improvement`       |
-| A sound / a music track                                       | `content/sounds/<id>.yaml`, `content/music/<id>.yaml`                                                                                     | `sound-effects`                         |
+| A sound effect                                                | `content/sounds/<id>.yaml`                                                                                                                | `sound-effects`                         |
+| A music track                                                 | `content/music/<id>.yaml`                                                                                                                 | `soundtrack`                            |
 | The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml`; the row's BEHAVIOUR in its `menus-*.ts` builder                                                                  | `menu-design`                           |
 | AN IN-GAME WINDOW — the pause menu, the bag's frame, a modal  | `content/menus/<id>.yaml`, `modals/<id>.yaml`, `elements/<id>.yaml`, `scripts/<id>.lua`; its code-backed insides in `pwa/src/game/menus/` | `menu-design`, `ui-review`              |
 | THE HUD — the fight's chrome AND the road's dashboard         | `content/hud/` (`hud.yaml`, `elements/<id>.yaml`, `events.yaml`, `scripts/<id>.lua`); a WIDGET's insides in `pwa/src/game/hud/widgets/`   | `menu-design`, `ui-review`              |
@@ -899,7 +901,8 @@ skill is the source of truth — load that, not a search of the tree.
 | The passive talent trees and their always-on looks    | `talent-fx`                                             |
 | Enemies, companions, presentation fields              | `enemy-design`                                          |
 | Sprites and the pixel font                            | `pixel-assets`, `art-improvement`                       |
-| Audio (including a mod's recorded .wav/.mp3)          | `sound-effects`                                         |
+| A sound effect — a hit, a pickup, a door, a machine   | `sound-effects`                                         |
+| A SOUNDTRACK — a level's theme, the title, a minigame | `soundtrack`                                            |
 | The generated `/library/` site                        | `library-improvement`                                   |
 | Balance, the XP curve, measuring a real run           | `simulate-run`, `leveling-balance`, `playtest`          |
 | The autopilot                                         | `bot-improvement`                                       |
@@ -929,7 +932,8 @@ carries the workflow, the quality bar and the traps for its subject.
 | `simulate-run`        | MEASURING actual balance by running the real engine headlessly        |
 | `pixel-assets`        | Creating or changing sprites, tiles, palettes, font glyphs            |
 | `art-improvement`     | Finding and replacing the game's WORST art                            |
-| `sound-effects`       | Synthesized SFX, the tracker music, and a MOD's recorded audio        |
+| `sound-effects`       | Synthesized SFX — and a MOD's recorded .wav/.mp3                      |
+| `soundtrack`          | MUSIC — the tracker scores, and LOOKING at one to judge it            |
 | `talent-fx`           | The passive talent trees and their always-on looks                    |
 | `visual-effects`      | A transient effect — explosion, flash, aura, screen wash              |
 | `gore-system`         | Blood, the floor, the hero's coat, cleaves, gibs, the NSFW gate       |

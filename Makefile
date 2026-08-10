@@ -1,4 +1,4 @@
-.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
+.PHONY: lua-vm build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep store-page-shot store-achievement-art store-game-center store-steam-achievements sim-bench drive-bench town gallery sheet mod-check mod-catalog unique-check tauri tauri-test tauri-lint tauri-fmt desktop-tauri-steam desktop-tauri-dist sync sync-merge sync-continue sync-abort sync-cleanup
 
 build:
 	npm run build
@@ -141,6 +141,20 @@ town:
 # It starts and stops its own dev server unless you pass `--url`.
 gallery:
 	node pwa/scripts/effects-gallery.mjs $(ARGS)
+
+# LOOK AT A SCORE — one of `content/music/*.yaml` engraved as sheet music, one
+# staff per voice, with a SPECTRUM under every system. THE review surface for
+# anything musical, and the counterpart of the gallery above: a track is
+# otherwise eight hundred lines of note tokens that can only be judged by
+# playing the whole two minutes and remembering. On the page a section's shape
+# is one glance — whether a melody has a contour or merely wobbles, whether a
+# line ever breathes — and the strip under it answers the half a staff cannot:
+# how loud, in which band, and which two voices are in each other's way.
+# `make sheet ARGS="overdue"` is one track; `--all` is every one this build has.
+# `--pattern=b` is one section drawn big, which is what to read when the whole
+# score comes out too tall to see.
+sheet:
+	node scripts/music-sheet.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the
