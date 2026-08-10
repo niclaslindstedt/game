@@ -98,6 +98,11 @@ export function buildDifficultyMenu(
         label: def.name,
         aria: rowAria("difficulty", id),
         color: unlocked ? def.color : "#5a6068",
+        // The rung's own emblem, off the catalog: the ladder escalates through
+        // them (a feather, a shield, crossed blades, a skull, the bomb) and it
+        // is drawn in the row's `color` above, so a locked rung's mark greys
+        // out with its label.
+        icon: def.icon,
         locked: !unlocked,
         // Warp repeats one line on every rung (the heading already says
         // WARP), so it carries no subtitle; normal play keeps the tagline

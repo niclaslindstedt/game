@@ -1,0 +1,30 @@
+name: icon_difficulty_easy
+family: icons
+size: [12, 12]
+description: >
+  A single feather standing on its quill, its vane notched down one side — the
+  EASY rung's marker on the difficulty ladder.
+subject:
+  kind: UI icon
+  features: a tapering vane with two barb notches cut into its left edge and a
+    bare quill running out of the bottom
+  accent: pale down, lit along the shaft
+  flavor: weightless — a gentle warm-up
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#f2f4fa" # lit shaft
+  W: "#c8cedd" # vane body
+  w: "#949bb0" # vane shade
+grid: |
+  ......OO....
+  .....OWTO...
+  ....OWWTWO..
+  ...OWWWTWwO.
+  ....OWWTWwO.
+  ...OWWWTWwO.
+  ....OWWTWwO.
+  ...OWWWTWwO.
+  ....OWWTWO..
+  .....OWTO...
+  .....OTO....
+  ......O.....

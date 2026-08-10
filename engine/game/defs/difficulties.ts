@@ -131,6 +131,12 @@ export type DifficultyDef = {
   /** Menu color for this rung; the ladder heats up as it descends. Lives with
    * the def so a new difficulty is pure data (no TitleScreen edit). */
   color: string;
+  /** The sprite the ladder's row wears beside its label — drawn in the row's
+   * own `color` (`spriteMonoUrl`), so what it has to carry is a SILHOUETTE,
+   * not a palette. Lives here beside `color` for the same reason: a new rung
+   * is pure data. The ladder escalates through them — a feather, a shield,
+   * crossed blades, a skull, the bomb. */
+  icon: string;
   /**
    * The weapon off the hero's wall: the WEAPON_DEFS id minted in hand when a
    * run starts fresh (create.ts). The prelude cutscene shows the same piece
@@ -646,6 +652,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "EASY",
     tagline: "A GENTLE WARM-UP",
     color: "#7ef0c8",
+    icon: "icon_difficulty_easy",
     // Grandpa's, off the garage wall: a short-range SPREAD, so the kindest rung
     // teaches the AoE read from the opening knot without handing the player a
     // single-target wand (see WEAPON_DEFS.sawed_off_shotgun). It is slower and
@@ -783,6 +790,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "MEDIUM",
     tagline: "THE FIGHT AS INTENDED",
     color: "#4da6ff",
+    icon: "icon_difficulty_medium",
     startingWeapon: "medieval_sword",
     startingStats: {},
     // The band comes with him: the one piece of jewellery he owns before the
@@ -872,6 +880,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "HARD",
     tagline: "NO ROOM FOR MISTAKES",
     color: "#ffd75e",
+    icon: "icon_difficulty_hard",
     startingWeapon: "combat_knife",
     startingStats: {},
     // The band comes with him: the one piece of jewellery he owns before the
@@ -948,6 +957,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "NIGHTMARE",
     tagline: "THEY NEVER STOP COMING",
     color: "#ff8c42",
+    icon: "icon_difficulty_nightmare",
     startingWeapon: "brass_knuckles",
     startingStats: {},
     // The band comes with him: the one piece of jewellery he owns before the
@@ -1027,6 +1037,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "JESUS CHRIST!",
     tagline: "ABANDON ALL HOPE",
     color: "#d83a3a",
+    icon: "icon_difficulty_jesus",
     startingWeapon: "stick",
     startingStats: {},
     // The band comes with him: the one piece of jewellery he owns before the
