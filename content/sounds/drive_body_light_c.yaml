@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_light_c
+description: >-
+  The third light thud — the lowest of the three, so the bank does not sit
+  entirely above the ordinary one and a run of light hits still has a floor
+  to it.
+voices:
+  - call: tone
+    type: square
+    from: 208
+    to: 122
+    durationMs: 66
+    volume: 0.037
+    detuneCents: 10
+  - call: noise
+    durationMs: 52
+    volume: 0.027
+    filter:
+      type: bandpass
+      frequency: 1080
+  - call: noise
+    durationMs: 96
+    volume: 0.012
+    delayMs: 40
+    filter:
+      type: lowpass
+      frequency: 460

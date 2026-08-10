@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_car_thump_b
+description: >-
+  The second frame thump — caught further back down the flank, so the boom is
+  drier, the rattle is nearer the player's own door and the springs take
+  longer to give it back.
+voices:
+  - call: tone
+    type: sine
+    from: 108
+    to: 46
+    durationMs: 230
+    volume: 0.048
+  - call: noise
+    durationMs: 200
+    volume: 0.024
+    filter:
+      type: lowpass
+      frequency: 260
+  - call: noise
+    durationMs: 90
+    volume: 0.014
+    delayMs: 70
+    filter:
+      type: bandpass
+      frequency: 2400
+  - call: tone
+    type: triangle
+    from: 66
+    to: 92
+    durationMs: 210
+    volume: 0.02
+    delayMs: 160

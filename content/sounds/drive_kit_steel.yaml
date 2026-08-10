@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_kit_steel
+description: >-
+  WHAT THEY WERE HOLDING, arriving a moment after they do — light steel tube
+  going end over end down the tarmac. A walking frame, a pair of crutches, a
+  wheelchair: the crowd is not eighteen silhouettes, it is eighteen people
+  carrying eighteen different things, and this is the cheapest possible way to
+  say so. Three bounces getting quieter and lower, no body in it at all —
+  that is the thud's job, and this is only ever laid over one.
+voices:
+  - call: noise
+    durationMs: 30
+    volume: 0.026
+    filter:
+      type: highpass
+      frequency: 3000
+  - call: tone
+    type: square
+    from: 1420
+    to: 1180
+    durationMs: 24
+    volume: 0.02
+    delayMs: 46
+    detuneCents: 14
+  - call: tone
+    type: square
+    from: 980
+    to: 880
+    durationMs: 20
+    volume: 0.015
+    delayMs: 104
+    detuneCents: 10
+  - call: noise
+    durationMs: 44
+    volume: 0.012
+    delayMs: 168
+    filter:
+      type: bandpass
+      frequency: 2400

@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_light_a
+description: >-
+  A LIGHT BODY on the bumper — the old woman, the girl with the headphones,
+  somebody on crutches. The whole bank sits a fifth higher and a third shorter
+  than the ordinary thud beside it, because that is what less mass does to a
+  collision: the same blow arrives faster, leaves sooner and has nothing under
+  it. The first of three.
+voices:
+  - call: tone
+    type: square
+    from: 232
+    to: 138
+    durationMs: 58
+    volume: 0.036
+    detuneCents: 6
+  - call: noise
+    durationMs: 46
+    volume: 0.028
+    filter:
+      type: bandpass
+      frequency: 1280
+  - call: noise
+    durationMs: 88
+    volume: 0.011
+    delayMs: 34
+    filter:
+      type: lowpass
+      frequency: 520

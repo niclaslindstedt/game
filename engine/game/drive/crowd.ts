@@ -33,7 +33,12 @@
 import { randomRange, type Rng } from "@game/lib/rng.ts";
 
 import { cityEndPx, cityStartPx, DRIVE } from "./config.ts";
-import type { DriveParams, DrivePedestrian, DriveState } from "./types.ts";
+import type {
+  DriveParams,
+  DrivePedestrian,
+  DriveState,
+  PedestrianKind,
+} from "./types.ts";
 
 /**
  * How many distinct bodies the crowd is drawn from. The app's sprite table is
@@ -66,6 +71,90 @@ export const CROWD_VARIANTS = 18;
  * feeling the whole beat exists to work against.
  */
 export const CROWD_THOUGHTS = 40;
+
+/**
+ * WHAT EACH OF THEM WEIGHS, as a multiple of `DRIVE_UNITS.pedestrianMassKg` —
+ * and the reason a bumper does not answer every body on this road the same way.
+ *
+ * NOBODY OUT HERE WEIGHS THE SAME AS ANYBODY ELSE, and the sum has always been
+ * ready to say so: an inelastic collision is two masses meeting, so a person's
+ * own mass is already an input to the speed the car loses, the energy the
+ * crumple absorbs and the impulse the body leaves with (`solveImpact`). It was
+ * simply fed the same number eighteen times. So a run of hits was eighteen
+ * copies of one collision — which is what the road SOUNDED like too, because
+ * every shelf the app reaches for is priced off those very joules.
+ *
+ * THE ORDER IS `CROWD_SPRITES`' (pwa/src/game/drive-screen/scenery.ts), the
+ * same index `DrivePedestrian.variant` already carries, so what the player is
+ * looking at and what the car just felt are the same person: the old woman is
+ * three-quarters of a body and the man with everything he owns in four bags is
+ * a third over one. A weight nobody can see is a weight nobody believes, which
+ * is why the light end of this table is the frail-looking half of the roster
+ * rather than a spread of noise.
+ *
+ * IT AVERAGES EXACTLY 1.0 across the eighteen, on purpose and by arithmetic
+ * (18.00 / 18). Variants are drawn uniformly, so a leg meets the same total
+ * mass of people it always did — the crowd's cost, the wear column, the
+ * difficulty ladder's `pedestrianMassMult` and every measured number in
+ * `drive_test.ts` are about the AVERAGE body, and this table is a spread around
+ * it rather than a thumb on the scale. Keep it that way when tuning: a row that
+ * goes up owes another row the same.
+ */
+export const CROWD_MASS_MULTS: readonly number[] = [
+  0.85, // an old man, and not much of one
+  0.75, // an old woman — the lightest thing on the road
+  0.95, // a hoodie
+  0.8, // a young woman
+  1.0, // a suit, which is the yardstick
+  1.1, // hi-vis: boots, a jacket with things in it
+  1.2, // a full shopping trolley, and whoever is pushing it
+  1.05, // a pram
+  1.0, // somebody walking a dog
+  0.9, // crutches
+  0.85, // a walking frame
+  0.85, // a skater
+  1.1, // a long coat
+  0.95, // a mohawk
+  1.3, // the bagman — everything he owns, carried
+  0.9, // headphones
+  1.15, // a cyclist, and the bike under them
+  1.3, // a wheelchair: steel, wheels and a person in it
+];
+
+/**
+ * …AND WHAT THE OTHER THREE KINDS WEIGH, for the same sum.
+ *
+ * They have their own tables of art rather than the crowd's, so `variant` means
+ * something else for each of them and the eighteen above cannot answer. A RIDER
+ * is a helmet, leathers and boots — the heaviest ordinary body out here without
+ * being a different kind of thing. A DRIVER came out of a seat, so they are
+ * whoever was driving, plus a coat. One of THE GLUED is an ordinary person, and
+ * deliberately: what makes a blockade a wall is the RESIN
+ * (`DRIVE.blockade.massMult`), not the people in it, and folding the two into
+ * one number would leave the road unable to say which of them it meant.
+ */
+const KIND_MASS_MULTS: Record<Exclude<PedestrianKind, "walker">, number> = {
+  rider: 1.1,
+  driver: 1.05,
+  glued: 1,
+};
+
+/**
+ * What one body on this road weighs, as a multiple of the rung's own
+ * `pedestrianMassKg` — the ONE answer, read by the collision that solves the
+ * blow and by the app that has to make a noise about it.
+ *
+ * One function rather than two tables read in two places, because the second
+ * copy is where the picture and the physics start disagreeing: the app buckets
+ * this into the shelf a hit sounds like (`drive-screen/drive-sounds.ts`), and a
+ * body that sounded heavy while the sum treated it as light would be the road
+ * lying about the only thing this minigame is made of.
+ */
+export function bodyMassMult(kind: PedestrianKind, variant: number): number {
+  if (kind !== "walker") return KIND_MASS_MULTS[kind];
+  const at = ((variant % CROWD_VARIANTS) + CROWD_VARIANTS) % CROWD_VARIANTS;
+  return CROWD_MASS_MULTS[at] ?? 1;
+}
 
 /** How fast a tumbling body sheds its speed on the tarmac (1/s), and the speed
  * under which it has stopped for good. */

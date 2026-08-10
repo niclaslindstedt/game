@@ -37,7 +37,7 @@ import {
   type DriveExhibit,
 } from "../../pwa/src/game/effects-gallery/exhibit-kit.ts";
 import {
-  bodyHitSound,
+  bodyHitSounds,
   BREAKDOWN_SOUND,
   crushSound,
   panelSound,
@@ -47,7 +47,7 @@ import {
   BODY_SOUNDS,
   CRUNCH_SOUNDS,
   DEBRIS_SOUND,
-  DRAG_SOUND,
+  dragSound,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
@@ -82,18 +82,34 @@ function play(exhibit: DriveExhibit): { event: DriveEvent; atMs: number }[] {
   return out;
 }
 
-/** The sound the drive screen would play for an event — the app's own pick, so
- * a re-tuned threshold moves this test and not just the game. */
+/**
+ * The sound the drive screen would play for an event — the app's own pick, so
+ * a re-tuned threshold moves this test and not just the game.
+ *
+ * A BODY'S IS THE FIRST OF ITS STACK: a collision plays the person's own bank
+ * and then whatever the speed, their belongings and their weight add over the
+ * top (`bodyHitSounds`), and what an exhibit ADVERTISES is the bank. It is
+ * asked with the wagon flat out, which is what every one of these cards is
+ * staged at — a card's `bank` is a claim about the shelf its collision lands
+ * on, not about the throttle.
+ */
 function soundFor(event: DriveEvent): string | undefined {
   if (event.type === "pedestrianHit")
-    return bodyHitSound(event.pos.x, event.pos.y, event.joules);
+    return bodyHitSounds({
+      x: event.pos.x,
+      y: event.pos.y,
+      joules: event.joules,
+      kind: event.kind,
+      variant: event.variant,
+      speedFrac: 1,
+    })[0];
   if (event.type === "trafficHit")
     return trafficHitSound(event.pos.x, event.pos.y, event.joules).id;
   if (event.type === "panelBent") return panelSound(event.pos.x, event.pos.y);
   if (event.type === "partShed") return SHED_SOUND;
   if (event.type === "breakdown") return BREAKDOWN_SOUND;
   if (event.type === "bodySplit") return splitSound(event.pos.x, event.pos.y);
-  if (event.type === "bodyCaught") return DRAG_SOUND;
+  if (event.type === "bodyCaught") return dragSound(event.kind, event.variant);
   if (event.type === "bodyCrushed") return crushSound(event.pos.x, event.pos.y);
   if (event.type === "debrisStruck") return DEBRIS_SOUND;
   return undefined;

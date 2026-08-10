@@ -46,6 +46,8 @@ import {
   DRIVE,
   DRIVE_OUTCOME,
   DRIVE_UNITS,
+  bodyMassMult,
+  CROWD_MASS_MULTS,
   impactMasses,
   laneAt,
   laneCenter,
@@ -429,15 +431,22 @@ describe("what a body is actually FELT as", () => {
   // (`nudgePerLoss`). Neither touches the energy, so nothing here is a statement
   // about damage.
 
-  /** Somebody standing still on the car's own line, `ahead` px up the road. */
-  const plant = (drive: DriveState, ahead: number): void => {
+  /**
+   * Somebody standing still on the car's own line, `ahead` px up the road.
+   *
+   * VARIANT 0 IS A PERSON, NOT AN AVERAGE — an old man, and 0.85 of a body
+   * (`CROWD_MASS_MULTS`). Every sum below that wants the bare momentum answer
+   * to compare against has to weigh HIM rather than the rung's headline figure,
+   * or it is comparing two different collisions.
+   */
+  const plant = (drive: DriveState, ahead: number, variant = 0): void => {
     drive.pedestrians.push({
       id: drive.nextId++,
       pos: { x: drive.car.pos.x + ahead, y: drive.car.pos.y },
       vel: { x: 0, y: 0 },
       mode: "afoot",
       kind: "walker",
-      variant: 0,
+      variant,
       phase: 0,
       z: 0,
       vz: 0,
@@ -471,6 +480,31 @@ describe("what a body is actually FELT as", () => {
     return { lost: clear.car.speed - struck.car.speed, dip };
   };
 
+  it("costs the wagon more for a heavy body than for a light one", () => {
+    // WHAT THE WEIGHT TABLE IS FOR, stated as physics rather than as audio: two
+    // people met identically, differing only in which of the crowd's eighteen
+    // bodies they were wearing. The blow is an inelastic collision between two
+    // masses and one of them is the PERSON, so a body a third heavier than
+    // another must take more off the dial and put more energy through the
+    // crumple — and the sound bank buckets that very number, which is what
+    // keeps what the player hears and what the car felt from disagreeing.
+    const lightest = CROWD_MASS_MULTS.indexOf(Math.min(...CROWD_MASS_MULTS));
+    const heaviest = CROWD_MASS_MULTS.indexOf(Math.max(...CROWD_MASS_MULTS));
+    const cost = (variant: number): number => {
+      const drive = createDrive(PARAMS);
+      silence(drive);
+      drive.car.speed = DRIVE.topSpeedPx;
+      plant(drive, 40, variant);
+      const before = drive.car.speed;
+      for (let t = 0; t < 400; t += 16) {
+        stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+      }
+      expect(drive.bodies).toBe(1);
+      return before - drive.car.speed;
+    };
+    expect(cost(heaviest)).toBeGreaterThan(cost(lightest));
+  });
+
   it("takes more off the speedometer than the bare momentum sum does", () => {
     const speed = DRIVE.topSpeedPx;
     const raw = solveImpact(
@@ -480,7 +514,9 @@ describe("what a body is actually FELT as", () => {
       { x: 30, y: 0 },
       { x: 0, y: 0 },
       DRIVE.pedestrianRadiusPx,
-      impactMasses(PARAMS.difficulty ?? "medium").pedestrian,
+      // The planted body's OWN weight — see `plant`.
+      impactMasses(PARAMS.difficulty ?? "medium").pedestrian *
+        bodyMassMult("walker", 0),
     )!.speedLoss;
     const { lost } = meet(speed);
     // The whole point: plainly MORE than the sum's own answer…

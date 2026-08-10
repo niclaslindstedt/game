@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_crack_a
+description: >-
+  WHAT SPEED SOUNDS LIKE — the whip-crack laid over a body hit taken near the
+  top of the dial, and nothing else.
+  A layer rather than a shelf, because speed and weight are two different
+  facts and the bank cannot spend a file on every pairing of them: a heavy
+  body at a crawl and a light one at a hundred can cost the same joules, and
+  they must not make the same noise. So the WEIGHT picks the thud and this
+  goes over the top of it when the needle is up — very short, very dry, mostly
+  above 2 kHz, with just enough of a pitched snap to read as the bumper rather
+  than as static.
+voices:
+  - call: noise
+    durationMs: 26
+    volume: 0.03
+    filter:
+      type: highpass
+      frequency: 3200
+  - call: noise
+    durationMs: 44
+    volume: 0.024
+    delayMs: 6
+    filter:
+      type: bandpass
+      frequency: 2000
+  - call: tone
+    type: square
+    from: 940
+    to: 320
+    durationMs: 34
+    volume: 0.02
+    detuneCents: 12

@@ -3803,29 +3803,61 @@
     "drive_body_a",
     "drive_body_b",
     "drive_body_c",
+    "drive_body_crack_a",
+    "drive_body_crack_b",
     "drive_body_drag",
+    "drive_body_drag_heavy",
     "drive_body_hard_a",
     "drive_body_hard_b",
+    "drive_body_hard_c",
+    "drive_body_hard_heavy_a",
+    "drive_body_hard_heavy_b",
+    "drive_body_hard_light_a",
+    "drive_body_hard_light_b",
+    "drive_body_heavy_a",
+    "drive_body_heavy_b",
+    "drive_body_heavy_c",
+    "drive_body_light_a",
+    "drive_body_light_b",
+    "drive_body_light_c",
+    "drive_body_nudge_a",
+    "drive_body_nudge_b",
+    "drive_body_sub",
     "drive_breakdown",
+    "drive_car_bump",
+    "drive_car_jolt",
+    "drive_car_thump_a",
+    "drive_car_thump_b",
     "drive_crunch_a",
     "drive_crunch_b",
+    "drive_crunch_c",
     "drive_crush_a",
     "drive_crush_b",
     "drive_crush_c",
     "drive_debris_clunk",
     "drive_glass_a",
     "drive_glass_b",
+    "drive_glass_c",
     "drive_impact_sub",
+    "drive_kit_bags",
+    "drive_kit_helmet",
+    "drive_kit_resin",
+    "drive_kit_steel",
+    "drive_kit_wheels",
     "drive_panel_a",
     "drive_panel_b",
+    "drive_panel_c",
     "drive_part_shed",
     "drive_rollover",
     "drive_scrape_a",
     "drive_scrape_b",
+    "drive_scrape_c",
     "drive_smash_a",
     "drive_smash_b",
+    "drive_smash_c",
     "drive_split_a",
     "drive_split_b",
+    "drive_split_c",
     "elevator_locked",
     "elevator_ride",
     "elite_cast",
@@ -4246,8 +4278,17 @@
     "drive_body_c": {
       "what": "The third body thud — brighter and shorter, the one that reads as a clipping blow on the wing rather than a square hit on the nose."
     },
+    "drive_body_crack_a": {
+      "what": "WHAT SPEED SOUNDS LIKE — the whip-crack laid over a body hit taken near the top of the dial, and nothing else. A layer rather than a shelf, because speed and weight are two different facts and the bank cannot spend a file on every pairing of them: a heavy body at a crawl and a light one at a hundred can cost the same joules, and they must not make the same noise. So the WEIGHT picks the thud and this goes over the top of it when the needle is up — very short, very dry, mostly above 2 kHz, with just enough of a pitched snap to read as the bumper rather than as static."
+    },
+    "drive_body_crack_b": {
+      "what": "The second crack — a shade lower and with a hair more air after it, so a run of fast hits does not tick like a metronome."
+    },
     "drive_body_drag": {
       "what": "Something has caught under the car and started to travel with it — a long bandpass scrape with a wet lowpass wash beneath it and a slow tail, so the ear places it UNDERNEATH rather than out in front. It runs about as long as a middling drag does; a piece carried further simply has the road noise over the top of it, which is what happens in a real one."
+    },
+    "drive_body_drag_heavy": {
+      "what": "…and the same thing with somebody BIG under it. Longer, lower and with the floorpan itself in it: the scrape sits an octave under the ordinary drag, the wet wash beneath it runs half again as long, and there is a slow grinding note where the underside of the car is being loaded rather than merely brushed. What the player is being told is that this one is going to take a while to come free."
     },
     "drive_body_hard_a": {
       "what": "A body taken square at the top end — the sound the arrival lines are refusing to talk about. A sawtooth dive to the floor for the weight of it, a lowpass boom under that, and a short wet burst of contact. Louder than the ordinary thud because the physics says it was: the app picks this over `drive_body_a` off the collision's own joules, not at random."
@@ -4255,14 +4296,71 @@
     "drive_body_hard_b": {
       "what": "The second heavy body hit — a shade deeper and longer, with a scatter of highpass debris after it, for the one that came apart over the bonnet."
     },
+    "drive_body_hard_c": {
+      "what": "The third hit at the top end for an ordinary body — the one between the other two, so the shelf a fast driver spends most of the leg on has three takes rather than two. Caught a little off centre: the dive is shorter, the contact brighter, and the boom under it arrives a moment late."
+    },
+    "drive_body_hard_heavy_a": {
+      "what": "A HEAVY BODY taken square at the top end — the worst thing that happens to somebody on this road without a wheel being involved. Everything the hard shelf does, an octave down and half again as long: the dive goes below where a speaker can follow it, the boom under it outlasts the crack, and the contact is a wide wet band rather than a slap. The road lays its own sub under this one as well (`drive_body_sub`), which is where the last of the weight comes from."
+    },
+    "drive_body_hard_heavy_b": {
+      "what": "The second heavy hard hit — the one with the bags, the frame or the bike in it: same weight, and a scatter of what they were carrying coming down after them."
+    },
+    "drive_body_hard_light_a": {
+      "what": "A LIGHT BODY taken square at the top end. The hard shelf's own dive, but pitched where a small body lands: it starts higher, gets to the floor quicker, and the boom under it is thinner. The one thing it keeps in full is the wet burst of contact — how much of somebody there was does not change what the bumper did to them."
+    },
+    "drive_body_hard_light_b": {
+      "what": "The second light hard hit — shorter and brighter still, with the debris sizzle over the top that says they left the ground."
+    },
+    "drive_body_heavy_a": {
+      "what": "A HEAVY BODY on the bumper — the bagman under four bags, the wheelchair, the man in the long coat. Everything the light bank does, backwards: lower, longer, and with an actual floor under it. It is not a louder thud, which is the mistake this bank exists to avoid — it is a thud with more of it BELOW the crack, which is how the ear reads mass. The first of three."
+    },
+    "drive_body_heavy_b": {
+      "what": "The second heavy thud — lower still and slower off the bumper, the one that reads as somebody who barely moved for being hit."
+    },
+    "drive_body_heavy_c": {
+      "what": "The third heavy thud — the clipping one: caught on the wing rather than square, so it keeps the weight and loses the low tail."
+    },
+    "drive_body_light_a": {
+      "what": "A LIGHT BODY on the bumper — the old woman, the girl with the headphones, somebody on crutches. The whole bank sits a fifth higher and a third shorter than the ordinary thud beside it, because that is what less mass does to a collision: the same blow arrives faster, leaves sooner and has nothing under it. The first of three."
+    },
+    "drive_body_light_b": {
+      "what": "The second light thud — a touch higher again and drier, the one that reads as somebody who was already half out of the way."
+    },
+    "drive_body_light_c": {
+      "what": "The third light thud — the lowest of the three, so the bank does not sit entirely above the ordinary one and a run of light hits still has a floor to it."
+    },
+    "drive_body_nudge_a": {
+      "what": "A person met at walking pace — the bottom rung of the whole road, and the one the bank did not have. A wagon rolling through a crowd at ten still books a body, and it used to book it with the same thud a hit at sixty makes; what actually happens is a bumper LEANING on somebody until they go over. So: no crack at all, a soft dull knock through the plastic, cloth against steel, and the trim ticking as they slide off it."
+    },
+    "drive_body_nudge_b": {
+      "what": "The second shove at walking pace — caught a little higher up the bumper, so it is the shorter of the two and has a touch more trim in it and less cloth."
+    },
+    "drive_body_sub": {
+      "what": "THE WEIGHT UNDER A HEAVY BODY — `drive_impact_sub`'s smaller brother, and built for the same reason: a bank cannot be made heavier by turning it up. It is laid under the heavy shelf only, and it is deliberately half of what a car-sized collision gets — a big man is not a bus, and if the two shared a sub the road would have nothing left to say when an actual vehicle arrived. Alone it is almost nothing, which is the test that it is doing its job as a layer."
+    },
     "drive_breakdown": {
       "what": "The engine giving up in the middle of the road: the note sags away down the scale, the block knocks twice as it dies, and then there is nothing but steam out of a split hose while the wreck rolls to a stop. The mirror of `car_start`'s catch, played backwards and badly."
+    },
+    "drive_car_bump": {
+      "what": "THE WAGON'S OWN ANSWER to a small hit — the half of every collision on this road the player was never given. Something hit the front of a two-ton estate and the estate did something about it: the bumper's plastic knocked, the near spring took the load, and the trim ticked as it came back. Tiny, and laid UNDER the body's own noise rather than beside it — this is the car speaking, and the car is directly under the player's seat, so it does not have to be loud to be felt."
+    },
+    "drive_car_jolt": {
+      "what": "THE WAGON BOTTOMING OUT — its answer to the top of the ladder: another car, an end going in, a body taken at the full hundred and twenty. The springs run out of travel and the load goes straight into the shell, so what the player hears is the chassis itself ringing under him, the glass in every door shaking, and a long slow rebound afterwards. It is the loudest thing the CAR does, and it is still under what the collision does — the wagon is the room this happens in, not the event."
+    },
+    "drive_car_thump_a": {
+      "what": "…AND ITS ANSWER TO A REAL ONE. The blow arriving THROUGH the car rather than at it: a low damped boom in the cabin, the front springs going down on their stops, everything loose in the doors rattling, and the suspension coming back UP a beat later — which is the part that makes it read as a car and not as a drum. The rebound is a rising note on purpose; a spring that only ever went down would be a box being hit."
+    },
+    "drive_car_thump_b": {
+      "what": "The second frame thump — caught further back down the flank, so the boom is drier, the rattle is nearer the player's own door and the springs take longer to give it back."
     },
     "drive_crunch_a": {
       "what": "A real collision with another car — the sound that means the drive may be over. Three layers, the way every big impact in the game is built: a saw diving to the floor for the mass of it, a lowpass boom for the air it moved, and delayed highpass sizzle for the glass and trim landing after. Near the mix ceiling, because it is rare and it should frighten."
     },
     "drive_crunch_b": {
       "what": "The second heavy collision — the same shape pitched lower and given a metallic wrench in the middle of it, for the hit that folds a wing rather than shattering a light cluster."
+    },
+    "drive_crunch_c": {
+      "what": "The third real collision with another car — the short, structural one: less boom and more BODY, a dive that stops halfway and a fold of steel over the top of it. It is what a corner going in sounds like next to the other two, which are what a whole flank does."
     },
     "drive_crush_a": {
       "what": "A wheel finding something already lying in the road. The first of three, and the quietest thing on this road that still counts as an event: a short lowpass squelch of the mass giving way, and a dry tick of grit as the tyre climbs back off it. Deliberately small — this fires several times a second in the middle of a blockade, and a crush that announced itself would drown the collision that made the mess."
@@ -4282,14 +4380,35 @@
     "drive_glass_b": {
       "what": "The second take of a window going — a side pane rather than a screen, so it is a harder, drier burst with far less of it still falling afterwards. Two takes for the same reason the crunch has two: a car with four windows in it can lose them one at a time."
     },
+    "drive_glass_c": {
+      "what": "The third windscreen — the one that goes in a single sheet rather than in shards: one hard crack, a short fall of glass, and no ring at all. Two takes was one too few for a beat that rides every folded car on the road."
+    },
     "drive_impact_sub": {
       "what": "THE WEIGHT UNDER A BIG HIT — a bare sub-bass drop with no transient of its own, layered underneath whatever else the collision is playing. It exists because a bank cannot be made bigger by turning it up: the mix has a ceiling and a synthesized crunch hits it long before it sounds heavy. What the ear actually reads as SIZE is energy below about 60 Hz and a tail that outlasts the crack, and neither of those fits inside a sound that also has to be a crack. So the biggest events on this road play their own noise AND this, and the pair is what a lorry-sized collision sounds like. Alone it is almost nothing — which is the test that it is doing its job as a layer rather than as a sound."
+    },
+    "drive_kit_bags": {
+      "what": "…AND WHAT THEY WERE CARRYING IT ALL IN. The trolley, and the man with everything he owns in four bags: the load goes everywhere, which is a soft burst of paper and plastic with a couple of tins rolling out of it. The warmest noise on this road, and the only one in the crowd's whole vocabulary that is faintly comic — which is the joke this minigame is built on and the only place it is safe to put it."
+    },
+    "drive_kit_helmet": {
+      "what": "A CRASH HELMET meeting the road — the rider's, laid over whatever the body itself made. A hard shell has a NOTE in it where a head does not, which is the whole point of the layer: it is the one moment out here where the player can hear that the person who just arrived on the bonnet was on a machine a second ago."
+    },
+    "drive_kit_resin": {
+      "what": "ONE OF THE GLUED, COMING UNSTUCK — the bond letting go, laid over the thud. The blockade is the one set piece on this road, and the resin is the whole of what makes it a wall rather than a thicker crowd (`DRIVE.blockade.massMult`); until now the wall was silent and the road played the same body noise twenty times in two seconds. A dry sticky tear that rips upward and stops dead, plus the tarmac it took with it."
+    },
+    "drive_kit_steel": {
+      "what": "WHAT THEY WERE HOLDING, arriving a moment after they do — light steel tube going end over end down the tarmac. A walking frame, a pair of crutches, a wheelchair: the crowd is not eighteen silhouettes, it is eighteen people carrying eighteen different things, and this is the cheapest possible way to say so. Three bounces getting quieter and lower, no body in it at all — that is the thud's job, and this is only ever laid over one."
+    },
+    "drive_kit_wheels": {
+      "what": "…AND WHAT THEY WERE ON, OR PUSHING — a small hard wheel let loose and skittering off across the road. The skater's board, the cyclist's bike, a pram. It is a rattle rather than a clatter: high, fast, three ticks in under a fifth of a second, and gone. The one thing on this road that keeps travelling after the body has stopped."
     },
     "drive_panel_a": {
       "what": "A panel giving up a rung: the dull metallic bonk of a wing folding one step further, with a short click of the seam letting go. Quiet — it plays under a hit that already made its own noise, and is there to tell the player the damage was structural rather than cosmetic."
     },
     "drive_panel_b": {
       "what": "The second panel bend — lower and duller, the one that sounds like the car is running out of straight metal to bend."
+    },
+    "drive_panel_c": {
+      "what": "The third panel rung — the dull one: a wing that has already been folded twice going a third time, which has no ring left in it at all."
     },
     "drive_part_shed": {
       "what": "A part working free and going: the tear of the last fixing, then the piece skipping away down the tarmac behind — three bright clatters in quick succession, each quieter than the last, so the ear puts it in the mirror rather than on the car."
@@ -4303,17 +4422,26 @@
     "drive_scrape_b": {
       "what": "The second scrape — shorter and higher, the touch that costs a wing mirror rather than a door."
     },
+    "drive_scrape_c": {
+      "what": "The third trade of paint down the flank — the long one: a lower, grittier band held twice as long as the other two, for the sideswipe that goes on for half a second because neither car has anywhere to be."
+    },
     "drive_smash_a": {
       "what": "THE BIG ONE — two tonnes of estate meeting somebody else's car at the top of the dial, and the loudest thing on this road by a wide margin. The crunch bank above it is a collision; this is a collision that ends somebody's car, and it had to be a shelf of its own because the old top end was a 260 ms saw and a boom, which is a fender-bender at any volume you play it at. Five layers, and the length is doing as much work as the level: a sub-sine falling to nearly nothing for the mass, a detuned saw dive for the structure failing, a long lowpass roar for the air it moved, a hard bandpass crack for the instant of contact, and a slow highpass rain of glass and trim still landing half a second later."
     },
     "drive_smash_b": {
       "what": "The second take of the big one — the same collision landing squarer, so it is shorter and harder rather than longer and rounder. Two takes because a driver who is enjoying himself hears this several times a leg, and one take at that rate stops being a collision and starts being a jingle. The sub goes lower and dies sooner, the saw is pitched under the first take's, and the debris tail is drier: less of it in the air, more of it already down."
     },
+    "drive_smash_c": {
+      "what": "The third end-of-somebody's-car — the one that arrives in TWO parts: the structure going, and then, a fifth of a second later, everything that was bolted to it coming down. The other two land as one event; this is the one that keeps going after the player has driven past it."
+    },
     "drive_split_a": {
       "what": "A bumper going THROUGH somebody rather than merely into them — the sound the heavy body bank cannot make on its own. Three layers in the order the event happens: a bandpass tear that rips upward as the steel parts the body, a hard dry snap of bone under it, and a low wet slump as what is left of them arrives on the tarmac. Louder than the thud it plays over, and it has to be: the two fire on the same tick and this is the one carrying the news."
     },
     "drive_split_b": {
       "what": "The second take of a body coming in two — the same three layers pitched and timed differently, so a blockade taken at speed does not play one sample twenty times in four seconds. Wetter and shorter than its sibling: this is the one where the bone gave first."
+    },
+    "drive_split_c": {
+      "what": "The third bumper-through-somebody — the one that catches them low, so the tear is shorter and darker and what is left arrives on the tarmac almost straight away. A third take because this fires on nearly every square hit at speed, and two of anything at that rate is a pattern the ear learns inside a single leg."
     },
     "elevator_locked": {
       "on": {

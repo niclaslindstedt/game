@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_kit_wheels
+description: >-
+  …AND WHAT THEY WERE ON, OR PUSHING — a small hard wheel let loose and
+  skittering off across the road. The skater's board, the cyclist's bike, a
+  pram. It is a rattle rather than a clatter: high, fast, three ticks in
+  under a fifth of a second, and gone. The one thing on this road that keeps
+  travelling after the body has stopped.
+voices:
+  - call: noise
+    durationMs: 22
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 2800
+  - call: noise
+    durationMs: 18
+    volume: 0.018
+    delayMs: 52
+    filter:
+      type: bandpass
+      frequency: 3300
+  - call: noise
+    durationMs: 16
+    volume: 0.014
+    delayMs: 96
+    filter:
+      type: bandpass
+      frequency: 3800
+  - call: tone
+    type: triangle
+    from: 620
+    to: 940
+    durationMs: 130
+    volume: 0.012
+    delayMs: 30

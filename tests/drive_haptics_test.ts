@@ -88,11 +88,15 @@ describe("how hard a collision was", () => {
       type: "pedestrianHit",
       pos: { x: 0, y: 0 },
       joules: DRIVE.impact.wearJoules * 0.002,
+      kind: "walker",
+      variant: 0,
     });
     const hard = driveHitForce({
       type: "pedestrianHit",
       pos: { x: 0, y: 0 },
       joules: DRIVE.impact.wearJoules * 0.04,
+      kind: "walker",
+      variant: 0,
     });
     expect(light).toBeGreaterThan(0);
     expect(hard).toBeGreaterThan(light);

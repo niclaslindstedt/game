@@ -51,6 +51,7 @@ import {
   BODY_SOUNDS,
   BREAKDOWN_SOUND,
   CRUNCH_SOUNDS,
+  DRAG_HEAVY_SOUND,
   DRAG_SOUND,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
@@ -418,7 +419,12 @@ export function driveExhibits(): DriveExhibit[] {
       road: (drive) => {
         silence(drive);
         const speed = openAt(drive);
-        plantBody(drive, leadPx(speed) + 34, 0, 3);
+        // AN ORDINARY BODY (variant 4, the suit — the yardstick the crowd's
+        // weight table is written around, `CROWD_MASS_MULTS`). WHICH person is
+        // standing here now picks which bank the hit comes off, so a card that
+        // advertises the ordinary heavy shelf has to plant somebody of ordinary
+        // weight or it is demonstrating the light one and saying otherwise.
+        plantBody(drive, leadPx(speed) + 34, 0, 4);
       },
     },
     {
@@ -480,7 +486,9 @@ export function driveExhibits(): DriveExhibit[] {
       // half of tarmac doing it (`DRIVE.gore.dragMs`).
       showMs: 3400,
       shows: "bodyCaught",
-      bank: [DRAG_SOUND],
+      // BOTH DRAGS, because which one plays is a question about who is under
+      // there (`dragSound`) and this card's business is the picture.
+      bank: [DRAG_SOUND, DRAG_HEAVY_SOUND],
       // IT HOLDS LIKE EVERYTHING ELSE ON THIS SHELF, and following the car was
       // tried first and was wrong. The subject travels WITH the wagon, so
       // following it sounded right — but what the exhibit is actually of is the

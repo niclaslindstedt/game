@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_heavy_a
+description: >-
+  A HEAVY BODY taken square at the top end — the worst thing that happens to
+  somebody on this road without a wheel being involved. Everything the hard
+  shelf does, an octave down and half again as long: the dive goes below where
+  a speaker can follow it, the boom under it outlasts the crack, and the
+  contact is a wide wet band rather than a slap. The road lays its own sub
+  under this one as well (`drive_body_sub`), which is where the last of the
+  weight comes from.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 138
+    to: 34
+    durationMs: 190
+    volume: 0.06
+    detuneCents: 18
+  - call: noise
+    durationMs: 240
+    volume: 0.036
+    filter:
+      type: lowpass
+      frequency: 230
+  - call: noise
+    durationMs: 84
+    volume: 0.04
+    filter:
+      type: bandpass
+      frequency: 700

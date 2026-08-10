@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_heavy_c
+description: >-
+  The third heavy thud — the clipping one: caught on the wing rather than
+  square, so it keeps the weight and loses the low tail.
+voices:
+  - call: tone
+    type: square
+    from: 168
+    to: 92
+    durationMs: 86
+    volume: 0.044
+    detuneCents: 10
+  - call: noise
+    durationMs: 66
+    volume: 0.034
+    filter:
+      type: bandpass
+      frequency: 760
+  - call: noise
+    durationMs: 130
+    volume: 0.015
+    delayMs: 46
+    filter:
+      type: lowpass
+      frequency: 320

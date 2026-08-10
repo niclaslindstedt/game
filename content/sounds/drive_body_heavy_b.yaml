@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_heavy_b
+description: >-
+  The second heavy thud — lower still and slower off the bumper, the one that
+  reads as somebody who barely moved for being hit.
+voices:
+  - call: tone
+    type: square
+    from: 124
+    to: 62
+    durationMs: 122
+    volume: 0.047
+    detuneCents: 16
+  - call: noise
+    durationMs: 88
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 520
+  - call: noise
+    durationMs: 200
+    volume: 0.02
+    delayMs: 62
+    filter:
+      type: lowpass
+      frequency: 220

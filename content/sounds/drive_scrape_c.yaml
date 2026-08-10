@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_scrape_c
+description: >-
+  The third trade of paint down the flank — the long one: a lower, grittier
+  band held twice as long as the other two, for the sideswipe that goes on for
+  half a second because neither car has anywhere to be.
+voices:
+  - call: noise
+    durationMs: 340
+    volume: 0.034
+    filter:
+      type: bandpass
+      frequency: 1900
+  - call: tone
+    type: sawtooth
+    from: 1750
+    to: 1080
+    durationMs: 300
+    volume: 0.013
+    detuneCents: 22
+  - call: noise
+    durationMs: 200
+    volume: 0.014
+    delayMs: 180
+    filter:
+      type: highpass
+      frequency: 3200

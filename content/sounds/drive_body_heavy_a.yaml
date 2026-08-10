@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_heavy_a
+description: >-
+  A HEAVY BODY on the bumper — the bagman under four bags, the wheelchair, the
+  man in the long coat. Everything the light bank does, backwards: lower,
+  longer, and with an actual floor under it. It is not a louder thud, which is
+  the mistake this bank exists to avoid — it is a thud with more of it BELOW
+  the crack, which is how the ear reads mass. The first of three.
+voices:
+  - call: tone
+    type: square
+    from: 142
+    to: 76
+    durationMs: 104
+    volume: 0.046
+    detuneCents: 12
+  - call: noise
+    durationMs: 74
+    volume: 0.032
+    filter:
+      type: bandpass
+      frequency: 620
+  - call: noise
+    durationMs: 175
+    volume: 0.019
+    delayMs: 54
+    filter:
+      type: lowpass
+      frequency: 260

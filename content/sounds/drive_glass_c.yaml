@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_glass_c
+description: >-
+  The third windscreen — the one that goes in a single sheet rather than in
+  shards: one hard crack, a short fall of glass, and no ring at all. Two takes
+  was one too few for a beat that rides every folded car on the road.
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.048
+    filter:
+      type: highpass
+      frequency: 2800
+  - call: noise
+    durationMs: 260
+    volume: 0.03
+    delayMs: 40
+    filter:
+      type: highpass
+      frequency: 6200
+    echo: 0.24
+  - call: tone
+    type: triangle
+    from: 980
+    to: 520
+    durationMs: 90
+    volume: 0.022

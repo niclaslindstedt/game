@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_crack_b
+description: >-
+  The second crack — a shade lower and with a hair more air after it, so a run
+  of fast hits does not tick like a metronome.
+voices:
+  - call: noise
+    durationMs: 30
+    volume: 0.028
+    filter:
+      type: highpass
+      frequency: 2800
+  - call: noise
+    durationMs: 56
+    volume: 0.022
+    delayMs: 8
+    filter:
+      type: bandpass
+      frequency: 1700
+  - call: tone
+    type: square
+    from: 780
+    to: 260
+    durationMs: 40
+    volume: 0.019
+    detuneCents: 16
