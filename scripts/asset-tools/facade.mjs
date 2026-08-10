@@ -2,10 +2,10 @@
 // THE FACADE GENERATOR — every building shell on the road to GOODCO, ruled from
 // its def rather than drawn.
 //
-// WHY GENERATED AND NEVER HAND-DRAWN. The town is 26 archetypes in 3 colourways,
-// which is 78 grids, and the 79th is whatever gets added next week. Drawing them
+// WHY GENERATED AND NEVER HAND-DRAWN. The town is 39 archetypes in 3 colourways,
+// which is 117 grids, and the 118th is whatever gets added next week. Drawing them
 // means a street that can only grow at the speed somebody can pixel a wall — and,
-// worse, a street where retuning one course line means opening 78 files. So a
+// worse, a street where retuning one course line means opening 117 files. So a
 // building ships a DEF and earns its picture, exactly as a vehicle ships one
 // grid and earns its wrecks (`wreck.mjs`) and an enemy ships two frames and
 // earns its wounds (`damage.mjs`).
@@ -37,6 +37,7 @@ import { TOWN_ART_SIZE } from "../../engine/game/drive/town-parts.ts";
 import {
   townHeight,
   townSlots,
+  townWalkwayRows,
   townWidth,
 } from "../../engine/game/drive/town.ts";
 
@@ -413,6 +414,32 @@ function sinkOpening(g, slot) {
 }
 
 /**
+ * RULE A GALLERY ACROSS THE FRONT — the deck a motel's rooms and a walk-up's
+ * flats are reached along, one per storey above the ground floor.
+ *
+ * TWO ROWS, AND THAT IS THE WHOLE BUDGET. A storey band is 11 px and a window
+ * with its reveal takes nine of them, so the deck gets the band's last two —
+ * which is why `townSlots` lifts a walkway building's windows by a row and why
+ * the pair is derived in one place (`townWalkwayRows`) rather than counted
+ * twice. Read top to bottom it is a lit nosing, the slab, and the ink line
+ * under it: the same three rows a kerb is drawn with, for the same reason —
+ * without the dark line the deck floats off the wall it is bolted to.
+ */
+function ruleWalkways(g, def, w) {
+  for (const y of townWalkwayRows(def)) {
+    hline(g, 0, y, w, "4");
+    hline(g, 0, y + 1, w, "5");
+    // THE RAIL'S POSTS, standing ON the deck rather than drawn over the window
+    // behind it: one lit pixel every four, which at this size is the difference
+    // between a balcony and a stripe of paint.
+    for (let i = 2; i < w - 2; i += 4) put(g, i, y, "2");
+    // …and the ends, which is where a gallery meets the party wall.
+    put(g, 0, y, "O");
+    put(g, w - 1, y, "O");
+  }
+}
+
+/**
  * Build one building's shell in one colourway.
  *
  * @param {object} def a `TownBuildingDef`
@@ -443,6 +470,9 @@ export function facadeShell(def, colourway) {
 
   // THE ROOF, cut in over the top of it.
   (ROOFS[def.roof] ?? ROOFS.coping)(g, w, rh, seed);
+
+  // …AND THE GALLERIES, if its front doors are on the outside.
+  ruleWalkways(g, def, w);
 
   // THE OPENINGS — read off the SAME function the app reads, so a window always
   // lands in a hole that was cut for it (see `townSlots`).

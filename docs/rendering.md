@@ -786,7 +786,7 @@ hands over, and the split is worth carrying because it is the same one the
 hero's car uses (`render/vehicles.ts` stacks six panels and two wheels):
 
 - **The catalog and the layout are the ENGINE's** — `engine/game/drive/town.ts`
-  holds 26 archetypes and the parts bin they are dressed from;
+  holds 39 archetypes and the parts bin they are dressed from;
   `town-plan.ts` tiles them onto a 20-px plot grid, a BLOCK at a time, and
   dresses each one from its own plot's hash. Nothing is simulated: the town
   stands behind the pavement where the wagon can never reach it. Nothing spends
@@ -807,7 +807,7 @@ hero's car uses (`render/vehicles.ts` stacks six panels and two wheels):
   reads as a formula.
 
 Two things fall out of that and both show on screen. **The row has a
-silhouette**: buildings are 16–96 px wide and 18–53 tall against 40×30 for
+silhouette**: buildings are 16–136 px wide and 18–64 tall against 40×30 for
 every house that used to stand there, so the skyline is a shape rather than the
 ruled line it was. And **the road has a gradient**: `townDistrict(x)` runs 0 at
 the hero's block to 1 at GOODCO's gate, and it picks the archetype, the wear
@@ -818,9 +818,24 @@ seam across the road. `tests/content/drive_town_test.ts` measures the gradient
 rather than trusting it, because "the hero's end is worse" is a claim about a
 mile of road and cannot be eyeballed from one frame.
 
+**And the roster is a TOWN rather than a row of houses**, which is the other
+half of why the road reads as somewhere rather than as scenery: what a place
+people live in has on it is ERRANDS. A grocer with crates on the pavement, a
+supermarket behind its own car park, a laundromat lit to the back wall, an
+off-licence, a diner, a hardware store, a barber, a pawnbroker, a bank and a
+self-store — and, for the people who do not own the door they come through, a
+motel, a walk-up and an apartment complex. The last three share one field:
+`walkway` puts a GALLERY across every storey above the ground floor, which is
+the only thing in this vocabulary that says a building's front doors are on the
+OUTSIDE. It costs the storey band its bottom two rows, so `townSlots` lifts a
+walkway building's windows by one and `townWalkwayRows` derives the deck — one
+function, two readers, the same arrangement the openings themselves use.
+
 `scripts/town-viewer.mjs` is how it is judged: it runs the real planner at five
 stops along the leg and writes a sheet, which is the only way to look at a
-street that exists in no file.
+street that exists in no file. `--at <t>` is one stop in detail and `--width`
+narrows the stretch to a screenful when the question is about one building
+rather than about the rhythm of a row.
 
 **The street lighting is the one thing on this road that lights the road**, and
 it is not a second row of furniture: every second of the kerb posts the ENGINE

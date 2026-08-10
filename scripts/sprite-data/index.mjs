@@ -330,7 +330,7 @@ for (const name of LAMP_SPRITES) {
 // ---- The town ---------------------------------------------------------------
 // Every building on the road to GOODCO, and every loose piece it is dressed
 // with (asset-tools/facade.mjs + facade-parts.mjs). Generated for the same
-// reason the wreck ladder is: 26 archetypes in 3 colourways is 78 grids, and
+// reason the wreck ladder is: 39 archetypes in 3 colourways is 117 grids, and
 // hand-drawing them means a street that can only grow at the speed somebody can
 // pixel a wall.
 //

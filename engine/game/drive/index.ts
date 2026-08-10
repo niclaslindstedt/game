@@ -211,6 +211,7 @@ export {
   TOWN_DECALS,
   TOWN_DOORS,
   TOWN_FRONTS,
+  TOWN_FRONTS_BREAK,
   TOWN_GARAGE_DOORS,
   TOWN_HOLE_STATES,
   TOWN_FRONTAGE_SETBACK_PX,
@@ -230,6 +231,7 @@ export {
   townPorchSlot,
   townSignSlot,
   townSlots,
+  townWalkwayRows,
   townWidth,
 } from "./town.ts";
 export type {

@@ -13,7 +13,7 @@
 //
 //   IT IS ITS OWN SIZE     — `slots` wide and `storeys` tall, so the row has a
 //                            silhouette and the skyline has a shape. Widths run
-//                            16–96 px and heights 18–53, against 40×30 for
+//                            16–136 px and heights 18–64, against 40×30 for
 //                            everything that used to stand here.
 //   IT IS DRESSED PER SITE — the shell is a WALL. Its doors, windows, shopfront,
 //                            awning, sign, fence and the junk in its front
@@ -99,7 +99,10 @@ export type TownFront =
   | "rail"
   | "chain"
   | "planter"
-  | "broken";
+  | "broken"
+  /** Tarmac and painted bays — what stands in front of anything with a car
+   * park: the supermarket, the motel, the showroom. */
+  | "lot";
 
 /**
  * ONE ARCHETYPE OF BUILDING.
@@ -155,16 +158,42 @@ export type TownBuildingDef = {
   porch: boolean;
   /** Whether its windows light up at night. A home does; a lock-up does not. */
   lit: boolean;
+  /**
+   * WHETHER ITS UPPER FLOORS ARE REACHED FROM OUTSIDE — a deck and a rail
+   * running the full width of every storey above the ground one.
+   *
+   * It is the whole difference between a motel and a bungalow with a first
+   * floor, and between an apartment complex and an office block: a building
+   * whose front is a stack of galleries is a building whose front doors are on
+   * the OUTSIDE, and nothing else in this vocabulary says that. The deck is
+   * ruled by the shell generator (`facade.mjs`), so it is behind whatever gets
+   * hung in the holes rather than over it.
+   *
+   * IT COSTS THE STOREY BAND ITS BOTTOM TWO ROWS, which is why `townSlots`
+   * lifts a walkway building's upper windows by a row — and why a def that
+   * wants one may not use a `tall` or `shop` window upstairs: at 9 and 11 px
+   * those fill the band and the deck would be ruled through their sills.
+   */
+  walkway?: boolean;
 };
 
 /**
- * THE ROSTER — 26 archetypes, and the ORDER is the road.
+ * THE ROSTER — 39 archetypes, and the ORDER is the road.
  *
  * Read top to bottom it is the drive: the block the hero lives on, the ordinary
  * streets past it, the trades that survived, and then the business park with
  * GOODCO at the end of it. Nothing here is named after anybody — a fried
  * chicken shop, a nail bar and a vape shop are TRADES, which is the funnier half
  * and the half that cannot be refused by a store (`docs/naming.md`).
+ *
+ * A TOWN IS NOT A ROW OF HOUSES WITH FOUR SHOPS IN IT. What makes a road read as
+ * somewhere people actually live is the ERRANDS on it: somewhere to buy food,
+ * somewhere to wash clothes, somewhere to drink, somewhere to sleep that is not
+ * a home, and somewhere to keep the things that no longer fit in one. So the
+ * roster carries a grocer, a supermarket, a laundromat, an off-licence, a
+ * diner, a hardware store, a barber, a pawnbroker, a bank and a self-store —
+ * and, for the people who do not own the front door they come through, a motel,
+ * a walk-up and an apartment complex.
  */
 export const TOWN: readonly TownBuildingDef[] = [
   // ── THE HERO'S END: what is left of the neighbourhood ─────────────────────
@@ -333,6 +362,71 @@ export const TOWN: readonly TownBuildingDef[] = [
     lit: true,
   },
   {
+    // THE OFF-LICENCE, and the one shop on the hero's block that never shuts.
+    // A grille on the door, a neon tube in the window, and the light on at two
+    // in the morning — it is the trade that outlives every other trade on a
+    // street like this, which is the joke and also simply true.
+    id: "town_liquor",
+    slots: 2,
+    storeys: 1,
+    bays: 2,
+    ground: "sd",
+    wall: "tile",
+    roof: "signbox",
+    window: "small",
+    roofPx: 6,
+    district: [0, 0.8],
+    weight: 8,
+    wear: [1, 3],
+    front: "none",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
+    // THE PAWNBROKER. Two windows of other people's things and a door nobody
+    // walks through twice.
+    id: "town_pawn",
+    slots: 3,
+    storeys: 1,
+    bays: 3,
+    ground: "ssd",
+    wall: "brick",
+    roof: "signbox",
+    window: "small",
+    roofPx: 6,
+    district: [0, 0.55],
+    weight: 5,
+    wear: [1, 3],
+    front: "none",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
+    // THE LAUNDROMAT — a wide glazed front with the machines behind it, and the
+    // only trade on this road that is lit all the way to the back wall. The
+    // launderette two doors down is the same trade at half the size; a town has
+    // two of everything, and the pair is what makes a road read as a place
+    // rather than as a list.
+    id: "town_laundromat",
+    slots: 4,
+    storeys: 0,
+    bays: 4,
+    ground: "ssds",
+    wall: "tile",
+    roof: "signbox",
+    window: "shop",
+    roofPx: 6,
+    district: [0.02, 0.9],
+    weight: 6,
+    wear: [1, 3],
+    front: "none",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
     id: "town_scrapyard",
     slots: 5,
     storeys: 0,
@@ -488,6 +582,153 @@ export const TOWN: readonly TownBuildingDef[] = [
     lit: true,
   },
   {
+    // THE GROCER — crates on the pavement, an awning over them, and a light on
+    // in the back. The corner shop's older brother, and the building on this
+    // road that most reliably says somebody still lives round here.
+    id: "town_grocer",
+    slots: 3,
+    storeys: 1,
+    bays: 3,
+    ground: "ssd",
+    wall: "render",
+    roof: "signbox",
+    window: "small",
+    roofPx: 6,
+    district: [0.04, 0.85],
+    weight: 8,
+    wear: [0, 3],
+    front: "none",
+    sign: true,
+    porch: true,
+    lit: true,
+  },
+  {
+    // THE DINER. All glass, all lit, a canopy over the door — the warmest
+    // frontage in the roster, and deliberately allowed most of the way to
+    // GOODCO's end: a diner is the one trade that survives the money arriving.
+    id: "town_diner",
+    slots: 4,
+    storeys: 0,
+    bays: 4,
+    ground: "sdss",
+    wall: "panel",
+    roof: "signbox",
+    window: "shop",
+    roofPx: 7,
+    district: [0.1, 0.95],
+    weight: 6,
+    wear: [0, 2],
+    front: "planter",
+    sign: true,
+    porch: true,
+    lit: true,
+  },
+  {
+    // THE BARBER — the narrowest trade on the road, and the one that fills the
+    // two-plot gaps a terrace leaves.
+    id: "town_barber",
+    slots: 2,
+    storeys: 1,
+    bays: 2,
+    ground: "ds",
+    wall: "render",
+    roof: "signbox",
+    window: "small",
+    roofPx: 5,
+    district: [0.05, 0.9],
+    weight: 5,
+    wear: [0, 3],
+    front: "none",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
+    // THE HARDWARE STORE — a shopfront, a door and a roller shutter for the
+    // deliveries, which is the mix that tells a shop selling THINGS from a shop
+    // selling lunch.
+    id: "town_hardware",
+    slots: 4,
+    storeys: 1,
+    bays: 4,
+    ground: "sdgw",
+    wall: "block",
+    roof: "signbox",
+    window: "strip",
+    roofPx: 6,
+    district: [0.1, 0.85],
+    weight: 5,
+    wear: [0, 3],
+    front: "none",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
+    // THE WALK-UP — four flats over a brick front, reached along a gallery
+    // rather than through a hall. The stack of decks is the whole read: a
+    // building whose front doors are OUTSIDE is a building people rent.
+    id: "town_walkup",
+    slots: 4,
+    storeys: 2,
+    bays: 4,
+    ground: "dwww",
+    wall: "brick",
+    roof: "parapet",
+    window: "wide",
+    roofPx: 5,
+    district: [0.08, 0.8],
+    weight: 6,
+    wear: [1, 3],
+    front: "rail",
+    sign: false,
+    porch: false,
+    lit: true,
+    walkway: true,
+  },
+  {
+    // THE MOTEL. A door and a window, six times over, under one long slope with
+    // a gallery across it and a tube sign on the front — the most repetitive
+    // facade in the roster on purpose, because that repetition IS the building.
+    id: "town_motel",
+    slots: 6,
+    storeys: 1,
+    bays: 6,
+    ground: "dwdwdw",
+    wall: "render",
+    roof: "mono",
+    window: "small",
+    roofPx: 6,
+    district: [0.05, 0.9],
+    weight: 5,
+    wear: [0, 3],
+    front: "lot",
+    sign: true,
+    porch: false,
+    lit: true,
+    walkway: true,
+  },
+  {
+    // SELF-STORAGE — a run of roller shutters with one door in the middle of
+    // it. What gets built on a plot nobody wants to put people on.
+    id: "town_storage",
+    slots: 5,
+    storeys: 0,
+    bays: 5,
+    ground: "ggdgg",
+    wall: "corrugated",
+    roof: "mono",
+    window: "strip",
+    roofPx: 4,
+    district: [0.15, 0.85],
+    weight: 6,
+    wear: [1, 3],
+    front: "chain",
+    sign: true,
+    porch: false,
+    lit: false,
+  },
+  {
     id: "town_garage",
     slots: 4,
     storeys: 0,
@@ -579,6 +820,73 @@ export const TOWN: readonly TownBuildingDef[] = [
   },
 
   // ── GOODCO'S END: what the money bought ───────────────────────────────────
+  {
+    // THE SUPERMARKET — a hundred and thirty px of glazed shed with two doors
+    // in the middle of it and a fascia across the whole thing. It is the widest
+    // and flattest building on the road, and the pair of them is the point: a
+    // long low frontage behind a car park is a shape nothing else here makes,
+    // and the eye reads it as a supermarket before it reads a single detail.
+    id: "town_supermarket",
+    slots: 7,
+    storeys: 0,
+    bays: 7,
+    ground: "sssddss",
+    wall: "panel",
+    roof: "signbox",
+    window: "shop",
+    roofPx: 8,
+    district: [0.32, 1],
+    weight: 5,
+    wear: [0, 2],
+    front: "lot",
+    sign: true,
+    porch: false,
+    lit: true,
+  },
+  {
+    // THE APARTMENT COMPLEX — four galleried floors over an entrance, plant on
+    // the roof, a clipped hedge in front. The tallest thing on the road short
+    // of GOODCO itself, and what the skyline needs at the moment the houses run
+    // out and the business park has not started.
+    id: "town_apartments",
+    slots: 6,
+    storeys: 4,
+    bays: 5,
+    ground: "dwwww",
+    wall: "concrete",
+    roof: "plant",
+    window: "wide",
+    roofPx: 6,
+    district: [0.2, 0.95],
+    weight: 6,
+    wear: [0, 2],
+    front: "hedge",
+    sign: false,
+    porch: true,
+    lit: true,
+    walkway: true,
+  },
+  {
+    // THE BANK — stone, a level cap, tall windows and a portico. The one
+    // building on this road that was built to look like it would still be there
+    // afterwards.
+    id: "town_bank",
+    slots: 3,
+    storeys: 1,
+    bays: 3,
+    ground: "wdw",
+    wall: "block",
+    roof: "coping",
+    window: "tall",
+    roofPx: 5,
+    district: [0.45, 1],
+    weight: 5,
+    wear: [0, 1],
+    front: "rail",
+    sign: true,
+    porch: true,
+    lit: true,
+  },
   {
     id: "town_showroom",
     slots: 5,
@@ -756,11 +1064,34 @@ export function townSlots(def: TownBuildingDef): TownSlot[] {
   const upper = `win_${def.window}`;
   for (let s = 1; s <= def.storeys; s++) {
     const bandTop = groundY - s * STOREY_PX;
-    const y =
-      bandTop + Math.max(1, Math.floor((STOREY_PX - slotSize(upper)[1]) / 2));
+    // A GALLERY TAKES THE BOTTOM OF THE BAND, so a walkway building's windows
+    // are pushed to the TOP of theirs rather than centred in it — which is also
+    // what a real balcony floor does to the window behind it.
+    const y = def.walkway
+      ? bandTop + 1
+      : bandTop + Math.max(1, Math.floor((STOREY_PX - slotSize(upper)[1]) / 2));
     for (let bay = 0; bay < def.bays; bay++) put("window", upper, bay, y);
   }
   return slots;
+}
+
+/**
+ * WHERE THE DECKS RUN — the top row of each gallery, sprite-local, one per
+ * storey above the ground floor. Empty for everything that is not a walkway
+ * building.
+ *
+ * DERIVED HERE FOR THE SAME REASON THE SLOTS ARE: the shell generator rules the
+ * deck and `townSlots` lifts the windows out of its way, and those two numbers
+ * agreeing is not something either side can check. One function, two readers.
+ */
+export function townWalkwayRows(def: TownBuildingDef): number[] {
+  if (!def.walkway) return [];
+  const groundY = townHeight(def) - BASE_PX - GROUND_PX;
+  const rows: number[] = [];
+  for (let s = 1; s <= def.storeys; s++) {
+    rows.push(groundY - s * STOREY_PX + STOREY_PX - 2);
+  }
+  return rows;
 }
 
 /** Where a sign hangs on a shell that carries one — sprite-local, centred over

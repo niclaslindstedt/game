@@ -37,6 +37,7 @@ import {
   TOWN_DECALS,
   TOWN_DOORS,
   TOWN_FRONTS,
+  TOWN_FRONTS_BREAK,
   TOWN_GARAGE_DOORS,
   TOWN_HOLE_STATES,
   TOWN_JUNK,
@@ -45,6 +46,7 @@ import {
   townDistrict,
   townHeight,
   townSlots,
+  townWalkwayRows,
   townWidth,
   type TownRoad,
 } from "@game/core";
@@ -162,6 +164,69 @@ describe("the town's catalog", () => {
     for (const [id, [w]] of Object.entries(TOWN_ART_SIZE)) {
       if (id.startsWith("front_")) continue; // a frontage tile is a plot wide
       expect(w, id).toBeLessThanOrEqual(15);
+    }
+  });
+
+  it("rules a gallery clear of the windows behind it", () => {
+    // THE DECK AND THE WINDOWS SHARE A STOREY BAND, and the band is 11 px. A
+    // window with its reveal takes nine of them, so the deck gets the last two
+    // and `townSlots` lifts a walkway building's windows out of the way. The
+    // two halves are derived in one place on purpose (`townWalkwayRows`), and
+    // this is the assertion that says the derivation is the right one: a def
+    // that reached for a `tall` window would have its gallery ruled straight
+    // through every sill on the front, on one archetype, at one storey.
+    for (const def of TOWN.filter((d) => d.walkway)) {
+      const rows = townWalkwayRows(def);
+      expect(rows.length, def.id).toBe(def.storeys);
+      const slots = townSlots(def);
+      for (const y of rows) {
+        expect(y, def.id).toBeGreaterThanOrEqual(def.roofPx);
+        expect(y + 2, def.id).toBeLessThan(townHeight(def));
+        for (const slot of slots) {
+          // …with a px of reveal above and below every hole, which is what the
+          // shell sinks around one.
+          const clash = y <= slot.y + slot.h && y + 1 >= slot.y - 1;
+          expect(clash, `${def.id} ${slot.part}@${slot.y}`).toBe(false);
+        }
+      }
+    }
+    // …and nothing that has no gallery gets a row of them.
+    for (const def of TOWN.filter((d) => !d.walkway)) {
+      expect(townWalkwayRows(def), def.id).toEqual([]);
+    }
+  });
+
+  it("only takes down the fronts that can fall down", () => {
+    // A worn-out picket becomes a run of broken palings; a worn-out CAR PARK is
+    // still a car park. Every name on the list has to be a real front, and the
+    // three that are not fences must not be on it.
+    for (const front of TOWN_FRONTS_BREAK) {
+      expect(TOWN_FRONTS[front], front).toBeTruthy();
+    }
+    for (const front of ["none", "broken", "lot"] as const) {
+      expect(TOWN_FRONTS_BREAK).not.toContain(front);
+    }
+  });
+
+  it("gives the town its errands, not just its houses", () => {
+    // WHAT MAKES A ROAD READ AS A PLACE PEOPLE LIVE is that there is somewhere
+    // on it to buy food, wash clothes, get a drink and sleep a night. Stated as
+    // a list because it is a content claim rather than an engine rule: a
+    // roster that quietly lost its grocer would still tile, still grade and
+    // still pass every other test in this file.
+    const ids = new Set(TOWN.map((def) => def.id));
+    for (const id of [
+      "town_grocer",
+      "town_supermarket",
+      "town_laundromat",
+      "town_launderette",
+      "town_liquor",
+      "town_diner",
+      "town_motel",
+      "town_apartments",
+      "town_walkup",
+    ]) {
+      expect(ids.has(id), id).toBe(true);
     }
   });
 
