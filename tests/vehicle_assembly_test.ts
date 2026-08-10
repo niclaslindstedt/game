@@ -350,7 +350,7 @@ describe("the car assembly", () => {
 
   // ── AND THE GROUND IT BLOCKS IS THE GROUND IT STANDS ON ───────────────────
   // The other half of the same fact, and the half the player walks into: the
-  // car's collision chain (`vehicleFootprint`) is three columns of the SAME part
+  // car's collision chain (`vehicleFootprint`) is columns of the SAME part
   // canvas, so projected it has to land on the drawn body's own columns. Laid
   // along the heading instead it swung off the picture at the camera's angle,
   // and the hero walked through the bonnet and was stopped by bare floor.
@@ -371,19 +371,29 @@ describe("the car assembly", () => {
           expect(projectX(dx, dy)).toBeCloseTo(CAR.footprint.offsets[i]!, 6);
           expect(projectY(dx, dy)).toBeCloseTo(0, 6);
         });
-        // …and the outer two ARE the wheel arches, so they can be read against
-        // the wheels this pass actually blitted. Whole-pixel slack: the drawn
-        // parts are rounded to the device grid and the blockers are not.
+        // …and the chain SPANS the drawn body rather than sampling it: the
+        // outer two blockers' own edges reach the assembly's ends, which is
+        // what stops a bonnet burying itself in a wall the collision has not
+        // got to yet. Read against the wheels this pass actually blitted,
+        // which are columns of the same canvas (`CAR.wheelOffsets`) — with
+        // whole-pixel slack, because the drawn parts are rounded to the device
+        // grid and the blockers are not.
         const shell = blits.find((b) => b.name === "car_doors_0")!;
         const wheels = blits.filter((b) => b.name.startsWith("car_wheel_"));
-        [0, 2].forEach((i, axle) => {
-          const print = prints[i]!;
-          const column = projectX(print.pos.x - at.x, print.pos.y - at.y);
-          expect(column).toBeCloseTo(
-            wheels[axle]!.centre.x - shell.centre.x,
+        CAR.wheelOffsets.forEach((offset, axle) => {
+          expect(wheels[axle]!.centre.x - shell.centre.x).toBeCloseTo(
+            offset,
             1,
           );
         });
+        const columns = prints.map((print) =>
+          projectX(print.pos.x - at.x, print.pos.y - at.y),
+        );
+        // A hair of slack: these columns come back through the projection and
+        // its inverse, so they carry the last bit of a float with them.
+        const half = PART.width / 2 - CAR.footprint.radius - 1e-6;
+        expect(Math.min(...columns)).toBeLessThanOrEqual(-half);
+        expect(Math.max(...columns)).toBeGreaterThanOrEqual(half);
       });
     }
   });

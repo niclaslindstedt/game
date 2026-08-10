@@ -96,6 +96,12 @@ export function roadEdges(): { top: number; bottom: number } {
   return { top: band.top - DRIVE.vergePx, bottom: band.bottom + DRIVE.vergePx };
 }
 
+/** THE APPROACH'S OWN HALF-WIDTH (world px) — the country road either side of
+ * the town, before the taper opens it out to four lanes. */
+function narrowRoadHalf(): number {
+  return (DRIVE.opening.laneCount * DRIVE.laneWidth) / 2;
+}
+
 /**
  * HOW WIDE THE CARRIAGEWAY IS AT ONE POINT ON THE LEG (half-width, world px) —
  * the one thing about this road that is not the same all the way down it.
@@ -126,7 +132,7 @@ export function roadBandHalfAt(
   params: { coursePx?: number; cityPx?: number },
 ): number {
   const full = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
-  const narrow = (DRIVE.opening.laneCount * DRIVE.laneWidth) / 2;
+  const narrow = narrowRoadHalf();
   const { widenPx } = DRIVE.opening;
   const near = cityStartPx(params);
   const far = cityEndPx(params);
@@ -138,6 +144,23 @@ export function roadBandHalfAt(
   const opened = 1 + inside / widenPx;
   if (opened <= 0) return narrow;
   return narrow + (full - narrow) * opened;
+}
+
+/**
+ * HAS THE ROAD BEGUN TO OPEN OUT AT THIS POINT ON THE LEG — the taper's own
+ * start, read off the same arithmetic that draws it rather than restated as a
+ * distance, so the mark can never drift from the widening it names.
+ *
+ * It is a fact about the ROAD and it is asked for a reason that is not the
+ * road's: the widening is the first thing the player can SEE of the town
+ * arriving, so it is the honest moment to tell him the minigame is about to
+ * start (`driveReadyUp`).
+ */
+export function roadWideningAt(
+  travel: number,
+  params: { coursePx?: number; cityPx?: number },
+): boolean {
+  return roadBandHalfAt(travel, params) > narrowRoadHalf();
 }
 
 /** …and the same in the units the CAR is clamped to: the tarmac at this point

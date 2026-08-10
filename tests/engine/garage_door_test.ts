@@ -106,7 +106,73 @@ describe("the approach door", () => {
   });
 });
 
+/** The 48-px assembly's own reach off its anchor — what the player SEES the
+ * car as, and so what its collision hull has to be. */
+const HALF_ART = 24;
+
+describe("the car's own body", () => {
+  // THE HULL COVERS THE ASSEMBLY; IT DOES NOT SAMPLE IT. There used to be three
+  // circles, hung on the two wheel arches and the middle — which left the hull
+  // 3 px behind the painted bonnet and pinched 3 px in at each gap between
+  // them, so what a wall actually stopped was a peanut with a snub nose. Both
+  // halves are pinned here because both showed in the same place: a car driven
+  // at the bay's doorway buried the front of its bonnet in the frame.
+
+  it("reaches both ends of the 48-px assembly", () => {
+    const offsets = [...CAR.footprint.offsets].sort((a, b) => a - b);
+    const nose = (offsets.at(-1) as number) + CAR.footprint.radius;
+    const tail = (offsets[0] as number) - CAR.footprint.radius;
+    expect(nose).toBeGreaterThanOrEqual(HALF_ART);
+    expect(tail).toBeLessThanOrEqual(-HALF_ART);
+  });
+
+  it("leaves no pinch between its circles a drawn flank hangs out of", () => {
+    const offsets = [...CAR.footprint.offsets].sort((a, b) => a - b);
+    const r = CAR.footprint.radius;
+    for (let i = 1; i < offsets.length; i++) {
+      const gap = (offsets[i] as number) - (offsets[i - 1] as number);
+      // Half-width of the union at the worst point between two circles: the
+      // flank may draw in by less than a pixel, never by a third of the car.
+      const waist = Math.sqrt(r * r - (gap / 2) * (gap / 2));
+      expect(r - waist).toBeLessThan(1);
+    }
+  });
+});
+
 describe("car physics", () => {
+  it("stops the bonnet where the shut door is DRAWN", () => {
+    const state = startGarage();
+    const door = doorOf(state);
+    // THE OPENER OFF, and only the opener: a driven car trips an APPROACH door
+    // from further out than its own bonnet can ever reach (`CAR.doorReach`), so
+    // the shut chain is a thing the shipped hero never meets. It is still the
+    // thing every OTHER door in the game is made of, and it is what the wall a
+    // doorway is cut into has to agree with.
+    door.approach = false;
+    const chain = state.obstacles.filter((o) => o.kind === "test_garage_door");
+    // BOTH SIDES MEASURED AS DRAWN, which is the only comparison that catches
+    // anything: a hull short of its own art and a collider standing proud of
+    // its own sprite cancel each other out square-on, and the pair agree with
+    // themselves right up until you meet the door anywhere else. The fixture's
+    // slats are authored at radius 8 and drawn 16 px across.
+    const face = door.center.x - 8;
+    // Met at a slat's centre and again between two of them: a chain of circles
+    // has a waist, and the whole doorway has to stop the bonnet in the same
+    // place or the door reads as bent.
+    const spacing =
+      (chain[1] as { pos: { y: number } }).pos.y - chain[0]!.pos.y;
+    for (const y of [door.center.y, door.center.y + spacing / 2]) {
+      const car = board(state);
+      car.pos = { x: car.home.x, y };
+      state.players[0]!.pos = { x: car.pos.x, y };
+      run(state, steerTo(car.pos.x + 600, y), 120);
+      const bonnet = car.pos.x + HALF_ART;
+      expect(bonnet).toBeGreaterThan(face - 1);
+      expect(bonnet).toBeLessThan(face + 1);
+      applyRunCommand(state, "exitCar");
+    }
+  });
+
   it("a wall is a wall — the body shoves out instead of phasing through", () => {
     const state = startGarage();
     const car = board(state);

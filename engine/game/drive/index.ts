@@ -113,6 +113,7 @@ import { coastDecelPx, rungTopSpeedPx, throttleAccelPx } from "./drivetrain.ts";
 import {
   laneCenter,
   roadEdgesAt,
+  roadWideningAt,
   resetCrowdMarks,
   resetThoughtDeck,
   spawnCrowd,
@@ -179,6 +180,7 @@ export {
   roadBandHalfAt,
   roadEdges,
   roadEdgesAt,
+  roadWideningAt,
 } from "./crowd.ts";
 export {
   createTraffic,
@@ -466,6 +468,29 @@ export function driveHandsOff(drive: DriveState): boolean {
  */
 export function driveSteerOnly(drive: DriveState): boolean {
   return driveHandsOff(drive) && driveDashUp(drive);
+}
+
+/**
+ * …AND IS THE COUNTDOWN BEING SAID OUT LOUD — the GET READY beat.
+ *
+ * IT IS THE WIDENING (`roadWideningAt`), NOT A CLOCK. The road opens out from
+ * two lanes to four over the last stretch before the first house
+ * (`DRIVE.opening.widenPx`), and that taper is the first thing the player can
+ * SEE of the town arriving — so it is the honest frame to say the words on. The
+ * caption used to be up for the WHOLE approach, which is ten seconds of a car
+ * on an empty road being told to get ready for nothing, over the top of the two
+ * lines the hero is trying to say. Now it arrives with the thing it is about.
+ *
+ * The beats it sits between are both already named here: the widening starts it,
+ * `driveSteerOnly` hands back the wheel a second out, and the gate takes the
+ * caption away as the pedal and the clock arrive.
+ *
+ * ANSWERED HERE rather than by the app, for the reason `driveDashUp` is: it is a
+ * fact about the ROAD, and the app has two hosts that would otherwise each
+ * decide it.
+ */
+export function driveReadyUp(drive: DriveState): boolean {
+  return driveHandsOff(drive) && roadWideningAt(drive.distance, drive.params);
 }
 
 /**

@@ -49,11 +49,12 @@ describe("minting", () => {
   it("parks solid footprints — collision-only blockers, the car's hoppable", () => {
     const state = startHub();
     const prints = state.obstacles.filter((o) => o.kind === "vehicle");
-    // Three circles under the car (a 48px body needs its middle held), one
-    // under the ship.
-    expect(prints).toHaveLength(4);
+    // A chain under the car — the 48px body is covered end to end rather than
+    // sampled, so how MANY is `CAR.footprint`'s to say — and one under the ship.
+    const carCount = CAR.footprint.offsets.length;
+    expect(prints).toHaveLength(carCount + 1);
     const carPrints = prints.filter((o) => o.pos.y === 500);
-    expect(carPrints).toHaveLength(3);
+    expect(carPrints).toHaveLength(carCount);
     for (const p of carPrints) expect(p.jumpable).toBe(true);
     const shipPrint = prints.find((o) => o.pos.y === 300)!;
     expect(shipPrint.jumpable).toBe(false);
@@ -595,7 +596,7 @@ describe("the footprint", () => {
     car.heading = Math.PI * 0.48;
     expect(applyRunCommand(state, "exitCar")).toBe(true);
     const prints = carPrints(state);
-    expect(prints).toHaveLength(3);
+    expect(prints).toHaveLength(CAR.footprint.offsets.length);
     for (const print of prints) expect(print.pos.y).toBeCloseTo(car.pos.y, 6);
     expect(
       prints.map((p) => p.pos.x - car.pos.x).sort((a, b) => a - b),
@@ -607,7 +608,7 @@ describe("the footprint", () => {
     const state = startHub();
     const car = carOf(state);
     const prints = carPrints(state);
-    expect(prints).toHaveLength(3);
+    expect(prints).toHaveLength(CAR.footprint.offsets.length);
     const offsets = [...CAR.footprint.offsets].sort((a, b) => a - b);
     const along = prints
       .map((p) => ({ dx: p.pos.x - car.pos.x, dy: p.pos.y - car.pos.y }))
@@ -712,7 +713,8 @@ describe("getting back out", () => {
     expect(state.events.some((e) => e.type === "carStopped")).toBe(true);
     // The car is furniture again WHERE IT NOW STANDS, and the nav grid is told.
     const prints = state.obstacles.filter((o) => o.kind === "vehicle");
-    expect(prints).toHaveLength(4); // three under the car, one under the ship
+    // The car's own chain, plus the one under the ship.
+    expect(prints).toHaveLength(CAR.footprint.offsets.length + 1);
     const reach = Math.max(...CAR.footprint.offsets.map(Math.abs));
     for (const print of prints.filter((o) => o.jumpable)) {
       expect(

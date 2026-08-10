@@ -84,10 +84,35 @@ export const CAR = {
   springDamping: 7,
   /** The axle's travel limit (px) — a spring never buries the body. */
   maxCompress: 3,
-  /** The blockers under the body (create.ts): columns of the DRAWN body — the
-   * wheel arches and the middle between them — and the radius each covers.
-   * Laid along the picture rather than along the nose: `vehicleFootprint`. */
-  footprint: { offsets: [-14, 0, 12], radius: 9 },
+  /**
+   * The blockers under the body (create.ts): columns of the DRAWN body, and the
+   * radius each covers. Laid along the picture rather than along the nose:
+   * `vehicleFootprint`.
+   *
+   * THEY COVER THE BODY; THEY DO NOT SAMPLE IT — which is the whole of what was
+   * wrong with the three there used to be. Those sat on the two wheel arches and
+   * the middle (−14, 0, +12), and a chain of circles hung on landmarks is not a
+   * hull: it ended 3 px short of the bonnet at the nose, and it pinched 3 px in
+   * at each of the two gaps between the circles, so the car's collision outline
+   * was a peanut with a snub nose rather than a 48-px car.
+   *
+   * IT SHOWED WHERE IT MATTERS MOST — at the garage's doorway. Driven at the
+   * wall stones either side of the roll-up the wagon buried the front of its
+   * bonnet in the door frame before anything stopped it, because the thing
+   * being stopped was a circle a whole 3 px behind the painted nose.
+   *
+   * So the chain spans the assembly instead: five columns at 7.5 px, radius 9,
+   * which puts the outer circles' own edges on the 48-px body's ends and holds
+   * the flanks to within a pixel of the drawn side. That is the same body the
+   * driving minigame already solves the car as — one capsule laid along the
+   * picture (`drive/impact.ts`, which reads this radius for exactly that
+   * reason) — so the wagon is now the same shape in the bay and on the road.
+   *
+   * THE SAME CIRCLES DO BOTH JOBS, and that is load-bearing: a driving car and
+   * the furniture it becomes the moment its driver steps out have to occupy the
+   * same ground, or parking would jump the body a foot sideways.
+   */
+  footprint: { offsets: [-15, -7.5, 0, 7.5, 15], radius: 9 },
   /** The parts that can work free of the body (the fix ladder). */
   detachables: ["doors", "hood", "bumper", "roof"] as const,
   /** The dangle oscillator: a hinge is floppier than an axle spring, so it
@@ -1246,9 +1271,15 @@ function driveCar(
  * bonnet in it, and one small enough to fit through the bay's doorway let the
  * whole back end swing through the door frame on the way out. So the pass runs
  * the SAME circles the parked car blocks the floor with (`vehicleFootprint`),
- * laid along the DRAWN body: rear, middle, front, each shoved out on its own and
- * the shove carried back to the body. A corner resolves because each point is
- * read from the position the one before it left the car in.
+ * laid along the DRAWN body end to end, each shoved out on its own and the shove
+ * carried back to the body. A corner resolves because each point is read from
+ * the position the one before it left the car in.
+ *
+ * HOW MANY OF THEM IS `CAR.footprint`'s to say, and it says FIVE for a reason
+ * this pass is the one that pays for: three circles sampled the body rather than
+ * covering it, and the two gaps between them were holes the drawn flanks hung
+ * out of. Nothing here counts them — the loop is over whatever the footprint
+ * lays down, which is what keeps this and the parked blockers the same car.
  *
  * The same circles is the load-bearing half — a driving car and the furniture it
  * becomes the moment its driver steps out have to occupy the same ground, or

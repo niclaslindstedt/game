@@ -982,10 +982,12 @@ export {
   createDrive,
   driveArriving,
   driveDashUp,
-  // THE APPROACH'S COUNTDOWN — whether the car is still being held, and whether
-  // the wheel has been handed back yet. The screen reads both: one raises GET
-  // READY, the other slides the dashboard in.
+  // THE APPROACH'S COUNTDOWN — whether the car is still being held, whether the
+  // words are up, and whether the wheel has been handed back yet. The screen
+  // reads the last two: one raises GET READY as the road widens, the other
+  // slides the dashboard in a second before the flag.
   driveHandsOff,
+  driveReadyUp,
   driveSteerOnly,
   driveInCity,
   createDriveDriver,

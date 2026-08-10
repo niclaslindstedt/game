@@ -1529,6 +1529,15 @@ export function buildPropLines(
 }
 
 /**
+ * HOW CLOSELY A DOOR'S SLAT BLOCKS STAND (× the block's own radius) — the wall
+ * run's own pitch (`expandSegment`), so a shut door stops a body exactly where
+ * the wall either side of it does. Below `2` on purpose: adjacent colliders have
+ * to OVERLAP rather than merely touch, which is what lets each of them keep the
+ * radius it is drawn at (see `expandDoor`).
+ */
+const DOOR_BLOCK_PITCH = 1.5;
+
+/**
  * Expand one DOORWAY into the chain of slat blocks that fills it.
  *
  * A door is not a wall run, and expanding it as one gets it visibly wrong. The
@@ -1544,15 +1553,24 @@ export function buildPropLines(
  * spacing from ever opening past a block width and leaving a slot of daylight
  * in the middle of a shut door.
  *
- * A door built this way tiles at a full block (`2 × radius` — a wall sprite's
- * own width) wherever the opening divides evenly, which is the point: each
- * block reads as a block, and that is what lets the roll-up take them away one
- * at a time (render/effects.ts `garageDoor`). Tiling that cleanly would leave
- * the colliders merely TANGENT, though, and a hairline seam between two circles
- * is a seam a shot can thread — so the blocks carry a collider inflated back
- * past their spacing. A sprite is drawn at its own size wherever its obstacle
- * sits, so that inflation is collision-only and nothing about the door LOOKS
- * fatter.
+ * THE BLOCKS OVERLAP, AT THE SAME PITCH A WALL RUN USES (`radius * 1.5`, see
+ * `expandSegment`) — because a door is a hole in a wall and has to stop a body
+ * exactly where the wall either side of it does, or the two disagree across the
+ * doorway's own edges. A sprite is drawn at its own size wherever its obstacle
+ * sits, so overlapping colliders still tile the opening edge to edge in the
+ * picture; there is simply more than one block behind some of those pixels, and
+ * the roll-up still takes them away one at a time (render/effects.ts
+ * `garageDoor`), in finer steps over the same beat.
+ *
+ * IT USED TO TILE AT A FULL BLOCK (`2 × radius`) AND INFLATE THE COLLIDER back
+ * past that spacing, so no shot could thread the hairline seam where two tangent
+ * circles met. It closed the seam and bought a worse problem: an inflated circle
+ * stands PROUD of the slat it is drawn as — a third of a block, at each block's
+ * centre — so anything with a body of its own was held that far off a door it
+ * was plainly not touching. Overlapping at the wall's own pitch closes the same
+ * seam with geometry instead: adjacent circles share a third of their width, so
+ * the union has no dip a shot could find and the boundary sits on the drawn face
+ * rather than in front of it.
  */
 function expandDoor(
   sprite: string,
@@ -1566,7 +1584,7 @@ function expandDoor(
   // the opening's edge rather than straddling it.
   const span = Math.max(0, distance(from, to) - radius * 2);
   const dir = normalize(to.x - from.x, to.y - from.y);
-  const count = Math.max(1, Math.ceil(span / (radius * 2)));
+  const count = Math.max(1, Math.ceil(span / (radius * DOOR_BLOCK_PITCH)));
   const inner = Math.max(0, span - radius * 2);
   const step = count > 1 ? inner / (count - 1) : 0;
   const obstacles: Obstacle[] = [];
@@ -1578,7 +1596,7 @@ function expandDoor(
       kind: sprite,
       sprite,
       pos: vec(from.x + dir.x * along, from.y + dir.y * along),
-      radius: Math.max(radius, step * 0.7),
+      radius,
       jumpable: false,
     });
   }

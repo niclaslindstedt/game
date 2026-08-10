@@ -65,10 +65,11 @@ const GOODCO = "goodco_hq";
  *
  * `&city=0` OPENS IN THE TOWN, on the knob the attract loop uses
  * (`DriveParams.cityPx`) — the outskirts otherwise, exactly as a player drives
- * them. The opening is five seconds of held road with GET READY over it, which
- * is the right length once a trip and the wrong length forty times an afternoon;
- * this is how a pass about the TOWN skips it without pretending the road is
- * shorter than it is.
+ * them. The opening is ten seconds of held road — the wagon sliding in, the
+ * hero's two lines, then the widening with GET READY over it — which is the
+ * right length once a trip and the wrong length forty times an afternoon; this
+ * is how a pass about the TOWN skips it without pretending the road is shorter
+ * than it is.
  *
  * `&course=1200` SHORTENS THE LEG, on the same knob the attract loop uses
  * (`DriveParams.coursePx`) — the whole road otherwise, exactly as a player

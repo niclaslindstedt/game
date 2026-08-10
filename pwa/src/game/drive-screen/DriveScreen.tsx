@@ -25,7 +25,7 @@ import {
   createDriveDriver,
   driveDashUp,
   driveDriverInput,
-  driveHandsOff,
+  driveReadyUp,
   driveScore,
   driveVerdict,
   stepDrive,
@@ -303,17 +303,18 @@ export function DriveScreen({
    * THE APPROACH'S COUNTDOWN, as the screen needs it — two booleans, published
    * by the frame loop only when one of them moves.
    *
-   * `held` is the whole opening: the car is being carried at the road's own pace
-   * and nothing the player does reaches it, which is what GET READY is on screen
-   * to say. `dash` is the last second of it: the wheel has been handed back and
-   * the instruments slide in from the left. The pedal arrives when `held` goes
-   * false, with the clock.
+   * `ready` is the last stretch of the opening, from the frame the carriageway
+   * starts opening out to four lanes (`driveReadyUp`): GET READY goes up with
+   * the widening, which is the first thing on screen that says the town is
+   * coming. `dash` is the last second of it: the wheel has been handed back and
+   * the instruments slide in from the left. The pedal arrives when the gate
+   * does, with the clock, and takes the caption away with it.
    *
-   * SEEDED HELD because that is what a fresh road is, and the first frame will
-   * confirm it — seeding it the other way would flash the dashboard on for one
-   * frame at the top of every leg.
+   * SEEDED QUIET because that is what a fresh road is — the wagon is still
+   * sliding into frame with the hero's own two lines to get through, and the
+   * words have nothing to be about yet.
    */
-  const [opening, setOpening] = useState({ held: true, dash: false });
+  const [opening, setOpening] = useState({ ready: false, dash: false });
   /** The damage dial's fresh-slice anchor. Held across ticks (and across a
    * restart, which lays a clean car and snaps it back to nothing on its own). */
   const wearTrailRef = useRef(createWearTrail());
@@ -808,18 +809,19 @@ export function DriveScreen({
         const next = driveDials(drive, pausedRef.current, wearTrailRef.current);
         return sameDials(prev, next) ? prev : next;
       });
-      // THE COUNTDOWN, republished only when it MOVES. Two booleans and three
-      // states between them: held (GET READY, no dashboard, no controls), the
+      // THE COUNTDOWN, republished only when it MOVES. Two booleans and four
+      // beats between them: the quiet approach (no dashboard, no controls, the
+      // hero talking), the road opening out to four lanes (GET READY), the
       // wheel handed back a second out (the dashboard slides in), and the flag.
-      // Read off the engine rather than off the distance, because where the
-      // opening ends is the ROAD's decision and this screen is not the only
-      // thing that asks (`driveHandsOff` / `driveSteerOnly`).
+      // Read off the engine rather than off the distance, because where each of
+      // those falls is the ROAD's decision and this screen is not the only thing
+      // that asks (`driveReadyUp` / `driveDashUp` / `driveSteerOnly`).
       setOpening((prev) => {
-        const held = driveHandsOff(drive);
+        const ready = driveReadyUp(drive);
         const up = driveDashUp(drive);
-        return prev.held === held && prev.dash === up
+        return prev.ready === ready && prev.dash === up
           ? prev
-          : { held, dash: up };
+          : { ready, dash: up };
       });
     };
     raf = requestAnimationFrame(frame);
@@ -907,18 +909,25 @@ export function DriveScreen({
 
       {/* GET READY — the approach's countdown, said out loud.
 
-          The car is being carried at the road's own pace and the pedal reaches
-          nothing (`driveHandsOff`); a second before the flag the wheel comes
-          back and the dashboard slides in beside this, and then the town
+          IT GOES UP WITH THE WIDENING (`driveReadyUp`), which is the frame the
+          road starts opening out from two lanes to four — the first thing on
+          screen that says the town is arriving. A second later the wheel comes
+          back and the dashboard slides in beside this, and then the gate
           arrives and this goes. A player handed straight from a menu into a
           side-on car at seventy with a crowd coming needs the same three words
           every arcade racer has ever opened with — and, more than the words, a
           beat in which nothing can go wrong yet.
 
+          NOT THE WHOLE APPROACH, which is what it used to be: ten seconds of
+          empty road with GET READY held over the hero's own two lines, telling
+          the player to brace for something that was still eight seconds away.
+          The words mean something when they arrive with the thing they are
+          about.
+
           Inert, aria-hidden and out of the way of the thumb: the last second of
           it is genuinely steerable, and a caption that ate the pad would be a
           countdown the player could not use. */}
-      {opening.held && (
+      {opening.ready && (
         <div className="drive-ready" aria-hidden="true">
           <PixelText
             font={assets.font}
