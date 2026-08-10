@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The title sky: the starfield, the drifting asteroids and twinkles, the
+// The title sky: the starfield, the asteroid belt flying past and the
+// twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
 // frame by title-sky.ts), and the SUN's detonation — the payoff of the hidden
 // developer gesture (sixteen quick taps ARM the sun, the first ten of them in
@@ -10,14 +11,7 @@
 // the gesture hit-tests the sun's rect instead, so a press on the menu above it
 // is never swallowed.
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  type AnimationEvent as ReactAnimationEvent,
-  type CSSProperties,
-} from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
@@ -41,29 +35,6 @@ const SUN_EMBERS = 8;
  * wants a sky full of it. */
 const SUN_SHARDS = 18;
 
-/** Base cycle length of each backdrop asteroid's drift keyframe (seconds),
- * matching the `.title-asteroid-N` animations in styles.css. The visible
- * crossing is a fixed slice of this cycle, so a shorter cycle reads as a
- * faster fly-by. */
-const ASTEROID_BASE_SECONDS = [21, 17, 27];
-
-/** Speed spread for a fly-by, relative to the base cadence: from a lazy drift
- * (0.5×) up to a gentle streak (1.5×). Each crossing rolls a fresh multiplier
- * so no two feel alike and the belt reads as natural rather than a metronome.
- * Kept modest so even the quickest asteroid stays easy to follow by eye. */
-const ASTEROID_MIN_SPEED = 0.5;
-const ASTEROID_MAX_SPEED = 1.5;
-
-/** A random `animation-duration` for one asteroid's next crossing. Faster
- * speed ⇒ shorter cycle. `Math.random` is fine here — this is cosmetic, not
- * gameplay RNG. */
-function randomAsteroidDuration(baseSeconds: number): string {
-  const speed =
-    ASTEROID_MIN_SPEED +
-    Math.random() * (ASTEROID_MAX_SPEED - ASTEROID_MIN_SPEED);
-  return `${(baseSeconds / speed).toFixed(2)}s`;
-}
-
 export function TitleBackdrop({
   armed,
   onCharged,
@@ -84,23 +55,6 @@ export function TitleBackdrop({
    * happens to be open already. */
   onDetonated: () => void;
 }) {
-  // Each backdrop asteroid gets its own random speed for its first fly-by, and
-  // rerolls a fresh one at every iteration boundary (rerollAsteroid), so the
-  // belt never falls into a fixed rhythm. Computed once per mount.
-  const asteroidDurations = useMemo(
-    () => ASTEROID_BASE_SECONDS.map(randomAsteroidDuration),
-    [],
-  );
-  const rerollAsteroid = useCallback(
-    (e: ReactAnimationEvent<HTMLSpanElement>, baseSeconds: number) => {
-      // Fires while the asteroid is parked off-screen, so swapping the
-      // duration never shows as a mid-flight jump.
-      e.currentTarget.style.animationDuration =
-        randomAsteroidDuration(baseSeconds);
-    },
-    [],
-  );
-
   // The backdrop's solar-system Easter egg — a rAF loop that wheels all eight
   // planets around a static sun on one shared ecliptic (and the Moon around
   // Earth), each on its real orbital elements and lit from the sun's real 3D
@@ -121,10 +75,8 @@ export function TitleBackdrop({
   const neptuneRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
-  // The backdrop asteroids, driven on a 3D fly-through in orbit mode (they keep
-  // their CSS drift with the flag off). Collected so startTitleSky can take them
-  // over.
-  const asteroidRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  // The asteroid belt: ONE canvas for all of it (title-asteroids.ts).
+  const beltRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const moon = moonRef.current;
@@ -142,10 +94,8 @@ export function TitleBackdrop({
     if (!mercury || !venus || !earth || !mars) return;
     if (!jupiter || !saturn || !uranus || !neptune) return;
     const satellites = satellitesRef.current;
-    if (!satellites) return;
-    const asteroids = asteroidRefs.current.filter(
-      (a): a is HTMLSpanElement => !!a,
-    );
+    const belt = beltRef.current;
+    if (!satellites || !belt) return;
     return startTitleSky({
       moon,
       satellites,
@@ -159,7 +109,7 @@ export function TitleBackdrop({
       neptune,
       sun,
       glare,
-      asteroids,
+      belt,
     });
   }, []);
 
@@ -223,21 +173,15 @@ export function TitleBackdrop({
           as the backdrop they are lighting up. */}
       <div className="title-sky" aria-hidden="true">
         <div className="title-stars" />
-        {/* Asteroids drift across the backdrop now and then, so the menu feels
-            alive rather than a static painting. */}
-        <div className="title-asteroids">
-          {ASTEROID_BASE_SECONDS.map((baseSeconds, i) => (
-            <span
-              key={i}
-              ref={(el) => {
-                asteroidRefs.current[i] = el;
-              }}
-              className={`title-asteroid title-asteroid-${i + 1}`}
-              style={{ animationDuration: asteroidDurations[i] }}
-              onAnimationIteration={(e) => rerollAsteroid(e, baseSeconds)}
-            />
-          ))}
-        </div>
+        {/* THE ASTEROID BELT — and the camera is parked in the middle of it
+            (CAM_AU = 3 in title-sky.ts), so these are belt objects seen from
+            inside the belt: real spectral classes at their real albedos, real
+            sizes off the surveys' broken power law, real encounter speeds
+            about 5.3 km/s, and Poisson arrivals. One canvas draws all of them
+            — see title-asteroids.ts for why it is not one element per rock.
+            Under prefers-reduced-motion the driver never starts and this stays
+            blank, which is the honest resting state for a fly-by. */}
+        <canvas ref={beltRef} className="title-asteroids" aria-hidden="true" />
         {/* A handful of stars twinkle on their own long cycles, out of sync, so
             the sky flickers with life rather than sitting as a flat backdrop. */}
         <div className="title-twinkles">

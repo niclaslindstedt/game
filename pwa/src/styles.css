@@ -3825,115 +3825,24 @@ html.app-locked body {
   }
 }
 
-/* Occasional asteroids streaking past the backdrop. Each spends most of its
-   cycle parked off-screen and only crosses briefly, so they read as a rare
-   fly-by rather than a constant conveyor belt. Staggered delays keep them from
-   arriving together. */
+/* THE ASTEROID BELT — one canvas for all of it, painted each frame by
+   `title-asteroids.ts`. It sits ABOVE the whole orrery inside `.title-sky`
+   (see the title band map above) and that is a statement about the geometry
+   rather than a layering preference: every rock is tens of kilometres from the
+   camera and every planet is at least an AU, so the belt is in front of the
+   solar system at all times and never needs to sort against it. 900 clears the
+   orrery's whole inline band (SUN_Z + Z_SPREAD = 850, title-planets.ts) and is
+   as private as the rest of it — `.title-sky` is a stacking context, so this
+   number never bids against the menu outside.
+
+   There is no resting look and no keyframe: a fly-by is motion, so under
+   prefers-reduced-motion the driver never starts and the canvas stays
+   blank. */
 .title-asteroids {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  z-index: 900;
   pointer-events: none;
-}
-
-.title-asteroid {
-  position: absolute;
-  width: clamp(10px, 2.4vmin, 20px);
-  height: clamp(10px, 2.4vmin, 20px);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 62% 30%, #4c525c 0 14%, transparent 15%),
-    radial-gradient(circle at 34% 60%, #4c525c 0 18%, transparent 19%),
-    radial-gradient(circle at 40% 38%, #8f96a0, #5a616b 60%, #3a3f47);
-  box-shadow: 0 0 6px rgba(180, 190, 200, 0.25);
-  image-rendering: pixelated;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-/* Top-third, larger, slow drift right-to-left. */
-.title-asteroid-1 {
-  top: 18%;
-  animation: title-asteroid-drift-a 21s linear infinite;
-  animation-delay: -3s;
-}
-
-/* Mid screen, smaller and quicker. */
-.title-asteroid-2 {
-  top: 46%;
-  transform: scale(0.7);
-  animation: title-asteroid-drift-b 17s linear infinite;
-  animation-delay: -11s;
-}
-
-/* Lower band, left-to-right the other way. */
-.title-asteroid-3 {
-  top: 70%;
-  transform: scale(0.85);
-  animation: title-asteroid-drift-c 27s linear infinite;
-  animation-delay: -19s;
-}
-
-/* Only the first slice of each cycle is a visible crossing; the rest parks it
-   off-screen so fly-bys stay occasional. */
-@keyframes title-asteroid-drift-a {
-  0% {
-    transform: translate(108vw, 0) rotate(0deg);
-    opacity: 0;
-  }
-  2% {
-    opacity: 0.85;
-  }
-  20% {
-    opacity: 0.85;
-  }
-  22%,
-  100% {
-    transform: translate(-16vw, 6vh) rotate(140deg);
-    opacity: 0;
-  }
-}
-
-@keyframes title-asteroid-drift-b {
-  0% {
-    transform: translate(110vw, 0) scale(0.7) rotate(0deg);
-    opacity: 0;
-  }
-  3% {
-    opacity: 0.7;
-  }
-  16% {
-    opacity: 0.7;
-  }
-  18%,
-  100% {
-    transform: translate(-14vw, -5vh) scale(0.7) rotate(-120deg);
-    opacity: 0;
-  }
-}
-
-@keyframes title-asteroid-drift-c {
-  0% {
-    transform: translate(-16vw, 0) scale(0.85) rotate(0deg);
-    opacity: 0;
-  }
-  3% {
-    opacity: 0.75;
-  }
-  17% {
-    opacity: 0.75;
-  }
-  19%,
-  100% {
-    transform: translate(110vw, -7vh) scale(0.85) rotate(160deg);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .title-asteroid {
-    animation: none;
-  }
 }
 
 /* The top of the column: the brand mark and — off the main menu — the page

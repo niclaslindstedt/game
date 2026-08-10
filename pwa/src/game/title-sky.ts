@@ -62,7 +62,7 @@ import { clamp, clamp01 } from "@game/lib/vec.ts";
 import { getSettings } from "./settings.ts";
 import { orbitAt, type World } from "@ui/lib/orbit.ts";
 import type { GlobeLight, PlanetGlobe } from "@ui/lib/planet-globe.ts";
-import { clearAsteroid, driveAsteroids } from "./title-asteroids.ts";
+import { createBelt } from "./title-asteroids.ts";
 import {
   AU_UNITS,
   DEPTH,
@@ -164,8 +164,12 @@ export type SkyElements = {
    * twenty hand-written divs would be a data table typed out as JSX — the
    * catalogue in `title-moons.ts` is the list, and this is where it lands. */
   satellites: HTMLElement;
-  /** Backdrop asteroids, driven on a 3D fly-through toward the camera. */
-  asteroids: HTMLElement[];
+  /** ONE full-frame canvas for the whole asteroid belt. Not an element per
+   * rock: every asteroid is tens of kilometres from the camera while every
+   * planet is at least an AU, so the belt is in front of the entire solar
+   * system at all times and needs no depth sort against it — see
+   * `title-asteroids.ts`. */
+  belt: HTMLCanvasElement;
 };
 
 // The sun's fixed seat, in fractions of the viewport. Held in the upper sky so
@@ -425,7 +429,8 @@ function wireCamera(cam: Camera, enabled: () => boolean): () => void {
 export function startTitleSky(els: SkyElements): () => void {
   if (prefersReducedMotion()) return () => {};
 
-  const { sun, glare, earth, moon, asteroids } = els;
+  const { sun, glare, earth, moon } = els;
+  const belt = createBelt(els.belt);
   let raf = 0;
 
   const planets = planetTable(els);
@@ -799,7 +804,20 @@ export function startTitleSky(els: SkyElements): () => void {
       );
     }
 
-    driveAsteroids(asteroids, t, vw, vh, u, SUN_Z);
+    // The belt. It is handed the sun's DRAWN seat rather than a light vector,
+    // because a pinhole camera can read the direction back off the screen
+    // position — and doing it that way means the rocks are lit from wherever
+    // the viewer can see the star, at any zoom or pan.
+    belt.drive(t, {
+      vw,
+      vh,
+      u,
+      vanX: vw / 2 + cam.x,
+      vanY: vh / 2 + cam.y,
+      sunX: sunCx,
+      sunY: sunCy,
+      zoom,
+    });
 
     // One globe per frame, once the shader has arrived, until every world that
     // wants one has one.
@@ -852,7 +870,7 @@ export function startTitleSky(els: SkyElements): () => void {
       el.textContent = "";
     }
     for (const o of moons) o.el.remove();
-    for (const a of asteroids) clearAsteroid(a);
+    belt.stop();
     sun.style.left = "";
     sun.style.top = "";
     sun.style.opacity = "";

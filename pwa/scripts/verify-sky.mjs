@@ -17,6 +17,15 @@
 //     proves the shader USED it. (A shader that ignored the light entirely
 //     would sail through pass 1.)
 //
+//   PASS 3 — THE ASTEROID BELT, on the same law and for the same reason. The
+//     rocks are painted into ONE canvas rather than into elements, so there is
+//     nothing to screenshot and nothing to `getBoundingClientRect`: the pass
+//     reads the canvas's own pixels instead, around the position the driver
+//     published in `window.__beltState`. It exists because the belt's light is
+//     a sign and a stretch away from being wrong in a way nothing else
+//     notices — a flipped z turns every rock into a flat disc, and a flipped
+//     crater ramp turns every bowl into a dome.
+//
 // The moments for pass 2 are CHOSEN BY MEASUREMENT, not hard-coded: the script
 // scans for frames where the Moon shows a legible terminator (a clear crescent
 // through gibbous) and asserts on those. Hard-coded sample points rot the
@@ -72,6 +81,27 @@ const WANT_FRAMES = 6;
 
 /** Pins swept for both passes — a fine, even walk of the master cycle. */
 const PINS = Array.from({ length: 40 }, (_, i) => Number((i / 40).toFixed(3)));
+
+/**
+ * Pass 3 needs its OWN, much finer sweep, because a fly-by is seconds long
+ * against a four-minute master cycle: at PINS' spacing of six seconds the scan
+ * would land on a rock big enough to measure only by luck. These are spaced
+ * about a second apart, and the pass stops as soon as it has enough.
+ */
+const BELT_PINS = Array.from({ length: 260 }, (_, i) =>
+  Number((i / 260).toFixed(5)),
+);
+/** A rock has to be this many CSS px across for its pixels to mean anything… */
+const BELT_MIN_PX = 26;
+/** …and to be showing a terminator rather than a full face or a silhouette. */
+const BELT_LIT_MIN = 0.3;
+const BELT_LIT_MAX = 0.72;
+/** How many rocks to insist on measuring, and by how much the sunward half
+ * must beat the other. Lower than the Moon's bar: an asteroid is a fraction of
+ * the size, its silhouette is irregular, and its craters put real variance
+ * into both halves. A rock lit the WRONG way still scores below zero. */
+const BELT_WANT = 8;
+const BELT_MIN_CONTRAST = 0.1;
 
 /**
  * THE CAMERA HAS TO MOVE FOR EITHER PASS TO MEAN ANYTHING NOW, and the two
@@ -187,6 +217,60 @@ let renderFailures = 0;
 let lightChecks = 0;
 let worstLightDeg = 0;
 const rows = [];
+const beltRows = [];
+const beltSeen = new Set();
+let beltFailures = 0;
+
+/**
+ * Pass 3's measurement, run in the page: split the belt canvas's pixels around
+ * one rock along its terminator and compare the two halves' mean luminance,
+ * exactly as `analyze` does for the Moon. Reading the canvas rather than
+ * screenshotting it is what makes this possible at all — a rock has no element
+ * — and it also isolates the belt from the sun's glare, which is a separate
+ * layer screen-blended over the top and would otherwise swamp the measure.
+ */
+const analyzeRock = ({ x, y, px, sunAng }) => {
+  const canvas = document.querySelector("canvas.title-asteroids");
+  if (!canvas) return null;
+  const g = canvas.getContext("2d");
+  const scale = canvas.width / canvas.getBoundingClientRect().width;
+  const r = Math.round((px / 2) * 0.82 * scale);
+  const cx = Math.round(x * scale);
+  const cy = Math.round(y * scale);
+  if (r < 6 || cx - r < 0 || cy - r < 0) return null;
+  if (cx + r > canvas.width || cy + r > canvas.height) return null;
+  const d = g.getImageData(cx - r, cy - r, r * 2, r * 2).data;
+  const ca = Math.cos(sunAng);
+  const sa = Math.sin(sunAng);
+  let sun = 0;
+  let sunN = 0;
+  let anti = 0;
+  let antiN = 0;
+  for (let j = 0; j < r * 2; j++) {
+    for (let i = 0; i < r * 2; i++) {
+      const dx = i - r;
+      const dy = j - r;
+      if (dx * dx + dy * dy > r * r) continue;
+      const k = (j * r * 2 + i) * 4;
+      // The canvas is transparent where there is no rock; weight by alpha so
+      // the sky around an irregular silhouette cannot tip the measure.
+      const a = d[k + 3] / 255;
+      if (a < 0.5) continue;
+      const lum = 0.299 * d[k] + 0.587 * d[k + 1] + 0.114 * d[k + 2];
+      if (dx * ca + dy * sa >= 0) {
+        sun += lum;
+        sunN++;
+      } else {
+        anti += lum;
+        antiN++;
+      }
+    }
+  }
+  if (sunN < 12 || antiN < 12) return null;
+  const ms = sun / sunN;
+  const ma = anti / antiN;
+  return { contrast: (ms - ma) / (ms + ma + 1), pixels: sunN + antiN };
+};
 
 for (const vp of VIEWPORTS) {
   const page = await browser.newPage({
@@ -279,6 +363,64 @@ for (const vp of VIEWPORTS) {
         }
       }
     }
+  }
+
+  // ---- Pass 3: the belt is lit from the sun's side too. --------------------
+  //
+  // The frames are chosen by measurement like pass 2's: sweep the clock, keep
+  // the moments where a rock is big enough to measure AND showing a readable
+  // terminator, and assert on those. A rock at full phase or in silhouette has
+  // no terminator, so it would score noise either way.
+  for (const p of BELT_PINS) {
+    await page.evaluate((x) => {
+      window.__skyFreeze = x;
+      window.__skyZoom?.(1);
+    }, p);
+    await settle();
+    const [sky, rocks] = await page.evaluate(() => [
+      window.__skyState,
+      window.__beltState ?? [],
+    ]);
+    for (const rock of rocks) {
+      if (rock.px < BELT_MIN_PX) continue;
+      if (rock.lit < BELT_LIT_MIN || rock.lit > BELT_LIT_MAX) continue;
+      // Keep clear of anything that would contaminate the pixels: another rock
+      // overlapping this one, or the sun's own painted disc behind it.
+      const clash = rocks.some(
+        (o) =>
+          o !== rock &&
+          Math.hypot(o.x - rock.x, o.y - rock.y) < (o.px + rock.px) * 0.75,
+      );
+      if (clash) continue;
+      const sunAng = Math.atan2(sky.sun.y - rock.y, sky.sun.x - rock.x);
+      const measured = await page.evaluate(analyzeRock, {
+        x: rock.x,
+        y: rock.y,
+        px: rock.px,
+        sunAng,
+      });
+      if (!measured) continue;
+      // One row per FLY-BY, not per frame. Consecutive pins are a second
+      // apart and a fly-by lasts tens of them, so without this the pass
+      // measures the same rock eight times and calls it eight samples. A
+      // rolled diameter is continuous, which makes it the fly-by's identity.
+      const id = `${rock.cls}:${rock.km.toFixed(6)}`;
+      if (beltSeen.has(id)) continue;
+      beltSeen.add(id);
+      const ok = measured.contrast >= BELT_MIN_CONTRAST;
+      if (!ok) beltFailures++;
+      beltRows.push({
+        view: vp.name,
+        p,
+        cls: rock.cls,
+        px: Math.round(rock.px),
+        lit: Number(rock.lit.toFixed(2)),
+        contrast: Number(measured.contrast.toFixed(2)),
+        ok,
+      });
+      break; // One rock per pinned frame is plenty; move the clock on.
+    }
+    if (beltRows.length >= BELT_WANT) break;
   }
 
   // ---- Pass 2: the shader actually used it. -------------------------------
@@ -387,6 +529,33 @@ for (const r of rows) {
 console.log(
   `\n${rows.length - renderFailures}/${rows.length} rendered frames lit from the sunward side (min contrast ${MIN_CONTRAST}).`,
 );
+
+console.log(
+  `\nPASS 3 — the asteroid belt, rendered:\n${pad("view", 11)}${pad("p", 10)}${pad("class", 7)}${pad("px", 6)}${pad("lit", 7)}${pad("contrast", 10)}check`,
+);
+for (const r of beltRows) {
+  console.log(
+    pad(r.view, 11) +
+      pad(r.p, 10) +
+      pad(r.cls, 7) +
+      pad(r.px, 6) +
+      pad(r.lit, 7) +
+      pad(r.contrast, 10) +
+      (r.ok ? "PASS" : "FAIL"),
+  );
+}
+console.log(
+  `\n${beltRows.length - beltFailures}/${beltRows.length} rocks lit from the sunward side (min contrast ${BELT_MIN_CONTRAST}).`,
+);
+// Same rule as pass 2: an empty table is a failure, not a pass. If the sweep
+// found no rock worth measuring, the belt's pacing or sizes have moved out
+// from under the harness and pass 3 asserted nothing at all.
+if (beltRows.length < BELT_WANT) {
+  console.log(
+    `\nFAIL: measured only ${beltRows.length} rock(s), wanted ${BELT_WANT}.` +
+      ` Pass 3 asserted nothing — check BELT_MIN_PX against what the belt draws.`,
+  );
+}
 // A PASS WITH NOTHING IN IT IS A FAILURE. The frames are chosen by measurement,
 // so an empty table does not mean "all good" — it means the scan found no Moon
 // worth photographing, which is what happens when the geometry moves under the
@@ -399,5 +568,11 @@ if (rows.length < WANT_FRAMES) {
   );
 }
 process.exit(
-  lightFailures > 0 || renderFailures > 0 || rows.length < WANT_FRAMES ? 1 : 0,
+  lightFailures > 0 ||
+    renderFailures > 0 ||
+    rows.length < WANT_FRAMES ||
+    beltFailures > 0 ||
+    beltRows.length < BELT_WANT
+    ? 1
+    : 0,
 );
