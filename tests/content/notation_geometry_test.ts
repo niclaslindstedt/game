@@ -60,8 +60,8 @@ function elements(svg: string, cls: string): Record<string, string>[] {
     svg.match(new RegExp(`<[a-z]+ class="${cls}"[^>]*>`, "g")) ?? [];
   for (const tag of found) {
     const attrs: Record<string, string> = {};
-    for (const [, k, v] of tag.matchAll(/([a-z0-9-]+)="([^"]*)"/g))
-      attrs[k] = v;
+    for (const m of tag.matchAll(/([a-z0-9-]+)="([^"]*)"/g))
+      attrs[m[1] as string] = m[2] as string;
     out.push(attrs);
   }
   return out;
@@ -225,7 +225,7 @@ describe("where a note sits", () => {
         // The bottom line the position implies must be a clef we actually draw:
         // treble sits on E4, bass on G2.
         expect(
-          [4 * 7 + LETTER.E, 2 * 7 + LETTER.G],
+          [4 * 7 + (LETTER.E as number), 2 * 7 + (LETTER.G as number)],
           `${id}: ${head["data-note"]} is drawn at a position no clef puts it`,
         ).toContain(step - half);
       }
