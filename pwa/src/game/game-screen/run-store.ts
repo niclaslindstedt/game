@@ -12,7 +12,7 @@
 
 import type { MutableRefObject } from "react";
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { loadCharacters, type Character } from "../characters.ts";
 import { scheduleCloudSync } from "../cloud-save.ts";

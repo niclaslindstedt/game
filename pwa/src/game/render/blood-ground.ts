@@ -84,7 +84,7 @@
 // caller (`bloodBlow`, through game-screen/gore-gate.ts) before anything
 // reaches here.
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { type BloodSpill } from "../game-screen/blood-hit.ts";

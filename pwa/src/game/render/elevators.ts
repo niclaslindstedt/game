@@ -10,7 +10,7 @@
 // pad the hero has already ridden stops advertising itself and dims to a plain
 // plate; it still works, it just no longer shouts.
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawWorldSprite } from "./plane.ts";

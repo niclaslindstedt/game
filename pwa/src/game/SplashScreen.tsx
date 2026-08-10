@@ -3,12 +3,16 @@
 // in the title menu's own pixel font over the same sky the menu stands on, so
 // the card lifting reads as the menu arriving rather than as a screen change.
 //
-// It is a COVER, not a stage. The title menu mounts underneath it on the very
-// first render and does its whole arrival behind it — the sprite atlas, the
-// planet shader's chunk, the nine surface bakes (see `splash.ts` `warmBoot`) —
-// which is what the card is buying. Presses are swallowed for exactly that
-// reason: the menu is live under there, and a press meant for the card must
-// never reach the row the cursor happens to be sitting on.
+// It is a COVER, not a stage. The whole app mounts underneath it and does its
+// entire arrival behind it — its own chunk, the sprite atlas, the planet
+// shader, the nine surface bakes (see `splash.ts` `warmBoot`) — which is what
+// the card is buying. Presses are swallowed for exactly that reason: the menu
+// is live under there, and a press meant for the card must never reach the row
+// the cursor happens to be sitting on.
+//
+// A player who presses before all that has landed gets the card anyway: it is
+// the AUTO-dismiss that waits for the load, never a press. What is underneath
+// then is a Loading screen, which is the honest answer — see `splashPhase`.
 //
 // The timing rules it obeys live in `splash.ts` and are tested there.
 
@@ -17,13 +21,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import { loadAppShell } from "../app-shell.ts";
 import { IDENTITY } from "../identity.ts";
 
-import { loadUiFont, peekUiFont } from "./assets.ts";
+// The FONT LEAF, not `assets.ts`: the card needs the menu font and must not
+// drag the sprite atlas into the entry chunk to get it (see ui-font.ts).
 import { musicSynth, synth } from "./audio.ts";
+import { loadUiFont, peekUiFont } from "./ui-font.ts";
 import {
   SPLASH_AUTO_MS,
   SPLASH_MIN_MS,
+  splashPhase,
   warmBoot,
   type SplashPhase,
 } from "./splash.ts";
@@ -83,10 +91,19 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     };
   }, [font]);
 
-  // Everything the menu behind us would otherwise arrive slowly with.
+  // Everything the menu behind us would otherwise arrive slowly with — in two
+  // halves, started together and awaited together.
+  //
+  // The CONTENT half is `warmBoot` (the atlas, the fonts, the sky). The other
+  // is THE APP SHELL ITSELF: `App.tsx` is no longer in the entry chunk, this
+  // card is (see `Boot.tsx`), so the chunk carrying the menu is fetched here
+  // and the card holds until it has landed and mounted. Its failure is NOT
+  // swallowed into `warm` — there would be no menu to hold anybody out of, and
+  // what the player needs is Boot's RELOAD panel; all this has to do is not
+  // hang the card, and lifting onto that panel is the correct ending.
   useEffect(() => {
     let live = true;
-    void warmBoot().then(() => {
+    void Promise.all([warmBoot(), loadAppShell().catch(() => {})]).then(() => {
       if (live) setWarm(true);
     });
     return () => {
@@ -94,27 +111,32 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     };
   }, []);
 
-  // THE CLOCKS ONLY START ONCE THE GAME IS WARM, which is what makes a slow
-  // device hold the card past its auto-dismiss instead of handing over a menu
-  // that is still assembling itself. Both are measured from the card's own
-  // birth, not from the load finishing, so a launch that was ready in 200 ms
-  // still lifts at three seconds rather than at 3.2.
+  // THE MINIMUM ANSWERS TO NOTHING BUT THE CLOCK. At SPLASH_MIN_MS the card
+  // takes a press, warm or not: a player who has told us they are done reading
+  // gets the card out of the way, and whatever is not loaded yet says so with
+  // a Loading screen (see `Boot.tsx`) rather than by ignoring them.
+  useEffect(() => {
+    const shown = performance.now() - startedAt.current;
+    const timer = window.setTimeout(
+      () => setPhase((p) => (p === "holding" ? "skippable" : p)),
+      Math.max(0, SPLASH_MIN_MS - shown),
+    );
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  // THE AUTO-DISMISS WAITS FOR THE LOAD, which is what makes a slow device
+  // hold the card past three seconds instead of handing a player who touched
+  // nothing a menu that is still assembling itself. Measured from the card's
+  // own birth rather than from the load finishing, so a launch that was ready
+  // in 200 ms still lifts at three seconds rather than at 3.2.
   useEffect(() => {
     if (!warm) return;
     const shown = performance.now() - startedAt.current;
-    const timers = [
-      window.setTimeout(
-        () => setPhase((p) => (p === "holding" ? "skippable" : p)),
-        Math.max(0, SPLASH_MIN_MS - shown),
-      ),
-      window.setTimeout(
-        () => setPhase("done"),
-        Math.max(0, SPLASH_AUTO_MS - shown),
-      ),
-    ];
-    return () => {
-      for (const timer of timers) window.clearTimeout(timer);
-    };
+    const timer = window.setTimeout(
+      () => setPhase("done"),
+      Math.max(0, SPLASH_AUTO_MS - shown),
+    );
+    return () => window.clearTimeout(timer);
   }, [warm]);
 
   // Cleared: fade, then let the parent unmount us.
@@ -124,15 +146,28 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
+  // MAY THIS PRESS CLEAR THE CARD — asked of the CLOCK, never of `phase`.
+  //
+  // The two are the same answer only on an idle main thread, and the card's
+  // whole reason to exist is the launch where the main thread is anything but:
+  // the atlas is decoding and nine worlds are baking. Both the timer that
+  // promotes `holding` → `skippable` and the press itself are macrotasks
+  // queued behind that work, so they arrive together when it lets go — and a
+  // `dismiss` that closed over `phase` read the render BEFORE the timer's state
+  // update landed, decided the card was still holding, and dropped the press
+  // on the floor. The player then pressed a card that had gone unresponsive on
+  // exactly the device it was added for. `startedAt` is a ref and
+  // `performance.now()` owes nothing to the renderer, so this cannot go stale.
   const dismiss = useCallback(() => {
-    if (phase !== "skippable") return;
+    const elapsed = performance.now() - startedAt.current;
+    if (splashPhase(elapsed, warm) === "holding") return;
     // The press that cleared the card IS the player arriving, so it does the
     // title theme's audio unlock itself — see the key listener below for why
     // the theme's own listener cannot be relied on to see it.
     synth.unlock();
     musicSynth.unlock();
     setPhase("done");
-  }, [phase]);
+  }, [warm]);
 
   // EVERY KEY IS EATEN WHILE THE CARD IS UP, and on `window` in the CAPTURE
   // phase because that is the only place upstream of every listener the live

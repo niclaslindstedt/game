@@ -11,7 +11,7 @@
 import { localHero } from "../local-seat.ts";
 import { useState } from "react";
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";

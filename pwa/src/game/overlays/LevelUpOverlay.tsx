@@ -30,7 +30,7 @@
 import { localHero } from "../local-seat.ts";
 import { useEffect, useState } from "react";
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";

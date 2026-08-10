@@ -17,7 +17,7 @@
 // and say so on the roster and in the chat. It may not step anything, publish
 // anything, or decide who is admitted.
 
-import { type GameInput } from "@game/core";
+import type { GameInput } from "@game/core";
 
 import { type Client } from "./session-model.ts";
 import { baselineFor } from "./wire/snapshot.ts";

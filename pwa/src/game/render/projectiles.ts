@@ -3,7 +3,7 @@
 // signature glow trail riding his own rounds (weapon-fx.ts).
 
 import { localHero } from "../local-seat.ts";
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { drawFaded } from "@ui/lib/canvas-fade.ts";
 

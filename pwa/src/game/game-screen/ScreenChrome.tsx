@@ -8,7 +8,7 @@
 import { fieldLive } from "../local-seat.ts";
 import type { MutableRefObject, RefObject } from "react";
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
