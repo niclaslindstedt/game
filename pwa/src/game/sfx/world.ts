@@ -459,7 +459,8 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       // over before the next one arrived, and the car putt-putted. The fix is
       // the sustain (`holdMs`): the grain holds its peak past the next grain's
       // arrival and crossfades into it over the attack. The road minigame's
-      // engine is the same rule worked out in full (`sfx/drive.ts`).
+      // engine is the same rule worked out in full — see the road's own
+      // `drive-screen/engine-note.ts`, which is where a continuous note lives.
       const i = clamp01(event.intensity);
       synth.tone({
         type: "triangle",

@@ -24,7 +24,7 @@
 //
 // THIS FILE TOUCHES NO BROWSER. The staging is pure engine — `DriveState` and
 // the numbers in `DRIVE` — so the test above can run it in Node. Everything
-// that draws or makes a noise is the host's (`drive-exhibit.ts`).
+// that draws or makes a noise is the host's (`exhibit-run.ts`).
 
 import {
   courseLength,
@@ -58,8 +58,8 @@ import {
   SHED_SOUND,
   SMASH_SOUNDS,
   SPLIT_SOUNDS,
-} from "../drive-screen/drive-sounds.ts";
-import type { DriveExhibit } from "./exhibit-kit.ts";
+} from "./drive-sounds.ts";
+import type { DriveExhibit } from "../effects-gallery/exhibit-kit.ts";
 
 /**
  * HOW FAR AHEAD OF THE BUMPER A THING IS PLANTED so it is met about half a

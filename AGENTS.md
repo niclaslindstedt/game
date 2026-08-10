@@ -322,20 +322,62 @@ Each slot gets its own service worker and a disjoint precache cache id. See
 Each of these is a rule an ordinary change trips over, stated once here with the
 file that owns it. The reasoning behind each lives where the pointer goes.
 
-**A MINIGAME MEETS THE GAME IN FOUR PLACES AND MUST NEVER MEET IT IN A FIFTH.**
-The DRIVE is the whole simulation of a minigame and it touches the rest of the
-tree through exactly this seam: the CATALOG (`pwa/src/game/minigames.ts` — a
-startup-path leaf: names, and the VARIANTS a cabinet offers), the MOUNT
-(`MinigameScreen.tsx`, the one module allowed to know which id is which screen),
-the PARAMS (`drive-screen/begin.ts` — every question about whether a run gets one
-at all, answered once), and the two calls a run makes (`beginDrive` /
-`beginDriveHome` in `GameScreen.tsx`). Everything else lives under
-`engine/game/drive/` and `pwa/src/game/drive-screen/`. A SECOND minigame is a
-row in the catalog, a case in the mount, and its own two folders — and if it
-needs anything else, that is the thing to fix rather than the thing to add.
+**A MINIGAME LIVES IN ITS OWN TWO FOLDERS, AND MEETS THE GAME AT A NAMED SEAM.**
+The DRIVE is the whole simulation of a minigame; everything it is lives under
+`engine/game/drive/` and `pwa/src/game/drive-screen/`. The test that keeps it
+that way is blunt — **delete the two folders and nothing outside them should be
+left orphaned** — and the seam below is the list of what a deletion would then
+have to touch. A SECOND minigame is a row in the catalog, a case in the mount,
+and its own two folders; anything it needs beyond that is the thing to fix
+rather than the thing to add.
+
+The FOUR PLACES a minigame is REACHED FROM, and the whole of what a new one
+wires up:
+
+- the CATALOG (`pwa/src/game/minigames.ts` — a startup-path leaf: names, and the
+  VARIANTS a cabinet offers),
+- the MOUNT (`MinigameScreen.tsx` — the arcade shelf's door),
+- the PARAMS (`drive-screen/begin.ts` — every question about whether a run gets
+  one at all, answered once),
+- and the two calls a run makes (`beginDrive` / `beginDriveHome` in
+  `GameScreen.tsx`).
+
+…AND THE FOUR IT ALSO MEETS, each of which a deletion has to clean up. Stated
+because they are real rather than because they are right: a rule that claims
+four seams while the tree has eight teaches a session to stop looking.
+
+- **TWO MOUNTS, NOT ONE.** `GameScreen.tsx` imports `DriveScreen` directly
+  (the campaign's road: a hero doll built from `GameState`, a screenshot bind, a
+  MAIN MENU that ends the run) and `MinigameScreen.tsx` mounts it for the arcade
+  shelf (a rung, a seed, a board to land on). They are DELIBERATELY not merged —
+  the prop sets and the lifecycles are disjoint, and one component answering both
+  would be two components sharing a file.
+- **THE GALLERY** shows the road (`effects-gallery/`), so the drive EXPORTS its
+  own shelf and its own host (`drive-screen/exhibits.ts`,
+  `drive-screen/exhibit-run.ts`) and the gallery imports those rather than
+  reaching into the road's internals. What still names the drive out there is the
+  card TYPE (`DriveExhibit` in `exhibit-kit.ts`) — generalize it when there is a
+  second minigame to generalize it FOR, not before.
+- **THE ARCADE BOARD IS A CLOUD-SAVE SLOT** (`game/drive-scores.ts`, read by
+  `cloud-save.ts`). A persisted shape, so retiring it is a data migration rather
+  than a delete.
+- **THE DASHBOARD IS A HUD SURFACE** — `HudSurface = "field" | "drive"`
+  (`hud/types.ts`) plus `content/hud/`'s `drive*` regions, elements and
+  `scripts/drive.lua`. The road's own bindings are NOT here: they are
+  `drive-screen/dials.ts`, with the shared binding surface knowing only that a
+  `drive` group exists.
+
+Two smaller ones round it off: `App.tsx` lazy-imports the `?drive` developer
+workbench, and `engine/generated/botTuning.ts` carries a `DriveBotPatch` because
+`content/bot.yaml` holds the road's driver knobs.
+
 Inside the road, what is CONTENT-shaped is data: the two ends of it are layout
 tables read by one planner (`engine/game/drive/sites.ts`), and which lines a leg
-speaks is a table too (`drive-screen/voice.ts`).
+speaks is a table too (`drive-screen/voice.ts`). And what the road makes of a
+SENSE is the road's — its sounds are `drive-screen/drive-sounds.ts`, its engine
+note `drive-screen/engine-note.ts` and its vibration
+`drive-screen/drive-haptics.ts`, each speaking through a shared surface
+(`sfx/`, `game/haptics.ts`) that knows nothing about a road.
 
 **A RUN READS ITS OWN MAP — `runLevelDef(state)`, never `levelDef(state.level.id)`.**
 Every mission's geometry is CARVED per run from a blueprint, so the catalog holds

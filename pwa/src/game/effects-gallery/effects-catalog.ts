@@ -36,7 +36,7 @@ import {
   type Exhibit,
 } from "./exhibit-kit.ts";
 import { riftPortalLook } from "../render/rift-portal.ts";
-import { driveExhibits } from "./drive-exhibits.ts";
+import { driveExhibits } from "../drive-screen/exhibits.ts";
 import { sceneExhibits } from "./scene-exhibits.ts";
 import { talentExhibits } from "./talent-exhibits.ts";
 import { uiExhibits } from "./ui-exhibits.ts";
@@ -2240,7 +2240,7 @@ export function effectsCatalog(): Exhibit[] {
     // shelf stages one instead (`ui-exhibits.ts`).
     ...uiExhibits(),
     // THE ROAD, hosted by a `DriveState` rather than a run (see
-    // `drive-exhibit.ts`). It sits in this catalog rather than in a gallery of
+    // `drive-screen/exhibit-run.ts`). It sits in this catalog rather than in a gallery of
     // its own because everything ABOUT an exhibit — the search, the shelf jump,
     // the slow-motion chip, `H`, the `?effects=` deep link and the contact
     // sheet — is chrome, and the chrome is the whole reason the gallery is worth

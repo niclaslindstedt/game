@@ -69,7 +69,7 @@ import {
   ENGINE_GRAIN_MS,
   engineNote,
   playDriveEngine,
-} from "../../pwa/src/game/sfx/drive.ts";
+} from "../../pwa/src/game/drive-screen/engine-note.ts";
 import {
   createWearTrail,
   driveDials,

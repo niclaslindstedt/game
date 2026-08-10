@@ -19,8 +19,6 @@
 
 import { weaponDef, type GameState } from "@game/core";
 
-import { lapClock } from "@ui/lib/format-number.ts";
-
 import { WEAPON_CLASS_COLORS } from "../tiers.ts";
 import type { Hud } from "../game-screen/hud-model.ts";
 
@@ -136,128 +134,6 @@ export function hudBindings(
  * one value. The weapon slot widget reads it directly. */
 export function weaponSlotColors(hud: Hud): { bg: string; border: string } {
   return WEAPON_CLASS_COLORS[weaponDef(hud.weaponDefId).class];
-}
-
-/**
- * THE ROAD'S DIALS. The drive minigame publishes its own handful of values and
- * nothing else — a drive has no hero, no bag and no horde — so its bindings are
- * built from the wagon rather than from a HUD snapshot.
- *
- * `failing` is the one judgement-shaped entry, and it is deliberately still a
- * read: WHERE the line sits is the Lua script's call (`drive.damage_color`), and
- * this only answers whether the wagon is past the point the engine itself treats
- * as trouble.
- *
- * IT PUBLISHES MORE THAN THE SHIPPED DASHBOARD READS, on purpose — the top end,
- * the gear count, the revs both ways. A dial that had to wait for the app to
- * start publishing its number would be a dial nobody could author, and they
- * cost one object per publish.
- *
- * THE CRANK IS PUBLISHED TWICE AND BOTH ARE READS. `rpm` is the number a
- * tachometer PRINTS and `rpmFrac` is the arc it SWEEPS, and neither is a
- * judgement: where the needle goes red, what the gate says at a standstill and
- * when the damage dial starts shouting are all the Lua's call
- * (`hud/scripts/drive.lua`).
- */
-export type DriveDials = {
-  mph: number;
-  /** The wagon's authored top end, so a dial can print its own last number. */
-  topSpeedMph: number;
-  /** Road speed over that top end. */
-  speedFrac: number;
-  /** The engine's own gear reading, counting from zero. */
-  gear: number;
-  /** How many gears there are — the gate a gearbox draws. */
-  gearCount: number;
-  /** How far up THIS gear the wagon is: the revs. */
-  rev: number;
-  /** What the crank is actually turning at. */
-  rpm: number;
-  /** …where the box lets go of it and changes up. */
-  shiftUpRpm: number;
-  /** …and where it would stop being asked to — the tacho's last number, and a
-   * limit rather than a target: the box hands over well short of it. */
-  redlineRpm: number;
-  reversing: boolean;
-  bodies: number;
-  /** THE STOPWATCH — ms of TOWN, which is the stretch the leg is scored over
-   * (`DriveState.clockMs`). Quantised to tenths by the publisher, because that
-   * is the last digit anybody reads off a moving car. */
-  clockMs: number;
-  /** …and whether it is still running. Distinct from the time being non-zero:
-   * the clock holds its final figure through the whole arrival. */
-  clockRunning: boolean;
-  /** …and whether the leg has reached the town at all, which is what decides
-   * whether there is a clock on screen. */
-  clockStarted: boolean;
-  /** …and whether the DASHBOARD is up. A third moment again, and the earliest:
-   * the instruments arrive a short way BEFORE the town so they are settled by
-   * the time the clock starts (`driveDashUp`). */
-  dashLive: boolean;
-  /** 0..1 — how worn the wagon is. */
-  wear: number;
-  /** …and how worn it was before the last second's hits — the anchor the
-   * damage dial's FRESH slice is drawn from. Level with `wear` whenever nothing
-   * has just happened. */
-  wearSettled: number;
-  failing: boolean;
-  paused: boolean;
-};
-
-export function driveBindings(drive: DriveDials): HudValues {
-  return {
-    "drive.mph": Math.round(drive.mph),
-    "drive.topSpeedMph": Math.round(drive.topSpeedMph),
-    "drive.speedFrac": Math.max(0, Math.min(1, drive.speedFrac)),
-    "drive.gear": drive.gear,
-    // The dial counts from one, the engine counts from zero. Done here rather
-    // than in the text, so an authored line never has to do arithmetic.
-    "drive.gearLabel": drive.gear + 1,
-    "drive.gearCount": drive.gearCount,
-    "drive.rev": Math.max(0, Math.min(1, drive.rev)),
-    "drive.rpm": Math.round(drive.rpm),
-    "drive.shiftUpRpm": Math.round(drive.shiftUpRpm),
-    "drive.redlineRpm": Math.round(drive.redlineRpm),
-    // The tacho's own sweep — the crank against the LAST NUMBER ON THE FACE,
-    // which is the redline and not the shift point. Worked out here rather than
-    // authored as a division in every dial that wants it, and clamped, because
-    // a rev limiter is a thing the engine has and an arc past its own end is
-    // not. On the shipped wagon it tops out around two thirds: the box changes
-    // up a thousand revs early, so the paint at the end of the dial is
-    // something the player is shown rather than something they reach.
-    "drive.rpmFrac": Math.max(
-      0,
-      Math.min(1, drive.redlineRpm > 0 ? drive.rpm / drive.redlineRpm : 0),
-    ),
-    // …and the crank against where the box will LET GO of it, which is the
-    // reading a driver actually has: 1 is the upshift, and the approach to it is
-    // the only thing on this dial worth warning about.
-    "drive.shiftFrac": Math.max(
-      0,
-      Math.min(1, drive.shiftUpRpm > 0 ? drive.rpm / drive.shiftUpRpm : 0),
-    ),
-    "drive.reversing": drive.reversing,
-    "drive.bodies": drive.bodies,
-    // THE STOPWATCH, both ways round. The TEXT is what a dial prints and is
-    // formatted here rather than in Lua — a clock is a format, not a judgement,
-    // and a script that had to do the tenths would be four lines of arithmetic
-    // in every conversion that wanted a timer. The MS is beside it so a judgement
-    // that IS one (is this a good time, is it about to be a record) has a number
-    // to work with.
-    "drive.clock": lapClock(drive.clockMs),
-    "drive.clockMs": Math.round(drive.clockMs),
-    "drive.clockRunning": drive.clockRunning,
-    "drive.clockStarted": drive.clockStarted,
-    "drive.dashLive": drive.dashLive,
-    "drive.wear": Math.max(0, Math.min(1, drive.wear)),
-    "drive.wearSettled": Math.max(
-      0,
-      Math.min(1, Math.min(drive.wearSettled, drive.wear)),
-    ),
-    "drive.wearPercent": Math.round(100 * drive.wear),
-    "drive.failing": drive.failing,
-    "drive.paused": drive.paused,
-  };
 }
 
 /**
