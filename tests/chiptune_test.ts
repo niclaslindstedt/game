@@ -20,6 +20,7 @@ import type { NoiseOptions, Synth, ToneOptions } from "@ui/lib/synth.ts";
 import { TRACK_LOADERS } from "../pwa/src/generated/music/index.ts";
 import { TRACK as BENCH_LIGHT } from "../pwa/src/generated/music/bench_light.ts";
 import { TRACK as HQ_LOCKDOWN } from "../pwa/src/generated/music/hq_lockdown.ts";
+import { TRACK as LONG_NOON } from "../pwa/src/generated/music/long_noon.ts";
 import { TRACK as OVERDUE } from "../pwa/src/generated/music/overdue.ts";
 import { TRACK as RED_DUST } from "../pwa/src/generated/music/red_dust.ts";
 import { TRACK as REGOLITH_RIDE } from "../pwa/src/generated/music/regolith_ride.ts";
@@ -39,6 +40,7 @@ const SCORES: [string, ChiptuneTrack][] = [
   ["red_dust", RED_DUST],
   ["rift_drift", RIFT_DRIFT],
   ["bench_light", BENCH_LIGHT],
+  ["long_noon", LONG_NOON],
   ["overdue", OVERDUE],
 ];
 

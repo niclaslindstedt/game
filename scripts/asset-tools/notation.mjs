@@ -216,7 +216,7 @@ function percussionClef(x, top) {
 /** A sharp: two slanted thick beams crossed by two thin uprights. */
 function sharpGlyph(x, y) {
   const a = S * 0.34;
-  return `<g stroke="#111" fill="none">
+  return `<g class="acc" data-acc="sharp" stroke="#111" fill="none">
     <line x1="${x}" y1="${y - a * 0.4}" x2="${x + a * 2.2}" y2="${y - a * 1.1}" stroke-width="${a * 0.9}"/>
     <line x1="${x}" y1="${y + a * 1.3}" x2="${x + a * 2.2}" y2="${y + a * 0.6}" stroke-width="${a * 0.9}"/>
     <line x1="${x + a * 0.7}" y1="${y - a * 2.1}" x2="${x + a * 0.7}" y2="${y + a * 2.3}" stroke-width="${a * 0.42}"/>
@@ -227,7 +227,7 @@ function sharpGlyph(x, y) {
 /** A natural, for a letter this bar has already sharpened. */
 function naturalGlyph(x, y) {
   const a = S * 0.34;
-  return `<g stroke="#111" fill="none">
+  return `<g class="acc" data-acc="natural" stroke="#111" fill="none">
     <line x1="${x}" y1="${y - a * 2.2}" x2="${x}" y2="${y + a * 1.2}" stroke-width="${a * 0.42}"/>
     <line x1="${x + a * 1.3}" y1="${y - a * 1.2}" x2="${x + a * 1.3}" y2="${y + a * 2.2}" stroke-width="${a * 0.42}"/>
     <line x1="${x}" y1="${y - a * 0.5}" x2="${x + a * 1.3}" y2="${y - a * 1.0}" stroke-width="${a * 0.8}"/>
@@ -239,22 +239,34 @@ function naturalGlyph(x, y) {
  * as the zigzag it actually is rather than as a box. */
 function restGlyph(kind, x, top) {
   const mid = top + STAFF_H / 2;
+  const tag = `<g class="rest" data-kind="${kind}"></g>`;
   switch (kind) {
     case "whole":
-      return `<rect x="${x - S * 0.55}" y="${top + S - S * 0.42}" width="${S * 1.1}" height="${S * 0.42}" fill="#111"/>`;
+      return (
+        tag +
+        `<rect x="${x - S * 0.55}" y="${top + S - S * 0.42}" width="${S * 1.1}" height="${S * 0.42}" fill="#111"/>`
+      );
     case "half":
-      return `<rect x="${x - S * 0.55}" y="${top + 2 * S}" width="${S * 1.1}" height="${S * 0.42}" fill="#111"/>`;
+      return (
+        tag +
+        `<rect x="${x - S * 0.55}" y="${top + 2 * S}" width="${S * 1.1}" height="${S * 0.42}" fill="#111"/>`
+      );
     case "quarter":
-      return `<path d="M ${x - S * 0.3} ${mid - S * 1.5}
+      return (
+        tag +
+        `<path d="M ${x - S * 0.3} ${mid - S * 1.5}
         L ${x + S * 0.32} ${mid - S * 0.55} L ${x - S * 0.28} ${mid + S * 0.1}
         L ${x + S * 0.34} ${mid + S * 1.1}
         C ${x - S * 0.1} ${mid + S * 0.55} ${x - S * 0.42} ${mid + S * 1.05} ${x + S * 0.05} ${mid + S * 1.5}
         C ${x - S * 0.7} ${mid + S * 1.15} ${x - S * 0.5} ${mid + S * 0.3} ${x + S * 0.02} ${mid + S * 0.42}
-        L ${x - S * 0.46} ${mid - S * 0.5} Z" fill="#111"/>`;
+        L ${x - S * 0.46} ${mid - S * 0.5} Z" fill="#111"/>`
+      );
     default: {
       // Eighth and sixteenth: a slanted stroke with one blob per tail.
       const tails = kind === "16th" ? 2 : 1;
-      let out = `<line x1="${x + S * 0.42}" y1="${mid - S * (tails === 2 ? 1.3 : 0.9)}" x2="${x - S * 0.18}" y2="${mid + S * 1.1}" stroke="#111" stroke-width="${S * 0.16}"/>`;
+      let out =
+        tag +
+        `<line x1="${x + S * 0.42}" y1="${mid - S * (tails === 2 ? 1.3 : 0.9)}" x2="${x - S * 0.18}" y2="${mid + S * 1.1}" stroke="#111" stroke-width="${S * 0.16}"/>`;
       for (let i = 0; i < tails; i++) {
         const cy = mid - S * (tails === 2 ? 1.15 : 0.75) + i * S * 0.85;
         out += `<circle cx="${x + S * 0.34}" cy="${cy}" r="${S * 0.24}" fill="#111"/>`;
@@ -268,7 +280,7 @@ function restGlyph(kind, x, top) {
 /** A flag on an unbeamed eighth or sixteenth. */
 function flagGlyph(x, y, tails, up) {
   const d = up ? 1 : -1;
-  let out = "";
+  let out = `<g class="flag" data-tails="${tails}"></g>`;
   for (let i = 0; i < tails; i++) {
     const y0 = y + d * i * S * 0.82;
     out += `<path d="M ${x} ${y0} C ${x + S * 0.9} ${y0 + d * S * 0.5} ${x + S * 1.0} ${y0 + d * S * 1.3} ${x + S * 0.45} ${y0 + d * S * 2.0}
@@ -302,6 +314,10 @@ export async function engraveTrack(track, opts = {}) {
 
   const out = [];
   let y = 0;
+  /** Systems are numbered so a measurement can compare columns WITHIN one —
+   * the first system of a section is wider by its time signature, so pooling
+   * them says the grid is broken when it is not. */
+  let sysIndex = 0;
 
   // ── THE HEAD ──────────────────────────────────────────────────────────────
   if (title) {
@@ -450,6 +466,7 @@ export async function engraveTrack(track, opts = {}) {
         table,
         first: bar0 === 0,
         last: bar0 + nBars >= bars,
+        sys: sysIndex++,
         stepS,
         refPeak,
         loudRef,
@@ -548,7 +565,7 @@ async function drawSystem(out, ctx) {
     for (let k = 0; k < 5; k++) {
       const ly = top + k * S;
       out.push(
-        `<line x1="${x0}" y1="${ly}" x2="${staffX + nBars * barW}" y2="${ly}" stroke="#111" stroke-width="${LINE_W}"/>`,
+        `<line class="staffline" data-lane="${esc(lane.name)}" data-line="${k}" x1="${x0}" y1="${ly}" x2="${staffX + nBars * barW}" y2="${ly}" stroke="#111" stroke-width="${LINE_W}"/>`,
       );
     }
     // The name, and the clef.
@@ -577,6 +594,7 @@ async function drawSystem(out, ctx) {
       table,
       names,
       nameDy: nameDy[i],
+      sys: ctx.sys,
     });
   });
 
@@ -917,12 +935,12 @@ function drawLane(out, lane, ctx) {
       if (lane.drum) {
         const r = HEAD_RX * 0.8;
         out.push(
-          `<g stroke="#111" stroke-width="1.8" stroke-linecap="round"><line x1="${x - r}" y1="${yy - r}" x2="${x + r}" y2="${yy + r}"/><line x1="${x - r}" y1="${yy + r}" x2="${x + r}" y2="${yy - r}"/></g>`,
+          `<g class="head" data-sys="${ctx.sys}" data-lane="${esc(lane.name)}" data-clef="${lane.clef}" data-note="${span.token}" data-kind="${piece.kind}" data-at="${piece.at}" data-cx="${x}" data-cy="${yy}" stroke="#111" stroke-width="1.8" stroke-linecap="round"><line x1="${x - r}" y1="${yy - r}" x2="${x + r}" y2="${yy + r}"/><line x1="${x - r}" y1="${yy + r}" x2="${x + r}" y2="${yy - r}"/></g>`,
         );
       } else {
         const solid = filled.has(piece.kind);
         out.push(
-          `<ellipse cx="${x}" cy="${yy}" rx="${HEAD_RX}" ry="${HEAD_RY}" transform="rotate(-22 ${x} ${yy})" fill="${solid ? "#111" : "none"}" stroke="#111" stroke-width="${solid ? 0 : 1.6}"/>`,
+          `<ellipse class="head" data-sys="${ctx.sys}" data-lane="${esc(lane.name)}" data-clef="${lane.clef}" data-note="${span.token}" data-kind="${piece.kind}" data-at="${piece.at}" data-cx="${x}" data-cy="${yy}" cx="${x}" cy="${yy}" rx="${HEAD_RX}" ry="${HEAD_RY}" transform="rotate(-22 ${x} ${yy})" fill="${solid ? "#111" : "none"}" stroke="#111" stroke-width="${solid ? 0 : 1.6}"/>`,
         );
         // THE NAME, UNDER THE STAFF — set like a lyric, which is where a
         // score has always put a word that belongs to a note.
@@ -948,19 +966,20 @@ function drawLane(out, lane, ctx) {
         out.push(
           `<circle cx="${x + HEAD_RX + 4}" cy="${yy - (half % 2 === 0 ? S / 2 : 0)}" r="1.7" fill="#111"/>`,
         );
-      // The stem — everything but a whole note has one.
+      // THE STEM IS NOT DRAWN HERE. Every stemmed note is recorded and the
+      // stems go on in ONE pass below, after the beam groups are known.
+      //
+      // Drawing it here as well was a real bug and a visible one: a beam takes
+      // ONE direction for the whole group, so any note whose own preference
+      // disagreed ended up with two stems — the group's, and a leftover stub
+      // hanging off the other side of its head. An octave-pumping bass, where
+      // the low note wants its stem up and the high note wants it down, grew a
+      // leg on every second note.
       if (piece.kind !== "whole") {
-        const sx = up ? x + HEAD_RX - 0.6 : x - HEAD_RX + 0.6;
-        const sy = up ? yy - STEM_LEN : yy + STEM_LEN;
-        out.push(
-          `<line x1="${sx}" y1="${yy}" x2="${sx}" y2="${sy}" stroke="#111" stroke-width="${STEM_W}"/>`,
-        );
         heads.push({
           at: piece.at,
           x,
           y: yy,
-          sx,
-          sy,
           up,
           tails,
           kind: piece.kind,
@@ -974,25 +993,46 @@ function drawLane(out, lane, ctx) {
     }
   }
 
-  // ── BEAMS ─────────────────────────────────────────────────────────────────
+  // ── STEMS AND BEAMS ───────────────────────────────────────────────────────
   // Consecutive tailed notes inside one BEAT are beamed, which is the thing
-  // that makes a rhythm readable at a glance instead of countable.
+  // that makes a rhythm readable at a glance instead of countable. Everything
+  // else gets a stem of its own, with a flag if it has tails.
+  const midLine = top + STAFF_H / 2;
+  /** Where a stem attaches to its head — the right side going up, the left
+   * going down, which is what stops a stem from bisecting the notehead. */
+  const stemX = (h, up) => (up ? h.x + HEAD_RX - 0.6 : h.x - HEAD_RX + 0.6);
+  const stem = (h, up, to) =>
+    out.push(
+      `<line class="stem" data-up="${up ? 1 : 0}" x1="${stemX(h, up)}" y1="${h.y}" x2="${stemX(h, up)}" y2="${to}" stroke="#111" stroke-width="${STEM_W}"/>`,
+    );
+
   let group = [];
   const flush = () => {
-    if (group.length >= 2) {
-      const up = group.filter((g) => g.up).length * 2 >= group.length;
+    if (group.length === 1) {
+      const g = group[0];
+      const to = g.up ? g.y - STEM_LEN : g.y + STEM_LEN;
+      stem(g, g.up, to);
+      // A flag hangs off the stem's TIP and curls back toward the head: down
+      // from an up-stem, up from a down-stem.
+      if (g.tails > 0) out.push(flagGlyph(stemX(g, g.up), to, g.tails, g.up));
+    } else if (group.length > 1) {
+      // THE GROUP'S DIRECTION IS THE FARTHEST NOTE'S, which is the engraver's
+      // rule and not a vote: whichever note lies furthest from the middle line
+      // decides, because that is the one whose stem would otherwise have to run
+      // clean across the staff.
+      const above = Math.max(...group.map((g) => midLine - g.y));
+      const below = Math.max(...group.map((g) => g.y - midLine));
+      // …and it points AWAY from that note: a group that reaches low stems UP,
+      // one that reaches high stems DOWN. Which is the same rule the single
+      // notes follow (`up = half < 4`) — having the two disagree is what put
+      // the beam under an octave-pumping bass instead of over it.
+      const up = below >= above;
       const tipY = up
         ? Math.min(...group.map((g) => g.y)) - STEM_LEN
         : Math.max(...group.map((g) => g.y)) + STEM_LEN;
-      for (const g of group) {
-        const sx = up ? g.x + HEAD_RX - 0.6 : g.x - HEAD_RX + 0.6;
-        g.sx = sx;
-        out.push(
-          `<line x1="${sx}" y1="${g.y}" x2="${sx}" y2="${tipY}" stroke="#111" stroke-width="${STEM_W}"/>`,
-        );
-      }
-      const x1 = group[0].sx;
-      const x2 = group[group.length - 1].sx;
+      for (const g of group) stem(g, up, tipY);
+      const x1 = stemX(group[0], up);
+      const x2 = stemX(group[group.length - 1], up);
       const beams = Math.max(...group.map((g) => g.tails));
       for (let b = 0; b < beams; b++) {
         const by = up
@@ -1000,7 +1040,7 @@ function drawLane(out, lane, ctx) {
           : tipY - b * (BEAM_H + BEAM_GAP) - BEAM_H;
         if (b === 0) {
           out.push(
-            `<rect x="${x1 - STEM_W / 2}" y="${by}" width="${x2 - x1 + STEM_W}" height="${BEAM_H}" fill="#111"/>`,
+            `<rect class="beam" x="${x1 - STEM_W / 2}" y="${by}" width="${x2 - x1 + STEM_W}" height="${BEAM_H}" fill="#111"/>`,
           );
           continue;
         }
@@ -1009,11 +1049,11 @@ function drawLane(out, lane, ctx) {
         let run = [];
         const emit = () => {
           if (run.length === 0) return;
-          const a = run[0].sx;
-          const z = run[run.length - 1].sx;
+          const a = stemX(run[0], up);
+          const z = stemX(run[run.length - 1], up);
           const w = run.length === 1 ? S * 0.9 : z - a + STEM_W;
           out.push(
-            `<rect x="${a - STEM_W / 2}" y="${by}" width="${w}" height="${BEAM_H}" fill="#111"/>`,
+            `<rect class="beam" x="${a - STEM_W / 2}" y="${by}" width="${w}" height="${BEAM_H}" fill="#111"/>`,
           );
           run = [];
         };
@@ -1023,24 +1063,23 @@ function drawLane(out, lane, ctx) {
         }
         emit();
       }
-    } else if (group.length === 1 && group[0].tails > 0) {
-      const g = group[0];
-      // A flag hangs off the stem's TIP and curls back toward the head: down
-      // from an up-stem, up from a down-stem.
-      out.push(flagGlyph(g.sx, g.sy, g.tails, g.up));
     }
     group = [];
   };
   for (const h of heads) {
+    // A note with no tail can never be beamed, so it is always its own group.
     if (h.tails === 0) {
+      flush();
+      group = [h];
       flush();
       continue;
     }
-    const beat = Math.floor(h.at / stepsPerBeat);
     if (group.length > 0) {
       const last = group[group.length - 1];
       const contiguous = last.at + stepsForKind(last, stepsPerBeat) === h.at;
-      if (Math.floor(last.at / stepsPerBeat) !== beat || !contiguous) flush();
+      const sameBeat =
+        Math.floor(last.at / stepsPerBeat) === Math.floor(h.at / stepsPerBeat);
+      if (!sameBeat || !contiguous) flush();
     }
     group.push(h);
   }
@@ -1065,10 +1104,10 @@ function stepsForKind(piece, stepsPerBeat) {
 }
 
 const ledger = (x, y) =>
-  `<line x1="${x - S * 0.95}" y1="${y}" x2="${x + S * 0.95}" y2="${y}" stroke="#111" stroke-width="${LINE_W}"/>`;
+  `<line class="ledger" x1="${x - S * 0.95}" y1="${y}" x2="${x + S * 0.95}" y2="${y}" stroke="#111" stroke-width="${LINE_W}"/>`;
 
 const tie = (x1, y1, x2, y2, up) => {
   const d = up ? -1 : 1;
   const my = (y1 + y2) / 2 + d * S * 1.1;
-  return `<path d="M ${x1 + HEAD_RX * 0.4} ${y1 + d * S * 0.55} Q ${(x1 + x2) / 2} ${my} ${x2 - HEAD_RX * 0.4} ${y2 + d * S * 0.55}" fill="none" stroke="#111" stroke-width="1.3"/>`;
+  return `<path class="tie" d="M ${x1 + HEAD_RX * 0.4} ${y1 + d * S * 0.55} Q ${(x1 + x2) / 2} ${my} ${x2 - HEAD_RX * 0.4} ${y2 + d * S * 0.55}" fill="none" stroke="#111" stroke-width="1.3"/>`;
 };

@@ -61,6 +61,8 @@ make town          # LOOK at the DRIVE's town, five stops along the road to GOOD
 make town ARGS="--site home"   # …and at what a leg ARRIVES at, either end
 make gallery       # LOOK at any EFFECT — the effects gallery as a filmstrip PNG
 make sheet ARGS="overdue"      # LOOK at a SCORE — a track engraved as sheet music
+make song FILE=x.song          # write a SCORE the short way, and engrave it
+make audition ARGS="overdue"   # HEAR a score — the page that plays it, for an artifact
 make bump          # print the release bump derived from .changes/unreleased/
 npm run parity     # rewrite docs/desktop-parity.md from the two desktop trees
 npm run shell:bench    # weigh the packaged desktop builds; read this machine's cold starts
