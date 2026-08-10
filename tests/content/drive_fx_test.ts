@@ -25,6 +25,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createDrive,
+  engineRpm,
   vehicleDef,
   DRIVE,
   DRIVETRAIN,
@@ -461,6 +462,38 @@ function gearOpening(gear: number): number {
   }
   return DRIVE.topSpeedPx;
 }
+
+describe("the tachometer's figure", () => {
+  // THE CRANK IS PUBLISHED WHOLE, and it is the one continuous dial on this
+  // dashboard that is. It was quantised to fifty, which is invisible on the ARC
+  // and very visible on the FIGURE printed under it — the last two digits could
+  // only ever read 00 or 50, so the number stepped in hundreds while the needle
+  // swept smoothly, which reads as a broken instrument rather than a calm one.
+  it("publishes the crank whole rather than in steps", () => {
+    const drive = createDrive({
+      seed: 11,
+      direction: 1,
+      to: "goodco_hq",
+      difficulty: "medium",
+      gib: true,
+      split: true,
+    });
+    // A speed the quantiser would have rounded away from: what the dial says
+    // has to be what the crank is doing, to the rev.
+    for (const speed of [140, 141, 142, 143]) {
+      drive.car.speed = speed;
+      expect(driveDials(drive, false).rpm).toBe(Math.round(engineRpm(speed)));
+    }
+    // …and two speeds a hair apart must not collapse onto the same figure, or
+    // the readout is stepping again under a different name.
+    const seen = new Set<number>();
+    for (let speed = 140; speed < 160; speed += 1) {
+      drive.car.speed = speed;
+      seen.add(driveDials(drive, false).rpm);
+    }
+    expect(seen.size).toBe(20);
+  });
+});
 
 describe("the damage dial's fresh slice", () => {
   // THE ONE PIECE OF THE DASHBOARD WITH A CLOCK IN IT. Everything else on the

@@ -87,6 +87,7 @@ import {
   type Burst,
 } from "./loop.ts";
 import { endDrive } from "./end-drive.ts";
+import { feelDrive } from "./drive-haptics.ts";
 import { drawDrive, driveCamera } from "./render.ts";
 
 /** The simulation's fixed step (ms) — the engine's own, so a drive ticks at the
@@ -737,6 +738,16 @@ export function DriveScreen({
           say,
         );
         ageSpeech(drive.ms);
+        // …AND WHAT THE WHEEL FELT. Read off the tick's own events after the
+        // drain, exactly as the fade below is, and sized by the collision's own
+        // energy so a body clipped at forty and a van met square are not the
+        // same buzz (`drive-haptics.ts`).
+        //
+        // NOBODY'S THUMB, NO BUZZ — the same `auto` rule that already takes
+        // away the title card, the pause card and the high-score board. An
+        // attract loop that vibrated a phone nobody is holding is the one
+        // failure this cue has, and it is the loudest one.
+        if (!auto) feelDrive(drive);
         // THE PICTURE GOING OUT. Read off the tick's own events rather than off
         // a clock kept out here, so the fade starts on exactly the beat the
         // engine says it does — and read AFTER the drain, which is where the
@@ -883,7 +894,7 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, arrive, assets, clearSpeech, nose, say]);
+  }, [ageSpeech, arrive, assets, auto, clearSpeech, nose, say]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {

@@ -120,8 +120,9 @@ export type SwipeBars = "on" | "off";
 export type KeyboardMove = "on" | "off";
 
 /** Vibration feedback — taking a hit (scaled to hp lost), the hero's death,
- * menu presses, and the dialogue crawl. `off` silences it; on iOS in a browser
- * — no Vibration API — it is a noop regardless (see haptics.ts). */
+ * every collision on the ROAD (scaled to the energy the wagon absorbed), menu
+ * presses, and the dialogue crawl. `off` silences all of it; on iOS in a
+ * browser — no Vibration API — it is a noop regardless (see haptics.ts). */
 export type Vibration = "on" | "off";
 
 /** DEBUG mode: a developer-only toggle. `on` shows the in-run FPS meter

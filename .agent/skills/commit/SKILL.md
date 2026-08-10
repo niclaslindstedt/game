@@ -33,7 +33,14 @@ it at both ends of the session.
   the PR-only checks against it, nobody is asked to look at it, and the work
   sits done and unmergeable until somebody notices. If a PR is already open
   for the branch, the push updates it and there is nothing more to do.
-- **Push and open the PR WHILE the final verification runs, not after it.**
+- **Push and open the PR WHILE the final verification runs, not after it —
+  on the MANUAL path.** This convention and the preferred command below are
+  two different shapes, and trying to follow both wastes a whole-repo run:
+  `scripts/commit-pr.mjs` runs build, test, lint and fmt-check ITSELF, ahead
+  of the push, and serializes them on purpose. So either hand the whole thing
+  to the command and start nothing alongside it, or drive the manual steps and
+  overlap the push as below — never both. (The gates cannot overlap each other
+  in any case: each opens by regenerating the same content tree.)
   The full suite takes minutes and passes almost every time, so waiting for it
   before pushing spends that time twice — once locally and again in CI, which
   is about to run the same checks anyway. Start `make test` in the background,

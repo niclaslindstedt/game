@@ -70,13 +70,21 @@ children:
     kind: panel
     class: drive-dial-face
     children:
-      # THE FIGURE FOLLOWS THE ARC, so it reads the settling value rather than
-      # the live one: a hit lights its slice, and then the percentage counts up
-      # into it as the calm arc sweeps over. A number that snapped while its own
-      # ring glided read as two readouts disagreeing about the same car.
+      # THE FIGURE IS THE LIVE DAMAGE, and it does NOT wait for the arc.
+      #
+      # It read `drive.wearSettled` first, on the theory that a number snapping
+      # while its own ring glided would read as two readouts disagreeing. In the
+      # hand it reads as something worse: the figure is the part of this dial a
+      # player actually checks, and holding it for the second the fresh slice is
+      # lit meant a collision he had just felt through the wheel showed up on the
+      # dashboard a beat and a half after he had stopped looking. What the two
+      # rings are for is showing WHAT THE LAST SECOND COST — the fresh arc is
+      # already the whole answer to "which part of this is new" — so the number
+      # is free to be the plain, immediate truth about the car, which is the one
+      # question it is ever asked.
       - id: damage_number
         kind: text
-        bind: drive.wearSettled
+        bind: drive.wear
         format: percent
         scale: 3
         color:

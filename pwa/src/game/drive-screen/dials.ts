@@ -9,11 +9,16 @@
 // already follow (`loop.ts`): the two hosts share every function and disagree
 // only about what is standing in front of the bumper.
 //
-// EVERYTHING CONTINUOUS IS QUANTISED, on purpose. A needle wants smooth, but
-// each of these is a React publish: at sixty frames a second an unrounded rev
-// counter would re-resolve the whole HUD every frame, for a change nobody can
-// see. (A genuinely 60fps needle is a render-loop handle, the way the stamina
-// bar is.)
+// ALMOST EVERYTHING CONTINUOUS IS QUANTISED, on purpose. Each of these is a
+// React publish: at sixty frames a second an unrounded dial would re-resolve
+// the whole HUD every frame, for a change nobody can see. (A genuinely 60fps
+// needle is a render-loop handle, the way the stamina bar is.)
+//
+// THE CRANK IS THE EXCEPTION, and it earns it. Quantisation is invisible on an
+// ARC and very visible on a FIGURE, and the rev counter is the one continuous
+// value on this dashboard that is PRINTED as well as swept — so a step big
+// enough to be free was a step big enough to read as a broken instrument. It is
+// published whole; see `rpm` below for what that costs.
 
 import {
   driveDashUp,
@@ -52,10 +57,15 @@ export const FAILING_WEAR_PERCENT = 70;
  * a percentage nobody notices: the hit is the thing worth showing, so the arc
  * the last second put on is drawn in its own colour and only THEN folds into
  * the rest.
+ *
+ * IT IS THE ARC'S ALONE. The figure in the middle of the dial reads the live
+ * wear and always has the current number; this exists so the RING can say which
+ * part of its own sweep the last second is responsible for.
  */
 export type WearTrail = {
-  /** The wear the calm arc is drawn to and the FIGURE reads — behind the live
-   * damage while a hit is fresh, then climbing to meet it. */
+  /** The wear the calm arc is drawn to — behind the live damage while a hit is
+   * fresh, then climbing to meet it. The FIGURE is not drawn from this: it
+   * reads the live wear, so the percentage moves on the tick the hit lands. */
   settled: number;
   /** Drive-clock ms of the most recent hit. */
   hitMs: number;
@@ -100,11 +110,16 @@ const WEAR_HOT_MS = 1000;
 /**
  * …and how long it then takes to catch up (ms).
  *
- * THE FIGURE COUNTS UP WITH THE ARC, which is the whole reason this is a tween
- * in here rather than a CSS transition on the arc alone: a dial whose ring
- * glided while its percentage snapped read as two readouts disagreeing. Both
- * are drawn from `wearSettled`, so the number ticks 1% at a time round the
- * sweep and lands exactly as the arc does.
+ * A TWEEN IN HERE RATHER THAN A CSS TRANSITION ON THE ARC, because the anchor
+ * has to be a NUMBER the whole dial can be resolved against: the fresh slice is
+ * drawn from `wear` and the calm one from this, and a glide that lived in the
+ * stylesheet would leave the two arcs with no shared account of where the
+ * highlight currently ends.
+ *
+ * THE FIGURE NO LONGER WAITS FOR IT. The percentage is bound to the LIVE wear
+ * (`content/hud/elements/drive_damage.yaml`) — a hit felt through the wheel has
+ * to be on the dashboard by the time the player's eyes get there, and the
+ * fresh arc is already the whole answer to which part of the sweep is new.
  */
 const WEAR_CATCH_MS = 420;
 
@@ -140,7 +155,17 @@ export function driveDials(
     gear: gearFor(speed),
     gearCount: GEAR_COUNT,
     rev: Math.round(gearRev(speed) * 16) / 16,
-    rpm: Math.round(engineRpm(speed) / 50) * 50,
+    // THE CRANK IS THE ONE CONTINUOUS DIAL PUBLISHED WHOLE, and it is an
+    // exception to the rule above it rather than an oversight. It was quantised
+    // to fifty, which is invisible on the ARC and very visible on the FIGURE:
+    // the tacho's last two digits could only ever read 00 or 50, so a needle
+    // sweeping the whole face was printed as a number stepping in hundreds, and
+    // a rev counter that moves in hundreds reads as a rev counter that is
+    // broken. The cost is real and bounded — the dials republish on every frame
+    // the throttle is doing anything, rather than the ~30 times a second a
+    // 50-rpm step allowed — and it buys the one readout on this dashboard whose
+    // whole job is to be seen climbing.
+    rpm: Math.round(engineRpm(speed)),
     shiftUpRpm: DRIVETRAIN.shiftUpRpm,
     redlineRpm: DRIVETRAIN.redlineRpm,
     reversing: drive.car.speed < 0,
