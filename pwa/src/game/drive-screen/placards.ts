@@ -91,7 +91,7 @@ export const GLUED_BARKS: readonly string[] = [
  * just somebody hoping there is food on a Thursday.
  */
 export const CROWD_THOUGHTS: readonly string[] = [
-  "AT LEAST LOVE IS FREE",
+  "SHE STILL WAITS UP FOR ME",
   "I WISH I WAS ON WELFARE",
   "I HOPE FOODCO DOES ANOTHER GIVEAWAY",
   "I AM SO TIRED OF BEGGING",
@@ -113,7 +113,7 @@ export const CROWD_THOUGHTS: readonly string[] = [
   "THE BUS COSTS MORE THAN BREAD NOW",
   "MY DAUGHTER SENDS WHAT SHE CAN",
   "SIXTY MORE AND I SLEEP INSIDE",
-  "NOBODY TELLS YOU HOW LOUD HUNGER IS",
+  "MY STOMACH WON'T SHUT UP",
   "I USED TO GIVE TO COLLECTIONS",
   "THEY SAY THE JOBS WENT TO MARS",
   "MY WIFE WOULD HATE SEEING ME HERE",

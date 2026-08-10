@@ -28,9 +28,10 @@ on that welfare money. Nobody in the game remarks on this, least of all him.
 
 **Ada goes out** for chips and soda on movie night and does not come back. The
 tracking beacon the hero sewed into her jacket answers from one place: GOODCO —
-THE GENUINELY GOOD COMPANY — the campus he built engines at for ten years until
-the machine learned his job and they walked him out. He takes the weapon off his
-living-room wall, gets in the car, and drives an hour to fetch her.
+THE GENUINELY GOOD COMPANY — the campus he built engines at for ten years, until
+they sat a machine at his bench and gave him a box for his mug. He takes the
+weapon off his living-room wall, gets in the car, and drives an hour to fetch
+her.
 
 **He is late.** She was flown off the planet an hour before he got through the
 door. What the building can still give him is the one engine part his garage

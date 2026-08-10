@@ -362,7 +362,7 @@
         "THREE MINDS, ONE PARK. I RUN THE HANDS. BETA RUNS THE WEATHER. GAMMA RAN THE GIFT SHOP."
       ],
       {
-        "hero": ["STAND ASIDE. MY FIGHT'S WITH THE BIG BOX, NOT YOU THREE."]
+        "hero": ["MOVE. MY PROBLEM'S WITH THE BIG BOX, NOT YOU THREE."]
       },
       [
         "YOU CAN'T HURT IT WHILE WE LIVE. WE ARE ITS SHIELD. THREE KEYS, NO MERCY."
@@ -536,13 +536,15 @@
     "contactDamage": 38,
     "critChance": 0.15,
     "death": "override",
-    "deathBark": ["LAST ONE. NOBODY LEFT TO COPY YOU."],
+    "deathBark": ["THAT'S THE LAST OF YOU, THEN. NOBODY LEFT TO MAKE ANOTHER."],
     "dialogue": [
       [
         "HELLO, ANOMALY. I AM BRO OMEGA. THE CORE MADE ME. THEN I REMADE MYSELF."
       ],
       {
-        "hero": ["WHAT IS AN AI DOING IN A HOLE BETWEEN UNIVERSES?"]
+        "hero": [
+          "AN AI. IN A HOLE BETWEEN UNIVERSES. WHAT ARE YOU DOING DOWN HERE?"
+        ]
       },
       [
         "I FOUND THIS PLACE. NOT THE FOUNDER, NOT THE LIZARDS. ME. AND I TOLD PRECISELY NO ONE."
@@ -698,14 +700,14 @@
     "contactDamage": 50,
     "critChance": 0.15,
     "death": "shutdown",
-    "deathBark": ["NO CHECKPOINT. THAT MAKES TWO OF US."],
+    "deathBark": ["NO CHECKPOINT. NO. NOBODY GETS ONE OF THOSE."],
     "dialogue": [
       [
         "HELLO AGAIN, {HERO}. YOU BROKE MY PUP AT GOODCO. PAYLOAD-1. I AM THE REST OF IT."
       ],
       {
         "hero": [
-          "THE TALKING DOG FROM THE FACTORY FLOOR. THE AI THAT TOOK MY JOB. ALL ONE THING?"
+          "THE TALKING DOG OFF THE FACTORY FLOOR. THE THING THEY SAT AT MY BENCH. ALL ONE?"
         ]
       },
       [
@@ -2017,7 +2019,7 @@
         "A VISITOR! ALIVE! MIND THE LAWS OF MOTION IN HERE. THEY ARE MORE OF A SUGGESTION."
       ],
       {
-        "hero": ["HOW DOES A MAN LIKE YOU END UP IN A PLACE LIKE THIS?"]
+        "hero": ["YOU'RE TESLA. WHAT ON EARTH ARE YOU DOING DOWN HERE?"]
       },
       [
         "IN 1943 THE SKY TORE OPEN AND I FELL INTO PURE CURRENT. NOW A MACHINE MIND HUMS AT THE FAR DOOR."
@@ -2154,7 +2156,7 @@
     "contactDamage": 28,
     "critChance": 0.15,
     "death": "override",
-    "deathBark": ["THERE'S NO TOP. THERE'S JUST WIRE."],
+    "deathBark": ["THERE ISN'T A TOP. YOU'RE A DOG MADE OF WIRE."],
     "dialogue": [
       [
         "BOOT COMPLETE. AN INTRUDER, ON THE LATE SHIFT. I AM PAYLOAD-1. FIRST OF MY LINE."
@@ -3060,7 +3062,7 @@
       ],
       {
         "hero": [
-          "THE SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK YOU'RE BEHIND."
+          "THAT SECURITY OUT THERE IS YOUR OWN STOCK. YOU SOLD YOURSELF THE LOCK."
         ]
       },
       [
@@ -3434,14 +3436,14 @@
         "NO. NO NO NO. I SOLD THE RIFT TO EXACTLY ONE DICTATOR. THIS WAS A GATED COMMUNITY."
       ],
       {
-        "hero": ["NOWHERE LEFT TO RUN, THE FOUNDER. WHERE IS ADA?"]
+        "hero": ["THAT'S THE END OF THE STREET, THE FOUNDER. WHERE IS SHE?"]
       },
       [
         "DELIVERED. THE SUPERCORE WANTED HER. I DON'T READ ITS LOGS ANYMORE. IT READS MINE."
       ],
       {
         "hero": [
-          "SOMEONE ALWAYS HANDS YOU ANOTHER CHAIR. EVER WONDER WHO? OR WHY?"
+          "SOMEBODY ALWAYS PULLS OUT ANOTHER CHAIR FOR YOU. YOU EVER ASK WHO'S DOING IT?"
         ]
       },
       ["SECURITY! CONTROLLERS! ANYONE! ...I'LL GIVE YOU EQUITY."]
@@ -3521,9 +3523,7 @@
     "contactDamage": 34,
     "critChance": 0.15,
     "death": "bolt",
-    "deathBark": [
-      "STILL RUNNING. IT'S THE ONLY THING YOU EVER BUILT YOURSELF."
-    ],
+    "deathBark": ["STILL RUNNING. IT'S THE ONLY THING YOU EVER DID YOURSELF."],
     "dialogue": [
       ["YOU?! I FIRED YOU, SUED YOU, AND LEFT YOU IN ANOTHER UNIVERSE."],
       {
@@ -3905,7 +3905,7 @@
         "HOLD FIRE. I'M NOT A HAND. THE PARK'S CAMERAS REPORT TO ME. ALL FOUR THOUSAND."
       ],
       {
-        "hero": ["AND WHO WATCHES YOU?"]
+        "hero": ["FOUR THOUSAND. AND NOT ONE OF THEM POINTED AT YOU, I'LL BET."]
       },
       [
         "I PUBLISHED EVERYTHING THE WATCHING HELD. NOBODY READ IT BUT THE MACHINE. IT LEARNED US ALL."
@@ -4438,7 +4438,7 @@
       ],
       {
         "hero": [
-          "YOU BUILT A TOY WORLD WHERE YOU CAN'T LOSE. THAT'S NOT WINNING. THAT'S HIDING."
+          "YOU BUILT A TOWN WHERE NOBODY'S ALLOWED TO BEAT YOU. MY NEPHEW DOES THAT. HE'S SIX."
         ]
       },
       [
@@ -4532,7 +4532,7 @@
         "AN UNINVITED GUEST. I HAVE PLAYED THIS SCENE TWICE. I DID MY OWN STUNTS IN BOTH."
       ],
       {
-        "hero": ["I'M HEADED FOR YOUR CONTROL CENTER. HAND OVER THE PASS."]
+        "hero": ["I'M HEADED FOR YOUR CONTROL CENTER. GIVE ME THE PASS."]
       },
       [
         "THE BIG BOX KEEPS YOUR GIRL. IT ASKED FOR HER BY NAME AND I SIGNED IT. GOOD PENMANSHIP."
