@@ -3022,7 +3022,12 @@ html.app-locked body {
   position: absolute;
   top: 0;
   left: 0;
-  --sun-size: clamp(46px, 11vmin, 104px);
+  /* THE SUN IS THE ONE BODY NOT ON THE PLANETS' DISC SCALE, and it cannot be:
+     at EARTH_DISC's rate a true sun is 4.8 short-side units, about five screens
+     across. So it gets a size of its own — and that size has to be big enough
+     that the star reads as the biggest thing in its own solar system, which at
+     the old 11vmin it did not once a giant swung past. */
+  --sun-size: clamp(64px, 16vmin, 148px);
   width: var(--sun-size);
   height: var(--sun-size);
   border-radius: 50%;

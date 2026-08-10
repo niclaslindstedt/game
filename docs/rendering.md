@@ -1548,6 +1548,19 @@ Forward-scattering (the tenuous rings glowing when backlit) is deliberately NOT
 implemented: a superior world is only ever seen near conjunction, fully lit, so
 it would be dead code in this sky.
 
+**SIZE IS A PERSPECTIVE DIVIDE, AND IT USED NOT TO BE.** A body's drawn size is
+`camZ / |body − camera|`, normalised so something at the sun's distance draws at
+1 — the camera being a real place (`CAM_AU`, 3 AU out). It was `1 − DEPTH·far`:
+linear in normalised depth and capped at a 30% swing, so a world at conjunction
+came out very nearly as big as one at its closest and Jupiter beyond the sun was
+drawn about 3× WIDER than the sun it was passing behind. Under the divide
+Jupiter at 8.2 AU comes out about a third of that, Saturn about a quarter, and
+the inner four visibly swell as they round the front. It is still not the whole
+truth: true angular size would have the sun 27× wider than Jupiter, and the sun
+cannot be on `EARTH_DISC`'s scale at all (it would be 4.8 short-side units,
+about five screens). So the star keeps a size of its own (`--sun-size`), chosen
+to be big enough that it reads as the biggest thing in its own system.
+
 **A PLANET IS OPAQUE.** The globe shader lights the sphere per pixel, so the
 night side is already dark and a backlit limb already keeps the thread of air a
 crescent needs; anything that wants a body DIMMER — distance, or a superior
