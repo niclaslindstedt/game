@@ -112,10 +112,21 @@ shipped track predates it, and `yaml → song → yaml` is lossless, so it is sa
 **Flats do not exist.** The note token is `[A-G]#?<octave>`, so E♭ is written
 `D#` and B♭ is `A#`. A `Db4` fails the schema.
 
-**Target ~2 minutes a loop with real section contrast** — intro / verse / chorus
-/ breakdown / build / turnaround. `tests/chiptune_test.ts` enforces the shape:
-loop length 100–145 s, at least 4 patterns, and an order longer than the pattern
-list (so something repeats).
+**WRITE TO THE LENGTH OF THE THING IT PLAYS UNDER, and that is two answers.**
+A LEVEL theme is a bed under something that runs for minutes: **~2 minutes a
+loop** with real section contrast — intro / verse / chorus / breakdown / build /
+turnaround. A MINIGAME's score is a PIECE, not a bed — a leg of the DRIVE is
+over in 40–60 s, so its loop is **~50 s** and the whole arc has to land before
+the player arrives. `tests/chiptune_test.ts` enforces both through a
+`SHORT_FORM` set of ids (100–145 s otherwise, 40–65 s inside it), plus at least
+4 patterns and an order longer than the pattern list (so something repeats).
+
+Getting this wrong is invisible and expensive: the road's two scores were
+written to the level bound and spent 45% of their bars — break, build and turn —
+on a listener who had already arrived. **Before composing anything, ask how long
+the player will actually be listening**, and measure it rather than guessing
+(`make drive-bench` for the road). `GAME_NOTES.md` has the short form's
+arrangement shape and the three things it does differently.
 
 ### Where a track gets NAMED
 
@@ -171,11 +182,12 @@ make album ARGS="title bench_light overdue"  # …in that running order
 2. **Compile and engrave in one step** — `make song FILE=content/songs/<id>.song`
    writes `content/music/<id>.yaml` and draws the sheet. A miscounted bar is an
    error with a bar number on it; a typo'd note fails at the SCHEMA, before it
-   can reach a run. **Read the `N bars ≈ Ns` it prints**: the loop bound is
-   100–145 s and the section lengths that feel right put a fast score under the
-   floor and a slow one over the ceiling. Settle it by adding or removing an
-   entry from `order` — the tempo is a decision about the piece, the order is
-   arithmetic.
+   can reach a run. **Read the `N bars ≈ Ns` it prints** and check it against
+   the bound this score's ROLE has (100–145 s for a level, 40–65 s for a
+   minigame — see above): the section lengths that feel right put a fast score
+   under the floor and a slow one over the ceiling. Settle it by adding or
+   removing an entry from `order` — the tempo is a decision about the piece, the
+   order is arithmetic.
 3. **LOOK AT THE SHEET, section by section.** A whole track engraves thousands
    of pixels tall and is illegible once it has been scaled down to be read — so
    read one `--pattern` at a time. Judge it against the first rubric below.

@@ -2,22 +2,25 @@
 # AN HOUR BEHIND — compiled from a .song by scripts/song-import.mjs.
 #
 # Arrangement (176 bpm, 4/4, one bar = 16 sixteenth-note steps):
-#   intro(4) a(8) a2(8) b(8) a(8) hole(8) build(8) b(8) a2(8) turn(8)
-#   = 76 bars ≈ 104 s per loop.
+#   intro(4) a(8) slip(4) b(8) slip(4) turn(8)
+#   = 36 bars ≈ 49 s per loop.
 id: hour_behind
 name: AN HOUR BEHIND
 description: >-
-  The road home, and it is not the relief version of OVERDUE. He has the
-  part on the passenger seat and she left the planet an hour before he got
-  through the door, so the deadline has not passed — it has become a
-  distance. Every phrase is a call with the reply cut out: two bars of
-  tune, two bars of nothing but engine and tarmac where the answer used to
-  be. The clock that runs through the whole of the outbound score is gone,
-  replaced by a sonar ping that slides flat as it sounds, twice in four
-  bars, off the grid, alone in the breakdown. The harmony falls Dm–C–B♭–A
-  and never once lands, and the build accelerates that fall to four chords
-  a bar rather than climbing out of it. Original melodies; nothing
-  sampled.
+  The road home, and it is not the relief version of OVERDUE — written to
+  the same short length, so the fall reaches the bottom before the car
+  stops. He has the part on the passenger seat and she left the planet an
+  hour before he got through the door, so the deadline has not passed — it
+  has become a distance. Every phrase is a call with the reply cut out:
+  two bars of tune, two bars of nothing but engine and tarmac where the
+  answer used to be, and the hole closes as the piece runs — two bars,
+  then one, then none. The clock that runs through the whole of the
+  outbound score is gone, replaced by a sonar ping that slides flat as it
+  sounds, twice in four bars, off the grid, alone in the opening bar. The
+  harmony falls Dm–C–B♭–A and never once lands, and twice a loop a
+  four-bar hinge accelerates that fall to four chords a bar rather than
+  climbing out of it — the same hinge the outbound score uses to climb.
+  Original melodies; nothing sampled.
 bpm: 176
 stepsPerBeat: 4
 instruments:
@@ -149,55 +152,43 @@ patterns:
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # A2 — Dm C Bb A Dm C Bb A
-  a2:
+  # SLIP — Dm/C Bb/A Dm/C/Bb/A Dm/C/Bb/A
+  slip:
     call: |
-      D4 =  F4 =  A4 =  D5 =  A4 =  =  =  F4 =  =  =
-      G4 =  =  =  E4 =  =  =  C4 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      D4 =  F4 =  A4 =  D5 =  C5 =  =  =  A4 =  =  =
-      G4 =  =  =  E4 =  =  =  G4 =  =  =  =  =  =  =
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D6 =  =  =  =  =  =  =  C6 =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  A5 =  =  =  =  =  =  =
+      D5 =  =  =  C5 =  =  =  A#4 =  =  =  A4 =  =  =
+      D5 =  C5 =  A#4 =  A4 =  D5 =  C5 =  A#4 =  A4 =
     ping: |
       D7 =  =  =  .  .  .  .  .  .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
       .  .  .  .  .  .  .  .  .  A6 =  =  =  .  .  .
       .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     engine: |
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
-      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
-      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
+      D4 .  D4 D4 .  D4 D4 .  C4 .  C4 C4 .  C4 C4 .
+      A#4 .  A#4 A#4 .  A#4 A#4 .  A4 .  A4 A4 .  A4 A4 .
+      D4 .  D4 D4 .  C4 C4 .  A#4 .  A#4 A#4 .  A4 A4 .
+      D4 .  D4 D4 .  C4 C4 .  A#4 .  A#4 A#4 .  A4 A4 .
     stab: |
-      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
-      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
-      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
-      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
-      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
-      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
-      .  .  D5 .  .  .  F5 .  .  .  D5 .  .  .  F5 .
-      .  .  C#5 .  .  .  E5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  A4 .  .  .  E4 .  .  .  G4 .
+      .  .  D5 .  .  .  F5 .  .  .  C#5 .  .  .  E5 .
+      .  .  F4 .  .  .  G4 .  .  .  D5 .  .  .  E5 .
+      .  .  F4 .  .  .  G4 .  .  .  D5 .  .  .  E5 .
     bass: |
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
-      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
-      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
-      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
-      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
-      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
-      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      D2 .  D2 .  D2 .  D2 .  C2 .  C2 .  C2 .  C2 .
+      A#2 .  A#2 .  A#2 .  A#2 .  A2 .  A2 .  A2 .  A2 .
+      D2 .  D2 .  C2 .  C2 .  A#2 .  A#2 .  A2 .  A2 .
+      D2 .  D2 .  C2 .  C2 .  A#2 .  A#2 .  A2 .  A2 .
     kick: |
-      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
-      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  D2 .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
   # B — Dm C Bb A Dm C Bb A
@@ -248,75 +239,6 @@ patterns:
       D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
     snare: |
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-    hat: |
-      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-  # HOLE — Dm C Bb A Dm C Bb A
-  hole:
-    ping: |
-      D7 =  =  =  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-      .  .  .  .  .  .  .  .  .  A6 =  =  =  .  .  .
-      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-    engine: |
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
-      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
-      D4 .  D4 D4 .  D4 D4 .  D4 .  D4 D4 .  D4 D4 .
-      C4 .  C4 C4 .  C4 C4 .  C4 .  C4 C4 .  C4 C4 .
-      A#4 .  A#4 A#4 .  A#4 A#4 .  A#4 .  A#4 A#4 .  A#4 A#4 .
-      A4 .  A4 A4 .  A4 A4 .  A4 .  A4 A4 .  A4 A4 .
-    bass: |
-      D2 =  =  =  =  =  =  =  D2 =  =  =  =  =  =  =
-      C2 =  =  =  =  =  =  =  C2 =  =  =  =  =  =  =
-      A#1 =  =  =  =  =  =  =  A#1 =  =  =  =  =  =  =
-      A1 =  =  =  =  =  =  =  A1 =  =  =  =  =  =  =
-      D2 =  =  =  =  =  =  =  D2 =  =  =  =  =  =  =
-      C2 =  =  =  =  =  =  =  C2 =  =  =  =  =  =  =
-      A#1 =  =  =  =  =  =  =  A#1 =  =  =  =  =  =  =
-      A1 =  =  =  =  =  =  =  E2 =  =  =  =  =  =  =
-    hat: |
-      x  .  .  .  .  .  .  .  x  .  .  .  .  .  x  .
-  # BUILD — Dm C Bb A Dm C Bb A
-  build:
-    call: |
-      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      C5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      A#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      A4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
-      D5 =  =  =  =  =  =  =  C5 =  =  =  =  =  =  =
-      A#4 =  =  =  =  =  =  =  A4 =  =  =  =  =  =  =
-      D5 =  =  =  C5 =  =  =  A#4 =  =  =  A4 =  =  =
-      D5 =  =  =  C5 =  =  =  A#4 =  =  =  A4 =  =  =
-    engine: |
-      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
-      C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4
-      A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4
-      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
-      D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4 D4
-      C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4
-      A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4 A#4
-      A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4 A4
-    bass: |
-      D2 =  =  =  D2 =  =  =  D2 =  =  =  D2 =  =  =
-      C2 =  =  =  C2 =  =  =  C2 =  =  =  C2 =  =  =
-      A#1 =  =  =  A#1 =  =  =  A#1 =  =  =  A#1 =  =  =
-      A1 =  =  =  A1 =  =  =  A1 =  =  =  A1 =  =  =
-      D2 =  =  =  D2 =  =  =  C2 =  =  =  C2 =  =  =
-      A#1 =  =  =  A#1 =  =  =  A1 =  =  =  A1 =  =  =
-      D2 =  =  =  C2 =  =  =  A#1 =  =  =  A1 =  =  =
-      D2 =  =  =  C2 =  =  =  A#1 =  =  =  A1 =  =  =
-    kick: |
-      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
-    snare: |
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
-      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
-      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
-      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
-      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
   # TURN — Dm C Bb A Dm C Bb A
@@ -370,4 +292,4 @@ patterns:
       .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
     hat: |
       x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
-order: [intro, a, a2, b, a, hole, build, b, a2, turn]
+order: [intro, a, slip, b, slip, turn]
