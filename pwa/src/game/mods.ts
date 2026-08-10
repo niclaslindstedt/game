@@ -57,6 +57,7 @@ import {
   type DefOverrides,
 } from "@game/core";
 
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 import type { ChiptuneTrack } from "@ui/lib/chiptune.ts";
 
 import { synth } from "./audio.ts";
@@ -193,7 +194,20 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
 // shipped catalogs" is unambiguous.
 // ---------------------------------------------------------------------------
 let baseDefs: DefOverrides | null = null;
-let baseSprites: Sprites | null = null;
+
+/**
+ * Every sprite name a mod has written over or added since load — the exact set
+ * `restoreBaseDefs` has to undo.
+ *
+ * IT USED TO BE A SNAPSHOT OF THE WHOLE SPRITE RECORD (`{ ...sprites }`), and
+ * that stopped being affordable when the atlas went lazy: the sprite map cuts a
+ * sprite on first read (`@ui/lib/atlas.ts`), so spreading it materialises all
+ * two thousand of them — moving the 13-second stall the laziness removed from
+ * launch onto whichever press applies a mod. Naming what changed is both
+ * cheaper and more honest: a shipped sprite is restored by DELETING the
+ * override, whereupon the next read cuts it from the atlas again.
+ */
+const modSpriteNames = new Set<string>();
 
 /**
  * Apply a STACK of compiled mods to the engine and the sprite set, in load
@@ -245,7 +259,6 @@ export async function applyMods(
       questGivers: QUEST_GIVER_DEFS,
     };
   }
-  if (!baseSprites) baseSprites = { ...sprites };
 
   // Every apply starts from the SHIPPED catalogs, never from whatever the last
   // one left behind. Merging onto the live registry would make the result
@@ -491,7 +504,8 @@ export async function applyMods(
     // Decoded and merged per mod IN ORDER rather than all at once, so a later
     // mod's frame lands on top of an earlier one's exactly as its defs do.
     for (const [name, bitmap] of await decodeSprites(bundle.sprites)) {
-      (sprites as Record<string, ImageBitmap>)[name] = bitmap;
+      (sprites as Record<string, SpriteImage>)[name] = bitmap;
+      modSpriteNames.add(name);
       claim(spriteOwners, name, bundle.id);
     }
     if (bundle.hud) {
@@ -643,14 +657,14 @@ function contested(
  */
 export function restoreBaseDefs(sprites: Sprites): void {
   if (baseDefs) registerDefs(baseDefs);
-  if (baseSprites) {
-    // Restore by REPLACING the contents of the same object rather than swapping
-    // it: the renderer captured this reference at load and never re-reads it.
-    for (const name of Object.keys(sprites)) {
-      delete (sprites as Record<string, ImageBitmap>)[name];
-    }
-    Object.assign(sprites, baseSprites);
+  // Undo the overrides IN PLACE rather than swapping the object: the renderer
+  // captured this reference at load and never re-reads it. A name the atlas
+  // also carries comes back by itself — the delete drops the mod's surface and
+  // the next read cuts the shipped one.
+  for (const name of modSpriteNames) {
+    delete (sprites as Record<string, SpriteImage>)[name];
   }
+  modSpriteNames.clear();
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
   setCueCatalog(SHIPPED_SOUNDS, SHIPPED_CUE_KEYS);
   setUiSoundCatalog(SHIPPED_UI_SOUNDS);

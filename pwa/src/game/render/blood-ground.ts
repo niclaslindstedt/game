@@ -102,6 +102,7 @@ import { recolorSprite } from "./recolor.ts";
 import { TILE, type ViewSize } from "./shared.ts";
 import { projectionKey } from "./tilt.ts";
 import { type Camera } from "./view.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** The saturation ladder's four rungs, two variants each. The tile's hash picks
  * a variant and mirrors it, so eight sprites cover every cell on the map. */
@@ -194,7 +195,7 @@ const BLOOD_INDEX = FAMILY_INDEX.get("blood") ?? 0;
  * furniture). */
 let flipCacheFor: Sprites | null = null;
 let flipCacheProjection = projectionKey();
-const flipCache = new Map<string, HTMLCanvasElement | ImageBitmap>();
+const flipCache = new Map<string, SpriteImage>();
 
 /** Wipe the floor — a new run, or a hot reload. */
 export function resetBloodGround(): void {
@@ -274,7 +275,7 @@ function flipped(
   name: string,
   flip: number,
   family: GoreFamily,
-): HTMLCanvasElement | ImageBitmap | null {
+): SpriteImage | null {
   const projection = projectionKey();
   if (flipCacheFor !== sprites || flipCacheProjection !== projection) {
     flipCacheFor = sprites;
@@ -302,10 +303,7 @@ function flipped(
 }
 
 /** `art` mirrored per `flip` (bit 0 = X, bit 1 = Y). */
-function mirror(
-  art: HTMLCanvasElement | ImageBitmap,
-  flip: number,
-): HTMLCanvasElement | ImageBitmap {
+function mirror(art: SpriteImage, flip: number): SpriteImage {
   const canvas = document.createElement("canvas");
   canvas.width = art.width;
   canvas.height = art.height;
@@ -349,7 +347,7 @@ function diagonalMin(tx: number, ty: number, orthogonal: number): number {
  */
 function blot(
   ctx: CanvasRenderingContext2D,
-  art: HTMLCanvasElement | ImageBitmap | null,
+  art: SpriteImage | null,
   camera: Camera,
   cx: number,
   cy: number,

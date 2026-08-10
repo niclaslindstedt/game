@@ -39,6 +39,7 @@ import { seatX, seatY } from "./shared.ts";
 import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 import type { InView } from "./world.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /**
  * HOW FAST THE TWO ROLL FRAMES MAY ALTERNATE (Hz) — the ceiling that stops a
@@ -295,7 +296,7 @@ function wheelSeat(
   car: Extract<Vehicle, { kind: "car" }>,
   camera: Camera,
   axle: number,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
 ): { cx: number; top: number } {
   return {
     cx: seatX(car.pos.x, camera.x) + (CAR.wheelOffsets[axle] ?? 0),
@@ -356,7 +357,7 @@ const STEER_GROW = 0.3;
  * assembly's screen space. */
 function drawSteeredWheel(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap | HTMLCanvasElement,
+  sprite: SpriteImage,
   cx: number,
   top: number,
   steer: number,
@@ -398,7 +399,7 @@ const TILT_BAND = 8;
  */
 function drawShellLayer(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap | HTMLCanvasElement,
+  sprite: SpriteImage,
   pos: { x: number; y: number },
   camera: Camera,
   rearDrop: number,

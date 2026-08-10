@@ -43,6 +43,7 @@ import {
 import { flatSprite, wallBlock } from "./caches.ts";
 import { seatX, seatY } from "./shared.ts";
 import { billboard, bodyAnchorX, bodyAnchorY, standingWalls } from "./tilt.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /**
  * Directional art is authored running SOUTH — down the sprite's own rows — so a
@@ -96,7 +97,7 @@ function spinFor(name: string, facing: number | undefined): number {
 export function drawWorldSprite(
   ctx: CanvasRenderingContext2D,
   name: string,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   pos: { x: number; y: number },
   camera: { x: number; y: number },
   anchor: "center" | "base" = "center",
@@ -177,7 +178,7 @@ export function drawWorldSprite(
 export function drawWorldSpriteTop(
   ctx: CanvasRenderingContext2D,
   name: string,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   pos: { x: number; y: number },
   camera: { x: number; y: number },
   keep: number,
@@ -238,7 +239,7 @@ export function drawWorldSpriteTop(
  */
 export function drawFloorDecal(
   ctx: CanvasRenderingContext2D,
-  art: ImageBitmap | HTMLCanvasElement,
+  art: SpriteImage,
   worldX: number,
   worldY: number,
   camera: { x: number; y: number },

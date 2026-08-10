@@ -20,6 +20,7 @@
 
 import { glowSprite } from "./caches.ts";
 import { clamp01, fract } from "./shared.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** Motes that rush in and knit the thing together. Enough to read as a swarm
  * on a phone, few enough that the icon is never buried under them. */
@@ -195,7 +196,7 @@ export function drawConjureBurst(
  */
 export function drawConjuringSprite(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   cx: number,
   cy: number,
   t: number,

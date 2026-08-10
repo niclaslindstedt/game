@@ -22,6 +22,7 @@
 // walk on its own.
 
 import { clamp01 } from "./shared.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** World px of ground covered per full left-right cycle (two steps) — so half of
  * it is one step. Set a touch under the distance the hero's two-frame walk
@@ -222,7 +223,7 @@ export function floatLift(key: string, timeMs: number): number {
  */
 export function drawFloatShadow(
   ctx: CanvasRenderingContext2D,
-  shadow: ImageBitmap,
+  shadow: SpriteImage,
   cx: number,
   groundY: number,
   width: number,

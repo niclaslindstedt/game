@@ -40,6 +40,7 @@ import { seatX, seatY } from "../render/shared.ts";
 import { billboard } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 import { roofBar, trafficSprite, type RoofBar } from "./scenery.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /**
  * How far a fold may push the two halves into each other, as a share of the
@@ -228,7 +229,7 @@ const BEACON_MS = 110;
  */
 function drawFolded(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   ox: number,
   oy: number,
   nose: number,

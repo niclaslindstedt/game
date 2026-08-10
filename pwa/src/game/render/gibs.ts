@@ -59,6 +59,7 @@ import {
   type SpriteShred,
 } from "./sprite-split.ts";
 import type { Effect } from "./effects.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** The effect kinds this module owns. */
 export const GORE_KINDS = new Set(["cleave", "gib"]);
@@ -73,7 +74,7 @@ function gorePiece(
   sprites: Sprites,
   name: string,
   bodyPx: number,
-): ImageBitmap | undefined {
+): SpriteImage | undefined {
   if (bodyPx < SMALL_BODY_PX) {
     const small = spriteByName(sprites, `${name}_s`);
     if (small) return small;
@@ -94,7 +95,7 @@ function familyArt(
   sprites: Sprites,
   name: string,
   family: GoreFamily,
-): ImageBitmap | HTMLCanvasElement | undefined {
+): SpriteImage | undefined {
   const art = spriteByName(sprites, name);
   if (!art || !family.ramp) return art;
   return recolorSprite(art, name, family.ramp);
@@ -485,7 +486,7 @@ function drawPiece(
   burst: GoreBurst,
   family: GoreFamily,
   gib: GorePiece,
-  art: ImageBitmap | HTMLCanvasElement,
+  art: SpriteImage,
   x: number,
   y: number,
   t: number,

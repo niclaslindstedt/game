@@ -8,27 +8,119 @@
 export type AtlasRect = readonly [number, number, number, number];
 
 /**
- * Slice a decoded atlas image into per-sprite bitmaps — one fetch and one
- * decode for the whole sprite set, then zero-copy handles the canvas can
- * blit directly (`drawImage` accepts an ImageBitmap wherever it accepts an
- * image element).
+ * A drawn sprite, whatever surface it happens to live on. `drawImage`,
+ * `createPattern` and `getImageData` take either, and the renderer does not
+ * care which it is given: the atlas cuts CANVASES (see `sliceAtlas`), while a
+ * mod's frames arrive as real `ImageBitmap`s decoded from its own pixels.
  */
-export async function sliceAtlas<K extends string>(
+export type SpriteImage = ImageBitmap | HTMLCanvasElement;
+
+/**
+ * Slice a decoded atlas image into per-sprite surfaces — **on first read, not
+ * up front**, which is the whole point of this function.
+ *
+ * IT USED TO CUT EVERY SPRITE BEFORE THE MENU COULD OPEN, and that was
+ * measured as the entire cost of opening the game: 2,333 `createImageBitmap`
+ * calls issued in one `Promise.all`, the last resolving **13.4 seconds** after
+ * the first on a one-core machine — while the app's whole JavaScript bundle had
+ * finished downloading at 136 ms and the main thread sat 97% idle waiting for
+ * the decode queue to drain. The title menu draws about a dozen sprites. It was
+ * paying for two thousand it would never show, every single launch, and the
+ * bill grew with every sprite anybody added to the game.
+ *
+ * So the map is lazy: a name is cut the first time something asks for it and
+ * cached forever after, and a launch pays only for what it draws.
+ *
+ * **The surface is a CANVAS and not an `ImageBitmap`, and that follows from the
+ * laziness rather than being a preference.** `createImageBitmap` is
+ * asynchronous, and the renderer reads `sprites[name]` in the middle of a frame
+ * — there is nowhere to await. `drawImage(atlas, sx, sy, sw, sh, …)` into a
+ * canvas of the sprite's size is the synchronous equivalent, it is a pure GPU
+ * blit of a region already decoded and resident, and every consumer in this
+ * repo takes a `CanvasImageSource`.
+ *
+ * **THE ATLAS IMAGE IS CAPTURED AND HELD FOR THE PROCESS'S LIFE.** It has to
+ * be — it is the source every not-yet-cut sprite will be cut from — where the
+ * eager version could let it go once the last bitmap was made. One decoded PNG
+ * is a cheap thing to keep, and far cheaper than the 2,333 surfaces it replaces.
+ *
+ * The returned map behaves like the plain object it replaced: it can be written
+ * to (a mod overriding a sprite), deleted from (dropping that override — the
+ * shipped sprite is simply cut again on the next read) and enumerated
+ * (`Object.keys` lists the whole catalogue, cut or not, cutting nothing).
+ */
+export function sliceAtlas<K extends string>(
   atlas: HTMLImageElement,
   rects: Record<K, AtlasRect>,
-): Promise<Record<K, ImageBitmap>> {
-  const entries = await Promise.all(
-    (Object.entries(rects) as [K, AtlasRect][]).map(
-      async ([name, [x, y, w, h]]) =>
-        [name, await createImageBitmap(atlas, x, y, w, h)] as const,
-    ),
-  );
-  return Object.fromEntries(entries) as Record<K, ImageBitmap>;
+): Record<K, SpriteImage> {
+  // Every sprite handed out so far: the atlas's own, cut on demand, plus
+  // whatever a mod has written over or added. One map, because "what does this
+  // name resolve to right now" is one question.
+  const cut = new Map<string, SpriteImage>();
+  const table = rects as Record<string, AtlasRect | undefined>;
+
+  const target: Record<string, SpriteImage> = {};
+  return new Proxy(target, {
+    get(_t, key) {
+      if (typeof key !== "string") return undefined;
+      const ready = cut.get(key);
+      if (ready) return ready;
+      const rect = table[key];
+      if (!rect) return undefined;
+      const [x, y, w, h] = rect;
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      // A context can genuinely be refused (too many live canvases, a lost
+      // GPU). Returning undefined is what `spriteByName` already treats as "not
+      // drawn", and it is not cached, so the next frame tries again.
+      if (!ctx) return undefined;
+      ctx.drawImage(atlas, x, y, w, h, 0, 0, w, h);
+      cut.set(key, canvas);
+      return canvas;
+    },
+    set(_t, key, value: SpriteImage) {
+      if (typeof key !== "string") return false;
+      cut.set(key, value);
+      return true;
+    },
+    // Dropping a name forgets the surface. For a MOD's own sprite that removes
+    // it; for one the atlas also has, the next read simply cuts the shipped
+    // sprite again — which is exactly what "remove the override" has to mean.
+    deleteProperty(_t, key) {
+      if (typeof key !== "string") return false;
+      cut.delete(key);
+      return true;
+    },
+    has(_t, key) {
+      return typeof key === "string" && (!!table[key] || cut.has(key));
+    },
+    ownKeys() {
+      return [...new Set([...Object.keys(table), ...cut.keys()])];
+    },
+    // ENUMERATION MUST NOT CUT ANYTHING. `Object.keys` asks for a descriptor per
+    // key to test enumerability, so resolving the sprite here would make listing
+    // the catalogue as expensive as the eager slice this replaced. The value is
+    // reported only when it has already been cut; reading one is `get`'s job.
+    getOwnPropertyDescriptor(_t, key) {
+      if (typeof key !== "string") return undefined;
+      if (!table[key] && !cut.has(key)) return undefined;
+      // `configurable: true` is required of a proxy reporting a property its
+      // target does not have — and it is also true: these can be deleted.
+      return {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value: cut.get(key),
+      };
+    },
+  }) as Record<K, SpriteImage>;
 }
 
 /** One sprite in a `composeDataUrl` stack, offset inside the canvas. */
 export type ComposeLayer = {
-  image: ImageBitmap;
+  image: SpriteImage;
   dx?: number;
   dy?: number;
   /** Mirror this layer horizontally in place. */
@@ -82,7 +174,7 @@ export function composeDataUrl(
  * that need a DOM `<img>` (inventory icons, dialogue portraits) rather than
  * a canvas blit.
  */
-export function bitmapDataUrl(bitmap: ImageBitmap): string {
+export function bitmapDataUrl(bitmap: SpriteImage): string {
   const canvas = document.createElement("canvas");
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
@@ -122,7 +214,7 @@ function parseHex(color: string): [number, number, number] {
  * gamma pushes the midtones up, which keeps a mostly mid-toned sprite (steel,
  * plastic) from reading dimmer than the text beside it.
  */
-export function monochromeDataUrl(bitmap: ImageBitmap, color: string): string {
+export function monochromeDataUrl(bitmap: SpriteImage, color: string): string {
   const canvas = document.createElement("canvas");
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;

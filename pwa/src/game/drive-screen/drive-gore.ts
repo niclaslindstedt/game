@@ -60,6 +60,7 @@ import {
   RIDER_SPRITES,
   TRAFFIC_SPRITES,
 } from "./scenery.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** One mark on the tarmac: a drag streak, a tyre print, a splash, or a body
  * pressed into the road. */
@@ -310,7 +311,7 @@ export function bodySprite(kind: string, variant: number): string {
 function drawMachinePiece(
   ctx: CanvasRenderingContext2D,
   piece: DriveRemain,
-  art: ImageBitmap,
+  art: SpriteImage,
 ): void {
   const size = 4 + Math.floor(fract(piece.seed * 0.618) * 4);
   const sx = Math.floor(fract(piece.seed * 0.317) * (art.width - size - 8)) + 4;
@@ -707,11 +708,11 @@ function drawRemainAt(
  * A `whole` piece is not cut at all — nobody went through it.
  */
 function halfOf(
-  body: ImageBitmap,
+  body: SpriteImage,
   name: string,
   piece: DriveRemain,
   sprites: Sprites,
-): HTMLCanvasElement | ImageBitmap | null {
+): SpriteImage | null {
   if (piece.part === "whole") return null;
   // The cut is a fraction from the TOP of the sprite; `splitSprite` measures its
   // offset from the MIDDLE, along the cut's own normal.

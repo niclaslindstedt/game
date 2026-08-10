@@ -27,6 +27,7 @@ export function worldViewOf(canvas: {
 export { clamp01 } from "@game/lib/vec.ts";
 
 import { worldViewRect } from "./tilt.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /**
  * THE SEAT — the whole-pixel spot a world point takes inside its own billboard,
@@ -85,7 +86,7 @@ export function spriteTopLeft(
 /** Draw `sprite` centred on world `pos` (screen-rounded). */
 export function drawSpriteCentered(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   pos: { x: number; y: number },
   camera: { x: number; y: number },
 ): void {
@@ -97,7 +98,7 @@ export function drawSpriteCentered(
  * place when `faceLeft` — the shared facing-flip every actor renderer uses. */
 export function drawSpriteFacing(
   ctx: CanvasRenderingContext2D,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   x: number,
   y: number,
   faceLeft: boolean,

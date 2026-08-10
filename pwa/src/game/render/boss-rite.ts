@@ -36,6 +36,7 @@ import { spriteByName, type Sprites } from "../assets.ts";
 import { spriteTopLeft } from "./shared.ts";
 import { billboard } from "./tilt.ts";
 import type { Camera } from "./view.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** How far the spinning fugitive shrinks by the time he is gone (a fraction of
  * his own size). Not to nothing: he vanishes at a fifth rather than at zero,
@@ -100,7 +101,7 @@ function riteSprite(
   sprites: Sprites,
   scene: NonNullable<GameState["bossDeath"]>,
   timeMs: number,
-): ImageBitmap | undefined {
+): SpriteImage | undefined {
   const base = scene.sprite;
   // RUNNING or STANDING, the ordinary two-frame walk is the floor. A fleeing
   // man frozen on one frame is the tell that nothing is really moving, so the
@@ -116,7 +117,7 @@ function riteSprite(
 function drawKneeling(
   ctx: CanvasRenderingContext2D,
   scene: NonNullable<GameState["bossDeath"]>,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   camera: Camera,
 ): void {
   const t = Math.min(1, scene.ms / BOSS_DEATH.staggerMs);
@@ -144,7 +145,7 @@ function drawFugitive(
   ctx: CanvasRenderingContext2D,
   scene: NonNullable<GameState["bossDeath"]>,
   spins: number,
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   camera: Camera,
 ): void {
   const vanishing = scene.beat === "aftermath";
