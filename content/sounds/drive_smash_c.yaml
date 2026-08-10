@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_smash_c
+description: >-
+  The third end-of-somebody's-car — the one that arrives in TWO parts: the
+  structure going, and then, a fifth of a second later, everything that was
+  bolted to it coming down. The other two land as one event; this is the one
+  that keeps going after the player has driven past it.
+voices:
+  - call: tone
+    type: sine
+    from: 90
+    to: 24
+    durationMs: 580
+    volume: 0.1
+  - call: tone
+    type: sawtooth
+    from: 232
+    to: 32
+    durationMs: 340
+    volume: 0.086
+    detuneCents: 30
+  - call: noise
+    durationMs: 500
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 210
+    echo: 0.26
+  - call: noise
+    durationMs: 66
+    volume: 0.054
+    filter:
+      type: bandpass
+      frequency: 1800
+  - call: tone
+    type: sawtooth
+    from: 150
+    to: 44
+    durationMs: 220
+    volume: 0.04
+    delayMs: 200
+    detuneCents: 24
+  - call: noise
+    durationMs: 420
+    volume: 0.028
+    delayMs: 230
+    filter:
+      type: highpass
+      frequency: 4900
+    echo: 0.2

@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_car_jolt
+description: >-
+  THE WAGON BOTTOMING OUT — its answer to the top of the ladder: another car,
+  an end going in, a body taken at the full hundred and twenty. The springs
+  run out of travel and the load goes straight into the shell, so what the
+  player hears is the chassis itself ringing under him, the glass in every
+  door shaking, and a long slow rebound afterwards. It is the loudest thing
+  the CAR does, and it is still under what the collision does — the wagon is
+  the room this happens in, not the event.
+voices:
+  - call: tone
+    type: sine
+    from: 96
+    to: 34
+    durationMs: 330
+    volume: 0.062
+  - call: noise
+    durationMs: 300
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 180
+    echo: 0.15
+  - call: noise
+    durationMs: 140
+    volume: 0.016
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 4200
+  - call: tone
+    type: triangle
+    from: 58
+    to: 86
+    durationMs: 270
+    volume: 0.024
+    delayMs: 190

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_nudge_b
+description: >-
+  The second shove at walking pace — caught a little higher up the bumper, so
+  it is the shorter of the two and has a touch more trim in it and less cloth.
+voices:
+  - call: tone
+    type: square
+    from: 146
+    to: 104
+    durationMs: 62
+    volume: 0.022
+    detuneCents: 6
+  - call: noise
+    durationMs: 94
+    volume: 0.015
+    filter:
+      type: lowpass
+      frequency: 780
+  - call: noise
+    durationMs: 30
+    volume: 0.013
+    delayMs: 36
+    filter:
+      type: bandpass
+      frequency: 2200

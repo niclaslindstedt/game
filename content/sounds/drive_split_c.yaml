@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_split_c
+description: >-
+  The third bumper-through-somebody — the one that catches them low, so the
+  tear is shorter and darker and what is left arrives on the tarmac almost
+  straight away. A third take because this fires on nearly every square hit
+  at speed, and two of anything at that rate is a pattern the ear learns
+  inside a single leg.
+voices:
+  - call: noise
+    durationMs: 110
+    volume: 0.048
+    filter:
+      type: bandpass
+      frequency: 820
+  - call: tone
+    type: square
+    from: 232
+    to: 66
+    durationMs: 64
+    volume: 0.038
+    detuneCents: 24
+  - call: noise
+    durationMs: 200
+    volume: 0.032
+    delayMs: 50
+    filter:
+      type: lowpass
+      frequency: 280
+    echo: 0.12

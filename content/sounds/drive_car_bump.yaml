@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_car_bump
+description: >-
+  THE WAGON'S OWN ANSWER to a small hit — the half of every collision on this
+  road the player was never given. Something hit the front of a two-ton estate
+  and the estate did something about it: the bumper's plastic knocked, the
+  near spring took the load, and the trim ticked as it came back. Tiny, and
+  laid UNDER the body's own noise rather than beside it — this is the car
+  speaking, and the car is directly under the player's seat, so it does not
+  have to be loud to be felt.
+voices:
+  - call: tone
+    type: square
+    from: 208
+    to: 152
+    durationMs: 42
+    volume: 0.02
+    detuneCents: 8
+  - call: noise
+    durationMs: 96
+    volume: 0.014
+    filter:
+      type: lowpass
+      frequency: 300
+  - call: tone
+    type: sine
+    from: 92
+    to: 72
+    durationMs: 140
+    volume: 0.018
+    delayMs: 40

@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_sub
+description: >-
+  THE WEIGHT UNDER A HEAVY BODY — `drive_impact_sub`'s smaller brother, and
+  built for the same reason: a bank cannot be made heavier by turning it up.
+  It is laid under the heavy shelf only, and it is deliberately half of what a
+  car-sized collision gets — a big man is not a bus, and if the two shared a
+  sub the road would have nothing left to say when an actual vehicle arrived.
+  Alone it is almost nothing, which is the test that it is doing its job as a
+  layer.
+voices:
+  - call: tone
+    type: sine
+    from: 78
+    to: 26
+    durationMs: 380
+    volume: 0.075
+  - call: noise
+    durationMs: 320
+    volume: 0.022
+    filter:
+      type: lowpass
+      frequency: 150
+    echo: 0.15

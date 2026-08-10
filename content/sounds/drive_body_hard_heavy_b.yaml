@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_heavy_b
+description: >-
+  The second heavy hard hit — the one with the bags, the frame or the bike in
+  it: same weight, and a scatter of what they were carrying coming down after
+  them.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 124
+    to: 30
+    durationMs: 210
+    volume: 0.058
+    detuneCents: 22
+  - call: noise
+    durationMs: 270
+    volume: 0.034
+    filter:
+      type: lowpass
+      frequency: 200
+  - call: noise
+    durationMs: 74
+    volume: 0.042
+    filter:
+      type: bandpass
+      frequency: 820
+  - call: noise
+    durationMs: 180
+    volume: 0.016
+    delayMs: 110
+    filter:
+      type: highpass
+      frequency: 3000

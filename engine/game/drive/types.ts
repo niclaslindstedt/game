@@ -728,8 +728,25 @@ export type DriveStrike = {
 /** Something worth a sound or a flash, drained by the app each tick — the
  * drive's own little `state.events`, and read exactly the same way. */
 export type DriveEvent =
-  /** A person went under the car. */
-  | { type: "pedestrianHit"; pos: Vec2; joules: number }
+  /**
+   * A PERSON WENT UNDER THE CAR — and WHICH person, which is the half this
+   * event used to leave out.
+   *
+   * `kind` and `variant` are the same two numbers the body was drawn from
+   * (`DrivePedestrian`), carried so the app can voice WHO was hit rather than
+   * only how hard: what they weighed (`bodyMassMult` — the very multiplier the
+   * blow above was solved with, so the shelf a hit sounds like and the energy it
+   * cost are the same fact) and what they had with them (a trolley, a frame, a
+   * bike — `drive-screen/drive-sounds.ts`, because the engine has never been
+   * told a walking frame is made of steel).
+   */
+  | {
+      type: "pedestrianHit";
+      pos: Vec2;
+      joules: number;
+      kind: PedestrianKind;
+      variant: number;
+    }
   /**
    * …and somebody came apart in two: the bumper went THROUGH them at speed, or
    * a WHEEL went over one already lying in the road, which takes a body in two
@@ -743,8 +760,24 @@ export type DriveEvent =
    * the car did it.
    */
   | { type: "bodySplit"; pos: Vec2; joules: number }
-  /** Something is caught under the car and has started to travel with it. */
-  | { type: "bodyCaught"; pos: Vec2; joules: number }
+  /**
+   * Something is caught under the car and has started to travel with it — and
+   * WHOSE, which is the one place a body's weight is heard after the collision
+   * rather than during it: a big one grinds along under the floorpan longer and
+   * lower than a small one does (`dragSound`).
+   *
+   * The two fields stop here. `bodySplit` and `bodyCrushed` deliberately do NOT
+   * carry them: a person coming apart and a wheel finding what is left sound
+   * like what they are whoever it was, and an event field nothing reads is a
+   * promise to the next reader that the road does something it does not.
+   */
+  | {
+      type: "bodyCaught";
+      pos: Vec2;
+      joules: number;
+      kind: PedestrianKind;
+      variant: number;
+    }
   /** A wheel has gone over a piece of somebody lying in the road. */
   | { type: "bodyCrushed"; pos: Vec2; joules: number }
   /** The car has clouted something dead and steel already lying on the tarmac —

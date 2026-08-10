@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_car_thump_a
+description: >-
+  …AND ITS ANSWER TO A REAL ONE. The blow arriving THROUGH the car rather
+  than at it: a low damped boom in the cabin, the front springs going down on
+  their stops, everything loose in the doors rattling, and the suspension
+  coming back UP a beat later — which is the part that makes it read as a car
+  and not as a drum. The rebound is a rising note on purpose; a spring that
+  only ever went down would be a box being hit.
+voices:
+  - call: tone
+    type: sine
+    from: 124
+    to: 54
+    durationMs: 200
+    volume: 0.05
+  - call: noise
+    durationMs: 240
+    volume: 0.026
+    filter:
+      type: lowpass
+      frequency: 220
+  - call: noise
+    durationMs: 70
+    volume: 0.012
+    delayMs: 90
+    filter:
+      type: bandpass
+      frequency: 3000
+  - call: tone
+    type: triangle
+    from: 74
+    to: 98
+    durationMs: 180
+    volume: 0.022
+    delayMs: 130

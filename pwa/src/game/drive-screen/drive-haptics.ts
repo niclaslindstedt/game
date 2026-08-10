@@ -217,6 +217,25 @@ export function playDriveHitHaptic(force: number, nowMs: number): boolean {
 }
 
 /**
+ * HOW HARD THIS BLOW LANDED ON THE HERO'S OWN CAR, 0..1 — the force above,
+ * with the road's collisions that were nothing to do with him taken out.
+ *
+ * TWO SENSES READ THIS, which is why it is a function rather than two loops.
+ * The road crashes WITHOUT the hero (`engine/game/drive/between.ts` — a pile-up
+ * he never touched is the best obstacle this minigame has), so both the motor
+ * in his hand and the wagon's OWN noise (`carAnswerSound`, drive-sounds.ts)
+ * have to ask the same question before they answer: a phone that jumped, or a
+ * chassis that boomed, for two strangers meeting a quarter of a mile up the
+ * carriageway would be lying about what just happened to the player.
+ */
+export function feltForce(drive: DriveState, event: DriveEvent): number {
+  if (!("pos" in event)) return 0;
+  if (Math.abs(event.pos.x - drive.car.pos.x) > FEEL_REACH_PX) return 0;
+  if (Math.abs(event.pos.y - drive.car.pos.y) > FEEL_REACH_PX) return 0;
+  return driveHitForce(event);
+}
+
+/**
  * ONE TICK OF THE ROAD, FELT — the hardest thing that happened to the wagon
  * this step, buzzed once.
  *
@@ -231,10 +250,7 @@ export function playDriveHitHaptic(force: number, nowMs: number): boolean {
 export function feelDrive(drive: DriveState): void {
   let hardest = 0;
   for (const event of drive.events) {
-    if (!("pos" in event)) continue;
-    if (Math.abs(event.pos.x - drive.car.pos.x) > FEEL_REACH_PX) continue;
-    if (Math.abs(event.pos.y - drive.car.pos.y) > FEEL_REACH_PX) continue;
-    const force = driveHitForce(event);
+    const force = feltForce(drive, event);
     if (force > hardest) hardest = force;
   }
   if (hardest > 0) playDriveHitHaptic(hardest, drive.ms);

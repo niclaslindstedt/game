@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_kit_bags
+description: >-
+  …AND WHAT THEY WERE CARRYING IT ALL IN. The trolley, and the man with
+  everything he owns in four bags: the load goes everywhere, which is a soft
+  burst of paper and plastic with a couple of tins rolling out of it. The
+  warmest noise on this road, and the only one in the crowd's whole vocabulary
+  that is faintly comic — which is the joke this minigame is built on and the
+  only place it is safe to put it.
+voices:
+  - call: noise
+    durationMs: 110
+    volume: 0.026
+    filter:
+      type: highpass
+      frequency: 1800
+  - call: tone
+    type: triangle
+    from: 380
+    to: 300
+    durationMs: 90
+    volume: 0.016
+    delayMs: 70
+  - call: tone
+    type: triangle
+    from: 300
+    to: 250
+    durationMs: 110
+    volume: 0.013
+    delayMs: 150
+  - call: noise
+    durationMs: 160
+    volume: 0.011
+    delayMs: 90
+    filter:
+      type: bandpass
+      frequency: 1200

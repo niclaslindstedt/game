@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_kit_resin
+description: >-
+  ONE OF THE GLUED, COMING UNSTUCK — the bond letting go, laid over the thud.
+  The blockade is the one set piece on this road, and the resin is the whole
+  of what makes it a wall rather than a thicker crowd (`DRIVE.blockade.massMult`);
+  until now the wall was silent and the road played the same body noise
+  twenty times in two seconds. A dry sticky tear that rips upward and stops
+  dead, plus the tarmac it took with it.
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.028
+    filter:
+      type: bandpass
+      frequency: 1450
+  - call: tone
+    type: sawtooth
+    from: 260
+    to: 620
+    durationMs: 70
+    volume: 0.018
+    detuneCents: 20
+  - call: noise
+    durationMs: 60
+    volume: 0.016
+    delayMs: 80
+    filter:
+      type: lowpass
+      frequency: 900

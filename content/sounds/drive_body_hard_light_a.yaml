@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_light_a
+description: >-
+  A LIGHT BODY taken square at the top end. The hard shelf's own dive, but
+  pitched where a small body lands: it starts higher, gets to the floor
+  quicker, and the boom under it is thinner. The one thing it keeps in full is
+  the wet burst of contact — how much of somebody there was does not change
+  what the bumper did to them.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 212
+    to: 62
+    durationMs: 120
+    volume: 0.052
+    detuneCents: 12
+  - call: noise
+    durationMs: 150
+    volume: 0.028
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: noise
+    durationMs: 62
+    volume: 0.038
+    filter:
+      type: bandpass
+      frequency: 1120

@@ -40,6 +40,7 @@ import {
   tipsOver,
   tipVehicle,
 } from "./crush.ts";
+import { bodyMassMult } from "./crowd.ts";
 import { burstBody, splitsBody } from "./remains.ts";
 import { fellLamp, propRadius } from "./street.ts";
 import {
@@ -78,12 +79,20 @@ export function collide(drive: DriveState): void {
       ped.pos,
       ped.vel,
       DRIVE.pedestrianRadiusPx,
-      // ONE OF THE GLUED IS NOT A PEDESTRIAN'S WEIGHT, and that is the whole
-      // difference between a wall and a thicker crowd — see
-      // `DRIVE.blockade.massMult`.
-      ped.kind === "glued"
-        ? mass.pedestrian * DRIVE.blockade.massMult
-        : mass.pedestrian,
+      // WHAT THIS PARTICULAR PERSON WEIGHS — the rung's own figure for a body,
+      // times THEIR OWN BUILD (`bodyMassMult`, crowd.ts): the old woman is
+      // three-quarters of it and the man carrying everything he owns is a third
+      // over. It is the same index the player is looking at, so the blow the
+      // wheel feels and the person on the bonnet are one thing.
+      //
+      // …AND ONE OF THE GLUED IS NOT A PEDESTRIAN'S WEIGHT ON TOP OF THAT,
+      // which is the whole difference between a wall and a thicker crowd — see
+      // `DRIVE.blockade.massMult`. The two multiply rather than one replacing
+      // the other: the resin is what the road is holding on to, the body is
+      // still a body, and the sound bank needs them kept apart.
+      mass.pedestrian *
+        bodyMassMult(ped.kind, ped.variant) *
+        (ped.kind === "glued" ? DRIVE.blockade.massMult : 1),
     );
     if (!hit) continue;
     // …AND THE CROWD'S OWN SHARE OF THE VOLUME KNOB. A person is five percent
@@ -99,6 +108,8 @@ export function collide(drive: DriveState): void {
       type: "pedestrianHit",
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
+      kind: ped.kind,
+      variant: ped.variant,
     });
     const { gib, split } = drive.params;
     if (gib || split) {
@@ -137,6 +148,8 @@ export function collide(drive: DriveState): void {
           type: "bodyCaught",
           pos: { x: hit.contact.x, y: hit.contact.y },
           joules: hit.joules,
+          kind: ped.kind,
+          variant: ped.variant,
         });
       }
       ped.mode = "tumbling";

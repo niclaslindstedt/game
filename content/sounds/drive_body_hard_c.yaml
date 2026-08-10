@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_c
+description: >-
+  The third hit at the top end for an ordinary body — the one between the
+  other two, so the shelf a fast driver spends most of the leg on has three
+  takes rather than two. Caught a little off centre: the dive is shorter, the
+  contact brighter, and the boom under it arrives a moment late.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 182
+    to: 52
+    durationMs: 138
+    volume: 0.056
+    detuneCents: 12
+  - call: noise
+    durationMs: 88
+    volume: 0.036
+    filter:
+      type: bandpass
+      frequency: 940
+  - call: noise
+    durationMs: 200
+    volume: 0.03
+    delayMs: 40
+    filter:
+      type: lowpass
+      frequency: 280

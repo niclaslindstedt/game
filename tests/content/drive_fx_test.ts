@@ -27,6 +27,8 @@ import {
   createDrive,
   engineRpm,
   vehicleDef,
+  CROWD_MASS_MULTS,
+  CROWD_VARIANTS,
   DRIVE,
   DRIVETRAIN,
   GEAR_COUNT,
@@ -39,19 +41,34 @@ import { CAR } from "../../engine/game/vehicles.ts";
 
 import { GENERATED_SOUNDS } from "../../pwa/src/generated/sounds.ts";
 import {
-  bodyHitSound,
+  bodyHitSounds,
+  bodyWeight,
+  carAnswerSound,
+  kitSound,
   panelSound,
+  resetCarAnswer,
   trafficHitSound,
   variantAt,
   BODY_SOUNDS,
+  BODY_SUB_SOUND,
   BREAKDOWN_SOUND,
+  CAR_BUMP_SOUND,
+  CAR_JOLT_SOUND,
+  CAR_THUMP_SOUNDS,
+  CRACK_SOUNDS,
   CRUNCH_SOUNDS,
   DRIVE_SOUND_IDS,
   HARD_BODY_SOUNDS,
+  HARD_HEAVY_SOUNDS,
+  HARD_LIGHT_SOUNDS,
+  HEAVY_BODY_SOUNDS,
+  LIGHT_BODY_SOUNDS,
+  NUDGE_SOUNDS,
   SCRAPE_SOUNDS,
   SHED_SOUND,
   SMASH_SOUNDS,
 } from "../../pwa/src/game/drive-screen/drive-sounds.ts";
+import { feltForce } from "../../pwa/src/game/drive-screen/drive-haptics.ts";
 import {
   clearDriveFx,
   createDriveFx,
@@ -90,6 +107,14 @@ describe("the road's sound banks", () => {
     expect(SCRAPE_SOUNDS.length).toBeGreaterThan(1);
     expect(CRUNCH_SOUNDS.length).toBeGreaterThan(1);
     expect(SMASH_SOUNDS.length).toBeGreaterThan(1);
+    // …and so does every bank the WEIGHT split added, for the same reason it
+    // was split at all: a road of light bodies must not be a road of one noise.
+    expect(LIGHT_BODY_SOUNDS.length).toBeGreaterThan(1);
+    expect(HEAVY_BODY_SOUNDS.length).toBeGreaterThan(1);
+    expect(HARD_LIGHT_SOUNDS.length).toBeGreaterThan(1);
+    expect(HARD_HEAVY_SOUNDS.length).toBeGreaterThan(1);
+    expect(NUDGE_SOUNDS.length).toBeGreaterThan(1);
+    expect(CRACK_SOUNDS.length).toBeGreaterThan(1);
     // …and the two that fire once a leg do not need one.
     expect(GENERATED_SOUNDS[SHED_SOUND]).toBeDefined();
     expect(GENERATED_SOUNDS[BREAKDOWN_SOUND]).toBeDefined();
@@ -141,14 +166,26 @@ describe("the road's sound banks", () => {
     // the test was calling seventy careful. A quarter of this dial is about
     // forty-five, which is what the claim always meant.
     const CAREFUL = 0.26;
-    expect(BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(CAREFUL)));
+    // …asked of an ORDINARY body (variant 4, the suit — the yardstick the
+    // weight table is written around), at the speed the share names, because
+    // both of those now pick banks of their own.
+    const bodySound = (frac: number) =>
+      bodyHitSounds({
+        x: 10,
+        y: 4,
+        joules: bodyAt(frac),
+        kind: "walker",
+        variant: 4,
+        speedFrac: frac,
+      })[0];
+    expect(BODY_SOUNDS).toContain(bodySound(CAREFUL));
     expect(SCRAPE_SOUNDS).toContain(trafficHitSound(10, 4, vanAt(CAREFUL)).id);
     // …and one PRESSING ON, which moved for the same reason: eighty percent of
     // this dial is a hundred and forty, and a van rear-ended at a hundred and
     // forty is off the crunch shelf and onto the smash. A shade over half is the
     // ninety-six the claim was measured at.
     const PRESSING_ON = 0.55;
-    expect(HARD_BODY_SOUNDS).toContain(bodyHitSound(10, 4, bodyAt(1)));
+    expect(HARD_BODY_SOUNDS).toContain(bodySound(1));
     expect(CRUNCH_SOUNDS).toContain(
       trafficHitSound(10, 4, vanAt(PRESSING_ON)).id,
     );
@@ -178,8 +215,175 @@ describe("the road's sound banks", () => {
     expect(trafficHitSound(10, 4, vanAt(CAREFUL)).sub).toBe(false);
   });
 
+  it("gives every body on the road a weight, and never all of them the same one", () => {
+    // THE TABLE IS THE PHYSICS' OWN (`bodyMassMult`), which is the point: the
+    // shelf a hit sounds like and the energy the wheel actually felt are one
+    // number read twice, so a body cannot sound heavy and be solved as light.
+    expect(CROWD_MASS_MULTS).toHaveLength(CROWD_VARIANTS);
+    // …and it averages a body, so a leg meets the same total mass of people it
+    // always did — every measured number in `drive_test.ts` is about the
+    // AVERAGE body, and this is a spread around it, not a thumb on the scale.
+    const mean =
+      CROWD_MASS_MULTS.reduce((sum, m) => sum + m, 0) / CROWD_MASS_MULTS.length;
+    expect(mean).toBeCloseTo(1, 5);
+
+    // ALL THREE BANKS ARE ACTUALLY REACHED. A weight split where seventeen of
+    // eighteen bodies land on one shelf is the old road with more files in it.
+    const banks = new Set(
+      Array.from({ length: CROWD_VARIANTS }, (_, v) => bodyWeight("walker", v)),
+    );
+    expect(banks).toEqual(new Set(["light", "mid", "heavy"]));
+  });
+
+  it("plays a different noise for a light body and a heavy one, same blow", () => {
+    // The SAME collision — same spot, same energy, same speed — differing only
+    // in who was standing there. This is the whole complaint the split answers.
+    const blow = (variant: number) =>
+      bodyHitSounds({
+        x: 40,
+        y: 6,
+        joules: DRIVE.impact.wearJoules * 0.02,
+        kind: "walker",
+        variant,
+        speedFrac: 0.5,
+      });
+    const light = CROWD_MASS_MULTS.findIndex((m) => m < 0.9);
+    const heavy = CROWD_MASS_MULTS.findIndex((m) => m > 1.1);
+    expect(blow(light)[0]).not.toBe(blow(heavy)[0]);
+    expect(HARD_LIGHT_SOUNDS).toContain(blow(light)[0]);
+    expect(HARD_HEAVY_SOUNDS).toContain(blow(heavy)[0]);
+    // …and the heavy one lays its own weight underneath, which is the half of
+    // "heavier" that turning a thud up cannot buy.
+    expect(blow(heavy)).toContain(BODY_SUB_SOUND);
+    expect(blow(light)).not.toContain(BODY_SUB_SOUND);
+  });
+
+  it("makes the SPEED audible on top of the weight, and a crawl a shove", () => {
+    // Speed and weight are two facts and the joules ladder folds them into one,
+    // so the crack is a LAYER over whatever the weight chose rather than a
+    // shelf of its own.
+    const at = (speedFrac: number) =>
+      bodyHitSounds({
+        x: 12,
+        y: 3,
+        joules: DRIVE.impact.wearJoules * 0.02,
+        kind: "walker",
+        variant: 4,
+        speedFrac,
+      });
+    // A crawl is a SHOVE: the bank is not reached at all, and nothing cracks.
+    expect(at(0.05)).toEqual([expect.stringMatching(/^drive_body_nudge_/)]);
+    expect(NUDGE_SOUNDS).toContain(at(0.05)[0]);
+    // Cruising: the body's own noise, no crack.
+    expect(at(0.4).some((id) => CRACK_SOUNDS.includes(id as never))).toBe(
+      false,
+    );
+    // Foot down: the same body, plus what the speed did.
+    expect(at(0.95).some((id) => CRACK_SOUNDS.includes(id as never))).toBe(
+      true,
+    );
+    // …and the crawl and the top of the dial are not the same event.
+    expect(at(0.05)).not.toEqual(at(0.95));
+  });
+
+  it("hands somebody's belongings their own layer, and most people none", () => {
+    // Every kit id names a sound the catalog holds (DRIVE_SOUND_IDS covers
+    // that) and every index is a body the crowd actually has — a row past the
+    // end of `CROWD_SPRITES` is a layer that can never play.
+    let carried = 0;
+    for (let v = 0; v < CROWD_VARIANTS; v++) {
+      const kit = kitSound("walker", v);
+      if (!kit) continue;
+      carried++;
+      expect(GENERATED_SOUNDS[kit], `missing kit sound "${kit}"`).toBeDefined();
+    }
+    // A handful of them, not all of them: if everybody clattered, nobody would.
+    expect(carried).toBeGreaterThan(2);
+    expect(carried).toBeLessThan(CROWD_VARIANTS / 2);
+    // The three KINDS that are not the crowd answer by kind instead — a rider
+    // is wearing a helmet whichever of the five faces they have.
+    expect(kitSound("rider", 0)).toBe(kitSound("rider", 3));
+    expect(kitSound("glued", 0)).toBeDefined();
+    expect(kitSound("driver", 0)).toBeUndefined();
+    // …and the kit only leaves them when the blow was hard enough to take it.
+    const soft = bodyHitSounds({
+      x: 1,
+      y: 1,
+      joules: 1,
+      kind: "rider",
+      variant: 0,
+      speedFrac: 0.5,
+    });
+    expect(soft).not.toContain(kitSound("rider", 0));
+  });
+
+  it("lets the CAR answer a hit, once, however many the tick booked", () => {
+    // ONE CHASSIS, ONE RING. A blockade books six collisions on a tick and a
+    // wheel over a body several times a second; six overlapping chassis booms
+    // is mud, and this is the longest layer the road has.
+    resetCarAnswer();
+    expect(carAnswerSound(0.5, 1000)).toBeDefined();
+    expect(carAnswerSound(0.5, 1040)).toBeUndefined();
+    // …unless the next blow is plainly bigger, which is the case the gap alone
+    // would swallow: a van met head-on in the middle of a crowd.
+    expect(carAnswerSound(0.95, 1060)).toBe(CAR_JOLT_SOUND);
+
+    // IT CLIMBS THE SAME LADDER THE HAND DOES (`driveHitForce`'s 0..1).
+    resetCarAnswer();
+    expect(carAnswerSound(0.15, 5000)).toBe(CAR_BUMP_SOUND);
+    resetCarAnswer();
+    expect(CAR_THUMP_SOUNDS).toContain(carAnswerSound(0.5, 5000));
+    resetCarAnswer();
+    expect(carAnswerSound(0.9, 5000)).toBe(CAR_JOLT_SOUND);
+    // …and says nothing at all about a graze, or the wagon would boom under
+    // every crushed hand in a blockade.
+    resetCarAnswer();
+    expect(carAnswerSound(0.02, 5000)).toBeUndefined();
+
+    // …AND IT IS ONLY EVER ASKED ABOUT COLLISIONS THE WAGON WAS PART OF: the
+    // road crashes without the hero, and `feltForce` — the same reach test the
+    // motor in his hand uses — is what keeps a pile-up he never touched from
+    // ringing his own chassis.
+    resetCarAnswer();
+    const staged = createDrive({
+      seed: 7,
+      direction: 1,
+      difficulty: "medium",
+      to: "test_level",
+      gib: false,
+      split: false,
+    });
+    const far = {
+      type: "trafficRolled",
+      pos: { x: staged.car.pos.x + 900, y: staged.car.pos.y },
+      joules: 90_000,
+    } as const;
+    expect(feltForce(staged, far)).toBe(0);
+    expect(carAnswerSound(feltForce(staged, far), 5000)).toBeUndefined();
+    const near = {
+      ...far,
+      pos: { x: staged.car.pos.x + 6, y: staged.car.pos.y },
+    };
+    expect(carAnswerSound(feltForce(staged, near), 5000)).toBe(CAR_JOLT_SOUND);
+
+    // A RESTART REWINDS THE CLOCK, and a gate that only ever counted forwards
+    // would mute the wagon for the whole of the next leg.
+    resetCarAnswer();
+    expect(carAnswerSound(0.5, 9000)).toBeDefined();
+    expect(carAnswerSound(0.5, 20)).toBeDefined();
+  });
+
   it("picks the same take for the same spot, and different ones across the road", () => {
-    expect(bodyHitSound(120, 8, 1000)).toBe(bodyHitSound(120, 8, 1000));
+    const same = () =>
+      bodyHitSounds({
+        x: 120,
+        y: 8,
+        joules: 1000,
+        kind: "walker",
+        variant: 2,
+        speedFrac: 0.8,
+      });
+    expect(same()).toEqual(same());
     expect(panelSound(4, 2)).toBe(panelSound(4, 2));
     const picks = new Set(
       Array.from({ length: 40 }, (_, i) => variantAt(i * 13, i * 5, 3)),

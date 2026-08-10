@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_kit_helmet
+description: >-
+  A CRASH HELMET meeting the road — the rider's, laid over whatever the body
+  itself made. A hard shell has a NOTE in it where a head does not, which is
+  the whole point of the layer: it is the one moment out here where the player
+  can hear that the person who just arrived on the bonnet was on a machine a
+  second ago.
+voices:
+  - call: tone
+    type: square
+    from: 720
+    to: 540
+    durationMs: 46
+    volume: 0.026
+    detuneCents: 10
+  - call: noise
+    durationMs: 34
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 2600
+  - call: noise
+    durationMs: 120
+    volume: 0.013
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 4000

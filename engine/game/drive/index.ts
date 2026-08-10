@@ -173,8 +173,10 @@ export {
 } from "./drivetrain.ts";
 export type { DriveOutcome } from "./config.ts";
 export {
+  bodyMassMult,
   crossingsBetween,
   crowdEdges,
+  CROWD_MASS_MULTS,
   CROWD_THOUGHTS,
   CROWD_VARIANTS,
   laneAt,

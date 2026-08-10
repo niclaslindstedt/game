@@ -21,7 +21,12 @@
 // what lets the gallery play a 200 ms collision at an eighth speed with the gore,
 // the sparks and the physics all stretching together.
 
-import { DRIVE_OUTCOME, gibsBody, type DriveState } from "@game/core";
+import {
+  DRIVE_OUTCOME,
+  gibsBody,
+  rungTopSpeedPx,
+  type DriveState,
+} from "@game/core";
 
 import { type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -50,11 +55,13 @@ import {
 import { playHudEvent } from "../hud/sounds.ts";
 import { lampHeadLift } from "./scenery.ts";
 import {
-  bodyHitSound,
+  bodyHitSounds,
   BREAKDOWN_SOUND,
+  carAnswerSound,
+  thrownBodySound,
   crushSound,
   DEBRIS_SOUND,
-  DRAG_SOUND,
+  dragSound,
   glassSound,
   lampHitSound,
   panelSound,
@@ -66,6 +73,7 @@ import {
   SUB_SOUND,
   trafficHitSound,
 } from "./drive-sounds.ts";
+import { feltForce } from "./drive-haptics.ts";
 import { soakCarFromStrike } from "./car-soak.ts";
 import { stepSkids, type SkidState } from "./skid.ts";
 import { driveVoice } from "./voice.ts";
@@ -126,6 +134,20 @@ export type EngineNoteState = {
  * fallen out of the floor.
  */
 const WINDSCREEN_LIFT = 12;
+
+/**
+ * HOW FAST HE WAS GOING, 0..1 of THIS RUNG's own dial.
+ *
+ * Against the rung's top speed rather than the road's absolute one
+ * (`rungTopSpeedPx`, not `DRIVE.topSpeedPx`), so "two thirds of the way up the
+ * dial" means the same thing on EASY as it does on JESUS. A fraction of a fixed
+ * number would quietly make the gentle rungs a game with no crack in it and the
+ * top rung one where every hit cracks.
+ */
+function speedFrac(drive: DriveState): number {
+  const top = rungTopSpeedPx(drive.params.difficulty ?? "medium");
+  return Math.min(1, Math.abs(drive.car.speed) / Math.max(1, top));
+}
 
 export function createEngineNote(): EngineNoteState {
   return { dueMs: 0, gear: 0, speedPx: 0, atMs: -1, tickMs: 0 };
@@ -268,6 +290,41 @@ export function drainDrive(
   // it is on, and a push lasts for as long as the player keeps his foot in — so
   // both are issued on a cadence at the vehicle's own place (`burning.ts`).
   stepBurning(fx, drive);
+  // WHAT THE CAR ITSELF MAKES OF THE TICK — laid under the collisions below,
+  // and worked out BEFORE them so the wagon's own boom starts with the blow
+  // rather than a layer late. One chassis rings once (`carAnswerSound` holds
+  // the gap), for the hardest thing that happened TO HIM — `feltForce` is the
+  // same number, and the same reach test, the motor in his hand is buzzed
+  // with, because the two senses are one answer to "how big was that" and a
+  // pile-up he never touched is neither of them.
+  let hardest = 0;
+  for (const event of drive.events) {
+    const force = feltForce(drive, event);
+    if (force > hardest) hardest = force;
+  }
+  const answer = carAnswerSound(hardest, drive.ms);
+
+  // ── N COPIES OF ONE SOUND IS NOT N EVENTS ─────────────────────────────────
+  // It is ONE sound at N times the amplitude, because they are started in the
+  // same instant off the same parameters and sum sample-aligned — the run's own
+  // event bus learned this years ago (`playEventSounds` keys its dedupe on the
+  // route key) and the road never did. It did not much matter while every body
+  // picked its take off its own position; it matters now, because the layers a
+  // hit stacks on top are FIXED ids — the mass under a heavy body, the resin
+  // under one of THE GLUED — and a blockade books six of them on a tick. Six
+  // copies of the sub is not a bigger crash, it is a clipped one.
+  //
+  // So the drain plays each distinct id ONCE per tick. Nothing is lost: six
+  // bodies still sound like six bodies, because what makes them six is the six
+  // different banks, takes and layers they picked — not six copies of one.
+  const heard = new Set<string>();
+  const play = (id: string | undefined): void => {
+    if (!id || heard.has(id)) return;
+    heard.add(id);
+    playDriveSound(synth, id);
+  };
+  play(answer);
+
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
@@ -277,10 +334,24 @@ export function drainDrive(
     // whole frame. Nothing here decides how hard anything was; it only asks.
     if (event.type === "pedestrianHit") {
       driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(
-        synth,
-        bodyHitSound(event.pos.x, event.pos.y, event.joules),
-      );
+      // A STACK RATHER THAN A SOUND, and the whole of "they all hit
+      // differently": WHO it was picks the bank and adds whatever they were
+      // carrying, HOW HARD picks the shelf, and HOW FAST the wagon was going
+      // decides whether it cracks at all or is merely a shove (see
+      // `bodyHitSounds`). The speed is read off the car HERE because it is the
+      // one fact of the four the engine does not put on the event — the wagon's
+      // own state at the instant the tick drained is not the collision's, it is
+      // the driver's.
+      for (const id of bodyHitSounds({
+        x: event.pos.x,
+        y: event.pos.y,
+        joules: event.joules,
+        kind: event.kind,
+        variant: event.variant,
+        speedFrac: speedFrac(drive),
+      })) {
+        play(id);
+      }
     }
     // A BUMPER GOING THROUGH SOMEBODY. Its own sound over the thud rather than
     // instead of it: the thud is the steel arriving and this is the person, and
@@ -288,7 +359,7 @@ export function drainDrive(
     // two is the biggest thing that happens on this road that is not a car.
     if (event.type === "bodySplit") {
       driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
+      play(splitSound(event.pos.x, event.pos.y));
     }
     // Something is caught under the floorpan and travelling with the car — the
     // long wet scrape underneath, which is the only sound on this road that
@@ -297,7 +368,10 @@ export function drainDrive(
       // The back axle is turning in it, so the tyres are loaded — and what they
       // print is the only part of this the driver takes with him.
       wetTyres(gore);
-      playDriveSound(synth, DRAG_SOUND);
+      // …and WHOSE it is, which is the one place a body's weight is heard after
+      // the collision rather than during it: a big one grinds along under the
+      // floorpan for longer and lower than a small one does.
+      play(dragSound(event.kind, event.variant));
     }
     // A wheel has found something already down. Quiet, and it has to be: in the
     // middle of a blockade this fires several times a second, and a crush that
@@ -305,13 +379,13 @@ export function drainDrive(
     if (event.type === "bodyCrushed") {
       crushRemain(gore, drive, event.pos.x, event.pos.y);
       wetTyres(gore);
-      playDriveSound(synth, crushSound(event.pos.x, event.pos.y));
+      play(crushSound(event.pos.x, event.pos.y));
     }
     // Dead steel already on the tarmac, kicked further down it: a hollow clout
     // with no crumple in it, because nothing here is giving way.
     if (event.type === "debrisStruck") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
-      playDriveSound(synth, DEBRIS_SOUND);
+      play(DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
       const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
@@ -321,34 +395,34 @@ export function drainDrive(
       // joules, same as the two under it.
       if (hit.sub) {
         driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-        playDriveSound(synth, SUB_SOUND);
+        play(SUB_SOUND);
       } else {
         driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       }
-      playDriveSound(synth, hit.id);
+      play(hit.id);
     }
     // A CAR'S WINDOWS LEAVING IT, with nobody through them. Its own beat, and
     // played OVER whatever else the collision made: the crunch is the steel and
     // this is the glass, and they are one event.
     if (event.type === "glassSmashed") {
       driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
-      playDriveSound(synth, glassSound(event.pos.x, event.pos.y));
+      play(glassSound(event.pos.x, event.pos.y));
     }
     // SOMEBODY DIED IN THEIR SEAT — the death this road cannot show in the air,
     // so it shows it on the windows (`DriveTraffic.gore`). The noise is the
     // body's own wet tear under the glass rather than a bank of its own: what
     // happened is a person, and the player has already learnt that sound.
     if (event.type === "occupantKilled") {
-      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
-      playDriveSound(synth, glassSound(event.pos.x, event.pos.y));
+      play(splitSound(event.pos.x, event.pos.y));
+      play(glassSound(event.pos.x, event.pos.y));
     }
     // …AND A CAR GOING OVER. The longest sound and the biggest shove on this
     // road, and the only collision outcome the player cannot mistake for
     // another one.
     if (event.type === "trafficRolled") {
       driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(synth, ROLLOVER_SOUND);
-      playDriveSound(synth, SUB_SOUND);
+      play(ROLLOVER_SOUND);
+      play(SUB_SOUND);
     }
     // A CAR VISIBLY FOLDING UP — the same panel noise the hero's own wagon
     // makes, because it is the same event happening to somebody else's car.
@@ -356,7 +430,7 @@ export function drainDrive(
     // took a rung", and he has already learnt that sound on his own bonnet.
     if (event.type === "trafficBent") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
-      playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
+      play(panelSound(event.pos.x, event.pos.y));
     }
     // …AND ONE GIVING UP ENTIRELY. The breakdown noise, for the same reason:
     // the player knows it as the sound of an engine dying, and this is one.
@@ -375,9 +449,13 @@ export function drainDrive(
       // the structure going (the big bank), the mass of it (the sub), and the
       // engine dying under all of it (the noise the player already knows as
       // exactly that, off his own bonnet).
-      playDriveSound(synth, SMASH_SOUNDS[0]);
-      playDriveSound(synth, SUB_SOUND);
-      playDriveSound(synth, BREAKDOWN_SOUND);
+      //
+      // …AND THE FIRST OF THEM IS PICKED RATHER THAN NAMED. It used to be
+      // `SMASH_SOUNDS[0]` flat, so every car the player ever finished went the
+      // same way while the bank sitting behind it had takes nothing reached.
+      play(pickSmash(event.pos.x, event.pos.y));
+      play(SUB_SOUND);
+      play(BREAKDOWN_SOUND);
     }
     // ── AN END GOING IN ───────────────────────────────────────────────────
     // The blow that stops a car being the car it was: it swaps to that END's
@@ -388,8 +466,8 @@ export function drainDrive(
     // is the top of a ladder he has been climbing all leg.
     if (event.type === "endSmashed") {
       driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(synth, pickSmash(event.pos.x, event.pos.y));
-      playDriveSound(synth, SUB_SOUND);
+      play(pickSmash(event.pos.x, event.pos.y));
+      play(SUB_SOUND);
     }
     // …AND THE WHEEL COMING OFF IT. Its own beat because it is the one piece of
     // a collision that LEAVES and keeps going — it bounces off down the road on
@@ -397,13 +475,13 @@ export function drainDrive(
     // tarmac is exactly the noise the debris bank already holds.
     if (event.type === "wheelTorn") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      playDriveSound(synth, DEBRIS_SOUND);
+      play(DEBRIS_SOUND);
     }
     // SOMETHING HAS CAUGHT. Quiet on purpose: the fire itself is not the beat —
     // it is a promise about the next few seconds, and the thing the player is
     // meant to react to is the picture of it growing in his mirror.
     if (event.type === "trafficFire") {
-      playDriveSound(synth, SUB_SOUND);
+      play(SUB_SOUND);
     }
     // …AND THE TANK GOING, which is the loudest thing on this road and the only
     // one that reaches the hero without him touching anything. Everything at
@@ -411,19 +489,16 @@ export function drainDrive(
     // as this road ever throws it (`driveBlast`).
     if (event.type === "trafficExploded") {
       driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
-      playDriveSound(synth, SMASH_SOUNDS[0]);
-      playDriveSound(synth, SMASH_SOUNDS[1]);
-      playDriveSound(synth, SUB_SOUND);
-      playDriveSound(synth, ROLLOVER_SOUND);
+      play(SMASH_SOUNDS[0]);
+      play(SMASH_SOUNDS[1]);
+      play(SUB_SOUND);
+      play(ROLLOVER_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
     // machine hitting tarmac on its side actually is.
     if (event.type === "machineDown") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      playDriveSound(
-        synth,
-        trafficHitSound(event.pos.x, event.pos.y, event.joules).id,
-      );
+      play(trafficHitSound(event.pos.x, event.pos.y, event.joules).id);
     }
     // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the BIG shelf,
     // whatever the joules say: a machine breaking in half has no gentle version
@@ -434,8 +509,8 @@ export function drainDrive(
     if (event.type === "machineSnapped") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(synth, pickSmash(event.pos.x, event.pos.y));
-      playDriveSound(synth, SUB_SOUND);
+      play(pickSmash(event.pos.x, event.pos.y));
+      play(SUB_SOUND);
     }
     // THE SCREEN GOING OUT, with somebody through it. The glass burst is the
     // lamp's own — a lens leaving a fitting and a windscreen leaving a frame
@@ -443,7 +518,7 @@ export function drainDrive(
     // windscreen actually sits at rather than off the road.
     if (event.type === "windscreenOut") {
       driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
-      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+      play(lampHitSound(event.pos.x, event.pos.y));
     }
     // …AND WHAT CAME THROUGH IT WITH THEM. Its own event rather than a second
     // read of the one above, because the engine raises it ONLY for a head-on and
@@ -458,16 +533,17 @@ export function drainDrive(
         WINDSCREEN_LIFT,
         drive.ms,
       );
-      playDriveSound(synth, splitSound(event.pos.x, event.pos.y));
+      play(splitSound(event.pos.x, event.pos.y));
     }
     // …and the body itself, arriving in the air. The heavy bank whatever the
     // joules say: there is no gentle version of coming out of a vehicle.
     if (event.type === "occupantThrown") {
       driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-      playDriveSound(
-        synth,
-        bodyHitSound(event.pos.x, event.pos.y, event.joules),
-      );
+      // …AND IT NOW PLAYS THE SHELF THIS COMMENT ALWAYS CLAIMED IT DID. It
+      // asked the joules ladder, which answered the ordinary thud for every
+      // ejection off a moped the road has ever staged — a body leaving a
+      // machine at speed, played as a clip on the wing.
+      play(thrownBodySound(event.pos.x, event.pos.y));
     }
     // A STREET LIGHT LEAVING ITS BASE — the shards a car sheds, plus the
     // crunch, because what the player has just heard is steel shearing off a
@@ -486,19 +562,19 @@ export function drainDrive(
         lampHeadLift(event.pos),
         drive.ms,
       );
-      playDriveSound(synth, lampHitSound(event.pos.x, event.pos.y));
+      play(lampHitSound(event.pos.x, event.pos.y));
     }
     if (event.type === "panelBent") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
-      playDriveSound(synth, panelSound(event.pos.x, event.pos.y));
+      play(panelSound(event.pos.x, event.pos.y));
     }
     if (event.type === "partShed") {
       drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      playDriveSound(synth, SHED_SOUND);
+      play(SHED_SOUND);
     }
     if (event.type === "breakdown") {
       driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
-      playDriveSound(synth, BREAKDOWN_SOUND);
+      play(BREAKDOWN_SOUND);
     }
     // ── THE CLOCK ─────────────────────────────────────────────────────────
     // The two moments the STOPWATCH has, and the only sounds this road makes

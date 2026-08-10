@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_hard_light_b
+description: >-
+  The second light hard hit — shorter and brighter still, with the debris
+  sizzle over the top that says they left the ground.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 238
+    to: 74
+    durationMs: 104
+    volume: 0.05
+    detuneCents: 14
+  - call: noise
+    durationMs: 128
+    volume: 0.026
+    filter:
+      type: lowpass
+      frequency: 440
+  - call: noise
+    durationMs: 96
+    volume: 0.016
+    delayMs: 70
+    filter:
+      type: highpass
+      frequency: 3400

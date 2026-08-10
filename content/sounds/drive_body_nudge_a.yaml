@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_nudge_a
+description: >-
+  A person met at walking pace — the bottom rung of the whole road, and the
+  one the bank did not have. A wagon rolling through a crowd at ten still
+  books a body, and it used to book it with the same thud a hit at sixty
+  makes; what actually happens is a bumper LEANING on somebody until they go
+  over. So: no crack at all, a soft dull knock through the plastic, cloth
+  against steel, and the trim ticking as they slide off it.
+voices:
+  - call: tone
+    type: square
+    from: 124
+    to: 88
+    durationMs: 74
+    volume: 0.024
+    detuneCents: 8
+  - call: noise
+    durationMs: 120
+    volume: 0.017
+    filter:
+      type: lowpass
+      frequency: 640
+  - call: noise
+    durationMs: 26
+    volume: 0.011
+    delayMs: 44
+    filter:
+      type: bandpass
+      frequency: 1800

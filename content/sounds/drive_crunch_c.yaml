@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_crunch_c
+description: >-
+  The third real collision with another car — the short, structural one: less
+  boom and more BODY, a dive that stops halfway and a fold of steel over the
+  top of it. It is what a corner going in sounds like next to the other two,
+  which are what a whole flank does.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 246
+    to: 58
+    durationMs: 210
+    volume: 0.07
+    detuneCents: 14
+  - call: noise
+    durationMs: 240
+    volume: 0.046
+    filter:
+      type: lowpass
+      frequency: 300
+    echo: 0.18
+  - call: tone
+    type: triangle
+    from: 420
+    to: 210
+    durationMs: 150
+    volume: 0.026
+    delayMs: 60
+    detuneCents: 16
+  - call: noise
+    durationMs: 160
+    volume: 0.02
+    delayMs: 120
+    filter:
+      type: highpass
+      frequency: 4600

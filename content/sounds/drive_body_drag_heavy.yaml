@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_body_drag_heavy
+description: >-
+  …and the same thing with somebody BIG under it. Longer, lower and with the
+  floorpan itself in it: the scrape sits an octave under the ordinary drag, the
+  wet wash beneath it runs half again as long, and there is a slow grinding
+  note where the underside of the car is being loaded rather than merely
+  brushed. What the player is being told is that this one is going to take a
+  while to come free.
+voices:
+  - call: noise
+    durationMs: 780
+    volume: 0.032
+    filter:
+      type: bandpass
+      frequency: 380
+    echo: 0.2
+  - call: noise
+    durationMs: 900
+    volume: 0.024
+    delayMs: 50
+    filter:
+      type: lowpass
+      frequency: 170
+  - call: tone
+    type: sawtooth
+    from: 74
+    to: 44
+    durationMs: 700
+    volume: 0.018
+    detuneCents: 26
+  - call: noise
+    durationMs: 260
+    volume: 0.012
+    delayMs: 420
+    filter:
+      type: bandpass
+      frequency: 900
