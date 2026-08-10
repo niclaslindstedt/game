@@ -28,6 +28,9 @@ import {
   createDriveDriver,
   createTraffic,
   driveDriverInput,
+  driveDashUp,
+  driveReadyUp,
+  roadWideningAt,
   CROWD_THOUGHTS,
   crossingsBetween,
   crowdEdges,
@@ -933,6 +936,43 @@ describe("a drive", () => {
     expect(sawMonologue).toBe(true);
     // …and the road really was empty when he said it.
     expect(drive.bodies).toBe(0);
+  });
+
+  it("says GET READY on the frame the road starts opening out", () => {
+    // THE COUNTDOWN IS THE WIDENING, and the claim is the ORDER of the opening's
+    // beats rather than any distance: the approach is quiet while the hero is
+    // still talking, the words go up with the taper — the first thing on screen
+    // that says the town is coming — the instruments follow a second later, and
+    // the gate takes the caption away with the pedal and the clock.
+    const drive = createDrive(PARAMS);
+    const gate = cityStartPx(PARAMS);
+    const taper = gate - DRIVE.opening.widenPx;
+
+    const readyAt = (travel: number): boolean => {
+      drive.distance = travel;
+      drive.cityDone = travel >= gate;
+      return driveReadyUp(drive);
+    };
+    // Quiet out on the country road, and quiet a hair before the taper.
+    expect(readyAt(0)).toBe(false);
+    expect(readyAt(taper - 1)).toBe(false);
+    // Up the moment the carriageway is wider than the approach's two lanes —
+    // read off the same arithmetic the road is DRAWN from, so the caption can
+    // never drift off the widening it is about.
+    expect(roadWideningAt(taper - 1, PARAMS)).toBe(false);
+    expect(roadWideningAt(taper + 1, PARAMS)).toBe(true);
+    expect(readyAt(taper + 1)).toBe(true);
+    // …and still up as the dashboard lands, so the panel arrives inside a
+    // caption rather than in place of one.
+    expect(readyAt(gate - DRIVE.opening.dashAtPx)).toBe(true);
+    expect(DRIVE.opening.widenPx).toBeGreaterThan(DRIVE.opening.dashAtPx);
+    drive.distance = gate - DRIVE.opening.dashAtPx;
+    expect(driveDashUp(drive)).toBe(true);
+    // The gate is the flag: the words go with the hand-over.
+    expect(readyAt(gate)).toBe(false);
+    // And the far outskirt's taper is NOT a second countdown — that stretch is
+    // the leg playing itself out, and the opening is long over.
+    expect(readyAt(cityEndPx(PARAMS) - 1)).toBe(false);
   });
 
   it("puts people on the road, and they get hit", () => {

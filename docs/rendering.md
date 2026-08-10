@@ -1078,8 +1078,10 @@ the floor — which stands on its own ground and keeps its own world anchor.
 
 **SO THE GROUND IT BLOCKS IS THE GROUND ITS PICTURE STANDS ON — AND THAT IS THE
 ONE NUMBER THE SIMULATION TAKES FROM THE PROJECTION.** A car's collision chain
-(`vehicleFootprint`, engine/game/vehicles.ts) is three circles at three columns of
-that same 48-px canvas, so it has to lie along whichever world bearing comes out
+(`vehicleFootprint`, engine/game/vehicles.ts) is a run of circles laid along that
+same 48-px canvas — spanning it end to end rather than sampling it, so the drawn
+bumper and flanks are what a wall actually stops (`CAR.footprint`) — so it has to
+lie along whichever world bearing comes out
 HORIZONTAL on screen — `billboardBearing()` in the import-free leaf
 `engine/game/flags.ts`, which is `-yaw` and is exactly unit-preserving, so a drawn
 column and a world offset along it are the same number. The app pushes the yaw in

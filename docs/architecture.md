@@ -969,8 +969,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   more layout beside `campus.ts` and `homestead.ts` and one more line in
   `DRIVE_SITES`.
   THE APPROACH IS A COUNTDOWN. The ten seconds before the town are held: the
-  speed is the road's own, the pedal reaches nothing, GET READY is on the screen,
-  and one second out the WHEEL is handed back and the dashboard slides in from
+  speed is the road's own and the pedal reaches nothing. Its last beats are the
+  road's own picture — the carriageway opens out from two lanes to four
+  (`opening.widenPx`) and GET READY goes up with the taper (`driveReadyUp`),
+  then one second out the WHEEL is handed back and the dashboard slides in from
   the left (`driveHandsOff` / `driveSteerOnly` / `opening.dashAtPx`). The pedal
   arrives with the clock and not a frame before it, so the gate is a starting
   flag rather than a line the player crosses without noticing. Its length is a

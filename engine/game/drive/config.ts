@@ -2005,8 +2005,12 @@ export const DRIVE = {
      *   `handsOff`) — so the second before the flag is spent settling into the
      *   lane he wants to meet the town in, which is a genuine decision and the
      *   only one available.
-     *   AND "GET READY" IS ON SCREEN until the gate, so the beat is stated
-     *   rather than merely implied.
+     *
+     * "GET READY" IS NOT ON THIS MARK — it goes up with the WIDENING
+     * (`widenPx`, `driveReadyUp`), which is earlier and is the first thing the
+     * player can see of the town arriving. The instruments then land inside a
+     * caption that is already up, which is the right order: the road says it,
+     * then the panel confirms it, then the flag drops.
      *
      * ONE NUMBER RATHER THAN TWO, on purpose: a dashboard that arrived on a
      * different frame from the wheel would be the game telling the player two
@@ -2024,6 +2028,13 @@ export const DRIVE = {
      * Long enough to be a TAPER rather than a step — a carriageway that doubled
      * in width in one frame would read as a rendering fault — and short enough
      * that the widening and the first house are plainly the same event.
+     *
+     * IT IS ALSO WHEN THE COUNTDOWN IS SAID OUT LOUD. GET READY goes up on the
+     * frame the taper starts (`driveReadyUp`) rather than on a mark of its own,
+     * because the widening is the one thing on screen that already means "you
+     * are arriving" — so the words land on a picture that is saying the same
+     * thing, and the caption lasts as long as the taper does. Move this and the
+     * countdown moves with it, which is the point.
      */
     widenPx: 520,
   },
