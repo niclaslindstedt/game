@@ -1385,8 +1385,16 @@ voices:
 Both voice kinds take `durationMs` (required), `volume`, `delayMs`, `pan`,
 `echo` and `filter` (`lowpass` / `highpass` / `bandpass`, with a `frequency`).
 A `tone` additionally takes `type`, `from` (required), `to`, `attackMs`,
-`detuneCents` and `vibrato` — a noise burst has no pitch, so it takes none of
-those.
+`holdMs`, `detuneCents` and `vibrato` — a noise burst has no pitch, so it takes
+none of those.
+
+**`holdMs` is the one that is not obvious.** Every tone otherwise falls away
+from the moment it starts — the level is a tenth of its peak a quarter of the
+way through `durationMs`, which is what makes a longer duration ring on rather
+than sustain. `holdMs` keeps the note at its peak for that long first, and then
+lets it fall in whatever is left. Reach for it when a sound is a BED rather than
+an event: a machine, a wind, an engine, anything you intend to fire over and
+over so the copies overlap into one continuous noise.
 
 **Volume is the one number worth checking twice.** The game's own sounds live
 between 0.01 and 0.09, and the ones that fire constantly are the quietest; a

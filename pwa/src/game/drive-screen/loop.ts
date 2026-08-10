@@ -31,7 +31,7 @@ import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 import { playDriveSound } from "../sfx/index.ts";
 import {
-  engineGrainMs,
+  ENGINE_GRAIN_MS,
   engineNote,
   playDriveEngine,
   playDriveShift,
@@ -92,10 +92,26 @@ export type Burst = {
 /** How long a burst's pieces are drawn for (ms) — the run's own figure. */
 export const BURST_LIFE_MS = 2600;
 
-/** The engine's own little scheduler: when the next grain is due (drive-clock
- * ms) and which gear the last one was in, so an upshift can be HEARD rather
- * than merely computed. */
-export type EngineNoteState = { dueMs: number; gear: number };
+/**
+ * The engine's own little scheduler: when the next grain is due (drive-clock
+ * ms), which gear the last one was in, so an upshift can be HEARD rather than
+ * merely computed, and what the last one knew — the road speed it was fired at
+ * and when — which is how the next one works out where the note is travelling
+ * (`glideTo`, sfx/drive.ts).
+ */
+export type EngineNoteState = {
+  dueMs: number;
+  gear: number;
+  /** The last grain's road speed, and the drive-clock ms it was fired at.
+   * `atMs` is negative until the first grain of the leg has gone out. */
+  speedPx: number;
+  atMs: number;
+  /** How far into the NEXT grain the engine's clatter is due to tick. Carried
+   * across grains because the ticks run at the CRANK's rate rather than the
+   * grain's, and a phase reset every grain would lope at the grain's instead
+   * (`playDriveEngine`). */
+  tickMs: number;
+};
 
 /**
  * HOW HIGH A WINDSCREEN SITS (world px off the road) — where the shards come
@@ -110,17 +126,25 @@ export type EngineNoteState = { dueMs: number; gear: number };
 const WINDSCREEN_LIFT = 12;
 
 export function createEngineNote(): EngineNoteState {
-  return { dueMs: 0, gear: 0 };
+  return { dueMs: 0, gear: 0, speedPx: 0, atMs: -1, tickMs: 0 };
 }
 
 /**
  * ONE GRAIN OF THE ENGINE, if one is due — the running note, made out of
- * one-shots on a cadence that quickens with the revs (see `sfx/drive.ts`).
+ * overlapping one-shots on a fixed cadence (see `sfx/drive.ts`, which owns why
+ * it is fixed).
  *
  * Scheduled on the DRIVE's clock rather than the wall's, so it keeps step with
  * the physics through a stutter and stops with the world when a line is up. A
  * dead engine says nothing at all: the wreck rolls in silence, which is most of
  * why the breakdown lands.
+ *
+ * THE CADENCE IS COUNTED FROM WHEN THE GRAIN WAS DUE, not from now, so a frame
+ * that arrives late does not push the whole bed out behind it — a bed whose
+ * grains drifted apart is a bed with holes in it. It never runs a backlog
+ * either: a leg resumed off a pause card (or a tab that was in the background)
+ * has a due time minutes in the past, and what that wants is one grain now,
+ * not four hundred at once.
  */
 export function runEngineNote(
   drive: DriveState,
@@ -129,14 +153,25 @@ export function runEngineNote(
   if (drive.outcome === DRIVE_OUTCOME.broken) return;
   if (drive.ms < engine.dueMs) return;
   const speed = drive.car.speed;
-  const { gear, rpm } = engineNote(speed);
+  const { gear } = engineNote(speed);
   // THE SHIFT IS HEARD BEFORE THE NEXT GRAIN: the note the player follows is
   // the climb inside a gear, so the moment it resets has to be marked or the
   // pitch simply appears to jump backwards for no reason.
   if (gear > engine.gear) playDriveShift(synth, speed);
   engine.gear = gear;
-  playDriveEngine(synth, speed, drive.car.wear);
-  engine.dueMs = drive.ms + engineGrainMs(rpm);
+  engine.tickMs = playDriveEngine(
+    synth,
+    speed,
+    drive.car.wear,
+    engine.atMs >= 0
+      ? { speedPx: engine.speedPx, dtMs: drive.ms - engine.atMs }
+      : undefined,
+    engine.tickMs,
+  );
+  engine.speedPx = speed;
+  engine.atMs = drive.ms;
+  engine.dueMs =
+    Math.max(engine.dueMs, drive.ms - ENGINE_GRAIN_MS) + ENGINE_GRAIN_MS;
 }
 
 /**

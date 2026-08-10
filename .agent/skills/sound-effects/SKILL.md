@@ -121,6 +121,14 @@ A useful starting grammar (tweak from here, don't treat as law):
   moments; filtered noise reads as material (lowpass = dust/rumble,
   bandpass = clicks/snares, highpass = hats/sizzle); `attackMs` ≥ 200 for
   pads, 0 for anything percussive.
+- **A BED gets `holdMs`; an EVENT never does.** Every tone falls away from the
+  moment it starts — a tenth of its peak a quarter of the way through
+  `durationMs` — which is why a longer duration makes a hit RING rather than
+  sustain. `holdMs` keeps it at the peak first. Reach for it only for the
+  sounds you intend to fire over and over so the copies fuse into one
+  continuous noise (an engine, a machine, a wind); for a hit, a shot or a
+  pickup it is the wrong shape. Building one is its own craft — read the
+  `continuous-bed-needs-a-hold` lesson before tuning a grain cadence.
 
 Mixing rules:
 

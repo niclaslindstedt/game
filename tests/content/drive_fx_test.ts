@@ -59,7 +59,16 @@ import {
   shakeCamera,
   stepDriveFx,
 } from "../../pwa/src/game/drive-screen/drive-fx.ts";
-import { engineGrainMs, engineNote } from "../../pwa/src/game/sfx/drive.ts";
+import type {
+  NoiseOptions,
+  Synth,
+  ToneOptions,
+} from "../../pwa/src/lib/synth.ts";
+import {
+  ENGINE_GRAIN_MS,
+  engineNote,
+  playDriveEngine,
+} from "../../pwa/src/game/sfx/drive.ts";
 import {
   createWearTrail,
   driveDials,
@@ -245,21 +254,204 @@ describe("the engine note", () => {
     expect(at(1).gear).toBe(GEAR_COUNT - 1);
   });
 
-  it("quickens the putter as the revs climb", () => {
-    // Measured across the band the engine is actually ASKED for — idle to the
-    // shift point. A cadence stretched to the redline instead would spend the
-    // whole trip in its slow third, and the top of a gear would putter along at
-    // very nearly the rate of the same car sitting at the lights.
-    expect(engineGrainMs(DRIVETRAIN.shiftUpRpm)).toBeLessThan(
-      engineGrainMs(DRIVETRAIN.idleRpm),
+  // ── THE BED ───────────────────────────────────────────────────────────────
+  // A CAR MAKES ONE CONTINUOUS NOISE, and this engine is made of one-shots, so
+  // the thing that has to hold is that the one-shots OVERLAP into one. They did
+  // not: the grains were a hair longer than the gap between them, but a tone
+  // falls to a tenth of its peak a quarter of the way through its duration, so
+  // what the player got was a putter with daylight in it. Every assertion below
+  // is that failure, stated as a fact about what gets scheduled.
+  it("holds each grain and fires the next well inside it", () => {
+    const { tones } = record((synth) =>
+      playDriveEngine(synth, DRIVE.topSpeedPx * 0.5, 0),
     );
-    const half = (DRIVETRAIN.idleRpm + DRIVETRAIN.shiftUpRpm) / 2;
-    expect(engineGrainMs(half)).toBeLessThan(engineGrainMs(DRIVETRAIN.idleRpm));
-    expect(engineGrainMs(half)).toBeGreaterThan(
-      engineGrainMs(DRIVETRAIN.shiftUpRpm),
+    expect(tones.length).toBeGreaterThan(0);
+    for (const grain of tones) {
+      // The peak is HELD — without this the grain is a blip whatever its
+      // duration says, and no cadence short of a buzz will fuse two of them.
+      expect(grain.holdMs ?? 0).toBeGreaterThan(ENGINE_GRAIN_MS);
+      // …and the next grain lands during that hold, with the one before it
+      // still up: three sounding at once, which is what flattens the sum.
+      expect(grain.durationMs).toBeGreaterThan(ENGINE_GRAIN_MS * 2);
+    }
+  });
+
+  it("stacks the wind deeper than the pitched layers", () => {
+    // Uncorrelated noise sums in POWER, so a bed of noise grains needs more of
+    // them overlapping than a bed of notes does to stop fluttering.
+    const { noises } = record((synth) =>
+      playDriveEngine(synth, DRIVE.topSpeedPx * 0.5, 0),
     );
+    // The clatter is noise too and is meant to be the shortest sound here, so
+    // the bed is what is left once the ticks are put aside.
+    const bed = noises.filter((n) => n.durationMs >= 50);
+    expect(bed.length).toBeGreaterThan(0);
+    for (const grain of bed) {
+      expect(grain.durationMs).toBeGreaterThan(ENGINE_GRAIN_MS * 4);
+    }
+  });
+
+  it("glides toward where the note is GOING, so the grains agree", () => {
+    // Three grains sound at once and each covers three cadences, so a grain
+    // that held its pitch would be arguing with the two fired after it every
+    // time the car accelerated. Each one glides along the same extrapolated
+    // line instead: fired while accelerating it ends above where it started,
+    // while braking below it, and at a steady speed it does not move.
+    const from = DRIVE.topSpeedPx * 0.4;
+    const prev = (speedPx: number) => ({ speedPx, dtMs: ENGINE_GRAIN_MS });
+    const glide = (was: number): { from: number; to: number } => {
+      const grain = record((synth) =>
+        playDriveEngine(synth, from, 0, prev(was)),
+      ).tones[0] as ToneOptions;
+      return { from: grain.from, to: grain.to ?? grain.from };
+    };
+    const rising = glide(from * 0.9);
+    expect(rising.to).toBeGreaterThan(rising.from);
+    const falling = glide(from * 1.1);
+    expect(falling.to).toBeLessThan(falling.from);
+    const steady = glide(from);
+    expect(steady.to).toBeCloseTo(steady.from, 6);
+    // …and never runs away with itself: the prediction is the CRANK's, so
+    // however wild the rate it stays inside the band the engine is asked for.
+    // A slammed brake cannot glide the note below idle, and a standing start
+    // cannot glide it past where the box lets go — which is also why it can
+    // never wander into the next gear's pitch a third of a second early.
+    const perRpm = engineNote(from).hz / engineNote(from).rpm;
+    for (const was of [0, from * 4, -from]) {
+      const g = glide(was);
+      expect(g.to).toBeGreaterThanOrEqual(DRIVETRAIN.idleRpm * perRpm - 1e-6);
+      expect(g.to).toBeLessThanOrEqual(DRIVETRAIN.shiftUpRpm * perRpm + 1e-6);
+    }
+  });
+
+  it("leaves no hole in the bed — the summed level barely moves", () => {
+    // THE ACTUAL BUG, MEASURED. Overlapping grains is not the same thing as a
+    // continuous sound: what matters is what their ENVELOPES add up to, and
+    // the old ones added up to a putter with daylight in it. So this rebuilds
+    // the gain automation the way WebAudio will play it, sums every pitched
+    // layer of a couple of seconds' worth of grains, and asks how far the total
+    // moves between one grain and the next.
+    const grains: { at: number; tone: ToneOptions }[] = [];
+    let phase = 0;
+    const speed = DRIVE.topSpeedPx * 0.45; // steady, so only the bed can wobble
+    for (let grain = 0; grain < 20; grain++) {
+      const at = grain * ENGINE_GRAIN_MS;
+      const { tones } = record((synth) => {
+        phase = playDriveEngine(
+          synth,
+          speed,
+          0,
+          { speedPx: speed, dtMs: ENGINE_GRAIN_MS },
+          phase,
+        );
+      });
+      for (const tone of tones) grains.push({ at, tone });
+    }
+
+    let lo = Infinity;
+    let hi = 0;
+    // Measured across the middle only: the first grains are the bed filling up
+    // and the last are it draining, and neither is a hole.
+    for (let t = 6 * ENGINE_GRAIN_MS; t < 14 * ENGINE_GRAIN_MS; t++) {
+      let sum = 0;
+      for (const { at, tone } of grains) sum += gainAt(tone, t - at);
+      lo = Math.min(lo, sum);
+      hi = Math.max(hi, sum);
+    }
+    expect(lo).toBeGreaterThan(0);
+    // Under 2 dB of wobble. A putter is 15 and more — and the number to watch
+    // if any of the four grain constants is ever retuned.
+    expect(20 * Math.log10(hi / lo)).toBeLessThan(2);
+  });
+
+  it("clatters at the CRANK's rate, and carries the phase across grains", () => {
+    // The ticks are the layer the ear can count at the bottom of the band, so
+    // they have to run at the engine's rate rather than at the grain scheduler's
+    // — and the only way that survives being cut into grains is for each grain
+    // to pick the phase up where the last one dropped it. A grain that reset it
+    // would lope at the grain rate, which is a rhythm nothing in the car makes.
+    const ticksAt = (speedPx: number, phase: number) => {
+      const { noises } = record((synth) => {
+        next = playDriveEngine(synth, speedPx, 0, undefined, phase);
+      });
+      // The wind bed is the long one; the clatter is everything short.
+      return noises.filter((n) => n.durationMs < 50).map((n) => n.delayMs ?? 0);
+    };
+    let next = 0;
+
+    const slow = ticksAt(DRIVE.topSpeedPx * 0.02, 0);
+    const fast = ticksAt(DRIVE.topSpeedPx * 0.6, 0);
+    expect(slow.length).toBeGreaterThan(0);
+    expect(fast.length).toBeGreaterThan(slow.length);
+
+    // Walk a few grains at a steady speed and check the ticks come out evenly
+    // spaced ACROSS the seams, not just inside each grain.
+    const all: number[] = [];
+    let phase = 0;
+    for (let grain = 0; grain < 6; grain++) {
+      for (const at of ticksAt(DRIVE.topSpeedPx * 0.3, phase)) {
+        all.push(grain * ENGINE_GRAIN_MS + at);
+      }
+      phase = next;
+    }
+    expect(all.length).toBeGreaterThan(6);
+    const gaps = all.slice(1).map((t, i) => t - (all[i] as number));
+    for (const gap of gaps) expect(gap).toBeCloseTo(gaps[0] as number, 6);
+  });
+
+  it("holds the note flat across a shift and lets the blip say it", () => {
+    // The crank did not slow down over a shift, it was handed a different
+    // gear — so the rate across one is not a rate, and a grain that read it as
+    // one would dive for a pitch the engine is not going to make.
+    const before = gearOpening(1) - 1;
+    const after = gearOpening(2);
+    const grain = record((synth) =>
+      playDriveEngine(synth, after, 0, { speedPx: before, dtMs: 105 }),
+    ).tones[0] as ToneOptions;
+    expect(engineNote(after).gear).not.toBe(engineNote(before).gear);
+    expect(grain.to ?? grain.from).toBeCloseTo(grain.from, 6);
   });
 });
+
+/**
+ * A tone's level `t` ms into it, as WebAudio will actually play the automation
+ * `synth.tone()` writes: an exponential climb over the attack (from a
+ * floor of 0.0001, which is what makes the first half of one nearly silent),
+ * the peak held for `holdMs`, then an exponential fall back to that floor
+ * across whatever is left.
+ */
+function gainAt(tone: ToneOptions, t: number): number {
+  const { durationMs, volume = 0.06, attackMs = 0, holdMs = 0 } = tone;
+  if (t < 0 || t > durationMs) return 0;
+  const floor = 0.0001;
+  const attack = Math.min(attackMs, durationMs * 0.5);
+  const ramp = (from: number, to: number, f: number): number =>
+    from * Math.pow(to / from, Math.min(1, Math.max(0, f)));
+  if (t < attack) return ramp(floor, volume, t / attack);
+  const decayFrom = Math.min(attack + holdMs, durationMs - 5);
+  if (t < decayFrom) return volume;
+  return ramp(volume, floor, (t - decayFrom) / (durationMs - decayFrom));
+}
+
+/** Play something at a synth that writes down what it was asked for. */
+function record(play: (synth: Synth) => void): {
+  tones: ToneOptions[];
+  noises: NoiseOptions[];
+} {
+  const tones: ToneOptions[] = [];
+  const noises: NoiseOptions[] = [];
+  play({
+    unlock() {},
+    autostart() {},
+    resume() {},
+    now: () => 0,
+    tone: (o) => tones.push(o),
+    noise: (o) => noises.push(o),
+    sample: () => null,
+    decode: () => Promise.resolve(null),
+  });
+  return { tones, noises };
+}
 
 /** The road speed (px/s) a gear opens at — walked up from the note itself so
  * the test never has to know the ratios. */

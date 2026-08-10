@@ -1,0 +1,472 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# OVERDUE — the score for THE ROAD, both ends of it.
+#
+# Arrangement (162 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   intro(4) a(8) a2(8) b(8) a(8) break(8) build(8) b(8) a2(8) turn(8)
+#   = 76 bars ≈ 113 s per loop.
+#
+# THE CLOCK NEVER STOPS. The `tick` voice — a dry bandpassed click on every
+# quarter — runs through every single pattern including the breakdown, where it
+# is the loudest thing left. That is the whole idea of this score: the hero is
+# late, he was late before he got in the car, and the one sound the arrangement
+# never takes away is the one counting the time he does not have.
+id: overdue
+name: OVERDUE
+description: >-
+  The road's theme, and it is a panic rather than a chase. A D-minor drive
+  with a Phrygian i–bII lurch (Dm → Eb) that never settles, a galloping
+  triangle bass under a chugging saw engine, and a two-tone sawtooth SIREN
+  wailing a minor second over the top — the same interval an emergency
+  vehicle uses, and here it is a chord tone in both chords, so the distress
+  signal is also the harmony. A dry clock ticks every quarter from the first
+  bar to the last. The breakdown strips it to that clock, a held pedal and
+  the siren alone; the build climbs a bare chromatic bass D–Eb–E–F–F#–G–G#–A
+  under a snare roll and hands back to the anthem. Shapes borrowed from the
+  action scores of the era, every melody original.
+bpm: 162
+stepsPerBeat: 4
+instruments:
+  # THE SIREN — the distress signal, and the score's signature. Sawtooth,
+  # detuned, with a wide slow vibrato so a held note wavers like a wail rather
+  # than sitting there like a pad.
+  siren:
+    wave: sawtooth
+    volume: 0.021
+    gate: 0.95
+    detuneCents: 9
+    vibrato:
+      rateHz: 5.5
+      depthCents: 22
+      delayMs: 60
+    echo: 0.26
+  # The anxious lead: detuned square, quick shallow vibrato — a voice that
+  # keeps starting the same phrase again because it cannot finish it.
+  lead:
+    wave: square
+    volume: 0.028
+    gate: 0.8
+    detuneCents: 6
+    vibrato:
+      rateHz: 6.5
+      depthCents: 12
+      delayMs: 100
+    echo: 0.2
+  # The answer voice: doubles the lead an octave down through the anthem.
+  harm:
+    wave: square
+    volume: 0.014
+    gate: 0.8
+    pan: 0.35
+    echo: 0.16
+  # Off-beat chord stabs, and the breakdown's broken-chord arpeggio.
+  stab:
+    wave: square
+    volume: 0.013
+    gate: 0.25
+    pan: -0.32
+  # THE ENGINE — a syncopated saw chug under everything, filtered down so it
+  # is felt at the bottom of the mix rather than heard at the top of it.
+  pulse:
+    wave: sawtooth
+    volume: 0.017
+    gate: 0.5
+    pan: 0.22
+    filter:
+      type: lowpass
+      frequency: 1200
+  # The gallop: triangle octaves in a dotted push, so the bass is running
+  # rather than pumping.
+  bass:
+    wave: triangle
+    volume: 0.056
+    gate: 0.85
+  # THE CLOCK — one dry bandpassed click a quarter, in every pattern there is.
+  tick:
+    wave: noise
+    volume: 0.009
+    gate: 0.12
+    pan: -0.45
+    filter:
+      type: bandpass
+      frequency: 3200
+  # The kit: a pitch-diving triangle kick, band-limited snare, tight hat.
+  kick:
+    wave: triangle
+    volume: 0.064
+    gate: 1
+    slide: 0.25
+  snare:
+    wave: noise
+    volume: 0.036
+    gate: 0.75
+    filter:
+      type: highpass
+      frequency: 1500
+  hat:
+    wave: noise
+    volume: 0.01
+    gate: 0.25
+    pan: 0.25
+    filter:
+      type: highpass
+      frequency: 6800
+patterns:
+  # INTRO — the clock alone, then the engine, then the first wail. Four bars,
+  # and nothing melodic in any of them: the road has not started yet either.
+  intro:
+    siren: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A4 =  =  =  =  =  =  =  A#4 =  =  =  =  =  =  =
+    pulse: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+    bass: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+    kick: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+    hat: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # A — Dm Eb Dm Eb / Dm Bb C A. The lurch up a semitone and back is the
+  # whole engine of the theme: it is the one move that refuses to resolve.
+  a:
+    lead: |
+      D5 =  .  .  D5 =  .  .  F5 =  =  =  E5 =  =  =
+      D#5 =  .  .  D#5 =  .  .  D5 =  =  =  C5 =  =  =
+      D5 =  .  .  F5 =  .  .  A5 =  =  =  G5 =  F5 =
+      D#5 =  =  =  D5 =  =  =  C5 =  =  =  A4 =  =  =
+      D5 =  .  .  D5 =  .  .  F5 =  E5 =  D5 =  C5 =
+      A#4 =  =  =  D5 =  =  =  F5 =  =  =  D5 =  =  =
+      C5 =  =  =  E5 =  =  =  G5 =  =  =  E5 =  C5 =
+      A4 =  C#5 =  E5 =  =  =  C#5 =  A4 =  .  .  .  .
+    stab: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D4 .  .  .  F4 .  .  .  D4 .  .  .  F4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  C#4 .  .  .  E4 .  .  .  C#4 .  .  .  E4 .
+    pulse: |
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D#3 .  D#3 D#3 .  D#3 D#3 .  D#3 .  D#3 D#3 .  D#3 D#3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D#3 .  D#3 D#3 .  D#3 D#3 .  D#3 .  D#3 D#3 .  D#3 D#3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      C3 .  C3 C3 .  C3 C3 .  C3 .  C3 C3 .  C3 C3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+    bass: |
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+    kick: |
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+    hat: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # A2 — the same road, driven harder: the lead breaks into sixteenths and the
+  # siren arrives over the first half of it.
+  a2:
+    lead: |
+      D5 .  D5 =  F5 .  E5 =  D5 .  F5 =  A5 =  =  =
+      A#5 =  A5 =  G5 =  F5 =  D#5 =  =  =  D5 =  =  =
+      D5 .  D5 =  F5 .  A5 =  D6 =  =  =  A5 =  F5 =
+      G5 =  F5 =  D#5 =  D5 =  C5 =  =  =  A#4 =  =  =
+      D5 =  E5 =  F5 =  G5 =  A5 =  =  =  D5 =  =  =
+      F5 =  D5 =  A#4 =  D5 =  F5 =  A5 =  A#5 =  =  =
+      A5 =  G5 =  E5 =  C5 =  E5 =  G5 =  A5 =  =  =
+      A5 =  G5 =  F5 =  E5 =  C#5 =  =  =  A4 =  =  =
+    siren: |
+      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    stab: |
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  G4 .  .  .  A#4 .  .  .  G4 .  .  .  A#4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D4 .  .  .  F4 .  .  .  D4 .  .  .  F4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  C#4 .  .  .  E4 .  .  .  C#4 .  .  .  E4 .
+    pulse: |
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D#3 .  D#3 D#3 .  D#3 D#3 .  D#3 .  D#3 D#3 .  D#3 D#3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D#3 .  D#3 D#3 .  D#3 D#3 .  D#3 .  D#3 D#3 .  D#3 D#3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      C3 .  C3 C3 .  C3 C3 .  C3 .  C3 C3 .  C3 C3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+    bass: |
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+    kick: |
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+    hat: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # B — Bb C Dm Dm / Bb C Gm A: the bVI–bVII lift, which is as close to hope
+  # as this score gets. It is still not a resolution — it lands on the
+  # dominant and goes round again.
+  b:
+    lead: |
+      D5 =  =  =  F5 =  =  =  A#5 =  =  =  =  =  =  =
+      C5 =  =  =  E5 =  =  =  G5 =  =  =  =  =  =  =
+      A5 =  =  =  =  =  G5 =  F5 =  =  =  D5 =  =  =
+      E5 =  =  =  F5 =  =  =  A5 =  =  =  =  =  =  =
+      A#5 =  =  =  A5 =  G5 =  F5 =  =  =  D5 =  =  =
+      C5 =  =  =  E5 =  G5 =  A#5 =  =  =  G5 =  =  =
+      G5 =  =  =  A#5 =  =  =  D6 =  =  =  A#5 =  G5 =
+      A5 =  =  =  =  =  =  =  E5 =  =  =  C#5 =  =  =
+    harm: |
+      D4 =  =  =  F4 =  =  =  A#4 =  =  =  =  =  =  =
+      C4 =  =  =  E4 =  =  =  G4 =  =  =  =  =  =  =
+      A4 =  =  =  =  =  G4 =  F4 =  =  =  D4 =  =  =
+      E4 =  =  =  F4 =  =  =  A4 =  =  =  =  =  =  =
+      A#4 =  =  =  A4 =  G4 =  F4 =  =  =  D4 =  =  =
+      C4 =  =  =  E4 =  G4 =  A#4 =  =  =  G4 =  =  =
+      G4 =  =  =  A#4 =  =  =  D5 =  =  =  A#4 =  G4 =
+      A4 =  =  =  =  =  =  =  E4 =  =  =  C#4 =  =  =
+    stab: |
+      .  .  D4 .  .  .  F4 .  .  .  D4 .  .  .  F4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  F4 .  .  .  A4 .  .  .  F4 .  .  .  A4 .
+      .  .  D4 .  .  .  F4 .  .  .  D4 .  .  .  F4 .
+      .  .  E4 .  .  .  G4 .  .  .  E4 .  .  .  G4 .
+      .  .  A#3 .  .  .  D4 .  .  .  A#3 .  .  .  D4 .
+      .  .  C#4 .  .  .  E4 .  .  .  C#4 .  .  .  E4 .
+    pulse: |
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      C3 .  C3 C3 .  C3 C3 .  C3 .  C3 C3 .  C3 C3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      C3 .  C3 C3 .  C3 C3 .  C3 .  C3 C3 .  C3 C3 .
+      G3 .  G3 G3 .  G3 G3 .  G3 .  G3 G3 .  G3 G3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+    bass: |
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
+      G2 .  G2 G3 .  G2 .  G3 G2 .  G2 G3 .  G2 .  G3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+    kick: |
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+    hat: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # BREAK — Dm Dm Eb Eb / Gm Gm A A. The kit stops dead and what is left is
+  # the clock, a held pedal, a broken chord and the siren. This is the sound
+  # of the drive being a bad idea, and it is the only place in the score the
+  # tick is the loudest thing playing.
+  break:
+    siren: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C#5 =  =  =  =  =  =  =  E5 =  =  =  =  =  =  =
+    stab: |
+      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
+      D4 .  F4 .  A4 .  F4 .  D4 .  F4 .  A4 .  F4 .
+      D#4 .  G4 .  A#4 .  G4 .  D#4 .  G4 .  A#4 .  G4 .
+      D#4 .  G4 .  A#4 .  G4 .  D#4 .  G4 .  A#4 .  G4 .
+      G3 .  A#3 .  D4 .  A#3 .  G3 .  A#3 .  D4 .  A#3 .
+      G3 .  A#3 .  D4 .  A#3 .  G3 .  A#3 .  D4 .  A#3 .
+      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
+      A3 .  C#4 .  E4 .  C#4 .  A3 .  C#4 .  E4 .  C#4 .
+    bass: |
+      D2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A2 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    hat: |
+      x  .  .  .  .  .  .  .  x  .  .  .  .  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # BUILD — a bare chromatic climb, D–Eb–E–F–F#–G–G#–A, one bar apiece, under
+  # a lead that holds each step and a snare that fills in behind it. The
+  # siren joins halfway and is two-toning on the sixteenth by the top.
+  build:
+    lead: |
+      D5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      E5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    harm: |
+      D4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      D#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      E4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      F#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      G#4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A4 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+    siren: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
+      A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =  A5 =  A#5 =
+    pulse: |
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      D#3 .  D#3 D#3 .  D#3 D#3 .  D#3 .  D#3 D#3 .  D#3 D#3 .
+      E3 .  E3 E3 .  E3 E3 .  E3 .  E3 E3 .  E3 E3 .
+      F3 .  F3 F3 .  F3 F3 .  F3 .  F3 F3 .  F3 F3 .
+      F#3 .  F#3 F#3 .  F#3 F#3 .  F#3 .  F#3 F#3 .  F#3 F#3 .
+      G3 .  G3 G3 .  G3 G3 .  G3 .  G3 G3 .  G3 G3 .
+      G#3 .  G#3 G#3 .  G#3 G#3 .  G#3 .  G#3 G#3 .  G#3 G#3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+    bass: |
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      D#2 .  D#2 D#3 .  D#2 .  D#3 D#2 .  D#2 D#3 .  D#2 .  D#3
+      E2 .  E2 E3 .  E2 .  E3 E2 .  E2 E3 .  E2 .  E3
+      F2 .  F2 F3 .  F2 .  F3 F2 .  F2 F3 .  F2 .  F3
+      F#2 .  F#2 F#3 .  F#2 .  F#3 F#2 .  F#2 F#3 .  F#2 .  F#3
+      G2 .  G2 G3 .  G2 .  G3 G2 .  G2 G3 .  G2 .  G3
+      G#2 .  G#2 G#3 .  G#2 .  G#3 G#2 .  G#2 G#3 .  G#2 .  G#3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+    kick: |
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      .  .  .  .  x  .  .  .  x  .  x  .  x  .  x  .
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
+    hat: |
+      x  x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+  # TURN — Dm Bb C A / Dm Bb A A: lead and harmony in octaves with the siren
+  # over the top, and the last bar leaves a hole for the clock to be alone in
+  # before the loop comes round again.
+  turn:
+    lead: |
+      D5 =  E5 =  F5 =  G5 =  A5 =  =  =  =  =  =  =
+      A#5 =  A5 =  G5 =  F5 =  D5 =  =  =  =  =  =  =
+      C5 =  E5 =  G5 =  A5 =  A#5 =  =  =  A5 =  G5 =
+      E5 =  C#5 =  A4 =  =  =  C#5 =  E5 =  A5 =  =  =
+      D5 =  F5 =  A5 =  =  =  D6 =  =  =  A5 =  F5 =
+      A#5 =  =  =  A5 =  G5 =  F5 =  =  =  D5 =  =  =
+      E5 =  =  =  G5 =  =  =  A5 =  =  =  C#6 =  =  =
+      D6 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    harm: |
+      D4 =  E4 =  F4 =  G4 =  A4 =  =  =  =  =  =  =
+      A#4 =  A4 =  G4 =  F4 =  D4 =  =  =  =  =  =  =
+      C4 =  E4 =  G4 =  A4 =  A#4 =  =  =  A4 =  G4 =
+      E4 =  C#4 =  A3 =  =  =  C#4 =  E4 =  A4 =  =  =
+      D4 =  F4 =  A4 =  =  =  D5 =  =  =  A4 =  F4 =
+      A#4 =  =  =  A4 =  G4 =  F4 =  =  =  D4 =  =  =
+      E4 =  =  =  G4 =  =  =  A4 =  =  =  C#5 =  =  =
+      D5 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    siren: |
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A#5 =  =  =  =  =  =  =  =  =  =  =  =  =  =  =
+      A5 =  =  =  =  =  =  =  A#5 =  =  =  =  =  =  =
+      D6 =  =  =  =  =  =  =  .  .  .  .  .  .  .  .
+    pulse: |
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      C3 .  C3 C3 .  C3 C3 .  C3 .  C3 C3 .  C3 C3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+      D3 .  D3 D3 .  D3 D3 .  D3 .  D3 D3 .  D3 D3 .
+      A#3 .  A#3 A#3 .  A#3 A#3 .  A#3 .  A#3 A#3 .  A#3 A#3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  A3 A3 .
+      A3 .  A3 A3 .  A3 A3 .  A3 .  A3 A3 .  .  .  .
+    bass: |
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      C2 .  C2 C3 .  C2 .  C3 C2 .  C2 C3 .  C2 .  C3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      D2 .  D2 D3 .  D2 .  D3 D2 .  D2 D3 .  D2 .  D3
+      A#2 .  A#2 A#3 .  A#2 .  A#3 A#2 .  A#2 A#3 .  A#2 .  A#3
+      A2 .  A2 A3 .  A2 .  A3 A2 .  A2 A3 .  A2 .  A3
+      A2 .  A2 A3 .  A2 .  A3 A2 =  =  =  .  .  .  .
+    kick: |
+      D2 .  .  .  .  .  D2 .  D2 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  D2 .  D2 .  D2 .  .  .  .  .
+    snare: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  x  .
+      x  .  x  .  x  x  .  x  x  x  x  x  .  .  .  .
+    hat: |
+      x  .  x  .  x  .  x  .  x  .  x  .  x  .  x  .
+    tick: |
+      x  .  .  .  x  .  .  .  x  .  .  .  x  .  .  .
+order: [intro, a, a2, b, a, break, build, b, a2, turn]
