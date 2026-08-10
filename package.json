@@ -71,7 +71,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.8.0",
     "playwright": "^1.62.0",
-    "prettier": "^3.4.2",
+    "prettier": "^3.9.6",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "vitest": "^4.1.9",
     "yaml": "^2.9.0"
