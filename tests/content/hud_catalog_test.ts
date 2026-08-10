@@ -357,6 +357,28 @@ describe("the shipped HUD", () => {
     expect(clock?.aria, "a screen reader has no name for it").toBeDefined();
   });
 
+  it("prints the damage the wagon has NOW, not the damage the arc has reached", () => {
+    // THE DAMAGEOMETER IS TWO READOUTS OF ONE CAR AND THEY ANSWER DIFFERENT
+    // QUESTIONS. The calm ARC lags behind a fresh hit on purpose, so the slice
+    // the last second cost can be lit in its own colour before folding in
+    // (`WearTrail`, drive-screen/dials.ts). The FIGURE must not lag with it:
+    // it is the part of the dial a player actually checks, and bound to the
+    // settling value a collision he had just felt through the wheel reached the
+    // dashboard a beat and a half after he had stopped looking.
+    const face = HUD_ELEMENTS.find(
+      (el) => el.id === "drive_damage",
+    )?.children?.find((child) => child.id === "damage_face");
+    const figure = face?.children?.find((c) => c.id === "damage_number");
+    expect(figure, "the damage dial ships no figure").toBeDefined();
+    expect(figure?.bind).toBe("drive.wear");
+    // …and the arc it sits inside still lags, or the fresh slice has nothing to
+    // be measured against and the highlight silently stops existing.
+    const arc = HUD_ELEMENTS.find(
+      (el) => el.id === "drive_damage",
+    )?.children?.find((child) => child.id === "damage_arc");
+    expect(arc?.bind).toBe("drive.wearSettled");
+  });
+
   it("leaves a list's template alone until it has a row", () => {
     // THE BUG THIS PINS, and it is the drive surface's again in another shape:
     // a resolve CALLS every judgement it walks past, and a voice card's are
@@ -533,6 +555,21 @@ describe("resolving", () => {
       resolveNode({ kind: "text", text: { script: "drive.rpm_label" } }, drive)
         .text,
     ).toBe("2900 RPM");
+    // …AND EVERY DIGIT OF IT. The figure printed whole hundreds while the
+    // publisher quantised the crank to fifty, so the tacho's last two digits
+    // could only ever read 00 or 50: a needle sweeping the whole face was
+    // printed as a number stepping in hundreds, which reads as an instrument
+    // that has frozen rather than one that is alive. A round fixture cannot
+    // catch that, which is why this one is not.
+    expect(
+      resolveNode(
+        { kind: "text", text: { script: "drive.rpm_label" } },
+        resolveContext({
+          ...VALUES,
+          ...driveBindings({ ...DIALS, rpm: 2873 }),
+        }),
+      ).text,
+    ).toBe("2873 RPM");
     // …and the gearbox, which is the judgement with the most to say: it picks a
     // PICTURE, one shift-gate sprite per position, and the two answers that are
     // not gears at all (reverse, and standing still in neutral).

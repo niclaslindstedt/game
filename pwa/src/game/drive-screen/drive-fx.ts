@@ -192,8 +192,13 @@ export type DriveFxState = {
  * fifteenth of the scale and came out as a puff of dust and a tenth of a pixel
  * of shudder. It is the same complaint, and the same answer, as
  * `DRIVE.impact.crowdSpeedLossScale` on the physics side of the glass.
+ *
+ * EXPORTED BECAUSE THE MOTOR READS THE SAME SCALE. What the phone is asked to
+ * buzz for a collision is priced off this exact number (`drive-haptics.ts`), so
+ * the hit that shoves the frame hardest is the one felt hardest and the two
+ * cannot drift apart — the same rule the sound bank already follows.
  */
-function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
+export function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
   return Math.min(1, joules / (DRIVE.impact.wearJoules * full));
 }
 
@@ -213,8 +218,8 @@ function forceOf(joules: number, full = SMASH_FULL_SHARE): number {
  * much as the middle of it. That is the scale silently going flat at precisely
  * the speeds the whole change was made for.
  */
-const SMASH_FULL_SHARE = 0.12;
-const BODY_FULL_SHARE = 0.068;
+export const SMASH_FULL_SHARE = 0.12;
+export const BODY_FULL_SHARE = 0.068;
 
 /** How hard the frame is shaken by a hit of this force (world px). Well under
  * a lane's width at its worst: the road must stay readable while it is being

@@ -121,12 +121,24 @@ function M.rpm_color(state)
   return COOL
 end
 
---- …and what that figure reads. Whole hundreds, because the crank is quantised
--- to fifty and a dashboard that flickers its last digit is a dashboard nobody
--- can read at speed.
+--- …and what that figure reads: the crank, whole, every digit of it.
+--
+-- IT PRINTED WHOLE HUNDREDS FIRST, on the reasoning that a dashboard flickering
+-- its last digit is a dashboard nobody can read at speed. That is true of a
+-- digit nobody is reading — a clock's tenths, a lap time's thousandths — and
+-- exactly wrong for this one. A rev counter is not read as a VALUE, it is read
+-- as a MOVEMENT: what a driver takes off it is whether the number is climbing,
+-- how fast, and whether it just fell off a cliff because the box changed up.
+-- Rounded to hundreds (over a crank already quantised to fifty) it did none of
+-- that — it sat on 4300 for a third of a second and then jumped to 4400, so the
+-- one instrument on this dashboard that is supposed to be alive read as a
+-- readout that had frozen. Whole revs it climbs, and the upshift's snap back is
+-- visible in the figure as well as in the arc.
+--
+-- A conversion that wants the calm version back is one `math.floor` here, which
+-- is the point of this file.
 function M.rpm_label(state)
-  local hundreds = math.floor(state.drive.rpm / 100 + 0.5) * 100
-  return string.format("%d RPM", hundreds)
+  return string.format("%d RPM", math.floor(state.drive.rpm + 0.5))
 end
 
 --- THE GEARBOX — which of the seven shift-gate pictures is on screen.
