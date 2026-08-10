@@ -1097,7 +1097,11 @@ escort.ts` walks the people an escort errand puts on the field, and
   WHAT THE CABINET MAKES OF IT is the arrival's own screen: a rally RANKING board
   (`drive-screen/DriveScores.tsx`) — a plaque, a RANK / NAME / TIME rail, five
   rows, the row you just took lit in white, and three letters typed into it from
-  the keyboard. IT RANKS THE CLOCK AND PRINTS NOTHING ELSE: the fastest leg is
+  the keyboard. THE CELL ARRIVES HOLDING THE LAST NAME SIGNED on this device (the
+  usual player presses ENTER and is gone) and a full three-of-three field takes
+  no keystroke at all, so signing a DIFFERENT name has to be one gesture: the
+  prefill comes up SELECTED for a hardware keyboard, and a TAP on the name wipes
+  the cell and takes the software one. IT RANKS THE CLOCK AND PRINTS NOTHING ELSE: the fastest leg is
   the best leg, which is a rule a player knows before the screen has finished
   drawing, and a table with one number on it is a table read in one glance.
   EVERY LEG HAS A PLACE ON IT: the machine keeps the last thousand

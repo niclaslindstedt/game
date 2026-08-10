@@ -24,6 +24,7 @@ import {
   hasDriveScores,
   mergeDriveScores,
   recordDriveScore,
+  signedInitials,
   topDriveScores,
   trimDriveScores,
   type DriveScoreEntry,
@@ -98,6 +99,22 @@ describe("signing the board", () => {
   it("offers only characters the board can spell", () => {
     for (const char of INITIAL_CHARS) {
       expect(clampInitials(char.repeat(3))).toBe(char.repeat(3));
+    }
+  });
+
+  it("signs an untyped name with the unsigned row's own initials", () => {
+    // A tap on the name cell wipes it (see `DriveScores`), so a player can
+    // reach the ENTER button with nothing typed at all — and a row of three
+    // spaces is a row with a hole where the name goes, handed on to the next
+    // leg as its prefill.
+    expect(signedInitials("")).toBe("AAA");
+    expect(signedInitials("   ")).toBe("AAA");
+    expect(signedInitials("—")).toBe("AAA");
+  });
+
+  it("otherwise signs exactly what the board would print", () => {
+    for (const raw of ["abc", "a", "abcdef", "A—B", "x"]) {
+      expect(signedInitials(raw)).toBe(clampInitials(raw));
     }
   });
 });

@@ -54,11 +54,11 @@ import {
   BOARD_SIZE,
   INITIALS_LENGTH,
   INITIAL_CHARS,
-  clampInitials,
   driveTimeRank,
   lastInitials,
   recordDriveScore,
   rememberInitials,
+  signedInitials,
   topDriveScores,
   type DriveScoreEntry,
 } from "../drive-scores.ts";
@@ -176,11 +176,21 @@ export function DriveScores({
     window.matchMedia("(pointer: fine)").matches;
   useAutoFocus(inputRef, entering && finePointer);
 
+  // AND WHAT IT FINDS THERE IS SELECTED, NOT MERELY PRESENT — the same trap the
+  // tap answers, in the one place there is no tap. A focused field already
+  // holding three of three letters takes NO keystroke at all (`maxLength`), so
+  // a hardware keyboard would have to backspace the previous player's name out
+  // before it could type a letter. Selected, the first letter replaces it.
+  useEffect(() => {
+    if (!entering || !finePointer) return;
+    inputRef.current?.select();
+  }, [entering, finePointer]);
+
   const finish = useCallback(() => {
     if (doneRef.current) return;
     doneRef.current = true;
     if (entering) {
-      const signed = clampInitials(name);
+      const signed = signedInitials(name);
       rememberInitials(signed);
       recordDriveScore({
         name: signed,
@@ -238,11 +248,40 @@ export function DriveScores({
     [finish],
   );
 
-  /** A tap anywhere on the name cell is a tap on the field — which is what
-   * raises the software keyboard, since the tap is a gesture and `focus()` from
-   * inside one is allowed to summon it. */
+  /**
+   * A TAP ON THE NAME STARTS A FRESH ENTRY — it wipes the cell and takes the
+   * keyboard, which is the one thing a player who wants to sign their own name
+   * can do with the previous player's still sitting in it.
+   *
+   * THE FIELD ARRIVES PREFILLED with the last name signed on this device (an
+   * arcade cabinet's own convenience: the usual player presses ENTER and is
+   * gone), and prefilled it is FULL — three of three letters, `maxLength` 3 —
+   * so a keystroke into it lands nowhere and the tap that was meant to clear it
+   * did nothing but accept it. Erasing here is what makes the next letter the
+   * first letter.
+   *
+   * AND THE ERASE IS WHAT THE TAP IS FOR, so it happens on every tap rather
+   * than only the first: mid-entry, "start this name over" is the only thing
+   * pressing a three-letter cell can sensibly mean, and it costs at most two
+   * letters to undo.
+   *
+   * `blur()` FIRST WHEN IT ALREADY HAS FOCUS, which is the only way back from a
+   * software keyboard the player swiped away: `focus()` on the already-focused
+   * element is a no-op and the keyboard stays down, so focus is dropped and
+   * retaken inside the same gesture — invisible where the keyboard is hardware.
+   */
   const onCellTap = useCallback(() => {
-    inputRef.current?.focus();
+    const el = inputRef.current;
+    if (!el) return;
+    // Wiped on the ELEMENT as well as in state: it is uncontrolled between
+    // renders (see `onType`), so the letters would otherwise still be in the
+    // box the caret is about to land in.
+    const had = el.value.length > 0;
+    el.value = "";
+    setName("");
+    if (had) playUiSound(synth, "back");
+    if (document.activeElement === el) el.blur();
+    el.focus();
   }, []);
 
   // THE ONE KEY THE SCREEN ANSWERS WHEN THE FIELD DOES NOT: ENTER (or SPACE) to
@@ -421,9 +460,13 @@ export function DriveScores({
 
         {entering && (
           <div className="drive-scores-hint">
+            {/* WHAT TO DO WITH THE NAME ALREADY IN THE CELL, which is the only
+                part of this screen a player can get stuck on. A keyboard can
+                simply type over it (it arrives selected); a thumb has to be
+                told the letters are a button. */}
             <PixelText
               font={font}
-              text="TYPE YOUR NAME"
+              text={finePointer ? "TYPE YOUR NAME" : "TAP NAME TO TYPE"}
               scale={2}
               color={DIM}
             />
