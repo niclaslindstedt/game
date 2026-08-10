@@ -45,7 +45,7 @@ questGivers:
       conversation: ruth_arrival
       until: ruth_met
     greeting:
-      - SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. THERE'S SOMETHING I'D ASK OF YOU.
+      - SHE LAUGHED ABOUT THAT ZIPPER FOR A WEEK. LISTEN - COULD YOU DO SOMETHING FOR ME?
     farewell:
       - SHE'S FIGHTING HER WAY BACK, ISN'T SHE. I KNEW IT. GO ON.
 
@@ -122,7 +122,7 @@ questGivers:
       the year she arrived. She has kept the trays alive through two power cuts
       and one evacuation she was not told about.
     greeting:
-      - CAREFUL. THOSE TRAYS ARE OLDER THAN ANYONE'S CONTRACT HERE. WHICH IS WHY I NEED A HAND. HAVE YOU A MOMENT?
+      - CAREFUL. THOSE TRAYS ARE OLDER THAN ANYONE'S CONTRACT HERE. WHICH IS WHY I NEED A HAND. GOT A MINUTE?
 
   mars_curie:
     level: mars
@@ -150,7 +150,7 @@ questGivers:
       he is still two men short. He does not talk about the gale. He talks about
       the other two.
     greeting:
-      - THE LIGHT'S STILL LIT. THAT HALF OF THE JOB IS DONE. THE OTHER HALF I CANNOT DO ALONE. WILL YOU HEAR IT?
+      - THE LIGHT'S STILL LIT. THAT HALF OF THE JOB IS DONE. THE OTHER HALF I CAN'T DO ON MY OWN. WILL YOU HEAR IT?
 
   rift_cook:
     level: the_rift

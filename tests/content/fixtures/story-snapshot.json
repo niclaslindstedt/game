@@ -3175,7 +3175,7 @@
           "A RING OF METAL THAT ISN'T. IT FLOATS OFF MY PALM AND POINTS AT THE SKY. ALWAYS."
         ],
         [
-          "I CAME HERE FOR HER AND SHE'S GONE UP. SO I'M LEAVING WITH THE ONLY THING THAT FOLLOWS."
+          "I CAME HERE FOR HER AND SHE'S GONE UP. SO I'M TAKING THE ONE THING THAT'LL GET ME AFTER HER."
         ]
       ],
       "name": "ANTI-GRAV UNIT"
@@ -3508,7 +3508,7 @@
       "pages": [
         ["IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'"],
         [
-          "TRUST ME BRO HANDS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN."
+          "TRUST ME BRO HANDS. SAME OUTFIT THAT SAT AT MY BENCH, ONLY IN SPURS. RIGHT. NO GUILT, THEN."
         ]
       ],
       "portrait": "hero",
@@ -3553,7 +3553,7 @@
         [
           "THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE."
         ],
-        ["QUIT FARMING SCRAP, {HERO}. ADA'S STILL OUT THERE."]
+        ["QUIT FARMING SCRAP, {HERO}. SHE'S STILL OUT THERE SOMEWHERE."]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3562,7 +3562,7 @@
       "id": "cap_pathetic_2",
       "pages": [
         ["PATHETIC. THEY LINE UP AND FALL OVER. I COULD DO THIS IN MY SLEEP."],
-        ["EVERY MINUTE HERE IS A MINUTE ADA DOESN'T HAVE. MOVE."]
+        ["SHE'S BEEN GONE ALL NIGHT AND I'M OUT HERE HITTING THINGS. MOVE."]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3571,7 +3571,7 @@
       "id": "cap_pathetic_3",
       "pages": [
         ["I'VE WRUNG THIS PLACE DRY. NOTHING LEFT TO PROVE HERE."],
-        ["STOP CIRCLING. THE ONLY THING THAT MATTERS IS FINDING HER. GO."]
+        ["STOP CIRCLING. NONE OF THIS IS FINDING HER. GO ON."]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3582,7 +3582,7 @@
         [
           "WHEN DID THIS GET EASY? THEY DON'T EVEN REGISTER. JUST NOISE ON THE WAY."
         ],
-        ["ENOUGH WARMUP. ADA FIRST. ALWAYS ADA."]
+        ["THAT'S ENOUGH OF THAT. GO ON. GO AND FIND HER."]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3591,9 +3591,9 @@
       "id": "cap_pathetic_5",
       "pages": [
         [
-          "I'M SWATTING FLIES AND CALLING IT PROGRESS. THIS ISN'T GETTING ME CLOSER."
+          "I'M SWATTING FLIES AND CALLING IT PROGRESS. NONE OF THIS IS FOR HER."
         ],
-        ["SHE NEEDS ME MOVING, NOT GRINDING. FIND THE WAY OUT. FIND ADA."]
+        ["SHE'S NOT IN HERE. FIND THE WAY OUT AND GET GOING."]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -3724,7 +3724,7 @@
         ["THIRD TIME. HE ISN'T LISTENING. NOBODY ON THIS FLOOR IS LISTENING."],
         {
           "them": [
-            "WE ALL WANT TO KEEP OUR JOBS. NOTHING PERSONAL. YOU OF ALL PEOPLE KNOW."
+            "WE ALL WANT TO KEEP OUR JOBS. YOU HAD ONE. YOU KNOW WHAT IT'S LIKE WHEN IT GOES."
           ]
         },
         [
@@ -3747,7 +3747,7 @@
         ],
         {
           "them": [
-            "NOBODY GETS IN HERE. YOU'RE NOT WALKING OUT WITH OUR SECRETS."
+            "YOU CAN'T BE IN HERE. NOBODY'S SUPPOSED TO BE IN HERE TONIGHT. PLEASE."
           ]
         },
         ["WE ATE AT THE SAME TABLE FOR SIX YEARS. HEY. IT'S ME. LOOK AT ME."]
@@ -3766,7 +3766,7 @@
           "THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT."
         ],
         [
-          "I HAD A BADGE FOR THAT GATE ONCE. SO I DON'T FIND A WAY IN - I FOLLOW SOMEBODY WHO HAS ONE."
+          "I HAD A BADGE FOR THAT GATE ONCE. NOT ANYMORE. SO I'LL WALK IN BEHIND SOMEBODY WHO STILL DOES."
         ]
       ],
       "portrait": "hero",
@@ -3780,12 +3780,10 @@
         ],
         {
           "them": [
-            "I KNOW WHO YOU ARE, {HERO}. WE HAVE OUR ORDERS. I'D LIKE TO KEEP MY JOB."
+            "I KNOW WHO YOU ARE, {HERO}. THEY TOLD US NOBODY GETS PAST. I'D LIKE TO KEEP MY JOB."
           ]
         },
-        [
-          "STAY BACK. I HAVE NEVER RAISED A HAND TO ANYONE. DON'T MAKE ME START."
-        ]
+        ["STAY BACK. PLEASE. I'VE NEVER HIT ANYBODY IN MY LIFE. DON'T."]
       ],
       "portrait": "hero",
       "speaker": "{HERO}",
@@ -3801,7 +3799,7 @@
           "LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT."
         ],
         [
-          "WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK."
+          "WE NEVER RAN NIGHTS LIKE THIS. NOT ONCE IN TEN YEARS. SOMETHING'S GOT THEM ALL UP."
         ]
       ],
       "portrait": "hero",
@@ -3811,10 +3809,10 @@
       "id": "goodco_successor",
       "pages": [
         [
-          "AN SUCCESSOR. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. THEN THE AI REDREW IT."
+          "A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US."
         ],
         [
-          "AND THE LINE WALKED EVERYONE'S JOBS OUT THE DOOR. MY TURN TO MAKE SOMETHING OBSOLETE."
+          "AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE."
         ]
       ],
       "portrait": "hero",
@@ -4036,7 +4034,9 @@
         [
           "I'M WALKING ON NOTHING. NO GROUND. NO SKY. AND MY BOOTS DON'T SEEM TO CARE."
         ],
-        ["THE RIFT DOESN'T FOLLOW THE RULES. GOOD. LATELY, NEITHER DO I."]
+        [
+          "NOTHING IN HERE WORKS THE WAY IT SHOULD. I'VE STOPPED ASKING. I JUST KEEP WALKING."
+        ]
       ],
       "portrait": "player",
       "speaker": "{HERO}"
@@ -4056,7 +4056,7 @@
       "id": "rift_graviton",
       "pages": [
         [
-          "THAT LITTLE THING WEIGHED MORE THAN MY SHIP. SPACE IN HERE BENDS AROUND A GRUDGE."
+          "THAT LITTLE THING WEIGHED MORE THAN MY SHIP. I'M NOT GOING TO THINK ABOUT IT TOO HARD."
         ],
         ["NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE."]
       ],
