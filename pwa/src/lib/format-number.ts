@@ -141,3 +141,26 @@ export function lapClock(ms: number): string {
   const tenths = Math.floor((total * 10) % 10);
   return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
 }
+
+/**
+ * THE SAME TIME, THE WAY A RANKING BOARD PRINTS IT — `m'ss"hh`.
+ *
+ * It is `lapClock`'s figure in the arcade's own punctuation: an apostrophe for
+ * the minutes, a double quote for the seconds, and the fraction carried to
+ * hundredths because a finished time is READ rather than watched — two digits
+ * separate two legs a tenth could not, which is the whole job of the column a
+ * board ranks on.
+ *
+ * IT DOES NOT DISAGREE WITH THE CLOCK, which is the rule this pair exists
+ * under: both TRUNCATE toward zero off the same millisecond, so the board's
+ * figure is the stopwatch's figure with one more digit on the end and never a
+ * hundredth that rounds the other way.
+ */
+export function rallyClock(ms: number): string {
+  const total = Math.max(0, ms);
+  const minutes = Math.floor(total / 60_000);
+  const seconds = Math.floor((total % 60_000) / 1000);
+  const hundredths = Math.floor((total % 1000) / 10);
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${minutes}'${pad(seconds)}"${pad(hundredths)}`;
+}

@@ -90,6 +90,12 @@ export const GLYPHS = {
   // pixel at that height reads as a stray dot or a bit of dirt on the panel.
   "°": ["##.", "##.", "...", "...", "..."],
   "'": ["#", "#", ".", ".", "."],
+  // Double quote — the SECONDS mark on a rally clock (`1'23"45`, the format the
+  // drive's ranking board reads its times in). The apostrophe above already
+  // carried the minutes and this was the other half of the pair, so every time
+  // on that board printed as `1'23?45`. It is a general punctuation mark rather
+  // than a one-screen glyph, which is why it is a glyph and not a transform.
+  '"': ["#.#", "#.#", "...", "...", "..."],
   "(": [".#", "#.", "#.", "#.", ".#"],
   ")": ["#.", ".#", ".#", ".#", "#."],
   "&": [".##..", "#..#.", ".##..", "#..#.", ".##.#"],
