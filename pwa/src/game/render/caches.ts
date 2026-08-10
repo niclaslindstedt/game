@@ -20,6 +20,7 @@ import {
   unprojectX,
   unprojectY,
 } from "./tilt.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 let cachesFor: Sprites | null = null;
 
@@ -195,7 +196,7 @@ function freshBakes(): void {
  * in that case so the common bake is looked up by its plain name.
  */
 export function flatSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   spin = 0,
 ): HTMLCanvasElement | null {
@@ -249,7 +250,7 @@ export function flatSprite(
 const wallCache = new Map<string, HTMLCanvasElement | null>();
 
 export function wallBlock(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   rise: number,
 ): HTMLCanvasElement | null {
@@ -275,7 +276,7 @@ const WALL_FOOT_SHADE = 0.3;
 /** …and the top of it, just under the cap, so the face is never flat. */
 const WALL_HEAD_SHADE = 0;
 
-function bakeWall(sprite: ImageBitmap, rise: number): HTMLCanvasElement | null {
+function bakeWall(sprite: SpriteImage, rise: number): HTMLCanvasElement | null {
   const cap = bakeFlat(sprite);
   if (!cap) return null;
   const h = Math.max(1, Math.round(rise));
@@ -331,7 +332,7 @@ function bakeWall(sprite: ImageBitmap, rise: number): HTMLCanvasElement | null {
  * furniture answer to `projectionSmoothing`.
  */
 export function bakeFlat(
-  sprite: ImageBitmap | HTMLCanvasElement,
+  sprite: SpriteImage,
   opts: { antialias?: boolean; spin?: number } = {},
 ): HTMLCanvasElement | null {
   const w = sprite.width;
@@ -394,7 +395,7 @@ const glowCache = new Map<string, HTMLCanvasElement>();
 /** A monster's resolved sprite variants (base/hurt/wrecked/dying × 2 frames),
  * keyed by the def's sprite family — saves 1-2 string builds and up to 3
  * atlas probes per enemy per frame at horde scale. */
-type EnemyFrames = [ImageBitmap, ImageBitmap];
+type EnemyFrames = [SpriteImage, SpriteImage];
 export type EnemyVariants = {
   base: EnemyFrames;
   hurt: EnemyFrames;
@@ -411,16 +412,16 @@ const enemySpriteCache = new Map<string, EnemyVariants>();
  * fewer than two frames stays a static sprite. Cached per name; null =
  * "checked, not animated".
  */
-const decorFramesCache = new Map<string, ImageBitmap[] | null>();
+const decorFramesCache = new Map<string, SpriteImage[] | null>();
 export const DECOR_FRAME_MS = 110;
 
 export function decorFrames(
   sprites: Sprites,
   name: string,
-): ImageBitmap[] | null {
+): SpriteImage[] | null {
   const cached = decorFramesCache.get(name);
   if (cached !== undefined) return cached;
-  const frames: ImageBitmap[] = [];
+  const frames: SpriteImage[] = [];
   for (let i = 0; ; i++) {
     const frame = spriteByName(sprites, `${name}_${i}`);
     if (!frame) break;
@@ -435,8 +436,8 @@ export function decorFrames(
  * visible body, ignoring the transparent margin the fixed atlas cell pads it
  * with. Used to size the minion health bar to the character rather than the
  * cell. Measured once per bitmap (a getImageData scan) and cached. */
-const opaqueWidthCache = new Map<ImageBitmap, number>();
-export function opaqueWidth(sprite: ImageBitmap): number {
+const opaqueWidthCache = new Map<SpriteImage, number>();
+export function opaqueWidth(sprite: SpriteImage): number {
   const cached = opaqueWidthCache.get(sprite);
   if (cached !== undefined) return cached;
   const c = document.createElement("canvas");
@@ -551,10 +552,10 @@ export function groundColorAt(
 const tintCache = new Map<string, HTMLCanvasElement | null>();
 const TINT_STEP = 24;
 export function tintedSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   rgb: string,
-): HTMLCanvasElement | ImageBitmap {
+): SpriteImage {
   const quantized = rgb
     .split(",")
     .map((v) => Math.round(Number(v.trim()) / TINT_STEP) * TINT_STEP)
@@ -603,7 +604,7 @@ const sootCache = new Map<string, HTMLCanvasElement | null>();
  * showroom-clean on the other reads as a paint job rather than as a blast. */
 const SOOT_WRAP = 0.22;
 export function sootedSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   level: number,
   /** Which way the fire was: +1 to the right of this thing, -1 to the left. */
@@ -654,7 +655,7 @@ export function sootedSprite(
  */
 const crownCache = new Map<string, Int16Array | null>();
 export function spriteCrown(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
 ): Int16Array | null {
   const cached = crownCache.get(name);
@@ -1105,10 +1106,10 @@ export function spinBucket(angle: number): number {
  * which is the one thing every solid sprite in this game is built on.
  */
 export function spunSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   bucket: number,
-): HTMLCanvasElement | ImageBitmap {
+): SpriteImage {
   if (bucket % SPIN_BUCKETS === 0) return sprite;
   const key = `${name}/${bucket}`;
   const cached = spinCache.get(key);

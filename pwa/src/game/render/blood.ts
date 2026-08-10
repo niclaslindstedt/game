@@ -57,6 +57,7 @@ import { recolorSprite } from "./recolor.ts";
 import { clamp01, fract } from "./shared.ts";
 import { projectOffset } from "./tilt.ts";
 import type { Effect } from "./effects.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** The effect kind this module owns. */
 export const BLOOD_KINDS = new Set(["blood"]);
@@ -298,7 +299,7 @@ function frame(
   sprites: Sprites,
   name: string,
   family: GoreFamily,
-): ImageBitmap | HTMLCanvasElement | undefined {
+): SpriteImage | undefined {
   const art = spriteByName(sprites, name);
   if (!art || !family.ramp) return art;
   return recolorSprite(art, name, family.ramp);

@@ -1714,6 +1714,38 @@ behind it. Two patterns keep that possible:
   weapon/gear bases) beside `generated/uniques.ts` (the named chase roster).
   The menus read the first of each pair through `defs/levels/summary.ts`.
 
+#### The lazy sprite map
+
+**Bytes were never the reason the game took a while to open — the SPRITE CUT
+was**, and it is worth writing down how lopsided that turned out to be. Profiled
+against the built site, the whole JavaScript bundle had finished downloading at
+**136 ms** and the main thread was idle 97% of the time; the menu still did not
+appear for **13.8 s**. All of it was `sliceAtlas` issuing 2,333
+`createImageBitmap` calls in one `Promise.all` and the card waiting for the last
+one to resolve. The title menu draws about a dozen sprites.
+
+So `@ui/lib/atlas.ts` cuts a sprite **the first time something reads it** and
+caches it. Time to the menu fell to **3.6 s**, of which 3.0 s is the studio
+card's own mandated hold — the work behind it is about half a second. Three
+consequences worth knowing before touching it:
+
+- **A sprite is a `SpriteImage`** (`ImageBitmap | HTMLCanvasElement`), not an
+  `ImageBitmap`. `createImageBitmap` is async and the renderer reads
+  `sprites[name]` mid-frame, so the atlas cuts CANVASES — the synchronous
+  equivalent, and a `CanvasImageSource` like any other. A mod's frames are still
+  real `ImageBitmap`s, decoded from its own pixels, and nothing can tell.
+- **Per-frame cost is unchanged.** Measured in a real bot run: 4.0–4.4 ms of
+  task time per frame lazily against 4.2–4.3 ms eagerly, p99 frame interval
+  16.8 ms either way, no dropped frames. What it costs instead is **memory**:
+  the decoded atlas (~6 MB) is retained for the process's life, because it is
+  the source every not-yet-cut sprite will come from.
+- **Enumeration must never resolve a sprite.** `Object.keys` asks the proxy for
+  a descriptor per key; a `getOwnPropertyDescriptor` that reached for the
+  surface would cut the whole catalogue and silently restore the old behaviour.
+  `tests/atlas_lazy_test.ts` pins that, along with write/delete (how a mod
+  overrides a sprite, and how `restoreBaseDefs` puts the shipped one back —
+  by deleting the override and letting the atlas answer again).
+
 #### Bundle budgets
 
 `pwa/scripts/check-seo.mjs` polices the result, and since the app started
@@ -1962,9 +1994,9 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   monotone; `tests/achievements_test.ts` pins that no counter ladder ever pays
   less for asking more, and that exactly one tier gets the reveal,
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
-  rects sliced into per-sprite bitmaps in a single decode — plus the pixel
-  font), and `assets/` (the generated atlas + font atlas — never
-  hand-edited).
+  rects, cut into per-sprite surfaces ON FIRST READ; see _The lazy sprite map_
+  below — plus the pixel font), and `assets/` (the generated atlas + font
+  atlas — never hand-edited).
 
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias (which, like `@game/lib/*`, `@game/core`, `@game/menu` and

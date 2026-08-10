@@ -1,3 +1,4 @@
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // RE-HUEING AUTHORED ART ONTO ANOTHER PALETTE — how one set of spray frames
 // serves four kinds of body.
@@ -47,10 +48,10 @@ function parse(rgb: string): [number, number, number] {
  * `name` keys the bake — never the bitmap, which a hot reload replaces.
  */
 export function recolorSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   ramp: GoreRamp,
-): HTMLCanvasElement | ImageBitmap {
+): SpriteImage {
   const key = `${name}/${ramp.join("|")}`;
   const cached = cache.get(key);
   if (cached !== undefined) return cached ?? sprite;

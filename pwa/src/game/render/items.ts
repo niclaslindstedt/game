@@ -28,6 +28,7 @@ import {
 import { clamp01, spriteTopLeft } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
 
@@ -44,7 +45,7 @@ function drawAngelDelivery(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
   item: { id: number; pos: { x: number; y: number }; deliverMs?: number },
-  drop: ImageBitmap,
+  drop: SpriteImage,
   camera: { x: number; y: number },
   timeMs: number,
 ): void {
@@ -144,7 +145,7 @@ function drawToss(
   ctx: CanvasRenderingContext2D,
   toss: NonNullable<Item["toss"]>,
   landing: { x: number; y: number },
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   aura: LootAura | null,
   camera: Camera,
 ): void {

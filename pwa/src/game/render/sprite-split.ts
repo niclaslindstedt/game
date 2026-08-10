@@ -32,6 +32,7 @@
 // body was opened, and a continuous angle would mint a canvas per kill.
 
 import { fract } from "./shared.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** How many distinct cut bearings a family may be baked at. Eight is a cut
  * every 45°, which is past what the eye reads on a body coming apart. */
@@ -108,7 +109,7 @@ function blank(
  * (sprite, bucket, offset).
  */
 export function splitSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   angle: number,
   offset = 0,
@@ -183,9 +184,9 @@ export function splitSprite(
  * like the halves, on the same reasoning.
  */
 export function slicedPiece(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
-  fill: ImageBitmap,
+  fill: SpriteImage,
   angle: number,
   skinAt: number,
   faceAt: number,
@@ -284,7 +285,7 @@ export function slicedPiece(
  * in PIECES — an invisible one reads as a piece that failed to appear.
  */
 export function shredSprite(
-  sprite: ImageBitmap,
+  sprite: SpriteImage,
   name: string,
   cells: number,
 ): readonly SpriteShred[] {

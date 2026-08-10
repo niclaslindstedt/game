@@ -31,6 +31,7 @@ import { spriteByName, type Sprites } from "../assets.ts";
 import type { DollLayer } from "../paper-doll.ts";
 import type { CoatLayer } from "./soak-ladder.ts";
 import { drawSpriteFacing } from "./shared.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** How far the coat is lifted back toward true blood red after the multiply.
  * Zero is pure multiply — correct on his white EVA suit, mud on dark gear; one
@@ -168,7 +169,7 @@ export function drawCoatedLayers(
 export function drawCoatedSprite(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
-  image: ImageBitmap,
+  image: SpriteImage,
   dx: number,
   dy: number,
   flip: boolean,

@@ -50,6 +50,7 @@ import { drawFloorDecal } from "./plane.ts";
 import { TILE, type ViewSize } from "./shared.ts";
 import { projectionKey } from "./tilt.ts";
 import { type Camera } from "./view.ts";
+import type { SpriteImage } from "@ui/lib/atlas.ts";
 
 /** The print art, wettest first, and how each of the four bearings is drawn from
  * it: `[sprite suffix, flip]` where flip bit 0 mirrors X and bit 1 mirrors Y.
@@ -139,7 +140,7 @@ let carry = 0;
  * dropped on a projection change for the same reason (`bakeFlat`). */
 let flipCacheFor: Sprites | null = null;
 let flipCacheProjection = projectionKey();
-const flipCache = new Map<string, HTMLCanvasElement | ImageBitmap>();
+const flipCache = new Map<string, SpriteImage>();
 
 /** Wipe the trail — a new run, or a hot reload. */
 export function resetBloodTracks(): void {
@@ -266,7 +267,7 @@ function flipped(
   sprites: Sprites,
   name: string,
   flip: number,
-): HTMLCanvasElement | ImageBitmap | null {
+): SpriteImage | null {
   const projection = projectionKey();
   if (flipCacheFor !== sprites || flipCacheProjection !== projection) {
     flipCacheFor = sprites;
@@ -289,10 +290,7 @@ function flipped(
 }
 
 /** `art` mirrored per `flip` (bit 0 = X, bit 1 = Y). */
-function mirror(
-  art: HTMLCanvasElement | ImageBitmap,
-  flip: number,
-): HTMLCanvasElement | ImageBitmap {
+function mirror(art: SpriteImage, flip: number): SpriteImage {
   const canvas = document.createElement("canvas");
   canvas.width = art.width;
   canvas.height = art.height;

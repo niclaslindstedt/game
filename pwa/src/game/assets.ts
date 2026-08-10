@@ -10,6 +10,7 @@ import {
   monochromeDataUrl,
   sliceAtlas,
   type AtlasRect,
+  type SpriteImage,
 } from "@ui/lib/atlas.ts";
 import { bustDataUrl } from "@ui/lib/bust.ts";
 import { loadImages } from "@ui/lib/load-images.ts";
@@ -32,7 +33,7 @@ import { loadUiFont } from "./ui-font.ts";
 export { loadUiFont, peekUiFont } from "./ui-font.ts";
 
 export type SpriteName = keyof typeof atlasRects;
-export type Sprites = Record<SpriteName, ImageBitmap>;
+export type Sprites = Record<SpriteName, SpriteImage>;
 
 /** The rarity tiers that carry a struck-gold RELIC name font on their card. */
 export type RelicTier = "unique" | "legendary" | "artifact";
@@ -62,8 +63,8 @@ export type GameAssets = {
 export function spriteByName(
   sprites: Sprites,
   name: string,
-): ImageBitmap | undefined {
-  return (sprites as Record<string, ImageBitmap>)[name];
+): SpriteImage | undefined {
+  return (sprites as Record<string, SpriteImage>)[name];
 }
 
 /**
@@ -253,7 +254,7 @@ export function loadGameAssets(): Promise<GameAssets> {
     const assets: GameAssets = {
       // The JSON import types the tuples as `number[]`; the generator's
       // format is exactly `[x, y, w, h]` per entry (generate-assets.mjs).
-      sprites: await sliceAtlas(
+      sprites: sliceAtlas(
         images.atlas,
         atlasRects as unknown as Record<SpriteName, AtlasRect>,
       ),
