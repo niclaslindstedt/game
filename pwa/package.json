@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
-    "@tailwindcss/vite": "^4.3.1",
+    "@tailwindcss/vite": "^4.3.3",
     "@vite-pwa/assets-generator": "^1.0.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",

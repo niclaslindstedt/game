@@ -276,7 +276,7 @@ jobs:
       # Only for its git remote and credentials — nothing here is built.
       - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: site-*
           path: slots
