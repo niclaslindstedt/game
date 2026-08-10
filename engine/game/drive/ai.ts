@@ -13,9 +13,12 @@
 // really does:
 //
 //   IT WOBBLES        Nobody holds a line to the pixel.
-//   IT FOLLOWS        It lifts off for the car in front. IMPERFECTLY, on
-//                     purpose — past its own reaction the gap is simply gone,
-//                     and what happens then is `between.ts`.
+//   IT FOLLOWS        It matches the car in front rather than driving into it —
+//                     and stands on the brake when matching is not going to be
+//                     enough. IMPERFECTLY, on purpose: it brakes for what it can
+//                     SEE, with one set of brakes, so anything arriving inside
+//                     its own stopping distance still arrives, and what happens
+//                     then is `between.ts`.
 //   IT PULLS OUT      Because the car in front is slower than it wants to go,
 //                     which is the only honest reason anybody ever does.
 //   IT GOES ROUND     A parked car, a wreck standing dead in a lane, anything
@@ -42,7 +45,7 @@ import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
 import { DRIVE } from "./config.ts";
-import { laneAt, laneCenter, roadEdges } from "./crowd.ts";
+import { laneAt, laneCenter, laneStraddle, roadEdges } from "./crowd.ts";
 import { vehicleDef } from "./fleet.ts";
 import { laneRunsWithHero } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -92,8 +95,17 @@ export function siblingLane(lane: number): number {
 }
 
 /** Which way this vehicle is travelling in world +x, as a sign. */
-function heading(other: DriveTraffic): 1 | -1 {
+export function heading(other: DriveTraffic): 1 | -1 {
   return other.speed < 0 || (other.speed === 0 && other.faceLeft) ? -1 : 1;
+}
+
+/** A stable 0→1 off two integers — this file's own share of the cosmetic dice,
+ * and the reason nothing here has to touch the road's stream (see the file's own
+ * note). The same mixer `push.ts` and `fleet.ts` carry. */
+function hash(a: number, b: number): number {
+  let h = Math.imul((a ^ 0x9e3779b9) + Math.imul(b, 0x27d4eb2f), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
 /**
@@ -254,6 +266,66 @@ function dodge(
 }
 
 /**
+ * HE IS SITTING ON THE WHITE LINE — the one answer this file gives that is about
+ * the HERO rather than about the traffic, and the reason is that riding a lane
+ * marking is not driving, it is standing in the one place on the road nothing
+ * can reach (`DRIVE.drivers.lineRide` has the arithmetic).
+ *
+ * ASKED ONCE PER VEHICLE, as it comes into view, and answered off the vehicle's
+ * own hash — never a draw, like everything else in this file. So a car either is
+ * or is not the kind that moves over, the road stays a property of its seed, and
+ * a player who takes the line through heavy traffic meets a third of it.
+ *
+ * IT IS A LANE CHANGE AND NOTHING MORE. The driver takes the other half of its
+ * own pair (`siblingLane`) — the same manoeuvre, the same rate, the same
+ * settling as pulling out for a dawdler — and the man parked on the marking
+ * between the two is in the way of it. Nothing here steers AT him, and nothing
+ * here may: a car that homed on the wagon would read as the road cheating, and
+ * would follow him off the line he is being punished for holding.
+ */
+function lureAcross(
+  state: DriveState,
+  index: TrafficIndex,
+  other: DriveTraffic,
+  lane: number,
+): boolean {
+  const cfg = DRIVE.drivers;
+  const { lineRide } = cfg;
+  const gap = (other.pos.x - state.car.pos.x) * state.params.direction;
+  // Ahead of him, and only just: a car already level with the wagon has nothing
+  // left to change lanes into.
+  if (gap <= 0 || gap > lineRide.fromPx) return false;
+  const pair = laneStraddle(state.car.pos.y, lineRide.straddlePx);
+  // NOT EVERY MARKING IS ONE OF THESE. The middle of the road is a marking too,
+  // and the pair either side of it are opposite carriageways — a driver reaching
+  // across THAT is not changing lanes, it is turning into the oncoming stream,
+  // which is a thing this road's drivers never do (`siblingLane`).
+  if (pair === null || siblingLane(pair) !== pair + 1) return false;
+  if (lane !== pair && lane !== pair + 1) return false;
+  // Asked, whatever the answer — one chance each.
+  other.lured = true;
+  if (hash(other.id, 0x11e) >= lineRide.chance) return false;
+  // …AND IT STILL LOOKS FIRST. Nobody out here changes lanes into the side of
+  // somebody else, and a driver that did would be hitting a stranger to reach a
+  // man on a white line — which is the road cheating in the one way the player
+  // would actually see.
+  //
+  // A TIGHTER WINDOW THAN THE OVERTAKE'S, deliberately: pulling out to get past
+  // a dawdler is a manoeuvre somebody CHOSE, and it wants the generous mirror
+  // check that stops them doing it in front of a chase. This is a driver moving
+  // over on a gap they would otherwise leave — the room they need is the room
+  // not to hit anybody, which is their own following distance either way.
+  const wants = Math.max(
+    cfg.stopGapPx + vehicleDef(other.variant).halfLengthPx * 2,
+    Math.abs(other.speed) * cfg.followSec,
+  );
+  if (!laneClear(index, other, siblingLane(lane), wants, wants)) return false;
+  other.lane = siblingLane(lane);
+  other.laneHoldMs = DRIVE.drivers.settledMs;
+  return true;
+}
+
+/**
  * ONE TICK OF ONE DRIVER — where it wants to be across the road, how fast it
  * wants to be going, and the steering and the throttle that get it there.
  *
@@ -288,17 +360,44 @@ export function steerTraffic(
   // was born in, it takes the one it is in. Held to its OWN carriageway, so a
   // shove across the centre line has it coming back rather than driving into the
   // oncoming stream.
+  //
+  // …BUT NOT WHILE IT IS IN THE MIDDLE OF MOVING. A lane change takes about a
+  // second, and for every tick of it the car is still physically in the lane it
+  // is leaving — so a correction that fired on "you are not where you said you
+  // would be" talked every driver out of every change on the tick after it was
+  // decided, and the road's one deliberate manoeuvre never happened at all: they
+  // stepped a fraction of a px toward the next lane, changed their mind, and
+  // came back. `laneHoldMs` above `decideMs` is exactly the driver having just
+  // COMMITTED to something (`settledMs` is stamped by the change and by nothing
+  // else that matters here), so the correction waits for the commitment to lapse
+  // — which for a car that was genuinely SHUNTED across is a second or so and
+  // then the lane it has ended up in, as before.
   const at = laneAt(other.pos.y);
   const mine = laneRunsWithHero(other.lane, state.params.direction);
   if (
     laneRunsWithHero(at, state.params.direction) === mine &&
-    at !== other.lane
+    at !== other.lane &&
+    other.laneHoldMs <= cfg.decideMs
   )
     other.lane = at;
 
   other.laneHoldMs -= dt * 1000;
+  // …AND WHETHER THE MAN IN FRONT IS RIDING A LANE MARKING, which is asked once
+  // per vehicle as it comes into view and is the only thing on this road that
+  // reads the hero at all.
+  if (!other.lured) lureAcross(state, index, other, at);
   const sibling = siblingLane(other.lane);
-  const inFront = ahead(index, other, other.lane, cfg.lookAheadPx * urgency);
+  // HOW FAR UP THE ROAD IT IS LOOKING, and it is not one number: what a driver
+  // DECIDES on and what a driver BRAKES for are different distances. Pulling out
+  // is about the car it is catching (`lookAheadPx` — four car lengths, close
+  // enough that the decision reads as being about that car); not driving into
+  // the back of something is about the road it would need to stop in, and at
+  // this road's speeds that is several times as far. Looked up ONCE at the
+  // longer reach, because `ahead` walks the lane's list and asking twice would
+  // walk it twice for every vehicle on the carriageway.
+  const sight =
+    cfg.lookAheadPx * urgency + Math.abs(other.speed) * cfg.sightSec;
+  const inFront = ahead(index, other, other.lane, sight);
   if (other.laneHoldMs <= 0) {
     other.laneHoldMs = cfg.decideMs;
     // PULL OUT FOR SOMEBODY SLOWER, and only for somebody slower. A driver that
@@ -306,6 +405,7 @@ export function steerTraffic(
     // the player can watch being made and, once he has seen it twice, predict.
     const blocked =
       inFront !== null &&
+      (inFront.pos.x - other.pos.x) * dir <= cfg.lookAheadPx * urgency &&
       Math.abs(other.cruise) - Math.abs(inFront.speed) > cfg.overtakeGainPx;
     if (blocked) {
       const room =
@@ -349,26 +449,89 @@ export function steerTraffic(
   other.pos.y += Math.abs(step) > Math.abs(off) ? off : step;
 
   // ── AND HOW FAST ──────────────────────────────────────────────────────────
-  // The pace this driver chose, cut by whatever is in the way of it. The cut is
-  // a FRACTION of its own cruise rather than a target speed, so a bus and a
-  // sports car both lift off by the same amount of their own pace and neither
-  // ends up doing a number nobody chose.
-  let hold = 1;
+  // SOMEBODY WENT INTO THE BACK OF THEM, and a driver standing on the brake is
+  // not choosing a pace at all — so the throttle below is not consulted until
+  // the foot comes up (`DRIVE.drivers.brakeMs`). It is a flat deceleration
+  // rather than an ease toward zero, because a car being braked stops: an
+  // exponential would leave it ambling down the carriageway at a crawl for the
+  // rest of the leg, which is the same tail `wreckFrictionPx` exists to cut off.
+  //
+  // The wheel is still theirs on the way down — they hold their lane, they just
+  // hold it slower — and `authority` takes the steering away as the car actually
+  // comes to rest, which is what stops a stationary victim wandering.
+  if (other.brakeMs > 0) {
+    const shed = cfg.brakePx * dt;
+    other.speed =
+      Math.abs(other.speed) <= shed
+        ? 0
+        : other.speed - Math.sign(other.speed) * shed;
+    return;
+  }
 
-  // THE CAR IN FRONT. The gap it wants is SECONDS of its own travel — which is
-  // how following distance really works and how it scales — and the lift-off is
-  // deliberately not enough to always save it: a road whose drivers could never
-  // run out of road is a road that never has a crash on it, and the pile-up
-  // somebody else caused is the most interesting obstacle this minigame has.
+  // THE PACE THIS DRIVER CHOSE, and then everything in the way of it.
+  let target = other.cruise;
+
+  // ── THE CAR IN FRONT ──────────────────────────────────────────────────────
+  // NOBODY OUT HERE IS TRYING TO CRASH. It used to be a fixed fraction off its
+  // own cruise (`brakeFrac`), which is a driver that lifts off and hits the car
+  // in front anyway the moment that car is doing less than half its pace — and
+  // on a road whose whole point is that the traffic runs at genuinely different
+  // speeds, that is most of the traffic. A dawdling hatchback collected the bus
+  // behind it as a matter of course, and the road spent the leg turning itself
+  // into wreckage with nobody having driven into anything.
+  //
+  // It MATCHES instead: the gap it wants is SECONDS of its own travel — which is
+  // how following distance really works and how it scales — and as the room runs
+  // out its target slides from its own pace to the pace of the thing in front,
+  // reaching it exactly as the gap does. So a car behind a slower one settles in
+  // behind it and sits there, which is what traffic looks like, and a car behind
+  // a STOPPED one settles at a stop.
+  //
+  // MEASURED BUMPER TO BUMPER, not centre to centre: a bus has eleven px of
+  // itself in front of its own anchor and the thing ahead has its own, and a
+  // follower that aimed at centres would park a fifth of a bus inside a taxi.
   if (inFront) {
-    const gap = (inFront.pos.x - other.pos.x) * dir;
-    const closing = (other.speed - inFront.speed) * dir;
+    const frontDef = vehicleDef(inFront.variant);
+    const room =
+      (inFront.pos.x - other.pos.x) * dir -
+      def.halfLengthPx -
+      frontDef.halfLengthPx;
     const wants = Math.max(
-      def.halfLengthPx * 2,
+      cfg.stopGapPx,
       (Math.abs(other.speed) * cfg.followSec) / urgency,
     );
-    if (closing > 0 && gap < wants) {
-      hold -= cfg.brakeFrac * (1 - gap / Math.max(1, wants));
+    if (room < wants) {
+      const closed = clamp(1 - room / Math.max(1, wants), 0, 1);
+      target = other.cruise + (inFront.speed - other.cruise) * closed;
+    }
+    // …AND IF THAT IS NOT GOING TO BE ENOUGH, BOTH FEET. Matching is a throttle
+    // decision and it arrives at the pace of the right foot (`recoverPerSec`),
+    // which is fine for a gap that is closing gently and useless for one that
+    // has already gone — a wreck appearing from behind the van in front, a car
+    // pulling into the space, somebody standing on their own brakes. So the
+    // room left is checked against what stopping in it would actually TAKE, and
+    // past a fraction of what this driver has (`brakeFromFrac`) they stop
+    // choosing a speed and start braking.
+    //
+    // IT IS STILL NOT A PROMISE. They only brake for what they can SEE
+    // (`sight`, above — and a chase is following at a third of the distance
+    // while travelling half as far again), they only have the one set of brakes
+    // and no more than the rest of the road, and anything that
+    // arrives inside their own stopping distance is arriving too late — which is
+    // where the pile-up the player has to get through still comes from, rather
+    // than from drivers who were never trying.
+    const closing = (other.speed - inFront.speed) * dir;
+    if (closing > 0) {
+      const need =
+        room > 1 ? (closing * closing) / (2 * room) : Number.POSITIVE_INFINITY;
+      if (need >= cfg.brakePx * cfg.brakeFromFrac) {
+        const shed = Math.min(cfg.brakePx, need * cfg.brakeUrge) * dt;
+        other.speed =
+          Math.abs(other.speed) <= shed
+            ? 0
+            : other.speed - Math.sign(other.speed) * shed;
+        return;
+      }
     }
   }
 
@@ -385,14 +548,13 @@ export function steerTraffic(
     if (beside) {
       const mineFirst = (other.pos.x - beside.pos.x) * dir;
       const yields = mineFirst < 0 || (mineFirst === 0 && other.id > beside.id);
-      if (yields) hold = Math.min(hold, DRIVE.drivers.courtesyFrac);
+      if (yields) target *= DRIVE.drivers.courtesyFrac;
     }
   }
 
   // Ease onto it rather than snapping — the same recovery a shunted car gets
   // back on its pace with (`DRIVE.traffic.recoverPerSec`), because it is the
   // same driver doing the same thing with the same right foot.
-  const target = other.cruise * Math.max(0.25, hold);
   const blend = Math.min(1, DRIVE.traffic.recoverPerSec * urgency * dt);
   other.speed += (target - other.speed) * blend;
   if (Math.abs(target - other.speed) < 1) other.speed = target;

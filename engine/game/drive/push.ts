@@ -134,9 +134,23 @@ export function pushTraffic(drive: DriveState, dt: number): void {
     // are in contact, so they are going the same speed by definition, and easing
     // one toward the other would let the bumper eat its way through the wreck.
     other.speed = dir * mine;
-    // A pushed vehicle is not being driven, so it never gets back on a cruising
-    // pace while it is under the bumper (`recoverPerSec` reads this).
-    other.cruise = other.speed;
+    // …AND THE PERSON IN IT IS ON THE BRAKE, for as long as this lasts and for a
+    // beat afterwards (`DRIVE.drivers.brakeMs`). Two things follow, and the
+    // second is the whole reason the push has an end worth playing:
+    //
+    //   A PUSHED VEHICLE IS NOT BEING DRIVEN, so nothing tries to put it back on
+    //   a cruising pace while it is under the bumper — which is what the line
+    //   here used to say by writing the shove into `cruise` itself.
+    //   …AND THAT WAS A LIE THE CAR NEVER RECOVERED FROM: `cruise` is the pace
+    //   its driver CHOSE, and overwriting it meant a car shoved to 120 was a car
+    //   whose driver had decided to do 120, for ever. Lift off and it did not
+    //   slow down at all — it drove away up the road at the speed the wagon had
+    //   given it, which is the one thing nobody who has just been rear-ended
+    //   does.
+    //
+    // Re-stamped every tick of contact rather than counted from the first, so
+    // the clock starts when the bumper comes OFF it.
+    other.brakeMs = DRIVE.drivers.brakeMs;
 
     // ── AND IT COSTS HIM, BY WHAT IT WEIGHS ─────────────────────────────────
     // The MASS SHARE of the pair: one engine is moving two cars now, so what the
@@ -147,9 +161,26 @@ export function pushTraffic(drive: DriveState, dt: number): void {
     // very much could be (and was: a bus pinned the wagon at a standstill and
     // the leg never ended).
     const share = def.massKg / (DRIVE_UNITS.carMassKg + def.massKg);
+    // …AND THE THING IN FRONT HAS ITS BRAKES ON, which is a second and much
+    // heavier tax while it lasts. Whoever is in that car is standing on
+    // everything they have (`DRIVE.drivers.brakePx`), and the wagon is bolted to
+    // it by its own bumper — so it pays the victim's deceleration over the same
+    // mass share, which is what turns "I rear-ended somebody" into a thing that
+    // costs the trip rather than a thing that speeds it up.
+    const braked = other.brakeMs > 0 ? DRIVE.drivers.brakePx * share * dt : 0;
+    const drag = car.speed * share * wreckage.pushDragPerSec * dt + braked;
+    // …AND THE FLOOR ONLY EVER STOPS THE DRAG. It is a limit on what the shove
+    // may TAKE, not a speed the wagon is held at: written as a plain
+    // `max(floor, …)` it also raised a car that was already slower, so a player
+    // standing on the brake behind a bus was dragged along at the floor with the
+    // pedal buried — the one input that ends a push, answered by the push
+    // refusing to end. Under the floor the shove simply costs nothing, which is
+    // also what keeps a braked victim from being able to pin the wagon: you can
+    // always shove the thing in front of you at a walking pace, whatever its
+    // driver is doing about it.
     car.speed = Math.max(
-      wreckage.pushFloorPx,
-      car.speed - car.speed * share * wreckage.pushDragPerSec * dt,
+      Math.min(car.speed, wreckage.pushFloorPx),
+      car.speed - drag,
     );
 
     // ── AND IT WALKS OUT OF THE WAY, OR DOES NOT ────────────────────────────

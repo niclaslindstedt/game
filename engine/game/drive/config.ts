@@ -692,10 +692,12 @@ export const DRIVE = {
    *                     back out, which is what everybody does and what makes
    *                     the kerb read as being ON this road rather than beside
    *                     it.
-   *   IT FOLLOWS        It lifts off for the car in front rather than driving
-   *                     through it. IMPERFECTLY, on purpose: past its own
-   *                     reaction the gap is simply gone, and what happens then
-   *                     is the pile-up the player then has to get through.
+   *   IT FOLLOWS        It matches the car in front rather than driving into
+   *                     it, and stands on the brake when matching will not be
+   *                     enough. IMPERFECTLY, on purpose: it brakes for what it
+   *                     can SEE and has one set of brakes, so anything that
+   *                     arrives inside its own stopping distance still arrives —
+   *                     which is the pile-up the player has to get through.
    */
   drivers: {
     /** How far a driver drifts either side of its lane's centre (world px) and
@@ -728,6 +730,19 @@ export const DRIVE = {
     lookAheadPx: 190,
     lookBehindPx: 130,
     /**
+     * …AND HOW MUCH FURTHER IT LOOKS BEFORE IT STARTS BRAKING, in SECONDS of its
+     * own travel on top of the figure above.
+     *
+     * The two are different distances because they answer different questions.
+     * `lookAheadPx` is four car lengths, which is the right reach for a DECISION
+     * — a driver that pulled out for a car half a screen away would read as
+     * having pulled out for nothing. Not driving into the back of something is
+     * about the road it needs to STOP in, and at this road's speeds four car
+     * lengths is about half a second of travel: a driver that could not see
+     * further than that was not failing to try, it was blind.
+     */
+    sightSec: 1.2,
+    /**
      * HOW MUCH SLOWER THE CAR IN FRONT HAS TO BE before it is worth pulling out
      * for (world px/s). Below this nobody bothers, which is what keeps the road
      * from being a permanent game of musical lanes.
@@ -752,16 +767,44 @@ export const DRIVE = {
     dodgePx: 13,
     /**
      * FOLLOWING THE CAR IN FRONT — the gap it wants, in SECONDS of its own
-     * travel, and the hardest it will lift off to keep it.
+     * travel, and the daylight it leaves when the pair of them has stopped.
      *
      * Seconds rather than pixels because that is how following distance
      * actually works and how it scales: the same driver at twice the speed
-     * leaves twice the road. `brakeFrac` is how much of its cruise it will give
-     * up — well short of a stop, because a driver that could always avoid the
-     * car in front is a road that never has a crash on it.
+     * leaves twice the road. `stopGapPx` is what is left at the bottom of that,
+     * bumper to bumper, because a queue that closed to nothing would be a queue
+     * permanently inside its own collision test.
+     *
+     * WHAT IT DOES WITH THE GAP IS MATCH, and that is the part that changed. It
+     * used to give up a fixed share of its own pace (`brakeFrac`, 55%) and no
+     * more, which is a driver who lifts off politely and drives into the back of
+     * anything doing less than half what it wanted to do — on a road built
+     * around the traffic running at genuinely different speeds, that was most of
+     * the traffic, and the carriageway wrecked itself without the player
+     * touching anything. A follower now slides its target from its own pace to
+     * the pace of the thing in front as the room runs out, so it settles in
+     * behind a dawdler and sits there, and settles at a stop behind a wreck.
      */
     followSec: 0.55,
-    brakeFrac: 0.55,
+    stopGapPx: 10,
+    /**
+     * …AND WHEN IT STOPS CHOOSING A SPEED AND STANDS ON THE BRAKE: the share of
+     * its own braking (`brakePx`) that stopping in the room left would take,
+     * past which it is an emergency rather than a lift-off — and how much harder
+     * than the strict minimum it then presses, because nobody brakes by exactly
+     * as much as the sum says.
+     *
+     * IT IS DELIBERATELY NOT A GUARANTEE. They brake for what they can SEE
+     * (`lookAheadPx`), they have one set of brakes, and anything that arrives
+     * inside their own stopping distance — a wreck coming out from behind the
+     * van in front, somebody diving into the gap, a car standing on its own
+     * brakes because the hero has just been into the back of it — is arriving
+     * too late. Which is where the pile-up the player has to get through comes
+     * from now: drivers who tried and ran out of road, rather than drivers who
+     * were never trying.
+     */
+    brakeFromFrac: 0.15,
+    brakeUrge: 1.25,
     /**
      * WHO IS ACTUALLY DRIVING — the mix of tempers, as a share of the traffic
      * and a band on its own def's pace.
@@ -827,6 +870,86 @@ export const DRIVE = {
      * (`laneGuardPx`); this is only how hard the lift-off is when it applies.
      */
     courtesyFrac: 0.72,
+    /**
+     * SOMEBODY HAS JUST GONE INTO THE BACK OF THEM — how hard they stand on the
+     * brake (px/s²) and how long they keep their foot there (ms).
+     *
+     * THE HALF OF A REAR-ENDING THE ROAD DID NOT HAVE. A shove used to leave the
+     * struck car running on at whatever speed the wagon had given it, so the one
+     * collision the player makes on purpose — get behind somebody, put your
+     * bumper in their boot and lean on it — ended with the victim driving away
+     * up the road at 120 as if nothing had happened. There is a person in that
+     * car, and what a person does when they are hit from behind is stop: they
+     * come off the throttle and stand on everything they have. So the moment he
+     * LIFTS OFF, the thing he was pushing grinds to a halt in front of him, and
+     * a lane he was using is now a lane with a stopped car in it that he put
+     * there.
+     *
+     * THE FIGURE IS ABOUT TWICE A REAL EMERGENCY STOP, and deliberately: the
+     * speeds on this road are the HERO's rather than a commuter's — a car shoved
+     * up to 700 px/s and braked at a genuine 0.8 g would still be rolling eight
+     * seconds later, which is most of the town. At this rate a pushed car is
+     * stopped inside about a second and a half and a cruising one in half of
+     * that, which is the beat the shove is asking for. What is doing the
+     * stopping helps the reading, too: an end folded into its own wheels, a
+     * wheel or two pointing the wrong way, and the tyres locked.
+     *
+     * The HOLD is longer than any stop it has to make, so the car is genuinely
+     * STOPPED for a moment rather than dipping through zero and driving off —
+     * and then the foot comes up and they get going again, because a road that
+     * filled up with permanently parked cars would be a road the player broke
+     * once and then could not drive.
+     */
+    brakePx: 520,
+    brakeMs: 2400,
+    /**
+     * …AND HOW SQUARE A BLOW HAS TO BE to be a rear-ending rather than a corner
+     * caught on the way past (`Impact.squareness`, 1 is dead on the bumper).
+     *
+     * The ladder the whole minigame teaches is that a clip is cheap and centring
+     * somebody is not, and this is the same line drawn once more: a wing brushed
+     * in traffic is a thing drivers out here absorb, and only a car that has
+     * genuinely been driven into stops.
+     */
+    rearEndSquare: 0.5,
+    /**
+     * HE IS RIDING THE WHITE LINE — the one place on this road where doing
+     * nothing was safe, and what the other drivers now do about it.
+     *
+     * THE HOLE IT CLOSES. Two bodies meet across the road inside
+     * `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac`, which for a saloon is
+     * about eleven px against a lane that is twenty-six wide — so a wagon parked
+     * exactly on a lane marking is thirteen px from the centre of the lane either
+     * side of it and clears BOTH. Sit on the line and the traffic passes down
+     * each flank for the whole leg: no wheel, no reading, no minigame.
+     *
+     * So the drivers he is threading between get to notice. When one comes into
+     * view (`fromPx`) with the wagon sitting on the marking (`straddlePx`), it
+     * gets ONE roll — its own hash, never a draw off the road's stream — and on a
+     * hit it moves over into the other half of the pair, straight across the line
+     * he is sitting on. It is not aimed at him and nothing steers at him: the
+     * driver simply changes lanes, and the man on the marking is in the way of
+     * both of them, which is the whole point of not being in a lane.
+     *
+     * `chance` is per vehicle rather than per second, so the punishment scales
+     * with how much traffic he is riding the line through rather than with how
+     * long he does it for — and roughly a third of them is enough that the line
+     * is a gamble instead of a wall.
+     */
+    lineRide: {
+      /** How near the marking counts as riding it (world px either side). Wider
+       * than the ~2 px slot that is genuinely clear of both lanes, because a
+       * player wobbling either side of the line is plainly doing the same thing
+       * and asking for the same answer. */
+      straddlePx: 6,
+      /** …and how far up the road a driver has to be before it is asked — about
+       * a screen ahead, which is where a car first appears in front of the
+       * wagon (`spawnAheadPx` is a screen and a half). Asked once each, so this
+       * is "as it comes into view" rather than a range it is inside. */
+      fromPx: 460,
+      /** …and how many of them take it. */
+      chance: 0.3,
+    },
   },
   /**
    * THE DELIVERY TRADE, WHICH DOES NOT USE THE ROAD.
