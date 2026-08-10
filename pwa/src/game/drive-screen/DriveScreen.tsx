@@ -28,9 +28,11 @@ import {
   driveReadyUp,
   driveScore,
   driveVerdict,
+  readCarDamage,
   stepDrive,
   thoughtDef,
   withHeroNameLines,
+  type CarDamage,
   type DriveDriver,
   type DriveInput,
   type DriveParams,
@@ -41,6 +43,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { type GameAssets } from "../assets.ts";
 import { carKeyControl } from "../car-keys.ts";
+import { carriedCarFilth, carryCarFilth } from "../car-condition.ts";
 import { actionForCode } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
 import {
@@ -149,7 +152,17 @@ export function DriveScreen({
    * earned (`driveVerdict`), spoken as the first page of the destination's
    * opening monologue rather than as a popup on the road.
    */
-  onArrived: (to: string, bodies: number, verdict: string) => void;
+  onArrived: (
+    to: string,
+    bodies: number,
+    verdict: string,
+    /** THE WAGON AS THE LEG LEAVES IT (`CarDamage`) — what the level on the far
+     * side mints its own car from (`RunParams.car`), so the thing he parks is
+     * the thing he drove. The other half of the condition, the blood, has gone
+     * into `car-condition.ts` by the time this is called; a caller with nowhere
+     * to put a car (the arcade cabinet) simply ignores this. */
+    car: CarDamage,
+  ) => void;
   /**
    * DEVELOPER STAGING, run once on the fresh road before its first tick — the
    * hook the `?drive` workbench plants a body or a van in front of the bumper
@@ -232,8 +245,16 @@ export function DriveScreen({
   /** What the road is holding of the people it has met — the marks on the
    * tarmac and the bookkeeping behind them (`drive-gore.ts`). Held for the whole
    * leg and thrown away on a restart, exactly like the effect layer beside it:
-   * the mess is a record of THIS attempt at the road. */
-  const goreRef = useRef<DriveGoreState>(createDriveGore());
+   * the mess is a record of THIS attempt at the road.
+   *
+   * …EXCEPT WHAT THE CAR ARRIVED WEARING, which is not this attempt's and is
+   * seeded from the wagon's own carried film (`car-condition.ts`) — the other
+   * half of `DriveParams.car`, kept app-side because the engine has never known
+   * a car can get dirty. A leg the cabinet plays hands over nothing and opens on
+   * clean paint. */
+  const goreRef = useRef<DriveGoreState>(
+    createDriveGore(params.car ? carriedCarFilth() : undefined),
+  );
   /** …and what the DRIVER left on it: the rubber off every handbrake stop.
    * Thrown away on a restart with the rest of the mess — the marks are a record
    * of THIS attempt at the road. */
@@ -508,12 +529,30 @@ export function DriveScreen({
    * that the board is hidden: it is never scored and never banked, because a
    * board full of the demo's own initials is not a high-score table.
    */
+  /**
+   * THE WAGON, HANDED OFF THE ROAD — both halves of its condition, at the one
+   * moment the leg is over however it ended (arrived, signed off, or skipped).
+   *
+   * The BLOOD goes into the app's own carrier here rather than being returned,
+   * because the only thing that ever wants it is a renderer and the engine has
+   * no field for it; the DAMAGE is returned, because it is a run parameter on
+   * the far side. A leg with no night behind it (the arcade) has nothing to
+   * hand on and leaves the carrier alone — see `DriveParams.car`.
+   */
+  const handOffCar = useCallback((drive: DriveState): CarDamage => {
+    if (drive.params.car) {
+      const gore = goreRef.current;
+      carryCarFilth({ soak: gore.car, tyre: gore.tyre });
+    }
+    return readCarDamage(drive.car);
+  }, []);
+
   const arrive = useCallback(
     (drive: DriveState) => {
       const to = drive.params.to;
       const verdict = driveVerdict(drive);
       if (auto) {
-        onArrived(to, drive.bodies, verdict);
+        onArrived(to, drive.bodies, verdict, handOffCar(drive));
         return;
       }
       const result = driveBoardResult(
@@ -523,7 +562,7 @@ export function DriveScreen({
       boardRef.current = result;
       setBoard(result);
     },
-    [auto, onArrived],
+    [auto, handOffCar, onArrived],
   );
 
   /** Signed off: give the road back and make the crossing it was holding. */
@@ -531,8 +570,13 @@ export function DriveScreen({
     const drive = driveRef.current;
     boardRef.current = null;
     setBoard(null);
-    onArrived(drive.params.to, drive.bodies, driveVerdict(drive));
-  }, [onArrived]);
+    onArrived(
+      drive.params.to,
+      drive.bodies,
+      driveVerdict(drive),
+      handOffCar(drive),
+    );
+  }, [handOffCar, onArrived]);
 
   /** A finger has left the picture: whichever of the two jobs it had stops. A
    * leftover brake finger never inherits the pad — the next press re-anchors
@@ -907,8 +951,8 @@ export function DriveScreen({
     const drive = driveRef.current;
     // He still made the trip — the game just stops showing it — so the verdict
     // is read off however far he actually got.
-    onArrived(params.to, drive.bodies, driveVerdict(drive));
-  }, [onArrived, params.to, setPause]);
+    onArrived(params.to, drive.bodies, driveVerdict(drive), handOffCar(drive));
+  }, [handOffCar, onArrived, params.to, setPause]);
 
   /**
    * WHAT THE DASHBOARD READS. The road's half of the same context the fight's

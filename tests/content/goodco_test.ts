@@ -10,6 +10,9 @@ import { describe, expect, it } from "vitest";
 import {
   abilityDef,
   allocateStat,
+  applyRunCommand,
+  CAR,
+  carIsWayOut,
   CHESTS,
   createGame,
   enemyDef,
@@ -453,6 +456,45 @@ describe("GOODCO HQ level def", () => {
     // The rooms it cuts are the blueprint's own, and at least one of them is
     // SEALED (one doorway in) — a floor of nothing but open bays is a field.
     expect(BLUEPRINT.areas.some((a) => a.enclosure === "hard")).toBe(true);
+  });
+});
+
+describe("he parks, and he leaves in the car he parked", () => {
+  // THE LOT IS THE LAST FRAME OF THE DRIVE. He arrives at GOODCO by road
+  // (`driveParamsFor`), so the level opens on a man who has just got out of a
+  // car — which only reads if the car is at arm's length rather than a car park
+  // away, and if the machine standing there is the wagon rather than a prop.
+  it("lands the hero at his own wing, clear of the body", () => {
+    const state = startGame(SEED, "goodco_hq");
+    const car = state.vehicles.find((v) => v.kind === "car");
+    expect(car).toBeDefined();
+    const gap = dist(state.players[0].pos, car!.pos);
+    // Close enough to read as "he just shut that door"…
+    expect(gap).toBeLessThan(CAR.boardRadius);
+    // …and far enough that the landing is never inside the car's own blockers,
+    // which would have to shove him out of his own wagon on frame one.
+    expect(gap).toBeGreaterThan(CAR.footprint.radius + PLAYER.radius);
+  });
+
+  it("keeps the gold BOARD arrow down until PAYLOAD-1 is down", () => {
+    // The mark is the one thing that says a car can be got into, and on this
+    // venue the answer is no for the whole mission: the opening beat is walking
+    // AWAY from it into the building.
+    const state = startGame(SEED, "goodco_hq");
+    expect(carIsWayOut(state)).toBe(false);
+    expect(applyRunCommand(state, "enterCar", [], state.players[0])).toBe(
+      false,
+    );
+  });
+
+  it("has no LEVEL CLEAR at all — the way out is the wagon", () => {
+    // Both halves are authored, and each is useless without the other: the
+    // field names the beat, the door names where the trip goes.
+    expect(HQ.exitByCar?.thought).toBe("goodco_back_to_car");
+    const door = (HQ.travelDoors ?? []).find((d) => d.id === "car");
+    expect(door?.to).toEqual(["garage"]);
+    // …and the carve has to actually stand a car for him to walk back to.
+    expect(carved.landmarks.some((l) => l.kind === "car")).toBe(true);
   });
 });
 

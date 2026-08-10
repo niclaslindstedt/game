@@ -18,7 +18,7 @@
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
-import type { CarControl } from "../vehicles.ts";
+import type { CarControl, CarDamage } from "../vehicles.ts";
 import type {
   CarPanelId,
   CarVehicle,
@@ -871,6 +871,23 @@ export type DriveParams = {
    * (see `PedestrianMode`).
    */
   split: boolean;
+  /**
+   * THE WAGON AS IT STANDS — the dents, the ruined wheels and the parts working
+   * free that the last leg (and the level at either end of it) left on it.
+   *
+   * A leg used to open on a factory-fresh car every time, which made the damage
+   * a thing that existed for one minute and was then thrown away: a player who
+   * drove the whole town down on the way out arrived at GOODCO in a wreck,
+   * parked, and drove home in a car with straight panels. The wagon is ONE
+   * object across the night (`CarDamage`, engine/game/vehicles.ts) and this is
+   * how it reaches this leg.
+   *
+   * Omitted is the honest default and stays the shipped behaviour everywhere it
+   * matters: the ARCADE cabinet plays this road for a score rather than as part
+   * of a night, so it hands the player a clean car every attempt, and so does a
+   * road with no run behind it at all (the effects gallery, the workbench).
+   */
+  car?: CarDamage;
 };
 
 /** The whole of a drive. */

@@ -1971,6 +1971,26 @@ export const FIX_OUTRO_LEVEL: LevelDef = hazardLevel("test_outro_level", {
   outro: [["TEST OUTRO PAGE ONE."], ["TEST OUTRO PAGE TWO."]],
 });
 
+// A venue whose WAY OUT IS THE CAR (`LevelDef.exitByCar` — the synthetic twin
+// of GOODCO's staff lot). Killing the boss must NOT raise the victory splash:
+// the win banks, the field is left live, the hero says where he is going, and
+// the wagon parked on the map becomes the door home. Bare arena so the kill is
+// surgical, plus the two things `exitByCar` cannot work without — a `car`
+// travel door to read the destination off, and a `car` landmark for the engine
+// to mint the machine on.
+//
+// THE LINE IT NAMES IS REGISTERED BY THE SUITE, not here. `registerDefs` sets
+// the whole THOUGHT catalog when it is given one, and the cap-farm rotation
+// rides in the same call — so a fixture thought parked in `installFixtures`
+// would silently take the shipped mutter away from every other engine suite
+// (`xp_cap_test.ts` measured it doing exactly that). One suite needs one line;
+// it registers it itself.
+export const FIX_CAR_EXIT_LEVEL: LevelDef = hazardLevel("test_car_exit_level", {
+  exitByCar: { thought: "test_back_to_car" },
+  travelDoors: [{ id: "car", name: "TEST CAR", to: ["test_level_2"] }],
+  landmarks: [{ kind: "car", anchor: "base", pos: { x: 500, y: 1320 } }],
+});
+
 // A shooter arena: a gunner elite and a shielded, shooting boss with its
 // guard — the ranged/cover/shield suites' stage. No waves, no obstacles
 // (suites that need cover push a rock in by hand).
@@ -2437,6 +2457,7 @@ export function installFixtures(force = false): void {
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
       test_alarm_level: FIX_ALARM_LEVEL,
       test_arrivals_level: FIX_ARRIVALS_LEVEL,
+      test_car_exit_level: FIX_CAR_EXIT_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

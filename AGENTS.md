@@ -545,6 +545,33 @@ nobody walking pulls the next car forward), and it spends NOTHING off
 autopilot has its own rung for it (`bot/entrance.ts`) — without one it presses
 the wall the objective is behind for the whole run. → `docs/game-content.md`
 
+**AND ITS BACK DOOR IS THE CAR HE PARKED ON THAT LOT — GOODCO HAS NO LEVEL
+CLEAR BUTTON (`LevelDef.exitByCar`).** The objective clearing is a BEAT, not an
+ending: the `victory` event still fires on the same tick (it is what banks the
+clear and unlocks the next venue), and then the run deliberately stays `playing`
+with the win banked — which is exactly `state.staying` — the level's line is
+raised, and the wagon becomes a door. Four things follow and each is a silent
+regression if missed: **`carIsWayOut` is the ONE predicate** the boardable mark,
+the tap and `enterCar` all read (a hub's car always answers yes, this one only
+once the boss is down); **BOARDING IS THE DEPARTURE** here (a hub's car is driven
+out to a `driveOut` road, a car park has none, so getting in hands straight to
+the DIM); **the corpse tap must not conjure the splash** (`reopenVictoryChoice`
+refuses on such a venue); and **the autopilot needs its own rung**
+(`bot/hub.ts` `exitCar`, below the loot) or a botted or SIMULATED campaign stands
+on a cleared floor forever — which is also why `engine/sim/simulate.ts` reads
+`staying` as the clear on these venues rather than waiting for a phase that never
+comes.
+
+**THE WAGON IS ONE OBJECT ACROSS THE WHOLE NIGHT, AND ITS CONDITION IS A
+PARAMETER AT EVERY SEAM.** Garage → road → staff lot → road → garage is four
+objects holding one car, so what the road did to it travels rather than being
+re-minted: the dents, the shot wheels and the parts working free as `CarDamage`
+(`RunParams.car` / `DriveParams.car`, `readCarDamage` / `applyCarDamage`), and
+the BLOOD in the app's own carrier beside it (`pwa/src/game/car-condition.ts`),
+because the engine has never known a car can get dirty. Never re-mint one half
+without the other, and the ARCADE cabinet takes neither — a score depending on
+which panels a campaign leg flattened an hour ago is not a score.
+
 **ANYTHING THAT ADDS OR REMOVES AN OBSTACLE MID-RUN MUST BUMP
 `state.obstaclesVersion`.** The autopilot builds its nav grid once per level and
 caches it; a wall that appears without the bump is a wall it routes straight

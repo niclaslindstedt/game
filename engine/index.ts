@@ -571,13 +571,17 @@ export {
   WHEEL_DEBRIS,
   nudgeCar,
   carSkidding,
+  carIsWayOut,
   enterCar,
   exitCar,
+  readCarDamage,
+  applyCarDamage,
   shedPart,
   detachWheel,
   stepVehicles,
   createVehicles,
   vehicleFootprint,
+  type CarDamage,
 } from "./game/vehicles.ts";
 // THE STAFF LOT — the night shift turning up for a shift, and the keyed
 // entrance one of them opens (see arrivals.ts). `ARRIVALS` and the door id are

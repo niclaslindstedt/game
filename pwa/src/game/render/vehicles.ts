@@ -24,12 +24,14 @@
 import {
   CAR,
   CAR_FIX,
+  carIsWayOut,
   type CarDetachable,
   type CarPanelId,
   type GameState,
   type Vehicle,
 } from "@game/core";
 
+import { carriedCarCoat } from "../car-condition.ts";
 import { localHero } from "../local-seat.ts";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { soaked } from "./hero-coat.ts";
@@ -94,12 +96,22 @@ const BOARD_BOB_MS = 900;
  * manifestly interactive by then; a mark still pointing at it would be telling
  * the player to board a car he is sitting in. (Tapping a car you are IN still
  * gets you out; that gesture is discovered by having just used it.)
+ *
+ * AND ZERO FOR A CAR THAT IS NOT A WAY OUT YET (`carIsWayOut`), which is the
+ * half GOODCO's staff lot needs. The wagon he parked there is the same object
+ * the garage's is, so without the ask it wore the same mark — a gold arrow
+ * bobbing over the roof from the first frame of the mission, pointing at the
+ * one thing on the map the player must NOT get back into, on a venue whose
+ * opening beat is walking away from it and into the building. It is the same
+ * mark and the same rule; what changed is that the rule now asks the LEVEL
+ * whether the door is open, and on that lot it opens when PAYLOAD-1 goes down.
  */
 function boardablePrompt(
   state: GameState,
   car: Extract<Vehicle, { kind: "car" }>,
 ): number {
   if (car.driver !== null) return 0;
+  if (!carIsWayOut(state)) return 0;
   const hero = localHero(state);
   const d = Math.hypot(hero.pos.x - car.pos.x, hero.pos.y - car.pos.y);
   const near = 1 - (d - CAR.boardRadius) / BOARD_FADE_PX;
@@ -150,7 +162,24 @@ export function drawVehicles(
   for (const vehicle of state.vehicles) {
     if (!inView(vehicle.pos.x, vehicle.pos.y, 64)) continue;
     if (vehicle.kind === "car") {
-      drawCarAssembly(ctx, vehicle, sprites, camera, timeMs);
+      // …WEARING WHAT THE ROAD PUT ON IT. The film is the app's own carry
+      // (`car-condition.ts`) rather than anything on the state, because the
+      // engine has never known a car can get dirty — and it is the SAME record
+      // the road hands this same function, off the same ladder, so the wagon
+      // standing in a car park is drawn exactly as filthy as it was a second
+      // earlier at 120 mph. A clean car costs no composite (`carCoat` returns
+      // an empty record), which is every campaign that has not driven anybody
+      // down and every level with no road behind it.
+      const coat = carriedCarCoat();
+      drawCarAssembly(
+        ctx,
+        vehicle,
+        sprites,
+        camera,
+        timeMs,
+        coat.panels,
+        coat.wheels,
+      );
       // …and the mark OVER it. A pointer drawn under the thing it points at is
       // a pointer the thing can hide.
       const prompt = boardablePrompt(state, vehicle);

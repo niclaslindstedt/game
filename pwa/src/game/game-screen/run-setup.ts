@@ -25,6 +25,7 @@ import {
   type Bot,
   type BotProfile,
   type BotStrategy,
+  type CarDamage,
   type Difficulty,
   type GameState,
   type RunParams,
@@ -32,6 +33,7 @@ import {
 } from "@game/core";
 
 import { botViewSpec } from "../bot-view-specs.ts";
+import { washCar } from "../car-condition.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
   characterCacheSlots,
@@ -182,6 +184,11 @@ export function createRunSession(deps: {
    * in, spoken as the first page of this level's opening monologue. Consumed
    * on the same arrival that set it. */
   arrivalThoughtRef?: MutableRefObject<string | undefined>;
+  /** THE WAGON AS THE ROAD LEFT IT (`RunParams.car`) — carried on a ref for the
+   * same reason the two above are: it is a fact about the CROSSING. Consumed
+   * here, so walking into the garage on foot next time mints whatever that
+   * level's own car already was. */
+  arrivalCarRef?: MutableRefObject<CarDamage | undefined>;
 }): RunSession {
   if (deps.spectate) return spectatorSession(deps.spectate, deps.runId);
   const {
@@ -326,6 +333,10 @@ export function createRunSession(deps: {
     // AT THE WHEEL, when the trip in was the drive home — he pulls onto his own
     // drive in the car he left GOODCO in, rather than being stood beside it.
     startInCar: deps.arriveInCarRef?.current === true,
+    // …AND THE CAR HE ARRIVED IN, dents and all — the machine this level is
+    // about to mint off its own `car` landmark is the one he has been driving
+    // all night (engine/game/vehicles.ts `applyCarDamage`).
+    car: deps.arrivalCarRef?.current,
     // WHAT HE MADE OF THE TRIP IN — the drive's own reading of it
     // (`driveVerdict`), spoken before the level's own briefing.
     arrivalThought: deps.arrivalThoughtRef?.current,
@@ -381,10 +392,21 @@ export function createRunSession(deps: {
   const state =
     resumed ??
     (checkpoint ? cloneGameState(checkpoint) : createRunFromParams(runParams));
+  // …AND THE OTHER HALF OF THE WAGON'S CONDITION FOLLOWS THE FIRST. A run BUILT
+  // FROM PARAMETERS with no car handed to it has a factory-straight machine on
+  // it by construction (`createCar`) — a fresh campaign, a RETRY off a
+  // checkpoint's build, a level picked from the menu — so the blood has to come
+  // off with the dents, or the next campaign's first trip out starts in a clean
+  // car wearing somebody else's night. A RESUMED field and a CHECKPOINT are
+  // left alone: both hold a car that is already whatever the run made of it.
+  if (!resumed && !checkpoint && deps.arrivalCarRef?.current === undefined) {
+    washCar();
+  }
   // One arrival, one seat: consumed here so the next visit to the hub is on
   // foot like every other.
   if (deps.arriveInCarRef) deps.arriveInCarRef.current = false;
   if (deps.arrivalThoughtRef) deps.arrivalThoughtRef.current = undefined;
+  if (deps.arrivalCarRef) deps.arrivalCarRef.current = undefined;
 
   // A run started from scratch (not resumed from the menu, not adopted from a
   // checkpoint that already froze it): capture the combat-start checkpoint

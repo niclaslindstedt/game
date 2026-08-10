@@ -591,8 +591,16 @@ objects:
   # district away from the wall it belongs to. The lot is not the lobby, and the
   # thing he is standing beside when the level opens should be the car.
   #
-  # A FEW STEPS OFF HIS LANDING, not on it — he has already shut the door and
-  # walked away from it, which is the beat.
+  # RIGHT OUTSIDE THE DOOR HE JUST SHUT, not a car park away from it. The beat
+  # is the last frame of the drive: he parked, he got out, and the monologue
+  # lifts on him standing at his own wing. It used to land him 90 px south —
+  # a third of a landscape phone's height, most of a bay — because the amber
+  # "you can get in this" mark fades in from 84 px and would otherwise have been
+  # up on frame one, calling him back to a car he had just got out of. THAT IS
+  # NOT WHAT KEEPS THE MARK DOWN ANY MORE: the arrow now asks whether the car is
+  # the way OUT of this venue at all (`carIsWayOut`, engine/game/vehicles.ts),
+  # and on this lot it is not until PAYLOAD-1 is down. So the distance is free to
+  # be what the picture wants, which is arm's length.
   #
   # OFF THE `y` AXIS, AND THAT IS NOT A TASTE CALL. A parked car is three real
   # blockers (`CAR.footprint`, ±23 px of its anchor along the drawn body), and
@@ -606,18 +614,16 @@ objects:
   # of that line, and a car parked in the next bay along is what a car park
   # looks like anyway.
   #
-  # AND FAR ENOUGH THAT IT IS NOT ASKING TO BE PRESSED. The amber "you can get
-  # in this" glow fades in from `CAR.boardRadius + BOARD_FADE_PX` — 84 px
-  # (pwa/src/game/render/vehicles.ts) — so anything closer lights the car up on
-  # frame one and calls the player back to the lot, on a mission whose opening
-  # beat is walking INTO the building. 90 clears that with room, and is a third
-  # of a landscape phone's height (~260 units), so what he sees when the
-  # monologue lifts is himself standing in a car park beside his own wagon.
+  # AND NOT SO CLOSE THAT HE IS STANDING IN IT. A parked car's blockers are
+  # 9 px circles on the anchor's own line, and the hero is 8 px of body: at 28 px
+  # north there is a clear 11 px between them, so the landing never has to be
+  # shoved out of its own wagon, and the rusher's approach along the hero's `y`
+  # still passes 20 px clear of the nearest circle.
   - id: car
     type: landmark
     sprite: car_doors_0
     at: spawn
-    offset: { x: 0, y: -90 }
+    offset: { x: 0, y: -28 }
   - id: rocket
     type: landmark
     at: goal

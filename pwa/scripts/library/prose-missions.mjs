@@ -80,6 +80,12 @@ export function missionLead(mission) {
     );
   }
 
+  if (mission.exitByCar) {
+    lines.push(
+      "Killing its boss does not end the mission: there is no LEVEL CLEAR here at all. The floor stays open, and the way out is the car parked where the drive in left it — walk back to it, get in, and the road home starts.",
+    );
+  }
+
   if (mission.riftExit) {
     lines.push(
       "The way onward from here is a rift portal rather than a road, and walking it teaches the seam in the garage that destination — so the way home reaches one venue further afterwards.",

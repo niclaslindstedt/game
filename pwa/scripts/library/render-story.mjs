@@ -264,6 +264,9 @@ function thoughtsSection(chapter, { href }) {
               // Not a speaker but a DOOR he tries too early — so the slot the
               // others fill with a mob's name gets the door's instead.
               door: "The way out he cannot take yet",
+              // Not a speaker either: the venue ENDING, which on this one
+              // venue is a beat rather than a splash (`LevelDef.exitByCar`).
+              exit: "When the last of them stops moving",
               // Not a speaker either: a PLACE, and being in it is the whole
               // trigger. The slot gets what "being there" means.
               place: {

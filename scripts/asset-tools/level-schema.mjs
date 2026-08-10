@@ -466,6 +466,24 @@ export function validateLevel(def, refs, description = "", options = {}) {
   }
   if (def.riftExit !== undefined && typeof def.riftExit !== "boolean")
     err("riftExit must be a boolean");
+  // THE VENUE WHOSE WAY OUT IS THE CAR (`LevelDef.exitByCar`). Two things it
+  // cannot be authored without, and both are silent failures rather than loud
+  // ones: with no `car` travel door there is no destination for the trip home,
+  // so the countdown falls back to the ordinary splash the field exists to
+  // remove; and with no line the objective clears onto a swept floor with
+  // nothing at all telling the player the run is still going.
+  if (def.exitByCar !== undefined) {
+    if (typeof def.exitByCar !== "object" || Array.isArray(def.exitByCar)) {
+      err("exitByCar must be a mapping");
+    } else {
+      const thought = def.exitByCar.thought;
+      if (thought === undefined) err("exitByCar needs a thought");
+      else if (!refs.thoughts.has(thought))
+        err(`exitByCar names unknown thought "${thought}"`);
+      if (!(def.travelDoors ?? []).some((d) => d?.id === "car"))
+        err('exitByCar needs a travel door with id "car" to drive out to');
+    }
+  }
   if (
     def.merchant?.parked !== undefined &&
     typeof def.merchant.parked !== "boolean"

@@ -41,7 +41,7 @@ import {
 } from "./perception.ts";
 import { allyCoverTarget, partyLeash } from "./party-play.ts";
 import { errandGiver, questObjectiveTarget } from "./errands.ts";
-import { hubGoal } from "./hub.ts";
+import { exitCar, hubGoal } from "./hub.ts";
 import { entranceGoal, lockedOut } from "./entrance.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
@@ -225,6 +225,11 @@ function macroPreemptible(
   // the car is a ride that never leaves.
   const home = hubGoal(bot, state, hero, wantsMerchantVisit(state, hero));
   if (home && home.pos.x === goal.x && home.pos.y === goal.y) return false;
+  // …and so is the walk back to the car on a venue whose way out it is
+  // (`hub.ts` `exitCar`): a lull's hunt re-pointing off it on a floor that
+  // still has stragglers on it is a ride that never leaves GOODCO.
+  const ride = exitCar(state);
+  if (ride && ride.pos.x === goal.x && ride.pos.y === goal.y) return false;
   const c = bot.content;
   if (c?.target && c.target.x === goal.x && c.target.y === goal.y) return false;
   // A boss-ready arrow march is the boss push walked down the authored path —
@@ -425,6 +430,21 @@ function ownMacroTarget(
   const content = nearestContent(bot, state, hero, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
+  // AND THEN GO HOME, on the one kind of venue whose way out is a car
+  // (`hub.ts` `exitCar` — GOODCO's staff lot once PAYLOAD-1 is down). There is
+  // no LEVEL CLEAR button on such a level, so nothing else ever ends the run:
+  // without this rung a botted or SIMULATED campaign clears GOODCO and then
+  // stands on a swept factory floor until the clock runs out, which is the
+  // whole reason the rung exists rather than any opinion about how to play.
+  //
+  // BELOW THE LOOT AND THE ERRANDS AND ABOVE EVERYTHING ELSE. The boss's drop
+  // is on the floor, the last chests are still shut and the stall will still
+  // buy — all of that is what the trip was FOR, so the ride finishes the job
+  // and then leaves. Under it there is nothing left to reach anyway: the arrow
+  // has been walked to its end, the boss is dead, and the fog sweep on a
+  // cleared map is pottering.
+  const ride = exitCar(state);
+  if (ride) return ride.pos;
   // THE GUIDANCE ARROW IS AN INSTRUCTION. On a path level the blinking amber
   // "go this way" arrow the player sees points at the next unwalked waypoint
   // of the authored intended path (path.ts; drawn by the app's

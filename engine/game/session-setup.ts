@@ -33,7 +33,7 @@
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
 import { createGame } from "./create.ts";
-import { enterCar } from "./vehicles.ts";
+import { applyCarDamage, enterCar, type CarDamage } from "./vehicles.ts";
 import { dismissIntro, skipCutscene, skipStoryOpening } from "./items/flow.ts";
 import { seedCampaignQuests } from "./quests/campaign.ts";
 import { markThoughtsSeen, muteDialogue } from "./story.ts";
@@ -101,6 +101,28 @@ export type RunParams = {
    * A no-op on any level whose carve pins no car.
    */
   startInCar?: boolean;
+  /**
+   * THE STATE THE WAGON IS IN when this run's car is minted — the dents, the
+   * shot wheels and the parts hanging off it (`CarDamage`, vehicles.ts).
+   *
+   * The car outlives the run: he leaves the garage in it, drives a minute of
+   * road in it, parks it on GOODCO's lot, drives it home and parks it in his
+   * own bay again — four objects, one wagon. So what the road did to it is
+   * lifted off the leg and handed to the level it arrives at, and lifted off
+   * that level and handed to the leg home. A session parameter for the same
+   * reason `startInCar` is: it is settled before the first tick, and a field
+   * only one end of a session applied is a desync.
+   *
+   * Omitted mints the car exactly as `createCar` does — factory straight, which
+   * is what a fresh campaign, a restart and every level with no road behind it
+   * want. A no-op on any level whose carve pins no car.
+   *
+   * `unknown` for the same reason `loadout` is: the wire's own copy of this
+   * shape names nothing (server/wire/protocol.ts imports nothing at all), and
+   * `applyCarDamage` re-clamps every field it reads, so a malformed record
+   * cannot put a rung on the car that has no sprite behind it.
+   */
+  car?: unknown;
   /**
    * A LINE THE HERO ARRIVED STILL THINKING — the id of a thought spoken as the
    * first page of this level's opening monologue.
@@ -246,6 +268,15 @@ export function createRunFromParams(params: RunParams): GameState {
   // WHAT HE ARRIVED STILL THINKING — spoken as the first page of the level's
   // opening monologue (`introPages`).
   if (params.arrivalThought) state.arrivalThought = params.arrivalThought;
+  // WHAT THE ROAD LEFT ON THE WAGON, put back on the machine this level minted
+  // for it (`RunParams.car`) — before anybody gets into it, so a car boarded on
+  // the first tick is already the car that arrived.
+  if (params.car) {
+    const damage = params.car as CarDamage;
+    for (const vehicle of state.vehicles) {
+      if (vehicle.kind === "car") applyCarDamage(vehicle, damage);
+    }
+  }
   if (params.startInCar) {
     const hero = state.players[0];
     const car = state.vehicles.find((v) => v.kind === "car");

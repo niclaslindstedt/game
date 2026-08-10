@@ -368,6 +368,26 @@ thoughts:
     pages:
       - - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
       - - AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
+  # PAYLOAD-1 IS DOWN — the last beat of GOODCO, raised by the level's own
+  # `exitByCar` the moment the objective clears (engine/game/step/index.ts).
+  #
+  # IT IS THE ONLY THOUGHT IN THE GAME THAT IS AN INSTRUCTION, and it is one
+  # because the level stopped having a button. Every other venue ends on LEVEL
+  # CLEAR; this one ends the way the story says it ends — he walks the building
+  # back out through the gate, crosses the lot to the wagon he parked on it and
+  # drives home, because the part is no use here and the ship it goes into is on
+  # his own lawn. With no line at all the player is left standing on a cleared
+  # floor with the horde gone and nothing telling them the run is not over.
+  #
+  # FLAT, AND IT NAMES THE REASON RATHER THAN THE FEELING. He has just killed
+  # the thing that told him where she went; what he says about it is that he is
+  # in the wrong building. That is the same man who filed a crowd on the road
+  # under road surface.
+  goodco_back_to_car:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - SHE WENT UP AN HOUR AGO AND I'M STANDING IN A FACTORY. THE SHIP'S AT HOME. I NEED TO GET BACK TO MY CAR.
   # Sighting the first wisp on the moon: the dead walking the dust is the
   # hero's first proof the broadcast history is a lie — somebody knew.
   moon_wisp_sight:
