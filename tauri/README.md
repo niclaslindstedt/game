@@ -201,7 +201,12 @@ npm run tauri             # from the repo root
 make tauri                # the same thing
 ```
 
-Arguments reach the game: `npm run tauri -- --multiplayer`.
+Arguments reach the game: `npm run tauri -- --multiplayer`. A launch that turns
+multiplayer, mods or voice on from the command line rather than from its
+packaging stops on the game's own licence acknowledgement before the title menu,
+exactly as the Electron build does — this shell states the fact in the
+initialization script (`__GIS_UNLOCKED__`, `shell/src/channels.rs`) and the page
+draws it (`pwa/src/game/LaunchNotice.tsx`).
 
 The binary talks to Steam on every launch unless told not to — but
 `scripts/run-tauri.mjs` fills in `GIS_STEAM=off` when the caller left it unset,

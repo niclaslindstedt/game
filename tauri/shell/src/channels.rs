@@ -44,6 +44,17 @@ pub const SHELL_ID_GLOBAL: &str = "__GIS_SHELL__";
 /// What this launch may honour, as plain names.
 pub const CAPS_GLOBAL: &str = "__GIS_CAPS__";
 
+/// WHETHER THE COMMAND LINE — rather than the packaging — is what turned any of
+/// that on, which the game states before it shows the player a menu.
+///
+/// Multiplayer and mods are licensed with the store edition, so a copy running
+/// them off `--multiplayer` / `--mods` / `--voice` is being played outside the
+/// terms it was given; `pwa/src/game/LaunchNotice.tsx` is where somebody says
+/// they understand that, and this is the only thing it is told. It FAILS
+/// CLOSED in the page — an absent global is a launch with nothing to answer —
+/// so it is defined on every launch rather than only on an unlocked one.
+pub const UNLOCKED_GLOBAL: &str = "__GIS_UNLOCKED__";
+
 /// What the page answers to. The shell calls these from OUTSIDE — the return
 /// path needed no abstraction on any shell, which is why the web side's
 /// receiving half is byte-identical across all three.

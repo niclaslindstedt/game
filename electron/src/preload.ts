@@ -2,8 +2,7 @@
 // The preload — the desktop peer of native/src/injected.ts, and the whole of
 // the page's view of the shell.
 //
-// It exposes exactly three things into the page, all of them before the game's
-// own scripts run:
+// Everything it exposes lands before the game's own scripts run:
 //
 //   __GIS_NATIVE__    this is a store shell, so the PWA update lifecycle is off
 //                     (pwa/src/app/native.ts). The app bundles the game and
@@ -12,6 +11,11 @@
 //   __GIS_PLATFORM__  WHICH shell — read by pwa/src/app/shell-bridge.ts to
 //                     answer platform-feature questions, e.g. that Steam does
 //                     not sell coins and has no vibration motor.
+//   __GIS_CAPS__      what this launch may honour, as plain names, so the menus
+//                     are built right the first time they are drawn.
+//   __GIS_UNLOCKED__  the command line — not the packaging — is what turned
+//                     multiplayer/mods/voice on, so the game states the terms
+//                     before the menu (pwa/src/app/launch-options.ts).
 //   __gisShell.post   the page → shell pipe, the counterpart of the WebView's
 //                     `ReactNativeWebView.postMessage`.
 //
@@ -54,9 +58,22 @@ const caps = (
   .split(",")
   .filter(Boolean);
 
+/**
+ * WHETHER THE COMMAND LINE IS WHAT TURNED ANY OF THAT ON, which the game has to
+ * say out loud before it shows the player anything (`capabilities.ts`
+ * `UNLOCKED_ARG`, `pwa/src/app/launch-options.ts`).
+ *
+ * It arrives here rather than over the shell channel for the same reason the
+ * capability list does: the answer decides what the app draws FIRST, and a
+ * round trip would put the menu in front of the notice.
+ */
+const UNLOCKED_ARG = "--gis-unlocked";
+const unlocked = process.argv.includes(UNLOCKED_ARG);
+
 contextBridge.exposeInMainWorld("__GIS_NATIVE__", true);
 contextBridge.exposeInMainWorld("__GIS_PLATFORM__", "steam");
 contextBridge.exposeInMainWorld("__GIS_CAPS__", Object.freeze(caps));
+contextBridge.exposeInMainWorld("__GIS_UNLOCKED__", unlocked);
 contextBridge.exposeInMainWorld("__gisShell", {
   post(message: string): void {
     // Only strings cross. The main process parses and validates; a structured

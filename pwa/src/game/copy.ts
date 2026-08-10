@@ -4,7 +4,7 @@
 // Brand identity (title, tagline, links) lives in the identity config
 // (game.config.json / identity.ts); per-level story text lives on the level
 // defs (intro, foes). This module is for the loose UI strings that are
-// neither: the HOW TO PLAY teaching copy.
+// neither: the HOW TO PLAY teaching copy, and the launch notice.
 
 // The HOW TO PLAY demo (see demo.ts / GameScreen `demo`): the autopilot plays a
 // level while these one-time tooltips pop wherever the bot "taps", teaching each
@@ -66,4 +66,35 @@ export const DEMO_TIPS = {
   map: "TAP THE MAP TO SEE IT ALL",
   /** The pause menu is where the coin-metered AUTO PILOT is hired. */
   autopilot: "PAUSE TO HIRE THE AUTO PILOT",
+} as const;
+
+// THE LAUNCH NOTICE (LaunchNotice.tsx): what a desktop build whose licensed
+// features were switched on by command line says before it shows anybody the
+// menu. It replaces an operating-system message box the shell used to raise
+// before the window existed, so the substance is the dialog's and only the
+// dressing is the game's: what was turned on, where the licensed edition is,
+// and what carrying on means.
+//
+// KEEP IT SHORT. The pixel font has no lowercase glyphs (it uppercases what it
+// is given), so every line here is read in capitals — a paragraph of that is a
+// paragraph nobody finishes. `tests/launch_notice_test.ts` holds each line to
+// the glyphs the font actually has and to a length the reference phone can
+// draw without scrolling.
+export const LAUNCH_NOTICE = {
+  /** The heading, which names the cause rather than the consequence. */
+  heading: "ENABLED BY LAUNCH OPTIONS",
+  /** What this launch turned on that its packaging did not. */
+  what: "Multiplayer and mod support were turned on by launch options.",
+  /** Where the licensed edition is. Dropped when there is no store page to
+   * send anybody to — the same rule every other store link follows. */
+  where: "The Steam edition is the only one licensed to play multiplayer.",
+  /** What pressing the button means. The one line that cannot be trimmed. */
+  terms:
+    "Enabling them here is outside the terms of service for this build. Continuing means you understand you are playing outside those terms, on your own responsibility.",
+  /** Carry on — the acknowledgement itself. */
+  accept: "I UNDERSTAND",
+  /** The proper way to play, offered as a button rather than a URL to copy. */
+  store: "GET IT ON STEAM",
+  /** The way out, which closes the game rather than dropping the options. */
+  quit: "QUIT",
 } as const;

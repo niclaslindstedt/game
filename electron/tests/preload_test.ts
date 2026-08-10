@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { UNLOCKED_ARG } from "../src/capabilities";
 import { NET_PORT_CHANNEL, SHELL_CHANNEL } from "../src/channels";
 
 const PRELOAD_SOURCE = readFileSync(
@@ -27,5 +28,13 @@ describe("the sandboxed preload", () => {
     expect(PRELOAD_SOURCE).toContain(
       `const NET_PORT_CHANNEL = "${NET_PORT_CHANNEL}"`,
     );
+  });
+
+  it("reads the same unlock argument the window is created with", () => {
+    // The main process writes it into `additionalArguments`; this is the only
+    // reader. A drift here is silent in both directions — the flag is simply
+    // never found — and what it silences is the licence acknowledgement the
+    // game shows before the menu (pwa/src/game/LaunchNotice.tsx).
+    expect(PRELOAD_SOURCE).toContain(`const UNLOCKED_ARG = "${UNLOCKED_ARG}"`);
   });
 });

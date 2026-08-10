@@ -112,6 +112,20 @@ Arguments reach the game: `npm run electron -- --multiplayer`. Voice needs both:
 rather than ignored — voice travels inside a session, so there is nothing for a
 microphone to talk into without one).
 
+**A launch that turns any of those on says so, and asks.** Multiplayer and mods
+are licensed with the store edition rather than with a plain download, so a copy
+running them off the command line stops on an acknowledgement before the title
+menu: what was turned on, that the Steam edition is the licensed one, and that
+carrying on is on the player's own responsibility. It is shown on every such
+launch — a remembered answer would make it a checkbox — and its way out closes
+the game rather than starting it with the options quietly dropped.
+
+It is the GAME's own popup (`pwa/src/game/LaunchNotice.tsx`), not an
+operating-system message box: the shell states the fact on the preload's command
+line (`--gis-unlocked` → `__GIS_UNLOCKED__`, see `src/capabilities.ts`) and the
+page says the words in the game's own window skin. The dedicated server, which
+has no page to ask through, prints the same notice to its console instead.
+
 ### When it does not start
 
 The shell writes **every launch** to `launch.log` in its user-data directory

@@ -102,7 +102,10 @@ past sweeps — extend it when a new rule of thumb settles.
    flex column. Watch for flex children shrinking INTO each other: any
    scrollable column needs `flex-shrink: 0` on its rows and spacer-based
    centering (`::before/::after { flex: 1 }`) or `margin: auto` so it centers
-   when it fits and scrolls when it doesn't.
+   when it fits and scrolls when it doesn't. And EVERY new scroll box declares
+   `overscroll-behavior: contain` beside its `overflow` — without it a flick
+   past the end chains into the document behind it, and
+   `tests/page_scroll_lock_test.ts` fails the build by name.
 2. **One window skin.** Every modal/panel/prompt wears the FF6 window skin —
    the `--panel-*` tokens in `styles.css` (fill gradient, rail borders,
    radius, shadow). A flat slab with its own border color is drift; re-skin
@@ -185,6 +188,7 @@ plain mutations because rendering reads state every frame:
 | Talent picker | Bank ten points in a tree stat and enqueue: `g.player.spentStats.strength += 10; g.player.stats.strength += 10; g.pendingTalentPoints = ["strength"]`. Hand the ten points BACK afterwards — the engine reconciles the queue from `spentStats`, so a leftover re-opens the picker on top of the next capture |
 | LOST & FOUND (VaultScreen) | Bank a loadout on the roster hero whose `vault` holds a copy of the live run's weapon, then reload the title — the row exists only when the vault has something in it |
 | Demo exit confirm | HOW TO PLAY, then tap the field. A tap while a teaching tooltip is up dismisses the TIP, so tap until the confirm appears |
+| LAUNCH NOTICE (the licence acknowledgement) | Stamp `__GIS_UNLOCKED__` — plus `__GIS_NATIVE__`, `__GIS_PLATFORM__ = "steam"` and a stub `__gisShell` for the QUIT row — in an init script BEFORE the page loads. There is no in-game trigger: the shell states it, and it gates the whole app, so it needs a page of its own |
 
 Keep the harness in sync: a new overlay, a renamed aria-label, or a new
 `GamePhase` gets a step (or a fixed selector) in `ui-shots.mjs` in the same
