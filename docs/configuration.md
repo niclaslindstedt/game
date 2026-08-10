@@ -597,7 +597,11 @@ DEVELOPER menu's DEBUG MODE setting shows the same meter).
 
 **`?bot=<strategy>`** — Hands the run to the engine autopilot
 (`engine/game/bot/index.ts`): the bot skips any prelude cutscene, dismisses the
-intro, steers, jumps, and spends level-up points itself. Strategies (the
+intro, steers, jumps, and spends level-up points itself. **It does not START a
+run** — it says who steers one once there is one, so a launch carrying nothing
+but this param sits on the title menu. Something still has to press NEW GAME,
+name a hero and pick a rung and a level, which is what the menu walk inside
+`pwa/scripts/playtest.mjs` is for. Strategies (the
 positioning posture): `aggro` (close and hold tight, tolerate a denser ring
 before bailing), `balanced`/`survivor` (the adaptive edge-hug), `flee` (hold
 far, disengage early), plus the simpler `idle`, `rush`, `kite`, `boss`. Unknown

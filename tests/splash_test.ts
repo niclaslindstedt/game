@@ -12,6 +12,8 @@
 // screenshot harness capturing the game and a screenshot harness capturing
 // three seconds of a publisher's name, with its first click eaten.
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -86,6 +88,22 @@ describe("splashWanted", () => {
     expect(splashWanted("?nosplash")).toBe(false);
   });
 
+  it("stays out of the way of the developer workbenches too", () => {
+    // The DEEP LINKS `App.tsx` routes to before it renders any menu: there is
+    // no front door in front of these for a card to cover. They were suppressed
+    // by construction until the card became the app's ENTRY (`Boot.tsx`) and
+    // started sitting above every route — at which point `make gallery` began
+    // paying three seconds PER EXHIBIT and `elite-abilities.mjs` three per
+    // elite.
+    expect(splashWanted("?effects")).toBe(false);
+    expect(splashWanted("?effects=blood_spray&caster=tesla&speed=2")).toBe(
+      false,
+    );
+    expect(splashWanted("?drive")).toBe(false);
+    expect(splashWanted("?drive=home&seed=7")).toBe(false);
+    expect(splashWanted("?cutscene=prelude")).toBe(false);
+  });
+
   it("comes back for `?splash`, which is how the card is screenshotted", () => {
     expect(splashWanted("?splash")).toBe(true);
     expect(splashWanted("?debug&splash")).toBe(true);
@@ -93,6 +111,47 @@ describe("splashWanted", () => {
 
   it("ignores params that mean nothing to it", () => {
     expect(splashWanted("?utm_source=somewhere&seed=7")).toBe(true);
+  });
+});
+
+// THE GUARD ON THE LIST ABOVE, and the reason it is a source scan rather than
+// five more literals: the failure it exists for is a workbench added to
+// `App.tsx` MONTHS from now whose author has no reason to think about a studio
+// card. That is exactly how `?effects`, `?drive` and `?cutscene` each quietly
+// re-earned three seconds when the card became the app's entry — no test
+// failed, nothing looked wrong, and the cost only showed up as a contact sheet
+// that took a minute longer than it used to.
+//
+// So the rule is read off the routing itself: every URL param `App.tsx`
+// consults must be one the card stands out of the way of. It FAILS CLOSED — a
+// param that is genuinely not a route (an argument to a workbench, like the
+// gallery's `speed`) has to be named below — because the alternative is a guard
+// that lets the next one through.
+describe("the card and App.tsx's routing", () => {
+  /** Params `App.tsx` reads that select nothing — arguments to a route it has
+   * already taken, so they say nothing about whether this is a launch. */
+  const NOT_ROUTES = new Set(["speed", "caster"]);
+
+  it("never covers a screen the app deep-links to", () => {
+    const app = readFileSync(
+      new URL("../pwa/src/App.tsx", import.meta.url),
+      "utf8",
+    );
+    const read = new Set<string>();
+    for (const m of app.matchAll(/params\.(?:has|get)\("([^"]+)"\)/g)) {
+      const name = m[1]!;
+      if (!NOT_ROUTES.has(name)) read.add(name);
+    }
+    // The guard on the guard: a regex that matched nothing would pass forever.
+    expect(read.size).toBeGreaterThan(0);
+    for (const param of read) {
+      expect(
+        splashWanted(`?${param}=x`),
+        `App.tsx routes on "${param}", so the studio card must not cover it — ` +
+          `add it to HARNESS_PARAMS in pwa/src/game/splash.ts, or to ` +
+          `NOT_ROUTES here if it is an argument rather than a route`,
+      ).toBe(false);
+    }
   });
 });
 
