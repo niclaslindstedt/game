@@ -261,6 +261,9 @@ export type DriveExhibit = ExhibitCard & {
    * `gib` says, so an exhibit that wants a road with nobody coming apart on it
    * (the two CAR-damage ones) still only has to say so once. */
   split?: boolean;
+  /** Stage the shipped SFW road presentation: body impacts dissolve into fairy
+   * dust and the remaining collision sprites/effects are withheld. */
+  sfw?: boolean;
   /**
    * PLANT WHAT THE EXHIBIT IS OF in front of the bumper, and set the speed it
    * should be met at — run once on a fresh road before its first tick.

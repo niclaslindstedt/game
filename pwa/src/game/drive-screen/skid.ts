@@ -122,6 +122,7 @@ export function stepSkids(
   state: SkidState,
   drive: DriveState,
   fx: DriveFxState,
+  smoke = true,
 ): void {
   const { car } = drive;
   const at = state.at;
@@ -135,7 +136,7 @@ export function stepSkids(
   }
   const speed = Math.abs(car.speed);
   const heat = Math.min(1, speed / (CAR.skidMinSpeed * 8));
-  if (drive.ms >= state.smokeDueMs) {
+  if (smoke && drive.ms >= state.smokeDueMs) {
     state.smokeDueMs = drive.ms + SMOKE_EVERY_MS;
     // Off the back axle, where the locked wheels are — never off the car's
     // centre, which would read as the engine going rather than the tyres.

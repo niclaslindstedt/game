@@ -210,6 +210,14 @@ top as before. The moment of the handover is each one's own animation ending
 one), so nothing is still moving when it changes sides — and a launched body stays
 in the air layer for its whole arc, because it genuinely is in the air.
 
+**SFW MODE swaps the vocabulary before anything graphic is recorded.** The
+gore gate returns no blood family or dismemberment kind, `killPresentation`
+keeps an intact corpse for readable deaths, and `drawStardust` supplies the
+pastel hit/death flourish. The frozen hero-death tableau uses its own scene
+clock for a constellation in place of the blood pool. The DRIVE uses the same
+primitive in its denser `fairy` form, streaming dust with the collision bearing
+while its damaged sprites and other collision effects are withheld.
+
 **A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
 `screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
 STEER rather than point (the touch dpad, the stick, the WASD cluster) have no

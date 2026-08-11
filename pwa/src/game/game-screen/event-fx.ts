@@ -55,7 +55,7 @@ import { pushDamage, pushFloat } from "./float-lane.ts";
 import { collectGoldPickup } from "./gold-float.ts";
 import { charredRemains, goreFamily } from "./gore.ts";
 import { CLEAVE_MS, GORE_BURST_MS, landingSpots } from "./gore-burst.ts";
-import { splashOnly } from "./gore-gate.ts";
+import { sfwModeEnabled, splashOnly } from "./gore-gate.ts";
 import { soakHero } from "./hero-soak.ts";
 import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
@@ -506,11 +506,30 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     const incinerated = death?.incinerate ?? false;
     const burst = death?.gore ?? null;
     const launch = death?.launch ?? undefined;
+    const sfw = sfwModeEnabled();
     if (!incinerated) {
       // What the spray lands on STAYS — soaked into the floor's own saturation
       // grid here (`spillBlood`), one byte per tile, never kept as an object and
       // never forgotten.
-      if (blow) {
+      if (sfw) {
+        // SFW keeps the hit's strength and timing, but changes the entire
+        // vocabulary: no wound frame, liquid drop, floor mark, coat or piece
+        // is created. A death that would have come apart gets the larger shower
+        // while its whole body continues down the ordinary corpse path below.
+        const graphicDeath = death?.stardust ?? false;
+        const durationMs = graphicDeath ? 900 : 440;
+        effects.push({
+          kind: "stardust",
+          pos: { ...event.pos },
+          untilMs: state.stats.timeMs + durationMs,
+          durationMs,
+          stardust: {
+            intensity: Math.max(0.05, event.damage / Math.max(1, event.maxHp)),
+            burst: graphicDeath,
+          },
+          seed,
+        });
+      } else if (blow) {
         effects.push({
           kind: "blood",
           pos: { ...event.pos },
@@ -587,7 +606,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     }
     // A signature weapon's themed gore, sprayed over the plain splash
     // on the hero's own melee blows (see `heroGore` above).
-    if (heroGore && !incinerated) {
+    if (heroGore && !incinerated && !sfw) {
       effects.push({
         kind: "burst",
         pos: { x: event.pos.x, y: event.pos.y },
@@ -1266,7 +1285,16 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       event.pos.y - localHero(state).pos.y,
       event.pos.x - localHero(state).pos.x,
     );
-    if (blow) {
+    if (sfwModeEnabled()) {
+      effects.push({
+        kind: "stardust",
+        pos: { ...event.pos },
+        untilMs: state.stats.timeMs + 900,
+        durationMs: 900,
+        stardust: { intensity: 1, burst: true },
+        seed,
+      });
+    } else if (blow) {
       effects.push({
         kind: "blood",
         pos: { ...event.pos },
@@ -1546,6 +1574,16 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         );
       }
     } else {
+      if (left.stardust) {
+        effects.push({
+          kind: "stardust",
+          pos: { ...event.pos },
+          untilMs: state.stats.timeMs + 1100,
+          durationMs: 1100,
+          stardust: { intensity: event.force, burst: true },
+          seed: event.seed,
+        });
+      }
       effects.push({
         kind: "corpse",
         pos: { ...event.pos },

@@ -481,6 +481,35 @@ describe("the title menu tree", () => {
     }
   });
 
+  it("locks every granular GORE row behind SFW mode", () => {
+    try {
+      updateSettings({ ...ALL_GORE_ON, sfwMode: "on" });
+      const rows = buildMenu("gore", ctxFor());
+      expect(
+        rows.find((row) => row.aria === "gore-sfw-mode")?.toggle,
+      ).toBeTruthy();
+      const granularIds = [
+        "gore-blood",
+        "gore-ecto",
+        "gore-sparks",
+        "gore-cosmic",
+        "gore-cleaves",
+        "gore-gibs",
+        "gore-hero-soak",
+        "gore-bootprints",
+      ];
+      const granular = rows.filter((row) => granularIds.includes(row.aria));
+      expect(granular).toHaveLength(8);
+      for (const row of granular) {
+        expect(row.locked, `${row.aria} is not locked`).toBe(true);
+        expect(row.toggle).toBeUndefined();
+        expect(row.value).toBe("STARDUST");
+      }
+    } finally {
+      updateSettings({ ...ALL_GORE_ON });
+    }
+  });
+
   it("never offers CONTROLS when the page behind it would be blank", () => {
     // Every scheme row on CONTROLS is desktop-only and the one row that is not
     // needs a motor, so a touch device with neither reaches a page holding

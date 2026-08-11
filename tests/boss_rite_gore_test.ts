@@ -37,6 +37,7 @@ function struck(over: Partial<BossRiteBlow> = {}) {
 beforeEach(() => {
   setDevicePolicyForTest(null); // unmanaged: everything allowed
   updateSettings({
+    sfwMode: "off",
     blood: 1,
     goreBlood: "on",
     goreEcto: "on",

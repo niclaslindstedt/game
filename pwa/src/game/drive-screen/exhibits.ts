@@ -470,6 +470,35 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-fairy-dust",
+      icon: "spell_rending_strike",
+      label: "FAIRY DUST",
+      blurb: "SFW - THE BODY PEELS AWAY IN PASTEL DUST ON THE SLIPSTREAM",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "body",
+        "pedestrian",
+        "sfw",
+        "fairy",
+        "stardust",
+        "glitter",
+        "disintegrate",
+      ],
+      showMs: 1500,
+      shows: "pedestrianHit",
+      bank: HARD_BODY_SOUNDS,
+      sfw: true,
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        plantBody(drive, leadPx(speed) + 34, 0, 4);
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-drag",
       icon: "gib_road_smear_2",
       label: "CARRIED",

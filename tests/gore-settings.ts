@@ -3,7 +3,7 @@
 // only collects `*_test.ts` / `*_tests.ts`.
 //
 // Built from `GORE_SWITCHES` rather than typed out, so a suite that stages "all
-// the gore on" keeps staging all of it when a ninth kind is added — the failure
+// the gore on" keeps staging all of it when another kind is added — the failure
 // mode of a hand-written literal is a new switch nothing ever exercises, which
 // looks exactly like a passing suite.
 
@@ -20,8 +20,8 @@ function every(value: GoreSwitch): Record<GoreSwitchKey, GoreSwitch> {
   >;
 }
 
-/** The shipped state: every kind of gore on. */
-export const ALL_GORE_ON = every("on");
+/** The shipped state: SFW off and every granular kind of gore on. */
+export const ALL_GORE_ON = { sfwMode: "off" as const, ...every("on") };
 
-/** The other end — what a player who wants none of it has set. */
-export const ALL_GORE_OFF = every("off");
+/** Every granular row off, without changing the separate SFW override. */
+export const ALL_GORE_OFF = { sfwMode: "off" as const, ...every("off") };

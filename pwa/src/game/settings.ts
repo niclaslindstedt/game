@@ -225,6 +225,14 @@ export type XpFloat = "on" | "off";
  */
 export type GoreSwitch = "on" | "off";
 
+/** SFW MODE (SETTINGS → GORE): replace every graphic gore presentation with
+ * pastel stardust and glitter; DRIVE body impacts become directional fairy
+ * dust while its other collision sprites and effects stay hidden. The eight
+ * detailed gore switches remain stored underneath it, so turning SFW mode back
+ * off restores the player's exact choices instead of silently resetting them.
+ * Pure presentation, read by the centralized gore gate and DRIVE renderer. */
+export type SfwMode = "on" | "off";
+
 /** HEALTH BARS: a display preference (SETTINGS → INTERFACE) for a small hp bar
  * drawn over every wounded mob's head (see render.ts). `on` (the default)
  * shows a tiny few-pixel bar over regular minions too; `off` keeps the field
@@ -409,6 +417,7 @@ export type GameSettings = {
    * four families first — a player may want the machines to spark and the
    * people not to bleed — then what a killing blow does to a body, then what
    * blood leaves on the hero. */
+  sfwMode: SfwMode;
   goreBlood: GoreSwitch;
   goreEcto: GoreSwitch;
   goreSparks: GoreSwitch;
@@ -726,6 +735,9 @@ function defaults(): GameSettings {
     modBrand: null,
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
+    // The shipped presentation is the full game. SFW is an explicit player
+    // choice; when enabled it overrides (without rewriting) the rows below.
+    sfwMode: "off",
     // Every kind of gore ships ON — a mob that takes a blade and doesn't bleed
     // reads as a mob that wasn't hit. The GORE page is there for players who
     // want some of it quiet, one kind at a time.
@@ -1255,6 +1267,10 @@ function load(): GameSettings {
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
           : base.xpFloat,
+      sfwMode:
+        stored.sfwMode === "on" || stored.sfwMode === "off"
+          ? stored.sfwMode
+          : base.sfwMode,
       ...loadGore(stored, base),
       healthBars:
         stored.healthBars === "on" || stored.healthBars === "off"

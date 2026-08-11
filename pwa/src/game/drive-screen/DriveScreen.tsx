@@ -237,6 +237,10 @@ export function DriveScreen({
   arcade?: boolean;
 }): ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  /** SFW is latched for the whole leg, just like the gore params the engine
+   * received. Physics, scoring and sound still run; only collision art and its
+   * transient effect layer are withheld. */
+  const [collisionVisuals] = useState(() => getSettings().sfwMode !== "on");
   /** THE STEERING HINT — the run's own virtual dpad (`ScreenChrome.tsx`), worn
    * by the road. Written straight onto DOM styles from the frame loop, exactly
    * as the run writes its own: a hint that re-rendered React on every pointer
@@ -796,6 +800,7 @@ export function DriveScreen({
           goreRef.current,
           skidRef.current,
           say,
+          collisionVisuals,
         );
         ageSpeech(drive.ms);
         // …AND WHAT THE WHEEL FELT. Read off the tick's own events after the
@@ -853,11 +858,10 @@ export function DriveScreen({
       // the road, the crowd, the gore and the sparks — reads the same camera,
       // so the whole picture moves as one instead of the effects sliding
       // against the world they are standing in.
-      const camera = shakeCamera(
-        fxRef.current,
-        driveCamera(drive, viewW, viewH),
-        drive.ms,
-      );
+      const baseCamera = driveCamera(drive, viewW, viewH);
+      const camera = collisionVisuals
+        ? shakeCamera(fxRef.current, baseCamera, drive.ms)
+        : baseCamera;
       ctx.setTransform(unit, 0, 0, unit, 0, 0);
       drawDrive(
         ctx,
@@ -867,11 +871,14 @@ export function DriveScreen({
         viewW,
         viewH,
         drive.ms,
-        goreRef.current,
+        collisionVisuals ? goreRef.current : undefined,
         assets.font,
         skidRef.current,
+        collisionVisuals,
       );
 
+      // In SFW mode this list carries fairy dust rather than gore, so it is the
+      // one collision layer deliberately still drawn.
       burstsRef.current = drawBursts(
         ctx,
         burstsRef.current,
@@ -882,18 +889,20 @@ export function DriveScreen({
 
       // The sparks, the grit, the smoke and the bloom — over the finished
       // picture, on the same camera it was drawn with.
-      drawDriveFx(
-        ctx,
-        fxRef.current,
-        camera,
-        drive.ms,
-        viewW,
-        viewH,
-        drive.car.pos,
-        // …and the atlas, for the two effects out here made of authored ART
-        // rather than of particles: a burning car and a fuel tank going.
-        assets.sprites,
-      );
+      if (collisionVisuals) {
+        drawDriveFx(
+          ctx,
+          fxRef.current,
+          camera,
+          drive.ms,
+          viewW,
+          viewH,
+          drive.car.pos,
+          // …and the atlas, for the two effects out here made of authored ART
+          // rather than of particles: a burning car and a fuel tank going.
+          assets.sprites,
+        );
+      }
 
       // ── THE STEERING HINT ─────────────────────────────────────────────────
       // THE RUN'S OWN VIRTUAL DPAD, ON THE ROAD. The road's pad is anchored
@@ -963,7 +972,16 @@ export function DriveScreen({
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [ageSpeech, arrive, assets, auto, clearSpeech, nose, say]);
+  }, [
+    ageSpeech,
+    arrive,
+    assets,
+    auto,
+    clearSpeech,
+    collisionVisuals,
+    nose,
+    say,
+  ]);
 
   /** Give up on the road: arrive anyway, with whatever the trip had reached. */
   const skipDrive = useCallback(() => {

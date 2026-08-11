@@ -28,7 +28,7 @@
 // draw call leaves the saturation grid filling up invisibly and hands the
 // player everything it was hiding the moment they switch it back on.
 
-import { dismemberAllowed, goreAmount } from "./gore-gate.ts";
+import { dismemberAllowed, goreAmount, sfwModeEnabled } from "./gore-gate.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
 import type { GoreFamilyId } from "./gore.ts";
 
@@ -56,6 +56,8 @@ export type BossRitePresentation = {
   /** The boss came APART — cut in two, or burst. Null when the gate refused, or
    * when the rite never meant to take it apart in the first place. */
   gore: GoreBurst | null;
+  /** The graphic finisher is replaced by a transient glitter burst. */
+  stardust: boolean;
   /** True when what is left is a whole body: the ordinary corpse, toppled where
    * the rite ended it. The landmark of the fight either way. */
   corpse: boolean;
@@ -73,7 +75,12 @@ export type BossRitePresentation = {
 export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
   // A rite that never meant to take the body apart needs no permission to
   // leave it whole — THE UNMAKING wants the empty suit to fall.
-  if (blow.remains === "corpse") return { gore: null, corpse: true };
+  if (blow.remains === "corpse")
+    return { gore: null, stardust: false, corpse: true };
+  // SFW keeps the boss's whole body as the fight's landmark and replaces the
+  // scripted dismemberment with light. Unlike an ordinary refusal, the burst
+  // is still acknowledged — just in a non-graphic vocabulary.
+  if (sfwModeEnabled()) return { gore: null, stardust: true, corpse: true };
   // THE GATE, asked exactly where the kill path asks it (`kill-presentation.ts`)
   // and on BOTH its axes, because they answer different questions:
   //
@@ -89,7 +96,7 @@ export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
   // they set being ignored.
   const family = blow.family ?? "blood";
   if (goreAmount(family) == null || !dismemberAllowed(blow.remains)) {
-    return { gore: null, corpse: true };
+    return { gore: null, stardust: false, corpse: true };
   }
   return {
     gore: goreBurst(
@@ -101,6 +108,7 @@ export function bossRitePresentation(blow: BossRiteBlow): BossRitePresentation {
       blow.seed,
       family,
     ),
+    stardust: false,
     corpse: false,
   };
 }

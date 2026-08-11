@@ -17,7 +17,7 @@
 // A shelf showing the wrong shelf is worse than no shelf at all — a reviewer
 // would tune the light bank while looking at the heavy one — so each exhibit
 // declares the event it exists to show (`shows`) and the bank the road must pick
-// that event's take from (`bank`), and this suite drives all eight and checks.
+// that event's take from (`bank`), and this suite drives every staged card.
 //
 // It runs the ENGINE ONLY: `createDrive`, the exhibit's own `road`, `stepDrive`.
 // No canvas, no synth — the staging deliberately touches no browser (see
@@ -70,8 +70,8 @@ function play(exhibit: DriveExhibit): { event: DriveEvent; atMs: number }[] {
     direction: exhibit.direction ?? 1,
     difficulty: exhibit.difficulty ?? "medium",
     to: "goodco_hq",
-    gib: exhibit.gib ?? true,
-    split: exhibit.split ?? exhibit.gib ?? true,
+    gib: exhibit.sfw ? false : (exhibit.gib ?? true),
+    split: exhibit.sfw ? false : (exhibit.split ?? exhibit.gib ?? true),
   });
   exhibit.road?.(drive);
   const out: { event: DriveEvent; atMs: number }[] = [];

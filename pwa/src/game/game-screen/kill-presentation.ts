@@ -63,7 +63,7 @@
 
 import { nsfwAllowed } from "../../app/device-policy.ts";
 
-import { dismemberAllowed, goreAmount } from "./gore-gate.ts";
+import { dismemberAllowed, goreAmount, sfwModeEnabled } from "./gore-gate.ts";
 import { corpseLaunch, type CorpseLaunch } from "./corpse-launch.ts";
 import type { GoreFamilyId } from "./gore.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
@@ -75,6 +75,10 @@ export type KillPresentation = {
   incinerate: boolean;
   /** The body came APART — cut in two, or burst. Null for an ordinary death. */
   gore: GoreBurst | null;
+  /** SFW replacement for an incineration, cleave or gib: a large pastel
+   * stardust burst plays while the intact body follows the ordinary corpse
+   * path. This preserves the readable death and removes every graphic piece. */
+  stardust: boolean;
   /** The throw the body takes, or null when it just topples where it stood.
    * Always null when `incinerate` or a `gib` burst is set — there is no body
    * left to throw. A CLEAVE keeps it: the two halves ride the same punt, which
@@ -123,9 +127,6 @@ export type KillBlow = {
  * that reaches the end is the ordinary punt-and-topple.
  */
 export function killPresentation(blow: KillBlow): KillPresentation {
-  if (blow.incinerated && nsfwAllowed()) {
-    return { incinerate: true, gore: null, launch: null };
-  }
   const launch = corpseLaunch(
     blow.damage,
     blow.maxHp,
@@ -133,10 +134,28 @@ export function killPresentation(blow: KillBlow): KillPresentation {
     blow.pos,
     blow.role,
   );
+  if (sfwModeEnabled()) {
+    const overkill = overkillBars(blow.damage, blow.hpBefore, blow.maxHp);
+    const graphic =
+      blow.incinerated === true ||
+      goreKind(overkill, blow.role, blow.edged === true) != null;
+    return {
+      incinerate: false,
+      gore: null,
+      stardust: graphic,
+      // A graphic death replaced by glitter still leaves a whole readable
+      // body. It takes the same punt an ordinary death would have taken.
+      launch,
+    };
+  }
+  if (blow.incinerated && nsfwAllowed()) {
+    return { incinerate: true, gore: null, stardust: false, launch: null };
+  }
   const gore = goreFor(blow);
   return {
     incinerate: false,
     gore,
+    stardust: false,
     // A burst body has nothing left to punt; a cleaved one rides the punt in
     // two pieces.
     launch: gore?.kind === "gib" ? null : launch,

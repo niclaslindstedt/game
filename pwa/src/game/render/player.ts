@@ -18,6 +18,7 @@ import {
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
 import { heroSoak } from "../game-screen/hero-soak.ts";
+import { sfwModeEnabled } from "../game-screen/gore-gate.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import {
   DOLL_SIZE,
@@ -715,7 +716,7 @@ function drawHero(
   // are drawn in different spaces: the weapon's rides its own swing pivot.
   // `hero-soak.ts` keeps ONE record, the local hero's, so a teammate draws
   // clean — a known simplification, recorded in the module's own header.
-  const soak = isLocal ? heroSoak(state) : NO_SOAK;
+  const soak = isLocal && !sfwModeEnabled() ? heroSoak(state) : NO_SOAK;
   const coat = bodyCoat(soak);
   const held = weaponCoat(soak);
   // In the rift the ground isn't there — bob the grounded hero so he reads as
@@ -970,7 +971,8 @@ function drawKnockedOut(
 
 /**
  * The DEATH POSE: the fallen hero sprawled on his back in a wide, still-flowing
- * pool of blood (the `dying` death scene, held through the `defeat` splash). The
+ * pool of blood, or a pastel constellation in SFW mode (the `dying` death scene,
+ * held through the `defeat` splash). The
  * whole dressed paper-doll is laid flat — costume, armor, and weapon glued —
  * like the knockout pose but tipped a touch further and settled limp, and the
  * blood keeps welling out beneath him — pooling, sending rivulets creeping
@@ -1000,9 +1002,14 @@ function drawDeadHero(
   const cx = seatX(player.pos.x, camera.x);
   const cy = seatY(player.pos.y, camera.y) + 5; // the ground line
 
-  // The blood, under the body (the body lies IN the pool): the growing puddle,
-  // the rivulets creeping outward, and the welling droplets.
-  drawDeathBlood(ctx, cx, cy, prog, sceneMs, timeMs);
+  const sfw = sfwModeEnabled();
+  if (sfw) {
+    drawDeathStardust(ctx, cx, cy, prog, sceneMs);
+  } else {
+    // The blood, under the body (the body lies IN the pool): the growing
+    // puddle, the rivulets creeping outward, and the welling droplets.
+    drawDeathBlood(ctx, cx, cy, prog, sceneMs, timeMs);
+  }
 
   // The body, laid flat on its back: pivot about the sprite centre, tip it past
   // horizontal, and settle it to the ground line so it lies sprawled rather than
@@ -1015,9 +1022,53 @@ function drawDeadHero(
   drawHeldWeapon(ctx, sprites, layers, held);
   ctx.restore();
 
-  // A last few dark specks flung OVER the body — blood on the corpse itself, so
-  // the spatter isn't only on the floor behind it.
-  drawBloodSpecks(ctx, cx, cy - 2, prog, 10, 6, 0.75);
+  if (!sfw) {
+    // A last few dark specks flung OVER the body — blood on the corpse itself,
+    // so the spatter isn't only on the floor behind it.
+    drawBloodSpecks(ctx, cx, cy - 2, prog, 10, 6, 0.75);
+  }
+}
+
+const DEATH_STARDUST = ["#ff8fd8", "#c8a5ff", "#80e8ff", "#fff08a", "#a8ffc5"];
+
+/** The death scene runs after the simulation clock freezes, so its SFW
+ * replacement lives here beside the old pool and rides `sceneMs` too. It
+ * blooms once, then settles into a clean constellation rather than leaving a
+ * stain on the floor. */
+function drawDeathStardust(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  prog: number,
+  sceneMs: number,
+): void {
+  if (prog <= 0) return;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 42; i++) {
+    const reveal = clamp01((prog - fract(i * 3.71) * 0.34) * 5);
+    if (reveal <= 0) continue;
+    const angle = fract(i * 12.9898) * Math.PI * 2;
+    const reach = 8 + fract(i * 7.13) * 30;
+    const dist = reach * clamp01(prog / 0.48);
+    const x = Math.round(cx + Math.cos(angle) * dist);
+    const y = Math.round(cy + Math.sin(angle) * dist * 0.58 - 3);
+    const twinkle = 0.45 + 0.45 * Math.sin(sceneMs / 180 + i * 1.7);
+    const color = DEATH_STARDUST[i % DEATH_STARDUST.length]!;
+    ctx.globalAlpha = reveal * Math.max(0.18, twinkle);
+    ctx.fillStyle = color;
+    if (i % 4 === 0) {
+      ctx.fillRect(x - 2, y, 5, 1);
+      ctx.fillRect(x, y - 2, 1, 5);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x, y, 1, 1);
+    } else {
+      ctx.fillRect(x, y, i % 7 === 0 ? 2 : 1, i % 7 === 0 ? 2 : 1);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
 }
 
 // The blood palette, dark → wet → glossy, kept together so the pool, rivulets,

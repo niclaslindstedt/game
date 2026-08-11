@@ -50,6 +50,13 @@ const KIND_SWITCH = {
 /** How a body comes apart, as `overkill.ts` classifies it. */
 export type DismemberKind = keyof typeof KIND_SWITCH;
 
+/** Whether the player asked for the non-graphic presentation. Kept in the one
+ * gore gate so every surface — the field, the hero and the DRIVE — asks the
+ * same question. SFW overrides the detailed switches without rewriting them. */
+export function sfwModeEnabled(): boolean {
+  return getSettings().sfwMode === "on";
+}
+
 /**
  * How hard to price this family's mess — the multiplier everything that spills
  * is scaled by, or `null` for "there is nothing of this kind in the game right
@@ -60,6 +67,7 @@ export type DismemberKind = keyof typeof KIND_SWITCH;
  * `render/blood-tracks.ts`, each at the point its own effect is decided.
  */
 export function goreAmount(family: GoreFamilyId): number | null {
+  if (sfwModeEnabled()) return null;
   if (!nsfwAllowed()) return null;
   const settings = getSettings();
   if (settings[FAMILY_SWITCH[family]] !== "on") return null;
@@ -77,6 +85,9 @@ export function goreAmount(family: GoreFamilyId): number | null {
  * the device's switch and the player's own answer buy the splash back.
  */
 export function splashOnly(family: GoreFamilyId): boolean {
+  // SFW has its own stardust hit marker. Falling through to the family's plain
+  // gore splash would put the very art this mode replaces underneath it.
+  if (sfwModeEnabled()) return false;
   return !nsfwAllowed() || getSettings()[FAMILY_SWITCH[family]] !== "on";
 }
 
@@ -90,6 +101,7 @@ export function splashOnly(family: GoreFamilyId): boolean {
  * the other kind of dismemberment and never a body that ceases to exist.
  */
 export function dismemberAllowed(kind: DismemberKind): boolean {
+  if (sfwModeEnabled()) return false;
   return getSettings()[KIND_SWITCH[kind]] === "on";
 }
 

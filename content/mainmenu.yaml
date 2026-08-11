@@ -490,40 +490,51 @@ screens:
     parent: settings
     tone: player
     form: settings
-    # Eight switches and a reset — longer than any other settings page, so it
+    # Nine switches and a reset — longer than any other settings page, so it
     # caps and scrolls under a header and help line that stay put.
     scroll: true
     rows:
+      - id: sfw-mode
+        label: SFW MODE
+        help:
+          on: GORE GLITTERS; DRIVE COLLISIONS DISSOLVE INTO FAIRY DUST
+          off: THE GORE SWITCHES BELOW CONTROL THE MESS
       - id: blood
         label: HUMAN GORE
         help:
           on: PEOPLE BLEED WITH THE BLOW AND THE FLOOR STAYS RED
           off: PEOPLE TAKE A SMALL SPLASH AND LEAVE A CLEAN FLOOR
+          sfw: REPLACED BY STARDUST WHILE SFW MODE IS ON
       - id: ecto
         label: GHOST GORE
         help:
           on: HAUNTINGS BURST IN COLD GREEN ECTOPLASM
           off: HAUNTINGS TAKE A SMALL SPLASH AND NOTHING MORE
+          sfw: REPLACED BY STARDUST WHILE SFW MODE IS ON
       - id: sparks
         label: ROBOTIC GORE
         help:
           on: MACHINES THROW OIL, SPARKS AND SMOKE
           off: MACHINES TAKE A SMALL SPLASH AND NOTHING MORE
+          sfw: REPLACED BY STARDUST WHILE SFW MODE IS ON
       - id: cosmic
         label: COSMIC GORE
         help:
           on: RIFT THINGS COME APART IN COLD LIGHT THAT GOES OUT
           off: RIFT THINGS TAKE A SMALL SPLASH AND NOTHING MORE
+          sfw: REPLACED BY STARDUST WHILE SFW MODE IS ON
       - id: cleaves
         label: CLEAVES
         help:
           on: A BLADE FAR PAST WHAT A BODY HOLDS CUTS IT IN TWO
           off: BODIES A BLADE OVERKILLS TOPPLE IN ONE PIECE
+          sfw: THE BODY STAYS WHOLE AND BURSTS INTO STARDUST
       - id: gibs
         label: GIBS
         help:
           on: A HUGE BLUNT BLOW BURSTS THE BODY INTO PIECES
           off: BODIES A BLUNT BLOW OVERKILLS TOPPLE IN ONE PIECE
+          sfw: THE BODY STAYS WHOLE AND BURSTS INTO GLITTER
       - id: hero-soak
         label: BLOODY HERO
         help:
@@ -532,12 +543,14 @@ screens:
           # The two states BLOOD off leaves them in — the row is greyed, and its
           # line says where the setting went rather than what it does.
           locked: NOTHING TO WEAR WHILE HUMAN GORE IS OFF
+          sfw: YOUR GEAR STAYS CLEAN WHILE SFW MODE IS ON
       - id: bootprints
         label: BOOTPRINTS
         help:
           on: YOUR BOOTS TRACK BLOOD OUT ONTO CLEAN GROUND
           off: YOUR BOOTS LEAVE NOTHING BEHIND THEM
           locked: NOTHING TO TRACK WHILE HUMAN GORE IS OFF
+          sfw: YOUR BOOTS LEAVE NO BLOOD WHILE SFW MODE IS ON
       - id: reset
         label: RESET ALL
         help: PUT EVERY KIND OF GORE BACK THE WAY THE GAME SHIPPED

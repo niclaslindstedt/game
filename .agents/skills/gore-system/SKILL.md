@@ -1,6 +1,6 @@
 ---
 name: gore-system
-description: "Use when working on GORE — blood spray and the floor it soaks, the hero's own bloodied coat and bootprints, a body coming apart (a CLEAVE by an edged weapon, a GIB by a mass), a new gib or organ, a new gore FAMILY (blood/ecto/sparks/cosmic), the overkill ladder that decides which death a blow earns, or the MATURE CONTENT / NSFW gate any of it hangs off. Covers the volume-vs-force split, the one-byte-per-tile floor grid, the anatomy bands a cut spills, the depth illusion, the four families and how they are re-hued rather than re-authored, and how to MEASURE a gore rate on a real run instead of judging it from a diorama."
+description: "Use when working on GORE — blood spray and the floor it soaks, the hero's own bloodied coat and bootprints, a body coming apart (a CLEAVE by an edged weapon, a GIB by a mass), a new gib or organ, a new gore FAMILY (blood/ecto/sparks/cosmic), the overkill ladder that decides which death a blow earns, or the MATURE CONTENT / SFW gate any of it hangs off. Covers the volume-vs-force split, the one-byte-per-tile floor grid, the anatomy bands a cut spills, the depth illusion, the four families and how they are re-hued rather than re-authored, and how to MEASURE a gore rate on a real run instead of judging it from a diorama."
 ---
 
 # The gore system
@@ -38,7 +38,7 @@ skill's job — load it at both ends of the session.
 | The pieces in flight | `pwa/src/game/render/gibs.ts` (rides `items/toss.ts`'s arc) |
 | The four families | `pwa/src/game/game-screen/gore.ts` + `pwa/src/game/render/recolor.ts` |
 | What a BURNED body leaves | `charredRemains` + `GoreFamily.remains` in the same `gore.ts`, drawn by the `incinerate` pass in `pwa/src/game/render/effects.ts` |
-| The one gate | `pwa/src/game/game-screen/gore-gate.ts` (`goreAmount`, `nsfwAllowed`) |
+| The one gate | `pwa/src/game/game-screen/gore-gate.ts` (`goreAmount`, `sfwModeEnabled`) |
 | Sharpness on the weapon | `engine/game/items/edge.ts` (`WeaponDef.edge`), rides out on `enemyKilled.edged` |
 | The art | `content/sprites/effects/blood_*`, `gib_*`, `charred_*`, `cleave_wound`, `gore_inside` |
 | Measuring | `scripts/gore-rate.mjs`; the EFFECTS GALLERY exhibits (below) |
@@ -123,19 +123,21 @@ escalating for ever. Three pieces:
   moves is the spray, and that is over in a third of a second.
 
 - **ONE GATE, CHECKED IN ONE PLACE — `game-screen/gore-gate.ts`.** The device's
-  MATURE CONTENT switch, the player's own GORE switches and the DEVELOPER →
-  VISUALS **BLOOD** amount fold into one answer, `goreAmount(family)`, which is
-  what everything that spills anything asks, `bloodBlow` included. Off means
-  nothing is drawn AND nothing is recorded — a gate at the draw call would leave
-  the grid filling up invisibly and hand the player a red floor the moment they
-  switched it back on. Only ONE of the three is different in kind: a blow refused
-  because the DEVELOPER amount is zero lands completely DRY, where one refused by
-  the device or the player falls back to the plain two-frame splash (`splashOnly`)
-  — that knob exists to clear a field for a screenshot, not to make the game
-  gentler.
+  MATURE CONTENT switch, SFW MODE, the player's detailed GORE switches and the
+  DEVELOPER → VISUALS **BLOOD** amount fold into one answer,
+  `goreAmount(family)`, which is what everything that spills anything asks,
+  `bloodBlow` included. Off means nothing is drawn AND nothing is recorded — a
+  gate at the draw call would leave the grid filling up invisibly and hand the
+  player a red floor the moment they switched it back on. SFW is different from
+  every other refusal: `splashOnly` stays false because stardust is its hit
+  marker. The DEVELOPER amount at zero also lands completely DRY; device policy
+  or an individual gore switch falls back to the plain two-frame splash.
 
-- **AND "IS THIS TOO MUCH" IS NOT ONE QUESTION — SETTINGS → GORE.** What
-  was a single EXTRA GORE switch is a PAGE of eight, all shipping ON, because the
+- **AND "IS THIS TOO MUCH" IS NOT ONE QUESTION — SETTINGS → GORE.** SFW MODE
+  is the page's master presentation override: it preserves the detailed answers
+  underneath, but replaces blood, dismemberment, burned remains and the hero's
+  own stains with stardust. What was a single EXTRA GORE switch is otherwise a
+  PAGE of eight detailed switches, all shipping ON, because the
   one switch made a player who did not want to watch a PERSON opened up turn off
   the machines' sparks and the ghosts' ectoplasm with it. Three groups: one row
   per gore FAMILY (HUMAN GORE, GHOST GORE, ROBOTIC GORE, COSMIC GORE — so
@@ -150,8 +152,8 @@ escalating for ever. Three pieces:
   KEYS row shows where the movement went. A save carrying the retired `extraGore`
   key at `off` arrives as all eight off — a player who turned the gore off years
   ago must not be handed a page of switches that turned themselves back on. A
-  ninth kind of gore is a switch here plus its row in `FAMILY_SWITCH`/`KIND_SWITCH`,
-  never a new gate somewhere else.
+  new kind or family is a switch here plus its row in
+  `FAMILY_SWITCH`/`KIND_SWITCH`, never a new gate somewhere else.
 
 ## The hero wears it out
 
