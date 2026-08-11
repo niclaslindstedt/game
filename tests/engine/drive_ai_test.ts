@@ -392,12 +392,21 @@ describe("the man riding the white line", () => {
   it(
     "sends about a third of what he is hiding between across at him",
     () => {
-      // THE HOLE IT CLOSES. Two bodies meet across the road inside
-      // `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac` — about eleven px for a
-      // saloon against a lane twenty-six wide — so a wagon parked exactly on a
-      // lane marking is thirteen px from the centre of the lane either side of it
-      // and clears BOTH. Sit on the line and the traffic passes down each flank
-      // for the whole leg: no wheel, no reading, no minigame.
+      // THE HOLE IT CLOSED. Two bodies meet across the road inside
+      // `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac`, which while that band
+      // was 0.6 came out at about eleven px for a saloon against a lane
+      // twenty-six wide — so a wagon parked exactly on a lane marking sat
+      // thirteen px from the centre of the lane either side of it and cleared
+      // BOTH. Sit on the line and the traffic passed down each flank for the
+      // whole leg: no wheel, no reading, no minigame.
+      //
+      // THE GEOMETRY CLOSES IT NOW TOO (the band is 1, so the reach is about
+      // eighteen and the man on the marking is inside both lanes), and this
+      // behaviour stays because it is the better answer to the same question —
+      // the drivers he is threading between get to NOTICE. What it costs the
+      // measurement is that fewer of them survive to be asked: the wagon is now
+      // in contact with the cars it is hiding between, which writes them off.
+      // Hence twelve seeds rather than six.
       //
       // WHAT IS PINNED IS THE RATE, over a real road rather than a staged one,
       // because the answer is the vehicle's own hash and a handful of cars is a
@@ -405,7 +414,7 @@ describe("the man riding the white line", () => {
       // other lane was occupied when they were asked.
       let asked = 0;
       let swerved = 0;
-      for (const seed of [1, 2, 3, 4, 5, 6]) {
+      for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
         const state = drive({ seed });
         const seen = new Set<number>();
         // The marking between the two lanes running his way.

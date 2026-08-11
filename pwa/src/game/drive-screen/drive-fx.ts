@@ -24,7 +24,7 @@
 import { DRIVE } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
+import { bodyAnchorX, bodyAnchorY, projectOffset } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 
 /** What the road can throw. */
@@ -109,7 +109,27 @@ type DriveFxKind =
    * climbs through it, and is gone in under a second while its black column
    * keeps rising.
    */
-  | "blast";
+  | "blast"
+  /**
+   * …AND THE PRESSURE THAT LEAVES WITH IT — the one effect on this road that is
+   * bigger than the thing that made it.
+   *
+   * ITS OWN KIND RATHER THAN A WIDER `blast`, because it is the opposite shape.
+   * The ball is a bright mass that opens where the tank was, climbs and is gone;
+   * the wave is a THIN RING that leaves that point and does not stop — it
+   * crosses the lane, the far pavement and the frame, and what the player reads
+   * is not "there is a fire over there" but "that reached me". Nothing else out
+   * here does that: every other effect is an event happening at a place, and
+   * this one is the road being hit.
+   *
+   * IT IS ON THE GROUND, so it is an ELLIPSE and not a circle. The world is
+   * drawn raked (`DEFAULT_PITCH`), so a ring of one world radius comes out
+   * squashed by exactly the projection every body on this road is seated by —
+   * drawn as a screen-space circle it would read as a bubble in front of the
+   * street rather than as a wave across it. `projectOffset` is the honest way to
+   * ask, and it keeps answering if the pitch is ever dialled.
+   */
+  | "shockwave";
 
 /** One live effect on the road. */
 type DriveFx = {
@@ -569,6 +589,9 @@ export function driveBlast(
   x: number,
   y: number,
   nowMs: number,
+  /** THE RARE ONE — carried on the event rather than rolled here, so what the
+   * player sees and what he hears are the same tank. */
+  big = false,
 ): void {
   push(state, "blast", x, y, nowMs, BLAST_MS, 1, false, 0, BLAST_LIFT);
   push(state, "spark", x, y, nowMs, 620, 1, false, 0, BLAST_LIFT);
@@ -580,7 +603,28 @@ export function driveBlast(
   // …and the smoke it leaves, wide and low, which is what is still there when
   // the player looks in his mirror.
   push(state, "dust", x, y, nowMs, DUST_LIFE_MS * 1.4, 1, false, 0, 0, 26);
+  // …AND, ON THE RARE ONE, THE PRESSURE THAT REACHES THE WHOLE PICTURE. WHICH
+  // tank that is comes in on the event (`DriveEvent.trafficExploded.big`), so
+  // the ring, the sound and the road all agree without any of them re-rolling
+  // it — see `blowsBig` in engine/game/drive/wreckage.ts.
+  if (big) push(state, "shockwave", x, y, nowMs, SHOCKWAVE_MS, 1);
   kick(state, 2.6, 1.6, SMASH_SHAKE_MAX);
+}
+
+/**
+ * HOW LONG THE WAVE TAKES TO CROSS THE FRAME, and how far it gets — BOTH THE
+ * ENGINE'S, because the engine is what puts the street lights out as the front
+ * passes them (`stepShockwaves`).
+ *
+ * A ring drawn on one clock over lamps blown on another is the one way this
+ * effect can be actively wrong: the lights would go out ahead of the wave, or
+ * behind it, and either reads as a bug rather than as a blast. So there is one
+ * pair of numbers (`DRIVE.wreckage.shockwave`) and the drawing reads it.
+ */
+const SHOCKWAVE_MS = DRIVE.wreckage.shockwave.ms;
+
+function shockwaveReachPx(): number {
+  return DRIVE.wreckage.shockwave.reachPx;
 }
 
 /** How long the fireball itself lasts (ms) — short, because a fireball is: what
@@ -738,6 +782,31 @@ function scatter(seed: number, i: number, salt: number): number {
   return fract(Math.sin(seed * 0.017 + i * 12.9898 + salt) * 43758.5453);
 }
 
+/**
+ * WHICH HALF OF THE ROAD'S EFFECTS THIS CALL DRAWS.
+ *
+ * TWO PASSES, BECAUSE ONE OF THESE THINGS IS ON THE TARMAC. Everything the road
+ * throws used to be painted over the finished picture, which is right for a
+ * spark, a shard in the air, smoke and a fireball — and wrong for GLASS, which
+ * comes out of a window, falls to the road and STAYS there (`DriveFx.linger`).
+ * Drawn last it was laid across the cars standing on top of it: a wreck with a
+ * field of bright slivers over its roof, and the wagon driving through its own
+ * mess with the mess on the bonnet. The road already learned this about blood
+ * (see `drawRoadMarks`'s note above the body pass) — glass is the same fact.
+ *
+ * So `ground` is what belongs UNDER the traffic and is drawn from inside
+ * `drawDrive` between the lamp pools and the y-sorted bodies; `air` is
+ * everything else and is still drawn over the finished frame, and it is the one
+ * that carries the bloom. `all` is neither seam and exists for a host that draws
+ * the road in one go.
+ */
+export type DriveFxLayer = "ground" | "air" | "all";
+
+/** The kinds that belong on the tarmac rather than over the picture. */
+function onGround(kind: DriveFxKind): boolean {
+  return kind === "glass";
+}
+
 /** Draw everything the road has thrown, over the finished picture. */
 export function drawDriveFx(
   ctx: CanvasRenderingContext2D,
@@ -756,8 +825,12 @@ export function drawDriveFx(
    * they are the one pair on this road with nothing
    * to fall back to, because a fire drawn as a cloud of orange dots is sparks. */
   sprites?: Sprites,
+  /** Which half to draw — see `DriveFxLayer`. Omitted draws the lot in one
+   * pass, which is what a host with no body pass of its own wants. */
+  layer: DriveFxLayer = "all",
 ): void {
   for (const fx of state.fx) {
+    if (layer !== "all" && onGround(fx.kind) !== (layer === "ground")) continue;
     const t = Math.min(1, Math.max(0, (nowMs - fx.bornMs) / fx.lifeMs));
     const at = fx.follow && carAt ? carAt : fx;
     // THROUGH THE PROJECTION, like everything else with a place on this road.
@@ -773,6 +846,7 @@ export function drawDriveFx(
     else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
     else if (fx.kind === "dust") drawDust(ctx, fx, t, sx, sy);
     else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy, sprites);
+    else if (fx.kind === "shockwave") drawShockwave(ctx, fx, t, sx, sy);
     else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
     else if (fx.kind === "fire") {
       if (sprites) drawFire(ctx, sprites, fx, t, sx, sy, nowMs);
@@ -783,7 +857,11 @@ export function drawDriveFx(
   // THE BLOOM GOES LAST AND GOES ADDITIVE: a heavy hit whites the frame out
   // rather than laying a grey sheet over it. `lighter` over a dark road is a
   // flash; `source-over` would be a fog.
-  if (state.flash > 0) {
+  //
+  // …AND IT BELONGS TO THE PASS OVER THE FINISHED FRAME. A bloom laid under the
+  // traffic would be a bright rectangle with cars painted on top of it, which is
+  // a lit floor rather than a flash.
+  if (layer !== "ground" && state.flash > 0) {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.fillStyle = `rgba(255, 244, 214, ${(state.flash * 0.5).toFixed(3)})`;
@@ -791,6 +869,94 @@ export function drawDriveFx(
     ctx.restore();
   }
 }
+
+/**
+ * THE PRESSURE LEAVING THE CAR — a ring that travels outward across the whole
+ * picture.
+ *
+ * IT IS A CIRCLE, and that is a decision rather than an oversight. Everything
+ * else on this road that measures ground goes through the projection and comes
+ * out squashed, which is right for a thing lying ON the tarmac — a lamp's pool,
+ * a puddle of blood. A blast front is not on the tarmac: it is a sphere of air
+ * leaving a fuel tank, and what the player sees of it is the part at his own
+ * eye level, which is round. Drawn as a floor ellipse it read as a ripple in a
+ * puddle under the wreck; drawn round it reads as the thing that reached him,
+ * which is the whole point of the effect.
+ *
+ * THREE THINGS MAKE IT A WAVE RATHER THAN A GROWING CIRCLE, and each is a beat
+ * the eye already knows:
+ *
+ *   IT DECELERATES. A blast front leaves at its fastest and is spent slowing
+ *   down, so the radius runs on an ease-out (`t * (2 - t)`) rather than
+ *   linearly — most of the ground is covered in the first third, which is what
+ *   makes it feel like something LEFT rather than something inflated.
+ *   IT THINS AS IT GOES. The same energy is spread around a longer and longer
+ *   circumference, so the line narrows and dims with the radius. A ring of
+ *   constant weight reads as a drawn shape; one that gives out reads as air.
+ *   IT HAS A FRONT AND A WAKE. A hard bright leading line with a soft warm haze
+ *   trailing just inside it — the compression, then the hot air behind it —
+ *   which is what stops it looking like a hoop.
+ *
+ * ADDITIVE, because it is light and heat over a night road (`lighter`); a
+ * source-over ring would be a grey line laid across the picture.
+ */
+function drawShockwave(
+  ctx: CanvasRenderingContext2D,
+  fx: DriveFx,
+  t: number,
+  sx: number,
+  sy: number,
+): void {
+  const ease = t * (2 - t);
+  // THE RADIUS IS THE ROAD'S OWN, run through the projection ALONG the road and
+  // then used in both axes — so the ring is a true circle on the screen while
+  // still travelling at the speed the engine's own front travels at
+  // (`stepShockwaves`, which is what decides when each street light goes out).
+  // Asking the projection rather than hardcoding a scale keeps the two in step
+  // if the pitch is ever dialled.
+  const r = Math.abs(projectOffset(shockwaveReachPx() * fx.force * ease, 0).x);
+  if (r < 1) return;
+  const rx = r;
+  const ry = r;
+  // WHAT IS LEFT OF IT, and it is a LINEAR give rather than a squared one. The
+  // first cut faded on `(1-t)²`, which is the honest curve for a thing spending
+  // its energy round a growing circumference and the wrong one for a thing that
+  // has to be SEEN: by the time the front had crossed the frame it was a
+  // one-pixel line at a third alpha, so the whole second half of the effect was
+  // a ring nobody could point at. It gives out; it does not vanish while it is
+  // still on screen.
+  const spent = Math.max(0, 1 - t);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  // THE WAKE FIRST — the hot air behind the front, wide and dim, drawn under
+  // the line so the line stays the brightest thing in it.
+  ctx.strokeStyle = `rgba(255, 168, 92, ${(spent * 0.22).toFixed(3)})`;
+  ctx.lineWidth = Math.max(1, 16 * spent);
+  ctx.beginPath();
+  ctx.ellipse(
+    sx,
+    sy,
+    Math.max(1, rx * 0.88),
+    Math.max(1, ry * 0.88),
+    0,
+    0,
+    TAU,
+  );
+  ctx.stroke();
+  // …AND THE FRONT: near white while it is still close, cooling to the same
+  // orange as it goes, and thinning the whole way.
+  const heat = Math.max(0, 1 - t * 1.8);
+  ctx.strokeStyle = `rgba(255, ${Math.round(206 + heat * 44)}, ${Math.round(
+    158 + heat * 88,
+  )}, ${(spent * 0.9).toFixed(3)})`;
+  ctx.lineWidth = Math.max(1, 6 * spent);
+  ctx.beginPath();
+  ctx.ellipse(sx, sy, rx, ry, 0, 0, TAU);
+  ctx.stroke();
+  ctx.restore();
+}
+
+const TAU = Math.PI * 2;
 
 /** Scraped metal — the one effect that is LIGHT, so it is drawn additively and
  * fades from white through the orange a steel scrape actually throws. */
@@ -873,7 +1039,7 @@ function drawGlass(
   sy: number,
   sprites?: Sprites,
 ): void {
-  const count = Math.round(14 + fx.force * 18);
+  const count = Math.round((14 + fx.force * 18) * GLASS_DENSITY);
   const lift = fx.lift ?? 0;
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
@@ -917,6 +1083,27 @@ function drawGlass(
   ctx.globalAlpha = 1;
   ctx.restore();
 }
+
+/**
+ * HOW MUCH OF THE GLASS IS ACTUALLY DRAWN — 0.7, which is thirty per cent fewer
+ * pieces than every emitter asks for.
+ *
+ * IT IS A THINNING RATHER THAN A RE-TUNE, and it is one number rather than four
+ * because the three places that throw glass (`driveSmash`, `driveBlast`, a
+ * lamp's lens) are the same event seen at three sizes: whatever a windscreen is
+ * worth, a fireball is worth more and a street light less, and the RATIOS
+ * between them are right. What was wrong was the absolute count. Glass is drawn
+ * additively and LINGERS on the road (`DriveFx.linger`), so a busy stretch
+ * accumulated fields of bright slivers that read as sequins on the tarmac and,
+ * worse, as the brightest thing in a frame whose subject is somewhere else. At
+ * seven tenths a windscreen is still a spray rather than a sprinkle and the road
+ * behind it stays readable.
+ *
+ * It is applied in the DRAW rather than at the emitters for the same reason it
+ * is one number: an emitter's `force` is what the collision was worth, and
+ * nothing about the collision changed.
+ */
+const GLASS_DENSITY = 0.7;
 
 /** Six authored silhouettes rather than one square particle repeated. Small
  * enough to remain shards at 1x; different enough that a windscreen becomes a

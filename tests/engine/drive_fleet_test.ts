@@ -341,6 +341,102 @@ describe("destroying the other traffic", () => {
       wreckForce(bus, joules) * 20,
     );
   });
+
+  it("blows up anything a blow turns round, whatever the lottery says", () => {
+    // THE RULE: a collision that REVERSES the other vehicle's direction of
+    // travel is the maximum this road can do to it. There is no threshold in
+    // that — a car that was coming the other way and leaves the contact going
+    // back down its own lane has had every scrap of its momentum taken off it
+    // and replaced, and nothing drives away from that.
+    //
+    // The id is the one this suite uses precisely BECAUSE its combustion roll
+    // is `none` (see `plant`): under the lottery alone this car would stand
+    // there straight-ended and unlit, which is the "some cars in the opposing
+    // lane just survive" the rule exists to end.
+    expect(collisionCombustion(10)).toBe("none");
+    const state = drive();
+    haltTraffic(state);
+    state.traffic.length = 0;
+    heard.set(state, []);
+    const coming = createTraffic(
+      10,
+      indexOf("traffic_hatch"),
+      { x: state.car.pos.x + 26, y: state.car.pos.y },
+      // Coming AT him, which is the only way a punt can reverse anything.
+      -DRIVE.trafficSpeedPx.min,
+    );
+    state.traffic.push(coming);
+    state.car.speed = DRIVE.topSpeedPx * 0.8;
+    tick(state, 0);
+
+    expect(coming.speed).toBeGreaterThan(0); // turned round
+    expect(coming.blown).toBe(true);
+    expect(coming.glassOut).toBe(true);
+    // Both ends in, not one — a write-off wearing a straight end is the picture
+    // this replaces.
+    expect(coming.smashNose && coming.smashTail).toBe(true);
+    expect(saidBy(state)).toContain("trafficExploded");
+  });
+
+  it("leaves a car it merely stopped short of that", () => {
+    // A CAR BROUGHT TO REST IS NOT A CAR TURNED ROUND, and the difference has to
+    // survive: coming to a stop is what a shove into something heavier does, and
+    // the road already has a whole ladder for it. Only a sign change is havoc.
+    const state = drive();
+    haltTraffic(state);
+    state.traffic.length = 0;
+    heard.set(state, []);
+    const ahead = createTraffic(
+      10,
+      indexOf("traffic_hatch"),
+      { x: state.car.pos.x + 26, y: state.car.pos.y },
+      0,
+    );
+    state.traffic.push(ahead);
+    state.car.speed = (12 * 0.44704) / DRIVE_UNITS.mPerPx;
+    tick(state, 0);
+
+    expect(ahead.speed).toBeGreaterThanOrEqual(0); // punted, never reversed
+    expect(ahead.blown).toBe(false);
+    // …and it is still finished, because every closed car is: the ladder did
+    // its job, the maximum simply was not owed.
+    expect(ahead.wrecked).toBe(true);
+  });
+
+  it("charges an offset rear-end as a rear-end rather than as a graze", () => {
+    // THE FLAKINESS, IN ONE CASE. A tick at road speed covers more ground than
+    // the contact reach is wide, so the frame that first sees two cars touching
+    // usually sees them already OVERLAPPED — and the overlapped case used to
+    // read a nose-in-a-boot as a sideswipe unless it was within three tenths of
+    // the reach of dead centre. A hand's breadth of lane offset was the whole
+    // difference between a fifth of the wagon and nothing at all.
+    const mass = impactMasses("medium");
+    const def = vehicleDef(indexOf("traffic_sedan"));
+    const reach =
+      (CAR.footprint.radius + def.radiusPx) * DRIVE.impact.bodyBandFrac;
+    // Buried in the back of it: the two extents overlap along the road.
+    const buried = (y: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx * 0.6,
+        { x: 24 + def.halfLengthPx - 4, y },
+        { x: DRIVE.trafficSpeedPx.min, y: 0 },
+        def.radiusPx,
+        def.massKg * mass.vehicleMult,
+        def.halfLengthPx,
+        1,
+        DRIVE.impact.bodyBandFrac,
+      )!;
+    const square = buried(0);
+    const offset = buried(reach * 0.6);
+    expect(offset.squareness).toBe(1);
+    expect(offset.joules).toBeCloseTo(square.joules, 6);
+    expect(offset.speedLoss).toBeCloseTo(square.speedLoss, 6);
+    // …and it still knows which way it was hit, so the wreck leaves the lane.
+    expect(Math.abs(offset.dv.y)).toBeGreaterThan(0);
+    expect(square.dv.y).toBe(0);
+  });
 });
 
 describe("collision combustion odds", () => {
@@ -914,9 +1010,18 @@ describe("breaking a car, physically", () => {
         { x: 0, y: 0 },
         1,
         speedPx,
-        // Abeam, and deep enough into its flank that the contact normal runs
-        // straight across the road — which is what a sideswipe is.
-        { x: 24 + def.halfLengthPx - 2, y: 12 },
+        // DEAD ABEAM — centres level, the wagon grinding down its flank, which
+        // is what a sideswipe is and what makes the contact normal run straight
+        // across the road.
+        //
+        // IT USED TO BE STAGED A CAR-LENGTH AHEAD with two px of tail overlap,
+        // which is not a flank at all: it is the wagon's NOSE inside somebody's
+        // BOOT, and it only answered like a sideswipe because the overlapped
+        // case had a rear-end band three tenths of the reach wide
+        // (`REAR_END_BAND`, impact.ts). That band is the whole reach now — a
+        // nose inside a boot is a collision at any lane offset — so the staging
+        // has to be the thing it always claimed to be.
+        { x: 0, y: 12 },
         { x: 0, y: 0 },
         def.radiusPx,
         def.massKg * mass.vehicleMult,
@@ -957,6 +1062,10 @@ describe("breaking a car, physically", () => {
     // sum and a sideswipe's normal runs across the road, which the car is not
     // closing along — so two cars could grind down each other's whole length at
     // 120 and the model booked ZERO joules, zero damage and zero noise.
+    //
+    // A SIDESWIPE IS CENTRES LEVEL. Staged with the struck car a length ahead
+    // and two px of tail overlap it is a nose in a boot, and that is a crash at
+    // any lane offset now (`REAR_END_BAND`, impact.ts).
     const mass = impactMasses("medium");
     const def = vehicleDef(indexOf("traffic_sedan"));
     const clip = (scrape: number) =>
@@ -964,7 +1073,7 @@ describe("breaking a car, physically", () => {
         { x: 0, y: 0 },
         1,
         DRIVE.topSpeedPx,
-        { x: 24 + def.halfLengthPx - 2, y: 12 },
+        { x: 0, y: 12 },
         { x: 0, y: 0 },
         def.radiusPx,
         def.massKg * mass.vehicleMult,
@@ -1024,7 +1133,27 @@ describe("breaking a car, physically", () => {
 
     // A true flank contact is still the different case: it grinds and pushes
     // the struck car sideways instead of pretending the two ends met.
-    const side = hit(-2, reach * 0.9);
+    //
+    // AND A TRUE FLANK IS CENTRES LEVEL. It used to be staged two px INSIDE the
+    // struck car's end, which is a nose in a boot rather than a door in a door —
+    // it answered like a graze only because the overlapped case had a rear-end
+    // band three tenths of the reach wide, and that band is the whole reach now
+    // (`REAR_END_BAND`, impact.ts). Which is the point of this whole pass: a
+    // tick's travel at road speed is wider than the contact reach, so whether
+    // the model SAW a rear-end arrive at the edge or already overlapped was a
+    // coin flip, and the two answers were a full crash and nothing at all.
+    const side = solveImpact(
+      { x: 0, y: 0 },
+      1,
+      DRIVE.topSpeedPx * 0.6,
+      { x: 0, y: reach * 0.9 },
+      { x: -DRIVE.trafficSpeedPx.min, y: 0 },
+      def.radiusPx,
+      def.massKg * mass.vehicleMult,
+      def.halfLengthPx,
+      1,
+      DRIVE.impact.bodyBandFrac,
+    )!;
     expect(side.joules).toBeLessThan(square.joules * 0.3);
     expect(Math.abs(side.dv.y)).toBeGreaterThan(Math.abs(side.dv.x));
   });
@@ -1290,6 +1419,7 @@ describe("the kerb, and the way things get clear", () => {
       pos: { x: state.car.pos.x + 60, y: kerb },
       variant: indexOf("traffic_estate"),
       felled: false,
+      dark: false,
       vel: { x: 0, y: 0 },
       z: 0,
       vz: 0,

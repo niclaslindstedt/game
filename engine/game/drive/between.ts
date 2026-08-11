@@ -37,7 +37,7 @@ import { crushVehicle, shatterGlass, tipsOver, tipVehicle } from "./crush.ts";
 import { ejectRider, tearMachine, wreckForce } from "./eject.ts";
 import { FLEET, vehicleDef } from "./fleet.ts";
 import { hurtTraffic } from "./collide.ts";
-import { smashEnd } from "./wreckage.ts";
+import { smashEnd, turnedRound, wreckTotally } from "./wreckage.ts";
 import { impactMasses, panelAt, type Impact } from "./impact.ts";
 import { breakTrafficLamps, knockDown, trafficMass } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -239,6 +239,9 @@ function answer(
     return;
   }
 
+  // WHAT IT WAS DOING BEFORE THE PUNT — read here for `turnedRound` below, for
+  // the reason the hero's own pass reads it: the shove overwrites it.
+  const wasDoing = one.speed;
   crushVehicle(one, joules, by.pos.x);
   // …AND THE SAME END THAT FOLDS IS THE END THAT STOPS BEING A CAR. Two vehicles
   // that pile into each other answer for it exactly the way one hit by the wagon
@@ -280,5 +283,13 @@ function answer(
   if (tipsOver(one, hit)) {
     tipVehicle(one, hit, by.pos.y);
     drive.events.push({ type: "trafficRolled", pos: contact, joules });
+  }
+  // …AND THE SAME BLOW NOTHING SURVIVES, because it is the same rule and it must
+  // not be the hero's alone: a head-on in the oncoming lanes that turns one of
+  // them round is the biggest thing this road can produce without him, and a
+  // pile-up in which the pair politely coast to a halt is exactly the "the
+  // crashes feel thin" this pass was written to answer.
+  if (turnedRound(wasDoing, one.speed)) {
+    wreckTotally(drive, one, hit, by.pos.x);
   }
 }

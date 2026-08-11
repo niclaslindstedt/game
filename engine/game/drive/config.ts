@@ -916,12 +916,20 @@ export const DRIVE = {
      * HE IS RIDING THE WHITE LINE — the one place on this road where doing
      * nothing was safe, and what the other drivers now do about it.
      *
-     * THE HOLE IT CLOSES. Two bodies meet across the road inside
-     * `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac`, which for a saloon is
-     * about eleven px against a lane that is twenty-six wide — so a wagon parked
-     * exactly on a lane marking is thirteen px from the centre of the lane either
-     * side of it and clears BOTH. Sit on the line and the traffic passes down
-     * each flank for the whole leg: no wheel, no reading, no minigame.
+     * THE HOLE IT CLOSED. Two bodies meet across the road inside
+     * `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac`, which while that band
+     * was 0.6 came out at about eleven px against a lane that is twenty-six
+     * wide — so a wagon parked exactly on a lane marking sat thirteen px from
+     * the centre of the lane either side of it and cleared BOTH. Sit on the line
+     * and the traffic passed down each flank for the whole leg: no wheel, no
+     * reading, no minigame.
+     *
+     * THE GEOMETRY CLOSES IT NOW (the band is 1, so the reach is about
+     * eighteen), and this stays because it is the better answer to the same
+     * question: a man riding the marking should be noticed by the people he is
+     * riding it between, not merely clipped by whichever of them wanders. The
+     * two halves compound, which is right — the line is now a place you get hit
+     * from both sides rather than a place nothing can reach you.
      *
      * So the drivers he is threading between get to notice. When one comes into
      * view (`fromPx`) with the wagon sitting on the marking (`straddlePx`), it
@@ -1547,6 +1555,65 @@ export const DRIVE = {
     explodeChance: 0.3,
     smallFireCap: 0.45,
     largeFireStart: 0.5,
+    /**
+     * …AND HOW MANY OF THOSE EXPLOSIONS GO UP BIG — the rare one that puts a
+     * pressure ring across the whole picture and a wall of air under it.
+     *
+     * A TENTH, AND THE VALUE IS IN THE NINE. A ring that crosses the entire
+     * frame is the largest thing this game draws, and the largest thing is only
+     * large while it is not the usual answer: a leg through a busy town can
+     * finish half a dozen cars, and a screen-wide wave off every one of them has
+     * stopped being an event by the third. It compounds with `explodeChance`
+     * above, so about three cars in a hundred that the road destroys go up like
+     * this — some trips get one and some get none, which is what makes the one
+     * worth the trip.
+     *
+     * It changes NOTHING physical: the reach, the shove, the chain and what the
+     * blast costs the hero are the same blast either way (`explodeVehicle`).
+     * This is the one knob on this road that is purely a matter of how often the
+     * player is shown the biggest version of a thing that already happened.
+     */
+    bigBlastChance: 0.1,
+    /**
+     * …AND THE FRONT THAT LEAVES ONE — how far the pressure reaches (world px of
+     * radius) and how long it takes to get there (ms).
+     *
+     * IT IS IN THE ENGINE BECAUSE THE STREET LIGHTING ANSWERS IT. The ring
+     * itself is presentation and could have lived app-side with everything else
+     * the road throws — but a wave that puts the lamps out as it passes is a
+     * wave the SIM has to be able to time, because a dark lamp is world state
+     * that the renderer, the collision pass and every screenshot read
+     * (`DriveProp.dark`). One number, read by the front that blows the glass
+     * (`stepShockwaves`) and by the ring that is drawn over it
+     * (`drive-screen/drive-fx.ts`), is the only way the two can agree about
+     * where the wave has got to — and the failure if they disagree is the worst
+     * kind: lights going out ahead of a ring that has not reached them.
+     *
+     * THE REACH IS PAST THE FRAME AND NOT MUCH PAST IT, and both halves of that
+     * were measured rather than guessed. A screenful of this road is about 420
+     * world px (`laneTraffic.screenPx`), so the ring has to clear roughly 290 —
+     * the half-diagonal of the frame — to be seen LEAVING rather than stopping,
+     * and a shock wave that stops is a ripple. It must not clear it by much
+     * either: the first cut reached 640 in 900 ms, which put the front outside
+     * the picture a third of a second in and spent the rest of its life drawing
+     * a line nobody could see. Half as far again as the corner is the whole of
+     * it — the front crosses the frame in front of the player and then goes.
+     *
+     * THE DURATION IS WHAT MAKES IT READABLE. It is deliberately longer than the
+     * fireball that threw it (`BLAST_MS`, 820): the ball is the event and the
+     * wave is the consequence, and a consequence that outran its cause read as a
+     * flash rather than as something travelling.
+     *
+     * IT IS NOT `blastReachPx`, and the two must not be confused: that is what
+     * the fireball physically DOES (46 px — the shove, the chain, the wear), and
+     * this is how far the pressure is felt. Tying them together would give the
+     * biggest thing on this road a 46-px ring, which is a puff. It is also what
+     * decides HOW MUCH STREET GOES DARK: at 420 px against the kerb's 104-px
+     * slot pitch, about four lamp posts either side of the blast lose their
+     * lenses, which is a stretch of road rather than one lamp and not the whole
+     * town.
+     */
+    shockwave: { reachPx: 420, ms: 1100 },
     /** …and how fast it then takes hold (per second). Two-ish seconds from a
      * flicker under the wing to the whole engine bay going, which is long enough
      * for the player to watch it grow in his mirror and short enough that he
@@ -1895,11 +1962,29 @@ export const DRIVE = {
      * bodies that are both mostly air above the sills, and nothing else on this
      * road is.
      *
-     * It also, deliberately, makes threading traffic possible at a lane's edge:
-     * two cars a lane apart have real daylight between them now, and a driver
-     * who commits to half a gap gets through it.
+     * IT IS 1 NOW — THE WHOLE GROUND FOOTPRINT — and the shrink is retired. The
+     * reasoning above is still true and the number it produced was not: the
+     * footprint radii it was being applied to (`DriveVehicleDef.radiusPx`, 8–10
+     * px against a 26-px lane) ALREADY describe only what is on the road, so
+     * taking a further 40% off them was the perspective correction applied
+     * twice. What that bought was a wagon whose bumper visibly overlapped the
+     * car in front and passed through it — the sprites touching, the model
+     * saying no contact — which is the single worst thing a collision model can
+     * do: it teaches the player that what he is looking at is not what he is
+     * driving.
+     *
+     * THREADING SURVIVES IT, which is the reason the shrink was tolerated. Two
+     * vehicles' footprints sum to about eighteen px against a 26-px lane, so a
+     * car sitting in the lane next door still has eight px of daylight either
+     * side of it and a driver who commits to half a gap still gets through —
+     * he simply has to be in the gap rather than in the lane marking, which is
+     * the same lesson `drivers.lineRide` teaches from the other end.
+     *
+     * KEPT AS A KNOB rather than deleted, because it is the one dial that says
+     * how much of a side elevation is on the tarmac and a mod's taller fleet may
+     * want it back.
      */
-    bodyBandFrac: 0.6,
+    bodyBandFrac: 1,
     /**
      * How much of the car's own speed a struck body carries away along the
      * road, on top of the impulse it takes square in the chest. A person hit at
@@ -1920,9 +2005,39 @@ export const DRIVE = {
      * finish the car, and about a hundred and twenty at half that.
      */
     wearJoules: 2.9e6,
-    /** A shunted car is a much bigger lump than a person, so it does its damage
-     * on the same curve at this multiple. Trading paint hurts. */
-    trafficWearScale: 2.6,
+    /**
+     * A shunted car is a much bigger lump than a person, so it does its damage
+     * on the same curve at this multiple. Trading paint hurts.
+     *
+     * IT WAS 2.6, AND IT WAS RE-TAKEN RATHER THAN RE-DESIGNED. The number is a
+     * cost PER CONTACT, and the road stopped having the same number of contacts:
+     * a vehicle's collision footprint used to be shrunk to 60% of its own ground
+     * extent (`bodyBandFrac` above) and a blow a few px off the centre line read
+     * as a free graze (`REAR_END_BAND`, impact.ts). Between them the wagon
+     * passed clean through a great deal of what it visibly hit. Both are gone,
+     * and the same driving now books about THREE TIMES the contacts.
+     *
+     * So the per-contact cost comes down to keep the LEG costing what it was
+     * tuned to cost. Measured with `make drive-bench`, 25 seeds a rung, the
+     * shipped auto-driver — the same instrument every figure on `coursePx` was
+     * taken with (before → after):
+     *
+     *   rung        arrived           ending wear    shunts
+     *   easy        25/25 → 25/25      10% → 12%      4.6 → 13.1
+     *   medium      25/25 → 25/25      29% → 36%     11.1 → 37.5
+     *   hard        25/25 → 24/25      41% → 49%     13.1 → 40.5
+     *   nightmare   25/25 → 24/25      58% → 60%     15.8 → 56.5
+     *   jesus       20/25 → 21/25      68% → 71%     19.1 → 72.6
+     *
+     * The SHUNT column is the change; the WEAR column is what this knob holds
+     * still, and it lands a little ABOVE where it was on purpose — the whole
+     * point of the fix is that a collision is now an event rather than
+     * occasionally nothing at all, and a road where that cost the player exactly
+     * what the old one did would have taken the fix back with the other hand.
+     * The trip runs about eight seconds longer for the same reason: there is
+     * genuinely more out there to be got round.
+     */
+    trafficWearScale: 1.1,
     /**
      * …and a LAMP POST, which is a third thing again. A person crumples and a
      * car crumples with you; a galvanized column does neither — it shears off
@@ -2644,6 +2759,25 @@ export function courseLength(params: { coursePx?: number }): number {
  */
 export function cityStartPx(params: { cityPx?: number }): number {
   return params.cityPx ?? DRIVE.opening.cityPx;
+}
+
+/**
+ * IS THE CAR STILL BEING HELD — the approach's countdown, as ONE fact readable
+ * from anywhere on the road.
+ *
+ * `driveHandsOff` (drive/index.ts) is the name the rest of the game knows this
+ * by and delegates to it; the answer lives down here because the COLLISION side
+ * of the road needs it too and cannot import the tick. What the hold buys is the
+ * hero's exemption: out there the pedal is not connected, the wheel arrives a
+ * second before the gate, and nothing the wagon meets may cost it wear or speed
+ * — including a fuel tank going up under its nose, which reaches the car
+ * directly rather than through the collision pass (`explodeVehicle`).
+ *
+ * Structurally typed rather than taking a `DriveState`, so this file stays the
+ * leaf every other module on the road can read.
+ */
+export function driveHeld(drive: { cityDone: boolean }): boolean {
+  return DRIVE.opening.handsOff && !drive.cityDone;
 }
 
 /**

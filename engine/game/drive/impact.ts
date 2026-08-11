@@ -56,12 +56,28 @@ const BODY_RADIUS = CAR.footprint.radius;
  * one's length to count as a REAR-ENDING rather than as a clip — as a share of
  * the contact reach.
  *
- * Small on purpose. Outside it nothing changes at all: a corner caught on the
- * way past is a sideswipe, costs the normal sum nothing and is paid for in
- * friction (`scrape`), which is the ordering the whole minigame teaches. Inside
- * it the two are in the same lane and one of them is in the back of the other.
+ * IT WAS 0.3 AND THAT IS THE WHOLE OF "the collisions feel flaky". Three tenths
+ * of the reach is about three world px, an EIGHTH of a lane: line the wagon up
+ * a hand's breadth off the car in front and the model stopped calling it a
+ * rear-ending and called it a sideswipe — normal straight across the road,
+ * squareness zero, no speed lost, no damage, no punt. Which is a picture of a
+ * bumper buried in somebody's boot and an event worth nothing, and it is exactly
+ * what "a partial hit on the upper part of the sprite does not count" is: the
+ * player aims at a car, hits it, and the road shrugs.
+ *
+ * THE WHOLE REACH, THEN. If the two extents overlap along the road, the other
+ * body's centre is AHEAD of the wagon's, and they are inside the contact reach
+ * across it, the wagon drove into it — there is no lateral offset at which that
+ * becomes a graze, because the closing was along the road. What is still a
+ * genuine sideswipe is the case next door and it is untouched: a body the wagon
+ * has already gone PAST (`alongRaw * carDir <= 0`) is grinding down the flank,
+ * takes the lateral normal, and is paid for in friction exactly as before.
+ *
+ * The taper survives as the shape of the NORMAL — dead behind is dead square,
+ * and the answer swings lateral as the offset grows, which is what throws an
+ * offset wreck out of the lane rather than straight up the road.
  */
-const REAR_END_BAND = 0.3;
+const REAR_END_BAND = 1;
 
 /** One solved collision — everything both parties need to answer for it. */
 export type Impact = {
@@ -251,7 +267,7 @@ export function solveImpact(
     // most of a crowd, and it visibly halved the pace the auto-driver could hold.
     bodyHalfLength > 0 &&
     alongRaw * carDir > 0 &&
-    Math.abs(ny) < reach * REAR_END_BAND
+    Math.abs(ny) <= reach * REAR_END_BAND
   ) {
     // BURIED IN THE BACK OF IT — the one case the geometry above cannot answer
     // on its own, and the reason is TUNNELLING.
@@ -280,12 +296,16 @@ export function solveImpact(
     // offset grows — no rule about which end of the car, because the sweep has
     // already settled that the two were closing.
     //
-    // IT IS A NARROW BAND AND IT HAS TO BE (`REAR_END_BAND`), because the case
-    // next door is a CORNER CLIP and must stay free (a graze costs the normal
-    // sum nothing and is paid for in friction). The (1 − t) taper is what makes
-    // the two MEET rather than step: at the band's edge this answer is the
-    // lateral one, so a hair of lane offset can never turn a free graze into a
-    // fifth of the wagon.
+    // IT IS THE WHOLE REACH (`REAR_END_BAND`), and it used to be three tenths of
+    // it — which is where "the collisions feel flaky" came from. The case this
+    // was being kept narrow FOR is the corner clip, and that case is not in this
+    // branch at all: a body the wagon has already gone past fails
+    // `alongRaw * carDir > 0` and takes the lateral answer below, which is the
+    // sideswipe the whole ordering is built on. Everything that reaches here has
+    // the other vehicle's centre still in FRONT of the wagon with the two of them
+    // overlapped, which is a car being driven into and not a car being brushed.
+    // The (1 − t) taper still shapes the normal, so an offset blow throws the
+    // wreck out of the lane instead of punting it straight up the road.
     const band0 = reach * REAR_END_BAND;
     const swept = Math.sqrt(Math.max(0, reach * reach - ny * ny));
     nx = carDir * swept * (1 - Math.abs(ny) / band0);
