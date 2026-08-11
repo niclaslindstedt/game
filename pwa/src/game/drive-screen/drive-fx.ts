@@ -350,6 +350,10 @@ export function driveSmash(
   push(state, "spark", x, y, nowMs, 520, 1);
   push(state, "shard", x, y, nowMs, 1100, 1);
   push(state, "glass", x, y, nowMs, 900, 0.9, false, 0, WRECK_GLASS_LIFT);
+  // THE AIR AND ROAD DUST THE BODY DISPLACES. The glass and steel above fly;
+  // this one opens at the contact and hangs there, which is the immediate puff
+  // a hard collision needs before the wreck's longer smoke cadence takes over.
+  push(state, "dust", x, y, nowMs, 950, 0.72, false, 0, 1, 18);
   kick(state, 1.1 + force, 0.8, SMASH_SHAKE_MAX);
 }
 
@@ -734,9 +738,10 @@ export function drawDriveFx(
    * was born. Omitted leaves every effect on the road, which is what all but one
    * of them want. */
   carAt?: { x: number; y: number },
-  /** The atlas, for the two effects out here made of AUTHORED ART rather than of
-   * particles — the burn and the blast. Omitted (a still that has no atlas to
-   * hand) simply draws neither: they are the one pair on this road with nothing
+  /** The atlas, for the effects out here made of AUTHORED ART rather than of
+   * particles — glass, the burn and the blast. Omitted (a still that has no atlas to
+   * hand) leaves glass on its one-pixel fallback and draws neither fire effect:
+   * they are the one pair on this road with nothing
    * to fall back to, because a fire drawn as a cloud of orange dots is sparks. */
   sprites?: Sprites,
 ): void {
@@ -755,7 +760,7 @@ export function drawDriveFx(
     else if (fx.kind === "shard") drawShards(ctx, fx, t, sx, sy);
     else if (fx.kind === "tyresmoke") drawTyreSmoke(ctx, fx, t, sx, sy);
     else if (fx.kind === "dust") drawDust(ctx, fx, t, sx, sy);
-    else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy);
+    else if (fx.kind === "glass") drawGlass(ctx, fx, t, sx, sy, sprites);
     else if (fx.kind === "blood") drawBlood(ctx, fx, t, sx, sy);
     else if (fx.kind === "fire") {
       if (sprites) drawFire(ctx, sprites, fx, t, sx, sy, nowMs);
@@ -854,6 +859,7 @@ function drawGlass(
   t: number,
   sx: number,
   sy: number,
+  sprites?: Sprites,
 ): void {
   const count = Math.round(14 + fx.force * 18);
   const lift = fx.lift ?? 0;
@@ -872,13 +878,42 @@ function drawGlass(
     const spin = Math.sin(t * (7 + scatter(fx.seed, i, 14) * 9) * Math.PI);
     const glint = Math.max(0, spin) * (1 - t * 0.7);
     const warm = Math.max(0, 1 - t * 2.4);
-    ctx.fillStyle = `rgba(255, ${Math.round(240 - warm * 24)}, ${Math.round(
-      214 + warm * 20,
-    )}, ${(glint * 0.85).toFixed(3)})`;
-    ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+    ctx.globalAlpha = glint * 0.85;
+    const shard = sprites
+      ? spriteByName(sprites, GLASS_SHARDS[i % GLASS_SHARDS.length]!)
+      : undefined;
+    if (shard) {
+      ctx.save();
+      ctx.translate(Math.round(px), Math.round(py));
+      ctx.rotate(t * (5 + scatter(fx.seed, i, 15) * 8));
+      ctx.drawImage(
+        shard,
+        -Math.round(shard.width / 2),
+        -Math.round(shard.height / 2),
+      );
+      ctx.restore();
+    } else {
+      ctx.fillStyle = `rgb(255, ${Math.round(240 - warm * 24)}, ${Math.round(
+        214 + warm * 20,
+      )})`;
+      ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+    }
   }
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
+
+/** Six authored silhouettes rather than one square particle repeated. Small
+ * enough to remain shards at 1x; different enough that a windscreen becomes a
+ * field of slivers, chips and corners when it crosses the headlights. */
+const GLASS_SHARDS = [
+  "drive_glass_shard_0",
+  "drive_glass_shard_1",
+  "drive_glass_shard_2",
+  "drive_glass_shard_3",
+  "drive_glass_shard_4",
+  "drive_glass_shard_5",
+] as const;
 
 /**
  * THE SPRAY OUT OF A WINDSCREEN — a lot of it, thrown forward and down.

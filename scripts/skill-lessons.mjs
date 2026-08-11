@@ -3,7 +3,7 @@
 // Skill-lesson printer — the reading half of the `skill-reflection` skill.
 //
 // Lessons learned by past sessions live as one-file-per-lesson fragments under
-// .agent/skills/<skill>/.lessons/<unix-timestamp>-<slug>.md, each with YAML
+// .agents/skills/<skill>/.lessons/<unix-timestamp>-<slug>.md, each with YAML
 // front matter (title, date, and the optional scope/concepts filters) and the
 // lesson in the body. Fragments — not SKILL.md edits — are how sessions record
 // lessons, so parallel sessions never conflict on one file. This script is how
@@ -30,7 +30,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(here, "..");
-const SKILLS_DIR = path.join(REPO_ROOT, ".agent", "skills");
+const SKILLS_DIR = path.join(REPO_ROOT, ".agents", "skills");
 // Past this many fragments the printout nudges toward a consolidation pass
 // (merge near-duplicates, prune stale ones, promote the load-bearing ones
 // into SKILL.md) — see the `skill-reflection` skill.
@@ -325,7 +325,7 @@ if (checking) {
     if (!lessons.length) {
       if (skill)
         console.log(
-          `${s} has no matching lesson fragments (.agent/skills/${s}/.lessons/)${describeFilter()}.`,
+          `${s} has no matching lesson fragments (.agents/skills/${s}/.lessons/)${describeFilter()}.`,
         );
       continue;
     }

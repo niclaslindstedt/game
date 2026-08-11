@@ -9,7 +9,7 @@
 >
 > Rewrite this file only as part of an instruction that asks for the change, and
 > push the change down with the `update-story` skill
-> (`.agent/skills/update-story/`).
+> (`.agents/skills/update-story/`).
 >
 > **THIS IS NOT A STORY-DRIVEN GAME**, and the chain is kept short on purpose: a
 > level gets a paragraph or two, a character gets a sentence, and nobody gets a

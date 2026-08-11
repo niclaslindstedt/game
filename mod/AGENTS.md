@@ -6,7 +6,7 @@ field reference; this is the procedure, in order, with the command for every
 step that has one.
 
 **An agent should load the `mod-authoring` skill first**
-([`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)):
+([`../.agents/skills/mod-authoring/SKILL.md`](../.agents/skills/mod-authoring/SKILL.md)):
 it carries the scope — what the mod system supports and what it refuses — the
 judgment calls to bring back to the user, and which craft skill to load for the
 work. This file is the procedure that skill sends you to.
@@ -355,7 +355,7 @@ ids with your mod id.
 ## The SKILLS, the scope, and what to ask before doing
 
 Owned by the **`mod-authoring` skill**
-([`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)),
+([`../.agents/skills/mod-authoring/SKILL.md`](../.agents/skills/mod-authoring/SKILL.md)),
 so it is stated once and stays consistent:
 
 - **which craft skill to load** for each kind of work, and how each reads
@@ -411,4 +411,4 @@ skill's list, with the reasoning behind each.
 - [`LICENSE.md`](LICENSE.md) — samples are CC0; your mod is yours
 - [`../docs/modding.md`](../docs/modding.md) — how the game loads a mod
 - [`../scripts/mod-support.mjs`](../scripts/mod-support.mjs) — what `--mod` does
-- [`../.agent/skills/`](../.agent/skills) — the craft playbooks (see above)
+- [`../.agents/skills/`](../.agents/skills) — the craft playbooks (see above)

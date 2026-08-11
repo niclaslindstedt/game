@@ -115,7 +115,7 @@ jobs:
         run: node scripts/release/check-changeset.mjs
 
   # §7.1 — every tool-specific agent-guidance file must be a symlink to
-  # AGENTS.md, and .claude/skills must resolve to .agent/skills. A commit that
+  # AGENTS.md, and tool skill aliases must resolve to .agents/skills. A commit that
   # dereferences one into a regular file breaks the single source of truth.
   symlinks:
     runs-on: ubuntu-latest
@@ -133,10 +133,15 @@ jobs:
               fail=1
             fi
           done
-          if [ ! -L .claude/skills ]; then
-            echo "::error file=.claude/skills::.claude/skills must be a symlink to ../.agent/skills"
-            fail=1
-          fi
+          for link in .claude/skills .gemini/skills; do
+            if [ ! -L "$link" ]; then
+              echo "::error file=$link::$link must be a symlink to ../.agents/skills"
+              fail=1
+            elif [ "$(readlink "$link")" != "../.agents/skills" ]; then
+              echo "::error file=$link::$link resolves to $(readlink "$link"), not ../.agents/skills"
+              fail=1
+            fi
+          done
           exit $fail
 
   # Lint workflow YAML with actionlint and shell scripts with shellcheck

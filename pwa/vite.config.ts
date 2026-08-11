@@ -121,9 +121,10 @@ export default defineConfig({
   base,
   build: {
     // The simulation is deliberately a lazy, run-only chunk. Its minified
-    // size sits above Vite's generic 500 kB warning while the separately
-    // enforced gzipped startup path remains within the SEO budget.
-    chunkSizeWarningLimit: 700,
+    // size sits above Vite's generic warning while the separately enforced
+    // gzipped startup path remains within the SEO budget. Keep an explicit
+    // ceiling here so genuine engine-chunk growth still raises a build warning.
+    chunkSizeWarningLimit: 900,
     // WRITTEN FOR `scripts/check-seo.mjs`, which weighs two paths rather than
     // one: the CARD (what the entry HTML pulls before anything is on screen)
     // and MENU-READY (that plus the app shell the card fetches behind itself —

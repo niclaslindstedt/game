@@ -1527,6 +1527,21 @@ export const DRIVE = {
      * wheel off a moving car leave down the road rather than sideways. */
     wheelThrowPx: 90,
     wheelLiftPx: 130,
+    /** A square rear-ending becomes an axle-tearing impact at this many of the
+     * struck vehicle's own write-off. Below it the driver has traded bumpers;
+     * above it the rear crash art, both wheels and the stopped shell are one
+     * indivisible result. Kept in wrecks so a hatchback yields before a bus. */
+    rearAxleForce: 1,
+    /** How much road speed the shell keeps after the rear axle is torn out.
+     * The wheels keep the pre-impact speed; the body spends nearly all of it
+     * folding metal and dragging the bare rear frame. */
+    rearShellSpeedKeep: 0.18,
+    /** The first angular kick of a rear-ended shell, raising the struck tail
+     * before the missing-axle rest angle sits it back onto the road. */
+    rearShellPitch: 2.8,
+    /** Half the visual track width used to place the two torn wheels. The far
+     * one sorts behind the car and the near one in front. */
+    wheelTrackHalfPx: 4,
     /**
      * WHETHER THE FUEL FINDS THE SPARKS — the chance a stove-in end catches,
      * per unit of the blow's own `wreckForce`.

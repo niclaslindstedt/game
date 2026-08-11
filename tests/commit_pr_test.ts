@@ -26,12 +26,12 @@ describe("commit-pr arguments", () => {
       "--stage",
       "scripts/commit-pr.mjs",
       "--stage",
-      ".agent/skills/commit/SKILL.md",
+      ".agents/skills/commit/SKILL.md",
     ]);
     expect(() => validateOptions(opts)).not.toThrow();
     expect(opts.stage).toEqual([
       "scripts/commit-pr.mjs",
-      ".agent/skills/commit/SKILL.md",
+      ".agents/skills/commit/SKILL.md",
     ]);
   });
 

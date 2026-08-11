@@ -279,7 +279,7 @@ export type {
 } from "./sites.ts";
 export { CAMPUS, CAMPUS_ART_SIZE } from "./campus.ts";
 export { HOMESTEAD, HOME_ART_SIZE } from "./homestead.ts";
-export { wreckForce } from "./eject.ts";
+export { headOnPieceLaunch, wreckForce } from "./eject.ts";
 export { createDriveDriver, driveDriverInput } from "./driver.ts";
 export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
 export type { DriveDriver } from "./driver.ts";

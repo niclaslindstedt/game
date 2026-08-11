@@ -153,6 +153,19 @@ export function createEngineNote(): EngineNoteState {
   return { dueMs: 0, gear: 0, speedPx: 0, atMs: -1, tickMs: 0 };
 }
 
+/** Rebase the app-side grain scheduler when the simulation clock is replaced
+ * by a fresh attempt. Exported because the disappearing-engine regression is a
+ * clock comparison worth pinning without asking a test environment to make
+ * sound. */
+export function resetEngineNoteAfterRewind(
+  nowMs: number,
+  engine: EngineNoteState,
+): void {
+  if (nowMs < engine.atMs || nowMs + ENGINE_GRAIN_MS < engine.dueMs) {
+    Object.assign(engine, createEngineNote());
+  }
+}
+
 /**
  * ONE GRAIN OF THE ENGINE, if one is due — the running note, made out of
  * overlapping one-shots on a fixed cadence (see `engine-note.ts`, which owns why
@@ -174,6 +187,12 @@ export function runEngineNote(
   drive: DriveState,
   engine: EngineNoteState,
 ): void {
+  // A RESTART REWINDS THE ROAD'S CLOCK. The scheduler is app-side and keeps
+  // its object identity, so without resetting it the fresh attempt waits until
+  // `drive.ms` catches the destroyed run's old due time — usually the whole
+  // length of the minigame — and the engine appears to have vanished. Detect
+  // the rewind before the due-time guard and make the first grain immediate.
+  resetEngineNoteAfterRewind(drive.ms, engine);
   if (drive.outcome === DRIVE_OUTCOME.broken) return;
   if (drive.ms < engine.dueMs) return;
   const speed = drive.car.speed;

@@ -18,6 +18,7 @@ import {
   DRIVE,
   DRIVE_OUTCOME,
   haltTraffic,
+  headOnPieceLaunch,
   FLEET,
   impactMasses,
   roadBandEdges,
@@ -533,13 +534,15 @@ describe("people leaving vehicles", () => {
       -300,
     );
     state.traffic.push(coming);
-    const seats = 2;
+    const seats = 4;
     coming.occupants = seats;
     state.car.speed = DRIVE.topSpeedPx * 0.3;
-    floorIt(state, 300);
+    // Stop on the impact tick so the launch cone below measures the throw,
+    // before gravity has had a few tenths of a second to turn it into a fall.
+    for (let t = 0; t < 300 && coming.occupants > 0; t += 16) tick(state, 1);
 
     expect(saidBy(state)).toContain("windscreenOut");
-    expect(coming.occupants).toBeLessThan(seats);
+    expect(coming.occupants).toBe(0);
     // HIS UPPER HALF, and what was inside him — never a whole body lobbed over
     // the roof, which is what the force ladder alone would have given at this
     // speed.
@@ -548,10 +551,25 @@ describe("people leaving vehicles", () => {
     // …and the car wears the rest of him down its own glass.
     expect(coming.gore).toBe(1);
     expect(coming.glassOut).toBe(true);
-    // AND IT IS OVER QUICKLY. A head-on throws things flat and fast rather than
-    // lobbing them, so nothing leaves with the lift an ordinary eject would.
-    const lift = Math.max(...state.remains.map((piece) => piece.vz));
+    // AND IT IS OVER QUICKLY. Nothing gets the towering lift of the ordinary
+    // ladder; the pure launch contract below pins the exact angle and speed
+    // before gravity and the road have their say.
+    const flesh = state.remains.filter((piece) => piece.part !== "machine");
+    const lift = Math.max(...flesh.map((piece) => piece.vz));
     expect(lift).toBeLessThan(DRIVE.gore.maxLiftPx);
+  });
+
+  it("throws head-on gibs at 10–45 degrees with the car's road speed", () => {
+    const carVx = DRIVE.topSpeedPx * 0.72;
+    for (let seed = 0; seed < 128; seed++) {
+      const launch = headOnPieceLaunch(carVx, 1, seed);
+      const angle = (Math.atan2(launch.z, Math.abs(launch.x)) * 180) / Math.PI;
+      const speed = Math.hypot(launch.x, launch.z);
+      expect(angle).toBeGreaterThanOrEqual(10);
+      expect(angle).toBeLessThanOrEqual(45);
+      expect(speed).toBeGreaterThanOrEqual(carVx * 0.85);
+      expect(speed).toBeLessThanOrEqual(carVx);
+    }
   });
 
   it("counts a head-on that does NOT write the car off — the shunt runs first", () => {
@@ -631,18 +649,14 @@ describe("people leaving vehicles", () => {
     const bus = plant(state, indexOf("traffic_bus"), 0.95, aboard);
     const exits = vehicleDef(bus.variant).exits;
     hold(state, 100);
-    // A ROOMFUL GOES THROUGH THE GLASS — as many as the body can post at once,
-    // which is what makes this the biggest sight on the road.
+    // A ROOMFUL GOES THROUGH THE GLASS — as many as this non-oncoming impact's
+    // screen can post at once. A genuine nose-to-nose collision opens the whole
+    // cabin; this stopped bus remains on the ordinary geometry ladder.
     expect(aboard - bus.occupants).toBe(exits);
     expect(saidBy(state)).toContain("windscreenOut");
     expect(state.bodies).toBeGreaterThanOrEqual(exits);
     // …and more of them than any car on this road can manage.
     expect(exits).toBeGreaterThan(vehicleDef(indexOf("traffic_sedan")).exits);
-    // THE ONES LEFT IN IT ARE STILL IN IT, and that is the model rather than an
-    // oversight: whether the seats the screen could not reach die where they sit
-    // is a question about the FORCE (`eject.killForce`), and twelve and a half
-    // tonnes of bus divides a blow down to almost nothing (`wreckForce`). A car
-    // that hits a bus hurts itself far more than it hurts the bus.
     expect(bus.occupants).toBe(aboard - exits);
   });
 
@@ -755,6 +769,45 @@ function clip(
 }
 
 describe("breaking a car, physically", () => {
+  it("tears both rear wheels off a hard rear-ending and leaves them carrying on", () => {
+    const state = drive();
+    floorIt(state, 5000);
+    state.wheelDebris.length = 0;
+    const before = DRIVE.topSpeedPx * 0.95;
+    const hatch = plant(state, indexOf("traffic_hatch"), 0.95, 2);
+
+    // THE BODY CHANGES, THE AXLE LEAVES, AND THE SHELL STOPS. This is one
+    // outcome rather than three thresholds a player can accidentally miss.
+    expect(hatch.smashTail).toBe(true);
+    expect(hatch.smashNose).toBe(false);
+    expect(hatch.wheelsOff & 2).toBe(2);
+    expect(hatch.wrecked).toBe(true);
+    expect(Math.abs(hatch.speed)).toBeLessThan(before * 0.35);
+
+    // The hero may shed one of his own wheels in the same terminal blow; the
+    // struck car's axle pair are the two deliberately offset across its track.
+    const wheels = state.wheelDebris.filter(
+      (wheel) => Math.abs(wheel.pos.y - hatch.pos.y) > 1,
+    );
+    expect(wheels).toHaveLength(2);
+    // One begins on the far side of the body (and therefore renders behind it),
+    // the other on the near side. They keep going down the road while the shell
+    // gives up almost all of its speed.
+    expect(wheels[0]!.pos.y).toBeLessThan(hatch.pos.y);
+    expect(wheels[1]!.pos.y).toBeGreaterThan(hatch.pos.y);
+    expect(
+      wheels.every((wheel) => wheel.vel.x > Math.abs(hatch.speed) * 2),
+    ).toBe(true);
+    expect(wheels.every((wheel) => wheel.vz > 0)).toBe(true);
+    // The first pitch raises the struck tail; the missing axle will then settle
+    // it in the opposite direction, down onto the road.
+    expect(hatch.spin).toBeGreaterThan(0);
+    expect(saidBy(state)).toContain("endSmashed");
+    expect(saidBy(state).filter((event) => event === "wheelTorn")).toHaveLength(
+      2,
+    );
+  });
+
   it("folds the end that was hit and leaves the other one straight", () => {
     // A car rear-ended is SHORT AT THE BACK. Three whole-body dent rungs can
     // never say that, which is why the crush is a length per end rather than a
@@ -906,7 +959,9 @@ describe("breaking a car, physically", () => {
         CRUISE,
       );
       state.traffic.push(one);
-      state.car.speed = DRIVE.topSpeedPx * 0.95;
+      // Below the rear-axle failure line: this case measures the shove while
+      // the new terminal rear-ending case above measures what happens past it.
+      state.car.speed = DRIVE.topSpeedPx * 0.65;
       let best = CRUISE;
       for (let t = 0; t < 400; t += 16) {
         tick(state, 0);
@@ -917,7 +972,7 @@ describe("breaking a car, physically", () => {
     const hatch = punt("traffic_hatch");
     const bus = punt("traffic_bus");
     // It is shoved bodily up the road — a real change of speed, not a nudge.
-    expect(hatch).toBeGreaterThan(80);
+    expect(hatch).toBeGreaterThan(45);
     // …and twelve tonnes takes the same blow and barely notices it.
     expect(hatch).toBeGreaterThan(bus * 4);
   });

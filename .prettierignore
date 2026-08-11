@@ -30,7 +30,6 @@ site/
 node_modules/
 
 # Agent skill playbooks are templated upstream; keep their formatting stable
-.agent/
 .agents/
 .codex/
 

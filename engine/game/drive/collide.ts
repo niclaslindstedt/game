@@ -502,6 +502,16 @@ function breakCar(
   wasWrecked = false,
 ): void {
   const { car } = drive;
+  const hitLeft = car.pos.x < other.pos.x;
+  const hitNose = hitLeft === other.faceLeft;
+  /** A REAR-ENDING IS THE DIFFERENCE OF THE TWO SPEEDS. `hit.joules` already
+   * contains exactly that closing-speed sum; these geometry checks only say
+   * that the energy arrived squarely at the tail rather than along a wing. */
+  const hardRear =
+    !hitNose &&
+    hit.approach >= 0 &&
+    hit.squareness >= DRIVE.drivers.rearEndSquare &&
+    force >= DRIVE.wreckage.rearAxleForce;
   // ── WHAT THE STRUCTURE DID ──────────────────────────────────────────────
   // The body FOLDS at the end that was hit, by a depth the collision's own
   // energy buys against the vehicle's own stiffness (`crush.ts`) — so the same
@@ -511,7 +521,15 @@ function breakCar(
   // latch the picture reads for the rest of the leg: the vehicle swaps to that
   // END's authored crash art, the wheel under it is thrown, and whatever fuel
   // the fold has just opened up may find the sparks it threw (`wreckage.ts`).
-  smashEnd(drive, other, hit, car.pos.x);
+  smashEnd(
+    drive,
+    other,
+    hit,
+    car.pos.x,
+    hardRear,
+    hardRear,
+    hardRear ? false : undefined,
+  );
   // Its glass is not structure and goes long before the body does.
   if (shatterGlass(other, force)) {
     drive.events.push({
@@ -543,6 +561,24 @@ function breakCar(
         joules: hit.joules,
       });
     }
+  }
+  if (hardRear && !other.downed) {
+    const { wreckage } = DRIVE;
+    // THE AXLE AND THE SHELL PART COMPANY. The wheels were minted above from
+    // the car's PRE-impact speed; now the body spends its remaining motion in
+    // the fold and on the bare rear frame. Marking it wrecked prevents a driver
+    // from calmly accelerating a wheel-less shell back to cruise speed.
+    other.wrecked = true;
+    other.wear = Math.max(1, other.wear);
+    other.rung = Math.max(3, other.rung);
+    other.speed *= wreckage.rearShellSpeedKeep;
+    other.brakeMs = DRIVE.drivers.brakeMs;
+    // FIRST THE BACK RISES, THEN IT SITS DOWN. The positive body-frame kick
+    // raises the tail; the missing-axle rest angle in `traffic.ts` pulls it the
+    // other way and leaves the rear metal on the road after the bounce.
+    const toNose = other.faceLeft ? -1 : 1;
+    other.spin +=
+      toNose * wreckage.rearShellPitch * Math.min(1.6, 0.65 + force);
   }
   // …AND THE PEOPLE INSIDE COME OUT THROUGH THE SCREEN, if the blow was square
   // enough — or die in their seats if it was merely hard enough. Both
@@ -613,7 +649,12 @@ export function hurtTraffic(
   // it used to stand dead in a live lane, plainly finished, wearing straight
   // ends and both of its wheels. That was the commonest wreck on the road and it
   // is exactly the picture the crash art exists to replace.
-  smashEnd(drive, other, hit, fromX, true);
+  const hitLeft = fromX < other.pos.x;
+  const directEnd =
+    hit.squareness >= DRIVE.drivers.rearEndSquare
+      ? hitLeft === other.faceLeft
+      : undefined;
+  smashEnd(drive, other, hit, fromX, true, false, directEnd);
   drive.remains.push(
     ...tearMachine(drive, other, hit, wreckForce(other, hit.joules)),
   );

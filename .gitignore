@@ -118,9 +118,8 @@ native/*.p8
 # content of it (eslint ignores the same path).
 .claude/worktrees/
 
-# Local agent runtime metadata. The canonical checked-in playbooks live under
-# `.agent/`; these plural/runtime directories are materialized by coding tools.
-.agents/
+# Local Codex runtime metadata. The canonical checked-in playbooks live under
+# `.agents/`, so that standard discovery path must remain tracked.
 .codex/
 
 # The Lua VM compiled for the SHIPPED mod compiler (scripts/build-lua.mjs) — the

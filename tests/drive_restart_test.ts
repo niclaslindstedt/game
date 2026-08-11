@@ -25,7 +25,11 @@ import { endDrive } from "../pwa/src/game/drive-screen/end-drive.ts";
 import { createDriveFx } from "../pwa/src/game/drive-screen/drive-fx.ts";
 import { createDriveGore } from "../pwa/src/game/drive-screen/drive-gore.ts";
 import { createSkids } from "../pwa/src/game/drive-screen/skid.ts";
-import type { Burst } from "../pwa/src/game/drive-screen/loop.ts";
+import {
+  createEngineNote,
+  resetEngineNoteAfterRewind,
+  type Burst,
+} from "../pwa/src/game/drive-screen/loop.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,
@@ -63,6 +67,19 @@ const run = (drive: DriveState, h: ReturnType<typeof host>) =>
   endDrive(drive, h.bursts, h.fx, h.gore, h.skids, h.clearSpeech, h.onArrived);
 
 describe("the drive's terminal beats", () => {
+  it("makes the engine grain immediately due on the fresh clock", () => {
+    const engine = createEngineNote();
+    engine.atMs = 42_000;
+    engine.dueMs = 42_105;
+    engine.gear = 4;
+    engine.speedPx = 700;
+    engine.tickMs = 9;
+
+    resetEngineNoteAfterRewind(16, engine);
+
+    expect(engine).toEqual(createEngineNote());
+  });
+
   it("takes the hero's line away with the wreck it was about", () => {
     const drive = drivenTo(DRIVE_OUTCOME.broken, DRIVE.breakdownHoldMs + 1);
     const h = host();
