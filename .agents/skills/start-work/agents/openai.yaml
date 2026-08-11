@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start Work"
+  short_description: "Sync a clean branch before every task"
+  default_prompt: "Use $start-work to prepare this repository before beginning the task."
