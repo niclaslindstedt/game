@@ -1367,6 +1367,30 @@ export const DRIVE = {
      * player who has ever seen a police video expects to happen. */
     yawPerMs: 0.42,
     /**
+     * …AND HOW MUCH OF THE PUNT TURNS IT TOO — the other half of the couple, as
+     * a share of the rate above.
+     *
+     * WHAT A REAR-ENDING WAS MISSING. A blow into the back of a car is nearly
+     * all `dv.x` and almost no `dv.y`, so a yaw read off the lateral answer
+     * alone was reading a number that is near zero by construction: the same
+     * three degrees whether the wagon arrived at thirty or at a hundred and
+     * seventy, which is not what driving into the back of somebody at speed
+     * looks like. What turns a car you have rear-ended is the SHOVE, applied off
+     * its centre line — the force down the road times how far across it landed.
+     *
+     * THE SHARE IS THE SHORTER LEVER. The lateral force works about half the
+     * car's LENGTH and this one about half its WIDTH, which on everything with a
+     * roof out here is a bit under half as much — so the same rate would have a
+     * rear-ending spinning cars harder than a sideswipe does, which is the wrong
+     * way round.
+     *
+     * AND A HIT DEAD SQUARE STILL TURNS NOTHING, which is right: the whole
+     * impulse runs through the middle of the thing and what the player gets is a
+     * car punted straight up the road. A perfectly aimed rear-end is a shove,
+     * not a spin.
+     */
+    yawPuntShare: 0.45,
+    /**
      * …AND THE BAND ONE BLOW MAY PUT ON (rad/s) — the least and the most.
      *
      * TWO ENDS, BECAUSE THE PICTURE HAS TWO ENDS. Against the spring below the

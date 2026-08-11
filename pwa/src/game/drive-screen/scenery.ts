@@ -468,6 +468,12 @@ export const VEHICLE_LAMPS: Readonly<Record<string, LightBody>> = {
   traffic_bicycle: { halfPx: 8, liftPx: 9 },
   traffic_delivery_moped: { halfPx: 10, liftPx: 6 },
   // …and the skateboard has none at all, so it never asks (`DriveVehicleDef.lights`).
+  //
+  // THE ONE CAR THAT NEEDS AN ENTRY. Every other roofed vehicle in the fleet
+  // fills its canvas (23 px of reach either way) and takes the default below;
+  // the hatchback is drawn well inside its own, at 20, which on the shared
+  // number put both of its beams four px off the ends of the car.
+  traffic_hatch: { halfPx: 20, liftPx: 10 },
 };
 
 /**
@@ -506,9 +512,36 @@ export function roofBar(def: DriveVehicleDef): RoofBar | undefined {
   return ROOF_BARS[def.id];
 }
 
-/** What this vehicle's lamps are bolted to. Anything not in the table above is
- * a body with a roof on it, which is the hero's own wagon to within a pixel —
- * and that is exactly what `drawLightCones` draws when handed nothing. */
-export function lightBody(def: DriveVehicleDef): LightBody | undefined {
-  return VEHICLE_LAMPS[def.id];
+/**
+ * WHAT EVERYTHING WITH A ROOF IS, unless the table above says otherwise — the
+ * traffic's own body rather than the HERO's.
+ *
+ * MEASURED OFF THE GRIDS, like every other number in this block: the fleet's
+ * cars fill 46 to 48 px of their 48-px canvas and carry their lamps eight to ten
+ * px off the road (`content/sprites/earth/traffic_*.yaml`). The default used to
+ * be the wagon's own 24/11, which is the longest body on this road and a lamp
+ * line above any of theirs — close enough on a saloon to pass, and a pixel or
+ * two proud on everything else.
+ *
+ * IT IS NOT `def.halfLengthPx`, which was the obvious guess and is the wrong
+ * number: that is the COLLISION extent, deliberately shorter than the art (a
+ * saloon is 20 against 23 drawn), so a lamp placed on it burns two or three px
+ * inside the bodywork it is supposed to be bolted to.
+ */
+const ROOFED_LAMPS: LightBody = { halfPx: 23, liftPx: 10 };
+
+/**
+ * WHAT THIS VEHICLE'S LAMPS ARE BOLTED TO.
+ *
+ * `tests/content/drive_scenery_test.ts` holds every answer here against the ART
+ * — a lamp may sit anywhere inside the body it is on and never past the end of
+ * it — which is what stops the next short vehicle quietly inheriting a body it
+ * is nothing like. That is exactly how the hatchback went wrong: it is the one
+ * car in the fleet drawn well inside its canvas (20 px of reach against
+ * everything else's 23), and on the wagon's 24 it threw both its beams from a
+ * point four px OFF THE END of itself — a car driving along between two lights
+ * that are not attached to it.
+ */
+export function lightBody(def: DriveVehicleDef): LightBody {
+  return VEHICLE_LAMPS[def.id] ?? ROOFED_LAMPS;
 }

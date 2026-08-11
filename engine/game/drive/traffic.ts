@@ -905,13 +905,44 @@ export function shunt(
     other.brakeMs = DRIVE.drivers.brakeMs;
   }
   other.speed += hit.dv.x * crush.punt;
-  // THE SPIN, off the lever arm the contact already gives us. `hit.along` is
-  // measured from the HERO's centre toward his nose, so what it says about the
-  // OTHER vehicle is how far up the flank the two of them met — which is the
-  // arm, in the only frame both cars share.
+  // THE SPIN, off the lever arms the contact already gives us — and it is a
+  // COUPLE, which means BOTH of them.
+  //
+  // The lateral one was here from the start: `hit.along` is measured from the
+  // HERO's centre toward his nose, so what it says about the OTHER vehicle is
+  // how far up the flank the two of them met, which is the arm a sideways shove
+  // turns it about — in the only frame both cars share.
+  //
+  // THE ALONG-ROAD ONE WAS MISSING, and it is the whole of what a REAR-ENDING
+  // does. A blow into the back of a car is nearly all `dv.x` and almost no
+  // `dv.y`, so the lateral term is reading a number that is near zero by
+  // construction: the yaw came out the same three degrees whether the wagon
+  // arrived at thirty or at a hundred and seventy, which is precisely what a
+  // rear-ending at speed does not look like. What turns a car you have driven
+  // into the back of is the SHOVE ITSELF, applied off its centre line — the
+  // force down the road times how far across it landed — so the second arm is
+  // added rather than replacing anything, and it carries the SHORTER lever it
+  // works on (`yawPuntShare`: half a car's width against half its length).
+  //
+  // A HIT DEAD SQUARE STILL TURNS NOTHING, and must: both arms are zero, the
+  // whole impulse runs through the middle of the thing, and what the player gets
+  // is a car punted straight up the road. That is the correct answer to a
+  // perfectly aimed rear-end and always was.
   const def = vehicleDef(other.variant);
   const arm = Math.min(1, Math.abs(hit.along) / Math.max(1, def.halfLengthPx));
-  const yaw = Math.abs(hit.dv.y) * DRIVE_UNITS.mPerPx * crush.yawPerMs * arm;
+  // …AND HOW FAR ACROSS ITS OWN WIDTH THE BLOW LANDED, which is the arm the
+  // SHOVE turns it about. `Impact.contact` is solved on the hero's own axis, so
+  // its offset from the struck car's centre line is exactly how far off square
+  // the two of them met.
+  const across = Math.min(
+    1,
+    Math.abs(hit.contact.y - other.pos.y) / Math.max(1, def.radiusPx),
+  );
+  const yaw =
+    (Math.abs(hit.dv.y) * arm +
+      Math.abs(hit.dv.x) * across * crush.yawPuntShare) *
+    DRIVE_UNITS.mPerPx *
+    crush.yawPerMs;
   // …HELD TO THE BAND THE PICTURE HAS (`minYawSpin`/`maxYawSpin`). The sum's own
   // answer decides where in it this blow lands — that is the whole of "it
   // depends on the weight and the speed" — and the two ends decide what the
