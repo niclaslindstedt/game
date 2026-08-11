@@ -256,7 +256,13 @@ function answer(
     );
     const yaw =
       Math.abs(dv.y) * DRIVE_UNITS.mPerPx * DRIVE.between.yawPerMs * arm;
-    one.spin += Math.sign(dv.y || 1) * Math.min(DRIVE.between.maxYawSpin, yaw);
+    // …in the same band the hero's own blows turn a body through, so a car
+    // knocked about by a bus and one knocked about by the wagon are the same
+    // sight (`crush.minYawSpin`/`maxYawSpin`, and the spring they swing
+    // against).
+    one.spin +=
+      Math.sign(dv.y || 1) *
+      Math.min(DRIVE.between.maxYawSpin, Math.max(DRIVE.crush.minYawSpin, yaw));
   }
   if (tipsOver(one, hit)) {
     tipVehicle(one, hit, by.pos.y);

@@ -639,44 +639,57 @@ export function stepTraffic(state: DriveState, dt: number): void {
     // different motion from a rolled one's cartwheel and has to keep running
     // while the car does everything else it was doing. Ahead of the wreck check
     // on purpose: an engine that has died does not stop the body rotating.
+    // THE TYRES ARE A SPRING, and that is the whole of this block.
+    //
+    // A car yawed to its own direction of travel is scrubbing sideways on four
+    // contact patches, and the harder it is yawed the harder they pull it back:
+    // a restoring torque proportional to the angle, damped by the same rubber.
+    // So the blow sets an angular VELOCITY (`shunt`, off the momentum sum) and
+    // the body swings out, stops, and comes back — one motion, with a size and a
+    // duration that fall out of the numbers rather than being asserted.
+    //
+    // WHICH IS THE ONLY WAY THE PHYSICS SURVIVES A CAP. `Impact.dv` already
+    // carries both facts anybody would ask for — the impulse goes as the closing
+    // SPEED, and it is divided by the struck vehicle's own MASS — but a decaying
+    // spin against a hard angle limit threw all of that away: every blow above a
+    // nudge pinned the body at the limit and held it there while the spin bled
+    // off, so a bus clipped at a hundred and a hatchback nudged at thirty sat at
+    // exactly the same angle for the same second and a half. Against a spring
+    // the peak is PROPORTIONAL to the spin it was given, so twelve tonnes turns
+    // a fraction of what a hatchback does and a graze turns a fraction of what a
+    // real hit does — and the cap goes back to being what a cap should be,
+    // something only the hardest survivable blow ever reaches.
+    //
+    // A WRECK GETS IT TOO. What lines a car back up is not the driver, it is the
+    // rubber; a dead engine does not change that. What DOES is losing the wheel
+    // that was doing the work — see `restAngle`.
     const rest = restAngle(other);
     if (other.spin !== 0 || other.angle !== rest) {
       const { crush } = DRIVE;
+      other.spin += (rest - other.angle) * crush.yawSpringPerSec2 * dt;
+      other.spin *= Math.max(0, 1 - crush.yawDampPerSec * dt);
       other.angle += other.spin * dt;
-      const damp = Math.max(0, 1 - crush.yawDampPerSec * dt);
-      other.spin *= damp;
-      if (Math.abs(other.spin) < 0.2) other.spin = 0;
-      // …AND FOUR TYRES ON TARMAC PULL IT STRAIGHT AGAIN, every tick, all the
-      // way back to where it settles.
-      //
-      // BOTH HALVES OF THAT WERE WRONG. The straightening lived INSIDE the
-      // spin's own branch and ran on the single frame the spin died on — one
-      // multiply by 0.9 — and the frame after that `spin` was zero, so the whole
-      // block stopped being entered at all and the body kept whatever angle it
-      // had for the rest of the leg. A car shoved down the road therefore
-      // travelled at a fixed thirty degrees to the direction it was moving in,
-      // sliding sideways like a thing on ice, which is the one thing on this
-      // road nothing has ever done. It was also allowed to reach `yawRestRad *
-      // 4` — nearly sixty degrees — which is not a car being nudged askew, it is
-      // a car that should have gone over (`tipsOver`).
-      //
-      // …AND A WRECK STRAIGHTENS TOO, which the old note argued against on the
-      // grounds that nobody is correcting it. What pulls a car back in line is
-      // not the driver, it is the TYRES: a body yawed to its own direction of
-      // travel is scrubbing sideways on four contact patches, and that scrub is
-      // exactly the force that lines it back up. A dead engine does not change
-      // it. What DOES is losing the wheel that was doing the work — see
-      // `restAngle`.
-      if (other.spin === 0) {
-        const back = Math.min(1, crush.yawStraightenPerSec * dt);
-        other.angle += (rest - other.angle) * back;
-        if (Math.abs(other.angle - rest) < 0.01) other.angle = rest;
+      // Settled: near enough to level, and no longer moving toward anything.
+      if (
+        Math.abs(other.spin) < crush.yawRestSpin &&
+        Math.abs(other.angle - rest) < 0.01
+      ) {
+        other.spin = 0;
+        other.angle = rest;
       }
       // A FEW DEGREES, not a quarter turn: this is a car on its wheels being
-      // shoved about, and anything past it is the rollover the collision has
-      // its own test for.
+      // shoved about, and anything past it is the rollover the collision has its
+      // own test for. The spin is stopped WITH it — a body held against a limit
+      // that went on winding up would spring back off it the moment the limit
+      // let go, which is a bounce nothing hit it with.
       const cap = crush.maxYawRad + Math.abs(rest);
-      other.angle = clamp(other.angle, -cap, cap);
+      if (other.angle > cap) {
+        other.angle = cap;
+        other.spin = Math.min(0, other.spin);
+      } else if (other.angle < -cap) {
+        other.angle = -cap;
+        other.spin = Math.max(0, other.spin);
+      }
     }
 
     if (other.wrecked) {
@@ -899,7 +912,14 @@ export function shunt(
   const def = vehicleDef(other.variant);
   const arm = Math.min(1, Math.abs(hit.along) / Math.max(1, def.halfLengthPx));
   const yaw = Math.abs(hit.dv.y) * DRIVE_UNITS.mPerPx * crush.yawPerMs * arm;
-  other.spin += side * Math.min(crush.maxYawSpin, yaw);
+  // …HELD TO THE BAND THE PICTURE HAS (`minYawSpin`/`maxYawSpin`). The sum's own
+  // answer decides where in it this blow lands — that is the whole of "it
+  // depends on the weight and the speed" — and the two ends decide what the
+  // player can actually see: a graze the road booked as a collision still moves
+  // the body, and the hardest clip still leaves a car pointing roughly where it
+  // is going.
+  other.spin +=
+    side * clamp(yaw, DRIVE.crush.minYawSpin, DRIVE.crush.maxYawSpin);
   other.hitCooldownMs = DRIVE.shuntImmuneMs;
 }
 

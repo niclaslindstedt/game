@@ -691,6 +691,69 @@ describe("people leaving vehicles", () => {
   });
 });
 
+/**
+ * CATCH ONE VEHICLE ON THE CORNER at `share` of the dial and watch what its body
+ * does about it — the peak angle, how long it took to come back FROM that peak,
+ * and whether the blow put it over instead.
+ *
+ * TWO THINGS IN HERE ARE SCARS. The wagon is steered OFF it after the clip,
+ * because a bumper still leaning on a car goes on adding to what is being
+ * measured; and the pair are then held at the same speed, because a vehicle that
+ * falls behind is DESPAWNED (`despawnBehindPx`) and every reading after that is
+ * the frozen object this function is still holding — which looks exactly like an
+ * angle that never settled.
+ */
+function clip(
+  id: string,
+  share: number,
+): { peak: number; end: number; settledMs: number; downed: boolean } {
+  const state = drive();
+  floorIt(state, 5000);
+  haltTraffic(state);
+  state.traffic.length = 0;
+  state.pedestrians.length = 0;
+  state.props.length = 0;
+  // Caught on the corner rather than met square — a blow with a lever arm on
+  // it, which is the one that turns a car at all.
+  const one = createTraffic(
+    state.nextId++,
+    indexOf(id),
+    { x: state.car.pos.x + 34, y: state.car.pos.y - 8 },
+    200,
+  );
+  state.traffic.push(one);
+  state.car.speed = DRIVE.topSpeedPx * share;
+  let peak = 0;
+  let peakAt = 0;
+  let settledAt = -1;
+  for (let t = 0; t < 4000; t += 16) {
+    tick(state, t < 400 ? 0 : 0.35);
+    // …and OFF it, briskly. A wagon still leaning on the car goes on adding to
+    // the very thing being measured, and a second contact restarts the clock.
+    if (t > 400) state.car.pos.y -= 4;
+    if (t > 600) {
+      one.speed = state.car.speed;
+      one.cruise = state.car.speed;
+    }
+    if (Math.abs(one.angle) > peak) {
+      peak = Math.abs(one.angle);
+      // MEASURED FROM THE FURTHEST IT GOT, not from the first contact: the
+      // wagon can catch the same car twice on its way past, and a clock started
+      // at the first blow would be reporting the gap between two of them.
+      peakAt = t;
+      settledAt = -1;
+    } else if (settledAt < 0 && peak > 0 && one.spin === 0) {
+      settledAt = t;
+    }
+  }
+  return {
+    peak,
+    end: one.angle,
+    settledMs: settledAt < 0 ? Infinity : settledAt - peakAt,
+    downed: one.downed,
+  };
+}
+
 describe("breaking a car, physically", () => {
   it("folds the end that was hit and leaves the other one straight", () => {
     // A car rear-ended is SHORT AT THE BACK. Three whole-body dent rungs can
@@ -869,47 +932,43 @@ describe("breaking a car, physically", () => {
     // and slid up the road that way, which reads as a car on ice.
     //
     // What is pinned is the SHAPE of it: knocked askew by a few degrees, and
-    // back in line under its own tyres a second or so later.
-    const state = drive();
-    floorIt(state, 5000);
-    haltTraffic(state);
-    state.traffic.length = 0;
-    state.pedestrians.length = 0;
-    state.props.length = 0;
-    // Caught on the corner rather than met square — a blow with a lever arm on
-    // it, which is the one that turns a car at all.
-    const one = createTraffic(
-      state.nextId++,
-      indexOf("traffic_sedan"),
-      { x: state.car.pos.x + 34, y: state.car.pos.y - 8 },
-      200,
-    );
-    state.traffic.push(one);
-    state.car.speed = DRIVE.topSpeedPx * 0.5;
-    let worst = 0;
-    for (let t = 0; t < 4000; t += 16) {
-      // Clip it, then steer clear and leave it alone.
-      tick(state, t < 500 ? 0 : 0.35);
-      if (t > 500) state.car.pos.y -= 1.5;
-      // ONCE THE CLIP IS OVER, KEEP THE PAIR TRAVELLING TOGETHER. A vehicle
-      // that falls behind the wagon is DESPAWNED (`despawnBehindPx`), and every
-      // reading after that is the frozen object this test is still holding
-      // rather than an angle that settled — which reads exactly like the bug
-      // this case is about.
-      if (t > 600) {
-        one.speed = state.car.speed;
-        one.cruise = state.car.speed;
-      }
-      worst = Math.max(worst, Math.abs(one.angle));
-    }
+    // back in line under its own tyres inside a second.
+    const clipped = clip("traffic_sedan", 0.5);
     // It was genuinely turned…
-    expect(worst).toBeGreaterThan(0.05);
+    expect(clipped.peak).toBeGreaterThan(0.05);
     // …by a few degrees rather than by a third of a turn (it stayed on its
     // wheels, so this is not the rollover's cartwheel)…
-    expect(one.downed).toBe(false);
-    expect(worst).toBeLessThanOrEqual(DRIVE.crush.maxYawRad + 1e-6);
-    // …and its tyres pulled it back in line.
-    expect(Math.abs(one.angle)).toBeLessThan(0.02);
+    expect(clipped.downed).toBe(false);
+    expect(clipped.peak).toBeLessThanOrEqual(DRIVE.crush.maxYawRad + 1e-6);
+    // …its tyres pulled it back in line…
+    expect(Math.abs(clipped.end)).toBeLessThan(0.02);
+    // …and they took a beat to do it, rather than a frame (a snap) or the rest
+    // of the leg (the bug above). Measured from the furthest it got.
+    expect(clipped.settledMs).toBeGreaterThan(150);
+    expect(clipped.settledMs).toBeLessThan(900);
+  });
+
+  it("turns a light car far further than a heavy one with the same blow", () => {
+    // THE YAW IS THE MOMENTUM SUM'S, and this is the case that says so. It was
+    // not always: a decaying spin against a hard angle cap meant every blow
+    // above a nudge pinned the body at the cap and held it there, so a bus met
+    // at a hundred and a hatchback nudged at thirty sat at exactly the same
+    // angle. Against a spring (`crush.yawSpringPerSec2`) the peak is
+    // proportional to the spin the blow handed over, and that spin is
+    // `Impact.dv` — the impulse over the struck vehicle's OWN mass.
+    //
+    // The claim is a RATIO rather than a number for either, for the reason the
+    // punt's own test gives: what is being pinned is that the weight decides.
+    const light = clip("traffic_hatch", 0.6);
+    const heavy = clip("traffic_bus", 0.6);
+    expect(light.downed).toBe(false);
+    expect(heavy.downed).toBe(false);
+    expect(light.peak).toBeGreaterThan(heavy.peak * 2.5);
+    // …and both are inside the band the picture is allowed to use: nothing is
+    // turned less than a blow you can see, or more than a car still on its
+    // wheels ever is.
+    expect(heavy.peak).toBeGreaterThan(0.04);
+    expect(light.peak).toBeLessThanOrEqual(DRIVE.crush.maxYawRad + 1e-6);
   });
 
   it("sits the end down that has no wheel left under it", () => {
