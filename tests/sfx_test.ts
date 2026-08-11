@@ -12,7 +12,11 @@ import type { GameEvent } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-import { playEventSounds } from "../pwa/src/game/sfx/index.ts";
+import {
+  playDriveSound,
+  playEventSounds,
+  setListener,
+} from "../pwa/src/game/sfx/index.ts";
 
 /** A synth that only counts how many voices were started. */
 function countingSynth(): { synth: Synth; calls: () => number } {
@@ -117,5 +121,35 @@ describe("playEventSounds per-step dedupe", () => {
 
     // magic zap + ranged pew both play; the duplicate ranged shot does not.
     expect(mixed).toBeGreaterThan(singleCalls());
+  });
+});
+
+describe("DRIVE source placement", () => {
+  it("moves a passed source from the centre into the left headphone", () => {
+    const pans: number[] = [];
+    const synth: Synth = {
+      unlock() {},
+      autostart() {},
+      resume() {},
+      now: () => null,
+      tone(options) {
+        pans.push(options.pan ?? 0);
+      },
+      noise(options) {
+        pans.push(options.pan ?? 0);
+      },
+      sample: () => null,
+      decode: () => Promise.resolve(null),
+    };
+    setListener({ x: 0, y: -50, width: 100, height: 100 });
+    playDriveSound(synth, "drive_explosion", { x: 50, y: 0 });
+    const centred = pans.splice(0);
+    playDriveSound(synth, "drive_explosion", { x: 10, y: 0 });
+    const passed = pans.splice(0);
+    setListener(null);
+
+    expect(centred.length).toBeGreaterThan(0);
+    expect(centred.every((pan) => pan === 0)).toBe(true);
+    expect(passed.every((pan) => pan < 0)).toBe(true);
   });
 });

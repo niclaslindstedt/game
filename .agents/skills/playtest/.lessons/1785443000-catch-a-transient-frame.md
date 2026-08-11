@@ -22,6 +22,9 @@ harness viewport is 844×390 and a hero is 20 px across.
 
 Driving the menus by hand (rather than through `playtest.mjs`) needs the
 prelude skipped explicitly — a fresh run opens in `phase: "cutscene"` and
-clicking the canvas does nothing; the button is `skip-cutscene`. Also launch
-with `executablePath: "/opt/pw-browsers/chromium"` (as `playtest.mjs` does),
-or Playwright hunts for a browser it never downloaded.
+clicking the canvas does nothing; the button is `skip-cutscene`. Also give
+Playwright the installed Chromium executable explicitly. Do not hard-code the
+Linux cache path: remote Linux sessions commonly keep it under
+`/opt/pw-browsers/`, while macOS keeps it under
+`~/Library/Caches/ms-playwright/`; discover the actual executable in that
+environment before launching the scratch probe.

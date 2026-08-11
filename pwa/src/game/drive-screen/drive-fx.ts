@@ -105,10 +105,9 @@ type DriveFxKind =
    *
    * ITS OWN KIND RATHER THAN A BIG `fire`, because it is a different shape as
    * well as a different size. A fire SITS on a car and grows over seconds; a
-   * blast LEAVES one — a ball that opens in three frames and is gone in under a
-   * second, throwing its smoke SIDEWAYS along the road rather than up, which is
-   * the proportion the launch pad's cloud had to be taught and is just as true
-   * of something going off at knee height between four lanes.
+   * blast LEAVES one — a ball that opens beneath the shell in three frames,
+   * climbs through it, and is gone in under a second while its black column
+   * keeps rising.
    */
   | "blast";
 
@@ -170,6 +169,9 @@ type DriveFx = {
    * own `halfLengthPx`.
    */
   spread?: number;
+  /** Physical fragments finish their throw, then remain on the road until the
+   * car has passed them and they are safely off-screen behind it. */
+  linger?: boolean;
 };
 
 /**
@@ -556,7 +558,7 @@ export function driveVehicleFire(
  *
  * FULL FORCE WHATEVER THE JOULES SAY, which is the same call the windscreen gore
  * and the machine snap already make: the engine has decided a fuel tank has
- * exploded, and an explosion has no gentle version. It is FOUR effects at once
+ * exploded, and an explosion has no gentle version. It is SIX effects at once
  * because that is what the eye needs to read it as one event — the ball, the
  * sparks thrown out of it, the shards of what used to be a car, and the pall
  * that hangs there afterwards — and it takes the frame harder than anything
@@ -572,6 +574,9 @@ export function driveBlast(
   push(state, "spark", x, y, nowMs, 620, 1, false, 0, BLAST_LIFT);
   push(state, "shard", x, y, nowMs, 1300, 1, false, 0, BLAST_LIFT);
   push(state, "glass", x, y, nowMs, 1000, 1, false, 0, BLAST_LIFT);
+  // A black column climbs through the fireball and remains after its bright
+  // petals are gone. Wide at the base, then pulled behind the launched car.
+  push(state, "smoke", x, y, nowMs, 3600, 1, false, 0, 24, 24);
   // …and the smoke it leaves, wide and low, which is what is still there when
   // the player looks in his mirror.
   push(state, "dust", x, y, nowMs, DUST_LIFE_MS * 1.4, 1, false, 0, 0, 26);
@@ -580,7 +585,7 @@ export function driveBlast(
 
 /** How long the fireball itself lasts (ms) — short, because a fireball is: what
  * outlives it is the smoke and the burn underneath. */
-const BLAST_MS = 620;
+const BLAST_MS = 820;
 /** …and how far off the road its middle sits (world px). A tank is under the
  * boot, so the ball opens at about knee height rather than on the tarmac. */
 const BLAST_LIFT = 10;
@@ -638,6 +643,7 @@ function push(
     drift,
     lift,
     spread,
+    linger: kind === "glass" || kind === "shard",
     // The seed is the spawn POSITION rather than a draw — a `Math.random` here
     // would be fine (it is spawn-time, not per-frame), but deriving it means an
     // identical road replays with an identical picture, which is what makes a
@@ -677,13 +683,19 @@ export function stepDriveFx(
   state: DriveFxState,
   dtMs: number,
   nowMs: number,
+  carX?: number,
+  direction: 1 | -1 = 1,
 ): void {
   const dt = dtMs / 1000;
   state.shake = Math.max(0, state.shake - state.shake * SHAKE_DECAY * dt);
   state.flash = Math.max(0, state.flash - state.flash * FLASH_DECAY * dt);
   if (state.shake < 0.01) state.shake = 0;
   if (state.flash < 0.004) state.flash = 0;
-  state.fx = state.fx.filter((fx) => nowMs - fx.bornMs < fx.lifeMs);
+  state.fx = state.fx.filter((fx) => {
+    if (nowMs - fx.bornMs < fx.lifeMs) return true;
+    if (!fx.linger || carX === undefined) return false;
+    return (fx.x - carX) * direction > -DRIVE.despawnBehindPx;
+  });
 }
 
 /**
@@ -876,7 +888,10 @@ function drawGlass(
     const py =
       sy + Math.sin(angle) * reach * t * 0.4 - Math.max(0, lift - fall);
     const spin = Math.sin(t * (7 + scatter(fx.seed, i, 14) * 9) * Math.PI);
-    const glint = Math.max(0, spin) * (1 - t * 0.7);
+    const glint =
+      t >= 0.98
+        ? 0.18 + scatter(fx.seed, i, 16) * 0.3
+        : Math.max(0, spin) * (1 - t * 0.7);
     const warm = Math.max(0, 1 - t * 2.4);
     ctx.globalAlpha = glint * 0.85;
     const shard = sprites
@@ -1005,7 +1020,8 @@ function drawShards(
     const px = sx + Math.cos(angle) * reach * t;
     const hop = Math.sin(Math.min(1, t * 1.4) * Math.PI) * (6 + fx.force * 10);
     const py = sy + Math.sin(angle) * reach * t * 0.4 - hop;
-    ctx.fillStyle = `rgba(58, 60, 68, ${((1 - t) * 0.85).toFixed(3)})`;
+    const alpha = t >= 0.98 ? 0.68 : (1 - t) * 0.85;
+    ctx.fillStyle = `rgba(58, 60, 68, ${alpha.toFixed(3)})`;
     ctx.fillRect(Math.round(px), Math.round(py), 2, 1);
   }
   ctx.restore();
@@ -1199,11 +1215,10 @@ function drawFire(
 /**
  * THE FUEL TANK GOING — a ball that opens, and the black that comes off it.
  *
- * IT OPENS OUTWARD AND ALONG THE ROAD rather than upward, which is the same
- * proportion the launch pad's cloud had to be taught: something going off at
- * knee height between four lanes has nowhere to go but sideways, and a mushroom
- * reads as a bomb rather than as a car. So the ring of flame is nearly twice as
- * wide as it is tall.
+ * IT OPENS UNDER THE CAR AND RISES THROUGH IT. The bright base still spreads
+ * across the road, but its tongues and black column climb hard enough that the
+ * shell is visibly kicked upward by the same event rather than merely sitting
+ * beside a flat orange ring.
  *
  * THE CORE IS DRAWN LAST AND BRIGHTEST, and it is what makes the first two
  * frames read: an explosion is a flash with a fireball behind it, and a ring of
@@ -1222,7 +1237,7 @@ function drawBlast(
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
   // THE BALL, as a ring of the biggest flame the ladder has, thrown outward.
-  const petals = 9;
+  const petals = 13;
   for (let i = 0; i < petals; i++) {
     // Late in its life the ball is breaking up, so the outer tongues drop down
     // the ladder — which is what turns a fireball into a burning wreck rather
@@ -1232,11 +1247,10 @@ function drawBlast(
     const sprite = spriteByName(sprites, `flame_${step}${beat}`);
     if (!sprite) continue;
     const angle = (i / petals) * Math.PI * 2 + fx.seed * 0.01;
-    const reach = 30 * ease * (0.5 + scatter(fx.seed, i, 51) * 0.9);
+    const reach = 42 * ease * (0.5 + scatter(fx.seed, i, 51) * 0.9);
     const px = sx + Math.cos(angle) * reach;
-    // FLATTENED ACROSS THE ROAD, like every other scatter in this file: the
-    // world is drawn raked, so a circle in world space is an ellipse on screen.
-    const py = sy - lift + Math.sin(angle) * reach * 0.4 - ease * 6;
+    const rise = 12 + scatter(fx.seed, i, 52) * 22;
+    const py = sy - lift + Math.sin(angle) * reach * 0.35 - ease * rise;
     ctx.globalAlpha = Math.max(0, 1 - t * 1.15);
     ctx.drawImage(
       sprite,
@@ -1253,8 +1267,8 @@ function drawBlast(
     ctx.ellipse(
       Math.round(sx),
       Math.round(sy - lift),
-      10 + ease * 26,
-      6 + ease * 12,
+      14 + ease * 34,
+      9 + ease * 20,
       0,
       0,
       Math.PI * 2,
@@ -1267,11 +1281,11 @@ function drawBlast(
   const soot = Math.min(1, t * 1.4);
   if (soot <= 0) return;
   ctx.save();
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 16; i++) {
     const sprite = spriteByName(sprites, `flame_smoke_${i % 3}`);
     if (!sprite) continue;
     const angle = scatter(fx.seed, i, 61) * Math.PI * 2;
-    const reach = 34 * ease * (0.4 + scatter(fx.seed, i, 62) * 1.1);
+    const reach = 46 * ease * (0.4 + scatter(fx.seed, i, 62) * 1.1);
     ctx.globalAlpha = Math.max(0, (1 - t) * 0.55);
     ctx.drawImage(
       sprite,
@@ -1280,7 +1294,7 @@ function drawBlast(
         sy -
           lift +
           Math.sin(angle) * reach * 0.4 -
-          ease * 14 -
+          ease * (22 + scatter(fx.seed, i, 63) * 20) -
           sprite.height / 2,
       ),
     );
@@ -1302,14 +1316,17 @@ function drawSmoke(
     // Each puff has its own phase, so the column keeps issuing rather than
     // rising once and stopping.
     const phase = fract(t * 1.6 + scatter(fx.seed, i, 7));
-    const rise = phase * 34;
-    const drift = (scatter(fx.seed, i, 8) - 0.5) * 14 * phase;
+    const lift = fx.lift ?? 0;
+    const spread = fx.spread ?? 0;
+    const rise = phase * (34 + lift);
+    const drift =
+      (scatter(fx.seed, i, 8) - 0.5) * (14 * phase + spread * (0.4 + phase));
     const r = 1.5 + phase * 5;
     ctx.fillStyle = `rgba(126, 124, 120, ${((1 - phase) * 0.34).toFixed(3)})`;
     ctx.beginPath();
     ctx.arc(
       Math.round(sx + drift),
-      Math.round(sy - 6 - rise),
+      Math.round(sy - 6 - lift * 0.2 - rise),
       r,
       0,
       Math.PI * 2,

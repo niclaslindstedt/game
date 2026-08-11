@@ -72,7 +72,9 @@ import { feltForce } from "../../pwa/src/game/drive-screen/drive-haptics.ts";
 import {
   clearDriveFx,
   createDriveFx,
+  driveBlast,
   driveBodyHit,
+  driveLampGlass,
   driveTrafficHit,
   shakeCamera,
   stepDriveFx,
@@ -775,6 +777,24 @@ describe("the damage dial's fresh slice", () => {
 });
 
 describe("the road's shake", () => {
+  it("keeps glass and bodywork until the wagon has passed them off-screen", () => {
+    const fx = createDriveFx();
+    driveBlast(fx, 0, 0, 0);
+    driveLampGlass(fx, 0, 0, 9, 0);
+
+    // Long after the throw animation has landed, physical fragments remain.
+    stepDriveFx(fx, 5000, 5000, -1, 1);
+    expect(fx.fx.some((piece) => piece.kind === "glass")).toBe(true);
+    expect(fx.fx.some((piece) => piece.kind === "shard")).toBe(true);
+    expect(
+      fx.fx.every((piece) => piece.kind === "glass" || piece.kind === "shard"),
+    ).toBe(true);
+
+    // They leave only after the car has rolled a full off-screen margin past.
+    stepDriveFx(fx, 16, 5016, DRIVE.despawnBehindPx + 1, 1);
+    expect(fx.fx).toHaveLength(0);
+  });
+
   it("stands perfectly still until something is actually hit", () => {
     // The road used to tremble with SPEED, and it read as a broken frame rate
     // rather than as a fast car — worse, it left a real collision nothing to

@@ -98,6 +98,7 @@ function blow(lateralPx: number): Impact {
     squareness: 1,
     panel: "bumper",
     approach: 0,
+    closingPx: 0,
   };
 }
 

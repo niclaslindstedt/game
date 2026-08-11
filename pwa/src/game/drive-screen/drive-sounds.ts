@@ -162,6 +162,9 @@ export const ROLLOVER_SOUND = "drive_rollover";
  * built (`ui_boom`, `nuke`) and what the road was missing.
  */
 export const SUB_SOUND = "drive_impact_sub";
+/** A tank detonation: its own long, rising blast rather than four collision
+ * sounds stacked sample-aligned into a clipped wall. */
+export const EXPLOSION_SOUND = "drive_explosion";
 /** A panel folding one rung further. */
 export const PANEL_SOUNDS = [
   "drive_panel_a",
@@ -610,6 +613,7 @@ export const DRIVE_SOUND_IDS: readonly string[] = [
   ...GLASS_SOUNDS,
   ...PANEL_SOUNDS,
   ROLLOVER_SOUND,
+  EXPLOSION_SOUND,
   SUB_SOUND,
   SHED_SOUND,
   BREAKDOWN_SOUND,

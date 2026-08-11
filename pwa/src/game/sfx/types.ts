@@ -104,4 +104,7 @@ export type SoundCatalog = Record<string, SoundDef>;
 /** Where a sound happened, for a `spatial` def. Absent plays centred. */
 export type PlayContext = {
   pos?: { x: number; y: number };
+  /** Force placement for an imperative source whose whole domain is spatial,
+   * such as the DRIVE road, without making every authored sound global-spatial. */
+  spatial?: boolean;
 };

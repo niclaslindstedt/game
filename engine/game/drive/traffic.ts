@@ -138,8 +138,10 @@ export function trafficMass(other: DriveTraffic, riderMassKg: number): number {
 /** Where on the footway a pavement rider sits, and which side of the road it
  * is: the delivery trade travels with the flow like everything else, so it
  * shares the near/far split the lanes use. */
-function pavementY(nearSide: boolean): number {
-  const road = roadEdges();
+export function pavementY(nearSide: boolean): number {
+  // The renderer paints the footway from the lane-marking edge to the crowd
+  // edge. `roadEdges()` includes the gutter and biased riders toward the grass.
+  const road = roadBandEdges();
   const walk = crowdEdges();
   return nearSide ? (road.bottom + walk.bottom) / 2 : (road.top + walk.top) / 2;
 }
@@ -209,7 +211,7 @@ export function createTraffic(
     smashTail: false,
     wheelsOff: 0,
     fire: 0,
-    fireMs: 0,
+    fireCap: 0,
     blown: false,
     pushMs: 0,
     crab: 0,

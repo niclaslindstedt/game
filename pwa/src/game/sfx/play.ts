@@ -83,7 +83,7 @@ export function playDef(
   def: SoundDef,
   ctx?: PlayContext,
 ): boolean {
-  const at = def.spatial ? place(ctx?.pos) : FLAT;
+  const at = def.spatial || ctx?.spatial ? place(ctx?.pos) : FLAT;
   let heard = 0;
   for (const voice of def.voices) {
     if (voice.call === "sample") {

@@ -350,6 +350,9 @@ describe("somebody driven into from behind", () => {
     // they stop, and what the player is left with is an obstacle he made.
     const state = empty();
     state.car.pos.y = laneCenter(3);
+    // Stage the shove itself, not one of the deterministic combustion outcomes:
+    // id 10 is the neutral fixture shared by the other collision probes.
+    state.nextId = 10;
     const victim = plant(state, "traffic_hatch", 40, 3, 200);
     // Shove it for a second…
     for (let t = 0; t < 1000; t += 16) {

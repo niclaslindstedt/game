@@ -1316,10 +1316,6 @@ export const DRIVE = {
      * distance. The DAMAGE is the physics' own; this is how much of it is drawn.
      */
     drawShare: 0.8,
-    /** Absorbed energy that takes the glass out, in the vehicle's own wrecks
-     * (`wreckForce`). Well under the first damage rung: the windows are the
-     * first thing to go in any collision worth the name. */
-    glassForce: 0.1,
     /**
      * HOW HARD A SIDEWAYS SHOVE HAS TO BE TO PUT A VEHICLE OVER (m/s of lateral
      * Δv, for a vehicle of `topHeavy` 1).
@@ -1543,36 +1539,22 @@ export const DRIVE = {
     /** Half the visual track width used to place the two torn wheels. The far
      * one sorts behind the car and the near one in front. */
     wheelTrackHalfPx: 4,
-    /**
-     * WHETHER THE FUEL FINDS THE SPARKS — the chance a stove-in end catches,
-     * per unit of the blow's own `wreckForce`.
-     *
-     * Low, and it has to be: a fire is the road's biggest single sight after a
-     * rollover and a lane where every wreck is alight is a lane on fire rather
-     * than a collision. At this rate a hard hit lights maybe one car in five and
-     * a nudge lights none, so a burning car is a thing that HAPPENED to this run.
-     */
-    firePerForce: 0.22,
+    /** CUMULATIVE outcomes from one deterministic collision roll. The first
+     * 30% explodes, the next 20% burns large, the next 20% burns small: exactly
+     * 70% small-or-greater, 50% large-or-greater and 30% explosion. */
+    smallFireChance: 0.7,
+    largeFireChance: 0.5,
+    explodeChance: 0.3,
+    smallFireCap: 0.45,
+    largeFireStart: 0.5,
     /** …and how fast it then takes hold (per second). Two-ish seconds from a
      * flicker under the wing to the whole engine bay going, which is long enough
      * for the player to watch it grow in his mirror and short enough that he
      * sees the end of it. */
     fireGrowPerSec: 0.45,
-    /**
-     * WHEN THE TANK GOES: how well alight it has to be, and the fuse under it.
-     *
-     * BOTH, never either. The fire has to have taken properly (a car that is
-     * barely smoking does not explode) AND it has to have been burning for a
-     * while — because an explosion on the same tick as the fire is not an
-     * explosion, it is a bigger bang, and the whole value of the beat is the few
-     * seconds where the player can see it coming.
-     */
-    blowAtFire: 0.75,
-    blowAfterMs: 2600,
-    /** …and the chance a well-alight car goes up at all, per second past the
-     * fuse. Under 1: some of them just burn, which is what makes the ones that
-     * do go up worth watching. */
-    blowChancePerSec: 0.55,
+    /** Glass is guaranteed above this relative closing speed. The strict
+     * comparison makes 20 mph the boundary and every collision above it pay. */
+    glassMph: 20,
     /** How far the fireball reaches (world px) and what standing in it costs the
      * hero, as a share of `impact.wearJoules` at the centre. It is the one thing
      * out here that damages the wagon without the wagon touching anything. */
@@ -1581,6 +1563,10 @@ export const DRIVE = {
     /** …and how hard it shoves whatever else is inside it (px/s at the centre) —
      * the one collision on this road with no bumper in it. */
     blastShovePx: 210,
+    /** The exploding shell itself rises from the blast under it. 120 px/s
+     * against the road's gravity buys roughly a metre of lift — a few feet. */
+    blastLiftPx: 120,
+    blastSpin: 2.4,
 
     // ── PUSHING THE THING IN FRONT ──────────────────────────────────────────
     /**

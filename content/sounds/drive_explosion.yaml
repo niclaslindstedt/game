@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_explosion
+description: >-
+  THE ROAD'S BIGGEST SOUND — the fuel tank detonating under a car. A hard air
+  crack opens it, a falling saw and two-stage sub lift the shell, black lowpass
+  pressure hangs underneath, and delayed glass and bodywork rain down after the
+  fireball has already risen. Long enough to feel like a blast, never a louder
+  copy of the collision that caused it.
+voices:
+  - call: noise
+    durationMs: 85
+    volume: 0.075
+    filter:
+      type: bandpass
+      frequency: 1450
+  - call: tone
+    type: sine
+    from: 118
+    to: 21
+    durationMs: 920
+    volume: 0.12
+  - call: tone
+    type: sawtooth
+    from: 420
+    to: 32
+    durationMs: 610
+    volume: 0.09
+    detuneCents: 34
+    echo: 0.34
+  - call: noise
+    durationMs: 1050
+    volume: 0.072
+    filter:
+      type: lowpass
+      frequency: 280
+    echo: 0.42
+  - call: noise
+    durationMs: 680
+    volume: 0.038
+    delayMs: 180
+    filter:
+      type: highpass
+      frequency: 4100
+    echo: 0.28
+  - call: noise
+    durationMs: 230
+    volume: 0.05
+    delayMs: 320
+    filter:
+      type: bandpass
+      frequency: 720

@@ -34,6 +34,9 @@ import {
   type DriveTraffic,
 } from "../../engine/game/drive/index.ts";
 import { CAR } from "../../engine/game/vehicles.ts";
+import { crowdEdges } from "../../engine/game/drive/crowd.ts";
+import { pavementY } from "../../engine/game/drive/traffic.ts";
+import { collisionCombustion } from "../../engine/game/drive/wreckage.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,
@@ -159,7 +162,7 @@ function plant(
   state.remains.length = 0;
   heard.set(state, []);
   const one = createTraffic(
-    state.nextId++,
+    10, // collision probes opt out; combustion has its own cases below
     variant,
     { x: state.car.pos.x + 30, y: state.car.pos.y },
     0,
@@ -262,6 +265,54 @@ describe("destroying the other traffic", () => {
     },
   );
 
+  it.each([
+    [19, false],
+    [21, true],
+  ])(
+    "guarantees thrown glass at %i mph only above the 20 mph line",
+    (mph, glass) => {
+      const state = drive();
+      haltTraffic(state);
+      state.traffic.length = 0;
+      heard.set(state, []);
+      const other = createTraffic(
+        10, // deterministic no-combustion id, so only the glass threshold answers
+        indexOf("traffic_hatch"),
+        { x: state.car.pos.x + 26, y: state.car.pos.y },
+        0,
+      );
+      state.traffic.push(other);
+      state.car.speed = (mph * 0.44704) / DRIVE_UNITS.mPerPx;
+      tick(state, 0);
+
+      expect(other.glassOut).toBe(glass);
+      expect(saidBy(state).includes("glassSmashed")).toBe(glass);
+    },
+  );
+
+  it("launches an exploding car upward from the blast beneath it", () => {
+    const state = drive();
+    haltTraffic(state);
+    state.traffic.length = 0;
+    heard.set(state, []);
+    const other = createTraffic(
+      1, // collisionCombustion(1) is in the explosion third
+      indexOf("traffic_hatch"),
+      { x: state.car.pos.x + 26, y: state.car.pos.y },
+      0,
+    );
+    state.traffic.push(other);
+    state.car.speed = (35 * 0.44704) / DRIVE_UNITS.mPerPx;
+    tick(state, 0);
+
+    expect(other.blown).toBe(true);
+    expect(other.downed).toBe(true);
+    expect(other.vz).toBeGreaterThan(0);
+    expect(other.z).toBeGreaterThan(0);
+    expect(saidBy(state)).toContain("trafficExploded");
+    expect(saidBy(state)).toContain("glassSmashed");
+  });
+
   it("leaves a wreck standing dead in the lane it died in", () => {
     const state = drive();
     hold(state, 4000);
@@ -289,6 +340,33 @@ describe("destroying the other traffic", () => {
     expect(wreckForce(moped, joules)).toBeGreaterThan(
       wreckForce(bus, joules) * 20,
     );
+  });
+});
+
+describe("collision combustion odds", () => {
+  it("delivers cumulative 70% small, 50% large and 30% explosion chances", () => {
+    const total = 20_000;
+    let small = 0;
+    let large = 0;
+    let exploded = 0;
+    for (let id = 1; id <= total; id++) {
+      const result = collisionCombustion(id);
+      if (result !== "none") small++;
+      if (result === "large" || result === "explosion") large++;
+      if (result === "explosion") exploded++;
+    }
+    expect(small / total).toBeCloseTo(0.7, 1);
+    expect(large / total).toBeCloseTo(0.5, 1);
+    expect(exploded / total).toBeCloseTo(0.3, 1);
+  });
+});
+
+describe("pavement traffic", () => {
+  it("rides through the painted sidewalk centre instead of the grass edge", () => {
+    const road = roadBandEdges();
+    const walk = crowdEdges();
+    expect(pavementY(true)).toBe((road.bottom + walk.bottom) / 2);
+    expect(pavementY(false)).toBe((road.top + walk.top) / 2);
   });
 });
 
@@ -709,7 +787,7 @@ function clip(
   // Caught on the corner rather than met square — a blow with a lever arm on
   // it, which is the one that turns a car at all.
   const one = createTraffic(
-    state.nextId++,
+    10, // keep this geometry probe out of the combustion lottery
     indexOf(id),
     { x: state.car.pos.x + 34, y: state.car.pos.y - 8 },
     200,
@@ -972,7 +1050,7 @@ describe("breaking a car, physically", () => {
       // Rear-ended while genuinely rolling, which is the collision this is
       // about — a stopped car is a different (and much harder) sum.
       const one = createTraffic(
-        state.nextId++,
+        10, // this measures shunt mass, not the new combustion branch
         indexOf(id),
         { x: state.car.pos.x + 34, y: state.car.pos.y },
         CRUISE,

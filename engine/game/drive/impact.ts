@@ -133,7 +133,16 @@ export type Impact = {
    * re-deriving it from state that has since moved.
    */
   approach: number;
+  /** Relative closing speed at the contact surface (world px/s). This survives
+   * the collision so presentation thresholds such as glass can be stated in
+   * real road speed instead of guessed back from damage after the bodies move. */
+  closingPx: number;
 };
+
+/** The contact's relative closing speed, expressed on the dashboard's mph scale. */
+export function impactMph(hit: Impact): number {
+  return (hit.closingPx * DRIVE_UNITS.mPerPx) / 0.44704;
+}
 
 /**
  * Solve the car against one round body, or return null if they never touched.
@@ -365,6 +374,7 @@ export function solveImpact(
     // Read onto the hero's own heading, so the sign means the same thing on the
     // leg out and the leg home.
     approach: bodyVel.x * carDir,
+    closingPx: sweepPx,
   };
 }
 

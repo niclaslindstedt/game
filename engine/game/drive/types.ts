@@ -587,12 +587,12 @@ export type DriveTraffic = {
    * ruptured line burns under the wing, the flame climbs, and the whole engine
    * bay is going a few seconds later — which is exactly the beat the player is
    * driving away from, and it only reads if the picture GROWS. So the renderer
-   * takes its flame size and its smoke off this, and the fuel tank reads it to
-   * decide when it has had enough (`stepFires`).
+   * takes its flame size and its smoke off this.
    */
   fire: number;
-  /** …and how long it has been burning (ms) — the tank's own fuse. */
-  fireMs: number;
+  /** The size this particular burn may reach: small fires stay under a wing,
+   * large fires consume the whole engine bay. */
+  fireCap: number;
   /**
    * ITS TANK HAS ALREADY GONE. Latched, because a fuel tank explodes once: what
    * is left afterwards burns out rather than going up again.

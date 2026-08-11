@@ -46,7 +46,7 @@
 
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 import { vehicleDef } from "./fleet.ts";
-import type { Impact } from "./impact.ts";
+import { impactMph, type Impact } from "./impact.ts";
 import type { DriveTraffic } from "./types.ts";
 
 /**
@@ -96,9 +96,9 @@ export function crushVehicle(
  * TAKE THE GLASS OUT, if the blow was worth it. Returns whether this is the
  * blow that did it, so the caller raises the noise exactly once.
  */
-export function shatterGlass(other: DriveTraffic, force: number): boolean {
+export function shatterGlass(other: DriveTraffic, hit: Impact): boolean {
   if (other.glassOut) return false;
-  if (force < DRIVE.crush.glassForce) return false;
+  if (impactMph(hit) <= DRIVE.wreckage.glassMph) return false;
   other.glassOut = true;
   return true;
 }

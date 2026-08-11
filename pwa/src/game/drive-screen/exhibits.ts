@@ -53,6 +53,7 @@ import {
   CRUNCH_SOUNDS,
   DRAG_HEAVY_SOUND,
   DRAG_SOUND,
+  EXPLOSION_SOUND,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
@@ -305,12 +306,16 @@ function plantCar(
    * car with a row behind the front pair, on every single run.
    */
   seats?: number,
+  /** Stable id for an exhibit whose subject is a deterministic per-car roll. */
+  forcedId?: number,
 ): void {
   const dir = drive.params.direction;
+  const id = forcedId ?? 10;
+  drive.nextId = Math.max(drive.nextId, id + 1);
   // Minted by the engine's own factory, so a car staged for the gallery is
   // built exactly the way a car on the road is — riders, occupants and all.
   const one = createTraffic(
-    drive.nextId++,
+    id,
     variant % TRAFFIC_VARIANTS,
     { x: drive.car.pos.x + dir * ahead, y },
     (towardHero ? -dir : dir) * pace,
@@ -667,6 +672,46 @@ export function driveExhibits(): DriveExhibit[] {
         // the road can produce.
         const speed = openAt(drive);
         plantCar(drive, leadPx(speed) + 40, drive.car.pos.y, 0, 0);
+      },
+    },
+    {
+      kind: "drive",
+      id: "drive-explosion",
+      icon: "flame_4a",
+      label: "THE TANK GOES",
+      blurb:
+        "THE BLAST LIFTS THE CAR - FIRE, GLASS AND BLACK SMOKE RISE UNDER IT",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "explosion",
+        "blast",
+        "fire",
+        "smoke",
+        "glass",
+      ],
+      showMs: 3200,
+      shows: "trafficExploded",
+      bank: [EXPLOSION_SOUND],
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // ID 1 sits in the explosion third of the collision's deterministic
+        // roll. Pinning it is the gallery equivalent of pinning a seed: this
+        // card always shows the event its title promises.
+        plantCar(
+          drive,
+          leadPx(speed) + 40,
+          drive.car.pos.y,
+          0,
+          0,
+          false,
+          undefined,
+          1,
+        );
       },
     },
     {

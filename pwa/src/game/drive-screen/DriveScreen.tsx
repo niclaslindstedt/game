@@ -825,7 +825,13 @@ export function DriveScreen({
         // fixed step — so a slow frame never skips a grain or fast-forwards a
         // spark, the pause card's freeze stops both dead exactly as it stops
         // the road, and the slow-motion slows them with it.
-        stepDriveFx(fxRef.current, STEP_MS, drive.ms);
+        stepDriveFx(
+          fxRef.current,
+          STEP_MS,
+          drive.ms,
+          drive.car.pos.x,
+          drive.params.direction,
+        );
         runEngineNote(drive, engineRef.current);
         endDrive(
           drive,
