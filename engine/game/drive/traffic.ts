@@ -50,7 +50,7 @@ import {
   roadEdges,
 } from "./crowd.ts";
 import { rollOccupants, rollVehicle, variantOf, vehicleDef } from "./fleet.ts";
-import { indexTraffic, siblingLane, steerTraffic } from "./ai.ts";
+import { heading, indexTraffic, siblingLane, steerTraffic } from "./ai.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
 export { TRAFFIC_VARIANTS } from "./fleet.ts";
@@ -213,6 +213,8 @@ export function createTraffic(
     blown: false,
     pushMs: 0,
     crab: 0,
+    brakeMs: 0,
+    lured: false,
   };
 }
 
@@ -559,6 +561,11 @@ export function stepTraffic(state: DriveState, dt: number): void {
   for (const other of state.traffic) {
     if (other.hitCooldownMs > 0) other.hitCooldownMs -= dt * 1000;
     if (other.crashCooldownMs > 0) other.crashCooldownMs -= dt * 1000;
+    // …and the foot on the brake comes up on its own clock. Counted here beside
+    // the other two rather than where it is READ, because the shove re-stamps it
+    // every tick it lasts (`push.ts`) and a clock only the driver's own branch
+    // wound down would never move on a car being carried.
+    if (other.brakeMs > 0) other.brakeMs -= dt * 1000;
     const def = vehicleDef(other.variant);
 
     if (other.downed) {
@@ -821,6 +828,22 @@ export function shunt(
   // somebody sends them up the road and meeting one head-on drives it back down
   // its own lane — which is what a head-on does, and what a struck car sliding
   // meekly to the verge never said.
+  //
+  // …AND IF IT WAS A REAR-ENDING, THE PERSON IN IT STANDS ON THE BRAKE. Read off
+  // the punt rather than off the geometry a second time: a shove that runs the
+  // way the car was already travelling is a blow that landed on its back, and
+  // one square enough to be a rear-ending rather than a corner caught on the way
+  // past (`Impact.squareness`, which is the same line the ejections are decided
+  // on). A head-on fails the first test — the punt drives it backwards — and a
+  // sideswipe fails the second, which is right: neither of those is somebody
+  // being hit from behind, and a road where every clipped wing came to a
+  // standstill would be a car park by the second junction.
+  if (
+    hit.dv.x * heading(other) > 0 &&
+    hit.squareness >= DRIVE.drivers.rearEndSquare
+  ) {
+    other.brakeMs = DRIVE.drivers.brakeMs;
+  }
   other.speed += hit.dv.x * crush.punt;
   // THE SPIN, off the lever arm the contact already gives us. `hit.along` is
   // measured from the HERO's centre toward his nose, so what it says about the

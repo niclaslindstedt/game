@@ -992,6 +992,9 @@ export function drawDrive(
             // riding between them. `lightBody` is what this machine actually is
             // (`scenery.ts`).
             lightBody(def),
+            // …AND ITS STOP LAMPS, when somebody has just been driven into the
+            // back of it and is standing on the pedal (`DriveTraffic.brakeMs`).
+            other.brakeMs > 0,
           ),
       });
     }

@@ -620,6 +620,34 @@ export type DriveTraffic = {
    * and a draw spent here would move every car after it.
    */
   crab: number;
+  /**
+   * HOW LONG THE PERSON IN IT IS STILL STANDING ON THE BRAKE PEDAL (ms).
+   *
+   * WHAT IT IS FOR. Being driven into from behind is not a change of pace, it is
+   * a fright: whoever is in that car stops driving and stops the car, and they do
+   * it with both feet. So a rear-ended vehicle — and one the wagon is still
+   * shoving up the road — stamps this, and for as long as it runs the driver's
+   * throttle is not consulted at all (`ai.ts`). The whole of what the player
+   * feels is what happens when he LIFTS OFF: the car he was pushing does not run
+   * on at the speed he gave it, it grinds to a halt in front of him and becomes
+   * the obstacle he made.
+   *
+   * A CLOCK RATHER THAN A FLAG, so the foot comes off it on its own: the driver
+   * sits there a moment, then picks their pace back up and rejoins the road.
+   * Nobody is braking a WRECK, which is why that case never reads it.
+   */
+  brakeMs: number;
+  /**
+   * IT HAS ALREADY BEEN ASKED WHETHER IT DRIFTS ONTO A LINE-RIDER.
+   *
+   * The latch behind `DRIVE.drivers.lineRide`: a hero sitting exactly on a white
+   * line is inside neither lane's contact reach and passes both of them, so the
+   * drivers he is hiding between get one chance each to move over onto him. ONE
+   * chance — the answer is the vehicle's own hash rather than a draw (the road's
+   * stream lays the traffic down), and without a latch the same car would be
+   * asked sixty times a second and every one of them would eventually swerve.
+   */
+  lured: boolean;
 };
 
 /** What a piece of kerbside furniture is. */

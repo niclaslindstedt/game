@@ -916,11 +916,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   until something hits it, which leaves a clear lane clear and reduces the whole
   minigame to finding the empty belt once. Five
   behaviours, and each is something the car in front of you really does: it
-  WOBBLES, it FOLLOWS (imperfectly, on purpose — past its own reaction the gap is
-  simply gone), it PULLS OUT for somebody slower, it GOES ROUND anything stopped
+  WOBBLES, it FOLLOWS — matching the pace of whatever is in front of it as the
+  gap closes and standing on the brake when matching will not be enough, but
+  imperfectly on purpose, because it brakes for what it can SEE with one set of
+  brakes and anything arriving inside its own stopping distance still arrives —
+  it PULLS OUT for somebody slower, it GOES ROUND anything stopped
   in its lane (a parked car, a wreck) with a lean into the neighbouring lane
   rather than a lane change, and on the gentle rungs it LIFTS OFF for the car
-  drawing level with it. Who is at the wheel is a TEMPER rolled per vehicle —
+  drawing level with it. Two more are about the HERO: somebody driven into from
+  behind stands on the brake (`DriveTraffic.brakeMs`) and grinds to a halt in the
+  lane the moment his bumper comes off them, which is what makes shoving a car up
+  the road a thing that leaves an obstacle rather than a thing that speeds it up;
+  and a wagon parked exactly on a lane MARKING is inside neither lane's contact
+  reach, so the drivers he is hiding between get one chance each to move over
+  onto him (`drivers.lineRide`, answered by the vehicle's own hash and never by a
+  draw). Who is at the wheel is a TEMPER rolled per vehicle —
   most people do roughly the limit, some dawdle, some are late, and about one in
   twenty-five should not have a licence — because a road where everybody moves at
   one speed has nothing for a lane change to be FOR. And now and then somebody is

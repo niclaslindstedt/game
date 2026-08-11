@@ -27,6 +27,7 @@ import {
   vehicleDef,
   type DriveParams,
   type DriveState,
+  type DriveTraffic,
 } from "../../engine/game/drive/index.ts";
 import { siblingLane } from "../../engine/game/drive/ai.ts";
 import { variantOf } from "../../engine/game/drive/fleet.ts";
@@ -74,6 +75,43 @@ function roll(state: DriveState, ms: number, pedal = 1): void {
     if (state.outcome !== DRIVE_OUTCOME.driving) return;
     stepDrive(state, 16, { pedal, wheel: 0 });
   }
+}
+
+/**
+ * A ROAD WITH NOBODY ON IT AND THE HERO OUT OF THE WAY — what the following
+ * tests stage two vehicles on.
+ *
+ * The wagon is parked in the far carriageway's outside lane because it is a
+ * PARTY to every collision otherwise: coasting down a lane the test has just put
+ * a dawdler in, it rear-ends the dawdler itself and the suite reads the hero's
+ * own contact as the driver's.
+ */
+function empty(patch: Partial<DriveParams> = {}): DriveState {
+  const state = drive(patch);
+  silenceSpawners(state);
+  state.traffic.length = 0;
+  state.props.length = 0;
+  state.nextPropSlot = Number.POSITIVE_INFINITY;
+  state.car.pos.y = laneCenter(0);
+  return state;
+}
+
+/** Put one vehicle on the road, going the hero's way in `lane`. */
+function plant(
+  state: DriveState,
+  id: string,
+  aheadPx: number,
+  lane: number,
+  speed: number,
+): DriveTraffic {
+  const one = createTraffic(
+    state.nextId++,
+    variantOf(id),
+    { x: state.car.pos.x + aheadPx, y: laneCenter(lane) },
+    speed,
+  );
+  state.traffic.push(one);
+  return one;
 }
 
 describe("the other drivers", () => {
@@ -205,6 +243,237 @@ describe("the other drivers", () => {
     },
     ROAD_TIMEOUT_MS,
   );
+});
+
+describe("a driver that is trying not to crash", () => {
+  it("gets past a dawdler rather than driving over it", () => {
+    // THE CLAIM: a car that wants to do more than the car in front does not
+    // arrive at the back of it. It used to — the lift-off was a fixed share of
+    // its own cruise, so anything doing less than half what it wanted was a
+    // collision waiting for the gap to close, and on a road built around drivers
+    // running at genuinely different speeds that was most of the traffic.
+    const state = empty();
+    const slow = plant(state, "traffic_hatch", 900, 3, 120);
+    const quick = plant(state, "traffic_bus", 700, 3, 330);
+    let met = 0;
+    for (let t = 0; t < 12000; t += 16) {
+      stepDrive(state, 16, { pedal: 0, wheel: 0 });
+      met += state.events.filter((one) => one.type === "trafficHit").length;
+    }
+    expect(met).toBe(0);
+    // …and it did not solve it by giving up either: it is past the hatchback,
+    // still doing its own pace.
+    expect((quick.pos.x - slow.pos.x) * state.params.direction).toBeGreaterThan(
+      0,
+    );
+    expect(Math.abs(quick.speed)).toBeGreaterThan(250);
+  });
+
+  it("stands on the brake for something stopped dead in its lane", () => {
+    // THE OTHER HALF, and the one matching alone cannot answer: a wreck is not
+    // slower, it is STOPPED, and a driver that only lifted off arrived at it at
+    // most of its cruise. What is pinned is the speed it is doing by the time it
+    // gets there — a nudge at a walking pace is a driver that braked, and
+    // anything near its cruise is a driver that did not.
+    const state = empty();
+    const dead = plant(state, "traffic_van", 800, 3, 0);
+    dead.wrecked = true;
+    dead.cruise = 0;
+    const behind = plant(state, "traffic_sedan", 420, 3, 300);
+    let slowest = Number.POSITIVE_INFINITY;
+    for (let t = 0; t < 4000; t += 16) {
+      stepDrive(state, 16, { pedal: 0, wheel: 0 });
+      const gap = (dead.pos.x - behind.pos.x) * state.params.direction;
+      if (gap > 0 && gap < 200)
+        slowest = Math.min(slowest, Math.abs(behind.speed));
+    }
+    // It arrived at a crawl instead of at forty miles an hour…
+    expect(slowest).toBeLessThan(60);
+    // …and whatever it did about the van after that — squeeze past it, sit
+    // behind it — it did not drive into it. Read off its own WEAR rather than
+    // off the event, because the two are not the same claim: a car creeping past
+    // a wreck at walking pace can still scuff it, and a scuff is not the thing
+    // this test is about. A hit at three hundred is.
+    expect(behind.wear).toBeLessThan(0.05);
+  });
+
+  it("still runs out of road when the gap goes inside its own braking", () => {
+    // AND IT IS NOT A PROMISE. A driver brakes for what it can SEE with one set
+    // of brakes, so a car that stops dead a car's length in front of it is a
+    // collision — which is where the pile-up the player has to get through comes
+    // from now: drivers who tried and ran out of road, rather than drivers who
+    // were never trying. Without this the road would quietly stop producing the
+    // best obstacle it has.
+    const state = empty();
+    const stopped = plant(state, "traffic_hatch", 900, 1, 0);
+    stopped.cruise = 0;
+    const into = plant(state, "traffic_van", 820, 1, 520);
+    into.cruise = 520;
+    let met = 0;
+    for (let t = 0; t < 1200; t += 16) {
+      stepDrive(state, 16, { pedal: 0, wheel: 0 });
+      met += state.events.filter((one) => one.type === "trafficHit").length;
+    }
+    expect(met).toBeGreaterThan(0);
+  });
+
+  it("completes a lane change once it has committed to one", () => {
+    // THE COMMITMENT, and it is worth its own case because the road looked
+    // entirely healthy without it. A lane change takes about a second, and for
+    // every tick of it the car is still physically in the lane it is leaving —
+    // so the correction that adopts the lane a SHUNTED car has ended up in used
+    // to talk every driver out of every voluntary change on the tick after it
+    // was decided. Nothing looked broken: they wobbled, they went round parked
+    // cars, they lifted off. They simply never pulled out, which is one of the
+    // five things this file exists for.
+    const state = empty();
+    plant(state, "traffic_hatch", 900, 3, 120);
+    const quick = plant(state, "traffic_coupe", 780, 3, 300);
+    const born = laneAt(quick.pos.y);
+    let moved = false;
+    for (let t = 0; t < 6000 && !moved; t += 16) {
+      stepDrive(state, 16, { pedal: 0, wheel: 0 });
+      moved = laneAt(quick.pos.y) !== born;
+    }
+    expect(moved).toBe(true);
+    expect(laneAt(quick.pos.y)).toBe(siblingLane(born));
+  });
+});
+
+describe("somebody driven into from behind", () => {
+  it("grinds to a halt the moment the wagon is off it", () => {
+    // THE WHOLE POINT OF SHOVING A CAR UP THE ROAD. A pushed vehicle used to
+    // have the shove written into the pace its driver had CHOSEN, so lifting off
+    // left it driving away at whatever speed the wagon had given it — the one
+    // thing nobody who has just been rear-ended does. There is a person in it:
+    // they stop, and what the player is left with is an obstacle he made.
+    const state = empty();
+    state.car.pos.y = laneCenter(3);
+    const victim = plant(state, "traffic_hatch", 40, 3, 200);
+    // Shove it for a second…
+    for (let t = 0; t < 1000; t += 16) {
+      stepDrive(state, 16, { pedal: 1, wheel: 0 });
+    }
+    expect(victim.brakeMs).toBeGreaterThan(0);
+    const carried = Math.abs(victim.speed);
+    expect(carried).toBeGreaterThan(100);
+    // …then steer off it, and watch it stop.
+    for (let t = 0; t < 1500; t += 16) {
+      stepDrive(state, 16, { pedal: 1, wheel: -1 });
+    }
+    expect(Math.abs(victim.speed)).toBe(0);
+  });
+
+  it("leaves a sideswipe alone", () => {
+    // A ROAD WHERE EVERY CLIPPED WING CAME TO A STANDSTILL would be a car park
+    // by the second junction. The ladder the whole minigame teaches is that a
+    // clip is cheap; only a car that has genuinely been driven into stops.
+    const state = empty();
+    state.car.pos.y = laneCenter(3);
+    // Level with the wagon and grinding down its flank — a door, not a boot.
+    const beside = plant(state, "traffic_hatch", 4, 3, 200);
+    beside.pos.y = state.car.pos.y - 12;
+    state.car.speed = DRIVE.topSpeedPx * 0.7;
+    for (let t = 0; t < 400; t += 16) {
+      stepDrive(state, 16, { pedal: 0, wheel: 0 });
+    }
+    // It was genuinely hit…
+    expect(beside.wear).toBeGreaterThan(0);
+    // …and nobody stood on anything for it.
+    expect(beside.brakeMs).toBe(0);
+  });
+});
+
+describe("the man riding the white line", () => {
+  it(
+    "sends about a third of what he is hiding between across at him",
+    () => {
+      // THE HOLE IT CLOSES. Two bodies meet across the road inside
+      // `(BODY_RADIUS + radiusPx) × impact.bodyBandFrac` — about eleven px for a
+      // saloon against a lane twenty-six wide — so a wagon parked exactly on a
+      // lane marking is thirteen px from the centre of the lane either side of it
+      // and clears BOTH. Sit on the line and the traffic passes down each flank
+      // for the whole leg: no wheel, no reading, no minigame.
+      //
+      // WHAT IS PINNED IS THE RATE, over a real road rather than a staged one,
+      // because the answer is the vehicle's own hash and a handful of cars is a
+      // handful of coin flips. A third of them, give or take the ones whose
+      // other lane was occupied when they were asked.
+      let asked = 0;
+      let swerved = 0;
+      for (const seed of [1, 2, 3, 4, 5, 6]) {
+        const state = drive({ seed });
+        const seen = new Set<number>();
+        // The marking between the two lanes running his way.
+        const line = laneCenter(2) + DRIVE.laneWidth / 2;
+        for (let t = 0; t < 60000; t += 16) {
+          if (state.outcome !== DRIVE_OUTCOME.driving) break;
+          state.car.pos.y = line;
+          stepDrive(state, 16, { pedal: 0.5, wheel: 0 });
+          // Held there through the tick as well: the collisions and the shunts
+          // both move the wagon, and a hero who is knocked off the line is not
+          // the thing this is measuring.
+          state.car.pos.y = line;
+          for (const one of state.traffic) {
+            if (seen.has(one.id) || !one.lured) continue;
+            seen.add(one.id);
+            asked++;
+            // Asked and ANSWERED on the same tick — the driver's intended lane
+            // is now the other half of the pair, which is the swerve.
+            if (one.lane !== laneAt(one.pos.y)) swerved++;
+          }
+        }
+      }
+      expect(asked).toBeGreaterThan(15);
+      const rate = swerved / asked;
+      expect(rate).toBeGreaterThan(0.12);
+      expect(rate).toBeLessThan(0.5);
+    },
+    ROAD_TIMEOUT_MS,
+  );
+
+  it("leaves everybody alone while he is in a lane like everybody else", () => {
+    // The punishment is for the LINE, and only for the line. A player driving
+    // where the paint says to drive must never have a car move over onto him,
+    // or the road is cheating rather than answering.
+    let asked = 0;
+    for (const seed of [1, 2, 3, 4]) {
+      const state = drive({ seed });
+      const middle = laneCenter(2);
+      for (let t = 0; t < 40000; t += 16) {
+        if (state.outcome !== DRIVE_OUTCOME.driving) break;
+        state.car.pos.y = middle;
+        stepDrive(state, 16, { pedal: 0.5, wheel: 0 });
+        state.car.pos.y = middle;
+        for (const one of state.traffic) if (one.lured) asked++;
+      }
+    }
+    expect(asked).toBe(0);
+  });
+
+  it("never moves over into a lane that already has somebody in it", () => {
+    // NOBODY OUT HERE CHANGES LANES INTO THE SIDE OF SOMEBODY ELSE. A driver
+    // that hit a stranger to reach the man on the marking would be the road
+    // cheating in the one way the player would actually see.
+    const state = empty();
+    state.car.pos.y = laneCenter(2) + DRIVE.laneWidth / 2;
+    // Both halves of the pair occupied, abreast, for every candidate.
+    for (let i = 0; i < 12; i++) {
+      plant(state, "traffic_sedan", 300 + i * 120, 2, 240);
+      plant(state, "traffic_sedan", 300 + i * 120, 3, 240);
+    }
+    const born = state.traffic.map((one) => ({ one, lane: laneAt(one.pos.y) }));
+    for (let t = 0; t < 6000; t += 16) {
+      const line = laneCenter(2) + DRIVE.laneWidth / 2;
+      state.car.pos.y = line;
+      stepDrive(state, 16, { pedal: 0.3, wheel: 0 });
+      state.car.pos.y = line;
+    }
+    // They were asked…
+    expect(born.some(({ one }) => one.lured)).toBe(true);
+    // …and not one of them took a lane that was taken.
+    for (const { one, lane } of born) expect(one.lane).toBe(lane);
+  });
 });
 
 describe("the traffic against itself", () => {

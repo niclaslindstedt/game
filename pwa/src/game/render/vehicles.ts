@@ -792,6 +792,18 @@ export function drawLightCones(
   /** …and WHAT is throwing them. Omitted is the hero's wagon, which is what
    * every caller meant back when it was the only body on screen. */
   body: LightBody = CAR_LIGHT_BODY,
+  /**
+   * THE PERSON IN IT HAS BOTH FEET ON THE BRAKE (`DriveTraffic.brakeMs`) — so
+   * the tail lamps are not a marker light any more, they are STOP lamps: full
+   * brightness, reaching further back, and steady rather than flickering.
+   *
+   * It is the picture that explains the road's most deliberate collision. Put
+   * the bumper in somebody's boot, lean on it, and the moment the wagon lifts
+   * off the car in front lights up red and stops dead in the lane — which is
+   * the whole beat, and without the lamps it reads as the car simply having
+   * given up rather than as somebody standing on the middle pedal.
+   */
+  braking = false,
 ): void {
   const flicker = 0.88 + 0.12 * (Math.floor(timeMs / 90) % 2);
   const face = faceLeft ? -1 : 1;
@@ -868,23 +880,28 @@ export function drawLightCones(
     // cause.
     if (!tailOut) {
       const tailX = sx - tailPx * face;
+      // A lamp on the brake is brighter, longer and STEADY — the flicker is what
+      // makes a marker light read as a filament seen through exhaust, and a stop
+      // lamp is a thing somebody is holding on.
+      const stopReachPx = braking ? Math.round(tailReachPx * 1.8) : tailReachPx;
       const glow = ctx.createLinearGradient(
         tailX,
         0,
-        tailX - tailReachPx * face,
+        tailX - stopReachPx * face,
         0,
       );
-      glow.addColorStop(0, `rgba(255, 74, 58, ${0.32 * flicker})`);
+      const lit = braking ? 0.74 : 0.32 * flicker;
+      glow.addColorStop(0, `rgba(255, 74, 58, ${lit})`);
       glow.addColorStop(1, "rgba(255, 74, 58, 0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.moveTo(tailX, lampY + tailDip - root);
       ctx.lineTo(
-        tailX - tailReachPx * face,
+        tailX - stopReachPx * face,
         lampY + tailDip - Math.round(6 * spread),
       );
       ctx.lineTo(
-        tailX - tailReachPx * face,
+        tailX - stopReachPx * face,
         lampY + tailDip + Math.round(9 * spread),
       );
       ctx.lineTo(tailX, lampY + tailDip + foot);

@@ -298,6 +298,24 @@ export function laneAt(y: number): number {
 }
 
 /**
+ * IS THIS BODY SITTING ACROSS TWO LANES — the LOWER of the pair it is riding the
+ * marking between, or null if it is in a lane like everybody else.
+ *
+ * `withinPx` is how near the marking counts, measured either side of it. Pure
+ * geometry, because WHAT to do about somebody straddling is a question for the
+ * drivers (`ai.ts`, `DRIVE.drivers.lineRide`) and this file only knows where the
+ * paint is. The road's outer edges are not markings and never answer: there is
+ * no lane on the far side of them to be half in.
+ */
+export function laneStraddle(y: number, withinPx: number): number | null {
+  const half = (DRIVE.laneCount * DRIVE.laneWidth) / 2;
+  const marking = Math.round((y + half) / DRIVE.laneWidth);
+  if (marking <= 0 || marking >= DRIVE.laneCount) return null;
+  if (Math.abs(y + half - marking * DRIVE.laneWidth) > withinPx) return null;
+  return marking - 1;
+}
+
+/**
  * WHERE THE CROSSINGS ARE — every painted crossing whose centre falls between
  * two world-x bounds, in ascending x.
  *
