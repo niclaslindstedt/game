@@ -33,6 +33,7 @@ import {
   type DriveState,
   type DriveTraffic,
 } from "../../engine/game/drive/index.ts";
+import { CAR } from "../../engine/game/vehicles.ts";
 
 const PARAMS: DriveParams = {
   seed: 4242,
@@ -908,6 +909,46 @@ describe("breaking a car, physically", () => {
       1,
     )!;
     expect(clip(1).joules).toBeLessThan(square.joules * 0.3);
+  });
+
+  it("makes an offset meeting of two car ends a full collision", () => {
+    // THE REPRO: meeting oncoming traffic slightly off-centre used the round
+    // corner-to-corner normal. Most of the closing speed then disappeared into
+    // the lateral axis, so the same two ends touching could be a full crash or
+    // almost nothing depending on a few pixels of lane offset.
+    const mass = impactMasses("medium");
+    const def = vehicleDef(indexOf("traffic_sedan"));
+    const heroHalfLength =
+      Math.max(...CAR.footprint.offsets) + CAR.footprint.radius;
+    const reach =
+      (CAR.footprint.radius + def.radiusPx) * DRIVE.impact.bodyBandFrac;
+    const hit = (xPastEnd: number, y: number) =>
+      solveImpact(
+        { x: 0, y: 0 },
+        1,
+        DRIVE.topSpeedPx * 0.6,
+        { x: heroHalfLength + def.halfLengthPx + xPastEnd, y },
+        { x: -DRIVE.trafficSpeedPx.min, y: 0 },
+        def.radiusPx,
+        def.massKg * mass.vehicleMult,
+        def.halfLengthPx,
+        1,
+        DRIVE.impact.bodyBandFrac,
+      )!;
+    const square = hit(reach * 0.6, 0);
+    const offset = hit(reach * 0.6, reach * 0.75);
+
+    expect(offset.joules).toBeCloseTo(square.joules, 6);
+    expect(offset.speedLoss).toBeCloseTo(square.speedLoss, 6);
+    // Full crash does not mean dead straight: the corner contact keeps its
+    // lateral impulse and throws the wreck out of the lane.
+    expect(Math.abs(offset.dv.y)).toBeGreaterThan(0);
+
+    // A true flank contact is still the different case: it grinds and pushes
+    // the struck car sideways instead of pretending the two ends met.
+    const side = hit(-2, reach * 0.9);
+    expect(side.joules).toBeLessThan(square.joules * 0.3);
+    expect(Math.abs(side.dv.y)).toBeGreaterThan(Math.abs(side.dv.x));
   });
 
   it("punts a light car up the road and hardly moves a heavy one", () => {

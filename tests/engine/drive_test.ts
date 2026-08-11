@@ -1103,27 +1103,41 @@ describe("the car breaking up", () => {
     expect(front).toBeGreaterThan(0);
   });
 
-  it("breaks down sooner when driven fast than when driven slow", () => {
-    // Same road, same distance covered — the only difference is the speed the
-    // bodies were met at, and energy goes as the square of it.
-    //
-    // THE SLOW DRIVER HOLDS HIS SPEED WITH THE PEDALS, not with a part-open
-    // throttle, because a part-open throttle is not a speed: the pedal names a
-    // RATE (`applyCarPedal`), so a third of it is a car that gets to the top end
-    // gently rather than one that cruises at a third of it. Bang-bang against a
-    // target is how the auto-driver holds a cruise and how a person drives.
-    const fast = createDrive(PARAMS);
-    const slow = createDrive(PARAMS);
-    const target = 12000;
-    while (fast.distance < target && fast.outcome === DRIVE_OUTCOME.driving) {
-      stepDrive(fast, 16, { pedal: 1, wheel: 0 });
-    }
-    const cruise = DRIVE.topSpeedPx * 0.35;
-    while (slow.distance < target && slow.outcome === DRIVE_OUTCOME.driving) {
-      const pedal = Math.abs(slow.car.speed) < cruise ? 1 : -1;
-      stepDrive(slow, 16, { pedal, wheel: 0 });
-    }
-    expect(fast.car.wear).toBeGreaterThan(slow.car.wear);
+  it("takes more wear from the same car collision when driven fast", () => {
+    // Stage the SAME end contact at two speeds. Comparing whole roads stopped
+    // being this test once an offset crash began throwing the wreck aside: the
+    // first collision changes every traffic path after it, so equal distance is
+    // no longer equal collisions. This keeps the integration claim honest —
+    // absorbed energy still reaches the wagon's wear ladder, and speed squares.
+    const strikeAt = (speed: number): number => {
+      const drive = createDrive(PARAMS);
+      silence(drive);
+      drive.pedestrians.length = 0;
+      drive.traffic.length = 0;
+      drive.props.length = 0;
+      drive.car.speed = speed;
+      const def = vehicleDef(0);
+      const heroHalfLength =
+        Math.max(...CAR.footprint.offsets) + CAR.footprint.radius;
+      drive.traffic.push(
+        createTraffic(
+          drive.nextId++,
+          0,
+          {
+            x: drive.car.pos.x + heroHalfLength + def.halfLengthPx + 1,
+            y: drive.car.pos.y,
+          },
+          0,
+        ),
+      );
+      stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+      expect(drive.shunts).toBe(1);
+      return drive.car.wear;
+    };
+
+    const slow = strikeAt(DRIVE.topSpeedPx * 0.25);
+    const fast = strikeAt(DRIVE.topSpeedPx * 0.5);
+    expect(fast).toBeGreaterThan(slow * 3.5);
   });
 
   it("stops the car and loses the drive when it is finished", () => {

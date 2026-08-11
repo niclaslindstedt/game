@@ -50,6 +50,12 @@ const PARAMS: DriveParams = {
   difficulty: "medium",
 };
 
+// The suite's rate test owns whether the driver arrives across roads. Tests that
+// need to inspect a WHOLE completed road use one of that test's arriving seeds,
+// rather than quietly turning seed 4242's newly honest full crashes back into
+// cheap glances merely so their sampling loop reaches the finish.
+const ARRIVING_PARAMS: DriveParams = { ...PARAMS, seed: 4343 };
+
 /** Play a whole leg with the auto-driver and hand back what it cost. */
 function autoDrive(
   params: DriveParams,
@@ -148,7 +154,7 @@ describe("the auto-driver", () => {
   });
 
   it("gets the protected hero car through a real road without breaking it", () => {
-    const { drive: steered } = autoDrive(PARAMS);
+    const { drive: steered } = autoDrive(ARRIVING_PARAMS);
     // THE CAR is the headline. Every other closed car dies on its first crash;
     // the hero's deliberate videogame protection is still the accumulated wear
     // ladder, and it survives the whole leg rather than breaking on contact.
@@ -236,7 +242,7 @@ describe("the auto-driver", () => {
   it("keeps to its own side of the road when it can", () => {
     // An oncoming lane closes at the sum of both speeds, so it is somewhere to
     // pass through and never somewhere to settle.
-    const drive = createDrive(PARAMS);
+    const drive = createDrive(ARRIVING_PARAMS);
     const driver = createDriveDriver();
     let onSide = 0;
     let samples = 0;
@@ -309,7 +315,7 @@ describe("the driver and the kerb", () => {
     // a standard every hundred pixels until the car died. The bench went from
     // 60 legs in 60 to ZERO on every rung, and nothing else in the suite had an
     // opinion about it.
-    const { drive } = autoDrive(PARAMS);
+    const { drive } = autoDrive(ARRIVING_PARAMS);
     expect(drive.outcome).toBe(DRIVE_OUTCOME.arrived);
     // A leg's worth of road carries a couple of hundred posts. Clipping the odd
     // one while threading a knot is fine; living in the gutter is not.
