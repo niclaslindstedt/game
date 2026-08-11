@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE COMPANION RAIL — recruited allies under the hero's status plate. A bare
+# portrait opens that companion's equipment; a medkit badge turns the same
+# press into a heal. Empty until somebody has been spared into the party.
+region: left
+order: 1
+kind: widget
+widget: companionRail

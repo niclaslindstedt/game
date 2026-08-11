@@ -235,21 +235,22 @@ for (const vp of VIEWPORTS) {
   // The title-menu COIN STORE (its row exists because the context seeds FORCE
   // STORE) and its CONFIRM step — the money surfaces.
   await tryStep("store", async () => {
-    await click("main-store");
-    await page
-      .getByRole("button", { name: /^store-/ })
-      .first()
-      .waitFor();
-    await shot("store");
-    // The first row is a coin pack; tapping it opens the CONFIRM screen.
-    await page
-      .getByRole("button", { name: /^store-/ })
-      .first()
-      .click();
-    await page.getByRole("button", { name: "storeconfirm-buy" }).waitFor();
-    await shot("store-confirm");
-    await page.keyboard.press("Escape");
-    await page.keyboard.press("Escape");
+    try {
+      // Begin from the title root: earlier optional shelves may have returned
+      // one level short when their gated row was absent.
+      await page.goto(`${url}/?debug`);
+      await click("main-store");
+      await page.getByRole("button", { name: "store-coins_1m" }).waitFor();
+      await shot("store");
+      // The first row is a coin pack; tapping it opens the CONFIRM screen.
+      await click("store-coins_1m");
+      await page.getByRole("button", { name: "storeconfirm-buy" }).waitFor();
+      await shot("store-confirm");
+    } finally {
+      // A missing platform catalog must not strand the rest of the sweep on
+      // the STORE screen after its own step reports the failure.
+      await page.goto(`${url}/?debug`);
+    }
   });
 
   // The LOST & FOUND (VaultScreen) is captured after the in-game sweep — its
@@ -271,7 +272,7 @@ for (const vp of VIEWPORTS) {
       await shot(`settings-${page_}`);
       await page.keyboard.press("Escape");
     }
-    // The GORE page. Eight switches and a reset make it the longest settings
+    // The GORE page. Nine switches and a reset make it the longest settings
     // page in the game, so it is the one most likely to overflow a short
     // viewport — which is exactly why it is swept.
     await click("settings-gore");
@@ -297,7 +298,13 @@ for (const vp of VIEWPORTS) {
     await page.locator(".arsenal-panel").waitFor();
     await shot("arsenal");
     await page.locator(".arsenal-close").click();
-    await page.keyboard.press("Escape");
+    // Arsenal has its own full-screen lifecycle. Re-enter the title tree at a
+    // known screen instead of assuming which parent its close animation left
+    // focused; otherwise the rest of the sweep can wait on a PLAYGROUND row
+    // while actually standing back on SETTINGS.
+    await page.goto(`${url}/?debug`);
+    await click("main-settings");
+    await click("settings-developer");
     await click("developer-playground");
     await shot("developer-playground");
     // The warp picker: SELECT LEVEL -> difficulty (warp) -> level list. The
@@ -387,6 +394,7 @@ for (const vp of VIEWPORTS) {
     console.error(`[${vp.name}] shot ${name}`);
   };
   const phase = () => game.evaluate(() => window.__game?.phase);
+  const screen = () => game.evaluate(() => window.__game?.players[0]?.screen);
   // Boot a fresh run on the game page (also the recovery path — see below).
   const bootRun = async () => {
     await game.goto(`${url}/?debug&seed=7`);
@@ -405,7 +413,8 @@ for (const vp of VIEWPORTS) {
   const ensurePlaying = async () => {
     for (let i = 0; i < 40; i++) {
       const p = await phase();
-      if (p === "playing") return;
+      const s = await screen();
+      if (p === "playing" && s === undefined) return;
       if (p === undefined) {
         // The run is GONE — a forced phase (or a level advance behind one)
         // unmounted the game and took `window.__game` with it. Boot a fresh
@@ -416,9 +425,9 @@ for (const vp of VIEWPORTS) {
         await game.keyboard.press("Escape");
       } else if (p === "dialogue" || p === "title") {
         await game.mouse.click(vp.width / 2, vp.height / 2);
-      } else if (p === "levelup") {
+      } else if (s === "levelup") {
         await game.locator(".stat-button").first().click();
-      } else if (p === "companion") {
+      } else if (s === "companion") {
         // The companion panel has no Escape binding — use its CLOSE button.
         await game.getByRole("button", { name: "close-companion" }).click();
       } else {
@@ -451,7 +460,9 @@ for (const vp of VIEWPORTS) {
   await tryStep("pause", async () => {
     await ensurePlaying();
     await game.keyboard.press("p");
-    await game.waitForFunction(() => window.__game?.phase === "paused");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "paused",
+    );
     await gshot("pause");
     await game.keyboard.press("p");
   });
@@ -467,7 +478,9 @@ for (const vp of VIEWPORTS) {
       window.__game.players[0].coins = 250000;
     });
     await game.keyboard.press("p");
-    await game.waitForFunction(() => window.__game?.phase === "paused");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "paused",
+    );
     await game.getByRole("button", { name: "autopilot-start" }).click();
     await game.locator(".autopilot-start").waitFor();
     await gshot("autopilot-start");
@@ -547,7 +560,7 @@ for (const vp of VIEWPORTS) {
       g.players[0].spentStats.strength =
         (g.players[0].spentStats.strength ?? 0) + 10;
       g.players[0].stats.strength = (g.players[0].stats.strength ?? 0) + 10;
-      g.pendingTalentPoints = ["strength"];
+      g.players[0].pendingTalentPoints = ["strength"];
     });
     await game.locator(".talent-overlay").waitFor();
     await gshot("talent-picker");
@@ -564,14 +577,16 @@ for (const vp of VIEWPORTS) {
         0,
         (g.players[0].stats.strength ?? 0) - 10,
       );
-      g.pendingTalentPoints = [];
+      g.players[0].pendingTalentPoints = [];
     });
   });
 
   await tryStep("map", async () => {
     await ensurePlaying();
     await game.keyboard.press("m");
-    await game.waitForFunction(() => window.__game?.phase === "map");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "map",
+    );
     await gshot("map");
     await game.keyboard.press("Escape");
   });
@@ -579,7 +594,9 @@ for (const vp of VIEWPORTS) {
   await tryStep("inventory-early", async () => {
     await ensurePlaying();
     await game.keyboard.press("i");
-    await game.waitForFunction(() => window.__game?.phase === "inventory");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "inventory",
+    );
     await gshot("inventory-early");
     await game.keyboard.press("Escape");
   });
@@ -589,7 +606,9 @@ for (const vp of VIEWPORTS) {
   await tryStep("character-sheet", async () => {
     await ensurePlaying();
     await game.getByRole("button", { name: "open-character" }).first().click();
-    await game.waitForFunction(() => window.__game?.phase === "inventory");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "inventory",
+    );
     await gshot("character-sheet");
     await game.keyboard.press("Escape");
   });
@@ -602,13 +621,17 @@ for (const vp of VIEWPORTS) {
       g.players[0].pendingStatPoints = 1;
       g.levelUpFxMs = 1;
     });
-    await game.waitForFunction(() => window.__game?.phase === "levelup");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "levelup",
+    );
     await gshot("levelup");
     await game.getByRole("button", { name: "toggle-stat-info" }).click();
     await gshot("levelup-info");
     await game.getByRole("button", { name: "toggle-stat-info" }).click();
     await game.locator(".stat-button").first().click();
-    await game.waitForFunction(() => window.__game?.phase === "playing");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === undefined,
+    );
   });
 
   // Respec: hand the hero a refunded pool and jump to the phase.
@@ -617,14 +640,16 @@ for (const vp of VIEWPORTS) {
     await game.evaluate(() => {
       const g = window.__game;
       g.players[0].pendingStatPoints = 6;
-      g.phase = "respec";
+      g.players[0].screen = "respec";
     });
-    await game.waitForFunction(() => window.__game?.phase === "respec");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "respec",
+    );
     await gshot("respec");
     await game.evaluate(() => {
       const g = window.__game;
       g.players[0].pendingStatPoints = 0;
-      g.phase = "playing";
+      g.players[0].screen = undefined;
     });
   });
 
@@ -716,6 +741,9 @@ for (const vp of VIEWPORTS) {
     await game.evaluate(
       ([defId]) => {
         const g = window.__game;
+        // The shop step mutes its greeting while staging stock; the companion
+        // sequence needs its authored joining words back on the stage.
+        g.dialogueMuted = false;
         g.enemies.push({
           id: 999999,
           defId,
@@ -727,7 +755,13 @@ for (const vp of VIEWPORTS) {
           speed: 0,
           contactCooldownMs: 0,
         });
-        g.choice = { enemyId: 999999, defId, damage: 10, crit: false };
+        g.choice = {
+          enemyId: 999999,
+          defId,
+          damage: 10,
+          crit: false,
+          killer: 0,
+        };
         g.phase = "choice";
       },
       [spareableId],
@@ -762,7 +796,9 @@ for (const vp of VIEWPORTS) {
       .first()
       .waitFor({ state: "visible" });
     await game.locator(".companion-portrait").first().click();
-    await game.waitForFunction(() => window.__game?.phase === "companion");
+    await game.waitForFunction(
+      () => window.__game?.players[0]?.screen === "companion",
+    );
     await gshot("companion");
     await game.getByRole("button", { name: "close-companion" }).click();
   });
@@ -856,11 +892,14 @@ for (const vp of VIEWPORTS) {
     const settle = async () => {
       for (let i = 0; i < 40; i++) {
         const p = await bot.evaluate(() => window.__game?.phase);
-        if (p === "playing") return;
+        const s = await bot.evaluate(() => window.__game?.players[0]?.screen);
+        if (p === "playing" && s === undefined) return;
         if (p === "cutscene" || p === "intro" || p === "outro") {
           await bot.keyboard.press("Escape");
-        } else if (p === "paused") {
+        } else if (s === "paused") {
           await bot.keyboard.press("p");
+        } else if (s === "levelup") {
+          await bot.locator(".stat-button").first().click();
         } else {
           await bot.mouse.click(vp.width / 2, vp.height / 2);
         }
@@ -868,9 +907,13 @@ for (const vp of VIEWPORTS) {
       }
     };
     await settle();
-    await bot.waitForFunction(() => window.__game?.phase === "playing", null, {
-      timeout: 30000,
-    });
+    await bot.waitForFunction(
+      () =>
+        window.__game?.phase === "playing" &&
+        window.__game?.players[0]?.screen === undefined,
+      null,
+      { timeout: 30000 },
+    );
     const t0 = Date.now();
     const got = { card: false, feed: false, toast: false, dialogue: false };
     while (Date.now() - t0 < 90000) {
@@ -885,7 +928,8 @@ for (const vp of VIEWPORTS) {
         await bot.waitForTimeout(250);
         continue;
       }
-      if (p !== "playing" && p !== "levelup") break;
+      const s = await bot.evaluate(() => window.__game?.players[0]?.screen);
+      if (p !== "playing" || (s !== undefined && s !== "levelup")) break;
       // Keep the bot alive: the sweep needs a living hero at the end.
       await bot.evaluate(() => {
         const g = window.__game;
@@ -921,7 +965,9 @@ for (const vp of VIEWPORTS) {
     // settle back to `playing` so the inventory key below actually lands.
     await settle();
     await bot.keyboard.press("i");
-    await bot.waitForFunction(() => window.__game?.phase === "inventory");
+    await bot.waitForFunction(
+      () => window.__game?.players[0]?.screen === "inventory",
+    );
     await bot.waitForTimeout(400);
     await bshot("inventory-late");
     const cells = bot.locator(".inv-cell:has(.inv-item-icon)");
@@ -932,7 +978,9 @@ for (const vp of VIEWPORTS) {
     }
     await bot.keyboard.press("Escape");
     await bot.keyboard.press("m");
-    await bot.waitForFunction(() => window.__game?.phase === "map");
+    await bot.waitForFunction(
+      () => window.__game?.players[0]?.screen === "map",
+    );
     await bot.waitForTimeout(400);
     await bshot("map-late");
   });
