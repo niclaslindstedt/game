@@ -26,7 +26,7 @@ is the development environment it runs in, and
 **Use a coding agent — the repo is arranged for one.** Every catalog is
 schema-validated YAML, every error names its file and reason, and every
 judgement call has a command that answers it. Point your agent at
-[`.agent/skills/mod-authoring/SKILL.md`](.agent/skills/mod-authoring/SKILL.md)
+[`.agents/skills/mod-authoring/SKILL.md`](.agents/skills/mod-authoring/SKILL.md)
 ("read it and follow it"), which carries the scope, the loop, the verification
 bar, and what it must ask you before doing.
 
@@ -136,20 +136,20 @@ here are drift-tested against a fresh build.
 
 ## Repository layout
 
-| Path             | What it is                                                                                          |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| `content/`       | **Every authored catalog** — YAML, plus the Lua rules in `content/scripts/`                         |
-| `mod/`           | The mod SDK: the CLI, the compiler, `FORMAT.md`, the worked example, `catalog.json`                 |
-| `engine/`        | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
-| `pwa/`           | The deployable app — a Vite + Preact PWA shell that mounts the engine                               |
-| `scripts/`       | The instruments: renderers, simulators, calculators, catalog generators                             |
-| `tests/`         | Vitest suites (`*_test.ts`) — `tests/engine/` on fixtures, `tests/content/` on the shipped catalogs |
-| `server/`        | The session server for co-op — the engine compiled for Node                                         |
-| `native/`        | The App Store / Play Store shell (Expo, its own dependency tree)                                    |
-| `electron/`      | The Steam shell (its own dependency tree, its own tests)                                            |
-| `tauri/`         | A second desktop shell in Rust, built out beside `electron/` — packages, but ships nothing yet      |
-| `docs/`          | Reference documentation                                                                             |
-| `.agent/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills`                                |
+| Path              | What it is                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------------- |
+| `content/`        | **Every authored catalog** — YAML, plus the Lua rules in `content/scripts/`                         |
+| `mod/`            | The mod SDK: the CLI, the compiler, `FORMAT.md`, the worked example, `catalog.json`                 |
+| `engine/`         | The engine — framework-free TypeScript (`@game/core`); compiled content lands here                  |
+| `pwa/`            | The deployable app — a Vite + Preact PWA shell that mounts the engine                               |
+| `scripts/`        | The instruments: renderers, simulators, calculators, catalog generators                             |
+| `tests/`          | Vitest suites (`*_test.ts`) — `tests/engine/` on fixtures, `tests/content/` on the shipped catalogs |
+| `server/`         | The session server for co-op — the engine compiled for Node                                         |
+| `native/`         | The App Store / Play Store shell (Expo, its own dependency tree)                                    |
+| `electron/`       | The Steam shell (its own dependency tree, its own tests)                                            |
+| `tauri/`          | A second desktop shell in Rust, built out beside `electron/` — packages, but ships nothing yet      |
+| `docs/`           | Reference documentation                                                                             |
+| `.agents/skills/` | Playbooks for each kind of work — also reachable as `.claude/skills` and `.gemini/skills`           |
 
 Generated catalogs (`engine/generated/`, `pwa/src/generated/`) are gitignored and
 rebuilt by `make levels` / `make assets`. Never edit or commit one.
@@ -280,13 +280,13 @@ Full reference: [`docs/configuration.md`](docs/configuration.md).
 
 **Modding** — five documents, and each answers a different question:
 
-| Read                                                                           | To learn                                                         | Written for |
-| ------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ----------- |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                           | how to start, the loop, publishing                               | you         |
-| [`mod/README.md`](mod/README.md)                                               | what a mod may contain, addon vs conversion, load order, licence | you         |
-| [`mod/FORMAT.md`](mod/FORMAT.md)                                               | every file and every field — and the schema behind each          | either      |
-| [`.agent/skills/mod-authoring/SKILL.md`](.agent/skills/mod-authoring/SKILL.md) | the scope, the judgement calls, which playbook to load           | your agent  |
-| [`mod/AGENTS.md`](mod/AGENTS.md)                                               | the procedure with every command, and what each error means      | your agent  |
+| Read                                                                             | To learn                                                         | Written for |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------- |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                             | how to start, the loop, publishing                               | you         |
+| [`mod/README.md`](mod/README.md)                                                 | what a mod may contain, addon vs conversion, load order, licence | you         |
+| [`mod/FORMAT.md`](mod/FORMAT.md)                                                 | every file and every field — and the schema behind each          | either      |
+| [`.agents/skills/mod-authoring/SKILL.md`](.agents/skills/mod-authoring/SKILL.md) | the scope, the judgement calls, which playbook to load           | your agent  |
+| [`mod/AGENTS.md`](mod/AGENTS.md)                                                 | the procedure with every command, and what each error means      | your agent  |
 
 How a mod is compiled, loaded and resolved — the design behind all of the above
 — is [`docs/modding.md`](docs/modding.md).

@@ -37,7 +37,7 @@ with a filename and a reason; when it prints a `✓`, the game will accept it.
 see below.
 
 **Working with a coding agent?** Point it at
-[`../.agent/skills/mod-authoring/SKILL.md`](../.agent/skills/mod-authoring/SKILL.md)
+[`../.agents/skills/mod-authoring/SKILL.md`](../.agents/skills/mod-authoring/SKILL.md)
 — the scope, the loop and the judgement calls — which sends it to
 **[`AGENTS.md`](AGENTS.md)**, the step-by-step from `new` to publish with the
 command for every step. Both are just as usable as a human checklist.

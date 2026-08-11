@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// WHAT IS ON FIRE, AND WHAT IS BEING SHOVED — the two things on this road that
+// WHAT IS ON FIRE, AND WHAT IS GRINDING — the two things on this road that
 // go on HAPPENING, drawn by walking the state rather than by answering an event.
 //
 // WHY IT IS A WALK. The engine raises `trafficFire` and `trafficExploded` once
@@ -11,10 +11,9 @@
 // the identical bug `wreck-smoke.ts` was written to fix, and the reason
 // `DriveFx.follow` is not the answer: that flag means THE HERO'S CAR.
 //
-// THE PUSH IS THE SAME SHAPE FOR THE SAME REASON. `DriveTraffic.pushMs` is a
-// state the wagon and a wreck are IN, not an event either of them raised, so the
-// sparks coming off the thing being ground up the road are issued on a cadence
-// at the contact point for as long as it lasts.
+// THE GRIND IS THE SAME SHAPE FOR THE SAME REASON. A wheel-less, tilted shell
+// moving on its bare frame is a state, not an event, so the sparks coming off it
+// are issued on a cadence at the grounded end for as long as it lasts.
 //
 // EVERYTHING HERE IS PRESENTATION and the drive plays identically without it —
 // the same fence `drive-fx.ts`, `skid.ts` and `wreck-smoke.ts` are drawn along.
@@ -61,7 +60,7 @@ const FIRE_LIFT_PX = 9;
 const NEAR_PX = 520;
 
 /**
- * ONE TICK OF EVERY FIRE AND EVERY SHOVE ON THE ROAD.
+ * ONE TICK OF EVERY FIRE AND EVERY GRIND ON THE ROAD.
  *
  * Called from `drainDrive` beside the skids and the wreck smoke, inside the
  * fixed step and on the drive's own clock.
@@ -70,8 +69,17 @@ export function stepBurning(state: DriveFxState, drive: DriveState): void {
   const live = new Set<number>();
   for (const other of drive.traffic) {
     const burning = other.fire > 0;
-    const shoved = other.pushMs > 0;
-    if (!burning && !shoved) continue;
+    const toNose = other.faceLeft ? -1 : 1;
+    const bodyPitch = other.angle * toNose;
+    const rearGrinding = (other.wheelsOff & 2) !== 0 && bodyPitch < -0.012;
+    const frontGrinding = (other.wheelsOff & 1) !== 0 && bodyPitch > 0.012;
+    // SPARKS REQUIRE METAL ON ROAD. A pushed but level car is rubber against
+    // tarmac and stays dark; a shell whose missing axle has actually tipped an
+    // end down sparks while that end is still moving, pushed or coasting.
+    const grinding =
+      (rearGrinding || frontGrinding) &&
+      Math.abs(other.speed) > DRIVE.traffic.wreckRestPx;
+    if (!burning && !grinding) continue;
     if (Math.abs(other.pos.x - drive.car.pos.x) > NEAR_PX) continue;
     live.add(other.id);
     const due = state.burns.get(other.id) ?? 0;
@@ -88,7 +96,7 @@ export function stepBurning(state: DriveFxState, drive: DriveState): void {
         FIRE_LIFE_MS,
       );
     }
-    if (shoved) {
+    if (grinding) {
       // WHERE THE STEEL IS ACTUALLY GRINDING — the bumper, not the middle of
       // either car. It is the near END of the thing being pushed, which is the
       // one place on the pair the two of them are in contact.
@@ -101,22 +109,23 @@ export function stepBurning(state: DriveFxState, drive: DriveState): void {
       // (`wreck-draw.ts`), and one world px across the road is one screen px
       // down (`seatY`), so the rotated offset is the honest place to put them.
       const def = vehicleDef(other.variant);
-      const toward = drive.car.pos.x < other.pos.x ? -1 : 1;
+      const toward = rearGrinding ? -toNose : toNose;
       const reach = def.halfLengthPx * toward;
       driveGrindSparks(
         state,
         other.pos.x + reach * Math.cos(other.angle),
         other.pos.y + reach * Math.sin(other.angle),
         drive.ms,
-        // The longer he leans on it the more of it is on the road: a wreck being
-        // bullied along has its own underside dragging by now.
-        Math.min(1, other.pushMs / 900),
+        Math.min(
+          1,
+          0.25 + Math.abs(other.speed) / Math.max(1, DRIVE.topSpeedPx),
+        ),
       );
     }
     state.burns.set(
       other.id,
       drive.ms +
-        (shoved && !burning ? DRIVE.wreckage.grindEveryMs : FIRE_EVERY_MS),
+        (grinding && !burning ? DRIVE.wreckage.grindEveryMs : FIRE_EVERY_MS),
     );
   }
   // A VEHICLE THE ROAD HAS FORGOTTEN IS FORGOTTEN HERE TOO — the same leak the

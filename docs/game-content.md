@@ -14,7 +14,7 @@ none of it is engine.
 - How a catalog compiles → [`content-pipeline.md`](./content-pipeline.md)
 - How the engine is put together → [`architecture.md`](./architecture.md)
 - The plot, and every spoken line → [`story.md`](./story.md), [`manuscript.md`](./manuscript.md)
-- Authoring any of it → the skills in [`.agent/skills/`](../.agent/skills)
+- Authoring any of it → the skills in [`.agents/skills/`](../.agents/skills)
 
 ## A venue is two files, and its floor is rolled
 

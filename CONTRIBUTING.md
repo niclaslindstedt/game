@@ -24,10 +24,10 @@ is this weapon fair, can this relic drop — has a command that answers it. Thos
 are exactly the conditions an agent works well in, and none of them require it to
 guess.
 
-Point yours at **[`.agent/skills/mod-authoring/SKILL.md`](.agent/skills/mod-authoring/SKILL.md)**:
+Point yours at **[`.agents/skills/mod-authoring/SKILL.md`](.agents/skills/mod-authoring/SKILL.md)**:
 
 ```
-Read .agent/skills/mod-authoring/SKILL.md and follow it.
+Read .agents/skills/mod-authoring/SKILL.md and follow it.
 I want a mod that <what you want>.
 ```
 

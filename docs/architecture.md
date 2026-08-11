@@ -3009,7 +3009,7 @@ error, so the compiler points at every site you still owe.
 
 A sequel is a clone of this repo with the first game's content stripped and
 new content built on the same engine. The mechanical playbook is the
-`new-game` skill (`.agent/skills/new-game/SKILL.md`): rename via
+`new-game` skill (`.agents/skills/new-game/SKILL.md`): rename via
 `game.config.json`, strip the content catalogs and this game's docs/tests,
 then rebuild content with the `engine-system`, `pixel-assets`,
 `sound-effects`, and `playtest` skills. This game's content walkthrough lives

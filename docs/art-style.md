@@ -10,7 +10,7 @@ one self-describing YAML per sprite (a char `grid` + a concrete-hex `palette` +
 a `description`) under `content/sprites/`, packed into a single atlas at
 build time. This document is about the _look_ those grids should add up to. The
 mechanics of authoring a grid — the generate → look → evaluate → loop cycle and
-the pass/fail checklist — live in the [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md).
+the pass/fail checklist — live in the [`pixel-assets` skill](../.agents/skills/pixel-assets/SKILL.md).
 
 ## The feel
 
@@ -213,20 +213,20 @@ hand, and must stay that way:
 Both are **seeded and frame-stable** so the atlas only diffs when the source
 does. When you retune a base sprite, its overlays and wounds regenerate with it.
 The one thing to watch is **overlay contrast against the local body color** (a
-dark wound on a dark body is invisible) — see [`GAME_NOTES.md`](../.agent/skills/pixel-assets/GAME_NOTES.md)
+dark wound on a dark body is invisible) — see [`GAME_NOTES.md`](../.agents/skills/pixel-assets/GAME_NOTES.md)
 for this game's wound→effect color pairings.
 
 ## Where the sources of truth live
 
-| Concern                                              | Source of truth                                                      |
-| ---------------------------------------------------- | -------------------------------------------------------------------- |
-| The feel, the why, the design principles             | **this document**                                                    |
-| The fixed medium/framing/read (machine form)         | `STYLE_PREAMBLE` in `scripts/asset-tools/prompt.mjs`                 |
-| A family's mood, ground, palette scope               | that family's `_family.yaml` `style:` + `palette`                    |
-| What one sprite should look like                     | that sprite's `description` (the acceptance target)                  |
-| How to build/iterate a sprite (workflow + checklist) | [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md)       |
-| This game's per-family art learnings                 | [`GAME_NOTES.md`](../.agent/skills/pixel-assets/GAME_NOTES.md)       |
-| Finding and replacing the worst art                  | [`art-improvement` skill](../.agent/skills/art-improvement/SKILL.md) |
+| Concern                                              | Source of truth                                                       |
+| ---------------------------------------------------- | --------------------------------------------------------------------- |
+| The feel, the why, the design principles             | **this document**                                                     |
+| The fixed medium/framing/read (machine form)         | `STYLE_PREAMBLE` in `scripts/asset-tools/prompt.mjs`                  |
+| A family's mood, ground, palette scope               | that family's `_family.yaml` `style:` + `palette`                     |
+| What one sprite should look like                     | that sprite's `description` (the acceptance target)                   |
+| How to build/iterate a sprite (workflow + checklist) | [`pixel-assets` skill](../.agents/skills/pixel-assets/SKILL.md)       |
+| This game's per-family art learnings                 | [`GAME_NOTES.md`](../.agents/skills/pixel-assets/GAME_NOTES.md)       |
+| Finding and replacing the worst art                  | [`art-improvement` skill](../.agents/skills/art-improvement/SKILL.md) |
 
 When two tiers disagree, the more specific machine-readable one wins for its own
 scope (a family anchor owns that family's mood; a description owns that sprite),

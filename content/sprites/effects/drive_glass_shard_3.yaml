@@ -1,0 +1,11 @@
+name: drive_glass_shard_3
+family: effects
+size: [4, 3]
+description: A broad corner of shattered automotive glass.
+palette:
+  c: "#bfe7ec" # cold glass
+  w: "#f4ffff" # headlight glint
+grid: |
+  .ww.
+  cccc
+  .cc.

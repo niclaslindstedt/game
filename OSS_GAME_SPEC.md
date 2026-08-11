@@ -1,7 +1,7 @@
 ---
 title: Open Source Game Project Specification
 description: A prescriptive, language- and engine-agnostic specification for building an open source GAME as a well-run open source project — the licensing, documentation, automation, governance and release plumbing every OSS codebase needs, plus the structure a game needs: a headless simulation core, authored content compiled from data, deterministic runs, measurable balance, a mod seam, platform shells, and the craft loops that keep art, sound, story and UI honest.
-version: 1.0.0
+version: 1.0.1
 ---
 
 # Open Source Game Project Specification
@@ -2063,21 +2063,20 @@ the code, improved over time, and re-run on demand.
 Agent skills live at:
 
 ```
-.agent/skills/<skill-name>/SKILL.md
+.agents/skills/<skill-name>/SKILL.md
 ```
 
-`.agent/` is the generic, tool-neutral home for any file an AI coding
-agent needs but a human typically does not. Tool-specific directories
-(e.g. `.claude/skills/` for Claude Code) must be **symbolic links** to
-`.agent/skills/` so that any tool which discovers skills from a fixed
-path sees the same canonical set. This is the same single-source-of-
-truth rule as §7.1.
+`.agents/` is the standard, tool-neutral home for agent skills. Tools that
+discover skills from their own fixed directory must expose that directory as a
+**symbolic link** to `.agents/skills/`, so every client sees the same canonical
+set. This is the same single-source-of-truth rule as §7.1.
 
 Required directory symlinks:
 
-| Link path            | Tool          | Target            |
-|----------------------|---------------|-------------------|
-| `.claude/skills`     | Claude Code   | `../.agent/skills`|
+| Link path        | Tool       | Target              |
+| ---------------- | ---------- | ------------------- |
+| `.claude/skills` | Claude Code | `../.agents/skills` |
+| `.gemini/skills` | Gemini CLI  | `../.agents/skills` |
 
 Additional tool-specific paths may be added as support lands, but every
 such path must be a symlink — editing skills through a tool-specific
@@ -2133,7 +2132,7 @@ Every `SKILL.md` must contain:
 Each skill directory must contain a `.last-updated` file:
 
 ```
-.agent/skills/<skill-name>/.last-updated
+.agents/skills/<skill-name>/.last-updated
 ```
 
 It holds a single line: the git commit hash of the last successful run
@@ -2203,7 +2202,7 @@ Y" bug report.
 In addition to the per-artifact skills above, every project must ship a
 **`maintenance`** skill whose sole job is to dispatch to the individual
 `update-*` skills in the correct order and aggregate their output.
-`.agent/skills/maintenance/SKILL.md` is the entry point for any agent
+`.agents/skills/maintenance/SKILL.md` is the entry point for any agent
 that wants to bring the whole repository back into sync without first
 diagnosing *which* artifact is stale.
 
@@ -2245,7 +2244,7 @@ other skills, runs them in order, aggregates the combined diff, and
 The `AGENTS.md` file (§7) must include a **Maintenance skills** section
 that lists every skill the project ships and describes when each one
 should run. This is the discovery surface for agents that do not yet
-autoload skills from `.agent/skills/`.
+autoload skills from `.agents/skills/`.
 
 ### 21.9 Craft skills — the second class, required for a game
 
@@ -2353,13 +2352,14 @@ checked before the first public tag.
 [ ] Central output module, no raw print statements       (§19.4)
 [ ] Always-on debug log file                             (§19.2)
 [ ] A documented switch that raises verbosity            (§19.3)
-[ ] .agent/skills/update-readme/ with SKILL.md +
+[ ] .agents/skills/update-readme/ with SKILL.md +
     .last-updated                                       (§21.5)
-[ ] .agent/skills/update-docs/ with SKILL.md +
+[ ] .agents/skills/update-docs/ with SKILL.md +
     .last-updated                                       (§21.5)
-[ ] .agent/skills/maintenance/ umbrella skill routing
+[ ] .agents/skills/maintenance/ umbrella skill routing
     to every update-* skill                             (§21.6)
-[ ] .claude/skills symlinked to ../.agent/skills         (§21.2)
+[ ] .claude/skills and .gemini/skills symlinked to
+    ../.agents/skills                                   (§21.2)
 [ ] AGENTS.md documents maintenance skills                (§21.8)
 ```
 

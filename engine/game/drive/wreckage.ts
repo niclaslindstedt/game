@@ -88,17 +88,29 @@ export function smashEnd(
    * to replace, and it was the commonest wreck on the road.
    */
   forced = false,
+  /** Tear the complete axle out rather than allowing the ordinary cosmetic
+   * keep roll. This is the hard, square rear-ending path. */
+  tearAxle = false,
+  /** When supplied, bypass the write-off's "worse end" choice and stove in
+   * the end this collision is specifically about. */
+  forcedNose?: boolean,
 ): void {
   const hitLeft = fromX < other.pos.x;
   // WHICH END. The blow's own, normally; for a write-off it is whichever end has
   // actually taken the most, because the last hit is not necessarily the one
   // that did the damage.
-  const nose = forced
-    ? other.crushNose >= other.crushTail
-    : hitLeft === other.faceLeft;
+  const nose =
+    forcedNose ??
+    (forced ? other.crushNose >= other.crushTail : hitLeft === other.faceLeft);
   const depth = nose ? other.crushNose : other.crushTail;
   if (!forced && !smashedYet(other, depth)) return;
-  if (nose ? other.smashNose : other.smashTail) return;
+  if (nose ? other.smashNose : other.smashTail) {
+    // A write-off may have latched the crash art a few lines before the
+    // physical collision pass discovers that this particular rear hit tore the
+    // axle out. The picture is already right; the two wheels are still owed.
+    if (tearAxle) shedEndWheel(drive, other, nose, hit, true);
+    return;
+  }
   if (nose) other.smashNose = true;
   else other.smashTail = true;
   drive.events.push({
@@ -106,7 +118,7 @@ export function smashEnd(
     pos: { x: hit.contact.x, y: hit.contact.y },
     joules: hit.joules,
   });
-  shedEndWheel(drive, other, nose, hit);
+  shedEndWheel(drive, other, nose, hit, tearAxle);
   igniteFrom(drive, other, hit);
 }
 
@@ -130,13 +142,16 @@ export function shedEndWheel(
   other: DriveTraffic,
   nose: boolean,
   hit: Impact,
+  forceAxle = false,
 ): void {
   const bit = nose ? 1 : 2;
   if ((other.wheelsOff & bit) !== 0) return;
   // ALMOST ALWAYS — and the "almost" is what stops a lane of wrecks reading as
   // one repeated event. Hashed off the vehicle's own id and which end it is, so
   // it is settled the same way on a replay of the same seed.
-  if (hash(other.id, nose ? 17 : 29) < DRIVE.wreckage.wheelKeep) return;
+  if (!forceAxle && hash(other.id, nose ? 17 : 29) < DRIVE.wreckage.wheelKeep) {
+    return;
+  }
   other.wheelsOff |= bit;
 
   const def = vehicleDef(other.variant);
@@ -145,37 +160,48 @@ export function shedEndWheel(
   // body-ends-not-screen-ends rule the crush and the lamps keep.
   const toNose = other.faceLeft ? -1 : 1;
   const along = def.halfLengthPx * 0.62 * (nose ? toNose : -toNose);
-  const { wheelThrowPx, wheelLiftPx } = DRIVE.wreckage;
+  const { wheelThrowPx, wheelLiftPx, wheelTrackHalfPx } = DRIVE.wreckage;
   const force = Math.min(2, wreckForce(other, hit.joules));
-  const spin = hash(other.id, nose ? 31 : 37);
-  drive.wheelDebris.push({
-    pos: { x: other.pos.x + along, y: other.pos.y },
-    vel: {
-      // It keeps most of the car's own travel and takes the blow's along-road
-      // share on top, which is what sends a wheel off a head-on back UP the road
-      // toward the thing that hit it.
-      x: other.speed * 0.75 + hit.dv.x * 0.5,
-      // …and is kicked across by the lateral half of the same blow, with a
-      // little of its own so a dead-square hit still throws it off the axis.
-      y: hit.dv.y * 0.6 + (spin - 0.5) * wheelThrowPx * (0.4 + force * 0.5),
-    },
-    z: DRIVE_UNITS.mPerPx > 0 ? 4 : 4,
-    vz:
-      wheelLiftPx *
-      (0.35 + 0.65 * hash(other.id, nose ? 41 : 43)) *
-      (0.5 + force * 0.5),
-    angle: spin * Math.PI * 2,
-    // A wheel that has been through this is not a round one any more, unless it
-    // was a light hit — the same two-picture ladder the hero's own thrown wheels
-    // read (`WheelDebris.wheelState`).
-    wheelState: force > 0.6 ? 1 : 0,
-    settled: false,
-  });
-  drive.events.push({
-    type: "wheelTorn",
-    pos: { x: other.pos.x + along, y: other.pos.y },
-    joules: hit.joules,
-  });
+  // A ROOFED VEHICLE HAS AN AXLE, NOT A PROFILE DISC. The side-on art can only
+  // show its near wheel, but the road holds both physical wheels: the far one
+  // starts at the smaller y and therefore sorts BEHIND the body, while the near
+  // one starts at the larger y and passes in front. Open machines retain their
+  // single visible wheel because they are taken apart by their own path.
+  const wheels = def.class === "open" ? 1 : 2;
+  for (let i = 0; i < wheels; i++) {
+    const far = i === 0;
+    const salt = (nose ? 31 : 37) + i * 19;
+    const spin = hash(other.id, salt);
+    const side = far ? -1 : 1;
+    const y = other.pos.y + side * wheelTrackHalfPx;
+    drive.wheelDebris.push({
+      pos: { x: other.pos.x + along, y },
+      vel: {
+        // THE CAR STOPS; THE WHEELS DO NOT. They leave with the vehicle's
+        // PRE-impact road speed and only a small share of the shove, so the
+        // shell drops behind them instead of towing them along invisibly.
+        x: other.speed + hit.dv.x * 0.15,
+        // The two sides part from each other even on a dead-square hit. A hard
+        // blow adds lift and reach; a modest one lets them roll away low.
+        y:
+          hit.dv.y * 0.45 +
+          side * wheelThrowPx * (0.25 + force * 0.38) * (0.75 + spin * 0.5),
+      },
+      z: 4,
+      vz:
+        wheelLiftPx *
+        (0.28 + 0.5 * hash(other.id, salt + 10)) *
+        (0.45 + force * 0.55),
+      angle: spin * Math.PI * 2,
+      wheelState: force > 0.6 ? 1 : 0,
+      settled: false,
+    });
+    drive.events.push({
+      type: "wheelTorn",
+      pos: { x: other.pos.x + along, y },
+      joules: hit.joules,
+    });
+  }
 }
 
 /**

@@ -1043,7 +1043,7 @@ carries the workflow, the quality bar and the traps for its subject.
 
 ## Maintenance skills
 
-Per §21 of `OSS_GAME_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agent/skills/<name>/` and are also accessible via the `.claude/skills` symlink.
+Per §21 of `OSS_GAME_SPEC.md`, this repo ships agent skills for keeping drift-prone artifacts in sync with their sources of truth. Skills live under `.agents/skills/<name>/` and are also accessible through the `.claude/skills` and `.gemini/skills` symlinks.
 
 | Skill              | When to run                                                                                                                       |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -1071,7 +1071,7 @@ allowed to rewrite another's `SKILL.md`:
   `node scripts/skill-lessons.mjs <skill> --list`, then `--scope=<path>` /
   `--concepts=<tags>`.
 - **At the END, before the commit** — record what the pass learned as a fragment
-  under `.agent/skills/<skill>/.lessons/` (never by appending to a `SKILL.md`,
+  under `.agents/skills/<skill>/.lessons/` (never by appending to a `SKILL.md`,
   which conflicts across parallel sessions), fix anything the skill said that
   turned out WRONG, delete what went stale, merge what now says the same thing
   twice, and promote anything true in 100% of that skill's runs into the

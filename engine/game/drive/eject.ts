@@ -60,6 +60,22 @@ function hash(seed: number, salt: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
+/** The launch one head-on piece inherits from the player's pre-impact car.
+ * Kept pure so the angle and retained-speed contract can be tested before the
+ * road's gravity, bounces and wheels alter it. */
+export function headOnPieceLaunch(
+  carVx: number,
+  dir: 1 | -1,
+  seed: number,
+): { x: number; z: number } {
+  const angle = ((10 + hash(seed, 83) * 35) * Math.PI) / 180;
+  const speed = Math.abs(carVx) * (0.85 + hash(seed, 89) * 0.15);
+  return {
+    x: Math.sign(carVx || dir) * speed * Math.cos(angle),
+    z: speed * Math.sin(angle),
+  };
+}
+
 /**
  * HOW HARD THIS WAS, IN WRECKS — the collision's absorbed energy over what it
  * takes to finish this particular vehicle.
@@ -233,6 +249,18 @@ function throwBody(
       airborne: true,
       liftScale: square ? eject.headOn.liftScale : 1,
     });
+    if (square) {
+      // A HEAD-ON THROWS THE CONTENTS DOWN THE ROAD, NOT AT THE SKY. Every
+      // piece leaves at 85–100% of the wagon's pre-impact speed and within a
+      // ten-to-forty-five-degree elevation cone. The old independent x/z
+      // ladders could make a chunk climb almost vertically; a collision whose
+      // two cars were travelling horizontally has no source for that motion.
+      for (const piece of pieces) {
+        const launch = headOnPieceLaunch(carVx, dir, piece.seed);
+        piece.vel.x = launch.x;
+        piece.vz = launch.z;
+      }
+    }
     return pieces;
   }
   drive.pedestrians.push(ped);
@@ -346,18 +374,22 @@ export function ejectOccupants(
   }
 
   const pieces: DriveRemain[] = [];
-  // HOW MANY CAN ACTUALLY COME OUT — the vehicle's own answer (`def.exits`),
-  // because it is a question about the SHAPE of the thing rather than about how
-  // many seats it has.
+  // HOW MANY CAN ACTUALLY COME OUT — ordinarily the vehicle's own answer
+  // (`def.exits`), because it is a question about the SHAPE of the thing rather
+  // than about how many seats it has.
   //
   // A saloon posts two: it has one windscreen with a driver and a passenger in
   // front of it, and a third body through the same hole on the same frame reads
   // as a clown car rather than as a collision. A BUS is the case this exists
-  // for — a long band of square windows with a roomful of people behind it — and
-  // it is why hitting one squarely is the biggest mess this minigame can make,
-  // which is the right thing for twelve tonnes of it to be. Whoever is left over
-  // is not spared; they die where they sit, just below.
-  const going = Math.min(vehicleDef(other.variant).exits, other.occupants);
+  // for — a long band of square windows with a roomful of people behind it.
+  // Ordinary hard shunts retain that cap; a head-on is the terminal exception.
+  // A HEAD-ON OPENS THE WHOLE CABIN. On the ordinary eject ladder the body
+  // still limits how many people fit through one screen at once; nose-to-nose
+  // is the terminal exception, and the amount of upper bodies and smaller
+  // pieces must therefore scale with how many people were actually travelling.
+  const going = square
+    ? other.occupants
+    : Math.min(vehicleDef(other.variant).exits, other.occupants);
   for (let i = 0; i < going; i++) {
     other.occupants--;
     // Each one goes out a beat wider than the last, so a load leaving one body

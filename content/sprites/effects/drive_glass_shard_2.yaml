@@ -1,0 +1,12 @@
+name: drive_glass_shard_2
+family: effects
+size: [3, 4]
+description: A narrow hooked shard of broken automotive glass.
+palette:
+  c: "#bfe7ec" # cold glass
+  w: "#f4ffff" # headlight glint
+grid: |
+  .w.
+  .c.
+  cc.
+  c..

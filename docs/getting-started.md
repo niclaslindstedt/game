@@ -65,20 +65,20 @@ npm run preview --workspace pwa
 
 ## 5. Where things live
 
-| Path             | What it is                                                                     |
-| ---------------- | ------------------------------------------------------------------------------ |
-| `content/`       | Every authored catalog, as YAML — the format a mod is written in too           |
-| `mod/`           | The mod SDK — CLI, compiler, format reference, worked example                  |
-| `engine/`        | The engine — framework-free game logic (imported by the app as `@game/core`)   |
-| `pwa/`           | The deployable app — Vite + Preact PWA shell                                   |
-| `server/`        | The session server — the engine compiled for Node, and the dedicated server    |
-| `native/`        | The App Store / Play Store shell (Expo). Its own dependency tree               |
-| `electron/`      | The Steam shell. Its own dependency tree, its own `tsc`, its own vitest        |
-| `tauri/`         | The second desktop shell, in Rust. Checked by `make tauri-test` / `-lint`      |
-| `scripts/`       | The instruments — renderers, simulators, calculators, catalog generators       |
-| `tests/`         | The root suite — `tests/engine/` on fixtures, `tests/content/` on the catalogs |
-| `docs/`          | These reference pages                                                          |
-| `.agent/skills/` | Playbooks for each kind of work (also reachable as `.claude/skills`)           |
+| Path              | What it is                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `content/`        | Every authored catalog, as YAML — the format a mod is written in too                      |
+| `mod/`            | The mod SDK — CLI, compiler, format reference, worked example                             |
+| `engine/`         | The engine — framework-free game logic (imported by the app as `@game/core`)              |
+| `pwa/`            | The deployable app — Vite + Preact PWA shell                                              |
+| `server/`         | The session server — the engine compiled for Node, and the dedicated server               |
+| `native/`         | The App Store / Play Store shell (Expo). Its own dependency tree                          |
+| `electron/`       | The Steam shell. Its own dependency tree, its own `tsc`, its own vitest                   |
+| `tauri/`          | The second desktop shell, in Rust. Checked by `make tauri-test` / `-lint`                 |
+| `scripts/`        | The instruments — renderers, simulators, calculators, catalog generators                  |
+| `tests/`          | The root suite — `tests/engine/` on fixtures, `tests/content/` on the catalogs            |
+| `docs/`           | These reference pages                                                                     |
+| `.agents/skills/` | Playbooks for each kind of work (also reachable as `.claude/skills` and `.gemini/skills`) |
 
 The three shell trees sit OUTSIDE the npm workspace, so `make test`, `make lint`
 and `make build` stop at their edge; the root `package.json` forwards to them
