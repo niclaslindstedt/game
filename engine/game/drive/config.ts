@@ -1035,19 +1035,20 @@ export const DRIVE = {
    */
   traffic: {
     /**
-     * ABSORBED ENERGY THAT FINISHES A 1400 kg CAR (joules) — scaled per vehicle
-     * by its own mass, so a bus takes about nine times as much as a saloon and
-     * a moped folds up on the first real contact.
+     * THE FORCE UNIT FOR SOMEBODY ELSE'S VEHICLE (joules at 1400 kg), scaled
+     * by its own mass. Closed cars no longer use it as a survival threshold —
+     * every collision breaks them down — but their crush, glass, rollover,
+     * ejection, fire and debris still need to know whether the contact was a
+     * five-mile-an-hour nudge or a motorway impact. Open machines also keep it
+     * as their knock-down / snap / obliteration ladder.
      *
-     * WELL UNDER `impact.wearJoules`, and that asymmetry is the design rather
-     * than a slip: the hero's wagon is the one thing on this road that has to
-     * survive a whole minute of collisions, and everything else exists to come
-     * apart on camera. A square hit at the top end writes off a hatchback in
-     * two; the same two hits cost the hero about a seventh of his own car.
+     * The hero's wagon deliberately uses the much larger `impact.wearJoules`:
+     * it is the videogame exception that must survive a whole road.
      */
     wreckJoules: 1.1e6,
     /**
-     * The wear each visible damage rung is reached at.
+     * The wear each visible damage rung is reached at. Closed cars jump to the
+     * final rung on contact; open machines can still climb these progressively.
      *
      * THREE RUNGS AND THEN THE WRECK, matching the hero's own panel ladder
      * (`panelRungs`) on purpose — it is the same ladder of pictures, derived by

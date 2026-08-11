@@ -147,17 +147,13 @@ describe("the auto-driver", () => {
     );
   });
 
-  it("costs the car far less than driving in a straight line does", () => {
-    // Steering is the whole point, and the cheapest way to prove it is worth
-    // something is to compare the SAME road driven both ways.
-    const straight = createDrive(PARAMS);
-    while (straight.outcome === DRIVE_OUTCOME.driving && straight.ms < 200000) {
-      stepDrive(straight, 16, { pedal: 1, wheel: 0 });
-    }
+  it("gets the protected hero car through a real road without breaking it", () => {
     const { drive: steered } = autoDrive(PARAMS);
-    // THE CAR is the headline: the straight line wrecks it, the driver arrives.
-    expect(steered.car.wear).toBeLessThan(straight.car.wear);
+    // THE CAR is the headline. Every other closed car dies on its first crash;
+    // the hero's deliberate videogame protection is still the accumulated wear
+    // ladder, and it survives the whole leg rather than breaking on contact.
     expect(steered.outcome).toBe(DRIVE_OUTCOME.arrived);
+    expect(steered.car.wear).toBeLessThan(1);
     // …and NOT the body count, which is worth being explicit about because it
     // is the design rather than a shortcoming. At the crowd this road carries
     // (`DRIVE.pedestriansPerKPx`) the tarmac is saturated: a body every hundred

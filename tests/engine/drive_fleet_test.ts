@@ -17,6 +17,7 @@ import {
   crushDepthPx,
   DRIVE,
   DRIVE_OUTCOME,
+  DRIVE_UNITS,
   haltTraffic,
   headOnPieceLaunch,
   FLEET,
@@ -173,32 +174,6 @@ function plant(
   return one;
 }
 
-/** …and ram it again, for the ladder tests that need more than one blow. */
-function ramAgain(state: DriveState, one: DriveTraffic, share = 0.95): void {
-  one.hitCooldownMs = 0;
-  one.pos.x = state.car.pos.x + 26;
-  one.pos.y = state.car.pos.y;
-  one.speed = 0;
-  state.car.speed = DRIVE.topSpeedPx * share;
-  hold(state, 64);
-}
-
-/**
- * THE SPEED A LADDER TEST IS STAGED AT, as a share of the dial.
- *
- * A LADDER NEEDS RUNGS UNDER IT, and every rung on this road is bought with the
- * SQUARE of the closing speed — so a stage that reads "nearly flat out" is a
- * stage where the top rung is reached on the first blow and there is no ladder
- * left to watch. That is not a claim about the model, it is a fact about where
- * on the dial these tests have to stand: the wagon does 174 mph now, and a car
- * met at 165 of them is not damaged, it is deleted.
- *
- * So the ladder tests stage at half the dial — about eighty-seven miles an hour,
- * which is a fast road rather than a runway, and which takes seven blows to walk
- * a hatchback from clean to written off.
- */
-const LADDER_SHARE = 0.5;
-
 describe("the fleet's weights", () => {
   it("spreads mass over more than an order of magnitude", () => {
     // The whole reason the catalog exists. A fleet whose lightest and heaviest
@@ -265,29 +240,31 @@ function indexOf(id: string): number {
 }
 
 describe("destroying the other traffic", () => {
-  it("climbs a car's damage rungs and finally writes it off", () => {
-    const state = drive();
-    floorIt(state, 4000);
-    const car = plant(state, indexOf("traffic_hatch"), LADDER_SHARE);
-    const rungs: number[] = [];
-    for (let i = 0; i < 8 && !car.wrecked; i++) {
-      ramAgain(state, car, LADDER_SHARE);
-      rungs.push(car.rung);
-    }
-    // It visibly deforms on the way — the rung is the picture the renderer
-    // swaps in, and a car that jumped straight from clean to written off would
-    // never show the player what he was doing.
-    expect(Math.max(...rungs)).toBeGreaterThan(0);
-    expect(car.wrecked).toBe(true);
-    expect(saidBy(state)).toContain("trafficBent");
-  });
+  it.each([5, 10])(
+    "writes off a struck car from a %i mph pull-away without breaking the hero's",
+    (mph) => {
+      const state = drive();
+      const other = plant(state, indexOf("traffic_hatch"), 0);
+      other.hitCooldownMs = 0;
+      other.pos.x = state.car.pos.x + 26;
+      other.pos.y = state.car.pos.y;
+      other.speed = 0;
+      state.car.speed = (mph * 0.44704) / DRIVE_UNITS.mPerPx;
+
+      tick(state, 0);
+
+      expect(other.wrecked).toBe(true);
+      expect(other.rung).toBe(DRIVE.traffic.rungs.length);
+      expect(other.smashNose || other.smashTail).toBe(true);
+      expect(saidBy(state)).toContain("trafficWrecked");
+      expect(state.outcome).toBe(DRIVE_OUTCOME.driving);
+    },
+  );
 
   it("leaves a wreck standing dead in the lane it died in", () => {
     const state = drive();
     hold(state, 4000);
     const car = plant(state, indexOf("traffic_hatch"));
-    car.wear = 0.99;
-    for (let i = 0; i < 8 && !car.wrecked; i++) ramAgain(state, car);
     expect(car.wrecked).toBe(true);
     // It coasts to a halt rather than vanishing or carrying on — which is the
     // whole payoff: an obstacle nobody placed.
@@ -572,7 +549,7 @@ describe("people leaving vehicles", () => {
     }
   });
 
-  it("counts a head-on that does NOT write the car off — the shunt runs first", () => {
+  it("counts a softer head-on before the breakdown changes the car's motion", () => {
     // THE ONE THE ORIGINAL TEST WALKED STRAIGHT PAST, and the reason it did is
     // worth keeping: it staged a blow hard enough to WRITE THE CAR OFF, and a
     // write-off ejects from inside `hurtTraffic` — which runs BEFORE `breakCar`
@@ -584,8 +561,9 @@ describe("people leaving vehicles", () => {
     // thing quietly never fired — no halves, no glass gore, no spray, on the one
     // collision the rule exists for.
     //
-    // Staged deliberately UNDER the write-off line, which is the case that was
-    // broken and the case a player actually meets.
+    // Staged deliberately under the old physical write-off line. Every car
+    // contact now breaks the car mechanically, but the collision still has to
+    // classify this as a head-on from the PRE-IMPACT approach.
     const state = drive();
     floorIt(state, 5000);
     const coming = createTraffic(
@@ -598,9 +576,9 @@ describe("people leaving vehicles", () => {
     state.car.speed = DRIVE.topSpeedPx * 0.4;
     floorIt(state, 400);
 
-    // It survived as a vehicle — this is not the write-off path…
-    expect(coming.wrecked).toBe(false);
-    // …and it still emptied itself over the road.
+    // It broke down, as every struck non-hero car now does…
+    expect(coming.wrecked).toBe(true);
+    // …and the real head-on force still emptied it over the road.
     expect(saidBy(state)).toContain("windscreenGore");
     expect(coming.gore).toBe(1);
     expect(state.remains.some((piece) => piece.part === "upper")).toBe(true);
@@ -977,7 +955,7 @@ describe("breaking a car, physically", () => {
     expect(hatch).toBeGreaterThan(bus * 4);
   });
 
-  it("knocks a clipped car a few degrees askew and then straight again", () => {
+  it("knocks a clipped car a few degrees askew and leaves the broken car there", () => {
     // A CAR ON ITS WHEELS DOES NOT TRAVEL SIDEWAYS. A clip turns it — that much
     // is right, and it is what a corner-first blow does — but it used to be
     // allowed most of a quarter turn (`yawRestRad * 4`, nearly sixty degrees)
@@ -986,8 +964,8 @@ describe("breaking a car, physically", () => {
     // permanently yawed thirty-odd degrees to the direction it was moving in
     // and slid up the road that way, which reads as a car on ice.
     //
-    // What is pinned is the SHAPE of it: knocked askew by a few degrees, and
-    // back in line under its own tyres inside a second.
+    // What is pinned is the SHAPE of it: knocked askew by a few degrees, then
+    // left there once the engine dies. A wreck has no driver correcting it.
     const clipped = clip("traffic_sedan", 0.5);
     // It was genuinely turned…
     expect(clipped.peak).toBeGreaterThan(0.05);
@@ -995,12 +973,9 @@ describe("breaking a car, physically", () => {
     // wheels, so this is not the rollover's cartwheel)…
     expect(clipped.downed).toBe(false);
     expect(clipped.peak).toBeLessThanOrEqual(DRIVE.crush.maxYawRad + 1e-6);
-    // …its tyres pulled it back in line…
-    expect(Math.abs(clipped.end)).toBeLessThan(0.02);
-    // …and they took a beat to do it, rather than a frame (a snap) or the rest
-    // of the leg (the bug above). Measured from the furthest it got.
-    expect(clipped.settledMs).toBeGreaterThan(150);
-    expect(clipped.settledMs).toBeLessThan(900);
+    // …and the dead car keeps a readable trace of the collision instead of
+    // steering itself straight again.
+    expect(Math.abs(clipped.end)).toBeGreaterThan(0.02);
   });
 
   it("turns a light car far further than a heavy one with the same blow", () => {

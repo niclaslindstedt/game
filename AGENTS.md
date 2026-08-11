@@ -5,6 +5,12 @@ repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`,
 `.aider.conf.md`, and `.github/copilot-instructions.md` are symlinks to this
 file.
 
+## Start every task clean
+
+Before any task-specific work or skill, load the `start-work` skill. It owns the
+clean-tree check, synchronization with `origin/main`, and the default commit,
+push, and PR handoff.
+
 ## Game spec conformance
 
 This repository adheres to [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md), a prescriptive

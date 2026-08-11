@@ -546,9 +546,9 @@ function breakCar(
   }
 
   // ── AND WHAT THE WHOLE VEHICLE DID ──────────────────────────────────────
-  // A SHOVE, NOT A WRECK — until it is. It is punted up the road, slewed out of
-  // the lane and spun about the point it was struck at, all off the momentum
-  // sum's own answer over its own mass.
+  // It is already a mechanical wreck now; momentum still decides where that
+  // wreck goes. It is punted up the road, slewed out of the lane and spun about
+  // the point it was struck at, all off the sum's own answer over its own mass.
   if (!other.downed) {
     if (!wasWrecked) shunt(other, hit, car.pos.y);
     // …UNLESS THE SHOVE BEAT ITS OWN WHEELS, in which case it is not being
@@ -597,12 +597,14 @@ function rungFor(total: number, rungs: readonly number[]): number {
  * WHAT A HIT DOES TO SOMEBODY ELSE'S VEHICLE — the other half of the trade the
  * hero has always been the only loser in.
  *
- * It is the hero's own `damage()` with the same shape and the same currency:
- * absorbed energy over a threshold, a ladder of visible rungs on the way, and a
- * terminal state at the top. What is different is only WHOSE threshold — a
- * vehicle's is scaled by its own mass (`wreckForce`), so the identical blow
- * writes off a moped, folds a hatchback and barely marks a bus, and nobody had
- * to author a durability per model to get that.
+ * A CLOSED CAR IS FINISHED BY ANY COLLISION. Five miles an hour is enough: the
+ * engine dies, the body swaps to its broken art and the road gets a wreck rather
+ * than a live car politely shoved ahead. The hero's wagon is the deliberate
+ * videogame exception; its long wear ladder still lives in `damage()` above.
+ *
+ * Open machines retain the force ladder because their outcomes are different:
+ * knocked down, snapped, or obliterated. `wreckForce` still scales those by the
+ * machine's own mass, so a bicycle and a motorcycle do not answer alike.
  *
  * EXPORTED FOR THE OTHER COLLISION PASS. Two vehicles that hit each other
  * (`between.ts`) answer for it exactly the way one hit by the wagon does — same
@@ -619,7 +621,9 @@ export function hurtTraffic(
   fromX = drive.car.pos.x,
 ): void {
   if (other.wrecked) return;
-  other.wear = Math.min(2, other.wear + wreckForce(other, hit.joules));
+  const force = wreckForce(other, hit.joules);
+  const closedCar = vehicleDef(other.variant).class !== "open";
+  other.wear = closedCar ? 1 : Math.min(2, other.wear + force);
   const rung = rungFor(other.wear, DRIVE.traffic.rungs);
   if (rung > other.rung) {
     other.rung = rung;
@@ -663,11 +667,15 @@ export function hurtTraffic(
   // the renderer would otherwise draw a written-off shell with its screens
   // neatly intact.
   other.glassOut = true;
-  // Whoever was still inside it is not staying inside it — through the screen
-  // if the blow will let them, and dead in the seat if it will not. FORCED,
-  // because a structure that has given up entirely is not holding anybody in
-  // on a technicality about the angle of the last hit.
-  drive.remains.push(...ejectOccupants(drive, other, hit, fromX, true));
+  // THE BREAKDOWN RULE IS NOT AN EJECTION RULE. A five-mile-an-hour contact is
+  // enough to kill this non-hero car mechanically, but it is not enough to
+  // throw or kill everybody inside it. Only a physically terminal blow forces
+  // the cabin empty, through the screen if the blow permits and dead in the
+  // seat if it does not. Ordinary low-speed occupants still answer the real
+  // force and angle in `breakCar`.
+  if (force >= 1) {
+    drive.remains.push(...ejectOccupants(drive, other, hit, fromX, true));
+  }
 }
 
 /** Throw a wheel — the run's own `detachWheel` needs a `GameState` for the
