@@ -3841,6 +3841,7 @@
     "drive_crush_b",
     "drive_crush_c",
     "drive_debris_clunk",
+    "drive_explosion",
     "drive_glass_a",
     "drive_glass_b",
     "drive_glass_c",
@@ -4379,6 +4380,9 @@
     },
     "drive_debris_clunk": {
       "what": "The car clouting something dead and steel already lying on the tarmac — a felled street light, kicked on down the road. A hollow triangle bonk with a short metallic ring after it and no crumple at all, which is the whole difference between this and the crunch: nothing here is giving way, it is just being moved."
+    },
+    "drive_explosion": {
+      "what": "THE ROAD'S BIGGEST SOUND — the fuel tank detonating under a car. A hard air crack opens it, a falling saw and two-stage sub lift the shell, black lowpass pressure hangs underneath, and delayed glass and bodywork rain down after the fireball has already risen. Long enough to feel like a blast, never a louder copy of the collision that caused it."
     },
     "drive_glass_a": {
       "what": "A car's windows leaving it — the noise laminated glass makes when a body folds around it, which is not a smash so much as a long bright shatter and then a second of it arriving on the road. Layered OVER the collision that caused it rather than played instead: the crunch is the steel and this is the glass, and they are one event. Bright and thin on purpose, so it sits on top of the smash bank's sub rather than fighting it."

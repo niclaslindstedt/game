@@ -36,8 +36,17 @@ git branch --show-current
 - If a merge, rebase, or cherry-pick is already in progress, load the
   `conflict` skill and finish or abort that operation safely before doing
   anything else.
-- Stop on a detached HEAD or missing `origin/main`; report the repository state
-  instead of inventing a target.
+- Stop on a missing `origin/main`; report the repository state instead of
+  inventing a target.
+- On a detached HEAD, do **not** trust equality with the cached `origin/main`.
+  Fetch `origin main` first, then compare. When the tree is clean, `HEAD` is an
+  ancestor of the freshly fetched `origin/main`, the task will change files,
+  and the user has not explicitly asked to avoid a feature branch, invent a
+  concise descriptive branch name at `HEAD` and create it before continuing.
+  The new branch is still UNSYNCED: immediately run the guarded feature-branch
+  sync in §2, which moves a stale detached base onto the fetched tip. If `HEAD`
+  is not an ancestor of fresh `origin/main`, report the repository state and
+  ask which ref should own the work.
 
 The preflight does not pass while the working tree is dirty.
 
@@ -59,13 +68,21 @@ backup, fetches immediately before rebasing, and preserves a recovery point:
 node scripts/sync-branch.mjs
 ```
 
+**This includes a feature branch created one command ago from a detached
+checkout.** Creating a branch because `HEAD` matched the locally cached
+`origin/main` is not synchronization, and neither is an ancestry check against
+that cached ref. No task command or edit comes between branch creation and this
+guarded fetch-and-rebase.
+
 If the rebase stops, follow the `conflict` skill: understand both sides, resolve
 each file, stage only the resolved paths, and continue with
 `node scripts/sync-branch.mjs --continue`. Do not begin the requested task while
 the sync is incomplete.
 
 If the task will change files and the updated branch is `main`, create a
-descriptively named feature branch before the first edit.
+descriptively named feature branch before the first edit unless the user has
+explicitly asked not to use one. Do not stop to ask the user to name the branch;
+derive a concise name from the task.
 
 ## 3. Prove the preflight passed
 
@@ -78,7 +95,9 @@ git rev-list --left-right --count origin/main...HEAD
 ```
 
 Proceed only when status prints nothing, the ancestry check succeeds, and the
-rev-list output shows no commits on the `origin/main` side. Record the branch
+rev-list output shows no commits on the `origin/main` side. These commands are
+valid only after the fetch performed in §2 during this preflight; a cached
+remote-tracking ref can make all three print a false green. Record the branch
 name and whether the sync created a backup that must be cleaned up after the
 final push.
 
@@ -90,9 +109,15 @@ three as part of completing any task that changes the repository:
 1. Finish and verify the requested work.
 2. Load the `changelog` skill and settle its exactly-one requirement.
 3. Run the closing `skill-reflection` pass for every skill used.
-4. Load the `commit` skill, commit only task-owned changes, push the branch, and
-   create or update the PR.
-5. If the opening sync created a backup branch, delete it with
+4. Load the `commit` skill and commit only task-owned changes.
+5. **Expire the opening preflight before delivery.** Immediately before the
+   final verification and push, fetch `origin main` again and repeat §3's
+   ancestry and left/right checks against that freshly updated ref. If main
+   advanced during the task, load `conflict`, sync using its rebase/merge rule,
+   and run the final gates on the combined tree. Never cite the opening fetch
+   as proof that a long-running task is still current.
+6. Push the branch and create or update the PR.
+7. If either sync created a backup branch, delete it with
    `node scripts/sync-branch.mjs --cleanup` only after verification and a
    successful push.
 

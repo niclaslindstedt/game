@@ -209,17 +209,29 @@ export function shedEndWheel(
  *
  * ASKED THERE AND NOWHERE ELSE, on purpose. A fire wants a ruptured line and an
  * ignition source in the same place, and the moment a structure folds far enough
- * to matter is the only moment on this road where both are guaranteed. Rolling
- * for it on every contact instead would put a lane of burning cars behind any
- * player who spent a minute trading paint, which is a road on fire rather than a
- * collision.
+ * to matter is the only moment on this road where both are guaranteed. The
+ * outcome is rolled once from the vehicle id, so it replays exactly without
+ * spending the road's layout stream.
  */
+export type CollisionCombustion = "none" | "small" | "large" | "explosion";
+
+/** One nested roll gives the promised cumulative 70/50/30 collision odds. */
+export function collisionCombustion(id: number): CollisionCombustion {
+  const roll = hash(id, 53);
+  if (roll < DRIVE.wreckage.explodeChance) return "explosion";
+  if (roll < DRIVE.wreckage.largeFireChance) return "large";
+  if (roll < DRIVE.wreckage.smallFireChance) return "small";
+  return "none";
+}
+
 function igniteFrom(drive: DriveState, other: DriveTraffic, hit: Impact): void {
-  if (other.fire > 0) return;
-  const force = wreckForce(other, hit.joules);
-  const chance = Math.min(0.9, force * DRIVE.wreckage.firePerForce);
-  if (hash(other.id, 53) >= chance) return;
-  catchFire(drive, other, hit.contact);
+  if (other.fire > 0 || other.blown) return;
+  const outcome = collisionCombustion(other.id);
+  if (outcome === "explosion") {
+    explode(drive, other);
+  } else if (outcome !== "none") {
+    catchFire(drive, other, hit.contact, outcome);
+  }
 }
 
 /**
@@ -230,12 +242,12 @@ export function catchFire(
   drive: DriveState,
   other: DriveTraffic,
   at: { x: number; y: number },
+  size: "small" | "large" = "large",
 ): void {
   if (other.fire > 0 || other.blown) return;
-  // It starts as a flicker under a wing, never as a burning car: the whole value
-  // of the beat is watching it take.
-  other.fire = 0.12;
-  other.fireMs = 0;
+  const large = size === "large";
+  other.fire = large ? DRIVE.wreckage.largeFireStart : 0.18;
+  other.fireCap = large ? 1 : DRIVE.wreckage.smallFireCap;
   drive.events.push({
     type: "trafficFire",
     pos: { x: at.x, y: at.y },
@@ -244,7 +256,7 @@ export function catchFire(
 }
 
 /**
- * ONE TICK OF EVERY FIRE ON THE ROAD — it takes hold, and then the tank decides.
+ * ONE TICK OF EVERY FIRE ON THE ROAD — it takes hold up to its promised size.
  *
  * A WALK OF THE ROAD RATHER THAN AN ANSWER TO AN EVENT, for the reason the
  * wreck smoke is one: a fire is not an instant. It catches on the tick of a
@@ -256,24 +268,16 @@ export function stepFires(drive: DriveState, dt: number): void {
   const { wreckage } = DRIVE;
   for (const other of drive.traffic) {
     if (other.fire <= 0) continue;
-    other.fireMs += dt * 1000;
     if (other.blown) {
       // Past the bang it burns itself out rather than staying lit for the leg —
       // there is nothing left in it to burn.
       other.fire = Math.max(0, other.fire - dt * 0.22);
       continue;
     }
-    other.fire = Math.min(1, other.fire + dt * wreckage.fireGrowPerSec);
-    if (other.fire < wreckage.blowAtFire) continue;
-    if (other.fireMs < wreckage.blowAfterMs) continue;
-    // WHETHER IT GOES UP AT ALL. Hashed off the vehicle AND its own burn clock,
-    // quantised to a tenth of a second — so it is a per-tick roll that costs the
-    // road's stream nothing and replays identically on the same seed.
-    const tick = Math.floor(other.fireMs / 100);
-    if (hash(other.id * 131 + tick, 67) >= wreckage.blowChancePerSec * dt) {
-      continue;
-    }
-    explode(drive, other);
+    other.fire = Math.min(
+      other.fireCap,
+      other.fire + dt * wreckage.fireGrowPerSec,
+    );
   }
 }
 
@@ -292,8 +296,20 @@ function explode(drive: DriveState, other: DriveTraffic): void {
   const { wreckage } = DRIVE;
   other.blown = true;
   other.fire = 1;
+  other.fireCap = 1;
+  if (!other.glassOut) {
+    drive.events.push({
+      type: "glassSmashed",
+      pos: { x: other.pos.x, y: other.pos.y },
+      joules: DRIVE.impact.wearJoules * wreckage.blastWear,
+    });
+  }
   other.glassOut = true;
   other.wrecked = true;
+  other.downed = true;
+  other.z = Math.max(1, other.z);
+  other.vz = Math.max(other.vz, wreckage.blastLiftPx);
+  other.spin += (hash(other.id, 71) < 0.5 ? -1 : 1) * wreckage.blastSpin;
   drive.events.push({
     type: "trafficExploded",
     pos: { x: other.pos.x, y: other.pos.y },
@@ -322,7 +338,7 @@ function explode(drive: DriveState, other: DriveTraffic): void {
     // fuel in it and a fire around it; nothing else on this road can light one,
     // which is exactly why a row of wrecks going up one after another is worth
     // the trip back.
-    if (share > 0.45) catchFire(drive, near, near.pos);
+    if (share > 0.45) catchFire(drive, near, near.pos, "large");
   }
 
   // ── AND WHAT IT COSTS THE HERO ────────────────────────────────────────────

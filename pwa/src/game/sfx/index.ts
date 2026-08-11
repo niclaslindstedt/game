@@ -116,8 +116,18 @@ export const SHIPPED_CUE_KEYS = GENERATED_CUE_KEYS;
  * mod that reskins the road's sounds is heard on the road exactly as it is
  * heard in a fight.
  */
-export function playDriveSound(synth: Synth, id: string): void {
-  playSound(synth, catalog, id, undefined, GENERATED_SOUNDS);
+export function playDriveSound(
+  synth: Synth,
+  id: string,
+  pos?: { x: number; y: number },
+): void {
+  playSound(
+    synth,
+    catalog,
+    id,
+    pos ? { pos, spatial: true } : undefined,
+    GENERATED_SOUNDS,
+  );
 }
 
 /**

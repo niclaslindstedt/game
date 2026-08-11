@@ -16,9 +16,11 @@ import {
   createDrive,
   createDriveDriver,
   driveDriverInput,
+  haltTraffic,
   laneAt,
   laneCenter,
   roadEdges,
+  skipDriveOpening,
   stepDrive,
   DRIVE,
   DRIVE_BOT_DEFAULTS,
@@ -346,15 +348,36 @@ describe("the driver's knobs", () => {
   it(
     "drives slower with a slower cruise",
     () => {
-      const quick = autoDrive(PARAMS);
-      const drive = createDrive(PARAMS);
-      const slow = createDriveDriver({ cruiseFrac: 0.5, floorFrac: 0.2 });
-      let ticks = 0;
-      while (drive.outcome === DRIVE_OUTCOME.driving && drive.ms < 400000) {
-        stepDrive(drive, 16, driveDriverInput(slow, drive));
-        ticks++;
-      }
-      expect(ticks).toBeGreaterThan(quick.ticks);
+      // MEASURE THE KNOB, NOT TWO DIFFERENT COLLISION HISTORIES. A full road
+      // made this assertion depend on which seeded traffic caught fire: the
+      // slower car could take a cleaner line and arrive first even though its
+      // requested cruise was lower. On the same empty road over the same fixed
+      // window, distance is the cruise setting's direct observable.
+      const travel = (cruiseFrac: number, floorFrac: number): number => {
+        const drive = createDrive(PARAMS);
+        skipDriveOpening(drive);
+        haltTraffic(drive);
+        drive.nextPedestrianAt = Number.POSITIVE_INFINITY;
+        drive.nextThoughtAt = Number.POSITIVE_INFINITY;
+        drive.nextPropSlot = Number.POSITIVE_INFINITY;
+        drive.blockadeDone = true;
+        drive.traffic.length = 0;
+        drive.pedestrians.length = 0;
+        drive.props.length = 0;
+        const start = drive.distance;
+        const driver = createDriveDriver({ cruiseFrac, floorFrac });
+        for (let elapsed = 0; elapsed < 20_000; elapsed += 16) {
+          stepDrive(drive, 16, driveDriverInput(driver, drive));
+        }
+        return drive.distance - start;
+      };
+
+      const quick = travel(
+        DRIVE_BOT_DEFAULTS.cruiseFrac,
+        DRIVE_BOT_DEFAULTS.floorFrac,
+      );
+      const slow = travel(0.5, 0.2);
+      expect(slow).toBeLessThan(quick);
     },
     ROAD_TIMEOUT_MS,
   );

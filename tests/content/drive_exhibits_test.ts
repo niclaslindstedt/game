@@ -48,6 +48,7 @@ import {
   CRUNCH_SOUNDS,
   DEBRIS_SOUND,
   dragSound,
+  EXPLOSION_SOUND,
   HARD_BODY_SOUNDS,
   PANEL_SOUNDS,
   SCRAPE_SOUNDS,
@@ -112,6 +113,7 @@ function soundFor(event: DriveEvent): string | undefined {
   if (event.type === "bodyCaught") return dragSound(event.kind, event.variant);
   if (event.type === "bodyCrushed") return crushSound(event.pos.x, event.pos.y);
   if (event.type === "debrisStruck") return DEBRIS_SOUND;
+  if (event.type === "trafficExploded") return EXPLOSION_SOUND;
   return undefined;
 }
 
@@ -184,6 +186,7 @@ describe("effects gallery / the DRIVE shelf", () => {
       ["panels", PANEL_SOUNDS],
       ["a shed part", [SHED_SOUND]],
       ["a breakdown", [BREAKDOWN_SOUND]],
+      ["an explosion", [EXPLOSION_SOUND]],
     ];
     const played = new Set(
       SHELF.flatMap((exhibit) =>

@@ -531,7 +531,7 @@ function breakCar(
     hardRear ? false : undefined,
   );
   // Its glass is not structure and goes long before the body does.
-  if (shatterGlass(other, force)) {
+  if (shatterGlass(other, hit)) {
     drive.events.push({
       type: "glassSmashed",
       pos: { x: other.pos.x, y: other.pos.y },
@@ -662,11 +662,6 @@ export function hurtTraffic(
   drive.remains.push(
     ...tearMachine(drive, other, hit, wreckForce(other, hit.joules)),
   );
-  // A CAR THAT HAS GIVEN UP HAS NO GLASS LEFT IN IT, whatever the last blow's
-  // energy was — the windows went several hits ago on any honest reading, and
-  // the renderer would otherwise draw a written-off shell with its screens
-  // neatly intact.
-  other.glassOut = true;
   // THE BREAKDOWN RULE IS NOT AN EJECTION RULE. A five-mile-an-hour contact is
   // enough to kill this non-hero car mechanically, but it is not enough to
   // throw or kill everybody inside it. Only a physically terminal blow forces

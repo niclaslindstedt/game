@@ -16,9 +16,10 @@ and the comparison is worthless in a way nothing warns about.
     git stash pop
     npm run assets
 
-Two environment notes for the same pass, both of which cost a retry here: the
-Chromium the docs point at is `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`
-(the unversioned `chromium/` directory in that folder is not the binary), and a
-scratchpad script that imports `sharp` has to RUN from the repo root or Node
-cannot resolve it — pass an absolute path to `node` from the repo directory
-rather than cd-ing to the scratchpad.
+Two environment notes for the same pass, both of which cost a retry here: use
+the VERSIONED Chromium binary installed for the current host — remote Linux
+commonly puts it under `/opt/pw-browsers/`, while macOS uses
+`~/Library/Caches/ms-playwright/` — rather than assuming the unversioned path is
+an executable; and a scratchpad script that imports `sharp` has to RUN from the
+repo root or Node cannot resolve it, so pass an absolute path to `node` from the
+repo directory rather than cd-ing to the scratchpad.

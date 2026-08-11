@@ -34,7 +34,7 @@ import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
 import { drawGore } from "../render/gibs.ts";
 import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
-import { playDriveSound } from "../sfx/index.ts";
+import { playDriveSound, setListener } from "../sfx/index.ts";
 import {
   ENGINE_GRAIN_MS,
   engineNote,
@@ -62,13 +62,13 @@ import {
   crushSound,
   DEBRIS_SOUND,
   dragSound,
+  EXPLOSION_SOUND,
   glassSound,
   lampHitSound,
   panelSound,
   pickSmash,
   ROLLOVER_SOUND,
   SHED_SOUND,
-  SMASH_SOUNDS,
   splitSound,
   SUB_SOUND,
   trafficHitSound,
@@ -337,10 +337,21 @@ export function drainDrive(
   // bodies still sound like six bodies, because what makes them six is the six
   // different banks, takes and layers they picked — not six copies of one.
   const heard = new Set<string>();
+  // The road's listening stage is centred on the wagon. A source first met at
+  // the bumper therefore starts in the middle, then repeated sources behind it
+  // move naturally into the left headphone as the wagon passes.
+  const AUDIO_VIEW_WIDTH = 422;
+  setListener({
+    x: drive.car.pos.x - AUDIO_VIEW_WIDTH / 2,
+    y: drive.car.pos.y - 100,
+    width: AUDIO_VIEW_WIDTH,
+    height: 200,
+  });
+  let soundAt: { x: number; y: number } | undefined;
   const play = (id: string | undefined): void => {
     if (!id || heard.has(id)) return;
     heard.add(id);
-    playDriveSound(synth, id);
+    playDriveSound(synth, id, soundAt);
   };
   play(answer);
 
@@ -348,6 +359,7 @@ export function drainDrive(
     (event) => event.type === "trafficWrecked",
   );
   for (const event of drive.events) {
+    soundAt = "pos" in event ? event.pos : undefined;
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
     // the collision's own joules — the same number the gore burst is priced
@@ -514,10 +526,7 @@ export function drainDrive(
     // as this road ever throws it (`driveBlast`).
     if (event.type === "trafficExploded") {
       driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
-      play(SMASH_SOUNDS[0]);
-      play(SMASH_SOUNDS[1]);
-      play(SUB_SOUND);
-      play(ROLLOVER_SOUND);
+      play(EXPLOSION_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
     // machine hitting tarmac on its side actually is.

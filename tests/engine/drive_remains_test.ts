@@ -30,6 +30,7 @@ import {
   type DriveParams,
   type DriveState,
 } from "../../engine/game/drive/index.ts";
+import { forgetRemains } from "../../engine/game/drive/remains.ts";
 
 const PARAMS: DriveParams = {
   seed: 909,
@@ -259,6 +260,24 @@ describe("the split", () => {
     expect(one.remains.map((p) => [p.part, p.cut, p.seed])).toEqual(
       two.remains.map((p) => [p.part, p.cut, p.seed]),
     );
+  });
+
+  it("keeps gibs until the wagon has passed them by an off-screen margin", () => {
+    const drive = createDrive(PARAMS);
+    silence(drive);
+    drive.car.speed = DRIVE.topSpeedPx;
+    plant(drive, 120);
+    run(drive, 400);
+    expect(drive.remains.length).toBeGreaterThan(0);
+    const x = drive.remains[0]!.pos.x;
+
+    drive.car.pos.x = x + DRIVE.despawnBehindPx - 1;
+    for (let i = 0; i < 100; i++) forgetRemains(drive);
+    expect(drive.remains.length).toBeGreaterThan(0);
+
+    drive.car.pos.x = x + DRIVE.despawnBehindPx + 1;
+    forgetRemains(drive);
+    expect(drive.remains.some((piece) => piece.pos.x === x)).toBe(false);
   });
 });
 

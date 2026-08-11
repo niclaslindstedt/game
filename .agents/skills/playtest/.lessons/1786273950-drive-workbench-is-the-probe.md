@@ -11,8 +11,10 @@ is the workbench deep link (`pwa/src/game/drive-screen/DriveWorkbench.tsx`):
 `?drive&bot=1` hands the wheel to the engine's `createDriveDriver`,
 `&difficulty=`/`&seed=` pin the rung and the stretch, and `&city=0` opens IN the
 town so a pass about the traffic does not spend five seconds watching the
-approach every run. Launch it with plain Playwright and
-`executablePath: "/opt/pw-browsers/chromium"`.
+approach every run. Launch it with plain Playwright and the Chromium executable
+installed for the current host (typically `/opt/pw-browsers/` on remote Linux
+or `~/Library/Caches/ms-playwright/` on macOS); discover the versioned binary
+rather than assuming one cache path.
 
 To see something RARE on that road (a police chase is ~3.5% of lane marks), turn
 its own knob in `DRIVE.drivers.chase` up for the shot and put it back — and turn

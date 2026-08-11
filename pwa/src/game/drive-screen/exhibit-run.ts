@@ -247,7 +247,13 @@ export function runDriveExhibit(deps: {
         // THE FX AGE ON THE DRIVE'S OWN CLOCK, inside the fixed step — the same
         // rule the screen obeys, and what makes an eighth-speed take stretch a
         // spark shower rather than fast-forwarding through it.
-        stepDriveFx(fx, STEP_MS, drive.ms);
+        stepDriveFx(
+          fx,
+          STEP_MS,
+          drive.ms,
+          drive.car.pos.x,
+          drive.params.direction,
+        );
         if (exhibit.engine) runEngineNote(drive, engine);
       }
       if (onDials && exhibit.dash) {

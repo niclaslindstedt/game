@@ -154,8 +154,19 @@ function meet(
     impulse / massA / mPerPx,
     joules,
     contact,
+    closingPx,
   );
-  answer(drive, b, a, { nx, ny }, 1, impulse / massB / mPerPx, joules, contact);
+  answer(
+    drive,
+    b,
+    a,
+    { nx, ny },
+    1,
+    impulse / massB / mPerPx,
+    joules,
+    contact,
+    closingPx,
+  );
 
   a.crashCooldownMs = DRIVE.between.immuneMs;
   b.crashCooldownMs = DRIVE.between.immuneMs;
@@ -180,6 +191,7 @@ function answer(
   dvPx: number,
   joules: number,
   contact: { x: number; y: number },
+  closingPx: number,
 ): void {
   const def = vehicleDef(one.variant);
   const dv = { x: sign * n.nx * dvPx, y: sign * n.ny * dvPx };
@@ -201,6 +213,7 @@ function answer(
     // tells a rear-ending from a head-on, and a head-on between two of them is
     // the sight this whole pass pays for.
     approach: by.speed * (one.faceLeft ? -1 : 1),
+    closingPx,
   };
 
   breakTrafficLamps(one, by.pos.x);
@@ -233,7 +246,7 @@ function answer(
   // which is the whole reason `smashEnd` takes WHO HIT IT rather than assuming
   // the hero.
   smashEnd(drive, one, hit, by.pos.x);
-  if (shatterGlass(one, force)) {
+  if (shatterGlass(one, hit)) {
     drive.events.push({ type: "glassSmashed", pos: contact, joules });
   }
   if (one.downed) return;
