@@ -92,12 +92,21 @@ export function stepBurning(state: DriveFxState, drive: DriveState): void {
       // WHERE THE STEEL IS ACTUALLY GRINDING — the bumper, not the middle of
       // either car. It is the near END of the thing being pushed, which is the
       // one place on the pair the two of them are in contact.
+      //
+      // …AND THAT END MOVES WITH THE BODY. The offset used to be laid straight
+      // down the road whatever the car was doing, so a vehicle knocked askew
+      // threw its sparks from a point in mid-air beside itself — the further it
+      // was turned, the further out they came. The end is the same distance
+      // away, it is just no longer level: the sprite turns about its own seat
+      // (`wreck-draw.ts`), and one world px across the road is one screen px
+      // down (`seatY`), so the rotated offset is the honest place to put them.
       const def = vehicleDef(other.variant);
       const toward = drive.car.pos.x < other.pos.x ? -1 : 1;
+      const reach = def.halfLengthPx * toward;
       driveGrindSparks(
         state,
-        other.pos.x + def.halfLengthPx * toward,
-        other.pos.y,
+        other.pos.x + reach * Math.cos(other.angle),
+        other.pos.y + reach * Math.sin(other.angle),
         drive.ms,
         // The longer he leans on it the more of it is on the road: a wreck being
         // bullied along has its own underside dragging by now.

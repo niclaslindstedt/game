@@ -1248,9 +1248,12 @@ export const DRIVE = {
      * together — the between-traffic twin of `separationPx`. */
     partPx: 46,
     /** How much of the exchange goes into spinning them, per unit of lateral
-     * Δv, and the most one blow may put on. */
+     * Δv, and the most one blow may put on — held to the same rate the hero's
+     * own blows are (`crush.maxYawSpin`), because the body they are turning is
+     * capped at the same few degrees either way (`crush.maxYawRad`) and a
+     * faster spin only means arriving there on the frame of the hit. */
     yawPerMs: 0.5,
-    maxYawSpin: 3.2,
+    maxYawSpin: 1.6,
   },
 
   // ── BREAKING A VEHICLE, PHYSICALLY ────────────────────────────────────────
@@ -1365,11 +1368,43 @@ export const DRIVE = {
     /** …and the most one blow can add, so a corner clip is a spin rather than a
      * top. A car turning faster than this is one that is off its wheels, and
      * that is `tipMs`'s question. */
-    maxYawSpin: 3.4,
+    maxYawSpin: 1.6,
     /** How fast a spun-out car's yaw bleeds off (1/s), and the rate under which
      * it is straight again. */
     yawDampPerSec: 1.1,
-    yawRestRad: 0.25,
+    /**
+     * THE MOST A CAR ON ITS WHEELS MAY BE TURNED (rad) — SIX DEGREES, and it was
+     * effectively sixty.
+     *
+     * The cap used to be `yawRestRad * 4`, which is most of a quarter turn, and
+     * a shoved car sat at it: yawed thirty or forty degrees to the direction it
+     * was actually travelling and sliding up the road that way, which reads as a
+     * car on ice rather than a car being pushed. Nothing on this road does that,
+     * and nothing on a real one does either — a car that has been shunted is
+     * knocked a few degrees out of line and pulled straight again by its own
+     * tyres inside a second. A blow that would genuinely put one sideways is a
+     * blow that puts it OVER, and that is `tipsOver`'s question rather than this
+     * one's.
+     *
+     * SIX RATHER THAN TEN because ten was still reading as a slide: the eye
+     * measures the yaw against the LANE MARKINGS, which are dead straight and
+     * right under the car, and a body six degrees off them is a car that has
+     * been knocked about while a body ten degrees off them is a car pointing
+     * somewhere else. It is also why `maxYawSpin` came down with it — reaching
+     * the cap is a turn the eye can follow rather than a snap on the frame of
+     * the hit.
+     */
+    maxYawRad: 0.1,
+    /** …and how fast the tyres pull it back in line (1/s) — about a second from
+     * the cap to straight, so the recovery is as visible as the knock. */
+    yawStraightenPerSec: 2.2,
+    /** …and what it settles at instead when one END has no wheel left under it
+     * (rad): that end sits DOWN, by two degrees, which is enough that a car
+     * dragging a bare hub is visibly broken standing still and nowhere near
+     * enough to read as a car that has spun. Both ends gone is level again —
+     * level and lower, which the picture cannot say and a doubled tilt would
+     * say wrongly. */
+    yawSetPerWheel: 0.035,
     /** How many pieces a CAR sheds when it folds — a car coming apart throws
      * bumper, trim and glass down the road, and it is the same `tearMachine`
      * the two-wheelers use, cut out of the car's own art. Per unit of force,

@@ -858,6 +858,108 @@ describe("breaking a car, physically", () => {
     // …and twelve tonnes takes the same blow and barely notices it.
     expect(hatch).toBeGreaterThan(bus * 4);
   });
+
+  it("knocks a clipped car a few degrees askew and then straight again", () => {
+    // A CAR ON ITS WHEELS DOES NOT TRAVEL SIDEWAYS. A clip turns it — that much
+    // is right, and it is what a corner-first blow does — but it used to be
+    // allowed most of a quarter turn (`yawRestRad * 4`, nearly sixty degrees)
+    // AND the straightening ran on the single frame the spin died on, after
+    // which the whole block stopped being entered at all. So a shoved car sat
+    // permanently yawed thirty-odd degrees to the direction it was moving in
+    // and slid up the road that way, which reads as a car on ice.
+    //
+    // What is pinned is the SHAPE of it: knocked askew by a few degrees, and
+    // back in line under its own tyres a second or so later.
+    const state = drive();
+    floorIt(state, 5000);
+    haltTraffic(state);
+    state.traffic.length = 0;
+    state.pedestrians.length = 0;
+    state.props.length = 0;
+    // Caught on the corner rather than met square — a blow with a lever arm on
+    // it, which is the one that turns a car at all.
+    const one = createTraffic(
+      state.nextId++,
+      indexOf("traffic_sedan"),
+      { x: state.car.pos.x + 34, y: state.car.pos.y - 8 },
+      200,
+    );
+    state.traffic.push(one);
+    state.car.speed = DRIVE.topSpeedPx * 0.5;
+    let worst = 0;
+    for (let t = 0; t < 4000; t += 16) {
+      // Clip it, then steer clear and leave it alone.
+      tick(state, t < 500 ? 0 : 0.35);
+      if (t > 500) state.car.pos.y -= 1.5;
+      // ONCE THE CLIP IS OVER, KEEP THE PAIR TRAVELLING TOGETHER. A vehicle
+      // that falls behind the wagon is DESPAWNED (`despawnBehindPx`), and every
+      // reading after that is the frozen object this test is still holding
+      // rather than an angle that settled — which reads exactly like the bug
+      // this case is about.
+      if (t > 600) {
+        one.speed = state.car.speed;
+        one.cruise = state.car.speed;
+      }
+      worst = Math.max(worst, Math.abs(one.angle));
+    }
+    // It was genuinely turned…
+    expect(worst).toBeGreaterThan(0.05);
+    // …by a few degrees rather than by a third of a turn (it stayed on its
+    // wheels, so this is not the rollover's cartwheel)…
+    expect(one.downed).toBe(false);
+    expect(worst).toBeLessThanOrEqual(DRIVE.crush.maxYawRad + 1e-6);
+    // …and its tyres pulled it back in line.
+    expect(Math.abs(one.angle)).toBeLessThan(0.02);
+  });
+
+  it("sits the end down that has no wheel left under it", () => {
+    // WHAT PULLS A CAR LEVEL IS THE WHEEL, so the end that has lost one keeps
+    // its set while everything else straightens out — which is the picture the
+    // wheels coming off has been owed since they started coming off, and the
+    // reason a wreck looks broken standing still.
+    //
+    // THE SIGN IS A CLAIM ABOUT THE PICTURE: the renderer turns the body about
+    // its seat before mirroring it, so a positive angle drops whatever is on the
+    // RIGHT — the nose of a car pointing that way.
+    const settle = (wheelsOff: number, faceLeft: boolean): number => {
+      const state = drive();
+      floorIt(state, 5000);
+      haltTraffic(state);
+      state.traffic.length = 0;
+      state.pedestrians.length = 0;
+      state.props.length = 0;
+      const one = createTraffic(
+        state.nextId++,
+        indexOf("traffic_sedan"),
+        { x: state.car.pos.x + 200, y: state.car.pos.y },
+        200,
+      );
+      one.wheelsOff = wheelsOff;
+      one.faceLeft = faceLeft;
+      // Knocked well off line first, so what is measured is where it SETTLES
+      // rather than where it was put.
+      one.angle = -0.3;
+      state.traffic.push(one);
+      for (let t = 0; t < 3000; t += 16) {
+        tick(state, 0);
+        one.speed = state.car.speed;
+        one.cruise = state.car.speed;
+      }
+      return one.angle;
+    };
+    const set = DRIVE.crush.yawSetPerWheel;
+    // A couple of degrees — crooked, not spun.
+    expect(set).toBeLessThan(0.05);
+    // Nose wheel gone: nose down, and "down" follows the way it is pointing.
+    expect(settle(1, false)).toBeCloseTo(set, 5);
+    expect(settle(1, true)).toBeCloseTo(-set, 5);
+    // Tail wheel gone: the other end.
+    expect(settle(2, false)).toBeCloseTo(-set, 5);
+    // Both gone: level again — level and lower, which the picture cannot say.
+    expect(settle(3, false)).toBe(0);
+    // …and a car with its wheels on ends up flat whatever hit it.
+    expect(settle(0, false)).toBe(0);
+  });
 });
 
 describe("the delivery trade on the pavement", () => {

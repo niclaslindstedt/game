@@ -46,7 +46,7 @@ import { billboardBearing } from "./flags.ts";
 import { killMerchant } from "./merchant.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
-import { anyZoneContains } from "./zones.ts";
+import { anyZoneWithin } from "./zones.ts";
 import {
   CAR_FIX,
   type CarDetachable,
@@ -295,6 +295,23 @@ export const DEPARTURE = {
    * on purpose: the picture is GONE before the run is torn down, so the swap
    * happens behind black rather than under a fade that is still lifting. */
   fadeAt: 0.8,
+  /**
+   * HOW FAR SHORT OF THE ROAD THE PICTURE STARTS GOING DARK (world px).
+   *
+   * THE DIM USED TO START AT THE TARMAC, which is half a beat too late: the
+   * fade takes `durationMs * fadeAt` to reach black and the wagon is doing
+   * `CAR.driveSpeed` while it runs, so the last thing the player watched was
+   * his car driving a clear sixty px OUT ONTO the road, in full light, and only
+   * then the lights going down. The car is supposed to be gone by then — the
+   * road it is joining is a road the game does not have, and the next thing the
+   * player sees is a different one entirely.
+   *
+   * So the beat begins that same sixty px EARLIER — `driveSpeed × durationMs ×
+   * fadeAt`, which is the distance the fade costs — and the screen is black on
+   * the frame the wheels reach the tarmac. Nothing else moves: the trip still
+   * books at the end of the same beat, and the car still coasts under it.
+   */
+  dimFromPx: 64,
 } as const;
 
 /** The shed wheel's highway physics: gravity, the bounce's keep-fraction,
@@ -1379,8 +1396,14 @@ function driveCar(
     // THREE LATCHES, STRONGEST FIRST. A ROAD is the real departure — the car
     // has left the property. Failing that, an open garage door's threshold.
     // Failing both, the old radial latch off the parking spot.
+    //
+    // THE ROAD'S LATCH IS TRIPPED SHORT OF THE ROAD (`DEPARTURE.dimFromPx`),
+    // because what it starts is a FADE rather than a cut: measured at the kerb
+    // it left the wagon driving out onto the tarmac in full light for the whole
+    // half-second the picture takes to go dark. The other two are thresholds
+    // rather than edges and already have their own reach.
     const commits = road
-      ? anyZoneContains(road, car.pos)
+      ? anyZoneWithin(road, car.pos, DEPARTURE.dimFromPx)
       : garageDoors.length > 0
         ? garageDoors.some(
             (d) =>
