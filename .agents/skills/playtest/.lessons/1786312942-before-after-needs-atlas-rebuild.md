@@ -1,7 +1,7 @@
 ---
 title: A before/after screenshot pass over an ART change must rebuild the atlas between the two runs
 date: 2026-08-09
-scope: content/sprites/, pwa/src/game/assets/
+scope: content/sprites/, pwa/src/game/assets.ts
 concepts: [playwright, probes, screenshots, assets]
 ---
 
