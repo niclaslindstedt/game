@@ -344,6 +344,9 @@ export function drainDrive(
   };
   play(answer);
 
+  const carWreckedThisTick = drive.events.some(
+    (event) => event.type === "trafficWrecked",
+  );
   for (const event of drive.events) {
     // ── WHAT THE HIT LOOKS AND SOUNDS LIKE ────────────────────────────────
     // Every collision the engine books gets both. The WEIGHT of it comes from
@@ -407,18 +410,21 @@ export function drainDrive(
       play(DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
-      const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
-      // PAST THE TOP SHELF IT IS NOT A HIT, IT IS A CRASH: the big bank, the
-      // frame's own ceiling, and the sub laid underneath it. Nothing here
-      // decides how hard it was — the shelf is picked off the collision's own
-      // joules, same as the two under it.
-      if (hit.sub) {
-        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
-        play(SUB_SOUND);
-      } else {
-        driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      // A CLOSED CAR NOW DIES ON EVERY CONTACT, INCLUDING A 5 MPH PULL-AWAY.
+      // Its `trafficWrecked` event below owns the full smash/sub/breakdown
+      // stack; playing the energy-scaled contact too would put the obsolete
+      // light scrape under it and make one crash sound like two impacts. Open
+      // machines still use this ladder for their knock-down and snap outcomes.
+      if (!carWreckedThisTick) {
+        const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
+        if (hit.sub) {
+          driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+          play(SUB_SOUND);
+        } else {
+          driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+        }
+        play(hit.id);
       }
-      play(hit.id);
     }
     // A CAR'S WINDOWS LEAVING IT, with nobody through them. Its own beat, and
     // played OVER whatever else the collision made: the crunch is the steel and

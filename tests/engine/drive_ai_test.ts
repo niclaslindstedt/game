@@ -141,19 +141,23 @@ describe("the other drivers", () => {
     // claim resting on which six cars happened to be in frame. It read 2.4 on
     // the three seeds it was written against and 1.95 on the three it got when
     // an unrelated change to the road's length re-seeded the town, with the
-    // underlying spread unmoved (2.6 against 2.5 over twelve). A hundred-odd
+    // underlying spread unmoved (2.6 against 2.5 over twelve). Sixty-plus
     // samples is enough for the percentiles to be about the temper table rather
-    // than about the draw.
+    // than about the draw; instant breakdowns leave fewer live cars in frame.
     const paces: number[] = [];
     for (let seed = 1; seed <= 12; seed++) {
       const state = drive({ seed });
       roll(state, 20000);
       for (const one of state.traffic) {
-        if (vehicleDef(one.variant).pavement || one.wrecked) continue;
+        // `cruise` is the pace this driver CHOSE and survives a breakdown, so
+        // wrecks still belong in this distribution. Excluding them made the
+        // sample size a measurement of how many pile-ups the road had instead
+        // of the temper table this test is about.
+        if (vehicleDef(one.variant).pavement) continue;
         if (Math.abs(one.cruise) > 1) paces.push(Math.abs(one.cruise));
       }
     }
-    expect(paces.length).toBeGreaterThan(100);
+    expect(paces.length).toBeGreaterThan(60);
     paces.sort((a, b) => a - b);
     const low = paces[Math.floor(paces.length * 0.1)]!;
     const high = paces[Math.floor(paces.length * 0.9)]!;
@@ -269,7 +273,7 @@ describe("a driver that is trying not to crash", () => {
     expect(Math.abs(quick.speed)).toBeGreaterThan(250);
   });
 
-  it("stands on the brake for something stopped dead in its lane", () => {
+  it("stands on the brake for a wreck, though even its walking-pace scuff breaks the car", () => {
     // THE OTHER HALF, and the one matching alone cannot answer: a wreck is not
     // slower, it is STOPPED, and a driver that only lifted off arrived at it at
     // most of its cruise. What is pinned is the speed it is doing by the time it
@@ -289,12 +293,9 @@ describe("a driver that is trying not to crash", () => {
     }
     // It arrived at a crawl instead of at forty miles an hour…
     expect(slowest).toBeLessThan(60);
-    // …and whatever it did about the van after that — squeeze past it, sit
-    // behind it — it did not drive into it. Read off its own WEAR rather than
-    // off the event, because the two are not the same claim: a car creeping past
-    // a wreck at walking pace can still scuff it, and a scuff is not the thing
-    // this test is about. A hit at three hundred is.
-    expect(behind.wear).toBeLessThan(0.05);
+    // …but it DID touch it. Five or ten miles an hour is deliberately still a
+    // crash now, so the car breaks down instead of being lightly shoved on.
+    expect(behind.wrecked).toBe(true);
   });
 
   it("still runs out of road when the gap goes inside its own braking", () => {

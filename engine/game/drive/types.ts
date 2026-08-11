@@ -386,16 +386,15 @@ export type DriveTraffic = {
    * (`drive/fleet.ts`), which is also what says what it weighs. */
   variant: number;
   /**
-   * HOW BROKEN IT IS, 0 → 1 — the energy this vehicle has personally absorbed,
-   * as a fraction of what it takes to finish one off.
+   * HOW BROKEN IT IS, 0 → 1. A closed car jumps straight to 1 on contact: every
+   * crash kills its engine and selects broken art, even at pull-away speed.
+   * Open machines still accumulate the collision's mass-scaled force here on
+   * their way from upright to down, snapped and obliterated.
    *
-   * THE OTHER CARS ARE DESTRUCTIBLE NOW, and this is the whole of it. A shunt
-   * used to be a shove with no memory: hit the same van ten times and it was
-   * the same van. What the player is owed for ten hits is a van that LOOKS like
-   * it has been hit ten times, so the wear drives a damage rung
-   * (`DRIVE.trafficRungs`) the renderer swaps art for, and past 1 the thing is
-   * finished — dead in the road, which is the last rung and the one that
-   * changes the road rather than the picture.
+   * A shunt used to be a shove with no lasting answer. The new answer is
+   * terminal for cars: the renderer goes directly to the wreck rung/crash art
+   * and the engine dies. The gradual values remain for open machines, whose
+   * weight decides whether they merely go down or come apart.
    */
   wear: number;
   /** …and the rung that wear has reached, latched so it only ever climbs. The
@@ -403,7 +402,8 @@ export type DriveTraffic = {
   rung: number;
   /**
    * IT IS FINISHED — engine dead, rolling to a stop, and about to be a
-   * stationary obstacle in a live lane.
+   * stationary obstacle in a live lane. Every closed-car collision latches it;
+   * the hero's wagon is the intentional videogame exception.
    *
    * Worth its own flag rather than `wear >= 1` because it is a LATCH with
    * consequences: a wrecked car stops steering, stops being shunted like a live
