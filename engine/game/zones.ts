@@ -62,6 +62,39 @@ export function anyZoneContains(
   return false;
 }
 
+/**
+ * …AND IS IT WITHIN `marginPx` OF ANY OF THEM — inside, or that near the edge.
+ *
+ * The same question `anyZoneContains` asks with the region grown by a margin,
+ * which is what "about to reach it" means for anything that is APPROACHING a
+ * zone rather than standing in one. The departing car is the case it exists for
+ * (`LevelDef.driveOut`): a beat that has to be OVER by the time the wheels are
+ * on the tarmac has to begin a car's length or two before them.
+ */
+export function anyZoneWithin(
+  zones: readonly Zone[] | undefined,
+  pos: Vec2,
+  marginPx: number,
+): boolean {
+  if (!zones) return false;
+  for (const zone of zones) {
+    if (zone.shape === "circle") {
+      const dx = pos.x - zone.pos.x;
+      const dy = pos.y - zone.pos.y;
+      const reach = zone.radius + marginPx;
+      if (dx * dx + dy * dy <= reach * reach) return true;
+      continue;
+    }
+    const r = zone.rect;
+    // Nearest point on the rect, and how far off it we are — zero inside it, so
+    // this answers `zoneContains` for a margin of nought.
+    const dx = Math.max(r.x - pos.x, 0, pos.x - (r.x + r.width));
+    const dy = Math.max(r.y - pos.y, 0, pos.y - (r.y + r.height));
+    if (dx * dx + dy * dy <= marginPx * marginPx) return true;
+  }
+  return false;
+}
+
 /** The bounding box of a list of zones, or null for an empty list. The one
  * reading of "where is this region, roughly" — what a strip's LONG AXIS is
  * measured on (the trader's beat, the departing car's road). */

@@ -639,22 +639,43 @@ export function stepTraffic(state: DriveState, dt: number): void {
     // different motion from a rolled one's cartwheel and has to keep running
     // while the car does everything else it was doing. Ahead of the wreck check
     // on purpose: an engine that has died does not stop the body rotating.
-    if (other.spin !== 0) {
+    const rest = restAngle(other);
+    if (other.spin !== 0 || other.angle !== rest) {
+      const { crush } = DRIVE;
       other.angle += other.spin * dt;
-      const damp = Math.max(0, 1 - DRIVE.crush.yawDampPerSec * dt);
+      const damp = Math.max(0, 1 - crush.yawDampPerSec * dt);
       other.spin *= damp;
-      if (Math.abs(other.spin) < 0.2) {
-        other.spin = 0;
-        // …and it straightens back up, because a car whose driver still has the
-        // wheel does not spend the rest of the road at an angle. A WRECK does:
-        // nobody is correcting it.
-        if (!other.wrecked) other.angle *= 0.9;
-        if (Math.abs(other.angle) < 0.02) other.angle = 0;
+      if (Math.abs(other.spin) < 0.2) other.spin = 0;
+      // …AND FOUR TYRES ON TARMAC PULL IT STRAIGHT AGAIN, every tick, all the
+      // way back to where it settles.
+      //
+      // BOTH HALVES OF THAT WERE WRONG. The straightening lived INSIDE the
+      // spin's own branch and ran on the single frame the spin died on — one
+      // multiply by 0.9 — and the frame after that `spin` was zero, so the whole
+      // block stopped being entered at all and the body kept whatever angle it
+      // had for the rest of the leg. A car shoved down the road therefore
+      // travelled at a fixed thirty degrees to the direction it was moving in,
+      // sliding sideways like a thing on ice, which is the one thing on this
+      // road nothing has ever done. It was also allowed to reach `yawRestRad *
+      // 4` — nearly sixty degrees — which is not a car being nudged askew, it is
+      // a car that should have gone over (`tipsOver`).
+      //
+      // …AND A WRECK STRAIGHTENS TOO, which the old note argued against on the
+      // grounds that nobody is correcting it. What pulls a car back in line is
+      // not the driver, it is the TYRES: a body yawed to its own direction of
+      // travel is scrubbing sideways on four contact patches, and that scrub is
+      // exactly the force that lines it back up. A dead engine does not change
+      // it. What DOES is losing the wheel that was doing the work — see
+      // `restAngle`.
+      if (other.spin === 0) {
+        const back = Math.min(1, crush.yawStraightenPerSec * dt);
+        other.angle += (rest - other.angle) * back;
+        if (Math.abs(other.angle - rest) < 0.01) other.angle = rest;
       }
-      // Held well short of a quarter turn while it is still a car being driven
-      // — past that it is not spinning, it is over, and that is `tipsOver`'s
-      // question rather than this one's.
-      const cap = DRIVE.crush.yawRestRad * 4;
+      // A FEW DEGREES, not a quarter turn: this is a car on its wheels being
+      // shoved about, and anything past it is the rollover the collision has
+      // its own test for.
+      const cap = crush.maxYawRad + Math.abs(rest);
       other.angle = clamp(other.angle, -cap, cap);
     }
 
@@ -754,6 +775,32 @@ export function stepTraffic(state: DriveState, dt: number): void {
     // way back before it is worth forgetting.
     return behind > -DRIVE.despawnBehindPx && behind < DRIVE.spawnAheadPx * 2.2;
   });
+}
+
+/**
+ * THE ANGLE THIS VEHICLE SETTLES AT (rad) — nought for a car with a wheel at
+ * each end, and a couple of degrees NOSE DOWN or TAIL DOWN for one missing one.
+ *
+ * THE END WITH NOTHING UNDER IT DROPS, which is the whole rule and the only one
+ * that reads: a car dragging a bare hub sits down on that corner, and it stays
+ * sat down, because what pulls a body level again is the wheel that is no longer
+ * there. Everything else straightens (see the caller) — this is the one thing on
+ * a car being shoved about that is allowed to keep an angle at all.
+ *
+ * BOTH ENDS GONE IS LEVEL AGAIN, and lower — which the picture has no way to
+ * say, and a car tilted twice as far would say something quite different.
+ *
+ * THE SIGN IS THE BODY'S, NOT THE SCREEN'S. The renderer turns the sprite about
+ * its seat BEFORE mirroring it (`wreck-draw.ts`), so a positive angle always
+ * drops whatever is on the RIGHT — which is the nose of a car pointing that way
+ * and the tail of one pointing back. Reading `faceLeft` here is what keeps "the
+ * end with no wheel drops" true on both legs of the trip instead of on one.
+ */
+function restAngle(other: DriveTraffic): number {
+  const nose = (other.wheelsOff & 1) !== 0 ? 1 : 0;
+  const tail = (other.wheelsOff & 2) !== 0 ? 1 : 0;
+  const toNose = other.faceLeft ? -1 : 1;
+  return toNose * (nose - tail) * DRIVE.crush.yawSetPerWheel;
 }
 
 /**

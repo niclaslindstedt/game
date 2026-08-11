@@ -7,8 +7,12 @@
 //   1. the ROAD OUTRANKS THE DOOR — crossing the open garage-door threshold
 //      books nothing on a map that has tarmac beyond it, because a car in its
 //      own driveway has not gone anywhere;
-//   2. touching the tarmac opens the HANDOVER rather than firing the departure:
-//      the wheel leaves the player's hands and `carDeparted` is still unfired;
+//   2. COMING UP ON the tarmac opens the HANDOVER rather than firing the
+//      departure: the wheel leaves the player's hands and `carDeparted` is still
+//      unfired. It opens a car's length or two SHORT of the road
+//      (`DEPARTURE.dimFromPx`) because what it starts is a FADE — measured at
+//      the kerb it left the wagon driving out onto the tarmac in full light for
+//      the whole half-second the picture takes to go dark;
 //   3. nothing DRIVES it — the beat is the screen going dark, so the car simply
 //      coasts on with its controls released, and every run command is refused;
 //   4. the trip books ONCE, at `DEPARTURE.durationMs`, carrying the car door's
@@ -59,14 +63,14 @@ const driveEast = (state: GameState, ticks: number): string[] => {
 };
 
 /**
- * Drive east until the bumper touches the tarmac, and stop on that tick.
+ * Drive east until the dim opens, and stop on that tick.
  *
  * A fixed tick count no longer reaches the road WITHOUT overrunning the beat on
  * the far side of it: the handover is a dim rather than a scene now
- * (`DEPARTURE.durationMs`), so the window between touching the road and the
- * trip booking is well under a second. Every test below wants the state at the
- * moment of the touch, so they all ask for that rather than for a number of
- * ticks that happened to land there.
+ * (`DEPARTURE.durationMs`), so the window between the latch and the trip
+ * booking is well under a second. Every test below wants the state at the
+ * moment it opens, so they all ask for that rather than for a number of ticks
+ * that happened to land there.
  */
 const driveToRoad = (state: GameState): string[] => {
   const departs: string[] = [];
@@ -92,11 +96,20 @@ describe("the road out", () => {
     expect(state.departure).toBeNull();
   });
 
-  it("opens the DIM on the tarmac, and books nothing yet", () => {
+  it("opens the DIM coming up on the tarmac, and books nothing yet", () => {
     const state = startRoad();
     board(state);
     const departs = driveToRoad(state);
-    expect(carOf(state).pos.x).toBeGreaterThanOrEqual(1000);
+    // SHORT OF THE ROAD, BY THE DISTANCE THE FADE COSTS. The dim used to open
+    // at the kerb, which is half a beat too late: the fade takes
+    // `durationMs * fadeAt` and the wagon is doing `CAR.driveSpeed` under it, so
+    // the last thing the player watched was his car driving a clear sixty px
+    // OUT ONTO the road in full light. Begun that same distance earlier, the
+    // screen is black on the frame the wheels reach the tarmac.
+    expect(carOf(state).pos.x).toBeLessThan(1000);
+    expect(carOf(state).pos.x).toBeGreaterThanOrEqual(
+      1000 - DEPARTURE.dimFromPx,
+    );
     expect(state.departure).not.toBeNull();
     expect(state.departure?.to).toBe("test_level_2");
     expect(state.departure?.booked).toBe(false);
