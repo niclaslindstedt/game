@@ -29,11 +29,51 @@ import {
 
 import {
   CROWD_SPRITES,
+  lightBody,
   RIDER_SEATS,
   RIDER_SPRITES,
   TRAFFIC_SPRITES,
   trafficSprite,
 } from "../../pwa/src/game/drive-screen/scenery.ts";
+
+/** The canvas every vehicle on this road is drawn on. */
+const SPRITE_H = 26;
+
+/**
+ * HOW FAR THIS VEHICLE'S ART ACTUALLY REACHES from its own centre (px), read
+ * off the authored grid.
+ *
+ * The whole fleet shares one 48x26 canvas and each model is drawn somewhere
+ * inside it, so the sprite's own box says nothing about how long the thing is —
+ * which is exactly why the lamps need a table and exactly what this test holds
+ * that table to.
+ */
+function drawnReachPx(id: string): number {
+  const text = readFileSync(
+    new URL(`../../content/sprites/earth/${id}.yaml`, import.meta.url),
+    "utf8",
+  );
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line.startsWith("grid: |"));
+  expect(start).toBeGreaterThan(0);
+  const rows: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (!line.startsWith("  ")) break;
+    if (line.trim().length > 0) rows.push(line.slice(2));
+  }
+  expect(rows.length).toBeGreaterThan(0);
+  const width = Math.max(...rows.map((row) => row.length));
+  let left = width;
+  let right = 0;
+  for (const row of rows) {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] === ".") continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+    }
+  }
+  return Math.max(width / 2 - left, right - width / 2 + 1);
+}
 
 const ATLAS: Record<string, unknown> = JSON.parse(
   readFileSync(
@@ -116,6 +156,31 @@ describe("the drive's sprite tables", () => {
         // …and anything with a roof can post at least somebody through it.
         expect(def.exits).toBeGreaterThan(0);
       }
+    }
+  });
+
+  it("bolts every vehicle's lamps to its OWN body, never past the end of it", () => {
+    // A LAMP OUTSIDE THE BODYWORK IS THE ONE FAULT THAT READS: a cone thrown
+    // from a point off the end of the car is a car driving along between two
+    // lights that are not attached to it. Inside is invisible — the lamp burns
+    // under its own panel — so the rule is one-sided, and it is checked against
+    // the ART rather than against the collision extent (`halfLengthPx` is
+    // deliberately shorter than the drawing: a saloon is 20 against 23 drawn).
+    //
+    // IT CAUGHT A REAL ONE. Everything with a roof used to fall back to the
+    // HERO's wagon, which is the longest body on this road, and the hatchback is
+    // the one car drawn well inside its canvas — so it threw both beams four px
+    // clear of itself.
+    for (const def of FLEET) {
+      if (!def.lights) continue;
+      const reach = drawnReachPx(def.id);
+      const lamps = lightBody(def);
+      expect(lamps.halfPx).toBeLessThanOrEqual(reach + 1);
+      // …and not so far inside that the beam starts under the middle of the car.
+      expect(lamps.halfPx).toBeGreaterThanOrEqual(reach - 4);
+      // The lamp line is on the body too, not floating over its roof.
+      expect(lamps.liftPx).toBeGreaterThan(0);
+      expect(lamps.liftPx).toBeLessThanOrEqual(SPRITE_H);
     }
   });
 
