@@ -1248,12 +1248,13 @@ export const DRIVE = {
      * together — the between-traffic twin of `separationPx`. */
     partPx: 46,
     /** How much of the exchange goes into spinning them, per unit of lateral
-     * Δv, and the most one blow may put on — held to the same rate the hero's
-     * own blows are (`crush.maxYawSpin`), because the body they are turning is
-     * capped at the same few degrees either way (`crush.maxYawRad`) and a
-     * faster spin only means arriving there on the frame of the hit. */
+     * Δv, and the most one blow may put on — the same ceiling the hero's own
+     * blows work to (`crush.maxYawSpin`), because a body knocked about by a bus
+     * and one knocked about by the wagon swing against the same spring and
+     * should read as the same sight. The FLOOR is shared outright rather than
+     * doubled: `crush.minYawSpin`. */
     yawPerMs: 0.5,
-    maxYawSpin: 1.6,
+    maxYawSpin: 4.95,
   },
 
   // ── BREAKING A VEHICLE, PHYSICALLY ────────────────────────────────────────
@@ -1365,39 +1366,81 @@ export const DRIVE = {
      * spins nothing; one on the corner spins it out, which is the thing every
      * player who has ever seen a police video expects to happen. */
     yawPerMs: 0.42,
-    /** …and the most one blow can add, so a corner clip is a spin rather than a
-     * top. A car turning faster than this is one that is off its wheels, and
-     * that is `tipMs`'s question. */
-    maxYawSpin: 1.6,
-    /** How fast a spun-out car's yaw bleeds off (1/s), and the rate under which
-     * it is straight again. */
-    yawDampPerSec: 1.1,
     /**
-     * THE MOST A CAR ON ITS WHEELS MAY BE TURNED (rad) — SIX DEGREES, and it was
-     * effectively sixty.
+     * …AND THE BAND ONE BLOW MAY PUT ON (rad/s) — the least and the most.
+     *
+     * TWO ENDS, BECAUSE THE PICTURE HAS TWO ENDS. Against the spring below the
+     * peak angle is proportional to the spin a blow hands over, so this band IS
+     * the range of angles the road is allowed to show: the floor is a clip you
+     * can see happen at all, the ceiling is a car knocked as far out of line as
+     * one still on its wheels ever gets. Everything between them is the momentum
+     * sum's own answer, which is what makes a bus turn a fraction of what a
+     * hatchback does under the identical blow.
+     *
+     * THE FLOOR IS FOR THE EYE rather than for the physics: a graze the model
+     * books as a collision — a sound, a mark, a shower of paint — with no
+     * visible answer on the body reads as the road having missed it.
+     */
+    minYawSpin: 1.55,
+    maxYawSpin: 4.95,
+    /**
+     * THE TYRES, AS A SPRING — the restoring torque that pulls a yawed body back
+     * in line (rad/s² per rad of angle) and the damping that stops it there
+     * (1/s). Together they are the whole of how far a blow turns a car and how
+     * long it stays turned.
+     *
+     * WHY A SPRING RATHER THAN A LIMIT. `Impact.dv` carries both facts the yaw
+     * should be about — the impulse goes as the closing SPEED, and it is divided
+     * by the struck vehicle's own MASS — and a decaying spin against a hard
+     * angle cap threw all of it away: every blow above a nudge pinned the body
+     * at the cap, so a bus met at a hundred and a hatchback nudged at thirty
+     * held exactly the same angle. Against a spring the peak is PROPORTIONAL to
+     * the spin the blow handed over, so twelve tonnes turns a fraction of what a
+     * hatchback does and the cap is back to being a backstop.
+     *
+     * THE PAIR IS CRITICALLY DAMPED (`damp ≈ 2√spring`), which is the one choice
+     * that reads: under-damped and a shunted car wags its tail like a metronome,
+     * over-damped and it oozes back. Critical is a body that swings out, stops,
+     * and comes back — which is what a car on tyres does.
+     *
+     * THE NUMBERS ARE A SETTLING TIME. `√spring` is the natural frequency, about
+     * 8.6 rad/s here, and a critically damped system is done in ~4/ω — so a
+     * knock is out and back in about seven tenths of a second, and the very
+     * hardest one in nine, which is a beat rather than a wait. The peak works out
+     * at `spin / (ω·e)`, which is what sizes the band above: MEASURED over the
+     * fleet (`tests/engine/drive_fleet_test.ts`), the floor turns anything three
+     * degrees and the ceiling ten, with a bus clipped at sixty percent of the
+     * dial reaching three where a hatchback reaches the full ten.
+     */
+    yawSpringPerSec2: 74,
+    yawDampPerSec: 17.2,
+    /** …and the spin under which a body sitting at its rest angle has stopped
+     * moving (rad/s). Small: the spring runs the whole way down on its own, and
+     * this only ends the arithmetic. */
+    yawRestSpin: 0.05,
+    /**
+     * THE MOST A CAR ON ITS WHEELS MAY BE TURNED (rad) — TWELVE DEGREES, and it
+     * was effectively sixty.
      *
      * The cap used to be `yawRestRad * 4`, which is most of a quarter turn, and
-     * a shoved car sat at it: yawed thirty or forty degrees to the direction it
+     * a shoved car SAT at it: yawed thirty or forty degrees to the direction it
      * was actually travelling and sliding up the road that way, which reads as a
      * car on ice rather than a car being pushed. Nothing on this road does that,
      * and nothing on a real one does either — a car that has been shunted is
      * knocked a few degrees out of line and pulled straight again by its own
-     * tyres inside a second. A blow that would genuinely put one sideways is a
-     * blow that puts it OVER, and that is `tipsOver`'s question rather than this
-     * one's.
+     * tyres. A blow that would genuinely put one sideways is a blow that puts it
+     * OVER, and that is `tipsOver`'s question rather than this one's.
      *
-     * SIX RATHER THAN TEN because ten was still reading as a slide: the eye
-     * measures the yaw against the LANE MARKINGS, which are dead straight and
-     * right under the car, and a body six degrees off them is a car that has
-     * been knocked about while a body ten degrees off them is a car pointing
-     * somewhere else. It is also why `maxYawSpin` came down with it — reaching
-     * the cap is a turn the eye can follow rather than a snap on the frame of
-     * the hit.
+     * IT IS A BACKSTOP NOW RATHER THAN THE ANSWER. What decides the angle is the
+     * spring above against the spin the momentum sum handed over, and the spread
+     * that produces is the whole point: the band runs from three degrees for the
+     * softest blow the road books to ten for the hardest, with a bus turning a
+     * fraction of what a hatchback does under the identical hit. This is the
+     * same ten degrees as the top of that band, so all it actually catches is
+     * blows landing inside each other — two clips a tenth of a second apart,
+     * which would otherwise add.
      */
-    maxYawRad: 0.1,
-    /** …and how fast the tyres pull it back in line (1/s) — about a second from
-     * the cap to straight, so the recovery is as visible as the knock. */
-    yawStraightenPerSec: 2.2,
+    maxYawRad: 0.175,
     /** …and what it settles at instead when one END has no wheel left under it
      * (rad): that end sits DOWN, by two degrees, which is enough that a car
      * dragging a bare hub is visibly broken standing still and nowhere near
