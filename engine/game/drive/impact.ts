@@ -100,9 +100,9 @@ export type Impact = {
    * and signed toward the nose — which panel wears it (`panelAt`). */
   along: number;
   /**
-   * HOW SQUARE THE BLOW WAS: the contact normal read onto the nose. 1 is dead
-   * centre on the bumper, 0 is a body that never got in front of the car at
-   * all.
+   * HOW FULL THE AXIAL BLOW WAS. For flesh this is the contact normal read onto
+   * the nose; for another vehicle, any front/rear contact is 1 even when the
+   * geometric normal also carries a lateral shove. A true flank contact is 0.
    *
    * It was always computed here and always thrown away, which was fine while
    * the only thing that read it was the car's own share of the impulse. It is
@@ -216,6 +216,13 @@ export function solveImpact(
   );
   let nx = nearestX - contact.x;
   let ny = bodyPos.y - contact.y;
+  // FRONT OR REAR BODYWORK IS A FULL CRASH, even when only one corner meets.
+  // Keep the geometric normal below — its lateral component is what throws an
+  // offset wreck out of the lane — but do not let that angle turn meeting
+  // traffic into a fractional collision. Only a true flank contact, where the
+  // nearest point lies along the other vehicle's side (`nx === 0`), stays on
+  // the reduced scrape response.
+  let fullVehicleCrash = bodyHalfLength > 0 && nx !== 0;
   const reach = (BODY_RADIUS + bodyRadius) * band;
   const dist = Math.hypot(nx, ny);
   if (dist > reach) return null;
@@ -276,6 +283,9 @@ export function solveImpact(
     const len = Math.hypot(nx, ny);
     nx /= len;
     ny /= len;
+    // Tunnelling hid the end behind an overlapping pair of axis segments, but
+    // the reconstructed first-touch normal still describes a rear impact.
+    fullVehicleCrash = true;
   } else {
     nx /= dist;
     ny /= dist;
@@ -309,12 +319,13 @@ export function solveImpact(
   const sweepMs = sweepPx * mPerPx;
   const reducedMass = (carMassKg * bodyMassKg) / (carMassKg + bodyMassKg);
   const impulse = (1 + restitution) * reducedMass * sweepMs; // N·s
-  // HOW SQUARE THE BLOW WAS: the contact normal read onto the nose. 1 is dead
-  // centre on the bumper, 0 is a body that never got in front of the car at
-  // all — and the car's whole answer for the collision is scaled by it. It is
-  // also what decides who leaves a car through its windscreen (`eject.ts`),
-  // which is why it now travels on the result.
-  const alongNose = Math.abs(nx * carDir);
+  // HOW FULL THE AXIAL BLOW WAS. Flesh keeps the geometric scale; vehicle ends
+  // are binary, because meeting a car corner-to-corner is still a car crash.
+  // The geometric normal remains on `dv`, adding the lateral shove that sends
+  // an offset wreck out of the lane. A true flank contact stays a scrape. This
+  // value also decides who leaves a car through its windscreen (`eject.ts`),
+  // which is why it travels on the result.
+  const alongNose = fullVehicleCrash ? 1 : Math.abs(nx * carDir);
   const normalMs = sweepMs * alongNose;
   const kinetic = 0.5 * reducedMass * (1 - restitution ** 2);
   // THE CRUSH: energy absorbed along the contact normal, which is the collision
