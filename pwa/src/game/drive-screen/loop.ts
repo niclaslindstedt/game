@@ -65,6 +65,7 @@ import {
   DEBRIS_SOUND,
   dragSound,
   EXPLOSION_SOUND,
+  SHOCKWAVE_SOUND,
   glassSound,
   lampHitSound,
   panelSound,
@@ -583,8 +584,16 @@ export function drainDrive(
     // once: the ball, the shelf, the sub under it and the frame thrown as hard
     // as this road ever throws it (`driveBlast`).
     if (event.type === "trafficExploded") {
-      if (collisionVisuals) driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
+      if (collisionVisuals) {
+        driveBlast(fx, event.pos.x, event.pos.y, drive.ms, event.big);
+      }
       play(EXPLOSION_SOUND);
+      // …AND THE RARE ONE THAT TAKES THE WHOLE STREET WITH IT. The tag comes in
+      // on the event (`blowsBig`, engine/game/drive/wreckage.ts), so the ring
+      // and the sound can never disagree about which tank this was — and it is
+      // read OUTSIDE the visuals gate, because SFW mode turns the road's damage
+      // art off and does not make it quieter.
+      if (event.big) play(SHOCKWAVE_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
     // machine hitting tarmac on its side actually is.
@@ -675,6 +684,24 @@ export function drainDrive(
           drive.ms,
         );
       play(lampHitSound(event.pos.x, event.pos.y));
+    }
+    // …AND A STREET LIGHT PUT OUT BY A BLAST FRONT, which is the opposite event:
+    // nothing has touched it, nothing about it moves, and it costs the player
+    // nothing but the light. So it gets the LENS and only the lens — no shards
+    // off a fender, no crunch of steel on concrete, no shake. The glass falls
+    // from the head to the pavement under it and that stretch of road is dark
+    // for the rest of the leg (`DriveProp.dark`).
+    if (event.type === "lampBlown") {
+      if (collisionVisuals) {
+        driveLampGlass(
+          fx,
+          event.pos.x,
+          event.pos.y,
+          lampHeadLift(event.pos),
+          drive.ms,
+        );
+      }
+      play(glassSound(event.pos.x, event.pos.y));
     }
     if (event.type === "panelBent") {
       if (collisionVisuals)

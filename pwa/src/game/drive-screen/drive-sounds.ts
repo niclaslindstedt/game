@@ -165,6 +165,18 @@ export const SUB_SOUND = "drive_impact_sub";
 /** A tank detonation: its own long, rising blast rather than four collision
  * sounds stacked sample-aligned into a clipped wall. */
 export const EXPLOSION_SOUND = "drive_explosion";
+/**
+ * …AND THE PRESSURE THAT LEAVES WITH THE RARE BIG ONE, layered UNDER the
+ * detonation rather than instead of it.
+ *
+ * It is a second sound because it is a second EVENT in the ear: the crack has
+ * already happened, and this is what arrives after it — sub, air and a rush
+ * going past, all weight and no attack. Played on exactly the explosions that
+ * throw the ring across the frame (`blowsBig`, engine/game/drive/wreckage.ts), so
+ * what the player
+ * hears and what he is looking at are one fact about the same tank.
+ */
+export const SHOCKWAVE_SOUND = "drive_shockwave";
 /** A panel folding one rung further. */
 export const PANEL_SOUNDS = [
   "drive_panel_a",
@@ -614,6 +626,7 @@ export const DRIVE_SOUND_IDS: readonly string[] = [
   ...PANEL_SOUNDS,
   ROLLOVER_SOUND,
   EXPLOSION_SOUND,
+  SHOCKWAVE_SOUND,
   SUB_SOUND,
   SHED_SOUND,
   BREAKDOWN_SOUND,

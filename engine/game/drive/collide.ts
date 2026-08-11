@@ -51,7 +51,7 @@ import {
   unparkCar,
 } from "./traffic.ts";
 import { vehicleDef } from "./fleet.ts";
-import { smashEnd } from "./wreckage.ts";
+import { smashEnd, turnedRound, wreckTotally } from "./wreckage.ts";
 import {
   ejectOccupants,
   ejectRider,
@@ -62,8 +62,27 @@ import {
 import type { Impact } from "./impact.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
 
-/** Everything the car touched this tick. */
-export function collide(drive: DriveState): void {
+/**
+ * Everything the car touched this tick.
+ *
+ * `heroSafe` is THE APPROACH, and it is the whole of what the outskirts needed.
+ * Out there the wagon is HELD (`DRIVE.opening.handsOff`): the pedal is not
+ * connected, the speed is pinned at `entrySpeedPx`, and the player has the wheel
+ * for the last second and nothing else. So the tick used to skip this pass
+ * entirely — and the oncoming traffic laid down at the gate, which closes on him
+ * at the SUM of both speeds and reaches him well before he reaches the gate,
+ * went straight THROUGH the car. The first thing the minigame showed a player
+ * was its own worst bug.
+ *
+ * Running the pass with the hero exempt is the honest fix rather than a
+ * suppression: the other vehicle answers for the collision in full — it is
+ * written off, it folds, it sheds, it is punted, its people leave — and the
+ * wagon takes no wear and loses no speed, because it is not being driven yet and
+ * a leg that opens by handing the player a bent car and a lost second is not a
+ * fair shot at the road. Everything the flag touches is the HERO's half of the
+ * answer and nothing else.
+ */
+export function collide(drive: DriveState, heroSafe = false): void {
   const { car } = drive;
   const dir = drive.params.direction;
   // WHAT THE ROAD WEIGHS ON THIS RUNG, read once for the tick rather than once
@@ -99,7 +118,11 @@ export function collide(drive: DriveState): void {
     // of the wagon, which is the bottom of a range the road's one scale cannot
     // price at both ends — see `DRIVE.impact.crowdSpeedLossScale`. It is the
     // SPEED only: the energy, and so the damage, is untouched.
-    const loss = spend(drive, hit.speedLoss * DRIVE.impact.crowdSpeedLossScale);
+    const loss = spend(
+      drive,
+      hit.speedLoss * DRIVE.impact.crowdSpeedLossScale,
+      heroSafe,
+    );
     if (!ped.counted) {
       ped.counted = true;
       drive.bodies++;
@@ -164,7 +187,7 @@ export function collide(drive: DriveState): void {
       ped.vz = hit.liftZ;
       ped.z = 0.01;
     }
-    damage(drive, hit, 1, loss);
+    damage(drive, hit, 1, loss, heroSafe);
   }
   drive.pedestrians = drive.pedestrians.filter((ped) => ped.z >= 0);
 
@@ -202,7 +225,7 @@ export function collide(drive: DriveState): void {
       DRIVE.impact.bodyBandFrac,
     );
     if (!hit) continue;
-    const loss = spend(drive, hit.speedLoss);
+    const loss = spend(drive, hit.speedLoss, heroSafe);
     drive.shunts++;
     // ONE CONTACT IS ONE IMPACT — and the cooldown is stamped HERE, before the
     // three answers below, because it used to be stamped inside them and one
@@ -278,7 +301,7 @@ export function collide(drive: DriveState): void {
     }
     // The hero's own car takes the exchange properly, which is what makes
     // trading paint the expensive mistake it should be.
-    damage(drive, hit, DRIVE.impact.trafficWearScale, loss);
+    damage(drive, hit, DRIVE.impact.trafficWearScale, loss, heroSafe);
   }
 
   if (snapped.size > 0) {
@@ -326,7 +349,7 @@ export function collide(drive: DriveState): void {
       parked ? DRIVE.impact.bodyBandFrac : 1,
     );
     if (!hit) continue;
-    const loss = spend(drive, hit.speedLoss);
+    const loss = spend(drive, hit.speedLoss, heroSafe);
     if (parked) {
       drive.shunts++;
       // IT IS A CAR, SO IT TAKES IT LIKE ONE — which it could not do while it
@@ -350,7 +373,7 @@ export function collide(drive: DriveState): void {
         pos: { x: hit.contact.x, y: hit.contact.y },
         joules: hit.joules,
       });
-      damage(drive, hit, DRIVE.impact.trafficWearScale, loss);
+      damage(drive, hit, DRIVE.impact.trafficWearScale, loss, heroSafe);
       continue;
     }
     drive.posts++;
@@ -360,7 +383,7 @@ export function collide(drive: DriveState): void {
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
     });
-    damage(drive, hit, DRIVE.impact.lampWearScale, loss);
+    damage(drive, hit, DRIVE.impact.lampWearScale, loss, heroSafe);
   }
 
   if (unparkedProps.size > 0) {
@@ -377,8 +400,15 @@ export function collide(drive: DriveState): void {
  * body of the car then feels is the speed it LOST rather than the speed the sum
  * asked for. Reading that back at every call site is how the shove and the
  * speedometer end up disagreeing.
+ *
+ * `safe` is the APPROACH (see `collide`), where the wagon is being held at a
+ * fixed cruise and nothing it meets may slow it down. It answers ZERO rather
+ * than the raw loss, so the body of the car does not dip either — a nose that
+ * dived for a hit the speedometer never felt would be the two halves of the
+ * picture disagreeing.
  */
-function spend(drive: DriveState, loss: number): number {
+function spend(drive: DriveState, loss: number, safe = false): number {
+  if (safe) return 0;
   const { car } = drive;
   const had = Math.abs(car.speed);
   car.speed = Math.max(0, had - loss);
@@ -400,7 +430,12 @@ function damage(
   hit: Impact,
   scale: number,
   loss: number,
+  /** THE APPROACH — the wagon wears none of it. See `collide`'s `heroSafe`: the
+   * car is not the player's yet, so a leg cannot open by charging him for a
+   * collision he had no pedal to avoid. */
+  safe = false,
 ): void {
+  if (safe) return;
   const { car } = drive;
   const { joules, along } = hit;
   const share = (joules / DRIVE.impact.wearJoules) * scale;
@@ -502,6 +537,10 @@ function breakCar(
   wasWrecked = false,
 ): void {
   const { car } = drive;
+  // WHAT IT WAS DOING BEFORE ANY OF THIS — the one reading `turnedRound` below
+  // needs and the only place it still exists, because the punt is about to
+  // overwrite it (`shunt`).
+  const wasDoing = other.speed;
   const hitLeft = car.pos.x < other.pos.x;
   const hitNose = hitLeft === other.faceLeft;
   /** A REAR-ENDING IS THE DIFFERENCE OF THE TWO SPEEDS. `hit.joules` already
@@ -579,6 +618,17 @@ function breakCar(
     const toNose = other.faceLeft ? -1 : 1;
     other.spin +=
       toNose * wreckage.rearShellPitch * Math.min(1.6, 0.65 + force);
+  }
+  // ── AND THE ONE BLOW NOTHING SURVIVES ───────────────────────────────────
+  // IT TURNED THE THING ROUND. Read off the punt rather than off the geometry,
+  // because that is the honest test and it needs no threshold: a car that was
+  // coming the other way and is now going back down its own lane has had every
+  // scrap of its momentum taken off it and replaced, and a vehicle does not do
+  // that to another vehicle gently. So it is the maximum — both ends in, both
+  // axles out, the tank gone — whether or not the wagon met it dead square, and
+  // whatever the combustion lottery would have said (`wreckTotally`).
+  if (turnedRound(wasDoing, other.speed)) {
+    wreckTotally(drive, other, hit, car.pos.x);
   }
   // …AND THE PEOPLE INSIDE COME OUT THROUGH THE SCREEN, if the blow was square
   // enough — or die in their seats if it was merely hard enough. Both

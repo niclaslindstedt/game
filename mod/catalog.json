@@ -3859,6 +3859,7 @@
     "drive_scrape_a",
     "drive_scrape_b",
     "drive_scrape_c",
+    "drive_shockwave",
     "drive_smash_a",
     "drive_smash_b",
     "drive_smash_c",
@@ -4434,6 +4435,9 @@
     },
     "drive_scrape_c": {
       "what": "The third trade of paint down the flank — the long one: a lower, grittier band held twice as long as the other two, for the sideswipe that goes on for half a second because neither car has anywhere to be."
+    },
+    "drive_shockwave": {
+      "what": "THE THUD YOU FEEL IN THE STOMACH — the rare tank going up hard enough to put the street lights out, layered UNDER `drive_explosion` rather than instead of it. The crack has already happened; this is the pressure arriving after it, so nothing here is bright and nothing here is fast. It is a wall of sub with a held front, a dark lowpass body under it on the road's heaviest echo send, and one distant slap of the street answering back. No sizzle, no debris, no crack — every one of those is the explosion's, and adding a second copy of them here made this read as a louder bang instead of as a bigger one."
     },
     "drive_smash_a": {
       "what": "THE BIG ONE — two tonnes of estate meeting somebody else's car at the top of the dial, and the loudest thing on this road by a wide margin. The crunch bank above it is a collision; this is a collision that ends somebody's car, and it had to be a shelf of its own because the old top end was a 260 ms saw and a boom, which is a fender-bender at any volume you play it at. Five layers, and the length is doing as much work as the level: a sub-sine falling to nearly nothing for the mass, a detuned saw dive for the structure failing, a long lowpass roar for the air it moved, a hard bandpass crack for the instant of contact, and a slow highpass rain of glass and trim still landing half a second later."

@@ -667,6 +667,22 @@ export type DrivePropKind =
  * has unrolled far enough to reach it, it exists, it can be hit, and what
  * happens to it afterwards is physics rather than a redraw.
  */
+/**
+ * ONE PRESSURE FRONT, MID-FLIGHT — where the tank went up and how long ago.
+ *
+ * A radius is not stored because it is not a fact: it is `ms` read against
+ * `DRIVE.wreckage.shockwave`, and storing the derived number is how the ring the
+ * player sees and the lamps the sim blows end up disagreeing about where the
+ * wave is.
+ */
+export type DriveShockwave = {
+  /** Where the tank was (world px). */
+  x: number;
+  y: number;
+  /** How long the front has been travelling (ms). */
+  ms: number;
+};
+
 export type DriveProp = {
   id: number;
   kind: DrivePropKind;
@@ -682,6 +698,22 @@ export type DriveProp = {
    * one flag.
    */
   felled: boolean;
+  /**
+   * ITS LENS IS OUT AND IT IS STILL STANDING — the one state a street light has
+   * that is neither lit nor knocked over.
+   *
+   * A post is dark for exactly two reasons and they are not the same picture. A
+   * FELLED one is off its base and cartwheeling down the road; a DARK one is
+   * bolted where it always was with nothing left in the head, which is what a
+   * blast front does to the lighting for a street either side of it
+   * (`stepShockwaves`). Reading "dark" off `felled` was fine while the bumper
+   * was the only thing that could put a light out, and would now have the
+   * pressure wave laying a row of posts flat.
+   *
+   * Never true of a parked car — a car has no lens and no light. A felled post
+   * is dark too, so the renderer asks for BOTH.
+   */
+  dark: boolean;
   /**
    * WHERE IT SHEARED — the foot's own place, kept after the rest of the column
    * has left it. A slip-base light does not vanish off the pavement when it is
@@ -861,13 +893,46 @@ export type DriveEvent =
    */
   | { type: "trafficFire"; pos: Vec2; joules: number }
   /**
+   * A STREET LIGHT'S LENS BLOWN OUT BY A PRESSURE FRONT — the post still
+   * standing, the glass on the pavement under it, and that stretch of road dark
+   * for the rest of the leg.
+   *
+   * ITS OWN EVENT RATHER THAN `lampFelled`, because it is the opposite of one.
+   * A felled post was HIT: it shears at the foot, cartwheels off down the
+   * tarmac, costs the wagon a slice of its own bodywork and books a `posts` on
+   * the scorecard. This one is not touched by anything — it is a mile from the
+   * car, nothing about it moves, and it costs the player nothing at all except
+   * the light he was driving by. Sharing the event would mean sharing the
+   * flight, the sound and the tally with something that has none of them.
+   *
+   * `pos` is the POST's, on the tick it goes out — which is the one tick it can
+   * be asked, exactly as the felled one's is: the app puts the glass in the air
+   * at the head above it and the eye follows it down to the pavement.
+   */
+  | { type: "lampBlown"; pos: Vec2 }
+  /**
    * …AND THE TANK WENT. The biggest single thing that happens on this road, and
    * the only event on it that HURTS THE HERO WITHOUT HIM TOUCHING ANYTHING —
    * which is why it carries its energy: the app shakes the frame off it and the
    * blast reaches the wagon through `blastDamage` rather than through a
    * collision.
+   *
+   * `big` IS THE RARE ONE — about a tenth of them (`blowsBig`), and it is a tag
+   * on this event rather than an event of its own for the reason `incinerated`
+   * rides `enemyKilled` in the run: it marks a SUBSET of a thing that already
+   * happened, and nothing downstream should have to correlate two events fired
+   * on the same tick at the same place to work out that they are one tank.
+   *
+   * It changes NOTHING about the blast — the reach, the shove, the chain and
+   * what it costs the hero are identical either way. What it buys is
+   * presentation the app could not derive for itself: a pressure ring that
+   * crosses the whole frame and the sound that arrives with it
+   * (`drive-screen/drive-fx.ts`, `drive-sounds.ts`). Answered here because it is
+   * hashed off the vehicle's own id, which is the road's own way of settling a
+   * cosmetic question without spending a draw of its seeded stream — so a
+   * replayed seed blows the same car up the same way.
    */
-  | { type: "trafficExploded"; pos: Vec2; joules: number }
+  | { type: "trafficExploded"; pos: Vec2; joules: number; big: boolean }
   /**
    * A CAR'S GLASS HAS LEFT IT, with nobody through it.
    *
@@ -1077,6 +1142,24 @@ export type DriveState = {
   /** Wheels the car has thrown, bouncing down the road behind it. Reuses the
    * run's own debris physics (`WHEEL_DEBRIS`, engine/game/vehicles.ts). */
   wheelDebris: WheelDebris[];
+  /**
+   * PRESSURE FRONTS STILL TRAVELLING — the rare big blast's own wave, one entry
+   * per tank that went up that way (`DriveEvent.trafficExploded.big`).
+   *
+   * IT IS SIM STATE FOR A THING THAT LOOKS LIKE PRESENTATION, and the street
+   * lighting is why. The ring the player sees is drawn app-side like everything
+   * else the road throws; what it DOES on its way past is put the lamps out
+   * (`DriveProp.dark`), and a dark lamp is world state the renderer, the
+   * screenshots and the next leg all read. Something has to know where the front
+   * has got to on the fixed step to decide when each post goes, and the renderer
+   * is the one place that must not — a frame skipped or a tab backgrounded would
+   * leave a street half lit.
+   *
+   * Short-lived and self-draining: an entry is dropped the tick it passes
+   * `DRIVE.wreckage.shockwave.ms`, so the list is empty on all but about a
+   * second of a leg.
+   */
+  shockwaves: DriveShockwave[];
   /** Bodies struck THIS tick, for the app to burst. Drained every tick. */
   strikes: DriveStrike[];
   /** Sounds and flashes owed to the app. Drained every tick. */

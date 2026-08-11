@@ -107,6 +107,7 @@ import {
   cityEndPx,
   cityStartPx,
   courseLength,
+  driveHeld,
   DRIVE,
   DRIVE_OUTCOME,
 } from "./config.ts";
@@ -130,7 +131,7 @@ import { collide } from "./collide.ts";
 import { collideTraffic } from "./between.ts";
 import { crushRemains, forgetRemains, stepRemains } from "./remains.ts";
 import { pushTraffic } from "./push.ts";
-import { stepFires } from "./wreckage.ts";
+import { stepFires, stepShockwaves } from "./wreckage.ts";
 import { firstPropSlot, spawnProps, stepProps } from "./street.ts";
 import {
   haltTraffic,
@@ -371,6 +372,7 @@ export function createDrive(params: DriveParams): DriveState {
     traffic: [],
     props: [],
     wheelDebris: [],
+    shockwaves: [],
     strikes: [],
     events: [],
     bodies: 0,
@@ -466,7 +468,7 @@ export function driveDashUp(drive: DriveState): boolean {
  * decide it.
  */
 export function driveHandsOff(drive: DriveState): boolean {
-  return DRIVE.opening.handsOff && !drive.cityDone;
+  return driveHeld(drive);
 }
 
 /**
@@ -677,7 +679,31 @@ export function stepDrive(
     spawnProps(drive);
     stepTraffic(drive, dt);
     stepProps(drive, dt);
+    // …AND THE APPROACH COLLIDES, WITH THE HERO EXEMPT.
+    //
+    // IT USED TO NOT COLLIDE AT ALL, and that was the first thing the minigame
+    // showed anybody: the lanes are laid from the gate onwards, and an ONCOMING
+    // car closes at the SUM of both speeds — so the traffic that belongs to the
+    // town reaches the wagon well before the wagon reaches the town, and drove
+    // clean through it. A player's opening frame was the car passing through
+    // solid objects, which teaches them in one beat that nothing out here is
+    // real.
+    //
+    // So the pass runs, and the OTHER vehicle answers for it in full — written
+    // off, folded, shedding, punted, emptied — while the wagon takes no wear and
+    // loses no speed (`collide`'s `heroSafe`). That is the fair version: the
+    // pedal is not his yet and the wheel has only just arrived, so a leg cannot
+    // open by charging him for a collision he had nothing to avoid it with, and
+    // it cannot open by pretending the collision did not happen either.
+    collideTraffic(drive);
+    collide(drive, true);
+    stepFires(drive, dt);
+    stepShockwaves(drive, dt);
+    stepRemains(drive, dt);
+    crushRemains(drive);
+    forgetRemains(drive);
     integrateCarBody(car, dt);
+    stepDebris(drive, dt);
     // THE OPENING'S OWN BEATS still land out here — his two lines and the town
     // arriving — because the approach is no longer a stretch the tick returns
     // early from before reaching them. Without this the gate is never latched on
@@ -766,6 +792,9 @@ export function stepDrive(
   // …and every fire the road is carrying takes one step, which is the only
   // thing out here that gets worse on its own clock rather than on a blow.
   stepFires(drive, dt);
+  // …and every pressure front still travelling, which is the other: it puts the
+  // street lighting out as it passes rather than all at once (`stepShockwaves`).
+  stepShockwaves(drive, dt);
   // WHAT THE WHEELS FIND, AFTER what the bumper met — the order is the car's
   // own: the nose reaches a thing before the axles do, so a body knocked down
   // this tick is run over on a later one rather than being met and crushed in

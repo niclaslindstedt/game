@@ -216,6 +216,7 @@ export function spawnProps(state: DriveState): void {
         pos: { x: piece.pos.x, y: piece.pos.y },
         variant: piece.variant,
         felled: false,
+        dark: false,
         vel: { x: 0, y: 0 },
         z: 0,
         vz: 0,

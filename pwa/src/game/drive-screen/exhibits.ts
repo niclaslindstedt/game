@@ -276,6 +276,7 @@ function plantProp(
     pos: { x: drive.car.pos.x + drive.params.direction * ahead, y },
     variant: variant % TRAFFIC_VARIANTS,
     felled: false,
+    dark: false,
     vel: { x: 0, y: 0 },
     z: 0,
     vz: 0,
@@ -745,6 +746,48 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-shockwave",
+      icon: "flame_4b",
+      label: "THE BIG ONE",
+      blurb:
+        "A TANK THAT TAKES THE WHOLE STREET - THE PRESSURE CROSSES THE FRAME",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "car",
+        "traffic",
+        "explosion",
+        "blast",
+        "shockwave",
+        "pressure",
+        "wave",
+      ],
+      showMs: 3200,
+      shows: "trafficExploded",
+      bank: [EXPLOSION_SOUND],
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // ID 87 clears BOTH of the road's deterministic rolls: the explosion
+        // third (`collisionCombustion`) and the tenth that goes up big
+        // (`blowsBig`). The card next door pins 1, which explodes and does NOT —
+        // so the two of them are the same event at its two sizes, which is the
+        // only way a reviewer can tell whether the rare one is worth being rare.
+        plantCar(
+          drive,
+          leadPx(speed) + 40,
+          drive.car.pos.y,
+          0,
+          0,
+          false,
+          undefined,
+          87,
+        );
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-rollover",
       icon: "traffic_suv",
       label: "PUT ON ITS ROOF",
@@ -952,6 +995,7 @@ export function driveExhibits(): DriveExhibit[] {
           pos: { x: slot * pitchPx, y: kerb },
           variant: 0,
           felled: false,
+          dark: false,
           vel: { x: 0, y: 0 },
           z: 0,
           vz: 0,

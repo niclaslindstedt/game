@@ -895,6 +895,38 @@ of a lever, so what shatters it is the column whipping over rather than the
 joules the bumper spent, and tying the burst to the impact made a slow nudge
 produce three apologetic specks.
 
+**The rare tank takes the street with it.** About one explosion in ten is tagged
+`big` by the engine (`blowsBig`, hashed off the vehicle's own id so a replayed
+seed blows the same car up the same way), and three things ride that tag. The app
+draws a **pressure ring** — a true CIRCLE rather than a floor ellipse, because a
+blast front is a sphere of air and what the player sees of it is the part at his
+own eye level; it decelerates on an ease-out, thins as it spreads, and carries a
+soft warm wake just inside a hard bright front. The engine walks the same front
+on the fixed step (`stepShockwaves`) and **puts the street lighting out as it
+passes** — each post inside the radius this tick sets `DriveProp.dark`, keeps
+standing, swaps to its lights-out grid, drops its lens as a `glass` burst and
+throws no beam or pool for the rest of the leg. And the motor gets the one shape
+above full force (`QUAKE_AT`, drive-haptics.ts). One pair of numbers
+(`DRIVE.wreckage.shockwave`) drives the ring and the lamps, because a wave drawn
+on one clock over lights blown on another is the one way this can be actively
+wrong. `dark` is deliberately not `felled`: a felled post is off its base and
+cartwheeling, a dark one never moved.
+
+**Glass is drawn UNDER the traffic, and it is the one effect that is.** The road
+paints what it throws over the finished frame, which is right for a spark, a
+shard in the air, smoke and a fireball — and wrong for glass, which leaves a
+window, falls to the road and STAYS there (`DriveFx.linger`). Painted last it
+was laid across the roofs of the wrecks it came out of, and over the bonnet of
+the wagon driving back through its own mess. So `drawDriveFx` takes a
+`DriveFxLayer`: the `ground` half is drawn from inside `drawDrive`, between the
+lamp pools and the y-sorted bodies (exactly where the blood and the tyre marks
+already go), and the `air` half is still drawn over the finished picture and
+carries the bloom. The count is thinned in the DRAW rather than at the emitters
+(`GLASS_DENSITY`), because an emitter's force is what the collision was worth and
+the ratios between a windscreen, a fireball and a street light are right — what
+was wrong was the absolute number of bright, additive, lingering specks a busy
+stretch accumulated.
+
 **The other traffic runs with its lights on**, through the hero's own
 `drawLightCones` rather than a second implementation — every car in this game
 throws the same light, the rule the garage and the minigame already share. Two

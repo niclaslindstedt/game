@@ -875,6 +875,7 @@ export function DriveScreen({
         assets.font,
         skidRef.current,
         collisionVisuals,
+        collisionVisuals ? fxRef.current : undefined,
       );
 
       // In SFW mode this list carries fairy dust rather than gore, so it is the
@@ -901,6 +902,9 @@ export function DriveScreen({
           // …and the atlas, for the two effects out here made of authored ART
           // rather than of particles: a burning car and a fuel tank going.
           assets.sprites,
+          // …and only the half that FLIES. The glass went down on the tarmac
+          // inside `drawDrive`, under the wrecks and under the wagon.
+          "air",
         );
       }
 

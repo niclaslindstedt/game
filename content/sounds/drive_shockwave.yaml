@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: drive_shockwave
+description: >-
+  THE THUD YOU FEEL IN THE STOMACH — the rare tank going up hard enough to put
+  the street lights out, layered UNDER `drive_explosion` rather than instead of
+  it. The crack has already happened; this is the pressure arriving after it, so
+  nothing here is bright and nothing here is fast. It is a wall of sub with a
+  held front, a dark lowpass body under it on the road's heaviest echo send, and
+  one distant slap of the street answering back. No sizzle, no debris, no
+  crack — every one of those is the explosion's, and adding a second copy of
+  them here made this read as a louder bang instead of as a bigger one.
+voices:
+  # THE FRONT. Down at the bottom of what a phone speaker can move air with, and
+  # HELD there first (`holdMs`) because a pressure front is a WALL and not a
+  # strike: without the hold a tone is a tenth of its peak a third of the way
+  # through `durationMs` and reads as another kick. It starts under the
+  # explosion's own 118 Hz so the two stack as one event rather than as two
+  # tones, and it falls most of two octaves over a second and three quarters —
+  # slow enough that the ear stops hearing pitch and starts feeling pressure.
+  - call: tone
+    type: sine
+    from: 46
+    to: 14
+    holdMs: 420
+    durationMs: 1750
+    volume: 0.12
+    echo: 0.18
+  # …DOUBLED AN OCTAVE UP AND DETUNED. A pure sine at 40 Hz is almost nothing on
+  # a laptop and everything on headphones; the octave is what carries the same
+  # gesture on a speaker that cannot reach the fundamental at all, which is most
+  # of the devices this game is played on. Triangle rather than sine for the
+  # little bit of edge that makes it audible as a THUD rather than as a hum.
+  - call: tone
+    type: triangle
+    from: 88
+    to: 27
+    holdMs: 300
+    durationMs: 1200
+    volume: 0.06
+    detuneCents: 9
+    echo: 0.26
+  # THE BODY OF IT — lowpass noise so dark it is felt rather than heard, on the
+  # road's heaviest echo send. This is the layer that says STREET rather than
+  # CAR: what comes back off the houses either side is the whole of why a blast
+  # outdoors is enormous and one in a field is a pop.
+  - call: noise
+    durationMs: 1500
+    volume: 0.075
+    delayMs: 40
+    filter:
+      type: lowpass
+      frequency: 165
+    echo: 0.5
+  # …AND THE STREET ANSWERING, once, a long way behind it. Still lowpass — a
+  # slap off brickwork at this distance has no top left in it — and quiet enough
+  # that it registers as the size of the place rather than as a second event.
+  - call: noise
+    durationMs: 900
+    volume: 0.03
+    delayMs: 520
+    filter:
+      type: lowpass
+      frequency: 380
+    echo: 0.44

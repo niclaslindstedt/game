@@ -312,6 +312,7 @@ export function runDriveExhibit(deps: {
         assets.font,
         skids,
         !exhibit.sfw,
+        exhibit.sfw ? undefined : fx,
       );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
       if (!exhibit.sfw) {
@@ -324,6 +325,9 @@ export function runDriveExhibit(deps: {
           viewH,
           drive.car.pos,
           assets.sprites,
+          // …and only the half that flies. The GLASS was laid on the tarmac
+          // inside `drawDrive`, under the wrecks it came out of.
+          "air",
         );
       }
     },

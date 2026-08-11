@@ -32,7 +32,7 @@
 // vehicle's own id — and, where it has to change over time, off its own burn
 // clock as well.
 
-import { DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
+import { driveHeld, DRIVE, DRIVE_OUTCOME, DRIVE_UNITS } from "./config.ts";
 import { vehicleDef } from "./fleet.ts";
 import { wreckForce } from "./eject.ts";
 import type { Impact } from "./impact.ts";
@@ -215,6 +215,26 @@ export function shedEndWheel(
  */
 export type CollisionCombustion = "none" | "small" | "large" | "explosion";
 
+/**
+ * DOES THIS ONE GO UP BIG — the rare tank that takes the whole street with it.
+ *
+ * ITS OWN ROLL RATHER THAN A FOURTH RUNG ON `collisionCombustion`, and the
+ * difference is what each of them decides. That ladder is about what the FIRE
+ * does — none, a flicker under a wing, an engine bay, the tank — and every rung
+ * of it changes the road: whether the thing burns, whether the fire chains to
+ * its neighbour, what standing beside it costs. This decides nothing at all
+ * about the blast. It is the same explosion with the same reach, the same shove
+ * and the same wear, and the only thing it changes is how much of it the player
+ * is SHOWN (`DriveEvent.trafficExploded.big`).
+ *
+ * Hashed off the vehicle's own id on a salt of its own, like every other
+ * cosmetic answer out here, so it costs the road's seeded stream nothing and a
+ * replayed seed blows the same car up the same way.
+ */
+export function blowsBig(id: number): boolean {
+  return hash(id, 83) < DRIVE.wreckage.bigBlastChance;
+}
+
 /** One nested roll gives the promised cumulative 70/50/30 collision odds. */
 export function collisionCombustion(id: number): CollisionCombustion {
   const roll = hash(id, 53);
@@ -228,10 +248,77 @@ function igniteFrom(drive: DriveState, other: DriveTraffic, hit: Impact): void {
   if (other.fire > 0 || other.blown) return;
   const outcome = collisionCombustion(other.id);
   if (outcome === "explosion") {
-    explode(drive, other);
+    explodeVehicle(drive, other);
   } else if (outcome !== "none") {
     catchFire(drive, other, hit.contact, outcome);
   }
+}
+
+/**
+ * DID THAT BLOW REVERSE IT — the whole trigger, in one line and with no
+ * threshold in it.
+ *
+ * Asked of the vehicle's road speed either side of the punt, and it has to be
+ * asked THERE rather than derived from the impact: `Impact.approach` says the
+ * two were closing, which a rear-ending also does, and the sum's own answer says
+ * how hard — but whether the thing actually ended up going the other way is a
+ * comparison the collision destroys the moment it makes it.
+ *
+ * A car merely STOPPED does not qualify, and should not: coming to rest is what
+ * a hard shove into a heavy vehicle does, and the road already has a whole
+ * ladder for that. Only a sign change counts.
+ */
+export function turnedRound(was: number, now: number): boolean {
+  return was !== 0 && was * now < 0;
+}
+
+/**
+ * THE BLOW THAT TURNED IT ROUND — everything a vehicle has, spent at once.
+ *
+ * THE RULE IT SERVES, stated once: **a collision that reverses the other
+ * vehicle's direction of travel is the maximum this road can do to it.** Nothing
+ * about that is a threshold to tune. A car doing forty the other way that leaves
+ * the contact doing anything at all back down its own lane has been hit by
+ * something that took every scrap of its momentum and then some, and there is no
+ * version of that a car drives away from — so the combustion lottery
+ * (`collisionCombustion`, which quietly let three in ten of them off) does not
+ * get a say, both ends go in, both axles go, and the tank goes.
+ *
+ * IT IS THE ANSWER TO "some cars in the opposing lane survive a collision".
+ * They were surviving three ways at once — the contact missing on a lateral
+ * offset (`impact.bodyBandFrac`), the blow reading as a graze
+ * (`REAR_END_BAND`), and, having got past both, a 30% roll deciding the wreck
+ * was not worth a fire. This closes the third, and it closes it on the one fact
+ * about a collision that cannot be argued with.
+ *
+ * ROOFED VEHICLES ONLY, by its callers: an `open` machine reversed by a bumper
+ * is already on the tightest rung of a ladder of its own — down, snapped in
+ * half, obliterated — and a bicycle with a fuel tank would be the one lie on
+ * this road.
+ */
+export function wreckTotally(
+  drive: DriveState,
+  other: DriveTraffic,
+  hit: Impact,
+  fromX: number,
+): void {
+  if (other.blown) return;
+  // THE TANK FIRST, and the order is deliberate rather than dramatic: `smashEnd`
+  // runs its own ignition roll, and a small fire booked a line before the
+  // explosion would be a `trafficFire` and a `trafficExploded` in the same tick
+  // — two sounds for one event. Blown, that roll is already a no-op.
+  explodeVehicle(drive, other);
+  const def = vehicleDef(other.variant);
+  const cap = def.halfLengthPx * DRIVE.crush.maxShare;
+  other.crushNose = cap;
+  other.crushTail = cap;
+  other.wear = Math.max(1, other.wear);
+  other.rung = Math.max(other.rung, DRIVE.traffic.rungs.length);
+  // BOTH ENDS, BOTH AXLES. A head-on hard enough to turn a car round has folded
+  // the front into the engine AND slammed the back end down on the road behind
+  // it; a write-off wearing one straight end is the picture this exists to stop.
+  smashEnd(drive, other, hit, fromX, true, true, true);
+  smashEnd(drive, other, hit, fromX, true, true, false);
 }
 
 /**
@@ -282,6 +369,72 @@ export function stepFires(drive: DriveState, dt: number): void {
 }
 
 /**
+ * ONE TICK OF EVERY PRESSURE FRONT ON THE ROAD — and the street lighting going
+ * out as each one passes.
+ *
+ * WHY THE SIM OWNS THIS AT ALL, when the ring itself is drawn app-side with the
+ * sparks and the smoke: a blown lamp is not a picture, it is world state. The
+ * post stands there dark for the rest of the leg, the beam and the pool it was
+ * throwing are gone, and everything downstream — the renderer, a screenshot, the
+ * next thing the player can or cannot see coming — reads it. So the FRONT has to
+ * travel on the fixed step, where a dropped frame cannot leave half a street
+ * lit, and the drawing follows it rather than the other way round
+ * (`DRIVE.wreckage.shockwave`, read by both).
+ *
+ * WHAT IT DOES NOT DO IS ANY PHYSICS. It moves nothing, hurts nobody and costs
+ * the wagon not one point of wear — the blast's own reach already settled all of
+ * that on the tick it went up (`explodeVehicle`). This is a wave of pressure
+ * crossing a street at night, and the only thing on that street made of glass is
+ * the lighting.
+ *
+ * A POST IS PASSED ONCE. `dark` is the latch, so a second blast down the same
+ * stretch finds the lamps it wants already out and says nothing — which is right:
+ * they cannot go out twice, and a repeated tinkle for a light that has been dead
+ * for half a minute is a sound with nothing under it.
+ */
+export function stepShockwaves(drive: DriveState, dt: number): void {
+  if (drive.shockwaves.length === 0) return;
+  const { reachPx, ms } = DRIVE.wreckage.shockwave;
+  for (const wave of drive.shockwaves) {
+    const was = frontPx(wave.ms, reachPx, ms);
+    wave.ms += dt * 1000;
+    const now = frontPx(wave.ms, reachPx, ms);
+    if (now <= was) continue;
+    for (const prop of drive.props) {
+      if (prop.kind !== "lamp_post") continue;
+      if (prop.dark || prop.felled) continue;
+      // THE FRONT HAS TO HAVE REACHED IT THIS TICK rather than merely be past
+      // it, so the street goes out in the order the wave arrives — which is the
+      // whole sight. A plain "inside the radius" test would blow every lamp in
+      // reach on the first frame and the ring would then travel over a street
+      // that was already dark.
+      const away = Math.hypot(prop.pos.x - wave.x, prop.pos.y - wave.y);
+      if (away > now || away <= was) continue;
+      prop.dark = true;
+      drive.events.push({
+        type: "lampBlown",
+        pos: { x: prop.pos.x, y: prop.pos.y },
+      });
+    }
+  }
+  drive.shockwaves = drive.shockwaves.filter((wave) => wave.ms < ms);
+}
+
+/**
+ * HOW FAR THE FRONT HAS GOT (world px) — the same ease-out the ring is drawn on.
+ *
+ * A blast front leaves at its fastest and is spent slowing down, so it is
+ * `t * (2 - t)` rather than a straight line: most of the street is crossed in
+ * the first third. The drawing runs the identical curve
+ * (`drive-screen/drive-fx.ts`), which is the point of both of them reading
+ * `DRIVE.wreckage.shockwave`.
+ */
+function frontPx(elapsedMs: number, reachPx: number, lifeMs: number): number {
+  const t = Math.min(1, Math.max(0, elapsedMs / lifeMs));
+  return reachPx * t * (2 - t);
+}
+
+/**
  * THE TANK GOES — the biggest single thing that happens on this road, and the
  * only one that reaches the hero without him touching anything.
  *
@@ -291,9 +444,14 @@ export function stepFires(drive: DriveState, dt: number): void {
  * chain), and the hero wears a share of it as wear on his own car. The last one
  * is the reason a burning wreck is a thing to drive away from rather than a
  * thing to watch.
+ *
+ * EXPORTED FOR `wreckTotally`, which is the one caller that already knows the
+ * answer — a blow that reversed the thing's direction of travel does not get to
+ * ask a lottery whether it was serious.
  */
-function explode(drive: DriveState, other: DriveTraffic): void {
+export function explodeVehicle(drive: DriveState, other: DriveTraffic): void {
   const { wreckage } = DRIVE;
+  const big = blowsBig(other.id);
   other.blown = true;
   other.fire = 1;
   other.fireCap = 1;
@@ -314,7 +472,14 @@ function explode(drive: DriveState, other: DriveTraffic): void {
     type: "trafficExploded",
     pos: { x: other.pos.x, y: other.pos.y },
     joules: DRIVE.impact.wearJoules * wreckage.blastWear,
+    // …AND WHETHER THIS IS THE RARE ONE. A tag on the blast rather than a
+    // second event: it is the same tank going up, and the app draws a bigger
+    // picture of it. See `blowsBig` and `DriveEvent`'s own note.
+    big,
   });
+  // …AND IF IT IS, A FRONT LEAVES IT. The ring is drawn app-side; what travels
+  // here is the thing that ARRIVES somewhere — see `stepShockwaves`.
+  if (big) drive.shockwaves.push({ x: other.pos.x, y: other.pos.y, ms: 0 });
 
   // ── WHAT IS STANDING IN IT ────────────────────────────────────────────────
   for (const near of drive.traffic) {
@@ -342,6 +507,12 @@ function explode(drive: DriveState, other: DriveTraffic): void {
   }
 
   // ── AND WHAT IT COSTS THE HERO ────────────────────────────────────────────
+  // …EXCEPT ON THE APPROACH, where it costs him nothing. This is the ONE way
+  // the road reaches the wagon without going through the collision pass, so the
+  // exemption `collide`'s `heroSafe` grants has to be repeated here or a tank
+  // going up under the nose of a car the player is not yet driving would mark it
+  // anyway — which is the whole thing the held opening exists to prevent.
+  if (driveHeld(drive)) return;
   const { car } = drive;
   const reach = Math.hypot(car.pos.x - other.pos.x, car.pos.y - other.pos.y);
   if (reach > wreckage.blastReachPx) return;

@@ -958,12 +958,37 @@ escort.ts` walks the people an escort errand puts on the field, and
   sprite is drawn standing UP the screen — tyres at its own y, roof line most of
   a lane above it — while the axis that sprite stands up is the same axis the
   lanes are laid across, so two cars whose bodywork could not possibly touch look
-  as though they are scraping down each other's flank. Only the bottom of a body
-  is on the ground at all: from the tyres up to about the waistline is the part
-  that occupies ROAD, and the contact test uses that share of the pair's own
-  extents. Vehicles only — a person is a tall thin thing met by the whole flank
-  at any height, and a lamp post is a column from the pavement to well above the
-  roof.
+  as though they are scraping down each other's flank. **The band is 1 now — the
+  whole ground footprint — and the shrink is retired.** The footprint radii it
+  was being applied to (`DriveVehicleDef.radiusPx`, 8–10 px against a 26-px lane)
+  already describe only what is on the road, so taking a further 40% off them was
+  the perspective correction applied twice, and what it bought was a bumper that
+  visibly overlapped the car in front and passed through it. Threading survives:
+  two footprints sum to about eighteen px, so a car in the lane next door still
+  has daylight either side of it. The knob stays for a mod's taller fleet.
+  Vehicles only — a person is a tall thin thing met by the whole flank at any
+  height, and a lamp post is a column from the pavement to well above the roof.
+  A CONTACT IS NEVER PARTIAL, and the two rules that make it so are worth naming
+  because both used to be silently the other way. A tick at road speed covers
+  more ground than the contact reach is wide, so the frame that first sees two
+  cars touching usually sees them already OVERLAPPED — and the overlapped case
+  reads a nose-in-a-boot as a full collision at any lane offset (`REAR_END_BAND`,
+  `drive/impact.ts`), rather than as a free graze a hand's breadth off centre. A
+  true sideswipe — centres level, the wagon grinding down a flank it has drawn
+  level with — is still the cheap case, and is still paid for in friction alone.
+  And a blow that REVERSES the other vehicle's direction of travel is the maximum
+  the road can do to it (`wreckTotally`, `drive/wreckage.ts`): both ends in, both
+  axles out, the tank gone, with no combustion lottery consulted — because a car
+  that leaves a contact going back down its own lane has had every scrap of its
+  momentum taken off it and replaced, and nothing drives away from that.
+  THE APPROACH COLLIDES TOO, WITH THE HERO EXEMPT (`collide`'s `heroSafe`). The
+  lanes are laid from the gate onwards and an oncoming car closes at the SUM of
+  both speeds, so the town's traffic reaches the wagon well before the wagon
+  reaches the town. Out there the pedal is not the player's (`opening.handsOff`),
+  so the other vehicle answers for the collision in full while the wagon takes no
+  wear and loses no speed — including from a fuel tank going up under its nose,
+  which is the one thing that reaches the car without going through the collision
+  pass (`driveHeld`, read by `explodeVehicle`).
   THE LEG IS OUTSKIRT-TOWN-OUTSKIRT-SITE, AND THE SHAPE IS A MIRROR, because the
   road is driven BOTH WAYS and a road that only reads right one way round is half
   a road. The town is bracketed by `cityStartPx` of empty road at each end

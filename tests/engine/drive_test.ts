@@ -29,6 +29,7 @@ import {
   createTraffic,
   driveDriverInput,
   driveDashUp,
+  driveHandsOff,
   driveReadyUp,
   roadWideningAt,
   CROWD_THOUGHTS,
@@ -38,6 +39,7 @@ import {
   driveVerdict,
   engineRpm,
   gearFor,
+  FLEET,
   haltTraffic,
   solvedTopSpeedPx,
   DRIVETRAIN,
@@ -815,19 +817,41 @@ describe("the street", () => {
   });
 
   it("gathers a good share of the crowd onto the crossings", () => {
+    // COUNTED AT BIRTH, and it has to be. This used to read the crowd still
+    // ALIVE at the end of a minute, which is a sample of whoever the wagon
+    // happened not to reach — a handful of people, none of whom is obliged to be
+    // standing on paint. It went to zero on the seed this file pins the moment
+    // the road's contact reach was widened (`DRIVE.impact.bodyBandFrac`), which
+    // moved the wagon's own path and nothing whatever about where the crossings
+    // are or who is put on them. A body lunges the moment it SEES the car, so
+    // the honest reading is the tick it was laid down on: were people PUT on the
+    // crossings at all?
     const drive = createDrive(PARAMS);
-    floorIt(drive, 60000);
-    // Counted at birth would be cleaner, but a body lunges the moment it sees
-    // the car — so this asks the looser question the paint has to answer: were
-    // people PUT on the crossings at all?
-    const near = drive.pedestrians.filter((ped) => {
-      const off = Math.abs(
-        ped.pos.x -
-          Math.round(ped.pos.x / DRIVE.crossingPitchPx) * DRIVE.crossingPitchPx,
-      );
-      return off < DRIVE.crossingWidthPx;
-    });
-    expect(near.length).toBeGreaterThan(0);
+    skipDriveOpening(drive);
+    const seen = new Set<number>();
+    let near = 0;
+    let total = 0;
+    for (let t = 0; t < 60000; t += 16) {
+      stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+      for (const ped of drive.pedestrians) {
+        if (seen.has(ped.id)) continue;
+        seen.add(ped.id);
+        total++;
+        const off = Math.abs(
+          ped.pos.x -
+            Math.round(ped.pos.x / DRIVE.crossingPitchPx) *
+              DRIVE.crossingPitchPx,
+        );
+        if (off < DRIVE.crossingWidthPx) near++;
+      }
+    }
+    expect(total).toBeGreaterThan(0);
+    expect(near).toBeGreaterThan(0);
+    // …and a GOOD SHARE of them, which is the number the paint is authored
+    // against (`DRIVE.crossingCrowdShare`). Loose at the bottom because a
+    // crossing is a strip rather than a point and the jitter spreads people off
+    // it, but far enough above zero that the clumping cannot silently stop.
+    expect(near / total).toBeGreaterThan(0.2);
   });
 
   /**
@@ -917,7 +941,16 @@ describe("the street", () => {
         // Loose at the bottom on purpose: the lane the wagon is actually IN
         // reads lighter than the rest however carefully it is driven, because
         // what it meets there it shoves out of the way.
-        expect(lane).toBeGreaterThan(0.5);
+        //
+        // IT WAS 0.5, AND THE WAGON GOT WIDER. A vehicle's collision footprint
+        // is its whole ground extent now rather than 60% of it
+        // (`DRIVE.impact.bodyBandFrac`), so the car clears MORE of what it
+        // drives through and every lane it spends time in reads lighter still —
+        // measured over sixteen seeds the two lanes coming at him sit at 0.49
+        // and 0.51 against the 0.52 they used to. What is being pinned here is
+        // the SPAWNER, and the spawner did not move: not one draw of the road's
+        // stream changed, and the lanes the wagon is not driving through went UP.
+        expect(lane).toBeGreaterThan(0.45);
         // …and the other wall: past about one and a half a lane there is no gap
         // left to move into, and a road with nowhere to put the wagon has taken
         // the steering decision away rather than sharpened it.
@@ -972,6 +1005,36 @@ describe("a drive", () => {
     expect(sawMonologue).toBe(true);
     // …and the road really was empty when he said it.
     expect(drive.bodies).toBe(0);
+  });
+
+  it("crashes what it meets on the approach without marking the wagon", () => {
+    // THE APPROACH USED TO NOT COLLIDE AT ALL, and it is the first thing the
+    // minigame shows anybody. The lanes are laid from the gate onwards and an
+    // ONCOMING car closes at the SUM of both speeds, so the town's traffic
+    // reaches the wagon well before the wagon reaches the town — and drove clean
+    // through it. A player's opening frame was the car passing through solid
+    // objects.
+    const drive = createDrive(PARAMS);
+    expect(driveHandsOff(drive)).toBe(true);
+    const coming = createTraffic(
+      10,
+      FLEET.findIndex((def) => def.id === "traffic_hatch"),
+      { x: drive.car.pos.x + 26, y: drive.car.pos.y },
+      -DRIVE.trafficSpeedPx.min,
+    );
+    drive.traffic.push(coming);
+    const speed = drive.car.speed;
+    stepDrive(drive, 16, { pedal: 0, wheel: 0 });
+
+    // The OTHER car answers for it in full — it is a wreck, not a near miss.
+    expect(coming.wrecked).toBe(true);
+    expect(drive.events.some((e) => e.type === "trafficHit")).toBe(true);
+    // …and the wagon is untouched, in both currencies: the pedal is not the
+    // player's out here (`DRIVE.opening.handsOff`), so a leg cannot open by
+    // charging him for a collision he had nothing to avoid it with.
+    expect(drive.car.wear).toBe(0);
+    expect(drive.car.speed).toBe(speed);
+    expect(drive.outcome).toBe(DRIVE_OUTCOME.driving);
   });
 
   it("says GET READY on the frame the road starts opening out", () => {

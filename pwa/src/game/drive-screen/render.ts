@@ -69,6 +69,7 @@ import {
 } from "./drive-gore.ts";
 import { carCoat, carIsClean, wheelCoat } from "./car-soak.ts";
 import { drawSkidMarks, type SkidState } from "./skid.ts";
+import { drawDriveFx, type DriveFxState } from "./drive-fx.ts";
 import { drawTrafficBody } from "./wreck-draw.ts";
 import {
   CROWD_THOUGHTS,
@@ -403,6 +404,13 @@ export function drawDrive(
   /** False in SFW mode: draw the road's live actors but none of the damaged,
    * felled, thrown or remnant sprites collisions created. */
   collisionVisuals = true,
+  /** WHAT THE ROAD HAS THROWN THAT LANDS ON IT — the effect list, so the
+   * GROUND half of it (the glass) can be laid between the lamp pools and the
+   * bodies. The other half is still painted over the finished frame by the
+   * caller's own `drawDriveFx`; see `DriveFxLayer` for why it is two passes.
+   * Omitted simply draws no ground effects, which is what a host that has no
+   * effect state wants. */
+  fx?: DriveFxState,
 ): void {
   const bands = roadBands();
 
@@ -650,7 +658,11 @@ export function drawDrive(
   // circle here comes out as the ellipse a downward lamp actually casts; the
   // masts themselves stand up out of the y-sorted pass below.
   for (const prop of drive.props) {
-    if (prop.kind !== "lamp_post" || prop.felled) continue;
+    // …AND A DARK ONE THROWS NOTHING. `felled` is off its base and gone; `dark`
+    // is still bolted where it always was with nothing left in the head, which
+    // is what a blast front does to a street's lighting on its way past
+    // (`stepShockwaves`). Two states, one question the light has to ask.
+    if (prop.kind !== "lamp_post" || prop.felled || prop.dark) continue;
     const mast = mastAt(prop.pos);
     if (!mast) continue;
     ctx.save();
@@ -660,6 +672,26 @@ export function drawDrive(
     ctx.arc(0, 0, ROAD_LAMP_POOL_PX, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+  }
+
+  // ── AND THE GLASS THAT CAME OUT OF THE WINDOWS ────────────────────────────
+  // On the tarmac, under everything standing on it, for exactly the reason the
+  // blood above is: glass LINGERS (`DriveFx.linger`) — it leaves a window, falls
+  // to the road and stays there for the rest of the leg — so painted over the
+  // finished frame it ended up laid across the roofs of the wrecks it came out
+  // of and over the bonnet of the wagon driving back through it.
+  if (fx) {
+    drawDriveFx(
+      ctx,
+      fx,
+      camera,
+      timeMs,
+      viewW,
+      viewH,
+      undefined,
+      sprites,
+      "ground",
+    );
   }
 
   // ── EVERYTHING WITH A BODY, PAINTED BACK TO FRONT ─────────────────────────
@@ -845,7 +877,7 @@ export function drawDrive(
     // The cone is drawn WITH the mast rather than in a pass of its own — a beam
     // is part of the lamp, and one sorted separately would be thrown by a post
     // the picture had already covered up.
-    const mast = prop.felled ? null : mastAt(prop.pos);
+    const mast = prop.felled || prop.dark ? null : mastAt(prop.pos);
     if (mast) {
       // THE BEAM IS SORTED WHERE THE LIGHT LANDS, not where the lamp stands,
       // and that is the whole of getting the near row right. Light travels from
@@ -861,7 +893,16 @@ export function drawDrive(
       continue;
     }
     if (!prop.felled) {
-      put(LAMP_SPRITE, prop.pos.x, prop.pos.y);
+      // A BLOWN-BUT-STANDING POST wears the same lights-out grid a broken one
+      // does (`<name>_out`) — it is the identical fact about the head, arrived
+      // at without the column ever leaving its base. Everything else about it is
+      // unchanged: it stands where it stood, it is still solid, and the bumper
+      // can still take it out afterwards.
+      const head = mastAt(prop.pos)?.sprite ?? LAMP_SPRITE;
+      const out = prop.dark
+        ? (spriteByName(sprites, `${head}_out`) ?? spriteByName(sprites, head))
+        : undefined;
+      put(out ? `${head}_out` : LAMP_SPRITE, prop.pos.x, prop.pos.y);
       continue;
     }
     // A FELLED post has BROKEN, and the picture has to say so in three ways.

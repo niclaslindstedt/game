@@ -116,8 +116,14 @@ export function driveHitForce(event: DriveEvent): number {
     case "trafficWrecked":
     case "machineSnapped":
     case "endSmashed":
-    case "trafficExploded":
       return 1;
+    // …AND THE ONE THING ABOVE FULL FORCE. A tank going up is already the top of
+    // the scale; the RARE one that puts a pressure ring across the whole frame
+    // and the street lights out with it has to be felt as a different SIZE of
+    // event rather than as the same buzz again, and the only way a motor can say
+    // that is to keep going. See `QUAKE_AT`.
+    case "trafficExploded":
+      return event.big ? QUAKE_FORCE : 1;
     // A wheel leaving is a clunk of steel rather than a collision — the debris
     // shelf, which is the same weight as clouting a felled lamp post.
     case "wheelTorn":
@@ -151,6 +157,25 @@ const SPAN_MS = 92;
 /** Where one pulse becomes two, and two become three. */
 const SPLIT_AT = 0.45;
 const ROLL_AT = 0.85;
+/**
+ * …AND THE FOURTH SHAPE, WHICH ONLY ONE EVENT ON THIS ROAD CAN REACH.
+ *
+ * THE SCALE STOPS AT 1 FOR EVERYTHING ELSE, on purpose: a car on its roof, a
+ * machine in two and a fuel tank are all "the biggest thing that can happen",
+ * and giving them different weights would be inventing a difference the player
+ * cannot feel. The RARE big blast is a genuinely different size of event — a
+ * ring across the whole frame, the street lights going out either side of the
+ * road — and a motor has exactly one way to say bigger once it is already at
+ * full amplitude, which is to KEEP GOING.
+ *
+ * So this one gets a rolling five-beat that runs about a third of a second
+ * rather than the roll's fifth of one: the hit, and then the ground under it not
+ * settling. It is deliberately unreachable by arithmetic — `driveHitForce`
+ * returns it for one event and nothing else can climb to it — because a haptic
+ * that ordinary play can wander into is a phone that buzzes.
+ */
+const QUAKE_AT = 1.2;
+const QUAKE_FORCE = 1.5;
 
 /**
  * HOW OFTEN THE ROAD MAY BUZZ AT ALL.
@@ -202,11 +227,27 @@ export function playDriveHitHaptic(force: number, nowMs: number): boolean {
   if (nowMs - lastAtMs < MIN_GAP_MS && force < lastForce + PREEMPT_STEP) {
     return false;
   }
-  const f = Math.min(1, force);
+  const f = Math.min(QUAKE_FORCE, force);
   lastAtMs = nowMs;
   lastForce = f;
-  const on = Math.round(BASE_MS + f * SPAN_MS);
-  if (f >= ROLL_AT) {
+  const on = Math.round(BASE_MS + Math.min(1, f) * SPAN_MS);
+  if (f >= QUAKE_AT) {
+    // THE GROUND NOT SETTLING. Five beats, opening on a pulse half again as long
+    // as anything else out here can ask for and dying away over a third of a
+    // second — long enough to be a rumble rather than a knock, short enough that
+    // it is over before the wave it belongs to has crossed the frame.
+    haptics.vibrate([
+      Math.round(on * 1.5),
+      30,
+      on,
+      35,
+      Math.round(on * 0.75),
+      45,
+      Math.round(on * 0.5),
+      60,
+      Math.round(on * 0.3),
+    ]);
+  } else if (f >= ROLL_AT) {
     haptics.vibrate([on, 40, Math.round(on * 0.7), 45, Math.round(on * 0.45)]);
   } else if (f >= SPLIT_AT) {
     haptics.vibrate([on, 32, Math.round(on * 0.55)]);
