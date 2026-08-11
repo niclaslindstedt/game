@@ -103,6 +103,9 @@ export function drawTrafficBody(
   /** The wall clock, for the one thing on a car that is not a pose: a light bar
    * flashing. Omitted (a still, an exhibit) draws it lit rather than dark. */
   timeMs = 0,
+  /** SFW minigame presentation: keep the actor's current road position but
+   * render its intact, upright body with no gore or collision pose. */
+  clean = false,
 ): void {
   // ── WHICH PICTURE IT IS WEARING, AND WHAT THE OVERLAYS BELONG TO ──────────
   // THE SKIN is the body grid the overlays were derived FROM: the vehicle's own
@@ -116,13 +119,15 @@ export function drawTrafficBody(
   // THE BODY is the skin plus a dent rung, and only while the skin is the clean
   // one: the crash art IS the damage, so it never wears a rung on top.
   const has = (id: string) => spriteByName(sprites, id) !== undefined;
-  const end = crashEnd(other);
+  const end = clean ? undefined : crashEnd(other);
   const skin = trafficSprite(other.variant, 0, end, has);
-  const name = trafficSprite(other.variant, other.rung, end, has);
+  const name = trafficSprite(other.variant, clean ? 0 : other.rung, end, has);
   const sprite = spriteByName(sprites, name);
   if (!sprite) return;
   const gore =
-    other.gore > 0 ? spriteByName(sprites, `${skin}_gore`) : undefined;
+    !clean && other.gore > 0
+      ? spriteByName(sprites, `${skin}_gore`)
+      : undefined;
   // ITS WHEELS, TURNING. A derived overlay holding the discs and nothing else
   // (`asset-tools/spin.mjs`), laid over whichever damage rung is showing — so a
   // car folded in half still turns the wheel it still has, and the fold, the
@@ -143,7 +148,7 @@ export function drawTrafficBody(
   //
   // The OTHER end still folds normally, which is what keeps a car hit at both
   // ends reading as hit at both ends.
-  const crushed = crushShare(other);
+  const crushed = clean ? { nose: 0, tail: 0 } : crushShare(other);
   const fold = {
     nose: end === "front" ? 0 : crushed.nose,
     tail: end === "rear" ? 0 : crushed.tail,
@@ -152,9 +157,9 @@ export function drawTrafficBody(
     ctx.save();
     ctx.translate(
       seatX(other.pos.x, camera.x),
-      seatY(other.pos.y, camera.y) - Math.round(other.z),
+      seatY(other.pos.y, camera.y) - Math.round(clean ? 0 : other.z),
     );
-    if (other.angle !== 0) ctx.rotate(other.angle);
+    if (!clean && other.angle !== 0) ctx.rotate(other.angle);
     if (other.faceLeft) ctx.scale(-1, 1);
     // The sprite is drawn about its own bottom-centre, which is where every
     // other body on this road is seated (`drawSpriteFacing`) — so a turned car

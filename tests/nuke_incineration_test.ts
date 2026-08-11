@@ -60,7 +60,7 @@ function nukeDeath() {
 
 beforeEach(() => {
   setDevicePolicyForTest(null); // unmanaged: everything allowed
-  updateSettings({ knockback: 1 });
+  updateSettings({ sfwMode: "off", knockback: 1 });
 });
 
 describe("a screen-nuke kill", () => {

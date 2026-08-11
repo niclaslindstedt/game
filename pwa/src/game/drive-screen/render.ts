@@ -400,6 +400,9 @@ export function drawDrive(
   /** The rubber the DRIVER left — every handbrake stop's two black lines
    * (`skid.ts`). Optional on the same terms as the gore beside it. */
   skids?: SkidState,
+  /** False in SFW mode: draw the road's live actors but none of the damaged,
+   * felled, thrown or remnant sprites collisions created. */
+  collisionVisuals = true,
 ): void {
   const bands = roadBands();
 
@@ -827,6 +830,11 @@ export function drawDrive(
       put(trafficSprite(prop.variant, 0), prop.pos.x, prop.pos.y);
       continue;
     }
+    if (!collisionVisuals) {
+      const stood = prop.stub ?? prop.pos;
+      put(mastAt(stood)?.sprite ?? LAMP_SPRITE, stood.x, stood.y);
+      continue;
+    }
     // EVERY POST ON THIS ROAD IS A MAST. The little yard lights that used to
     // stand between them are gone (`street.ts`): once the masts were tall
     // enough to throw real light on the tarmac, the short ones stopped reading
@@ -955,7 +963,10 @@ export function drawDrive(
   // beam never paints over the car in front of it.
   for (const other of drive.traffic) {
     const def = vehicleDef(other.variant);
-    const name = trafficSprite(other.variant, other.rung);
+    const name = trafficSprite(
+      other.variant,
+      collisionVisuals ? other.rung : 0,
+    );
     // ITS LIGHTS GO OUT WHEN IT DOES. A wreck coasting to a halt and a moped
     // lying on its side are both still drawn, and a beam thrown down the road
     // out of either one would undo the whole read — and a car somebody LEFT at
@@ -965,7 +976,11 @@ export function drawDrive(
     // …AND SOME OF THEM NEVER HAD ANY. A skateboard has no lamps on it, so it
     // throws none (`DriveVehicleDef.lights`) — which is a fact about the vehicle
     // and lives on its def, beside how much it weighs.
-    if (def.lights && !other.downed && !other.wrecked && !other.driverless) {
+    if (
+      def.lights &&
+      (!collisionVisuals || (!other.downed && !other.wrecked)) &&
+      !other.driverless
+    ) {
       drawn.push({
         y: other.pos.y - 0.001,
         draw: () =>
@@ -998,7 +1013,7 @@ export function drawDrive(
           ),
       });
     }
-    if (other.downed && def.class === "open") {
+    if (collisionVisuals && other.downed && def.class === "open") {
       // ON ITS SIDE, and turned about its own centre — a dropped machine is
       // drawn about its MIDDLE rather than its wheels, because a thing lying
       // down has no wheels underneath it any more.
@@ -1011,12 +1026,13 @@ export function drawDrive(
     // comes out of it as the plain blit it always was.
     drawn.push({
       y: other.pos.y,
-      draw: () => drawTrafficBody(ctx, other, sprites, camera, timeMs),
+      draw: () =>
+        drawTrafficBody(ctx, other, sprites, camera, timeMs, !collisionVisuals),
     });
     // …AND THE PERSON ON IT, drawn on top at the machine's own saddle. Seated
     // separately rather than baked in, because the whole point of a rider is
     // that the machine can lose them (`ejectRider`).
-    if (other.rider && def.rider !== null) {
+    if ((other.rider || !collisionVisuals) && def.rider !== null) {
       const seat = RIDER_SEATS[def.id];
       const rider = RIDER_SPRITES[def.rider];
       if (seat && rider) {
@@ -1058,6 +1074,7 @@ export function drawDrive(
   }
 
   for (const ped of drive.pedestrians) {
+    if (!collisionVisuals && ped.mode !== "afoot") continue;
     // THE GLUED wear their own art and never animate — they sat down (see
     // `GLUED_SPRITES`). Everybody else walks.
     if (ped.kind === "glued" && ped.mode === "afoot") {
@@ -1144,7 +1161,17 @@ export function drawDrive(
   drawn.push({
     y: drive.car.pos.y,
     draw: () =>
-      drawCarAssembly(ctx, drive.car, sprites, camera, timeMs, coat, tyres),
+      drawCarAssembly(
+        ctx,
+        drive.car,
+        sprites,
+        camera,
+        timeMs,
+        coat,
+        tyres,
+        undefined,
+        collisionVisuals,
+      ),
   });
 
   // ── A THROWN WHEEL, SPINNING AWAY DOWN THE ROAD ───────────────────────────
@@ -1163,29 +1190,31 @@ export function drawDrive(
   //                so rotating it costs the pixel art nothing — the same licence
   //                the felled lamp posts and the yawing traffic already take on
   //                this road.
-  for (const wheel of drive.wheelDebris) {
-    const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
-    const name = wheelSprite(wheel.wheelState, frame);
-    const sprite = spriteByName(sprites, name);
-    if (!sprite) continue;
-    drawn.push({
-      y: wheel.pos.y,
-      draw: () =>
-        billboard(ctx, wheel.pos.x, wheel.pos.y, camera.x, camera.y, () => {
-          ctx.save();
-          ctx.translate(
-            seatX(wheel.pos.x, camera.x),
-            seatY(wheel.pos.y, camera.y) - Math.round(wheel.z),
-          );
-          ctx.rotate(wheel.angle);
-          ctx.drawImage(
-            sprite,
-            -Math.round(sprite.width / 2),
-            -Math.round(sprite.height - 2),
-          );
-          ctx.restore();
-        }),
-    });
+  if (collisionVisuals) {
+    for (const wheel of drive.wheelDebris) {
+      const frame = Math.floor(wheel.angle / (Math.PI / 5)) % 2;
+      const name = wheelSprite(wheel.wheelState, frame);
+      const sprite = spriteByName(sprites, name);
+      if (!sprite) continue;
+      drawn.push({
+        y: wheel.pos.y,
+        draw: () =>
+          billboard(ctx, wheel.pos.x, wheel.pos.y, camera.x, camera.y, () => {
+            ctx.save();
+            ctx.translate(
+              seatX(wheel.pos.x, camera.x),
+              seatY(wheel.pos.y, camera.y) - Math.round(wheel.z),
+            );
+            ctx.rotate(wheel.angle);
+            ctx.drawImage(
+              sprite,
+              -Math.round(sprite.width / 2),
+              -Math.round(sprite.height - 2),
+            );
+            ctx.restore();
+          }),
+      });
+    }
   }
 
   // ── AND NOBODY IS EVER DRAWN OUT OF THE CAR ───────────────────────────────

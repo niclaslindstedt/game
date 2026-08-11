@@ -137,8 +137,8 @@ export function runDriveExhibit(deps: {
     // The gallery stands OUTSIDE the player's gore gate, exactly as every other
     // gore exhibit in it does: what a body coming apart at 120 looks like is
     // half of what this shelf is for.
-    gib: exhibit.gib ?? true,
-    split: exhibit.split ?? exhibit.gib ?? true,
+    gib: exhibit.sfw ? false : (exhibit.gib ?? true),
+    split: exhibit.sfw ? false : (exhibit.split ?? exhibit.gib ?? true),
   };
   const showMs = exhibit.showMs ?? DEFAULT_SHOW_MS;
 
@@ -232,7 +232,7 @@ export function runDriveExhibit(deps: {
       while (owedMs >= STEP_MS) {
         owedMs -= STEP_MS;
         stepDrive(drive, STEP_MS, input);
-        drainDrive(drive, bursts, fx, gore, skids);
+        drainDrive(drive, bursts, fx, gore, skids, undefined, !exhibit.sfw);
         // The moment this exhibit's own collision lands, the camera stops here.
         // Latched off the car's position rather than the event's, so the shift
         // below is exactly "how far the car has come since" and the shipped
@@ -308,21 +308,24 @@ export function runDriveExhibit(deps: {
         viewW,
         viewH,
         drive.ms,
-        gore,
+        exhibit.sfw ? undefined : gore,
         assets.font,
         skids,
+        !exhibit.sfw,
       );
       bursts = drawBursts(ctx, bursts, camera, drive.ms, assets.sprites);
-      drawDriveFx(
-        ctx,
-        fx,
-        camera,
-        drive.ms,
-        viewW,
-        viewH,
-        drive.car.pos,
-        assets.sprites,
-      );
+      if (!exhibit.sfw) {
+        drawDriveFx(
+          ctx,
+          fx,
+          camera,
+          drive.ms,
+          viewW,
+          viewH,
+          drive.car.pos,
+          assets.sprites,
+        );
+      }
     },
     onError: (err, phase) => {
       error(`drive exhibit ${phase} failed: ${describeError(err)}`);

@@ -293,8 +293,9 @@ function partSprite(
 function axleDrop(
   car: Extract<Vehicle, { kind: "car" }>,
   axle: number,
+  visualDamage = true,
 ): number {
-  const wheelState = car.wheelStates[axle] ?? 0;
+  const wheelState = visualDamage ? (car.wheelStates[axle] ?? 0) : 0;
   const missing =
     wheelState === 3
       ? CAR.wheelRadius - 1
@@ -585,6 +586,9 @@ export function drawCarAssembly(
    * that has pulled up and not yet opened its door is still running.
    */
   engineOn?: boolean,
+  /** False for the SFW minigame: preserve movement and suspension while
+   * showing the intact assembly, without collision damage sprites. */
+  visualDamage = true,
 ): void {
   // The shell's attitude: each corner sinks by its own spring AND whatever
   // its wheel no longer holds up, and the whole body pitches between the
@@ -599,13 +603,13 @@ export function drawCarAssembly(
   // old estate idling actually looks like from ten feet away.
   const running = engineOn ?? car.driver !== null;
   const shiver = running ? (Math.floor(timeMs / 180) % 2 === 0 ? 0 : -1) : 0;
-  const rearDrop = axleDrop(car, 0) + shiver;
-  const frontDrop = axleDrop(car, 1) + shiver;
+  const rearDrop = axleDrop(car, 0, visualDamage) + shiver;
+  const frontDrop = axleDrop(car, 1, visualDamage) + shiver;
   // …AND HOW BENT IT IS. Every layer of the assembly is blitted through
   // `drawShellLayer`, so handing it the fold once warps the whole wagon —
   // panels, underbody, dangling parts and the blood already masked to each of
   // them — rather than needing a bashed picture of each.
-  const fold = shellFold(car);
+  const fold = visualDamage ? shellFold(car) : { nose: 0, tail: 0 };
   // Underbody first — the arches open onto dark steel and springs, never
   // onto the floor behind the car — then wheels, then the panel stack. The
   // underbody is shell too, so it pitches with the body.
@@ -633,7 +637,8 @@ export function drawCarAssembly(
   // Both axles inside the BODY's billboard — an axle is a column of the part
   // canvas, not a spot on the floor (see THE ASSEMBLY IS ONE BILLBOARD).
   billboard(ctx, car.pos.x, car.pos.y, camera.x, camera.y, () => {
-    car.wheelStates.forEach((wheelState, i) => {
+    car.wheelStates.forEach((actualWheelState, i) => {
+      const wheelState = visualDamage ? actualWheelState : 0;
       // A wheel at state 3 is GONE — bouncing away as debris; the axle sits
       // on the bump stop over the underbody's dark arch.
       if (wheelState === 3) return;
@@ -661,13 +666,16 @@ export function drawCarAssembly(
     });
   });
   for (const panel of CAR.panels) {
-    const rung = Math.max(0, Math.min(3, car.panels[panel] ?? 0));
+    const rung = visualDamage
+      ? Math.max(0, Math.min(3, car.panels[panel] ?? 0))
+      : 0;
     // A detachable part answers its FIX first — a loose part rattles, a
     // dangling one swings on its hinge poses, a gone one shows the bay —
     // and only an attached one draws its plain damage rung.
-    const pick = DETACHABLES.has(panel)
-      ? partSprite(car, panel as CarDetachable, rung)
-      : { name: `car_${panel}_${rung}`, dy: 0 };
+    const pick =
+      visualDamage && DETACHABLES.has(panel)
+        ? partSprite(car, panel as CarDetachable, rung)
+        : { name: `car_${panel}_${rung}`, dy: 0 };
     const sprite = spriteByName(sprites, pick.name);
     if (sprite) {
       // THE BLOOD THE PANEL HAS PICKED UP, masked to the panel's own art and

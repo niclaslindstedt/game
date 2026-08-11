@@ -462,7 +462,7 @@ npm install --no-save playwright        # once per session, not a repo dep
 node pwa/scripts/ui-shots.mjs --only land,port,sep   # or the full sweep
 ```
 
-`ui-shots.mjs` drives the real app to every screen at the nine reference
+`ui-shots.mjs` drives the real app to every screen at the ten reference
 viewports (see the `ui-review` skill for the quality bar). For a one-off check,
 a tiny Playwright script against `http://localhost:5199/` is fine — the
 reference viewport is the **landscape phone (844×390)**, and the small-phone

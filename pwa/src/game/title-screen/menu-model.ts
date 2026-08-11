@@ -550,6 +550,7 @@ type OnOffKey =
   | "vibration"
   | "muted"
   | "xpFloat"
+  | "sfwMode"
   | "goreBlood"
   | "goreEcto"
   | "goreSparks"

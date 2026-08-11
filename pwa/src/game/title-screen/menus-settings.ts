@@ -383,10 +383,14 @@ const BLOOD_ONLY = ["hero-soak", "bootprints"] as const;
  * one with a line under it saying why is an answer.
  */
 export function buildGoreMenu(ctx: MenuContext): MenuEntry[] {
-  const bloodOff = getSettings().goreBlood !== "on";
+  const settings = getSettings();
+  const sfw = settings.sfwMode === "on";
+  const bloodOff = settings.goreBlood !== "on";
   const rows: Record<string, MenuEntry | null> = {};
+  rows["sfw-mode"] = onOffRow(ctx, "gore", "sfw-mode", "sfwMode");
   for (const [id, key] of Object.entries(GORE_ROWS)) {
-    const locked = bloodOff && (BLOOD_ONLY as readonly string[]).includes(id);
+    const locked =
+      sfw || (bloodOff && (BLOOD_ONLY as readonly string[]).includes(id));
     rows[id] = locked
       ? actionRow(
           "gore",
@@ -394,20 +398,24 @@ export function buildGoreMenu(ctx: MenuContext): MenuEntry[] {
           () => {
             playUiSound(synth, "back");
           },
-          { value: "OFF", color: "#5a6068", locked: true, state: "locked" },
+          {
+            value: sfw ? "STARDUST" : "OFF",
+            color: "#5a6068",
+            locked: true,
+            state: sfw ? "sfw" : "locked",
+          },
         )
       : onOffRow(ctx, "gore", id, key);
   }
-  // Eight switches is well past where a RESET row earns its place — and this is
+  // Nine switches is well past where a RESET row earns its place — and this is
   // the page a player most easily leaves in a state they cannot reconstruct
   // from memory.
   rows.reset = actionRow("gore", "reset", () => {
     playUiSound(synth, "confirm");
-    updateSettings(
-      Object.fromEntries(GORE_SWITCHES.map((key) => [key, "on"])) as Partial<
-        Record<GoreSwitchKey, "on">
-      >,
-    );
+    updateSettings({
+      sfwMode: "off",
+      ...Object.fromEntries(GORE_SWITCHES.map((key) => [key, "on"])),
+    } as Partial<Record<GoreSwitchKey, "on">> & { sfwMode: "off" });
     ctx.bumpSettings();
   });
   return [...assembleRows("gore", rows), backRow(ctx, "gore")];

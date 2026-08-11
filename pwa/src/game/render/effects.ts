@@ -31,6 +31,7 @@ import { drawConjureBurst } from "./conjure.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import { drawEliteBurst } from "./elite-fx.ts";
 import { drawLootShine } from "./loot-aura.ts";
+import { drawStardust, type StardustSpec } from "./stardust.ts";
 import {
   MELEE_SWING_MS,
   PUNCH_CHAMBER_END,
@@ -81,6 +82,8 @@ export type Effect = {
     | "lootShine"
     // The blood a landed blow throws — drawn by ./blood.ts.
     | "blood"
+    // SFW replacement for every gore hit and graphic death.
+    | "stardust"
     // A body coming APART — cut in two, or burst into pieces. Drawn by
     // ./gibs.ts, decided by game-screen/kill-presentation.ts.
     | "cleave"
@@ -199,6 +202,8 @@ export type Effect = {
    * (drops, haze, reach, how far up the wound's frame chain it gets) comes off
    * this one shape (game-screen/blood-hit.ts, drawn by ./blood.ts). */
   blood?: BloodBlow;
+  /** SFW hit/death flourish, drawn by ./stardust.ts. */
+  stardust?: StardustSpec;
   /** Blood/splash: WHAT KIND OF BODY threw it (`EnemyDef.gore`) — the ramp its
    * frames are re-hued onto and what hangs in the air afterwards
    * (game-screen/gore.ts). A cleave/gib carries its own on the burst. */
@@ -439,6 +444,10 @@ function drawEffectPass(
     // first frame instead of blooming into existence.
     if (drawFlameGout(ctx, effect, x, groundY, timeMs, assets.sprites))
       continue;
+
+    // The SFW replacement for a gore hit or dismemberment. It deliberately
+    // claims the effect before the blood and gib passes can see it.
+    if (drawStardust(ctx, effect, x, groundY, timeMs)) continue;
 
     // The blood a landed blow throws — the wound, the drops and the haze, all
     // sized by how hard the hit was (./blood.ts). The MARK it leaves on the

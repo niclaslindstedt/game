@@ -260,7 +260,8 @@ The nuke is the reference for a big, layered effect split across BOTH surfaces:
 - [ ] Canvas draw is deterministic (seeded, no per-frame `Math.random`); coords
       rounded, sprite scale integer.
 - [ ] `prefers-reduced-motion` fallback for anything full-screen/flashing.
-- [ ] A `?debug` hook + a `*-preview.mjs`, and you LOOKED at the frames.
+- [ ] A gallery exhibit (or the relevant special-case preview), and you LOOKED
+      at a slow-motion filmstrip of the whole effect.
 - [ ] New event fields / sprites documented; `docs/configuration.md` updated for
       a new hook; a `.changes/unreleased/` fragment for the user-visible change.
 - [ ] `make lint`, `make fmt-check`, `make test` green.

@@ -263,6 +263,18 @@ describe("the shipped HUD", () => {
     }
   });
 
+  it("places every member of the left party rail", () => {
+    // These widgets render dynamic lists, but the HUD is content: registering
+    // one in TS does not put it on screen. Keep the party controls and voice
+    // cards authored beneath the hero in the order the rail promises.
+    expect(
+      HUD_ELEMENTS.filter((element) => element.region === "left")
+        .filter((element) => element.widget !== undefined)
+        .sort((a, b) => a.order - b.order)
+        .map((element) => element.widget),
+    ).toEqual(["companionRail", "partyFrames", "tradeAsks", "voiceCards"]);
+  });
+
   it("claims each render-loop handle exactly once", () => {
     const claims = new Map<string, string>();
     for (const element of HUD_ELEMENTS) {

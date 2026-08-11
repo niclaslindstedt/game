@@ -31,7 +31,9 @@ import {
 import { type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { goreBurst, type GoreBurst } from "../game-screen/gore-burst.ts";
+import type { Effect } from "../render/effects.ts";
 import { drawGore } from "../render/gibs.ts";
+import { drawStardust } from "../render/stardust.ts";
 import { bodyAnchorX, bodyAnchorY } from "../render/tilt.ts";
 import type { Camera } from "../render/view.ts";
 import { playDriveSound, setListener } from "../sfx/index.ts";
@@ -89,15 +91,26 @@ import {
   type DriveGoreState,
 } from "./drive-gore.ts";
 
-/** One body coming apart, held for as long as its pieces are in the air. */
-export type Burst = {
-  burst: GoreBurst;
-  x: number;
-  y: number;
-  /** Drive-clock ms when the body was struck. */
-  bornMs: number;
-  sprite: string;
-};
+/** One collision flourish, held for as long as its pieces are in the air. */
+export type Burst =
+  | {
+      kind: "gore";
+      burst: GoreBurst;
+      x: number;
+      y: number;
+      /** Drive-clock ms when the body was struck. */
+      bornMs: number;
+      sprite: string;
+    }
+  | {
+      kind: "fairyDust";
+      x: number;
+      y: number;
+      bornMs: number;
+      force: number;
+      heading: number;
+      seed: number;
+    };
 
 /** How long a burst's pieces are drawn for (ms) — the run's own figure. */
 export const BURST_LIFE_MS = 2600;
@@ -239,76 +252,82 @@ export function drainDrive(
   gore: DriveGoreState,
   skids: SkidState,
   say?: (id: string, nowMs: number) => void,
+  /** False in SFW mode: the same simulation and audio drain, with collision
+   * sprites, stains, debris particles, smoke and camera kicks omitted. */
+  collisionVisuals = true,
 ): void {
-  for (const strike of drive.strikes) {
-    // THE SHOWER ONLY HAPPENS IF ANYTHING CAME OFF — and that is the SIM's
-    // answer (`gibsBody`, the same line `burstBody` tears its chunks past),
-    // never a second threshold invented out here. Below it a body is knocked
-    // down and bleeds and nothing more: the splash and the mark on the wagon
-    // below still land, because a car that was barely moving still puts a
-    // person on the tarmac and still comes away with them on the bumper.
-    if (gibsBody(strike.joules)) {
-      bursts.push({
-        // The burst's force is priced off the collision's own energy, so a body
-        // taken at 120 comes apart harder than one clipped at 40 — the physics
-        // reaches the picture rather than being re-decided here.
-        //
-        // WHAT IT IS NOW FOR IS THE INSTANT, and only that. The body's own
-        // PIECES are the sim's (`DriveRemain`) and are drawn where the road is
-        // holding them; this is the shower of what was inside, thrown at the
-        // point of contact and gone in a second — which is the one part of a
-        // collision that genuinely has no afterwards.
-        burst: goreBurst(
-          "gib",
-          Math.atan2(strike.vel.y, strike.vel.x),
-          Math.min(6, 1 + strike.joules / 30000),
-          1,
-          "humanoid",
-          strike.id,
-          "blood",
-        ),
-        x: strike.pos.x,
-        y: strike.pos.y,
-        bornMs: drive.ms,
-        sprite: bodySprite(strike.kind, strike.variant),
-      });
+  if (collisionVisuals) {
+    for (const strike of drive.strikes) {
+      // THE SHOWER ONLY HAPPENS IF ANYTHING CAME OFF — and that is the SIM's
+      // answer (`gibsBody`, the same line `burstBody` tears its chunks past),
+      // never a second threshold invented out here. Below it a body is knocked
+      // down and bleeds and nothing more: the splash and the mark on the wagon
+      // below still land, because a car that was barely moving still puts a
+      // person on the tarmac and still comes away with them on the bumper.
+      if (gibsBody(strike.joules)) {
+        bursts.push({
+          kind: "gore",
+          // The burst's force is priced off the collision's own energy, so a body
+          // taken at 120 comes apart harder than one clipped at 40 — the physics
+          // reaches the picture rather than being re-decided here.
+          //
+          // WHAT IT IS NOW FOR IS THE INSTANT, and only that. The body's own
+          // PIECES are the sim's (`DriveRemain`) and are drawn where the road is
+          // holding them; this is the shower of what was inside, thrown at the
+          // point of contact and gone in a second — which is the one part of a
+          // collision that genuinely has no afterwards.
+          burst: goreBurst(
+            "gib",
+            Math.atan2(strike.vel.y, strike.vel.x),
+            Math.min(6, 1 + strike.joules / 30000),
+            1,
+            "humanoid",
+            strike.id,
+            "blood",
+          ),
+          x: strike.pos.x,
+          y: strike.pos.y,
+          bornMs: drive.ms,
+          sprite: bodySprite(strike.kind, strike.variant),
+        });
+      }
+      // …the splash it puts on the tarmac, which is the one mark on this road
+      // laid at the moment of a collision rather than by something travelling…
+      splashAt(gore, strike.pos.x, strike.pos.y, splashForce(strike.joules));
+      // …and what it puts on the CAR. Which panel wore it is the physics' own
+      // answer (`DriveStrike.panel`, the same number the damage is booked
+      // against), and how far UP the car the body got is its own lift — so the
+      // wagon gets bloody where it was actually hit, and only reaches the
+      // windscreen and the roof when somebody was properly thrown.
+      soakCarFromStrike(
+        gore.car,
+        strike.panel,
+        strike.vz,
+        splashForce(strike.joules),
+      );
     }
-    // …the splash it puts on the tarmac, which is the one mark on this road
-    // laid at the moment of a collision rather than by something travelling…
-    splashAt(gore, strike.pos.x, strike.pos.y, splashForce(strike.joules));
-    // …and what it puts on the CAR. Which panel wore it is the physics' own
-    // answer (`DriveStrike.panel`, the same number the damage is booked
-    // against), and how far UP the car the body got is its own lift — so the
-    // wagon gets bloody where it was actually hit, and only reaches the
-    // windscreen and the roof when somebody was properly thrown.
-    soakCarFromStrike(
-      gore.car,
-      strike.panel,
-      strike.vz,
-      splashForce(strike.joules),
-    );
   }
   // The trail: whatever is being dragged, skidded or carried leaves its blood on
   // the road it covered this tick. Walked here rather than at the draw, because
   // this runs on the drive's own fixed step and a draw runs on the frame rate —
   // a trail laid at 144 fps would be twice the trail laid at 72.
-  stepDriveGore(gore, drive);
+  if (collisionVisuals) stepDriveGore(gore, drive);
   // …and what the DRIVER left, which is the other kind of mark this road keeps:
   // the rubber a handbrake scrubs off, and the smoke coming off it. Walked here
   // beside the blood for the same reason — on the drive's own fixed step, so a
   // stop lays one line however fast the frames are arriving.
-  stepSkids(skids, drive, fx);
+  stepSkids(skids, drive, fx, collisionVisuals);
   // …and what the WRECKS are still doing. Walked here beside the two above and
   // for the third time the same reason: a cloud raised by a car grinding down
   // the tarmac is laid by ground covered and time spent, so it belongs on the
   // fixed step rather than on the frame — and, unlike everything in the event
   // loop below, a wreck is a thing that goes ON happening. See `wreck-smoke.ts`.
-  stepWreckSmoke(fx, drive);
+  if (collisionVisuals) stepWreckSmoke(fx, drive);
   // …and what is ON FIRE, and what is being SHOVED up the road. Both are states
   // rather than events — a burn takes hold over seconds and travels with the car
   // it is on, and a push lasts for as long as the player keeps his foot in — so
   // both are issued on a cadence at the vehicle's own place (`burning.ts`).
-  stepBurning(fx, drive);
+  if (collisionVisuals) stepBurning(fx, drive);
   // WHAT THE CAR ITSELF MAKES OF THE TICK — laid under the collisions below,
   // and worked out BEFORE them so the wagon's own boom starts with the blow
   // rather than a layer late. One chassis rings once (`carAnswerSound` holds
@@ -367,7 +386,28 @@ export function drainDrive(
     // met square at 120 gives a crunch, a shower of sparks and a shove of the
     // whole frame. Nothing here decides how hard anything was; it only asks.
     if (event.type === "pedestrianHit") {
-      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (!collisionVisuals) {
+        bursts.push({
+          kind: "fairyDust",
+          x: event.pos.x,
+          y: event.pos.y,
+          bornMs: drive.ms,
+          force: Math.min(6, 1 + event.joules / 30_000),
+          heading: drive.params.direction > 0 ? 0 : Math.PI,
+          // Presentation may not spend the drive's RNG. The collision's own
+          // position and victim are a stable seed for this disintegration.
+          seed: Math.abs(
+            Math.floor(
+              event.pos.x * 31 +
+                event.pos.y * 17 +
+                event.variant * 53 +
+                (event.kind === "walker" ? 0 : 97),
+            ),
+          ),
+        });
+      }
+      if (collisionVisuals)
+        driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       // A STACK RATHER THAN A SOUND, and the whole of "they all hit
       // differently": WHO it was picks the bank and adds whatever they were
       // carrying, HOW HARD picks the shelf, and HOW FAST the wagon was going
@@ -392,7 +432,8 @@ export function drainDrive(
     // they are one collision. It also takes the frame harder — a body coming in
     // two is the biggest thing that happens on this road that is not a car.
     if (event.type === "bodySplit") {
-      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals)
+        driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       play(splitSound(event.pos.x, event.pos.y));
     }
     // Something is caught under the floorpan and travelling with the car — the
@@ -401,7 +442,7 @@ export function drainDrive(
     if (event.type === "bodyCaught") {
       // The back axle is turning in it, so the tyres are loaded — and what they
       // print is the only part of this the driver takes with him.
-      wetTyres(gore);
+      if (collisionVisuals) wetTyres(gore);
       // …and WHOSE it is, which is the one place a body's weight is heard after
       // the collision rather than during it: a big one grinds along under the
       // floorpan for longer and lower than a small one does.
@@ -411,14 +452,17 @@ export function drainDrive(
     // middle of a blockade this fires several times a second, and a crush that
     // announced itself would drown the collision that made the mess.
     if (event.type === "bodyCrushed") {
-      crushRemain(gore, drive, event.pos.x, event.pos.y);
-      wetTyres(gore);
+      if (collisionVisuals) {
+        crushRemain(gore, drive, event.pos.x, event.pos.y);
+        wetTyres(gore);
+      }
       play(crushSound(event.pos.x, event.pos.y));
     }
     // Dead steel already on the tarmac, kicked further down it: a hollow clout
     // with no crumple in it, because nothing here is giving way.
     if (event.type === "debrisStruck") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
       play(DEBRIS_SOUND);
     }
     if (event.type === "trafficHit") {
@@ -430,10 +474,18 @@ export function drainDrive(
       if (!carWreckedThisTick) {
         const hit = trafficHitSound(event.pos.x, event.pos.y, event.joules);
         if (hit.sub) {
-          driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+          if (collisionVisuals)
+            driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
           play(SUB_SOUND);
         } else {
-          driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+          if (collisionVisuals)
+            driveTrafficHit(
+              fx,
+              event.pos.x,
+              event.pos.y,
+              event.joules,
+              drive.ms,
+            );
         }
         play(hit.id);
       }
@@ -442,7 +494,8 @@ export function drainDrive(
     // played OVER whatever else the collision made: the crunch is the steel and
     // this is the glass, and they are one event.
     if (event.type === "glassSmashed") {
-      driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
+      if (collisionVisuals)
+        driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
       play(glassSound(event.pos.x, event.pos.y));
     }
     // SOMEBODY DIED IN THEIR SEAT — the death this road cannot show in the air,
@@ -457,7 +510,8 @@ export function drainDrive(
     // road, and the only collision outcome the player cannot mistake for
     // another one.
     if (event.type === "trafficRolled") {
-      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals)
+        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       play(ROLLOVER_SOUND);
       play(SUB_SOUND);
     }
@@ -466,7 +520,8 @@ export function drainDrive(
     // Deliberately NOT a new bank: what the player is being told is "that one
     // took a rung", and he has already learnt that sound on his own bonnet.
     if (event.type === "trafficBent") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
       play(panelSound(event.pos.x, event.pos.y));
     }
     // …AND ONE GIVING UP ENTIRELY. The breakdown noise, for the same reason:
@@ -481,7 +536,8 @@ export function drainDrive(
     // `stepWreckSmoke`'s, which issues it where the wreck is and goes on
     // issuing it for as long as the thing is there to smoke.
     if (event.type === "trafficWrecked") {
-      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals)
+        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       // THREE AT ONCE, because a car being finished is three things happening:
       // the structure going (the big bank), the mass of it (the sub), and the
       // engine dying under all of it (the noise the player already knows as
@@ -502,7 +558,8 @@ export function drainDrive(
     // folded" — deliberately not a new sound, because it is not a new event, it
     // is the top of a ladder he has been climbing all leg.
     if (event.type === "endSmashed") {
-      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals)
+        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       play(pickSmash(event.pos.x, event.pos.y));
       play(SUB_SOUND);
     }
@@ -511,7 +568,8 @@ export function drainDrive(
     // its own physics for the rest of the leg — and the clunk of steel hitting
     // tarmac is exactly the noise the debris bank already holds.
     if (event.type === "wheelTorn") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       play(DEBRIS_SOUND);
     }
     // SOMETHING HAS CAUGHT. Quiet on purpose: the fire itself is not the beat —
@@ -525,13 +583,14 @@ export function drainDrive(
     // once: the ball, the shelf, the sub under it and the frame thrown as hard
     // as this road ever throws it (`driveBlast`).
     if (event.type === "trafficExploded") {
-      driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
+      if (collisionVisuals) driveBlast(fx, event.pos.x, event.pos.y, drive.ms);
       play(EXPLOSION_SOUND);
     }
     // A TWO-WHEELER GOING OVER — parts off it and a crunch, which is what a
     // machine hitting tarmac on its side actually is.
     if (event.type === "machineDown") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       play(trafficHitSound(event.pos.x, event.pos.y, event.joules).id);
     }
     // …AND ONE COMING APART IN THE MIDDLE. Parts everywhere and the BIG shelf,
@@ -541,8 +600,10 @@ export function drainDrive(
     // on this road where the shelf is picked off WHAT HAPPENED rather than off
     // the energy — and it is right, because what happened is total.
     if (event.type === "machineSnapped") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals) {
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+        driveSmash(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      }
       play(pickSmash(event.pos.x, event.pos.y));
       play(SUB_SOUND);
     }
@@ -551,7 +612,8 @@ export function drainDrive(
     // are the same shower of shards at 16 px — thrown from the height a
     // windscreen actually sits at rather than off the road.
     if (event.type === "windscreenOut") {
-      driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
+      if (collisionVisuals)
+        driveLampGlass(fx, event.pos.x, event.pos.y, WINDSCREEN_LIFT, drive.ms);
       play(lampHitSound(event.pos.x, event.pos.y));
     }
     // …AND WHAT CAME THROUGH IT WITH THEM. Its own event rather than a second
@@ -560,19 +622,32 @@ export function drainDrive(
     // decided, and this is the app doing as it is told. The wet tear plays over
     // the glass: what the player is being shown is a person, not a window.
     if (event.type === "windscreenGore") {
-      driveWindscreenGore(
-        fx,
-        event.pos.x,
-        event.pos.y,
-        WINDSCREEN_LIFT,
-        drive.ms,
-      );
+      if (collisionVisuals)
+        driveWindscreenGore(
+          fx,
+          event.pos.x,
+          event.pos.y,
+          WINDSCREEN_LIFT,
+          drive.ms,
+        );
       play(splitSound(event.pos.x, event.pos.y));
     }
     // …and the body itself, arriving in the air. The heavy bank whatever the
     // joules say: there is no gentle version of coming out of a vehicle.
     if (event.type === "occupantThrown") {
-      driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (!collisionVisuals) {
+        bursts.push({
+          kind: "fairyDust",
+          x: event.pos.x,
+          y: event.pos.y,
+          bornMs: drive.ms,
+          force: Math.min(6, 2 + event.joules / 30_000),
+          heading: drive.params.direction > 0 ? 0 : Math.PI,
+          seed: Math.abs(Math.floor(event.pos.x * 31 + event.pos.y * 17 + 193)),
+        });
+      }
+      if (collisionVisuals)
+        driveBodyHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
       // …AND IT NOW PLAYS THE SHELF THIS COMMENT ALWAYS CLAIMED IT DID. It
       // asked the joules ladder, which answered the ordinary thud for every
       // ejection off a moped the road has ever staged — a body leaving a
@@ -583,31 +658,37 @@ export function drainDrive(
     // crunch, because what the player has just heard is steel shearing off a
     // concrete foot rather than a fender folding.
     if (event.type === "lampFelled") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
-      driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      if (collisionVisuals) {
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+        driveTrafficHit(fx, event.pos.x, event.pos.y, event.joules, drive.ms);
+      }
       // …AND THE LENS, out of the air where the head was. The event's position
       // is the post's while it is still standing, which is the one tick this
       // can be asked — a felled prop's `pos` is the flying half's and is moving
       // by the next one.
-      driveLampGlass(
-        fx,
-        event.pos.x,
-        event.pos.y,
-        lampHeadLift(event.pos),
-        drive.ms,
-      );
+      if (collisionVisuals)
+        driveLampGlass(
+          fx,
+          event.pos.x,
+          event.pos.y,
+          lampHeadLift(event.pos),
+          drive.ms,
+        );
       play(lampHitSound(event.pos.x, event.pos.y));
     }
     if (event.type === "panelBent") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, false);
       play(panelSound(event.pos.x, event.pos.y));
     }
     if (event.type === "partShed") {
-      drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
+      if (collisionVisuals)
+        drivePartHit(fx, event.pos.x, event.pos.y, drive.ms, true);
       play(SHED_SOUND);
     }
     if (event.type === "breakdown") {
-      driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
+      if (collisionVisuals)
+        driveBreakdown(fx, event.pos.x, event.pos.y, drive.ms);
       play(BREAKDOWN_SOUND);
     }
     // ── THE CLOCK ─────────────────────────────────────────────────────────
@@ -668,8 +749,29 @@ export function drawBursts(
   nowMs: number,
   sprites: Sprites,
 ): Burst[] {
-  const live = bursts.filter((b) => nowMs - b.bornMs < BURST_LIFE_MS);
+  const live = bursts.filter(
+    (b) => nowMs - b.bornMs < (b.kind === "fairyDust" ? 1250 : BURST_LIFE_MS),
+  );
   for (const b of live) {
+    if (b.kind === "fairyDust") {
+      const durationMs = 1250;
+      drawStardust(
+        ctx,
+        {
+          kind: "stardust",
+          stardust: { intensity: b.force, burst: true, fairy: true },
+          pos: { x: b.x, y: b.y },
+          angle: b.heading,
+          seed: b.seed,
+          durationMs,
+          untilMs: b.bornMs + durationMs,
+        } as Effect,
+        bodyAnchorX(b.x, b.y, camera.x, camera.y),
+        bodyAnchorY(b.x, b.y, camera.x, camera.y),
+        nowMs,
+      );
+      continue;
+    }
     drawGore(
       ctx,
       {

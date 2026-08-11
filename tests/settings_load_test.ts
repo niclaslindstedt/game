@@ -69,6 +69,7 @@ describe("a saved settings blob", () => {
     const settings = await settingsFrom({
       steering: "aim",
       healthBars: "off",
+      sfwMode: "on",
       musicVolume: 0.12,
       autoEquip: "on",
       swipeBars: "on",
@@ -77,6 +78,7 @@ describe("a saved settings blob", () => {
     });
     expect(settings.steering).toBe("aim");
     expect(settings.healthBars).toBe("off");
+    expect(settings.sfwMode).toBe("on");
     expect(settings.musicVolume).toBeCloseTo(0.12, 5);
     expect(settings.autoEquip).toBe("on");
     expect(settings.swipeBars).toBe("on");
@@ -88,6 +90,7 @@ describe("a saved settings blob", () => {
     const settings = await settingsFrom({ steering: "aim" });
     expect(settings.healthBars).toBe("on");
     expect(settings.musicVolume).toBeGreaterThan(0);
+    expect(settings.sfwMode).toBe("off");
   });
 });
 
