@@ -210,6 +210,24 @@ export function LoadGame({
                           />
                         </span>
                       )}
+                      {/* A BOT HAS FLOWN THIS HERO (`Character.autopiloted`),
+                          so no session will seat them and the trophy shelf is
+                          shut to them. It is on the SLOT rather than only in
+                          the refusals, because those are two screens away from
+                          each other: a locked MULTIPLAYER row that says "this
+                          hero" is only useful if the roster says which one.
+                          Drawn grey rather than red — it is a statement of
+                          fact about the hero, not a warning about a mistake. */}
+                      {character.autopiloted === true && (
+                        <span className="hero-slot-badge autopiloted">
+                          <PixelText
+                            font={font}
+                            text="BOT FLOWN"
+                            scale={2}
+                            color="#9aa3ad"
+                          />
+                        </span>
+                      )}
                     </span>
                     <span className="hero-slot-meta">
                       <PixelText

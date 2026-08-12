@@ -473,6 +473,11 @@ export function TitleScreen({
     // The admission handshake needs to know which kind of hero is knocking:
     // hardcore and softcore never share a game.
     heroHardcore: character?.hardcore === true,
+    // …and whether this hero may knock at all. A hero a bot has flown is barred
+    // from every session (`Character.autopiloted`); the three doors are locked
+    // rows, and this is what stops the ONE join that never passes a row — a
+    // Steam invite accepted from outside the game.
+    heroAutopiloted: character?.autopiloted === true,
     // The hero travels WITH the player. The purse is funded from their
     // whole wealth (banked + pending store credit) exactly as a local run's is
     // (run-setup.ts), so banking after the session treats the two alike. A

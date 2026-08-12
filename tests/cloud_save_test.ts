@@ -304,6 +304,38 @@ describe("roster merge", () => {
     }
   });
 
+  it("keeps the AUTO PILOT mark even when the clean copy wins", () => {
+    // Last-writer-wins is right for progress and would be a laundry service for
+    // a mark that is meant to be permanent: fly the hero on the phone, open the
+    // roster on the desktop, and the desktop's later stamp hands back a clean
+    // hero. So `autopiloted` is unioned rather than replaced — which is also
+    // what keeps the merge commutative, since an OR does not care about order.
+    const flown = hero("a", 10, { autopiloted: true });
+    const clean = hero("a", 99, { clears: ["easy:landing"] });
+    for (const [x, y] of [
+      [flown, clean],
+      [clean, flown],
+    ] as const) {
+      const merged = mergeSaves(
+        save({ characters: [x] }),
+        save({ characters: [y] }),
+      );
+      expect(merged.characters).toHaveLength(1);
+      // The newer copy's progress survives…
+      expect(merged.characters[0]?.clears).toEqual(["easy:landing"]);
+      // …and the mark survives with it.
+      expect(merged.characters[0]?.autopiloted).toBe(true);
+    }
+  });
+
+  it("does not invent the mark for two clean copies", () => {
+    const merged = mergeSaves(
+      save({ characters: [hero("a", 10)] }),
+      save({ characters: [hero("a", 20)] }),
+    );
+    expect(merged.characters[0]?.autopiloted).toBeUndefined();
+  });
+
   it("breaks a stamp tie on progress rather than on order", () => {
     const thin = hero("a", 10);
     const thick = hero("a", 10, { clears: ["easy:landing"] });
