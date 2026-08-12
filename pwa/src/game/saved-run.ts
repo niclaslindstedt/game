@@ -410,6 +410,42 @@ function reviveExplored(state: GameState, packed?: string): void {
   state.explored = grid;
 }
 
+/**
+ * UN-BOOK A DEPARTURE THE ROAD WAS TAKEN OFF — the one thaw that would
+ * otherwise be a dead end, and on an iOS home-screen PWA it is the ordinary way
+ * out of a minigame.
+ *
+ * A run parked while the DRIVE was up is parked at a very particular instant.
+ * The car has left the property, the dim has run its course and `carDeparted`
+ * has already fired (`stepDeparture`, engine/game/vehicles.ts) — the app caught
+ * that event, raised the road over the still-mounted run and froze it there
+ * (`beginDrive`, GameScreen.tsx). The ROAD lives only in React memory, so a
+ * kill from the app switcher takes it and leaves the frozen run behind: the
+ * autosave's backgrounding flush is the last code the page runs, and what it
+ * writes is a garage the car has already driven out of, with `booked` latched so
+ * nothing can ever book the trip a second time.
+ *
+ * Thawed as-is that is a full-black curtain (the app paints the dim off
+ * `departure.ms`, which is past its end) over a hub nobody can reach, with no
+ * HUD, no pause menu and no way out — CONTINUE leading there every launch. So
+ * the latch is dropped on the way in: `ms` is deliberately LEFT where it was,
+ * which is what makes the resumed run open already black rather than flashing
+ * the garage it left, and the first simulated tick pushes `carDeparted` again.
+ * The app answers it exactly as it did a minute ago and the leg opens on its
+ * title card — the same road, from the top (`DriveIntro`).
+ *
+ * Every other way the crossing can be booked leaves nothing here to heal: with
+ * the road declined (`driveParamsFor` → null) the trip travels on the spot and
+ * the destination's own fresh state is what gets parked, and a departure caught
+ * mid-dim is parked UNBOOKED and simply finishes its clock. So this fires on
+ * exactly the states the drive stranded — including the ones already sitting in
+ * a player's storage, which is why the fix is a repair on the thaw rather than a
+ * `SAVE_VERSION` bump that would bin every healthy parked run beside them.
+ */
+function rebookDeparture(state: GameState): void {
+  if (state.departure?.booked === true) state.departure.booked = false;
+}
+
 /** Drop any parked run — called when one is resumed, abandoned, or replaced. */
 export function clearSavedRun(): void {
   removeRun(KEY);
@@ -532,6 +568,10 @@ function readRun(key: string): ParkedRun | null {
     // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
     // plain object, which freezes the fog renderers (see reviveExplored).
     reviveExplored(state, payload.fog);
+    // Hand a stranded drive-out back its trip, so a run parked while the ROAD
+    // was up resumes onto the road instead of behind a black curtain nothing
+    // can lift (see rebookDeparture).
+    rebookDeparture(state);
     // Freeze every kept item to its dropped-with stats before the run resumes,
     // so a catalog edge that landed while the run was parked can't reach it.
     adoptRunEquipment(state);
