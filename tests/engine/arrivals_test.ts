@@ -20,10 +20,13 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  ARRIVALS,
   createGame,
   dismissIntro,
+  registerDefs,
   skipCutscene,
   step,
+  type GameInput,
   type GameState,
 } from "@game/core";
 // Engine-internal: the parked position of a seeded stream, which is the one
@@ -34,19 +37,46 @@ import { installFixtures } from "./fixtures.ts";
 import { DT, idle, steerTo } from "../helpers.ts";
 
 const LOT = "test_arrivals_level";
+/** …and the same tarmac with the hero landing at the far end of it. */
+const FAR_LOT = "test_arrivals_far_level";
 /** The fixture's own door, hand-drawn at x=700 between y 740 and 860. */
 const DOOR = { x: 700, y: 800 };
+/** Where the far fixture lands him — the far corner of the same lot. */
+const FAR_SPAWN = { x: 150, y: 950 };
+/** The line the far fixture's lot has to say, registered below. */
+const READ = "test_night_shift";
 
 beforeEach(() => {
   installFixtures(true);
+  // The lot's own READ. Registered here rather than in `installFixtures`,
+  // because `registerDefs` replaces the whole thought catalog and a fixture
+  // line parked in there takes the shipped mutter away from every other engine
+  // suite (see the note on `FIX_CAR_EXIT_LEVEL`).
+  registerDefs({
+    thoughts: {
+      [READ]: {
+        id: READ,
+        speaker: "{HERO}",
+        portrait: "hero",
+        pages: [["TEST — THAT'S THE NIGHT SHIFT CLOCKING ON."]],
+      },
+    },
+  });
 });
 
 /** A run on the staff-lot fixture, past the doorstep scenes. */
-function lot(seed = 7): GameState {
-  const state = createGame(seed, LOT);
+function lot(seed = 7, level = LOT): GameState {
+  const state = createGame(seed, level);
   skipCutscene(state);
   dismissIntro(state);
   return state;
+}
+
+/** A CAMERA on a spot — the half of `visibleTo` a headless run has to report
+ * for itself, since nothing stamps a view on a hero nobody is watching through.
+ * Sized at the reference viewport (~422x260 world units). */
+function seeing(x: number, y: number): GameInput["view"] {
+  return { x: x - 211, y: y - 130, width: 422, height: 260 };
 }
 
 /** Run `ms` of ticks with the hero holding still. */
@@ -89,6 +119,77 @@ describe("the staff lot", () => {
         Math.sign(plan.entryX - plan.apron.x),
       );
     }
+  });
+
+  it("pulls the beat into what the hero can SEE from where he lands", () => {
+    // THE RULE THIS PINS is the one the whole lot exists for: the sequence has
+    // to be WATCHED. The doorway is wherever the carve punched it and the
+    // landing is wherever the lot's middle fell, so a rank anchored on the
+    // doorway alone plays off the side of the picture — measured over the
+    // shipped map, on ten seeds in twelve. Same tarmac, same keyed door as
+    // every other case here; only the spawn moves.
+    const plan = lot(7, FAR_LOT).arrivalPlan;
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    const bay = plan.bays[0] as number;
+    expect(Math.abs(bay - FAR_SPAWN.x)).toBeLessThanOrEqual(
+      ARRIVALS.watchReach,
+    );
+    expect(Math.abs(plan.laneY - FAR_SPAWN.y)).toBeLessThanOrEqual(
+      ARRIVALS.watchReach,
+    );
+    // …AND IT STILL ARRIVES. The kerb it rolls in from has to be off his
+    // screen AND out of his fog, or the car does not drive in out of the dark,
+    // it appears in front of him — which is what a lot that reaches no map edge
+    // does by default, since it starts its cars just inside its own boundary
+    // (see `kerb`).
+    expect(Math.abs(plan.entryX - FAR_SPAWN.x)).toBeGreaterThanOrEqual(
+      ARRIVALS.arriveGap,
+    );
+    // The doors keep their own rank when the landing is already in front of
+    // them: a bay beside the entrance is where somebody arriving for a shift
+    // would actually park, and this fixture lands him there.
+    const near = lot().arrivalPlan;
+    expect(near).not.toBeNull();
+    if (!near) return;
+    expect(Math.abs((near.bays[0] as number) - near.apron.x)).toBe(
+      ARRIVALS.bayGap,
+    );
+  });
+
+  it("holds the lot's read until somebody can actually see the walker", () => {
+    // "THAT'S THE NIGHT SHIFT CLOCKING ON" is a line about a PERSON. Fired the
+    // instant a car door opened somewhere on the tarmac it was a hero narrating
+    // somebody he had no picture of — which is exactly what the shipped venue
+    // did, and what sent the player off to look for the beat that exists to
+    // stop him looking.
+    const state = lot(7, FAR_LOT);
+    const plan = state.arrivalPlan;
+    expect(plan).not.toBeNull();
+    if (!plan) return;
+    const bay = { x: plan.bays[0] as number, y: plan.laneY };
+    // HE IS LOOKING SOMEWHERE ELSE. The camera is parked off at the far side of
+    // the map while cars arrive and people get out of them behind him, which is
+    // the SCREEN half of `visibleTo` — and it holds the line for as long as it
+    // is true.
+    let walked = false;
+    for (let t = 0; t < 20_000 / DT; t++) {
+      step(state, [{ ...idle, view: seeing(2000, 200) }], DT);
+      walked ||= state.arrivals.some((a) => a.staff !== null);
+    }
+    expect(walked, "nobody ever got out of a car").toBe(true);
+    expect(state.thoughtsSeen).not.toContain(READ);
+    // …and now he turns round and walks over to the rank, camera on him the way
+    // the app always has it. That lifts the fog as he goes, which is the OTHER
+    // half — and somewhere on that walk he is looking at somebody clocking on
+    // and says so. The beat never stops happening, so there is always another
+    // one coming (`restartArrival`).
+    for (let t = 0; t < 40_000 / DT; t++) {
+      const at = state.players[0]?.pos ?? { x: 0, y: 0 };
+      step(state, [{ ...steerTo(bay.x, bay.y), view: seeing(at.x, at.y) }], DT);
+      if (state.thoughtsSeen.includes(READ)) break;
+    }
+    expect(state.thoughtsSeen).toContain(READ);
   });
 
   it("stands its own people on the tarmac, and none of them is in the fight", () => {

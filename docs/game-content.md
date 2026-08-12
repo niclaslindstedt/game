@@ -56,8 +56,18 @@ off the road, parks in the rank, and a member of the night shift gets out and
 walks to a door in that wall and badges through it. Following one is how the way
 in is found, and it is the only way in there is.
 
-Three rules hold the beat together and each is load-bearing:
+Four rules hold the beat together and each is load-bearing:
 
+- **It happens where the player is LOOKING.** A beat whose whole job is to point
+  at the door is worth nothing off the side of the screen, and the geometry does
+  not give that away for free: the entrance is wherever the carve punched it and
+  the landing wherever the lot's middle fell, so a rank laid beside the doorway
+  sat out of sight on most seeds. The lane and the rank are therefore staged as
+  near the doors as the player can still SEE them from where he touched down
+  (`stageIt`, `ARRIVALS.watchReach` — a radius set by the fog rather than by the
+  screen, since a car is drawn wherever it is and a person is not), and the run-in
+  still starts out in the dark so the car arrives rather than appears. The hero's
+  read on it waits for somebody to actually be on that screen before he says it.
 - **The lot's whole cast is NEUTRAL** — the guards already standing on it and the
   staff arriving. The hero walks onto it holstered (the level's scripted first
   blow waits INSIDE, past the doors), so anything out there that could fight him

@@ -18,6 +18,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ARRIVALS,
   botAct,
   createBot,
   createGame,
@@ -75,6 +76,46 @@ describe("GOODCO HQ's staff lot", () => {
       // EVERY leaf of it is shut, and none of them opens on approach: the whole
       // point is that walking up to the building does nothing.
       for (const door of entrances) expect(door.opens).not.toBe("approach");
+    }
+  });
+
+  it("stages the whole beat where he lands, on every seed", () => {
+    // THE MISSION'S OPENING READ IS A THING TO WATCH, and for a long time it
+    // was only a thing that HAPPENED. The entrance lands wherever the carve
+    // punches it and the lot's landing wherever its middle falls, so the rank
+    // anchored on the doorway sat 150–690 px from the hero on ten of these
+    // twelve seeds: he touched down, thought "that's the night shift clocking
+    // on" about a car park with nothing on it, and had to go and find the beat
+    // that exists to stop him searching. `stageIt` (engine/game/arrivals.ts)
+    // answers it by laying the lane and the rank around the LANDING instead —
+    // and this is the assertion that says so about the shipped map, seed by
+    // seed, because a rolled floor plan is exactly where it went wrong.
+    for (const seed of SEEDS) {
+      const state = hq(seed);
+      const plan = state.arrivalPlan;
+      expect(plan, `seed ${seed}: no plan`).not.toBeNull();
+      if (!plan) continue;
+      const at = runLevelDef(state).playerSpawn;
+      const bay = plan.bays[0] as number;
+      expect(
+        Math.abs(bay - at.x),
+        `seed ${seed}: the first bay is off his screen`,
+      ).toBeLessThanOrEqual(ARRIVALS.watchReach);
+      expect(
+        Math.abs(plan.laneY - at.y),
+        `seed ${seed}: the lane runs off his screen`,
+      ).toBeLessThanOrEqual(ARRIVALS.watchReach);
+      // …and the car still ARRIVES rather than appearing: no kerb on this map
+      // is inside what he can see from where he stands. The tighter rule — a
+      // run-in that starts off his SCREEN, `ARRIVALS.arriveGap` — is what a
+      // PULLED staging is held to and is pinned on the fixture next door; this
+      // is the weaker one that has to hold however the lot was staged, and it
+      // is the one a carve could break by dropping a lot boundary on the
+      // landing's own row.
+      expect(
+        Math.abs(plan.entryX - at.x),
+        `seed ${seed}: the car is minted in plain sight`,
+      ).toBeGreaterThan(ARRIVALS.watchReach);
     }
   });
 

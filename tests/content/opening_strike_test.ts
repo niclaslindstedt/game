@@ -89,9 +89,29 @@ function vanguard(state: GameState): Enemy {
 /** Strip the board to just the vanguard so no crowd or sighting interferes. */
 function isolateVanguard(state: GameState): Enemy {
   stopWaves(state);
+  parkTheLot(state);
   const v = vanguard(state);
   state.enemies = [v];
   return v;
+}
+
+/**
+ * CLOSE THE STAFF LOT FOR THE DURATION.
+ *
+ * The tarmac has a read of its own — a car rolls in, somebody gets out, and the
+ * hero clocks the night shift (`goodco_follow_in`, engine/game/arrivals.ts) —
+ * and it now lands when that person is somewhere the player can actually SEE
+ * rather than on a fixed clock. So it can arrive at any tick at all, including
+ * the middle of a ledger a suite about the ORDER of the STRIKE's beats is
+ * collecting. Parking the lot is the honest isolation: this file is not about
+ * the car park, and `insideHQ` above already mutes the same read for the same
+ * reason.
+ */
+function parkTheLot(state: GameState): void {
+  state.arrivalPlan = null;
+  state.arrivalTimerMs = Number.POSITIVE_INFINITY;
+  state.arrivals = [];
+  state.enemies = state.enemies.filter((e) => e.arrival !== true);
 }
 
 /** Tap an open dialogue closed, page by page. */
@@ -160,6 +180,7 @@ describe("GOODCO HQ opening strike", () => {
     // killBoss objective never clears, so a long idle hold doesn't tip the run
     // into `victory` and freeze the sim out from under the assertion.
     stopWaves(state);
+    parkTheLot(state);
     const v = vanguard(state);
     state.enemies = state.enemies.filter(
       (e) => e.vanguard || enemyDef(e.defId).role === "boss",
