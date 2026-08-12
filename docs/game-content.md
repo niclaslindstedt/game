@@ -41,7 +41,11 @@ on JESUS. A due respawn is held while a hero stands close enough to watch the
 spot (no pop-ins), and a `clearAll` venue never respawns at all. Elite stands
 (`slot: elite`) are manned from the blueprint's own `elites` — WHICH stands,
 when the deal placed more than there are elites, is rolled per run — and a
-boss-anchored part dealt more than once rolls which instance holds him. The
+boss-anchored part dealt more than once rolls which instance holds him. **A
+woken elite pulls its camp** (social aggro, `MOB_SPAWNS.alarmRadius`): every
+dormant post within reach wakes with it — the parts maps' form of the knot
+maps' alarm link, and the same promise that a careless search costs more than
+a careful one. The
 carve-model venues keep their knot spawn points (`SpawnerSpec`); the two horde
 models never mix on one map, except HELLGATES, which are laced over both.
 
