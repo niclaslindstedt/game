@@ -26,6 +26,7 @@
 // engine already stands its furniture on.
 
 import {
+  citySpanX,
   isMastSlot,
   laneCenter,
   roadBandEdges,
@@ -72,6 +73,34 @@ export const ROAD_INK = {
  * one evenly broken line rather than as a line with a stutter every 56 px.
  */
 export const CENTRE_DASH = { on: 12, off: 14 } as const;
+
+/** One continuous stretch of centre-line paint, in world x. */
+type CentreLineSection = readonly [from: number, to: number];
+
+/**
+ * WHICH PARTS OF A VISIBLE ROAD HAVE A BROKEN OR SOLID CENTRE LINE.
+ *
+ * The centre line is solid only between the town's own two gates. A site's
+ * grounds overlap the far edge of town so the buildings meet without a gap,
+ * but that overlap must not turn the final two-lane country road into a solid
+ * no-passing line. The carriageway has already narrowed again there; its paint
+ * has to answer the same boundary.
+ */
+export function centreLineSections(
+  left: number,
+  right: number,
+  params: { direction: 1 | -1; coursePx?: number; cityPx?: number },
+): { solid?: CentreLineSection; broken: CentreLineSection[] } {
+  const city = citySpanX(params);
+  const from = Math.max(left, city.fromX);
+  const to = Math.min(right, city.toX);
+  if (to <= from) return { broken: [[left, right]] };
+
+  const broken: CentreLineSection[] = [];
+  if (left < from) broken.push([left, from]);
+  if (to < right) broken.push([to, right]);
+  return { solid: [from, to], broken };
+}
 
 /**
  * THE CROWD's bodies — the twenty people the welfare did not reach.
