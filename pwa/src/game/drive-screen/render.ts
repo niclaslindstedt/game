@@ -77,6 +77,7 @@ import {
   GLUED_BARKS,
   MAX_PLACARDS,
   PLACARD_READ_PX,
+  witnessLine,
   type PlacardVoice,
 } from "./placards.ts";
 import {
@@ -704,6 +705,10 @@ export function drawDrive(
     voice: PlacardVoice;
     ped: DriveState["pedestrians"][number];
   }[] = [];
+  /** Who, if anybody, is currently shouting about what the wagon just did. Read
+   * once for the frame rather than per body — it is at most ONE person out of a
+   * couple of hundred (`DriveWitness`). */
+  const { witness } = drive;
 
   const put = (
     name: string,
@@ -1111,6 +1116,24 @@ export function drawDrive(
 
   for (const ped of drive.pedestrians) {
     if (!collisionVisuals && ped.mode !== "afoot") continue;
+    // WHAT SOMEBODY WHO JUST WATCHED A COLLISION IS SHOUTING (`witness.ts`
+    // picks WHO and WHAT ABOUT; `witnessLine` answers with the words). Gathered
+    // here rather than in a pass of its own so the one line the picture can
+    // carry is decided once, over the whole road — and it takes the slot from a
+    // placard or a thought below, because a person reacting to what is on the
+    // tarmac in front of them outranks anything anybody had prepared.
+    //
+    // BEFORE the walk's own branches, because a reaction can come from ANY body
+    // out here: a walker on the pavement, a rider who has just been put down, or
+    // one of THE GLUED sitting in the road watching the wagon come through their
+    // own people.
+    if (font && witness?.ped === ped.id && ped.mode === "afoot") {
+      bubbles.push({
+        line: witnessLine(witness.scene, witness.roll),
+        voice: "reaction",
+        ped,
+      });
+    }
     // THE GLUED wear their own art and never animate — they sat down (see
     // `GLUED_SPRITES`). Everybody else walks.
     if (ped.kind === "glued" && ped.mode === "afoot") {
@@ -1283,16 +1306,29 @@ export function drawDrive(
       }))
       .filter((bubble) => bubble.away > 0 && bubble.away <= PLACARD_READ_PX)
       .sort((a, b) => a.away - b.away);
-    // AND A SHOUT OUTRANKS A THOUGHT, whatever the order on the road is. The
-    // blockade is a SET PIECE — twenty people, four voices, one demonstration a
-    // trip — and the crowd walks straight through it like everywhere else on this
-    // road, so without this the one line the picture can carry gets handed to a
-    // passer-by's thought about the bus fare in the middle of it. The thoughts
-    // are a texture and there are forty of them; missing one costs nothing, and
-    // one of them stepping on the set piece costs the set piece.
-    const shouts = ahead.filter((bubble) => bubble.voice === "shout");
-    const near = (shouts.length > 0 ? shouts : ahead).slice(0, MAX_PLACARDS);
-    for (const bubble of near) {
+    // A REACTION OUTRANKS A SHOUT, AND A SHOUT OUTRANKS A THOUGHT, whatever the
+    // order on the road is — a ladder rather than a pair, and each rung was paid
+    // for by the one below it.
+    //
+    // THE SHOUT over the thought: the blockade is a SET PIECE — twenty people,
+    // four voices, one demonstration a trip — and the crowd walks straight
+    // through it like everywhere else on this road, so without this the one line
+    // the picture can carry gets handed to a passer-by's thought about the bus
+    // fare in the middle of it. The thoughts are a texture and there are forty of
+    // them; missing one costs nothing, and one of them stepping on the set piece
+    // costs the set piece.
+    //
+    // THE REACTION over both: it is the only line out here that is about
+    // something the player just DID, and it has a clock on it (`DriveWitness`)
+    // where the other two are simply standing there. Losing it to a placard the
+    // wagon has not reached yet would be spending a beat with an expiry on one
+    // without.
+    const byVoice: PlacardVoice[] = ["reaction", "shout"];
+    const first =
+      byVoice
+        .map((voice) => ahead.filter((bubble) => bubble.voice === voice))
+        .find((found) => found.length > 0) ?? ahead;
+    for (const bubble of first.slice(0, MAX_PLACARDS)) {
       drawPlacard(
         ctx,
         font,
@@ -1302,6 +1338,10 @@ export function drawDrive(
         camera,
         bubble.away,
         bubble.voice,
+        // SEATED IS A FACT ABOUT THE BODY, not about the voice — see `LIFT`.
+        // Every shout still comes from one of THE GLUED, and a REACTION comes
+        // from whoever was near enough, which is usually somebody on their feet.
+        bubble.ped.kind === "glued",
       );
     }
   }

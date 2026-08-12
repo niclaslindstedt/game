@@ -120,6 +120,16 @@ the rent, the soup, a sister who stopped picking up, a giveaway somebody hopes
 is on again. They are legible for half a second at speed; the player catches a
 third of them and the hero catches none.
 
+**And the crowd SEE.** Every so often, when the wagon puts somebody over its own
+roof, one of the people further down the road turns and shouts about it — OH MY
+GOD, HE HIT THAT LADY, THEY WERE GLUED DOWN, HE'S NOT EVEN SLOWING DOWN. It is
+the one voice on this road that is about him, and it never becomes anything: no
+chase, no police, nothing waiting at GOODCO. He passes the person shouting a
+quarter of a second later and is at the far end ninety seconds after that,
+remarking on the suspension. **The town is not indifferent to what he does — he
+is indifferent to the town,** and until somebody was allowed to shout, the road
+could not tell those two apart.
+
 **What he says afterwards is about the car.** Standing beside the wagon at the
 far end he delivers a verdict on the trip, and it is always the suspension, the
 clock, the other drivers or the council's lamp standards. Never the people. It

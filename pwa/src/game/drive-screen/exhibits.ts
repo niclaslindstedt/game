@@ -1233,6 +1233,90 @@ export function driveExhibits(): DriveExhibit[] {
     },
     {
       kind: "drive",
+      id: "drive-reactions",
+      icon: "walker_hoodie_0",
+      label: "SOMEBODY SAW THAT",
+      blurb: "THE CROWD SHOUTS ABOUT WHAT THE WAGON JUST DID TO ONE OF THEM",
+      group: "DRIVE",
+      keywords: [
+        "drive",
+        "road",
+        "crowd",
+        "pedestrian",
+        "witness",
+        "reaction",
+        "shout",
+        "bystander",
+        "text",
+        "words",
+      ],
+      // SHORT, AND SHORTER THAN THE BEAT IT IS OF, because of what THIS HOST
+      // does with the camera: a drive take FOLLOWS the wagon until its own
+      // collision lands and then HOLDS, so the aftermath stays in the display
+      // case (`exhibit-run.ts`). That is right for every other shelf on this
+      // road and it puts a hard ceiling on this one — the car drives out of the
+      // frame, and every reaction after the first happens somewhere the picture
+      // no longer is. So the shelf shows the ONE shout that lands on the blow,
+      // and the PACING of them (one every `DRIVE.witness.gapMs`) is not
+      // reviewable here at all; that is a thing to look at by driving.
+      showMs: 1400,
+      // THE COLLISION IS THE CAUSE, and it is what the contract test drives for:
+      // the shout is a consequence the sim raises off it, so the event this
+      // stages is still a body going under the bumper.
+      shows: "pedestrianHit",
+      // Flat out and met square, so these are the HEAVY takes — the same shelf
+      // the road's own top-end collisions land on.
+      bank: HARD_BODY_SOUNDS,
+      road: (drive) => {
+        silence(drive);
+        const speed = openAt(drive);
+        // THE PEOPLE IT HAPPENS TO — a knot of them across the car's own line.
+        //
+        // A KNOT RATHER THAN A BODY, and that is not dressing: a single figure
+        // planted a second of road away spends that second WANDERING
+        // (`DRIVE.walkPx`, and every planted body shares a wander phase), so it
+        // can be forty pixels off the bumper by the time the car arrives and the
+        // take is a wagon driving down an empty road. A knot spread wider than
+        // the drift always has somebody left in the way.
+        //
+        // …AND EVERY BODY IN IT WEIGHS THE SAME KIND OF AMOUNT. Which of the
+        // nine the bumper reaches first is not something the staging can pick —
+        // they are spread across the lane and they drift — so if the knot were a
+        // spread of BUILDS the take would land on whichever sound shelf that
+        // body happened to belong to, and the shelf's own contract test would
+        // fail on a coin toss. These four are the mid band of
+        // `CROWD_MASS_MULTS` (0.92–1.08, `bodyWeight`), so the collision is the
+        // ordinary heavy take whoever it meets, and the knot still looks like
+        // four different people rather than one person nine times.
+        const BUILDS = [4, 2, 13, 8];
+        for (let i = 0; i < 9; i++) {
+          plantBody(
+            drive,
+            leadPx(speed) + (i % 3) * 7,
+            (i - 4) * 10,
+            BUILDS[i % BUILDS.length] ?? 4,
+          );
+        }
+        // …AND THE PEOPLE IT HAPPENS IN FRONT OF. On both pavements, thick
+        // enough that there is certain to be somebody inside the reading window
+        // (`DRIVE.witness.reachPx`) at the instant a body goes under — a witness
+        // the picture cannot draw is an incident that passes in silence, and an
+        // exhibit that showed that would be showing the bug rather than the
+        // beat.
+        const edges = crowdEdges();
+        for (let i = 0; i < 8; i++) {
+          const kerb = i % 2 === 0 ? edges.top + 3 : edges.bottom - 3;
+          plantBody(
+            drive,
+            leadPx(speed) * 0.5 + i * (DRIVE.witness.reachPx / 2),
+            kerb - drive.car.pos.y,
+            i * 7 + 3,
+          );
+        }
+      },
+    },
+    {
+      kind: "drive",
       id: "drive-gearbox",
       icon: "car_wheel_1",
       label: "PULLING AWAY",

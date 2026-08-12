@@ -244,6 +244,7 @@ export function collide(drive: DriveState, heroSafe = false): void {
       type: "trafficHit",
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
+      class: def.class,
     });
     // …and its lamps at that end go with the paint.
     breakTrafficLamps(other, car.pos.x);
@@ -372,6 +373,10 @@ export function collide(drive: DriveState, heroSafe = false): void {
         type: "trafficHit",
         pos: { x: hit.contact.x, y: hit.contact.y },
         joules: hit.joules,
+        // A parked car is one of the FLEET with the handbrake on, so it answers
+        // this the same way a moving one does — including the parked BUS, which
+        // is the thing on this kerb worth shouting about.
+        class: parkedDef?.class ?? "car",
       });
       damage(drive, hit, DRIVE.impact.trafficWearScale, loss, heroSafe);
       continue;

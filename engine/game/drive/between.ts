@@ -35,12 +35,30 @@
 import { DRIVE, DRIVE_UNITS } from "./config.ts";
 import { crushVehicle, shatterGlass, tipsOver, tipVehicle } from "./crush.ts";
 import { ejectRider, tearMachine, wreckForce } from "./eject.ts";
-import { FLEET, vehicleDef } from "./fleet.ts";
+import { FLEET, vehicleDef, type DriveVehicleClass } from "./fleet.ts";
 import { hurtTraffic } from "./collide.ts";
 import { smashEnd, turnedRound, wreckTotally } from "./wreckage.ts";
 import { impactMasses, panelAt, type Impact } from "./impact.ts";
 import { breakTrafficLamps, knockDown, trafficMass } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
+
+/**
+ * WHICH OF TWO VEHICLES A CRASH IS ABOUT — the one that decides what the thing
+ * looked like from the pavement.
+ *
+ * It is a SIZE order and not the class union's declaration order, which is why
+ * it is written out: a `heavy` going through an `open` is a lorry going through
+ * a bicycle, and the events this feeds (`WitnessScene`) would otherwise name
+ * the half nobody was looking at.
+ */
+function biggerOf(
+  a: DriveVehicleClass,
+  b: DriveVehicleClass,
+): DriveVehicleClass {
+  if (a === "heavy" || b === "heavy") return "heavy";
+  if (a === "car" || b === "car") return "car";
+  return "open";
+}
 
 /** The furthest apart two vehicles' centres can be and still touch — what the
  * sweep below stops looking past. Derived from the fleet rather than written
@@ -143,7 +161,15 @@ function meet(
     x: a.pos.x + nx * defA.halfLengthPx,
     y: (a.pos.y + b.pos.y) / 2,
   };
-  drive.events.push({ type: "trafficHit", pos: contact, joules });
+  // THE BIGGER OF THE PAIR, because that is the one anybody watching would
+  // name: a bus and a bicycle meeting is a bus going through a bicycle, and a
+  // bystander shouting about the bicycle has described the wrong half of it.
+  drive.events.push({
+    type: "trafficHit",
+    pos: contact,
+    joules,
+    class: biggerOf(defA.class, defB.class),
+  });
 
   answer(
     drive,

@@ -389,6 +389,94 @@ export const DRIVE = {
    */
   pavementPx: 16,
 
+  // ── WHAT THE CROWD SHOUTS WHEN IT SEES ONE ────────────────────────────────
+  /**
+   * THE BYSTANDERS — the one thing on this road that reacts to what the hero
+   * is doing, and the only voice out here that is ABOUT him.
+   *
+   * THE CROWD ALREADY HAD TWO VOICES AND NEITHER OF THEM COULD DO THIS. A
+   * thought (`CROWD_THOUGHTS`) has never heard of the car, on purpose — that is
+   * the whole beat. THE GLUED shout at a driver, but they are a set piece, they
+   * are laid down before the trip starts and they are saying what they came to
+   * say whatever happens. So a man could put a woman over the roof of a
+   * hatchback in front of two hundred people and the road would carry on
+   * thinking about the rent. The picture said "nobody here is a person"; what
+   * was actually meant is "he does not notice", which needs somebody NOTICING.
+   *
+   * SO A COLLISION IS SEEN. One body who was near enough to watch it turns and
+   * shouts about it, in the crowd's own floating text, for as long as they are
+   * still ahead of a car that is not slowing down. That is all of it — nothing
+   * is scored, nothing is unlocked, the wagon is not told, and the hero says
+   * nothing back on this leg or the next one.
+   *
+   * WHY THE NUMBERS ARE WHERE THEY ARE, since three of the four are governed
+   * from outside this file:
+   */
+  witness: {
+    /**
+     * HOW FAR AHEAD OF THE CAR A SHOUTING BODY MAY BE (world px) — and it is
+     * the APP's reading window written down in the engine, which is the one
+     * thing in this block that is not free to be re-tuned on taste.
+     *
+     * The camera holds the wagon in the trailing quarter and shows about 308
+     * world px past the bumper, so a line centred on a body further out than
+     * `PLACARD_READ_PX` (260, drive-screen/placards.ts) fades up already
+     * clipped off the right edge — which reads as a rendering fault rather than
+     * as a person. Picking a witness the picture cannot draw is worse than
+     * picking none: the incident passes in silence and the shout is spent.
+     * `tests/content/drive_words_test.ts` holds this at or under that number.
+     */
+    reachPx: 250,
+    /**
+     * …AND HOW NEAR IS TOO NEAR. A body eight pixels in front of the bumper is
+     * under it before a glyph has faded up, so the shout would be a flicker —
+     * and, worse, it is usually the NEXT person the car is about to hit, which
+     * makes the road look like it is reacting to a collision that has not
+     * happened yet.
+     */
+    nearPx: 70,
+    /**
+     * HOW FAR FROM THE INCIDENT SOMEBODY HAD TO BE STANDING TO HAVE SEEN IT
+     * (world px).
+     *
+     * It is not the same question as the two above and cannot be folded into
+     * them: those are about the CAMERA, this is about the WITNESS. Most
+     * collisions happen at the bumper and every candidate passes it. The one it
+     * exists for is the pile-up the hero did not cause (`between.ts`) — traffic
+     * meeting traffic hundreds of pixels up the road — where the crowd beside
+     * the wagon genuinely did not see anything and should not be shouting about
+     * it.
+     */
+    sawPx: 340,
+    /**
+     * HOW LONG A SHOUT IS HELD (drive-clock ms) — the ceiling rather than the
+     * usual length, because the car nearly always passes the speaker first.
+     *
+     * The drive's clock and not the wall's, exactly as a bark's is
+     * (`drive-screen/bark.ts`): a paused road holds the line where it was.
+     */
+    holdMs: 2400,
+    /**
+     * …AND THE QUIET BETWEEN TWO OF THEM. The whole point of this road is that
+     * it is unthreadable, so a fast leg is a collision every second or so — and
+     * a shout on every one of them is not a crowd reacting, it is a caption
+     * track. Wide enough that the reactions land as separate events, narrow
+     * enough that a run of carnage is plainly being watched.
+     */
+    gapMs: 1500,
+    /**
+     * WHAT SHARE OF THE REACTIONS TO A BODY BECOME "HE IS NOT STOPPING" once
+     * the hero has hit more than one person.
+     *
+     * IT IS THE ONLY LINE ON THIS ROAD THAT IS ABOUT THE PATTERN rather than
+     * about the blow, so it cannot be the first thing anybody says: the crowd
+     * has to have watched him do it twice before "again" means anything. After
+     * that it is a third of them, which is roughly how often a bystander stops
+     * describing what happened and starts describing the driver.
+     */
+    fleeingShare: 0.34,
+  },
+
   // ── THE BLOCKADE ──────────────────────────────────────────────────────────
   /**
    * THE GLUED — the one set piece on this road, and the only thing on it that
