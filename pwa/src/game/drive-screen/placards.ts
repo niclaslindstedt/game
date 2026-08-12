@@ -459,6 +459,48 @@ const THOUGHT_FADE_PX = 110;
 export const PLACARD_READ_PX = READ_PX;
 
 /**
+ * …AND A LINE DOES NOT STOP AT THE BUMPER. How long it goes on being drawn once
+ * the car is PAST its owner, as a share of the road still visible behind the
+ * wagon.
+ *
+ * IT USED TO BE ZERO, and that is the bug this closes. The reading window was
+ * `away > 0` — ahead of the car and nothing else — so a thought was taken off a
+ * walker on the frame the bumper drew level with them, while the walker
+ * themselves went on down the picture for another quarter of a frame. Somebody
+ * mid-sentence about the rent had it cut off in front of the player, every time,
+ * which reads as the renderer dropping the line rather than as the car going
+ * past.
+ *
+ * The window is the FRAME's own trailing share (`CAMERA_LEAD_FRAC`) rather than
+ * a distance, for the same reason `READ_PX` is bounded by the frame: the camera
+ * holds the wagon in the trailing quarter, so it is exactly "until its owner
+ * leaves the picture" on every viewport. The RENDERER measures it and passes it
+ * in as `passedPx` — this module has never known how wide the screen is, and
+ * restating the camera's lead here would be one edit from disagreeing with it.
+ */
+
+/** …and over how much of that the line comes off (world px). A short one: the
+ * body is already sliding out of frame with its own words half-clipped by the
+ * edge, and a line that snapped off at full strength there would be the same
+ * cut this fixes, moved a quarter of a frame. */
+const PASSED_FADE_PX = 60;
+
+/**
+ * WHERE A CANDIDATE SITS IN THE QUEUE FOR THE ONE SLOT (`MAX_BUBBLES`) — lower
+ * speaks.
+ *
+ * NEAREST AHEAD FIRST, WHICH IS THE SEQUENCE RULE, and then the ones the car has
+ * already passed, least-passed first. A speaker behind the bumper takes the slot
+ * only when nobody in front of it wants it, so the picket line still reads as a
+ * sequence of lines arriving — and out on the open road, where the thoughts are
+ * dealt half a screen apart (`DRIVE.thoughtPitchPx`), the walker just passed
+ * keeps their sentence until the next one is close enough to be read.
+ */
+export function placardOrder(awayPx: number): number {
+  return awayPx >= 0 ? awayPx : READ_PX - awayPx;
+}
+
+/**
  * WHICH VOICE A LINE IS IN. `shout` is one of THE GLUED addressing the driver;
  * `thought` is one of the crowd not addressing anybody at all; `reaction` is
  * somebody who has just watched a collision. It picks the ink and the column
@@ -511,18 +553,33 @@ export function drawPlacard(
   worldX: number,
   worldY: number,
   camera: Camera,
-  /** How far the car still is from this body (world px), for the fade-in. */
+  /** How far the car still is from this body (world px), for the fade-in —
+   * NEGATIVE once the wagon is past them, which is the whole of the window
+   * below (`PASSED_FADE_PX`). */
   awayPx: number,
   voice: PlacardVoice = "shout",
   /** IS THE SPEAKER SITTING DOWN — one of THE GLUED rather than somebody on
    * their feet. A fact about the BODY and not about the voice; see `LIFT`. */
   seated = voice === "shout",
+  /** How much road is still visible BEHIND the bumper (world px) — the frame's
+   * own trailing share, measured by the renderer. Zero cuts the line at the
+   * bumper, which is what this drew before there was a window at all. */
+  passedPx = 0,
 ): void {
   const quiet = voice === "thought";
   const wide = voice !== "shout";
   const fade = wide ? THOUGHT_FADE_PX : FADE_PX;
-  if (awayPx > READ_PX) return;
-  const alpha = awayPx > READ_PX - fade ? (READ_PX - awayPx) / fade : 1;
+  if (awayPx > READ_PX || awayPx < -passedPx) return;
+  // THE FADE IS AT BOTH ENDS NOW, and they are different lengths because they
+  // are different beats: a line SURFACES as the car closes on it, and it is
+  // TAKEN by the edge of the picture as the car leaves it behind.
+  const out = Math.min(PASSED_FADE_PX, passedPx);
+  const alpha =
+    awayPx < 0
+      ? Math.max(0, Math.min(1, (passedPx + awayPx) / Math.max(out, 1e-6)))
+      : awayPx > READ_PX - fade
+        ? (READ_PX - awayPx) / fade
+        : 1;
   const lines = font.wrap(text, wide ? THOUGHT_WRAP_PX : WRAP_PX);
   const lineH = (font.height + 1) * TEXT_SCALE;
   // IN CANVAS SPACE, NOT THE WORLD'S — the one thing on this road drawn outside

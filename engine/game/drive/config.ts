@@ -741,13 +741,26 @@ export const DRIVE = {
    * It has to be its own number now, because it is no longer competing with the
    * lanes for the same slots: a moped on the footway is not a car in lane 2 and
    * a road that filled its lanes by taking mopeds off the pavement would be the
-   * same bug in the other direction. HELD AT WHAT THE OLD RATE ACTUALLY
-   * DELIVERED (one vehicle per 1000 px × the fleet's 20% pavement share), so
-   * the lanes are the only thing this tuning moves — how busy the footway
-   * should be beside a road that is now genuinely busy is a separate design
-   * call, and one number away.
+   * same bug in the other direction.
+   *
+   * IT WAS 0.2 AND THAT WAS AN EMPTY PAVEMENT. The number was inherited rather
+   * than designed — held at whatever the old shared rate happened to deliver
+   * (one vehicle per 1000 px × the fleet's 20% pavement share) so that retuning
+   * the LANES moved nothing out here — and the deferred design call it named is
+   * this one. Split two ways over 19 600 px of town it came to about one rider
+   * per footway per leg, which is not a hazard, is not scenery, and is not even
+   * enough to tell a player the footway is a thing that has traffic on it. The
+   * kerbs were furniture with a moped parked on one of them.
+   *
+   * 1.1 IS PRICED OFF THE SCREEN, like everything else on this road: with the
+   * bias below it puts a rider on the FAR footway about every 1 300 px, which
+   * at the closing speed of a leg driven properly is one every four or five
+   * seconds — often enough that the top of the carriageway is a lane with
+   * something in it, rare enough that it is still a road and not a wall. The
+   * near footway lands at about half that and reads as overtaking rather than
+   * as meeting, because a rider on the hero's own side runs the hero's way.
    */
-  pavementPerKPx: 0.2,
+  pavementPerKPx: 1.1,
   /** What the other traffic does, world px/s, before its own def's `pace`
    * multiplies it. The near lanes dawdle (the hero overtakes them), the far
    * lanes come the other way. */
@@ -1072,6 +1085,26 @@ export const DRIVE = {
      * pavement, because they do not stay on the pavement.
      */
     cutInPx: 9,
+    /**
+     * WHICH FOOTWAY THE TRADE WORKS — the share of riders put on the FAR one,
+     * the pavement at the top of the picture.
+     *
+     * IT WAS A COIN TOSS AND THE TWO SIDES ARE NOT THE SAME PLACE. A rider on
+     * the NEAR footway runs the hero's way, so he closes on it at the
+     * difference of two speeds and spends a second and a half overtaking it; a
+     * rider on the FAR one comes at him, so they close at the SUM and the whole
+     * meeting is over in a fifth of a second. The far side is worth roughly
+     * three times as much per body, and the top of the carriageway is where a
+     * player who has learned the road goes to be left alone — the far lanes
+     * carry oncoming cars that never leave their own lane centres, so a wagon
+     * held in the top gutter met the kerb's lamp posts and nothing else at all.
+     *
+     * So the trade is biased into it. Not a rule about delivery riders — it is
+     * a rule about which half of the road is allowed to be empty, and the
+     * fiction is the same either way: this is the side with the restaurants on
+     * it tonight.
+     */
+    farShare: 0.68,
   },
   /** How far a shunted car is shoved sideways per unit of impulse it takes,
    * and the most it can be shoved in one hit (world px/s of lateral speed).

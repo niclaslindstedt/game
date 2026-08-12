@@ -1048,6 +1048,14 @@ escort.ts` walks the people an escort errand puts on the field, and
   the sum of the slide-in, both pages of speech and the hand-over's own second.
   The pages are sized in the app off their own crawl (`drive-screen/bark.ts`) and
   `tests/drive_bark_test.ts` holds the two halves against each other.
+  A BREAKDOWN REPLAYS THE LAST STRETCH OF IT AND NOTHING ELSE. `restartDrive`
+  lays the same seed's road down again and opens it at the WIDENING
+  (`skipDriveOpening`'s `beforeGatePx`), so the taper, GET READY, the dashboard
+  and the wheel all arrive exactly as they did the first time, and the wagon
+  sliding into frame with the two lines over it does not. None of it is scored —
+  the clock is the town's — so what a restart hands back is a beat to breathe
+  rather than distance off the board. Every HEADLESS caller (a suite, the bench,
+  the effects gallery) takes the default instead and opens at the gate itself.
   WHAT A COLLISION DOES TO THE THING IT HIT is `crush.ts`, and it is four
   answers rather than one — a lone sideways shunt makes a head-on and a nudge
   read as the same thing at two speeds. It FOLDS (a crumple zone eats

@@ -1136,23 +1136,49 @@ describe("a drive", () => {
     expect(b.car.wear).toBeCloseTo(a.car.wear, 9);
   });
 
-  it("gives the same road back after a breakdown, opening at the town", () => {
+  it("gives the same road back after a breakdown, opening at the widening", () => {
     const first = createDrive(PARAMS);
     floorIt(first, 5000);
     const again = restartDrive(first);
     expect(again.params.seed).toBe(first.params.seed);
     expect(again.car.wear).toBe(0);
-    // THE APPROACH IS NOT REPLAYED. A restart starts where the SCORING does —
-    // at the town's gate, with the clock at zero and the wagon already in frame
-    // — because the outskirts and the car sliding into them are an opening the
-    // player has already watched, and fourteen seconds of it after every
-    // failure is a punishment on top of a punishment.
-    expect(again.distance).toBe(cityStartPx(PARAMS));
+    // THE APPROACH IS NOT REPLAYED — all but the last stretch of it. The wagon
+    // sliding into frame and ten seconds of empty outskirt are an opening the
+    // player has already watched, and replaying them after every failure is a
+    // punishment on top of a punishment; but restarting on the far side of the
+    // HAND-OVER dropped the flag on somebody who was reading his own wreck a
+    // second ago. So the leg opens where the carriageway starts widening, which
+    // is the frame GET READY goes up on.
+    expect(again.distance).toBe(cityStartPx(PARAMS) - DRIVE.opening.widenPx);
     expect(again.entryPx).toBe(0);
     expect(again.clockMs).toBe(0);
-    expect(again.cityDone).toBe(true);
+    // …and it is still the HELD approach, so the caption, the dashboard and the
+    // wheel all arrive exactly as they do on a first attempt.
+    expect(again.cityDone).toBe(false);
+    expect(driveReadyUp(again)).toBe(false);
+    expect(again.car.speed).toBe(DRIVE.opening.entrySpeedPx);
     // …and he does not deliver the speech twice.
     expect(again.monologueDone).toBe(true);
+  });
+
+  it("says GET READY within a tick of a restart, and drops the flag at the gate", () => {
+    const again = restartDrive(createDrive(PARAMS));
+    // The taper's first frame is the mark itself, so the caption is due on the
+    // very next one rather than on this one (`roadWideningAt`).
+    stepDrive(again, 16, { pedal: 1, wheel: 0 });
+    expect(driveReadyUp(again)).toBe(true);
+    expect(again.cityDone).toBe(false);
+    expect(again.clockMs).toBe(0);
+
+    // …and the whole widening is driven at the held speed and NOT scored: the
+    // clock is the town's and starts at the gate, which the hold hands over on.
+    for (let t = 0; t < 4000; t += 16) {
+      stepDrive(again, 16, { pedal: 1, wheel: 0 });
+      if (again.cityDone) break;
+    }
+    expect(again.cityDone).toBe(true);
+    expect(again.distance).toBeGreaterThanOrEqual(cityStartPx(PARAMS));
+    expect(driveReadyUp(again)).toBe(false);
   });
 });
 
@@ -1257,9 +1283,16 @@ describe("the gore switch", () => {
       );
     }
     expect(drive.bodies).toBeGreaterThan(0);
-    // Nobody came apart…
+    // NOBODY came apart — and it is the FLESH parts this asks about, not the
+    // list. `remains` also carries what a struck moped sheds (`machine`,
+    // `machine_front`, `machine_rear`, which are the VEHICLE's art), and a
+    // switch about gore has nothing to say about a wheel: a bicycle still comes
+    // to pieces on a road with both settings off, because a bicycle is not
+    // somebody. Asserting the whole list was empty passed only for as long as
+    // this straight-line run happened to meet no two-wheeler at all.
+    const MACHINE = new Set(["machine", "machine_front", "machine_rear"]);
     expect(strikes).toBe(0);
-    expect(drive.remains).toHaveLength(0);
+    expect(drive.remains.filter((r) => !MACHINE.has(r.part))).toHaveLength(0);
     // …but somebody was plainly knocked over.
     expect(tumbled).toBeGreaterThan(0);
   });

@@ -528,8 +528,7 @@ export function driveReadyUp(drive: DriveState): boolean {
  * player back at the top of the SAME road, which is the right call for the road
  * and the wrong one for the approach to it: the car sliding into frame and the
  * two lines over it are an OPENING, and an opening replayed after every failure
- * is fourteen seconds of penalty on top of the penalty. So a restart begins
- * where the scoring does.
+ * is fourteen seconds of penalty on top of the penalty.
  *
  * AND THE SECOND IS EVERY HEADLESS CALLER. A test, a bench, a soak and the
  * effects gallery all want the ROAD — the crowd, the traffic, the collisions —
@@ -539,19 +538,38 @@ export function driveReadyUp(drive: DriveState): boolean {
  * those call sites, because "how do you get past the opening" is exactly the
  * kind of thing four suites would answer four slightly different ways.
  *
+ * `beforeGatePx` IS HOW MUCH OF THE APPROACH IS KEPT, and it is what separates
+ * those two callers. A headless one wants none of it and takes the default: the
+ * gate itself, the hold already over, the pedal connected, nothing in front of
+ * the bumper but the town. A RESTART wants the last stretch of it — see
+ * `restartDrive` — because a player who has just crashed is being handed the
+ * wheel again, and a hand-over with no run-up is a flag dropped on somebody who
+ * was still reading the wreck. Anything kept is still the HELD approach
+ * (`driveHeld` reads `cityDone`), so the caption, the dashboard's arrival and
+ * the wheel coming back all land exactly as they do on a first attempt.
+ *
  * It moves the car rather than the marks, because `distance` is derived from the
  * car's own travel — so putting the wagon a gate's worth down the road is
  * enough, and every spawner, every latch and the clock all agree about where it
  * is without being told twice.
  */
-export function skipDriveOpening(drive: DriveState): void {
+export function skipDriveOpening(drive: DriveState, beforeGatePx = 0): void {
   const dir = drive.params.direction;
-  drive.car.pos.x = drive.car.home.x + dir * cityStartPx(drive.params);
-  drive.distance = cityStartPx(drive.params);
-  drive.car.speed = DRIVE.opening.cruisePx;
+  const gate = cityStartPx(drive.params);
+  const at = Math.max(0, gate - Math.max(0, beforeGatePx));
+  const arrived = at >= gate;
+  drive.car.pos.x = drive.car.home.x + dir * at;
+  drive.distance = at;
+  // AT THE GATE the pedal is his and the wagon opens at the approach's cruise;
+  // SHORT OF IT the speed is not his to set — the hold pins it every tick
+  // (`entrySpeedPx`) — and opening at anything else would be one frame of a car
+  // doing a speed the road is about to take straight back off it.
+  drive.car.speed = arrived
+    ? DRIVE.opening.cruisePx
+    : DRIVE.opening.entrySpeedPx;
   drive.entryPx = 0;
   drive.monologueDone = true;
-  drive.cityDone = true;
+  drive.cityDone = arrived;
   drive.nextPropSlot = firstPropSlot(drive.car.pos.x, dir);
 }
 
@@ -564,13 +582,25 @@ export function skipDriveOpening(drive: DriveState): void {
  * The monologue does NOT play again: he has already had that thought, and
  * hearing a man promise to be careful for the fourth time is a different and
  * much worse joke. Nor does the rest of the opening — the wagon's slide into
- * frame and the empty outskirts under it are an approach the player has already
- * watched, so a restart opens AT THE GATE (`openAtGate`) with the clock at zero
- * and the town in front of him.
+ * frame and ten seconds of empty outskirt under it are an approach the player
+ * has already watched.
+ *
+ * IT OPENS AT THE WIDENING, NOT AT THE GATE, and that is the whole of what a
+ * restart keeps. The taper is the beat the road says GET READY on
+ * (`driveReadyUp`), the dashboard slides in across it and the wheel comes back
+ * with it — so restarting on the far side of all three dropped the flag on a
+ * player who, a second and a half earlier, was watching his own engine die. Two
+ * lanes opening out to four is the shortest run-up that still contains the whole
+ * hand-over, and it is the one the player already knows means the town is
+ * coming.
+ *
+ * IT IS NOT SCORED, and that is what makes it free to give back: the clock is
+ * the town's and does not start until the gate (`openingBeats`), so this is a
+ * beat to breathe rather than distance off the board.
  */
 export function restartDrive(previous: DriveState): DriveState {
   const next = createDrive(previous.params);
-  skipDriveOpening(next);
+  skipDriveOpening(next, DRIVE.opening.widenPx);
   return next;
 }
 

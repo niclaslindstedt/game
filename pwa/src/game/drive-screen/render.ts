@@ -76,6 +76,7 @@ import {
   drawPlacard,
   GLUED_BARKS,
   MAX_PLACARDS,
+  placardOrder,
   PLACARD_READ_PX,
   witnessLine,
   type PlacardVoice,
@@ -1297,15 +1298,28 @@ export function drawDrive(
   // number lives. Nearest-first is the honest cut: as the car closes, each
   // speaker in turn is passed and the next takes the bubble, so a picket line
   // reads as a SEQUENCE of lines rather than as a wall of overprinted text.
+  //
+  // …AND IT DOES NOT END AT THE BUMPER. The window reaches BEHIND the car by
+  // whatever of the road is still on screen back there, so a line goes out of
+  // the picture with the person who was thinking it instead of being cut off the
+  // frame the wagon draws level with them (`placardOrder`, `PASSED_FADE_PX`).
   if (font) {
     const dir = drive.params.direction;
+    // How much road the camera still shows behind the wagon: it sits in the
+    // trailing part of the frame (`CAMERA_LEAD_FRAC`), and this is the rest of
+    // it. Derived from the live frame rather than stated as a distance, so an
+    // upright phone — where the same fraction is barely half the world px —
+    // still takes its lines away exactly at its own edge.
+    const passedPx = viewW * (0.5 - CAMERA_LEAD_FRAC);
     const ahead = bubbles
       .map((bubble) => ({
         ...bubble,
         away: (bubble.ped.pos.x - drive.car.pos.x) * dir,
       }))
-      .filter((bubble) => bubble.away > 0 && bubble.away <= PLACARD_READ_PX)
-      .sort((a, b) => a.away - b.away);
+      .filter(
+        (bubble) => bubble.away > -passedPx && bubble.away <= PLACARD_READ_PX,
+      )
+      .sort((a, b) => placardOrder(a.away) - placardOrder(b.away));
     // A REACTION OUTRANKS A SHOUT, AND A SHOUT OUTRANKS A THOUGHT, whatever the
     // order on the road is — a ladder rather than a pair, and each rung was paid
     // for by the one below it.
@@ -1342,6 +1356,7 @@ export function drawDrive(
         // Every shout still comes from one of THE GLUED, and a REACTION comes
         // from whoever was near enough, which is usually somebody on their feet.
         bubble.ped.kind === "glued",
+        passedPx,
       );
     }
   }

@@ -116,7 +116,11 @@ function silence(drive: DriveState): void {
   // pass not running at all, and the outskirts after that hold the throttle at
   // a cruise — so a show staged on a fresh drive is a show whose collision
   // happens after everybody has stopped looking, if it happens at all.
-  // `skipDriveOpening` is the engine's own answer and is what a restart does.
+  // `skipDriveOpening` is the engine's own answer, and an exhibit takes its
+  // DEFAULT — the gate itself, hold already over. (A restart keeps the last
+  // stretch of the approach on purpose; a show that opened on two lanes of
+  // held-speed outskirt would be spending its first second and a half on the
+  // one thing an exhibit is not about.)
   skipDriveOpening(drive);
   const past = courseLength(drive.params) + 1;
   drive.nextPedestrianAt = past;
