@@ -1132,11 +1132,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   slow-motion beat is for a moment the player might still act on, and on a road
   laid this thick an unavoidable hit is always a second or two away — dilating
   for one interrupts the DRIVING several times a leg, and the tension here is
-  the wheel and the speed. What he MAKES of the trip is not said on the road at all: `driveVerdict`
-  reads the whole journey and hands the arriving run one line
-  (`RunParams.arrivalThought`), spoken as the FIRST page of the destination's
-  opening monologue — the first thing he says once he is out of the car, with
-  the level's own briefing following it.
+  the wheel and the speed. What he MAKES of the trip is said at the WHEEL, on the
+  run-in: `driveVerdict` reads the whole journey and picks a few words, and
+  `arrivalLine` (drive-screen/voice.ts) prints them onto the front of the place's
+  own line as one breath — "ROUGH RIDE. THERE'S GOODCO." Nothing about the
+  journey crosses the black with him, so the venue on the far side opens on its
+  own briefing.
   WHAT THE CABINET MAKES OF IT is the arrival's own screen: a rally RANKING board
   (`drive-screen/DriveScores.tsx`) — a plaque, a RANK / NAME / TIME rail, five
   rows, the row you just took lit in white, and three letters typed into it from

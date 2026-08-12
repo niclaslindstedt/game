@@ -7,7 +7,6 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
-import { thoughtDef } from "../defs/thoughts.ts";
 import { heroInPlay } from "../party.ts";
 import { isPartyRun } from "../seating.ts";
 import { advanceCutsceneChain } from "../story.ts";
@@ -90,55 +89,22 @@ export function closeLevelup(player: Player): void {
 }
 
 /**
- * THE LINE THE HERO ARRIVED STILL HAVING, as pages — empty for a plain arrival.
+ * THE OPENING MONOLOGUE THIS RUN PLAYS — the level's own, and nothing in front
+ * of it.
  *
- * Today it is the DRIVE's verdict on the trip in (`driveVerdict`, engine/game/
- * drive/): he gets out of the car and says what he made of the journey. A
- * thought MAY carry a `{ them: [...] }` block when somebody answers him; an
- * arrival line never does — he is on his own, standing beside a car — so the
- * plain rows are the whole of it.
- */
-function arrivalPages(state: GameState): readonly (readonly string[])[] {
-  const def = state.arrivalThought
-    ? thoughtDef(state.arrivalThought)
-    : undefined;
-  if (!def) return [];
-  return def.pages.filter((page): page is string[] => Array.isArray(page));
-}
-
-/**
- * THE OPENING MONOLOGUE THIS RUN ACTUALLY PLAYS — whatever the hero arrived
- * still thinking about, and then the level's own.
+ * NOTHING A TRIP LEFT HIM WITH ARRIVES HERE, and that is a decision rather than
+ * an omission. The DRIVE reads the whole journey and says what it made of it AT
+ * THE WHEEL, folded into the front of the run-in's own line ("ROUGH RIDE.
+ * THERE'S GOODCO." — `arrivalLine`, pwa/src/game/drive-screen/voice.ts), so the
+ * road keeps its own words and the venue on the far side of the black opens on
+ * the building rather than on the suspension. A carried line used to be a
+ * session parameter and the first page of this list; it left with the beat.
  *
- * ONE ARRIVAL, ONE MONOLOGUE. The trip in can leave him with something to say,
- * and the right place for a man's opinion of a journey is the moment he gets
- * out of the car — not a popup on the road he is still driving. So it arrives
- * as a session parameter (`RunParams.arrivalThought`) and is spoken in the
- * level's own briefing, in the same box, in the same voice.
- *
- * IT GOES FIRST, and that is the order a man actually speaks in. He has just
- * got out of the car; the drive is the thing still in his hands, and it is what
- * he says before he has looked up at the building. Held to the end it read as
- * an afterthought tacked onto the briefing — the serious business of the job
- * ahead, and then, four pages later, a remark about the suspension that no
- * longer belonged to anything. Said first it is the man arriving, and the
- * briefing is what he settles into afterwards.
- *
- * A REPLAY SKIPS THE LEVEL'S OWN OPENING AND KEEPS THIS (`skipStoryOpening` —
- * we die and retry a lot, and nobody wants the same briefing five times, but
- * tonight's drive has never been read). With the arrival line in FRONT, that
- * skip can no longer be a page index into this list, so it is `introSkipped`
- * on the state and this is where it is answered: the level's half is spent, the
- * arrival's half is not.
- *
- * Everything that walks the intro reads it through here, so a run with an
- * arrival line has one more page to turn and nothing else has to know.
+ * Everything that walks the intro reads it through here, which is what a
+ * carried page would go back to needing.
  */
 export function introPages(state: GameState): readonly (readonly string[])[] {
-  const arrival = arrivalPages(state);
-  if (state.introSkipped) return arrival;
-  const level = runLevelDef(state).intro;
-  return arrival.length ? [...arrival, ...level] : level;
+  return runLevelDef(state).intro;
 }
 
 /**
@@ -282,14 +248,10 @@ export function skipCutscene(state: GameState): void {
 export function skipStoryOpening(state: GameState): void {
   if (state.phase === "cutscene") skipCutscene(state);
   if (state.phase === "intro") {
-    // …but a line he arrived WITH is not part of the level's opening and has
-    // never been read: what he made of tonight's drive is about tonight. It is
-    // spoken FIRST (`introPages`), so the skip cannot be a page index into the
-    // monologue — it is the monologue itself that shrinks to the half nobody
-    // has read. A plain arrival has nothing there and lands on the card.
-    state.introSkipped = true;
+    // The monologue is the LEVEL's, all of it, so there is no half to keep:
+    // the whole briefing is spent and the card is what he lands on.
     state.introPage = 0;
-    if (introPages(state).length === 0) state.phase = "title";
+    state.phase = "title";
   }
   // Arm the WHOLE party. The opening is the level's, so the skip is too: a
   // party that armed seat 0 alone would leave every joiner holstered for the

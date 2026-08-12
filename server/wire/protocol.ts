@@ -33,7 +33,7 @@ import type { CommandName, FrameType } from "./frames.ts";
  * BOTH numbers named — a refusal a player can act on beats a desync they
  * cannot.
  */
-export const PROTOCOL_VERSION = 33;
+export const PROTOCOL_VERSION = 34;
 
 // ---------------------------------------------------------------------------
 // Session parameters — the STATIC half of the replication split
@@ -113,9 +113,6 @@ export type SessionParams = {
    * for lands as a straight panel rather than as a hole in the picture.
    */
   car?: unknown;
-  /** A thought the hero arrived still having, spoken as the first page of the
-   * level's opening monologue (`RunParams.arrivalThought`). */
-  arrivalThought?: string;
   /** The CAMPAIGN quest chain the hero carries. Opaque here like `loadout`:
    * the wire moves it, the engine reads it. */
   campaignQuests?: unknown | null;

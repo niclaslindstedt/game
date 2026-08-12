@@ -27,10 +27,8 @@ import {
   driveDriverInput,
   driveReadyUp,
   driveScore,
-  driveVerdict,
   readCarDamage,
   stepDrive,
-  thoughtDef,
   withHeroNameLines,
   type CarDamage,
   type DriveDriver,
@@ -97,6 +95,7 @@ import {
 import { endDrive } from "./end-drive.ts";
 import { feelDrive } from "./drive-haptics.ts";
 import { drawDrive, driveCamera } from "./render.ts";
+import { arrivalLine, thoughtPages } from "./voice.ts";
 
 /** The simulation's fixed step (ms) — the engine's own, so a drive ticks at the
  * same rate a run does and the physics is frame-rate independent. */
@@ -156,15 +155,15 @@ export function DriveScreen({
   params: DriveParams;
   assets: GameAssets;
   /**
-   * The road is behind him: make the crossing that was waiting on it, carrying
-   * what he made of the trip — `verdict` is the id of the thought the drive
-   * earned (`driveVerdict`), spoken as the first page of the destination's
-   * opening monologue rather than as a popup on the road.
+   * The road is behind him: make the crossing that was waiting on it.
+   *
+   * WHAT HE MADE OF THE TRIP DOES NOT TRAVEL WITH IT. The verdict is said at the
+   * wheel, on the run-in, in front of the place's own line (`arrivalLine`), so
+   * the only thing the road hands the far side is the car and the count.
    */
   onArrived: (
     to: string,
     bodies: number,
-    verdict: string,
     /** THE WAGON AS THE LEG LEAVES IT (`CarDamage`) — what the level on the far
      * side mints its own car from (`RunParams.car`), so the thing he parks is
      * the thing he drove. The other half of the condition, the blood, has gone
@@ -390,18 +389,24 @@ export function DriveScreen({
    * this one finishes the crawl or turns the page. */
   const revealRef = useRef<DialogueReveal>(IDLE_REVEAL);
 
-  /** Raise one of the hero's lines. Held on a ref as well as in state so the
-   * loop can tell whether one is already up without re-rendering. */
+  /**
+   * Raise one of the hero's lines. Held on a ref as well as in state so the
+   * loop can tell whether one is already up without re-rendering.
+   *
+   * `lead` is a SECOND thought printed onto the front of the first one's first
+   * row rather than as a page of its own — the run-in's verdict, and nothing
+   * else in the game (`arrivalLine`, voice.ts, which owns the reasoning). The
+   * bark still keeps `id` as its identity, because the line it prints is the
+   * place's; the verdict is what he says about the hour behind it.
+   */
   const say = useCallback(
-    (id: string, nowMs: number) => {
-      const def = thoughtDef(id);
-      if (!def) return;
+    (id: string, nowMs: number, lead?: string) => {
       // A page may carry a `{ them: [...] }` block when somebody answers him;
       // none of the drive's do — he is alone in the car, which is the whole
       // joke — so the plain string rows are the whole of it.
-      const pages = def.pages.map((page) => [
-        ...withHeroNameLines(Array.isArray(page) ? page : page.them, heroName),
-      ]);
+      const rows = lead ? arrivalLine(lead, id) : thoughtPages(id);
+      if (!rows.length) return;
+      const pages = rows.map((page) => [...withHeroNameLines(page, heroName)]);
       const next = openBark(id, pages, nowMs);
       speechRef.current = next;
       setSpeech(next);
@@ -565,9 +570,8 @@ export function DriveScreen({
   const arrive = useCallback(
     (drive: DriveState) => {
       const to = drive.params.to;
-      const verdict = driveVerdict(drive);
       if (auto) {
-        onArrived(to, drive.bodies, verdict, handOffCar(drive));
+        onArrived(to, drive.bodies, handOffCar(drive));
         return;
       }
       const result = driveBoardResult(
@@ -585,12 +589,7 @@ export function DriveScreen({
     const drive = driveRef.current;
     boardRef.current = null;
     setBoard(null);
-    onArrived(
-      drive.params.to,
-      drive.bodies,
-      driveVerdict(drive),
-      handOffCar(drive),
-    );
+    onArrived(drive.params.to, drive.bodies, handOffCar(drive));
   }, [handOffCar, onArrived]);
 
   /** A finger has left the picture: whichever of the two jobs it had stops. A
@@ -991,9 +990,10 @@ export function DriveScreen({
   const skipDrive = useCallback(() => {
     setPause(false);
     const drive = driveRef.current;
-    // He still made the trip — the game just stops showing it — so the verdict
-    // is read off however far he actually got.
-    onArrived(params.to, drive.bodies, driveVerdict(drive), handOffCar(drive));
+    // He still made the trip — the game just stops showing it — so the wagon
+    // still carries whatever the part of it he did play did to it. The verdict
+    // is not owed here: it is a line on the run-in he has just skipped past.
+    onArrived(params.to, drive.bodies, handOffCar(drive));
   }, [handOffCar, onArrived, params.to, setPause]);
 
   /**

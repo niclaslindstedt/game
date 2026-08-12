@@ -120,7 +120,8 @@ closing caption names it, per rung, and gets thinner as the rung gets harder.)_
 
 ### Opening monologue (hero, black screen)
 
-_Driven home, the run-in's verdict is spoken FIRST and this follows it._
+_He said what he made of the drive at the wheel, coming up his own road; out of
+the car there is nothing left to add and this is the whole of it._
 
 1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
 
@@ -237,9 +238,14 @@ _He does not mention the people. That absence is the joke._
 
 ### The run-in, past GOODCO's fence
 
+_The trip's VERDICT is said in front of it, as one breath — see the next
+section: ROUGH RIDE. THERE'S GOODCO._
+
 1. THERE'S GOODCO.
 
 ### The run-in home, past his own gate — the one warm line in the minigame
+
+_Same again: the verdict, and then this._
 
 1. HOME AT LAST. AND THERE SHE IS.
 
@@ -305,21 +311,27 @@ hero catches none._
 
 ### The arrival verdict — seven readings of one trip
 
-_Spoken standing beside the car as the FIRST page of the destination's opening
-monologue — before the level's own briefing, which follows it. It is the first
-thing out of his mouth at that end because the drive is the thing still in his
-hands; held to the end it read as an afterthought about the suspension tacked
-onto a serious speech. The priority order is the joke: everything a man notices
-on a commute outranks the crowd, and the crowd only ever reaches him as road
-surface._
+_Spoken ON THE RUN-IN, at the wheel, folded into the front of the place's own
+line so that the two are one breath: ROUGH RIDE. THERE'S GOODCO. It is the LAST
+thing either leg says and the only thing said about the drive anywhere — he gets
+out of the car at the far end with nothing to add, and the level's own briefing
+opens on the building rather than on the suspension._
 
-1. **Touched nothing at all:** CLEAN RUN. NOT A MARK ON HER.
-2. **The car barely made it:** I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE.
-3. **Flattened the lighting:** THEY'VE PUT THOSE LAMP STANDARDS FAR TOO CLOSE TO THE KERB. SOMEBODY'S GOING TO HAVE AN ACCIDENT.
-4. **Traded paint:** NOBODY OUT HERE CAN DRIVE. NOT ONE OF THEM LOOKED.
-5. **Unusually good time:** GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME.
-6. **Dawdled:** TOOK MY TIME. NO SENSE ARRIVING SOMEWHERE LIKE THIS IN A HURRY.
-7. **Otherwise, the road surface:** ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN. …and past thirty of them: BIT BUMPY TONIGHT. SHE'S FEELING HER AGE.
+_A FEW WORDS EACH, AND THAT IS THE FORM RATHER THAN A BUDGET. It is a man
+reviewing an hour of his life in three words on the way past a fence; the
+shorter it is, the less he has noticed. It is also all the clock allows — the
+line has from the sight of the place to the fade to print itself
+(`DRIVE.arrival`), and `tests/drive_bark_test.ts` fails on a verdict that
+outgrows it. The priority order is the joke: everything a man notices on a
+commute outranks the crowd, and the crowd only ever reaches him as road surface._
+
+1. **Touched nothing at all:** NOT A MARK ON HER.
+2. **The car barely made it:** POOR OLD GIRL.
+3. **Flattened the lighting:** LAMPS TOO CLOSE TO THE KERB.
+4. **Traded paint:** NOBODY OUT HERE CAN DRIVE.
+5. **Unusually good time:** GOOD RUN TONIGHT.
+6. **Dawdled:** TOOK MY TIME.
+7. **Otherwise, the road surface:** ROADS ARE ROUGH OUT HERE. …and past a great many of them, the understatement the whole minigame is built to earn: ROUGH RIDE.
 
 ---
 
@@ -327,10 +339,8 @@ surface._
 
 ### Opening monologue (hero, black screen)
 
-_Arrived by road, the drive's verdict above is spoken FIRST and these four
-follow it: the trip is what he has just finished, the building is what he looks
-up at next. A replay skips these four and keeps the verdict, which is about
-tonight and has never been read._
+_The drive said its piece at the wheel; out of the car he looks up at the
+building, and these four are the whole of the briefing. A replay skips them._
 
 1. THE JACKET'S STILL ANSWERING. NOT FROM ANY STREET I KNOW. FROM IN THERE.
 2. GOODCO. TEN YEARS I BUILT THEIR ENGINES. THEN THEY SAT A MACHINE AT MY BENCH AND GAVE ME A BOX FOR MY MUG.

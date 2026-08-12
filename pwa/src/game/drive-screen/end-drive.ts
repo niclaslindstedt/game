@@ -69,13 +69,12 @@ export function endDrive(
     drive.outcome === DRIVE_OUTCOME.arrived &&
     drive.outcomeMs > DRIVE.arrivalHoldMs
   ) {
-    // WHAT HE MAKES OF THE TRIP goes with him rather than being said here.
-    // `driveVerdict` reads the whole drive — the clock, the car, the other
-    // drivers, the council's lighting and the people — and the line it picks is
-    // the FIRST thing he says at the far end, opening the destination's
-    // monologue, which is where a man's opinion of a journey belongs: standing
-    // beside the car, having just finished it.
-    // (`RunParams.arrivalThought` → `introPages`.)
+    // WHAT HE MAKES OF THE TRIP HAS ALREADY BEEN SAID by the time this fires —
+    // `driveVerdict` reads the whole drive (the clock, the car, the other
+    // drivers, the council's lighting and the people) and the run-in printed it
+    // in front of the place's own line a couple of seconds ago (`arrivalLine`).
+    // So nothing about the journey crosses with him: this hands over a car and
+    // a body count, and the venue opens on its own briefing.
     onArrived(drive);
   }
 }

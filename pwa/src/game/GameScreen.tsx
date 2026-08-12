@@ -376,8 +376,6 @@ export function GameScreen({
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
-  /** The line the drive in earned, spent by the next run's setup. */
-  const arrivalThoughtRef = useRef<string | undefined>(undefined);
   /** …and the state the wagon is in as the road hands it over, spent by the
    * same build (`RunParams.car`): the car he parks is the car he drove. */
   const arrivalCarRef = useRef<CarDamage | undefined>(undefined);
@@ -749,7 +747,6 @@ export function GameScreen({
       difficulty,
       characterRef,
       arriveInCarRef,
-      arrivalThoughtRef,
       arrivalCarRef,
       resumeRef,
       checkpointRef,
@@ -1934,20 +1931,18 @@ export function GameScreen({
           // switch is what lets `playtest.mjs` and the shot recipes see the
           // road at all.
           auto={demo || botView}
-          onArrived={(to, _bodies, verdict, car) => {
+          onArrived={(to, _bodies, car) => {
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the
             // trip took, not what it was.
             // Homeward, he arrives sitting in it — the whole point of having
             // driven. Outbound he gets out at GOODCO like anybody parking.
             arriveInCarRef.current = drive.direction === -1;
-            // …and what he made of the trip goes with him: the line the drive
-            // earned OPENS the destination's monologue
-            // (`RunParams.arrivalThought` → `introPages`), which is where a
-            // man's opinion of a journey belongs — the first thing out of his
-            // mouth, standing beside the car he has just got out of.
-            arrivalThoughtRef.current = verdict;
-            // …AND SO DOES THE CAR. The level on the far side mints its own
+            // WHAT HE MADE OF THE TRIP DOES NOT CROSS. It was said at the wheel
+            // on the run-in, folded into the front of the place's own line
+            // ("ROUGH RIDE. THERE'S GOODCO." — `arrivalLine`), so the venue on
+            // this side opens on its own briefing rather than on the road.
+            // THE CAR DOES CROSS. The level on the far side mints its own
             // assembly off its `car` landmark, so what the road did to the
             // wagon has to travel as a parameter or the machine he parks is a
             // different machine from the one he drove (`RunParams.car`). The

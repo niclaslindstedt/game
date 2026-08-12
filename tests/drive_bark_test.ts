@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE OPENING THOUGHT AGAINST THE ROAD IT IS SAID OVER.
+// THE HERO'S LINES AGAINST THE ROAD THEY ARE SAID OVER — the OPENING thought on
+// the outskirt, and the RUN-IN's, which is the trip's verdict and the place
+// printed as one sentence.
 //
 // The drive opens on a stretch of empty outskirt with one thing on it: the hero
 // saying where he is going, and then what he thinks of the people he is about
@@ -21,7 +23,7 @@ import { describe, expect, it } from "vitest";
 
 import { DRIVE, thoughtDef } from "@game/core";
 
-import { driveVoice } from "../pwa/src/game/drive-screen/voice.ts";
+import { arrivalLine, driveVoice } from "../pwa/src/game/drive-screen/voice.ts";
 
 import { barkMs, crawlMs } from "../pwa/src/game/drive-screen/bark.ts";
 
@@ -95,6 +97,79 @@ describe("the drive's opening thought", () => {
     const beats = ["A LINE. THAT JUST. KEEPS GOING. ON AND ON"];
     expect(plain[0]?.length).toBe(beats[0]?.length);
     expect(crawlMs(beats)).toBeGreaterThan(crawlMs(plain));
+  });
+});
+
+// ── THE RUN-IN'S LINE, WHICH IS TWO THOUGHTS ────────────────────────────────
+// What he made of the trip is not carried off the road to be said at the far
+// end: `driveVerdict` picks a few words and `arrivalLine` prints them onto the
+// front of the place's own line, as one sentence — ROUGH RIDE. THERE'S GOODCO.
+//
+// WHICH PUTS THE VERDICTS UNDER A CLOCK THEY DID NOT USED TO BE UNDER. Spoken
+// in a monologue box they had as long as the player took to tap; printed over a
+// rolling car they have from the sight of the place (`sightMs`) to the black
+// (`blackoutMs`), and the pairing is a CROSS PRODUCT — every verdict against
+// every destination — so the one that overruns is a combination nobody wrote
+// down. Both halves of the constraint live in different trees again (the beat
+// in `engine/`, the page clock in the app), so only this can hold them together.
+const VERDICTS = [
+  "drive_arrive_clean",
+  "drive_arrive_wreck",
+  "drive_arrive_posts",
+  "drive_arrive_cars",
+  "drive_arrive_quick",
+  "drive_arrive_slow",
+  "drive_arrive_some",
+  "drive_arrive_bumpy",
+] as const;
+
+describe("the run-in's line", () => {
+  it("says the verdict and then the place, on one row", () => {
+    const [page, ...rest] = arrivalLine(
+      "drive_arrive_bumpy",
+      "drive_arrive_goodco",
+    );
+    expect(rest).toEqual([]);
+    expect(page).toEqual(["ROUGH RIDE. THERE'S GOODCO."]);
+  });
+
+  it("is ONE page however long the place's own line is", () => {
+    // A page break would turn one throwaway remark into two beats, and the
+    // run-in has room for exactly one — the box would still be turning itself
+    // over as the black landed.
+    for (const to of ["goodco_hq", "garage"]) {
+      const { sight } = driveVoice({ to });
+      for (const verdict of VERDICTS) {
+        expect(arrivalLine(verdict, sight), `${verdict} → ${to}`).toHaveLength(
+          1,
+        );
+      }
+    }
+  });
+
+  it.each(["goodco_hq", "garage"])(
+    "types every verdict out at %s before the black takes the picture",
+    (to) => {
+      const { sight } = driveVoice({ to });
+      // The window is the ROAD's, and it is the thing to move if a verdict
+      // outgrows it — the line is the writing, the beat is a number.
+      const windowMs = DRIVE.arrival.blackoutMs - DRIVE.arrival.sightMs;
+      for (const verdict of VERDICTS) {
+        const page = arrivalLine(verdict, sight)[0] ?? [];
+        expect(crawlMs(page), `${verdict} → ${to}`).toBeLessThanOrEqual(
+          windowMs,
+        );
+      }
+    },
+  );
+
+  it("keeps the fade behind the black rather than on top of it", () => {
+    // `arrivalHoldMs` follows `blackoutMs`: widening the run-in for a longer
+    // line and leaving the hold where it was would hand the crossing over
+    // mid-fade.
+    expect(
+      DRIVE.arrivalHoldMs - DRIVE.arrival.blackoutMs,
+    ).toBeGreaterThanOrEqual(1200);
   });
 });
 
