@@ -55,6 +55,7 @@ come back here only for the title screen.
 | The builders | `menus-main.ts` (front door + EXTRAS), `menus-campaign.ts` (difficulty/mission/bot-speed pickers), `menus-settings.ts` (the settings index + GAMEPLAY, CONTROLS/KEY BINDINGS, INTERFACE, GORE, AUDIO), `menus-data.ts` (DATA + EXPORT), `menus-developer.ts` (DEVELOPER, PLAYGROUND, CHEATS, GALLERIES, VISUALS, BALANCE, SEED), `menus-store.ts` (coin store), `menus-mods.ts`, `menus-minigames.ts` (the arcade shelf), `menus-net.ts` (MULTIPLAYER/HOST/JOIN) |
 | Async state a builder must be HANDED | `use-mods.ts`, `use-sessions.ts`, `use-coin-store.ts`, `use-cloud-save.ts`, `use-character-transfer.ts` |
 | Rendering | `title-screen/MenuList.tsx` (rows, cursor, controls), `MenuHeading.tsx` (title + trail + rule), `TitleScreen.tsx` (orchestration, keyboard, cursor, overflow) |
+| Which row is LIT, and whether a row carries a control | `title-screen/menu-highlight.ts` — `useRestingCursor`, `latches`, `hasControl`, `cursorRests`. Read by MenuList (to light a row) and TitleScreen (to fill the help line), so the two can't disagree |
 | Layout hooks | `title-screen/use-title-layout.ts` — `useHelpWrapRem`, `useMenuOverflow` |
 | Widgets | `@ui/lib/PixelSlider.tsx`, `PixelToggle.tsx`, `PixelCheckbox.tsx`, `PixelText.tsx`, `PixelShinyText.tsx` |
 | Styles | `pwa/src/styles.css` — `.menu-item`, `.menu-label`, `.menu-icon`, `.menu-cursor`, `.menu-item-control`, `.menu-item-blurb`, `.menu-item-subtitle`, `.menu-help`, `.title-menu.settings-menu`, `.title-header.sub`, `.title-plate` |
@@ -164,12 +165,29 @@ the settings tree a blurb renders INLINE under its row, which is right for a
 difficulty tagline or a level's status and wrong for the front door. Keep
 `main` rows to a label and an icon.
 
-**THE SETTINGS TREE IS A STABLE FORM.** Screens with `form: settings` render
-fixed-width (`.title-menu.settings-menu`) so a changing value can't resize the
-block and shove the right-aligned controls, and every row's help is hoisted OUT
-of the row to ONE bottom line (`.menu-help`, reserved height) so flipping a
-switch can't reflow the list. `SETTINGS_TREE` is DERIVED from `form`, so a new
-settings page joins by being authored — never by being remembered in a list.
+**THE SETTINGS TREE IS A STABLE FORM — BUT ONLY WHERE THERE IS A CONTROL TO
+HOLD STILL.** Screens with `form: settings` hoist every row's help OUT of the
+row to ONE bottom line (`.menu-help`, reserved height) so flipping a switch
+can't reflow the list, and a screen carrying a CONTROL also renders fixed-width
+(`.title-menu.settings-menu`) so a changing value can't resize the block and
+shove the right-aligned controls. A settings page that is nothing but DOORS
+(DEVELOPER, GALLERIES, SEED CHARACTERS, DATA) has no right edge to hold, so
+MenuList drops the width and it hugs its widest row like every other menu —
+a stretched block behind a short column of labels reads as a page laid out
+wrong, not as a form. The gate is `entries.some(hasControl)`, measured on the
+rows as BUILT, so a screen joins or leaves the form by what its builder
+returns. `SETTINGS_TREE` is DERIVED from `form`, so a new settings page joins
+by being authored — never by being remembered in a list.
+
+**THE HELP LINE SPEAKS FOR THE LIT ROW, AND SAYS NOTHING WHEN NO ROW IS LIT.**
+Whether a cursor RESTS anywhere is a question about the INPUT, not about the
+menu: a mouse hovers and the arrow keys step, a finger does neither. So on a
+phone a settings page opens with nothing highlighted, and a help line drawn
+from `entries[cursor]` was describing whichever row happened to be at index 0.
+`menu-highlight.ts` owns the predicate (`useRestingCursor`, `latches`,
+`cursorRests`) and BOTH surfaces read it — MenuList to light a row, TitleScreen
+to fill the help line — so the two cannot drift into disagreeing about who is
+selected.
 
 **THE HIERARCHY IS DERIVED, TWICE.** A screen's `parent` is where BACK *and*
 Escape go (`TitleScreen` reads the same `parentOf`, so the two cannot drift —

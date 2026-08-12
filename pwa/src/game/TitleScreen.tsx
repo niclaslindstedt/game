@@ -62,6 +62,10 @@ import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
 import { TitleBackdrop } from "./title-screen/TitleBackdrop.tsx";
 import { TitleFooter } from "./title-screen/TitleFooter.tsx";
 import {
+  cursorRests,
+  useRestingCursor,
+} from "./title-screen/menu-highlight.ts";
+import {
   unlockAudio,
   type MenuContext,
   type MenuEntry,
@@ -845,6 +849,12 @@ export function TitleScreen({
   useScrollFade(contentRef, [assets, screen, cursor, entries, levelsOverflow]);
   useScrollFade(menuRef, [assets, screen, cursor, entries, levelsOverflow]);
 
+  // Whether the input in the player's hand leaves a resting selection at all
+  // (a mouse or the arrow keys do; a finger does not) — MenuList lights its
+  // rows off the same answer, and the help line below speaks only for a row
+  // that is actually lit.
+  const restingCursor = useRestingCursor();
+
   if (!assets) {
     return <LoadingScreen />;
   }
@@ -884,9 +894,15 @@ export function TitleScreen({
   // itself is the tree's entry menu (a list of destinations, like the main
   // menu), so it keeps inline blurbs.
   const useHelpLine = SETTINGS_TREE.has(screen);
-  // The focused row's help text — shown in the bottom help line when the
-  // settings tree hoists blurbs out of the rows.
-  const helpText = useHelpLine ? (entries[cursor]?.blurb ?? "") : "";
+  // The help line SPEAKS FOR the row the cursor rests on, so it says nothing
+  // while no row is lit. A touch has no resting cursor (see menu-highlight.ts):
+  // the column opens with nothing highlighted, and a help line under it was
+  // describing whichever row happened to be at index 0 — a sentence about the
+  // top row of a menu the player has not pointed at yet.
+  const helpText =
+    useHelpLine && cursorRests(entries[cursor], restingCursor)
+      ? (entries[cursor]?.blurb ?? "")
+      : "";
   // The screens that surface the import/export/store result line under the
   // menu: SETTINGS » DATA, the EXPORT CHARACTER picker, the DEVELOPER
   // grant/seed rows, the MODS screen, and the COIN VAULT (purchase results).

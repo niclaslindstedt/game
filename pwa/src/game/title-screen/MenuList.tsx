@@ -25,7 +25,6 @@ import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { spriteMonoUrl, type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -33,6 +32,7 @@ import { playMenuHaptic } from "../haptics.ts";
 import { bindingLabel } from "../keybindings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { coinPile } from "./coin-pile.ts";
+import { hasControl, latches, useRestingCursor } from "./menu-highlight.ts";
 import type { MenuEntry } from "./menu-model.ts";
 
 /** A stable 32-bit hash of a row's id — the seed a per-row animation draws its
@@ -57,36 +57,6 @@ function bobStyle(id: string): CSSProperties {
     "--bob": `${bob.toFixed(2)}s`,
     "--bob-delay": `${(-(((h >>> 8) % 32) / 32) * bob).toFixed(2)}s`,
   } as CSSProperties;
-}
-
-/** The keys that STEER the menu (TitleScreen owns the handlers). A press on one
- * means the player is navigating without a pointer, so the highlighted row has
- * to stay lit between presses — see `hovers`. */
-const STEER_KEYS = new Set([
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "Tab",
-]);
-
-/** Whether a row may keep its highlight after a TOUCH lets go of it.
- *
- * A tap on a phone is a press, not a hover: leaving the tapped row lit is a
- * stale cursor parked wherever the last finger landed. The one exception is a
- * row that has something left to say once the finger is gone — a CONTROL (a
- * switch, slider, tick-box, bound key, or cycled value) that carries HELP TEXT:
- * there the highlight names the row the help line below is describing and the
- * state the player just changed. A row that merely opens another menu explains
- * nothing, so it lights only while pressed. */
-function latches(entry: MenuEntry): boolean {
-  const control =
-    !!entry.slider ||
-    !!entry.toggle ||
-    !!entry.check ||
-    !!entry.binding ||
-    entry.value !== undefined;
-  return control && !!entry.blurb;
 }
 
 export function MenuList({
@@ -136,21 +106,10 @@ export function MenuList({
   // released, and an index would carry the pressed look over to whatever row
   // took that slot on the next screen.
   const [pressedRow, setPressedRow] = useState<string | null>(null);
-  // Does the player steer with something that leaves a RESTING selection? A
-  // mouse hovers, and arrow keys move a highlight that must stay visible
-  // between presses; a touch has neither, so it only lights what it holds.
-  const finePointer = useMediaQuery("(any-pointer: fine)");
-  const [keySteering, setKeySteering] = useState(false);
-  const hovers = finePointer || keySteering;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (STEER_KEYS.has(e.key)) setKeySteering(true);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-    };
-  }, []);
+  // Does the player steer with something that leaves a RESTING selection?
+  // Shared with TitleScreen's help line, which speaks for the resting row —
+  // see menu-highlight.ts.
+  const hovers = useRestingCursor();
   // Release on the WINDOW, not the row: a press that navigates away takes its
   // row's own pointerup with it, which would leave the look latched on.
   useEffect(() => {
@@ -163,10 +122,18 @@ export function MenuList({
       window.removeEventListener("pointercancel", clear);
     };
   }, [pressedRow]);
+  // The fixed-width settings FORM exists for one reason: to hold the rows'
+  // right-aligned controls on a shared edge that a changing value can't shove.
+  // A settings page with no control on it (the DEVELOPER index, GALLERIES,
+  // SEED CHARACTERS — pages that are nothing but doors) has nothing to hold,
+  // and the stretched block just strands a short column of labels against the
+  // left of an empty form. Those hug their widest row and centre like every
+  // other menu; the help line below is unaffected, being `useHelpLine`'s.
+  const formed = useHelpLine && entries.some(hasControl);
   return (
     <nav
       ref={menuRef}
-      className={`title-menu${useHelpLine ? " settings-menu" : ""}${scrollable ? " scrollable" : ""}`}
+      className={`title-menu${formed ? " settings-menu" : ""}${scrollable ? " scrollable" : ""}`}
       aria-label={ariaLabel}
     >
       {entries.map((entry, i) => {
@@ -224,9 +191,9 @@ export function MenuList({
             onPointerDown={(e) => {
               setPressedRow(entry.aria);
               if (e.pointerType !== "touch") return;
-              // A finger is back in charge: the highlight goes back to marking
-              // what is pressed rather than where a key press left off.
-              setKeySteering(false);
+              // (The finger taking steering back from the keyboard is handled
+              // on the window by `useRestingCursor`, so the help line hears it
+              // too.)
               // Only a help-carrying control takes the cursor with it, so the
               // help line has a subject once the press is over.
               if (i !== cursor && latches(entry)) setCursor(i);
