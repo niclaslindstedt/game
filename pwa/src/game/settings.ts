@@ -170,10 +170,12 @@ export type CameraAntialias = "on" | "off";
 /** STANDING WALLS (DEVELOPER → VISUALS): whether `plane: wall` art is EXTRUDED
  * off its footprint — the one projected slice stacked a hero's height up the
  * screen — or lies down with the floor the way every wall did before the
- * extrusion existed. `on` is the default and the shipped look; `off` is for a
- * square-on camera, where the floor grid is still rectangles and the flat panel
- * already read as a wall, so the faces are a look to have an opinion about
- * rather than a fix. See `standingWalls` (render/tilt.ts). */
+ * extrusion existed. `off` is the default and the shipped look, because the
+ * shipped camera is square-on: the floor grid is still rectangles there and the
+ * flat panel already read as a wall, so the faces are a look to have an opinion
+ * about rather than a fix. `on` is for a developer who has turned the yaw up,
+ * where a flat panel stops reading as a wall at all. See `standingWalls`
+ * (render/tilt.ts). */
 export type StandingWalls = "on" | "off";
 
 /** MUTE: an AUDIO toggle (SETTINGS → AUDIO) that silences all audio without
@@ -546,11 +548,13 @@ export type GameSettings = {
   /** Developer switch: STANDING WALLS — whether `plane: wall` art is extruded
    * off its footprint or drawn flat with the floor.
    *
-   * On by default (the shipped look). Pure presentation, so it needs no engine
-   * setter — it rides along to the renderer's `setWorldProjection` with the two
-   * camera knobs and the anti-aliasing switch. Unlike that switch it is NOT
-   * folded together with the yaw: it means "I do not want the faces", so
-   * sweeping the camera round must not switch the answer out from under it. */
+   * OFF by default (the shipped look — the shipped camera is square-on, where
+   * the faces are a matter of taste rather than a fix). Pure presentation, so it
+   * needs no engine setter — it rides along to the renderer's
+   * `setWorldProjection` with the two camera knobs and the anti-aliasing switch.
+   * Unlike that switch it is NOT folded together with the yaw: it means "I DO
+   * want the faces", so a developer sweeping the camera back to square-on to
+   * compare the two looks keeps them. */
   standingWalls: StandingWalls;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
@@ -797,10 +801,12 @@ function defaults(): GameSettings {
     // where there is no staircase to smooth and smoothing would only cost the
     // art its edges. A developer who turns the camera turns this on with it.
     cameraAntialias: "off",
-    // The walls stand out of the box: an extruded panel is what makes a room a
-    // room once the camera is turned, and it is what the venues are dressed
-    // against. A developer who wants the old paving-slab look turns this off.
-    standingWalls: "on",
+    // The walls LIE DOWN out of the box, with the shipped square-on camera: a
+    // plan panel already reads as a wall from straight above, and a face hanging
+    // a hero's height off every one of them is a perspective the rest of the
+    // picture is not drawn in. A developer who turns CAMERA YAW up — where a
+    // flat panel stops reading as a wall at all — turns this on beside it.
+    standingWalls: "off",
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
     // look: this is how the game is meant to be seen, and the rows exist for a
     // developer judging a change to it on a real field.

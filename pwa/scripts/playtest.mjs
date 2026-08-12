@@ -18,7 +18,7 @@
 //     [--level goodco_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
 //       (any catalog level, SECRET levels included — forced via ?level=)
 //     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45] \
-//     [--antialias on|off] [--mod <dir>]
+//     [--antialias on|off] [--standing-walls on|off] [--mod <dir>]
 //
 // `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
 // steps per frame, so a bot playtest finishes in a fraction of the wall-clock
@@ -113,6 +113,12 @@ const yaw = opt("yaw", "");
 // as it bakes (see render/tilt.ts `projectionSmoothing`). Seeded the same way
 // and only worth passing alongside a --yaw, since it is inert square-on.
 const antialias = opt("antialias", "");
+// STANDING WALLS (--standing-walls on|off): whether `plane: wall` art is
+// EXTRUDED off its footprint or lies down with the floor (render/tilt.ts
+// `standingWalls`). Seeded the same way, and here because it ships OFF with the
+// square-on camera — so a shot of the extruded look is a flag rather than an
+// evening. Pair it with a --yaw, which is where the faces earn themselves.
+const standingWalls = opt("standing-walls", "");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -126,11 +132,11 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
-if (pitch || yaw || antialias) {
+if (pitch || yaw || antialias || standingWalls) {
   // Written before any app code runs, so the engine flags are applied from it on
   // load exactly as they would be for a developer who flipped the switch.
   await page.addInitScript(
-    ([camPitch, camYaw, camAntialias]) => {
+    ([camPitch, camYaw, camAntialias, camWalls]) => {
       const KEY = "adas-trail:settings";
       let stored;
       try {
@@ -146,10 +152,11 @@ if (pitch || yaw || antialias) {
           ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
           ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
           ...(camAntialias ? { cameraAntialias: camAntialias } : {}),
+          ...(camWalls ? { standingWalls: camWalls } : {}),
         }),
       );
     },
-    [pitch, yaw, antialias],
+    [pitch, yaw, antialias, standingWalls],
   );
 }
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));

@@ -76,10 +76,11 @@ let antialias = false;
 /**
  * STANDING WALLS — whether `plane: wall` art is EXTRUDED off its footprint, or
  * lies down with the floor the way every wall in this game did before the
- * extrusion existed. On by default and the shipped look; see
- * `standingWalls` below for why it is a knob at all.
+ * extrusion existed. OFF by default: the shipped camera is square-on, where the
+ * faces are a look rather than a fix, so the extrusion is something a developer
+ * turns ON. See `standingWalls` below for why it is a knob at all.
  */
-let walls = true;
+let walls = false;
 
 // The live projection, as the matrix `[a c; b d]` mapping a camera-relative
 // world offset to a screen offset, plus its inverse. Kept as plain numbers
@@ -183,12 +184,14 @@ export function projectionSmoothing(): boolean {
  *
  * The extrusion earns itself under a YAW, where a wall drawn flat stops being a
  * wall: the floor turns to diamonds, a lab's partitions become a slightly darker
- * PATH across it, and a room stops reading as a room. SQUARE-ON, though, the
- * floor grid is still rectangles and the flat panel already read as a wall — so
- * a face hanging a hero's height off every panel is a look to have an opinion
- * about rather than a fix. Off, `render/plane.ts` draws the piece exactly as it
- * drew it before the extrusion existed: the same footprint, lying down with the
- * floor, taking the projection whole.
+ * PATH across it, and a room stops reading as a room. SQUARE-ON — which is where
+ * the shipped camera stands — the floor grid is still rectangles and the flat
+ * panel already read as a wall, so a face hanging a hero's height off every
+ * panel is a look to have an opinion about rather than a fix. THAT is why the
+ * knob ships OFF: `render/plane.ts` then draws the piece exactly as it drew it
+ * before the extrusion existed — the same footprint, lying down with the floor,
+ * taking the projection whole — and a developer turning the yaw up turns this on
+ * beside it.
  *
  * Unlike `projectionSmoothing` this is NOT folded together with the yaw. The
  * knob means "I do not want the faces", and a camera the developer is sweeping

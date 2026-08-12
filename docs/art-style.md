@@ -97,9 +97,10 @@ Art that BELONGS to the ground is drawn in PLAN instead and takes the world
 projection whole, exactly as the ground tiles under it do: `plane: floor` for
 something genuinely flat (a stain, a hatch, a crate seen from above), and
 `plane: wall` for plan art that has HEIGHT (a wall panel, a parapet, a barrier),
-which the renderer extrudes `rise` px of screen height with a cap on top. The
-medium and the read never change — only which way the subject faces while you
-draw it. → `scripts/asset-tools/sprite-schema.mjs`,
+which the renderer can extrude `rise` px of screen height with a cap on top —
+under STANDING WALLS (DEVELOPER → VISUALS), which ships OFF with the square-on
+camera, so author the plan view and judge it lying down. The medium and the read
+never change — only which way the subject faces while you draw it. → `scripts/asset-tools/sprite-schema.mjs`,
 `pwa/src/game/render/plane.ts`
 
 ## Design best practices
