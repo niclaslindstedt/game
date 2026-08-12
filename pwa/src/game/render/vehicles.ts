@@ -25,6 +25,7 @@ import {
   CAR,
   CAR_FIX,
   carIsWayOut,
+  runLevelDef,
   type CarDetachable,
   type CarPanelId,
   type GameState,
@@ -151,6 +152,32 @@ function drawBoardableArrow(
   });
 }
 
+// ── WHERE A BEAM IS WORTH THROWING ──────────────────────────────────────────
+// A HEADLIGHT INSIDE A LIT ROOM IS NOT LIGHT, IT IS A DECAL — and the garage
+// bay is the room that proves it. Climbing into the wagon at home used to lay a
+// long white-gold wedge across cement the strip lights are already burning
+// over, and what a floor that bright does with a beam is nothing: the cone has
+// no darkness to cut, so it reads as a painted highlight sitting ON the car
+// rather than as light coming OFF it — which is the one thing it must not read
+// as, because a mark that says LOOK AT THIS is exactly what the boardable arrow
+// above already says, and it says it BEFORE the hero gets in rather than after.
+//
+// So the beam is asked WHERE IT IS STANDING. A lit zone is a room whose own
+// lights are on (`LevelDef.litZones`, the same rects the night pass cuts out as
+// shapes), so a car inside one throws nothing and a car outside one throws
+// exactly what it always did — which means the hub's wagon is dark in the bay
+// and has its beams back the moment it rolls out onto the driveway, with
+// nothing anywhere naming the garage.
+function inLitRoom(state: GameState, pos: { x: number; y: number }): boolean {
+  for (const zone of runLevelDef(state).litZones ?? []) {
+    const { x, y, width, height } = zone.rect;
+    if (pos.x >= x && pos.x <= x + width && pos.y >= y && pos.y <= y + height) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function drawVehicles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -179,6 +206,9 @@ export function drawVehicles(
         timeMs,
         coat.panels,
         coat.wheels,
+        undefined,
+        true,
+        !inLitRoom(state, vehicle.pos),
       );
       // …and the mark OVER it. A pointer drawn under the thing it points at is
       // a pointer the thing can hide.
@@ -223,6 +253,8 @@ export function drawVehicles(
       undefined,
       undefined,
       engineOn,
+      true,
+      !inLitRoom(state, car.pos),
     );
   }
   // Wheels that came off, mid-bounce or at rest: drawn lifted by their own
@@ -589,6 +621,14 @@ export function drawCarAssembly(
   /** False for the SFW minigame: preserve movement and suspension while
    * showing the intact assembly, without collision damage sprites. */
   visualDamage = true,
+  /**
+   * DOES ITS BEAM REACH ANYTHING? False where the ground under the car is
+   * already lit — a room with its own lights on — and the lamps then burn
+   * without throwing a cone (see WHERE A BEAM IS WORTH THROWING). Defaults to
+   * true, which is the road, the drive's traffic and every venue with a dark
+   * floor to cut.
+   */
+  throwsLight = true,
 ): void {
   // The shell's attitude: each corner sinks by its own spring AND whatever
   // its wheel no longer holds up, and the whole body pitches between the
@@ -707,8 +747,15 @@ export function drawCarAssembly(
   // outward, so the lamp pixels cap their roots), then the lit lamps
   // themselves over the whole stack — pitched with the shell, so the beam
   // of a nose-down wreck rakes the ground in front of it.
+  //
+  // THE LAMPS BURN EITHER WAY, and only the thrown cone is `throwsLight`'s to
+  // withhold: what says an engine is turning over is the lit bulb, the shiver
+  // and the rumble, and a car standing in a lit room with its lights visibly
+  // OFF would read as parked with somebody sitting in it.
   if (running) {
-    drawLightCones(ctx, car.pos, camera, timeMs, rearDrop, frontDrop);
+    if (throwsLight) {
+      drawLightCones(ctx, car.pos, camera, timeMs, rearDrop, frontDrop);
+    }
     const lights = spriteByName(sprites, "car_lights");
     if (lights) {
       drawShellLayer(ctx, lights, car.pos, camera, rearDrop, frontDrop, fold);
