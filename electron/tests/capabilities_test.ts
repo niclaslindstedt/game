@@ -183,15 +183,100 @@ describe("what a launch may do", () => {
 
   it("hands the page only the names it may act on", () => {
     expect(
-      capabilityList({ ...NOTHING, unlocked: false, direct: false }),
+      capabilityList({
+        ...NOTHING,
+        autopilot: false,
+        unlocked: false,
+        direct: false,
+      }),
     ).toEqual([]);
     expect(
       capabilityList({
         ...ALL_CAPABILITIES,
+        autopilot: false,
         unlocked: false,
         direct: false,
       }),
     ).toEqual(["multiplayer", "mods", "voice"]);
+  });
+
+  // THE AUTO PILOT — the one capability no desktop build carries, depot build
+  // included. It is not in `ALL_CAPABILITIES` because there is nothing for a
+  // packager to stamp: `--autopilot` is the only way it is ever on, and it
+  // costs the launch its multiplayer to ask.
+  it("gives the depot build no auto pilot to offer", () => {
+    const { capabilities } = resolveCapabilities(ALL_CAPABILITIES, ["game"]);
+    expect(capabilities.autopilot).toBe(false);
+    expect(capabilityList(capabilities)).not.toContain("autopilot");
+  });
+
+  it("hands the page the auto pilot when the command line asked for it", () => {
+    const { capabilities } = resolveCapabilities(NOTHING, [
+      "game",
+      "--autopilot",
+    ]);
+    expect(capabilities.autopilot).toBe(true);
+    expect(capabilityList(capabilities)).toContain("autopilot");
+  });
+
+  it("takes a depot build's multiplayer away to give it the auto pilot", () => {
+    // The stamp is not a defence: a copy that plays itself has no business in
+    // somebody else's session whatever packaged it.
+    const { capabilities, refusals } = resolveCapabilities(ALL_CAPABILITIES, [
+      "game",
+      "--autopilot",
+    ]);
+    expect(capabilities).toMatchObject({
+      autopilot: true,
+      multiplayer: false,
+      voice: false,
+      licensed: false,
+    });
+    expect(capabilityList(capabilities)).toEqual(["mods", "autopilot"]);
+    expect(refusals).toEqual([
+      "--autopilot is a developer switch: multiplayer is off for this launch",
+    ]);
+  });
+
+  it("takes it away from the command line too, in either order", () => {
+    for (const argv of [
+      ["game", "--multiplayer", "--voice", "--licensed", "--autopilot"],
+      ["game", "--autopilot", "--multiplayer", "--voice", "--licensed"],
+    ]) {
+      const { capabilities } = resolveCapabilities(NOTHING, argv);
+      expect(capabilities, argv.join(" ")).toMatchObject({
+        autopilot: true,
+        multiplayer: false,
+        voice: false,
+        licensed: false,
+      });
+    }
+  });
+
+  it("states the consequence once, and blames no flag for it", () => {
+    // The pairing refusals below would otherwise fire on every autopilot
+    // launch, naming flags the developer did not type — which reads as a bug
+    // in the parser rather than as the one deliberate trade.
+    const { refusals } = resolveCapabilities(ALL_CAPABILITIES, [
+      "game",
+      "--autopilot",
+      "--port",
+      "27849",
+    ]);
+    expect(refusals).toEqual([
+      "--autopilot is a developer switch: multiplayer is off for this launch",
+    ]);
+  });
+
+  it("does not call the auto pilot an unlock of its own", () => {
+    // `unlocked` is the LICENCE acknowledgement — it is about running licensed
+    // features outside the terms they came under. The auto pilot has its own
+    // fact and its own paragraph in the same notice.
+    const { capabilities } = resolveCapabilities(NOTHING, [
+      "game",
+      "--autopilot",
+    ]);
+    expect(capabilities.unlocked).toBe(false);
   });
 
   // VOICE — a capability of its own, because it opens a microphone and makes the

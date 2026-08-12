@@ -12,6 +12,7 @@ fn argv(args: &[&str]) -> Vec<String> {
 fn store(port: Option<u16>) -> Capabilities {
     Capabilities {
         built: ALL_CAPABILITIES,
+        autopilot: false,
         unlocked: false,
         direct: port.is_some(),
         port,
@@ -74,6 +75,7 @@ fn the_licence_and_the_router_permission_are_the_shells_answers() {
             multiplayer: true,
             ..BuildCapabilities::default()
         },
+        autopilot: false,
         unlocked: true,
         direct: true,
         port: Some(1),
@@ -97,4 +99,14 @@ fn a_server_is_the_multiplayer_feature_and_answers_to_the_same_permission() {
     // happened to be free is a server nobody can be told to connect to.
     assert!(refuse_dedicated(&store(None)).is_some());
     assert!(refuse_dedicated(&store(Some(27_849))).is_none());
+}
+
+#[test]
+fn the_auto_pilot_switch_is_taken_out_so_it_cannot_eat_the_token_after_it() {
+    // It can never reach a running server — asking for the ride is what turns
+    // multiplayer off, and a launch with no multiplayer is refused above — but
+    // the server's parser would still read it as a flag that takes a value.
+    let args = server_args(&argv(&["--autopilot", "server.json"]), &store(Some(27849)));
+    assert!(!args.contains(&"--autopilot".to_string()));
+    assert_eq!(args.first().map(String::as_str), Some("server.json"));
 }

@@ -31,7 +31,17 @@ export function serverArgs(
   after: readonly string[],
   capabilities: Capabilities,
 ): string[] {
-  const SHELL_OWN = ["--multiplayer", "--mods", "--licensed", "--no-portmap"];
+  // `--autopilot` is here for the parser's sake rather than the server's: it
+  // can never reach a running server (it is what turns multiplayer off, so the
+  // dedicated branch refuses the launch before this is called), but an unknown
+  // flag left in the list would still swallow the token after it.
+  const SHELL_OWN = [
+    "--multiplayer",
+    "--mods",
+    "--licensed",
+    "--no-portmap",
+    "--autopilot",
+  ];
   const args = after.filter(
     (arg) => !SHELL_OWN.some((own) => arg === own || arg.startsWith(`${own}=`)),
   );

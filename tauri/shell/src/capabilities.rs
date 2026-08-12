@@ -22,6 +22,12 @@
 //! `--multiplayer`, `--mods` and `--voice` — and `portMap` deliberately cannot:
 //! a port mapping is a change this program makes to somebody's ROUTER, so it is
 //! a property of the build and of nothing else.
+//!
+//! **AND ONE CAPABILITY IS NOT A BUILD PROPERTY AT ALL: the AUTO PILOT.** No
+//! desktop build carries it, depot build included, so there is no switch to
+//! stamp and no `GIS_ENABLE_*` for it — `--autopilot` is the only way it is ever
+//! on, and it costs the launch its multiplayer to ask (see
+//! [`resolve_capabilities`]).
 
 /// The capabilities a build is stamped with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -133,6 +139,17 @@ pub fn is_stamped(stamp: &BuildStamp) -> bool {
 pub struct Capabilities {
     /// The stamped set, widened by the command line.
     pub built: BuildCapabilities,
+    /// THE AUTO PILOT — the paid ride that flies the hero for the player.
+    ///
+    /// A LAUNCH property and never a build one, which is why it sits here
+    /// beside `direct` rather than in [`BuildCapabilities`]: no desktop build
+    /// ships it, so there is nothing for a packager to stamp and no switch to
+    /// get wrong. This is a game about playing WITH other people, and a copy
+    /// that plays itself is a cheat in a session — so the desktop shells simply
+    /// do not offer it, and `--autopilot` (a DEVELOPER switch) buys it back at
+    /// the price of this launch's multiplayer. A player who wants the ride
+    /// wants the phone edition, which is where it belongs and where it stays.
+    pub autopilot: bool,
     /// True when the command line — rather than the build — is what turned
     /// multiplayer, mods or voice on. The launch says so out loud when it is.
     pub unlocked: bool,
@@ -163,6 +180,10 @@ impl Capabilities {
     /// Whether this copy may ask the router to forward its port.
     pub fn port_map(&self) -> bool {
         self.built.port_map
+    }
+    /// Whether the AUTO PILOT may be offered at all on this launch.
+    pub fn autopilot(&self) -> bool {
+        self.autopilot
     }
 }
 
@@ -203,25 +224,51 @@ fn has(argv: &[String], name: &str) -> bool {
 /// `--licensed` is a DECLARATION rather than an unlock: the person starting the
 /// game saying they hold the multiplayer licence. Nothing here can check that
 /// and nothing pretends to.
+///
+/// `--autopilot` is the one switch that TAKES something away, and it takes the
+/// biggest thing there is: multiplayer, with its voice and its licence, whether
+/// they came from the stamp or from this same command line. A copy that plays
+/// itself has no business in somebody else's session, and the honest way to say
+/// so is to make the two mutually exclusive at the door rather than to let a
+/// session start and then argue about it. The line is pushed on EVERY such
+/// launch — not only where something was actually switched off — because what
+/// it states is the CONSEQUENCE, and a developer who reads it once is a
+/// developer who does not file the missing HOST row as a bug.
 pub fn resolve_capabilities(
     built: BuildCapabilities,
     argv: &[String],
 ) -> (Capabilities, Vec<String>) {
     let mut refusals = Vec::new();
 
-    let multiplayer = built.multiplayer || has(argv, "multiplayer");
+    // THE AUTO PILOT COSTS THIS LAUNCH ITS MULTIPLAYER — see the doc comment.
+    // Resolved first, because everything below reads the multiplayer it decides.
+    let autopilot = has(argv, "autopilot");
+    if autopilot {
+        refusals.push(
+            "--autopilot is a developer switch: multiplayer is off for this launch".to_string(),
+        );
+    }
+
+    let multiplayer = !autopilot && (built.multiplayer || has(argv, "multiplayer"));
     let mods = built.mods || has(argv, "mods");
 
     // VOICE NEEDS A SESSION TO TRAVEL IN — see the doc comment. The refusal
     // names the pairing rather than the flag, because "--voice does nothing"
     // would leave somebody adding it a second time and louder.
+    //
+    // …and every refusal below is silent on an autopilot launch: the line above
+    // already named the cause, and a second one blaming the flag the developer
+    // did not type reads as a bug in the parser.
     let voice_asked = built.voice || has(argv, "voice");
     let voice = voice_asked && multiplayer;
-    if voice_asked && !multiplayer {
+    if voice_asked && !multiplayer && !autopilot {
         refusals.push("--voice does nothing without --multiplayer".to_string());
     }
 
-    let licensed = built.licensed || has(argv, "licensed");
+    // The licence is a claim about a session this launch may no longer open at
+    // all once the autopilot has it, so it goes down with the rest of
+    // multiplayer rather than sitting on the record for an absent feature.
+    let licensed = !autopilot && (built.licensed || has(argv, "licensed"));
 
     let port_text = value_of(argv, "port");
     let port = port_text.and_then(|text| text.parse::<u32>().ok());
@@ -234,7 +281,9 @@ pub fn resolve_capabilities(
     match port_text {
         Some(text) if !multiplayer => {
             let _ = text;
-            refusals.push("--port does nothing without --multiplayer".to_string());
+            if !autopilot {
+                refusals.push("--port does nothing without --multiplayer".to_string());
+            }
         }
         Some(text) if !port_ok => {
             refusals.push(format!("--port {text} is not a port number"));
@@ -254,6 +303,7 @@ pub fn resolve_capabilities(
             voice,
             licensed,
         },
+        autopilot,
         unlocked: (multiplayer && !built.multiplayer)
             || (mods && !built.mods)
             || (voice && !built.voice),
@@ -281,6 +331,17 @@ pub fn capability_list(capabilities: &Capabilities) -> Vec<&'static str> {
     }
     if capabilities.voice() {
         list.push("voice");
+    }
+    // THE AUTO PILOT is in the list for the same reason and reads the same way,
+    // with one thing worth knowing about the direction it fails in. Every other
+    // name here WIDENS what the page offers, and the page's `shellCapability`
+    // answers TRUE where no list is published — so this entry is what a desktop
+    // launch uses to opt back IN to a feature the browser and the phone have had
+    // all along, and its absence from a published list is what withholds it.
+    // That is exactly right: nothing else in the game should learn that a shell
+    // can take a feature away, and nothing had to.
+    if capabilities.autopilot() {
+        list.push("autopilot");
     }
     list
 }

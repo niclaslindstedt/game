@@ -176,3 +176,74 @@ fn the_page_is_told_only_plain_names() {
         "a download offers the page nothing to draw a door for"
     );
 }
+
+// THE AUTO PILOT — the one capability no desktop build carries, depot build
+// included. It is not in `ALL_CAPABILITIES` because there is nothing for a
+// packager to stamp: `--autopilot` is the only way it is ever on, and it costs
+// the launch its multiplayer to ask.
+
+#[test]
+fn no_build_stamp_can_hand_out_the_auto_pilot() {
+    let (caps, _) = resolve_capabilities(ALL_CAPABILITIES, &argv(&[]));
+    assert!(!caps.autopilot());
+    assert!(!capability_list(&caps).contains(&"autopilot"));
+}
+
+#[test]
+fn the_command_line_hands_the_page_the_auto_pilot() {
+    let (caps, _) = resolve_capabilities(NO_CAPABILITIES, &argv(&["--autopilot"]));
+    assert!(caps.autopilot());
+    assert!(capability_list(&caps).contains(&"autopilot"));
+}
+
+#[test]
+fn the_auto_pilot_costs_the_launch_its_multiplayer() {
+    // The stamp is not a defence: a copy that plays itself has no business in
+    // somebody else's session whatever built it.
+    let (caps, refusals) = resolve_capabilities(ALL_CAPABILITIES, &argv(&["--autopilot"]));
+    assert!(caps.autopilot());
+    assert!(!caps.multiplayer());
+    assert!(!caps.voice());
+    assert!(!caps.licensed());
+    assert_eq!(capability_list(&caps), vec!["mods", "autopilot"]);
+    assert_eq!(
+        refusals,
+        vec!["--autopilot is a developer switch: multiplayer is off for this launch"]
+    );
+}
+
+#[test]
+fn the_auto_pilot_beats_the_command_line_too_in_either_order() {
+    for args in [
+        ["--multiplayer", "--voice", "--licensed", "--autopilot"],
+        ["--autopilot", "--multiplayer", "--voice", "--licensed"],
+    ] {
+        let (caps, _) = resolve_capabilities(NO_CAPABILITIES, &argv(&args));
+        assert!(caps.autopilot(), "{args:?}");
+        assert!(!caps.multiplayer(), "{args:?}");
+        assert!(!caps.voice(), "{args:?}");
+        assert!(!caps.licensed(), "{args:?}");
+    }
+}
+
+#[test]
+fn the_consequence_is_stated_once_and_blames_no_flag_for_it() {
+    // The pairing refusals would otherwise fire on every autopilot launch,
+    // naming flags the developer did not type — which reads as a bug in the
+    // parser rather than as the one deliberate trade.
+    let (_, refusals) =
+        resolve_capabilities(ALL_CAPABILITIES, &argv(&["--autopilot", "--port", "27849"]));
+    assert_eq!(
+        refusals,
+        vec!["--autopilot is a developer switch: multiplayer is off for this launch"]
+    );
+}
+
+#[test]
+fn the_auto_pilot_is_not_a_licence_unlock_of_its_own() {
+    // `unlocked` is the LICENCE acknowledgement — about running licensed
+    // features outside the terms they came under. The ride has its own fact and
+    // its own paragraph in the same notice.
+    let (caps, _) = resolve_capabilities(NO_CAPABILITIES, &argv(&["--autopilot"]));
+    assert!(!caps.unlocked);
+}

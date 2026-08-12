@@ -16,6 +16,9 @@
 //   __GIS_UNLOCKED__  the command line — not the packaging — is what turned
 //                     multiplayer/mods/voice on, so the game states the terms
 //                     before the menu (pwa/src/app/launch-options.ts).
+//   __GIS_AUTOPILOT__ …and the command line is what gave this launch the AUTO
+//                     PILOT, which no desktop build carries and which costs the
+//                     launch its multiplayer. Stated in the same box.
 //   __gisShell.post   the page → shell pipe, the counterpart of the WebView's
 //                     `ReactNativeWebView.postMessage`.
 //
@@ -70,10 +73,20 @@ const caps = (
 const UNLOCKED_ARG = "--gis-unlocked";
 const unlocked = process.argv.includes(UNLOCKED_ARG);
 
+/**
+ * WHETHER THE AUTO PILOT WAS SWITCHED ON BY HAND, which the game states before
+ * the menu for the same reason and in the same box — the ride is a developer
+ * tool on this shell, and it costs the launch its multiplayer
+ * (`capabilities.ts` `AUTOPILOT_ARG`).
+ */
+const AUTOPILOT_ARG = "--gis-autopilot";
+const autopilot = process.argv.includes(AUTOPILOT_ARG);
+
 contextBridge.exposeInMainWorld("__GIS_NATIVE__", true);
 contextBridge.exposeInMainWorld("__GIS_PLATFORM__", "steam");
 contextBridge.exposeInMainWorld("__GIS_CAPS__", Object.freeze(caps));
 contextBridge.exposeInMainWorld("__GIS_UNLOCKED__", unlocked);
+contextBridge.exposeInMainWorld("__GIS_AUTOPILOT__", autopilot);
 contextBridge.exposeInMainWorld("__gisShell", {
   post(message: string): void {
     // Only strings cross. The main process parses and validates; a structured

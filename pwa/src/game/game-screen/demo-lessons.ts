@@ -14,6 +14,7 @@
 // the standstill tracker the stamina lesson reads. Nothing here touches the
 // DOM or the engine, so it all tests headlessly.
 
+import { autopilotAllowed } from "../../app/launch-options.ts";
 import { localHero } from "../local-seat.ts";
 import {
   equipmentMaxDurability,
@@ -199,8 +200,14 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     // AUTO PILOT is hired from the pause menu, so it points at the same
     // control as the pause lesson — and comes well after it, so the viewer has
     // already been shown where that menu lives.
+    //
+    // …and it is silent where there is no row behind it: a desktop build ships
+    // without the ride (see `PausedOverlays`' `autopilotOffered`), and teaching
+    // somebody to press a button that is not in the menu is worse than teaching
+    // them nothing.
     key: "autopilot",
     anchor: '[aria-label="pause"]',
-    ready: (state) => state.stats.combatMs >= AUTOPILOT_AT_MS,
+    ready: (state) =>
+      autopilotAllowed() && state.stats.combatMs >= AUTOPILOT_AT_MS,
   },
 ];

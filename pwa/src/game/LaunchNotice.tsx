@@ -27,6 +27,13 @@
 //     `steamUrl`, which is the same rule every other store link in the game
 //     follows.
 //
+// AND IT NOW ANSWERS TWO FACTS, NOT ONE. The second is the AUTO PILOT: no
+// desktop build carries the ride, `--autopilot` is the developer switch that
+// hands it back, and it costs the launch its multiplayer — which is a thing
+// somebody has to be told before they wonder where the HOST row went. It is one
+// box with a paragraph per reason rather than two boxes stacked, because what
+// the player is being asked for is the same single acknowledgement.
+//
 // The copy is UPPERCASED BY THE FONT (there are no lowercase glyphs), so it is
 // written short: four sentences of all-caps is a paragraph nobody finishes.
 
@@ -37,10 +44,11 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { columnCapRem, useTextColumn } from "@ui/lib/use-text-column.ts";
 
+import type { LaunchNoticeReasons } from "../app/launch-options.ts";
 import { canQuitApp, quitApp } from "../app/quit-bridge.ts";
 import { IDENTITY } from "../identity.ts";
 import { synth } from "./audio.ts";
-import { LAUNCH_NOTICE } from "./copy.ts";
+import { AUTOPILOT_NOTICE, LAUNCH_NOTICE } from "./copy.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { loadUiFont, peekUiFont } from "./ui-font.ts";
@@ -53,7 +61,17 @@ const BODY_SCALE = 2;
  * ever used for the first frame; `columnCapRem` takes over from the real box. */
 const BODY_FALLBACK_REM = 26;
 
-export function LaunchNotice({ onAccept }: { onAccept: () => void }) {
+export function LaunchNotice({
+  reasons,
+  onAccept,
+}: {
+  /** WHAT this launch has to be told about — the licence, the AUTO PILOT, or
+   * both (`pwa/src/app/launch-options.ts`). One box either way: the heading,
+   * the acknowledgement and the QUIT are the notice's, and each reason
+   * contributes its own paragraph and its own store button. */
+  reasons: LaunchNoticeReasons;
+  onAccept: () => void;
+}) {
   // The UI FONT rather than the sprite atlas (`assets.ts`): the notice draws
   // text and nothing else, and it stands in front of the menu — reaching the
   // atlas for a font would make this wait on the whole sprite catalogue.
@@ -81,7 +99,12 @@ export function LaunchNotice({ onAccept }: { onAccept: () => void }) {
 
   if (!font) return <LoadingScreen />;
 
-  const storeUrl = IDENTITY.steamUrl;
+  // Each reason's own way to get the thing properly: the licensed edition is on
+  // Steam, the AUTO PILOT is on a phone. Both are absent rather than dead until
+  // `game.config.json` carries the listing, which is the rule every store link
+  // in the game follows.
+  const storeUrl = reasons.licence ? IDENTITY.steamUrl : "";
+  const phoneUrl = reasons.autopilot ? IDENTITY.appStoreUrl : "";
   const cap = columnCapRem(colFontPx, BODY_SCALE, BODY_FALLBACK_REM);
   const line = (text: string) => (
     <PixelText
@@ -107,9 +130,12 @@ export function LaunchNotice({ onAccept }: { onAccept: () => void }) {
           color="#ffcf6b"
         />
         <div className="launch-notice-body" ref={bodyRef}>
-          {line(LAUNCH_NOTICE.what)}
-          {storeUrl ? line(LAUNCH_NOTICE.where) : null}
-          {line(LAUNCH_NOTICE.terms)}
+          {reasons.licence ? line(LAUNCH_NOTICE.what) : null}
+          {reasons.licence && storeUrl ? line(LAUNCH_NOTICE.where) : null}
+          {reasons.licence ? line(LAUNCH_NOTICE.terms) : null}
+          {reasons.autopilot ? line(AUTOPILOT_NOTICE.what) : null}
+          {reasons.autopilot ? line(AUTOPILOT_NOTICE.terms) : null}
+          {reasons.autopilot && phoneUrl ? line(AUTOPILOT_NOTICE.where) : null}
         </div>
         <div className="launch-notice-actions">
           <button
@@ -144,6 +170,19 @@ export function LaunchNotice({ onAccept }: { onAccept: () => void }) {
               }}
             >
               <PixelText font={font} text={LAUNCH_NOTICE.store} scale={2} />
+            </button>
+          ) : null}
+          {phoneUrl ? (
+            <button
+              type="button"
+              className="pixel-button secondary modal-action"
+              aria-label="open-phone-store-page"
+              onClick={() => {
+                playUiSound(synth, "confirm");
+                window.open(phoneUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
+              <PixelText font={font} text={AUTOPILOT_NOTICE.store} scale={2} />
             </button>
           ) : null}
           {canQuitApp() ? (

@@ -1699,6 +1699,17 @@ escort.ts` walks the people an escort errand puts on the field, and
   opener/resume reopens the level-up chooser (`promptPendingPoints`,
   `dismissIntro`, `resumeGame`) so the player places them under their own
   control.
+  **AND IT IS NOT IN THE DESKTOP BUILD.** A copy that plays itself is a cheat in
+  somebody else's session, so both desktop shells withhold the ride — depot
+  build included, with no `GIS_ENABLE_*` to package it back in — and
+  `--autopilot` is a DEVELOPER switch that hands it to one launch at the price
+  of that launch's multiplayer, voice and licence. The engine is untouched by
+  any of it: the shells simply leave `autopilot` out of the capability list they
+  publish, the app's `autopilotAllowed()` reads it (`app/launch-options.ts`) and
+  the pause menu's `autopilotOffered` is the one gate. The read FAILS OPEN, so a
+  browser, the installed PWA and both phone builds — where the ride is a thing
+  players buy — publish no list and keep it. → `docs/multiplayer.md`,
+  `docs/configuration.md`
 - **`engine/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { UNLOCKED_ARG } from "../src/capabilities";
+import { AUTOPILOT_ARG, UNLOCKED_ARG } from "../src/capabilities";
 import { NET_PORT_CHANNEL, SHELL_CHANNEL } from "../src/channels";
 
 const PRELOAD_SOURCE = readFileSync(
@@ -36,5 +36,14 @@ describe("the sandboxed preload", () => {
     // never found — and what it silences is the licence acknowledgement the
     // game shows before the menu (pwa/src/game/LaunchNotice.tsx).
     expect(PRELOAD_SOURCE).toContain(`const UNLOCKED_ARG = "${UNLOCKED_ARG}"`);
+  });
+
+  it("reads the same auto pilot argument the window is created with", () => {
+    // Same shape, same silence: a drift here means the page is never told the
+    // ride was switched on by hand, so the notice that explains where this
+    // launch's multiplayer went never appears.
+    expect(PRELOAD_SOURCE).toContain(
+      `const AUTOPILOT_ARG = "${AUTOPILOT_ARG}"`,
+    );
   });
 });
