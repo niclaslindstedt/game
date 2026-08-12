@@ -4624,6 +4624,16 @@ html.app-locked body {
   background: rgba(70, 34, 34, 0.6);
 }
 
+/* BOT FLOWN — a hero the auto pilot has held the controls of, and so one no
+   session will seat and no badge will land on (`Character.autopiloted`). Slate
+   rather than the HARDCORE red beside it: it states what this hero is, it does
+   not warn about anything, and two red badges on one slot would read as two
+   halves of the same alarm. */
+.hero-slot-badge.autopiloted {
+  border-color: #4c545e;
+  background: rgba(38, 44, 52, 0.6);
+}
+
 .hero-slot-meta {
   display: flex;
   align-items: center;

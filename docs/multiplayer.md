@@ -717,6 +717,37 @@ the missing HOST row is explained rather than discovered. A dedicated server is
 refused on the same launch for the reason it is refused without `--multiplayer`:
 there is no session left to serve.
 
+### …and one HERO is barred from every session: a flown one
+
+The launch switch above is about a BUILD. This is about a CHARACTER, and it
+outlives the launch that made it: **`Character.autopiloted` is a one-way latch
+set the moment a bot takes a hero's controls** — the paid ride on a phone or in a
+browser, the developer BOT VIEW, or a `?bot=` playtest launch. From then on that
+hero may not enter a session, ever, on any platform. It never clears, because
+the question is not whether a bot is flying right now (`state.autopilot.active`)
+but whether one ever did: a hero flown to level 40 and then hand-played into
+somebody's co-op game is exactly what this refuses.
+
+Three places carry it, and the third is the one that keeps the rule closed:
+
+- **The three doors are locked rows** on the MULTIPLAYER screen
+  (`title-screen/menus-net.ts`), saying why and naming the way out — the mark is
+  on the character, so a fresh hero plays online.
+- **`useSessions` refuses the join with no row in front of it** — a Steam invite
+  accepted while the game was closed arrives straight at `onJoin`, and would
+  otherwise walk a barred hero in.
+- **The ride is withheld from a run that already has a session**
+  (`autopilotOffered`, `game-screen/PausedOverlays.tsx`). Handing your chair to a
+  bot in somebody else's game is the thing the rule is about — and refusing it
+  there is what saves the mark from needing a mid-session eviction to go with it,
+  since a seated hero can then never become stained.
+
+It is **sticky across a cloud merge** and travels with an export/import; see
+`docs/architecture.md` → "The AUTO PILOT mark" for that half and for what it
+costs the trophy shelf. **Local enforcement only**: what a joiner says about
+their own hero is a claim, exactly as `--licensed` is. This is a rule the game
+keeps on its own copy rather than an anti-cheat, and a host cannot verify it.
+
 ### The frame, and why it is the wire's one binary payload
 
 Everything else on this wire is JSON, and `server/wire/codec.ts` explains why
@@ -1232,6 +1263,8 @@ compiler.
 | `electron/tests/capabilities_test.ts`    | The voice capability, `--voice` refused by name, and `--autopilot` taking multiplayer away |
 | `tauri/shell/tests/capabilities_test.rs` | The same, in the Rust shell — the two must resolve a command line alike                    |
 | `tests/launch_notice_test.ts`            | Which launches are told what, and that the auto pilot gate fails OPEN off a shell          |
+| `tests/multiplayer_doors_test.ts`        | All three doors shut for a flown hero, locked rather than absent, BACK still open          |
+| `tests/autopilot_mark_test.ts`           | The mark's latch, its cheap read, and the trophy shelf it shuts                            |
 
 ## The three doors, and where each half of the HOST screen lives
 

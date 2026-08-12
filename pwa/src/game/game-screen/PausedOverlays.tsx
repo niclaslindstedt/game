@@ -138,7 +138,15 @@ export function usePauseMenu({
   // that launch's multiplayer (`pwa/src/app/launch-options.ts`). The read fails
   // OPEN, so the browser, the installed PWA and both phone builds — where the
   // ride is a thing players buy — are untouched by any of this.
-  const autopilotOffered = !demo && !botView && !hardcore && autopilotAllowed();
+  //
+  // …and NEVER INSIDE A SESSION, which is the rule that saves the mark from
+  // needing an eviction to go with it. A hero a bot has flown is barred from
+  // every session AT THE DOOR (`Character.autopiloted`), so the only way to be
+  // stained while already seated would be to hire the ride from in there — and
+  // the honest answer is that you cannot. Handing your chair to a bot in
+  // somebody else's co-op game is the thing this whole rule is about.
+  const autopilotOffered =
+    !demo && !botView && !hardcore && !sessionLink && autopilotAllowed();
   const active = state?.autopilot.active === true;
 
   const resumeRun = () => {

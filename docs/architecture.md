@@ -1710,6 +1710,42 @@ escort.ts` walks the people an escort errand puts on the field, and
   browser, the installed PWA and both phone builds — where the ride is a thing
   players buy — publish no list and keep it. → `docs/multiplayer.md`,
   `docs/configuration.md`
+
+### The AUTO PILOT mark — what a flown hero can never do again
+
+**`Character.autopiloted` is a one-way latch on the HERO**, and it is set the
+moment a bot takes their controls — the paid ride, the developer BOT VIEW, or a
+`?bot=` playtest launch alike. The app has exactly one place where the wheel
+changes hands (`resolveDrivingBot`, `game-screen/bot-driver.ts`), so the mark is
+set there and a fourth route in is marked without anybody remembering to. It
+never clears: the question is not "is a bot flying right now" — that is
+`state.autopilot.active` — but "was this hero ever flown", and a hero flown to
+level 40 and then hand-played into somebody's co-op game is the case the whole
+rule is about.
+
+It costs the hero two things, and NOTHING else — the campaign, the loot and the
+saved run are all untouched:
+
+- **EVERY SESSION.** The three doors on the MULTIPLAYER screen are locked rows
+  that say why (`title-screen/menus-net.ts`), and `useSessions` refuses the one
+  join that passes no row — a Steam invite accepted from outside the game. The
+  ride is also withheld from a run that already HAS a session
+  (`autopilotOffered`), which is what saves the mark from needing an eviction to
+  go with it: a hero cannot become stained while seated.
+- **THE TROPHY SHELF**, badges and lifetime counters both (above).
+
+It is **sticky across a cloud merge** (`newerCharacter` in `cloud-save.ts` unions
+it rather than taking the winner's value) and it travels with an
+export/import — either would otherwise launder it by simply being the newer
+copy. The mark is on the CHARACTER and never on the account, so a fresh hero
+plays online and earns badges as normal, which is what the locked row tells the
+player to do. The roster shows it as a **BOT FLOWN** badge beside HARDCORE, so
+the refusal two screens away names a hero the player can identify.
+
+Local enforcement only, and deliberately so: a joiner's claim about their own
+hero is a claim, exactly as `--licensed` is. This is a rule the game keeps on
+its own copy, not an anti-cheat.
+
 - **`engine/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
@@ -2036,7 +2072,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   unlock banner, which raises the same shelf over the run and PAUSES it
   (`game-screen/use-run-shelf.ts`, the freeze/thaw discipline the screenshot
   gallery shares) — and
-  `AchievementToast.tsx` the in-run unlock celebration;
+  `AchievementToast.tsx` the in-run unlock celebration.
+  **One hero books NOTHING here**: a character a bot has flown at any point
+  (`Character.autopiloted`) is refused at every entry point of the store — the
+  badges AND the counters, because the counters are account-wide and a stained
+  hero who still moved them would simply be a farm for a clean one minted
+  afterwards. See "The AUTO PILOT mark" below;
   `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —
   see the native section below).

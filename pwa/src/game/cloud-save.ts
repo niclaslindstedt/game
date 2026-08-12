@@ -290,8 +290,27 @@ function stampOf(character: Character): number {
   return typeof character.updatedAt === "number" ? character.updatedAt : 0;
 }
 
-/** Pick the surviving version of one hero held by both devices. */
+/**
+ * Pick the surviving version of one hero held by both devices.
+ *
+ * ONE FIELD DOES NOT TAKE THE WINNER'S ANSWER: the AUTO PILOT mark
+ * (`Character.autopiloted`) is unioned rather than replaced. Last-writer-wins is
+ * right for progress — the device that played the hero most recently knows what
+ * it did — and it would be a laundry service for a mark that is supposed to be
+ * permanent: fly the hero on the phone, open the roster on the desktop, and the
+ * desktop's later stamp restores a clean hero. Sticky is also what keeps
+ * `mergeSaves` commutative and idempotent, since an OR does not care which side
+ * it is given first.
+ */
 function newerCharacter(a: Character, b: Character): Character {
+  const winner = pickNewer(a, b);
+  return a.autopiloted === true || b.autopiloted === true
+    ? { ...winner, autopiloted: true }
+    : winner;
+}
+
+/** The last-writer-wins pick itself — everything but the sticky mark above. */
+function pickNewer(a: Character, b: Character): Character {
   const byStamp = stampOf(a) - stampOf(b);
   if (byStamp !== 0) return byStamp > 0 ? a : b;
   // Same stamp (both unstamped, or a clock collision): keep the copy that has

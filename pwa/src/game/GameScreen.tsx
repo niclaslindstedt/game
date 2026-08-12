@@ -80,7 +80,11 @@ import { fxStyleVars } from "./render/postfx.ts";
 import { bindingLabel } from "./keybindings.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { spectatorCharacter, type Character } from "./characters.ts";
+import {
+  markCharacterAutopiloted,
+  spectatorCharacter,
+  type Character,
+} from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -1210,6 +1214,24 @@ export function GameScreen({
         // the paid AUTO PILOT's own bot while its engine meter runs.
         const drivingBot = botDriver.resolveDrivingBot();
         if (drivingBot) {
+          // A BOT HAS THE CONTROLS, so the hero carries the mark from here on:
+          // no session will admit them and the trophy shelf is shut to them
+          // (`Character.autopiloted`). This is the ONE place it is set, because
+          // this is the one place the wheel changes hands — every route in
+          // (the paid ride, BOT VIEW, `?bot=`) passes through
+          // `resolveDrivingBot`, so a fourth one is marked without anybody
+          // remembering to.
+          //
+          // Idempotent and cheap on every tick after the first: the latch
+          // returns the hero untouched once it is set, so the roster is written
+          // exactly once per hero. The two runs with nobody's hero in them are
+          // skipped — the HOW TO PLAY demo flies a throwaway shell and a
+          // SPECTATOR is watching somebody else's bot fly THEIR hero.
+          if (!demo && !spectatorRun) {
+            characterRef.current = markCharacterAutopiloted(
+              characterRef.current,
+            );
+          }
           botDriver.drive(drivingBot, dtMs);
         } else {
           // Poll the controller once per tick and hand the snapshot down.

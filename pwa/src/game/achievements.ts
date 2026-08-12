@@ -11,6 +11,10 @@
 // the custom lifetime counters, while the store records timestamps and the
 // unseen queue.
 //
+// ONE HERO IS REFUSED OUTRIGHT: a character a bot has flown at any point
+// (`Character.autopiloted`) books NOTHING here — not a badge and not a counter.
+// See `ledgerShut` below for why it has to be both.
+//
 // Every write also nudges the PLATFORM MIRROR (achievement-sync.ts): in the
 // native shell the same badges show up in Game Center. That is a one-way copy
 // of what this file decides — the ledger here stays the source of truth — and
@@ -23,7 +27,10 @@ import { storageKey } from "../identity.ts";
 
 import { ACHIEVEMENTS } from "./achievement-defs.ts";
 import { scheduleAchievementSync } from "./achievement-sync.ts";
-import { getActiveCharacter } from "./characters.ts";
+import {
+  activeCharacterAutopiloted,
+  getActiveCharacter,
+} from "./characters.ts";
 import {
   applyEventsToTotals,
   applyKillRate,
@@ -112,6 +119,28 @@ export function unseenAchievements(): string[] {
   return save.unseen;
 }
 
+/**
+ * WHETHER THIS ACCOUNT'S LEDGER IS SHUT — the active hero has been flown by a
+ * bot at some point (`Character.autopiloted`), so nothing they do reaches the
+ * trophy shelf.
+ *
+ * IT SHUTS THE COUNTERS AND NOT ONLY THE BADGES, which is the half that is easy
+ * to get wrong. The lifetime totals are ACCOUNT-wide and shared by every hero,
+ * so a stained hero whose kills still counted would simply be a farm: fly one
+ * hero to a million kills, then mint a clean one and watch the badges land on
+ * the first swing. Every entry point below therefore refuses BEFORE it books
+ * anything, and the platform mirror never hears about it either — nothing is
+ * written, so nothing is synced.
+ *
+ * It is a live read (memoised on a roster counter, see `characters.ts`) rather
+ * than a per-run flag, because the mark can appear MID-RUN: on a phone or in a
+ * browser the paid AUTO PILOT ride is hired from the pause menu, and the tick it
+ * engages is the tick this has to start answering yes.
+ */
+function ledgerShut(): boolean {
+  return activeCharacterAutopiloted();
+}
+
 /** Conditions newly satisfied by the current totals, unrecorded so far. */
 function satisfiedNow(): string[] {
   const fresh: string[] = [];
@@ -157,7 +186,7 @@ export function recordAchievementEvents(
   events: readonly GameEvent[],
   ctx: RunContext,
 ): string[] {
-  if (events.length === 0) return [];
+  if (events.length === 0 || ledgerShut()) return [];
   if (!applyEventsToTotals(save.totals, events, ctx)) return [];
   const fresh = unlockSatisfied();
   persist();
@@ -167,6 +196,7 @@ export function recordAchievementEvents(
 /** Book a run starting (fresh starts and retries — not menu resumes) and
  * return any run-count unlocks it tipped over. */
 export function recordRunStarted(levelId: string): string[] {
+  if (ledgerShut()) return [];
   applyRunStart(save.totals, levelId);
   const fresh = unlockSatisfied();
   persist();
@@ -183,6 +213,7 @@ let lastWornSig = "";
 export function recordWornEquipment(worn: readonly WornPiece[]): string[] {
   const sig = worn.map((p) => `${p.slot}:${p.tier}:${p.defId}`).join("|");
   if (sig === lastWornSig) return [];
+  if (ledgerShut()) return [];
   lastWornSig = sig;
   if (!applyWornEquipment(save.totals, worn)) return [];
   const fresh = unlockSatisfied();
@@ -201,6 +232,7 @@ export function recordWornEquipment(worn: readonly WornPiece[]): string[] {
  * account-wide records already live (and already survive a reload).
  */
 export function recordKillRate(rate: number, party = false): void {
+  if (ledgerShut()) return;
   if (!applyKillRate(save.totals, rate, party)) return;
   unlockSatisfied();
   persist();

@@ -209,6 +209,34 @@ export type Character = {
    * Optional: a character created before the feature simply starts empty.
    */
   campaigns?: Partial<Record<Difficulty, CampaignTally>>;
+  /**
+   * A BOT HAS HELD THIS HERO'S CONTROLS AT SOME POINT, and so this hero may
+   * never enter a session and may never earn a badge again.
+   *
+   * It LATCHES and never clears, which is the whole of the design: the question
+   * is not "is a bot flying right now" — that is `state.autopilot.active`, and a
+   * ride the player stopped an hour ago still won the levels it won. A hero who
+   * was flown to level 40 and then hand-played into somebody else's co-op game
+   * is exactly the case this exists to refuse, and a flag that cleared on
+   * disengage would wave them through.
+   *
+   * EVERY WAY A BOT CAN TAKE THE WHEEL SETS IT, because the app has one place
+   * that hands it over (`resolveDrivingBot` — see `game-screen/bot-driver.ts`):
+   * the paid AUTO PILOT ride on a phone or in a browser, the developer BOT
+   * VIEW, and a `?bot=` playtest launch. The HOW TO PLAY demo is the one
+   * exception and it is an exception about WHOSE hero: it flies a throwaway
+   * shell nobody's roster holds (`demoCharacter`), so there is nothing to
+   * stain.
+   *
+   * It is STICKY ACROSS A CLOUD MERGE (see `newerCharacter` in cloud-save.ts):
+   * the mark survives even when the other device's copy of the hero wins on
+   * `updatedAt`, or a second device would launder it simply by being edited
+   * later.
+   *
+   * Optional — every hero on every roster stored before this shipped reads as
+   * clean, which is the right answer for a mark nobody was told about.
+   */
+  autopiloted?: boolean;
 };
 
 /** A hardcore character's in-progress campaign totals on one difficulty — the
@@ -424,11 +452,72 @@ function saveCharacters(characters: Character[]): void {
 }
 
 function writeRoster(characters: Character[]): void {
+  rosterVersion++;
   try {
     window.localStorage.setItem(ROSTER_KEY, JSON.stringify(characters));
   } catch {
     // Storage unavailable (private mode / full) — the roster stays in-memory.
   }
+}
+
+// ---- The AUTO PILOT mark, and reading it cheaply -----------------------------
+//
+// `Character.autopiloted` is asked about ON EVERY SIM TICK — the achievement
+// ledger refuses a stained hero (achievements.ts) and books events sixty times
+// a second — and answering it honestly means `getActiveCharacter()`, which
+// re-reads and re-parses the WHOLE roster out of localStorage. That is a
+// per-frame cost paid to re-derive something that changes about once in a
+// hero's life, which is exactly the shape AGENTS.md refuses.
+//
+// So it is memoised against a COUNTER rather than a clock or a cache timeout:
+// every write to the roster and every change of which hero is active bumps
+// `rosterVersion`, and the steady-state read is an integer compare. There is no
+// staleness window to reason about, because the only two things that can change
+// the answer are the two things that bump it.
+
+/** Bumped by every roster write and every active-hero change — see above. */
+let rosterVersion = 0;
+/** The memo: which `rosterVersion` it was computed at, and what it said. */
+let stainedAt = -1;
+let stained = false;
+
+/**
+ * Whether the ACTIVE hero has ever been flown by a bot — the question the
+ * achievement ledger and the multiplayer doors are gated on.
+ *
+ * False with no hero picked, which is the right answer for both callers: an
+ * account with an empty roster has nothing to bar.
+ */
+export function activeCharacterAutopiloted(): boolean {
+  if (stainedAt === rosterVersion) return stained;
+  stained = getActiveCharacter()?.autopiloted === true;
+  stainedAt = rosterVersion;
+  return stained;
+}
+
+/**
+ * LATCH THE MARK on one hero: a bot has taken this hero's controls.
+ *
+ * Idempotent and one-way — a hero already marked is left exactly as it was, so
+ * this is safe to call from the tick loop (which is where the app notices, see
+ * `game-screen/bot-driver.ts`). A hero the roster does not hold — the HOW TO
+ * PLAY demo's throwaway shell — writes nothing at all, so the demo cannot stain
+ * anybody by playing itself.
+ *
+ * Returns the marked character, so a caller holding a live copy (GameScreen's
+ * `characterRef`) can keep the two in step without re-reading the roster.
+ */
+export function markCharacterAutopiloted(character: Character): Character {
+  if (character.autopiloted === true) return character;
+  const marked = { ...character, autopiloted: true };
+  const roster = loadCharacters();
+  const at = roster.findIndex((c) => c.id === character.id);
+  // Not on the roster (the demo's shell): the caller gets the marked copy so
+  // its own in-memory hero agrees, and nothing is persisted.
+  if (at < 0) return marked;
+  roster[at] = { ...roster[at], ...marked };
+  saveCharacters(roster);
+  return marked;
 }
 
 // ---- Cloud save seam (cloud-save.ts) ------------------------------------------
@@ -499,6 +588,9 @@ export function getActiveCharacterId(): string | null {
 
 /** Select the active character (null clears the selection). */
 export function setActiveCharacterId(id: string | null): void {
+  // The second of the two things that can change what
+  // `activeCharacterAutopiloted()` answers — see the memo above.
+  rosterVersion++;
   try {
     if (id === null) window.localStorage.removeItem(ACTIVE_KEY);
     else window.localStorage.setItem(ACTIVE_KEY, id);
@@ -681,6 +773,13 @@ export function normalizeCharacter(data: unknown): Character {
     ...(typeof c.pendingCoins === "number" && c.pendingCoins > 0
       ? { pendingCoins: c.pendingCoins }
       : {}),
+    // THE AUTO PILOT MARK TRAVELS, and this is the half that decides whether an
+    // EXPORT/IMPORT round trip is a way to wash it off. It is not: the mark
+    // comes across with the hero exactly as the clears and the keepsakes do.
+    // (A hand-authored `character.json` can of course simply omit it — the same
+    // thing is true of every other field here, and an import is a file the
+    // player chose to trust.)
+    ...(c.autopiloted === true ? { autopiloted: true } : {}),
   };
 }
 
