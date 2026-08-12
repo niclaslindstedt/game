@@ -117,8 +117,19 @@ const LOUDNESS: Readonly<Record<WitnessScene, number>> = {
   // …and everything that happened to a machine rather than to a person. It
   // ranks BELOW every body: a bystander watching somebody go under a bumper
   // does not remark on the headlight that broke doing it.
+  //
+  // THE FOUR AT THE TOP OF THIS HALF ARE THE ONES THAT ARRIVE AS ONE MOMENT.
+  // A tank going up raises `trafficExploded`, a `trafficFire` on whatever it
+  // set alight, a `trafficHit` or two off the shove and a string of `lampBlown`
+  // as the front passes — all in the same second, and a bystander shouts about
+  // the bang rather than about the lamp. So: the person who came out of it,
+  // then the blast, then the wave it threw, then what is burning, and only then
+  // the collision that started it.
   thrown: 70,
+  blast: 68,
+  shockwave: 67,
   fire: 66,
+  headOn: 64,
   rolled: 62,
   heavy: 58,
   bike: 54,
@@ -159,8 +170,13 @@ function sceneOf(event: DriveEvent): WitnessScene | null {
     case "bodyCrushed":
       return "torn";
     case "trafficHit":
-      // WHAT it was, which is the whole reason that field is on the event: a
-      // bus going over and a hatchback being clipped are not the same sight.
+      // NOSE TO NOSE FIRST, whatever was in it. A head-on is the SHAPE of the
+      // crash and it is the thing a bystander names; that it happened to be a
+      // bus is the next sentence, and there is only ever one sentence.
+      if (event.headOn) return "headOn";
+      // …otherwise WHAT it was, which is the whole reason that field is on the
+      // event: a bus going over and a hatchback being clipped are not the same
+      // sight.
       return event.class === "heavy"
         ? "heavy"
         : event.class === "open"
@@ -172,8 +188,23 @@ function sceneOf(event: DriveEvent): WitnessScene | null {
     case "trafficRolled":
       return "rolled";
     case "trafficFire":
-    case "trafficExploded":
       return "fire";
+    case "trafficExploded":
+      // THE BIG ONE IS A DIFFERENT SIGHT FROM THE ORDINARY ONE, and the road
+      // already knows which it is: `big` is the tank that throws a pressure ring
+      // across the whole frame with the boom arriving behind it, where the
+      // ordinary one is a fireball where a car used to be. So the rare tenth
+      // gets the lines about being FELT and the rest get the lines about being
+      // watched — which is exactly the difference the flag was minted for.
+      return event.big ? "shockwave" : "blast";
+    // …AND THE STREET LIGHTING GOING OUT AS THAT FRONT PASSES. The one
+    // consequence on this road that reaches the crowd AFTER the thing that
+    // caused it — the lamps blow over the wave's own 1.1 seconds
+    // (`DRIVE.wreckage.shockwave`), so this is the line that lands when the
+    // blast's own reaction was blocked by the gap or had nobody near enough to
+    // see it.
+    case "lampBlown":
+      return "shockwave";
     case "occupantThrown":
     case "windscreenOut":
       return "thrown";

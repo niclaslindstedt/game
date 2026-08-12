@@ -369,14 +369,30 @@ export type WitnessScene =
   | "car"
   /** …or with a bus or a lorry. */
   | "heavy"
+  /** …or nose to nose with something oncoming. */
+  | "headOn"
   /** A two-wheeler knocked down, or broken in half. */
   | "bike"
   /** Something with a roof went over. */
   | "rolled"
   /** Somebody came out through a windscreen. */
   | "thrown"
-  /** A vehicle is burning, or has gone up. */
+  /** Something has caught — a ruptured line under a folded wing, and the burn
+   * spreading from it. */
   | "fire"
+  /**
+   * …AND THE TANK WENT. Its own scene rather than more `fire`, because the two
+   * are a second apart and are not the same sight: one is a car burning and the
+   * other is the moment it stops being a car.
+   */
+  | "blast"
+  /**
+   * …AND THE PRESSURE FRONT OFF THE BIGGEST OF THOSE — felt rather than watched.
+   * Raised by the big blast's own ring and by the street lighting going out as
+   * the wave passes (`lampBlown`), which is the one consequence on this road
+   * that arrives at the crowd AFTER the thing that caused it.
+   */
+  | "shockwave"
   /** A street light came down. */
   | "lamp"
   /** AND THE ONE ABOUT HIM RATHER THAN ABOUT THE BLOW — he has done this before
@@ -949,7 +965,23 @@ export type DriveEvent =
    * (`between.ts`) carry the BIGGER of the pair's, which is what a bystander
    * would name.
    */
-  | { type: "trafficHit"; pos: Vec2; joules: number; class: DriveVehicleClass }
+  /**
+   * `headOn` is the one piece of GEOMETRY the event carries, and it is here for
+   * the same reason `class` is: nose to nose is a sight of its own and nothing
+   * else the road says can be read as one. Not the joules (a rear-ending at the
+   * top end is worth more than a head-on at half of it), not `trafficRolled`
+   * (plenty of head-ons leave both cars on their wheels), not `trafficWrecked`
+   * (a sideswipe down a whole flank gets there too). True only when the other
+   * vehicle was ONCOMING and was met squarely at the end it faces — a parked car
+   * taken on the nose is not a head-on, whatever the bumper thought.
+   */
+  | {
+      type: "trafficHit";
+      pos: Vec2;
+      joules: number;
+      class: DriveVehicleClass;
+      headOn: boolean;
+    }
   /** …and it climbed a damage rung for it: a panel folded, a light went, glass
    * left the frame. Its own beat because a car visibly deforming is a different
    * noise from the paint trade that caused it, and one the player is meant to

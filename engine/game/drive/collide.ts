@@ -245,6 +245,14 @@ export function collide(drive: DriveState, heroSafe = false): void {
       pos: { x: hit.contact.x, y: hit.contact.y },
       joules: hit.joules,
       class: def.class,
+      // NOSE TO NOSE, and all three halves of it are required. It has to be
+      // ONCOMING (a car the hero caught up with and rear-ended is not a head-on
+      // however hard he hit it), met at the end it FACES, and met SQUARELY —
+      // the same bar the hard rear-ending reads, from the other end of the car.
+      headOn:
+        other.speed * dir < 0 &&
+        car.pos.x < other.pos.x === other.faceLeft &&
+        hit.squareness >= DRIVE.drivers.rearEndSquare,
     });
     // …and its lamps at that end go with the paint.
     breakTrafficLamps(other, car.pos.x);
@@ -377,6 +385,11 @@ export function collide(drive: DriveState, heroSafe = false): void {
         // this the same way a moving one does — including the parked BUS, which
         // is the thing on this kerb worth shouting about.
         class: parkedDef?.class ?? "car",
+        // …BUT IT IS NEVER A HEAD-ON, whatever end of it the bumper found. A
+        // head-on is two vehicles arriving at each other and this one has been
+        // sitting at the kerb with its handbrake on all evening; calling it one
+        // would put the crowd's biggest crash line over a parking prang.
+        headOn: false,
       });
       damage(drive, hit, DRIVE.impact.trafficWearScale, loss, heroSafe);
       continue;

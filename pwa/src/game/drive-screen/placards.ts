@@ -267,6 +267,16 @@ export const WITNESS_LINES: Readonly<Record<WitnessScene, readonly string[]>> =
       "THAT'S A BUS, YOU IDIOT",
       "THERE WERE PEOPLE ON THAT BUS",
     ],
+    // NOSE TO NOSE — the only crash on this road the crowd names by its SHAPE
+    // rather than by what was in it, and the only one a bystander is certain
+    // about the outcome of before anybody has got out of anything.
+    headOn: [
+      "THEY WENT STRAIGHT INTO EACH OTHER",
+      "HEAD ON, THAT WAS HEAD ON",
+      "NOBODY WALKS AWAY FROM THAT",
+      "RIGHT ON THE NOSE",
+      "THAT WAS FRONT TO FRONT",
+    ],
     bike: [
       "THE MOPED'S IN HALF",
       "HE PUT THE BIKE DOWN",
@@ -279,10 +289,37 @@ export const WITNESS_LINES: Readonly<Record<WitnessScene, readonly string[]>> =
       "SOMEBODY WENT OUT THE FRONT",
       "OH GOD, THE GLASS",
     ],
+    // SOMETHING HAS CAUGHT — the burn, which on this road is a thing that
+    // GROWS. It takes about two seconds to go from a flicker under a wing to
+    // the whole engine bay, so these are the lines of people watching it get
+    // worse rather than of people reacting to a bang.
     fire: [
       "IT'S GOING UP",
       "GET BACK, IT'S BURNING",
       "THE WHOLE THING'S ALIGHT",
+      "IT'S CAUGHT, IT'S CAUGHT",
+      "GET THEM OUT BEFORE IT SPREADS",
+    ],
+    // …AND THE TANK WENT. The biggest single thing that happens out here. What
+    // comes out of somebody at the instant of a bang is an instruction and not a
+    // description — get down, run — because there has been no time to look yet.
+    blast: [
+      "GET DOWN",
+      "THE TANK'S GONE",
+      "THAT WAS THE PETROL",
+      "IT BLEW, IT ACTUALLY BLEW",
+      "RUN, THERE'LL BE ANOTHER",
+    ],
+    // …AND THE FRONT IT THREW, which is the one thing on this road the crowd
+    // FEELS rather than watches. So not one of these describes the car: they are
+    // about the chest, the ears, the windows and the lights, which is what a
+    // pressure wave actually is to somebody standing in it half a street away.
+    shockwave: [
+      "I FELT THAT IN MY CHEST",
+      "THE WINDOWS, ALL THE WINDOWS",
+      "MY EARS, MY EARS",
+      "THE LIGHTS ARE GOING OUT",
+      "THAT SHOOK THE WHOLE STREET",
     ],
     lamp: [
       "THERE GOES THE STREET LIGHT",

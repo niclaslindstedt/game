@@ -169,6 +169,13 @@ function meet(
     pos: contact,
     joules,
     class: biggerOf(defA.class, defB.class),
+    // NOSE TO NOSE — two vehicles pointed at each other, closing along the road.
+    // The closing test above has already run, so opposite facings plus a contact
+    // normal that lies along the tarmac is a genuine head-on rather than two
+    // cars reversing apart. This is the pile-up the hero never touched, and it
+    // is the one place on this road a head-on happens without him.
+    headOn:
+      a.faceLeft !== b.faceLeft && Math.abs(nx) >= DRIVE.drivers.rearEndSquare,
   });
 
   answer(

@@ -121,8 +121,12 @@ is on again. They are legible for half a second at speed; the player catches a
 third of them and the hero catches none.
 
 **And the crowd SEE.** Every so often, when the wagon puts somebody over its own
-roof, one of the people further down the road turns and shouts about it — OH MY
-GOD, HE HIT THAT LADY, THEY WERE GLUED DOWN, HE'S NOT EVEN SLOWING DOWN. It is
+roof or leaves two cars in the middle of the road, one of the people further
+along turns and shouts about it — OH MY GOD, HE HIT THAT LADY, THEY WERE GLUED
+DOWN, NOBODY WALKS AWAY FROM THAT, THE TANK'S GONE, HE'S NOT EVEN SLOWING DOWN.
+And when the biggest of those goes up, what they shout about is not the fire but
+the front off it: their ears, the windows, the street lights going out one after
+another all the way down the road. It is
 the one voice on this road that is about him, and it never becomes anything: no
 chase, no police, nothing waiting at GOODCO. He passes the person shouting a
 quarter of a second later and is at the far end ninety seconds after that,

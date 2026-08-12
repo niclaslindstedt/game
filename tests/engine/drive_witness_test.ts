@@ -242,7 +242,7 @@ describe("who saw that", () => {
     const pos = { x: 0, y: 0 };
     const seen = witnessOf(empty(), [
       { type: "pedestrianHit", pos, joules: 4000, kind: "walker", variant: 4 },
-      { type: "trafficHit", pos, joules: 9000, class: "heavy" },
+      { type: "trafficHit", pos, joules: 9000, class: "heavy", headOn: true },
       { type: "lampFelled", pos, joules: 9000 },
     ]);
     expect(seen?.scene).toBe("person");
@@ -278,11 +278,170 @@ describe("who saw that", () => {
     const pos = { x: 0, y: 0 };
     const scene = (kind: "heavy" | "car" | "open") =>
       witnessOf(empty(), [
-        { type: "trafficHit", pos, joules: 5000, class: kind },
+        { type: "trafficHit", pos, joules: 5000, class: kind, headOn: false },
       ])?.scene;
     expect(scene("heavy")).toBe("heavy");
     expect(scene("car")).toBe("car");
     expect(scene("open")).toBe("bike");
+  });
+
+  it("names a head-on by its SHAPE, whatever was in it", () => {
+    // A head-on is the thing a bystander points at, and there is only ever one
+    // sentence — that it happened to be a bus is the next one. Nothing else the
+    // road says can be read as nose-to-nose: not the joules (a rear-ending at
+    // the top end is worth more), not a roll (plenty of head-ons leave both cars
+    // on their wheels), which is why the geometry travels on the event.
+    const pos = { x: 0, y: 0 };
+    const scene = (kind: "heavy" | "car" | "open", headOn: boolean) =>
+      witnessOf(empty(), [
+        { type: "trafficHit", pos, joules: 5000, class: kind, headOn },
+      ])?.scene;
+    expect(scene("car", true)).toBe("headOn");
+    expect(scene("heavy", true)).toBe("headOn");
+    expect(scene("open", true)).toBe("headOn");
+    expect(scene("car", false)).toBe("car");
+  });
+
+  it("can reach every scene it names — no scene is unreachable content", () => {
+    // THE DRIFT THIS SUITE EXISTS TO CATCH SECOND. The compiler already refuses
+    // an app-side table missing a scene; nothing whatever refuses the reverse —
+    // a scene added to `WitnessScene` and to `WITNESS_LINES` with no arm in
+    // `sceneOf` to raise it. That is a handful of lines nobody can ever hear,
+    // and it looks exactly like working content from both ends.
+    //
+    // So: one representative event per scene, driven through the real
+    // classifier. `fleeing` is the deliberate exception — it is not a thing that
+    // HAPPENED, so no event produces it and the test below owns it instead.
+    const pos = { x: 0, y: 0 };
+    const CASES: Record<
+      Exclude<WitnessScene, "fleeing">,
+      DriveState["events"][number]
+    > = {
+      person: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "walker",
+        variant: 4,
+      },
+      woman: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "walker",
+        variant: 1,
+      },
+      elder: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "walker",
+        variant: 0,
+      },
+      wheelchair: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "walker",
+        variant: 17,
+      },
+      dog: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "walker",
+        variant: 8,
+      },
+      cyclist: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "rider",
+        variant: 0,
+      },
+      glued: {
+        type: "pedestrianHit",
+        pos,
+        joules: 3000,
+        kind: "glued",
+        variant: 0,
+      },
+      torn: { type: "bodySplit", pos, joules: 9000 },
+      car: {
+        type: "trafficHit",
+        pos,
+        joules: 4000,
+        class: "car",
+        headOn: false,
+      },
+      heavy: {
+        type: "trafficHit",
+        pos,
+        joules: 4000,
+        class: "heavy",
+        headOn: false,
+      },
+      headOn: {
+        type: "trafficHit",
+        pos,
+        joules: 4000,
+        class: "car",
+        headOn: true,
+      },
+      bike: { type: "machineDown", pos, joules: 4000 },
+      rolled: { type: "trafficRolled", pos, joules: 4000 },
+      thrown: { type: "occupantThrown", pos, joules: 4000 },
+      fire: { type: "trafficFire", pos, joules: 4000 },
+      blast: { type: "trafficExploded", pos, joules: 9000, big: false },
+      shockwave: { type: "lampBlown", pos },
+      lamp: { type: "lampFelled", pos, joules: 4000 },
+    };
+    for (const [scene, event] of Object.entries(CASES)) {
+      expect(
+        witnessOf(empty(), [event])?.scene,
+        `no event in sceneOf() raises "${scene}" — its lines are unreachable`,
+      ).toBe(scene);
+    }
+  });
+
+  it("tells a burn from a bang from the front the bang threw", () => {
+    // THREE SIGHTS THAT ARRIVE WITHIN A SECOND OF EACH OTHER AND ARE NOT THE
+    // SAME. Something CATCHING is a thing that grows and is watched; a TANK
+    // GOING is an instant and is shouted at; and the FRONT off the big ones is
+    // felt rather than seen — which is why the rare `big` tenth takes the
+    // pressure lines and the ordinary nine tenths take the fireball's.
+    const pos = { x: 0, y: 0 };
+    const scene = (event: DriveState["events"][number]) =>
+      witnessOf(empty(), [event])?.scene;
+    expect(scene({ type: "trafficFire", pos, joules: 5000 })).toBe("fire");
+    expect(
+      scene({ type: "trafficExploded", pos, joules: 9000, big: false }),
+    ).toBe("blast");
+    expect(
+      scene({ type: "trafficExploded", pos, joules: 9000, big: true }),
+    ).toBe("shockwave");
+    // …AND THE LAMPS GOING OUT AS THE WAVE PASSES, which is the one consequence
+    // on this road that reaches the crowd AFTER its cause: the front takes 1.1 s
+    // to cross, so this is the line that lands when the blast's own reaction was
+    // blocked by the gap or had nobody near enough to see it.
+    expect(scene({ type: "lampBlown", pos })).toBe("shockwave");
+    // A FELLED post is the opposite event and stays its own scene — that one was
+    // HIT, and the crowd's line about it is a joke about the council.
+    expect(scene({ type: "lampFelled", pos, joules: 3000 })).toBe("lamp");
+  });
+
+  it("shouts about the bang rather than about the lamp it blew out", () => {
+    // A tank going up raises the blast, a fire on whatever it lit, a shove into
+    // the traffic and a string of lamps in the same second. One of those is what
+    // somebody standing there would say.
+    const pos = { x: 0, y: 0 };
+    const seen = witnessOf(empty(), [
+      { type: "trafficHit", pos, joules: 4000, class: "car", headOn: false },
+      { type: "trafficFire", pos, joules: 4000 },
+      { type: "trafficExploded", pos, joules: 9000, big: false },
+      { type: "lampBlown", pos },
+    ]);
+    expect(seen?.scene).toBe("blast");
   });
 
   it("says nothing at all about the car's own paperwork", () => {
@@ -306,7 +465,13 @@ describe("who saw that", () => {
     const far = DRIVE.witness.sawPx * 3;
     const drive = empty();
     const seen = witnessOf(drive, [
-      { type: "trafficHit", pos: { x: far, y: 0 }, joules: 9000, class: "car" },
+      {
+        type: "trafficHit",
+        pos: { x: far, y: 0 },
+        joules: 9000,
+        class: "car",
+        headOn: false,
+      },
     ]);
     expect(seen).toBeNull();
   });

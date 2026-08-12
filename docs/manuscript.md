@@ -399,46 +399,80 @@ where nobody describes anything.
 39. THAT'S A BUS, YOU IDIOT
 40. THERE WERE PEOPLE ON THAT BUS
 
+**Nose to nose** — the only crash the crowd names by its SHAPE rather than by
+what was in it, and the only one they are certain about the outcome of before
+anybody has got out of anything.
+
+41. THEY WENT STRAIGHT INTO EACH OTHER
+42. HEAD ON, THAT WAS HEAD ON
+43. NOBODY WALKS AWAY FROM THAT
+44. RIGHT ON THE NOSE
+45. THAT WAS FRONT TO FRONT
+
 **A two-wheeler down, or broken in half**
 
-41. THE MOPED'S IN HALF
-42. HE PUT THE BIKE DOWN
-43. THAT SCOOTER'S GONE UNDER HIM
-44. THERE'S A BIKE IN THE ROAD
+46. THE MOPED'S IN HALF
+47. HE PUT THE BIKE DOWN
+48. THAT SCOOTER'S GONE UNDER HIM
+49. THERE'S A BIKE IN THE ROAD
 
 **Something with a roof gone over**
 
-45. IT'S ON ITS ROOF
-46. IT WENT RIGHT OVER
-47. GET THEM OUT OF THERE
+50. IT'S ON ITS ROOF
+51. IT WENT RIGHT OVER
+52. GET THEM OUT OF THERE
 
 **Somebody out through a windscreen**
 
-48. THEY CAME THROUGH THE WINDSCREEN
-49. SOMEBODY WENT OUT THE FRONT
-50. OH GOD, THE GLASS
+53. THEY CAME THROUGH THE WINDSCREEN
+54. SOMEBODY WENT OUT THE FRONT
+55. OH GOD, THE GLASS
 
-**A vehicle burning, or gone up**
+**Something has caught.** The burn is a thing that GROWS out here — about two
+seconds from a flicker under a wing to the whole engine bay — so these are
+people watching it get worse rather than reacting to a bang.
 
-51. IT'S GOING UP
-52. GET BACK, IT'S BURNING
-53. THE WHOLE THING'S ALIGHT
+56. IT'S GOING UP
+57. GET BACK, IT'S BURNING
+58. THE WHOLE THING'S ALIGHT
+59. IT'S CAUGHT, IT'S CAUGHT
+60. GET THEM OUT BEFORE IT SPREADS
+
+**And the tank went.** The biggest single thing that happens on this road. What
+comes out of somebody at the instant of a bang is an instruction, not a
+description — there has been no time to look yet.
+
+61. GET DOWN
+62. THE TANK'S GONE
+63. THAT WAS THE PETROL
+64. IT BLEW, IT ACTUALLY BLEW
+65. RUN, THERE'LL BE ANOTHER
+
+**And the front it threw** — the one thing out here the crowd FEELS rather than
+watches, off the rare big blast and off the street lighting going out as the
+wave passes. Not one of these describes the car.
+
+66. I FELT THAT IN MY CHEST
+67. THE WINDOWS, ALL THE WINDOWS
+68. MY EARS, MY EARS
+69. THE LIGHTS ARE GOING OUT
+70. THAT SHOOK THE WHOLE STREET
 
 **A street light down.** Where the crowd gets its one bit of ordinary human
 pettiness back.
 
-54. THERE GOES THE STREET LIGHT
-55. HE'S TAKEN THE LAMP POST OUT
-56. THE COUNCIL WILL LOVE THAT
+71. THERE GOES THE STREET LIGHT
+72. HE'S TAKEN THE LAMP POST OUT
+73. THE COUNCIL WILL LOVE THAT
 
 **And the one about him.** Unlocked by the second body, because "again" needs a
 first time — the closest this road ever comes to naming what the player has
 spent the last minute doing. Nobody follows it up. Nothing comes of it.
 
-57. HE'S NOT STOPPING
-58. HE'S DONE IT AGAIN
-59. SOMEBODY GET HIS PLATE
-60. HE'S NOT EVEN SLOWING DOWN
+74. HE'S NOT STOPPING
+75. HE'S DONE IT AGAIN
+76. SOMEBODY GET HIS PLATE
+77. HE'S NOT EVEN SLOWING DOWN
 
 ### The arrival verdict — seven readings of one trip
 
