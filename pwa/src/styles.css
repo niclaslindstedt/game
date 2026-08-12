@@ -4745,6 +4745,92 @@ html.app-locked body {
   gap: 0.4rem;
 }
 
+/* ── NAMING A HERO WITH A KEYBOARD IN THE WAY ──────────────────────────────
+   A phone held SIDEWAYS is the reference device, and a phone held sideways
+   with a keyboard up has almost nothing left: 390 CSS px of screen, most of it
+   keyboard, and whatever "helper bar" of arrows and ticks the browser stacks
+   on top of that takes a good slice of the rest. The band the form actually
+   gets lands nearer 100 px than 300, and a 220 px column standing in it means
+   the player types a name they can see into a CREATE button they cannot.
+
+   None of that bar is ours to remove — it belongs to the browser, and it
+   appears whatever the markup says. What IS ours is not putting anything
+   underneath it: below the trigger the form stops being a column and becomes
+   two, the heading and the long HARDCORE blurb stand down, and the whole thing
+   fits in about 100 px with the field, the toggle and both buttons all in it.
+
+   TWO TRIGGERS FOR ONE LAYOUT, because the platforms disagree about what the
+   keyboard does. Android shrinks the LAYOUT viewport, so the media query fires
+   on its own; iOS leaves it at full height and only the VISUAL viewport moves,
+   which is what `SHORT_BAND_CLASS` (@ui/lib/visual-viewport.ts) is reading. */
+.character-screen.short-band .character-heading,
+.character-screen.short-band .character-toggle .menu-item-blurb {
+  display: none;
+}
+
+.character-screen.short-band .character-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  width: min(96vw, 40rem);
+  /* No slide-in down here: the form arrives while the keyboard is already
+     animating, and two travels at once reads as a stutter. */
+  animation: none;
+}
+
+.character-screen.short-band .character-field {
+  grid-row: span 2;
+  gap: 0.25rem;
+}
+
+.character-screen.short-band .pixel-input {
+  min-height: 2.1rem;
+}
+
+.character-screen.short-band .character-toggle {
+  padding: 0.25rem 0.5rem;
+}
+
+.character-screen.short-band .character-actions {
+  gap: 0.5rem;
+}
+
+@media (max-height: 300px) {
+  .character-heading,
+  .character-toggle .menu-item-blurb {
+    display: none;
+  }
+
+  .character-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    width: min(96vw, 40rem);
+    animation: none;
+  }
+
+  .character-field {
+    grid-row: span 2;
+    gap: 0.25rem;
+  }
+
+  .pixel-input {
+    min-height: 2.1rem;
+  }
+
+  .character-toggle {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .character-actions {
+    gap: 0.5rem;
+  }
+}
+
 /* The name field, drawn in the pixel font (PixelNameInput): a framed screen
    with the value as PixelText and a real, transparent <input> on top owning
    focus, the caret, IME and the mobile keyboard. */

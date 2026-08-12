@@ -1650,6 +1650,7 @@ function buildDoors(
       // own pixels if it is handed where they actually stood.
       from: vec(first.pos.x, first.pos.y),
       to: vec(last.pos.x, last.pos.y),
+      radius: door.radius,
     };
     if (door.opens === "approach") state.approach = true;
     if (door.openSprite) state.openSprite = door.openSprite;

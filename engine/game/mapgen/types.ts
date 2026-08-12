@@ -341,8 +341,8 @@ export type MapObject = {
      * the opening rather than into it. */
     inset?: number;
     /**
-     * HOW HIGH UP THE WALL THE PAIR IS BOLTED (world px, default 0) —
-     * `LevelLight.lift`, and the one thing `inset` cannot say.
+     * HOW HIGH UP THE WALL THE PAIR IS BOLTED (world px, default 0) — the
+     * one thing `inset` cannot say.
      *
      * `inset` is a MOVE: it steps the two fittings apart along the chain and
      * pushes both further off the wall, so the only picture it can buy is a
@@ -350,9 +350,21 @@ export type MapObject = {
      * the opening does not want to be further from it — it wants to be higher
      * than it, which is where barn lights are.
      *
-     * The pool stays on the ground where the fitting stands; only the FIXTURE
-     * rises. That split is the whole of it: the lamp is up on the wall and the
-     * light it throws is still on the pavement below.
+     * HOW IT IS SPENT DEPENDS ON WHICH WAY THE DOORWAY RUNS, because a height
+     * in this projection is a step up the SCREEN (`LevelLight.lift`) and that
+     * is not the same move on both axes:
+     *
+     *   - A doorway ACROSS the picture gets a real `LevelLight.lift`: both
+     *     fittings ride the same distance up the same wall face, the pair stays
+     *     level, and each pool stays on the ground at the foot of its own lamp.
+     *   - A doorway DOWN the picture cannot tell a lift from a slide, so it is
+     *     spent OUTWARD instead — one step further along the wall from each end,
+     *     symmetrically. Spending it as a lift there walked the pair ALONG the
+     *     opening rather than up it, and the garage's roll-up shipped with one
+     *     barn light up on plain brickwork and the other hanging in the middle
+     *     of the hole, over the car driving under it.
+     *
+     * Either way the pair flanks the opening evenly and clears its last stone.
      */
     lift?: number;
     /** The pool each one throws. */

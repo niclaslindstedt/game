@@ -198,6 +198,18 @@ export const PATH = {
 export const DOORS = {
   /** Carrying the key within this distance of the door slides it open. */
   openRadius: 40,
+  /**
+   * HOW LONG A ROLL-UP TAKES TO GET OUT OF THE WAY (ms) — the garage door, and
+   * the only door in the game that travels far enough for the wait to be a fact
+   * anything has to reckon with (`DoorState.rollingMs`).
+   *
+   * THE RENDERER READS THIS ONE (`GARAGE_DOOR_MS`, render/effects.ts) rather
+   * than carrying a number of its own: the slats are drawn retracting over
+   * exactly this span, and a door the simulation thought was still down while
+   * the picture showed a clear hole — or the other way round — is a car stopped
+   * by nothing.
+   */
+  rollUpMs: 750,
 } as const;
 
 /**

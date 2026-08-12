@@ -1668,23 +1668,38 @@ export function generateLevel(
           gap.axis === "v"
             ? { x: gap.coord >= mid.x ? inset : -inset, y: 0 }
             : { x: 0, y: gap.coord >= mid.y ? inset : -inset };
+        // HOW HIGH IT IS BOLTED, AND WHICH WAY THAT IS.
+        //
+        // A `lift` is drawn by taking it off the world y before the projection
+        // (render/night.ts). On a wall that runs ACROSS the picture that is a
+        // height — both fittings ride the same distance up the same face and
+        // the pair stays level. On one that runs DOWN it, "higher up the wall"
+        // and "further along the wall" are the SAME screen move, and spending
+        // it as a height there walks the pair along the doorway instead of up
+        // it: the garage's roll-up came out with one barn light 52 px above the
+        // opening on plain brickwork and the other 20 px below its centre,
+        // hanging in the middle of the hole with the car driving under it.
+        //
+        // So on that axis the lift is spent OUTWARD, symmetrically — one step
+        // further along the wall from each end — and the fitting is drawn where
+        // it stands, with its pool under it. The pair flanks the opening evenly
+        // whichever way the border runs, and clears the last stone either way.
+        const lift = lamps.lift ?? 0;
+        const alongLift = gap.axis === "v" ? lift : 0;
         // …and the two ENDS, stepped a little further apart than the chain
         // itself so a fitting stands beside the opening rather than in it.
         // `gap.from` is always the lower coordinate, so the first end steps
         // back down the chain and the second steps on up it.
         [from, to].forEach((end, i) => {
-          const step = i === 0 ? -inset : inset;
+          const step = (i === 0 ? -1 : 1) * (inset + alongLift);
           const pos = vec(
             Math.round(end.x + out.x + (gap.axis === "v" ? 0 : step)),
             Math.round(end.y + out.y + (gap.axis === "v" ? step : 0)),
           );
-          // HOW HIGH IT IS BOLTED travels with the light rather than moving
-          // `pos`: the fitting rides up the wall and the pool it throws stays
-          // at the foot of it (see `MapObject.lamps.lift`).
           lights.push({
             pos,
             sprite: lamps.sprite,
-            ...(lamps.lift ? { lift: lamps.lift } : {}),
+            ...(lift && !alongLift ? { lift } : {}),
             ...lamps.light,
           });
         });

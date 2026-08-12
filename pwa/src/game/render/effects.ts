@@ -42,7 +42,7 @@ import {
 } from "./player.ts";
 import { drawWorldSpriteTop } from "./plane.ts";
 import { drawPowerupBurst } from "./powerup-bursts.ts";
-import type { AbilityLook, BossAbilityId } from "@game/core";
+import { DOORS, type AbilityLook, type BossAbilityId } from "@game/core";
 import type { PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
 import {
@@ -271,8 +271,13 @@ function corpseFlightMs(launch: NonNullable<Effect["launch"]>): number {
  * — the blocks divide this between them rather than each taking a fixed beat,
  * so a wide doorway and a narrow one both finish with the `garage_door` sound's
  * closing clack (content/sounds/garage_door.yaml) instead of drifting off it.
+ *
+ * IT IS THE ENGINE'S OWN NUMBER, not a second copy of it: the simulation holds
+ * a driven car at a roll-up for exactly this long (`DoorState.rollingMs`), and
+ * a door the picture had already cleared while the run still thought it was
+ * down would be a car stopped by nothing.
  */
-export const GARAGE_DOOR_MS = 750;
+export const GARAGE_DOOR_MS = DOORS.rollUpMs;
 
 /**
  * HOW BIG A HIT NUMBER DRAWS. A plain hit is 1×; a crit's size tracks how hard

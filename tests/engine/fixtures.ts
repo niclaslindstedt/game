@@ -1814,6 +1814,34 @@ export const FIX_GARAGE_LEVEL: LevelDef = {
   ],
 };
 
+// THE GARAGE WITH JAMBS — the same bay door, with the wall it is actually
+// punched through standing either side of it. The twin above hangs a door in
+// open air, which is enough to prove who opens it and is no use at all for
+// proving what a wagon's own body can and cannot get into: the whole question
+// is what happens at the STONE beside the hole. Two runs of it, flanking the
+// (800,440)–(800,560) opening at the same radius the shipped garage's carve
+// uses, so the free lane and the pinch either side of it read the same way.
+export const FIX_JAMB_LEVEL: LevelDef = {
+  ...FIX_GARAGE_LEVEL,
+  id: "test_jamb_level",
+  walls: [
+    {
+      kind: "test_wall",
+      from: { x: 800, y: 300 },
+      to: { x: 800, y: 440 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "test_wall",
+      from: { x: 800, y: 560 },
+      to: { x: 800, y: 700 },
+      radius: 8,
+      jumpable: false,
+    },
+  ],
+};
+
 // THE GARAGE WITH A ROAD OUT — the same hub, its bay door hung exactly where
 // the twin above hangs one, plus the strip of public tarmac a driven car is
 // really gone at (`driveOut`). It is the SUPERSET on purpose: the point of the
@@ -2560,6 +2588,7 @@ export function installFixtures(force = false): void {
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_hub_level: FIX_HUB_LEVEL,
       test_garage_level: FIX_GARAGE_LEVEL,
+      test_jamb_level: FIX_JAMB_LEVEL,
       test_road_level: FIX_ROAD_LEVEL,
       test_beat_level: FIX_BEAT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,

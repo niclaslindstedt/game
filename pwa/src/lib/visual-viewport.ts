@@ -60,6 +60,26 @@ export function useCenterWhileFocused(
   }, [ref, active]);
 }
 
+/**
+ * The class {@link useVisualViewportBox} hangs on its element while the band
+ * left above the keyboard is too short for a comfortable layout, so a screen can
+ * style a cramped variant of itself. Paired with a `max-height` media query for
+ * the platforms where the LAYOUT viewport shrinks too: on Android it does and
+ * the query fires on its own; on iOS it does not and this class is the only
+ * signal there is.
+ */
+export const SHORT_BAND_CLASS = "short-band";
+
+/**
+ * How little room counts as short (CSS px). A phone HELD SIDEWAYS with a
+ * keyboard up is the case: the reference device is 390 tall, the keyboard takes
+ * most of it, and whatever accessory bar the browser puts above it takes a
+ * chunk of what is left — the visible band lands nearer 100 px than 300. Any
+ * screen that has to be usable there has to be usable REALLY small, so the
+ * trigger is set well above the worst case rather than at it.
+ */
+const SHORT_BAND_PX = 300;
+
 export function useVisualViewportBox(ref: RefObject<HTMLElement>): void {
   useEffect(() => {
     const el = ref.current;
@@ -70,6 +90,7 @@ export function useVisualViewportBox(ref: RefObject<HTMLElement>): void {
       el.style.height = "";
       el.style.top = "";
       el.style.bottom = "";
+      el.classList.remove(SHORT_BAND_CLASS);
     };
 
     const apply = () => {
@@ -87,6 +108,7 @@ export function useVisualViewportBox(ref: RefObject<HTMLElement>): void {
       // keeps the pinned box aligned to the visible band's top edge.
       el.style.top = `${vv.offsetTop}px`;
       el.style.bottom = "auto";
+      el.classList.toggle(SHORT_BAND_CLASS, vv.height < SHORT_BAND_PX);
     };
 
     apply();

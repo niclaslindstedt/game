@@ -964,6 +964,16 @@ function enemyHoldsKeyFor(enemy: Enemy, doorId: string): boolean {
  */
 export function stepDoors(state: GameState, dtMs = 0): void {
   for (const door of state.doors) {
+    // A ROLL-UP IS STILL IN THE WAY WHILE IT IS ROLLING (`DoorState.rollingMs`)
+    // — the chain is dropped the moment the opener fires, because the slats are
+    // drawn by the animation from there on, but the hole is not a hole until
+    // the travel is done. Counted here rather than in the car's own step so a
+    // door opened by a man on foot has already finished by the time he comes
+    // back for the wagon.
+    if (door.rollingMs !== undefined) {
+      door.rollingMs -= dtMs;
+      if (door.rollingMs <= 0) delete door.rollingMs;
+    }
     if (door.open) {
       stepClosingDoor(state, door, dtMs);
       continue;
@@ -1005,6 +1015,11 @@ export function openDoor(
 ): void {
   if (door.open) return;
   door.open = true;
+  // A ROLL-UP HAS TRAVEL TO DO, and for the length of it the doorway is still
+  // full of slats — drawn by the animation, since the chain below is dropped on
+  // this very tick. Only the car reads it (`collideCarBody`): a man ducks under
+  // a door that is on its way up, a wagon does not.
+  if (door.rollUp) door.rollingMs = DOORS.rollUpMs;
   const gone = new Set(door.obstacleIds);
   // A GATE KEEPS ITS OWN CHAIN. `holdMs` says this door shuts again, so the
   // slats are set aside rather than dropped: putting them back is the whole of
