@@ -24,6 +24,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   CAR,
   createVehicles,
+  runLevelDef,
   setCameraYaw,
   vehicleFootprint,
 } from "@game/core";
@@ -95,12 +96,17 @@ function drawProbe(names: Map<object, string>) {
   ];
   const stack: number[][] = [];
   const blits: Blit[] = [];
+  /** How many gradient fills the pass laid down — the thrown light, and the
+   * only thing in this pass that is painted rather than blitted. */
+  let fills = 0;
   const at = (x: number, y: number) => ({
     x: m[0]! * x + m[2]! * y + m[4]!,
     y: m[1]! * x + m[3]! * y + m[5]!,
   });
   return {
     blits,
+    /** How much thrown light the pass painted (see `fills`). */
+    fills: () => fills,
     /** The live transform, so a pass can be asserted to have left it alone. */
     matrix: () => [...m],
     /** How many unmatched `save`s the pass is holding — a leak, if it is not 0
@@ -156,13 +162,17 @@ function drawProbe(names: Map<object, string>) {
       // The light CONES the running car burns are canvas gradients rather than
       // blits (`drawLightCones`), and this probe has no pixels for them to land
       // on — but it must survive them being drawn, or a driven car could not be
-      // put through it at all. Swallowed, not recorded: what is asserted about
-      // the lamps is where the `car_lights` BLIT lands.
+      // put through it at all. Not recorded as blits: what is asserted about the
+      // lamps is where the `car_lights` BLIT lands. COUNTED, though, because
+      // whether a cone was thrown at all is a rule of its own (see A CAR IN A
+      // LIT ROOM below).
       beginPath() {},
       moveTo() {},
       lineTo() {},
       closePath() {},
-      fill() {},
+      fill() {
+        fills += 1;
+      },
       createLinearGradient() {
         return { addColorStop() {} };
       },
@@ -207,10 +217,24 @@ function parkedCar(pos: { x: number; y: number }): GameState {
     landmarks: [{ kind: "car", pos, sprite: "car_doors_0" }],
     doors: [],
   } as unknown as Pick<LevelDef, "landmarks" | "doors">);
-  // Well clear of `CAR.boardRadius`: the boardable halo bakes a gradient on a
-  // real canvas, which this probe has no business minting.
+  // Well clear of `CAR.boardRadius`: the boardable mark is a sprite this probe
+  // has no bitmap for, and standing the hero off it keeps the blit list to the
+  // machine itself.
   state.players[0].pos = { x: pos.x + 4000, y: pos.y + 4000 };
   return state;
+}
+
+/** The pass, run against one camera setting — what it drew, and how much light
+ * it threw while drawing it. */
+function probeAt(
+  state: GameState,
+  projection: { pitch: number; yaw: number },
+): { blits: Blit[]; fills: number } {
+  applyCamera(projection);
+  const { sprites, names } = carSprites();
+  const probe = drawProbe(names);
+  drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
+  return { blits: probe.blits, fills: probe.fills() };
 }
 
 /** The pass, run against one camera setting. */
@@ -218,11 +242,7 @@ function drawAt(
   state: GameState,
   projection: { pitch: number; yaw: number },
 ): Blit[] {
-  applyCamera(projection);
-  const { sprites, names } = carSprites();
-  const probe = drawProbe(names);
-  drawVehicles(probe.ctx, state, sprites, { x: 0, y: 0 }, () => true, 0);
-  return probe.blits;
+  return probeAt(state, projection).blits;
 }
 
 /** Every camera the two knobs can be dialled to that is worth asserting on. */
@@ -307,6 +327,70 @@ describe("the car assembly", () => {
      * day something wrote one, rather than on the day somebody noticed.
      */
     const HEADINGS = [0, 0.4, 1, -1, HARD_OVER, -HARD_OVER];
+
+    /**
+     * A CAR IN A LIT ROOM THROWS NO CONE — the garage bay, and the reason the
+     * rule exists at all: a beam laid across cement the strip lights are
+     * already burning over cuts no darkness, so it reads as a highlight painted
+     * ON the machine rather than as light coming OFF it. The boardable arrow is
+     * what says LOOK AT THIS, and it says it BEFORE the hero climbs in.
+     *
+     * The gate is the LIT ZONE (`LevelDef.litZones`, the rooms whose own lights
+     * are on) and nothing about the venue, so the wagon is dark in the bay and
+     * has its beams back the frame it rolls out onto the drive — which is the
+     * half a test has to hold, because a rule that killed the hub's headlights
+     * outright would look identical standing still.
+     */
+    describe("in a room whose lights are on", () => {
+      /** The room, four wheel-lengths square, with the car parked in it. */
+      const ROOM = { x: 300, y: 220, width: 60, height: 60 };
+
+      /**
+       * A running car at `pos`, on a venue carrying exactly `rooms`.
+       *
+       * The zones are written EVERY time, empty list included: a carved def
+       * outlives the run it was carved for in this suite, so a test that only
+       * ever adds one leaves it lying there for the next.
+       */
+      function litAround(
+        pos: { x: number; y: number },
+        rooms: { rect: typeof ROOM; amount: number }[],
+      ): GameState {
+        const state = carAt(0, true);
+        const car = state.vehicles[0]!;
+        if (car.kind !== "car") throw new Error("no car");
+        car.pos = { ...pos };
+        runLevelDef(state).litZones = rooms;
+        return state;
+      }
+
+      const LIT = [{ rect: ROOM, amount: 0.82 }];
+
+      it("throws nothing, and still burns its lamps", () => {
+        const inside = probeAt(
+          litAround({ x: 317, y: 244 }, LIT),
+          PROJECTIONS[0]!,
+        );
+        expect(inside.fills).toBe(0);
+        expect(inside.blits.some((b) => b.name === "car_lights")).toBe(true);
+      });
+
+      it("has its beams back a step outside the room", () => {
+        const outside = probeAt(
+          litAround({ x: 380, y: 244 }, LIT),
+          PROJECTIONS[0]!,
+        );
+        expect(outside.fills).toBeGreaterThan(0);
+      });
+
+      it("throws them on a venue with no lit room at all", () => {
+        const bare = probeAt(
+          litAround({ x: 317, y: 244 }, []),
+          PROJECTIONS[0]!,
+        );
+        expect(bare.fills).toBeGreaterThan(0);
+      });
+    });
 
     it("burns only with somebody at the wheel", () => {
       const off = drawAt(carAt(0, false), PROJECTIONS[0]!);

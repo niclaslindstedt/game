@@ -607,6 +607,15 @@ arches in the body's own screen space (`drawLightCones`, `render/vehicles.ts`),
 which is why the DRIVING MINIGAME and the garage light the same car identically:
 they are the same code, and the minigame is the reference.
 
+**AND A BEAM IS ONLY THROWN WHERE THERE IS DARK TO CUT.** A car standing inside
+a LIT ROOM (`LevelDef.litZones` — the rooms whose own lights are on) burns its
+lamps and throws no cone, because a wedge laid over cement the strip lights are
+already burning over lights nothing: it reads as a highlight painted ON the
+machine rather than as light coming OFF it, which is the one sentence the
+BOARDABLE ARROW above the roof already says — and says BEFORE the hero climbs in
+rather than after. The gate is the zone and not the venue, so the hub's wagon is
+dark in the bay and has its beams back the frame it rolls out onto the driveway.
+
 `render/night.ts` draws no headlight at all, and must not: a second pair on top
 disagreed with the assembly's cone about what colour the lamps burn (warm
 tungsten against cold daylight, out of the same two bulbs) and about their reach,
