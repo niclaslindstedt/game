@@ -181,6 +181,24 @@ Two authoring keys are **not** yours to set either: `mobLevels` and
 `intendedLevel` come from `ladder.yaml`, and a level that states them is an
 error.
 
+One hazard on a mission names a MONSTER rather than a number: `martyrs:` walks a
+walking bomb onto your floor on the map's own clock.
+
+```yaml
+martyrs:
+  defId: mymod_volunteer # a monster carrying `martyr:` (see enemies, below)
+  everyMs: [20000, 36667] # how often one comes in off the dark
+  afterProgress: 0.5 # …but not until the hero is this far into the run
+  thought: mymod_first_bomber # the one-time read, the first time he SEES one
+```
+
+It is written as a hazard because it arrives like one — on a timer, out of no
+pack and no wave budget — but what arrives is an ordinary monster your player
+can shoot, which is the whole point of it. `afterProgress` LATCHES once crossed:
+it asks how far into the run the player is, not where they happen to be
+standing. A `defId` that names nothing, or a monster with no `martyr:` block, is
+a compile error rather than a timer counting down to nothing.
+
 Full reference: [`../content/levels/moon.yaml`](../content/levels/moon.yaml) is
 a complete, heavily commented mission.
 
@@ -578,6 +596,49 @@ to a constant:
 
 A typo in one of these is an error rather than a silent no-op: an unread key
 would leave your mob quietly using the default you were trying to override.
+
+### `martyr:` — a body that IS the weapon
+
+Any role may carry it, unlike `mechanics:` — this is not a set-piece move a
+named fight earns, it is what the creature is. A martyr walks the floor, closes
+on a hero, SHOUTS, and a couple of seconds later goes off: the minions in its
+core are burned off the board, everything else in reach is flung, and a grounded
+hero the blast catches is bitten by how near the centre they stood. A jump
+clears it, exactly as a jump clears a meteor.
+
+```yaml
+martyr:
+  triggerRadius: 110 # how near a hero he gets before the shout
+  fuseMs: 2200 # the shout → blast window: the whole of the player's chance
+  bark: [FOR HUMANITY] # what he shouts. Floated, never a dialogue box
+  fuseSpeedMult: 1.7 # the last run, as a multiple of his walk
+  lifeMs: 25000 # how long he will walk before the switch closes anyway
+  blastRadius: 130 # world px
+  killFraction: 0.7 # the fraction of the blast that is simply lethal to minions
+  damageFrac: 0.3 # of the hero's MAX hp, dead centre, falling off to the rim
+  dropsAbility: screen_nuke # what his corpse ALWAYS sheds, if he is shot first
+```
+
+Three of those are the design rather than tuning, and the compiler holds you to
+them. `triggerRadius` may not exceed `blastRadius` — a fuse lit where the blast
+can never reach is a firework. `lifeMs` must be longer than `fuseMs`, and it is
+not a nicety: a martyr who can never reach anybody would otherwise stand on your
+floor forever holding a slot in the level's own cap, and after two of those the
+beat has quietly stopped happening. And `bark` is required, because the shout IS
+the telegraph — a silent one kills without warning, which is the one thing this
+mob may not do.
+
+`dropsAbility` names a power (yours or the game's) and is GUARANTEED, on every
+rung, every time. That is the whole trade: the fuse is a window, and a window
+that pays out only sometimes is a window nobody takes. Let the fuse burn instead
+and the blast still clears the room — it just costs you and pays nothing.
+
+Give him more health than your floor's rank and file. A bomber a stray shot
+fells is a gift rather than a decision.
+
+**A level walks them in with `martyrs:`** (see `levels/<id>.yaml`), which is
+where the cadence lives — how often is a fact about the map, and how big the
+bang is is a fact about the man.
 
 ## `companions.yaml` — who a spared elite joins you as
 

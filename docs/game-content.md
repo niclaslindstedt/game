@@ -444,6 +444,43 @@ the alive cap, thickens the batches and shortens the intervals, all bounded, and
 bounded again across every gate by `globalMaxAlive`. The mobs that come through
 belong to no venue's story, which is why they are their own roster.
 
+## A body that is the weapon — the martyr's window
+
+Every other thing that clears a room is either the hero's (a nuke, a power) or
+the weather's (a meteor, a herd). A **MARTYR** is neither: it is a monster
+(`EnemyDef.martyr`, `engine/game/martyrs.ts`), walked onto a floor on that
+level's own clock (`LevelDef.martyrs`), and everything the player already knows
+how to do works on it.
+
+What it does is one beat in three parts. It **walks** — minted out past the edge
+of what the hero can see and set running at him. It **shouts** the moment it is
+inside its `triggerRadius`, and that is the switch closing: from there a fuse of
+a couple of seconds only counts down, and it spends them sprinting. Then it
+**goes off** — the minions inside its core are burned off the board, everything
+else in reach is flung, and a grounded hero the blast catches is bitten by a
+fraction of his MAX health, falling off to nothing at the rim. A jump clears it,
+exactly as a jump clears a meteor.
+
+**The fuse is a WINDOW, and it is the whole design.** Put him down inside it and
+the charge he was carrying — a NUKE, on GOODCO's floor — drops at his feet, every
+time, on every rung. It is not a roll, and it does not touch the loot stream. Let
+the fuse burn instead and the blast still clears the room for you; it just takes
+a bite out of you on the way and pays nothing. That is why he carries more health
+than the floor's rank and file: a bomber a stray shot fells is a gift rather than
+a decision.
+
+**His kills are ENVIRONMENTAL** — no XP, no loot, no menace, the same terms as a
+meteor's core and a gravity well's throat. A mob that arrives on a cadence and
+PAYS for the bodies it takes with it is an XP farm that walks to you.
+
+Two rules keep the beat honest over a whole run. **He does not wait for ever**
+(`martyr.lifeMs`): a martyr who cannot reach anybody — wedged on a machine,
+outrun by a hero who never stops moving — closes the switch anyway, because
+otherwise he would stand there holding a slot in the level's own cap and the
+cadence would quietly end. And **the level's `afterProgress` gate LATCHES**: it
+asks how far into the run the player is, not where they are standing, so walking
+back up the aisles to the trader does not turn the bombers off again.
+
 ## What an errand costs — the farm rate and the top-up
 
 An errand is priced in KILLS, and the two shapes that ask for them are

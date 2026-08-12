@@ -196,6 +196,17 @@ not fighting anybody — **PRIYA NAIR**, an unpaid intern still logging a line t
 stopped being a workplace hours ago, and **UNIT 7-ECHO**, a decommissioned
 SUCCESSOR holding a safety order it may not act on alone.
 
+He is not the only one who came back. Every half minute or so, once he is deep
+into the building, a **VOLUNTEER** comes in off the dark at a dead run — a man
+in a work jacket with a shift's worth of shaped charge strapped under it, who
+built engines on this floor until a machine was sat at his bench and he was
+handed a box for his mug. Half the hero's street got the same box; this is
+somebody who did not drive home with it. He shouts **FOR HUMANITY** and takes
+the aisle with him. The hero recognises him and does not stop him, and the
+recognition is the whole point of the beat: he drove out here for one person,
+and the man running past him came for the building. Shoot him before the fuse
+goes and what he was carrying is left on the floor.
+
 ## Travel — THE LAUNCH (cutscene)
 
 The part goes in, the hero gathers "engine, fuel, duct tape, and the part they

@@ -1853,6 +1853,44 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
   {
+    id: "martyr-blast",
+    icon: "icon_nuke",
+    label: "THE VOLUNTEER",
+    blurb:
+      "A VEST GOING OFF IN AN AISLE - FLASH, SHOCKWAVE, EMBERS, AND WHAT IS LEFT OF THE CROWD",
+    group: "WORLD",
+    keywords: ["martyr", "bomber", "blast", "explosion", "goodco", "vest"],
+    // On the floor it actually happens on, with a crowd standing in it — the
+    // whole read is what the blast does to the room, and an empty stage would
+    // show a firework.
+    levelId: "goodco_hq",
+    stage: { spawns: [{ enemy: "intern", count: 10, maxDistance: 110 }] },
+    showMs: 1400,
+    fire: (ctx) => {
+      const hero = localHero(ctx.state);
+      const pos = { x: hero.pos.x + 60, y: hero.pos.y + 10 };
+      ctx.emit({
+        type: "martyrBlast",
+        pos,
+        radius: 130,
+        defId: "volunteer",
+      });
+      // The bodies the fireball caught burn with it — the blast alone is a
+      // light show, and what makes it read is the crowd not being there after.
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        ctx.emit({
+          type: "martyrKill",
+          pos: {
+            x: pos.x + Math.cos(angle) * 40,
+            y: pos.y + Math.sin(angle) * 26,
+          },
+          defId: "intern",
+        });
+      }
+    },
+  },
+  {
     id: "meteor",
     icon: "spell_meteor",
     label: "METEOR IMPACT",

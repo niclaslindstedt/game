@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: martyr_blast
+description: >-
+  A vest of shaped charge going off in an aisle: the flat CRACK of the primary
+  first, then a sub detonation with a long lowpass rumble under it and a hard
+  shrapnel wash on top. Sits between the meteor and the screen-nuke on purpose
+  — it is bigger than anything the map does on its own, and smaller than the
+  bomb the player gets to keep.
+on:
+  type: martyrBlast
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.11
+    filter:
+      type: highpass
+      frequency: 2200
+  - call: tone
+    type: sine
+    from: 190
+    to: 28
+    durationMs: 720
+    volume: 0.115
+    detuneCents: 16
+    echo: 0.4
+  - call: noise
+    durationMs: 620
+    volume: 0.085
+    delayMs: 30
+    filter:
+      type: lowpass
+      frequency: 700
+    echo: 0.35
+  - call: noise
+    durationMs: 300
+    volume: 0.05
+    delayMs: 70
+    filter:
+      type: bandpass
+      frequency: 3400

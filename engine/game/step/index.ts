@@ -44,6 +44,7 @@ import {
   stepWells,
 } from "../hazards.ts";
 import { openLevelupAfterDing } from "../items/flow.ts";
+import { stepMartyrs } from "../martyrs.ts";
 import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../fog.ts";
 import {
@@ -397,6 +398,11 @@ export function step(state: GameState, input: PartyInput, dtMs: number): void {
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
   stepStampedes(state, dt, dtMs);
+  // THE MARTYRS (martyrs.ts): a walking bomb crosses the floor, shouts, and
+  // goes off. It sits with the hazards because it arrives like one — on the
+  // map's clock rather than out of a wave budget — and AFTER the horde has
+  // moved, so the blast is measured against this tick's positions.
+  stepMartyrs(state, dtMs);
   // THE STAFF LOT (arrivals.ts): a car rolls in, somebody gets out, walks to
   // the entrance and badges in. It runs alongside the hazards because it is the
   // same kind of thing — a beat the WORLD plays rather than the hero — and

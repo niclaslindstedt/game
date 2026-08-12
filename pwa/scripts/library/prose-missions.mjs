@@ -245,6 +245,11 @@ export function hazardNotes(mission) {
             "STAMPEDES",
             `Every ${seconds(hazard.spec.everyMs[0])} to ${seconds(hazard.spec.everyMs[1])} a wall of panicked staff charges in from the right and thunders left. It tramples minions outright. A jump sails clean over it; stepping out of the lane works too.`,
           ];
+        case "martyrs":
+          return [
+            "BOMBERS",
+            `Every ${seconds(hazard.spec.everyMs[0])} to ${seconds(hazard.spec.everyMs[1])} somebody wearing a vest of charges comes in off the dark at a run. He shouts when he gets close and goes off a couple of seconds later, clearing the bodies around him and taking a bite out of you if you are still there. Shoot him inside those seconds and the charge he was carrying is yours.`,
+          ];
         case "hayBalls":
           return [
             "BALES",

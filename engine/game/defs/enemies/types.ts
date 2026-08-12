@@ -399,6 +399,67 @@ export type EnemyDef = {
     takesCover?: boolean;
   };
   /**
+   * A MARTYR: a body that is itself the weapon. It runs the floor down, and
+   * once it is `triggerRadius` from a hero it SHOUTS (`bark` — floated over
+   * its head, never the dialogue phase, because the whole point is that the
+   * run does not stop for it) and lights a `fuseMs` fuse it cannot put out.
+   * When the fuse runs down it DETONATES: everything inside `killFraction` of
+   * `blastRadius` is simply gone, everything else in reach is flung, and a
+   * grounded hero the blast catches is bitten for `damageFrac` of his MAX hp,
+   * falling off to nothing at the rim. A jump clears it exactly as it clears a
+   * meteor.
+   *
+   * Both halves of the trade are deliberate. The fuse is the ONLY window the
+   * player gets, and it is short: he is sprinting (`fuseSpeedMult`) while it
+   * burns, so the shout is a shot clock rather than a warning. Kill him inside
+   * it and `dropsAbility` — the bomb he never got to spend — always drops,
+   * which is what makes the window worth taking rather than a thing to run
+   * from. Let it burn and the blast still clears the room for you; it just
+   * takes a bite out of you on the way and pays nothing.
+   *
+   * The blast's kills are ENVIRONMENTAL, like a meteor's and a well's: no XP,
+   * no loot, no menace. A martyr who spawns on a cadence and pays for his own
+   * kills is an XP farm that walks to you.
+   *
+   * Works on any role, unlike `mechanics` — this is not a set-piece move a
+   * named fight earns, it is what the creature IS.
+   */
+  martyr?: {
+    /** How near a hero he gets before the shout and the fuse. */
+    triggerRadius: number;
+    /** The shout→blast window (ms) — the whole of the player's chance. */
+    fuseMs: number;
+    /**
+     * How long he is willing to walk before the switch closes ANYWAY (ms).
+     *
+     * It is not a nicety, it is what keeps the beat from stopping. A martyr who
+     * cannot get to anybody — wedged on a machine, outrun by a hero who never
+     * stops running — would otherwise stand on the floor forever holding a slot
+     * in the level's own cap (`MARTYRS.maxAlive`), and after two of those the
+     * cadence has quietly ended. It also happens to be the honest reading of
+     * him: he was always going to do it, and reaching somebody first was only
+     * ever his preference.
+     *
+     * Omitted = `MARTYRS.walkMs`.
+     */
+    lifeMs?: number;
+    /** What he shouts as the fuse lights. Floated, one row per line. */
+    bark: string[];
+    /** Speed multiplier for the last run, applied when the fuse lights. */
+    fuseSpeedMult?: number;
+    /** Blast reach (world px). */
+    blastRadius: number;
+    /** Fraction of `blastRadius` inside which a minion is simply gone
+     * (default 0.75 — a martyr's core is most of his blast). */
+    killFraction?: number;
+    /** Fraction of a hero's MAX hp a dead-centre blast takes, before armor. */
+    damageFrac: number;
+    /** The powerup (an ABILITY_DEFS id) his corpse always drops when he is
+     * shot before the fuse runs out — the bomb he was carrying. Omitted =
+     * nothing beyond the ordinary roll. */
+    dropsAbility?: string;
+  };
+  /**
    * A GUARDED unique: while ANY enemy with one of these def ids is still on
    * the board, this one cannot be hurt — every blow bounces off with an
    * `enemyShielded` event (the app floats "SHIELDED"). How a set-piece boss

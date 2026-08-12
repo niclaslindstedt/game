@@ -79,7 +79,12 @@ export function createTickReactions(deps: {
     // a crowd), and a lightning strike flicks it — paired with the camera kick
     // and the crack/boom SFX. Kills stay silent (a busy field would drone), so
     // these are the only field events that buzz.
-    if (state.events.some((e) => e.type === "nuke")) {
+    if (
+      state.events.some((e) => e.type === "nuke" || e.type === "martyrBlast")
+    ) {
+      // A MARTYR's vest going off borrows the nuke's own jolt: it is the only
+      // other thing on the field that clears a room in one beat, and a lesser
+      // buzz under a blast that size reads as the phone missing it.
       playNukeHaptic();
     } else if (state.events.some((e) => e.type === "levelUp")) {
       // The ding's light explosion HAMMERS the motor — a heavy jolt then a

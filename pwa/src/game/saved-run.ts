@@ -542,6 +542,19 @@ function readRun(key: string): ParkedRun | null {
       arrivals: payload.state.arrivals ?? [],
       arrivalTimerMs: payload.state.arrivalTimerMs ?? 0,
       arrivalPlan: payload.state.arrivalPlan ?? null,
+      // THE MARTYR CADENCE (`GameState.martyrTimerMs`, engine/game/martyrs.ts),
+      // defaulted on exactly the arrival clock's reasoning and for the same
+      // failure: it is counted down every tick, so a run parked before the beat
+      // shipped would thaw with `undefined` there and take the clock to NaN —
+      // and `NaN <= 0` is false, so the bomber never comes and nothing says why.
+      // Zero is honest: the first one is owed straight away, and the level's own
+      // `afterProgress` gate still decides whether that means now.
+      martyrTimerMs: payload.state.martyrTimerMs ?? 0,
+      // …and its GATE latch beside it, defaulted the same way. False is the
+      // honest default: a run parked before the beat shipped has not crossed a
+      // mark that did not exist, and the first crossing after the resume arms
+      // it exactly as a fresh run would.
+      martyrsArmed: payload.state.martyrsArmed ?? false,
       // THE RACK (`CarVehicle.steer`) is defaulted on the same reasoning, and
       // it is the case where it MATTERS: `steerCar` integrates that number
       // every tick somebody is at the wheel, so a car parked before the front

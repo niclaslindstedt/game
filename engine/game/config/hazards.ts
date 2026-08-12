@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Level hazards: gravity wells, asteroid strikes, hay balls, sand storms,
-// and employee stampedes.
+// employee stampedes, and the martyrs that walk in wearing a bomb.
 
 /**
  * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
@@ -293,4 +293,41 @@ export const STAMPEDES = {
    * (`state.stampedeWarn.y`) is rolled the instant the telegraph lights and the
    * herd then spawns on it, so the dust and the wall never disagree. */
   telegraphMs: 1000,
+} as const;
+
+/**
+ * THE MARTYRS — the level-driven cadence that walks a walking bomb onto the
+ * floor (`LevelDef.martyrs`; the bomb itself is `EnemyDef.martyr`, stepped by
+ * engine/game/martyrs.ts). Every `everyMs` one is minted out past the edge of
+ * what the hero can see and set running at him; the rest of what happens is
+ * the mob's own def, because how big the blast is and how long the fuse burns
+ * are facts about the CREATURE rather than about the map it turned up on.
+ *
+ * The one thing that IS the map's is how often, which is why this config holds
+ * only the geometry of the arrival. Units: world px, ms.
+ */
+export const MARTYRS = {
+  /** How far out one is minted (world px) — past the screen edge, so he is
+   * heard and then seen arriving rather than appearing in the room. */
+  spawnDistance: 330,
+  /** Random spread on the spawn bearing and distance (world px), so two never
+   * come in on the same line. */
+  spawnJitter: 90,
+  /** Attempts made to find open ground for the spawn before the cadence gives
+   * up and tries again next tick — a floor packed wall-to-wall with obstacles
+   * must not wedge one inside a machine. */
+  spawnTries: 12,
+  /** Live martyrs are capped here. Two at once is a pincer nobody can read;
+   * the beat is a recurring shock, not a swarm. */
+  maxAlive: 2,
+  /** How long one is willing to WALK before the switch closes anyway (ms),
+   * when the def names no `lifeMs` of its own. It is the cap that keeps the
+   * beat alive: without it a martyr who cannot reach anybody holds a slot in
+   * `maxAlive` forever, and two of those end the cadence with nothing to see. */
+  walkMs: 25_000,
+  /** The nearest a mint may LAND (world px). The spawn point is clamped into
+   * the level's bounds, so a hero pressed against a corner can otherwise pull
+   * an arrival right on top of himself — a bomber that appears in the room
+   * rather than walking into it, which is the one way this beat is unfair. */
+  minDistance: 200,
 } as const;

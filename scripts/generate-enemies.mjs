@@ -32,6 +32,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 import { validateEnemy } from "./asset-tools/enemy-schema.mjs";
 import { loadCompanions } from "./companion-data/load-yaml.mjs";
 import { loadEnemies } from "./enemy-data/load-yaml.mjs";
+import { loadPowerups } from "./powerup-data/load-yaml.mjs";
 import { loadStoryItems } from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
@@ -66,6 +67,14 @@ const refs = {
   // does not need is one bootstrap cycle away from a broken build.
   storyItems: new Set(Object.keys(loadStoryItems().storyItems)),
   items: new Set([...Object.keys(WEAPON_DEFS), ...Object.keys(GEAR_DEFS)]),
+  // The POWERS a martyr's `dropsAbility` may name. Read from
+  // `content/powerups.yaml` through the powerup loader rather than from
+  // `engine/generated/powerups.ts`, and the reason is the step ORDER: enemies
+  // are compiled BEFORE powerups (see generate-content.mjs), so the generated
+  // module on disk is the PREVIOUS build's. The content tree is the one copy
+  // that is always current — the same call the companions and story items
+  // above make, for the same reason.
+  abilities: new Set(Object.keys(loadPowerups().powerups)),
   // The DEATH RITES a boss's `death:` may name, read off the engine's own
   // catalog rather than copied into the schema. Same discipline the region
   // grammar follows: there is one list of what is valid, and a validator that

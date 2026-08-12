@@ -143,6 +143,17 @@ const LORE_MIN_CHARS = 80;
  * refusal — the odd elite genuinely needs the room). */
 const LORE_WARN_CHARS = 420;
 
+/** The numbers a MARTYR cannot be authored without (`EnemyDef.martyr`) — the
+ * fuse he lights, how near he lights it, how far it reaches and what it takes
+ * out of a hero at ground zero. Every one of them decides whether the move is
+ * survivable, so none of them gets a silent default. */
+const MARTYR_REQUIRED_FIELDS = [
+  "triggerRadius",
+  "fuseMs",
+  "blastRadius",
+  "damageFrac",
+];
+
 /** The longest a floated BARK may be. Measured against the reference phone's
  * ~422 world-unit view in the pixel font — past this the line runs off the
  * side, and unlike a dialogue page nothing is going to wrap it. */
@@ -516,6 +527,72 @@ export function validateEnemy(def, refs) {
     checkAbilities(phase.mechanics?.abilities, "phase mechanics.abilities");
   for (const id of def.shieldedBy ?? []) ref(refs.enemies, id, "shieldedBy");
   ref(refs.companions, def.spareable?.companion, "companion");
+
+  // ---- THE MARTYR (EnemyDef.martyr) ----------------------------------------
+  // A body that is its own weapon. Everything here is checked rather than
+  // defaulted for the same reason the ability catalog is: a half-authored
+  // martyr does not fail, it simply walks up and stands there — a mob that
+  // costs the player nothing and pays them nothing, with every test green.
+  if (def.martyr !== undefined) {
+    const m = def.martyr;
+    for (const field of MARTYR_REQUIRED_FIELDS) {
+      if (typeof m[field] !== "number" || !(m[field] > 0))
+        err(`martyr.${field} must be a positive number`);
+    }
+    if (!Array.isArray(m.bark) || m.bark.length === 0) {
+      err(
+        `martyr.bark must be a non-empty list of lines — the shout IS the ` +
+          `telegraph, and a silent one is a mob that kills without warning`,
+      );
+    } else {
+      for (const line of m.bark) {
+        if (typeof line !== "string" || line.trim().length === 0)
+          err(`martyr.bark line must be a non-empty string`);
+        else if (line.length > BARK_MAX_CHARS)
+          err(
+            `martyr.bark line is ${line.length} characters — a bark FLOATS ` +
+              `over the field and nothing wraps it (max ${BARK_MAX_CHARS})`,
+          );
+      }
+    }
+    if (m.damageFrac <= 0 || m.damageFrac > 1)
+      err(`martyr.damageFrac (${m.damageFrac}) must be within (0, 1]`);
+    if (
+      m.killFraction !== undefined &&
+      (typeof m.killFraction !== "number" ||
+        m.killFraction <= 0 ||
+        m.killFraction > 1)
+    )
+      err(`martyr.killFraction (${m.killFraction}) must be within (0, 1]`);
+    if (
+      m.fuseSpeedMult !== undefined &&
+      (typeof m.fuseSpeedMult !== "number" || m.fuseSpeedMult <= 0)
+    )
+      err(`martyr.fuseSpeedMult must be a positive number`);
+    // A walk shorter than the fuse means the switch closes the tick he arrives,
+    // which is a mob with no approach at all rather than a shorter one.
+    if (m.lifeMs !== undefined) {
+      if (typeof m.lifeMs !== "number" || m.lifeMs <= 0)
+        err(`martyr.lifeMs must be a positive number`);
+      else if (typeof m.fuseMs === "number" && m.lifeMs <= m.fuseMs)
+        err(
+          `martyr.lifeMs (${m.lifeMs}) must be longer than the fuse ` +
+            `(${m.fuseMs}) — he needs a walk before the switch closes`,
+        );
+    }
+    // The trigger must sit INSIDE the blast, or he lights the fuse from a
+    // distance the blast can never reach and the move is a firework.
+    if (
+      typeof m.triggerRadius === "number" &&
+      typeof m.blastRadius === "number" &&
+      m.triggerRadius > m.blastRadius
+    )
+      err(
+        `martyr.triggerRadius (${m.triggerRadius}) is outside the blast ` +
+          `(${m.blastRadius}) — he would light the fuse where it cannot reach`,
+      );
+    if (refs?.abilities) ref(refs.abilities, m.dropsAbility, "martyr powerup");
+  }
 
   for (const item of def.loot?.items ?? []) {
     const id = typeof item === "string" ? item : item?.defId;

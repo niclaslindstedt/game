@@ -112,6 +112,7 @@
     "vanguard_scientist",
     "vault_warden",
     "voidling",
+    "volunteer",
     "wandering_tourist",
     "wisp",
     "wraith"
@@ -227,10 +228,14 @@
     "vanguard_scientist": "minion",
     "vault_warden": "boss",
     "voidling": "minion",
+    "volunteer": "minion",
     "wandering_tourist": "minion",
     "wisp": "minion",
     "wraith": "minion"
   },
+  "martyrEnemies": [
+    "volunteer"
+  ],
   "weapons": [
     "arc_projector",
     "archmage_staff",
@@ -704,6 +709,7 @@
     "goodco_second_blow",
     "goodco_staff",
     "goodco_successor",
+    "goodco_volunteer",
     "hellborn_ancestor",
     "hellborn_deadhand",
     "hellborn_drowned",
@@ -3477,6 +3483,10 @@
     "voidling_1",
     "voidling_hurt_0",
     "voidling_hurt_1",
+    "volunteer_0",
+    "volunteer_1",
+    "volunteer_hurt_0",
+    "volunteer_hurt_1",
     "wagon",
     "walker_bagman_0",
     "walker_bagman_1",
@@ -3943,6 +3953,9 @@
     "loot_shine_rare",
     "loot_shine_set",
     "loot_shine_unique",
+    "martyr_armed",
+    "martyr_blast",
+    "martyr_kill",
     "medkit_used",
     "menace_rose",
     "merchant_discovered",
@@ -4965,6 +4978,24 @@
       },
       "what": "The gold find — the one every Diablo player learns to hear from across a room: a bright four-note major arpeggio with a shimmer over the top, and enough echo to hang for a beat after the item has settled."
     },
+    "martyr_armed": {
+      "on": {
+        "type": "martyrArmed"
+      },
+      "what": "The switch closing, and the fuse taking. A dry snap and then a rising, tightening sizzle that says a clock has started — deliberately thin and HIGH, so it cuts through a fight the player is already in the middle of rather than hiding under it."
+    },
+    "martyr_blast": {
+      "on": {
+        "type": "martyrBlast"
+      },
+      "what": "A vest of shaped charge going off in an aisle: the flat CRACK of the primary first, then a sub detonation with a long lowpass rumble under it and a hard shrapnel wash on top. Sits between the meteor and the screen-nuke on purpose — it is bigger than anything the map does on its own, and smaller than the bomb the player gets to keep."
+    },
+    "martyr_kill": {
+      "on": {
+        "type": "martyrKill"
+      },
+      "what": "A body caught inside the fireball. The blast's own low crump with a short scorched hiss folded into it — distinct from an ordinary takedown, because nobody swung and the player should be able to hear that the kill was not theirs."
+    },
     "medkit_used": {
       "on": {
         "type": "medkitUsed"
@@ -5375,6 +5406,9 @@
     "levelUp",
     "lightning",
     "lootShine",
+    "martyrArmed",
+    "martyrBlast",
+    "martyrKill",
     "medkitUsed",
     "menaceRose",
     "merchantDiscovered",

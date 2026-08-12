@@ -826,6 +826,12 @@ export function createGame(
       : 0,
     stampedeRumbleMs: 0,
     stampedeWarn: null,
+    // The first martyr is owed a full interval; 0 on levels without them.
+    martyrTimerMs: def.martyrs
+      ? randomRange(rng, def.martyrs.everyMs[0], def.martyrs.everyMs[1])
+      : 0,
+    // …and the beat is armed from the first second unless the level gates it.
+    martyrsArmed: !def.martyrs?.afterProgress,
     // The staff lot opens empty and stays that way on every level that has no
     // arrivals; `openArrivals` (below, once the whole state exists) works out
     // the lot's geometry and arms the clock for the first car.

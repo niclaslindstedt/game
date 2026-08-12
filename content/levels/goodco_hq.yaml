@@ -41,19 +41,34 @@ tiles:
     rareEvery: 13
 heroSuited: false
 foes: STAFF
-# EMPLOYEE STAMPEDES — the "asteroid" beat of the assembly floor: every 20-37s a wall
-# of five panicked staffers charges right-to-left across the floor at a steady,
-# heavy pace, a dust cloud boiling off its back and a line of dust telegraphing its
-# lane a beat before it appears. It BOWLS any minion in its lane over (knocked out a
-# few seconds, not killed — no farm) and knocks the grounded hero down (~20% hp + a
-# 2s knockdown) unless he jumps it (its hitbox is a thin line, easy to hop) or steps
-# out of its lane. Jumping is the intended dodge.
-stampedes:
+# THE VOLUNTEERS — the "asteroid" beat of the assembly floor, and the one beat
+# on this map that is not GOODCO's. Every 20-37s a man who used to work here
+# comes in off the dark at a dead run, wearing a shift's worth of shaped charge.
+# He crosses the floor, he gets close, he shouts FOR HUMANITY, and about two
+# seconds later the aisle goes up: the staff standing around him are simply
+# gone, and a hero who did not clear it or jump it wears a third of his health.
+#
+# WHY IT IS THIS AND NOT WEATHER. A stampede was a wall to step out of, and the
+# only verb the player had against it was to be somewhere else — which stopped
+# reading as anything at all once the floor stopped being one recognisable
+# company's. This is a MONSTER, so every verb the player already owns works on
+# it, and the fuse is a window in which using them pays: shoot him inside it and
+# the charge he was carrying drops at his feet as a NUKE, every time. He is
+# armoured for exactly that reason (`EnemyDef.martyr` on `volunteer`) — a
+# bomber a stray shot fells is a gift rather than a decision.
+#
+# And he is the story's own beat rather than a hazard wearing one. Half the
+# hero's street got the same box he did; the hero drove out here for one person,
+# and this is what somebody else did with the same grievance.
+martyrs:
+  defId: volunteer
   everyMs: [20000, 36667]
-  # Held back until the hero is halfway to PAYLOAD-1: the stampedes are the
-  # SECOND-HALF beat of the assembly floor, so the opening aisles — where a
-  # fresh player is still learning to steer and jump — stay clear of the herd.
+  # Held back until the hero is halfway to PAYLOAD-1, exactly as the stampedes
+  # were: this is the SECOND-HALF beat of the assembly floor, so the opening
+  # aisles — where a fresh player is still learning to steer and jump — stay
+  # clear of it.
   afterProgress: 0.5
+  thought: goodco_volunteer
 # THE STAFF LOT, AND THE WAY IN (engine/game/arrivals.ts). The hero lands on a car
 # park with a building in front of him and no visible door — the fog is over the
 # whole wall — so the mission's first move is finding one. What tells him where

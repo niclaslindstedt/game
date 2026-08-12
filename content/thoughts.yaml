@@ -389,6 +389,18 @@ thoughts:
     pages:
       - - A SUCCESSOR. I HELPED BUILD THE FIRST ONE OF THOSE. THEN THEY REDREW IT WITHOUT US.
       - - AND THAT LINE EMPTIED THE WHOLE FLOOR. WELL. I STILL KNOW WHERE ITS BOLTS ARE.
+  # THE FIRST VOLUNTEER HE SEES (the level's `martyrs.thought`, fired the first
+  # time one is actually in sight rather than somewhere in the fog). The read
+  # has to do two jobs in two lines: tell the player what is strapped to the man
+  # running at them, and place him — this is not staff, this is somebody off the
+  # same street the hero came from, who took the same box and did something else
+  # with it. The hero does not approve and does not condemn; he recognises.
+  goodco_volunteer:
+    speaker: "{HERO}"
+    portrait: hero
+    pages:
+      - - THAT ONE'S NOT STAFF. THAT'S A WORK JACKET, AND THAT'S A VEST UNDER IT.
+      - - HE GOT THE SAME BOX I DID. HE JUST DIDN'T DRIVE HOME WITH IT.
   # PAYLOAD-1 IS DOWN — the last beat of GOODCO, raised by the level's own
   # `exitByCar` the moment the objective clears (engine/game/step/index.ts).
   #

@@ -383,6 +383,44 @@ export function validateLevel(def, refs, description = "", options = {}) {
   thought(def.asteroids?.struckThought, "asteroids.struckThought");
   thought(def.sandstorms?.struckThought, "sandstorms.struckThought");
 
+  // ---- the MARTYR cadence (LevelDef.martyrs) ---------------------------------
+  // The only hazard whose spec names a MONSTER, so it is the only one that can
+  // be authored into a beat that never happens: a dangling `defId` would be a
+  // timer counting down to nothing, on a map where the whole difficulty curve
+  // assumed the bomb was coming.
+  if (def.martyrs !== undefined) {
+    const m = def.martyrs;
+    if (typeof m.defId !== "string" || m.defId.length === 0)
+      err("martyrs.defId must name the enemy that walks in wearing the bomb");
+    else {
+      enemy(m.defId, "martyrs.defId");
+      // …and it has to actually BE one. A cadence pointed at an ordinary mob
+      // compiles, spawns, and walks a body onto the floor that never goes off.
+      if (refs.martyrEnemies && !refs.martyrEnemies.has(m.defId))
+        err(
+          `martyrs.defId "${m.defId}" carries no \`martyr:\` block — it would ` +
+            `walk onto the floor on the level's clock and never go off`,
+        );
+    }
+    if (
+      !Array.isArray(m.everyMs) ||
+      m.everyMs.length !== 2 ||
+      !m.everyMs.every((n) => typeof n === "number" && n > 0) ||
+      m.everyMs[0] > m.everyMs[1]
+    )
+      err(
+        "martyrs.everyMs must be an ascending [min, max] pair of positive ms",
+      );
+    if (
+      m.afterProgress !== undefined &&
+      (typeof m.afterProgress !== "number" ||
+        m.afterProgress < 0 ||
+        m.afterProgress > 1)
+    )
+      err(`martyrs.afterProgress (${m.afterProgress}) must be within [0, 1]`);
+    thought(m.thought, "martyrs.thought");
+  }
+
   // ---- the prelude chain -----------------------------------------------------
   // A scene id that resolves to nothing used to throw out of `cutsceneDef` at
   // the moment the venue opened — the worst place to learn about a typo, and

@@ -35,6 +35,14 @@ const HAZARD_KILLERS: Record<string, string> = {
  * is credited to whoever laid it down (THE FLAGBEARER's laser sweep). */
 const SCORCH_PREFIX = "hazard:scorch:";
 
+/** A MARTYR's blast — `hazard:martyr:<defId>` (engine/game/martyrs.ts), so the
+ * line names the man who was wearing it rather than "an explosion". */
+const MARTYR_PREFIX = "hazard:martyr:";
+
+/** A boss's ORBITAL DELIVERY — `hazard:pod:<boss defId>` (hazards.ts): a rock
+ * with an author, so it is credited to the author rather than to the sky. */
+const POD_PREFIX = "hazard:pod:";
+
 /**
  * The cause of the fatal blow in ONE tick's events, or null when this tick
  * holds no death. The inner `cause` is null when the death can't be attributed.
@@ -67,6 +75,14 @@ export function killerLabel(cause: string | null): string | null {
   if (cause.startsWith(SCORCH_PREFIX)) {
     const name = ENEMY_DEFS[cause.slice(SCORCH_PREFIX.length)]?.name;
     return name ? `${name}'S FIRE` : "BURNING GROUND";
+  }
+  if (cause.startsWith(MARTYR_PREFIX)) {
+    const name = ENEMY_DEFS[cause.slice(MARTYR_PREFIX.length)]?.name;
+    return name ? `${name}'S VEST` : "A SUICIDE BLAST";
+  }
+  if (cause.startsWith(POD_PREFIX)) {
+    const name = ENEMY_DEFS[cause.slice(POD_PREFIX.length)]?.name;
+    return name ? `${name}'S ORBITAL STRIKE` : "AN ORBITAL STRIKE";
   }
   return ENEMY_DEFS[cause]?.name ?? null;
 }

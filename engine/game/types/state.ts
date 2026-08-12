@@ -988,6 +988,22 @@ export type GameState = {
    * the herd's roll is emitted on this cadence (levels with LevelDef.stampedes). */
   stampedeRumbleMs: number;
   /**
+   * Ms until the next MARTYR walks in (levels with `LevelDef.martyrs`). Held —
+   * not counted — until the level's `afterProgress` gate has been crossed, so
+   * the first one arrives a full interval after the crossing rather than the
+   * instant it is reached.
+   */
+  martyrTimerMs: number;
+  /**
+   * Has the run crossed the level's `martyrs.afterProgress` mark yet? A LATCH
+   * rather than a live read, because the gate answers "is the player still
+   * learning this floor" — a question about how far into the run they are, not
+   * about where they are standing. Without it, walking back up the aisles to
+   * the trader turns the beat off again, which measured out as a cadence armed
+   * for a ninth of the level.
+   */
+  martyrsArmed: boolean;
+  /**
    * THE NIGHT SHIFT TURNING UP (levels with `LevelDef.arrivals`): every car
    * that has rolled onto the lot this run, from the moment it appears at the
    * kerb to long after it is parked and its driver has gone inside. A finished

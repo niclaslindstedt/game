@@ -990,6 +990,32 @@ export type GameEvent =
    */
   | { type: "asteroidKill"; pos: Vec2; defId: string }
   /**
+   * A MARTYR lit his fuse (`EnemyDef.martyr`): he has closed on a hero, and
+   * from here he is a countdown that sprints. `pos` is where he stood when it
+   * caught, `fuseMs` how long the player has. The SHOUT rides the ordinary
+   * bark event beside this one — this is the moment's own hook, so the app can
+   * arm the sizzle bed and the tell without parsing a line of dialogue.
+   */
+  | { type: "martyrArmed"; pos: Vec2; defId: string; fuseMs: number }
+  /**
+   * A MARTYR went off. `pos` is the body, `radius` the blast reach — a good
+   * deal wider than a meteor's, and the app is expected to answer it in kind:
+   * the flash, the shockwave, the fireball, a hard camera kick. Everything the
+   * blast DID rides its own events (`martyrKill` for each body burned in the
+   * core, `playerHurt` for the bite), exactly as a meteor's does.
+   */
+  | { type: "martyrBlast"; pos: Vec2; radius: number; defId: string }
+  /**
+   * A body was burned up inside a martyr's blast — off the board with no kill,
+   * no XP, no loot and no menace, exactly like a meteor's core (`asteroidKill`)
+   * and for the same reason: a mob that arrives on a cadence and PAYS for the
+   * bodies it takes with it is an XP farm that walks to you. It gets its own
+   * event rather than the meteor's because the app answers it differently —
+   * the fireball INCINERATES what it catches, so each body leaves the charred
+   * remains its own kind leaves.
+   */
+  | { type: "martyrKill"; pos: Vec2; defId: string }
+  /**
    * A sand storm caught the grounded hero: it took its scaled bite AND knocked
    * him out (he drops prone for SANDSTORMS.knockoutMs). `pos` is the hero at
    * the moment the gust hit; the app plays the whump + dust and shakes the

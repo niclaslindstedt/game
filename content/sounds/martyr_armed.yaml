@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: martyr_armed
+description: >-
+  The switch closing, and the fuse taking. A dry snap and then a rising,
+  tightening sizzle that says a clock has started — deliberately thin and
+  HIGH, so it cuts through a fight the player is already in the middle of
+  rather than hiding under it.
+on:
+  type: martyrArmed
+spatial: true
+voices:
+  - call: noise
+    durationMs: 45
+    volume: 0.05
+    filter:
+      type: highpass
+      frequency: 3000
+  - call: tone
+    type: square
+    from: 620
+    to: 1180
+    durationMs: 520
+    volume: 0.035
+    delayMs: 40
+  - call: noise
+    durationMs: 620
+    volume: 0.03
+    delayMs: 60
+    filter:
+      type: bandpass
+      frequency: 5200

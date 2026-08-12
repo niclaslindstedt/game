@@ -302,6 +302,21 @@ function thoughtsOn(level) {
     ...(level.exitByCar?.thought
       ? [{ thought: level.exitByCar.thought, when: "exit" }]
       : []),
+    // …the beat a MARTYR raises the first time the hero lays eyes on one
+    // (`LevelDef.martyrs.thought`). It looks like a `firstSightThoughts` entry
+    // and is not one: the trigger lives on the hazard spec rather than in that
+    // list, so without its own entry here it would be authored, shipped,
+    // playable and on no page at all. It DOES have a speaker to name, which is
+    // the mob the cadence walks in.
+    ...(level.martyrs?.thought
+      ? [
+          {
+            enemy: level.martyrs.defId,
+            thought: level.martyrs.thought,
+            when: "martyr",
+          },
+        ]
+      : []),
     // …and the PLACE-pinned beats, which have no speaker and no door either:
     // they fire on the hero BEING somewhere (`placeThoughts`), so `where` is
     // what the others carry in `enemy`. Same reason the door beats are here —

@@ -63,6 +63,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     structure: d.structure,
     flees: d.flees,
     ranged: d.ranged,
+    martyr: d.martyr,
     shieldedBy: d.shieldedBy,
     spareable: d.spareable,
     xp: d.xp,

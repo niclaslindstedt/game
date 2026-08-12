@@ -261,6 +261,10 @@ function thoughtsSection(chapter, { href }) {
               kill: "The first one he kills",
               sight: "The first one he sees",
               strike: "The one who swings first",
+              // A MARTYR the level walks in on its own clock. A SIGHTING like
+              // `sight`, but of somebody nothing placed on this floor — which
+              // is exactly what the heading has to say.
+              martyr: "The first one who walks in wearing a bomb",
               // Not a speaker but a DOOR he tries too early — so the slot the
               // others fill with a mob's name gets the door's instead.
               door: "The way out he cannot take yet",

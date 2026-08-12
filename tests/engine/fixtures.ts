@@ -70,6 +70,36 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 950 },
   },
+  // A MARTYR — a body that is its own weapon (`EnemyDef.martyr`,
+  // engine/game/martyrs.ts). Authored at round numbers so a test can state a
+  // distance and a fuse in the assertion rather than deriving them: he lights
+  // at 100, burns for 1000 ms, and goes off across 150 for a quarter of the
+  // hero's max hp. `blood`, unlike the fixture rank and file, because the
+  // charred-remains path a blast hands the app is a body's own.
+  test_martyr: {
+    id: "test_martyr",
+    name: "TEST MARTYR",
+    lore: "A synthetic fixture monster wearing the engine's walking bomb: the body every rule about a fuse, a blast and the charge it drops is measured against.",
+    role: "minion",
+    sprite: "test_martyr",
+    hp: 100,
+    speed: 20,
+    radius: 9,
+    contactDamage: 10,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+    martyr: {
+      triggerRadius: 100,
+      fuseMs: 1000,
+      bark: ["TEST BARK"],
+      fuseSpeedMult: 2,
+      blastRadius: 150,
+      killFraction: 0.5,
+      damageFrac: 0.25,
+      dropsAbility: "screen_nuke",
+    },
+  },
   // A heavier minion for band-ordering (mirrors `wraith`).
   test_brute: {
     id: "test_brute",
@@ -1918,6 +1948,20 @@ export const FIX_STAMPEDE_LEVEL: LevelDef = hazardLevel("test_stampede_level", {
   stampedes: { everyMs: [800, 800] },
 });
 
+// A level that walks a MARTYR in, at a fixed cadence for determinism.
+export const FIX_MARTYR_LEVEL: LevelDef = hazardLevel("test_martyr_level", {
+  martyrs: { defId: "test_martyr", everyMs: [800, 800] },
+});
+
+// …and the same beat behind an `afterProgress` gate, so a test can prove the
+// countdown is FROZEN below it rather than merely ignored.
+export const FIX_MARTYR_GATED_LEVEL: LevelDef = hazardLevel(
+  "test_martyr_gated_level",
+  {
+    martyrs: { defId: "test_martyr", everyMs: [800, 800], afterProgress: 0.5 },
+  },
+);
+
 // A STAFF LOT with an entrance in it (`LevelDef.arrivals`, engine/game/arrivals.ts).
 //
 // It is a FIXTURE for the same reason the locked-door level is: the shipped
@@ -2496,6 +2540,8 @@ export function installFixtures(force = false): void {
       test_hayball_level: FIX_HAYBALL_LEVEL,
       test_sandstorm_level: FIX_SANDSTORM_LEVEL,
       test_stampede_level: FIX_STAMPEDE_LEVEL,
+      test_martyr_level: FIX_MARTYR_LEVEL,
+      test_martyr_gated_level: FIX_MARTYR_GATED_LEVEL,
       test_apparition_level: FIX_APPARITION_LEVEL,
       test_outro_level: FIX_OUTRO_LEVEL,
       test_ranged_level: FIX_RANGED_LEVEL,

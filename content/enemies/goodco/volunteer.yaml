@@ -1,0 +1,51 @@
+id: volunteer
+name: THE VOLUNTEER
+lore: >-
+  He built engines on this floor until a machine was sat at his bench and he
+  was handed a box for his mug. Half his street got the same box. He is the
+  one who did not take it lying down, and what he is wearing under the jacket
+  is a shift's worth of shaped charge and a switch he will not let go of.
+role: minion
+sprite: volunteer
+# NOT STAFF, so he is not on the floor's roster: he arrives on the level's own
+# cadence (`LevelDef.martyrs`) rather than out of a pack, a wave or a spawner.
+hp: 110
+# ARMOUR, which is the whole reason the number is here: he is wearing plate
+# under the jacket because the vest is no use to him if a doorway guard drops
+# him in the corridor. He is the toughest body on this floor by a little — a
+# bomber a stray shot fells is a gift rather than a decision, and the decision
+# is the point of him.
+speed: 40
+radius: 9
+# The bomb is the weapon. Walking into him is a shove and a scrape, and the
+# player who trades blows with him has misread which clock is running.
+contactDamage: 12
+critChance: 0.05
+contactCooldownMs: 900
+# He is not asleep at a post and there is nothing to sneak past: he came in
+# looking for the crowd, and he finds it from across the floor.
+ai:
+  aggroRadius: 900
+martyr:
+  # Inside the blast, so the shout always comes from within reach of it — and
+  # far enough out that a hero who reacts can be clear before it lands.
+  triggerRadius: 110
+  # THE WINDOW. Long enough to read the shout, turn, and either put him down or
+  # get out; short enough that doing neither is a decision rather than an
+  # accident. A hero at a run covers well over the gap in this.
+  fuseMs: 2200
+  bark:
+    - FOR HUMANITY
+  # He was never going to survive this, so the last stretch is flat out.
+  fuseSpeedMult: 1.7
+  # A BIG one — most of the reference phone's view across (~422 world units
+  # wide), which is what makes it worth clearing rather than tanking, and what
+  # makes letting it happen in a crowd genuinely useful.
+  blastRadius: 130
+  killFraction: 0.7
+  # A dead-centre hit takes a third of the hero's health. It falls off to
+  # nothing at the rim, and a jump clears the whole thing.
+  damageFrac: 0.3
+  # THE PRIZE. What he was carrying, dropped by the body that was carrying it —
+  # guaranteed, every time, which is the entire reason to take the window.
+  dropsAbility: screen_nuke
