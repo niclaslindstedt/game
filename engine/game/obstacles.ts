@@ -289,6 +289,75 @@ export function resolveObstacles(
   }
 }
 
+/**
+ * Push an ORIENTED BOX out of every obstacle it overlaps — the same pass as
+ * `resolveObstacles`, for a body whose picture is a rectangle rather than a
+ * disc.
+ *
+ * IT EXISTS FOR THE CAR, AND FOR THE THING A CIRCLE CANNOT DO: hold a corner.
+ * A wagon solved as a chain of discs has its bonnet's two front corners rounded
+ * off by a whole radius, so driven at a doorway's jamb at any angle at all it
+ * parks with the painted corner a couple of pixels inside the stone — the
+ * circle is clear, and the picture is not. A box has corners, so the drawn body
+ * stops where it is drawn.
+ *
+ * `half` is measured ALONG `bearing` (x) and ACROSS it (y), which is how a
+ * machine's own picture lies on the ground (`alongBody`, vehicles.ts) — at the
+ * shipped square-on camera that is simply the world's own axes.
+ *
+ * Sized for the same spatial index every other query uses: `pos` reads ONE grid
+ * cell, so the box's own bounding radius must stay under `MAX_QUERY_RADIUS`.
+ * A long body is passed as a chain of short boxes that tile it, exactly as the
+ * disc version is passed a chain of discs.
+ */
+export function resolveObstacleBox(
+  state: GameState,
+  pos: Vec2,
+  half: Vec2,
+  bearing: number,
+  z = 0,
+): void {
+  const bucket = bucketAt(state, pos);
+  if (!bucket) return;
+  const cos = Math.cos(bearing);
+  const sin = Math.sin(bearing);
+  for (const obstacle of bucket) {
+    if (obstacle.jumpable && z > OBSTACLES.clearHeight) continue;
+    // Carry the obstacle into the box's frame; every escape below is worked out
+    // there as a plain axis-aligned problem and turned back on the way out.
+    const dx = obstacle.pos.x - pos.x;
+    const dy = obstacle.pos.y - pos.y;
+    const lx = dx * cos + dy * sin;
+    const ly = -dx * sin + dy * cos;
+    // THE OTHER SIDE IS A BOX TOO, and that is the second half of the point.
+    // An obstacle's `radius` is the radius of the footprint its sprite is DRAWN
+    // on, and the things a lot is made of — wall stones, door slats, drums,
+    // crates — fill that square. Solved against the INSCRIBED circle, a stone's
+    // four painted corners stick out past everything that stops a body by about
+    // 3 px, which nothing in the game is long and flat enough to show except a
+    // car pressed diagonally into the last stone of a jamb. So the car meets the
+    // world as squares on both sides: exact for anything drawn as a block, and
+    // deliberately ~3 px early at a round prop, which is a car stopping a
+    // pixel short of a fuel drum rather than a bug anybody can see.
+    const oHalfX = obstacle.half?.x ?? obstacle.radius;
+    const oHalfY = obstacle.half?.y ?? obstacle.radius;
+    // …carried into the box's frame as the box that CONTAINS it once turned:
+    // exact at the shipped square-on camera and generous under a yaw.
+    const ex = Math.abs(oHalfX * cos) + Math.abs(oHalfY * sin);
+    const ey = Math.abs(oHalfX * sin) + Math.abs(oHalfY * cos);
+    // How far the box has to travel in its own frame to be clear, per axis —
+    // and which of the two it spends is the least-penetration pick every
+    // resolver here makes.
+    const penX = half.x + ex - Math.abs(lx);
+    const penY = half.y + ey - Math.abs(ly);
+    if (penX <= 0 || penY <= 0) continue;
+    const mx = penX <= penY ? (lx < 0 ? penX : -penX) : 0;
+    const my = penX <= penY ? 0 : ly < 0 ? penY : -penY;
+    pos.x += mx * cos - my * sin;
+    pos.y += mx * sin + my * cos;
+  }
+}
+
 /** Push a circular body of `radius` out of the axis-aligned box (`center`,
  * `half`) along the shortest escape. */
 function resolveRect(

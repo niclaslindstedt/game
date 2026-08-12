@@ -44,7 +44,7 @@ import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { billboardBearing } from "./flags.ts";
 import { killMerchant } from "./merchant.ts";
-import { resolveObstacles } from "./obstacles.ts";
+import { resolveObstacleBox, resolveObstacles } from "./obstacles.ts";
 import { openDoor } from "./story.ts";
 import { anyZoneWithin } from "./zones.ts";
 import {
@@ -114,6 +114,32 @@ export const CAR = {
    * same ground, or parking would jump the body a foot sideways.
    */
   footprint: { offsets: [-15, -7.5, 0, 7.5, 15], radius: 9 },
+  /**
+   * THE HULL A DRIVEN CAR IS SOLVED AS — the rectangle its picture covers,
+   * half-extents ALONG the drawn body and ACROSS it, laid out as a chain of
+   * boxes that TILE it (`collideCarBody`).
+   *
+   * IT IS THE CIRCLES ABOVE WITH THEIR CORNERS PUT BACK. A chain of discs has
+   * no corners: the bonnet's two front ones are rounded off by a whole radius,
+   * so a wagon driven at the roll-up's jamb at any angle other than dead square
+   * comes to rest with the painted corner a couple of pixels inside the stone.
+   * The circle is clear and the picture is not, and the bay's doorway is exactly
+   * where a player is looking closely enough to see it.
+   *
+   * SAME BODY, SAME GROUND: `length` is the drawn 48, `depth` the same band the
+   * footprint's discs claim (2 × radius), so the hull is the smallest rectangle
+   * that holds them and the discs are the largest capsule that fits inside it.
+   * The parked blockers stay DISCS — `Obstacle` only carries axis-aligned boxes
+   * and a machine's picture lies on whatever bearing the camera decides — and
+   * being strictly inside this hull is what keeps them honest: a car driven up
+   * to a wall and switched off leaves blockers that cannot reach past where its
+   * own body just stopped, so getting out never jogs it.
+   *
+   * `boxes` is how many pieces the chain is cut into. Each one is a query
+   * against the obstacle grid's single cell, so a piece has to stay well under
+   * `MAX_QUERY_RADIUS` (obstacles.ts) — five puts each at 4.8 × 9.
+   */
+  hull: { length: 48, depth: 18, boxes: 5 },
   /** The parts that can work free of the body (the fix ladder). */
   detachables: ["doors", "hood", "bumper", "roof"] as const,
   /** The dangle oscillator: a hinge is floppier than an axle spring, so it
@@ -663,6 +689,23 @@ export function detachWheel(
 }
 
 /**
+ * PRESS THE OPENER — every `approach` door within a car's reach
+ * (`CAR.doorReach`) rolls up.
+ *
+ * Called from both ends of a car's life on a lot: the moment a driver climbs in
+ * (`enterCar`) and every tick he is driving (`driveCar`). One rule, two
+ * triggers, and the first exists because the second cannot be early enough — a
+ * roll-up has travel to do (`DOORS.rollUpMs`) and a bay is short.
+ */
+function openDoorsForCar(state: GameState, car: CarVehicle): void {
+  for (const door of state.doors) {
+    if (!door.approach || door.open) continue;
+    const d = Math.hypot(car.pos.x - door.center.x, car.pos.y - door.center.y);
+    if (d <= CAR.doorReach) openDoor(state, door);
+  }
+}
+
+/**
  * Climb into the car and turn the key — the tap-the-car verb (`enterCar`).
  *
  * The acting hero must be standing AT the car (`boardRadius` — the server
@@ -699,6 +742,15 @@ export function enterCar(state: GameState, hero: Player): boolean {
       type: "carStarted",
       pos: { x: vehicle.pos.x, y: vehicle.pos.y },
     });
+    // …AND THE OPENER GOES WITH THE KEY. The roll-up is tripped from HERE as
+    // well as from the driven car below, because the two are half a second
+    // apart and the door needs every one of them: a bay this snug puts the
+    // bumper at the threshold well inside the chain's own travel, so a door
+    // that only started moving when the wagon did was one the wagon caught.
+    // Started at the cough instead, it is up and out of the way by the time
+    // anybody has finished settling their thumb — which is also where a man
+    // with a remote clipped to his sun visor actually presses it.
+    openDoorsForCar(state, vehicle);
     // …AND ON A VENUE WHOSE WAY OUT IS THE CAR, GETTING IN IS LEAVING.
     leaveByCar(state, vehicle);
     return true;
@@ -1390,12 +1442,10 @@ function driveCar(
   }
   // A driven car pulling up rolls the garage door open — same opener the
   // walking hero triggers in stepDoors, but from further out (`doorReach`,
-  // a real opener's range), so the roll-up is done before the bumper is.
-  for (const door of state.doors) {
-    if (!door.approach || door.open) continue;
-    const d = Math.hypot(car.pos.x - door.center.x, car.pos.y - door.center.y);
-    if (d <= CAR.doorReach) openDoor(state, door);
-  }
+  // a real opener's range), so the roll-up is done before the bumper is. The
+  // car that was BOARDED here has already pressed it (`enterCar`); this is the
+  // one that was driven up from somewhere else on the lot.
+  openDoorsForCar(state, car);
   if (!car.departed) {
     const def = runLevelDef(state);
     const road = def.driveOut;
@@ -1455,21 +1505,28 @@ function driveCar(
  * showed: a 48-px wagon is more than twice as long as it is wide, so one circle
  * fat enough to hold the flanks let a nose driven at a wall bury a third of the
  * bonnet in it, and one small enough to fit through the bay's doorway let the
- * whole back end swing through the door frame on the way out. So the pass runs
- * the SAME circles the parked car blocks the floor with (`vehicleFootprint`),
- * laid along the DRAWN body end to end, each shoved out on its own and the shove
- * carried back to the body. A corner resolves because each point is read from
- * the position the one before it left the car in.
+ * whole back end swing through the door frame on the way out.
  *
- * HOW MANY OF THEM IS `CAR.footprint`'s to say, and it says FIVE for a reason
- * this pass is the one that pays for: three circles sampled the body rather than
- * covering it, and the two gaps between them were holes the drawn flanks hung
- * out of. Nothing here counts them — the loop is over whatever the footprint
- * lays down, which is what keeps this and the parked blockers the same car.
+ * SO IT IS SOLVED AS THE RECTANGLE ITS PICTURE COVERS (`CAR.hull`) — a chain of
+ * boxes laid along the DRAWN body end to end, tiling it exactly, each shoved out
+ * on its own and the shove carried back to the body. A corner of the lot
+ * resolves because each piece is read from the position the one before it left
+ * the car in.
  *
- * The same circles is the load-bearing half — a driving car and the furniture it
- * becomes the moment its driver steps out have to occupy the same ground, or
- * parking would jump the body a foot sideways.
+ * A CHAIN OF DISCS GOT EVERYTHING BUT THE CORNERS, which is the half a doorway
+ * is made of. Discs spanning the body hold its ends and its flanks to within a
+ * pixel and then round off the bonnet's two front corners by a whole radius, so
+ * a wagon driven at the roll-up's jamb at any angle but dead square parked with
+ * the painted corner ~2 px inside the stone. The circle was clear; the picture
+ * was not, and the bay's doorway is the one place in the game a player is
+ * looking closely enough to see it.
+ *
+ * THE PARKED BLOCKERS ARE STILL DISCS (`vehicleFootprint`) and that is not a
+ * drift: `CAR.hull` is the smallest rectangle holding them, so they are strictly
+ * inside the ground this pass claims. A driving car and the furniture it becomes
+ * the moment its driver steps out have to occupy the same ground or parking
+ * would jump the body a foot sideways — and a chain that cannot reach past where
+ * the body itself just stopped never can.
  *
  * THE LOT IS FINITE TOO. Nothing pins an obstacle along the map's outer edge —
  * the hero is held in by an explicit clamp in his own step (step/player.ts) —
@@ -1485,20 +1542,110 @@ function driveCar(
  * still to run.
  */
 function collideCarBody(state: GameState, car: CarVehicle): void {
-  const r = CAR.footprint.radius;
   const leaving = state.departure !== null;
-  for (const along of CAR.footprint.offsets) {
-    const point = alongBody(car.pos, along);
+  const bearing = billboardBearing();
+  const { length, depth, boxes } = CAR.hull;
+  // The chain, laid end to end down the picture: `boxes` pieces that tile the
+  // whole 48, each half a piece long and the body's own half-depth across.
+  const half = { x: length / (boxes * 2), y: depth / 2 };
+  const step = length / boxes;
+  const first = (step - length) / 2;
+  // The lot's own edge stops the BUMPER rather than the centre, so the clamp is
+  // the piece's own half-extents projected back onto the world's axes.
+  const edgeX =
+    Math.abs(half.x * Math.cos(bearing)) + Math.abs(half.y * Math.sin(bearing));
+  const edgeY =
+    Math.abs(half.x * Math.sin(bearing)) + Math.abs(half.y * Math.cos(bearing));
+  for (let i = 0; i < boxes; i++) {
+    const point = alongBody(car.pos, first + i * step);
     const px = point.x;
     const py = point.y;
-    resolveObstacles(state, point, r);
+    resolveObstacleBox(state, point, half, bearing);
     if (!leaving) {
-      point.x = clamp(point.x, r, state.level.width - r);
-      point.y = clamp(point.y, r, state.level.height - r);
+      point.x = clamp(point.x, edgeX, state.level.width - edgeX);
+      point.y = clamp(point.y, edgeY, state.level.height - edgeY);
     }
     car.pos.x += point.x - px;
     car.pos.y += point.y - py;
   }
+  // …AND A ROLL-UP THAT IS STILL ROLLING IS STILL IN THE WAY. Its obstacle
+  // chain went the moment the opener fired (the slats are drawn by the
+  // animation from there on), which is right for a man on foot — he ducks under
+  // — and wrong for a wagon: from the bay's top end the bumper reaches the
+  // threshold a good quarter-second before the last of the travel is done, so
+  // the car drove out through slats that were still a third of the way down.
+  // Held at the door's own line until the chain is up, which is what a driver
+  // waiting for his own garage door looks like.
+  for (const door of state.doors) {
+    if (!door.rollingMs || !door.from || !door.to) continue;
+    for (let i = 0; i < boxes; i++) {
+      const point = alongBody(car.pos, first + i * step);
+      const px = point.x;
+      const py = point.y;
+      resolveSegmentBox(
+        point,
+        half,
+        bearing,
+        door.from,
+        door.to,
+        door.radius ?? 8,
+      );
+      car.pos.x += point.x - px;
+      car.pos.y += point.y - py;
+    }
+  }
+}
+
+/**
+ * Push one piece of the car's hull off a door's own line — the shut chain a
+ * roll-up still has in the air, read straight off its two ends rather than off
+ * obstacles that are already gone.
+ *
+ * The chain is a capsule (a segment of `radius`), so the escape is the same one
+ * `resolveObstacleBox` makes against a round obstacle, measured to the closest
+ * point on the segment.
+ */
+function resolveSegmentBox(
+  pos: Vec2,
+  half: Vec2,
+  bearing: number,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+): void {
+  const ax = to.x - from.x;
+  const ay = to.y - from.y;
+  const len2 = ax * ax + ay * ay;
+  const t =
+    len2 === 0
+      ? 0
+      : clamp(((pos.x - from.x) * ax + (pos.y - from.y) * ay) / len2, 0, 1);
+  const near = { x: from.x + ax * t, y: from.y + ay * t };
+  const cos = Math.cos(bearing);
+  const sin = Math.sin(bearing);
+  const dx = near.x - pos.x;
+  const dy = near.y - pos.y;
+  const lx = dx * cos + dy * sin;
+  const ly = -dx * sin + dy * cos;
+  const ox = lx - clamp(lx, -half.x, half.x);
+  const oy = ly - clamp(ly, -half.y, half.y);
+  const d2 = ox * ox + oy * oy;
+  let mx: number;
+  let my: number;
+  if (d2 > 0) {
+    if (d2 >= radius * radius) return;
+    const d = Math.sqrt(d2);
+    const push = (radius - d) / d;
+    mx = -ox * push;
+    my = -oy * push;
+  } else {
+    const penX = half.x + radius - Math.abs(lx);
+    const penY = half.y + radius - Math.abs(ly);
+    mx = penX <= penY ? (lx < 0 ? penX : -penX) : 0;
+    my = penX <= penY ? 0 : ly < 0 ? penY : -penY;
+  }
+  pos.x += mx * cos - my * sin;
+  pos.y += mx * sin + my * cos;
 }
 
 /**

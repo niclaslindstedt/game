@@ -261,14 +261,21 @@ objects:
     # daylight — which is exactly how the first pass of this came out, and it
     # read as the brightness turned down rather than as night.
     #
-    # AND BOLTED A COURSE HIGHER UP THE WALL — `lift`, one tile of it. The pair
-    # is placed at the chain's own ends, which is right on the floor plan and
-    # wrong in the picture: a wall is drawn as an EXTRUDED FACE and a fitting
-    # is painted from its foot upward, so the lamp above the opening sat on the
-    # doorway's very last block with the roll-up door crossing it. Raising the
-    # FITTINGS (never their pools, and never `pos` — that would walk the lower
-    # lamp into the opening) puts both up on plain brickwork, which is also
-    # where a barn light is actually screwed.
+    # AND BOLTED A COURSE CLEAR OF THE OPENING — `lift`, one tile of it. The
+    # pair is placed at the chain's own ends, which is right on the floor plan
+    # and wrong in the picture: a wall is drawn as an EXTRUDED FACE and a
+    # fitting is painted from its foot upward, so a lamp at the chain's end sat
+    # on the doorway's very last block with the roll-up door crossing it.
+    #
+    # THIS DOORWAY RUNS DOWN THE PICTURE, so the carve spends the lift as a
+    # symmetric step ALONG the wall rather than as a height (see
+    # `MapObject.lamps.lift`) — on this axis the two are the same screen move,
+    # and spent as a height it put one lamp 52 px above the opening and the
+    # other 20 px below its centre, hanging in the hole over the car. Spent
+    # outward, the pair sits at 158 and 262 with the opening's centre at 210:
+    # evenly flanking the roll-up, both on plain brickwork, each pool on the
+    # pavement under its own fitting, which is where a barn light and its light
+    # actually are.
     lamps:
       sprite: wall_lamp
       lift: 16
@@ -289,6 +296,15 @@ objects:
     type: landmark
     sprite: car_doors_0
     at: spawn
+    # …PARKED ON THE DOORWAY'S OWN LINE, which the hero's landing is not: the
+    # roll-up is punched at y 178–242 and he lands at 198, so a wagon left on his
+    # spot pulled out 12 px north of centre and spent the whole drive-out with
+    # its roof inside the north jamb's stones. The car is 48 px long and 26 tall
+    # and the hole is 64 wide — there is room to go through the middle of it, and
+    # nothing but this was stopping it. Authored, like every other offset on this
+    # map, because the carve is PINNED (`carveSeed`): the doorway lands on the
+    # same 64 px every visit forever.
+    offset: { x: 0, y: 12 }
   - id: rocket
     type: landmark
     sprite: starship

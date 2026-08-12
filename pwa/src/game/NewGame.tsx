@@ -132,6 +132,12 @@ function PixelNameInput({
         // text); iOS autocorrect/predictive text stays ON so a tapped
         // suggestion fills the field.
         spellcheck={false}
+        // THE ACTION KEY MINTS THE HERO. On a phone held sideways the CREATE
+        // button can be under the keyboard (and under whatever helper bar the
+        // browser stacks above it), so the one control that is always reachable
+        // has to be the one on the keyboard itself — `onKeyDown` below already
+        // answers Enter, and this is what makes the key SAY so.
+        enterKeyHint="done"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onChange={(e) => {

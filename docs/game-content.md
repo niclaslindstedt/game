@@ -132,6 +132,14 @@ until the venue is over. The gold "you can get in this" mark over the roof, the
 tap that boards it and `enterCar` itself all ask it, so the mark is up exactly
 when the press works.
 
+**And boarding presses the opener.** The roll-up has real travel to do
+(`DOORS.rollUpMs`) and a bay is short: tripped only when the wagon set off, the
+door was still a third of the way down when the bumper reached the threshold. So
+climbing in rolls it up — where a man with a remote on his sun visor actually
+presses it — and until the slats are up they are still in the way of the car
+(`DoorState.rollingMs`), which is a driver waiting for his own garage door rather
+than one driving through it. A man on foot still ducks under.
+
 **Boarding is the departure, not the start of a lap.** A hub's car is DRIVEN
 out — there is a roll-up to open, a driveway to cross and a road at the end of it
 (`LevelDef.driveOut`) — while a car park has none of that, and "drive around a

@@ -219,7 +219,11 @@ arc, because it genuinely is in the air.
 The second is THE GARAGE DOOR ROLLING UP, and it is in that pass from its first
 frame to its last, because the question is not "has it landed" but "is this part
 of the world picture". The retracting slats are an OBSTACLE the engine has
-already dropped, redrawn for the length of the roll-up — so drawn over the
+already dropped, redrawn for the length of the roll-up — `GARAGE_DOOR_MS`, which
+is the ENGINE'S own `DOORS.rollUpMs` rather than a second copy of it, because the
+simulation holds a driven car at the threshold for exactly as long as the picture
+shows slats in the way (`DoorState.rollingMs`) and a door the two disagreed about
+would be a car stopped by nothing — so drawn over the
 finished frame they sat above the night wash and above every lamp pool cut out
 of it (`drawNight`, below), and the door CHANGED COLOUR on the tick it started
 moving: a chain hanging in a lit garage went from that light to the sprite's own
@@ -1191,6 +1195,20 @@ the screen laid the blockers square across the drawn body, and a yaw stood even 
 PARKED car's chain off its own picture at the yaw's own angle. Both read the same
 way from inside the game — the hero walks through the drawn bonnet and is stopped
 by open floor half a car away, and hops onto a roof that is not there.
+
+**AND A DRIVEN ONE IS SOLVED AS THE RECTANGLE, NOT THE CAPSULE** (`CAR.hull`,
+`resolveObstacleBox` in engine/game/obstacles.ts). The chain of circles holds a
+48-px wagon's ends and its flanks to within a pixel and then rounds its four
+corners off by a whole radius, which nothing in the game is long and flat enough
+to show except a car pressed diagonally into a doorway's jamb: the disc was
+clear of the stone and the painted bonnet was a couple of pixels inside it. So
+the driving pass runs the smallest rectangle that holds those same circles, cut
+into pieces that tile it, laid along the same bearing — and it meets the world as
+squares on BOTH sides, because an obstacle's `radius` is the radius of the
+footprint its sprite is drawn on and a wall stone fills that square out to its
+corners. The parked blockers stay circles (an `Obstacle` box is axis-aligned and
+a picture is not); being strictly inside the driven hull is what keeps getting
+out of a car from jogging it.
 
 **AND THE CAR'S NOSE NEVER MOVES AT ALL.** The body is one side-profile
 assembly and nothing mirrors it, so a car free to turn round drove away still

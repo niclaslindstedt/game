@@ -369,6 +369,10 @@ export type DoorState = {
    * lands its blocks back on exactly the pixels the chain stood on. */
   from?: Vec2;
   to?: Vec2;
+  /** How thick the chain between those two ends is (world px) — each slat's own
+   * radius. Read while the door is still travelling, when there are no
+   * obstacles left to read it off (`DoorState.rollingMs`). */
+  radius?: number;
   /**
    * An APPROACH door (a building's interior doors, the garage door) opens for
    * anybody who walks or drives up to it — no key. Absent = a key door.
@@ -383,6 +387,21 @@ export type DoorState = {
   /** It ROLLS UP rather than sliding aside — the garage door, which is the one
    * that fires `garageDoorOpened` and its chain-drive sound. */
   rollUp?: boolean;
+  /**
+   * A ROLL-UP STILL GOING UP — ms of chain left to travel (`DOORS.rollUpMs`).
+   *
+   * The obstacles are dropped the instant the opener fires, because the slats
+   * the animation puts back are drawn FROM the effect rather than from the
+   * chain (see `openDoor`). That is fine for a man on foot and wrong for a car:
+   * a wagon at the bay's top end covers the last stretch of floor faster than
+   * the door covers the last of its travel, so it drove out through slats that
+   * were still a third of the way down. This is what the car is held at until
+   * they are up (`collideCarBody`) — a driver waits for his own garage door.
+   *
+   * Absent (or 0) on a door that is not rolling: every other door in the game,
+   * and this one for every tick after the chain has cleared.
+   */
+  rollingMs?: number;
   /**
    * A DOOR THAT SHUTS AGAIN — ms of open left before it does.
    *
