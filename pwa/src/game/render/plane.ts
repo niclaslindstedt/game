@@ -29,11 +29,16 @@
 // `isFloorPlaneSprite` / `wallPlaneRise`) and this is the one place that acts on
 // it.
 //
-// …with ONE knob over the top of it: STANDING WALLS (DEVELOPER → VISUALS). The
-// extrusion earns itself under a YAW and is a matter of taste square-on, so a
-// developer may turn it off — and "off" means the third case collapses back into
-// the second, not into the first. `drawnWallRise` and `laidFlat` are the pair
-// that says so, and every pass asks them rather than the catalog.
+// …with ONE knob over the top of it: STANDING WALLS (DEVELOPER → VISUALS), and
+// it ships OFF. The extrusion earns itself under a YAW and is a matter of taste
+// square-on, which is where the shipped camera stands — so the game draws the
+// third case as the SECOND (the same footprint on the same floor, taking the
+// projection whole, exactly as it was drawn before the extrusion existed), and a
+// developer who turns the camera round turns the faces on. Note "collapses into
+// the second, not the first": falling through to the upright branch instead
+// would stand a plan view up, which is the exact mistake `plane:` exists to
+// stop. `drawnWallRise` and `laidFlat` are the pair that says so, and every pass
+// asks them rather than the catalog.
 
 import {
   isDirectionalSprite,
@@ -53,10 +58,11 @@ import type { SpriteImage } from "@ui/lib/atlas.ts";
 const AUTHORED_BEARING = Math.PI / 2;
 
 /**
- * HOW FAR THIS PIECE RISES OFF ITS FOOTPRINT AS DRAWN — the art's own `rise`,
- * or 0 while STANDING WALLS is off (DEVELOPER → VISUALS, `standingWalls` in
- * ./tilt.ts). **Every pass asks THIS, never `wallPlaneRise`**, which is the
- * catalog's answer and does not know about the switch.
+ * HOW FAR THIS PIECE RISES OFF ITS FOOTPRINT AS DRAWN — the art's own `rise`
+ * once STANDING WALLS is on, and 0 otherwise, which is the shipped answer
+ * (DEVELOPER → VISUALS, `standingWalls` in ./tilt.ts). **Every pass asks THIS,
+ * never `wallPlaneRise`**, which is the catalog's answer and does not know about
+ * the switch.
  */
 export function drawnWallRise(name: string): number {
   return standingWalls() ? wallPlaneRise(name) : 0;

@@ -208,14 +208,15 @@ the world projection dialled live (`docs/rendering.md`):
 - **STANDING WALLS** — whether a `plane: wall` piece is EXTRUDED off its
   footprint (the one projected slice stacked a hero's height up the screen, cap
   on top) or lies down with the floor as a plain tile, the way every wall in the
-  game did before the extrusion existed. On is the default and the shipped look.
-  The extrusion earns itself under a YAW, where a flat panel stops reading as a
+  game did before the extrusion existed. **Off is the default and the shipped
+  look**, because the shipped camera is square-on: the floor grid is still
+  rectangles there and the flat panel already read as a wall, so a face hanging a
+  hero's height off every panel is a perspective the rest of the picture is not
+  drawn in. Turn it on with CAMERA YAW, where a flat panel stops reading as a
   wall at all and a lab's partitions become a slightly darker path across the
-  floor; square-on the floor grid is still rectangles and the flat panel already
-  read as a wall, so the faces are a look to have an opinion about. Unlike
-  ANTI-ALIASING it is NOT folded together with the yaw — it means "I do not want
-  the faces", so sweeping the camera round to compare the two looks leaves the
-  answer where the developer put it.
+  floor. Unlike ANTI-ALIASING it is NOT folded together with the yaw — it means
+  "I DO want the faces", so sweeping the camera back to square-on to compare the
+  two looks leaves the answer where the developer put it.
 
 Under the camera sit the three washes laid over the FINISHED frame
 (`pwa/src/game/render/postfx.ts`, and `docs/rendering.md` for the mechanism).

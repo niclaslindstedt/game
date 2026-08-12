@@ -32,7 +32,8 @@ rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
 longer cover their axis-aligned collision boxes still read wrong under a turned
 camera, and a proper isometric look needs that structural art redrawn as iso
 pieces — which is an art project, not a render setting. The WALLS are out of that
-backlog (`plane: wall` extrudes them off their own footprint, below) and so are
+backlog (`plane: wall` can extrude them off their own footprint, below — a knob
+that ships off with the square-on camera and comes on with the yaw) and so are
 the belts (`directional:`); what is left is the front-facing BUILDINGS.
 
 **THE YAW IS ALSO THE ONE THING ON THIS PAGE THE SIMULATION HEARS ABOUT** — the
@@ -137,18 +138,21 @@ slice's, so it is still right at every pitch and yaw.
 cube: a wall a hero tall, which is what it takes to read as one. A piece that is
 deliberately lower than it is deep (a parapet, a kerb) says so with `rise:`.
 
-**AND IT IS A KNOB — STANDING WALLS (DEVELOPER → VISUALS).** The extrusion earns
-itself under a yaw and is a matter of taste square-on, where the floor grid is
-still rectangles and the flat panel already read as a wall, so a developer may
-turn it off — and off means the THIRD case collapses back into the SECOND, not
-into the first: the same footprint on the same floor, taking the projection
-whole, exactly as it was drawn before the extrusion existed. `drawnWallRise` and
-`laidFlat` (render/plane.ts) are the pair that says so, and **every pass asks
-them, never `wallPlaneRise`** — that is the catalog's answer and does not know
-about the switch. It is deliberately NOT folded together with the yaw the way
-`projectionSmoothing` is: the knob means "I do not want the faces", so sweeping
-the camera round to compare the two looks must not switch the answer out from
-under it.
+**AND IT IS A KNOB THAT SHIPS OFF — STANDING WALLS (DEVELOPER → VISUALS).** The
+extrusion earns itself under a yaw and is a matter of taste square-on, where the
+floor grid is still rectangles and the flat panel already read as a wall — and
+square-on is where the SHIPPED camera stands (yaw ships at 0, above). So the
+game draws the THIRD case as the SECOND, not as the first: the same footprint on
+the same floor, taking the projection whole, exactly as it was drawn before the
+extrusion existed, with no face hanging a hero's height off every panel in a
+picture nothing else is drawn in perspective for. A developer who turns the yaw
+up turns the faces on beside it. `drawnWallRise` and `laidFlat`
+(render/plane.ts) are the pair that says so, and **every pass asks them, never
+`wallPlaneRise`** — that is the catalog's answer and does not know about the
+switch. It is deliberately NOT folded together with the yaw the way
+`projectionSmoothing` is: the knob means "I DO want the faces", so sweeping the
+camera back to square-on to compare the two looks must not switch the answer out
+from under it.
 
 Three consequences worth carrying. **The walls are drawn LAST in the obstacle pass
 and back-to-front**, by PROJECTED y — the axis that actually runs into the screen
