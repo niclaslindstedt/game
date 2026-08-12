@@ -111,6 +111,41 @@ describe("the opening monologue", () => {
   });
 });
 
+// A VENUE WITH NOTHING TO SAY. `MissionDef.intro` is optional, and the shipped
+// HUB is why: the hero walks out of the prelude's living room having just said
+// what he is going to do, and the next thing he stands in is his own garage. A
+// run with no page to turn must land on the level-name card — the `intro` phase
+// would hold it behind a dialogue box with no text and no way past it.
+describe("a level with no opening monologue", () => {
+  it("opens on the level-name card instead of an empty box", () => {
+    const state = createGame(SEED, "test_quiet_level");
+    expect(introPages(state)).toEqual([]);
+    expect(state.phase).toBe("title");
+    dismissIntro(state);
+    expect(state.phase).toBe("playing");
+  });
+
+  it("hands a drained prelude straight to the card", () => {
+    // The garage's own path: the scene plays, and there is no briefing behind
+    // it for the chain to hand the stage to.
+    const state = createGame(SEED, "test_quiet_prelude_level");
+    expect(state.phase).toBe("cutscene");
+    skipStoryOpening(state);
+    expect(state.phase).toBe("title");
+  });
+
+  it("lands the same run built from session parameters", () => {
+    // The app and an arriving client both build a run this way, so a card the
+    // one-argument path lands on and the other does not is a desync.
+    const state = createRunFromParams({
+      seed: SEED,
+      levelId: "test_quiet_level",
+      difficulty: "medium",
+    });
+    expect(state.phase).toBe("title");
+  });
+});
+
 describe("markThoughtsSeen", () => {
   it("seeds unseen ids and dedupes against the ledger", () => {
     const state = createGame(SEED, "test_level");

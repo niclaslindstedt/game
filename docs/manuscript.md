@@ -114,16 +114,26 @@ closing caption names it, per rung, and gets thinner as the rung gets harder.)_
 - **NIGHTMARE** (BRASS KNUCKLES): THE KNUCKLES. THEY'LL HAVE TO DO.
 - **JESUS CHRIST!** (A STICK): A STICK. GOD HELP US BOTH.
 
+_(Then the plan, spoken on every rung — the last line said in the house.)_
+
+**ME:** I'LL TAKE THE CAR AND GET HER.
+
+_(Out the door she left by, armed. The game opens on him standing in the
+garage.)_
+
 ---
 
 ## Home — THE GARAGE (hub)
 
 ### Opening monologue (hero, black screen)
 
-_He said what he made of the drive at the wheel, coming up his own road; out of
-the car there is nothing left to add and this is the whole of it._
-
-1. HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
+_None — the ONE venue in the game with no opening monologue
+(`content/levels/garage.yaml` ships no `intro:`, which is why the field is
+optional at all). He does not arrive here: he walks out of his own living room
+having just said what he is going to do, and the next thing he stands in is his
+own bay. Coming HOME off a leg he has already said what he made of the drive, at
+the wheel, coming up his own road — so there is nothing left to say on the
+doorstep either way._
 
 ### Pinned beats
 
@@ -1719,7 +1729,7 @@ changes with it, in the same commit.
 | Story/dialogue element                              | Canonical data file                                                                                                            |
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Cutscenes (captions, `say` beats)                   | `content/cutscenes/<id>.yaml` (the prelude's per-difficulty weapons are its `variants:`)                                       |
-| Per-level opening monologues + epilogues            | `content/levels/<id>.yaml` (`intro` / `outro`)                                                                                 |
+| Per-level opening monologues + epilogues            | `content/levels/<id>.yaml` (`intro` / `outro`, both OPTIONAL — the hub ships neither)                                          |
 | Elite/boss `dialogue`, `lastWords`, `deathBark`     | `content/enemies/<biome>/<id>.yaml`                                                                                            |
 | A boss's set-piece BARK                             | `content/enemies/<biome>/<id>.yaml` → `mechanics.abilities[].bark`                                                             |
 | The hero's pinned beats and the opening strike      | `content/thoughts.yaml`, pinned from `firstKillThoughts` / `firstSightThoughts` / `placeThoughts` / `openingStrike` on a level |

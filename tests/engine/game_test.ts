@@ -62,7 +62,7 @@ describe("createGame", () => {
     const state = createGame(SEED, "test_level");
     expect(state.phase).toBe("intro");
     expect(state.introPage).toBe(0);
-    expect(MOON.intro.length).toBeGreaterThan(0);
+    expect(MOON.intro?.length ?? 0).toBeGreaterThan(0);
 
     step(state, steerTo(0, 0), DT);
     expect(state.stats.timeMs).toBe(0); // frozen during the intro
@@ -75,7 +75,7 @@ describe("createGame", () => {
 
   it("pages the intro monologue, then flashes the title before the drop", () => {
     const state = createGame(SEED, "test_level");
-    const pages = MOON.intro.length;
+    const pages = MOON.intro?.length ?? 0;
     // Turning past every page lands on the title card, not straight into play.
     for (let i = 0; i < pages - 1; i++) {
       advanceIntro(state);

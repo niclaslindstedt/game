@@ -77,6 +77,7 @@ import {
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import { LAIR_TRIGGER } from "./lairs.ts";
+import { openingPhase } from "./opening.ts";
 import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
 import { anyZoneContains } from "./zones.ts";
 import type {
@@ -971,6 +972,17 @@ export function createGame(
   // draws come off a stream of its own, so a level that gains a car park full
   // of people does not move a single roll of this run's own.
   openArrivals(state, seed);
+
+  // …and only now can the opening be settled, because a venue may ship no
+  // monologue at all and the answer is read off the CARVE (`runLevelDef`),
+  // which the state above did not have yet. A run with nothing to say lands on
+  // the level-name card instead of an empty dialogue box. A prelude settles it
+  // for itself when its chain drains (`advanceCutsceneChain`), and a run built
+  // from session parameters settles it once more when the arrival line has been
+  // stamped on it (`createRunFromParams`).
+  if (state.phase === "intro" || state.phase === "title") {
+    state.phase = openingPhase(state);
+  }
 
   return state;
 }

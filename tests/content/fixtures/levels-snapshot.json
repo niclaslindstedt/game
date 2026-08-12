@@ -1474,11 +1474,6 @@
       "name": "THE GARAGE",
       "prelude": "prelude",
       "music": "bench_light",
-      "intro": [
-        [
-          "HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT."
-        ]
-      ],
       "gravity": 800,
       "revealed": true,
       "biome": "goodco",

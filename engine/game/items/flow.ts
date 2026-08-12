@@ -7,11 +7,19 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
+import { introPages } from "../opening.ts";
 import { heroInPlay } from "../party.ts";
 import { isPartyRun } from "../seating.ts";
 import { advanceCutsceneChain } from "../story.ts";
 import type { GameState, Player } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
+
+// THE OPENING MONOLOGUE ITSELF is assembled a layer up
+// (`engine/game/opening.ts`), because `story.ts` — which this module imports —
+// has to ask the same question when a prelude chain drains, and answering it
+// here would make the two a cycle. Re-exported because every reader has always
+// found it beside the run-flow verbs it is paged with.
+export { introPages };
 
 // ---- Screen toggles (called by the app's UI) ----------------------------------
 
@@ -86,25 +94,6 @@ export function openLevelupAfterDing(state: GameState): void {
 export function closeLevelup(player: Player): void {
   if (player.screen !== "levelup") return;
   delete player.screen;
-}
-
-/**
- * THE OPENING MONOLOGUE THIS RUN PLAYS — the level's own, and nothing in front
- * of it.
- *
- * NOTHING A TRIP LEFT HIM WITH ARRIVES HERE, and that is a decision rather than
- * an omission. The DRIVE reads the whole journey and says what it made of it AT
- * THE WHEEL, folded into the front of the run-in's own line ("ROUGH RIDE.
- * THERE'S GOODCO." — `arrivalLine`, pwa/src/game/drive-screen/voice.ts), so the
- * road keeps its own words and the venue on the far side of the black opens on
- * the building rather than on the suspension. A carried line used to be a
- * session parameter and the first page of this list; it left with the beat.
- *
- * Everything that walks the intro reads it through here, which is what a
- * carried page would go back to needing.
- */
-export function introPages(state: GameState): readonly (readonly string[])[] {
-  return runLevelDef(state).intro;
 }
 
 /**

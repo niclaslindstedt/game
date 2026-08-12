@@ -159,8 +159,15 @@ your level's difficulty without learning your private scale.
 ## `levels/<id>.yaml` — a MISSION (a venue minus its floor)
 
 The file stem must equal the level's `id`. Required fields: `id`, `index`,
-`name`, `foes`, `gravity`, `biome`, `tiles`, `intro`, `objective`,
-`decorClearance`, `loot`, and exactly one of `campaign: true` / `secret: true`.
+`name`, `foes`, `gravity`, `biome`, `tiles`, `objective`, `decorClearance`,
+`loot`, and exactly one of `campaign: true` / `secret: true`.
+
+`intro` — the hero's opening monologue — is **optional**, because a venue can be
+somewhere he does not arrive at. Omit it and the run lands straight on the
+level-name card; the shipped hub does exactly that, since the prelude has just
+walked him out of his own living room into his own garage. What you may not
+write is `intro: []`: an empty monologue reads as one somebody meant to finish,
+and it is a compile error rather than a silent card.
 
 **A mission is not a map.** Where the walls run, what stands on the floor, where
 the horde knots and where the boss is are carved fresh every run from

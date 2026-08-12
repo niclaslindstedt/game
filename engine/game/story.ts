@@ -30,6 +30,7 @@ import { knockEnemyBack } from "./knockback.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
+import { openingPhase } from "./opening.ts";
 import { anyHeroWithin, heroInPlay, partyLevel } from "./party.ts";
 import type { DialogueState, Enemy, GameState, Player } from "./types/index.ts";
 
@@ -53,7 +54,9 @@ export {
  * step loop and the player's tap land here so the chain behaves the same
  * whether a scene runs out or is clicked through. A DIALOGUE-muted run skips
  * the intro monologue too, dropping straight to the level-name card (the same
- * `title` phase a SKIP lands on) — see `create.ts` for the muted opening.
+ * `title` phase a SKIP lands on) — and so does a venue that ships no monologue
+ * at all, which is the PRELUDE's own case: it walks the hero out of his living
+ * room and the hub he lands in has nothing left to introduce (`openingPhase`).
  */
 export function advanceCutsceneChain(state: GameState): void {
   const next = state.cutsceneQueue.shift();
@@ -72,7 +75,7 @@ export function advanceCutsceneChain(state: GameState): void {
       !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
     return;
   }
-  state.phase = state.dialogueMuted ? "title" : "intro";
+  state.phase = openingPhase(state);
 }
 
 /**

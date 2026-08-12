@@ -696,7 +696,19 @@ describe("level catalog integrity", () => {
     for (const l of levels.filter((l) => secret.has(l.id))) {
       expect(campaign.map((c) => c.index)).toContain(l.index);
     }
-    for (const level of levels) expect(level.intro.length).toBeGreaterThan(0);
+    // Every venue the hero ARRIVES at owes an opening monologue. THE HUB is the
+    // one that does not, and is the reason the field is optional: he walks out
+    // of the prelude's living room having just said what he is going to do, and
+    // the next thing he stands in is his own garage. A venue that ships the
+    // field may not ship it EMPTY — that reads as a monologue somebody meant to
+    // write (the level schema refuses it too).
+    for (const level of levels) {
+      if (level.id === "garage") {
+        expect(level.intro).toBeUndefined();
+        continue;
+      }
+      expect(level.intro?.length ?? 0).toBeGreaterThan(0);
+    }
   });
 
   it("resolves every id referenced by spawns, waves, and loot", () => {
