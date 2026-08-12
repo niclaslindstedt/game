@@ -123,17 +123,6 @@ export type RunParams = {
    * cannot put a rung on the car that has no sprite behind it.
    */
   car?: unknown;
-  /**
-   * A LINE THE HERO ARRIVED STILL THINKING — the id of a thought spoken as the
-   * first page of this level's opening monologue.
-   *
-   * Today it is the DRIVE's verdict on the trip in (`driveVerdict`): he gets
-   * out of the car and says what he made of the journey, and the level's own
-   * briefing follows. A session parameter for the same reason `startInCar` is —
-   * it is settled before the run's first tick, so the app, the session and an
-   * arriving client all have to build it from the same place.
-   */
-  arrivalThought?: string;
   /** Level ids the hero has already cleared on this difficulty — the engine
    * gates drops on them (the bunker key stays latent until Boot Hill falls). */
   clearedLevels?: readonly string[];
@@ -261,13 +250,6 @@ export function createRunFromParams(params: RunParams): GameState {
     markThoughtsSeen(state, params.seenThoughts);
   }
   if (params.keepsakes?.length) state.keepsakes = [...params.keepsakes];
-  // AT THE WHEEL, if the trip in was a drive. `enterCar` is the same verb the
-  // tap uses, so the seat, the lifted blockers, the running engine and the
-  // `carStarted` cue are all exactly what boarding normally does — the hero has
-  // simply not let go of it since GOODCO.
-  // WHAT HE ARRIVED STILL THINKING — spoken as the first page of the level's
-  // opening monologue (`introPages`).
-  if (params.arrivalThought) state.arrivalThought = params.arrivalThought;
   // WHAT THE ROAD LEFT ON THE WAGON, put back on the machine this level minted
   // for it (`RunParams.car`) — before anybody gets into it, so a car boarded on
   // the first tick is already the car that arrived.
@@ -277,6 +259,10 @@ export function createRunFromParams(params: RunParams): GameState {
       if (vehicle.kind === "car") applyCarDamage(vehicle, damage);
     }
   }
+  // AT THE WHEEL, if the trip in was a drive. `enterCar` is the same verb the
+  // tap uses, so the seat, the lifted blockers, the running engine and the
+  // `carStarted` cue are all exactly what boarding normally does — the hero has
+  // simply not let go of it since GOODCO.
   if (params.startInCar) {
     const hero = state.players[0];
     const car = state.vehicles.find((v) => v.kind === "car");

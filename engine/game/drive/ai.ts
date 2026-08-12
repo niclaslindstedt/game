@@ -45,7 +45,7 @@ import { clamp } from "@game/lib/vec.ts";
 
 import { difficultyDef } from "../defs/difficulties.ts";
 import { DRIVE } from "./config.ts";
-import { laneAt, laneCenter, laneStraddle, roadEdges } from "./crowd.ts";
+import { laneAt, laneCenter, laneStraddle, roadBandHalfAt } from "./crowd.ts";
 import { vehicleDef } from "./fleet.ts";
 import { laneRunsWithHero } from "./traffic.ts";
 import type { DriveState, DriveTraffic } from "./types.ts";
@@ -74,7 +74,10 @@ export function indexTraffic(state: DriveState): TrafficIndex {
     () => [],
   );
   for (const other of state.traffic) {
-    if (vehicleDef(other.variant).pavement) continue;
+    // A FACT ABOUT THIS VEHICLE, NOT ABOUT ITS MODEL (`DriveTraffic.footway`):
+    // the outskirts put a CYCLIST on the one pavement out there, and a cyclist's
+    // def rides the road.
+    if (other.footway) continue;
     lanes[laneAt(other.pos.y)]!.push(other);
   }
   for (const lane of lanes) lane.sort((a, b) => a.pos.x - b.pos.x);
@@ -219,10 +222,13 @@ function dodge(
   index: TrafficIndex,
   other: DriveTraffic,
   def: { radiusPx: number },
+  /** The road at THIS driver's own point on the leg — passed in rather than
+   * asked for again, because the caller has already worked it out and this runs
+   * once per vehicle per tick. */
+  edges: { top: number; bottom: number },
 ): number {
   const { dodgeFromPx, dodgePx } = DRIVE.drivers;
   const dir = heading(other);
-  const edges = roadEdges();
   // Which way there IS to lean: away from the nearer kerb, so a car in the
   // gutter lane pulls IN toward the middle of the road, which is the only
   // direction that helps.
@@ -259,7 +265,8 @@ function dodge(
     }
   }
   const lean = away * worst;
-  // …and never off the tarmac. A car that dodged into the verge would have
+  // …and never off the tarmac — the tarmac AT THIS POINT, which on the approach
+  // is two lanes rather than four. A car that dodged into the verge would have
   // solved a collision by leaving the road.
   const target = clamp(other.pos.y + lean, edges.top, edges.bottom);
   return target - other.pos.y;
@@ -430,9 +437,27 @@ export function steerTraffic(
     Math.sin(other.phase + other.pos.x * 0.01 * cfg.wobbleHz) *
     cfg.wobblePx *
     authority;
-  const edges = roadEdges();
+  // …HELD TO THE ROAD THAT IS ACTUALLY THERE, which out on the approach is not
+  // the town's. The lanes open half a gap BEFORE the gate (`resetTrafficMarks`)
+  // and the ONCOMING pair then drives back out of the widening, so a driver was
+  // aiming at a lane centre the outskirts do not have — a car tracking a white
+  // line across the grass beside the opening's empty two-lane road. Measured at
+  // this driver's own point on the leg (`roadBandHalfAt`), the outer lane is
+  // squeezed in as the road narrows and slides back out as it opens, which is
+  // what a lane merging away looks like.
+  //
+  // THE TARMAC, NOT THE TARMAC PLUS ITS GUTTER (`roadEdgesAt`): the gutter is
+  // where a SHOVE leaves a car, never where one steers. Out of town that ten px
+  // is grass, and in town this binds on nobody — every aim below is a lane
+  // centre (±39 at the outermost) plus a wobble, and a dodge only ever leans
+  // AWAY from the nearer kerb.
+  const half = roadBandHalfAt(
+    (other.pos.x - state.car.home.x) * state.params.direction,
+    state.params,
+  );
+  const edges = { top: -half, bottom: half };
   const aim = clamp(
-    laneCenter(other.lane) + dodge(state, index, other, def) + wobble,
+    laneCenter(other.lane) + dodge(state, index, other, def, edges) + wobble,
     edges.top + def.radiusPx * 0.5,
     edges.bottom - def.radiusPx * 0.5,
   );

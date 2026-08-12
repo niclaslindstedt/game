@@ -65,14 +65,22 @@ prints the name.
 Movie night. Ada announces they are out of chips and soda, takes the jacket he
 fixed the zipper on, and steps out for five minutes. Two hours later the man who
 never gets up gets up, leaps for the weapon mounted over the couch — which one
-depends on the difficulty, from grandpa's sawed-off down to a stick — and walks
-out the door she left by, carrying it. It is the weapon he starts the run with.
+depends on the difficulty, from grandpa's sawed-off down to a stick — weighs it
+in one line, and says the only thing he will say about the plan: he is taking
+the car and getting her. Then he walks out the door she left by, carrying it. It
+is the weapon he starts the run with, and it is the last thing said in the
+house — the game opens on him standing in his own garage, with no introduction,
+because he told us where he was going.
 
 ## Home — THE GARAGE (hub)
 
-The campaign breathes here between chapters. The lawn is grass except for the
-dead black patch the ship stands on, the bench is a mess, and the ship is one
-part short. Nothing hunts him here. **THE DEALER** works the road at the edge of
+The campaign breathes here between chapters. **Nobody introduces it** — it is
+the one venue in the game the hero says nothing on arriving at, because it is
+his, and the prelude has just had him say what he came out here to do. The lawn
+is grass except for the dead black patch the ship stands on, the bench is a
+mess, and the ship is one part short. What he does say, standing in the bay for
+the first time, is about Ada: her jacket is answering from GOODCO and the car is
+right there. Nothing hunts him here. **THE DEALER** works the road at the edge of
 the lot, hood up, buying what weighs the hero down and asking for no name — and
 he is the first person the car takes, on the hero's own drive, with nothing said
 about it by anybody. There is always another dealer on that pavement next time.
@@ -126,20 +134,20 @@ along turns and shouts about it — OH MY GOD, HE HIT THAT LADY, THEY WERE GLUED
 DOWN, NOBODY WALKS AWAY FROM THAT, THE TANK'S GONE, HE'S NOT EVEN SLOWING DOWN.
 And when the biggest of those goes up, what they shout about is not the fire but
 the front off it: their ears, the windows, the street lights going out one after
-another all the way down the road. It is
-the one voice on this road that is about him, and it never becomes anything: no
-chase, no police, nothing waiting at GOODCO. He passes the person shouting a
-quarter of a second later and is at the far end ninety seconds after that,
-remarking on the suspension. **The town is not indifferent to what he does — he
-is indifferent to the town,** and until somebody was allowed to shout, the road
-could not tell those two apart.
+another all the way down the road. It is the one voice on this road that is about
+him, and it never becomes anything: no chase, no police, nothing waiting at
+GOODCO. He passes the person shouting a quarter of a second later and is through
+GOODCO's fence a minute after that, reviewing the ride. **The town is not
+indifferent to what he does — he is indifferent to the town,** and until somebody
+was allowed to shout, the road could not tell those two apart.
 
-**What he says afterwards is about the car.** Standing beside the wagon at the
-far end he delivers a verdict on the trip, and it is always the suspension, the
-clock, the other drivers or the council's lamp standards. Never the people. It
-is the FIRST thing he says at that end — before he has looked up at the
-building, before a word about the job he came to do — because the drive is
-still in his hands and the forty people he went through are already gone.
+**What he says about it is about the car.** Coming in past the fence with the
+place growing in the windscreen, he reviews the whole trip in a couple of words
+and then names what he is looking at — ROUGH RIDE. THERE'S GOODCO. The review is
+always the suspension, the clock, the other drivers or the council's lamp
+standards. Never the people. It is said at the wheel with the last of them still
+on the road behind him, and it is the last thing either leg says: he gets out of
+the car at the far end with nothing left to add.
 **The car keeps the evidence and he does not look at it.** Whatever the road did
 to it comes onto the staff lot with him — the panels bent where he hit somebody,
 the paint wearing what landed on it — and it is still on the wagon when he walks

@@ -16,10 +16,12 @@
 // rather than a mirror nobody can read.
 //
 // …AND A THIRD THAT IS NOT ON THE ROAD AT ALL. The delivery trade rides the
-// PAVEMENT (`DriveVehicleDef.pavement`), which is the one change here that
-// alters the shape of the minigame rather than its furniture: the gutter used to
-// be the safe line, and now it has mopeds on it, weaving, cutting in, and
-// threading the same crowd the hero is trying to.
+// PAVEMENT (`DriveTraffic.footway`), which is the one change here that alters
+// the shape of the minigame rather than its furniture: the gutter used to be the
+// safe line, and now it has mopeds on it, weaving, cutting in, and threading the
+// same crowd the hero is trying to. The flag is the VEHICLE's rather than its
+// model's, because the OUTSKIRTS cast their one footway from their own roster
+// (`OUTSKIRT_IDS`) and a cyclist is in it while riding the road in town.
 //
 // WHAT A HIT DOES DEPENDS ON WHAT IT HIT, and that is the other half of this
 // file. A CAR is shunted: slewed out of its lane, scrubbed, and left to settle —
@@ -47,6 +49,7 @@ import {
   laneAt,
   laneCenter,
   roadBandEdges,
+  roadBandHalfAt,
   roadEdges,
 } from "./crowd.ts";
 import { rollOccupants, rollVehicle, variantOf, vehicleDef } from "./fleet.ts";
@@ -147,6 +150,31 @@ export function pavementY(nearSide: boolean): number {
 }
 
 /**
+ * HOW FAR PAST THE KERB A FOOTWAY RIDER MAY REACH at one point along the leg
+ * (world px) — `cutInPx` where the tarmac meets the paving, and NOTHING AT ALL
+ * where it does not.
+ *
+ * THE FOOTWAY DOES NOT MOVE AND THE CARRIAGEWAY DOES. The paving sits at the
+ * full road's own kerb line all the way down the leg, while the approach is the
+ * middle two lanes (`roadBandHalfAt`) — so out of town there is a lane's worth of
+ * verge between the tarmac and the kerb, and that verge is deliberate: it is what
+ * makes the riders out there genuinely out of reach rather than nominally so.
+ *
+ * Measured off the TOWN's kerb line, the cut-in spent that verge instead of the
+ * carriageway: every rider in the opening swung out of the paving, rode the grass
+ * for most of its cycle, and never once reached a road. What a rider cuts into is
+ * the ROAD — so where there is no road against the kerb there is nothing to cut
+ * into, and the weave stays on the paving where it belongs.
+ */
+function cutReachAt(state: DriveState, x: number): number {
+  const travel = (x - state.car.home.x) * state.params.direction;
+  // How much verge is between the tarmac and the paving here — nought through
+  // the town, a lane's worth out on either outskirt, and tapering between.
+  const verge = roadBandEdges().bottom - roadBandHalfAt(travel, state.params);
+  return Math.max(0, DRIVE.pavementRiders.cutInPx - verge);
+}
+
+/**
  * MINT ONE VEHICLE — the single place a `DriveTraffic` is built.
  *
  * It is exported because it is the only honest way to add a car to a road from
@@ -161,6 +189,12 @@ export function createTraffic(
   pos: { x: number; y: number },
   speed: number,
   phase = 0,
+  /** WHETHER THIS ONE IS ON THE FOOTWAY, defaulted to what its model does in
+   * town — so every caller that ever minted a vehicle (the lane spawner, the
+   * exhibits, a dozen suites) goes on getting the right answer, and only the
+   * one place that puts something somewhere its model would not have to say so
+   * (`spawnPavement` out of town). See `DriveTraffic.footway`. */
+  footway = vehicleDef(variant).pavement,
 ): DriveTraffic {
   const def = vehicleDef(variant);
   return {
@@ -201,6 +235,7 @@ export function createTraffic(
     // It is the whole of how much gore this car is worth when it is met.
     occupants: rollOccupants(def, id),
     driverless: false,
+    footway,
     downed: false,
     z: 0,
     vz: 0,
@@ -501,6 +536,13 @@ function spawnPavement(state: DriveState): void {
         { x: state.car.home.x + dir * at, y: pavementY(nearSide) },
         (withHero ? dir : -dir) * pace,
         (at * 0.017) % (Math.PI * 2),
+        // …AND IT IS ON THE FOOTWAY BECAUSE THIS SPAWNER PUT IT THERE, whatever
+        // its model does in town (`DriveTraffic.footway`). The outskirts roster
+        // is a CASTING for the one pavement out there and it holds a CYCLIST,
+        // whose def rides the road — so the flag is stated here rather than
+        // inferred, and the opening's riders weave along the paving instead of
+        // being steered at the centre of a lane the approach does not have.
+        true,
       ),
     );
   }
@@ -721,7 +763,7 @@ export function stepTraffic(state: DriveState, dt: number): void {
     // what `driverless` means. Both fall through to the plain recovery, which is
     // also the right answer for them — a shoved moped gets back on its line and
     // a shoved parked car rolls to a stop (its `cruise` is zero).
-    if (!def.pavement && !other.driverless) {
+    if (!other.footway && !other.driverless) {
       steerTraffic(state, index, other, dt);
     } else if (other.speed !== other.cruise) {
       // …AND THE ONE GETS BACK ON THE PACE. A shove up the road is a real change
@@ -734,7 +776,7 @@ export function stepTraffic(state: DriveState, dt: number): void {
       if (Math.abs(other.cruise - other.speed) < 1) other.speed = other.cruise;
     }
 
-    if (def.pavement) {
+    if (other.footway) {
       // THE FOOTWAY WEAVE. Derived from the rider's own phase and its position
       // rather than drawn for, so it costs the road's stream nothing — and it
       // reaches PAST the kerb (`cutInPx`), because a delivery rider who
@@ -748,12 +790,17 @@ export function stepTraffic(state: DriveState, dt: number): void {
       // out here is that they do not stay on the pavement, and a hazard that
       // only ever occupied the pavement would be one the player learns to
       // ignore in about four seconds.
+      //
+      // …AND IT REACHES INTO THE ROAD, WHICH IS NOT ALWAYS THERE. Out on either
+      // outskirt the carriageway is the middle two lanes and the paving still
+      // sits at the full road's kerb line, so the cut has a lane of verge in
+      // front of it rather than tarmac — `cutReachAt` is what closes it back up,
+      // and without it the whole opening was riders weaving out across the grass.
       const nearSide = other.pos.y > 0;
       const home = pavementY(nearSide);
       const t = other.phase + other.pos.x * 0.01 * pavementRiders.weaveHz;
-      const limit = nearSide
-        ? band.bottom - pavementRiders.cutInPx
-        : band.top + pavementRiders.cutInPx;
+      const reach = cutReachAt(state, other.pos.x);
+      const limit = nearSide ? band.bottom - reach : band.top + reach;
       const cut = Math.max(0, Math.sin(t * 0.37 + other.phase)) ** 3;
       const inward =
         Math.max(0, Math.sin(t)) * pavementRiders.weavePx +
@@ -778,8 +825,8 @@ export function stepTraffic(state: DriveState, dt: number): void {
       // hero is held to the same edges (`stepDrive`); so is everybody else.
       // A pavement rider is held to the WIDER band, because the pavement is
       // where they live.
-      const top = def.pavement ? walk.top : edges.top;
-      const bottom = def.pavement ? walk.bottom : edges.bottom;
+      const top = other.footway ? walk.top : edges.top;
+      const bottom = other.footway ? walk.bottom : edges.bottom;
       other.pos.y = clamp(other.pos.y, top, bottom);
       if (other.pos.y === top || other.pos.y === bottom) other.slew = 0;
     }

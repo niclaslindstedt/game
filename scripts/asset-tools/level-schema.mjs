@@ -26,7 +26,6 @@ export const REQUIRED_FIELDS = [
   "tiles",
   "objective",
   "decorClearance",
-  "intro",
   "loot",
   // HARD-CODED per-difficulty mob levels (easy/medium/hard/nightmare); JESUS
   // stays player-relative. Required on every level — a spawner may override it.
@@ -111,6 +110,23 @@ export function validateLevel(def, refs, description = "", options = {}) {
   // moon's music and reads as a decision rather than a typo.
   if (def.music !== undefined && refs.music && !refs.music.has(def.music)) {
     err(`unknown music "${def.music}" — no such track (see content/music/)`);
+  }
+  // THE OPENING MONOLOGUE IS OPTIONAL — a venue can be somewhere the hero does
+  // not arrive at (the HUB is his own garage, and he walks into it straight off
+  // the prelude). What it may NOT be is present and empty: `intro: []` reads as
+  // a monologue somebody meant to write, and it lands the run on the same
+  // level-name card omitting it does, so the field would be a lie in the file.
+  // Omit it instead.
+  if (def.intro !== undefined) {
+    const pages = def.intro;
+    const isPage = (p) =>
+      Array.isArray(p) && p.every((line) => typeof line === "string");
+    if (!Array.isArray(pages) || pages.length === 0 || !pages.every(isPage)) {
+      err(
+        "intro must be a non-empty list of pages, each a list of lines " +
+          "(omit the field entirely for a venue with no opening monologue)",
+      );
+    }
   }
   // A mission has no map to be off, so a bounds check is only meaningful on a
   // carve — every position on one belongs to the carve that put it there.

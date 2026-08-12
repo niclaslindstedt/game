@@ -813,6 +813,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
   dialogue-only figures the combat/hazard paths all skip — they rush in to
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
+- **`engine/game/opening.ts`** — the run's OPENING MONOLOGUE, and whether there
+  is one at all. `introPages` is the level's own `intro`, and `openingPhase`
+  answers where a run that has not been read yet should stand: the `intro` box
+  when there is a page to turn, the level-name `title` card when there is not. A
+  LEAF on purpose, because two callers ask at two different moments (`create.ts`
+  when a run is built, `story.ts` when a prelude chain drains) and the second
+  lives in a module imported BY the one the pager lives in. **`MissionDef.intro`
+  is optional**: the HUB ships none — the prelude walks the hero out of his own
+  living room saying what he is going to do, and the next thing he stands in is
+  his own garage, which needs no introducing.
 - **`engine/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `muteDialogue` for the overlay's
@@ -1148,11 +1158,12 @@ escort.ts` walks the people an escort errand puts on the field, and
   slow-motion beat is for a moment the player might still act on, and on a road
   laid this thick an unavoidable hit is always a second or two away — dilating
   for one interrupts the DRIVING several times a leg, and the tension here is
-  the wheel and the speed. What he MAKES of the trip is not said on the road at all: `driveVerdict`
-  reads the whole journey and hands the arriving run one line
-  (`RunParams.arrivalThought`), spoken as the FIRST page of the destination's
-  opening monologue — the first thing he says once he is out of the car, with
-  the level's own briefing following it.
+  the wheel and the speed. What he MAKES of the trip is said at the WHEEL, on the
+  run-in: `driveVerdict` reads the whole journey and picks a few words, and
+  `arrivalLine` (drive-screen/voice.ts) prints them onto the front of the place's
+  own line as one breath — "ROUGH RIDE. THERE'S GOODCO." Nothing about the
+  journey crosses the black with him, so the venue on the far side opens on its
+  own briefing.
   WHAT THE CABINET MAKES OF IT is the arrival's own screen: a rally RANKING board
   (`drive-screen/DriveScores.tsx`) — a plaque, a RANK / NAME / TIME rail, five
   rows, the row you just took lit in white, and three letters typed into it from
@@ -1714,6 +1725,53 @@ escort.ts` walks the people an escort errand puts on the field, and
   opener/resume reopens the level-up chooser (`promptPendingPoints`,
   `dismissIntro`, `resumeGame`) so the player places them under their own
   control.
+  **AND IT IS NOT IN THE DESKTOP BUILD.** A copy that plays itself is a cheat in
+  somebody else's session, so both desktop shells withhold the ride — depot
+  build included, with no `GIS_ENABLE_*` to package it back in — and
+  `--autopilot` is a DEVELOPER switch that hands it to one launch at the price
+  of that launch's multiplayer, voice and licence. The engine is untouched by
+  any of it: the shells simply leave `autopilot` out of the capability list they
+  publish, the app's `autopilotAllowed()` reads it (`app/launch-options.ts`) and
+  the pause menu's `autopilotOffered` is the one gate. The read FAILS OPEN, so a
+  browser, the installed PWA and both phone builds — where the ride is a thing
+  players buy — publish no list and keep it. → `docs/multiplayer.md`,
+  `docs/configuration.md`
+
+### The AUTO PILOT mark — what a flown hero can never do again
+
+**`Character.autopiloted` is a one-way latch on the HERO**, and it is set the
+moment a bot takes their controls — the paid ride, the developer BOT VIEW, or a
+`?bot=` playtest launch alike. The app has exactly one place where the wheel
+changes hands (`resolveDrivingBot`, `game-screen/bot-driver.ts`), so the mark is
+set there and a fourth route in is marked without anybody remembering to. It
+never clears: the question is not "is a bot flying right now" — that is
+`state.autopilot.active` — but "was this hero ever flown", and a hero flown to
+level 40 and then hand-played into somebody's co-op game is the case the whole
+rule is about.
+
+It costs the hero two things, and NOTHING else — the campaign, the loot and the
+saved run are all untouched:
+
+- **EVERY SESSION.** The three doors on the MULTIPLAYER screen are locked rows
+  that say why (`title-screen/menus-net.ts`), and `useSessions` refuses the one
+  join that passes no row — a Steam invite accepted from outside the game. The
+  ride is also withheld from a run that already HAS a session
+  (`autopilotOffered`), which is what saves the mark from needing an eviction to
+  go with it: a hero cannot become stained while seated.
+- **THE TROPHY SHELF**, badges and lifetime counters both (above).
+
+It is **sticky across a cloud merge** (`newerCharacter` in `cloud-save.ts` unions
+it rather than taking the winner's value) and it travels with an
+export/import — either would otherwise launder it by simply being the newer
+copy. The mark is on the CHARACTER and never on the account, so a fresh hero
+plays online and earns badges as normal, which is what the locked row tells the
+player to do. The roster shows it as a **BOT FLOWN** badge beside HARDCORE, so
+the refusal two screens away names a hero the player can identify.
+
+Local enforcement only, and deliberately so: a joiner's claim about their own
+hero is a claim, exactly as `--licensed` is. This is a rule the game keeps on
+its own copy, not an anti-cheat.
+
 - **`engine/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
@@ -2040,7 +2098,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   unlock banner, which raises the same shelf over the run and PAUSES it
   (`game-screen/use-run-shelf.ts`, the freeze/thaw discipline the screenshot
   gallery shares) — and
-  `AchievementToast.tsx` the in-run unlock celebration;
+  `AchievementToast.tsx` the in-run unlock celebration.
+  **One hero books NOTHING here**: a character a bot has flown at any point
+  (`Character.autopiloted`) is refused at every entry point of the store — the
+  badges AND the counters, because the counters are account-wide and a stained
+  hero who still moved them would simply be a farm for a clean one minted
+  afterwards. See "The AUTO PILOT mark" below;
   `platform-achievements.ts` / `achievement-sync.ts`
   mirror the curated slice of the catalog into Game Center in native builds —
   see the native section below).

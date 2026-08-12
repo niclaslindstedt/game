@@ -927,6 +927,11 @@
         },
         {
           "actor": "hero",
+          "kind": "say",
+          "text": ["I'LL TAKE THE CAR AND GET HER."]
+        },
+        {
+          "actor": "hero",
           "kind": "move",
           "speed": 46,
           "to": {
@@ -1292,6 +1297,11 @@
         {
           "kind": "caption",
           "text": ["GRANDPA'S SAWED-OFF. THAT'LL DO IT."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["I'LL TAKE THE CAR AND GET HER."]
         },
         {
           "actor": "hero",
@@ -1663,6 +1673,11 @@
         },
         {
           "actor": "hero",
+          "kind": "say",
+          "text": ["I'LL TAKE THE CAR AND GET HER."]
+        },
+        {
+          "actor": "hero",
           "kind": "move",
           "speed": 46,
           "to": {
@@ -2031,6 +2046,11 @@
         },
         {
           "actor": "hero",
+          "kind": "say",
+          "text": ["I'LL TAKE THE CAR AND GET HER."]
+        },
+        {
+          "actor": "hero",
           "kind": "move",
           "speed": 46,
           "to": {
@@ -2396,6 +2416,11 @@
         {
           "kind": "caption",
           "text": ["THE KNUCKLES. THEY'LL HAVE TO DO."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["I'LL TAKE THE CAR AND GET HER."]
         },
         {
           "actor": "hero",
@@ -3600,19 +3625,19 @@
     },
     "drive_arrive_bumpy": {
       "id": "drive_arrive_bumpy",
-      "pages": [["BIT BUMPY TONIGHT. SHE'S FEELING HER AGE."]],
+      "pages": [["ROUGH RIDE."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_cars": {
       "id": "drive_arrive_cars",
-      "pages": [["NOBODY OUT HERE CAN DRIVE. NOT ONE OF THEM LOOKED."]],
+      "pages": [["NOBODY OUT HERE CAN DRIVE."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_clean": {
       "id": "drive_arrive_clean",
-      "pages": [["CLEAN RUN. NOT A MARK ON HER."]],
+      "pages": [["NOT A MARK ON HER."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
@@ -3630,41 +3655,31 @@
     },
     "drive_arrive_posts": {
       "id": "drive_arrive_posts",
-      "pages": [
-        [
-          "THEY'VE PUT THOSE LAMP STANDARDS FAR TOO CLOSE TO THE KERB. SOMEBODY'S GOING TO HAVE AN ACCIDENT."
-        ]
-      ],
+      "pages": [["LAMPS TOO CLOSE TO THE KERB."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_quick": {
       "id": "drive_arrive_quick",
-      "pages": [["GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME."]],
+      "pages": [["GOOD RUN TONIGHT."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_slow": {
       "id": "drive_arrive_slow",
-      "pages": [
-        ["TOOK MY TIME. NO SENSE ARRIVING SOMEWHERE LIKE THIS IN A HURRY."]
-      ],
+      "pages": [["TOOK MY TIME."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_some": {
       "id": "drive_arrive_some",
-      "pages": [["ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN."]],
+      "pages": [["ROADS ARE ROUGH OUT HERE."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },
     "drive_arrive_wreck": {
       "id": "drive_arrive_wreck",
-      "pages": [
-        [
-          "I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE."
-        ]
-      ],
+      "pages": [["POOR OLD GIRL."]],
       "portrait": "hero",
       "speaker": "{HERO}"
     },

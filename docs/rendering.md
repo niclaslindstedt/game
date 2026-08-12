@@ -195,20 +195,35 @@ vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
 shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
 which is wrong at every pitch but the one it was eyeballed at.
 
-**AND WHAT HAS COME TO REST IS NO LONGER PART OF THAT LAYER —
-`restsOnFloor`.** The effect layer is drawn OVER the finished frame because
-nearly everything in it happens in the air. What is left when those are over is
-not: a corpse lies on the floor for seconds, a burst's gibs and a cleave's halves
-for the ten of GORE LINGER, an epic's remains for the whole level. The field is a
-painter's stack with no depth sort to appeal to (floor → furniture → loot →
-horde → hero), so drawn with the rest of the layer every one of those was painted
-OVER the hero the moment he walked across the spot. They change layers when they
-land: `drawFloorRemains` puts them down inside `drawFrame`, under the loot and the
-bodies and over the floor furniture, while `drawEffects` draws everything else on
-top as before. The moment of the handover is each one's own animation ending
-(`CLEAVE_MS`, `GORE_BURST_MS`, a corpse's keel-over or the flight of a punted
-one), so nothing is still moving when it changes sides — and a launched body stays
-in the air layer for its whole arc, because it genuinely is in the air.
+**AND WHAT BELONGS TO THE WORLD PICTURE IS NO LONGER PART OF THAT LAYER —
+`drawnUnderActors`.** The effect layer is drawn OVER the finished frame because
+nearly everything in it happens in the air. Two kinds of thing in it do not, and
+they are separated out into a pass `drawFrame` runs itself (`drawUnderActors`)
+while `drawEffects` draws everything else on top as before.
+
+The first is WHAT HAS COME TO REST (`restsOnFloor`): a corpse lies on the floor
+for seconds, a burst's gibs and a cleave's halves for the ten of GORE LINGER, an
+epic's remains for the whole level. The field is a painter's stack with no depth
+sort to appeal to (floor → furniture → loot → horde → hero), so drawn with the
+rest of the layer every one of those was painted OVER the hero the moment he
+walked across the spot. They change layers when they land, and the moment of the
+handover is each one's own animation ending (`CLEAVE_MS`, `GORE_BURST_MS`, a
+corpse's keel-over or the flight of a punted one), so nothing is still moving
+when it changes sides — and a launched body stays in the air layer for its whole
+arc, because it genuinely is in the air.
+
+The second is THE GARAGE DOOR ROLLING UP, and it is in that pass from its first
+frame to its last, because the question is not "has it landed" but "is this part
+of the world picture". The retracting slats are an OBSTACLE the engine has
+already dropped, redrawn for the length of the roll-up — so drawn over the
+finished frame they sat above the night wash and above every lamp pool cut out
+of it (`drawNight`, below), and the door CHANGED COLOUR on the tick it started
+moving: a chain hanging in a lit garage went from that light to the sprite's own
+cold slate against unchanged surroundings, and painted over the hero standing in
+the doorway besides. It belongs exactly where the shut door was — with the
+walls, under the night and under the bodies. The general rule, for the next
+effect that redraws a piece of the level: **anything the world lights has to be
+drawn where the world lights it.**
 
 **SFW MODE swaps the vocabulary before anything graphic is recorded.** The
 gore gate returns no blood family or dismemberment kind, `killPresentation`
@@ -1679,6 +1694,24 @@ planets' rate Io's orbit would last a third of a second and every world's day
 would strobe. Only the ratios BETWEEN the three are invented — no two bodies
 inside one of them are wrong against each other, which is the property that
 makes the Galilean 1:2:4 resonance visible on screen.
+
+**A BODY GOES ON THE CLOCK OF WHATEVER IS IN FRAME WITH IT, WHICH IS WHY EARTH'S
+MOON IS ON THE PLANETS'.** The satellites' clock is anchored on the fastest
+orbit in the solar system (Phobos, 7.6 hours → 4.5 s) and the catalogue spans
+250:1 in period, so its slow end crawls: Iapetus takes eight minutes, which is
+fine for the outermost moon of a planet rarely in frame, and Earth's Moon took
+**164 s round a 20 px orbit — 0.77 px/s, a Moon that had visibly stopped.** No
+single clock serves both ends of that spread. The other twenty are judged
+against their SIBLINGS, which share their clock and their planet; the Moon has
+no siblings, and the only body ever in frame beside it is the Earth, whose
+motion is on the planets' clock. So the Moon runs there, at its true sidereal
+month over Earth's true sidereal year: it laps the Earth 13.37 times per
+on-screen year, exactly as the real one does, with no invented number left on
+the line. The old objection — that a strict ratio "whips it round every 5 s, a
+blur" — was made when the Moon rode a 39 px orbit; true distances halved that,
+so the same month is now 26 px/s, a third of Io's and an eighth of Mimas's.
+`tests/title_moons_test.ts` measures APPARENT SPEED for exactly this reason: a
+period can be right while the body it belongs to is not moving.
 
 **AND THE PRICE OF TRUE PERIODS IS THAT THE GIANTS BARELY MOVE.** Jupiter takes
 12.6 minutes to go round, Saturn 31, Uranus an hour and a half, Neptune very

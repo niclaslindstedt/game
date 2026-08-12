@@ -181,6 +181,18 @@ beats:
     kind: caption
     text:
       - THE OLD SWORD. IT'LL DO.
+  # AND THE VERDICT TURNS INTO A PLAN — the last thing said in the house, and
+  # the reason the hub needs no opening monologue of its own. He names the
+  # weapon, says what he is going to do with it, and walks out; the next thing
+  # he is standing in is his own garage, with the car in it, and nothing has to
+  # be introduced to him. (The line the game used to open the garage on —
+  # "HOME. THE LAWN IS DEAD…" — was a briefing on his own bench.) UNVARIED
+  # across the rungs on purpose: which piece he took off the wall changes, what
+  # he is going to do with it does not.
+  - kind: say
+    actor: hero
+    text:
+      - I'LL TAKE THE CAR AND GET HER.
   # Out the door Ada walked out of, two hours behind her, armed. The same door,
   # the same road behind it — and it shuts on an empty living room this time.
   - { kind: move, actor: hero, to: { x: 201, y: 88 }, speed: 46 }

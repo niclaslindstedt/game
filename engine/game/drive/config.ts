@@ -2678,10 +2678,23 @@ export const DRIVE = {
     /** When he sees it (ms past the finish) — early, while the car is still
      * rolling and the halls are still growing in the windscreen. */
     sightMs: 1200,
-    /** …and when the picture goes out under him (ms past the finish). Late
+    /**
+     * …and when the picture goes out under him (ms past the finish). Late
      * enough to read that line at the crawl's own pace, early enough that the
-     * black lands while the fence is still going by. */
-    blackoutMs: 3100,
+     * black lands while the fence is still going by.
+     *
+     * THE GAP FROM `sightMs` IS AN OUTPUT OF THE LINE, NOT A PACING TASTE — the
+     * same inversion the road's opening is built on. What the run-in says is
+     * the trip's VERDICT and then the place, printed as one line ("ROUGH RIDE.
+     * THERE'S GOODCO." — `arrivalLine`), and the longest pairing the eight
+     * verdicts and the two destinations can make has to finish TYPING before
+     * the black takes it. `tests/drive_bark_test.ts` holds every combination
+     * against this number and fails on a verdict that outgrows it OR on a
+     * run-in shortened to tighten the pacing; the verdicts are a few words
+     * each, so what it is really buying is the leg HOME, whose own line is
+     * three times the length of GOODCO's.
+     */
+    blackoutMs: 3600,
     /**
      * HOW FAR THE CAMERA RISES ON THE RUN-IN (world px), and over how long.
      *
@@ -2707,8 +2720,10 @@ export const DRIVE = {
     cameraLiftMs: 1100,
   },
   /** How long the whole run-in holds before the drive hands back (ms) — the
-   * beats above plus the fade the app paints over the tail of them. */
-  arrivalHoldMs: 4400,
+   * beats above plus the fade the app paints over the tail of them. It follows
+   * `blackoutMs`: the 1.3 s behind the black is the fade's own, and moving the
+   * black without moving this cuts the crossing into it. */
+  arrivalHoldMs: 4900,
 
   /**
    * WHAT HE MAKES OF THE TRIP — the lines the arrival is read against
@@ -2722,6 +2737,11 @@ export const DRIVE = {
    * only way this is funny rather than nasty, and it is why every threshold
    * below is about the CAR, the TIME or the street furniture: the body count is
    * the one number he files under road surface.
+   *
+   * AND IT IS SAID ON THE RUN-IN, in front of the place's own line, as one
+   * printed sentence (`arrivalLine`, pwa/src/game/drive-screen/voice.ts) — so
+   * the whole review is a few words at the wheel and nothing about the journey
+   * crosses the black with him.
    *
    * Ordered by what is most remarkable, not by what is worst.
    */

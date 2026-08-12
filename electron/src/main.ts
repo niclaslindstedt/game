@@ -82,6 +82,7 @@ import {
   STORE_URL,
 } from "./config";
 import {
+  AUTOPILOT_ARG,
   capabilityList,
   resolveCapabilities,
   UNLOCKED_ARG,
@@ -615,6 +616,7 @@ function createWindow(): BrowserWindow {
       additionalArguments: [
         `--gis-caps=${capabilityList(capabilities).join(",")}`,
         ...(capabilities.unlocked ? [UNLOCKED_ARG] : []),
+        ...(capabilities.autopilot ? [AUTOPILOT_ARG] : []),
       ],
       // The renderer is the game — a large web app. It gets no Node, no
       // `require`, and its own isolated world. See preload.ts for why this

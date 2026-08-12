@@ -1567,6 +1567,114 @@ describe("the road itself", () => {
   });
 });
 
+describe("the opening's traffic", () => {
+  /**
+   * NOBODY IS OUT ON THE GRASS — the one claim about the intro's picture, and it
+   * is the whole of what the outskirts get wrong if either rule below slips.
+   *
+   * THE APPROACH IS A NARROW ROAD WITH A FOOTWAY A LANE AWAY FROM IT. The paving
+   * sits at the FULL road's kerb line all the way down the leg while the
+   * carriageway out here is the middle two lanes (`roadBandHalfAt`), so there is
+   * a strip of painted verge between the two that nothing is supposed to be
+   * standing in — it is the gap that keeps the riders out there out of reach, and
+   * it is also the only place on this road where "off the tarmac" and "on the
+   * paving" are not the same thing.
+   *
+   * Which is exactly why both halves of the opening fell into it. A footway
+   * rider's CUT-IN was measured off the town's kerb line, so it swung out of the
+   * paving toward a carriageway that was a lane further in and rode the grass for
+   * most of its cycle; and the outskirts cast a CYCLIST onto that footway
+   * (`OUTSKIRT_IDS`) whose def rides the road in town, so it was handed to the
+   * lane driver and steered at the centre of a lane the approach does not have.
+   *
+   * Asked of the whole opening rather than of one rule, because the two failures
+   * looked identical on screen and either one alone leaves the intro wrong.
+   */
+  it(
+    "keeps everything on the approach either on the tarmac or on the paving",
+    { timeout: ROAD_TIMEOUT_MS },
+    () => {
+      const paving = roadBandEdges().bottom;
+      const walk = crowdEdges().bottom;
+      let judged = 0;
+      const strays: string[] = [];
+      for (const seed of [1234, 77, 5, 9001, 4242]) {
+        const params = { ...PARAMS, seed };
+        const drive = createDrive(params);
+        const gate = cityStartPx(params);
+        // The WHOLE opening, from the wagon sliding in to the town's gate, and
+        // deliberately without `skipDriveOpening`: the outskirts are the stretch
+        // under test rather than the stretch every other case here skips.
+        for (let t = 0; t < 60_000 && drive.distance < gate; t += 16) {
+          stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+          for (const other of drive.traffic) {
+            // A body that has been HIT ends up wherever it slides, verge
+            // included — that is the collision's answer and not the road's.
+            if (other.wrecked || other.downed || other.slew !== 0) continue;
+            const travel =
+              (other.pos.x - drive.car.home.x) * drive.params.direction;
+            if (travel < 0 || travel > gate) continue;
+            const y = Math.abs(other.pos.y);
+            judged++;
+            // The tarmac at this vehicle's own point on the leg (plus the rim
+            // the renderer paints outside the lane markings), or the paving.
+            const half = roadBandHalfAt(travel, params);
+            const onRoad = y <= half + 2;
+            const onPaving = y >= paving && y <= walk;
+            // …AND A FOOTWAY RIDER MAY LEAVE THE PAVING, because cutting in is
+            // what makes it a hazard rather than scenery — but only ever INTO
+            // THE ROAD. The reach is a distance from the TARMAC, so the taper is
+            // a rider closing on a carriageway that is closing on the kerb, and
+            // where the road is still a lane away there is nothing to reach for.
+            const reaching =
+              other.footway && y - half <= DRIVE.pavementRiders.cutInPx;
+            if (!onRoad && !onPaving && !reaching) {
+              strays.push(
+                `${vehicleDef(other.variant).id} at y=${y.toFixed(1)}` +
+                  ` (tarmac ${half.toFixed(0)}, paving ${paving}) on seed ${seed}`,
+              );
+            }
+          }
+        }
+      }
+      // The sample is only worth anything if the opening actually laid a road
+      // down — a leg that spawned nothing would pass this vacuously.
+      expect(judged).toBeGreaterThan(1000);
+      expect(strays.slice(0, 5)).toEqual([]);
+    },
+  );
+
+  it("still casts a cyclist onto the footway out of town", () => {
+    // THE CASTING IS THE REASON THE FLAG EXISTS. A cyclist rides the ROAD in
+    // town (`pavement: false`) and the one footway on the approach is cast from
+    // the opening's own roster, which holds one — so "is this on the footway" is
+    // a fact about the VEHICLE (`DriveTraffic.footway`) and never about its def.
+    // Read the answer off the def again and the intro's cyclists go straight
+    // back onto the grass with nothing failing.
+    const bike = FLEET.findIndex((def) => def.id === "traffic_bicycle");
+    expect(bike).toBeGreaterThanOrEqual(0);
+    expect(FLEET[bike]!.pavement).toBe(false);
+    let ridden = 0;
+    for (const seed of [1234, 77, 5, 9001, 4242, 31337]) {
+      const params = { ...PARAMS, seed };
+      const drive = createDrive(params);
+      const gate = cityStartPx(params);
+      for (let t = 0; t < 60_000 && drive.distance < gate; t += 16) {
+        stepDrive(drive, 16, { pedal: 1, wheel: 0 });
+        for (const other of drive.traffic) {
+          if (other.variant !== bike) continue;
+          const travel =
+            (other.pos.x - drive.car.home.x) * drive.params.direction;
+          if (travel < 0 || travel > gate) continue;
+          expect(other.footway).toBe(true);
+          ridden++;
+        }
+      }
+    }
+    expect(ridden).toBeGreaterThan(0);
+  });
+});
+
 describe("the road driven the other way", () => {
   /** The same road, bound for the garage rather than for GOODCO. */
   const HOME: DriveParams = { ...PARAMS, direction: -1, to: "garage" };

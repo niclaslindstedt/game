@@ -480,17 +480,20 @@ export function startTitleSky(els: SkyElements): () => void {
     uranus: DIAMETER_KM.uranus,
     neptune: DIAMETER_KM.neptune,
   } as Record<ParentName, number>;
-  const layout = layoutSatellites(parentDisc, parentKm);
-  const byParent = new Map<ParentName, SatelliteScreen[]>();
-  const moons: Planet[] = layout.map((sat) => {
+  // A satellite and the geometry it was laid out from travel TOGETHER, in one
+  // object. They used to be two arrays walked by a shared index, and the only
+  // thing keeping Io off Saturn was that the two `.map`s stayed in step —
+  // a pairing nothing would have caught breaking, because a moon drawn round
+  // the wrong planet still draws.
+  const moons: { body: Planet; sat: SatelliteScreen }[] = layoutSatellites(
+    parentDisc,
+    parentKm,
+  ).map((sat) => {
     const el = document.createElement("div");
     el.className = "title-planet title-satellite";
     el.setAttribute("aria-hidden", "true");
     els.satellites.appendChild(el);
-    const family = byParent.get(sat.def.parent) ?? [];
-    family.push(sat);
-    byParent.set(sat.def.parent, family);
-    return {
+    const body: Planet = {
       el,
       label: sat.def.id,
       kind: sat.def.kind,
@@ -510,7 +513,8 @@ export function startTitleSky(els: SkyElements): () => void {
       spin: sat.ms,
       tint: sat.def.tint,
       lum: sat.lum,
-    } satisfies Planet;
+    };
+    return { body, sat };
   });
 
   // Give every body a real, textured, rotating globe: a canvas child that the
@@ -834,9 +838,7 @@ export function startTitleSky(els: SkyElements): () => void {
 
     // …and the other twenty, each about ITS OWN planet, in that planet's
     // equatorial plane rather than in the ecliptic (`satelliteOffset`).
-    for (let i = 0; i < moons.length; i++) {
-      const body = moons[i] as Planet;
-      const sat = layout[i] as SatelliteScreen;
+    for (const { body, sat } of moons) {
       const host = worlds.get(sat.def.parent);
       if (!host) continue;
       const off = satelliteOffset(sat, t);
@@ -894,7 +896,7 @@ export function startTitleSky(els: SkyElements): () => void {
     window.cancelAnimationFrame(raf);
     unwire();
     delete window.__skyZoom;
-    for (const o of [...planets, moonOrbit, ...moons]) {
+    for (const o of [...planets, moonOrbit, ...moons.map((m) => m.body)]) {
       const el = o.el;
       o.globe?.canvas.remove();
       o.globe = undefined;
@@ -916,7 +918,7 @@ export function startTitleSky(els: SkyElements): () => void {
       el.style.textShadow = "";
       el.textContent = "";
     }
-    for (const o of moons) o.el.remove();
+    for (const { body } of moons) body.el.remove();
     belt.stop();
     sun.style.left = "";
     sun.style.top = "";

@@ -700,6 +700,54 @@ travels inside a session; on a build that can neither host nor join one, grantin
 the microphone would put a settings page and a permission prompt in front of a
 feature that could never carry a syllable.
 
+### …and one switch takes multiplayer AWAY: `--autopilot`
+
+The AUTO PILOT is the coin-metered ride that flies the hero for the player. It
+is a fine thing to buy on a phone and a **cheat in somebody else's session**, so
+neither desktop shell ships it — depot build included, with no `GIS_ENABLE_*` to
+package it with — and `--autopilot` is a DEVELOPER switch that hands it back for
+one launch **at the price of that launch's multiplayer**: `multiplayer`, `voice`
+and `licensed` all go off, whether the stamp or the same command line put them
+there. It is enforced where every other capability question is answered
+(`resolveCapabilities` / `resolve_capabilities`), which is before a bridge is
+built, before a lobby is opened and before a session process exists — so there
+is no admission rule to write and nothing for a host to police. The launch log
+carries the consequence and the page states it in the licence notice's box, so
+the missing HOST row is explained rather than discovered. A dedicated server is
+refused on the same launch for the reason it is refused without `--multiplayer`:
+there is no session left to serve.
+
+### …and one HERO is barred from every session: a flown one
+
+The launch switch above is about a BUILD. This is about a CHARACTER, and it
+outlives the launch that made it: **`Character.autopiloted` is a one-way latch
+set the moment a bot takes a hero's controls** — the paid ride on a phone or in a
+browser, the developer BOT VIEW, or a `?bot=` playtest launch. From then on that
+hero may not enter a session, ever, on any platform. It never clears, because
+the question is not whether a bot is flying right now (`state.autopilot.active`)
+but whether one ever did: a hero flown to level 40 and then hand-played into
+somebody's co-op game is exactly what this refuses.
+
+Three places carry it, and the third is the one that keeps the rule closed:
+
+- **The three doors are locked rows** on the MULTIPLAYER screen
+  (`title-screen/menus-net.ts`), saying why and naming the way out — the mark is
+  on the character, so a fresh hero plays online.
+- **`useSessions` refuses the join with no row in front of it** — a Steam invite
+  accepted while the game was closed arrives straight at `onJoin`, and would
+  otherwise walk a barred hero in.
+- **The ride is withheld from a run that already has a session**
+  (`autopilotOffered`, `game-screen/PausedOverlays.tsx`). Handing your chair to a
+  bot in somebody else's game is the thing the rule is about — and refusing it
+  there is what saves the mark from needing a mid-session eviction to go with it,
+  since a seated hero can then never become stained.
+
+It is **sticky across a cloud merge** and travels with an export/import; see
+`docs/architecture.md` → "The AUTO PILOT mark" for that half and for what it
+costs the trophy shelf. **Local enforcement only**: what a joiner says about
+their own hero is a claim, exactly as `--licensed` is. This is a rule the game
+keeps on its own copy rather than an anti-cheat, and a host cannot verify it.
+
 ### The frame, and why it is the wire's one binary payload
 
 Everything else on this wire is JSON, and `server/wire/codec.ts` explains why
@@ -1182,37 +1230,41 @@ compiler.
 
 ## What is tested
 
-| Suite                                    | What it holds                                                                  |
-| ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make     |
-| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately         |
-| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process             |
-| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send          |
-| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                         |
-| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine, and the loop reaching the client     |
-| `tests/engine/run_driver_test.ts`        | The driver seam's contract — who clears `state.events`, and who must not       |
-| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks    |
-| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in       |
-| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                           |
-| `tests/engine/wire_voice_test.ts`        | The voice payload, and the three shapes a decoder on an open port refuses      |
-| `tests/engine/net_voice_test.ts`         | Voice's four relay rules — the seat stamp, the echo, the spectator, the worlds |
-| `tests/voice_room_test.ts`               | The voice HUD's model: the mute's two seat rules, and what must not notify     |
-| `tests/voice_tap_test.ts`                | The developer tap: its WAV header, and a digest that catches a reorder         |
-| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                           |
-| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link               |
-| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                         |
-| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger       |
-| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's  |
-| `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes     |
-| `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter     |
-| `tests/engine/net_fuzz_test.ts`          | Every decoder against arbitrary JSON — chiefly the DELTA APPLIER               |
-| `tests/engine/net_prediction_test.ts`    | The ack echo, the rebase, the loss reconcile, and the interpolation bounds     |
-| `tests/engine/net_bot_client_test.ts`    | A bot playing off a client's view alone — is what a client HAS enough          |
-| `tests/engine/bot_intent_test.ts`        | The autopilot's decision→verb mapping, written out by hand                     |
-| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it  |
-| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop             |
-| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam    |
-| `electron/tests/capabilities_test.ts`    | The voice capability, and `--voice` without `--multiplayer` refused by name    |
+| Suite                                    | What it holds                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `tests/engine/wire_codec_test.ts`        | Framing round trips, and every refusal a decoder on an open port must make                 |
+| `tests/engine/wire_delta_test.ts`        | `patch(prev, diff(prev, next)) === next`, and each strategy separately                     |
+| `tests/engine/net_determinism_test.ts`   | The same arguments build the same world — in a real second process                         |
+| `tests/engine/run_commands_test.ts`      | The two closed lists agreeing, and every argument a stranger may send                      |
+| `tests/engine/run_params_test.ts`        | `RunParams` and `SessionParams` naming the same fields                                     |
+| `tests/content/net_reachability_test.ts` | The startup path not reaching the engine, and the loop reaching the client                 |
+| `tests/engine/run_driver_test.ts`        | The driver seam's contract — who clears `state.events`, and who must not                   |
+| `tests/engine/net_session_test.ts`       | A real session and a real client, hashed against each other after 600 ticks                |
+| `tests/engine/wire_handshake_test.ts`    | The cookie's epoch window, the proof, and the ORDER the refusals come in                   |
+| `tests/engine/wire_chat_test.ts`         | The slash grammar, and that hp and XP scale together                                       |
+| `tests/engine/wire_voice_test.ts`        | The voice payload, and the three shapes a decoder on an open port refuses                  |
+| `tests/engine/net_voice_test.ts`         | Voice's four relay rules — the seat stamp, the echo, the spectator, the worlds             |
+| `tests/voice_room_test.ts`               | The voice HUD's model: the mute's two seat rules, and what must not notify                 |
+| `tests/voice_tap_test.ts`                | The developer tap: its WAV header, and a digest that catches a reorder                     |
+| `tests/engine/wire_address_test.ts`      | Every form a player may type, IPv6 brackets included                                       |
+| `tests/engine/net_reliability_test.ts`   | Retransmit, dedupe, the 16-bit wrap — over a scripted lossy link                           |
+| `tests/engine/net_udp_test.ts`           | The port walk, and that `bound` is what the socket GOT                                     |
+| `tests/engine/net_hub_test.ts`           | Mostly what does NOT happen: the unpadded probe, the flood, the stranger                   |
+| `tests/engine/net_spectators_test.ts`    | Several clients, no bag on the wire, and the host's commands being the host's              |
+| `tests/engine/party_test.ts`             | Every shared read the party migration answers, each staged with two heroes                 |
+| `tests/engine/coop_rules_test.ts`        | The abandoned hero, the XP split, allocated loot, and the per-capita meter                 |
+| `tests/engine/net_fuzz_test.ts`          | Every decoder against arbitrary JSON — chiefly the DELTA APPLIER                           |
+| `tests/engine/net_prediction_test.ts`    | The ack echo, the rebase, the loss reconcile, and the interpolation bounds                 |
+| `tests/engine/net_bot_client_test.ts`    | A bot playing off a client's view alone — is what a client HAS enough                      |
+| `tests/engine/bot_intent_test.ts`        | The autopilot's decision→verb mapping, written out by hand                                 |
+| `tests/content/server_deps_test.ts`      | The ship target's dependency manifest, and that it reaches nothing outside it              |
+| `electron/tests/session-host_test.ts`    | Spawn, port handover, orderly stop, forced kill, and crash-vs-stop                         |
+| `electron/tests/net-lobby_test.ts`       | The metadata round trip through the short keys, and degrading without Steam                |
+| `electron/tests/capabilities_test.ts`    | The voice capability, `--voice` refused by name, and `--autopilot` taking multiplayer away |
+| `tauri/shell/tests/capabilities_test.rs` | The same, in the Rust shell — the two must resolve a command line alike                    |
+| `tests/launch_notice_test.ts`            | Which launches are told what, and that the auto pilot gate fails OPEN off a shell          |
+| `tests/multiplayer_doors_test.ts`        | All three doors shut for a flown hero, locked rather than absent, BACK still open          |
+| `tests/autopilot_mark_test.ts`           | The mark's latch, its cheap read, and the trophy shelf it shuts                            |
 
 ## The three doors, and where each half of the HOST screen lives
 

@@ -48,6 +48,7 @@ export function useSessions({
   screen,
   heroName,
   heroHardcore,
+  heroAutopiloted,
   heroLoadout,
   applyForSession,
   onJoin,
@@ -59,6 +60,17 @@ export function useSessions({
   /** The picked hero is HARDCORE: rides every join so the handshake can
    * hold hardcore and softcore apart — the mismatch is refused by name. */
   heroHardcore: boolean;
+  /**
+   * The picked hero has been FLOWN BY A BOT at some point
+   * (`Character.autopiloted`), so no session may seat them.
+   *
+   * The three doors on the MULTIPLAYER screen are already locked rows
+   * (`menus-net.ts`), which is where the player is TOLD. This is the half that
+   * catches the join with no row in front of it: a Steam invite accepted while
+   * the game was closed arrives straight here (`onSessionInvite` below), and it
+   * would otherwise walk a barred hero into somebody's game.
+   */
+  heroAutopiloted: boolean;
   /** The picked hero's banked loadout, purse already funded — what the
    * session seats them with. Null for a fresh hero (the authored fresh
    * start), and for no hero at all. */
@@ -77,6 +89,19 @@ export function useSessions({
   onJoin: (intent: JoinIntent) => void;
 }): { netOpen: boolean; net: NetMenuState } {
   const netOpen = netBridgeAvailable();
+  // EVERY join in this module goes through here rather than through `onJoin`
+  // directly — the invite, the browser row and the typed address alike — so the
+  // bar is one line rather than four that have to agree. It refuses SILENTLY,
+  // which is the same shape as the mods-gap refusal below: the row the player
+  // pressed is what carries the reason, and for the invite (which has no row)
+  // the MULTIPLAYER screen they land back on says it in full.
+  const join = useCallback(
+    (intent: JoinIntent) => {
+      if (heroAutopiloted) return;
+      onJoin(intent);
+    },
+    [heroAutopiloted, onJoin],
+  );
   const [rows, setRows] = useState<BrowserRow[] | null>(null);
   const [firewall, setFirewall] = useState<FirewallStatus | null>(null);
   // THE JOINER'S MOD RECONCILE (join-mods.ts), behind its own lazy chunk — what
@@ -103,7 +128,7 @@ export function useSessions({
     if (!netOpen) return;
     return onSessionInvite((invite) => {
       if (invite.address) {
-        onJoin({
+        join({
           address: invite.address,
           name: heroName,
           hardcore: heroHardcore,
@@ -115,7 +140,7 @@ export function useSessions({
       if (!invite.lobbyId) return;
       void joinSession(invite.lobbyId).then((found) => {
         if (found) {
-          onJoin({
+          join({
             peer: found.hostId,
             name: heroName,
             hardcore: heroHardcore,
@@ -125,7 +150,7 @@ export function useSessions({
         }
       });
     });
-  }, [netOpen, heroName, heroHardcore, heroLoadout, onJoin]);
+  }, [netOpen, heroName, heroHardcore, heroLoadout, join]);
 
   // Browsing starts when the browser is opened, and again on every press of
   // REFRESH: the list is a live fact about other people, not a fetched resource
@@ -183,15 +208,15 @@ export function useSessions({
     (target: readonly string[], intent: JoinIntent) => {
       const gap = modsGap(target);
       if (!gap || !gap.needsApply) {
-        onJoin(intent);
+        join(intent);
         return;
       }
       if (gap.missing.length) return; // the row was a refusal; belt and braces
       void applyForSession([...target]).then((ok) => {
-        if (ok) onJoin({ ...intent, appliedMods: true });
+        if (ok) join({ ...intent, appliedMods: true });
       });
     },
-    [modsGap, applyForSession, onJoin],
+    [modsGap, applyForSession, join],
   );
 
   // The FIREWALL row asks its question when the HOST screen is opened, and
@@ -298,7 +323,7 @@ export function useSessions({
       },
       joinAddress: (address, password) => {
         remember(address);
-        onJoin({
+        join({
           address,
           name: heroName,
           password,

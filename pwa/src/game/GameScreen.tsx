@@ -80,7 +80,11 @@ import { fxStyleVars } from "./render/postfx.ts";
 import { bindingLabel } from "./keybindings.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
-import { spectatorCharacter, type Character } from "./characters.ts";
+import {
+  markCharacterAutopiloted,
+  spectatorCharacter,
+  type Character,
+} from "./characters.ts";
 import {
   createAutopilotDirector,
   useAutopilotSession,
@@ -376,8 +380,6 @@ export function GameScreen({
   /** Set as the drive HOME hands the trip back, consumed by the next run's
    * build (run-setup.ts): he pulls onto his own drive at the wheel. */
   const arriveInCarRef = useRef(false);
-  /** The line the drive in earned, spent by the next run's setup. */
-  const arrivalThoughtRef = useRef<string | undefined>(undefined);
   /** …and the state the wagon is in as the road hands it over, spent by the
    * same build (`RunParams.car`): the car he parks is the car he drove. */
   const arrivalCarRef = useRef<CarDamage | undefined>(undefined);
@@ -749,7 +751,6 @@ export function GameScreen({
       difficulty,
       characterRef,
       arriveInCarRef,
-      arrivalThoughtRef,
       arrivalCarRef,
       resumeRef,
       checkpointRef,
@@ -1213,6 +1214,24 @@ export function GameScreen({
         // the paid AUTO PILOT's own bot while its engine meter runs.
         const drivingBot = botDriver.resolveDrivingBot();
         if (drivingBot) {
+          // A BOT HAS THE CONTROLS, so the hero carries the mark from here on:
+          // no session will admit them and the trophy shelf is shut to them
+          // (`Character.autopiloted`). This is the ONE place it is set, because
+          // this is the one place the wheel changes hands — every route in
+          // (the paid ride, BOT VIEW, `?bot=`) passes through
+          // `resolveDrivingBot`, so a fourth one is marked without anybody
+          // remembering to.
+          //
+          // Idempotent and cheap on every tick after the first: the latch
+          // returns the hero untouched once it is set, so the roster is written
+          // exactly once per hero. The two runs with nobody's hero in them are
+          // skipped — the HOW TO PLAY demo flies a throwaway shell and a
+          // SPECTATOR is watching somebody else's bot fly THEIR hero.
+          if (!demo && !spectatorRun) {
+            characterRef.current = markCharacterAutopiloted(
+              characterRef.current,
+            );
+          }
           botDriver.drive(drivingBot, dtMs);
         } else {
           // Poll the controller once per tick and hand the snapshot down.
@@ -1934,20 +1953,18 @@ export function GameScreen({
           // switch is what lets `playtest.mjs` and the shot recipes see the
           // road at all.
           auto={demo || botView}
-          onArrived={(to, _bodies, verdict, car) => {
+          onArrived={(to, _bodies, car) => {
             // The crossing that was waiting on the road, made exactly as it
             // would have been a minute ago — the drive changed how long the
             // trip took, not what it was.
             // Homeward, he arrives sitting in it — the whole point of having
             // driven. Outbound he gets out at GOODCO like anybody parking.
             arriveInCarRef.current = drive.direction === -1;
-            // …and what he made of the trip goes with him: the line the drive
-            // earned OPENS the destination's monologue
-            // (`RunParams.arrivalThought` → `introPages`), which is where a
-            // man's opinion of a journey belongs — the first thing out of his
-            // mouth, standing beside the car he has just got out of.
-            arrivalThoughtRef.current = verdict;
-            // …AND SO DOES THE CAR. The level on the far side mints its own
+            // WHAT HE MADE OF THE TRIP DOES NOT CROSS. It was said at the wheel
+            // on the run-in, folded into the front of the place's own line
+            // ("ROUGH RIDE. THERE'S GOODCO." — `arrivalLine`), so the venue on
+            // this side opens on its own briefing rather than on the road.
+            // THE CAR DOES CROSS. The level on the far side mints its own
             // assembly off its `car` landmark, so what the road did to the
             // wagon has to travel as a parameter or the machine he parks is a
             // different machine from the one he drove (`RunParams.car`). The

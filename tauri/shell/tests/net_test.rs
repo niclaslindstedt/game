@@ -22,6 +22,7 @@ fn request(message: Value) -> net::NetRequest {
 fn licensed() -> Capabilities {
     Capabilities {
         built: ALL_CAPABILITIES,
+        autopilot: false,
         unlocked: false,
         direct: false,
         port: None,
@@ -34,6 +35,7 @@ fn download() -> Capabilities {
             multiplayer: true,
             ..BuildCapabilities::default()
         },
+        autopilot: false,
         unlocked: true,
         direct: false,
         port: None,
@@ -106,6 +108,7 @@ fn both_doors_open_by_default_and_a_direct_launch_takes_only_its_own() {
     // when the page asked for another.
     let direct = Capabilities {
         built: ALL_CAPABILITIES,
+        autopilot: false,
         unlocked: false,
         direct: true,
         port: Some(27_849),

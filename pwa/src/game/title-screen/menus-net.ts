@@ -54,12 +54,42 @@ import { rowAria } from "./menu-tree.ts";
  * everybody else gets an address. */
 const DOORS: SessionDoors[] = ["both", "steam", "direct"];
 
+/**
+ * What a locked door says. Written for the menu's own font, which has no
+ * lowercase glyphs and no dash but the hyphen, and short enough to sit on a
+ * help line at the reference viewport.
+ *
+ * It names the WAY OUT rather than only the refusal, because there is one and
+ * it is cheap: the mark is on the character, so a fresh hero plays online.
+ */
+const NET_REFUSAL = {
+  autopiloted: "A BOT HAS FLOWN THIS HERO - PLAY ONLINE WITH ANOTHER",
+} as const;
+
+/**
+ * THE ONE HERO NO DOOR OPENS FOR — one a bot has flown at some point
+ * (`Character.autopiloted`).
+ *
+ * All three doors are shut rather than one, and the row says why rather than
+ * vanishing: a player who parked a hero on BOT VIEW for an afternoon and came
+ * back to find MULTIPLAYER simply gone would go looking for a broken build. A
+ * locked row with the reason on it sends them to make another hero instead,
+ * which is the actual answer — the mark is on the CHARACTER, never on the
+ * account, so the next one is clean.
+ */
+function autopilotedLock(ctx: MenuContext) {
+  return ctx.character?.autopiloted === true
+    ? { locked: true, color: "#5a6068", help: NET_REFUSAL.autopiloted }
+    : {};
+}
+
 export function buildMultiplayerMenu(ctx: MenuContext): MenuEntry[] {
+  const barred = autopilotedLock(ctx);
   return [
     ...assembleRows("multiplayer", {
-      "host-game": navRow(ctx, "multiplayer", "host-game"),
-      "join-game": navRow(ctx, "multiplayer", "join-game"),
-      "join-address": navRow(ctx, "multiplayer", "join-address"),
+      "host-game": navRow(ctx, "multiplayer", "host-game", barred),
+      "join-game": navRow(ctx, "multiplayer", "join-game", barred),
+      "join-address": navRow(ctx, "multiplayer", "join-address", barred),
     }),
     backRow(ctx, "multiplayer"),
   ];
