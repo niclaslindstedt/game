@@ -63,6 +63,33 @@ describe("validateLevel", () => {
     expect(errors.some((e: string) => e.includes("loot"))).toBe(true);
   });
 
+  it("lets a venue ship no opening monologue, but not an empty one", () => {
+    // OPTIONAL: a venue the hero does not ARRIVE at (the hub — he walks out of
+    // the prelude's living room into his own garage) has nothing to say, and
+    // the run lands on the level-name card instead.
+    const quiet = goodLevel();
+    delete (quiet as Record<string, unknown>).intro;
+    expect(validateLevel(quiet, refs, "desc").errors).toEqual([]);
+    // …but PRESENT AND EMPTY is a monologue somebody meant to write. It lands
+    // the player in exactly the same place omitting it does, so the field would
+    // be a lie in the file.
+    const empty = goodLevel();
+    empty.intro = [];
+    expect(
+      validateLevel(empty, refs, "desc").errors.some((e: string) =>
+        e.includes("intro"),
+      ),
+    ).toBe(true);
+    // …and so is a page that is not a list of lines.
+    const ragged = goodLevel();
+    (ragged as Record<string, unknown>).intro = ["HELLO."];
+    expect(
+      validateLevel(ragged, refs, "desc").errors.some((e: string) =>
+        e.includes("intro"),
+      ),
+    ).toBe(true);
+  });
+
   it("rejects a locked door with no matching key", () => {
     const def = goodLevel();
     (def as Record<string, unknown>).doors = [

@@ -403,8 +403,16 @@ export type LevelDef = {
    * at a time. Each entry is a page; each page is its own array of lines
    * ("" is a blank spacer line). Turning past the last page flashes the level
    * name and drops into the run.
+   *
+   * OPTIONAL, because a venue can be somewhere he does not arrive at. The HUB
+   * ships none: the prelude walks him out of his own living room saying what he
+   * is about to do, and the next thing he stands in is his own garage — a man
+   * does not brief himself on his own bench. Omitted, the run lands straight on
+   * the level-name card (`openingPhase`, engine/game/opening.ts), and whatever
+   * the trip in left him thinking (`GameState.arrivalThought`) is then the
+   * whole of the monologue rather than its first page.
    */
-  intro: readonly (readonly string[])[];
+  intro?: readonly (readonly string[])[];
   /**
    * The level's post-victory EPILOGUE — the intro's mirror: black-screen
    * pages shown when the victory countdown runs out, before the splash.

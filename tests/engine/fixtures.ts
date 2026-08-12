@@ -2103,6 +2103,27 @@ export const FIX_PRELUDE_LEVEL: LevelDef = {
   prelude: "test_prelude",
 };
 
+// A venue with NO OPENING MONOLOGUE (`intro` is optional — the shipped HUB
+// ships none): the run has nothing to put in the dialogue box and must land on
+// the level-name card instead. The field is DELETED rather than set empty,
+// because omitting it is what the schema allows an author to do (`intro: []` is
+// a compile error).
+function quietLevel(id: string, rest: Partial<LevelDef> = {}): LevelDef {
+  const def: LevelDef = { ...FIX_LEVEL, id, ...rest };
+  delete def.intro;
+  return def;
+}
+
+export const FIX_QUIET_LEVEL: LevelDef = quietLevel("test_quiet_level");
+
+// …and the same venue reached the way the garage is: through a PRELUDE. The
+// scene drains, there is no monologue behind it, and the chain has to hand the
+// run to the card rather than to an empty box.
+export const FIX_QUIET_PRELUDE_LEVEL: LevelDef = quietLevel(
+  "test_quiet_prelude_level",
+  { prelude: "test_prelude" },
+);
+
 // The reference level under a CLEAR-ALL objective (for the spawner's
 // straggler rule: the endless post-budget trickle must stay OFF here, or the
 // level could never be cleared).
@@ -2432,6 +2453,8 @@ export function installFixtures(force = false): void {
       test_road_level: FIX_ROAD_LEVEL,
       test_beat_level: FIX_BEAT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
+      test_quiet_level: FIX_QUIET_LEVEL,
+      test_quiet_prelude_level: FIX_QUIET_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_farewell_level: FIX_FAREWELL_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,

@@ -813,6 +813,16 @@ escort.ts` walks the people an escort errand puts on the field, and
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
   dialogue-only figures the combat/hazard paths all skip — they rush in to
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
+- **`engine/game/opening.ts`** — the run's OPENING MONOLOGUE, and whether there
+  is one at all. `introPages` is the level's own `intro`, and `openingPhase`
+  answers where a run that has not been read yet should stand: the `intro` box
+  when there is a page to turn, the level-name `title` card when there is not. A
+  LEAF on purpose, because two callers ask at two different moments (`create.ts`
+  when a run is built, `story.ts` when a prelude chain drains) and the second
+  lives in a module imported BY the one the pager lives in. **`MissionDef.intro`
+  is optional**: the HUB ships none — the prelude walks the hero out of his own
+  living room saying what he is going to do, and the next thing he stands in is
+  his own garage, which needs no introducing.
 - **`engine/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `muteDialogue` for the overlay's

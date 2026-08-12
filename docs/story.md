@@ -65,14 +65,22 @@ prints the name.
 Movie night. Ada announces they are out of chips and soda, takes the jacket he
 fixed the zipper on, and steps out for five minutes. Two hours later the man who
 never gets up gets up, leaps for the weapon mounted over the couch — which one
-depends on the difficulty, from grandpa's sawed-off down to a stick — and walks
-out the door she left by, carrying it. It is the weapon he starts the run with.
+depends on the difficulty, from grandpa's sawed-off down to a stick — weighs it
+in one line, and says the only thing he will say about the plan: he is taking
+the car and getting her. Then he walks out the door she left by, carrying it. It
+is the weapon he starts the run with, and it is the last thing said in the
+house — the game opens on him standing in his own garage, with no introduction,
+because he told us where he was going.
 
 ## Home — THE GARAGE (hub)
 
-The campaign breathes here between chapters. The lawn is grass except for the
-dead black patch the ship stands on, the bench is a mess, and the ship is one
-part short. Nothing hunts him here. **THE DEALER** works the road at the edge of
+The campaign breathes here between chapters. **Nobody introduces it** — it is
+the one venue in the game the hero says nothing on arriving at, because it is
+his, and the prelude has just had him say what he came out here to do. The lawn
+is grass except for the dead black patch the ship stands on, the bench is a
+mess, and the ship is one part short. What he does say, standing in the bay for
+the first time, is about Ada: her jacket is answering from GOODCO and the car is
+right there. Nothing hunts him here. **THE DEALER** works the road at the edge of
 the lot, hood up, buying what weighs the hero down and asking for no name — and
 he is the first person the car takes, on the hero's own drive, with nothing said
 about it by anybody. There is always another dealer on that pavement next time.

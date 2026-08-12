@@ -28,11 +28,15 @@ index: 1
 name: THE GARAGE
 prelude: prelude
 music: bench_light
-intro:
-  # Once per difficulty, on the doorstep, before GOODCO - so the ship is still
-  # one part short. The line the whole hub hangs off: home is a mess, the work
-  # of ten years is not.
-  - - HOME. THE LAWN IS DEAD, THE BENCH IS A MESS, AND THE SHIP IS ONE PART FROM PERFECT.
+# NO `intro:` - THE ONE VENUE IN THE GAME WITH NO OPENING MONOLOGUE, and the
+# reason the field is optional at all. He does not arrive here: he says what he
+# is going to do in the last line of the prelude ("I'LL TAKE THE CAR AND GET
+# HER."), walks out of his own living room, and the next thing he is standing in
+# is his own garage. A briefing on the doorstep of his own bench would be a
+# stranger's voice - the place is established by BEING it, and what he wants
+# from it is said by the arrival beat below (`placeThoughts`), which names the
+# person rather than the property. Driving HOME still speaks: the road's own
+# verdict rides in as `arrivalThought` and is the whole monologue here.
 gravity: 800
 # His own garage: no fog of war, the whole floor lit from the first frame.
 revealed: true

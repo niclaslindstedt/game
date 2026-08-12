@@ -109,7 +109,10 @@ so they are read, not authored:
 2. **Rules of the place**: `objective` (its TYPE — where the exit stands is the
    carve's), `gates`, `exitTo`, the hazards (`asteroids`, `sandstorms`,
    `hayBalls`, `stampedes`), `canopy`, `decorClearance`.
-3. **Story beats**: `intro`/`outro`/`prelude`, `firstKillThoughts`/
+3. **Story beats**: `intro`/`outro`/`prelude` (all three OPTIONAL — a venue the
+   hero does not ARRIVE at, like the hub, ships no `intro` and lands straight on
+   the level-name card; `intro: []` is a compile error, omit the key),
+   `firstKillThoughts`/
    `firstSightThoughts`, the per-level `merchant` persona, `openingStrike` (the
    beat, not its spot), `placedItems` and `wells` (WHAT the venue leaves lying
    around and how hard its holes pull — the carve decides where).
