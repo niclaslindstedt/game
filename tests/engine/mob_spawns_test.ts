@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { createGame, MOB_SPAWNS } from "@game/core";
 import type { GameState } from "@game/core";
-import { idle, run, startGame } from "./helpers.ts";
+import { idle, makeEnemy, run, startGame } from "./helpers.ts";
 
 /** The live occupant of a post, or undefined while it is vacant. */
 function occupant(state: GameState, id: string) {
@@ -107,6 +107,32 @@ describe("a vacated post refills on the clock", () => {
     };
     run(state, idle, 3);
     expect(post.mobId).not.toBeNull();
+  });
+
+  it("social aggro: a woken elite pulls its camp of posts", () => {
+    // The parts maps' answer to the knot maps' alarm link: the sentry pulls
+    // the room. An elite waking wakes every dormant post occupant within
+    // MOB_SPAWNS.alarmRadius — and nothing beyond it.
+    const state = startGame(1, "test_mob_spawn_level");
+    const near = occupant(state, "post_a")!; // 700,1320
+    const far = occupant(state, "post_far")!; // 2000,1320 — out of reach
+    const elite = makeEnemy(
+      { pos: { x: near.pos.x + 120, y: near.pos.y }, hp: 200, maxHp: 200 },
+      "test_elite",
+    );
+    state.enemies.push(elite);
+    expect(near.awake ?? false).toBe(false);
+    // Wound the elite — the wake that raises the alarm on any map model. The
+    // hero stands INSIDE the camp's aggro range (the minion AI re-sleeps a
+    // mob whose hero has left its radius — walls-break-aggro by design) but
+    // OUTSIDE the fog's reveal disc, or his auto-attack kills the very post
+    // mob the assertion is about before the pull lands.
+    elite.hp -= 1;
+    state.players[0].pos = { x: 700, y: 900 };
+    run(state, idle, 2);
+    expect(elite.awake).toBe(true);
+    expect(near.awake).toBe(true);
+    expect(far.awake ?? false).toBe(false);
   });
 
   it("never respawns on a clearAll objective", () => {

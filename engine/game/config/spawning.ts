@@ -259,6 +259,14 @@ export const MOB_SPAWNS = {
    * expired; the mob stands up the moment the hero steps away.
    */
   clearRadius: 280,
+  /**
+   * SOCIAL AGGRO (the WoW linked pull): when an ELITE wakes, every dormant
+   * post-standing mob within this of it (world px) wakes with it — the parts
+   * maps' answer to the knot maps' alarm link (`SpawnSpec.alarms`), and the
+   * same design promise: the sentry pulls the room, so a careless search
+   * costs more than a careful one. Roughly a room.
+   */
+  alarmRadius: 360,
 } as const;
 
 /**

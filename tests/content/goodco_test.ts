@@ -411,18 +411,48 @@ describe("GOODCO HQ level def", () => {
     expect(pinned.some((l) => l.sprite === "mop_bucket")).toBe(true);
   });
 
-  it("wires every knotted elite to the knot it stands in", () => {
-    // An elite that wakes RAISES its cell's knot — the sentry who pulls the
-    // whole room, and the reason a careless search costs more than a careful
-    // one. The carve names a knot after the cell it holds, so the link needs no
-    // lookup table and cannot be authored wrong.
-    const knotIds = new Set((carved.spawners ?? []).map((s) => s.id));
-    const alarmed = carved.spawns.filter(
-      (s): s is Extract<(typeof carved.spawns)[number], { at: unknown }> =>
-        "at" in s && s.alarms !== undefined,
+  it("keeps the sentry-pulls-the-room promise, under either generator", async () => {
+    // An elite that wakes must cost the careless hero the whole room. The two
+    // generators keep the promise differently: the LEGACY carve wires every
+    // knotted elite to the knot it stands in (`SpawnSpec.alarms` — a knot is
+    // named after its cell, so the link needs no lookup table), while a PARTS
+    // deal needs no wiring at all — a woken elite pulls every dormant post
+    // within `MOB_SPAWNS.alarmRadius` (social aggro, mob-spawns.ts, pinned by
+    // tests/engine/mob_spawns_test.ts). What the SEWN map owes instead is the
+    // GROUND for that pull: elites standing among the posts they would wake.
+    const { setLegacyMapgenEnabled } = await import("@game/menu");
+    try {
+      setLegacyMapgenEnabled(true);
+      const legacy = resolveLevelDef("goodco_hq", SEED);
+      const knotIds = new Set((legacy.spawners ?? []).map((s) => s.id));
+      const alarmed = legacy.spawns.filter(
+        (s): s is Extract<(typeof legacy.spawns)[number], { at: unknown }> =>
+          "at" in s && s.alarms !== undefined,
+      );
+      expect(alarmed.length).toBeGreaterThan(0);
+      for (const s of alarmed) expect(knotIds.has(s.alarms!)).toBe(true);
+    } finally {
+      setLegacyMapgenEnabled(false);
+    }
+    // The parts deal: every elite stand has at least one post in pulling
+    // range, so the social aggro has somebody to wake.
+    const elites = new Set(
+      MAP_BLUEPRINTS.goodco_hq!.elites.map((e) => e.enemy),
     );
-    expect(alarmed.length).toBeGreaterThan(0);
-    for (const s of alarmed) expect(knotIds.has(s.alarms!)).toBe(true);
+    const stands = carved.spawns.filter(
+      (s): s is Extract<(typeof carved.spawns)[number], { at: unknown }> =>
+        "at" in s && elites.has(s.enemy),
+    );
+    expect(stands.length).toBeGreaterThan(0);
+    for (const stand of stands) {
+      const nearby = (carved.mobSpawns ?? []).filter(
+        (m) => dist(m.at, stand.at) <= 360,
+      );
+      expect(
+        nearby.length,
+        `${stand.enemy} stands alone — no post in pulling range`,
+      ).toBeGreaterThan(0);
+    }
   });
 
   it("rolls the conveyor: five belt-scroll frames ship beside the base sprite", () => {

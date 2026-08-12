@@ -116,6 +116,23 @@ function clearSpot(
 }
 
 /**
+ * SOCIAL AGGRO — the parts maps' alarm. A woken ELITE pulls its camp: every
+ * dormant post-standing mob within `MOB_SPAWNS.alarmRadius` of it wakes with
+ * it. It is the same promise the knot maps keep through `SpawnSpec.alarms`
+ * (the sentry who pulls the whole room), kept here without a def field
+ * because a post's occupant is already standing where the pull should land.
+ * Deterministic — a plain wake, no draws.
+ */
+export function alertPosts(state: GameState, from: Enemy): void {
+  if (state.mobSpawns.length === 0) return;
+  for (const enemy of state.enemies) {
+    if (enemy.post === undefined || enemy.awake || enemy === from) continue;
+    if (distance(enemy.pos, from.pos) <= MOB_SPAWNS.alarmRadius)
+      enemy.awake = true;
+  }
+}
+
+/**
  * The per-tick pass: vacate posts whose occupant died or was dragged off, and
  * refill the vacant ones whose clock has run out.
  */
