@@ -1680,6 +1680,24 @@ would strobe. Only the ratios BETWEEN the three are invented — no two bodies
 inside one of them are wrong against each other, which is the property that
 makes the Galilean 1:2:4 resonance visible on screen.
 
+**A BODY GOES ON THE CLOCK OF WHATEVER IS IN FRAME WITH IT, WHICH IS WHY EARTH'S
+MOON IS ON THE PLANETS'.** The satellites' clock is anchored on the fastest
+orbit in the solar system (Phobos, 7.6 hours → 4.5 s) and the catalogue spans
+250:1 in period, so its slow end crawls: Iapetus takes eight minutes, which is
+fine for the outermost moon of a planet rarely in frame, and Earth's Moon took
+**164 s round a 20 px orbit — 0.77 px/s, a Moon that had visibly stopped.** No
+single clock serves both ends of that spread. The other twenty are judged
+against their SIBLINGS, which share their clock and their planet; the Moon has
+no siblings, and the only body ever in frame beside it is the Earth, whose
+motion is on the planets' clock. So the Moon runs there, at its true sidereal
+month over Earth's true sidereal year: it laps the Earth 13.37 times per
+on-screen year, exactly as the real one does, with no invented number left on
+the line. The old objection — that a strict ratio "whips it round every 5 s, a
+blur" — was made when the Moon rode a 39 px orbit; true distances halved that,
+so the same month is now 26 px/s, a third of Io's and an eighth of Mimas's.
+`tests/title_moons_test.ts` measures APPARENT SPEED for exactly this reason: a
+period can be right while the body it belongs to is not moving.
+
 **AND THE PRICE OF TRUE PERIODS IS THAT THE GIANTS BARELY MOVE.** Jupiter takes
 12.6 minutes to go round, Saturn 31, Uranus an hour and a half, Neptune very
 nearly three hours. That is why the sky opens on a chosen date (`EPOCH_MS`)

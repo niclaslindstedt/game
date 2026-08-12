@@ -44,8 +44,9 @@ import { orbitAt, type World } from "@ui/lib/orbit.ts";
 import type { GlobeKind } from "@ui/lib/planet-globe.ts";
 
 /** The planets that have one of these. (Earth's Moon is not here: it is old
- * enough in this file's history to have its own seat in `title-sky.ts`, and
- * physically it is the odd one out anyway — see `SATELLITES` below.) */
+ * enough in this file's history to have its own seat in `title-planets.ts`, it
+ * rides the ecliptic rather than its planet's equator, and it is the one
+ * satellite in the sky NOT on the clock below — see `moonBody`.) */
 export type ParentName = "mars" | "jupiter" | "saturn" | "uranus" | "neptune";
 
 /**
@@ -69,7 +70,13 @@ export type SatelliteDef = {
   inc: number;
   /** Sidereal period (days). */
   days: number;
-  /** Geometric albedo — how much sunlight it throws back. */
+  /** GEOMETRIC albedo — how much sunlight the disc throws straight back at the
+   * sun, which is the quantity that decides how bright a point of light is from
+   * here. It legitimately exceeds 1 for fresh ice (Enceladus 1.375, Tethys
+   * 1.229): a surface that backscatters beats the flat white plate the scale is
+   * defined against. Do NOT mix in Bond albedos, which are the same worlds'
+   * whole-sphere figures and about a third lower — Saturn's seven were quietly
+   * on that scale while Jupiter's four were on this one. */
   albedo: number;
   /** The colour it is, for the frames where it is too small for a globe and is
    * drawn as a point of light instead. */
@@ -113,9 +120,12 @@ export const SATELLITES: readonly SatelliteDef[] = [
   },
 
   // --- JUPITER: the four Galileo turned his glass on in January 1610, and ---
-  // the reason we know the Earth is not the centre of anything. Their periods
-  // lock 1:2:4 — Io laps Europa exactly twice and Ganymede exactly four times —
-  // which is why all three can never be on the same side at once.
+  // the reason we know the Earth is not the centre of anything. The inner three
+  // are in the LAPLACE RESONANCE: within a fraction of a per cent Io laps
+  // Europa twice and Ganymede four times, which is why all three can never be
+  // on the same side of Jupiter at once. The periods below are the true ones
+  // rather than a tidied 1:2:4 — the resonance is a fact about the sky and does
+  // not need help from this file.
   {
     id: "io",
     kind: "io",
@@ -124,7 +134,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     a: 421800,
     e: 0.004,
     inc: 0.0,
-    days: 1.763,
+    days: 1.769138,
     albedo: 0.62,
     tint: [238, 222, 150],
     l0: 0,
@@ -137,7 +147,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     a: 671100,
     e: 0.009,
     inc: 0.5,
-    days: 3.525,
+    days: 3.551181,
     albedo: 0.68,
     tint: [244, 240, 230],
     l0: 130,
@@ -152,7 +162,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     a: 1070400,
     e: 0.001,
     inc: 0.2,
-    days: 7.156,
+    days: 7.154553,
     albedo: 0.44,
     tint: [186, 180, 172],
     l0: 250,
@@ -165,7 +175,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     a: 1882700,
     e: 0.007,
     inc: 0.3,
-    days: 16.69,
+    days: 16.689018,
     albedo: 0.19,
     tint: [140, 128, 114],
     l0: 60,
@@ -181,7 +191,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.02,
     inc: 1.6,
     days: 0.942,
-    albedo: 0.52,
+    albedo: 0.962,
     tint: [214, 214, 218],
     l0: 15,
   },
@@ -196,7 +206,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.005,
     inc: 0.0,
     days: 1.37,
-    albedo: 0.96,
+    albedo: 1.375,
     tint: [246, 248, 252],
     l0: 145,
   },
@@ -209,7 +219,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.001,
     inc: 1.1,
     days: 1.888,
-    albedo: 0.78,
+    albedo: 1.229,
     tint: [230, 228, 224],
     l0: 275,
   },
@@ -222,7 +232,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.002,
     inc: 0.0,
     days: 2.737,
-    albedo: 0.65,
+    albedo: 0.998,
     tint: [222, 220, 216],
     l0: 40,
   },
@@ -235,7 +245,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.001,
     inc: 0.3,
     days: 4.518,
-    albedo: 0.65,
+    albedo: 0.949,
     tint: [218, 216, 212],
     l0: 190,
   },
@@ -250,7 +260,7 @@ export const SATELLITES: readonly SatelliteDef[] = [
     e: 0.029,
     inc: 0.3,
     days: 15.945,
-    albedo: 0.2,
+    albedo: 0.22,
     tint: [222, 168, 96],
     l0: 310,
   },
@@ -389,6 +399,17 @@ export const SATELLITES: readonly SatelliteDef[] = [
  * it cannot be: on that clock Io's orbit would last a third of a second. That
  * is the same compromise the sky already makes between orbits and spins — each
  * clock exact within itself, only the ratio between them invented.
+ *
+ * WHAT IT COSTS IS THE SLOW END, and the bill has already come in once. A
+ * satellite's apparent speed is its drawn orbit over its period, and this
+ * catalogue spans 250:1 in period — so a clock that keeps Phobos from strobing
+ * leaves Iapetus, 79 days out, crawling round Saturn in eight minutes. That is
+ * survivable for the outermost moon of a planet that is rarely in frame; it was
+ * NOT survivable for Earth's Moon, whose 27-day month on this clock came to
+ * 164 s round a 20 px orbit — 0.77 px/s, which is a Moon that has stopped. No
+ * single clock can serve both ends of a 250:1 spread, which is precisely why
+ * Earth's Moon is on the planets' clock instead (`moonBody`) and why
+ * `tests/title_moons_test.ts` measures apparent speed rather than periods.
  */
 export const SAT_MS_PER_DAY = 6_000;
 
