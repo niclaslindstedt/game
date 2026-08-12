@@ -36,10 +36,20 @@ it at both ends of the session.
 - **Author** a mission as `content/levels/<id>.yaml` (the file stem MUST
   equal the level `id`). It carries every `MissionDef` field (documented at the
   type, `engine/game/defs/levels/types.ts` — `LevelDef` minus the geometry) plus
-  three authoring keys:
+  two authoring keys:
   - `description:` free-text design intent (documentation + the map renderer).
-  - `campaign: true` → joins the ordered campaign (`LEVEL_ORDER`), or
-    `secret: true` → an off-campaign venue (`SECRET_LEVEL_ORDER`). Exactly one.
+  - the venue's KIND — **exactly one** of:
+    - `campaign: true` → joins the ordered campaign (`LEVEL_ORDER`);
+    - `secret: true` → an off-campaign venue (`SECRET_LEVEL_ORDER`) — no unlock
+      chain, no NEXT LEVEL slot, reached only by a travel gate or the dev warp;
+    - `display: true` → a **DISPLAY CASE** (`DISPLAY_LEVEL_ORDER`): compiled into
+      the catalog and carved like any level, but in NEITHER player-facing order,
+      so it has no unlock chain, no picker row, no dev warp row and **no library
+      page**. It is a room built to be LOOKED THROUGH rather than played, and it
+      is reached only by something naming it by id. The effects gallery's stage
+      (`content/levels/gallery.yaml`) is the one of them — write a second only
+      for another such instrument, never for a venue a player is meant to
+      visit.
 - **Compile:** `make levels` (or `npm run levels`; also runs inside
   `make assets`) parses the tree, VALIDATES it against the live engine catalogs
   (unknown enemy/weapon/gear/thought/story id, bad band, off-map zone, a locked

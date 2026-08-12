@@ -735,7 +735,13 @@ last time.
 (`pwa/src/game/effects-gallery/`): every visual effect the game ships, each
 staged as a real fullscreen game situation and replayed on a loop — the nuke
 over a horde, the ding at the level cap, every signature blade and shot, every
-talent's always-on FX, the world's own hazards. Browse with the side buttons /
+talent's always-on FX, the world's own hazards. Every diorama stands in THE
+DISPLAY CASE (`content/levels/gallery.yaml`) — a venue that exists only for
+this: one empty hall of dark, evenly-laid floor, no props, no vehicles, no
+district seams and its walls parked far outside the frame, so the only thing in
+shot is the effect under inspection. An exhibit names a real venue instead only
+when the venue is part of what it is showing (the WORLD shelf's hazards, a
+level's own ground). Browse with the side buttons /
 ←→ (↑↓ jump a whole shelf), search the catalog at the top, tap the field (or
 press `Enter`) to run the show again, `S` (or the SPEED chip) to step the
 diorama down through `1X / 1/2X / 1/4X / 1/8X` slow motion — it scales SIM time,

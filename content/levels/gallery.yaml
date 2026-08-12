@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  THE DISPLAY CASE - the venue the EFFECTS GALLERY stages its dioramas in, and
+  the one level in the game nobody plays. It is a room built to be LOOKED
+  THROUGH rather than walked: a single empty hall of dark, evenly-laid floor
+  with the hero standing in the middle of it and its walls parked far outside
+  any frame the gallery will ever draw.
+  EVERYTHING IT DOES NOT HAVE IS THE POINT. No props, no crates, no chests, no
+  decor, no landmarks, no parked car with a boarding arrow over it, no night
+  shift driving in with its headlights on, no district seam cutting the frame in
+  half, and no map edge dithering to black a screen away - every one of which
+  the gallery used to stand its effects in front of, because it borrowed GOODCO
+  HQ's staff lot for a stage. An explosion is hard enough to judge without a
+  vehicle in the shot.
+  IT IS NOT A MISSION AND IS NOT REACHABLE IN PLAY (`display: true`): it joins
+  no campaign chain, no secret order, no level picker, no library page. Only the
+  effects gallery names it, by id.
+display: true
+id: gallery
+index: 0
+name: THE DISPLAY CASE
+# Earth's pull. A display case is not somewhere - it is a neutral bench - so it
+# takes the gravity every effect in the game was tuned against rather than a
+# character of its own: a gib thrown here arcs exactly as it does at GOODCO.
+gravity: 800
+biome: goodco
+# THE WHOLE FLOOR, LIT, FROM THE FIRST FRAME. The gallery's own staging lifts
+# the fog anyway (`STAGE_BASE.reveal`), but a display case with a fog of war on
+# it is a display case with a frontier band in the frame, and the band is drawn
+# from what has been EXPLORED - which is a question this venue has no business
+# asking.
+revealed: true
+tiles:
+  # ONE SURFACE, WALL TO WALL: dark, evenly speckled tarmac. Dark, because most
+  # of what this room exists to show is LIGHT (fire, flashes, muzzle glow,
+  # lightning) and light needs somewhere dark to be light against; evenly
+  # speckled rather than flat, because a floor with no grain at all reads as an
+  # unfinished level and gives the eye nothing to measure a shockwave's spread
+  # against. The cracked variant is laid RARELY - often enough that the ground
+  # is a surface, seldom enough that no crack ever competes with the exhibit.
+  ground:
+    common: asphalt_0
+    rare: asphalt_1
+    rareEvery: 61
+heroSuited: false
+foes: NOBODY
+# NOTHING TO CLEAR, and nothing that could clear it: the hall is empty and the
+# gallery's own staging holds the win latched (`STAGE_BASE.noVictory`), so the
+# diorama stays up for as long as it is watched. Deliberately NOT `hub` - that
+# objective is how `hubLevelId()` finds the garage, and a second venue wearing
+# it would make the game's home address a question of catalog order.
+objective:
+  type: clearAll
+# Nothing is scattered in here, so the number is never read. It is required, and
+# a display case's answer to "how close may furniture stand to a landmark" is
+# the honest one: there is no furniture.
+decorClearance: 40
+# NO POOLS. Nothing spawns here, nothing dies here, and nothing drops here - an
+# exhibit that wants an item on the floor stages it itself
+# (`ScenarioSpec.drops`).
+loot:
+  weaponPool: []
+  gearPool: []
+  abilityPool: []

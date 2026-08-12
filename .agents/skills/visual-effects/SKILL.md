@@ -82,6 +82,16 @@ screenshot it in the REAL game.
 **Start at the EFFECTS GALLERY** (`?effects`, or SETTINGS → DEVELOPER → GALLERIES →
 EFFECTS — `pwa/src/game/effects-gallery/`): every effect the game ships is
 already staged there, fullscreen and looping, so the first look costs nothing.
+
+**The stage is THE DISPLAY CASE** (`content/levels/gallery.yaml`) — a venue
+built for this and reachable no other way: one empty hall of dark, evenly-laid
+floor, no props, no vehicles, no district seam, and its walls parked far outside
+any frame the gallery draws. So an exhibit sets `levelId` ONLY when the venue is
+part of what it is showing (the WORLD shelf's hazards, a level's own ground) —
+and a new exhibit almost never is. Nothing else is in shot on purpose: the
+gallery used to borrow GOODCO's staff lot, and a third of every frame was a
+parked car, a second car driving in, the building's floor, and the map's own
+edge dithering to black.
 An effect you are ADDING gets an exhibit in the same change — a `ScenarioSpec`
 for the stage and a `GameEvent` to fire, a few lines of data in
 `effects-catalog.ts` (the melee/shot/talent shelves generate themselves from

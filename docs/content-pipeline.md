@@ -185,6 +185,18 @@ never by editing the fixture.
   = count, colour = con vs the ladder's `intendedLevel`); `--seed` picks which
   run, `--size` the scale), and how it plays with `make map LEVEL=<id>`
   (`scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
+  Every level declares exactly one KIND, and the kind decides only where it is
+  LISTED: `campaign: true` (`LEVEL_ORDER` — the unlock chain), `secret: true`
+  (`SECRET_LEVEL_ORDER` — an off-campaign venue reached by a travel gate or the
+  dev warp), or `display: true` (`DISPLAY_LEVEL_ORDER` — a **DISPLAY CASE**: a
+  venue compiled and carved like any other but in NEITHER player-facing order,
+  so no unlock chain, no picker row, no warp row and no library page finds it).
+  Everything outside a run walks the two player-facing orders, which is what
+  keeps a display case out of all of them without any of them learning to skip
+  one; `tests/content/catalog_test.ts` pins that the three partition the
+  catalog. The shipped game has exactly one — the effects gallery's stage
+  (`content/levels/gallery.yaml`), a bare hall the FX dioramas are staged in so
+  nothing but the effect under inspection is in frame.
 - **The hero level curve is compiled from YAML**, the same way.
   `content/leveling.yaml` authors the XP each level costs (rows annotated with
   their kills-per-level equivalents); `make levels` runs

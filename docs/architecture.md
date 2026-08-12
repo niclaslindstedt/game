@@ -2069,7 +2069,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `effects-gallery/` (the developer EFFECTS GALLERY — every visual effect the
   game draws, each staged as a real fullscreen game situation by the engine's own
   scenario system and fired through the engine's own event stream, so the
-  exhibits can never drift from what ships; the melee/shot/talent shelves are
+  exhibits can never drift from what ships. The stage is a venue of its own,
+  THE DISPLAY CASE (`content/levels/gallery.yaml`, `display: true` — compiled
+  and carved like any level but in neither player-facing order): an empty hall
+  of dark, evenly-laid floor whose walls are parked outside any frame the
+  gallery draws, so nothing but the effect is in shot. An exhibit names a real
+  venue only when the VENUE is part of what it shows; the melee/shot/talent shelves are
   generated from `weapon-fx.ts` and the talent catalog, and
   `tests/content/effects_gallery_test.ts` fails the build when one falls behind.
   ONE CATALOG, TWO HOSTS: an `Exhibit` is a `RunExhibit` or a `DriveExhibit`

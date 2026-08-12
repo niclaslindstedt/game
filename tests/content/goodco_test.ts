@@ -683,7 +683,12 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
 describe("level catalog integrity", () => {
   // CARVED, because that is the level a run is played on: the mission carries
   // the loot pools and the story, the map carried the cast.
-  const levels: LevelDef[] = Object.keys(LEVELS).map((id) =>
+  //
+  // THE PLAYABLE VENUES, not every compiled level: a DISPLAY CASE
+  // (`DISPLAY_LEVEL_ORDER` — the effects gallery's stage) is a room built to be
+  // looked through and owes none of what a mission owes. No story index, no
+  // monologue, no cast, no loot.
+  const levels: LevelDef[] = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].map((id) =>
     resolveLevelDef(id, SEED),
   );
 

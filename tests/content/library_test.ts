@@ -21,10 +21,12 @@ import {
   ABILITY_DEFS,
   COMPANION_DEFS,
   CUTSCENE_DEFS,
+  DISPLAY_LEVEL_ORDER,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
   LEVEL_ORDER,
+  SECRET_LEVEL_ORDER,
   NUKE_DEF_ID,
   QUALITY,
   QUEST_DEFS,
@@ -138,6 +140,10 @@ import {
 } from "../../pwa/scripts/library/render-achievements.mjs";
 
 const model = libraryModel();
+/** The venues the library is ABOUT — every level the player can reach. A
+ * DISPLAY CASE (the effects gallery's stage) is neither a mission nor a place
+ * in the story, and owes the library nothing. */
+const PLAYABLE_LEVELS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
 const context = {
   base: "/",
   groundFor: (id: string | null) => `/library/grounds/${id ?? "moon"}.png`,
@@ -358,9 +364,14 @@ describe("library coverage", () => {
     expect(grouped.length).toBe(model.talents.talents.length);
   });
 
-  it("gives every LEVEL a mission page", () => {
+  it("gives every PLAYABLE LEVEL a mission page", () => {
+    // The playable venues, not every compiled level: a DISPLAY CASE
+    // (`DISPLAY_LEVEL_ORDER` — the effects gallery's stage) is not a mission
+    // and must NOT have a page. The library builds from the two player-facing
+    // orders, so it is excluded by construction; this pins that it stays so.
     const paged = new Set(model.missions.map((m: { id: string }) => m.id));
-    expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
+    expect(PLAYABLE_LEVELS.filter((id) => !paged.has(id))).toEqual([]);
+    for (const id of DISPLAY_LEVEL_ORDER) expect(paged.has(id)).toBe(false);
   });
 
   it("gives every LEVEL a chapter of the story, and the hellborn their own", () => {
@@ -371,7 +382,7 @@ describe("library coverage", () => {
     const paged = new Set(
       model.story.chapters.map((c: { id: string }) => c.id),
     );
-    expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
+    expect(PLAYABLE_LEVELS.filter((id) => !paged.has(id))).toEqual([]);
     expect(paged.has("the-hellborn")).toBe(true);
   });
 

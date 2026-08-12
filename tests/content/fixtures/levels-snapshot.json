@@ -1833,6 +1833,39 @@
         [52, 56]
       ],
       "intendedLevel": [28, 28, 31, 55]
+    },
+    "gallery": {
+      "id": "gallery",
+      "index": 0,
+      "name": "THE DISPLAY CASE",
+      "gravity": 800,
+      "biome": "goodco",
+      "revealed": true,
+      "tiles": {
+        "ground": {
+          "common": "asphalt_0",
+          "rare": "asphalt_1",
+          "rareEvery": 61
+        }
+      },
+      "heroSuited": false,
+      "foes": "NOBODY",
+      "objective": {
+        "type": "clearAll"
+      },
+      "decorClearance": 40,
+      "loot": {
+        "weaponPool": [],
+        "gearPool": [],
+        "abilityPool": []
+      },
+      "mobLevels": [
+        [1, 7],
+        [1, 7],
+        [3, 10],
+        [42, 45]
+      ],
+      "intendedLevel": [6, 6, 8, 42]
     }
   }
 }

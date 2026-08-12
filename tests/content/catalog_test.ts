@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  DISPLAY_LEVEL_ORDER,
   enemyDef,
   gearDef,
   isWeaponDef,
@@ -43,10 +44,17 @@ function resolveEquipment(id: string): void {
 }
 
 describe("campaign catalog integrity", () => {
-  it("LEVEL_ORDER + SECRET_LEVEL_ORDER list every level exactly once, campaign in ascending story index", () => {
-    expect([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].sort()).toEqual(
-      Object.keys(LEVELS).sort(),
-    );
+  it("the three orders list every level exactly once, campaign in ascending story index", () => {
+    // Every compiled level is in EXACTLY one of the three: the campaign chain,
+    // the secret venues, or the display cases (`display: true` — the effects
+    // gallery's stage). The third is why this is a three-way partition rather
+    // than the two-way one it used to be: a display case is deliberately in
+    // neither player-facing order, and this assertion is what keeps "in neither
+    // order" from quietly becoming "in no order because somebody forgot a
+    // flag".
+    expect(
+      [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER, ...DISPLAY_LEVEL_ORDER].sort(),
+    ).toEqual(Object.keys(LEVELS).sort());
     // The campaign's own indices stay unique and ascending; a secret venue
     // instead SHARES a campaign index on purpose, so levelPosition's
     // interpolation axis (per-map XP caps) never shifts under shipped maps.
