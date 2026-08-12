@@ -9,7 +9,7 @@ import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
 import { usePwaUpdate } from "@ui/lib/pwa-update.ts";
 
 import { initDevicePolicy } from "./app/device-policy.ts";
-import { unlockedByLaunchOptions } from "./app/launch-options.ts";
+import { launchNoticeReasons } from "./app/launch-options.ts";
 import { isNativeApp } from "./app/native.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
@@ -216,14 +216,13 @@ export function App() {
 
   // THE LAUNCH NOTICE, and whether it has been answered yet. A desktop build
   // whose licensed features were switched on by command line owes the player a
-  // word about the terms before it shows them anything (app/launch-options.ts),
-  // and this is where that word goes: the ONE thing this app draws before the
-  // menu. Asked ONCE, from the shell's own stamp, so the answer cannot be
-  // re-raised by a later render — and never remembered across a launch, because
-  // the page load IS the launch.
-  const [noticePending, setNoticePending] = useState(() =>
-    unlockedByLaunchOptions(),
-  );
+  // word about the terms before it shows them anything — and one that was given
+  // the AUTO PILOT owes them a word about the multiplayer that cost
+  // (app/launch-options.ts). This is where both go: the ONE thing this app draws
+  // before the menu. Asked ONCE, from the shell's own stamp, so the answer
+  // cannot be re-raised by a later render — and never remembered across a
+  // launch, because the page load IS the launch. Null means nobody is owed one.
+  const [notice, setNotice] = useState(() => launchNoticeReasons());
 
   // THE STUDIO CARD is NOT here: it is the entry chunk (`Boot.tsx`), and this
   // whole module is one of the things it covers. By the time anything below
@@ -371,8 +370,8 @@ export function App() {
   // with does nothing at all until somebody says they understand that. So it is
   // an EARLY RETURN rather than a modal layered over the title — there is
   // nothing behind it to reach.
-  if (noticePending) {
-    return <LaunchNotice onAccept={() => setNoticePending(false)} />;
+  if (notice) {
+    return <LaunchNotice reasons={notice} onAccept={() => setNotice(null)} />;
   }
 
   // The cutscene workbench (`?cutscene=<id>`): loop one scene from the

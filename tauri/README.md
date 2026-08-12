@@ -208,6 +208,13 @@ exactly as the Electron build does — this shell states the fact in the
 initialization script (`__GIS_UNLOCKED__`, `shell/src/channels.rs`) and the page
 draws it (`pwa/src/game/LaunchNotice.tsx`).
 
+`--autopilot` goes the other way, and this shell answers it exactly as the
+Electron one does: the AUTO PILOT ride is in no desktop build (a copy that plays
+itself is a cheat in somebody else's session), there is no build switch for it,
+and the flag is a DEVELOPER one that costs the launch its multiplayer, voice and
+licence. The fact reaches the page as `__GIS_AUTOPILOT__` beside the licence
+one, into the same box.
+
 The binary talks to Steam on every launch unless told not to — but
 `scripts/run-tauri.mjs` fills in `GIS_STEAM=off` when the caller left it unset,
 exactly as the Electron launcher does, because a checkout being run by a

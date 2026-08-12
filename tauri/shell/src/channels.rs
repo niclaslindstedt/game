@@ -55,6 +55,18 @@ pub const CAPS_GLOBAL: &str = "__GIS_CAPS__";
 /// so it is defined on every launch rather than only on an unlocked one.
 pub const UNLOCKED_GLOBAL: &str = "__GIS_UNLOCKED__";
 
+/// WHETHER THE COMMAND LINE GAVE THIS LAUNCH THE AUTO PILOT, which the game
+/// states in the same box and before the same menu.
+///
+/// No desktop build carries the ride — it is a cheat in a session, and this is
+/// a game people play together — so `--autopilot` is a DEVELOPER switch that
+/// costs the launch its multiplayer (`capabilities::resolve_capabilities`). The
+/// page is told twice, on purpose and in two directions: the capability list
+/// says whether the ride may be OFFERED and fails open, this says whether it
+/// was switched on BY HAND and fails closed. Defined on every launch, `false`
+/// included, so the page's read stays a plain equality.
+pub const AUTOPILOT_GLOBAL: &str = "__GIS_AUTOPILOT__";
+
 /// What the page answers to. The shell calls these from OUTSIDE — the return
 /// path needed no abstraction on any shell, which is why the web side's
 /// receiving half is byte-identical across all three.

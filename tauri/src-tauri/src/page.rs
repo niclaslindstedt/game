@@ -3,7 +3,7 @@
 //! and of `native/src/injected.ts`.
 //!
 //! It is one initialization script, evaluated before the game's own scripts on
-//! every load, and it exposes exactly seven things — five constants, the page →
+//! every load, and it exposes exactly eight things — six constants, the page →
 //! shell pipe, and the snapshot channel's page-side half
 //! ([`adastrail_shell::snapshot`]), which is how a session's twenty frames a
 //! second reach the page without the shell in the path:
@@ -15,6 +15,7 @@
 //! | `__GIS_SHELL__`       | WHICH BINARY — `tauri`, for a bug report and nothing else |
 //! | `__GIS_CAPS__`        | what this launch may honour, as plain names               |
 //! | `__GIS_UNLOCKED__`    | …and whether the COMMAND LINE is what turned it on        |
+//! | `__GIS_AUTOPILOT__`   | …and whether it is what gave this launch the AUTO PILOT   |
 //! | `__gisShell.post`     | the page → shell pipe                                     |
 //! | `__gisShell.onNetPort`| a session's frames, as the `MessagePort` the page expects |
 //!
@@ -37,8 +38,8 @@
 
 use adastrail_shell::capabilities::{capability_list, Capabilities};
 use adastrail_shell::channels::{
-    CAPS_GLOBAL, NATIVE_GLOBAL, PLATFORM_GLOBAL, SHELL_COMMAND, SHELL_GLOBAL, SHELL_ID_GLOBAL,
-    UNLOCKED_GLOBAL,
+    AUTOPILOT_GLOBAL, CAPS_GLOBAL, NATIVE_GLOBAL, PLATFORM_GLOBAL, SHELL_COMMAND, SHELL_GLOBAL,
+    SHELL_ID_GLOBAL, UNLOCKED_GLOBAL,
 };
 use adastrail_shell::media::lockout_script;
 use adastrail_shell::snapshot::{adapter_script, shell_member};
@@ -85,6 +86,10 @@ pub fn initialization_script(capabilities: &Capabilities, overlay: bool) -> Stri
     // every launch, `false` included, so the page's read stays a plain equality
     // rather than a guess about what an absent global meant.
     let unlocked = capabilities.unlocked;
+    // …and the AUTO PILOT's, which is the other thing this launch may owe the
+    // player a sentence about — see `AUTOPILOT_GLOBAL`. Stated on every launch
+    // for the same reason.
+    let autopilot = capabilities.autopilot();
     // THE SNAPSHOT CHANNEL's page-side half, and the MICROPHONE's floor. Both
     // are decisions with tests, spliced in rather than written here — see
     // `adastrail_shell::snapshot` and `adastrail_shell::media`.
@@ -102,6 +107,7 @@ pub fn initialization_script(capabilities: &Capabilities, overlay: bool) -> Stri
   define({SHELL_ID_GLOBAL:?}, {SHELL_ID:?});
   define({CAPS_GLOBAL:?}, Object.freeze({caps}));
   define({UNLOCKED_GLOBAL:?}, {unlocked});
+  define({AUTOPILOT_GLOBAL:?}, {autopilot});
 {lockout}
 {net}
 

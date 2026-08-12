@@ -33,12 +33,18 @@ pub fn dedicated_args(argv: &[String]) -> Option<Vec<String>> {
 /// the server's parser reads an unknown `--flag` as one that takes a VALUE, so
 /// leaving one in would swallow the token after it and turn `--port 27849` into
 /// a config-file path.
+///
+/// `--autopilot` is in the list for the parser's sake rather than the server's:
+/// it can never reach a running server (it is what turns multiplayer off, so the
+/// dedicated launch is refused before this is called), but an unknown flag left
+/// in would still swallow the token after it.
 const SHELL_OWN: &[&str] = &[
     "--multiplayer",
     "--mods",
     "--voice",
     "--licensed",
     "--no-portmap",
+    "--autopilot",
 ];
 
 /// What the session server is actually handed.

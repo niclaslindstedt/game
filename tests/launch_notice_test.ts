@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE LAUNCH NOTICE — the licence acknowledgement a desktop build shows in
-// front of the title menu when its command line, rather than its packaging, is
-// what turned multiplayer or mods on (pwa/src/game/LaunchNotice.tsx).
+// THE LAUNCH NOTICE — what a desktop build says in front of the title menu when
+// its command line, rather than its packaging, decided what it may do
+// (pwa/src/game/LaunchNotice.tsx). Two reasons land in the same box: the
+// LICENCE (multiplayer or mods switched on outside the terms this build came
+// under) and the AUTO PILOT (a ride no desktop build carries, handed back by
+// `--autopilot` at the price of that launch's multiplayer).
 //
 // Two halves are worth pinning, and both fail SILENTLY in the running game.
 //
@@ -20,8 +23,13 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { measureText } from "../scripts/asset-tools/font.mjs";
-import { unlockedByLaunchOptions } from "../pwa/src/app/launch-options.ts";
-import { LAUNCH_NOTICE } from "../pwa/src/game/copy.ts";
+import {
+  autopilotAllowed,
+  autopilotByLaunchOption,
+  launchNoticeReasons,
+  unlockedByLaunchOptions,
+} from "../pwa/src/app/launch-options.ts";
+import { AUTOPILOT_NOTICE, LAUNCH_NOTICE } from "../pwa/src/game/copy.ts";
 
 /** Every character the font has a glyph for that this copy has any business
  * using — letters, digits, space, and the sentence punctuation. The font
@@ -89,23 +97,118 @@ describe("who is shown the launch notice", () => {
   });
 });
 
+// THE AUTO PILOT is the second fact the same box states, and it reads BACKWARDS
+// from the first: `--multiplayer` gives a launch something its packaging
+// withheld, `--autopilot` gives it something no desktop packaging carries at
+// all. Two reads answer the two halves and they fail in OPPOSITE directions —
+// which is the whole of what can go wrong here, in both directions at once.
+describe("who is shown the auto pilot notice", () => {
+  it("shows nobody, with no shell to say otherwise", () => {
+    vi.stubGlobal("window", {});
+    expect(autopilotByLaunchOption()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("shows it when the shell says the command line switched the ride on", () => {
+    vi.stubGlobal("window", { __GIS_AUTOPILOT__: true });
+    expect(autopilotByLaunchOption()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("takes only the boolean, never something that merely looks true", () => {
+    for (const value of ["true", "false", 1, {}, []]) {
+      vi.stubGlobal("window", { __GIS_AUTOPILOT__: value });
+      expect(
+        autopilotByLaunchOption(),
+        `__GIS_AUTOPILOT__ = ${String(value)}`,
+      ).toBe(false);
+    }
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("who may be offered the auto pilot at all", () => {
+  it("keeps it where nothing publishes a capability list", () => {
+    // A browser, the installed PWA and both phone shells — the ride is a thing
+    // players buy there, and none of this is about them.
+    vi.stubGlobal("window", {});
+    expect(autopilotAllowed()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("withholds it from a desktop launch that did not ask", () => {
+    // The depot build's own list, ride absent. This is the change: before it,
+    // every desktop copy could hire a bot to play the game for it.
+    vi.stubGlobal("window", {
+      __GIS_CAPS__: ["multiplayer", "mods", "voice"],
+    });
+    expect(autopilotAllowed()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("hands it back to a launch that did", () => {
+    // …and that launch has no multiplayer left in its list, which is the trade
+    // the shells make (`electron/src/capabilities.ts`).
+    vi.stubGlobal("window", { __GIS_CAPS__: ["mods", "autopilot"] });
+    expect(autopilotAllowed()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("what the one box has to say", () => {
+  it("says nothing at all on an ordinary launch", () => {
+    vi.stubGlobal("window", {});
+    expect(launchNoticeReasons()).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it("carries each reason on its own", () => {
+    vi.stubGlobal("window", { __GIS_UNLOCKED__: true });
+    expect(launchNoticeReasons()).toEqual({ licence: true, autopilot: false });
+    vi.stubGlobal("window", { __GIS_AUTOPILOT__: true });
+    expect(launchNoticeReasons()).toEqual({ licence: false, autopilot: true });
+    vi.unstubAllGlobals();
+  });
+
+  it("carries both at once — one box, two paragraphs", () => {
+    // `--mods --autopilot` is a real pairing: mods survive the trade, so a
+    // launch can owe the licence sentence AND the auto pilot one.
+    vi.stubGlobal("window", {
+      __GIS_UNLOCKED__: true,
+      __GIS_AUTOPILOT__: true,
+    });
+    expect(launchNoticeReasons()).toEqual({ licence: true, autopilot: true });
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("the launch notice's copy", () => {
   it("only uses characters the pixel font can draw", () => {
-    for (const [key, text] of Object.entries(LAUNCH_NOTICE)) {
-      expect(text, `${key}: "${text}"`).toMatch(GLYPH_SAFE);
+    for (const block of [LAUNCH_NOTICE, AUTOPILOT_NOTICE]) {
+      for (const [key, text] of Object.entries(block)) {
+        expect(text, `${key}: "${text}"`).toMatch(GLYPH_SAFE);
+      }
     }
   });
 
   it("stays short enough to be read rather than clicked past", () => {
-    const body = [LAUNCH_NOTICE.what, LAUNCH_NOTICE.where, LAUNCH_NOTICE.terms];
-    // The wrap is the font's own (`wrapLines`); this is the cheap upper bound
-    // on the same arithmetic — total width over the column's width, plus one
-    // line per paragraph for the ragged last row.
-    const lines = body.reduce(
-      (total, text) => total + Math.ceil(measureText(text) / COLUMN_FONT_PX),
-      0,
-    );
-    expect(lines).toBeLessThanOrEqual(MAX_BODY_LINES);
+    // Each REASON's own body, held to the budget on its own — a launch with
+    // both reasons is the one case the box may scroll for, and it is a pairing
+    // a developer typed rather than anything a player meets.
+    const bodies = [
+      [LAUNCH_NOTICE.what, LAUNCH_NOTICE.where, LAUNCH_NOTICE.terms],
+      [AUTOPILOT_NOTICE.what, AUTOPILOT_NOTICE.terms, AUTOPILOT_NOTICE.where],
+    ];
+    for (const body of bodies) {
+      // The wrap is the font's own (`wrapLines`); this is the cheap upper bound
+      // on the same arithmetic — total width over the column's width, plus one
+      // line per paragraph for the ragged last row.
+      const lines = body.reduce(
+        (total, text) => total + Math.ceil(measureText(text) / COLUMN_FONT_PX),
+        0,
+      );
+      expect(lines, body[0]).toBeLessThanOrEqual(MAX_BODY_LINES);
+    }
   });
 
   it("keeps every button label inside a button", () => {
@@ -114,6 +217,7 @@ describe("the launch notice's copy", () => {
       LAUNCH_NOTICE.accept,
       LAUNCH_NOTICE.store,
       LAUNCH_NOTICE.quit,
+      AUTOPILOT_NOTICE.store,
     ]) {
       expect(measureText(label), `"${label}"`).toBeLessThanOrEqual(
         NARROW_COLUMN_FONT_PX,

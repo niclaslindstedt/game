@@ -556,6 +556,22 @@ options dropped. Both shells state the fact the same way (`__GIS_UNLOCKED__`)
 and the page draws the same notice; the dedicated server, which has no page,
 prints it to the console instead.
 
+**And ONE launch option goes the other way: `--autopilot` hands back a feature
+no desktop build carries at all.** The AUTO PILOT is the coin-metered ride that
+flies the hero for the player — a fine thing to buy on a phone and a cheat in
+somebody else's session — so neither desktop shell ships it, depot build
+included, and there is no `GIS_ENABLE_*` switch for it to be packaged with.
+`--autopilot` is a DEVELOPER switch, and **it costs the launch its multiplayer**:
+that launch's `multiplayer`, `voice` and `licensed` all go off, whether they
+came from the stamp or from the same command line, so no copy playing itself can
+sit in a session. The shells write the consequence to the launch log and state
+the fact to the page (`__GIS_AUTOPILOT__`), which puts it in the same box as the
+licence notice — with a way to the phone edition, which is where the ride is
+meant for players. `--dedicated` with `--autopilot` is refused for the same
+reason `--dedicated` without `--multiplayer` is: there is no session left to
+serve. Browsers, the installed PWA and both phone builds are untouched — they
+publish no capability list and keep the ride they have always had.
+
 At RUNTIME both shells read the same handful: `GIS_STEAM=off` (don't talk to
 Steam at all — how most local shell work happens), `GIS_STEAM_OVERLAY=1|0`
 (force "was this started by Steam", which decides the overlay's surface),

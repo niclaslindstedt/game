@@ -11,6 +11,7 @@ const caps = (over: Partial<Capabilities> = {}): Capabilities => ({
   portMap: true,
   voice: false,
   licensed: false,
+  autopilot: false,
   unlocked: false,
   direct: false,
   ...over,
@@ -71,5 +72,14 @@ describe("what the session server is handed", () => {
     expect(serverArgs([], caps({ licensed: true }))).toEqual(["--licensed"]);
     // …and a claim the shell did not resolve does not sneak past it.
     expect(serverArgs(["--licensed"], caps())).toEqual([]);
+  });
+
+  it("takes --autopilot out too, so it cannot eat the token after it", () => {
+    // It can never reach a running server — asking for the ride is what turns
+    // multiplayer off, and the dedicated branch refuses such a launch — but the
+    // server's parser would still read it as a flag that takes a value.
+    expect(serverArgs(["--autopilot", "server.json"], caps())).toEqual([
+      "server.json",
+    ]);
   });
 });

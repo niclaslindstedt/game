@@ -98,3 +98,28 @@ export const LAUNCH_NOTICE = {
   /** The way out, which closes the game rather than dropping the options. */
   quit: "QUIT",
 } as const;
+
+// THE OTHER HALF OF THE SAME BOX — what a desktop build says when `--autopilot`
+// gave it the ride it ships without (pwa/src/app/launch-options.ts).
+//
+// It reads BACKWARDS from the licence notice above, and the difference is the
+// point: that one is about a feature somebody switched on outside the terms it
+// came under, this one is about a feature no desktop build has terms for at all.
+// The ride plays the game for the player, which is a fine thing to buy on a
+// phone and a cheat in somebody else's session — so it costs this launch its
+// multiplayer, and saying so is the whole job. The heading, the acknowledgement
+// and the QUIT are the notice's own and shared with the licence block.
+//
+// Same rules: no lowercase glyphs, so keep it short.
+export const AUTOPILOT_NOTICE = {
+  /** What this launch turned on that no desktop build carries. */
+  what: "Auto pilot was turned on by launch options.",
+  /** The consequence, which is the whole reason this is in front of anybody. */
+  terms:
+    "It plays the game for you, so multiplayer is off for this launch. On desktop it is a developer tool, not a way to play.",
+  /** Where the ride is meant for players. Dropped when there is no store page
+   * to send anybody to — the same rule every other store link follows. */
+  where: "The phone edition is the one that has it to play with.",
+  /** The proper way to get the ride, offered as a button rather than a URL. */
+  store: "GET IT ON YOUR PHONE",
+} as const;

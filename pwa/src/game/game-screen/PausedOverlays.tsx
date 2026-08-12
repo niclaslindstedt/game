@@ -29,6 +29,7 @@ import {
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
+import { autopilotAllowed } from "../../app/launch-options.ts";
 import { hasClearedLevel, type Character } from "../characters.ts";
 import type { GameAssets, RelicTier, Sprites } from "../assets.ts";
 import type { HudActions } from "../hud/context.ts";
@@ -129,7 +130,15 @@ export function usePauseMenu({
   // it), and never for a hardcore hero: the flight director retires a hero
   // mid-ride, so handing an unattended bot the controls could permakill the
   // run. A hardcore hero is always flown by hand.
-  const autopilotOffered = !demo && !botView && !hardcore;
+  //
+  // …and NOT ON A DESKTOP BUILD, which ships without the ride entirely. This is
+  // a game people play together and a copy that plays itself is a cheat in
+  // somebody else's session, so the two desktop shells withhold the capability
+  // and `--autopilot` is a DEVELOPER switch that buys it back at the price of
+  // that launch's multiplayer (`pwa/src/app/launch-options.ts`). The read fails
+  // OPEN, so the browser, the installed PWA and both phone builds — where the
+  // ride is a thing players buy — are untouched by any of this.
+  const autopilotOffered = !demo && !botView && !hardcore && autopilotAllowed();
   const active = state?.autopilot.active === true;
 
   const resumeRun = () => {

@@ -126,6 +126,19 @@ line (`--gis-unlocked` → `__GIS_UNLOCKED__`, see `src/capabilities.ts`) and th
 page says the words in the game's own window skin. The dedicated server, which
 has no page to ask through, prints the same notice to its console instead.
 
+**And one option goes the other way — `--autopilot`.** The AUTO PILOT is the
+coin-metered ride that flies the hero for the player, and no desktop build
+carries it, depot build included: this is a game people play together, and a
+copy that plays itself is a cheat in somebody else's session. There is nothing
+to stamp and no `GIS_ENABLE_*` for it — the switch is the only way it is ever
+on, it is for DEVELOPERS, and it costs the launch its multiplayer (this launch's
+`multiplayer`, `voice` and `licensed` all go off, stamp or no stamp). The fact
+reaches the page the same way the licence one does (`--gis-autopilot` →
+`__GIS_AUTOPILOT__`) and lands in the same box, which offers the phone edition —
+where the ride is meant for players. `--dedicated --autopilot` is refused for
+the same reason `--dedicated` without `--multiplayer` is: no session left to
+serve.
+
 ### When it does not start
 
 The shell writes **every launch** to `launch.log` in its user-data directory
