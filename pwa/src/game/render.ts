@@ -29,7 +29,7 @@ import {
   drawDeathClouds,
   effectsClockMs,
 } from "./render/death.ts";
-import { drawFloorRemains, type Effect } from "./render/effects.ts";
+import { drawUnderActors, type Effect } from "./render/effects.ts";
 import {
   drawBaits,
   drawBeams,
@@ -266,18 +266,22 @@ export function drawFrame(
   drawEscortDestinations(ctx, state, camera, timeMs);
   ctx.restore();
 
-  // WHAT THE FIGHT LEFT LYING THERE — the corpses, the gibs and the cleaved
-  // halves that have already landed (`restsOnFloor`). The rest of the effect
-  // layer is drawn over the finished frame by the run's loop, because almost all
-  // of it happens in the AIR; these do not, and drawn up there a chunk of somebody
-  // was painted over the hero every time he walked across the spot it lay in.
-  // Under the loot and the bodies, over the floor furniture: gore is a thing on
-  // the ground, and a find that dropped on top of it has to stay visible.
+  // THE HALF OF THE EFFECT LAYER THAT BELONGS TO THE WORLD PICTURE
+  // (`drawnUnderActors`) — what the fight left lying there (the corpses, the
+  // gibs and the cleaved halves that have already landed), and the garage door
+  // rolling up. The rest of the layer is drawn over the finished frame by the
+  // run's loop, because almost all of it happens in the AIR; these do not, and
+  // drawn up there a chunk of somebody was painted over the hero every time he
+  // walked across the spot it lay in — and a door that started moving left the
+  // night wash and every lamp pool BELOW it, so it changed colour on the tick it
+  // opened. Under the loot and the bodies, over the floor furniture: gore is a
+  // thing on the ground, and a find that dropped on top of it has to stay
+  // visible.
   //
   // Screen space, like the rest of its layer — the pass billboards its own
   // anchors, so it goes OUTSIDE the tilt (which is reopened for the actors right
   // below, each of which stands itself back up).
-  drawFloorRemains(
+  drawUnderActors(
     ctx,
     effects,
     camera,

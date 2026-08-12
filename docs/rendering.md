@@ -195,20 +195,35 @@ vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
 shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
 which is wrong at every pitch but the one it was eyeballed at.
 
-**AND WHAT HAS COME TO REST IS NO LONGER PART OF THAT LAYER —
-`restsOnFloor`.** The effect layer is drawn OVER the finished frame because
-nearly everything in it happens in the air. What is left when those are over is
-not: a corpse lies on the floor for seconds, a burst's gibs and a cleave's halves
-for the ten of GORE LINGER, an epic's remains for the whole level. The field is a
-painter's stack with no depth sort to appeal to (floor → furniture → loot →
-horde → hero), so drawn with the rest of the layer every one of those was painted
-OVER the hero the moment he walked across the spot. They change layers when they
-land: `drawFloorRemains` puts them down inside `drawFrame`, under the loot and the
-bodies and over the floor furniture, while `drawEffects` draws everything else on
-top as before. The moment of the handover is each one's own animation ending
-(`CLEAVE_MS`, `GORE_BURST_MS`, a corpse's keel-over or the flight of a punted
-one), so nothing is still moving when it changes sides — and a launched body stays
-in the air layer for its whole arc, because it genuinely is in the air.
+**AND WHAT BELONGS TO THE WORLD PICTURE IS NO LONGER PART OF THAT LAYER —
+`drawnUnderActors`.** The effect layer is drawn OVER the finished frame because
+nearly everything in it happens in the air. Two kinds of thing in it do not, and
+they are separated out into a pass `drawFrame` runs itself (`drawUnderActors`)
+while `drawEffects` draws everything else on top as before.
+
+The first is WHAT HAS COME TO REST (`restsOnFloor`): a corpse lies on the floor
+for seconds, a burst's gibs and a cleave's halves for the ten of GORE LINGER, an
+epic's remains for the whole level. The field is a painter's stack with no depth
+sort to appeal to (floor → furniture → loot → horde → hero), so drawn with the
+rest of the layer every one of those was painted OVER the hero the moment he
+walked across the spot. They change layers when they land, and the moment of the
+handover is each one's own animation ending (`CLEAVE_MS`, `GORE_BURST_MS`, a
+corpse's keel-over or the flight of a punted one), so nothing is still moving
+when it changes sides — and a launched body stays in the air layer for its whole
+arc, because it genuinely is in the air.
+
+The second is THE GARAGE DOOR ROLLING UP, and it is in that pass from its first
+frame to its last, because the question is not "has it landed" but "is this part
+of the world picture". The retracting slats are an OBSTACLE the engine has
+already dropped, redrawn for the length of the roll-up — so drawn over the
+finished frame they sat above the night wash and above every lamp pool cut out
+of it (`drawNight`, below), and the door CHANGED COLOUR on the tick it started
+moving: a chain hanging in a lit garage went from that light to the sprite's own
+cold slate against unchanged surroundings, and painted over the hero standing in
+the doorway besides. It belongs exactly where the shut door was — with the
+walls, under the night and under the bodies. The general rule, for the next
+effect that redraws a piece of the level: **anything the world lights has to be
+drawn where the world lights it.**
 
 **SFW MODE swaps the vocabulary before anything graphic is recorded.** The
 gore gate returns no blood family or dismemberment kind, `killPresentation`
