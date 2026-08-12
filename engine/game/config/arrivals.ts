@@ -85,9 +85,10 @@ export const ARRIVALS = {
    * footpath reads as the strip between the bays and the building.
    */
   laneOffset: 30,
-  /** The rank's first bay, measured back from the apron along the lane (px) —
-   * near enough to the doors to be obviously THEIR bay, far enough that the
-   * car is not parked in the doorway. */
+  /** The DOORWAY's own first bay, measured back from the apron along the lane
+   * (px) — near enough to the doors to be obviously THEIR bay, far enough that
+   * the car is not parked in the doorway. Where the rank actually lands is that
+   * bay pulled toward the landing until the player can see it (`stageIt`). */
   bayGap: 96,
   /** …and the gap between the bays behind it. A car is 48 across (`CAR`), so
    * this is a bay and a half — a rank rather than a scrapyard. */
@@ -100,6 +101,28 @@ export const ARRIVALS = {
    * where nothing stands instead.
    */
   laneClearance: 30,
+  /**
+   * …and how wide the strip between a BAY and the footpath has to be clear for
+   * somebody to get out of the car there (px, either side of the walk).
+   *
+   * A person, not a car — so it is a fraction of `laneClearance` and measured
+   * across the walk rather than along the lane. It exists because the tarmac
+   * has parked cars on it already (the `parking_bays` prefab), and a bay laid a
+   * rank's width off one of them is a bay whose driver steps out into a 48 px
+   * slot with a bumper either side: the separation pass shoves him back into it
+   * every tick, he stands there until his leg times out, and the only door on
+   * the level opens eight seconds later than it should.
+   */
+  walkClearance: 14,
+  /** How far apart that corridor is sampled (px) — a stride, which is finer
+   * than anything it has to catch: the slot that trapped a staffer between two
+   * bumpers was 48 px across. */
+  walkStep: 16,
+  /** …and how far along it the check runs (px). Being WEDGED is a thing that
+   * happens beside the car — a slot between two ranks with no way out of it —
+   * and everything past that is a prop he is shoved around and walks on from.
+   * A car's length and a stride, which reaches the next rank either way. */
+  walkProbe: 80,
   /** How far from the ideal lane the search may wander looking for a clear
    * one (px), and the step it searches at. */
   laneSearch: 130,
@@ -122,6 +145,56 @@ export const ARRIVALS = {
    */
   legMsPer100: 3400,
   legMsFloor: 2000,
+  /**
+   * HOW FAR FROM THE LANDING THE BEAT MAY BE STAGED AND STILL BE WATCHED (px)
+   * — the number that pulls the lane and the rank off the doorway and onto what
+   * the player can actually see (`stageIt`).
+   *
+   * This module's whole reason for existing is a player who has just landed
+   * SEEING a car arrive, somebody get out, and a walk that ends at a door
+   * opening. Anchored on the doorway alone that is a promise the geometry does
+   * not keep: the entrance is wherever the carve punched it and the landing is
+   * wherever the lot's middle fell, and measured over the shipped map those two
+   * are 150–690 px apart on ten seeds in twelve. The line still played — a
+   * thought about the night shift clocking on — over a car park with nothing on
+   * it, and the beat that is supposed to POINT AT THE DOOR became a thing the
+   * player had to go and find first.
+   *
+   * IT IS THE FOG THAT SETS IT, NOT THE SCREEN, and that is the part worth
+   * knowing. Half a landscape phone is ~211 world px across, so the screen
+   * would allow more than twice this — but a CAR is drawn wherever it is and a
+   * PERSON is not (`render/enemies.ts` culls anything within `MAP.fogBand` of
+   * the frontier), and a hero standing where he landed has uncovered exactly
+   * `MAP.revealRadius`. Staged on the screen's budget the beat delivers a car
+   * he can see and a night-shift worker he cannot, which is half the complaint
+   * answered and the more confusing half kept.
+   *
+   * So it is the reveal radius less the band — 112 — with three fog CELLS'
+   * worth taken as the working figure instead. The last 16 px of that headroom
+   * are not real: the fog answers per 32 px cell centre, so a body at 110 lands
+   * inside or outside the frontier depending on where the grid fell, which
+   * measured over the shipped map left two seeds in sixty staging a beat at the
+   * limit and drawing it as fog.
+   *
+   * A CLAMP AND NOT A TARGET. The beat is staged as near the doors as this
+   * allows, because everything it pulls away from the entrance is added to the
+   * walk the player then waits through (measured: dragged all the way to the
+   * landing, the wait for the first badge went from 13.5 s to 19.6 s, and to
+   * 32 s on the worst seed).
+   */
+  watchReach: 96,
+  /**
+   * …AND HOW FAR OFF THAT SCREEN THE RUN-IN HAS TO START (px), or the car does
+   * not drive in, it APPEARS.
+   *
+   * Past both edges of what the player has: half a landscape screen (~211) and
+   * the fog's own reveal radius around the landing (`MAP.revealRadius`, 160),
+   * whichever bites — outside both, the car comes out of the dark. It has to be
+   * checked rather than assumed, because a lot that reaches no map edge starts
+   * its cars just inside its own boundary, which on the hero's own row can be a
+   * stride from where he parked (measured at 63 px on one shipped seed).
+   */
+  arriveGap: 240,
   /** The lot's own people (`ArrivalsSpec.guards`): how far apart they are
    * spread, and how far off the walls and the lane they are held (px). */
   guardSpacing: 190,

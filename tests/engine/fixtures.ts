@@ -1931,8 +1931,21 @@ export const FIX_STAMPEDE_LEVEL: LevelDef = hazardLevel("test_stampede_level", {
 // The door carries NO `opens`, which makes it a KEY door — and nothing in this
 // ladder unlocks `entrance`, which is precisely the shipped arrangement: the
 // only thing that ever opens it is somebody badging in.
+const LOT_ARRIVALS: NonNullable<LevelDef["arrivals"]> = {
+  staff: ["test_bystander"],
+  guards: { enemy: "test_bystander", count: 2 },
+  firstMs: 1000,
+  everyMs: [4000, 4000],
+  maxCars: 2,
+};
+
 export const FIX_ARRIVALS_LEVEL: LevelDef = hazardLevel("test_arrivals_level", {
-  playerSpawn: { x: 400, y: 800 },
+  // IN FRONT OF THE DOORS, and near enough to them to mean it: the beat is
+  // staged on the doorway's own rank only while that rank is inside what the
+  // hero can SEE from where he lands (`ARRIVALS.watchReach`, `stageIt`). A
+  // spawn half a car park away is the OTHER case, and it has a fixture of its
+  // own below.
+  playerSpawn: { x: 560, y: 800 },
   arrivalLot: [
     { shape: "rect", rect: { x: 0, y: 600, width: 700, height: 400 } },
   ],
@@ -1944,14 +1957,32 @@ export const FIX_ARRIVALS_LEVEL: LevelDef = hazardLevel("test_arrivals_level", {
       radius: 10,
     },
   ],
-  arrivals: {
-    staff: ["test_bystander"],
-    guards: { enemy: "test_bystander", count: 2 },
-    firstMs: 1000,
-    everyMs: [4000, 4000],
-    maxCars: 2,
-  },
+  arrivals: LOT_ARRIVALS,
 });
+
+// THE SAME LOT WITH THE HERO LANDING AT THE FAR END OF IT.
+//
+// The one above lands him in front of the doors, which is the case where the
+// doorway keeps its own rank. This is the other one, and it is the case the
+// shipped map hits on ten seeds in twelve: the entrance is wherever the carve
+// punched it, the landing is wherever the lot's middle fell, and a beat staged
+// on the doorway alone then plays half a screen off the side of the picture.
+// Same tarmac, same keyed door — only the spawn moves, which is exactly the one
+// input `stageIt` reads.
+export const FIX_ARRIVALS_FAR_LEVEL: LevelDef = hazardLevel(
+  "test_arrivals_far_level",
+  {
+    ...FIX_ARRIVALS_LEVEL,
+    id: "test_arrivals_far_level",
+    playerSpawn: { x: 150, y: 950 },
+    // …and it carries the lot's READ, which the near fixture does not: the
+    // rule that line pins is that it waits for somebody to be VISIBLE, and a
+    // beat already in front of the hero cannot tell you whether it waited. The
+    // suite registers the line itself — see the note on `FIX_CAR_EXIT_LEVEL`
+    // for why a thought never goes in `installFixtures`.
+    arrivals: { ...LOT_ARRIVALS, thought: "test_night_shift" },
+  },
+);
 
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
@@ -2457,6 +2488,7 @@ export function installFixtures(force = false): void {
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
       test_alarm_level: FIX_ALARM_LEVEL,
       test_arrivals_level: FIX_ARRIVALS_LEVEL,
+      test_arrivals_far_level: FIX_ARRIVALS_FAR_LEVEL,
       test_car_exit_level: FIX_CAR_EXIT_LEVEL,
     },
     uniques: FIX_UNIQUES,

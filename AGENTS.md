@@ -543,12 +543,20 @@ freeze the world on the tick a death needs. → `docs/multiplayer.md`
 first venue lands the hero on a STAFF LOT (`MapArea.arrivals`) whose entrance is
 a keyed door nothing in the game unlocks: it opens when a member of the night
 shift drives in, parks, walks up and badges through it, and following one is the
-way in (`LevelDef.arrivals`, `engine/game/arrivals.ts`). Three rules hold it and
-each has already been paid for once — the lot's whole cast is NEUTRAL (the hero
-is holstered out there; the scripted first blow now waits INSIDE), the beat may
+way in (`LevelDef.arrivals`; `engine/game/arrivals.ts` is WHEN the beat happens,
+`arrival-plan.ts` is WHERE). Four rules hold it and
+each has already been paid for once — the beat is staged WHERE THE PLAYER CAN
+SEE IT (`stageIt`: the doorway is wherever the carve punched it, so the lane and
+the rank are pulled to the nearest point to it inside `ARRIVALS.watchReach` of
+the LANDING, a radius the FOG sets rather than the screen — a car is drawn
+wherever it is and a person is not — while the kerb stays out in the dark so the
+car still arrives), the lot's whole cast is NEUTRAL (the hero is holstered out
+there; the scripted first blow now waits INSIDE), the beat may
 never stop happening (a walker that stalls badges anyway, and a shut door with
 nobody walking pulls the next car forward), and it spends NOTHING off
-`state.rng` (a car park is presentation; the draws ride `ArrivalPlan.rng`). The
+`state.rng` (a car park is presentation; the draws ride `ArrivalPlan.rng`). Its
+own read waits too: the "night shift clocking on" line is held until a walker is
+somewhere `visibleTo` a hero, and is only spent once it has actually played. The
 autopilot has its own rung for it (`bot/entrance.ts`) — without one it presses
 the wall the objective is behind for the whole run. → `docs/game-content.md`
 

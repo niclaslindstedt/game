@@ -40,6 +40,18 @@
 // that runs out badges from wherever the body stands), and a run whose door is
 // still shut with nobody walking toward it pulls the next car forward to
 // `ARRIVALS.retryMs`.
+//
+// AND IT MAY NEVER HAPPEN WHERE NOBODY IS LOOKING, which is the other half of
+// the same rule and the one that had to be learned. A beat whose whole job is
+// to POINT AT THE DOOR is worth nothing off the side of the screen: the hero
+// landed, said "that's the night shift clocking on" about a car park with
+// nothing on it, and then went looking for the thing that exists to stop him
+// looking. Two answers, and the lot needs both — `stageIt` lays the lane and
+// the rank as near the doorway as the player can still SEE them from where he
+// touched down (`arrival-plan.ts`), and `readTheLot` holds the line until there
+// is somebody on that screen to say it about.
+//
+// WHERE all of that happens is `arrival-plan.ts`; this file is WHEN.
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, vec, type Vec2 } from "@game/lib/vec.ts";
@@ -51,28 +63,22 @@ import {
   integrateCarBody,
   vehicleFootprint,
 } from "./vehicles.ts";
+import { ENTRANCE_DOOR, planArrivals } from "./arrival-plan.ts";
 import { spawnEnemy } from "./create.ts";
 import { runLevelDef } from "./defs/levels/index.ts";
 import type { ArrivalsSpec } from "./defs/levels/types.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
+import { heroInPlay } from "./party.ts";
+import { visibleTo } from "./sight.ts";
 import { openDoor, startPlayerThought } from "./story.ts";
-import { anyZoneContains, zonesBounds } from "./zones.ts";
-import type {
-  Arrival,
-  ArrivalPlan,
-  DoorState,
-  Enemy,
-  GameState,
-} from "./types/index.ts";
+import type { Arrival, ArrivalPlan, Enemy, GameState } from "./types/index.ts";
 
-/** The default id of the door the badge opens — what the carve hangs across
- * every opening between the arrival district and the building. */
-export const ENTRANCE_DOOR = "entrance";
-
-/** How far off the map's own edge an arriving car is minted, so it is a car
- * driving IN rather than one that blinked into being at the kerb. */
-const OFF_MAP = 70;
+// WHERE the beat happens is its own module (`arrival-plan.ts`) — a floor plan's
+// worth of geometry, read once as the run is built. Re-exported because the
+// door id is the lot's public fact: the autopilot's own rung asks whether the
+// entrance is still shut (`bot/entrance.ts`).
+export { ENTRANCE_DOOR };
 
 /** One draw off the lot's private stream (see the header). */
 function draw(plan: ArrivalPlan): number {
@@ -80,211 +86,6 @@ function draw(plan: ArrivalPlan): number {
   const value = rng();
   plan.rng = rngState(rng);
   return value;
-}
-
-/**
- * WORK OUT WHERE THE ARRIVALS HAPPEN, once, from the carve.
- *
- * Everything this needs is a fact about a floor plan that did not exist until
- * this run was carved: which wall the entrance landed in, which way round the
- * lot is, and which strip of it is clear enough to drive a car down. Returns
- * null — and the whole feature simply does not run — when the carve gave the
- * level no arrival district or no entrance, which is the honest answer for a
- * seed whose lot ended up with no wall to put a door in.
- */
-export function planArrivals(
-  state: GameState,
-  seed: number,
-): ArrivalPlan | null {
-  const def = runLevelDef(state);
-  const spec = def.arrivals;
-  const zones = def.arrivalLot;
-  if (!spec || !zones) return null;
-  const lot = zonesBounds(zones);
-  if (!lot) return null;
-  const onLot = (x: number, y: number): boolean =>
-    anyZoneContains(zones, { x, y });
-  const doorId = spec.door ?? ENTRANCE_DOOR;
-  const lotMid = vec((lot.minX + lot.maxX) / 2, (lot.minY + lot.maxY) / 2);
-  // The lot's own doorway, when the carve punched more than one: the nearest to
-  // the middle of the tarmac is the one somebody parking there would use, and
-  // every one of them opens on the same badge anyway (they share an id). The
-  // carve picks the FIRST ROOM INSIDE off the same rule (`insideEntrance`), so
-  // the walk and the scene waiting past it never end up at different doors.
-  let door: DoorState | null = null;
-  let best = Infinity;
-  for (const candidate of state.doors) {
-    if (candidate.id !== doorId) continue;
-    const d = distance(candidate.center, lotMid);
-    if (d < best) {
-      best = d;
-      door = candidate;
-    }
-  }
-  if (!door || !door.from || !door.to) return null;
-
-  // ACROSS THE OPENING, not toward the middle of the room. The door's chain
-  // runs `from`→`to` along the wall, so the way THROUGH it is that line's
-  // normal — and which of the two normals is the lot's is settled by ASKING THE
-  // TARMAC: a step down one of them lands on the lot and a step down the other
-  // does not. Taken as a bearing on the lot's centre instead, a doorway near the
-  // corner of an L-shaped car park points diagonally across its own threshold.
-  const ax = door.to.x - door.from.x;
-  const ay = door.to.y - door.from.y;
-  const len = Math.hypot(ax, ay) || 1;
-  let nx = -ay / len;
-  let ny = ax / len;
-  const probe = ARRIVALS.apronGap;
-  const facesLot = onLot(
-    door.center.x + nx * probe,
-    door.center.y + ny * probe,
-  );
-  const facesAway = onLot(
-    door.center.x - nx * probe,
-    door.center.y - ny * probe,
-  );
-  const flip =
-    facesLot === facesAway
-      ? (lotMid.x - door.center.x) * nx + (lotMid.y - door.center.y) * ny < 0
-      : facesAway;
-  if (flip) {
-    nx = -nx;
-    ny = -ny;
-  }
-  const apron = vec(
-    door.center.x + nx * ARRIVALS.apronGap,
-    door.center.y + ny * ARRIVALS.apronGap,
-  );
-  const inside = vec(
-    door.center.x - nx * ARRIVALS.insideStep,
-    door.center.y - ny * ARRIVALS.insideStep,
-  );
-
-  // WHICH WAY THE CARS COME IN, and it is TWO different answers stacked.
-  //
-  // A MAP EDGE is the honest kerb: the car rolls in off the public road and the
-  // run-in starts off the world entirely. But the carve's regions are corners of
-  // the MAP, not corners of the world — a lot can sit against the southern edge
-  // with a district either side of it — so a lot that reaches no x edge starts
-  // its cars at its own far BOUNDARY instead, just inside the tarmac. It has to
-  // be inside: the far side of that boundary is the building, and a run-in laid
-  // through a wall is a car driving through a wall.
-  //
-  // Either way the start is hundreds of px from the apron, which on a phone is
-  // well off the screen and under the fog, so what the player sees is the same
-  // both times — a car arriving out of the dark.
-  const margin = ARRIVALS.laneClearance;
-  //
-  // The inset is the same `OFF_MAP` the edge case reaches OUT by, and it is not
-  // a coincidence: a lot that reaches no edge has somebody's wall along that
-  // boundary, and a run-in laid hard against it is swept straight into the
-  // stone. A car's length inside leaves the whole approach on open tarmac.
-  const kerb = (fromLeft: boolean): number =>
-    fromLeft
-      ? lot.minX <= 1
-        ? -OFF_MAP
-        : lot.minX + OFF_MAP
-      : lot.maxX >= state.level.width - 1
-        ? state.level.width + OFF_MAP
-        : lot.maxX - OFF_MAP;
-
-  // THE FOOTPATH is the apron's own line; the LANE is held off it, because a
-  // rank of parked cars stands on the lane and people walking the same y would
-  // walk through every bumper ahead of them.
-  const walkY = clamp(apron.y, lot.minY + margin, lot.maxY - margin);
-  const laneSign =
-    Math.abs(ny) > 0.5
-      ? Math.sign(ny) || 1 // a wall to the north or south: away from it
-      : lotMid.y >= walkY
-        ? 1
-        : -1; // a wall east or west: whichever side has the tarmac
-
-  // A REAL KERB FIRST, then the longer run-in — and then the other one anyway,
-  // because the preferred side may be exactly where the ordered bank of bays and
-  // its parked cars sits (the `parking_bays` prefab), and a lot with one usable
-  // approach is still a lot with an approach.
-  const leftIsEdge = lot.minX <= 1;
-  const rightIsEdge = lot.maxX >= state.level.width - 1;
-  const first =
-    leftIsEdge !== rightIsEdge
-      ? leftIsEdge
-      : apron.x - lot.minX >= lot.maxX - apron.x;
-  for (const fromLeft of [first, !first]) {
-    const entryX = kerb(fromLeft);
-    const lane = layLane(
-      state,
-      { onLot, minY: lot.minY, maxY: lot.maxY },
-      walkY + laneSign * ARRIVALS.laneOffset,
-      {
-        apronX: apron.x,
-        entryX,
-        entrySign: fromLeft ? -1 : 1,
-        cars: Math.max(1, spec.maxCars ?? 3),
-      },
-    );
-    if (!lane) continue;
-    return {
-      door: vec(door.center.x, door.center.y),
-      apron,
-      inside,
-      walkY: Math.round(walkY),
-      laneY: lane.y,
-      entryX: Math.round(entryX),
-      bays: lane.bays,
-      rng: (seed ^ 0x5bf03635) >>> 0,
-    };
-  }
-  return null;
-}
-
-/**
- * LAY THE ACCESS LANE AND THE RANK ON IT.
- *
- * The two are one decision, because each disqualifies the other: a lane with no
- * bay left on the tarmac is not a lane, and a bay on a line the cars cannot
- * drive down is not a bay. So candidate lines are tried outward from the ideal
- * one, nearest first, and the first that yields a driveable run-in AND at least
- * one bay wins — deterministic, and as close to the footpath as the furniture
- * allows.
- *
- * "Driveable" is a CLEARANCE test rather than collision: an arriving car does
- * not push anything out of the way (a visitor threading the lamp posts is not a
- * simulation anybody asked for), so the lane is put where nothing stands.
- */
-function layLane(
-  state: GameState,
-  lot: { onLot: (x: number, y: number) => boolean; minY: number; maxY: number },
-  ideal: number,
-  rank: { apronX: number; entryX: number; entrySign: number; cars: number },
-): { y: number; bays: number[] } | null {
-  const margin = ARRIVALS.laneClearance;
-  const from = vec(clamp(rank.entryX, 0, state.level.width), 0);
-  const to = vec(0, 0);
-  for (let step = 0; step * ARRIVALS.laneStep <= ARRIVALS.laneSearch; step++) {
-    for (const dir of step === 0 ? [0] : [1, -1]) {
-      const y = Math.round(ideal + dir * step * ARRIVALS.laneStep);
-      if (y < lot.minY + margin || y > lot.maxY - margin) continue;
-      // The rank, nearest the doors first, and only the bays that are actually
-      // on the tarmac — an L-shaped car park has corners its bounding box
-      // covers and its asphalt does not.
-      const bays: number[] = [];
-      for (let i = 0; i < rank.cars; i++) {
-        const x = Math.round(
-          rank.apronX +
-            rank.entrySign * (ARRIVALS.bayGap + i * ARRIVALS.baySpacing),
-        );
-        if (!lot.onLot(x, y)) break;
-        bays.push(x);
-      }
-      if (bays.length === 0) continue;
-      from.y = y;
-      to.x = bays[0] as number;
-      to.y = y;
-      if (blockedByObstacle(state, from, to, margin)) continue;
-      return { y, bays };
-    }
-  }
-  return null;
 }
 
 /**
@@ -627,6 +428,9 @@ function stepArrival(
   // The body's own clockwork runs whatever the phase: a parked car settles on
   // its springs, and one still rolling spins its wheels off its own speed.
   integrateCarBody(arrival.car, dt);
+  // …and the moment somebody is out of it and can be SEEN, the hero has a read
+  // on what he is looking at.
+  readTheLot(state, arrival, spec);
 }
 
 /**
@@ -749,10 +553,52 @@ function stepOut(
     { ...plan.apron },
   ];
   arrival.beatMs = legBudget(out, arrival.route[0] as Vec2);
-  if (spec.thought && !state.thoughtsSeen.includes(spec.thought)) {
-    state.thoughtsSeen.push(spec.thought);
-    startPlayerThought(state, spec.thought);
-  }
+}
+
+/**
+ * THE READ ON THE BEAT — and it waits until there is something to read.
+ *
+ * The line is about a person: "that's the night shift clocking on". Fired the
+ * instant a door opened somewhere on the lot it was a hero narrating a car he
+ * had no picture of — the geometry above is what puts the beat on his screen,
+ * and this is what refuses to say it out loud until it is. Asked of the WALKER
+ * rather than of the car, because the walker is the half of it the line is
+ * about and the half that goes on being worth pointing at all the way to the
+ * reader.
+ *
+ * `visibleTo` rather than plain distance, so it means the same thing the rest of
+ * the game means by seeing something: on the player's screen AND out of the
+ * fog. A headless run has no screen and abstains on that half, which is what
+ * keeps the simulator and the engine suites reading the line at all.
+ *
+ * It stays a ONE-TIME read (`thoughtsSeen`), so a lot that keeps producing cars
+ * does not keep producing the thought — but it is marked read only once it has
+ * actually PLAYED. A thought raised while another scene is on stage is dropped
+ * on the floor (`startPlayerThought`), and a line the hero owes the player is
+ * not spent by a beat that never reached them: unspent, it lands on the next
+ * staffer he watches get out of a car.
+ */
+function readTheLot(
+  state: GameState,
+  arrival: Arrival,
+  spec: ArrivalsSpec,
+): void {
+  const thought = spec.thought;
+  if (!thought || state.thoughtsSeen.includes(thought)) return;
+  const body = staffBody(state, arrival);
+  if (!body) return;
+  const watched = state.players.some(
+    (hero) => heroInPlay(hero) && visibleTo(state, hero, body.pos),
+  );
+  if (!watched) return;
+  startPlayerThought(state, thought);
+  const playing = state.dialogue?.source;
+  const shown = playing?.kind === "playerThought" && playing.defId === thought;
+  // A MUTED run has decided it does not want the lines at all (`muteDialogue`
+  // — a replay, a soak, a suite about some other beat), and a read nobody asked
+  // to hear is SPENT rather than held: held, it would queue behind a mute that
+  // may never be lifted and then jump the stage the moment it is.
+  if (shown || state.dialogueMuted) state.thoughtsSeen.push(thought);
 }
 
 /** How long a leg may take before it is written off as wedged (ms). */
