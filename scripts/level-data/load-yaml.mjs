@@ -12,12 +12,21 @@
 // floor plan: its story, its ladder rung, its hazards, its merchant, its loot
 // pools, its thought pins.
 //
-// A level YAML carries those `MissionDef` fields plus three authoring-only keys
+// A level YAML carries those `MissionDef` fields plus four authoring-only keys
 // the loader strips before handing the def to the engine:
 //
 //   description   free-text design intent (documentation + the map renderer)
 //   campaign      true → the level joins the ordered campaign (LEVEL_ORDER)
 //   secret        true → an off-campaign venue (SECRET_LEVEL_ORDER)
+//   display       true → a DISPLAY CASE: compiled into the catalog and reachable
+//                 by id, but in NEITHER order — so no campaign chain, no level
+//                 picker, no dev warp row, no library page. The effects
+//                 gallery's stage is the one such venue; see
+//                 `content/levels/gallery.yaml`.
+//
+// Exactly one of the three KINDS must be set. Declaring none used to drop the
+// level from the compiled catalog silently, which is why the loader refuses it
+// by name instead.
 //
 // The per-difficulty DIFFICULTY RAMPS live in `ladder.yaml`, not the level
 // files. A mission takes its own rung from there — the `mob: [start, end]` band
@@ -28,8 +37,8 @@
 // game is still tuned from the one file.
 //
 // Layout:
-//   levels/<id>.yaml   description, campaign|secret, then the LevelDef fields
-//                      (the file stem must equal the level `id`).
+//   levels/<id>.yaml   description, campaign|secret|display, then the LevelDef
+//                      fields (the file stem must equal the level `id`).
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -89,8 +98,9 @@ const CARVED_FIELDS = {
  * Load the whole level tree.
  *
  * @returns `{ entries }` where each entry is
- *   `{ id, def, description, campaign, secret }` — `def` is the pure MissionDef
- *   (authoring keys stripped). Throws on a duplicate id or a stem/id mismatch.
+ *   `{ id, def, description, campaign, secret, display }` — `def` is the pure
+ *   MissionDef (authoring keys stripped). Throws on a duplicate id or a
+ *   stem/id mismatch.
  */
 export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
   const errors = [];
@@ -139,7 +149,7 @@ export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
     }
     seen.add(doc.id);
 
-    const { description, campaign, secret, ...def } = doc;
+    const { description, campaign, secret, display, ...def } = doc;
     for (const [field, home] of Object.entries(CARVED_FIELDS)) {
       if (def[field] !== undefined)
         errors.push(
@@ -176,12 +186,15 @@ export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
       errors.push(
         `${file}: the objective carries no "at" — a reachExit stands wherever the carve put the goal`,
       );
-    if (campaign && secret) {
-      errors.push(`${file}: level is both campaign and secret — pick one`);
-    }
-    if (!campaign && !secret) {
+    const kinds = [campaign, secret, display].filter(Boolean).length;
+    if (kinds > 1) {
       errors.push(
-        `${file}: level is neither campaign nor secret — set one to true`,
+        `${file}: level is more than one of campaign/secret/display — pick one`,
+      );
+    }
+    if (kinds === 0) {
+      errors.push(
+        `${file}: level is none of campaign/secret/display — set one to true`,
       );
     }
     // Stamp the ladder's mob bands + hero anchors onto the def, so the numbers
@@ -206,6 +219,7 @@ export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
       description: description ?? "",
       campaign: Boolean(campaign),
       secret: Boolean(secret),
+      display: Boolean(display),
     });
   }
 

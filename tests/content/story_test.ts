@@ -19,7 +19,7 @@ import {
   isWeaponDef,
   LEVELS,
   MAP_BLUEPRINTS,
-  SECRET_LEVEL_ORDER,
+  LEVEL_ORDER,
   step,
   STORY_ITEM_DEFS,
   storyItemDef,
@@ -322,12 +322,13 @@ describe("catalog integrity", () => {
   const elites = Object.values(ENEMY_DEFS).filter((d) => d.role === "elite");
 
   it("fields 3-5 speaking, loot-bearing elites per campaign level", () => {
-    const secret = new Set(SECRET_LEVEL_ORDER);
-    for (const level of Object.values(LEVELS)) {
-      // Secret venues (the bunker) field their own roster shape — they get
-      // their own rule below. Apparitions are dialogue-only figures, not the
-      // loot-bearing story fights this rule counts — same.
-      if (secret.has(level.id)) continue;
+    // THE CAMPAIGN's levels, by name. Secret venues (the bunker) field their
+    // own roster shape and get their own rule below; a DISPLAY CASE (the
+    // effects gallery's stage) casts nobody at all. Apparitions are
+    // dialogue-only figures, not the loot-bearing story fights this rule
+    // counts — same.
+    for (const id of LEVEL_ORDER) {
+      const level = LEVELS[id]!;
       const placed = MAP_BLUEPRINTS[level.id]!.elites.map((e) =>
         enemyDef(e.enemy),
       ).filter((d) => d.role === "elite" && !d.apparition);

@@ -1263,6 +1263,7 @@ export {
   type DifficultyDef,
 } from "./game/defs/difficulties.ts";
 export {
+  DISPLAY_LEVEL_ORDER,
   LEVEL_ORDER,
   LEVELS,
   SECRET_LEVEL_ORDER,

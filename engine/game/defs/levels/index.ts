@@ -17,6 +17,7 @@ import type { LevelDef, MissionDef } from "./types.ts";
 // so the menus can order and name levels without downloading them (see the file
 // header there). Re-exported here so every existing importer is unaffected.
 export {
+  DISPLAY_LEVEL_ORDER,
   hasLevel,
   levelSummary,
   LEVEL_ORDER,

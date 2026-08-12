@@ -128,7 +128,17 @@ export function runExhibit(deps: {
   // of restarting the show under the viewer.
   let speed = deps.speed ?? 1;
   const spec = stageSpec(exhibit);
-  const levelId = exhibit.levelId ?? "goodco_hq";
+  // THE DISPLAY CASE (`content/levels/gallery.yaml`) — a venue that exists only
+  // to be looked through: one empty hall of dark, evenly-laid floor with its
+  // walls parked far outside any frame this canvas will draw. An exhibit names
+  // a real venue only when the VENUE is part of what it is showing (the WORLD
+  // shelf's hazards, a level's own ground); everything else stands here.
+  //
+  // It used to stand on GOODCO HQ, which put a parked car with a boarding arrow
+  // over it, a second car driving in with its headlights on, the building's own
+  // floor cutting the frame in half and the map's edge dithering to black a
+  // screen away — all of it in shot, in front of the effect under inspection.
+  const levelId = exhibit.levelId ?? "gallery";
   const build = () => createGame(SEED, levelId, "medium");
   // Replaced outright when an exhibit ENDS its run — see `stage()`. Every read
   // below goes through this binding, so the loop picks the new run up on the

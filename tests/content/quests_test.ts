@@ -14,12 +14,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  LEVEL_ORDER,
   LEVELS,
   MAP_BLUEPRINTS,
   QUEST_DEFS,
   QUEST_GIVER_DEFS,
   // The module-local `QUESTS` below is the CATALOG; this is the tuning block.
   QUESTS as QUEST_TUNING,
+  SECRET_LEVEL_ORDER,
   giversForLevel,
   questsForLevel,
   type QuestDef,
@@ -28,13 +30,18 @@ import {
 
 const QUESTS = Object.values(QUEST_DEFS);
 const GIVERS = Object.values(QUEST_GIVER_DEFS);
+/** THE VENUES AN ERRAND CAN BE HANDED OUT ON — every level the player can
+ * reach. A DISPLAY CASE (`display: true` — the effects gallery's stage) has no
+ * cast, no bystanders and nowhere to walk to, so an "every map owes one" rule
+ * is not about it. */
+const VENUES = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
 
 describe("the campaign's quest givers", () => {
   it("stand on every map in the game", () => {
     // A venue with nobody on it who isn't trying to kill the hero is a venue
     // that reads as a level rather than as a place — the whole reason these
     // people exist (see content/quest-givers.yaml).
-    for (const levelId of Object.keys(LEVELS)) {
+    for (const levelId of VENUES) {
       // The HUB is exempt from the REQUIREMENT: home is a breather first,
       // and whether somebody waits there (RUTH does) is the story's call,
       // not this rule's.
@@ -84,7 +91,7 @@ describe("the campaign's errands", () => {
   });
 
   it("are handed out on every map", () => {
-    for (const levelId of Object.keys(LEVELS)) {
+    for (const levelId of VENUES) {
       if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       expect(
         questsForLevel(levelId).length,
@@ -117,7 +124,7 @@ describe("the campaign's errands", () => {
   it("give every map at least one chain", () => {
     // A chain is what turns three jobs into a reason to keep coming back to
     // one person. A map whose errands are all standalone has a to-do list.
-    for (const levelId of Object.keys(LEVELS)) {
+    for (const levelId of VENUES) {
       if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       const onMap = questsForLevel(levelId);
       expect(
@@ -152,7 +159,7 @@ describe("the campaign's errands", () => {
       // chain's breeds are checked against the whole game instead.
       const hub = LEVELS[quest.level]!.objective.type === "hub";
       const breeds = hub
-        ? Object.keys(LEVELS).reduce(
+        ? VENUES.reduce(
             (all, id) => new Set([...all, ...levelBreeds(id)]),
             new Set<string>(),
           )
@@ -252,7 +259,7 @@ function hordeBreeds(levelId: string): Set<string> {
 /** Every map's horde at once — what a HUB errand's carriers are checked
  * against, since a campaign chain is carried wherever the trail goes. */
 function allHordeBreeds(): Set<string> {
-  return new Set(Object.keys(LEVELS).flatMap((id) => [...hordeBreeds(id)]));
+  return new Set(VENUES.flatMap((id) => [...hordeBreeds(id)]));
 }
 
 /** Every enemy id the mission `levelId` can put on the field, from every source
@@ -328,7 +335,7 @@ describe("the quest chains", () => {
   it("each start from a link that waits on nothing", () => {
     // A map whose every errand has a prerequisite offers nothing at all — the
     // gate never opens, and it is invisible: the giver simply has no `!`.
-    for (const levelId of Object.keys(LEVELS)) {
+    for (const levelId of VENUES) {
       if (LEVELS[levelId]!.objective.type === "hub") continue; // home, not an errand board
       const onMap = questsForLevel(levelId);
       expect(

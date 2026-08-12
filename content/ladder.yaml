@@ -208,6 +208,10 @@ staminaEmptyLock:
   jesus: 4.5
 
 easy:
+  # THE DISPLAY CASE is the effects gallery's stage: nothing spawns in it and
+  # nothing is ever con-coloured against it, but every level owes the ladder a
+  # cell. It mirrors the rung's opener.
+  gallery: { hero: 6, mob: [1, 7] }
   # THE GARAGE is the hub: no horde ever spawns, so its cells only anchor
   # the tooling (con colours, stall math). Mirrors each rung's opener.
   garage: { hero: 6, mob: [1, 7] }
@@ -219,6 +223,7 @@ easy:
   the_bunker: { hero: 28, mob: [25, 28] }
 
 medium:
+  gallery: { hero: 6, mob: [1, 7] }
   garage: { hero: 6, mob: [1, 7] }
   goodco_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 15] }
@@ -228,6 +233,7 @@ medium:
   the_bunker: { hero: 28, mob: [25, 30] }
 
 hard:
+  gallery: { hero: 8, mob: [3, 10] }
   garage: { hero: 8, mob: [3, 10] }
   goodco_hq: { hero: 8, mob: [3, 10] }
   moon: { hero: 15, mob: [9, 16] }
@@ -237,6 +243,7 @@ hard:
   the_bunker: { hero: 31, mob: [27, 34] }
 
 nightmare:
+  gallery: { hero: 42, mob: [42, 45] }
   garage: { hero: 42, mob: [42, 45] }
   goodco_hq: { hero: 42, mob: [42, 45] }
   moon: { hero: 44, mob: [42, 47] }

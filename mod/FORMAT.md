@@ -160,7 +160,15 @@ your level's difficulty without learning your private scale.
 
 The file stem must equal the level's `id`. Required fields: `id`, `index`,
 `name`, `foes`, `gravity`, `biome`, `tiles`, `objective`, `decorClearance`,
-`loot`, and exactly one of `campaign: true` / `secret: true`.
+`loot`, and exactly one of `campaign: true` / `secret: true` / `display: true`.
+
+The KIND decides where the venue is LISTED, not what it can do. `campaign` joins
+the ordered campaign; `secret` is an off-campaign venue reached only by a travel
+gate; `display` is a DISPLAY CASE — compiled and carved like any level but in
+neither player-facing order, so nothing but something naming it by id can reach
+it. The shipped game uses the third for the effects gallery's stage. A mod's own
+venue is almost always `campaign` or `secret`: a display case is an instrument,
+not a place.
 
 `intro` — the hero's opening monologue — is **optional**, because a venue can be
 somewhere he does not arrive at. Omit it and the run lands straight on the

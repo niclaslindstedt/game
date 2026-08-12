@@ -1,0 +1,157 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  THE DISPLAY CASE'S FLOOR PLAN - the effects gallery's stage, and the emptiest
+  blueprint in the game. It is AUTHORED rather than carved (`plan`) and PINNED
+  (`carveSeed`), because a display case that rearranged itself between visits
+  would make every before/after screenshot a comparison of two different rooms.
+  THE READ: one hall of dark tarmac, 2400x1600 of it, with a service margin and
+  the hall's own walls ringing it a long way out. The hero lands on THE STAND -
+  a small district in the dead centre whose only job is to pin where he is put
+  down, so the diorama is framed the same way every time instead of wherever a
+  roll inside a big room happened to land him. The stand is the same floor as
+  the hall and is walled off from nothing (`enclosure: none`), so what the
+  player sees is one unbroken surface with a man standing in the middle of it.
+  THE WALLS ARE REAL AND ARE NEVER IN SHOT. The nearest of them is ~650px from
+  the stand and the frame the game draws is ~422x260 world units, so they sit
+  outside even the widest desktop tier - which is their whole job. Without them
+  the gallery would be looking at the map's own boundary, and the renderer
+  dithers that to black: the old GOODCO stage put a third of the frame under a
+  black void for exactly that reason.
+  NOTHING STANDS ON THE FLOOR. No obstacles, no cover, no crates, no chests, no
+  decor, no critters, no landmarks, no doors, no lights - the object palette is
+  one entry, and that entry is the wall.
+id: gallery
+level: gallery
+
+# THE PIN. One room, one look, every visit — the display case's equivalent of
+# the garage's, and for a sharper reason: a screenshot taken today is diffed
+# against one taken next month.
+carveSeed: 11
+
+areas:
+  # THE HALL — the floor every exhibit is staged on. Open ground, so it meets
+  # the stand in the middle of it with no seam at all.
+  - id: hall
+    enclosure: none
+    space: inside
+    weight: 1
+    horde: 0
+    boss: false
+    # LAID TO THE INCH. An open district's floor is emitted RAGGED by default,
+    # which is right for open country and wrong for a built surface: the four
+    # rectangles this hall is spelled as would stop short of one another and
+    # leave seams of bare ground across the middle of the display case.
+    ragged: false
+    label: THE DISPLAY CASE
+    ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 61 }
+  # THE STAND — where the hero is put down, and nothing else. A district exists
+  # for it because `landing: true` pins the hero's CELL and nothing pins his
+  # point inside one: left to the hall he would be dropped anywhere in
+  # 2400x1600, which on a bad seed is a man in the corner of his own display
+  # case with a wall over his shoulder. A small centred cell answers it with
+  # the machinery that already exists.
+  #
+  # SAME FLOOR, SAME LABEL, NO ENCLOSURE: it is not somewhere else, it is the
+  # middle of the hall.
+  - id: stand
+    enclosure: none
+    space: inside
+    weight: 1
+    horde: 0
+    boss: false
+    landing: true
+    ragged: false
+    label: THE DISPLAY CASE
+    ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 61 }
+  # THE MARGIN — the strip of nothing outside the hall's walls, and the reason
+  # the hall HAS walls: a `hard` district beside an open one owns the border
+  # between them (see `borderOwner`), so declaring this ring is what rings the
+  # display floor in masonry. Nothing is ever placed here, nobody ever stands
+  # here, and no doorway is cut into it — a display case is sealed, which is
+  # what a case is.
+  - id: margin
+    enclosure: hard
+    space: inside
+    weight: 1
+    horde: 0
+    boss: false
+    spawn: false
+    label: BACK OF HOUSE
+    ground: { common: asphalt_0, rare: asphalt_1, rareEvery: 61 }
+
+size:
+  width: 2800
+  height: 2000
+  # Ignored under a plan (the rooms below ARE the rooms), but the field is read
+  # by the capacity check, so it says what the plan draws.
+  rooms: 9
+
+# Almost every number here is unread — an authored plan draws its own rooms and
+# this hall has no doorways to punch — but the block is required and the values
+# have to be self-consistent (a doorway plus its end margins must fit a border).
+layout:
+  minRoom: 240
+  doorWidth: 96
+  loopDoors: 0
+  cluster: 0.5
+  wall: case_wall
+
+# THE FLOOR PLAN: a 2400x1600 hall inside a 200px margin ring, with a small
+# stand punched out of the dead centre of it. The hall is spelled as the four
+# rectangles AROUND the stand, the way the garage spells its lawn around the
+# launch pad — a plan is rectangles, so a patch with floor on four sides is
+# written as the floor around it.
+plan:
+  rooms:
+    # ── THE MARGIN RING ──────────────────────────────────────────────────────
+    - area: margin
+      rect: { x: 0, y: 0, width: 2800, height: 200 }
+    - area: margin
+      rect: { x: 0, y: 1800, width: 2800, height: 200 }
+    - area: margin
+      rect: { x: 0, y: 200, width: 200, height: 1600 }
+    - area: margin
+      rect: { x: 2600, y: 200, width: 200, height: 1600 }
+    # ── THE HALL, AROUND THE STAND ───────────────────────────────────────────
+    - area: hall
+      rect: { x: 200, y: 200, width: 2400, height: 710 }
+    - area: hall
+      rect: { x: 200, y: 1090, width: 2400, height: 710 }
+    - area: hall
+      rect: { x: 200, y: 910, width: 1080, height: 180 }
+    - area: hall
+      rect: { x: 1520, y: 910, width: 1080, height: 180 }
+    # ── THE STAND ────────────────────────────────────────────────────────────
+    - area: stand
+      rect: { x: 1280, y: 910, width: 240, height: 180 }
+  # No `doors`: the margin is back of house and there is nothing in it to reach.
+  # `goal` names the hall so the bossless goal anchor lands on the floor rather
+  # than out in the ring — nothing stands on it, but the pick is read before
+  # anything knows that.
+  goal: hall
+
+objects:
+  # THE ONLY THING IN THE BLUEPRINT. Plain wall stone, standing where the hall
+  # meets the margin, ~650px from the stand at the nearest — which is to say,
+  # never in frame.
+  - id: case_wall
+    type: wall
+    kind: wall
+    radius: 8
+
+# Nothing stands here — every area above is `horde: 0`, so no knot is ever
+# placed — but the block is required and its members must resolve, so it names
+# the gentlest staffer at zero pressure (the garage's idiom).
+horde:
+  perRoom: [1, 1]
+  maxAlive: 1
+  lingering: 0
+  ramps: [meek]
+  hellgates: 0
+  members:
+    - enemy: intern
+      window: [0, 1]
+      weight: 1
+
+# No elites, no guardians, no boss: nothing is cast in a display case.
+boss: null

@@ -17,6 +17,7 @@
 
 import {
   GENERATED_CAMPAIGN_ORDER,
+  GENERATED_DISPLAY_ORDER,
   GENERATED_LEVEL_SUMMARIES,
   GENERATED_SECRET_ORDER,
   type GeneratedLevelSummary,
@@ -39,6 +40,24 @@ export const LEVEL_ORDER: string[] = GENERATED_CAMPAIGN_ORDER;
  * `secret: true` flag; the dev warp picker's extra rows.
  */
 export const SECRET_LEVEL_ORDER: string[] = GENERATED_SECRET_ORDER;
+
+/**
+ * DISPLAY CASES: venues that exist to be LOOKED AT rather than played — the
+ * effects gallery's own stage is the one of them (`content/levels/gallery.yaml`).
+ * Compiled from each YAML level's `display: true` flag.
+ *
+ * They resolve through `levelDef` like any level and carve like any level, and
+ * they are in NEITHER order above — which is the whole of what the flag buys.
+ * Every player-facing surface walks the campaign and secret orders (the unlock
+ * chain, the level picker, the dev warp rows, every page of the library), so a
+ * display case is absent from all of them without any of them learning to skip
+ * one. This array exists so the ORDERS can still be checked against the whole
+ * catalog; nothing the player can reach reads it.
+ *
+ * A PLAYABLE VENUE is therefore `LEVEL_ORDER + SECRET_LEVEL_ORDER`, and that is
+ * the list a "every level owes X" rule means.
+ */
+export const DISPLAY_LEVEL_ORDER: string[] = GENERATED_DISPLAY_ORDER;
 
 // The active summaries (defaults to the shipped catalog; `setLevelDefs`
 // re-derives them when a fixture catalog is installed).
