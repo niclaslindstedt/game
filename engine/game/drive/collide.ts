@@ -256,9 +256,11 @@ export function collide(drive: DriveState, heroSafe = false): void {
     });
     // …and its lamps at that end go with the paint.
     breakTrafficLamps(other, car.pos.x);
-    // WAS IT ALREADY DEAD BEFORE THIS BLOW? Read HERE, because `hurtTraffic` is
-    // about to answer it differently — see `breakCar`'s `wasWrecked`.
+    // WAS IT ALREADY DEAD BEFORE THIS BLOW, AND WAS IT ALREADY OFF ITS WHEELS?
+    // Both read HERE, because `hurtTraffic` is about to answer them differently
+    // — see `breakCar`'s `wasWrecked` and `wasDowned`.
     const wasWrecked = other.wrecked;
+    const wasDowned = other.downed;
     hurtTraffic(drive, other, hit);
 
     const force = wreckForce(other, hit.joules);
@@ -306,7 +308,7 @@ export function collide(drive: DriveState, heroSafe = false): void {
     } else {
       // ANYTHING WITH A ROOF — and the SAME function the kerb's parked cars go
       // through, which is the point of it being a function at all.
-      breakCar(drive, other, hit, force, wasWrecked);
+      breakCar(drive, other, hit, force, wasWrecked, wasDowned);
     }
     // The hero's own car takes the exchange properly, which is what makes
     // trading paint the expensive mistake it should be.
@@ -553,6 +555,24 @@ function breakCar(
    * it stood.
    */
   wasWrecked = false,
+  /**
+   * …AND WHETHER IT WAS ALREADY OFF ITS WHEELS. The same question about the
+   * other latch, read in the same place and for the same reason — and it was
+   * the same bug, one line further down in the body.
+   *
+   * `other.downed` cannot be read inside this function, because BOTH of the
+   * passes in front of it can set it: `hurtTraffic` runs an ignition roll, and
+   * so does the fold below (`smashEnd`), and an explosion puts the vehicle in
+   * the air (`explodeVehicle`). So the hardest blows on the road — the ones
+   * that open a tank up — reached the shove with the flag already true and
+   * produced no shove at all: a parked estate met flat out went up, hopped,
+   * spun, and came back down on the millimetre it had been parked on.
+   *
+   * Read by the caller, it means what the guard was written to mean: was this
+   * thing already lying on its side from an EARLIER event, in which case
+   * momentum has already had its say about where it went.
+   */
+  wasDowned = false,
 ): void {
   const { car } = drive;
   // WHAT IT WAS DOING BEFORE ANY OF THIS — the one reading `turnedRound` below
@@ -606,7 +626,7 @@ function breakCar(
   // It is already a mechanical wreck now; momentum still decides where that
   // wreck goes. It is punted up the road, slewed out of the lane and spun about
   // the point it was struck at, all off the sum's own answer over its own mass.
-  if (!other.downed) {
+  if (!wasDowned) {
     if (!wasWrecked) shunt(other, hit, car.pos.y);
     // …UNLESS THE SHOVE BEAT ITS OWN WHEELS, in which case it is not being
     // shunted anywhere. It is going over.

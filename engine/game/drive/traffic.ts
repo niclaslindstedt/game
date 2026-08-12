@@ -517,11 +517,16 @@ function spawnPavement(state: DriveState): void {
     // pavement runs the hero's way on the leg out and against it on the leg
     // home — exactly the near/far split the lanes use. Out of town there is only
     // the one pavement, and it is the near one.
+    //
+    // IT IS NOT A COIN TOSS (`pavementRiders.farShare`): the far footway is the
+    // one the hero MEETS rather than overtakes, and it is the side of the road
+    // he can otherwise hold all the way to the finish. The reasoning lives on
+    // the knob.
     // The draw happens either way, even where the answer is already settled —
     // the same rule the lane's pitch follows above: a stream spent differently
     // on the outskirts would move every rider in the town the moment the opening
     // was retuned.
-    const side = rng() < 0.5;
+    const side = rng() >= DRIVE.pavementRiders.farShare;
     const nearSide = outskirts || side;
     const withHero = nearSide === (dir === 1);
     const variant = rollVehicle(rng, outskirts ? "outskirts" : "pavement");

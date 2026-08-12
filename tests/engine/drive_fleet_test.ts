@@ -1410,6 +1410,18 @@ describe("the kerb, and the way things get clear", () => {
     // blow the way every other car does.
     const state = drive();
     floorIt(state, 3000);
+    // …ON A ROAD HOLDING NOTHING ELSE, which is what the rest of this suite
+    // does and what this one should always have done. The staged car is put at
+    // the NEAR kerb and the wagon is put on top of it, which is the busiest
+    // three feet of tarmac there is: the footway's delivery riders run a body's
+    // width outside it. One of them meeting the wagon on the same tick puts a
+    // blast over the staged car, and a car the blast has already written off
+    // takes the hero's blow without a shunt (`wasWrecked`) — so the assertion
+    // below failed over a moped, having said nothing at all about the parked
+    // car this test is named for.
+    haltTraffic(state);
+    state.traffic.length = 0;
+    state.pedestrians.length = 0;
     const kerb = roadBandEdges().bottom + DRIVE.street.kerbOffsetPx;
     state.props.length = 0;
     state.car.pos.y = kerb;

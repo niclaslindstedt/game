@@ -32,6 +32,7 @@ import {
 import {
   CROWD_THOUGHTS,
   GLUED_BARKS,
+  placardOrder,
   PLACARD_READ_PX,
   WITNESS_LINES,
   witnessLine,
@@ -167,5 +168,27 @@ describe("what the road shouts when it sees one", () => {
     // …and the near edge is inside the far one, or the sim can never pick
     // anybody at all.
     expect(DRIVE.witness.nearPx).toBeLessThan(DRIVE.witness.reachPx);
+  });
+
+  it("hands the one slot to the nearest speaker AHEAD, then to the ones passed", () => {
+    // The picture carries ONE line (`MAX_PLACARDS`) and `placardOrder` is the
+    // whole of who gets it. Two rules, and the second is the one that exists at
+    // all: as the car closes, each speaker in turn is passed and the next takes
+    // the bubble (a picket line reads as a SEQUENCE); and a speaker the car has
+    // gone past keeps their line until somebody in front wants it, so a thought
+    // leaves the picture with the person who was thinking it rather than being
+    // cut off on the frame the bumper draws level with them.
+    const queue = (aways: number[]): number[] =>
+      [...aways].sort((a, b) => placardOrder(a) - placardOrder(b));
+
+    // Nearest AHEAD first…
+    expect(queue([200, 40, 120])).toEqual([40, 120, 200]);
+    // …ahead of anybody already passed, however near they still are…
+    expect(queue([-5, 250])).toEqual([250, -5]);
+    // …and among the passed, the one the car has only just gone by.
+    expect(queue([-90, -10, -40])).toEqual([-10, -40, -90]);
+    // The body dead level with the bumper is still an APPROACHING one, so a
+    // speaker cannot lose the slot to itself on the frame it is passed.
+    expect(placardOrder(0)).toBeLessThan(placardOrder(-0.001));
   });
 });

@@ -86,13 +86,18 @@ describe("the drive's terminal beats", () => {
     run(drive, h);
 
     expect(h.clearSpeech).toHaveBeenCalledTimes(1);
-    // …and the leg really did start again underneath it — AT THE TOWN'S GATE,
-    // which is where the scoring starts. The approach in front of it (the wagon
-    // sliding into frame, the empty outskirts, the two lines over them) is an
-    // opening the player has already watched, and replaying it after every
-    // breakdown is a punishment on top of a punishment.
+    // …and the leg really did start again underneath it — AT THE WIDENING, the
+    // last stretch of the approach and the one the hand-over happens on. What
+    // is in FRONT of it (the wagon sliding into frame, ten seconds of empty
+    // outskirt, the two lines over them) is an opening the player has already
+    // watched, and replaying that after every breakdown is a punishment on top
+    // of a punishment; the taper is the beat that says GET READY, and a player
+    // who has just crashed is exactly the player who needs it.
     expect(drive.outcome).toBe(DRIVE_OUTCOME.driving);
-    expect(drive.distance).toBe(cityStartPx(PARAMS));
+    expect(drive.distance).toBe(cityStartPx(PARAMS) - DRIVE.opening.widenPx);
+    // NOT SCORED, which is what makes it free to give back: the clock is the
+    // town's and does not start until the gate.
+    expect(drive.cityDone).toBe(false);
     expect(drive.clockMs).toBe(0);
     expect(h.onArrived).not.toHaveBeenCalled();
   });
