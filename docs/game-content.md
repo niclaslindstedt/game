@@ -56,7 +56,20 @@ off the road, parks in the rank, and a member of the night shift gets out and
 walks to a door in that wall and badges through it. Following one is how the way
 in is found, and it is the only way in there is.
 
-Four rules hold the beat together and each is load-bearing:
+It is a **GATE** rather than a door, and the difference is a whole beat. The way
+through is two slabs wide and no wider — the door object sizes its own hole
+(`MapObject.opening`) instead of taking whichever width the district behind it
+happens to use, which is what stopped the front of GOODCO being a 220px hangar
+opening on every seed the carve put the lot beside an assembly bay. Beside it
+stands a lit **guard box** with somebody in it, and the walk ends at that
+WINDOW, not at the doorway (`ArrivalPlan.reader`): a staffer crosses the tarmac,
+stops at the glass, is read, and the gate beside them opens. It takes them and
+shuts (`ARRIVALS.gateHoldMs`) — and it is drawn in BOTH modes, its own slab
+chain while shut and a pair of open leaves standing in the jambs while open, so
+"the way in is open right now" is something the player can see from across the
+lot rather than something they have to walk at to discover.
+
+Five rules hold the beat together and each is load-bearing:
 
 - **It happens where the player is LOOKING.** A beat whose whole job is to point
   at the door is worth nothing off the side of the screen, and the geometry does
@@ -79,10 +92,19 @@ Four rules hold the beat together and each is load-bearing:
 - **It spends nothing off `state.rng`.** A car park is presentation, and a draw
   spent on presentation shifts every loot roll after it, so the lot's own
   decisions ride a private stream parked on `ArrivalPlan.rng`.
+- **Missing it says so.** The gate is a moment, and a player who has not yet
+  understood that watches it open, shut and go back to being a wall with nothing
+  on a deliberately quiet lot to tell them "wait for the next car" from "that was
+  never the way in". So the hero says it, once, at the only moment it is true —
+  he watched somebody go through and he is still on the tarmac
+  (`ArrivalsSpec.missedThought`). A player who took the moment never hears it.
 
 The autopilot knows the beat too (`bot/entrance.ts`): locked out, it falls in
 behind whoever is crossing the tarmac instead of pressing the wall the objective
-is behind.
+is behind. A gate this narrow is also what a person-width doorway costs the
+PLANNER: the nav grid resolves at 40px cells and finds its openings by sampling,
+so a 32px hole was routable only by luck until the grid learned to anchor a
+doorway cell on the doorway the map already knows is there (`buildNavGrid`).
 
 ## …and a venue you leave the way you arrived
 

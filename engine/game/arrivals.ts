@@ -69,6 +69,7 @@ import { runLevelDef } from "./defs/levels/index.ts";
 import type { ArrivalsSpec } from "./defs/levels/types.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
+import { anyZoneContains, type Zone } from "./zones.ts";
 import { heroInPlay } from "./party.ts";
 import { visibleTo } from "./sight.ts";
 import { openDoor, startPlayerThought } from "./story.ts";
@@ -129,8 +130,14 @@ const BOOTH_RADIUS = 11;
  *
  * The near side is tried first and the far side after it, because the carve
  * decides which end of that wall is a corner; a seed with room on neither simply
- * has no kiosk. The badge beat is unaffected either way, which is what keeps
- * this presentation rather than a dependency.
+ * has no kiosk.
+ *
+ * AND IT MOVES THE READER TO THE WINDOW. The kiosk is where the card is
+ * actually presented (`ArrivalPlan.reader`), so where the box lands decides
+ * where the walk ends — which is why this is the one piece of the lot's
+ * furniture the beat cannot simply skip and still read. A seed that finds room
+ * for no kiosk leaves the reader on the threshold, which is the plain badge
+ * beat every other venue would get.
  */
 function placeGatehouse(
   state: GameState,
@@ -182,9 +189,33 @@ function placeGatehouse(
       jumpable: false,
     });
     state.obstaclesVersion++;
+    // THE WINDOW: the kiosk's near face, a body's width off the glass and on
+    // the apron's own line out from the wall. Not the box's centre, which is
+    // inside it — the separation pass would shove the staffer straight back out
+    // and he would badge from wherever he was pushed to.
+    plan.reader = vec(
+      plan.door.x +
+        wx * side * (along - radius - READER_GAP) +
+        (nx / len) * ARRIVALS.apronGap,
+      plan.door.y +
+        wy * side * (along - radius - READER_GAP) +
+        (ny / len) * ARRIVALS.apronGap,
+    );
     return;
   }
 }
+
+/**
+ * How far the staffer stands off the kiosk's near face to present the card (px).
+ *
+ * A body's width, and it is a CLEARANCE rather than a look: an arrival is a real
+ * neutral and the separation pass pushes it out of furniture like anything else
+ * (`resolveObstacles`, step/enemies.ts — only the idle stroll leaves an arrival
+ * alone). Stood any closer than his own radius off the glass he is shoved back
+ * out of it every tick and badges from wherever he was pushed to, which is the
+ * kiosk making the beat worse than no kiosk at all.
+ */
+const READER_GAP = 18;
 
 /**
  * THE SCENE BEHIND THE DOOR HAS TO BE ABLE TO COME THROUGH IT.
@@ -392,6 +423,7 @@ function sendCar(state: GameState, plan: ArrivalPlan): void {
     route: [],
     beatMs: 0,
     parked: false,
+    watched: false,
   });
 }
 
@@ -413,7 +445,7 @@ function stepArrival(
       if (arrival.beatMs <= 0) stepOut(state, arrival, plan, spec);
       break;
     case "walking":
-      walkOn(state, arrival, plan, dt, dtMs);
+      walkOn(state, arrival, plan, spec, dt, dtMs);
       break;
     case "badging":
       arrival.beatMs -= dtMs;
@@ -422,15 +454,17 @@ function stepArrival(
     case "entering":
       // …and once the body is off the field there is nothing left to walk:
       // what remains of the arrival is a parked car, which is furniture.
-      if (arrival.staff !== null) walkOn(state, arrival, plan, dt, dtMs);
+      if (arrival.staff !== null) walkOn(state, arrival, plan, spec, dt, dtMs);
       break;
   }
   // The body's own clockwork runs whatever the phase: a parked car settles on
   // its springs, and one still rolling spins its wheels off its own speed.
   integrateCarBody(arrival.car, dt);
   // …and the moment somebody is out of it and can be SEEN, the hero has a read
-  // on what he is looking at.
+  // on what he is looking at — and the lot remembers he watched it, which is
+  // what the MISS is read off once this walker is through the gate.
   readTheLot(state, arrival, spec);
+  watchTheWalk(state, arrival);
 }
 
 /**
@@ -513,10 +547,12 @@ function park(state: GameState, arrival: Arrival): void {
  * (`Enemy.arrival`), so the idle stroll leaves it alone.
  *
  * THE ROUTE IS THREE STRAIGHT LEGS and every one of them stays on the tarmac:
- * out of the car onto the footpath, along the footpath to the apron, and — once
- * the badge has opened the way — through the doorway. The first read the player
- * ever gets on the beat fires here rather than at the kerb, because a car
- * arriving is scenery until a person gets out of it.
+ * out of the car onto the footpath, along the footpath to the GATEHOUSE WINDOW,
+ * and — once the badge has opened the way — a dogleg back to the gate and
+ * through it. The window rather than the gate is the whole of what makes the
+ * kiosk part of the beat instead of scenery beside it (`ArrivalPlan.reader`).
+ * The first read the player ever gets on the beat fires here rather than at the
+ * kerb, because a car arriving is scenery until a person gets out of it.
  */
 function stepOut(
   state: GameState,
@@ -549,8 +585,8 @@ function stepOut(
   arrival.phase = "walking";
   arrival.route = [
     vec(arrival.car.pos.x, plan.walkY),
-    vec(plan.apron.x, plan.walkY),
-    { ...plan.apron },
+    vec(plan.reader.x, plan.walkY),
+    { ...plan.reader },
   ];
   arrival.beatMs = legBudget(out, arrival.route[0] as Vec2);
 }
@@ -591,13 +627,101 @@ function readTheLot(
     (hero) => heroInPlay(hero) && visibleTo(state, hero, body.pos),
   );
   if (!watched) return;
+  readOnce(state, thought);
+}
+
+/**
+ * AND THE READ ON MISSING IT — fired when he WATCHES somebody go through the
+ * gate while he is still standing on the tarmac (`ArrivalsSpec.missedThought`).
+ *
+ * The gate holds for a second and a half and then shuts, which is the whole
+ * design: the way in is a MOMENT rather than a door. What that design could not
+ * say for itself is what a miss MEANS. A player who watched the gate open, shut
+ * and go back to being a wall had nothing telling them the difference between
+ * "wait for the next car" and "that was not the way in after all" — and the lot
+ * is deliberately quiet, so there is nothing else out there to read either. The
+ * line is the level's second and last instruction, and it costs nothing on a
+ * player who took the moment: they are through the gate, not on the lot, and it
+ * never fires.
+ *
+ * ASKED OF THE SAME HERO for both halves. "Somebody saw it" and "somebody is
+ * still outside" answered by two different players in a party is a line about
+ * nobody: the hero who watched it is the one who is owed the advice.
+ *
+ * AND ASKED ABOUT THE GATE, NOT ABOUT THE BODY — which is the half that had to
+ * be learned. A staffer is taken off the field one step PAST the doorway
+ * (`ARRIVALS.insideStep`), which is inside the building, and the fog stops at
+ * the walls: the last position the walker ever holds is one no hero standing on
+ * the tarmac can see, so asked about the body the line could not fire at all.
+ * The thing the player watched is the GATE, and the gate is on their side of the
+ * wall.
+ *
+ * Ordered behind `thought`, so "that's the night shift clocking on" lands before
+ * "and there they go" — the first read explains who these people are, and the
+ * second is only sensible once it has.
+ */
+function readTheMiss(
+  state: GameState,
+  arrival: Arrival,
+  spec: ArrivalsSpec,
+): void {
+  const thought = spec.missedThought;
+  if (!thought || !arrival.watched) return;
+  if (state.thoughtsSeen.includes(thought)) return;
+  if (spec.thought && !state.thoughtsSeen.includes(spec.thought)) return;
+  const lot = runLevelDef(state).arrivalLot;
+  if (!lot) return;
+  if (
+    !state.players.some((hero) => heroInPlay(hero) && onTheLot(lot, hero.pos))
+  )
+    return;
+  readOnce(state, thought);
+}
+
+/** Is this point out on the tarmac? — the "still outside" half of the miss. */
+function onTheLot(lot: Zone[], at: Vec2): boolean {
+  return anyZoneContains(lot, at);
+}
+
+/**
+ * REMEMBER THAT SOMEBODY WATCHED THIS ONE (`Arrival.watched`) — asked every
+ * tick a walker is on its feet, because the moment it is TRUE is the only
+ * moment it can be asked (see the field's own note).
+ */
+function watchTheWalk(state: GameState, arrival: Arrival): void {
+  if (arrival.watched) return;
+  const body = staffBody(state, arrival);
+  if (!body) return;
+  const lot = runLevelDef(state).arrivalLot;
+  if (!lot) return;
+  if (
+    state.players.some(
+      (hero) =>
+        heroInPlay(hero) &&
+        onTheLot(lot, hero.pos) &&
+        visibleTo(state, hero, body.pos),
+    )
+  ) {
+    arrival.watched = true;
+  }
+}
+
+/**
+ * RAISE A READ AND SPEND IT ONLY IF IT LANDED.
+ *
+ * A thought raised while another scene is on stage is dropped on the floor
+ * (`startPlayerThought`), and a line the hero owes the player is not spent by a
+ * beat that never reached them — unspent, it lands on the next staffer worth
+ * saying it about.
+ *
+ * A MUTED run is the exception and is spent immediately (`muteDialogue` — a
+ * replay, a soak, a suite about some other beat). Held, it would queue behind a
+ * mute that may never be lifted and then jump the stage the moment it is.
+ */
+function readOnce(state: GameState, thought: string): void {
   startPlayerThought(state, thought);
   const playing = state.dialogue?.source;
   const shown = playing?.kind === "playerThought" && playing.defId === thought;
-  // A MUTED run has decided it does not want the lines at all (`muteDialogue`
-  // — a replay, a soak, a suite about some other beat), and a read nobody asked
-  // to hear is SPENT rather than held: held, it would queue behind a mute that
-  // may never be lifted and then jump the stage the moment it is.
   if (shown || state.dialogueMuted) state.thoughtsSeen.push(thought);
 }
 
@@ -623,6 +747,7 @@ function walkOn(
   state: GameState,
   arrival: Arrival,
   plan: ArrivalPlan,
+  spec: ArrivalsSpec,
   dt: number,
   dtMs: number,
 ): void {
@@ -635,7 +760,7 @@ function walkOn(
   }
   const target = arrival.route[0];
   if (!target) {
-    finishLeg(state, arrival, plan);
+    finishLeg(state, arrival, plan, spec);
     return;
   }
   body.pos = moveToward(body.pos, target, ARRIVALS.walkSpeed * dt);
@@ -644,15 +769,18 @@ function walkOn(
   arrival.route.shift();
   const next = arrival.route[0];
   arrival.beatMs = next ? legBudget(body.pos, next) : 0;
-  if (!next) finishLeg(state, arrival, plan);
+  if (!next) finishLeg(state, arrival, plan, spec);
 }
 
-/** The end of a walk: at the apron the card comes out; past the doorway the
- * body has gone to work and is taken off the field. */
+/** The end of a walk: at the WINDOW the card comes out; past the doorway the
+ * body has gone to work and is taken off the field — which is the one moment
+ * "somebody just went in without me" is a true thing to say (`readTheMiss`),
+ * so the read is taken while the body is still there to have been watched. */
 function finishLeg(
   state: GameState,
   arrival: Arrival,
   plan: ArrivalPlan,
+  spec: ArrivalsSpec,
 ): void {
   if (arrival.phase === "walking") {
     arrival.phase = "badging";
@@ -660,18 +788,25 @@ function finishLeg(
     return;
   }
   const body = staffBody(state, arrival);
-  if (body) state.enemies = state.enemies.filter((e) => e !== body);
+  if (body) {
+    readTheMiss(state, arrival, spec);
+    state.enemies = state.enemies.filter((e) => e !== body);
+  }
   arrival.staff = null;
   arrival.phase = "entering";
   arrival.route = [];
-  void plan;
 }
 
 /**
- * THE BADGE. The beep first, then the doors — one beat apart on purpose, or the
- * entrance reads as having opened by itself. Every leaf of the entrance opens,
- * because they all carry the same id and a card opens the WAY IN rather than
- * one of its openings (the vault rule, said about a front door).
+ * THE BADGE, AT THE WINDOW. The beep first, then the gate — one beat apart on
+ * purpose, or the entrance reads as having opened by itself, and the beep is
+ * anchored where the card actually is (`plan.reader`) rather than at the gate,
+ * so what the player hears comes from the man at the glass. Every leaf of the
+ * entrance opens, because they all carry the same id and a card opens the WAY IN
+ * rather than one of its openings (the vault rule, said about a front door).
+ *
+ * The walk from here is a DOGLEG — back off the kiosk to the gate, then through
+ * it — which is the shape of somebody who has just been let in.
  */
 function badgeIn(
   state: GameState,
@@ -680,7 +815,7 @@ function badgeIn(
   spec: ArrivalsSpec,
 ): void {
   const id = spec.door ?? ENTRANCE_DOOR;
-  state.events.push({ type: "badgeSwiped", pos: { ...plan.apron } });
+  state.events.push({ type: "badgeSwiped", pos: { ...plan.reader } });
   for (const door of state.doors) {
     // …AND IT SHUTS AGAIN. A badge buys a moment, not a door (see
     // `ARRIVALS.gateHoldMs`): the gate takes the staffer who opened it, and

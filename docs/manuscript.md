@@ -530,11 +530,17 @@ building, and these four are the whole of the briefing. A replay skips them._
 
 ### Pinned beats
 
-_The night shift clocking on, out on the STAFF LOT — the level's only
+_The night shift clocking on, out on the STAFF LOT — the level's first
 instruction, and it claims nothing he could not know._
 
 - THAT'S THE NIGHT SHIFT CLOCKING ON. NOBODY'S TOLD THEM THE BUILDING IS SHUT TONIGHT.
 - I HAD A BADGE FOR THAT GATE ONCE. NOT ANYMORE. SO I'LL WALK IN BEHIND SOMEBODY WHO STILL DOES.
+
+_And the level's second, at the only moment it can be said: he has just watched
+one of them badge in at the guard box and go through, and he is still standing
+on the tarmac. It never fires on a player who took the moment._
+
+- THAT ONE'S IN AND I'M STILL OUT HERE. FINE — I'LL WAIT FOR THE NEXT AND WALK IN BEHIND THEM.
 
 _First INTERN sighted, inside._
 

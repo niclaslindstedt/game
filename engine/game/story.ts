@@ -8,7 +8,7 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { DIALOGUE, DOORS, GATES, MERCHANT } from "./config/index.ts";
+import { DIALOGUE, DOORS, GATES, MERCHANT, PLAYER } from "./config/index.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
@@ -1022,11 +1022,15 @@ export function openDoor(
   // are flat scenery at the two ENDS of the chain (where the leaves went), so
   // they are drawn but never stood in the way of again.
   //
-  // A GATE GETS NONE, and for the reason the rest of them do: it is going to be
-  // shut again in a second and a half, and decor is laid down for good — so a
-  // gate that dressed its jambs would leave a pair of open leaves standing
-  // beside a closed gate, and a fresh pair every time somebody badges in.
-  if (door.openSprite && door.from && door.to && holdMs === undefined) {
+  // A GATE GETS THEM TOO, AND GIVES THEM BACK. It is the one door that shuts
+  // again, so its leaves are laid down for the length of the hold rather than
+  // for good (`shutGate` takes them away with the same hand that puts the slats
+  // back) — and it is the door that needs them MOST. A gate whose whole
+  // vocabulary is one moment has to say which of its two modes it is in from
+  // across the tarmac, and for as long as OPEN was drawn as nothing at all,
+  // "the way in is open right now" was a fact the player could only learn by
+  // walking at it.
+  if (door.openSprite && door.from && door.to) {
     for (const pos of [door.from, door.to])
       state.decor.push({
         kind: door.openSprite,
@@ -1055,29 +1059,100 @@ export function openDoor(
  * would be a gate that teleports him. Held rather than cancelled, so the moment
  * the threshold is clear it shuts on the next tick.
  */
+/**
+ * IS ANYBODY STANDING IN THIS DOORWAY? — the question a gate has to answer
+ * before it shuts, and it is about the HOLE, not about the neighbourhood.
+ *
+ * A CIRCLE ROUND THE DOOR'S CENTRE IS THE WRONG SHAPE, and it was the shape
+ * this used: the doorway's half-span plus `DOORS.openRadius`, which reaches as
+ * far INTO the building as it does across the opening. GOODCO parks the
+ * scripted rusher a step past its entrance (`clearTheLobby` walks it back to
+ * `ARRIVALS.insideStep`), so on the seeds where it settles nearest the gate it
+ * stood inside that circle for the whole run — and the gate that the entire
+ * venue is built around, the one whose second and a half the player has to
+ * take, opened once and never shut again. Nobody was ever in its way.
+ *
+ * So the test is the OPENING's own box: how far along the chain a body is
+ * (which is what "in the hole" means across it) and how far off the wall plane
+ * (which is what "in it" means through it). A leaf's own thickness on each,
+ * plus the body's radius, so a person clear of the slab is clear.
+ *
+ * It fails back to the circle on a door with no chain geometry to read — there
+ * are none today, and a gate that guesses wrong is better than a gate that
+ * guillotines.
+ */
+function doorwayIsBlocked(
+  state: GameState,
+  door: GameState["doors"][number],
+): boolean {
+  const from = door.from;
+  const to = door.to;
+  const len = from && to ? distance(from, to) : 0;
+  if (!from || !to || len === 0) {
+    const reach = DOORS.openRadius;
+    return (
+      anyHeroWithin(state, door.center, reach) ||
+      state.enemies.some(
+        (e) => e.hp > 0 && distance(e.pos, door.center) <= reach,
+      )
+    );
+  }
+  // Along the chain, and across it — the leaf's own half-thickness on both, so
+  // the box is the hole the door fills rather than a point at its middle.
+  const ax = (to.x - from.x) / len;
+  const ay = (to.y - from.y) / len;
+  const leaf = door.shut?.[0]?.radius ?? 0;
+  const half = len / 2 + leaf;
+  const standing = (pos: Vec2, radius: number): boolean => {
+    const dx = pos.x - door.center.x;
+    const dy = pos.y - door.center.y;
+    return (
+      Math.abs(dx * ax + dy * ay) <= half + radius &&
+      Math.abs(dy * ax - dx * ay) <= leaf + radius
+    );
+  };
+  return (
+    state.players.some(
+      (hero) => heroInPlay(hero) && standing(hero.pos, PLAYER.radius),
+    ) ||
+    state.enemies.some(
+      (e) => e.hp > 0 && standing(e.pos, enemyDef(e.defId).radius),
+    )
+  );
+}
+
 function stepClosingDoor(
   state: GameState,
   door: GameState["doors"][number],
   dtMs: number,
 ): void {
   if (door.closeMs === undefined || !door.shut) return;
-  // The doorway's own span, plus a body's worth of margin: anything inside that
-  // circle is standing IN the hole rather than near it.
-  const reach =
-    (door.from && door.to ? distance(door.from, door.to) / 2 : 0) +
-    DOORS.openRadius;
-  const inTheWay =
-    anyHeroWithin(state, door.center, reach) ||
-    state.enemies.some(
-      (e) => e.hp > 0 && distance(e.pos, door.center) <= reach,
-    );
-  if (inTheWay) return;
+  const blocked = doorwayIsBlocked(state, door);
+  if (blocked) return;
   door.closeMs -= dtMs;
   if (door.closeMs > 0) return;
   door.open = false;
   delete door.closeMs;
   state.obstacles = state.obstacles.concat(door.shut);
   delete door.shut;
+  // …AND THE OPEN LEAVES COME BACK OUT OF THE JAMBS. `openDoor` lays a pair of
+  // them where the chain's two ends stood, which for every other door in the
+  // game is the last thing that ever happens to that doorway; a gate has to
+  // undo it, or it stands there closed with a pair of open leaves beside it and
+  // a fresh pair after every badge.
+  //
+  // Matched by WHAT and WHERE rather than by identity: a snapshot crossing the
+  // wire and coming back is a different object holding the same two facts, and
+  // a gate that could not find its own leaves after a reconnect would litter
+  // one pair per swipe for the rest of the run.
+  if (door.openSprite && door.from && door.to) {
+    const ends = [door.from, door.to];
+    state.decor = state.decor.filter(
+      (piece) =>
+        piece.kind !== door.openSprite ||
+        !ends.some((end) => end.x === piece.pos.x && end.y === piece.pos.y),
+    );
+  }
   // A wall that reappears without the bump is a wall the autopilot walks
   // straight through, exactly as one that vanishes without it is one it keeps
   // routing around.

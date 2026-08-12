@@ -41,12 +41,14 @@ export type EntranceGoal = { pos: Vec2; thought: string };
 /**
  * IS THE WAY IN STILL SHUT, AND IS THIS HERO STILL OUTSIDE IT?
  *
- * Both halves matter. A door that has been badged open stays open for the rest
- * of the run, so the first is a one-way latch and the rung retires itself. The
- * second is what keeps a party honest: a hero who has already followed somebody
- * through is playing the building, and pulling him back onto the tarmac because
- * a second leaf of the same entrance is still shut would be the rung fighting
- * the run.
+ * Both halves matter, and the FIRST is not a latch — the gate shuts again
+ * (`ARRIVALS.gateHoldMs`), so the rung retires itself for the second and a half
+ * the way in is open and re-arms behind it, which is exactly the read a player
+ * has: while it is open there is a level to play, and while it is shut there is
+ * a car to wait for. The second is what keeps a party honest: a hero who has
+ * already followed somebody through is playing the building, and pulling him
+ * back onto the tarmac because the gate has since shut behind him would be the
+ * rung fighting the run.
  */
 export function lockedOut(state: GameState, hero: Player): boolean {
   const def = runLevelDef(state);

@@ -568,7 +568,16 @@ nobody walking pulls the next car forward), and it spends NOTHING off
 own read waits too: the "night shift clocking on" line is held until a walker is
 somewhere `visibleTo` a hero, and is only spent once it has actually played. The
 autopilot has its own rung for it (`bot/entrance.ts`) — without one it presses
-the wall the objective is behind for the whole run. → `docs/game-content.md`
+the wall the objective is behind for the whole run.
+**IT IS A GATE, AND A GATE IS TWO SLABS WIDE WITH A BOX BESIDE IT.** The door
+sizes its own hole (`MapObject.opening` — a doorway's width is otherwise the
+DISTRICT's, and the district behind this one is whichever the carve landed the
+lot against), the walk ends at the guard box's WINDOW rather than at the doorway
+(`ArrivalPlan.reader`), and the gate is drawn in BOTH modes — its slab chain
+while shut, its open leaves in the jambs while open, taken back when it shuts.
+A doorway that narrow is below what the autopilot's 40px nav grid finds by
+sampling, which is why `buildNavGrid` anchors a doorway cell ON the doorway.
+→ `docs/game-content.md`
 
 **AND ITS BACK DOOR IS THE CAR HE PARKED ON THAT LOT — GOODCO HAS NO LEVEL
 CLEAR BUTTON (`LevelDef.exitByCar`).** The objective clearing is a BEAT, not an

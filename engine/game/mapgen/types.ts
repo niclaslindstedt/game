@@ -235,6 +235,30 @@ export type MapObject = {
    * plain door slide (`LevelDef.doors[].rollUp`).
    */
   rollUp?: boolean;
+  /**
+   * `door`: HOW WIDE THE HOLE THIS DOOR HANGS IN IS (world px), overriding the
+   * width the doorway's own district would have punched
+   * (`MapArea.doorWidth` → `layout.doorWidth`).
+   *
+   * IT EXISTS BECAUSE A DOORWAY'S WIDTH IS OTHERWISE A FACT ABOUT THE ROOM
+   * BEHIND IT, and for one door in the game that is the wrong owner. A district
+   * sizes its own doorways because a cupboard door and a hangar door are what
+   * the rooms either side of them are for — but GOODCO's front GATE is punched
+   * through whichever wall the carve happened to put the staff lot against, so
+   * it wore the ASSEMBLY BAY's hangar opening on the seeds where the lot landed
+   * beside a bay: a 220 px hole in the front of the building, with no gate in
+   * it that reads as a gate and nothing for a badge to be the only way through.
+   * A door that is a CONTROLLED way in is one specific object, and it is the
+   * same width wherever the floor plan lands it.
+   *
+   * Applied to the BORDER before the walls are built, so the wall runs and the
+   * doorway they leave between them agree — a width applied any later would be
+   * a narrow door standing in the middle of a wide hole.
+   *
+   * Omitted = the district's own doorway width, which is the right answer for
+   * every door that belongs to the rooms it joins.
+   */
+  opening?: number;
   /** `landmark`: which carved feature it is pinned to.
    *
    * `door`: WHERE ONE HANGS. Only `spawn` means anything — every doorway of the

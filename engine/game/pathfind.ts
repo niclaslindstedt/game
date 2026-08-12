@@ -213,6 +213,36 @@ export function buildNavGrid(state: GameState): NavGrid {
       }
     }
   }
+  // …AND A DOORWAY IS ANCHORED ON THE DOORWAY, because the map already knows
+  // where its holes are and the sampler above does not.
+  //
+  // The refinement asks "where in this cell does a body fit BEST", which for a
+  // cell straddling a wall is a point out in the open floor beside it rather
+  // than the gap through it — and the route then has to sweep from THERE to the
+  // next cell's anchor, on a line that never passes through the opening. On a
+  // wide doorway that costs nothing (the sweep clears the hole wherever it
+  // crosses); on a person-width one it is the difference between a building
+  // with rooms in it and a building the autopilot cannot plan a step inside.
+  // Measured on GOODCO with its doorways cut to 32 px: the boss, all four
+  // caches and both story items came back UNREACHABLE, on a floor a player
+  // walks through without noticing.
+  //
+  // A SHUT DOOR STILL SEALS ITSELF. The pin is applied only where a body
+  // genuinely fits, and a closed door's own chain is in this obstacle field —
+  // so a shut doorway fails the clearance and keeps whatever the sampler said,
+  // which is what makes this a better ANSWER to the same question rather than a
+  // second, more optimistic one.
+  for (const door of state.doors) {
+    const tx = Math.floor(door.center.x / cell);
+    const ty = Math.floor(door.center.y / cell);
+    if (tx < 0 || ty < 0 || tx >= cols || ty >= rows) continue;
+    const i = ty * cols + tx;
+    if (clearanceAt(door.center, buckets[i] ?? solids) < pad) continue;
+    walkable[i] = 1;
+    fringe[i] = 1;
+    anchorX[i] = door.center.x;
+    anchorY[i] = door.center.y;
+  }
   // A cell NEXT TO the fringe keeps its centre anchor but its link to a fringe
   // neighbour still has to be swept, so mark the whole neighbourhood as needing
   // the honest check.

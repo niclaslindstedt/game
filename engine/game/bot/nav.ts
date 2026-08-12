@@ -679,13 +679,35 @@ export function routeTarget(
     rc.index = 0;
     if (!route) return goal; // walled off — nudge straight and hope
   }
-  while (
-    rc.index < rc.path.length &&
-    distance(from, rc.path[rc.index]!) <= ROUTE_REACH
-  )
-    rc.index++;
-  if (rc.index >= rc.path.length) return rc.legGoal;
   const r = PLAYER.radius;
+  // RETIRE A WAYPOINT ONLY WHEN HE CAN SEE PAST IT — near enough is not the
+  // same as THROUGH.
+  //
+  // A waypoint standing in a DOORWAY is a hole in a wall, and proximity alone
+  // retires it from `ROUTE_REACH` (48 px) away — which on a wide opening costs
+  // nothing, because the next waypoint is in clear sight through the rest of
+  // the hole. On a PERSON-WIDTH doorway it is the whole failure: the hero is
+  // retired past the only gap in the wall while still standing outside it, the
+  // plan then aims him at the next cell's anchor on the far side of the stone,
+  // the wall sense traces him sideways, `nextBlocked` replans, and the identical
+  // route hands him the identical waypoint. Measured on GOODCO's 32 px gate: the
+  // autopilot oscillated one stride outside an OPEN entrance for the rest of the
+  // clock, and the campaign's first level could not be started.
+  //
+  // So a waypoint is retired when the hero is close to it AND the one after it
+  // is a straight body-width sweep away — the honest reading of "past it". The
+  // one exception is standing ON it (inside a body radius), where holding would
+  // steer him at his own feet.
+  const after = (i: number): Vec2 =>
+    i + 1 < rc.path.length ? rc.path[i + 1]! : rc.legGoal;
+  while (rc.index < rc.path.length) {
+    const at = rc.path[rc.index]!;
+    const gap = distance(from, at);
+    if (gap > ROUTE_REACH) break;
+    if (gap > r && blockedByObstacle(state, from, after(rc.index), r)) break;
+    rc.index++;
+  }
+  if (rc.index >= rc.path.length) return rc.legGoal;
   let target = rc.path[rc.index]!;
   for (let i = rc.path.length - 1; i >= rc.index; i--) {
     if (!blockedByObstacle(state, from, rc.path[i]!, r)) {

@@ -3797,6 +3797,16 @@
       "portrait": "hero",
       "speaker": "{HERO}"
     },
+    "goodco_missed_gate": {
+      "id": "goodco_missed_gate",
+      "pages": [
+        [
+          "THAT ONE'S IN AND I'M STILL OUT HERE. FINE — I'LL WAIT FOR THE NEXT AND WALK IN BEHIND THEM."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "{HERO}"
+    },
     "goodco_second_blow": {
       "id": "goodco_second_blow",
       "pages": [

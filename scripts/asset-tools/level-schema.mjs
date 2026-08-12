@@ -350,6 +350,15 @@ export function validateLevel(def, refs, description = "", options = {}) {
     }
   }
   thought(def.arrivals?.thought, "arrivals");
+  thought(def.arrivals?.missedThought, "arrivals.missedThought");
+  // …and the miss is ORDERED BEHIND the arrival read (`readTheMiss`), so a
+  // mission that names the second and not the first has authored a line the
+  // engine will never raise.
+  if (def.arrivals?.missedThought && !def.arrivals.thought)
+    err(
+      "arrivals.missedThought waits on arrivals.thought — " +
+        `"${def.arrivals.missedThought}" would never fire without one`,
+    );
   if (def.openingStrike) {
     thought(def.openingStrike.thought, "openingStrike");
     thought(def.openingStrike.after, "openingStrike.after");
