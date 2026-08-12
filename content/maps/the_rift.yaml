@@ -204,6 +204,184 @@ objects:
     sprite: rift
     at: goal
 
+# THE STATIC PARTS DECK — the floor plan the tear is SEWN from (the shipping
+# generator; the old carve stays behind the developer LEGACY MAP GENERATOR
+# switch). Every part is a hand-drawn piece of frontier physics: void shelves
+# to drift across, shard drifts behind their crystal fences, the cages where
+# space froze solid behind baffle curtains — and THE FOUNDER'S CAGE as the
+# boss's own room, sewn farthest from wherever the arrival tear opens. The
+# horde is the deck's own spawn markers: ONE mob to a post (WoW-style),
+# dormant until aggroed, refilled on the difficulty's respawn clock. Breeds
+# are rolled by DEPTH from the horde members below, so the same shelf fields
+# voidlings by the tear and gravitons out at the far door.
+parts:
+  count: [7, 10]
+  list:
+    # THE ARRIVAL SHELF — the hero steps out of the tear here; the landmark
+    # stands at his spawn. One patroller sweeps the shelf so a hero who never
+    # moves is still found (the promise the difficulty curve rests on).
+    - id: arrival_shelf
+      area: void
+      start: true
+      width: 660
+      height: 540
+      doors:
+        - { edge: n, at: 330 }
+        - { edge: s, at: 330 }
+        - { edge: e, at: 270 }
+        - { edge: w, at: 270 }
+      spawns:
+        - { at: [150, 110] }
+        - { at: [530, 130], patrol: true }
+        - { at: [550, 430] }
+    # A void channel — the corridor piece, repeatable, flippable to serve
+    # either hand of the plan.
+    - id: void_channel
+      area: void
+      width: 580
+      height: 300
+      flip: true
+      max: 3
+      weight: 3
+      doors:
+        - { edge: w, at: 150, width: 200 }
+        - { edge: e, at: 150, width: 200 }
+      props:
+        - { object: rift_pit_small, at: [200, 90] }
+        - { object: rift_shard, at: [370, 210] }
+        - { object: stardust, at: [290, 150] }
+      spawns:
+        - { at: [140, 150], patrol: true }
+        - { at: [300, 80] }
+        - { at: [300, 230] }
+        - { at: [470, 160] }
+    # A SHARD DRIFT — the tear's debris collected into thicker nothing, void
+    # tears punched through it, one of the vanished standing among the shards.
+    - id: shard_drift
+      area: drift
+      width: 640
+      height: 560
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 320, width: 220 }
+        - { edge: w, at: 280, width: 220 }
+        - { edge: s, at: 320, width: 220 }
+      props:
+        - { object: rift_shard, at: [230, 190] }
+        - { object: rift_pit, at: [500, 150] }
+        - { object: space_junk, at: [430, 330] }
+        - { object: rift_debris, at: [340, 260] }
+        - { object: rift_shard, at: [160, 420] }
+      spawns:
+        - { at: [320, 120], slot: elite }
+        - { at: [160, 290] }
+        - { at: [480, 240], patrol: true }
+        - { at: [340, 460] }
+        - { at: [560, 470] }
+    # A drift elbow — crystal wall to wall, one way in, one way on.
+    - id: drift_elbow
+      area: drift
+      width: 480
+      height: 480
+      flip: true
+      max: 2
+      weight: 2
+      doors:
+        - { edge: n, at: 240, width: 200 }
+        - { edge: e, at: 240, width: 200 }
+      props:
+        - { object: rift_seam, at: [180, 310] }
+        - { object: rift_shard, at: [330, 170] }
+        - { object: space_junk, at: [240, 240] }
+      spawns:
+        - { at: [240, 130] }
+        - { at: [130, 250], patrol: true }
+        - { at: [350, 340] }
+    # THE JUNK FIELD — everything that was ever lost, drifted into one shoal:
+    # somebody's television, somebody's luggage, salvage worth breaking open.
+    - id: junk_field
+      area: void
+      width: 620
+      height: 500
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: w, at: 250 }
+        - { edge: s, at: 310 }
+      props:
+        - { object: space_junk, at: [150, 110] }
+        - { object: space_junk, at: [210, 90] }
+        - { object: rift_shard, at: [470, 150] }
+        - { object: lost_tv, at: [310, 250] }
+        - { object: space_junk, at: [440, 350] }
+      spawns:
+        - { at: [310, 140], slot: elite }
+        - { at: [150, 340] }
+        - { at: [320, 370] }
+        - { at: [480, 250], patrol: true }
+    # THE FROZEN GALLERY — a cage sealed behind its baffle curtain, one gate
+    # in and out. A dead end, which is what the cache picker looks for; its
+    # stand is one of the posts the vanished are dealt onto.
+    - id: frozen_gallery
+      area: cage
+      width: 520
+      height: 420
+      flip: true
+      min: 1
+      max: 2
+      doors:
+        - { edge: s, at: 260, width: 150 }
+      props:
+        - { object: rift_singularity, at: [130, 110] }
+        - { object: rift_seam, at: [390, 120] }
+        - { object: rift_debris, at: [260, 210] }
+        - { object: rift_singularity, at: [420, 290] }
+      spawns:
+        - { at: [260, 190], slot: elite }
+        - { at: [120, 290] }
+    # THE PYLON YARD — a cage with two gates somebody left open, pinned
+    # singularities knotted between the emitter pylons.
+    - id: pylon_yard
+      area: cage
+      width: 560
+      height: 460
+      flip: true
+      max: 2
+      doors:
+        - { edge: w, at: 230, width: 150 }
+        - { edge: s, at: 280, width: 150 }
+      props:
+        - { object: rift_singularity, at: [150, 120] }
+        - { object: rift_seam, at: [300, 230] }
+        - { object: rift_singularity, at: [440, 340] }
+      spawns:
+        - { at: [280, 120], slot: elite }
+        - { at: [140, 330] }
+        - { at: [460, 230], patrol: true }
+    # THE FOUNDER'S CAGE — the boss's own room, sewn farthest from the
+    # arrival. He tore his way in here and pulled it shut; BRO OMEGA stands
+    # over him, and the honor guard of posts holds the corners.
+    - id: founders_cage
+      area: cage
+      width: 740
+      height: 600
+      doors:
+        - { edge: s, at: 370, width: 160 }
+      boss: { at: [370, 250] }
+      props:
+        - { object: rift_singularity, at: [140, 130] }
+        - { object: rift_singularity, at: [600, 130] }
+        - { object: rift_seam, at: [370, 460] }
+        - { object: rift_debris, at: [150, 470] }
+      spawns:
+        - { at: [180, 280] }
+        - { at: [560, 280] }
+        - { at: [240, 470] }
+        - { at: [500, 470] }
+
 # THE HORDE: one finite knot per drift, handing over along the depth axis —
 # voidlings where he arrives, gravitons only out at the deep end.
 horde:

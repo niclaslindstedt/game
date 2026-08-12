@@ -586,9 +586,12 @@ function sharedBorder(
 export function assembleParts(bp: MapBlueprint, rng: Rng): PartsAssembly {
   const deck = bp.parts as MapParts;
   const doorWidth = bp.layout.doorWidth;
+  // Margins on BOTH sides, plus one ground tile of headroom: the final extents
+  // are rounded UP to the 16px tile grid, and a deal sewn flush against the
+  // raw allowance could round past the priced rectangle by up to 15px.
   const bounds = {
-    width: bp.size.width - MAP_MARGIN * 2,
-    height: bp.size.height - MAP_MARGIN * 2,
+    width: bp.size.width - MAP_MARGIN * 2 - 16,
+    height: bp.size.height - MAP_MARGIN * 2 - 16,
   };
   // Deal until one clears the SEARCH FLOOR (see `BOSS_WALK_MIN`); keep the
   // longest walk seen as the stand-in when the deck simply cannot reach it.
