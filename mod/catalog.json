@@ -4205,7 +4205,7 @@
       "on": {
         "type": "carStarted"
       },
-      "what": "The hero turns the key on a thirty-year-old hatchback: the starter motor cranks — a dry whirr with three low square coughs riding it — then the engine CATCHES: a saw swell climbing out of the floor into the idle the running `carEngine` rumble takes over from."
+      "what": "The hero turns the key on a thirty-year-old hatchback: the starter motor cranks — a dry whirr with three low square coughs riding it — then the engine CATCHES: a saw swell climbing out of the floor, flaring the way a cold engine does, and settling onto the 40 Hz idle the running `carEngine` rumble takes over from."
     },
     "car_stop": {
       "on": {
