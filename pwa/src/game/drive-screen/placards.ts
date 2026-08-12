@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // WHAT THE ROAD HAS TO SAY, AND HOW IT REACHES THE SCREEN.
 //
-// TWO KINDS OF WORDS AND THE DIFFERENCE IS THE WHOLE POINT OF THE FILE. THE
+// THREE KINDS OF WORDS AND THE DIFFERENCES ARE THE WHOLE POINT OF THE FILE. THE
 // GLUED SHOUT (`GLUED_BARKS`): they are addressing a driver they can see, they
 // want the car stopped, and they are drawn in the white. THE CROWD THINK
 // (`CROWD_THOUGHTS`): nobody out there is talking to the car at all, the
 // sentence is a private one about the rent or the soup or a daughter who still
 // calls, and it is drawn in the grey. Same glyphs, same float, same half-second
 // window — one is aimed at the hero and the other has never heard of him.
+//
+// AND THEN SOMEBODY SEES A COLLISION (`WITNESS_LINES`). That one is neither: it
+// is not prepared, like a placard, and it is not private, like a thought — it is
+// a person on a pavement turning round because a wagon has just put somebody
+// over its own roof. It is drawn in the white with THE GLUED, because it is a
+// shout; it is written in a different register from either, because nobody
+// composes a sentence at the moment they see that.
 //
 // THE WORDS ARE HERE RATHER THAN IN A THOUGHT CATALOG, and the reason is the
 // shape of the line rather than a filing preference. `content/thoughts.yaml`
@@ -32,6 +39,8 @@
 // a near-miss pun on one (docs/naming.md). THE GLUED is a role, and a role does
 // not date: there has been somebody sitting in a road since there have been
 // roads.
+
+import type { WitnessScene } from "@game/core";
 
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -134,6 +143,218 @@ export const CROWD_THOUGHTS: readonly string[] = [
 ];
 
 /**
+ * WHAT SOMEBODY SHOUTS WHEN THEY SEE ONE — sixty lines, filed by the SCENE the
+ * sim says they just watched (`WitnessScene`, engine/game/drive/witness.ts).
+ *
+ * A TABLE KEYED ON THE CASE, NEVER A BRANCH IN THE DRAIN. The engine names what
+ * happened and this answers with words, exactly the way the two legs' monologues
+ * are a `Record<levelId, …>` in `voice.ts` rather than an `if` at the say. A new
+ * case is one more row here beside one more arm of `sceneOf` there, and nothing
+ * in between learns there was a fifteenth.
+ *
+ * AND THE TABLE IS TOTAL, WHICH IS WHY THIS BEAT IS SAFER THAN THE OTHER TWO.
+ * `GLUED_BARKS` and `CROWD_THOUGHTS` are lists the sim indexes by a NUMBER it
+ * got from a count in the other tree, so a list that drifts short silently stops
+ * using its tail and every check stays green. A scene is a NAME, so this is a
+ * `Record<WitnessScene, …>` and the compiler refuses the omission outright.
+ *
+ * THE RULES THEY ARE WRITTEN TO, and every one is load-bearing:
+ *
+ * SHORTER THAN A THOUGHT — two to six words. A thought is read off a body the
+ * car is closing on for most of a second; a reaction is picked at the far edge
+ * of the reading window and the wagon is doing 905 px/s, so it has under three
+ * tenths. Anything with a subordinate clause in it is a line nobody ever read.
+ *
+ * SHOUTED, NOT COMPOSED. No irony, no punchlines, no commentary on the state of
+ * the world — these people are not the author's mouthpiece and the joke is not
+ * theirs. What comes out of somebody who has just watched a car go through a
+ * person is short, badly formed and often not a sentence at all: a noise, a
+ * name for what they saw, an instruction to nobody in particular.
+ *
+ * THEY ARE THE SAME PEOPLE AS THE THOUGHTS. The crowd out here is the one the
+ * welfare did not reach (`crowd.ts`), so nobody says anything that costs money
+ * or assumes any: it is "SOMEBODY GET HELP", never "CALL AN AMBULANCE", and
+ * "SOMEBODY GET HIS PLATE", never a phone.
+ *
+ * NOBODY ADDRESSES HIM BY ANYTHING HE IS. He is HE, and he is never a job, a
+ * class, a company or a cause — the moment a bystander diagnoses the driver, the
+ * road has an opinion and this minigame has stopped being about a man who is not
+ * paying attention.
+ *
+ * AND NOTHING NAMES ANYTHING REAL (`docs/naming.md`) — no make of car, no
+ * emergency number, no brand on the bus.
+ */
+export const WITNESS_LINES: Readonly<Record<WitnessScene, readonly string[]>> =
+  {
+    // ── SOMEBODY WENT UNDER THE CAR ──────────────────────────────────────────
+    // THE PLAIN ONE, and the one most of the road gets. It carries the two lines
+    // everybody already has in their head for this — the noise and the disbelief
+    // — because those are what actually get said, and because a scene with only
+    // clever lines in it is a scene nobody believes.
+    person: [
+      "OH MY GOD",
+      "HE JUST RAN THAT MAN DOWN",
+      "HE DIDN'T EVEN BRAKE",
+      "SOMEBODY GET HELP",
+      "JEEEEESUS",
+      "DID YOU SEE THAT",
+    ],
+    woman: [
+      "HE HIT THAT LADY",
+      "THAT'S A WOMAN DOWN THERE",
+      "SHE NEVER SAW HIM COMING",
+      "OH GOD, THAT POOR WOMAN",
+    ],
+    // NOT ONE OF THESE SAYS A GENDER. The scene covers the old man, the crutches
+    // and the walking frame — three bodies with one thing in common and nothing
+    // else — so a line that guessed would be wrong two thirds of the time in
+    // front of a player looking straight at the sprite.
+    elder: [
+      "THEY COULDN'T GET OUT THE WAY",
+      "THAT ONE COULD BARELY WALK",
+      "HAVE YOU NO SHAME AT ALL",
+      "OH GOD, THE POOR OLD SOUL",
+    ],
+    wheelchair: [
+      "THAT WAS A WHEELCHAIR",
+      "HE WENT STRAIGHT THROUGH THE CHAIR",
+      "THEY COULDN'T MOVE AT ALL",
+    ],
+    // THE DOG GETS ITS OWN SCENE, and it is not a gag. It is the one body on this
+    // road that somebody was holding on to, and a crowd that has watched a person
+    // go under in silence all evening will shout about a dog — which is a truer
+    // thing about people than any line here could say outright.
+    dog: ["THE DOG, HE GOT THE DOG", "NOT THE DOG", "SOMEBODY CATCH THAT DOG"],
+    cyclist: [
+      "HE TOOK THE CYCLIST CLEAN OUT",
+      "THAT BIKE WENT OVER THE ROOF",
+      "THEY WERE ON A BIKE",
+      "HE NEVER EVEN LOOKED",
+    ],
+    // AND THE ONE SCENE WHERE THE CROWD IS RIGHT ABOUT SOMETHING. THE GLUED cannot
+    // move and everybody watching knows it, so what is shouted here is a FACT
+    // rather than an alarm — which is also the only moment the road's two set
+    // pieces speak about each other.
+    glued: [
+      "THEY WERE GLUED DOWN",
+      "THEY COULDN'T MOVE, YOU KNOW THAT",
+      "HE DROVE STRAIGHT INTO THEM",
+      "THEIR HANDS WERE IN THE ROAD",
+    ],
+    // THE WORST OF IT, AND THE ONLY SCENE WHERE NOBODY DESCRIBES ANYTHING. A
+    // person who has just seen a body come apart does not narrate it; they look
+    // away, they say a name they do not mean, or they tell somebody else not to
+    // look. One line names it and that is the ceiling.
+    torn: [
+      "OH GOD, OH GOD, NO",
+      "DON'T LOOK, DON'T LOOK",
+      "THERE'S PIECES OF THEM",
+      "I'M GOING TO BE SICK",
+      "GET AWAY FROM THE ROAD",
+    ],
+    // ── AND THE REST OF THE ROAD ─────────────────────────────────────────────
+    // Everything below happened to a MACHINE, and the register drops with it: no
+    // horror, plenty of alarm, and the two lines that give the crowd its one bit
+    // of ordinary human pettiness back.
+    car: [
+      "HE'S HITTING THE CARS NOW",
+      "DID YOU SEE THAT SMASH",
+      "THAT'S SOMEBODY'S CAR",
+      "THEY'VE CRASHED, THEY'VE CRASHED",
+    ],
+    heavy: [
+      "HE'S TAKEN ON A BUS",
+      "THAT'S A BUS, YOU IDIOT",
+      "THERE WERE PEOPLE ON THAT BUS",
+    ],
+    // NOSE TO NOSE — the only crash on this road the crowd names by its SHAPE
+    // rather than by what was in it, and the only one a bystander is certain
+    // about the outcome of before anybody has got out of anything.
+    headOn: [
+      "THEY WENT STRAIGHT INTO EACH OTHER",
+      "HEAD ON, THAT WAS HEAD ON",
+      "NOBODY WALKS AWAY FROM THAT",
+      "RIGHT ON THE NOSE",
+      "THAT WAS FRONT TO FRONT",
+    ],
+    bike: [
+      "THE MOPED'S IN HALF",
+      "HE PUT THE BIKE DOWN",
+      "THAT SCOOTER'S GONE UNDER HIM",
+      "THERE'S A BIKE IN THE ROAD",
+    ],
+    rolled: ["IT'S ON ITS ROOF", "IT WENT RIGHT OVER", "GET THEM OUT OF THERE"],
+    thrown: [
+      "THEY CAME THROUGH THE WINDSCREEN",
+      "SOMEBODY WENT OUT THE FRONT",
+      "OH GOD, THE GLASS",
+    ],
+    // SOMETHING HAS CAUGHT — the burn, which on this road is a thing that
+    // GROWS. It takes about two seconds to go from a flicker under a wing to
+    // the whole engine bay, so these are the lines of people watching it get
+    // worse rather than of people reacting to a bang.
+    fire: [
+      "IT'S GOING UP",
+      "GET BACK, IT'S BURNING",
+      "THE WHOLE THING'S ALIGHT",
+      "IT'S CAUGHT, IT'S CAUGHT",
+      "GET THEM OUT BEFORE IT SPREADS",
+    ],
+    // …AND THE TANK WENT. The biggest single thing that happens out here. What
+    // comes out of somebody at the instant of a bang is an instruction and not a
+    // description — get down, run — because there has been no time to look yet.
+    blast: [
+      "GET DOWN",
+      "THE TANK'S GONE",
+      "THAT WAS THE PETROL",
+      "IT BLEW, IT ACTUALLY BLEW",
+      "RUN, THERE'LL BE ANOTHER",
+    ],
+    // …AND THE FRONT IT THREW, which is the one thing on this road the crowd
+    // FEELS rather than watches. So not one of these describes the car: they are
+    // about the chest, the ears, the windows and the lights, which is what a
+    // pressure wave actually is to somebody standing in it half a street away.
+    shockwave: [
+      "I FELT THAT IN MY CHEST",
+      "THE WINDOWS, ALL THE WINDOWS",
+      "MY EARS, MY EARS",
+      "THE LIGHTS ARE GOING OUT",
+      "THAT SHOOK THE WHOLE STREET",
+    ],
+    lamp: [
+      "THERE GOES THE STREET LIGHT",
+      "HE'S TAKEN THE LAMP POST OUT",
+      "THE COUNCIL WILL LOVE THAT",
+    ],
+    // ── AND THE ONE ABOUT HIM ────────────────────────────────────────────────
+    // THE ONLY SCENE THAT IS NOT ABOUT WHAT HAPPENED. It is unlocked by the
+    // second body (`DRIVE.witness.fleeingShare`), because "again" needs a first
+    // time — and it is the closest this road ever comes to naming what the player
+    // has spent the last minute doing. Nobody follows it up. Nothing comes of it.
+    // He is at GOODCO ninety seconds later remarking on the suspension.
+    fleeing: [
+      "HE'S NOT STOPPING",
+      "HE'S DONE IT AGAIN",
+      "SOMEBODY GET HIS PLATE",
+      "HE'S NOT EVEN SLOWING DOWN",
+    ],
+  };
+
+/**
+ * WHICH OF A SCENE'S LINES THIS ONE IS — the app's half of the seam, because
+ * the app is the only side that knows how many there are.
+ *
+ * `roll` is the 0→1 the sim hashed off the incident (`DriveWitness.roll`), so
+ * the same seed driven the same way shouts the same words — and no draw was
+ * spent off `state.rng` to get there.
+ */
+export function witnessLine(scene: WitnessScene, roll: number): string {
+  const lines = WITNESS_LINES[scene];
+  const at = Math.min(lines.length - 1, Math.floor(roll * lines.length));
+  return lines[at] ?? lines[0] ?? "";
+}
+
+/**
  * BARE FLOATING TEXT, THE WAY THE RUN ALREADY SPEAKS — the ink, and the hard
  * one-pixel shadow under it.
  *
@@ -182,10 +403,20 @@ const WRAP_PX = 62;
  */
 const THOUGHT_WRAP_PX = 88;
 const TEXT_SCALE = 1;
-/** How far above the body's own anchor the text sits (world px) — a seated
+/**
+ * How far above the body's own anchor the text sits (world px) — a seated
  * person is half the height of a standing one, so this clears a head rather
  * than a sprite. Somebody ON THEIR FEET needs the rest of the sprite paid for,
- * or the last row of their thought is printed across their own hair. */
+ * or the last row of their thought is printed across their own hair.
+ *
+ * IT IS A QUESTION ABOUT THE BODY, NOT ABOUT THE VOICE, and it used to be read
+ * off the voice because the two happened to agree: every shout was one of THE
+ * GLUED (seated) and every thought was a walker (on their feet). A REACTION
+ * broke the coincidence — it comes from whoever was near enough to see, which
+ * is usually a walker and is sometimes one of the seated watching the wagon come
+ * through their own people — so the caller passes the posture and the voice
+ * picks nothing but ink and column width.
+ */
 const LIFT = 13;
 const STANDING_LIFT = 20;
 
@@ -229,10 +460,17 @@ export const PLACARD_READ_PX = READ_PX;
 
 /**
  * WHICH VOICE A LINE IS IN. `shout` is one of THE GLUED addressing the driver;
- * `thought` is one of the crowd not addressing anybody at all. It picks the ink
- * and the lift and nothing else — the two are the same float, on purpose.
+ * `thought` is one of the crowd not addressing anybody at all; `reaction` is
+ * somebody who has just watched a collision. It picks the ink and the column
+ * width and nothing else — all three are the same float, on purpose.
+ *
+ * A REACTION IS A SHOUT'S INK AND A THOUGHT'S COLUMN, which is not a compromise
+ * but the two answers to two different questions. It is AIMED at the driver, so
+ * it is in the white; and it is written to be caught in a quarter of a second at
+ * the far edge of the reading window, so it gets the wide column that folds a
+ * six-word line into two rows instead of three.
  */
-export type PlacardVoice = "shout" | "thought";
+export type PlacardVoice = "shout" | "thought" | "reaction";
 
 /**
  * ONE VOICE AT A TIME, AND THAT NUMBER WAS ARRIVED AT BY LOOKING — three times.
@@ -276,12 +514,16 @@ export function drawPlacard(
   /** How far the car still is from this body (world px), for the fade-in. */
   awayPx: number,
   voice: PlacardVoice = "shout",
+  /** IS THE SPEAKER SITTING DOWN — one of THE GLUED rather than somebody on
+   * their feet. A fact about the BODY and not about the voice; see `LIFT`. */
+  seated = voice === "shout",
 ): void {
-  const thought = voice === "thought";
-  const fade = thought ? THOUGHT_FADE_PX : FADE_PX;
+  const quiet = voice === "thought";
+  const wide = voice !== "shout";
+  const fade = wide ? THOUGHT_FADE_PX : FADE_PX;
   if (awayPx > READ_PX) return;
   const alpha = awayPx > READ_PX - fade ? (READ_PX - awayPx) / fade : 1;
-  const lines = font.wrap(text, thought ? THOUGHT_WRAP_PX : WRAP_PX);
+  const lines = font.wrap(text, wide ? THOUGHT_WRAP_PX : WRAP_PX);
   const lineH = (font.height + 1) * TEXT_SCALE;
   // IN CANVAS SPACE, NOT THE WORLD'S — the one thing on this road drawn outside
   // the projection, and deliberately. Everything with a PLACE on the road is
@@ -291,7 +533,7 @@ export function drawPlacard(
   // spot), so it stays over its owner as the road slides past.
   const seat = worldToCanvas(worldX, worldY, camera);
   const sx = Math.round(seat.x);
-  const bottom = Math.round(seat.y) - (thought ? STANDING_LIFT : LIFT);
+  const bottom = Math.round(seat.y) - (seated ? LIFT : STANDING_LIFT);
   const top = Math.max(CEILING_PX, bottom - lines.length * lineH);
 
   ctx.save();
@@ -305,7 +547,7 @@ export function drawPlacard(
     font.draw(ctx, line, x + 1, y + 1, { scale: TEXT_SCALE, color: SHADOW });
     font.draw(ctx, line, x, y, {
       scale: TEXT_SCALE,
-      color: thought ? THOUGHT_INK : INK,
+      color: quiet ? THOUGHT_INK : INK,
     });
   }
   ctx.restore();

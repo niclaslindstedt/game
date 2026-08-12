@@ -1098,7 +1098,23 @@ escort.ts` walks the people an escort errand puts on the field, and
   (`CROWD_THOUGHTS`, dealt from a per-trip deck in `crowd.ts` so no line ever
   plays twice), floated over a walker's head for well under a second each and
   written to be missed — the words are the app's (`drive-screen/placards.ts`),
-  which is also where the shout-versus-thought difference lives. What any of it is MADE of is still the app's
+  which is also where the shout-versus-thought difference lives. `witness.ts`
+  adds the road's THIRD voice and the only one that is about the hero: when the
+  wagon puts somebody over its own roof, one bystander near enough to have seen
+  it turns and shouts, once, for about two seconds and never twice inside a
+  second and a half. The seam is a step better drawn than the older two — the
+  engine names a SCENE (`WitnessScene`: a woman, a wheelchair, a bus, a head-on,
+  a body in two, something catching, a tank going up, the pressure front off
+  one, a driver who is not stopping) and the app answers with words keyed on
+  that name, so a `Record<WitnessScene, …>` makes the compiler refuse a case
+  nobody wrote a line for, where the thoughts and the placards pair a count in
+  one tree with a list in the other and a short list silently stops using its
+  tail. Two facts travel on `trafficHit` for it and could not be re-derived
+  downstream — the vehicle's `class` and whether it was met `headOn` — because
+  the joules say neither (a saloon met flat out is worth more than a bus met
+  gently, and a rear-ending at the top end more than a head-on at half of it).
+  Nothing comes of a shout: no chase, no police, nothing waiting at GOODCO, and
+  the wagon is never told. What any of it is MADE of is still the app's
   (`drive-screen/drive-gore.ts`), which cuts the victim's OWN sprite at the
   bumper's line with the run's own `slicedPiece` and lays the marks the road
   keeps: the splash, the drag smear, the paste under a wheel, and the tread

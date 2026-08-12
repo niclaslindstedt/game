@@ -67,8 +67,9 @@ yes. A person who has to be talked ROUND is a CONVERSATION instead
 **—** _…_.
 
 **A BARK never stops the run.** A boss's set-piece line, the hero's finisher as
-a death rite lands, the road's own mutters and THE GLUED's shouts all float over
-a live field in hard-wrapped rows. Everything else is a page in a box.
+a death rite lands, the road's own mutters, THE GLUED's shouts and THE
+BYSTANDERS' reactions all float over a live field in hard-wrapped rows.
+Everything else is a page in a box.
 
 ## The hero's name — `{HERO}`
 
@@ -318,6 +319,176 @@ hero catches none._
 38. I DREAMED ABOUT A FULL FRIDGE
 39. SOMEBODY WILL NOTICE ME EVENTUALLY
 40. MY NAME IS ON A LIST SOMEWHERE
+
+### THE BYSTANDERS — what somebody shouts when they see one (`WITNESS_LINES`)
+
+_The road's third voice, and the only one that is about the hero. When the wagon
+puts somebody over its own roof, one person further down the road turns and
+shouts about it — once, for about two seconds, and never twice inside a second
+and a half. It never becomes anything: no chase, no police, nothing waiting at
+GOODCO. He passes the person shouting a quarter of a second later._
+
+_Two to six words, shouted rather than composed — no irony, no punchlines, no
+commentary on the state of the world. These are the same people as the thoughts
+above, so nobody says anything that costs money or assumes any: it is SOMEBODY
+GET HELP and never CALL AN AMBULANCE. And nobody diagnoses the driver — he is
+HE, never a job or a class or a cause._
+
+_Filed by what they watched happen. The sim names the scene and the words answer
+it (`pwa/src/game/drive-screen/placards.ts`); which line of a scene gets shouted
+is hashed off the collision, so the same seed driven the same way says the same
+thing._
+
+**A walker, with nothing about them to name**
+
+1. OH MY GOD
+2. HE JUST RAN THAT MAN DOWN
+3. HE DIDN'T EVEN BRAKE
+4. SOMEBODY GET HELP
+5. JEEEEESUS
+6. DID YOU SEE THAT
+
+**A woman**
+
+7. HE HIT THAT LADY
+8. THAT'S A WOMAN DOWN THERE
+9. SHE NEVER SAW HIM COMING
+10. OH GOD, THAT POOR WOMAN
+
+**Somebody who could not have got out of the way — the old man, the crutches,
+the walking frame.** Not one of these says a gender: the scene covers three
+bodies with one thing in common and nothing else.
+
+11. THEY COULDN'T GET OUT THE WAY
+12. THAT ONE COULD BARELY WALK
+13. HAVE YOU NO SHAME AT ALL
+14. OH GOD, THE POOR OLD SOUL
+
+**The wheelchair**
+
+15. THAT WAS A WHEELCHAIR
+16. HE WENT STRAIGHT THROUGH THE CHAIR
+17. THEY COULDN'T MOVE AT ALL
+
+**Somebody walking a dog.** Its own scene, and not a gag: it is the one body on
+this road that somebody was holding on to, and a crowd that has watched a person
+go under in silence all evening will shout about a dog.
+
+18. THE DOG, HE GOT THE DOG
+19. NOT THE DOG
+20. SOMEBODY CATCH THAT DOG
+
+**A bike and its rider**
+
+21. HE TOOK THE CYCLIST CLEAN OUT
+22. THAT BIKE WENT OVER THE ROOF
+23. THEY WERE ON A BIKE
+24. HE NEVER EVEN LOOKED
+
+**One of THE GLUED** — the only scene where the crowd is right about something,
+and the only moment the road's two set pieces speak about each other.
+
+25. THEY WERE GLUED DOWN
+26. THEY COULDN'T MOVE, YOU KNOW THAT
+27. HE DROVE STRAIGHT INTO THEM
+28. THEIR HANDS WERE IN THE ROAD
+
+**A body in two, caught under the car, or found by a wheel.** The only scene
+where nobody describes anything.
+
+29. OH GOD, OH GOD, NO
+30. DON'T LOOK, DON'T LOOK
+31. THERE'S PIECES OF THEM
+32. I'M GOING TO BE SICK
+33. GET AWAY FROM THE ROAD
+
+**A car** — his, theirs, or two of theirs meeting each other.
+
+34. HE'S HITTING THE CARS NOW
+35. DID YOU SEE THAT SMASH
+36. THAT'S SOMEBODY'S CAR
+37. THEY'VE CRASHED, THEY'VE CRASHED
+
+**A bus or a lorry**
+
+38. HE'S TAKEN ON A BUS
+39. THAT'S A BUS, YOU IDIOT
+40. THERE WERE PEOPLE ON THAT BUS
+
+**Nose to nose** — the only crash the crowd names by its SHAPE rather than by
+what was in it, and the only one they are certain about the outcome of before
+anybody has got out of anything.
+
+41. THEY WENT STRAIGHT INTO EACH OTHER
+42. HEAD ON, THAT WAS HEAD ON
+43. NOBODY WALKS AWAY FROM THAT
+44. RIGHT ON THE NOSE
+45. THAT WAS FRONT TO FRONT
+
+**A two-wheeler down, or broken in half**
+
+46. THE MOPED'S IN HALF
+47. HE PUT THE BIKE DOWN
+48. THAT SCOOTER'S GONE UNDER HIM
+49. THERE'S A BIKE IN THE ROAD
+
+**Something with a roof gone over**
+
+50. IT'S ON ITS ROOF
+51. IT WENT RIGHT OVER
+52. GET THEM OUT OF THERE
+
+**Somebody out through a windscreen**
+
+53. THEY CAME THROUGH THE WINDSCREEN
+54. SOMEBODY WENT OUT THE FRONT
+55. OH GOD, THE GLASS
+
+**Something has caught.** The burn is a thing that GROWS out here — about two
+seconds from a flicker under a wing to the whole engine bay — so these are
+people watching it get worse rather than reacting to a bang.
+
+56. IT'S GOING UP
+57. GET BACK, IT'S BURNING
+58. THE WHOLE THING'S ALIGHT
+59. IT'S CAUGHT, IT'S CAUGHT
+60. GET THEM OUT BEFORE IT SPREADS
+
+**And the tank went.** The biggest single thing that happens on this road. What
+comes out of somebody at the instant of a bang is an instruction, not a
+description — there has been no time to look yet.
+
+61. GET DOWN
+62. THE TANK'S GONE
+63. THAT WAS THE PETROL
+64. IT BLEW, IT ACTUALLY BLEW
+65. RUN, THERE'LL BE ANOTHER
+
+**And the front it threw** — the one thing out here the crowd FEELS rather than
+watches, off the rare big blast and off the street lighting going out as the
+wave passes. Not one of these describes the car.
+
+66. I FELT THAT IN MY CHEST
+67. THE WINDOWS, ALL THE WINDOWS
+68. MY EARS, MY EARS
+69. THE LIGHTS ARE GOING OUT
+70. THAT SHOOK THE WHOLE STREET
+
+**A street light down.** Where the crowd gets its one bit of ordinary human
+pettiness back.
+
+71. THERE GOES THE STREET LIGHT
+72. HE'S TAKEN THE LAMP POST OUT
+73. THE COUNCIL WILL LOVE THAT
+
+**And the one about him.** Unlocked by the second body, because "again" needs a
+first time — the closest this road ever comes to naming what the player has
+spent the last minute doing. Nobody follows it up. Nothing comes of it.
+
+74. HE'S NOT STOPPING
+75. HE'S DONE IT AGAIN
+76. SOMEBODY GET HIS PLATE
+77. HE'S NOT EVEN SLOWING DOWN
 
 ### The arrival verdict — seven readings of one trip
 
@@ -1736,6 +1907,7 @@ changes with it, in the same commit.
 | The cap-farm mutter, the drive verdicts, HELLBORN   | `content/thoughts.yaml` (`capRotation`, `drive_arrive_*`, `hellborn_*`)                                                        |
 | What he mutters ON the road                         | `content/thoughts.yaml` (`drive_out_welfare`, `drive_home_errand`, `drive_broke_down`, `drive_arrive_goodco`/`_home`)          |
 | THE GLUED's shouts and THE CROWD's thoughts         | `GLUED_BARKS` / `CROWD_THOUGHTS`, `pwa/src/game/drive-screen/placards.ts` — no name, no portrait, no box, so no thought def    |
+| What a BYSTANDER shouts at a collision              | `WITNESS_LINES`, same file — keyed on the SCENE the sim names (`WitnessScene`, `engine/game/drive/witness.ts`), never an index |
 | Companion joining words + kill quotes               | `content/companions.yaml`                                                                                                      |
 | Found lore on story items                           | `content/story-items.yaml`                                                                                                     |
 | The merchant's greeting, counter line, welcome back | `content/levels/<id>.yaml` (`merchant.*`) + `MERCHANT_RETURN_SENDOFF` in `engine/game/defs/difficulties.ts`                    |

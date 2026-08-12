@@ -1080,6 +1080,7 @@ export {
   GLUED_BARKS,
   GLUED_VARIANTS,
   IDLE_DRIVE_INPUT,
+  stepWitness,
   TOWN,
   TOWN_ART_SIZE,
   TOWN_COLOURWAYS,
@@ -1115,6 +1116,7 @@ export type {
   DriveTraffic,
   DriveVehicleClass,
   DriveVehicleDef,
+  DriveWitness,
   Impact,
   ImpactMasses,
   PedestrianKind,
@@ -1132,6 +1134,7 @@ export type {
   TownProp,
   TownRoad,
   TownSlot,
+  WitnessScene,
 } from "./game/drive/index.ts";
 
 // THE PLAYABLE INTERLUDES' own switch. Exported straight off the flag leaf

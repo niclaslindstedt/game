@@ -130,6 +130,9 @@ import { collide } from "./collide.ts";
 // and now has to get through (`between.ts`).
 import { collideTraffic } from "./between.ts";
 import { crushRemains, forgetRemains, stepRemains } from "./remains.ts";
+// …AND WHO SAW IT. The road's bystanders, who react to what the two passes
+// above just did (`witness.ts`).
+import { stepWitness } from "./witness.ts";
 import { pushTraffic } from "./push.ts";
 import { stepFires, stepShockwaves } from "./wreckage.ts";
 import { firstPropSlot, spawnProps, stepProps } from "./street.ts";
@@ -286,6 +289,11 @@ export { DRIVE_BOT_DEFAULTS, resolveDriveBotTuning } from "./driver-tuning.ts";
 export type { DriveDriver } from "./driver.ts";
 export type { DriveBotPatch, DriveBotTuning } from "./driver-tuning.ts";
 export { blockadeAt, GLUED_BARKS, GLUED_VARIANTS } from "./blockade.ts";
+// …AND THE ROAD WATCHING ITSELF. The app reads `DriveState.witness` and answers
+// the scene with words (`WITNESS_LINES`, drive-screen/placards.ts); nothing but
+// the tick calls `stepWitness`, and it is exported so a test can stage an
+// incident without driving a mile to find one.
+export { stepWitness } from "./witness.ts";
 export { fellLamp, isMastSlot } from "./street.ts";
 export { breakTrafficLamps } from "./traffic.ts";
 export { impactMasses, panelAt, solveImpact } from "./impact.ts";
@@ -319,9 +327,11 @@ export type {
   DriveState,
   DriveStrike,
   DriveTraffic,
+  DriveWitness,
   PedestrianKind,
   PedestrianMode,
   RemainPart,
+  WitnessScene,
 } from "./types.ts";
 export { IDLE_DRIVE_INPUT } from "./types.ts";
 
@@ -397,6 +407,10 @@ export function createDrive(params: DriveParams): DriveState {
     // first of them due with the first person the road puts out.
     thoughtDeck: resetThoughtDeck(params.seed),
     nextThoughtAt: cityStartPx(params),
+    // Nobody has seen anything yet, and the first thing anybody sees may be
+    // shouted about the instant it happens (`witness.ts`).
+    witness: null,
+    nextWitnessMs: 0,
     nextPropSlot: firstPropSlot(car.pos.x, params.direction),
     monologueDone: false,
     blockadeDone: false,
@@ -803,6 +817,12 @@ export function stepDrive(
   forgetRemains(drive);
   integrateCarBody(car, dt);
   stepDebris(drive, dt);
+  // …AND SOMEBODY ON THE PAVEMENT SAW ALL OF THAT. Last of the collision work
+  // rather than folded into it, because it ranks the whole TICK's events
+  // against each other (`witness.ts`): one blow raises four or five of them, a
+  // bystander shouts about the worst, and the worst of all — a wheel finding
+  // what is left of somebody — is raised by the pass immediately above.
+  stepWitness(drive);
 
   // ── THE BEATS ─────────────────────────────────────────────────────────────
   openingBeats(drive, dtMs);

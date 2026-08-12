@@ -26,6 +26,7 @@ import type {
   WheelDebris,
 } from "../types/index.ts";
 import type { DriveOutcome } from "./config.ts";
+import type { DriveVehicleClass } from "./fleet.ts";
 
 /**
  * WHICH WAY THIS TRIP RUNS. `1` is the outbound leg (the garage behind, GOODCO
@@ -317,6 +318,115 @@ export type DrivePedestrian = {
    * would be the one place in the game where a collision made no noise.
    */
   crushed: boolean;
+};
+
+/**
+ * WHAT A BYSTANDER JUST WATCHED HAPPEN — the CASE a reaction is about, and the
+ * whole of what the engine says on the subject.
+ *
+ * IT IS A SCENE, NOT A LINE, and that split is the entire seam. The engine has
+ * never been told this game has words in it, so it names the thing that
+ * happened — a woman went under the bumper, a bus is on its roof, a bike came
+ * apart — and the app answers with what somebody standing there would shout
+ * (`WITNESS_LINES`, pwa/src/game/drive-screen/placards.ts). That is the same
+ * fence THE GLUED's placards and the crowd's thoughts are drawn along, one step
+ * better: those two hand out an INDEX and depend on a count in this tree
+ * matching a list in the other, which is a drift nothing catches. A scene is a
+ * NAME, so the app's table is `Record<WitnessScene, …>` and the compiler
+ * refuses a case nobody wrote a line for.
+ *
+ * WHAT IS AND IS NOT IN HERE. Every case is one the road can genuinely tell
+ * apart from the outside — an event type, or a body's own `kind`/`variant` —
+ * because a scene the sim has to guess at is a scene the crowd shouts the wrong
+ * thing about. And one deliberate absence: the walker carrying a PRAM has no
+ * scene of its own and falls to `person`. The road does not say what is in it
+ * and never has (see `CROWD_VARIANTS` on why there are no children out here);
+ * a bystander naming it would settle the one question this minigame is careful
+ * not to ask.
+ */
+export type WitnessScene =
+  // ── SOMEBODY WENT UNDER THE CAR ──────────────────────────────────────────
+  /** A walker with nothing about them to name — most of the crowd. */
+  | "person"
+  /** One of the two women in the roster. */
+  | "woman"
+  /** Somebody who could not have got out of the way: the old man, the crutches,
+   * the walking frame. */
+  | "elder"
+  /** The wheelchair. */
+  | "wheelchair"
+  /** Somebody walking a dog — the one body out here that was not alone. */
+  | "dog"
+  /** A bike and its rider, on foot or thrown off a moped a moment ago. */
+  | "cyclist"
+  /** One of THE GLUED, hit where they sat. */
+  | "glued"
+  /** The worst of it: a body in two, caught under the floorpan, or found by a
+   * wheel. */
+  | "torn"
+  // ── AND THE REST OF THE ROAD ─────────────────────────────────────────────
+  /** Paint traded with an ordinary car, whoever started it. */
+  | "car"
+  /** …or with a bus or a lorry. */
+  | "heavy"
+  /** …or nose to nose with something oncoming. */
+  | "headOn"
+  /** A two-wheeler knocked down, or broken in half. */
+  | "bike"
+  /** Something with a roof went over. */
+  | "rolled"
+  /** Somebody came out through a windscreen. */
+  | "thrown"
+  /** Something has caught — a ruptured line under a folded wing, and the burn
+   * spreading from it. */
+  | "fire"
+  /**
+   * …AND THE TANK WENT. Its own scene rather than more `fire`, because the two
+   * are a second apart and are not the same sight: one is a car burning and the
+   * other is the moment it stops being a car.
+   */
+  | "blast"
+  /**
+   * …AND THE PRESSURE FRONT OFF THE BIGGEST OF THOSE — felt rather than watched.
+   * Raised by the big blast's own ring and by the street lighting going out as
+   * the wave passes (`lampBlown`), which is the one consequence on this road
+   * that arrives at the crowd AFTER the thing that caused it.
+   */
+  | "shockwave"
+  /** A street light came down. */
+  | "lamp"
+  /** AND THE ONE ABOUT HIM RATHER THAN ABOUT THE BLOW — he has done this before
+   * in front of these people, and he is not slowing down. */
+  | "fleeing";
+
+/**
+ * ONE BYSTANDER, MID-SHOUT — who is saying it, what about, and until when.
+ *
+ * ONE AT A TIME, and that is a layout fact rather than a budget: the picture
+ * carries a single line of floating text (`MAX_PLACARDS`), so a second reaction
+ * would print over the first and turn two people into one smudge. A fresh
+ * incident REPLACES this rather than queueing behind it — what the player wants
+ * over the bonnet is the thing that just happened, not the thing before it.
+ */
+export type DriveWitness = {
+  /** Whose head it floats over — a `DrivePedestrian.id`. */
+  ped: number;
+  scene: WitnessScene;
+  /**
+   * 0→1, HASHED OFF THE INCIDENT — which of that scene's lines gets shouted,
+   * decided by the app because the app is the only side that knows how many
+   * there are.
+   *
+   * A hash and never a `state.rng()` draw, for the reason the crossings, the
+   * thought deck and the blockade's seating are hashed: the road's bodies,
+   * their variants and their wander phases all come off the seeded stream in a
+   * fixed order, so spending a draw on a WORD would lay a different road for
+   * the same seed and break a restart after a breakdown.
+   */
+  roll: number;
+  /** Drive-clock ms this shout is retired at — the drive's clock rather than
+   * the wall's, so a paused road holds the line where it was. */
+  untilMs: number;
 };
 
 /** Another car on the road. */
@@ -858,8 +968,35 @@ export type DriveEvent =
   /** The car has clouted something dead and steel already lying on the tarmac —
    * a felled street light, kicked further down the road. */
   | { type: "debrisStruck"; pos: Vec2; joules: number }
-  /** Traded paint with another car — moving, or parked at the kerb. */
-  | { type: "trafficHit"; pos: Vec2; joules: number }
+  /**
+   * Traded paint with another car — moving, or parked at the kerb.
+   *
+   * `class` is WHAT it traded paint with, and it is here for the same reason
+   * `pedestrianHit` carries `kind`: somebody watching from the pavement does
+   * not shout the same thing at a clipped hatchback and at a bus going over
+   * (`witness.ts`). Nothing else the road can say tells the two apart — the
+   * joules do not, because a saloon met flat out is worth more than a bus met
+   * gently — and the two vehicles in a pile-up the hero never touched
+   * (`between.ts`) carry the BIGGER of the pair's, which is what a bystander
+   * would name.
+   */
+  /**
+   * `headOn` is the one piece of GEOMETRY the event carries, and it is here for
+   * the same reason `class` is: nose to nose is a sight of its own and nothing
+   * else the road says can be read as one. Not the joules (a rear-ending at the
+   * top end is worth more than a head-on at half of it), not `trafficRolled`
+   * (plenty of head-ons leave both cars on their wheels), not `trafficWrecked`
+   * (a sideswipe down a whole flank gets there too). True only when the other
+   * vehicle was ONCOMING and was met squarely at the end it faces — a parked car
+   * taken on the nose is not a head-on, whatever the bumper thought.
+   */
+  | {
+      type: "trafficHit";
+      pos: Vec2;
+      joules: number;
+      class: DriveVehicleClass;
+      headOn: boolean;
+    }
   /** …and it climbed a damage rung for it: a panel folded, a light went, glass
    * left the frame. Its own beat because a car visibly deforming is a different
    * noise from the paint trade that caused it, and one the player is meant to
@@ -1234,6 +1371,21 @@ export type DriveState = {
    * line over every head is a wall of text and a line every so often is a
    * person. */
   nextThoughtAt: number;
+  /**
+   * WHO IS SHOUTING ABOUT WHAT THEY JUST SAW, or null for the great majority of
+   * the leg (`witness.ts`). One at a time — see `DriveWitness`.
+   */
+  witness: DriveWitness | null;
+  /**
+   * …AND THE DRIVE-CLOCK MS BEFORE THE ROAD IS ALLOWED ANOTHER ONE.
+   *
+   * Its own field rather than "the last shout's `untilMs`", because the two are
+   * different clocks and folding them cost the beat its rhythm: a shout is
+   * usually cut short by the car passing its speaker, so a gap measured off the
+   * hold would open again the instant a witness was overtaken — which on a fast
+   * leg is a fresh line every third of a second.
+   */
+  nextWitnessMs: number;
   /** The next kerb slot the street has not put its furniture down at — an
    * INDEX rather than a distance, because the furniture stands on a fixed
    * pitch in world x (so the way home passes the same posts) and it walks in
