@@ -51,7 +51,11 @@ it at both ends of the session.
 - **Capture the final suite's output to a file** (`… 2>&1 | tee <log>`), never
   just `| tail`. A run that ends `1 failed` with the failure scrolled past is
   a run that has to be done again to learn anything, and the second run is
-  where a flake hides from you.
+  where a flake hides from you. **And a pipe REPLACES the exit code with the
+  last stage's** — `make test 2>&1 | tail -30` exits 0 on a red suite, because
+  that is `tail`'s status, so a harness reporting "exit code 0" is reporting
+  on `tail`. Redirect and read the code yourself
+  (`make test > <log> 2>&1; echo "EXIT=$?"`) rather than trusting a piped one.
 - **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
   out its URL and a short summary of what was done, then stop. Don't
   proactively subscribe to PR activity, poll CI, or schedule check-ins, and

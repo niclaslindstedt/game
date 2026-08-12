@@ -100,3 +100,10 @@ neighbours of the same trap:
   despite living under `content/`.
 - **Anything auditing a rename must exclude itself**, or the bulk pass rewrites
   the list of names it was checking against and then reports clean.
+- **A word SPELLED IN PIXELS is invisible to every textual search there is.**
+  `boot_hill_gate` read EASTWORLD for the whole life of the venue — drawn glyph
+  by glyph into its `grid`, so no grep, no boundary pass and no prefix pass
+  could ever have found it, and its own `description` said BOOT HILL the entire
+  time. Any sign, banner, screen or billboard has to be LOOKED at
+  (`pwa/assets-preview/<name>@8x.png`); the only textual handle on it is the
+  sprite's `description`/`subject`, which is exactly the thing that drifts.
