@@ -1,6 +1,6 @@
 ---
 name: skill-reflection
-description: "Use at BOTH ends of any session that loads another skill. At the START, to read that skill's accumulated lessons — filtered to the paths and concepts the task touches — before doing the work. At the END, before committing, to reflect on what the session actually learned: record new lessons, reword or delete the ones that went stale, merge the ones that now say the same thing twice, promote the ones that are true every single time into SKILL.md itself, fix instructions the session found to be WRONG, and check whether anything sitting in AGENTS.md belongs in a skill instead. Also the owner of the lesson-fragment format (title, date, scope, concepts) and of `scripts/skill-lessons.mjs`."
+description: "Use at BOTH ends of any session that loads another skill. At the START, to read that skill's accumulated lessons — filtered to the paths and concepts the task touches — before doing the work. At the END, before committing, to reflect on what the session actually learned: record new lessons, reword or delete the ones that went stale, merge the ones that now say the same thing twice, promote the ones that are true every single time into SKILL.md itself, fix instructions the session found to be WRONG, and check whether anything sitting in AGENTS.md belongs in a skill instead. Also the owner of the lesson-fragment format (title, date, scope, concepts), of the SIZE BARS that flag a skill carrying more lessons — or a longer one — than a session will actually read, and of `scripts/skill-lessons.mjs`."
 ---
 
 # Skill reflection
@@ -94,8 +94,8 @@ failure it prevents.
 - One lesson per fragment. Two things learned = two fragments. Fragments — never
   a `SKILL.md` edit — are how a session records a lesson, because parallel
   sessions appending to one file conflict and separate fragments never do.
-- Keep the body a few sentences to a short paragraph. Anything bigger is
-  probably a `SKILL.md` section and belongs in the promote step below.
+- Keep the body a few sentences to a short paragraph — **under 350 words**, and
+  the good ones are half that. See the size bars below.
 
 **Scoping honestly is what makes the filter worth having.** Scope to the
 NARROWEST path where the lesson stays true — the module, the catalog directory,
@@ -180,6 +180,54 @@ A lesson that applies in most-but-not-all runs stays a fragment, and gets a
 
 ---
 
+## The size bars — a playbook nobody finishes is a playbook nobody follows
+
+Everything a skill carries is read by every session that loads it, and a session
+that hits a wall of text skims it. So size is a correctness property, not a
+tidiness one, and `skill-lessons.mjs` measures three of them (in WORDS —
+markdown line length says more about the author's wrapping than about the
+reading):
+
+| Bar                          | Limit          | What being over it means                                             |
+| ---------------------------- | -------------- | -------------------------------------------------------------------- |
+| One fragment's body          | **350 words**  | It is two lessons, or one lesson wrapped in the session's story      |
+| A skill's whole lesson set   | **4000 words** | The set has outgrown reading; merge and promote                      |
+| Fragment count on one skill  | **15**         | Same call, counted the other way                                     |
+| A `SKILL.md`                 | **5000 words** | The playbook is repeating itself or has absorbed a reference doc     |
+
+Every mode of the tool reports them — the inventory, the printout's nudge, and
+`--check`:
+
+```sh
+node scripts/skill-lessons.mjs                 # inventory, each skill's verdict
+node scripts/skill-lessons.mjs --check         # every fragment over the bar, by name
+node scripts/skill-lessons.mjs <skill> --list  # per-fragment word counts
+```
+
+**A bar is a prompt to consolidate, never a licence to truncate — and never a
+backlog to burn down in an unrelated PR.** Settle the fragments this session
+wrote or touched; leave the rest to a sweep of their own. The fix is always one
+of the five questions above, in this order:
+
+1. **Split it** — a 600-word fragment is usually two lessons that were learned
+   in the same hour, not one lesson that needs 600 words.
+2. **Cut the narrative.** A lesson is what the next session must KNOW, not what
+   this session DID. "I tried A, then B, then found C" is three sentences of
+   autobiography around one sentence of lesson. Keep the claim, the file it
+   applies to, and the failure it prevents.
+3. **Merge** it with the near-duplicates it has accumulated beside.
+4. **Promote** it into `SKILL.md` if it is true every time — which usually makes
+   it SHORTER, because the surrounding context is already on the page.
+5. **Delete** it if it is an off-case. A lesson that fires once in twenty runs
+   costs all twenty of them; unless the failure it prevents is expensive, the
+   honest answer is to let the next session rediscover it.
+
+A `SKILL.md` over its bar gets the same treatment aimed at itself: cut what it
+says twice, cut what `AGENTS.md` or a `docs/` page already owns (leave the
+pointer), and move a long reference table into the doc that owns the subject.
+
+---
+
 ## The sixth question — does this belong in AGENTS.md at all?
 
 `AGENTS.md` is read at the start of **every** session, whatever the task. That
@@ -214,8 +262,8 @@ trustworthy.
 
 ## The consolidation sweep
 
-Everything above is per-session and cheap. When `skill-lessons.mjs` nudges (more
-than 15 fragments on one skill), run the same five questions across the skill's
+Everything above is per-session and cheap. When `skill-lessons.mjs` nudges — any
+of the four size bars above — run the same five questions across the skill's
 WHOLE lesson set rather than only the ones the session touched:
 
 ```sh
@@ -239,6 +287,9 @@ correctly scoped, and not yet important enough to be an instruction.
 - [ ] CLOSE: anything the skill said that was WRONG, fixed in `SKILL.md` in place
 - [ ] CLOSE: stale lessons deleted, near-duplicates merged
 - [ ] CLOSE: anything true in 100% of runs promoted into `SKILL.md`, fragment deleted
-- [ ] CLOSE: `node scripts/skill-lessons.mjs --check` clean
+- [ ] CLOSE: every fragment written this session is under the 350-word bar
+- [ ] CLOSE: `node scripts/skill-lessons.mjs --check` clean **for what this
+      session wrote or touched** — a bar the rest of the repo is already over is
+      a consolidation sweep's job, not this PR's
 - [ ] CLOSE: nothing was appended to `AGENTS.md` that a skill should own
-- [ ] A consolidation sweep, if a skill is over the nudge — as its own commit
+- [ ] A consolidation sweep, if a skill is over any size bar — as its own commit
