@@ -336,6 +336,7 @@ describe(`saved run — save format v${SAVE_VERSION} shape guard`, () => {
       "minionEquipmentDrops",
       "minionKillRate",
       "minionSpawnRate",
+      "mobSpawns",
       "moveSpawnCredit",
       "nextId",
       "nukeCalmMs",

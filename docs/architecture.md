@@ -77,7 +77,16 @@ run against synthetic fixtures with no shipped content (see
   into a cleanroom. A blueprint may also pin a few rooms outright
   (`prefabs`): a fixed-size room with fixed contents, guillotined into the
   rolled carve, so a venue the player has run ten times has something in it he
-  can recognise. A MOD may ship a blueprint too
+  can recognise. **Two generators live behind `resolveLevelDef`**: a blueprint
+  that authors a STATIC PARTS deck (`parts:`) is SEWN from hand-drawn rooms at
+  their door sockets (`mapgen/parts.ts`) — every room the same room every run,
+  the variety in which rooms are dealt and how — and its horde is one-mob spawn
+  POSTS (`LevelDef.mobSpawns`, `engine/game/mob-spawns.ts`: dormant individuals
+  refilled on a difficulty-scaled respawn clock once killed or dragged off
+  their leash) instead of knot spawn points; a blueprint without a deck keeps
+  the legacy BSP carve, which also stays reachable on any venue behind the
+  developer LEGACY MAP GENERATOR flag (`flags.ts`) while the two are judged
+  side by side. A MOD may ship a blueprint too
   (`maps/<id>.yaml` in its folder, through the same loader and schema), which is
   why the registry is the import-free leaf `mapgen/blueprints.ts` —
   `registerDefs({ blueprints })` swaps a mod's recipes in without the def

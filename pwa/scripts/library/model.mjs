@@ -252,6 +252,15 @@ function placementsByEnemy() {
         });
       }
     }
+    for (const post of level.mobSpawns ?? []) {
+      add(post.enemy, {
+        ...base,
+        kind: "post",
+        count: 1,
+        minDifficulty: post.minDifficulty,
+        mobLevels: post.mobLevels ?? level.mobLevels,
+      });
+    }
     for (const pack of level.packs ?? []) {
       for (const member of pack.members ?? []) {
         add(member.enemy, {

@@ -20,6 +20,7 @@ import {
   LOOT,
   MEDKIT,
   MENACE,
+  MOB_SPAWNS,
   OBSTACLES,
   PACKS,
   PATH,
@@ -91,6 +92,7 @@ import type {
   GameState,
   Item,
   Loadout,
+  MobSpawnState,
   Obstacle,
   PackState,
   Player,
@@ -635,6 +637,52 @@ export function createGame(
     spawners.reduce((sum, s) => sum + (s.openStage ? 0 : s.total), 0) +
     spawnerLingering;
 
+  // MOB POSTS (config MOB_SPAWNS / mob-spawns.ts): the parts maps' one-mob-per-
+  // spawn garrison. The FIRST WATCH is spawned right here on the creation
+  // stream — dormant at its authored post, patrol beat and all, exactly like a
+  // pinned spawn — and the runtime slot remembers who is standing it so the
+  // respawn pass can vacate and refill it on the difficulty's clock.
+  const mobSpawns: MobSpawnState[] = [];
+  let mobSpawnTotal = 0;
+  for (const m of def.mobSpawns ?? []) {
+    if (!meetsMinDifficulty(difficulty, m.minDifficulty)) continue;
+    const post: MobSpawnState = {
+      id: m.id,
+      at: vec(m.at.x, m.at.y),
+      enemy: m.enemy,
+      respawnMs: resolveMobSpawnDelay(
+        m.respawnMs ?? MOB_SPAWNS.respawnMs,
+        difficulty,
+      ),
+      mobId: null,
+      respawnAtMs: null,
+    };
+    if (m.mobLevels) post.mobLevels = m.mobLevels;
+    if (m.patrol && m.patrol.length > 0)
+      post.patrol = m.patrol.map((p) => vec(p.x, p.y));
+    const sc = scaleRegular(m.mobLevels);
+    const occupant = spawnEnemy(
+      m.enemy,
+      clearOfFurniture(post.at, m.enemy),
+      rng,
+      nextId++,
+      sc.hpMult,
+      0,
+      sc.mlvl,
+      sc.banded,
+    );
+    occupant.post = post.id;
+    if (post.patrol) {
+      occupant.patrol = [vec(post.at.x, post.at.y), ...post.patrol];
+      occupant.patrolIndex = 1;
+      occupant.patrolDir = 1;
+    }
+    enemies.push(occupant);
+    if (countsAsFoe(occupant)) mobSpawnTotal++;
+    post.mobId = occupant.id;
+    mobSpawns.push(post);
+  }
+
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is
   // registered (`<id>_<difficulty>`), so the weapon on the living-room wall
@@ -861,6 +909,7 @@ export function createGame(
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     packs,
     spawners,
+    mobSpawns,
     moveSpawnCredit: 0,
     // The camp clock opens anchored on the spawn — standing at the lander
     // farming the opening waves is exactly the camping the starvation answers.
@@ -880,7 +929,8 @@ export function createGame(
     earlyDropCursor: 0,
     stats: {
       kills: 0,
-      totalEnemies: foeCount + waveTotal + packTotal + spawnerTotal,
+      totalEnemies:
+        foeCount + waveTotal + packTotal + spawnerTotal + mobSpawnTotal,
       shotsFired: 0,
       jumps: 0,
       damageDealt: 0,
@@ -1029,6 +1079,18 @@ function resolveLandingSoftening(
   if (!(reach > 0) || !Number.isFinite(distToSpawn)) return 1;
   const t = clamp(distToSpawn / reach, 0, 1);
   return floor + (1 - floor) * t;
+}
+
+/**
+ * A MOB POST's respawn clock (config MOB_SPAWNS / mob-spawns.ts): the authored
+ * (or default) base, shortened by the rung's own `spawnerRespawnMult` — the
+ * same ladder the spawn points refill on, so "higher difficulty repopulates
+ * faster" is one dial across both horde models — and floored so no post ever
+ * refills in the middle of the fight that emptied it.
+ */
+function resolveMobSpawnDelay(baseMs: number, difficulty: Difficulty): number {
+  const diffMult = difficultyDef(difficulty).spawnerRespawnMult ?? 1;
+  return Math.max(MOB_SPAWNS.respawnMinMs, Math.round(baseMs * diffMult));
 }
 
 function resolveSpawnerRespawnDelay(

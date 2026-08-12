@@ -543,6 +543,7 @@ type OnOffKey =
   | "swipeBars"
   | "debug"
   | "autoLevelStats"
+  | "legacyMapgen"
   | "skyCamera"
   | "storeForce"
   | "cameraAntialias"

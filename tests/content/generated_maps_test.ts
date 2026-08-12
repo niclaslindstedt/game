@@ -80,6 +80,11 @@ const MISSIONS = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
  * still runs on it unexempted. */
 const isHub = (id: string) => levelDef(id).objective.type === "hub";
 
+/** Venues sewn by the STATIC PARTS generator — their horde is one-mob POSTS
+ * (`LevelDef.mobSpawns`), not knot spawn points, so every horde assertion
+ * branches on the spawn model the blueprint actually ships. */
+const isParts = (id: string) => MAP_BLUEPRINTS[id]?.parts !== undefined;
+
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
   enemyRoles: new Map(
@@ -433,6 +438,18 @@ describe("generated levels", () => {
       const bp = MAP_BLUEPRINTS[id];
       if (!bp) continue;
       const def = resolveLevelDef(id, 4);
+      if (isParts(id)) {
+        // A SEWN plan's extents are emergent — the deal grows inside the
+        // priced rectangle, never past it — and its horde is the deck's own
+        // posts, at least one per part the deal is priced to hold.
+        expect(def.width).toBeLessThanOrEqual(bp.size.width);
+        expect(def.height).toBeLessThanOrEqual(bp.size.height + 2400);
+        expect(
+          (def.mobSpawns ?? []).length,
+          `${id} deals an empty garrison`,
+        ).toBeGreaterThanOrEqual(bp.parts!.count[0]);
+        continue;
+      }
       // The carve is the blueprint's own rectangle — an annex adds a band of
       // its own PAST it, and nothing else may resize the map.
       expect(def.width).toBe(bp.size.width);
@@ -473,16 +490,54 @@ describe("the carve", () => {
     expect(resolveLevelDef(id, 3).playerSpawn).toEqual(def.playerSpawn);
   });
 
+  it("falls back to the legacy carve behind the developer switch", async () => {
+    // The LEGACY MAP GENERATOR flag (flags.ts) holds a parts venue to the old
+    // BSP carve — the side-by-side the parts generator is judged against.
+    const { setLegacyMapgenEnabled } = await import("@game/menu");
+    const parts = Object.keys(MAP_BLUEPRINTS).filter(isParts);
+    expect(parts.length).toBeGreaterThan(0);
+    try {
+      setLegacyMapgenEnabled(true);
+      for (const id of parts) {
+        const def = resolveLevelDef(id, 5);
+        // The carve fills its priced rectangle and fields KNOTS, not posts.
+        expect(def.width, `${id} legacy width`).toBe(
+          MAP_BLUEPRINTS[id]!.size.width,
+        );
+        expect(def.mobSpawns ?? []).toEqual([]);
+        expect(
+          (def.spawners ?? []).filter((s) => !s.hellgate).length,
+          `${id} legacy knots`,
+        ).toBeGreaterThan(0);
+      }
+    } finally {
+      setLegacyMapgenEnabled(false);
+    }
+    // …and with the switch released, the same venue is sewn again.
+    for (const id of parts)
+      expect(
+        (resolveLevelDef(id, 5).mobSpawns ?? []).length,
+        `${id} parts mode restored`,
+      ).toBeGreaterThan(0);
+  });
+
   it("prices ONE set of extents per blueprint — there is no size to pick", () => {
     // The setting that used to choose between three carves is gone; a
     // blueprint names its own rectangle and every run of it gets that one.
     for (const [id, bp] of Object.entries(MAP_BLUEPRINTS)) {
       expect(bp.size.width, `${id} width`).toBeGreaterThan(0);
       expect(bp.size.height, `${id} height`).toBeGreaterThan(0);
-      expect(
-        resolveLevelDef(id, 2).width,
-        `${id} carves its priced width`,
-      ).toBe(bp.size.width);
+      // A parts deal sizes itself INSIDE the priced rectangle; a carve fills it.
+      if (isParts(id))
+        expect(
+          resolveLevelDef(id, 2).width,
+          `${id} outgrows its priced width`,
+        ).toBeLessThanOrEqual(bp.size.width);
+      else
+        expect(
+          resolveLevelDef(id, 2).width,
+          `${id} carves its priced width`,
+        ).toBe(bp.size.width);
     }
   });
 });
@@ -652,6 +707,10 @@ describe("a run on a generated map", () => {
       expect(runLevelDef(state).waves).toBeUndefined();
       if (isHub(id))
         expect(state.spawners.length).toBe(0); // home ground
+      else if (isParts(id))
+        // A parts venue's horde is its POSTS; the only spawn points it may
+        // field are the rampage's hellgates.
+        expect(state.mobSpawns.length).toBeGreaterThan(0);
       else expect(state.spawners.length).toBeGreaterThan(0);
     }
   });
@@ -695,6 +754,9 @@ describe("the story on a generated map", () => {
       ...(def.packs ?? []).flatMap((p) => p.members.map((m) => m.enemy)),
       ...(def.lairs ?? []).map((l) => l.enemy),
       ...(def.spawners ?? []).flatMap((s) => s.members.map((m) => m.enemy)),
+      // The parts maps' one-mob posts are cast too — a pinned thought's breed
+      // standing a post is a beat that can fire.
+      ...(def.mobSpawns ?? []).map((m) => m.enemy),
     ]);
 
   it("keeps every speaking elite and boss its blueprint casts", () => {
@@ -813,14 +875,22 @@ describe("the generated horde", () => {
         const state = createGame(7, id, difficulty);
         const knots = state.spawners.filter((s) => !(s.openStage ?? 0));
         const gates = state.spawners.filter((s) => (s.openStage ?? 0) > 0);
-        expect(
-          knots.length,
-          `${id}/${difficulty} has no horde`,
-        ).toBeGreaterThan(0);
-        const queued = knots.reduce((n, s) => n + s.queue.length, 0);
-        expect(queued, `${id}/${difficulty} queues nothing`).toBeGreaterThan(
-          50,
-        );
+        if (isParts(id)) {
+          // The garrison stands on every rung — the posts ARE the horde.
+          expect(
+            state.mobSpawns.length,
+            `${id}/${difficulty} has no garrison`,
+          ).toBeGreaterThan(20);
+        } else {
+          expect(
+            knots.length,
+            `${id}/${difficulty} has no horde`,
+          ).toBeGreaterThan(0);
+          const queued = knots.reduce((n, s) => n + s.queue.length, 0);
+          expect(queued, `${id}/${difficulty} queues nothing`).toBeGreaterThan(
+            50,
+          );
+        }
         // HELLGATES are the rampage's answer on the top rungs, exactly as on the
         // hand-authored maps — nightmare and JESUS get them, nobody else does.
         const rampageRung =
@@ -842,6 +912,18 @@ describe("the generated horde", () => {
     for (const id of MISSIONS.filter((id) => !isHub(id)))
       for (const seed of WALK_SEEDS) {
         const def = resolveLevelDef(id, seed);
+        if (isParts(id)) {
+          // The posts ARE the mobs: one apiece, standing from the first tick
+          // and refilled on the respawn clock — so the density that matters is
+          // posts per floor, and the floor is the (smaller) sewn plan's own.
+          const posts = (def.mobSpawns ?? []).length;
+          const perMillion = posts / ((def.width * def.height) / MILLION);
+          expect(
+            perMillion,
+            `${id}/${seed} deals an empty map (${perMillion.toFixed(2)} posts/Mpx²)`,
+          ).toBeGreaterThan(3);
+          continue;
+        }
         const knots = (def.spawners ?? []).filter((s) => !s.hellgate);
         const perMillion = knots.length / ((def.width * def.height) / MILLION);
         expect(
@@ -873,10 +955,17 @@ describe("the generated horde", () => {
       const ramps = MAP_BLUEPRINTS[id]?.horde.ramps;
       if (!ramps) throw new Error(`no blueprint for "${id}"`);
       const used = new Set<string>();
-      for (const seed of SEEDS)
-        for (const knot of resolveLevelDef(id, seed).spawners ?? []) {
-          if (knot.hellgate) continue;
-          const band = JSON.stringify(knot.mobLevels);
+      for (const seed of SEEDS) {
+        const def = resolveLevelDef(id, seed);
+        // The parts maps' posts climb the same ladder the knots do — each one
+        // priced by its room's depth off the same authored ramps.
+        const bands = isParts(id)
+          ? (def.mobSpawns ?? []).map((m) => m.mobLevels)
+          : (def.spawners ?? [])
+              .filter((s) => !s.hellgate)
+              .map((s) => s.mobLevels);
+        for (const levels of bands) {
+          const band = JSON.stringify(levels);
           // Every knot stands on a rung of the authored ladder — never a number
           // the generator made up.
           expect(
@@ -885,6 +974,7 @@ describe("the generated horde", () => {
           ).toBe(true);
           used.add(band);
         }
+      }
       expect(
         used.has(JSON.stringify(ramps[0])),
         `${id} never uses its first ramp`,

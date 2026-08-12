@@ -64,6 +64,7 @@ export const LEVEL_FIELDS = {
   merchant: "the merchant section",
   spawns: "the roster, and the map render's set pieces",
   spawners: "the roster",
+  mobSpawns: "the roster — the parts maps' one-mob posts",
   packs: "the roster",
   waves: "the roster and the HORDE note",
   rareSpawns: "the roster's rare and unique rolls",
@@ -173,6 +174,8 @@ function roster(level) {
   for (const pack of level.packs ?? []) {
     for (const member of pack.members ?? []) note(member.enemy, "pack");
   }
+  // The parts maps' one-mob posts — each names the breed standing it.
+  for (const post of level.mobSpawns ?? []) note(post.enemy, "post");
   for (const window of level.waves?.budget ?? []) {
     for (const member of window.members ?? []) note(member.enemy, "wave");
   }

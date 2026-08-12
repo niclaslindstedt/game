@@ -167,11 +167,16 @@ const EMPTY_FOG = new Uint8Array(0);
 // and the splash), and a blob thawed without it would send a skipped send-off
 // to the level-name title card.
 //
+// v30: MOB POSTS — the state grew `mobSpawns`, the parts maps' one-mob-per-
+// spawn garrison (engine/game/mob-spawns.ts). It is an array `stepMobSpawns`
+// iterates on every tick, so a v29 snapshot would crash the resume's first
+// step exactly the way a missing `vehicles` list did.
+//
 // The shape-drift guard in tests/saved_run_test.ts fails when GameState, a
 // hero, or the stats record grows a field this version doesn't know — bump
 // here (and update the guard's lists) in the SAME commit as the shape change,
 // or the next release resumes old snapshots into a state the engine can't read.
-export const SAVE_VERSION = 29;
+export const SAVE_VERSION = 30;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

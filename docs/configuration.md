@@ -114,8 +114,8 @@ of a dozen unrelated tools:
   every cabinet on every rung, where the player's own MINIGAMES screen offers
   only what a beaten campaign earned), the one term a run is built on — **AUTO
   LEVEL STATS** (read when a level is BUILT, so a change lands on the next run
-  rather than one in progress) — and **DEBUG MODE**, the one thing drawn OVER a
-  run.
+  rather than one in progress), **LEGACY MAP GENERATOR** (read the same way —
+  below) — and **DEBUG MODE**, the one thing drawn OVER a run.
 - **CHEATS** — what a run would otherwise have to earn: **SEED CHARACTERS**,
   **GRANT 10B COINS**, and **FORCE STORE** (which belongs here rather than among
   the build flags because the packs it surfaces are granted free).
@@ -138,17 +138,24 @@ or off — on also brings the horde's compensating hp scaling in lockstep (both
 derive from the same rule), and off leaves only chosen points and gear to push
 the hero ahead of the curve.
 
-**The map generator has no controls at all**, because it is neither optional nor
-tunable: every mission's map is carved fresh at the start of each run from the
-mission's own blueprint (`content/maps/<id>.yaml`), at the ONE size that
-blueprint prices. The chambers, the walls between them, the horde in each of
-them, the caches and — the point of the whole thing — the boss's hiding place
-are all rolled from the run's seed. No intended route is generated, so the "go
-this way" guidance arrow stays silent and the fog-of-war minimap is the only
-record of where you have been: the boss has to be hunted down rather than walked
-to. The story is untouched by any of it: a mission carries its own name, intro,
-cutscenes, loot pools, merchant, hazards and thought pins, so however THE MOON is
-carved it is still the moon.
+**The map generator has ONE control, and it is a comparison switch, not a
+tuning knob.** Every mission's map is generated fresh at the start of each run
+from the mission's own blueprint (`content/maps/<id>.yaml`), by one of two
+generators: a venue whose blueprint authors a **STATIC PARTS deck** (`parts:`)
+is SEWN from hand-drawn rooms at their door sockets — the kitchen is the
+kitchen, furniture and all, and the run's variety is which rooms are dealt and
+how — while its horde is one-mob spawn POSTS (`mobSpawns`, the WoW model:
+dormant individuals refilled on a difficulty-scaled respawn clock once killed
+or dragged away). A venue with no deck keeps the legacy BSP carve. **LEGACY MAP
+GENERATOR** (PLAYGROUND) holds a parts venue to the old carve anyway — the
+side-by-side kept while the parts generator is judged for the carve's
+retirement — read when a level is BUILT, so flipping it lands on the next run.
+Under either generator the boss's hiding place, the caches and the deal/carve
+itself are rolled from the run's seed, no intended route is generated (the "go
+this way" arrow stays silent, the fog-of-war minimap is the only record of
+where you have been), and the story is untouched: a mission carries its own
+name, intro, cutscenes, loot pools, merchant, hazards and thought pins, so
+however THE MOON is assembled it is still the moon.
 
 The developer screen holds a **BALANCE** subpage: a set of runtime
 multipliers over the engine's shipped tuning (`engine/game/tuning.ts`, applied via

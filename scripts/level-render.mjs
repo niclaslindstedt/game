@@ -226,6 +226,13 @@ function drawShowcase(surf, def) {
       hell ? [255, 150, 90, 255] : [255, 240, 170, 255],
     );
   }
+  // MOB POSTS — the parts maps' one-mob-per-spawn garrison. Every post gets a
+  // small ring (its occupant is already drawn standing in it — the first watch
+  // is minted at creation), so the render shows the spawn MODEL as well as the
+  // crowd: a ring with nobody in it is a post the difficulty gated out.
+  for (const m of def.mobSpawns ?? []) {
+    strokeCircle(surf, m.at.x, m.at.y, 14, [140, 200, 255, 120], 1);
+  }
   // Chests — the caches the detours pay out.
   for (const c of def.chests ?? [])
     label(surf, "CACHE", c.at.x + 6, c.at.y - 6, [255, 210, 110, 255]);

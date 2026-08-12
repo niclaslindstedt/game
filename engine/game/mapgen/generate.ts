@@ -35,9 +35,11 @@ import type {
   LevelDef,
   LevelLight,
   MissionDef,
+  MobSpawnSpec,
   SpawnerSpec,
   SpawnSpec,
 } from "../defs/levels/types.ts";
+import { legacyMapgenOn } from "../flags.ts";
 import { zonesBounds, type Zone } from "../zones.ts";
 import { areaById, spaceOf, type MapArea } from "./areas.ts";
 import {
@@ -58,6 +60,13 @@ import {
   spread,
   WALL_INSET,
 } from "./place.ts";
+import {
+  assembleParts,
+  partProps,
+  partSpawns,
+  type PartsAssembly,
+  type PlacedSpawn,
+} from "./parts.ts";
 import { regionContains, regionRect } from "./regions.ts";
 import {
   carveChambers,
@@ -73,6 +82,7 @@ import {
 import type {
   MapAnchor,
   MapBlueprint,
+  MapHordeMember,
   MapObject,
   MapSetPiece,
 } from "./types.ts";
@@ -479,6 +489,74 @@ function buildSpawners(
 }
 
 /**
+ * THE PARTS MAP'S HORDE: every ambient spawn marker the deal put on the floor,
+ * as one-mob POSTS (`LevelDef.mobSpawns`).
+ *
+ * A marker with no authored breed rolls one from the blueprint's own
+ * `horde.members` by its room's DEPTH — the same windows and the same ladder
+ * of `ramps` the knots climb, rescaled over the marker-bearing rooms so the
+ * top rung is actually stood somewhere (see `buildSpawners` for why). So the
+ * same corridor part fields wisps by the landing and wraiths at the deep end,
+ * and the blueprint's difficulty curve survives the change of spawn model
+ * untouched.
+ */
+function buildMobSpawns(
+  bp: MapBlueprint,
+  grid: ChamberGrid,
+  markers: PlacedSpawn[],
+  depth: number[],
+  rng: Rng,
+): MobSpawnSpec[] {
+  const { ramps, members } = bp.horde;
+  const held = markers.map((m) => depth[m.cell] as number);
+  const deepest = held.length > 0 ? Math.max(...held) : 1;
+  const shallowest = held.length > 0 ? Math.min(...held) : 0;
+  const reach = deepest - shallowest;
+  const out: MobSpawnSpec[] = [];
+  markers.forEach((marker, i) => {
+    const raw = depth[marker.cell] as number;
+    const d = reach > 0 ? (raw - shallowest) / reach : raw;
+    const rampIndex = Math.min(ramps.length - 1, Math.floor(d * ramps.length));
+    let enemy = marker.spawn.enemy;
+    if (!enemy) {
+      let live = members.filter((m) => d >= m.window[0] && d <= m.window[1]);
+      if (live.length === 0) {
+        const nearest = members.reduce((best, m) => {
+          const mid = (m.window[0] + m.window[1]) / 2;
+          const bestMid = (best.window[0] + best.window[1]) / 2;
+          return Math.abs(mid - d) < Math.abs(bestMid - d) ? m : best;
+        });
+        live = [nearest];
+      }
+      const weightSum = live.reduce((sum, m) => sum + (m.weight ?? 1), 0);
+      let roll = rng() * weightSum;
+      enemy = (live[live.length - 1] as MapHordeMember).enemy;
+      for (const m of live) {
+        roll -= m.weight ?? 1;
+        if (roll <= 0) {
+          enemy = m.enemy;
+          break;
+        }
+      }
+    }
+    const post: MobSpawnSpec = {
+      id: `m${i}`,
+      enemy,
+      at: marker.at,
+      mobLevels: ramps[rampIndex],
+    };
+    // A marker that walks gets the same derived beat a patrolling set piece
+    // gets: down the long axis of its own room, inset off the walls.
+    if (marker.spawn.patrol) {
+      const room = grid.chambers[marker.cell] as Chamber;
+      post.patrol = [patrolBeat(room, marker.at)];
+    }
+    out.push(post);
+  });
+  return out;
+}
+
+/**
  * HELLGATES laced across the grid (config HELLGATES): rampage-only points, shut
  * until the hero's menace meter opens them, gated to the rungs the content exists
  * for. Spread by walking the cell list at a stride so they land corner to corner
@@ -851,13 +929,24 @@ export function generateLevel(
 ): LevelDef {
   const spec = bp.size;
   const rng = createRng((seed ^ LAYOUT_SALT) >>> 0);
+  // THE STATIC PARTS PATH: a blueprint that authors a parts deck is SEWN rather
+  // than carved (see parts.ts) — unless the developer LEGACY MAP GENERATOR
+  // switch holds it to the old carve while the two are judged side by side.
+  // The deal replaces the grid AND the horde model (one-mob posts instead of
+  // knots, further down); everything else below reads the same grid either way.
+  const assembly: PartsAssembly | null =
+    bp.parts && !legacyMapgenOn() ? assembleParts(bp, rng) : null;
+  // A sewn plan's extents fall out of the deal; a carve's are priced by `size`.
+  const extent = assembly
+    ? { width: assembly.width, height: assembly.height }
+    : { width: spec.width, height: spec.height };
   // The ANNEX gets a band of its own PAST the carved rectangle (see `MapAnnex`).
   // The carve never sees it, so nothing is ever adjacent to the room the lift
   // rides to and the minimap has nothing to draw where it is.
   const annexMargin = bp.annex ? (bp.annex.margin ?? 200) : 0;
   const band = bp.annex ? bp.annex.height + annexMargin * 2 : 0;
-  const width = spec.width;
-  const height = spec.height + band;
+  const width = extent.width;
+  const height = extent.height + band;
   // A KEY PROMISES ITS ROOM. The lockable districts are seeded once per key
   // before the weighted roll (see `assignAreas`), because a keycard the player
   // fought an elite for and which opens nothing on this seed is worse than no
@@ -876,25 +965,28 @@ export function generateLevel(
     ...bp.areas.filter((a) => a.landing === true).map((a) => a.id),
     ...keyRooms,
   ];
-  // An AUTHORED PLAN draws the rooms outright (the static hub's composed
-  // shot); everything else is grown by the BSP as always. A plan consumes no
-  // rng, so the dressing draws land on the same stream either way.
-  const grid = bp.plan
-    ? planChambers(bp.plan, bp.areas, bp.layout.doorWidth, bp.layout.wall)
-    : carveChambers(
-        spec.width,
-        spec.height,
-        spec.rooms,
-        bp.layout.minRoom,
-        bp.layout.doorWidth,
-        bp.layout.loopDoors,
-        bp.areas,
-        bp.layout.cluster,
-        bp.layout.wall,
-        rng,
-        promised,
-        bp.prefabs ?? [],
-      );
+  // The SEWN grid when the deal ran; else an AUTHORED PLAN draws the rooms
+  // outright (the static hub's composed shot); everything else is grown by the
+  // BSP as always. A plan consumes no rng, so the dressing draws land on the
+  // same stream either way.
+  const grid = assembly
+    ? assembly.grid
+    : bp.plan
+      ? planChambers(bp.plan, bp.areas, bp.layout.doorWidth, bp.layout.wall)
+      : carveChambers(
+          spec.width,
+          spec.height,
+          spec.rooms,
+          bp.layout.minRoom,
+          bp.layout.doorWidth,
+          bp.layout.loopDoors,
+          bp.areas,
+          bp.layout.cluster,
+          bp.layout.wall,
+          rng,
+          promised,
+          bp.prefabs ?? [],
+        );
   // THE LAST WORD ON HOW WIDE THE DOORWAYS ARE, spent HERE, on the grid, the
   // moment the carve hands it over: a door that sizes its own hole
   // (`MapObject.opening`) gets it, and the walls are built round the answer.
@@ -929,42 +1021,53 @@ export function generateLevel(
   const landingAreas = new Set(
     bp.areas.filter((a) => a.landing === true).map((a) => a.id),
   );
-  const landingCell =
-    landingAreas.size > 0
+  const landingCell = assembly
+    ? (grid.chambers[assembly.startCell] as Chamber)
+    : landingAreas.size > 0
       ? grid.chambers
           .filter((c) => landingAreas.has(c.area))
           .sort((a, b) => b.w * b.h - a.w * a.h)[0]
       : undefined;
-  const rolledGoal = pickGoalChamber(
-    grid,
-    bp.areas,
-    bp.boss ? bp.boss.regions : ["center"],
-    spec.width,
-    spec.height,
-    rng,
-    landingCell,
-  );
+  // A DEAL settles both endpoints itself: the hero lands in the `start` part,
+  // and the boss holds the throne room the deal sewed farthest out (rolled
+  // among the thrones when it dared to deal more than one). A deck with no
+  // boss part (a `reachExit` venue) still rolls its goal the ordinary way,
+  // held away from the landing.
+  const rolledGoal =
+    assembly?.boss !== undefined
+      ? (grid.chambers[assembly.boss.cell] as Chamber)
+      : pickGoalChamber(
+          grid,
+          bp.areas,
+          bp.boss ? bp.boss.regions : ["center"],
+          extent.width,
+          extent.height,
+          rng,
+          landingCell,
+        );
   const goal =
     (bp.plan?.goal
       ? grid.chambers.find((c) => c.area === bp.plan?.goal)
       : undefined) ?? rolledGoal;
-  const spawn = pickSpawnChamber(
-    grid,
-    bp.areas,
-    goal,
-    bp.spawnRegions,
-    spec.width,
-    spec.height,
-    rng,
-    bp.plan !== undefined,
-  );
+  const spawn = assembly
+    ? (grid.chambers[assembly.startCell] as Chamber)
+    : pickSpawnChamber(
+        grid,
+        bp.areas,
+        goal,
+        bp.spawnRegions,
+        extent.width,
+        extent.height,
+        rng,
+        bp.plan !== undefined,
+      );
   // The ANNEX, appended AFTER both endpoints are chosen so it can never be picked
   // as one: it is not a candidate for anything, it is where the lift goes. It
   // joins the grid as a real chamber with an EMPTY neighbour list, which is what
   // lets every dressing pass below treat it as the district it is — its own
   // floor, its own scatter, its own ranks — without a single special case.
   const annexRoom = bp.annex
-    ? appendAnnex(grid, bp.annex, spec, annexMargin, rng)
+    ? appendAnnex(grid, bp.annex, extent, annexMargin, rng)
     : null;
   const bossHome = annexRoom ?? goal;
   const steps = doorDistances(grid, spawn.id);
@@ -1126,14 +1229,18 @@ export function generateLevel(
   const quiet = new Set([bossHome.id, shopRoom.id, ...chestIds]);
 
   // --- The horde ------------------------------------------------------------
-  const knots = buildSpawners(
-    bp,
-    grid,
-    depth,
-    quiet,
-    new Map([[spawn.id, farSide(spawn, playerSpawn)]]),
-    rng,
-  );
+  // A SEWN map fields no knots: its horde is the deal's own spawn markers, one
+  // mob to a post (`mobSpawns`, built below once the elite stands are dealt).
+  const knots = assembly
+    ? []
+    : buildSpawners(
+        bp,
+        grid,
+        depth,
+        quiet,
+        new Map([[spawn.id, farSide(spawn, playerSpawn)]]),
+        rng,
+      );
   // A MAN WHO NEVER MOVES IS STILL FOUND. The opening knot stands at the FAR
   // side of the landing cell so the hero has floor to arrive on before he meets
   // it — and a knot arms on APPROACH, so in a cell wider than the default 300 px
@@ -1160,6 +1267,25 @@ export function generateLevel(
   const spawners = [...knots, ...buildHellgates(bp, grid, spawn, bossHome)];
 
   // --- The set pieces -------------------------------------------------------
+  // THE DEAL'S SPAWN MARKERS, split into the ambient POSTS and the ELITE
+  // STANDS. Which stands are manned is rolled per run whenever the deal placed
+  // more than there are elites — a player who learned where the keycard
+  // carrier stood last run knows nothing about this one — and the manned ones
+  // are dealt to the elites in DEPTH order, so the blueprint's cast still
+  // unspools shallow to deep.
+  const markers = assembly ? partSpawns(assembly) : [];
+  const ambientMarkers = markers.filter((m) => m.spawn.slot === undefined);
+  const eliteStands = markers.filter((m) => m.spawn.slot === "elite");
+  for (let i = eliteStands.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [eliteStands[i], eliteStands[j]] = [
+      eliteStands[j] as PlacedSpawn,
+      eliteStands[i] as PlacedSpawn,
+    ];
+  }
+  const manned = eliteStands
+    .slice(0, bp.elites.length)
+    .sort((a, b) => (depth[a.cell] as number) - (depth[b.cell] as number));
   const spawns: SpawnSpec[] = [];
   // The LAIRS and the houses they live in, filled in as the elites are placed.
   const lairs: NonNullable<LevelDef["lairs"]> = [];
@@ -1200,15 +1326,20 @@ export function generateLevel(
       : room;
   };
   bp.elites.forEach((piece, i) => {
-    const room = piece.patrol
-      ? roomToPace(eliteRooms[i] as Chamber)
-      : (eliteRooms[i] as Chamber);
-    if (piece.patrol) paced.add(room.id);
-    const at = pointIn(
-      room,
-      rng,
-      Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3),
-    );
+    // A MANNED STAND outranks the spread: the deck's author put a post where
+    // an elite reads right (the throne's antechamber, the office's corner
+    // desk), and the roll above already decided which posts are manned this
+    // run. Elites past the stand count fall back to the spread as always.
+    const stand = manned[i];
+    const room = stand
+      ? (grid.chambers[stand.cell] as Chamber)
+      : piece.patrol
+        ? roomToPace(eliteRooms[i] as Chamber)
+        : (eliteRooms[i] as Chamber);
+    if (piece.patrol && !stand) paced.add(room.id);
+    const at = stand
+      ? vec(stand.at.x, stand.at.y)
+      : pointIn(room, rng, Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3));
     // An elite that LIVES somewhere gets a house instead of a patch of floor: the
     // structure goes down here (so it never collides with the street blocks the
     // dressing pass lays out later), and the mob itself stays off the field until
@@ -1296,18 +1427,30 @@ export function generateLevel(
   // The boss holds the goal cell — the annex when the mission ends in one, the
   // carved corner otherwise — offset off dead centre so a `reachExit` door (or
   // its landmark) is not standing inside him. His escort stands with him.
+  // On a sewn map with a throne, the boss stands exactly where its part's
+  // author put him — the annex still outranks the throne when a venue has one,
+  // because an ending past a lift is an ending the floor plan must not show.
   if (bp.boss)
     spawns.push(
       ...pinSetPiece(
         bp.boss,
-        vec(
-          Math.round(goalCenter.x + Math.min(bossHome.w / 5, 120)),
-          Math.round(goalCenter.y - Math.min(bossHome.h / 5, 100)),
-        ),
+        !annexRoom && assembly?.boss
+          ? vec(assembly.boss.at.x, assembly.boss.at.y)
+          : vec(
+              Math.round(goalCenter.x + Math.min(bossHome.w / 5, 120)),
+              Math.round(goalCenter.y - Math.min(bossHome.h / 5, 100)),
+            ),
         rng,
         bossHome,
       ),
     );
+
+  // --- The parts horde --------------------------------------------------------
+  // Built AFTER the stands are dealt so an unmanned elite stand spawns nothing,
+  // and after the endpoints so depth is real. One post, one mob (mob-spawns.ts).
+  const mobSpawns = assembly
+    ? buildMobSpawns(bp, grid, ambientMarkers, depth, rng)
+    : [];
 
   // --- The breathers --------------------------------------------------------
   // A BEAT trader starts in the MIDDLE of his strip, not at a rolled point in
@@ -1427,8 +1570,14 @@ export function generateLevel(
     // which are quiet by design and would hide him behind the ending, and never
     // a VAULT: an errand whose giver is sealed behind a keycard is a chain that
     // stops with no way to ask why.
+    // "Somewhere the horde stands" is a knot-bearing cell on a carve and a
+    // post-bearing room on a sewn map — either way, ground the player has a
+    // reason to walk.
+    const populated = new Set(ambientMarkers.map((m) => m.cell));
     const rooms = grid.chambers.filter(
-      (c) => knotIn(c) !== undefined && !vaultIds.has(c.id),
+      (c) =>
+        (assembly ? populated.has(c.id) : knotIn(c) !== undefined) &&
+        !vaultIds.has(c.id),
     );
     const room = rooms[Math.floor(rng() * rooms.length)];
     if (!room) continue;
@@ -1530,10 +1679,12 @@ export function generateLevel(
   // it: the control room has to look like a control room.
   const endpoints = new Set([spawn.id, goal.id]);
   const offMap = new Set([spawn.id, goal.id, bossHome.id, ...vaultIds]);
-  const walls: NonNullable<LevelDef["walls"]> = buildWalls(
-    bp,
-    wallSegments(grid),
-  );
+  // A sewn plan does not tile its rectangle, so its OUTER edges are walls of
+  // their own (`assembly.perimeter`) on top of the ones the borders derive.
+  const walls: NonNullable<LevelDef["walls"]> = buildWalls(bp, [
+    ...wallSegments(grid),
+    ...(assembly?.perimeter ?? []),
+  ]);
   const gaps = doorGaps(grid);
   // THE LOCKED DOORS: every doorway into a sealed cell, filled back in with the
   // chain the matching keycard dissolves. A vault with three ways in gets three
@@ -1732,7 +1883,7 @@ export function generateLevel(
       rng,
       bp.annex?.ground
         ? {
-            rect: { x: 0, y: spec.height, width, height: band },
+            rect: { x: 0, y: extent.height, width, height: band },
             ground: bp.annex.ground,
           }
         : undefined,
@@ -1745,6 +1896,7 @@ export function generateLevel(
         : base.objective,
     spawns,
     spawners,
+    ...(mobSpawns.length > 0 ? { mobSpawns } : {}),
     chests,
     safeZones,
     quietZones,
@@ -1840,6 +1992,9 @@ export function generateLevel(
   const rows = [
     ...buildRows(bp, grid, endpoints, rng),
     ...buildPrefabProps(bp, grid),
+    // …and the PARTS' own furniture: the deal's whole claim is that the
+    // kitchen is the kitchen, and this is the pass that stamps its contents.
+    ...(assembly ? partProps(bp, assembly) : []),
     ...anchored,
   ];
   if (rows.length > 0) def.propLines = rows;

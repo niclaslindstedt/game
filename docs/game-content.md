@@ -20,10 +20,30 @@ none of it is engine.
 
 The MISSION (`content/levels/<id>.yaml`) is the venue **minus its floor**: name,
 story, ladder rung, hazards, merchant, loot pools, thought pins, music. Its MAP
-(`content/maps/<id>.yaml`) is a BLUEPRINT the geometry is **carved from on the
-run's own seed** — chambers, walls, props, the horde's knots, the caches and the
-boss's hiding place all rolled fresh. No two runs are the same walk, and no
-intended route exists.
+(`content/maps/<id>.yaml`) is a BLUEPRINT the geometry is **generated from on
+the run's own seed**, by one of two generators. A blueprint that authors a
+**STATIC PARTS deck** (`parts:`) is SEWN: hand-drawn rooms — a kitchen, an
+engine room, a great hall — joined at their door sockets, mirrored to fit, the
+boss's own room dealt farthest from the landing; every room is the same room
+every run, and the variety is which rooms are dealt and how they join. A
+blueprint without one is CARVED by the legacy BSP (kept, behind the developer
+LEGACY MAP GENERATOR switch, while the two are judged side by side). Either
+way the caches and the boss's hiding place are rolled fresh, no two runs are
+the same walk, and no intended route exists.
+
+**A parts venue's horde is one mob to a post** (`LevelDef.mobSpawns`, config
+`MOB_SPAWNS` — the WoW model): every spawn marker its rooms author is a single
+mob standing that spot, dormant until aggro wakes it. A post VACATED — its mob
+killed, or dragged off its leash chasing a hero — refills on the respawn
+clock, scaled by the same `spawnerRespawnMult` ladder the spawn points use, so
+higher difficulties repopulate faster and a cleared room does not stay cleared
+on JESUS. A due respawn is held while a hero stands close enough to watch the
+spot (no pop-ins), and a `clearAll` venue never respawns at all. Elite stands
+(`slot: elite`) are manned from the blueprint's own `elites` — WHICH stands,
+when the deal placed more than there are elites, is rolled per run — and a
+boss-anchored part dealt more than once rolls which instance holds him. The
+carve-model venues keep their knot spawn points (`SpawnerSpec`); the two horde
+models never mix on one map, except HELLGATES, which are laced over both.
 
 The consequence is a rule that bites anything reading a level: inside a run, the
 map is `runLevelDef(state)`, never `levelDef(state.level.id)`. Nothing outside a

@@ -549,6 +549,12 @@ export type Enemy = {
   pos: Vec2;
   /** Spawn point: monsters return here when the player escapes their aggro. */
   home: Vec2;
+  /**
+   * The MOB POST this one is standing (`MobSpawnState.id`) — the back edge of
+   * the one-mob-per-spawn model, so the post knows its occupant and a vacated
+   * occupant is unlinked (see mob-spawns.ts). Absent on every other mob.
+   */
+  post?: string;
   hp: number;
   maxHp: number;
   /**

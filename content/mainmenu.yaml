@@ -1126,6 +1126,14 @@ screens:
         help:
           on: FREE BASE STATS EACH LEVEL - MOBS SCALE TO MATCH
           off: BASE STATS ONLY FROM POINTS YOU SPEND
+      # The old BSP carve, kept reachable while the STATIC PARTS generator is
+      # judged against it — read when a level is BUILT, so flipping it lands on
+      # the next run rather than one in progress.
+      - id: legacy-mapgen
+        label: LEGACY MAP GENERATOR
+        help:
+          on: MAPS ARE CARVED BY THE OLD GENERATOR
+          off: MAPS ARE SEWN FROM STATIC PARTS WHERE A VENUE HAS THEM
       - id: debug
         label: DEBUG MODE
         help:
