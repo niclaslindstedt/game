@@ -120,12 +120,13 @@ the rent, the soup, a sister who stopped picking up, a giveaway somebody hopes
 is on again. They are legible for half a second at speed; the player catches a
 third of them and the hero catches none.
 
-**What he says afterwards is about the car.** Standing beside the wagon at the
-far end he delivers a verdict on the trip, and it is always the suspension, the
-clock, the other drivers or the council's lamp standards. Never the people. It
-is the FIRST thing he says at that end — before he has looked up at the
-building, before a word about the job he came to do — because the drive is
-still in his hands and the forty people he went through are already gone.
+**What he says about it is about the car.** Coming in past the fence with the
+place growing in the windscreen, he reviews the whole trip in a couple of words
+and then names what he is looking at — ROUGH RIDE. THERE'S GOODCO. The review is
+always the suspension, the clock, the other drivers or the council's lamp
+standards. Never the people. It is said at the wheel with the last of them still
+on the road behind him, and it is the last thing either leg says: he gets out of
+the car at the far end with nothing left to add.
 **The car keeps the evidence and he does not look at it.** Whatever the road did
 to it comes onto the staff lot with him — the panels bent where he hit somebody,
 the paint wearing what landed on it — and it is still on the wagon when he walks

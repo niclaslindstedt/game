@@ -977,7 +977,10 @@ function stepWheel(wheel: DriveState["wheelDebris"][number], dt: number): void {
 
 /**
  * HOW HE READ THE TRIP — which of his arrival lines this drive earned, as the
- * id of the thought to play.
+ * id of the thought to play. A FEW WORDS EACH: it is printed in front of the
+ * run-in's own line, as one sentence ("ROUGH RIDE. THERE'S GOODCO." —
+ * `arrivalLine`, pwa/src/game/drive-screen/voice.ts), and the man reviewing an
+ * hour of his life in three words is the joke rather than a budget.
  *
  * IT READS THE WHOLE DRIVE, not the body count. What the road hands back is
  * five numbers — the clock, the car's own wear, the cars he shoved, the street

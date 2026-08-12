@@ -180,10 +180,6 @@ export function createRunSession(deps: {
    * exactly as it always was.
    */
   arriveInCarRef?: MutableRefObject<boolean>;
-  /** A thought the hero arrived still having — the DRIVE's verdict on the trip
-   * in, spoken as the first page of this level's opening monologue. Consumed
-   * on the same arrival that set it. */
-  arrivalThoughtRef?: MutableRefObject<string | undefined>;
   /** THE WAGON AS THE ROAD LEFT IT (`RunParams.car`) — carried on a ref for the
    * same reason the two above are: it is a fact about the CROSSING. Consumed
    * here, so walking into the garage on foot next time mints whatever that
@@ -337,9 +333,6 @@ export function createRunSession(deps: {
     // about to mint off its own `car` landmark is the one he has been driving
     // all night (engine/game/vehicles.ts `applyCarDamage`).
     car: deps.arrivalCarRef?.current,
-    // WHAT HE MADE OF THE TRIP IN — the drive's own reading of it
-    // (`driveVerdict`), spoken before the level's own briefing.
-    arrivalThought: deps.arrivalThoughtRef?.current,
     // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts), seeded before
     // anything reads the quest log so a chain's gate, a giver's head mark and
     // the tracker are all correct on the first frame.
@@ -405,7 +398,6 @@ export function createRunSession(deps: {
   // One arrival, one seat: consumed here so the next visit to the hub is on
   // foot like every other.
   if (deps.arriveInCarRef) deps.arriveInCarRef.current = false;
-  if (deps.arrivalThoughtRef) deps.arrivalThoughtRef.current = undefined;
   if (deps.arrivalCarRef) deps.arrivalCarRef.current = undefined;
 
   // A run started from scratch (not resumed from the menu, not adopted from a

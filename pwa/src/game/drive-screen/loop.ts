@@ -23,6 +23,7 @@
 
 import {
   DRIVE_OUTCOME,
+  driveVerdict,
   gibsBody,
   rungTopSpeedPx,
   type DriveState,
@@ -240,11 +241,11 @@ export function runEngineNote(
  * stop being a loop. It takes the drive's own clock, because a line on this
  * road is a BARK that retires itself rather than a scene somebody dismisses.
  *
- * WHAT HE MAKES OF THE TRIP IS NOT SAID HERE. Only two of his lines belong to
- * the road — the promise before the crowd and the wagon giving up under him;
- * the arrival's verdict is read off the whole journey (`driveVerdict`) and
- * spoken at the far end, standing beside the car, as the FIRST page of the
- * destination's opening monologue. See `engine/game/items/flow.ts` `introPages`.
+ * WHAT HE MAKES OF THE TRIP IS SAID HERE TOO, and it is not a beat of its own:
+ * the verdict is read off the whole journey (`driveVerdict`) and printed in
+ * FRONT of the run-in's line, as one breath (`arrivalLine`, voice.ts). So every
+ * word the drive has is spoken at the wheel, and the venue on the far side of
+ * the black opens on its own briefing with nothing of the road left over.
  */
 export function drainDrive(
   drive: DriveState,
@@ -252,7 +253,9 @@ export function drainDrive(
   fx: DriveFxState,
   gore: DriveGoreState,
   skids: SkidState,
-  say?: (id: string, nowMs: number) => void,
+  /** `lead` is a SECOND thought printed in front of the first, on the same
+   * line — the run-in spends it on the trip's verdict and nothing else does. */
+  say?: (id: string, nowMs: number, lead?: string) => void,
   /** False in SFW mode: the same simulation and audio drain, with collision
    * sprites, stains, debris particles, smoke and camera kicks omitted. */
   collisionVisuals = true,
@@ -748,11 +751,19 @@ export function drainDrive(
     // and, at GOODCO, on a gate with a guard sitting in it, so a question about
     // a door the player is looking at would be the game explaining its own map.
     //
-    // It is the only line on this road that is not about the car, the clock or
-    // the road surface, and it is allowed to be for the same reason the
-    // opening's is: there is nobody in the picture. He is not failing to notice
-    // anybody here; there is genuinely nobody left to notice.
-    if (event.type === "sight") say(voice.sight, drive.ms);
+    // …AND IT IS SAID WITH THE WHOLE TRIP IN FRONT OF IT. The verdict
+    // (`driveVerdict`) is a few words about the suspension, the clock, the
+    // other drivers or the council's lighting, and it is printed onto the same
+    // line as the place — "ROUGH RIDE. THERE'S GOODCO." — rather than being
+    // carried off the road to be said at the far end. One remark, not two
+    // beats: the review and the arrival are the same throwaway sentence, which
+    // is the only reading of the hour behind him he ever gives.
+    //
+    // The half about the place is the only line on this road that is not about
+    // the car, the clock or the road surface, and it is allowed to be for the
+    // same reason the opening's is: there is nobody in the picture. He is not
+    // failing to notice anybody here; there is genuinely nobody left to notice.
+    if (event.type === "sight") say(voice.sight, drive.ms, driveVerdict(drive));
   }
 }
 

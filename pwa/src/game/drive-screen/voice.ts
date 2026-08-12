@@ -20,7 +20,7 @@
 // two beats a road has — and the words are content (`content/thoughts.yaml`),
 // which is the same fence every other line in this game is drawn along.
 
-import type { DriveParams } from "@game/core";
+import { thoughtDef, type DriveParams } from "@game/core";
 
 /**
  * The two thoughts one leg has room for.
@@ -36,7 +36,8 @@ export type DriveVoice = {
    * the player is told why any of this is happening. */
   monologue: string;
   /** Through the windscreen on the run-in, with the place growing in it, and the
-   * last thing the leg says before the picture goes. */
+   * last thing the leg says before the picture goes — spoken with the trip's
+   * VERDICT folded in front of it (`arrivalLine`). */
   sight: string;
 };
 
@@ -61,4 +62,48 @@ const VOICES: Record<string, DriveVoice> = {
  */
 export function driveVoice(params: Pick<DriveParams, "to">): DriveVoice {
   return VOICES[params.to] ?? VOICES.goodco_hq!;
+}
+
+/**
+ * A thought's pages as the road's box wants them — plain string rows. None of
+ * the drive's lines carries a `{ them: [...] }` block (he is alone in the car,
+ * which is the whole joke), so the tagged shape is unfolded rather than
+ * special-cased. An id the catalog does not have THROWS, in here as everywhere
+ * else: a silent line over a road that keeps moving is a beat nobody notices
+ * has gone.
+ */
+export function thoughtPages(id: string): string[][] {
+  return thoughtDef(id).pages.map((page) => [
+    ...(Array.isArray(page) ? page : page.them),
+  ]);
+}
+
+/**
+ * THE RUN-IN'S ONE LINE — WHAT HE MADE OF THE TRIP, AND THEN THE PLACE, SAID AS
+ * ONE BREATH: "ROUGH RIDE. THERE'S GOODCO."
+ *
+ * TWO THOUGHT IDS, ONE PRINTED LINE, and that is the whole reason this exists.
+ * The verdict is picked off the finished journey (`driveVerdict`) and the sight
+ * is picked off the destination (`driveVoice`), so the pair is a different
+ * combination every leg — which is exactly the thing content cannot author as
+ * one entry without writing eight lines per destination. Joining them HERE
+ * keeps both halves in `content/thoughts.yaml`, where a mod can replace either.
+ *
+ * IT IS A JOIN, NOT A SECOND PAGE. A page break here would turn one remark into
+ * two beats — the box coming and going twice inside three seconds of run-in —
+ * and the joke is that the review and the arrival are the same throwaway
+ * sentence. It is also why the verdicts are a few words each: the join has to
+ * finish printing before the picture goes (`DRIVE.arrival`), and
+ * `tests/drive_bark_test.ts` is what says so.
+ *
+ * The verdict goes FIRST because that is the order a man speaks in — the hour
+ * behind him, and then the thing that has just come into the windscreen.
+ */
+export function arrivalLine(verdict: string, sight: string): string[][] {
+  const pages = thoughtPages(sight);
+  const lead = thoughtPages(verdict)[0]?.join(" ") ?? "";
+  const first = pages[0];
+  if (!lead || !first?.length) return pages;
+  first[0] = `${lead} ${first[0]}`;
+  return pages;
 }

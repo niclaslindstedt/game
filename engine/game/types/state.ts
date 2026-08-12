@@ -440,32 +440,6 @@ export type GameState = {
    */
   introPage: number;
   /**
-   * A THOUGHT THE HERO ARRIVED STILL HAVING — the id of the line spoken as the
-   * first page of this level's opening monologue, or undefined for a plain
-   * arrival.
-   *
-   * It is what the trip in left him with. The DRIVE reads the whole journey —
-   * the clock, the car, the other drivers, the council's lighting and the
-   * people — and hands the arriving run the one line it earned
-   * (`driveVerdict`), because a man's opinion of a journey belongs to the
-   * moment he gets out of the car rather than to a popup over the road he is
-   * still driving. A SESSION PARAMETER (`RunParams.arrivalThought`) like
-   * everything else the app settles before a run's first tick.
-   */
-  arrivalThought?: string;
-  /**
-   * THE LEVEL'S OWN OPENING IS SPENT — a replay bailed it (`skipStoryOpening`),
-   * so `introPages` is the ARRIVAL line alone and nothing else.
-   *
-   * It exists because the arrival line is spoken FIRST. While it went last, the
-   * skip was one assignment — page past the level's own monologue and land on
-   * whatever was behind it — but a half that sits in FRONT cannot be skipped by
-   * an index, and "which half of this monologue has been read" is genuinely a
-   * second fact about the run. Undefined on every run that never skipped, which
-   * is every run a player sees the first time.
-   */
-  introSkipped?: boolean;
-  /**
    * Which page of the level's post-victory EPILOGUE is on screen while
    * `phase === "outro"` (`LevelDef.outro` — the intro's black-screen mirror,
    * entered when the victory countdown runs out on a level that ships one).

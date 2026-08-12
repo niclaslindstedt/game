@@ -75,13 +75,13 @@ thoughts:
   # turn the bit from a joke into a confession, so there isn't one, and there
   # must never be one.
   #
-  # TWO PLACES, AND THE SPLIT MATTERS. The road's own lines are BARKED over a car
-  # that keeps moving — nothing on that screen stops for him to talk. The
-  # `drive_arrive_*` VERDICT is not said on the road at all: the drive picks one
-  # (`driveVerdict`) and hands it to the arriving run, which speaks it as the
-  # FIRST page of that venue's opening monologue, standing beside the car — the
-  # trip is what he has just finished, so it is what he says before the venue's
-  # own briefing rather than an afterthought four pages behind it.
+  # ONE PLACE, AND EVERY LINE IN THE SET IS BARKED over a car that keeps moving —
+  # nothing on that screen stops for him to talk. The `drive_arrive_*` VERDICT is
+  # not a beat of its own: the drive picks one (`driveVerdict`) and the RUN-IN
+  # says it folded into the front of the place's own line, as one breath — ROUGH
+  # RIDE. THERE'S GOODCO. So the whole of what he made of the trip is said at the
+  # wheel, and the venue on the far side of the black opens on its own briefing
+  # with nothing of the road left over.
   #
   # WHAT HE IS DOING OUT HERE, said on the OUTSKIRTS — before the town, before
   # the crowd, on a road with nothing on either side of it. Two pages and they do
@@ -150,6 +150,10 @@ thoughts:
   # is nobody in the picture. He is not failing to notice anybody here — there is
   # genuinely nobody left to notice, which is its own remark about the place.
   #
+  # AND IT IS SAID WITH THE TRIP'S VERDICT IN FRONT OF IT (`arrivalLine`,
+  # drive-screen/voice.ts): the two ids below are printed as ONE line, so what is
+  # authored here is only the second half of it.
+  #
   # THE SIGHT OF IT. Flat, and deliberately: a man arriving at work.
   drive_arrive_goodco:
     speaker: "{HERO}"
@@ -184,9 +188,24 @@ thoughts:
   # and a line asking about a door the player is looking at reads as the game
   # explaining its own map.
   # ── THE ARRIVAL VERDICT ───────────────────────────────────────────────────
-  # Seven readings of one trip, in `driveVerdict`'s own priority order: the car
+  # Eight readings of one trip, in `driveVerdict`'s own priority order: the car
   # first, then the two kinds of somebody else's property, then the clock, and
   # only then — as road surface — the people.
+  #
+  # A FEW WORDS EACH, AND THE BREVITY IS THE JOKE RATHER THAN A BUDGET. He has
+  # just spent an hour of his life driving through a town at a hundred and
+  # twenty, and the whole review is three words said on the way past a fence:
+  # the less he finds to say, the less he has noticed. A verdict that grew into
+  # a sentence with a second clause on it would be a man REFLECTING, which is
+  # the one thing he never does.
+  #
+  # IT IS ALSO ALL THE CLOCK ALLOWS. These are not spoken on their own: each one
+  # is printed as the FIRST HALF of the run-in's line (`arrivalLine`,
+  # drive-screen/voice.ts), which has from the sight of the place to the fade to
+  # get itself typed (`DRIVE.arrival`). `tests/drive_bark_test.ts` holds every
+  # verdict against both destinations and fails on one that outgrows the beat —
+  # and the beat is the thing to move first, not the words (see the road's
+  # opening, whose length is an OUTPUT of its two pages).
   #
   # ARRIVING, HAVING TOUCHED NOTHING AT ALL: not a person, not a car, not a
   # post, and the wagon unmarked. Very nearly unreachable, because the road is
@@ -196,55 +215,57 @@ thoughts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - CLEAN RUN. NOT A MARK ON HER.
+      - - NOT A MARK ON HER.
   # THE CAR BARELY MADE IT — said over a wagon with the bumper gone and one
-  # wheel dragging. He is not lying; he genuinely does not connect the two
-  # halves of the sentence.
+  # wheel dragging. Sympathy for the only casualty he can see.
   drive_arrive_wreck:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - I'LL HAVE TO LOOK AT HER TONIGHT. THIRTY YEARS AND SHE'S NEVER GIVEN ME A DAY'S TROUBLE.
+      - - POOR OLD GIRL.
   # THE COUNCIL'S LIGHTING, flattened. Somebody else's property, which is the
-  # one category of damage he has always been able to see.
+  # one category of damage he has always been able to see — and note who it is
+  # a complaint ABOUT.
   drive_arrive_posts:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - THEY'VE PUT THOSE LAMP STANDARDS FAR TOO CLOSE TO THE KERB. SOMEBODY'S GOING TO HAVE AN ACCIDENT.
+      - - LAMPS TOO CLOSE TO THE KERB.
   # PAINT TRADED WITH HALF THE TRAFFIC.
   drive_arrive_cars:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - NOBODY OUT HERE CAN DRIVE. NOT ONE OF THEM LOOKED.
-  # UNUSUALLY GOOD TIME — the blackest of the seven, and the only one that comes
+      - - NOBODY OUT HERE CAN DRIVE.
+  # UNUSUALLY GOOD TIME — the blackest of the eight, and the only one that comes
   # near the thing itself. Still deniably: he is talking about the traffic.
   drive_arrive_quick:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - GOOD RUN TONIGHT. ROAD OPENED RIGHT UP FOR ME.
+      - - GOOD RUN TONIGHT.
   # HAVING DAWDLED.
   drive_arrive_slow:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - TOOK MY TIME. NO SENSE ARRIVING SOMEWHERE LIKE THIS IN A HURRY.
+      - - TOOK MY TIME.
   # ARRIVING, HAVING HIT A FEW — the default when nothing else about the trip
-  # was worth remarking on.
+  # was worth remarking on. The longest of the eight, because it is the one
+  # where he is EXPLAINING rather than remarking.
   drive_arrive_some:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - ROADS ARE ROUGH OUT THIS WAY. ALWAYS HAVE BEEN.
+      - - ROADS ARE ROUGH OUT HERE.
   # ARRIVING, HAVING HIT A GREAT MANY — the line the whole minigame is built to
-  # earn. He is talking about the suspension.
+  # earn, and the shortest thing he says all night. He is talking about the
+  # suspension.
   drive_arrive_bumpy:
     speaker: "{HERO}"
     portrait: hero
     pages:
-      - - BIT BUMPY TONIGHT. SHE'S FEELING HER AGE.
+      - - ROUGH RIDE.
   # THE SHIP HE CANNOT FLY YET. Tapping the rocket on the garage's back lawn
   # before GOODCO HQ has fallen plays this instead of the travel picker (the
   # door's `unready:` pin — see `LevelDef.travelDoors`). Two things it must do
