@@ -22,6 +22,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CENTRE_DASH,
+  centreLineSections,
   ROAD_INK,
 } from "../../pwa/src/game/drive-screen/scenery.ts";
 
@@ -91,4 +92,22 @@ describe("the cutscene road is the drive's road", () => {
       3,
     );
   });
+});
+
+describe("the drive's centre line", () => {
+  it.each([
+    { direction: 1 as const, endingRoad: [21_400, 24_000] as const },
+    { direction: -1 as const, endingRoad: [-24_000, -21_400] as const },
+  ])(
+    "is broken again after town when driving $direction",
+    ({ direction, endingRoad }) => {
+      const sections = centreLineSections(-24_000, 24_000, {
+        direction,
+        coursePx: 24_000,
+        cityPx: 2_600,
+      });
+
+      expect(sections.broken).toContainEqual(endingRoad);
+    },
+  );
 });

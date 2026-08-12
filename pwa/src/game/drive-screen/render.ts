@@ -82,6 +82,7 @@ import {
 import {
   CROWD_FRAME_MS,
   CROWD_SPRITES,
+  centreLineSections,
   LAMP_SPRITE,
   LAMP_STUB_PX,
   mastAt,
@@ -611,30 +612,24 @@ export function drawDrive(
       ctx.fillRect(x - camera.x, y - camera.y, run, 1);
     }
   };
-  const inTownFrom = Math.max(left, built.fromX);
-  const inTownTo = Math.min(right, built.toX);
+  const centre = centreLineSections(left, right, drive.params);
   for (const [i, y] of bands.lanes.entries()) {
     const middle = i === Math.floor((DRIVE.laneCount - 1) / 2);
     ctx.fillStyle = PAINT;
     if (middle) {
-      // Solid through the built-up road…
-      if (inTownTo > inTownFrom) {
-        ctx.fillRect(
-          inTownFrom - camera.x,
-          y - camera.y - 1,
-          inTownTo - inTownFrom,
-          2,
-        );
+      // Solid through the town itself…
+      if (centre.solid) {
+        const [from, to] = centre.solid;
+        ctx.fillRect(from - camera.x, y - camera.y - 1, to - from, 2);
       }
       // …and broken either side of it, which out here is both sides of the leg:
       // the approach in front of the town, and nothing behind GOODCO's gate.
-      if (inTownFrom > left)
-        dashes(y, left, inTownFrom, CENTRE_DASH.on, CENTRE_DASH.off);
-      if (inTownTo < right)
-        dashes(y, inTownTo, right, CENTRE_DASH.on, CENTRE_DASH.off);
+      for (const [from, to] of centre.broken) {
+        dashes(y, from, to, CENTRE_DASH.on, CENTRE_DASH.off);
+      }
       continue;
     }
-    dashes(y, inTownFrom, inTownTo, 22, 20);
+    if (centre.solid) dashes(y, centre.solid[0], centre.solid[1], 22, 20);
   }
 
   // ── WHAT THE ROAD REMEMBERS ───────────────────────────────────────────────
