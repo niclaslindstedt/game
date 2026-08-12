@@ -11,6 +11,16 @@ Before any task-specific work or skill, load the `start-work` skill. It owns the
 clean-tree check, synchronization with `origin/main`, and the default commit,
 push, and PR handoff.
 
+## Writing code — the `write-code` skill owns the craft
+
+**Load the `write-code` skill before changing any source file**, alongside the
+skill that owns the subject. It carries every rule about the code itself: what a
+comment is for and the **comment pruning** pass (history references out, the
+lessons worth keeping validated and promoted), leaving the tree cleaner than you
+found it, the sub-second edit loop, the 1000-line file cap, the test
+conventions, and the generic pools and import aliases. This file still owns
+WHERE code goes — the tables below.
+
 ## Game spec conformance
 
 This repository adheres to [`OSS_GAME_SPEC.md`](OSS_GAME_SPEC.md), a prescriptive
@@ -32,22 +42,6 @@ structure survive a change of renderer, UI framework or language. Load the
 in doubt about a layout, naming, or workflow decision, consult the relevant
 section of `OSS_GAME_SPEC.md` — it is the source of truth for the conventions
 this repo follows.
-
-## Leave the tree cleaner than you found it
-
-- **Fix every error and warning you encounter, even ones you didn't cause.**
-  A `make lint` / `make test` / typecheck run that surfaces a pre-existing
-  error or warning (a generator's `!` warning included) is part of your job:
-  fix it in the same session rather than working around it or reporting it as
-  "not mine". The repo's baseline is zero errors and zero warnings — anything
-  above zero hides the next real regression.
-- **Fix inefficient algorithms on sight.** If, while doing any task, you spot
-  code with a needlessly bad complexity or a hot-path pattern that clearly
-  wastes work (an O(n²) scan a hash/grid would collapse, per-call
-  recomputation of an invariant, per-frame allocation in a loop that runs at
-  60 Hz), fix it — even when it's unrelated to what you were asked to do.
-  Keep such fixes behavior-preserving, verify with the relevant tests or a
-  quick benchmark, and mention them in the PR description.
 
 ## Build and test commands
 
@@ -830,73 +824,20 @@ are regenerated in the same commit as the change that moves them:
 from a catalog, and whose drift test lives in the ROOT suite because a change
 under `electron/src/` breaks it exactly as easily as one under `tauri/`.
 
-## Local reusable code
+## Local reusable code, tests, file size — the `write-code` skill owns them
 
-- **Keep generic game code separate.** Code
-  that is not specific to THIS game (HUD widgets, input handling, game-loop
-  utilities, sprite/audio helpers) goes in the dedicated generic areas —
-  `engine/lib/` for engine-side code, `pwa/src/lib/` for UI code —
-  never tangled into game-specific modules. The game remains self-contained;
-  iterate and playtest reusable code here.
-- **Always import the generic pools through their aliases** — `@game/lib/*`
-  (engine) and `@ui/lib/*` (UI), never by relative path. The alias maps live in `tsconfig.json`,
-  `pwa/tsconfig.json`, `vitest.config.ts`, and `pwa/vite.config.ts`
-  — keep all four in lockstep (they also carry `@game/core`, `@game/menu`,
-  `@game/wire/*`, `@game/client` and the three `react` entries below). Two more
-  copies exist and both bite:
-  `scripts/game-alias-loader.mjs` is what lets a plain `node` script import
-  aliased modules at runtime, and `tests/content/net_reachability_test.ts`
-  resolves them to walk the import graph — a new alias missing from either is a
-  script that cannot start or a budget guard that silently stops following an
-  edge.
-- **THE APP RENDERS WITH PREACT, AND STILL SPELLS IT `react`.** `react`,
-  `react-dom` and `react-dom/client` are aliased to `preact/compat` (and
-  `preact/compat/client`, which is where `createRoot` lives) in all four maps
-  above, so a component goes on importing `useState` `from "react"` and the
-  ~400 existing import sites did not move when the renderer did. React itself
-  is NOT installed, and `tests/preact_renderer_test.ts` keeps both halves
-  honest — the four maps agreeing, and react staying out of the tree, where its
-  react-dom would silently eat ~50 KB of the 170 KB critical-path budget.
-  Three places where Preact's types are not React's, all settled the same way —
-  by spelling it Preact's way, which is also the correct way:
-  `RefObject<T>` ALREADY includes the null (`useRef<HTMLDivElement>(null)`,
-  never `useRef<HTMLDivElement | null>(null)`); an event type is generic in the
-  element (`PointerEvent<HTMLElement>`, and `e.currentTarget` — not `e.target`
-  — is the half that is typed); and `useSyncExternalStore` takes TWO arguments,
-  the dropped third being a `getServerSnapshot` this app could never call
-  because it never hydrates.
-  **AND ONE PROP IS NOT A TYPING DIFFERENCE BUT A MISSING IMPLEMENTATION:
-  `autoFocus`.** React focused the element itself; Preact writes the `autofocus`
-  ATTRIBUTE, and the HTML spec drops every autofocus candidate the moment
-  anything else already holds focus — which a clicked menu row (a `<button>`)
-  always does. The field then takes no keystroke at all and the presses go to the
-  screen's own `window` listener instead. Use `useAutoFocus`
-  (`@ui/lib/auto-focus.ts`), which asks imperatively;
-  `tests/preact_renderer_test.ts` keeps the prop out of the tree.
-  **AND FOCUS IS NOT A KEYBOARD.** A phone raises one only for a `focus()` made
-  WHILE A GESTURE IS BEING HANDLED, and a field mounted by a menu press asks from
-  an effect a turn of the loop later — so it comes up focused with nothing to
-  type on, and tapping it does nothing because it already has focus. The PRESS
-  arms it (`armSoftKeyboard`, same file, called synchronously from the `onClick`
-  or it silently does nothing) and `useAutoFocus` hands it over on mount.
-- **Every dependency comes from the public npm registry.** `npm ci` needs no
-  token, no `.npmrc` and no private registry — keep it that way: a private
-  dependency breaks not just a fresh clone but the pages workflow, which
-  rebuilds the released TAG from that tag's own lockfile.
+Three sets of rules live in the `write-code` skill, which every code task
+loads: the **generic pools** and the six copies of the import-alias map (`@game/lib/*`, `@ui/lib/*`, and the fact
+that the app renders with Preact while still spelling it `react`); the **test
+conventions** (own files, `_test.ts`, `tests/engine/` on synthetic fixtures vs
+`tests/content/` on the shipped catalogs); and the **1000-line file cap** with
+its `game-spec:allow-large-file:` escape hatch (§20.5 of `OSS_GAME_SPEC.md`).
 
-## Test conventions
-
-- **All tests live in separate files** — never inline in source files (no `#[cfg(test)]` blocks, no `if __name__ == "__main__"` test harnesses). This keeps source files free of test scaffolding and lets agents, hooks, and linters treat source and test code differently.
-- Test files are named with a `_test` or `_tests` suffix (e.g. `output_test.ts`). The stem must match the pattern `_?[Tt]ests?$` per §20 of `OSS_GAME_SPEC.md`.
-- Tests live in `tests/` and run with **Vitest** (`make test`, or `npx vitest run tests/engine/game_test.ts` for a single file). The include pattern (`tests/**/*_test.ts`) lives in `vitest.config.ts` — keep it in lockstep with the naming rule.
-- **`tests/engine/` vs `tests/content/`.** Engine-rule suites live in `tests/engine/` and run against **synthetic fixtures** (`tests/engine/fixtures.ts`, plain ids like `test_level`/`test_minion`) installed via the engine's `registerDefs` hook — so they survive content deletion. This-game content suites (levels, story, bosses, sprite atlas) live in `tests/content/` and use the shipped catalogs via the root `tests/helpers.ts`; a sequel deletes and rewrites them. Lib tests (`chiptune`, `synth`, `output`, …) stay at the `tests/` root. Rule of thumb: if a test asserts an engine rule, it belongs in `tests/engine/` and must not reference a shipped content id (only `fists`, the engine's built-in EMPTY HAND id, is shared).
-- No test-specific setup is needed today; engine tests run in a plain Node environment.
-- **The Tauri shell is RUST and follows the same two rules through its own toolchain** (OSS_GAME_SPEC §20.3): tests are integration tests in `tauri/<crate>/tests/*_test.rs`, never a `#[cfg(test)]` module, which is also why every decision that needs testing lives in the `adastrail-shell` LIBRARY crate — an integration test can only reach a crate's public API. Run them with `make tauri-test` (`cargo test -p adastrail-shell` from `tauri/`), and a single file with `cargo test --test webroot_test`. They need no GUI libraries and no Steam SDK; the root suite does not reach them. The app crate has no test target of its own — that is what the split buys, and a test that would need one is a decision sitting in the wrong crate.
-
-## Source file size
-
-- Non-test source files must stay under **1000 physical lines** (§20.5 of `OSS_GAME_SPEC.md`). When a file grows past the limit, prefer splitting by concern (extracting submodules, helpers, or sibling files) over relaxing the cap.
-- A file may opt out by placing `game-spec:allow-large-file: <reason>` in any comment within its first 20 lines. The reason must be non-empty and motivate why the file genuinely cannot be split (generated code, cohesive state machine, third-party snapshot, inherently dense rule catalogue).
+One that stays here because it is a supply-chain fact rather than a craft rule:
+**every dependency comes from the public npm registry.** `npm ci` needs no
+token, no `.npmrc` and no private registry — a private dependency breaks not
+just a fresh clone but the pages workflow, which rebuilds the released TAG from
+that tag's own lockfile.
 
 ## Documentation sync points
 
@@ -1016,6 +957,7 @@ skill is the source of truth — load that, not a search of the tree.
 
 | Working on                                            | Load the skill                                          |
 | ----------------------------------------------------- | ------------------------------------------------------- |
+| ANY source file — always, beside the subject's skill  | `write-code`                                            |
 | Generated maps, blueprints, a venue's feel            | `mapgen-improvement`, `map-improvement`, `level-design` |
 | Errands, givers, conversations, campaign chains       | `quest-design`                                          |
 | The title menu, a settings row, the developer menu    | `menu-design`                                           |
@@ -1044,6 +986,7 @@ carries the workflow, the quality bar and the traps for its subject.
 
 | Skill                 | Use for                                                               |
 | --------------------- | --------------------------------------------------------------------- |
+| `write-code`          | ANY change to a source file — comments, warnings, tests, the cap      |
 | `mod-authoring`       | Creating a MOD, or updating a published one — the scope and the loop  |
 | `new-game`            | Turning a clone of this repo into a new game/sequel                   |
 | `engine-system`       | Adding/changing a gameplay system — the engine-first workflow         |
@@ -1111,6 +1054,8 @@ allowed to rewrite another's `SKILL.md`:
   `SKILL.md` itself.
 
 The skill owns the rest: the fragment format (`title`, `date`, and the optional
-`scope`/`concepts` that make the filters work), the consolidation sweep, and the
+`scope`/`concepts` that make the filters work), the **size bars** the tool
+flags — a fragment over 350 words, a skill over 15 fragments or 4000 words of
+them, a `SKILL.md` over 5000 — the consolidation sweep they call for, and the
 standing question of whether a rule sitting in THIS file belongs in a skill
 instead.

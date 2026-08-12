@@ -136,7 +136,9 @@ the repo and fails on a player's machine with a resolve error, which is what
 - Docs: a public API change means updating `docs/architecture.md` and the
   README per the sync table in `AGENTS.md`; new config knobs go in
   `docs/configuration.md` if they're user-facing.
-- Source files stay under 1000 lines — split by concern before the cap.
+- The craft rules — the file-size cap, the test conventions, comment pruning,
+  the sub-second edit loop — are the **`write-code`** skill's, and it is loaded
+  beside this one on every system change.
 
 ## Skill self-improvement
 
