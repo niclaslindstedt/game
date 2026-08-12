@@ -7,7 +7,6 @@
 // catalogue and a render loop are two different things to read.
 
 import type { GlobeKind, PlanetGlobe } from "@ui/lib/planet-globe.ts";
-import { SAT_MS_PER_DAY } from "./title-moons.ts";
 import type { SkyElements } from "./title-sky.ts";
 
 /**
@@ -44,6 +43,12 @@ export const SKY_SCALE = 2;
 
 /** Earth's revolution time on screen — the anchor for the whole system. */
 export const EARTH_PERIOD_MS = 64_000;
+
+/** Earth's sidereal year and the Moon's sidereal month, in days. The two
+ * together are the only numbers Earth's Moon needs to run on the clock above
+ * (see `moonBody`), and both are measured. */
+export const EARTH_YEAR_DAYS = 365.256363;
+export const MOON_SIDEREAL_DAYS = 27.321582;
 
 /**
  * TRUE SIDEREAL PERIODS, in Earth years. Every planet's year is this number
@@ -452,6 +457,8 @@ export function planetTable(els: SkyElements): Planet[] {
  * Its orbit is drawn at 2.35 Earth radii — compressed like every other distance
  * in this sky, and the true 60 would put it four screens out. Airless, so no
  * halo and no limb haze.
+ *
+ * AND IT RUNS ON THE PLANETS' CLOCK, WHICH THE OTHER TWENTY DO NOT — see `ms`.
  */
 export function moonBody(el: HTMLElement): Planet {
   return {
@@ -476,9 +483,34 @@ export function moonBody(el: HTMLElement): Planet {
      * Earth. Set from the orbital period below. */
     rotDays: 0,
     satellite: true,
-    /** 27.32 days on the satellites' clock — the same clock the other twenty
-     * run on, so the Moon is right against Io and Titan rather than being the
-     * one body with a period picked by feel. */
-    ms: Math.round(27.321582 * SAT_MS_PER_DAY),
+    /**
+     * A TRUE SIDEREAL MONTH AGAINST EARTH'S TRUE SIDEREAL YEAR, on the PLANETS'
+     * clock — so the Moon laps the Earth 13.37 times per on-screen year, which
+     * is exactly what the Moon does. There is no invented number on this line.
+     *
+     * IT IS THE ONE SATELLITE NOT ON THE SATELLITES' CLOCK, and that is the
+     * whole point rather than an exception left lying about. A satellite is
+     * only ever judged against what is IN FRAME WITH IT. For the other twenty
+     * that is their siblings — same system, same clock, so the Galilean 1:2:4
+     * lock is watchable and every ratio inside a system is the real one. The
+     * Moon has no siblings: the only thing ever in frame beside it is the
+     * EARTH, whose motion is on the planets' clock, so the planets' clock is
+     * the one that makes the pair honest. On the satellites' clock the two
+     * disagreed by a factor of 34 — a month of 164 s against a year of 64 —
+     * and a Moon that takes two and a half YEARS to go round its planet is not
+     * a moon, whatever its period says.
+     *
+     * WHAT IT LOOKED LIKE, because "the numbers were right" hid it for four
+     * releases: a 20 px orbit walked at 0.77 px/s. The Moon sat still. It is
+     * the reason `tests/title_moons_test.ts` measures apparent speed at all.
+     *
+     * AND THE OLD OBJECTION TO THE TRUE RATIO HAS EXPIRED. It was rejected once
+     * as "a blur" — correctly, when the Moon rode a 39 px orbit and a 4.8 s
+     * month meant 51 px/s. #1072 put the distances on true scale and halved
+     * that orbit, so the same month is now 26 px/s: a third of Io's, an eighth
+     * of Mimas's, and slower than the Phobos that has always circled Mars here
+     * in under two seconds.
+     */
+    ms: Math.round(EARTH_PERIOD_MS * (MOON_SIDEREAL_DAYS / EARTH_YEAR_DAYS)),
   };
 }
