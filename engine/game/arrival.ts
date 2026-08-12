@@ -434,8 +434,21 @@ function rosterXp(def: LevelDef, difficulty: Difficulty): number {
       total += mobXp(member.enemy) * member.count;
     }
   }
+  // MOB POSTS — the parts maps' garrison. A "full clear" of one is not one
+  // kill per post: the posts REFILL on the respawn clock, and the search that
+  // finds the boss walks its own ground more than once, so the story baseline
+  // prices each post at a few generations farmed on the way through.
+  for (const post of def.mobSpawns ?? []) {
+    if (!meetsMinDifficulty(difficulty, post.minDifficulty)) continue;
+    total += mobXp(post.enemy) * POST_FARM_GENERATIONS;
+  }
   return total;
 }
+
+/** How many of a post's generations a full campaign clear is assumed to have
+ * farmed — the first watch plus the refills met while searching. A story
+ * baseline like the rest of the derivation, not a simulation. */
+const POST_FARM_GENERATIONS = 3;
 
 /** The weapon a clear of `def` is assumed to leave in hand: its scripted
  * early-drop weapon (the run's signature blade), else its all-clear trophy,
