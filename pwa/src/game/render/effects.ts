@@ -275,6 +275,46 @@ function corpseFlightMs(launch: NonNullable<Effect["launch"]>): number {
 export const GARAGE_DOOR_MS = 750;
 
 /**
+ * HOW BIG A HIT NUMBER DRAWS. A plain hit is 1×; a crit's size tracks how hard
+ * it rolled — a glancing one grows a modest 1.5×, a top-of-band slam a fat 3×,
+ * quantized to half-steps so the pixel glyphs stay crisp. Exported because the
+ * LANE the number is given has to know how tall it will be
+ * (game-screen/float-lane.ts), and a second copy of this rule would drift.
+ */
+export function damageTextScale(crit: boolean, critPower?: number): number {
+  return crit ? Math.round((1.5 + 1.5 * (critPower ?? 0.5)) * 2) / 2 : 1;
+}
+
+/**
+ * WHICH HALF OF THE LAYER THIS ONE BELONGS TO — the pass drawn INSIDE the frame
+ * with the level's own furniture (`drawUnderActors`), or the pass drawn OVER the
+ * finished frame (`drawEffects`).
+ *
+ * TWO memberships, and they join for two different reasons:
+ *
+ * - WHAT HAS COME TO REST ON THE FLOOR (`restsOnFloor`) — the remains, which are
+ *   no longer in the air and must not be painted over the hero standing on them.
+ * - THE GARAGE DOOR'S RETRACTING SLATS, which are not something the fight threw
+ *   at all: they are an OBSTACLE the engine has already dropped, redrawn for the
+ *   length of the roll-up. Every other member of this half earns its place by
+ *   ceasing to move; this one is in it from its first frame to its last, because
+ *   the question it answers is not "has it landed" but "is it part of the world
+ *   picture" — and a door is, whether it is standing still or moving.
+ *
+ * A door in the OTHER half was drawn after `drawNight`'s wash and after every
+ * lamp pool cut out of it, so it changed COLOUR on the tick it started moving:
+ * the closed chain wears the warm light of the lit bay it hangs in, and the
+ * roll-up came out in the sprite's own cold slate, against unchanged
+ * surroundings. (It painted over the hero standing in the doorway too — the same
+ * mistake the remains make, arrived at from the other end.) It belongs exactly
+ * where the closed door was: with the walls, under the night and under the
+ * bodies.
+ */
+export function drawnUnderActors(effect: Effect, timeMs: number): boolean {
+  return effect.kind === "garageDoor" || restsOnFloor(effect, timeMs);
+}
+
+/**
  * HAS THIS ONE STOPPED MOVING — i.e. is it SCENERY now rather than an event?
  *
  * The effect layer is drawn over the finished frame because almost everything in
@@ -291,17 +331,6 @@ export const GARAGE_DOOR_MS = 750;
  * ./gibs.ts is clamped over exactly these lengths, so nothing is still moving
  * when this turns true.
  */
-/**
- * HOW BIG A HIT NUMBER DRAWS. A plain hit is 1×; a crit's size tracks how hard
- * it rolled — a glancing one grows a modest 1.5×, a top-of-band slam a fat 3×,
- * quantized to half-steps so the pixel glyphs stay crisp. Exported because the
- * LANE the number is given has to know how tall it will be
- * (game-screen/float-lane.ts), and a second copy of this rule would drift.
- */
-export function damageTextScale(crit: boolean, critPower?: number): number {
-  return crit ? Math.round((1.5 + 1.5 * (critPower ?? 0.5)) * 2) / 2 : 1;
-}
-
 export function restsOnFloor(effect: Effect, timeMs: number): boolean {
   if (effect.kind === "gib" || effect.kind === "cleave") {
     const age = (effect.durationMs ?? 0) - (effect.untilMs - timeMs);
@@ -315,9 +344,8 @@ export function restsOnFloor(effect: Effect, timeMs: number): boolean {
 }
 
 /**
- * Draw the live effects over the frame — everything in the layer EXCEPT what has
- * already come to rest on the floor, which `drawFloorRemains` put down under the
- * actors (`restsOnFloor`).
+ * Draw the live effects over the frame — everything in the layer EXCEPT what
+ * `drawUnderActors` already put down inside it (`drawnUnderActors`).
  *
  * `fade` (default 1) dims the WHOLE pass as one — the death scene eases it to 0
  * so the fight's floating damage / crit / XP numbers clear off the tableau
@@ -338,14 +366,16 @@ export function drawEffects(
 
 /**
  * …and the other half: the corpses, the gibs and the cleaved halves that have
- * LANDED, drawn from inside `drawFrame` with the floor furniture so the hero
- * walks OVER the mess he made instead of under it.
+ * LANDED, plus the garage door rolling up, drawn from inside `drawFrame` with
+ * the floor furniture — so the hero walks OVER the mess he made instead of under
+ * it, and the night's wash falls on a moving door exactly as it falls on a shut
+ * one (`drawnUnderActors`).
  *
  * Same pass, same billboarded anchors, same fade — only the membership differs,
  * so a piece of gore does not change size, place or colour on the frame it
  * changes layers.
  */
-export function drawFloorRemains(
+export function drawUnderActors(
   ctx: CanvasRenderingContext2D,
   effects: readonly Effect[],
   camera: Camera,
@@ -363,15 +393,15 @@ function drawLayer(
   timeMs: number,
   assets: GameAssets,
   fade: number,
-  onFloor: boolean,
+  underActors: boolean,
 ): void {
   if (fade < 1) {
     drawFaded(ctx, fade, (target) =>
-      drawEffectPass(target, effects, camera, timeMs, assets, onFloor),
+      drawEffectPass(target, effects, camera, timeMs, assets, underActors),
     );
     return;
   }
-  drawEffectPass(ctx, effects, camera, timeMs, assets, onFloor);
+  drawEffectPass(ctx, effects, camera, timeMs, assets, underActors);
 }
 
 function drawEffectPass(
@@ -380,14 +410,14 @@ function drawEffectPass(
   camera: Camera,
   timeMs: number,
   assets: GameAssets,
-  onFloor: boolean,
+  underActors: boolean,
 ): void {
   const font = assets.font;
   const viewW = ctx.canvas.width;
   const viewH = ctx.canvas.height;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
-    if (restsOnFloor(effect, timeMs) !== onFloor) continue;
+    if (drawnUnderActors(effect, timeMs) !== underActors) continue;
     // A delayed float (e.g. the XP popup trailing its damage number) stays
     // hidden until its start tick, then animates from t=0 as usual.
     if (effect.startMs != null && timeMs < effect.startMs) continue;

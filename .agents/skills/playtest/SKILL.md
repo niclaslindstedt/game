@@ -38,7 +38,10 @@ The reason this is worth a section rather than a footnote is how it fails:
 `waitForSelector("canvas")` resolves on the menu; a screenshot looks like a game
 because the menu is pretty; and a benchmark reports plausible, stable, entirely
 meaningless numbers. It cost this repo one confident "35% less CPU per frame"
-that was really the title screen versus the title screen. Wait for something
+that was really the title screen versus the title screen. The same trap swallows
+any STAGED precondition — a door held shut, a hero left unarmed, a mob parked in
+a doorway — so assert the state in the probe and fail loudly when it does not
+hold, rather than trusting a screenshot to look wrong. Wait for something
 only a RUN has — `window.__game` (`?debug`), the HUD, a mob — and if you are
 measuring, print a run statistic (kills, damage) beside the measurement so a
 reading taken on the menu is obviously wrong rather than quietly wrong.
@@ -46,8 +49,10 @@ reading taken on the menu is obviously wrong rather than quietly wrong.
 ## Running
 
 ```sh
-# one-time per session — playwright is deliberately not a repo dependency
-npm install --no-save playwright
+# playwright is a devDependency — `npm ci` installs it. Only its browser
+# binaries are separate, and this environment already ships one: launch with
+# `executablePath` (playtest.mjs defaults to /opt/pw-browsers/chromium), and
+# never run `playwright install`.
 
 cd pwa && npx vite --port 5199 &     # dev server
 node pwa/scripts/playtest.mjs --strategy kite   # from the repo root
