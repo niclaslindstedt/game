@@ -435,6 +435,21 @@ export type DriveTraffic = {
    * would otherwise be wrong the instant it joined the traffic list.
    */
   driverless: boolean;
+  /**
+   * IT IS ON THE FOOTWAY, NOT IN A LANE — so it weaves to the pavement's own
+   * rule, is left out of the lane index, and is held to the wider band when it
+   * is shoved.
+   *
+   * A FACT ABOUT THIS VEHICLE, NOT ABOUT ITS MODEL, and the difference is the
+   * whole reason it is a field. `DriveVehicleDef.pavement` says where a machine
+   * belongs IN TOWN — which is what splits the two pools there — and the
+   * OUTSKIRTS have one footway, no town, and their own hand-picked roster on it
+   * (`OUTSKIRT_IDS`). A cyclist is in that roster and rides the road in town, so
+   * its def says no while the opening puts it on the paving; asked of the def,
+   * every cyclist in the intro was handed to the lane driver and steered out
+   * onto the grass. Stamped once, where the vehicle is laid down.
+   */
+  footway: boolean;
   /** How many people are still INSIDE — decremented as they leave through the
    * screen. Starts at the def's `occupants`. */
   occupants: number;
