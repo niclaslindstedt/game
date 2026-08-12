@@ -8,11 +8,16 @@ description: "Use when improving the DESIGN and FEEL of an existing venue (not a
 The sibling of `art-improvement` (which hunts the worst art) — this one improves
 how a venue *plays and feels*. A venue is two data files: the MISSION
 (`content/levels/<id>.yaml` — story, ladder rung, hazards, loot) and the
-BLUEPRINT its map is carved from per run (`content/maps/<id>.yaml`), both
-compiled by `make levels`. **There is no hand-drawn layout to edit**, so a
-geometry fix lands in the blueprint's areas, object palette and horde — and a
-render shows ONE run's carve, so judge across seeds rather than off a single
-picture. Two renderers make it legible:
+BLUEPRINT its map is generated from per run (`content/maps/<id>.yaml`), both
+compiled by `make levels`. **On a STATIC PARTS venue there IS a hand-drawn
+layout to edit** — the blueprint's `parts:` deck: each room's size, sockets,
+furniture and one-mob spawn markers are authored, and a feel fix is usually an
+edit to a PART (move the posts, resize the room, add a prop) or to the deal
+(`min`/`max`/`weight`/`count`) rather than to a density. On a legacy-carve
+venue nothing is hand-drawn, so a geometry fix lands in the blueprint's areas,
+object palette and horde. Either way a render shows ONE run's deal/carve, so
+judge across seeds rather than off a single picture. Two renderers make it
+legible:
 
 - **`map-layout.mjs` — the VISUAL OVERVIEW.** A clean, high-res, top-down
   picture of one carve: a labelled coordinate grid for orientation
