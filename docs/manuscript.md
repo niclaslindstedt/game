@@ -164,7 +164,9 @@ about it — there is another dealer on that pavement next time._
 ### RUTH — Ada's mother
 
 _Three errands, one per leg of the trail. She is never scared for Ada, only
-proud._
+proud. **She was not in the house that night** — so she asks for a KIND of thing
+and lets the hero name the particular, and what the slip actually says she finds
+out reading it._
 
 **She has arrived** (`conversations/ruth_arrival.yaml`):
 
@@ -178,11 +180,11 @@ proud._
 
 #### THE RECEIPT
 
-> BRING ME SOMETHING OF HERS THAT ISN'T A REPORT. SHE BOUGHT CHIPS AND A SODA THAT NIGHT, AND THE MACHINES PRINT A SLIP.
+> EVERYTHING THEY HAVE ON HER IS A FILE. I WANT SOMETHING SHE HELD THAT NIGHT. WHAT DID SHE GO OUT FOR?
 
-**ME:** THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT.
+**ME:** CHIPS AND A SODA. THE MACHINES PRINT A SLIP, AND THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT.
 
-**Short:** SOMEBODY ON THAT FLOOR IS CARRYING IT. THEY CARRY EVERYTHING.
+**Short:** YOU SAID THEY CARRY THE PAPERWORK. THEN IT'S IN SOMEBODY'S POCKET OUT THERE.
 
 **Handover:** CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.' I'M KEEPING THIS.
 

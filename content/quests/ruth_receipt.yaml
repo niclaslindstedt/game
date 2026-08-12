@@ -6,17 +6,17 @@ campaign: true
 order: 1
 lore: >
   The first thing Ruth asks for, and the one that names the shape of all
-  three: not a report, not a photograph — something Ada held. The
-  chips-and-soda run that started it all was interrupted mid-purchase, and a
-  company that logs everything logged that too: the slip is still on the HQ
-  floor, on somebody's clipboard with the night's paperwork. She wants her
-  daughter's last ordinary minute out of GOODCO's hands.
+  three: not a report, not a photograph — something Ada held. She was not in
+  that house that night, so she cannot name the thing and does not try; she
+  asks the hero what her daughter went out for, and the errand's item is HIS
+  answer. The slip is on the HQ floor with the night's paperwork, and what the
+  minute actually was she finds out reading it.
 offer:
-  - - "BRING ME SOMETHING OF HERS THAT ISN'T A REPORT. SHE BOUGHT CHIPS AND A SODA THAT NIGHT, AND THE MACHINES PRINT A SLIP."
+  - - "EVERYTHING THEY HAVE ON HER IS A FILE. I WANT SOMETHING SHE HELD THAT NIGHT. WHAT DID SHE GO OUT FOR?"
   - hero:
-      - "THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT."
+      - "CHIPS AND A SODA. THE MACHINES PRINT A SLIP, AND THEIR NIGHT STAFF CARRY THE PAPERWORK. I'LL GET IT."
 incomplete:
-  - "SOMEBODY ON THAT FLOOR IS CARRYING IT. THEY CARRY EVERYTHING."
+  - "YOU SAID THEY CARRY THE PAPERWORK. THEN IT'S IN SOMEBODY'S POCKET OUT THERE."
 complete:
   - - "CHIPS AND HER SODA, 11:52 PM. 'PAYMENT INTERRUPTED.' I'M KEEPING THIS."
   - hero:
